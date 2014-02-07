@@ -234,12 +234,6 @@ ShadowRoot::GetElementsByClassName(const nsAString& aClasses)
   return nsContentUtils::GetElementsByClassName(this, aClasses);
 }
 
-bool
-ShadowRoot::PrefEnabled()
-{
-  return Preferences::GetBool("dom.webcomponents.enabled", false);
-}
-
 void
 ShadowRoot::AddInsertionPoint(HTMLContentElement* aInsertionPoint)
 {

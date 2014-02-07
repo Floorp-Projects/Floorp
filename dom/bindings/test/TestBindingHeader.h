@@ -285,6 +285,7 @@ public:
   already_AddRefed<TestInterface> NonNullSelf();
   void SetNonNullSelf(TestInterface&);
   already_AddRefed<TestInterface> GetNullableSelf();
+  already_AddRefed<TestInterface> CachedSelf();
   void SetNullableSelf(TestInterface*);
   void PassOptionalSelf(const Optional<TestInterface*> &);
   void PassOptionalNonNullSelf(const Optional<NonNull<TestInterface> >&);

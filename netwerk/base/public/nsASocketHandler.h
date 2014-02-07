@@ -82,6 +82,11 @@ public:
     }
 
     //
+    // called when global pref for keepalive has changed.
+    //
+    virtual void OnKeepaliveEnabledPrefChange(bool aEnabled) { }
+
+    //
     // returns the number of bytes sent/transmitted over the socket
     //
     virtual uint64_t ByteCountSent() = 0;

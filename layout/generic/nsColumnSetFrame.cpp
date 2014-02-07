@@ -629,7 +629,7 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
                      "We have to create a continuation, but the block doesn't want us to reflow it?");
 
         // We need to create a continuing column
-        nsresult rv = CreateNextInFlow(PresContext(), child, kidNextInFlow);
+        nsresult rv = CreateNextInFlow(child, kidNextInFlow);
         
         if (NS_FAILED(rv)) {
           NS_NOTREACHED("Couldn't create continuation");
@@ -670,7 +670,7 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
         // next-in-flow will eventually pick them up.
         const nsFrameList& continuationColumns = mFrames.RemoveFramesAfter(child);
         if (continuationColumns.NotEmpty()) {
-          SetOverflowFrames(PresContext(), continuationColumns);
+          SetOverflowFrames(continuationColumns);
         }
         child = nullptr;
         break;
@@ -775,8 +775,7 @@ nsColumnSetFrame::DrainOverflowColumns()
   if (prev) {
     AutoFrameListPtr overflows(presContext, prev->StealOverflowFrames());
     if (overflows) {
-      nsContainerFrame::ReparentFrameViewList(presContext, *overflows,
-                                              prev, this);
+      nsContainerFrame::ReparentFrameViewList(*overflows, prev, this);
 
       mFrames.InsertFrames(this, nullptr, *overflows);
     }

@@ -183,6 +183,30 @@ class NS_ConvertUTF8toUTF16 : public nsAutoString
   };
 
 
+#ifdef MOZ_USE_CHAR16_WRAPPER
+
+inline char16_t*
+wwc(wchar_t *str)
+{
+    return reinterpret_cast<char16_t*>(str);
+}
+
+inline wchar_t*
+wwc(char16_t *str)
+{
+    return reinterpret_cast<wchar_t*>(str);
+}
+
+#else
+
+inline char16_t*
+wwc(char16_t *str)
+{
+    return str;
+}
+
+#endif
+
 // the following are included/declared for backwards compatibility
 typedef nsAutoString nsVoidableString;
 

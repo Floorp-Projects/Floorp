@@ -30,7 +30,7 @@ class nsSHEntryShared;
 [ptr] native nsDocShellEditorDataPtr(nsDocShellEditorData);
 [ptr] native nsSHEntryShared(nsSHEntryShared);
 
-[scriptable, uuid(c2a5827e-0fc0-11e3-bb95-59e799890b3c)]
+[scriptable, uuid(9eed7e92-1121-46f2-95e5-2f5c0dca46f0)]
 interface nsISHEntry : nsISupports
 {
     /**
@@ -277,6 +277,13 @@ interface nsISHEntry : nsISupports
      * Setting this sets isSrcdocEntry to true
      */
     attribute AString srcdocData;
+
+    /**
+     * When isSrcdocEntry is true, this contains the baseURI of the srcdoc
+     * document for use in situations where it cannot otherwise be determined,
+     * for example with view-source.
+     */
+    attribute nsIURI baseURI;
 };
 
 [scriptable, uuid(bb66ac35-253b-471f-a317-3ece940f04c5)]

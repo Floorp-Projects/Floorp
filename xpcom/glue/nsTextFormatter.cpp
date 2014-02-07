@@ -513,9 +513,7 @@ static int cvt_S(SprintfState *ss, const char16_t *s, int width,
     }
 
     /* and away we go */
-    NS_NAMED_LITERAL_STRING(nullstr, "(null)");
-
-    return fill2(ss, s ? s : nullstr.get(), slen, width, flags);
+    return fill2(ss, s ? s : MOZ_UTF16("(null)"), slen, width, flags);
 }
 
 /*

@@ -726,12 +726,6 @@ Notification::Get(const GlobalObject& aGlobal,
   return promise.forget();
 }
 
-bool
-Notification::PrefEnabled()
-{
-  return Preferences::GetBool("dom.webnotifications.enabled", false);
-}
-
 JSObject*
 Notification::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {

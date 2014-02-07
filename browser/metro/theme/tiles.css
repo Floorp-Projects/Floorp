@@ -45,7 +45,7 @@ richgrid > .richgrid-grid {
   -moz-column-gap: 0;
   -moz-column-count: auto;
   display: block;
-  -moz-box-sizing: content-box;
+  box-sizing: content-box;
   overflow-x: hidden; /* clipping will only kick in if an explicit width is set */
   transition: 100ms transform ease-out;
 }
@@ -60,7 +60,7 @@ richgriditem {
   position: relative;
   width: @grid_double_column_width@;
   height: @grid_row_height@;
-  -moz-box-sizing: border-box;
+  box-sizing: border-box;
   -moz-column-gap: 0;
   overflow:hidden;
   cursor: default;

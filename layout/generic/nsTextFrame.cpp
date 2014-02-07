@@ -513,7 +513,7 @@ GlyphObserver::NotifyGlyphsChanged()
 {
   nsIPresShell* shell = mFrame->PresContext()->PresShell();
   for (nsIFrame* f = mFrame; f;
-       f = nsLayoutUtils::GetNextContinuationOrSpecialSibling(f)) {
+       f = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(f)) {
     if (f != mFrame && f->HasAnyStateBits(TEXT_IN_TEXTRUN_USER_DATA)) {
       // f will have its own GlyphObserver (if needed) so we can stop here.
       break;

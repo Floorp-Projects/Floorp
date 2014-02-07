@@ -95,7 +95,7 @@ typedef nsresult
 
 class nsHashtable {
   protected:
-    // members  
+    // members
     PRLock*         mLock;
     PLDHashTable    mHashtable;
     bool            mEnumerating;
@@ -145,7 +145,7 @@ class nsObjectHashtable : public nsHashtable {
     static PLDHashOperator CopyElement(PLDHashTable* table,
                                        PLDHashEntryHdr* hdr,
                                        uint32_t i, void *arg);
-    
+
     nsHashtableCloneElementFunc mCloneElementFun;
     void*                       mCloneElementClosure;
     nsHashtableEnumFunc         mDestroyElementFun;
@@ -193,7 +193,7 @@ class nsSupportsHashtable
 class nsISupportsKey : public nsHashKey {
   protected:
     nsISupports* mKey;
-    
+
   public:
     nsISupportsKey(const nsISupportsKey& aKey) : mKey(aKey.mKey) {
 #ifdef DEBUG
@@ -209,11 +209,11 @@ class nsISupportsKey : public nsHashKey {
         mKey = key;
         NS_IF_ADDREF(mKey);
     }
-    
+
     ~nsISupportsKey(void) {
         NS_IF_RELEASE(mKey);
     }
-    
+
     uint32_t HashCode(void) const {
         return NS_PTR_TO_INT32(mKey);
     }
@@ -264,7 +264,7 @@ public:
 class nsVoidKey : public nsHashKey {
   protected:
     void* mKey;
-    
+
   public:
     nsVoidKey(const nsVoidKey& aKey) : mKey(aKey.mKey) {
 #ifdef DEBUG
@@ -278,7 +278,7 @@ class nsVoidKey : public nsHashKey {
 #endif
         mKey = key;
     }
-    
+
     uint32_t HashCode(void) const {
         return NS_PTR_TO_INT32(mKey);
     }

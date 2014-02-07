@@ -6,9 +6,10 @@
 
 XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
 
-JS_MODULES_PATH = 'modules/devtools'
+JS_MODULES_PATH = 'modules/devtools/acorn'
 
 EXTRA_JS_MODULES += [
     'acorn.js',
     'acorn_loose.js',
+    'walk.js',
 ]

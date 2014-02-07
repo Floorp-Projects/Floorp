@@ -1781,19 +1781,15 @@ class CanvasLayer : public Layer {
 public:
   struct Data {
     Data()
-      : mSurface(nullptr)
-      , mDrawTarget(nullptr)
+      : mDrawTarget(nullptr)
       , mGLContext(nullptr)
       , mSize(0,0)
       , mIsGLAlphaPremult(false)
     { }
 
     // One of these two must be specified for Canvas2D, but never both
-    gfxASurface* mSurface;  // a gfx Surface for the canvas contents
     mozilla::gfx::DrawTarget *mDrawTarget; // a DrawTarget for the canvas contents
-
-    // Or this, for GL.
-    mozilla::gl::GLContext* mGLContext;
+    mozilla::gl::GLContext* mGLContext; // or this, for GL.
 
     // The size of the canvas content
     nsIntSize mSize;

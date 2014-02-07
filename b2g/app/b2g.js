@@ -816,11 +816,7 @@ pref("network.sntp.port", 123);
 pref("network.sntp.timeout", 30); // In seconds.
 
 // Enable dataStore
-#ifdef RELEASE_BUILD
-pref("dom.datastore.enabled", false);
-#else
 pref("dom.datastore.enabled", true);
-#endif
 
 // DOM Inter-App Communication API.
 pref("dom.inter-app-communication-api.enabled", true);

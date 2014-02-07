@@ -102,7 +102,7 @@ nsAbsoluteContainingBlock::RemoveFrame(nsIFrame*       aDelegatingFrame,
   nsIFrame* nif = aOldFrame->GetNextInFlow();
   if (nif) {
     static_cast<nsContainerFrame*>(nif->GetParent())
-      ->DeleteNextInFlowChild(aOldFrame->PresContext(), nif, false);
+      ->DeleteNextInFlowChild(nif, false);
   }
 
   mAbsoluteFrames.DestroyFrame(aOldFrame);
@@ -124,7 +124,7 @@ nsAbsoluteContainingBlock::Reflow(nsContainerFrame*        aDelegatingFrame,
   bool reflowAll = aReflowState.ShouldReflowAllKids();
 
   nsIFrame* kidFrame;
-  nsOverflowContinuationTracker tracker(aPresContext, aDelegatingFrame, true);
+  nsOverflowContinuationTracker tracker(aDelegatingFrame, true);
   for (kidFrame = mAbsoluteFrames.FirstChild(); kidFrame; kidFrame = kidFrame->GetNextSibling()) {
     bool kidNeedsReflow = reflowAll || NS_SUBTREE_DIRTY(kidFrame) ||
       FrameDependsOnContainer(kidFrame, aCBWidthChanged, aCBHeightChanged);
@@ -155,7 +155,7 @@ nsAbsoluteContainingBlock::Reflow(nsContainerFrame*        aDelegatingFrame,
         if (nextFrame) {
           nsOverflowContinuationTracker::AutoFinish fini(&tracker, kidFrame);
           static_cast<nsContainerFrame*>(nextFrame->GetParent())
-            ->DeleteNextInFlowChild(aPresContext, nextFrame, true);
+            ->DeleteNextInFlowChild(nextFrame, true);
         }
       }
     }

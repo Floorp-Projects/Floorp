@@ -1180,6 +1180,8 @@ PresShell::Destroy()
   }
 
   mHaveShutDown = true;
+
+  EvictTouches();
 }
 
 void
@@ -4800,7 +4802,7 @@ PresShell::CreateRangePaintInfo(nsIDOMRange* aRange,
     // use the nearest ancestor frame that includes all continuations as the
     // root for building the display list
     while (ancestorFrame &&
-           nsLayoutUtils::GetNextContinuationOrSpecialSibling(ancestorFrame))
+           nsLayoutUtils::GetNextContinuationOrIBSplitSibling(ancestorFrame))
       ancestorFrame = ancestorFrame->GetParent();
   }
 
@@ -6175,40 +6177,37 @@ PresShell::RecordMouseLocation(WidgetGUIEvent* aEvent)
 }
 
 static void
-EvictTouchPoint(nsRefPtr<dom::Touch>& aTouch)
+EvictTouchPoint(nsRefPtr<dom::Touch>& aTouch,
+                nsIDocument* aLimitToDocument = nullptr)
 {
-  nsIWidget *widget = nullptr;
-  // is there an easier/better way to dig out the widget?
   nsCOMPtr<nsINode> node(do_QueryInterface(aTouch->mTarget));
-  if (!node) {
-    return;
+  if (node) {
+    nsIDocument* doc = node->GetCurrentDoc();
+    if (doc && (!aLimitToDocument || aLimitToDocument == doc)) {
+      nsIPresShell* presShell = doc->GetShell();
+      if (presShell) {
+        nsIFrame* frame = presShell->GetRootFrame();
+        if (frame) {
+          nsPoint pt(aTouch->mRefPoint.x, aTouch->mRefPoint.y);
+          nsCOMPtr<nsIWidget> widget = frame->GetView()->GetNearestWidget(&pt);
+          if (widget) {
+            WidgetTouchEvent event(true, NS_TOUCH_END, widget);
+            event.widget = widget;
+            event.time = PR_IntervalNow();
+            event.touches.AppendElement(aTouch);
+            nsEventStatus status;
+            widget->DispatchEvent(&event, status);
+            return;
+          }
+        }
+      }
+    }
   }
-  nsIDocument* doc = node->GetCurrentDoc();
-  if (!doc) {
-    return;
+  if (!node || !aLimitToDocument || node->OwnerDoc() == aLimitToDocument) {
+    // We couldn't dispatch touchend. Remove the touch from gCaptureTouchList
+    // explicitly.
+    nsIPresShell::gCaptureTouchList->Remove(aTouch->Identifier());
   }
-  nsIPresShell *presShell = doc->GetShell();
-  if (!presShell) {
-    return;
-  }
-  nsIFrame* frame = presShell->GetRootFrame();
-  if (!frame) {
-    return;
-  }
-  nsPoint pt(aTouch->mRefPoint.x, aTouch->mRefPoint.y);
-  widget = frame->GetView()->GetNearestWidget(&pt);
-
-  if (!widget) {
-    return;
-  }
-  
-  WidgetTouchEvent event(true, NS_TOUCH_END, widget);
-  event.widget = widget;
-  event.time = PR_IntervalNow();
-  event.touches.AppendElement(aTouch);
-
-  nsEventStatus status;
-  widget->DispatchEvent(&event, status);
 }
 
 static PLDHashOperator
@@ -6219,6 +6218,16 @@ AppendToTouchList(const uint32_t& aKey, nsRefPtr<dom::Touch>& aData, void *aTouc
   aData->mChanged = false;
   touches->AppendElement(aData);
   return PL_DHASH_NEXT;
+}
+
+void
+PresShell::EvictTouches()
+{
+  nsTArray< nsRefPtr<dom::Touch> > touches;
+  gCaptureTouchList->Enumerate(&AppendToTouchList, &touches);
+  for (uint32_t i = 0; i < touches.Length(); ++i) {
+    EvictTouchPoint(touches[i], mDocument);
+  }
 }
 
 static PLDHashOperator

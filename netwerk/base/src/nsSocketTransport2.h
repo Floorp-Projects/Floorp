@@ -139,6 +139,7 @@ public:
     void OnSocketReady(PRFileDesc *, int16_t outFlags);
     void OnSocketDetached(PRFileDesc *);
     void IsLocal(bool *aIsLocal);
+    void OnKeepaliveEnabledPrefChange(bool aEnabled) MOZ_OVERRIDE MOZ_FINAL;
 
     // called when a socket event is handled
     void OnSocketEvent(uint32_t type, nsresult status, nsISupports *param);
@@ -192,7 +193,6 @@ private:
           }
         }
         mFd = mSocketTransport->GetFD_Locked();
-        NS_WARN_IF_FALSE(mFd, "PRFileDescAutoLock cannot get fd!");
       }
       ~PRFileDescAutoLock() {
         MutexAutoLock lock(mSocketTransport->mLock);
@@ -206,8 +206,12 @@ private:
       operator PRFileDesc*() {
         return mFd;
       }
+      nsresult SetKeepaliveEnabled(bool aEnable);
+      nsresult SetKeepaliveVals(bool aEnabled, int aIdleTime,
+                                int aRetryInterval, int aProbeCount);
     private:
       operator PRFileDescAutoLock*() { return nullptr; }
+
       // Weak ptr to nsSocketTransport since this is a stack class only.
       nsSocketTransport *mSocketTransport;
       PRFileDesc        *mFd;
@@ -387,6 +391,21 @@ private:
     void TraceInBuf(const char *buf, int32_t n);
     void TraceOutBuf(const char *buf, int32_t n);
 #endif
+
+    // Reads prefs to get default keepalive config.
+    nsresult EnsureKeepaliveValsAreInitialized();
+
+    // Groups calls to fd.SetKeepaliveEnabled and fd.SetKeepaliveVals.
+    nsresult SetKeepaliveEnabledInternal(bool aEnable);
+
+    // True if keepalive has been enabled by the socket owner. Note: Keepalive
+    // must also be enabled globally for it to be enabled in TCP.
+    bool mKeepaliveEnabled;
+
+    // Keepalive config (support varies by platform).
+    int32_t mKeepaliveIdleTimeS;
+    int32_t mKeepaliveRetryIntervalS;
+    int32_t mKeepaliveProbeCount;
 };
 
 #endif // !nsSocketTransport_h__
