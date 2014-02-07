@@ -128,7 +128,7 @@ static bool printTiming = false;
 static const char *jsCacheDir = nullptr;
 static const char *jsCacheAsmJSPath = nullptr;
 static bool jsCachingEnabled = true;
-mozilla::Atomic<int32_t> jsCacheOpened(false);
+mozilla::Atomic<bool> jsCacheOpened(false);
 
 static bool
 SetTimeoutValue(JSContext *cx, double t);
