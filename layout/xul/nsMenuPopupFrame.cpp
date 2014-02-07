@@ -1198,6 +1198,9 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame, bool aIsMove, bool aS
   nsDeviceContext* devContext = presContext->DeviceContext();
   nscoord offsetForContextMenu = 0;
 
+  bool isNoAutoHide = IsNoAutoHide();
+  nsPopupLevel popupLevel = PopupLevel(isNoAutoHide);
+
   if (IsAnchored()) {
     // if we are anchored, there are certain things we don't want to do when
     // repositioning the popup to fit on the screen, such as end up positioned
@@ -1238,7 +1241,7 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame, bool aIsMove, bool aS
     // the window is moved. Popups at the parent level follow the parent
     // window as it is moved and remained anchored, so we want to maintain the
     // anchoring instead.
-    if (IsNoAutoHide() && PopupLevel(true) != ePopupLevelParent) {
+    if (isNoAutoHide && popupLevel != ePopupLevelParent) {
       // Account for the margin that will end up being added to the screen coordinate
       // the next time SetPopupPosition is called.
       mScreenXPos = presContext->AppUnitsToIntCSSPixels(screenPoint.x - margin.left);
@@ -1279,7 +1282,7 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame, bool aIsMove, bool aS
   // If a panel is being moved or has flip="none", don't constrain or flip it. But always do this for
   // content shells, so that the popup doesn't extend outside the containing frame.
   if (mInContentShell || (mFlip != FlipType_None && (!aIsMove || mPopupType != ePopupTypePanel))) {
-    nsRect screenRect = GetConstraintRect(anchorRect, rootScreenRect);
+    nsRect screenRect = GetConstraintRect(anchorRect, rootScreenRect, popupLevel);
 
     // Ensure that anchorRect is on screen.
     anchorRect = anchorRect.Intersect(screenRect);
@@ -1378,7 +1381,8 @@ nsMenuPopupFrame::GetCurrentMenuItem()
 
 nsRect
 nsMenuPopupFrame::GetConstraintRect(const nsRect& aAnchorRect,
-                                    const nsRect& aRootScreenRect)
+                                    const nsRect& aRootScreenRect,
+                                    nsPopupLevel aPopupLevel)
 {
   nsIntRect screenRectPixels;
   nsPresContext* presContext = PresContext();
@@ -1401,8 +1405,11 @@ nsMenuPopupFrame::GetConstraintRect(const nsRect& aAnchorRect,
                       nsPresContext::AppUnitsToIntCSSPixels(rect.y),
                       width, height, getter_AddRefs(screen));
     if (screen) {
+      // Non-top-level popups (which will always be panels)
+      // should never overlap the OS bar:
+      bool dontOverlapOSBar = aPopupLevel != ePopupLevelTop;
       // get the total screen area if the popup is allowed to overlap it.
-      if (mMenuCanOverlapOSBar && !mInContentShell)
+      if (!dontOverlapOSBar && mMenuCanOverlapOSBar && !mInContentShell)
         screen->GetRect(&screenRectPixels.x, &screenRectPixels.y,
                         &screenRectPixels.width, &screenRectPixels.height);
       else
