@@ -625,7 +625,7 @@ nsFrame::DestroyFrom(nsIFrame* aDestructRoot)
   if (mState & NS_FRAME_PART_OF_IBSPLIT) {
     // Delete previous sibling's reference to me.
     nsIFrame* prevSib = static_cast<nsIFrame*>
-      (Properties().Get(nsIFrame::IBSplitSpecialPrevSibling()));
+      (Properties().Get(nsIFrame::IBSplitPrevSibling()));
     if (prevSib) {
       NS_WARN_IF_FALSE(this ==
          prevSib->Properties().Get(nsIFrame::IBSplitSibling()),
@@ -638,9 +638,9 @@ nsFrame::DestroyFrom(nsIFrame* aDestructRoot)
       (Properties().Get(nsIFrame::IBSplitSibling()));
     if (nextSib) {
       NS_WARN_IF_FALSE(this ==
-         nextSib->Properties().Get(nsIFrame::IBSplitSpecialPrevSibling()),
+         nextSib->Properties().Get(nsIFrame::IBSplitPrevSibling()),
          "IB sibling chain is inconsistent");
-      nextSib->Properties().Delete(nsIFrame::IBSplitSpecialPrevSibling());
+      nextSib->Properties().Delete(nsIFrame::IBSplitPrevSibling());
     }
   }
 
@@ -5331,9 +5331,9 @@ nsIFrame::ListGeneric(nsACString& aTo, const char* aPrefix, uint32_t aFlags) con
   if (IBsibling) {
     aTo += nsPrintfCString(" IBSplitSibling=%p", IBsibling);
   }
-  void* IBprevsibling = Properties().Get(IBSplitSpecialPrevSibling());
+  void* IBprevsibling = Properties().Get(IBSplitPrevSibling());
   if (IBprevsibling) {
-    aTo += nsPrintfCString(" IBSplitSpecialPrevSibling=%p", IBprevsibling);
+    aTo += nsPrintfCString(" IBSplitPrevSibling=%p", IBprevsibling);
   }
   aTo += nsPrintfCString(" {%d,%d,%d,%d}", mRect.x, mRect.y, mRect.width, mRect.height);
   nsIFrame* f = const_cast<nsIFrame*>(this);
@@ -7188,11 +7188,11 @@ GetIBSplitSiblingForAnonymousBlock(const nsIFrame* aFrame)
   aFrame = aFrame->FirstContinuation();
 
   /*
-   * Now look up the nsGkAtoms::IBSplitSpecialPrevSibling
+   * Now look up the nsGkAtoms::IBSplitPrevSibling
    * property.
    */
   nsIFrame *specialSibling = static_cast<nsIFrame*>
-    (aFrame->Properties().Get(nsIFrame::IBSplitSpecialPrevSibling()));
+    (aFrame->Properties().Get(nsIFrame::IBSplitPrevSibling()));
   NS_ASSERTION(specialSibling, "Broken frame tree?");
   return specialSibling;
 }
