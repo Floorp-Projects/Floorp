@@ -739,20 +739,30 @@ BluetoothAdapter::SendFile(const nsAString& aDeviceAddress,
   nsRefPtr<BluetoothVoidReplyRunnable> results =
     new BluetoothVoidReplyRunnable(request);
 
-  BlobChild* actor =
-    ContentChild::GetSingleton()->GetOrCreateActorForBlob(aBlob);
-  if (!actor) {
-    BT_WARNING("Can't create actor");
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
   BluetoothService* bs = BluetoothService::Get();
   if (!bs) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
-  bs->SendFile(aDeviceAddress, nullptr, actor, results);
+
+  if (XRE_GetProcessType() == GeckoProcessType_Default) {
+    // In-process transfer
+    bs->SendFile(aDeviceAddress, aBlob, results);
+  } else {
+    ContentChild *cc = ContentChild::GetSingleton();
+    if (!cc) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return nullptr;
+    }
+
+    BlobChild* actor = cc->GetOrCreateActorForBlob(aBlob);
+    if (!actor) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return nullptr;
+    }
+
+    bs->SendFile(aDeviceAddress, nullptr, actor, results);
+  }
 
   return request.forget();
 }
