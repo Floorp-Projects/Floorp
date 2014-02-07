@@ -381,7 +381,7 @@ void TelemetryIOInterposeObserver::Observe(Observation& aOb)
   for (uint32_t i = 0; i < safeDirsLen; ++i) {
     uint32_t curSafeDirLen = mSafeDirs[i].Length();
     if (curSafeDirLen <= filenameStrLen) {
-#if defined(XP_WIN)
+#if defined(_MSC_VER)
       if (!_wcsnicmp(filename, mSafeDirs[i].get(), curSafeDirLen)) {
 #else
       if (!std::char_traits<char16_t>::compare(filename, mSafeDirs[i].get(),
