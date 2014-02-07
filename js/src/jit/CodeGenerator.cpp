@@ -2851,7 +2851,7 @@ CodeGenerator::visitCheckOverRecursedPar(LCheckOverRecursedPar *lir)
     if (!addOutOfLineCode(ool))
         return false;
     masm.branchPtr(Assembler::BelowOrEqual, StackPointer, tempReg, ool->entry());
-    masm.checkInterruptFlagsPar(tempReg, ool->entry());
+    masm.checkInterruptFlagPar(tempReg, ool->entry());
     masm.bind(ool->rejoin());
 
     return true;
@@ -2886,41 +2886,36 @@ CodeGenerator::visitCheckOverRecursedFailurePar(CheckOverRecursedFailurePar *ool
 }
 
 // Out-of-line path to report over-recursed error and fail.
-class OutOfLineCheckInterruptPar : public OutOfLineCodeBase<CodeGenerator>
+class OutOfLineInterruptCheckPar : public OutOfLineCodeBase<CodeGenerator>
 {
   public:
-    LCheckInterruptPar *const lir;
+    LInterruptCheckPar *const lir;
 
-    OutOfLineCheckInterruptPar(LCheckInterruptPar *lir)
+    OutOfLineInterruptCheckPar(LInterruptCheckPar *lir)
       : lir(lir)
     { }
 
     bool accept(CodeGenerator *codegen) {
-        return codegen->visitOutOfLineCheckInterruptPar(this);
+        return codegen->visitOutOfLineInterruptCheckPar(this);
     }
 };
 
 bool
-CodeGenerator::visitCheckInterruptPar(LCheckInterruptPar *lir)
+CodeGenerator::visitInterruptCheckPar(LInterruptCheckPar *lir)
 {
     // First check for cx->shared->interrupt_.
-    OutOfLineCheckInterruptPar *ool = new(alloc()) OutOfLineCheckInterruptPar(lir);
+    OutOfLineInterruptCheckPar *ool = new(alloc()) OutOfLineInterruptCheckPar(lir);
     if (!addOutOfLineCode(ool))
         return false;
 
-    // We must check two flags:
-    // - runtime->interrupt
-    // - runtime->parallelAbort
-    // See vm/ForkJoin.h for discussion on why we use this design.
-
     Register tempReg = ToRegister(lir->getTempReg());
-    masm.checkInterruptFlagsPar(tempReg, ool->entry());
+    masm.checkInterruptFlagPar(tempReg, ool->entry());
     masm.bind(ool->rejoin());
     return true;
 }
 
 bool
-CodeGenerator::visitOutOfLineCheckInterruptPar(OutOfLineCheckInterruptPar *ool)
+CodeGenerator::visitOutOfLineInterruptCheckPar(OutOfLineInterruptCheckPar *ool)
 {
     OutOfLinePropagateAbortPar *bail = oolPropagateAbortPar(ool->lir);
     if (!bail)
@@ -2929,7 +2924,7 @@ CodeGenerator::visitOutOfLineCheckInterruptPar(OutOfLineCheckInterruptPar *ool)
     // Avoid saving/restoring the temp register since we will put the
     // ReturnReg into it below and we don't want to clobber that
     // during PopRegsInMask():
-    LCheckInterruptPar *lir = ool->lir;
+    LInterruptCheckPar *lir = ool->lir;
     Register tempReg = ToRegister(lir->getTempReg());
     RegisterSet saveSet(lir->safepoint()->liveRegs());
     saveSet.takeUnchecked(tempReg);
@@ -2938,7 +2933,7 @@ CodeGenerator::visitOutOfLineCheckInterruptPar(OutOfLineCheckInterruptPar *ool)
     masm.movePtr(ToRegister(ool->lir->forkJoinContext()), CallTempReg0);
     masm.setupUnalignedABICall(1, CallTempReg1);
     masm.passABIArg(CallTempReg0);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, CheckInterruptPar));
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, InterruptCheckPar));
     masm.movePtr(ReturnReg, tempReg);
     masm.PopRegsInMask(saveSet);
     masm.branchIfFalseBool(tempReg, bail->entry());

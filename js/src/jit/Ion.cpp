@@ -433,6 +433,7 @@ jit::TriggerOperationCallbackForIonCode(JSRuntime *rt,
         break;
 
       case JSRuntime::TriggerCallbackAnyThreadDontStopIon:
+      case JSRuntime::TriggerCallbackAnyThreadForkJoin:
         // When the trigger does not require Ion code to be interrupted,
         // nothing more needs to be done.
         break;
