@@ -3,11 +3,13 @@
     "dataset_id": "fake-dataset",
     "url": "http://example.com/first",
     "title": "First Example",
-    "description": "This is an example"
+    "description": "This is an example",
+    "image_url": "http://lorempixel.com/64/64?id=1"
 }, {
     "id": 2,
     "dataset_id": "fake-dataset",
     "url": "http://example.com/second",
     "title": "Second Example",
-    "description": "This is a second example"
+    "description": "This is a second example",
+    "image_url": "http://lorempixel.com/64/64?id=2"
 }]

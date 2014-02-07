@@ -9,14 +9,14 @@ html|*.textbox-input {
   -moz-appearance: none !important;
   text-align: inherit;
   text-shadow: inherit;
-  -moz-box-sizing: border-box;
+  box-sizing: border-box;
   -moz-box-flex: 1;
 }
 
 html|*.textbox-textarea {
   -moz-appearance: none !important;
   text-shadow: inherit;
-  -moz-box-sizing: border-box;
+  box-sizing: border-box;
   -moz-box-flex: 1;
 }
 

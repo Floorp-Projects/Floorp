@@ -100,7 +100,7 @@ struct NS_COM_GLUE VersionW
 {
   VersionW(const char16_t *versionStringW)
   {
-    versionContentW = wcsdup(versionStringW);
+    versionContentW = reinterpret_cast<char16_t*>(wcsdup(char16ptr_t(versionStringW)));
   }
 
   const char16_t* ReadContentW() const

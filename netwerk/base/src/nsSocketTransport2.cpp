@@ -38,9 +38,22 @@
 #include "nsICancelable.h"
 #include <algorithm>
 
+#include "nsPrintfCString.h"
+
 #if defined(XP_WIN)
 #include "nsNativeConnectionHelper.h"
 #endif
+
+/* Following inclusions required for keepalive config not supported by NSPR. */
+#include "private/pprio.h"
+#if defined(XP_WIN)
+#include <Winsock2.h>
+#include <Mstcpip.h>
+#elif defined(XP_UNIX)
+#include <errno.h>
+#include <netinet/tcp.h>
+#endif
+/* End keepalive config inclusions. */
 
 using namespace mozilla;
 using namespace mozilla::net;
@@ -754,6 +767,10 @@ nsSocketTransport::nsSocketTransport()
     , mInput(MOZ_THIS_IN_INITIALIZER_LIST())
     , mOutput(MOZ_THIS_IN_INITIALIZER_LIST())
     , mQoSBits(0x00)
+    , mKeepaliveEnabled(false)
+    , mKeepaliveIdleTimeS(-1)
+    , mKeepaliveRetryIntervalS(-1)
+    , mKeepaliveProbeCount(-1)
 {
     SOCKET_LOG(("creating nsSocketTransport @%p\n", this));
 
@@ -1540,6 +1557,14 @@ nsSocketTransport::OnSocketConnected()
         NS_ASSERTION(mFD.IsInitialized(), "no socket");
         NS_ASSERTION(mFDref == 1, "wrong socket ref count");
         mFDconnected = true;
+    }
+
+    // Ensure keepalive is configured correctly if previously enabled.
+    if (mKeepaliveEnabled) {
+        nsresult rv = SetKeepaliveEnabledInternal(true);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+            SOCKET_LOG(("  SetKeepaliveEnabledInternal failed rv[0x%x]", rv));
+        }
     }
 
     MOZ_EVENT_TRACER_DONE(this, "net::tcp::connect");
@@ -2392,6 +2417,204 @@ nsSocketTransport::SetConnectionFlags(uint32_t value)
     return NS_OK;
 }
 
+void
+nsSocketTransport::OnKeepaliveEnabledPrefChange(bool aEnabled)
+{
+    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+
+    // The global pref toggles keepalive as a system feature; it only affects
+    // an individual socket if keepalive has been specifically enabled for it.
+    // So, ensure keepalive is configured correctly if previously enabled.
+    if (mKeepaliveEnabled) {
+        nsresult rv = SetKeepaliveEnabledInternal(aEnabled);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+            SOCKET_LOG(("  SetKeepaliveEnabledInternal [%s] failed rv[0x%x]",
+                        aEnabled ? "enable" : "disable", rv));
+        }
+    }
+}
+
+nsresult
+nsSocketTransport::SetKeepaliveEnabledInternal(bool aEnable)
+{
+    MOZ_ASSERT(mKeepaliveIdleTimeS > 0 ||
+               mKeepaliveIdleTimeS <= kMaxTCPKeepIdle);
+    MOZ_ASSERT(mKeepaliveRetryIntervalS > 0 ||
+               mKeepaliveRetryIntervalS <= kMaxTCPKeepIntvl);
+    MOZ_ASSERT(mKeepaliveProbeCount > 0 ||
+               mKeepaliveProbeCount <= kMaxTCPKeepCount);
+
+    PRFileDescAutoLock fd(this);
+    if (NS_WARN_IF(!fd.IsInitialized())) {
+        return NS_ERROR_NOT_INITIALIZED;
+    }
+
+    // Only enable if keepalives are globally enabled, but ensure other
+    // options are set correctly on the fd.
+    bool enable = aEnable && gSocketTransportService->IsKeepaliveEnabled();
+    nsresult rv = fd.SetKeepaliveVals(enable,
+                                      mKeepaliveIdleTimeS,
+                                      mKeepaliveRetryIntervalS,
+                                      mKeepaliveProbeCount);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+        SOCKET_LOG(("  SetKeepaliveVals failed rv[0x%x]", rv));
+        return rv;
+    }
+    rv = fd.SetKeepaliveEnabled(enable);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+        SOCKET_LOG(("  SetKeepaliveEnabled failed rv[0x%x]", rv));
+        return rv;
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSocketTransport::GetKeepaliveEnabled(bool *aResult)
+{
+    MOZ_ASSERT(aResult);
+
+    *aResult = mKeepaliveEnabled;
+    return NS_OK;
+}
+
+nsresult
+nsSocketTransport::EnsureKeepaliveValsAreInitialized()
+{
+    nsresult rv = NS_OK;
+    int32_t val = -1;
+    if (mKeepaliveIdleTimeS == -1) {
+        rv = gSocketTransportService->GetKeepaliveIdleTime(&val);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+            return rv;
+        }
+        mKeepaliveIdleTimeS = val;
+    }
+    if (mKeepaliveRetryIntervalS == -1) {
+        rv = gSocketTransportService->GetKeepaliveRetryInterval(&val);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+            return rv;
+        }
+        mKeepaliveRetryIntervalS = val;
+    }
+    if (mKeepaliveProbeCount == -1) {
+        rv = gSocketTransportService->GetKeepaliveProbeCount(&val);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+            return rv;
+        }
+        mKeepaliveProbeCount = val;
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSocketTransport::SetKeepaliveEnabled(bool aEnable)
+{
+#if defined(XP_WIN) || defined(XP_UNIX) || defined(XP_MACOSX)
+    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+
+    if (aEnable == mKeepaliveEnabled) {
+        SOCKET_LOG(("nsSocketTransport::SetKeepaliveEnabled [%p] already %s.",
+                    this, aEnable ? "enabled" : "disabled"));
+        return NS_OK;
+    }
+
+    nsresult rv = NS_OK;
+    if (aEnable) {
+        rv = EnsureKeepaliveValsAreInitialized();
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+            SOCKET_LOG(("  SetKeepaliveEnabled [%p] "
+                        "error [0x%x] initializing keepalive vals",
+                        this, rv));
+            return rv;
+        }
+    }
+    SOCKET_LOG(("nsSocketTransport::SetKeepaliveEnabled [%p] "
+                "%s, idle time[%ds] retry interval[%ds] packet count[%d]: "
+                "globally %s.",
+                this, aEnable ? "enabled" : "disabled",
+                mKeepaliveIdleTimeS, mKeepaliveRetryIntervalS,
+                mKeepaliveProbeCount,
+                gSocketTransportService->IsKeepaliveEnabled() ?
+                "enabled" : "disabled"));
+
+    // Set mKeepaliveEnabled here so that state is maintained; it is possible
+    // that we're in between fds, e.g. the 1st IP address failed, so we're about
+    // to retry on a 2nd from the DNS record.
+    mKeepaliveEnabled = aEnable;
+
+    rv = SetKeepaliveEnabledInternal(aEnable);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+        SOCKET_LOG(("  SetKeepaliveEnabledInternal failed rv[0x%x]", rv));
+        return rv;
+    }
+
+    return NS_OK;
+#else /* !(defined(XP_WIN) || defined(XP_UNIX) || defined(XP_MACOSX)) */
+    SOCKET_LOG(("nsSocketTransport::SetKeepaliveEnabled unsupported platform"));
+    return NS_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+NS_IMETHODIMP
+nsSocketTransport::SetKeepaliveVals(int32_t aIdleTime,
+                                    int32_t aRetryInterval)
+{
+#if defined(XP_WIN) || defined(XP_UNIX) || defined(XP_MACOSX)
+    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+    if (NS_WARN_IF(aIdleTime <= 0 || kMaxTCPKeepIdle < aIdleTime)) {
+        return NS_ERROR_INVALID_ARG;
+    }
+    if (NS_WARN_IF(aRetryInterval <= 0 ||
+                   kMaxTCPKeepIntvl < aRetryInterval)) {
+        return NS_ERROR_INVALID_ARG;
+    }
+
+    if (aIdleTime == mKeepaliveIdleTimeS &&
+        aRetryInterval == mKeepaliveRetryIntervalS) {
+        SOCKET_LOG(("nsSocketTransport::SetKeepaliveVals [%p] idle time "
+                    "already %ds and retry interval already %ds.",
+                    this, mKeepaliveIdleTimeS,
+                    mKeepaliveRetryIntervalS));
+        return NS_OK;
+    }
+    mKeepaliveIdleTimeS = aIdleTime;
+    mKeepaliveRetryIntervalS = aRetryInterval;
+
+    nsresult rv = NS_OK;
+    if (mKeepaliveProbeCount == -1) {
+        int32_t val = -1;
+        nsresult rv = gSocketTransportService->GetKeepaliveProbeCount(&val);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+            return rv;
+        }
+        mKeepaliveProbeCount = val;
+    }
+
+    SOCKET_LOG(("nsSocketTransport::SetKeepaliveVals [%p] "
+                "keepalive %s, idle time[%ds] retry interval[%ds] "
+                "packet count[%d]",
+                this, mKeepaliveEnabled ? "enabled" : "disabled",
+                mKeepaliveIdleTimeS, mKeepaliveRetryIntervalS,
+                mKeepaliveProbeCount));
+
+    PRFileDescAutoLock fd(this);
+    if (NS_WARN_IF(!fd.IsInitialized())) {
+        return NS_ERROR_NULL_POINTER;
+    }
+
+    rv = fd.SetKeepaliveVals(mKeepaliveEnabled,
+                             mKeepaliveIdleTimeS,
+                             mKeepaliveRetryIntervalS,
+                             mKeepaliveProbeCount);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+    }
+    return NS_OK;
+#else
+    SOCKET_LOG(("nsSocketTransport::SetKeepaliveVals unsupported platform"));
+    return NS_ERROR_NOT_IMPLEMENTED;
+#endif
+}
 
 #ifdef ENABLE_SOCKET_TRACING
 
@@ -2465,3 +2688,169 @@ nsSocketTransport::TraceOutBuf(const char *buf, int32_t n)
 }
 
 #endif
+
+static void LogNSPRError(const char* aPrefix, const void *aObjPtr)
+{
+#if defined(PR_LOGGING) && defined(DEBUG)
+    PRErrorCode errCode = PR_GetError();
+    int errLen = PR_GetErrorTextLength();
+    nsAutoCString errStr;
+    if (errLen > 0) {
+        errStr.SetLength(errLen);
+        PR_GetErrorText(errStr.BeginWriting());
+    }
+    NS_WARNING(nsPrintfCString(
+               "%s [%p] NSPR error[0x%x] %s.",
+               aPrefix ? aPrefix : "nsSocketTransport", aObjPtr, errCode,
+               errLen > 0 ? errStr.BeginReading() : "<no error text>").get());
+#endif
+}
+
+nsresult
+nsSocketTransport::PRFileDescAutoLock::SetKeepaliveEnabled(bool aEnable)
+{
+    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+    MOZ_ASSERT(!(aEnable && !gSocketTransportService->IsKeepaliveEnabled()),
+               "Cannot enable keepalive if global pref is disabled!");
+    if (aEnable && !gSocketTransportService->IsKeepaliveEnabled()) {
+        return NS_ERROR_ILLEGAL_VALUE;
+    }
+
+    PRSocketOptionData opt;
+
+    opt.option = PR_SockOpt_Keepalive;
+    opt.value.keep_alive = aEnable;
+    PRStatus status = PR_SetSocketOption(mFd, &opt);
+    if (NS_WARN_IF(status != PR_SUCCESS)) {
+        LogNSPRError("nsSocketTransport::PRFileDescAutoLock::SetKeepaliveEnabled",
+                     mSocketTransport);
+        return ErrorAccordingToNSPR(PR_GetError());
+    }
+    return NS_OK;
+}
+
+static void LogOSError(const char *aPrefix, const void *aObjPtr)
+{
+#if defined(PR_LOGGING) && defined(DEBUG)
+    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+
+#ifdef XP_WIN
+    DWORD errCode = WSAGetLastError();
+    LPVOID errMessage;
+    FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+                  FORMAT_MESSAGE_FROM_SYSTEM |
+                  FORMAT_MESSAGE_IGNORE_INSERTS,
+                  NULL,
+                  errCode,
+                  MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                  (LPTSTR) &errMessage,
+                  0, NULL);
+#else
+    int errCode = errno;
+    char *errMessage = strerror(errno);
+#endif
+    NS_WARNING(nsPrintfCString(
+               "%s [%p] OS error[0x%x] %s",
+               aPrefix ? aPrefix : "nsSocketTransport", aObjPtr, errCode,
+               errMessage ? errMessage : "<no error text>").get());
+#ifdef XP_WIN
+    LocalFree(errMessage);
+#endif
+#endif
+}
+
+/* XXX PR_SetSockOpt does not support setting keepalive values, so native
+ * handles and platform specific apis (setsockopt, WSAIOCtl) are used in this
+ * file. Requires inclusion of NSPR private/pprio.h, and platform headers.
+ */
+
+nsresult
+nsSocketTransport::PRFileDescAutoLock::SetKeepaliveVals(bool aEnabled,
+                                                        int aIdleTime,
+                                                        int aRetryInterval,
+                                                        int aProbeCount)
+{
+#if defined(XP_WIN) || defined(XP_UNIX) || defined(XP_MACOSX)
+    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+    if (NS_WARN_IF(aIdleTime <= 0 || kMaxTCPKeepIdle < aIdleTime)) {
+        return NS_ERROR_INVALID_ARG;
+    }
+    if (NS_WARN_IF(aRetryInterval <= 0 ||
+                   kMaxTCPKeepIntvl < aRetryInterval)) {
+        return NS_ERROR_INVALID_ARG;
+    }
+    if (NS_WARN_IF(aProbeCount <= 0 || kMaxTCPKeepCount < aProbeCount)) {
+        return NS_ERROR_INVALID_ARG;
+    }
+
+    PROsfd sock = PR_FileDesc2NativeHandle(mFd);
+    if (NS_WARN_IF(sock == -1)) {
+        LogNSPRError("nsSocketTransport::PRFileDescAutoLock::SetKeepaliveVals",
+                     mSocketTransport);
+        return ErrorAccordingToNSPR(PR_GetError());
+    }
+#endif
+
+#if defined(XP_WIN)
+    // Windows allows idle time and retry interval to be set; NOT ping count.
+    struct tcp_keepalive keepalive_vals = {
+        (int)aEnabled,
+        // Windows uses msec.
+        aIdleTime * 1000,
+        aRetryInterval * 1000
+    };
+    DWORD bytes_returned;
+    int err = WSAIoctl(sock, SIO_KEEPALIVE_VALS, &keepalive_vals,
+                       sizeof(keepalive_vals), NULL, 0, &bytes_returned, NULL,
+                       NULL);
+    if (NS_WARN_IF(err)) {
+        LogOSError("nsSocketTransport WSAIoctl failed", mSocketTransport);
+        return NS_ERROR_UNEXPECTED;
+    }
+    return NS_OK;
+
+#elif defined(XP_MACOSX)
+    // OS X uses sec; only supports idle time being set.
+    int err = setsockopt(sock, IPPROTO_TCP, TCP_KEEPALIVE,
+                         &aIdleTime, sizeof(aIdleTime));
+    if (NS_WARN_IF(err)) {
+        LogOSError("nsSocketTransport Failed setting TCP_KEEPALIVE",
+                   mSocketTransport);
+        return NS_ERROR_UNEXPECTED;
+    }
+    return NS_OK;
+
+#elif defined(XP_UNIX)
+    // Linux uses sec; supports idle time, retry interval and ping count.
+    int err = setsockopt(sock, IPPROTO_TCP, TCP_KEEPIDLE,
+                         &aIdleTime, sizeof(aIdleTime));
+    if (NS_WARN_IF(err)) {
+        LogOSError("nsSocketTransport Failed setting TCP_KEEPIDLE",
+                   mSocketTransport);
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    // Linux also has a few extra knobs to tweak
+    err = setsockopt(sock, IPPROTO_TCP, TCP_KEEPINTVL,
+                        &aRetryInterval, sizeof(aRetryInterval));
+    if (NS_WARN_IF(err)) {
+        LogOSError("nsSocketTransport Failed setting TCP_KEEPINTVL",
+                   mSocketTransport);
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    err = setsockopt(sock, IPPROTO_TCP, TCP_KEEPCNT,
+                     &aProbeCount, sizeof(aProbeCount));
+    if (NS_WARN_IF(err)) {
+        LogOSError("nsSocketTransport Failed setting TCP_KEEPCNT",
+                   mSocketTransport);
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    return NS_OK;
+#else
+    MOZ_ASSERT(false, "nsSocketTransport::PRFileDescAutoLock::SetKeepaliveVals "
+               "called on unsupported platform!");
+    return NS_ERROR_UNEXPECTED;
+#endif
+}

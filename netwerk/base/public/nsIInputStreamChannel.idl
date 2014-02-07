@@ -13,7 +13,7 @@ interface nsIURI;
  * This interface provides methods to initialize an input stream channel.
  * The input stream channel serves as a data pump for an input stream.
  */
-[scriptable, uuid(A30E916F-B1DE-452A-BDD0-C59BB516D427)]
+[scriptable, uuid(17a17ce4-9a07-43fb-a0a3-947a6e21476c)]
 interface nsIInputStreamChannel : nsISupports
 {
     /**
@@ -56,4 +56,9 @@ interface nsIInputStreamChannel : nsISupports
      */
     readonly attribute boolean isSrcdocChannel;
 
+    /**
+     * The base URI to be used for the channel.  Used when the base URI cannot
+     * be inferred by other means, for example when this is a srcdoc channel.
+     */
+    attribute nsIURI baseURI;
 };

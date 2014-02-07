@@ -145,6 +145,8 @@ interface TestJSImplInterface {
   void passNullableSelf(TestJSImplInterface? arg);
   attribute TestJSImplInterface nonNullSelf;
   attribute TestJSImplInterface? nullableSelf;
+  [Cached, Pure]
+  readonly attribute TestJSImplInterface cachedSelf;
   // Optional arguments
   void passOptionalSelf(optional TestJSImplInterface? arg);
   void passOptionalNonNullSelf(optional TestJSImplInterface arg);

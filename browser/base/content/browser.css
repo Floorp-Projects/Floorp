@@ -852,7 +852,7 @@ chatbox:-moz-full-screen-ancestor  {
   max-width: none !important;
   min-height: 0 !important;
   max-height: none !important;
-  -moz-box-sizing: border-box !important; 
+  box-sizing: border-box !important;
 }
 
 /* hide chat chrome when chat is fullscreen */

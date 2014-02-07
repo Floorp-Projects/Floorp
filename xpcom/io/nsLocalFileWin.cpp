@@ -1021,7 +1021,7 @@ nsLocalFile::ResolveShortcut()
     if (mResolvedPath.Length() != MAX_PATH)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    char16_t *resolvedPath = mResolvedPath.BeginWriting();
+    wchar_t *resolvedPath = wwc(mResolvedPath.BeginWriting());
 
     // resolve this shortcut
     nsresult rv = gResolver->Resolve(mWorkingPath.get(), resolvedPath);
@@ -1256,7 +1256,7 @@ nsLocalFile::Create(uint32_t type, uint32_t attributes)
     // Skip the first 'X:\' for the first form, and skip the first full
     // '\\machine\volume\' segment for the second form.
 
-    char16_t* path = mResolvedPath.BeginWriting();
+    wchar_t* path = wwc(mResolvedPath.BeginWriting());
 
     if (path[0] == L'\\' && path[1] == L'\\')
     {
@@ -1635,8 +1635,6 @@ nsLocalFile::GetVersionInfoField(const char* aField, nsAString& _retval)
 
     rv = NS_ERROR_FAILURE;
 
-    // Cast away const-ness here because WinAPI functions don't understand it, 
-    // the path is used for [in] parameters only however so it's safe. 
     const WCHAR *path = mFollowSymlinks ? mResolvedPath.get() : mWorkingPath.get();
 
     DWORD dummy;
@@ -2343,11 +2341,11 @@ nsLocalFile::SetLastModifiedTimeOfLink(PRTime aLastModifiedTime)
 }
 
 nsresult
-nsLocalFile::SetModDate(PRTime aLastModifiedTime, const char16_t *filePath)
+nsLocalFile::SetModDate(PRTime aLastModifiedTime, const wchar_t *filePath)
 {
     // The FILE_FLAG_BACKUP_SEMANTICS is required in order to change the
     // modification time for directories.
-    HANDLE file = ::CreateFileW(char16ptr_t(filePath), // pointer to name of the file
+    HANDLE file = ::CreateFileW(filePath,          // pointer to name of the file
                                 GENERIC_WRITE,     // access (write) mode
                                 0,                 // share mode
                                 nullptr,           // pointer to security attributes
@@ -3446,7 +3444,7 @@ nsresult nsDriveEnumerator::Init()
     /* The string is null terminated */
     if (!mDrives.SetLength(length+1, fallible_t()))
         return NS_ERROR_OUT_OF_MEMORY;
-    if (!GetLogicalDriveStringsW(length, mDrives.BeginWriting()))
+    if (!GetLogicalDriveStringsW(length, wwc(mDrives.BeginWriting())))
         return NS_ERROR_FAILURE;
     mDrives.BeginReading(mStartOfCurrentDrive);
     mDrives.EndReading(mEndOfDrivesString);

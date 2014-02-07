@@ -30,7 +30,7 @@ public class testPasswordProvider extends BaseTest {
         ContentValues[] cvs = new ContentValues[1];
         cvs[0] = new ContentValues();
   
-        blockForGeckoDelayedStartup();
+        blockForGeckoReady();
   
         cvs[0].put("hostname", "http://www.example.com");
         cvs[0].put("httpRealm", "http://www.example.com");

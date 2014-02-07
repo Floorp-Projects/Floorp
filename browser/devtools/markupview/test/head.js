@@ -40,26 +40,88 @@ function openInspector() {
   gDevTools.showToolbox(target, "inspector").then(function(toolbox) {
     let inspector = toolbox.getCurrentPanel();
     inspector.once("inspector-updated", () => {
-      deferred.resolve(inspector, toolbox);
+      deferred.resolve({toolbox: toolbox, inspector: inspector});
     });
   }).then(null, console.error);
 
   return deferred.promise;
 }
 
+function getNode(nodeOrSelector) {
+  let node = nodeOrSelector;
+
+  if (typeof nodeOrSelector === "string") {
+    node = content.document.querySelector(nodeOrSelector);
+    ok(node, "A node was found for selector " + nodeOrSelector);
+  }
+
+  return node;
+}
+
 /**
- * Set the inspector's current selection to the first match of the given css
- * selector
+ * Set the inspector's current selection to a node or to the first match of the
+ * given css selector
  * @return a promise that resolves when the inspector is updated with the new
  * node
  */
-function selectNode(selector, inspector) {
-  let deferred = promise.defer();
-  let node = content.document.querySelector(selector);
-  ok(node, "A node was found for selector " + selector + ". Selecting it now");
+function selectNode(nodeOrSelector, inspector) {
+  let node = getNode(nodeOrSelector);
+  let updated = inspector.once("inspector-updated");
   inspector.selection.setNode(node, "test");
-  inspector.once("inspector-updated", () => {
-    deferred.resolve(node);
-  });
+  return updated;
+}
+
+/**
+ * Simulate a mouse-over on the markup-container (a line in the markup-view)
+ * that corresponds to the node or selector passed.
+ * @return a promise that resolves when the container is hovered and the higlighter
+ * is shown on the corresponding node
+ */
+function hoverContainer(nodeOrSelector, inspector) {
+  let highlit = inspector.toolbox.once("node-highlight");
+  let container = getContainerForRawNode(inspector.markup, getNode(nodeOrSelector));
+  EventUtils.synthesizeMouse(container.tagLine, 2, 2, {type: "mousemove"},
+    inspector.markup.doc.defaultView);
+  return highlit;
+}
+
+/**
+ * Simulate a click on the markup-container (a line in the markup-view)
+ * that corresponds to the node or selector passed.
+ * @return a promise that resolves when the node has been selected.
+ */
+function clickContainer(nodeOrSelector, inspector) {
+  let updated = inspector.once("inspector-updated");
+  let container = getContainerForRawNode(inspector.markup, getNode(nodeOrSelector));
+  EventUtils.synthesizeMouseAtCenter(container.tagLine, {type: "mousedown"},
+    inspector.markup.doc.defaultView);
+  EventUtils.synthesizeMouseAtCenter(container.tagLine, {type: "mouseup"},
+    inspector.markup.doc.defaultView);
+  return updated;
+}
+
+/**
+ * Checks if the highlighter is visible currently
+ */
+function isHighlighterVisible() {
+  let outline = gBrowser.selectedBrowser.parentNode.querySelector(".highlighter-container .highlighter-outline");
+  return outline && !outline.hasAttribute("hidden");
+}
+
+/**
+ * Simulate the mouse leaving the markup-view area
+ * @return a promise when done
+ */
+function mouseLeaveMarkupView(inspector) {
+  let deferred = promise.defer();
+
+  // Find another element to mouseover over in order to leave the markup-view
+  let btn = inspector.toolbox.doc.querySelector(".toolbox-dock-button");
+
+  EventUtils.synthesizeMouse(btn, 2, 2, {type: "mousemove"},
+    inspector.toolbox.doc.defaultView);
+  executeSoon(deferred.resolve);
+
   return deferred.promise;
 }
+

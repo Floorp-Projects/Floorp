@@ -72,9 +72,9 @@ Touch::~Touch()
 }
 
  /* static */ bool
-Touch::PrefEnabled()
+Touch::PrefEnabled(JSContext* aCx, JSObject* aGlobal)
 {
-  return nsDOMTouchEvent::PrefEnabled();
+  return nsDOMTouchEvent::PrefEnabled(aCx, aGlobal);
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(Touch, mTarget)
