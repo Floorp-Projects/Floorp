@@ -31,7 +31,7 @@ public class PromptService implements GeckoEventListener {
         GeckoAppShell.getEventDispatcher().unregisterEventListener("Prompt:ShowTop", this);
     }
 
-    public void show(final String aTitle, final String aText, final Prompt.PromptListItem[] aMenuList,
+    public void show(final String aTitle, final String aText, final PromptListItem[] aMenuList,
                      final boolean aMultipleSelection, final Prompt.PromptCallback callback) {
         // The dialog must be created on the UI thread.
         ThreadUtils.postToUiThread(new Runnable() {
