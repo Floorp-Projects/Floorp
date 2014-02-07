@@ -84,6 +84,28 @@ StoreBuffer::WholeCellEdges::mark(JSTracer *trc)
 
 template <typename T>
 void
+StoreBuffer::MonoTypeBuffer<T>::handleOverflow(StoreBuffer *owner)
+{
+    if (!owner->isAboutToOverflow()) {
+        /*
+         * Compact the buffer now, and if that fails to free enough space then
+         * trigger a minor collection.
+         */
+        compact(owner);
+        if (isAboutToOverflow())
+            owner->setAboutToOverflow();
+    } else {
+         /*
+          * A minor GC has already been triggered, so there's no point
+          * compacting unless the buffer is totally full.
+          */
+        if (storage_->availableInCurrentChunk() < sizeof(T))
+            compact(owner);
+    }
+}
+
+template <typename T>
+void
 StoreBuffer::MonoTypeBuffer<T>::compactRemoveDuplicates(StoreBuffer *owner)
 {
     EdgeSet duplicates;
