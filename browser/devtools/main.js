@@ -86,6 +86,14 @@ Tools.webConsole = {
   tooltip: l10n("ToolboxWebconsole.tooltip", webConsoleStrings),
   inMenu: true,
 
+  preventClosingOnKey: true,
+  onkey: function(panel, toolbox) {
+    if (toolbox.splitConsole)
+      return toolbox.focusConsoleInput();
+
+    panel.focusInput();
+  },
+
   isTargetSupported: function(target) {
     return true;
   },
