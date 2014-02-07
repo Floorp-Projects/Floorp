@@ -5052,6 +5052,24 @@ js::MinorGC(JSContext *cx, JS::gcreason::Reason reason)
 }
 
 void
+js::gc::GCIfNeeded(JSContext *cx)
+{
+    JSRuntime *rt = cx->runtime();
+
+#ifdef JSGC_GENERATIONAL
+    /*
+     * In case of store buffer overflow perform minor GC first so that the
+     * correct reason is seen in the logs.
+     */
+    if (rt->gcStoreBuffer.isAboutToOverflow())
+        MinorGC(cx, JS::gcreason::FULL_STORE_BUFFER);
+#endif
+
+    if (rt->gcIsNeeded)
+        GCSlice(rt, GC_NORMAL, rt->gcTriggerReason);
+}
+
+void
 js::gc::FinishBackgroundFinalize(JSRuntime *rt)
 {
     rt->gcHelperThread.waitBackgroundSweepEnd();
