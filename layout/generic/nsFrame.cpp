@@ -7170,11 +7170,11 @@ nsFrame::ConsiderChildOverflow(nsOverflowAreas& aOverflowAreas,
  * If aFrame is not an anonymous block, null is returned.
  */
 static nsIFrame*
-GetIBSpecialSiblingForAnonymousBlock(const nsIFrame* aFrame)
+GetIBSplitSiblingForAnonymousBlock(const nsIFrame* aFrame)
 {
   NS_PRECONDITION(aFrame, "Must have a non-null frame!");
   NS_ASSERTION(aFrame->GetStateBits() & NS_FRAME_PART_OF_IBSPLIT,
-               "GetIBSpecialSibling should not be called on a non-special frame");
+               "GetIBSplitSibling should not be called on a non-special frame");
 
   nsIAtom* type = aFrame->StyleContext()->GetPseudo();
   if (type != nsCSSAnonBoxes::mozAnonymousBlock &&
@@ -7249,7 +7249,7 @@ nsFrame::CorrectStyleParentFrame(nsIFrame* aProspectiveParent,
   nsIFrame* parent = aProspectiveParent;
   do {
     if (parent->GetStateBits() & NS_FRAME_PART_OF_IBSPLIT) {
-      nsIFrame* sibling = GetIBSpecialSiblingForAnonymousBlock(parent);
+      nsIFrame* sibling = GetIBSplitSiblingForAnonymousBlock(parent);
 
       if (sibling) {
         // |parent| was a block in an {ib} split; use the inline as
@@ -7300,10 +7300,10 @@ nsFrame::DoGetParentStyleContextFrame() const
     /*
      * If this frame is an anonymous block created when an inline with a block
      * inside it got split, then the parent style context is on its preceding
-     * inline. We can get to it using GetIBSpecialSiblingForAnonymousBlock.
+     * inline. We can get to it using GetIBSplitSiblingForAnonymousBlock.
      */
     if (mState & NS_FRAME_PART_OF_IBSPLIT) {
-      nsIFrame* specialSibling = GetIBSpecialSiblingForAnonymousBlock(this);
+      nsIFrame* specialSibling = GetIBSplitSiblingForAnonymousBlock(this);
       if (specialSibling) {
         return specialSibling;
       }
