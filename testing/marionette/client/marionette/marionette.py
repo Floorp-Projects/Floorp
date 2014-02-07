@@ -584,39 +584,39 @@ class Marionette(object):
             time.sleep(1)
         return False
 
-    def _send_message(self, command, response_key, **kwargs):
-        if not self.session and command not in ('newSession', 'getStatus'):
-            raise MarionetteException(message="Please start a session")
+    def _send_message(self, command, response_key="ok", **kwargs):
+        if not self.session and command not in ("newSession", "getStatus"):
+            raise MarionetteException("Please start a session")
 
-        message = { 'name': command }
+        message = {"name": command}
         if self.session:
-            message['sessionId'] = self.session
+            message["sessionId"] = self.session
         if kwargs:
-            message['parameters'] = kwargs
+            message["parameters"] = kwargs
 
         try:
             response = self.client.send(message)
-        except socket.timeout:
+        except socket.timeout as e:
             self.session = None
             self.window = None
             self.client.close()
-            raise TimeoutException(message='socket.timeout', status=ErrorCodes.TIMEOUT, stacktrace=None)
+            raise TimeoutException(
+                "Connection timed out", status=ErrorCodes.TIMEOUT)
 
         # Process any emulator commands that are sent from a script
         # while it's executing.
         while response.get("emulator_cmd"):
             response = self._handle_emulator_cmd(response)
 
-        if (response_key == 'ok' and response.get('ok') ==  True) or response_key in response:
+        if response_key in response:
             return response[response_key]
-        else:
-            self._handle_error(response)
+        self._handle_error(response)
 
     def _handle_emulator_cmd(self, response):
         cmd = response.get("emulator_cmd")
         if not cmd or not self.emulator:
-            raise MarionetteException(message="No emulator in this test to run "
-                                      "command against.")
+            raise MarionetteException(
+                "No emulator in this test to run command against")
         cmd = cmd.encode("ascii")
         result = self.emulator._run_telnet(cmd)
         return self.client.send({"name": "emulatorCmdResult",
@@ -706,11 +706,17 @@ class Marionette(object):
         return self._send_message('getStatus', 'value')
 
     def start_session(self, desired_capabilities=None):
-        '''
-        Creates a new Marionette session.
+        """Create a new Marionette session.
 
-        You must call this method before performing any other action.
-        '''
+        This method must be called before performing any other action.
+
+        :params desired_capabilities: An optional dict of desired
+            capabilities.  This is currently ignored.
+
+        :returns: A dict of the capabilities offered.
+
+        """
+
         try:
             # We are ignoring desired_capabilities, at least for now.
             self.session = self._send_message('newSession', 'value')
