@@ -35,6 +35,13 @@ XPCOMUtils.defineLazyGetter(this, 'fxAccountsCommon', function() {
   return ob;
 });
 
+XPCOMUtils.defineLazyGetter(this, 'log', function() {
+  let log = Log.repository.getLogger("Sync.BrowserIDManager");
+  log.addAppender(new Log.DumpAppender());
+  log.level = Log.Level[Svc.Prefs.get("log.logger.identity")] || Log.Level.Error;
+  return log;
+});
+
 const PREF_SYNC_SHOW_CUSTOMIZATION = "services.sync.ui.showCustomizationDialog";
 
 function deriveKeyBundle(kB) {
@@ -62,9 +69,7 @@ this.BrowserIDManager = function BrowserIDManager() {
   this._tokenServerClient = new TokenServerClient();
   // will be a promise that resolves when we are ready to authenticate
   this.whenReadyToAuthenticate = null;
-  this._log = Log.repository.getLogger("Sync.BrowserIDManager");
-  this._log.addAppender(new Log.DumpAppender());
-  this._log.level = Log.Level[Svc.Prefs.get("log.logger.identity")] || Log.Level.Error;
+  this._log = log;
 };
 
 this.BrowserIDManager.prototype = {
