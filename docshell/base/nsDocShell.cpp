@@ -2967,7 +2967,14 @@ nsDocShell::RecomputeCanExecuteScripts()
 nsresult
 nsDocShell::SetDocLoaderParent(nsDocLoader * aParent)
 {
+    bool wasFrame = IsFrame();
+
     nsDocLoader::SetDocLoaderParent(aParent);
+
+    nsCOMPtr<nsISupportsPriority> priorityGroup = do_QueryInterface(mLoadGroup);
+    if (wasFrame != IsFrame() && priorityGroup) {
+        priorityGroup->AdjustPriority(wasFrame ? -1 : 1);
+    }
 
     // Curse ambiguous nsISupports inheritance!
     nsISupports* parent = GetAsSupports(aParent);
