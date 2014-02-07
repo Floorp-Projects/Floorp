@@ -16,6 +16,12 @@ Cu.import("resource://gre/modules/Sqlite.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+/*
+ * XXX: Add migration logic to getDatabaseConnection if you ever rev SCHEMA_VERSION.
+ *
+ * SCHEMA_VERSION history:
+ *   1: Create HomeProvider (bug 942288)
+ */
 const SCHEMA_VERSION = 1;
 
 XPCOMUtils.defineLazyGetter(this, "DB_PATH", function() {
@@ -172,6 +178,43 @@ this.HomeProvider = Object.freeze({
   }
 });
 
+var gDatabaseEnsured = false;
+
+/**
+ * Opens a database connection and makes sure that the database schema version
+ * is correct, performing migrations if necessary. Consumers should be sure
+ * to close any database connections they open.
+ *
+ * @return Promise
+ * @resolves Handle on an opened SQLite database.
+ */
+function getDatabaseConnection() {
+  return Task.spawn(function get_database_connection_task() {
+    let db = yield Sqlite.openConnection({ path: DB_PATH });
+    if (gDatabaseEnsured) {
+      throw new Task.Result(db);
+    }
+
+    try {
+      // Check to see if we need to perform any migrations.
+      // XXX: We will need to add migration logic if we ever rev SCHEMA_VERSION.
+      let dbVersion = yield db.getSchemaVersion();
+      if (parseInt(dbVersion) < SCHEMA_VERSION) {
+        // For schema v1, create the items table and set the schema version.
+        yield db.execute(SQL.createItemsTable);
+        yield db.setSchemaVersion(SCHEMA_VERSION);
+      }
+    } catch(e) {
+      // Close the DB connection before passing the exception to the consumer.
+      yield db.close();
+      throw e;
+    }
+
+    gDatabaseEnsured = true;
+    throw new Task.Result(db);
+  });
+}
+
 this.HomeStorage = function(datasetId) {
   this.datasetId = datasetId;
 };
@@ -188,15 +231,8 @@ HomeStorage.prototype = {
    */
   save: function(data) {
     return Task.spawn(function save_task() {
-      let db = yield Sqlite.openConnection({ path: DB_PATH });
-
+      let db = yield getDatabaseConnection();
       try {
-        // XXX: Factor this out to some migration path.
-        if (!(yield db.tableExists("items"))) {
-          yield db.execute(SQL.createItemsTable);
-          yield db.setSchemaVersion(SCHEMA_VERSION);
-        }
-
         // Insert data into DB.
         for (let item of data) {
           // XXX: Directly pass item as params? More validation for item? Batch insert?
@@ -224,10 +260,8 @@ HomeStorage.prototype = {
    */
   deleteAll: function() {
     return Task.spawn(function delete_all_task() {
-      let db = yield Sqlite.openConnection({ path: DB_PATH });
-
+      let db = yield getDatabaseConnection();
       try {
-        // XXX: Check to make sure table exists.
         let params = { dataset_id: this.datasetId };
         yield db.executeCached(SQL.deleteFromDataset, params);
       } finally {
