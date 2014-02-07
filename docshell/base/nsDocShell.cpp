@@ -2896,7 +2896,7 @@ nsDocShell::SetItemType(int32_t aItemType)
     nsRefPtr<nsPresContext> presContext = nullptr;
     GetPresContext(getter_AddRefs(presContext));
     if (presContext) {
-        presContext->InvalidateIsChromeCache();
+        presContext->UpdateIsChrome();
     }
 
     return NS_OK;
