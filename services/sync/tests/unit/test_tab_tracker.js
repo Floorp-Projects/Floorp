@@ -34,18 +34,6 @@ function fakeSvcWinMediator() {
   return logs;
 }
 
-function fakeSvcSession() {
-  // actions on Session are captured in logs
-  let logs = [];
-  delete Svc.Session;
-  Svc.Session = {
-    setTabValue: function(target, prop, value) {
-      logs.push({target: target, prop: prop, value: value});
-    }
-  };
-  return logs;
-}
-
 function run_test() {
   let engine = Service.engineManager.get("tabs");
 
@@ -88,8 +76,6 @@ function run_test() {
   }
 
   _("Test tab listener");
-  logs = fakeSvcSession();
-  let idx = 0;
   for each (let evttype in ["TabOpen", "TabClose", "TabSelect"]) {
     // Pretend we just synced.
     tracker.clearChangedIDs();
@@ -100,11 +86,6 @@ function run_test() {
     do_check_true(tracker.modified);
     do_check_true(Utils.deepEquals(Object.keys(engine.getChangedIDs()),
                                    [clientsEngine.localID]));
-    do_check_eq(logs.length, idx+1);
-    do_check_eq(logs[idx].target, evttype);
-    do_check_eq(logs[idx].prop, "weaveLastUsed");
-    do_check_true(typeof logs[idx].value == "number");
-    idx++;
   }
 
   // Pretend we just synced.
@@ -114,5 +95,4 @@ function run_test() {
   tracker.onTab({type: "pageshow", originalTarget: "pageshow"});
   do_check_true(Utils.deepEquals(Object.keys(engine.getChangedIDs()),
                                  [clientsEngine.localID]));
-  do_check_eq(logs.length, idx); // test that setTabValue isn't called
 }
