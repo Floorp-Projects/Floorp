@@ -224,10 +224,10 @@ protected:
       // The {ib} properties are only stored on first continuations
       aFrame = aFrame->FirstContinuation();
       nsIFrame* block = static_cast<nsIFrame*>
-        (aFrame->Properties().Get(nsIFrame::IBSplitSpecialSibling()));
+        (aFrame->Properties().Get(nsIFrame::IBSplitSibling()));
       if (block) {
         nextCont = static_cast<nsIFrame*>
-          (block->Properties().Get(nsIFrame::IBSplitSpecialSibling()));
+          (block->Properties().Get(nsIFrame::IBSplitSibling()));
         NS_ASSERTION(nextCont, "How did that happen?");
       }
     }
