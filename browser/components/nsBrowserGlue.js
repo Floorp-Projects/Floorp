@@ -205,16 +205,7 @@ BrowserGlue.prototype = {
         this._onQuitRequest(subject, data);
         break;
       case "quit-application-granted":
-        // This pref must be set here because SessionStore will use its value
-        // on quit-application.
-        this._setPrefToSaveSession();
-        try {
-          let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"].
-                           getService(Ci.nsIAppStartup);
-          appStartup.trackStartupCrashEnd();
-        } catch (e) {
-          Cu.reportError("Could not end startup crash tracking in quit-application-granted: " + e);
-        }
+        this._onQuitApplicationGranted();
         break;
 #ifdef OBSERVE_LASTWINDOW_CLOSE_TOPICS
       case "browser-lastwindow-close-requested":
@@ -306,7 +297,10 @@ BrowserGlue.prototype = {
         }
         break;
       case "profile-before-change":
-        this._onProfileShutdown();
+         // Any component depending on Places should be finalized in
+         // _onPlacesShutdown.  Any component that doesn't need to act after
+         // the UI has gone should be finalized in _onQuitApplicationGranted.
+        this._dispose();
         break;
 #ifdef MOZ_SERVICES_HEALTHREPORT
       case "keyword-search":
@@ -638,16 +632,24 @@ BrowserGlue.prototype = {
   },
 
   /**
-   * Profile shutdown handler (contains profile cleanup routines).
-   * All components depending on Places should be shut down in
-   * _onPlacesShutdown() and not here.
+   * Application shutdown handler.
    */
-  _onProfileShutdown: function BG__onProfileShutdown() {
+  _onQuitApplicationGranted: function () {
+    // This pref must be set here because SessionStore will use its value
+    // on quit-application.
+    this._setPrefToSaveSession();
+    try {
+      let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"]
+                         .getService(Ci.nsIAppStartup);
+      appStartup.trackStartupCrashEnd();
+    } catch (e) {
+      Cu.reportError("Could not end startup crash tracking in quit-application-granted: " + e);
+    }
+
     BrowserNewTabPreloader.uninit();
     webappsUI.uninit();
     SignInToWebsiteUX.uninit();
     webrtcUI.uninit();
-    this._dispose();
   },
 
   // All initial windows have opened.
