@@ -5234,6 +5234,7 @@ if (!${obj}) {
                                  'jsvalHandle': 'args.rval()',
                                  'returnsNewObject': returnsNewObject,
                                  'successCode': successCode,
+                                 'obj' : "reflector" if setSlot else "obj",
                                  }
         try:
             wrapCode = CGGeneric(wrapForType(self.returnType, self.descriptor,
