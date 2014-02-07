@@ -297,6 +297,8 @@ gbjar.sources += [
     'PrivateTab.java',
     'prompts/ColorPickerInput.java',
     'prompts/IconGridInput.java',
+    'prompts/IntentChooserPrompt.java',
+    'prompts/IntentHandler.java',
     'prompts/Prompt.java',
     'prompts/PromptInput.java',
     'prompts/PromptListAdapter.java',
