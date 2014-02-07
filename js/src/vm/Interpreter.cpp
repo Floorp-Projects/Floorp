@@ -423,6 +423,13 @@ js::RunScript(JSContext *cx, RunState &state)
     return Interpret(cx, state);
 }
 
+struct AutoGCIfNeeded
+{
+    JSContext *cx_;
+    AutoGCIfNeeded(JSContext *cx) : cx_(cx) {}
+    ~AutoGCIfNeeded() { js::gc::GCIfNeeded(cx_); }
+};
+
 /*
  * Find a function reference and its 'this' value implicit first parameter
  * under argc arguments on cx's stack, and call the function.  Push missing
@@ -437,6 +444,9 @@ js::Invoke(JSContext *cx, CallArgs args, MaybeConstruct construct)
 
     /* We should never enter a new script while cx->iterValue is live. */
     JS_ASSERT(cx->iterValue.isMagic(JS_NO_ITER_VALUE));
+
+    /* Perform GC if necessary on exit from the function. */
+    AutoGCIfNeeded gcIfNeeded(cx);
 
     /* MaybeConstruct is a subset of InitialFrameFlags */
     InitialFrameFlags initial = (InitialFrameFlags) construct;
