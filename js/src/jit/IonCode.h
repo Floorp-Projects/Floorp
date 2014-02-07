@@ -196,7 +196,7 @@ struct IonScript
     // Flag set when it is likely that one of our (transitive) call
     // targets is not compiled.  Used in ForkJoin.cpp to decide when
     // we should add call targets to the worklist.
-    bool hasUncompiledCallTarget_;
+    mozilla::Atomic<bool, mozilla::Relaxed> hasUncompiledCallTarget_;
 
     // Flag set if IonScript was compiled with SPS profiling enabled.
     bool hasSPSInstrumentation_;
