@@ -54,23 +54,37 @@ add_task(function test_simple_async() {
   for (let arg of [undefined, null, "foo", 100, new Error("BOOM")]) {
     for (let resolution of [arg, Promise.reject(arg)]) {
       for (let success of [false, true]) {
-        // Asynchronous phase
-        do_print("Asynchronous test with " + arg + ", " + resolution);
-        let topic = getUniqueTopic();
-        let outParam = { isFinished: false };
-        AsyncShutdown._getPhase(topic).addBlocker(
-          "Async test",
-            function() {
-              if (success) {
-                return longRunningAsyncTask(resolution, outParam);
-              } else {
-                throw resolution;
-              }
-            }
-        );
-        do_check_false(outParam.isFinished);
-        Services.obs.notifyObservers(null, topic, null);
-        do_check_eq(outParam.isFinished, success);
+        for (let state of [[null],
+                           [],
+                           [() => "some state"],
+                           [function() {
+                             throw new Error("State BOOM"); }],
+                           [function() {
+                             return {
+                               toJSON: function() {
+                                 throw new Error("State.toJSON BOOM");
+                               }
+                             };
+                           }]]) {
+          // Asynchronous phase
+          do_print("Asynchronous test with " + arg + ", " + resolution);
+          let topic = getUniqueTopic();
+          let outParam = { isFinished: false };
+          AsyncShutdown._getPhase(topic).addBlocker(
+            "Async test",
+              function() {
+                if (success) {
+                  return longRunningAsyncTask(resolution, outParam);
+                } else {
+                  throw resolution;
+                }
+              },
+              ...state
+          );
+          do_check_false(outParam.isFinished);
+          Services.obs.notifyObservers(null, topic, null);
+          do_check_eq(outParam.isFinished, success);
+        }
       }
 
       // Synchronous phase - just test that we don't throw/freeze
@@ -127,6 +141,9 @@ add_task(function test_various_failures() {
   do_check_eq(exn.name, "TypeError");
 
   exn = get_exn(() => phase.addBlocker(null, true));
+  do_check_eq(exn.name, "TypeError");
+
+  exn = get_exn(() => phase.addBlocker("Test 2", () => true, "not a function"));
   do_check_eq(exn.name, "TypeError");
 });
 
