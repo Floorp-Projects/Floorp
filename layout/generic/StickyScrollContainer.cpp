@@ -166,7 +166,7 @@ void
 StickyScrollContainer::ComputeStickyLimits(nsIFrame* aFrame, nsRect* aStick,
                                            nsRect* aContain) const
 {
-  NS_ASSERTION(nsLayoutUtils::IsFirstContinuationOrSpecialSibling(aFrame),
+  NS_ASSERTION(nsLayoutUtils::IsFirstContinuationOrIBSplitSibling(aFrame),
                "Can't sticky position individual continuations");
 
   aStick->SetRect(nscoord_MIN/2, nscoord_MIN/2, nscoord_MAX, nscoord_MAX);
@@ -290,7 +290,7 @@ StickyScrollContainer::GetScrollRanges(nsIFrame* aFrame, nsRect* aOuter,
   // this, at the very least because its call to
   // nsLayoutUtils::GetAllInFlowRectsUnion requires it.
   nsIFrame *firstCont =
-    nsLayoutUtils::FirstContinuationOrSpecialSibling(aFrame);
+    nsLayoutUtils::FirstContinuationOrIBSplitSibling(aFrame);
 
   nsRect stick;
   nsRect contain;
@@ -327,13 +327,13 @@ StickyScrollContainer::GetScrollRanges(nsIFrame* aFrame, nsRect* aOuter,
 void
 StickyScrollContainer::PositionContinuations(nsIFrame* aFrame)
 {
-  NS_ASSERTION(nsLayoutUtils::IsFirstContinuationOrSpecialSibling(aFrame),
+  NS_ASSERTION(nsLayoutUtils::IsFirstContinuationOrIBSplitSibling(aFrame),
                "Should be starting from the first continuation");
   nsPoint translation = ComputePosition(aFrame) - aFrame->GetPosition();
 
   // Move all continuation frames by the same amount.
   for (nsIFrame* cont = aFrame; cont;
-       cont = nsLayoutUtils::GetNextContinuationOrSpecialSibling(cont)) {
+       cont = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(cont)) {
     cont->SetPosition(cont->GetPosition() + translation);
   }
 }
@@ -355,7 +355,7 @@ StickyScrollContainer::UpdatePositions(nsPoint aScrollPosition,
   oct.SetSubtreeRoot(aSubtreeRoot);
   for (nsTArray<nsIFrame*>::size_type i = 0; i < mFrames.Length(); i++) {
     nsIFrame* f = mFrames[i];
-    if (!nsLayoutUtils::IsFirstContinuationOrSpecialSibling(f)) {
+    if (!nsLayoutUtils::IsFirstContinuationOrIBSplitSibling(f)) {
       // This frame was added in nsFrame::Init before we knew it wasn't
       // the first special-sibling.
       mFrames.RemoveElementAt(i);
@@ -372,7 +372,7 @@ StickyScrollContainer::UpdatePositions(nsPoint aScrollPosition,
     PositionContinuations(f);
 
     for (nsIFrame* cont = f; cont;
-         cont = nsLayoutUtils::GetNextContinuationOrSpecialSibling(cont)) {
+         cont = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(cont)) {
       oct.AddFrame(cont);
     }
   }
