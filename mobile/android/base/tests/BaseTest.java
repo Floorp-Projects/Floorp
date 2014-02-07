@@ -90,16 +90,6 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         }
     }
 
-    protected void blockForGeckoDelayedStartup() {
-        try {
-            Actions.EventExpecter geckoReadyExpector = mActions.expectGeckoEvent("Gecko:DelayedStartup");
-            geckoReadyExpector.blockForEvent();
-            geckoReadyExpector.unregisterListener();
-        } catch (Exception e) {
-            mAsserter.dumpLog("Exception in blockForGeckoDelayedStartup", e);
-        }
-    }
-
     static {
         try {
             mLauncherActivityClass = (Class<Activity>)Class.forName(LAUNCH_ACTIVITY_FULL_CLASSNAME);

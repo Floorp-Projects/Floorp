@@ -378,6 +378,11 @@ AbstractFile.read = function read(path, bytes, options = {}) {
  * If "lz4", compress the contents of the file atomically using lz4. For the
  * time being, the container format is specific to Mozilla and cannot be read
  * by means other than OS.File.read(..., { compression: "lz4"})
+ * - {string} backupTo - If specified, backup the destination file as |backupTo|.
+ * Note that this function renames the destination file before overwriting it.
+ * If the process or the operating system freezes or crashes
+ * during the short window between these operations,
+ * the destination file will have been moved to its backup.
  *
  * @return {number} The number of bytes actually written.
  */
@@ -408,6 +413,13 @@ AbstractFile.writeAtomic =
   let bytesWritten = 0;
 
   if (!options.tmpPath) {
+    if (options.backupTo) {
+      try {
+        OS.File.move(path, options.backupTo, {noCopy: true});
+      } catch (ex if ex.becauseNoSuchFile) {
+        // The file doesn't exist, nothing to backup.
+      }
+    }
     // Just write, without any renaming trick
     let dest = OS.File.open(path, {write: true, truncate: true});
     try {
@@ -432,6 +444,14 @@ AbstractFile.writeAtomic =
     throw x;
   } finally {
     tmpFile.close();
+  }
+
+  if (options.backupTo) {
+    try {
+      OS.File.move(path, options.backupTo, {noCopy: true});
+    } catch (ex if ex.becauseNoSuchFile) {
+      // The file doesn't exist, nothing to backup.
+    }
   }
 
   OS.File.move(options.tmpPath, path, {noCopy: true});

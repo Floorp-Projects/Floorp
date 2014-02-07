@@ -14,7 +14,11 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/NullPtr.h"
+
+#ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
+#endif
+
 #if defined(ANDROID)
 #include "android_ucontext.h"
 #include <android/log.h>
@@ -92,10 +96,12 @@ Reporter(int nr, siginfo_t *info, void *void_context)
             " %lu %lu %lu.  Killing process.", pid, syscall_nr,
             args[0], args[1], args[2], args[3], args[4], args[5]);
 
+#ifdef MOZ_CRASHREPORTER
   bool dumped = CrashReporter::WriteMinidumpForSigInfo(nr, info, void_context);
   if (!dumped) {
     LOG_ERROR("Failed to write minidump");
   }
+#endif
 
   // Try to reraise, so the parent sees that this process crashed.
   // (If tgkill is forbidden, then seccomp will raise SIGSYS, which

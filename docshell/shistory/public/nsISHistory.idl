@@ -63,6 +63,7 @@ interface nsISHistory: nsISupports
    * given index.
    *
    * @param index             The index value whose entry is requested.
+   *                          The oldest entry is located at index == 0.
    * @param modifyIndex       A boolean flag that indicates if the current
    *                          index of session history should be modified 
    *                          to the parameter index.
