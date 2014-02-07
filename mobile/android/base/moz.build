@@ -298,6 +298,7 @@ gbjar.sources += [
     'prompts/IconGridInput.java',
     'prompts/Prompt.java',
     'prompts/PromptInput.java',
+    'prompts/PromptListItem.java',
     'prompts/PromptService.java',
     'ReaderModeUtils.java',
     'ReferrerReceiver.java',

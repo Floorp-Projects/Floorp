@@ -433,7 +433,7 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
             } catch(Exception ex) { }
         }
 
-        PromptListItem[] menuitems = getListItemArray(geckoObject, "listitems");
+        PromptListItem[] menuitems = PromptListItem.getArray(geckoObject.optJSONArray("listitems"));
         mSelected = getBooleanArray(geckoObject, "selected");
         boolean multiple = geckoObject.optBoolean("multiple");
         show(title, text, menuitems, multiple);
@@ -472,48 +472,6 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
             } catch(Exception ex) { }
         }
         return list;
-    }
-
-    private PromptListItem[] getListItemArray(JSONObject aObject, String aName) {
-        JSONArray items = getSafeArray(aObject, aName);
-        int length = items.length();
-        PromptListItem[] list = new PromptListItem[length];
-        for (int i = 0; i < length; i++) {
-            try {
-                list[i] = new PromptListItem(items.getJSONObject(i));
-            } catch(Exception ex) { }
-        }
-        return list;
-    }
-
-    public static class PromptListItem {
-        public final String label;
-        public final boolean isGroup;
-        public final boolean inGroup;
-        public final boolean disabled;
-        public final int id;
-        public final boolean isParent;
-
-        // This member can't be accessible from JS, see bug 733749.
-        public Drawable icon;
-
-        PromptListItem(JSONObject aObject) {
-            label = aObject.optString("label");
-            isGroup = aObject.optBoolean("isGroup");
-            inGroup = aObject.optBoolean("inGroup");
-            disabled = aObject.optBoolean("disabled");
-            id = aObject.optInt("id");
-            isParent = aObject.optBoolean("isParent");
-        }
-
-        public PromptListItem(String aLabel) {
-            label = aLabel;
-            isGroup = false;
-            inGroup = false;
-            disabled = false;
-            id = 0;
-            isParent = false;
-        }
     }
 
     public interface PromptCallback {
