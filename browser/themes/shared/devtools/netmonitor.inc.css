@@ -181,28 +181,48 @@ box.requests-menu-status {
   background-color: rgba(44, 187, 15, 1); /* green */
 }
 
+/* 3xx are triangles */
 .theme-dark box.requests-menu-status[code^="3"] {
-  background-color: rgba(94, 136, 176, 1); /* grey */
+  background-color: transparent;
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 10px solid rgba(217, 155, 40, 1); /* light orange */
+  border-radius: 0;
 }
 
 .theme-light box.requests-menu-status[code^="3"] {
-  background-color: rgba(95, 136, 176, 1); /* blue grey */
+  background-color: transparent;
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 10px solid rgba(217, 126, 0, 1); /* light orange */
+  border-radius: 0;
 }
 
+/* 4xx and 5xx are squares - error codes */
 .theme-dark box.requests-menu-status[code^="4"] {
   background-color: rgba(235, 83, 104, 1); /* red */
+  border-radius: 0; /* squares */
 }
 
 .theme-light box.requests-menu-status[code^="4"] {
   background-color: rgba(237, 38, 85, 1); /* red */
+  border-radius: 0; /* squares */
 }
 
 .theme-dark box.requests-menu-status[code^="5"] {
   background-color: rgba(223, 128, 255, 1); /* pink? */
+  border-radius: 0;
+  transform: rotate(45deg);
 }
 
 .theme-light box.requests-menu-status[code^="5"] {
   background-color: rgba(184, 46, 229, 1); /* pink! */
+  border-radius: 0;
+  transform: rotate(45deg);
 }
 
 /* Network requests table: waterfall header */
