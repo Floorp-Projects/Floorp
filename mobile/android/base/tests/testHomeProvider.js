@@ -7,13 +7,42 @@ const { utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/HomeProvider.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Sqlite.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 
 const TEST_DATASET_ID = "test-dataset-id";
 const TEST_URL = "http://test.com";
 
+const PREF_SYNC_CHECK_INTERVAL_SECS = "home.sync.checkIntervalSecs";
+const TEST_INTERVAL_SECS = 1;
+
 const DB_PATH = OS.Path.join(OS.Constants.Path.profileDir, "home.sqlite");
+
+add_test(function test_request_sync() {
+  // The current implementation of requestSync is synchronous.
+  let success = HomeProvider.requestSync(TEST_DATASET_ID, function callback(datasetId) {
+    do_check_eq(datasetId, TEST_DATASET_ID);
+  });
+
+  do_check_true(success);
+  run_next_test();
+});
+
+add_test(function test_periodic_sync() {
+  do_register_cleanup(function cleanup() {
+    Services.prefs.clearUserPref(PREF_SYNC_CHECK_INTERVAL_SECS);
+    HomeProvider.removePeriodicSync(TEST_DATASET_ID);
+  });
+
+  // Lower the check interval for testing purposes.
+  Services.prefs.setIntPref(PREF_SYNC_CHECK_INTERVAL_SECS, TEST_INTERVAL_SECS);
+
+  HomeProvider.addPeriodicSync(TEST_DATASET_ID, TEST_INTERVAL_SECS, function callback(datasetId) {
+    do_check_eq(datasetId, TEST_DATASET_ID);
+    run_next_test();
+  });
+});
 
 add_task(function test_save_and_delete() {
   // Use the HomeProvider API to save some data.
