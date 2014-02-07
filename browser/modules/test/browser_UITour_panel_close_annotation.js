@@ -128,6 +128,7 @@ let tests = [
         is(PanelUI.panel.state, "open",
            "Panel should have stayed open when the subview opened");
         is(highlight.parentElement.state, "open", "The highlight should have remained open");
+        PanelUI.hide();
         done();
       }, "Tooltip should have disappeared when the subview opened");
     }, "Highlight should be shown after showHighlight() for fixed panel items");
