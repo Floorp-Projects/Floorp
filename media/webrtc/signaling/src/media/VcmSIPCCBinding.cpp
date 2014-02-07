@@ -2234,11 +2234,6 @@ static int vcmTxStartICE_m(cc_mcapid_t mcap_id,
     if (!conduit || conduit->ConfigureSendMediaCodec(config))
       return VCM_ERROR;
 
-    CSFLogError(logTag, "Created audio pipeline audio level %d", attrs->audio_level);
-
-    if (!conduit || conduit->EnableAudioLevelExtension(attrs->audio_level))
-      return VCM_ERROR;
-
     pc.impl()->media()->AddConduit(level, false, conduit);
 
     mozilla::RefPtr<mozilla::MediaPipeline> pipeline =

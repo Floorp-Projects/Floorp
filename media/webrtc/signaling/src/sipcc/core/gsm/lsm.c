@@ -1236,7 +1236,6 @@ lsm_tx_start (lsm_lcb_t *lcb, const char *fname, fsmdef_media_t *media)
             attrs.mute = FALSE;
 
             attrs.rtcp_mux = media->rtcp_mux;
-            attrs.audio_level = media->audio_level;
 
             attrs.is_video = FALSE;
             attrs.bundle_level = 0;
