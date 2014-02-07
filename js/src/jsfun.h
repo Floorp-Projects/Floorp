@@ -339,11 +339,11 @@ class JSFunction : public JSObject
         return u.i.s.script_;
     }
 
-    // Returns the non-callsited-clone version of this function.  Use
-    // when return-value can flow to arbitrary JS (see Bug 944975).
+    // Returns non-callsited-clone version of this.  Use when return
+    // value can flow to arbitrary JS (see Bug 944975).
     JSFunction* originalFunction() {
         if (this->hasScript() && this->nonLazyScript()->isCallsiteClone()) {
-            return this->nonLazyScript()->originalFunction();
+            return this->nonLazyScript()->donorFunction();
         } else {
             return this;
         }
