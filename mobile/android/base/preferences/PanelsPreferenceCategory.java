@@ -68,13 +68,13 @@ public class PanelsPreferenceCategory extends CustomListCategory {
             @Override
             public void onPostExecute(List<PanelConfig> panelConfigs) {
                 mPanelConfigs = panelConfigs;
-                displayPanelConfig();
+                displayHomeConfig();
             }
         };
         mLoadTask.execute();
     }
 
-    private void displayPanelConfig() {
+    private void displayHomeConfig() {
         for (PanelConfig panelConfig : mPanelConfigs) {
             // Create and add the pref.
             final PanelsPreference pref = new PanelsPreference(getContext(), PanelsPreferenceCategory.this);
