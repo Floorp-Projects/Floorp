@@ -249,6 +249,11 @@ toolbarpaletteitem > toolbaritem[sdkstylewidget="true"] > iframe {
   display: none;
 }
 
+toolbarpaletteitem[removable="false"] {
+  opacity: 0.5;
+  cursor: default;
+}
+
 #bookmarks-toolbar-placeholder,
 toolbarpaletteitem > #personal-bookmarks > #PlacesToolbar,
 #personal-bookmarks[cui-areatype="menu-panel"] > #PlacesToolbar,
