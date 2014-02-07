@@ -89,7 +89,7 @@ public:
         ERR("Failed to get settingsLock service!");
         return NS_OK;
       }
-      settingsService->CreateLock(getter_AddRefs(lock));
+      settingsService->CreateLock(nullptr, getter_AddRefs(lock));
       JS::Rooted<JS::Value> value(cx, JS::StringValue(jsStr));
       lock->Set(TIME_TIMEZONE, value, nullptr, nullptr);
       return NS_OK;
@@ -135,7 +135,7 @@ TimeZoneSettingObserver::TimeZoneSettingObserver()
     ERR("Failed to get settingsLock service!");
     return;
   }
-  settingsService->CreateLock(getter_AddRefs(lock));
+  settingsService->CreateLock(nullptr, getter_AddRefs(lock));
   nsCOMPtr<nsISettingsServiceCallback> callback = new TimeZoneSettingCb();
   lock->Get(TIME_TIMEZONE, callback);
 }

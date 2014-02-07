@@ -132,12 +132,22 @@ SettingsServiceLock.prototype = {
     lock._open = true;
   },
 
-  createTransactionAndProcess: function() {
+  createTransactionAndProcess: function(aCallback) {
     if (this._settingsService._settingsDB._db) {
       let lock;
       while (lock = this._settingsService._locks.dequeue()) {
         if (!lock._transaction) {
           lock._transaction = lock._settingsService._settingsDB._db.transaction(SETTINGSSTORE_NAME, "readwrite");
+          if (aCallback) {
+            lock._transaction.oncomplete = aCallback.handle;
+            lock._transaction.onabort = function(event) {
+              let message = '';
+              if (event.target.error) {
+                message = event.target.error.name + ': ' + event.target.error.message;
+              }
+              aCallback.handleAbort(message);
+            };
+          }
         }
         if (!lock._isBusy) {
           lock.process();
@@ -199,11 +209,11 @@ SettingsService.prototype = {
     Services.tm.currentThread.dispatch(aCallback, Ci.nsIThread.DISPATCH_NORMAL);
   },
 
-  createLock: function createLock() {
+  createLock: function createLock(aCallback) {
     var lock = new SettingsServiceLock(this);
     this._locks.enqueue(lock);
     this._settingsDB.ensureDB(
-      function() { lock.createTransactionAndProcess(); },
+      function() { lock.createTransactionAndProcess(aCallback); },
       function() { dump("SettingsService failed to open DB!\n"); }
     );
     this.nextTick(function() { this._open = false; }, lock);
