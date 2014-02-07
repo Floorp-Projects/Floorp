@@ -10,7 +10,6 @@ registerCleanupFunction(cleanup);
 
 // Registering a toolbar with defaultset attribute should work
 add_task(function() {
-  ok(CustomizableUI.inDefaultState, "Everything should be in its default state.");
   let btn = createDummyXULButton(kButtonId);
   let toolbar = document.createElement("toolbar");
   toolbar.id = kToolbarId;
@@ -22,7 +21,7 @@ add_task(function() {
   is(CustomizableUI.getAreaType(kToolbarId), CustomizableUI.TYPE_TOOLBAR,
      "Area should be registered as toolbar");
   assertAreaPlacements(kToolbarId, [kButtonId]);
-  ok(!CustomizableUI.inDefaultState, "No longer in default state after toolbar is registered and visible.");
+  ok(CustomizableUI.inDefaultState, "Everything should be in its default state.");
   CustomizableUI.unregisterArea(kToolbarId, true);
   toolbar.remove();
   ok(CustomizableUI.inDefaultState, "Everything should be in its default state.");
@@ -32,7 +31,6 @@ add_task(function() {
 // Registering a toolbar without a defaultset attribute should
 // wait for the registerArea call
 add_task(function() {
-  ok(CustomizableUI.inDefaultState, "Everything should be in its default state.");
   let btn = createDummyXULButton(kButtonId);
   let toolbar = document.createElement("toolbar");
   toolbar.id = kToolbarId;
@@ -46,7 +44,7 @@ add_task(function() {
   is(CustomizableUI.getAreaType(kToolbarId), CustomizableUI.TYPE_TOOLBAR,
      "Area should be registered as toolbar");
   assertAreaPlacements(kToolbarId, [kButtonId]);
-  ok(!CustomizableUI.inDefaultState, "No longer in default state after toolbar is registered and visible.");
+  ok(CustomizableUI.inDefaultState, "Everything should be in its default state.");
   CustomizableUI.unregisterArea(kToolbarId, true);
   toolbar.remove();
   ok(CustomizableUI.inDefaultState, "Everything should be in its default state.");
