@@ -166,6 +166,7 @@ public class StringHelper {
 
     // Android 3.0+
     public static final String TOOLS_LABEL = "Tools";
+    public static final String PAGE_LABEL = "Page";
 
     // Android 2.3 and lower only
     public static final String MORE_LABEL = "More";
