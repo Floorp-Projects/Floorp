@@ -103,5 +103,5 @@
     <dimen name="icongrid_padding">16dp</dimen>
 
     <!-- PanelGridView dimensions -->
-    <dimen name="panel_grid_view_column_width">180dp</dimen>
+    <dimen name="panel_grid_view_column_width">150dp</dimen>
 </resources>
