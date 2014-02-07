@@ -101,11 +101,6 @@ public:
            BluetoothReplyRunnable* aRunnable);
 
   virtual void
-  SendFile(const nsAString& aDeviceAddress,
-           nsIDOMBlob* aBlob,
-           BluetoothReplyRunnable* aRunnable);
-
-  virtual void
   StopSendingFile(const nsAString& aDeviceAddress,
                   BluetoothReplyRunnable* aRunnable);
 
