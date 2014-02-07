@@ -427,7 +427,7 @@ static nsIFrame* GetIBSplitSibling(nsIFrame* aFrame)
        Properties().Get(nsIFrame::IBSplitSibling()));
 }
 
-static nsIFrame* GetSpecialPrevSibling(nsIFrame* aFrame)
+static nsIFrame* GetIBSplitPrevSibling(nsIFrame* aFrame)
 {
   NS_PRECONDITION(IsFramePartOfIBSplit(aFrame), "Shouldn't call this");
 
@@ -5853,7 +5853,7 @@ nsCSSFrameConstructor::AppendFramesToParent(nsFrameConstructorState&       aStat
         NS_ASSERTION(blockKids.NotEmpty(), "No blocks?");
 
         nsIFrame* prevBlock =
-          GetSpecialPrevSibling(firstContinuation)->LastContinuation();
+          GetIBSplitPrevSibling(firstContinuation)->LastContinuation();
         NS_ASSERTION(prevBlock, "Should have previous block here");
 
         MoveChildrenTo(aState.mPresContext, aParentFrame, prevBlock, blockKids);
@@ -8582,7 +8582,7 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame,
   // Get the first continuation up front so we don't have to do it twice.
   nsIFrame* parentFirstContinuation = parent->FirstContinuation();
   if (!GetIBSplitSibling(parentFirstContinuation) ||
-      !GetSpecialPrevSibling(parentFirstContinuation)) {
+      !GetIBSplitPrevSibling(parentFirstContinuation)) {
     return false;
   }
 
