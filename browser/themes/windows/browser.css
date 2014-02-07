@@ -537,6 +537,16 @@ menuitem.bookmark-item {
   padding: 3px 7px;
 }
 
+/* Help SDK icons fit: */
+toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
+  width: 16px;
+}
+
+#nav-bar toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
+  /* XXXgijs box models strike again: this is 16px + 2 * 7px padding + 2 * 1px border (from the rules above) */
+  width: 32px;
+}
+
 #nav-bar .toolbarbutton-1[type=menu]:not(#back-button):not(#forward-button):not(#feed-button):not(#social-provider-button):not(#PanelUI-menu-button) > .toolbarbutton-icon,
 #nav-bar .toolbarbutton-1[type=menu] > .toolbarbutton-text /* hack for add-ons that forcefully display the label */ {
   -moz-padding-end: 17px;

@@ -1174,9 +1174,15 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button,
   min-width: 28px;
 }
 
-.toolbarbutton-1:not(:-moz-any(@primaryToolbarButtons@)) > .toolbarbutton-icon,
-.toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
+/* Help 16px icons fit: */
+.toolbarbutton-1[cui-areatype="toolbar"]:not(:-moz-any(@primaryToolbarButtons@)) > .toolbarbutton-icon,
+.toolbarbutton-1[cui-areatype="toolbar"] > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
   margin: 2px;
+}
+
+/* Help SDK icons fit: */
+toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
+  width: 16px;
 }
 
 #main-window:not([customizing]) .toolbarbutton-1[disabled="true"] > .toolbarbutton-icon,

@@ -191,6 +191,13 @@ toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-it
   height: calc(40px + 4em);
 }
 
+/* Help SDK buttons fit in. */
+toolbarpaletteitem[place="palette"] > #personal-bookmarks > #bookmarks-toolbar-placeholder,
+#personal-bookmarks[cui-areatype="menu-panel"] > #bookmarks-toolbar-placeholder {
+  height: 32px;
+  width: 32px;
+}
+
 .customization-palette .toolbarbutton-1 {
   -moz-appearance: none;
   -moz-box-orient: vertical;
