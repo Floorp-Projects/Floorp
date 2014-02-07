@@ -124,8 +124,8 @@ nsInlineFrame::IsSelfEmpty()
         haveStart = haveRight;
         haveEnd = haveLeft;
       }
-      // For special frames, ignore things we know we'll skip in GetSkipSides.
-      // XXXbz should we be doing this for non-special frames too, in a more
+      // For ib-split frames, ignore things we know we'll skip in GetSkipSides.
+      // XXXbz should we be doing this for non-ib-split frames too, in a more
       // general way?
 
       // Get the first continuation eagerly, as a performance optimization, to
