@@ -30,6 +30,8 @@
 <!ENTITY % syncDTD SYSTEM "chrome://browser/locale/sync.dtd">
 %syncDTD;
 #endif
+<!ENTITY % baseMenuOverlayDTD SYSTEM "chrome://browser/locale/baseMenuOverlay.dtd">
+%baseMenuOverlayDTD;
 ]>
 
 <window id="main-window"
@@ -847,5 +849,6 @@ Desktop browser's sync prefs.
       </vbox>
     </box>
   </stack>
-
+  <!-- XXX: Expose feedback string to SettingsCharm.js -->
+  <label value="&helpFeedbackPage.label;" id="feedback-label" href="https://input.mozilla.org/feedback/metrofirefox" hidden="true"/>
 </window>
