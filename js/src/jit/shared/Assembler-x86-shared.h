@@ -1106,6 +1106,45 @@ class AssemblerX86Shared
         masm.sarl_CLr(dest.code());
     }
 
+    void incl(const Operand &op) {
+        switch (op.kind()) {
+          case Operand::MEM_REG_DISP:
+            masm.incl_m32(op.disp(), op.base());
+            break;
+          default:
+            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+        }
+    }
+    void lock_incl(const Operand &op) {
+        masm.prefix_lock();
+        incl(op);
+    }
+
+    void decl(const Operand &op) {
+        switch (op.kind()) {
+          case Operand::MEM_REG_DISP:
+            masm.decl_m32(op.disp(), op.base());
+            break;
+          default:
+            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+        }
+    }
+    void lock_decl(const Operand &op) {
+        masm.prefix_lock();
+        decl(op);
+    }
+
+    void lock_cmpxchg32(const Register &src, const Operand &op) {
+        masm.prefix_lock();
+        switch (op.kind()) {
+          case Operand::MEM_REG_DISP:
+            masm.cmpxchg32(src.code(), op.disp(), op.base());
+            break;
+          default:
+            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+        }
+    }
+
     void xaddl(const Register &srcdest, const Operand &mem) {
         switch (mem.kind()) {
           case Operand::MEM_REG_DISP:

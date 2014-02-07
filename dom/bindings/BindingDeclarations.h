@@ -36,6 +36,9 @@ namespace dom {
 // so we can use IsBaseOf to detect dictionary template arguments.
 struct DictionaryBase
 {
+protected:
+  bool ParseJSON(JSContext* aCx, const nsAString& aJSON,
+                 JS::MutableHandle<JS::Value> aVal);
 };
 
 // Struct that serves as a base class for all typed arrays and array buffers and
@@ -44,13 +47,6 @@ struct DictionaryBase
 struct AllTypedArraysBase {
 };
 
-
-struct MainThreadDictionaryBase : public DictionaryBase
-{
-protected:
-  bool ParseJSON(JSContext *aCx, const nsAString& aJSON,
-                 JS::MutableHandle<JS::Value> aVal);
-};
 
 struct EnumEntry {
   const char* value;

@@ -333,7 +333,7 @@ nsWindowsRegKey::ReadStringValue(const nsAString &name, nsAString &result)
         return NS_ERROR_OUT_OF_MEMORY;
 
       resultLen = ExpandEnvironmentStringsW(flatSource.get(),
-                                            begin.get(),
+                                            wwc(begin.get()),
                                             resultLen + 1);
       if (resultLen <= 0) {
         rv = ERROR_UNKNOWN_FEATURE;

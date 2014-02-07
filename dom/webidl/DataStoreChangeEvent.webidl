@@ -10,7 +10,7 @@ dictionary DataStoreChangeEventInit : EventInit {
   DOMString operation = "";
 };
 
-[Pref="dom.datastore.enabled",
+[Func="Navigator::HasDataStoreSupport",
  Constructor(DOMString type, optional DataStoreChangeEventInit eventInitDict)]
 interface DataStoreChangeEvent : Event {
   readonly attribute DOMString revisionId;

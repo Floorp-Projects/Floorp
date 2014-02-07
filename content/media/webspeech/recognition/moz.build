@@ -24,7 +24,6 @@ EXPORTS.mozilla.dom += [
 ]
 
 UNIFIED_SOURCES += [
-    'EnableWebSpeechRecognitionCheck.cpp',
     'endpointer.cc',
     'energy_endpointer.cc',
     'energy_endpointer_params.cc',

@@ -120,6 +120,33 @@ public:
 
     bool           PromptTempRedirect()      { return mPromptTempRedirect; }
 
+    // TCP Keepalive configuration values.
+
+    // Returns true if TCP keepalive should be enabled for short-lived conns.
+    bool TCPKeepaliveEnabledForShortLivedConns() {
+      return mTCPKeepaliveShortLivedEnabled;
+    }
+    // Return time (secs) that a connection is consider short lived (for TCP
+    // keepalive purposes). After this time, the connection is long-lived.
+    int32_t GetTCPKeepaliveShortLivedTime() {
+      return mTCPKeepaliveShortLivedTimeS;
+    }
+    // Returns time (secs) before first TCP keepalive probes should be sent;
+    // same time used between successful keepalive probes.
+    int32_t GetTCPKeepaliveShortLivedIdleTime() {
+      return mTCPKeepaliveShortLivedIdleTimeS;
+    }
+
+    // Returns true if TCP keepalive should be enabled for long-lived conns.
+    bool TCPKeepaliveEnabledForLongLivedConns() {
+      return mTCPKeepaliveLongLivedEnabled;
+    }
+    // Returns time (secs) before first TCP keepalive probes should be sent;
+    // same time used between successful keepalive probes.
+    int32_t GetTCPKeepaliveLongLivedIdleTime() {
+      return mTCPKeepaliveLongLivedIdleTimeS;
+    }
+
     nsHttpAuthCache     *AuthCache(bool aPrivate) {
         return aPrivate ? &mPrivateAuthCache : &mAuthCache;
     }
@@ -463,6 +490,20 @@ private:
     // When the disk cache is responding slowly its use is suppressed
     // for 1 minute for most requests.
     TimeStamp      mCacheSkippedUntil;
+
+    // TCP Keepalive configuration values.
+
+    // True if TCP keepalive is enabled for short-lived conns.
+    bool mTCPKeepaliveShortLivedEnabled;
+    // Time (secs) indicating how long a conn is considered short-lived.
+    int32_t mTCPKeepaliveShortLivedTimeS;
+    // Time (secs) before first keepalive probe; between successful probes.
+    int32_t mTCPKeepaliveShortLivedIdleTimeS;
+
+    // True if TCP keepalive is enabled for long-lived conns.
+    bool mTCPKeepaliveLongLivedEnabled;
+    // Time (secs) before first keepalive probe; between successful probes.
+    int32_t mTCPKeepaliveLongLivedIdleTimeS;
 
 private:
     // For Rate Pacing Certain Network Events. Only assign this pointer on

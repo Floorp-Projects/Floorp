@@ -483,7 +483,6 @@ class Descriptor(DescriptorProvider):
         static methods or attributes.
         """
         return (self.interface.isExternal() or self.concrete or
-            self.interface.getExtendedAttribute("PrefControlled") or
             self.interface.hasInterfacePrototypeObject() or
             any((m.isAttr() or m.isMethod()) and m.isStatic() for m
                 in self.interface.members))
@@ -492,7 +491,6 @@ class Descriptor(DescriptorProvider):
         return (self.interface.getExtendedAttribute("Pref") or
                 self.interface.getExtendedAttribute("ChromeOnly") or
                 self.interface.getExtendedAttribute("Func") or
-                self.interface.getExtendedAttribute("PrefControlled") or
                 self.interface.getExtendedAttribute("AvailableIn"))
 
     def needsXrayResolveHooks(self):

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-US">
 <head>
-  <title>test of -moz-box-sizing</title>
+  <title>test of box-sizing</title>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <meta http-equiv="Content-Style-Type" content="text/css">
   <style type="text/css">
@@ -12,9 +12,9 @@
 
     td > div { width: 100px; }
 
-    td#bscontent > div > div { -moz-box-sizing: content-box; }
-    td#bspadding > div > div { -moz-box-sizing: padding-box; }
-    td#bsborder > div > div { -moz-box-sizing: border-box; }
+    td#bscontent > div > div { box-sizing: content-box; }
+    td#bspadding > div > div { box-sizing: padding-box; }
+    td#bsborder > div > div { box-sizing: border-box; }
 
     td > div > div {
       margin-left: 1%;
@@ -36,7 +36,7 @@
 
 <td id="bscontent"><div>
 
-<!-- -moz-box-sizing: content-box -->
+<!-- box-sizing: content-box -->
 <div style="width: auto">A B</div>
 <div style="width: -moz-max-content">A B</div>
 <div style="width: -moz-min-content">A B</div>
@@ -48,7 +48,7 @@
 </div></td>
 
 <td id="bspadding"><div>
-<!-- -moz-box-sizing: padding-box -->
+<!-- box-sizing: padding-box -->
 <div style="width: auto">A B</div>
 <div style="width: -moz-max-content">A B</div>
 <div style="width: -moz-min-content">A B</div>
@@ -60,7 +60,7 @@
 </div></td>
 
 <td id="bsborder"><div>
-<!-- -moz-box-sizing: border-box -->
+<!-- box-sizing: border-box -->
 <div style="width: auto">A B</div>
 <div style="width: -moz-max-content">A B</div>
 <div style="width: -moz-min-content">A B</div>

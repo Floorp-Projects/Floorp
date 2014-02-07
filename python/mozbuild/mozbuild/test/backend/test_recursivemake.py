@@ -321,6 +321,13 @@ class TestRecursiveMakeBackend(BackendTester):
             'VISIBILITY_FLAGS': [
                 'VISIBILITY_FLAGS :=',
             ],
+            'DELAYLOAD_LDFLAGS': [
+                'DELAYLOAD_LDFLAGS += -DELAYLOAD:foo.dll',
+                'DELAYLOAD_LDFLAGS += -DELAYLOAD:bar.dll',
+            ],
+            'USE_DELAYIMP': [
+                'USE_DELAYIMP := 1',
+            ],
         }
 
         for var, val in expected.items():

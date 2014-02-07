@@ -5,7 +5,7 @@
 
 #include "nsIChannel.idl"
 
-[uuid(0d92a16a-8235-4c4c-81c9-a4fa65c65f5c)]
+[uuid(023782d2-3ec9-4bbc-8027-ec35e144fc96)]
 interface nsIViewSourceChannel : nsIChannel
 {
     /**
@@ -24,6 +24,14 @@ interface nsIViewSourceChannel : nsIChannel
      * Whether the channel was created to view the source of a srcdoc document.
      */
     readonly attribute boolean isSrcdocChannel;
+
+    /**
+     * If this is a srcdoc channel, it returns the base URI provided by the
+     * embedded channel.  It is used to provide an indication of the base URI
+     * in circumstances where it isn't otherwise recoverable.  Returns a
+     * nullptr when it isn't set or isn't a srcdoc channel.
+     */
+    readonly attribute nsIURI baseURI;
 };
 
 

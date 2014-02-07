@@ -115,7 +115,7 @@ nsInlineFrame::IsSelfEmpty()
     !nsLayoutUtils::IsPaddingZero(padding->mPadding.GetLeft()) ||
     !IsMarginZero(margin->mMargin.GetLeft());
   if (haveLeft || haveRight) {
-    if (GetStateBits() & NS_FRAME_IS_SPECIAL) {
+    if (GetStateBits() & NS_FRAME_PART_OF_IBSPLIT) {
       bool haveStart, haveEnd;
       if (NS_STYLE_DIRECTION_LTR == StyleVisibility()->mDirection) {
         haveStart = haveLeft;
@@ -124,8 +124,8 @@ nsInlineFrame::IsSelfEmpty()
         haveStart = haveRight;
         haveEnd = haveLeft;
       }
-      // For special frames, ignore things we know we'll skip in GetSkipSides.
-      // XXXbz should we be doing this for non-special frames too, in a more
+      // For ib-split frames, ignore things we know we'll skip in GetSkipSides.
+      // XXXbz should we be doing this for non-ib-split frames too, in a more
       // general way?
 
       // Get the first continuation eagerly, as a performance optimization, to
@@ -316,9 +316,8 @@ nsInlineFrame::Reflow(nsPresContext*          aPresContext,
     if (prevOverflowFrames) {
       // When pushing and pulling frames we need to check for whether any
       // views need to be reparented.
-      nsContainerFrame::ReparentFrameViewList(aPresContext,
-                                              *prevOverflowFrames,
-                                              prevInFlow, this);
+      nsContainerFrame::ReparentFrameViewList(*prevOverflowFrames, prevInFlow,
+                                              this);
 
       // Check if we should do the lazilySetParentPointer optimization.
       // Only do it in simple cases where we're being reflowed for the
@@ -468,9 +467,8 @@ nsInlineFrame::PullOverflowsFromPrevInFlow()
                                         prevInFlow->StealOverflowFrames());
     if (prevOverflowFrames) {
       // Assume that our prev-in-flow has the same line container that we do.
-      nsContainerFrame::ReparentFrameViewList(presContext,
-                                              *prevOverflowFrames,
-                                              prevInFlow, this);
+      nsContainerFrame::ReparentFrameViewList(*prevOverflowFrames, prevInFlow,
+                                              this);
       mFrames.InsertFrames(this, nullptr, *prevOverflowFrames);
     }
   }
@@ -750,7 +748,7 @@ nsInlineFrame::ReflowInlineFrame(nsPresContext* aPresContext,
   // Create a next-in-flow if needed.
   if (!NS_FRAME_IS_FULLY_COMPLETE(aStatus)) {
     nsIFrame* newFrame;
-    rv = CreateNextInFlow(aPresContext, aFrame, newFrame);
+    rv = CreateNextInFlow(aFrame, newFrame);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -804,7 +802,7 @@ nsInlineFrame::PullOneFrame(nsPresContext* aPresContext,
         frame = overflowFrames->RemoveFirstChild();
         if (overflowFrames->IsEmpty()) {
           // We're stealing the only frame - delete the overflow list.
-          nextInFlow->DestroyOverflowList(aPresContext);
+          nextInFlow->DestroyOverflowList();
         } else {
           // We leave the remaining frames on the overflow list (rather than
           // putting them on nextInFlow's principal list) so we don't have to
@@ -834,7 +832,7 @@ nsInlineFrame::PullOneFrame(nsPresContext* aPresContext,
       if (irs.mLineLayout) {
         irs.mLineLayout->SetDirtyNextLine();
       }
-      nsContainerFrame::ReparentFrameView(aPresContext, frame, nextInFlow, this);
+      nsContainerFrame::ReparentFrameView(frame, nextInFlow, this);
       break;
     }
     nextInFlow = static_cast<nsInlineFrame*>(nextInFlow->GetNextInFlow());
@@ -862,7 +860,7 @@ nsInlineFrame::PushFrames(nsPresContext* aPresContext,
 
   // Add the frames to our overflow list (let our next in flow drain
   // our overflow list when it is ready)
-  SetOverflowFrames(aPresContext, mFrames.RemoveFramesAfter(aPrevSibling));
+  SetOverflowFrames(mFrames.RemoveFramesAfter(aPrevSibling));
   if (aState.mLineLayout) {
     aState.mLineLayout->SetDirtyNextLine();
   }
@@ -902,7 +900,7 @@ nsInlineFrame::GetSkipSides(const nsHTMLReflowState* aReflowState) const
     }
   }
 
-  if (GetStateBits() & NS_FRAME_IS_SPECIAL) {
+  if (GetStateBits() & NS_FRAME_PART_OF_IBSPLIT) {
     // All but the last part of an {ib} split should skip the "end" side (as
     // determined by this frame's direction) and all but the first part of such
     // a split should skip the "start" side.  But figuring out which part of

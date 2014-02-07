@@ -779,8 +779,8 @@ public:
     return &descriptor;                                                                        \
   }
 
-  NS_DECLARE_FRAME_PROPERTY(IBSplitSpecialSibling, nullptr)
-  NS_DECLARE_FRAME_PROPERTY(IBSplitSpecialPrevSibling, nullptr)
+  NS_DECLARE_FRAME_PROPERTY(IBSplitSibling, nullptr)
+  NS_DECLARE_FRAME_PROPERTY(IBSplitPrevSibling, nullptr)
 
   NS_DECLARE_FRAME_PROPERTY(NormalPositionProperty, DestroyPoint)
   NS_DECLARE_FRAME_PROPERTY(ComputedOffsetProperty, DestroyMargin)
@@ -2808,8 +2808,8 @@ NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::ParagraphDepthProperty()))
    * continuations of the first inline in it.
    */
   bool FrameIsNonFirstInIBSplit() const {
-    return (GetStateBits() & NS_FRAME_IS_SPECIAL) &&
-      FirstContinuation()->Properties().Get(nsIFrame::IBSplitSpecialPrevSibling());
+    return (GetStateBits() & NS_FRAME_PART_OF_IBSPLIT) &&
+      FirstContinuation()->Properties().Get(nsIFrame::IBSplitPrevSibling());
   }
 
   /**
@@ -2817,8 +2817,8 @@ NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::ParagraphDepthProperty()))
    * continuations of the last inline in it.
    */
   bool FrameIsNonLastInIBSplit() const {
-    return (GetStateBits() & NS_FRAME_IS_SPECIAL) &&
-      FirstContinuation()->Properties().Get(nsIFrame::IBSplitSpecialSibling());
+    return (GetStateBits() & NS_FRAME_PART_OF_IBSPLIT) &&
+      FirstContinuation()->Properties().Get(nsIFrame::IBSplitSibling());
   }
 
   /**

@@ -46,22 +46,22 @@ class GLConstHeader:
 
     def formatFileBegin(self):
         self.write([
-                    '/* This Source Code Form is subject to the terms of the Mozilla Public',
-                    ' * License, v. 2.0. If a copy of the MPL was not distributed with this',
-                    ' * file, You can obtain one at http://mozilla.org/MPL/2.0/. */',
-                    '',
-                    '#ifndef GLCONSTS_H_',
-                    '#define GLCONSTS_H_',
-                    '',
-                    '/**',
-                    ' * GENERATED FILE, DO NOT MODIFY DIRECTLY.',
-                    ' * This is a file generated directly from the official OpenGL registry',
-                    ' * xml available http://www.opengl.org/registry/#specfiles.',
-                    ' *',
-                    ' * To generate this file, see tutorial in GLParseRegistry.py',
-                    ' */',
-                    ''
-                   ])
+            '/* This Source Code Form is subject to the terms of the Mozilla Public',
+            ' * License, v. 2.0. If a copy of the MPL was not distributed with this',
+            ' * file, You can obtain one at http://mozilla.org/MPL/2.0/. */',
+            '',
+            '#ifndef GLCONSTS_H_',
+            '#define GLCONSTS_H_',
+            '',
+            '/**',
+            ' * GENERATED FILE, DO NOT MODIFY DIRECTLY.',
+            ' * This is a file generated directly from the official OpenGL registry',
+            ' * xml available http://www.opengl.org/registry/#specfiles.',
+            ' *',
+            ' * To generate this file, see tutorial in \'GLParseRegistryXML.py\'.',
+            ' */',
+            ''
+        ])
 
 
     def formatLibBegin(self, lib):

@@ -1011,24 +1011,25 @@ public:
   static nsIFrame* GetParentOrPlaceholderForCrossDoc(nsIFrame* aFrame);
 
   /**
-   * Get a frame's next-in-flow, or, if it doesn't have one, its special sibling.
+   * Get a frame's next-in-flow, or, if it doesn't have one, its
+   * block-in-inline-split sibling.
    */
   static nsIFrame*
-  GetNextContinuationOrSpecialSibling(nsIFrame *aFrame);
+  GetNextContinuationOrIBSplitSibling(nsIFrame *aFrame);
 
   /**
-   * Get the first frame in the continuation-plus-special-sibling chain
+   * Get the first frame in the continuation-plus-ib-split-sibling chain
    * containing aFrame.
    */
   static nsIFrame*
-  FirstContinuationOrSpecialSibling(nsIFrame *aFrame);
+  FirstContinuationOrIBSplitSibling(nsIFrame *aFrame);
 
   /**
-   * Is FirstContinuationOrSpecialSibling(aFrame) going to return
+   * Is FirstContinuationOrIBSplitSibling(aFrame) going to return
    * aFrame?
    */
   static bool
-  IsFirstContinuationOrSpecialSibling(nsIFrame *aFrame);
+  IsFirstContinuationOrIBSplitSibling(nsIFrame *aFrame);
 
   /**
    * Check whether aFrame is a part of the scrollbar or scrollcorner of
@@ -1075,9 +1076,9 @@ public:
    * @param aFrame Frame whose (min-/max-/)width is being computed
    * @param aContainingBlockWidth Width of aFrame's containing block.
    * @param aContentEdgeToBoxSizing The sum of any left/right padding and
-   *          border that goes inside the rect chosen by -moz-box-sizing.
+   *          border that goes inside the rect chosen by box-sizing.
    * @param aBoxSizingToMarginEdge The sum of any left/right padding, border,
-   *          and margin that goes outside the rect chosen by -moz-box-sizing.
+   *          and margin that goes outside the rect chosen by box-sizing.
    * @param aCoord The width value to compute.
    */
   static nscoord ComputeWidthValue(

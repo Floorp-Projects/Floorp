@@ -26,5 +26,6 @@ add_task(function* test_instantiation() {
 
   Assert.ok(bsp.gCrashManager, "Profile creation makes it available.");
   Assert.ok(Services.crashmanager, "CrashManager available via Services.");
-  Assert.equal(bsp.gCrashManager, Services.crashmanager);
+  Assert.strictEqual(bsp.gCrashManager, Services.crashmanager,
+                     "The objects are the same.");
 });

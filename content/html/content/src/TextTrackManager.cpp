@@ -32,9 +32,10 @@ TextTrackManager::TextTrackManager(HTMLMediaElement *aMediaElement)
 {
   MOZ_COUNT_CTOR(TextTrackManager);
   mNewCues = new TextTrackCueList(mMediaElement->OwnerDoc()->GetParentObject());
-  mTextTracks = new TextTrackList(mMediaElement->OwnerDoc()->GetParentObject());
+  mTextTracks = new TextTrackList(mMediaElement->OwnerDoc()->GetParentObject(),
+                                  this);
   mPendingTextTracks =
-    new TextTrackList(mMediaElement->OwnerDoc()->GetParentObject());
+    new TextTrackList(mMediaElement->OwnerDoc()->GetParentObject(), this);
 
   if (!sParserWrapper) {
     nsCOMPtr<nsIWebVTTParserWrapper> parserWrapper =
@@ -60,7 +61,7 @@ TextTrackManager::AddTextTrack(TextTrackKind aKind, const nsAString& aLabel,
                                const nsAString& aLanguage)
 {
   nsRefPtr<TextTrack> ttrack =
-    mTextTracks->AddTextTrack(mMediaElement, aKind, aLabel, aLanguage);
+    mTextTracks->AddTextTrack(aKind, aLabel, aLanguage);
   ttrack->SetReadyState(HTMLTrackElement::READY_STATE_LOADED);
   AddCues(ttrack);
   return ttrack.forget();

@@ -261,6 +261,7 @@ class Simulator
     void decodeVCMP(SimInstruction *instr);
     void decodeVCVTBetweenDoubleAndSingle(SimInstruction *instr);
     void decodeVCVTBetweenFloatingPointAndInteger(SimInstruction *instr);
+    void decodeVCVTBetweenFloatingPointAndIntegerFrac(SimInstruction *instr);
 
     // Executes one instruction.
     void instructionDecode(SimInstruction *instr);
@@ -269,7 +270,7 @@ class Simulator
     static bool ICacheCheckingEnabled;
     static void FlushICache(void *start, size_t size);
 
-    static int StopSimAt;
+    static int64_t StopSimAt;
 
     // Runtime call support.
     static void *RedirectNativeFunction(void *nativeFunction, ABIFunctionType type);
@@ -320,7 +321,7 @@ class Simulator
     // Simulator support.
     char *stack_;
     bool pc_modified_;
-    int icount_;
+    int64_t icount_;
 
     int32_t resume_pc_;
 
@@ -349,6 +350,12 @@ class Simulator
         char *desc;
     };
     StopCountAndDesc watched_stops_[kNumOfWatchedStops];
+
+  public:
+    int64_t icount() {
+        return icount_;
+    }
+
 };
 
 #define JS_CHECK_SIMULATOR_RECURSION_WITH_EXTRA(cx, extra, onerror)             \

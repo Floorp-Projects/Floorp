@@ -369,7 +369,7 @@ private:
                                   FrameConstructionItemList& aItems);
 
   // This method can change aFrameList: it can chop off the beginning and put
-  // it in aParentFrame while putting the remainder into a special sibling of
+  // it in aParentFrame while putting the remainder into a ib-split sibling of
   // aParentFrame.  aPrevSibling must be the frame after which aFrameList is to
   // be placed on aParentFrame's principal child list.  It may be null if
   // aFrameList is being added at the beginning of the child list.
@@ -1552,7 +1552,7 @@ private:
    *                    will be empty.
    * @param aSiblings the nsFrameItems to put the newly-created siblings into.
    *
-   * This method is responsible for making any SetFrameIsSpecial calls that are
+   * This method is responsible for making any SetFrameIsIBSplit calls that are
    * needed.
    */
   void CreateIBSiblings(nsFrameConstructorState& aState,
