@@ -102,28 +102,23 @@ MockStorage.prototype = Object.freeze({
  * mock the now() method, so that we can simulate the passing of
  * time and verify that signatures expire correctly.
  */
-let MockFxAccounts = function() {
-  this._getCertificateSigned_calls = [];
-  this._d_signCertificate = Promise.defer();
-  this._now_is = new Date();
-
-  let mockInternal = {
+function MockFxAccounts() {
+  return new FxAccounts({
+    _getCertificateSigned_calls: [],
+    _d_signCertificate: Promise.defer(),
+    _now_is: new Date(),
     signedInUserStorage: new MockStorage(),
-    now: () => {
+    now: function () {
       return this._now_is;
     },
-    getCertificateSigned: (sessionToken, serializedPublicKey) => {
-      _("mock getCerificateSigned\n");
+    getCertificateSigned: function (sessionToken, serializedPublicKey) {
+      _("mock getCertificateSigned\n");
       this._getCertificateSigned_calls.push([sessionToken, serializedPublicKey]);
       return this._d_signCertificate.promise;
     },
     fxAccountsClient: new MockFxAccountsClient()
-  };
-  FxAccounts.apply(this, [mockInternal]);
-};
-MockFxAccounts.prototype = {
-  __proto__: FxAccounts.prototype,
-};
+  });
+}
 
 add_test(function test_non_https_remote_server_uri() {
   Services.prefs.setCharPref(
@@ -394,15 +389,15 @@ add_task(function test_getAssertion() {
   // the test, we will update 'now', but leave 'start' where it is.
   let now = Date.parse("Mon, 13 Jan 2014 21:45:06 GMT");
   let start = now;
-  fxa._now_is = now;
+  fxa.internal._now_is = now;
 
   let d = fxa.getAssertion("audience.example.com");
   // At this point, a thread has been spawned to generate the keys.
   _("-- back from fxa.getAssertion\n");
-  fxa._d_signCertificate.resolve("cert1");
+  fxa.internal._d_signCertificate.resolve("cert1");
   let assertion = yield d;
-  do_check_eq(fxa._getCertificateSigned_calls.length, 1);
-  do_check_eq(fxa._getCertificateSigned_calls[0][0], "sessionToken");
+  do_check_eq(fxa.internal._getCertificateSigned_calls.length, 1);
+  do_check_eq(fxa.internal._getCertificateSigned_calls[0][0], "sessionToken");
   do_check_neq(assertion, null);
   _("ASSERTION: " + assertion + "\n");
   let pieces = assertion.split("~");
@@ -424,18 +419,18 @@ add_task(function test_getAssertion() {
   do_check_eq(exp, now + TWO_MINUTES_MS);
 
   // Reset for next call.
-  fxa._d_signCertificate = Promise.defer();
+  fxa.internal._d_signCertificate = Promise.defer();
 
   // Getting a new assertion "soon" (i.e., w/o incrementing "now"), even for
   // a new audience, should not provoke key generation or a signing request.
   assertion = yield fxa.getAssertion("other.example.com");
 
   // There were no additional calls - same number of getcert calls as before
-  do_check_eq(fxa._getCertificateSigned_calls.length, 1);
+  do_check_eq(fxa.internal._getCertificateSigned_calls.length, 1);
 
   // Wait an hour; assertion expires, but not the certificate
   now += ONE_HOUR_MS;
-  fxa._now_is = now;
+  fxa.internal._now_is = now;
 
   // This won't block on anything - will make an assertion, but not get a
   // new certificate.
@@ -462,12 +457,12 @@ add_task(function test_getAssertion() {
   // Now we wait even longer, and expect both assertion and cert to expire.  So
   // we will have to get a new keypair and cert.
   now += ONE_DAY_MS;
-  fxa._now_is = now;
+  fxa.internal._now_is = now;
   d = fxa.getAssertion("fourth.example.com");
-  fxa._d_signCertificate.resolve("cert2");
+  fxa.internal._d_signCertificate.resolve("cert2");
   assertion = yield d;
-  do_check_eq(fxa._getCertificateSigned_calls.length, 2);
-  do_check_eq(fxa._getCertificateSigned_calls[1][0], "sessionToken");
+  do_check_eq(fxa.internal._getCertificateSigned_calls.length, 2);
+  do_check_eq(fxa.internal._getCertificateSigned_calls[1][0], "sessionToken");
   pieces = assertion.split("~");
   do_check_eq(pieces[0], "cert2");
   p2 = pieces[1].split(".");

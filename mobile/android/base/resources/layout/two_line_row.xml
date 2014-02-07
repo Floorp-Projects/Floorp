@@ -18,14 +18,14 @@
                   android:orientation="vertical">
 
         <org.mozilla.gecko.home.FadedTextView
-                android:id="@+id/primary_text"
-                style="@style/Widget.TwoLineRow.PrimaryText"
+                android:id="@+id/title"
+                style="@style/Widget.TwoLineRow.Title"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 gecko:fadeWidth="30dp"/>
 
-        <TextView android:id="@+id/secondary_text"
-                  style="@style/Widget.TwoLineRow.SecondaryText"
+        <TextView android:id="@+id/description"
+                  style="@style/Widget.TwoLineRow.Description"
                   android:layout_width="fill_parent"
                   android:layout_height="wrap_content"
                   android:drawablePadding="5dp"

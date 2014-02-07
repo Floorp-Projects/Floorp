@@ -111,20 +111,20 @@
 
     <style name="Widget.TwoLineRow" />
 
-    <style name="Widget.TwoLineRow.PrimaryText">
-        <item name="android:textAppearance">@style/TextAppearance.Widget.TwoLineRow.PrimaryText</item>
+    <style name="Widget.TwoLineRow.Title">
+        <item name="android:textAppearance">@style/TextAppearance.Widget.TwoLineRow.Title</item>
         <item name="android:singleLine">true</item>
         <item name="android:ellipsize">none</item>
     </style>
 
-    <style name="Widget.TwoLineRow.SecondaryText">
-        <item name="android:textAppearance">@style/TextAppearance.Widget.TwoLineRow.SecondaryText</item>
+    <style name="Widget.TwoLineRow.Description">
+        <item name="android:textAppearance">@style/TextAppearance.Widget.TwoLineRow.Description</item>
         <item name="android:includeFontPadding">false</item>
         <item name="android:singleLine">true</item>
         <item name="android:ellipsize">middle</item>
     </style>
 
-    <style name="Widget.BookmarkFolderView" parent="Widget.TwoLineRow.PrimaryText">
+    <style name="Widget.BookmarkFolderView" parent="Widget.TwoLineRow.Title">
         <item name="android:paddingLeft">10dip</item>
         <item name="android:drawablePadding">10dip</item>
         <item name="android:drawableLeft">@drawable/bookmark_folder</item>
@@ -150,19 +150,20 @@
         <item name="android:layout_height">fill_parent</item>
         <item name="android:paddingTop">0dp</item>
         <item name="android:stretchMode">columnWidth</item>
+        <item name="android:numColumns">auto_fit</item>
         <item name="android:columnWidth">@dimen/panel_grid_view_column_width</item>
         <item name="android:horizontalSpacing">2dp</item>
         <item name="android:verticalSpacing">2dp</item>
     </style>
 
     <style name="Widget.PanelGridItemView">
+      <item name="android:layout_width">fill_parent</item>
       <item name="android:layout_height">wrap_content</item>
-      <item name="android:layout_width">wrap_content</item>
     </style>
 
     <style name="Widget.PanelGridItemImageView">
-      <item name="android:layout_height">@dimen/panel_grid_view_column_width</item>
       <item name="android:layout_width">fill_parent</item>
+      <item name="android:layout_height">wrap_content</item>
       <item name="android:scaleType">centerCrop</item>
       <item name="android:adjustViewBounds">true</item>
       <item name="android:background">@color/panel_grid_item_image_background</item>
@@ -344,9 +345,9 @@
 
     <style name="TextAppearance.Widget.TwoLineRow" />
 
-    <style name="TextAppearance.Widget.TwoLineRow.PrimaryText" parent="TextAppearance.Medium"/>
+    <style name="TextAppearance.Widget.TwoLineRow.Title" parent="TextAppearance.Medium"/>
 
-    <style name="TextAppearance.Widget.TwoLineRow.SecondaryText" parent="TextAppearance.Micro">
+    <style name="TextAppearance.Widget.TwoLineRow.Description" parent="TextAppearance.Micro">
         <item name="android:textColor">?android:attr/textColorSecondary</item>
     </style>
 

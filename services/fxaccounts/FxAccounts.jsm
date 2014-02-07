@@ -17,11 +17,57 @@ Cu.import("resource://gre/modules/Timer.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/FxAccountsClient.jsm");
 Cu.import("resource://gre/modules/FxAccountsCommon.js");
+Cu.import("resource://gre/modules/FxAccountsUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "jwcrypto",
-                                  "resource://gre/modules/identity/jwcrypto.jsm");
+  "resource://gre/modules/identity/jwcrypto.jsm");
 
-InternalMethods = function(mock) {
+// All properties exposed by the public FxAccounts API.
+let publicProperties = [
+  "getAccountsURI",
+  "getAssertion",
+  "getKeys",
+  "getSignedInUser",
+  "loadAndPoll",
+  "localtimeOffsetMsec",
+  "now",
+  "promiseAccountsForceSigninURI",
+  "resendVerificationEmail",
+  "setSignedInUser",
+  "signOut",
+  "version",
+  "whenVerified"
+];
+
+/**
+ * The public API's constructor.
+ */
+this.FxAccounts = function (mockInternal) {
+  let internal = new FxAccountsInternal();
+  let external = {};
+
+  // Copy all public properties to the 'external' object.
+  let prototype = FxAccountsInternal.prototype;
+  let options = {keys: publicProperties, bind: internal};
+  FxAccountsUtils.copyObjectProperties(prototype, external, options);
+
+  // Copy all of the mock's properties to the internal object.
+  if (mockInternal && !mockInternal.onlySetInternal) {
+    FxAccountsUtils.copyObjectProperties(mockInternal, internal);
+  }
+
+  if (mockInternal) {
+    // Exposes the internal object for testing only.
+    external.internal = internal;
+  }
+
+  return Object.freeze(external);
+}
+
+/**
+ * The internal API's constructor.
+ */
+function FxAccountsInternal() {
   this.cert = null;
   this.keyPair = null;
   this.signedInUser = null;
@@ -49,23 +95,23 @@ InternalMethods = function(mock) {
 
   this.fxAccountsClient = new FxAccountsClient();
 
-  if (mock) { // Testing.
-    Object.keys(mock).forEach((prop) => {
-      log.debug("InternalMethods: mocking: " + prop);
-      this[prop] = mock[prop];
-    });
-  }
-  if (!this.signedInUserStorage) {
-    // Normal (i.e., non-testing) initialization.
-    // We don't reference |profileDir| in the top-level module scope
-    // as we may be imported before we know where it is.
-    this.signedInUserStorage = new JSONStorage({
-      filename: DEFAULT_STORAGE_FILENAME,
-      baseDir: OS.Constants.Path.profileDir,
-    });
-  }
+  // We don't reference |profileDir| in the top-level module scope
+  // as we may be imported before we know where it is.
+  this.signedInUserStorage = new JSONStorage({
+    filename: DEFAULT_STORAGE_FILENAME,
+    baseDir: OS.Constants.Path.profileDir,
+  });
 }
-InternalMethods.prototype = {
+
+/**
+ * The internal API's prototype.
+ */
+FxAccountsInternal.prototype = {
+
+  /**
+   * The current data format's version number.
+   */
+  version: DATA_FORMAT_VERSION,
 
   /**
    * Return the current time in milliseconds as an integer.  Allows tests to
@@ -100,6 +146,125 @@ InternalMethods.prototype = {
   fetchKeys: function fetchKeys(keyFetchToken) {
     log.debug("fetchKeys: " + keyFetchToken);
     return this.fxAccountsClient.accountKeys(keyFetchToken);
+  },
+
+  // set() makes sure that polling is happening, if necessary.
+  // get() does not wait for verification, and returns an object even if
+  // unverified. The caller of get() must check .verified .
+  // The "fxaccounts:onverified" event will fire only when the verified
+  // state goes from false to true, so callers must register their observer
+  // and then call get(). In particular, it will not fire when the account
+  // was found to be verified in a previous boot: if our stored state says
+  // the account is verified, the event will never fire. So callers must do:
+  //   register notification observer (go)
+  //   userdata = get()
+  //   if (userdata.verified()) {go()}
+
+  /**
+   * Get the user currently signed in to Firefox Accounts.
+   *
+   * @return Promise
+   *        The promise resolves to the credentials object of the signed-in user:
+   *        {
+   *          email: The user's email address
+   *          uid: The user's unique id
+   *          sessionToken: Session for the FxA server
+   *          kA: An encryption key from the FxA server
+   *          kB: An encryption key derived from the user's FxA password
+   *          verified: email verification status
+   *        }
+   *        or null if no user is signed in.
+   */
+  getSignedInUser: function getSignedInUser() {
+    return this.getUserAccountData().then(data => {
+      if (!data) {
+        return null;
+      }
+      if (!this.isUserEmailVerified(data)) {
+        // If the email is not verified, start polling for verification,
+        // but return null right away.  We don't want to return a promise
+        // that might not be fulfilled for a long time.
+        this.startVerifiedCheck(data);
+      }
+      return data;
+    });
+  },
+
+  /**
+   * Set the current user signed in to Firefox Accounts.
+   *
+   * @param credentials
+   *        The credentials object obtained by logging in or creating
+   *        an account on the FxA server:
+   *        {
+   *          email: The users email address
+   *          uid: The user's unique id
+   *          sessionToken: Session for the FxA server
+   *          keyFetchToken: an unused keyFetchToken
+   *          verified: true/false
+   *        }
+   * @return Promise
+   *         The promise resolves to null when the data is saved
+   *         successfully and is rejected on error.
+   */
+  setSignedInUser: function setSignedInUser(credentials) {
+    log.debug("setSignedInUser - aborting any existing flows");
+    this.abortExistingFlow();
+
+    let record = {version: this.version, accountData: credentials};
+    // Cache a clone of the credentials object.
+    this.signedInUser = JSON.parse(JSON.stringify(record));
+
+    // This promise waits for storage, but not for verification.
+    // We're telling the caller that this is durable now.
+    return this.signedInUserStorage.set(record).then(() => {
+      this.notifyObservers(ONLOGIN_NOTIFICATION);
+      if (!this.isUserEmailVerified(credentials)) {
+        this.startVerifiedCheck(credentials);
+      }
+    });
+  },
+
+  /**
+   * returns a promise that fires with the assertion.  If there is no verified
+   * signed-in user, fires with null.
+   */
+  getAssertion: function getAssertion(audience) {
+    log.debug("enter getAssertion()");
+    let mustBeValidUntil = this.now() + ASSERTION_LIFETIME;
+    return this.getUserAccountData().then(data => {
+      if (!data) {
+        // No signed-in user
+        return null;
+      }
+      if (!this.isUserEmailVerified(data)) {
+        // Signed-in user has not verified email
+        return null;
+      }
+      return this.getKeyPair(mustBeValidUntil).then(keyPair => {
+        return this.getCertificate(data, keyPair, mustBeValidUntil)
+          .then(cert => {
+            return this.getAssertionFromCert(data, keyPair, cert, audience);
+          });
+      });
+    });
+  },
+
+  /**
+   * Resend the verification email fot the currently signed-in user.
+   *
+   */
+  resendVerificationEmail: function resendVerificationEmail() {
+    return this.getSignedInUser().then(data => {
+      // If the caller is asking for verification to be re-sent, and there is
+      // no signed-in user to begin with, this is probably best regarded as an
+      // error.
+      if (data) {
+        this.pollEmailStatus(data.sessionToken, "start");
+        return this.fxAccountsClient.resendVerificationEmail(data.sessionToken);
+      }
+      throw new Error("Cannot resend verification email; no signed-in user");
+    });
   },
 
   /*
@@ -179,14 +344,14 @@ InternalMethods.prototype = {
     return Task.spawn(function* task() {
       // Sign out if we don't have a key fetch token.
       if (!keyFetchToken) {
-        yield internal.signOut();
+        yield this.signOut();
         return null;
       }
-      let myGenerationCount = internal.generationCount;
+      let myGenerationCount = this.generationCount;
 
-      let {kA, wrapKB} = yield internal.fetchKeys(keyFetchToken);
+      let {kA, wrapKB} = yield this.fetchKeys(keyFetchToken);
 
-      let data = yield internal.getUserAccountData();
+      let data = yield this.getUserAccountData();
 
       // Sanity check that the user hasn't changed out from under us
       if (data.keyFetchToken !== keyFetchToken) {
@@ -208,16 +373,16 @@ InternalMethods.prototype = {
 
       // Before writing any data, ensure that a new flow hasn't been
       // started behind our backs.
-      if (internal.generationCount !== myGenerationCount) {
+      if (this.generationCount !== myGenerationCount) {
         return null;
       }
 
-      yield internal.setUserAccountData(data);
+      yield this.setUserAccountData(data);
 
       // We are now ready for business. This should only be invoked once
       // per setSignedInUser(), regardless of whether we've rebooted since
       // setSignedInUser() was called.
-      internal.notifyObservers(ONVERIFIED_NOTIFICATION);
+      this.notifyObservers(ONVERIFIED_NOTIFICATION);
       return data;
     }.bind(this));
   },
@@ -227,8 +392,8 @@ InternalMethods.prototype = {
     let payload = {};
     let d = Promise.defer();
     let options = {
-      localtimeOffsetMsec: internal.localtimeOffsetMsec,
-      now: internal.now()
+      localtimeOffsetMsec: this.localtimeOffsetMsec,
+      now: this.now()
     };
     // "audience" should look like "http://123done.org".
     // The generated assertion will expire in two minutes.
@@ -252,7 +417,7 @@ InternalMethods.prototype = {
       return Promise.resolve(this.cert.cert);
     }
     // else get our cert signed
-    let willBeValidUntil = internal.now() + CERT_LIFETIME;
+    let willBeValidUntil = this.now() + CERT_LIFETIME;
     return this.getCertificateSigned(data.sessionToken,
                                      keyPair.serializedPublicKey,
                                      CERT_LIFETIME)
@@ -279,7 +444,7 @@ InternalMethods.prototype = {
       return Promise.resolve(this.keyPair.keyPair);
     }
     // Otherwse, create a keypair and set validity limit.
-    let willBeValidUntil = internal.now() + KEY_LIFETIME;
+    let willBeValidUntil = this.now() + KEY_LIFETIME;
     let d = Promise.defer();
     jwcrypto.generateKeyPair("DS160", (err, kp) => {
       if (err) {
@@ -368,18 +533,6 @@ InternalMethods.prototype = {
     return this.whenVerifiedPromise.promise;
   },
 
-  /**
-   * Resend the verification email to the logged-in user.
-   *
-   * @return Promise
-   *         fulfilled: json data returned from xhr call
-   *         rejected: error
-   */
-  resendVerificationEmail: function(data) {
-    this.pollEmailStatus(data.sessionToken, "start");
-    return this.fxAccountsClient.resendVerificationEmail(data.sessionToken);
-  },
-
   notifyObservers: function(topic) {
     log.debug("Notifying observers of " + topic);
     Services.obs.notifyObservers(null, topic, null);
@@ -445,194 +598,12 @@ InternalMethods.prototype = {
     },
 
   setUserAccountData: function(accountData) {
-    return this.signedInUserStorage.get().then((record) => {
+    return this.signedInUserStorage.get().then(record => {
       record.accountData = accountData;
       this.signedInUser = record;
       return this.signedInUserStorage.set(record)
         .then(() => accountData);
     });
-  }
-};
-
-let internal = null;
-
-/**
- * FxAccounts delegates private methods to an instance of InternalMethods,
- * which is not exported. The xpcshell tests need two overrides:
- *  1) Access to the real internal.signedInUserStorage.
- *  2) The ability to mock InternalMethods.
- * If mockInternal is undefined, we are live.
- * If mockInternal.onlySetInternal is present, we are executing the first
- * case by binding internal to the FxAccounts instance.
- * Otherwise if we have a mock instance, we are executing the second case.
- */
-this.FxAccounts = function(mockInternal) {
-  let mocks = mockInternal;
-  if (mocks && mocks.onlySetInternal) {
-    mocks = null;
-  }
-  internal = new InternalMethods(mocks);
-  if (mockInternal) {
-    // Exposes the internal object for testing only.
-    this.internal = internal;
-  }
-}
-this.FxAccounts.prototype = Object.freeze({
-  version: DATA_FORMAT_VERSION,
-
-  now: function() {
-    if (this.internal) {
-      return this.internal.now();
-    }
-    return internal.now();
-  },
-
-  get localtimeOffsetMsec() {
-    if (this.internal) {
-      return this.internal.localtimeOffsetMsec;
-    }
-    return internal.localtimeOffsetMsec;
-  },
-
-  // set() makes sure that polling is happening, if necessary.
-  // get() does not wait for verification, and returns an object even if
-  // unverified. The caller of get() must check .verified .
-  // The "fxaccounts:onverified" event will fire only when the verified
-  // state goes from false to true, so callers must register their observer
-  // and then call get(). In particular, it will not fire when the account
-  // was found to be verified in a previous boot: if our stored state says
-  // the account is verified, the event will never fire. So callers must do:
-  //   register notification observer (go)
-  //   userdata = get()
-  //   if (userdata.verified()) {go()}
-
-  /**
-   * Set the current user signed in to Firefox Accounts.
-   *
-   * @param credentials
-   *        The credentials object obtained by logging in or creating
-   *        an account on the FxA server:
-   *        {
-   *          email: The users email address
-   *          uid: The user's unique id
-   *          sessionToken: Session for the FxA server
-   *          keyFetchToken: an unused keyFetchToken
-   *          verified: true/false
-   *        }
-   * @return Promise
-   *         The promise resolves to null when the data is saved
-   *         successfully and is rejected on error.
-   */
-  setSignedInUser: function setSignedInUser(credentials) {
-    log.debug("setSignedInUser - aborting any existing flows");
-    internal.abortExistingFlow();
-
-    let record = {version: this.version, accountData: credentials};
-    // Cache a clone of the credentials object.
-    internal.signedInUser = JSON.parse(JSON.stringify(record));
-
-    // This promise waits for storage, but not for verification.
-    // We're telling the caller that this is durable now.
-    return internal.signedInUserStorage.set(record)
-      .then(() => {
-        internal.notifyObservers(ONLOGIN_NOTIFICATION);
-        if (!internal.isUserEmailVerified(credentials)) {
-          internal.startVerifiedCheck(credentials);
-        }
-      });
-  },
-
-  /**
-   * Get the user currently signed in to Firefox Accounts.
-   *
-   * @return Promise
-   *        The promise resolves to the credentials object of the signed-in user:
-   *        {
-   *          email: The user's email address
-   *          uid: The user's unique id
-   *          sessionToken: Session for the FxA server
-   *          kA: An encryption key from the FxA server
-   *          kB: An encryption key derived from the user's FxA password
-   *          verified: email verification status
-   *        }
-   *        or null if no user is signed in.
-   */
-  getSignedInUser: function getSignedInUser() {
-    return internal.getUserAccountData()
-      .then((data) => {
-        if (!data) {
-          return null;
-        }
-        if (!internal.isUserEmailVerified(data)) {
-          // If the email is not verified, start polling for verification,
-          // but return null right away.  We don't want to return a promise
-          // that might not be fulfilled for a long time.
-          internal.startVerifiedCheck(data);
-        }
-        return data;
-      });
-  },
-
-  /**
-   * Resend the verification email fot the currently signed-in user.
-   *
-   */
-  resendVerificationEmail: function resendVerificationEmail() {
-    return this.getSignedInUser().then((data) => {
-      // If the caller is asking for verification to be re-sent, and there is
-      // no signed-in user to begin with, this is probably best regarded as an
-      // error.
-      if (data) {
-        return internal.resendVerificationEmail(data);
-      }
-      throw new Error("Cannot resend verification email; no signed-in user");
-    });
-  },
-
-  /**
-   * returns a promise that fires with the assertion.  If there is no verified
-   * signed-in user, fires with null.
-   */
-  getAssertion: function getAssertion(audience) {
-    log.debug("enter getAssertion()");
-    let mustBeValidUntil = internal.now() + ASSERTION_LIFETIME;
-    return internal.getUserAccountData()
-      .then((data) => {
-        if (!data) {
-          // No signed-in user
-          return null;
-        }
-        if (!internal.isUserEmailVerified(data)) {
-          // Signed-in user has not verified email
-          return null;
-        }
-        return internal.getKeyPair(mustBeValidUntil)
-          .then((keyPair) => {
-            return internal.getCertificate(data, keyPair, mustBeValidUntil)
-              .then((cert) => {
-                return internal.getAssertionFromCert(data, keyPair,
-                                                     cert, audience)
-              });
-          });
-      });
-  },
-
-  getKeys: function() {
-    return internal.getKeys();
-  },
-
-  whenVerified: function(userData) {
-    return internal.whenVerified(userData);
-  },
-
-  /**
-   * Sign the current user out.
-   *
-   * @return Promise
-   *         The promise is rejected if a storage error occurs.
-   */
-  signOut: function signOut() {
-    return internal.signOut();
   },
 
   // Return the URI of the remote UI flows.
@@ -661,8 +632,7 @@ this.FxAccounts.prototype = Object.freeze({
       return url + newQueryPortion;
     });
   }
-
-});
+};
 
 /**
  * JSONStorage constructor that creates instances that may set/get
@@ -697,8 +667,7 @@ XPCOMUtils.defineLazyGetter(this, "fxAccounts", function() {
 
   // XXX Bug 947061 - We need a strategy for resuming email verification after
   // browser restart
-  internal.loadAndPoll();
+  a.loadAndPoll();
 
   return a;
 });
-
