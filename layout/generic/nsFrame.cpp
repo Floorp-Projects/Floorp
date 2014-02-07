@@ -474,7 +474,7 @@ nsFrame::Init(nsIContent*      aContent,
 
     // Make bits that are currently off (see constructor) the same:
     mState |= state & (NS_FRAME_INDEPENDENT_SELECTION |
-                       NS_FRAME_IS_SPECIAL |
+                       NS_FRAME_PART_OF_IBSPLIT |
                        NS_FRAME_MAY_BE_TRANSFORMED |
                        NS_FRAME_MAY_HAVE_GENERATED_CONTENT |
                        NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN);
@@ -622,7 +622,7 @@ nsFrame::DestroyFrom(nsIFrame* aDestructRoot)
   // If we have any IB split special siblings, clear their references to us.
   // (Note: This has to happen before we call shell->NotifyDestroyingFrame,
   // because that clears our Properties() table.)
-  if (mState & NS_FRAME_IS_SPECIAL) {
+  if (mState & NS_FRAME_PART_OF_IBSPLIT) {
     // Delete previous sibling's reference to me.
     nsIFrame* prevSib = static_cast<nsIFrame*>
       (Properties().Get(nsIFrame::IBSplitSpecialPrevSibling()));
@@ -6024,7 +6024,8 @@ FindBlockFrameOrBR(nsIFrame* aFrame, nsDirection aDirection)
   // Fall through "special" block frames because their mContent is the content
   // of the inline frames they were created from. The first/last child of
   // such frames is the real block frame we're looking for.
-  if ((nsLayoutUtils::GetAsBlock(aFrame) && !(aFrame->GetStateBits() & NS_FRAME_IS_SPECIAL)) ||
+  if ((nsLayoutUtils::GetAsBlock(aFrame) &&
+       !(aFrame->GetStateBits() & NS_FRAME_PART_OF_IBSPLIT)) ||
       aFrame->GetType() == nsGkAtoms::brFrame) {
     nsIContent* content = aFrame->GetContent();
     result.mContent = content->GetParent();
@@ -7172,7 +7173,7 @@ static nsIFrame*
 GetIBSpecialSiblingForAnonymousBlock(const nsIFrame* aFrame)
 {
   NS_PRECONDITION(aFrame, "Must have a non-null frame!");
-  NS_ASSERTION(aFrame->GetStateBits() & NS_FRAME_IS_SPECIAL,
+  NS_ASSERTION(aFrame->GetStateBits() & NS_FRAME_PART_OF_IBSPLIT,
                "GetIBSpecialSibling should not be called on a non-special frame");
 
   nsIAtom* type = aFrame->StyleContext()->GetPseudo();
@@ -7237,8 +7238,8 @@ nsFrame::CorrectStyleParentFrame(nsIFrame* aProspectiveParent,
       nsCSSAnonBoxes::IsAnonBox(aChildPseudo)) {
     NS_ASSERTION(aChildPseudo != nsCSSAnonBoxes::mozAnonymousBlock &&
                  aChildPseudo != nsCSSAnonBoxes::mozAnonymousPositionedBlock,
-                 "Should have dealt with kids that have NS_FRAME_IS_SPECIAL "
-                 "elsewhere");
+                 "Should have dealt with kids that have "
+                 "NS_FRAME_PART_OF_IBSPLIT elsewhere");
     return aProspectiveParent;
   }
 
@@ -7247,7 +7248,7 @@ nsFrame::CorrectStyleParentFrame(nsIFrame* aProspectiveParent,
   // style data to be out of sync with the frame tree.
   nsIFrame* parent = aProspectiveParent;
   do {
-    if (parent->GetStateBits() & NS_FRAME_IS_SPECIAL) {
+    if (parent->GetStateBits() & NS_FRAME_PART_OF_IBSPLIT) {
       nsIFrame* sibling = GetIBSpecialSiblingForAnonymousBlock(parent);
 
       if (sibling) {
@@ -7301,7 +7302,7 @@ nsFrame::DoGetParentStyleContextFrame() const
      * inside it got split, then the parent style context is on its preceding
      * inline. We can get to it using GetIBSpecialSiblingForAnonymousBlock.
      */
-    if (mState & NS_FRAME_IS_SPECIAL) {
+    if (mState & NS_FRAME_PART_OF_IBSPLIT) {
       nsIFrame* specialSibling = GetIBSpecialSiblingForAnonymousBlock(this);
       if (specialSibling) {
         return specialSibling;
