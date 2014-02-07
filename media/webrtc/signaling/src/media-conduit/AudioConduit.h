@@ -31,6 +31,7 @@
  using webrtc::VoEExternalMedia;
  using webrtc::VoEAudioProcessing;
  using webrtc::VoEVideoSync;
+ using webrtc::VoERTP_RTCP;
 
 /** This file hosts several structures identifying different aspects
  * of a RTP Session.
@@ -86,6 +87,12 @@ public:
    */
   virtual MediaConduitErrorCode ConfigureRecvMediaCodecs(
     const std::vector<AudioCodecConfig* >& codecConfigList);
+
+  /**
+   * Function to enable the audio level extension
+   * @param enabled: enable extension
+   */
+  virtual MediaConduitErrorCode EnableAudioLevelExtension(bool enabled);
 
   /**
    * Register External Transport to this Conduit. RTP and RTCP frames from the VoiceEngine
@@ -234,6 +241,7 @@ private:
   webrtc::VoEExternalMedia* mPtrVoEXmedia;
   webrtc::VoEAudioProcessing* mPtrVoEProcessing;
   webrtc::VoEVideoSync* mPtrVoEVideoSync;
+  webrtc::VoERTP_RTCP* mPtrVoERTP_RTCP;
   webrtc::VoERTP_RTCP* mPtrRTP;
 
   //engine states of our interets

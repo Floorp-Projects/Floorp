@@ -207,6 +207,9 @@ typedef struct fsmdef_media_t_ {
      */
     boolean        rtcp_mux;
 
+    /* Flag to indicate if RTP Header extension for audio level is used */
+    boolean         audio_level;
+
     /*
      * The value of the a=setup line
      */

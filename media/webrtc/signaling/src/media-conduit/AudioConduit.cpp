@@ -76,6 +76,10 @@ WebrtcAudioConduit::~WebrtcAudioConduit()
 
   delete mCurSendCodecConfig;
 
+  if (mPtrVoERTP_RTCP) {
+    mPtrVoERTP_RTCP->Release();
+  }
+
   // The first one of a pair to be deleted shuts down media for both
   if(mPtrVoEXmedia)
   {
@@ -282,6 +286,12 @@ MediaConduitErrorCode WebrtcAudioConduit::Init(WebrtcAudioConduit *other)
   if(!(mPtrVoEXmedia = VoEExternalMedia::GetInterface(mVoiceEngine)))
   {
     CSFLogError(logTag, "%s Unable to initialize VoEExternalMedia", __FUNCTION__);
+    return kMediaConduitSessionNotInited;
+  }
+
+  if(!(mPtrVoERTP_RTCP = VoERTP_RTCP::GetInterface(mVoiceEngine)))
+  {
+    CSFLogError(logTag, "%s Unable to initialize VoERTP_RTCP", __FUNCTION__);
     return kMediaConduitSessionNotInited;
   }
 
@@ -560,6 +570,20 @@ WebrtcAudioConduit::ConfigureRecvMediaCodecs(
   //we should be good here for setting this.
   mEngineReceiving = true;
   DumpCodecDB();
+  return kMediaConduitNoError;
+}
+
+MediaConduitErrorCode
+WebrtcAudioConduit::EnableAudioLevelExtension(bool enabled)
+{
+  CSFLogDebug(logTag,  "%s %d ", __FUNCTION__, enabled);
+
+  if (mPtrVoERTP_RTCP->SetRTPAudioLevelIndicationStatus(mChannel, enabled, 1) == -1)
+  {
+    CSFLogError(logTag, "%s SetRTPAudioLevelIndicationStatus Failed", __FUNCTION__);
+    return kMediaConduitUnknownError;
+  }
+
   return kMediaConduitNoError;
 }
 
