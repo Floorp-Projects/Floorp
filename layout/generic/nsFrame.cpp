@@ -628,14 +628,14 @@ nsFrame::DestroyFrom(nsIFrame* aDestructRoot)
       (Properties().Get(nsIFrame::IBSplitSpecialPrevSibling()));
     if (prevSib) {
       NS_WARN_IF_FALSE(this ==
-         prevSib->Properties().Get(nsIFrame::IBSplitSpecialSibling()),
+         prevSib->Properties().Get(nsIFrame::IBSplitSibling()),
          "IB sibling chain is inconsistent");
-      prevSib->Properties().Delete(nsIFrame::IBSplitSpecialSibling());
+      prevSib->Properties().Delete(nsIFrame::IBSplitSibling());
     }
 
     // Delete next sibling's reference to me.
     nsIFrame* nextSib = static_cast<nsIFrame*>
-      (Properties().Get(nsIFrame::IBSplitSpecialSibling()));
+      (Properties().Get(nsIFrame::IBSplitSibling()));
     if (nextSib) {
       NS_WARN_IF_FALSE(this ==
          nextSib->Properties().Get(nsIFrame::IBSplitSpecialPrevSibling()),
@@ -5327,9 +5327,9 @@ nsIFrame::ListGeneric(nsACString& aTo, const char* aPrefix, uint32_t aFlags) con
     aTo += nsPrintfCString(" next-%s=%p", fluid?"in-flow":"continuation",
             static_cast<void*>(GetNextContinuation()));
   }
-  void* IBsibling = Properties().Get(IBSplitSpecialSibling());
+  void* IBsibling = Properties().Get(IBSplitSibling());
   if (IBsibling) {
-    aTo += nsPrintfCString(" IBSplitSpecialSibling=%p", IBsibling);
+    aTo += nsPrintfCString(" IBSplitSibling=%p", IBsibling);
   }
   void* IBprevsibling = Properties().Get(IBSplitSpecialPrevSibling());
   if (IBprevsibling) {

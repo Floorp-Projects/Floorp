@@ -424,7 +424,7 @@ static nsIFrame* GetSpecialSibling(nsIFrame* aFrame)
   // frame in the continuation chain. Walk back to find that frame now.
   return static_cast<nsIFrame*>
     (aFrame->FirstContinuation()->
-       Properties().Get(nsIFrame::IBSplitSpecialSibling()));
+       Properties().Get(nsIFrame::IBSplitSibling()));
 }
 
 static nsIFrame* GetSpecialPrevSibling(nsIFrame* aFrame)
@@ -478,7 +478,7 @@ SetFrameIsSpecial(nsIFrame* aFrame, nsIFrame* aSpecialSibling)
     // Store the "special sibling" (if we were given one) with the
     // first frame in the flow.
     FramePropertyTable* props = aFrame->PresContext()->PropertyTable();
-    props->Set(aFrame, nsIFrame::IBSplitSpecialSibling(), aSpecialSibling);
+    props->Set(aFrame, nsIFrame::IBSplitSibling(), aSpecialSibling);
     props->Set(aSpecialSibling, nsIFrame::IBSplitSpecialPrevSibling(), aFrame);
   }
 }
@@ -10403,7 +10403,7 @@ nsCSSFrameConstructor::ConstructInline(nsFrameConstructorState& aState,
   // {ib} splits maintain the following invariants:
   // 1) All frames in the split have the NS_FRAME_PART_OF_IBSPLIT bit
   //    set.
-  // 2) Each frame in the split has the nsIFrame::IBSplitSpecialSibling
+  // 2) Each frame in the split has the nsIFrame::IBSplitSibling
   //    property pointing to the next frame in the split, except for the last
   //    one, which does not have it set.
   // 3) Each frame in the split has the nsIFrame::IBSplitSpecialPrevSibling
