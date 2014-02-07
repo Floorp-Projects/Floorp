@@ -500,7 +500,7 @@ nsFrame::Init(nsIContent*      aContent,
       !(mState & NS_FRAME_IS_NONDISPLAY) &&
       !disp->IsInnerTableStyle()) {
     // Note that we only add first continuations, but we really only
-    // want to add first continuation-or-special-siblings.  But since we
+    // want to add first continuation-or-ib-split-siblings.  But since we
     // don't yet know if we're a later part of a block-in-inline split,
     // we'll just add later members of a block-in-inline split here, and
     // then StickyScrollContainer will remove them later.
@@ -619,7 +619,7 @@ nsFrame::DestroyFrom(nsIFrame* aDestructRoot)
     }
   }
 
-  // If we have any IB split special siblings, clear their references to us.
+  // If we have any IB split siblings, clear their references to us.
   // (Note: This has to happen before we call shell->NotifyDestroyingFrame,
   // because that clears our Properties() table.)
   if (mState & NS_FRAME_PART_OF_IBSPLIT) {
@@ -6021,9 +6021,10 @@ FindBlockFrameOrBR(nsIFrame* aFrame, nsDirection aDirection)
     return result;
   
   // Check the frame itself
-  // Fall through "special" block frames because their mContent is the content
-  // of the inline frames they were created from. The first/last child of
-  // such frames is the real block frame we're looking for.
+  // Fall through block-in-inline split frames because their mContent is
+  // the content of the inline frames they were created from. The
+  // first/last child of such frames is the real block frame we're
+  // looking for.
   if ((nsLayoutUtils::GetAsBlock(aFrame) &&
        !(aFrame->GetStateBits() & NS_FRAME_PART_OF_IBSPLIT)) ||
       aFrame->GetType() == nsGkAtoms::brFrame) {
@@ -7162,10 +7163,11 @@ nsFrame::ConsiderChildOverflow(nsOverflowAreas& aOverflowAreas,
 }
 
 /**
- * This function takes a "special" frame and _if_ that frame is an anonymous
- * block created by an ib split it returns the block's preceding inline.  This
- * is needed because the split inline's style context is the parent of the
- * anonymous block's style context.
+ * This function takes a frame that is part of a block-in-inline split,
+ * and _if_ that frame is an anonymous block created by an ib split it
+ * returns the block's preceding inline.  This is needed because the
+ * split inline's style context is the parent of the anonymous block's
+ * style context.
  *
  * If aFrame is not an anonymous block, null is returned.
  */
@@ -7174,7 +7176,7 @@ GetIBSplitSiblingForAnonymousBlock(const nsIFrame* aFrame)
 {
   NS_PRECONDITION(aFrame, "Must have a non-null frame!");
   NS_ASSERTION(aFrame->GetStateBits() & NS_FRAME_PART_OF_IBSPLIT,
-               "GetIBSplitSibling should not be called on a non-special frame");
+               "GetIBSplitSibling should only be called on ib-split frames");
 
   nsIAtom* type = aFrame->StyleContext()->GetPseudo();
   if (type != nsCSSAnonBoxes::mozAnonymousBlock &&

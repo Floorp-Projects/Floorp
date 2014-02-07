@@ -1011,13 +1011,14 @@ public:
   static nsIFrame* GetParentOrPlaceholderForCrossDoc(nsIFrame* aFrame);
 
   /**
-   * Get a frame's next-in-flow, or, if it doesn't have one, its special sibling.
+   * Get a frame's next-in-flow, or, if it doesn't have one, its
+   * block-in-inline-split sibling.
    */
   static nsIFrame*
   GetNextContinuationOrIBSplitSibling(nsIFrame *aFrame);
 
   /**
-   * Get the first frame in the continuation-plus-special-sibling chain
+   * Get the first frame in the continuation-plus-ib-split-sibling chain
    * containing aFrame.
    */
   static nsIFrame*

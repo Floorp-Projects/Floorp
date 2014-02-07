@@ -99,7 +99,7 @@ struct InlineBackgroundData
       nscoord curOffset = aFrame->GetOffsetTo(mBlockFrame).x;
 
       // No need to use our GetPrevContinuation/GetNextContinuation methods
-      // here, since ib special siblings are certainly not on the same line.
+      // here, since ib-split siblings are certainly not on the same line.
 
       nsIFrame* inlineFrame = aFrame->GetPrevContinuation();
       // If the continuation is fluid we know inlineFrame is not on the same line.

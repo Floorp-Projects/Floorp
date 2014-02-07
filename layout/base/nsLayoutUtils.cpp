@@ -2728,7 +2728,7 @@ nsLayoutUtils::GetNextContinuationOrIBSplitSibling(nsIFrame *aFrame)
     return result;
 
   if ((aFrame->GetStateBits() & NS_FRAME_PART_OF_IBSPLIT) != 0) {
-    // We only store the "special sibling" annotation with the first
+    // We only store the ib-split sibling annotation with the first
     // frame in the continuation chain. Walk back to find that frame now.
     aFrame = aFrame->FirstContinuation();
 

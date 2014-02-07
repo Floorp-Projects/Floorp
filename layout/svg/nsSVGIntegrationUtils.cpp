@@ -76,14 +76,14 @@ private:
       return *r;
     }
     // Despite the fact that we're invoked for frames with SVG effects applied,
-    // we can actually get here. All continuations and special siblings of a
+    // we can actually get here. All continuations and IB split siblings of a
     // frame with SVG effects applied will have the PreEffectsBBoxProperty
     // property set on them. Therefore, the frames that are passed to us will
     // always have that property set...well, with one exception. If the frames
     // for an element with SVG effects applied have been subject to an "IB
     // split", then the block frame(s) that caused the split will have been
     // wrapped in anonymous, inline-block, nsBlockFrames of pseudo-type
-    // nsCSSAnonBoxes::mozAnonymousBlock. These "special sibling" anonymous
+    // nsCSSAnonBoxes::mozAnonymousBlock. These "IB split sibling" anonymous
     // blocks will have the PreEffectsBBoxProperty property set on them, but
     // they will never be passed to us. Instead, we'll be passed the block
     // children that they wrap, which don't have the PreEffectsBBoxProperty
