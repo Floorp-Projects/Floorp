@@ -12,7 +12,6 @@
 #include "mozilla/dom/ipc/Blob.h"
 #include "nsAutoPtr.h"
 #include "nsClassHashtable.h"
-#include "nsIDOMFile.h"
 #include "nsIObserver.h"
 #include "nsIThread.h"
 #include "nsTObserverArray.h"
@@ -228,11 +227,6 @@ public:
   SendFile(const nsAString& aDeviceAddress,
            BlobParent* aBlobParent,
            BlobChild* aBlobChild,
-           BluetoothReplyRunnable* aRunnable) = 0;
-
-  virtual void
-  SendFile(const nsAString& aDeviceAddress,
-           nsIDOMBlob* aBlob,
            BluetoothReplyRunnable* aRunnable) = 0;
 
   virtual void
