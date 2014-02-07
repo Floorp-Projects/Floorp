@@ -2727,7 +2727,7 @@ nsLayoutUtils::GetNextContinuationOrSpecialSibling(nsIFrame *aFrame)
   if (result)
     return result;
 
-  if ((aFrame->GetStateBits() & NS_FRAME_IS_SPECIAL) != 0) {
+  if ((aFrame->GetStateBits() & NS_FRAME_PART_OF_IBSPLIT) != 0) {
     // We only store the "special sibling" annotation with the first
     // frame in the continuation chain. Walk back to find that frame now.
     aFrame = aFrame->FirstContinuation();
@@ -2743,7 +2743,7 @@ nsIFrame*
 nsLayoutUtils::FirstContinuationOrSpecialSibling(nsIFrame *aFrame)
 {
   nsIFrame *result = aFrame->FirstContinuation();
-  if (result->GetStateBits() & NS_FRAME_IS_SPECIAL) {
+  if (result->GetStateBits() & NS_FRAME_PART_OF_IBSPLIT) {
     while (true) {
       nsIFrame *f = static_cast<nsIFrame*>
         (result->Properties().Get(nsIFrame::IBSplitSpecialPrevSibling()));
@@ -2762,7 +2762,7 @@ nsLayoutUtils::IsFirstContinuationOrSpecialSibling(nsIFrame *aFrame)
   if (aFrame->GetPrevContinuation()) {
     return false;
   }
-  if ((aFrame->GetStateBits() & NS_FRAME_IS_SPECIAL) &&
+  if ((aFrame->GetStateBits() & NS_FRAME_PART_OF_IBSPLIT) &&
       aFrame->Properties().Get(nsIFrame::IBSplitSpecialPrevSibling())) {
     return false;
   }

@@ -1784,7 +1784,8 @@ GetPrevContinuationWithPossiblySameStyle(nsIFrame* aFrame)
   // an inline and the special prevsibling of that is either another {ib}
   // wrapper block block or null.
   nsIFrame *prevContinuation = aFrame->GetPrevContinuation();
-  if (!prevContinuation && (aFrame->GetStateBits() & NS_FRAME_IS_SPECIAL)) {
+  if (!prevContinuation &&
+      (aFrame->GetStateBits() & NS_FRAME_PART_OF_IBSPLIT)) {
     // We're the first continuation, so we can just get the frame
     // property directly
     prevContinuation = static_cast<nsIFrame*>(
@@ -1844,7 +1845,8 @@ GetNextContinuationWithSameStyle(nsIFrame* aFrame,
   // See GetPrevContinuationWithSameStyle about {ib} splits.
 
   nsIFrame *nextContinuation = aFrame->GetNextContinuation();
-  if (!nextContinuation && (aFrame->GetStateBits() & NS_FRAME_IS_SPECIAL)) {
+  if (!nextContinuation &&
+      (aFrame->GetStateBits() & NS_FRAME_PART_OF_IBSPLIT)) {
     // We're the last continuation, so we have to hop back to the first
     // before getting the frame property
     nextContinuation = static_cast<nsIFrame*>(aFrame->FirstContinuation()->
@@ -2016,7 +2018,7 @@ RestyleManager::ReparentStyleContext(nsIFrame* aFrame)
       // (split or not) hasn't done so already). It's not a problem to
       // reparent the same frame twice because the "if (newContext !=
       // oldContext)" check will prevent us from redoing work.
-      if ((aFrame->GetStateBits() & NS_FRAME_IS_SPECIAL) &&
+      if ((aFrame->GetStateBits() & NS_FRAME_PART_OF_IBSPLIT) &&
           !aFrame->GetPrevContinuation()) {
         nsIFrame* sib = static_cast<nsIFrame*>
           (aFrame->Properties().Get(nsIFrame::IBSplitSpecialSibling()));
@@ -2839,7 +2841,7 @@ GetNextBlockInInlineSibling(FramePropertyTable* aPropTable, nsIFrame* aFrame)
   NS_ASSERTION(!aFrame->GetPrevContinuation(),
                "must start with the first continuation");
   // Might we have special siblings?
-  if (!(aFrame->GetStateBits() & NS_FRAME_IS_SPECIAL)) {
+  if (!(aFrame->GetStateBits() & NS_FRAME_PART_OF_IBSPLIT)) {
     // nothing more to do here
     return nullptr;
   }

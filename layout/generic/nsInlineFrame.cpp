@@ -115,7 +115,7 @@ nsInlineFrame::IsSelfEmpty()
     !nsLayoutUtils::IsPaddingZero(padding->mPadding.GetLeft()) ||
     !IsMarginZero(margin->mMargin.GetLeft());
   if (haveLeft || haveRight) {
-    if (GetStateBits() & NS_FRAME_IS_SPECIAL) {
+    if (GetStateBits() & NS_FRAME_PART_OF_IBSPLIT) {
       bool haveStart, haveEnd;
       if (NS_STYLE_DIRECTION_LTR == StyleVisibility()->mDirection) {
         haveStart = haveLeft;
@@ -900,7 +900,7 @@ nsInlineFrame::GetSkipSides(const nsHTMLReflowState* aReflowState) const
     }
   }
 
-  if (GetStateBits() & NS_FRAME_IS_SPECIAL) {
+  if (GetStateBits() & NS_FRAME_PART_OF_IBSPLIT) {
     // All but the last part of an {ib} split should skip the "end" side (as
     // determined by this frame's direction) and all but the first part of such
     // a split should skip the "start" side.  But figuring out which part of

@@ -1334,7 +1334,7 @@ nsBidiPresUtils::IsLeftOrRightMost(nsIFrame*              aFrame,
                         : !firstFrameState->mHasContOnPrevLines);
 
   if ((aIsLeftMost || aIsRightMost) &&
-      (aFrame->GetStateBits() & NS_FRAME_IS_SPECIAL)) {
+      (aFrame->GetStateBits() & NS_FRAME_PART_OF_IBSPLIT)) {
     // For ib splits, don't treat anything except the last part as
     // endmost or anything except the first part as startmost.
     // As an optimization, only get the first continuation once.
