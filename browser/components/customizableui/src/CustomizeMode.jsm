@@ -189,6 +189,11 @@ CustomizeMode.prototype = {
       // Hide the palette before starting the transition for increased perf.
       this.visiblePalette.hidden = true;
 
+      // Disable the button-text fade-out mask
+      // during the transition for increased perf.
+      let panelContents = window.PanelUI.contents;
+      panelContents.setAttribute("customize-transitioning", "true");
+
       // Move the mainView in the panel to the holder so that we can see it
       // while customizing.
       let mainView = window.PanelUI.mainView;
@@ -253,6 +258,8 @@ CustomizeMode.prototype = {
       this._updateEmptyPaletteNotice();
 
       this._handler.isEnteringCustomizeMode = false;
+      panelContents.removeAttribute("customize-transitioning");
+
       this.dispatchToolboxEvent("customizationready");
       if (!this._wantToBeInCustomizeMode) {
         this.exit();
@@ -299,6 +306,11 @@ CustomizeMode.prototype = {
     this.paletteSpacer.hidden = false;
     this.visiblePalette.hidden = true;
     this.paletteEmptyNotice.hidden = true;
+
+    // Disable the button-text fade-out mask
+    // during the transition for increased perf.
+    let panelContents = window.PanelUI.contents;
+    panelContents.setAttribute("customize-transitioning", "true");
 
     this._transitioning = true;
 
@@ -352,6 +364,8 @@ CustomizeMode.prototype = {
       // now we'd be setting an expando, which breaks the XBL property.
       document.getElementById("PanelUI-help").removeAttribute("disabled");
       document.getElementById("PanelUI-quit").removeAttribute("disabled");
+
+      panelContents.removeAttribute("customize-transitioning");
 
       // We need to set this._customizing to false before removing the tab
       // or the TabSelect event handler will think that we are exiting
