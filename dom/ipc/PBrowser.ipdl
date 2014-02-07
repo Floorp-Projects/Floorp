@@ -356,21 +356,21 @@ child:
      * the scroll offset. This message is expected to round-trip back to
      * ZoomToRect() with a rect indicating where we should zoom to.
      */
-    HandleDoubleTap(CSSIntPoint point);
+    HandleDoubleTap(CSSIntPoint point, ScrollableLayerGuid aGuid);
 
     /**
      * Requests handling of a single tap. |point| is in CSS pixels, relative to
      * the scroll offset. This message is expected to send a "mousedown" and
      * "mouseup" series of events at this point.
      */
-    HandleSingleTap(CSSIntPoint point);
+    HandleSingleTap(CSSIntPoint point, ScrollableLayerGuid aGuid);
 
     /**
      * Requests handling of a long tap. |point| is in CSS pixels, relative to
      * the scroll offset. This message is expected to send a "contextmenu"
      * events at this point.
      */
-    HandleLongTap(CSSIntPoint point);
+    HandleLongTap(CSSIntPoint point, ScrollableLayerGuid aGuid);
 
     /**
      * Requests handling of releasing a long tap. |aPoint| is in CSS pixels,
@@ -379,7 +379,7 @@ child:
      * this message is expected to generate a "mousedown" and "mouseup"
      * series of events
      */
-    HandleLongTapUp(CSSIntPoint point);
+    HandleLongTapUp(CSSIntPoint point, ScrollableLayerGuid aGuid);
 
     /**
      * Notifies the child that the parent has begun or finished transforming
