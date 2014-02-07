@@ -717,6 +717,21 @@ APZCTreeManager::DispatchScroll(AsyncPanZoomController* aPrev, ScreenPoint aStar
 }
 
 bool
+APZCTreeManager::FlushRepaintsForOverscrollHandoffChain()
+{
+  if (mOverscrollHandoffChain.length() == 0) {
+    return false;
+  }
+  for (uint32_t i = 0; i < mOverscrollHandoffChain.length(); i++) {
+    nsRefPtr<AsyncPanZoomController> item = mOverscrollHandoffChain[i];
+    if (item) {
+      item->FlushRepaintForOverscrollHandoff();
+    }
+  }
+  return true;
+}
+
+bool
 APZCTreeManager::HitTestAPZC(const ScreenIntPoint& aPoint)
 {
   MonitorAutoLock lock(mTreeLock);

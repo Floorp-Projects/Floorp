@@ -256,6 +256,8 @@ public:
   void DispatchScroll(AsyncPanZoomController* aAPZC, ScreenPoint aStartPoint, ScreenPoint aEndPoint,
                       uint32_t aOverscrollHandoffChainIndex);
 
+  bool FlushRepaintsForOverscrollHandoffChain();
+
 protected:
   /**
    * Debug-build assertion that can be called to ensure code is running on the
