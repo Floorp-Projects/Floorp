@@ -903,6 +903,11 @@ File.exists = function exists(path) {
  * if the system shuts down improperly (typically due to a kernel freeze
  * or a power failure) or if the device is disconnected before the buffer
  * is flushed, the file has more chances of not being corrupted.
+ * - {string} backupTo - If specified, backup the destination file as |backupTo|.
+ * Note that this function renames the destination file before overwriting it.
+ * If the process or the operating system freezes or crashes
+ * during the short window between these operations,
+ * the destination file will have been moved to its backup.
  *
  * @return {promise}
  * @resolves {number} The number of bytes actually written.

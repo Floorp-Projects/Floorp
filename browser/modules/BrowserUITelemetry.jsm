@@ -17,6 +17,15 @@ XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow",
   "resource:///modules/RecentWindow.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI",
   "resource:///modules/CustomizableUI.jsm");
+XPCOMUtils.defineLazyGetter(this, "Timer", function() {
+  let timer = {};
+  Cu.import("resource://gre/modules/Timer.jsm", timer);
+  return timer;
+});
+
+const MS_SECOND = 1000;
+const MS_MINUTE = MS_SECOND * 60;
+const MS_HOUR = MS_MINUTE * 60;
 
 XPCOMUtils.defineLazyGetter(this, "DEFAULT_AREA_PLACEMENTS", function() {
   let result = {
@@ -149,6 +158,14 @@ const MOUSEDOWN_MONITORED_ITEMS = [
 // lasted.
 const WINDOW_DURATION_MAP = new WeakMap();
 
+// Default bucket name, when no other bucket is active.
+const BUCKET_DEFAULT = "__DEFAULT__";
+// Bucket prefix, for named buckets.
+const BUCKET_PREFIX = "bucket_";
+// Standard separator to use between different parts of a bucket name, such
+// as primary name and the time step string.
+const BUCKET_SEPARATOR = "|";
+
 this.BrowserUITelemetry = {
   init: function() {
     UITelemetry.addSimpleMeasureFunction("toolbars",
@@ -204,6 +221,7 @@ this.BrowserUITelemetry = {
   _ensureObjectChain: function(aKeys, aEndWith) {
     let current = this._countableEvents;
     let parent = null;
+    aKeys.unshift(this._bucket);
     for (let [i, key] of Iterator(aKeys)) {
       if (!(key in current)) {
         if (i == aKeys.length - 1) {
@@ -538,16 +556,152 @@ this.BrowserUITelemetry = {
       durationMap = {};
       WINDOW_DURATION_MAP.set(aWindow, durationMap);
     }
-    durationMap.customization = aWindow.performance.now();
+
+    durationMap.customization = {
+      start: aWindow.performance.now(),
+      bucket: this._bucket,
+    };
   },
 
   onCustomizeEnd: function(aWindow) {
     let durationMap = WINDOW_DURATION_MAP.get(aWindow);
     if (durationMap && "customization" in durationMap) {
-      let duration = aWindow.performance.now() - durationMap.customization;
-      this._durations.customization.push(duration);
+      let duration = aWindow.performance.now() - durationMap.customization.start;
+      this._durations.customization.push({
+        duration: duration,
+        bucket: durationMap.customization.bucket,
+      });
       delete durationMap.customization;
     }
+  },
+
+  _bucket: BUCKET_DEFAULT,
+  _bucketTimer: null,
+
+  /**
+   * Default bucket name, when no other bucket is active.
+   */
+  get BUCKET_DEFAULT() BUCKET_DEFAULT,
+
+  /**
+   * Bucket prefix, for named buckets.
+   */
+  get BUCKET_PREFIX() BUCKET_PREFIX,
+
+  /**
+   * Standard separator to use between different parts of a bucket name, such
+   * as primary name and the time step string.
+   */
+  get BUCKET_SEPARATOR() BUCKET_SEPARATOR,
+
+  get currentBucket() {
+    return this._bucket;
+  },
+
+  /**
+   * Sets a named bucket for all countable events and select durections to be
+   * put into.
+   *
+   * @param aName  Name of bucket, or null for default bucket name (__DEFAULT__)
+   */
+  setBucket: function(aName) {
+    if (this._bucketTimer) {
+      Timer.clearTimeout(this._bucketTimer);
+      this._bucketTimer = null;
+    }
+
+    if (aName)
+      this._bucket = BUCKET_PREFIX + aName;
+    else
+      this._bucket = BUCKET_DEFAULT;
+  },
+
+  /**
+  * Sets a bucket that expires at the rate of a given series of time steps.
+  * Once the bucket expires, the current bucket will automatically revert to
+  * the default bucket. While the bucket is expiring, it's name is postfixed
+  * by '|' followed by a short string representation of the time step it's
+  * currently in.
+  * If any other bucket (expiring or normal) is set while an expiring bucket is
+  * still expiring, the old expiring bucket stops expiring and the new bucket
+  * immediately takes over.
+  *
+  * @param aName       Name of bucket.
+  * @param aTimeSteps  An array of times in milliseconds to count up to before
+  *                    reverting back to the default bucket. The array of times
+  *                    is expected to be pre-sorted in ascending order.
+  *                    For example, given a bucket name of 'bucket', the times:
+  *                      [60000, 300000, 600000]
+  *                    will result in the following buckets:
+  *                    * bucket|1m - for the first 1 minute
+  *                    * bucket|5m - for the following 4 minutes
+  *                                  (until 5 minutes after the start)
+  *                    * bucket|10m - for the following 5 minutes
+  *                                   (until 10 minutes after the start)
+  *                    * __DEFAULT__ - until a new bucket is set
+  * @param aTimeOffset Time offset, in milliseconds, from which to start
+  *                    counting. For example, if the first time step is 1000ms,
+  *                    and the time offset is 300ms, then the next time step
+  *                    will become active after 700ms. This affects all
+  *                    following time steps also, meaning they will also all be
+  *                    timed as though they started expiring 300ms before
+  *                    setExpiringBucket was called.
+  */
+  setExpiringBucket: function(aName, aTimeSteps, aTimeOffset = 0) {
+    if (aTimeSteps.length === 0) {
+      this.setBucket(null);
+      return;
+    }
+
+    if (this._bucketTimer) {
+      Timer.clearTimeout(this._bucketTimer);
+      this._bucketTimer = null;
+    }
+
+    // Make a copy of the time steps array, so we can safely modify it without
+    // modifying the original array that external code has passed to us.
+    let steps = [...aTimeSteps];
+    let msec = steps.shift();
+    let postfix = this._toTimeStr(msec);
+    this.setBucket(aName + BUCKET_SEPARATOR + postfix);
+
+    this._bucketTimer = Timer.setTimeout(() => {
+      this._bucketTimer = null;
+      this.setExpiringBucket(aName, steps, aTimeOffset + msec);
+    }, msec - aTimeOffset);
+  },
+
+  /**
+   * Formats a time interval, in milliseconds, to a minimal non-localized string
+   * representation. Format is: 'h' for hours, 'm' for minutes, 's' for seconds,
+   * 'ms' for milliseconds.
+   * Examples:
+   *   65 => 65ms
+   *   1000 => 1s
+   *   60000 => 1m
+   *   61000 => 1m01s
+   *
+   * @param aTimeMS  Time in milliseconds
+   *
+   * @return Minimal string representation.
+   */
+  _toTimeStr: function(aTimeMS) {
+    let timeStr = "";
+
+    function reduce(aUnitLength, aSymbol) {
+      if (aTimeMS >= aUnitLength) {
+        let units = Math.floor(aTimeMS / aUnitLength);
+        aTimeMS = aTimeMS - (units * aUnitLength)
+        timeStr += units + aSymbol;
+      }
+    }
+
+    reduce(MS_HOUR, "h");
+    reduce(MS_MINUTE, "m");
+    reduce(MS_SECOND, "s");
+    reduce(1, "ms");
+
+    return timeStr;
   },
 };
 
