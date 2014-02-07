@@ -14,7 +14,7 @@ body {
 }
 
 #header {
-  -moz-box-sizing: border-box;
+  box-sizing: border-box;
   width: 100%;
   padding: 6px 9px;
   display: -moz-box;
@@ -39,7 +39,7 @@ body {
 
 #main {
   margin: 0 10px 10px 10px;
-  -moz-box-sizing: border-box;
+  box-sizing: border-box;
   width: calc(100% - 2 * 10px);
   position: absolute;
   border-width: 1px;

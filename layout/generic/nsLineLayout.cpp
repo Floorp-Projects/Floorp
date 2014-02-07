@@ -970,7 +970,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
         // parent is not this because we are executing pullup code)
         nsContainerFrame* parent = static_cast<nsContainerFrame*>
                                                   (kidNextInFlow->GetParent());
-        parent->DeleteNextInFlowChild(mPresContext, kidNextInFlow, true);
+        parent->DeleteNextInFlowChild(kidNextInFlow, true);
       }
     }
 
@@ -1069,9 +1069,10 @@ nsLineLayout::ApplyStartMargin(PerFrameData* pfd,
 
   // Only apply start-margin on the first-in flow for inline frames,
   // and make sure to not apply it to any inline other than the first
-  // in an ib split.  Note that the ib special sibling annotations
-  // only live on the first continuation, but we don't want to apply
-  // the start margin for later continuations anyway.
+  // in an ib split.  Note that the ib sibling (block-in-inline
+  // sibling) annotations only live on the first continuation, but we
+  // don't want to apply the start margin for later continuations
+  // anyway.
   if (pfd->mFrame->GetPrevContinuation() ||
       pfd->mFrame->FrameIsNonFirstInIBSplit()) {
     // Zero this out so that when we compute the max-element-width of

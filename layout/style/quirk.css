@@ -219,7 +219,7 @@ img[align=right] {
 /* Note that all other <input>s already use border-box
    sizing, so we're ok with this selector */
 input:not([type=image]), textarea {
-  -moz-box-sizing: border-box;
+  box-sizing: border-box;
 }
 
 /* Quirk: give form margin for compat (b=41806) */

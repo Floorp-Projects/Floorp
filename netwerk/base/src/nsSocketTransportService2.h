@@ -38,6 +38,25 @@ extern PRLogModuleInfo *gSocketTransportLog;
 
 //-----------------------------------------------------------------------------
 
+namespace mozilla {
+namespace net {
+// These maximums are borrowed from the linux kernel.
+static const int32_t kMaxTCPKeepIdle  = 32767; // ~9 hours.
+static const int32_t kMaxTCPKeepIntvl = 32767;
+static const int32_t kMaxTCPKeepCount   = 127;
+static const int32_t kDefaultTCPKeepCount =
+#if defined (XP_WIN)
+                                              10; // Hardcoded in Windows.
+#elif defined (XP_MACOSX)
+                                              8;  // Hardcoded in OSX.
+#else
+                                              4;  // Specifiable in Linux.
+#endif
+}
+}
+
+//-----------------------------------------------------------------------------
+
 class nsSocketTransportService : public nsPISocketTransportService
                                , public nsIEventTarget
                                , public nsIThreadObserver
@@ -79,6 +98,9 @@ public:
     void GetSocketConnections(nsTArray<mozilla::net::SocketInfo> *);
     uint64_t GetSentBytes() { return mSentBytesCount; }
     uint64_t GetReceivedBytes() { return mReceivedBytesCount; }
+
+    // Returns true if keepalives are enabled in prefs.
+    bool IsKeepaliveEnabled() { return mKeepaliveEnabledPref; }
 protected:
 
     virtual ~nsSocketTransportService();
@@ -183,9 +205,20 @@ private:
 
     nsEventQueue mPendingSocketQ; // queue of nsIRunnable objects
 
-    // Preference Monitor for SendBufferSize
+    // Preference Monitor for SendBufferSize and Keepalive prefs.
     nsresult    UpdatePrefs();
     int32_t     mSendBufferSize;
+    // Number of seconds of connection is idle before first keepalive ping.
+    int32_t     mKeepaliveIdleTimeS;
+    // Number of seconds between retries should keepalive pings fail.
+    int32_t     mKeepaliveRetryIntervalS;
+    // Number of keepalive probes to send.
+    int32_t     mKeepaliveProbeCount;
+    // True if TCP keepalive is enabled globally.
+    bool        mKeepaliveEnabledPref;
+
+    void OnKeepaliveEnabledPrefChange();
+    void NotifyKeepaliveEnabledPrefChange(SocketContext *sock);
 
     // Socket thread only for dynamically adjusting max socket size
 #if defined(XP_WIN)

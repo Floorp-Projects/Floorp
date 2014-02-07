@@ -4336,6 +4336,13 @@
     "n_buckets": 15,
     "description": "Time (ms) for a WAL checkpoint after collecting all measurements."
   },
+  "CRASH_STORE_COMPRESSED_BYTES": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "1000000",
+    "n_buckets": 202,
+    "description": "Size (in bytes) of the compressed crash store JSON file."
+  },
   "PDF_VIEWER_USED": {
     "expires_in_version": "never",
     "kind": "boolean",

@@ -74,11 +74,11 @@ nsProxyInfo::SetFailoverProxy(nsIProxyInfo *proxy)
 // These pointers are declared in nsProtocolProxyService.cpp and
 // comparison of mType by string pointer is valid within necko
 namespace mozilla {
-  extern const char *kProxyType_HTTP;
-  extern const char *kProxyType_SOCKS;
-  extern const char *kProxyType_SOCKS4;
-  extern const char *kProxyType_SOCKS5;
-  extern const char *kProxyType_DIRECT;
+  extern const char kProxyType_HTTP[];
+  extern const char kProxyType_SOCKS[];
+  extern const char kProxyType_SOCKS4[];
+  extern const char kProxyType_SOCKS5[];
+  extern const char kProxyType_DIRECT[];
 }
 
 bool

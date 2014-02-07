@@ -98,7 +98,7 @@ public:
   void Close();
 
   // Determine if preferences allow EventSource
-  static bool PrefEnabled();
+  static bool PrefEnabled(JSContext* aCx = nullptr, JSObject* aGlobal = nullptr);
 
   virtual void DisconnectFromOwner() MOZ_OVERRIDE;
 

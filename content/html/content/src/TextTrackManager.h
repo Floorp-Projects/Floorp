@@ -74,12 +74,12 @@ public:
 
   void PopulatePendingList();
 
-private:
   // The HTMLMediaElement that this TextTrackManager manages the TextTracks of.
   // This is a weak reference as the life time of TextTrackManager is dependent
   // on the HTMLMediaElement, so it should not be trying to hold the
   // HTMLMediaElement alive.
   HTMLMediaElement* mMediaElement;
+private:
   // List of the TextTrackManager's owning HTMLMediaElement's TextTracks.
   nsRefPtr<TextTrackList> mTextTracks;
   // List of text track objects awaiting loading.

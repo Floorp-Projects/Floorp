@@ -135,12 +135,11 @@ FRAME_STATE_BIT(Generic, 13, NS_FRAME_HAS_VIEW)
 // If this bit is set, the frame was created from anonymous content.
 FRAME_STATE_BIT(Generic, 14, NS_FRAME_INDEPENDENT_SELECTION)
 
-// If this bit is set, the frame is "special" (lame term, I know),
-// which means that it is part of the mangled frame hierarchy that
-// results when an inline has been split because of a nested block.
+// If this bit is set, the frame is part of the mangled frame hierarchy
+// that results when an inline has been split because of a nested block.
 // See the comments in nsCSSFrameConstructor::ConstructInline for
 // more details.
-FRAME_STATE_BIT(Generic, 15, NS_FRAME_IS_SPECIAL)
+FRAME_STATE_BIT(Generic, 15, NS_FRAME_PART_OF_IBSPLIT)
 
 // If this bit is set, then transforms (e.g. CSS or SVG transforms) are allowed
 // to affect the frame, and a transform may currently be in affect. If this bit

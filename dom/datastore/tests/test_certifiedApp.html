@@ -82,6 +82,8 @@
     },
 
     function() {
+      ok(!("DataStore" in window), "DataStore is not an available interface");
+      ok(!("DataStoreChangeEvent" in window), "DataStore is not an available interface");
       ok(!("getDataStores" in navigator), "getDataStores should not exist");
       runTest();
     },

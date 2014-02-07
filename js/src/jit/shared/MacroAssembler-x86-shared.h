@@ -159,6 +159,23 @@ class MacroAssemblerX86Shared : public Assembler
     void not32(Register reg) {
         notl(reg);
     }
+    void inc32(const Operand &addr) {
+        incl(addr);
+    }
+    void atomic_inc32(const Operand &addr) {
+        lock_incl(addr);
+    }
+    void dec32(const Operand &addr) {
+        decl(addr);
+    }
+    void atomic_dec32(const Operand &addr) {
+        lock_decl(addr);
+    }
+    void atomic_cmpxchg32(const Register &src, const Operand &addr, const Register &dest) {
+        // %eax must be explicitly provided for calling clarity.
+        MOZ_ASSERT(dest.code() == JSC::X86Registers::eax);
+        lock_cmpxchg32(src, addr);
+    }
 
     void branch32(Condition cond, const Operand &lhs, const Register &rhs, Label *label) {
         cmpl(lhs, rhs);

@@ -131,7 +131,7 @@ protected:
 
   nscoord ComputeCrossSize(const nsHTMLReflowState& aReflowState,
                            const FlexboxAxisTracker& aAxisTracker,
-                           const nsTArray<FlexLine>& aLines,
+                           nscoord aSumLineCrossSizes,
                            nscoord aAvailableHeightForContent,
                            bool* aIsDefinite,
                            nsReflowStatus& aStatus);

@@ -10,7 +10,8 @@
  * liability, trademark and document use rules apply.
  */
 
-[Constructor, PrefControlled]
+[Constructor,
+ Pref="media.webspeech.recognition.enable"]
 interface SpeechRecognition : EventTarget {
     // recognition parameters
     [Throws]

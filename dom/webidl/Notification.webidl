@@ -11,7 +11,8 @@
  * related or neighboring rights to this work.
  */
 
-[PrefControlled, Constructor(DOMString title, optional NotificationOptions options)]
+[Pref="dom.webnotifications.enabled",
+ Constructor(DOMString title, optional NotificationOptions options)]
 interface Notification : EventTarget {
   [GetterThrows]
   static readonly attribute NotificationPermission permission;

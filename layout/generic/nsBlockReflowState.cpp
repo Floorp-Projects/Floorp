@@ -483,7 +483,7 @@ nsBlockReflowState::AddFloat(nsLineLayout*       aLineLayout,
     // nsBlockFrame::DrainPushedFloats.
     nsBlockFrame *floatParent =
       static_cast<nsBlockFrame*>(aFloat->GetParent());
-    floatParent->StealFrame(mPresContext, aFloat);
+    floatParent->StealFrame(aFloat);
 
     aFloat->RemoveStateBits(NS_FRAME_IS_PUSHED_FLOAT);
 
@@ -898,7 +898,7 @@ nsBlockReflowState::PushFloatPastBreak(nsIFrame *aFloat)
 
   // Put the float on the pushed floats list, even though it
   // isn't actually a continuation.
-  DebugOnly<nsresult> rv = mBlock->StealFrame(mPresContext, aFloat);
+  DebugOnly<nsresult> rv = mBlock->StealFrame(aFloat);
   NS_ASSERTION(NS_SUCCEEDED(rv), "StealFrame should succeed");
   AppendPushedFloat(aFloat);
 

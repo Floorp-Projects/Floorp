@@ -897,7 +897,7 @@ NS_METHOD nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
   if (!(GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
     // Set up our kids.  They're already present, on an overflow list, 
     // or there are none so we'll create them now
-    MoveOverflowToChildList(aPresContext);
+    MoveOverflowToChildList();
   }
 
   // Use longs to get more-aligned space.

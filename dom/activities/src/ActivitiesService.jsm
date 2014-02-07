@@ -151,13 +151,18 @@ let Activities = {
     // ActivityProxy.js
     "Activity:Start",
 
+    // ActivityWrapper.js
+    "Activity:Ready",
+
     // ActivityRequestHandler.js
     "Activity:PostResult",
     "Activity:PostError",
 
     "Activities:Register",
     "Activities:Unregister",
-    "Activities:GetContentTypes"
+    "Activities:GetContentTypes",
+
+    "child-process-shutdown"
   ],
 
   init: function activities_init() {
@@ -226,6 +231,7 @@ let Activities = {
                       .getService(Ci.nsISystemMessagesInternal);
         if (!sysmm) {
           // System message is not present, what should we do?
+          delete Activities.callers[aMsg.id];
           return;
         }
 
@@ -280,7 +286,8 @@ let Activities = {
     let obsData;
 
     if (aMessage.name == "Activity:PostResult" ||
-        aMessage.name == "Activity:PostError") {
+        aMessage.name == "Activity:PostError" ||
+        aMessage.name == "Activity:Ready") {
       caller = this.callers[msg.id];
       if (!caller) {
         debug("!! caller is null for msg.id=" + msg.id);
@@ -293,10 +300,14 @@ let Activities = {
 
     switch(aMessage.name) {
       case "Activity:Start":
-        this.callers[msg.id] = { mm: aMessage.target,
+        this.callers[msg.id] = { mm: mm,
                                  manifestURL: msg.manifestURL,
                                  pageURL: msg.pageURL };
         this.startActivity(msg);
+        break;
+
+      case "Activity:Ready":
+        caller.childMM = mm;
         break;
 
       case "Activity:PostResult":
@@ -340,6 +351,18 @@ let Activities = {
         break;
       case "Activities:GetContentTypes":
         this.sendContentTypes(mm);
+        break;
+      case "child-process-shutdown":
+        for (let id in this.callers) {
+          if (this.callers[id].childMM == mm) {
+            this.callers[id].mm.sendAsyncMessage("Activity:FireError", {
+              "id": id,
+              "error": "USER_ABORT"
+            });
+            delete this.callers[id];
+            break;
+          }
+        }
         break;
     }
   },

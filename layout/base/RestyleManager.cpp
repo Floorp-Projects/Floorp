@@ -171,7 +171,7 @@ DoApplyRenderingChangeToTree(nsIFrame* aFrame,
   NS_PRECONDITION(gInApplyRenderingChangeToTree,
                   "should only be called within ApplyRenderingChangeToTree");
 
-  for ( ; aFrame; aFrame = nsLayoutUtils::GetNextContinuationOrSpecialSibling(aFrame)) {
+  for ( ; aFrame; aFrame = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(aFrame)) {
     // Invalidate and sync views on all descendant frames, following placeholders.
     // We don't need to update transforms in SyncViewsAndInvalidateDescendants, because
     // there can't be any out-of-flows or popups that need to be transformed;
@@ -349,7 +349,7 @@ RestyleManager::RecomputePosition(nsIFrame* aFrame)
       MOZ_ASSERT(NS_STYLE_POSITION_RELATIVE == display->mPosition,
                  "Unexpected type of positioning");
       for (nsIFrame *cont = aFrame; cont;
-           cont = nsLayoutUtils::GetNextContinuationOrSpecialSibling(cont)) {
+           cont = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(cont)) {
         nsIFrame* cb = cont->GetContainingBlock();
         nsMargin newOffsets;
         const nsSize size = cb->GetContentRectRelativeToSelf().Size();
@@ -487,7 +487,7 @@ RestyleManager::StyleChangeReflow(nsIFrame* aFrame, nsChangeHint aHint)
 
   do {
     mPresContext->PresShell()->FrameNeedsReflow(aFrame, dirtyType, dirtyBits);
-    aFrame = nsLayoutUtils::GetNextContinuationOrSpecialSibling(aFrame);
+    aFrame = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(aFrame);
   } while (aFrame);
 
   return NS_OK;
@@ -553,7 +553,7 @@ NeedToReframeForAddingOrRemovingTransform(nsIFrame* aFrame)
         (1 << NS_STYLE_POSITION_ABSOLUTE);
   }
   for (nsIFrame* f = aFrame; f;
-       f = nsLayoutUtils::GetNextContinuationOrSpecialSibling(f)) {
+       f = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(f)) {
     if (FrameHasPositionedPlaceholderDescendants(f, positionMask)) {
       return true;
     }
@@ -631,7 +631,7 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
         NS_UpdateHint(hint, nsChangeHint_ReconstructFrame);
       } else {
         for (nsIFrame *cont = frame; cont;
-             cont = nsLayoutUtils::GetNextContinuationOrSpecialSibling(cont)) {
+             cont = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(cont)) {
           // Normally frame construction would set state bits as needed,
           // but we're not going to reconstruct the frame so we need to set them.
           // It's because we need to set this state on each affected frame
@@ -679,7 +679,7 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
 
       if (hint & nsChangeHint_UpdateEffects) {
         for (nsIFrame *cont = frame; cont;
-             cont = nsLayoutUtils::GetNextContinuationOrSpecialSibling(cont)) {
+             cont = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(cont)) {
           nsSVGEffects::UpdateEffects(cont);
         }
       }
@@ -707,10 +707,12 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
           // The overflow areas of the child frames need to be updated:
           nsIFrame* hintFrame = GetFrameForChildrenOnlyTransformHint(frame);
           nsIFrame* childFrame = hintFrame->GetFirstPrincipalChild();
-          NS_ASSERTION(!nsLayoutUtils::GetNextContinuationOrSpecialSibling(frame),
-                       "SVG frames should not have continuations or special siblings");
-          NS_ASSERTION(!nsLayoutUtils::GetNextContinuationOrSpecialSibling(hintFrame),
-                       "SVG frames should not have continuations or special siblings");
+          NS_ASSERTION(!nsLayoutUtils::GetNextContinuationOrIBSplitSibling(frame),
+                       "SVG frames should not have continuations "
+                       "or ib-split siblings");
+          NS_ASSERTION(!nsLayoutUtils::GetNextContinuationOrIBSplitSibling(hintFrame),
+                       "SVG frames should not have continuations "
+                       "or ib-split siblings");
           for ( ; childFrame; childFrame = childFrame->GetNextSibling()) {
             NS_ABORT_IF_FALSE(childFrame->IsFrameOfType(nsIFrame::eSVG),
                               "Not expecting non-SVG children");
@@ -720,8 +722,9 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
                   (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN))) {
               mOverflowChangedTracker.AddFrame(childFrame);
             }
-            NS_ASSERTION(!nsLayoutUtils::GetNextContinuationOrSpecialSibling(childFrame),
-                         "SVG frames should not have continuations or special siblings");
+            NS_ASSERTION(!nsLayoutUtils::GetNextContinuationOrIBSplitSibling(childFrame),
+                         "SVG frames should not have continuations "
+                         "or ib-split siblings");
             NS_ASSERTION(childFrame->GetParent() == hintFrame,
                          "SVG child frame not expected to have different parent");
           }
@@ -731,7 +734,7 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
         if (!(frame->GetStateBits() &
               (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN))) {
           for (nsIFrame *cont = frame; cont; cont =
-                 nsLayoutUtils::GetNextContinuationOrSpecialSibling(cont)) {
+                 nsLayoutUtils::GetNextContinuationOrIBSplitSibling(cont)) {
             mOverflowChangedTracker.AddFrame(cont);
           }
         }
@@ -1009,7 +1012,7 @@ RestyleManager::AttributeChanged(Element* aElement,
 
     // let the frame deal with it now, so we don't have to deal later
     primaryFrame->AttributeChanged(aNameSpaceID, aAttribute, aModType);
-    // XXXwaterson should probably check for special IB siblings
+    // XXXwaterson should probably check for IB split siblings
     // here, and propagate the AttributeChanged notification to
     // them, as well. Currently, inline frames don't do anything on
     // this notification, so it's not that big a deal.
@@ -1773,25 +1776,28 @@ static nsIFrame*
 GetPrevContinuationWithPossiblySameStyle(nsIFrame* aFrame)
 {
   // Account for {ib} splits when looking for "prevContinuation".  In
-  // particular, for the first-continuation of a part of an {ib} split we
-  // want to use the special prevsibling of the special prevsibling of
-  // aFrame, which should have the same style context as aFrame itself.
-  // In particular, if aFrame is the first continuation of an inline part
-  // of an {ib} split then its special prevsibling is a block, and the
-  // special prevsibling of _that_ is an inline, just like aFrame.
-  // Similarly, if aFrame is the first continuation of a block part of an
-  // {ib} split (an {ib} wrapper block), then its special prevsibling is
-  // an inline and the special prevsibling of that is either another {ib}
-  // wrapper block block or null.
+  // particular, for the first-continuation of a part of an {ib} split
+  // we want to use the previous ib-split sibling of the previous
+  // ib-split sibling of aFrame, which should have the same style
+  // context as aFrame itself.  In particular, if aFrame is the first
+  // continuation of an inline part of a block-in-inline split then its
+  // previous ib-split sibling is a block, and the previous ib-split
+  // sibling of _that_ is an inline, just like aFrame.  Similarly, if
+  // aFrame is the first continuation of a block part of an
+  // block-in-inline split (a block-in-inline wrapper block), then its
+  // previous ib-split sibling is an inline and the previous ib-split
+  // sibling of that is either another block-in-inline wrapper block box
+  // or null.
   nsIFrame *prevContinuation = aFrame->GetPrevContinuation();
-  if (!prevContinuation && (aFrame->GetStateBits() & NS_FRAME_IS_SPECIAL)) {
+  if (!prevContinuation &&
+      (aFrame->GetStateBits() & NS_FRAME_PART_OF_IBSPLIT)) {
     // We're the first continuation, so we can just get the frame
     // property directly
     prevContinuation = static_cast<nsIFrame*>(
-      aFrame->Properties().Get(nsIFrame::IBSplitSpecialPrevSibling()));
+      aFrame->Properties().Get(nsIFrame::IBSplitPrevSibling()));
     if (prevContinuation) {
       prevContinuation = static_cast<nsIFrame*>(
-        prevContinuation->Properties().Get(nsIFrame::IBSplitSpecialPrevSibling()));
+        prevContinuation->Properties().Get(nsIFrame::IBSplitPrevSibling()));
     }
   }
 
@@ -1803,7 +1809,7 @@ GetPrevContinuationWithPossiblySameStyle(nsIFrame* aFrame)
 }
 
 /**
- * Get the previous continuation or similar special sibling (assuming
+ * Get the previous continuation or similar ib-split sibling (assuming
  * block/inline alternation), conditionally on it having the same style.
  * This assumes that we're not between resolving the two (i.e., that
  * they're both already resolved.
@@ -1828,7 +1834,7 @@ GetPrevContinuationWithSameStyle(nsIFrame* aFrame)
 }
 
 /**
- * Get the next continuation or similar special sibling (assuming
+ * Get the next continuation or similar ib-split sibling (assuming
  * block/inline alternation), conditionally on it having the same style.
  *
  * Since this is used when deciding to copy the new style context, it
@@ -1844,14 +1850,15 @@ GetNextContinuationWithSameStyle(nsIFrame* aFrame,
   // See GetPrevContinuationWithSameStyle about {ib} splits.
 
   nsIFrame *nextContinuation = aFrame->GetNextContinuation();
-  if (!nextContinuation && (aFrame->GetStateBits() & NS_FRAME_IS_SPECIAL)) {
+  if (!nextContinuation &&
+      (aFrame->GetStateBits() & NS_FRAME_PART_OF_IBSPLIT)) {
     // We're the last continuation, so we have to hop back to the first
     // before getting the frame property
     nextContinuation = static_cast<nsIFrame*>(aFrame->FirstContinuation()->
-      Properties().Get(nsIFrame::IBSplitSpecialSibling()));
+      Properties().Get(nsIFrame::IBSplitSibling()));
     if (nextContinuation) {
       nextContinuation = static_cast<nsIFrame*>(
-        nextContinuation->Properties().Get(nsIFrame::IBSplitSpecialSibling()));
+        nextContinuation->Properties().Get(nsIFrame::IBSplitSibling()));
     }
   }
 
@@ -2016,10 +2023,10 @@ RestyleManager::ReparentStyleContext(nsIFrame* aFrame)
       // (split or not) hasn't done so already). It's not a problem to
       // reparent the same frame twice because the "if (newContext !=
       // oldContext)" check will prevent us from redoing work.
-      if ((aFrame->GetStateBits() & NS_FRAME_IS_SPECIAL) &&
+      if ((aFrame->GetStateBits() & NS_FRAME_PART_OF_IBSPLIT) &&
           !aFrame->GetPrevContinuation()) {
         nsIFrame* sib = static_cast<nsIFrame*>
-          (aFrame->Properties().Get(nsIFrame::IBSplitSpecialSibling()));
+          (aFrame->Properties().Get(nsIFrame::IBSplitSibling()));
         if (sib) {
           ReparentStyleContext(sib);
         }
@@ -2200,7 +2207,7 @@ ElementRestyler::CaptureChange(nsStyleContext* aOldContext,
 /**
  * Recompute style for mFrame (which should not have a prev continuation
  * with the same style), all of its next continuations with the same
- * style, and all special siblings of the same type (either block or
+ * style, and all ib-split siblings of the same type (either block or
  * inline, skipping the intermediates of the other type) and accumulate
  * changes into mChangeList given that mHintsHandled is already accumulated
  * for an ancestor.
@@ -2838,14 +2845,14 @@ GetNextBlockInInlineSibling(FramePropertyTable* aPropTable, nsIFrame* aFrame)
 {
   NS_ASSERTION(!aFrame->GetPrevContinuation(),
                "must start with the first continuation");
-  // Might we have special siblings?
-  if (!(aFrame->GetStateBits() & NS_FRAME_IS_SPECIAL)) {
+  // Might we have ib-split siblings?
+  if (!(aFrame->GetStateBits() & NS_FRAME_PART_OF_IBSPLIT)) {
     // nothing more to do here
     return nullptr;
   }
 
   return static_cast<nsIFrame*>
-    (aPropTable->Get(aFrame, nsIFrame::IBSplitSpecialSibling()));
+    (aPropTable->Get(aFrame, nsIFrame::IBSplitSibling()));
 }
 
 void
@@ -2866,7 +2873,7 @@ RestyleManager::ComputeStyleChangeFor(nsIFrame*          aFrame,
                "must start with the first continuation");
 
   // We want to start with this frame and walk all its next-in-flows,
-  // as well as all its special siblings and their next-in-flows,
+  // as well as all its ib-split siblings and their next-in-flows,
   // reresolving style on all the frames we encounter in this walk that
   // we didn't reach already.  In the normal case, this will mean only
   // restyling the first two block-in-inline splits and no
@@ -2888,7 +2895,7 @@ RestyleManager::ComputeStyleChangeFor(nsIFrame*          aFrame,
   nsTArray<nsIContent*> visibleKidsOfHiddenElement;
   for (nsIFrame* ibSibling = aFrame; ibSibling;
        ibSibling = GetNextBlockInInlineSibling(propTable, ibSibling)) {
-    // Outer loop over special siblings
+    // Outer loop over ib-split siblings
     for (nsIFrame* cont = ibSibling; cont; cont = cont->GetNextContinuation()) {
       if (GetPrevContinuationWithSameStyle(cont)) {
         // We already handled this element when dealing with its earlier
@@ -2906,7 +2913,7 @@ RestyleManager::ComputeStyleChangeFor(nsIFrame*          aFrame,
 
       if (restyler.HintsHandledForFrame() & nsChangeHint_ReconstructFrame) {
         // If it's going to cause a framechange, then don't bother
-        // with the continuations or special siblings since they'll be
+        // with the continuations or ib-split siblings since they'll be
         // clobbered by the frame reconstruct anyway.
         NS_ASSERTION(!cont->GetPrevContinuation(),
                      "continuing frame had more severe impact than first-in-flow");
