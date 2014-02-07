@@ -1013,10 +1013,11 @@
       case 19: /* metrics in EBLC, PNG image data */
 #ifdef FT_CONFIG_OPTION_USE_PNG
         loader = tt_sbit_decoder_load_png;
+        break;
 #else
         error = FT_THROW( Unimplemented_Feature );
+        goto Fail;
 #endif /* FT_CONFIG_OPTION_USE_PNG */
-        break;
 
       default:
         error = FT_THROW( Invalid_Table );
