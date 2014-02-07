@@ -171,16 +171,6 @@ public:
     DECL_WEBGL_EXTENSION_GOOP
 };
 
-class WebGLExtensionTextureHalfFloatLinear
-    : public WebGLExtensionBase
-{
-public:
-    WebGLExtensionTextureHalfFloatLinear(WebGLContext*);
-    virtual ~WebGLExtensionTextureHalfFloatLinear();
-
-    DECL_WEBGL_EXTENSION_GOOP
-};
-
 class WebGLExtensionDrawBuffers
     : public WebGLExtensionBase
 {
