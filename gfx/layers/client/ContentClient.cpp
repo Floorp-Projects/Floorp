@@ -63,8 +63,7 @@ ContentClient::CreateContentClient(CompositableForwarder* aForwarder)
   } else
 #endif
   {
-    useDoubleBuffering = (LayerManagerComposite::SupportsDirectTexturing() &&
-                         backend != LayersBackend::LAYERS_D3D9) ||
+    useDoubleBuffering = LayerManagerComposite::SupportsDirectTexturing() ||
                          backend == LayersBackend::LAYERS_BASIC;
   }
 
