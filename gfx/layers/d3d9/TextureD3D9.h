@@ -181,7 +181,7 @@ protected:
 };
 
 /**
- * Can only be drawn into through Cairo, and only support opaque surfaces.
+ * Can only be drawn into through Cairo and need a D3D9 context on the client side.
  * The corresponding TextureHost is TextureHostD3D9.
  */
 class CairoTextureClientD3D9 : public TextureClient
@@ -228,11 +228,12 @@ private:
   gfx::SurfaceFormat mFormat;
   bool mIsLocked;
   bool mNeedsClear;
+  bool mLockRect;
 };
 
 /**
  * Can only be drawn into through Cairo.
- * Supports opaque surfaces. Prefer CairoTextureClientD3D9 when possible.
+ * Prefer CairoTextureClientD3D9 when possible.
  * The coresponding TextureHost is DIBTextureHostD3D9.
  */
 class DIBTextureClientD3D9 : public TextureClient
