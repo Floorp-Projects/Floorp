@@ -178,7 +178,8 @@ function updateBanner(response) {
       text: message.text,
       icon: message.icon,
       onclick: function() {
-        gChromeWin.BrowserApp.addTab(message.url);
+        let parentId = gChromeWin.BrowserApp.selectedTab.id;
+        gChromeWin.BrowserApp.addTab(message.url, { parentId: parentId });
       },
       onshown: function() {
         // 10% of the time, record the snippet id and a timestamp
