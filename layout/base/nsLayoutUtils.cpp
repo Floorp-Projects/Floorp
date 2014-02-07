@@ -2505,7 +2505,7 @@ nsLayoutUtils::GetAllInFlowBoxes(nsIFrame* aFrame, BoxCallback* aCallback)
 {
   while (aFrame) {
     AddBoxesForFrame(aFrame, aCallback);
-    aFrame = nsLayoutUtils::GetNextContinuationOrSpecialSibling(aFrame);
+    aFrame = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(aFrame);
   }
 }
 
@@ -2721,7 +2721,7 @@ nsLayoutUtils::GetParentOrPlaceholderForCrossDoc(nsIFrame* aFrame)
 }
 
 nsIFrame*
-nsLayoutUtils::GetNextContinuationOrSpecialSibling(nsIFrame *aFrame)
+nsLayoutUtils::GetNextContinuationOrIBSplitSibling(nsIFrame *aFrame)
 {
   nsIFrame *result = aFrame->GetNextContinuation();
   if (result)
@@ -2740,7 +2740,7 @@ nsLayoutUtils::GetNextContinuationOrSpecialSibling(nsIFrame *aFrame)
 }
 
 nsIFrame*
-nsLayoutUtils::FirstContinuationOrSpecialSibling(nsIFrame *aFrame)
+nsLayoutUtils::FirstContinuationOrIBSplitSibling(nsIFrame *aFrame)
 {
   nsIFrame *result = aFrame->FirstContinuation();
   if (result->GetStateBits() & NS_FRAME_PART_OF_IBSPLIT) {
@@ -2757,7 +2757,7 @@ nsLayoutUtils::FirstContinuationOrSpecialSibling(nsIFrame *aFrame)
 }
 
 bool
-nsLayoutUtils::IsFirstContinuationOrSpecialSibling(nsIFrame *aFrame)
+nsLayoutUtils::IsFirstContinuationOrIBSplitSibling(nsIFrame *aFrame)
 {
   if (aFrame->GetPrevContinuation()) {
     return false;
@@ -5160,7 +5160,7 @@ nsLayoutUtils::GetFontFacesForFrames(nsIFrame* aFrame,
 
   while (aFrame) {
     GetFontFacesForFramesInner(aFrame, aFontFaceList);
-    aFrame = GetNextContinuationOrSpecialSibling(aFrame);
+    aFrame = GetNextContinuationOrIBSplitSibling(aFrame);
   }
 
   return NS_OK;
