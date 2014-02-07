@@ -132,9 +132,12 @@
   #TabsToolbar:not(:-moz-lwtheme) {
     background-color: transparent !important;
     color: black;
-    text-shadow: 0 0 .5em white, 0 0 .5em white, 0 1px 0 rgba(255,255,255,.4);
     border-left-style: none !important;
     border-right-style: none !important;
+  }
+
+  #toolbar-menubar:not(:-moz-lwtheme) {
+    text-shadow: 0 0 .5em white, 0 0 .5em white, 0 1px 0 rgba(255,255,255,.4);
   }
 
   /* Vertical toolbar border */
@@ -195,10 +198,6 @@
   #main-menubar:not(:-moz-lwtheme):not(:-moz-window-inactive) {
     background-color: rgba(255,255,255,.5);
     border-radius: 4px;
-  }
-
-  .tabbrowser-tab:not(:-moz-lwtheme) {
-    text-shadow: none;
   }
 
   #ctrlTab-panel {
