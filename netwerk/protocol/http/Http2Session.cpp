@@ -7,6 +7,12 @@
 // HttpLog.h should generally be included first
 #include "HttpLog.h"
 
+// Log on level :5, instead of default :4.
+#undef LOG
+#define LOG(args) LOG5(args)
+#undef LOG_ENABLED
+#define LOG_ENABLED() LOG5_ENABLED()
+
 #include <algorithm>
 
 #include "Http2Session.h"
