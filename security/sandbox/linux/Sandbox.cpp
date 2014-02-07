@@ -14,6 +14,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/NullPtr.h"
+#include "mozilla/unused.h"
 
 #ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
@@ -24,6 +25,10 @@
 #include <android/log.h>
 #endif
 #include "seccomp_filter.h"
+
+#include "mozilla/dom/Exceptions.h"
+#include "nsString.h"
+#include "nsThreadUtils.h"
 
 #include "linux_seccomp.h"
 #ifdef MOZ_LOGGING
@@ -56,6 +61,47 @@ struct sock_fprog seccomp_prog = {
   (unsigned short)MOZ_ARRAY_LENGTH(seccomp_filter),
   seccomp_filter,
 };
+
+/**
+ * Log JS stack info in the same place as the sandbox violation
+ * message.  Useful in case the responsible code is JS and all we have
+ * are logs and a minidump with the C++ stacks (e.g., on TBPL).
+ */
+static void
+SandboxLogJSStack(void)
+{
+  if (!NS_IsMainThread()) {
+    // This might be a worker thread... or it might be a non-JS
+    // thread, or a non-NSPR thread.  There's isn't a good API for
+    // dealing with this, yet.
+    return;
+  }
+  nsCOMPtr<nsIStackFrame> frame = dom::GetCurrentJSStack();
+  for (int i = 0; frame != nullptr; ++i) {
+    nsAutoCString fileName, funName;
+    int32_t lineNumber;
+
+    // Don't stop unwinding if an attribute can't be read.
+    fileName.SetIsVoid(true);
+    unused << frame->GetFilename(fileName);
+    lineNumber = 0;
+    unused << frame->GetLineNumber(&lineNumber);
+    funName.SetIsVoid(true);
+    unused << frame->GetName(funName);
+
+    if (!funName.IsVoid() || !fileName.IsVoid()) {
+      LOG_ERROR("JS frame %d: %s %s line %d", i,
+                funName.IsVoid() ? "(anonymous)" : funName.get(),
+                fileName.IsVoid() ? "(no file)" : fileName.get(),
+                lineNumber);
+    }
+
+    nsCOMPtr<nsIStackFrame> nextFrame;
+    nsresult rv = frame->GetCaller(getter_AddRefs(nextFrame));
+    NS_ENSURE_SUCCESS_VOID(rv);
+    frame = nextFrame;
+  }
+}
 
 /**
  * This is the SIGSYS handler function. It is used to report to the user
@@ -102,6 +148,9 @@ Reporter(int nr, siginfo_t *info, void *void_context)
     LOG_ERROR("Failed to write minidump");
   }
 #endif
+
+  // Do this last, in case it crashes or deadlocks.
+  SandboxLogJSStack();
 
   // Try to reraise, so the parent sees that this process crashed.
   // (If tgkill is forbidden, then seccomp will raise SIGSYS, which
