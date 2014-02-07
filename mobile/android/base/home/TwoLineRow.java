@@ -18,13 +18,8 @@ import android.widget.TextView;
 import java.lang.ref.WeakReference;
 
 public abstract class TwoLineRow extends LinearLayout {
-    protected static final int NO_ICON = 0;
-
-    private final TextView mPrimaryText;
-    private int mPrimaryIconId;
-
-    private final TextView mSecondaryText;
-    private int mSecondaryIconId;
+    private final TextView mTitle;
+    private final TextView mDescription;
 
     public TwoLineRow(Context context) {
         this(context, null);
@@ -35,42 +30,21 @@ public abstract class TwoLineRow extends LinearLayout {
 
         setGravity(Gravity.CENTER_VERTICAL);
 
-        mSecondaryIconId = NO_ICON;
-        mPrimaryIconId = NO_ICON;
-
         LayoutInflater.from(context).inflate(R.layout.two_line_row, this);
-        mPrimaryText = (TextView) findViewById(R.id.primary_text);
-        mSecondaryText = (TextView) findViewById(R.id.secondary_text);
+        mTitle = (TextView) findViewById(R.id.title);
+        mDescription = (TextView) findViewById(R.id.description);
     }
 
-    protected void setPrimaryText(String text) {
-        mPrimaryText.setText(text);
+    protected void setTitle(String text) {
+        mTitle.setText(text);
     }
 
-    protected void setSecondaryText(String text) {
-        mSecondaryText.setText(text);
+    protected void setDescription(String text) {
+        mDescription.setText(text);
     }
 
-    protected void setSecondaryText(int stringId) {
-        mSecondaryText.setText(stringId);
-    }
-
-    protected void setPrimaryIcon(int iconId) {
-        if (mPrimaryIconId == iconId) {
-            return;
-        }
-
-        mPrimaryIconId = iconId;
-        mSecondaryText.setCompoundDrawablesWithIntrinsicBounds(mSecondaryIconId, 0, mPrimaryIconId, 0);
-    }
-
-    protected void setSecondaryIcon(int iconId) {
-        if (mSecondaryIconId == iconId) {
-            return;
-        }
-
-        mSecondaryIconId = iconId;
-        mSecondaryText.setCompoundDrawablesWithIntrinsicBounds(mSecondaryIconId, 0, mPrimaryIconId, 0);
+    protected void setDescription(int stringId) {
+        mDescription.setText(stringId);
     }
 
     public abstract void updateFromCursor(Cursor cursor);
