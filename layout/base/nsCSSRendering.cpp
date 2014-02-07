@@ -203,13 +203,13 @@ protected:
     if (!prevCont &&
         (aFrame->GetStateBits() & NS_FRAME_PART_OF_IBSPLIT)) {
       nsIFrame* block = static_cast<nsIFrame*>
-        (aFrame->Properties().Get(nsIFrame::IBSplitSpecialPrevSibling()));
+        (aFrame->Properties().Get(nsIFrame::IBSplitPrevSibling()));
       if (block) {
         // The {ib} properties are only stored on first continuations
         NS_ASSERTION(!block->GetPrevContinuation(),
-                     "Incorrect value for IBSplitSpecialPrevSibling");
+                     "Incorrect value for IBSplitPrevSibling");
         prevCont = static_cast<nsIFrame*>
-          (block->Properties().Get(nsIFrame::IBSplitSpecialPrevSibling()));
+          (block->Properties().Get(nsIFrame::IBSplitPrevSibling()));
         NS_ASSERTION(prevCont, "How did that happen?");
       }
     }

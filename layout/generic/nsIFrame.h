@@ -780,7 +780,7 @@ public:
   }
 
   NS_DECLARE_FRAME_PROPERTY(IBSplitSibling, nullptr)
-  NS_DECLARE_FRAME_PROPERTY(IBSplitSpecialPrevSibling, nullptr)
+  NS_DECLARE_FRAME_PROPERTY(IBSplitPrevSibling, nullptr)
 
   NS_DECLARE_FRAME_PROPERTY(NormalPositionProperty, DestroyPoint)
   NS_DECLARE_FRAME_PROPERTY(ComputedOffsetProperty, DestroyMargin)
@@ -2809,7 +2809,7 @@ NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::ParagraphDepthProperty()))
    */
   bool FrameIsNonFirstInIBSplit() const {
     return (GetStateBits() & NS_FRAME_PART_OF_IBSPLIT) &&
-      FirstContinuation()->Properties().Get(nsIFrame::IBSplitSpecialPrevSibling());
+      FirstContinuation()->Properties().Get(nsIFrame::IBSplitPrevSibling());
   }
 
   /**

@@ -435,7 +435,7 @@ static nsIFrame* GetSpecialPrevSibling(nsIFrame* aFrame)
   // frame in the continuation chain. Walk back to find that frame now.  
   return static_cast<nsIFrame*>
     (aFrame->FirstContinuation()->
-       Properties().Get(nsIFrame::IBSplitSpecialPrevSibling()));
+       Properties().Get(nsIFrame::IBSplitPrevSibling()));
 }
 
 static nsIFrame*
@@ -479,7 +479,7 @@ SetFrameIsSpecial(nsIFrame* aFrame, nsIFrame* aIBSplitSibling)
     // first frame in the flow.
     FramePropertyTable* props = aFrame->PresContext()->PropertyTable();
     props->Set(aFrame, nsIFrame::IBSplitSibling(), aIBSplitSibling);
-    props->Set(aIBSplitSibling, nsIFrame::IBSplitSpecialPrevSibling(), aFrame);
+    props->Set(aIBSplitSibling, nsIFrame::IBSplitPrevSibling(), aFrame);
   }
 }
 
@@ -10406,7 +10406,7 @@ nsCSSFrameConstructor::ConstructInline(nsFrameConstructorState& aState,
   // 2) Each frame in the split has the nsIFrame::IBSplitSibling
   //    property pointing to the next frame in the split, except for the last
   //    one, which does not have it set.
-  // 3) Each frame in the split has the nsIFrame::IBSplitSpecialPrevSibling
+  // 3) Each frame in the split has the nsIFrame::IBSplitPrevSibling
   //    property pointing to the previous frame in the split, except for the
   //    first one, which does not have it set.
   // 4) The first and last frame in the split are always inlines.
