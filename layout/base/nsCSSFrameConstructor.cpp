@@ -416,7 +416,7 @@ IsFramePartOfIBSplit(nsIFrame* aFrame)
   return (aFrame->GetStateBits() & NS_FRAME_PART_OF_IBSPLIT) != 0;
 }
 
-static nsIFrame* GetSpecialSibling(nsIFrame* aFrame)
+static nsIFrame* GetIBSplitSibling(nsIFrame* aFrame)
 {
   NS_PRECONDITION(IsFramePartOfIBSplit(aFrame), "Shouldn't call this");
 
@@ -439,13 +439,13 @@ static nsIFrame* GetSpecialPrevSibling(nsIFrame* aFrame)
 }
 
 static nsIFrame*
-GetLastSpecialSibling(nsIFrame* aFrame, bool aReturnEmptyTrailingInline)
+GetLastIBSplitSibling(nsIFrame* aFrame, bool aReturnEmptyTrailingInline)
 {
   for (nsIFrame *frame = aFrame, *next; ; frame = next) {
-    next = GetSpecialSibling(frame);
+    next = GetIBSplitSibling(frame);
     if (!next ||
         (!aReturnEmptyTrailingInline && !next->GetFirstPrincipalChild() &&
-         !GetSpecialSibling(next))) {
+         !GetIBSplitSibling(next))) {
       NS_ASSERTION(!next || !frame->IsInlineOutside(),
                    "Should have a block here!");
       return frame;
@@ -456,7 +456,7 @@ GetLastSpecialSibling(nsIFrame* aFrame, bool aReturnEmptyTrailingInline)
 }
 
 static void
-SetFrameIsSpecial(nsIFrame* aFrame, nsIFrame* aSpecialSibling)
+SetFrameIsSpecial(nsIFrame* aFrame, nsIFrame* aIBSplitSibling)
 {
   NS_PRECONDITION(aFrame, "bad args!");
 
@@ -470,16 +470,16 @@ SetFrameIsSpecial(nsIFrame* aFrame, nsIFrame* aSpecialSibling)
   // Mark the frame as "special".
   aFrame->AddStateBits(NS_FRAME_PART_OF_IBSPLIT);
 
-  if (aSpecialSibling) {
-    NS_ASSERTION(!aSpecialSibling->GetPrevContinuation(),
+  if (aIBSplitSibling) {
+    NS_ASSERTION(!aIBSplitSibling->GetPrevContinuation(),
                  "assigning something other than the first continuation as the "
                  "special sibling");
 
     // Store the "special sibling" (if we were given one) with the
     // first frame in the flow.
     FramePropertyTable* props = aFrame->PresContext()->PropertyTable();
-    props->Set(aFrame, nsIFrame::IBSplitSibling(), aSpecialSibling);
-    props->Set(aSpecialSibling, nsIFrame::IBSplitSpecialPrevSibling(), aFrame);
+    props->Set(aFrame, nsIFrame::IBSplitSibling(), aIBSplitSibling);
+    props->Set(aIBSplitSibling, nsIFrame::IBSplitSpecialPrevSibling(), aFrame);
   }
 }
 
@@ -5742,9 +5742,9 @@ AdjustAppendParentForAfterContent(nsPresContext* aPresContext,
     // We might be in a situation where the last part of the {ib} split was
     // empty.  Since we have no ::after pseudo-element, we do in fact want to be
     // appending to that last part, so advance to it if needed.  Note that here
-    // aParentFrame is the result of a GetLastSpecialSibling call, so must be
+    // aParentFrame is the result of a GetLastIBSplitSibling call, so must be
     // either the last or next to last special sibling.
-    nsIFrame* trailingInline = GetSpecialSibling(aParentFrame);
+    nsIFrame* trailingInline = GetIBSplitSibling(aParentFrame);
     if (trailingInline) {
       aParentFrame = trailingInline;
     }
@@ -5809,8 +5809,8 @@ nsCSSFrameConstructor::AppendFramesToParent(nsFrameConstructorState&       aStat
                                             bool                           aIsRecursiveCall)
 {
   NS_PRECONDITION(!IsFramePartOfIBSplit(aParentFrame) ||
-                  !GetSpecialSibling(aParentFrame) ||
-                  !GetSpecialSibling(aParentFrame)->GetFirstPrincipalChild(),
+                  !GetIBSplitSibling(aParentFrame) ||
+                  !GetIBSplitSibling(aParentFrame)->GetFirstPrincipalChild(),
                   "aParentFrame has a special sibling with kids?");
   NS_PRECONDITION(!aPrevSibling || aPrevSibling->GetParent() == aParentFrame,
                   "Parent and prevsibling don't match");
@@ -5825,7 +5825,7 @@ nsCSSFrameConstructor::AppendFramesToParent(nsFrameConstructorState&       aStat
   NS_ASSERTION(nextSibling ||
                !IsFramePartOfIBSplit(aParentFrame) ||
                (IsInlineFrame(aParentFrame) &&
-                !GetSpecialSibling(aParentFrame) &&
+                !GetIBSplitSibling(aParentFrame) &&
                 !aParentFrame->GetNextContinuation()) ||
                aIsRecursiveCall,
                "aParentFrame is not last?");
@@ -6011,7 +6011,7 @@ nsCSSFrameConstructor::FindFrameForContentSibling(nsIContent* aContent,
     // The frame may be a special frame (a split inline frame that
     // contains a block).  Get the last part of that split.
     if (IsFramePartOfIBSplit(sibling)) {
-      sibling = GetLastSpecialSibling(sibling, true);
+      sibling = GetLastIBSplitSibling(sibling, true);
     }
 
     // The frame may have a continuation. If so, we want the last
@@ -6154,7 +6154,7 @@ nsCSSFrameConstructor::GetInsertionPrevSibling(nsIFrame*& aParentFrame,
         // Since we're appending, we'll walk to the last anonymous frame
         // that was created for the broken inline frame.  But don't walk
         // to the trailing inline if it's empty; stop at the block.
-        aParentFrame = GetLastSpecialSibling(aParentFrame, false);
+        aParentFrame = GetLastIBSplitSibling(aParentFrame, false);
       }
       // Get continuation that parents the last child.  This MUST be done
       // before the AdjustAppendParentForAfterContent call.
@@ -6652,7 +6652,7 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
     // Since we're appending, we'll walk to the last anonymous frame
     // that was created for the broken inline frame.  But don't walk
     // to the trailing inline if it's empty; stop at the block.
-    parentFrame = GetLastSpecialSibling(parentFrame, false);
+    parentFrame = GetLastIBSplitSibling(parentFrame, false);
   }
 
   // Get continuation that parents the last child.  This MUST be done
@@ -8336,7 +8336,7 @@ nsCSSFrameConstructor::CaptureStateForFramesOf(nsIContent* aContent,
     frame = mFixedContainingBlock;
   }
   for ( ; frame;
-        frame = nsLayoutUtils::GetNextContinuationOrSpecialSibling(frame)) {
+        frame = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(frame)) {
     CaptureFrameState(frame, aHistoryState);
   }
 }
@@ -8581,7 +8581,7 @@ nsCSSFrameConstructor::MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame,
   // removing one of its kids will have no effect on the splitting.
   // Get the first continuation up front so we don't have to do it twice.
   nsIFrame* parentFirstContinuation = parent->FirstContinuation();
-  if (!GetSpecialSibling(parentFirstContinuation) ||
+  if (!GetIBSplitSibling(parentFirstContinuation) ||
       !GetSpecialPrevSibling(parentFirstContinuation)) {
     return false;
   }
@@ -10703,7 +10703,7 @@ IsSafeToAppendToSpecialInline(nsIFrame* aParentFrame, nsIFrame* aNextSibling)
     NS_ASSERTION(IsFramePartOfIBSplit(aParentFrame),
                  "How is this not special?");
     if (aNextSibling || aParentFrame->GetNextContinuation() ||
-        GetSpecialSibling(aParentFrame)) {
+        GetIBSplitSibling(aParentFrame)) {
       return false;
     }
 

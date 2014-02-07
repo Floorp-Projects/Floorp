@@ -171,7 +171,7 @@ DoApplyRenderingChangeToTree(nsIFrame* aFrame,
   NS_PRECONDITION(gInApplyRenderingChangeToTree,
                   "should only be called within ApplyRenderingChangeToTree");
 
-  for ( ; aFrame; aFrame = nsLayoutUtils::GetNextContinuationOrSpecialSibling(aFrame)) {
+  for ( ; aFrame; aFrame = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(aFrame)) {
     // Invalidate and sync views on all descendant frames, following placeholders.
     // We don't need to update transforms in SyncViewsAndInvalidateDescendants, because
     // there can't be any out-of-flows or popups that need to be transformed;
@@ -349,7 +349,7 @@ RestyleManager::RecomputePosition(nsIFrame* aFrame)
       MOZ_ASSERT(NS_STYLE_POSITION_RELATIVE == display->mPosition,
                  "Unexpected type of positioning");
       for (nsIFrame *cont = aFrame; cont;
-           cont = nsLayoutUtils::GetNextContinuationOrSpecialSibling(cont)) {
+           cont = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(cont)) {
         nsIFrame* cb = cont->GetContainingBlock();
         nsMargin newOffsets;
         const nsSize size = cb->GetContentRectRelativeToSelf().Size();
@@ -487,7 +487,7 @@ RestyleManager::StyleChangeReflow(nsIFrame* aFrame, nsChangeHint aHint)
 
   do {
     mPresContext->PresShell()->FrameNeedsReflow(aFrame, dirtyType, dirtyBits);
-    aFrame = nsLayoutUtils::GetNextContinuationOrSpecialSibling(aFrame);
+    aFrame = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(aFrame);
   } while (aFrame);
 
   return NS_OK;
@@ -553,7 +553,7 @@ NeedToReframeForAddingOrRemovingTransform(nsIFrame* aFrame)
         (1 << NS_STYLE_POSITION_ABSOLUTE);
   }
   for (nsIFrame* f = aFrame; f;
-       f = nsLayoutUtils::GetNextContinuationOrSpecialSibling(f)) {
+       f = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(f)) {
     if (FrameHasPositionedPlaceholderDescendants(f, positionMask)) {
       return true;
     }
@@ -631,7 +631,7 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
         NS_UpdateHint(hint, nsChangeHint_ReconstructFrame);
       } else {
         for (nsIFrame *cont = frame; cont;
-             cont = nsLayoutUtils::GetNextContinuationOrSpecialSibling(cont)) {
+             cont = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(cont)) {
           // Normally frame construction would set state bits as needed,
           // but we're not going to reconstruct the frame so we need to set them.
           // It's because we need to set this state on each affected frame
@@ -679,7 +679,7 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
 
       if (hint & nsChangeHint_UpdateEffects) {
         for (nsIFrame *cont = frame; cont;
-             cont = nsLayoutUtils::GetNextContinuationOrSpecialSibling(cont)) {
+             cont = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(cont)) {
           nsSVGEffects::UpdateEffects(cont);
         }
       }
@@ -707,9 +707,9 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
           // The overflow areas of the child frames need to be updated:
           nsIFrame* hintFrame = GetFrameForChildrenOnlyTransformHint(frame);
           nsIFrame* childFrame = hintFrame->GetFirstPrincipalChild();
-          NS_ASSERTION(!nsLayoutUtils::GetNextContinuationOrSpecialSibling(frame),
+          NS_ASSERTION(!nsLayoutUtils::GetNextContinuationOrIBSplitSibling(frame),
                        "SVG frames should not have continuations or special siblings");
-          NS_ASSERTION(!nsLayoutUtils::GetNextContinuationOrSpecialSibling(hintFrame),
+          NS_ASSERTION(!nsLayoutUtils::GetNextContinuationOrIBSplitSibling(hintFrame),
                        "SVG frames should not have continuations or special siblings");
           for ( ; childFrame; childFrame = childFrame->GetNextSibling()) {
             NS_ABORT_IF_FALSE(childFrame->IsFrameOfType(nsIFrame::eSVG),
@@ -720,7 +720,7 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
                   (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN))) {
               mOverflowChangedTracker.AddFrame(childFrame);
             }
-            NS_ASSERTION(!nsLayoutUtils::GetNextContinuationOrSpecialSibling(childFrame),
+            NS_ASSERTION(!nsLayoutUtils::GetNextContinuationOrIBSplitSibling(childFrame),
                          "SVG frames should not have continuations or special siblings");
             NS_ASSERTION(childFrame->GetParent() == hintFrame,
                          "SVG child frame not expected to have different parent");
@@ -731,7 +731,7 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
         if (!(frame->GetStateBits() &
               (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN))) {
           for (nsIFrame *cont = frame; cont; cont =
-                 nsLayoutUtils::GetNextContinuationOrSpecialSibling(cont)) {
+                 nsLayoutUtils::GetNextContinuationOrIBSplitSibling(cont)) {
             mOverflowChangedTracker.AddFrame(cont);
           }
         }
