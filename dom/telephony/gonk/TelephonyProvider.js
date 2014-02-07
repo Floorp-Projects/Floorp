@@ -315,7 +315,10 @@ TelephonyProvider.prototype = {
       case RIL.GECKO_SUPP_SVC_NOTIFICATION_REMOTE_RESUMED:
         return nsITelephonyProvider.NOTIFICATION_REMOTE_RESUMED;
       default:
-        throw new Error("Unknown rilSuppSvcNotification: " + aNotification);
+        if (DEBUG) {
+          debug("Unknown rilSuppSvcNotification: " + aNotification);
+        }
+        return;
     }
   },
 
