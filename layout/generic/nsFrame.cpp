@@ -7191,10 +7191,10 @@ GetIBSplitSiblingForAnonymousBlock(const nsIFrame* aFrame)
    * Now look up the nsGkAtoms::IBSplitPrevSibling
    * property.
    */
-  nsIFrame *specialSibling = static_cast<nsIFrame*>
+  nsIFrame *ibSplitSibling = static_cast<nsIFrame*>
     (aFrame->Properties().Get(nsIFrame::IBSplitPrevSibling()));
-  NS_ASSERTION(specialSibling, "Broken frame tree?");
-  return specialSibling;
+  NS_ASSERTION(ibSplitSibling, "Broken frame tree?");
+  return ibSplitSibling;
 }
 
 /**
@@ -7303,9 +7303,9 @@ nsFrame::DoGetParentStyleContextFrame() const
      * inline. We can get to it using GetIBSplitSiblingForAnonymousBlock.
      */
     if (mState & NS_FRAME_PART_OF_IBSPLIT) {
-      nsIFrame* specialSibling = GetIBSplitSiblingForAnonymousBlock(this);
-      if (specialSibling) {
-        return specialSibling;
+      nsIFrame* ibSplitSibling = GetIBSplitSiblingForAnonymousBlock(this);
+      if (ibSplitSibling) {
+        return ibSplitSibling;
       }
     }
 
