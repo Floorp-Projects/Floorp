@@ -467,8 +467,10 @@ Toolbox.prototype = {
   fireCustomKey: function(toolId) {
     let toolDefinition = gDevTools.getToolDefinition(toolId);
 
-    if (toolDefinition.onkey && this.currentToolId === toolId) {
-      toolDefinition.onkey(this.getCurrentPanel());
+    if (toolDefinition.onkey && 
+        ((this.currentToolId === toolId) ||
+          (toolId == "webconsole" && this.splitConsole))) {
+      toolDefinition.onkey(this.getCurrentPanel(), this);
     }
   },
 
@@ -818,6 +820,14 @@ Toolbox.prototype = {
   },
 
   /**
+   * Focus split console's input line
+   */
+  focusConsoleInput: function() {
+    let hud = this.getPanel("webconsole").hud;
+    hud.jsterm.inputNode.focus();
+  },
+
+  /**
    * Toggles the split state of the webconsole.  If the webconsole panel
    * is already selected, then this command is ignored.
    */
@@ -832,7 +842,7 @@ Toolbox.prototype = {
 
       if (this._splitConsole) {
         this.loadTool("webconsole").then(() => {
-          this.focusTool("webconsole");
+          this.focusConsoleInput();
         });
       }
     }

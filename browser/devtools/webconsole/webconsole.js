@@ -562,7 +562,6 @@ WebConsoleFrame.prototype = {
 
     this.jsterm = new JSTerm(this);
     this.jsterm.init();
-    this.jsterm.inputNode.focus();
 
     let toolbox = gDevTools.getToolbox(this.owner.target);
     if (toolbox) {
@@ -576,8 +575,9 @@ WebConsoleFrame.prototype = {
      */
     this._addFocusCallback(this.outputNode, (evt) => {
       if ((evt.target.nodeName.toLowerCase() != "a") &&
-          (evt.target.parentNode.nodeName.toLowerCase() != "a"))
+          (evt.target.parentNode.nodeName.toLowerCase() != "a")) {
         this.jsterm.inputNode.focus();
+      }
     });
 
     // Toggle the timestamp on preference change
@@ -586,14 +586,17 @@ WebConsoleFrame.prototype = {
       pref: PREF_MESSAGE_TIMESTAMP,
       newValue: Services.prefs.getBoolPref(PREF_MESSAGE_TIMESTAMP),
     });
+
+    // focus input node
+    this.jsterm.inputNode.focus();
   },
 
   /**
    * Sets the focus to JavaScript input field when the web console tab is
-   * selected.
+   * selected or when there is a split console present.
    * @private
    */
-  _onPanelSelected: function WCF__onPanelSelected()
+  _onPanelSelected: function WCF__onPanelSelected(evt, id)
   {
     this.jsterm.inputNode.focus();
   },
