@@ -23,12 +23,170 @@
 /* TODO: Remove BlueZ constant */
 #define BLUEZ_DBUS_BASE_IFC "org.bluez"
 
-//
-// Runnables
-//
-
 namespace mozilla {
 namespace ipc {
+
+//
+// DBusWatcher
+//
+
+class DBusWatcher : public MessageLoopForIO::Watcher
+{
+public:
+  DBusWatcher(RawDBusConnection* aConnection, DBusWatch* aWatch)
+  : mConnection(aConnection),
+    mWatch(aWatch)
+  {
+    MOZ_ASSERT(mConnection);
+    MOZ_ASSERT(mWatch);
+  }
+
+  ~DBusWatcher()
+  { }
+
+  void StartWatching();
+  void StopWatching();
+
+  static void        FreeFunction(void* aData);
+  static dbus_bool_t AddWatchFunction(DBusWatch* aWatch, void* aData);
+  static void        RemoveWatchFunction(DBusWatch* aWatch, void* aData);
+  static void        ToggleWatchFunction(DBusWatch* aWatch, void* aData);
+
+  RawDBusConnection* GetConnection();
+
+private:
+  void OnFileCanReadWithoutBlocking(int aFd);
+  void OnFileCanWriteWithoutBlocking(int aFd);
+
+  // Read watcher for libevent. Only to be accessed on IO Thread.
+  MessageLoopForIO::FileDescriptorWatcher mReadWatcher;
+
+  // Write watcher for libevent. Only to be accessed on IO Thread.
+  MessageLoopForIO::FileDescriptorWatcher mWriteWatcher;
+
+  // DBus structures
+  RawDBusConnection* mConnection;
+  DBusWatch* mWatch;
+};
+
+RawDBusConnection*
+DBusWatcher::GetConnection()
+{
+  return mConnection;
+}
+
+void DBusWatcher::StartWatching()
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(mWatch);
+
+  int fd = dbus_watch_get_unix_fd(mWatch);
+
+  MessageLoopForIO* ioLoop = MessageLoopForIO::current();
+
+  unsigned int flags = dbus_watch_get_flags(mWatch);
+
+  if (flags & DBUS_WATCH_READABLE) {
+    ioLoop->WatchFileDescriptor(fd, true, MessageLoopForIO::WATCH_READ,
+                                &mReadWatcher, this);
+  }
+  if (flags & DBUS_WATCH_WRITABLE) {
+    ioLoop->WatchFileDescriptor(fd, true, MessageLoopForIO::WATCH_WRITE,
+                                &mWriteWatcher, this);
+  }
+}
+
+void DBusWatcher::StopWatching()
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  unsigned int flags = dbus_watch_get_flags(mWatch);
+
+  if (flags & DBUS_WATCH_READABLE) {
+    mReadWatcher.StopWatchingFileDescriptor();
+  }
+  if (flags & DBUS_WATCH_WRITABLE) {
+    mWriteWatcher.StopWatchingFileDescriptor();
+  }
+}
+
+// DBus utility functions, used as function pointers in DBus setup
+
+void
+DBusWatcher::FreeFunction(void* aData)
+{
+  delete static_cast<DBusWatcher*>(aData);
+}
+
+dbus_bool_t
+DBusWatcher::AddWatchFunction(DBusWatch* aWatch, void* aData)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  RawDBusConnection* connection = static_cast<RawDBusConnection*>(aData);
+
+  DBusWatcher* dbusWatcher = new DBusWatcher(connection, aWatch);
+  dbus_watch_set_data(aWatch, dbusWatcher, DBusWatcher::FreeFunction);
+
+  if (dbus_watch_get_enabled(aWatch)) {
+    dbusWatcher->StartWatching();
+  }
+
+  return TRUE;
+}
+
+void
+DBusWatcher::RemoveWatchFunction(DBusWatch* aWatch, void* aData)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  DBusWatcher* dbusWatcher =
+    static_cast<DBusWatcher*>(dbus_watch_get_data(aWatch));
+  dbusWatcher->StopWatching();
+}
+
+void
+DBusWatcher::ToggleWatchFunction(DBusWatch* aWatch, void* aData)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  DBusWatcher* dbusWatcher =
+    static_cast<DBusWatcher*>(dbus_watch_get_data(aWatch));
+
+  if (dbus_watch_get_enabled(aWatch)) {
+    dbusWatcher->StartWatching();
+  } else {
+    dbusWatcher->StopWatching();
+  }
+}
+
+// I/O-loop callbacks
+
+void
+DBusWatcher::OnFileCanReadWithoutBlocking(int aFd)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  dbus_watch_handle(mWatch, DBUS_WATCH_READABLE);
+
+  DBusDispatchStatus dbusDispatchStatus;
+  do {
+    dbusDispatchStatus =
+      dbus_connection_dispatch(mConnection->GetConnection());
+  } while (dbusDispatchStatus == DBUS_DISPATCH_DATA_REMAINS);
+}
+
+void
+DBusWatcher::OnFileCanWriteWithoutBlocking(int aFd)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  dbus_watch_handle(mWatch, DBUS_WATCH_WRITABLE);
+}
+
+//
+// Notification
+//
 
 class Notification
 {
@@ -101,6 +259,22 @@ nsresult RawDBusConnection::EstablishDBusConnection()
   }
   dbus_connection_set_exit_on_disconnect(mConnection, FALSE);
   return NS_OK;
+}
+
+bool RawDBusConnection::Watch()
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(MessageLoop::current());
+
+  dbus_bool_t success =
+    dbus_connection_set_watch_functions(mConnection,
+                                        DBusWatcher::AddWatchFunction,
+                                        DBusWatcher::RemoveWatchFunction,
+                                        DBusWatcher::ToggleWatchFunction,
+                                        this, nullptr);
+  NS_ENSURE_TRUE(success == TRUE, false);
+
+  return true;
 }
 
 void RawDBusConnection::ScopedDBusConnectionPtrTraits::release(DBusConnection* ptr)
