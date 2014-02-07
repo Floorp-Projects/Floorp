@@ -121,11 +121,6 @@ public:
            BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
 
   virtual void
-  SendFile(const nsAString& aDeviceAddress,
-           nsIDOMBlob* aBlob,
-           BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
-
-  virtual void
   StopSendingFile(const nsAString& aDeviceAddress,
                   BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
 

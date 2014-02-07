@@ -59,10 +59,11 @@ static bool sInShutdown = false;
 
 class mozilla::dom::bluetooth::SendFileBatch {
 public:
-  SendFileBatch(const nsAString& aDeviceAddress, nsIDOMBlob* aBlob)
+  SendFileBatch(const nsAString& aDeviceAddress, BlobParent* aActor)
     : mDeviceAddress(aDeviceAddress)
   {
-    mBlobs.AppendElement(aBlob);
+    nsCOMPtr<nsIDOMBlob> blob = aActor->GetBlob();
+    mBlobs.AppendElement(blob);
   }
 
   nsString mDeviceAddress;
@@ -348,18 +349,7 @@ BluetoothOppManager::SendFile(const nsAString& aDeviceAddress,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsCOMPtr<nsIDOMBlob> blob = aActor->GetBlob();
-
-  return SendFile(aDeviceAddress, blob.get());
-}
-
-bool
-BluetoothOppManager::SendFile(const nsAString& aDeviceAddress,
-                              nsIDOMBlob* aBlob)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  AppendBlobToSend(aDeviceAddress, aBlob);
+  AppendBlobToSend(aDeviceAddress, aActor);
   if (!mSocket) {
     ProcessNextBatch();
   }
@@ -369,7 +359,7 @@ BluetoothOppManager::SendFile(const nsAString& aDeviceAddress,
 
 void
 BluetoothOppManager::AppendBlobToSend(const nsAString& aDeviceAddress,
-                                      nsIDOMBlob* aBlob)
+                                      BlobParent* aActor)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -382,10 +372,11 @@ BluetoothOppManager::AppendBlobToSend(const nsAString& aDeviceAddress,
    */
   if (mBatches.IsEmpty() ||
       aDeviceAddress != mBatches[indexTail].mDeviceAddress) {
-    SendFileBatch batch(aDeviceAddress, aBlob);
+    SendFileBatch batch(aDeviceAddress, aActor);
     mBatches.AppendElement(batch);
   } else {
-    mBatches[indexTail].mBlobs.AppendElement(aBlob);
+    nsCOMPtr<nsIDOMBlob> blob = aActor->GetBlob();
+    mBatches[indexTail].mBlobs.AppendElement(blob);
   }
 }
 
