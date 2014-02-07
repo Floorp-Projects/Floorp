@@ -15,9 +15,58 @@
 #include "WinIMEHandler.h"
 #include "mozilla/widget/AudioSession.h"
 #include "mozilla/HangMonitor.h"
+#include "nsIDOMWakeLockListener.h"
+#include "nsIPowerManagerService.h"
+#include "mozilla/StaticPtr.h"
 
 using namespace mozilla;
 using namespace mozilla::widget;
+
+// A wake lock listener that disables screen saver when requested by
+// Gecko. For example when we're playing video in a foreground tab we
+// don't want the screen saver to turn on.
+class WinWakeLockListener : public nsIDOMMozWakeLockListener {
+public:
+  NS_DECL_ISUPPORTS;
+
+private:
+  NS_IMETHOD Callback(const nsAString& aTopic, const nsAString& aState) {
+    if (aState.Equals(NS_LITERAL_STRING("locked-foreground"))) {
+      // Prevent screen saver.
+      SetThreadExecutionState(ES_DISPLAY_REQUIRED|ES_CONTINUOUS);
+    } else {
+      // Re-enable screen saver.
+      SetThreadExecutionState(ES_CONTINUOUS);
+   }
+    return NS_OK;
+  }
+};
+
+NS_IMPL_ISUPPORTS1(WinWakeLockListener, nsIDOMMozWakeLockListener)
+StaticRefPtr<WinWakeLockListener> sWakeLockListener;
+
+static void
+AddScreenWakeLockListener()
+{
+  nsCOMPtr<nsIPowerManagerService> sPowerManagerService = do_GetService(POWERMANAGERSERVICE_CONTRACTID);
+  if (sPowerManagerService) {
+    sWakeLockListener = new WinWakeLockListener();
+    sPowerManagerService->AddWakeLockListener(sWakeLockListener);
+  } else {
+    NS_WARNING("Failed to retrieve PowerManagerService, wakelocks will be broken!");
+  }
+}
+
+static void
+RemoveScreenWakeLockListener()
+{
+  nsCOMPtr<nsIPowerManagerService> sPowerManagerService = do_GetService(POWERMANAGERSERVICE_CONTRACTID);
+  if (sPowerManagerService) {
+    sPowerManagerService->RemoveWakeLockListener(sWakeLockListener);
+    sPowerManagerService = nullptr;
+    sWakeLockListener = nullptr;
+  }
+}
 
 namespace mozilla {
 namespace widget {
@@ -102,7 +151,6 @@ nsAppShell::Init()
   return nsBaseAppShell::Init();
 }
 
-
 NS_IMETHODIMP
 nsAppShell::Run(void)
 {
@@ -110,7 +158,13 @@ nsAppShell::Run(void)
   // appropriate response to failing to start an audio session.
   mozilla::widget::StartAudioSession();
 
+  // Add an observer that disables the screen saver when requested by Gecko.
+  // For example when we're playing video in the foreground tab.
+  AddScreenWakeLockListener();
+
   nsresult rv = nsBaseAppShell::Run();
+
+  RemoveScreenWakeLockListener();
 
   mozilla::widget::StopAudioSession();
 
@@ -142,7 +196,7 @@ nsAppShell::DoProcessMoreGeckoEvents()
   // always be true. ScheduleNativeEventCallback will be called on every
   // NativeEventCallback callback, and in a Windows modal dispatch loop, the
   // callback message will be processed first -> input gets starved, dead lock.
-  
+
   // To avoid, don't post native callback messages from NativeEventCallback
   // when we're in a modal loop. This gets us back into the Windows modal
   // dispatch loop dispatching input messages. Once we drop out of the modal
@@ -251,6 +305,6 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
   if (timeSinceLastNativeEventScheduled > nativeEventStarvationLimit) {
     ScheduleNativeEventCallback();
   }
-  
+
   return gotMessage;
 }
