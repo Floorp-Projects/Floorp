@@ -427,7 +427,12 @@ class JSObject : public js::ObjectImpl
         return getSlot(index);
     }
 
-    inline js::HeapSlot &getReservedSlotRef(uint32_t index) {
+    const js::HeapSlot &getReservedSlotRef(uint32_t index) const {
+        JS_ASSERT(index < JSSLOT_FREE(getClass()));
+        return getSlotRef(index);
+    }
+
+    js::HeapSlot &getReservedSlotRef(uint32_t index) {
         JS_ASSERT(index < JSSLOT_FREE(getClass()));
         return getSlotRef(index);
     }
