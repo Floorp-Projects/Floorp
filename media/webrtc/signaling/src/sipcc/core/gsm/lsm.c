@@ -1230,13 +1230,11 @@ lsm_tx_start (lsm_lcb_t *lcb, const char *fname, fsmdef_media_t *media)
         			continue;
             	}
         	}
-
             media->xmit_chan = TRUE;
-
             attrs.mute = FALSE;
-
             attrs.rtcp_mux = media->rtcp_mux;
-
+            attrs.audio_level = media->audio_level;
+            attrs.audio_level_id = (uint8_t)media->audio_level_id;
             attrs.is_video = FALSE;
             attrs.bundle_level = 0;
             attrs.bundle_stream_correlator = 0;

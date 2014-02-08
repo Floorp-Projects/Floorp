@@ -12477,10 +12477,112 @@ sdp_attr_set_rtcp_fb_ccm(void *sdp_ptr, u16 level, u16 payload_type, u16 inst,
         sdp_p->conf_p->num_invalid_param++;
         return (SDP_INVALID_PARAMETER);
     }
-
     attr_p->attr.rtcp_fb.payload_num = payload_type;
     attr_p->attr.rtcp_fb.feedback_type = SDP_RTCP_FB_CCM;
     attr_p->attr.rtcp_fb.param.ccm = type;
     attr_p->attr.rtcp_fb.extra[0] = '\0';
     return (SDP_SUCCESS);
 }
+
+/* Function:    sdp_attr_get_extmap_uri
+ * Description: Returns a pointer to the value of the encoding name
+ *              parameter specified for the given attribute.  Value is
+ *              returned as a const ptr and so cannot be modified by the
+ *              application.  If the given attribute is not defined, NULL
+ *              will be returned.
+ * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
+ *              level       The level to check for the attribute.
+ *              inst_num    The attribute instance number to check.
+ * Returns:     Codec value or SDP_CODEC_INVALID.
+ */
+const char *sdp_attr_get_extmap_uri(void *sdp_ptr, u16 level,
+                                    u16 inst_num)
+{
+    sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
+    sdp_attr_t  *attr_p;
+
+    if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
+        return (NULL);
+    }
+
+    attr_p = sdp_find_attr(sdp_p, level, 0, SDP_ATTR_EXTMAP, inst_num);
+    if (attr_p == NULL) {
+        if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
+            CSFLogError(logTag, "%s extmap attribute, level %u instance %u "
+                      "not found.", sdp_p->debug_str, level, inst_num);
+        }
+        sdp_p->conf_p->num_invalid_param++;
+        return (NULL);
+    } else {
+        return (attr_p->attr.extmap.uri);
+    }
+}
+
+/* Function:    sdp_attr_get_extmap_id
+ * Description: Returns the id of the  extmap specified for the given
+ *              attribute.  If the given attribute is not defined, 0xFFFF
+ *              will be returned.
+ * Parameters:  sdp_ptr     The SDP handle returned by sdp_init_description.
+ *              level       The level to check for the attribute.
+ *              inst_num    The attribute instance number to check.
+ * Returns:     The id of the extmap attribute.
+ */
+u16 sdp_attr_get_extmap_id(void *sdp_ptr, u16 level,
+                           u16 inst_num)
+{
+    sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
+    sdp_attr_t  *attr_p;
+
+    if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
+        return (NULL);
+    }
+
+    attr_p = sdp_find_attr(sdp_p, level, 0, SDP_ATTR_EXTMAP, inst_num);
+    if (attr_p == NULL) {
+        if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
+            CSFLogError(logTag, "%s extmap attribute, level %u instance %u "
+                      "not found.", sdp_p->debug_str, level, inst_num);
+        }
+        sdp_p->conf_p->num_invalid_param++;
+        return 0xFFFF;
+    } else {
+        return (attr_p->attr.extmap.id);
+    }
+}
+
+/* Function:    sdp_attr_set_extmap
+ * Description: Sets the value of an rtcp-fb:...ccm attribute
+ * Parameters:  sdp_ptr        The SDP handle returned by sdp_init_description.
+ *              level          The level to set the attribute.
+ *              id             The id to set the attribute.
+ *              uri            The uri to set the attribute.
+ *              inst           The attribute instance number to check.
+ * Returns:     SDP_SUCCESS            Attribute param was set successfully.
+ *              SDP_INVALID_PARAMETER  Specified attribute is not defined.
+ */
+sdp_result_e
+sdp_attr_set_extmap(void *sdp_ptr, u16 level, u16 id, const char* uri, u16 inst)
+{
+    sdp_t       *sdp_p = (sdp_t *)sdp_ptr;
+    sdp_attr_t  *attr_p;
+
+    if (!sdp_verify_sdp_ptr(sdp_p)) {
+        return (SDP_INVALID_SDP_PTR);
+    }
+
+    attr_p = sdp_find_attr(sdp_p, level, 0, SDP_ATTR_EXTMAP, inst);
+    if (!attr_p) {
+        if (sdp_p->debug_flag[SDP_DEBUG_ERRORS]) {
+            CSFLogError(logTag, "%s extmap attribute, level %u "
+                      "instance %u not found.", sdp_p->debug_str, level,
+                      inst);
+        }
+        sdp_p->conf_p->num_invalid_param++;
+        return (SDP_INVALID_PARAMETER);
+    }
+
+    attr_p->attr.extmap.id = id;
+    sstrncpy(attr_p->attr.extmap.uri, uri, SDP_MAX_STRING_LEN+1);
+    return (SDP_SUCCESS);
+}
+

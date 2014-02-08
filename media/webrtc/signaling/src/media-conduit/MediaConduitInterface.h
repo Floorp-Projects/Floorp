@@ -344,15 +344,17 @@ public:
     */
   virtual MediaConduitErrorCode ConfigureRecvMediaCodecs(
                                 const std::vector<AudioCodecConfig* >& recvCodecConfigList) = 0;
+   /**
+    * Function to enable the audio level extension
+    * @param enabled: enable extension
+    * @param id: id to be used for this rtp header extension
+    * NOTE: See AudioConduit for more information
+    */
+  virtual MediaConduitErrorCode EnableAudioLevelExtension(bool enabled, uint8_t id) = 0;
 
 };
-
-
 }
-
 #endif
-
-
 
 
 

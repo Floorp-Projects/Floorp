@@ -5145,6 +5145,79 @@ sdp_result_e sdp_parse_attr_connection(sdp_t *sdp_p,
         return SDP_FAILURE;
         break;
     }
+    return SDP_SUCCESS;
+}
+
+sdp_result_e sdp_build_attr_extmap(sdp_t *sdp_p,
+                                       sdp_attr_t *attr_p,
+                                       flex_string *fs)
+{
+    flex_string_sprintf(fs, "a=extmap:%d %s\r\n",
+        attr_p->attr.extmap.id,
+        attr_p->attr.extmap.uri);
 
     return SDP_SUCCESS;
 }
+
+sdp_result_e sdp_parse_attr_extmap(sdp_t *sdp_p,
+                                   sdp_attr_t *attr_p,
+                                   const char *ptr)
+{
+    sdp_result_e  result;
+
+    attr_p->attr.extmap.id = 0;
+    attr_p->attr.extmap.media_direction = SDP_DIRECTION_SENDRECV;
+    attr_p->attr.extmap.uri[0] = '\0';
+    attr_p->attr.extmap.extension_attributes[0] = '\0';
+
+    /* Find the payload type number. */
+    attr_p->attr.extmap.id =
+    (u16)sdp_getnextnumtok(ptr, &ptr, "/ \t", &result);
+    if (result != SDP_SUCCESS) {
+        sdp_parse_error(sdp_p->peerconnection,
+            "%s Warning: Invalid extmap id specified for %s attribute.",
+            sdp_p->debug_str, sdp_get_attr_name(attr_p->type));
+        sdp_p->conf_p->num_invalid_param++;
+        return (SDP_INVALID_PARAMETER);
+    }
+
+    if (*ptr == '/') {
+        char direction[SDP_MAX_STRING_LEN+1];
+        /* Find the encoding name. */
+        ptr = sdp_getnextstrtok(ptr, direction,
+                                sizeof(direction), " \t", &result);
+        if (result != SDP_SUCCESS) {
+            sdp_parse_error(sdp_p->peerconnection,
+                "%s Warning: No uri specified in %s attribute.",
+                sdp_p->debug_str, sdp_get_attr_name(attr_p->type));
+            sdp_p->conf_p->num_invalid_param++;
+            return (SDP_INVALID_PARAMETER);
+        }
+    }
+
+    ptr = sdp_getnextstrtok(ptr, attr_p->attr.extmap.uri,
+                            sizeof(attr_p->attr.extmap.uri), " \t", &result);
+    if (result != SDP_SUCCESS) {
+        sdp_parse_error(sdp_p->peerconnection,
+            "%s Warning: No uri specified in %s attribute.",
+            sdp_p->debug_str, sdp_get_attr_name(attr_p->type));
+        sdp_p->conf_p->num_invalid_param++;
+        return (SDP_INVALID_PARAMETER);
+    }
+
+    ptr = sdp_getnextstrtok(ptr, attr_p->attr.extmap.extension_attributes,
+                            sizeof(attr_p->attr.extmap.extension_attributes), "\r\n", &result);
+
+    if (sdp_p->debug_flag[SDP_DEBUG_TRACE]) {
+        SDP_PRINT("%s Parsed a=%s, id %u, direction %s, "
+                  "uri %s, extension %s", sdp_p->debug_str,
+                  sdp_get_attr_name(attr_p->type),
+                  attr_p->attr.extmap.id,
+                  SDP_DIRECTION_PRINT(attr_p->attr.extmap.media_direction),
+                  attr_p->attr.extmap.uri,
+                  attr_p->attr.extmap.extension_attributes);
+    }
+
+    return (SDP_SUCCESS);
+}
+

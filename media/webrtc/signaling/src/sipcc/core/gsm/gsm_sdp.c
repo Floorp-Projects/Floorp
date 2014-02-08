@@ -514,17 +514,16 @@ gsmsdp_init_media (fsmdef_media_t *media)
     media->previous_sdp.num_payloads = 0;
     media->previous_sdp.tias_bw = SDP_INVALID_VALUE;
     media->previous_sdp.profile_level = 0;
-
     media->hold  = FSM_HOLD_NONE;
     media->flags = 0;                    /* clear all flags      */
     media->cap_index = CC_MAX_MEDIA_CAP; /* max is invalid value */
     media->video = NULL;
     media->candidate_ct = 0;
     media->rtcp_mux = FALSE;
-
+    media->audio_level = TRUE;
+    media->audio_level_id = 1;
     /* ACTPASS is the value we put in every offer */
     media->setup = SDP_SETUP_ACTPASS;
-
     media->local_datachannel_port = 0;
     media->remote_datachannel_port = 0;
     media->datachannel_streams = WEBRTC_DATACHANNEL_STREAMS_DEFAULT;
@@ -1702,9 +1701,41 @@ gsmsdp_set_rtcp_fb_ack_attribute (uint16_t level,
         GSM_ERR_MSG("Failed to add attribute");
         return;
     }
-
     result = sdp_attr_set_rtcp_fb_ack(sdp_p, level, payload_type,
                                       a_instance, ack_type);
+    if (result != SDP_SUCCESS) {
+        GSM_ERR_MSG("Failed to set attribute");
+    }
+}
+
+/*
+ * gsmsdp_set_audio_level_attribute
+ *
+ * Description:
+ *
+ * Adds an audio level extension attributesto the specified SDP.
+ *
+ * Parameters:
+ *
+ * level        - The media level of the SDP where the media attribute exists.
+ * sdp_p        - Pointer to the SDP to set the attribute against.
+ */
+void
+gsmsdp_set_extmap_attribute (uint16_t level,
+                             void *sdp_p,
+                             u16 id,
+                             const char* uri)
+{
+    uint16_t      a_instance = 0;
+    sdp_result_e  result;
+
+    result = sdp_add_new_attr(sdp_p, level, 0, SDP_ATTR_EXTMAP, &a_instance);
+    if (result != SDP_SUCCESS) {
+        GSM_ERR_MSG("Failed to add attribute");
+        return;
+    }
+
+    result = sdp_attr_set_extmap(sdp_p, level, id, uri, a_instance);
     if (result != SDP_SUCCESS) {
         GSM_ERR_MSG("Failed to set attribute");
     }
@@ -4629,6 +4660,66 @@ gsmsdp_negotiate_rtcp_fb (cc_sdp_t *cc_sdp_p,
             }
         }
     }
+    return CC_CAUSE_OK;
+}
+
+/*
+ * gsmsdp_negotiate_extmap
+ *
+ * Description:
+ *  Negotiates extmaps header extension to local SDP for supported audio codecs
+ *
+ * Parameters:
+ *   cc_sdp_p - local and remote SDP
+ *   media    - The media structure for the current level to be negotiated
+ *   offer    - True if the remote SDP is an offer
+ *
+ * returns
+ *  CC_CAUSE_OK - success
+ *  any other code - failure
+ */
+cc_causes_t
+gsmsdp_negotiate_extmap (cc_sdp_t *cc_sdp_p,
+                          fsmdef_media_t *media,
+                          boolean offer)
+{
+    boolean audio_level = FALSE;
+    u16 audio_level_id = 0xFFFF;
+    int level = media->level;
+    int i;
+    const char* uri;
+
+    /*
+     * Remove any previously negotiated extmap attributes from the
+     * local SDP
+     */
+    sdp_result_e result = SDP_SUCCESS;
+    while (result == SDP_SUCCESS) {
+        result = sdp_delete_attr (cc_sdp_p->src_sdp, level, 0,
+                                  SDP_ATTR_EXTMAP, 1);
+    }
+
+    i = 1;
+    do {
+        uri = sdp_attr_get_extmap_uri(cc_sdp_p->dest_sdp, level, i);
+
+        if (uri != NULL && strcmp(uri, SDP_EXTMAP_AUDIO_LEVEL) == 0) {
+          audio_level = TRUE;
+          audio_level_id = sdp_attr_get_extmap_id(cc_sdp_p->dest_sdp, level, i);
+        }
+        i++;
+    } while (uri != NULL);
+
+    media->audio_level = audio_level;
+    media->audio_level_id = audio_level_id;
+
+    /*
+     * Now, in our local SDP, set extmap types that both we and the
+     * remote party support
+     */
+    if (media->audio_level) {
+        gsmsdp_set_extmap_attribute (level, cc_sdp_p->src_sdp, audio_level_id, SDP_EXTMAP_AUDIO_LEVEL);
+    }
 
     return CC_CAUSE_OK;
 }
@@ -4980,10 +5071,13 @@ gsmsdp_negotiate_media_lines (fsm_fcb_t *fcb_p, cc_sdp_t *sdp_p, boolean initial
                 unsupported_line = TRUE;
                 update_local_ret_value = TRUE;
             }
-
             /* Negotiate rtcp feedback mechanisms */
             if (media && media_type == SDP_MEDIA_VIDEO) {
                 gsmsdp_negotiate_rtcp_fb (dcb_p->sdp, media, offer);
+            }
+            /* Negotiate redundancy mechanisms */
+            if (media && media_type == SDP_MEDIA_AUDIO) {
+                gsmsdp_negotiate_extmap (dcb_p->sdp, media, offer);
             }
 
             /*
@@ -4993,7 +5087,6 @@ gsmsdp_negotiate_media_lines (fsm_fcb_t *fcb_p, cc_sdp_t *sdp_p, boolean initial
               sdp_res = sdp_attr_get_rtcp_mux_attribute(sdp_p->dest_sdp, i,
                                                         0, SDP_ATTR_RTCP_MUX,
                                                         1, &rtcp_mux);
-
               if (SDP_SUCCESS == sdp_res) {
                 media->rtcp_mux = TRUE;
               }
@@ -5597,10 +5690,14 @@ gsmsdp_add_media_line (fsmdef_dcb_t *dcb_p, const cc_media_cap_t *media_cap,
                   sdp_rtcp_fb_nack_to_bitmap(SDP_RTCP_FB_NACK_PLI) |
                   sdp_rtcp_fb_ccm_to_bitmap(SDP_RTCP_FB_CCM_FIR));
           }
+          /* Add supported audio level rtp extension */
+          if (media_cap->type == SDP_MEDIA_AUDIO) {
+              gsmsdp_set_extmap_attribute(level, dcb_p->sdp->src_sdp, 1,
+                  SDP_EXTMAP_AUDIO_LEVEL);
+          }
 
           /* Add a=setup attribute */
           gsmsdp_set_setup_attribute(level, dcb_p->sdp->src_sdp, media->setup);
-
           /*
            * wait until here to set ICE candidates as SDP is now initialized
            */

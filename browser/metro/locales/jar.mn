@@ -39,6 +39,8 @@
 @AB_CD@.jar:
 relativesrcdir browser/locales:
   locale/browser/syncBrand.dtd            (%chrome/browser/syncBrand.dtd)
+# Temporary hack to provide a 'feedback' string
+  locale/browser/baseMenuOverlay.dtd      (%chrome/browser/baseMenuOverlay.dtd)
   locale/browser/netError.dtd             (%chrome/overrides/netError.dtd)
 % override chrome://global/locale/netError.dtd chrome://browser/locale/netError.dtd
   locale/browser/appstrings.properties    (%chrome/overrides/appstrings.properties)

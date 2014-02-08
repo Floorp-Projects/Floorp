@@ -176,8 +176,9 @@ const sdp_attrarray_t sdp_attr[SDP_MAX_ATTR_TYPES] =
       sdp_parse_attr_setup, sdp_build_attr_setup},
     {"connection", sizeof("connection"),
       sdp_parse_attr_connection, sdp_build_attr_connection},
+    {"extmap", sizeof("extmap"),
+      sdp_parse_attr_extmap, sdp_build_attr_extmap},
 };
-
 /* Note: These *must* be in the same order as the enum types. */
 const sdp_namearray_t sdp_media[SDP_MAX_MEDIA_TYPES] =
 {

@@ -479,7 +479,7 @@ pref("browser.bookmarks.autoExportHTML",          false);
 // keep in {PROFILEDIR}/bookmarkbackups. Special values:
 // -1: unlimited
 //  0: no backups created (and deletes all existing backups)
-pref("browser.bookmarks.max_backups",             10);
+pref("browser.bookmarks.max_backups",             15);
 
 // Scripts & Windows prefs
 pref("dom.disable_open_during_load",              true);

@@ -77,6 +77,7 @@
   <string name="save_as_pdf">&save_as_pdf;</string>
   <string name="find_in_page">&find_in_page;</string>
   <string name="desktop_mode">&desktop_mode;</string>
+  <string name="page">&page;</string>
   <string name="tools">&tools;</string>
 
   <string name="find_text">&find_text;</string>

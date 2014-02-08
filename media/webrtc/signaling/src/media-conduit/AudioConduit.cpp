@@ -73,8 +73,10 @@ WebrtcAudioConduit::~WebrtcAudioConduit()
   {
     delete mRecvCodecList[i];
   }
-
   delete mCurSendCodecConfig;
+  if (mPtrVoERTP_RTCP) {
+    mPtrVoERTP_RTCP->Release();
+  }
 
   // The first one of a pair to be deleted shuts down media for both
   if(mPtrVoEXmedia)
@@ -278,10 +280,14 @@ MediaConduitErrorCode WebrtcAudioConduit::Init(WebrtcAudioConduit *other)
     CSFLogError(logTag, "%s Unable to initialize VoEProcessing", __FUNCTION__);
     return kMediaConduitSessionNotInited;
   }
-
   if(!(mPtrVoEXmedia = VoEExternalMedia::GetInterface(mVoiceEngine)))
   {
     CSFLogError(logTag, "%s Unable to initialize VoEExternalMedia", __FUNCTION__);
+    return kMediaConduitSessionNotInited;
+  }
+  if(!(mPtrVoERTP_RTCP = VoERTP_RTCP::GetInterface(mVoiceEngine)))
+  {
+    CSFLogError(logTag, "%s Unable to initialize VoERTP_RTCP", __FUNCTION__);
     return kMediaConduitSessionNotInited;
   }
 
@@ -290,7 +296,6 @@ MediaConduitErrorCode WebrtcAudioConduit::Init(WebrtcAudioConduit *other)
     CSFLogError(logTag, "%s Unable to initialize VoEVideoSync", __FUNCTION__);
     return kMediaConduitSessionNotInited;
   }
-
   if (!(mPtrRTP = webrtc::VoERTP_RTCP::GetInterface(mVoiceEngine)))
   {
     CSFLogError(logTag, "%s Unable to get audio RTP/RTCP interface ",
@@ -556,10 +561,22 @@ WebrtcAudioConduit::ConfigureRecvMediaCodecs(
     CSFLogError(logTag, "%s Starting playout Failed", __FUNCTION__);
     return kMediaConduitPlayoutError;
   }
-
   //we should be good here for setting this.
   mEngineReceiving = true;
   DumpCodecDB();
+  return kMediaConduitNoError;
+}
+MediaConduitErrorCode
+WebrtcAudioConduit::EnableAudioLevelExtension(bool enabled, uint8_t id)
+{
+  CSFLogDebug(logTag,  "%s %d %d ", __FUNCTION__, enabled, id);
+
+  if (mPtrVoERTP_RTCP->SetRTPAudioLevelIndicationStatus(mChannel, enabled, id) == -1)
+  {
+    CSFLogError(logTag, "%s SetRTPAudioLevelIndicationStatus Failed", __FUNCTION__);
+    return kMediaConduitUnknownError;
+  }
+
   return kMediaConduitNoError;
 }
 
@@ -570,7 +587,6 @@ WebrtcAudioConduit::SendAudioFrame(const int16_t audio_data[],
                                     int32_t capture_delay)
 {
   CSFLogDebug(logTag,  "%s ", __FUNCTION__);
-
   // Following checks need to be performed
   // 1. Non null audio buffer pointer,
   // 2. invalid sampling frequency -  less than 0 or unsupported ones

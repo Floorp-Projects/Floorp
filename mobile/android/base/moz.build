@@ -52,6 +52,7 @@ gujar.sources += [
     'util/INIParser.java',
     'util/INISection.java',
     'util/JSONUtils.java',
+    'util/MenuUtils.java',
     'util/NonEvictingLruCache.java',
     'util/ProxySelector.java',
     'util/StringUtils.java',

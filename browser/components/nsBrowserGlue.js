@@ -82,16 +82,20 @@ XPCOMUtils.defineLazyModuleGetter(this, "SessionStore",
 XPCOMUtils.defineLazyModuleGetter(this, "BrowserUITelemetry",
                                   "resource:///modules/BrowserUITelemetry.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "AsyncShutdown",
+                                  "resource:///modules/AsyncShutdown.jsm");
+
 const PREF_PLUGINS_NOTIFYUSER = "plugins.update.notifyUser";
 const PREF_PLUGINS_UPDATEURL  = "plugins.update.url";
 
-// We try to backup bookmarks at idle times, to avoid doing that at shutdown.
-// Number of idle seconds before trying to backup bookmarks.  10 minutes.
-const BOOKMARKS_BACKUP_IDLE_TIME = 10 * 60;
-// Minimum interval in milliseconds between backups.
-const BOOKMARKS_BACKUP_INTERVAL = 86400 * 1000;
-// Maximum number of backups to create.  Old ones will be purged.
-const BOOKMARKS_BACKUP_MAX_BACKUPS = 10;
+// Seconds of idle before trying to create a bookmarks backup.
+const BOOKMARKS_BACKUP_IDLE_TIME_SEC = 10 * 60;
+// Minimum interval between backups.  We try to not create more than one backup
+// per interval.
+const BOOKMARKS_BACKUP_MIN_INTERVAL_DAYS = 1;
+// Maximum interval between backups.  If the last backup is older than these
+// days we will try to create a new one more aggressively.
+const BOOKMARKS_BACKUP_MAX_INTERVAL_DAYS = 5;
 
 // Factory object
 const BrowserGlueServiceFactory = {
@@ -134,7 +138,6 @@ function BrowserGlue() {
 
 BrowserGlue.prototype = {
   _saveSession: false,
-  _isIdleObserver: false,
   _isPlacesInitObserver: false,
   _isPlacesLockedObserver: false,
   _isPlacesShutdownObserver: false,
@@ -202,16 +205,7 @@ BrowserGlue.prototype = {
         this._onQuitRequest(subject, data);
         break;
       case "quit-application-granted":
-        // This pref must be set here because SessionStore will use its value
-        // on quit-application.
-        this._setPrefToSaveSession();
-        try {
-          let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"].
-                           getService(Ci.nsIAppStartup);
-          appStartup.trackStartupCrashEnd();
-        } catch (e) {
-          Cu.reportError("Could not end startup crash tracking in quit-application-granted: " + e);
-        }
+        this._onQuitApplicationGranted();
         break;
 #ifdef OBSERVE_LASTWINDOW_CLOSE_TOPICS
       case "browser-lastwindow-close-requested":
@@ -262,8 +256,7 @@ BrowserGlue.prototype = {
         this._onPlacesShutdown();
         break;
       case "idle":
-        if (this._idleService.idleTime > BOOKMARKS_BACKUP_IDLE_TIME * 1000)
-          this._backupBookmarks();
+        this._backupBookmarks();
         break;
       case "distribution-customization-complete":
         Services.obs.removeObserver(this, "distribution-customization-complete");
@@ -304,7 +297,10 @@ BrowserGlue.prototype = {
         }
         break;
       case "profile-before-change":
-        this._onProfileShutdown();
+         // Any component depending on Places should be finalized in
+         // _onPlacesShutdown.  Any component that doesn't need to act after
+         // the UI has gone should be finalized in _onQuitApplicationGranted.
+        this._dispose();
         break;
 #ifdef MOZ_SERVICES_HEALTHREPORT
       case "keyword-search":
@@ -422,8 +418,10 @@ BrowserGlue.prototype = {
     os.removeObserver(this, "weave:engine:clients:display-uri");
 #endif
     os.removeObserver(this, "session-save");
-    if (this._isIdleObserver)
-      this._idleService.removeIdleObserver(this, BOOKMARKS_BACKUP_IDLE_TIME);
+    if (this._bookmarksBackupIdleTime) {
+      this._idleService.removeIdleObserver(this, this._bookmarksBackupIdleTime);
+      delete this._bookmarksBackupIdleTime;
+    }
     if (this._isPlacesInitObserver)
       os.removeObserver(this, "places-init-complete");
     if (this._isPlacesLockedObserver)
@@ -634,16 +632,24 @@ BrowserGlue.prototype = {
   },
 
   /**
-   * Profile shutdown handler (contains profile cleanup routines).
-   * All components depending on Places should be shut down in
-   * _onPlacesShutdown() and not here.
+   * Application shutdown handler.
    */
-  _onProfileShutdown: function BG__onProfileShutdown() {
+  _onQuitApplicationGranted: function () {
+    // This pref must be set here because SessionStore will use its value
+    // on quit-application.
+    this._setPrefToSaveSession();
+    try {
+      let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"]
+                         .getService(Ci.nsIAppStartup);
+      appStartup.trackStartupCrashEnd();
+    } catch (e) {
+      Cu.reportError("Could not end startup crash tracking in quit-application-granted: " + e);
+    }
+
     BrowserNewTabPreloader.uninit();
     webappsUI.uninit();
     SignInToWebsiteUX.uninit();
     webrtcUI.uninit();
-    this._dispose();
   },
 
   // All initial windows have opened.
@@ -1060,14 +1066,18 @@ BrowserGlue.prototype = {
         }
       } catch(ex) {}
 
+      // This may be reused later, check for "=== undefined" to see if it has
+      // been populated already.
+      let lastBackupFile;
+
       // If the user did not require to restore default bookmarks, or import
       // from bookmarks.html, we will try to restore from JSON
       if (importBookmarks && !restoreDefaultBookmarks && !importBookmarksHTML) {
         // get latest JSON backup
-        var bookmarksBackupFile = yield PlacesBackups.getMostRecent("json");
-        if (bookmarksBackupFile) {
+        lastBackupFile = yield PlacesBackups.getMostRecentBackup("json");
+        if (lastBackupFile) {
           // restore from JSON backup
-          yield BookmarkJSONUtils.importFromFile(bookmarksBackupFile, true);
+          yield BookmarkJSONUtils.importFromFile(lastBackupFile, true);
           importBookmarks = false;
         }
         else {
@@ -1162,10 +1172,39 @@ BrowserGlue.prototype = {
       }
 
       // Initialize bookmark archiving on idle.
-      // Once a day, either on idle or shutdown, bookmarks are backed up.
-      if (!this._isIdleObserver) {
-        this._idleService.addIdleObserver(this, BOOKMARKS_BACKUP_IDLE_TIME);
-        this._isIdleObserver = true;
+      if (!this._bookmarksBackupIdleTime) {
+        this._bookmarksBackupIdleTime = BOOKMARKS_BACKUP_IDLE_TIME_SEC;
+
+        // If there is no backup, or the last bookmarks backup is too old, use
+        // a more aggressive idle observer.
+        if (lastBackupFile === undefined)
+          lastBackupFile = yield PlacesBackups.getMostRecentBackup();
+        if (!lastBackupFile) {
+            this._bookmarksBackupIdleTime /= 2;
+        }
+        else {
+          let lastBackupTime = PlacesBackups.getDateForFile(lastBackupFile);
+          let profileLastUse = Services.appinfo.replacedLockTime || Date.now();
+
+          // If there is a backup after the last profile usage date it's fine,
+          // regardless its age.  Otherwise check how old is the last
+          // available backup compared to that session.
+          if (profileLastUse > lastBackupTime) {
+            let backupAge = Math.round((profileLastUse - lastBackupTime) / 86400000);
+            // Report the age of the last available backup.
+            try {
+              Services.telemetry
+                      .getHistogramById("PLACES_BACKUPS_DAYSFROMLAST")
+                      .add(backupAge);
+            } catch (ex) {
+              Components.utils.reportError("Unable to report telemetry.");
+            }
+
+            if (backupAge > BOOKMARKS_BACKUP_MAX_INTERVAL_DAYS)
+              this._bookmarksBackupIdleTime /= 2;
+          }
+        }
+        this._idleService.addIdleObserver(this, this._bookmarksBackupIdleTime);
       }
 
       Services.obs.notifyObservers(null, "places-browser-init-complete", "");
@@ -1174,63 +1213,34 @@ BrowserGlue.prototype = {
 
   /**
    * Places shut-down tasks
-   * - back up bookmarks if needed.
-   * - export bookmarks as HTML, if so configured.
    * - finalize components depending on Places.
+   * - export bookmarks as HTML, if so configured.
    */
   _onPlacesShutdown: function BG__onPlacesShutdown() {
     this._sanitizer.onShutdown();
     PageThumbs.uninit();
 
-    if (this._isIdleObserver) {
-      this._idleService.removeIdleObserver(this, BOOKMARKS_BACKUP_IDLE_TIME);
-      this._isIdleObserver = false;
+    if (this._bookmarksBackupIdleTime) {
+      this._idleService.removeIdleObserver(this, this._bookmarksBackupIdleTime);
+      delete this._bookmarksBackupIdleTime;
     }
 
-    let waitingForBackupToComplete = true;
-    this._backupBookmarks().then(
-      function onSuccess() {
-        waitingForBackupToComplete = false;
-      },
-      function onFailure() {
-        Cu.reportError("Unable to backup bookmarks.");
-        waitingForBackupToComplete = false;
+    // Support legacy bookmarks.html format for apps that depend on that format.
+    try {
+      if (Services.prefs.getBoolPref("browser.bookmarks.autoExportHTML")) {
+        // places-shutdown happens at profile-change-teardown, so here we
+        // can safely add a profile-before-change blocker.
+        AsyncShutdown.profileBeforeChange.addBlocker(
+          "Places: bookmarks.html",
+          () => BookmarkHTMLUtils.exportToFile(Services.dirsvc.get("BMarks", Ci.nsIFile))
+                                 .then(null, Cu.reportError)
+        );
       }
-    );
-
-    // Backup bookmarks to bookmarks.html to support apps that depend
-    // on the legacy format.
-    let waitingForHTMLExportToComplete = false;
-    // If this fails to get the preference value, we don't export.
-    if (Services.prefs.getBoolPref("browser.bookmarks.autoExportHTML")) {
-      // Exceptionally, since this is a non-default setting and HTML format is
-      // discouraged in favor of the JSON backups, we spin the event loop on
-      // shutdown, to wait for the export to finish.  We cannot safely spin
-      // the event loop on shutdown until we include a watchdog to prevent
-      // potential hangs (bug 518683).  The asynchronous shutdown operations
-      // will then be handled by a shutdown service (bug 435058).
-      waitingForHTMLExportToComplete = true;
-      BookmarkHTMLUtils.exportToFile(Services.dirsvc.get("BMarks", Ci.nsIFile)).then(
-        function onSuccess() {
-          waitingForHTMLExportToComplete = false;
-        },
-        function onFailure() {
-          Cu.reportError("Unable to auto export html.");
-          waitingForHTMLExportToComplete = false;
-        }
-      );
-    }
-
-    // The events loop should spin at least once because waitingForBackupToComplete
-    // is true before checking whether backup should be made.
-    let thread = Services.tm.currentThread;
-    while (waitingForBackupToComplete || waitingForHTMLExportToComplete) {
-      thread.processNextEvent(true);
-    }
+    } catch (ex) {} // Do not export.
   },
 
   /**
-   * Backup bookmarks.
+   * If a backup for today doesn't exist, this creates one.
    */
   _backupBookmarks: function BG__backupBookmarks() {
     return Task.spawn(function() {
@@ -1238,14 +1248,9 @@ BrowserGlue.prototype = {
       // Should backup bookmarks if there are no backups or the maximum
       // interval between backups elapsed.
       if (!lastBackupFile ||
-          new Date() - PlacesBackups.getDateForFile(lastBackupFile) > BOOKMARKS_BACKUP_INTERVAL) {
-        let maxBackups = BOOKMARKS_BACKUP_MAX_BACKUPS;
-        try {
-          maxBackups = Services.prefs.getIntPref("browser.bookmarks.max_backups");
-        }
-        catch(ex) { /* Use default. */ }
-
-        yield PlacesBackups.create(maxBackups); // Don't force creation.
+          new Date() - PlacesBackups.getDateForFile(lastBackupFile) > BOOKMARKS_BACKUP_MIN_INTERVAL_DAYS * 86400000) {
+        let maxBackups = Services.prefs.getIntPref("browser.bookmarks.max_backups");
+        yield PlacesBackups.create(maxBackups);
       }
     });
   },

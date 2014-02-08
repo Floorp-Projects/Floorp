@@ -4386,12 +4386,25 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
     // Turn the error code into a human readable error message.
     if (NS_ERROR_UNKNOWN_PROTOCOL == aError) {
         NS_ENSURE_ARG_POINTER(aURI);
-        // extract the scheme
+
+        // Extract the schemes into a comma delimited list.
         nsAutoCString scheme;
         aURI->GetScheme(scheme);
         CopyASCIItoUTF16(scheme, formatStrs[0]);
+        nsCOMPtr<nsINestedURI> nestedURI = do_QueryInterface(aURI);
+        while (nestedURI) {
+            nsCOMPtr<nsIURI> tempURI;
+            nsresult rv2;
+            rv2 = nestedURI->GetInnerURI(getter_AddRefs(tempURI));
+            if (NS_SUCCEEDED(rv2) && tempURI) {
+                tempURI->GetScheme(scheme);
+                formatStrs[0].Append(NS_LITERAL_STRING(", "));
+                AppendASCIItoUTF16(scheme, formatStrs[0]);
+            }
+            nestedURI = do_QueryInterface(tempURI);
+        }
         formatStrCount = 1;
-        error.AssignLiteral("protocolNotFound");
+        error.AssignLiteral("unknownProtocolFound");
     }
     else if (NS_ERROR_FILE_NOT_FOUND == aError) {
         NS_ENSURE_ARG_POINTER(aURI);
@@ -9681,6 +9694,25 @@ nsDocShell::DoURILoad(nsIURI * aURI,
                 channelPolicy->SetContentSecurityPolicy(csp);
                 channelPolicy->SetLoadType(nsIContentPolicy::TYPE_SUBDOCUMENT);
             }
+        }
+
+        // Only allow view-source scheme in top-level docshells. view-source is
+        // the only scheme to which this applies at the moment due to potential
+        // timing attacks to read data from cross-origin iframes. If this widens
+        // we should add a protocol flag for whether the scheme is allowed in
+        // frames and use something like nsNetUtil::NS_URIChainHasFlags.
+        nsCOMPtr<nsIURI> tempURI = aURI;
+        nsCOMPtr<nsINestedURI> nestedURI = do_QueryInterface(tempURI);
+        while (nestedURI) {
+            // view-source should always be an nsINestedURI, loop and check the
+            // scheme on this and all inner URIs that are also nested URIs.
+            bool isViewSource = false;
+            rv = tempURI->SchemeIs("view-source", &isViewSource);
+            if (NS_FAILED(rv) || isViewSource) {
+                return NS_ERROR_UNKNOWN_PROTOCOL;
+            }
+            nestedURI->GetInnerURI(getter_AddRefs(tempURI));
+            nestedURI = do_QueryInterface(tempURI);
         }
     }
 

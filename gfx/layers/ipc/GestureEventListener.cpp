@@ -48,26 +48,20 @@ GestureEventListener::~GestureEventListener()
 {
 }
 
-nsEventStatus GestureEventListener::HandleInputEvent(const InputData& aEvent)
+nsEventStatus GestureEventListener::HandleInputEvent(const MultiTouchInput& aEvent)
 {
-  if (aEvent.mInputType != MULTITOUCH_INPUT) {
-    return nsEventStatus_eIgnore;
-  }
-
-  const MultiTouchInput& event = static_cast<const MultiTouchInput&>(aEvent);
-
   // Cache the current event since it may become the single or long tap that we
   // send.
-  mLastTouchInput = event;
+  mLastTouchInput = aEvent;
 
-  switch (event.mType)
+  switch (aEvent.mType)
   {
   case MultiTouchInput::MULTITOUCH_START:
   case MultiTouchInput::MULTITOUCH_ENTER: {
-    for (size_t i = 0; i < event.mTouches.Length(); i++) {
+    for (size_t i = 0; i < aEvent.mTouches.Length(); i++) {
       bool foundAlreadyExistingTouch = false;
       for (size_t j = 0; j < mTouches.Length(); j++) {
-        if (mTouches[j].mIdentifier == event.mTouches[i].mIdentifier) {
+        if (mTouches[j].mIdentifier == aEvent.mTouches[i].mIdentifier) {
           foundAlreadyExistingTouch = true;
           break;
         }
@@ -75,14 +69,14 @@ nsEventStatus GestureEventListener::HandleInputEvent(const InputData& aEvent)
 
       // If we didn't find a touch in our list that matches this, then add it.
       if (!foundAlreadyExistingTouch) {
-        mTouches.AppendElement(event.mTouches[i]);
+        mTouches.AppendElement(aEvent.mTouches[i]);
       }
     }
 
     size_t length = mTouches.Length();
     if (length == 1) {
-      mTapStartTime = event.mTime;
-      mTouchStartPosition = event.mTouches[0].mScreenPoint;
+      mTapStartTime = aEvent.mTime;
+      mTouchStartPosition = aEvent.mTouches[0].mScreenPoint;
       if (mState == GESTURE_NONE) {
         mState = GESTURE_WAITING_SINGLE_TAP;
 
@@ -95,28 +89,28 @@ nsEventStatus GestureEventListener::HandleInputEvent(const InputData& aEvent)
       }
     } else if (length == 2) {
       // Another finger has been added; it can't be a tap anymore.
-      HandleTapCancel(event);
+      HandleTapCancel(aEvent);
     }
 
     break;
   }
   case MultiTouchInput::MULTITOUCH_MOVE: {
     // If we move too much, bail out of the tap.
-    ScreenIntPoint delta = event.mTouches[0].mScreenPoint - mTouchStartPosition;
+    ScreenIntPoint delta = aEvent.mTouches[0].mScreenPoint - mTouchStartPosition;
     if (mTouches.Length() == 1 &&
         NS_hypot(delta.x, delta.y) > AsyncPanZoomController::GetTouchStartTolerance())
     {
-      HandleTapCancel(event);
+      HandleTapCancel(aEvent);
     }
 
     size_t eventTouchesMatched = 0;
     for (size_t i = 0; i < mTouches.Length(); i++) {
       bool isTouchRemoved = true;
-      for (size_t j = 0; j < event.mTouches.Length(); j++) {
-        if (mTouches[i].mIdentifier == event.mTouches[j].mIdentifier) {
+      for (size_t j = 0; j < aEvent.mTouches.Length(); j++) {
+        if (mTouches[i].mIdentifier == aEvent.mTouches[j].mIdentifier) {
           eventTouchesMatched++;
           isTouchRemoved = false;
-          mTouches[i] = event.mTouches[j];
+          mTouches[i] = aEvent.mTouches[j];
         }
       }
       if (isTouchRemoved) {
@@ -126,16 +120,16 @@ nsEventStatus GestureEventListener::HandleInputEvent(const InputData& aEvent)
       }
     }
 
-    NS_WARN_IF_FALSE(eventTouchesMatched == event.mTouches.Length(), "Touch moved, but not in list");
+    NS_WARN_IF_FALSE(eventTouchesMatched == aEvent.mTouches.Length(), "Touch moved, but not in list");
 
     break;
   }
   case MultiTouchInput::MULTITOUCH_END:
   case MultiTouchInput::MULTITOUCH_LEAVE: {
-    for (size_t i = 0; i < event.mTouches.Length(); i++) {
+    for (size_t i = 0; i < aEvent.mTouches.Length(); i++) {
       bool foundAlreadyExistingTouch = false;
       for (size_t j = 0; j < mTouches.Length() && !foundAlreadyExistingTouch; j++) {
-        if (event.mTouches[i].mIdentifier == mTouches[j].mIdentifier) {
+        if (aEvent.mTouches[i].mIdentifier == mTouches[j].mIdentifier) {
           foundAlreadyExistingTouch = true;
           mTouches.RemoveElementAt(j);
         }
@@ -146,30 +140,30 @@ nsEventStatus GestureEventListener::HandleInputEvent(const InputData& aEvent)
     if (mState == GESTURE_WAITING_DOUBLE_TAP) {
       CancelDoubleTapTimeoutTask();
       if (mTapStartTime - mLastTapEndTime > MAX_TAP_TIME ||
-          event.mTime - mTapStartTime > MAX_TAP_TIME) {
+          aEvent.mTime - mTapStartTime > MAX_TAP_TIME) {
         // Either the time between taps or the last tap took too long
         // confirm previous tap and handle current tap seperately
         TimeoutDoubleTap();
         mState = GESTURE_WAITING_SINGLE_TAP;
       } else {
         // We were waiting for a double tap and it has arrived.
-        HandleDoubleTap(event);
+        HandleDoubleTap(aEvent);
         mState = GESTURE_NONE;
       }
     }
 
     if (mState == GESTURE_LONG_TAP_UP) {
-      HandleLongTapUpEvent(event);
+      HandleLongTapUpEvent(aEvent);
       mState = GESTURE_NONE;
     } else if (mState == GESTURE_WAITING_SINGLE_TAP &&
-        event.mTime - mTapStartTime > MAX_TAP_TIME) {
+        aEvent.mTime - mTapStartTime > MAX_TAP_TIME) {
       // Extended taps are immediately dispatched as single taps
       CancelLongTapTimeoutTask();
-      HandleSingleTapConfirmedEvent(event);
+      HandleSingleTapConfirmedEvent(aEvent);
       mState = GESTURE_NONE;
     } else if (mState == GESTURE_WAITING_SINGLE_TAP) {
       CancelLongTapTimeoutTask();
-      nsEventStatus tapupEvent = HandleSingleTapUpEvent(event);
+      nsEventStatus tapupEvent = HandleSingleTapUpEvent(aEvent);
 
       if (tapupEvent == nsEventStatus_eIgnore) {
         // We were not waiting for anything but a single tap has happened that
@@ -190,7 +184,7 @@ nsEventStatus GestureEventListener::HandleInputEvent(const InputData& aEvent)
       }
     }
 
-    mLastTapEndTime = event.mTime;
+    mLastTapEndTime = aEvent.mTime;
 
     if (!mTouches.Length()) {
       mSpanChange = 0.0f;
@@ -199,20 +193,24 @@ nsEventStatus GestureEventListener::HandleInputEvent(const InputData& aEvent)
     break;
   }
   case MultiTouchInput::MULTITOUCH_CANCEL:
-    // This gets called if there's a touch that has to bail for weird reasons
-    // like pinching and then moving away from the window that the pinch was
-    // started in without letting go of the screen.
-    return HandlePinchGestureEvent(event, true);
+    // FIXME: we should probably clear a bunch of gesture state here
+    break;
   }
 
-  return HandlePinchGestureEvent(event, false);
+  return HandlePinchGestureEvent(aEvent);
 }
 
-nsEventStatus GestureEventListener::HandlePinchGestureEvent(const MultiTouchInput& aEvent, bool aClearTouches)
+nsEventStatus GestureEventListener::HandlePinchGestureEvent(const MultiTouchInput& aEvent)
 {
   nsEventStatus rv = nsEventStatus_eIgnore;
 
-  if (mTouches.Length() > 1 && !aClearTouches) {
+  if (aEvent.mType == MultiTouchInput::MULTITOUCH_CANCEL) {
+    mTouches.Clear();
+    mState = GESTURE_NONE;
+    return rv;
+  }
+
+  if (mTouches.Length() > 1) {
     const ScreenIntPoint& firstTouch = mTouches[0].mScreenPoint,
                          secondTouch = mTouches[1].mScreenPoint;
     ScreenPoint focusPoint = ScreenPoint(firstTouch + secondTouch) / 2;
@@ -287,10 +285,6 @@ nsEventStatus GestureEventListener::HandlePinchGestureEvent(const MultiTouchInpu
     rv = nsEventStatus_eConsumeNoDefault;
   } else if (mState == GESTURE_WAITING_PINCH) {
     mState = GESTURE_NONE;
-  }
-
-  if (aClearTouches) {
-    mTouches.Clear();
   }
 
   return rv;
