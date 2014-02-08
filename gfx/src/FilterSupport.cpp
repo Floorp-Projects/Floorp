@@ -95,6 +95,8 @@ namespace gfx {
 
 // Some convenience FilterNode creation functions.
 
+static const float kMaxStdDeviation = 500;
+
 namespace FilterWrappers {
 
   static TemporaryRef<FilterNode>
@@ -159,6 +161,28 @@ namespace FilterWrappers {
     filter->SetAttribute(ATT_TRANSFORM_MATRIX, Matrix().Translate(aOffset.x, aOffset.y));
     filter->SetInput(IN_TRANSFORM_IN, aInputFilter);
     return filter;
+  }
+
+  static TemporaryRef<FilterNode>
+  GaussianBlur(DrawTarget* aDT, FilterNode* aInputFilter, const Size& aStdDeviation)
+  {
+    float stdX = float(std::min(aStdDeviation.width, kMaxStdDeviation));
+    float stdY = float(std::min(aStdDeviation.height, kMaxStdDeviation));
+    if (stdX == stdY) {
+      RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::GAUSSIAN_BLUR);
+      filter->SetAttribute(ATT_GAUSSIAN_BLUR_STD_DEVIATION, stdX);
+      filter->SetInput(IN_GAUSSIAN_BLUR_IN, aInputFilter);
+      return filter;
+    }
+    RefPtr<FilterNode> filterH = aDT->CreateFilter(FilterType::DIRECTIONAL_BLUR);
+    RefPtr<FilterNode> filterV = aDT->CreateFilter(FilterType::DIRECTIONAL_BLUR);
+    filterH->SetAttribute(ATT_DIRECTIONAL_BLUR_DIRECTION, (uint32_t)BLUR_DIRECTION_X);
+    filterH->SetAttribute(ATT_DIRECTIONAL_BLUR_STD_DEVIATION, stdX);
+    filterV->SetAttribute(ATT_DIRECTIONAL_BLUR_DIRECTION, (uint32_t)BLUR_DIRECTION_Y);
+    filterV->SetAttribute(ATT_DIRECTIONAL_BLUR_STD_DEVIATION, stdY);
+    filterH->SetInput(IN_DIRECTIONAL_BLUR_IN, aInputFilter);
+    filterV->SetInput(IN_DIRECTIONAL_BLUR_IN, filterH);
+    return filterV;
   }
 
   static TemporaryRef<FilterNode>
@@ -815,22 +839,37 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
 
     case FilterPrimitiveDescription::eGaussianBlur:
     {
-      Size stdDeviation = atts.GetSize(eGaussianBlurStdDeviation);
-      if (stdDeviation.width == stdDeviation.height) {
-        RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::GAUSSIAN_BLUR);
-        filter->SetAttribute(ATT_GAUSSIAN_BLUR_STD_DEVIATION, float(stdDeviation.width));
-        filter->SetInput(IN_GAUSSIAN_BLUR_IN, aSources[0]);
-        return filter;
+      return FilterWrappers::GaussianBlur(aDT, aSources[0],
+                                          atts.GetSize(eGaussianBlurStdDeviation));
+    }
+
+    case FilterPrimitiveDescription::eDropShadow:
+    {
+      RefPtr<FilterNode> alpha = FilterWrappers::ToAlpha(aDT, aSources[0]);
+      RefPtr<FilterNode> blur = FilterWrappers::GaussianBlur(aDT, alpha,
+                                  atts.GetSize(eDropShadowStdDeviation));
+      RefPtr<FilterNode> offsetBlur = FilterWrappers::Offset(aDT, blur,
+                                        atts.GetIntPoint(eDropShadowOffset));
+      RefPtr<FilterNode> flood = aDT->CreateFilter(FilterType::FLOOD);
+      Color color = atts.GetColor(eDropShadowColor);
+      if (aDescription.InputColorSpace(0) == LINEAR_RGB) {
+        color = Color(gsRGBToLinearRGBMap[uint8_t(color.r * 255)],
+                      gsRGBToLinearRGBMap[uint8_t(color.g * 255)],
+                      gsRGBToLinearRGBMap[uint8_t(color.b * 255)],
+                      color.a);
       }
-      RefPtr<FilterNode> filterH = aDT->CreateFilter(FilterType::DIRECTIONAL_BLUR);
-      RefPtr<FilterNode> filterV = aDT->CreateFilter(FilterType::DIRECTIONAL_BLUR);
-      filterH->SetAttribute(ATT_DIRECTIONAL_BLUR_DIRECTION, (uint32_t)BLUR_DIRECTION_X);
-      filterH->SetAttribute(ATT_DIRECTIONAL_BLUR_STD_DEVIATION, float(stdDeviation.width));
-      filterV->SetAttribute(ATT_DIRECTIONAL_BLUR_DIRECTION, (uint32_t)BLUR_DIRECTION_Y);
-      filterV->SetAttribute(ATT_DIRECTIONAL_BLUR_STD_DEVIATION, float(stdDeviation.height));
-      filterH->SetInput(IN_DIRECTIONAL_BLUR_IN, aSources[0]);
-      filterV->SetInput(IN_DIRECTIONAL_BLUR_IN, filterH);
-      return filterV;
+      flood->SetAttribute(ATT_FLOOD_COLOR, color);
+
+      RefPtr<FilterNode> composite = aDT->CreateFilter(FilterType::COMPOSITE);
+      composite->SetAttribute(ATT_COMPOSITE_OPERATOR, (uint32_t)COMPOSITE_OPERATOR_IN);
+      composite->SetInput(IN_COMPOSITE_IN_START, offsetBlur);
+      composite->SetInput(IN_COMPOSITE_IN_START + 1, flood);
+
+      RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::COMPOSITE);
+      filter->SetAttribute(ATT_COMPOSITE_OPERATOR, (uint32_t)COMPOSITE_OPERATOR_OVER);
+      filter->SetInput(IN_COMPOSITE_IN_START, composite);
+      filter->SetInput(IN_COMPOSITE_IN_START + 1, aSources[0]);
+      return filter;
     }
 
     case FilterPrimitiveDescription::eDiffuseLighting:
@@ -1127,11 +1166,9 @@ UnionOfRegions(const nsTArray<nsIntRegion>& aRegions)
 }
 
 static int32_t
-InflateSizeForBlurStdDev(double aStdDev)
+InflateSizeForBlurStdDev(float aStdDev)
 {
-  double size = aStdDev * (3 * sqrt(2 * M_PI) / 4) * 1.5;
-  static const double max = 1024;
-  size = std::min(size, max);
+  double size = std::min(aStdDev, kMaxStdDeviation) * (3 * sqrt(2 * M_PI) / 4) * 1.5;
   return uint32_t(floor(size + 0.5));
 }
 
@@ -1198,6 +1235,18 @@ ResultChangeRegionForPrimitive(const FilterPrimitiveDescription& aDescription,
       int32_t dx = InflateSizeForBlurStdDev(stdDeviation.width);
       int32_t dy = InflateSizeForBlurStdDev(stdDeviation.height);
       return aInputChangeRegions[0].Inflated(nsIntMargin(dy, dx, dy, dx));
+    }
+
+    case FilterPrimitiveDescription::eDropShadow:
+    {
+      IntPoint offset = atts.GetIntPoint(eDropShadowOffset);
+      nsIntRegion offsetRegion = aInputChangeRegions[0].MovedBy(offset.x, offset.y);
+      Size stdDeviation = atts.GetSize(eDropShadowStdDeviation);
+      int32_t dx = InflateSizeForBlurStdDev(stdDeviation.width);
+      int32_t dy = InflateSizeForBlurStdDev(stdDeviation.height);
+      nsIntRegion blurRegion = offsetRegion.Inflated(nsIntMargin(dy, dx, dy, dx));
+      blurRegion.Or(blurRegion, aInputChangeRegions[0]);
+      return blurRegion;
     }
 
     case FilterPrimitiveDescription::eDiffuseLighting:
@@ -1416,6 +1465,19 @@ SourceNeededRegionForPrimitive(const FilterPrimitiveDescription& aDescription,
       int32_t dx = InflateSizeForBlurStdDev(stdDeviation.width);
       int32_t dy = InflateSizeForBlurStdDev(stdDeviation.height);
       return aResultNeededRegion.Inflated(nsIntMargin(dy, dx, dy, dx));
+    }
+
+    case FilterPrimitiveDescription::eDropShadow:
+    {
+      IntPoint offset = atts.GetIntPoint(eDropShadowOffset);
+      nsIntRegion offsetRegion =
+        aResultNeededRegion.MovedBy(-nsIntPoint(offset.x, offset.y));
+      Size stdDeviation = atts.GetSize(eDropShadowStdDeviation);
+      int32_t dx = InflateSizeForBlurStdDev(stdDeviation.width);
+      int32_t dy = InflateSizeForBlurStdDev(stdDeviation.height);
+      nsIntRegion blurRegion = offsetRegion.Inflated(nsIntMargin(dy, dx, dy, dx));
+      blurRegion.Or(blurRegion, aResultNeededRegion);
+      return blurRegion;
     }
 
     case FilterPrimitiveDescription::eDiffuseLighting:
