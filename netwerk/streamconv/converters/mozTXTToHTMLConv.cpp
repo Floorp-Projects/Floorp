@@ -1223,16 +1223,17 @@ mozTXTToHTMLConv::ScanHTML(nsString& aInString, uint32_t whattodo, nsString &aOu
 #endif
 
   // Look for simple entities not included in a tags and scan them.
-  /* Skip all tags ("<[...]>") and content in an a tag ("<a[...]</a>")
-     or in a tag ("<!--[...]-->").
-     Unescape the rest (text between tags) and pass it to ScanTXT. */
+  // Skip all tags ("<[...]>") and content in an a link tag ("<a [...]</a>"),
+  // comment tag ("<!--[...]-->"), style tag, script tag or head tag.
+  // Unescape the rest (text between tags) and pass it to ScanTXT.
   for (int32_t i = 0; i < lengthOfInString;)
   {
     if (aInString[i] == '<')  // html tag
     {
-      uint32_t start = uint32_t(i);
-      if (nsCRT::ToLower((char)aInString[uint32_t(i) + 1]) == 'a')
-           // if a tag, skip until </a>
+      int32_t start = i;
+      if (Substring(aInString, i + 1, 2).LowerCaseEqualsASCII("a "))
+           // if a tag, skip until </a>.
+           // Make sure there's a space after, not to match "abbr".
       {
         i = aInString.Find("</a>", true, i);
         if (i == kNotFound)
@@ -1240,16 +1241,45 @@ mozTXTToHTMLConv::ScanHTML(nsString& aInString, uint32_t whattodo, nsString &aOu
         else
           i += 4;
       }
-      else if (aInString[uint32_t(i) + 1] == '!' && aInString[uint32_t(i) + 2] == '-' &&
-        aInString[uint32_t(i) + 3] == '-')
-          //if out-commended code, skip until -->
+      else if (Substring(aInString, i + 1, 3).LowerCaseEqualsASCII("!--"))
+          // if out-commended code, skip until -->
       {
         i = aInString.Find("-->", false, i);
         if (i == kNotFound)
           i = lengthOfInString;
         else
           i += 3;
-
+      }
+      else if (Substring(aInString, i + 1, 5).LowerCaseEqualsASCII("style") &&
+               (aInString.CharAt(i + 6) == ' ' || aInString.CharAt(i + 6) == '>'))
+           // if style tag, skip until </style>
+      {
+        i = aInString.Find("</style>", true, i);
+        if (i == kNotFound)
+          i = lengthOfInString;
+        else
+          i += 8;
+      }
+      else if (Substring(aInString, i + 1, 6).LowerCaseEqualsASCII("script") &&
+               (aInString.CharAt(i + 7) == ' ' || aInString.CharAt(i + 7) == '>'))
+           // if script tag, skip until </script>
+      {
+        i = aInString.Find("</script>", true, i);
+        if (i == kNotFound)
+          i = lengthOfInString;
+        else
+          i += 9;
+      }
+      else if (Substring(aInString, i + 1, 4).LowerCaseEqualsASCII("head") &&
+               (aInString.CharAt(i + 5) == ' ' || aInString.CharAt(i + 5) == '>'))
+           // if head tag, skip until </head>
+           // Make sure not to match <header>.
+      {
+        i = aInString.Find("</head>", true, i);
+        if (i == kNotFound)
+          i = lengthOfInString;
+        else
+          i += 7;
       }
       else  // just skip tag (attributes etc.)
       {
@@ -1259,7 +1289,7 @@ mozTXTToHTMLConv::ScanHTML(nsString& aInString, uint32_t whattodo, nsString &aOu
         else
           i++;
       }
-      aOutString.Append(&uniBuffer[start], uint32_t(i) - start);
+      aOutString.Append(&uniBuffer[start], i - start);
     }
     else
     {
