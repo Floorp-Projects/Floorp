@@ -52,6 +52,10 @@ public class AboutPages {
         return url.startsWith(READER);
     }
 
+    public static final boolean isAboutPrivateBrowsing(final String url) {
+        return PRIVATEBROWSING.equals(url);
+    }
+
     private static final String[] DEFAULT_ICON_PAGES = new String[] {
         HOME,
 

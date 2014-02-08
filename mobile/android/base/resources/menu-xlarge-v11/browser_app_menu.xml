@@ -47,6 +47,29 @@
           android:title="@string/desktop_mode"
           android:checkable="true" />
 
+
+    <item android:id="@+id/page"
+          android:title="@string/page"
+          android:icon="@drawable/ic_menu_tools">
+
+        <menu>
+
+            <item android:id="@+id/subscribe"
+                  android:title="@string/contextmenu_subscribe"/>
+
+            <item android:id="@+id/add_search_engine"
+                  android:title="@string/contextmenu_add_search_engine"/>
+
+            <item android:id="@+id/site_settings"
+                  android:title="@string/contextmenu_site_settings" />
+
+            <item android:id="@+id/add_to_launcher"
+                  android:title="@string/contextmenu_add_to_launcher"/>
+
+        </menu>
+
+    </item>
+
     <item android:id="@+id/tools"
           android:title="@string/tools"
           android:icon="@drawable/ic_menu_tools">
