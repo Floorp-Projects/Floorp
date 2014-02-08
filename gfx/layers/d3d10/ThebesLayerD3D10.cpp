@@ -151,6 +151,12 @@ ThebesLayerD3D10::Validate(ReadbackProcessor *aReadback)
     return;
   }
 
+  if (FAILED(gfxWindowsPlatform::GetPlatform()->GetD3D10Device()->GetDeviceRemovedReason())) {
+    // Device removed, this will be discovered on the next rendering pass.
+    // Do no validate.
+    return;
+  }
+
   nsIntRect newTextureRect = mVisibleRegion.GetBounds();
 
   SurfaceMode mode = GetSurfaceMode();
