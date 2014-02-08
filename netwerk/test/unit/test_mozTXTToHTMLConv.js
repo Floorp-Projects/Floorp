@@ -13,7 +13,7 @@ function run_test() {
   let converter = Cc["@mozilla.org/txttohtmlconv;1"]
                      .getService(Ci.mozITXTToHTMLConv);
 
-  const tests = [
+  const scanTXTtests = [
     // -- RFC1738
     {
       input: "RFC1738: <URL:http://mozilla.org> then",
@@ -113,15 +113,83 @@ function run_test() {
     }
   ];
 
+  const scanHTMLtests = [
+    {
+      input: "http://foo.example.com",
+      shouldChange: true
+    },
+    {
+      input: " <a href='http://a.example.com/'>foo</a>",
+      shouldChange: false
+    },
+    {
+      input: "<abbr>see http://abbr.example.com</abbr>",
+      shouldChange: true
+    },
+    {
+      input: "<!-- see http://comment.example.com/ -->",
+      shouldChange: false
+    },
+    {
+      input: "<!-- greater > -->",
+      shouldChange: false
+    },
+    {
+      input: "<!-- lesser < -->",
+      shouldChange: false
+    },
+    {
+      input: "<style id='ex'>background-image: url(http://example.com/ex.png);</style>",
+      shouldChange: false
+    },
+    {
+      input: "<style>body > p, body > div { color:blue }</style>",
+      shouldChange: false
+    },
+    {
+      input: "<script>window.location='http://script.example.com/';</script>",
+      shouldChange: false
+    },
+    {
+      input: "<head><title>http://head.example.com/</title></head>",
+      shouldChange: false
+    },
+    {
+      input: "<header>see http://header.example.com</header>",
+      shouldChange: true
+    },
+    {
+      input: "<iframe src='http://iframe.example.com/' />",
+      shouldChange: false
+    },
+    {
+      input: "broken end <script",
+      shouldChange: false
+    },
+  ];
+
   function hrefLink(url) {
     return ' href="' + url + '"';
   }
 
-  for (let i = 0; i < tests.length; i++) {
-    let output = converter.scanTXT(tests[i].input, Ci.mozITXTToHTMLConv.kURLs);
-    let link = hrefLink(tests[i].url);
+  for (let i = 0; i < scanTXTtests.length; i++) {
+    let t = scanTXTtests[i];
+    let output = converter.scanTXT(t.input, Ci.mozITXTToHTMLConv.kURLs);
+    let link = hrefLink(t.url);
     if (output.indexOf(link) == -1)
-      do_throw("Unexpected conversion: input=" + tests[i].input +
+      do_throw("Unexpected conversion by scanTXT: input=" + t.input +
                ", output=" + output + ", link=" + link);
+  }
+
+  for (let i = 0; i < scanHTMLtests.length; i++) {
+    let t = scanHTMLtests[i];
+    let output = converter.scanHTML(t.input, Ci.mozITXTToHTMLConv.kURLs);
+    let changed = (t.input != output);
+    if (changed != t.shouldChange) {
+      do_throw("Unexpected change by scanHTML: changed=" + changed +
+               ", shouldChange=" + t.shouldChange +
+               ", \ninput=" + t.input +
+               ", \noutput=" + output);
+    }
   }
 }
