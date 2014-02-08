@@ -167,11 +167,16 @@ extern sdp_result_e sdp_parse_attr_connection(sdp_t *sdp_p,
 extern sdp_result_e sdp_build_attr_connection(sdp_t *sdp_p,
                                               sdp_attr_t *attr_p,
                                               flex_string *fs);
+extern sdp_result_e sdp_parse_attr_extmap(sdp_t *sdp_p,
+                                          sdp_attr_t *attr_p,
+                                          const char *ptr);
+extern sdp_result_e sdp_build_attr_extmap(sdp_t *sdp_p,
+                                          sdp_attr_t *attr_p,
+                                          flex_string *fs);
 extern sdp_result_e sdp_parse_attr_mptime(
     sdp_t *sdp_p, sdp_attr_t *attr_p, const char *ptr);
 extern sdp_result_e sdp_build_attr_mptime(
     sdp_t *sdp_p, sdp_attr_t *attr_p, flex_string *fs);
-
 extern sdp_result_e sdp_parse_attr_x_sidin(
     sdp_t *sdp_p, sdp_attr_t *attr_p, const char *ptr);
 extern sdp_result_e sdp_build_attr_x_sidin(

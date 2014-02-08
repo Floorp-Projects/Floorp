@@ -616,8 +616,6 @@ pref("print.use_global_printsettings", true);
 // Save the Printings after each print job
 pref("print.save_print_settings", true);
 
-pref("print.whileInPrintPreview", true);
-
 // Cache old Presentation when going into Print Preview
 pref("print.always_cache_old_pres", false);
 

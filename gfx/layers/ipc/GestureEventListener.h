@@ -54,7 +54,7 @@ public:
    * of a gesture, then we pass it along to AsyncPanZoomController. Otherwise,
    * it gets consumed here and never forwarded along.
    */
-  nsEventStatus HandleInputEvent(const InputData& aEvent);
+  nsEventStatus HandleInputEvent(const MultiTouchInput& aEvent);
 
   /**
    * Cancels any currently active gesture. May not properly handle situations
@@ -94,11 +94,8 @@ protected:
   /**
    * Attempts to handle the event as a pinch event. If it is not a pinch event,
    * then we simply tell the next consumer to consume the event instead.
-   *
-   * |aClearTouches| marks whether or not to terminate any pinch currently
-   * happening.
    */
-  nsEventStatus HandlePinchGestureEvent(const MultiTouchInput& aEvent, bool aClearTouches);
+  nsEventStatus HandlePinchGestureEvent(const MultiTouchInput& aEvent);
 
   /**
    * Attempts to handle the event as a single tap event, which highlights links

@@ -2230,12 +2230,15 @@ static int vcmTxStartICE_m(cc_mcapid_t mcap_id,
     // and are responsible for cleanly shutting down.
     mozilla::RefPtr<mozilla::AudioSessionConduit> conduit =
       mozilla::AudioSessionConduit::Create(static_cast<AudioSessionConduit *>(rx_conduit.get()));
-
     if (!conduit || conduit->ConfigureSendMediaCodec(config))
+      return VCM_ERROR;
+    CSFLogError(logTag, "Created audio pipeline audio level %d %d",
+                attrs->audio_level, attrs->audio_level_id);
+
+    if (!conduit || conduit->EnableAudioLevelExtension(attrs->audio_level, attrs->audio_level_id))
       return VCM_ERROR;
 
     pc.impl()->media()->AddConduit(level, false, conduit);
-
     mozilla::RefPtr<mozilla::MediaPipeline> pipeline =
         new mozilla::MediaPipelineTransmit(
             pc.impl()->GetHandle(),
