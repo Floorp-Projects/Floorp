@@ -3937,8 +3937,8 @@ DebuggerSource_getIntroductionType(JSContext *cx, unsigned argc, Value *vp)
     THIS_DEBUGSOURCE_REFERENT(cx, argc, vp, "(get introductionOffset)", args, obj, sourceObject);
 
     ScriptSource *ss = sourceObject->source();
-    if (ss->hasIntroducerType()) {
-        JSString *str = js_NewStringCopyZ<CanGC>(cx, ss->introducerType());
+    if (ss->hasIntroductionType()) {
+        JSString *str = js_NewStringCopyZ<CanGC>(cx, ss->introductionType());
         if (!str)
             return false;
         args.rval().setString(str);
