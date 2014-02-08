@@ -223,7 +223,7 @@ var ctrlTab = {
     if (!this._recentlyUsedTabs) {
       tabPreviews.init();
 
-      this._recentlyUsedTabs = [gBrowser.selectedTab];
+      this._initRecentlyUsedTabs();
       this._init(true);
     }
   },
@@ -495,6 +495,9 @@ var ctrlTab = {
 
   handleEvent: function ctrlTab_handleEvent(event) {
     switch (event.type) {
+      case "SSWindowStateReady":
+        this._initRecentlyUsedTabs();
+        break;
       case "TabAttrModified":
         // tab attribute modified (e.g. label, crop, busy, image, selected)
         for (let i = this.previews.length - 1; i >= 0; i--) {
@@ -530,8 +533,16 @@ var ctrlTab = {
     }
   },
 
+  _initRecentlyUsedTabs: function () {
+    this._recentlyUsedTabs =
+      Array.filter(gBrowser.tabs, tab => !tab.closing)
+           .sort((tab1, tab2) => tab2.lastAccessed - tab1.lastAccessed);
+  },
+
   _init: function ctrlTab__init(enable) {
     var toggleEventListener = enable ? "addEventListener" : "removeEventListener";
+
+    window[toggleEventListener]("SSWindowStateReady", this, false);
 
     var tabContainer = gBrowser.tabContainer;
     tabContainer[toggleEventListener]("TabOpen", this, false);
