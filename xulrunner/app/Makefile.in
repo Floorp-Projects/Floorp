@@ -59,6 +59,7 @@ endif
 endif
 
 ifeq ($(OS_ARCH),OS2)
+RESFILE=splashos2.res
 RCFLAGS += -DMOZ_XULRUNNER
 ifdef DEBUG
 RCFLAGS += -DDEBUG
