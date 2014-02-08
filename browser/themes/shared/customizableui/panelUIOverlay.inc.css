@@ -54,6 +54,16 @@
   -moz-box-flex: 1;
 }
 
+.panel-subview-body {
+  overflow-y: auto;
+  overflow-x: hidden;
+  -moz-box-flex: 1;
+}
+
+#PanelUI-popup .panel-subview-body {
+  margin: -4px;
+}
+
 .panel-subview-header,
 .subviewbutton.panel-subview-footer {
   padding: 12px;

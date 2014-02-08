@@ -200,8 +200,7 @@
 
           this._currentSubView = viewNode;
 
-          // Now we have to transition to transition the panel. There are a few parts
-          // to this:
+          // Now we have to transition the panel. There are a few parts to this:
           //
           // 1) The main view content gets shifted so that the center of the anchor
           //    node is at the left-most edge of the panel.
@@ -222,7 +221,9 @@
             this._viewContainer.removeEventListener("transitionend", trans);
             this._transitioning = false;
           }.bind(this));
-          this._viewContainer.style.height = this._subViews.scrollHeight + "px";
+
+          let newHeight = this._heightOfSubview(viewNode);
+          this._viewContainer.style.height = newHeight + "px";
 
           this._subViewObserver.observe(viewNode, {
             attributes: true,
@@ -293,7 +294,7 @@
               break;
             case "popuphidden":
               this.removeAttribute("panelopen");
-              this._mainView.style.height = "";
+              this._mainView.style.removeProperty("height");
               this.showMainView();
               break;
           }
@@ -313,8 +314,8 @@
       <method name="_syncContainerWithSubView">
         <body><![CDATA[
           if (!this.ignoreMutations && this.showingSubView) {
-            this._viewContainer.style.height =
-              this._subViews.scrollHeight + "px";
+            let newHeight = this._heightOfSubview(this._currentSubView);
+            this._viewContainer.style.height = newHeight + "px";
           }
         ]]></body>
       </method>
@@ -324,6 +325,21 @@
             this._viewContainer.style.height =
               this._mainView.scrollHeight + "px";
           }
+        ]]></body>
+      </method>
+
+      <method name="_heightOfSubview">
+        <parameter name="aSubview"/>
+        <body><![CDATA[
+          let body = aSubview.querySelector(".panel-subview-body");
+          let height = body ? body.scrollHeight : aSubview.scrollHeight;
+          if (body) {
+            let header = aSubview.querySelector(".panel-subview-header");
+            let footer = aSubview.querySelector(".panel-subview-footer");
+            height += (header ? header.scrollHeight : 0) +
+                      (footer ? footer.scrollHeight : 0);
+          }
+          return height;
         ]]></body>
       </method>
 
