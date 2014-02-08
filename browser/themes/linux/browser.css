@@ -29,7 +29,14 @@
   -moz-appearance: none;
   background-color: transparent;
   border-top: none;
-  border-bottom: 1px solid ThreeDShadow;
+}
+
+#navigator-toolbox::after {
+  content: "";
+  display: -moz-box;
+  -moz-box-ordinal-group: 101; /* tabs toolbar is 100 */
+  height: 1px;
+  background-color: ThreeDShadow;
 }
 
 #navigator-toolbox > toolbar:not(:-moz-lwtheme):not(#toolbar-menubar):not(#TabsToolbar) {
@@ -2012,7 +2019,7 @@ chatbox {
   border-left: 3px solid transparent;
 }
 
-#main-window[customizing] #TabsToolbar::after {
+#main-window[customizing] #navigator-toolbox::after {
   margin-left: 2em;
   margin-right: 2em;
 }

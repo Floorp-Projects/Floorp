@@ -4152,8 +4152,7 @@ window > chatbox {
   }
 }
 
-#main-window[customizing] #navigator-toolbox::after,
-#main-window[customize-entered] #TabsToolbar::after {
+#main-window[customizing] #navigator-toolbox::after {
   margin-left: 2em;
   margin-right: 2em;
 }
