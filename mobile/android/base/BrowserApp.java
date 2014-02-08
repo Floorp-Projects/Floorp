@@ -34,6 +34,7 @@ import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.EventDispatcher;
 import org.mozilla.gecko.util.GamepadUtils;
 import org.mozilla.gecko.util.HardwareUtils;
+import org.mozilla.gecko.util.MenuUtils;
 import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UiAsyncTask;
@@ -2132,6 +2133,15 @@ abstract public class BrowserApp extends GeckoApp
             share.setEnabled(false);
             saveAsPDF.setEnabled(false);
             findInPage.setEnabled(false);
+
+            // NOTE: Use MenuUtils.safeSetEnabled because some actions might
+            // be on the BrowserToolbar context menu
+            MenuUtils.safeSetEnabled(aMenu, R.id.page, false);
+            MenuUtils.safeSetEnabled(aMenu, R.id.subscribe, false);
+            MenuUtils.safeSetEnabled(aMenu, R.id.add_search_engine, false);
+            MenuUtils.safeSetEnabled(aMenu, R.id.site_settings, false);
+            MenuUtils.safeSetEnabled(aMenu, R.id.add_to_launcher, false);
+
             return true;
         }
 
@@ -2158,6 +2168,14 @@ abstract public class BrowserApp extends GeckoApp
         share.setVisible(!GeckoProfile.get(this).inGuestMode());
         share.setEnabled(!(scheme.equals("about") || scheme.equals("chrome") ||
                            scheme.equals("file") || scheme.equals("resource")));
+
+        // NOTE: Use MenuUtils.safeSetEnabled because some actions might
+        // be on the BrowserToolbar context menu
+        MenuUtils.safeSetEnabled(aMenu, R.id.page, !isAboutHome(tab));
+        MenuUtils.safeSetEnabled(aMenu, R.id.subscribe, tab.hasFeeds());
+        MenuUtils.safeSetEnabled(aMenu, R.id.add_search_engine, tab.hasOpenSearch());
+        MenuUtils.safeSetEnabled(aMenu, R.id.site_settings, !isAboutHome(tab));
+        MenuUtils.safeSetEnabled(aMenu, R.id.add_to_launcher, !isAboutHome(tab));
 
         // Action providers are available only ICS+.
         if (Build.VERSION.SDK_INT >= 14) {
@@ -2352,6 +2370,13 @@ abstract public class BrowserApp extends GeckoApp
 
         if (itemId == R.id.exit_guest_session) {
             showGuestModeDialog(GuestModeDialog.LEAVING);
+            return true;
+        }
+
+        // We have a few menu items that can also be in the context menu. If
+        // we have not already handled the item, give the context menu handler
+        // a chance.
+        if (onContextItemSelected(item)) {
             return true;
         }
 
