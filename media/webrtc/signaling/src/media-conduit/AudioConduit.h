@@ -23,7 +23,6 @@
 #include "webrtc/voice_engine/include/voe_audio_processing.h"
 #include "webrtc/voice_engine/include/voe_video_sync.h"
 #include "webrtc/voice_engine/include/voe_rtp_rtcp.h"
-
 //Some WebRTC types for short notations
  using webrtc::VoEBase;
  using webrtc::VoENetwork;
@@ -31,13 +30,11 @@
  using webrtc::VoEExternalMedia;
  using webrtc::VoEAudioProcessing;
  using webrtc::VoEVideoSync;
-
+ using webrtc::VoERTP_RTCP;
 /** This file hosts several structures identifying different aspects
  * of a RTP Session.
  */
-
 namespace mozilla {
-
 // Helper function
 
 DOMHighResTimeStamp
@@ -86,13 +83,17 @@ public:
    */
   virtual MediaConduitErrorCode ConfigureRecvMediaCodecs(
     const std::vector<AudioCodecConfig* >& codecConfigList);
+  /**
+   * Function to enable the audio level extension
+   * @param enabled: enable extension
+   */
+  virtual MediaConduitErrorCode EnableAudioLevelExtension(bool enabled, uint8_t id);
 
   /**
    * Register External Transport to this Conduit. RTP and RTCP frames from the VoiceEngine
    * shall be passed to the registered transport for transporting externally.
    */
   virtual MediaConduitErrorCode AttachTransport(mozilla::RefPtr<TransportInterface> aTransport);
-
   /**
    * Function to deliver externally captured audio sample for encoding and transport
    * @param audioData [in]: Pointer to array containing a frame of audio
@@ -234,13 +235,12 @@ private:
   webrtc::VoEExternalMedia* mPtrVoEXmedia;
   webrtc::VoEAudioProcessing* mPtrVoEProcessing;
   webrtc::VoEVideoSync* mPtrVoEVideoSync;
+  webrtc::VoERTP_RTCP* mPtrVoERTP_RTCP;
   webrtc::VoERTP_RTCP* mPtrRTP;
-
   //engine states of our interets
   bool mEngineTransmitting; // If true => VoiceEngine Send-subsystem is up
   bool mEngineReceiving;    // If true => VoiceEngine Receive-subsystem is up
                             // and playout is enabled
-
   // Keep track of each inserted RTP block and the time it was inserted
   // so we can estimate the clock time for a specific TimeStamp coming out
   // (for when we send data to MediaStreamTracks).  Blocks are aged out as needed.

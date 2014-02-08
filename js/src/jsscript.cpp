@@ -1599,12 +1599,12 @@ ScriptSource::displayURL()
 bool
 ScriptSource::setIntroducedFilename(ExclusiveContext *cx,
                                     const char *callerFilename, unsigned callerLineno,
-                                    const char *introducer, const char *introducerFilename)
+                                    const char *introductionType, const char *introducerFilename)
 {
     JS_ASSERT(!filename_);
     JS_ASSERT(!introducerFilename_);
 
-    introducerType_ = introducer;
+    introductionType_ = introductionType;
 
     if (introducerFilename) {
         introducerFilename_ = js_strdup(cx, introducerFilename);
@@ -1612,24 +1612,24 @@ ScriptSource::setIntroducedFilename(ExclusiveContext *cx,
             return false;
     }
 
-    // Final format:  "{callerFilename} line {callerLineno} > {introducer}"
+    // Final format:  "{callerFilename} line {callerLineno} > {introductionType}"
     // Len = strlen(callerFilename) + strlen(" line ") +
-    //       strlen(toStr(callerLineno)) + strlen(" > ") + strlen(introducer);
+    //       strlen(toStr(callerLineno)) + strlen(" > ") + strlen(introductionType);
     char linenoBuf[15];
     size_t filenameLen = strlen(callerFilename);
     size_t linenoLen = JS_snprintf(linenoBuf, 15, "%u", callerLineno);
-    size_t introducerLen = strlen(introducer);
+    size_t introductionTypeLen = strlen(introductionType);
     size_t len = filenameLen                    +
                  6 /* == strlen(" line ") */    +
                  linenoLen                      +
                  3 /* == strlen(" > ") */       +
-                 introducerLen                  +
+                 introductionTypeLen            +
                  1 /* \0 */;
     filename_ = cx->pod_malloc<char>(len);
     if (!filename_)
         return false;
     mozilla::DebugOnly<int> checkLen = JS_snprintf(filename_, len, "%s line %s > %s",
-                                                   callerFilename, linenoBuf, introducer);
+                                                   callerFilename, linenoBuf, introductionType);
     JS_ASSERT(checkLen == len - 1);
 
     if (!introducerFilename_)

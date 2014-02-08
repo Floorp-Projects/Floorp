@@ -1926,11 +1926,6 @@ Navigator::HasDataStoreSupport(JSContext* cx, JSObject* aGlobal)
 {
   JS::Rooted<JSObject*> global(cx, aGlobal);
 
-  // DataStore is enabled by default for chrome code.
-  if (nsContentUtils::IsCallerChrome()) {
-    return true;
-  }
-
   // First of all, the general pref has to be turned on.
   bool enabled = false;
   Preferences::GetBool("dom.datastore.enabled", &enabled);

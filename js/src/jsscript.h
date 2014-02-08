@@ -405,7 +405,7 @@ class ScriptSource
     //      undefined if the implementation doesn't know how the code was introduced.
     // This is a constant, statically allocated C string, so does not need
     // memory management.
-    const char *introducerType_;
+    const char *introductionType_;
 
     // True if we can call JSRuntime::sourceHook to load the source on
     // demand. If sourceRetrievable_ and hasSourceData() are false, it is not
@@ -426,7 +426,7 @@ class ScriptSource
         originPrincipals_(originPrincipals),
         introductionOffset_(0),
         introducerFilename_(nullptr),
-        introducerType_(nullptr),
+        introductionType_(nullptr),
         sourceRetrievable_(false),
         argumentsNotIncluded_(false),
         ready_(true),
@@ -471,16 +471,16 @@ class ScriptSource
     bool setFilename(ExclusiveContext *cx, const char *filename);
     bool setIntroducedFilename(ExclusiveContext *cx,
                                const char *callerFilename, unsigned callerLineno,
-                               const char *introducer, const char *introducerFilename);
+                               const char *introductionType, const char *introducerFilename);
     const char *introducerFilename() const {
         return introducerFilename_;
     }
-    bool hasIntroducerType() const {
-        return introducerType_;
+    bool hasIntroductionType() const {
+        return introductionType_;
     }
-    const char *introducerType() const {
-        JS_ASSERT(hasIntroducerType());
-        return introducerType_;
+    const char *introductionType() const {
+        JS_ASSERT(hasIntroductionType());
+        return introductionType_;
     }
     const char *filename() const {
         return filename_;
@@ -1273,7 +1273,10 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
      */
     inline void ensureNonLazyCanonicalFunction(JSContext *cx);
 
-    JSFunction *originalFunction() const;
+    /*
+     * Donor provided itself to callsite clone; null if this is non-clone.
+     */
+    JSFunction *donorFunction() const;
     void setIsCallsiteClone(JSObject *fun);
 
     JSFlatString *sourceData(JSContext *cx);
