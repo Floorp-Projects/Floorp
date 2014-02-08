@@ -53,6 +53,7 @@ BackCert::Init()
         case 15: out = &encodedKeyUsage; break;
         case 19: out = &encodedBasicConstraints; break;
         case 35: out = &dummyEncodedAuthorityKeyIdentifier; break; // bug 965136
+        case 37: out = &encodedExtendedKeyUsage; break;
       }
     } else if (ext->id.len == 9 &&
                ext->id.data[0] == 0x2b && ext->id.data[1] == 0x06 &&
@@ -91,6 +92,7 @@ static Result BuildForward(TrustDomain& trustDomain,
                            PRTime time,
                            EndEntityOrCA endEntityOrCA,
                            KeyUsages requiredKeyUsagesIfPresent,
+                           SECOidTag requiredEKUIfPresent,
                            unsigned int subCACount,
                            /*out*/ ScopedCERTCertList& results);
 
@@ -100,6 +102,7 @@ BuildForwardInner(TrustDomain& trustDomain,
                   BackCert& subject,
                   PRTime time,
                   EndEntityOrCA endEntityOrCA,
+                  SECOidTag requiredEKUIfPresent,
                   CERTCertificate* potentialIssuerCertToDup,
                   unsigned int subCACount,
                   ScopedCERTCertList& results)
@@ -142,7 +145,7 @@ BuildForwardInner(TrustDomain& trustDomain,
   }
 
   rv = BuildForward(trustDomain, potentialIssuer, time, MustBeCA,
-                    KU_KEY_CERT_SIGN,
+                    KU_KEY_CERT_SIGN, requiredEKUIfPresent,
                     newSubCACount, results);
   if (rv != Success) {
     return rv;
@@ -163,6 +166,7 @@ BuildForward(TrustDomain& trustDomain,
              PRTime time,
              EndEntityOrCA endEntityOrCA,
              KeyUsages requiredKeyUsagesIfPresent,
+             SECOidTag requiredEKUIfPresent,
              unsigned int subCACount,
              /*out*/ ScopedCERTCertList& results)
 {
@@ -191,7 +195,7 @@ BuildForward(TrustDomain& trustDomain,
 
   rv = CheckExtensions(subject, endEntityOrCA,
                        trustLevel == TrustDomain::TrustAnchor,
-                       requiredKeyUsagesIfPresent,
+                       requiredKeyUsagesIfPresent, requiredEKUIfPresent,
                        subCACount);
   if (rv != Success) {
     return rv;
@@ -223,6 +227,7 @@ BuildForward(TrustDomain& trustDomain,
   for (CERTCertListNode* n = CERT_LIST_HEAD(candidates);
        !CERT_LIST_END(n, candidates); n = CERT_LIST_NEXT(n)) {
     rv = BuildForwardInner(trustDomain, subject, time, endEntityOrCA,
+                           requiredEKUIfPresent,
                            n->cert, subCACount, results);
     if (rv == Success) {
       // We found a trusted issuer. At this point, we know the cert is valid
@@ -241,6 +246,7 @@ BuildCertChain(TrustDomain& trustDomain,
                CERTCertificate* certToDup,
                PRTime time,
                /*optional*/ KeyUsages requiredKeyUsagesIfPresent,
+               /*optional*/ SECOidTag requiredEKUIfPresent,
                /*out*/ ScopedCERTCertList& results)
 {
   PORT_Assert(certToDup);
@@ -260,7 +266,7 @@ BuildCertChain(TrustDomain& trustDomain,
   }
 
   rv = BuildForward(trustDomain, ee, time, MustBeEndEntity,
-                    requiredKeyUsagesIfPresent,
+                    requiredKeyUsagesIfPresent, requiredEKUIfPresent,
                     0, results);
   if (rv != Success) {
     results = nullptr;

@@ -84,6 +84,7 @@ public:
   // nssCert and childCert must be valid for the lifetime of BackCert
   BackCert(CERTCertificate* nssCert, BackCert* childCert)
     : encodedBasicConstraints(nullptr)
+    , encodedExtendedKeyUsage(nullptr)
     , encodedKeyUsage(nullptr)
     , childCert(childCert)
     , nssCert(nssCert)
@@ -93,6 +94,7 @@ public:
   Result Init();
 
   const SECItem* encodedBasicConstraints;
+  const SECItem* encodedExtendedKeyUsage;
   const SECItem* encodedKeyUsage;
 
   BackCert* const childCert;
