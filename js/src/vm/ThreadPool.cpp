@@ -589,4 +589,14 @@ ThreadPool::abortJob()
     mainWorker_->abort();
     for (uint32_t workerId = 0; workerId < numWorkers(); workerId++)
         workers_[workerId]->abort();
+
+    // Spin until pendingSlices_ reaches 0.
+    //
+    // The reason for this is that while calling abort() clears all workers'
+    // bounds, the pendingSlices_ cache might still be > 0 due to
+    // still-executing calls to popSliceBack or popSliceFront in other
+    // threads. When those finish, we will be sure that !hasWork(), which is
+    // important to ensure that an aborted worker does not start again due to
+    // the thread pool having more work.
+    while (hasWork());
 }
