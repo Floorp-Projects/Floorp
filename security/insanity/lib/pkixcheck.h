@@ -29,6 +29,7 @@ Result CheckExtensions(BackCert& certExt,
                        EndEntityOrCA endEntityOrCA,
                        bool isTrustAnchor,
                        KeyUsages requiredKeyUsagesIfPresent,
+                       SECOidTag requiredEKUIfPresent,
                        unsigned int depth);
 
 } } // namespace insanity::pkix

@@ -27,6 +27,7 @@ SECStatus BuildCertChain(TrustDomain& trustDomain,
                          CERTCertificate* cert,
                          PRTime time,
             /*optional*/ KeyUsages requiredKeyUsagesIfPresent,
+            /*optional*/ SECOidTag requiredEKUIfPresent,
                  /*out*/ ScopedCERTCertList& results);
 
 // Verify the given signed data using the public key of the given certificate.
