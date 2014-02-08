@@ -96,3 +96,27 @@ add_task(function() {
   ok(CustomizableUI.inDefaultState, "Everything should be back to default state");
   yield endCustomizing();
 });
+
+// Check that the menubar will be collapsed by resetting, if the platform supports it.
+add_task(function() {
+  let menubar = document.getElementById("toolbar-menubar");
+  const canMenubarCollapse = CustomizableUI.isToolbarDefaultCollapsed(menubar.id);
+  if (!canMenubarCollapse) {
+    return;
+  }
+  ok(CustomizableUI.inDefaultState, "Everything should be in its default state");
+  yield startCustomizing();
+  let resetButton = document.getElementById("customization-reset-button");
+  is(resetButton.disabled, true, "The reset button should be disabled when in default state");
+
+  setToolbarVisibility(menubar, true);
+  is(resetButton.disabled, false, "The reset button should be enabled when not in default state")
+  ok(!CustomizableUI.inDefaultState, "No longer in default state when the menubar is shown");
+
+  yield gCustomizeMode.reset();
+
+  is(resetButton.disabled, true, "The reset button should be disabled when in default state");
+  ok(CustomizableUI.inDefaultState, "Everything should be in its default state");
+
+  yield endCustomizing();
+});

@@ -866,6 +866,7 @@ CustomizeMode.prototype = {
     } else {
       toolbar.removeAttribute("customizing");
     }
+    this._onUIChange();
   },
 
   onWidgetMoved: function(aWidgetId, aArea, aOldPosition, aNewPosition) {
