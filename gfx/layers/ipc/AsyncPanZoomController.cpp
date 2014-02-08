@@ -575,16 +575,18 @@ nsEventStatus AsyncPanZoomController::ReceiveInputEvent(const InputData& aEvent)
 nsEventStatus AsyncPanZoomController::HandleInputEvent(const InputData& aEvent) {
   nsEventStatus rv = nsEventStatus_eIgnore;
 
-  nsRefPtr<GestureEventListener> listener = GetGestureEventListener();
-  if (listener) {
-    rv = listener->HandleInputEvent(aEvent);
-    if (rv == nsEventStatus_eConsumeNoDefault)
-      return rv;
-  }
-
   switch (aEvent.mInputType) {
   case MULTITOUCH_INPUT: {
     const MultiTouchInput& multiTouchInput = aEvent.AsMultiTouchInput();
+
+    nsRefPtr<GestureEventListener> listener = GetGestureEventListener();
+    if (listener) {
+      rv = listener->HandleInputEvent(multiTouchInput);
+      if (rv == nsEventStatus_eConsumeNoDefault) {
+        return rv;
+      }
+    }
+
     switch (multiTouchInput.mType) {
       case MultiTouchInput::MULTITOUCH_START: rv = OnTouchStart(multiTouchInput); break;
       case MultiTouchInput::MULTITOUCH_MOVE: rv = OnTouchMove(multiTouchInput); break;
@@ -757,9 +759,17 @@ nsEventStatus AsyncPanZoomController::OnTouchEnd(const MultiTouchInput& aEvent) 
   case PANNING_LOCKED_X:
   case PANNING_LOCKED_Y:
     {
-      ReentrantMonitorAutoEnter lock(mMonitor);
-      RequestContentRepaint();
-      UpdateSharedCompositorFrameMetrics();
+      // Make a local copy of the tree manager pointer and check if it's not
+      // null before calling HandleOverscroll(). This is necessary because
+      // Destroy(), which nulls out mTreeManager, could be called concurrently.
+      APZCTreeManager* treeManagerLocal = mTreeManager;
+      if (treeManagerLocal) {
+        if (!treeManagerLocal->FlushRepaintsForOverscrollHandoffChain()) {
+          NS_WARNING("Overscroll handoff chain was empty during panning! This should not be the case.");
+          // Graceful handling of error condition
+          FlushRepaintForOverscrollHandoff();
+        }
+      }
     }
     mX.EndTouch();
     mY.EndTouch();
@@ -1387,6 +1397,12 @@ void AsyncPanZoomController::ScheduleComposite() {
   if (mCompositorParent) {
     mCompositorParent->ScheduleRenderOnCompositorThread();
   }
+}
+
+void AsyncPanZoomController::FlushRepaintForOverscrollHandoff() {
+  ReentrantMonitorAutoEnter lock(mMonitor);
+  RequestContentRepaint();
+  UpdateSharedCompositorFrameMetrics();
 }
 
 void AsyncPanZoomController::RequestContentRepaint() {

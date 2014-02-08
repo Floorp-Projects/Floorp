@@ -285,7 +285,7 @@ CanEnterBaselineJIT(JSContext *cx, HandleScript script, bool osr)
     if (script->isCallsiteClone()) {
         // Ensure the original function is compiled too, so that bailouts from
         // Ion code have a BaselineScript to resume into.
-        RootedScript original(cx, script->originalFunction()->nonLazyScript());
+        RootedScript original(cx, script->donorFunction()->nonLazyScript());
         JS_ASSERT(original != script);
 
         if (!original->canBaselineCompile())
