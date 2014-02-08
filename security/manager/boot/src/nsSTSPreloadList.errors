@@ -8,10 +8,12 @@ bassh.net: did not receive HSTS header
 bcrook.com: max-age too low: 86400
 betnet.fr: could not connect to host
 bigshinylock.minazo.net: could not connect to host
+blacklane.com: did not receive HSTS header
 braintreegateway.com: did not receive HSTS header
 braintreepayments.com: did not receive HSTS header
 browserid.org: did not receive HSTS header
 business.medbank.com.mt: did not receive HSTS header
+calyxinstitute.org: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsISiteSecurityService.processHeader]"  nsresult: "0x80004005 (NS_ERROR_FAILURE)"  location: "JS frame :: /builds/slave/m-cen-l64-hsts-000000000000000/getHSTSPreloadList.js :: processStsHeader :: line 125"  data: no]
 carlolly.co.uk: did not receive HSTS header
 cert.se: max-age too low: 2628001
 checkout.google.com: did not receive HSTS header (error ignored - included regardless)
@@ -56,6 +58,7 @@ jottit.com: did not receive HSTS header
 kiwiirc.com: max-age too low: 5256000
 ledgerscope.net: did not receive HSTS header
 liberty.lavabit.com: could not connect to host
+lifeguard.aecom.com: did not receive HSTS header
 lists.mayfirst.org: did not receive HSTS header
 lumi.do: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsISiteSecurityService.processHeader]"  nsresult: "0x80004005 (NS_ERROR_FAILURE)"  location: "JS frame :: /builds/slave/m-cen-l64-hsts-000000000000000/getHSTSPreloadList.js :: processStsHeader :: line 125"  data: no]
 mail.google.com: did not receive HSTS header (error ignored - included regardless)
@@ -66,7 +69,6 @@ mydigipass.com: did not receive HSTS header
 neonisi.com: could not connect to host
 openshift.redhat.com: did not receive HSTS header
 ottospora.nl: could not connect to host
-packagist.org: max-age too low: 2592000
 passport.yandex.by: did not receive HSTS header
 passport.yandex.com: did not receive HSTS header
 passport.yandex.com.tr: did not receive HSTS header
@@ -104,6 +106,7 @@ uprotect.it: could not connect to host
 wallet.google.com: did not receive HSTS header (error ignored - included regardless)
 webmail.mayfirst.org: did not receive HSTS header
 whonix.org: did not receive HSTS header
+www.calyxinstitute.org: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsISiteSecurityService.processHeader]"  nsresult: "0x80004005 (NS_ERROR_FAILURE)"  location: "JS frame :: /builds/slave/m-cen-l64-hsts-000000000000000/getHSTSPreloadList.js :: processStsHeader :: line 125"  data: no]
 www.cueup.com: did not receive HSTS header
 www.developer.mydigipass.com: could not connect to host
 www.dropcam.com: max-age too low: 2592000
