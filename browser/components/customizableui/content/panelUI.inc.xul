@@ -52,34 +52,36 @@
 
     <panelview id="PanelUI-history" flex="1">
       <label value="&appMenuHistory.label;" class="panel-subview-header"/>
-      <toolbarbutton id="appMenuViewHistorySidebar"
-                     label="&appMenuHistory.viewSidebar.label;"
-                     type="checkbox"
-                     class="subviewbutton"
-                     oncommand="toggleSidebar('viewHistorySidebar'); PanelUI.hide();">
-        <observes element="viewHistorySidebar" attribute="checked"/>
-      </toolbarbutton>
-      <toolbarbutton id="appMenuClearRecentHistory"
-                     label="&appMenuHistory.clearRecent.label;"
-                     class="subviewbutton"
-                     command="Tools:Sanitize"/>
+      <vbox class="panel-subview-body">
+        <toolbarbutton id="appMenuViewHistorySidebar"
+                       label="&appMenuHistory.viewSidebar.label;"
+                       type="checkbox"
+                       class="subviewbutton"
+                       oncommand="toggleSidebar('viewHistorySidebar'); PanelUI.hide();">
+          <observes element="viewHistorySidebar" attribute="checked"/>
+        </toolbarbutton>
+        <toolbarbutton id="appMenuClearRecentHistory"
+                       label="&appMenuHistory.clearRecent.label;"
+                       class="subviewbutton"
+                       command="Tools:Sanitize"/>
 #ifdef MOZ_SERVICES_SYNC
-      <toolbarbutton id="sync-tabs-menuitem2"
-                     class="syncTabsMenuItem subviewbutton"
-                     label="&syncTabsMenu2.label;"
-                     oncommand="BrowserOpenSyncTabs();"
-                     disabled="true"/>
+        <toolbarbutton id="sync-tabs-menuitem2"
+                       class="syncTabsMenuItem subviewbutton"
+                       label="&syncTabsMenu2.label;"
+                       oncommand="BrowserOpenSyncTabs();"
+                       disabled="true"/>
 #endif
-      <toolbarbutton id="appMenuRestoreLastSession"
-                     label="&appMenuHistory.restoreSession.label;"
-                     class="subviewbutton"
-                     command="Browser:RestoreLastSession"/>
-      <menuseparator id="PanelUI-recentlyClosedTabs-separator"/>
-      <vbox id="PanelUI-recentlyClosedTabs" tooltip="bhTooltip"/>
-      <menuseparator id="PanelUI-recentlyClosedWindows-separator"/>
-      <vbox id="PanelUI-recentlyClosedWindows" tooltip="bhTooltip"/>
-      <menuseparator id="PanelUI-historyItems-separator"/>
-      <vbox id="PanelUI-historyItems" tooltip="bhTooltip"/>
+        <toolbarbutton id="appMenuRestoreLastSession"
+                       label="&appMenuHistory.restoreSession.label;"
+                       class="subviewbutton"
+                       command="Browser:RestoreLastSession"/>
+        <menuseparator id="PanelUI-recentlyClosedTabs-separator"/>
+        <vbox id="PanelUI-recentlyClosedTabs" tooltip="bhTooltip"/>
+        <menuseparator id="PanelUI-recentlyClosedWindows-separator"/>
+        <vbox id="PanelUI-recentlyClosedWindows" tooltip="bhTooltip"/>
+        <menuseparator id="PanelUI-historyItems-separator"/>
+        <vbox id="PanelUI-historyItems" tooltip="bhTooltip"/>
+      </vbox>
       <toolbarbutton id="PanelUI-historyMore"
                      class="panel-subview-footer subviewbutton"
                      label="&appMenuHistory.showAll.label;"
@@ -88,44 +90,46 @@
 
     <panelview id="PanelUI-bookmarks" flex="1" class="PanelUI-subView">
       <label value="&bookmarksMenu.label;" class="panel-subview-header"/>
-      <toolbarbutton id="panelMenuBookmarkThisPage"
-                     class="subviewbutton"
-                     observes="bookmarkThisPageBroadcaster"
-                     command="Browser:AddBookmarkAs"
-                     onclick="PanelUI.hide();"/>
-      <toolbarseparator/>
-      <toolbarbutton id="panelMenu_viewBookmarksSidebar"
-                     label="&viewBookmarksSidebar2.label;"
-                     class="subviewbutton"
-                     oncommand="toggleSidebar('viewBookmarksSidebar'); PanelUI.hide();">
-        <observes element="viewBookmarksSidebar" attribute="checked"/>
-      </toolbarbutton>
-      <toolbarbutton id="panelMenu_viewBookmarksToolbar"
-                     label="&viewBookmarksToolbar.label;"
-                     type="checkbox"
-                     toolbarId="PersonalToolbar"
-                     class="subviewbutton"
-                     oncommand="onViewToolbarCommand(event); PanelUI.hide();"/>
-      <toolbarseparator/>
-      <toolbarbutton id="panelMenu_bookmarksToolbar"
-                     label="&personalbarCmd.label;"
-                     class="subviewbutton"
-                     oncommand="PlacesCommandHook.showPlacesOrganizer('BookmarksToolbar'); PanelUI.hide();"/>
-      <toolbarbutton id="panelMenu_unsortedBookmarks"
-                     label="&unsortedBookmarksCmd.label;"
-                     class="subviewbutton"
-                     oncommand="PlacesCommandHook.showPlacesOrganizer('UnfiledBookmarks'); PanelUI.hide();"/>
-      <toolbarseparator/>
-      <toolbaritem id="panelMenu_bookmarksMenu"
-                   flex="1"
-                   orient="vertical"
-                   smoothscroll="false"
-                   onclick="if (event.button == 1) BookmarkingUI.onPanelMenuViewCommand(event, this._placesView);"
-                   oncommand="BookmarkingUI.onPanelMenuViewCommand(event, this._placesView);"
-                   flatList="true"
-                   tooltip="bhTooltip">
-        <!-- bookmarks menu items will go here -->
-      </toolbaritem>
+      <vbox class="panel-subview-body">
+        <toolbarbutton id="panelMenuBookmarkThisPage"
+                       class="subviewbutton"
+                       observes="bookmarkThisPageBroadcaster"
+                       command="Browser:AddBookmarkAs"
+                       onclick="PanelUI.hide();"/>
+        <toolbarseparator/>
+        <toolbarbutton id="panelMenu_viewBookmarksSidebar"
+                       label="&viewBookmarksSidebar2.label;"
+                       class="subviewbutton"
+                       oncommand="toggleSidebar('viewBookmarksSidebar'); PanelUI.hide();">
+          <observes element="viewBookmarksSidebar" attribute="checked"/>
+        </toolbarbutton>
+        <toolbarbutton id="panelMenu_viewBookmarksToolbar"
+                       label="&viewBookmarksToolbar.label;"
+                       type="checkbox"
+                       toolbarId="PersonalToolbar"
+                       class="subviewbutton"
+                       oncommand="onViewToolbarCommand(event); PanelUI.hide();"/>
+        <toolbarseparator/>
+        <toolbarbutton id="panelMenu_bookmarksToolbar"
+                       label="&personalbarCmd.label;"
+                       class="subviewbutton"
+                       oncommand="PlacesCommandHook.showPlacesOrganizer('BookmarksToolbar'); PanelUI.hide();"/>
+        <toolbarbutton id="panelMenu_unsortedBookmarks"
+                       label="&unsortedBookmarksCmd.label;"
+                       class="subviewbutton"
+                       oncommand="PlacesCommandHook.showPlacesOrganizer('UnfiledBookmarks'); PanelUI.hide();"/>
+        <toolbarseparator/>
+        <toolbaritem id="panelMenu_bookmarksMenu"
+                     flex="1"
+                     orient="vertical"
+                     smoothscroll="false"
+                     onclick="if (event.button == 1) BookmarkingUI.onPanelMenuViewCommand(event, this._placesView);"
+                     oncommand="BookmarkingUI.onPanelMenuViewCommand(event, this._placesView);"
+                     flatList="true"
+                     tooltip="bhTooltip">
+          <!-- bookmarks menu items will go here -->
+        </toolbaritem>
+      </vbox>
       <toolbarbutton id="panelMenu_showAllBookmarks"
                      label="&showAllBookmarks2.label;"
                      class="subviewbutton panel-subview-footer"
@@ -146,22 +150,23 @@
 
     <panelview id="PanelUI-developer" flex="1">
       <label value="&webDeveloperMenu.label;" class="panel-subview-header"/>
-      <vbox id="PanelUI-developerItems"/>
+      <vbox id="PanelUI-developerItems" class="panel-subview-body"/>
     </panelview>
 
     <panelview id="PanelUI-characterEncodingView" flex="1">
       <label value="&charsetMenu.label;" class="panel-subview-header"/>
-
-      <vbox id="PanelUI-characterEncodingView-pinned"
-            class="PanelUI-characterEncodingView-list"/>
-      <toolbarseparator/>
-      <vbox id="PanelUI-characterEncodingView-charsets"
-            class="PanelUI-characterEncodingView-list"/>
-      <toolbarseparator/>
-      <vbox>
-        <label id="PanelUI-characterEncodingView-autodetect-label"/>
-        <vbox id="PanelUI-characterEncodingView-autodetect"
+      <vbox class="panel-subview-body">
+        <vbox id="PanelUI-characterEncodingView-pinned"
               class="PanelUI-characterEncodingView-list"/>
+        <toolbarseparator/>
+        <vbox id="PanelUI-characterEncodingView-charsets"
+              class="PanelUI-characterEncodingView-list"/>
+        <toolbarseparator/>
+        <vbox>
+          <label id="PanelUI-characterEncodingView-autodetect-label"/>
+          <vbox id="PanelUI-characterEncodingView-autodetect"
+                class="PanelUI-characterEncodingView-list"/>
+        </vbox>
       </vbox>
     </panelview>
 
