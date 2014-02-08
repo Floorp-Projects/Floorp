@@ -201,17 +201,21 @@ typedef struct fsmdef_media_t_ {
     /* ICE Candidates */
     char **candidatesp;
     int candidate_ct;
-
     /*
      * rtcp-mux indicates media stream is muxed for RTP and RTCP
      */
     boolean        rtcp_mux;
+    /*
+     * Flag to indicate if RTP Header extension for audio level is used
+     * and the id to be used for it
+     */
+    boolean         audio_level;
+    uint8_t         audio_level_id;
 
     /*
      * The value of the a=setup line
      */
     sdp_setup_type_e setup;
-
     /*
      * port number used in m= data channel line
      */
