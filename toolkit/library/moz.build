@@ -44,6 +44,17 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('windows', 'os2', 'mac', 'cocoa',
                                     'gtk2', 'gtk3', 'qt', 'android'):
     DEFINES['ICON_DECODER'] = True
 
+LOCAL_INCLUDES += [
+    '/config',
+    # need widget/windows for resource.h (included from widget.rc)
+    '/widget/windows',
+]
+
+if CONFIG['OS_ARCH'] == 'WINNT' and not CONFIG['GNU_CC']:
+    LOCAL_INCLUDES += [
+        '/xpcom/base',
+    ]
+
 FAIL_ON_WARNINGS = True
 
 MSVC_ENABLE_PGO = True

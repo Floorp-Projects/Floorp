@@ -15,3 +15,5 @@ SOURCES += [
 XPI_NAME = 'winembed'
 
 DEFINES['XPCOM_GLUE'] = True
+
+RESFILE = 'winEmbed.res'
