@@ -1016,6 +1016,9 @@ struct JSRuntime : public JS::shadow::Runtime,
 
     /* Garbage collector state, used by jsgc.c. */
 
+    /* Garbase collector state has been sucessfully initialized. */
+    bool                gcInitialized;
+
     /*
      * Set of all GC chunks with at least one allocated thing. The
      * conservative GC uses it to quickly check if a possible GC thing points
