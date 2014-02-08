@@ -45,6 +45,7 @@ EXPORTS.mozilla.dom += [
     'SVGFEDiffuseLightingElement.h',
     'SVGFEDisplacementMapElement.h',
     'SVGFEDistantLightElement.h',
+    'SVGFEDropShadowElement.h',
     'SVGFEFloodElement.h',
     'SVGFEGaussianBlurElement.h',
     'SVGFEImageElement.h',
