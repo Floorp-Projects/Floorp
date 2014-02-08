@@ -322,6 +322,18 @@ VARIABLES = {
         This variable contains a list of system libaries to link against.
         """, None),
 
+    'RCFILE': (unicode, unicode,
+        """The program .rc file.
+
+        This variable can only be used on Windows (and OS/2).
+        """, None),
+
+    'RESFILE': (unicode, unicode,
+        """The program .res file.
+
+        This variable can only be used on Windows (and OS/2).
+        """, None),
+
     'SDK_LIBRARY': (StrictOrderingOnAppendList, list,
         """Elements of the distributed SDK.
 
