@@ -638,6 +638,9 @@ BrowserGlue.prototype = {
     // This pref must be set here because SessionStore will use its value
     // on quit-application.
     this._setPrefToSaveSession();
+
+    // Call trackStartupCrashEnd here in case the delayed call on startup hasn't
+    // yet occurred (see trackStartupCrashEnd caller in browser.js).
     try {
       let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"]
                          .getService(Ci.nsIAppStartup);
