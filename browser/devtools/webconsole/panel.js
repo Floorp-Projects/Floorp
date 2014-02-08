@@ -6,9 +6,11 @@
 
 const {Cc, Ci, Cu} = require("chrome");
 
+loader.lazyImporter(this, "devtools", "resource://gre/modules/devtools/Loader.jsm");
 loader.lazyImporter(this, "promise", "resource://gre/modules/Promise.jsm", "Promise");
 loader.lazyGetter(this, "HUDService", () => require("devtools/webconsole/hudservice"));
 loader.lazyGetter(this, "EventEmitter", () => require("devtools/shared/event-emitter"));
+loader.lazyImporter(this, "gDevTools", "resource:///modules/devtools/gDevTools.jsm");
 
 /**
  * A DevToolPanel that controls the Web Console.
@@ -19,10 +21,26 @@ function WebConsolePanel(iframeWindow, toolbox)
   this._toolbox = toolbox;
   EventEmitter.decorate(this);
 }
+
 exports.WebConsolePanel = WebConsolePanel;
 
 WebConsolePanel.prototype = {
   hud: null,
+
+  /**
+   * Called by the WebConsole's onkey command handler.
+   * If the WebConsole is opened, check if the JSTerm's input line has focus.
+   * If not, focus it.
+   */
+  focusInput: function WCP_focusInput()
+  {
+    let inputNode = this.hud.jsterm.inputNode;
+
+    if (!inputNode.getAttribute("focused"))
+    {
+      inputNode.focus();
+    }
+  },
 
   /**
    * Open is effectively an asynchronous constructor.
