@@ -1628,8 +1628,8 @@ ScriptSource::setIntroducedFilename(ExclusiveContext *cx,
     filename_ = cx->pod_malloc<char>(len);
     if (!filename_)
         return false;
-    mozilla::DebugOnly<int> checkLen = JS_snprintf(filename_, len, "%s line %s > %s",
-                                                   callerFilename, linenoBuf, introductionType);
+    mozilla::DebugOnly<size_t> checkLen = JS_snprintf(filename_, len, "%s line %s > %s",
+                                                      callerFilename, linenoBuf, introductionType);
     JS_ASSERT(checkLen == len - 1);
 
     if (!introducerFilename_)

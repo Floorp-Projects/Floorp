@@ -1019,6 +1019,10 @@ js_InvokeOperationCallback(JSContext *cx)
     js::gc::GCIfNeeded(cx);
 
 #ifdef JS_ION
+#ifdef JS_THREADSAFE
+    rt->interruptPar = false;
+#endif
+
     /*
      * A worker thread may have set the callback after finishing an Ion
      * compilation.

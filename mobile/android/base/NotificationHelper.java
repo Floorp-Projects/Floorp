@@ -42,6 +42,7 @@ public final class NotificationHelper implements GeckoEventListener {
     // Attributes that can be used while sending a notification from js.
     private static final String PROGRESS_VALUE_ATTR = "progress_value";
     private static final String PROGRESS_MAX_ATTR = "progress_max";
+    private static final String PROGRESS_INDETERMINATE_ATTR = "progress_indeterminate";
     private static final String LIGHT_ATTR = "light";
     private static final String ONGOING_ATTR = "ongoing";
     private static final String WHEN_ATTR = "when";
@@ -253,11 +254,13 @@ public final class NotificationHelper implements GeckoEventListener {
         }
 
         if (message.has(PROGRESS_VALUE_ATTR) &&
-            message.has(PROGRESS_MAX_ATTR)) {
+            message.has(PROGRESS_MAX_ATTR) &&
+            message.has(PROGRESS_INDETERMINATE_ATTR)) {
             try {
                 final int progress = message.getInt(PROGRESS_VALUE_ATTR);
                 final int progressMax = message.getInt(PROGRESS_MAX_ATTR);
-                builder.setProgress(progressMax, progress, false);
+                final boolean progressIndeterminate = message.getBoolean(PROGRESS_INDETERMINATE_ATTR);
+                builder.setProgress(progressMax, progress, progressIndeterminate);
             } catch (JSONException ex) {
                 Log.i(LOGTAG, "Error parsing", ex);
             }

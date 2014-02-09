@@ -30,38 +30,49 @@
 // to enable parallel execution.  At the top-level, it consists of a native
 // function (exposed as the ForkJoin intrinsic) that is used like so:
 //
-//     ForkJoin(func, feedback, N)
+//     ForkJoin(func, boundsFunc, mode)
 //
-// The intention of this statement is to start |N| copies of |func()|
-// running in parallel.  Each copy will then do more or less 1/Nth of
-// the total work, depending on workstealing-based load balancing.
+// The intention of this statement is to start some some number (usually the
+// number of hardware threads) of copies of |func()| running in parallel. Each
+// copy will then do a portion of the total work, depending on
+// workstealing-based load balancing.
 //
-// Typically, each of the N slices runs in a different worker thread,
-// but that is not something you should rely upon---if work-stealing
-// is enabled it could be that a single worker thread winds up
-// handling multiple slices.
+// Typically, each of the N slices runs in a different worker thread, but that
+// is not something you should rely upon---if work-stealing is enabled it
+// could be that a single worker thread winds up handling multiple slices.
 //
-// The second argument, |feedback|, is an optional callback that will
-// receiver information about how execution proceeded.  This is
-// intended for use in unit testing but also for providing feedback to
-// users.  Note that gathering the data to provide to |feedback| is
-// not free and so execution will run somewhat slower if |feedback| is
-// provided.
+// The second argument, |boundsFunc|, is a function that must return an array
+// of exactly two integers. This function is called before every attempt at
+// execution: warmup, sequential, or parallel. The bounds are taken from a
+// function call instead of taken as two static integers so that the bounds
+// may be shrunk when recovering from bailout.
+//
+// The third argument, |mode|, is an internal mode integer giving finer
+// control over the behavior of ForkJoin. See the |ForkJoinMode| enum.
 //
 // func() should expect the following arguments:
 //
-//     func(id, n, warmup)
+//     func(warmup)
 //
-// Here, |id| is the slice id. |n| is the total number of slices. The
-// parameter |warmup| is true for a *warmup or recovery phase*.
-// Warmup phases are discussed below in more detail, but the general
-// idea is that if |warmup| is true, |func| should only do a fixed
-// amount of work.  If |warmup| is false, |func| should try to do all
-// remaining work is assigned.
+// The parameter |warmup| is true for a *warmup or recovery phase*. Warmup
+// phases are discussed below in more detail, but the general idea is that if
+// |warmup| is true, |func| should only do a fixed amount of work. If |warmup|
+// is false, |func| should try to do all remaining work is assigned.
 //
-// Note that we implicitly assume that |func| is tracking how much
-// work it has accomplished thus far; some techniques for doing this
-// are discussed in |ParallelArray.js|.
+// |func| can keep asking for more work from the scheduler by calling the
+// intrinsic |GetForkJoinSlice(id)|. When there are no more slices to hand
+// out, -1 is returned as a sentinel value. By exposing this function as an
+// intrinsic, we reduce the number of JS-C++ boundary crossings incurred by
+// workstealing, which may have many slices.
+//
+// |func| MUST PROCESS ALL SLICES BEFORE RETURNING! Not doing so is an error
+// |and is protected by debug asserts in ThreadPool.
+//
+// Note well that there is a separation of concern between *scheduling* slices
+// and *interpreting* slices. ForkJoin only schedules slices by handing out
+// slice ids; it does not interpret what slice ids mean. Instead, |func|
+// should track how much work it has accomplished thus far; consult |Array.js|
+// for some examples.
 //
 // Warmups and Sequential Fallbacks
 // --------------------------------
@@ -301,9 +312,6 @@ struct ForkJoinShared;
 class ForkJoinContext : public ThreadSafeContext
 {
   public:
-    // The slice that is being processed.
-    const uint16_t sliceId;
-
     // The worker that is doing the work.
     const uint32_t workerId;
 
@@ -314,8 +322,7 @@ class ForkJoinContext : public ThreadSafeContext
     // Records the last instr. to execute on this thread.
     IonLIRTraceData traceData;
 
-    // The maximum worker and slice id.
-    uint16_t maxSliceId;
+    // The maximum worker id.
     uint32_t maxWorkerId;
 #endif
 
@@ -336,9 +343,17 @@ class ForkJoinContext : public ThreadSafeContext
     uint8_t *targetRegionStart;
     uint8_t *targetRegionEnd;
 
-    ForkJoinContext(PerThreadData *perThreadData, uint16_t sliceId, uint32_t workerId,
+    ForkJoinContext(PerThreadData *perThreadData, uint32_t workerId,
                     Allocator *allocator, ForkJoinShared *shared,
                     ParallelBailoutRecord *bailoutRecord);
+
+    // Get a slice of work for the worker associated with the context.
+    bool getSlice(uint16_t *sliceId) {
+        ThreadPool &pool = runtime()->threadPool;
+        return (isMainThread()
+                ? pool.getSliceForMainThread(sliceId)
+                : pool.getSliceForWorker(workerId, sliceId));
+    }
 
     // True if this is the main thread, false if it is one of the parallel workers.
     bool isMainThread() const;
@@ -449,6 +464,9 @@ class LockedJSContext
 bool InExclusiveParallelSection();
 
 bool ParallelTestsShouldPass(JSContext *cx);
+
+void TriggerOperationCallbackForForkJoin(JSRuntime *rt,
+                                         JSRuntime::OperationCallbackTrigger trigger);
 
 bool intrinsic_SetForkJoinTargetRegion(JSContext *cx, unsigned argc, Value *vp);
 extern const JSJitInfo intrinsic_SetForkJoinTargetRegionInfo;

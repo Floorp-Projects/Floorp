@@ -122,20 +122,10 @@ static void *_pt_root(void *arg)
     PRIntn rv;
     PRThread *thred = (PRThread*)arg;
     PRBool detached = (thred->state & PT_THREAD_DETACHED) ? PR_TRUE : PR_FALSE;
+    pthread_t id = pthread_self();
 #ifdef _PR_NICE_PRIORITY_SCHEDULING
     pid_t tid;
 #endif
-
-    /*
-     * Both the parent thread and this new thread set thred->id.
-     * The new thread must ensure that thred->id is set before
-     * it executes its startFunc.  The parent thread must ensure
-     * that thred->id is set before PR_CreateThread() returns.
-     * Both threads set thred->id without holding a lock.  Since
-     * they are writing the same value, this unprotected double
-     * write should be safe.
-     */
-    thred->id = pthread_self();
 
 #ifdef _PR_NICE_PRIORITY_SCHEDULING
     /*
@@ -152,11 +142,6 @@ static void *_pt_root(void *arg)
         setpriority(PRIO_PROCESS, tid,
                     pt_RelativePriority(rv, thred->priority));
     }
-
-    PR_Lock(pt_book.ml);
-    thred->tid = tid;
-    PR_NotifyAllCondVar(pt_book.cv);
-    PR_Unlock(pt_book.ml);
 #endif
 
     /*
@@ -168,7 +153,7 @@ static void *_pt_root(void *arg)
     if (detached)
     {
         /* pthread_detach() modifies its argument, so we must pass a copy */
-        pthread_t self = thred->id;
+        pthread_t self = id;
         rv = pthread_detach(&self);
         PR_ASSERT(0 == rv);
     }
@@ -187,6 +172,28 @@ static void *_pt_root(void *arg)
 
     /* make the thread visible to the rest of the runtime */
     PR_Lock(pt_book.ml);
+    /*
+     * Both the parent thread and this new thread set thred->id.
+     * The new thread must ensure that thred->id is set before
+     * it executes its startFunc.  The parent thread must ensure
+     * that thred->id is set before PR_CreateThread() returns.
+     * Both threads set thred->id while holding pt_book.ml and
+     * use thred->idSet to ensure thred->id is written only once.
+     */
+    if (!thred->idSet)
+    {
+        thred->id = id;
+        thred->idSet = PR_TRUE;
+    }
+    else
+    {
+        PR_ASSERT(pthread_equal(thred->id, id));
+    }
+
+#ifdef _PR_NICE_PRIORITY_SCHEDULING
+    thred->tid = tid;
+    PR_NotifyAllCondVar(pt_book.cv);
+#endif
 
     /* If this is a GCABLE thread, set its state appropriately */
     if (thred->suspend & PT_THREAD_SETGCABLE)
@@ -209,7 +216,7 @@ static void *_pt_root(void *arg)
     /*
      * At this moment, PR_CreateThread() may not have set thred->id yet.
      * It is safe for a detached thread to free thred only after
-     * PR_CreateThread() has set thred->id.
+     * PR_CreateThread() has accessed thred->id and thred->idSet.
      */
     if (detached)
     {
@@ -273,6 +280,7 @@ static PRThread* pt_AttachThread(void)
 
         thred->priority = PR_PRIORITY_NORMAL;
         thred->id = pthread_self();
+        thred->idSet = PR_TRUE;
 #ifdef _PR_NICE_PRIORITY_SCHEDULING
         thred->tid = gettid();
 #endif
@@ -493,24 +501,32 @@ static PRThread* _PR_CreateThread(
             goto done;
         }
 
+        PR_Lock(pt_book.ml);
         /*
          * Both the parent thread and this new thread set thred->id.
          * The parent thread must ensure that thred->id is set before
          * PR_CreateThread() returns.  (See comments in _pt_root().)
          */
-        thred->id = id;
+        if (!thred->idSet)
+        {
+            thred->id = id;
+            thred->idSet = PR_TRUE;
+        }
+        else
+        {
+            PR_ASSERT(pthread_equal(thred->id, id));
+        }
 
         /*
-         * If the new thread is detached, tell it that PR_CreateThread()
-         * has set thred->id so it's ok to delete thred.
+         * If the new thread is detached, tell it that PR_CreateThread() has
+         * accessed thred->id and thred->idSet so it's ok to delete thred.
          */
         if (PR_UNJOINABLE_THREAD == state)
         {
-            PR_Lock(pt_book.ml);
             thred->okToDelete = PR_TRUE;
             PR_NotifyAllCondVar(pt_book.cv);
-            PR_Unlock(pt_book.ml);
         }
+        PR_Unlock(pt_book.ml);
     }
 
 done:
@@ -940,6 +956,7 @@ void _PR_InitThreads(
     thred->startFunc = NULL;
     thred->priority = priority;
     thred->id = pthread_self();
+    thred->idSet = PR_TRUE;
 #ifdef _PR_NICE_PRIORITY_SCHEDULING
     thred->tid = gettid();
 #endif

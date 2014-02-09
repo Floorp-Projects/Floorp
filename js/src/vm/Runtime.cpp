@@ -120,6 +120,9 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     ),
     mainThread(this),
     interrupt(0),
+#if defined(JS_THREADSAFE) && defined(JS_ION)
+    interruptPar(false),
+#endif
     handlingSignal(false),
     operationCallback(nullptr),
 #ifdef JS_THREADSAFE
@@ -166,6 +169,7 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     checkRequestDepth(0),
 # endif
 #endif
+    gcInitialized(false),
     gcSystemAvailableChunkListHead(nullptr),
     gcUserAvailableChunkListHead(nullptr),
     gcBytes(0),
@@ -293,7 +297,7 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     threadPool(this),
     defaultJSContextCallback(nullptr),
     ctypesActivityCallback(nullptr),
-    parallelWarmup(0),
+    forkJoinWarmup(0),
     ionReturnOverride_(MagicValue(JS_ARG_POISON)),
     useHelperThreads_(useHelperThreads),
     parallelIonCompilationEnabled_(true),
@@ -401,16 +405,19 @@ JSRuntime::init(uint32_t maxbytes)
     if (!InitAtoms(this))
         return false;
 
-    if (!InitRuntimeNumberState(this))
-        return false;
-
-    dateTimeInfo.updateTimeZoneAdjustment();
-
     if (!scriptDataTable_.init())
         return false;
 
     if (!evalCache.init())
         return false;
+
+    /* The garbage collector depends on everything before this point being initialized. */
+    gcInitialized = true;
+
+    if (!InitRuntimeNumberState(this))
+        return false;
+
+    dateTimeInfo.updateTimeZoneAdjustment();
 
 #ifdef JS_ARM_SIMULATOR
     simulatorRuntime_ = js::jit::CreateSimulatorRuntime();
@@ -432,43 +439,45 @@ JSRuntime::~JSRuntime()
 {
     JS_ASSERT(!isHeapBusy());
 
-    /* Free source hook early, as its destructor may want to delete roots. */
-    sourceHook = nullptr;
+    if (gcInitialized) {
+        /* Free source hook early, as its destructor may want to delete roots. */
+        sourceHook = nullptr;
 
-    /*
-     * Cancel any pending, in progress or completed Ion compilations and
-     * parse tasks. Waiting for AsmJS and compression tasks is done
-     * synchronously (on the main thread or during parse tasks), so no
-     * explicit canceling is needed for these.
-     */
-    for (CompartmentsIter comp(this, SkipAtoms); !comp.done(); comp.next())
-        CancelOffThreadIonCompile(comp, nullptr);
-    CancelOffThreadParses(this);
+        /*
+         * Cancel any pending, in progress or completed Ion compilations and
+         * parse tasks. Waiting for AsmJS and compression tasks is done
+         * synchronously (on the main thread or during parse tasks), so no
+         * explicit canceling is needed for these.
+         */
+        for (CompartmentsIter comp(this, SkipAtoms); !comp.done(); comp.next())
+            CancelOffThreadIonCompile(comp, nullptr);
+        CancelOffThreadParses(this);
 
-    /* Poison common names before final GC. */
-    FinishCommonNames(this);
+        /* Poison common names before final GC. */
+        FinishCommonNames(this);
 
-    /* Clear debugging state to remove GC roots. */
-    for (CompartmentsIter comp(this, SkipAtoms); !comp.done(); comp.next()) {
-        comp->clearTraps(defaultFreeOp());
-        if (WatchpointMap *wpmap = comp->watchpointMap)
-            wpmap->clear();
+        /* Clear debugging state to remove GC roots. */
+        for (CompartmentsIter comp(this, SkipAtoms); !comp.done(); comp.next()) {
+            comp->clearTraps(defaultFreeOp());
+            if (WatchpointMap *wpmap = comp->watchpointMap)
+                wpmap->clear();
+        }
+
+        /* Clear the statics table to remove GC roots. */
+        staticStrings.finish();
+
+        /*
+         * Flag us as being destroyed. This allows the GC to free things like
+         * interned atoms and Ion trampolines.
+         */
+        beingDestroyed_ = true;
+
+        /* Allow the GC to release scripts that were being profiled. */
+        profilingScripts = false;
+
+        JS::PrepareForFullGC(this);
+        GC(this, GC_NORMAL, JS::gcreason::DESTROY_RUNTIME);
     }
-
-    /* Clear the statics table to remove GC roots. */
-    staticStrings.finish();
-
-    /*
-     * Flag us as being destroyed. This allows the GC to free things like
-     * interned atoms and Ion trampolines.
-     */
-    beingDestroyed_ = true;
-
-    /* Allow the GC to release scripts that were being profiled. */
-    profilingScripts = false;
-
-    JS::PrepareForFullGC(this);
-    GC(this, GC_NORMAL, JS::gcreason::DESTROY_RUNTIME);
 
     /*
      * Clear the self-hosted global and delete self-hosted classes *after*
@@ -654,6 +663,10 @@ JSRuntime::triggerOperationCallback(OperationCallbackTrigger trigger)
     interrupt = 1;
 
 #ifdef JS_ION
+#ifdef JS_THREADSAFE
+    TriggerOperationCallbackForForkJoin(this, trigger);
+#endif
+
     /*
      * asm.js and, optionally, normal Ion code use memory protection and signal
      * handlers to halt running code.

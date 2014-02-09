@@ -1,4 +1,6 @@
 This directory contains freetype2 v2.5.2 downloaded from
 http://savannah.nongnu.org/download/freetype/
 
-There are currently no local changes applied the freetype tree.
+==== Patches ====
+
+unimplemented-png-loading.patch: Bug 968626 - Fail gracefully on unimplemented PNG loading.

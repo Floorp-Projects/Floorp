@@ -1446,9 +1446,27 @@ struct PRCondVar {
 struct PRMonitor {
     const char* name;           /* monitor name for debugging */
 #if defined(_PR_PTHREADS)
-    PRLock lock;                /* the lock structure */
-    pthread_t owner;            /* the owner of the lock or invalid */
-    PRCondVar *cvar;            /* condition variable queue */
+    PRIntn notifyTimes;         /* number of pending notifies for waitCV.
+                                 * The special value -1 means a broadcast
+                                 * (PR_NotifyAll). */
+
+    pthread_mutex_t lock;       /* lock is only held when accessing fields
+                                 * of the PRMonitor, instead of being held
+                                 * while the monitor is entered. The only
+                                 * exception is notifyTimes, which is
+                                 * protected by the monitor. */
+    pthread_t owner;            /* the owner of the monitor or invalid */
+    pthread_cond_t entryCV;     /* for threads waiting to enter the monitor */
+
+    pthread_cond_t waitCV;      /* for threads waiting on the monitor */
+    PRInt32 refCount;           /* reference count, an atomic variable.
+                                 * PR_NewMonitor adds a reference to the
+                                 * newly created PRMonitor, and
+                                 * PR_DestroyMonitor releases that reference.
+                                 * PR_ExitMonitor adds a reference before
+                                 * unlocking the internal lock if it needs to
+                                 * signal entryCV, and releases the reference
+                                 * after signaling entryCV. */
 #else  /* defined(_PR_PTHREADS) */
     PRCondVar *cvar;            /* associated lock and condition variable queue */
 #endif /* defined(_PR_PTHREADS) */
@@ -1555,6 +1573,8 @@ struct PRThread {
 
 #if defined(_PR_PTHREADS)
     pthread_t id;                   /* pthread identifier for the thread */
+    PRBool idSet;                   /* whether 'id' has been set. Protected by
+                                     * pt_book.ml. */
 #ifdef _PR_NICE_PRIORITY_SCHEDULING
     pid_t tid;                      /* Linux-specific kernel thread ID */
 #endif
