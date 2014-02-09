@@ -132,10 +132,9 @@ HTMLAllCollection::Collection()
 
 nsISupports*
 HTMLAllCollection::GetNamedItem(const nsAString& aID,
-                                nsWrapperCache** aCache,
-                                nsresult* aResult)
+                                nsWrapperCache** aCache)
 {
-  nsContentList* docAllList = mDocument->GetDocumentAllList(aID, aResult);
+  nsContentList* docAllList = mDocument->GetDocumentAllList(aID);
   if (!docAllList) {
     return nullptr;
   }
@@ -226,7 +225,6 @@ nsHTMLDocumentSH::DocumentAllGetProperty(JSContext *cx, JS::Handle<JSObject*> ob
   HTMLAllCollection* allCollection = GetDocument(obj)->All();
   nsISupports *result;
   nsWrapperCache *cache;
-  nsresult rv = NS_OK;
 
   if (JSID_IS_STRING(id)) {
     if (nsDOMClassInfo::sLength_id == id) {
@@ -237,12 +235,7 @@ nsHTMLDocumentSH::DocumentAllGetProperty(JSContext *cx, JS::Handle<JSObject*> ob
 
     // For all other strings, look for an element by id or name.
     nsDependentJSString str(id);
-    result = allCollection->GetNamedItem(str, &cache, &rv);
-
-    if (NS_FAILED(rv)) {
-      xpc::Throw(cx, rv);
-      return false;
-    }
+    result = allCollection->GetNamedItem(str, &cache);
   } else if (JSID_IS_INT(id) && JSID_TO_INT(id) >= 0) {
     // Map document.all[n] (where n is a number) to the n:th item in
     // the document.all node list.
@@ -256,7 +249,8 @@ nsHTMLDocumentSH::DocumentAllGetProperty(JSContext *cx, JS::Handle<JSObject*> ob
   }
 
   if (result) {
-    rv = WrapNative(cx, JS::CurrentGlobalOrNull(cx), result, cache, true, vp);
+    nsresult rv = WrapNative(cx, JS::CurrentGlobalOrNull(cx), result, cache,
+                             true, vp);
     if (NS_FAILED(rv)) {
       xpc::Throw(cx, rv);
 
