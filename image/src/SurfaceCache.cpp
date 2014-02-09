@@ -524,5 +524,14 @@ SurfaceCache::Discard(Image* aImageKey)
   return sInstance->Discard(aImageKey);
 }
 
+/* static */ void
+SurfaceCache::DiscardAll()
+{
+  MOZ_ASSERT(sInstance, "Should be initialized");
+  MOZ_ASSERT(NS_IsMainThread());
+
+  return sInstance->DiscardAll();
+}
+
 } // namespace image
 } // namespace mozilla
