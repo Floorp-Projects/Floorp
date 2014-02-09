@@ -9,10 +9,12 @@ let Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this,
-  "LoginManagerContent", "resource://gre/modules/LoginManagerContent.jsm");
-XPCOMUtils.defineLazyModuleGetter(this,
-  "InsecurePasswordUtils", "resource://gre/modules/InsecurePasswordUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ContentLinkHandler",
+  "resource:///modules/ContentLinkHandler.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "LoginManagerContent",
+  "resource://gre/modules/LoginManagerContent.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "InsecurePasswordUtils",
+  "resource://gre/modules/InsecurePasswordUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "UITour",
@@ -282,6 +284,8 @@ let ClickEventHandler = {
   }
 };
 ClickEventHandler.init();
+
+ContentLinkHandler.init(this);
 
 addEventListener("DOMWebNotificationClicked", function(event) {
   sendAsyncMessage("DOMWebNotificationClicked", {});

@@ -10,6 +10,8 @@ EXTRA_JS_MODULES += [
     'BrowserNewTabPreloader.jsm',
     'BrowserUITelemetry.jsm',
     'ContentClick.jsm',
+    'ContentLinkHandler.jsm',
+    'Feeds.jsm',
     'NetworkPrioritizer.jsm',
     'offlineAppCache.jsm',
     'SharedFrame.jsm',

@@ -278,7 +278,7 @@ public:
         byteOffset += mBytesPerSample;
       }
     }
-    mNextSample = maxSamples;
+    mNextSample += maxSamples;
     return frames;
   }
 
