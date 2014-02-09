@@ -13,7 +13,7 @@
 #include "mozilla/HashFunctions.h"  // for HashGeneric and AddToHash
 #include "gfxPoint.h"               // for gfxSize
 #include "nsCOMPtr.h"               // for already_AddRefed
-#include "nsSize.h"                 // for nsIntSize
+#include "mozilla/gfx/Point.h"      // for mozilla::gfx::IntSize
 #include "SVGImageContext.h"        // for SVGImageContext
 
 class gfxDrawable;
@@ -43,8 +43,9 @@ typedef Image* ImageKey;
  */
 class SurfaceKey
 {
+  typedef gfx::IntSize IntSize;
 public:
-  SurfaceKey(const nsIntSize aSize,
+  SurfaceKey(const IntSize& aSize,
              const gfxSize aScale,
              const SVGImageContext* aSVGContext,
              const float aAnimationTime,
@@ -80,10 +81,10 @@ public:
     return hash;
   }
 
-  nsIntSize Size() const { return mSize; }
+  IntSize Size() const { return mSize; }
 
 private:
-  nsIntSize       mSize;
+  IntSize         mSize;
   gfxSize         mScale;
   SVGImageContext mSVGContext;
   bool            mSVGContextIsValid;
@@ -101,6 +102,8 @@ private:
  */
 struct SurfaceCache
 {
+  typedef gfx::IntSize IntSize;
+
   /*
    * Initialize static data. Called during imagelib module initialization.
    */
@@ -150,7 +153,7 @@ struct SurfaceCache
    *
    * @return false if the surface cache can't hold a surface of that size.
    */
-  static bool CanHold(const nsIntSize& aSize);
+  static bool CanHold(const IntSize& aSize);
 
   /*
    * Evicts any cached surfaces associated with the given image from the cache.
