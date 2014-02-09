@@ -516,12 +516,7 @@ class TypedDatum : public JSObject
     }
 
     uint8_t *typedMem(size_t offset) const {
-        // It seems a bit surprising that one might request an offset
-        // == size(), but it can happen when taking the "address of" a
-        // 0-sized value. (In other words, we maintain the invariant
-        // that `offset + size <= size()` -- this is always checked in
-        // the caller's side.)
-        JS_ASSERT(offset <= size());
+        JS_ASSERT(offset < size());
         return typedMem() + offset;
     }
 };
