@@ -125,7 +125,9 @@ For objects that do have synthetic children defined for them, like nsTArray,
 the "expr -R -- EXPR" command can be used to show its actual member variables.
 
 
-* nsAString, nsACString
+* nsAString, nsACString,
+  nsFixedString, nsFixedCString,
+  nsAutoString, nsAutoCString
 
   Strings have a type summary that shows the actual string.
 
