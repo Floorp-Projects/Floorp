@@ -21,8 +21,7 @@ EE_basic_constraints = "basicConstraints = CA:FALSE\n"
 EE_full_ku = ("keyUsage = digitalSignature, nonRepudiation, keyEncipherment, " +
               " dataEncipherment, keyAgreement, keyCertSign, cRLSign\n")
 
-CA_eku = ("extendedKeyUsage = critical, serverAuth, clientAuth, " +
-          "1.3.6.1.5.5.7.3.9\n")
+CA_eku = ("extendedKeyUsage = critical, serverAuth, clientAuth\n")
 Server_eku = "extendedKeyUsage = critical, serverAuth, clientAuth\n"
 
 authority_key_ident = "authorityKeyIdentifier = keyid, issuer\n"
