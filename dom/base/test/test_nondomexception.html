@@ -15,7 +15,7 @@
 "use strict";
 
 try {
-  document.all();
+  document.all.item();
 } catch (e) {
   is(typeof e, "object");
   is(e.filename, location);
