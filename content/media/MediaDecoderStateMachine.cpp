@@ -620,7 +620,7 @@ static void WriteVideoToMediaStream(layers::Image* aImage,
                                     VideoSegment* aOutput)
 {
   nsRefPtr<layers::Image> image = aImage;
-  aOutput->AppendFrame(image.forget(), aDuration, ThebesIntSize(aIntrinsicSize));
+  aOutput->AppendFrame(image.forget(), aDuration, aIntrinsicSize);
 }
 
 static const TrackID TRACK_AUDIO = 1;

@@ -247,9 +247,9 @@ MediaEngineDefaultVideoSource::NotifyPull(MediaStreamGraph* aGraph,
     // nullptr images are allowed
     if (image) {
       segment.AppendFrame(image.forget(), delta,
-                          gfxIntSize(mOpts.mWidth, mOpts.mHeight));
+                          IntSize(mOpts.mWidth, mOpts.mHeight));
     } else {
-      segment.AppendFrame(nullptr, delta, gfxIntSize(0,0));
+      segment.AppendFrame(nullptr, delta, IntSize(0, 0));
     }
     // This can fail if either a) we haven't added the track yet, or b)
     // we've removed or finished the track.
