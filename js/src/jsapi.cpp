@@ -4355,6 +4355,7 @@ JS::OwningCompileOptions::copy(JSContext *cx, const ReadOnlyCompileOptions &rhs)
     setPrincipals(rhs.principals());
     setOriginPrincipals(rhs.originPrincipals());
     setElement(rhs.element());
+    setElementAttributeName(rhs.elementAttributeName());
 
     return (setFileAndLine(cx, rhs.filename(), rhs.lineno) &&
             setSourceMapURL(cx, rhs.sourceMapURL()) &&
