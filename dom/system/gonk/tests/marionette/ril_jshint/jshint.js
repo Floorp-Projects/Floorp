@@ -462,6 +462,7 @@ exports.browser = {
 	SVGFEDiffuseLightingElement: false,
 	SVGFEDisplacementMapElement: false,
 	SVGFEDistantLightElement: false,
+	SVGFEDropShadowElement: false,
 	SVGFEFloodElement    : false,
 	SVGFEFuncAElement    : false,
 	SVGFEFuncBElement    : false,
