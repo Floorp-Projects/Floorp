@@ -295,7 +295,6 @@ const PanelUI = {
       tempPanel.setAttribute("type", "arrow");
       tempPanel.setAttribute("id", "customizationui-widget-panel");
       tempPanel.setAttribute("class", "cui-widget-panel");
-      tempPanel.setAttribute("level", "top");
       document.getElementById(CustomizableUI.AREA_NAVBAR).appendChild(tempPanel);
       // If the view has a footer, set a convenience class on the panel.
       tempPanel.classList.toggle("cui-widget-panelWithFooter",
