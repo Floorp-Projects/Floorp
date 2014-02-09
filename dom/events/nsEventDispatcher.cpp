@@ -200,7 +200,7 @@ public:
   /**
    * Copies mItemFlags and mItemData to aVisitor and calls PostHandleEvent.
    */
-  nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
+  void PostHandleEvent(nsEventChainPostVisitor& aVisitor);
 
   nsCOMPtr<EventTarget>             mTarget;
   uint16_t                          mFlags;
@@ -230,13 +230,12 @@ nsEventTargetChainItem::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
   mItemData = aVisitor.mItemData;
 }
 
-nsresult
+void
 nsEventTargetChainItem::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 {
   aVisitor.mItemFlags = mItemFlags;
   aVisitor.mItemData = mItemData;
   mTarget->PostHandleEvent(aVisitor);
-  return NS_OK;
 }
 
 void
