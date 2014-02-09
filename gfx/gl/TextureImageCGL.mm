@@ -5,11 +5,15 @@
 
 #include "TextureImageCGL.h"
 #include "GLContext.h"
+#include "gfx2DGlue.h"
 #include "gfxQuartzSurface.h"
 #include "gfxPlatform.h"
 #include "gfxFailure.h"
 
 namespace mozilla {
+
+using namespace gfx;
+
 namespace gl {
 
 TextureImageCGL::TextureImageCGL(GLuint aTexture,
@@ -37,7 +41,7 @@ TextureImageCGL::~TextureImageCGL()
 already_AddRefed<gfxASurface>
 TextureImageCGL::GetSurfaceForUpdate(const gfxIntSize& aSize, ImageFormat aFmt)
 {
-    gfxIntSize size(aSize.width + 1, aSize.height + 1);
+    IntSize size(aSize.width + 1, aSize.height + 1);
     mGLContext->MakeCurrent();
     if (!mGLContext->
         IsExtensionSupported(GLContext::ARB_pixel_buffer_object))
@@ -78,7 +82,7 @@ TextureImageCGL::GetSurfaceForUpdate(const gfxIntSize& aSize, ImageFormat aFmt)
     }
 
     nsRefPtr<gfxQuartzSurface> surf =
-        new gfxQuartzSurface(data, size, size.width * 4, aFmt);
+        new gfxQuartzSurface(data, ThebesIntSize(size), size.width * 4, aFmt);
 
     mBoundPixelBuffer = true;
     return surf.forget();

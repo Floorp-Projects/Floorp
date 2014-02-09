@@ -121,8 +121,7 @@ TextureClientX11::AllocateForSurface(IntSize aSize, TextureAllocationFlags aText
   //MOZ_ASSERT(mFormat != gfx::FORMAT_YUV, "This TextureClient cannot use YCbCr data");
 
   gfxContentType contentType = ContentForFormat(mFormat);
-  gfxIntSize size = ThebesIntSize(aSize);
-  nsRefPtr<gfxASurface> surface = gfxPlatform::GetPlatform()->CreateOffscreenSurface(size, contentType);
+  nsRefPtr<gfxASurface> surface = gfxPlatform::GetPlatform()->CreateOffscreenSurface(aSize, contentType);
   if (!surface || surface->GetType() != gfxSurfaceType::Xlib) {
     NS_ERROR("creating Xlib surface failed!");
     return false;
