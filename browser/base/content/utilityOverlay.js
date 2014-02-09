@@ -649,41 +649,6 @@ function openNewWindowWith(aURL, aDocument, aPostData, aAllowThirdPartyFixup, aR
                referrerURI: aDocument ? aDocument.documentURIObject : aReferrer });
 }
 
-/**
- * isValidFeed: checks whether the given data represents a valid feed.
- *
- * @param  aLink
- *         An object representing a feed with title, href and type.
- * @param  aPrincipal
- *         The principal of the document, used for security check.
- * @param  aIsFeed
- *         Whether this is already a known feed or not, if true only a security
- *         check will be performed.
- */ 
-function isValidFeed(aLink, aPrincipal, aIsFeed)
-{
-  if (!aLink || !aPrincipal)
-    return false;
-
-  var type = aLink.type.toLowerCase().replace(/^\s+|\s*(?:;.*)?$/g, "");
-  if (!aIsFeed) {
-    aIsFeed = (type == "application/rss+xml" ||
-               type == "application/atom+xml");
-  }
-
-  if (aIsFeed) {
-    try {
-      urlSecurityCheck(aLink.href, aPrincipal,
-                       Components.interfaces.nsIScriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL);
-      return type || "application/rss+xml";
-    }
-    catch(ex) {
-    }
-  }
-
-  return null;
-}
-
 // aCalledFromModal is optional
 function openHelpLink(aHelpTopic, aCalledFromModal, aWhere) {
   var url = Components.classes["@mozilla.org/toolkit/URLFormatterService;1"]
