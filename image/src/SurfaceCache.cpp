@@ -15,6 +15,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/StaticPtr.h"
+#include "gfx2DGlue.h"
 #include "gfxASurface.h"
 #include "gfxPattern.h"  // Workaround for flaw in bug 921753 part 2.
 #include "gfxDrawable.h"
@@ -30,7 +31,7 @@
 
 using std::max;
 using std::min;
-using mozilla::gfx::DrawTarget;
+using namespace mozilla::gfx;
 
 namespace mozilla {
 namespace image {
@@ -58,7 +59,7 @@ static StaticRefPtr<SurfaceCacheImpl> sInstance;
  */
 typedef size_t Cost;
 
-static Cost ComputeCost(const nsIntSize aSize)
+static Cost ComputeCost(const IntSize& aSize)
 {
   return aSize.width * aSize.height * 4;  // width * height * 4 bytes (32bpp)
 }
@@ -502,11 +503,12 @@ SurfaceCache::Insert(DrawTarget*       aTarget,
   MOZ_ASSERT(NS_IsMainThread());
 
   Cost cost = ComputeCost(aSurfaceKey.Size());
-  return sInstance->Insert(aTarget, aSurfaceKey.Size(), cost, aImageKey, aSurfaceKey);
+  return sInstance->Insert(aTarget, ThebesIntSize(aSurfaceKey.Size()), cost,
+                           aImageKey, aSurfaceKey);
 }
 
 /* static */ bool
-SurfaceCache::CanHold(const nsIntSize& aSize)
+SurfaceCache::CanHold(const IntSize& aSize)
 {
   MOZ_ASSERT(sInstance, "Should be initialized");
   MOZ_ASSERT(NS_IsMainThread());
