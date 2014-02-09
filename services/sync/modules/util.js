@@ -601,6 +601,34 @@ this.Utils = {
     return Math.max(Math.min(backoffInterval, MAXIMUM_BACKOFF_INTERVAL),
                     statusInterval);
   },
+
+  /**
+   * Return a set of hostnames (including the protocol) which may have
+   * credentials for sync itself stored in the login manager.
+   *
+   * In general, these hosts will not have their passwords synced, will be
+   * reset when we drop sync credentials, etc.
+   */
+  getSyncCredentialsHosts: function() {
+    let result = new Set();
+    // the legacy sync host.
+    result.add(PWDMGR_HOST);
+    // The FxA hosts - these almost certainly all have the same hostname, but
+    // better safe than sorry...
+    for (let prefName of ["identity.fxaccounts.remote.force_auth.uri",
+                          "identity.fxaccounts.remote.uri",
+                          "identity.fxaccounts.settings.uri"]) {
+      let prefVal;
+      try {
+        prefVal = Services.prefs.getCharPref(prefName);
+      } catch (_) {
+        continue;
+      }
+      let uri = Services.io.newURI(prefVal, null, null);
+      result.add(uri.prePath);
+    }
+    return result;
+  },
 };
 
 XPCOMUtils.defineLazyGetter(Utils, "_utf8Converter", function() {
