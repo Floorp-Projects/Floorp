@@ -118,7 +118,7 @@ LayerManager::CreateOptimalSurface(const gfx::IntSize &aSize,
                                    gfxImageFormat aFormat)
 {
   return gfxPlatform::GetPlatform()->
-    CreateOffscreenSurface(gfx::ThebesIntSize(aSize), gfxASurface::ContentFromFormat(aFormat));
+    CreateOffscreenSurface(aSize, gfxASurface::ContentFromFormat(aFormat));
 }
 
 already_AddRefed<gfxASurface>

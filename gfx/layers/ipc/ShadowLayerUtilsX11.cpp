@@ -135,7 +135,7 @@ ISurfaceAllocator::PlatformAllocSurfaceDescriptor(const gfx::IntSize& aSize,
 
   gfxPlatform* platform = gfxPlatform::GetPlatform();
   nsRefPtr<gfxASurface> buffer =
-    platform->CreateOffscreenSurface(gfx::ThebesIntSize(aSize), aContent);
+    platform->CreateOffscreenSurface(aSize, aContent);
   if (!buffer ||
       buffer->GetType() != gfxSurfaceType::Xlib) {
     NS_ERROR("creating Xlib front/back surfaces failed!");

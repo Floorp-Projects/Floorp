@@ -3463,7 +3463,7 @@ CanvasRenderingContext2D::DrawWindow(nsGlobalWindow& window, double x,
     thebes->Scale(matrix._11, matrix._22);
   } else {
     drawSurf =
-      gfxPlatform::GetPlatform()->CreateOffscreenSurface(gfxIntSize(ceil(sw), ceil(sh)),
+      gfxPlatform::GetPlatform()->CreateOffscreenSurface(IntSize(ceil(sw), ceil(sh)),
                                                          gfxContentType::COLOR_ALPHA);
     if (!drawSurf) {
       error.Throw(NS_ERROR_FAILURE);
