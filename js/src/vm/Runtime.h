@@ -689,6 +689,15 @@ struct JSRuntime : public JS::shadow::Runtime,
     int32_t interrupt;
 #endif
 
+#if defined(JS_THREADSAFE) && defined(JS_ION)
+    /*
+     * If non-zero, ForkJoin should service an interrupt. This is a separate
+     * flag from |interrupt| because we cannot use the mprotect trick with PJS
+     * code and ignore the TriggerCallbackAnyThreadDontStopIon trigger.
+     */
+    mozilla::Atomic<bool, mozilla::Relaxed> interruptPar;
+#endif
+
     /* Set when handling a signal for a thread associated with this runtime. */
     bool handlingSignal;
 
@@ -1006,6 +1015,9 @@ struct JSRuntime : public JS::shadow::Runtime,
 #endif
 
     /* Garbage collector state, used by jsgc.c. */
+
+    /* Garbase collector state has been sucessfully initialized. */
+    bool                gcInitialized;
 
     /*
      * Set of all GC chunks with at least one allocated thing. The
@@ -1627,9 +1639,9 @@ struct JSRuntime : public JS::shadow::Runtime,
 
     js::CTypesActivityCallback  ctypesActivityCallback;
 
-    // Non-zero if this is a parallel warmup execution.  See
-    // js::parallel::Do() for more information.
-    uint32_t parallelWarmup;
+    // Non-zero if this is a ForkJoin warmup execution.  See
+    // js::ForkJoin() for more information.
+    uint32_t forkJoinWarmup;
 
   private:
     // In certain cases, we want to optimize certain opcodes to typed instructions,
@@ -1722,7 +1734,8 @@ struct JSRuntime : public JS::shadow::Runtime,
     enum OperationCallbackTrigger {
         TriggerCallbackMainThread,
         TriggerCallbackAnyThread,
-        TriggerCallbackAnyThreadDontStopIon
+        TriggerCallbackAnyThreadDontStopIon,
+        TriggerCallbackAnyThreadForkJoin
     };
 
     void triggerOperationCallback(OperationCallbackTrigger trigger);

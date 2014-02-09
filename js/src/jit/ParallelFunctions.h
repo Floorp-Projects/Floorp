@@ -21,7 +21,7 @@ JSObject *NewGCThingPar(ForkJoinContext *cx, gc::AllocKind allocKind);
 bool ParallelWriteGuard(ForkJoinContext *cx, JSObject *object);
 bool IsInTargetRegion(ForkJoinContext *cx, TypedDatum *object);
 bool CheckOverRecursedPar(ForkJoinContext *cx);
-bool CheckInterruptPar(ForkJoinContext *cx);
+bool InterruptCheckPar(ForkJoinContext *cx);
 
 // Extends the given array with `length` new holes.  Returns nullptr on
 // failure or else `array`, which is convenient during code

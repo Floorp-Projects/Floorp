@@ -207,10 +207,18 @@ public:
     void UpdateDimensions(const nsRect& rect, const nsIntSize& size);
     void UpdateFrame(const layers::FrameMetrics& aFrameMetrics);
     void AcknowledgeScrollUpdate(const ViewID& aScrollId, const uint32_t& aScrollGeneration);
-    void HandleDoubleTap(const CSSIntPoint& aPoint, int32_t aModifiers);
-    void HandleSingleTap(const CSSIntPoint& aPoint, int32_t aModifiers);
-    void HandleLongTap(const CSSIntPoint& aPoint, int32_t aModifiers);
-    void HandleLongTapUp(const CSSIntPoint& aPoint, int32_t aModifiers);
+    void HandleDoubleTap(const CSSIntPoint& aPoint,
+                         int32_t aModifiers,
+                         const ScrollableLayerGuid& aGuid);
+    void HandleSingleTap(const CSSIntPoint& aPoint,
+                         int32_t aModifiers,
+                         const ScrollableLayerGuid& aGuid);
+    void HandleLongTap(const CSSIntPoint& aPoint,
+                       int32_t aModifiers,
+                       const ScrollableLayerGuid& aGuid);
+    void HandleLongTapUp(const CSSIntPoint& aPoint,
+                         int32_t aModifiers,
+                         const ScrollableLayerGuid& aGuid);
     void NotifyTransformBegin(ViewID aViewId);
     void NotifyTransformEnd(ViewID aViewId);
     void Activate();
@@ -230,10 +238,10 @@ public:
     bool SendMouseWheelEvent(mozilla::WidgetWheelEvent& event);
     bool SendRealKeyEvent(mozilla::WidgetKeyboardEvent& event);
     bool SendRealTouchEvent(WidgetTouchEvent& event);
-    bool SendHandleSingleTap(const CSSIntPoint& aPoint);
-    bool SendHandleLongTap(const CSSIntPoint& aPoint);
-    bool SendHandleLongTapUp(const CSSIntPoint& aPoint);
-    bool SendHandleDoubleTap(const CSSIntPoint& aPoint);
+    bool SendHandleSingleTap(const CSSIntPoint& aPoint, const ScrollableLayerGuid& aGuid);
+    bool SendHandleLongTap(const CSSIntPoint& aPoint, const ScrollableLayerGuid& aGuid);
+    bool SendHandleLongTapUp(const CSSIntPoint& aPoint, const ScrollableLayerGuid& aGuid);
+    bool SendHandleDoubleTap(const CSSIntPoint& aPoint, const ScrollableLayerGuid& aGuid);
 
     virtual PDocumentRendererParent*
     AllocPDocumentRendererParent(const nsRect& documentRect,

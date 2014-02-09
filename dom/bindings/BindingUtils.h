@@ -93,6 +93,11 @@ ThrowInvalidThis(JSContext* aCx, const JS::CallArgs& aArgs,
                  const ErrNum aErrorNumber,
                  const char* aInterfaceName);
 
+bool
+ThrowInvalidThis(JSContext* aCx, const JS::CallArgs& aArgs,
+                 const ErrNum aErrorNumber,
+                 prototypes::ID aProtoId);
+
 inline bool
 ThrowMethodFailedWithDetails(JSContext* cx, ErrorResult& rv,
                              const char* ifaceName,
@@ -206,9 +211,10 @@ IsDOMObject(JSObject* obj)
 // (for example, overload resolution uses unwrapping to tell what sort
 // of thing it's looking at).
 // U must be something that a T* can be assigned to (e.g. T* or an nsRefPtr<T>).
-template <prototypes::ID PrototypeID, class T, typename U>
+template <class T, typename U>
 MOZ_ALWAYS_INLINE nsresult
-UnwrapObject(JSObject* obj, U& value)
+UnwrapObject(JSObject* obj, U& value, prototypes::ID protoID,
+             uint32_t protoDepth)
 {
   /* First check to see whether we have a DOM object */
   const DOMClass* domClass = GetDOMClass(obj);
@@ -234,14 +240,21 @@ UnwrapObject(JSObject* obj, U& value)
   /* This object is a DOM object.  Double-check that it is safely
      castable to T by checking whether it claims to inherit from the
      class identified by protoID. */
-  if (domClass->mInterfaceChain[PrototypeTraits<PrototypeID>::Depth] ==
-      PrototypeID) {
+  if (domClass->mInterfaceChain[protoDepth] == protoID) {
     value = UnwrapDOMObject<T>(obj);
     return NS_OK;
   }
 
   /* It's the wrong sort of DOM object */
   return NS_ERROR_XPC_BAD_CONVERT_JS;
+}
+
+template <prototypes::ID PrototypeID, class T, typename U>
+MOZ_ALWAYS_INLINE nsresult
+UnwrapObject(JSObject* obj, U& value)
+{
+  return UnwrapObject<T>(obj, value, PrototypeID,
+                         PrototypeTraits<PrototypeID>::Depth);
 }
 
 inline bool
@@ -2454,6 +2467,15 @@ class InternedStringId
     return JS::Handle<jsid>::fromMarkedLocation(&id);
   }
 };
+
+bool
+GenericBindingGetter(JSContext* cx, unsigned argc, JS::Value* vp);
+
+bool
+GenericBindingSetter(JSContext* cx, unsigned argc, JS::Value* vp);
+
+bool
+GenericBindingMethod(JSContext* cx, unsigned argc, JS::Value* vp);
 
 } // namespace dom
 } // namespace mozilla

@@ -44,7 +44,7 @@ nsHyphenator::IsValid()
 
 nsresult
 nsHyphenator::Hyphenate(const nsAString& aString,
-                        nsTArray<bool>& aHyphens)
+                        FallibleTArray<bool>& aHyphens)
 {
   if (!aHyphens.SetLength(aString.Length())) {
     return NS_ERROR_OUT_OF_MEMORY;

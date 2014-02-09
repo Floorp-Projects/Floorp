@@ -100,7 +100,7 @@ function assertEqArray(a, b) {
       try {
         assertStructuralEq(a[i], b[i]);
       } catch (e) {
-        print("...in index ", i, " of ", l);
+        print("...in index", i, "of", l);
         throw e;
       }
     }

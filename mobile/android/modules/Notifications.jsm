@@ -103,6 +103,11 @@ Notification.prototype = {
     if (this._progress) {
       msg.progress_value = this._progress;
       msg.progress_max = 100;
+      msg.progress_indeterminate = false;
+    } else if (Number.isNaN(this._progress)) {
+      msg.progress_value = 0;
+      msg.progress_max = 0;
+      msg.progress_indeterminate = true;
     }
 
     if (this._priority)

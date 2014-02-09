@@ -509,6 +509,15 @@ protected:
   const FrameMetrics& GetFrameMetrics();
 
   /**
+   * Sets the timer for content response to a series of touch events, if it
+   * hasn't been already. This is to prevent us from batching up touch events
+   * indefinitely in the case that content doesn't respond with whether or not
+   * it wants to preventDefault. When the timer is fired, the touch event queue
+   * will be flushed.
+   */
+  void SetContentResponseTimer();
+
+  /**
    * Timeout function for content response. This should be called on a timer
    * after we get our first touch event in a batch, under the condition that we
    * waiting for response from content. If a notification comes indicating whether or not

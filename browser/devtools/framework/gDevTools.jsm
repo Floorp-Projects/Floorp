@@ -457,7 +457,10 @@ let gDevToolsBrowser = {
     let toolbox = gDevTools.getToolbox(target);
     let toolDefinition = gDevTools.getToolDefinition(toolId);
 
-    if (toolbox && toolbox.currentToolId == toolId) {
+    if (toolbox &&
+        (toolbox.currentToolId == toolId ||
+          (toolId == "webconsole" && toolbox.splitConsole)))
+    {
       toolbox.fireCustomKey(toolId);
 
       if (toolDefinition.preventClosingOnKey || toolbox.hostType == devtools.Toolbox.HostType.WINDOW) {

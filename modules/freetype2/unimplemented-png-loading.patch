@@ -1,0 +1,45 @@
+# HG changeset patch
+# User Eugen Sawin <esawin@mozilla.com>
+# Date 1391806019 -3600
+#      Fri Feb 07 21:46:59 2014 +0100
+# Node ID 4c7fa0591be41a82c63c8589eb0d633c9d1ebee6
+# Parent  2a44b6d8cafe7770762bf416cbb8a5d6ec912c63
+Bug 968626 - Fail gracefully on unimplemented PNG loading. r=jfkthame
+
+diff --git a/modules/freetype2/README.moz-patches b/modules/freetype2/README.moz-patches
+--- a/modules/freetype2/README.moz-patches
++++ b/modules/freetype2/README.moz-patches
+@@ -1,4 +1,6 @@
+ This directory contains freetype2 v2.5.2 downloaded from
+ http://savannah.nongnu.org/download/freetype/
+ 
+-There are currently no local changes applied the freetype tree.
++==== Patches ====
++
++unimplemented-png-loading.patch: Bug 968626 - Fail gracefully on unimplemented PNG loading.
+diff --git a/modules/freetype2/src/sfnt/ttsbit.c b/modules/freetype2/src/sfnt/ttsbit.c
+--- a/modules/freetype2/src/sfnt/ttsbit.c
++++ b/modules/freetype2/src/sfnt/ttsbit.c
+@@ -1008,20 +1008,21 @@
+         loader = tt_sbit_decoder_load_compound;
+         break;
+ 
+       case 17: /* small metrics, PNG image data   */
+       case 18: /* big metrics, PNG image data     */
+       case 19: /* metrics in EBLC, PNG image data */
+ #ifdef FT_CONFIG_OPTION_USE_PNG
+         loader = tt_sbit_decoder_load_png;
++        break;
+ #else
+         error = FT_THROW( Unimplemented_Feature );
++        goto Fail;
+ #endif /* FT_CONFIG_OPTION_USE_PNG */
+-        break;
+ 
+       default:
+         error = FT_THROW( Invalid_Table );
+         goto Fail;
+       }
+ 
+       if ( !decoder->bitmap_allocated )
+       {

@@ -393,7 +393,7 @@ gfxUserFontSet::SanitizeOpenTypeData(gfxMixedFontFamily *aFamily,
 static void
 StoreUserFontData(gfxFontEntry* aFontEntry, gfxProxyFontEntry* aProxy,
                   bool aPrivate, const nsAString& aOriginalName,
-                  nsTArray<uint8_t>* aMetadata, uint32_t aMetaOrigLen)
+                  FallibleTArray<uint8_t>* aMetadata, uint32_t aMetaOrigLen)
 {
     if (!aFontEntry->mUserFontData) {
         aFontEntry->mUserFontData = new gfxUserFontData;
@@ -435,7 +435,7 @@ struct WOFFHeader {
 void
 gfxUserFontSet::CopyWOFFMetadata(const uint8_t* aFontData,
                                  uint32_t aLength,
-                                 nsTArray<uint8_t>* aMetadata,
+                                 FallibleTArray<uint8_t>* aMetadata,
                                  uint32_t* aMetaOrigLen)
 {
     // This function may be called with arbitrary, unvalidated "font" data
@@ -713,7 +713,7 @@ gfxUserFontSet::LoadFont(gfxMixedFontFamily *aFamily,
         // Save a copy of the metadata block (if present) for nsIDOMFontFace
         // to use if required. Ownership of the metadata block will be passed
         // to the gfxUserFontData record below.
-        nsTArray<uint8_t> metadata;
+        FallibleTArray<uint8_t> metadata;
         uint32_t metaOrigLen = 0;
         if (fontType == GFX_USERFONT_WOFF) {
             CopyWOFFMetadata(aFontData, aLength, &metadata, &metaOrigLen);
