@@ -11,6 +11,7 @@
 #include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsISupportsImpl.h"
+#include "nsRefPtrHashtable.h"
 
 #include <stdint.h>
 
@@ -43,9 +44,15 @@ public:
 private:
   nsContentList* Collection();
 
+  /**
+   * Returns the NodeList for document.all[aID], or null if there isn't one.
+   */
+  nsContentList* GetDocumentAllList(const nsAString& aID);
+
   JS::Heap<JSObject*> mObject;
   nsRefPtr<nsHTMLDocument> mDocument;
   nsRefPtr<nsContentList> mCollection;
+  nsRefPtrHashtable<nsStringHashKey, nsContentList> mNamedMap;
 };
 
 } // namespace dom

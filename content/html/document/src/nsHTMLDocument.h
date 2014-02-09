@@ -102,10 +102,6 @@ public:
   // nsIDOMHTMLDocument interface
   NS_DECL_NSIDOMHTMLDOCUMENT
 
-  /**
-   * Returns the NodeList for document.all[aID], or null if there isn't one.
-   */
-  nsContentList* GetDocumentAllList(const nsAString& aID);
   mozilla::dom::HTMLAllCollection* All();
   JSObject* GetAll(JSContext* aCx, mozilla::ErrorResult& aRv);
 
@@ -292,7 +288,6 @@ protected:
   nsRefPtr<nsContentList> mFormControls;
 
   nsRefPtr<mozilla::dom::HTMLAllCollection> mAll;
-  nsRefPtrHashtable<nsStringHashKey, nsContentList> mAllMap;
 
   /** # of forms in the document, synchronously set */
   int32_t mNumForms;
