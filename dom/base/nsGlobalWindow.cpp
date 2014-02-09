@@ -7029,7 +7029,7 @@ nsGlobalWindow::SetResizable(bool aResizable)
 }
 
 NS_IMETHODIMP
-nsGlobalWindow::CaptureEvents(int32_t aEventFlags)
+nsGlobalWindow::CaptureEvents()
 {
   if (mDoc) {
     mDoc->WarnOnceAbout(nsIDocument::eUseOfCaptureEvents);
@@ -7039,7 +7039,7 @@ nsGlobalWindow::CaptureEvents(int32_t aEventFlags)
 }
 
 NS_IMETHODIMP
-nsGlobalWindow::ReleaseEvents(int32_t aEventFlags)
+nsGlobalWindow::ReleaseEvents()
 {
   if (mDoc) {
     mDoc->WarnOnceAbout(nsIDocument::eUseOfReleaseEvents);

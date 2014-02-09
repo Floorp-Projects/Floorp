@@ -82,6 +82,6 @@ interface HTMLDocument : Document {
   // @deprecated These are old Netscape 4 methods. Do not use,
   //             the implementation is no-op.
   // XXXbz do we actually need these anymore?
-  void                      captureEvents(long eventFlags);
-  void                      releaseEvents(long eventFlags);
+  void                      captureEvents();
+  void                      releaseEvents();
 };
