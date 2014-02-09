@@ -19,8 +19,12 @@ UNIFIED_SOURCES += [
     'MediaDocument.cpp',
     'nsHTMLContentSink.cpp',
     'nsHTMLDocument.cpp',
-    'PluginDocument.cpp',
     'VideoDocument.cpp',
+]
+
+SOURCES += [
+    # Includes npapi.h.
+    'PluginDocument.cpp',
 ]
 
 FAIL_ON_WARNINGS = True
