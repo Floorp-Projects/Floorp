@@ -16,6 +16,7 @@
 
 class nsContentList;
 class nsHTMLDocument;
+class nsIContent;
 
 namespace mozilla {
 class ErrorResult;
@@ -32,12 +33,13 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(HTMLAllCollection)
 
   uint32_t Length();
+  nsIContent* Item(uint32_t aIndex);
 
   JSObject* GetObject(JSContext* aCx, ErrorResult& aRv);
 
+private:
   nsContentList* Collection();
 
-private:
   JS::Heap<JSObject*> mObject;
   nsRefPtr<nsHTMLDocument> mDocument;
   nsRefPtr<nsContentList> mCollection;

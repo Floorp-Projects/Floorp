@@ -87,6 +87,12 @@ HTMLAllCollection::Length()
   return Collection()->Length(true);
 }
 
+nsIContent*
+HTMLAllCollection::Item(uint32_t aIndex)
+{
+  return Collection()->Item(aIndex);
+}
+
 JSObject*
 HTMLAllCollection::GetObject(JSContext* aCx, ErrorResult& aRv)
 {
@@ -216,9 +222,7 @@ nsHTMLDocumentSH::DocumentAllGetProperty(JSContext *cx, JS::Handle<JSObject*> ob
     // Map document.all[n] (where n is a number) to the n:th item in
     // the document.all node list.
 
-    nsRefPtr<nsContentList> nodeList = doc->All()->Collection();
-
-    nsIContent *node = nodeList->Item(JSID_TO_INT(id));
+    nsIContent* node = doc->All()->Item(SafeCast<uint32_t>(JSID_TO_INT(id)));
 
     result = node;
     cache = node;
