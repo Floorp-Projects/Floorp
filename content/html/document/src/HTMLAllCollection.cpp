@@ -20,11 +20,6 @@ using namespace mozilla::dom;
 
 class nsHTMLDocumentSH
 {
-protected:
-  static bool GetDocumentAllNodeList(JSContext*,
-                                     JS::Handle<JSObject*>,
-                                     nsHTMLDocument* aDocument,
-                                     nsContentList** aNodeList);
 public:
   static bool DocumentAllGetProperty(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
                                      JS::MutableHandle<JS::Value> vp);
@@ -163,18 +158,6 @@ WrapNative(JSContext *cx, JSObject *scope, nsISupports *native,
   return WrapNative(cx, scope, native, cache, nullptr, vp, aAllowWrapping);
 }
 
-// static
-bool
-nsHTMLDocumentSH::GetDocumentAllNodeList(JSContext*,
-                                         JS::Handle<JSObject*>,
-                                         nsHTMLDocument* aDocument,
-                                         nsContentList** aNodeList)
-{
-  nsRefPtr<nsContentList> collection = aDocument->All()->Collection();
-  collection.forget(aNodeList);
-  return true;
-}
-
 bool
 nsHTMLDocumentSH::DocumentAllGetProperty(JSContext *cx, JS::Handle<JSObject*> obj_,
                                          JS::Handle<jsid> id, JS::MutableHandle<JS::Value> vp)
@@ -214,10 +197,7 @@ nsHTMLDocumentSH::DocumentAllGetProperty(JSContext *cx, JS::Handle<JSObject*> ob
       // document.getElementsByTagName("*"), and make sure <div
       // id="length"> doesn't shadow document.all.length.
 
-      nsRefPtr<nsContentList> nodeList;
-      if (!GetDocumentAllNodeList(cx, obj, doc, getter_AddRefs(nodeList))) {
-        return false;
-      }
+      nsRefPtr<nsContentList> nodeList = doc->All()->Collection();
 
       uint32_t length;
       rv = nodeList->GetLength(&length);
@@ -245,10 +225,7 @@ nsHTMLDocumentSH::DocumentAllGetProperty(JSContext *cx, JS::Handle<JSObject*> ob
     // Map document.all[n] (where n is a number) to the n:th item in
     // the document.all node list.
 
-    nsRefPtr<nsContentList> nodeList;
-    if (!GetDocumentAllNodeList(cx, obj, doc, getter_AddRefs(nodeList))) {
-      return false;
-    }
+    nsRefPtr<nsContentList> nodeList = doc->All()->Collection();
 
     nsIContent *node = nodeList->Item(JSID_TO_INT(id));
 
