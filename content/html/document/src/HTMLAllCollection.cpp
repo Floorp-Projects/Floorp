@@ -135,7 +135,24 @@ HTMLAllCollection::GetNamedItem(const nsAString& aID,
                                 nsWrapperCache** aCache,
                                 nsresult* aResult)
 {
-  return mDocument->GetDocumentAllResult(aID, aCache, aResult);
+  nsContentList* docAllList = mDocument->GetDocumentAllList(aID, aResult);
+  if (!docAllList) {
+    return nullptr;
+  }
+
+  // Check if there are more than 1 entries. Do this by getting the second one
+  // rather than the length since getting the length always requires walking
+  // the entire document.
+
+  nsIContent* cont = docAllList->Item(1, true);
+  if (cont) {
+    *aCache = docAllList;
+    return static_cast<nsINodeList*>(docAllList);
+  }
+
+  // There's only 0 or 1 items. Return the first one or null.
+  *aCache = cont = docAllList->Item(0, true);
+  return cont;
 }
 
 } // namespace dom
