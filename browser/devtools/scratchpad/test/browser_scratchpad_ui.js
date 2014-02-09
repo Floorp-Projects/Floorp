@@ -32,6 +32,7 @@ function runTests()
     "sp-text-reloadAndRun" : "reloadAndRun",
     "sp-menu-content": "setContentContext",
     "sp-menu-browser": "setBrowserContext",
+    "sp-menu-pprint":"prettyPrint",
   };
 
   let lastMethodCalled = null;

@@ -67,6 +67,7 @@
 
 <!ENTITY pprint.label                 "Pretty Print">
 <!ENTITY pprint.key                   "p">
+<!ENTITY pprint.accesskey             "P">
 
 <!-- LOCALIZATION NOTE (environmentMenu.label, accesskey): This menu item was
   -  renamed from "Context" to avoid confusion with the right-click context
