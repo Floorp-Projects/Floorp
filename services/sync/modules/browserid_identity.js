@@ -237,7 +237,8 @@ this.BrowserIDManager.prototype = {
    * username is derived from account.
    *
    * Changing the account name has the side-effect of wiping out stored
-   * credentials.
+   * credentials. Keep in mind that persistCredentials() will need to be called
+   * to flush the changes to disk.
    *
    * Set this value to null to clear out identity information.
    */
