@@ -69,12 +69,14 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(HTMLAllCollection)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCollection)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mNamedMap)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(HTMLAllCollection)
   tmp->mObject = nullptr;
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCollection)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mNamedMap)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(HTMLAllCollection)
@@ -130,11 +132,65 @@ HTMLAllCollection::Collection()
   return mCollection;
 }
 
+static bool
+DocAllResultMatch(nsIContent* aContent, int32_t aNamespaceID, nsIAtom* aAtom,
+                  void* aData)
+{
+  if (aContent->GetID() == aAtom) {
+    return true;
+  }
+
+  nsGenericHTMLElement* elm = nsGenericHTMLElement::FromContent(aContent);
+  if (!elm) {
+    return false;
+  }
+
+  nsIAtom* tag = elm->Tag();
+  if (tag != nsGkAtoms::a &&
+      tag != nsGkAtoms::applet &&
+      tag != nsGkAtoms::button &&
+      tag != nsGkAtoms::embed &&
+      tag != nsGkAtoms::form &&
+      tag != nsGkAtoms::iframe &&
+      tag != nsGkAtoms::img &&
+      tag != nsGkAtoms::input &&
+      tag != nsGkAtoms::map &&
+      tag != nsGkAtoms::meta &&
+      tag != nsGkAtoms::object &&
+      tag != nsGkAtoms::select &&
+      tag != nsGkAtoms::textarea) {
+    return false;
+  }
+
+  const nsAttrValue* val = elm->GetParsedAttr(nsGkAtoms::name);
+  return val && val->Type() == nsAttrValue::eAtom &&
+         val->GetAtomValue() == aAtom;
+}
+
+nsContentList*
+HTMLAllCollection::GetDocumentAllList(const nsAString& aID)
+{
+  if (nsContentList* docAllList = mNamedMap.GetWeak(aID)) {
+    return docAllList;
+  }
+
+  Element* root = mDocument->GetRootElement();
+  if (!root) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIAtom> id = do_GetAtom(aID);
+  nsRefPtr<nsContentList> docAllList =
+    new nsContentList(root, DocAllResultMatch, nullptr, nullptr, true, id);
+  mNamedMap.Put(aID, docAllList);
+  return docAllList;
+}
+
 nsISupports*
 HTMLAllCollection::GetNamedItem(const nsAString& aID,
                                 nsWrapperCache** aCache)
 {
-  nsContentList* docAllList = mDocument->GetDocumentAllList(aID);
+  nsContentList* docAllList = GetDocumentAllList(aID);
   if (!docAllList) {
     return nullptr;
   }

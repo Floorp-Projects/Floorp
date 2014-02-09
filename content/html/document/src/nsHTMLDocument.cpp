@@ -199,9 +199,8 @@ nsHTMLDocument::~nsHTMLDocument()
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_12(nsHTMLDocument, nsDocument,
+NS_IMPL_CYCLE_COLLECTION_INHERITED_11(nsHTMLDocument, nsDocument,
                                       mAll,
-                                      mAllMap,
                                       mImages,
                                       mApplets,
                                       mEmbeds,
@@ -2554,61 +2553,6 @@ nsHTMLDocument::DeferredContentEditableCountChange(nsIContent *aElement)
       }
     }
   }
-}
-
-static bool
-DocAllResultMatch(nsIContent* aContent, int32_t aNamespaceID, nsIAtom* aAtom,
-                  void* aData)
-{
-  if (aContent->GetID() == aAtom) {
-    return true;
-  }
-
-  nsGenericHTMLElement* elm = nsGenericHTMLElement::FromContent(aContent);
-  if (!elm) {
-    return false;
-  }
-
-  nsIAtom* tag = elm->Tag();
-  if (tag != nsGkAtoms::a &&
-      tag != nsGkAtoms::applet &&
-      tag != nsGkAtoms::button &&
-      tag != nsGkAtoms::embed &&
-      tag != nsGkAtoms::form &&
-      tag != nsGkAtoms::iframe &&
-      tag != nsGkAtoms::img &&
-      tag != nsGkAtoms::input &&
-      tag != nsGkAtoms::map &&
-      tag != nsGkAtoms::meta &&
-      tag != nsGkAtoms::object &&
-      tag != nsGkAtoms::select &&
-      tag != nsGkAtoms::textarea) {
-    return false;
-  }
-
-  const nsAttrValue* val = elm->GetParsedAttr(nsGkAtoms::name);
-  return val && val->Type() == nsAttrValue::eAtom &&
-         val->GetAtomValue() == aAtom;
-}
-
-
-nsContentList*
-nsHTMLDocument::GetDocumentAllList(const nsAString& aID)
-{
-  if (nsContentList* docAllList = mAllMap.GetWeak(aID)) {
-    return docAllList;
-  }
-
-  Element* root = GetRootElement();
-  if (!root) {
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIAtom> id = do_GetAtom(aID);
-  nsRefPtr<nsContentList> docAllList =
-    new nsContentList(root, DocAllResultMatch, nullptr, nullptr, true, id);
-  mAllMap.Put(aID, docAllList);
-  return docAllList;
 }
 
 HTMLAllCollection*
