@@ -30,18 +30,11 @@ FileRequest::~FileRequest()
 
 // static
 already_AddRefed<FileRequest>
-FileRequest::Create(nsPIDOMWindow* aOwner,
-                    LockedFile* aLockedFile,
-                    bool aIsFileRequest)
+FileRequest::Create(nsPIDOMWindow* aOwner, LockedFile* aLockedFile)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  nsRefPtr<FileRequest> request;
-  if (aIsFileRequest) {
-    request = new DOMFileRequest(aOwner);
-  } else {
-    request = new FileRequest(aOwner);
-  }
+  nsRefPtr<FileRequest> request = new FileRequest(aOwner);
   request->mLockedFile = aLockedFile;
 
   return request.forget();
