@@ -183,6 +183,7 @@ destroying the MediaDecoder object.
 #include "nsIObserver.h"
 #include "nsAutoPtr.h"
 #include "MediaResource.h"
+#include "mozilla/gfx/Rect.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "mozilla/TimeStamp.h"
 #include "MediaStreamGraph.h"
@@ -351,6 +352,8 @@ public:
   // not connected to streams created by captureStreamUntilEnded.
 
   struct DecodedStreamData {
+    typedef gfx::IntSize IntSize;
+
     DecodedStreamData(MediaDecoder* aDecoder,
                       int64_t aInitialTime, SourceMediaStream* aStream);
     ~DecodedStreamData();
@@ -375,7 +378,7 @@ public:
     // The last video image sent to the stream. Useful if we need to replicate
     // the image.
     nsRefPtr<layers::Image> mLastVideoImage;
-    gfxIntSize mLastVideoImageDisplaySize;
+    IntSize mLastVideoImageDisplaySize;
     // This is set to true when the stream is initialized (audio and
     // video tracks added).
     bool mStreamInitialized;
