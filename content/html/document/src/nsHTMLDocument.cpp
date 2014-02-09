@@ -2593,10 +2593,8 @@ DocAllResultMatch(nsIContent* aContent, int32_t aNamespaceID, nsIAtom* aAtom,
 
 
 nsContentList*
-nsHTMLDocument::GetDocumentAllList(const nsAString& aID, nsresult *aResult)
+nsHTMLDocument::GetDocumentAllList(const nsAString& aID)
 {
-  *aResult = NS_OK;
-
   if (nsContentList* docAllList = mAllMap.GetWeak(aID)) {
     return docAllList;
   }
