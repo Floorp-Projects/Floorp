@@ -199,8 +199,9 @@ nsHTMLDocument::~nsHTMLDocument()
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_11(nsHTMLDocument, nsDocument,
+NS_IMPL_CYCLE_COLLECTION_INHERITED_12(nsHTMLDocument, nsDocument,
                                       mAll,
+                                      mAllMap,
                                       mImages,
                                       mApplets,
                                       mEmbeds,
@@ -2596,11 +2597,8 @@ nsHTMLDocument::GetDocumentAllList(const nsAString& aID, nsresult *aResult)
 {
   *aResult = NS_OK;
 
-  nsIdentifierMapEntry *entry = mIdentifierMap.PutEntry(aID);
-  if (!entry) {
-    *aResult = NS_ERROR_OUT_OF_MEMORY;
-
-    return nullptr;
+  if (nsContentList* docAllList = mAllMap.GetWeak(aID)) {
+    return docAllList;
   }
 
   Element* root = GetRootElement();
@@ -2608,15 +2606,10 @@ nsHTMLDocument::GetDocumentAllList(const nsAString& aID, nsresult *aResult)
     return nullptr;
   }
 
-  nsRefPtr<nsContentList> docAllList = entry->GetDocAllList();
-  if (!docAllList) {
-    nsCOMPtr<nsIAtom> id = do_GetAtom(aID);
-
-    docAllList = new nsContentList(root, DocAllResultMatch,
-                                   nullptr, nullptr, true, id);
-    entry->SetDocAllList(docAllList);
-  }
-
+  nsCOMPtr<nsIAtom> id = do_GetAtom(aID);
+  nsRefPtr<nsContentList> docAllList =
+    new nsContentList(root, DocAllResultMatch, nullptr, nullptr, true, id);
+  mAllMap.Put(aID, docAllList);
   return docAllList;
 }
 
