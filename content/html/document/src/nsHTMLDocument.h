@@ -105,7 +105,7 @@ public:
   /**
    * Returns the NodeList for document.all[aID], or null if there isn't one.
    */
-  nsContentList* GetDocumentAllList(const nsAString& aID, nsresult* aResult);
+  nsContentList* GetDocumentAllList(const nsAString& aID);
   mozilla::dom::HTMLAllCollection* All();
   JSObject* GetAll(JSContext* aCx, mozilla::ErrorResult& aRv);
 

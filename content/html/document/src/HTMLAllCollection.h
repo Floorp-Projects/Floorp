@@ -38,8 +38,7 @@ public:
 
   JSObject* GetObject(JSContext* aCx, ErrorResult& aRv);
 
-  nsISupports* GetNamedItem(const nsAString& aID, nsWrapperCache** aCache,
-                            nsresult* aResult);
+  nsISupports* GetNamedItem(const nsAString& aID, nsWrapperCache** aCache);
 
 private:
   nsContentList* Collection();
