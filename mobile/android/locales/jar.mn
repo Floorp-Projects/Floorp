@@ -34,6 +34,9 @@
   locale/@AB_CD@/browser/phishing.dtd             (%chrome/phishing.dtd)
   locale/@AB_CD@/browser/payments.properties      (%chrome/payments.properties)
   locale/@AB_CD@/browser/handling.properties      (%chrome/handling.properties)
+#ifdef MOZ_ANDROID_SYNTHAPKS
+  locale/@AB_CD@/browser/webapp.properties        (%chrome/webapp.properties)
+#endif
 
 # overrides for toolkit l10n, also for en-US
 relativesrcdir toolkit/locales:

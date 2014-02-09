@@ -4,7 +4,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-TEST_DIRS += ['test']
+if CONFIG['OS_ARCH'] == 'WINNT':
+    TEST_DIRS += ['test/win']
+
+MOCHITEST_MANIFESTS += ['test/mochitest.ini']
 
 XPIDL_SOURCES += [
     'nsINativeAppSupport.idl',

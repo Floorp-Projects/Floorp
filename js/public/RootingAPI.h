@@ -200,6 +200,13 @@ class Heap : public js::HeapBase<T>
         init(js::GCMethods<T>::initial());
     }
     explicit Heap(T p) { init(p); }
+
+    /*
+     * For Heap, move semantics are equivalent to copy semantics. In C++, a
+     * copy constructor taking const-ref is the way to get a single function
+     * that will be used for both lvalue and rvalue copies, so we can simply
+     * omit the rvalue variant.
+     */
     explicit Heap(const Heap<T> &p) { init(p.ptr); }
 
     ~Heap() {

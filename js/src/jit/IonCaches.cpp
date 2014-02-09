@@ -1844,8 +1844,6 @@ bool
 GetPropertyParIC::update(ForkJoinContext *cx, size_t cacheIndex,
                          HandleObject obj, MutableHandleValue vp)
 {
-    AutoFlushCache afc("GetPropertyParCache", cx->runtime()->jitRuntime());
-
     IonScript *ion = GetTopIonJSScript(cx)->parallelIonScript();
     GetPropertyParIC &cache = ion->getCache(cacheIndex).toGetPropertyPar();
 
@@ -1863,6 +1861,9 @@ GetPropertyParIC::update(ForkJoinContext *cx, size_t cacheIndex,
         // finer-grained locking, with one lock per cache. However, generating
         // new jitcode uses a global ExecutableAllocator tied to the runtime.
         LockedJSContext ncx(cx);
+
+        // The flusher needs to be under lock.
+        AutoFlushCache afc("GetPropertyParCache", cx->runtime()->jitRuntime());
 
         if (cache.canAttachStub()) {
             bool alreadyStubbed;
@@ -2842,8 +2843,6 @@ SetPropertyParIC::update(ForkJoinContext *cx, size_t cacheIndex, HandleObject ob
 {
     JS_ASSERT(cx->isThreadLocal(obj));
 
-    AutoFlushCache afc("SetPropertyParCache", cx->runtime()->jitRuntime());
-
     IonScript *ion = GetTopIonJSScript(cx)->parallelIonScript();
     SetPropertyParIC &cache = ion->getCache(cacheIndex).toSetPropertyPar();
 
@@ -2860,7 +2859,9 @@ SetPropertyParIC::update(ForkJoinContext *cx, size_t cacheIndex, HandleObject ob
     bool attachedStub = false;
 
     {
+        // See note about locking context in GetPropertyParIC::update.
         LockedJSContext ncx(cx);
+        AutoFlushCache afc("SetPropertyParCache", cx->runtime()->jitRuntime());
 
         if (cache.canAttachStub()) {
             bool alreadyStubbed;
@@ -3940,8 +3941,6 @@ bool
 GetElementParIC::update(ForkJoinContext *cx, size_t cacheIndex, HandleObject obj,
                         HandleValue idval, MutableHandleValue vp)
 {
-    AutoFlushCache afc("GetElementParCache", cx->runtime()->jitRuntime());
-
     IonScript *ion = GetTopIonJSScript(cx)->parallelIonScript();
     GetElementParIC &cache = ion->getCache(cacheIndex).toGetElementPar();
 
@@ -3955,7 +3954,9 @@ GetElementParIC::update(ForkJoinContext *cx, size_t cacheIndex, HandleObject obj
         return true;
 
     {
+        // See note about locking context in GetPropertyParIC::update.
         LockedJSContext ncx(cx);
+        AutoFlushCache afc("GetElementParCache", cx->runtime()->jitRuntime());
 
         if (cache.canAttachStub()) {
             bool alreadyStubbed;

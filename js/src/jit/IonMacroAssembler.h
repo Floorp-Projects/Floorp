@@ -797,7 +797,7 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     // Checks the flags that signal that parallel code may need to interrupt or
     // abort.  Branches to fail in that case.
-    void checkInterruptFlagsPar(const Register &tempReg, Label *fail);
+    void checkInterruptFlagPar(const Register &tempReg, Label *fail);
 
     // If the JitCode that created this assembler needs to transition into the VM,
     // we want to store the JitCode on the stack in order to mark it during a GC.
