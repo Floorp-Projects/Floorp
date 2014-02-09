@@ -349,12 +349,12 @@ private:
 
 #define AVERAGE_ITEM_LENGTH 40
 
-    nsAutoTArray<WORD, uint32_t(ESTIMATE_MAX_GLYPHS(AVERAGE_ITEM_LENGTH))> mGlyphs;
-    nsAutoTArray<WORD, AVERAGE_ITEM_LENGTH + 1> mClusters;
-    nsAutoTArray<SCRIPT_VISATTR, uint32_t(ESTIMATE_MAX_GLYPHS(AVERAGE_ITEM_LENGTH))> mAttr;
+    AutoFallibleTArray<WORD, uint32_t(ESTIMATE_MAX_GLYPHS(AVERAGE_ITEM_LENGTH))> mGlyphs;
+    AutoFallibleTArray<WORD, AVERAGE_ITEM_LENGTH + 1> mClusters;
+    AutoFallibleTArray<SCRIPT_VISATTR, uint32_t(ESTIMATE_MAX_GLYPHS(AVERAGE_ITEM_LENGTH))> mAttr;
  
-    nsAutoTArray<GOFFSET, 2 * AVERAGE_ITEM_LENGTH> mOffsets;
-    nsAutoTArray<int, 2 * AVERAGE_ITEM_LENGTH> mAdvances;
+    AutoFallibleTArray<GOFFSET, 2 * AVERAGE_ITEM_LENGTH> mOffsets;
+    AutoFallibleTArray<int, 2 * AVERAGE_ITEM_LENGTH> mAdvances;
 
 #undef AVERAGE_ITEM_LENGTH
 
@@ -424,7 +424,7 @@ private:
 
     SCRIPT_CONTROL mControl;
     SCRIPT_STATE   mState;
-    nsTArray<SCRIPT_ITEM> mItems;
+    FallibleTArray<SCRIPT_ITEM> mItems;
     int mNumItems;
 };
 
