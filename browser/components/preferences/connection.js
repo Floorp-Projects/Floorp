@@ -67,7 +67,17 @@ var gConnectionsDialog = {
 
     this.updateReloadButton();
   },
-
+  
+  updateDNSPref: function ()
+  {
+    var socksVersionPref = document.getElementById("network.proxy.socks_version");
+    var socksDNSPref = document.getElementById("network.proxy.socks_remote_dns");
+    var proxyTypePref = document.getElementById("network.proxy.type");
+    var isDefinitelySocks4 = !socksVersionPref.disabled && socksVersionPref.value == 4;
+    socksDNSPref.disabled = (isDefinitelySocks4 || proxyTypePref.value == 0);
+    return undefined;
+  },
+  
   updateReloadButton: function ()
   {
     // Disable the "Reload PAC" button if the selected proxy type is not PAC or
@@ -126,7 +136,7 @@ var gConnectionsDialog = {
     }
     var socksVersionPref = document.getElementById("network.proxy.socks_version");
     socksVersionPref.disabled = proxyTypePref.value != 1 || shareProxiesPref.value;
-    
+    this.updateDNSPref();
     return undefined;
   },
   
