@@ -36,9 +36,9 @@ function testClosingAfterCompletion(hud) {
   });
 
   if (Services.appinfo.OS == "Darwin") {
-    EventUtils.synthesizeKey("k", { accelKey: true, altKey: true });
+    EventUtils.synthesizeKey("i", { accelKey: true, altKey: true });
   } else {
-    EventUtils.synthesizeKey("k", { accelKey: true, shiftKey: true });
+    EventUtils.synthesizeKey("i", { accelKey: true, shiftKey: true });
   }
 }
 

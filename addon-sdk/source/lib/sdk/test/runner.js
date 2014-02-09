@@ -7,6 +7,7 @@ module.metadata = {
   "stability": "experimental"
 };
 
+var { setTimeout } = require("../timers");
 var { exit, stdout } = require("../system");
 var cfxArgs = require("@test/options");
 
@@ -19,9 +20,16 @@ function runTests(findAndRunTests) {
     stdout.write(tests.passed + " of " + total + " tests passed.\n");
 
     if (tests.failed == 0) {
-      if (tests.passed === 0)
+      if (tests.passed === 0) {
         stdout.write("No tests were run\n");
-      exit(0);
+      }
+
+      setTimeout(function() {
+        if (cfxArgs.parseable) {
+          console.log('calling exit(0)');
+        }
+        exit(0);
+      }, 0);
     } else {
       if (cfxArgs.verbose || cfxArgs.parseable)
         printFailedTests(tests, stdout.write);

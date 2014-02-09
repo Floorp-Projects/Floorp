@@ -794,6 +794,7 @@ const CustomizableWidgets = [{
         onWidgetRemoved: (aWidgetId, aPrevArea) => {
           if (aWidgetId != this.id)
             return;
+          aNode.removeAttribute("disabled");
           if (aPrevArea == CustomizableUI.AREA_PANEL) {
             let panel = document.getElementById(kPanelId);
             panel.removeEventListener("popupshowing", updateButton);
