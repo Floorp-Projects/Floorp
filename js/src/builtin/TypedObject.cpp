@@ -1341,7 +1341,6 @@ void
 TypedDatum::attach(TypedDatum &datum, uint32_t offset)
 {
     JS_ASSERT(datum.getReservedSlot(JS_DATUM_SLOT_OWNER).isObject());
-    JS_ASSERT(offset + size() <= datum.size());
 
     // find the location in memory
     uint8_t *mem = datum.typedMem(offset);
