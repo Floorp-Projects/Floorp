@@ -1126,6 +1126,12 @@ AccessibleWrap::HandleAccEvent(AccEvent* aEvent)
         return FireAtkShowHideEvent(aEvent, atkObj, true);
 
     case nsIAccessibleEvent::EVENT_HIDE:
+        // XXX - Handle native dialog accessibles.
+        if (!accessible->IsRoot() && accessible->HasARIARole() &&
+            accessible->ARIARole() == roles::DIALOG) {
+          guint id = g_signal_lookup("deactivate", MAI_TYPE_ATK_OBJECT);
+          g_signal_emit(atkObj, id, 0);
+        }
         return FireAtkShowHideEvent(aEvent, atkObj, false);
 
         /*
@@ -1141,7 +1147,7 @@ AccessibleWrap::HandleAccEvent(AccEvent* aEvent)
     case nsIAccessibleEvent::EVENT_WINDOW_ACTIVATE:
       {
         accessible->AsRoot()->mActivated = true;
-        guint id = g_signal_lookup ("activate", MAI_TYPE_ATK_OBJECT);
+        guint id = g_signal_lookup("activate", MAI_TYPE_ATK_OBJECT);
         g_signal_emit(atkObj, id, 0);
 
         // Always fire a current focus event after activation.
@@ -1151,30 +1157,36 @@ AccessibleWrap::HandleAccEvent(AccEvent* aEvent)
     case nsIAccessibleEvent::EVENT_WINDOW_DEACTIVATE:
       {
         accessible->AsRoot()->mActivated = false;
-        guint id = g_signal_lookup ("deactivate", MAI_TYPE_ATK_OBJECT);
+        guint id = g_signal_lookup("deactivate", MAI_TYPE_ATK_OBJECT);
         g_signal_emit(atkObj, id, 0);
       } break;
 
     case nsIAccessibleEvent::EVENT_WINDOW_MAXIMIZE:
       {
-        guint id = g_signal_lookup ("maximize", MAI_TYPE_ATK_OBJECT);
+        guint id = g_signal_lookup("maximize", MAI_TYPE_ATK_OBJECT);
         g_signal_emit(atkObj, id, 0);
       } break;
 
     case nsIAccessibleEvent::EVENT_WINDOW_MINIMIZE:
       {
-        guint id = g_signal_lookup ("minimize", MAI_TYPE_ATK_OBJECT);
+        guint id = g_signal_lookup("minimize", MAI_TYPE_ATK_OBJECT);
         g_signal_emit(atkObj, id, 0);
       } break;
 
     case nsIAccessibleEvent::EVENT_WINDOW_RESTORE:
       {
-        guint id = g_signal_lookup ("restore", MAI_TYPE_ATK_OBJECT);
+        guint id = g_signal_lookup("restore", MAI_TYPE_ATK_OBJECT);
         g_signal_emit(atkObj, id, 0);
       } break;
 
     case nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE:
         g_signal_emit_by_name (atkObj, "load_complete");
+        // XXX - Handle native dialog accessibles.
+        if (!accessible->IsRoot() && accessible->HasARIARole() &&
+            accessible->ARIARole() == roles::DIALOG) {
+          guint id = g_signal_lookup("activate", MAI_TYPE_ATK_OBJECT);
+          g_signal_emit(atkObj, id, 0);
+        }
       break;
 
     case nsIAccessibleEvent::EVENT_DOCUMENT_RELOAD:
