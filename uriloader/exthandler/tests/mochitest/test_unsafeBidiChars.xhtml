@@ -52,8 +52,13 @@ function load() {
   var iframe = document.getElementById("test");
   var gCallback = null;
   function run_test(test, cb) {
-    iframe.src = "unsafeBidiFileName.sjs?name=" + encodeURIComponent(test.param);
+    var url = "unsafeBidiFileName.sjs?name=" + encodeURIComponent(test.param);
+    info("Loading test " + gCounter + " (" + test.param + ") from " + url);
+    iframe.onload = function() {
+      ok(false, "Received an unexpected load event from the iframe");
+    };
     gCallback = cb;
+    iframe.src = url;
   }
 
   var gCounter = -1;

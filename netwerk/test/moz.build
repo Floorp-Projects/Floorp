@@ -4,10 +4,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-TEST_TOOL_DIRS += ['httpserver', 'browser', 'mochitests']
+TEST_TOOL_DIRS += ['httpserver']
 
 FAIL_ON_WARNINGS = True
 
+BROWSER_CHROME_MANIFESTS += ['browser/browser.ini']
+MOCHITEST_MANIFESTS += ['mochitests/mochitest.ini']
 XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
 
 # FIXME/bug 575918: out-of-process xpcshell is broken on OS X

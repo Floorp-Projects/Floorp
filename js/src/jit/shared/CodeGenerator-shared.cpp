@@ -951,7 +951,7 @@ CodeGeneratorShared::labelForBackedgeWithImplicitCheck(MBasicBlock *mir)
             } else {
                 // The interrupt check should be the first instruction in the
                 // loop header other than the initial label and move groups.
-                JS_ASSERT(iter->isInterruptCheck() || iter->isCheckInterruptPar());
+                JS_ASSERT(iter->isInterruptCheck() || iter->isInterruptCheckPar());
                 return nullptr;
             }
         }
