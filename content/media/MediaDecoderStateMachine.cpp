@@ -31,6 +31,8 @@
 
 #include "prenv.h"
 #include "mozilla/Preferences.h"
+#include "gfx2DGlue.h"
+
 #include <algorithm>
 
 namespace mozilla {
@@ -708,11 +710,11 @@ void MediaDecoderStateMachine::SendStreamData()
                                      mDecoder.get(), v->mTime, mediaStream,
                                      v->GetEndTime() - stream->mNextVideoTime));
           WriteVideoToMediaStream(v->mImage,
-              v->GetEndTime() - stream->mNextVideoTime, v->mDisplay,
+              v->GetEndTime() - stream->mNextVideoTime, ThebesIntSize(v->mDisplay),
               &output);
           stream->mNextVideoTime = v->GetEndTime();
           stream->mLastVideoImage = v->mImage;
-          stream->mLastVideoImageDisplaySize = v->mDisplay;
+          stream->mLastVideoImageDisplaySize = ThebesIntSize(v->mDisplay);
         } else {
           DECODER_LOG(PR_LOG_DEBUG, ("%p Decoder skipping writing video frame %lldus (end %lldus) to MediaStream",
                                      mDecoder.get(), v->mTime, v->GetEndTime()));
@@ -2422,7 +2424,8 @@ void MediaDecoderStateMachine::RenderVideoFrame(VideoData* aData,
 
   VideoFrameContainer* container = mDecoder->GetVideoFrameContainer();
   if (container) {
-    container->SetCurrentFrame(aData->mDisplay, aData->mImage, aTarget);
+    container->SetCurrentFrame(ThebesIntSize(aData->mDisplay), aData->mImage,
+                               aTarget);
   }
 }
 

@@ -16,9 +16,11 @@
 #include "mozilla/dom/TimeRanges.h"
 #include "mozilla/Preferences.h"
 #include "GStreamerLoader.h"
+#include "gfx2DGlue.h"
 
 namespace mozilla {
 
+using namespace gfx;
 using namespace layers;
 
 // Un-comment to enable logging of seek bisections.
@@ -1012,7 +1014,7 @@ void GStreamerReader::VideoPreroll()
   GstStructure* structure = gst_caps_get_structure(caps, 0);
   gst_structure_get_fraction(structure, "framerate", &fpsNum, &fpsDen);
   NS_ASSERTION(mPicture.width && mPicture.height, "invalid video resolution");
-  mInfo.mVideo.mDisplay = nsIntSize(mPicture.width, mPicture.height);
+  mInfo.mVideo.mDisplay = ThebesIntSize(mPicture.Size());
   mInfo.mVideo.mHasVideo = true;
   gst_caps_unref(caps);
   gst_object_unref(sinkpad);
