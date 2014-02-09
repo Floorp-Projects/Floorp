@@ -374,26 +374,6 @@ private:
 };
 
 
-// HTMLAllCollection
-
-extern const JSClass sHTMLDocumentAllClass;
-
-class nsHTMLDocumentSH
-{
-protected:
-  static bool GetDocumentAllNodeList(JSContext *cx, JS::Handle<JSObject*> obj,
-                                     nsDocument *doc,
-                                     nsContentList **nodeList);
-public:
-  static bool DocumentAllGetProperty(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
-                                     JS::MutableHandle<JS::Value> vp);
-  static bool DocumentAllNewResolve(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
-                                    unsigned flags, JS::MutableHandle<JSObject*> objp);
-  static void ReleaseDocument(JSFreeOp *fop, JSObject *obj);
-  static bool CallToGetPropMapper(JSContext *cx, unsigned argc, JS::Value *vp);
-};
-
-
 // String array helper
 
 class nsStringArraySH : public nsGenericArraySH
