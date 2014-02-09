@@ -103,13 +103,9 @@ public:
   NS_DECL_NSIDOMHTMLDOCUMENT
 
   /**
-   * Returns the result of document.all[aID] which can either be a node
-   * or a nodelist depending on if there are multiple nodes with the same
-   * id.
+   * Returns the NodeList for document.all[aID], or null if there isn't one.
    */
-  nsISupports *GetDocumentAllResult(const nsAString& aID,
-                                    nsWrapperCache **aCache,
-                                    nsresult *aResult);
+  nsContentList* GetDocumentAllList(const nsAString& aID, nsresult* aResult);
   mozilla::dom::HTMLAllCollection* All();
   JSObject* GetAll(JSContext* aCx, mozilla::ErrorResult& aRv);
 
