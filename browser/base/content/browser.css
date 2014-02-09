@@ -280,10 +280,6 @@ toolbarpaletteitem > #personal-bookmarks > #bookmarks-toolbar-placeholder,
   direction: rtl;
 }
 
-#panelMenu_bookmarksMenu {
-  overflow-x: hidden;
-  overflow-y: auto;
-}
 #panelMenu_bookmarksMenu > .bookmark-item {
   max-width: none;
 }
@@ -894,14 +890,14 @@ chatbox:-moz-full-screen-ancestor > .chat-titlebar {
 }
 
 /* Customize mode */
-#navigator-toolbox > toolbar:not(#TabsToolbar),
+#navigator-toolbox > toolbar,
 #content-deck {
   transition-property: margin-left, margin-right;
   transition-duration: 150ms;
   transition-timing-function: ease-out;
 }
 
-#tab-view-deck[fastcustomizeanimation] #navigator-toolbox > toolbar:not(#TabsToolbar),
+#tab-view-deck[fastcustomizeanimation] #navigator-toolbox > toolbar,
 #tab-view-deck[fastcustomizeanimation] #content-deck {
   transition-duration: 1ms;
   transition-timing-function: linear;
