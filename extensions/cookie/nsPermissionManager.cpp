@@ -94,8 +94,14 @@ GetPrincipal(const nsACString& aHost, uint32_t aAppId, bool aIsInBrowserElement,
   if (NS_FAILED(rv)) {
     // NOTE: most callers will end up here because we don't append "http://" for
     // hosts. It's fine to arbitrary use "http://" because, for those entries,
-    // we will actually just use the host.
-    rv = NS_NewURI(getter_AddRefs(uri), NS_LITERAL_CSTRING("http://") + aHost);
+    // we will actually just use the host. If we end up here, but the host looks
+    // like an email address, we use mailto: instead.
+    nsCString scheme;
+    if (aHost.FindChar('@') == -1)
+      scheme = NS_LITERAL_CSTRING("http://");
+    else
+      scheme = NS_LITERAL_CSTRING("mailto:");
+    rv = NS_NewURI(getter_AddRefs(uri), scheme + aHost);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

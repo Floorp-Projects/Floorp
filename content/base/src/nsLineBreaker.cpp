@@ -302,7 +302,7 @@ nsLineBreaker::FindHyphenationPoints(nsHyphenator *aHyphenator,
                                      uint8_t *aBreakState)
 {
   nsDependentSubstring string(aTextStart, aTextLimit);
-  nsAutoTArray<bool,200> hyphens;
+  AutoFallibleTArray<bool,200> hyphens;
   if (NS_SUCCEEDED(aHyphenator->Hyphenate(string, hyphens))) {
     for (uint32_t i = 0; i + 1 < string.Length(); ++i) {
       if (hyphens[i]) {
