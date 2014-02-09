@@ -67,8 +67,6 @@ var ContextCommands = {
       // content
       if (ContextMenuUI.popupState.string) {
         this.sendCommand("copy");
-
-        SelectionHelperUI.closeEditSession(true);
       }
     } else if (ContextMenuUI.popupState.string) {
       this.clipboard.copyString(ContextMenuUI.popupState.string, this.docRef);

@@ -8,6 +8,8 @@ this.EXPORTED_SYMBOLS = ["WebappManager"];
 
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
+const UPDATE_URL_PREF = "browser.webapps.updateCheckUrl";
+
 Cu.import("resource://gre/modules/AppsUtils.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -16,9 +18,23 @@ Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/DOMRequestHelper.jsm");
 Cu.import("resource://gre/modules/Webapps.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
+Cu.import("resource://gre/modules/Promise.jsm");
+Cu.import("resource://gre/modules/Task.jsm");
+Cu.import("resource://gre/modules/PluralForm.jsm");
 
-function dump(a) {
-  Services.console.logStringMessage("* * WebappManager.jsm: " + a);
+XPCOMUtils.defineLazyModuleGetter(this, "Notifications", "resource://gre/modules/Notifications.jsm");
+
+XPCOMUtils.defineLazyGetter(this, "Strings", function() {
+  return Services.strings.createBundle("chrome://browser/locale/webapp.properties");
+});
+
+function log(message) {
+  // We use *dump* instead of Services.console.logStringMessage so the messages
+  // have the INFO level of severity instead of the ERROR level.  And we don't
+  // append a newline character to the end of the message because *dump* spills
+  // into the Android native logging system, which strips newlines from messages
+  // and breaks messages into lines automatically at display time (i.e. logcat).
+  dump(message);
 }
 
 function sendMessageToJava(aMessage) {
@@ -43,7 +59,7 @@ this.WebappManager = {
       return;
     }
 
-    this._downloadApk(aMessage, aMessageManager);
+    this._installApk(aMessage, aMessageManager);
   },
 
   installPackage: function(aMessage, aMessageManager) {
@@ -53,12 +69,31 @@ this.WebappManager = {
       return;
     }
 
-    this._downloadApk(aMessage, aMessageManager);
+    this._installApk(aMessage, aMessageManager);
   },
 
-  _downloadApk: function(aMsg, aMessageManager) {
-    let manifestUrl = aMsg.app.manifestURL;
-    dump("_downloadApk for " + manifestUrl);
+  _installApk: function(aMessage, aMessageManager) { return Task.spawn((function*() {
+    let filePath;
+
+    try {
+      filePath = yield this._downloadApk(aMessage.app.manifestURL);
+    } catch(ex) {
+      aMessage.error = ex;
+      aMessageManager.sendAsyncMessage("Webapps:Install:Return:KO", aMessage);
+      log("error downloading APK: " + ex);
+      return;
+    }
+
+    sendMessageToJava({
+      type: "WebApps:InstallApk",
+      filePath: filePath,
+      data: JSON.stringify(aMessage),
+    });
+  }).bind(this)); },
+
+  _downloadApk: function(aManifestUrl) {
+    log("_downloadApk for " + aManifestUrl);
+    let deferred = Promise.defer();
 
     // Get the endpoint URL and convert it to an nsIURI/nsIURL object.
     const GENERATOR_URL_PREF = "browser.webapps.apkFactoryUrl";
@@ -67,19 +102,19 @@ this.WebappManager = {
 
     // Populate the query part of the URL with the manifest URL parameter.
     let params = {
-      manifestUrl: manifestUrl,
+      manifestUrl: aManifestUrl,
     };
     generatorUrl.query =
       [p + "=" + encodeURIComponent(params[p]) for (p in params)].join("&");
-    dump("downloading APK from " + generatorUrl.spec);
+    log("downloading APK from " + generatorUrl.spec);
 
     let file = Cc["@mozilla.org/download-manager;1"].
                getService(Ci.nsIDownloadManager).
                defaultDownloadsDirectory.
                clone();
-    file.append(manifestUrl.replace(/[^a-zA-Z0-9]/gi, "") + ".apk");
+    file.append(aManifestUrl.replace(/[^a-zA-Z0-9]/gi, "") + ".apk");
     file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
-    dump("downloading APK to " + file.path);
+    log("downloading APK to " + file.path);
 
     let worker = new ChromeWorker("resource://gre/modules/WebappManagerWorker.js");
     worker.onmessage = function(event) {
@@ -88,20 +123,17 @@ this.WebappManager = {
       worker.terminate();
 
       if (type == "success") {
-        sendMessageToJava({
-          type: "WebApps:InstallApk",
-          filePath: file.path,
-          data: JSON.stringify(aMsg),
-        });
+        deferred.resolve(file.path);
       } else { // type == "failure"
-        aMsg.error = message;
-        aMessageManager.sendAsyncMessage("Webapps:Install:Return:KO", aMsg);
-        dump("error downloading APK: " + message);
+        log("error downloading APK: " + message);
+        deferred.reject(message);
       }
     }
 
     // Trigger the download.
     worker.postMessage({ url: generatorUrl.spec, path: file.path });
+
+    return deferred.promise;
   },
 
   askInstall: function(aData) {
@@ -115,7 +147,7 @@ this.WebappManager = {
     // when we trigger the native install dialog and doesn't re-init itself
     // afterward (TODO: file bug about this behavior).
     if ("appcache_path" in aData.app.manifest) {
-      dump("deleting appcache_path from manifest: " + aData.app.manifest.appcache_path);
+      log("deleting appcache_path from manifest: " + aData.app.manifest.appcache_path);
       delete aData.app.manifest.appcache_path;
     }
 
@@ -136,7 +168,7 @@ this.WebappManager = {
   },
 
   launch: function({ manifestURL, origin }) {
-    dump("launchWebapp: " + manifestURL);
+    log("launchWebapp: " + manifestURL);
 
     sendMessageToJava({
       type: "WebApps:Open",
@@ -146,7 +178,7 @@ this.WebappManager = {
   },
 
   uninstall: function(aData) {
-    dump("uninstall: " + aData.manifestURL);
+    log("uninstall: " + aData.manifestURL);
 
     if (this._testing) {
       // We don't have to do anything, as the registry does all the work.
@@ -157,10 +189,17 @@ this.WebappManager = {
   },
 
   autoInstall: function(aData) {
+    let oldApp = DOMApplicationRegistry.getAppByManifestURL(aData.manifestUrl);
+    if (oldApp) {
+      // If the app is already installed, update the existing installation.
+      this._autoUpdate(aData, oldApp);
+      return;
+    }
+
     let mm = {
       sendAsyncMessage: function (aMessageName, aData) {
         // TODO hook this back to Java to report errors.
-        dump("sendAsyncMessage " + aMessageName + ": " + JSON.stringify(aData));
+        log("sendAsyncMessage " + aMessageName + ": " + JSON.stringify(aData));
       }
     };
 
@@ -204,19 +243,282 @@ this.WebappManager = {
     });
   },
 
+  _autoUpdate: function(aData, aOldApp) { return Task.spawn((function*() {
+    log("_autoUpdate app of type " + aData.type);
+
+    // The data object has a manifestUrl property for the manifest URL,
+    // but updateHostedApp expects it to be called manifestURL, and we pass
+    // the data object to it, so we need to change the name.
+    // TODO: rename this to manifestURL upstream, so the data object always has
+    // a consistent name for the property (even if we name it differently
+    // internally).
+    aData.manifestURL = aData.manifestUrl;
+    delete aData.manifestUrl;
+
+    if (aData.type == "hosted") {
+      let oldManifest = yield DOMApplicationRegistry.getManifestFor(aData.manifestURL);
+      DOMApplicationRegistry.updateHostedApp(aData, aOldApp.id, aOldApp, oldManifest, aData.manifest);
+    } else {
+      DOMApplicationRegistry.updatePackagedApp(aData, aOldApp.id, aOldApp, aData.manifest);
+    }
+  }).bind(this)); },
+
+  _checkingForUpdates: false,
+
+  checkForUpdates: function(userInitiated) { return Task.spawn((function*() {
+    log("checkForUpdates");
+
+    // Don't start checking for updates if we're already doing so.
+    // TODO: Consider cancelling the old one and starting a new one anyway
+    // if the user requested this one.
+    if (this._checkingForUpdates) {
+      log("already checking for updates");
+      return;
+    }
+    this._checkingForUpdates = true;
+
+    try {
+      let installedApps = yield this._getInstalledApps();
+      if (installedApps.length === 0) {
+        return;
+      }
+
+      // Map APK names to APK versions.
+      let apkNameToVersion = JSON.parse(sendMessageToJava({
+        type: "WebApps:GetApkVersions",
+        packageNames: installedApps.map(app => app.packageName).filter(packageName => !!packageName)
+      }));
+
+      // Map manifest URLs to APK versions, which is what the service needs
+      // in order to tell us which apps are outdated; and also map them to app
+      // objects, which the downloader/installer uses to download/install APKs.
+      // XXX Will this cause us to update apps without packages, and if so,
+      // does that satisfy the legacy migration story?
+      let manifestUrlToApkVersion = {};
+      let manifestUrlToApp = {};
+      for (let app of installedApps) {
+        manifestUrlToApkVersion[app.manifestURL] = apkNameToVersion[app.packageName] || 0;
+        manifestUrlToApp[app.manifestURL] = app;
+      }
+
+      let outdatedApps = yield this._getOutdatedApps(manifestUrlToApkVersion, userInitiated);
+
+      if (outdatedApps.length === 0) {
+        // If the user asked us to check for updates, tell 'em we came up empty.
+        if (userInitiated) {
+          this._notify({
+            title: Strings.GetStringFromName("noUpdatesTitle"),
+            message: Strings.GetStringFromName("noUpdatesMessage"),
+            icon: "drawable://alert_app",
+          });
+        }
+        return;
+      }
+
+      let names = [manifestUrlToApp[url].name for (url of outdatedApps)].join(", ");
+      let accepted = yield this._notify({
+        title: PluralForm.get(outdatedApps.length, Strings.GetStringFromName("downloadUpdateTitle")).
+               replace("#1", outdatedApps.length),
+        message: Strings.formatStringFromName("downloadUpdateMessage", [names], 1),
+        icon: "drawable://alert_download",
+      }).dismissed;
+
+      if (accepted) {
+        yield this._updateApks([manifestUrlToApp[url] for (url of outdatedApps)]);
+      }
+    }
+    // There isn't a catch block because we want the error to propagate through
+    // the promise chain, so callers can receive it and choose to respond to it.
+    finally {
+      // Ensure we update the _checkingForUpdates flag even if there's an error;
+      // otherwise the process will get stuck and never check for updates again.
+      this._checkingForUpdates = false;
+    }
+  }).bind(this)); },
+
+  _getInstalledApps: function() {
+    let deferred = Promise.defer();
+    DOMApplicationRegistry.getAll(apps => deferred.resolve(apps));
+    return deferred.promise;
+  },
+
+  _getOutdatedApps: function(installedApps, userInitiated) {
+    let deferred = Promise.defer();
+
+    let data = JSON.stringify({ installed: installedApps });
+
+    let notification;
+    if (userInitiated) {
+      notification = this._notify({
+        title: Strings.GetStringFromName("checkingForUpdatesTitle"),
+        message: Strings.GetStringFromName("checkingForUpdatesMessage"),
+        // TODO: replace this with an animated icon.
+        icon: "drawable://alert_app",
+        progress: NaN,
+      });
+    }
+
+    let request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
+                  createInstance(Ci.nsIXMLHttpRequest).
+                  QueryInterface(Ci.nsIXMLHttpRequestEventTarget);
+    request.mozBackgroundRequest = true;
+    request.open("POST", Services.prefs.getCharPref(UPDATE_URL_PREF), true);
+    request.channel.loadFlags = Ci.nsIChannel.LOAD_ANONYMOUS |
+                                Ci.nsIChannel.LOAD_BYPASS_CACHE |
+                                Ci.nsIChannel.INHIBIT_CACHING;
+    request.onload = function() {
+      notification.cancel();
+      deferred.resolve(JSON.parse(this.response).outdated);
+    };
+    request.onerror = function() {
+      if (userInitiated) {
+        notification.cancel();
+      }
+      deferred.reject(this.status || this.statusText);
+    };
+    request.setRequestHeader("Content-Type", "application/json");
+    request.setRequestHeader("Content-Length", data.length);
+
+    request.send(data);
+
+    return deferred.promise;
+  },
+
+  _updateApks: function(aApps) { return Task.spawn((function*() {
+    // Notify the user that we're in the progress of downloading updates.
+    let downloadingNames = [app.name for (app of aApps)].join(", ");
+    let notification = this._notify({
+      title: PluralForm.get(aApps.length, Strings.GetStringFromName("downloadingUpdateTitle")).
+             replace("#1", aApps.length),
+      message: Strings.formatStringFromName("downloadingUpdateMessage", [downloadingNames], 1),
+      // TODO: replace this with an animated icon.  UpdateService uses
+      // android.R.drawable.stat_sys_download, but I don't think we can reference
+      // a system icon with a drawable: URL here, so we'll have to craft our own.
+      icon: "drawable://alert_download",
+      // TODO: make this a determinate progress indicator once we can determine
+      // the sizes of the APKs and observe their progress.
+      progress: NaN,
+    });
+
+    // Download the APKs for the given apps.  We do this serially to avoid
+    // saturating the user's network connection.
+    // TODO: download APKs in parallel (or at least more than one at a time)
+    // if it seems reasonable.
+    let downloadedApks = [];
+    let downloadFailedApps = [];
+    for (let app of aApps) {
+      try {
+        let filePath = yield this._downloadApk(app.manifestURL);
+        downloadedApks.push({ app: app, filePath: filePath });
+      } catch(ex) {
+        downloadFailedApps.push(app);
+      }
+    }
+
+    notification.cancel();
+
+    // Notify the user if any downloads failed, but don't do anything
+    // when the user accepts/cancels the notification.
+    // In the future, we might prompt the user to retry the download.
+    if (downloadFailedApps.length > 0) {
+      let downloadFailedNames = [app.name for (app of downloadFailedApps)].join(", ");
+      this._notify({
+        title: PluralForm.get(downloadFailedApps.length, Strings.GetStringFromName("downloadFailedTitle")).
+               replace("#1", downloadFailedApps.length),
+        message: Strings.formatStringFromName("downloadFailedMessage", [downloadFailedNames], 1),
+        icon: "drawable://alert_app",
+      });
+    }
+
+    // If we weren't able to download any APKs, then there's nothing more to do.
+    if (downloadedApks.length === 0) {
+      return;
+    }
+
+    // Prompt the user to update the apps for which we downloaded APKs, and wait
+    // until they accept/cancel the notification.
+    let downloadedNames = [apk.app.name for (apk of downloadedApks)].join(", ");
+    let accepted = yield this._notify({
+      title: PluralForm.get(downloadedApks.length, Strings.GetStringFromName("installUpdateTitle")).
+             replace("#1", downloadedApks.length),
+      message: Strings.formatStringFromName("installUpdateMessage", [downloadedNames], 1),
+      icon: "drawable://alert_app",
+    }).dismissed;
+
+    if (accepted) {
+      // The user accepted the notification, so install the downloaded APKs.
+      for (let apk of downloadedApks) {
+        let msg = {
+          app: apk.app,
+          // TODO: figure out why WebApps:InstallApk needs the "from" property.
+          from: apk.app.installOrigin,
+        };
+        sendMessageToJava({
+          type: "WebApps:InstallApk",
+          filePath: apk.filePath,
+          data: JSON.stringify(msg),
+        });
+      }
+    } else {
+      // The user cancelled the notification, so remove the downloaded APKs.
+      for (let apk of downloadedApks) {
+        try {
+          yield OS.file.remove(apk.filePath);
+        } catch(ex) {
+          log("error removing " + apk.filePath + " for cancelled update: " + ex);
+        }
+      }
+    }
+
+  }).bind(this)); },
+
+  _notify: function(aOptions) {
+    dump("_notify: " + aOptions.title);
+
+    // Resolves to true if the notification is "clicked" (i.e. touched)
+    // and false if the notification is "cancelled" by swiping it away.
+    let dismissed = Promise.defer();
+
+    // TODO: make notifications expandable so users can expand them to read text
+    // that gets cut off in standard notifications.
+    let id = Notifications.create({
+      title: aOptions.title,
+      message: aOptions.message,
+      icon: aOptions.icon,
+      progress: aOptions.progress,
+      onClick: function(aId, aCookie) {
+        dismissed.resolve(true);
+      },
+      onCancel: function(aId, aCookie) {
+        dismissed.resolve(false);
+      },
+    });
+
+    // Return an object with a promise that resolves when the notification
+    // is dismissed by the user along with a method for cancelling it,
+    // so callers who want to wait for user action can do so, while those
+    // who want to control the notification's lifecycle can do that instead.
+    return {
+      dismissed: dismissed.promise,
+      cancel: function() {
+        Notifications.cancel(id);
+      },
+    };
+  },
+
   autoUninstall: function(aData) {
     DOMApplicationRegistry.registryReady.then(() => {
       for (let id in DOMApplicationRegistry.webapps) {
         let app = DOMApplicationRegistry.webapps[id];
         if (aData.apkPackageNames.indexOf(app.apkPackageName) > -1) {
-          dump("attempting to uninstall " + app.name);
+          log("attempting to uninstall " + app.name);
           DOMApplicationRegistry.uninstall(
             app.manifestURL,
             function() {
-              dump("success uninstalling " + app.name);
+              log("success uninstalling " + app.name);
             },
             function(error) {
-              dump("error uninstalling " + app.name + ": " + error);
+              log("error uninstalling " + app.name + ": " + error);
             }
           );
         }
@@ -241,7 +543,7 @@ this.WebappManager = {
     if (aPrefs.length > 0) {
       let array = new TextEncoder().encode(JSON.stringify(aPrefs));
       OS.File.writeAtomic(aFile.path, array, { tmpPath: aFile.path + ".tmp" }).then(null, function onError(reason) {
-        dump("Error writing default prefs: " + reason);
+        log("Error writing default prefs: " + reason);
       });
     }
   },
