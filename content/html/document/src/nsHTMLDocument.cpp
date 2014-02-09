@@ -1639,7 +1639,7 @@ nsHTMLDocument::Open(JSContext* cx,
   nsCOMPtr<nsIContentViewer> cv;
   shell->GetContentViewer(getter_AddRefs(cv));
   if (cv) {
-    cv->LoadStart(static_cast<nsIHTMLDocument *>(this));
+    cv->LoadStart(this);
   }
 
   // Add a wyciwyg channel request into the document load group

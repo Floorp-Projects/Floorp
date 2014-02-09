@@ -551,20 +551,18 @@ nsDocumentViewer::~nsDocumentViewer()
  * This method is also called when an out of band document.write() happens.
  * In that case, the document passed in is the same as the previous document.
  */
-NS_IMETHODIMP
-nsDocumentViewer::LoadStart(nsISupports *aDoc)
+/* virtual */ void
+nsDocumentViewer::LoadStart(nsIDocument* aDocument)
 {
-  nsresult rv = NS_OK;
+  MOZ_ASSERT(aDocument);
+
   if (!mDocument) {
-    mDocument = do_QueryInterface(aDoc, &rv);
-  }
-  else if (mDocument == aDoc) {
+    mDocument = aDocument;
+  } else if (mDocument == aDocument) {
     // Reset the document viewer's state back to what it was
     // when the document load started.
     PrepareToStartLoad();
   }
-
-  return rv;
 }
 
 nsresult
