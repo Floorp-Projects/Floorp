@@ -143,6 +143,23 @@ the "expr -R -- EXPR" command can be used to show its actual member variables.
     nsACString_internal = "text/html"
   }
 
+* nscolor
+
+  nscolors (32-bit RGBA colors) have a type summary that shows the color as
+  one of the CSS 2.1 color keywords, a six digit hex color, an rgba() color,
+  or the "transparent" keyword.
+
+  (lldb) p this
+  (nsTextFrame *) $0 = 0x00000001168245e0
+  (lldb) p *this->StyleColor()
+  (const nsStyleColor) $1 = {
+    mColor = lime
+  }
+  (lldb) expr -R -- *this->StyleColor()
+  (const nsStyleColor) $2 = {
+    mColor = 4278255360
+  }
+
 * nsIAtom
 
   Atoms have a type summary that shows the string value inside the atom.
