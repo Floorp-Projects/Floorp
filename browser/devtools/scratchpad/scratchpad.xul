@@ -191,6 +191,11 @@
           accesskey="&gotoLineCmd.accesskey;"
           key="key_gotoLine"
           command="cmd_gotoLine"/>
+      <menuitem id="sp-menu-pprint"
+          label="&pprint.label;"
+          accesskey="&pprint.accesskey;"
+          key="sp-key-pprint"
+          command="sp-cmd-pprint"/>
     </menupopup>
   </menu>
 
