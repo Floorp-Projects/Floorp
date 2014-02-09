@@ -16,6 +16,18 @@ DOMFileRequest::DOMFileRequest(nsPIDOMWindow* aWindow)
 {
 }
 
+// static
+already_AddRefed<DOMFileRequest>
+DOMFileRequest::Create(nsPIDOMWindow* aOwner, LockedFile* aLockedFile)
+{
+  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
+
+  nsRefPtr<DOMFileRequest> request = new DOMFileRequest(aOwner);
+  request->mLockedFile = aLockedFile;
+
+  return request.forget();
+}
+
 /* virtual */ JSObject*
 DOMFileRequest::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
