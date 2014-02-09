@@ -7,9 +7,8 @@
 #include "mozilla/dom/HTMLAllCollection.h"
 
 #include "jsapi.h"
-#include "mozilla/dom/BindingUtils.h"
-#include "mozilla/dom/HTMLCollectionBinding.h"
 #include "mozilla/HoldDropJSObjects.h"
+#include "nsContentUtils.h"
 #include "nsDOMClassInfo.h"
 #include "nsHTMLDocument.h"
 #include "nsJSUtils.h"
@@ -22,9 +21,10 @@ using namespace mozilla::dom;
 class nsHTMLDocumentSH
 {
 protected:
-  static bool GetDocumentAllNodeList(JSContext *cx, JS::Handle<JSObject*> obj,
-                                     nsDocument *doc,
-                                     nsContentList **nodeList);
+  static bool GetDocumentAllNodeList(JSContext*,
+                                     JS::Handle<JSObject*>,
+                                     nsHTMLDocument* aDocument,
+                                     nsContentList** aNodeList);
 public:
   static bool DocumentAllGetProperty(JSContext *cx, JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
                                      JS::MutableHandle<JS::Value> vp);
@@ -37,7 +37,7 @@ public:
 const JSClass sHTMLDocumentAllClass = {
   "HTML document.all class",
   JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS | JSCLASS_NEW_RESOLVE |
-  JSCLASS_EMULATES_UNDEFINED | JSCLASS_HAS_RESERVED_SLOTS(1),
+  JSCLASS_EMULATES_UNDEFINED,
   JS_PropertyStub,                                         /* addProperty */
   JS_DeletePropertyStub,                                   /* delProperty */
   nsHTMLDocumentSH::DocumentAllGetProperty,                /* getProperty */
@@ -73,11 +73,13 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(HTMLAllCollection)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(HTMLAllCollection)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocument)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCollection)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(HTMLAllCollection)
   tmp->mObject = nullptr;
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocument)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mCollection)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(HTMLAllCollection)
@@ -108,6 +110,17 @@ HTMLAllCollection::GetObject(JSContext* aCx, ErrorResult& aRv)
 
   JS::ExposeObjectToActiveJS(mObject);
   return mObject;
+}
+
+nsContentList*
+HTMLAllCollection::Collection()
+{
+  if (!mCollection) {
+    nsIDocument* document = mDocument;
+    mCollection = document->GetElementsByTagName(NS_LITERAL_STRING("*"));
+    MOZ_ASSERT(mCollection);
+  }
+  return mCollection;
 }
 
 } // namespace dom
@@ -152,68 +165,14 @@ WrapNative(JSContext *cx, JSObject *scope, nsISupports *native,
 
 // static
 bool
-nsHTMLDocumentSH::GetDocumentAllNodeList(JSContext *cx,
-                                         JS::Handle<JSObject*> obj,
-                                         nsDocument *domdoc,
-                                         nsContentList **nodeList)
+nsHTMLDocumentSH::GetDocumentAllNodeList(JSContext*,
+                                         JS::Handle<JSObject*>,
+                                         nsHTMLDocument* aDocument,
+                                         nsContentList** aNodeList)
 {
-  // The document.all object is a mix of the node list returned by
-  // document.getElementsByTagName("*") and a map of elements in the
-  // document exposed by their id and/or name. To make access to the
-  // node list part (i.e. access to elements by index) not walk the
-  // document each time, we create a nsContentList and hold on to it
-  // in a reserved slot (0) on the document.all JSObject.
-  nsresult rv = NS_OK;
-
-  JS::Rooted<JS::Value> collection(cx, JS_GetReservedSlot(obj, 0));
-
-  if (!JSVAL_IS_PRIMITIVE(collection)) {
-    // We already have a node list in our reserved slot, use it.
-    JS::Rooted<JSObject*> obj(cx, JSVAL_TO_OBJECT(collection));
-    nsIHTMLCollection* htmlCollection;
-    rv = UNWRAP_OBJECT(HTMLCollection, obj, htmlCollection);
-    if (NS_SUCCEEDED(rv)) {
-      NS_ADDREF(*nodeList = static_cast<nsContentList*>(htmlCollection));
-    }
-    else {
-      nsISupports *native = nsDOMClassInfo::XPConnect()->GetNativeOfWrapper(cx, obj);
-      if (native) {
-        NS_ADDREF(*nodeList = nsContentList::FromSupports(native));
-        rv = NS_OK;
-      }
-      else {
-        rv = NS_ERROR_FAILURE;
-      }
-    }
-  } else {
-    // No node list for this document.all yet, create one...
-
-    nsRefPtr<nsContentList> list =
-      domdoc->GetElementsByTagName(NS_LITERAL_STRING("*"));
-    if (!list) {
-      rv = NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    nsresult tmp = WrapNative(cx, JS::CurrentGlobalOrNull(cx),
-                              static_cast<nsINodeList*>(list), list, false,
-                              &collection);
-    if (NS_FAILED(tmp)) {
-      rv = tmp;
-    }
-
-    list.forget(nodeList);
-
-    // ... and store it in our reserved slot.
-    JS_SetReservedSlot(obj, 0, collection);
-  }
-
-  if (NS_FAILED(rv)) {
-    xpc::Throw(cx, NS_ERROR_FAILURE);
-
-    return false;
-  }
-
-  return *nodeList != nullptr;
+  nsRefPtr<nsContentList> collection = aDocument->All()->Collection();
+  collection.forget(aNodeList);
+  return true;
 }
 
 bool

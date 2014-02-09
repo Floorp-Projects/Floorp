@@ -2636,14 +2636,19 @@ nsHTMLDocument::GetDocumentAllResult(const nsAString& aID,
   return cont;
 }
 
-JSObject*
-nsHTMLDocument::GetAll(JSContext* aCx, ErrorResult& aRv)
+HTMLAllCollection*
+nsHTMLDocument::All()
 {
   if (!mAll) {
     mAll = new HTMLAllCollection(this);
   }
+  return mAll;
+}
 
-  return mAll->GetObject(aCx, aRv);
+JSObject*
+nsHTMLDocument::GetAll(JSContext* aCx, ErrorResult& aRv)
+{
+  return All()->GetObject(aCx, aRv);
 }
 
 static void
