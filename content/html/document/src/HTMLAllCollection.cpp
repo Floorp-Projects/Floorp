@@ -130,6 +130,14 @@ HTMLAllCollection::Collection()
   return mCollection;
 }
 
+nsISupports*
+HTMLAllCollection::GetNamedItem(const nsAString& aID,
+                                nsWrapperCache** aCache,
+                                nsresult* aResult)
+{
+  return mDocument->GetDocumentAllResult(aID, aCache, aResult);
+}
+
 } // namespace dom
 } // namespace mozilla
 
@@ -212,7 +220,7 @@ nsHTMLDocumentSH::DocumentAllGetProperty(JSContext *cx, JS::Handle<JSObject*> ob
 
     // For all other strings, look for an element by id or name.
     nsDependentJSString str(id);
-    result = doc->GetDocumentAllResult(str, &cache, &rv);
+    result = doc->All()->GetNamedItem(str, &cache, &rv);
 
     if (NS_FAILED(rv)) {
       xpc::Throw(cx, rv);

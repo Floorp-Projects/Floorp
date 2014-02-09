@@ -17,6 +17,7 @@
 class nsContentList;
 class nsHTMLDocument;
 class nsIContent;
+class nsWrapperCache;
 
 namespace mozilla {
 class ErrorResult;
@@ -36,6 +37,9 @@ public:
   nsIContent* Item(uint32_t aIndex);
 
   JSObject* GetObject(JSContext* aCx, ErrorResult& aRv);
+
+  nsISupports* GetNamedItem(const nsAString& aID, nsWrapperCache** aCache,
+                            nsresult* aResult);
 
 private:
   nsContentList* Collection();
