@@ -12,6 +12,8 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsISupportsImpl.h"
 
+#include <stdint.h>
+
 class nsContentList;
 class nsHTMLDocument;
 
@@ -28,6 +30,8 @@ public:
 
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(HTMLAllCollection)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(HTMLAllCollection)
+
+  uint32_t Length();
 
   JSObject* GetObject(JSContext* aCx, ErrorResult& aRv);
 
