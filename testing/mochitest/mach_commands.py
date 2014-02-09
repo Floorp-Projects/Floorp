@@ -193,12 +193,13 @@ class MochitestRunner(MozbuildObject):
         return mochitest.run_remote_mochitests(parser, options)
 
     def run_desktop_test(self, suite=None, test_file=None, debugger=None,
-        debugger_args=None, shuffle=False, keep_open=False, rerun_failures=False,
-        no_autorun=False, repeat=0, run_until_failure=False, slow=False,
-        chunk_by_dir=0, total_chunks=None, this_chunk=None, jsdebugger=False,
-        debug_on_failure=False, start_at=None, end_at=None, e10s=False,
-        dmd=False, dump_output_directory=None, dump_about_memory_after_test=False,
-        dump_dmd_after_test=False, install_extension=None, **kwargs):
+        debugger_args=None, slowscript=False, shuffle=False, keep_open=False,
+        rerun_failures=False, no_autorun=False, repeat=0, run_until_failure=False,
+        slow=False, chunk_by_dir=0, total_chunks=None, this_chunk=None,
+        jsdebugger=False, debug_on_failure=False, start_at=None, end_at=None,
+        e10s=False, dmd=False, dump_output_directory=None,
+        dump_about_memory_after_test=False, dump_dmd_after_test=False,
+        install_extension=None, **kwargs):
         """Runs a mochitest.
 
         test_file is a path to a test file. It can be a relative path from the
@@ -212,6 +213,9 @@ class MochitestRunner(MozbuildObject):
         to run the test in. e.g. 'gdb'
 
         debugger_args are the arguments passed to the debugger.
+
+        slowscript is true if the user has requested the SIGSEGV mechanism of
+        invoking the slow script dialog.
 
         shuffle is whether test order should be shuffled (defaults to false).
 
@@ -290,6 +294,7 @@ class MochitestRunner(MozbuildObject):
 
         options.autorun = not no_autorun
         options.closeWhenDone = not keep_open
+        options.slowscript = slowscript
         options.shuffle = shuffle
         options.consoleLevel = 'INFO'
         options.repeat = repeat
@@ -399,6 +404,15 @@ def MochitestCommand(func):
     debugger_args = CommandArgument('--debugger-args',
         metavar='DEBUGGER_ARGS', help='Arguments to pass to the debugger.')
     func = debugger_args(func)
+
+    # Bug 933807 introduced JS_DISABLE_SLOW_SCRIPT_SIGNALS to avoid clever
+    # segfaults induced by the slow-script-detecting logic for Ion/Odin JITted
+    # code. If we don't pass this, the user will need to periodically type
+    # "continue" to (safely) resume execution. There are ways to implement
+    # automatic resuming; see the bug.
+    slowscript = CommandArgument('--slowscript', action='store_true',
+        help='Do not set the JS_DISABLE_SLOW_SCRIPT_SIGNALS env variable; when not set, recoverable but misleading SIGSEGV instances may occur in Ion/Odin JIT code')
+    func = slowscript(func)
 
     shuffle = CommandArgument('--shuffle', action='store_true',
         help='Shuffle execution order.')

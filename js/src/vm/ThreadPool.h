@@ -26,14 +26,15 @@ class ThreadPoolWorker;
 class ThreadPoolMainWorker;
 
 // A ParallelJob is the main runnable abstraction in the ThreadPool.
-// ParallelJobs are composed of one or more slices. Each slice is executed by
-// the pool by calling one of the execute method with the unique |sliceId|
-// as argument. The pool executes multiple slices in parallel.
+//
+// The unit of work here is in terms of threads, *not* slices. The
+// user-provided function has the responsibility of getting slices of work via
+// the |ForkJoinGetSlice| intrinsic.
 class ParallelJob
 {
   public:
-    virtual bool executeFromWorker(uint16_t sliceId, uint32_t workerId, uintptr_t stackLimit) = 0;
-    virtual bool executeFromMainThread(uint16_t sliceId) = 0;
+    virtual bool executeFromWorker(uint32_t workerId, uintptr_t stackLimit) = 0;
+    virtual bool executeFromMainThread() = 0;
 };
 
 // ThreadPool used for parallel JavaScript execution. Unless you are building
@@ -147,7 +148,13 @@ class ThreadPool : public Monitor
 
     // Execute the given ParallelJob using the main thread and any available worker.
     // Blocks until the main thread has completed execution.
-    ParallelResult executeJob(JSContext *cx, ParallelJob *job, uint16_t numSlices);
+    ParallelResult executeJob(JSContext *cx, ParallelJob *job, uint16_t sliceStart,
+                              uint16_t numSlices);
+
+    // Get the next slice; work stealing happens here if work stealing is
+    // on. Returns false if there are no more slices to hand out.
+    bool getSliceForWorker(uint32_t workerId, uint16_t *sliceId);
+    bool getSliceForMainThread(uint16_t *sliceId);
 
     // Abort the current job.
     void abortJob();

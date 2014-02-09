@@ -4747,9 +4747,9 @@ class MCheckOverRecursedPar : public MUnaryInstruction
 };
 
 // Check for an interrupt (or rendezvous) in parallel mode.
-class MCheckInterruptPar : public MUnaryInstruction
+class MInterruptCheckPar : public MUnaryInstruction
 {
-    MCheckInterruptPar(MDefinition *cx)
+    MInterruptCheckPar(MDefinition *cx)
       : MUnaryInstruction(cx)
     {
         setResultType(MIRType_None);
@@ -4758,10 +4758,10 @@ class MCheckInterruptPar : public MUnaryInstruction
     }
 
   public:
-    INSTRUCTION_HEADER(CheckInterruptPar);
+    INSTRUCTION_HEADER(InterruptCheckPar);
 
-    static MCheckInterruptPar *New(TempAllocator &alloc, MDefinition *cx) {
-        return new(alloc) MCheckInterruptPar(cx);
+    static MInterruptCheckPar *New(TempAllocator &alloc, MDefinition *cx) {
+        return new(alloc) MInterruptCheckPar(cx);
     }
 
     MDefinition *forkJoinContext() const {

@@ -32,6 +32,11 @@ public class UninstallListener extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
+        if (intent.getBooleanExtra(Intent.EXTRA_REPLACING, false)) {
+            Log.i(LOGTAG, "Package is being replaced; ignoring removal intent");
+            return;
+        }
+
         String packageName = intent.getData().getSchemeSpecificPart();
 
         if (TextUtils.isEmpty(packageName)) {
