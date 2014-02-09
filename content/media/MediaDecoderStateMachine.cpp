@@ -39,6 +39,7 @@ namespace mozilla {
 
 using namespace mozilla::layers;
 using namespace mozilla::dom;
+using namespace mozilla::gfx;
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gMediaDecoderLog;
@@ -614,11 +615,12 @@ void MediaDecoderStateMachine::SendStreamAudio(AudioData* aAudio,
 }
 
 static void WriteVideoToMediaStream(layers::Image* aImage,
-                                    int64_t aDuration, const gfxIntSize& aIntrinsicSize,
+                                    int64_t aDuration,
+                                    const IntSize& aIntrinsicSize,
                                     VideoSegment* aOutput)
 {
   nsRefPtr<layers::Image> image = aImage;
-  aOutput->AppendFrame(image.forget(), aDuration, aIntrinsicSize);
+  aOutput->AppendFrame(image.forget(), aDuration, ThebesIntSize(aIntrinsicSize));
 }
 
 static const TrackID TRACK_AUDIO = 1;
@@ -710,11 +712,11 @@ void MediaDecoderStateMachine::SendStreamData()
                                      mDecoder.get(), v->mTime, mediaStream,
                                      v->GetEndTime() - stream->mNextVideoTime));
           WriteVideoToMediaStream(v->mImage,
-              v->GetEndTime() - stream->mNextVideoTime, ThebesIntSize(v->mDisplay),
+              v->GetEndTime() - stream->mNextVideoTime, v->mDisplay,
               &output);
           stream->mNextVideoTime = v->GetEndTime();
           stream->mLastVideoImage = v->mImage;
-          stream->mLastVideoImageDisplaySize = ThebesIntSize(v->mDisplay);
+          stream->mLastVideoImageDisplaySize = v->mDisplay;
         } else {
           DECODER_LOG(PR_LOG_DEBUG, ("%p Decoder skipping writing video frame %lldus (end %lldus) to MediaStream",
                                      mDecoder.get(), v->mTime, v->GetEndTime()));
