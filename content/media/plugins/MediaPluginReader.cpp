@@ -14,6 +14,7 @@
 #include "MediaDecoderStateMachine.h"
 #include "ImageContainer.h"
 #include "AbstractMediaDecoder.h"
+#include "gfx2DGlue.h"
 
 namespace mozilla {
 
@@ -172,7 +173,7 @@ bool MediaPluginReader::DecodeVideoFrame(bool &aKeyframeSkip,
 
     currentImage = bufferCallback.GetImage();
     int64_t pos = mDecoder->GetResource()->Tell();
-    nsIntRect picture = mPicture;
+    IntRect picture = ToIntRect(mPicture);
 
     nsAutoPtr<VideoData> v;
     if (currentImage) {

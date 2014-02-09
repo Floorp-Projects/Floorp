@@ -14,6 +14,7 @@
 #include "Layers.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "prlog.h"
+#include "gfx2DGlue.h"
 
 #ifdef PR_LOGGING
 PRLogModuleInfo* GetDemuxerLog();
@@ -22,6 +23,7 @@ PRLogModuleInfo* GetDemuxerLog();
 #define LOG(...)
 #endif
 
+using mozilla::gfx::ToIntRect;
 using mozilla::layers::Image;
 using mozilla::layers::LayerManager;
 using mozilla::layers::LayersBackend;
@@ -277,7 +279,7 @@ WMFVideoOutputSource::CreateBasicVideoFrame(IMFSample* aSample,
                                    b,
                                    false,
                                    -1,
-                                   mPictureRegion);
+                                   ToIntRect(mPictureRegion));
   if (twoDBuffer) {
     twoDBuffer->Unlock2D();
   } else {
@@ -320,7 +322,7 @@ WMFVideoOutputSource::CreateD3DVideoFrame(IMFSample* aSample,
                                             image.forget(),
                                             false,
                                             -1,
-                                            mPictureRegion);
+                                            ToIntRect(mPictureRegion));
 
   NS_ENSURE_TRUE(v, E_FAIL);
   *aOutVideoData = v;

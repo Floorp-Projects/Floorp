@@ -97,7 +97,7 @@ public:
     , mImageContainer(aImageContainer)
   {
     mInfo.mDisplay = nsIntSize(mFrameWidth, mFrameHeight);
-    mPicture = nsIntRect(0, 0, mFrameWidth, mFrameHeight);
+    mPicture = gfx::IntRect(0, 0, mFrameWidth, mFrameHeight);
   }
 
   MediaData* Create(Microseconds aDTS,
@@ -149,7 +149,7 @@ public:
   }
 private:
   VideoInfo mInfo;
-  nsIntRect mPicture;
+  gfx::IntRect mPicture;
   uint32_t mFrameWidth;
   uint32_t mFrameHeight;
   RefPtr<layers::ImageContainer> mImageContainer;

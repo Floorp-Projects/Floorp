@@ -7,6 +7,7 @@
 #define MediaData_h
 
 #include "nsSize.h"
+#include "mozilla/gfx/Rect.h"
 #include "nsRect.h"
 #include "AudioSampleFormat.h"
 #include "nsIMemoryReporter.h"
@@ -108,6 +109,8 @@ class VideoInfo;
 // Holds a decoded video frame, in YCbCr format. These are queued in the reader.
 class VideoData : public MediaData {
 public:
+  typedef gfx::IntRect IntRect;
+  typedef gfx::IntSize IntSize;
   typedef layers::ImageContainer ImageContainer;
   typedef layers::Image Image;
 
@@ -145,7 +148,7 @@ public:
                            const YCbCrBuffer &aBuffer,
                            bool aKeyframe,
                            int64_t aTimecode,
-                           nsIntRect aPicture);
+                           const IntRect& aPicture);
 
   // Variant that always makes a copy of aBuffer
   static VideoData* Create(VideoInfo& aInfo,
@@ -156,7 +159,7 @@ public:
                            const YCbCrBuffer &aBuffer,
                            bool aKeyframe,
                            int64_t aTimecode,
-                           nsIntRect aPicture);
+                           const IntRect& aPicture);
 
   // Variant to create a VideoData instance given an existing aImage
   static VideoData* Create(VideoInfo& aInfo,
@@ -167,7 +170,7 @@ public:
                            const YCbCrBuffer &aBuffer,
                            bool aKeyframe,
                            int64_t aTimecode,
-                           nsIntRect aPicture);
+                           const IntRect& aPicture);
 
   static VideoData* Create(VideoInfo& aInfo,
                            ImageContainer* aContainer,
@@ -177,7 +180,7 @@ public:
                            layers::GraphicBufferLocked* aBuffer,
                            bool aKeyframe,
                            int64_t aTimecode,
-                           nsIntRect aPicture);
+                           const IntRect& aPicture);
 
   static VideoData* CreateFromImage(VideoInfo& aInfo,
                                     ImageContainer* aContainer,
@@ -187,7 +190,7 @@ public:
                                     const nsRefPtr<Image>& aImage,
                                     bool aKeyframe,
                                     int64_t aTimecode,
-                                    nsIntRect aPicture);
+                                    const IntRect& aPicture);
 
   // Creates a new VideoData identical to aOther, but with a different
   // specified duration. All data from aOther is copied into the new
@@ -215,7 +218,7 @@ public:
   // Dimensions at which to display the video frame. The picture region
   // will be scaled to this size. This is should be the picture region's
   // dimensions scaled with respect to its aspect ratio.
-  const nsIntSize mDisplay;
+  const IntSize mDisplay;
 
   // Codec specific internal time code. For Ogg based codecs this is the
   // granulepos.
@@ -240,7 +243,7 @@ public:
             int64_t aDuration,
             bool aKeyframe,
             int64_t aTimecode,
-            nsIntSize aDisplay);
+            IntSize aDisplay);
 
 };
 
