@@ -113,7 +113,7 @@ class CachedSurface : public RefCounted<CachedSurface>
 {
 public:
   CachedSurface(DrawTarget*       aTarget,
-                const nsIntSize   aTargetSize,
+                const IntSize     aTargetSize,
                 const Cost        aCost,
                 const ImageKey    aImageKey,
                 const SurfaceKey& aSurfaceKey)
@@ -129,7 +129,8 @@ public:
 
   already_AddRefed<gfxDrawable> Drawable() const
   {
-    nsRefPtr<gfxDrawable> drawable = new gfxSurfaceDrawable(mTarget, mTargetSize);
+    nsRefPtr<gfxDrawable> drawable =
+      new gfxSurfaceDrawable(mTarget, ThebesIntSize(mTargetSize));
     return drawable.forget();
   }
 
@@ -141,7 +142,7 @@ public:
 private:
   nsExpirationState       mExpirationState;
   nsRefPtr<DrawTarget>    mTarget;
-  const nsIntSize         mTargetSize;
+  const IntSize           mTargetSize;
   const Cost              mCost;
   const ImageKey          mImageKey;
   const SurfaceKey        mSurfaceKey;
@@ -230,7 +231,7 @@ public:
   }
 
   void Insert(DrawTarget*       aTarget,
-              nsIntSize         aTargetSize,
+              IntSize           aTargetSize,
               const Cost        aCost,
               const ImageKey    aImageKey,
               const SurfaceKey& aSurfaceKey)
@@ -503,8 +504,8 @@ SurfaceCache::Insert(DrawTarget*       aTarget,
   MOZ_ASSERT(NS_IsMainThread());
 
   Cost cost = ComputeCost(aSurfaceKey.Size());
-  return sInstance->Insert(aTarget, ThebesIntSize(aSurfaceKey.Size()), cost,
-                           aImageKey, aSurfaceKey);
+  return sInstance->Insert(aTarget, aSurfaceKey.Size(), cost, aImageKey,
+                           aSurfaceKey);
 }
 
 /* static */ bool
