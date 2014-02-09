@@ -22,9 +22,9 @@
 #include "xpcpublic.h"
 
 #include "AsyncHelper.h"
+#include "DOMFileRequest.h"
 #include "FileHandle.h"
 #include "FileHelper.h"
-#include "FileRequest.h"
 #include "FileService.h"
 #include "FileStreamWrappers.h"
 #include "MemoryStreams.h"
@@ -424,7 +424,7 @@ already_AddRefed<DOMFileRequest>
 LockedFile::GenerateFileRequest()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  return FileRequest::Create(GetOwner(), this, true).downcast<DOMFileRequest>();
+  return DOMFileRequest::Create(GetOwner(), this);
 }
 
 bool
