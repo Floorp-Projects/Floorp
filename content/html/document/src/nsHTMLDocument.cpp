@@ -2178,14 +2178,14 @@ nsHTMLDocument::GetSelection(ErrorResult& rv)
 }
 
 NS_IMETHODIMP
-nsHTMLDocument::CaptureEvents(int32_t aEventFlags)
+nsHTMLDocument::CaptureEvents()
 {
   WarnOnceAbout(nsIDocument::eUseOfCaptureEvents);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTMLDocument::ReleaseEvents(int32_t aEventFlags)
+nsHTMLDocument::ReleaseEvents()
 {
   WarnOnceAbout(nsIDocument::eUseOfReleaseEvents);
   return NS_OK;
