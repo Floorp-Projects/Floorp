@@ -81,6 +81,12 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(HTMLAllCollection)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mObject)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
+uint32_t
+HTMLAllCollection::Length()
+{
+  return Collection()->Length(true);
+}
+
 JSObject*
 HTMLAllCollection::GetObject(JSContext* aCx, ErrorResult& aRv)
 {
@@ -193,23 +199,8 @@ nsHTMLDocumentSH::DocumentAllGetProperty(JSContext *cx, JS::Handle<JSObject*> ob
 
   if (JSID_IS_STRING(id)) {
     if (nsDOMClassInfo::sLength_id == id) {
-      // Map document.all.length to the length of the collection
-      // document.getElementsByTagName("*"), and make sure <div
-      // id="length"> doesn't shadow document.all.length.
-
-      nsRefPtr<nsContentList> nodeList = doc->All()->Collection();
-
-      uint32_t length;
-      rv = nodeList->GetLength(&length);
-
-      if (NS_FAILED(rv)) {
-        xpc::Throw(cx, rv);
-
-        return false;
-      }
-
-      vp.set(INT_TO_JSVAL(length));
-
+      // Make sure <div id="length"> doesn't shadow document.all.length.
+      vp.setNumber(doc->All()->Length());
       return true;
     }
 
