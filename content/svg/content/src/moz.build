@@ -169,6 +169,7 @@ UNIFIED_SOURCES += [
     'SVGFEDiffuseLightingElement.cpp',
     'SVGFEDisplacementMapElement.cpp',
     'SVGFEDistantLightElement.cpp',
+    'SVGFEDropShadowElement.cpp',
     'SVGFEFloodElement.cpp',
     'SVGFEGaussianBlurElement.cpp',
     'SVGFEImageElement.cpp',
