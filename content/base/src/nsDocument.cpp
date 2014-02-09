@@ -241,9 +241,6 @@ nsIdentifierMapEntry::Traverse(nsCycleCollectionTraversalCallback* aCallback)
                                      "mIdentifierMap mNameContentList");
   aCallback->NoteXPCOMChild(static_cast<nsIDOMNodeList*>(mNameContentList));
 
-  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*aCallback, "mIdentifierMap mDocAllList");
-  aCallback->NoteXPCOMChild(static_cast<nsIDOMNodeList*>(mDocAllList));
-
   if (mImageElement) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*aCallback,
                                        "mIdentifierMap mImageElement element");

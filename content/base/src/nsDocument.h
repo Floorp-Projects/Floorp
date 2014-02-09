@@ -189,9 +189,6 @@ public:
 
   void Traverse(nsCycleCollectionTraversalCallback* aCallback);
 
-  void SetDocAllList(nsContentList* aContentList) { mDocAllList = aContentList; }
-  nsContentList* GetDocAllList() { return mDocAllList; }
-
   struct ChangeCallback {
     nsIDocument::IDTargetObserver mCallback;
     void* mData;
@@ -236,7 +233,6 @@ private:
   // The elements are stored as weak pointers.
   nsSmallVoidArray mIdContentList;
   nsRefPtr<nsBaseContentList> mNameContentList;
-  nsRefPtr<nsContentList> mDocAllList;
   nsAutoPtr<nsTHashtable<ChangeCallbackEntry> > mChangeCallbacks;
   nsRefPtr<Element> mImageElement;
 };
