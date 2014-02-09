@@ -300,7 +300,8 @@ UpdateOffScreenBuffers(int aDepth, QSize aSize, QWidget* aWidget = nullptr)
 #endif
 
     gBufferSurface = gfxPlatform::GetPlatform()->
-        CreateOffscreenSurface(gBufferMaxSize, gfxASurface::ContentFromFormat(format));
+        CreateOffscreenSurface(gBufferMaxSize.ToIntSize(),
+                               gfxASurface::ContentFromFormat(format));
 
     return true;
 }

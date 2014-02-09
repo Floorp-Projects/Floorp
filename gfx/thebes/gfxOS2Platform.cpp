@@ -49,29 +49,30 @@ gfxOS2Platform::~gfxOS2Platform()
 }
 
 already_AddRefed<gfxASurface>
-gfxOS2Platform::CreateOffscreenSurface(const gfxIntSize& aSize,
+gfxOS2Platform::CreateOffscreenSurface(const IntSize& aSize,
                                        gfxContentType contentType)
 {
 #ifdef DEBUG_thebes_2
     printf("gfxOS2Platform::CreateOffscreenSurface(%d/%d, %d)\n",
            aSize.width, aSize.height, aImageFormat);
 #endif
-    gfxASurface *newSurface = nullptr;
+    nsRefPtr<gfxASurface> newSurface;
 
     // we only ever seem to get aImageFormat=0 or gfxImageFormat::ARGB32 but
     // I don't really know if we need to differ between ARGB32 and RGB24 here
     if (contentType == gfxContentType::COLOR_ALPHA ||
         contentType == gfxContentType::COLOR)
     {
-        newSurface = new gfxOS2Surface(aSize, OptimalFormatForContent(contentType));
+        newSurface = new gfxOS2Surface(ThebesIntSize(aSize),
+                                       OptimalFormatForContent(contentType));
     } else if (contentType == gfxContentType::ALPHA) {
-        newSurface = new gfxImageSurface(aSize, OptimalFormatForContent(contentType));
+        newSurface = new gfxImageSurface(ThebesIntSize(aSize),
+                                         OptimalFormatForContent(contentType));
     } else {
         return nullptr;
     }
 
-    NS_IF_ADDREF(newSurface);
-    return newSurface;
+    return newSurface.forget();
 }
 
 nsresult
