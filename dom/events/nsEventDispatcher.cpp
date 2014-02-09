@@ -24,6 +24,7 @@
 #include "mozilla/MutationEvent.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
+#include "mozilla/unused.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -163,7 +164,7 @@ public:
    * Resets aVisitor object and calls PreHandleEvent.
    * Copies mItemFlags and mItemData to the current nsEventTargetChainItem.
    */
-  nsresult PreHandleEvent(nsEventChainPreVisitor& aVisitor);
+  void PreHandleEvent(nsEventChainPreVisitor& aVisitor);
 
   /**
    * If the current item in the event target chain has an event listener
@@ -218,17 +219,16 @@ nsEventTargetChainItem::nsEventTargetChainItem(EventTarget* aTarget)
   MOZ_ASSERT(!aTarget || mTarget == aTarget->GetTargetForEventTargetChain());
 }
 
-nsresult
+void
 nsEventTargetChainItem::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 {
   aVisitor.Reset();
-  nsresult rv = mTarget->PreHandleEvent(aVisitor);
+  unused << mTarget->PreHandleEvent(aVisitor);
   SetForceContentDispatch(aVisitor.mForceContentDispatch);
   SetWantsWillHandleEvent(aVisitor.mWantsWillHandleEvent);
   SetMayHaveListenerManager(aVisitor.mMayHaveListenerManager);
   mItemFlags = aVisitor.mItemFlags;
   mItemData = aVisitor.mItemData;
-  return rv;
 }
 
 nsresult
