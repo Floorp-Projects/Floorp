@@ -12,6 +12,7 @@ const { Cc, Ci, CC } = require('chrome');
 const options = require('@loader/options');
 const file = require('./io/file');
 const runtime = require("./system/runtime");
+var cfxArgs = require("@test/options");
 
 const appStartup = Cc['@mozilla.org/toolkit/app-startup;1'].
                    getService(Ci.nsIAppStartup);
@@ -69,12 +70,13 @@ exports.exit = function exit(code) {
     stream.write(status, status.length);
     stream.flush();
     stream.close();
+    if (cfxArgs.parseable) {
+      console.log('wrote to resultFile');
+    }
   }
 
-  if (code == 0) {
-    forcedExit = true;
-  }
-  appStartup.quit(code ? E_ATTEMPT : E_FORCE);
+  forcedExit = true;
+  appStartup.quit(E_FORCE);
 };
 
 // Adapter for nodejs's stdout & stderr:

@@ -192,10 +192,10 @@ gfxGraphiteShaper::SetGlyphsFromSegment(gfxContext      *aContext,
     uint32_t glyphCount = gr_seg_n_slots(aSegment);
 
     // identify clusters; graphite may have reordered/expanded/ligated glyphs.
-    nsAutoTArray<Cluster,SMALL_GLYPH_RUN> clusters;
-    nsAutoTArray<uint16_t,SMALL_GLYPH_RUN> gids;
-    nsAutoTArray<float,SMALL_GLYPH_RUN> xLocs;
-    nsAutoTArray<float,SMALL_GLYPH_RUN> yLocs;
+    AutoFallibleTArray<Cluster,SMALL_GLYPH_RUN> clusters;
+    AutoFallibleTArray<uint16_t,SMALL_GLYPH_RUN> gids;
+    AutoFallibleTArray<float,SMALL_GLYPH_RUN> xLocs;
+    AutoFallibleTArray<float,SMALL_GLYPH_RUN> yLocs;
 
     if (!clusters.SetLength(aLength) ||
         !gids.SetLength(glyphCount) ||

@@ -514,32 +514,40 @@ TabParent::AcknowledgeScrollUpdate(const ViewID& aScrollId, const uint32_t& aScr
   }
 }
 
-void TabParent::HandleDoubleTap(const CSSIntPoint& aPoint, int32_t aModifiers)
+void TabParent::HandleDoubleTap(const CSSIntPoint& aPoint,
+                                int32_t aModifiers,
+                                const ScrollableLayerGuid &aGuid)
 {
   if (!mIsDestroyed) {
-    unused << SendHandleDoubleTap(aPoint);
+    unused << SendHandleDoubleTap(aPoint, aGuid);
   }
 }
 
-void TabParent::HandleSingleTap(const CSSIntPoint& aPoint, int32_t aModifiers)
+void TabParent::HandleSingleTap(const CSSIntPoint& aPoint,
+                                int32_t aModifiers,
+                                const ScrollableLayerGuid &aGuid)
 {
   // TODO Send the modifier data to TabChild for use in mouse events.
   if (!mIsDestroyed) {
-    unused << SendHandleSingleTap(aPoint);
+    unused << SendHandleSingleTap(aPoint, aGuid);
   }
 }
 
-void TabParent::HandleLongTap(const CSSIntPoint& aPoint, int32_t aModifiers)
+void TabParent::HandleLongTap(const CSSIntPoint& aPoint,
+                              int32_t aModifiers,
+                              const ScrollableLayerGuid &aGuid)
 {
   if (!mIsDestroyed) {
-    unused << SendHandleLongTap(aPoint);
+    unused << SendHandleLongTap(aPoint, aGuid);
   }
 }
 
-void TabParent::HandleLongTapUp(const CSSIntPoint& aPoint, int32_t aModifiers)
+void TabParent::HandleLongTapUp(const CSSIntPoint& aPoint,
+                                int32_t aModifiers,
+                                const ScrollableLayerGuid &aGuid)
 {
   if (!mIsDestroyed) {
-    unused << SendHandleLongTapUp(aPoint);
+    unused << SendHandleLongTapUp(aPoint, aGuid);
   }
 }
 
@@ -717,40 +725,40 @@ CSSIntPoint TabParent::AdjustTapToChildWidget(const CSSIntPoint& aPoint)
     aPoint.y + presContext->DevPixelsToIntCSSPixels(mChildProcessOffsetAtTouchStart.y));
 }
 
-bool TabParent::SendHandleSingleTap(const CSSIntPoint& aPoint)
+bool TabParent::SendHandleSingleTap(const CSSIntPoint& aPoint, const ScrollableLayerGuid& aGuid)
 {
   if (mIsDestroyed) {
     return false;
   }
 
-  return PBrowserParent::SendHandleSingleTap(AdjustTapToChildWidget(aPoint));
+  return PBrowserParent::SendHandleSingleTap(AdjustTapToChildWidget(aPoint), aGuid);
 }
 
-bool TabParent::SendHandleLongTap(const CSSIntPoint& aPoint)
+bool TabParent::SendHandleLongTap(const CSSIntPoint& aPoint, const ScrollableLayerGuid& aGuid)
 {
   if (mIsDestroyed) {
     return false;
   }
 
-  return PBrowserParent::SendHandleLongTap(AdjustTapToChildWidget(aPoint));
+  return PBrowserParent::SendHandleLongTap(AdjustTapToChildWidget(aPoint), aGuid);
 }
 
-bool TabParent::SendHandleLongTapUp(const CSSIntPoint& aPoint)
+bool TabParent::SendHandleLongTapUp(const CSSIntPoint& aPoint, const ScrollableLayerGuid& aGuid)
 {
   if (mIsDestroyed) {
     return false;
   }
 
-  return PBrowserParent::SendHandleLongTapUp(AdjustTapToChildWidget(aPoint));
+  return PBrowserParent::SendHandleLongTapUp(AdjustTapToChildWidget(aPoint), aGuid);
 }
 
-bool TabParent::SendHandleDoubleTap(const CSSIntPoint& aPoint)
+bool TabParent::SendHandleDoubleTap(const CSSIntPoint& aPoint, const ScrollableLayerGuid& aGuid)
 {
   if (mIsDestroyed) {
     return false;
   }
 
-  return PBrowserParent::SendHandleDoubleTap(AdjustTapToChildWidget(aPoint));
+  return PBrowserParent::SendHandleDoubleTap(AdjustTapToChildWidget(aPoint), aGuid);
 }
 
 bool TabParent::SendMouseWheelEvent(WidgetWheelEvent& event)

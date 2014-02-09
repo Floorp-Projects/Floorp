@@ -824,6 +824,16 @@ pref("browser.snippets.syncPromo.enabled", false);
 // The URL of the APK factory from which we obtain APKs for webapps.
 // This currently points to the development server.
 pref("browser.webapps.apkFactoryUrl", "http://dapk.net/application.apk");
+
+// How frequently to check for webapp updates, in seconds (86400 is daily).
+pref("browser.webapps.updateInterval", 86400);
+
+// The URL of the service that checks for updates.
+// This currently points to the development server.
+// To test updates, set this to http://apk-update-checker.paas.allizom.org,
+// which is a test server that always reports all apps as having updates.
+pref("browser.webapps.updateCheckUrl", "http://dapk.net/app_updates");
+
 #endif
 
 // Whether or not to only sync home provider data when the user is on wifi.

@@ -650,8 +650,8 @@ RegExpCompartment::RegExpCompartment(JSRuntime *rt)
 
 RegExpCompartment::~RegExpCompartment()
 {
-    JS_ASSERT(map_.empty());
-    JS_ASSERT(inUse_.empty());
+    JS_ASSERT_IF(map_.initialized(), map_.empty());
+    JS_ASSERT_IF(inUse_.initialized(), inUse_.empty());
 }
 
 JSObject *

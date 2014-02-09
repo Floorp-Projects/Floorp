@@ -1107,16 +1107,13 @@ HyperTextAccessible::SetSelectionRange(int32_t aStartPos, int32_t aEndPos)
   if (isFocusable)
     TakeFocus();
 
-  // Set the selection
-  SetSelectionBoundsAt(0, aStartPos, aEndPos);
-
-  // If range 0 was successfully set, clear any additional selection 
-  // ranges remaining from previous selection
   Selection* domSel = DOMSelection();
   NS_ENSURE_STATE(domSel);
 
+  // Set up the selection.
   for (int32_t idx = domSel->GetRangeCount() - 1; idx > 0; idx--)
     domSel->RemoveRange(domSel->GetRangeAt(idx));
+  SetSelectionBoundsAt(0, aStartPos, aEndPos);
 
   // When selection is done, move the focus to the selection if accessible is
   // not focusable. That happens when selection is set within hypertext

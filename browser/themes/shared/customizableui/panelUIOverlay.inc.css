@@ -18,9 +18,9 @@
 %include ../browser.inc
 
 #PanelUI-button {
-  background-image: -moz-linear-gradient(hsla(0,0%,100%,0), hsla(0,0%,100%,.3) 30%, hsla(0,0%,100%,.3) 70%, hsla(0,0%,100%,0)),
-                    -moz-linear-gradient(hsla(210,54%,20%,0), hsla(210,54%,20%,.3) 30%, hsla(210,54%,20%,.3) 70%, hsla(210,54%,20%,0)),
-                    -moz-linear-gradient(hsla(0,0%,100%,0), hsla(0,0%,100%,.3) 30%, hsla(0,0%,100%,.3) 70%, hsla(0,0%,100%,0));
+  background-image: linear-gradient(to bottom, hsla(0,0%,100%,0), hsla(0,0%,100%,.3) 30%, hsla(0,0%,100%,.3) 70%, hsla(0,0%,100%,0)),
+                    linear-gradient(to bottom, hsla(210,54%,20%,0), hsla(210,54%,20%,.3) 30%, hsla(210,54%,20%,.3) 70%, hsla(210,54%,20%,0)),
+                    linear-gradient(to bottom, hsla(0,0%,100%,0), hsla(0,0%,100%,.3) 30%, hsla(0,0%,100%,.3) 70%, hsla(0,0%,100%,0));
   background-size: 1px calc(100% - 1px), 1px calc(100% - 1px), 1px  calc(100% - 1px) !important;
   background-position: 0px 0px, 1px 0px, 2px 0px;
   background-repeat: no-repeat;
@@ -104,7 +104,6 @@
 
 #PanelUI-popup > .panel-arrowcontainer > .panel-arrowcontent {
   overflow: hidden;
-  box-shadow: none;
 }
 
 #PanelUI-popup > .panel-arrowcontainer > .panel-arrowcontent,
@@ -116,8 +115,12 @@
 .panelUI-grid .toolbarbutton-1 > .toolbarbutton-multiline-text {
   text-align: center;
   -moz-hyphens: auto;
-  mask: url(chrome://browser/content/browser.xul#menuPanelButtonTextFadeOutMask);
   min-height: 3.5em;
+}
+
+.panelUI-grid:not([customize-transitioning]) .toolbarbutton-menubutton-button > .toolbarbutton-multiline-text,
+.panelUI-grid:not([customize-transitioning]) .toolbarbutton-1 > .toolbarbutton-multiline-text {
+  mask: url(chrome://browser/content/browser.xul#menuPanelButtonTextFadeOutMask);
 }
 
 .panelUI-grid .toolbarbutton-1 > .toolbarbutton-multiline-text {
@@ -185,6 +188,13 @@ toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-it
   -moz-box-orient: vertical;
   width: calc(@menuPanelButtonWidth@);
   height: calc(40px + 4em);
+}
+
+/* Help SDK buttons fit in. */
+toolbarpaletteitem[place="palette"] > #personal-bookmarks > #bookmarks-toolbar-placeholder,
+#personal-bookmarks[cui-areatype="menu-panel"] > #bookmarks-toolbar-placeholder {
+  height: 32px;
+  width: 32px;
 }
 
 .customization-palette .toolbarbutton-1 {

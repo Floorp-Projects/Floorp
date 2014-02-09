@@ -10,6 +10,7 @@ EXPORTS += [
     'imgRequest.h',
     'imgRequestProxy.h',
     'Orientation.h',
+    'SurfaceCache.h'
 ]
 
 UNIFIED_SOURCES += [
