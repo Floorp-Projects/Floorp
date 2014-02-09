@@ -3,6 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+XPCOMUtils.defineLazyModuleGetter(this, "Feeds",
+  "resource:///modules/Feeds.jsm");
+
 function initFeedTab()
 {
   const feedTypes = {
@@ -29,7 +32,7 @@ function initFeedTab()
     }
 
     if (rels.feed || (link.type && rels.alternate && !rels.stylesheet)) {
-      var type = isValidFeed(link, gDocument.nodePrincipal, "feed" in rels);
+      var type = Feeds.isValidFeed(link, gDocument.nodePrincipal, "feed" in rels);
       if (type) {
         type = feedTypes[type] || feedTypes["application/rss+xml"];
         addRow(link.title, type, link.href);
