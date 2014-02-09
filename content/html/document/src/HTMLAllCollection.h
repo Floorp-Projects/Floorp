@@ -12,6 +12,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsISupportsImpl.h"
 
+class nsContentList;
 class nsHTMLDocument;
 
 namespace mozilla {
@@ -30,9 +31,12 @@ public:
 
   JSObject* GetObject(JSContext* aCx, ErrorResult& aRv);
 
+  nsContentList* Collection();
+
 private:
   JS::Heap<JSObject*> mObject;
   nsRefPtr<nsHTMLDocument> mDocument;
+  nsRefPtr<nsContentList> mCollection;
 };
 
 } // namespace dom
