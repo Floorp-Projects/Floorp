@@ -1706,7 +1706,7 @@ GLContext::DeletedShader(GLContext *aOrigin, GLuint aName)
 }
 
 void
-GLContext::DeletedBuffers(GLContext *aOrigin, GLsizei aCount, GLuint *aNames)
+GLContext::DeletedBuffers(GLContext *aOrigin, GLsizei aCount, const GLuint *aNames)
 {
     RemoveNamesFromArray(aOrigin, aCount, aNames, mTrackedBuffers);
 }
@@ -1718,19 +1718,19 @@ GLContext::DeletedQueries(GLContext *aOrigin, GLsizei aCount, const GLuint *aNam
 }
 
 void
-GLContext::DeletedTextures(GLContext *aOrigin, GLsizei aCount, GLuint *aNames)
+GLContext::DeletedTextures(GLContext *aOrigin, GLsizei aCount, const GLuint *aNames)
 {
     RemoveNamesFromArray(aOrigin, aCount, aNames, mTrackedTextures);
 }
 
 void
-GLContext::DeletedFramebuffers(GLContext *aOrigin, GLsizei aCount, GLuint *aNames)
+GLContext::DeletedFramebuffers(GLContext *aOrigin, GLsizei aCount, const GLuint *aNames)
 {
     RemoveNamesFromArray(aOrigin, aCount, aNames, mTrackedFramebuffers);
 }
 
 void
-GLContext::DeletedRenderbuffers(GLContext *aOrigin, GLsizei aCount, GLuint *aNames)
+GLContext::DeletedRenderbuffers(GLContext *aOrigin, GLsizei aCount, const GLuint *aNames)
 {
     RemoveNamesFromArray(aOrigin, aCount, aNames, mTrackedRenderbuffers);
 }

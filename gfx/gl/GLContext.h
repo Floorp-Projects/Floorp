@@ -1041,7 +1041,7 @@ public:
         AFTER_GL_CALL;
     }
 
-    GLint fGetAttribLocation (GLuint program, const GLchar* name) {
+    GLint fGetAttribLocation(GLuint program, const GLchar* name) {
         BEFORE_GL_CALL;
         GLint retval = mSymbols.fGetAttribLocation(program, name);
         AFTER_GL_CALL;
@@ -1950,25 +1950,25 @@ private:
         AFTER_GL_CALL;
     }
 
-    void GLAPIENTRY raw_fDeleteBuffers(GLsizei n, GLuint *names) {
+    void GLAPIENTRY raw_fDeleteBuffers(GLsizei n, const GLuint* names) {
         BEFORE_GL_CALL;
         mSymbols.fDeleteBuffers(n, names);
         AFTER_GL_CALL;
     }
 
-    void GLAPIENTRY raw_fDeleteFramebuffers(GLsizei n, GLuint *names) {
+    void GLAPIENTRY raw_fDeleteFramebuffers(GLsizei n, const GLuint* names) {
         BEFORE_GL_CALL;
         mSymbols.fDeleteFramebuffers(n, names);
         AFTER_GL_CALL;
     }
 
-    void GLAPIENTRY raw_fDeleteRenderbuffers(GLsizei n, GLuint *names) {
+    void GLAPIENTRY raw_fDeleteRenderbuffers(GLsizei n, const GLuint* names) {
         BEFORE_GL_CALL;
         mSymbols.fDeleteRenderbuffers(n, names);
         AFTER_GL_CALL;
     }
 
-    void GLAPIENTRY raw_fDeleteTextures(GLsizei n, GLuint *names) {
+    void GLAPIENTRY raw_fDeleteTextures(GLsizei n, const GLuint* names) {
         BEFORE_GL_CALL;
         mSymbols.fDeleteTextures(n, names);
         AFTER_GL_CALL;
@@ -1986,12 +1986,12 @@ public:
         TRACKING_CONTEXT(DeletedShader(this, shader));
     }
 
-    void fDeleteBuffers(GLsizei n, GLuint *names) {
+    void fDeleteBuffers(GLsizei n, const GLuint* names) {
         raw_fDeleteBuffers(n, names);
         TRACKING_CONTEXT(DeletedBuffers(this, n, names));
     }
 
-    void fDeleteFramebuffers(GLsizei n, GLuint *names) {
+    void fDeleteFramebuffers(GLsizei n, const GLuint* names) {
         if (mScreen) {
             // Notify mScreen which framebuffers we're deleting.
             // Otherwise, we will get framebuffer binding mispredictions.
@@ -2008,12 +2008,12 @@ public:
         TRACKING_CONTEXT(DeletedFramebuffers(this, n, names));
     }
 
-    void fDeleteRenderbuffers(GLsizei n, GLuint *names) {
+    void fDeleteRenderbuffers(GLsizei n, const GLuint* names) {
         raw_fDeleteRenderbuffers(n, names);
         TRACKING_CONTEXT(DeletedRenderbuffers(this, n, names));
     }
 
-    void fDeleteTextures(GLsizei n, GLuint *names) {
+    void fDeleteTextures(GLsizei n, const GLuint* names) {
         raw_fDeleteTextures(n, names);
         TRACKING_CONTEXT(DeletedTextures(this, n, names));
     }
@@ -2863,11 +2863,11 @@ public:
     void CreatedRenderbuffers(GLContext *aOrigin, GLsizei aCount, GLuint *aNames);
     void DeletedProgram(GLContext *aOrigin, GLuint aName);
     void DeletedShader(GLContext *aOrigin, GLuint aName);
-    void DeletedBuffers(GLContext *aOrigin, GLsizei aCount, GLuint *aNames);
+    void DeletedBuffers(GLContext *aOrigin, GLsizei aCount, const GLuint *aNames);
     void DeletedQueries(GLContext *aOrigin, GLsizei aCount, const GLuint *aNames);
-    void DeletedTextures(GLContext *aOrigin, GLsizei aCount, GLuint *aNames);
-    void DeletedFramebuffers(GLContext *aOrigin, GLsizei aCount, GLuint *aNames);
-    void DeletedRenderbuffers(GLContext *aOrigin, GLsizei aCount, GLuint *aNames);
+    void DeletedTextures(GLContext *aOrigin, GLsizei aCount, const GLuint *aNames);
+    void DeletedFramebuffers(GLContext *aOrigin, GLsizei aCount, const GLuint *aNames);
+    void DeletedRenderbuffers(GLContext *aOrigin, GLsizei aCount, const GLuint *aNames);
 
     void SharedContextDestroyed(GLContext *aChild);
     void ReportOutstandingNames();
