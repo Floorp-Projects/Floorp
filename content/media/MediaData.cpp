@@ -73,7 +73,7 @@ VideoData::VideoData(int64_t aOffset,
                      int64_t aDuration,
                      bool aKeyframe,
                      int64_t aTimecode,
-                     nsIntSize aDisplay)
+                     IntSize aDisplay)
   : MediaData(VIDEO_FRAME, aOffset, aTime, aDuration),
     mDisplay(aDisplay),
     mTimecode(aTimecode),
@@ -112,7 +112,7 @@ VideoData* VideoData::Create(VideoInfo& aInfo,
                              const YCbCrBuffer& aBuffer,
                              bool aKeyframe,
                              int64_t aTimecode,
-                             nsIntRect aPicture)
+                             const IntRect& aPicture)
 {
   if (!aImage && !aContainer) {
     // Create a dummy VideoData with no image. This gives us something to
@@ -122,7 +122,7 @@ VideoData* VideoData::Create(VideoInfo& aInfo,
                                          aDuration,
                                          aKeyframe,
                                          aTimecode,
-                                         aInfo.mDisplay));
+                                         aInfo.mDisplay.ToIntSize()));
     return v.forget();
   }
 
@@ -163,7 +163,7 @@ VideoData* VideoData::Create(VideoInfo& aInfo,
                                        aDuration,
                                        aKeyframe,
                                        aTimecode,
-                                       aInfo.mDisplay));
+                                       aInfo.mDisplay.ToIntSize()));
   const YCbCrBuffer::Plane &Y = aBuffer.mPlanes[0];
   const YCbCrBuffer::Plane &Cb = aBuffer.mPlanes[1];
   const YCbCrBuffer::Plane &Cr = aBuffer.mPlanes[2];
@@ -204,7 +204,7 @@ VideoData* VideoData::Create(VideoInfo& aInfo,
   data.mCrSkip = Cr.mSkip;
   data.mPicX = aPicture.x;
   data.mPicY = aPicture.y;
-  data.mPicSize = aPicture.Size().ToIntSize();
+  data.mPicSize = aPicture.Size();
   data.mStereoMode = aInfo.mStereoMode;
 
   videoImage->SetDelayedConversion(true);
@@ -225,7 +225,7 @@ VideoData* VideoData::Create(VideoInfo& aInfo,
                              const YCbCrBuffer& aBuffer,
                              bool aKeyframe,
                              int64_t aTimecode,
-                             nsIntRect aPicture)
+                             const IntRect& aPicture)
 {
   return Create(aInfo, aContainer, nullptr, aOffset, aTime, aDuration, aBuffer,
                 aKeyframe, aTimecode, aPicture);
@@ -239,7 +239,7 @@ VideoData* VideoData::Create(VideoInfo& aInfo,
                              const YCbCrBuffer& aBuffer,
                              bool aKeyframe,
                              int64_t aTimecode,
-                             nsIntRect aPicture)
+                             const IntRect& aPicture)
 {
   return Create(aInfo, nullptr, aImage, aOffset, aTime, aDuration, aBuffer,
                 aKeyframe, aTimecode, aPicture);
@@ -253,14 +253,14 @@ VideoData* VideoData::CreateFromImage(VideoInfo& aInfo,
                                       const nsRefPtr<Image>& aImage,
                                       bool aKeyframe,
                                       int64_t aTimecode,
-                                      nsIntRect aPicture)
+                                      const IntRect& aPicture)
 {
   nsAutoPtr<VideoData> v(new VideoData(aOffset,
                                        aTime,
                                        aDuration,
                                        aKeyframe,
                                        aTimecode,
-                                       aInfo.mDisplay));
+                                       aInfo.mDisplay.ToIntSize()));
   v->mImage = aImage;
   return v.forget();
 }
@@ -274,7 +274,7 @@ VideoData* VideoData::Create(VideoInfo& aInfo,
                              mozilla::layers::GraphicBufferLocked* aBuffer,
                              bool aKeyframe,
                              int64_t aTimecode,
-                             nsIntRect aPicture)
+                             const IntRect& aPicture)
 {
   if (!aContainer) {
     // Create a dummy VideoData with no image. This gives us something to
@@ -284,7 +284,7 @@ VideoData* VideoData::Create(VideoInfo& aInfo,
                                          aDuration,
                                          aKeyframe,
                                          aTimecode,
-                                         aInfo.mDisplay));
+                                         aInfo.mDisplay.ToIntSize()));
     return v.forget();
   }
 
@@ -311,7 +311,7 @@ VideoData* VideoData::Create(VideoInfo& aInfo,
                                        aDuration,
                                        aKeyframe,
                                        aTimecode,
-                                       aInfo.mDisplay));
+                                       aInfo.mDisplay.ToIntSize()));
 
   v->mImage = aContainer->CreateImage(ImageFormat::GRALLOC_PLANAR_YCBCR);
   if (!v->mImage) {
@@ -323,7 +323,7 @@ VideoData* VideoData::Create(VideoInfo& aInfo,
   GrallocImage* videoImage = static_cast<GrallocImage*>(v->mImage.get());
   GrallocImage::GrallocData data;
 
-  data.mPicSize = aPicture.Size().ToIntSize();
+  data.mPicSize = aPicture.Size();
   data.mGraphicBuffer = aBuffer;
 
   videoImage->SetData(data);
