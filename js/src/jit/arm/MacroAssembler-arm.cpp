@@ -1528,10 +1528,19 @@ MacroAssemblerARM::ma_vimm_f32(float value, FloatRegister dest, Condition cc)
             return;
         }
 
-        VFPImm enc(DoubleHighWord(double(value)));
-        if (enc.isValid()) {
-            as_vimm(vd, enc, cc);
-            return;
+        // Note that the vimm immediate float32 instruction encoding differs from the
+        // vimm immediate double encoding, but this difference matches the difference
+        // in the floating point formats, so it is possible to convert the float32 to
+        // a double and then use the double encoding paths.  It is still necessary to
+        // firstly check that the double low word is zero because some float32
+        // numbers set these bits and this can not be ignored.
+        double doubleValue = value;
+        if (DoubleLowWord(value) == 0) {
+            VFPImm enc(DoubleHighWord(doubleValue));
+            if (enc.isValid()) {
+                as_vimm(vd, enc, cc);
+                return;
+            }
         }
     }
     // Fall back to putting the value in a pool.

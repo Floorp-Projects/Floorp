@@ -1,0 +1,33 @@
+<!doctype html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=969346
+-->
+<head>
+<title>Nesting of srcdoc iframes is permitted</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=969349">Mozilla Bug 969346</a>
+
+<iframe id="pframe" srcdoc="<iframe id='iframe' srcdoc='I am nested'></iframe"></iframe>
+
+<pre id="test">
+<script>
+
+    SimpleTest.waitForExplicitFinish();
+    addLoadEvent(function () {
+        var pframe = $("pframe");
+        var pframeDoc = pframe.contentDocument;
+        var iframe = pframeDoc.getElementById("iframe");
+        var innerDoc = iframe.contentDocument;
+
+        is(innerDoc.body.innerHTML, "I am nested", "Nesting not working?");
+        SimpleTest.finish();
+    });
+
+</script>
+</pre>
+</body>
+</html>
