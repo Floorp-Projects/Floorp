@@ -37,7 +37,8 @@
       <preference id="network.proxy.ssl_port"     name="network.proxy.ssl_port"     type="int"/>
       <preference id="network.proxy.socks"        name="network.proxy.socks"        type="string"/>
       <preference id="network.proxy.socks_port"   name="network.proxy.socks_port"   type="int"/>
-      <preference id="network.proxy.socks_version"  name="network.proxy.socks_version"  type="int"/>
+      <preference id="network.proxy.socks_version"  name="network.proxy.socks_version"  type="int" onchange="gConnectionsDialog.updateDNSPref();"/>
+      <preference id="network.proxy.socks_remote_dns"  name="network.proxy.socks_remote_dns"  type="bool"/>
       <preference id="network.proxy.no_proxies_on"  name="network.proxy.no_proxies_on"  type="string"/>
       <preference id="network.proxy.autoconfig_url" name="network.proxy.autoconfig_url" type="string"/>
       <preference id="network.proxy.share_proxy_settings"
@@ -133,11 +134,14 @@
             </row>
             <row>
               <spacer/>
+              <box pack="start">
               <radiogroup id="networkProxySOCKSVersion" orient="horizontal"
                           preference="network.proxy.socks_version">
                 <radio id="networkProxySOCKSVersion4" value="4" label="&socks4.label;" accesskey="&socks4.accesskey;" />
                 <radio id="networkProxySOCKSVersion5" value="5" label="&socks5.label;" accesskey="&socks5.accesskey;" />
               </radiogroup>
+              <checkbox id="networkProxySOCKSRemoteDNS"  preference="network.proxy.socks_remote_dns" label="&socksRemoteDNS.label;" accesskey="&socksRemoteDNS.accesskey;" />
+              </box>
             </row>
             <label value="&noproxy.label;" accesskey="&noproxy.accesskey;" control="networkProxyNone"/>
             <textbox id="networkProxyNone" preference="network.proxy.no_proxies_on" multiline="true" rows="2"/>
