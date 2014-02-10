@@ -150,7 +150,21 @@ TextureClientD3D11::TextureClientD3D11(gfx::SurfaceFormat aFormat, TextureFlags 
 {}
 
 TextureClientD3D11::~TextureClientD3D11()
-{}
+{
+#ifdef DEBUG
+  // An Azure DrawTarget needs to be locked when it gets nullptr'ed as this is
+  // when it calls EndDraw. This EndDraw should not execute anything so it
+  // shouldn't -really- need the lock but the debug layer chokes on this.
+  if (mDrawTarget) {
+    MOZ_ASSERT(!mIsLocked);
+    MOZ_ASSERT(mTexture);
+    MOZ_ASSERT(mDrawTarget->refCount() == 1);
+    LockD3DTexture(mTexture.get());
+    mDrawTarget = nullptr;
+    UnlockD3DTexture(mTexture.get());
+  }
+#endif
+}
 
 bool
 TextureClientD3D11::Lock(OpenMode aMode)

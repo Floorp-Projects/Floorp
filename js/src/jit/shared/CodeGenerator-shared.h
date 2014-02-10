@@ -15,7 +15,7 @@
 #include "jit/MIRGenerator.h"
 #include "jit/MIRGraph.h"
 #include "jit/Safepoints.h"
-#include "jit/SnapshotWriter.h"
+#include "jit/Snapshots.h"
 #include "jit/VMFunctions.h"
 #include "vm/ForkJoin.h"
 
@@ -258,7 +258,7 @@ class CodeGeneratorShared : public LInstructionVisitor
     // Encodes an LSnapshot into the compressed snapshot buffer, returning
     // false on failure.
     bool encode(LSnapshot *snapshot);
-    bool encodeSlots(LSnapshot *snapshot, MResumePoint *resumePoint, uint32_t *startIndex);
+    bool encodeAllocations(LSnapshot *snapshot, MResumePoint *resumePoint, uint32_t *startIndex);
 
     // Attempts to assign a BailoutId to a snapshot, if one isn't already set.
     // If the bailout table is full, this returns false, which is not a fatal

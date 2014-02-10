@@ -1575,7 +1575,7 @@ void
 DirectWriteFontInfo::LoadFontFamilyData(const nsAString& aFamilyName)
 {
     // lookup the family
-    nsAutoTArray<char16_t, 32> famName;
+    nsAutoTArray<wchar_t, 32> famName;
 
     uint32_t len = aFamilyName.Length();
     famName.SetLength(len + 1);

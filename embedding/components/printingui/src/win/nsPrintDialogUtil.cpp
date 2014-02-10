@@ -453,7 +453,7 @@ static HWND CreateControl(LPCTSTR          aType,
   HWND hWnd = ::CreateWindow (aType, str.get(),
                               WS_CHILD | WS_CLIPSIBLINGS | WS_VISIBLE | aStyle,
                               aRect.x, aRect.y, aRect.width, aRect.height,
-                              (HWND)aHdlg, (HMENU)aId,
+                              (HWND)aHdlg, (HMENU)(intptr_t)aId,
                               aHInst, nullptr);
   if (hWnd == nullptr) return nullptr;
 

@@ -560,53 +560,105 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    *        "flash" or "other".
    */
   filterOn: function(aType = "all") {
-    let target = $("#requests-menu-filter-" + aType + "-button");
-    let buttons = document.querySelectorAll(".requests-menu-footer-button");
-
-    for (let button of buttons) {
-      if (button != target) {
-        button.removeAttribute("checked");
-      } else {
-        button.setAttribute("checked", "true");
+    if (aType === "all") {
+      // The filter "all" is special as it doesn't toggle.
+      // - If some filters are selected and 'all' is clicked, the previously
+      //   selected filters will be disabled and 'all' is the only active one.
+      // - If 'all' is already selected, do nothing.
+      if (this._activeFilters.indexOf("all") !== -1) {
+        return;
       }
+
+      // Uncheck all other filters and select 'all'. Must create a copy as
+      // _disableFilter removes the filters from the list while it's being
+      // iterated. 'all' will be enabled automatically by _disableFilter once
+      // the last filter is disabled.
+      this._activeFilters.slice().forEach(this._disableFilter, this);
+    }
+    else if (this._activeFilters.indexOf(aType) === -1) {
+      this._enableFilter(aType);
+    }
+    else {
+      this._disableFilter(aType);
     }
 
-    // Filter on whatever was requested.
-    switch (aType) {
-      case "all":
-        this.filterContents(() => true);
-        break;
-      case "html":
-        this.filterContents(e => this.isHtml(e));
-        break;
-      case "css":
-        this.filterContents(e => this.isCss(e));
-        break;
-      case "js":
-        this.filterContents(e => this.isJs(e));
-        break;
-      case "xhr":
-        this.filterContents(e => this.isXHR(e));
-        break;
-      case "fonts":
-        this.filterContents(e => this.isFont(e));
-        break;
-      case "images":
-        this.filterContents(e => this.isImage(e));
-        break;
-      case "media":
-        this.filterContents(e => this.isMedia(e));
-        break;
-      case "flash":
-        this.filterContents(e => this.isFlash(e));
-        break;
-      case "other":
-        this.filterContents(e => this.isOther(e));
-        break;
-    }
-
+    this.filterContents(this._filterPredicate);
     this.refreshSummary();
     this.refreshZebra();
+  },
+
+  /**
+   * Disables the given filter, its button and toggles 'all' on if the filter to
+   * be disabled is the last one active.
+   *
+   * @param string aType
+   *        Either "all", "html", "css", "js", "xhr", "fonts", "images", "media"
+   *        "flash" or "other".
+   */
+  _disableFilter: function (aType) {
+    // Remove the filter from list of active filters.
+    this._activeFilters.splice(this._activeFilters.indexOf(aType), 1);
+
+    // Remove the checked status from the filter.
+    let target = $("#requests-menu-filter-" + aType + "-button");
+    target.removeAttribute("checked");
+
+    // Check if the filter disabled was the last one. If so, toggle all on.
+    if (this._activeFilters.length === 0)
+      this._enableFilter("all");
+  },
+
+  /**
+   * Enables the given filter, its button and toggles 'all' off if the filter to
+   * be enabled is the first one active.
+   *
+   * @param string aType
+   *        Either "all", "html", "css", "js", "xhr", "fonts", "images", "media"
+   *        "flash" or "other".
+   */
+  _enableFilter: function (aType) {
+    // Add the filter to the list of active filters.
+    this._activeFilters.push(aType);
+
+    // Add the checked status to the filter button.
+    let target = $("#requests-menu-filter-" + aType + "-button");
+    target.setAttribute("checked", true);
+
+    // Check if 'all' was selected before. If so, disable it.
+    if (aType !== "all" && this._activeFilters.indexOf("all") !== -1) {
+      this._disableFilter("all");
+    }
+  },
+
+  /**
+   * Returns a predicate that can be used to test if a request matches any of
+   * the active filters.
+   */
+  get _filterPredicate() {
+    let filterPredicates = {
+      "all": () => true,
+      "html": this.isHtml,
+      "css": this.isCss,
+      "js": this.isJs,
+      "xhr": this.isXHR,
+      "fonts": this.isFont,
+      "images": this.isImage,
+      "media": this.isMedia,
+      "flash": this.isFlash,
+      "other": this.isOther
+    };
+
+     if (this._activeFilters.length === 1) {
+       // The simplest case: only one filter active.
+       return filterPredicates[this._activeFilters[0]].bind(this);
+     } else {
+       // Multiple filters active.
+       return requestItem => {
+         return this._activeFilters.some(filterName => {
+           return filterPredicates[filterName].call(this, requestItem);
+         });
+       };
+     }
   },
 
   /**
@@ -1526,7 +1578,8 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
   _lastRequestEndedMillis: -1,
   _updateQueue: [],
   _updateTimeout: null,
-  _resizeTimeout: null
+  _resizeTimeout: null,
+  _activeFilters: ["all"]
 });
 
 /**
