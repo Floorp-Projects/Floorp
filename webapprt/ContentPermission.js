@@ -30,17 +30,25 @@ ContentPermission.prototype = {
   },
 
   prompt: function(request) {
+    // Only allow exactly one permission rquest here.
+    let types = request.types.QueryInterface(Ci.nsIArray);
+    if (types.length != 1) {
+      request.cancel();
+      return;
+    }
+    let perm = types.queryElementAt(0, Ci.nsIContentPermissionType);
+
     // Reuse any remembered permission preferences
     let result =
       Services.perms.testExactPermissionFromPrincipal(request.principal,
-                                                      request.type);
+                                                      perm.type);
 
     // We used to use the name "geo" for the geolocation permission, now we're
     // using "geolocation".  We need to check both to support existing
     // installations.
     if ((result == Ci.nsIPermissionManager.UNKNOWN_ACTION ||
          result == Ci.nsIPermissionManager.PROMPT_ACTION) &&
-        request.type == "geolocation") {
+        perm.type == "geolocation") {
       let geoResult = Services.perms.testExactPermission(request.principal.URI,
                                                          "geo");
       // We override the result only if the "geo" permission was allowed or
@@ -56,7 +64,7 @@ ContentPermission.prototype = {
       return;
     } else if (result == Ci.nsIPermissionManager.DENY_ACTION ||
                (result == Ci.nsIPermissionManager.UNKNOWN_ACTION &&
-                UNKNOWN_FAIL.indexOf(request.type) >= 0)) {
+                UNKNOWN_FAIL.indexOf(perm.type) >= 0)) {
       request.cancel();
       return;
     }
@@ -71,16 +79,16 @@ ContentPermission.prototype = {
     let remember = {value: false};
     let choice = Services.prompt.confirmEx(
       chromeWin,
-      bundle.formatStringFromName(request.type + ".title", [name], 1),
-      bundle.GetStringFromName(request.type + ".description"),
+      bundle.formatStringFromName(perm.type + ".title", [name], 1),
+      bundle.GetStringFromName(perm.type + ".description"),
       // Set both buttons to strings with the cancel button being default
       Ci.nsIPromptService.BUTTON_POS_1_DEFAULT |
         Ci.nsIPromptService.BUTTON_TITLE_IS_STRING * Ci.nsIPromptService.BUTTON_POS_0 |
         Ci.nsIPromptService.BUTTON_TITLE_IS_STRING * Ci.nsIPromptService.BUTTON_POS_1,
-      bundle.GetStringFromName(request.type + ".allow"),
-      bundle.GetStringFromName(request.type + ".deny"),
+      bundle.GetStringFromName(perm.type + ".allow"),
+      bundle.GetStringFromName(perm.type + ".deny"),
       null,
-      bundle.GetStringFromName(request.type + ".remember"),
+      bundle.GetStringFromName(perm.type + ".remember"),
       remember);
 
     let action = Ci.nsIPermissionManager.ALLOW_ACTION;
@@ -90,10 +98,10 @@ ContentPermission.prototype = {
 
     if (remember.value) {
       // Persist the choice if the user wants to remember
-      Services.perms.addFromPrincipal(request.principal, request.type, action);
+      Services.perms.addFromPrincipal(request.principal, perm.type, action);
     } else {
       // Otherwise allow the permission for the current session
-      Services.perms.addFromPrincipal(request.principal, request.type, action,
+      Services.perms.addFromPrincipal(request.principal, perm.type, action,
                                       Ci.nsIPermissionManager.EXPIRE_SESSION);
     }
 
