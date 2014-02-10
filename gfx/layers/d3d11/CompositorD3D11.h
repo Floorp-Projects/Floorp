@@ -136,8 +136,6 @@ public:
   virtual const char* Name() const MOZ_OVERRIDE { return "Direct3D 11"; }
 #endif
 
-  virtual void NotifyLayersTransaction() MOZ_OVERRIDE { }
-
   virtual nsIWidget* GetWidget() const MOZ_OVERRIDE { return mWidget; }
 
   ID3D11Device* GetDevice() { return mDevice; }

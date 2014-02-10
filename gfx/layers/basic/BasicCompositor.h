@@ -114,8 +114,6 @@ public:
   virtual void PrepareViewport(const gfx::IntSize& aSize,
                                const gfx::Matrix& aWorldTransform) MOZ_OVERRIDE { }
 
-  virtual void NotifyLayersTransaction() MOZ_OVERRIDE { }
-
   virtual const char* Name() const { return "Basic"; }
 
   virtual nsIWidget* GetWidget() const MOZ_OVERRIDE { return mWidget; }
