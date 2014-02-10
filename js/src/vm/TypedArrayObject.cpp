@@ -4088,9 +4088,10 @@ JS_NewArrayBufferWithContents(JSContext *cx, void *contents)
 }
 
 JS_PUBLIC_API(bool)
-JS_AllocateArrayBufferContents(JSContext *cx, uint32_t nbytes, void **contents, uint8_t **data)
+JS_AllocateArrayBufferContents(JSContext *maybecx, uint32_t nbytes,
+                               void **contents, uint8_t **data)
 {
-    js::ObjectElements *header = AllocateArrayBufferContents(cx, nbytes);
+    js::ObjectElements *header = AllocateArrayBufferContents(maybecx, nbytes);
     if (!header)
         return false;
 
