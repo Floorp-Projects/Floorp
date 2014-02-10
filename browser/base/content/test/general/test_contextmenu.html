@@ -118,7 +118,8 @@ function runTest(testNum) {
                             "---",                   null,
                             "context-bookmarklink",  true,
                             "context-savelink",      true,
-                            "context-copylink",      true
+                            "context-copylink",      true,
+                            "context-searchselect",  true
                            ].concat(inspectItems));
         } else {
           checkContextMenu(["context-openlinkintab", true,
@@ -126,7 +127,8 @@ function runTest(testNum) {
                             "---",                   null,
                             "context-bookmarklink",  true,
                             "context-savelink",      true,
-                            "context-copylink",      true
+                            "context-copylink",      true,
+                            "context-searchselect",  true
                            ].concat(inspectItems));
         }
         closeContextMenu();
@@ -135,7 +137,9 @@ function runTest(testNum) {
 
     case 4:
         // Context menu for text mailto-link
-        checkContextMenu(["context-copyemail", true].concat(inspectItems));
+        checkContextMenu(["context-copyemail", true,
+                          "context-searchselect", true
+                        ].concat(inspectItems));
         closeContextMenu();
         openContextMenuFor(img); // Invoke context menu for next test.
         break;
