@@ -113,18 +113,14 @@ FilePickerConstructor(nsISupports *aOuter, REFNSIID aIID,
   }
   nsCOMPtr<nsIFilePicker> picker;
 
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
-    picker = new nsFilePickerProxy();
-  } else {
-    if (XRE_GetWindowsEnvironment() == WindowsEnvironmentType_Metro) {
+  if (XRE_GetWindowsEnvironment() == WindowsEnvironmentType_Metro) {
 #ifdef MOZ_METRO
-      picker = new nsMetroFilePicker;
+    picker = new nsMetroFilePicker;
 #else
-      NS_RUNTIMEABORT("build does not support metro.");
+    NS_RUNTIMEABORT("build does not support metro.");
 #endif
-    } else {
-      picker = new nsFilePicker;
-    }
+  } else {
+    picker = new nsFilePicker;
   }
   return picker->QueryInterface(aIID, aResult);
 }
