@@ -81,13 +81,6 @@ using mozilla::DefaultXDisplay;
 #include <winuser.h>
 #endif
 
-#ifdef XP_OS2
-#define INCL_PM
-#define INCL_GPI
-#include <os2.h>
-#include "gfxOS2Surface.h"
-#endif
-
 #ifdef MOZ_WIDGET_ANDROID
 #include "AndroidBridge.h"
 #include "GLContext.h"
@@ -1235,19 +1228,6 @@ nsObjectFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   }
 }
 
-#ifdef XP_OS2
-static void *
-GetPSFromRC(nsRenderingContext& aRenderingContext)
-{
-  nsRefPtr<gfxASurface>
-    surf = aRenderingContext.ThebesContext()->CurrentSurface();
-  if (!surf || surf->CairoStatus())
-    return nullptr;
-  return (void *)(static_cast<gfxOS2Surface*>
-                  (static_cast<gfxASurface*>(surf.get()))->GetPS());
-}
-#endif
-
 void
 nsObjectFrame::PrintPlugin(nsRenderingContext& aRenderingContext,
                            const nsRect& aDirtyRect)
@@ -1401,15 +1381,6 @@ nsObjectFrame::PrintPlugin(nsRenderingContext& aRenderingContext,
   (void)window;
   (void)npprint;
 
-#elif defined(XP_OS2)
-  void *hps = GetPSFromRC(aRenderingContext);
-  if (!hps)
-    return;
-
-  npprint.print.embedPrint.platformPrint = hps;
-  npprint.print.embedPrint.window = window;
-  // send off print info to plugin
-  pi->Print(&npprint);
 #elif defined(XP_WIN)
 
   /* On Windows, we use the win32 printing surface to print.  This, in
@@ -1865,98 +1836,6 @@ nsObjectFrame::PaintPlugin(nsDisplayListBuilder* aBuilder,
     }
 
     ctx->SetMatrix(currentMatrix);
-  }
-#elif defined(XP_OS2)
-  nsRefPtr<nsNPAPIPluginInstance> inst;
-  GetPluginInstance(getter_AddRefs(inst));
-  if (inst) {
-    // Look if it's windowless
-    NPWindow *window;
-    mInstanceOwner->GetWindow(window);
-
-    if (window->type == NPWindowTypeDrawable) {
-      // FIXME - Bug 385435: Doesn't aDirtyRect need translating too?
-      nsRenderingContext::AutoPushTranslation
-        translate(&aRenderingContext, aPluginRect.TopLeft());
-
-      // check if we need to call SetWindow with updated parameters
-      bool doupdatewindow = false;
-      // the offset of the DC
-      nsIntPoint origin;
-
-      /*
-       * Layout now has an optimized way of painting. Now we always get
-       * a new drawing surface, sized to be just what's needed. Windowless
-       * plugins need a transform applied to their origin so they paint
-       * in the right place. Since |SetWindow| is no longer being used
-       * to tell the plugin where it is, we dispatch a NPWindow through
-       * |HandleEvent| to tell the plugin when its window moved
-       */
-      gfxContext *ctx = aRenderingContext.ThebesContext();
-
-      gfxMatrix ctxMatrix = ctx->CurrentMatrix();
-      if (ctxMatrix.HasNonTranslation()) {
-        // soo; in the future, we should be able to render
-        // the object content to an offscreen DC, and then
-        // composite it in with the right transforms.
-
-        // But, we don't bother doing that, because we don't
-        // have the event handling story figured out yet.
-        // Instead, let's just bail.
-
-        return;
-      }
-
-      origin.x = NSToIntRound(ctxMatrix.GetTranslation().x);
-      origin.y = NSToIntRound(ctxMatrix.GetTranslation().y);
-
-      /* Need to force the clip to be set */
-      ctx->UpdateSurfaceClip();
-
-      /* Set the device offsets as appropriate, for whatever our current group offsets might be */
-      gfxFloat xoff, yoff;
-      nsRefPtr<gfxASurface> surf = ctx->CurrentSurface(&xoff, &yoff);
-
-      if (surf->CairoStatus() != 0) {
-        NS_WARNING("Plugin is being asked to render to a surface that's in error!");
-        return;
-      }
-
-      // check if we need to update the PS
-      HPS hps = (HPS)GetPSFromRC(aRenderingContext);
-      if (reinterpret_cast<HPS>(window->window) != hps) {
-        window->window = reinterpret_cast<void*>(hps);
-        doupdatewindow = true;
-      }
-      LONG lPSid = GpiSavePS(hps);
-      RECTL rclViewport;
-      if (GpiQueryDevice(hps) != NULLHANDLE) { // ensure that we have an associated HDC
-        if (GpiQueryPageViewport(hps, &rclViewport)) {
-          rclViewport.xLeft += (LONG)xoff;
-          rclViewport.xRight += (LONG)xoff;
-          rclViewport.yBottom += (LONG)yoff;
-          rclViewport.yTop += (LONG)yoff;
-          GpiSetPageViewport(hps, &rclViewport);
-        }
-      }
-
-      if ((window->x != origin.x) || (window->y != origin.y)) {
-        window->x = origin.x;
-        window->y = origin.y;
-        doupdatewindow = true;
-      }
-
-      // if our location or visible area has changed, we need to tell the plugin
-      if (doupdatewindow) {
-        inst->SetWindow(window);        
-      }
-
-      mInstanceOwner->Paint(aDirtyRect, hps);
-      if (lPSid >= 1) {
-        GpiRestorePS(hps, lPSid);
-      }
-      surf->MarkDirty();
-    }
   }
 #endif
 }

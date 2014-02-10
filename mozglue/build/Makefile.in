@@ -10,7 +10,7 @@ include $(topsrcdir)/config/config.mk
 
 ifneq (1_1,$(MOZ_MEMORY)_$(or $(MOZ_NATIVE_JEMALLOC),$(FORCE_SHARED_LIB)))
 
-ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
+ifneq (,$(filter WINNT,$(OS_ARCH)))
 SDK_LIBRARY = $(IMPORT_LIBRARY)
 else
 ifdef FORCE_SHARED_LIB

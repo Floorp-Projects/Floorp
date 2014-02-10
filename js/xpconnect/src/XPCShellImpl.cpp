@@ -732,7 +732,7 @@ static bool
 env_setProperty(JSContext *cx, HandleObject obj, HandleId id, bool strict, MutableHandleValue vp)
 {
 /* XXX porting may be easy, but these don't seem to supply setenv by default */
-#if !defined XP_OS2 && !defined SOLARIS
+#if !defined SOLARIS
     JSString *valstr;
     JS::Rooted<JSString*> idstr(cx);
     int rv;
@@ -778,7 +778,7 @@ env_setProperty(JSContext *cx, HandleObject obj, HandleId id, bool strict, Mutab
         return false;
     }
     vp.set(STRING_TO_JSVAL(valstr));
-#endif /* !defined XP_OS2 && !defined SOLARIS */
+#endif /* !defined SOLARIS */
     return true;
 }
 

@@ -30,10 +30,6 @@ ifeq ($(OS_ARCH)_$(GNU_CC),WINNT_)
 RCINCLUDE = xulrunner.rc
 endif
 
-ifeq ($(OS_ARCH),OS2)
-RCFLAGS += -i $(topsrcdir)/widget/os2
-endif
-
 # dependent libraries
 ifdef MOZ_B2G_BT_BLUEZ #{
 ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
@@ -168,7 +164,7 @@ ifdef MOZ_DIRECTSHOW
 OS_LIBS += $(call EXPAND_LIBNAME,dmoguids wmcodecdspuuid strmiids msdmo)
 endif
 
-ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
+ifneq (,$(filter WINNT,$(OS_ARCH)))
 SDK_LIBRARY = $(IMPORT_LIBRARY)
 else
 SDK_LIBRARY = $(SHARED_LIBRARY)

@@ -12,14 +12,10 @@ else
 ifeq ($(MOZ_WIDGET_TOOLKIT), windows)
 AUTOCFG_JS_EXPORTS += $(srcdir)/win/platform.js
 else
-ifeq ($(MOZ_WIDGET_TOOLKIT), os2)
-AUTOCFG_JS_EXPORTS += $(srcdir)/os2/platform.js
-else
 ifeq ($(MOZ_WIDGET_TOOLKIT), beos)
 AUTOCFG_JS_EXPORTS += $(srcdir)/beos/platform.js
 else
 AUTOCFG_JS_EXPORTS += $(srcdir)/unix/platform.js
-endif
 endif
 endif
 endif

@@ -7,7 +7,7 @@ include $(topsrcdir)/config/rules.mk
 
 GARBAGE		+= $(addprefix $(DIST)/bin/defaults/pref/, \
 			mailnews.js editor.js \
-			aix.js unix.js winpref.js os2prefs.js)
+			aix.js unix.js winpref.js)
 
 GARBAGE		+= greprefs.js
 

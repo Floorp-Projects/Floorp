@@ -21,11 +21,7 @@ LOCAL_INCLUDES += [
     '../windowwatcher/src',
 ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'os2':
-    LOCAL_INCLUDES += [
-        '../printingui/src/os2',
-    ]
-elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     LOCAL_INCLUDES += [
         '../printingui/src/win',
     ]

@@ -22,10 +22,6 @@
 
 #if defined(XP_WIN)
 #  include "nsWin32Locale.h"
-#elif defined(XP_OS2)
-#  include "nsServiceManagerUtils.h"
-#  include "unidef.h"
-#  include "nsIOS2Locale.h"
 #elif defined(XP_MACOSX)
 #  include <Carbon/Carbon.h>
 #elif defined(XP_UNIX)
@@ -50,7 +46,7 @@ const char* LocaleList[LocaleListLength] =
 #define NSILOCALE_MAX_ACCEPT_LANGUAGE	16
 #define NSILOCALE_MAX_ACCEPT_LENGTH		18
 
-#if (defined(XP_UNIX) && !defined(XP_MACOSX)) || defined(XP_OS2)
+#if (defined(XP_UNIX) && !defined(XP_MACOSX))
 static int posix_locale_category[LocaleListLength] =
 {
   LC_COLLATE,
@@ -166,54 +162,6 @@ nsLocaleService::nsLocaleService(void)
     mApplicationLocale = do_QueryInterface(resultLocale);
        
 #endif // XP_UNIX
-#ifdef XP_OS2
-    nsCOMPtr<nsIOS2Locale> os2Converter = do_GetService(NS_OS2LOCALE_CONTRACTID);
-    nsAutoString xpLocale;
-    if (os2Converter) {
-        nsAutoString category;
-        int i;
-
-        nsRefPtr<nsLocale> resultLocale(new nsLocale());
-
-        LocaleObject locale_object = nullptr;
-        int result = UniCreateLocaleObject(UNI_UCS_STRING_POINTER,
-                                           (UniChar *)L"", &locale_object);
-        if (result != ULS_SUCCESS) {
-            int result = UniCreateLocaleObject(UNI_UCS_STRING_POINTER,
-                                               (UniChar *)L"en_US", &locale_object);
-        }
-        char* lc_temp;
-        for( i = 0; i < LocaleListLength; i++ ) {
-            lc_temp = nullptr;
-            UniQueryLocaleObject(locale_object,
-                                 posix_locale_category[i],
-                                 UNI_MBS_STRING_POINTER,
-                                 (void **)&lc_temp);
-            category.AssignASCII(LocaleList[i]);
-            nsresult result;
-            if (lc_temp != nullptr)
-                result = os2Converter->GetXPLocale(lc_temp, xpLocale);
-            else {
-                char* lang = getenv("LANG");
-                if ( lang == nullptr ) {
-                    result = os2Converter->GetXPLocale("en-US", xpLocale);
-                }
-                else
-                    result = os2Converter->GetXPLocale(lang, xpLocale); 
-            }
-            if (NS_FAILED(result)) {
-                UniFreeMem(lc_temp);
-                UniFreeLocaleObject(locale_object);
-                return;
-            }
-            resultLocale->AddCategory(category, xpLocale);
-            UniFreeMem(lc_temp);
-        }
-        UniFreeLocaleObject(locale_object);
-        mSystemLocale = do_QueryInterface(resultLocale);
-        mApplicationLocale = do_QueryInterface(resultLocale);
-    }  // if ( NS_SUCCEEDED )...
-#endif  // XP_OS2
 
 #ifdef XP_MACOSX
     // Get string representation of user's current locale

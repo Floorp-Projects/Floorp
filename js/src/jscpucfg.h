@@ -18,7 +18,7 @@
 #  error "CPU type is unknown"
 # endif /* !(defined(_M_X64) || defined(_M_AMD64) || defined(_AMD64_)) */
 
-#elif defined(_WIN32) || defined(XP_OS2)
+#elif defined(_WIN32)
 
 # ifdef __WATCOMC__
 #  define HAVE_VA_LIST_AS_ARRAY 1

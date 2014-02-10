@@ -9,9 +9,6 @@
 #include <unistd.h>
 #elif defined(XP_WIN)
 #include <windows.h>
-#elif defined(XP_OS2)
-#define INCL_DOSERRORS
-#include <os2.h>
 #else
 // XXX add necessary include file for ftruncate (or equivalent)
 #endif
@@ -92,7 +89,7 @@ nsFileStreamBase::SetEOF()
     if (mFD == nullptr)
         return NS_BASE_STREAM_CLOSED;
 
-#if defined(XP_UNIX) || defined(XP_OS2) || defined(XP_BEOS)
+#if defined(XP_UNIX) || defined(XP_BEOS)
     // Some system calls require an EOF offset.
     int64_t offset;
     rv = Tell(&offset);
@@ -107,11 +104,6 @@ nsFileStreamBase::SetEOF()
 #elif defined(XP_WIN)
     if (!SetEndOfFile((HANDLE) PR_FileDesc2NativeHandle(mFD))) {
         NS_ERROR("SetEndOfFile failed");
-        return NS_ERROR_FAILURE;
-    }
-#elif defined(XP_OS2)
-    if (DosSetFileSize((HFILE) PR_FileDesc2NativeHandle(mFD), offset) != NO_ERROR) {
-        NS_ERROR("DosSetFileSize failed");
         return NS_ERROR_FAILURE;
     }
 #else

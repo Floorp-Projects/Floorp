@@ -7,10 +7,10 @@
 # This cannot be named "build" because of bug 922191.
 SPHINX_TREES['buildsystem'] = 'docs'
 
-if CONFIG['OS_ARCH'] not in ('WINNT', 'OS2'):
-    DIRS += ['unix']
-elif CONFIG['OS_ARCH'] == 'WINNT':
+if CONFIG['OS_ARCH'] == 'WINNT':
     DIRS += ['win32']
+else:
+    DIRS += ['unix']
 
 if CONFIG['OS_TARGET'] == 'Android' and not CONFIG['MOZ_ANDROID_LIBSTDCXX']:
     DIRS += ['stlport']

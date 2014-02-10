@@ -120,15 +120,6 @@ private:
     return NS_ERROR_FAILURE;
   }
 
-#elif defined(XP_OS2)
-  static nsresult Get(const char *argv0, char aResult[MAXPATHLEN])
-  {
-    PPIB ppib;
-    PTIB ptib;
-    DosGetInfoBlocks( &ptib, &ppib);
-    DosQueryModuleName(ppib->pib_hmte, MAXPATHLEN, aResult);
-  }
-
 #else
 #error Oops, you need platform-specific code here
 #endif
