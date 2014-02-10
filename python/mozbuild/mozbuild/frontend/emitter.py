@@ -236,6 +236,8 @@ class TreeMetadataEmitter(LoggingMixin):
             'MSVC_ENABLE_PGO',
             'NO_DIST_INSTALL',
             'OS_LIBS',
+            'RCFILE',
+            'RESFILE',
             'SDK_LIBRARY',
         ]
         for v in varlist:

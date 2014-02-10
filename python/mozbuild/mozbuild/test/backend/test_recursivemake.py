@@ -328,6 +328,12 @@ class TestRecursiveMakeBackend(BackendTester):
             'USE_DELAYIMP': [
                 'USE_DELAYIMP := 1',
             ],
+            'RCFILE': [
+                'RCFILE := foo.rc',
+            ],
+            'RESFILE': [
+                'RESFILE := bar.res',
+            ],
         }
 
         for var, val in expected.items():

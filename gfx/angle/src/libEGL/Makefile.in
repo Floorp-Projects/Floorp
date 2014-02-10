@@ -14,7 +14,6 @@ endif
 # Target: 'libEGL'
 #   Links with: 'libGLESv2'
 DEFFILE = $(srcdir)/libEGL.def
-RCFILE  = $(srcdir)/libEGL.rc
 
 include $(topsrcdir)/config/rules.mk
 
