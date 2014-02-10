@@ -182,6 +182,66 @@ CheckBasicConstraints(const BackCert& cert,
   return Success;
 }
 
+Result
+BackCert::GetConstrainedNames(/*out*/ const CERTGeneralName** result)
+{
+  if (!constrainedNames) {
+    if (!GetArena()) {
+      return FatalError;
+    }
+
+    constrainedNames =
+      CERT_GetConstrainedCertificateNames(nssCert, arena.get(),
+                                          cnOptions == IncludeCN);
+    if (!constrainedNames) {
+      return MapSECStatus(SECFailure);
+    }
+  }
+
+  *result = constrainedNames;
+  return Success;
+}
+
+// 4.2.1.10. Name Constraints
+Result
+CheckNameConstraints(BackCert& cert)
+{
+  if (!cert.encodedNameConstraints) {
+    return Success;
+  }
+
+  PLArenaPool* arena = cert.GetArena();
+  if (!arena) {
+    return FatalError;
+  }
+
+  // Owned by arena
+  const CERTNameConstraints* constraints =
+    CERT_DecodeNameConstraintsExtension(arena, cert.encodedNameConstraints);
+  if (!constraints) {
+    return MapSECStatus(SECFailure);
+  }
+
+  for (BackCert* prev = cert.childCert; prev; prev = prev->childCert) {
+    const CERTGeneralName* names = nullptr;
+    Result rv = prev->GetConstrainedNames(&names);
+    if (rv != Success) {
+      return rv;
+    }
+    PORT_Assert(names);
+    CERTGeneralName* currentName = const_cast<CERTGeneralName*>(names);
+    do {
+      rv = MapSECStatus(CERT_CheckNameSpace(arena, constraints, currentName));
+      if (rv != Success) {
+        return rv;
+      }
+      currentName = CERT_GetNextGeneralName(currentName);
+    } while (currentName != names);
+  }
+
+  return Success;
+}
+
 // 4.2.1.12. Extended Key Usage (id-ce-extKeyUsage)
 // 4.2.1.12. Extended Key Usage (id-ce-extKeyUsage)
 Result
