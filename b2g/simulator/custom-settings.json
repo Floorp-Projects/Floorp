@@ -1,0 +1,6 @@
+{
+  "debugger.remote-mode": "adb-devtools",
+  "screen.timeout": 0,
+  "lockscreen.enabled": false,
+  "lockscreen.locked": false
+}
