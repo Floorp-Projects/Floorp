@@ -20,3 +20,18 @@ DEFINES['XPCOM_GLUE'] = True
 
 for var in ('MOZ_APP_NAME', 'MOZ_APP_VERSION', 'MOZ_UPDATER'):
     DEFINES[var] = CONFIG[var]
+
+GENERATED_INCLUDES += [
+    '/build',
+]
+
+LOCAL_INCLUDES += [
+    '/toolkit/xre',
+    '/xpcom/base',
+    '/xpcom/build',
+]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+    LOCAL_INCLUDES += [
+        '/widget/gonk/libdisplay',
+    ]
