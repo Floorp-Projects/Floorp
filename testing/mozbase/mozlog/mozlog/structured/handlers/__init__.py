@@ -4,6 +4,8 @@
 
 from threading import Lock
 
+from ..structuredlog import log_levels
+
 
 class BaseHandler(object):
     def __init__(self, formatter=str):
