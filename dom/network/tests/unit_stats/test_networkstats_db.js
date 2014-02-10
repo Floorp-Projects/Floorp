@@ -734,30 +734,34 @@ var exampleManifestURL = "http://example.com/manifest.webapp";
 var testPageURL = "http://test.com/index.html";
 var testManifestURL = "http://test.com/manifest.webapp";
 
-var alarms = [{ id:             null,
-                networkId:      networkWifi,
-                threshold:      10000,
-                data:           {foo: "something"},
-                pageURL:        examplePageURL,
-                manifestURL:    exampleManifestURL },
-              { id:             null,
-                networkId:      networkWifi,
-                threshold:      1000,
-                data:           {foo: "else"},
-                pageURL:        examplePageURL,
-                manifestURL:    exampleManifestURL },
-              { id:             null,
-                networkId:      networkMobile,
-                threshold:      100,
-                data:           {foo: "to"},
-                pageURL:        examplePageURL,
-                manifestURL:    exampleManifestURL },
-              { id:             null,
-                networkId:      networkMobile,
-                threshold:      10,
-                data:           {foo: "test"},
-                pageURL:        testPageURL,
-                manifestURL:    testManifestURL }];
+var alarms = [{ id:                null,
+                networkId:         networkWifi,
+                absoluteThreshold: 10000,
+                relativeThreshold: 10000,
+                data:              {foo: "something"},
+                pageURL:           examplePageURL,
+                manifestURL:       exampleManifestURL },
+              { id:                null,
+                networkId:         networkWifi,
+                absoluteThreshold: 1000,
+                relativeThreshold: 1000,
+                data:              {foo: "else"},
+                pageURL:           examplePageURL,
+                manifestURL:       exampleManifestURL },
+              { id:                null,
+                networkId:         networkMobile,
+                absoluteThreshold: 100,
+                relativeThreshold: 100,
+                data:              {foo: "to"},
+                pageURL:           examplePageURL,
+                manifestURL:       exampleManifestURL },
+              { id:                null,
+                networkId:         networkMobile,
+                absoluteThreshold: 10,
+                relativeThreshold: 10,
+                data:              {foo: "test"},
+                pageURL:           testPageURL,
+                manifestURL:       testManifestURL }];
 
 var alarmsDbId = 1;
 
@@ -772,7 +776,8 @@ add_test(function test_addAlarm() {
       do_check_eq(result.length, 1);
       do_check_eq(result[0].id, alarmsDbId);
       do_check_eq(result[0].networkId, alarms[0].networkId);
-      do_check_eq(result[0].threshold, alarms[0].threshold);
+      do_check_eq(result[0].absoluteThreshold, alarms[0].absoluteThreshold);
+      do_check_eq(result[0].relativeThreshold, alarms[0].relativeThreshold);
       do_check_eq(result[0].data.foo, alarms[0].data.foo);
       run_next_test();
     });
@@ -790,7 +795,8 @@ add_test(function test_getFirstAlarm() {
       do_check_eq(error, null);
       do_check_eq(result.id, alarmsDbId);
       do_check_eq(result.networkId, alarms[1].networkId);
-      do_check_eq(result.threshold, alarms[1].threshold);
+      do_check_eq(result.absoluteThreshold, alarms[1].absoluteThreshold);
+      do_check_eq(result.relativeThreshold, alarms[1].relativeThreshold);
       do_check_eq(result.data.foo, alarms[1].data.foo);
       do_check_eq(result.pageURL, alarms[1].pageURL);
       do_check_eq(result.manifestURL, alarms[1].manifestURL);
@@ -808,7 +814,8 @@ add_test(function test_removeAlarm() {
       do_check_eq(error, null);
       do_check_eq(result.id, alarmsDbId - 1);
       do_check_eq(result.networkId, alarms[0].networkId);
-      do_check_eq(result.threshold, alarms[0].threshold);
+      do_check_eq(result.absoluteThreshold, alarms[0].absoluteThreshold);
+      do_check_eq(result.relativeThreshold, alarms[0].relativeThreshold);
       do_check_eq(result.data.foo, alarms[0].data.foo);
       do_check_eq(result.pageURL, alarms[0].pageURL);
       do_check_eq(result.manifestURL, alarms[0].manifestURL);
@@ -897,7 +904,8 @@ add_test(function test_updateAlarm() {
       do_check_eq(error, null);
       do_check_eq(result.id, updatedAlarm.id);
       do_check_eq(result.networkId, updatedAlarm.networkId);
-      do_check_eq(result.threshold, updatedAlarm.threshold);
+      do_check_eq(result.absoluteThreshold, updatedAlarm.absoluteThreshold);
+      do_check_eq(result.relativeThreshold, updatedAlarm.relativeThreshold);
       do_check_eq(result.data.foo, updatedAlarm.data.foo);
       do_check_eq(result.pageURL, updatedAlarm.pageURL);
       do_check_eq(result.manifestURL, updatedAlarm.manifestURL);
