@@ -203,9 +203,15 @@
                 observes="sync-syncnow-state"
                 oncommand="gSyncUI.doSync(event);"/>
 #endif
+#ifdef HAVE_SHELL_SERVICE
+#ifdef XP_WIN
+#ifdef MOZ_METRO
       <menuitem id="switch-to-metro"
                 label="&switchToMetroCmd2.label;"
                 oncommand="SwitchToMetro()"/>
+#endif
+#endif
+#endif
       <menuitem id="appmenu-quit"
                 class="menuitem-iconic"
 #ifdef XP_WIN
