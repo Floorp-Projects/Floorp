@@ -129,6 +129,9 @@ using mozilla::system::nsVolumeService;
 #include "nsIMobileConnectionService.h"
 #include "mozilla/dom/mobileconnection/MobileConnectionIPCService.h"
 using mozilla::dom::mobileconnection::MobileConnectionIPCService;
+#ifdef MOZ_WIDGET_GONK
+#include "nsIMobileConnectionGonkService.h"
+#endif
 #endif
 
 #include "AudioChannelAgent.h"
@@ -945,6 +948,10 @@ nsIMobileConnectionServiceConstructor(nsISupports *aOuter, REFNSIID aIID,
 
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
     service = MobileConnectionIPCService::GetSingleton();
+  } else {
+#ifdef MOZ_WIDGET_GONK
+    service = do_CreateInstance(NS_MOBILECONNECTION_GONK_SERVICE_CONTRACTID);
+#endif
   }
 
   if (!service) {
