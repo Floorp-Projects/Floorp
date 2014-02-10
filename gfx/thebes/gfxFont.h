@@ -1137,6 +1137,11 @@ public:
          * textruns that have been seen so as to avoid multiple-accounting.
          */
         TEXT_RUN_SIZE_ACCOUNTED      = 0x0200,
+        /**
+         * When set, the textrun should discard control characters instead of
+         * turning them into hexboxes.
+         */
+        TEXT_HIDE_CONTROL_CHARACTERS = 0x0400,
 
         /**
          * nsTextFrameThebes sets these, but they're defined here rather than

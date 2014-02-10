@@ -292,3 +292,6 @@ pref(layout.css.text-align-true-value.enabled,true) == text-align-true.html text
 != control-chars-01b.html control-chars-01-notref.html
 != control-chars-01c.html control-chars-01-notref.html
 != control-chars-01d.html control-chars-01-notref.html
+!= control-chars-02.html control-chars-02-notref.html
+== control-chars-03a.html control-chars-03-ref.html
+== control-chars-03b.html control-chars-03-ref.html

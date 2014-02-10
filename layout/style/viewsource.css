@@ -9,6 +9,7 @@
   background-color: white;
   color: black;
   direction: ltr;
+  -moz-control-character-visibility: visible;
 }
 #viewsource {
   font-family: -moz-fixed;

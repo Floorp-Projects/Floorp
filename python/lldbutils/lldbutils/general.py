@@ -69,6 +69,10 @@ def prefcnt(debugger, command, result, dict):
 def init(debugger):
     debugger.HandleCommand("type summary add nsAString_internal -F lldbutils.general.summarize_string")
     debugger.HandleCommand("type summary add nsACString_internal -F lldbutils.general.summarize_string")
+    debugger.HandleCommand("type summary add nsFixedString -F lldbutils.general.summarize_string")
+    debugger.HandleCommand("type summary add nsFixedCString -F lldbutils.general.summarize_string")
+    debugger.HandleCommand("type summary add nsAutoString -F lldbutils.general.summarize_string")
+    debugger.HandleCommand("type summary add nsAutoCString -F lldbutils.general.summarize_string")
     debugger.HandleCommand("type synthetic add -x \"nsTArray<\" -l lldbutils.general.TArraySyntheticChildrenProvider")
     debugger.HandleCommand("type synthetic add -x \"nsAutoTArray<\" -l lldbutils.general.TArraySyntheticChildrenProvider")
     debugger.HandleCommand("type synthetic add -x \"FallibleTArray<\" -l lldbutils.general.TArraySyntheticChildrenProvider")
