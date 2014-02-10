@@ -143,7 +143,6 @@ load 387233-1.html
 load 387233-2.html
 load 387282-1.html
 load 388175-1.html
-load 388367-1.html
 load 388709-1.html
 load 389635-1.html
 load 390050-1.html
@@ -177,7 +176,7 @@ load 398322-1.html
 load 398322-2.html
 load 398332-1.html
 load 398332-2.html
-asserts(0-2) load 398332-3.html # bug 436123 and bug 457397
+asserts(2) load 398332-3.html # bug 436123 and bug 457397
 load 399407-1.xhtml
 load 399412-1.html
 load 399843-1.html
