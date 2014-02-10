@@ -425,9 +425,13 @@ pkix_CertSelector_Match_NameConstraints(
                 PKIX_COMCERTSELPARAMSGETNAMECONSTRAINTSFAILED);
 
         if (nameConstraints != NULL) {
-
+                /* As only the end-entity certificate should have
+                 * the common name constrained as if it was a dNSName,
+                 * do not constrain the common name when building a
+                 * forward path.
+                 */
                 PKIX_CHECK(PKIX_PL_Cert_CheckNameConstraints
-                    (cert, nameConstraints, plContext),
+                    (cert, nameConstraints, PKIX_FALSE, plContext),
                     PKIX_CERTCHECKNAMECONSTRAINTSFAILED);
         }
 
