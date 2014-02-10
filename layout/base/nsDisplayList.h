@@ -2792,6 +2792,12 @@ public:
 
   virtual bool ShouldBuildLayerEvenIfInvisible(nsDisplayListBuilder* aBuilder) MOZ_OVERRIDE;
 
+  virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
+                                   bool* aSnap) MOZ_OVERRIDE {
+    *aSnap = false;
+    return nsRegion();
+  }
+
   virtual bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                    nsRegion* aVisibleRegion,
                                    const nsRect& aAllowVisibleRegionExpansion) MOZ_OVERRIDE;
