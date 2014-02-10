@@ -29,6 +29,7 @@
 #include "nsEventStateManager.h"
 #include "nsIEditor.h"
 #include "nsIHTMLEditor.h"
+#include "nsIDOMDocument.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -357,6 +358,14 @@ nsXBLWindowKeyHandler::IsHTMLEditableFieldFocused()
   nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(editor);
   if (!htmlEditor) {
     return false;
+  }
+
+  nsCOMPtr<nsIDOMDocument> domDocument;
+  editor->GetDocument(getter_AddRefs(domDocument));
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDocument);
+  if (doc->HasFlag(NODE_IS_EDITABLE)) {
+    // Don't need to perform any checks in designMode documents.
+    return true;
   }
 
   nsCOMPtr<nsIDOMElement> focusedElement;
