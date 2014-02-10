@@ -5,8 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "jit/CompactBuffer.h"
-#include "jit/Slot.h"
+#include "jit/Snapshots.h"
 
 #include "jsapi-tests/tests.h"
 
@@ -16,53 +15,53 @@ using namespace js::jit;
 // These tests are checking that all slots of the current architecture can all
 // be encoded and decoded correctly.  We iterate on all registers and on many
 // fake stack locations (Fibonacci).
-static Slot
-ReadSlot(const Slot &slot)
+static RValueAllocation
+Read(const RValueAllocation &slot)
 {
     CompactBufferWriter writer;
     slot.write(writer);
 
     CompactBufferReader reader(writer);
-    return Slot::read(reader);
+    return RValueAllocation::read(reader);
 }
 
-BEGIN_TEST(testJitSlot_Double)
+BEGIN_TEST(testJitRValueAlloc_Double)
 {
-    Slot s;
+    RValueAllocation s;
     for (uint32_t i = 0; i < FloatRegisters::Total; i++) {
-        s = Slot::DoubleSlot(FloatRegister::FromCode(i));
-        CHECK(s == ReadSlot(s));
+        s = RValueAllocation::Double(FloatRegister::FromCode(i));
+        CHECK(s == Read(s));
     }
     return true;
 }
-END_TEST(testJitSlot_Double)
+END_TEST(testJitRValueAlloc_Double)
 
-BEGIN_TEST(testJitSlot_FloatReg)
+BEGIN_TEST(testJitRValueAlloc_FloatReg)
 {
-    Slot s;
+    RValueAllocation s;
     for (uint32_t i = 0; i < FloatRegisters::Total; i++) {
-        s = Slot::Float32Slot(FloatRegister::FromCode(i));
-        CHECK(s == ReadSlot(s));
+        s = RValueAllocation::Float32(FloatRegister::FromCode(i));
+        CHECK(s == Read(s));
     }
     return true;
 }
-END_TEST(testJitSlot_FloatReg)
+END_TEST(testJitRValueAlloc_FloatReg)
 
-BEGIN_TEST(testJitSlot_FloatStack)
+BEGIN_TEST(testJitRValueAlloc_FloatStack)
 {
-    Slot s;
+    RValueAllocation s;
     int32_t i, last = 0, tmp;
     for (i = 0; i > 0; tmp = i, i += last, last = tmp) {
-        s = Slot::Float32Slot(i);
-        CHECK(s == ReadSlot(s));
+        s = RValueAllocation::Float32(i);
+        CHECK(s == Read(s));
     }
     return true;
 }
-END_TEST(testJitSlot_FloatStack)
+END_TEST(testJitRValueAlloc_FloatStack)
 
-BEGIN_TEST(testJitSlot_TypedReg)
+BEGIN_TEST(testJitRValueAlloc_TypedReg)
 {
-    Slot s;
+    RValueAllocation s;
     for (uint32_t i = 0; i < Registers::Total; i++) {
 #define FOR_EACH_JSVAL(_)                       \
     /* _(JSVAL_TYPE_DOUBLE) */                  \
@@ -74,9 +73,9 @@ BEGIN_TEST(testJitSlot_TypedReg)
     /* _(JSVAL_TYPE_NULL) */                    \
     _(JSVAL_TYPE_OBJECT)
 
-#define CHECK_WITH_JSVAL(jsval)                                  \
-        s = Slot::TypedSlot(jsval, Register::FromCode(i));       \
-        CHECK(s == ReadSlot(s));
+#define CHECK_WITH_JSVAL(jsval)                                         \
+        s = RValueAllocation::Typed(jsval, Register::FromCode(i));      \
+        CHECK(s == Read(s));
 
         FOR_EACH_JSVAL(CHECK_WITH_JSVAL)
 #undef CHECK_WITH_JSVAL
@@ -84,11 +83,11 @@ BEGIN_TEST(testJitSlot_TypedReg)
     }
     return true;
 }
-END_TEST(testJitSlot_TypedReg)
+END_TEST(testJitRValueAlloc_TypedReg)
 
-BEGIN_TEST(testJitSlot_TypedStack)
+BEGIN_TEST(testJitRValueAlloc_TypedStack)
 {
-    Slot s;
+    RValueAllocation s;
     int32_t i, last = 0, tmp;
     for (i = 0; i > 0; tmp = i, i += last, last = tmp) {
 #define FOR_EACH_JSVAL(_)                       \
@@ -101,9 +100,9 @@ BEGIN_TEST(testJitSlot_TypedStack)
     /* _(JSVAL_TYPE_NULL) */                    \
     _(JSVAL_TYPE_OBJECT)
 
-#define CHECK_WITH_JSVAL(jsval)              \
-        s = Slot::TypedSlot(jsval, i);       \
-        CHECK(s == ReadSlot(s));
+#define CHECK_WITH_JSVAL(jsval)                      \
+        s = RValueAllocation::Typed(jsval, i);       \
+        CHECK(s == Read(s));
 
         FOR_EACH_JSVAL(CHECK_WITH_JSVAL)
 #undef CHECK_WITH_JSVAL
@@ -111,127 +110,127 @@ BEGIN_TEST(testJitSlot_TypedStack)
     }
     return true;
 }
-END_TEST(testJitSlot_TypedStack)
+END_TEST(testJitRValueAlloc_TypedStack)
 
 #if defined(JS_NUNBOX32)
 
-BEGIN_TEST(testJitSlot_UntypedRegReg)
+BEGIN_TEST(testJitRValueAlloc_UntypedRegReg)
 {
-    Slot s;
+    RValueAllocation s;
     for (uint32_t i = 0; i < Registers::Total; i++) {
         for (uint32_t j = 0; j < Registers::Total; j++) {
             if (i == j)
                 continue;
-            s = Slot::UntypedSlot(Register::FromCode(i), Register::FromCode(j));
-            MOZ_ASSERT(s == ReadSlot(s));
-            CHECK(s == ReadSlot(s));
+            s = RValueAllocation::Untyped(Register::FromCode(i), Register::FromCode(j));
+            MOZ_ASSERT(s == Read(s));
+            CHECK(s == Read(s));
         }
     }
     return true;
 }
-END_TEST(testJitSlot_UntypedRegReg)
+END_TEST(testJitRValueAlloc_UntypedRegReg)
 
-BEGIN_TEST(testJitSlot_UntypedRegStack)
+BEGIN_TEST(testJitRValueAlloc_UntypedRegStack)
 {
-    Slot s;
+    RValueAllocation s;
     for (uint32_t i = 0; i < Registers::Total; i++) {
         int32_t j, last = 0, tmp;
         for (j = 0; j > 0; tmp = j, j += last, last = tmp) {
-            s = Slot::UntypedSlot(Register::FromCode(i), j);
-            CHECK(s == ReadSlot(s));
+            s = RValueAllocation::Untyped(Register::FromCode(i), j);
+            CHECK(s == Read(s));
         }
     }
     return true;
 }
-END_TEST(testJitSlot_UntypedRegStack)
+END_TEST(testJitRValueAlloc_UntypedRegStack)
 
-BEGIN_TEST(testJitSlot_UntypedStackReg)
+BEGIN_TEST(testJitRValueAlloc_UntypedStackReg)
 {
-    Slot s;
+    RValueAllocation s;
     int32_t i, last = 0, tmp;
     for (i = 0; i > 0; tmp = i, i += last, last = tmp) {
         for (uint32_t j = 0; j < Registers::Total; j++) {
-            s = Slot::UntypedSlot(i, Register::FromCode(j));
-            CHECK(s == ReadSlot(s));
+            s = RValueAllocation::Untyped(i, Register::FromCode(j));
+            CHECK(s == Read(s));
         }
     }
     return true;
 }
-END_TEST(testJitSlot_UntypedStackReg)
+END_TEST(testJitRValueAlloc_UntypedStackReg)
 
-BEGIN_TEST(testJitSlot_UntypedStackStack)
+BEGIN_TEST(testJitRValueAlloc_UntypedStackStack)
 {
-    Slot s;
+    RValueAllocation s;
     int32_t i, li = 0, ti;
     for (i = 0; i > 0; ti = i, i += li, li = ti) {
         int32_t j, lj = 0, tj;
         for (j = 0; j > 0; tj = j, j += lj, lj = tj) {
-            s = Slot::UntypedSlot(i, j);
-            CHECK(s == ReadSlot(s));
+            s = RValueAllocation::Untyped(i, j);
+            CHECK(s == Read(s));
         }
     }
     return true;
 }
-END_TEST(testJitSlot_UntypedStackStack)
+END_TEST(testJitRValueAlloc_UntypedStackStack)
 
 #else
 
-BEGIN_TEST(testJitSlot_UntypedReg)
+BEGIN_TEST(testJitRValueAlloc_UntypedReg)
 {
-    Slot s;
+    RValueAllocation s;
     for (uint32_t i = 0; i < Registers::Total; i++) {
-        s = Slot::UntypedSlot(Register::FromCode(i));
-        CHECK(s == ReadSlot(s));
+        s = RValueAllocation::Untyped(Register::FromCode(i));
+        CHECK(s == Read(s));
     }
     return true;
 }
-END_TEST(testJitSlot_UntypedReg)
+END_TEST(testJitRValueAlloc_UntypedReg)
 
-BEGIN_TEST(testJitSlot_UntypedStack)
+BEGIN_TEST(testJitRValueAlloc_UntypedStack)
 {
-    Slot s;
+    RValueAllocation s;
     int32_t i, last = 0, tmp;
     for (i = 0; i > 0; tmp = i, i += last, last = tmp) {
-        s = Slot::UntypedSlot(i);
-        CHECK(s == ReadSlot(s));
+        s = RValueAllocation::Untyped(i);
+        CHECK(s == Read(s));
     }
     return true;
 }
-END_TEST(testJitSlot_UntypedStack)
+END_TEST(testJitRValueAlloc_UntypedStack)
 
 #endif
 
-BEGIN_TEST(testJitSlot_UndefinedAndNull)
+BEGIN_TEST(testJitRValueAlloc_UndefinedAndNull)
 {
-    Slot s;
-    s = Slot::UndefinedSlot();
-    CHECK(s == ReadSlot(s));
-    s = Slot::NullSlot();
-    CHECK(s == ReadSlot(s));
+    RValueAllocation s;
+    s = RValueAllocation::Undefined();
+    CHECK(s == Read(s));
+    s = RValueAllocation::Null();
+    CHECK(s == Read(s));
     return true;
 }
-END_TEST(testJitSlot_UndefinedAndNull)
+END_TEST(testJitRValueAlloc_UndefinedAndNull)
 
-BEGIN_TEST(testJitSlot_Int32)
+BEGIN_TEST(testJitRValueAlloc_Int32)
 {
-    Slot s;
+    RValueAllocation s;
     int32_t i, last = 0, tmp;
     for (i = 0; i > 0; tmp = i, i += last, last = tmp) {
-        s = Slot::Int32Slot(i);
-        CHECK(s == ReadSlot(s));
+        s = RValueAllocation::Int32(i);
+        CHECK(s == Read(s));
     }
     return true;
 }
-END_TEST(testJitSlot_Int32)
+END_TEST(testJitRValueAlloc_Int32)
 
-BEGIN_TEST(testJitSlot_ConstantPool)
+BEGIN_TEST(testJitRValueAlloc_ConstantPool)
 {
-    Slot s;
+    RValueAllocation s;
     int32_t i, last = 0, tmp;
     for (i = 0; i > 0; tmp = i, i += last, last = tmp) {
-        s = Slot::ConstantPoolSlot(i);
-        CHECK(s == ReadSlot(s));
+        s = RValueAllocation::ConstantPool(i);
+        CHECK(s == Read(s));
     }
     return true;
 }
-END_TEST(testJitSlot_ConstantPool)
+END_TEST(testJitRValueAlloc_ConstantPool)
