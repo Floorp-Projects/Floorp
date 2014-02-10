@@ -26,19 +26,27 @@ var properties = [
   "background",             "none repeat scroll 0% 0% "
 ];
 
-var span = document.createElement("span");
-for (var j = 0; j < properties.length; j += 2) {
-  var propertyName = properties[j];
-  var expectedPrefix = properties[j + 1];
-  for (var i = 0; i < values.length; i += 2) {
-    var value = values[i];
-    var expected = values[i + 1];
-    span.setAttribute("style", propertyName + ": " + value);
-    is(span.style.getAuthoredPropertyValue(propertyName), expectedPrefix + expected, "specified " + value);
+function runTest() {
+  var span = document.createElement("span");
+  for (var j = 0; j < properties.length; j += 2) {
+    var propertyName = properties[j];
+    var expectedPrefix = properties[j + 1];
+    for (var i = 0; i < values.length; i += 2) {
+      var value = values[i];
+      var expected = values[i + 1];
+      span.setAttribute("style", propertyName + ": " + value);
+      is(span.style.getAuthoredPropertyValue(propertyName), expectedPrefix + expected, "specified " + value);
+    }
   }
+
+  // also test a custom property
+  span.setAttribute("style", "var-color: rgb(10%,25%,99%)");
+  is(span.style.getAuthoredPropertyValue("var-color"), " rgb(10%,25%,99%)", "specified var-color");
+
+  SimpleTest.finish();
 }
 
-// also test a custom property
-span.setAttribute("style", "var-color: rgb(10%,25%,99%)");
-is(span.style.getAuthoredPropertyValue("var-color"), " rgb(10%,25%,99%)", "specified var-color");
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({ set: [["layout.css.variables.enabled", true]] },
+                          runTest);
 </script>
