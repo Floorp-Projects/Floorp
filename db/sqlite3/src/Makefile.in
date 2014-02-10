@@ -7,8 +7,6 @@ LIB_IS_C_ONLY    = 1
 
 ifeq ($(OS_ARCH),WINNT)
 DEFFILE = $(CURDIR)/sqlite-processed.def
-RCFILE  = sqlite.rc
-RESFILE = sqlite.res
 
 GARBAGE += \
   sqlite-version.h \

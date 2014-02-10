@@ -80,13 +80,13 @@ PaymentUI.prototype = {
 
     // If there's only one payment provider that will work, just move on without prompting the user.
     if (aRequests.length == 1) {
-      aSuccessCb.onresult(aRequestId, aRequests[0].wrappedJSObject.type);
+      aSuccessCb.onresult(aRequestId, aRequests[0].type);
       return;
     }
 
     // Otherwise, let the user select a payment provider from a list.
     for (let i = 0; i < aRequests.length; i++) {
-      let request = aRequests[i].wrappedJSObject;
+      let request = aRequests[i];
       let requestText = request.providerName;
       if (request.productPrice) {
         requestText += " (" + request.productPrice[0].amount + " " +
@@ -100,7 +100,7 @@ PaymentUI.prototype = {
       title: this.bundle.GetStringFromName("payments.providerdialog.title"),
     }).setSingleChoiceItems(listItems).show(function(data) {
       if (data.button > -1 && aSuccessCb) {
-        aSuccessCb.onresult(aRequestId, aRequests[data.button].wrappedJSObject.type);
+        aSuccessCb.onresult(aRequestId, aRequests[data.button].type);
       } else {
         _error(aRequestId, "USER_CANCELED");
       }
