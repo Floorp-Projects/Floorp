@@ -253,7 +253,7 @@ TemporaryRef<DataSourceSurface>
 YCbCrImageDataDeserializer::ToDataSourceSurface()
 {
   RefPtr<DataSourceSurface> result =
-    Factory::CreateDataSourceSurface(GetYSize(), gfx::SurfaceFormat::R8G8B8X8);
+    Factory::CreateDataSourceSurface(GetYSize(), gfx::SurfaceFormat::B8G8R8X8);
 
   DataSourceSurface::MappedSurface map;
   result->Map(DataSourceSurface::MapType::WRITE, &map);
