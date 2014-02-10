@@ -15,6 +15,7 @@ log_formatters = {
     'xunit': (formatters.XUnitFormatter, "xUnit compatible XML"),
     'html': (formatters.HTMLFormatter, "HTML report"),
     'mach': (formatters.MachFormatter, "Uncolored mach-like output"),
+    'mach_terminal': (formatters.MachTerminalFormatter, "Colored mach-like output for use in a tty"),
 }
 
 
@@ -42,7 +43,7 @@ def add_logging_group(parser):
                                       "and takes a filename to write that format to, "
                                       "or '-' to write to stdout.")
     for name, (cls, help_str) in log_formatters.iteritems():
-        group.add_argument("--log-" + name, type=log_file,
+        group.add_argument("--log-" + name, action="append", type=log_file,
                            help=help_str)
 
 
@@ -51,8 +52,8 @@ def setup_logging(suite, args, defaults):
     Configure a structuredlogger based on command line arguments.
 
     :param suite: The name of the testsuite being run
-    :param args: The Namespace object produced by argparse from parsing
-                 command line arguments from a parser with logging arguments.
+    :param args: A dictionary of {argument_name:value} produced from
+                 parsing the command line arguments for the application
     :param defaults: A dictionary of {formatter name: output stream} to apply
                      when there is no logging supplied on the command line.
 
@@ -62,14 +63,15 @@ def setup_logging(suite, args, defaults):
     prefix = "log_"
     found = False
     found_stdout_logger = False
-    for name, value in args.iteritems():
-        if name.startswith(prefix) and value is not None:
-            found = True
-            if value == sys.stdout:
-                found_stdout_logger = True
-            formatter_cls = log_formatters[name[len(prefix):]][0]
-            logger.add_handler(handlers.StreamHandler(stream=value,
-                                                      formatter=formatter_cls()))
+    for name, values in args.iteritems():
+        if name.startswith(prefix) and values is not None:
+            for value in values:
+                found = True
+                if value == sys.stdout:
+                    found_stdout_logger = True
+                formatter_cls = log_formatters[name[len(prefix):]][0]
+                logger.add_handler(handlers.StreamHandler(stream=value,
+                                                          formatter=formatter_cls()))
 
     #If there is no user-specified logging, go with the default options
     if not found:
