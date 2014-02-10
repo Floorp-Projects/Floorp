@@ -45,6 +45,12 @@
 #  error Unknown widget module.
 #endif
 
+#ifndef MOZ_B2G
+#define CONTENT_PROCESS_WIDGET_MODULES MODULE(nsContentProcessWidgetModule)
+#else
+#define CONTENT_PROCESS_WIDGET_MODULES
+#endif
+
 #ifdef ICON_DECODER
 #define ICON_MODULE MODULE(nsIconDecoderModule)
 #else
@@ -199,6 +205,7 @@
     MODULE(nsGfxModule)                      \
     PROFILER_MODULE                          \
     WIDGET_MODULES                           \
+    CONTENT_PROCESS_WIDGET_MODULES           \
     ICON_MODULE                              \
     MODULE(nsPluginModule)                   \
     MODULE(nsLayoutModule)                   \
