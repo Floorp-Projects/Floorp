@@ -256,7 +256,7 @@ if CONFIG['OS_ARCH'] == 'OpenBSD' and CONFIG['OS_TEST'] == 'sparc':
         'xptcstubs_sparc_openbsd.cpp',
     ]
 
-if CONFIG['OS_ARCH'] == 'OpenBSD' and CONFIG['OS_TEST'] == 'sparc64':
+if CONFIG['OS_ARCH'] in ('OpenBSD', 'FreeBSD') and CONFIG['OS_TEST'] == 'sparc64':
     SOURCES += [
         'xptcinvoke_asm_sparc64_openbsd.s',
         'xptcinvoke_sparc64_openbsd.cpp',

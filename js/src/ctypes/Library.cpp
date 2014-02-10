@@ -107,7 +107,7 @@ Library::Create(JSContext* cx, jsval path_, JSCTypesCallbacks* callbacks)
 #ifdef XP_WIN
   // On Windows, converting to native charset may corrupt path string.
   // So, we have to use Unicode path directly.
-  const char16_t* pathChars = JS_GetFlatStringChars(pathStr);
+  char16ptr_t pathChars = JS_GetFlatStringChars(pathStr);
   if (!pathChars)
     return nullptr;
 

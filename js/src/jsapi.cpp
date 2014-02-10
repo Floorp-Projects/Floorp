@@ -191,7 +191,7 @@ AssertHeapIsIdleOrStringIsFlat(JSContext *cx, JSString *str)
 }
 
 JS_PUBLIC_API(bool)
-JS_ConvertArguments(JSContext *cx, unsigned argc, jsval *argv, const char *format, ...)
+JS_ConvertArguments(JSContext *cx, const CallArgs &args, const char *format, ...)
 {
     va_list ap;
     bool ok;
@@ -199,15 +199,15 @@ JS_ConvertArguments(JSContext *cx, unsigned argc, jsval *argv, const char *forma
     AssertHeapIsIdle(cx);
 
     va_start(ap, format);
-    ok = JS_ConvertArgumentsVA(cx, argc, argv, format, ap);
+    ok = JS_ConvertArgumentsVA(cx, args, format, ap);
     va_end(ap);
     return ok;
 }
 
 JS_PUBLIC_API(bool)
-JS_ConvertArgumentsVA(JSContext *cx, unsigned argc, jsval *argv, const char *format, va_list ap)
+JS_ConvertArgumentsVA(JSContext *cx, const CallArgs &args, const char *format, va_list ap)
 {
-    jsval *sp;
+    unsigned index = 0;
     bool required;
     char c;
     double d;
@@ -217,8 +217,7 @@ JS_ConvertArgumentsVA(JSContext *cx, unsigned argc, jsval *argv, const char *for
 
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, JSValueArray(argv - 2, argc + 2));
-    sp = argv;
+    assertSameCompartment(cx, args);
     required = true;
     while ((c = *format++) != '\0') {
         if (isspace(c))
@@ -227,24 +226,23 @@ JS_ConvertArgumentsVA(JSContext *cx, unsigned argc, jsval *argv, const char *for
             required = false;
             continue;
         }
-        if (sp == argv + argc) {
+        if (index == args.length()) {
             if (required) {
-                HandleValue callee = HandleValue::fromMarkedLocation(&argv[-2]);
-                if (JSFunction *fun = ReportIfNotFunction(cx, callee)) {
+                if (JSFunction *fun = ReportIfNotFunction(cx, args.calleev())) {
                     char numBuf[12];
-                    JS_snprintf(numBuf, sizeof numBuf, "%u", argc);
+                    JS_snprintf(numBuf, sizeof numBuf, "%u", args.length());
                     JSAutoByteString funNameBytes;
                     if (const char *name = GetFunctionNameBytes(cx, fun, &funNameBytes)) {
                         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
                                              JSMSG_MORE_ARGS_NEEDED,
-                                             name, numBuf, (argc == 1) ? "" : "s");
+                                             name, numBuf, (args.length() == 1) ? "" : "s");
                     }
                 }
                 return false;
             }
             break;
         }
-        RootedValue arg(cx, *sp);
+        MutableHandleValue arg = args[index++];
         switch (c) {
           case 'b':
             *va_arg(ap, bool *) = ToBoolean(arg);
@@ -273,11 +271,10 @@ JS_ConvertArgumentsVA(JSContext *cx, unsigned argc, jsval *argv, const char *for
             break;
           case 'S':
           case 'W':
-            val = *sp;
-            str = ToString<CanGC>(cx, val);
+            str = ToString<CanGC>(cx, arg);
             if (!str)
                 return false;
-            *sp = STRING_TO_JSVAL(str);
+            arg.setString(str);
             if (c == 'W') {
                 JSFlatString *flat = str->ensureFlat(cx);
                 if (!flat)
@@ -288,26 +285,25 @@ JS_ConvertArgumentsVA(JSContext *cx, unsigned argc, jsval *argv, const char *for
             }
             break;
           case 'o':
-            if (sp->isNullOrUndefined()) {
+            if (arg.isNullOrUndefined()) {
                 obj = nullptr;
             } else {
-                RootedValue v(cx, *sp);
-                obj = ToObject(cx, v);
+                obj = ToObject(cx, arg);
                 if (!obj)
                     return false;
             }
-            *sp = ObjectOrNullValue(obj);
+            arg.setObjectOrNull(obj);
             *va_arg(ap, JSObject **) = obj;
             break;
           case 'f':
-              obj = ReportIfNotFunction(cx, HandleValue::fromMarkedLocation(sp));
+            obj = ReportIfNotFunction(cx, arg);
             if (!obj)
                 return false;
-            *sp = OBJECT_TO_JSVAL(obj);
+            arg.setObject(*obj);
             *va_arg(ap, JSFunction **) = &obj->as<JSFunction>();
             break;
           case 'v':
-            *va_arg(ap, jsval *) = *sp;
+            *va_arg(ap, jsval *) = arg;
             break;
           case '*':
             break;
@@ -315,7 +311,6 @@ JS_ConvertArgumentsVA(JSContext *cx, unsigned argc, jsval *argv, const char *for
             JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_BAD_CHAR, format);
             return false;
         }
-        sp++;
     }
     return true;
 }

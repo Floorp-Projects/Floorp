@@ -28,14 +28,6 @@ class AsmJSModule;
 
 namespace jit {
 
-// The maximum size of any buffer associated with an assembler or code object.
-// This is chosen to not overflow a signed integer, leaving room for an extra
-// bit on offsets.
-static const uint32_t MAX_BUFFER_SIZE = (1 << 30) - 1;
-
-// Maximum number of scripted arg slots.
-static const uint32_t SNAPSHOT_MAX_NARGS = 127;
-
 class MacroAssembler;
 class CodeOffsetLabel;
 class PatchableBackedge;

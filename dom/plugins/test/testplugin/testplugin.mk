@@ -20,8 +20,6 @@ EXTRA_DSO_LDOPTS = \
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-RCFILE    = nptest.rc
-RESFILE   = nptest.res
 DEFFILE   = $(win_srcdir)/nptest.def
 OS_LIBS  += $(call EXPAND_LIBNAME,msimg32)
 

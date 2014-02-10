@@ -171,6 +171,8 @@ class TestEmitterBasic(unittest.TestCase):
             VISIBILITY_FLAGS='',
             DELAYLOAD_LDFLAGS=['-DELAYLOAD:foo.dll', '-DELAYLOAD:bar.dll'],
             USE_DELAYIMP=True,
+            RCFILE='foo.rc',
+            RESFILE='bar.res',
         )
 
         variables = objs[0].variables
