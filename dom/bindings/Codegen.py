@@ -346,7 +346,7 @@ class CGPrototypeJSClass(CGThing):
         slotCount = "DOM_INTERFACE_PROTO_SLOTS_BASE"
         if UseHolderForUnforgeable(self.descriptor):
             slotCount += " + 1 /* slot for the JSObject holding the unforgeable properties */"
-        return """static DOMIfaceAndProtoJSClass PrototypeClass = {
+        return """static const DOMIfaceAndProtoJSClass PrototypeClass = {
   {
     "%sPrototype",
     JSCLASS_IS_DOMIFACEANDPROTOJSCLASS | JSCLASS_HAS_RESERVED_SLOTS(%s),
@@ -403,7 +403,7 @@ class CGInterfaceObjectJSClass(CGThing):
             slotCount += (" + %i /* slots for the named constructors */" %
                           len(self.descriptor.interface.namedConstructors))
         return """
-static DOMIfaceAndProtoJSClass InterfaceObjectClass = {
+static const DOMIfaceAndProtoJSClass InterfaceObjectClass = {
   {
     "Function",
     JSCLASS_IS_DOMIFACEANDPROTOJSCLASS | JSCLASS_HAS_RESERVED_SLOTS(%s),
