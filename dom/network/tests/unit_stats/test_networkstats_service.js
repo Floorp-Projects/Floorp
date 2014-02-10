@@ -7,6 +7,8 @@ const NETWORK_STATUS_READY   = 0;
 const NETWORK_STATUS_STANDBY = 1;
 const NETWORK_STATUS_AWAY    = 2;
 
+var wifiId = '00';
+
 function getNetworks(callback) {
   NetworkStatsService._db.getAvailableNetworks(function onGetNetworks(aError, aResult) {
     callback(aError, aResult);
@@ -122,9 +124,34 @@ add_test(function test_updateStats_failure() {
   });
 });
 
+// Define Mockup function to simulate a request to netd
+function MockNetdRequest(aCallback) {
+  var timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+  var event = {
+    notify: function (timer) {
+      aCallback();
+    }
+  };
+
+  timer.initWithCallback(event, 100, Ci.nsITimer.TYPE_ONE_SHOT);
+}
+
 add_test(function test_queue() {
-  // Fill networks with fake network interfaces
-  // to enable netd async requests
+
+  // Overwrite update function of NetworkStatsService to avoid netd errors due to use
+  // fake interfaces. First, original function is stored to restore it at the end of the
+  // test.
+  var updateFunctionBackup = NetworkStatsService.update;
+
+  NetworkStatsService.update = function update(aNetId, aCallback) {
+    MockNetdRequest(function () {
+      if (aCallback) {
+        aCallback(true, "ok");
+      }
+    });
+  };
+
+  // Fill networks with fake network interfaces to enable netd async requests.
   var network = {id: "1234", type: Ci.nsIDOMMozNetworkStatsManager.MOBILE};
   var netId1 = NetworkStatsService.getNetworkId(network.id, network.type);
   NetworkStatsService._networks[netId1] = { network: network,
@@ -140,33 +167,34 @@ add_test(function test_queue() {
   do_check_eq(NetworkStatsService.updateQueue.length, 2);
   do_check_eq(NetworkStatsService.updateQueue[0].callbacks.length, 1);
 
+  var i = 0;
+  var updateCount = 0;
   var callback = function(success, msg) {
-    return;
+    i++;
+    if (i >= updateCount) {
+      NetworkStatsService.update = updateFunctionBackup;
+      run_next_test();
+    }
   };
 
   NetworkStatsService.updateStats(netId1, callback);
+  updateCount++;
   NetworkStatsService.updateStats(netId2, callback);
+  updateCount++;
 
   do_check_eq(NetworkStatsService.updateQueue.length, 2);
   do_check_eq(NetworkStatsService.updateQueue[0].callbacks.length, 2);
   do_check_eq(NetworkStatsService.updateQueue[0].callbacks[0], null);
   do_check_neq(NetworkStatsService.updateQueue[0].callbacks[1], null);
-
-  // Clear queue because in test environment requests for mobile networks
-  // can not be handled.
-  NetworkStatsService.updateQueue =  [];
-  run_next_test();
 });
 
-var wifiId = '00';
+add_test(function test_getAlarmQuota() {
+  let alarm = { networkId: wifiId, absoluteThreshold: 10000 };
 
-add_test(function test_updateThreshold() {
-  let alarm = { networkId: wifiId, threshold: 10000 };
-
-  NetworkStatsService._updateThreshold(alarm, function onSet(error, threshold){
+  NetworkStatsService._getAlarmQuota(alarm, function onSet(error, quota){
     do_check_eq(error, null);
-    do_check_neq(threshold.systemThreshold, undefined);
-    do_check_neq(threshold.absoluteThreshold, undefined);
+    do_check_neq(quota, undefined);
+    do_check_eq(alarm.absoluteThreshold, alarm.relativeThreshold);
     run_next_test();
   });
 });
@@ -221,6 +249,9 @@ add_test(function test_fireAlarm() {
                 data: null,
                 pageURL: testPageURL,
                 manifestURL: testManifestURL };
+
+  // Set wifi status to standby to avoid connecting to netd when adding an alarm.
+  NetworkStatsService._networks[wifiId].status = NETWORK_STATUS_STANDBY;
 
   NetworkStatsService._db.addAlarm(alarm, function addSuccessCb(error, newId) {
     NetworkStatsService._db.getAlarms(Ci.nsINetworkInterface.NETWORK_TYPE_WIFI,

@@ -237,6 +237,10 @@ NetworkStatsManager.prototype = {
       aOptions = Object.create(null);
     }
 
+    if (aOptions.startTime && aOptions.startTime.constructor.name !== "Date") {
+      throw Components.results.NS_ERROR_INVALID_ARG;
+    }
+
     let request = this.createRequest();
     cpmm.sendAsyncMessage("NetworkStats:SetAlarm",
                           {id: this.getRequestId(request),
