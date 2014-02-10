@@ -232,6 +232,21 @@ nsEditorEventListener::Disconnect()
     return;
   }
   UninstallFromEditor();
+
+  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+  if (fm) {
+    nsCOMPtr<nsIDOMElement> domFocus;
+    fm->GetFocusedElement(getter_AddRefs(domFocus));
+    nsCOMPtr<nsINode> focusedElement = do_QueryInterface(domFocus);
+    mozilla::dom::Element* root = mEditor->GetRoot();
+    if (focusedElement && root &&
+        nsContentUtils::ContentIsDescendantOf(focusedElement, root)) {
+      // Reset the Selection ancestor limiter and SelectionController state
+      // that nsEditor::InitializeSelection set up.
+      mEditor->FinalizeSelection();
+    }
+  }
+
   mEditor = nullptr;
 }
 

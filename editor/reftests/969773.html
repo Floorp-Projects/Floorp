@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+  <meta charset="utf-8">
+  <title>Contenteditable Selection Test Case</title>
+  <script>
+    function runTests() {
+      var editable = document.getElementById("editable");
+      var text = document.getElementById("text");
+
+      editable.focus();
+
+      setTimeout(function () {
+        editable.setAttribute("contenteditable", "false");
+        text.focus();
+        setTimeout(function () {
+          document.body.offsetHeight;
+          document.documentElement.removeAttribute('class');
+        }, 0);
+      }, 0);
+    }
+    document.addEventListener('MozReftestInvalidate', runTests, false);
+  </script>
+</head>
+<body>
+    <div id="editable" contenteditable="true" tabindex="0" spellcheck="false">This is a contenteditable.</div>
+    <div id="text" tabindex="0">This is focusable text</div>
+</body>
+</html>

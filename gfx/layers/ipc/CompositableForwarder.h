@@ -162,13 +162,13 @@ public:
   virtual void RemoveTexture(TextureClient* aTexture) = 0;
 
   /**
-   * Forcibly remove texture data from TextureClient
-   * after a tansaction with Compositor.
+   * Holds a reference to a TextureClient until after the next
+   * compositor transaction, and then drops it.
    */
-  virtual void AddForceRemovingTexture(TextureClient* aClient)
+  virtual void HoldUntilTransaction(TextureClient* aClient)
   {
     if (aClient) {
-      mForceRemovingTextures.AppendElement(aClient);
+      mTexturesToRemove.AppendElement(aClient);
     }
   }
 
@@ -176,12 +176,9 @@ public:
    * Forcibly remove texture data from TextureClient
    * This function needs to be called after a tansaction with Compositor.
    */
-  virtual void ForceRemoveTexturesIfNecessary()
+  virtual void RemoveTexturesIfNecessary()
   {
-    for (uint32_t i = 0; i < mForceRemovingTextures.Length(); i++) {
-       mForceRemovingTextures[i]->ForceRemove();
-    }
-    mForceRemovingTextures.Clear();
+    mTexturesToRemove.Clear();
   }
 
   /**
@@ -244,7 +241,7 @@ public:
 protected:
   TextureFactoryIdentifier mTextureFactoryIdentifier;
   bool mMultiProcess;
-  nsTArray<RefPtr<TextureClient> > mForceRemovingTextures;
+  nsTArray<RefPtr<TextureClient> > mTexturesToRemove;
 };
 
 } // namespace
