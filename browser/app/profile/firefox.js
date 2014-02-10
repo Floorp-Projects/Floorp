@@ -1171,7 +1171,7 @@ pref("devtools.shadereditor.enabled", false);
 pref("devtools.chrome.enabled", false);
 
 // Default theme ("dark" or "light")
-pref("devtools.theme", "light");
+pref("devtools.theme", "dark");
 
 // Display the introductory text
 pref("devtools.gcli.hideIntro", false);
