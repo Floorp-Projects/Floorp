@@ -5,22 +5,21 @@
 <link rel="stylesheet" href="/tests/SimpleTest/test.css" type="text/css">
 
 <style id="test1">
-p { var-a:123!important; }
 </style>
 
 <style id="test2">
-p { var-a: a !important; }
 </style>
 
 <style id="test3">
-p { border-left-style: inset; padding: 1px; var-decoration: line-through; }
 </style>
 
 <script>
 var tests = [
   function() {
     // https://bugzilla.mozilla.org/show_bug.cgi?id=773296#c121
-    var declaration = document.getElementById("test1").sheet.cssRules[0].style;
+    var test1 = document.getElementById("test1");
+    test1.textContent = "p { var-a:123!important; }";
+    var declaration = test1.sheet.cssRules[0].style;
     declaration.cssText;
     declaration.setProperty("color", "black");
     is(declaration.getPropertyValue("var-a"), "123");
@@ -28,16 +27,27 @@ var tests = [
 
   function() {
     // https://bugzilla.mozilla.org/show_bug.cgi?id=773296#c121
-    var declaration = document.getElementById("test2").sheet.cssRules[0].style;
+    var test2 = document.getElementById("test2");
+    test2.textContent = "p { var-a: a !important; }";
+    var declaration = test2.sheet.cssRules[0].style;
     is(declaration.getPropertyPriority("var-a"), "important");
   },
 
   function() {
     // https://bugzilla.mozilla.org/show_bug.cgi?id=955913
-    var declaration = document.getElementById("test3").sheet.cssRules[0].style;
+    var test3 = document.getElementById("test3");
+    test3.textContent = "p { border-left-style: inset; padding: 1px; var-decoration: line-through; }";
+    var declaration = test3.sheet.cssRules[0].style;
     is(declaration[declaration.length - 1], "var-decoration");
   },
 ];
 
-tests.forEach(function(fn) { fn(); });
+function runTest() {
+  tests.forEach(function(fn) { fn(); });
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({ set: [["layout.css.variables.enabled", true ]] },
+                          runTest);
 </script>
