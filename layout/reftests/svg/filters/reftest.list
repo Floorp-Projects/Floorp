@@ -87,6 +87,8 @@ skip-if(B2G) == feDisplacementMap-scale-01.svg pass.svg
 
 skip-if(B2G) fuzzy-if(cocoaWidget,4,184) == feDistantLight-filterRes-01.svg feDistantLight-filterRes-01-ref.svg
 
+== feDropShadow-01.svg feDropShadow-01-ref.svg
+
 == feGaussianBlur-alpha-01.svg feGaussianBlur-alpha-01-ref.svg
 
 == feMorphology-radius-negative-01.svg pass.svg
