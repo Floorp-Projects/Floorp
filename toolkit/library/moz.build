@@ -14,6 +14,11 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     SOURCES += [
         'nsDllMain.cpp',
     ]
+    if not CONFIG['GNU_CC']:
+        LOCAL_INCLUDES += [
+	    '/widget/windows',
+	    '/xpcom/base',
+	]
 
 # component libraries
 additional_defines = (
