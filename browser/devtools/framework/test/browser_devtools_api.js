@@ -49,6 +49,12 @@ function continueTests(toolbox, panel) {
   ok(toolbox.getCurrentPanel(), "panel value is correct");
   is(toolbox.currentToolId, toolId, "toolbox _currentToolId is correct");
 
+  ok(!toolbox.doc.getElementById("toolbox-tab-" + toolId).hasAttribute("icon-invertable"),
+    "The tool tab does not have the invertable attribute");
+
+  ok(toolbox.doc.getElementById("toolbox-tab-inspector").hasAttribute("icon-invertable"),
+    "The builtin tool tabs do have the invertable attribute");
+
   let toolDefinitions = gDevTools.getToolDefinitionMap();
   is(toolDefinitions.has(toolId), true, "The tool is in gDevTools");
 
