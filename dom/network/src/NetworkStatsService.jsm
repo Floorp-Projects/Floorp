@@ -331,10 +331,11 @@ this.NetworkStatsService = {
         this._networks[netId].status = NETWORK_STATUS_AWAY;
         this._currentAlarms[netId] = Object.create(null);
         aCallback(netId);
+        return;
       }
 
       aCallback(null);
-    });
+    }.bind(this));
   },
 
   getAvailableNetworks: function getAvailableNetworks(mm, msg) {
@@ -863,7 +864,7 @@ this.NetworkStatsService = {
         let alarm = result[i];
         alarms.push({ id: alarm.id,
                       network: self._networks[alarm.networkId].network,
-                      threshold: alarm.threshold,
+                      threshold: alarm.absoluteThreshold,
                       data: alarm.data });
       }
 
@@ -931,22 +932,21 @@ this.NetworkStatsService = {
       let newAlarm = {
         id: null,
         networkId: aNetId,
-        threshold: threshold,
-        absoluteThreshold: null,
+        absoluteThreshold: threshold,
+        relativeThreshold: null,
         startTime: options.startTime,
         data: options.data,
         pageURL: options.pageURL,
         manifestURL: options.manifestURL
       };
 
-      self._updateThreshold(newAlarm, function onUpdate(error, _threshold) {
+      self._getAlarmQuota(newAlarm, function onUpdate(error, quota) {
         if (error) {
           mm.sendAsyncMessage("NetworkStats:SetAlarm:Return",
                               { id: msg.id, error: error, result: null });
           return;
         }
 
-        newAlarm.absoluteThreshold = _threshold.absoluteThreshold;
         self._db.addAlarm(newAlarm, function addSuccessCb(error, newId) {
           if (error) {
             mm.sendAsyncMessage("NetworkStats:SetAlarm:Return",
@@ -971,7 +971,7 @@ this.NetworkStatsService = {
   _setAlarm: function _setAlarm(aAlarm, aCallback) {
     let currentAlarm = this._currentAlarms[aAlarm.networkId];
     if ((Object.getOwnPropertyNames(currentAlarm).length !== 0 &&
-         aAlarm.absoluteThreshold > currentAlarm.alarm.absoluteThreshold) ||
+         aAlarm.relativeThreshold > currentAlarm.alarm.relativeThreshold) ||
         this._networks[aAlarm.networkId].status != NETWORK_STATUS_READY) {
       aCallback(null, true);
       return;
@@ -979,7 +979,7 @@ this.NetworkStatsService = {
 
     let self = this;
 
-    this._updateThreshold(aAlarm, function onUpdate(aError, aThreshold) {
+    this._getAlarmQuota(aAlarm, function onUpdate(aError, aQuota) {
       if (aError) {
         aCallback(aError, null);
         return;
@@ -1001,7 +1001,7 @@ this.NetworkStatsService = {
       let interfaceName = self._networks[aAlarm.networkId].interfaceName;
       if (interfaceName) {
         networkService.setNetworkInterfaceAlarm(interfaceName,
-                                                aThreshold.systemThreshold,
+                                                aQuota,
                                                 callback);
         return;
       }
@@ -1010,7 +1010,7 @@ this.NetworkStatsService = {
     });
   },
 
-  _updateThreshold: function _updateThreshold(aAlarm, aCallback) {
+  _getAlarmQuota: function _getAlarmQuota(aAlarm, aCallback) {
     let self = this;
     this.updateStats(aAlarm.networkId, function onStatsUpdated(aResult, aMessage) {
       self._db.getCurrentStats(self._networks[aAlarm.networkId].network,
@@ -1023,28 +1023,19 @@ this.NetworkStatsService = {
           return;
         }
 
-        if (!result) {
-          // There are no stats for the network of the alarm, set them to default 0 in
-          // order to be able to calculate the offset, systemThreshold and
-          // absoluteThreshold.
-          result = { rxTotalBytes:  0, txTotalBytes:  0,
-                     rxSystemBytes: 0, txSystemBytes: 0 };
-        }
-
-        let offset = aAlarm.threshold - result.rxTotalBytes - result.txTotalBytes;
+        let quota = aAlarm.absoluteThreshold - result.rxBytes - result.txBytes;
 
         // Alarm set to a threshold lower than current rx/tx bytes.
-        if (offset <= 0) {
+        if (quota <= 0) {
           aCallback("InvalidStateError", null);
           return;
         }
 
-        let threshold = {
-          systemThreshold: result.rxSystemBytes + result.txSystemBytes + offset,
-          absoluteThreshold: result.rxTotalBytes + result.txTotalBytes + offset
-        };
+        aAlarm.relativeThreshold = aAlarm.startTime
+                                 ? result.rxTotalBytes + result.txTotalBytes + quota
+                                 : aAlarm.absoluteThreshold;
 
-        aCallback(null, threshold);
+        aCallback(null, quota);
       });
     });
   },
@@ -1096,7 +1087,7 @@ this.NetworkStatsService = {
     let pageURI = Services.io.newURI(aAlarm.pageURL, null, null);
 
     let alarm = { "id":        aAlarm.id,
-                  "threshold": aAlarm.threshold,
+                  "threshold": aAlarm.absoluteThreshold,
                   "data":      aAlarm.data };
     messenger.sendMessage("networkstats-alarm", alarm, pageURI, manifestURI);
   }
