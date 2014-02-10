@@ -101,8 +101,6 @@ public class BrowserContract {
     public static final class Favicons implements CommonColumns, DateSyncColumns {
         private Favicons() {}
 
-        public static final String TABLE_NAME = "favicons";
-
         public static final Uri CONTENT_URI = Uri.withAppendedPath(AUTHORITY_URI, "favicons");
 
         public static final String URL = "url";
@@ -114,8 +112,6 @@ public class BrowserContract {
     public static final class Thumbnails implements CommonColumns {
         private Thumbnails() {}
 
-        public static final String TABLE_NAME = "thumbnails";
-
         public static final Uri CONTENT_URI = Uri.withAppendedPath(AUTHORITY_URI, "thumbnails");
 
         public static final String URL = "url";
@@ -125,10 +121,6 @@ public class BrowserContract {
     @RobocopTarget
     public static final class Bookmarks implements CommonColumns, URLColumns, FaviconColumns, SyncColumns {
         private Bookmarks() {}
-
-        public static final String TABLE_NAME = "bookmarks";
-
-        public static final String VIEW_WITH_FAVICONS = "bookmarks_with_favicons";
 
         public static final int FIXED_ROOT_ID = 0;
         public static final int FAKE_DESKTOP_FOLDER_ID = -1;
@@ -170,11 +162,6 @@ public class BrowserContract {
     @RobocopTarget
     public static final class History implements CommonColumns, URLColumns, HistoryColumns, FaviconColumns, SyncColumns {
         private History() {}
-
-        public static final String TABLE_NAME = "history";
-
-        public static final String VIEW_WITH_FAVICONS = "history_with_favicons";
-
         public static final Uri CONTENT_URI = Uri.withAppendedPath(AUTHORITY_URI, "history");
         public static final Uri CONTENT_OLD_URI = Uri.withAppendedPath(AUTHORITY_URI, "history/old");
         public static final String CONTENT_TYPE = "vnd.android.cursor.dir/browser-history";
@@ -185,11 +172,6 @@ public class BrowserContract {
     @RobocopTarget
     public static final class Combined implements CommonColumns, URLColumns, HistoryColumns, FaviconColumns  {
         private Combined() {}
-
-        public static final String VIEW_NAME = "combined";
-
-        public static final String VIEW_WITH_FAVICONS = "combined_with_favicons";
-
         public static final Uri CONTENT_URI = Uri.withAppendedPath(AUTHORITY_URI, "combined");
 
         public static final int DISPLAY_NORMAL = 0;
@@ -322,48 +304,5 @@ public class BrowserContract {
         public static final String DESCRIPTION = "description";
         public static final String IMAGE_URL = "image_url";
         public static final String CREATED = "created";
-    }
-
-    /*
-     * Contains names and schema definitions for tables and views
-     * no longer being used by current ContentProviders. These values are used
-     * to make incremental updates to the schema during a database upgrade. Will be
-     * removed with bug 947018.
-     */
-    static final class Obsolete {
-        public static final String TABLE_IMAGES = "images";
-        public static final String VIEW_BOOKMARKS_WITH_IMAGES = "bookmarks_with_images";
-        public static final String VIEW_HISTORY_WITH_IMAGES = "history_with_images";
-        public static final String VIEW_COMBINED_WITH_IMAGES = "combined_with_images";
-
-        public static final class Images implements CommonColumns, SyncColumns {
-            private Images() {}
-
-            public static final String URL = "url_key";
-            public static final String FAVICON_URL = "favicon_url";
-            public static final String FAVICON = "favicon";
-            public static final String THUMBNAIL = "thumbnail";
-            public static final String _ID = "_id";
-            public static final String GUID = "guid";
-            public static final String DATE_CREATED = "created";
-            public static final String DATE_MODIFIED = "modified";
-            public static final String IS_DELETED = "deleted";
-        }
-
-        public static final class Combined {
-            private Combined() {}
-
-            public static final String THUMBNAIL = "thumbnail";
-        }
-
-        static final String TABLE_BOOKMARKS_JOIN_IMAGES = Bookmarks.TABLE_NAME + " LEFT OUTER JOIN " +
-                Obsolete.TABLE_IMAGES + " ON " + DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.URL) + " = " +
-                DBUtils.qualifyColumn(Obsolete.TABLE_IMAGES, Obsolete.Images.URL);
-
-        static final String TABLE_HISTORY_JOIN_IMAGES = History.TABLE_NAME + " LEFT OUTER JOIN " +
-                Obsolete.TABLE_IMAGES + " ON " + DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, History.URL) + " = " +
-                DBUtils.qualifyColumn(Obsolete.TABLE_IMAGES, Obsolete.Images.URL);
-
-        static final String FAVICON_DB = "favicon_urls.db";
     }
 }
