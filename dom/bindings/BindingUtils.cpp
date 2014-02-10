@@ -95,14 +95,14 @@ ThrowInvalidThis(JSContext* aCx, const JS::CallArgs& aArgs,
                  prototypes::ID aProtoId)
 {
   return ThrowInvalidThis(aCx, aArgs, aErrorNumber,
-                          NamesOfInterfacesWithProtos[aProtoId]);
+                          NamesOfInterfacesWithProtos(aProtoId));
 }
 
 bool
 ThrowNoSetterArg(JSContext* aCx, prototypes::ID aProtoId)
 {
   nsPrintfCString errorMessage("%s attribute setter",
-                               NamesOfInterfacesWithProtos[aProtoId]);
+                               NamesOfInterfacesWithProtos(aProtoId));
   return ThrowErrorMessage(aCx, MSG_MISSING_ARGUMENTS, errorMessage.get());
 }
 
