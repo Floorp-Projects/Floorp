@@ -408,8 +408,8 @@ private:
                                       const bool& isPrivateData,
                                       const int32_t& whichClipboard) MOZ_OVERRIDE;
     virtual bool RecvGetClipboardText(const int32_t& whichClipboard, nsString* text) MOZ_OVERRIDE;
-    virtual bool RecvEmptyClipboard() MOZ_OVERRIDE;
-    virtual bool RecvClipboardHasText(bool* hasText) MOZ_OVERRIDE;
+    virtual bool RecvEmptyClipboard(const int32_t& whichClipboard) MOZ_OVERRIDE;
+    virtual bool RecvClipboardHasText(const int32_t& whichClipboard, bool* hasText) MOZ_OVERRIDE;
 
     virtual bool RecvGetSystemColors(const uint32_t& colorsCount,
                                      InfallibleTArray<uint32_t>* colors) MOZ_OVERRIDE;
