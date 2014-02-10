@@ -54,9 +54,9 @@ RES     = $(OBJDIR)/$(LIBRARY_NAME).res
 RESNAME = freebl.rc
 
 ifdef NS_USE_GCC
-OS_LIBS += -lshell32
+OS_LIBS += -ladvapi32
 else
-OS_LIBS += shell32.lib
+OS_LIBS += advapi32.lib
 endif
 
 ifdef NS_USE_GCC

@@ -2677,7 +2677,7 @@ public:
       DBUS_TYPE_OBJECT_PATH, &deviceAgentPath,
       DBUS_TYPE_STRING, &capabilities,
       DBUS_TYPE_INVALID);
-    NS_ENSURE_SUCCESS_VOID(success);
+    NS_ENSURE_TRUE_VOID(success);
 
     mRunnable.forget();
 

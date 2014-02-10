@@ -25,6 +25,8 @@ UNIFIED_SOURCES += [
     'nsBaseScreen.cpp',
     'nsClipboardHelper.cpp',
     'nsClipboardPrivacyHandler.cpp',
+    'nsClipboardProxy.cpp',
+    'nsContentProcessWidgetFactory.cpp',
     'nsFilePickerProxy.cpp',
     'nsHTMLFormatConverter.cpp',
     'nsIdleService.cpp',
