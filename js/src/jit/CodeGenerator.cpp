@@ -4084,6 +4084,18 @@ CodeGenerator::visitTypedArrayElements(LTypedArrayElements *lir)
 }
 
 bool
+CodeGenerator::visitNeuterCheck(LNeuterCheck *lir)
+{
+    Register obj = ToRegister(lir->object());
+    Register temp = ToRegister(lir->temp());
+    masm.loadPtr(Address(obj, TypedObject::dataOffset()), temp);
+    masm.testPtr(temp, temp);
+    if (!bailoutIf(Assembler::Zero, lir->snapshot()))
+        return false;
+    return true;
+}
+
+bool
 CodeGenerator::visitTypedObjectElements(LTypedObjectElements *lir)
 {
     Register obj = ToRegister(lir->object());

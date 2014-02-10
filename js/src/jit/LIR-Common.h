@@ -3646,6 +3646,28 @@ class LTypedObjectElements : public LInstructionHelper<1, 1, 0>
     const LAllocation *object() {
         return getOperand(0);
     }
+    const MTypedObjectElements *mir() const {
+        return mir_->toTypedObjectElements();
+    }
+};
+
+// Check whether a typed object has a NULL data pointer
+// (i.e., has been neutered).
+class LNeuterCheck : public LInstructionHelper<0, 1, 1>
+{
+  public:
+    LIR_HEADER(NeuterCheck)
+
+    LNeuterCheck(const LAllocation &object, const LDefinition &temp) {
+        setOperand(0, object);
+        setTemp(0, temp);
+    }
+    const LAllocation *object() {
+        return getOperand(0);
+    }
+    const LDefinition *temp() {
+        return getTemp(0);
+    }
 };
 
 // Bailout if index >= length.
