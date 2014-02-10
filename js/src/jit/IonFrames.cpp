@@ -1319,13 +1319,13 @@ SnapshotIterator::SnapshotIterator()
 }
 
 bool
-SnapshotIterator::hasLocation(const SnapshotReader::Location &loc)
+SnapshotIterator::hasLocation(const Location &loc)
 {
     return loc.isStackSlot() || machine_.has(loc.reg());
 }
 
 uintptr_t
-SnapshotIterator::fromLocation(const SnapshotReader::Location &loc)
+SnapshotIterator::fromLocation(const Location &loc)
 {
     if (loc.isStackSlot())
         return ReadFrameSlot(fp_, loc.stackSlot());
@@ -1365,13 +1365,13 @@ bool
 SnapshotIterator::slotReadable(const Slot &slot)
 {
     switch (slot.mode()) {
-      case SnapshotReader::DOUBLE_REG:
+      case Slot::DOUBLE_REG:
         return machine_.has(slot.floatReg());
 
-      case SnapshotReader::TYPED_REG:
+      case Slot::TYPED_REG:
         return machine_.has(slot.reg());
 
-      case SnapshotReader::UNTYPED:
+      case Slot::UNTYPED:
 #if defined(JS_NUNBOX32)
           return hasLocation(slot.type()) && hasLocation(slot.payload());
 #elif defined(JS_PUNBOX64)
@@ -1387,10 +1387,10 @@ Value
 SnapshotIterator::slotValue(const Slot &slot)
 {
     switch (slot.mode()) {
-      case SnapshotReader::DOUBLE_REG:
+      case Slot::DOUBLE_REG:
         return DoubleValue(machine_.read(slot.floatReg()));
 
-      case SnapshotReader::FLOAT32_REG:
+      case Slot::FLOAT32_REG:
       {
         union {
             double d;
@@ -1402,13 +1402,13 @@ SnapshotIterator::slotValue(const Slot &slot)
         return Float32Value(pun.f);
       }
 
-      case SnapshotReader::FLOAT32_STACK:
+      case Slot::FLOAT32_STACK:
         return Float32Value(ReadFrameFloat32Slot(fp_, slot.stackSlot()));
 
-      case SnapshotReader::TYPED_REG:
+      case Slot::TYPED_REG:
         return FromTypedPayload(slot.knownType(), machine_.read(slot.reg()));
 
-      case SnapshotReader::TYPED_STACK:
+      case Slot::TYPED_STACK:
       {
         switch (slot.knownType()) {
           case JSVAL_TYPE_DOUBLE:
@@ -1426,7 +1426,7 @@ SnapshotIterator::slotValue(const Slot &slot)
         }
       }
 
-      case SnapshotReader::UNTYPED:
+      case Slot::UNTYPED:
       {
           jsval_layout layout;
 #if defined(JS_NUNBOX32)
@@ -1438,16 +1438,16 @@ SnapshotIterator::slotValue(const Slot &slot)
           return IMPL_TO_JSVAL(layout);
       }
 
-      case SnapshotReader::JS_UNDEFINED:
+      case Slot::JS_UNDEFINED:
         return UndefinedValue();
 
-      case SnapshotReader::JS_NULL:
+      case Slot::JS_NULL:
         return NullValue();
 
-      case SnapshotReader::JS_INT32:
+      case Slot::JS_INT32:
         return Int32Value(slot.int32Value());
 
-      case SnapshotReader::CONSTANT:
+      case Slot::CONSTANT:
         return ionScript_->getConstant(slot.constantIndex());
 
       default:
