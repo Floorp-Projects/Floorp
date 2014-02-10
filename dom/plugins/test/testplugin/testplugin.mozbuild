@@ -42,3 +42,7 @@ elif toolkit == 'windows':
     ]
 
 FORCE_SHARED_LIB = True
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+    RCFILE  = 'nptest.rc'
+    RESFILE = 'nptest.res'

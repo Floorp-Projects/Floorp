@@ -131,14 +131,14 @@ ToStackIndex(LAllocation *a)
 }
 
 bool
-CodeGeneratorShared::encodeSlots(LSnapshot *snapshot, MResumePoint *resumePoint,
-                                 uint32_t *startIndex)
+CodeGeneratorShared::encodeAllocations(LSnapshot *snapshot, MResumePoint *resumePoint,
+                                       uint32_t *startIndex)
 {
     IonSpew(IonSpew_Codegen, "Encoding %u of resume point %p's operands starting from %u",
             resumePoint->numOperands(), (void *) resumePoint, *startIndex);
-    for (uint32_t slotno = 0, e = resumePoint->numOperands(); slotno < e; slotno++) {
-        uint32_t i = slotno + *startIndex;
-        MDefinition *mir = resumePoint->getOperand(slotno);
+    for (uint32_t allocno = 0, e = resumePoint->numOperands(); allocno < e; allocno++) {
+        uint32_t i = allocno + *startIndex;
+        MDefinition *mir = resumePoint->getOperand(allocno);
 
         if (mir->isBox())
             mir = mir->toBox()->getOperand(0);
@@ -147,12 +147,14 @@ CodeGeneratorShared::encodeSlots(LSnapshot *snapshot, MResumePoint *resumePoint,
                        ? MIRType_Undefined
                        : mir->type();
 
+        RValueAllocation alloc;
+
         switch (type) {
           case MIRType_Undefined:
-            snapshots_.addUndefinedSlot();
+            alloc = RValueAllocation::Undefined();
             break;
           case MIRType_Null:
-            snapshots_.addNullSlot();
+            alloc = RValueAllocation::Null();
             break;
           case MIRType_Int32:
           case MIRType_String:
@@ -165,29 +167,29 @@ CodeGeneratorShared::encodeSlots(LSnapshot *snapshot, MResumePoint *resumePoint,
             JSValueType valueType = ValueTypeFromMIRType(type);
             if (payload->isMemory()) {
                 if (type == MIRType_Float32)
-                    snapshots_.addFloat32Slot(ToStackIndex(payload));
+                    alloc = RValueAllocation::Float32(ToStackIndex(payload));
                 else
-                    snapshots_.addSlot(valueType, ToStackIndex(payload));
+                    alloc = RValueAllocation::Typed(valueType, ToStackIndex(payload));
             } else if (payload->isGeneralReg()) {
-                snapshots_.addSlot(valueType, ToRegister(payload));
+                alloc = RValueAllocation::Typed(valueType, ToRegister(payload));
             } else if (payload->isFloatReg()) {
                 FloatRegister reg = ToFloatRegister(payload);
                 if (type == MIRType_Float32)
-                    snapshots_.addFloat32Slot(reg);
+                    alloc = RValueAllocation::Float32(reg);
                 else
-                    snapshots_.addSlot(reg);
+                    alloc = RValueAllocation::Double(reg);
             } else {
                 MConstant *constant = mir->toConstant();
                 const Value &v = constant->value();
 
                 // Don't bother with the constant pool for smallish integers.
                 if (v.isInt32() && v.toInt32() >= -32 && v.toInt32() <= 32) {
-                    snapshots_.addInt32Slot(v.toInt32());
+                    alloc = RValueAllocation::Int32(v.toInt32());
                 } else {
                     uint32_t index;
                     if (!graph.addConstantToPool(constant->value(), &index))
                         return false;
-                    snapshots_.addConstantPoolSlot(index);
+                    alloc = RValueAllocation::ConstantPool(index);
                 }
             }
             break;
@@ -197,7 +199,7 @@ CodeGeneratorShared::encodeSlots(LSnapshot *snapshot, MResumePoint *resumePoint,
             uint32_t index;
             if (!graph.addConstantToPool(MagicValue(JS_OPTIMIZED_ARGUMENTS), &index))
                 return false;
-            snapshots_.addConstantPoolSlot(index);
+            alloc = RValueAllocation::ConstantPool(index);
             break;
           }
           default:
@@ -208,24 +210,26 @@ CodeGeneratorShared::encodeSlots(LSnapshot *snapshot, MResumePoint *resumePoint,
             LAllocation *type = snapshot->typeOfSlot(i);
             if (type->isRegister()) {
                 if (payload->isRegister())
-                    snapshots_.addSlot(ToRegister(type), ToRegister(payload));
+                    alloc = RValueAllocation::Untyped(ToRegister(type), ToRegister(payload));
                 else
-                    snapshots_.addSlot(ToRegister(type), ToStackIndex(payload));
+                    alloc = RValueAllocation::Untyped(ToRegister(type), ToStackIndex(payload));
             } else {
                 if (payload->isRegister())
-                    snapshots_.addSlot(ToStackIndex(type), ToRegister(payload));
+                    alloc = RValueAllocation::Untyped(ToStackIndex(type), ToRegister(payload));
                 else
-                    snapshots_.addSlot(ToStackIndex(type), ToStackIndex(payload));
+                    alloc = RValueAllocation::Untyped(ToStackIndex(type), ToStackIndex(payload));
             }
 #elif JS_PUNBOX64
             if (payload->isRegister())
-                snapshots_.addSlot(ToRegister(payload));
+                alloc = RValueAllocation::Untyped(ToRegister(payload));
             else
-                snapshots_.addSlot(ToStackIndex(payload));
+                alloc = RValueAllocation::Untyped(ToStackIndex(payload));
 #endif
             break;
           }
-      }
+        }
+
+        snapshots_.add(alloc);
     }
 
     *startIndex += resumePoint->numOperands();
@@ -328,7 +332,7 @@ CodeGeneratorShared::encode(LSnapshot *snapshot)
         snapshots_.trackFrame(pcOpcode, mirOpcode, mirId, lirOpcode, lirId);
 #endif
 
-        if (!encodeSlots(snapshot, mir, &startIndex))
+        if (!encodeAllocations(snapshot, mir, &startIndex))
             return false;
         snapshots_.endFrame();
     }
