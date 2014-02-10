@@ -446,6 +446,19 @@ ShadowLayerForwarder::UseComponentAlphaTextures(CompositableClient* aCompositabl
 }
 
 void
+ShadowLayerForwarder::RemoveTextureFromCompositable(CompositableClient* aCompositable,
+                                                    TextureClient* aTexture)
+{
+  mTxn->AddEdit(OpRemoveTexture(nullptr, aCompositable->GetIPDLActor(),
+                                nullptr, aTexture->GetIPDLActor()));
+  if (aTexture->GetFlags() & TEXTURE_DEALLOCATE_CLIENT) {
+    mTxn->MarkSyncTransaction();
+  }
+  // Hold texture until transaction complete.
+  HoldUntilTransaction(aTexture);
+}
+
+void
 ShadowLayerForwarder::RemoveTexture(TextureClient* aTexture)
 {
   aTexture->ForceRemove();

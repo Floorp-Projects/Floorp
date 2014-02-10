@@ -156,6 +156,14 @@ public:
   virtual void DestroyedThebesBuffer(const SurfaceDescriptor& aBackBufferToDestroy) = 0;
 
   /**
+   * Tell the CompositableHost on the compositor side to remove the texture.
+   * This function does not delete the TextureHost corresponding to the
+   * TextureClient passed in parameter.
+   */
+  virtual void RemoveTextureFromCompositable(CompositableClient* aCompositable,
+                                             TextureClient* aTexture) = 0;
+
+  /**
    * Tell the compositor side to delete the TextureHost corresponding to the
    * TextureClient passed in parameter.
    */
