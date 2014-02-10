@@ -165,10 +165,19 @@ if test -z "$PERL" -o "$PERL" = ":"; then
     AC_MSG_ERROR([perl not found in \$PATH])
 fi
 
+if test -n "$GAIADIR" -a ! -d "$GAIADIR" ; then
+    AC_MSG_ERROR([GAIADIR '$GAIADIR' isn't a valid directory])
+fi
+
 AC_SUBST(GAIADIR)
 if test -n "$GAIADIR" ; then
     AC_DEFINE(PACKAGE_GAIA)
 fi
+
+if test -n "$FXOS_SIMULATOR" -a -z "$GAIADIR" ; then
+    AC_MSG_ERROR([FXOS_SIMULATOR=1 requires GAIADIR to be defined])
+fi
+AC_SUBST(FXOS_SIMULATOR)
 
 MOZ_ARG_WITH_STRING(gonk,
 [  --with-gonk=DIR
@@ -4241,6 +4250,7 @@ AC_SUBST(MOZ_BUILD_APP)
 AC_SUBST(MOZ_PHOENIX)
 AC_SUBST(MOZ_XULRUNNER)
 AC_SUBST(MOZ_B2G)
+AC_SUBST(MOZ_B2G_VERSION)
 
 AC_DEFINE_UNQUOTED(MOZ_BUILD_APP,$MOZ_BUILD_APP)
 
