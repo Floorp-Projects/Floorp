@@ -41,6 +41,7 @@ UNIFIED_SOURCES += [
     'testIntern.cpp',
     'testIntString.cpp',
     'testIntTypesABI.cpp',
+    'testJitRValueAlloc.cpp',
     'testJSEvaluateScript.cpp',
     'testLookup.cpp',
     'testLooselyEqual.cpp',

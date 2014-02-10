@@ -66,3 +66,7 @@ if CONFIG['OS_ARCH'] == 'WINNT' and CONFIG['MOZ_MEMORY']:
 # disable PGO for Sun Studio
 if CONFIG['SOLARIS_SUNPRO_CC']:
     NO_PGO = True
+
+if CONFIG['OS_ARCH'] == 'WINNT':
+    RCFILE  = 'sqlite.rc'
+    RESFILE = 'sqlite.res'
