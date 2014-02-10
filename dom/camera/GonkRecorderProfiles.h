@@ -7,6 +7,7 @@
 
 #include <media/MediaProfiles.h>
 #include "CameraRecorderProfiles.h"
+#include "ICameraControl.h"
 
 #ifndef CHECK_SETARG
 #define CHECK_SETARG(x)                 \
@@ -86,7 +87,7 @@ public:
    * supported by the camera hardware.  (Just because it appears in a recorder
    * profile doesn't mean the hardware can handle it.)
    */
-  void SetSupportedResolutions(const nsTArray<idl::CameraSize>& aSizes)
+  void SetSupportedResolutions(const nsTArray<ICameraControl::Size>& aSizes)
     { mSupportedSizes = aSizes; }
 
   /**
@@ -104,7 +105,7 @@ public:
 protected:
   virtual ~GonkRecorderProfileManager();
 
-  nsTArray<idl::CameraSize> mSupportedSizes;
+  nsTArray<ICameraControl::Size> mSupportedSizes;
 };
 
 }; // namespace mozilla

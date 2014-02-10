@@ -312,7 +312,9 @@ nsresult
 MediaEngineWebRTCVideoSource::Start(SourceMediaStream* aStream, TrackID aID)
 {
   LOG((__FUNCTION__));
+#ifndef MOZ_B2G_CAMERA
   int error = 0;
+#endif
   if (!mInitDone || !aStream) {
     return NS_ERROR_FAILURE;
   }
@@ -413,7 +415,7 @@ MediaEngineWebRTCVideoSource::Init()
 {
 #ifdef MOZ_B2G_CAMERA
   nsAutoCString deviceName;
-  mCameraManager->GetCameraName(mCaptureIndex, deviceName);
+  ICameraControl::GetCameraName(mCaptureIndex, deviceName);
   CopyUTF8toUTF16(deviceName, mDeviceName);
   CopyUTF8toUTF16(deviceName, mUniqueId);
 #else
@@ -492,125 +494,95 @@ void
 MediaEngineWebRTCVideoSource::AllocImpl() {
   MOZ_ASSERT(NS_IsMainThread());
 
-  mDOMCameraControl = new nsDOMCameraControl(mCaptureIndex,
-                                             mCameraThread,
-                                             this,
-                                             this,
-                                             nsGlobalWindow::GetInnerWindowWithId(mWindowId));
-  mCameraManager->Register(mDOMCameraControl);
+  mCameraControl = ICameraControl::Create(mCaptureIndex, nullptr);
+  mCameraControl->AddListener(this);
 }
 
 void
 MediaEngineWebRTCVideoSource::DeallocImpl() {
   MOZ_ASSERT(NS_IsMainThread());
 
-  mNativeCameraControl->ReleaseHardware(this, this);
-  mNativeCameraControl = nullptr;
+  mCameraControl->ReleaseHardware();
+  mCameraControl = nullptr;
 }
 
 void
 MediaEngineWebRTCVideoSource::StartImpl(webrtc::CaptureCapability aCapability) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  idl::CameraSize size;
-  size.width = aCapability.width;
-  size.height = aCapability.height;
-  mNativeCameraControl->GetPreviewStream(size, this, this);
+  ICameraControl::Configuration config;
+  config.mMode = ICameraControl::kPictureMode;
+  config.mPreviewSize.width = aCapability.width;
+  config.mPreviewSize.height = aCapability.height;
+  mCameraControl->SetConfiguration(config);
+  mCameraControl->Set(CAMERA_PARAM_PICTURESIZE, config.mPreviewSize);
 }
 
 void
 MediaEngineWebRTCVideoSource::StopImpl() {
   MOZ_ASSERT(NS_IsMainThread());
 
-  mNativeCameraControl->StopPreview();
-  mPreviewStream = nullptr;
+  mCameraControl->StopPreview();
 }
 
 void
 MediaEngineWebRTCVideoSource::SnapshotImpl() {
-
   MOZ_ASSERT(NS_IsMainThread());
-
-  idl::CameraSize size;
-  size.width = mCapability.width;
-  size.height = mCapability.height;
-
-  idl::CameraPosition cameraPosition;
-  cameraPosition.latitude = NAN;
-  cameraPosition.longitude = NAN;
-  cameraPosition.altitude = NAN;
-  cameraPosition.timestamp = NAN;
-
-  mNativeCameraControl->TakePicture(size, 0, NS_LITERAL_STRING("jpeg"), cameraPosition, PR_Now() / 1000000, this, this);
+  mCameraControl->TakePicture();
 }
 
-// nsICameraGetCameraCallback
-nsresult
-MediaEngineWebRTCVideoSource::HandleEvent(nsISupports* /* unused */) {
-  MOZ_ASSERT(NS_IsMainThread());
+void
+MediaEngineWebRTCVideoSource::OnHardwareStateChange(HardwareState aState)
+{
   ReentrantMonitorAutoEnter sync(mCallbackMonitor);
-  mNativeCameraControl = static_cast<nsGonkCameraControl*>(mDOMCameraControl->GetNativeCameraControl().get());
-  mState = kAllocated;
+  if (aState == CameraControlListener::kHardwareOpen) {
+    mState = kAllocated;
+  } else {
+    mState = kReleased;
+    mCameraControl->RemoveListener(this);
+  }
   mCallbackMonitor.Notify();
-  return NS_OK;
 }
 
-// nsICameraPreviewStreamCallback
-nsresult
-MediaEngineWebRTCVideoSource::HandleEvent(nsIDOMMediaStream* stream) {
-  MOZ_ASSERT(NS_IsMainThread());
+void
+MediaEngineWebRTCVideoSource::OnConfigurationChange(const CameraListenerConfiguration& aConfiguration)
+{
   ReentrantMonitorAutoEnter sync(mCallbackMonitor);
-  mPreviewStream = static_cast<DOMCameraPreview*>(stream);
-  mPreviewStream->Start();
-  CameraPreviewMediaStream* cameraStream = static_cast<CameraPreviewMediaStream*>(mPreviewStream->GetStream());
-  cameraStream->SetFrameCallback(this);
   mState = kStarted;
   mCallbackMonitor.Notify();
-  return NS_OK;
 }
 
-// nsICameraTakePictureCallback
-nsresult
-MediaEngineWebRTCVideoSource::HandleEvent(nsIDOMBlob* picture) {
-  MOZ_ASSERT(NS_IsMainThread());
-  ReentrantMonitorAutoEnter sync(mCallbackMonitor);
-  mLastCapture = static_cast<nsIDOMFile*>(picture);
-  mCallbackMonitor.Notify();
-  return NS_OK;
-}
-
-// nsICameraReleaseCallback
-nsresult
-MediaEngineWebRTCVideoSource::HandleEvent() {
-  MOZ_ASSERT(NS_IsMainThread());
-  ReentrantMonitorAutoEnter sync(mCallbackMonitor);
-  mState = kReleased;
-  mCallbackMonitor.Notify();
-  return NS_OK;
-}
-
-// nsICameraErrorCallback
-nsresult
-MediaEngineWebRTCVideoSource::HandleEvent(const nsAString& error) {
-  MOZ_ASSERT(NS_IsMainThread());
-  ReentrantMonitorAutoEnter sync(mCallbackMonitor);
-  mCallbackMonitor.Notify();
-  return NS_OK;
-}
-
-//Except this one. This callback should called on camera preview thread.
 void
-MediaEngineWebRTCVideoSource::OnNewFrame(const gfxIntSize& aIntrinsicSize, layers::Image* aImage) {
+MediaEngineWebRTCVideoSource::OnError(CameraErrorContext aContext, const nsACString& aError)
+{
+  ReentrantMonitorAutoEnter sync(mCallbackMonitor);
+  mCallbackMonitor.Notify();
+}
+
+void
+MediaEngineWebRTCVideoSource::OnTakePictureComplete(uint8_t* aData, uint32_t aLength, const nsAString& aMimeType)
+{
+  ReentrantMonitorAutoEnter sync(mCallbackMonitor);
+  mLastCapture =
+    static_cast<nsIDOMFile*>(new nsDOMMemoryFile(static_cast<void*>(aData),
+                                                 static_cast<uint64_t>(aLength),
+                                                 aMimeType));
+  mCallbackMonitor.Notify();
+}
+
+bool
+MediaEngineWebRTCVideoSource::OnNewPreviewFrame(layers::Image* aImage, uint32_t aWidth, uint32_t aHeight) {
   MonitorAutoLock enter(mMonitor);
   if (mState == kStopped) {
-    return;
+    return false;
   }
   mImage = aImage;
-  if (mWidth != aIntrinsicSize.width || mHeight != aIntrinsicSize.height) {
-    mWidth = aIntrinsicSize.width;
-    mHeight = aIntrinsicSize.height;
+  if (mWidth != static_cast<int>(aWidth) || mHeight != static_cast<int>(aHeight)) {
+    mWidth = aWidth;
+    mHeight = aHeight;
     LOG(("Video FrameSizeChange: %ux%u", mWidth, mHeight));
   }
+  return true; // return true because we're accepting the frame
 }
 #endif
 

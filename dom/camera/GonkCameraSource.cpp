@@ -158,8 +158,7 @@ GonkCameraSource::GonkCameraSource(
     Size videoSize,
     int32_t frameRate,
     bool storeMetaDataInVideoBuffers)
-    : mCameraHw(aCameraHw),
-      mCameraFlags(0),
+    : mCameraFlags(0),
       mNumInputBuffers(0),
       mVideoFrameRate(-1),
       mNumFramesReceived(0),
@@ -171,7 +170,8 @@ GonkCameraSource::GonkCameraSource(
       mNumFramesDropped(0),
       mNumGlitches(0),
       mGlitchDurationThresholdUs(200000),
-      mCollectStats(false) {
+      mCollectStats(false),
+      mCameraHw(aCameraHw) {
     mVideoSize.width  = -1;
     mVideoSize.height = -1;
 

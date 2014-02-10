@@ -10,9 +10,7 @@
 #include "nsAutoPtr.h"
 #include "nsTArray.h"
 #include "jsapi.h"
-#include "DictionaryHelpers.h"
 #include "CameraCommon.h"
-
 
 namespace mozilla {
 

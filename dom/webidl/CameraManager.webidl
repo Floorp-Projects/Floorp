@@ -5,70 +5,43 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-dictionary CameraPictureOptions {
+enum CameraMode { "picture", "video" };
 
-  /* an object with a combination of 'height' and 'width' properties
-     chosen from nsICameraCapabilities.pictureSizes */
-  // XXXbz this should be a CameraSize dictionary, but we don't have that yet.
-  any pictureSize = null;
+/* Used for the dimensions of a captured picture,
+   a preview stream, a video capture stream, etc. */
+dictionary CameraSize
+{
+  unsigned long width = 0;
+  unsigned long height = 0;
+};
 
-  /* one of the file formats chosen from
-     nsICameraCapabilities.fileFormats */
-  DOMString fileFormat = "";
+/* Pre-emptive camera configuration options. */
+dictionary CameraConfiguration
+{
+  CameraMode mode = "picture";
+  CameraSize previewSize = null;
+  DOMString recorderProfile = "cif";  // or some other recording profile
+                                      // supported by the CameraControl
+};
 
-  /* the rotation of the image in degrees, from 0 to 270 in
-     steps of 90; this doesn't affect the image, only the
-     rotation recorded in the image header.*/
-  long rotation = 0;
+callback CameraErrorCallback = void (DOMString error);
 
-  /* an object containing any or all of 'latitude', 'longitude',
-     'altitude', and 'timestamp', used to record when and where
-     the image was taken.  e.g.
-     {
-         latitude:  43.647118,
-         longitude: -79.3943,
-         altitude:  500
-         // timestamp not specified, in this case, and
-         // won't be included in the image header
-     }
+callback GetCameraCallback = void (CameraControl camera,
+                                   CameraConfiguration configuration);
 
-     can be null in the case where position information isn't
-     available/desired.
-
-     'altitude' is in metres; 'timestamp' is UTC, in seconds from
-     January 1, 1970.
+interface CameraManager
+{
+  /* get a camera instance; 'camera' is one of the camera
+     identifiers returned by getListOfCameras() below.
   */
-  any position = null;
-
-  /* the number of seconds from January 1, 1970 UTC.  This can be
-     different from the positional timestamp (above). */
-  // XXXbz this should really accept a date too, no?
-  long long dateTime = 0;
-};
-
-// If we start using CameraPictureOptions here, remove it from DummyBinding.
-
-interface GetCameraCallback;
-interface CameraErrorCallback;
-
-/* Select a camera to use. */
-dictionary CameraSelector {
-    DOMString camera = "back";
-};
-
-interface CameraManager {
-    /* get a camera instance; options will be used to specify which
-       camera to get from the list returned by getListOfCameras(), e.g.:
-        {
-            camera: "front"
-        }
-    */
   [Throws]
-  void getCamera(CameraSelector options, GetCameraCallback callback,
+  void getCamera(DOMString camera,
+                 CameraConfiguration initialConfiguration,
+                 GetCameraCallback callback,
                  optional CameraErrorCallback errorCallback);
 
-  /* return an array of camera   identifiers, e.g.
-     [ "front", "back" ]
+  /* return an array of camera identifiers, e.g.
+       [ "front", "back" ]
    */
   [Throws]
   sequence<DOMString> getListOfCameras();

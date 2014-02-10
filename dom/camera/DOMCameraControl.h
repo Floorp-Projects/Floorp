@@ -8,51 +8,50 @@
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsIDOMEventListener.h"
-#include "DictionaryHelpers.h"
+#include "mozilla/dom/CameraControlBinding.h"
 #include "ICameraControl.h"
-#include "DOMCameraPreview.h"
-#include "nsIDOMCameraManager.h"
 #include "CameraCommon.h"
+#include "DOMMediaStream.h"
 #include "AudioChannelAgent.h"
 #include "nsProxyRelease.h"
 #include "nsHashPropertyBag.h"
 #include "DeviceStorage.h"
+#include "DOMCameraControlListener.h"
 
 class nsDOMDeviceStorage;
 class nsPIDOMWindow;
+class nsIDOMBlob;
 
 namespace mozilla {
+
 namespace dom {
-class CameraPictureOptions;
-template<typename T> class Optional;
+  class CameraCapabilities;
+  class CameraPictureOptions;
+  class CameraStartRecordingOptions;
+  template<typename T> class Optional;
 }
 class ErrorResult;
+class StartRecordingHelper;
 
 // Main camera control.
-class nsDOMCameraControl MOZ_FINAL : public nsIDOMEventListener,
-                                     public nsWrapperCache
+class nsDOMCameraControl MOZ_FINAL : public DOMMediaStream
 {
 public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_NSIDOMEVENTLISTENER
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsDOMCameraControl)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(nsDOMCameraControl, DOMMediaStream)
+  NS_DECL_ISUPPORTS_INHERITED
 
-  nsDOMCameraControl(uint32_t aCameraId, nsIThread* aCameraThread,
-                     nsICameraGetCameraCallback* onSuccess,
-                     nsICameraErrorCallback* onError, nsPIDOMWindow* aWindow);
-  nsresult Result(nsresult aResult,
-                  const nsMainThreadPtrHandle<nsICameraGetCameraCallback>& onSuccess,
-                  const nsMainThreadPtrHandle<nsICameraErrorCallback>& onError,
-                  uint64_t aWindowId);
+  nsDOMCameraControl(uint32_t aCameraId,
+                     const dom::CameraConfiguration& aInitialConfig,
+                     dom::GetCameraCallback* aOnSuccess,
+                     dom::CameraErrorCallback* aOnError,
+                     nsPIDOMWindow* aWindow);
   nsRefPtr<ICameraControl> GetNativeCameraControl();
 
   void Shutdown();
 
   nsPIDOMWindow* GetParentObject() const { return mWindow; }
 
-  // WebIDL
-  nsICameraCapabilities* Capabilities();
+  // Attributes.
   void GetEffect(nsString& aEffect, ErrorResult& aRv);
   void SetEffect(const nsAString& aEffect, ErrorResult& aRv);
   void GetWhiteBalanceMode(nsString& aMode, ErrorResult& aRv);
@@ -80,48 +79,130 @@ public:
   void SetExposureCompensation(const dom::Optional<double>& aCompensation, ErrorResult& aRv);
   double GetExposureCompensation(ErrorResult& aRv);
   int32_t SensorAngle();
-  already_AddRefed<nsICameraShutterCallback> GetOnShutter(ErrorResult& aRv);
-  void SetOnShutter(nsICameraShutterCallback* aCb, ErrorResult& aRv);
-  already_AddRefed<nsICameraClosedCallback> GetOnClosed(ErrorResult& aRv);
-  void SetOnClosed(nsICameraClosedCallback* aCb, ErrorResult& aRv);
-  already_AddRefed<nsICameraRecorderStateChange> GetOnRecorderStateChange(ErrorResult& aRv);
-  void SetOnRecorderStateChange(nsICameraRecorderStateChange* aCb, ErrorResult& aRv);
-  void AutoFocus(nsICameraAutoFocusCallback* aOnSuccess, const dom::Optional<nsICameraErrorCallback*>& aOnErro, ErrorResult& aRvr);
-  void TakePicture(JSContext* aCx, const dom::CameraPictureOptions& aOptions,
-                   nsICameraTakePictureCallback* onSuccess,
-                   const dom::Optional<nsICameraErrorCallback* >& onError,
+  already_AddRefed<dom::CameraCapabilities> Capabilities();
+
+  // Unsolicited event handlers.
+  already_AddRefed<dom::CameraShutterCallback> GetOnShutter();
+  void SetOnShutter(dom::CameraShutterCallback* aCb);
+  already_AddRefed<dom::CameraClosedCallback> GetOnClosed();
+  void SetOnClosed(dom::CameraClosedCallback* aCb);
+  already_AddRefed<dom::CameraRecorderStateChange> GetOnRecorderStateChange();
+  void SetOnRecorderStateChange(dom::CameraRecorderStateChange* aCb);
+  already_AddRefed<dom::CameraPreviewStateChange> GetOnPreviewStateChange();
+  void SetOnPreviewStateChange(dom::CameraPreviewStateChange* aCb);
+
+  // Methods.
+  void SetConfiguration(const dom::CameraConfiguration& aConfiguration,
+                        const dom::Optional<dom::OwningNonNull<dom::CameraSetConfigurationCallback> >& aOnSuccess,
+                        const dom::Optional<dom::OwningNonNull<dom::CameraErrorCallback> >& aOnError,
+                        ErrorResult& aRv);
+  void AutoFocus(dom::CameraAutoFocusCallback& aOnSuccess,
+                 const dom::Optional<dom::OwningNonNull<dom::CameraErrorCallback> >& aOnError,
+                 ErrorResult& aRv);
+  void TakePicture(const dom::CameraPictureOptions& aOptions,
+                   dom::CameraTakePictureCallback& aOnSuccess,
+                   const dom::Optional<dom::OwningNonNull<dom::CameraErrorCallback> >& aOnError,
                    ErrorResult& aRv);
-  already_AddRefed<nsICameraPreviewStateChange> GetOnPreviewStateChange() const;
-  void SetOnPreviewStateChange(nsICameraPreviewStateChange* aOnStateChange);
-  void GetPreviewStreamVideoMode(JSContext* cx, JS::Handle<JS::Value> aOptions, nsICameraPreviewStreamCallback* onSuccess, const dom::Optional<nsICameraErrorCallback* >& onError, ErrorResult& aRv);
-  void StartRecording(JSContext* cx, JS::Handle<JS::Value> aOptions, nsDOMDeviceStorage& storageArea, const nsAString& filename, nsICameraStartRecordingCallback* onSuccess, const dom::Optional<nsICameraErrorCallback* >& onError, ErrorResult& aRv);
+  void StartRecording(const dom::CameraStartRecordingOptions& aOptions,
+                      nsDOMDeviceStorage& storageArea,
+                      const nsAString& filename,
+                      dom::CameraStartRecordingCallback& aOnSuccess,
+                      const dom::Optional<dom::OwningNonNull<dom::CameraErrorCallback> >& aOnError,
+                      ErrorResult& aRv);
   void StopRecording(ErrorResult& aRv);
-  void GetPreviewStream(JSContext* cx, JS::Handle<JS::Value> aOptions, nsICameraPreviewStreamCallback* onSuccess, const dom::Optional<nsICameraErrorCallback* >& onError, ErrorResult& aRv);
   void ResumePreview(ErrorResult& aRv);
-  void ReleaseHardware(const dom::Optional<nsICameraReleaseCallback* >& onSuccess, const dom::Optional<nsICameraErrorCallback* >& onError, ErrorResult& aRv);
+  void ReleaseHardware(const dom::Optional<dom::OwningNonNull<dom::CameraReleaseCallback> >& aOnSuccess,
+                       const dom::Optional<dom::OwningNonNull<dom::CameraErrorCallback> >& aOnError,
+                       ErrorResult& aRv);
+
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
 protected:
   virtual ~nsDOMCameraControl();
 
+  class DOMCameraConfiguration : public dom::CameraConfiguration
+  {
+  public:
+    NS_INLINE_DECL_REFCOUNTING(DOMCameraConfiguration)
+
+    DOMCameraConfiguration();
+    DOMCameraConfiguration(const dom::CameraConfiguration& aConfiguration);
+
+    // Additional configuration options that aren't exposed to the DOM
+    uint32_t mMaxFocusAreas;
+    uint32_t mMaxMeteringAreas;
+
+  protected:
+    ~DOMCameraConfiguration();
+  };
+
+  friend class DOMCameraControlListener;
+  friend class mozilla::StartRecordingHelper;
+
+  void OnCreatedFileDescriptor(bool aSucceeded);
+
+  void OnAutoFocusComplete(bool aAutoFocusSucceeded);
+  void OnTakePictureComplete(nsIDOMBlob* aPicture);
+
+  void OnHardwareStateChange(DOMCameraControlListener::HardwareState aState);
+  void OnPreviewStateChange(DOMCameraControlListener::PreviewState aState);
+  void OnRecorderStateChange(CameraControlListener::RecorderState aState, int32_t aStatus, int32_t aTrackNum);
+  void OnConfigurationChange(DOMCameraConfiguration* aConfiguration);
+  void OnShutter();
+  void OnError(CameraControlListener::CameraErrorContext aContext, const nsAString& mError);
+
+  bool IsWindowStillActive();
+
+  nsresult NotifyRecordingStatusChange(const nsString& aMsg);
+
+  nsRefPtr<ICameraControl> mCameraControl; // non-DOM camera control
+
+  // An agent used to join audio channel service.
+  nsCOMPtr<nsIAudioChannelAgent> mAudioChannelAgent;
+
+  nsresult Set(JSContext* aCx, uint32_t aKey, const JS::Value& aValue, uint32_t aLimit);
+  nsresult Get(JSContext* aCx, uint32_t aKey, JS::Value* aValue);
+
+  nsRefPtr<DOMCameraConfiguration>              mCurrentConfiguration;
+  nsRefPtr<dom::CameraCapabilities>             mCapabilities;
+
+  // solicited camera control event handlers
+  nsCOMPtr<dom::GetCameraCallback>              mGetCameraOnSuccessCb;
+  nsCOMPtr<dom::CameraErrorCallback>            mGetCameraOnErrorCb;
+  nsCOMPtr<dom::CameraAutoFocusCallback>        mAutoFocusOnSuccessCb;
+  nsCOMPtr<dom::CameraErrorCallback>            mAutoFocusOnErrorCb;
+  nsCOMPtr<dom::CameraTakePictureCallback>      mTakePictureOnSuccessCb;
+  nsCOMPtr<dom::CameraErrorCallback>            mTakePictureOnErrorCb;
+  nsCOMPtr<dom::CameraStartRecordingCallback>   mStartRecordingOnSuccessCb;
+  nsCOMPtr<dom::CameraErrorCallback>            mStartRecordingOnErrorCb;
+  nsCOMPtr<dom::CameraReleaseCallback>          mReleaseOnSuccessCb;
+  nsCOMPtr<dom::CameraErrorCallback>            mReleaseOnErrorCb;
+  nsCOMPtr<dom::CameraSetConfigurationCallback> mSetConfigurationOnSuccessCb;
+  nsCOMPtr<dom::CameraErrorCallback>            mSetConfigurationOnErrorCb;
+
+  // unsolicited event handlers
+  nsCOMPtr<dom::CameraShutterCallback>          mOnShutterCb;
+  nsCOMPtr<dom::CameraClosedCallback>           mOnClosedCb;
+  nsCOMPtr<dom::CameraRecorderStateChange>      mOnRecorderStateChangeCb;
+  nsCOMPtr<dom::CameraPreviewStateChange>       mOnPreviewStateChangeCb;
+
+  // Camera event listener; we only need this weak reference so that
+  //  we can remove the listener from the camera when we're done
+  //  with it.
+  DOMCameraControlListener* mListener;
+
+  // our viewfinder stream
+  CameraPreviewMediaStream* mInput;
+
+  // set once when this object is created
+  nsCOMPtr<nsPIDOMWindow>   mWindow;
+
+  dom::CameraStartRecordingOptions mOptions;
+  nsRefPtr<DeviceStorageFileDescriptor> mDSFileDescriptor;
+
 private:
   nsDOMCameraControl(const nsDOMCameraControl&) MOZ_DELETE;
   nsDOMCameraControl& operator=(const nsDOMCameraControl&) MOZ_DELETE;
-
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
-  nsresult NotifyRecordingStatusChange(const nsString& aMsg);
-
-  mozilla::idl::CameraStartRecordingOptions mOptions;
-  nsRefPtr<DeviceStorageFileDescriptor> mDSFileDescriptor;
-  nsCOMPtr<nsICameraStartRecordingCallback> mOnSuccessCb;
-  nsCOMPtr<nsICameraErrorCallback> mOnErrorCb;
-
-protected:
-  /* additional members */
-  nsRefPtr<ICameraControl>        mCameraControl; // non-DOM camera control
-  nsCOMPtr<nsICameraCapabilities> mDOMCapabilities;
-  // An agent used to join audio channel service.
-  nsCOMPtr<nsIAudioChannelAgent>  mAudioChannelAgent;
-  nsCOMPtr<nsPIDOMWindow> mWindow;
 };
 
 } // namespace mozilla

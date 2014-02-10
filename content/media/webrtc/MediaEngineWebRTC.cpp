@@ -42,7 +42,7 @@ GetUserMediaLog()
 #define LOG(args) PR_LOG(GetUserMediaLog(), PR_LOG_DEBUG, args)
 
 namespace mozilla {
-#ifndef MOZ_B2G_CAMERA
+
 MediaEngineWebRTC::MediaEngineWebRTC(MediaEnginePrefs &aPrefs)
   : mMutex("mozilla::MediaEngineWebRTC")
   , mVideoEngine(nullptr)
@@ -51,27 +51,26 @@ MediaEngineWebRTC::MediaEngineWebRTC(MediaEnginePrefs &aPrefs)
   , mAudioEngineInit(false)
   , mHasTabVideoSource(false)
 {
+#ifndef MOZ_B2G_CAMERA
   nsCOMPtr<nsIComponentRegistrar> compMgr;
   NS_GetComponentRegistrar(getter_AddRefs(compMgr));
   if (compMgr) {
     compMgr->IsContractIDRegistered(NS_TABSOURCESERVICE_CONTRACTID, &mHasTabVideoSource);
   }
+#else
+  AsyncLatencyLogger::Get()->AddRef();
+#endif
   if (aPrefs.mLoadAdapt) {
       mLoadMonitor = new LoadMonitor();
       mLoadMonitor->Init(mLoadMonitor);
   }
 }
-#endif
-
 
 void
 MediaEngineWebRTC::EnumerateVideoDevices(nsTArray<nsRefPtr<MediaEngineVideoSource> >* aVSources)
 {
 #ifdef MOZ_B2G_CAMERA
   MutexAutoLock lock(mMutex);
-  if (!mCameraManager) {
-    return;
-  }
 
   /**
    * We still enumerate every time, in case a new device was plugged in since
@@ -83,14 +82,14 @@ MediaEngineWebRTC::EnumerateVideoDevices(nsTArray<nsRefPtr<MediaEngineVideoSourc
    */
   int num = 0;
   nsresult result;
-  result = mCameraManager->GetNumberOfCameras(num);
+  result = ICameraControl::GetNumberOfCameras(num);
   if (num <= 0 || result != NS_OK) {
     return;
   }
 
   for (int i = 0; i < num; i++) {
     nsCString cameraName;
-    result = mCameraManager->GetCameraName(i, cameraName);
+    result = ICameraControl::GetCameraName(i, cameraName);
     if (result != NS_OK) {
       continue;
     }
@@ -101,7 +100,7 @@ MediaEngineWebRTC::EnumerateVideoDevices(nsTArray<nsRefPtr<MediaEngineVideoSourc
       // We've already seen this device, just append.
       aVSources->AppendElement(vSource.get());
     } else {
-      vSource = new MediaEngineWebRTCVideoSource(mCameraManager, i, mWindowId);
+      vSource = new MediaEngineWebRTCVideoSource(i);
       mVideoSources.Put(uuid, vSource); // Hashtable takes ownership.
       aVSources->AppendElement(vSource);
     }
