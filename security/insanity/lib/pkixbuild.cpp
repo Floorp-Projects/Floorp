@@ -41,6 +41,7 @@ BackCert::Init()
   const SECItem* dummyEncodedSubjectKeyIdentifier = nullptr;
   const SECItem* dummyEncodedAuthorityKeyIdentifier = nullptr;
   const SECItem* dummyEncodedAuthorityInfoAccess = nullptr;
+  const SECItem* dummyEncodedSubjectAltName = nullptr;
 
   for (const CERTCertExtension* ext = *exts; ext; ext = *++exts) {
     const SECItem** out = nullptr;
@@ -51,7 +52,9 @@ BackCert::Init()
       switch (ext->id.data[2]) {
         case 14: out = &dummyEncodedSubjectKeyIdentifier; break; // bug 965136
         case 15: out = &encodedKeyUsage; break;
+        case 17: out = &dummyEncodedSubjectAltName; break; // bug 970542
         case 19: out = &encodedBasicConstraints; break;
+        case 30: out = &encodedNameConstraints; break;
         case 35: out = &dummyEncodedAuthorityKeyIdentifier; break; // bug 965136
         case 37: out = &encodedExtendedKeyUsage; break;
       }
@@ -109,7 +112,8 @@ BuildForwardInner(TrustDomain& trustDomain,
 {
   PORT_Assert(potentialIssuerCertToDup);
 
-  BackCert potentialIssuer(potentialIssuerCertToDup, &subject);
+  BackCert potentialIssuer(potentialIssuerCertToDup, &subject,
+                           BackCert::ExcludeCN);
   Result rv = potentialIssuer.Init();
   if (rv != Success) {
     return rv;
@@ -133,6 +137,11 @@ BuildForwardInner(TrustDomain& trustDomain,
   }
 
   rv = CheckTimes(potentialIssuer.GetNSSCert(), time);
+  if (rv != Success) {
+    return rv;
+  }
+
+  rv = CheckNameConstraints(potentialIssuer);
   if (rv != Success) {
     return rv;
   }
@@ -260,7 +269,15 @@ BuildCertChain(TrustDomain& trustDomain,
   // The only non-const operation on the cert we are allowed to do is
   // CERT_DupCertificate.
 
-  BackCert cert(certToDup, nullptr);
+  // XXX: Support the legacy use of the subject CN field for indicating the
+  // domain name the certificate is valid for.
+  BackCert::ConstrainedNameOptions cnOptions
+    = endEntityOrCA == MustBeEndEntity &&
+      requiredEKUIfPresent == SEC_OID_EXT_KEY_USAGE_SERVER_AUTH
+    ? BackCert::IncludeCN
+    : BackCert::ExcludeCN;
+
+  BackCert cert(certToDup, nullptr, cnOptions);
   Result rv = cert.Init();
   if (rv != Success) {
     return SECFailure;

@@ -32,6 +32,8 @@ Result CheckExtensions(BackCert& certExt,
                        SECOidTag requiredEKUIfPresent,
                        unsigned int depth);
 
+Result CheckNameConstraints(BackCert& cert);
+
 } } // namespace insanity::pkix
 
 #endif // insanity__pkixcheck_h
