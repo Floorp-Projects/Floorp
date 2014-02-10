@@ -25,11 +25,11 @@ var manager = new MediaTestManager;
 var player = new Audio();
 
 function startTest(test, token) {
-  if (!player.canPlayType(test.type))
+  if (!player.canPlayType(test.type)) {
     return;
+  }
   manager.started(token);
   var a = new Audio(test.name);
-  a.setAttribute("autoplay", false);
   a.addEventListener("canplaythrough",
                      function(e){ e.target.play(); },
                       false);
