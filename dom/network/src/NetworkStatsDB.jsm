@@ -16,7 +16,7 @@ Cu.import("resource://gre/modules/IndexedDBHelper.jsm");
 Cu.importGlobalProperties(["indexedDB"]);
 
 const DB_NAME = "net_stats";
-const DB_VERSION = 6;
+const DB_VERSION = 7;
 const DEPRECATED_STORE_NAME = "net_stats";
 const STATS_STORE_NAME = "net_stats_store";
 const ALARMS_STORE_NAME = "net_alarm";
@@ -213,6 +213,94 @@ NetworkStatsDB.prototype = {
         if (DEBUG) {
           debug("Added new key 'serviceType' for version 6");
         }
+      } else if (currVersion == 6) {
+        // Replace threshold attribute of alarm index by relativeThreshold in alarms DB.
+        // Now alarms are indexed by relativeThreshold, which is the threshold relative
+        // to current system stats.
+        let alarmsStore = aTransaction.objectStore(ALARMS_STORE_NAME);
+
+        // Delete "alarm" index.
+        if (alarmsStore.indexNames.contains("alarm")) {
+          alarmsStore.deleteIndex("alarm");
+        }
+
+        // Create new "alarm" index.
+        alarmsStore.createIndex("alarm", ['networkId','relativeThreshold'], { unique: false });
+
+        // Populate new "alarm" index attributes.
+        alarmsStore.openCursor().onsuccess = function(event) {
+          let cursor = event.target.result;
+          if (!cursor) {
+            return;
+          }
+
+          cursor.value.relativeThreshold = cursor.value.threshold;
+          cursor.value.absoluteThreshold = cursor.value.threshold;
+          delete cursor.value.threshold;
+
+          cursor.update(cursor.value);
+          cursor.continue();
+        }
+
+        // Previous versions save accumulative totalBytes, increasing althought the system
+        // reboots or resets stats. But is necessary to reset the total counters when reset
+        // through 'clearInterfaceStats'.
+        let statsStore = aTransaction.objectStore(STATS_STORE_NAME);
+        let networks = [];
+        // Find networks stored in the database.
+        statsStore.index("network").openKeyCursor(null, "nextunique").onsuccess = function(event) {
+          let cursor = event.target.result;
+          if (cursor) {
+            networks.push(cursor.key);
+            cursor.continue();
+            return;
+          }
+
+          networks.forEach(function(network) {
+            let lowerFilter = [0, "", network, 0];
+            let upperFilter = [0, "", network, ""];
+            let range = IDBKeyRange.bound(lowerFilter, upperFilter, false, false);
+
+            // Find number of samples for a given network.
+            statsStore.count(range).onsuccess = function(event) {
+              // If there are more samples than the max allowed, there is no way to know
+              // when does reset take place.
+              if (event.target.result >= VALUES_MAX_LENGTH) {
+                return;
+              }
+
+              let last = null;
+              // Reset detected if the first sample totalCounters are different than bytes
+              // counters. If so, the total counters should be recalculated.
+              statsStore.openCursor(range).onsuccess = function(event) {
+                let cursor = event.target.result;
+                if (!cursor) {
+                  return;
+                }
+                if (!last) {
+                  if (cursor.value.rxTotalBytes == cursor.value.rxBytes &&
+                      cursor.value.txTotalBytes == cursor.value.txBytes) {
+                    return;
+                  }
+
+                  cursor.value.rxTotalBytes = cursor.value.rxBytes;
+                  cursor.value.txTotalBytes = cursor.value.txBytes;
+                  cursor.update(cursor.value);
+                  last = cursor.value;
+                  cursor.continue();
+                  return;
+                }
+
+                // Recalculate the total counter for last / current sample
+                cursor.value.rxTotalBytes = last.rxTotalBytes + cursor.value.rxBytes;
+                cursor.value.txTotalBytes = last.txTotalBytes + cursor.value.txBytes;
+                cursor.update(cursor.value);
+                last = cursor.value;
+                cursor.continue();
+              }
+            }
+          }, this);
+        };
       }
     }
   },
@@ -515,6 +603,8 @@ NetworkStatsDB.prototype = {
           sample.serviceType = "";
           sample.rxBytes = 0;
           sample.txBytes = 0;
+          sample.rxTotalBytes = 0;
+          sample.txTotalBytes = 0;
 
           self._saveStats(aTxn, aStore, sample);
         }
@@ -550,24 +640,78 @@ NetworkStatsDB.prototype = {
       debug("Get current stats for " + JSON.stringify(aNetwork) + " since " + aDate);
     }
 
+    let network = [aNetwork.id, aNetwork.type];
+    if (aDate) {
+      this._getCurrentStatsFromDate(network, aDate, aResultCb);
+      return;
+    }
+
+    this._getCurrentStats(network, aResultCb);
+  },
+
+  _getCurrentStats: function _getCurrentStats(aNetwork, aResultCb) {
     this.dbNewTxn(STATS_STORE_NAME, "readonly", function(txn, store) {
       let request = null;
-      let network = [aNetwork.id, aNetwork.type];
-      if (aDate) {
-        let start = this.normalizeDate(aDate);
-        let lowerFilter = [0, network, start];
-        let range = this.dbGlobal.IDBKeyRange.lowerBound(lowerFilter, false);
-        request = store.openCursor(range);
-      } else {
-        request = store.index("network").openCursor(network, "prev");
-      }
+      let upperFilter = [0, "", aNetwork, Date.now()];
+      let range = IDBKeyRange.upperBound(upperFilter, false);
+      request = store.openCursor(range, "prev");
+
+      let result = { rxBytes:      0, txBytes:      0,
+                     rxTotalBytes: 0, txTotalBytes: 0 };
 
       request.onsuccess = function onsuccess(event) {
-        txn.result = null;
         let cursor = event.target.result;
         if (cursor) {
-          txn.result = cursor.value;
+          result.rxBytes = result.rxTotalBytes = cursor.value.rxTotalBytes;
+          result.txBytes = result.txTotalBytes = cursor.value.txTotalBytes;
         }
+
+        txn.result = result;
+      };
+    }.bind(this), aResultCb);
+  },
+
+  _getCurrentStatsFromDate: function _getCurrentStatsFromDate(aNetwork, aDate, aResultCb) {
+    aDate = new Date(aDate);
+    this.dbNewTxn(STATS_STORE_NAME, "readonly", function(txn, store) {
+      let request = null;
+      let start = this.normalizeDate(aDate);
+      let lowerFilter = [0, "", aNetwork, start];
+      let upperFilter = [0, "", aNetwork, Date.now()];
+
+      let range = IDBKeyRange.upperBound(upperFilter, false);
+
+      let result = { rxBytes:      0, txBytes:      0,
+                     rxTotalBytes: 0, txTotalBytes: 0 };
+
+      request = store.openCursor(range, "prev");
+
+      request.onsuccess = function onsuccess(event) {
+        let cursor = event.target.result;
+        if (cursor) {
+          result.rxBytes = result.rxTotalBytes = cursor.value.rxTotalBytes;
+          result.txBytes = result.txTotalBytes = cursor.value.txTotalBytes;
+        }
+
+        let timestamp = cursor.value.timestamp;
+        let range = IDBKeyRange.lowerBound(lowerFilter, false);
+        request = store.openCursor(range);
+
+        request.onsuccess = function onsuccess(event) {
+          let cursor = event.target.result;
+          if (cursor) {
+            if (cursor.value.timestamp == timestamp) {
+              // There is one sample only.
+              result.rxBytes = cursor.value.rxBytes;
+              result.txBytes = cursor.value.txBytes;
+            } else {
+              result.rxBytes -= cursor.value.rxTotalBytes;
+              result.txBytes -= cursor.value.txTotalBytes;
+            }
+          }
+
+          txn.result = result;
+        };
       };
     }.bind(this), aResultCb);
   },
@@ -671,7 +815,7 @@ NetworkStatsDB.prototype = {
         aTxn.result = false;
       }
 
-      var network = [aNetwork.id, aNetwork.type];
+      let network = [aNetwork.id, aNetwork.type];
       let request = aStore.index("network").openKeyCursor(IDBKeyRange.only(network));
       request.onsuccess = function onsuccess(event) {
         if (event.target.result) {
@@ -717,7 +861,8 @@ NetworkStatsDB.prototype = {
 
   alarmToRecord: function alarmToRecord(aAlarm) {
     let record = { networkId: aAlarm.networkId,
-                   threshold: aAlarm.threshold,
+                   absoluteThreshold: aAlarm.absoluteThreshold,
+                   relativeThreshold: aAlarm.relativeThreshold,
                    data: aAlarm.data,
                    manifestURL: aAlarm.manifestURL,
                    pageURL: aAlarm.pageURL };
@@ -731,7 +876,8 @@ NetworkStatsDB.prototype = {
 
   recordToAlarm: function recordToalarm(aRecord) {
     let alarm = { networkId: aRecord.networkId,
-                  threshold: aRecord.threshold,
+                  absoluteThreshold: aRecord.absoluteThreshold,
+                  relativeThreshold: aRecord.relativeThreshold,
                   data: aRecord.data,
                   manifestURL: aRecord.manifestURL,
                   pageURL: aRecord.pageURL };
@@ -837,6 +983,7 @@ NetworkStatsDB.prototype = {
   },
 
   getAlarms: function getAlarms(aNetworkId, aManifestURL, aResultCb) {
+    let self = this;
     this.dbNewTxn(ALARMS_STORE_NAME, "readonly", function(txn, store) {
       if (DEBUG) {
         debug("Get alarms for " + aManifestURL);
@@ -851,12 +998,7 @@ NetworkStatsDB.prototype = {
         }
 
         if (!aNetworkId || cursor.value.networkId == aNetworkId) {
-          let alarm = { id: cursor.value.id,
-                        networkId: cursor.value.networkId,
-                        threshold: cursor.value.threshold,
-                        data: cursor.value.data };
-
-          txn.result.push(alarm);
+          txn.result.push(self.recordToAlarm(cursor.value));
         }
 
         cursor.continue();
