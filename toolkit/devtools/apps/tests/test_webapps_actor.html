@@ -62,9 +62,16 @@ SimpleTest.waitForExplicitFinish();
 
 var installTestApp, mm;
 
+const PACKAGED_APP_ID = "test-app-id";
+const PACKAGED_APP_ORIGIN = "app://" + PACKAGED_APP_ID;
+const PACKAGED_APP_MANIFEST = PACKAGED_APP_ORIGIN + "/manifest.webapp";
+const CERTIFIED_APP_ID = "test-certified-id";
+const CERTIFIED_APP_ORIGIN = "app://" + CERTIFIED_APP_ID;
+const CERTIFIED_APP_MANIFEST = CERTIFIED_APP_ORIGIN + "/manifest.webapp";
+
 var steps = [
   function() {
-    ok(true, "Start setting up");
+    info("== SETUP ==");
     // Set up
     launchableValue = SpecialPowers.setAllAppsLaunchable(true);
     SpecialPowers.addPermission("webapps-manage", true, document);
@@ -117,13 +124,12 @@ var steps = [
     SpecialPowers.autoConfirmAppInstall(next);
   },
   function() {
-    ok(true, "== TEST == Install packaged app");
-    let appId = "test-app-id";
+    info("== TEST == Install packaged app");
     let url = SimpleTest.getTestFileURL("data/app.zip");
-    installTestApp(url, appId,
+    installTestApp(url, PACKAGED_APP_ID,
       function (aResponse, aApp) {
         ok(true, "Installed");
-        is(aResponse.appId, appId, "Got same app id");
+        is(aResponse.appId, PACKAGED_APP_ID, "Got same app id");
         if ("error" in aResponse) {
           ok(false, "Error: " + aResponse.error);
         }
@@ -137,13 +143,12 @@ var steps = [
     );
   },
   function () {
-    ok(true, "== TEST == Reinstall packaged app");
-    let appId = "test-app-id";
+    info("== TEST == Reinstall packaged app");
     let url = SimpleTest.getTestFileURL("data/app-updated.zip");
-    installTestApp(url, appId,
+    installTestApp(url, PACKAGED_APP_ID,
       function (aResponse, aApp) {
         ok(true, "Reinstalled");
-        is(aResponse.appId, appId, "Got same app id");
+        is(aResponse.appId, PACKAGED_APP_ID, "Got same app id");
         if ("error" in aResponse) {
           ok(false, "Error: " + aResponse.error);
         }
@@ -157,13 +162,12 @@ var steps = [
     );
   },
   function() {
-    ok(true, "== TEST == Install certified app");
-    let appId = "test-certified-id";
+    info("== TEST == Install certified app");
     let url = SimpleTest.getTestFileURL("data/app-certified.zip");
-    installTestApp(url, appId,
+    installTestApp(url, CERTIFIED_APP_ID,
       function (aResponse, aApp) {
         ok(true, "Installed");
-        is(aResponse.appId, appId, "Got same app id");
+        is(aResponse.appId, CERTIFIED_APP_ID, "Got same app id");
         if ("error" in aResponse) {
           ok(false, "Error: " + aResponse.error);
         }
@@ -177,13 +181,135 @@ var steps = [
     );
   },
   function() {
+    info("== TEST == Get all apps");
+    getAll(false);
+  },
+  function() {
+    info("== TEST == Get packaged app");
+    getApp({
+      id: PACKAGED_APP_ID,
+      manifestURL: PACKAGED_APP_MANIFEST
+    }, true);
+  },
+  function() {
+    info("== TEST == Get certified app");
+    getApp({
+      id: CERTIFIED_APP_ID,
+      manifestURL: CERTIFIED_APP_MANIFEST
+    }, false);
+  },
+  function() {
+    info("== SETUP == Enable certified app access");
+    SpecialPowers.pushPrefEnv({
+      "set": [["devtools.debugger.forbid-certified-apps", false]]
+    }, next);
+  },
+  function() {
+    info("== TEST == Get all apps (CERTIFIED ENABLED)");
+    getAll(true);
+  },
+  function() {
+    info("== TEST == Get packaged app (CERTIFIED ENABLED)");
+    getApp({
+      id: PACKAGED_APP_ID,
+      manifestURL: PACKAGED_APP_MANIFEST
+    }, true);
+  },
+  function() {
+    info("== TEST == Get certified app (CERTIFIED ENABLED)");
+    getApp({
+      id: CERTIFIED_APP_ID,
+      manifestURL: CERTIFIED_APP_MANIFEST
+    }, true);
+  },
+  function() {
+    info("== SETUP == Disable certified app access");
+    SpecialPowers.popPrefEnv(next);
+  },
+  function() {
+    info("== TEST == Uninstall packaged app");
+    uninstall(PACKAGED_APP_MANIFEST);
+  },
+  function() {
+    info("== TEST == Uninstall certified app");
+    uninstall(CERTIFIED_APP_MANIFEST);
+  },
+  function() {
     ok(true, "all done!\n");
     mm.sendAsyncMessage("cleanup");
-    SpecialPowers.popPrefEnv(finish);
+    SpecialPowers.flushPrefEnv(finish);
   }
 ];
 
 addLoadEvent(start);
+
+function getAll(expectCertified) {
+  mm.addMessageListener("appActorResponse", function onResponse(response) {
+    mm.removeMessageListener("appActorResponse", onResponse);
+
+    ok("apps" in response, "Apps found in getAll reply");
+    let apps = response.apps;
+    let packagedApp, certifiedApp;
+    for (let app of apps) {
+      switch (app.id) {
+        case PACKAGED_APP_ID:
+          packagedApp = app;
+          break;
+        case CERTIFIED_APP_ID:
+          certifiedApp = app;
+          break;
+      }
+    }
+
+    ok(packagedApp, "Packaged app found via getAll");
+    is(!!certifiedApp, expectCertified, "Certified app matches expectation");
+
+    next();
+  });
+
+  mm.sendAsyncMessage("appActorRequest", {
+    type: "getAll"
+  });
+}
+
+function getApp(appInfo, expected) {
+  mm.addMessageListener("appActorResponse", function onResponse(response) {
+    mm.removeMessageListener("appActorResponse", onResponse);
+
+    is("app" in response, expected, "App existence matches expectation");
+    is("error" in response, !expected, "Error existence matches expectation");
+    if (!expected) {
+      is(response.error, "forbidden", "Error message is correct");
+      next();
+      return;
+    }
+
+    let app = response.app;
+    for (let key in appInfo) {
+      is(app[key], appInfo[key], "Value for " + key + " matches");
+    }
+
+    next();
+  });
+
+  mm.sendAsyncMessage("appActorRequest", {
+    type: "getApp",
+    manifestURL: appInfo.manifestURL
+  });
+}
+
+function uninstall(manifestURL) {
+  mm.addMessageListener("appActorResponse", function onResponse(response) {
+    mm.removeMessageListener("appActorResponse", onResponse);
+    ok(!("error" in response), "App uninstalled successfully");
+    next();
+  });
+
+  mm.sendAsyncMessage("appActorRequest", {
+    type: "uninstall",
+    manifestURL: manifestURL
+  });
+}
 
 </script>
 </pre>
