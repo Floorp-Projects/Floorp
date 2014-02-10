@@ -237,8 +237,13 @@ class SnapshotIterator : public SnapshotReader
     IonScript *ionScript_;
 
   private:
-    bool hasLocation(const Location &loc);
-    uintptr_t fromLocation(const Location &loc);
+    // Read a spilled register from the machine state.
+    bool hasRegister(const Location &loc);
+    uintptr_t fromRegister(const Location &loc);
+
+    // Read an uintptr_t from the stack.
+    bool hasStack(const Location &loc);
+    uintptr_t fromStack(const Location &loc);
 
     Value slotValue(const Slot &slot);
     bool slotReadable(const Slot &slot);
