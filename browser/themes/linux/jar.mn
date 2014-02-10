@@ -34,6 +34,7 @@ browser.jar:
   skin/classic/browser/identity-icons-https-mixed-active.png
   skin/classic/browser/identity-icons-https-mixed-display.png
   skin/classic/browser/Info.png
+  skin/classic/browser/in-content/common.css                    (../shared/in-content/common.css)
   skin/classic/browser/menuPanel.png
   skin/classic/browser/menuPanel-customize.png
   skin/classic/browser/menuPanel-exit.png
