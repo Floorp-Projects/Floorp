@@ -165,8 +165,6 @@ class CommonTestCase(unittest.TestCase):
                     result.addFailure(self, sys.exc_info())
                 except KeyboardInterrupt:
                     raise
-                except self.failureException:
-                    result.addFailure(self, sys.exc_info())
                 except _ExpectedFailure as e:
                     expected_failure(result, e.exc_info)
                 except _UnexpectedSuccess:
@@ -275,7 +273,7 @@ permissions.forEach(function (perm) {
             self.marionette.timeouts(self.marionette.TIMEOUT_PAGE, 30000)
 
     def tearDown(self):
-        pass  # bug 874599
+        pass
 
     def cleanTest(self):
         self._deleteSession()
@@ -337,6 +335,7 @@ class MarionetteTestCase(CommonTestCase):
                                        (self.filepath.replace('\\', '\\\\'), self.methodName))
 
     def tearDown(self):
+        self.marionette.check_for_crash()
         self.marionette.set_context("content")
         self.marionette.execute_script("log('TEST-END: %s:%s')" %
                                        (self.filepath.replace('\\', '\\\\'), self.methodName))
