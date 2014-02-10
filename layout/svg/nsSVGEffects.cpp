@@ -214,12 +214,72 @@ nsSVGRenderingObserver::ContentRemoved(nsIDocument *aDocument,
   DoUpdate();
 }
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsSVGFilterProperty,
-                             nsSVGIDRenderingObserver,
-                             nsISVGFilterProperty)
+NS_IMPL_ISUPPORTS1(nsSVGFilterProperty, nsISupports)
+
+nsSVGFilterProperty::nsSVGFilterProperty(const nsTArray<nsStyleFilter> &aFilters,
+                                         nsIFrame *aFilteredFrame) :
+  mFilters(aFilters)
+{
+  for (uint32_t i = 0; i < mFilters.Length(); i++) {
+    if (mFilters[i].GetType() != NS_STYLE_FILTER_URL)
+      continue;
+
+    nsSVGFilterReference *reference =
+      new nsSVGFilterReference(mFilters[i].GetURL(), aFilteredFrame);
+    NS_ADDREF(reference);
+    mReferences.AppendElement(reference);
+  }
+}
+
+nsSVGFilterProperty::~nsSVGFilterProperty()
+{
+  for (uint32_t i = 0; i < mReferences.Length(); i++) {
+    NS_RELEASE(mReferences[i]);
+  }
+}
+
+bool
+nsSVGFilterProperty::ReferencesValidResources()
+{
+  for (uint32_t i = 0; i < mReferences.Length(); i++) {
+    if (!mReferences[i]->ReferencesValidResource())
+      return false;
+  }
+  return true;
+}
+
+bool
+nsSVGFilterProperty::IsInObserverLists() const
+{
+  for (uint32_t i = 0; i < mReferences.Length(); i++) {
+    if (!mReferences[i]->IsInObserverList())
+      return false;
+  }
+  return true;
+}
+
+void
+nsSVGFilterProperty::Invalidate()
+{
+  for (uint32_t i = 0; i < mReferences.Length(); i++) {
+    mReferences[i]->Invalidate();
+  }
+}
 
 nsSVGFilterFrame *
 nsSVGFilterProperty::GetFilterFrame()
+{
+  // Eventually, callers will ask nsSVGFilterProperty for an nsStyleFilter
+  // chain, not a single nsSVGFilterFrame, and this function will go away.
+  return mReferences.Length() > 0 ? mReferences[0]->GetFilterFrame() : nullptr;
+}
+
+NS_IMPL_ISUPPORTS_INHERITED1(nsSVGFilterReference,
+                             nsSVGIDRenderingObserver,
+                             nsISVGFilterReference);
+
+nsSVGFilterFrame *
+nsSVGFilterReference::GetFilterFrame()
 {
   return static_cast<nsSVGFilterFrame *>
     (GetReferencedFrame(nsGkAtoms::svgFilterFrame, nullptr));
@@ -235,7 +295,7 @@ InvalidateAllContinuations(nsIFrame* aFrame)
 }
 
 void
-nsSVGFilterProperty::DoUpdate()
+nsSVGFilterReference::DoUpdate()
 {
   nsSVGIDRenderingObserver::DoUpdate();
   if (!mFrame)
@@ -335,10 +395,6 @@ nsSVGPaintingProperty::DoUpdate()
 }
 
 static nsSVGRenderingObserver *
-CreateFilterProperty(nsIURI *aURI, nsIFrame *aFrame, bool aReferenceImage)
-{ return new nsSVGFilterProperty(aURI, aFrame, aReferenceImage); }
-
-static nsSVGRenderingObserver *
 CreateMarkerProperty(nsIURI *aURI, nsIFrame *aFrame, bool aReferenceImage)
 { return new nsSVGMarkerProperty(aURI, aFrame, aReferenceImage); }
 
@@ -368,6 +424,26 @@ GetEffectProperty(nsIURI *aURI, nsIFrame *aFrame,
     return nullptr;
   NS_ADDREF(prop);
   props.Set(aProperty, static_cast<nsISupports*>(prop));
+  return prop;
+}
+
+static nsSVGFilterProperty*
+GetOrCreateFilterProperty(nsIFrame *aFrame)
+{
+  const nsStyleSVGReset* style = aFrame->StyleSVGReset();
+  if (!style->HasFilters())
+    return nullptr;
+
+  FrameProperties props = aFrame->Properties();
+  nsSVGFilterProperty *prop =
+    static_cast<nsSVGFilterProperty*>(props.Get(nsSVGEffects::FilterProperty()));
+  if (prop)
+    return prop;
+  prop = new nsSVGFilterProperty(style->mFilters, aFrame);
+  if (!prop)
+    return nullptr;
+  NS_ADDREF(prop);
+  props.Set(nsSVGEffects::FilterProperty(), static_cast<nsISupports*>(prop));
   return prop;
 }
 
@@ -438,9 +514,7 @@ nsSVGEffects::GetEffectProperties(nsIFrame *aFrame)
 
   EffectProperties result;
   const nsStyleSVGReset *style = aFrame->StyleSVGReset();
-  result.mFilter = static_cast<nsSVGFilterProperty*>
-    (GetEffectProperty(style->SingleFilter(), aFrame, FilterProperty(),
-                       CreateFilterProperty));
+  result.mFilter = GetOrCreateFilterProperty(aFrame);
   result.mClipPath =
     GetPaintingProperty(style->mClipPath, aFrame, ClipPathProperty());
   result.mMask =
@@ -515,8 +589,7 @@ nsSVGEffects::UpdateEffects(nsIFrame *aFrame)
 
   // Ensure that the filter is repainted correctly
   // We can't do that in DoUpdate as the referenced frame may not be valid
-  GetEffectProperty(aFrame->StyleSVGReset()->SingleFilter(),
-                    aFrame, FilterProperty(), CreateFilterProperty);
+  GetOrCreateFilterProperty(aFrame);
 
   if (aFrame->GetType() == nsGkAtoms::svgPathGeometryFrame &&
       static_cast<nsSVGPathGeometryElement*>(aFrame->GetContent())->IsMarkable()) {
@@ -536,7 +609,7 @@ nsSVGEffects::GetFilterProperty(nsIFrame *aFrame)
 {
   NS_ASSERTION(!aFrame->GetPrevContinuation(), "aFrame should be first continuation");
 
-  if (!aFrame->StyleSVGReset()->SingleFilter())
+  if (!aFrame->StyleSVGReset()->HasFilters())
     return nullptr;
 
   return static_cast<nsSVGFilterProperty *>
