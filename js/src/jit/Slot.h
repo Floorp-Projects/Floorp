@@ -73,11 +73,32 @@ class Slot
         FLOAT32_STACK,      // Type is float32, payload is on the stack.
         TYPED_REG,          // Type is constant, payload is in a register.
         TYPED_STACK,        // Type is constant, payload is on the stack.
-        UNTYPED,            // Type is not known.
+#if defined(JS_NUNBOX32)
+        UNTYPED_REG_REG,    // Type is not known, type & payload are is in
+                            // registers.
+        UNTYPED_REG_STACK,  // Type is not known, type is in a register and the
+                            // payload is on the stack.
+        UNTYPED_STACK_REG,  // Type is not known, type is on the stack and the
+                            // payload is in a register.
+        UNTYPED_STACK_STACK, // Type is not known, type & payload are on the
+                            // stack.
+#elif defined(JS_PUNBOX64)
+        UNTYPED_REG,        // Type is not known, value is in a register.
+        UNTYPED_STACK,      // Type is not known, value is on the stack.
+#endif
         JS_UNDEFINED,       // UndefinedValue()
         JS_NULL,            // NullValue()
         JS_INT32,           // Int32Value(n)
-        INVALID
+        INVALID,
+
+        // Assert that the mode is UNTYPED by checking the range.
+#if defined(JS_NUNBOX32)
+        UNTYPED_MIN = UNTYPED_REG_REG,
+        UNTYPED_MAX = UNTYPED_STACK_STACK
+#elif defined(JS_PUNBOX64)
+        UNTYPED_MIN = UNTYPED_REG,
+        UNTYPED_MAX = UNTYPED_STACK
+#endif
     };
 
   private:
@@ -137,7 +158,8 @@ class Slot
     Slot(Mode mode)
       : mode_(mode)
     {
-        JS_ASSERT(mode == JS_UNDEFINED || mode == JS_NULL || mode == UNTYPED);
+        JS_ASSERT(mode == JS_UNDEFINED || mode == JS_NULL ||
+                  (UNTYPED_MIN <= mode && mode <= UNTYPED_MAX));
     }
 
   public:
@@ -176,28 +198,28 @@ class Slot
     // UNTYPED
 #if defined(JS_NUNBOX32)
     static Slot UntypedSlot(const Register &type, const Register &payload) {
-        Slot slot(UNTYPED);
+        Slot slot(UNTYPED_REG_REG);
         slot.unknown_type_.type = Location::From(type);
         slot.unknown_type_.payload = Location::From(payload);
         return slot;
     }
 
     static Slot UntypedSlot(const Register &type, int32_t payloadStackIndex) {
-        Slot slot(UNTYPED);
+        Slot slot(UNTYPED_REG_STACK);
         slot.unknown_type_.type = Location::From(type);
         slot.unknown_type_.payload = Location::From(payloadStackIndex);
         return slot;
     }
 
     static Slot UntypedSlot(int32_t typeStackIndex, const Register &payload) {
-        Slot slot(UNTYPED);
+        Slot slot(UNTYPED_STACK_REG);
         slot.unknown_type_.type = Location::From(typeStackIndex);
         slot.unknown_type_.payload = Location::From(payload);
         return slot;
     }
 
     static Slot UntypedSlot(int32_t typeStackIndex, int32_t payloadStackIndex) {
-        Slot slot(UNTYPED);
+        Slot slot(UNTYPED_STACK_STACK);
         slot.unknown_type_.type = Location::From(typeStackIndex);
         slot.unknown_type_.payload = Location::From(payloadStackIndex);
         return slot;
@@ -205,13 +227,13 @@ class Slot
 
 #elif defined(JS_PUNBOX64)
     static Slot UntypedSlot(const Register &value) {
-        Slot slot(UNTYPED);
+        Slot slot(UNTYPED_REG);
         slot.unknown_type_.value = Location::From(value);
         return slot;
     }
 
     static Slot UntypedSlot(int32_t valueStackSlot) {
-        Slot slot(UNTYPED);
+        Slot slot(UNTYPED_STACK);
         slot.unknown_type_.value = Location::From(valueStackSlot);
         return slot;
     }
@@ -270,16 +292,16 @@ class Slot
     }
 #if defined(JS_NUNBOX32)
     Location payload() const {
-        JS_ASSERT(mode() == UNTYPED);
+        JS_ASSERT((UNTYPED_MIN <= mode() && mode() <= UNTYPED_MAX));
         return unknown_type_.payload;
     }
     Location type() const {
-        JS_ASSERT(mode() == UNTYPED);
+        JS_ASSERT((UNTYPED_MIN <= mode() && mode() <= UNTYPED_MAX));
         return unknown_type_.type;
     }
 #elif defined(JS_PUNBOX64)
     Location value() const {
-        JS_ASSERT(mode() == UNTYPED);
+        JS_ASSERT((UNTYPED_MIN <= mode() && mode() <= UNTYPED_MAX));
         return unknown_type_.value;
     }
 #endif
@@ -303,11 +325,16 @@ class Slot
           case FLOAT32_STACK:
             return known_type_.type == s.known_type_.type &&
                 known_type_.payload == s.known_type_.payload;
-          case UNTYPED:
 #if defined(JS_NUNBOX32)
+          case UNTYPED_REG_REG:
+          case UNTYPED_REG_STACK:
+          case UNTYPED_STACK_REG:
+          case UNTYPED_STACK_STACK:
             return unknown_type_.type == s.unknown_type_.type &&
                 unknown_type_.payload == s.unknown_type_.payload;
 #else
+          case UNTYPED_REG:
+          case UNTYPED_STACK:
             return unknown_type_.value == s.unknown_type_.value;
 #endif
           case CONSTANT:

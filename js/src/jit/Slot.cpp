@@ -227,43 +227,42 @@ Slot::write(CompactBufferWriter &writer) const
         writer.writeSigned(stackSlot());
         break;
       }
-      case UNTYPED: {
 #if defined(JS_NUNBOX32)
-        uint32_t code = 0;
-        if (type().isStackSlot()) {
-            if (payload().isStackSlot())
-                code = NUNBOX32_STACK_STACK;
-            else
-                code = NUNBOX32_STACK_REG;
-        } else {
-            if (payload().isStackSlot())
-                code = NUNBOX32_REG_STACK;
-            else
-                code = NUNBOX32_REG_REG;
-        }
-
-        writeSlotHeader(writer, JSVAL_TYPE_MAGIC, code);
-
-        if (type().isStackSlot())
-            writer.writeSigned(type().stackSlot());
-        else
-            writer.writeByte(type().reg().code());
-
-        if (payload().isStackSlot())
-            writer.writeSigned(payload().stackSlot());
-        else
-            writer.writeByte(payload().reg().code());
-
-#elif defined(JS_PUNBOX64)
-        if (value().isStackSlot()) {
-            writeSlotHeader(writer, JSVAL_TYPE_MAGIC, ESC_REG_FIELD_INDEX);
-            writer.writeSigned(value().stackSlot());
-        } else {
-            writeSlotHeader(writer, JSVAL_TYPE_MAGIC, value().reg().code());
-        }
-#endif
+      case UNTYPED_REG_REG: {
+        writeSlotHeader(writer, JSVAL_TYPE_MAGIC, NUNBOX32_REG_REG);
+        writer.writeByte(type().reg().code());
+        writer.writeByte(payload().reg().code());
         break;
       }
+      case UNTYPED_REG_STACK: {
+        writeSlotHeader(writer, JSVAL_TYPE_MAGIC, NUNBOX32_REG_STACK);
+        writer.writeByte(type().reg().code());
+        writer.writeSigned(payload().stackSlot());
+        break;
+      }
+      case UNTYPED_STACK_REG: {
+        writeSlotHeader(writer, JSVAL_TYPE_MAGIC, NUNBOX32_STACK_REG);
+        writer.writeSigned(type().stackSlot());
+        writer.writeByte(payload().reg().code());
+        break;
+      }
+      case UNTYPED_STACK_STACK: {
+        writeSlotHeader(writer, JSVAL_TYPE_MAGIC, NUNBOX32_STACK_STACK);
+        writer.writeSigned(type().stackSlot());
+        writer.writeSigned(payload().stackSlot());
+        break;
+      }
+#elif defined(JS_PUNBOX64)
+      case UNTYPED_REG: {
+        writeSlotHeader(writer, JSVAL_TYPE_MAGIC, value().reg().code());
+        break;
+      }
+      case UNTYPED_STACK: {
+        writeSlotHeader(writer, JSVAL_TYPE_MAGIC, ESC_REG_FIELD_INDEX);
+        writer.writeSigned(value().stackSlot());
+        break;
+      }
+#endif
       case JS_UNDEFINED: {
         writeSlotHeader(writer, JSVAL_TYPE_UNDEFINED, ESC_REG_FIELD_CONST);
         break;
@@ -347,19 +346,25 @@ Slot::dump(FILE *fp) const
         fprintf(fp, ")");
         break;
 
-      case UNTYPED: {
-        fprintf(fp, "value (");
 #if defined(JS_NUNBOX32)
-        fprintf(fp, "type = ");
+      case UNTYPED_REG_REG:
+      case UNTYPED_REG_STACK:
+      case UNTYPED_STACK_REG:
+      case UNTYPED_STACK_STACK:
+        fprintf(fp, "value (type = ");
         type().dump(fp);
         fprintf(fp, ", payload = ");
         payload().dump(fp);
-#elif defined(JS_PUNBOX64)
-        value().dump(fp);
-#endif
         fprintf(fp, ")");
         break;
-      }
+#elif defined(JS_PUNBOX64)
+      case UNTYPED_REG:
+      case UNTYPED_STACK:
+        fprintf(fp, "value (");
+        value().dump(fp);
+        fprintf(fp, ")");
+        break;
+#endif
 
       case JS_UNDEFINED:
         fprintf(fp, "undefined");
