@@ -753,10 +753,10 @@
 /* Invert the colors of certain dark theme images for displaying
  * inside of the light theme.
  */
-.theme-light .devtools-tab > image,
+.theme-light .devtools-tab[icon-invertable] > image,
 .theme-light #toolbox-dock-buttons > toolbarbutton > image,
-.theme-light .command-button > image,
-.theme-light .command-button:active > image,
+.theme-light .command-button-invertable > image,
+.theme-light .command-button-invertable:active > image,
 .theme-light .devtools-closebutton > image,
 .theme-light .devtools-toolbarbutton > image,
 .theme-light .devtools-option-toolbarbutton > image,
@@ -771,9 +771,9 @@
 
 /* Since selected backgrounds are blue, we want to use the normal
  * (light) icons. */
-.theme-light .command-button[checked=true]:not(:active) > image,
-.theme-light .devtools-tab[selected] > image,
-.theme-light .devtools-tab[highlighted] > image,
+.theme-light .command-button-invertable[checked=true]:not(:active) > image,
+.theme-light .devtools-tab[icon-invertable][selected] > image,
+.theme-light .devtools-tab[icon-invertable][highlighted] > image,
 .theme-light .devtools-option-toolbarbutton[open] > image,
 .theme-light #resume[checked] > image {
   filter: none !important;

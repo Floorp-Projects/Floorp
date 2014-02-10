@@ -15,31 +15,22 @@ function test()
 
   let webconsole, browserconsole;
 
-  addTab(TEST_URI);
-  browser.addEventListener("load", function onLoad() {
-    browser.removeEventListener("load", onLoad, true);
+  Task.spawn(runner).then(finishTest);
 
-    openConsole(null, consoleOpened);
-  }, true);
+  function* runner() {
+    let {tab} = yield loadTab(TEST_URI);
+    webconsole = yield openConsole(tab);
+    ok(webconsole, "web console opened");
 
-  function consoleOpened(hud)
-  {
-    ok(hud, "web console opened");
-    webconsole = hud;
-    HUDService.toggleBrowserConsole().then(browserConsoleOpened);
-  }
-
-  function browserConsoleOpened(hud)
-  {
-    ok(hud, "browser console opened");
-    browserconsole = hud;
+    browserconsole = yield HUDService.toggleBrowserConsole();
+    ok(browserconsole, "browser console opened");
 
     // Cause an exception in a script loaded with the addon-sdk loader.
     let toolbox = gDevTools.getToolbox(webconsole.target);
     let oldPanels = toolbox._toolPanels;
     toolbox._toolPanels = null;
-    function fixToolbox()
-    {
+
+    function fixToolbox() {
       toolbox._toolPanels = oldPanels;
     }
 
@@ -51,24 +42,18 @@ function test()
       toolbox.getToolPanels();
     });
 
-    waitForMessages({
-      webconsole: hud,
-      messages: [
-        {
-          text: "TypeError: can't convert null to object",
-          category: CATEGORY_JS,
-          severity: SEVERITY_ERROR,
-        },
-      ],
-    }).then((results) => {
-      fixToolbox();
-      onMessageFound(results);
+    let [result] = yield waitForMessages({
+      webconsole: browserconsole,
+      messages: [{
+        text: "TypeError: can't convert null to object",
+        category: CATEGORY_JS,
+        severity: SEVERITY_ERROR,
+      }],
     });
-  }
 
-  function onMessageFound(results)
-  {
-    let msg = [...results[0].matched][0];
+    fixToolbox();
+
+    let msg = [...result.matched][0];
     ok(msg, "message element found");
     let locationNode = msg.querySelector(".message-location");
     ok(locationNode, "message location element found");
@@ -79,17 +64,25 @@ function test()
 
     let viewSource = browserconsole.viewSource;
     let URL = null;
-    browserconsole.viewSource = (aURL) => URL = aURL;
+    let clickPromise = promise.defer();
+    browserconsole.viewSource = (aURL) => {
+      info("browserconsole.viewSource() was invoked: " + aURL);
+      URL = aURL;
+      clickPromise.resolve(null);
+    };
 
+    msg.scrollIntoView();
     EventUtils.synthesizeMouse(locationNode, 2, 2, {},
                                browserconsole.iframeWindow);
 
+    info("wait for click on locationNode");
+    yield clickPromise;
+
     info("view-source url: " + URL);
-    isnot(URL.indexOf("toolbox.js"), -1, "expected view source URL");
+    ok(URL, "we have some source URL after the click");
+    isnot(URL.indexOf("toolbox.js"), -1, "we have the expected view source URL");
     is(URL.indexOf("->"), -1, "no -> in the URL given to view-source");
 
     browserconsole.viewSource = viewSource;
-
-    finishTest();
   }
 }
