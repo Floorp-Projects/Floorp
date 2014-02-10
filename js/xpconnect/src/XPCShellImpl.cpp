@@ -379,7 +379,7 @@ static bool
 Quit(JSContext *cx, unsigned argc, jsval *vp)
 {
     gExitCode = 0;
-    JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp),"/ i", &gExitCode);
+    JS_ConvertArguments(cx, JS::CallArgsFromVp(argc, vp),"/ i", &gExitCode);
 
     gQuitting = true;
 //    exit(0);

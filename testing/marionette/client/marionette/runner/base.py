@@ -20,6 +20,7 @@ from manifestparser import TestManifest
 from mozhttpd import MozHttpd
 from marionette import Marionette
 from moztest.results import TestResultCollection, TestResult, relevant_line
+from mixins.b2g import B2GTestResultMixin, get_b2g_pid, get_dm
 
 
 class MarionetteTest(TestResult):
@@ -113,7 +114,7 @@ class MarionetteTestResult(unittest._TextTestResult, TestResultCollection):
                        context=context, **kwargs)
         # call any registered result modifiers
         for modifier in self.result_modifiers:
-            modifier(t, result_expected, result_actual, output, context)
+            result_expected, result_actual, output, context = modifier(t, result_expected, result_actual, output, context)
         t.finish(result_actual,
                  time_end=time.time() if test.start_time else 0,
                  reason=relevant_line(output),
@@ -238,6 +239,7 @@ class MarionetteTextTestRunner(unittest.TextTestRunner):
 
     def __init__(self, **kwargs):
         self.marionette = kwargs['marionette']
+        self.capabilities = kwargs.pop('capabilities')
         del kwargs['marionette']
         unittest.TextTestRunner.__init__(self, **kwargs)
 
@@ -307,6 +309,40 @@ class MarionetteTextTestRunner(unittest.TextTestRunner):
         else:
             self.stream.write("\n")
         return result
+
+
+class B2GMarionetteTestResult(MarionetteTestResult, B2GTestResultMixin):
+
+    def __init__(self, *args, **kwargs):
+        # stupid hack because _TextTestRunner doesn't accept **kwargs
+        b2g_pid = kwargs.pop('b2g_pid')
+        MarionetteTestResult.__init__(self, *args, **kwargs)
+        kwargs['b2g_pid'] = b2g_pid
+        B2GTestResultMixin.__init__(self, *args, **kwargs)
+ 
+
+class B2GMarionetteTextTestRunner(MarionetteTextTestRunner):
+
+    resultclass = B2GMarionetteTestResult
+
+    def __init__(self, **kwargs):
+        MarionetteTextTestRunner.__init__(self, **kwargs)
+        if self.capabilities['device'] != 'desktop':
+            self.resultclass = B2GMarionetteTestResult
+        self.b2g_pid = None
+
+    def _makeResult(self):
+        return self.resultclass(self.stream,
+                                self.descriptions,
+                                self.verbosity,
+                                marionette=self.marionette,
+                                b2g_pid=self.b2g_pid)
+
+    def run(self, test):
+        dm_type = os.environ.get('DM_TRANS', 'adb')
+        if dm_type == 'adb':
+            self.b2g_pid = get_b2g_pid(get_dm(self.marionette))
+        return super(B2GMarionetteTextTestRunner, self).run(test)
 
 
 class BaseMarionetteOptions(OptionParser):
@@ -768,6 +804,12 @@ class BaseMarionetteTestRunner(object):
             self.start_marionette()
             if self.emulator:
                 self.marionette.emulator.wait_for_homescreen(self.marionette)
+            # Retrieve capabilities for later use
+            if not self._capabilities:
+                self.capabilities
+
+        if self.capabilities['device'] != 'desktop':
+            self.textrunnerclass = B2GMarionetteTextTestRunner
 
         testargs = {}
         if self.type is not None:
@@ -858,7 +900,8 @@ class BaseMarionetteTestRunner(object):
 
         if suite.countTestCases():
             runner = self.textrunnerclass(verbosity=3,
-                                          marionette=self.marionette)
+                                          marionette=self.marionette,
+                                          capabilities=self.capabilities)
             results = runner.run(suite)
             self.results.append(results)
 

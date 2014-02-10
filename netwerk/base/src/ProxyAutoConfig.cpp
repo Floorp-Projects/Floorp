@@ -395,13 +395,15 @@ bool PACResolveToString(const nsCString &aHostName,
 static
 bool PACDnsResolve(JSContext *cx, unsigned int argc, JS::Value *vp)
 {
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+
   if (NS_IsMainThread()) {
     NS_WARNING("DNS Resolution From PAC on Main Thread. How did that happen?");
     return false;
   }
 
   JS::Rooted<JSString*> arg1(cx);
-  if (!JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "S", arg1.address()))
+  if (!JS_ConvertArguments(cx, args, "S", arg1.address()))
     return false;
 
   nsDependentJSString hostName;
@@ -411,10 +413,10 @@ bool PACDnsResolve(JSContext *cx, unsigned int argc, JS::Value *vp)
     return false;
   if (PACResolveToString(NS_ConvertUTF16toUTF8(hostName), dottedDecimal, 0)) {
     JSString *dottedDecimalString = JS_NewStringCopyZ(cx, dottedDecimal.get());
-    JS_SET_RVAL(cx, vp, STRING_TO_JSVAL(dottedDecimalString));
+    args.rval().setString(dottedDecimalString);
   }
   else {
-    JS_SET_RVAL(cx, vp, JSVAL_NULL);
+    args.rval().setNull();
   }
 
   return true;
@@ -441,8 +443,10 @@ bool PACMyIpAddress(JSContext *cx, unsigned int argc, JS::Value *vp)
 static
 bool PACProxyAlert(JSContext *cx, unsigned int argc, JS::Value *vp)
 {
+  JS::CallArgs args = CallArgsFromVp(argc, vp);
+
   JS::Rooted<JSString*> arg1(cx);
-  if (!JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "S", arg1.address()))
+  if (!JS_ConvertArguments(cx, args, "S", arg1.address()))
     return false;
 
   nsDependentJSString message;
@@ -455,7 +459,7 @@ bool PACProxyAlert(JSContext *cx, unsigned int argc, JS::Value *vp)
   alertMessage += message;
   PACLogToConsole(alertMessage);
 
-  JS_SET_RVAL(cx, vp, JSVAL_VOID);  /* return undefined */
+  args.rval().setUndefined();  /* return undefined */
   return true;
 }
 
