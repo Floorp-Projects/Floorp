@@ -10,7 +10,7 @@ const { EventTarget } = require('../event/target');
 const { activateTab, getTabTitle, setTabTitle, closeTab, getTabURL, getTabContentWindow,
         getTabForBrowser,
         setTabURL, getOwnerWindow, getTabContentType, getTabId } = require('./utils');
-const { emit } = require('../event/core');
+const { emit } = require('../view/core');
 const { getOwnerWindow: getPBOwnerWindow } = require('../private-browsing/window/utils');
 const { when: unload } = require('../system/unload');
 const { viewFor } = require('../event/core');
