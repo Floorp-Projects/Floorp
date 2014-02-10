@@ -19,8 +19,6 @@ var int32 = TypedObject.int32;
 var float32 = TypedObject.float32;
 var float64 = TypedObject.float64;
 
-var Handle = TypedObject.Handle;
-
 // Test name format:
 
 // from<N>DimArrayOf<G1>sTo<G2>s where <N> is a positive integer (or its
@@ -58,9 +56,7 @@ function fromTwoDimArrayOfUint8ToUint32s() {
 
   var r1 = type.from(i1, 2, x => x*2);
   var r2 = type.from(i1, 1, a => rowtype.from(a, 1, x => x*2));
-  var r3 = type.from(i1, 1,
-    a => rowtype.from(a, 1, (x, j, c, out) => Handle.set(out, x*2)));
-  var r4 = type.from(i1, 1, (a, j, c, out) => { out[0] = a[0]*2;
+  var r3 = type.from(i1, 1, (a, j, c, out) => { out[0] = a[0]*2;
                                                 out[1] = a[1]*2;
                                                 out[2] = a[2]*2;
                                                 out[3] = a[3]*2; });
@@ -70,7 +66,6 @@ function fromTwoDimArrayOfUint8ToUint32s() {
                                        [80, 82, 84, 86]]));
   assertTypedEqual(type, r1, r2);
   assertTypedEqual(type, r1, r3);
-  assertTypedEqual(type, r1, r4);
 }
 
 function fromTwoDimArrayOfUint32ToUint8s() {
@@ -84,9 +79,7 @@ function fromTwoDimArrayOfUint32ToUint8s() {
 
   var r1 = type.from(i1, 2, x => x*2);
   var r2 = type.from(i1, 1, a => rowtype.from(a, 1, x => x*2));
-  var r3 = type.from(i1, 1,
-    a => rowtype.from(a, 1, (x, j, c, out) => Handle.set(out, x*2)));
-  var r4 = type.from(i1, 1, (a, j, c, out) => { out[0] = a[0]*2;
+  var r3 = type.from(i1, 1, (a, j, c, out) => { out[0] = a[0]*2;
                                                 out[1] = a[1]*2;
                                                 out[2] = a[2]*2;
                                                 out[3] = a[3]*2; });
@@ -96,7 +89,6 @@ function fromTwoDimArrayOfUint32ToUint8s() {
                                        [80, 82, 84, 86]]));
   assertTypedEqual(type, r1, r2);
   assertTypedEqual(type, r1, r3);
-  assertTypedEqual(type, r1, r4);
 }
 
 function fromOneDimArrayOfArrayOfUint8ToUint32s() {
@@ -110,13 +102,10 @@ function fromOneDimArrayOfArrayOfUint8ToUint32s() {
   function combine(a,b,c,d) { return a << 24 | b << 16 | c << 8 | d; }
 
   var r1 = type.from(i1, x => combine(x[0], x[1], x[2], x[3]));
-  var r2 = type.from(i1, 1,
-    (x, i, c, out) => Handle.set(out, combine(x[0], x[1], x[2], x[3])));
   assertTypedEqual(type, r1, new type([0xddccbbaa,
                                        0x09080706,
                                        0x15141312,
                                        0x23324150]));
-  assertTypedEqual(type, r1, r2);
 }
 
 function fromOneDimArrayOfUint32ToArrayOfUint8s() {
