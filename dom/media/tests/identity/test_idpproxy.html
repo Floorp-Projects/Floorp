@@ -51,10 +51,12 @@ function test_protocol_sandbox(done) {
 }
 
 function handleFailure(done) {
-  return function failure(error) {
+  function failure(error) {
     ok(false, "IdP error" + error);
     done();
-  };
+  }
+  setTimeout(failure, 5000);
+  return failure;
 }
 
 function test_success_response(done) {

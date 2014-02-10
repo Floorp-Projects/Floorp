@@ -205,7 +205,7 @@ public:
         mCode(static_cast<PeerConnectionImpl::Error>(aInfo->getStatusCode())),
         mReason(aInfo->getStatus()),
         mSdpStr(),
-	mCandidateStr(),
+        mCandidateStr(),
         mCallState(aInfo->getCallState()),
         mFsmState(aInfo->getFsmState()),
         mStateStr(aInfo->callStateToString(mCallState)),
@@ -216,9 +216,9 @@ public:
       mRemoteStream = mPC->media()->GetRemoteStream(streams->media_stream_id);
       MOZ_ASSERT(mRemoteStream);
     } else if (mCallState == FOUNDICECANDIDATE) {
-	mCandidateStr = aInfo->getCandidate();
+        mCandidateStr = aInfo->getCandidate();
     } else if ((mCallState == CREATEOFFERSUCCESS) ||
-	       (mCallState == CREATEANSWERSUCCESS)) {
+               (mCallState == CREATEANSWERSUCCESS)) {
         mSdpStr = aInfo->getSDP();
     }
   }
@@ -1607,10 +1607,14 @@ PeerConnectionImpl::CheckApiState(bool assert_ice_ready) const
   MOZ_ASSERT(mTrickle || !assert_ice_ready ||
              (mIceGatheringState == PCImplIceGatheringState::Complete));
 
-  if (mReadyState == PCImplReadyState::Closed)
+  if (mReadyState == PCImplReadyState::Closed) {
+    CSFLogError(logTag, "%s: called API while closed", __FUNCTION__);
     return NS_ERROR_FAILURE;
-  if (!mMedia)
+  }
+  if (!mMedia) {
+    CSFLogError(logTag, "%s: called API with disposed mMedia", __FUNCTION__);
     return NS_ERROR_FAILURE;
+  }
   return NS_OK;
 }
 
