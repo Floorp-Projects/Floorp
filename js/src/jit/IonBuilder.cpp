@@ -4653,8 +4653,7 @@ IonBuilder::createCallObject(MDefinition *callee, MDefinition *scope)
     MInstruction *slots;
     if (templateObj->hasDynamicSlots()) {
         size_t nslots = JSObject::dynamicSlotsCount(templateObj->numFixedSlotsForCompilation(),
-                                                    templateObj->lastProperty()->slotSpan(templateObj->getClass()),
-                                                    templateObj->getClass());
+                                                    templateObj->lastProperty()->slotSpan(templateObj->getClass()));
         slots = MNewSlots::New(alloc(), nslots);
     } else {
         slots = MConstant::New(alloc(), NullValue());

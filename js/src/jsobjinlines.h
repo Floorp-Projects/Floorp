@@ -497,14 +497,9 @@ JSObject::create(js::ExclusiveContext *cx, js::gc::AllocKind kind, js::gc::Initi
     JS_ASSERT(js::gc::GetGCKindSlots(kind, type->clasp()) == shape->numFixedSlots());
     JS_ASSERT_IF(type->clasp()->flags & JSCLASS_BACKGROUND_FINALIZE, IsBackgroundFinalized(kind));
     JS_ASSERT_IF(type->clasp()->finalize, heap == js::gc::TenuredHeap);
-    JS_ASSERT_IF(extantSlots, dynamicSlotsCount(shape->numFixedSlots(), shape->slotSpan(),
-                                                type->clasp()));
+    JS_ASSERT_IF(extantSlots, dynamicSlotsCount(shape->numFixedSlots(), shape->slotSpan()));
 
-    const js::Class *clasp = type->clasp();
-    size_t nDynamicSlots = 0;
-    if (!extantSlots)
-        nDynamicSlots = dynamicSlotsCount(shape->numFixedSlots(), shape->slotSpan(), clasp);
-
+    size_t nDynamicSlots = extantSlots ? 0 : dynamicSlotsCount(shape->numFixedSlots(), shape->slotSpan());
     JSObject *obj = js::NewGCObject<js::CanGC>(cx, kind, nDynamicSlots, heap);
     if (!obj)
         return nullptr;
@@ -515,6 +510,7 @@ JSObject::create(js::ExclusiveContext *cx, js::gc::AllocKind kind, js::gc::Initi
         obj->slots = extantSlots;
     obj->elements = js::emptyObjectElements;
 
+    const js::Class *clasp = type->clasp();
     if (clasp->hasPrivate())
         obj->privateRef(shape->numFixedSlots()) = nullptr;
 
@@ -541,7 +537,7 @@ JSObject::createArray(js::ExclusiveContext *cx, js::gc::AllocKind kind, js::gc::
      * named properties stored in those fixed slots.
      */
     JS_ASSERT(shape->numFixedSlots() == 0);
-    size_t nDynamicSlots = dynamicSlotsCount(0, shape->slotSpan(), type->clasp());
+    size_t nDynamicSlots = dynamicSlotsCount(0, shape->slotSpan());
     JSObject *obj = js::NewGCObject<js::CanGC>(cx, kind, nDynamicSlots, heap);
     if (!obj)
         return nullptr;
