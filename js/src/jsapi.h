@@ -996,13 +996,12 @@ JS_GetEmptyString(JSRuntime *rt);
  * unconverted arguments.
  */
 extern JS_PUBLIC_API(bool)
-JS_ConvertArguments(JSContext *cx, unsigned argc, jsval *argv, const char *format,
-                    ...);
+JS_ConvertArguments(JSContext *cx, const JS::CallArgs &args, const char *format, ...);
 
 #ifdef va_start
 extern JS_PUBLIC_API(bool)
-JS_ConvertArgumentsVA(JSContext *cx, unsigned argc, jsval *argv,
-                      const char *format, va_list ap);
+JS_ConvertArgumentsVA(JSContext *cx, const JS::CallArgs &args, const char *format,
+                      va_list ap);
 #endif
 
 extern JS_PUBLIC_API(bool)
