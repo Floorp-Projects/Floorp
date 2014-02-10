@@ -21,8 +21,8 @@
     <box id="instruction-topsites-box" insertafter="start-topsites" class="firstrun">
       <box id="instruction-topsites">
         <vbox class="instruction-content-container">
-          <image class="instruction-arrow arrow-left-straight" />
-          <image class="instruction-arrow arrow-left" />
+          <image class="instruction-arrow arrow-back-straight" />
+          <image class="instruction-arrow arrow-back" />
           <label class="instruction-label">&firstRunTopSites.label;</label>
         </vbox>
       </box>
@@ -37,7 +37,7 @@
     <box insertafter="start-bookmarks" class="firstrun">
       <box id="instruction-bookmarks">
         <vbox class="instruction-content-container" align="center">
-          <image class="instruction-arrow arrow-right" />
+          <image class="instruction-arrow arrow-forward" />
           <label class="instruction-label">&firstRunBookmarks.label;</label>
         </vbox>
       </box>
@@ -46,7 +46,7 @@
     <box id="instruction-history-container" insertafter="start-history" class="firstrun">
       <box id="instruction-history">
         <vbox class="instruction-content-container" align="center">
-          <image class="instruction-arrow arrow-right" />
+          <image class="instruction-arrow arrow-forward" />
           <label class="instruction-label">&firstRunHistory.label;</label>
         </vbox>
       </box>

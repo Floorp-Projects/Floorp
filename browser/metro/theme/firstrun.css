@@ -96,23 +96,34 @@ below instruction */
 .instruction-arrow.arrow-down {
   transform: rotate(180deg);
 }
+.instruction-arrow.arrow-down:-moz-locale-dir(rtl) {
+  transform: scaleY(-1);
+}
 
-.instruction-arrow.arrow-left,
-.instruction-arrow.arrow-right,
-.instruction-arrow.arrow-left-straight,
-.instruction-arrow.arrow-right-straight {
+.instruction-arrow.arrow-back,
+.instruction-arrow.arrow-forward,
+.instruction-arrow.arrow-back-straight,
+.instruction-arrow.arrow-forward-straight {
   background-image: url("chrome://browser/skin/images/arrow-left.png");
 }
 
-.instruction-arrow.arrow-right {
+.instruction-arrow.arrow-back,
+.instruction-arrow.arrow-forward:-moz-locale-dir(rtl) {
+  transform: rotate(0) scaleY(1);
+}
+
+.instruction-arrow.arrow-forward,
+.instruction-arrow.arrow-back:-moz-locale-dir(rtl) {
   transform: rotate(180deg) scaleY(-1);
 }
 
-.instruction-arrow.arrow-left-straight {
+.instruction-arrow.arrow-back-straight,
+.instruction-arrow.arrow-forward-straight:-moz-locale-dir(rtl) {
   transform: rotate(220deg) scaleX(-1);
 }
 
-.instruction-arrow.arrow-right-straight {
+.instruction-arrow.arrow-forward-straight,
+.instruction-arrow.arrow-back-straight:-moz-locale-dir(rtl) {
   transform: rotate(-220deg);
 }
 
@@ -121,9 +132,17 @@ below instruction */
   top: 10px;
   transform: translateX(calc(630px - 50%));
 }
+#instruction-tabs:-moz-locale-dir(rtl) {
+  right: 0;
+  left: auto;
+  transform: translateX(calc(50% - 630px));
+}
 
 #start-container[viewstate="portrait"] #instruction-tabs {
   transform: translateX(calc(50vw - 50%));
+}
+#start-container[viewstate="portrait"] #instruction-tabs:-moz-locale-dir(rtl) {
+  transform: translateX(calc(-50vw + 50%));
 }
 
 #start-container[viewstate="landscape"] #instruction-topsites {
@@ -143,19 +162,19 @@ below instruction */
   -moz-box-align: center;
 }
 
-#start-container[viewstate="portrait"] #instruction-topsites .arrow-left-straight {
+#start-container[viewstate="portrait"] #instruction-topsites .arrow-back-straight {
   display: none;
 }
 
-#start-container[viewstate="portrait"] #instruction-topsites .arrow-left {
+#start-container[viewstate="portrait"] #instruction-topsites .arrow-back {
   display: block;
 }
 
-#start-container[viewstate="landscape"] #instruction-topsites .arrow-left-straight {
+#start-container[viewstate="landscape"] #instruction-topsites .arrow-back-straight {
   display: block;
 }
 
-#start-container[viewstate="landscape"] #instruction-topsites .arrow-left {
+#start-container[viewstate="landscape"] #instruction-topsites .arrow-back {
   display: none;
 }
 
@@ -165,11 +184,20 @@ below instruction */
   top: 310px;
   transform: translateX(calc(-300px - 50%));
 }
+#start-container[viewstate="landscape"] #instruction-history:-moz-locale-dir(rtl),
+#start-container[viewstate="landscape"] #instruction-bookmarks:-moz-locale-dir(rtl) {
+  transform: translateX(calc(300px + 50%));
+}
 
 #start-container[viewstate="portrait"] #instruction-history,
 #start-container[viewstate="portrait"] #instruction-bookmarks,
 #start-container[viewstate="portrait"] #instruction-topsites {
   transform: translateX(-55px);
+}
+#start-container[viewstate="portrait"] #instruction-history:-moz-locale-dir(rtl),
+#start-container[viewstate="portrait"] #instruction-bookmarks:-moz-locale-dir(rtl),
+#start-container[viewstate="portrait"] #instruction-topsites:-moz-locale-dir(rtl) {
+  transform: translateX(55px);
 }
 
 #start-container[viewstate="landscape"] #instruction-menu {
@@ -177,11 +205,19 @@ below instruction */
   bottom: 16px;
   right: 37px;
 }
+#start-container[viewstate="landscape"] #instruction-menu:-moz-locale-dir(rtl) {
+  left: 37px;
+  right: auto;
+}
 
 #start-container[viewstate="portrait"] #instruction-menu {
   position: absolute;
   right: 37px;
   transform: translateY(40px);
+}
+#start-container[viewstate="portrait"] #instruction-menu:-moz-locale-dir(rtl) {
+  left: 37px;
+  right: auto;
 }
 
 #start-container #instruction-menu .instruction-label {
@@ -201,8 +237,8 @@ below instruction */
     background-image: url("chrome://browser/skin/images/arrow-top@1.4x.png");
   }
 
-  .instruction-arrow.arrow-left,
-  .instruction-arrow.arrow-right {
+  .instruction-arrow.arrow-back,
+  .instruction-arrow.arrow-forward {
     background-image: url("chrome://browser/skin/images/arrow-left@1.4x.png");
   }
 
@@ -218,8 +254,8 @@ below instruction */
     background-image: url("chrome://browser/skin/images/arrow-top@1.8x.png");
   }
 
-  .instruction-arrow.arrow-left,
-  .instruction-arrow.arrow-right {
+  .instruction-arrow.arrow-back,
+  .instruction-arrow.arrow-forward {
     background-image: url("chrome://browser/skin/images/arrow-left@1.8x.png");
   }
 
