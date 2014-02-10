@@ -2055,6 +2055,7 @@ let CustomizableUIInternal = {
     // Reset placements to make restoring default placements possible.
     gPlacements = new Map();
     gDirtyAreaCache = new Set();
+    gSeenWidgets = new Set();
     // Clear the saved state to ensure that defaults will be used.
     gSavedState = null;
     // Restore the state for each area to its defaults
