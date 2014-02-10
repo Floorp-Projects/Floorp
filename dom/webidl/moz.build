@@ -326,6 +326,7 @@ WEBIDL_FILES = [
     'SVGFEDiffuseLightingElement.webidl',
     'SVGFEDisplacementMapElement.webidl',
     'SVGFEDistantLightElement.webidl',
+    'SVGFEDropShadowElement.webidl',
     'SVGFEFloodElement.webidl',
     'SVGFEFuncAElement.webidl',
     'SVGFEFuncBElement.webidl',

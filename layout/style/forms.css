@@ -136,6 +136,7 @@ textarea::-moz-placeholder {
   display: inline-block;
   ime-mode: inherit;
   resize: inherit;
+  -moz-control-character-visibility: visible;
 }
 
 textarea > .anonymous-div.wrap,
