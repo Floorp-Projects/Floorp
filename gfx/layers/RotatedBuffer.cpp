@@ -503,16 +503,8 @@ RotatedContentBuffer::BeginPaint(ThebesLayer* aLayer,
   // or call CreateBuffer before this call.
   FinalizeFrame(result.mRegionToDraw);
 
-  // Have some cases where the region to draw is empty,
-  // but the needed region is not empty, so we still need to allocate
-  // a clean buffer for those cases. If everything is empty, then clear out
-  // the buffers.
-  if (result.mRegionToDraw.IsEmpty() && canReuseBuffer) {
-    if (neededRegion.IsEmpty()) {
-      Clear();
-    }
+  if (result.mRegionToDraw.IsEmpty())
     return result;
-  }
 
   nsIntRect drawBounds = result.mRegionToDraw.GetBounds();
   RefPtr<DrawTarget> destDTBuffer;
