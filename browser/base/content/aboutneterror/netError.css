@@ -1,0 +1,76 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@import url("chrome://browser/skin/in-content/common.css");
+
+body {
+  display: flex;
+  box-sizing: padding-box;
+  min-height: 100vh;
+  padding: 0 48px;
+  align-items: center;
+  justify-content: center;
+}
+
+ul, ol {
+  margin: 0;
+  padding: 0;
+  -moz-margin-start: 1em;
+}
+
+ul > li, ol > li {
+  margin-bottom: .5em;
+}
+
+ul {
+  list-style: disc;
+}
+
+#errorPageContainer {
+  min-width: 320px;
+  max-width: 512px;
+}
+
+#errorTitle {
+  background: url("info.svg") left 0 no-repeat;
+  background-size: 3em 3em;
+  -moz-margin-start: -5em;
+  -moz-padding-start: 5em;
+}
+
+#errorTitle:-moz-locale-dir(rtl) {
+  background-position: right 0;
+}
+
+#errorTryAgain {
+  margin-top: 1.2em;
+}
+
+#errorContainer {
+  display: none;
+}
+
+@media (max-width: 675px) {
+  #errorTitle {
+    padding-top: 0;
+    background-image: none;
+    -moz-padding-start: 0;
+    -moz-margin-start: 0;
+  }
+}
+
+
+/* common.css overrides */
+
+button {
+  font-size: 1em;
+  min-width: 150px;
+}
+
+/* Pressing the retry button will cause the cursor to flicker from a pointer to
+ * not-allowed. Override the disabled cursor behaviour since we will never show
+ * the button disabled as the initial state. */
+button:disabled {
+  cursor: pointer;
+}
