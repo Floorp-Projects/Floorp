@@ -171,8 +171,14 @@ static const JSClass pm_class = {
 static bool
 pm_construct(JSContext* cx, unsigned argc, jsval* vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
+
     uint32_t mask;
-    if (!JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "u", &mask))
+    if (!args.hasDefined(0)) {
+        js_ReportMissingArg(cx, args.calleev(), 0);
+        return false;
+    }
+    if (!JS::ToUint32(cx, args[0], &mask))
         return false;
 
     JS::RootedObject obj(cx, JS_NewObjectForConstructor(cx, &pm_class, vp));
@@ -189,7 +195,7 @@ pm_construct(JSContext* cx, unsigned argc, jsval* vp)
     }
 
     JS_SetPrivate(obj, p);
-    *vp = OBJECT_TO_JSVAL(obj);
+    args.rval().setObject(*obj);
     return true;
 }
 

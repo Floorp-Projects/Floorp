@@ -167,7 +167,9 @@ private:
   static bool
   Slice(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
-    JS::Rooted<JSObject*> obj(aCx, JS_THIS_OBJECT(aCx, aVp));
+    JS::CallArgs args = JS::CallArgsFromVp(aArgc, aVp);
+
+    JS::Rooted<JSObject*> obj(aCx, args.thisv().toObjectOrNull());
     if (!obj) {
       return false;
     }
@@ -179,7 +181,7 @@ private:
 
     double start = 0, end = 0;
     JS::Rooted<JSString*> jsContentType(aCx, JS_GetEmptyString(JS_GetRuntime(aCx)));
-    if (!JS_ConvertArguments(aCx, aArgc, JS_ARGV(aCx, aVp), "/IIS", &start,
+    if (!JS_ConvertArguments(aCx, args, "/IIS", &start,
                              &end, jsContentType.address())) {
       return false;
     }
@@ -203,7 +205,7 @@ private:
       return false;
     }
 
-    JS_SET_RVAL(aCx, aVp, OBJECT_TO_JSVAL(rtnObj));
+    args.rval().setObject(*rtnObj);
     return true;
   }
 };

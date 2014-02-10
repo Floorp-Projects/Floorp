@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import errno
 import json
 import socket
 
@@ -52,9 +53,8 @@ class MarionetteClient(object):
             response += self._recv_n_bytes(int(length) + 1 + len(length) - 10)
             return json.loads(response)
         else:
-            raise InvalidResponseException("Could not successfully complete "
-                                           "transport of message to Gecko, "
-                                           "socket closed?",
+            raise InvalidResponseException("Could not communicate with Marionette server. "
+                                           "Is the Gecko process still running?",
                                            status=ErrorCodes.INVALID_RESPONSE)
 
     def connect(self, timeout=360.0):
@@ -90,7 +90,13 @@ class MarionetteClient(object):
 
         for packet in [data[i:i + self.max_packet_length] for i in
                        range(0, len(data), self.max_packet_length)]:
-            self.sock.send(packet)
+            try: 
+                self.sock.send(packet)
+            except IOError as e:
+                if e.errno == errno.EPIPE:
+                    raise IOError("%s: Connection to Marionette server is lost. Check gecko.log (desktop firefox) or logcat (b2g) for errors." % str(e))
+                else:
+                    raise e
 
         response = self.receive()
         return response

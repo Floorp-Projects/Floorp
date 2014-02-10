@@ -193,6 +193,7 @@ class HTMLReportingTestResultMixin(object):
         test.debug = None
         if result_actual is not 'PASS':
             test.debug = self.gather_debug()
+        return result_expected, result_actual, output, context
 
     def gather_debug(self):
         debug = {}

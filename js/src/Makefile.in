@@ -222,11 +222,6 @@ else
 NSPR_STATIC_PATH = $(DIST)/lib
 endif
 
-ifdef MOZ_ETW
-# This will get the ETW provider resources into the library mozjs.dll
-RESFILE = ETWProvider.res
-endif
-
 # HP-UX does not require the extra linking of "-lm"
 ifeq (,$(filter HP-UX WINNT OS2,$(OS_ARCH)))
 EXTRA_LIBS	+= -lm
