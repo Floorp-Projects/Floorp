@@ -44,6 +44,13 @@ let IndexedDB = {
     }
 
     let prompt = Cc["@mozilla.org/content-permission/prompt;1"].createInstance(Ci.nsIContentPermissionPrompt);
+    let types = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
+    let promptType = {
+      type: type,
+      access: "unused",
+      QueryInterface: XPCOMUtils.generateQI([Ci.nsIContentPermissionType])
+    };
+    types.appendElement(promptType, false);
 
     // If the user waits a long time before responding, we default to UNKNOWN_ACTION.
     let timeoutId = setTimeout(function() {
@@ -60,7 +67,7 @@ let IndexedDB = {
     }
 
     prompt.prompt({
-      type: type,
+      types: types,
       uri: Services.io.newURI(payload.location, null, null),
       window: null,
       element: aMessage.target,
