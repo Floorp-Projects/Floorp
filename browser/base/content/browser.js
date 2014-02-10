@@ -2564,9 +2564,15 @@ function isInWin8() {
 }
 
 function updateSwitchToMetroVisibility() {
+#ifdef HAVE_SHELL_SERVICE
+#ifdef XP_WIN
+#ifdef MOZ_METRO
   if (PrivateBrowsingUtils.isWindowPrivate(window) || !isInWin8()) {
     document.getElementById("switch-to-metro").hidden = true;
   }
+#endif
+#endif
+#endif
 }
 
 function onFullScreen(event) {
