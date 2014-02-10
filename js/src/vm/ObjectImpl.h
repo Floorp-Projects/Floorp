@@ -1155,6 +1155,7 @@ class ObjectImpl : public gc::BarrieredCell<ObjectImpl>
      * since they normally don't have a lot of slots.
      */
     static const uint32_t SLOT_CAPACITY_MIN = 8;
+    static const uint32_t SLOT_CAPACITY_ARRAYOBJECT_MIN = 2;
 
     HeapSlot *fixedSlots() const {
         return reinterpret_cast<HeapSlot *>(uintptr_t(this) + sizeof(ObjectImpl));
