@@ -8,6 +8,7 @@
 #include "jsfriendapi.h"
 #include "jsprf.h"
 #include "js/OldDebugAPI.h"
+#include "mozilla/Debug.h"
 #include "nsServiceManagerUtils.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIXPConnect.h"
@@ -31,10 +32,6 @@
 #include "nsCxPusher.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIPrincipal.h"
-
-#ifdef ANDROID
-#include <android/log.h>
-#endif
 
 #ifdef XP_WIN
 #include <windows.h>
@@ -300,18 +297,9 @@ Dump(JSContext *cx, unsigned argc, jsval *vp)
     if (!chars)
         return false;
 
-    NS_ConvertUTF16toUTF8 utf8str(reinterpret_cast<const char16_t*>(chars),
-                                  length);
-#ifdef ANDROID
-    __android_log_print(ANDROID_LOG_INFO, "Gecko", "%s", utf8str.get());
-#endif
-#ifdef XP_WIN
-    if (IsDebuggerPresent()) {
-      OutputDebugStringW(reinterpret_cast<const wchar_t*>(chars));
-    }
-#endif
-    fputs(utf8str.get(), gOutFile);
-    fflush(gOutFile);
+    nsDependentSubstring ustr(reinterpret_cast<const char16_t*>(chars),
+                              length);
+    PrintToDebugger(ustr, gOutFile);
     return true;
 }
 
