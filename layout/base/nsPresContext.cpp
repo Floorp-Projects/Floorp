@@ -2354,8 +2354,7 @@ nsPresContext::NotifyInvalidation(const nsIntRect& aRect, uint32_t aFlags)
 void
 nsPresContext::NotifyInvalidation(const nsRect& aRect, uint32_t aFlags)
 {
-  // Disabled temporarily for happening too frequently. (bug 967758)
-  //MOZ_ASSERT(GetContainerWeak(), "Invalidation in detached pres context");
+  MOZ_ASSERT(GetContainerWeak(), "Invalidation in detached pres context");
 
   // If there is no paint event listener, then we don't need to fire
   // the asynchronous event. We don't even need to record invalidation.
