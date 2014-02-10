@@ -13,7 +13,7 @@
 #include "jstypes.h"
 
 #include "jit/IonCode.h"
-#include "jit/SnapshotReader.h"
+#include "jit/Snapshots.h"
 
 namespace js {
     class ActivationIterator;
@@ -245,9 +245,9 @@ class SnapshotIterator : public SnapshotReader
     bool hasStack(const Location &loc);
     uintptr_t fromStack(const Location &loc);
 
-    Value slotValue(const Slot &slot);
-    bool slotReadable(const Slot &slot);
-    void warnUnreadableSlot();
+    Value allocationValue(const RValueAllocation &a);
+    bool allocationReadable(const RValueAllocation &a);
+    void warnUnreadableAllocation();
 
   public:
     SnapshotIterator(IonScript *ionScript, SnapshotOffset snapshotOffset,
@@ -256,15 +256,19 @@ class SnapshotIterator : public SnapshotReader
     SnapshotIterator(const IonBailoutIterator &iter);
     SnapshotIterator();
 
+    Value skip() {
+        readAllocation();
+        return UndefinedValue();
+    }
     Value read() {
-        return slotValue(readSlot());
+        return allocationValue(readAllocation());
     }
     Value maybeRead(bool silentFailure = false) {
-        Slot s = readSlot();
-        if (slotReadable(s))
-            return slotValue(s);
+        RValueAllocation a = readAllocation();
+        if (allocationReadable(a))
+            return allocationValue(a);
         if (!silentFailure)
-            warnUnreadableSlot();
+            warnUnreadableAllocation();
         return UndefinedValue();
     }
 
@@ -308,15 +312,15 @@ class SnapshotIterator : public SnapshotReader
         }
     }
 
-    Value maybeReadSlotByIndex(size_t index) {
+    Value maybeReadAllocByIndex(size_t index) {
         while (index--) {
-            JS_ASSERT(moreSlots());
+            JS_ASSERT(moreAllocations());
             skip();
         }
 
         Value s = maybeRead(true);
 
-        while (moreSlots())
+        while (moreAllocations())
             skip();
 
         return s;
@@ -427,8 +431,8 @@ class InlineFrameIteratorMaybeGC
 
             // Skip over all slots untill we get to the last slots (= arguments slots of callee)
             // the +3 is for [this], [returnvalue], [scopechain], and maybe +1 for [argsObj]
-            JS_ASSERT(parent_s.slots() >= nactual + 3 + argsObjAdj);
-            unsigned skip = parent_s.slots() - nactual - 3 - argsObjAdj;
+            JS_ASSERT(parent_s.allocations() >= nactual + 3 + argsObjAdj);
+            unsigned skip = parent_s.allocations() - nactual - 3 - argsObjAdj;
             for (unsigned j = 0; j < skip; j++)
                 parent_s.skip();
 

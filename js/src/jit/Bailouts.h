@@ -91,9 +91,6 @@ namespace jit {
 
 static const BailoutId INVALID_BAILOUT_ID = BailoutId(-1);
 
-static const uint32_t BAILOUT_KIND_BITS = 3;
-static const uint32_t BAILOUT_RESUME_BITS = 1;
-
 // Keep this arbitrarily small for now, for testing.
 static const uint32_t BAILOUT_TABLE_SIZE = 16;
 
