@@ -576,8 +576,11 @@ bool
 Navigator::JavaEnabled(ErrorResult& aRv)
 {
   Telemetry::AutoTimer<Telemetry::CHECK_JAVA_ENABLED> telemetryTimer;
-  // Return true if we have a handler for "application/x-java-vm",
-  // otherwise return false.
+
+  // Return true if we have a handler for the java mime
+  nsAdoptingString javaMIME = Preferences::GetString("plugin.java.mime");
+  NS_ENSURE_TRUE(!javaMIME.IsEmpty(), false);
+
   if (!mMimeTypes) {
     if (!mWindow) {
       aRv.Throw(NS_ERROR_UNEXPECTED);
@@ -588,8 +591,7 @@ Navigator::JavaEnabled(ErrorResult& aRv)
 
   RefreshMIMEArray();
 
-  nsMimeType *mimeType =
-    mMimeTypes->NamedItem(NS_LITERAL_STRING("application/x-java-vm"));
+  nsMimeType *mimeType = mMimeTypes->NamedItem(javaMIME);
 
   return mimeType && mimeType->GetEnabledPlugin();
 }
