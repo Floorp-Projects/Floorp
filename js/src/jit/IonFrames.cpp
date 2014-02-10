@@ -1319,17 +1319,28 @@ SnapshotIterator::SnapshotIterator()
 }
 
 bool
-SnapshotIterator::hasLocation(const Location &loc)
+SnapshotIterator::hasRegister(const Location &loc)
 {
-    return loc.isStackSlot() || machine_.has(loc.reg());
+    return machine_.has(loc.reg());
 }
 
 uintptr_t
-SnapshotIterator::fromLocation(const Location &loc)
+SnapshotIterator::fromRegister(const Location &loc)
 {
-    if (loc.isStackSlot())
-        return ReadFrameSlot(fp_, loc.stackSlot());
     return machine_.read(loc.reg());
+}
+
+bool
+SnapshotIterator::hasStack(const Location &loc)
+{
+    JS_ASSERT(loc.isStackSlot());
+    return true;
+}
+
+uintptr_t
+SnapshotIterator::fromStack(const Location &loc)
+{
+    return ReadFrameSlot(fp_, loc.stackSlot());
 }
 
 static Value
@@ -1373,14 +1384,18 @@ SnapshotIterator::slotReadable(const Slot &slot)
 
 #if defined(JS_NUNBOX32)
       case Slot::UNTYPED_REG_REG:
+        return hasRegister(slot.type()) && hasRegister(slot.payload());
       case Slot::UNTYPED_REG_STACK:
+        return hasRegister(slot.type()) && hasStack(slot.payload());
       case Slot::UNTYPED_STACK_REG:
+        return hasStack(slot.type()) && hasRegister(slot.payload());
       case Slot::UNTYPED_STACK_STACK:
-        return hasLocation(slot.type()) && hasLocation(slot.payload());
+        return hasStack(slot.type()) && hasStack(slot.payload());
 #elif defined(JS_PUNBOX64)
       case Slot::UNTYPED_REG:
+        return hasRegister(slot.value());
       case Slot::UNTYPED_STACK:
-        return hasLocation(slot.value());
+        return hasStack(slot.value());
 #endif
 
       default:
@@ -1433,21 +1448,48 @@ SnapshotIterator::slotValue(const Slot &slot)
 
 #if defined(JS_NUNBOX32)
       case Slot::UNTYPED_REG_REG:
+      {
+        jsval_layout layout;
+        layout.s.tag = (JSValueTag) fromRegister(slot.type());
+        layout.s.payload.word = fromRegister(slot.payload());
+        return IMPL_TO_JSVAL(layout);
+      }
+
       case Slot::UNTYPED_REG_STACK:
+      {
+        jsval_layout layout;
+        layout.s.tag = (JSValueTag) fromRegister(slot.type());
+        layout.s.payload.word = fromStack(slot.payload());
+        return IMPL_TO_JSVAL(layout);
+      }
+
       case Slot::UNTYPED_STACK_REG:
+      {
+        jsval_layout layout;
+        layout.s.tag = (JSValueTag) fromStack(slot.type());
+        layout.s.payload.word = fromRegister(slot.payload());
+        return IMPL_TO_JSVAL(layout);
+      }
+
       case Slot::UNTYPED_STACK_STACK:
       {
         jsval_layout layout;
-        layout.s.tag = (JSValueTag)fromLocation(slot.type());
-        layout.s.payload.word = fromLocation(slot.payload());
+        layout.s.tag = (JSValueTag) fromStack(slot.type());
+        layout.s.payload.word = fromStack(slot.payload());
         return IMPL_TO_JSVAL(layout);
       }
 #elif defined(JS_PUNBOX64)
       case Slot::UNTYPED_REG:
+      {
+        jsval_layout layout;
+        layout.asBits = fromRegister(slot.value());
+        return IMPL_TO_JSVAL(layout);
+      }
+
       case Slot::UNTYPED_STACK:
       {
         jsval_layout layout;
-        layout.asBits = fromLocation(slot.value());
+        layout.asBits = fromStack(slot.value());
         return IMPL_TO_JSVAL(layout);
       }
 #endif
