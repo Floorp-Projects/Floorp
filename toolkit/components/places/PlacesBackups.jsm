@@ -30,15 +30,9 @@ XPCOMUtils.defineLazyGetter(this, "localFileCtor",
 
 this.PlacesBackups = {
   get _filenamesRegex() {
-    // Get the localized backup filename, will be used to clear out
-    // old backups with a localized name (bug 445704).
-    let localizedFilename =
-      PlacesUtils.getFormattedString("bookmarksArchiveFilename", [new Date()]);
-    let localizedFilenamePrefix =
-      localizedFilename.substr(0, localizedFilename.indexOf("-"));
     delete this._filenamesRegex;
     return this._filenamesRegex =
-      new RegExp("^(bookmarks|" + localizedFilenamePrefix + ")-([0-9-]+)(_[0-9]+)*\.(json|html)");
+      new RegExp("^(bookmarks)-([0-9-]+)(_[0-9]+)*\.(json|html)");
   },
 
   get folder() {
@@ -319,9 +313,7 @@ this.PlacesBackups = {
         if (aMaxBackups !== undefined && aMaxBackups > -1) {
           let backupFiles = yield this.getBackupFiles();
           numberOfBackupsToDelete = backupFiles.length - aMaxBackups;
-        }
 
-        if (numberOfBackupsToDelete > 0) {
           // If we don't have today's backup, remove one more so that
           // the total backups after this operation does not exceed the
           // number specified in the pref.
@@ -329,15 +321,15 @@ this.PlacesBackups = {
               !this._isFilenameWithSameDate(OS.Path.basename(mostRecentBackupFile),
                                             newBackupFilename))
             numberOfBackupsToDelete++;
+        }
 
-          while (numberOfBackupsToDelete--) {
-            this._entries.pop();
-            if (!this._backupFiles) {
-              yield this.getBackupFiles();
-            }
-            let oldestBackup = this._backupFiles.pop();
-            yield OS.File.remove(oldestBackup);
+        while (numberOfBackupsToDelete--) {
+          this._entries.pop();
+          if (!this._backupFiles) {
+            yield this.getBackupFiles();
           }
+          let oldestBackup = this._backupFiles.pop();
+          yield OS.File.remove(oldestBackup);
         }
 
         // Do nothing if we already have this backup or we don't want backups.

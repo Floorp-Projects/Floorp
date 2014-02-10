@@ -77,9 +77,9 @@ import mozinfo
 # TODO: perhaps this should be in a more generally shared location?
 # This regex matches all of the C0 and C1 control characters
 # (U+0000 through U+001F; U+007F; U+0080 through U+009F),
-# except TAB (U+0009) and LF (U+000A); also, backslash (U+005C).
+# except TAB (U+0009), CR (U+000D), LF (U+000A) and backslash (U+005C).
 # A raw string is deliberately not used.
-_cleanup_encoding_re = re.compile(u'[\x00-\x08\x0b-\x1f\x7f-\x9f\\\\]')
+_cleanup_encoding_re = re.compile(u'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\x9f\\\\]')
 def _cleanup_encoding_repl(m):
     c = m.group(0)
     return '\\\\' if c == '\\' else '\\x{:02X}'.format(ord(c))

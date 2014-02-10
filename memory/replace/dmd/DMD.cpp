@@ -1835,11 +1835,15 @@ Init(const malloc_table_t* aMallocTable)
 
   DMD_CREATE_TLS_INDEX(gTlsIndex);
 
-  gStackTraceTable = InfallibleAllocPolicy::new_<StackTraceTable>();
-  gStackTraceTable->init(8192);
+  {
+    AutoLockState lock;
 
-  gBlockTable = InfallibleAllocPolicy::new_<BlockTable>();
-  gBlockTable->init(8192);
+    gStackTraceTable = InfallibleAllocPolicy::new_<StackTraceTable>();
+    gStackTraceTable->init(8192);
+
+    gBlockTable = InfallibleAllocPolicy::new_<BlockTable>();
+    gBlockTable->init(8192);
+  }
 
   if (gOptions->IsTestMode()) {
     // OpenOutputFile() can allocate.  So do this before setting
@@ -2012,12 +2016,13 @@ PrintSortedTraceAndFrameRecords(const Writer& aWriter,
 }
 
 // Note that, unlike most SizeOf* functions, this function does not take a
-// |mozilla::MallocSizeOf| argument.  That's because those arguments are primarily
-// to aid DMD track heap blocks... but DMD deliberately doesn't track heap
-// blocks it allocated for itself!
+// |mozilla::MallocSizeOf| argument.  That's because those arguments are
+// primarily to aid DMD track heap blocks... but DMD deliberately doesn't track
+// heap blocks it allocated for itself!
 //
-// SizeOfInternal should be called while you're holding the state lock and while
-// intercepts are blocked; SizeOf acquires the lock and blocks intercepts.
+// SizeOfInternal should be called while you're holding the state lock and
+// while intercepts are blocked; SizeOf acquires the lock and blocks
+// intercepts.
 
 static void
 SizeOfInternal(Sizes* aSizes)
@@ -2066,12 +2071,10 @@ SizeOf(Sizes* aSizes)
   SizeOfInternal(aSizes);
 }
 
-MOZ_EXPORT void
-ClearReports()
+void
+ClearReportsInternal()
 {
-  if (!gIsDMDRunning) {
-    return;
-  }
+  MOZ_ASSERT(gStateLock->IsLocked());
 
   // Unreport all blocks that were marked reported by a memory reporter.  This
   // excludes those that were reported on allocation, because they need to keep
@@ -2079,6 +2082,17 @@ ClearReports()
   for (BlockTable::Range r = gBlockTable->all(); !r.empty(); r.popFront()) {
     r.front().UnreportIfNotReportedOnAlloc();
   }
+}
+
+MOZ_EXPORT void
+ClearReports()
+{
+  if (!gIsDMDRunning) {
+    return;
+  }
+
+  AutoLockState lock;
+  ClearReportsInternal();
 }
 
 MOZ_EXPORT void
@@ -2270,7 +2284,7 @@ Dump(Writer aWriter)
 
   InfallibleAllocPolicy::delete_(locService);
 
-  ClearReports();
+  ClearReportsInternal(); // Use internal version, we already have the lock.
 
   StatusMsg("}\n");
 }
