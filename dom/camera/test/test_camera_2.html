@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <title>Test for mozCameras.getCamera() with separate .setConfiguration() call</title>
+  <title>Test for mozCameras.getCamera() using an initial configuration</title>
   <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
@@ -127,9 +127,7 @@ var Camera = {
       prop = capabilities[prop];
       ok(camcap[prop] || isFinite(camcap[prop]) || camcap[prop] == null, "Camera Capability: " +
                     prop + " is exposed, value = " +JSON.stringify(camcap[prop]));
-    }
-    ok(camcap.maxMeteringAreas >= 0, "maxMeteringAreas = " + camcap.maxMeteringAreas);
-    ok(camcap.maxFocusAreas >= 0, "maxFocusAreas = " + camcap.maxFocusAreas);
+    } 
     for (var prop in camcap) {
       if(camcap[prop] && camcap[prop].length > 1)  {
         tests[prop] = camcap[prop];
@@ -163,15 +161,14 @@ var Camera = {
     ok(true, "testing picture size " + JSON.stringify(config.pictureSize));
     Camera.cameraObj.takePicture(config, this.takePictureSuccess.bind(this), onError);
   },
-  onConfigChange: function onConfigChange(config) {
-    ok(config.mode === options.mode, "configuration mode = " + config.mode);
-    ok(config.recorderProfile === options.recorderProfile, "recorder profile = " + config.recorderProfile);
-    ok(config.previewSize.width === options.previewSize.width &&
-      config.previewSize.height === options.previewSize.height,
-      "preview size (w x h) = " + config.previewSize.width + " x " + config.previewSize.height);
-  },
   setUp: function setup_tests() {
-    function onSuccess(camera) {
+    function onSuccess(camera, config) {
+      ok(true, "Camera Control object has been successfully initialized");
+      ok(config.mode === options.mode, "configuration mode = " + config.mode);
+      ok(config.recorderProfile === options.recorderProfile, "recorder profile = " + config.recorderProfile);
+      ok(config.previewSize.width === options.previewSize.width &&
+        config.previewSize.height === options.previewSize.height,
+        "preview size (w x h) = " + config.previewSize.width + " x " + config.previewSize.height);
       Camera.cameraObj = camera;
       Camera.viewfinder.mozSrcObject = camera;
       Camera.viewfinder.play();
@@ -183,11 +180,9 @@ var Camera = {
         }
       };
       SimpleTest.expectAssertions(34);
-      ok(true, "Camera Control object has been successfully initialized");
-      Camera.cameraObj.setConfiguration(options, Camera.onConfigChange, onError);
       Camera.cameraObj.onShutter = Camera.shutter;
     };
-    navigator.mozCameras.getCamera(whichCamera, null, onSuccess, onError);
+    navigator.mozCameras.getCamera(whichCamera, options, onSuccess, onError);
   }
 }
 

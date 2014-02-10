@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
+#include "GonkRecorderProfiles.h"
 #include <media/MediaProfiles.h>
 #include "GonkRecorder.h"
 #include "CameraControlImpl.h"
-#include "GonkRecorderProfiles.h"
 #include "CameraCommon.h"
 
 using namespace mozilla;
