@@ -51,12 +51,12 @@ if CONFIG['MOZ_X11']:
         'GfxInfoX11.cpp'
     ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('os2', 'cocoa', 'windows'):
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('cocoa', 'windows'):
     UNIFIED_SOURCES += [
         'nsBaseClipboard.cpp',
     ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('qt', 'gtk2', 'gtk3', 'os2', 'cocoa', 'windows',
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('qt', 'gtk2', 'gtk3', 'cocoa', 'windows',
                                     'android', 'gonk'):
     UNIFIED_SOURCES += [
         'nsBaseFilePicker.cpp',
@@ -98,8 +98,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     FINAL_LIBRARY = 'widget_mac'
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] in ('windows', 'gonk', 'android', 'qt', 'gtk2', 'gtk3'):
     FINAL_LIBRARY = 'widget_%s' % CONFIG['MOZ_WIDGET_TOOLKIT']
-elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'os2':
-    FINAL_LIBRARY = 'wdgtos2'
 
 if CONFIG['MOZ_ENABLE_D3D10_LAYER']:
     DEFINES['MOZ_ENABLE_D3D10_LAYER'] = True

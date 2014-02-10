@@ -12,7 +12,7 @@
 #include "nsCRT.h"
 #include <stdio.h>
 #include <stdlib.h>
-#if defined(XP_WIN) || defined(XP_OS2)
+#if defined(XP_WIN)
 #include <io.h>
 #endif
 #ifdef XP_UNIX

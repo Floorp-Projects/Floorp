@@ -36,22 +36,16 @@ endif
 ifdef MOZ_NATIVE_FFI
 EXTRA_DSO_LDOPTS += $(MOZ_FFI_LIBS)
 else
-ifeq ($(OS_ARCH),OS2)
-SHARED_LIBRARY_LIBS += \
-    ctypes/libffi/.libs/ffi.a \
-    $(NULL)
-else
 SHARED_LIBRARY_LIBS += \
     ctypes/libffi/.libs/libffi.$(LIB_SUFFIX) \
     $(NULL)
-endif
 endif
 
 endif # JS_HAS_CTYPES
 
 DASH_R		= -r
 
-ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
+ifneq (,$(filter WINNT,$(OS_ARCH)))
 SDK_LIBRARY = $(IMPORT_LIBRARY)
 else
 SDK_LIBRARY = $(SHARED_LIBRARY)
@@ -223,7 +217,7 @@ NSPR_STATIC_PATH = $(DIST)/lib
 endif
 
 # HP-UX does not require the extra linking of "-lm"
-ifeq (,$(filter HP-UX WINNT OS2,$(OS_ARCH)))
+ifeq (,$(filter HP-UX WINNT,$(OS_ARCH)))
 EXTRA_LIBS	+= -lm
 endif
 

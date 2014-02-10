@@ -84,8 +84,6 @@ const EXPORT_INDENT = "    "; // four spaces
 
 #ifdef XP_WIN
 const EXPORT_NEWLINE = "\r\n";
-#elifdef XP_OS2
-const EXPORT_NEWLINE = "\r\n";
 #else
 const EXPORT_NEWLINE = "\n";
 #endif

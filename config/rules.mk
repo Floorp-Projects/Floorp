@@ -56,11 +56,7 @@ else
 REPORT_BUILD = $(info $(notdir $@))
 endif
 
-ifeq ($(OS_ARCH),OS2)
-EXEC			=
-else
 EXEC			= exec
-endif
 
 # Don't copy xulrunner files at install time, when using system xulrunner
 ifdef SYSTEM_LIBXUL
@@ -191,7 +187,7 @@ ifdef LIB_IS_C_ONLY
 MKSHLIB			= $(MKCSHLIB)
 endif
 
-ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
+ifneq (,$(filter WINNT,$(OS_ARCH)))
 IMPORT_LIBRARY		:= $(LIB_PREFIX)$(SHARED_LIBRARY_NAME).$(IMPORT_LIB_SUFFIX)
 endif
 
@@ -199,10 +195,6 @@ ifdef MAKE_FRAMEWORK
 SHARED_LIBRARY		:= $(SHARED_LIBRARY_NAME)
 else
 SHARED_LIBRARY		:= $(DLL_PREFIX)$(SHARED_LIBRARY_NAME)$(DLL_SUFFIX)
-endif
-
-ifeq ($(OS_ARCH),OS2)
-DEF_FILE		:= $(SHARED_LIBRARY:.dll=.def)
 endif
 
 EMBED_MANIFEST_AT=2
@@ -729,9 +721,6 @@ distclean::
 	$(wildcard *.$(OBJ_SUFFIX)) $(wildcard *.ho) $(wildcard host_*.o*) \
 	$(wildcard *.$(LIB_SUFFIX)) $(wildcard *$(DLL_SUFFIX)) \
 	$(wildcard *.$(IMPORT_LIB_SUFFIX))
-ifeq ($(OS_ARCH),OS2)
-	-$(RM) $(PROGRAM:.exe=.map)
-endif
 
 alltags:
 	$(RM) TAGS
@@ -871,23 +860,6 @@ ifeq ($(OS_ARCH),WINNT)
 # See bug 795204.
 $(IMPORT_LIBRARY): $(SHARED_LIBRARY) ;
 endif
-
-ifeq ($(OS_ARCH),OS2)
-$(DEF_FILE): $(OBJS) $(SHARED_LIBRARY_LIBS)
-	$(RM) $@
-	echo LIBRARY $(SHARED_LIBRARY_NAME) INITINSTANCE TERMINSTANCE > $@
-	echo PROTMODE >> $@
-	echo CODE    LOADONCALL MOVEABLE DISCARDABLE >> $@
-	echo DATA    PRELOAD MOVEABLE MULTIPLE NONSHARED >> $@
-	echo EXPORTS >> $@
-
-	$(ADD_TO_DEF_FILE)
-
-$(IMPORT_LIBRARY): $(SHARED_LIBRARY)
-	$(REPORT_BUILD)
-	$(RM) $@
-	$(IMPLIB) $@ $^
-endif # OS/2
 
 $(HOST_LIBRARY): $(HOST_OBJS) Makefile
 	$(REPORT_BUILD)
@@ -1076,14 +1048,10 @@ $(filter %.i,$(CMMSRCS:%.mm=%.i)): %.i: %.mm $(call mkdir_deps,$(MDDEPDIR))
 $(RESFILE): %.res: %.rc
 	$(REPORT_BUILD)
 	@echo Creating Resource file: $@
-ifeq ($(OS_ARCH),OS2)
-	$(RC) $(RCFLAGS:-D%=-d %) -i $(subst /,\,$(srcdir)) -r $< $@
-else
 ifdef GNU_CC
 	$(RC) $(RCFLAGS) $(filter-out -U%,$(DEFINES)) $(INCLUDES:-I%=--include-dir %) $(OUTOPTION)$@ $(_VPATH_SRCS)
 else
 	$(RC) $(RCFLAGS) -r $(DEFINES) $(INCLUDES) $(OUTOPTION)$@ $(_VPATH_SRCS)
-endif
 endif
 
 # Cancel GNU make built-in implicit rules
@@ -1091,7 +1059,7 @@ ifndef .PYMAKE
 MAKEFLAGS += -r
 endif
 
-ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
+ifneq (,$(filter WINNT,$(OS_ARCH)))
 SEP := ;
 else
 SEP := :

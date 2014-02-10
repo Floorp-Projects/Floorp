@@ -19,8 +19,6 @@
 
 #if defined(XP_WIN)
 #define READ_BINARYMODE L"rb"
-#elif defined(XP_OS2)
-#define READ_BINARYMODE "rb"
 #else
 #define READ_BINARYMODE "r"
 #endif

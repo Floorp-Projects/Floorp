@@ -9,10 +9,6 @@
 #ifdef XP_WIN
 # include "jswin.h"
 
-#elif defined(XP_OS2)
-# define INCL_DOSPROCESS
-# include <os2.h>
-
 #elif defined(XP_MACOSX) || defined(DARWIN) || defined(XP_UNIX)
 # include <pthread.h>
 
@@ -86,18 +82,6 @@ js::GetNativeStackBaseImpl()
     getcontext(&context);
     return static_cast<char*>(context.uc_stack.ss_sp) +
         context.uc_stack.ss_size;
-}
-
-#elif defined(XP_OS2)
-
-void *
-js::GetNativeStackBaseImpl()
-{
-    PTIB  ptib;
-    PPIB  ppib;
-
-    DosGetInfoBlocks(&ptib, &ppib);
-    return ptib->tib_pstacklimit;
 }
 
 #else /* XP_UNIX */

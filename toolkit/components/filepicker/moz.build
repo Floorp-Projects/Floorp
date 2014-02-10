@@ -5,7 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 if CONFIG['MOZ_XUL'] and \
-    CONFIG['MOZ_WIDGET_TOOLKIT'] not in ('android', 'qt', 'os2', 'cocoa', 'windows'):
+    CONFIG['MOZ_WIDGET_TOOLKIT'] not in ('android', 'qt', 'cocoa', 'windows'):
         XPIDL_MODULE = 'filepicker'
         XPIDL_SOURCES += [
             'nsIFileView.idl',

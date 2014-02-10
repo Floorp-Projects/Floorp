@@ -240,7 +240,7 @@ nsServerSocket::OnSocketDetached(PRFileDesc *fd)
 void
 nsServerSocket::IsLocal(bool *aIsLocal)
 {
-#if defined(XP_UNIX) || defined(XP_OS2)
+#if defined(XP_UNIX)
   // Unix-domain sockets are always local.
   if (mAddr.raw.family == PR_AF_LOCAL)
   {
@@ -279,7 +279,7 @@ nsServerSocket::Init(int32_t aPort, bool aLoopbackOnly, int32_t aBackLog)
 NS_IMETHODIMP
 nsServerSocket::InitWithFilename(nsIFile *aPath, uint32_t aPermissions, int32_t aBacklog)
 {
-#if defined(XP_UNIX) || defined(XP_OS2)
+#if defined(XP_UNIX)
   nsresult rv;
 
   nsAutoCString path;

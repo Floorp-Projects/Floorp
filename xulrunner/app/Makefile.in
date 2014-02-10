@@ -58,14 +58,6 @@ RCFLAGS += -DDEBUG
 endif
 endif
 
-ifeq ($(OS_ARCH),OS2)
-RCFLAGS += -DMOZ_XULRUNNER
-ifdef DEBUG
-RCFLAGS += -DDEBUG
-endif
-RCFLAGS += -DXULRUNNER_ICO='"$(DIST)/branding/xulrunner.ico"' -DDOCUMENT_ICO='"$(DIST)/branding/document.ico"'
-endif
-
 include $(topsrcdir)/config/rules.mk
 
 DEFINES += -DXULRUNNER_ICO='"$(DIST)/branding/xulrunner.ico"' -DDOCUMENT_ICO='"$(DIST)/branding/document.ico"'
@@ -108,9 +100,6 @@ ifdef MOZ_WIDGET_GTK
 	cp $(srcdir)/default16.png   $(DIST)/branding/default16.png
 	cp $(srcdir)/default32.png   $(DIST)/branding/default32.png
 	cp $(srcdir)/default48.png   $(DIST)/branding/default48.png
-endif
-ifeq ($(OS_ARCH),OS2)
-	cp $(srcdir)/xulrunner-os2.ico   $(DIST)/branding/xulrunner.ico
 endif
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))

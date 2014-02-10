@@ -335,11 +335,6 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         'assembler/jit/ExecutableAllocatorWin.cpp',
         'yarr/OSAllocatorWin.cpp',
     ]
-elif CONFIG['OS_ARCH'] == 'OS2':
-    SOURCES += [
-        'assembler/jit/ExecutableAllocatorOS2.cpp',
-        'yarr/OSAllocatorOS2.cpp',
-    ]
 else:
     SOURCES += [
         'assembler/jit/ExecutableAllocatorPosix.cpp',

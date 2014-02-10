@@ -34,7 +34,7 @@ endif
 
 SDK_LIBS = crmf
 
-ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
+ifneq (,$(filter WINNT,$(OS_ARCH)))
 SDK_LIBS += $(NSS_DLLS)
 endif
 
@@ -170,11 +170,6 @@ DEFAULT_GMAKE_FLAGS += USE_DEBUG_RTL=1
 endif
 endif
 endif # WINNT
-ifeq ($(OS_ARCH),OS2)
-ifdef MOZ_OS2_HIGH_MEMORY
-DEFAULT_GMAKE_FLAGS += MOZ_OS2_HIGH_MEMORY=1
-endif
-endif # OS2
 ifeq ($(OS_ARCH),Darwin)
 # Make nsinstall use absolute symlinks by default when building NSS
 # for Mozilla on Mac OS X. (Bugzilla bug 193164)
@@ -375,7 +370,7 @@ nss3.def: $(NSS_STATIC_LIBS_DEFS) $(DEPTH)/db/sqlite3/src/sqlite-processed.def
 	mv $@.tmp $@
 endif
 
-ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
+ifneq (,$(filter WINNT,$(OS_ARCH)))
 SDK_LIBRARY = $(IMPORT_LIBRARY)
 else
 SDK_LIBRARY = $(SHARED_LIBRARY)
