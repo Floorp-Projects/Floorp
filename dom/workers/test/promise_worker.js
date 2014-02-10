@@ -456,7 +456,6 @@ function promiseRejectNoHandler() {
 
 function promiseUtilitiesDefined() {
   ok(Promise.all, "Promise.all must be defined when Promise is enabled.");
-  ok(Promise.cast, "Promise.cast must be defined when Promise is enabled.");
   ok(Promise.race, "Promise.race must be defined when Promise is enabled.");
   runTest();
 }
@@ -535,53 +534,6 @@ function promiseAllRejectFails() {
     is(e, 2, "Rejection value should match.");
     runTest();
   });
-}
-
-function promiseCastNoArg() {
-  var p = Promise.cast();
-  ok(p instanceof Promise, "Should cast to a Promise.");
-  p.then(function(v) {
-    is(v, undefined, "Resolved value should be undefined.");
-    runTest();
-  });
-}
-
-function promiseCastInteger() {
-  var p = Promise.cast(5);
-  ok(p instanceof Promise, "Should cast to a Promise.");
-  p.then(function(v) {
-    is(v, 5, "Resolved value should match original.");
-    runTest();
-  });
-}
-
-function promiseCastArray() {
-  var p = Promise.cast([1,2,3]);
-  ok(p instanceof Promise, "Should cast to a Promise.");
-  p.then(runTest);
-}
-
-// We don't support thenables, but if we did
-// they'd have to be cast to a trusted Promise.
-function promiseCastThenable() {
-  var p = Promise.cast({ then: function(onFulfill, onReject) { onFulfill(2); } });
-  ok(p instanceof Promise, "Should cast to a Promise.");
-  p.then(function(v) {
-    is(v, 2, "Should resolve to 2.");
-    runTest();
-  }, function(e) {
-    ok(false, "promiseCastThenable should've resolved");
-    runTest();
-  });
-}
-
-function promiseCastPromise() {
-  var original = Promise.resolve(true);
-  var cast = Promise.cast(original);
-
-  ok(cast instanceof Promise, "Should cast to a Promise.");
-  is(cast, original, "Should return original Promise.");
-  runTest();
 }
 
 function promiseRaceEmpty() {
@@ -665,6 +617,43 @@ function promiseRaceThrow() {
   });
 }
 
+function promiseResolveArray() {
+  var p = Promise.resolve([1,2,3]);
+  ok(p instanceof Promise, "Should return a Promise.");
+  p.then(function(v) {
+    ok(Array.isArray(v), "Resolved value should be an Array");
+    is(v.length, 3, "Length should match");
+    is(v[0], 1, "Resolved value should match original");
+    is(v[1], 2, "Resolved value should match original");
+    is(v[2], 3, "Resolved value should match original");
+    runTest();
+  });
+}
+
+function promiseResolveThenable() {
+  var p = Promise.resolve({ then: function(onFulfill, onReject) { onFulfill(2); } });
+  ok(p instanceof Promise, "Should cast to a Promise.");
+  p.then(function(v) {
+    is(v, 2, "Should resolve to 2.");
+    runTest();
+  }, function(e) {
+    ok(false, "promiseResolveThenable should've resolved");
+    runTest();
+  });
+}
+
+function promiseResolvePromise() {
+  var original = Promise.resolve(true);
+  var cast = Promise.resolve(original);
+
+  ok(cast instanceof Promise, "Should cast to a Promise.");
+  is(cast, original, "Should return original Promise.");
+  cast.then(function(v) {
+    is(v, true, "Should resolve to true.");
+    runTest();
+  });
+}
+
 var tests = [
     promiseResolve,
     promiseReject,
@@ -700,17 +689,15 @@ var tests = [
     promiseAllWaitsForAllPromises,
     promiseAllRejectFails,
 
-    promiseCastNoArg,
-    promiseCastInteger,
-    promiseCastArray,
-    promiseCastThenable,
-    promiseCastPromise,
-
     promiseRaceEmpty,
     promiseRaceValuesArray,
     promiseRacePromiseArray,
     promiseRaceReject,
     promiseRaceThrow,
+
+    promiseResolveArray,
+    promiseResolveThenable,
+    promiseResolvePromise,
 ];
 
 function runTest() {
