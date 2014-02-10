@@ -304,6 +304,14 @@ struct OpUpdatePictureRect {
 };
 
 /**
+ * Tells the CompositableHost to remove the corresponding TextureHost
+ */
+struct OpRemoveTexture {
+  PCompositable compositable;
+  PTexture texture;
+};
+
+/**
  * Tells the compositor-side which texture to use (for example, as front buffer
  * if there is several textures for double buffering)
  */
@@ -341,6 +349,8 @@ union CompositableOperation {
   OpPaintTextureIncremental;
 
   OpPaintTiledLayerBuffer;
+
+  OpRemoveTexture;
 
   OpUpdateTexture;
   OpUseTexture;
