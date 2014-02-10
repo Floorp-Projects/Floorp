@@ -70,8 +70,6 @@
 
 #ifdef XP_MACOSX
 #include "nsILocalFileMac.h"
-#elif defined(XP_OS2)
-#include "nsILocalFileOS2.h"
 #endif
 
 #include "nsIPluginHost.h" // XXX needed for ext->type mapping (bug 233289)

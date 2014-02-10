@@ -25,14 +25,12 @@ static bool do_preload = false;
 
 #if defined(XP_WIN)
 #define READ_TEXTMODE L"rt"
-#elif defined(XP_OS2)
-#define READ_TEXTMODE "rt"
 #else
 #define READ_TEXTMODE "r"
 #endif
 
 #if defined(SUNOS4) || defined(NEXTSTEP) || \
-    defined(XP_DARWIN) || defined(XP_OS2) || \
+    defined(XP_DARWIN) || \
     (defined(OPENBSD) || defined(NETBSD)) && !defined(__ELF__)
 #define LEADING_UNDERSCORE "_"
 #else
@@ -85,38 +83,6 @@ static void
 CloseLibHandle(LibHandleType aLibHandle)
 {
     FreeLibrary(aLibHandle);
-}
-
-#elif defined(XP_OS2)
-#define INCL_DOS
-#define INCL_DOSERRORS
-#include <os2.h>
-
-typedef HMODULE LibHandleType;
-
-static LibHandleType
-GetLibHandle(pathstr_t aDependentLib)
-{
-    CHAR pszError[_MAX_PATH];
-    ULONG ulrc = NO_ERROR;
-    LibHandleType libHandle;
-    ulrc = DosLoadModule(pszError, _MAX_PATH, aDependentLib, &libHandle);
-    return (ulrc == NO_ERROR) ? libHandle : nullptr;
-}
-
-static NSFuncPtr
-GetSymbol(LibHandleType aLibHandle, const char *aSymbol)
-{
-    ULONG ulrc = NO_ERROR;
-    GetFrozenFunctionsFunc sym;
-    ulrc = DosQueryProcAddr(aLibHandle, 0, aSymbol, (PFN*)&sym);
-    return (ulrc == NO_ERROR) ? sym : nullptr;
-}
-
-static void
-CloseLibHandle(LibHandleType aLibHandle)
-{
-    DosFreeModule(aLibHandle);
 }
 
 #elif defined(XP_MACOSX)
@@ -348,8 +314,7 @@ typedef Scoped<ScopedCloseFileTraits> ScopedCloseFile;
 static void
 XPCOMGlueUnload()
 {
-#if !defined(XP_WIN) && !defined(XP_OS2) && !defined(XP_MACOSX) \
-  && defined(NS_TRACE_MALLOC)
+#if !defined(XP_WIN) && !defined(XP_MACOSX) && defined(NS_TRACE_MALLOC)
     if (sTop) {
         _malloc = __libc_malloc;
         _calloc = __libc_calloc;
@@ -370,7 +335,7 @@ XPCOMGlueUnload()
     }
 }
 
-#if defined(XP_WIN) || defined(XP_OS2)
+#if defined(XP_WIN)
 // like strpbrk but finds the *last* char, not the first
 static const char*
 ns_strrpbrk(const char *string, const char *strCharSet)
@@ -394,7 +359,7 @@ static GetFrozenFunctionsFunc
 XPCOMGlueLoad(const char *xpcomFile)
 {
     char xpcomDir[MAXPATHLEN];
-#if defined(XP_WIN) || defined(XP_OS2)
+#if defined(XP_WIN)
     const char *lastSlash = ns_strrpbrk(xpcomFile, "/\\");
 #else
     const char *lastSlash = strrchr(xpcomFile, '/');
@@ -461,8 +426,7 @@ XPCOMGlueLoad(const char *xpcomFile)
         return nullptr;
     }
 
-#if !defined(XP_WIN) && !defined(XP_OS2) && !defined(XP_MACOSX) \
-  && defined(NS_TRACE_MALLOC)
+#if !defined(XP_WIN) && !defined(XP_MACOSX) && defined(NS_TRACE_MALLOC)
     _malloc = (__ptr_t(*)(size_t)) GetSymbol(sTop->libHandle, "malloc");
     _calloc = (__ptr_t(*)(size_t, size_t)) GetSymbol(sTop->libHandle, "calloc");
     _realloc = (__ptr_t(*)(__ptr_t, size_t)) GetSymbol(sTop->libHandle, "realloc");

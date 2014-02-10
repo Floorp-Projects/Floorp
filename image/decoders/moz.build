@@ -15,8 +15,6 @@ elif toolkit == 'qt':
 
 if CONFIG['OS_ARCH'] == 'WINNT':
     DIRS += ['icon/win', 'icon']
-elif CONFIG['OS_ARCH'] == 'OS2':
-    DIRS += ['icon/os2', 'icon']
 
 if toolkit == 'cocoa':
     DIRS += ['icon/mac', 'icon']

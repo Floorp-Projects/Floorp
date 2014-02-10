@@ -23,15 +23,6 @@
 #include <sys/stat.h>
 #include <CoreFoundation/CoreFoundation.h>
 #define PATH_SEPARATOR_CHAR '/'
-#elif defined (XP_OS2)
-#define INCL_DOS
-#define INCL_DOSMISC
-#define INCL_DOSERRORS
-#include <os2.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#define PATH_SEPARATOR_CHAR '\\'
 #else
 #include <unistd.h>
 #include <sys/types.h>
@@ -90,7 +81,7 @@ static bool IsArg(const char* arg, const char* s)
     return !strcasecmp(arg, s);
   }
 
-#if defined(XP_WIN) || defined(XP_OS2)
+#if defined(XP_WIN)
   if (*arg == '/')
     return !strcasecmp(++arg, s);
 #endif
@@ -209,13 +200,6 @@ main(int argc, char **argv)
 
   WideCharToMultiByte(CP_UTF8, 0, wide_path,-1,
 		      iniPath, MAX_PATH, nullptr, nullptr);
-
-#elif defined(XP_OS2)
-   PPIB ppib;
-   PTIB ptib;
-
-   DosGetInfoBlocks(&ptib, &ppib);
-   DosQueryModuleName(ppib->pib_hmte, sizeof(iniPath), iniPath);
 
 #else
   // on unix, there is no official way to get the path of the current binary.
@@ -399,16 +383,6 @@ main(int argc, char **argv)
     }
   }
 
-#ifdef XP_OS2
-  // On OS/2 we need to set BEGINLIBPATH to be able to find XULRunner DLLs
-  strcpy(tmpPath, greDir);
-  lastSlash = strrchr(tmpPath, PATH_SEPARATOR_CHAR);
-  if (lastSlash) {
-    *lastSlash = '\0';
-  }
-  DosSetExtLIBPATH(tmpPath, BEGIN_LIBPATH);
-#endif
-  
   rv = XPCOMGlueStartup(greDir);
   if (NS_FAILED(rv)) {
     if (rv == NS_ERROR_OUT_OF_MEMORY) {

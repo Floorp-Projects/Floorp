@@ -1046,9 +1046,6 @@ solaris*)
     AC_SUBST(SOLARIS_SUNPRO_CC)
     AC_SUBST(SOLARIS_SUNPRO_CXX)
     ;;
-OS_2)
-    HOST_OS_ARCH=OS2
-    ;;
 esac
 
 case "$OS_ARCH" in
@@ -1086,11 +1083,6 @@ MINGW*_NT*)
 AIX)
     OS_RELEASE=`uname -v`.`uname -r`
     OS_TEST=${target_cpu}
-    ;;
-OS_2)
-    OS_ARCH=OS2
-    OS_TARGET=OS2
-    OS_RELEASE=`uname -v`
     ;;
 Darwin)
     case "${target_cpu}" in
@@ -1543,16 +1535,6 @@ AC_LANG_RESTORE
 fi # COMPILE_ENVIRONMENT
 
 dnl ========================================================
-dnl Enable high-memory support on OS/2 by default.
-dnl ========================================================
-MOZ_OS2_HIGH_MEMORY=1
-MOZ_ARG_DISABLE_BOOL(os2-high-mem,
-[  --disable-os2-high-mem  Disable high-memory support on OS/2],
-    MOZ_OS2_HIGH_MEMORY=,
-    MOZ_OS2_HIGH_MEMORY=1 )
-AC_SUBST(MOZ_OS2_HIGH_MEMORY)
-
-dnl ========================================================
 dnl = Use profiling compile flags
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(profiling,
@@ -1740,14 +1722,6 @@ case "$host" in
     HOST_CFLAGS="$HOST_CFLAGS -DXP_UNIX"
     HOST_NSPR_MDCPUCFG='\"md/_linux.cfg\"'
     HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O3}"
-    ;;
-
-*os2*)
-    HOST_CFLAGS="$HOST_CFLAGS -DXP_OS2 -DNO_X11 -Zomf"
-    HOST_NSPR_MDCPUCFG='\"md/_os2.cfg\"'
-    HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O2}"
-    HOST_BIN_SUFFIX=.exe
-    MOZ_FIX_LINK_PATHS=
     ;;
 
 *)
@@ -2257,71 +2231,6 @@ ia64*-hpux*)
     fi
     ;;
 
-*-os2*)
-    MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
-    MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
-    AC_DEFINE(OS2)
-    AC_DEFINE(XP_OS2)
-    AC_DEFINE(OS2EMX_PLAIN_CHAR)
-    AC_DEFINE(TCPV40HDRS)
-    DLL_PREFIX=
-    LIB_PREFIX=
-    LIB_SUFFIX=lib
-    BIN_SUFFIX=".exe"
-    DLL_SUFFIX=".dll"
-    IMPORT_LIB_SUFFIX=lib
-    DSO_PIC_CFLAGS=
-    AR=emxomfar
-    AR_FLAGS='r $@'
-    CFLAGS="$CFLAGS -Zomf"
-    CXXFLAGS="$CXXFLAGS -Zomf"
-    DSO_LDOPTS='-Zdll'
-    BIN_FLAGS='-Zlinker /ST:0x100000'
-    IMPLIB='emximp -o'
-    FILTER='true'
-    LDFLAGS='-Zmap'
-    WARNINGS_AS_ERRORS='-Werror'
-    MOZ_DEBUG_FLAGS="-g -fno-inline"
-    MOZ_OPTIMIZE_FLAGS="-O2"
-    MOZ_OPTIMIZE_LDFLAGS="-s -Zlinker /EXEPACK:2 -Zlinker /PACKCODE -Zlinker /PACKDATA"
-    LIBXUL_LIBS='-L$(LIBXUL_DIST)/lib $(LIBXUL_DIST)/lib/xul.lib $(LIBXUL_DIST)/lib/mozalloc.lib'
-    TARGET_MD_ARCH=os2
-    _PLATFORM_DEFAULT_TOOLKIT="cairo-os2"
-    RC=rc.exe
-    MC=mc.exe
-    RCFLAGS='-n'
-    MOZ_USER_DIR="Mozilla"
-    ZIP="$ZIP -X"
-    STRIP=lxlite
-    STRIP_FLAGS="/yua /ydd /yxd /ynl /anp /b- /cs+ /d /i- /ml1 /mr2 /mf2 /r+ /u+ /x- /zs:0 /zx /zd"
-
-    if test "$MOZTOOLS"; then
-        MOZ_TOOLS_DIR=`echo $MOZTOOLS | sed -e 's|\\\\|/|g'`
-    else
-        AC_MSG_ERROR([MOZTOOLS is not set])
-    fi
-    if test -n "$MOZ_OS2_HIGH_MEMORY"; then
-        DSO_LDOPTS="$DSO_LDOPTS -Zhigh-mem"
-        LDFLAGS="$LDFLAGS -Zhigh-mem"
-        MOZ_OPTIMIZE_LDFLAGS="$MOZ_OPTIMIZE_LDFLAGS -Zhigh-mem"
-        AC_DEFINE(MOZ_OS2_HIGH_MEMORY)
-    fi
-
-    # GCC for OS/2 currently predefines these, but we don't want them
-    _DEFINES_CFLAGS="$_DEFINES_CFLAGS -Uunix -U__unix -U__unix__"
-    _DEFINES_CXXFLAGS="$_DEFINES_CXXFLAGS -Uunix -U__unix -U__unix__"
-
-    AC_CACHE_CHECK(for __declspec(dllexport),
-        ac_os2_declspec,
-        [AC_TRY_COMPILE([__declspec(dllexport) void ac_os2_declspec(void) {}],
-                        [return 0;],
-                        ac_os2_declspec="yes",
-                        ac_os2_declspec="no")])
-    if test "$ac_os2_declspec" != "yes"; then
-        AC_MSG_ERROR([Compiler does not support __declspec(dllexport), install GCC-4.3.2 or newer])
-    fi
-    ;;
-
 *-solaris*)
     AC_DEFINE(SOLARIS)
     TARGET_NSPR_MDCPUCFG='\"md/_solaris.cfg\"'
@@ -2417,10 +2326,6 @@ ia64*-hpux*)
     esac
     ;;
 
-*-os2*)
-    HOST_NSPR_MDCPUCFG='\"md/_os2.cfg\"'
-    ;;
-
 esac
 
 case "$target" in
@@ -2453,9 +2358,6 @@ if test -z "$MKSHLIB_FORCE_ALL" -o -z "$MKSHLIB_UNFORCE_ALL"; then
     NO_LD_ARCHIVE_FLAGS=1
 fi
 case "$target" in
-*-os2*)
-    NO_LD_ARCHIVE_FLAGS=
-    ;;
 *-aix4.3*|*-aix5*)
     NO_LD_ARCHIVE_FLAGS=
     ;;
@@ -2811,8 +2713,6 @@ dnl against libSystem causes issues when debugging (see bug 299601).
 case $target in
 *-darwin*)
     ;;
-*-os2*)
-    ;;
 *)
     AC_SEARCH_LIBS(dlopen, dl,
         MOZ_CHECK_HEADER(dlfcn.h,
@@ -2837,13 +2737,7 @@ if test ! "$GNU_CXX"; then
      esac
 fi
 
-dnl OS/2 has socket in libc.
-case $target in
-*-os2*)
-    ;;
-*)
-    AC_CHECK_LIB(socket, socket)
-esac
+AC_CHECK_LIB(socket, socket)
 
 XLDFLAGS="$X_LIBS"
 XLIBS="$X_EXTRA_LIBS"
@@ -3122,7 +3016,7 @@ fi
 AC_LANG_CPLUSPLUS
 
 case $target_os in
-    darwin*|mingw*|os2*)
+    darwin*|mingw*)
         ;;
     *)
 
@@ -3697,7 +3591,7 @@ if test -n "$MOZ_NATIVE_NSS"; then
 else
    NSS_CFLAGS='-I$(LIBXUL_DIST)/include/nss'
 
-   if test -z "$GNU_CC" -a "$OS_ARCH" = "WINNT" -o "$OS_ARCH" = "OS2"; then
+   if test -z "$GNU_CC" -a "$OS_ARCH" = "WINNT"; then
        NSS_LIBS="\
         \$(LIBXUL_DIST)/lib/\$(LIB_PREFIX)crmf.\$(LIB_SUFFIX) \
         \$(LIBXUL_DIST)/lib/\$(LIB_PREFIX)smime$NSS_VERSION.\$(LIB_SUFFIX) \
@@ -4282,7 +4176,6 @@ MOZ_ARG_HEADER(Toolkit Options)
                           Select default toolkit
                           Platform specific defaults:
                             Mac OS X - cairo-cocoa
-                            OS/2 - cairo-os2
                             Win32 - cairo-windows
                             * - cairo-gtk2
                             * - cairo-gtk3
@@ -4295,7 +4188,6 @@ MOZ_ARG_HEADER(Toolkit Options)
         -o "$_DEFAULT_TOOLKIT" = "cairo-gtk2-x11" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-gtk3" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-qt" \
-        -o "$_DEFAULT_TOOLKIT" = "cairo-os2" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-cocoa" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-uikit" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-android" \
@@ -4389,14 +4281,6 @@ cairo-qt)
     AC_DEFINE(MOZ_WIDGET_QT)
     MOZ_PDF_PRINTING=1
     AC_DEFINE(QT_NO_KEYWORDS)
-    ;;
-
-cairo-os2)
-    MOZ_WIDGET_TOOLKIT=os2
-    USE_FC_FREETYPE=1
-    TK_CFLAGS='$(MOZ_CAIRO_CFLAGS) $(MOZ_PIXMAN_CFLAGS)'
-    TK_LIBS='$(MOZ_CAIRO_LIBS) $(MOZ_PIXMAN_LIBS)'
-    MOZ_PDF_PRINTING=1
     ;;
 
 cairo-cocoa)
@@ -6850,8 +6734,8 @@ fi
 if test "${OS_TARGET}" = "Android"; then
   dnl On Android, we use WRAP_LDFLAGS to link everything to mozglue
   :
-elif test "${OS_TARGET}" = "WINNT" -o "${OS_TARGET}" = "Darwin" -o "${OS_TARGET}" = "OS2"; then
-  dnl On Windows, OSX and OS2, we want to link all our binaries against mozglue
+elif test "${OS_TARGET}" = "WINNT" -o "${OS_TARGET}" = "Darwin"; then
+  dnl On Windows and OSX, we want to link all our binaries against mozglue
   if test -z "$GNU_CC"; then
     MOZ_GLUE_LDFLAGS='$(call EXPAND_LIBNAME_PATH,mozglue,$(LIBXUL_DIST)/lib)'
   else
@@ -7563,7 +7447,7 @@ if test "$MOZ_CHROME_FILE_FORMAT" = "omni"; then
     AC_DEFINE(MOZ_OMNIJAR)
 fi
 MOZ_PACKAGER_FORMAT="$MOZ_CHROME_FILE_FORMAT"
-if test "$OS_ARCH" = "WINNT" -o "$OS_ARCH" = "OS2" -o "$MOZ_WIDGET_TOOLKIT" = "android"; then
+if test "$OS_ARCH" = "WINNT" -o "$MOZ_WIDGET_TOOLKIT" = "android"; then
     MOZ_CHROME_FILE_FORMAT=flat
 else
     MOZ_CHROME_FILE_FORMAT=symlink
@@ -8043,13 +7927,6 @@ if test "$MOZ_TREE_CAIRO"; then
           MOZ_CHECK_HEADER(d3d10.h, MOZ_ENABLE_D3D10_LAYER=1)
         fi
         ;;
-      os2)
-        OS2_SURFACE_FEATURE="#define CAIRO_HAS_OS2_SURFACE 1"
-        FT_FONT_FEATURE="#define CAIRO_HAS_FT_FONT 1"
-        MOZ_ENABLE_CAIRO_FT=1
-        CAIRO_FT_CFLAGS="-I${MZFTCFGFT2}/include"
-        CAIRO_FT_OSLIBS="-L${MZFTCFGFT2}/lib -lmozft -lmzfntcfg"
-        ;;
     esac
     if test "$USE_FC_FREETYPE"; then
         FC_FONT_FEATURE="#define CAIRO_HAS_FC_FONT 1"
@@ -8425,7 +8302,6 @@ AC_SUBST(XPCOM_STANDALONE_STATICRUNTIME_GLUE_LDOPTS)
 AC_SUBST(USE_DEPENDENT_LIBS)
 
 AC_SUBST(MOZ_BUILD_ROOT)
-AC_SUBST(MOZ_OS2_TOOLS)
 
 AC_SUBST(MOZ_POST_DSO_LIB_COMMAND)
 AC_SUBST(MOZ_POST_PROGRAM_COMMAND)
@@ -8797,7 +8673,7 @@ dnl ========================================================
 
 if test "$OS_ARCH" = "Darwin"; then
   AC_DEFINE(XP_UNIX)
-elif test "$OS_ARCH" != "WINNT" -a "$OS_ARCH" != "OS2"; then
+elif test "$OS_ARCH" != "WINNT"; then
   AC_DEFINE(XP_UNIX)
 fi
 

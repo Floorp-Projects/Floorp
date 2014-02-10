@@ -7,7 +7,7 @@
 
 #include <exception>
 
-#if defined(XP_WIN) || defined(XP_OS2)
+#if defined(XP_WIN)
 #  define MOZALLOC_EXPORT __declspec(dllexport)
 #endif
 

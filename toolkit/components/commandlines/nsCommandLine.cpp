@@ -34,8 +34,6 @@
 #include <shlobj.h>
 #elif defined(XP_UNIX)
 #include <unistd.h>
-#elif defined(XP_OS2)
-#include <os2.h>
 #endif
 
 #ifdef DEBUG_bsmedberg
@@ -338,32 +336,6 @@ nsCommandLine::ResolveFile(const nsAString& aArgument, nsIFile* *aResult)
   NS_ADDREF(*aResult = lf);
   return NS_OK;
 
-#elif defined(XP_OS2)
-  nsCOMPtr<nsIFile> lf (do_CreateInstance(NS_LOCAL_FILE_CONTRACTID));
-  NS_ENSURE_TRUE(lf, NS_ERROR_OUT_OF_MEMORY);
-
-  rv = lf->InitWithPath(aArgument);
-  if (NS_FAILED(rv)) {
-
-    nsAutoCString fullPath;
-    mWorkingDir->GetNativePath(fullPath);
-
-    nsAutoCString carg;
-    NS_CopyUnicodeToNative(aArgument, carg);
-
-    fullPath.Append('\\');
-    fullPath.Append(carg);
-
-    char pathBuf[CCHMAXPATH];
-    if (DosQueryPathInfo(fullPath.get(), FIL_QUERYFULLNAME, pathBuf, sizeof(pathBuf)))
-      return NS_ERROR_FAILURE;
-
-    rv = lf->InitWithNativePath(nsDependentCString(pathBuf));
-    if (NS_FAILED(rv)) return rv;
-  }
-  NS_ADDREF(*aResult = lf);
-  return NS_OK;
-
 #else
 #error Need platform-specific logic here.
 #endif
@@ -458,7 +430,7 @@ nsCommandLine::Init(int32_t argc, const char* const* argv, nsIFile* aWorkingDir,
 #ifdef DEBUG_COMMANDLINE
     printf("Testing native arg %i: '%s'\n", i, curarg);
 #endif
-#if defined(XP_WIN) || defined(XP_OS2)
+#if defined(XP_WIN)
     if (*curarg == '/') {
       char* dup = PL_strdup(curarg);
       if (!dup) return NS_ERROR_OUT_OF_MEMORY;

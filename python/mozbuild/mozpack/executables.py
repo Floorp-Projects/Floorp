@@ -71,7 +71,7 @@ def is_executable(path):
     if not os.path.exists(path):
         return False
 
-    if substs['OS_ARCH'] == 'OS2' or substs['OS_ARCH'] == 'WINNT':
+    if substs['OS_ARCH'] == 'WINNT':
         return path.lower().endswith((substs['DLL_SUFFIX'],
                                       substs['BIN_SUFFIX']))
 

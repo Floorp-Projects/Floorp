@@ -45,7 +45,7 @@ class nsNoAuthURLParser MOZ_FINAL : public nsBaseURLParser
 public:
     NS_DECL_THREADSAFE_ISUPPORTS
 
-#if defined(XP_WIN) || defined(XP_OS2)
+#if defined(XP_WIN)
     NS_IMETHOD ParseFilePath(const char *, int32_t,
                              uint32_t *, int32_t *,
                              uint32_t *, int32_t *,
