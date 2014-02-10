@@ -3,9 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/ContentChild.h"
-#include "nsClipboard.h"
+#include "nsClipboardProxy.h"
 #include "nsISupportsPrimitives.h"
-#include "AndroidBridge.h"
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
 #include "nsXULAppAPI.h"
@@ -13,25 +12,16 @@
 using namespace mozilla;
 using mozilla::dom::ContentChild;
 
-NS_IMPL_ISUPPORTS1(nsClipboard, nsIClipboard)
+NS_IMPL_ISUPPORTS1(nsClipboardProxy, nsIClipboard)
 
-/* The Android clipboard only supports text and doesn't support mime types
- * so we assume all clipboard data is text/unicode for now. Documentation
- * indicates that support for other data types is planned for future
- * releases.
- */
-
-nsClipboard::nsClipboard()
+nsClipboardProxy::nsClipboardProxy()
 {
 }
 
 NS_IMETHODIMP
-nsClipboard::SetData(nsITransferable *aTransferable,
-                     nsIClipboardOwner *anOwner, int32_t aWhichClipboard)
+nsClipboardProxy::SetData(nsITransferable *aTransferable,
+			  nsIClipboardOwner *anOwner, int32_t aWhichClipboard)
 {
-  if (aWhichClipboard != kGlobalClipboard)
-    return NS_ERROR_NOT_IMPLEMENTED;
-
   nsCOMPtr<nsISupports> tmp;
   uint32_t len;
   nsresult rv  = aTransferable->GetTransferData(kUnicodeMime, getter_AddRefs(tmp),
@@ -43,22 +33,19 @@ nsClipboard::SetData(nsITransferable *aTransferable,
   nsAutoString buffer;
   supportsString->GetData(buffer);
 
-  Clipboard::SetClipboardText(buffer);
+  bool isPrivateData = false;
+  aTransferable->GetIsPrivateData(&isPrivateData);
+  ContentChild::GetSingleton()->SendSetClipboardText(buffer, isPrivateData,
+						     aWhichClipboard);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsClipboard::GetData(nsITransferable *aTransferable, int32_t aWhichClipboard)
+nsClipboardProxy::GetData(nsITransferable *aTransferable, int32_t aWhichClipboard)
 {
-  if (aWhichClipboard != kGlobalClipboard)
-    return NS_ERROR_NOT_IMPLEMENTED;
-
   nsAutoString buffer;
-  if (!AndroidBridge::Bridge())
-    return NS_ERROR_NOT_IMPLEMENTED;
-  if (!AndroidBridge::Bridge()->GetClipboardText(buffer))
-    return NS_ERROR_UNEXPECTED;
+  ContentChild::GetSingleton()->SendGetClipboardText(aWhichClipboard, &buffer);
 
   nsresult rv;
   nsCOMPtr<nsISupportsString> dataWrapper =
@@ -81,29 +68,24 @@ nsClipboard::GetData(nsITransferable *aTransferable, int32_t aWhichClipboard)
 }
 
 NS_IMETHODIMP
-nsClipboard::EmptyClipboard(int32_t aWhichClipboard)
+nsClipboardProxy::EmptyClipboard(int32_t aWhichClipboard)
 {
-  if (aWhichClipboard != kGlobalClipboard)
-    return NS_ERROR_NOT_IMPLEMENTED;
-  Clipboard::ClearText();
-
+  ContentChild::GetSingleton()->SendEmptyClipboard(aWhichClipboard);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsClipboard::HasDataMatchingFlavors(const char **aFlavorList,
+nsClipboardProxy::HasDataMatchingFlavors(const char **aFlavorList,
                                     uint32_t aLength, int32_t aWhichClipboard,
                                     bool *aHasText)
 {
   *aHasText = false;
-  if (aWhichClipboard != kGlobalClipboard)
-    return NS_ERROR_NOT_IMPLEMENTED;
-  *aHasText = Clipboard::HasText();
+  ContentChild::GetSingleton()->SendClipboardHasText(aWhichClipboard, aHasText);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsClipboard::SupportsSelectionClipboard(bool *aIsSupported)
+nsClipboardProxy::SupportsSelectionClipboard(bool *aIsSupported)
 {
   *aIsSupported = false;
   return NS_OK;
