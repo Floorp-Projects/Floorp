@@ -43,11 +43,26 @@ class MockContentControllerDelayed : public MockContentController {
 public:
 
   void PostDelayedTask(Task* aTask, int aDelayMs) {
+    // Ensure we're not clobbering an existing task
+    EXPECT_TRUE(nullptr == mCurrentTask);
     mCurrentTask = aTask;
   }
 
-  Task* GetDelayedTask() {
-    return mCurrentTask;
+  void CheckHasDelayedTask() {
+    EXPECT_TRUE(nullptr != mCurrentTask);
+  }
+
+  // Note that deleting mCurrentTask is important in order to
+  // release the reference to the callee object. Without this
+  // that object might be leaked. This is also why we don't
+  // expose mCurrentTask to any users of MockContentControllerDelayed.
+  void RunDelayedTask() {
+    // Running mCurrentTask may call PostDelayedTask, so we should
+    // keep a local copy of mCurrentTask and operate on that
+    Task* local = mCurrentTask;
+    mCurrentTask = nullptr;
+    local->Run();
+    delete local;
   }
 
 private:
@@ -587,7 +602,7 @@ TEST(AsyncPanZoomController, OverScrollPanning) {
 }
 
 TEST(AsyncPanZoomController, ShortPress) {
-  nsRefPtr<MockContentController> mcc = new NiceMock<MockContentController>();
+  nsRefPtr<MockContentControllerDelayed> mcc = new NiceMock<MockContentControllerDelayed>();
   nsRefPtr<TestAPZCTreeManager> tm = new TestAPZCTreeManager();
   nsRefPtr<TestAsyncPanZoomController> apzc = new TestAsyncPanZoomController(
     0, mcc, tm, AsyncPanZoomController::USE_GESTURE_DETECTOR);
@@ -595,18 +610,23 @@ TEST(AsyncPanZoomController, ShortPress) {
   apzc->SetFrameMetrics(TestFrameMetrics());
   apzc->NotifyLayersUpdated(TestFrameMetrics(), true);
   apzc->UpdateZoomConstraints(ZoomConstraints(false, CSSToScreenScale(1.0), CSSToScreenScale(1.0)));
-
-  EXPECT_CALL(*mcc, HandleSingleTap(CSSIntPoint(10, 10), 0, apzc->GetGuid())).Times(1);
 
   int time = 0;
   nsEventStatus status = ApzcTap(apzc, 10, 10, time, 100);
   EXPECT_EQ(nsEventStatus_eIgnore, status);
 
+  // This verifies that the single tap notification is sent after the
+  // touchdown is fully processed. The ordering here is important.
+  mcc->CheckHasDelayedTask();
+
+  EXPECT_CALL(*mcc, HandleSingleTap(CSSIntPoint(10, 10), 0, apzc->GetGuid())).Times(1);
+  mcc->RunDelayedTask();
+
   apzc->Destroy();
 }
 
 TEST(AsyncPanZoomController, MediumPress) {
-  nsRefPtr<MockContentController> mcc = new NiceMock<MockContentController>();
+  nsRefPtr<MockContentControllerDelayed> mcc = new NiceMock<MockContentControllerDelayed>();
   nsRefPtr<TestAPZCTreeManager> tm = new TestAPZCTreeManager();
   nsRefPtr<TestAsyncPanZoomController> apzc = new TestAsyncPanZoomController(
     0, mcc, tm, AsyncPanZoomController::USE_GESTURE_DETECTOR);
@@ -615,11 +635,16 @@ TEST(AsyncPanZoomController, MediumPress) {
   apzc->NotifyLayersUpdated(TestFrameMetrics(), true);
   apzc->UpdateZoomConstraints(ZoomConstraints(false, CSSToScreenScale(1.0), CSSToScreenScale(1.0)));
 
-  EXPECT_CALL(*mcc, HandleSingleTap(CSSIntPoint(10, 10), 0, apzc->GetGuid())).Times(1);
-
   int time = 0;
   nsEventStatus status = ApzcTap(apzc, 10, 10, time, 400);
   EXPECT_EQ(nsEventStatus_eIgnore, status);
+
+  // This verifies that the single tap notification is sent after the
+  // touchdown is fully processed. The ordering here is important.
+  mcc->CheckHasDelayedTask();
+
+  EXPECT_CALL(*mcc, HandleSingleTap(CSSIntPoint(10, 10), 0, apzc->GetGuid())).Times(1);
+  mcc->RunDelayedTask();
 
   apzc->Destroy();
 }
@@ -639,13 +664,11 @@ TEST(AsyncPanZoomController, LongPress) {
   nsEventStatus status = ApzcDown(apzc, 10, 10, time);
   EXPECT_EQ(nsEventStatus_eConsumeNoDefault, status);
 
-  Task* t = mcc->GetDelayedTask();
-
-  EXPECT_TRUE(nullptr != t);
+  mcc->CheckHasDelayedTask();
   EXPECT_CALL(*mcc, HandleLongTap(CSSIntPoint(10, 10), 0, apzc->GetGuid())).Times(1);
 
   // Manually invoke the longpress while the touch is currently down.
-  t->Run();
+  mcc->RunDelayedTask();
 
   time += 1000;
 
