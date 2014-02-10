@@ -158,7 +158,7 @@ TextureClientD3D11::~TextureClientD3D11()
   if (mDrawTarget) {
     MOZ_ASSERT(!mIsLocked);
     MOZ_ASSERT(mTexture);
-    MOZ_ASSERT(mDrawTarget->refcount() == 1);
+    MOZ_ASSERT(mDrawTarget->refCount() == 1);
     LockD3DTexture(mTexture.get());
     mDrawTarget = nullptr;
     UnlockD3DTexture(mTexture.get());
