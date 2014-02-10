@@ -89,8 +89,11 @@ function run_test() {
     let uri = Services.io.newFileURI(file).spec;
     do_check_eq(uri, OS.Path.toFileURI(path));
 
-    // keep the resulting URI to try the reverse
-    uris.push(uri)
+    // keep the resulting URI to try the reverse, except for "C:\" for which the
+    // behavior of nsIFileURL and OS.File is inconsistent
+    if (path != "C:\\") {
+      uris.push(uri);
+    }
   }
 
   for (let uri of uris) {

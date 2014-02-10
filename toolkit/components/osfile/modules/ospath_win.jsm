@@ -142,7 +142,6 @@ let join = function(...path) {
   let absolute = false;
   for each(let subpath in path) {
     let drive = this.winGetDrive(subpath);
-    let abs   = this.winIsAbsolute(subpath);
     if (drive) {
       root = drive;
       let component = trimBackslashes(subpath.slice(drive.length));
@@ -151,8 +150,8 @@ let join = function(...path) {
       } else {
         paths = [];
       }
-      absolute = abs;
-    } else if (abs) {
+      absolute = true;
+    } else if (this.winIsAbsolute(subpath)) {
       paths = [trimBackslashes(subpath)];
       absolute = true;
     } else {
@@ -259,7 +258,7 @@ let normalize = function(path) {
 
   // Put everything back together
   let result = stack.join("\\");
-  if (absolute) {
+  if (absolute || root) {
     result = "\\" + result;
   }
   if (root) {
