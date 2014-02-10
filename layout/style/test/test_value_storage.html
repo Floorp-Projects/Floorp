@@ -105,6 +105,7 @@ var gPrereqDeclaration =
 
 function test_property(property)
 {
+  ok(SpecialPowers.getBoolPref("layout.css.variables.enabled"), "pref not set #2");
   var info = gCSSProperties[property];
 
   var test_computed = !("backend_only" in info);
@@ -286,24 +287,30 @@ function test_property(property)
 
 }
 
-// To avoid triggering the slow script dialog, we have to test one
-// property at a time.
-SimpleTest.waitForExplicitFinish();
-SimpleTest.requestLongerTimeout(2);
-var props = [];
-for (var prop in gCSSProperties)
-  props.push(prop);
-props = props.reverse();
-function do_one() {
-  if (props.length == 0) {
-    SimpleTest.finish();
-    return;
+function runTest() {
+  // To avoid triggering the slow script dialog, we have to test one
+  // property at a time.
+  ok(SpecialPowers.getBoolPref("layout.css.variables.enabled"), "pref not set #1");
+  var props = [];
+  for (var prop in gCSSProperties)
+    props.push(prop);
+  props = props.reverse();
+  function do_one() {
+    if (props.length == 0) {
+      SimpleTest.finish();
+      return;
+    }
+    test_property(props.pop());
+    SimpleTest.executeSoon(do_one);
   }
-  test_property(props.pop());
   SimpleTest.executeSoon(do_one);
 }
-SimpleTest.executeSoon(do_one);
 
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestLongerTimeout(2);
+
+SpecialPowers.pushPrefEnv({ set: [["layout.css.variables.enabled", true]] },
+                          runTest);
 </script>
 </pre>
 </body>

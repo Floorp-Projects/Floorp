@@ -166,6 +166,10 @@ ifdef NSS_DISABLE_DBM
 DEFINES += -DNSS_DISABLE_DBM
 endif
 
+ifdef NSS_PKIX_NO_LDAP
+DEFINES += -DNSS_PKIX_NO_LDAP
+endif
+
 # Avoid building object leak test code for optimized library
 ifndef BUILD_OPT
 ifdef PKIX_OBJECT_LEAK_TEST

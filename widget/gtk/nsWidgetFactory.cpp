@@ -248,14 +248,14 @@ static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
     { &kNS_WINDOW_CID, false, nullptr, nsWindowConstructor },
     { &kNS_CHILD_CID, false, nullptr, nsChildWindowConstructor },
     { &kNS_APPSHELL_CID, false, nullptr, nsAppShellConstructor },
-    { &kNS_COLORPICKER_CID, false, nullptr, nsColorPickerConstructor },
-    { &kNS_FILEPICKER_CID, false, nullptr, nsFilePickerConstructor },
-    { &kNS_SOUND_CID, false, nullptr, nsSoundConstructor },
+    { &kNS_COLORPICKER_CID, false, nullptr, nsColorPickerConstructor, Module::MAIN_PROCESS_ONLY },
+    { &kNS_FILEPICKER_CID, false, nullptr, nsFilePickerConstructor, Module::MAIN_PROCESS_ONLY },
+    { &kNS_SOUND_CID, false, nullptr, nsSoundConstructor, Module::MAIN_PROCESS_ONLY },
     { &kNS_TRANSFERABLE_CID, false, nullptr, nsTransferableConstructor },
 #ifdef MOZ_X11
-    { &kNS_CLIPBOARD_CID, false, nullptr, nsClipboardConstructor },
+    { &kNS_CLIPBOARD_CID, false, nullptr, nsClipboardConstructor, Module::MAIN_PROCESS_ONLY },
     { &kNS_CLIPBOARDHELPER_CID, false, nullptr, nsClipboardHelperConstructor },
-    { &kNS_DRAGSERVICE_CID, false, nullptr, nsDragServiceConstructor },
+    { &kNS_DRAGSERVICE_CID, false, nullptr, nsDragServiceConstructor, Module::MAIN_PROCESS_ONLY },
 #endif
     { &kNS_HTMLFORMATCONVERTER_CID, false, nullptr, nsHTMLFormatConverterConstructor },
     { &kNS_BIDIKEYBOARD_CID, false, nullptr, nsBidiKeyboardConstructor },
@@ -266,11 +266,15 @@ static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
     { &kNS_THEMERENDERER_CID, false, nullptr, nsNativeThemeGTKConstructor },
 #ifdef NS_PRINTING
     { &kNS_PRINTSETTINGSSERVICE_CID, false, nullptr, nsPrintOptionsGTKConstructor },
-    { &kNS_PRINTER_ENUMERATOR_CID, false, nullptr, nsPrinterEnumeratorGTKConstructor },
-    { &kNS_PRINTSESSION_CID, false, nullptr, nsPrintSessionConstructor },
-    { &kNS_DEVICE_CONTEXT_SPEC_CID, false, nullptr, nsDeviceContextSpecGTKConstructor },
-    { &kNS_PRINTDIALOGSERVICE_CID, false, nullptr, nsPrintDialogServiceGTKConstructor },
-#endif 
+    { &kNS_PRINTER_ENUMERATOR_CID, false, nullptr, nsPrinterEnumeratorGTKConstructor,
+      Module::MAIN_PROCESS_ONLY },
+    { &kNS_PRINTSESSION_CID, false, nullptr, nsPrintSessionConstructor,
+      Module::MAIN_PROCESS_ONLY },
+    { &kNS_DEVICE_CONTEXT_SPEC_CID, false, nullptr, nsDeviceContextSpecGTKConstructor,
+      Module::MAIN_PROCESS_ONLY },
+    { &kNS_PRINTDIALOGSERVICE_CID, false, nullptr, nsPrintDialogServiceGTKConstructor,
+      Module::MAIN_PROCESS_ONLY },
+#endif
     { &kNS_IMAGE_TO_PIXBUF_CID, false, nullptr, nsImageToPixbufConstructor },
 #if defined(MOZ_X11)
     { &kNS_IDLE_SERVICE_CID, false, nullptr, nsIdleServiceGTKConstructor },
@@ -283,14 +287,14 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
     { "@mozilla.org/widget/window/gtk;1", &kNS_WINDOW_CID },
     { "@mozilla.org/widgets/child_window/gtk;1", &kNS_CHILD_CID },
     { "@mozilla.org/widget/appshell/gtk;1", &kNS_APPSHELL_CID },
-    { "@mozilla.org/colorpicker;1", &kNS_COLORPICKER_CID },
-    { "@mozilla.org/filepicker;1", &kNS_FILEPICKER_CID },
-    { "@mozilla.org/sound;1", &kNS_SOUND_CID },
+    { "@mozilla.org/colorpicker;1", &kNS_COLORPICKER_CID, Module::MAIN_PROCESS_ONLY },
+    { "@mozilla.org/filepicker;1", &kNS_FILEPICKER_CID, Module::MAIN_PROCESS_ONLY },
+    { "@mozilla.org/sound;1", &kNS_SOUND_CID, Module::MAIN_PROCESS_ONLY },
     { "@mozilla.org/widget/transferable;1", &kNS_TRANSFERABLE_CID },
 #ifdef MOZ_X11
-    { "@mozilla.org/widget/clipboard;1", &kNS_CLIPBOARD_CID },
+    { "@mozilla.org/widget/clipboard;1", &kNS_CLIPBOARD_CID, Module::MAIN_PROCESS_ONLY },
     { "@mozilla.org/widget/clipboardhelper;1", &kNS_CLIPBOARDHELPER_CID },
-    { "@mozilla.org/widget/dragservice;1", &kNS_DRAGSERVICE_CID },
+    { "@mozilla.org/widget/dragservice;1", &kNS_DRAGSERVICE_CID, Module::MAIN_PROCESS_ONLY },
 #endif
     { "@mozilla.org/widget/htmlformatconverter;1", &kNS_HTMLFORMATCONVERTER_CID },
     { "@mozilla.org/widget/bidikeyboard;1", &kNS_BIDIKEYBOARD_CID },
@@ -301,11 +305,15 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
     { "@mozilla.org/chrome/chrome-native-theme;1", &kNS_THEMERENDERER_CID },
 #ifdef NS_PRINTING
     { "@mozilla.org/gfx/printsettings-service;1", &kNS_PRINTSETTINGSSERVICE_CID },
-    { "@mozilla.org/gfx/printerenumerator;1", &kNS_PRINTER_ENUMERATOR_CID },
-    { "@mozilla.org/gfx/printsession;1", &kNS_PRINTSESSION_CID },
-    { "@mozilla.org/gfx/devicecontextspec;1", &kNS_DEVICE_CONTEXT_SPEC_CID },
-    { NS_PRINTDIALOGSERVICE_CONTRACTID, &kNS_PRINTDIALOGSERVICE_CID },
-#endif 
+    { "@mozilla.org/gfx/printerenumerator;1", &kNS_PRINTER_ENUMERATOR_CID,
+      Module::MAIN_PROCESS_ONLY },
+    { "@mozilla.org/gfx/printsession;1", &kNS_PRINTSESSION_CID,
+      Module::MAIN_PROCESS_ONLY },
+    { "@mozilla.org/gfx/devicecontextspec;1", &kNS_DEVICE_CONTEXT_SPEC_CID,
+      Module::MAIN_PROCESS_ONLY },
+    { NS_PRINTDIALOGSERVICE_CONTRACTID, &kNS_PRINTDIALOGSERVICE_CID,
+      Module::MAIN_PROCESS_ONLY },
+#endif
     { "@mozilla.org/widget/image-to-gdk-pixbuf;1", &kNS_IMAGE_TO_PIXBUF_CID },
 #if defined(MOZ_X11)
     { "@mozilla.org/widget/idleservice;1", &kNS_IDLE_SERVICE_CID },

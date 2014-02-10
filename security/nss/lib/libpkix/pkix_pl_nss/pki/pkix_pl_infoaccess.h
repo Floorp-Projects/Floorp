@@ -32,6 +32,7 @@ pkix_pl_InfoAccess_CreateList(
         PKIX_List **pAiaList, /* of PKIX_PL_InfoAccess */
         void *plContext);
 
+#ifndef NSS_PKIX_NO_LDAP
 PKIX_Error *
 pkix_pl_InfoAccess_ParseLocation(
         PKIX_PL_GeneralName *generalName,
@@ -39,6 +40,7 @@ pkix_pl_InfoAccess_ParseLocation(
         LDAPRequestParams *request,
         char **pDomainName,
         void *plContext);
+#endif /* !NSS_PKIX_NO_LDAP */
 
 #ifdef __cplusplus
 }

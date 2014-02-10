@@ -122,7 +122,7 @@ protected:
     CheckedUint32 mGeneration;
 
     // post-link data
-    nsTArray<bool> mAttribsInUse;
+    FallibleTArray<bool> mAttribsInUse;
     nsAutoPtr<CStringMap> mIdentifierMap, mIdentifierReverseMap;
     nsAutoPtr<CStringToUniformInfoMap> mUniformInfoMap;
     int mAttribMaxNameLength;

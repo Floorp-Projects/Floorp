@@ -429,12 +429,34 @@ nsComponentManagerImpl::RegisterModule(const mozilla::Module* aModule,
     }
 }
 
+static bool
+ProcessSelectorMatches(Module::ProcessSelector selector)
+{
+    if (selector == Module::ANY_PROCESS) {
+        return true;
+    }
+
+    GeckoProcessType type = XRE_GetProcessType();
+    switch (selector) {
+      case Module::MAIN_PROCESS_ONLY:
+        return type == GeckoProcessType_Default;
+      case Module::CONTENT_PROCESS_ONLY:
+        return type == GeckoProcessType_Content;
+      default:
+        MOZ_CRASH("invalid process selector");
+    }
+}
+
 void
 nsComponentManagerImpl::RegisterCIDEntryLocked(
     const mozilla::Module::CIDEntry* aEntry,
     KnownModule* aModule)
 {
     mLock.AssertCurrentThreadOwns();
+
+    if (!ProcessSelectorMatches(aEntry->processSelector)) {
+        return;
+    }
 
     nsFactoryEntry* f = mFactories.Get(*aEntry->cid);
     if (f) {
@@ -465,6 +487,10 @@ nsComponentManagerImpl::RegisterContractIDLocked(
     const mozilla::Module::ContractIDEntry* aEntry)
 {
     mLock.AssertCurrentThreadOwns();
+
+    if (!ProcessSelectorMatches(aEntry->processSelector)) {
+        return;
+    }
 
     nsFactoryEntry* f = mFactories.Get(*aEntry->cid);
     if (!f) {

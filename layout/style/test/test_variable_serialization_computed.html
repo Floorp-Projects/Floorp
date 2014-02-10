@@ -4,7 +4,7 @@
 <script src="/tests/SimpleTest/SimpleTest.js"></script>
 <link rel="stylesheet" href="/tests/SimpleTest/test.css" type="text/css">
 
-<div style="var-z:an-inherited-value">
+<div>
   <span></span>
 </div>
 
@@ -52,14 +52,25 @@ var values = [
   ["var-a: url(\"http://example.org/\\", "var-a", " url(\"http://example.org/\")"]
 ];
 
-var span = document.querySelector("span");
+function runTest() {
+  var div = document.querySelector("div");
+  var span = document.querySelector("span");
 
-values.forEach(function(entry, i) {
-  var declaration = entry[0];
-  var property = entry[1];
-  var expected = entry[2];
-  span.setAttribute("style", declaration);
-  var cs = getComputedStyle(span, "");
-  is(cs.getPropertyValue(property), expected, "subtest #" + i);
-});
+  div.setAttribute("style", "var-z:an-inherited-value");
+
+  values.forEach(function(entry, i) {
+    var declaration = entry[0];
+    var property = entry[1];
+    var expected = entry[2];
+    span.setAttribute("style", declaration);
+    var cs = getComputedStyle(span, "");
+    is(cs.getPropertyValue(property), expected, "subtest #" + i);
+  });
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({ set: [["layout.css.variables.enabled", true]] },
+                          runTest);
 </script>

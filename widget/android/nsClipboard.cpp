@@ -43,14 +43,7 @@ nsClipboard::SetData(nsITransferable *aTransferable,
   nsAutoString buffer;
   supportsString->GetData(buffer);
 
-  if (XRE_GetProcessType() == GeckoProcessType_Default) {
-   Clipboard::SetClipboardText(buffer);
-  } else {
-    bool isPrivateData = false;
-    aTransferable->GetIsPrivateData(&isPrivateData);
-    ContentChild::GetSingleton()->SendSetClipboardText(buffer, isPrivateData,
-                                                       aWhichClipboard);
-  }
+  Clipboard::SetClipboardText(buffer);
 
   return NS_OK;
 }
@@ -62,14 +55,10 @@ nsClipboard::GetData(nsITransferable *aTransferable, int32_t aWhichClipboard)
     return NS_ERROR_NOT_IMPLEMENTED;
 
   nsAutoString buffer;
-  if (XRE_GetProcessType() == GeckoProcessType_Default) {
-    if (!AndroidBridge::Bridge())
-      return NS_ERROR_NOT_IMPLEMENTED;
-    if (!AndroidBridge::Bridge()->GetClipboardText(buffer))
-      return NS_ERROR_UNEXPECTED;
-  } else {
-    ContentChild::GetSingleton()->SendGetClipboardText(aWhichClipboard, &buffer);
-  }
+  if (!AndroidBridge::Bridge())
+    return NS_ERROR_NOT_IMPLEMENTED;
+  if (!AndroidBridge::Bridge()->GetClipboardText(buffer))
+    return NS_ERROR_UNEXPECTED;
 
   nsresult rv;
   nsCOMPtr<nsISupportsString> dataWrapper =
@@ -96,11 +85,7 @@ nsClipboard::EmptyClipboard(int32_t aWhichClipboard)
 {
   if (aWhichClipboard != kGlobalClipboard)
     return NS_ERROR_NOT_IMPLEMENTED;
-  if (XRE_GetProcessType() == GeckoProcessType_Default) {
-    Clipboard::ClearText();
-  } else {
-    ContentChild::GetSingleton()->SendEmptyClipboard();
-  }
+  Clipboard::ClearText();
 
   return NS_OK;
 }
@@ -113,11 +98,7 @@ nsClipboard::HasDataMatchingFlavors(const char **aFlavorList,
   *aHasText = false;
   if (aWhichClipboard != kGlobalClipboard)
     return NS_ERROR_NOT_IMPLEMENTED;
-  if (XRE_GetProcessType() == GeckoProcessType_Default) {
-    *aHasText = Clipboard::HasText();
-  } else {
-    ContentChild::GetSingleton()->SendClipboardHasText(aHasText);
-  }
+  *aHasText = Clipboard::HasText();
   return NS_OK;
 }
 
