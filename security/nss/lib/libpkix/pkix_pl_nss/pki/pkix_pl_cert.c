@@ -3135,6 +3135,7 @@ PKIX_Error *
 PKIX_PL_Cert_CheckNameConstraints(
         PKIX_PL_Cert *cert,
         PKIX_PL_CertNameConstraints *nameConstraints,
+        PKIX_Boolean treatCommonNameAsDNSName,
         void *plContext)
 {
         PKIX_Boolean checkPass = PKIX_TRUE;
@@ -3151,11 +3152,14 @@ PKIX_PL_Cert_CheckNameConstraints(
                         PKIX_ERROR(PKIX_OUTOFMEMORY);
                 }
 
-                /* This NSS call returns both Subject and  Subject Alt Names */
+                /* This NSS call returns Subject Alt Names. If
+                 * treatCommonNameAsDNSName is true, it also returns the
+                 * Subject Common Name
+                 */
                 PKIX_CERT_DEBUG
                     ("\t\tCalling CERT_GetConstrainedCertificateNames\n");
                 nssSubjectNames = CERT_GetConstrainedCertificateNames
-                        (cert->nssCert, arena, PR_TRUE);
+                        (cert->nssCert, arena, treatCommonNameAsDNSName);
 
                 PKIX_CHECK(pkix_pl_CertNameConstraints_CheckNameSpaceNssNames
                         (nssSubjectNames,
