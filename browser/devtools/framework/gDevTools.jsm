@@ -55,6 +55,11 @@ DevTools.prototype = {
    *                     A falsy value indicates that it cannot be hidden.
    * - icon: URL pointing to a graphic which will be used as the src for an
    *         16x16 img tag (string|required)
+   * - invertIconForLightTheme: The icon can automatically have an inversion
+   *         filter applied (default is false).  All builtin tools are true, but
+   *         addons may omit this to prevent unwanted changes to the `icon`
+   *         image. See browser/themes/shared/devtools/filters.svg#invert for
+   *         the filter being applied to the images (boolean|optional)
    * - url: URL pointing to a XUL/XHTML document containing the user interface
    *        (string|required)
    * - label: Localized name for the tool to be displayed to the user
