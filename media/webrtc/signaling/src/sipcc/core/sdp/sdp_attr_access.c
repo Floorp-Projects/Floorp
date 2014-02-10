@@ -12534,7 +12534,7 @@ u16 sdp_attr_get_extmap_id(void *sdp_ptr, u16 level,
     sdp_attr_t  *attr_p;
 
     if (sdp_verify_sdp_ptr(sdp_p) == FALSE) {
-        return (NULL);
+        return 0;
     }
 
     attr_p = sdp_find_attr(sdp_p, level, 0, SDP_ATTR_EXTMAP, inst_num);
