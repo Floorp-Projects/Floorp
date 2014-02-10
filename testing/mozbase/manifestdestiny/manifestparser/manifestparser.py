@@ -276,7 +276,7 @@ def parse(text, **values):
     :rtype: the final value of the expression.
     :raises: :py:exc::ParseError: will be raised if parsing fails.
     """
-    return ExpressionParser(text, values, strict=True).parse()
+    return ExpressionParser(text, values).parse()
 
 
 ### path normalization
