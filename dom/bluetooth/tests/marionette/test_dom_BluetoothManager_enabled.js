@@ -7,14 +7,21 @@
 MARIONETTE_TIMEOUT = 60000;
 MARIONETTE_HEAD_JS = 'head.js';
 
-let enabledEventReceived;
-function onEnabled() {
-  enabledEventReceived = true;
-}
+function waitEitherEnabledOrDisabled() {
+  let deferred = Promise.defer();
 
-let disabledEventReceived;
-function onDisabled() {
-  disabledEventReceived = true;
+  function onEnabledDisabled(aEvent) {
+    bluetoothManager.removeEventListener("enabled", onEnabledDisabled);
+    bluetoothManager.removeEventListener("disabled", onEnabledDisabled);
+
+    ok(true, "Got event " + aEvent.type);
+    deferred.resolve(aEvent.type === "enabled");
+  }
+
+  bluetoothManager.addEventListener("enabled", onEnabledDisabled);
+  bluetoothManager.addEventListener("disabled", onEnabledDisabled);
+
+  return deferred.promise;
 }
 
 function test(aEnabled) {
@@ -22,43 +29,34 @@ function test(aEnabled) {
 
   let deferred = Promise.defer();
 
-  enabledEventReceived = false;
-  disabledEventReceived = false;
+  Promise.all([setBluetoothEnabled(aEnabled),
+               waitEitherEnabledOrDisabled()])
+    .then(function(aResults) {
+      /* aResults is an array of two elements:
+       *   [ <result of setBluetoothEnabled>,
+       *     <result of waitEitherEnabledOrDisabled> ]
+       */
+      log("  Examine results " + JSON.stringify(aResults));
 
-  setBluetoothEnabled(aEnabled).then(function() {
-    log("  Settings set. Waiting 3 seconds and examine results.");
-
-    window.setTimeout(function() {
       is(bluetoothManager.enabled, aEnabled, "bluetoothManager.enabled");
-      is(enabledEventReceived, aEnabled, "enabledEventReceived");
-      is(disabledEventReceived, !aEnabled, "disabledEventReceived");
+      is(aResults[1], aEnabled, "'enabled' event received");
 
-      if (bluetoothManager.enabled === aEnabled &&
-          enabledEventReceived === aEnabled &&
-          disabledEventReceived === !aEnabled) {
+      if (bluetoothManager.enabled === aEnabled && aResults[1] === aEnabled) {
         deferred.resolve();
       } else {
         deferred.reject();
       }
-    }, 3000);
-  });
+    });
 
   return deferred.promise;
 }
 
 startBluetoothTestBase(["settings-read", "settings-write"],
                        function testCaseMain() {
-  bluetoothManager.addEventListener("enabled", onEnabled);
-  bluetoothManager.addEventListener("disabled", onDisabled);
-
   return getBluetoothEnabled()
     .then(function(aEnabled) {
       log("Original 'bluetooth.enabled' is " + aEnabled);
       // Set to !aEnabled and reset back to aEnabled.
       return test(!aEnabled).then(test.bind(null, aEnabled));
-    })
-    .then(function() {
-      bluetoothManager.removeEventListener("enabled", onEnabled);
-      bluetoothManager.removeEventListener("disabled", onDisabled);
     });
 });

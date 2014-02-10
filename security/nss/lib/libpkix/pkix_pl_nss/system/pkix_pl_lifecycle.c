@@ -204,9 +204,11 @@ PKIX_PL_Initialize(
         pkix_ForwardBuilderState_RegisterSelf(plContext);
         pkix_SignatureCheckerState_RegisterSelf(plContext);
         pkix_NameConstraintsCheckerState_RegisterSelf(plContext);
+#ifndef NSS_PKIX_NO_LDAP
         pkix_pl_LdapRequest_RegisterSelf(plContext);
         pkix_pl_LdapResponse_RegisterSelf(plContext);
         pkix_pl_LdapDefaultClient_RegisterSelf(plContext);
+#endif
         pkix_pl_Socket_RegisterSelf(plContext);
 
         pkix_ResourceLimits_RegisterSelf(plContext); /* 51-59 */
