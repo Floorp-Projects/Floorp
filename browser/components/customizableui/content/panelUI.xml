@@ -289,6 +289,12 @@
               break;
             case "popupshowing":
               this.setAttribute("panelopen", "true");
+              // Bug 941196 - The panel can get taller when opening a subview. Disabling
+              // autoPositioning means that the panel won't jump around if an opened
+              // subview causes the panel to exceed the dimensions of the screen in the
+              // direction that the panel originally opened in. This property resets
+              // every time the popup closes, which is why we have to set it each time.
+              this._panel.autoPosition = false;
               this._syncContainerWithMainView();
               break;
             case "popupshown":
