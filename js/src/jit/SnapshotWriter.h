@@ -40,24 +40,8 @@ class SnapshotWriter
 #endif
     void endFrame();
 
-    void addSlot(const FloatRegister &reg);
-    void addSlot(JSValueType type, const Register &reg);
-    void addSlot(JSValueType type, int32_t stackIndex);
-    void addUndefinedSlot();
-    void addNullSlot();
-    void addInt32Slot(int32_t value);
-    void addFloat32Slot(const FloatRegister &reg);
-    void addFloat32Slot(int32_t stackIndex);
-    void addConstantPoolSlot(uint32_t index);
-#if defined(JS_NUNBOX32)
-    void addSlot(const Register &type, const Register &payload);
-    void addSlot(const Register &type, int32_t payloadStackIndex);
-    void addSlot(int32_t typeStackIndex, const Register &payload);
-    void addSlot(int32_t typeStackIndex, int32_t payloadStackIndex);
-#elif defined(JS_PUNBOX64)
-    void addSlot(const Register &value);
-    void addSlot(int32_t valueStackSlot);
-#endif
+    void addSlot(const Slot &slot);
+
     void endSnapshot();
 
     bool oom() const {

@@ -90,7 +90,7 @@ using namespace js::jit;
 //                  offset containing a Value.
 //
 //                  Otherwise, "reg" is a register containing a Value.
-//        
+//
 
 SnapshotReader::SnapshotReader(const uint8_t *buffer, const uint8_t *end)
   : reader_(buffer, end),
@@ -163,116 +163,13 @@ SnapshotReader::spewBailingFrom() const
 }
 #endif
 
-#ifdef JS_NUNBOX32
-static const uint32_t NUNBOX32_STACK_STACK = 0;
-static const uint32_t NUNBOX32_STACK_REG   = 1;
-static const uint32_t NUNBOX32_REG_STACK   = 2;
-static const uint32_t NUNBOX32_REG_REG     = 3;
-#endif
-
-static const uint32_t MAX_TYPE_FIELD_VALUE = 7;
-
-static const uint32_t MAX_REG_FIELD_VALUE         = 31;
-static const uint32_t ESC_REG_FIELD_INDEX         = 31;
-static const uint32_t ESC_REG_FIELD_CONST         = 30;
-static const uint32_t ESC_REG_FIELD_FLOAT32_STACK = 29;
-static const uint32_t ESC_REG_FIELD_FLOAT32_REG   = 28;
-static const uint32_t MIN_REG_FIELD_ESC           = 28;
-
-SnapshotReader::Slot
+Slot
 SnapshotReader::readSlot()
 {
     JS_ASSERT(slotsRead_ < slotCount_);
     IonSpew(IonSpew_Snapshots, "Reading slot %u", slotsRead_);
     slotsRead_++;
-
-    uint8_t b = reader_.readByte();
-
-    JSValueType type = JSValueType(b & 0x7);
-    uint32_t code = b >> 3;
-
-    switch (type) {
-      case JSVAL_TYPE_DOUBLE:
-        if (code < MIN_REG_FIELD_ESC)
-            return Slot(FloatRegister::FromCode(code));
-        JS_ASSERT(code == ESC_REG_FIELD_INDEX);
-        return Slot(TYPED_STACK, type, Location::From(reader_.readSigned()));
-
-      case JSVAL_TYPE_INT32:
-      case JSVAL_TYPE_STRING:
-      case JSVAL_TYPE_OBJECT:
-      case JSVAL_TYPE_BOOLEAN:
-        if (code < MIN_REG_FIELD_ESC)
-            return Slot(TYPED_REG, type, Location::From(Register::FromCode(code)));
-        JS_ASSERT(code == ESC_REG_FIELD_INDEX);
-        return Slot(TYPED_STACK, type, Location::From(reader_.readSigned()));
-
-      case JSVAL_TYPE_NULL:
-        if (code == ESC_REG_FIELD_CONST)
-            return Slot(JS_NULL);
-        if (code == ESC_REG_FIELD_INDEX)
-            return Slot(JS_INT32, reader_.readSigned());
-        if (code == ESC_REG_FIELD_FLOAT32_REG)
-            return Slot(FLOAT32_REG, FloatRegister::FromCode(reader_.readUnsigned()));
-        if (code == ESC_REG_FIELD_FLOAT32_STACK)
-            return Slot(FLOAT32_STACK, Location::From(reader_.readSigned()));
-        return Slot(JS_INT32, code);
-
-      case JSVAL_TYPE_UNDEFINED:
-        if (code == ESC_REG_FIELD_CONST)
-            return Slot(JS_UNDEFINED);
-        if (code == ESC_REG_FIELD_INDEX)
-            return Slot(CONSTANT, reader_.readUnsigned());
-        return Slot(CONSTANT, code);
-
-      default:
-      {
-        JS_ASSERT(type == JSVAL_TYPE_MAGIC);
-
-        if (code == ESC_REG_FIELD_CONST) {
-            uint8_t reg2 = reader_.readUnsigned();
-            Location loc;
-            if (reg2 != ESC_REG_FIELD_INDEX)
-                loc = Location::From(Register::FromCode(reg2));
-            else
-                loc = Location::From(reader_.readSigned());
-            return Slot(TYPED_REG, type, loc);
-        }
-
-        Slot slot(UNTYPED);
-#ifdef JS_NUNBOX32
-        switch (code) {
-          case NUNBOX32_STACK_STACK:
-            slot.unknown_type_.type = Location::From(reader_.readSigned());
-            slot.unknown_type_.payload = Location::From(reader_.readSigned());
-            return slot;
-          case NUNBOX32_STACK_REG:
-            slot.unknown_type_.type = Location::From(reader_.readSigned());
-            slot.unknown_type_.payload = Location::From(Register::FromCode(reader_.readByte()));
-            return slot;
-          case NUNBOX32_REG_STACK:
-            slot.unknown_type_.type = Location::From(Register::FromCode(reader_.readByte()));
-            slot.unknown_type_.payload = Location::From(reader_.readSigned());
-            return slot;
-          default:
-            JS_ASSERT(code == NUNBOX32_REG_REG);
-            slot.unknown_type_.type = Location::From(Register::FromCode(reader_.readByte()));
-            slot.unknown_type_.payload = Location::From(Register::FromCode(reader_.readByte()));
-            return slot;
-        }
-#elif JS_PUNBOX64
-        if (code < MIN_REG_FIELD_ESC) {
-            slot.unknown_type_.value = Location::From(Register::FromCode(code));
-        } else {
-            JS_ASSERT(code == ESC_REG_FIELD_INDEX);
-            slot.unknown_type_.value = Location::From(reader_.readSigned());
-        }
-        return slot;
-#endif
-      }
-    }
-
-    MOZ_ASSUME_UNREACHABLE("huh?");
+    return Slot::read(reader_);
 }
 
 SnapshotOffset
@@ -335,156 +232,27 @@ SnapshotWriter::trackFrame(uint32_t pcOpcode, uint32_t mirOpcode, uint32_t mirId
 #endif
 
 void
+SnapshotWriter::addSlot(const Slot &slot)
+{
+    if (IonSpewEnabled(IonSpew_Snapshots)) {
+        IonSpewHeader(IonSpew_Snapshots);
+        fprintf(IonSpewFile, "    slot %u: ", slotsWritten_);
+        slot.dump(IonSpewFile);
+        fprintf(IonSpewFile, "\n");
+    }
+
+    slotsWritten_++;
+    JS_ASSERT(slotsWritten_ <= nslots_);
+    slot.write(writer_);
+}
+
+void
 SnapshotWriter::endFrame()
 {
     // Check that the last write succeeded.
     JS_ASSERT(nslots_ == slotsWritten_);
     nslots_ = slotsWritten_ = 0;
     framesWritten_++;
-}
-
-void
-SnapshotWriter::writeSlotHeader(JSValueType type, uint32_t regCode)
-{
-    JS_ASSERT(uint32_t(type) <= MAX_TYPE_FIELD_VALUE);
-    JS_ASSERT(uint32_t(regCode) <= MAX_REG_FIELD_VALUE);
-    JS_STATIC_ASSERT(Registers::Total < MIN_REG_FIELD_ESC);
-
-    uint8_t byte = uint32_t(type) | (regCode << 3);
-    writer_.writeByte(byte);
-
-    slotsWritten_++;
-    JS_ASSERT(slotsWritten_ <= nslots_);
-}
-
-void
-SnapshotWriter::addSlot(const FloatRegister &reg)
-{
-    JS_ASSERT(uint32_t(reg.code()) < MIN_REG_FIELD_ESC);
-    IonSpew(IonSpew_Snapshots, "    slot %u: double (reg %s)", slotsWritten_, reg.name());
-
-    writeSlotHeader(JSVAL_TYPE_DOUBLE, reg.code());
-}
-
-static const char *
-ValTypeToString(JSValueType type)
-{
-    switch (type) {
-      case JSVAL_TYPE_INT32:
-        return "int32_t";
-      case JSVAL_TYPE_DOUBLE:
-        return "double";
-      case JSVAL_TYPE_STRING:
-        return "string";
-      case JSVAL_TYPE_BOOLEAN:
-        return "boolean";
-      case JSVAL_TYPE_OBJECT:
-        return "object";
-      case JSVAL_TYPE_MAGIC:
-        return "magic";
-      default:
-        MOZ_ASSUME_UNREACHABLE("no payload");
-    }
-}
-
-void
-SnapshotWriter::addSlot(JSValueType type, const Register &reg)
-{
-    IonSpew(IonSpew_Snapshots, "    slot %u: %s (%s)",
-            slotsWritten_, ValTypeToString(type), reg.name());
-
-    JS_ASSERT(type != JSVAL_TYPE_DOUBLE);
-    writeSlotHeader(type, reg.code());
-}
-
-void
-SnapshotWriter::addSlot(JSValueType type, int32_t stackIndex)
-{
-    IonSpew(IonSpew_Snapshots, "    slot %u: %s (stack %d)",
-            slotsWritten_, ValTypeToString(type), stackIndex);
-
-    writeSlotHeader(type, ESC_REG_FIELD_INDEX);
-    writer_.writeSigned(stackIndex);
-}
-
-#if defined(JS_NUNBOX32)
-void
-SnapshotWriter::addSlot(const Register &type, const Register &payload)
-{
-    IonSpew(IonSpew_Snapshots, "    slot %u: value (t=%s, d=%s)",
-            slotsWritten_, type.name(), payload.name());
-
-    writeSlotHeader(JSVAL_TYPE_MAGIC, NUNBOX32_REG_REG);
-    writer_.writeByte(type.code());
-    writer_.writeByte(payload.code());
-}
-
-void
-SnapshotWriter::addSlot(const Register &type, int32_t payloadStackIndex)
-{
-    IonSpew(IonSpew_Snapshots, "    slot %u: value (t=%s, d=%d)",
-            slotsWritten_, type.name(), payloadStackIndex);
-
-    writeSlotHeader(JSVAL_TYPE_MAGIC, NUNBOX32_REG_STACK);
-    writer_.writeByte(type.code());
-    writer_.writeSigned(payloadStackIndex);
-}
-
-void
-SnapshotWriter::addSlot(int32_t typeStackIndex, const Register &payload)
-{
-    IonSpew(IonSpew_Snapshots, "    slot %u: value (t=%d, d=%s)",
-            slotsWritten_, typeStackIndex, payload.name());
-
-    writeSlotHeader(JSVAL_TYPE_MAGIC, NUNBOX32_STACK_REG);
-    writer_.writeSigned(typeStackIndex);
-    writer_.writeByte(payload.code());
-}
-
-void
-SnapshotWriter::addSlot(int32_t typeStackIndex, int32_t payloadStackIndex)
-{
-    IonSpew(IonSpew_Snapshots, "    slot %u: value (t=%d, d=%d)",
-            slotsWritten_, typeStackIndex, payloadStackIndex);
-
-    writeSlotHeader(JSVAL_TYPE_MAGIC, NUNBOX32_STACK_STACK);
-    writer_.writeSigned(typeStackIndex);
-    writer_.writeSigned(payloadStackIndex);
-}
-
-#elif defined(JS_PUNBOX64)
-void
-SnapshotWriter::addSlot(const Register &value)
-{
-    IonSpew(IonSpew_Snapshots, "    slot %u: value (reg %s)", slotsWritten_, value.name());
-
-    writeSlotHeader(JSVAL_TYPE_MAGIC, value.code());
-}
-
-void
-SnapshotWriter::addSlot(int32_t valueStackSlot)
-{
-    IonSpew(IonSpew_Snapshots, "    slot %u: value (stack %d)", slotsWritten_, valueStackSlot);
-
-    writeSlotHeader(JSVAL_TYPE_MAGIC, ESC_REG_FIELD_INDEX);
-    writer_.writeSigned(valueStackSlot);
-}
-#endif
-
-void
-SnapshotWriter::addUndefinedSlot()
-{
-    IonSpew(IonSpew_Snapshots, "    slot %u: undefined", slotsWritten_);
-
-    writeSlotHeader(JSVAL_TYPE_UNDEFINED, ESC_REG_FIELD_CONST);
-}
-
-void
-SnapshotWriter::addNullSlot()
-{
-    IonSpew(IonSpew_Snapshots, "    slot %u: null", slotsWritten_);
-
-    writeSlotHeader(JSVAL_TYPE_NULL, ESC_REG_FIELD_CONST);
 }
 
 void
@@ -500,47 +268,3 @@ SnapshotWriter::endSnapshot()
     IonSpew(IonSpew_Snapshots, "ending snapshot total size: %u bytes (start %u)",
             uint32_t(writer_.length() - lastStart_), lastStart_);
 }
-
-void
-SnapshotWriter::addInt32Slot(int32_t value)
-{
-    IonSpew(IonSpew_Snapshots, "    slot %u: int32_t %d", slotsWritten_, value);
-
-    if (value >= 0 && uint32_t(value) < MIN_REG_FIELD_ESC) {
-        writeSlotHeader(JSVAL_TYPE_NULL, value);
-    } else {
-        writeSlotHeader(JSVAL_TYPE_NULL, ESC_REG_FIELD_INDEX);
-        writer_.writeSigned(value);
-    }
-}
-
-void
-SnapshotWriter::addFloat32Slot(const FloatRegister &reg)
-{
-    JS_ASSERT(uint32_t(reg.code()) < MIN_REG_FIELD_ESC);
-    IonSpew(IonSpew_Snapshots, "    slot %u: float32 (reg %s)", slotsWritten_, reg.name());
-    writeSlotHeader(JSVAL_TYPE_NULL, ESC_REG_FIELD_FLOAT32_REG);
-    writer_.writeUnsigned(reg.code());
-}
-
-void
-SnapshotWriter::addFloat32Slot(int32_t stackIndex)
-{
-    IonSpew(IonSpew_Snapshots, "    slot %u: float32 (stack %d)", slotsWritten_, stackIndex);
-    writeSlotHeader(JSVAL_TYPE_NULL, ESC_REG_FIELD_FLOAT32_STACK);
-    writer_.writeSigned(stackIndex);
-}
-
-void
-SnapshotWriter::addConstantPoolSlot(uint32_t index)
-{
-    IonSpew(IonSpew_Snapshots, "    slot %u: constant pool index %u", slotsWritten_, index);
-
-    if (index < MIN_REG_FIELD_ESC) {
-        writeSlotHeader(JSVAL_TYPE_UNDEFINED, index);
-    } else {
-        writeSlotHeader(JSVAL_TYPE_UNDEFINED, ESC_REG_FIELD_INDEX);
-        writer_.writeUnsigned(index);
-    }
-}
-
