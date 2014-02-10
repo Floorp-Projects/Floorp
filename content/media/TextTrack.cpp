@@ -148,7 +148,7 @@ TextTrack::RemoveRegion(const TextTrackRegion& aRegion, ErrorResult& aRv)
 void
 TextTrack::UpdateActiveCueList()
 {
-  if (mMode == TextTrackMode::Disabled || !mTextTrackList) {
+  if (!mTextTrackList) {
     return;
   }
 
@@ -188,15 +188,20 @@ TextTrack::UpdateActiveCueList()
 
 TextTrackCueList*
 TextTrack::GetActiveCues() {
-  UpdateActiveCueList();
-  return mActiveCueList;
+  if (mMode != TextTrackMode::Disabled) {
+    UpdateActiveCueList();
+    return mActiveCueList;
+  }
+  return nullptr;
 }
 
 void
 TextTrack::GetActiveCueArray(nsTArray<nsRefPtr<TextTrackCue> >& aCues)
 {
-  UpdateActiveCueList();
-  mActiveCueList->GetArray(aCues);
+  if (mMode != TextTrackMode::Disabled) {
+    UpdateActiveCueList();
+    mActiveCueList->GetArray(aCues);
+  }
 }
 
 uint16_t

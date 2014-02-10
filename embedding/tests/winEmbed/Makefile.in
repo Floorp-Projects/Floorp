@@ -27,8 +27,6 @@
 #
 # ***** END LICENSE BLOCK *****
 
-RESFILE		= winEmbed.res
-
 LIBS = \
 	$(DEPTH)/profile/dirserviceprovider/standalone/$(LIB_PREFIX)profdirserviceprovidersa_s.$(LIB_SUFFIX) \
 	$(XPCOM_STANDALONE_GLUE_LDOPTS) \

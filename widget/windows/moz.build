@@ -112,3 +112,5 @@ DEFINES['MOZ_UNICODE'] = True
 for var in ('MOZ_ENABLE_D3D9_LAYER', 'MOZ_ENABLE_D3D10_LAYER'):
     if CONFIG[var]:
         DEFINES[var] = True
+
+RESFILE = 'widget.res'

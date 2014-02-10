@@ -21,7 +21,7 @@
 #include "jit/ParallelFunctions.h"
 #include "jit/PcScriptCache.h"
 #include "jit/Safepoints.h"
-#include "jit/SnapshotReader.h"
+#include "jit/Snapshots.h"
 #include "jit/VMFunctions.h"
 #include "vm/ForkJoin.h"
 #include "vm/Interpreter.h"
@@ -1319,17 +1319,28 @@ SnapshotIterator::SnapshotIterator()
 }
 
 bool
-SnapshotIterator::hasLocation(const SnapshotReader::Location &loc)
+SnapshotIterator::hasRegister(const Location &loc)
 {
-    return loc.isStackSlot() || machine_.has(loc.reg());
+    return machine_.has(loc.reg());
 }
 
 uintptr_t
-SnapshotIterator::fromLocation(const SnapshotReader::Location &loc)
+SnapshotIterator::fromRegister(const Location &loc)
 {
-    if (loc.isStackSlot())
-        return ReadFrameSlot(fp_, loc.stackSlot());
     return machine_.read(loc.reg());
+}
+
+bool
+SnapshotIterator::hasStack(const Location &loc)
+{
+    JS_ASSERT(loc.isStackOffset());
+    return true;
+}
+
+uintptr_t
+SnapshotIterator::fromStack(const Location &loc)
+{
+    return ReadFrameSlot(fp_, loc.stackOffset());
 }
 
 static Value
@@ -1362,20 +1373,29 @@ FromTypedPayload(JSValueType type, uintptr_t payload)
 }
 
 bool
-SnapshotIterator::slotReadable(const Slot &slot)
+SnapshotIterator::allocationReadable(const RValueAllocation &alloc)
 {
-    switch (slot.mode()) {
-      case SnapshotReader::DOUBLE_REG:
-        return machine_.has(slot.floatReg());
+    switch (alloc.mode()) {
+      case RValueAllocation::DOUBLE_REG:
+        return machine_.has(alloc.floatReg());
 
-      case SnapshotReader::TYPED_REG:
-        return machine_.has(slot.reg());
+      case RValueAllocation::TYPED_REG:
+        return machine_.has(alloc.reg());
 
-      case SnapshotReader::UNTYPED:
 #if defined(JS_NUNBOX32)
-          return hasLocation(slot.type()) && hasLocation(slot.payload());
+      case RValueAllocation::UNTYPED_REG_REG:
+        return hasRegister(alloc.type()) && hasRegister(alloc.payload());
+      case RValueAllocation::UNTYPED_REG_STACK:
+        return hasRegister(alloc.type()) && hasStack(alloc.payload());
+      case RValueAllocation::UNTYPED_STACK_REG:
+        return hasStack(alloc.type()) && hasRegister(alloc.payload());
+      case RValueAllocation::UNTYPED_STACK_STACK:
+        return hasStack(alloc.type()) && hasStack(alloc.payload());
 #elif defined(JS_PUNBOX64)
-          return hasLocation(slot.value());
+      case RValueAllocation::UNTYPED_REG:
+        return hasRegister(alloc.value());
+      case RValueAllocation::UNTYPED_STACK:
+        return hasStack(alloc.value());
 #endif
 
       default:
@@ -1384,71 +1404,107 @@ SnapshotIterator::slotReadable(const Slot &slot)
 }
 
 Value
-SnapshotIterator::slotValue(const Slot &slot)
+SnapshotIterator::allocationValue(const RValueAllocation &alloc)
 {
-    switch (slot.mode()) {
-      case SnapshotReader::DOUBLE_REG:
-        return DoubleValue(machine_.read(slot.floatReg()));
+    switch (alloc.mode()) {
+      case RValueAllocation::DOUBLE_REG:
+        return DoubleValue(machine_.read(alloc.floatReg()));
 
-      case SnapshotReader::FLOAT32_REG:
+      case RValueAllocation::FLOAT32_REG:
       {
         union {
             double d;
             float f;
         } pun;
-        pun.d = machine_.read(slot.floatReg());
+        pun.d = machine_.read(alloc.floatReg());
         // The register contains the encoding of a float32. We just read
         // the bits without making any conversion.
         return Float32Value(pun.f);
       }
 
-      case SnapshotReader::FLOAT32_STACK:
-        return Float32Value(ReadFrameFloat32Slot(fp_, slot.stackSlot()));
+      case RValueAllocation::FLOAT32_STACK:
+        return Float32Value(ReadFrameFloat32Slot(fp_, alloc.stackOffset()));
 
-      case SnapshotReader::TYPED_REG:
-        return FromTypedPayload(slot.knownType(), machine_.read(slot.reg()));
+      case RValueAllocation::TYPED_REG:
+        return FromTypedPayload(alloc.knownType(), machine_.read(alloc.reg()));
 
-      case SnapshotReader::TYPED_STACK:
+      case RValueAllocation::TYPED_STACK:
       {
-        switch (slot.knownType()) {
+        switch (alloc.knownType()) {
           case JSVAL_TYPE_DOUBLE:
-            return DoubleValue(ReadFrameDoubleSlot(fp_, slot.stackSlot()));
+            return DoubleValue(ReadFrameDoubleSlot(fp_, alloc.stackOffset()));
           case JSVAL_TYPE_INT32:
-            return Int32Value(ReadFrameInt32Slot(fp_, slot.stackSlot()));
+            return Int32Value(ReadFrameInt32Slot(fp_, alloc.stackOffset()));
           case JSVAL_TYPE_BOOLEAN:
-            return BooleanValue(ReadFrameBooleanSlot(fp_, slot.stackSlot()));
+            return BooleanValue(ReadFrameBooleanSlot(fp_, alloc.stackOffset()));
           case JSVAL_TYPE_STRING:
-            return FromStringPayload(ReadFrameSlot(fp_, slot.stackSlot()));
+            return FromStringPayload(ReadFrameSlot(fp_, alloc.stackOffset()));
           case JSVAL_TYPE_OBJECT:
-            return FromObjectPayload(ReadFrameSlot(fp_, slot.stackSlot()));
+            return FromObjectPayload(ReadFrameSlot(fp_, alloc.stackOffset()));
           default:
             MOZ_ASSUME_UNREACHABLE("Unexpected type");
         }
       }
 
-      case SnapshotReader::UNTYPED:
-      {
-          jsval_layout layout;
 #if defined(JS_NUNBOX32)
-          layout.s.tag = (JSValueTag)fromLocation(slot.type());
-          layout.s.payload.word = fromLocation(slot.payload());
-#elif defined(JS_PUNBOX64)
-          layout.asBits = fromLocation(slot.value());
-#endif
-          return IMPL_TO_JSVAL(layout);
+      case RValueAllocation::UNTYPED_REG_REG:
+      {
+        jsval_layout layout;
+        layout.s.tag = (JSValueTag) fromRegister(alloc.type());
+        layout.s.payload.word = fromRegister(alloc.payload());
+        return IMPL_TO_JSVAL(layout);
       }
 
-      case SnapshotReader::JS_UNDEFINED:
+      case RValueAllocation::UNTYPED_REG_STACK:
+      {
+        jsval_layout layout;
+        layout.s.tag = (JSValueTag) fromRegister(alloc.type());
+        layout.s.payload.word = fromStack(alloc.payload());
+        return IMPL_TO_JSVAL(layout);
+      }
+
+      case RValueAllocation::UNTYPED_STACK_REG:
+      {
+        jsval_layout layout;
+        layout.s.tag = (JSValueTag) fromStack(alloc.type());
+        layout.s.payload.word = fromRegister(alloc.payload());
+        return IMPL_TO_JSVAL(layout);
+      }
+
+      case RValueAllocation::UNTYPED_STACK_STACK:
+      {
+        jsval_layout layout;
+        layout.s.tag = (JSValueTag) fromStack(alloc.type());
+        layout.s.payload.word = fromStack(alloc.payload());
+        return IMPL_TO_JSVAL(layout);
+      }
+#elif defined(JS_PUNBOX64)
+      case RValueAllocation::UNTYPED_REG:
+      {
+        jsval_layout layout;
+        layout.asBits = fromRegister(alloc.value());
+        return IMPL_TO_JSVAL(layout);
+      }
+
+      case RValueAllocation::UNTYPED_STACK:
+      {
+        jsval_layout layout;
+        layout.asBits = fromStack(alloc.value());
+        return IMPL_TO_JSVAL(layout);
+      }
+#endif
+
+      case RValueAllocation::JS_UNDEFINED:
         return UndefinedValue();
 
-      case SnapshotReader::JS_NULL:
+      case RValueAllocation::JS_NULL:
         return NullValue();
 
-      case SnapshotReader::JS_INT32:
-        return Int32Value(slot.int32Value());
+      case RValueAllocation::JS_INT32:
+        return Int32Value(alloc.int32Value());
 
-      case SnapshotReader::CONSTANT:
-        return ionScript_->getConstant(slot.constantIndex());
+      case RValueAllocation::CONSTANT:
+        return ionScript_->getConstant(alloc.constantIndex());
 
       default:
         MOZ_ASSUME_UNREACHABLE("huh?");
@@ -1539,14 +1595,14 @@ InlineFrameIteratorMaybeGC<allowGC>::findNextFrame()
         JS_ASSERT(numActualArgs_ != 0xbadbad);
 
         // Skip over non-argument slots, as well as |this|.
-        unsigned skipCount = (si_.slots() - 1) - numActualArgs_ - 1;
+        unsigned skipCount = (si_.allocations() - 1) - numActualArgs_ - 1;
         for (unsigned j = 0; j < skipCount; j++)
             si_.skip();
 
         Value funval = si_.read();
 
-        // Skip extra slots.
-        while (si_.moreSlots())
+        // Skip extra value allocations.
+        while (si_.moreAllocations())
             si_.skip();
 
         si_.nextFrame();
@@ -1665,9 +1721,9 @@ IonFrameIterator::numActualArgs() const
 }
 
 void
-SnapshotIterator::warnUnreadableSlot()
+SnapshotIterator::warnUnreadableAllocation()
 {
-    fprintf(stderr, "Warning! Tried to access unreadable IonMonkey slot (possible f.arguments).\n");
+    fprintf(stderr, "Warning! Tried to access unreadable value allocation (possible f.arguments).\n");
 }
 
 struct DumpOp {
@@ -1761,8 +1817,8 @@ InlineFrameIteratorMaybeGC<allowGC>::dump() const
     }
 
     SnapshotIterator si = snapshotIterator();
-    fprintf(stderr, "  slots: %u\n", si.slots() - 1);
-    for (unsigned i = 0; i < si.slots() - 1; i++) {
+    fprintf(stderr, "  slots: %u\n", si.allocations() - 1);
+    for (unsigned i = 0; i < si.allocations() - 1; i++) {
         if (isFunction) {
             if (i == 0)
                 fprintf(stderr, "  scope chain: ");

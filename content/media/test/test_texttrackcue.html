@@ -173,6 +173,15 @@ SpecialPowers.pushPrefEnv({"set": [["media.webvtt.enabled", true]]},
 
       is(cueList.length, 6, "Cue list length should be 6.");
 
+      video.currentTime = 2;
+      isnot(trackElement.track.activeCues, null);
+
+      trackElement.track.mode = "disabled";
+      is(trackElement.track.activeCues, null);
+
+      trackElement.track.mode = "showing";
+      video.currentTime = 0;
+
       // Test TextTrack::ActiveCues.
       var cueInfo = [
         { startTime: 0.51, endTime: 0.71, ids: ["Cue 01"] },

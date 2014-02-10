@@ -35,7 +35,6 @@ LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/base
 endif
 
 ifeq ($(OS_ARCH),OS2)
-RESFILE = xulrunos2.res
 RCFLAGS += -i $(topsrcdir)/widget/os2
 
 LOCAL_INCLUDES += -I$(topsrcdir)/widget/os2
