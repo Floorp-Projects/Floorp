@@ -2222,8 +2222,8 @@ JSObject::ReserveForTradeGuts(JSContext *cx, JSObject *aArg, JSObject *bArg,
      * other object.
      */
 
-    unsigned adynamic = dynamicSlotsCount(reserved.newafixed, b->slotSpan());
-    unsigned bdynamic = dynamicSlotsCount(reserved.newbfixed, a->slotSpan());
+    unsigned adynamic = dynamicSlotsCount(reserved.newafixed, b->slotSpan(), b->getClass());
+    unsigned bdynamic = dynamicSlotsCount(reserved.newbfixed, a->slotSpan(), a->getClass());
 
     if (adynamic) {
         reserved.newaslots = cx->pod_malloc<HeapSlot>(adynamic);
@@ -2654,8 +2654,8 @@ JSObject::updateSlotsForSpan(ThreadSafeContext *cx,
     JS_ASSERT(cx->isThreadLocal(obj));
     JS_ASSERT(oldSpan != newSpan);
 
-    size_t oldCount = dynamicSlotsCount(obj->numFixedSlots(), oldSpan);
-    size_t newCount = dynamicSlotsCount(obj->numFixedSlots(), newSpan);
+    size_t oldCount = dynamicSlotsCount(obj->numFixedSlots(), oldSpan, obj->getClass());
+    size_t newCount = dynamicSlotsCount(obj->numFixedSlots(), newSpan, obj->getClass());
 
     if (oldSpan < newSpan) {
         if (oldCount < newCount && !JSObject::growSlots(cx, obj, oldCount, newCount))
@@ -2748,7 +2748,7 @@ JSObject::growSlots(ThreadSafeContext *cx, HandleObject obj, uint32_t oldCount, 
 {
     JS_ASSERT(cx->isThreadLocal(obj));
     JS_ASSERT(newCount > oldCount);
-    JS_ASSERT(newCount >= SLOT_CAPACITY_MIN);
+    JS_ASSERT_IF(!obj->is<ArrayObject>(), newCount >= SLOT_CAPACITY_MIN);
 
     /*
      * Slot capacities are determined by the span of allocated objects. Due to
@@ -2834,7 +2834,7 @@ JSObject::shrinkSlots(ThreadSafeContext *cx, HandleObject obj, uint32_t oldCount
         return;
     }
 
-    JS_ASSERT(newCount >= SLOT_CAPACITY_MIN);
+    JS_ASSERT_IF(!obj->is<ArrayObject>(), newCount >= SLOT_CAPACITY_MIN);
 
     // Global slots may be read during off thread compilation, and updates to
     // their slot pointers need to be synchronized.
