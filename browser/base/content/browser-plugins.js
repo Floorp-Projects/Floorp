@@ -33,14 +33,9 @@ var gPluginHandler = {
     let fallbackType = null;
     let blocklistState = null;
 
-    if (pluginElement instanceof HTMLAppletElement) {
-      tagMimetype = "application/x-java-vm";
-    } else {
-      tagMimetype = pluginElement.actualType;
-
-      if (tagMimetype == "") {
-        tagMimetype = pluginElement.type;
-      }
+    tagMimetype = pluginElement.actualType;
+    if (tagMimetype == "") {
+      tagMimetype = pluginElement.type;
     }
 
     if (gPluginHandler.isKnownPlugin(pluginElement)) {

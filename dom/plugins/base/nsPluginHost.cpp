@@ -124,6 +124,7 @@ using mozilla::TimeStamp;
 
 static const char *kPrefWhitelist = "plugin.allowed_types";
 static const char *kPrefDisableFullPage = "plugin.disable_full_page_plugin_for_types";
+static const char *kPrefJavaMIME = "plugin.java.mime";
 
 // Version of cached plugin info
 // 0.01 first implementation
@@ -1555,8 +1556,12 @@ nsPluginHost::SiteHasData(nsIPluginTag* plugin, const nsACString& domain,
 
 bool nsPluginHost::IsJavaMIMEType(const char* aType)
 {
+  // The java mime pref may well not be one of these,
+  // e.g. application/x-java-test used in the test suite
+  nsAdoptingCString javaMIME = Preferences::GetCString(kPrefJavaMIME);
   return aType &&
-    ((0 == PL_strncasecmp(aType, "application/x-java-vm",
+    (javaMIME.EqualsIgnoreCase(aType) ||
+     (0 == PL_strncasecmp(aType, "application/x-java-vm",
                           sizeof("application/x-java-vm") - 1)) ||
      (0 == PL_strncasecmp(aType, "application/x-java-applet",
                           sizeof("application/x-java-applet") - 1)) ||
