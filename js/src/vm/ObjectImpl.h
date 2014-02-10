@@ -1149,7 +1149,11 @@ class ObjectImpl : public gc::BarrieredCell<ObjectImpl>
     bool slotInRange(uint32_t slot, SentinelAllowed sentinel = SENTINEL_NOT_ALLOWED) const;
 #endif
 
-    /* Minimum size for dynamically allocated slots. */
+    /*
+     * Minimum size for dynamically allocated slots in normal Objects.
+     * ArrayObjects don't use this limit and can have a lower slot capacity,
+     * since they normally don't have a lot of slots.
+     */
     static const uint32_t SLOT_CAPACITY_MIN = 8;
 
     HeapSlot *fixedSlots() const {
@@ -1239,8 +1243,9 @@ class ObjectImpl : public gc::BarrieredCell<ObjectImpl>
 
     /* Compute dynamicSlotsCount() for this object. */
     uint32_t numDynamicSlots() const {
-        return dynamicSlotsCount(numFixedSlots(), slotSpan());
+        return dynamicSlotsCount(numFixedSlots(), slotSpan(), getClass());
     }
+
 
     Shape *nativeLookup(ExclusiveContext *cx, jsid id);
     Shape *nativeLookup(ExclusiveContext *cx, PropertyId pid) {
@@ -1406,17 +1411,7 @@ class ObjectImpl : public gc::BarrieredCell<ObjectImpl>
      * capacity is not stored explicitly, and the allocated size of the slot
      * array is kept in sync with this count.
      */
-    static uint32_t dynamicSlotsCount(uint32_t nfixed, uint32_t span) {
-        if (span <= nfixed)
-            return 0;
-        span -= nfixed;
-        if (span <= SLOT_CAPACITY_MIN)
-            return SLOT_CAPACITY_MIN;
-
-        uint32_t slots = mozilla::RoundUpPow2(span);
-        MOZ_ASSERT(slots >= span);
-        return slots;
-    }
+    static uint32_t dynamicSlotsCount(uint32_t nfixed, uint32_t span, const Class *clasp);
 
     /* Memory usage functions. */
     size_t tenuredSizeOfThis() const {
