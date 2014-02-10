@@ -1371,11 +1371,16 @@ SnapshotIterator::slotReadable(const Slot &slot)
       case Slot::TYPED_REG:
         return machine_.has(slot.reg());
 
-      case Slot::UNTYPED:
 #if defined(JS_NUNBOX32)
-          return hasLocation(slot.type()) && hasLocation(slot.payload());
+      case Slot::UNTYPED_REG_REG:
+      case Slot::UNTYPED_REG_STACK:
+      case Slot::UNTYPED_STACK_REG:
+      case Slot::UNTYPED_STACK_STACK:
+        return hasLocation(slot.type()) && hasLocation(slot.payload());
 #elif defined(JS_PUNBOX64)
-          return hasLocation(slot.value());
+      case Slot::UNTYPED_REG:
+      case Slot::UNTYPED_STACK:
+        return hasLocation(slot.value());
 #endif
 
       default:
@@ -1426,17 +1431,26 @@ SnapshotIterator::slotValue(const Slot &slot)
         }
       }
 
-      case Slot::UNTYPED:
-      {
-          jsval_layout layout;
 #if defined(JS_NUNBOX32)
-          layout.s.tag = (JSValueTag)fromLocation(slot.type());
-          layout.s.payload.word = fromLocation(slot.payload());
-#elif defined(JS_PUNBOX64)
-          layout.asBits = fromLocation(slot.value());
-#endif
-          return IMPL_TO_JSVAL(layout);
+      case Slot::UNTYPED_REG_REG:
+      case Slot::UNTYPED_REG_STACK:
+      case Slot::UNTYPED_STACK_REG:
+      case Slot::UNTYPED_STACK_STACK:
+      {
+        jsval_layout layout;
+        layout.s.tag = (JSValueTag)fromLocation(slot.type());
+        layout.s.payload.word = fromLocation(slot.payload());
+        return IMPL_TO_JSVAL(layout);
       }
+#elif defined(JS_PUNBOX64)
+      case Slot::UNTYPED_REG:
+      case Slot::UNTYPED_STACK:
+      {
+        jsval_layout layout;
+        layout.asBits = fromLocation(slot.value());
+        return IMPL_TO_JSVAL(layout);
+      }
+#endif
 
       case Slot::JS_UNDEFINED:
         return UndefinedValue();
