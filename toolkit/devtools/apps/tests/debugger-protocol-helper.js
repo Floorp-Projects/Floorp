@@ -59,6 +59,12 @@ function startClient(transport, onDone) {
   gClient.addListener("appUninstall", function (aState, aType, aPacket) {
     sendAsyncMessage("uninstalled-event", { manifestURL: aType.manifestURL });
   });
+
+  addMessageListener("appActorRequest", request => {
+    webappActorRequest(request, response => {
+      sendAsyncMessage("appActorResponse", response);
+    });
+  });
 }
 
 function webappActorRequest(request, onResponse) {
