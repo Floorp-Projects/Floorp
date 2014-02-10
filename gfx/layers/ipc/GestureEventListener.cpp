@@ -280,6 +280,11 @@ nsEventStatus GestureEventListener::HandlePinchGestureEvent(const MultiTouchInpu
                                  aEvent.modifiers);
       touchEvent.mTouches.AppendElement(mTouches[0]);
       mAsyncPanZoomController->HandleInputEvent(touchEvent);
+
+      // The spoofed touch start will get back to GEL and make us enter the
+      // GESTURE_WAITING_SINGLE_TAP state, but this isn't a new touch, so there
+      // is no condition under which this touch should turn into any tap.
+      mState = GESTURE_NONE;
     }
 
     rv = nsEventStatus_eConsumeNoDefault;
