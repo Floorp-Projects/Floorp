@@ -530,6 +530,11 @@ function PCT_createOffer(peer, onSuccess) {
   });
 };
 
+PeerConnectionTest.prototype.setIdentityProvider =
+function(peer, provider, protocol, identity) {
+  peer.setIdentityProvider(provider, protocol, identity);
+};
+
 /**
  * Sets the local description for the specified peer connection instance
  * and automatically handles the failure case.
@@ -765,7 +770,7 @@ DataChannelTest.prototype = Object.create(PeerConnectionTest.prototype, {
           });
         } else {
           check_next_test();
-	}
+        }
       });
     }
   },
@@ -1208,6 +1213,10 @@ PeerConnectionWrapper.prototype = {
    */
   get iceConnectionState() {
     return this._pc.iceConnectionState;
+  },
+
+  setIdentityProvider: function(provider, protocol, identity) {
+      this._pc.setIdentityProvider(provider, protocol, identity);
   },
 
   /**
