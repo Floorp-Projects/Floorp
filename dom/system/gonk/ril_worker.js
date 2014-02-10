@@ -426,7 +426,7 @@ RilObject.prototype = {
     /**
      * One of the RADIO_STATE_* constants.
      */
-    this.radioState = GECKO_RADIOSTATE_UNAVAILABLE;
+    this.radioState = GECKO_RADIOSTATE_UNKNOWN;
 
     /**
      * True if we are on a CDMA phone.
@@ -1649,7 +1649,7 @@ RilObject.prototype = {
       this.sendChromeMessage(options);
     }).bind(this, options);
 
-    let isRadioOff = (this.radioState === GECKO_RADIOSTATE_OFF);
+    let isRadioOff = (this.radioState === GECKO_RADIOSTATE_DISABLED);
 
     if (options.isEmergency) {
       if (isRadioOff) {
@@ -2648,7 +2648,7 @@ RilObject.prototype = {
     }
 
     let _isRadioAvailable = (function() {
-      if (this.radioState !== GECKO_RADIOSTATE_READY) {
+      if (this.radioState !== GECKO_RADIOSTATE_ENABLED) {
         _sendMMIError(GECKO_ERROR_RADIO_NOT_AVAILABLE);
         return false;
       }
@@ -3488,7 +3488,7 @@ RilObject.prototype = {
           // Note: setUiccSubscription works abnormally when RADIO is OFF,
           // which causes SMS function broken in Flame.
           // See bug 1008557 for detailed info.
-          this.radioState === GECKO_RADIOSTATE_READY) {
+          this.radioState === GECKO_RADIOSTATE_ENABLED) {
         for (let i = 0; i < iccStatus.apps.length; i++) {
           this.setUiccSubscription({appIndex: i, enabled: true});
         }
@@ -6808,11 +6808,11 @@ RilObject.prototype[UNSOLICITED_RESPONSE_RADIO_STATE_CHANGED] = function UNSOLIC
   let radioState = this.context.Buf.readInt32();
   let newState;
   if (radioState == RADIO_STATE_UNAVAILABLE) {
-    newState = GECKO_RADIOSTATE_UNAVAILABLE;
+    newState = GECKO_RADIOSTATE_UNKNOWN;
   } else if (radioState == RADIO_STATE_OFF) {
-    newState = GECKO_RADIOSTATE_OFF;
+    newState = GECKO_RADIOSTATE_DISABLED;
   } else {
-    newState = GECKO_RADIOSTATE_READY;
+    newState = GECKO_RADIOSTATE_ENABLED;
   }
 
   if (DEBUG) {
@@ -6847,9 +6847,9 @@ RilObject.prototype[UNSOLICITED_RESPONSE_RADIO_STATE_CHANGED] = function UNSOLIC
     break;
   }
 
-  if ((this.radioState == GECKO_RADIOSTATE_UNAVAILABLE ||
-       this.radioState == GECKO_RADIOSTATE_OFF) &&
-       newState == GECKO_RADIOSTATE_READY) {
+  if ((this.radioState == GECKO_RADIOSTATE_UNKNOWN ||
+       this.radioState == GECKO_RADIOSTATE_DISABLED) &&
+       newState == GECKO_RADIOSTATE_ENABLED) {
     // The radio became available, let's get its info.
     if (!this._waitingRadioTech) {
       if (this._isCdma) {
@@ -7094,7 +7094,11 @@ RilObject.prototype[UNSOLICITED_CDMA_CALL_WAITING] = function UNSOLICITED_CDMA_C
                           waitingCall: call});
 };
 RilObject.prototype[UNSOLICITED_CDMA_OTA_PROVISION_STATUS] = function UNSOLICITED_CDMA_OTA_PROVISION_STATUS() {
-  let status = this.context.Buf.readInt32List()[0];
+  let status =
+    CDMA_OTA_PROVISION_STATUS_TO_GECKO[this.context.Buf.readInt32List()[0]];
+  if (!status) {
+    return;
+  }
   this.sendChromeMessage({rilMessageType: "otastatuschange",
                           status: status});
 };
@@ -14700,7 +14704,7 @@ ICCUtilsHelperObject.prototype = {
       return null;
     }
 
-    if (!iccInfoPriv.OPL) {
+    if (!this.isICCServiceAvailable("OPL")) {
       // When OPL is not present:
       // According to 3GPP TS 31.102 Sec. 4.2.58 and 3GPP TS 51.011 Sec. 10.3.41,
       // If EF_OPL is not present, the first record in this EF is used for the
