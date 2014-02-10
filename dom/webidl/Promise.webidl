@@ -43,8 +43,5 @@ interface Promise {
   static Promise all(sequence<any> iterable);
 
   [NewObject, Throws]
-  static Promise cast(optional any value);
-
-  [NewObject, Throws]
   static Promise race(sequence<any> iterable);
 };
