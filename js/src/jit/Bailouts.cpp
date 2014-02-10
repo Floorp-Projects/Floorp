@@ -12,7 +12,7 @@
 #include "jit/Ion.h"
 #include "jit/IonSpewer.h"
 #include "jit/JitCompartment.h"
-#include "jit/SnapshotReader.h"
+#include "jit/Snapshots.h"
 
 #include "jit/IonFrameIterator-inl.h"
 #include "vm/Stack-inl.h"

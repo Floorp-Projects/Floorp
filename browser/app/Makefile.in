@@ -82,7 +82,6 @@ endif
 endif
 
 ifeq ($(OS_ARCH),OS2)
-RESFILE=splashos2.res
 RCFLAGS += -DMOZ_PHOENIX
 RCFLAGS += -DFIREFOX_ICO='"$(DIST)/branding/firefox-os2.ico"' -DDOCUMENT_ICO='"$(DIST)/branding/document-os2.ico"'
 endif
