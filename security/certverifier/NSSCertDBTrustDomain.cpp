@@ -8,7 +8,7 @@
 
 #include <stdint.h>
 
-#include "insanity/ScopedPtr.h"
+#include "insanity/pkix.h"
 #include "certdb.h"
 #include "nss.h"
 #include "ocsp.h"
@@ -21,6 +21,10 @@
 
 using namespace insanity::pkix;
 
+#ifdef PR_LOGGING
+extern PRLogModuleInfo* gCertVerifierLog;
+#endif
+
 namespace mozilla { namespace psm {
 
 const char BUILTIN_ROOTS_MODULE_DEFAULT_NAME[] = "Builtin Roots Module";
@@ -30,6 +34,92 @@ namespace {
 inline void PORT_Free_string(char* str) { PORT_Free(str); }
 
 typedef ScopedPtr<SECMODModule, SECMOD_DestroyModule> ScopedSECMODModule;
+
+} // unnamed namespace
+
+NSSCertDBTrustDomain::NSSCertDBTrustDomain(SECTrustType certDBTrustType,
+                                           bool /*ocspDownloadEnabled*/,
+                                           bool /*ocspStrict*/,
+                                           void* pinArg)
+  : mCertDBTrustType(certDBTrustType)
+//  , mOCSPDownloadEnabled(ocspDownloadEnabled)
+//  , mOCSPStrict(ocspStrict)
+  , mPinArg(pinArg)
+{
+}
+
+SECStatus
+NSSCertDBTrustDomain::FindPotentialIssuers(
+  const SECItem* encodedIssuerName, PRTime time,
+  /*out*/ insanity::pkix::ScopedCERTCertList& results)
+{
+  // TODO: normalize encodedIssuerName
+  // TODO: NSS seems to be ambiguous between "no potential issuers found" and
+  // "there was an error trying to retrieve the potential issuers."
+  results = CERT_CreateSubjectCertList(nullptr, CERT_GetDefaultCertDB(),
+                                       encodedIssuerName, time, true);
+  if (!results) {
+    return SECFailure;
+  }
+
+  return SECSuccess;
+}
+
+SECStatus
+NSSCertDBTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
+                                   const CERTCertificate* candidateCert,
+                                   /*out*/ TrustLevel* trustLevel)
+{
+  PORT_Assert(candidateCert);
+  PORT_Assert(trustLevel);
+  if (!candidateCert || !trustLevel) {
+    PORT_SetError(SEC_ERROR_INVALID_ARGS);
+    return SECFailure;
+  }
+
+  // XXX: CERT_GetCertTrust seems to be abusing SECStatus as a boolean, where
+  // SECSuccess means that there is a trust record and SECFailure means there
+  // is not a trust record. I looked at NSS's internal uses of
+  // CERT_GetCertTrust, and all that code uses the result as a boolean meaning
+  // "We have a trust record."
+  CERTCertTrust trust;
+  if (CERT_GetCertTrust(candidateCert, &trust) == SECSuccess) {
+    PRUint32 flags = SEC_GET_TRUST_FLAGS(&trust, mCertDBTrustType);
+
+    // For DISTRUST, we use the CERTDB_TRUSTED or CERTDB_TRUSTED_CA bit,
+    // because we can have active distrust for either type of cert. Note that
+    // CERTDB_TERMINAL_RECORD means "stop trying to inherit trust" so if the
+    // relevant trust bit isn't set then that means the cert must be considered
+    // distrusted.
+    PRUint32 relevantTrustBit = endEntityOrCA == MustBeCA ? CERTDB_TRUSTED_CA
+                                                          : CERTDB_TRUSTED;
+    if (((flags & (relevantTrustBit|CERTDB_TERMINAL_RECORD)))
+            == CERTDB_TERMINAL_RECORD) {
+      *trustLevel = ActivelyDistrusted;
+      return SECSuccess;
+    }
+
+    // For TRUST, we only use the CERTDB_TRUSTED_CA bit, because Gecko hasn't
+    // needed to consider end-entity certs to be their own trust anchors since
+    // Gecko implemented nsICertOverrideService.
+    if (flags & CERTDB_TRUSTED_CA) {
+      *trustLevel = TrustAnchor;
+      return SECSuccess;
+    }
+  }
+
+  *trustLevel = InheritsTrust;
+  return SECSuccess;
+}
+
+SECStatus
+NSSCertDBTrustDomain::VerifySignedData(const CERTSignedData* signedData,
+                                       const CERTCertificate* cert)
+{
+  return ::insanity::pkix::VerifySignedData(signedData, cert, mPinArg);
+}
+
+namespace {
 
 static char*
 nss_addEscape(const char* string, char quote)
