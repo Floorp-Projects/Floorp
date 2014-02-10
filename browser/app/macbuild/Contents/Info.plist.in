@@ -218,5 +218,7 @@
   <true/>
   <key>NSPrincipalClass</key>
   <string>GeckoNSApplication</string>
+  <key>NSDisablePersistence</key>
+  <true/>
 </dict>
 </plist>
