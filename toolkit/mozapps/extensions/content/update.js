@@ -12,6 +12,9 @@ const PREF_UPDATE_EXTENSIONS_ENABLED            = "extensions.update.enabled";
 const PREF_XPINSTALL_ENABLED                    = "xpinstall.enabled";
 const PREF_EM_HOTFIX_ID                         = "extensions.hotfix.id";
 
+// timeout (in milliseconds) to wait for response to the metadata ping
+const METADATA_TIMEOUT    = 30000;
+
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/AddonManager.jsm");
 Components.utils.import("resource://gre/modules/AddonRepository.jsm");
@@ -175,7 +178,7 @@ var gVersionInfoPage = {
           for (let addon of gUpdateWizard.addons)
             addon.findUpdates(gVersionInfoPage, AddonManager.UPDATE_WHEN_NEW_APP_INSTALLED);
         });
-      });
+      }, METADATA_TIMEOUT);
     });
   },
 
