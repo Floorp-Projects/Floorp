@@ -359,10 +359,6 @@ ifdef MOZ_UPDATE_XTERM
 UPDATE_TITLE = printf '\033]0;%s in %s\007' $(1) $(relativesrcdir)/$(2) ;
 endif
 
-ifdef BUILDING_JS
-NO_BUILDSTATUS_MESSAGES=1
-endif
-
 ifdef MACH
 ifndef NO_BUILDSTATUS_MESSAGES
 define BUILDSTATUS
