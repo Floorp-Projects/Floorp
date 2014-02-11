@@ -3299,11 +3299,13 @@ WebGLContext::CompileShader(WebGLShader *shader)
                                                     nsDependentCString(mapped_name)));
             }
 
-            size_t len = 0;
-            ShGetInfo(compiler, SH_OBJECT_CODE_LENGTH, &len);
+            size_t lenWithNull = 0;
+            ShGetInfo(compiler, SH_OBJECT_CODE_LENGTH, &lenWithNull);
+            MOZ_ASSERT(lenWithNull >= 1);
+            size_t len = lenWithNull - 1;
 
             nsAutoCString translatedSrc;
-            translatedSrc.SetLength(len);
+            translatedSrc.SetLength(len); // Allocates len+1, for the null-term.
             ShGetObjectCode(compiler, translatedSrc.BeginWriting());
 
             CopyASCIItoUTF16(translatedSrc, shader->mTranslatedSource);
