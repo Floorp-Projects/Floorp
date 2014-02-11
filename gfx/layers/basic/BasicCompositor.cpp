@@ -546,11 +546,19 @@ BasicCompositor::BeginFrame(const nsIntRegion& aInvalidRegion,
 {
   nsIntRect intRect;
   mWidget->GetClientBounds(intRect);
+
+  // The result of GetClientBounds is shifted over by the size of the window
+  // manager styling. We want to ignore that.
+  intRect.MoveTo(0, 0);
   Rect rect = Rect(0, 0, intRect.width, intRect.height);
 
-  nsIntRect invalidRect = aInvalidRegion.GetBounds();
+  // Sometimes the invalid region is larger than we want to draw.
+  nsIntRegion invalidRegionSafe;
+  invalidRegionSafe.And(aInvalidRegion, intRect);
+
+  nsIntRect invalidRect = invalidRegionSafe.GetBounds();
   mInvalidRect = IntRect(invalidRect.x, invalidRect.y, invalidRect.width, invalidRect.height);
-  mInvalidRegion = aInvalidRegion;
+  mInvalidRegion = invalidRegionSafe;
 
   if (aRenderBoundsOut) {
     *aRenderBoundsOut = Rect();
