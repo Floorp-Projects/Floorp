@@ -25,7 +25,7 @@ class nsIDocShell;
 class nsIDocShellTreeItem;
 class imgIContainer;
 class nsDOMDataTransfer;
-class MouseEnterLeaveDispatcher;
+class EnterLeaveDispatcher;
 class nsIMarkupDocumentViewer;
 class nsIScrollableFrame;
 class nsITimer;
@@ -234,7 +234,7 @@ public:
   static nsWeakPtr sPointerLockedDoc;
 
 protected:
-  friend class MouseEnterLeaveDispatcher;
+  friend class EnterLeaveDispatcher;
 
   /**
    * Prefs class capsules preference management.
@@ -272,14 +272,14 @@ protected:
                     nsIFrame* aTargetFrame,
                     nsEventStatus* aStatus);
   /**
-   * Turn a GUI mouse event into a mouse event targeted at the specified
+   * Turn a GUI mouse/pointer event into a mouse/pointer event targeted at the specified
    * content.  This returns the primary frame for the content (or null
    * if it goes away during the event).
    */
-  nsIFrame* DispatchMouseEvent(mozilla::WidgetMouseEvent* aMouseEvent,
-                               uint32_t aMessage,
-                               nsIContent* aTargetContent,
-                               nsIContent* aRelatedContent);
+  nsIFrame* DispatchMouseOrPointerEvent(mozilla::WidgetMouseEvent* aMouseEvent,
+                                        uint32_t aMessage,
+                                        nsIContent* aTargetContent,
+                                        nsIContent* aRelatedContent);
   /**
    * Synthesize DOM and frame mouseover and mouseout events from this
    * MOUSE_MOVE or MOUSE_EXIT event.
