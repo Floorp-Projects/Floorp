@@ -127,21 +127,16 @@ nsWindowDataSource::OnWindowTitleChange(nsIXULWindow *window,
 {
     nsresult rv;
 
-    nsVoidKey key(window);
-
-    nsCOMPtr<nsISupports> sup =
-        dont_AddRef(mWindowResources.Get(&key));
+    nsCOMPtr<nsIRDFResource> windowResource;
+    mWindowResources.Get(window, getter_AddRefs(windowResource));
 
     // oops, make sure this window is in the hashtable!
-    if (!sup) {
+    if (!windowResource) {
         OnOpenWindow(window);
-        sup = dont_AddRef(mWindowResources.Get(&key));
+        mWindowResources.Get(window, getter_AddRefs(windowResource));
     }
 
-    NS_ENSURE_TRUE(sup, NS_ERROR_UNEXPECTED);
-
-    nsCOMPtr<nsIRDFResource> windowResource =
-        do_QueryInterface(sup);
+    NS_ENSURE_TRUE(windowResource, NS_ERROR_UNEXPECTED);
 
     nsCOMPtr<nsIRDFLiteral> newTitleLiteral;
     rv = gRDFService->GetLiteral(newTitle, getter_AddRefs(newTitleLiteral));
@@ -178,8 +173,7 @@ nsWindowDataSource::OnOpenWindow(nsIXULWindow *window)
     nsCOMPtr<nsIRDFResource> windowResource;
     gRDFService->GetResource(windowId, getter_AddRefs(windowResource));
 
-    nsVoidKey key(window);
-    mWindowResources.Put(&key, windowResource);
+    mWindowResources.Put(window, windowResource);
 
     // assert the new window
     if (mContainer)
@@ -192,13 +186,14 @@ nsWindowDataSource::OnOpenWindow(nsIXULWindow *window)
 NS_IMETHODIMP
 nsWindowDataSource::OnCloseWindow(nsIXULWindow *window)
 {
-    nsVoidKey key(window);
-    nsCOMPtr<nsIRDFResource> resource;
-
     nsresult rv;
-
-    if (!mWindowResources.Remove(&key, getter_AddRefs(resource)))
+    nsCOMPtr<nsIRDFResource> resource;
+    mWindowResources.Get(window, getter_AddRefs(resource));
+    if (!resource) {
         return NS_ERROR_UNEXPECTED;
+    }
+
+    mWindowResources.Remove(window);
 
     // make sure we're not shutting down
     if (!mContainer) return NS_OK;
@@ -279,24 +274,16 @@ struct findWindowClosure {
     nsIXULWindow *resultWindow;
 };
 
-static bool
-findWindow(nsHashKey* aKey, void *aData, void* aClosure)
+static PLDHashOperator
+findWindow(nsIXULWindow* aWindow, nsIRDFResource* aResource, void* aClosure)
 {
-    nsVoidKey *thisKey = static_cast<nsVoidKey*>(aKey);
+    findWindowClosure* closure = static_cast<findWindowClosure*>(aClosure);
 
-    nsIRDFResource *resource =
-        static_cast<nsIRDFResource*>(aData);
-
-    findWindowClosure* closure =
-        static_cast<findWindowClosure*>(aClosure);
-
-    if (resource == closure->targetResource) {
-        closure->resultWindow =
-            static_cast<nsIXULWindow*>
-                       (thisKey->GetValue());
-        return false;         // stop enumerating
+    if (aResource == closure->targetResource) {
+        closure->resultWindow = aWindow;
+        return PL_DHASH_STOP;
     }
-    return true;
+    return PL_DHASH_NEXT;
 }
 
 // nsIWindowDataSource implementation
@@ -311,7 +298,7 @@ nsWindowDataSource::GetWindowForResource(const char *aResourceString,
 
     // now reverse-lookup in the hashtable
     findWindowClosure closure = { windowResource.get(), nullptr };
-    mWindowResources.Enumerate(findWindow, (void*)&closure);
+    mWindowResources.EnumerateRead(findWindow, &closure);
     if (closure.resultWindow) {
 
         // this sucks, we have to jump through docshell to go from
