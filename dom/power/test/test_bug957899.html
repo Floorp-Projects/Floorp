@@ -7,9 +7,14 @@
 </head>
 <body>
  <script type="application/javascript">
- var wl = navigator.requestWakeLock('a');
- ok(wl, "WakeLock created!");
- ok(!(wl instanceof XPathEvaluator), "Crashing?");
+  SimpleTest.waitForExplicitFinish();
+  function test() {
+    var wl = navigator.requestWakeLock('a');
+    ok(wl, "WakeLock created!");
+    ok(!(wl instanceof XPathEvaluator), "Crashing?");
+    SimpleTest.finish();
+  }
+  SpecialPowers.pushPrefEnv({"set": [["dom.wakelock.enabled", true]]}, test);
  </script>
 </body>
 </html>
