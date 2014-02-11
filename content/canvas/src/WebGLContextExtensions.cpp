@@ -163,7 +163,7 @@ WebGLContext::GetExtension(JSContext *cx, const nsAString& aName, ErrorResult& r
     for (size_t i = 0; i < size_t(WebGLExtensionID_max); i++)
     {
         WebGLExtensionID extension = WebGLExtensionID(i);
-        
+
         if (CompareWebGLExtensionName(name, GetExtensionString(extension))) {
             ext = extension;
             break;
