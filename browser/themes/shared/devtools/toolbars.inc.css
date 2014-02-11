@@ -393,6 +393,10 @@
   background-image: linear-gradient(transparent, transparent), @smallSeparatorDark@;
 }
 
+.theme-dark .devtools-sidebar-tabs > tabs > tab:hover {
+  background-image: linear-gradient(hsla(206,37%,4%,.2), hsla(206,37%,4%,.2)), @smallSeparatorDark@;
+}
+
 .theme-dark .devtools-sidebar-tabs > tabs > tab:hover:active {
   background-image: linear-gradient(hsla(206,37%,4%,.4), hsla(206,37%,4%,.4)), @smallSeparatorDark@;
 }
