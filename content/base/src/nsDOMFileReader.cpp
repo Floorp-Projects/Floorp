@@ -544,7 +544,9 @@ nsDOMFileReader::GetAsDataURL(nsIDOMBlob *aFile,
   rv = Base64Encode(Substring(aFileData, aDataLen), encodedData);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  AppendASCIItoUTF16(encodedData, aResult);
+  if (!AppendASCIItoUTF16(encodedData, aResult, fallible_t())) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   return NS_OK;
 }
