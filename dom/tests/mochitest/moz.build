@@ -7,7 +7,6 @@
 DIRS += [
     'dom-level0',
     'ajax',
-    'beacon',
     'bugs',
     'chrome',
     'crypto',
