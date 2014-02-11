@@ -134,6 +134,7 @@ AC_CHECK_PROGS(LD, "${target_alias}-ld" "${target}-ld", :)
 AC_CHECK_PROGS(STRIP, "${target_alias}-strip" "${target}-strip", :)
 AC_CHECK_PROGS(WINDRES, "${target_alias}-windres" "${target}-windres", :)
 AC_DEFINE(CROSS_COMPILE)
+CROSS_COMPILE=1
 
 dnl If we cross compile for ppc on Mac OS X x86, cross_compiling will
 dnl dnl have erroneously been set to "no", because the x86 build host is

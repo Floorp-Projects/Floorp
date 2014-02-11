@@ -264,11 +264,11 @@ class XPCShellTestThread(Thread):
                       - set("%s=%s" % i for i in os.environ.iteritems()))
         self.log.info("TEST-INFO | %s | environment: %s" % (name, list(changedEnv)))
 
-    def testTimeout(self, test_file, processPID):
+    def testTimeout(self, test_file, proc):
         if not self.retry:
             self.log.error("TEST-UNEXPECTED-FAIL | %s | Test timed out" % test_file)
         self.done = True
-        Automation().killAndGetStackNoScreenshot(processPID, self.appPath, self.debuggerInfo)
+        Automation().killAndGetStackNoScreenshot(proc.pid, self.appPath, self.debuggerInfo)
 
     def buildCmdTestFile(self, name):
         """
@@ -608,7 +608,7 @@ class XPCShellTestThread(Thread):
 
         testTimer = None
         if not self.interactive and not self.debuggerInfo:
-            testTimer = Timer(testTimeoutInterval, lambda: self.testTimeout(name, proc.pid))
+            testTimer = Timer(testTimeoutInterval, lambda: self.testTimeout(name, proc))
             testTimer.start()
 
         proc = None

@@ -25,10 +25,6 @@ function getStore() {
     yield OS.File.makeDir(storeDir, {unixMode: OS.Constants.libc.S_IRWXU});
 
     let s = new CrashStore(storeDir);
-    s._addCrash = (id, date) => {
-      s._data.crashes.set(id, {id: id, crashDate: date});
-    }
-
     yield s.load();
 
     return s;
@@ -49,8 +45,7 @@ add_task(function test_add_crash() {
 
   Assert.equal(s.crashesCount, 0);
   let d = new Date(Date.now() - 5000);
-  // TODO use official APIs once they are implemented.
-  s._addCrash("id1", d);
+  s.addMainProcessCrash("id1", d);
 
   Assert.equal(s.crashesCount, 1);
 
@@ -61,7 +56,7 @@ add_task(function test_add_crash() {
   Assert.equal(c.id, "id1", "ID set properly.");
   Assert.equal(c.crashDate.getTime(), d.getTime(), "Date set.");
 
-  s._addCrash("id2", new Date());
+  s.addMainProcessCrash("id2", new Date());
   Assert.equal(s.crashesCount, 2);
 });
 
@@ -72,8 +67,8 @@ add_task(function test_save_load() {
 
   let d1 = new Date();
   let d2 = new Date(d1.getTime() - 10000);
-  s._addCrash("id1", d1);
-  s._addCrash("id2", d2);
+  s.addMainProcessCrash("id1", d1);
+  s.addMainProcessCrash("id2", d2);
 
   yield s.save();
 
@@ -101,4 +96,88 @@ add_task(function test_corrupt_json() {
   yield s.load();
   Assert.ok(s.corruptDate);
   Assert.equal(date.getTime(), s.corruptDate.getTime());
+});
+
+add_task(function* test_add_main_crash() {
+  let s = yield getStore();
+
+  s.addMainProcessCrash("id1", new Date());
+  Assert.equal(s.crashesCount, 1);
+
+  let c = s.crashes[0];
+  Assert.ok(c.crashDate);
+  Assert.equal(c.type, bsp.CrashStore.prototype.TYPE_MAIN_CRASH);
+  Assert.ok(c.isMainProcessCrash);
+
+  s.addMainProcessCrash("id2", new Date());
+  Assert.equal(s.crashesCount, 2);
+
+  // Duplicate.
+  s.addMainProcessCrash("id1", new Date());
+  Assert.equal(s.crashesCount, 2);
+
+  Assert.equal(s.mainProcessCrashes.length, 2);
+});
+
+add_task(function* test_add_plugin_crash() {
+  let s = yield getStore();
+
+  s.addPluginCrash("id1", new Date());
+  Assert.equal(s.crashesCount, 1);
+
+  let c = s.crashes[0];
+  Assert.ok(c.crashDate);
+  Assert.equal(c.type, bsp.CrashStore.prototype.TYPE_PLUGIN_CRASH);
+  Assert.ok(c.isPluginCrash);
+
+  s.addPluginCrash("id2", new Date());
+  Assert.equal(s.crashesCount, 2);
+
+  s.addPluginCrash("id1", new Date());
+  Assert.equal(s.crashesCount, 2);
+
+  Assert.equal(s.pluginCrashes.length, 2);
+});
+
+add_task(function* test_add_plugin_hang() {
+  let s = yield getStore();
+
+  s.addPluginHang("id1", new Date());
+  Assert.equal(s.crashesCount, 1);
+
+  let c = s.crashes[0];
+  Assert.ok(c.crashDate);
+  Assert.equal(c.type, bsp.CrashStore.prototype.TYPE_PLUGIN_HANG);
+  Assert.ok(c.isPluginHang);
+
+  s.addPluginHang("id2", new Date());
+  Assert.equal(s.crashesCount, 2);
+
+  s.addPluginHang("id1", new Date());
+  Assert.equal(s.crashesCount, 2);
+
+  Assert.equal(s.pluginHangs.length, 2);
+});
+
+add_task(function* test_add_mixed_types() {
+  let s = yield getStore();
+
+  s.addMainProcessCrash("main", new Date());
+  s.addPluginCrash("pcrash", new Date());
+  s.addPluginHang("phang", new Date());
+
+  Assert.equal(s.crashesCount, 3);
+
+  yield s.save();
+
+  s._data.crashes.clear();
+  Assert.equal(s.crashesCount, 0);
+
+  yield s.load();
+
+  Assert.equal(s.crashesCount, 3);
+
+  Assert.equal(s.mainProcessCrashes.length, 1);
+  Assert.equal(s.pluginCrashes.length, 1);
+  Assert.equal(s.pluginHangs.length, 1);
 });

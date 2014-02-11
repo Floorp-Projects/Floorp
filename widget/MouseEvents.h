@@ -550,20 +550,6 @@ public:
     eventStructType = NS_POINTER_EVENT;
   }
 
-  WidgetPointerEvent(bool aIsTrusted, uint32_t aMsg, nsIWidget* w,
-                     uint32_t aPointerId,
-                     uint32_t aWidth, uint32_t aHeight,
-                     uint32_t aTiltX, uint32_t aTiltY, bool aIsPrimary)
-    : WidgetMouseEvent(aIsTrusted, aMsg, w, NS_POINTER_EVENT, eReal)
-    , pointerId(aPointerId)
-    , width(aWidth)
-    , height(aHeight)
-    , tiltX(aTiltX)
-    , tiltY(aTiltY)
-    , isPrimary(aIsPrimary)
-  {
-  }
-
   virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
   {
     MOZ_ASSERT(eventStructType == NS_POINTER_EVENT,

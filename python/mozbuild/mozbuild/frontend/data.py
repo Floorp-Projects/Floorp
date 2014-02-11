@@ -81,6 +81,8 @@ class SandboxDerived(TreeMetadata):
         self.srcdir = sandbox['SRCDIR']
         self.objdir = sandbox['OBJDIR']
 
+        self.config = sandbox.config
+
 
 class DirectoryTraversal(SandboxDerived):
     """Describes how directory traversal for building should work.

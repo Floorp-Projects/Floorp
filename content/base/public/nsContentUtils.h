@@ -9,7 +9,7 @@
 #ifndef nsContentUtils_h___
 #define nsContentUtils_h___
 
-#if defined(XP_WIN) || defined(XP_OS2)
+#if defined(XP_WIN)
 #include <float.h>
 #endif
 

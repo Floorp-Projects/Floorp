@@ -30,4 +30,16 @@ GType mai_atk_object_get_type(void);
 GType mai_util_get_type();
 mozilla::a11y::AccessibleWrap* GetAccessibleWrap(AtkObject* aAtkObj);
 
+extern int atkMajorVersion, atkMinorVersion;
+
+/**
+ * Return true if the loaded version of libatk-1.0.so is at least
+ * aMajor.aMinor.0.
+ */
+static inline bool
+IsAtkVersionAtLeast(int aMajor, int aMinor)
+{
+  return aMajor < atkMajorVersion && aMinor < atkMinorVersion;
+}
+
 #endif /* __NS_MAI_H__ */

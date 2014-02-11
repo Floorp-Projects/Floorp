@@ -50,14 +50,10 @@
 #ifdef XP_UNIX
 #include <ctype.h>
 #endif
-#ifdef XP_OS2
-#define INCL_DOS
-#include <os2.h>
-#endif
 
 #if defined(XP_MACOSX)
 #define APP_REGISTRY_NAME "Application Registry"
-#elif defined(XP_WIN) || defined(XP_OS2)
+#elif defined(XP_WIN)
 #define APP_REGISTRY_NAME "registry.dat"
 #else
 #define APP_REGISTRY_NAME "appreg"
@@ -1184,30 +1180,6 @@ nsXREDirProvider::GetUserDataDirectoryHome(nsIFile** aFile, bool aLocal)
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = NS_NewLocalFile(path, true, getter_AddRefs(localDir));
-#elif defined(XP_OS2)
-#if 0 /* For OS/2 we want to always use MOZILLA_HOME */
-  // we want an environment variable of the form
-  // FIREFOX_HOME, etc
-  if (!gAppData)
-    return NS_ERROR_FAILURE;
-  nsDependentCString envVar(nsDependentCString(gAppData->name));
-  envVar.Append("_HOME");
-  char *pHome = getenv(envVar.get());
-#endif
-  char *pHome = getenv("MOZILLA_HOME");
-  if (pHome && *pHome) {
-    rv = NS_NewNativeLocalFile(nsDependentCString(pHome), true,
-                               getter_AddRefs(localDir));
-  } else {
-    PPIB ppib;
-    PTIB ptib;
-    char appDir[CCHMAXPATH];
-
-    DosGetInfoBlocks(&ptib, &ppib);
-    DosQueryModuleName(ppib->pib_hmte, CCHMAXPATH, appDir);
-    *strrchr(appDir, '\\') = '\0';
-    rv = NS_NewNativeLocalFile(nsDependentCString(appDir), true, getter_AddRefs(localDir));
-  }
 #elif defined(MOZ_WIDGET_GONK)
   rv = NS_NewNativeLocalFile(NS_LITERAL_CSTRING("/data/b2g"), true,
                              getter_AddRefs(localDir));
@@ -1410,7 +1382,7 @@ nsXREDirProvider::AppendSysUserExtensionPath(nsIFile* aFile)
 
   nsresult rv;
 
-#if defined (XP_MACOSX) || defined(XP_WIN) || defined(XP_OS2)
+#if defined (XP_MACOSX) || defined(XP_WIN)
 
   static const char* const sXR = "Mozilla";
   rv = aFile->AppendNative(nsDependentCString(sXR));
@@ -1481,7 +1453,7 @@ nsXREDirProvider::AppendProfilePath(nsIFile* aFile,
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
-#elif defined(XP_WIN) || defined(XP_OS2)
+#elif defined(XP_WIN)
   if (!profile.IsEmpty()) {
     rv = AppendProfileString(aFile, profile.get());
   }
