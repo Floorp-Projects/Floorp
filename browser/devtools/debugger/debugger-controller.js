@@ -29,6 +29,9 @@ const EVENTS = {
   SOURCE_SHOWN: "Debugger:EditorSourceShown",
   SOURCE_ERROR_SHOWN: "Debugger:EditorSourceErrorShown",
 
+  // When the editor has shown a source and set the line / column position
+  EDITOR_LOCATION_SET: "Debugger:EditorLocationSet",
+
   // When scopes, variables, properties and watch expressions are fetched and
   // displayed in the variables view.
   FETCHED_SCOPES: "Debugger:FetchedScopes",
@@ -1300,7 +1303,7 @@ SourceScripts.prototype = {
     deferred.promise.pretty = wantPretty;
     this._cache.set(aSource.url, deferred.promise);
 
-    const afterToggle = ({ error, message, source: text }) => {
+    const afterToggle = ({ error, message, source: text, contentType }) => {
       if (error) {
         // Revert the rejected promise from the cache, so that the original
         // source's text may be shown when the source is selected.
@@ -1308,7 +1311,7 @@ SourceScripts.prototype = {
         deferred.reject([aSource, message || error]);
         return;
       }
-      deferred.resolve([aSource, text]);
+      deferred.resolve([aSource, text, contentType]);
     };
 
     if (wantPretty) {
@@ -1360,14 +1363,15 @@ SourceScripts.prototype = {
     }
 
     // Get the source text from the active thread.
-    this.activeThread.source(aSource).source(({ error, message, source: text }) => {
+    this.activeThread.source(aSource)
+        .source(({ error, message, source: text, contentType }) => {
       if (aOnTimeout) {
         window.clearTimeout(fetchTimeout);
       }
       if (error) {
         deferred.reject([aSource, message || error]);
       } else {
-        deferred.resolve([aSource, text]);
+        deferred.resolve([aSource, text, contentType]);
       }
     });
 
@@ -1406,13 +1410,13 @@ SourceScripts.prototype = {
     }
 
     /* Called if fetching a source finishes successfully. */
-    function onFetch([aSource, aText]) {
+    function onFetch([aSource, aText, aContentType]) {
       // If fetching the source has previously timed out, discard it this time.
       if (!pending.has(aSource.url)) {
         return;
       }
       pending.delete(aSource.url);
-      fetched.push([aSource.url, aText]);
+      fetched.push([aSource.url, aText, aContentType]);
       maybeFinish();
     }
 
