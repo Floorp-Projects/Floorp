@@ -1368,6 +1368,9 @@ nsHttpConnectionMgr::MakeNewConnection(nsConnectionEntry *ent,
     if (!(trans->Caps() & NS_HTTP_DISALLOW_SPDY) &&
         (trans->Caps() & NS_HTTP_ALLOW_KEEPALIVE) &&
         RestrictConnections(ent)) {
+        LOG(("nsHttpConnectionMgr::MakeNewConnection [ci = %s] "
+             "Not Available Due to RestrictConnections()\n",
+             ent->mConnInfo->HashKey().get()));
         return NS_ERROR_NOT_AVAILABLE;
     }
 
@@ -1933,6 +1936,8 @@ nsHttpConnectionMgr::ProcessNewTransaction(nsHttpTransaction *trans)
         MOZ_ASSERT(trans->Caps() & NS_HTTP_STICKY_CONNECTION);
         MOZ_ASSERT(((int32_t)ent->mActiveConns.IndexOf(conn)) != -1,
                    "Sticky Connection Not In Active List");
+        LOG(("nsHttpConnectionMgr::ProcessNewTransaction trans=%p "
+             "sticky connection=%p\n", trans, conn.get()));
         trans->SetConnection(nullptr);
         rv = DispatchTransaction(ent, trans, conn);
     }
@@ -2195,21 +2200,40 @@ nsHttpConnectionMgr::OnMsgCancelTransaction(int32_t reason, void *param)
     // transaction directly (removing it from the pending queue first).
     //
     nsAHttpConnection *conn = trans->Connection();
-    if (conn && !trans->IsDone())
+    if (conn && !trans->IsDone()) {
         conn->CloseTransaction(trans, closeCode);
-    else {
-        nsConnectionEntry *ent = LookupConnectionEntry(trans->ConnectionInfo(),
-                                                       nullptr, trans);
+    } else {
+        nsConnectionEntry *ent =
+            LookupConnectionEntry(trans->ConnectionInfo(), nullptr, trans);
 
         if (ent) {
             int32_t index = ent->mPendingQ.IndexOf(trans);
             if (index >= 0) {
+                LOG(("nsHttpConnectionMgr::OnMsgCancelTransaction [trans=%p]"
+                     " found in pending queue\n", trans));
                 ent->mPendingQ.RemoveElementAt(index);
                 nsHttpTransaction *temp = trans;
                 NS_RELEASE(temp); // b/c NS_RELEASE nulls its argument!
             }
         }
         trans->Close(closeCode);
+
+        // Cancel is a pretty strong signal that things might be hanging
+        // so we want to cancel any null transactions related to this connection
+        // entry. They are just optimizations, but they aren't hooked up to
+        // anything that might get canceled from the rest of gecko, so best
+        // to assume that's what was meant by the cancel we did receive if
+        // it only applied to something in the queue.
+        for (uint32_t index = 0; index < ent->mActiveConns.Length(); ++index) {
+            nsHttpConnection *activeConn = ent->mActiveConns[index];
+            nsAHttpTransaction *liveTransaction = activeConn->Transaction();
+            if (liveTransaction && liveTransaction->IsNullTransaction()) {
+                LOG(("nsHttpConnectionMgr::OnMsgCancelTransaction [trans=%p] "
+                     "also canceling Null Transaction %p on conn %p\n",
+                     trans, liveTransaction, activeConn));
+                activeConn->CloseTransaction(liveTransaction, closeCode);
+            }
+        }
     }
     NS_RELEASE(trans);
 }
@@ -2494,8 +2518,11 @@ nsHttpConnectionMgr::TimeoutTickCB(const nsACString &key,
 {
     nsHttpConnectionMgr *self = (nsHttpConnectionMgr *) closure;
 
-    LOG(("nsHttpConnectionMgr::TimeoutTickCB() this=%p host=%s\n",
-         self, ent->mConnInfo->Host()));
+    LOG(("nsHttpConnectionMgr::TimeoutTickCB() this=%p host=%s "
+         "idle=%d active=%d half-len=%d pending=%d\n",
+         self, ent->mConnInfo->Host(), ent->mIdleConns.Length(),
+         ent->mActiveConns.Length(), ent->mHalfOpens.Length(),
+         ent->mPendingQ.Length()));
 
     // first call the tick handler for each active connection
     PRIntervalTime now = PR_IntervalNow();

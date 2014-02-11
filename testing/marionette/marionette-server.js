@@ -535,36 +535,56 @@ MarionetteServerConnection.prototype = {
     this.switchToGlobalMessageManager();
   },
 
-  getSessionCapabilities: function MDA_getSessionCapabilities(){
+  /**
+   * Send the current session's capabilities to the client.
+   *
+   * Capabilities informs the client of which WebDriver features are
+   * supported by Firefox and Marionette.  They are immutable for the
+   * length of the session.
+   *
+   * The return value is an immutable map of string keys
+   * ("capabilities") to values, which may be of types boolean,
+   * numerical or string.
+   */
+  getSessionCapabilities: function MDA_getSessionCapabilities() {
     this.command_id = this.getCommandId();
 
-    let rotatable = appName == "B2G" ? true : false;
+    let isB2G = appName == "B2G";
+    let platformName = Services.appinfo.OS.toUpperCase();
 
-    let value = {
-      'appBuildId' : Services.appinfo.appBuildID,
-      'XULappId' : Services.appinfo.ID,
-      'cssSelectorsEnabled': true,
-      'browserName': appName,
-      'handlesAlerts': false,
-      'javascriptEnabled': true,
-      'nativeEvents': false,
-      'platform': Services.appinfo.OS,
-      'platformName': Services.appinfo.OS,
-      'platformVersion': Services.appinfo.platformVersion,
-      'secureSsl': false,
-      'device': qemu == "1" ? "qemu" : (!device ? "desktop" : device),
-      'rotatable': rotatable,
-      'takesScreenshot': true,
-      'takesElementScreenshot': true,
-      'version': Services.appinfo.version
+    let caps = {
+      // Mandated capabilities
+      "browserName": appName,
+      "platformName": platformName,
+      "platformVersion": Services.appinfo.platformVersion,
+
+      // Supported features
+      "cssSelectorsEnabled": true,
+      "handlesAlerts": false,
+      "javascriptEnabled": true,
+      "nativeEvents": false,
+      "rotatable": isB2G,
+      "secureSsl": false,
+      "takesElementScreenshot": true,
+      "takesScreenshot": true,
+
+      // Selenium 2 compat
+      "platform": platformName,
+
+      // Proprietary extensions
+      "XULappId" : Services.appinfo.ID,
+      "appBuildId" : Services.appinfo.appBuildID,
+      "device": qemu == "1" ? "qemu" : (!device ? "desktop" : device),
+      "version": Services.appinfo.version
     };
 
     // eideticker (bug 965297) and mochitest (bug 965304)
-    // compatibility
-    if (appName == "B2G")
-      value.b2g = true;
+    // compatibility.  They only check for the presence of this
+    // property and should so not be in caps if not on a B2G device.
+    if (isB2G)
+      caps.b2g = true;
 
-    this.sendResponse(value, this.command_id);
+    this.sendResponse(caps, this.command_id);
   },
 
   getStatus: function MDA_getStatus(){

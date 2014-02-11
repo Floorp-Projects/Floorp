@@ -44,6 +44,16 @@
       }
     }
 
+    function imageMapChecker(aID)
+    {
+      var node = getNode(aID);
+      this.type = EVENT_FOCUS;
+      this.match = function imageMapChecker_match(aEvent)
+      {
+        return aEvent.DOMNode == node;
+      }
+    }
+
     function topMenuChecker()
     {
       this.type = EVENT_FOCUS;
@@ -115,6 +125,9 @@
         gQueue.push(new synthShiftTab("link", new focusChecker("link")));
       } // ! SEAMONKEY
 
+      gQueue.push(new synthFocus("a", new imageMapChecker("a")));
+      gQueue.push(new synthFocus("b", new imageMapChecker("b")));
+
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
 
@@ -139,6 +152,11 @@
      title="Rework accessible focus handling">
     Mozilla Bug 673958
   </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=961696"
+     title="Accessible object:state-changed:focused events for imagemap links are broken">
+    Mozilla Bug 961696
+  </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
@@ -149,6 +167,12 @@
   <iframe id="iframe" src="data:text/html,<html></html>"></iframe>
   <a id="link" href="">link</a>
   <iframe id="editabledoc" src="about:blank"></iframe>
+
+  <map name="atoz_map">
+    <area id="a" coords="0,0,13,14" shape="rect">
+    <area id="b" coords="17,0,30,14" shape="rect">
+  </map>
+  <img width="447" height="15" usemap="#atoz_map" src="../letters.gif">
 
   <div id="eventdump"></div>
 </body>

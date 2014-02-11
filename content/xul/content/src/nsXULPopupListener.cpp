@@ -50,7 +50,7 @@ using namespace mozilla::dom;
 
 // on win32 and os/2, context menus come up on mouse up. On other platforms,
 // they appear on mouse down. Certain bits of code care about this difference.
-#if defined(XP_WIN) || defined(XP_OS2)
+#if defined(XP_WIN)
 #define NS_CONTEXT_MENU_IS_MOUSEUP 1
 #endif
 

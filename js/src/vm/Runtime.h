@@ -680,14 +680,10 @@ struct JSRuntime : public JS::shadow::Runtime,
     js::PerThreadData mainThread;
 
     /*
-     * If non-zero, we were been asked to call the operation callback as soon
-     * as possible.
+     * If true, we've been asked to call the operation callback as soon as
+     * possible.
      */
-#ifdef JS_THREADSAFE
-    mozilla::Atomic<int32_t, mozilla::Relaxed> interrupt;
-#else
-    int32_t interrupt;
-#endif
+    mozilla::Atomic<bool, mozilla::Relaxed> interrupt;
 
 #if defined(JS_THREADSAFE) && defined(JS_ION)
     /*
@@ -1298,11 +1294,8 @@ struct JSRuntime : public JS::shadow::Runtime,
     /*
      * Whether a GC has been triggered as a result of gcMallocBytes falling
      * below zero.
-     *
-     * This should be a bool, but Atomic only supports 32-bit and pointer-sized
-     * types.
      */
-    mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire> gcMallocGCTriggered;
+    mozilla::Atomic<bool, mozilla::ReleaseAcquire> gcMallocGCTriggered;
 
 #ifdef JS_ARM_SIMULATOR
     js::jit::SimulatorRuntime *simulatorRuntime_;

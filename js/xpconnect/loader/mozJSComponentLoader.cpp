@@ -13,17 +13,12 @@
 #include <cstdarg>
 
 #include "prlog.h"
-#ifdef ANDROID
-#include <android/log.h>
-#endif
-#ifdef XP_WIN
-#include <windows.h>
-#endif
 
 #include "jsapi.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "nsIComponentManager.h"
+#include "mozilla/Debug.h"
 #include "mozilla/Module.h"
 #include "nsIFile.h"
 #include "mozJSComponentLoader.h"
@@ -76,10 +71,7 @@ static const char kXPConnectServiceContractID[] = "@mozilla.org/js/xpc/XPConnect
 static const char kObserverServiceContractID[] = "@mozilla.org/observer-service;1";
 static const char kJSCachePrefix[] = "jsloader";
 
-/* Some platforms don't have an implementation of PR_MemMap(). */
-#ifndef XP_OS2
 #define HAVE_PR_MEMMAP
-#endif
 
 /**
  * Buffer sizes for serialization and deserialization of scripts.
@@ -121,18 +113,9 @@ Dump(JSContext *cx, unsigned argc, Value *vp)
     if (!chars)
         return false;
 
-    NS_ConvertUTF16toUTF8 utf8str(reinterpret_cast<const char16_t*>(chars),
-                                  length);
-#ifdef ANDROID
-    __android_log_print(ANDROID_LOG_INFO, "Gecko", "%s", utf8str.get());
-#endif
-#ifdef XP_WIN
-    if (IsDebuggerPresent()) {
-      OutputDebugStringW(reinterpret_cast<const wchar_t*>(chars));
-    }
-#endif
-    fputs(utf8str.get(), stdout);
-    fflush(stdout);
+    nsDependentSubstring ustr(reinterpret_cast<const char16_t*>(chars),
+                              length);
+    PrintToDebugger(ustr, stdout);
     return true;
 }
 

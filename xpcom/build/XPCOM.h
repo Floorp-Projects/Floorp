@@ -142,10 +142,6 @@
 #include "nsIMacUtils.h"
 #endif
 
-#ifdef XP_OS2
-#include "nsILocalFileOS2.h"
-#endif
-
 // xpcom/glue utility headers
 
 #include "nsComponentManagerUtils.h"

@@ -6,17 +6,7 @@
 #ifndef npapi_h_
 #define npapi_h_
 
-#if defined(__OS2__)
-#pragma pack(1)
-#endif
-
 #include "nptypes.h"
-
-#if defined(__OS2__) || defined(OS2)
-#ifndef XP_OS2
-#define XP_OS2 1
-#endif
-#endif
 
 #if defined(_WIN32) && !defined(__SYMBIAN32__)
 #include <windef.h>
@@ -537,13 +527,6 @@ typedef struct _NPEvent
   uintptr_t wParam;
   uintptr_t lParam;
 } NPEvent;
-#elif defined(XP_OS2)
-typedef struct _NPEvent
-{
-  uint32_t event;
-  uint32_t wParam;
-  uint32_t lParam;
-} NPEvent;
 #elif defined(XP_UNIX) && defined(MOZ_X11)
 typedef XEvent NPEvent;
 #else
@@ -785,12 +768,6 @@ enum NPEventType {
 /*                        Function Prototypes                           */
 /*----------------------------------------------------------------------*/
 
-#if defined(__OS2__)
-#define NP_LOADDS _System
-#else
-#define NP_LOADDS
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -801,108 +778,105 @@ extern "C" {
 const char* NPP_GetMIMEDescription(void);
 #endif
 
-NPError NP_LOADDS NPP_New(NPMIMEType pluginType, NPP instance,
-                          uint16_t mode, int16_t argc, char* argn[],
-                          char* argv[], NPSavedData* saved);
-NPError NP_LOADDS NPP_Destroy(NPP instance, NPSavedData** save);
-NPError NP_LOADDS NPP_SetWindow(NPP instance, NPWindow* window);
-NPError NP_LOADDS NPP_NewStream(NPP instance, NPMIMEType type,
-                                NPStream* stream, NPBool seekable,
-                                uint16_t* stype);
-NPError NP_LOADDS NPP_DestroyStream(NPP instance, NPStream* stream,
-                                    NPReason reason);
-int32_t NP_LOADDS NPP_WriteReady(NPP instance, NPStream* stream);
-int32_t NP_LOADDS NPP_Write(NPP instance, NPStream* stream, int32_t offset,
-                            int32_t len, void* buffer);
-void    NP_LOADDS NPP_StreamAsFile(NPP instance, NPStream* stream,
-                                   const char* fname);
-void    NP_LOADDS NPP_Print(NPP instance, NPPrint* platformPrint);
-int16_t NP_LOADDS NPP_HandleEvent(NPP instance, void* event);
-void    NP_LOADDS NPP_URLNotify(NPP instance, const char* url,
-                                NPReason reason, void* notifyData);
-NPError NP_LOADDS NPP_GetValue(NPP instance, NPPVariable variable, void *value);
-NPError NP_LOADDS NPP_SetValue(NPP instance, NPNVariable variable, void *value);
-NPBool  NP_LOADDS NPP_GotFocus(NPP instance, NPFocusDirection direction);
-void    NP_LOADDS NPP_LostFocus(NPP instance);
-void    NP_LOADDS NPP_URLRedirectNotify(NPP instance, const char* url, int32_t status, void* notifyData);
-NPError NP_LOADDS NPP_ClearSiteData(const char* site, uint64_t flags, uint64_t maxAge);
-char**  NP_LOADDS NPP_GetSitesWithData(void);
-void    NP_LOADDS NPP_DidComposite(NPP instance);
+NPError NPP_New(NPMIMEType pluginType, NPP instance,
+                uint16_t mode, int16_t argc, char* argn[],
+                char* argv[], NPSavedData* saved);
+NPError NPP_Destroy(NPP instance, NPSavedData** save);
+NPError NPP_SetWindow(NPP instance, NPWindow* window);
+NPError NPP_NewStream(NPP instance, NPMIMEType type,
+                      NPStream* stream, NPBool seekable,
+                      uint16_t* stype);
+NPError NPP_DestroyStream(NPP instance, NPStream* stream,
+                          NPReason reason);
+int32_t NPP_WriteReady(NPP instance, NPStream* stream);
+int32_t NPP_Write(NPP instance, NPStream* stream, int32_t offset,
+                  int32_t len, void* buffer);
+void    NPP_StreamAsFile(NPP instance, NPStream* stream,
+                         const char* fname);
+void    NPP_Print(NPP instance, NPPrint* platformPrint);
+int16_t NPP_HandleEvent(NPP instance, void* event);
+void    NPP_URLNotify(NPP instance, const char* url,
+                      NPReason reason, void* notifyData);
+NPError NPP_GetValue(NPP instance, NPPVariable variable, void *value);
+NPError NPP_SetValue(NPP instance, NPNVariable variable, void *value);
+NPBool  NPP_GotFocus(NPP instance, NPFocusDirection direction);
+void    NPP_LostFocus(NPP instance);
+void    NPP_URLRedirectNotify(NPP instance, const char* url, int32_t status, void* notifyData);
+NPError NPP_ClearSiteData(const char* site, uint64_t flags, uint64_t maxAge);
+char**  NPP_GetSitesWithData(void);
+void    NPP_DidComposite(NPP instance);
 
 /* NPN_* functions are provided by the navigator and called by the plugin. */
-void        NP_LOADDS NPN_Version(int* plugin_major, int* plugin_minor,
-                                  int* netscape_major, int* netscape_minor);
-NPError     NP_LOADDS NPN_GetURLNotify(NPP instance, const char* url,
-                                       const char* target, void* notifyData);
-NPError     NP_LOADDS NPN_GetURL(NPP instance, const char* url,
-                                 const char* target);
-NPError     NP_LOADDS NPN_PostURLNotify(NPP instance, const char* url,
-                                        const char* target, uint32_t len,
-                                        const char* buf, NPBool file,
-                                        void* notifyData);
-NPError     NP_LOADDS NPN_PostURL(NPP instance, const char* url,
-                                  const char* target, uint32_t len,
-                                  const char* buf, NPBool file);
-NPError     NP_LOADDS NPN_RequestRead(NPStream* stream, NPByteRange* rangeList);
-NPError     NP_LOADDS NPN_NewStream(NPP instance, NPMIMEType type,
-                                    const char* target, NPStream** stream);
-int32_t     NP_LOADDS NPN_Write(NPP instance, NPStream* stream, int32_t len,
-                                void* buffer);
-NPError     NP_LOADDS NPN_DestroyStream(NPP instance, NPStream* stream,
-                                        NPReason reason);
-void        NP_LOADDS NPN_Status(NPP instance, const char* message);
-const char* NP_LOADDS NPN_UserAgent(NPP instance);
-void*       NP_LOADDS NPN_MemAlloc(uint32_t size);
-void        NP_LOADDS NPN_MemFree(void* ptr);
-uint32_t    NP_LOADDS NPN_MemFlush(uint32_t size);
-void        NP_LOADDS NPN_ReloadPlugins(NPBool reloadPages);
-NPError     NP_LOADDS NPN_GetValue(NPP instance, NPNVariable variable,
-                                   void *value);
-NPError     NP_LOADDS NPN_SetValue(NPP instance, NPPVariable variable,
-                                   void *value);
-void        NP_LOADDS NPN_InvalidateRect(NPP instance, NPRect *invalidRect);
-void        NP_LOADDS NPN_InvalidateRegion(NPP instance,
-                                           NPRegion invalidRegion);
-void        NP_LOADDS NPN_ForceRedraw(NPP instance);
-void        NP_LOADDS NPN_PushPopupsEnabledState(NPP instance, NPBool enabled);
-void        NP_LOADDS NPN_PopPopupsEnabledState(NPP instance);
-void        NP_LOADDS NPN_PluginThreadAsyncCall(NPP instance,
-                                                void (*func) (void *),
-                                                void *userData);
-NPError     NP_LOADDS NPN_GetValueForURL(NPP instance, NPNURLVariable variable,
-                                         const char *url, char **value,
-                                         uint32_t *len);
-NPError     NP_LOADDS NPN_SetValueForURL(NPP instance, NPNURLVariable variable,
-                                         const char *url, const char *value,
-                                         uint32_t len);
-NPError     NP_LOADDS NPN_GetAuthenticationInfo(NPP instance,
-                                                const char *protocol,
-                                                const char *host, int32_t port,
-                                                const char *scheme,
-                                                const char *realm,
-                                                char **username, uint32_t *ulen,
-                                                char **password,
-                                                uint32_t *plen);
-uint32_t    NP_LOADDS NPN_ScheduleTimer(NPP instance, uint32_t interval, NPBool repeat, void (*timerFunc)(NPP npp, uint32_t timerID));
-void        NP_LOADDS NPN_UnscheduleTimer(NPP instance, uint32_t timerID);
-NPError     NP_LOADDS NPN_PopUpContextMenu(NPP instance, NPMenu* menu);
-NPBool      NP_LOADDS NPN_ConvertPoint(NPP instance, double sourceX, double sourceY, NPCoordinateSpace sourceSpace, double *destX, double *destY, NPCoordinateSpace destSpace);
-NPBool      NP_LOADDS NPN_HandleEvent(NPP instance, void *event, NPBool handled);
-NPBool      NP_LOADDS NPN_UnfocusInstance(NPP instance, NPFocusDirection direction);
-void        NP_LOADDS NPN_URLRedirectResponse(NPP instance, void* notifyData, NPBool allow);
-NPError     NP_LOADDS NPN_InitAsyncSurface(NPP instance, NPSize *size,
-                                           NPImageFormat format, void *initData,
-                                           NPAsyncSurface *surface);
-NPError     NP_LOADDS NPN_FinalizeAsyncSurface(NPP instance, NPAsyncSurface *surface);
-void        NP_LOADDS NPN_SetCurrentAsyncSurface(NPP instance, NPAsyncSurface *surface, NPRect *changed);
+void        NPN_Version(int* plugin_major, int* plugin_minor,
+                        int* netscape_major, int* netscape_minor);
+NPError     NPN_GetURLNotify(NPP instance, const char* url,
+                             const char* target, void* notifyData);
+NPError     NPN_GetURL(NPP instance, const char* url,
+                       const char* target);
+NPError     NPN_PostURLNotify(NPP instance, const char* url,
+                              const char* target, uint32_t len,
+                              const char* buf, NPBool file,
+                              void* notifyData);
+NPError     NPN_PostURL(NPP instance, const char* url,
+                        const char* target, uint32_t len,
+                        const char* buf, NPBool file);
+NPError     NPN_RequestRead(NPStream* stream, NPByteRange* rangeList);
+NPError     NPN_NewStream(NPP instance, NPMIMEType type,
+                          const char* target, NPStream** stream);
+int32_t     NPN_Write(NPP instance, NPStream* stream, int32_t len,
+                      void* buffer);
+NPError     NPN_DestroyStream(NPP instance, NPStream* stream,
+                              NPReason reason);
+void        NPN_Status(NPP instance, const char* message);
+const char* NPN_UserAgent(NPP instance);
+void*       NPN_MemAlloc(uint32_t size);
+void        NPN_MemFree(void* ptr);
+uint32_t    NPN_MemFlush(uint32_t size);
+void        NPN_ReloadPlugins(NPBool reloadPages);
+NPError     NPN_GetValue(NPP instance, NPNVariable variable,
+                         void *value);
+NPError     NPN_SetValue(NPP instance, NPPVariable variable,
+                         void *value);
+void        NPN_InvalidateRect(NPP instance, NPRect *invalidRect);
+void        NPN_InvalidateRegion(NPP instance,
+                                 NPRegion invalidRegion);
+void        NPN_ForceRedraw(NPP instance);
+void        NPN_PushPopupsEnabledState(NPP instance, NPBool enabled);
+void        NPN_PopPopupsEnabledState(NPP instance);
+void        NPN_PluginThreadAsyncCall(NPP instance,
+                                      void (*func) (void *),
+                                      void *userData);
+NPError     NPN_GetValueForURL(NPP instance, NPNURLVariable variable,
+                               const char *url, char **value,
+                               uint32_t *len);
+NPError     NPN_SetValueForURL(NPP instance, NPNURLVariable variable,
+                               const char *url, const char *value,
+                               uint32_t len);
+NPError     NPN_GetAuthenticationInfo(NPP instance,
+                                      const char *protocol,
+                                      const char *host, int32_t port,
+                                      const char *scheme,
+                                      const char *realm,
+                                      char **username, uint32_t *ulen,
+                                      char **password,
+                                      uint32_t *plen);
+uint32_t    NPN_ScheduleTimer(NPP instance, uint32_t interval, NPBool repeat, void (*timerFunc)(NPP npp, uint32_t timerID));
+void        NPN_UnscheduleTimer(NPP instance, uint32_t timerID);
+NPError     NPN_PopUpContextMenu(NPP instance, NPMenu* menu);
+NPBool      NPN_ConvertPoint(NPP instance, double sourceX, double sourceY, NPCoordinateSpace sourceSpace, double *destX, double *destY, NPCoordinateSpace destSpace);
+NPBool      NPN_HandleEvent(NPP instance, void *event, NPBool handled);
+NPBool      NPN_UnfocusInstance(NPP instance, NPFocusDirection direction);
+void        NPN_URLRedirectResponse(NPP instance, void* notifyData, NPBool allow);
+NPError     NPN_InitAsyncSurface(NPP instance, NPSize *size,
+                                 NPImageFormat format, void *initData,
+                                 NPAsyncSurface *surface);
+NPError     NPN_FinalizeAsyncSurface(NPP instance, NPAsyncSurface *surface);
+void        NPN_SetCurrentAsyncSurface(NPP instance, NPAsyncSurface *surface, NPRect *changed);
 
 #ifdef __cplusplus
 }  /* end extern "C" */
 #endif
 
 #endif /* RC_INVOKED */
-#if defined(__OS2__)
-#pragma pack()
-#endif
 
 #endif /* npapi_h_ */

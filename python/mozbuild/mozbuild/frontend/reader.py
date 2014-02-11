@@ -169,6 +169,13 @@ class MozbuildSandbox(Sandbox):
         relpath = mozpath.relpath(path, topsrcdir)
         reldir = mozpath.dirname(relpath)
 
+        if mozpath.dirname(relpath) == 'js/src' and \
+                not config.substs.get('JS_STANDALONE'):
+            config = ConfigEnvironment.from_config_status(
+                mozpath.join(topobjdir, reldir, 'config.status'))
+            config.topobjdir = topobjdir
+            self.config = config
+
         with self._globals.allow_all_writes() as d:
             d['TOPSRCDIR'] = topsrcdir
             d['TOPOBJDIR'] = topobjdir
@@ -620,7 +627,7 @@ class BuildReader(object):
         read, a new Sandbox is created and emitted.
         """
         path = mozpath.join(self.topsrcdir, 'moz.build')
-        return self.read_mozbuild(path, read_tiers=True,
+        return self.read_mozbuild(path, self.config, read_tiers=True,
             filesystem_absolute=True, metadata={'tier': None})
 
     def walk_topsrcdir(self):
@@ -648,12 +655,12 @@ class BuildReader(object):
 
         for path, f in finder.find('**/moz.build'):
             path = os.path.join(self.topsrcdir, path)
-            for s in self.read_mozbuild(path, descend=False,
+            for s in self.read_mozbuild(path, self.config, descend=False,
                 filesystem_absolute=True, read_tiers=True):
                 yield s
 
-    def read_mozbuild(self, path, read_tiers=False, filesystem_absolute=False,
-            descend=True, metadata={}):
+    def read_mozbuild(self, path, config, read_tiers=False,
+            filesystem_absolute=False, descend=True, metadata={}):
         """Read and process a mozbuild file, descending into children.
 
         This starts with a single mozbuild file, executes it, and descends into
@@ -681,9 +688,9 @@ class BuildReader(object):
         """
         self._execution_stack.append(path)
         try:
-            for s in self._read_mozbuild(path, read_tiers=read_tiers,
-                filesystem_absolute=filesystem_absolute, descend=descend,
-                metadata=metadata):
+            for s in self._read_mozbuild(path, config, read_tiers=read_tiers,
+                filesystem_absolute=filesystem_absolute,
+                descend=descend, metadata=metadata):
                 yield s
 
         except BuildReaderError as bre:
@@ -709,8 +716,8 @@ class BuildReader(object):
             raise BuildReaderError(list(self._execution_stack),
                 sys.exc_info()[2], other_error=e)
 
-    def _read_mozbuild(self, path, read_tiers, filesystem_absolute, descend,
-            metadata):
+    def _read_mozbuild(self, path, config, read_tiers, filesystem_absolute,
+            descend, metadata):
         path = mozpath.normpath(path)
         log(self._log, logging.DEBUG, 'read_mozbuild', {'path': path},
             'Reading file: {path}')
@@ -723,7 +730,7 @@ class BuildReader(object):
         self._read_files.add(path)
 
         time_start = time.time()
-        sandbox = MozbuildSandbox(self.config, path, metadata=metadata)
+        sandbox = MozbuildSandbox(config, path, metadata=metadata)
         sandbox.exec_file(path, filesystem_absolute=filesystem_absolute)
         sandbox.execution_time = time.time() - time_start
 
@@ -747,7 +754,7 @@ class BuildReader(object):
         # We first collect directories populated in variables.
         dir_vars = ['DIRS', 'PARALLEL_DIRS', 'TOOL_DIRS']
 
-        if self.config.substs.get('ENABLE_TESTS', False) == '1':
+        if sandbox.config.substs.get('ENABLE_TESTS', False) == '1':
             dir_vars.extend(['TEST_DIRS', 'TEST_TOOL_DIRS'])
 
         dirs = [(v, sandbox[v]) for v in dir_vars if v in sandbox]
@@ -775,7 +782,7 @@ class BuildReader(object):
                     raise SandboxValidationError('Cannot find %s referenced '
                         'from %s' % (source, path))
                 non_unified_sources.add(source)
-            for gyp_sandbox in read_from_gyp(self.config,
+            for gyp_sandbox in read_from_gyp(sandbox.config,
                                              mozpath.join(curdir, gyp_dir.input),
                                              mozpath.join(sandbox['OBJDIR'],
                                                           target_dir),
@@ -847,7 +854,7 @@ class BuildReader(object):
             # that's not our problem. We're not a hosted application: we don't
             # need to worry about security too much.
             child_path = mozpath.normpath(child_path)
-            if not is_read_allowed(child_path, self.config):
+            if not is_read_allowed(child_path, sandbox.config):
                 raise SandboxValidationError(
                     'Attempting to process file outside of allowed paths: %s' %
                         child_path)
@@ -855,8 +862,9 @@ class BuildReader(object):
             if not descend:
                 continue
 
-            for res in self.read_mozbuild(child_path, read_tiers=False,
-                filesystem_absolute=True, metadata=child_metadata):
+            for res in self.read_mozbuild(child_path, sandbox.config,
+                read_tiers=False, filesystem_absolute=True,
+                metadata=child_metadata):
                 yield res
 
         self._execution_stack.pop()

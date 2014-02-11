@@ -20,3 +20,13 @@ MSVC_ENABLE_PGO = True
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xpcom_core'
+
+GENERATED_INCLUDES += [
+    '/xpcom',
+]
+
+LOCAL_INCLUDES += [
+    '/netwerk/base/src',
+    '/netwerk/protocol/res',
+    '/xpcom/components'
+]

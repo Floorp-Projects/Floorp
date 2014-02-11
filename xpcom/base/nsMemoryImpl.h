@@ -38,7 +38,7 @@ protected:
         const char16_t* mReason;
     };
 
-    static mozilla::Atomic<int32_t> sIsFlushing;
+    static mozilla::Atomic<bool> sIsFlushing;
     static FlushEvent sFlushEvent;
     static PRIntervalTime sLastFlushTime;
 };

@@ -17,10 +17,6 @@
 #if defined(MOZ_WIDGET_COCOA)
 #include <Carbon/Carbon.h>
 #include "nsILocalFileMac.h"
-#elif defined(XP_OS2)
-#define INCL_DOSPROCESS
-#define INCL_DOSMODULEMGR
-#include <os2.h>
 #elif defined(XP_WIN)
 #include <windows.h>
 #include <shlobj.h>
@@ -37,7 +33,7 @@
 #if defined(MOZ_WIDGET_COCOA)
 #define APP_REGISTRY_NAME NS_LITERAL_CSTRING("Application Registry")
 #define ESSENTIAL_FILES   NS_LITERAL_CSTRING("Essential Files")
-#elif defined(XP_WIN) || defined(XP_OS2)
+#elif defined(XP_WIN)
 #define APP_REGISTRY_NAME NS_LITERAL_CSTRING("registry.dat")
 #else
 #define APP_REGISTRY_NAME NS_LITERAL_CSTRING("appreg")
@@ -311,12 +307,6 @@ NS_METHOD nsAppFileLocationProvider::GetProductDirectory(nsIFile **aLocalFile, b
     nsCOMPtr<nsILocalFileMac> localDirMac(do_QueryInterface(localDir));
     rv = localDirMac->InitWithFSRef(&fsRef);
     if (NS_FAILED(rv)) return rv;
-#elif defined(XP_OS2)
-    nsCOMPtr<nsIProperties> directoryService = 
-             do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) return rv;
-    rv = directoryService->Get(NS_OS2_HOME_DIR, NS_GET_IID(nsIFile), getter_AddRefs(localDir));
-    if (NS_FAILED(rv)) return rv;
 #elif defined(XP_WIN)
     nsCOMPtr<nsIProperties> directoryService = 
              do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
@@ -365,7 +355,7 @@ NS_METHOD nsAppFileLocationProvider::GetDefaultUserProfileRoot(nsIFile **aLocalF
     rv = GetProductDirectory(getter_AddRefs(localDir), aLocal);
     if (NS_FAILED(rv)) return rv;
 
-#if defined(MOZ_WIDGET_COCOA) || defined(XP_OS2) || defined(XP_WIN)
+#if defined(MOZ_WIDGET_COCOA) || defined(XP_WIN)
     // These 3 platforms share this part of the path - do them as one
     rv = localDir->AppendRelativeNativePath(NS_LITERAL_CSTRING("Profiles"));
     if (NS_FAILED(rv)) return rv;
@@ -455,7 +445,7 @@ NS_IMPL_ISUPPORTS1(nsAppDirectoryEnumerator, nsISimpleEnumerator)
 /* nsPathsDirectoryEnumerator and PATH_SEPARATOR
  * are not used on MacOS/X. */
 
-#if defined(XP_WIN) || defined(XP_OS2) /* Win32 and OS/2 */
+#if defined(XP_WIN) /* Win32 */
 #define PATH_SEPARATOR ';'
 #else
 #define PATH_SEPARATOR ':'

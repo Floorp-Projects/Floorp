@@ -183,7 +183,7 @@ public:
   }
 
 private:
-  static mozilla::Atomic<int32_t> sAmount;
+  static mozilla::Atomic<size_t> sAmount;
 };
 
 } // namespace

@@ -17,7 +17,7 @@
     </filter>
     <!-- check flood-opacity and non-default values -->
     <filter id="dropShadow3">
-      <feDropShadow stdDeviation="2 5" dx="5" dy="5" flood-color="green" flood-opacity="0.5"/>
+      <feDropShadow stdDeviation="2 5" dx="5" dy="5" flood-color="green" flood-opacity="0.2"/>
     </filter>
     <!-- check sRGB -->
     <filter id="dropShadow4" color-interpolation-filters="sRGB">
