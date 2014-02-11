@@ -260,8 +260,6 @@ if os_bsd:
         SOURCES += [
             'src/third_party/libevent/kqueue.c',
         ]
-        if not os_freebsd and not os_dragonfly:
-            DEFINES['_EVENT_HAVE_SENDFILE'] = True
 
 if CONFIG['_MSC_VER']:
     SOURCES += [
