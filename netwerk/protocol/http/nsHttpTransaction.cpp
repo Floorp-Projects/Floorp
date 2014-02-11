@@ -1035,6 +1035,24 @@ nsHttpTransaction::PipelinePosition()
     return mPipelinePosition;
 }
 
+bool // NOTE BASE CLASS
+nsAHttpTransaction::ResponseTimeoutEnabled() const
+{
+    return false;
+}
+
+PRIntervalTime // NOTE BASE CLASS
+nsAHttpTransaction::ResponseTimeout()
+{
+    return gHttpHandler->ResponseTimeout();
+}
+
+bool
+nsHttpTransaction::ResponseTimeoutEnabled() const
+{
+    return mResponseTimeoutEnabled;
+}
+
 //-----------------------------------------------------------------------------
 // nsHttpTransaction <private>
 //-----------------------------------------------------------------------------

@@ -62,11 +62,6 @@
 #include "nsCocoaFeatures.h"
 #endif
 
-#if defined(XP_OS2)
-#define INCL_DOSMISC
-#include <os2.h>
-#endif
-
 #if defined(MOZ_WIDGET_GONK)
 #include "nsINetworkManager.h"
 #endif
@@ -680,8 +675,6 @@ nsHttpHandler::InitUserAgentComponents()
     mPlatform.AssignLiteral(
 #if defined(ANDROID)
     "Android"
-#elif defined(XP_OS2)
-    "OS/2"
 #elif defined(XP_WIN)
     "Windows"
 #elif defined(XP_MACOSX)
@@ -706,20 +699,7 @@ nsHttpHandler::InitUserAgentComponents()
 
 #ifndef MOZ_UA_OS_AGNOSTIC
     // Gather OS/CPU.
-#if defined(XP_OS2)
-    ULONG os2ver = 0;
-    DosQuerySysInfo(QSV_VERSION_MINOR, QSV_VERSION_MINOR,
-                    &os2ver, sizeof(os2ver));
-    if (os2ver == 11)
-        mOscpu.AssignLiteral("2.11");
-    else if (os2ver == 30)
-        mOscpu.AssignLiteral("Warp 3");
-    else if (os2ver == 40)
-        mOscpu.AssignLiteral("Warp 4");
-    else if (os2ver == 45)
-        mOscpu.AssignLiteral("Warp 4.5");
-
-#elif defined(XP_WIN)
+#if defined(XP_WIN)
     OSVERSIONINFO info = { sizeof(OSVERSIONINFO) };
 #pragma warning(push)
 #pragma warning(disable:4996)

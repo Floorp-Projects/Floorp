@@ -48,10 +48,6 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
         'nsNativeAppSupportQt.cpp',
         'nsQAppInstance.cpp',
     ]
-elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'os2':
-    SOURCES += [
-        'nsNativeAppSupportOS2.cpp',
-    ]
 elif CONFIG['MOZ_ENABLE_GTK']:
     UNIFIED_SOURCES += [
         'nsNativeAppSupportUnix.cpp',

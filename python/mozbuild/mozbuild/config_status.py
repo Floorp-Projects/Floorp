@@ -26,7 +26,7 @@ log_manager = LoggingManager()
 
 
 def config_status(topobjdir='.', topsrcdir='.',
-        defines=[], non_global_defines=[], substs=[]):
+        defines=[], non_global_defines=[], substs=[], source=None):
     '''Main function, providing config.status functionality.
 
     Contrary to config.status, it doesn't use CONFIG_FILES or CONFIG_HEADERS
@@ -73,7 +73,7 @@ def config_status(topobjdir='.', topsrcdir='.',
         topobjdir = os.path.abspath('.')
 
     env = ConfigEnvironment(topsrcdir, topobjdir, defines=defines,
-            non_global_defines=non_global_defines, substs=substs)
+            non_global_defines=non_global_defines, substs=substs, source=source)
 
     # mozinfo.json only needs written if configure changes and configure always
     # passes this environment variable.

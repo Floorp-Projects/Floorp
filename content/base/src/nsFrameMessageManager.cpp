@@ -29,6 +29,7 @@
 #include "nsIDOMClassInfo.h"
 #include "nsIDOMFile.h"
 #include "xpcpublic.h"
+#include "mozilla/Debug.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/StructuredCloneUtils.h"
 #include "JavaScriptChild.h"
@@ -37,9 +38,6 @@
 #include "nsPrintfCString.h"
 #include <algorithm>
 
-#ifdef ANDROID
-#include <android/log.h>
-#endif
 #ifdef XP_WIN
 #include <windows.h>
 # if defined(SendMessage)
@@ -723,16 +721,7 @@ nsFrameMessageManager::GetChildAt(uint32_t aIndex,
 NS_IMETHODIMP
 nsFrameMessageManager::Dump(const nsAString& aStr)
 {
-#ifdef ANDROID
-  __android_log_print(ANDROID_LOG_INFO, "Gecko", "%s", NS_ConvertUTF16toUTF8(aStr).get());
-#endif
-#ifdef XP_WIN
-  if (IsDebuggerPresent()) {
-    OutputDebugStringW(PromiseFlatString(aStr).get());
-  }
-#endif
-  fputs(NS_ConvertUTF16toUTF8(aStr).get(), stdout);
-  fflush(stdout);
+  PrintToDebugger(aStr, stdout);
   return NS_OK;
 }
 

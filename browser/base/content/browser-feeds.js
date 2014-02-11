@@ -153,11 +153,6 @@ var FeedHandler = {
   },
 
   addFeed: function(link, browserForLink) {
-    if (!browserForLink) {
-      // ignore feeds loaded in subframes (see bug 305472)
-      return;
-    }
-
     if (!browserForLink.feeds)
       browserForLink.feeds = [];
 

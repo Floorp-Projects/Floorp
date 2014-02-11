@@ -92,7 +92,6 @@ _topsrcdir=`cd \`dirname $0\`; pwd`
 _objdir=`pwd`
 
 
-
 dnl TODO Don't exempt L10N builds once bug 842760 is resolved.
 if test "$_topsrcdir" = "$_objdir" -a "${with_l10n_base+set}" != set; then
   echo "  ***"
@@ -287,7 +286,6 @@ if test -n "$gonkdir" ; then
     AC_SUBST(ANDROID_VERSION)
     AC_DEFINE(HAVE_SYS_UIO_H)
     AC_DEFINE(HAVE_PTHREADS)
-    CROSS_COMPILE=1
     MOZ_CHROME_FILE_FORMAT=omni
     direct_nspr_config=1
 else
@@ -314,16 +312,13 @@ AC_SUBST(OBJCOPY)
 dnl ========================================================
 dnl Checks for compilers.
 dnl ========================================================
-dnl Set CROSS_COMPILE in the environment when running configure
-dnl to use the cross-compile setup for now
-dnl ========================================================
 
 dnl AR_FLAGS set here so HOST_AR_FLAGS can be set correctly (see bug 538269)
 AR_FLAGS='crs $@'
 
 if test "$COMPILE_ENVIRONMENT"; then
 
-if test -n "$CROSS_COMPILE" -a "$target" != "$host"; then
+if test "$target" != "$host"; then
     MOZ_CROSS_COMPILER
 else
     AC_PROG_CC
@@ -1046,9 +1041,6 @@ solaris*)
     AC_SUBST(SOLARIS_SUNPRO_CC)
     AC_SUBST(SOLARIS_SUNPRO_CXX)
     ;;
-OS_2)
-    HOST_OS_ARCH=OS2
-    ;;
 esac
 
 case "$OS_ARCH" in
@@ -1086,11 +1078,6 @@ MINGW*_NT*)
 AIX)
     OS_RELEASE=`uname -v`.`uname -r`
     OS_TEST=${target_cpu}
-    ;;
-OS_2)
-    OS_ARCH=OS2
-    OS_TARGET=OS2
-    OS_RELEASE=`uname -v`
     ;;
 Darwin)
     case "${target_cpu}" in
@@ -1543,16 +1530,6 @@ AC_LANG_RESTORE
 fi # COMPILE_ENVIRONMENT
 
 dnl ========================================================
-dnl Enable high-memory support on OS/2 by default.
-dnl ========================================================
-MOZ_OS2_HIGH_MEMORY=1
-MOZ_ARG_DISABLE_BOOL(os2-high-mem,
-[  --disable-os2-high-mem  Disable high-memory support on OS/2],
-    MOZ_OS2_HIGH_MEMORY=,
-    MOZ_OS2_HIGH_MEMORY=1 )
-AC_SUBST(MOZ_OS2_HIGH_MEMORY)
-
-dnl ========================================================
 dnl = Use profiling compile flags
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(profiling,
@@ -1740,14 +1717,6 @@ case "$host" in
     HOST_CFLAGS="$HOST_CFLAGS -DXP_UNIX"
     HOST_NSPR_MDCPUCFG='\"md/_linux.cfg\"'
     HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O3}"
-    ;;
-
-*os2*)
-    HOST_CFLAGS="$HOST_CFLAGS -DXP_OS2 -DNO_X11 -Zomf"
-    HOST_NSPR_MDCPUCFG='\"md/_os2.cfg\"'
-    HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O2}"
-    HOST_BIN_SUFFIX=.exe
-    MOZ_FIX_LINK_PATHS=
     ;;
 
 *)
@@ -2257,71 +2226,6 @@ ia64*-hpux*)
     fi
     ;;
 
-*-os2*)
-    MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
-    MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
-    AC_DEFINE(OS2)
-    AC_DEFINE(XP_OS2)
-    AC_DEFINE(OS2EMX_PLAIN_CHAR)
-    AC_DEFINE(TCPV40HDRS)
-    DLL_PREFIX=
-    LIB_PREFIX=
-    LIB_SUFFIX=lib
-    BIN_SUFFIX=".exe"
-    DLL_SUFFIX=".dll"
-    IMPORT_LIB_SUFFIX=lib
-    DSO_PIC_CFLAGS=
-    AR=emxomfar
-    AR_FLAGS='r $@'
-    CFLAGS="$CFLAGS -Zomf"
-    CXXFLAGS="$CXXFLAGS -Zomf"
-    DSO_LDOPTS='-Zdll'
-    BIN_FLAGS='-Zlinker /ST:0x100000'
-    IMPLIB='emximp -o'
-    FILTER='true'
-    LDFLAGS='-Zmap'
-    WARNINGS_AS_ERRORS='-Werror'
-    MOZ_DEBUG_FLAGS="-g -fno-inline"
-    MOZ_OPTIMIZE_FLAGS="-O2"
-    MOZ_OPTIMIZE_LDFLAGS="-s -Zlinker /EXEPACK:2 -Zlinker /PACKCODE -Zlinker /PACKDATA"
-    LIBXUL_LIBS='-L$(LIBXUL_DIST)/lib $(LIBXUL_DIST)/lib/xul.lib $(LIBXUL_DIST)/lib/mozalloc.lib'
-    TARGET_MD_ARCH=os2
-    _PLATFORM_DEFAULT_TOOLKIT="cairo-os2"
-    RC=rc.exe
-    MC=mc.exe
-    RCFLAGS='-n'
-    MOZ_USER_DIR="Mozilla"
-    ZIP="$ZIP -X"
-    STRIP=lxlite
-    STRIP_FLAGS="/yua /ydd /yxd /ynl /anp /b- /cs+ /d /i- /ml1 /mr2 /mf2 /r+ /u+ /x- /zs:0 /zx /zd"
-
-    if test "$MOZTOOLS"; then
-        MOZ_TOOLS_DIR=`echo $MOZTOOLS | sed -e 's|\\\\|/|g'`
-    else
-        AC_MSG_ERROR([MOZTOOLS is not set])
-    fi
-    if test -n "$MOZ_OS2_HIGH_MEMORY"; then
-        DSO_LDOPTS="$DSO_LDOPTS -Zhigh-mem"
-        LDFLAGS="$LDFLAGS -Zhigh-mem"
-        MOZ_OPTIMIZE_LDFLAGS="$MOZ_OPTIMIZE_LDFLAGS -Zhigh-mem"
-        AC_DEFINE(MOZ_OS2_HIGH_MEMORY)
-    fi
-
-    # GCC for OS/2 currently predefines these, but we don't want them
-    _DEFINES_CFLAGS="$_DEFINES_CFLAGS -Uunix -U__unix -U__unix__"
-    _DEFINES_CXXFLAGS="$_DEFINES_CXXFLAGS -Uunix -U__unix -U__unix__"
-
-    AC_CACHE_CHECK(for __declspec(dllexport),
-        ac_os2_declspec,
-        [AC_TRY_COMPILE([__declspec(dllexport) void ac_os2_declspec(void) {}],
-                        [return 0;],
-                        ac_os2_declspec="yes",
-                        ac_os2_declspec="no")])
-    if test "$ac_os2_declspec" != "yes"; then
-        AC_MSG_ERROR([Compiler does not support __declspec(dllexport), install GCC-4.3.2 or newer])
-    fi
-    ;;
-
 *-solaris*)
     AC_DEFINE(SOLARIS)
     TARGET_NSPR_MDCPUCFG='\"md/_solaris.cfg\"'
@@ -2417,10 +2321,6 @@ ia64*-hpux*)
     esac
     ;;
 
-*-os2*)
-    HOST_NSPR_MDCPUCFG='\"md/_os2.cfg\"'
-    ;;
-
 esac
 
 case "$target" in
@@ -2453,9 +2353,6 @@ if test -z "$MKSHLIB_FORCE_ALL" -o -z "$MKSHLIB_UNFORCE_ALL"; then
     NO_LD_ARCHIVE_FLAGS=1
 fi
 case "$target" in
-*-os2*)
-    NO_LD_ARCHIVE_FLAGS=
-    ;;
 *-aix4.3*|*-aix5*)
     NO_LD_ARCHIVE_FLAGS=
     ;;
@@ -2811,8 +2708,6 @@ dnl against libSystem causes issues when debugging (see bug 299601).
 case $target in
 *-darwin*)
     ;;
-*-os2*)
-    ;;
 *)
     AC_SEARCH_LIBS(dlopen, dl,
         MOZ_CHECK_HEADER(dlfcn.h,
@@ -2837,13 +2732,7 @@ if test ! "$GNU_CXX"; then
      esac
 fi
 
-dnl OS/2 has socket in libc.
-case $target in
-*-os2*)
-    ;;
-*)
-    AC_CHECK_LIB(socket, socket)
-esac
+AC_CHECK_LIB(socket, socket)
 
 XLDFLAGS="$X_LIBS"
 XLIBS="$X_EXTRA_LIBS"
@@ -3122,7 +3011,7 @@ fi
 AC_LANG_CPLUSPLUS
 
 case $target_os in
-    darwin*|mingw*|os2*)
+    darwin*|mingw*)
         ;;
     *)
 
@@ -3563,7 +3452,7 @@ MOZ_ARG_WITH_BOOL(system-nspr,
     _USE_SYSTEM_NSPR=1 )
 
 if test -n "$_USE_SYSTEM_NSPR"; then
-    AM_PATH_NSPR(4.10.2, [MOZ_NATIVE_NSPR=1], [AC_MSG_ERROR([your don't have NSPR installed or your version is too old])])
+    AM_PATH_NSPR(4.10.3, [MOZ_NATIVE_NSPR=1], [AC_MSG_ERROR([your don't have NSPR installed or your version is too old])])
 fi
 
 if test -n "$MOZ_NATIVE_NSPR"; then
@@ -3697,7 +3586,7 @@ if test -n "$MOZ_NATIVE_NSS"; then
 else
    NSS_CFLAGS='-I$(LIBXUL_DIST)/include/nss'
 
-   if test -z "$GNU_CC" -a "$OS_ARCH" = "WINNT" -o "$OS_ARCH" = "OS2"; then
+   if test -z "$GNU_CC" -a "$OS_ARCH" = "WINNT"; then
        NSS_LIBS="\
         \$(LIBXUL_DIST)/lib/\$(LIB_PREFIX)crmf.\$(LIB_SUFFIX) \
         \$(LIBXUL_DIST)/lib/\$(LIB_PREFIX)smime$NSS_VERSION.\$(LIB_SUFFIX) \
@@ -3907,18 +3796,9 @@ AC_SUBST(MOZ_NATIVE_HUNSPELL)
 dnl ========================================================
 dnl system libffi Support
 dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(system-ffi,
-[  --enable-system-ffi       Use system libffi (located with pkgconfig)],
-    MOZ_NATIVE_FFI=1 )
+MOZ_CONFIG_FFI()
 
 if test -n "$MOZ_NATIVE_FFI"; then
-    # Vanilla libffi 3.0.9 needs a few patches from upcoming version 3.0.10
-    # for non-GCC compilers.
-    if test -z "$GNU_CC"; then
-        PKG_CHECK_MODULES(MOZ_FFI, libffi > 3.0.9)
-    else
-        PKG_CHECK_MODULES(MOZ_FFI, libffi >= 3.0.9)
-    fi
     MOZ_JS_STATIC_LIBS="$MOZ_JS_STATIC_LIBS $MOZ_FFI_LIBS"
 fi
 
@@ -3932,26 +3812,6 @@ MOZ_ARG_ENABLE_BOOL(shared-js,
                           Create a shared JavaScript library.],
     JS_SHARED_LIBRARY=1,
     JS_SHARED_LIBRARY=)
-
-dnl ========================================================
-dnl System ICU Support
-dnl ========================================================
-MOZ_NATIVE_ICU=
-MOZ_ARG_WITH_BOOL(system-icu,
-[  --with-system-icu
-                          Use system ICU (located with pkgconfig)],
-    MOZ_NATIVE_ICU=1)
-
-if test -n "$MOZ_NATIVE_ICU"; then
-    PKG_CHECK_MODULES(MOZ_ICU, icu-i18n >= 50.1)
-    MOZ_JS_STATIC_LIBS="$MOZ_JS_STATIC_LIBS $MOZ_ICU_LIBS"
-    MOZ_SHARED_ICU=1
-else
-    MOZ_ICU_CFLAGS='-I$(topsrcdir)/intl/icu/source/common -I$(topsrcdir)/intl/icu/source/i18n'
-    AC_SUBST(MOZ_ICU_CFLAGS)
-fi
-
-AC_SUBST(MOZ_NATIVE_ICU)
 
 dnl ========================================================
 dnl Java SDK support
@@ -4199,10 +4059,6 @@ if test -n "$WITH_APP_NAME" ; then
     MOZ_APP_NAME="$WITH_APP_NAME"
 fi
 
-if test -z "$MOZ_APP_NAME"; then
-   MOZ_APP_NAME=`echo $MOZ_APP_BASENAME | tr A-Z a-z`
-fi
-
 MOZ_ARG_WITH_STRING(app-basename,
 [--with-app-basename=BASENAME sets MOZ_APP_BASENAME to BASENAME],
 WITH_APP_BASENAME=$withval,
@@ -4282,7 +4138,6 @@ MOZ_ARG_HEADER(Toolkit Options)
                           Select default toolkit
                           Platform specific defaults:
                             Mac OS X - cairo-cocoa
-                            OS/2 - cairo-os2
                             Win32 - cairo-windows
                             * - cairo-gtk2
                             * - cairo-gtk3
@@ -4295,7 +4150,6 @@ MOZ_ARG_HEADER(Toolkit Options)
         -o "$_DEFAULT_TOOLKIT" = "cairo-gtk2-x11" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-gtk3" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-qt" \
-        -o "$_DEFAULT_TOOLKIT" = "cairo-os2" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-cocoa" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-uikit" \
         -o "$_DEFAULT_TOOLKIT" = "cairo-android" \
@@ -4389,14 +4243,6 @@ cairo-qt)
     AC_DEFINE(MOZ_WIDGET_QT)
     MOZ_PDF_PRINTING=1
     AC_DEFINE(QT_NO_KEYWORDS)
-    ;;
-
-cairo-os2)
-    MOZ_WIDGET_TOOLKIT=os2
-    USE_FC_FREETYPE=1
-    TK_CFLAGS='$(MOZ_CAIRO_CFLAGS) $(MOZ_PIXMAN_CFLAGS)'
-    TK_LIBS='$(MOZ_CAIRO_LIBS) $(MOZ_PIXMAN_LIBS)'
-    MOZ_PDF_PRINTING=1
     ;;
 
 cairo-cocoa)
@@ -6850,8 +6696,8 @@ fi
 if test "${OS_TARGET}" = "Android"; then
   dnl On Android, we use WRAP_LDFLAGS to link everything to mozglue
   :
-elif test "${OS_TARGET}" = "WINNT" -o "${OS_TARGET}" = "Darwin" -o "${OS_TARGET}" = "OS2"; then
-  dnl On Windows, OSX and OS2, we want to link all our binaries against mozglue
+elif test "${OS_TARGET}" = "WINNT" -o "${OS_TARGET}" = "Darwin"; then
+  dnl On Windows and OSX, we want to link all our binaries against mozglue
   if test -z "$GNU_CC"; then
     MOZ_GLUE_LDFLAGS='$(call EXPAND_LIBNAME_PATH,mozglue,$(LIBXUL_DIST)/lib)'
   else
@@ -7563,7 +7409,7 @@ if test "$MOZ_CHROME_FILE_FORMAT" = "omni"; then
     AC_DEFINE(MOZ_OMNIJAR)
 fi
 MOZ_PACKAGER_FORMAT="$MOZ_CHROME_FILE_FORMAT"
-if test "$OS_ARCH" = "WINNT" -o "$OS_ARCH" = "OS2" -o "$MOZ_WIDGET_TOOLKIT" = "android"; then
+if test "$OS_ARCH" = "WINNT" -o "$MOZ_WIDGET_TOOLKIT" = "android"; then
     MOZ_CHROME_FILE_FORMAT=flat
 else
     MOZ_CHROME_FILE_FORMAT=symlink
@@ -8043,13 +7889,6 @@ if test "$MOZ_TREE_CAIRO"; then
           MOZ_CHECK_HEADER(d3d10.h, MOZ_ENABLE_D3D10_LAYER=1)
         fi
         ;;
-      os2)
-        OS2_SURFACE_FEATURE="#define CAIRO_HAS_OS2_SURFACE 1"
-        FT_FONT_FEATURE="#define CAIRO_HAS_FT_FONT 1"
-        MOZ_ENABLE_CAIRO_FT=1
-        CAIRO_FT_CFLAGS="-I${MZFTCFGFT2}/include"
-        CAIRO_FT_OSLIBS="-L${MZFTCFGFT2}/lib -lmozft -lmzfntcfg"
-        ;;
     esac
     if test "$USE_FC_FREETYPE"; then
         FC_FONT_FEATURE="#define CAIRO_HAS_FC_FONT 1"
@@ -8425,7 +8264,6 @@ AC_SUBST(XPCOM_STANDALONE_STATICRUNTIME_GLUE_LDOPTS)
 AC_SUBST(USE_DEPENDENT_LIBS)
 
 AC_SUBST(MOZ_BUILD_ROOT)
-AC_SUBST(MOZ_OS2_TOOLS)
 
 AC_SUBST(MOZ_POST_DSO_LIB_COMMAND)
 AC_SUBST(MOZ_POST_PROGRAM_COMMAND)
@@ -8505,6 +8343,10 @@ AC_SUBST(MOZ_CHILD_PROCESS_BUNDLE)
 # crash reporter server url.
 # - MOZ_PROFILE_MIGRATOR: When set, enables profile migrator.
 # - MOZ_EXTENSION_MANAGER: When set, enabled extension manager.
+
+if test -z "$MOZ_APP_NAME"; then
+   MOZ_APP_NAME=`echo $MOZ_APP_BASENAME | tr A-Z a-z`
+fi
 
 # For extensions and langpacks, we require a max version that is compatible
 # across security releases. MOZ_APP_MAXVERSION is our method for doing that.
@@ -8797,7 +8639,7 @@ dnl ========================================================
 
 if test "$OS_ARCH" = "Darwin"; then
   AC_DEFINE(XP_UNIX)
-elif test "$OS_ARCH" != "WINNT" -a "$OS_ARCH" != "OS2"; then
+elif test "$OS_ARCH" != "WINNT"; then
   AC_DEFINE(XP_UNIX)
 fi
 
@@ -8849,84 +8691,34 @@ HAVE_SYS_MOUNT_H
 
 AC_SUBST(STLPORT_LIBS)
 
-MOZ_ARG_WITH_STRING(intl-api,
-[  --with-intl-api, --with-intl-api=build, --without-intl-api
-    Determine the status of the ECMAScript Internationalization API.  The first
-    (or lack of any of these) builds and exposes the API.  The second builds it
-    but doesn't use ICU or expose the API to script.  The third doesn't build
-    ICU at all.],
-    _INTL_API=$withval,
-    _INTL_API=yes)
+dnl ========================================================
+dnl ICU Support
+dnl ========================================================
 
-WITH_INTL="--with-intl-api=$_INTL_API"
-ENABLE_INTL_API=
-case "$_INTL_API" in
-no)
-    ;;
-build)
-    ENABLE_INTL_API=1
-    ;;
-yes)
-    ENABLE_INTL_API=1
-    ;;
-*)
-    AC_MSG_ERROR([Invalid value passed to --with-intl-api: $_INTL_API])
-    ;;
-esac
-
-if test -n "$ENABLE_INTL_API"; then
 if test "$MOZ_BUILD_APP" = "browser"; then
-    WITH_INTL="--with-intl-api"
+    _INTL_API=yes
 else
     # Internationalization isn't built or exposed by default in non-desktop
     # builds.  Bugs to enable:
     #
     #   Android:  bug 864843
     #   B2G:      bug 866301
-    WITH_INTL="--without-intl-api"
-    ENABLE_INTL_API=
-fi
+    _INTL_API=no
 fi
 
-dnl Settings for the implementation of the ECMAScript Internationalization API
-if test -n "$ENABLE_INTL_API"; then
-    AC_DEFINE(ENABLE_INTL_API)
+MOZ_CONFIG_ICU()
 
-    MOZ_CONFIG_ICU()
-
-    dnl Build ICU as a shared library for shared js builds.
-    if test -z "$MOZ_NATIVE_ICU" -a -n "$JS_SHARED_LIBRARY"; then
-        case "$OS_TARGET" in
-            WINNT)
-                ICU_LIB_NAMES="icuin icuuc icudt"
-                DBG_SUFFIX=
-                if test -n "$MOZ_DEBUG"; then
-                    DBG_SUFFIX=d
-                fi
-                MOZ_ICU_LIBS='$(foreach lib,$(ICU_LIB_NAMES),$(DEPTH)/js/src/intl/icu/target/lib/$(LIB_PREFIX)$(lib)$(DBG_SUFFIX).$(LIB_SUFFIX))'
-                ;;
-            Darwin)
-                ICU_LIB_NAMES="icui18n icuuc icudata"
-                MOZ_ICU_LIBS='$(foreach lib,$(ICU_LIB_NAMES),$(DEPTH)/js/src/intl/icu/target/lib/$(DLL_PREFIX)$(lib).$(MOZ_ICU_VERSION)$(DLL_SUFFIX))'
-                ;;
-            Linux|DragonFly|FreeBSD|NetBSD|OpenBSD)
-                ICU_LIB_NAMES="icui18n icuuc icudata"
-                MOZ_ICU_LIBS='$(foreach lib,$(ICU_LIB_NAMES),$(DEPTH)/js/src/intl/icu/target/lib/$(DLL_PREFIX)$(lib)$(DLL_SUFFIX).$(MOZ_ICU_VERSION))'
-                ;;
-            *)
-                AC_MSG_ERROR([ECMAScript Internationalization API is not yet supported on this platform])
-        esac
-    fi
+if test -n "$MOZ_NATIVE_ICU"; then
+    MOZ_JS_STATIC_LIBS="$MOZ_JS_STATIC_LIBS $MOZ_ICU_LIBS"
 fi
 
-AC_SUBST(DBG_SUFFIX)
-AC_SUBST(ENABLE_INTL_API)
-AC_SUBST(ICU_LIB_NAMES)
-AC_SUBST(MOZ_ICU_LIBS)
+MOZ_CREATE_CONFIG_STATUS()
 
-export WRITE_MOZINFO=1
-AC_OUTPUT()
-unset WRITE_MOZINFO
+# No need to run subconfigures when building with LIBXUL_SDK_DIR
+if test "$COMPILE_ENVIRONMENT" -a -z "$LIBXUL_SDK_DIR"; then
+  MOZ_SUBCONFIGURE_ICU()
+  MOZ_SUBCONFIGURE_FFI()
+fi
 
 # Hack around an Apple bug that affects the egrep that comes with OS X 10.7.
 # "env ARCHPREFERENCE=i386,x86_64 arch egrep" first tries to use the 32-bit
@@ -9106,9 +8898,6 @@ if test -z "$MOZ_NATIVE_NSPR"; then
     AC_OUTPUT_SUBDIRS(nsprpub)
 
     # .. and restore them
-    unset CFLAGS
-    unset CPPFLAGS
-    unset LDFLAGS
     CFLAGS="$_SAVE_CFLAGS"
     CPPFLAGS="$_SAVE_CPPFLAGS"
     LDFLAGS="$_SAVE_LDFLAGS"
@@ -9142,7 +8931,9 @@ dist=$MOZ_BUILD_ROOT/dist
 ac_configure_args="$_SUBDIR_CONFIG_ARGS"
 ac_configure_args="$ac_configure_args --enable-threadsafe"
 
-ac_configure_args="$ac_configure_args $WITH_INTL"
+if test "$_INTL_API" = no; then
+    ac_configure_args="$ac_configure_args --without-intl-api"
+fi
 
 if test "$BUILD_CTYPES"; then
     # Build js-ctypes on the platforms we can.
@@ -9161,7 +8952,6 @@ if test -z "$MOZ_NATIVE_NSPR"; then
     ac_configure_args="$ac_configure_args --with-nspr-cflags='$NSPR_CFLAGS'"
     ac_configure_args="$ac_configure_args --with-nspr-libs='$NSPR_LIBS'"
 fi
-ac_configure_args="$ac_configure_args --with-dist-dir=../../dist"
 ac_configure_args="$ac_configure_args --prefix=$dist"
 if test "$MOZ_MEMORY"; then
    ac_configure_args="$ac_configure_args --enable-jemalloc"
@@ -9197,3 +8987,12 @@ AC_OUTPUT_SUBDIRS(js/src)
 ac_configure_args="$_SUBDIR_CONFIG_ARGS"
 
 fi # COMPILE_ENVIRONMENT && !LIBXUL_SDK_DIR
+
+export WRITE_MOZINFO=1
+dnl we need to run config.status after js/src subconfigure because we're
+dnl traversing its moz.build and we need its config.status for that.
+dnl However, writing our own config.status needs to happen before
+dnl subconfigures because the setup surrounding subconfigures alters
+dnl many AC_SUBSTed variables.
+MOZ_RUN_CONFIG_STATUS()
+unset WRITE_MOZINFO

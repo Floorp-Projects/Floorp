@@ -155,7 +155,7 @@ nsLocalFile::CreateUnique(uint32_t type, uint32_t attributes)
     return NS_ERROR_FILE_TOO_BIG;
 }
 
-#if defined(XP_WIN) || defined(XP_OS2)
+#if defined(XP_WIN)
 static const char16_t kPathSeparatorChar       = '\\';
 #elif defined(XP_UNIX)
 static const char16_t kPathSeparatorChar       = '/';

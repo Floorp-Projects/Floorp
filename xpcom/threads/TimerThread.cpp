@@ -20,7 +20,7 @@ using namespace mozilla;
 NS_IMPL_ISUPPORTS2(TimerThread, nsIRunnable, nsIObserver)
 
 TimerThread::TimerThread() :
-  mInitInProgress(0),
+  mInitInProgress(false),
   mInitialized(false),
   mMonitor("TimerThread.mMonitor"),
   mShutdown(false),
@@ -84,7 +84,7 @@ nsresult TimerThread::Init()
     return NS_OK;
   }
 
-  if (mInitInProgress.exchange(1) == 0) {
+  if (mInitInProgress.exchange(true) == false) {
     // We hold on to mThread to keep the thread alive.
     nsresult rv = NS_NewThread(getter_AddRefs(mThread), this);
     if (NS_FAILED(rv)) {
@@ -244,7 +244,7 @@ NS_IMETHODIMP TimerThread::Run()
             if (NS_FAILED(timer->PostTimerEvent())) {
               nsrefcnt rc;
               NS_RELEASE2(timer, rc);
-            
+
               // The nsITimer interface requires that its users keep a reference
               // to the timers they use while those timers are initialized but
               // have not yet fired.  If this ever happens, it is a bug in the

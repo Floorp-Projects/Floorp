@@ -4,7 +4,7 @@
 -->
 <html>
 <head>
-  <title>Test for Promise.all, Promise.cast, Promise.race</title>
+  <title>Test for Promise.all, Promise.race</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
@@ -18,7 +18,6 @@
 
 function promiseUtilitiesDefined() {
   ok(Promise.all, "Promise.all must be defined when Promise is enabled.");
-  ok(Promise.cast, "Promise.cast must be defined when Promise is enabled.");
   ok(Promise.race, "Promise.race must be defined when Promise is enabled.");
   runTest();
 }
@@ -142,58 +141,6 @@ function promiseAllEnumerable() {
   });
 }
 
-function promiseCastNoArg() {
-  var p = Promise.cast();
-  ok(p instanceof Promise, "Should cast to a Promise.");
-  p.then(function(v) {
-    is(v, undefined, "Resolved value should be undefined.");
-    runTest();
-  });
-}
-
-function promiseCastInteger() {
-  var p = Promise.cast(5);
-  ok(p instanceof Promise, "Should cast to a Promise.");
-  p.then(function(v) {
-    is(v, 5, "Resolved value should match original.");
-    runTest();
-  });
-}
-
-function promiseCastArray() {
-  var p = Promise.cast([1,2,3]);
-  ok(p instanceof Promise, "Should cast to a Promise.");
-  p.then(function(v) {
-    ok(Array.isArray(v), "Resolved value should be an Array");
-    is(v.length, 3, "Length should match");
-    is(v[0], 1, "Resolved value should match original");
-    is(v[1], 2, "Resolved value should match original");
-    is(v[2], 3, "Resolved value should match original");
-    runTest();
-  });
-}
-
-function promiseCastThenable() {
-  var p = Promise.cast({ then: function(onFulfill, onReject) { onFulfill(2); } });
-  ok(p instanceof Promise, "Should cast to a Promise.");
-  p.then(function(v) {
-    is(v, 2, "Should resolve to 2.");
-    runTest();
-  }, function(e) {
-    ok(false, "promiseCastThenable should've resolved");
-    runTest();
-  });
-}
-
-function promiseCastPromise() {
-  var original = Promise.resolve(true);
-  var cast = Promise.cast(original);
-
-  ok(cast instanceof Promise, "Should cast to a Promise.");
-  is(cast, original, "Should return original Promise.");
-  runTest();
-}
-
 function promiseRaceEmpty() {
   var p = Promise.race([]);
   ok(p instanceof Promise, "Should return a Promise.");
@@ -291,12 +238,6 @@ var tests = [
               promiseAllRejectFails,
               promiseAllCastError,
               promiseAllEnumerable,
-
-              promiseCastNoArg,
-              promiseCastInteger,
-              promiseCastArray,
-              promiseCastThenable,
-              promiseCastPromise,
 
               promiseRaceEmpty,
               promiseRaceValuesArray,

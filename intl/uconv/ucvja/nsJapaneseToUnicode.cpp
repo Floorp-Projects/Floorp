@@ -13,18 +13,9 @@
 
 #include "mozilla/Assertions.h"
 
-#ifdef XP_OS2
-  // HTML5-incompliant behavior for OS/2, see bug 108136
-  // This is bogus. The right fix would be working around the font problems
-  // in OS/2 gfx, since this "fix" introduces script-visible DOM differences
-  // between the platforms.
-  #define SJIS_INDEX gIBM943Index[0]
-  #define JIS0208_INDEX gIBM943Index[1]
-#else
-  // HTML5 says to use Windows-31J instead of the real Shift_JIS for decoding
-  #define SJIS_INDEX gCP932Index[0]
-  #define JIS0208_INDEX gCP932Index[1]
-#endif
+// HTML5 says to use Windows-31J instead of the real Shift_JIS for decoding
+#define SJIS_INDEX gCP932Index[0]
+#define JIS0208_INDEX gCP932Index[1]
 
 #define JIS0212_INDEX gJIS0212Index
 #define SJIS_UNMAPPED	0x30fb

@@ -9,28 +9,22 @@ CONFIGURE_SUBST_FILES += [
     'config/emptyvars.mk',
 ]
 
-if CONFIG['BUILDING_JS']:
-    if CONFIG['JS_STANDALONE']:
-        add_tier_dir('base', ['config', 'mfbt'])
-    if CONFIG['JS_HAS_CTYPES'] and not CONFIG['MOZ_NATIVE_FFI']:
-        add_tier_dir('js', ['js/src/ctypes/libffi'], static=True)
-    add_tier_dir('js', ['intl/icu'], static=True)
-    CONFIGURE_SUBST_FILES += ['intl/icu/Makefile']
-    add_tier_dir('js', ['js/src'])
-else:
+if CONFIG['ENABLE_CLANG_PLUGIN']:
+    add_tier_dir('base', 'build/clang-plugin', external=True)
+
+add_tier_dir('base', ['config', 'python'])
+if not CONFIG['JS_STANDALONE']:
     CONFIGURE_SUBST_FILES += [
         'mozilla-config.h',
         'tools/update-packaging/Makefile',
     ]
 
-    if CONFIG['ENABLE_CLANG_PLUGIN']:
-        add_tier_dir('base', 'build/clang-plugin', external=True)
+    add_tier_dir('base', ['build', 'probes'])
 
-    add_tier_dir('base', ['config', 'build', 'probes', 'python'])
+if not CONFIG['LIBXUL_SDK']:
+    add_tier_dir('base', ['mfbt'])
 
-    if not CONFIG['LIBXUL_SDK']:
-        add_tier_dir('base', ['mfbt'])
-
+    if not CONFIG['JS_STANDALONE']:
         if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gonk'):
             if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk' and CONFIG['ANDROID_VERSION'] <= '18':
                 add_tier_dir('base', ['other-licenses/android'])
@@ -43,7 +37,25 @@ else:
 
         add_tier_dir('base', ['mozglue', 'memory/mozalloc'])
 
+if not CONFIG['JS_STANDALONE']:
     add_tier_dir('precompile', 'xpcom/xpidl')
 
+    if CONFIG['COMPILE_ENVIRONMENT'] and not CONFIG['LIBXUL_SDK']:
+        if not CONFIG['MOZ_NATIVE_NSPR']:
+            add_tier_dir('nspr', 'config/nspr')
+
+        add_tier_dir('external', 'config/external')
+
+        if not CONFIG['MOZ_NATIVE_NSS']:
+             add_tier_dir('nss', 'security/build')
+
+if CONFIG['COMPILE_ENVIRONMENT'] and not CONFIG['LIBXUL_SDK']:
+    if CONFIG['BUILD_CTYPES'] and not CONFIG['MOZ_NATIVE_FFI']:
+        add_tier_dir('js', ['js/src/ctypes/libffi'], static=True)
+    add_tier_dir('js', ['intl/icu'], static=True)
+    CONFIGURE_SUBST_FILES += ['intl/icu/Makefile']
+    add_tier_dir('js', ['js/src'])
+
+if not CONFIG['JS_STANDALONE']:
     # Bring in the configuration for the configured application.
     include('/' + CONFIG['MOZ_BUILD_APP'] + '/app.mozbuild')

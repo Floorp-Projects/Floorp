@@ -14,7 +14,6 @@
 #include "nsIServiceManager.h"
 #include "nsLanguageAtomService.h"
 #include "nsPlatformCharset.h"
-#include "nsLocaleCID.h"
 
 #if defined(XP_MACOSX)
 #define USE_MAC_LOCALE
@@ -27,12 +26,6 @@
 #ifdef XP_WIN
 #include "windows/nsCollationWin.h"
 #include "windows/nsDateTimeFormatWin.h"
-#endif
-
-#ifdef XP_OS2
-#include "os2/nsOS2Locale.h"
-#include "os2/nsCollationOS2.h"
-#include "os2/nsDateTimeFormatOS2.h"
 #endif
 
 #ifdef USE_MAC_LOCALE
@@ -82,11 +75,5 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDateTimeFormatUnix)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCollationMacUC)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDateTimeFormatMac)
 #endif  
-
-#ifdef XP_OS2
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsOS2Locale)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsCollationOS2)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDateTimeFormatOS2)
-#endif
 
 #endif

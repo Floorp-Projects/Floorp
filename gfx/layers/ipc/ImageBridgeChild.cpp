@@ -941,6 +941,21 @@ ImageBridgeChild::CreateTexture(const SurfaceDescriptor& aSharedData,
   return SendPTextureConstructor(aSharedData, aFlags);
 }
 
+void
+ImageBridgeChild::RemoveTextureFromCompositable(CompositableClient* aCompositable,
+                                                TextureClient* aTexture)
+{
+  if (aTexture->GetFlags() & TEXTURE_DEALLOCATE_CLIENT) {
+    mTxn->AddEdit(OpRemoveTexture(nullptr, aCompositable->GetIPDLActor(),
+                                  nullptr, aTexture->GetIPDLActor()));
+  } else {
+    mTxn->AddNoSwapEdit(OpRemoveTexture(nullptr, aCompositable->GetIPDLActor(),
+                                        nullptr, aTexture->GetIPDLActor()));
+  }
+  // Hold texture until transaction complete.
+  HoldUntilTransaction(aTexture);
+}
+
 static void RemoveTextureSync(TextureClient* aTexture, ReentrantMonitor* aBarrier, bool* aDone)
 {
   aTexture->ForceRemove();

@@ -153,14 +153,13 @@ public:
   // Borrow a full buffer of size WEBAUDIO_BLOCK_SIZE from the source buffer
   // at offset aSourceOffset.  This avoids copying memory.
   void BorrowFromInputBuffer(AudioChunk* aOutput,
-                             uint32_t aChannels,
-                             uintptr_t aSourceOffset)
+                             uint32_t aChannels)
   {
     aOutput->mDuration = WEBAUDIO_BLOCK_SIZE;
     aOutput->mBuffer = mBuffer;
     aOutput->mChannelData.SetLength(aChannels);
     for (uint32_t i = 0; i < aChannels; ++i) {
-      aOutput->mChannelData[i] = mBuffer->GetData(i) + aSourceOffset;
+      aOutput->mChannelData[i] = mBuffer->GetData(i) + mBufferPosition;
     }
     aOutput->mVolume = 1.0f;
     aOutput->mBufferFormat = AUDIO_FORMAT_FLOAT32;
@@ -170,13 +169,12 @@ public:
   // and put it at offset aBufferOffset in the destination buffer.
   void CopyFromInputBuffer(AudioChunk* aOutput,
                            uint32_t aChannels,
-                           uintptr_t aSourceOffset,
-                           uintptr_t aBufferOffset,
+                           uintptr_t aOffsetWithinBlock,
                            uint32_t aNumberOfFrames) {
     for (uint32_t i = 0; i < aChannels; ++i) {
       float* baseChannelData = static_cast<float*>(const_cast<void*>(aOutput->mChannelData[i]));
-      memcpy(baseChannelData + aBufferOffset,
-             mBuffer->GetData(i) + aSourceOffset,
+      memcpy(baseChannelData + aOffsetWithinBlock,
+             mBuffer->GetData(i) + mBufferPosition,
              aNumberOfFrames * sizeof(float));
     }
   }
@@ -191,15 +189,14 @@ public:
                                          uint32_t aChannels,
                                          uint32_t aOffsetWithinBlock,
                                          uint32_t& aFramesWritten,
-                                         uint32_t aBufferOffset,
-                                         uint32_t aBufferMax) {
+                                         int32_t aBufferMax) {
     // TODO: adjust for mStop (see bug 913854 comment 9).
     uint32_t availableInOutputBuffer = WEBAUDIO_BLOCK_SIZE - aOffsetWithinBlock;
     SpeexResamplerState* resampler = Resampler(aStream, aChannels);
     MOZ_ASSERT(aChannels > 0);
 
-    if (aBufferOffset < aBufferMax) {
-      uint32_t availableInInputBuffer = aBufferMax - aBufferOffset;
+    if (mBufferPosition < aBufferMax) {
+      uint32_t availableInInputBuffer = aBufferMax - mBufferPosition;
       // Limit the number of input samples copied and possibly
       // format-converted for resampling by estimating how many will be used.
       // This may be a little small when filling the resampler with initial
@@ -210,7 +207,7 @@ public:
                                      availableInOutputBuffer * num / den + 10);
       for (uint32_t i = 0; true; ) {
         uint32_t inSamples = inputLimit;
-        const float* inputData = mBuffer->GetData(i) + aBufferOffset;
+        const float* inputData = mBuffer->GetData(i) + mBufferPosition;
 
         uint32_t outSamples = availableInOutputBuffer;
         float* outputData =
@@ -308,17 +305,16 @@ public:
                       uint32_t aChannels,
                       uint32_t* aOffsetWithinBlock,
                       TrackTicks* aCurrentPosition,
-                      uint32_t aBufferOffset,
-                      uint32_t aBufferMax)
+                      int32_t aBufferMax)
   {
     MOZ_ASSERT(*aCurrentPosition < mStop);
     uint32_t numFrames =
-      std::min<TrackTicks>(std::min(WEBAUDIO_BLOCK_SIZE - *aOffsetWithinBlock,
-                                    aBufferMax - aBufferOffset),
-                           mStop - *aCurrentPosition);
+      std::min(std::min<TrackTicks>(WEBAUDIO_BLOCK_SIZE - *aOffsetWithinBlock,
+                                    aBufferMax - mBufferPosition),
+               mStop - *aCurrentPosition);
     if (numFrames == WEBAUDIO_BLOCK_SIZE && !ShouldResample(aStream->SampleRate())) {
-      MOZ_ASSERT(aBufferOffset < aBufferMax);
-      BorrowFromInputBuffer(aOutput, aChannels, aBufferOffset);
+      MOZ_ASSERT(mBufferPosition < aBufferMax);
+      BorrowFromInputBuffer(aOutput, aChannels);
       *aOffsetWithinBlock += numFrames;
       *aCurrentPosition += numFrames;
       mBufferPosition += numFrames;
@@ -327,14 +323,14 @@ public:
         AllocateAudioBlock(aChannels, aOutput);
       }
       if (!ShouldResample(aStream->SampleRate())) {
-        MOZ_ASSERT(aBufferOffset < aBufferMax);
-        CopyFromInputBuffer(aOutput, aChannels, aBufferOffset, *aOffsetWithinBlock, numFrames);
+        MOZ_ASSERT(mBufferPosition < aBufferMax);
+        CopyFromInputBuffer(aOutput, aChannels, *aOffsetWithinBlock, numFrames);
         *aOffsetWithinBlock += numFrames;
         *aCurrentPosition += numFrames;
         mBufferPosition += numFrames;
       } else {
         uint32_t framesWritten;
-        CopyFromInputBufferWithResampling(aStream, aOutput, aChannels, *aOffsetWithinBlock, framesWritten, aBufferOffset, aBufferMax);
+        CopyFromInputBufferWithResampling(aStream, aOutput, aChannels, *aOffsetWithinBlock, framesWritten, aBufferMax);
         *aOffsetWithinBlock += framesWritten;
         *aCurrentPosition += framesWritten;
       }
@@ -424,15 +420,16 @@ public:
         continue;
       }
       if (mLoop) {
-        if (mBufferPosition < mLoopEnd) {
-          CopyFromBuffer(aStream, aOutput, channels, &written, &streamPosition, mBufferPosition, mLoopEnd);
-        } else {
-          uint32_t offsetInLoop = (mBufferPosition - mLoopEnd) % (mLoopEnd - mLoopStart);
-          CopyFromBuffer(aStream, aOutput, channels, &written, &streamPosition, mLoopStart + offsetInLoop, mLoopEnd);
+        // mLoopEnd can become less than mBufferPosition when a LOOPEND engine
+        // parameter is received after "loopend" is changed on the node or a
+        // new buffer with lower samplerate is set.
+        if (mBufferPosition >= mLoopEnd) {
+          mBufferPosition = mLoopStart;
         }
+        CopyFromBuffer(aStream, aOutput, channels, &written, &streamPosition, mLoopEnd);
       } else {
         if (mBufferPosition < mBufferEnd || mRemainingResamplerTail) {
-          CopyFromBuffer(aStream, aOutput, channels, &written, &streamPosition, mBufferPosition, mBufferEnd);
+          CopyFromBuffer(aStream, aOutput, channels, &written, &streamPosition, mBufferEnd);
         } else {
           FillWithZeroes(aOutput, channels, &written, &streamPosition, TRACK_TICKS_MAX);
         }

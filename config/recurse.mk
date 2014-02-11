@@ -200,13 +200,11 @@ endif # ifeq (1_.,$(MOZ_PSEUDO_DERECURSE)_$(DEPTH))
 ifdef MOZ_PSEUDO_DERECURSE
 ifeq (.,$(DEPTH))
 # top-level directories
-ifdef BUILDING_JS
 ifndef JS_STANDALONE
 # Only define recurse_targets for js, when it is built as part of gecko.
 recurse_targets := $(addsuffix /binaries,$(call TIER_DIRS,binaries))
 # we want to adjust paths for js/src.
 want_abspaths = 1
-endif
 endif
 endif
 

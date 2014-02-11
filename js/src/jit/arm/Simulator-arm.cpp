@@ -652,7 +652,8 @@ DisassembleInstruction(uint32_t pc)
     char llvmcmd[1024];
     sprintf(llvmcmd, "bash -c \"echo -n '%p'; echo '%s' | "
             "llvm-mc -disassemble -arch=arm -mcpu=cortex-a9 | "
-            "grep -v pure_instructions\"", reinterpret_cast<void*>(pc), hexbytes);
+            "grep -v pure_instructions | grep -v .text\"",
+            reinterpret_cast<void*>(pc), hexbytes);
     system(llvmcmd);
 }
 

@@ -312,7 +312,7 @@ interface nsIXPConnect : nsISupports
                   in JSCompartmentOptions aOptions);
 
     const uint32_t INIT_JS_STANDARD_CLASSES  = 1 << 0;
-    // Free bit here!
+    const uint32_t DONT_FIRE_ONNEWGLOBALHOOK = 1 << 1;
     const uint32_t OMIT_COMPONENTS_OBJECT    = 1 << 2;
 
     /**

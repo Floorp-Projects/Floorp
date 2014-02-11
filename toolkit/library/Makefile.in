@@ -16,7 +16,6 @@ endif
 
 ifdef MOZ_CONTENT_SANDBOX
 ifeq ($(OS_ARCH),WINNT)
-  LOCAL_INCLUDES += -I$(srcdir)/../sandboxbroker
   SHARED_LIBRARY_LIBS += ../../security/sandbox/win/src/sandboxbroker/$(LIB_PREFIX)sandboxbroker.$(LIB_SUFFIX)
 endif
 endif
@@ -29,16 +28,6 @@ SHARED_LIBRARY_LIBS += \
 
 ifeq ($(OS_ARCH)_$(GNU_CC),WINNT_)
 RCINCLUDE = xulrunner.rc
-
-LOCAL_INCLUDES += -I$(topsrcdir)/widget/windows
-LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/base
-endif
-
-ifeq ($(OS_ARCH),OS2)
-RCFLAGS += -i $(topsrcdir)/widget/os2
-
-LOCAL_INCLUDES += -I$(topsrcdir)/widget/os2
-LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/base
 endif
 
 # dependent libraries
@@ -175,7 +164,7 @@ ifdef MOZ_DIRECTSHOW
 OS_LIBS += $(call EXPAND_LIBNAME,dmoguids wmcodecdspuuid strmiids msdmo)
 endif
 
-ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
+ifneq (,$(filter WINNT,$(OS_ARCH)))
 SDK_LIBRARY = $(IMPORT_LIBRARY)
 else
 SDK_LIBRARY = $(SHARED_LIBRARY)
@@ -303,12 +292,6 @@ GTEST_LIB = $(EFFECTIVE_LIB_PREFIX)gtest/$(EFFECTIVE_LIB_PREFIX)$(SHARED_LIBRARY
 EXTRA_MDDEPEND_FILES = $(GTEST_LIB).pp
 
 include $(topsrcdir)/config/rules.mk
-
-# need widget/windows for resource.h (included from widget.rc)
-LOCAL_INCLUDES += \
-  -I$(topsrcdir)/config \
-  -I$(topsrcdir)/widget/windows \
-  $(NULL)
 
 OS_LIBS += $(LIBICONV)
 
