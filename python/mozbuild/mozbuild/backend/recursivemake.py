@@ -37,6 +37,7 @@ from ..frontend.data import (
     LibraryDefinition,
     LocalInclude,
     Program,
+    Resources,
     SandboxDerived,
     SandboxWrapped,
     SimpleProgram,
@@ -412,6 +413,9 @@ class RecursiveMakeBackend(CommonBackend):
 
         elif isinstance(obj, Exports):
             self._process_exports(obj, obj.exports, backend_file)
+
+        elif isinstance(obj, Resources):
+            self._process_resources(obj, obj.resources, backend_file)
 
         elif isinstance(obj, JARManifest):
             backend_file.write('JAR_MANIFEST := %s\n' % obj.path)
@@ -873,28 +877,68 @@ class RecursiveMakeBackend(CommonBackend):
         for tier in set(self._may_skip.keys()) - affected_tiers:
             self._may_skip[tier].add(backend_file.relobjdir)
 
-    def _process_exports(self, obj, exports, backend_file, namespace=""):
-        # This may not be needed, but is present for backwards compatibility
-        # with the old make rules, just in case.
-        if not obj.dist_install:
-            return
+    def _process_hierarchy(self, obj, element, namespace, action):
+        """Walks the ``HierarchicalStringList`` ``element`` and performs
+        ``action`` on each string in the heirarcy.
 
-        strings = exports.get_strings()
+        ``action`` is a callback to be invoked with the following arguments:
+        - ``source`` - The path to the source file named by the current string
+        - ``dest``   - The relative path, including the namespace, of the
+                       destination file.
+        """
+        strings = element.get_strings()
         if namespace:
             namespace += '/'
 
         for s in strings:
             source = mozpath.normpath(mozpath.join(obj.srcdir, s))
             dest = '%s%s' % (namespace, mozpath.basename(s))
+            flags = None
+            if '__getitem__' in dir(element):
+                flags = element[s]
+            action(source, dest, flags)
+
+        children = element.get_children()
+        for subdir in sorted(children):
+            self._process_hierarchy(obj, children[subdir],
+                namespace=namespace + subdir,
+                action=action)
+
+    def _process_exports(self, obj, exports, backend_file):
+        # This may not be needed, but is present for backwards compatibility
+        # with the old make rules, just in case.
+        if not obj.dist_install:
+            return
+
+        def handle_export(source, dest, flags):
             self._install_manifests['dist_include'].add_symlink(source, dest)
 
             if not os.path.exists(source):
                 raise Exception('File listed in EXPORTS does not exist: %s' % source)
 
-        children = exports.get_children()
-        for subdir in sorted(children):
-            self._process_exports(obj, children[subdir], backend_file,
-                namespace=namespace + subdir)
+        self._process_hierarchy(obj, exports,
+                                namespace="",
+                                action=handle_export)
+
+    def _process_resources(self, obj, resources, backend_file):
+        dep_path = mozpath.join(self.environment.topobjdir, '_build_manifests', '.deps', 'install')
+        def handle_resource(source, dest, flags):
+            if flags.preprocess:
+                if dest.endswith('.in'):
+                    dest = dest[:-3]
+                dep_file = mozpath.join(dep_path, mozpath.basename(source) + '.pp')
+                self._install_manifests['dist_bin'].add_preprocess(source, dest, dep_file, marker='%', defines=obj.defines)
+            else:
+                self._install_manifests['dist_bin'].add_symlink(source, dest)
+
+            if not os.path.exists(source):
+                raise Exception('File listed in RESOURCE_FILES does not exist: %s' % source)
+
+        # Resources need to go in the 'res' subdirectory of $(DIST)/bin, so we
+        # specify a root namespace of 'res'.
+        self._process_hierarchy(obj, resources,
+                                namespace='res',
+                                action=handle_resource)
 
     def _process_installation_target(self, obj, backend_file):
         # A few makefiles need to be able to override the following rules via

@@ -37,7 +37,7 @@ struct PrivateD3D10DataD2D
   RefPtr<ID3D10Effect> mEffect;
   RefPtr<ID3D10InputLayout> mInputLayout;
   RefPtr<ID3D10Buffer> mVB;
-  RefPtr<ID3D10BlendState> mBlendStates[CompositionOp::OP_COUNT];
+  RefPtr<ID3D10BlendState> mBlendStates[size_t(CompositionOp::OP_COUNT)];
 };
 
 class DrawTargetD2D : public DrawTarget

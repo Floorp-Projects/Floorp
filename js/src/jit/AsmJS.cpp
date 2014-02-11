@@ -1204,6 +1204,8 @@ class MOZ_STACK_CLASS ModuleCompiler
             !addStandardLibraryMathName("atan2", AsmJSMathBuiltin_atan2) ||
             !addStandardLibraryMathName("imul", AsmJSMathBuiltin_imul) ||
             !addStandardLibraryMathName("fround", AsmJSMathBuiltin_fround) ||
+            !addStandardLibraryMathName("min", AsmJSMathBuiltin_min) ||
+            !addStandardLibraryMathName("max", AsmJSMathBuiltin_max) ||
             !addStandardLibraryMathName("E", M_E) ||
             !addStandardLibraryMathName("LN10", M_LN10) ||
             !addStandardLibraryMathName("LN2", M_LN2) ||
@@ -2205,6 +2207,14 @@ class FunctionCompiler
         if (!curBlock_)
             return nullptr;
         T *ins = T::NewAsmJS(alloc(), lhs, rhs, type);
+        curBlock_->add(ins);
+        return ins;
+    }
+
+    MDefinition *minMax(MDefinition *lhs, MDefinition *rhs, MIRType type, bool isMax) {
+        if (!curBlock_)
+            return nullptr;
+        MMinMax *ins = MMinMax::New(alloc(), lhs, rhs, type, isMax);
         curBlock_->add(ins);
         return ins;
     }
@@ -3792,6 +3802,51 @@ CheckMathSqrt(FunctionCompiler &f, ParseNode *call, RetType retType, MDefinition
     return f.failf(call, "%s is neither a subtype of double? nor float?", argType.toChars());
 }
 
+static bool
+CheckMathMinMax(FunctionCompiler &f, ParseNode *callNode, RetType retType, MDefinition **def, Type *type, bool isMax)
+{
+    if (CallArgListLength(callNode) < 2)
+        return f.fail(callNode, "Math.min/max must be passed at least 2 arguments");
+
+    ParseNode *firstArg = CallArgList(callNode);
+    MDefinition *firstDef;
+    Type firstType;
+    if (!CheckExpr(f, firstArg, &firstDef, &firstType))
+        return false;
+
+    bool opIsDouble = firstType.isMaybeDouble();
+    bool opIsInteger = firstType.isInt();
+    MIRType opType = firstType.toMIRType();
+
+    if (!opIsDouble && !opIsInteger)
+        return f.failf(firstArg, "%s is not a subtype of double? or int", firstType.toChars());
+
+    MDefinition *lastDef = firstDef;
+    ParseNode *nextArg = NextNode(firstArg);
+    for (unsigned i = 1; i < CallArgListLength(callNode); i++, nextArg = NextNode(nextArg)) {
+        MDefinition *nextDef;
+        Type nextType;
+        if (!CheckExpr(f, nextArg, &nextDef, &nextType))
+            return false;
+
+        if (opIsDouble && !nextType.isMaybeDouble())
+            return f.failf(nextArg, "%s is not a subtype of double?", nextType.toChars());
+        if (opIsInteger && !nextType.isInt())
+            return f.failf(nextArg, "%s is not a subtype of int", nextType.toChars());
+
+        lastDef = f.minMax(lastDef, nextDef, opType, isMax);
+    }
+
+    if (opIsDouble && retType != RetType::Double)
+        return f.failf(callNode, "return type is double, used as %s", retType.toType().toChars());
+    if (opIsInteger && retType != RetType::Signed)
+        return f.failf(callNode, "return type is int, used as %s", retType.toType().toChars());
+
+    *type = opIsDouble ? Type::Double : Type::Signed;
+    *def = lastDef;
+    return true;
+}
+
 typedef bool (*CheckArgType)(FunctionCompiler &f, ParseNode *argNode, Type type);
 
 static bool
@@ -4085,6 +4140,8 @@ CheckMathBuiltinCall(FunctionCompiler &f, ParseNode *callNode, AsmJSMathBuiltinF
       case AsmJSMathBuiltin_abs:    return CheckMathAbs(f, callNode, retType, def, type);
       case AsmJSMathBuiltin_sqrt:   return CheckMathSqrt(f, callNode, retType, def, type);
       case AsmJSMathBuiltin_fround: return CheckMathFRound(f, callNode, retType, def, type);
+      case AsmJSMathBuiltin_min:    return CheckMathMinMax(f, callNode, retType, def, type, /* isMax = */ false);
+      case AsmJSMathBuiltin_max:    return CheckMathMinMax(f, callNode, retType, def, type, /* isMax = */ true);
       case AsmJSMathBuiltin_sin:    arity = 1; doubleCallee = AsmJSImm_SinD; floatCallee = AsmJSImm_SinF;      break;
       case AsmJSMathBuiltin_cos:    arity = 1; doubleCallee = AsmJSImm_CosD; floatCallee = AsmJSImm_CosF;      break;
       case AsmJSMathBuiltin_tan:    arity = 1; doubleCallee = AsmJSImm_TanD; floatCallee = AsmJSImm_TanF;      break;

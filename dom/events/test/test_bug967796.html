@@ -1,0 +1,208 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=967796
+-->
+<head>
+  <title>Test for Bug 967796</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=967796">Mozilla Bug 967796</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 967796 **/
+
+SpecialPowers.setBoolPref("dom.w3c_pointer_events.enabled", true);      // Enable Pointer Events
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(runTests);
+var outer;
+var middle;
+var inner;
+var outside;
+var container;
+var file;
+var iframe;
+var checkRelatedTarget = false;
+var expectedRelatedEnter = null;
+var expectedRelatedLeave = null;
+var pointerentercount = 0;
+var pointerleavecount = 0;
+var pointerovercount = 0;
+var pointeroutcount = 0;
+
+function sendPointerEvent(t, elem) {
+  var r = elem.getBoundingClientRect();
+  synthesizePointer(elem, r.width / 2, r.height / 2, {type: t});
+}
+
+var expectedPointerEnterTargets = [];
+var expectedPointerLeaveTargets = [];
+
+function runTests() {
+  outer = document.getElementById("outertest");
+  middle = document.getElementById("middletest");
+  inner = document.getElementById("innertest");
+  outside = document.getElementById("outside");
+  container = document.getElementById("container");
+  file = document.getElementById("file");
+  iframe = document.getElementById("iframe");
+
+  // Make sure ESM thinks pointer is outside the test elements.
+  sendPointerEvent("pointermove", outside);
+
+  pointerentercount = 0;
+  pointerleavecount = 0;
+  pointerovercount = 0;
+  pointeroutcount = 0;
+  checkRelatedTarget = true;
+  expectedRelatedEnter = outside;
+  expectedRelatedLeave = inner;
+  expectedPointerEnterTargets = ["outertest", "middletest", "innertest"];
+  sendPointerEvent("pointermove", inner);
+  is(pointerentercount, 3, "Unexpected pointerenter event count!");
+  is(pointerovercount, 1, "Unexpected pointerover event count!");
+  is(pointeroutcount, 0, "Unexpected pointerout event count!");
+  is(pointerleavecount, 0, "Unexpected pointerleave event count!");
+  expectedRelatedEnter = inner;
+  expectedRelatedLeave = outside;
+  expectedPointerLeaveTargets = ["innertest", "middletest", "outertest"];
+  sendPointerEvent("pointermove", outside);
+  is(pointerentercount, 3, "Unexpected pointerenter event count!");
+  is(pointerovercount, 1, "Unexpected pointerover event count!");
+  is(pointeroutcount, 1, "Unexpected pointerout event count!");
+  is(pointerleavecount, 3, "Unexpected pointerleave event count!");
+
+  // Event handling over native anonymous content.
+  var r = file.getBoundingClientRect();
+  expectedRelatedEnter = outside;
+  expectedRelatedLeave = file;
+  synthesizePointer(file, r.width / 6, r.height / 2, {type: "pointermove"});
+  is(pointerentercount, 4, "Unexpected pointerenter event count!");
+  is(pointerovercount, 2, "Unexpected pointerover event count!");
+  is(pointeroutcount, 1, "Unexpected pointerout event count!");
+  is(pointerleavecount, 3, "Unexpected pointerleave event count!");
+
+  // Moving pointer over type="file" shouldn't cause pointerover/out/enter/leave events
+  synthesizePointer(file, r.width - (r.width / 6), r.height / 2, {type: "pointermove"});
+  is(pointerentercount, 4, "Unexpected pointerenter event count!");
+  is(pointerovercount, 2, "Unexpected pointerover event count!");
+  is(pointeroutcount, 1, "Unexpected pointerout event count!");
+  is(pointerleavecount, 3, "Unexpected pointerleave event count!");
+
+  expectedRelatedEnter = file;
+  expectedRelatedLeave = outside;
+  sendPointerEvent("pointermove", outside);
+  is(pointerentercount, 4, "Unexpected pointerenter event count!");
+  is(pointerovercount, 2, "Unexpected pointerover event count!");
+  is(pointeroutcount, 2, "Unexpected pointerout event count!");
+  is(pointerleavecount, 4, "Unexpected pointerleave event count!");
+
+  // Initialize iframe
+  iframe.contentDocument.documentElement.style.overflow = "hidden";
+  iframe.contentDocument.body.style.margin = "0px";
+  iframe.contentDocument.body.style.width = "100%";
+  iframe.contentDocument.body.style.height = "100%";
+  iframe.contentDocument.body.innerHTML =
+    "<div style='width: 100%; height: 50%; border: 1px solid black;'></div>" +
+    "<div style='width: 100%; height: 50%; border: 1px solid black;'></div>";
+  iframe.contentDocument.body.offsetLeft; // flush
+
+  iframe.contentDocument.body.firstChild.onpointerenter = penter;
+  iframe.contentDocument.body.firstChild.onpointerleave = pleave;
+  iframe.contentDocument.body.lastChild.onpointerenter = penter;
+  iframe.contentDocument.body.lastChild.onpointerleave = pleave;
+  r = iframe.getBoundingClientRect();
+  expectedRelatedEnter = outside;
+  expectedRelatedLeave = iframe;
+  // Move pointer inside the iframe.
+  synthesizePointer(iframe.contentDocument.body, r.width / 2, r.height / 4, {type: "pointermove"},
+                    iframe.contentWindow);
+  synthesizePointer(iframe.contentDocument.body, r.width / 2, r.height - (r.height / 4), {type: "pointermove"},
+                    iframe.contentWindow);
+  is(pointerentercount, 7, "Unexpected pointerenter event count!");
+  expectedRelatedEnter = iframe;
+  expectedRelatedLeave = outside;
+  sendPointerEvent("pointermove", outside);
+  is(pointerleavecount, 7, "Unexpected pointerleave event count!");
+
+  SpecialPowers.clearUserPref("dom.w3c_pointer_events.enabled");      // Disable Pointer Events
+
+  SimpleTest.finish();
+}
+
+function penter(evt) {
+  ++pointerentercount;
+  evt.stopPropagation();
+  if (expectedPointerEnterTargets.length) {
+    var t = expectedPointerEnterTargets.shift();
+    is(evt.target.id, t, "Wrong event target!");
+  }
+  is(evt.bubbles, false, evt.type + " should not bubble!");
+  is(evt.cancelable, true, evt.type + " is cancelable!");
+  is(evt.target, evt.currentTarget, "Wrong event target!");
+  ok(!evt.relatedTarget || evt.target.ownerDocument == evt.relatedTarget.ownerDocument,
+     "Leaking nodes to another document?");
+  if (checkRelatedTarget && evt.target.ownerDocument == document) {
+    is(evt.relatedTarget, expectedRelatedEnter, "Wrong related target (pointerenter)");
+  }
+}
+
+function pleave(evt) {
+  ++pointerleavecount;
+  evt.stopPropagation();
+  if (expectedPointerLeaveTargets.length) {
+    var t = expectedPointerLeaveTargets.shift();
+    is(evt.target.id, t, "Wrong event target!");
+  }
+  is(evt.bubbles, false, evt.type + " should not bubble!");
+  is(evt.cancelable, true, evt.type + " is cancelable!");
+  is(evt.target, evt.currentTarget, "Wrong event target!");
+  ok(!evt.relatedTarget || evt.target.ownerDocument == evt.relatedTarget.ownerDocument,
+     "Leaking nodes to another document?");
+  if (checkRelatedTarget && evt.target.ownerDocument == document) {
+    is(evt.relatedTarget, expectedRelatedLeave, "Wrong related target (pointerleave)");
+  }
+}
+
+function pover(evt) {
+  ++pointerovercount;
+  evt.stopPropagation();
+}
+
+function pout(evt) {
+  ++pointeroutcount;
+  evt.stopPropagation();
+}
+
+</script>
+</pre>
+<div id="container" onpointerenter="penter(event)" onpointerleave="pleave(event)"
+                    onpointerout="pout(event)" onpointerover="pover(event)">
+  <div id="outside" onpointerout="event.stopPropagation()" onpointerover="event.stopPropagation()">foo</div>
+  <div id="outertest" onpointerenter="penter(event)" onpointerleave="pleave(event)"
+                      onpointerout="pout(event)" onpointerover="pover(event)">
+    <div id="middletest" onpointerenter="penter(event)" onpointerleave="pleave(event)"
+                         onpointerout="pout(event)" onpointerover="pover(event)">
+      <div id="innertest" onpointerenter="penter(event)" onpointerleave="pleave(event)"
+                          onpointerout="pout(event)" onpointerover="pover(event)">foo</div>
+    </div>
+  </div>
+  <input type="file" id="file"
+         onpointerenter="penter(event)" onpointerleave="pleave(event)"
+         onpointerout="pout(event)" onpointerover="pover(event)">
+  <br>
+  <iframe id="iframe" width="50px" height="50px"
+          onpointerenter="penter(event)" onpointerleave="pleave(event)"
+          onpointerout="pout(event)" onpointerover="pover(event)"></iframe>
+</div>
+</body>
+</html>

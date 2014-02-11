@@ -338,7 +338,9 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     this._summary = $("#requests-menu-network-summary-label");
     this._summary.setAttribute("value", L10N.getStr("networkMenu.empty"));
 
+    Prefs.filters.forEach(type => this.filterOn(type));
     this.sortContents(this._byTiming);
+
     this.allowFocusOnRightClick = true;
     this.maintainSelectionVisible = true;
     this.widget.autoscrollWithAppendedItems = true;
@@ -386,6 +388,8 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
   destroy: function() {
     dumpn("Destroying the SourcesView");
 
+    Prefs.filters = this._activeFilters;
+
     this.widget.removeEventListener("select", this._onSelect, false);
     this._splitter.removeEventListener("mousemove", this._onResize, false);
     window.removeEventListener("resize", this._onResize, false);
@@ -414,7 +418,6 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    */
   reset: function() {
     this.empty();
-    this.filterOn("all");
     this._firstRequestStartedMillis = -1;
     this._lastRequestEndedMillis = -1;
   },
@@ -588,6 +591,17 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
   },
 
   /**
+   * Same as `filterOn`, except that it only allows a single type exclusively.
+   *
+   * @param string aType
+   *        @see RequestsMenuView.prototype.fitlerOn
+   */
+  filterOnlyOn: function(aType = "all") {
+    this._activeFilters.slice().forEach(this._disableFilter, this);
+    this.filterOn(aType);
+  },
+
+  /**
    * Disables the given filter, its button and toggles 'all' on if the filter to
    * be disabled is the last one active.
    *
@@ -604,8 +618,9 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     target.removeAttribute("checked");
 
     // Check if the filter disabled was the last one. If so, toggle all on.
-    if (this._activeFilters.length === 0)
+    if (this._activeFilters.length === 0) {
       this._enableFilter("all");
+    }
   },
 
   /**
@@ -2461,7 +2476,7 @@ PerformanceStatisticsView.prototype = {
     });
 
     chart.on("click", (_, item) => {
-      NetMonitorView.RequestsMenu.filterOn(item.label);
+      NetMonitorView.RequestsMenu.filterOnlyOn(item.label);
       NetMonitorView.showNetworkInspectorView();
     });
 

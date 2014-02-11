@@ -11,3 +11,7 @@ SOURCES += [
 LIBRARY_NAME = 'vmwarerecordinghelper'
 
 FORCE_SHARED_LIB = True
+
+DEFFILE = '%s/%s.def' % (SRCDIR, LIBRARY_NAME)
+
+USE_STATIC_LIBS = True

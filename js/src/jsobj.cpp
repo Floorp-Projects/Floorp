@@ -581,13 +581,12 @@ DefinePropertyOnObject(JSContext *cx, HandleObject obj, HandleId id, const PropD
 
         JS_ASSERT(desc.isAccessorDescriptor());
 
-        RootedValue tmp(cx, UndefinedValue());
-        return baseops::DefineGeneric(cx, obj, id, tmp,
+        return baseops::DefineGeneric(cx, obj, id, UndefinedHandleValue,
                                       desc.getter(), desc.setter(), desc.attributes());
     }
 
     /* 8.12.9 steps 5-6 (note 5 is merely a special case of 6). */
-    RootedValue v(cx, UndefinedValue());
+    RootedValue v(cx);
 
     JS_ASSERT(obj == obj2);
 
@@ -2222,8 +2221,8 @@ JSObject::ReserveForTradeGuts(JSContext *cx, JSObject *aArg, JSObject *bArg,
      * other object.
      */
 
-    unsigned adynamic = dynamicSlotsCount(reserved.newafixed, b->slotSpan());
-    unsigned bdynamic = dynamicSlotsCount(reserved.newbfixed, a->slotSpan());
+    unsigned adynamic = dynamicSlotsCount(reserved.newafixed, b->slotSpan(), b->getClass());
+    unsigned bdynamic = dynamicSlotsCount(reserved.newbfixed, a->slotSpan(), a->getClass());
 
     if (adynamic) {
         reserved.newaslots = cx->pod_malloc<HeapSlot>(adynamic);
@@ -2654,8 +2653,8 @@ JSObject::updateSlotsForSpan(ThreadSafeContext *cx,
     JS_ASSERT(cx->isThreadLocal(obj));
     JS_ASSERT(oldSpan != newSpan);
 
-    size_t oldCount = dynamicSlotsCount(obj->numFixedSlots(), oldSpan);
-    size_t newCount = dynamicSlotsCount(obj->numFixedSlots(), newSpan);
+    size_t oldCount = dynamicSlotsCount(obj->numFixedSlots(), oldSpan, obj->getClass());
+    size_t newCount = dynamicSlotsCount(obj->numFixedSlots(), newSpan, obj->getClass());
 
     if (oldSpan < newSpan) {
         if (oldCount < newCount && !JSObject::growSlots(cx, obj, oldCount, newCount))
@@ -2748,7 +2747,7 @@ JSObject::growSlots(ThreadSafeContext *cx, HandleObject obj, uint32_t oldCount, 
 {
     JS_ASSERT(cx->isThreadLocal(obj));
     JS_ASSERT(newCount > oldCount);
-    JS_ASSERT(newCount >= SLOT_CAPACITY_MIN);
+    JS_ASSERT_IF(!obj->is<ArrayObject>(), newCount >= SLOT_CAPACITY_MIN);
 
     /*
      * Slot capacities are determined by the span of allocated objects. Due to
@@ -2834,7 +2833,7 @@ JSObject::shrinkSlots(ThreadSafeContext *cx, HandleObject obj, uint32_t oldCount
         return;
     }
 
-    JS_ASSERT(newCount >= SLOT_CAPACITY_MIN);
+    JS_ASSERT_IF(!obj->is<ArrayObject>(), newCount >= SLOT_CAPACITY_MIN);
 
     // Global slots may be read during off thread compilation, and updates to
     // their slot pointers need to be synchronized.
@@ -3330,7 +3329,7 @@ js_FindClassObject(ExclusiveContext *cx, MutableHandleObject protop, const Class
     RootedShape shape(cx);
     if (!LookupPropertyWithFlags(cx, cx->global(), id, 0, &pobj, &shape))
         return false;
-    RootedValue v(cx, UndefinedValue());
+    RootedValue v(cx);
     if (shape && pobj->isNative()) {
         if (shape->hasSlot())
             v = pobj->nativeGetSlot(shape->slot());

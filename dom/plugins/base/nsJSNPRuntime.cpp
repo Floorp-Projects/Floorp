@@ -659,8 +659,7 @@ doInvoke(NPObject *npobj, NPIdentifier method, const NPVariant *args,
       ok = true;
     }
   } else {
-    ok = ::JS_CallFunctionValue(cx, npjsobj->mJSObj, fv, jsargs.length(),
-                                jsargs.begin(), v.address());
+    ok = ::JS_CallFunctionValue(cx, npjsobj->mJSObj, fv, jsargs, v.address());
   }
 
   if (ok)
@@ -1606,7 +1605,7 @@ NPObjWrapper_Convert(JSContext *cx, JS::Handle<JSObject*> obj, JSType hint, JS::
   if (!JS_GetProperty(cx, obj, "toString", &v))
     return false;
   if (!JSVAL_IS_PRIMITIVE(v) && JS_ObjectIsCallable(cx, JSVAL_TO_OBJECT(v))) {
-    if (!JS_CallFunctionValue(cx, obj, v, 0, nullptr, vp.address()))
+    if (!JS_CallFunctionValue(cx, obj, v, JS::EmptyValueArray, vp.address()))
       return false;
     if (JSVAL_IS_PRIMITIVE(vp))
       return true;
