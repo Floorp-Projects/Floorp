@@ -4439,11 +4439,13 @@ if test "$JS_HAS_CTYPES" -a -z "$MOZ_NATIVE_FFI"; then
   if test "$DSO_PIC_CFLAGS"; then
     ac_configure_args="$ac_configure_args --with-pic"
   fi
+  for var in AS CC CXX CPP LD AR RANLIB STRIP; do
+    ac_configure_args="$ac_configure_args $var='`eval echo \\${${var}}`'"
+  done
   if test "$CROSS_COMPILE"; then
-    export AS CC CXX CPP LD AR RANLIB STRIP CPPFLAGS CFLAGS LDFLAGS
-
-    ac_configure_args="$ac_configure_args --build=$build --host=$target HOST_CC=\"$HOST_CC\""
+    export CPPFLAGS CFLAGS LDFLAGS
   fi
+  ac_configure_args="$ac_configure_args --build=$build --host=$target"
   if test "$_MSC_VER"; then
     # Use a wrapper script for cl and ml that looks more like gcc.
     # autotools can't quite handle an MSVC build environment yet.
@@ -4453,7 +4455,7 @@ if test "$JS_HAS_CTYPES" -a -z "$MOZ_NATIVE_FFI"; then
     case "${target_cpu}" in
     x86_64)
       # Need target since MSYS tools into mozilla-build may be 32bit
-      ac_configure_args="$ac_configure_args CC=\"$_topsrcdir/js/src/ctypes/libffi/msvcc.sh -m64\" --build=$build --host=$target"
+      ac_configure_args="$ac_configure_args CC=\"$_topsrcdir/js/src/ctypes/libffi/msvcc.sh -m64\""
       ;;
     *)
       ac_configure_args="$ac_configure_args CC=$_topsrcdir/js/src/ctypes/libffi/msvcc.sh"
