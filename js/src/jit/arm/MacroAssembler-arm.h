@@ -626,6 +626,10 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void pop(const FloatRegister &reg) {
         ma_vpop(VFPRegister(reg));
     }
+    void pop(const Address &address) {
+        ma_ldr(Operand(address.base, address.offset), ScratchRegister);
+        ma_pop(ScratchRegister);
+    }
 
     void popN(const Register &reg, Imm32 extraSpace) {
         Imm32 totSpace = Imm32(extraSpace.value + 4);

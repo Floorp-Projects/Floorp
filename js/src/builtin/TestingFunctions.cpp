@@ -257,6 +257,28 @@ MinorGC(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
+static bool
+DisableGGC(JSContext *cx, unsigned argc, jsval *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+#ifdef JSGC_GENERATIONAL
+    JS::DisableGenerationalGC(cx->runtime());
+#endif
+    args.rval().setUndefined();
+    return true;
+}
+
+static bool
+EnableGGC(JSContext *cx, unsigned argc, jsval *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+#ifdef JSGC_GENERATIONAL
+    JS::EnableGenerationalGC(cx->runtime());
+#endif
+    args.rval().setUndefined();
+    return true;
+}
+
 static const struct ParamPair {
     const char      *name;
     JSGCParamKey    param;
@@ -1428,6 +1450,15 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 "minorgc([aboutToOverflow])",
 "  Run a minor collector on the Nursery. When aboutToOverflow is true, marks\n"
 "  the store buffer as about-to-overflow before collecting."),
+
+    JS_FN_HELP("disableGenerationalGC", ::DisableGGC, 0, 0,
+"disableGenerationalGC()",
+"  In builds with support for generational GC, disable generational GC."),
+
+    JS_FN_HELP("enableGenerationalGC", ::EnableGGC, 0, 0,
+"enableGenerationalGC()",
+"  In builds with support for generational GC, re-enable a disabled\n"
+"  generational GC."),
 
     JS_FN_HELP("gcparam", GCParameter, 2, 0,
 "gcparam(name [, value])",
