@@ -930,6 +930,62 @@ class AutoObjectHashSet : public AutoHashSetRooter<JSObject *>
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
+/* AutoArrayRooter roots an external array of Values. */
+class AutoArrayRooter : private AutoGCRooter
+{
+  public:
+    AutoArrayRooter(JSContext *cx, size_t len, Value *vec
+                    MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : AutoGCRooter(cx, len), array(vec), skip(cx, array, len)
+    {
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+        JS_ASSERT(tag_ >= 0);
+    }
+
+    void changeLength(size_t newLength) {
+        tag_ = ptrdiff_t(newLength);
+        JS_ASSERT(tag_ >= 0);
+    }
+
+    void changeArray(Value *newArray, size_t newLength) {
+        changeLength(newLength);
+        array = newArray;
+    }
+
+    Value *start() {
+        return array;
+    }
+
+    size_t length() {
+        JS_ASSERT(tag_ >= 0);
+        return size_t(tag_);
+    }
+
+    MutableHandleValue handleAt(size_t i) {
+        JS_ASSERT(i < size_t(tag_));
+        return MutableHandleValue::fromMarkedLocation(&array[i]);
+    }
+    HandleValue handleAt(size_t i) const {
+        JS_ASSERT(i < size_t(tag_));
+        return HandleValue::fromMarkedLocation(&array[i]);
+    }
+    MutableHandleValue operator[](size_t i) {
+        JS_ASSERT(i < size_t(tag_));
+        return MutableHandleValue::fromMarkedLocation(&array[i]);
+    }
+    HandleValue operator[](size_t i) const {
+        JS_ASSERT(i < size_t(tag_));
+        return HandleValue::fromMarkedLocation(&array[i]);
+    }
+
+    friend void AutoGCRooter::trace(JSTracer *trc);
+
+  private:
+    Value *array;
+    js::SkipRoot skip;
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
 class AutoAssertNoException
 {
 #ifdef DEBUG
