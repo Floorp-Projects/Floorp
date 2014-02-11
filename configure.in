@@ -3797,18 +3797,9 @@ AC_SUBST(MOZ_NATIVE_HUNSPELL)
 dnl ========================================================
 dnl system libffi Support
 dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(system-ffi,
-[  --enable-system-ffi       Use system libffi (located with pkgconfig)],
-    MOZ_NATIVE_FFI=1 )
+MOZ_CONFIG_FFI()
 
 if test -n "$MOZ_NATIVE_FFI"; then
-    # Vanilla libffi 3.0.9 needs a few patches from upcoming version 3.0.10
-    # for non-GCC compilers.
-    if test -z "$GNU_CC"; then
-        PKG_CHECK_MODULES(MOZ_FFI, libffi > 3.0.9)
-    else
-        PKG_CHECK_MODULES(MOZ_FFI, libffi >= 3.0.9)
-    fi
     MOZ_JS_STATIC_LIBS="$MOZ_JS_STATIC_LIBS $MOZ_FFI_LIBS"
 fi
 
