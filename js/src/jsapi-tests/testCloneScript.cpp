@@ -137,8 +137,8 @@ BEGIN_TEST(test_cloneScriptWithPrincipals)
         CHECK(JS_GetScriptPrincipals(script) == principalsB);
 
         JS::RootedValue v(cx);
-        JS::Value args[] = { JS::Int32Value(1) };
-        CHECK(JS_CallFunctionValue(cx, B, JS::ObjectValue(*cloned), 1, args, v.address()));
+        JS::RootedValue arg(cx, JS::Int32Value(1));
+        CHECK(JS_CallFunctionValue(cx, B, JS::ObjectValue(*cloned), arg, v.address()));
         CHECK(v.isObject());
 
         JSObject *funobj = &v.toObject();

@@ -224,10 +224,9 @@ bool testIndirectEval(JS::HandleObject scope, const char *code)
         JSAutoCompartment ae(cx, scope);
         JSString *codestr = JS_NewStringCopyZ(cx, code);
         CHECK(codestr);
-        JS::AutoValueArray<1> args(cx);
-        args[1].setString(codestr);
+        JS::RootedValue arg(cx, JS::StringValue(codestr));
         JS::RootedValue v(cx);
-        CHECK(JS_CallFunctionName(cx, scope, "eval", 1, args.begin(), v.address()));
+        CHECK(JS_CallFunctionName(cx, scope, "eval", arg, v.address()));
     }
 
     JS::RootedValue hitsv(cx);
