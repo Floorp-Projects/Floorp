@@ -16,7 +16,7 @@
 #include "nsIArray.h"
 #include "nsIDocument.h"
 #include "nsIDocShellTreeItem.h"
-#include "nsIXULRuntime.h"
+#include "nsXULAppAPI.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -59,7 +59,7 @@ nsWinUtils::MaybeStartWindowEmulation()
   // with tabs.
   if (Compatibility::IsJAWS() || Compatibility::IsWE() ||
       Compatibility::IsDolphin() ||
-      BrowserTabsRemote()) {
+      XRE_GetProcessType() == GeckoProcessType_Content) {
     RegisterNativeWindow(kClassNameTabContent);
     sHWNDCache = new nsRefPtrHashtable<nsPtrHashKey<void>, DocAccessible>(4);
     return true;
