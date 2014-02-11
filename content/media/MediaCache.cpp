@@ -381,8 +381,7 @@ MediaCacheStream::MediaCacheStream(ChannelMediaResource* aClient)
     mPlaybackBytesPerSecond(10000),
     mPinCount(0),
     mCurrentMode(MODE_PLAYBACK),
-    mMetadataInPartialBlockBuffer(false),
-    mPartialBlockBuffer(new int64_t[BLOCK_SIZE/sizeof(int64_t)])
+    mMetadataInPartialBlockBuffer(false)
 {
 }
 
@@ -1736,12 +1735,12 @@ MediaCacheStream::NotifyDataReceived(int64_t aSize, const char* aData,
         // to clear this flag.
         mMetadataInPartialBlockBuffer = false;
       }
-      memcpy(reinterpret_cast<char*>(mPartialBlockBuffer.get()) + blockOffset,
+      memcpy(reinterpret_cast<char*>(mPartialBlockBuffer) + blockOffset,
              data, chunkSize);
 
       if (blockOffset + chunkSize == BLOCK_SIZE) {
         // We completed a block, so lets write it out.
-        blockDataToStore = reinterpret_cast<char*>(mPartialBlockBuffer.get());
+        blockDataToStore = reinterpret_cast<char*>(mPartialBlockBuffer);
         if (mMetadataInPartialBlockBuffer) {
           mode = MODE_METADATA;
         }
@@ -1789,7 +1788,7 @@ MediaCacheStream::FlushPartialBlockInternal(bool aNotifyAll)
                aNotifyAll ? "yes" : "no"));
 
     // Write back the partial block
-    memset(reinterpret_cast<char*>(mPartialBlockBuffer.get()) + blockOffset, 0,
+    memset(reinterpret_cast<char*>(mPartialBlockBuffer) + blockOffset, 0,
            BLOCK_SIZE - blockOffset);
     gMediaCache->AllocateAndWriteBlock(this, mPartialBlockBuffer,
         mMetadataInPartialBlockBuffer ? MODE_METADATA : MODE_PLAYBACK);
@@ -2183,7 +2182,7 @@ MediaCacheStream::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
         // the cache.
         bytes = std::min<int64_t>(size, streamWithPartialBlock->mChannelOffset - mStreamOffset);
         memcpy(aBuffer,
-          reinterpret_cast<char*>(streamWithPartialBlock->mPartialBlockBuffer.get()) + offsetInStreamBlock, bytes);
+          reinterpret_cast<char*>(streamWithPartialBlock->mPartialBlockBuffer) + offsetInStreamBlock, bytes);
         if (mCurrentMode == MODE_METADATA) {
           streamWithPartialBlock->mMetadataInPartialBlockBuffer = true;
         }
@@ -2278,7 +2277,7 @@ MediaCacheStream::ReadFromCache(char* aBuffer,
       // the cache.
       bytes = std::min<int64_t>(size, mChannelOffset - streamOffset);
       memcpy(aBuffer + count,
-        reinterpret_cast<char*>(mPartialBlockBuffer.get()) + offsetInStreamBlock, bytes);
+        reinterpret_cast<char*>(mPartialBlockBuffer) + offsetInStreamBlock, bytes);
     } else {
       if (cacheBlock < 0) {
         // We expect all blocks to be cached! Fail!
