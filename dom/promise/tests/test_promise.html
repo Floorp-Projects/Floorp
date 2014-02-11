@@ -573,6 +573,43 @@ function promiseStrictHandlers() {
   });
 }
 
+function promiseResolveArray() {
+  var p = Promise.resolve([1,2,3]);
+  ok(p instanceof Promise, "Should return a Promise.");
+  p.then(function(v) {
+    ok(Array.isArray(v), "Resolved value should be an Array");
+    is(v.length, 3, "Length should match");
+    is(v[0], 1, "Resolved value should match original");
+    is(v[1], 2, "Resolved value should match original");
+    is(v[2], 3, "Resolved value should match original");
+    runTest();
+  });
+}
+
+function promiseResolveThenable() {
+  var p = Promise.resolve({ then: function(onFulfill, onReject) { onFulfill(2); } });
+  ok(p instanceof Promise, "Should cast to a Promise.");
+  p.then(function(v) {
+    is(v, 2, "Should resolve to 2.");
+    runTest();
+  }, function(e) {
+    ok(false, "promiseResolveThenable should've resolved");
+    runTest();
+  });
+}
+
+function promiseResolvePromise() {
+  var original = Promise.resolve(true);
+  var cast = Promise.resolve(original);
+
+  ok(cast instanceof Promise, "Should cast to a Promise.");
+  is(cast, original, "Should return original Promise.");
+  cast.then(function(v) {
+    is(v, true, "Should resolve to true.");
+    runTest();
+  });
+}
+
 var tests = [ promiseResolve, promiseReject,
               promiseException, promiseGC, promiseAsync,
               promiseDoubleThen, promiseThenException,
@@ -599,6 +636,9 @@ var tests = [ promiseResolve, promiseReject,
               promiseThenableRejectThenResolve,
               promiseWithThenReplaced,
               promiseStrictHandlers,
+              promiseResolveArray,
+              promiseResolveThenable,
+              promiseResolvePromise,
             ];
 
 function runTest() {

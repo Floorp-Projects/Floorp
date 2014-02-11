@@ -17,3 +17,7 @@ XPCSHELL_TESTS_MANIFESTS += [
 ]
 
 FINAL_LIBRARY = 'browsercomps'
+
+LOCAL_INCLUDES += [
+    '../build'
+]

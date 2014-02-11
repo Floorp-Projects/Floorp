@@ -13,7 +13,7 @@
 
 #ifdef XP_UNIX
   #include <sys/stat.h>
-#elif defined (XP_WIN) || defined(XP_OS2)
+#elif defined (XP_WIN)
   #include <io.h>
 #endif
 

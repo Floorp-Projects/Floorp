@@ -17,9 +17,8 @@ const DANGLING_LINK  = "dangling_link";
 const LOOP_LINK      = "loop_link";
 
 const isWin = checkOS("Win");
-const isOS2 = checkOS("OS2");
 const isMac = checkOS("Mac");
-const isUnix = !(isWin || isOS2 || isMac);
+const isUnix = !(isWin || isMac);
 
 const nsIFile = Components.interfaces.nsIFile;
 
@@ -141,7 +140,7 @@ function testSymLinks(testDir, relative) {
 
 function run_test() {
   // Skip this test on Windows
-  if (isWin || isOS2)
+  if (isWin)
     return;
 
   var testDir = CWD;

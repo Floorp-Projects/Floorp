@@ -27,7 +27,7 @@ public:
 #if defined(XP_UNIX) && !defined(XP_MACOSX)
         mNP_GetValue(nullptr),
 #endif
-#if defined(XP_WIN) || defined(XP_MACOSX) || defined(XP_OS2)
+#if defined(XP_WIN) || defined(XP_MACOSX)
         mNP_GetEntryPoints(nullptr),
 #endif
         mNPP_New(nullptr),
@@ -72,7 +72,7 @@ public:
             return false;
 #endif
 
-#if defined(XP_WIN) || defined(XP_MACOSX) || defined(XP_OS2)
+#if defined(XP_WIN) || defined(XP_MACOSX)
         mNP_GetEntryPoints = (NP_GetEntryPointsFunc)
             PR_FindFunctionSymbol(mLibrary, "NP_GetEntryPoints");
         if (!mNP_GetEntryPoints)
@@ -95,7 +95,7 @@ public:
     virtual nsresult NP_GetValue(void *future, NPPVariable aVariable,
                                  void *aValue, NPError* error);
 
-#if defined(XP_WIN) || defined(XP_MACOSX) || defined(XP_OS2)
+#if defined(XP_WIN) || defined(XP_MACOSX)
     virtual nsresult NP_GetEntryPoints(NPPluginFuncs* pFuncs, NPError* error);
 #endif
 
@@ -130,7 +130,7 @@ private:
 #if defined(XP_UNIX) && !defined(XP_MACOSX)
     NP_GetValueFunc mNP_GetValue;
 #endif
-#if defined(XP_WIN) || defined(XP_MACOSX) || defined(XP_OS2)
+#if defined(XP_WIN) || defined(XP_MACOSX)
     NP_GetEntryPointsFunc mNP_GetEntryPoints;
 #endif
     NPP_NewProcPtr mNPP_New;

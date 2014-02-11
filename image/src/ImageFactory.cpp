@@ -143,14 +143,12 @@ SaturateToInt32(int64_t val)
 uint32_t
 GetContentSize(nsIRequest* aRequest)
 {
-  // Use content-length as a size hint for http channels.
-  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aRequest));
-  if (httpChannel) {
-    nsAutoCString contentLength;
-    nsresult rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("content-length"),
-                                                 contentLength);
+  nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
+  if (channel) {
+    int64_t size;
+    nsresult rv = channel->GetContentLength(&size);
     if (NS_SUCCEEDED(rv)) {
-      return std::max(contentLength.ToInteger(&rv), 0);
+      return std::max(SaturateToInt32(size), 0);
     }
   }
 

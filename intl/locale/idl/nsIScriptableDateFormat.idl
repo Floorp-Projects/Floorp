@@ -62,7 +62,7 @@ interface nsIScriptableDateFormat : nsISupports
      *     Wednesday, January 29, 2003 4:02:14 PM
      * In US English dateFormatShort output will be like:
      *     1/29/03 4:02:14 PM
-     * On platforms like Linux and OS2, it is rather difficult to achieve exact
+     * On platforms like Linux, it is rather difficult to achieve exact
      * same output, and since we are aiming at human readers, it does not make
      * sense to achieve exact same result. We will do just enough as the
      * platform allow us to do. 

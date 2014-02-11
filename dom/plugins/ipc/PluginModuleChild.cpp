@@ -777,168 +777,168 @@ namespace mozilla {
 namespace plugins {
 namespace child {
 
-static NPError NP_CALLBACK
+static NPError
 _requestread(NPStream *pstream, NPByteRange *rangeList);
 
-static NPError NP_CALLBACK
+static NPError
 _geturlnotify(NPP aNPP, const char* relativeURL, const char* target,
               void* notifyData);
 
-static NPError NP_CALLBACK
+static NPError
 _getvalue(NPP aNPP, NPNVariable variable, void *r_value);
 
-static NPError NP_CALLBACK
+static NPError
 _setvalue(NPP aNPP, NPPVariable variable, void *r_value);
 
-static NPError NP_CALLBACK
+static NPError
 _geturl(NPP aNPP, const char* relativeURL, const char* target);
 
-static NPError NP_CALLBACK
+static NPError
 _posturlnotify(NPP aNPP, const char* relativeURL, const char *target,
                uint32_t len, const char *buf, NPBool file, void* notifyData);
 
-static NPError NP_CALLBACK
+static NPError
 _posturl(NPP aNPP, const char* relativeURL, const char *target, uint32_t len,
          const char *buf, NPBool file);
 
-static NPError NP_CALLBACK
+static NPError
 _newstream(NPP aNPP, NPMIMEType type, const char* window, NPStream** pstream);
 
-static int32_t NP_CALLBACK
+static int32_t
 _write(NPP aNPP, NPStream *pstream, int32_t len, void *buffer);
 
-static NPError NP_CALLBACK
+static NPError
 _destroystream(NPP aNPP, NPStream *pstream, NPError reason);
 
-static void NP_CALLBACK
+static void
 _status(NPP aNPP, const char *message);
 
-static void NP_CALLBACK
+static void
 _memfree (void *ptr);
 
-static uint32_t NP_CALLBACK
+static uint32_t
 _memflush(uint32_t size);
 
-static void NP_CALLBACK
+static void
 _reloadplugins(NPBool reloadPages);
 
-static void NP_CALLBACK
+static void
 _invalidaterect(NPP aNPP, NPRect *invalidRect);
 
-static void NP_CALLBACK
+static void
 _invalidateregion(NPP aNPP, NPRegion invalidRegion);
 
-static void NP_CALLBACK
+static void
 _forceredraw(NPP aNPP);
 
-static const char* NP_CALLBACK
+static const char*
 _useragent(NPP aNPP);
 
-static void* NP_CALLBACK
+static void*
 _memalloc (uint32_t size);
 
 // Deprecated entry points for the old Java plugin.
-static void* NP_CALLBACK /* OJI type: JRIEnv* */
+static void* /* OJI type: JRIEnv* */
 _getjavaenv(void);
 
 // Deprecated entry points for the old Java plugin.
-static void* NP_CALLBACK /* OJI type: jref */
+static void* /* OJI type: jref */
 _getjavapeer(NPP aNPP);
 
-static bool NP_CALLBACK
+static bool
 _invoke(NPP aNPP, NPObject* npobj, NPIdentifier method, const NPVariant *args,
         uint32_t argCount, NPVariant *result);
 
-static bool NP_CALLBACK
+static bool
 _invokedefault(NPP aNPP, NPObject* npobj, const NPVariant *args,
                uint32_t argCount, NPVariant *result);
 
-static bool NP_CALLBACK
+static bool
 _evaluate(NPP aNPP, NPObject* npobj, NPString *script, NPVariant *result);
 
-static bool NP_CALLBACK
+static bool
 _getproperty(NPP aNPP, NPObject* npobj, NPIdentifier property,
              NPVariant *result);
 
-static bool NP_CALLBACK
+static bool
 _setproperty(NPP aNPP, NPObject* npobj, NPIdentifier property,
              const NPVariant *value);
 
-static bool NP_CALLBACK
+static bool
 _removeproperty(NPP aNPP, NPObject* npobj, NPIdentifier property);
 
-static bool NP_CALLBACK
+static bool
 _hasproperty(NPP aNPP, NPObject* npobj, NPIdentifier propertyName);
 
-static bool NP_CALLBACK
+static bool
 _hasmethod(NPP aNPP, NPObject* npobj, NPIdentifier methodName);
 
-static bool NP_CALLBACK
+static bool
 _enumerate(NPP aNPP, NPObject *npobj, NPIdentifier **identifier,
            uint32_t *count);
 
-static bool NP_CALLBACK
+static bool
 _construct(NPP aNPP, NPObject* npobj, const NPVariant *args,
            uint32_t argCount, NPVariant *result);
 
-static void NP_CALLBACK
+static void
 _releasevariantvalue(NPVariant *variant);
 
-static void NP_CALLBACK
+static void
 _setexception(NPObject* npobj, const NPUTF8 *message);
 
-static void NP_CALLBACK
+static void
 _pushpopupsenabledstate(NPP aNPP, NPBool enabled);
 
-static void NP_CALLBACK
+static void
 _poppopupsenabledstate(NPP aNPP);
 
-static void NP_CALLBACK
+static void
 _pluginthreadasynccall(NPP instance, PluginThreadCallback func,
                        void *userData);
 
-static NPError NP_CALLBACK
+static NPError
 _getvalueforurl(NPP npp, NPNURLVariable variable, const char *url,
                 char **value, uint32_t *len);
 
-static NPError NP_CALLBACK
+static NPError
 _setvalueforurl(NPP npp, NPNURLVariable variable, const char *url,
                 const char *value, uint32_t len);
 
-static NPError NP_CALLBACK
+static NPError
 _getauthenticationinfo(NPP npp, const char *protocol,
                        const char *host, int32_t port,
                        const char *scheme, const char *realm,
                        char **username, uint32_t *ulen,
                        char **password, uint32_t *plen);
 
-static uint32_t NP_CALLBACK
+static uint32_t
 _scheduletimer(NPP instance, uint32_t interval, NPBool repeat,
                void (*timerFunc)(NPP npp, uint32_t timerID));
 
-static void NP_CALLBACK
+static void
 _unscheduletimer(NPP instance, uint32_t timerID);
 
-static NPError NP_CALLBACK
+static NPError
 _popupcontextmenu(NPP instance, NPMenu* menu);
 
-static NPBool NP_CALLBACK
+static NPBool
 _convertpoint(NPP instance, 
               double sourceX, double sourceY, NPCoordinateSpace sourceSpace,
               double *destX, double *destY, NPCoordinateSpace destSpace);
 
-static void NP_CALLBACK
+static void
 _urlredirectresponse(NPP instance, void* notifyData, NPBool allow);
 
-static NPError NP_CALLBACK
+static NPError
 _initasyncsurface(NPP instance, NPSize *size,
                   NPImageFormat format, void *initData,
                   NPAsyncSurface *surface);
 
-static NPError NP_CALLBACK
+static NPError
 _finalizeasyncsurface(NPP instance, NPAsyncSurface *surface);
 
-static void NP_CALLBACK
+static void
 _setcurrentasyncsurface(NPP instance, NPAsyncSurface *surface, NPRect *changed);
 
 } /* namespace child */
@@ -1019,7 +1019,7 @@ namespace mozilla {
 namespace plugins {
 namespace child {
 
-NPError NP_CALLBACK
+NPError
 _requestread(NPStream* aStream,
              NPByteRange* aRangeList)
 {
@@ -1032,7 +1032,7 @@ _requestread(NPStream* aStream,
     return bs->NPN_RequestRead(aRangeList);
 }
 
-NPError NP_CALLBACK
+NPError
 _geturlnotify(NPP aNPP,
               const char* aRelativeURL,
               const char* aTarget,
@@ -1060,7 +1060,7 @@ _geturlnotify(NPP aNPP,
     return err;
 }
 
-NPError NP_CALLBACK
+NPError
 _getvalue(NPP aNPP,
           NPNVariable aVariable,
           void* aValue)
@@ -1116,7 +1116,7 @@ _getvalue(NPP aNPP,
     return NPERR_GENERIC_ERROR;
 }
 
-NPError NP_CALLBACK
+NPError
 _setvalue(NPP aNPP,
           NPPVariable aVariable,
           void* aValue)
@@ -1126,7 +1126,7 @@ _setvalue(NPP aNPP,
     return InstCast(aNPP)->NPN_SetValue(aVariable, aValue);
 }
 
-NPError NP_CALLBACK
+NPError
 _geturl(NPP aNPP,
         const char* aRelativeURL,
         const char* aTarget)
@@ -1140,7 +1140,7 @@ _geturl(NPP aNPP,
     return err;
 }
 
-NPError NP_CALLBACK
+NPError
 _posturlnotify(NPP aNPP,
                const char* aRelativeURL,
                const char* aTarget,
@@ -1172,7 +1172,7 @@ _posturlnotify(NPP aNPP,
     return err;
 }
 
-NPError NP_CALLBACK
+NPError
 _posturl(NPP aNPP,
          const char* aRelativeURL,
          const char* aTarget,
@@ -1192,7 +1192,7 @@ _posturl(NPP aNPP,
     return err;
 }
 
-NPError NP_CALLBACK
+NPError
 _newstream(NPP aNPP,
            NPMIMEType aMIMEType,
            const char* aWindow,
@@ -1203,7 +1203,7 @@ _newstream(NPP aNPP,
     return InstCast(aNPP)->NPN_NewStream(aMIMEType, aWindow, aStream);
 }
 
-int32_t NP_CALLBACK
+int32_t
 _write(NPP aNPP,
        NPStream* aStream,
        int32_t aLength,
@@ -1219,7 +1219,7 @@ _write(NPP aNPP,
     return ps->NPN_Write(aLength, aBuffer);
 }
 
-NPError NP_CALLBACK
+NPError
 _destroystream(NPP aNPP,
                NPStream* aStream,
                NPError aReason)
@@ -1242,7 +1242,7 @@ _destroystream(NPP aNPP,
     return NPERR_NO_ERROR;
 }
 
-void NP_CALLBACK
+void
 _status(NPP aNPP,
         const char* aMessage)
 {
@@ -1251,7 +1251,7 @@ _status(NPP aNPP,
     NS_WARNING("Not yet implemented!");
 }
 
-void NP_CALLBACK
+void
 _memfree(void* aPtr)
 {
     PLUGIN_LOG_DEBUG_FUNCTION;
@@ -1260,7 +1260,7 @@ _memfree(void* aPtr)
     NS_Free(aPtr);
 }
 
-uint32_t NP_CALLBACK
+uint32_t
 _memflush(uint32_t aSize)
 {
     PLUGIN_LOG_DEBUG_FUNCTION;
@@ -1269,7 +1269,7 @@ _memflush(uint32_t aSize)
     return 0;
 }
 
-void NP_CALLBACK
+void
 _reloadplugins(NPBool aReloadPages)
 {
     PLUGIN_LOG_DEBUG_FUNCTION;
@@ -1278,7 +1278,7 @@ _reloadplugins(NPBool aReloadPages)
     PluginModuleChild::current()->SendNPN_ReloadPlugins(!!aReloadPages);
 }
 
-void NP_CALLBACK
+void
 _invalidaterect(NPP aNPP,
                 NPRect* aInvalidRect)
 {
@@ -1290,7 +1290,7 @@ _invalidaterect(NPP aNPP,
     }
 }
 
-void NP_CALLBACK
+void
 _invalidateregion(NPP aNPP,
                   NPRegion aInvalidRegion)
 {
@@ -1299,7 +1299,7 @@ _invalidateregion(NPP aNPP,
     NS_WARNING("Not yet implemented!");
 }
 
-void NP_CALLBACK
+void
 _forceredraw(NPP aNPP)
 {
     PLUGIN_LOG_DEBUG_FUNCTION;
@@ -1309,7 +1309,7 @@ _forceredraw(NPP aNPP)
     // never be necessary.
 }
 
-const char* NP_CALLBACK
+const char*
 _useragent(NPP aNPP)
 {
     PLUGIN_LOG_DEBUG_FUNCTION;
@@ -1317,7 +1317,7 @@ _useragent(NPP aNPP)
     return PluginModuleChild::current()->GetUserAgent();
 }
 
-void* NP_CALLBACK
+void*
 _memalloc(uint32_t aSize)
 {
     PLUGIN_LOG_DEBUG_FUNCTION;
@@ -1327,21 +1327,21 @@ _memalloc(uint32_t aSize)
 }
 
 // Deprecated entry points for the old Java plugin.
-void* NP_CALLBACK /* OJI type: JRIEnv* */
+void* /* OJI type: JRIEnv* */
 _getjavaenv(void)
 {
     PLUGIN_LOG_DEBUG_FUNCTION;
     return 0;
 }
 
-void* NP_CALLBACK /* OJI type: jref */
+void* /* OJI type: jref */
 _getjavapeer(NPP aNPP)
 {
     PLUGIN_LOG_DEBUG_FUNCTION;
     return 0;
 }
 
-bool NP_CALLBACK
+bool
 _invoke(NPP aNPP,
         NPObject* aNPObj,
         NPIdentifier aMethod,
@@ -1358,7 +1358,7 @@ _invoke(NPP aNPP,
     return aNPObj->_class->invoke(aNPObj, aMethod, aArgs, aArgCount, aResult);
 }
 
-bool NP_CALLBACK
+bool
 _invokedefault(NPP aNPP,
                NPObject* aNPObj,
                const NPVariant* aArgs,
@@ -1374,7 +1374,7 @@ _invokedefault(NPP aNPP,
     return aNPObj->_class->invokeDefault(aNPObj, aArgs, aArgCount, aResult);
 }
 
-bool NP_CALLBACK
+bool
 _evaluate(NPP aNPP,
           NPObject* aObject,
           NPString* aScript,
@@ -1405,7 +1405,7 @@ _evaluate(NPP aNPP,
     return actor->Evaluate(aScript, aResult);
 }
 
-bool NP_CALLBACK
+bool
 _getproperty(NPP aNPP,
              NPObject* aNPObj,
              NPIdentifier aPropertyName,
@@ -1420,7 +1420,7 @@ _getproperty(NPP aNPP,
     return aNPObj->_class->getProperty(aNPObj, aPropertyName, aResult);
 }
 
-bool NP_CALLBACK
+bool
 _setproperty(NPP aNPP,
              NPObject* aNPObj,
              NPIdentifier aPropertyName,
@@ -1435,7 +1435,7 @@ _setproperty(NPP aNPP,
     return aNPObj->_class->setProperty(aNPObj, aPropertyName, aValue);
 }
 
-bool NP_CALLBACK
+bool
 _removeproperty(NPP aNPP,
                 NPObject* aNPObj,
                 NPIdentifier aPropertyName)
@@ -1449,7 +1449,7 @@ _removeproperty(NPP aNPP,
     return aNPObj->_class->removeProperty(aNPObj, aPropertyName);
 }
 
-bool NP_CALLBACK
+bool
 _hasproperty(NPP aNPP,
              NPObject* aNPObj,
              NPIdentifier aPropertyName)
@@ -1463,7 +1463,7 @@ _hasproperty(NPP aNPP,
     return aNPObj->_class->hasProperty(aNPObj, aPropertyName);
 }
 
-bool NP_CALLBACK
+bool
 _hasmethod(NPP aNPP,
            NPObject* aNPObj,
            NPIdentifier aMethodName)
@@ -1477,7 +1477,7 @@ _hasmethod(NPP aNPP,
     return aNPObj->_class->hasMethod(aNPObj, aMethodName);
 }
 
-bool NP_CALLBACK
+bool
 _enumerate(NPP aNPP,
            NPObject* aNPObj,
            NPIdentifier** aIdentifiers,
@@ -1499,7 +1499,7 @@ _enumerate(NPP aNPP,
     return aNPObj->_class->enumerate(aNPObj, aIdentifiers, aCount);
 }
 
-bool NP_CALLBACK
+bool
 _construct(NPP aNPP,
            NPObject* aNPObj,
            const NPVariant* aArgs,
@@ -1518,7 +1518,7 @@ _construct(NPP aNPP,
     return aNPObj->_class->construct(aNPObj, aArgs, aArgCount, aResult);
 }
 
-void NP_CALLBACK
+void
 _releasevariantvalue(NPVariant* aVariant)
 {
     PLUGIN_LOG_DEBUG_FUNCTION;
@@ -1538,7 +1538,7 @@ _releasevariantvalue(NPVariant* aVariant)
     VOID_TO_NPVARIANT(*aVariant);
 }
 
-void NP_CALLBACK
+void
 _setexception(NPObject* aNPObj,
               const NPUTF8* aMessage)
 {
@@ -1559,7 +1559,7 @@ _setexception(NPObject* aNPObj,
                                NullableString(aMessage));
 }
 
-void NP_CALLBACK
+void
 _pushpopupsenabledstate(NPP aNPP,
                         NPBool aEnabled)
 {
@@ -1569,7 +1569,7 @@ _pushpopupsenabledstate(NPP aNPP,
     InstCast(aNPP)->CallNPN_PushPopupsEnabledState(aEnabled ? true : false);
 }
 
-void NP_CALLBACK
+void
 _poppopupsenabledstate(NPP aNPP)
 {
     PLUGIN_LOG_DEBUG_FUNCTION;
@@ -1578,7 +1578,7 @@ _poppopupsenabledstate(NPP aNPP)
     InstCast(aNPP)->CallNPN_PopPopupsEnabledState();
 }
 
-void NP_CALLBACK
+void
 _pluginthreadasynccall(NPP aNPP,
                        PluginThreadCallback aFunc,
                        void* aUserData)
@@ -1590,7 +1590,7 @@ _pluginthreadasynccall(NPP aNPP,
     InstCast(aNPP)->AsyncCall(aFunc, aUserData);
 }
 
-NPError NP_CALLBACK
+NPError
 _getvalueforurl(NPP npp, NPNURLVariable variable, const char *url,
                 char **value, uint32_t *len)
 {
@@ -1620,7 +1620,7 @@ _getvalueforurl(NPP npp, NPNURLVariable variable, const char *url,
     return NPERR_INVALID_PARAM;
 }
 
-NPError NP_CALLBACK
+NPError
 _setvalueforurl(NPP npp, NPNURLVariable variable, const char *url,
                 const char *value, uint32_t len)
 {
@@ -1646,7 +1646,7 @@ _setvalueforurl(NPP npp, NPNURLVariable variable, const char *url,
     return NPERR_INVALID_PARAM;
 }
 
-NPError NP_CALLBACK
+NPError
 _getauthenticationinfo(NPP npp, const char *protocol,
                        const char *host, int32_t port,
                        const char *scheme, const char *realm,
@@ -1679,7 +1679,7 @@ _getauthenticationinfo(NPP npp, const char *protocol,
     return result;
 }
 
-uint32_t NP_CALLBACK
+uint32_t
 _scheduletimer(NPP npp, uint32_t interval, NPBool repeat,
                void (*timerFunc)(NPP npp, uint32_t timerID))
 {
@@ -1688,7 +1688,7 @@ _scheduletimer(NPP npp, uint32_t interval, NPBool repeat,
     return InstCast(npp)->ScheduleTimer(interval, repeat, timerFunc);
 }
 
-void NP_CALLBACK
+void
 _unscheduletimer(NPP npp, uint32_t timerID)
 {
     PLUGIN_LOG_DEBUG_FUNCTION;
@@ -1708,7 +1708,7 @@ static void ProcessBrowserEvents(void* pluginModule) {
 }
 #endif
 
-NPError NP_CALLBACK
+NPError
 _popupcontextmenu(NPP instance, NPMenu* menu)
 {
     PLUGIN_LOG_DEBUG_FUNCTION;
@@ -1759,7 +1759,7 @@ _popupcontextmenu(NPP instance, NPMenu* menu)
 #endif
 }
 
-NPBool NP_CALLBACK
+NPBool
 _convertpoint(NPP instance, 
               double sourceX, double sourceY, NPCoordinateSpace sourceSpace,
               double *destX, double *destY, NPCoordinateSpace destSpace)
@@ -1787,13 +1787,13 @@ _convertpoint(NPP instance,
     return result;
 }
 
-void NP_CALLBACK
+void
 _urlredirectresponse(NPP instance, void* notifyData, NPBool allow)
 {
     InstCast(instance)->NPN_URLRedirectResponse(notifyData, allow);
 }
 
-NPError NP_CALLBACK
+NPError
 _initasyncsurface(NPP instance, NPSize *size,
                   NPImageFormat format, void *initData,
                   NPAsyncSurface *surface)
@@ -1801,13 +1801,13 @@ _initasyncsurface(NPP instance, NPSize *size,
     return InstCast(instance)->NPN_InitAsyncSurface(size, format, initData, surface);
 }
 
-NPError NP_CALLBACK
+NPError
 _finalizeasyncsurface(NPP instance, NPAsyncSurface *surface)
 {
     return InstCast(instance)->NPN_FinalizeAsyncSurface(surface);
 }
 
-void NP_CALLBACK
+void
 _setcurrentasyncsurface(NPP instance, NPAsyncSurface *surface, NPRect *changed)
 {
     InstCast(instance)->NPN_SetCurrentAsyncSurface(surface, changed);
@@ -2077,7 +2077,7 @@ PluginModuleChild::DeallocPPluginInstanceChild(PPluginInstanceChild* aActor)
     return true;
 }
 
-NPObject* NP_CALLBACK
+NPObject*
 PluginModuleChild::NPN_CreateObject(NPP aNPP, NPClass* aClass)
 {
     PLUGIN_LOG_DEBUG_FUNCTION;
@@ -2111,7 +2111,7 @@ PluginModuleChild::NPN_CreateObject(NPP aNPP, NPClass* aClass)
     return newObject;
 }
 
-NPObject* NP_CALLBACK
+NPObject*
 PluginModuleChild::NPN_RetainObject(NPObject* aNPObj)
 {
     AssertPluginThread();
@@ -2125,7 +2125,7 @@ PluginModuleChild::NPN_RetainObject(NPObject* aNPObj)
     return aNPObj;
 }
 
-void NP_CALLBACK
+void
 PluginModuleChild::NPN_ReleaseObject(NPObject* aNPObj)
 {
     AssertPluginThread();
@@ -2192,7 +2192,7 @@ PluginModuleChild::CollectForInstance(NPObjectData* d, void* userArg)
     return PL_DHASH_NEXT;
 }
 
-NPIdentifier NP_CALLBACK
+NPIdentifier
 PluginModuleChild::NPN_GetStringIdentifier(const NPUTF8* aName)
 {
     PLUGIN_LOG_DEBUG_FUNCTION;
@@ -2215,7 +2215,7 @@ PluginModuleChild::NPN_GetStringIdentifier(const NPUTF8* aName)
     return ident;
 }
 
-void NP_CALLBACK
+void
 PluginModuleChild::NPN_GetStringIdentifiers(const NPUTF8** aNames,
                                             int32_t aNameCount,
                                             NPIdentifier* aIdentifiers)
@@ -2247,7 +2247,7 @@ PluginModuleChild::NPN_GetStringIdentifiers(const NPUTF8** aNames,
     }
 }
 
-bool NP_CALLBACK
+bool
 PluginModuleChild::NPN_IdentifierIsString(NPIdentifier aIdentifier)
 {
     PLUGIN_LOG_DEBUG_FUNCTION;
@@ -2257,7 +2257,7 @@ PluginModuleChild::NPN_IdentifierIsString(NPIdentifier aIdentifier)
     return ident->IsString();
 }
 
-NPIdentifier NP_CALLBACK
+NPIdentifier
 PluginModuleChild::NPN_GetIntIdentifier(int32_t aIntId)
 {
     PLUGIN_LOG_DEBUG_FUNCTION;
@@ -2277,7 +2277,7 @@ PluginModuleChild::NPN_GetIntIdentifier(int32_t aIntId)
     return ident;
 }
 
-NPUTF8* NP_CALLBACK
+NPUTF8*
 PluginModuleChild::NPN_UTF8FromIdentifier(NPIdentifier aIdentifier)
 {
     PLUGIN_LOG_DEBUG_FUNCTION;
@@ -2288,7 +2288,7 @@ PluginModuleChild::NPN_UTF8FromIdentifier(NPIdentifier aIdentifier)
     return nullptr;
 }
 
-int32_t NP_CALLBACK
+int32_t
 PluginModuleChild::NPN_IntFromIdentifier(NPIdentifier aIdentifier)
 {
     PLUGIN_LOG_DEBUG_FUNCTION;

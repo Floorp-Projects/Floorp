@@ -170,8 +170,11 @@ class CommonBackend(BuildBackend):
         self._idl_manager = XPIDLManager(self.environment)
         self._test_manager = TestManager(self.environment)
         self._webidls = WebIDLCollection()
+        self._configs = set()
 
     def consume_object(self, obj):
+        self._configs.add(obj.config)
+
         if isinstance(obj, TestManifest):
             for test in obj.tests:
                 self._test_manager.add(test, flavor=obj.flavor,
@@ -231,6 +234,9 @@ class CommonBackend(BuildBackend):
 
         self._handle_webidl_collection(self._webidls)
 
+        for config in self._configs:
+            self.backend_input_files.add(config.source)
+
         # Write out a machine-readable file describing every test.
         path = mozpath.join(self.environment.topobjdir, 'all-tests.json')
         with self._write_file(path) as fh:
@@ -257,17 +263,17 @@ class CommonBackend(BuildBackend):
                     name = m.group('name')
                     value = m.group('value')
                     if name:
-                        if name in self.environment.defines:
+                        if name in obj.config.defines:
                             if cmd == 'define' and value:
                                 l = l[:m.start('value')] \
-                                    + str(self.environment.defines[name]) \
+                                    + str(obj.config.defines[name]) \
                                     + l[m.end('value'):]
                             elif cmd == 'undef':
                                 l = l[:m.start('cmd')] \
                                     + 'define' \
                                     + l[m.end('cmd'):m.end('name')] \
                                     + ' ' \
-                                    + str(self.environment.defines[name]) \
+                                    + str(obj.config.defines[name]) \
                                     + l[m.end('name'):]
                         elif cmd == 'undef':
                            l = '/* ' + l[:m.end('name')] + ' */' + l[m.end('name'):]

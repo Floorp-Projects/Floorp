@@ -80,11 +80,7 @@ SOURCES += [
     'nsSocketTransportService2.cpp',
 ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'os2':
-    SOURCES += [
-        'nsURLHelperOS2.cpp',
-    ]
-elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     SOURCES += [
         'nsAutodialWin.cpp',
         'nsNativeConnectionHelper.cpp',

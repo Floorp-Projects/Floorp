@@ -2788,8 +2788,6 @@ function run_load_system_library()
     // limb.so wasn't available, try libm.so.6 instead
     syslib = ctypes.open("libm.so.6");
   }
-#elifdef XP_OS2
-  let syslib = ctypes.open("libc063.dll");
 #else
   do_throw("please add a system library for this test")
 #endif

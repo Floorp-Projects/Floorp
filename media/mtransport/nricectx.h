@@ -102,8 +102,8 @@ class NrIceStunServer {
     return server.forget();
   }
 
-  nsresult ToNicerStunStruct(nr_ice_stun_server *server,
-                             const char* transport =
+  nsresult ToNicerStunStruct(nr_ice_stun_server* server,
+                             const std::string& transport =
                              kNrIceTransportUdp) const;
 
  protected:
@@ -161,7 +161,7 @@ class NrIceTurnServer : public NrIceStunServer {
 
   std::string username_;
   std::vector<unsigned char> password_;
-  const char* transport_;
+  std::string transport_;
 };
 
 class NrIceCtx {

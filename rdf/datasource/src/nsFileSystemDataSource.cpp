@@ -38,11 +38,6 @@
 #include "nsDirectoryServiceDefs.h"
 #endif
 
-#ifdef XP_OS2
-#define INCL_DOSFILEMGR
-#include <os2.h>
-#endif
-
 #define NS_MOZICON_SCHEME           "moz-icon:"
 
 static const char kFileProtocol[]         = "file://";
@@ -873,29 +868,6 @@ FileSystemDataSource::GetVolumeList(nsISimpleEnumerator** aResult)
 #ifdef XP_UNIX
     mRDFService->GetResource(NS_LITERAL_CSTRING("file:///"), getter_AddRefs(vol));
     volumes.AppendObject(vol);
-#endif
-
-#ifdef XP_OS2
-    ULONG ulDriveNo = 0;
-    ULONG ulDriveMap = 0;
-
-    nsresult rv = DosQueryCurrentDisk(&ulDriveNo, &ulDriveMap);
-    if (NS_FAILED(rv))
-        return rv;
-
-    for (int volNum = 0; volNum < 26; volNum++)
-    {
-        if (((ulDriveMap << (31 - volNum)) >> 31))
-        {
-          nsAutoCString url;
-          url.AppendPrintf("file:///%c|/", volNum + 'A');
-          rv = mRDFService->GetResource(nsDependentCString(url), getter_AddRefs(vol));
-
-          if (NS_FAILED(rv)) return rv;
-                volumes.AppendObject(vol);
-        }
-
-    }
 #endif
 
     return NS_NewArrayEnumerator(aResult, volumes);

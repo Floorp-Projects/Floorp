@@ -346,19 +346,62 @@ this.CrashManager.prototype = Object.freeze({
       let decoder = new TextDecoder();
       data = decoder.decode(data);
 
-      let sepIndex = data.indexOf("\n");
-      if (sepIndex == -1) {
-        return this.EVENT_FILE_ERROR_MALFORMED;
+      let type, time, payload;
+      let start = 0;
+      for (let i = 0; i < 2; i++) {
+        let index = data.indexOf("\n", start);
+        if (index == -1) {
+          return this.EVENT_FILE_ERROR_MALFORMED;
+        }
+
+        let sub = data.substring(start, index);
+        switch (i) {
+          case 0:
+            type = sub;
+            break;
+          case 1:
+            time = sub;
+            try {
+              time = parseInt(time, 10);
+            } catch (ex) {
+              return this.EVENT_FILE_ERROR_MALFORMED;
+            }
+        }
+
+        start = index + 1;
       }
+      let date = new Date(time * 1000);
+      let payload = data.substring(start);
 
-      let type = data.substring(0, sepIndex);
-      let payload = data.substring(sepIndex + 1);
-
-      return this._handleEventFilePayload(entry, type, payload);
+      return this._handleEventFilePayload(store, entry, type, date, payload);
     }.bind(this));
   },
 
-  _handleEventFilePayload: function (entry, type, payload) {
+  _handleEventFilePayload: function (store, entry, type, date, payload) {
+      // The payload types and formats are documented in docs/crash-events.rst.
+      // Do not change the format of an existing type. Instead, invent a new
+      // type.
+
+      let eventMap = {
+        "crash.main.1": "addMainProcessCrash",
+        "crash.plugin.1": "addPluginCrash",
+        "hang.plugin.1": "addPluginHang",
+      };
+
+      if (type in eventMap) {
+        let lines = payload.split("\n");
+        if (lines.length > 1) {
+          this._log.warn("Multiple lines unexpected in payload for " +
+                         entry.path);
+          return this.EVENT_FILE_ERROR_MALFORMED;
+        }
+
+        store[eventMap[type]](payload, date);
+        return this.EVENT_FILE_SUCCESS;
+      }
+
+      // DO NOT ADD NEW TYPES WITHOUT DOCUMENTING!
+
       return this.EVENT_FILE_ERROR_UNKNOWN_EVENT;
   },
 
@@ -494,6 +537,10 @@ function CrashStore(storeDir, telemetrySizeKey) {
 }
 
 CrashStore.prototype = Object.freeze({
+  TYPE_MAIN_CRASH: "main-crash",
+  TYPE_PLUGIN_CRASH: "plugin-crash",
+  TYPE_PLUGIN_HANG: "plugin-hang",
+
   /**
    * Load data from disk.
    *
@@ -681,6 +728,87 @@ CrashStore.prototype = Object.freeze({
 
     return null;
   },
+
+  _ensureCrashRecord: function (id) {
+    if (!this._data.crashes.has(id)) {
+      this._data.crashes.set(id, {
+        id: id,
+        type: null,
+        crashDate: null,
+      });
+    }
+
+    return this._data.crashes.get(id);
+  },
+
+  /**
+   * Record the occurrence of a crash in the main process.
+   *
+   * @param id (string) Crash ID. Likely a UUID.
+   * @param date (Date) When the crash occurred.
+   */
+  addMainProcessCrash: function (id, date) {
+    let r = this._ensureCrashRecord(id);
+    r.type = this.TYPE_MAIN_CRASH;
+    r.crashDate = date;
+  },
+
+  /**
+   * Record the occurrence of a crash in a plugin process.
+   *
+   * @param id (string) Crash ID. Likely a UUID.
+   * @param date (Date) When the crash occurred.
+   */
+  addPluginCrash: function (id, date) {
+    let r = this._ensureCrashRecord(id);
+    r.type = this.TYPE_PLUGIN_CRASH;
+    r.crashDate = date;
+  },
+
+  /**
+   * Record the occurrence of a hang in a plugin process.
+   *
+   * @param id (string) Crash ID. Likely a UUID.
+   * @param date (Date) When the hang was reported.
+   */
+  addPluginHang: function (id, date) {
+    let r = this._ensureCrashRecord(id);
+    r.type = this.TYPE_PLUGIN_HANG;
+    r.crashDate = date;
+  },
+
+  get mainProcessCrashes() {
+    let crashes = [];
+    for (let crash of this.crashes) {
+      if (crash.isMainProcessCrash) {
+        crashes.push(crash);
+      }
+    }
+
+    return crashes;
+  },
+
+  get pluginCrashes() {
+    let crashes = [];
+    for (let crash of this.crashes) {
+      if (crash.isPluginCrash) {
+        crashes.push(crash);
+      }
+    }
+
+    return crashes;
+  },
+
+  get pluginHangs() {
+    let crashes = [];
+    for (let crash of this.crashes) {
+      if (crash.isPluginHang) {
+        crashes.push(crash);
+      }
+    }
+
+    return crashes;
+  },
 });
 
 /**
@@ -717,6 +845,22 @@ CrashRecord.prototype = Object.freeze({
   get newestDate() {
     // We currently only have 1 date, so this is easy.
     return this._o.crashDate;
+  },
+
+  get type() {
+    return this._o.type;
+  },
+
+  get isMainProcessCrash() {
+    return this._o.type == CrashStore.prototype.TYPE_MAIN_CRASH;
+  },
+
+  get isPluginCrash() {
+    return this._o.type == CrashStore.prototype.TYPE_PLUGIN_CRASH;
+  },
+
+  get isPluginHang() {
+    return this._o.type == CrashStore.prototype.TYPE_PLUGIN_HANG;
   },
 });
 

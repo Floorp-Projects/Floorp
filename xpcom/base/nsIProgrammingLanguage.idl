@@ -6,12 +6,6 @@
 
 #include "nsISupports.idl"
 
-%{C++
-#ifdef XP_OS2 // OS2 has UNKNOWN problems :)
-#undef UNKNOWN
-#endif
-%}
-
 /**
  * Enumeration of Programming Languages
  */

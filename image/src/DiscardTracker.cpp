@@ -18,13 +18,13 @@ static const char* sDiscardTimeoutPref = "image.mem.min_discard_timeout_ms";
 /* static */ nsCOMPtr<nsITimer> DiscardTracker::sTimer;
 /* static */ bool DiscardTracker::sInitialized = false;
 /* static */ bool DiscardTracker::sTimerOn = false;
-/* static */ Atomic<int32_t> DiscardTracker::sDiscardRunnablePending(0);
+/* static */ Atomic<bool> DiscardTracker::sDiscardRunnablePending(false);
 /* static */ int64_t DiscardTracker::sCurrentDecodedImageBytes = 0;
 /* static */ uint32_t DiscardTracker::sMinDiscardTimeoutMs = 10000;
 /* static */ uint32_t DiscardTracker::sMaxDecodedImageKB = 42 * 1024;
 /* static */ PRLock * DiscardTracker::sAllocationLock = nullptr;
 /* static */ mozilla::Mutex* DiscardTracker::sNodeListMutex = nullptr;
-/* static */ Atomic<uint32_t> DiscardTracker::sShutdown(0);
+/* static */ Atomic<bool> DiscardTracker::sShutdown(false);
 
 /*
  * When we notice we're using too much memory for decoded images, we enqueue a
@@ -33,7 +33,7 @@ static const char* sDiscardTimeoutPref = "image.mem.min_discard_timeout_ms";
 NS_IMETHODIMP
 DiscardTracker::DiscardRunnable::Run()
 {
-  sDiscardRunnablePending = 0;
+  sDiscardRunnablePending = false;
 
   DiscardTracker::DiscardNow();
   return NS_OK;
@@ -303,7 +303,7 @@ DiscardTracker::MaybeDiscardSoon()
   if (sCurrentDecodedImageBytes > sMaxDecodedImageKB * 1024 &&
       !sDiscardableImages.isEmpty()) {
     // Check if the value of sDiscardRunnablePending used to be false
-    if (!sDiscardRunnablePending.exchange(1)) {
+    if (!sDiscardRunnablePending.exchange(true)) {
       nsRefPtr<DiscardRunnable> runnable = new DiscardRunnable();
       NS_DispatchToMainThread(runnable);
     }

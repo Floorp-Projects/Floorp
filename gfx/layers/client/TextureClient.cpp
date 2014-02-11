@@ -222,7 +222,7 @@ public:
   ~MemoryTextureClientData()
   {
     MOZ_ASSERT(!mBuffer, "Forgot to deallocate the shared texture data?");
-    MOZ_COUNT_CTOR(MemoryTextureClientData);
+    MOZ_COUNT_DTOR(MemoryTextureClientData);
   }
 
   virtual void DeallocateSharedData(ISurfaceAllocator*)

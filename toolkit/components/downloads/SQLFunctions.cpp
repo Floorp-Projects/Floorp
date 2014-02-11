@@ -11,9 +11,6 @@
 #include "nsUTF8Utils.h"
 #include "plbase64.h"
 #include "prio.h"
-#if defined(XP_OS2)
-#include "nsIRandomGenerator.h"
-#endif
 
 // The length of guids that are used by the download manager
 #define GUID_LENGTH 12
@@ -34,15 +31,6 @@ namespace downloads {
 nsresult
 GenerateGUIDFunction::create(mozIStorageConnection *aDBConn)
 {
-#if defined(XP_OS2)
-  // We need this service to be initialized on the main thread because it is
-  // not threadsafe.  We are about to use it asynchronously, so initialize it
-  // now.
-  nsCOMPtr<nsIRandomGenerator> rg =
-    do_GetService("@mozilla.org/security/random-generator;1");
-  NS_ENSURE_STATE(rg);
-#endif
-
   nsRefPtr<GenerateGUIDFunction> function = new GenerateGUIDFunction();
   nsresult rv = aDBConn->CreateFunction(
     NS_LITERAL_CSTRING("generate_guid"), 0, function
@@ -117,17 +105,6 @@ GenerateRandomBytes(uint32_t aSize,
     (void)PR_Close(urandom);
   }
   return rv;
-#elif defined(XP_OS2)
-  nsCOMPtr<nsIRandomGenerator> rg =
-      do_GetService("@mozilla.org/security/random-generator;1");
-  NS_ENSURE_STATE(rg);
-
-  uint8_t* temp;
-  nsresult rv = rg->GenerateRandomBytes(aSize, &temp);
-  NS_ENSURE_SUCCESS(rv, rv);
-  memcpy(_buffer, temp, aSize);
-  NS_Free(temp);
-  return NS_OK;
 #endif
 }
 

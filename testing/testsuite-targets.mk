@@ -280,7 +280,6 @@ crashtest-ipc-gpu:
 jstestbrowser: TESTS_PATH?=test-package-stage/jsreftest/tests/
 jstestbrowser:
 	$(MAKE) -C $(DEPTH)/config
-	$(MAKE) -C $(DEPTH)/js/src/config
 	$(MAKE) stage-jstests
 	$(call RUN_REFTEST,'$(DIST)/$(TESTS_PATH)/jstests.list' --extra-profile-file=$(DIST)/test-package-stage/jsreftest/tests/user.js)
 	$(CHECK_TEST_ERROR)
@@ -461,7 +460,7 @@ stage-xpcshell: make-stage-dir
 	$(MAKE) -C $(DEPTH)/testing/xpcshell stage-package
 
 stage-jstests: make-stage-dir
-	$(MAKE) -C $(DEPTH)/js/src/js/src/tests stage-package
+	$(MAKE) -C $(DEPTH)/js/src/tests stage-package
 
 stage-android: make-stage-dir
 ifdef MOZ_ENABLE_SZIP

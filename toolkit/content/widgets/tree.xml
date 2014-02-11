@@ -729,13 +729,7 @@
       <handler event="blur" action="this.treeBoxObject.focused = false;"/>
       <handler event="blur" phase="capturing"
                action="if (event.originalTarget == this.inputField.inputField) this.stopEditing(true);"/>
-      <handler event="keypress" keycode="VK_ENTER">
-        if (this._handleEnter(event)) {
-          event.stopPropagation();
-          event.preventDefault();
-        }
-      </handler>
-      <handler event="keypress" keycode="VK_RETURN">
+      <handler event="keydown" keycode="VK_RETURN">
         if (this._handleEnter(event)) {
           event.stopPropagation();
           event.preventDefault();
@@ -743,7 +737,7 @@
       </handler>
 #ifndef XP_MACOSX
       <!-- Use F2 key to enter text editing. -->
-      <handler event="keypress" keycode="VK_F2">
+      <handler event="keydown" keycode="VK_F2">
         <![CDATA[
           if (!this._cellSelType)
             return;
@@ -755,7 +749,7 @@
       </handler>
 #endif // XP_MACOSX
 
-      <handler event="keypress" keycode="VK_ESCAPE">
+      <handler event="keydown" keycode="VK_ESCAPE">
         <![CDATA[
           if (this._editingColumn) {
             this.stopEditing(false);
@@ -765,7 +759,7 @@
           }
         ]]>
       </handler>
-      <handler event="keypress" keycode="VK_LEFT">
+      <handler event="keydown" keycode="VK_LEFT">
         <![CDATA[
          if (this._editingColumn)
            return;
@@ -813,7 +807,7 @@
          }
         ]]>
       </handler>
-      <handler event="keypress" keycode="VK_RIGHT">
+      <handler event="keydown" keycode="VK_RIGHT">
         <![CDATA[
          if (this._editingColumn)
            return;
@@ -869,29 +863,29 @@
           }
         ]]>
       </handler>
-      <handler event="keypress" keycode="VK_UP" preventdefault="true"
+      <handler event="keydown" keycode="VK_UP" preventdefault="true"
                modifiers="accel any" action="_moveByOffset(-1, 0, event);"/>
-      <handler event="keypress" keycode="VK_DOWN" preventdefault="true"
+      <handler event="keydown" keycode="VK_DOWN" preventdefault="true"
                modifiers="accel any" action="_moveByOffset(1, this.view.rowCount - 1, event);"/>
-      <handler event="keypress" keycode="VK_UP" preventdefault="true"
+      <handler event="keydown" keycode="VK_UP" preventdefault="true"
                modifiers="accel any, shift" action="_moveByOffsetShift(-1, 0, event);"/>
-      <handler event="keypress" keycode="VK_DOWN" preventdefault="true"
+      <handler event="keydown" keycode="VK_DOWN" preventdefault="true"
                modifiers="accel any, shift" action="_moveByOffsetShift(1, this.view.rowCount - 1, event);"/>
-      <handler event="keypress" keycode="VK_PAGE_UP" preventdefault="true"
+      <handler event="keydown" keycode="VK_PAGE_UP" preventdefault="true"
                modifiers="accel any" action="_moveByPage(-1, 0, event);"/>
-      <handler event="keypress" keycode="VK_PAGE_DOWN" preventdefault="true"
+      <handler event="keydown" keycode="VK_PAGE_DOWN" preventdefault="true"
                modifiers="accel any" action="_moveByPage(1, this.view.rowCount - 1, event);"/>
-      <handler event="keypress" keycode="VK_PAGE_UP" preventdefault="true"
+      <handler event="keydown" keycode="VK_PAGE_UP" preventdefault="true"
                modifiers="accel any, shift" action="_moveByPageShift(-1, 0, event);"/>
-      <handler event="keypress" keycode="VK_PAGE_DOWN" preventdefault="true"
+      <handler event="keydown" keycode="VK_PAGE_DOWN" preventdefault="true"
                modifiers="accel any, shift" action="_moveByPageShift(1, this.view.rowCount - 1, event);"/>
-      <handler event="keypress" keycode="VK_HOME" preventdefault="true"
+      <handler event="keydown" keycode="VK_HOME" preventdefault="true"
                modifiers="accel any" action="_moveToEdge(0, event);"/>
-      <handler event="keypress" keycode="VK_END" preventdefault="true"
+      <handler event="keydown" keycode="VK_END" preventdefault="true"
                modifiers="accel any" action="_moveToEdge(this.view.rowCount - 1, event);"/>
-      <handler event="keypress" keycode="VK_HOME" preventdefault="true"
+      <handler event="keydown" keycode="VK_HOME" preventdefault="true"
                modifiers="accel any, shift" action="_moveToEdgeShift(0, event);"/>
-      <handler event="keypress" keycode="VK_END" preventdefault="true"
+      <handler event="keydown" keycode="VK_END" preventdefault="true"
                modifiers="accel any, shift" action="_moveToEdgeShift(this.view.rowCount - 1, event);"/>
       <handler event="keypress">
         <![CDATA[

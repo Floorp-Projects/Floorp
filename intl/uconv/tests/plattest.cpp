@@ -6,7 +6,6 @@
 #include "nsILocaleService.h"
 #include "nsCOMPtr.h"
 #include "nsReadableUtils.h"
-#include "nsLocaleCID.h"
 #include "nsIComponentManager.h"
 #include <stdio.h>
 

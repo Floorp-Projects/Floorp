@@ -35,18 +35,8 @@
 
 // NOTE: stolen from nsNPAPIPlugin.h
 
-/*
- * Use this macro before each exported function
- * (between the return address and the function
- * itself), to ensure that the function has the
- * right calling conventions on OS/2.
- */
-#define NP_CALLBACK NP_LOADDS
-
 #if defined(XP_WIN)
 #define NS_NPAPIPLUGIN_CALLBACK(_type, _name) _type (__stdcall * _name)
-#elif defined(XP_OS2)
-#define NS_NPAPIPLUGIN_CALLBACK(_type, _name) _type (_System * _name)
 #else
 #define NS_NPAPIPLUGIN_CALLBACK(_type, _name) _type (* _name)
 #endif
@@ -198,27 +188,27 @@ public:
     /**
      * The child implementation of NPN_CreateObject.
      */
-    static NPObject* NP_CALLBACK NPN_CreateObject(NPP aNPP, NPClass* aClass);
+    static NPObject* NPN_CreateObject(NPP aNPP, NPClass* aClass);
     /**
      * The child implementation of NPN_RetainObject.
      */
-    static NPObject* NP_CALLBACK NPN_RetainObject(NPObject* aNPObj);
+    static NPObject* NPN_RetainObject(NPObject* aNPObj);
     /**
      * The child implementation of NPN_ReleaseObject.
      */
-    static void NP_CALLBACK NPN_ReleaseObject(NPObject* aNPObj);
+    static void NPN_ReleaseObject(NPObject* aNPObj);
 
     /**
      * The child implementations of NPIdentifier-related functions.
      */
-    static NPIdentifier NP_CALLBACK NPN_GetStringIdentifier(const NPUTF8* aName);
-    static void NP_CALLBACK NPN_GetStringIdentifiers(const NPUTF8** aNames,
+    static NPIdentifier NPN_GetStringIdentifier(const NPUTF8* aName);
+    static void NPN_GetStringIdentifiers(const NPUTF8** aNames,
                                                      int32_t aNameCount,
                                                      NPIdentifier* aIdentifiers);
-    static NPIdentifier NP_CALLBACK NPN_GetIntIdentifier(int32_t aIntId);
-    static bool NP_CALLBACK NPN_IdentifierIsString(NPIdentifier aIdentifier);
-    static NPUTF8* NP_CALLBACK NPN_UTF8FromIdentifier(NPIdentifier aIdentifier);
-    static int32_t NP_CALLBACK NPN_IntFromIdentifier(NPIdentifier aIdentifier);
+    static NPIdentifier NPN_GetIntIdentifier(int32_t aIntId);
+    static bool NPN_IdentifierIsString(NPIdentifier aIdentifier);
+    static NPUTF8* NPN_UTF8FromIdentifier(NPIdentifier aIdentifier);
+    static int32_t NPN_IntFromIdentifier(NPIdentifier aIdentifier);
 
 #ifdef MOZ_WIDGET_COCOA
     void ProcessNativeEvents();

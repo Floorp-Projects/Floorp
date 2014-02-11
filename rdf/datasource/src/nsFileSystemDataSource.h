@@ -14,7 +14,7 @@
 #include "nsString.h"
 #include "mozilla/Attributes.h"
 
-#if defined(XP_UNIX) || defined(XP_OS2) || defined(XP_WIN)
+#if defined(XP_UNIX) || defined(XP_WIN)
 #define USE_NC_EXTENSION
 #endif
 

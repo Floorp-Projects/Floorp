@@ -22,3 +22,13 @@ for var in ('MOZILLA_OFFICIAL', 'LIBXUL_SDK'):
         DEFINES[var] = True
 
 DEFINES['XPCOM_GLUE'] = True
+
+GENERATED_INCLUDES += [
+    '/build',
+]
+
+LOCAL_INCLUDES += [
+    '/toolkit/xre',
+    '/xpcom/base',
+    '/xpcom/build',
+]

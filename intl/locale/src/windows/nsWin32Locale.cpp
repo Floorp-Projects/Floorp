@@ -10,7 +10,6 @@
 #include "nsXPCOMStrings.h"
 #include "nsReadableUtils.h"
 #include "nsWin32Locale.h"
-#include "nsLocaleCID.h"
 #include "prprf.h"
 #include <windows.h>
 #include "nsCRT.h"
