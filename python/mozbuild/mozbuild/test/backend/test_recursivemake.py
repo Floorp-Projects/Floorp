@@ -334,6 +334,9 @@ class TestRecursiveMakeBackend(BackendTester):
             'RESFILE': [
                 'RESFILE := bar.res',
             ],
+            'DEFFILE': [
+                'DEFFILE := baz.def',
+            ],
             'USE_STATIC_LIBS': [
                 'USE_STATIC_LIBS := 1',
             ],

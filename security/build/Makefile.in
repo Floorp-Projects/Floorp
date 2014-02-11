@@ -361,7 +361,6 @@ ifeq (WINNT,$(OS_TARGET))
 # Create a .def file based on the various .def files for nss, smime, ssl and
 # nssutil.
 NSS_STATIC_LIBS_DEFS := $(wildcard $(addprefix $(srcdir)/../,$(NSS_STATIC_LIBS:.$(LIB_SUFFIX)=.def)))
-DEFFILE = nss3.def
 
 nss3.def: $(NSS_STATIC_LIBS_DEFS) $(DEPTH)/db/sqlite3/src/sqlite-processed.def
 	echo LIBRARY nss3$(DLL_SUFFIX) > $@.tmp

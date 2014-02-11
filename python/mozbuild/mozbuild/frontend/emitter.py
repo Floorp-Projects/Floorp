@@ -240,6 +240,7 @@ class TreeMetadataEmitter(LoggingMixin):
             'OS_LIBS',
             'RCFILE',
             'RESFILE',
+            'DEFFILE',
             'SDK_LIBRARY',
         ]
         for v in varlist:
