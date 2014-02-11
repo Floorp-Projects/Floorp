@@ -136,6 +136,7 @@ class JS_PUBLIC_API(AutoGCRooter) {
     void operator=(AutoGCRooter &ida) MOZ_DELETE;
 };
 
+/* AutoArrayRooter roots an external array of Values. */
 class AutoArrayRooter : private AutoGCRooter
 {
   public:
@@ -188,6 +189,40 @@ class AutoArrayRooter : private AutoGCRooter
   private:
     Value *array;
     js::SkipRoot skip;
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+/* AutoValueArray roots an internal fixed-size array of Values. */
+template <size_t N>
+class AutoValueArray : public AutoGCRooter
+{
+    const size_t length_;
+    Value elements_[N];
+    js::SkipRoot skip_;
+
+  public:
+    AutoValueArray(JSContext *cx
+                   MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : AutoGCRooter(cx, VALARRAY), length_(N), skip_(cx, elements_, N)
+    {
+        /* Always initialize in case we GC before assignment. */
+        mozilla::PodArrayZero(elements_);
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+
+    unsigned length() const { return length_; }
+    const Value *begin() const { return elements_; }
+    Value *begin() { return elements_; }
+
+    HandleValue operator[](unsigned i) const {
+        JS_ASSERT(i < N);
+        return HandleValue::fromMarkedLocation(&elements_[i]);
+    }
+    MutableHandleValue operator[](unsigned i) {
+        JS_ASSERT(i < N);
+        return MutableHandleValue::fromMarkedLocation(&elements_[i]);
+    }
+
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 

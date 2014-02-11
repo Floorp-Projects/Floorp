@@ -85,13 +85,12 @@ ExhaustiveTest(const char funcode[])
     EVAL(CALL_CODES[ArgCount], v.address());
     Rooted<ArgumentsObject*> argsobj(cx, &JSVAL_TO_OBJECT(v)->as<ArgumentsObject>());
 
-    Value elems_[MAX_ELEMS];
-    AutoValueArray elems(cx, elems_, MAX_ELEMS);
+    JS::AutoValueArray<MAX_ELEMS> elems(cx);
 
     for (size_t i = 0; i <= ArgCount; i++) {
         for (size_t j = 0; j <= ArgCount - i; j++) {
             ClearElements(elems);
-            CHECK(argsobj->maybeGetElements(i, j, elems.start()));
+            CHECK(argsobj->maybeGetElements(i, j, elems.begin()));
             for (size_t k = 0; k < j; k++)
                 CHECK_SAME(elems[k], INT_TO_JSVAL(i + k));
             for (size_t k = j; k < MAX_ELEMS - 1; k++)
@@ -103,8 +102,9 @@ ExhaustiveTest(const char funcode[])
     return true;
 }
 
+template <size_t N>
 static void
-ClearElements(AutoValueArray &elems)
+ClearElements(JS::AutoValueArray<N> &elems)
 {
     for (size_t i = 0; i < elems.length() - 1; i++)
         elems[i].setNull();
