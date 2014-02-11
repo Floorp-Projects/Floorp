@@ -9,7 +9,7 @@ this.EXPORTED_SYMBOLS = ['ErrorPage'];
 const Cu = Components.utils;
 const Cc = Components.classes;
 const Ci = Components.interfaces;
-const kErrorPageFrameScript = 'chrome://browser/content/ErrorPage.js';
+const kErrorPageFrameScript = 'chrome://b2g/content/ErrorPage.js';
 
 Cu.import('resource://gre/modules/Services.jsm');
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");

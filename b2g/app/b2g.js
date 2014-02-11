@@ -4,8 +4,8 @@
 
 #filter substitution
 
-pref("toolkit.defaultChromeURI", "chrome://browser/content/shell.html");
-pref("browser.chromeURL", "chrome://browser/content/");
+pref("toolkit.defaultChromeURI", "chrome://b2g/content/shell.html");
+pref("browser.chromeURL", "chrome://b2g/content/");
 
 // Bug 945235: Prevent all bars to be considered visible:
 pref("toolkit.defaultChromeFeatures", "chrome,dialog=no,close,resizable,scrollbars,extrachrome");
@@ -136,9 +136,6 @@ pref("accessibility.typeaheadfind.timeout", 5000);
 pref("accessibility.typeaheadfind.flashBar", 1);
 pref("accessibility.typeaheadfind.linksonly", false);
 pref("accessibility.typeaheadfind.casesensitive", 0);
-
-// pointer to the default engine name
-pref("browser.search.defaultenginename", "chrome://browser/locale/region.properties");
 
 // SSL error page behaviour
 pref("browser.ssl_override_behavior", 2);

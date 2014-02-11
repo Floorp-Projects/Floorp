@@ -5,7 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DEFINES['AB_CD'] = CONFIG['MOZ_UI_LOCALE']
-DEFINES['PACKAGE'] = 'browser'
+DEFINES['PACKAGE'] = 'b2g'
 DEFINES['MOZ_APP_VERSION'] = CONFIG['MOZ_APP_VERSION']
 
 JAR_MANIFESTS += ['jar.mn']
