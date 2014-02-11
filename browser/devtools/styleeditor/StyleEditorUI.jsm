@@ -578,7 +578,7 @@ StyleEditorUI.prototype = {
     }
 
     let ruleCount = editor.styleSheet.ruleCount;
-    if (editor.styleSheet.relatedStyleSheet) {
+    if (editor.styleSheet.relatedStyleSheet && editor.linkedCSSFile) {
       ruleCount = editor.styleSheet.relatedStyleSheet.ruleCount;
     }
     if (ruleCount === undefined) {
