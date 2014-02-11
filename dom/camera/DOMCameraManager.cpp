@@ -2,18 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "DOMCameraManager.h"
 #include "nsDebug.h"
-#include "jsapi.h"
 #include "nsPIDOMWindow.h"
 #include "mozilla/Services.h"
 #include "nsObserverService.h"
 #include "nsIPermissionManager.h"
 #include "DOMCameraControl.h"
+#include "DOMCameraManager.h"
 #include "nsDOMClassInfo.h"
 #include "DictionaryHelpers.h"
 #include "CameraCommon.h"
-#include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/CameraManagerBinding.h"
 
 using namespace mozilla;
@@ -45,10 +43,17 @@ GetCameraLog()
   return sLog;
 }
 
+/**
+ * nsDOMCameraManager::GetListOfCameras
+ * is implementation-specific, and can be found in (e.g.)
+ * GonkCameraManager.cpp and FallbackCameraManager.cpp.
+ */
+
 WindowTable* nsDOMCameraManager::sActiveWindows = nullptr;
 
 nsDOMCameraManager::nsDOMCameraManager(nsPIDOMWindow* aWindow)
   : mWindowId(aWindow->WindowID())
+  , mCameraThread(nullptr)
   , mWindow(aWindow)
 {
   /* member initializers and constructor code */
@@ -64,12 +69,6 @@ nsDOMCameraManager::~nsDOMCameraManager()
   if (obs) {
     obs->RemoveObserver(this, "xpcom-shutdown");
   }
-}
-
-void
-nsDOMCameraManager::GetListOfCameras(nsTArray<nsString>& aList, ErrorResult& aRv)
-{
-  aRv = ICameraControl::GetListOfCameras(aList);
 }
 
 bool
@@ -107,28 +106,30 @@ nsDOMCameraManager::CreateInstance(nsPIDOMWindow* aWindow)
 }
 
 void
-nsDOMCameraManager::GetCamera(const nsAString& aCamera,
-                              const CameraConfiguration& aInitialConfig,
-                              GetCameraCallback& aOnSuccess,
-                              const Optional<OwningNonNull<CameraErrorCallback> >& aOnError,
+nsDOMCameraManager::GetCamera(const CameraSelector& aOptions,
+                              nsICameraGetCameraCallback* onSuccess,
+                              const Optional<nsICameraErrorCallback*>& onError,
                               ErrorResult& aRv)
 {
-  DOM_CAMERA_LOGT("%s:%d\n", __func__, __LINE__);
-
   uint32_t cameraId = 0;  // back (or forward-facing) camera by default
-  if (aCamera.EqualsLiteral("front")) {
+  if (aOptions.mCamera.EqualsLiteral("front")) {
     cameraId = 1;
   }
 
-  nsCOMPtr<CameraErrorCallback> errorCallback = nullptr;
-  if (aOnError.WasPassed()) {
-    errorCallback = &aOnError.Value();
+  // reuse the same camera thread to conserve resources
+  if (!mCameraThread) {
+    aRv = NS_NewThread(getter_AddRefs(mCameraThread));
+    if (aRv.Failed()) {
+      return;
+    }
   }
 
-  // Creating this object will trigger the aOnSuccess callback
-  //  (or the aOnError one, if it fails).
+  DOM_CAMERA_LOGT("%s:%d\n", __func__, __LINE__);
+
+  // Creating this object will trigger the onSuccess handler
   nsRefPtr<nsDOMCameraControl> cameraControl =
-    new nsDOMCameraControl(cameraId, aInitialConfig, &aOnSuccess, errorCallback, mWindow);
+    new nsDOMCameraControl(cameraId, mCameraThread,
+                           onSuccess, onError.WasPassed() ? onError.Value() : nullptr, mWindow);
 
   Register(cameraControl);
 }
