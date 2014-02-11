@@ -59,8 +59,9 @@ var f = asmLink(asmCompile('glob', USE_ASM + 'var abs=glob.Math.abs; function f(
 for (n of [-Math.pow(2,31)-1, -Math.pow(2,31), -Math.pow(2,31)+1, -1, 0, 1, Math.pow(2,31)-2, Math.pow(2,31)-1, Math.pow(2,31)])
     assertEq(f(n), Math.abs(n|0)|0);
 
-function testBinary(f, g) {
-    var numbers = [NaN, Infinity, -Infinity, -10000, -3.4, -0, 0, 3.4, 10000];
+var doubleNumbers = [NaN, Infinity, -Infinity, -10000, -3.4, -0, 0, 3.4, 10000];
+var intNumbers = [-10000, -3, -1, 0, 3, 10000];
+function testBinary(f, g, numbers) {
     for (n of numbers)
         for (o of numbers)
             assertEq(f(n,o), g(n,o));
@@ -68,11 +69,43 @@ function testBinary(f, g) {
 
 assertAsmLinkFail(asmCompile('glob', USE_ASM + 'var po=glob.Math.pow; function f(d,e) { d=+d;e=+e; return +po(d,e) } return f'), {Math:{pow:Math.sin}});
 assertAsmLinkFail(asmCompile('glob', USE_ASM + 'var po=glob.Math.pow; function f(d,e) { d=+d;e=+e; return +po(d,e) } return f'), {Math:{pow:null}});
-testBinary(asmLink(asmCompile('glob', USE_ASM + 'var po=glob.Math.pow; function f(d,e) { d=+d;e=+e; return +po(d,e) } return f'), {Math:{pow:Math.pow}}), Math.pow);
+testBinary(asmLink(asmCompile('glob', USE_ASM + 'var po=glob.Math.pow; function f(d,e) { d=+d;e=+e; return +po(d,e) } return f'), {Math:{pow:Math.pow}}), Math.pow, doubleNumbers);
 
 assertAsmLinkFail(asmCompile('glob', USE_ASM + 'var at=glob.Math.atan2; function f(d,e) { d=+d;e=+e; return +at(d,e) } return f'), {Math:{atan2:Math.sin}});
 assertAsmLinkFail(asmCompile('glob', USE_ASM + 'var at=glob.Math.atan2; function f(d,e) { d=+d;e=+e; return +at(d,e) } return f'), {Math:{atan2:null}});
-testBinary(asmLink(asmCompile('glob', USE_ASM + 'var at=glob.Math.atan2; function f(d,e) { d=+d;e=+e; return +at(d,e) } return f'), {Math:{atan2:Math.atan2}}), Math.atan2);
+testBinary(asmLink(asmCompile('glob', USE_ASM + 'var at=glob.Math.atan2; function f(d,e) { d=+d;e=+e; return +at(d,e) } return f'), {Math:{atan2:Math.atan2}}), Math.atan2, doubleNumbers);
+
+assertAsmTypeFail('glob', USE_ASM + 'var min=glob.Math.min; function f(d) { d=+d; return +min(d) } return f');
+assertAsmTypeFail('glob', USE_ASM + 'var f32=glob.Math.fround; var min=glob.Math.min; function f(d) { d=f32(d); return +min(d, f32(5)) } return f');
+assertAsmTypeFail('glob', 'ffi', 'heap', USE_ASM + 'var i32=new glob.Int32Array(heap); var min=glob.Math.min; function f() { return min(i32[0], 5)|0 } return f');
+assertAsmTypeFail('glob', USE_ASM + 'var min=glob.Math.min; function f(x) { x=x|0; return min(3 + x, 5)|0 } return f');
+assertAsmTypeFail('glob', USE_ASM + 'var min=glob.Math.min; function f(x) { x=x|0; return min(5, 3 + x)|0 } return f');
+
+assertAsmLinkFail(asmCompile('glob', USE_ASM + 'var min=glob.Math.min; function f(d,e) { d=+d;e=+e; return +min(d,e) } return f'), {Math:{min:Math.sin}});
+assertAsmLinkFail(asmCompile('glob', USE_ASM + 'var min=glob.Math.min; function f(d,e) { d=+d;e=+e; return +min(d,e) } return f'), {Math:{min:null}});
+testBinary(asmLink(asmCompile('glob', USE_ASM + 'var min=glob.Math.min; function f(d,e) { d=+d;e=+e; return +min(d,e) } return f'), {Math:{min:Math.min}}), Math.min, doubleNumbers);
+testBinary(asmLink(asmCompile('glob', USE_ASM + 'var min=glob.Math.min; function f(d,e) { d=d|0;e=e|0; return min(d,e)|0} return f'), {Math:{min:Math.min}}), Math.min, intNumbers);
+
+assertAsmLinkFail(asmCompile('glob', USE_ASM + 'var max=glob.Math.max; function f(d,e) { d=+d;e=+e; return +max(d,e) } return f'), {Math:{max:Math.sin}});
+assertAsmLinkFail(asmCompile('glob', USE_ASM + 'var max=glob.Math.max; function f(d,e) { d=+d;e=+e; return +max(d,e) } return f'), {Math:{max:null}});
+testBinary(asmLink(asmCompile('glob', USE_ASM + 'var max=glob.Math.max; function f(d,e) { d=+d;e=+e; return +max(d,e) } return f'), {Math:{max:Math.max}}), Math.max, doubleNumbers);
+testBinary(asmLink(asmCompile('glob', USE_ASM + 'var max=glob.Math.max; function f(d,e) { d=d|0;e=e|0; return max(d,e)|0} return f'), {Math:{max:Math.max}}), Math.max, intNumbers);
+
+function testTernary(f, g, numbers) {
+    for (n of numbers)
+        for (o of numbers)
+            for (p of numbers)
+                assertEq(f(n,o,p), g(n,o,p));
+}
+
+assertAsmTypeFail('glob', USE_ASM + 'var min=glob.Math.min; function f(d,e,g) { d=+d;e=+e;g=g|0; return +min(d,e,g) } return f');
+assertAsmTypeFail('glob', USE_ASM + 'var max=glob.Math.max; function f(d,e,g) { d=d|0;e=e|0;g=+g; return max(d,e,g)|0 } return f');
+assertAsmTypeFail('glob', USE_ASM + 'var min=glob.Math.min; function f(d,e,g) { d=+d;e=+e;g=+g; return min(d,e,g)|0 } return f');
+assertAsmTypeFail('glob', USE_ASM + 'var max=glob.Math.max; function f(d,e,g) { d=d|0;e=e|0;g=g|0; return +max(d,e,g) } return f');
+testTernary(asmLink(asmCompile('glob', USE_ASM + 'var max=glob.Math.max; function f(d,e,g) { d=d|0;e=e|0;g=g|0; return max(d,e,g)|0 } return f'), {Math:{max:Math.max}}), Math.max, intNumbers);
+testTernary(asmLink(asmCompile('glob', USE_ASM + 'var max=glob.Math.max; function f(d,e,g) { d=+d;e=+e;g=+g; return +max(d,e,g) } return f'), {Math:{max:Math.max}}), Math.max, doubleNumbers);
+testTernary(asmLink(asmCompile('glob', USE_ASM + 'var min=glob.Math.min; function f(d,e,g) { d=d|0;e=e|0;g=g|0; return min(d,e,g)|0 } return f'), {Math:{min:Math.min}}), Math.min, intNumbers);
+testTernary(asmLink(asmCompile('glob', USE_ASM + 'var min=glob.Math.min; function f(d,e,g) { d=+d;e=+e;g=+g; return +min(d,e,g) } return f'), {Math:{min:Math.min}}), Math.min, doubleNumbers);
 
 assertAsmTypeFail('glob', USE_ASM + 'var sin=glob.Math.sin; function f(d) { d=+d; d = sin(d); } return f');
 assertAsmTypeFail('glob', USE_ASM + 'var sin=glob.Math.sin; function f(d) { d=+d; var i=0; i = sin(d)|0; } return f');
