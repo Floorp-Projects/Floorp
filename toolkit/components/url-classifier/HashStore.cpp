@@ -607,7 +607,7 @@ nsresult DeflateWriteTArray(nsIOutputStream* aStream, nsTArray<T>& aIn)
 }
 
 template<class T>
-nsresult InflateReadTArray(nsIInputStream* aStream, nsTArray<T>* aOut,
+nsresult InflateReadTArray(nsIInputStream* aStream, FallibleTArray<T>* aOut,
                            uint32_t aExpectedSize)
 {
 
@@ -618,15 +618,19 @@ nsresult InflateReadTArray(nsIInputStream* aStream, nsTArray<T>* aOut,
 
   NS_ASSERTION(read == sizeof(inLen), "Error reading inflate length");
 
-  nsTArray<char> inBuff;
-  inBuff.SetLength(inLen);
+  FallibleTArray<char> inBuff;
+  if (!inBuff.SetLength(inLen)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   rv = ReadTArray(aStream, &inBuff, inLen);
   NS_ENSURE_SUCCESS(rv, rv);
 
   uLongf insize = inLen;
   uLongf outsize = aExpectedSize * sizeof(T);
-  aOut->SetLength(aExpectedSize);
+  if (!aOut->SetLength(aExpectedSize)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   int zerr = uncompress(reinterpret_cast<Bytef*>(aOut->Elements()),
                         &outsize,
@@ -680,10 +684,10 @@ ByteSliceWrite(nsIOutputStream* aOut, nsTArray<uint32_t>& aData)
 static nsresult
 ByteSliceRead(nsIInputStream* aInStream, FallibleTArray<uint32_t>* aData, uint32_t count)
 {
-  nsTArray<uint8_t> slice1;
-  nsTArray<uint8_t> slice2;
-  nsTArray<uint8_t> slice3;
-  nsTArray<uint8_t> slice4;
+  FallibleTArray<uint8_t> slice1;
+  FallibleTArray<uint8_t> slice2;
+  FallibleTArray<uint8_t> slice3;
+  FallibleTArray<uint8_t> slice4;
 
   nsresult rv = InflateReadTArray(aInStream, &slice1, count);
   NS_ENSURE_SUCCESS(rv, rv);
