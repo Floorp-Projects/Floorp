@@ -2338,13 +2338,21 @@ MCompare::truncate()
         return false;
 
     compareType_ = Compare_Int32;
+
+    // Truncating the operands won't change their value, but it will change
+    // their type, which we need because we now expect integer inputs.
+    truncateOperands_ = true;
+
     return true;
 }
 
 bool
 MCompare::isOperandTruncated(size_t index) const
 {
-    return compareType() == Compare_Int32;
+    // If we're doing an int32 comparison on operands which were previously
+    // floating-point, convert them!
+    JS_ASSERT_IF(truncateOperands_, isInt32Comparison());
+    return truncateOperands_;
 }
 
 // Ensure that all observables uses can work with a truncated
