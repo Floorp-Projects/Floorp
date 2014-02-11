@@ -21,7 +21,7 @@ Cu.import("resource://gre/modules/PhoneNumberUtils.jsm");
 Cu.importGlobalProperties(["indexedDB"]);
 
 const DB_NAME = "contacts";
-const DB_VERSION = 18;
+const DB_VERSION = 19;
 const STORE_NAME = "contacts";
 const SAVED_GETALL_STORE_NAME = "getallcache";
 const CHUNK_SIZE = 20;
@@ -703,6 +703,11 @@ ContactDB.prototype = {
         }
       },
       function upgrade17to18() {
+        // this upgrade function has been moved to the next upgrade path because
+        // a previous version of it had a bug
+        next();
+      },
+      function upgrade18to19() {
         if (DEBUG) {
           debug("Adding the name index");
         }
@@ -710,9 +715,10 @@ ContactDB.prototype = {
         if (!objectStore) {
           objectStore = aTransaction.objectStore(STORE_NAME);
         }
-
-        objectStore.createIndex("name", "properties.name", { multiEntry: true });
-        objectStore.createIndex("nameLowerCase", "search.name", { multiEntry: true });
+        if (!objectStore.indexNames.contains("name")) {
+          objectStore.createIndex("name", "properties.name", { multiEntry: true });
+          objectStore.createIndex("nameLowerCase", "search.name", { multiEntry: true });
+        }
 
         objectStore.openCursor().onsuccess = function(event) {
           let cursor = event.target.result;
@@ -721,10 +727,16 @@ ContactDB.prototype = {
             value.search.name = [];
             if (value.properties.name) {
               value.properties.name.forEach(function addNameIndex(name) {
-                value.search.name.push(name.toLowerCase());
+                let lowerName = name.toLowerCase();
+
+                // an earlier version of this code could have added it already
+                if (value.search.name.indexOf(lowerName) === -1) {
+                  value.search.name.push(lowerName);
+                }
               });
             }
             cursor.update(value);
+            cursor.continue();
           } else {
             next();
           }
