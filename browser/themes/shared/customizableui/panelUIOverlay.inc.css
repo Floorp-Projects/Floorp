@@ -26,10 +26,6 @@
   background-repeat: no-repeat;
 }
 
-#PanelUI-menu-button {
-  margin: 0 7px 0 9px;
-}
-
 .panel-subviews {
   padding: 4px;
   background-color: hsla(0,0%,100%,.97);
