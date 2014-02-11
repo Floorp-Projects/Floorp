@@ -1919,6 +1919,7 @@ TabParent::GetLoadContext()
                                   OwnOrContainingAppId(),
                                   true /* aIsContent */,
                                   mChromeFlags & nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW,
+                                  mChromeFlags & nsIWebBrowserChrome::CHROME_REMOTE_WINDOW,
                                   IsBrowserElement());
     mLoadContext = loadContext;
   }
