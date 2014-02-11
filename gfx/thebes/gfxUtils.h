@@ -177,6 +177,24 @@ public:
     static bool sDumpPainting;
     static bool sDumpPaintingToFile;
     static FILE* sDumpPaintFile;
+
+    /**
+     * Writes a binary PNG file.
+     * Expensive. Creates a DataSourceSurface, then a DrawTarget, then passes to DrawTarget overloads
+     */
+    static void WriteAsPNG(mozilla::RefPtr<mozilla::gfx::SourceSurface> aSourceSurface, const char* aFile);
+
+    /**
+     * Write as a PNG encoded Data URL to stdout.
+     * Expensive. Creates a DataSourceSurface, then a DrawTarget, then passes to DrawTarget overloads
+     */
+    static void DumpAsDataURL(mozilla::RefPtr<mozilla::gfx::SourceSurface> aSourceSurface);
+
+    /**
+     * Copy a PNG encoded Data URL to the clipboard.
+     * Expensive. Creates a DataSourceSurface, then a DrawTarget, then passes to DrawTarget overloads
+     */
+    static void CopyAsDataURL(mozilla::RefPtr<mozilla::gfx::SourceSurface> aSourceSurface);
 #endif
 };
 
