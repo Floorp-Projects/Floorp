@@ -36,22 +36,16 @@ endif
 ifdef MOZ_NATIVE_FFI
 EXTRA_DSO_LDOPTS += $(MOZ_FFI_LIBS)
 else
-ifeq ($(OS_ARCH),OS2)
-SHARED_LIBRARY_LIBS += \
-    ctypes/libffi/.libs/ffi.a \
-    $(NULL)
-else
 SHARED_LIBRARY_LIBS += \
     ctypes/libffi/.libs/libffi.$(LIB_SUFFIX) \
     $(NULL)
-endif
 endif
 
 endif # JS_HAS_CTYPES
 
 DASH_R		= -r
 
-ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
+ifneq (,$(filter WINNT,$(OS_ARCH)))
 SDK_LIBRARY = $(IMPORT_LIBRARY)
 else
 SDK_LIBRARY = $(SHARED_LIBRARY)
@@ -202,7 +196,7 @@ endif
 
 DIST_GARBAGE = config.cache config.log config.status* \
    config/autoconf.mk config/emptyvars.mk \
-   $(JS_CONFIG_NAME) js-config.h js-confdefs.h \
+   js-config.h js-confdefs.h \
    backend.mk config/backend.mk devtools/backend.mk editline/backend.mk \
    gdb/backend.mk jsapi-tests/backend.mk shell/backend.mk tests/backend.mk \
    backend.RecursiveMakeBackend backend.RecursiveMakeBackend.pp \
@@ -223,7 +217,7 @@ NSPR_STATIC_PATH = $(DIST)/lib
 endif
 
 # HP-UX does not require the extra linking of "-lm"
-ifeq (,$(filter HP-UX WINNT OS2,$(OS_ARCH)))
+ifeq (,$(filter HP-UX WINNT,$(OS_ARCH)))
 EXTRA_LIBS	+= -lm
 endif
 
@@ -283,61 +277,11 @@ endif
 EXTRA_LIBS	+= -lposix4 -ldl -lnsl -lsocket
 endif
 
-# Compute the linker flags that programs linking against SpiderMonkey should
-# pass to get SpiderMonkey and its dependencies, beyond just the -L and -l
-# for the SpiderMonkey library itself.
-# - EXTRA_DSO_LDOPTS includes the NSPR -L and -l flags.
-# - OS_LIBS includes libraries selected by the configure script.
-# - EXTRA_LIBS includes libraries selected by this Makefile.
-JS_CONFIG_LIBS=$(EXTRA_DSO_LDOPTS) $(OS_LIBS) $(EXTRA_LIBS)
-ifdef GNU_CC
-JS_CONFIG_MOZ_JS_LIBS=-L$(libdir) -l$(LIBRARY_NAME)
-else
-JS_CONFIG_MOZ_JS_LIBS=$(libdir)/$(LIBRARY_NAME).lib
-endif
-
-# The configure script invokes this rule explicitly at configure time!
-# It's important that js-config be ready by the time we're done
-# configuring, because we may be running other configure scripts that
-# would like to run js-config themselves, before js is built.
-#
-# This file and rules.mk go through a certain amount of work to decide
-# which libraries to build, what to name them, and what flags to pass
-# when linking them (and thus what flags its own clients must pass).
-# All this information needs to go into the js-config script.  To
-# avoid trying to re-compute all that in the configure script, we just
-# have the configure script generate this Makefile, and then invoke
-# this rule.
-
-# Set the various definitions that will be substituted for js-config
-# and for the pck-config .pc file.
-JS_CONFIG_SUBSTITUTIONS=\
-	-Dprefix='$(prefix)' \
-	-Dexec_prefix='$(exec_prefix)' \
-	-Dincludedir='$(includedir)' \
-	-Dlibdir='$(libdir)' \
-	-DMOZILLA_VERSION='$(MOZILLA_VERSION)' \
-	-DLIBRARY_NAME='$(LIBRARY_NAME)' \
-	-DJS_CONFIG_LIBS='$(JS_CONFIG_LIBS)' \
-	-DJS_CONFIG_MOZ_JS_LIBS='$(JS_CONFIG_MOZ_JS_LIBS)' \
-	-DMOZJS_MAJOR_VERSION='$(MOZJS_MAJOR_VERSION)' \
-	-DMOZJS_MINOR_VERSION='$(MOZJS_MINOR_VERSION)' \
-	-DMOZJS_PATCH_VERSION='$(MOZJS_PATCH_VERSION)' \
-	-DMOZJS_ALPHA='$(MOZJS_ALPHA)' \
-	-DNSPR_CFLAGS='$(NSPR_CFLAGS)' \
-	-DNSPR_PKGCONF_CHECK='$(NSPR_PKGCONF_CHECK)' \
-	$(NULL)
-
-$(JS_CONFIG_NAME): js-config.in Makefile $(DEPTH)/config/autoconf.mk $(topsrcdir)/config/config.mk $(topsrcdir)/config/rules.mk
-	$(RM) $@.tmp
-	$(call py_action,preprocessor,--marker % $(JS_CONFIG_SUBSTITUTIONS) $< -o $@.tmp)
-	mv $@.tmp $@ && chmod +x $@
-
 SCRIPTS = $(JS_CONFIG_NAME)
 SDK_BINARY = $(JS_CONFIG_NAME)
 
-$(LIBRARY_NAME).pc: js.pc.in
-	$(call py_action,preprocessor,$(JS_CONFIG_SUBSTITUTIONS) $< -o $@)
+$(LIBRARY_NAME).pc: js.pc
+	cp $^ $@
 
 install:: $(LIBRARY_NAME).pc
 	$(SYSINSTALL) $^ $(DESTDIR)$(libdir)/pkgconfig
@@ -367,7 +311,7 @@ install:: $(LIBRARY_NAME).pc
 #
 
 install::
-	$(call py_action,process_install_manifest,--no-remove $(DESTDIR)$(includedir)/$(LIBRARY_NAME) _build_manifests/install/dist_include)
+	$(call py_action,process_install_manifest,--no-remove $(DESTDIR)$(includedir)/$(LIBRARY_NAME) $(DEPTH)/_build_manifests/install/dist_include)
 
 #
 # END SpiderMonkey header installation

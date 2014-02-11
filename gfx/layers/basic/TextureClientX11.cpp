@@ -19,8 +19,8 @@ using namespace mozilla::gfx;
 using namespace mozilla::layers;
 
 TextureClientX11::TextureClientX11(SurfaceFormat aFormat, TextureFlags aFlags)
-  : mFormat(aFormat),
-    mTextureFlags(aFlags)
+  : TextureClient(aFlags),
+    mFormat(aFormat)
 {
   MOZ_COUNT_CTOR(TextureClientX11);
 }

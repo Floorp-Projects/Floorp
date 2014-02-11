@@ -970,7 +970,7 @@ ROLE(RICH_OPTION,
 
 ROLE(LISTBOX,
      "listbox",
-     ATK_ROLE_LIST,
+     ATK_ROLE_LIST_BOX,
      NSAccessibilityListRole,
      ROLE_SYSTEM_LIST,
      ROLE_SYSTEM_LIST,

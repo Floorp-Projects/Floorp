@@ -60,6 +60,11 @@ CompositableHost::UseComponentAlphaTextures(TextureHost* aTextureOnBlack,
 }
 
 void
+CompositableHost::RemoveTextureHost(TextureHost* aTexture)
+{
+}
+
+void
 CompositableHost::SetCompositor(Compositor* aCompositor)
 {
   mCompositor = aCompositor;

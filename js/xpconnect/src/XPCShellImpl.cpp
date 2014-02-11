@@ -8,6 +8,7 @@
 #include "jsfriendapi.h"
 #include "jsprf.h"
 #include "js/OldDebugAPI.h"
+#include "mozilla/Debug.h"
 #include "nsServiceManagerUtils.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIXPConnect.h"
@@ -31,10 +32,6 @@
 #include "nsCxPusher.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIPrincipal.h"
-
-#ifdef ANDROID
-#include <android/log.h>
-#endif
 
 #ifdef XP_WIN
 #include <windows.h>
@@ -300,18 +297,9 @@ Dump(JSContext *cx, unsigned argc, jsval *vp)
     if (!chars)
         return false;
 
-    NS_ConvertUTF16toUTF8 utf8str(reinterpret_cast<const char16_t*>(chars),
-                                  length);
-#ifdef ANDROID
-    __android_log_print(ANDROID_LOG_INFO, "Gecko", "%s", utf8str.get());
-#endif
-#ifdef XP_WIN
-    if (IsDebuggerPresent()) {
-      OutputDebugStringW(reinterpret_cast<const wchar_t*>(chars));
-    }
-#endif
-    fputs(utf8str.get(), gOutFile);
-    fflush(gOutFile);
+    nsDependentSubstring ustr(reinterpret_cast<const char16_t*>(chars),
+                              length);
+    PrintToDebugger(ustr, gOutFile);
     return true;
 }
 
@@ -744,7 +732,7 @@ static bool
 env_setProperty(JSContext *cx, HandleObject obj, HandleId id, bool strict, MutableHandleValue vp)
 {
 /* XXX porting may be easy, but these don't seem to supply setenv by default */
-#if !defined XP_OS2 && !defined SOLARIS
+#if !defined SOLARIS
     JSString *valstr;
     JS::Rooted<JSString*> idstr(cx);
     int rv;
@@ -790,7 +778,7 @@ env_setProperty(JSContext *cx, HandleObject obj, HandleId id, bool strict, Mutab
         return false;
     }
     vp.set(STRING_TO_JSVAL(valstr));
-#endif /* !defined XP_OS2 && !defined SOLARIS */
+#endif /* !defined SOLARIS */
     return true;
 }
 

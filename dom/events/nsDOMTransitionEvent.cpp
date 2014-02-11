@@ -13,9 +13,7 @@ nsDOMTransitionEvent::nsDOMTransitionEvent(mozilla::dom::EventTarget* aOwner,
                                            nsPresContext *aPresContext,
                                            InternalTransitionEvent* aEvent)
   : nsDOMEvent(aOwner, aPresContext,
-               aEvent ? aEvent :
-                        new InternalTransitionEvent(false, 0, EmptyString(),
-                                                    0.0, EmptyString()))
+               aEvent ? aEvent : new InternalTransitionEvent(false, 0))
 {
   if (aEvent) {
     mEventIsInternal = false;

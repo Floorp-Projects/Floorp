@@ -120,12 +120,28 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
               self.remoteDebuggerArgs,
               self.xpcsCmd]
 
+    def testTimeout(self, test_file, proc):
+        self.timedout = True
+        if not self.retry:
+            self.log.error("TEST-UNEXPECTED-FAIL | %s | Test timed out" % test_file)
+        self.kill(proc)
+
     def launchProcess(self, cmd, stdout, stderr, env, cwd):
+        self.timedout = False
         cmd.insert(1, self.remoteHere)
         outputFile = "xpcshelloutput"
-        f = open(outputFile, "w+")
-        self.shellReturnCode = self.device.shell(cmd, f)
-        f.close()
+        with open(outputFile, 'w+') as f:
+            try:
+                self.shellReturnCode = self.device.shell(cmd, f)
+            except devicemanager.DMError as e:
+                if self.timedout:
+                    # If the test timed out, there is a good chance the SUTagent also
+                    # timed out and failed to return a return code, generating a
+                    # DMError. Ignore the DMError to simplify the error report.
+                    self.shellReturnCode = None
+                    pass
+                else:
+                    raise e
         # The device manager may have timed out waiting for xpcshell.
         # Guard against an accumulation of hung processes by killing
         # them here. Note also that IPC tests may spawn new instances
@@ -138,6 +154,13 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
                         dump_directory,
                         symbols_path,
                         test_name=None):
+        if not self.device.dirExists(self.remoteMinidumpDir):
+            # The minidumps directory is automatically created when Fennec
+            # (first) starts, so its lack of presence is a hint that
+            # something went wrong.
+            print "Automation Error: No crash directory (%s) found on remote device" % self.remoteMinidumpDir
+            # Whilst no crash was found, the run should still display as a failure
+            return True
         with mozfile.TemporaryDirectory() as dumpDir:
             self.device.getDirectory(self.remoteMinidumpDir, dumpDir)
             crashed = xpcshell.XPCShellTestThread.checkForCrashes(self, dumpDir, symbols_path, test_name)

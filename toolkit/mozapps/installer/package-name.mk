@@ -40,9 +40,6 @@ endif
 ifeq ($(TARGET_OS),linux-gnu)
 MOZ_PKG_PLATFORM := linux-$(TARGET_CPU)
 endif
-ifeq ($(OS_ARCH),OS2)
-MOZ_PKG_PLATFORM := os2
-endif
 endif #MOZ_PKG_PLATFORM
 
 ifdef MOZ_PKG_SPECIAL
@@ -88,7 +85,7 @@ ifndef MOZ_PKG_LONGVERSION
 MOZ_PKG_LONGVERSION = $(shell echo $(MOZ_PKG_VERSION))
 endif
 
-ifeq (,$(filter-out Darwin OS2, $(OS_ARCH))) # Mac and OS2
+ifeq (,$(filter-out Darwin, $(OS_ARCH))) # Mac
 PKG_BASENAME = $(MOZ_PKG_APPNAME) $(MOZ_PKG_LONGVERSION)
 PKG_INST_BASENAME = $(MOZ_PKG_APPNAME) Setup $(MOZ_PKG_LONGVERSION)
 else

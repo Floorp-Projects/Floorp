@@ -56,17 +56,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         ]
     else:
         DEFINES['CAIRO_OMIT_WIN32_PRINTING'] = True
-elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'os2':
-    EXPORTS.cairo += [
-        'cairo-os2-private.h',
-        'cairo-os2.h',
-    ]
-    SOURCES += [
-        'cairo-os2-surface.c',
-    ]
-    DEFINES['OS2_USE_PLATFORM_ALLOC'] = True
-    if CONFIG['MOZ_OS2_HIGH_MEMORY']:
-        DEFINES['OS2_HIGH_MEMORY'] = True
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     EXPORTS.cairo += [
         'cairo-quartz-image.h',

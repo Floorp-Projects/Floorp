@@ -1295,7 +1295,7 @@ PluginModuleParent::NP_GetValue(void *future, NPPVariable aVariable,
     return NS_OK;
 }
 
-#if defined(XP_WIN) || defined(XP_MACOSX) || defined(XP_OS2)
+#if defined(XP_WIN) || defined(XP_MACOSX)
 nsresult
 PluginModuleParent::NP_GetEntryPoints(NPPluginFuncs* pFuncs, NPError* error)
 {

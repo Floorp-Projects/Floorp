@@ -55,6 +55,8 @@ public:
 
   virtual void UseTextureHost(TextureHost* aTexture) MOZ_OVERRIDE;
 
+  virtual void RemoveTextureHost(TextureHost* aTexture) MOZ_OVERRIDE;
+
   virtual TextureHost* GetAsTextureHost() MOZ_OVERRIDE;
 
   virtual void SetCompositor(Compositor* aCompositor) MOZ_OVERRIDE;
