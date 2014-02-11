@@ -51,6 +51,12 @@ function test() {
     ed.removeLineClass(0, "test");
     ok(!ed.hasLineClass(0, "test"), "test line class is gone");
 
+    // Font size
+    let size = ed.getFontSize();
+    is("number", typeof size, "we have the default font size");
+    ed.setFontSize(ed.getFontSize() + 1);
+    is(ed.getFontSize(), size + 1, "new font size was set");
+
     teardown(ed, win);
   });
 }

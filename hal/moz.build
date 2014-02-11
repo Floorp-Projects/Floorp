@@ -176,3 +176,15 @@ FAIL_ON_WARNINGS = True
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
+
+if CONFIG['MOZ_GAMEPAD']:
+    LOCAL_INCLUDES += [
+        '/dom/base',
+    ]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+    # So that we can call nsScreenManagerGonk::GetConfiguration().
+    LOCAL_INCLUDES += [
+        '/widget/gonk',
+        '/widget/xpwidgets'
+    ]

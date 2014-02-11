@@ -63,7 +63,7 @@ void PRNetAddrToNetAddr(const PRNetAddr *prAddr, NetAddr *addr)
     memcpy(&addr->inet6.ip, &prAddr->ipv6.ip, sizeof(addr->inet6.ip.u8));
     addr->inet6.scope_id = prAddr->ipv6.scope_id;
   }
-#if defined(XP_UNIX) || defined(XP_OS2)
+#if defined(XP_UNIX)
   else if (prAddr->raw.family == PR_AF_LOCAL) {
     addr->local.family = AF_LOCAL;
     memcpy(addr->local.path, prAddr->local.path, sizeof(addr->local.path));
@@ -87,7 +87,7 @@ void NetAddrToPRNetAddr(const NetAddr *addr, PRNetAddr *prAddr)
     memcpy(&prAddr->ipv6.ip, &addr->inet6.ip, sizeof(addr->inet6.ip.u8));
     prAddr->ipv6.scope_id = addr->inet6.scope_id;
   }
-#if defined(XP_UNIX) || defined(XP_OS2)
+#if defined(XP_UNIX)
   else if (addr->raw.family == AF_LOCAL) {
     prAddr->local.family = PR_AF_LOCAL;
     memcpy(prAddr->local.path, addr->local.path, sizeof(addr->local.path));
@@ -113,7 +113,7 @@ bool NetAddrToString(const NetAddr *addr, char *buf, uint32_t bufSize)
     memcpy(&nativeAddr.s6_addr, &addr->inet6.ip, sizeof(addr->inet6.ip.u8));
     return !!inet_ntop_internal(AF_INET6, &nativeAddr, buf, bufSize);
   }
-#if defined(XP_UNIX) || defined(XP_OS2)
+#if defined(XP_UNIX)
   else if (addr->raw.family == AF_LOCAL) {
     if (bufSize < sizeof(addr->local.path)) {
       // Many callers don't bother checking our return value, so
@@ -218,7 +218,7 @@ NetAddr::operator == (const NetAddr& other) const
            (memcmp(&this->inet6.ip, &other.inet6.ip,
                    sizeof(this->inet6.ip)) == 0) &&
            (this->inet6.scope_id == other.inet6.scope_id);
-#if defined(XP_UNIX) || defined(XP_OS2)
+#if defined(XP_UNIX)
   } else if (this->raw.family == AF_LOCAL) {
     return PL_strncmp(this->local.path, other.local.path,
                       ArrayLength(this->local.path));

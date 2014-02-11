@@ -38,12 +38,6 @@ class gfxXlibSurface;
 #endif
 #endif
 
-#ifdef XP_OS2
-#define INCL_PM
-#define INCL_GPI
-#include <os2.h>
-#endif
-
 class nsPluginInstanceOwner : public nsIPluginInstanceOwner,
                               public nsIDOMEventListener,
                               public nsIPrivacyTransitionObserver,
@@ -150,8 +144,6 @@ public:
   void Paint(gfxContext* aContext,
              const gfxRect& aFrameRect,
              const gfxRect& aDirtyRect);
-#elif defined(XP_OS2)
-  void Paint(const nsRect& aDirtyRect, HPS aHPS);
 #endif
 
   //locals

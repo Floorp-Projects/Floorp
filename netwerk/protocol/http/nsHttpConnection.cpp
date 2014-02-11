@@ -361,7 +361,7 @@ nsHttpConnection::Activate(nsAHttpTransaction *trans, uint32_t caps, int32_t pri
     // The overflow state is not needed between activations
     mInputOverflow = nullptr;
 
-    mResponseTimeoutEnabled = mHttpHandler->ResponseTimeout() > 0 &&
+    mResponseTimeoutEnabled = mTransaction->ResponseTimeout() > 0 &&
                               mTransaction->ResponseTimeoutEnabled();
 
     rv = OnOutputStreamReady(mSocketOut);
@@ -1002,14 +1002,14 @@ nsHttpConnection::ReadTimeoutTick(PRIntervalTime now)
     }
 
     uint32_t nextTickAfter = UINT32_MAX;
-
     // Timeout if the response is taking too long to arrive.
     if (mResponseTimeoutEnabled) {
         PRIntervalTime initialResponseDelta = now - mLastWriteTime;
-        if (initialResponseDelta > gHttpHandler->ResponseTimeout()) {
+
+        if (initialResponseDelta > mTransaction->ResponseTimeout()) {
             LOG(("canceling transaction: no response for %ums: timeout is %dms\n",
                  PR_IntervalToMilliseconds(initialResponseDelta),
-                 PR_IntervalToMilliseconds(gHttpHandler->ResponseTimeout())));
+                 PR_IntervalToMilliseconds(mTransaction->ResponseTimeout())));
 
             mResponseTimeoutEnabled = false;
 
@@ -1017,8 +1017,8 @@ nsHttpConnection::ReadTimeoutTick(PRIntervalTime now)
             CloseTransaction(mTransaction, NS_ERROR_NET_TIMEOUT);
             return UINT32_MAX;
         }
-        nextTickAfter = PR_IntervalToSeconds(gHttpHandler->ResponseTimeout()) -
-            PR_IntervalToSeconds(initialResponseDelta);
+        nextTickAfter = PR_IntervalToSeconds(mTransaction->ResponseTimeout()) -
+                        PR_IntervalToSeconds(initialResponseDelta);
         nextTickAfter = std::max(nextTickAfter, 1U);
     }
 

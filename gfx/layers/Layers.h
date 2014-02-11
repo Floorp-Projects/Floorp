@@ -1323,13 +1323,13 @@ public:
 
   virtual LayerRenderState GetRenderState() { return LayerRenderState(); }
 
-protected:
-  Layer(LayerManager* aManager, void* aImplData);
-
   void Mutated()
   {
     mManager->Mutated(this);
   }
+
+protected:
+  Layer(LayerManager* aManager, void* aImplData);
 
   // Print interesting information about this into aTo.  Internally
   // used to implement Dump*() and Log*().  If subclasses have

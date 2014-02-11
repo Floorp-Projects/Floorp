@@ -48,7 +48,7 @@ FileLocation::FileLocation(const FileLocation &file, const char *path)
       nsCOMPtr<nsIFile> cfile;
       file.mBaseFile->GetParent(getter_AddRefs(cfile));
 
-#if defined(XP_WIN) || defined(XP_OS2)
+#if defined(XP_WIN)
       nsAutoCString pathStr(path);
       char *p;
       uint32_t len = pathStr.GetMutableData(&p);

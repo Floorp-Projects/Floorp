@@ -23,14 +23,6 @@ endif
 
 include $(topsrcdir)/config/config.mk
 
-ifndef LIBXUL_SDK
-ifdef COMPILE_ENVIRONMENT
-ifndef BUILDING_JS
-BUILD_JS = 1
-endif
-endif
-endif
-
 GARBAGE_DIRS += dist _javagen _profile staticlib
 DIST_GARBAGE = config.cache config.log config.status* config-defs.h \
    config/autoconf.mk \
@@ -38,7 +30,7 @@ DIST_GARBAGE = config.cache config.log config.status* config-defs.h \
    netwerk/necko-config.h xpcom/xpcom-config.h xpcom/xpcom-private.h \
    .mozconfig.mk
 
-ifdef BUILDING_JS
+ifdef JS_STANDALONE
 configure_dir = $(topsrcdir)/js/src
 else
 configure_dir = $(topsrcdir)
@@ -48,12 +40,12 @@ ifndef MOZ_PROFILE_USE
 # We need to explicitly put backend.RecursiveMakeBackend here
 # otherwise the rule in rules.mk doesn't run early enough.
 libs binaries export tools:: CLOBBER $(configure_dir)/configure config.status backend.RecursiveMakeBackend
-ifdef BUILD_JS
-libs binaries export tools:: js-config-status
+ifndef JS_STANDALONE
+libs binaries export tools:: $(topsrcdir)/js/src/configure js/src/config.status
 endif
 endif
 
-ifdef BUILDING_JS
+ifdef JS_STANDALONE
 .PHONY: CLOBBER
 CLOBBER:
 else
@@ -64,17 +56,21 @@ CLOBBER: $(topsrcdir)/CLOBBER
 	@exit 1
 endif
 
-$(configure_dir)/configure: $(configure_dir)/configure.in
-	@echo 'STOP!  configure.in has changed, and your configure is out of date.'
+$(topsrcdir)/configure: $(topsrcdir)/configure.in
+$(topsrcdir)/js/src/configure: $(topsrcdir)/js/src/configure.in
+$(topsrcdir)/configure $(topsrcdir)/js/src/configure:
+	@echo 'STOP!  $^ has changed, and your configure is out of date.'
 	@echo 'Please rerun autoconf and re-configure your build directory.'
-	@echo 'To ignore this message, touch "configure" in the source directory,'
+	@echo 'To ignore this message, touch "$@",'
 	@echo 'but your build might not succeed.'
 	@exit 1
 
 config.status: $(configure_dir)/configure
-	@echo 'STOP!  configure has changed and needs to be run in this build directory.'
-	@echo 'Please rerun configure.'
-	@echo 'To ignore this message, touch "config.status" in the build directory,'
+js/src/config.status: $(topsrcdir)/js/src/configure
+config.status js/src/config.status:
+	@echo 'STOP!  $^ has changed and needs to be run again.'
+	@echo 'Please rerun it.'
+	@echo 'To ignore this message, touch "$(CURDIR)/$@",'
 	@echo 'but your build might not succeed.'
 	@exit 1
 
@@ -96,12 +92,6 @@ include backend.RecursiveMakeBackend.pp
 
 default:: backend.RecursiveMakeBackend
 
-ifdef BUILD_JS
-.PHONY: js-config-status
-js-config-status:
-	$(call SUBMAKE,backend.RecursiveMakeBackend,js/src,1)
-endif
-
 install_manifests := bin idl include public private sdk
 install_manifest_depends = \
   CLOBBER \
@@ -110,8 +100,11 @@ install_manifest_depends = \
   backend.RecursiveMakeBackend \
   $(NULL)
 
-ifdef BUILD_JS
-install_manifest_depends += js-config-status
+ifndef JS_STANDALONE
+install_manifest_depends += \
+  $(topsrcdir)/js/src/configure \
+  js/src/config.status \
+  $(NULL)
 endif
 
 .PHONY: install-manifests
@@ -119,24 +112,21 @@ install-manifests: $(addprefix install-dist-,$(install_manifests))
 
 # process_install_manifest needs to be invoked with --no-remove when building
 # js as standalone because automated builds are building nspr separately and
-# that would remove the resulting files. It is also necessary when building
-# js as part of gecko because that would remove the files exported from gecko.
+# that would remove the resulting files.
 # Eventually, a standalone js build would just be able to build nspr itself,
-# removing the need for the former. But that won't likely happen before
-# finishing to merge gecko and js build systems, removing the need for the
-# latter.
-ifdef BUILDING_JS
+# removing the need for the former.
+ifdef JS_STANDALONE
 NO_REMOVE=1
 endif
 
 .PHONY: $(addprefix install-dist-,$(install_manifests))
 $(addprefix install-dist-,$(install_manifests)): install-dist-%: $(install_manifest_depends)
-	$(call py_action,process_install_manifest,$(if $(NO_REMOVE),--no-remove )$(DIST)/$* _build_manifests/install/dist_$* $(if $(BUILD_JS),js/src/_build_manifests/install/dist_$*))
+	$(call py_action,process_install_manifest,$(if $(NO_REMOVE),--no-remove )$(DIST)/$* _build_manifests/install/dist_$*)
 
 .PHONY: install-tests
 install-manifests: install-tests
 install-tests: $(install_manifest_depends)
-	$(call py_action,process_install_manifest,$(if $(NO_REMOVE),--no-remove )_tests _build_manifests/install/tests $(if $(BUILD_JS),js/src/_build_manifests/install/tests))
+	$(call py_action,process_install_manifest,$(if $(NO_REMOVE),--no-remove )_tests _build_manifests/install/tests)
 
 
 # _tests should be purged during cleaning. However, we don't want it purged
@@ -166,7 +156,7 @@ endif
 # with no regard for PGO passes. This decision could probably be revisited.
 export:: install-dist-sdk
 
-ifndef BUILDING_JS
+ifndef JS_STANDALONE
 ifdef ENABLE_TESTS
 # Additional makefile targets to call automated test suites
 include $(topsrcdir)/testing/testsuite-targets.mk
@@ -210,7 +200,7 @@ endif
 
 SYM_STORE_SOURCE_DIRS := $(topsrcdir)
 
-ifndef BUILDING_JS
+ifndef JS_STANDALONE
 include $(topsrcdir)/toolkit/mozapps/installer/package-name.mk
 
 ifdef MOZ_SYMBOLS_EXTRA_BUILDID
@@ -281,7 +271,7 @@ check::
 	@relcount=`find $(DIST)/bin -name '*.so' | xargs objdump -R | grep R_386_PC32 | wc -l` && if test $$relcount -gt 0; then echo 'FAILED: R_386_PC32 relocations detected in a shared library.  Did you use a system header without adding it to config/system-headers?'; exit 1; else echo 'PASSED'; fi
 endif
 
-ifdef BUILDING_JS
+ifdef JS_STANDALONE
 # Delegate js-specific rules to js
 check-%:
 	$(MAKE) -C js/src $@
@@ -294,10 +284,7 @@ source-package install:
 .PHONY: config/export
 config/export:
 
-else
-
-ifdef BUILD_JS
-js/src/Makefile: subsrcdir := js/src
+endif
 
 ifdef MOZ_PSEUDO_DERECURSE
 # Interdependencies for parallel export.
@@ -306,7 +293,5 @@ accessible/src/xpcom/export: xpcom/xpidl/export
 js/src/export: mfbt/export
 ifdef ENABLE_CLANG_PLUGIN
 js/src/export config/export: build/clang-plugin/export
-endif
-endif
 endif
 endif

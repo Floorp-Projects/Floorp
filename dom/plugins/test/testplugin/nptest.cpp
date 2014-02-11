@@ -647,7 +647,7 @@ extern const char *sMimeDescription;
 
 #if defined(XP_UNIX)
 NP_EXPORT(const char*) NP_GetMIMEDescription()
-#elif defined(XP_WIN) || defined(XP_OS2)
+#elif defined(XP_WIN)
 const char* NP_GetMIMEDescription()
 #endif
 {
@@ -701,7 +701,7 @@ static bool fillPluginFunctionTable(NPPluginFuncs* pFuncs)
 
 #if defined(XP_MACOSX)
 NP_EXPORT(NPError) NP_Initialize(NPNetscapeFuncs* bFuncs)
-#elif defined(XP_WIN) || defined(XP_OS2)
+#elif defined(XP_WIN)
 NPError OSCALL NP_Initialize(NPNetscapeFuncs* bFuncs)
 #elif defined(XP_UNIX)
 NP_EXPORT(NPError) NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* pFuncs)
@@ -741,10 +741,10 @@ NP_EXPORT(NPError) NP_Initialize(NPNetscapeFuncs* bFuncs, NPPluginFuncs* pFuncs)
 
 #if defined(XP_MACOSX)
 NP_EXPORT(NPError) NP_GetEntryPoints(NPPluginFuncs* pFuncs)
-#elif defined(XP_WIN) || defined(XP_OS2)
+#elif defined(XP_WIN)
 NPError OSCALL NP_GetEntryPoints(NPPluginFuncs* pFuncs)
 #endif
-#if defined(XP_MACOSX) || defined(XP_WIN) || defined(XP_OS2)
+#if defined(XP_MACOSX) || defined(XP_WIN)
 {
   if (!fillPluginFunctionTable(pFuncs)) {
     return NPERR_INVALID_FUNCTABLE_ERROR;
@@ -756,7 +756,7 @@ NPError OSCALL NP_GetEntryPoints(NPPluginFuncs* pFuncs)
 
 #if defined(XP_UNIX)
 NP_EXPORT(NPError) NP_Shutdown()
-#elif defined(XP_WIN) || defined(XP_OS2)
+#elif defined(XP_WIN)
 NPError OSCALL NP_Shutdown()
 #endif
 {

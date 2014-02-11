@@ -10,7 +10,6 @@
 #include "nsCOMArray.h"
 #include "nsServiceManagerUtils.h"
 #include "nsMemoryReporterManager.h"
-#include "nsISimpleEnumerator.h"
 #include "nsITimer.h"
 #include "nsThreadUtils.h"
 #include "nsIDOMWindow.h"
@@ -121,11 +120,12 @@ public:
 NS_IMPL_ISUPPORTS1(ResidentUniqueReporter, nsIMemoryReporter)
 
 #elif defined(__DragonFly__) || defined(__FreeBSD__) \
-    || defined(__NetBSD__) || defined(__OpenBSD__)
+    || defined(__NetBSD__) || defined(__OpenBSD__) \
+    || defined(__FreeBSD_kernel__)
 
 #include <sys/param.h>
 #include <sys/sysctl.h>
-#if defined(__DragonFly__) || defined(__FreeBSD__)
+#if defined(__DragonFly__) || defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
 #include <sys/user.h>
 #endif
 
@@ -142,7 +142,7 @@ NS_IMPL_ISUPPORTS1(ResidentUniqueReporter, nsIMemoryReporter)
 #if defined(__DragonFly__)
 #define KP_SIZE(kp) (kp.kp_vm_map_size)
 #define KP_RSS(kp) (kp.kp_vm_rssize * getpagesize())
-#elif defined(__FreeBSD__)
+#elif defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
 #define KP_SIZE(kp) (kp.ki_size)
 #define KP_RSS(kp) (kp.ki_rssize * getpagesize())
 #elif defined(__NetBSD__)
@@ -884,83 +884,6 @@ nsMemoryReporterManager::Init()
     return NS_OK;
 }
 
-namespace {
-
-// ReporterEnumerator takes the two hashtables of reporters in its constructor
-// and creates an nsISimpleEnumerator from its contents.
-//
-// The resultant enumerator works over a copy of the hashtable elements, so
-// it's safe to mutate or destroy the hashtables after the enumerator is
-// created.
-//
-class ReporterEnumerator MOZ_FINAL : public nsISimpleEnumerator
-{
-public:
-    ReporterEnumerator(
-        nsMemoryReporterManager::StrongReportersTable* aStrongReporters,
-        nsMemoryReporterManager::WeakReportersTable* aWeakReporters)
-      : mIndex(0)
-    {
-        aStrongReporters->EnumerateEntries(StrongEnumerator, this);
-        aWeakReporters->EnumerateEntries(WeakEnumerator, this);
-    }
-
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSISIMPLEENUMERATOR
-
-private:
-    static PLDHashOperator
-    StrongEnumerator(nsISupportsHashKey* aEntry, void* aData);
-
-    static PLDHashOperator
-    WeakEnumerator(nsPtrHashKey<nsISupports>* aEntry, void* aData);
-
-    uint32_t mIndex;
-    nsCOMArray<nsISupports> mArray;
-};
-
-NS_IMPL_ISUPPORTS1(ReporterEnumerator, nsISimpleEnumerator)
-
-/* static */ PLDHashOperator
-ReporterEnumerator::StrongEnumerator(nsISupportsHashKey* aElem, void* aData)
-{
-    ReporterEnumerator* enumerator = static_cast<ReporterEnumerator*>(aData);
-    enumerator->mArray.AppendObject(aElem->GetKey());
-    return PL_DHASH_NEXT;
-}
-
-/* static */ PLDHashOperator
-ReporterEnumerator::WeakEnumerator(nsPtrHashKey<nsISupports>* aElem,
-                                   void* aData)
-{
-    ReporterEnumerator* enumerator = static_cast<ReporterEnumerator*>(aData);
-    enumerator->mArray.AppendObject(aElem->GetKey());
-    return PL_DHASH_NEXT;
-}
-
-NS_IMETHODIMP
-ReporterEnumerator::HasMoreElements(bool* aResult)
-{
-    *aResult = mIndex < mArray.Length();
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-ReporterEnumerator::GetNext(nsISupports** aNext)
-{
-    if (mIndex < mArray.Length()) {
-        nsCOMPtr<nsISupports> next = mArray.ObjectAt(mIndex);
-        next.forget(aNext);
-        mIndex++;
-        return NS_OK;
-    }
-
-    *aNext = nullptr;
-    return NS_ERROR_FAILURE;
-}
-
-} // anonymous namespace
-
 nsMemoryReporterManager::nsMemoryReporterManager()
   : mMutex("nsMemoryReporterManager::mMutex"),
     mIsRegistrationBlocked(false),
@@ -1078,6 +1001,24 @@ nsMemoryReporterManager::GetReports(
          : NS_OK;
 }
 
+typedef nsCOMArray<nsIMemoryReporter> MemoryReporterArray;
+
+static PLDHashOperator
+StrongEnumerator(nsRefPtrHashKey<nsIMemoryReporter>* aElem, void* aData)
+{
+    MemoryReporterArray *allReporters = static_cast<MemoryReporterArray*>(aData);
+    allReporters->AppendElement(aElem->GetKey());
+    return PL_DHASH_NEXT;
+}
+
+static PLDHashOperator
+WeakEnumerator(nsPtrHashKey<nsIMemoryReporter>* aElem, void* aData)
+{
+    MemoryReporterArray *allReporters = static_cast<MemoryReporterArray*>(aData);
+    allReporters->AppendElement(aElem->GetKey());
+    return PL_DHASH_NEXT;
+}
+
 NS_IMETHODIMP
 nsMemoryReporterManager::GetReportsForThisProcess(
     nsIHandleReportCallback* aHandleReport,
@@ -1089,16 +1030,14 @@ nsMemoryReporterManager::GetReportsForThisProcess(
         MOZ_CRASH();
     }
 
-    nsRefPtr<ReporterEnumerator> e;
+    MemoryReporterArray allReporters;
     {
         mozilla::MutexAutoLock autoLock(mMutex);
-        e = new ReporterEnumerator(mStrongReporters, mWeakReporters);
+        mStrongReporters->EnumerateEntries(StrongEnumerator, &allReporters);
+        mWeakReporters->EnumerateEntries(WeakEnumerator, &allReporters);
     }
-    bool more;
-    while (NS_SUCCEEDED(e->HasMoreElements(&more)) && more) {
-        nsCOMPtr<nsIMemoryReporter> r;
-        e->GetNext(getter_AddRefs(r));
-        r->CollectReports(aHandleReport, aHandleReportData);
+    for (uint32_t i = 0; i < allReporters.Length(); i++) {
+        allReporters[i]->CollectReports(aHandleReport, aHandleReportData);
     }
 
     return NS_OK;
@@ -1443,7 +1382,7 @@ nsMemoryReporterManager::GetVsize(int64_t* aVsize)
 #ifdef HAVE_VSIZE_AND_RESIDENT_REPORTERS
     return VsizeDistinguishedAmount(aVsize);
 #else
-    *aResident = 0;
+    *aVsize = 0;
     return NS_ERROR_NOT_AVAILABLE;
 #endif
 }

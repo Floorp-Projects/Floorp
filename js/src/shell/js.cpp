@@ -17,7 +17,7 @@
 #endif
 #include <errno.h>
 #include <fcntl.h>
-#if defined(XP_OS2) || defined(XP_WIN)
+#if defined(XP_WIN)
 # include <io.h>     /* for isatty() */
 #endif
 #include <locale.h>
@@ -128,7 +128,7 @@ static bool printTiming = false;
 static const char *jsCacheDir = nullptr;
 static const char *jsCacheAsmJSPath = nullptr;
 static bool jsCachingEnabled = true;
-mozilla::Atomic<int32_t> jsCacheOpened(false);
+mozilla::Atomic<bool> jsCacheOpened(false);
 
 static bool
 SetTimeoutValue(JSContext *cx, double t);
@@ -4701,7 +4701,7 @@ static bool
 env_setProperty(JSContext *cx, HandleObject obj, HandleId id, bool strict, MutableHandleValue vp)
 {
 /* XXX porting may be easy, but these don't seem to supply setenv by default */
-#if !defined XP_OS2 && !defined SOLARIS
+#if !defined SOLARIS
     int rv;
 
     RootedValue idvalue(cx, IdToValue(id));
@@ -4744,7 +4744,7 @@ env_setProperty(JSContext *cx, HandleObject obj, HandleId id, bool strict, Mutab
         return false;
     }
     vp.set(StringValue(value));
-#endif /* !defined XP_OS2 && !defined SOLARIS */
+#endif /* !defined SOLARIS */
     return true;
 }
 
@@ -5743,13 +5743,6 @@ main(int argc, char **argv, char **envp)
 
 #ifdef HAVE_SETLOCALE
     setlocale(LC_ALL, "");
-#endif
-
-#ifdef XP_OS2
-   /* these streams are normally line buffered on OS/2 and need a \n, *
-    * so we need to unbuffer then to get a reasonable prompt          */
-    setbuf(stdout,0);
-    setbuf(stderr,0);
 #endif
 
     MaybeOverrideOutFileFromEnv("JS_STDERR", stderr, &gErrFile);

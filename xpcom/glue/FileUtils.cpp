@@ -31,9 +31,6 @@
 #include <sys/stat.h>
 #elif defined(XP_WIN)
 #include <windows.h>
-#elif defined(XP_OS2)
-#define INCL_DOSFILEMGR
-#include <os2.h>
 #endif
 
 // Functions that are not to be used in standalone glue must be implemented
@@ -57,9 +54,6 @@ mozilla::fallocate(PRFileDesc *aFD, int64_t aLength)
 
   PR_Seek64(aFD, oldpos, PR_SEEK_SET);
   return retval;
-#elif defined(XP_OS2)
-  return aLength <= UINT32_MAX
-    && 0 == DosSetFileSize(PR_FileDesc2NativeHandle(aFD), (uint32_t)aLength);
 #elif defined(XP_MACOSX)
   int fd = PR_FileDesc2NativeHandle(aFD);
   fstore_t store = {F_ALLOCATECONTIG, F_PEOFPOSMODE, 0, aLength};

@@ -7208,7 +7208,9 @@ PresShell::DispatchTouchEvent(WidgetEvent* aEvent,
       content = capturingContent;
     }
     // copy the event
-    WidgetTouchEvent newEvent(touchEvent->mFlags.mIsTrusted, touchEvent);
+    WidgetTouchEvent newEvent(touchEvent->mFlags.mIsTrusted,
+                              touchEvent->message, touchEvent->widget);
+    newEvent.AssignTouchEventData(*touchEvent, false);
     newEvent.target = targetPtr;
 
     nsRefPtr<PresShell> contentPresShell;

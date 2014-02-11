@@ -71,11 +71,16 @@ public:
     SortChildrenBy3DZOrder(children);
 
     for (uint32_t i = 0; i < children.Length(); i++) {
-      if (children.ElementAt(i)->GetEffectiveVisibleRegion().IsEmpty()) {
+      Layer* child = children.ElementAt(i);
+      if (child->GetEffectiveVisibleRegion().IsEmpty()) {
         continue;
       }
 
-      ToClientLayer(children.ElementAt(i))->RenderLayer();
+      if (!child->GetInvalidRegion().IsEmpty()) {
+        child->Mutated();
+      }
+
+      ToClientLayer(child)->RenderLayer();
     }
   }
 

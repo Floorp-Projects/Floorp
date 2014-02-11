@@ -28,10 +28,6 @@ elif toolkit == 'android':
     UNIFIED_SOURCES += [
         relative_path + '/nptest_droid.cpp',
     ]
-elif toolkit == 'os2':
-    UNIFIED_SOURCES += [
-        relative_path + '/nptest_os2.cpp',
-    ]
 elif toolkit == 'qt':
     UNIFIED_SOURCES += [
         relative_path + '/nptest_qt.cpp',

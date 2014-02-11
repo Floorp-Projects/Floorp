@@ -166,14 +166,6 @@ function onListKeyDown(aEvent) {
     if (aEvent.ctrlKey && !treeView.isContainer(ix))
       restoreSingleTab(ix, aEvent.shiftKey);
     break;
-  case KeyEvent.DOM_VK_UP:
-  case KeyEvent.DOM_VK_DOWN:
-  case KeyEvent.DOM_VK_PAGE_UP:
-  case KeyEvent.DOM_VK_PAGE_DOWN:
-  case KeyEvent.DOM_VK_HOME:
-  case KeyEvent.DOM_VK_END:
-    aEvent.preventDefault(); // else the page scrolls unwantedly
-    break;
   }
 }
 

@@ -406,6 +406,7 @@ public:
         ARB_framebuffer_sRGB,
         EXT_framebuffer_sRGB,
         KHR_debug,
+        ARB_half_float_pixel,
         Extensions_Max,
         Extensions_End
     };

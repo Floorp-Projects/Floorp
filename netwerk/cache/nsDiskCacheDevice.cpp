@@ -16,9 +16,6 @@
 #include <unistd.h>
 #elif defined(XP_WIN)
 #include <windows.h>
-#elif defined(XP_OS2)
-#define INCL_DOSERRORS
-#include <os2.h>
 #else
 // XXX add necessary include file for ftruncate (or equivalent)
 #endif
@@ -352,11 +349,6 @@ nsDiskCache::Truncate(PRFileDesc *  fd, uint32_t  newEOF)
         return NS_ERROR_FAILURE;
     }
 
-#elif defined(XP_OS2)
-    if (DosSetFileSize((HFILE) PR_FileDesc2NativeHandle(fd), newEOF) != NO_ERROR) {
-        NS_ERROR("DosSetFileSize failed");
-        return NS_ERROR_FAILURE;
-    }
 #else
     // add implementations for other platforms here
 #endif

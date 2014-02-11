@@ -38,21 +38,12 @@ XPIDL_SOURCES += [
     'nsIUnicharOutputStream.idl',
 ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'os2':
-    XPIDL_SOURCES += [
-        'nsILocalFileOS2.idl',
-    ]
-elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     XPIDL_SOURCES += [
         'nsILocalFileMac.idl',
     ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'os2':
-    EXPORTS += ['nsLocalFileOS2.h']
-    SOURCES += [
-        'nsLocalFileOS2.cpp',
-    ]
-elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     EXPORTS += ['nsLocalFileWin.h']
     EXPORTS.mozilla += [
       'FileUtilsWin.h',

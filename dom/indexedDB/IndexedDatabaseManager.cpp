@@ -107,8 +107,8 @@ namespace {
 
 mozilla::StaticRefPtr<IndexedDatabaseManager> gDBManager;
 
-mozilla::Atomic<int32_t> gInitialized(0);
-mozilla::Atomic<int32_t> gClosed(0);
+mozilla::Atomic<bool> gInitialized(false);
+mozilla::Atomic<bool> gClosed(false);
 
 class AsyncDeleteFileRunnable MOZ_FINAL : public nsIRunnable
 {
@@ -191,7 +191,7 @@ IndexedDatabaseManager::~IndexedDatabaseManager()
 }
 
 bool IndexedDatabaseManager::sIsMainProcess = false;
-mozilla::Atomic<int32_t> IndexedDatabaseManager::sLowDiskSpaceMode(0);
+mozilla::Atomic<bool> IndexedDatabaseManager::sLowDiskSpaceMode(false);
 
 // static
 IndexedDatabaseManager*
@@ -214,7 +214,7 @@ IndexedDatabaseManager::GetOrCreate()
       if (watcher) {
         bool isDiskFull;
         if (NS_SUCCEEDED(watcher->GetIsDiskFull(&isDiskFull))) {
-          sLowDiskSpaceMode = isDiskFull ? 1 : 0;
+          sLowDiskSpaceMode = isDiskFull;
         }
         else {
           NS_WARNING("GetIsDiskFull failed!");
@@ -230,7 +230,7 @@ IndexedDatabaseManager::GetOrCreate()
     nsresult rv = instance->Init();
     NS_ENSURE_SUCCESS(rv, nullptr);
 
-    if (gInitialized.exchange(1)) {
+    if (gInitialized.exchange(true)) {
       NS_ERROR("Initialized more than once?!");
     }
 
@@ -294,7 +294,7 @@ IndexedDatabaseManager::Destroy()
 {
   // Setting the closed flag prevents the service from being recreated.
   // Don't set it though if there's no real instance created.
-  if (!!gInitialized && gClosed.exchange(1)) {
+  if (gInitialized && gClosed.exchange(true)) {
     NS_ERROR("Shutdown more than once?!");
   }
 
@@ -450,7 +450,7 @@ IndexedDatabaseManager::DefineIndexedDB(JSContext* aCx,
 bool
 IndexedDatabaseManager::IsClosed()
 {
-  return !!gClosed;
+  return gClosed;
 }
 
 #ifdef DEBUG
@@ -472,7 +472,7 @@ IndexedDatabaseManager::InLowDiskSpaceMode()
   NS_ASSERTION(gDBManager,
                "InLowDiskSpaceMode() called before indexedDB has been "
                "initialized!");
-  return !!sLowDiskSpaceMode;
+  return sLowDiskSpaceMode;
 }
 #endif
 
@@ -686,10 +686,10 @@ IndexedDatabaseManager::Observe(nsISupports* aSubject, const char* aTopic,
     const nsDependentString data(aData);
 
     if (data.EqualsLiteral(LOW_DISK_SPACE_DATA_FULL)) {
-      sLowDiskSpaceMode = 1;
+      sLowDiskSpaceMode = true;
     }
     else if (data.EqualsLiteral(LOW_DISK_SPACE_DATA_FREE)) {
-      sLowDiskSpaceMode = 0;
+      sLowDiskSpaceMode = false;
     }
     else {
       NS_NOTREACHED("Unknown data value!");

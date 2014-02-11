@@ -835,21 +835,23 @@ struct TransitionEventInfo {
 
   TransitionEventInfo(nsIContent *aElement, nsCSSProperty aProperty,
                       TimeDuration aDuration, const nsAString& aPseudoElement)
-    : mElement(aElement),
-      mEvent(true, NS_TRANSITION_END,
-             NS_ConvertUTF8toUTF16(nsCSSProps::GetStringValue(aProperty)),
-             aDuration.ToSeconds(), aPseudoElement)
+    : mElement(aElement)
+    , mEvent(true, NS_TRANSITION_END)
   {
+    // XXX Looks like nobody initialize WidgetEvent::time
+    mEvent.propertyName =
+      NS_ConvertUTF8toUTF16(nsCSSProps::GetStringValue(aProperty));
+    mEvent.elapsedTime = aDuration.ToSeconds();
+    mEvent.pseudoElement = aPseudoElement;
   }
 
   // InternalTransitionEvent doesn't support copy-construction, so we need
   // to ourselves in order to work with nsTArray
   TransitionEventInfo(const TransitionEventInfo &aOther)
-    : mElement(aOther.mElement),
-      mEvent(true, NS_TRANSITION_END,
-             aOther.mEvent.propertyName, aOther.mEvent.elapsedTime,
-             aOther.mEvent.pseudoElement)
+    : mElement(aOther.mElement)
+    , mEvent(true, NS_TRANSITION_END)
   {
+    mEvent.AssignTransitionEventData(aOther.mEvent, false);
   }
 };
 
