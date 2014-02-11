@@ -399,6 +399,7 @@ public:
   bool MayHaveTouchEventListener() { return mMayHaveTouchEventListener; }
 
   bool MayHaveMouseEnterLeaveEventListener() { return mMayHaveMouseEnterLeaveEventListener; }
+  bool MayHavePointerEnterLeaveEventListener() { return mMayHavePointerEnterLeaveEventListener; }
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
@@ -548,9 +549,10 @@ protected:
   uint32_t mMayHaveAudioAvailableEventListener : 1;
   uint32_t mMayHaveTouchEventListener : 1;
   uint32_t mMayHaveMouseEnterLeaveEventListener : 1;
+  uint32_t mMayHavePointerEnterLeaveEventListener : 1;
   uint32_t mClearingListeners : 1;
   uint32_t mIsMainThreadELM : 1;
-  uint32_t mNoListenerForEvent : 23;
+  uint32_t mNoListenerForEvent : 22;
 
   nsAutoTObserverArray<nsListenerStruct, 2> mListeners;
   mozilla::dom::EventTarget*                mTarget;  //WEAK

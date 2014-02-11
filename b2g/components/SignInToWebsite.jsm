@@ -100,7 +100,7 @@ try {
 
 // JS shim that contains the callback functions that
 // live within the identity UI provisioning frame.
-const kIdentityShimFile = "chrome://browser/content/identity.js";
+const kIdentityShimFile = "chrome://b2g/content/identity.js";
 
 // Type of MozChromeEvents to handle id dialogs.
 const kOpenIdentityDialog = "id-dialog-open";

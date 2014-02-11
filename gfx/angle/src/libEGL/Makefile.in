@@ -13,7 +13,6 @@ endif
 # Below is a transcription of the EGL target from build_angle.gypi.
 # Target: 'libEGL'
 #   Links with: 'libGLESv2'
-DEFFILE = $(srcdir)/libEGL.def
 
 include $(topsrcdir)/config/rules.mk
 

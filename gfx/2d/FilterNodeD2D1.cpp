@@ -30,7 +30,7 @@ D2D1_COLORMATRIX_ALPHA_MODE D2DAlphaMode(uint32_t aMode)
   return D2D1_COLORMATRIX_ALPHA_MODE_PREMULTIPLIED;
 }
 
-D2D1_2DAFFINETRANSFORM_INTERPOLATION_MODE D2DAffineTransformInterpolationMode(uint32_t aFilter)
+D2D1_2DAFFINETRANSFORM_INTERPOLATION_MODE D2DAffineTransformInterpolationMode(Filter aFilter)
 {
   switch (aFilter) {
   case Filter::GOOD:
@@ -163,7 +163,7 @@ uint32_t ConvertValue(FilterType aType, uint32_t aAttribute, uint32_t aValue)
     break;
   case FilterType::TRANSFORM:
     if (aAttribute == ATT_TRANSFORM_FILTER) {
-      aValue = D2DAffineTransformInterpolationMode(aValue);
+      aValue = D2DAffineTransformInterpolationMode(Filter(aValue));
     }
     break;
   case FilterType::BLEND:

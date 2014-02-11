@@ -55,8 +55,8 @@ constructHook(JSContext *cx, unsigned argc, jsval *vp)
 BEGIN_TEST(testNewObject_1)
 {
     static const size_t N = 1000;
-    JS::Value argv_[N];
-    JS::AutoArrayRooter argv(cx, N, argv_);
+    JS::AutoValueVector argv(cx);
+    CHECK(argv.resize(N));
 
     JS::RootedValue v(cx);
     EVAL("Array", v.address());
@@ -73,7 +73,7 @@ BEGIN_TEST(testNewObject_1)
 
     // With one argument.
     argv[0].setInt32(4);
-    obj = JS_New(cx, Array, 1, argv.start());
+    obj = JS_New(cx, Array, 1, argv.begin());
     CHECK(obj);
     rt = OBJECT_TO_JSVAL(obj);
     CHECK(JS_IsArrayObject(cx, obj));
@@ -83,7 +83,7 @@ BEGIN_TEST(testNewObject_1)
     // With N arguments.
     for (size_t i = 0; i < N; i++)
         argv[i].setInt32(i);
-    obj = JS_New(cx, Array, N, argv.start());
+    obj = JS_New(cx, Array, N, argv.begin());
     CHECK(obj);
     rt = OBJECT_TO_JSVAL(obj);
     CHECK(JS_IsArrayObject(cx, obj));
@@ -103,7 +103,7 @@ BEGIN_TEST(testNewObject_1)
     JS::RootedObject ctor(cx, JS_NewObject(cx, &cls, JS::NullPtr(), JS::NullPtr()));
     CHECK(ctor);
     JS::RootedValue rt2(cx, OBJECT_TO_JSVAL(ctor));
-    obj = JS_New(cx, ctor, 3, argv.start());
+    obj = JS_New(cx, ctor, 3, argv.begin());
     CHECK(obj);
     CHECK(JS_GetElement(cx, ctor, 0, &v));
     CHECK_SAME(v, JSVAL_ZERO);

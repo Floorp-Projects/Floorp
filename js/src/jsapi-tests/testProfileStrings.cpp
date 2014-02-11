@@ -42,7 +42,7 @@ test_fn2(JSContext *cx, unsigned argc, jsval *vp)
 {
     JS::RootedValue r(cx);
     JS::RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
-    return JS_CallFunctionName(cx, global, "d", 0, nullptr, r.address());
+    return JS_CallFunctionName(cx, global, "d", JS::EmptyValueArray, r.address());
 }
 
 static bool
@@ -104,13 +104,13 @@ BEGIN_TEST(testProfileStrings_isCalledWithInterpreter)
     {
         JS::RootedValue rval(cx);
         /* Make sure the stack resets and we have an entry for each stack */
-        CHECK(JS_CallFunctionName(cx, global, "check", 0, nullptr, rval.address()));
+        CHECK(JS_CallFunctionName(cx, global, "check", JS::EmptyValueArray, rval.address()));
         CHECK(psize == 0);
         CHECK(max_stack >= 8);
         CHECK(cx->runtime()->spsProfiler.stringsCount() == 8);
         /* Make sure the stack resets and we added no new entries */
         max_stack = 0;
-        CHECK(JS_CallFunctionName(cx, global, "check", 0, nullptr, rval.address()));
+        CHECK(JS_CallFunctionName(cx, global, "check", JS::EmptyValueArray, rval.address()));
         CHECK(psize == 0);
         CHECK(max_stack >= 8);
         CHECK(cx->runtime()->spsProfiler.stringsCount() == 8);
@@ -118,7 +118,7 @@ BEGIN_TEST(testProfileStrings_isCalledWithInterpreter)
     reset(cx);
     {
         JS::RootedValue rval(cx);
-        CHECK(JS_CallFunctionName(cx, global, "check2", 0, nullptr, rval.address()));
+        CHECK(JS_CallFunctionName(cx, global, "check2", JS::EmptyValueArray, rval.address()));
         CHECK(cx->runtime()->spsProfiler.stringsCount() == 5);
         CHECK(max_stack >= 6);
         CHECK(psize == 0);
@@ -129,7 +129,7 @@ BEGIN_TEST(testProfileStrings_isCalledWithInterpreter)
     {
         JS::RootedValue rval(cx);
         pstack[3].setLabel((char*) 1234);
-        CHECK(JS_CallFunctionName(cx, global, "check", 0, nullptr, rval.address()));
+        CHECK(JS_CallFunctionName(cx, global, "check", JS::EmptyValueArray, rval.address()));
         CHECK((size_t) pstack[3].label() == 1234);
         CHECK(max_stack >= 8);
         CHECK(psize == 0);
@@ -158,14 +158,14 @@ BEGIN_TEST(testProfileStrings_isCalledWithJIT)
     {
         JS::RootedValue rval(cx);
         /* Make sure the stack resets and we have an entry for each stack */
-        CHECK(JS_CallFunctionName(cx, global, "check", 0, nullptr, rval.address()));
+        CHECK(JS_CallFunctionName(cx, global, "check", JS::EmptyValueArray, rval.address()));
         CHECK(psize == 0);
         CHECK(max_stack >= 8);
 
         /* Make sure the stack resets and we added no new entries */
         uint32_t cnt = cx->runtime()->spsProfiler.stringsCount();
         max_stack = 0;
-        CHECK(JS_CallFunctionName(cx, global, "check", 0, nullptr, rval.address()));
+        CHECK(JS_CallFunctionName(cx, global, "check", JS::EmptyValueArray, rval.address()));
         CHECK(psize == 0);
         CHECK(cx->runtime()->spsProfiler.stringsCount() == cnt);
         CHECK(max_stack >= 8);
@@ -178,7 +178,7 @@ BEGIN_TEST(testProfileStrings_isCalledWithJIT)
         /* Limit the size of the stack and make sure we don't overflow */
         JS::RootedValue rval(cx);
         pstack[3].setLabel((char*) 1234);
-        CHECK(JS_CallFunctionName(cx, global, "check", 0, nullptr, rval.address()));
+        CHECK(JS_CallFunctionName(cx, global, "check", JS::EmptyValueArray, rval.address()));
         CHECK(psize == 0);
         CHECK(max_stack >= 8);
         CHECK((size_t) pstack[3].label() == 1234);
@@ -200,7 +200,7 @@ BEGIN_TEST(testProfileStrings_isCalledWhenError)
     {
         JS::RootedValue rval(cx);
         /* Make sure the stack resets and we have an entry for each stack */
-        bool ok = JS_CallFunctionName(cx, global, "check2", 0, nullptr, rval.address());
+        bool ok = JS_CallFunctionName(cx, global, "check2", JS::EmptyValueArray, rval.address());
         CHECK(!ok);
         CHECK(psize == 0);
         CHECK(cx->runtime()->spsProfiler.stringsCount() == 1);
@@ -224,7 +224,7 @@ BEGIN_TEST(testProfileStrings_worksWhenEnabledOnTheFly)
     {
         /* enable it in the middle of JS and make sure things check out */
         JS::RootedValue rval(cx);
-        JS_CallFunctionName(cx, global, "a", 0, nullptr, rval.address());
+        JS_CallFunctionName(cx, global, "a", JS::EmptyValueArray, rval.address());
         CHECK(psize == 0);
         CHECK(max_stack >= 1);
         CHECK(cx->runtime()->spsProfiler.stringsCount() == 1);
@@ -236,7 +236,7 @@ BEGIN_TEST(testProfileStrings_worksWhenEnabledOnTheFly)
     {
         /* now disable in the middle of js */
         JS::RootedValue rval(cx);
-        JS_CallFunctionName(cx, global, "c", 0, nullptr, rval.address());
+        JS_CallFunctionName(cx, global, "c", JS::EmptyValueArray, rval.address());
         CHECK(psize == 0);
     }
 
@@ -245,7 +245,7 @@ BEGIN_TEST(testProfileStrings_worksWhenEnabledOnTheFly)
     {
         /* now disable in the middle of js, but re-enable before final exit */
         JS::RootedValue rval(cx);
-        JS_CallFunctionName(cx, global, "e", 0, nullptr, rval.address());
+        JS_CallFunctionName(cx, global, "e", JS::EmptyValueArray, rval.address());
         CHECK(psize == 0);
         CHECK(max_stack >= 3);
     }
@@ -259,7 +259,7 @@ BEGIN_TEST(testProfileStrings_worksWhenEnabledOnTheFly)
         JS::RootedValue rval(cx);
         /* disable, and make sure that if we try to re-enter the JIT the pop
          * will still happen */
-        JS_CallFunctionName(cx, global, "f", 0, nullptr, rval.address());
+        JS_CallFunctionName(cx, global, "f", JS::EmptyValueArray, rval.address());
         CHECK(psize == 0);
     }
     return true;

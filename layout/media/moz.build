@@ -11,3 +11,6 @@ if CONFIG['GKMEDIAS_SHARED_LIBRARY']:
 
 if CONFIG['MOZ_WEBRTC']:
     DIRS += ['webrtc']
+
+if CONFIG['OS_TARGET'] == 'WINNT':
+    DEFFILE = 'symbols.def'

@@ -52,3 +52,21 @@ if CONFIG['ENABLE_TESTS']:
     ]
 
 JAR_MANIFESTS += ['jar.mn']
+
+RESOURCE_FILES.fonts += [
+    'mathfont.properties',
+    'mathfontAsanaMath.properties',
+    'mathfontMathJax_Main.properties',
+    'mathfontStandardSymbolsL.properties',
+    'mathfontSTIXNonUnicode.properties',
+    'mathfontSTIXSize1.properties',
+    'mathfontSTIXSizeOneSym.properties',
+    'mathfontUnicode.properties',
+]
+
+RESOURCE_FILES.fonts['mathfont.properties'].preprocess = True
+
+if CONFIG['TARGET_MD_ARCH'] == 'win32':
+    RESOURCE_FILES.fonts += [
+        'mathfontSymbol.properties',
+    ]

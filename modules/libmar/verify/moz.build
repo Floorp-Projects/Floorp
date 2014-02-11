@@ -13,5 +13,7 @@ UNIFIED_SOURCES += [
 
 FORCE_STATIC_LIB = True
 
-if CONFIG['OS_ARCH'] != 'WINNT':
+if CONFIG['OS_ARCH'] == 'WINNT':
+    USE_STATIC_LIBS = True
+else:
     DEFINES['MAR_NSS'] = True

@@ -20,6 +20,7 @@ from mozbuild.frontend.data import (
     LocalInclude,
     Program,
     ReaderSummary,
+    Resources,
     SimpleProgram,
     TestManifest,
     VariablePassthru,
@@ -173,6 +174,8 @@ class TestEmitterBasic(unittest.TestCase):
             USE_DELAYIMP=True,
             RCFILE='foo.rc',
             RESFILE='bar.res',
+            DEFFILE='baz.def',
+            USE_STATIC_LIBS=True,
         )
 
         variables = objs[0].variables
@@ -216,6 +219,63 @@ class TestEmitterBasic(unittest.TestCase):
         self.assertIn('overwrite', exports._children)
         overwrite = exports._children['overwrite']
         self.assertEqual(overwrite.get_strings(), ['new.h'])
+
+    def test_resources(self):
+        reader = self.reader('resources')
+        objs = self.read_topsrcdir(reader)
+
+        expected_defines = reader.config.defines
+        expected_defines.update({
+            'FOO': True,
+            'BAR': 'BAZ',
+        })
+
+        self.assertEqual(len(objs), 2)
+        self.assertIsInstance(objs[0], Defines)
+        self.assertIsInstance(objs[1], Resources)
+
+        self.assertEqual(objs[1].defines, expected_defines)
+
+        resources = objs[1].resources
+        self.assertEqual(resources.get_strings(), ['foo.res', 'bar.res', 'baz.res',
+                                                   'foo_p.res.in', 'bar_p.res.in', 'baz_p.res.in'])
+        self.assertFalse(resources['foo.res'].preprocess)
+        self.assertFalse(resources['bar.res'].preprocess)
+        self.assertFalse(resources['baz.res'].preprocess)
+        self.assertTrue(resources['foo_p.res.in'].preprocess)
+        self.assertTrue(resources['bar_p.res.in'].preprocess)
+        self.assertTrue(resources['baz_p.res.in'].preprocess)
+
+        self.assertIn('mozilla', resources._children)
+        mozilla = resources._children['mozilla']
+        self.assertEqual(mozilla.get_strings(), ['mozilla1.res', 'mozilla2.res',
+                                                 'mozilla1_p.res.in', 'mozilla2_p.res.in'])
+        self.assertFalse(mozilla['mozilla1.res'].preprocess)
+        self.assertFalse(mozilla['mozilla2.res'].preprocess)
+        self.assertTrue(mozilla['mozilla1_p.res.in'].preprocess)
+        self.assertTrue(mozilla['mozilla2_p.res.in'].preprocess)
+
+        self.assertIn('dom', mozilla._children)
+        dom = mozilla._children['dom']
+        self.assertEqual(dom.get_strings(), ['dom1.res', 'dom2.res', 'dom3.res'])
+
+        self.assertIn('gfx', mozilla._children)
+        gfx = mozilla._children['gfx']
+        self.assertEqual(gfx.get_strings(), ['gfx.res'])
+
+        self.assertIn('vpx', resources._children)
+        vpx = resources._children['vpx']
+        self.assertEqual(vpx.get_strings(), ['mem.res', 'mem2.res'])
+
+        self.assertIn('nspr', resources._children)
+        nspr = resources._children['nspr']
+        self.assertIn('private', nspr._children)
+        private = nspr._children['private']
+        self.assertEqual(private.get_strings(), ['pprio.res', 'pprthred.res'])
+
+        self.assertIn('overwrite', resources._children)
+        overwrite = resources._children['overwrite']
+        self.assertEqual(overwrite.get_strings(), ['new.res'])
 
     def test_program(self):
         reader = self.reader('program')

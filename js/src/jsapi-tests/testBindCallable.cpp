@@ -20,7 +20,7 @@ BEGIN_TEST(test_BindCallable)
   CHECK(newCallable);
 
   JS::RootedValue retval(cx);
-  bool called = JS_CallFunctionValue(cx, nullptr, OBJECT_TO_JSVAL(newCallable), 0, nullptr,
+  bool called = JS_CallFunctionValue(cx, nullptr, OBJECT_TO_JSVAL(newCallable), JS::EmptyValueArray,
                                      retval.address());
   CHECK(called);
 

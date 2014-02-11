@@ -7,6 +7,7 @@
  *  sendKey
  *  synthesizeMouse
  *  synthesizeMouseAtCenter
+ *  synthesizePointer
  *  synthesizeWheel
  *  synthesizeKey
  *  synthesizeNativeKey
@@ -226,6 +227,12 @@ function synthesizeTouch(aTarget, aOffsetX, aOffsetY, aEvent, aWindow)
   synthesizeTouchAtPoint(rect.left + aOffsetX, rect.top + aOffsetY,
        aEvent, aWindow);
 }
+function synthesizePointer(aTarget, aOffsetX, aOffsetY, aEvent, aWindow)
+{
+  var rect = aTarget.getBoundingClientRect();
+  return synthesizePointerAtPoint(rect.left + aOffsetX, rect.top + aOffsetY,
+       aEvent, aWindow);
+}
 
 /*
  * Synthesize a mouse event at a particular point in aWindow.
@@ -286,6 +293,34 @@ function synthesizeTouchAtPoint(left, top, aEvent, aWindow)
     }
   }
 }
+function synthesizePointerAtPoint(left, top, aEvent, aWindow)
+{
+  var utils = _getDOMWindowUtils(aWindow);
+  var defaultPrevented = false;
+
+  if (utils) {
+    var button = aEvent.button || 0;
+    var clickCount = aEvent.clickCount || 1;
+    var modifiers = _parseModifiers(aEvent);
+    var pressure = ("pressure" in aEvent) ? aEvent.pressure : 0;
+    var inputSource = ("inputSource" in aEvent) ? aEvent.inputSource : 0;
+    var synthesized = ("isSynthesized" in aEvent) ? aEvent.isSynthesized : true;
+
+    if (("type" in aEvent) && aEvent.type) {
+      defaultPrevented = utils.sendPointerEvent(aEvent.type, left, top, button,
+                                                clickCount, modifiers, false,
+                                                pressure, inputSource,
+                                                synthesized);
+    }
+    else {
+      utils.sendPointerEvent("pointerdown", left, top, button, clickCount, modifiers, false, pressure, inputSource);
+      utils.sendPointerEvent("pointerup", left, top, button, clickCount, modifiers, false, pressure, inputSource);
+    }
+  }
+
+  return defaultPrevented;
+}
+
 // Call synthesizeMouse with coordinates at the center of aTarget.
 function synthesizeMouseAtCenter(aTarget, aEvent, aWindow)
 {

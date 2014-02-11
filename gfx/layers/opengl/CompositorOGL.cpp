@@ -7,7 +7,6 @@
 #include <stddef.h>                     // for size_t
 #include <stdint.h>                     // for uint32_t, uint8_t
 #include <stdlib.h>                     // for free, malloc
-#include "FPSCounter.h"                 // for FPSState, FPSCounter
 #include "GLContextProvider.h"          // for GLContextProvider
 #include "GLContext.h"                  // for GLContext
 #include "GLUploadHelpers.h"
@@ -135,112 +134,6 @@ DrawQuads(GLContext *aGLContext,
   aGLContext->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
 }
 
-// Size of the builtin font.
-static const float FontHeight = 7.f;
-static const float FontWidth = 5.f;
-static const float FontStride = 4.f;
-
-// Scale the font when drawing it to the viewport for better readability.
-static const float FontScaleX = 2.f;
-static const float FontScaleY = 3.f;
-
-// Size of the font texture (POT).
-static const size_t FontTextureWidth = 64;
-static const size_t FontTextureHeight = 8;
-
-static void
-AddDigits(RectTriangles &aRects,
-          const gfx::IntSize aViewportSize,
-          unsigned int aOffset,
-          unsigned int aValue)
-{
-  unsigned int divisor = 100;
-  for (size_t n = 0; n < 3; ++n) {
-    gfxRect d(aOffset * FontWidth, 0.f, FontWidth, FontHeight);
-    d.Scale(FontScaleX / aViewportSize.width, FontScaleY / aViewportSize.height);
-
-    unsigned int digit = aValue % (divisor * 10) / divisor;
-    gfxRect t(digit * FontStride, 0.f, FontWidth, FontHeight);
-    t.Scale(1.f / FontTextureWidth, 1.f / FontTextureHeight);
-
-    aRects.addRect(d.x, d.y, d.x + d.width, d.y + d.height,
-                   t.x, t.y, t.x + t.width, t.y + t.height,
-                   false);
-    divisor /= 10;
-    ++aOffset;
-  }
-}
-
-void
-FPSState::DrawFPS(TimeStamp aNow,
-                  unsigned int aFillRatio,
-                  GLContext* aContext,
-                  ShaderProgramOGL* aProgram)
-{
-  if (!mTexture) {
-    // Bind the number of textures we need, in this case one.
-    aContext->fGenTextures(1, &mTexture);
-    aContext->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
-    aContext->fTexParameteri(LOCAL_GL_TEXTURE_2D,LOCAL_GL_TEXTURE_MIN_FILTER,LOCAL_GL_NEAREST);
-    aContext->fTexParameteri(LOCAL_GL_TEXTURE_2D,LOCAL_GL_TEXTURE_MAG_FILTER,LOCAL_GL_NEAREST);
-
-    const char *text =
-      "                                         "
-      " XXX XX  XXX XXX X X XXX XXX XXX XXX XXX "
-      " X X  X    X   X X X X   X     X X X X X "
-      " X X  X  XXX XXX XXX XXX XXX   X XXX XXX "
-      " X X  X  X     X   X   X X X   X X X   X "
-      " XXX XXX XXX XXX   X XXX XXX   X XXX   X "
-      "                                         ";
-
-    // Convert the text encoding above to RGBA.
-    uint32_t* buf = (uint32_t *) malloc(64 * 8 * sizeof(uint32_t));
-    for (int i = 0; i < 7; i++) {
-      for (int j = 0; j < 41; j++) {
-        uint32_t purple = 0xfff000ff;
-        uint32_t white  = 0xffffffff;
-        buf[i * 64 + j] = (text[i * 41 + j] == ' ') ? purple : white;
-      }
-    }
-    aContext->fTexImage2D(LOCAL_GL_TEXTURE_2D, 0, LOCAL_GL_RGBA, 64, 8, 0, LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE, buf);
-    free(buf);
-  }
-
-  mVBOs.Reset();
-
-  GLint viewport[4];
-  aContext->fGetIntegerv(LOCAL_GL_VIEWPORT, viewport);
-  gfx::IntSize viewportSize(viewport[2], viewport[3]);
-
-  unsigned int fps = unsigned(mCompositionFps.AddFrameAndGetFps(aNow));
-  unsigned int txnFps = unsigned(mTransactionFps.GetFpsAt(aNow));
-
-  RectTriangles rects;
-  AddDigits(rects, viewportSize, 0, fps);
-  AddDigits(rects, viewportSize, 4, txnFps);
-  AddDigits(rects, viewportSize, 8, aFillRatio);
-
-  // Turn necessary features on
-  aContext->fEnable(LOCAL_GL_BLEND);
-  aContext->fBlendFunc(LOCAL_GL_ONE, LOCAL_GL_SRC_COLOR);
-
-  aContext->fActiveTexture(LOCAL_GL_TEXTURE0);
-  aContext->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
-
-  aProgram->Activate();
-  aProgram->SetTextureUnit(0);
-  aProgram->SetLayerQuadRect(gfx::Rect(0.f, 0.f, viewport[2], viewport[3]));
-  aProgram->SetLayerOpacity(1.f);
-  aProgram->SetTextureTransform(Matrix4x4());
-  aProgram->SetLayerTransform(Matrix4x4());
-  aProgram->SetRenderOffset(0, 0);
-
-  aContext->fBlendFuncSeparate(LOCAL_GL_ONE, LOCAL_GL_ZERO,
-                               LOCAL_GL_ONE, LOCAL_GL_ZERO);
-
-  DrawQuads(aContext, mVBOs, aProgram, rects);
-}
-
 CompositorOGL::CompositorOGL(nsIWidget *aWidget, int aSurfaceWidth,
                              int aSurfaceHeight, bool aUseExternalSurfaceSize)
   : mWidget(aWidget)
@@ -327,11 +220,6 @@ CompositorOGL::Destroy()
       gl()->fDeleteTextures(mTextures.Length(), &mTextures[0]);
     }
     mVBOs.Flush(gl());
-    if (mFPS) {
-      if (mFPS->mTexture > 0)
-        gl()->fDeleteTextures(1, &mFPS->mTexture);
-      mFPS->mVBOs.Flush(gl());
-    }
   }
   mTextures.SetLength(0);
   if (!mDestroyed) {
@@ -367,15 +255,6 @@ CompositorOGL::CleanupResources()
   }
 
   mGLContext = nullptr;
-}
-
-// Impl of a a helper-runnable's "Run" method, used in Initialize()
-NS_IMETHODIMP
-CompositorOGL::ReadDrawFPSPref::Run()
-{
-  // NOTE: This must match the code in Initialize()'s NS_IsMainThread check.
-  Preferences::AddBoolVarCache(&sDrawFPS, "layers.acceleration.draw-fps");
-  return NS_OK;
 }
 
 bool
@@ -543,14 +422,6 @@ CompositorOGL::Initialize()
     else
       msg += NS_LITERAL_STRING("TEXTURE_RECTANGLE");
     console->LogStringMessage(msg.get());
-  }
-
-  if (NS_IsMainThread()) {
-    // NOTE: This must match the code in ReadDrawFPSPref::Run().
-    Preferences::AddBoolVarCache(&sDrawFPS, "layers.acceleration.draw-fps");
-  } else {
-    // We have to dispatch an event to the main thread to read the pref.
-    NS_DispatchToMainThread(new ReadDrawFPSPref());
   }
 
   reporter.SetSuccessful();
@@ -755,8 +626,6 @@ GetFrameBufferInternalFormat(GLContext* gl,
   }
   return LOCAL_GL_RGBA;
 }
-
-bool CompositorOGL::sDrawFPS = false;
 
 /*
  * Returns a size that is larger than and closest to aSize where both
@@ -1425,22 +1294,6 @@ CompositorOGL::EndFrame()
 
   mCurrentRenderTarget = nullptr;
 
-  if (sDrawFPS && !mFPS) {
-    mFPS = new FPSState();
-  } else if (!sDrawFPS && mFPS) {
-    mFPS = nullptr;
-  }
-
-  if (mFPS) {
-    float fillRatio = 0;
-    if (mPixelsFilled > 0 && mPixelsPerFrame > 0) {
-      fillRatio = 100.0f * float(mPixelsFilled) / float(mPixelsPerFrame);
-      if (fillRatio > 999.0f)
-        fillRatio = 999.0f;
-    }
-    mFPS->DrawFPS(TimeStamp::Now(), unsigned(fillRatio), mGLContext, GetProgram(RGBXLayerProgramType));
-  }
-
   mGLContext->SwapBuffers();
   mGLContext->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
 }
@@ -1448,14 +1301,6 @@ CompositorOGL::EndFrame()
 void
 CompositorOGL::EndFrameForExternalComposition(const gfx::Matrix& aTransform)
 {
-  if (sDrawFPS) {
-    if (!mFPS) {
-      mFPS = new FPSState();
-    }
-    double fps = mFPS->mCompositionFps.AddFrameAndGetFps(TimeStamp::Now());
-    printf_stderr("HWComposer: FPS is %g\n", fps);
-  }
-
   // This lets us reftest and screenshot content rendered externally
   if (mTarget) {
     MakeCurrent();
@@ -1530,29 +1375,6 @@ CompositorOGL::CopyToTarget(DrawTarget *aTarget, const gfx::Matrix& aTransform)
   aTarget->DrawSurface(source, floatRect, floatRect, DrawSurfaceOptions(), DrawOptions(1.0f, CompositionOp::OP_SOURCE));
   aTarget->SetTransform(oldMatrix);
   aTarget->Flush();
-}
-
-double
-CompositorOGL::AddFrameAndGetFps(const TimeStamp& timestamp)
-{
-  if (sDrawFPS) {
-    if (!mFPS) {
-      mFPS = new FPSState();
-    }
-    double fps = mFPS->mCompositionFps.AddFrameAndGetFps(timestamp);
-
-    return fps;
-  }
-
-  return 0.;
-}
-
-void
-CompositorOGL::NotifyLayersTransaction()
-{
-  if (mFPS) {
-    mFPS->NotifyShadowTreeTransaction();
-  }
 }
 
 void

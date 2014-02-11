@@ -5,22 +5,8 @@
 
 MOZILLA_INTERNAL_API = 1
 
-SAMPLES_DIR	= $(DIST)/bin/res/samples/rdf
-
-RESOURCE_SAMPLES = \
-		DataSourceViewer.xul \
-		DataSourceViewer.css \
-		$(NULL)
-
 EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/bin \
 		$(XPCOM_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
-
-include $(topsrcdir)/config/rules.mk
-
-GARBAGE		+= $(addprefix $(SAMPLES_DIR)/, $(RESOURCE_SAMPLES))
-
-libs::
-	$(INSTALL) $(addprefix $(srcdir)/,$(RESOURCE_SAMPLES)) $(SAMPLES_DIR)

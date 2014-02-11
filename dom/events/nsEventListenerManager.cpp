@@ -94,6 +94,7 @@ nsEventListenerManager::nsEventListenerManager(EventTarget* aTarget) :
   mMayHaveAudioAvailableEventListener(false),
   mMayHaveTouchEventListener(false),
   mMayHaveMouseEnterLeaveEventListener(false),
+  mMayHavePointerEnterLeaveEventListener(false),
   mClearingListeners(false),
   mIsMainThreadELM(NS_IsMainThread()),
   mNoListenerForEvent(0),
@@ -339,6 +340,21 @@ nsEventListenerManager::AddEventListenerInternal(
     // so we ignore listeners created with system event flag
     if (window && !aFlags.mInSystemGroup) {
       window->SetHasTouchEventListeners();
+    }
+  } else if (aType >= NS_POINTER_EVENT_START && aType <= NS_POINTER_LOST_CAPTURE) {
+    nsPIDOMWindow* window = GetInnerWindowForTarget();
+    if (aTypeAtom == nsGkAtoms::onpointerenter ||
+        aTypeAtom == nsGkAtoms::onpointerleave) {
+      mMayHavePointerEnterLeaveEventListener = true;
+      if (window) {
+#ifdef DEBUG
+        nsCOMPtr<nsIDocument> d = window->GetExtantDoc();
+        NS_WARN_IF_FALSE(!nsContentUtils::IsChromeDoc(d),
+                         "Please do not use pointerenter/leave events in chrome. "
+                         "They are slower than pointerover/out!");
+#endif
+        window->SetHasPointerEnterLeaveEventListeners();
+      }
     }
   } else if (aTypeAtom == nsGkAtoms::onmouseenter ||
              aTypeAtom == nsGkAtoms::onmouseleave) {

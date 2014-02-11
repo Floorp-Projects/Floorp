@@ -323,7 +323,7 @@ ShellOperationCallback(JSContext *cx)
     if (!gTimeoutFunc.isNull()) {
         JSAutoCompartment ac(cx, &gTimeoutFunc.toObject());
         RootedValue returnedValue(cx);
-        if (!JS_CallFunctionValue(cx, nullptr, gTimeoutFunc, 0, nullptr, returnedValue.address()))
+        if (!JS_CallFunctionValue(cx, nullptr, gTimeoutFunc, JS::EmptyValueArray, returnedValue.address()))
             return false;
         if (returnedValue.isBoolean())
             result = returnedValue.toBoolean();
@@ -3944,8 +3944,7 @@ class ShellSourceHook: public SourceHook {
         RootedValue filenameValue(cx, StringValue(str));
 
         RootedValue result(cx);
-        if (!Call(cx, UndefinedValue(), &fun->as<JSFunction>(),
-                  1, filenameValue.address(), &result))
+        if (!Call(cx, UndefinedValue(), &fun->as<JSFunction>(), filenameValue, &result))
             return false;
 
         str = JS::ToString(cx, result);
@@ -3991,7 +3990,7 @@ WithSourceHook(JSContext *cx, unsigned argc, jsval *vp)
 
     SourceHook *savedHook = js::ForgetSourceHook(cx->runtime());
     js::SetSourceHook(cx->runtime(), hook);
-    bool result = Call(cx, UndefinedValue(), &args[1].toObject(), 0, nullptr, args.rval());
+    bool result = Call(cx, UndefinedValue(), &args[1].toObject(), JS::EmptyValueArray, args.rval());
     js::SetSourceHook(cx->runtime(), savedHook);
     return result;
 }

@@ -30,6 +30,7 @@
 using namespace js;
 using namespace js::frontend;
 
+using JS::AutoValueArray;
 using mozilla::ArrayLength;
 using mozilla::DebugOnly;
 
@@ -148,22 +149,21 @@ GetPropertyDefault(JSContext *cx, HandleObject obj, HandleId id, HandleValue def
  */
 class NodeBuilder
 {
+    typedef AutoValueArray<AST_LIMIT> CallbackArray;
+
     JSContext   *cx;
     TokenStream *tokenStream;
     bool        saveLoc;               /* save source location information?     */
     char const  *src;                  /* source filename or null               */
     RootedValue srcval;                /* source filename JS value or null      */
-    Value       callbacks_[AST_LIMIT]; /* user-specified callbacks              */
-    AutoValueArray callbacks;          /* for rooting |callbacks|               */
+    CallbackArray callbacks;           /* user-specified callbacks              */
     RootedValue userv;                 /* user-specified builder object or null */
 
   public:
     NodeBuilder(JSContext *c, bool l, char const *s)
-        : cx(c), tokenStream(nullptr), saveLoc(l), src(s), srcval(c),
-          callbacks(c, callbacks_, AST_LIMIT), userv(c)
-    {
-        MakeRangeGCSafe(callbacks.start(), callbacks.length());
-    }
+      : cx(c), tokenStream(nullptr), saveLoc(l), src(s), srcval(c), callbacks(cx),
+          userv(c)
+    {}
 
     bool init(HandleObject userobj = js::NullPtr()) {
         if (src) {
@@ -221,14 +221,14 @@ class NodeBuilder
             RootedValue loc(cx);
             if (!newNodeLoc(pos, &loc))
                 return false;
-            Value argv[] = { loc };
-            AutoValueArray ava(cx, argv, 1);
-            return Invoke(cx, userv, fun, ArrayLength(argv), argv, dst);
+            AutoValueArray<1> argv(cx);
+            argv[1].set(loc);
+            return Invoke(cx, userv, fun, argv.length(), argv.begin(), dst);
         }
 
-        Value argv[] = { NullValue() }; /* no zero-length arrays allowed! */
-        AutoValueArray ava(cx, argv, 1);
-        return Invoke(cx, userv, fun, 0, argv, dst);
+        AutoValueArray<1> argv(cx);
+        argv[1].setNull(); /* no zero-length arrays allowed! */
+        return Invoke(cx, userv, fun, 0, argv.begin(), dst);
     }
 
     bool callback(HandleValue fun, HandleValue v1, TokenPos *pos, MutableHandleValue dst) {
@@ -236,14 +236,15 @@ class NodeBuilder
             RootedValue loc(cx);
             if (!newNodeLoc(pos, &loc))
                 return false;
-            Value argv[] = { v1, loc };
-            AutoValueArray ava(cx, argv, 2);
-            return Invoke(cx, userv, fun, ArrayLength(argv), argv, dst);
+            AutoValueArray<2> argv(cx);
+            argv[0].set(v1);
+            argv[1].set(loc);
+            return Invoke(cx, userv, fun, argv.length(), argv.begin(), dst);
         }
 
-        Value argv[] = { v1 };
-        AutoValueArray ava(cx, argv, 1);
-        return Invoke(cx, userv, fun, ArrayLength(argv), argv, dst);
+        AutoValueArray<1> argv(cx);
+        argv[1].set(v1);
+        return Invoke(cx, userv, fun, argv.length(), argv.begin(), dst);
     }
 
     bool callback(HandleValue fun, HandleValue v1, HandleValue v2, TokenPos *pos,
@@ -252,14 +253,17 @@ class NodeBuilder
             RootedValue loc(cx);
             if (!newNodeLoc(pos, &loc))
                 return false;
-            Value argv[] = { v1, v2, loc };
-            AutoValueArray ava(cx, argv, 3);
-            return Invoke(cx, userv, fun, ArrayLength(argv), argv, dst);
+            AutoValueArray<3> argv(cx);
+            argv[0].set(v1);
+            argv[1].set(v2);
+            argv[2].set(loc);
+            return Invoke(cx, userv, fun, argv.length(), argv.begin(), dst);
         }
 
-        Value argv[] = { v1, v2 };
-        AutoValueArray ava(cx, argv, 2);
-        return Invoke(cx, userv, fun, ArrayLength(argv), argv, dst);
+        AutoValueArray<2> argv(cx);
+        argv[0].set(v1);
+        argv[1].set(v2);
+        return Invoke(cx, userv, fun, argv.length(), argv.begin(), dst);
     }
 
     bool callback(HandleValue fun, HandleValue v1, HandleValue v2, HandleValue v3, TokenPos *pos,
@@ -268,14 +272,19 @@ class NodeBuilder
             RootedValue loc(cx);
             if (!newNodeLoc(pos, &loc))
                 return false;
-            Value argv[] = { v1, v2, v3, loc };
-            AutoValueArray ava(cx, argv, 4);
-            return Invoke(cx, userv, fun, ArrayLength(argv), argv, dst);
+            AutoValueArray<4> argv(cx);
+            argv[0].set(v1);
+            argv[1].set(v2);
+            argv[2].set(v3);
+            argv[3].set(loc);
+            return Invoke(cx, userv, fun, argv.length(), argv.begin(), dst);
         }
 
-        Value argv[] = { v1, v2, v3 };
-        AutoValueArray ava(cx, argv, 3);
-        return Invoke(cx, userv, fun, ArrayLength(argv), argv, dst);
+        AutoValueArray<3> argv(cx);
+        argv[0].set(v1);
+        argv[1].set(v2);
+        argv[2].set(v3);
+        return Invoke(cx, userv, fun, argv.length(), argv.begin(), dst);
     }
 
     bool callback(HandleValue fun, HandleValue v1, HandleValue v2, HandleValue v3, HandleValue v4,
@@ -284,14 +293,21 @@ class NodeBuilder
             RootedValue loc(cx);
             if (!newNodeLoc(pos, &loc))
                 return false;
-            Value argv[] = { v1, v2, v3, v4, loc };
-            AutoValueArray ava(cx, argv, 5);
-            return Invoke(cx, userv, fun, ArrayLength(argv), argv, dst);
+            AutoValueArray<5> argv(cx);
+            argv[0].set(v1);
+            argv[1].set(v2);
+            argv[2].set(v3);
+            argv[3].set(v4);
+            argv[4].set(loc);
+            return Invoke(cx, userv, fun, argv.length(), argv.begin(), dst);
         }
 
-        Value argv[] = { v1, v2, v3, v4 };
-        AutoValueArray ava(cx, argv, 4);
-        return Invoke(cx, userv, fun, ArrayLength(argv), argv, dst);
+        AutoValueArray<4> argv(cx);
+        argv[0].set(v1);
+        argv[1].set(v2);
+        argv[2].set(v3);
+        argv[3].set(v4);
+        return Invoke(cx, userv, fun, argv.length(), argv.begin(), dst);
     }
 
     bool callback(HandleValue fun, HandleValue v1, HandleValue v2, HandleValue v3, HandleValue v4,
@@ -300,14 +316,23 @@ class NodeBuilder
             RootedValue loc(cx);
             if (!newNodeLoc(pos, &loc))
                 return false;
-            Value argv[] = { v1, v2, v3, v4, v5, loc };
-            AutoValueArray ava(cx, argv, 6);
-            return Invoke(cx, userv, fun, ArrayLength(argv), argv, dst);
+            AutoValueArray<6> argv(cx);
+            argv[0].set(v1);
+            argv[1].set(v2);
+            argv[2].set(v3);
+            argv[3].set(v4);
+            argv[4].set(v5);
+            argv[5].set(loc);
+            return Invoke(cx, userv, fun, argv.length(), argv.begin(), dst);
         }
 
-        Value argv[] = { v1, v2, v3, v4, v5 };
-        AutoValueArray ava(cx, argv, 5);
-        return Invoke(cx, userv, fun, ArrayLength(argv), argv, dst);
+        AutoValueArray<5> argv(cx);
+        argv[0].set(v1);
+        argv[1].set(v2);
+        argv[2].set(v3);
+        argv[3].set(v4);
+        argv[4].set(v5);
+        return Invoke(cx, userv, fun, argv.length(), argv.begin(), dst);
     }
 
     // WARNING: Returning a Handle is non-standard, but it works in this case

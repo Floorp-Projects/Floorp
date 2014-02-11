@@ -27,3 +27,6 @@ LOCAL_INCLUDES += [
     '/content/base/src',
 ]
 
+RESOURCE_FILES.dtd += [
+    'htmlmathml-f.ent',
+]

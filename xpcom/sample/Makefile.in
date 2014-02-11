@@ -18,8 +18,3 @@ EXTRA_DSO_LDOPTS += \
 		$(TK_LIBS) \
 		$(NULL)
 endif
-
-include $(topsrcdir)/config/rules.mk
-
-libs:: $(TARGETS)
-	$(INSTALL) $(srcdir)/xpconnect-sample.html $(DIST)/bin/res/samples
