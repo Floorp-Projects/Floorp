@@ -303,6 +303,7 @@ const PanelUI = {
 
       let multiView = document.createElement("panelmultiview");
       tempPanel.appendChild(multiView);
+      multiView.setAttribute("mainViewIsSubView", "true");
       multiView.setMainView(viewNode);
       viewNode.classList.add("cui-widget-panelview");
       CustomizableUI.addPanelCloseListeners(tempPanel);
