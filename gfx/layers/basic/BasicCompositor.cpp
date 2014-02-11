@@ -293,6 +293,7 @@ DrawSurfaceWithTextureCoords(DrawTarget *aDest,
                              const gfx::Rect& aDestRect,
                              SourceSurface *aSource,
                              const gfx::Rect& aTextureCoords,
+                             gfx::Filter aFilter,
                              float aOpacity,
                              SourceSurface *aMask,
                              const Matrix& aMaskTransform)
@@ -316,13 +317,13 @@ DrawSurfaceWithTextureCoords(DrawTarget *aDest,
     Matrix dtTransform = aDest->GetTransform();
     aDest->SetTransform(aMaskTransform);
     Matrix patternMatrix = maskTransformInverse * dtTransform * matrix;
-    aDest->MaskSurface(SurfacePattern(aSource, ExtendMode::REPEAT, patternMatrix),
+    aDest->MaskSurface(SurfacePattern(aSource, ExtendMode::REPEAT, patternMatrix, aFilter),
                        aMask, Point(), DrawOptions(aOpacity));
     aDest->SetTransform(dtTransform);
     aDest->PopClip();
   } else {
     aDest->FillRect(aDestRect,
-                    SurfacePattern(aSource, ExtendMode::REPEAT, matrix),
+                    SurfacePattern(aSource, ExtendMode::REPEAT, matrix, aFilter),
                     DrawOptions(aOpacity));
   }
 }
@@ -487,6 +488,7 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
       DrawSurfaceWithTextureCoords(dest, aRect,
                                    source->GetSurface(),
                                    texturedEffect->mTextureCoords,
+                                   texturedEffect->mFilter,
                                    aOpacity, sourceMask, maskTransform);
       break;
     }
@@ -504,6 +506,7 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
       DrawSurfaceWithTextureCoords(dest, aRect,
                                    sourceSurf,
                                    effectRenderTarget->mTextureCoords,
+                                   effectRenderTarget->mFilter,
                                    aOpacity, sourceMask, maskTransform);
       break;
     }
