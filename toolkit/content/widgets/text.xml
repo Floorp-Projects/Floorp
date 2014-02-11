@@ -67,6 +67,17 @@
         <parameter name="firstTime"/>
         <body>
           <![CDATA[
+            var control = this.labeledControlElement;
+            if (!control) {
+              var bindingParent = document.getBindingParent(this);
+              if (bindingParent instanceof Components.interfaces.nsIDOMXULLabeledControlElement) {
+                control = bindingParent; // For controls that make the <label> an anon child
+              }
+            }
+            if (control) {
+              control.labelElement = this;
+            }
+
             var accessKey = this.accessKey;
             // No need to remove existing formatting the first time.
             if (firstTime && !accessKey)
@@ -101,17 +112,6 @@
 
             if (!this.mUnderlineAccesskey)
               return;
-
-            var control = this.labeledControlElement;
-            if (!control) {
-              var bindingParent = document.getBindingParent(this);
-              if (bindingParent instanceof Components.interfaces.nsIDOMXULLabeledControlElement) {
-                control = bindingParent; // For controls that make the <label> an anon child
-              }
-            }
-            if (control) {
-              control.labelElement = this;
-            }
 
             var afterLabel = document.getAnonymousElementByAttribute(this, "anonid", "accessKeyParens");
             afterLabel.textContent = "";
