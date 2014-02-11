@@ -466,10 +466,18 @@ this.NetworkStatsService = {
       }
 
       network = {network: network, networkId: aNetId};
-      self._db.clearInterfaceStats(network, function onDBCleared(aError, aResult) {
+      self.updateStats(aNetId, function onUpdate(aResult, aMessage) {
+        if (!aResult) {
+          mm.sendAsyncMessage("NetworkStats:Clear:Return",
+                              { id: msg.id, error: aMessage, result: null });
+          return;
+        }
+
+        self._db.clearInterfaceStats(network, function onDBCleared(aError, aResult) {
           self._updateCurrentAlarm(aNetId);
           mm.sendAsyncMessage("NetworkStats:Clear:Return",
                               { id: msg.id, error: aError, result: aResult });
+        });
       });
     });
   },
@@ -488,12 +496,20 @@ this.NetworkStatsService = {
         networks[index] = {network: network, networkId: self.getNetworkId(network.id, network.type)};
       }, self);
 
-      self._db.clearStats(networks, function onDBCleared(aError, aResult) {
-        networks.forEach(function(network, index) {
-          self._updateCurrentAlarm(network.networkId);
-        }, self);
-        mm.sendAsyncMessage("NetworkStats:ClearAll:Return",
-                            { id: msg.id, error: aError, result: aResult });
+      self.updateAllStats(function onUpdate(aResult, aMessage){
+        if (!aResult) {
+          mm.sendAsyncMessage("NetworkStats:ClearAll:Return",
+                              { id: msg.id, error: aMessage, result: null });
+          return;
+        }
+
+        self._db.clearStats(networks, function onDBCleared(aError, aResult) {
+          networks.forEach(function(network, index) {
+            self._updateCurrentAlarm(network.networkId);
+          }, self);
+          mm.sendAsyncMessage("NetworkStats:ClearAll:Return",
+                              { id: msg.id, error: aError, result: aResult });
+        });
       });
     });
   },
