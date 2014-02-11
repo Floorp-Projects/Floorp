@@ -496,6 +496,11 @@ menuitem.bookmark-item {
   -moz-box-pack: center;
 }
 
+#nav-bar #PanelUI-menu-button {
+  -moz-padding-start: 7px;
+  -moz-padding-end: 5px;
+}
+
 #nav-bar .toolbarbutton-1[type=menu]:not(#back-button):not(#forward-button):not(#feed-button):not(#social-provider-button):not(#PanelUI-menu-button) {
   padding-left: 5px;
   padding-right: 5px;
