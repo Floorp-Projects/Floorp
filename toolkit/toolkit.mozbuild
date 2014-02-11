@@ -6,17 +6,6 @@
 if CONFIG['LIBXUL_SDK']:
     error('toolkit.mozbuild is not compatible with --enable-libxul-sdk=')
 
-if CONFIG['COMPILE_ENVIRONMENT']:
-    if not CONFIG['MOZ_NATIVE_NSPR']:
-        add_tier_dir('nspr', 'config/nspr')
-
-    add_tier_dir('external', 'config/external')
-
-    if not CONFIG['MOZ_NATIVE_NSS']:
-        add_tier_dir('nss', 'security/build')
-
-    include('/config/js/js.mozbuild')
-
 if CONFIG['MOZ_CONTENT_SANDBOX']:
     add_tier_dir('sandbox', 'security/sandbox')
 

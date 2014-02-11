@@ -159,6 +159,7 @@ fi
 AC_SUBST(JS_SHARED_LIBRARY)
 
 if test "$JS_STANDALONE" = no; then
+  autoconfmk=autoconf-js.mk
   JS_STANDALONE=
 else
   JS_STANDALONE=1
@@ -167,6 +168,7 @@ fi
 AC_SUBST(JS_STANDALONE)
 BUILDING_JS=1
 AC_SUBST(BUILDING_JS)
+AC_SUBST(autoconfmk)
 
 MOZ_ARG_WITH_STRING(gonk,
 [  --with-gonk=DIR
@@ -3810,6 +3812,7 @@ MOZ_ARG_ENABLE_BOOL(ctypes,
     BUILD_CTYPES= )
 JS_HAS_CTYPES=$BUILD_CTYPES
 AC_SUBST(JS_HAS_CTYPES)
+AC_SUBST(BUILD_CTYPES)
 if test "$JS_HAS_CTYPES"; then
   dnl Error out if we're on MSVC and MASM is unavailable.
   if test -n "$_MSC_VER" -a \( "$AS" != "ml.exe" -a "$AS" != "ml64.exe" \); then
@@ -4117,8 +4120,12 @@ AC_SUBST(JS_LIBRARY_NAME)
 AC_SUBST(JS_CONFIG_MOZ_JS_LIBS)
 AC_SUBST(JS_CONFIG_LIBS)
 
+MOZ_SUBCONFIGURE_FFI()
+
 dnl Spit out some output
 dnl ========================================================
-AC_OUTPUT()
+MOZ_CREATE_CONFIG_STATUS()
 
-MOZ_SUBCONFIGURE_FFI()
+if test "$JS_STANDALONE"; then
+  MOZ_RUN_CONFIG_STATUS()
+fi
