@@ -869,8 +869,8 @@ pref("dom.min_background_timeout_value", 1000);
 // Don't use new input types
 pref("dom.experimental_forms", false);
 
-// Enable <input type=number>:
-pref("dom.forms.number", true);
+// Disable <input type=number>:
+pref("dom.forms.number", false);
 
 // Enable <input type=color> by default. It will be turned off for remaining
 // platforms which don't have a color picker implemented yet.
