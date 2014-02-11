@@ -523,15 +523,11 @@ toolbar .toolbarbutton-1:not([type="menu-button"]),
     -moz-image-region: rect(18px, 126px, 36px, 108px);
   }
 
-  #bookmarks-menu-button@toolbarButtonPressed@ {
+  #bookmarks-menu-button[buttonover]@toolbarButtonPressed@ {
     -moz-image-region: rect(18px, 144px, 36px, 126px);
   }
 
-  #bookmarks-menu-button[open] {
-    -moz-image-region: rect(36px, 144px, 54px, 126px);
-  }
-
-  #bookmarks-menu-button[starred]@toolbarButtonPressed@ {
+  #bookmarks-menu-button[starred][buttonover]@toolbarButtonPressed@ {
     -moz-image-region: rect(18px, 162px, 36px, 144px);
   }
 
@@ -730,19 +726,15 @@ toolbar .toolbarbutton-1:not([type="menu-button"]),
     -moz-image-region: rect(0, 288px, 36px, 252px);
   }
 
-  #bookmarks-menu-button[cui-areatype="toolbar"]:hover:active:not([disabled="true"]) {
+  #bookmarks-menu-button[cui-areatype="toolbar"][buttonover]:hover:active:not([disabled="true"]) {
     -moz-image-region: rect(36px, 288px, 72px, 252px);
-  }
-
-  #bookmarks-menu-button[cui-areatype="toolbar"][open] {
-    -moz-image-region: rect(72px, 288px, 108px, 252px);
   }
 
   #bookmarks-menu-button[cui-areatype="toolbar"][starred] {
     -moz-image-region: rect(0, 324px, 36px, 288px);
   }
 
-  #bookmarks-menu-button[cui-areatype="toolbar"][starred]:hover:active:not([disabled="true"]) {
+  #bookmarks-menu-button[cui-areatype="toolbar"][starred][buttonover]:hover:active:not([disabled="true"]) {
     -moz-image-region: rect(36px, 324px, 72px, 288px);
   }
 
