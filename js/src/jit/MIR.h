@@ -85,8 +85,6 @@ class MUse;
 class MIRGraph;
 class MResumePoint;
 
-static inline bool isOSRLikeValue (MDefinition *def);
-
 // Represents a use of a node.
 class MUse : public TempObject, public InlineListNode<MUse>
 {
@@ -9739,17 +9737,6 @@ MInstruction *MDefinition::toInstruction()
 {
     JS_ASSERT(!isPhi());
     return (MInstruction *)this;
-}
-
-static inline bool isOSRLikeValue (MDefinition *def) {
-    if (def->isOsrValue())
-        return true;
-
-    if (def->isUnbox())
-        if (def->getOperand(0)->isOsrValue())
-            return true;
-
-    return false;
 }
 
 typedef Vector<MDefinition *, 8, IonAllocPolicy> MDefinitionVector;
