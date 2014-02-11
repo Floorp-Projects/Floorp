@@ -17,7 +17,7 @@ NS_NewControllerCommandTable(nsIControllerCommandTable** aResult);
 
 
 nsControllerCommandTable::nsControllerCommandTable()
-: mCommandsTable(NUM_COMMANDS_BOUNDS, false)
+: mCommandsTable(NUM_COMMANDS_BOUNDS)
 , mMutable(true)
 {
 }
@@ -41,14 +41,8 @@ nsControllerCommandTable::RegisterCommand(const char * aCommandName, nsIControll
 {
   NS_ENSURE_TRUE(mMutable, NS_ERROR_FAILURE);
 
-  nsCStringKey commandKey(aCommandName);
+  mCommandsTable.Put(nsDependentCString(aCommandName), aCommand);
 
-  if (mCommandsTable.Put(&commandKey, aCommand))
-  {
-#if DEBUG
-    NS_WARNING("Replacing existing command -- ");
-#endif
-  }
   return NS_OK;
 }
 
@@ -58,10 +52,14 @@ nsControllerCommandTable::UnregisterCommand(const char * aCommandName, nsIContro
 {
   NS_ENSURE_TRUE(mMutable, NS_ERROR_FAILURE);
 
-  nsCStringKey commandKey(aCommandName);
+  nsDependentCString commandKey(aCommandName);
 
-  bool wasRemoved = mCommandsTable.Remove(&commandKey);
-  return wasRemoved ? NS_OK : NS_ERROR_FAILURE;
+  if (!mCommandsTable.Get(commandKey, nullptr)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  mCommandsTable.Remove(commandKey);
+  return NS_OK;
 }
 
 
@@ -72,12 +70,11 @@ nsControllerCommandTable::FindCommandHandler(const char * aCommandName, nsIContr
 
   *outCommand = nullptr;
 
-  nsCStringKey commandKey(aCommandName);
-  nsISupports* foundCommand = mCommandsTable.Get(&commandKey);
+  nsCOMPtr<nsIControllerCommand> foundCommand;
+  mCommandsTable.Get(nsDependentCString(aCommandName), getter_AddRefs(foundCommand));
   if (!foundCommand) return NS_ERROR_FAILURE;
 
-  // no need to addref since the .Get does it for us
-  *outCommand = reinterpret_cast<nsIControllerCommand*>(foundCommand);
+  foundCommand.forget(outCommand);
   return NS_OK;
 }
 
