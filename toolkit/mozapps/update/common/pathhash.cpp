@@ -42,14 +42,15 @@ CalculateMD5(const char *data, DWORD dataSize,
   HCRYPTPROV hProv = 0;
   HCRYPTHASH hHash = 0;
 
-  if (!CryptAcquireContext(&hProv, nullptr, nullptr, PROV_RSA_FULL, 0)) {
+  if (!CryptAcquireContext(&hProv, nullptr, nullptr, PROV_RSA_FULL,
+                           CRYPT_VERIFYCONTEXT)) {
     if (NTE_BAD_KEYSET != GetLastError()) {
       return FALSE;
     }
  
     // Maybe it doesn't exist, try to create it.
     if (!CryptAcquireContext(&hProv, nullptr, nullptr, PROV_RSA_FULL, 
-                            CRYPT_NEWKEYSET)) {
+                             CRYPT_VERIFYCONTEXT | CRYPT_NEWKEYSET)) {
       return FALSE;
     }
   }
