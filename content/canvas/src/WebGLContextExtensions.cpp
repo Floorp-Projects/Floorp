@@ -53,10 +53,18 @@ WebGLContext::IsExtensionEnabled(WebGLExtensionID ext) const {
 
 bool WebGLContext::IsExtensionSupported(JSContext *cx, WebGLExtensionID ext) const
 {
+    bool allowPrivilegedExts = false;
+
     // Chrome contexts need access to debug information even when
     // webgl.disable-extensions is set. This is used in the graphics
     // section of about:support.
-    if (xpc::AccessCheck::isChrome(js::GetContextCompartment(cx))) {
+    if (xpc::AccessCheck::isChrome(js::GetContextCompartment(cx)))
+        allowPrivilegedExts = true;
+
+    if (Preferences::GetBool("webgl.enable-privileged-extensions", false))
+        allowPrivilegedExts = true;
+
+    if (allowPrivilegedExts) {
         switch (ext) {
             case WEBGL_debug_renderer_info:
                 return true;
