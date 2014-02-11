@@ -827,6 +827,23 @@ nsScrollbarsForWheel::DeactivateAllTemporarilyActivatedScrollTargets()
 }
 
 /******************************************************************/
+/* OverOutElementsWrapper                                         */
+/******************************************************************/
+
+NS_IMPL_CYCLE_COLLECTION_3(OverOutElementsWrapper,
+                           mLastOverElement,
+                           mFirstOverEventElement,
+                           mFirstOutEventElement)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(OverOutElementsWrapper)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(OverOutElementsWrapper)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(OverOutElementsWrapper)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
+/******************************************************************/
+
+/******************************************************************/
 /* nsEventStateManager                                            */
 /******************************************************************/
 
@@ -834,7 +851,6 @@ nsEventStateManager::nsEventStateManager()
   : mLockCursor(0),
     mPreLockPoint(0,0),
     mCurrentTarget(nullptr),
-    mLastMouseOverFrame(nullptr),
     // init d&d gesture state machine variables
     mGestureDownPoint(0,0),
     mPresContext(nullptr),
@@ -961,9 +977,8 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsEventStateManager)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsEventStateManager)
 
-NS_IMPL_CYCLE_COLLECTION_17(nsEventStateManager,
+NS_IMPL_CYCLE_COLLECTION_16(nsEventStateManager,
                             mCurrentTargetContent,
-                            mLastMouseOverElement,
                             mGestureDownContent,
                             mGestureDownFrameOwner,
                             mLastLeftMouseDownContent,
@@ -975,8 +990,8 @@ NS_IMPL_CYCLE_COLLECTION_17(nsEventStateManager,
                             mActiveContent,
                             mHoverContent,
                             mURLTargetContent,
-                            mFirstMouseOverEventElement,
-                            mFirstMouseOutEventElement,
+                            mMouseEnterLeaveHelper,
+                            mPointersEnterLeaveHelper,
                             mDocument,
                             mAccessKeys)
 
@@ -4142,16 +4157,18 @@ void
 nsEventStateManager::NotifyMouseOut(WidgetMouseEvent* aMouseEvent,
                                     nsIContent* aMovingInto)
 {
-  if (!mLastMouseOverElement)
+  OverOutElementsWrapper* wrapper = GetWrapperByEventID(aMouseEvent);
+
+  if (!wrapper->mLastOverElement)
     return;
   // Before firing mouseout, check for recursion
-  if (mLastMouseOverElement == mFirstMouseOutEventElement)
+  if (wrapper->mLastOverElement == wrapper->mFirstOutEventElement)
     return;
 
-  if (mLastMouseOverFrame) {
+  if (wrapper->mLastOverFrame) {
     // if the frame is associated with a subdocument,
     // tell the subdocument that we're moving out of it
-    nsSubDocumentFrame* subdocFrame = do_QueryFrame(mLastMouseOverFrame.GetFrame());
+    nsSubDocumentFrame* subdocFrame = do_QueryFrame(wrapper->mLastOverFrame.GetFrame());
     if (subdocFrame) {
       nsCOMPtr<nsIDocShell> docshell;
       subdocFrame->GetDocShell(getter_AddRefs(docshell));
@@ -4169,12 +4186,12 @@ nsEventStateManager::NotifyMouseOut(WidgetMouseEvent* aMouseEvent,
   }
   // That could have caused DOM events which could wreak havoc. Reverify
   // things and be careful.
-  if (!mLastMouseOverElement)
+  if (!wrapper->mLastOverElement)
     return;
 
   // Store the first mouseOut event we fire and don't refire mouseOut
   // to that element while the first mouseOut is still ongoing.
-  mFirstMouseOutEventElement = mLastMouseOverElement;
+  wrapper->mFirstOutEventElement = wrapper->mLastOverElement;
 
   // Don't touch hover state if aMovingInto is non-null.  Caller will update
   // hover state itself, and we have optimizations for hover switching between
@@ -4185,18 +4202,18 @@ nsEventStateManager::NotifyMouseOut(WidgetMouseEvent* aMouseEvent,
     SetContentState(nullptr, NS_EVENT_STATE_HOVER);
   }
 
-  MouseEnterLeaveDispatcher leaveDispatcher(this, mLastMouseOverElement, aMovingInto,
+  MouseEnterLeaveDispatcher leaveDispatcher(this, wrapper->mLastOverElement, aMovingInto,
                                             aMouseEvent, NS_MOUSELEAVE);
 
   // Fire mouseout
   DispatchMouseEvent(aMouseEvent, NS_MOUSE_EXIT_SYNTH,
-                     mLastMouseOverElement, aMovingInto);
-  
-  mLastMouseOverFrame = nullptr;
-  mLastMouseOverElement = nullptr;
-  
+                     wrapper->mLastOverElement, aMovingInto);
+
+  wrapper->mLastOverFrame = nullptr;
+  wrapper->mLastOverElement = nullptr;
+
   // Turn recursion protection back off
-  mFirstMouseOutEventElement = nullptr;
+  wrapper->mFirstOutEventElement = nullptr;
 }
 
 void
@@ -4205,11 +4222,13 @@ nsEventStateManager::NotifyMouseOver(WidgetMouseEvent* aMouseEvent,
 {
   NS_ASSERTION(aContent, "Mouse must be over something");
 
-  if (mLastMouseOverElement == aContent)
+  OverOutElementsWrapper* wrapper = GetWrapperByEventID(aMouseEvent);
+
+  if (wrapper->mLastOverElement == aContent)
     return;
 
   // Before firing mouseover, check for recursion
-  if (aContent == mFirstMouseOverEventElement)
+  if (aContent == wrapper->mFirstOverEventElement)
     return;
 
   // Check to see if we're a subdocument and if so update the parent
@@ -4229,31 +4248,31 @@ nsEventStateManager::NotifyMouseOver(WidgetMouseEvent* aMouseEvent,
   }
   // Firing the DOM event in the parent document could cause all kinds
   // of havoc.  Reverify and take care.
-  if (mLastMouseOverElement == aContent)
+  if (wrapper->mLastOverElement == aContent)
     return;
 
-  // Remember mLastMouseOverElement as the related content for the
+  // Remember mLastOverElement as the related content for the
   // DispatchMouseEvent() call below, since NotifyMouseOut() resets it, bug 298477.
-  nsCOMPtr<nsIContent> lastMouseOverElement = mLastMouseOverElement;
+  nsCOMPtr<nsIContent> lastOverElement = wrapper->mLastOverElement;
 
-  MouseEnterLeaveDispatcher enterDispatcher(this, aContent, lastMouseOverElement,
+  MouseEnterLeaveDispatcher enterDispatcher(this, aContent, lastOverElement,
                                             aMouseEvent, NS_MOUSEENTER);
-  
+
   NotifyMouseOut(aMouseEvent, aContent);
 
   // Store the first mouseOver event we fire and don't refire mouseOver
   // to that element while the first mouseOver is still ongoing.
-  mFirstMouseOverEventElement = aContent;
-  
+  wrapper->mFirstOverEventElement = aContent;
+
   SetContentState(aContent, NS_EVENT_STATE_HOVER);
-  
+
   // Fire mouseover
-  mLastMouseOverFrame = DispatchMouseEvent(aMouseEvent, NS_MOUSE_ENTER_SYNTH,
-                                           aContent, lastMouseOverElement);
-  mLastMouseOverElement = aContent;
-  
+  wrapper->mLastOverFrame = DispatchMouseEvent(aMouseEvent, NS_MOUSE_ENTER_SYNTH,
+                                               aContent, lastOverElement);
+  wrapper->mLastOverElement = aContent;
+
   // Turn recursion protection back off
-  mFirstMouseOverEventElement = nullptr;
+  wrapper->mFirstOverEventElement = nullptr;
 }
 
 // Returns the center point of the window's inner content area.
@@ -4375,9 +4394,10 @@ nsEventStateManager::GenerateMouseEnterExit(WidgetMouseEvent* aMouseEvent)
       // This is actually the window mouse exit event. We're not moving
       // into any new element.
 
-      if (mLastMouseOverFrame &&
+      OverOutElementsWrapper* helper = GetWrapperByEventID(aMouseEvent);
+      if (helper->mLastOverFrame &&
           nsContentUtils::GetTopLevelWidget(aMouseEvent->widget) !=
-          nsContentUtils::GetTopLevelWidget(mLastMouseOverFrame->GetNearestWidget())) {
+          nsContentUtils::GetTopLevelWidget(helper->mLastOverFrame->GetNearestWidget())) {
         // the MouseOut event widget doesn't have same top widget with
         // mLastMouseOverFrame, it's a spurious event for mLastMouseOverFrame
         break;
@@ -4394,6 +4414,15 @@ nsEventStateManager::GenerateMouseEnterExit(WidgetMouseEvent* aMouseEvent)
 
   // reset mCurretTargetContent to what it was
   mCurrentTargetContent = targetBeforeEvent;
+}
+
+OverOutElementsWrapper*
+nsEventStateManager::GetWrapperByEventID(WidgetMouseEvent* aEvent)
+{
+  if (!mMouseEnterLeaveHelper) {
+    mMouseEnterLeaveHelper = new OverOutElementsWrapper();
+  }
+  return mMouseEnterLeaveHelper.get();
 }
 
 void
@@ -5046,6 +5075,20 @@ nsEventStateManager::SetContentState(nsIContent *aContent, nsEventStates aState)
   return true;
 }
 
+PLDHashOperator
+nsEventStateManager::ResetLastOverForContent(const uint32_t& aIdx,
+                                             nsRefPtr<OverOutElementsWrapper>& aElemWrapper,
+                                             void* aClosure)
+{
+  nsIContent* content = static_cast<nsIContent*>(aClosure);
+  if (aElemWrapper && aElemWrapper->mLastOverElement &&
+      nsContentUtils::ContentIsDescendantOf(aElemWrapper->mLastOverElement, content)) {
+    aElemWrapper->mLastOverElement = nullptr;
+  }
+
+  return PL_DHASH_NEXT;
+}
+
 void
 nsEventStateManager::ContentRemoved(nsIDocument* aDocument, nsIContent* aContent)
 {
@@ -5090,11 +5133,8 @@ nsEventStateManager::ContentRemoved(nsIDocument* aDocument, nsIContent* aContent
     sDragOverContent = nullptr;
   }
 
-  if (mLastMouseOverElement &&
-      nsContentUtils::ContentIsDescendantOf(mLastMouseOverElement, aContent)) {
-    // See bug 292146 for why we want to null this out
-    mLastMouseOverElement = nullptr;
-  }
+  // See bug 292146 for why we want to null this out
+  ResetLastOverForContent(0, mMouseEnterLeaveHelper, aContent);
 }
 
 bool
