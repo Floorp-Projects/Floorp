@@ -120,7 +120,6 @@
                        oncommand="PlacesCommandHook.showPlacesOrganizer('UnfiledBookmarks'); PanelUI.hide();"/>
         <toolbarseparator/>
         <toolbaritem id="panelMenu_bookmarksMenu"
-                     flex="1"
                      orient="vertical"
                      smoothscroll="false"
                      onclick="if (event.button == 1) BookmarkingUI.onPanelMenuViewCommand(event, this._placesView);"
