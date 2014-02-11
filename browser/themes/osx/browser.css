@@ -2573,22 +2573,11 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
       url(chrome://browser/skin/tabbrowser/tab-background-start@2x.png);
   }
 
+  .tabbrowser-tab:hover > .tab-stack > .tab-background:not([selected=true]),
   .tabs-newtab-button:hover {
     background-image: url(chrome://browser/skin/tabbrowser/tab-background-start@2x.png),
                       url(chrome://browser/skin/tabbrowser/tab-background-middle@2x.png),
                       url(chrome://browser/skin/tabbrowser/tab-background-end@2x.png);
-  }
-
-  .tabbrowser-tab:hover > .tab-stack > .tab-background > .tab-background-middle:not([selected=true]) {
-    background-image: url(chrome://browser/skin/tabbrowser/tab-background-middle@2x.png);
-  }
-
-  .tabbrowser-tab:hover > .tab-stack > .tab-background > .tab-background-start:not([selected=true]) {
-    background-image: url(chrome://browser/skin/tabbrowser/tab-background-start@2x.png);
-  }
-
-  .tabbrowser-tab:hover > .tab-stack > .tab-background > .tab-background-end:not([selected=true]) {
-    background-image: url(chrome://browser/skin/tabbrowser/tab-background-end@2x.png);
   }
 
   .tab-background-middle[selected=true] {

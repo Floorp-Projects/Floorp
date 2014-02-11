@@ -224,6 +224,7 @@
 /* End selected tab */
 
 /* new tab button border and gradient on hover */
+.tabbrowser-tab:hover > .tab-stack > .tab-background:not([selected=true]),
 .tabs-newtab-button:hover {
   background-image: url(chrome://browser/skin/tabbrowser/tab-background-start.png),
                     url(chrome://browser/skin/tabbrowser/tab-background-middle.png),
@@ -231,27 +232,6 @@
   background-position: left bottom, @tabCurveWidth@ bottom, right bottom;
   background-repeat: no-repeat;
   background-size: @tabCurveWidth@ 100%, calc(100% - (2 * @tabCurveWidth@)) 100%, @tabCurveWidth@ 100%;
-}
-
-/* normal tab border and gradient on hover */
-.tabbrowser-tab:hover > .tab-stack > .tab-background > .tab-background-middle:not([selected=true]) {
-  background-image: url(chrome://browser/skin/tabbrowser/tab-background-middle.png);
-  background-repeat: repeat-x;
-  background-size: auto 100%;
-}
-
-.tabbrowser-tab:hover > .tab-stack > .tab-background > .tab-background-start:not([selected=true]),
-.tabbrowser-tab:hover > .tab-stack > .tab-background > .tab-background-end:not([selected=true]) {
-  background-repeat: no-repeat;
-  background-size: 100% 100%;
-}
-
-.tabbrowser-tab:hover > .tab-stack > .tab-background > .tab-background-start:not([selected=true]) {
-  background-image: url(chrome://browser/skin/tabbrowser/tab-background-start.png);
-}
-
-.tabbrowser-tab:hover > .tab-stack > .tab-background > .tab-background-end:not([selected=true]) {
-  background-image: url(chrome://browser/skin/tabbrowser/tab-background-end.png);
 }
 
 /* Tab pointer-events */
