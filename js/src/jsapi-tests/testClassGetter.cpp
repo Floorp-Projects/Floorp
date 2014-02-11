@@ -63,7 +63,7 @@ BEGIN_TEST(testClassGetter_isCalled)
 
     for (int i = 1; i < 9; i++) {
         JS::RootedValue rval(cx);
-        CHECK(JS_CallFunctionName(cx, global, "check", 0, nullptr, rval.address()));
+        CHECK(JS_CallFunctionName(cx, global, "check", JS::EmptyValueArray, rval.address()));
         CHECK_SAME(INT_TO_JSVAL(called_test_fn), INT_TO_JSVAL(i));
         CHECK_SAME(INT_TO_JSVAL(called_test_prop_get), INT_TO_JSVAL(4 * i));
     }

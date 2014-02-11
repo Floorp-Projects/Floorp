@@ -3911,48 +3911,49 @@ Evaluate(JSContext *cx, JS::HandleObject obj, const ReadOnlyCompileOptions &opti
 } /* namespace JS */
 
 extern JS_PUBLIC_API(bool)
-JS_CallFunction(JSContext *cx, JSObject *obj, JSFunction *fun, unsigned argc,
-                jsval *argv, jsval *rval);
+JS_CallFunction(JSContext *cx, JSObject *obj, JSFunction *fun, const JS::HandleValueArray& args,
+                jsval *rval);
 
 extern JS_PUBLIC_API(bool)
-JS_CallFunctionName(JSContext *cx, JSObject *obj, const char *name, unsigned argc,
-                    jsval *argv, jsval *rval);
+JS_CallFunctionName(JSContext *cx, JSObject *obj, const char *name, const JS::HandleValueArray& args,
+                    jsval *rval);
 
 extern JS_PUBLIC_API(bool)
-JS_CallFunctionValue(JSContext *cx, JSObject *obj, jsval fval, unsigned argc,
-                     jsval *argv, jsval *rval);
+JS_CallFunctionValue(JSContext *cx, JSObject *obj, jsval fval, const JS::HandleValueArray& args,
+                     jsval *rval);
 
 namespace JS {
 
 static inline bool
-Call(JSContext *cx, JSObject *thisObj, JSFunction *fun, unsigned argc, jsval *argv,
+Call(JSContext *cx, JSObject *thisObj, JSFunction *fun, const JS::HandleValueArray &args,
      MutableHandleValue rval)
 {
-    return !!JS_CallFunction(cx, thisObj, fun, argc, argv, rval.address());
+    return !!JS_CallFunction(cx, thisObj, fun, args, rval.address());
 }
 
 static inline bool
-Call(JSContext *cx, JSObject *thisObj, const char *name, unsigned argc, jsval *argv,
+Call(JSContext *cx, JSObject *thisObj, const char *name, const JS::HandleValueArray& args,
      MutableHandleValue rval)
 {
-    return !!JS_CallFunctionName(cx, thisObj, name, argc, argv, rval.address());
+    return !!JS_CallFunctionName(cx, thisObj, name, args, rval.address());
 }
 
 static inline bool
-Call(JSContext *cx, JSObject *thisObj, jsval fun, unsigned argc, jsval *argv,
+Call(JSContext *cx, JSObject *thisObj, jsval fun, const JS::HandleValueArray& args,
      MutableHandleValue rval)
 {
-    return !!JS_CallFunctionValue(cx, thisObj, fun, argc, argv, rval.address());
+    return !!JS_CallFunctionValue(cx, thisObj, fun, args, rval.address());
 }
 
 extern JS_PUBLIC_API(bool)
-Call(JSContext *cx, jsval thisv, jsval fun, unsigned argc, jsval *argv, MutableHandleValue rval);
+Call(JSContext *cx, jsval thisv, jsval fun, const JS::HandleValueArray& args,
+     MutableHandleValue rval);
 
 static inline bool
-Call(JSContext *cx, jsval thisv, JSObject *funObj, unsigned argc, jsval *argv,
+Call(JSContext *cx, jsval thisv, JSObject *funObj, const JS::HandleValueArray& args,
      MutableHandleValue rval)
 {
-    return Call(cx, thisv, OBJECT_TO_JSVAL(funObj), argc, argv, rval);
+    return Call(cx, thisv, OBJECT_TO_JSVAL(funObj), args, rval);
 }
 
 } /* namespace JS */

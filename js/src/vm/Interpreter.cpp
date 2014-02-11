@@ -499,7 +499,7 @@ js::Invoke(JSContext *cx, CallArgs args, MaybeConstruct construct)
 }
 
 bool
-js::Invoke(JSContext *cx, const Value &thisv, const Value &fval, unsigned argc, Value *argv,
+js::Invoke(JSContext *cx, const Value &thisv, const Value &fval, unsigned argc, const Value *argv,
            MutableHandleValue rval)
 {
     InvokeArgs args(cx);
