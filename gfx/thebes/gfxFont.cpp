@@ -4580,7 +4580,20 @@ gfxFontGroup::MakeSpaceTextRun(const Parameters *aParams, uint32_t aFlags)
         textRun->AddGlyphRun(font, gfxTextRange::kFontGroup, 0, false);
     }
     else {
-        textRun->SetSpaceGlyph(font, aParams->mContext, 0);
+        if (font->GetSpaceGlyph()) {
+            // Normally, the font has a cached space glyph, so we can avoid
+            // the cost of calling FindFontForChar.
+            textRun->SetSpaceGlyph(font, aParams->mContext, 0);
+        } else {
+            // In case the primary font doesn't have <space> (bug 970891),
+            // find one that does.
+            uint8_t matchType;
+            nsRefPtr<gfxFont> spaceFont =
+                FindFontForChar(' ', 0, MOZ_SCRIPT_LATIN, nullptr, &matchType);
+            if (spaceFont) {
+                textRun->SetSpaceGlyph(spaceFont, aParams->mContext, 0);
+            }
+        }
     }
 
     // Note that the gfxGlyphExtents glyph bounds storage for the font will
