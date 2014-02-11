@@ -502,6 +502,14 @@ box.requests-menu-status {
   border-top: solid 1px hsla(210,5%,5%,.3);
 }
 
+.theme-dark #requests-menu-footer {
+  background: url(background-noise-toolbar.png), #343c45; /* Toolbars */
+}
+
+.theme-light #requests-menu-footer {
+  background: url(background-noise-toolbar.png), #f0f1f2; /* Toolbars */
+}
+
 .requests-menu-footer-button,
 .requests-menu-footer-label {
   min-width: 1em;
