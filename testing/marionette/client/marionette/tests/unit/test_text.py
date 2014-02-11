@@ -30,6 +30,7 @@ class TestText(MarionetteTestCase):
         self.assertEqual("asdfo", self.marionette.execute_script("return arguments[0].value;", [l]))
 
     def test_send_keys_to_type_input(self):
+        return # <input type=number> is disabled for v28
         test_html = self.marionette.absolute_url("html5/test_html_inputs.html")
         self.marionette.navigate(test_html)
         num_input = self.marionette.find_element('id', 'number')
