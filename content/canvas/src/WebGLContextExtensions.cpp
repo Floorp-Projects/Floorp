@@ -29,6 +29,7 @@ static const char *sExtensionNames[] = {
     "WEBGL_compressed_texture_pvrtc",
     "WEBGL_compressed_texture_s3tc",
     "WEBGL_debug_renderer_info",
+    "WEBGL_debug_shaders",
     "WEBGL_depth_texture",
     "WEBGL_lose_context",
     "WEBGL_draw_buffers",
@@ -67,6 +68,8 @@ bool WebGLContext::IsExtensionSupported(JSContext *cx, WebGLExtensionID ext) con
     if (allowPrivilegedExts) {
         switch (ext) {
             case WEBGL_debug_renderer_info:
+                return true;
+            case WEBGL_debug_shaders:
                 return true;
             default:
                 // For warnings-as-errors.
@@ -258,6 +261,9 @@ WebGLContext::EnableExtension(WebGLExtensionID ext)
             break;
         case WEBGL_debug_renderer_info:
             obj = new WebGLExtensionDebugRendererInfo(this);
+            break;
+        case WEBGL_debug_shaders:
+            obj = new WebGLExtensionDebugShaders(this);
             break;
         case WEBGL_depth_texture:
             obj = new WebGLExtensionDepthTexture(this);
