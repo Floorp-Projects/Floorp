@@ -617,7 +617,19 @@ BasicCompositor::BeginFrame(const nsIntRegion& aInvalidRegion,
 void
 BasicCompositor::EndFrame()
 {
+  // Pop aClipRectIn/bounds rect
   mRenderTarget->mDrawTarget->PopClip();
+
+  if (gfxPlatform::GetPlatform()->WidgetUpdateFlashing()) {
+    float r = float(rand()) / RAND_MAX;
+    float g = float(rand()) / RAND_MAX;
+    float b = float(rand()) / RAND_MAX;
+    // We're still clipped to mInvalidRegion, so just fill the bounds.
+    mRenderTarget->mDrawTarget->FillRect(ToRect(mInvalidRegion.GetBounds()),
+                                         ColorPattern(Color(r, g, b, 0.2f)));
+  }
+
+  // Pop aInvalidregion
   mRenderTarget->mDrawTarget->PopClip();
 
   // Note: Most platforms require us to buffer drawing to the widget surface.
