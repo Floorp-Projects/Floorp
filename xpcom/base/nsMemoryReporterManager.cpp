@@ -121,11 +121,12 @@ public:
 NS_IMPL_ISUPPORTS1(ResidentUniqueReporter, nsIMemoryReporter)
 
 #elif defined(__DragonFly__) || defined(__FreeBSD__) \
-    || defined(__NetBSD__) || defined(__OpenBSD__)
+    || defined(__NetBSD__) || defined(__OpenBSD__) \
+    || defined(__FreeBSD_kernel__)
 
 #include <sys/param.h>
 #include <sys/sysctl.h>
-#if defined(__DragonFly__) || defined(__FreeBSD__)
+#if defined(__DragonFly__) || defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
 #include <sys/user.h>
 #endif
 
@@ -142,7 +143,7 @@ NS_IMPL_ISUPPORTS1(ResidentUniqueReporter, nsIMemoryReporter)
 #if defined(__DragonFly__)
 #define KP_SIZE(kp) (kp.kp_vm_map_size)
 #define KP_RSS(kp) (kp.kp_vm_rssize * getpagesize())
-#elif defined(__FreeBSD__)
+#elif defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
 #define KP_SIZE(kp) (kp.ki_size)
 #define KP_RSS(kp) (kp.ki_rssize * getpagesize())
 #elif defined(__NetBSD__)
@@ -1443,7 +1444,7 @@ nsMemoryReporterManager::GetVsize(int64_t* aVsize)
 #ifdef HAVE_VSIZE_AND_RESIDENT_REPORTERS
     return VsizeDistinguishedAmount(aVsize);
 #else
-    *aResident = 0;
+    *aVsize = 0;
     return NS_ERROR_NOT_AVAILABLE;
 #endif
 }
