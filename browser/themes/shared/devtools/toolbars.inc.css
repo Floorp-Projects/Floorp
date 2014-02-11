@@ -4,8 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 %endif
 %filter substitution
-%define smallSeparator linear-gradient(transparent 15%, #5a6169 15%, #5a6169 85%, transparent 85%)
-%define solidSeparator linear-gradient(#2d5b7d, #2d5b7d)
+%define smallSeparatorDark linear-gradient(transparent 15%, #5a6169 15%, #5a6169 85%, transparent 85%)
+%define smallSeparatorLight linear-gradient(transparent 15%, #aaa 15%, #aaa 85%, transparent 85%)
+%define solidSeparatorDark linear-gradient(#2d5b7d, #2d5b7d)
+%define solidSeparatorLight linear-gradient(#aaa, #aaa)
+
 
 .devtools-toolbar {
   -moz-appearance: none;
@@ -384,62 +387,65 @@
 
 .devtools-sidebar-tabs > tabs > tab {
   background-color: transparent;
-  background-image: linear-gradient(transparent, transparent), @smallSeparator@;
 }
 
-.theme-dark .devtools-sidebar-tabs > tabs > tab:hover {
-  background-image: linear-gradient(hsla(206,37%,4%,.2), hsla(206,37%,4%,.2)), @smallSeparator@;
+.theme-dark .devtools-sidebar-tabs > tabs > tab {
+  background-image: linear-gradient(transparent, transparent), @smallSeparatorDark@;
 }
 
 .theme-dark .devtools-sidebar-tabs > tabs > tab:hover:active {
-  background-image: linear-gradient(hsla(206,37%,4%,.4), hsla(206,37%,4%,.4)), @smallSeparator@;
+  background-image: linear-gradient(hsla(206,37%,4%,.4), hsla(206,37%,4%,.4)), @smallSeparatorDark@;
 }
 
 .theme-dark .devtools-sidebar-tabs > tabs > tab[selected] + tab {
-  background-image: linear-gradient(transparent, transparent), @solidSeparator@;
+  background-image: linear-gradient(transparent, transparent), @solidSeparatorDark@;
 }
 
 .theme-dark .devtools-sidebar-tabs > tabs > tab[selected] + tab:hover {
-  background-image: linear-gradient(hsla(206,37%,4%,.2), hsla(206,37%,4%,.2)), @solidSeparator@;
+  background-image: linear-gradient(hsla(206,37%,4%,.2), hsla(206,37%,4%,.2)), @solidSeparatorDark@;
 }
 
 .theme-dark .devtools-sidebar-tabs > tabs > tab[selected] + tab:hover:active {
-  background-image: linear-gradient(hsla(206,37%,4%,.4), hsla(206,37%,4%,.4)), @solidSeparator@;
+  background-image: linear-gradient(hsla(206,37%,4%,.4), hsla(206,37%,4%,.4)), @solidSeparatorDark@;
 }
 
 .theme-dark .devtools-sidebar-tabs > tabs > tab[selected] {
   color: #f5f7fa;
-  background-image: linear-gradient(#1d4f73, #1d4f73), @solidSeparator@;
+  background-image: linear-gradient(#1d4f73, #1d4f73), @solidSeparatorDark@;
 }
 
 .theme-dark .devtools-sidebar-tabs > tabs > tab[selected]:hover {
-  background-image: linear-gradient(#274f64, #274f64), @solidSeparator@;
+  background-image: linear-gradient(#274f64, #274f64), @solidSeparatorDark@;
 }
 
 .theme-dark .devtools-sidebar-tabs > tabs > tab[selected]:hover:active {
-  background-image: linear-gradient(#1f3e4f, #1f3e4f), @solidSeparator@;
+  background-image: linear-gradient(#1f3e4f, #1f3e4f), @solidSeparatorDark@;
+}
+
+.theme-light .devtools-sidebar-tabs > tabs > tab {
+  background-image: linear-gradient(transparent, transparent), @smallSeparatorLight@;
 }
 
 .theme-light .devtools-sidebar-tabs > tabs > tab:hover {
-  background-image: linear-gradient(#ddd, #ddd), @smallSeparator@;
+  background-image: linear-gradient(#ddd, #ddd), @smallSeparatorLight@;
 }
 
 .theme-light .devtools-sidebar-tabs > tabs > tab:hover:active {
-  background-image: linear-gradient(#ddd, #ddd), @smallSeparator@;
+  background-image: linear-gradient(#ddd, #ddd), @smallSeparatorLight@;
 }
 
 .theme-light .devtools-sidebar-tabs > tabs > tab[selected] + tab {
-  background-image: linear-gradient(transparent, transparent), @solidSeparator@;
+  background-image: linear-gradient(transparent, transparent), @solidSeparatorLight@;
 }
 
 .theme-light .devtools-sidebar-tabs > tabs > tab[selected] + tab:hover {
-  background-image: linear-gradient(#ddd, #ddd), @solidSeparator@;
+  background-image: linear-gradient(#ddd, #ddd), @solidSeparatorLight@;
 }
 
 .theme-light .devtools-sidebar-tabs > tabs > tab[selected],
 .theme-light .devtools-sidebar-tabs > tabs > tab[selected]:hover:active {
   color: #f5f7fa;
-  background-image: linear-gradient(#4c9ed9, #4c9ed9), @solidSeparator@;
+  background-image: linear-gradient(#4c9ed9, #4c9ed9), @solidSeparatorLight@;
 }
 
 /* Toolbox - moved from toolbox.css.

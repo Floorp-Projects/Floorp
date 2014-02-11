@@ -224,7 +224,7 @@ SettingsListener.observe('devtools.overlay', false, (value) => {
   if (value) {
     if (!devtoolsWidgetPanel) {
       let scope = {};
-      Services.scriptloader.loadSubScript('chrome://browser/content/devtools.js', scope);
+      Services.scriptloader.loadSubScript('chrome://b2g/content/devtools.js', scope);
       devtoolsWidgetPanel = scope.devtoolsWidgetPanel;
     }
     devtoolsWidgetPanel.init();

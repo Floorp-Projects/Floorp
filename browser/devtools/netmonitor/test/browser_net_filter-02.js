@@ -24,12 +24,12 @@ function test() {
       is(NetMonitorView.detailsPaneHidden, false,
         "The details pane should not be hidden after toggle button was pressed.");
 
-      testButtons("all");
+      testFilterButtons(aMonitor, "all");
       testContents([1, 1, 1, 1, 1, 1, 1, 1])
         .then(() => {
           info("Testing html filtering.");
           EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-html-button"));
-          testButtons("html");
+          testFilterButtons(aMonitor, "html");
           return testContents([1, 0, 0, 0, 0, 0, 0, 0]);
         })
         .then(() => {
@@ -39,7 +39,7 @@ function test() {
         })
         .then(() => {
           info("Testing html filtering again.");
-          testButtons("html");
+          testFilterButtons(aMonitor, "html");
           return testContents([1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0]);
         })
         .then(() => {
@@ -49,30 +49,20 @@ function test() {
         })
         .then(() => {
           info("Testing html filtering again.");
-          testButtons("html");
+          testFilterButtons(aMonitor, "html");
           return testContents([1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0]);
+        })
+        .then(() => {
+          info("Resetting filters.");
+          EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-all-button"));
+          testFilterButtons(aMonitor, "all");
+          return testContents([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
         })
         .then(() => {
           return teardown(aMonitor);
         })
         .then(finish);
     });
-
-    function testButtons(aFilterType) {
-      let doc = aMonitor.panelWin.document;
-      let target = doc.querySelector("#requests-menu-filter-" + aFilterType + "-button");
-      let buttons = doc.querySelectorAll(".requests-menu-footer-button");
-
-      for (let button of buttons) {
-        if (button != target) {
-          is(button.hasAttribute("checked"), false,
-            "The " + button.id + " button should not have a 'checked' attribute.");
-        } else {
-          is(button.hasAttribute("checked"), true,
-            "The " + button.id + " button should have a 'checked' attribute.");
-        }
-      }
-    }
 
     function testContents(aVisibility) {
       isnot(RequestsMenu.selectedItem, null,

@@ -43,129 +43,381 @@
 
   <deck id="body" class="theme-sidebar" flex="1">
 
-  <box id="network-inspector-view" class="devtools-responsive-container">
-    <vbox id="network-table" flex="1">
-      <toolbar id="requests-menu-toolbar"
-               class="devtools-toolbar"
-               align="center">
-        <hbox id="toolbar-labels" flex="1">
-          <hbox id="requests-menu-status-and-method-header-box"
-                class="requests-menu-header requests-menu-status-and-method"
-                align="center">
-            <button id="requests-menu-status-button"
-                    class="requests-menu-header-button requests-menu-status"
-                    data-key="status"
-                    label="&netmonitorUI.toolbar.status2;">
-            </button>
-            <button id="requests-menu-method-button"
-                    class="requests-menu-header-button requests-menu-method"
-                    data-key="method"
-                    label="&netmonitorUI.toolbar.method;"
+    <vbox id="network-inspector-view" flex="1">
+      <hbox id="network-table-and-sidebar"
+            class="devtools-responsive-container"
+            flex="1">
+        <vbox id="network-table" flex="1">
+          <toolbar id="requests-menu-toolbar"
+                   class="devtools-toolbar"
+                   align="center">
+            <hbox id="toolbar-labels" flex="1">
+              <hbox id="requests-menu-status-and-method-header-box"
+                    class="requests-menu-header requests-menu-status-and-method"
+                    align="center">
+                <button id="requests-menu-status-button"
+                        class="requests-menu-header-button requests-menu-status"
+                        data-key="status"
+                        label="&netmonitorUI.toolbar.status2;">
+                </button>
+                <button id="requests-menu-method-button"
+                        class="requests-menu-header-button requests-menu-method"
+                        data-key="method"
+                        label="&netmonitorUI.toolbar.method;"
+                        flex="1">
+                </button>
+              </hbox>
+              <hbox id="requests-menu-file-header-box"
+                    class="requests-menu-header requests-menu-file"
+                    align="center">
+                <button id="requests-menu-file-button"
+                        class="requests-menu-header-button requests-menu-file"
+                        data-key="file"
+                        label="&netmonitorUI.toolbar.file;"
+                        flex="1">
+                </button>
+              </hbox>
+              <hbox id="requests-menu-domain-header-box"
+                    class="requests-menu-header requests-menu-domain"
+                    align="center">
+                <button id="requests-menu-domain-button"
+                        class="requests-menu-header-button requests-menu-domain"
+                        data-key="domain"
+                        label="&netmonitorUI.toolbar.domain;"
+                        flex="1">
+                </button>
+              </hbox>
+              <hbox id="requests-menu-type-header-box"
+                    class="requests-menu-header requests-menu-type"
+                    align="center">
+                <button id="requests-menu-type-button"
+                        class="requests-menu-header-button requests-menu-type"
+                        data-key="type"
+                        label="&netmonitorUI.toolbar.type;"
+                        flex="1">
+                </button>
+              </hbox>
+              <hbox id="requests-menu-size-header-box"
+                    class="requests-menu-header requests-menu-size"
+                    align="center">
+                <button id="requests-menu-size-button"
+                        class="requests-menu-header-button requests-menu-size"
+                        data-key="size"
+                        label="&netmonitorUI.toolbar.size;"
+                        flex="1">
+                </button>
+              </hbox>
+              <hbox id="requests-menu-waterfall-header-box"
+                    class="requests-menu-header requests-menu-waterfall"
+                    align="center"
                     flex="1">
-            </button>
-          </hbox>
-          <hbox id="requests-menu-file-header-box"
-                class="requests-menu-header requests-menu-file"
-                align="center">
-            <button id="requests-menu-file-button"
-                    class="requests-menu-header-button requests-menu-file"
-                    data-key="file"
-                    label="&netmonitorUI.toolbar.file;"
-                    flex="1">
-            </button>
-          </hbox>
-          <hbox id="requests-menu-domain-header-box"
-                class="requests-menu-header requests-menu-domain"
-                align="center">
-            <button id="requests-menu-domain-button"
-                    class="requests-menu-header-button requests-menu-domain"
-                    data-key="domain"
-                    label="&netmonitorUI.toolbar.domain;"
-                    flex="1">
-            </button>
-          </hbox>
-          <hbox id="requests-menu-type-header-box"
-                class="requests-menu-header requests-menu-type"
-                align="center">
-            <button id="requests-menu-type-button"
-                    class="requests-menu-header-button requests-menu-type"
-                    data-key="type"
-                    label="&netmonitorUI.toolbar.type;"
-                    flex="1">
-            </button>
-          </hbox>
-          <hbox id="requests-menu-size-header-box"
-                class="requests-menu-header requests-menu-size"
-                align="center">
-            <button id="requests-menu-size-button"
-                    class="requests-menu-header-button requests-menu-size"
-                    data-key="size"
-                    label="&netmonitorUI.toolbar.size;"
-                    flex="1">
-            </button>
-          </hbox>
-          <hbox id="requests-menu-waterfall-header-box"
-                class="requests-menu-header requests-menu-waterfall"
-                align="center"
-                flex="1">
-            <button id="requests-menu-waterfall-button"
-                    class="requests-menu-header-button requests-menu-waterfall"
-                    data-key="waterfall"
-                    pack="start"
-                    flex="1">
-              <label id="requests-menu-waterfall-label"
-                     class="plain requests-menu-waterfall"
-                     value="&netmonitorUI.toolbar.waterfall;"/>
-            </button>
-          </hbox>
-        </hbox>
-        <toolbarbutton id="details-pane-toggle"
-                       class="devtools-toolbarbutton"
-                       tooltiptext="&netmonitorUI.panesButton.tooltip;"
-                       disabled="true"
-                       tabindex="0"/>
-      </toolbar>
-
-      <vbox id="requests-menu-empty-notice"
-            class="side-menu-widget-empty-text">
-        <hbox id="notice-perf-message" align="center">
-          <label value="&netmonitorUI.perfNotice1;"/>
-          <button id="requests-menu-perf-notice-button"
-                  class="devtools-toolbarbutton"/>
-          <label value="&netmonitorUI.perfNotice2;"/>
-        </hbox>
-        <hbox id="notice-reload-message" align="center">
-          <label value="&netmonitorUI.emptyNotice3;"/>
-        </hbox>
-      </vbox>
-
-      <vbox id="requests-menu-contents" flex="1" context="network-request-popup">
-        <hbox id="requests-menu-item-template" hidden="true">
-          <hbox class="requests-menu-subitem requests-menu-status-and-method"
-                align="center">
-            <box class="requests-menu-status"/>
-            <label class="plain requests-menu-method"
-                   crop="end"
-                   flex="1"/>
-          </hbox>
-          <label class="plain requests-menu-subitem requests-menu-file"
-                 crop="end"/>
-          <label class="plain requests-menu-subitem requests-menu-domain"
-                 crop="end"/>
-          <label class="plain requests-menu-subitem requests-menu-type"
-                 crop="end"/>
-          <label class="plain requests-menu-subitem requests-menu-size"
-                 crop="end"/>
-          <hbox class="requests-menu-subitem requests-menu-waterfall"
-                align="center"
-                flex="1">
-            <hbox class="requests-menu-timings"
-                  align="center">
-              <label class="plain requests-menu-timings-total"/>
+                <button id="requests-menu-waterfall-button"
+                        class="requests-menu-header-button requests-menu-waterfall"
+                        data-key="waterfall"
+                        pack="start"
+                        flex="1">
+                  <label id="requests-menu-waterfall-label"
+                         class="plain requests-menu-waterfall"
+                         value="&netmonitorUI.toolbar.waterfall;"/>
+                </button>
+              </hbox>
             </hbox>
-          </hbox>
-        </hbox>
-      </vbox>
+            <toolbarbutton id="details-pane-toggle"
+                           class="devtools-toolbarbutton"
+                           tooltiptext="&netmonitorUI.panesButton.tooltip;"
+                           disabled="true"
+                           tabindex="0"/>
+          </toolbar>
+
+          <vbox id="requests-menu-empty-notice"
+                class="side-menu-widget-empty-text">
+            <hbox id="notice-perf-message" align="center">
+              <label value="&netmonitorUI.perfNotice1;"/>
+              <button id="requests-menu-perf-notice-button"
+                      class="devtools-toolbarbutton"/>
+              <label value="&netmonitorUI.perfNotice2;"/>
+            </hbox>
+            <hbox id="notice-reload-message" align="center">
+              <label value="&netmonitorUI.emptyNotice3;"/>
+            </hbox>
+          </vbox>
+
+          <vbox id="requests-menu-contents" flex="1" context="network-request-popup">
+            <hbox id="requests-menu-item-template" hidden="true">
+              <hbox class="requests-menu-subitem requests-menu-status-and-method"
+                    align="center">
+                <box class="requests-menu-status"/>
+                <label class="plain requests-menu-method"
+                       crop="end"
+                       flex="1"/>
+              </hbox>
+              <label class="plain requests-menu-subitem requests-menu-file"
+                     crop="end"/>
+              <label class="plain requests-menu-subitem requests-menu-domain"
+                     crop="end"/>
+              <label class="plain requests-menu-subitem requests-menu-type"
+                     crop="end"/>
+              <label class="plain requests-menu-subitem requests-menu-size"
+                     crop="end"/>
+              <hbox class="requests-menu-subitem requests-menu-waterfall"
+                    align="center"
+                    flex="1">
+                <hbox class="requests-menu-timings"
+                      align="center">
+                  <label class="plain requests-menu-timings-total"/>
+                </hbox>
+              </hbox>
+            </hbox>
+          </vbox>
+        </vbox>
+
+        <splitter id="network-inspector-view-splitter"
+                  class="devtools-side-splitter"/>
+
+        <deck id="details-pane"
+              hidden="true">
+          <vbox id="custom-pane"
+                class="tabpanel-content">
+            <hbox align="baseline">
+              <label value="&netmonitorUI.custom.newRequest;"
+                     class="plain tabpanel-summary-label
+                            custom-header"/>
+              <hbox flex="1" pack="end">
+                <button id="custom-request-send-button"
+                        class="devtools-toolbarbutton"
+                        label="&netmonitorUI.custom.send;"/>
+                <button id="custom-request-close-button"
+                        class="devtools-toolbarbutton"
+                        label="&netmonitorUI.custom.cancel;"/>
+              </hbox>
+            </hbox>
+            <hbox id="custom-method-and-url"
+                  class="tabpanel-summary-container"
+                  align="center">
+              <textbox id="custom-method-value"
+                       data-key="method"/>
+              <textbox id="custom-url-value"
+                       flex="1"
+                       data-key="url"/>
+            </hbox>
+            <vbox id="custom-query"
+                  class="tabpanel-summary-container custom-section">
+              <label class="plain tabpanel-summary-label"
+                     value="&netmonitorUI.custom.query;"/>
+              <textbox id="custom-query-value"
+                       class="tabpanel-summary-input"
+                       multiline="true"
+                       rows="4"
+                       wrap="off"
+                       data-key="query"/>
+            </vbox>
+            <vbox id="custom-headers"
+                  class="tabpanel-summary-container custom-section">
+              <label class="plain tabpanel-summary-label"
+                     value="&netmonitorUI.custom.headers;"/>
+              <textbox id="custom-headers-value"
+                       class="tabpanel-summary-input"
+                       multiline="true"
+                       rows="8"
+                       wrap="off"
+                       data-key="headers"/>
+            </vbox>
+            <vbox id="custom-postdata"
+                  class="tabpanel-summary-container custom-section">
+              <label class="plain tabpanel-summary-label"
+                     value="&netmonitorUI.custom.postData;"/>
+              <textbox id="custom-postdata-value"
+                       class="tabpanel-summary-input"
+                       multiline="true"
+                       rows="6"
+                       wrap="off"
+                       data-key="body"/>
+            </vbox>
+          </vbox>
+          <tabbox id="event-details-pane"
+                  class="devtools-sidebar-tabs"
+                  handleCtrlTab="false">
+            <tabs>
+              <tab label="&netmonitorUI.tab.headers;"/>
+              <tab label="&netmonitorUI.tab.cookies;"/>
+              <tab label="&netmonitorUI.tab.params;"/>
+              <tab label="&netmonitorUI.tab.response;"/>
+              <tab label="&netmonitorUI.tab.timings;"/>
+            </tabs>
+            <tabpanels flex="1">
+              <tabpanel id="headers-tabppanel"
+                        class="tabpanel-content">
+                <vbox flex="1">
+                  <hbox id="headers-summary-url"
+                        class="tabpanel-summary-container"
+                        align="center">
+                    <label class="plain tabpanel-summary-label"
+                           value="&netmonitorUI.summary.url;"/>
+                    <label id="headers-summary-url-value"
+                           class="plain tabpanel-summary-value devtools-monospace"
+                           crop="end"
+                           flex="1"/>
+                  </hbox>
+                  <hbox id="headers-summary-method"
+                        class="tabpanel-summary-container"
+                        align="center">
+                    <label class="plain tabpanel-summary-label"
+                           value="&netmonitorUI.summary.method;"/>
+                    <label id="headers-summary-method-value"
+                           class="plain tabpanel-summary-value devtools-monospace"
+                           crop="end"
+                           flex="1"/>
+                  </hbox>
+                  <hbox id="headers-summary-status"
+                        class="tabpanel-summary-container"
+                        align="center">
+                    <label class="plain tabpanel-summary-label"
+                           value="&netmonitorUI.summary.status;"/>
+                    <box id="headers-summary-status-circle"
+                         class="requests-menu-status"/>
+                    <label id="headers-summary-status-value"
+                           class="plain tabpanel-summary-value devtools-monospace"
+                           crop="end"
+                           flex="1"/>
+                    <button id="headers-summary-resend"
+                            class="devtools-toolbarbutton"
+                            label="&netmonitorUI.summary.editAndResend;"/>
+                  </hbox>
+                  <hbox id="headers-summary-version"
+                        class="tabpanel-summary-container"
+                        align="center">
+                    <label class="plain tabpanel-summary-label"
+                           value="&netmonitorUI.summary.version;"/>
+                    <label id="headers-summary-version-value"
+                           class="plain tabpanel-summary-value devtools-monospace"
+                           crop="end"
+                           flex="1"/>
+                  </hbox>
+                  <vbox id="all-headers" flex="1"/>
+                </vbox>
+              </tabpanel>
+              <tabpanel id="cookies-tabpanel"
+                        class="tabpanel-content">
+                <vbox flex="1">
+                  <vbox id="all-cookies" flex="1"/>
+                </vbox>
+              </tabpanel>
+              <tabpanel id="params-tabpanel"
+                        class="tabpanel-content">
+                <vbox flex="1">
+                  <vbox id="request-params-box" flex="1" hidden="true">
+                    <vbox id="request-params" flex="1"/>
+                  </vbox>
+                  <vbox id="request-post-data-textarea-box" flex="1" hidden="true">
+                    <vbox id="request-post-data-textarea" flex="1"/>
+                  </vbox>
+                </vbox>
+              </tabpanel>
+              <tabpanel id="response-tabpanel"
+                        class="tabpanel-content">
+                <vbox flex="1">
+                  <label id="response-content-info-header"/>
+                  <vbox id="response-content-json-box" flex="1" hidden="true">
+                    <vbox id="response-content-json" flex="1"/>
+                  </vbox>
+                  <vbox id="response-content-textarea-box" flex="1" hidden="true">
+                    <vbox id="response-content-textarea" flex="1"/>
+                  </vbox>
+                  <vbox id="response-content-image-box" flex="1" hidden="true">
+                    <image id="response-content-image"/>
+                    <hbox>
+                      <label class="plain tabpanel-summary-label"
+                             value="&netmonitorUI.response.name;"/>
+                      <label id="response-content-image-name-value"
+                             class="plain tabpanel-summary-value devtools-monospace"
+                             crop="end"
+                             flex="1"/>
+                    </hbox>
+                    <hbox>
+                      <label class="plain tabpanel-summary-label"
+                             value="&netmonitorUI.response.dimensions;"/>
+                      <label id="response-content-image-dimensions-value"
+                             class="plain tabpanel-summary-value devtools-monospace"
+                             crop="end"
+                             flex="1"/>
+                    </hbox>
+                    <hbox>
+                      <label class="plain tabpanel-summary-label"
+                             value="&netmonitorUI.response.mime;"/>
+                      <label id="response-content-image-mime-value"
+                             class="plain tabpanel-summary-value devtools-monospace"
+                             crop="end"
+                             flex="1"/>
+                    </hbox>
+                    <hbox>
+                      <label class="plain tabpanel-summary-label"
+                             value="&netmonitorUI.response.encoding;"/>
+                      <label id="response-content-image-encoding-value"
+                             class="plain tabpanel-summary-value devtools-monospace"
+                             crop="end"
+                             flex="1"/>
+                    </hbox>
+                  </vbox>
+                </vbox>
+              </tabpanel>
+              <tabpanel id="timings-tabpanel"
+                        class="tabpanel-content">
+                <vbox flex="1">
+                  <hbox id="timings-summary-blocked"
+                        class="tabpanel-summary-container"
+                        align="center">
+                    <label class="plain tabpanel-summary-label"
+                           value="&netmonitorUI.timings.blocked;"/>
+                    <hbox class="requests-menu-timings-box blocked"/>
+                    <label class="plain requests-menu-timings-total"/>
+                  </hbox>
+                  <hbox id="timings-summary-dns"
+                        class="tabpanel-summary-container"
+                        align="center">
+                    <label class="plain tabpanel-summary-label"
+                           value="&netmonitorUI.timings.dns;"/>
+                    <hbox class="requests-menu-timings-box dns"/>
+                    <label class="plain requests-menu-timings-total"/>
+                  </hbox>
+                  <hbox id="timings-summary-connect"
+                        class="tabpanel-summary-container"
+                        align="center">
+                    <label class="plain tabpanel-summary-label"
+                           value="&netmonitorUI.timings.connect;"/>
+                    <hbox class="requests-menu-timings-box connect"/>
+                    <label class="plain requests-menu-timings-total"/>
+                  </hbox>
+                  <hbox id="timings-summary-send"
+                        class="tabpanel-summary-container"
+                        align="center">
+                    <label class="plain tabpanel-summary-label"
+                           value="&netmonitorUI.timings.send;"/>
+                    <hbox class="requests-menu-timings-box send"/>
+                    <label class="plain requests-menu-timings-total"/>
+                  </hbox>
+                  <hbox id="timings-summary-wait"
+                        class="tabpanel-summary-container"
+                        align="center">
+                    <label class="plain tabpanel-summary-label"
+                           value="&netmonitorUI.timings.wait;"/>
+                    <hbox class="requests-menu-timings-box wait"/>
+                    <label class="plain requests-menu-timings-total"/>
+                  </hbox>
+                  <hbox id="timings-summary-receive"
+                        class="tabpanel-summary-container"
+                        align="center">
+                    <label class="plain tabpanel-summary-label"
+                           value="&netmonitorUI.timings.receive;"/>
+                    <hbox class="requests-menu-timings-box receive"/>
+                    <label class="plain requests-menu-timings-total"/>
+                  </hbox>
+                </vbox>
+              </tabpanel>
+            </tabpanels>
+          </tabbox>
+        </deck>
+      </hbox>
+
       <hbox id="requests-menu-footer">
         <button id="requests-menu-filter-all-button"
                 class="requests-menu-filter-button requests-menu-footer-button"
@@ -232,272 +484,26 @@
                 class="requests-menu-footer-button"
                 label="&netmonitorUI.footer.clear;"/>
       </hbox>
+
     </vbox>
 
-    <splitter id="network-inspector-view-splitter"
-              class="devtools-side-splitter"/>
-
-    <deck id="details-pane"
-          hidden="true">
-      <vbox id="custom-pane"
-            class="tabpanel-content">
-        <hbox align="baseline">
-          <label value="&netmonitorUI.custom.newRequest;"
-                 class="plain tabpanel-summary-label
-                        custom-header"/>
-          <hbox flex="1" pack="end">
-            <button id="custom-request-send-button"
-                    class="devtools-toolbarbutton"
-                    label="&netmonitorUI.custom.send;"/>
-            <button id="custom-request-close-button"
-                    class="devtools-toolbarbutton"
-                    label="&netmonitorUI.custom.cancel;"/>
-          </hbox>
-        </hbox>
-        <hbox id="custom-method-and-url"
-              class="tabpanel-summary-container"
-              align="center">
-          <textbox id="custom-method-value"
-                   data-key="method"/>
-          <textbox id="custom-url-value"
-                   flex="1"
-                   data-key="url"/>
-        </hbox>
-        <vbox id="custom-query"
-              class="tabpanel-summary-container custom-section">
-          <label class="plain tabpanel-summary-label"
-                 value="&netmonitorUI.custom.query;"/>
-          <textbox id="custom-query-value"
-                   class="tabpanel-summary-input"
-                   multiline="true"
-                   rows="4"
-                   wrap="off"
-                   data-key="query"/>
-        </vbox>
-        <vbox id="custom-headers"
-              class="tabpanel-summary-container custom-section">
-          <label class="plain tabpanel-summary-label"
-                 value="&netmonitorUI.custom.headers;"/>
-          <textbox id="custom-headers-value"
-                   class="tabpanel-summary-input"
-                   multiline="true"
-                   rows="8"
-                   wrap="off"
-                   data-key="headers"/>
-        </vbox>
-        <vbox id="custom-postdata"
-              class="tabpanel-summary-container custom-section">
-          <label class="plain tabpanel-summary-label"
-                 value="&netmonitorUI.custom.postData;"/>
-          <textbox id="custom-postdata-value"
-                   class="tabpanel-summary-input"
-                   multiline="true"
-                   rows="6"
-                   wrap="off"
-                   data-key="body"/>
-        </vbox>
-      </vbox>
-      <tabbox id="event-details-pane"
-              class="devtools-sidebar-tabs"
-              handleCtrlTab="false">
-        <tabs>
-          <tab label="&netmonitorUI.tab.headers;"/>
-          <tab label="&netmonitorUI.tab.cookies;"/>
-          <tab label="&netmonitorUI.tab.params;"/>
-          <tab label="&netmonitorUI.tab.response;"/>
-          <tab label="&netmonitorUI.tab.timings;"/>
-        </tabs>
-        <tabpanels flex="1">
-          <tabpanel id="headers-tabppanel"
-                    class="tabpanel-content">
-            <vbox flex="1">
-              <hbox id="headers-summary-url"
-                    class="tabpanel-summary-container"
-                    align="center">
-                <label class="plain tabpanel-summary-label"
-                       value="&netmonitorUI.summary.url;"/>
-                <label id="headers-summary-url-value"
-                       class="plain tabpanel-summary-value devtools-monospace"
-                       crop="end"
-                       flex="1"/>
-              </hbox>
-              <hbox id="headers-summary-method"
-                    class="tabpanel-summary-container"
-                    align="center">
-                <label class="plain tabpanel-summary-label"
-                       value="&netmonitorUI.summary.method;"/>
-                <label id="headers-summary-method-value"
-                       class="plain tabpanel-summary-value devtools-monospace"
-                       crop="end"
-                       flex="1"/>
-              </hbox>
-              <hbox id="headers-summary-status"
-                    class="tabpanel-summary-container"
-                    align="center">
-                <label class="plain tabpanel-summary-label"
-                       value="&netmonitorUI.summary.status;"/>
-                <box id="headers-summary-status-circle"
-                     class="requests-menu-status"/>
-                <label id="headers-summary-status-value"
-                       class="plain tabpanel-summary-value devtools-monospace"
-                       crop="end"
-                       flex="1"/>
-                <button id="headers-summary-resend"
-                        class="devtools-toolbarbutton"
-                        label="&netmonitorUI.summary.editAndResend;"/>
-              </hbox>
-              <hbox id="headers-summary-version"
-                    class="tabpanel-summary-container"
-                    align="center">
-                <label class="plain tabpanel-summary-label"
-                       value="&netmonitorUI.summary.version;"/>
-                <label id="headers-summary-version-value"
-                       class="plain tabpanel-summary-value devtools-monospace"
-                       crop="end"
-                       flex="1"/>
-              </hbox>
-              <vbox id="all-headers" flex="1"/>
-            </vbox>
-          </tabpanel>
-          <tabpanel id="cookies-tabpanel"
-                    class="tabpanel-content">
-            <vbox flex="1">
-              <vbox id="all-cookies" flex="1"/>
-            </vbox>
-          </tabpanel>
-          <tabpanel id="params-tabpanel"
-                    class="tabpanel-content">
-            <vbox flex="1">
-              <vbox id="request-params-box" flex="1" hidden="true">
-                <vbox id="request-params" flex="1"/>
-              </vbox>
-              <vbox id="request-post-data-textarea-box" flex="1" hidden="true">
-                <vbox id="request-post-data-textarea" flex="1"/>
-              </vbox>
-            </vbox>
-          </tabpanel>
-          <tabpanel id="response-tabpanel"
-                    class="tabpanel-content">
-            <vbox flex="1">
-              <label id="response-content-info-header"/>
-              <vbox id="response-content-json-box" flex="1" hidden="true">
-                <vbox id="response-content-json" flex="1"/>
-              </vbox>
-              <vbox id="response-content-textarea-box" flex="1" hidden="true">
-                <vbox id="response-content-textarea" flex="1"/>
-              </vbox>
-              <vbox id="response-content-image-box" flex="1" hidden="true">
-                <image id="response-content-image"/>
-                <hbox>
-                  <label class="plain tabpanel-summary-label"
-                         value="&netmonitorUI.response.name;"/>
-                  <label id="response-content-image-name-value"
-                         class="plain tabpanel-summary-value devtools-monospace"
-                         crop="end"
-                         flex="1"/>
-                </hbox>
-                <hbox>
-                  <label class="plain tabpanel-summary-label"
-                         value="&netmonitorUI.response.dimensions;"/>
-                  <label id="response-content-image-dimensions-value"
-                         class="plain tabpanel-summary-value devtools-monospace"
-                         crop="end"
-                         flex="1"/>
-                </hbox>
-                <hbox>
-                  <label class="plain tabpanel-summary-label"
-                         value="&netmonitorUI.response.mime;"/>
-                  <label id="response-content-image-mime-value"
-                         class="plain tabpanel-summary-value devtools-monospace"
-                         crop="end"
-                         flex="1"/>
-                </hbox>
-                <hbox>
-                  <label class="plain tabpanel-summary-label"
-                         value="&netmonitorUI.response.encoding;"/>
-                  <label id="response-content-image-encoding-value"
-                         class="plain tabpanel-summary-value devtools-monospace"
-                         crop="end"
-                         flex="1"/>
-                </hbox>
-              </vbox>
-            </vbox>
-          </tabpanel>
-          <tabpanel id="timings-tabpanel"
-                    class="tabpanel-content">
-            <vbox flex="1">
-              <hbox id="timings-summary-blocked"
-                    class="tabpanel-summary-container"
-                    align="center">
-                <label class="plain tabpanel-summary-label"
-                       value="&netmonitorUI.timings.blocked;"/>
-                <hbox class="requests-menu-timings-box blocked"/>
-                <label class="plain requests-menu-timings-total"/>
-              </hbox>
-              <hbox id="timings-summary-dns"
-                    class="tabpanel-summary-container"
-                    align="center">
-                <label class="plain tabpanel-summary-label"
-                       value="&netmonitorUI.timings.dns;"/>
-                <hbox class="requests-menu-timings-box dns"/>
-                <label class="plain requests-menu-timings-total"/>
-              </hbox>
-              <hbox id="timings-summary-connect"
-                    class="tabpanel-summary-container"
-                    align="center">
-                <label class="plain tabpanel-summary-label"
-                       value="&netmonitorUI.timings.connect;"/>
-                <hbox class="requests-menu-timings-box connect"/>
-                <label class="plain requests-menu-timings-total"/>
-              </hbox>
-              <hbox id="timings-summary-send"
-                    class="tabpanel-summary-container"
-                    align="center">
-                <label class="plain tabpanel-summary-label"
-                       value="&netmonitorUI.timings.send;"/>
-                <hbox class="requests-menu-timings-box send"/>
-                <label class="plain requests-menu-timings-total"/>
-              </hbox>
-              <hbox id="timings-summary-wait"
-                    class="tabpanel-summary-container"
-                    align="center">
-                <label class="plain tabpanel-summary-label"
-                       value="&netmonitorUI.timings.wait;"/>
-                <hbox class="requests-menu-timings-box wait"/>
-                <label class="plain requests-menu-timings-total"/>
-              </hbox>
-              <hbox id="timings-summary-receive"
-                    class="tabpanel-summary-container"
-                    align="center">
-                <label class="plain tabpanel-summary-label"
-                       value="&netmonitorUI.timings.receive;"/>
-                <hbox class="requests-menu-timings-box receive"/>
-                <label class="plain requests-menu-timings-total"/>
-              </hbox>
-            </vbox>
-          </tabpanel>
-        </tabpanels>
-      </tabbox>
-    </deck>
-  </box>
-
-  <box id="network-statistics-view">
-    <toolbar id="network-statistics-toolbar"
-             class="devtools-toolbar">
-      <button id="network-statistics-back-button"
-              class="devtools-toolbarbutton"
-              onclick="NetMonitorView.toggleFrontendMode()"
-              label="&netmonitorUI.backButton;"/>
-    </toolbar>
-    <box id="network-statistics-charts"
-         class="devtools-responsive-container"
-         flex="1">
-      <vbox id="primed-cache-chart" pack="center" flex="1"/>
-      <splitter id="network-statistics-view-splitter"
-                class="devtools-side-splitter"/>
-      <vbox id="empty-cache-chart" pack="center" flex="1"/>
+    <box id="network-statistics-view">
+      <toolbar id="network-statistics-toolbar"
+               class="devtools-toolbar">
+        <button id="network-statistics-back-button"
+                class="devtools-toolbarbutton"
+                onclick="NetMonitorView.toggleFrontendMode()"
+                label="&netmonitorUI.backButton;"/>
+      </toolbar>
+      <box id="network-statistics-charts"
+           class="devtools-responsive-container"
+           flex="1">
+        <vbox id="primed-cache-chart" pack="center" flex="1"/>
+        <splitter id="network-statistics-view-splitter"
+                  class="devtools-side-splitter"/>
+        <vbox id="empty-cache-chart" pack="center" flex="1"/>
+      </box>
     </box>
-  </box>
 
   </deck>
 
