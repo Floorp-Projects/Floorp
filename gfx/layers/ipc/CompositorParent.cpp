@@ -318,7 +318,7 @@ CompositorParent::RecvMakeSnapshot(const SurfaceDescriptor& aInSnapshot,
   // do better if AutoOpenSurface uses Moz2D directly.
   RefPtr<DrawTarget> target =
     gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(opener.Get(), size);
-  ComposeToTarget(target);
+  ForceComposeToTarget(target);
   *aOutSnapshot = aInSnapshot;
   return true;
 }
@@ -330,7 +330,7 @@ CompositorParent::RecvFlushRendering()
   // and do it immediately instead.
   if (mCurrentCompositeTask) {
     mCurrentCompositeTask->Cancel();
-    ComposeToTarget(nullptr);
+    ForceComposeToTarget(nullptr);
   }
   return true;
 }
@@ -433,7 +433,7 @@ CompositorParent::ResumeComposition()
 
   mPaused = false;
 
-  Composite(nullptr);
+  Composite();
 
   // if anyone's waiting to make sure that composition really got resumed, tell them
   lock.NotifyAll();
@@ -565,7 +565,7 @@ CompositorParent::ScheduleComposition()
   mExpectedComposeTime = TimeStamp::Now() + minFrameDelta;
 #endif
 
-  mCurrentCompositeTask = NewRunnableMethod(this, &CompositorParent::Composite, nullptr);
+  mCurrentCompositeTask = NewRunnableMethod(this, &CompositorParent::Composite);
 
   if (!initialComposition && delta < minFrameDelta) {
     TimeDuration delay = minFrameDelta - delta;
@@ -579,7 +579,13 @@ CompositorParent::ScheduleComposition()
 }
 
 void
-CompositorParent::Composite(DrawTarget* aTarget)
+CompositorParent::Composite()
+{
+  CompositeToTarget(nullptr);
+}
+
+void
+CompositorParent::CompositeToTarget(DrawTarget* aTarget)
 {
   profiler_tracing("Paint", "Composite", TRACING_INTERVAL_START);
   PROFILER_LABEL("CompositorParent", "Composite");
@@ -651,13 +657,13 @@ CompositorParent::Composite(DrawTarget* aTarget)
 }
 
 void
-CompositorParent::ComposeToTarget(DrawTarget* aTarget)
+CompositorParent::ForceComposeToTarget(DrawTarget* aTarget)
 {
-  PROFILER_LABEL("CompositorParent", "ComposeToTarget");
+  PROFILER_LABEL("CompositorParent", "ForceComposeToTarget");
   AutoRestore<bool> override(mOverrideComposeReadiness);
   mOverrideComposeReadiness = true;
 
-  Composite(aTarget);
+  CompositeToTarget(aTarget);
 }
 
 bool
