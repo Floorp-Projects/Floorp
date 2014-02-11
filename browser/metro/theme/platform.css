@@ -640,10 +640,12 @@ tabmodalprompt:not([promptType="promptUserAndPass"]) .infoContainer {
 
 .meta {
   background-color: @panel_light_color@;
+  /* bug 969354
   background-image: url("chrome://browser/skin/images/firefox-watermark.png");
   background-repeat: no-repeat;
   background-position: center center;
   background-attachment: fixed;
+  */
 }
 
 /* needs to observe the viewstate */
