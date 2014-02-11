@@ -46,6 +46,8 @@
 #include "nsIWebBrowser.h"
 #include "nsIDocShell.h"
 
+#include "EventTracer.h"
+
 using namespace mozilla;
 
 // Default URL for the hidden window, can be overridden by a pref on Mac
@@ -865,4 +867,18 @@ nsAppShellService::Observe(nsISupports* aSubject, const char *aTopic,
   }
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAppShellService::StartEventLoopLagTracking(bool* aResult)
+{
+    *aResult = mozilla::InitEventTracing(true);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAppShellService::StopEventLoopLagTracking()
+{
+    mozilla::ShutdownEventTracing();
+    return NS_OK;
 }
