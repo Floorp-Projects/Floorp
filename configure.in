@@ -3848,6 +3848,7 @@ MOZ_SAMPLE_TYPE_FLOAT32=
 MOZ_SAMPLE_TYPE_S16=
 MOZ_OPUS=1
 MOZ_WEBM=1
+MOZ_GSTREAMER=
 MOZ_DIRECTSHOW=
 MOZ_WMF=
 MOZ_FMP4=
@@ -5480,44 +5481,59 @@ WINNT|Darwin|Android)
     ;;
 *)
     MOZ_GSTREAMER=1
+    GST_API_VERSION=0.10
     ;;
 esac
 
-MOZ_ARG_ENABLE_BOOL(gstreamer,
-[  --enable-gstreamer           Enable GStreamer support],
-MOZ_GSTREAMER=1,
-MOZ_GSTREAMER=)
-
-if test "$MOZ_GSTREAMER"; then
-    # API version, eg 0.10, 1.0 etc
+MOZ_ARG_ENABLE_STRING(gstreamer,
+[  --enable-gstreamer[=0.10]           Enable GStreamer support],
+[ MOZ_GSTREAMER=1
+  # API version, eg 0.10, 1.0 etc
+  if test -z "$enableval" -o "$enableval" = "yes"; then
     GST_API_VERSION=0.10
+  else
+    GST_API_VERSION=$enableval
+  fi],
+)
+
+if test -n "$MOZ_GSTREAMER"; then
     # core/base release number
-    GST_VERSION=0.10.25
+    if test "$GST_API_VERSION" = "1.0"; then
+      GST_VERSION=1.0
+    else
+      GST_VERSION=0.10.25
+    fi
+
     PKG_CHECK_MODULES(GSTREAMER,
                       gstreamer-$GST_API_VERSION >= $GST_VERSION
                       gstreamer-app-$GST_API_VERSION
-                      gstreamer-plugins-base-$GST_API_VERSION, ,
-                      AC_MSG_ERROR([gstreamer and gstreamer-plugins-base development packages are needed to build gstreamer backend. Install them or disable gstreamer support with --disable-gstreamer]))
-    if test -n "$GSTREAMER_LIBS"; then
-       _SAVE_LDFLAGS=$LDFLAGS
-       LDFLAGS="$LDFLAGS $GSTREAMER_LIBS -lgstvideo-$GST_API_VERSION"
-       AC_TRY_LINK(,[return 0;],_HAVE_LIBGSTVIDEO=1,_HAVE_LIBGSTVIDEO=)
-       if test -n "$_HAVE_LIBGSTVIDEO" ; then
-          GSTREAMER_LIBS="$GSTREAMER_LIBS -lgstvideo-$GST_API_VERSION"
-       else
-          AC_MSG_ERROR([gstreamer-plugins-base found, but no libgstvideo. Something has gone terribly wrong. Try reinstalling gstreamer-plugins-base; failing that, disable the gstreamer backend with --disable-gstreamer.])
-       fi
-       LDFLAGS=$_SAVE_LDFLAGS
-    else
-       AC_MSG_ERROR([gstreamer and gstreamer-plugins-base development packages are needed to build gstreamer backend. Install them or disable gstreamer support with --disable-gstreamer])
+                      gstreamer-plugins-base-$GST_API_VERSION,
+                      [_HAVE_GSTREAMER=1],
+                      [_HAVE_GSTREAMER=])
+    if test -z "$_HAVE_GSTREAMER"; then
+        AC_MSG_ERROR([gstreamer and gstreamer-plugins-base development packages are needed to build gstreamer backend. Install them or disable gstreamer support with --disable-gstreamer])
     fi
+
+    _SAVE_LDFLAGS=$LDFLAGS
+    LDFLAGS="$LDFLAGS $GSTREAMER_LIBS -lgstvideo-$GST_API_VERSION"
+    AC_TRY_LINK(,[return 0;],_HAVE_LIBGSTVIDEO=1,_HAVE_LIBGSTVIDEO=)
+    if test -n "$_HAVE_LIBGSTVIDEO" ; then
+        GSTREAMER_LIBS="$GSTREAMER_LIBS -lgstvideo-$GST_API_VERSION"
+    else
+        AC_MSG_ERROR([gstreamer-plugins-base found, but no libgstvideo. Something has gone terribly wrong. Try reinstalling gstreamer-plugins-base; failing that, disable the gstreamer backend with --disable-gstreamer.])
+    fi
+    LDFLAGS=$_SAVE_LDFLAGS
+
+    AC_SUBST(GSTREAMER_CFLAGS)
+    AC_SUBST(GSTREAMER_LIBS)
 fi
-AC_SUBST(GSTREAMER_CFLAGS)
-AC_SUBST(GSTREAMER_LIBS)
+
 AC_SUBST(MOZ_GSTREAMER)
+AC_SUBST(GST_API_VERSION)
 
 if test -n "$MOZ_GSTREAMER"; then
-   AC_DEFINE(MOZ_GSTREAMER)
+     AC_DEFINE(MOZ_GSTREAMER)
+     AC_DEFINE_UNQUOTED(GST_API_VERSION, "$GST_API_VERSION")
 fi
 
 
