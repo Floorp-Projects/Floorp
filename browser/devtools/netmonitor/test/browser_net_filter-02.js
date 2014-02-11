@@ -53,6 +53,12 @@ function test() {
           return testContents([1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0]);
         })
         .then(() => {
+          info("Resetting filters.");
+          EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-all-button"));
+          testButtons("all");
+          return testContents([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
+        })
+        .then(() => {
           return teardown(aMonitor);
         })
         .then(finish);
