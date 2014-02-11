@@ -3351,26 +3351,11 @@ gfxASurface *nsWindow::GetThebesSurface()
   if (mPaintDC)
     return (new gfxWindowsSurface(mPaintDC));
 
-#ifdef CAIRO_HAS_D2D_SURFACE
-  if (gfxWindowsPlatform::GetPlatform()->GetRenderMode() ==
-      gfxWindowsPlatform::RENDER_DIRECT2D) {
-    gfxContentType content = gfxContentType::COLOR;
-#if defined(MOZ_XUL)
-    if (mTransparencyMode != eTransparencyOpaque) {
-      content = gfxContentType::COLOR_ALPHA;
-    }
-#endif
-    return (new gfxD2DSurface(mWnd, content));
-  } else {
-#endif
-    uint32_t flags = gfxWindowsSurface::FLAG_TAKE_DC;
-    if (mTransparencyMode != eTransparencyOpaque) {
-        flags |= gfxWindowsSurface::FLAG_IS_TRANSPARENT;
-    }
-    return (new gfxWindowsSurface(mWnd, flags));
-#ifdef CAIRO_HAS_D2D_SURFACE
+  uint32_t flags = gfxWindowsSurface::FLAG_TAKE_DC;
+  if (mTransparencyMode != eTransparencyOpaque) {
+      flags |= gfxWindowsSurface::FLAG_IS_TRANSPARENT;
   }
-#endif
+  return (new gfxWindowsSurface(mWnd, flags));
 }
 
 /**************************************************************
@@ -6751,21 +6736,10 @@ void nsWindow::ResizeTranslucentWindow(int32_t aNewWidth, int32_t aNewHeight, bo
   if (!force && aNewWidth == mBounds.width && aNewHeight == mBounds.height)
     return;
 
-#ifdef CAIRO_HAS_D2D_SURFACE
-  if (gfxWindowsPlatform::GetPlatform()->GetRenderMode() ==
-      gfxWindowsPlatform::RENDER_DIRECT2D) {
-    nsRefPtr<gfxD2DSurface> newSurface =
-      new gfxD2DSurface(gfxIntSize(aNewWidth, aNewHeight), gfxImageFormat::ARGB32);
-    mTransparentSurface = newSurface;
-    mMemoryDC = nullptr;
-  } else
-#endif
-  {
-    nsRefPtr<gfxWindowsSurface> newSurface =
-      new gfxWindowsSurface(gfxIntSize(aNewWidth, aNewHeight), gfxImageFormat::ARGB32);
-    mTransparentSurface = newSurface;
-    mMemoryDC = newSurface->GetDC();
-  }
+  nsRefPtr<gfxWindowsSurface> newSurface =
+    new gfxWindowsSurface(gfxIntSize(aNewWidth, aNewHeight), gfxImageFormat::ARGB32);
+  mTransparentSurface = newSurface;
+  mMemoryDC = newSurface->GetDC();
 }
 
 void nsWindow::SetWindowTranslucencyInner(nsTransparencyMode aMode)
@@ -6857,13 +6831,6 @@ nsresult nsWindow::UpdateTranslucentWindow()
   RECT winRect;
   ::GetWindowRect(hWnd, &winRect);
 
-#ifdef CAIRO_HAS_D2D_SURFACE
-  if (gfxWindowsPlatform::GetPlatform()->GetRenderMode() ==
-      gfxWindowsPlatform::RENDER_DIRECT2D) {
-    mMemoryDC = static_cast<gfxD2DSurface*>(mTransparentSurface.get())->
-      GetDC(true);
-  }
-#endif
   // perform the alpha blend
   bool updateSuccesful = 
     ::UpdateLayeredWindow(hWnd, nullptr, (POINT*)&winRect, &winSize, mMemoryDC,
