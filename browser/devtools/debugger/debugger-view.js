@@ -388,7 +388,8 @@ let DebuggerView = {
     this._setEditorText(L10N.getStr("loadingText"));
     this._editorSource = { url: aSource.url, promise: deferred.promise };
 
-    DebuggerController.SourceScripts.getText(aSource).then(([, aText]) => {
+    DebuggerController.SourceScripts.getText(aSource)
+                                    .then(([, aText, aContentType]) => {
       // Avoid setting an unexpected source. This may happen when switching
       // very fast between sources that haven't been fetched yet.
       if (this._editorSource.url != aSource.url) {
@@ -396,7 +397,7 @@ let DebuggerView = {
       }
 
       this._setEditorText(aText);
-      this._setEditorMode(aSource.url, aSource.contentType, aText);
+      this._setEditorMode(aSource.url, aContentType, aText);
 
       // Synchronize any other components with the currently displayed source.
       DebuggerView.Sources.selectedValue = aSource.url;
@@ -406,7 +407,7 @@ let DebuggerView = {
 
       // Resolve and notify that a source file was shown.
       window.emit(EVENTS.SOURCE_SHOWN, aSource);
-      deferred.resolve([aSource, aText]);
+      deferred.resolve([aSource, aText, aContentType]);
     },
     ([, aError]) => {
       let msg = L10N.getStr("errorLoadingText") + DevToolsUtils.safeErrorString(aError);
@@ -466,10 +467,14 @@ let DebuggerView = {
 
     // Make sure the requested source client is shown in the editor, then
     // update the source editor's caret position and debug location.
-    return this._setEditorSource(sourceForm, aFlags).then(() => {
+    return this._setEditorSource(sourceForm, aFlags)
+               .then(([,, aContentType]) => {
+      // Record the contentType learned from fetching
+      sourceForm.contentType = aContentType;
       // Line numbers in the source editor should start from 1. If invalid
       // or not specified, then don't do anything.
       if (aLine < 1) {
+        window.emit(EVENTS.EDITOR_LOCATION_SET);
         return;
       }
       if (aFlags.charOffset) {
@@ -485,6 +490,7 @@ let DebuggerView = {
       if (!aFlags.noDebug) {
         this.editor.setDebugLocation(aLine - 1);
       }
+      window.emit(EVENTS.EDITOR_LOCATION_SET);
     }).then(null, console.error);
   },
 
