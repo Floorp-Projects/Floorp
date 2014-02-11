@@ -339,8 +339,7 @@ js::fun_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
                 setter = JS_StrictPropertyStub;
             }
 
-            RootedValue value(cx, UndefinedValue());
-            if (!DefineNativeProperty(cx, fun, id, value, getter, setter,
+            if (!DefineNativeProperty(cx, fun, id, UndefinedHandleValue, getter, setter,
                                       attrs, 0, 0)) {
                 return false;
             }

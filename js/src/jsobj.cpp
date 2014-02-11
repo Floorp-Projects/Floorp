@@ -581,13 +581,12 @@ DefinePropertyOnObject(JSContext *cx, HandleObject obj, HandleId id, const PropD
 
         JS_ASSERT(desc.isAccessorDescriptor());
 
-        RootedValue tmp(cx, UndefinedValue());
-        return baseops::DefineGeneric(cx, obj, id, tmp,
+        return baseops::DefineGeneric(cx, obj, id, UndefinedHandleValue,
                                       desc.getter(), desc.setter(), desc.attributes());
     }
 
     /* 8.12.9 steps 5-6 (note 5 is merely a special case of 6). */
-    RootedValue v(cx, UndefinedValue());
+    RootedValue v(cx);
 
     JS_ASSERT(obj == obj2);
 
@@ -3330,7 +3329,7 @@ js_FindClassObject(ExclusiveContext *cx, MutableHandleObject protop, const Class
     RootedShape shape(cx);
     if (!LookupPropertyWithFlags(cx, cx->global(), id, 0, &pobj, &shape))
         return false;
-    RootedValue v(cx, UndefinedValue());
+    RootedValue v(cx);
     if (shape && pobj->isNative()) {
         if (shape->hasSlot())
             v = pobj->nativeGetSlot(shape->slot());
