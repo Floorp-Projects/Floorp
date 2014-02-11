@@ -287,7 +287,6 @@ if test -n "$gonkdir" ; then
     AC_SUBST(ANDROID_VERSION)
     AC_DEFINE(HAVE_SYS_UIO_H)
     AC_DEFINE(HAVE_PTHREADS)
-    CROSS_COMPILE=1
     MOZ_CHROME_FILE_FORMAT=omni
     direct_nspr_config=1
 else
@@ -314,16 +313,13 @@ AC_SUBST(OBJCOPY)
 dnl ========================================================
 dnl Checks for compilers.
 dnl ========================================================
-dnl Set CROSS_COMPILE in the environment when running configure
-dnl to use the cross-compile setup for now
-dnl ========================================================
 
 dnl AR_FLAGS set here so HOST_AR_FLAGS can be set correctly (see bug 538269)
 AR_FLAGS='crs $@'
 
 if test "$COMPILE_ENVIRONMENT"; then
 
-if test -n "$CROSS_COMPILE" -a "$target" != "$host"; then
+if test "$target" != "$host"; then
     MOZ_CROSS_COMPILER
 else
     AC_PROG_CC
