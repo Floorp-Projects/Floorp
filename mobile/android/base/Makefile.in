@@ -81,8 +81,8 @@ include $(topsrcdir)/config/config.mk
 # because Android resource classes must be compiled together in order to avoid overlapping resource
 # indices.
 
-classes.dex: .proguard.deps
-	$(REPORT_BUILD)
+classes.dex: proguard-jars
+	@echo 'DX classes.dex'
 	$(DX) --dex --output=classes.dex jars-proguarded $(ANDROID_COMPAT_LIB)
 
 ifdef MOZ_DISABLE_PROGUARD
@@ -95,15 +95,8 @@ else
   endif
 endif
 
-.proguard.deps: $(ALL_JARS)
-	$(REPORT_BUILD)
-	java -jar $(ANDROID_SDK_ROOT)/tools/proguard/lib/proguard.jar \
-		@$(topsrcdir)/mobile/android/config/proguard.cfg \
-		-optimizationpasses $(PROGUARD_PASSES) \
-		-injars $(subst ::,:,$(subst $(NULL) ,:,$(strip $(ALL_JARS)))) \
-		-outjars jars-proguarded \
-		-libraryjars $(ANDROID_SDK)/android.jar:$(ANDROID_COMPAT_LIB)
-	@$(TOUCH) $@
+proguard-jars: $(ALL_JARS)
+	java -jar $(ANDROID_SDK_ROOT)/tools/proguard/lib/proguard.jar @$(topsrcdir)/mobile/android/config/proguard.cfg -optimizationpasses $(PROGUARD_PASSES) -injars $(subst ::,:,$(subst $(NULL) ,:,$(strip $(ALL_JARS)))) -outjars jars-proguarded -libraryjars $(ANDROID_SDK)/android.jar:$(ANDROID_COMPAT_LIB)
 
 CLASSES_WITH_JNI= \
     org.mozilla.gecko.GeckoAppShell \
@@ -228,7 +221,7 @@ all_resources = \
 # All of generated/org/mozilla/gecko/R.java, gecko.ap_, and R.txt are
 # produced by aapt; this saves aapt invocations.
 
-$(CURDIR)/$(gecko_package_dir)/R.java: .aapt.deps
+$(gecko_package_dir)/R.java: .aapt.deps
 gecko.ap_: .aapt.deps
 R.txt: .aapt.deps
 
@@ -237,7 +230,7 @@ R.txt: .aapt.deps
 # resources are fresh.  The alternative would be complicated; see
 # [Comment 1/3].
 
-$(CURDIR)/gecko-nodeps/R.java: .aapt.nodeps
+gecko-nodeps/R.java: .aapt.nodeps
 gecko-nodeps.ap_: .aapt.nodeps
 gecko-nodeps/R.txt: .aapt.nodeps
 
@@ -248,7 +241,6 @@ gecko-nodeps/R.txt: .aapt.nodeps
 # 5: directory to write R.txt into.
 define aapt_command
 $(1): $$(call mkdir_deps,$(filter-out ./,$(dir $(3) $(4) $(5)))) $(2)
-	$$(REPORT_BUILD)
 	$$(AAPT) package -f -M AndroidManifest.xml -I $$(ANDROID_SDK)/android.jar \
 		--auto-add-overlay \
 		$$(addprefix -S ,$$(ANDROID_RES_DIRS)) \
@@ -272,8 +264,7 @@ $(eval $(call aapt_command,.aapt.deps,$(all_resources),gecko.ap_,$(gecko_package
 # .aapt.nodeps: $(CURDIR)/AndroidManifest.xml FORCE
 $(eval $(call aapt_command,.aapt.nodeps,$(CURDIR)/AndroidManifest.xml FORCE,gecko-nodeps.ap_,gecko-nodeps/,gecko-nodeps/))
 
-fennec_ids.txt: $(CURDIR)/$(gecko_package_dir)/R.java fennec-ids-generator.py
-	$(REPORT_BUILD)
+fennec_ids.txt: $(gecko_package_dir)/R.java fennec-ids-generator.py
 	$(PYTHON) $(topsrcdir)/mobile/android/base/fennec-ids-generator.py -i $< -o $@
 
 # Override the Java settings with some specific android settings
