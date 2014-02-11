@@ -39,6 +39,9 @@ pref("metro.private_browsing.enabled", false);
 // Enable tab-modal prompts
 pref("prompts.tab_modal.enabled", true);
 
+// NewTabUtils pref related to top site thumbnail updating.
+pref("browser.newtabpage.enabled", true);
+
 // Enable off main thread compositing
 pref("layers.offmainthreadcomposition.enabled", true);
 pref("layers.async-pan-zoom.enabled", true);

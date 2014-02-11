@@ -68,19 +68,23 @@ function run_test()
   do_check_eq(Win.dirname("c:a\\b\\", options), "a\\b");
   do_check_eq(Win.dirname("c:a\\\\\\\\b", options), "a");
   do_check_eq(Win.dirname("c:abc", options), ".");
+  do_check_eq(Win.join("c:", "abc"), "c:\\abc", "join c:,abc");
 
+  do_check_eq(Win.normalize("c:"), "c:\\");
+  do_check_eq(Win.normalize("c:\\"), "c:\\");
   do_check_eq(Win.normalize("c:\\a\\b\\c"), "c:\\a\\b\\c");
   do_check_eq(Win.normalize("c:\\a\\b\\\\\\\\c"), "c:\\a\\b\\c");
   do_check_eq(Win.normalize("c:\\\\\\\\a\\b\\c"), "c:\\a\\b\\c");
   do_check_eq(Win.normalize("c:\\a\\b\\c\\\\\\"), "c:\\a\\b\\c");
   do_check_eq(Win.normalize("c:\\a\\b\\c\\..\\..\\..\\d\\e\\f"), "c:\\d\\e\\f");
-  do_check_eq(Win.normalize("c:a\\b\\c\\..\\..\\..\\d\\e\\f"), "c:d\\e\\f");
+  do_check_eq(Win.normalize("c:a\\b\\c\\..\\..\\..\\d\\e\\f"), "c:\\d\\e\\f");
   do_check_fail(function() Win.normalize("c:\\a\\b\\c\\..\\..\\..\\..\\d\\e\\f"));
 
+  do_check_eq(Win.join("c:\\", "foo"), "c:\\foo", "join c:\,foo");
   do_check_eq(Win.join("c:\\tmp", "foo", "bar"), "c:\\tmp\\foo\\bar", "join c:\\tmp,foo,bar");
   do_check_eq(Win.join("c:\\tmp", "\\foo", "bar"), "c:\\foo\\bar", "join c:\\tmp,\\foo,bar");
   do_check_eq(Win.join("c:\\tmp", "c:\\foo", "bar"), "c:\\foo\\bar", "join c:\\tmp,c:\\foo,bar");
-  do_check_eq(Win.join("c:\\tmp", "c:foo", "bar"), "c:foo\\bar", "join c:\\tmp,c:foo,bar");
+  do_check_eq(Win.join("c:\\tmp", "c:foo", "bar"), "c:\\foo\\bar", "join c:\\tmp,c:foo,bar");
   do_check_eq(Win.winGetDrive("c:"), "c:");
   do_check_eq(Win.winGetDrive("c:\\"), "c:");
   do_check_eq(Win.winGetDrive("c:abc"), "c:");
@@ -96,12 +100,13 @@ function run_test()
   do_check_eq(Win.normalize("a/b/c/../../../d/e/f"), "d\\e\\f");
 
   do_print("Forwardslash-separated, with a drive");
+  do_check_eq(Win.normalize("c:/"), "c:\\");
   do_check_eq(Win.normalize("c:/a/b/c"), "c:\\a\\b\\c");
   do_check_eq(Win.normalize("c:/a/b////c"), "c:\\a\\b\\c");
   do_check_eq(Win.normalize("c:////a/b/c"), "c:\\a\\b\\c");
   do_check_eq(Win.normalize("c:/a/b/c///"), "c:\\a\\b\\c");
   do_check_eq(Win.normalize("c:/a/b/c/../../../d/e/f"), "c:\\d\\e\\f");
-  do_check_eq(Win.normalize("c:a/b/c/../../../d/e/f"), "c:d\\e\\f");
+  do_check_eq(Win.normalize("c:a/b/c/../../../d/e/f"), "c:\\d\\e\\f");
 
   do_print("Backslash-separated, UNC-style");
   do_check_eq(Win.basename("\\\\a\\b"), "b");
