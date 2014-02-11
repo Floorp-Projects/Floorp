@@ -24,6 +24,9 @@ XPCOMUtils.defineLazyGetter(this, "NetUtil", function() {
   return NetUtil;
 });
 
+XPCOMUtils.defineLazyModuleGetter(this, "UITelemetry",
+  "resource://gre/modules/UITelemetry.jsm");
+
 // -----------------------------------------------------------------------
 // Session Store
 // -----------------------------------------------------------------------
@@ -52,6 +55,9 @@ SessionStore.prototype = {
   _maxTabsUndo: 1,
   _shouldRestore: false,
 
+  // Tab telemetry variables
+  _maxTabsOpen: 1,
+
   init: function ss_init() {
     // Get file references
     this._sessionFile = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
@@ -62,6 +68,13 @@ SessionStore.prototype = {
     this._sessionCache.append("sessionstoreCache");
 
     this._loadState = STATE_STOPPED;
+
+    try {
+      UITelemetry.addSimpleMeasureFunction("metro-tabs",
+                                          this._getTabStats.bind(this));
+    } catch (ex) {
+      // swallow exception that occurs if metro-tabs measure is already set up
+    }
 
     try {
       let shutdownWasUnclean = false;
@@ -184,6 +197,13 @@ SessionStore.prototype = {
     })
   },
 
+  _getTabStats: function() {
+    return {
+      currTabCount: this._currTabCount,
+      maxTabCount: this._maxTabsOpen
+    };
+  },
+
   observe: function ss_observe(aSubject, aTopic, aData) {
     let self = this;
     let observerService = Services.obs;
@@ -197,6 +217,7 @@ SessionStore.prototype = {
         observerService.addObserver(this, "quit-application-requested", true);
         observerService.addObserver(this, "quit-application-granted", true);
         observerService.addObserver(this, "quit-application", true);
+        observerService.addObserver(this, "reset-telemetry-vars", true);
         break;
       case "final-ui-startup":
         observerService.removeObserver(this, "final-ui-startup");
@@ -264,6 +285,7 @@ SessionStore.prototype = {
         observerService.removeObserver(this, "quit-application-requested");
         observerService.removeObserver(this, "quit-application-granted");
         observerService.removeObserver(this, "quit-application");
+        observerService.removeObserver(this, "reset-telemetry-vars");
 
         // If a save has been queued, kill the timer and save state now
         if (this._saveTimer) {
@@ -295,13 +317,24 @@ SessionStore.prototype = {
         this._saveTimer = null;
         this.saveState();
         break;
+      case "reset-telemetry-vars":
+        // Used in mochitests only.
+        this._maxTabsOpen = 1;
     }
+  },
+
+  updateTabTelemetryVars: function(window) {
+    this._currTabCount = window.Browser.tabs.length;
+      if (this._currTabCount > this._maxTabsOpen) {
+        this._maxTabsOpen = this._currTabCount;
+      }
   },
 
   handleEvent: function ss_handleEvent(aEvent) {
     let window = aEvent.currentTarget.ownerDocument.defaultView;
     switch (aEvent.type) {
       case "TabOpen":
+        this.updateTabTelemetryVars(window);
       case "TabClose": {
         let browser = aEvent.originalTarget.linkedBrowser;
         if (aEvent.type == "TabOpen") {
@@ -313,6 +346,9 @@ SessionStore.prototype = {
         }
         break;
     }
+      case "TabRemove":
+        this.updateTabTelemetryVars(window);
+        break;
       case "TabSelect": {
         let browser = aEvent.originalTarget.linkedBrowser;
         this.onTabSelect(window, browser);
@@ -361,6 +397,7 @@ SessionStore.prototype = {
     let tabContainer = aWindow.document.getElementById("tabs");
     tabContainer.addEventListener("TabOpen", this, true);
     tabContainer.addEventListener("TabClose", this, true);
+    tabContainer.addEventListener("TabRemove", this, true);
     tabContainer.addEventListener("TabSelect", this, true);
   },
 
@@ -372,6 +409,7 @@ SessionStore.prototype = {
     let tabContainer = aWindow.document.getElementById("tabs");
     tabContainer.removeEventListener("TabOpen", this, true);
     tabContainer.removeEventListener("TabClose", this, true);
+    tabContainer.removeEventListener("TabRemove", this, true);
     tabContainer.removeEventListener("TabSelect", this, true);
 
     if (this._loadState == STATE_RUNNING) {
