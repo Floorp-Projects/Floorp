@@ -5,6 +5,10 @@
 "use strict";
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
 const PREF_FXA_ENABLED = "identity.fxaccounts.enabled";
 let _fxa_enabled = false;
 try {
@@ -17,9 +21,6 @@ const FXA_ENABLED = _fxa_enabled;
 
 // This is the parent process corresponding to nsDOMIdentity.
 this.EXPORTED_SYMBOLS = ["DOMIdentity"];
-
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "objectCopy",
                                   "resource://gre/modules/identity/IdentityUtils.jsm");

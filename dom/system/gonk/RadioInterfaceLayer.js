@@ -926,13 +926,13 @@ XPCOMUtils.defineLazyGetter(this, "gDataConnectionManager", function () {
           if (network.state == Ci.nsINetworkInterface.NETWORK_STATE_UNKNOWN) {
             let connHandler = this._connectionHandlers[this._currentDataClientId];
             let radioInterface = connHandler.radioInterface;
-            if (!connHandler.allDataDisconnected() &&
+            if (connHandler.allDataDisconnected() &&
                 typeof this._pendingDataCallRequest === "function") {
               if (RILQUIRKS_DATA_REGISTRATION_ON_DEMAND) {
                 radioInterface.setDataRegistration(false);
               }
               if (DEBUG) {
-                debug("All data calls disconnected, setup pending data call.");
+                this.debug("All data calls disconnected, setup pending data call.");
               }
               this._pendingDataCallRequest();
               this._pendingDataCallRequest = null;
