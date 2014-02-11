@@ -4314,15 +4314,25 @@ AC_SUBST(ac_configure_args)
 
 AC_SUBST(TOOLCHAIN_PREFIX)
 
+
+if test -n "$JS_STANDALONE"; then
+JS_LIBRARY_NAME="mozjs-$MOZILLA_SYMBOLVERSION"
+else
+JS_LIBRARY_NAME="mozjs"
+fi
+JS_CONFIG_LIBS="$NSPR_LIBS $LIBS"
+if test -n "$GNU_CC"; then
+JS_CONFIG_MOZ_JS_LIBS='-L${libdir} -l${JS_LIBRARY_NAME}'
+else
+JS_CONFIG_MOZ_JS_LIBS='${libdir}/${JS_LIBRARY_NAME}.lib'
+fi
+AC_SUBST(JS_LIBRARY_NAME)
+AC_SUBST(JS_CONFIG_MOZ_JS_LIBS)
+AC_SUBST(JS_CONFIG_LIBS)
+
 dnl Spit out some output
 dnl ========================================================
-
 AC_OUTPUT()
-
-# Produce the js-config script at configure time; see the comments for
-# 'js*-config' in Makefile.in.
-AC_MSG_RESULT(invoking $MAKE to create $JS_CONFIG_NAME script)
-$MAKE -C js/src $JS_CONFIG_NAME
 
 # Build jsctypes if it's enabled.
 if test "$JS_HAS_CTYPES" -a -z "$MOZ_NATIVE_FFI"; then
