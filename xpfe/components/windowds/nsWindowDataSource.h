@@ -29,7 +29,7 @@ class nsWindowDataSource : public nsIRDFDataSource,
     virtual ~nsWindowDataSource();
 
     nsresult Init();
-    
+
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsWindowDataSource,
                                              nsIRDFDataSource)
@@ -45,7 +45,7 @@ class nsWindowDataSource : public nsIRDFDataSource,
 
     static uint32_t windowCount;
     static uint32_t gRefCnt;
-    
+
     nsCOMPtr<nsIRDFDataSource> mInner;
     nsCOMPtr<nsIRDFContainer> mContainer;
 
@@ -54,5 +54,3 @@ class nsWindowDataSource : public nsIRDFDataSource,
     static nsIRDFResource* kNC_WindowRoot;
     static nsIRDFService* gRDFService;
 };
-
-             
