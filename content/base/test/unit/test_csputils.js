@@ -114,8 +114,12 @@ test(
     h = CSPHost.fromString("foo-bar.com");
     do_check_neq(null, h); // "dashes in hosts should work"
 
+
     h = CSPHost.fromString("foo!bar.com");
     do_check_eq(null, h); // "special chars in hosts should fail"
+
+    h = CSPHost.fromString("{app-url-is-uid}");
+    do_check_neq(null, h); // "Packaged apps URLs failed"
   });
 
 test(
@@ -177,6 +181,9 @@ test(
       //Port parsing should work for all schemes
       do_check_neq(null, CSPSource.create("data:"));
       do_check_neq(null, CSPSource.create("javascript:"));
+
+      //"app:// URLs should work, including the {} characters.");
+      do_check_neq(null, CSPSource.fromString("{app-host-is-uid}", undefined, "app://{app-host-is-uid}"));
     });
 
 test(
@@ -217,6 +224,12 @@ test(
       do_check_false(src.permits("https://a.com"));
       //"nothing else should be allowed"
       do_check_false(src.permits("https://foobar.com"));
+
+      src = CSPSource.create("{app-host-is-uid}", undefined, "app://{app-host-is-uid}");
+      //"src should inherit and require 'app' scheme"
+      do_check_false(src.permits("https://{app-host-is-uid}"));
+      //"src should inherit scheme 'app'"
+      do_check_true(src.permits("app://{app-host-is-uid}"));
 
     });
 

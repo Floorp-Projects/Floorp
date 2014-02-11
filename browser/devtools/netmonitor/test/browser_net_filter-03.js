@@ -25,18 +25,18 @@ function test() {
       is(NetMonitorView.detailsPaneHidden, false,
         "The details pane should not be hidden after toggle button was pressed.");
 
-      testButtons("all");
+      testFilterButtons(aMonitor, "all");
       testContents([0, 1, 2, 3, 4, 5, 6], 7, 0)
         .then(() => {
           info("Sorting by size, ascending.");
           EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-size-button"));
-          testButtons("all");
+          testFilterButtons(aMonitor, "all");
           return testContents([6, 4, 5, 0, 1, 2, 3], 7, 6);
         })
         .then(() => {
           info("Testing html filtering.");
           EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-html-button"));
-          testButtons("html");
+          testFilterButtons(aMonitor, "html");
           return testContents([6, 4, 5, 0, 1, 2, 3], 1, 6);
         })
         .then(() => {
@@ -47,7 +47,7 @@ function test() {
         .then(() => {
           info("Testing html filtering again.");
           resetSorting();
-          testButtons("html");
+          testFilterButtons(aMonitor, "html");
           return testContents([8, 13, 9, 11, 10, 12, 0, 4, 1, 5, 2, 6, 3, 7], 2, 13);
         })
         .then(() => {
@@ -58,7 +58,7 @@ function test() {
         .then(() => {
           info("Testing html filtering again.");
           resetSorting();
-          testButtons("html");
+          testFilterButtons(aMonitor, "html");
           return testContents([12, 13, 20, 14, 16, 18, 15, 17, 19, 0, 4, 8, 1, 5, 9, 2, 6, 10, 3, 7, 11], 3, 20);
         })
         .then(() => {
@@ -70,22 +70,6 @@ function test() {
     function resetSorting() {
       EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-waterfall-button"));
       EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-size-button"));
-    }
-
-    function testButtons(aFilterType) {
-      let doc = aMonitor.panelWin.document;
-      let target = doc.querySelector("#requests-menu-filter-" + aFilterType + "-button");
-      let buttons = doc.querySelectorAll(".requests-menu-footer-button");
-
-      for (let button of buttons) {
-        if (button != target) {
-          is(button.hasAttribute("checked"), false,
-            "The " + button.id + " button should not have a 'checked' attribute.");
-        } else {
-          is(button.hasAttribute("checked"), true,
-            "The " + button.id + " button should have a 'checked' attribute.");
-        }
-      }
     }
 
     function testContents(aOrder, aVisible, aSelection) {

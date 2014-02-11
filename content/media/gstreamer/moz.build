@@ -15,9 +15,18 @@ SOURCES += [
     'GStreamerDecoder.cpp',
     'GStreamerFormatHelper.cpp',
     'GStreamerLoader.cpp',
-    'GStreamerMozVideoBuffer.cpp',
     'GStreamerReader.cpp',
 ]
+
+if CONFIG['GST_API_VERSION'] == '1.0':
+    SOURCES += [
+        'GStreamerAllocator.cpp',
+    ]
+else:
+    SOURCES += [
+        'GStreamerMozVideoBuffer.cpp',
+        'GStreamerReader-0.10.cpp',
+    ]
 
 FAIL_ON_WARNINGS = True
 

@@ -19,3 +19,6 @@ for var in ('MAR_CHANNEL_ID', 'MOZ_APP_VERSION'):
 
 if not CONFIG['MOZ_ENABLE_SIGNMAR']:
     DEFINES['NO_SIGN_VERIFY'] = True
+
+if CONFIG['OS_ARCH'] == 'WINNT':
+    USE_STATIC_LIBS = True

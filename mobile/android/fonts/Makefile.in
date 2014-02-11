@@ -2,25 +2,5 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-packaged_fonts =  \
-	CharisSILCompact-R.ttf \
-	CharisSILCompact-B.ttf \
-	CharisSILCompact-I.ttf \
-	CharisSILCompact-BI.ttf \
-	ClearSans-Thin.ttf \
-	ClearSans-Light.ttf \
-	ClearSans-Regular.ttf \
-	ClearSans-Medium.ttf \
-	ClearSans-Bold.ttf \
-	ClearSans-Italic.ttf \
-	ClearSans-MediumItalic.ttf \
-	ClearSans-BoldItalic.ttf \
-	$(NULL)
-
-GARBAGE += $(packaged_fonts)
-
 include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/testing/testsuite-targets.mk
-
-libs:: $(packaged_fonts)
-	$(INSTALL) $^ $(DIST)/bin/res/fonts/

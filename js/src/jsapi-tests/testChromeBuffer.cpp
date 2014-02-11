@@ -33,7 +33,7 @@ CallTrusted(JSContext *cx, unsigned argc, jsval *vp)
     {
         JSAutoCompartment ac(cx, trusted_glob);
         ok = JS_CallFunctionValue(cx, nullptr, JS::ObjectValue(*trusted_fun),
-                                  0, nullptr, vp);
+                                  JS::EmptyValueArray, vp);
     }
     JS_RestoreFrameChain(cx);
     return ok;
@@ -91,7 +91,7 @@ BEGIN_TEST(testChromeBuffer)
                                        bytes, strlen(bytes), options));
 
         JS::RootedValue rval(cx);
-        CHECK(JS_CallFunction(cx, nullptr, fun, 1, v.address(), rval.address()));
+        CHECK(JS_CallFunction(cx, nullptr, fun, v, rval.address()));
         CHECK(JSVAL_TO_INT(rval) == 100);
     }
 
@@ -132,7 +132,7 @@ BEGIN_TEST(testChromeBuffer)
                                        bytes, strlen(bytes), options));
 
         JS::RootedValue rval(cx);
-        CHECK(JS_CallFunction(cx, nullptr, fun, 1, v.address(), rval.address()));
+        CHECK(JS_CallFunction(cx, nullptr, fun, v, rval.address()));
         bool match;
         CHECK(JS_StringEqualsAscii(cx, JSVAL_TO_STRING(rval), "From trusted: InternalError: too much recursion", &match));
         CHECK(match);
@@ -171,7 +171,7 @@ BEGIN_TEST(testChromeBuffer)
 
         JS::RootedValue arg(cx, JS::ObjectValue(*callTrusted));
         JS::RootedValue rval(cx);
-        CHECK(JS_CallFunction(cx, nullptr, fun, 1, arg.address(), rval.address()));
+        CHECK(JS_CallFunction(cx, nullptr, fun, arg, rval.address()));
         CHECK(JSVAL_TO_INT(rval) == 42);
     }
 

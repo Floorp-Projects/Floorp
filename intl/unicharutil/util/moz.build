@@ -27,6 +27,7 @@ LOCAL_INCLUDES += [
     '../src',
 ]
 
+USE_STATIC_LIBS = True
 
 if CONFIG['_MSC_VER']:
     DEFINES['_USE_ANSI_CPP'] = True

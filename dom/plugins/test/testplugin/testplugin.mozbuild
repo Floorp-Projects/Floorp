@@ -39,6 +39,10 @@ elif toolkit == 'windows':
 
 FORCE_SHARED_LIB = True
 
+# must link statically with the CRT; nptest isn't Gecko code
+USE_STATIC_LIBS = True
+
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     RCFILE  = 'nptest.rc'
     RESFILE = 'nptest.res'
+    DEFFILE = SRCDIR + '/nptest.def'

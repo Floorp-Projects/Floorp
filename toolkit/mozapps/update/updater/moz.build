@@ -22,6 +22,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     ]
     DEFINES['UNICODE'] = True
     DEFINES['_UNICODE'] = True
+    USE_STATIC_LIBS = True
 
 if CONFIG['MOZ_ENABLE_GTK']:
     have_progressui = 1

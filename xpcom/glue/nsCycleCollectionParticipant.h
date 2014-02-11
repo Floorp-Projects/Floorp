@@ -936,6 +936,46 @@ static NS_CYCLE_COLLECTION_INNERCLASS NS_CYCLE_COLLECTION_INNERNAME;
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_f17)                                       \
  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
+#define NS_IMPL_CYCLE_COLLECTION_16(_class, _f1, _f2, _f3, _f4, _f5, _f6, _f7, _f8, _f9, \
+                                    _f10, _f11, _f12, _f13, _f14, _f15, _f16) \
+ NS_IMPL_CYCLE_COLLECTION_CLASS(_class)                                        \
+ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(_class)                                 \
+ NS_IMPL_CYCLE_COLLECTION_UNLINK(_f1)                                          \
+ NS_IMPL_CYCLE_COLLECTION_UNLINK(_f2)                                          \
+ NS_IMPL_CYCLE_COLLECTION_UNLINK(_f3)                                          \
+ NS_IMPL_CYCLE_COLLECTION_UNLINK(_f4)                                          \
+ NS_IMPL_CYCLE_COLLECTION_UNLINK(_f5)                                          \
+ NS_IMPL_CYCLE_COLLECTION_UNLINK(_f6)                                          \
+ NS_IMPL_CYCLE_COLLECTION_UNLINK(_f7)                                          \
+ NS_IMPL_CYCLE_COLLECTION_UNLINK(_f8)                                          \
+ NS_IMPL_CYCLE_COLLECTION_UNLINK(_f9)                                          \
+ NS_IMPL_CYCLE_COLLECTION_UNLINK(_f10)                                         \
+ NS_IMPL_CYCLE_COLLECTION_UNLINK(_f11)                                         \
+ NS_IMPL_CYCLE_COLLECTION_UNLINK(_f12)                                         \
+ NS_IMPL_CYCLE_COLLECTION_UNLINK(_f13)                                         \
+ NS_IMPL_CYCLE_COLLECTION_UNLINK(_f14)                                         \
+ NS_IMPL_CYCLE_COLLECTION_UNLINK(_f15)                                         \
+ NS_IMPL_CYCLE_COLLECTION_UNLINK(_f16)                                         \
+ NS_IMPL_CYCLE_COLLECTION_UNLINK_END                                           \
+ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(_class)                               \
+ NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_f1)                                        \
+ NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_f2)                                        \
+ NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_f3)                                        \
+ NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_f4)                                        \
+ NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_f5)                                        \
+ NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_f6)                                        \
+ NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_f7)                                        \
+ NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_f8)                                        \
+ NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_f9)                                        \
+ NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_f10)                                       \
+ NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_f11)                                       \
+ NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_f12)                                       \
+ NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_f13)                                       \
+ NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_f14)                                       \
+ NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_f15)                                       \
+ NS_IMPL_CYCLE_COLLECTION_TRAVERSE(_f16)                                       \
+ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
 #define NS_IMPL_CYCLE_COLLECTION_INHERITED_1(_class, _base, _f1)               \
  NS_IMPL_CYCLE_COLLECTION_CLASS(_class)                                        \
  NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(_class, _base)                \

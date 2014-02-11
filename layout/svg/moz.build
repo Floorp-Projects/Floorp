@@ -58,3 +58,7 @@ LOCAL_INCLUDES += [
     '../xul',
 ]
 
+RESOURCE_FILES += [
+    'svg.css',
+]
+

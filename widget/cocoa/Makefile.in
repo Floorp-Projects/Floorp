@@ -5,29 +5,4 @@
 
 include $(topsrcdir)/config/rules.mk
 
-NIB_FILES = \
-	classes.nib \
-	info.nib \
-	keyedobjects.nib \
-	$(NULL)
-NIB_DEST = $(DIST)/bin/res/MainMenu.nib
-
-libs:: $(addprefix $(NIB_DEST)/,$(NIB_FILES))
-
-$(NIB_DEST):
-	$(NSINSTALL) -D $@
-
-$(NIB_DEST)/%: $(srcdir)/resources/MainMenu.nib/% $(NIB_DEST)
-	$(INSTALL) $< $(NIB_DEST)
-
-# for objdir builds, symlink the cursors dir
-ABS_topsrcdir   := $(abspath $(topsrcdir))
-ifneq ($(ABS_topsrcdir),$(MOZ_BUILD_ROOT))
-export::
-	ln -fs $(srcdir)/cursors
-endif
-
-export::
-	$(INSTALL) $(srcdir)/cursors $(DIST)/bin/res
-
 CXXFLAGS += $(TK_CFLAGS)
