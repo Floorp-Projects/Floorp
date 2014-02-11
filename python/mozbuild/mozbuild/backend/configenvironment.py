@@ -99,8 +99,11 @@ class ConfigEnvironment(object):
     """
 
     def __init__(self, topsrcdir, topobjdir, defines=[], non_global_defines=[],
-            substs=[]):
+        substs=[], source=None):
 
+        if not source:
+            source = mozpath.join(topobjdir, 'config.status')
+        self.source = source
         self.defines = ReadOnlyDict(defines)
         self.substs = dict(substs)
         self.topsrcdir = mozpath.normsep(topsrcdir)
@@ -154,4 +157,4 @@ class ConfigEnvironment(object):
         config = BuildConfig.from_config_status(path)
 
         return ConfigEnvironment(config.topsrcdir, config.topobjdir,
-            config.defines, config.non_global_defines, config.substs)
+            config.defines, config.non_global_defines, config.substs, path)

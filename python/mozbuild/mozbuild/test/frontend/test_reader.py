@@ -57,7 +57,7 @@ class TestBuildReader(unittest.TestCase):
         path = mozpath.join(reader.topsrcdir, 'moz.build')
         self.assertTrue(os.path.exists(path))
 
-        sandboxes = list(reader.read_mozbuild(path,
+        sandboxes = list(reader.read_mozbuild(path, reader.config,
             filesystem_absolute=True, descend=False))
 
         self.assertEqual(len(sandboxes), 1)
