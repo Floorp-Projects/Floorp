@@ -817,7 +817,7 @@ pref("browser.snippets.geoUrl", "https://geo.mozilla.org/country.json");
 pref("browser.snippets.statsUrl", "https://snippets-stats.mozilla.org/mobile");
 
 // These prefs require a restart to take effect.
-pref("browser.snippets.enabled", true);
+pref("browser.snippets.enabled", false);
 pref("browser.snippets.syncPromo.enabled", false);
 
 #ifdef MOZ_ANDROID_SYNTHAPKS
