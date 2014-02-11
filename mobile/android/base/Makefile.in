@@ -221,7 +221,7 @@ all_resources = \
 # All of generated/org/mozilla/gecko/R.java, gecko.ap_, and R.txt are
 # produced by aapt; this saves aapt invocations.
 
-$(gecko_package_dir)/R.java: .aapt.deps
+$(CURDIR)/$(gecko_package_dir)/R.java: .aapt.deps
 gecko.ap_: .aapt.deps
 R.txt: .aapt.deps
 
@@ -230,7 +230,7 @@ R.txt: .aapt.deps
 # resources are fresh.  The alternative would be complicated; see
 # [Comment 1/3].
 
-gecko-nodeps/R.java: .aapt.nodeps
+$(CURDIR)/gecko-nodeps/R.java: .aapt.nodeps
 gecko-nodeps.ap_: .aapt.nodeps
 gecko-nodeps/R.txt: .aapt.nodeps
 
@@ -241,6 +241,7 @@ gecko-nodeps/R.txt: .aapt.nodeps
 # 5: directory to write R.txt into.
 define aapt_command
 $(1): $$(call mkdir_deps,$(filter-out ./,$(dir $(3) $(4) $(5)))) $(2)
+	$$(REPORT_BUILD)
 	$$(AAPT) package -f -M AndroidManifest.xml -I $$(ANDROID_SDK)/android.jar \
 		--auto-add-overlay \
 		$$(addprefix -S ,$$(ANDROID_RES_DIRS)) \
@@ -264,7 +265,8 @@ $(eval $(call aapt_command,.aapt.deps,$(all_resources),gecko.ap_,$(gecko_package
 # .aapt.nodeps: $(CURDIR)/AndroidManifest.xml FORCE
 $(eval $(call aapt_command,.aapt.nodeps,$(CURDIR)/AndroidManifest.xml FORCE,gecko-nodeps.ap_,gecko-nodeps/,gecko-nodeps/))
 
-fennec_ids.txt: $(gecko_package_dir)/R.java fennec-ids-generator.py
+fennec_ids.txt: $(CURDIR)/$(gecko_package_dir)/R.java fennec-ids-generator.py
+	$(REPORT_BUILD)
 	$(PYTHON) $(topsrcdir)/mobile/android/base/fennec-ids-generator.py -i $< -o $@
 
 # Override the Java settings with some specific android settings
