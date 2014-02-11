@@ -3858,6 +3858,7 @@ pref("webgl.lose-context-on-heap-minimize", false);
 pref("webgl.can-lose-context-in-foreground", true);
 pref("webgl.max-warnings-per-context", 32);
 pref("webgl.enable-draft-extensions", false);
+pref("webgl.enable-privileged-extensions", false);
 #ifdef MOZ_WIDGET_GONK
 pref("gfx.gralloc.fence-with-readpixels", false);
 #endif
