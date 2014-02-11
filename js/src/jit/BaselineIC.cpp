@@ -1602,13 +1602,14 @@ DoCallNativeGetter(JSContext *cx, HandleFunction callee, HandleObject obj,
     JS_ASSERT(callee->isNative());
     JSNative natfun = callee->native();
 
-    Value vp[2] = { ObjectValue(*callee.get()), ObjectValue(*obj.get()) };
-    AutoValueArray rootVp(cx, vp, 2);
+    JS::AutoValueArray<2> vp(cx);
+    vp[0].setObject(*callee.get());
+    vp[1].setObject(*obj.get());
 
-    if (!natfun(cx, 0, rootVp.start()))
+    if (!natfun(cx, 0, vp.begin()))
         return false;
 
-    result.set(rootVp[0]);
+    result.set(vp[0]);
     return true;
 }
 
@@ -7675,10 +7676,12 @@ DoCallNativeSetter(JSContext *cx, HandleFunction callee, HandleObject obj, Handl
     JS_ASSERT(callee->isNative());
     JSNative natfun = callee->native();
 
-    Value vp[3] = { ObjectValue(*callee.get()), ObjectValue(*obj.get()), val };
-    AutoValueArray rootVp(cx, vp, 3);
+    JS::AutoValueArray<3> vp(cx);
+    vp[0].setObject(*callee.get());
+    vp[1].setObject(*obj.get());
+    vp[2].set(val);
 
-    return natfun(cx, 1, vp);
+    return natfun(cx, 1, vp.begin());
 }
 
 typedef bool (*DoCallNativeSetterFn)(JSContext *, HandleFunction, HandleObject, HandleValue);
