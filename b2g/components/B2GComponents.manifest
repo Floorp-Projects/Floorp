@@ -1,5 +1,5 @@
 # Scrollbars
-category agent-style-sheets browser-content-stylesheet chrome://browser/content/content.css
+category agent-style-sheets browser-content-stylesheet chrome://b2g/content/content.css
 
 # AlertsService.js
 component {fe33c107-82a4-41d6-8c64-5353267e04c9} AlertsService.js
