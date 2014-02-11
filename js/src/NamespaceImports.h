@@ -33,7 +33,6 @@ class AutoValueVector;
 class AutoIdArray;
 
 class AutoGCRooter;
-class AutoArrayRooter;
 template <typename T> class AutoVectorRooter;
 template<typename K, typename V> class AutoHashMapRooter;
 template<typename T> class AutoHashSetRooter;
@@ -74,7 +73,6 @@ using JS::AutoValueVector;
 using JS::AutoIdArray;
 
 using JS::AutoGCRooter;
-using JS::AutoArrayRooter;
 using JS::AutoHashMapRooter;
 using JS::AutoHashSetRooter;
 using JS::AutoVectorRooter;
