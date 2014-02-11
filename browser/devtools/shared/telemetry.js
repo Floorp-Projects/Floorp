@@ -157,6 +157,11 @@ Telemetry.prototype = {
       histogram: "DEVTOOLS_DEVELOPERTOOLBAR_OPENED_BOOLEAN",
       userHistogram: "DEVTOOLS_DEVELOPERTOOLBAR_OPENED_PER_USER_FLAG",
       timerHistogram: "DEVTOOLS_DEVELOPERTOOLBAR_TIME_ACTIVE_SECONDS"
+    },
+    custom: {
+      histogram: "DEVTOOLS_CUSTOM_OPENED_BOOLEAN",
+      userHistogram: "DEVTOOLS_CUSTOM_OPENED_PER_USER_FLAG",
+      timerHistogram: "DEVTOOLS_CUSTOM_TIME_ACTIVE_SECONDS"
     }
   },
 
@@ -168,14 +173,7 @@ Telemetry.prototype = {
    *         histogram.
    */
   toolOpened: function(id) {
-    let charts = this._histograms[id];
-
-    if (!charts) {
-      dump('Warning: An attempt was made to open a tool with an id of "' + id +
-           '", which is not listed in Telemetry._histograms. ' +
-           "Location: telemetry.js/toolOpened()\n");
-      return;
-    }
+    let charts = this._histograms[id] || this._histograms.custom;
 
     if (charts.histogram) {
       this.log(charts.histogram, true);

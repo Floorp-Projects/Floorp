@@ -47,6 +47,7 @@ public:
   bool Listen();
 
   bool SendFile(const nsAString& aDeviceAddress, BlobParent* aActor);
+  bool SendFile(const nsAString& aDeviceAddress, nsIDOMBlob* aBlob);
   bool StopSendingFile();
   bool ConfirmReceivingFile(bool aConfirm);
 
@@ -95,7 +96,7 @@ private:
   void NotifyAboutFileChange();
   bool AcquireSdcardMountLock();
   void SendObexData(uint8_t* aData, uint8_t aOpcode, int aSize);
-  void AppendBlobToSend(const nsAString& aDeviceAddress, BlobParent* aActor);
+  void AppendBlobToSend(const nsAString& aDeviceAddress, nsIDOMBlob* aBlob);
   void DiscardBlobsToSend();
   bool ProcessNextBatch();
   void ConnectInternal(const nsAString& aDeviceAddress);

@@ -1238,6 +1238,26 @@ BluetoothServiceBluedroid::SendFile(const nsAString& aDeviceAddress,
 }
 
 void
+BluetoothServiceBluedroid::SendFile(const nsAString& aDeviceAddress,
+                                    nsIDOMBlob* aBlob,
+                                    BluetoothReplyRunnable* aRunnable)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // Currently we only support one device sending one file at a time,
+  // so we don't need aDeviceAddress here because the target device
+  // has been determined when calling 'Connect()'. Nevertheless, keep
+  // it for future use.
+  BluetoothOppManager* opp = BluetoothOppManager::Get();
+  nsAutoString errorStr;
+  if (!opp || !opp->SendFile(aDeviceAddress, aBlob)) {
+    errorStr.AssignLiteral("Calling SendFile() failed");
+  }
+
+  DispatchBluetoothReply(aRunnable, BluetoothValue(true), errorStr);
+}
+
+void
 BluetoothServiceBluedroid::StopSendingFile(const nsAString& aDeviceAddress,
                                            BluetoothReplyRunnable* aRunnable)
 {

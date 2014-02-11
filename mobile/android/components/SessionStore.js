@@ -178,9 +178,12 @@ SessionStore.prototype = {
         break;
       }
       case "DOMTitleChanged": {
-        let browser = Services.wm.getMostRecentWindow("navigator:browser")
-                                 .BrowserApp
-                                 .getBrowserForDocument(aEvent.target);
+        let browser = aEvent.currentTarget;
+
+        // Handle only top-level DOMTitleChanged event
+        if (browser.contentDocument !== aEvent.originalTarget)
+          return;
+
         // Use DOMTitleChanged to detect page loads over alternatives.
         // onLocationChange happens too early, so we don't have the page title
         // yet; pageshow happens too late, so we could lose session data if the
@@ -220,7 +223,6 @@ SessionStore.prototype = {
     browsers.addEventListener("TabOpen", this, true);
     browsers.addEventListener("TabClose", this, true);
     browsers.addEventListener("TabSelect", this, true);
-    browsers.addEventListener("DOMTitleChanged", this, true);
   },
 
   onWindowClose: function ss_onWindowClose(aWindow) {
@@ -232,7 +234,6 @@ SessionStore.prototype = {
     browsers.removeEventListener("TabOpen", this, true);
     browsers.removeEventListener("TabClose", this, true);
     browsers.removeEventListener("TabSelect", this, true);
-    browsers.removeEventListener("DOMTitleChanged", this, true);
 
     if (this._loadState == STATE_RUNNING) {
       // Update all window data for a last time
@@ -253,12 +254,15 @@ SessionStore.prototype = {
   },
 
   onTabAdd: function ss_onTabAdd(aWindow, aBrowser, aNoNotification) {
+    aBrowser.addEventListener("DOMTitleChanged", this, true);
     if (!aNoNotification)
       this.saveStateDelayed();
     this._updateCrashReportURL(aWindow);
   },
 
   onTabRemove: function ss_onTabRemove(aWindow, aBrowser, aNoNotification) {
+    aBrowser.removeEventListener("DOMTitleChanged", this, true);
+
     // If this browser is being restored, skip any session save activity
     if (aBrowser.__SS_restore)
       return;
