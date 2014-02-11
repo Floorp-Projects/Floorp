@@ -275,7 +275,7 @@ this.EventManager.prototype = {
         let doc = aEvent.accessibleDocument;
         if (acc.role != Roles.DOCUMENT && doc.role != Roles.CHROME_WINDOW) {
           this.contentScope.content.clearTimeout(this._autoMove);
-          let vc = Utils.getVirtualCursor(doc);
+          let vc = Utils.getVirtualCursor(this.contentScope.content.document);
           vc.moveNext(TraversalRules.Simple, acc, true);
         }
         break;
