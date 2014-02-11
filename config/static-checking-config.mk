@@ -7,7 +7,7 @@
 
 DEHYDRA_SCRIPT = $(topsrcdir)/config/static-checking.js
 
-ifndef BUILDING_JS
+ifndef JS_STANDALONE
 DEHYDRA_MODULES = \
   $(topsrcdir)/xpcom/analysis/final.js \
   $(topsrcdir)/xpcom/analysis/must-override.js \
