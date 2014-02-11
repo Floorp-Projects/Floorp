@@ -45,6 +45,5 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
 else:
     FORCE_SHARED_LIB = True
 
-if CONFIG['OS_ARCH'] != 'OS2':
-    # The strndup declaration in string.h is in an ifdef __USE_GNU section
-    DEFINES['_GNU_SOURCE'] = True
+# The strndup declaration in string.h is in an ifdef __USE_GNU section
+DEFINES['_GNU_SOURCE'] = True

@@ -5,16 +5,6 @@
 
 include $(topsrcdir)/config/rules.mk
 
-LOCAL_INCLUDES += \
-		-I$(topsrcdir)/netwerk/protocol/res \
-		-I$(topsrcdir)/netwerk/base/src \
-		$(NULL)
-
 ifdef MOZ_ENABLE_GTK
 CXXFLAGS          += $(TK_CFLAGS)
 endif
-
-LOCAL_INCLUDES += \
-  -I$(topsrcdir)/xpcom/components \
-  -I$(DEPTH)/xpcom \
-  $(NULL)

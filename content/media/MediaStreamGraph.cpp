@@ -1277,10 +1277,10 @@ MediaStreamGraphImpl::RunThread()
         // Enter shutdown mode. The stable-state handler will detect this
         // and complete shutdown. Destroy any streams immediately.
         STREAM_LOG(PR_LOG_DEBUG, ("MediaStreamGraph %p waiting for main thread cleanup", this));
-        // Commit to shutting down this graph object.
+        // We'll shut down this graph object if it does not get restarted.
         mLifecycleState = LIFECYCLE_WAITING_FOR_MAIN_THREAD_CLEANUP;
         // No need to Destroy streams here. The main-thread owner of each
-        // stream is responsible for calling Destroy them.
+        // stream is responsible for calling Destroy on them.
         return;
       }
 
@@ -1421,11 +1421,15 @@ public:
 
     // mGraph's thread is not running so it's OK to do whatever here
     if (mGraph->IsEmpty()) {
-      // mGraph is no longer needed, so delete it. If the graph is not empty
-      // then we must be in a forced shutdown and some later AppendMessage will
-      // detect that the manager has been emptied, and delete it.
+      // mGraph is no longer needed, so delete it.
       delete mGraph;
     } else {
+      // The graph is not empty.  We must be in a forced shutdown, or a
+      // non-realtime graph that has finished processing.  Some later
+      // AppendMessage will detect that the manager has been emptied, and
+      // delete it.
+      NS_ASSERTION(mGraph->mForceShutDown || !mGraph->mRealtime,
+                   "Not in forced shutdown?");
       for (uint32_t i = 0; i < mGraph->mStreams.Length(); ++i) {
         DOMMediaStream* s = mGraph->mStreams[i]->GetWrapper();
         if (s) {
@@ -1433,7 +1437,6 @@ public:
         }
       }
 
-      NS_ASSERTION(mGraph->mForceShutDown, "Not in forced shutdown?");
       mGraph->mLifecycleState =
         MediaStreamGraphImpl::LIFECYCLE_WAITING_FOR_STREAM_DESTRUCTION;
     }
@@ -1565,7 +1568,7 @@ MediaStreamGraphImpl::RunInStableState()
       }
     }
 
-    if (mForceShutDown &&
+    if ((mForceShutDown || !mRealtime) &&
         mLifecycleState == LIFECYCLE_WAITING_FOR_MAIN_THREAD_CLEANUP) {
       // Defer calls to RunDuringShutdown() to happen while mMonitor is not held.
       for (uint32_t i = 0; i < mMessageQueue.Length(); ++i) {
@@ -1640,7 +1643,8 @@ MediaStreamGraphImpl::AppendMessage(ControlMessage* aMessage)
     // happened. From now on we can't append messages to mCurrentTaskMessageQueue,
     // because that will never be processed again, so just RunDuringShutdown
     // this message.
-    // This should only happen during forced shutdown.
+    // This should only happen during forced shutdown, or after a non-realtime
+    // graph has finished processing.
     aMessage->RunDuringShutdown();
     delete aMessage;
     if (IsEmpty() &&

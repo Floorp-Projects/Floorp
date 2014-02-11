@@ -220,6 +220,15 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
       tileComposer->PaintedTiledLayerBuffer(this, tileDesc);
       break;
     }
+    case CompositableOperation::TOpRemoveTexture: {
+      const OpRemoveTexture& op = aEdit.get_OpRemoveTexture();
+      CompositableHost* compositable = AsCompositable(op);
+      RefPtr<TextureHost> tex = TextureHost::AsTextureHost(op.textureParent());
+
+      MOZ_ASSERT(tex.get());
+      compositable->RemoveTextureHost(tex);
+      break;
+    }
     case CompositableOperation::TOpUseTexture: {
       const OpUseTexture& op = aEdit.get_OpUseTexture();
       CompositableHost* compositable = AsCompositable(op);

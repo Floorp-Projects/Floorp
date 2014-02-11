@@ -40,7 +40,7 @@
     #include <sys/stat.h>
     #include <limits.h>
     #include <unistd.h>
-#elif defined(XP_WIN) || defined(XP_OS2)
+#elif defined(XP_WIN)
     #include <io.h>
 #endif
 

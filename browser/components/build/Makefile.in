@@ -6,13 +6,6 @@ ifeq ($(OS_ARCH),WINNT)
 OS_LIBS	+= $(call EXPAND_LIBNAME,ole32 shell32 shlwapi)
 endif
 
-LOCAL_INCLUDES = \
-	-I$(srcdir)/../shell/src \
-	-I$(srcdir)/../feeds/src \
-	-I$(srcdir)/../about \
-	-I$(srcdir)/../dirprovider \
-	$(NULL)
-
 ifeq ($(OS_ARCH),WINNT)
 OS_LIBS += $(call EXPAND_LIBNAME,version)
 endif
@@ -21,8 +14,6 @@ EXTRA_DSO_LDOPTS += \
 	$(XPCOM_GLUE_LDOPTS) \
 	$(MOZ_COMPONENT_LIBS) \
 	$(NULL)
-
-LOCAL_INCLUDES += -I$(srcdir)/../migration/src
 
 # Mac: Need to link with CoreFoundation for Mac Migrators (PList reading code)
 # GTK2: Need to link with glib for GNOME shell service

@@ -13,9 +13,7 @@ nsDOMAnimationEvent::nsDOMAnimationEvent(mozilla::dom::EventTarget* aOwner,
                                          nsPresContext *aPresContext,
                                          InternalAnimationEvent* aEvent)
   : nsDOMEvent(aOwner, aPresContext,
-               aEvent ? aEvent :
-                        new InternalAnimationEvent(false, 0, EmptyString(),
-                                                   0.0, EmptyString()))
+               aEvent ? aEvent : new InternalAnimationEvent(false, 0))
 {
   if (aEvent) {
     mEventIsInternal = false;

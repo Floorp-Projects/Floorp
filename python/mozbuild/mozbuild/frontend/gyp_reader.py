@@ -120,6 +120,7 @@ def read_from_gyp(config, path, output, vars, non_unified_sources = set()):
                           for f in data[build_file]['included_files']]
         # Emit a sandbox for each target.
         sandbox = GypSandbox(mozpath.abspath(build_file), included_files)
+        sandbox.config = config
 
         with sandbox.allow_all_writes() as d:
             topsrcdir = d['TOPSRCDIR'] = config.topsrcdir

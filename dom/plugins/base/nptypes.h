@@ -11,7 +11,7 @@
  * true/false macros are available.
  */
 
-#if defined(WIN32) || defined(OS2)
+#if defined(WIN32)
   /*
    * Win32 and OS/2 don't know C99, so define [u]int_16/32/64 here. The bool
    * is predefined tho, both in C and C++.

@@ -20,7 +20,7 @@
 #  include <unistd.h>           // for valloc on *BSD
 #endif //if defined(XP_UNIX)
 
-#if defined(XP_WIN) || (defined(XP_OS2) && defined(__declspec))
+#if defined(XP_WIN)
 #  define MOZALLOC_EXPORT __declspec(dllexport)
 #endif
 

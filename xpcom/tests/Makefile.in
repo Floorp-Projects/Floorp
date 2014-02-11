@@ -15,7 +15,7 @@ ifneq (,$(SIMPLE_PROGRAMS))
 	$(INSTALL) $(SIMPLE_PROGRAMS) $(DEPTH)/_tests/xpcshell/$(relativesrcdir)/unit
 endif
 
-ifeq (,$(filter-out WINNT os2-emx, $(HOST_OS_ARCH)))
+ifeq (,$(filter-out WINNT, $(HOST_OS_ARCH)))
 getnativepath = $(call normalizepath,$(1))
 else
 getnativepath = $(1)

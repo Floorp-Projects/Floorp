@@ -30,6 +30,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=650295
     info("Successfully start() from end() callback");
   }
 
+  function expectExceptionHandler(evt, sr) {
+    try {
+      sr.start();
+    } catch (err) {
+      is(err.name, "InvalidStateError");
+      return;
+    }
+
+    ok(false, "Calling start() didn't raise InvalidStateError");
+  }
+
   performTest({
     eventsToRequest: [
       'EVENT_START',
@@ -37,11 +48,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=650295
       'EVENT_RECOGNITIONSERVICE_FINAL_RESULT'
     ],
     expectedEvents: {
-      'start': null,
-      'audiostart': null,
-      'speechstart': null,
-      'speechend': null,
-      'audioend': null,
+      'start': expectExceptionHandler,
+      'audiostart': expectExceptionHandler,
+      'speechstart': expectExceptionHandler,
+      'speechend': expectExceptionHandler,
+      'audioend': expectExceptionHandler,
       'result': buildResultCallback("Mock final result"),
       'end': endHandler,
     },

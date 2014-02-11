@@ -56,7 +56,6 @@ class TextureClientX11
 
  private:
   gfx::SurfaceFormat mFormat;
-  TextureFlags mTextureFlags;
   gfx::IntSize mSize;
   RefPtr<gfxXlibSurface> mSurface;
   bool mLocked;

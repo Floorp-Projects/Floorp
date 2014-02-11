@@ -137,6 +137,9 @@ static DllBlockInfo sWindowsDllBlocklist[] = {
   // Software is discontinued/unsupported
   { "atkdx11disp.dll", ALL_VERSIONS },
 
+  // Topcrash with Conduit SearchProtect, bug 944542
+  { "spvc32.dll", ALL_VERSIONS },
+
   { nullptr, 0 }
 };
 

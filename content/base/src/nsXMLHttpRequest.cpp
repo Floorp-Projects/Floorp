@@ -273,6 +273,9 @@ nsXMLHttpRequestUpload::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 //
 /////////////////////////////////////////////
 
+bool
+nsXMLHttpRequest::sDontWarnAboutSyncXHR = false;
+
 nsXMLHttpRequest::nsXMLHttpRequest()
   : mResponseBodyDecodedPos(0),
     mResponseType(XML_HTTP_RESPONSE_TYPE_DEFAULT),
@@ -1540,6 +1543,11 @@ nsXMLHttpRequest::Open(const nsACString& method, const nsACString& url,
                        const Optional<nsAString>& password)
 {
   NS_ENSURE_ARG(!method.IsEmpty());
+
+  if (!async && !DontWarnAboutSyncXHR() && GetOwner() &&
+      GetOwner()->GetExtantDoc()) {
+    GetOwner()->GetExtantDoc()->WarnOnceAbout(nsIDocument::eSyncXMLHttpRequest);
+  }
 
   Telemetry::Accumulate(Telemetry::XMLHTTPREQUEST_ASYNC_OR_SYNC,
                         async ? 0 : 1);

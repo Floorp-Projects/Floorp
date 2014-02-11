@@ -291,6 +291,8 @@ public:
   virtual void UseComponentAlphaTextures(TextureHost* aTextureOnBlack,
                                          TextureHost* aTextureOnWhite);
 
+  virtual void RemoveTextureHost(TextureHost* aTexture);
+
 protected:
   TextureInfo mTextureInfo;
   Compositor* mCompositor;

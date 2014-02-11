@@ -147,9 +147,7 @@ private:
 
     bool TimingEnabled() const { return mCaps & NS_HTTP_TIMING_ENABLED; }
 
-    bool ResponseTimeoutEnabled() const MOZ_OVERRIDE MOZ_FINAL {
-      return mResponseTimeoutEnabled;
-    }
+    bool ResponseTimeoutEnabled() const MOZ_FINAL;
 
 private:
     class UpdateSecurityCallbacks : public nsRunnable

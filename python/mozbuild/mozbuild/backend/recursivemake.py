@@ -330,7 +330,7 @@ class RecursiveMakeBackend(CommonBackend):
 
         if obj.objdir not in self._backend_files:
             self._backend_files[obj.objdir] = \
-                BackendMakeFile(obj.srcdir, obj.objdir, self.get_environment(obj))
+                BackendMakeFile(obj.srcdir, obj.objdir, obj.config)
         backend_file = self._backend_files[obj.objdir]
 
         CommonBackend.consume_object(self, obj)
@@ -705,6 +705,7 @@ class RecursiveMakeBackend(CommonBackend):
                 obj.input_path = makefile_in
                 obj.topsrcdir = bf.environment.topsrcdir
                 obj.topobjdir = bf.environment.topobjdir
+                obj.config = bf.environment
                 self._create_makefile(obj, stub=stub)
 
         # Write out a master list of all IPDL source files.
@@ -966,6 +967,7 @@ class RecursiveMakeBackend(CommonBackend):
             'makefiles', 'xpidl', 'Makefile.in')
         obj.topsrcdir = self.environment.topsrcdir
         obj.topobjdir = self.environment.topobjdir
+        obj.config = self.environment
         self._create_makefile(obj, extra=dict(
             xpidl_rules='\n'.join(rules),
             xpidl_modules=' '.join(xpt_modules),
@@ -1091,6 +1093,7 @@ class RecursiveMakeBackend(CommonBackend):
             'output_path',
             'topsrcdir',
             'topobjdir',
+            'config',
         )
 
     def _create_makefile(self, obj, stub=False, extra=None):
@@ -1104,13 +1107,15 @@ class RecursiveMakeBackend(CommonBackend):
         with self._get_preprocessor(obj) as pp:
             if extra:
                 pp.context.update(extra)
+            if not pp.context.get('autoconfmk', ''):
+                pp.context['autoconfmk'] = 'autoconf.mk'
             pp.handleLine(b'# THIS FILE WAS AUTOMATICALLY GENERATED. DO NOT MODIFY BY HAND.\n');
             pp.handleLine(b'DEPTH := @DEPTH@\n')
             pp.handleLine(b'topsrcdir := @top_srcdir@\n')
             pp.handleLine(b'srcdir := @srcdir@\n')
             pp.handleLine(b'VPATH := @srcdir@\n')
             pp.handleLine(b'relativesrcdir := @relativesrcdir@\n')
-            pp.handleLine(b'include $(DEPTH)/config/autoconf.mk\n')
+            pp.handleLine(b'include $(DEPTH)/config/@autoconfmk@\n')
             if not stub:
                 pp.do_include(obj.input_path)
             # Empty line to avoid failures when last line in Makefile.in ends

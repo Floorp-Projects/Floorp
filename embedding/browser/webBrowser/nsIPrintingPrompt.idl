@@ -91,15 +91,6 @@ interface nsIPrintingPrompt : nsISupports
    *         showPageSetup         - displays a XUL dialog
    *         showProgress          - displays a XUL dialog
    *         showPrinterProperties - displays a XUL dialog
-   *              
-   *  OS2: 
-   *
-   *       Defaults for platform service:           
-   *         showPrintDialog       - displays a XUL dialog
-   *         showPageSetup         - displays a XUL dialog
-   *         showProgress          - displays a XUL dialog
-   *         showPrinterProperties - displays a native dialog
-   *              
    *
    */
  

@@ -8,7 +8,7 @@ DIRS += ['shared', 'xpwidgets']
 
 toolkit = CONFIG['MOZ_WIDGET_TOOLKIT']
 
-if toolkit in ('os2', 'cocoa', 'qt', 'android', 'gonk'):
+if toolkit in ('cocoa', 'qt', 'android', 'gonk'):
     DIRS += [toolkit]
 if toolkit in ('qt', 'android', 'gonk', 'gtk2', 'gtk3'):
     EXPORTS += ['nsIPrintDialogService.h']
@@ -40,11 +40,6 @@ elif toolkit == 'cocoa':
         'nsINativeMenuService.h',
         'nsIPrintDialogService.h',
     ]
-elif toolkit == 'os2':
-    XPIDL_SOURCES += [
-        'nsIRwsService.idl',
-    ]
-    EXPORTS += ['nsIDragSessionOS2.h']
 
 TEST_TOOL_DIRS += ['tests']
 

@@ -20,14 +20,8 @@
 #include "nsIConsoleListener.h"
 #include "nsPrintfCString.h"
 
+#include "mozilla/Debug.h"
 #include "mozilla/Preferences.h"
-
-#if defined(ANDROID)
-#include <android/log.h>
-#endif
-#ifdef XP_WIN
-#include <windows.h>
-#endif
 
 using namespace mozilla;
 
@@ -191,24 +185,13 @@ nsConsoleService::LogMessageWithMode(nsIConsoleMessage *message, nsConsoleServic
     {
         MutexAutoLock lock(mLock);
 
-#if defined(ANDROID)
-        if (outputMode == OutputToLog)
-        {
-            nsXPIDLString msg;
-            message->GetMessageMoz(getter_Copies(msg));
-            __android_log_print(ANDROID_LOG_ERROR, "GeckoConsole",
-                        "%s",
-                        NS_LossyConvertUTF16toASCII(msg).get());
+        nsString msg;
+        message->GetMessageMoz(getter_Copies(msg));
+        LogOptions options = kPrintToDebugger | kPrintNewLine;
+        if (outputMode == OutputToLog) {
+            options |= kPrintErrorLog;
         }
-#endif
-#ifdef XP_WIN
-        if (IsDebuggerPresent()) {
-            nsString msg;
-            message->GetMessageMoz(getter_Copies(msg));
-            msg.AppendLiteral("\n");
-            OutputDebugStringW(msg.get());
-        }
-#endif
+        PrintToDebugger(msg, nullptr, options);
 
         /*
          * If there's already a message in the slot we're about to replace,

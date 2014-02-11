@@ -232,10 +232,6 @@ class nsIScriptTimeoutHandler;
 #endif // check
 #include "AccessCheck.h"
 
-#ifdef ANDROID
-#include <android/log.h>
-#endif
-
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gDOMLeakPRLog;
 #endif
@@ -2179,6 +2175,7 @@ CreateNativeGlobalForInner(JSContext* aCx,
   bool needComponents = nsContentUtils::IsSystemPrincipal(aPrincipal) ||
                         TreatAsRemoteXUL(aPrincipal);
   uint32_t flags = needComponents ? 0 : nsIXPConnect::OMIT_COMPONENTS_OBJECT;
+  flags |= nsIXPConnect::DONT_FIRE_ONNEWGLOBALHOOK;
 
   nsRefPtr<nsIXPConnectJSObjectHolder> jsholder;
   nsresult rv = xpc->InitClassesWithNewWrappedGlobal(
@@ -2591,6 +2588,13 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
 
   mContext->GC(JS::gcreason::SET_NEW_DOCUMENT);
   mContext->DidInitializeContext();
+
+  // We wait to fire the debugger hook until the window is all set up and hooked
+  // up with the outer. See bug 969156.
+  if (createdInnerWindow) {
+    JS::Rooted<JSObject*> global(cx, newInnerWindow->mJSObject);
+    JS_FireOnNewGlobalObject(cx, global);
+  }
 
   if (newInnerWindow && !newInnerWindow->mHasNotifiedGlobalCreated && mDoc) {
     // We should probably notify. However if this is the, arguably bad,
@@ -5804,31 +5808,7 @@ nsGlobalWindow::Dump(const nsAString& aStr)
     return NS_OK;
   }
 
-  char *cstr = ToNewUTF8String(aStr);
-
-#if defined(XP_MACOSX)
-  // have to convert \r to \n so that printing to the console works
-  char *c = cstr, *cEnd = cstr + strlen(cstr);
-  while (c < cEnd) {
-    if (*c == '\r')
-      *c = '\n';
-    c++;
-  }
-#endif
-
-  if (cstr) {
-#ifdef XP_WIN
-    PrintToDebugger(cstr);
-#endif
-#ifdef ANDROID
-    __android_log_write(ANDROID_LOG_INFO, "GeckoDump", cstr);
-#endif
-    FILE *fp = gDumpFile ? gDumpFile : stdout;
-    fputs(cstr, fp);
-    fflush(fp);
-    nsMemory::Free(cstr);
-  }
-
+  PrintToDebugger(aStr, gDumpFile ? gDumpFile : stdout);
   return NS_OK;
 }
 

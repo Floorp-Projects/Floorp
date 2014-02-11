@@ -318,7 +318,7 @@ CompositorParent::RecvMakeSnapshot(const SurfaceDescriptor& aInSnapshot,
   // do better if AutoOpenSurface uses Moz2D directly.
   RefPtr<DrawTarget> target =
     gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(opener.Get(), size);
-  ComposeToTarget(target);
+  ForceComposeToTarget(target);
   *aOutSnapshot = aInSnapshot;
   return true;
 }
@@ -330,7 +330,7 @@ CompositorParent::RecvFlushRendering()
   // and do it immediately instead.
   if (mCurrentCompositeTask) {
     mCurrentCompositeTask->Cancel();
-    ComposeToTarget(nullptr);
+    ForceComposeToTarget(nullptr);
   }
   return true;
 }
@@ -581,14 +581,11 @@ CompositorParent::ScheduleComposition()
 void
 CompositorParent::Composite()
 {
-  if (CanComposite()) {
-    mLayerManager->BeginTransaction();
-  }
-  CompositeInTransaction();
+  CompositeToTarget(nullptr);
 }
 
 void
-CompositorParent::CompositeInTransaction()
+CompositorParent::CompositeToTarget(DrawTarget* aTarget)
 {
   profiler_tracing("Paint", "Composite", TRACING_INTERVAL_START);
   PROFILER_LABEL("CompositorParent", "Composite");
@@ -603,6 +600,13 @@ CompositorParent::CompositeInTransaction()
   }
 
   AutoResolveRefLayers resolve(mCompositionManager);
+
+  if (aTarget) {
+    mLayerManager->BeginTransactionWithDrawTarget(aTarget);
+  } else {
+    mLayerManager->BeginTransaction();
+  }
+
   if (mForceCompositionTask && !mOverrideComposeReadiness) {
     if (mCompositionManager->ReadyForCompose()) {
       mForceCompositionTask->Cancel();
@@ -653,19 +657,13 @@ CompositorParent::CompositeInTransaction()
 }
 
 void
-CompositorParent::ComposeToTarget(DrawTarget* aTarget)
+CompositorParent::ForceComposeToTarget(DrawTarget* aTarget)
 {
-  PROFILER_LABEL("CompositorParent", "ComposeToTarget");
+  PROFILER_LABEL("CompositorParent", "ForceComposeToTarget");
   AutoRestore<bool> override(mOverrideComposeReadiness);
   mOverrideComposeReadiness = true;
 
-  if (!CanComposite()) {
-    return;
-  }
-  mLayerManager->BeginTransactionWithDrawTarget(aTarget);
-  // Since CanComposite() is true, Composite() must end the layers txn
-  // we opened above.
-  CompositeInTransaction();
+  CompositeToTarget(aTarget);
 }
 
 bool

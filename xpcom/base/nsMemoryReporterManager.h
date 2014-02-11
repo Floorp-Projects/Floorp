@@ -39,8 +39,8 @@ public:
     return static_cast<nsMemoryReporterManager*>(imgr.get());
   }
 
-  typedef nsTHashtable<nsISupportsHashKey>         StrongReportersTable;
-  typedef nsTHashtable<nsPtrHashKey<nsISupports> > WeakReportersTable;
+  typedef nsTHashtable<nsRefPtrHashKey<nsIMemoryReporter> > StrongReportersTable;
+  typedef nsTHashtable<nsPtrHashKey<nsIMemoryReporter> > WeakReportersTable;
 
   void IncrementNumChildProcesses();
   void DecrementNumChildProcesses();

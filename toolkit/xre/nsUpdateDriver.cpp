@@ -41,10 +41,6 @@
 # include "nsWindowsHelpers.h"
 # define getcwd(path, size) _getcwd(path, size)
 # define getpid() GetCurrentProcessId()
-#elif defined(XP_OS2)
-# include <unistd.h>
-# define INCL_DOSFILEMGR
-# include <os2.h>
 #elif defined(XP_UNIX)
 # include <unistd.h>
 #endif
@@ -123,10 +119,7 @@ GetCurrentWorkingDir(char *buf, size_t size)
   // Cannot use NS_GetSpecialDirectory because XPCOM is not yet initialized.
   // This code is duplicated from xpcom/io/SpecialSystemDirectory.cpp:
 
-#if defined(XP_OS2)
-  if (DosQueryPathInfo( ".", FIL_QUERYFULLNAME, buf, size))
-    return NS_ERROR_FAILURE;
-#elif defined(XP_WIN)
+#if defined(XP_WIN)
   wchar_t wpath[MAX_PATH];
   if (!_wgetcwd(wpath, size))
     return NS_ERROR_FAILURE;

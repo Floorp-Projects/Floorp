@@ -2027,8 +2027,6 @@ NS_GetNavigatorPlatform(nsAString& aPlatform)
   aPlatform.AssignLiteral("MacIntel");
 #elif defined(XP_MACOSX) && defined(__x86_64__)
   aPlatform.AssignLiteral("MacIntel");
-#elif defined(XP_OS2)
-  aPlatform.AssignLiteral("OS/2");
 #else
   // XXX Communicator uses compiled-in build-time string defines
   // to indicate the platform it was compiled *for*, not what it is

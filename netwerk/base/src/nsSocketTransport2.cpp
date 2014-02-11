@@ -884,7 +884,7 @@ nsSocketTransport::Init(const char **types, uint32_t typeCount,
 nsresult
 nsSocketTransport::InitWithFilename(const char *filename)
 {
-#if defined(XP_UNIX) || defined(XP_OS2)
+#if defined(XP_UNIX)
     size_t filenameLength = strlen(filename);
 
     if (filenameLength > sizeof(mNetAddr.local.path) - 1)
@@ -1002,7 +1002,7 @@ nsSocketTransport::ResolveHost()
 
     if (!mProxyHost.IsEmpty()) {
         if (!mProxyTransparent || mProxyTransparentResolvesHost) {
-#if defined(XP_UNIX) || defined(XP_OS2)
+#if defined(XP_UNIX)
             NS_ABORT_IF_FALSE(!mNetAddrIsSet || mNetAddr.raw.family != AF_LOCAL,
                               "Unix domain sockets can't be used with proxies");
 #endif
@@ -1069,7 +1069,7 @@ nsSocketTransport::BuildSocket(PRFileDesc *&fd, bool &proxyTransparent, bool &us
         rv = fd ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
     }
     else {
-#if defined(XP_UNIX) || defined(XP_OS2)
+#if defined(XP_UNIX)
         NS_ABORT_IF_FALSE(!mNetAddrIsSet || mNetAddr.raw.family != AF_LOCAL,
                           "Unix domain sockets can't be used with socket types");
 #endif
@@ -1398,7 +1398,7 @@ nsSocketTransport::RecoverFromError()
     SOCKET_LOG(("nsSocketTransport::RecoverFromError [this=%p state=%x cond=%x]\n",
         this, mState, mCondition));
 
-#if defined(XP_UNIX) || defined(XP_OS2)
+#if defined(XP_UNIX)
     // Unix domain connections don't have multiple addresses to try,
     // so the recovery techniques here don't apply.
     if (mNetAddrIsSet && mNetAddr.raw.family == AF_LOCAL)
@@ -1666,7 +1666,7 @@ nsSocketTransport::OnSocketEvent(uint32_t type, nsresult status, nsISupports *pa
             // Unix domain sockets are ready to connect; mNetAddr is all we
             // need. Internet address families require a DNS lookup (or possibly
             // several) before we can connect.
-#if defined(XP_UNIX) || defined(XP_OS2)
+#if defined(XP_UNIX)
             if (mNetAddrIsSet && mNetAddr.raw.family == AF_LOCAL)
                 mCondition = InitiateSocket();
             else
@@ -1912,7 +1912,7 @@ nsSocketTransport::IsLocal(bool *aIsLocal)
     {
         MutexAutoLock lock(mLock);
 
-#if defined(XP_UNIX) || defined(XP_OS2)
+#if defined(XP_UNIX)
         // Unix-domain sockets are always local.
         if (mNetAddr.raw.family == PR_AF_LOCAL)
         {
