@@ -91,6 +91,10 @@ richgriditem {
   padding: 8px;
   background-color: #fff;
 }
+richgriditem:-moz-locale-dir(rtl) .tile-start-container {
+  right: 10px;
+  left: 0;
+}
 
 richgriditem[search] .tile-start-container {
   background-color: transparent;
@@ -137,19 +141,33 @@ richgriditem[search] .tile-icon-box {
   padding: 0;
   border: 0;
   left: 50%;
-  margin-left: -13px;
+  -moz-margin-start: -13px;
   margin-top: -8px;
 }
+
+richgriditem[search]:-moz-locale-dir(rtl) .tile-icon-box {
+  right: 50%;
+  left: auto;
+}
+
 
 richgriditem[search][iconsize="large"] .tile-icon-box {
   left: 0;
   top: 0;
   margin: 0;
 }
+richgriditem[search][iconsize="large"]:-moz-locale-dir(rtl) .tile-icon-box {
+  right: 0;
+  left: auto;
+}
 
 richgriditem[search][iconsize="large"] .tile-start-container {
   left: 0;
   padding: 0;
+}
+richgriditem[search][iconsize="large"]:-moz-locale-dir(rtl) .tile-start-container {
+  left: auto;
+  right: 0;
 }
 
 richgriditem[search][iconsize="large"] .tile-icon-box > image {
@@ -169,9 +187,12 @@ richgriditem[search] .tile-content {
   display: block;
   position: absolute;
   top: 6px;
-  left: 52px; /* label goes to the right of the favicon */
+  left: 52px; /* label goes to the end (right) of the favicon */
   right: 0;
-  padding: 1em 6px 6px 12px;
+  padding-top: 1em;
+  -moz-padding-end: 6px;
+  padding-bottom: 6px;
+  -moz-padding-start: 12px;
   background: white;
   color: #333;
   margin: 0;
@@ -182,6 +203,10 @@ richgriditem[search] .tile-content {
   white-space: nowrap;
   text-overflow: ellipsis;
   transition: @metro_animation_duration@ background-color @metro_animation_easing@;
+}
+richgriditem:-moz-locale-dir(rtl) .tile-desc {
+  right: 52px; /* label goes to the end (left) of the favicon */
+  left: 0;
 }
 
 richgriditem:not([tiletype="thumbnail"]) .tile-desc {
@@ -219,7 +244,11 @@ richgriditem[tiletype="thumbnail"] .tile-desc {
   top: auto;
   bottom: 0;
   left: 0;
-  padding: 4px 8px 4px 56px;
+  right: 0;
+  padding-top: 4px;
+  -moz-padding-end: 8px;
+  padding-bottom: 4px;
+  -moz-padding-start: 56px;
 }
 
 richgriditem[tiletype="thumbnail"] > .tile-content > .tile-desc {
@@ -263,6 +292,10 @@ richgriditem[tiletype="thumbnail"] .tile-icon-box {
   z-index: 1;
   box-shadow: 0px 0px 2px 2px rgba(0, 0, 0, 0.05), 0px 2px 0px rgba(0, 0, 0, 0.1);
 }
+richgriditem[tiletype="thumbnail"]:-moz-locale-dir(rtl) .tile-icon-box {
+  left: auto;
+  right: 10px;
+}
 
 /* selected tile indicator */
 richgriditem[selected] > .tile-content::after {
@@ -277,11 +310,15 @@ richgriditem[selected] > .tile-content::after {
   z-index: 1;
   background-image: url(chrome://browser/skin/images/tile-selected-check-hdpi.png);
   background-origin: border-box;
-  background-position: right 0 top 0;
   background-repeat: no-repeat;
+  background-position: right 0 top 0;
   /* scale the image whatever the dppx */
   background-size: 35px 35px;
   border: @metro_border_xthick@ solid @selected_color@;
+}
+richgriditem[selected]:-moz-locale-dir(rtl) > .tile-content::after {
+  background-position: left 0 top 0;
+  background-image: url(chrome://browser/skin/images/tile-selected-check-rtl-hdpi.png);
 }
 
 richgriditem[crosssliding] {
@@ -312,6 +349,12 @@ richgriditem[pinned] > .tile-content::before {
   /* scale the image whatever the dppx */
   background-size: 70px 70px;
 }
+richgriditem[pinned]:-moz-locale-dir(rtl) > .tile-content::before {
+  left: 0;
+  right: auto;
+  -moz-transform: scaleX(-1);
+}
+
 
 /* Selected _and_ pinned tiles*/
 richgriditem[selected][pinned] > .tile-content::before {
@@ -319,10 +362,8 @@ richgriditem[selected][pinned] > .tile-content::before {
   width: 70px;
   height: 70px;
 }
-
-richgriditem[pinned]:-moz-locale-dir(rtl) > .tile-content::before {
-  left: 0;
-  right: auto;
+richgriditem[selected][pinned]:-moz-locale-dir(rtl) > .tile-content::before {
+  background-position: left -@metro_border_xthick@ top -@metro_border_xthick@;
 }
 
 richgriditem[customColor] {
@@ -373,7 +414,10 @@ richgriditem[tiletype="thumbnail"]:not([value]) > .tile-content {
   }
 
   .tile-desc {
-    padding: 0.5em 4px 4px 4px;
+    padding-top: 0.5em;
+    -moz-padding-end: 4px;
+    padding-bottom: 4px;
+    -moz-padding-start: 4px;
   }
 
   richgriditem:not([search]) > .tile-content {
