@@ -1020,8 +1020,9 @@ nsIFrame::IsSVGTransformed(gfx::Matrix *aOwnTransforms,
 bool
 nsIFrame::Preserves3DChildren() const
 {
-  if (StyleDisplay()->mTransformStyle != NS_STYLE_TRANSFORM_STYLE_PRESERVE_3D ||
-      !StyleDisplay()->HasTransform(this)) {
+  const nsStyleDisplay* disp = StyleDisplay();
+  if (disp->mTransformStyle != NS_STYLE_TRANSFORM_STYLE_PRESERVE_3D ||
+      !disp->HasTransform(this)) {
     return false;
   }
 
@@ -1031,9 +1032,8 @@ nsIFrame::Preserves3DChildren() const
   }
 
   nsRect temp;
-  const nsStyleDisplay* displayStyle = StyleDisplay();
-  return !nsFrame::ShouldApplyOverflowClipping(this, displayStyle) &&
-         !GetClipPropClipRect(displayStyle, &temp, GetSize()) &&
+  return !nsFrame::ShouldApplyOverflowClipping(this, disp) &&
+         !GetClipPropClipRect(disp, &temp, GetSize()) &&
          !nsSVGIntegrationUtils::UsingEffectsForFrame(this);
 }
 
