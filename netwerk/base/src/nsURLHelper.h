@@ -118,7 +118,7 @@ inline bool net_IsValidScheme(const nsAFlatCString &scheme)
  */
 NS_HIDDEN_(bool) net_FilterURIString(const char *str, nsACString& result);
 
-#if defined(XP_WIN) || defined(XP_OS2)
+#if defined(XP_WIN)
 /**
  * On Win32 and OS/2 system's a back-slash in a file:// URL is equivalent to a
  * forward-slash.  This function maps any back-slashes to forward-slashes.

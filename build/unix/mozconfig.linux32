@@ -5,6 +5,7 @@ if test `uname -m` = "x86_64"; then
   CC="$CC -m32 -march=pentiumpro"
   CXX="$CXX -m32 -march=pentiumpro"
   ac_add_options --target=i686-pc-linux
+  ac_add_options --host=i686-pc-linux
   ac_add_options --x-libraries=/usr/lib
   export PKG_CONFIG_LIBDIR=/usr/lib/pkgconfig:/usr/share/pkgconfig
 fi

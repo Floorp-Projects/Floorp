@@ -330,7 +330,7 @@ const CustomizableWidgets = [{
     tooltiptext: "preferences-button.tooltiptext.withshortcut",
     shortcutId: "key_preferencesCmdMac",
 #else
-    tooltiptext: "preferences-button.tooltiptext",
+    tooltiptext: "preferences-button.tooltiptext2",
 #endif
 #endif
     onCommand: function(aEvent) {

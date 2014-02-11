@@ -904,8 +904,6 @@ struct ParamTraits<NPCoordinateSpace>
 #  include "mozilla/plugins/NPEventOSX.h"
 #elif defined(XP_WIN)
 #  include "mozilla/plugins/NPEventWindows.h"
-#elif defined(XP_OS2)
-#  error Sorry, OS/2 is not supported
 #elif defined(ANDROID)
 #  include "mozilla/plugins/NPEventAndroid.h"
 #elif defined(XP_UNIX)

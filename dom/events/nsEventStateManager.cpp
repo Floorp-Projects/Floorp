@@ -1047,9 +1047,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
   case NS_MOUSE_BUTTON_DOWN: {
     switch (mouseEvent->button) {
     case WidgetMouseEvent::eLeftButton:
-#ifndef XP_OS2
       BeginTrackingDragGesture(aPresContext, mouseEvent, aTargetFrame);
-#endif
       mLClickCount = mouseEvent->clickCount;
       SetClickCount(aPresContext, mouseEvent, aStatus);
       sNormalLMouseEventInProcess = true;
@@ -1059,9 +1057,6 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       SetClickCount(aPresContext, mouseEvent, aStatus);
       break;
     case WidgetMouseEvent::eRightButton:
-#ifdef XP_OS2
-      BeginTrackingDragGesture(aPresContext, mouseEvent, aTargetFrame);
-#endif
       mRClickCount = mouseEvent->clickCount;
       SetClickCount(aPresContext, mouseEvent, aStatus);
       break;
@@ -1074,16 +1069,10 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
         if (Prefs::ClickHoldContextMenu()) {
           KillClickHoldTimer();
         }
-#ifndef XP_OS2
         StopTrackingDragGesture();
-#endif
         sNormalLMouseEventInProcess = false;
         // then fall through...
       case WidgetMouseEvent::eRightButton:
-#ifdef XP_OS2
-        StopTrackingDragGesture();
-#endif
-        // then fall through...
       case WidgetMouseEvent::eMiddleButton:
         SetClickCount(aPresContext, mouseEvent, aStatus);
         break;

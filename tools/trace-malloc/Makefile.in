@@ -19,10 +19,6 @@ endif
 
 CPPSRCS += $(EXTRACPPSRCS)
 
-ifeq ($(OS_ARCH),WINNT)
-LOCAL_INCLUDES	+= -I$(topsrcdir)/config/os2
-endif
-
 include $(topsrcdir)/config/config.mk
 
 LIBS		+= \

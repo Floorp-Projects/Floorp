@@ -18,7 +18,7 @@ class UsageInfo
 {
 public:
   UsageInfo()
-  : mCanceled(0), mDatabaseUsage(0), mFileUsage(0)
+  : mCanceled(false), mDatabaseUsage(0), mFileUsage(0)
   { }
 
   virtual ~UsageInfo()
@@ -70,7 +70,7 @@ public:
   }
 
 protected:
-  mozilla::Atomic<int32_t> mCanceled;
+  mozilla::Atomic<bool> mCanceled;
 
 private:
   uint64_t mDatabaseUsage;

@@ -102,7 +102,7 @@ struct ParamTraits<mozilla::net::NetAddr>
       WriteParam(aMsg, aParam.inet6.ip.u64[0]);
       WriteParam(aMsg, aParam.inet6.ip.u64[1]);
       WriteParam(aMsg, aParam.inet6.scope_id);
-#if defined(XP_UNIX) || defined(XP_OS2)
+#if defined(XP_UNIX)
     } else if (aParam.raw.family == AF_LOCAL) {
       // Train's already off the rails:  let's get a stack trace at least...
       NS_RUNTIMEABORT("Error: please post stack trace to "
@@ -133,7 +133,7 @@ struct ParamTraits<mozilla::net::NetAddr>
              ReadParam(aMsg, aIter, &aResult->inet6.ip.u64[0]) &&
              ReadParam(aMsg, aIter, &aResult->inet6.ip.u64[1]) &&
              ReadParam(aMsg, aIter, &aResult->inet6.scope_id);
-#if defined(XP_UNIX) || defined(XP_OS2)
+#if defined(XP_UNIX)
     } else if (aResult->raw.family == AF_LOCAL) {
       return aMsg->ReadBytes(aIter,
                              reinterpret_cast<const char**>(&aResult->local.path),

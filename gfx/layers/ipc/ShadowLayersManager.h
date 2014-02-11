@@ -12,6 +12,7 @@ namespace layers {
 
 class TargetConfig;
 class LayerTransactionParent;
+class AsyncCompositionManager;
 
 class ShadowLayersManager
 {
@@ -20,6 +21,8 @@ public:
                                      const TargetConfig& aTargetConfig,
                                      bool aIsFirstPaint,
                                      bool aScheduleComposite) = 0;
+
+    virtual AsyncCompositionManager* GetCompositionManager() { return nullptr; }
 };
 
 } // layers

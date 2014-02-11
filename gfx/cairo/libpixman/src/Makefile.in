@@ -45,9 +45,7 @@ endif
 ifdef USE_SSE2
 SSE2_CFLAGS=-msse -msse2 -Winline
 endif
-ifneq ($(MOZ_WIDGET_TOOLKIT),os2)
 MMX_CFLAGS+=--param inline-unit-growth=10000 --param large-function-growth=10000
-endif
 endif
 ifeq (arm,$(findstring arm,$(OS_TEST)))
 # Apple's arm assembler doesn't support the same syntax as

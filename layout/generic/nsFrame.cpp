@@ -1020,18 +1020,20 @@ nsIFrame::IsSVGTransformed(gfx::Matrix *aOwnTransforms,
 bool
 nsIFrame::Preserves3DChildren() const
 {
-  if (StyleDisplay()->mTransformStyle != NS_STYLE_TRANSFORM_STYLE_PRESERVE_3D ||
-      !StyleDisplay()->HasTransform(this))
-      return false;
+  const nsStyleDisplay* disp = StyleDisplay();
+  if (disp->mTransformStyle != NS_STYLE_TRANSFORM_STYLE_PRESERVE_3D ||
+      !disp->HasTransform(this)) {
+    return false;
+  }
 
   // If we're all scroll frame, then all descendants will be clipped, so we can't preserve 3d.
-  if (GetType() == nsGkAtoms::scrollFrame)
-      return false;
+  if (GetType() == nsGkAtoms::scrollFrame) {
+    return false;
+  }
 
   nsRect temp;
-  const nsStyleDisplay* displayStyle = StyleDisplay();
-  return !nsFrame::ShouldApplyOverflowClipping(this, displayStyle) &&
-         !GetClipPropClipRect(displayStyle, &temp, GetSize()) &&
+  return !nsFrame::ShouldApplyOverflowClipping(this, disp) &&
+         !GetClipPropClipRect(disp, &temp, GetSize()) &&
          !nsSVGIntegrationUtils::UsingEffectsForFrame(this);
 }
 
@@ -1051,30 +1053,21 @@ nsIFrame::HasPerspective() const
   if (!IsTransformed()) {
     return false;
   }
-  const nsStyleDisplay* parentDisp = nullptr;
   nsStyleContext* parentStyleContext = StyleContext()->GetParent();
-  if (parentStyleContext) {
-    parentDisp = parentStyleContext->StyleDisplay();
+  if (!parentStyleContext) {
+    return false;
   }
-
-  if (parentDisp &&
-      parentDisp->mChildPerspective.GetUnit() == eStyleUnit_Coord &&
-      parentDisp->mChildPerspective.GetCoordValue() > 0.0) {
-    return true;
-  }
-  return false;
+  const nsStyleDisplay* parentDisp = parentStyleContext->StyleDisplay();
+  return parentDisp->mChildPerspective.GetUnit() == eStyleUnit_Coord &&
+         parentDisp->mChildPerspective.GetCoordValue() > 0.0;
 }
 
 bool
 nsIFrame::ChildrenHavePerspective() const
 {
   const nsStyleDisplay *disp = StyleDisplay();
-  if (disp &&
-      disp->mChildPerspective.GetUnit() == eStyleUnit_Coord &&
-      disp->mChildPerspective.GetCoordValue() > 0.0) {
-    return true;
-  }
-  return false;
+  return disp->mChildPerspective.GetUnit() == eStyleUnit_Coord &&
+         disp->mChildPerspective.GetCoordValue() > 0.0;
 }
 
 nsRect

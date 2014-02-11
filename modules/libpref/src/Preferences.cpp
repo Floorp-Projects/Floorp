@@ -1252,8 +1252,6 @@ static nsresult pref_InitInitialObjects()
 #elif defined(_AIX)
     , "aix.js"
 #endif
-#elif defined(XP_OS2)
-    "os2pref.js"
 #elif defined(XP_BEOS)
     "beos.js"
 #endif

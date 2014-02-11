@@ -21,13 +21,6 @@
 #endif
 #endif
 
-// URL file handling for OS/2
-#ifdef XP_OS2
-#include "prio.h"
-#include "nsIFileURL.h"
-#include "nsILocalFileOS2.h"
-#endif
-
 // URL file handling for freedesktop.org
 #ifdef XP_UNIX
 #include "nsINIParser.h"
@@ -96,50 +89,6 @@ nsFileProtocolHandler::ReadURLFile(nsIFile* aFile, nsIURI** aURI)
         }
         urlLink->Release();
     }
-    return rv;
-}
-
-#elif defined(XP_OS2)
-NS_IMETHODIMP
-nsFileProtocolHandler::ReadURLFile(nsIFile* aFile, nsIURI** aURI)
-{
-    nsresult rv;
-
-    nsCOMPtr<nsILocalFileOS2> os2File (do_QueryInterface(aFile, &rv));
-    if (NS_FAILED(rv))
-        return NS_ERROR_NOT_AVAILABLE;
-
-    // see if this file is a WPS UrlObject
-    bool isUrl;
-    rv = os2File->IsFileType(NS_LITERAL_CSTRING("UniformResourceLocator"),
-                             &isUrl);
-    if (NS_FAILED(rv) || !isUrl)
-        return NS_ERROR_NOT_AVAILABLE;
-
-    // if so, open it & get its size
-    PRFileDesc *file;
-    rv = os2File->OpenNSPRFileDesc(PR_RDONLY, 0, &file);
-    if (NS_FAILED(rv))
-        return NS_ERROR_NOT_AVAILABLE;
-
-    int64_t fileSize;
-    os2File->GetFileSize(&fileSize);
-    rv = NS_ERROR_NOT_AVAILABLE;
-
-    // get a buffer, read the entire file, then create
-    // an nsURI;  we assume the string is already escaped
-    char * buffer = (char*)NS_Alloc(fileSize+1);
-    if (buffer) {
-        int32_t cnt = PR_Read(file, buffer, fileSize);
-        if (cnt > 0) {
-            buffer[cnt] = '\0';
-            if (NS_SUCCEEDED(NS_NewURI(aURI, nsDependentCString(buffer))))
-                rv = NS_OK;
-        }
-        NS_Free(buffer);
-    }
-    PR_Close(file);
-
     return rv;
 }
 
@@ -214,7 +163,7 @@ nsFileProtocolHandler::NewURI(const nsACString &spec,
 
     const nsACString *specPtr = &spec;
 
-#if defined(XP_WIN) || defined(XP_OS2)
+#if defined(XP_WIN)
     nsAutoCString buf;
     if (net_NormalizeFileURL(spec, buf))
         specPtr = &buf;

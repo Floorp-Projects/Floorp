@@ -170,6 +170,8 @@
       gQueue.push(new focusMenu("menubar4", "mb4-item1"));
       gQueue.push(new focusMenu("menubar5", "mb5-mi"));
 
+      gQueue.push(new synthFocus("mi6"));
+
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
 
@@ -209,6 +211,11 @@
      href="https://bugzilla.mozilla.org/show_bug.cgi?id=934460"
      title="menustart/end events may be missed when top level menuitem is focused">
     Bug 934460
+  </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=970005"
+     title="infinite long loop in a11y:FocusManager::ProcessFocusEvent">
+    Bug 970005
   </a>
 
   <p id="display"></p>
@@ -264,6 +271,10 @@
       </div>
     </div>
   </div>
+
+  <!-- other aria-owns relations -->
+  <div id="mi6" tabindex="0" role="menuitem">aria-owned item</div>
+  <div aria-owns="mi6">Obla</div>
 
   <div id="eventdump"></div>
 

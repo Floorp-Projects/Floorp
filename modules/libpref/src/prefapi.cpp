@@ -14,9 +14,6 @@
 #define PL_ARENA_CONST_ALIGN_MASK 3
 #include "plarena.h"
 
-#ifdef XP_OS2
-  #include <sys/types.h>
-#endif
 #ifdef _WIN32
   #include "windows.h"
 #endif /* _WIN32 */
@@ -32,11 +29,6 @@
 #include "nsString.h"
 #include "nsPrintfCString.h"
 #include "prlink.h"
-
-#ifdef XP_OS2
-#define INCL_DOS
-#include <os2.h>
-#endif
 
 using namespace mozilla;
 

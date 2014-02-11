@@ -11,7 +11,6 @@
 #include "nsWin32Locale.h"
 #include "nsCOMPtr.h"
 #include "nsReadableUtils.h"
-#include "nsLocaleCID.h"
 #include "nsServiceManagerUtils.h"
 #include "nsPlatformCharset.h"
 #include "nsEncoderDecoderUtils.h"

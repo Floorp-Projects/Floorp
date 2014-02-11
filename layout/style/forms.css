@@ -969,24 +969,3 @@ input[type="number"] > div > div > div:hover {
   /* give some indication of hover state for the up/down buttons */
   background-color: lightblue;
 }
-
-%ifdef XP_OS2
-input {
-  font: medium serif; font-family: inherit
-}
-
-select {
-  font: medium serif; font-family: inherit
-}
-
-optgroup {
-  font: medium serif; font-family: inherit
-}
-
-input[type="reset"],
-input[type="button"],
-input[type="submit"] { 
-  font: medium serif; font-family: inherit
-}
-
-%endif

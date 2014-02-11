@@ -27,9 +27,6 @@
 #ifdef XP_WIN
 #include <windows.h>
 #endif
-#ifdef XP_OS2
-#include <os2.h>
-#endif
 
 static int gKeepRunning = 0;
 /////////////////////////////////

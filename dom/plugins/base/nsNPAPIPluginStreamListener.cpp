@@ -866,7 +866,7 @@ nsNPAPIPluginStreamListener::HandleRedirectNotification(nsIChannel *oldChannel, 
 
           NPP npp;
           mInst->GetNPP(&npp);
-#if defined(XP_WIN) || defined(XP_OS2)
+#if defined(XP_WIN)
           NS_TRY_SAFE_CALL_VOID((*pluginFunctions->urlredirectnotify)(npp, spec.get(), static_cast<int32_t>(status), mNPStreamWrapper->mNPStream.notifyData), mInst,
                                 NS_PLUGIN_CALL_UNSAFE_TO_REENTER_GECKO);
 #else

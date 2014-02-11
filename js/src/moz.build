@@ -18,15 +18,20 @@ TEST_DIRS += ['jsapi-tests', 'tests', 'gdb']
 
 LOCAL_INCLUDES += ['../../mfbt/double-conversion']
 
-if CONFIG['JS_STANDALONE']:
-    LIBRARY_NAME = 'mozjs-%s' % CONFIG['MOZILLA_SYMBOLVERSION']
-else:
-    LIBRARY_NAME = 'mozjs'
+LIBRARY_NAME = CONFIG['JS_LIBRARY_NAME']
 
 CONFIGURE_SUBST_FILES += [
     'devtools/rootAnalysis/Makefile',
     'js-confdefs.h',
+    'js-config',
+    'js.pc',
 ]
+
+if not CONFIG['JS_STANDALONE']:
+    CONFIGURE_SUBST_FILES += [
+        '../../config/autoconf-js.mk',
+        '../../config/emptyvars-js.mk',
+    ]
 
 CONFIGURE_DEFINE_FILES += [
     'js-config.h',
@@ -334,11 +339,6 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     SOURCES += [
         'assembler/jit/ExecutableAllocatorWin.cpp',
         'yarr/OSAllocatorWin.cpp',
-    ]
-elif CONFIG['OS_ARCH'] == 'OS2':
-    SOURCES += [
-        'assembler/jit/ExecutableAllocatorOS2.cpp',
-        'yarr/OSAllocatorOS2.cpp',
     ]
 else:
     SOURCES += [

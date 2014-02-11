@@ -8,7 +8,7 @@
 
 #include "nscore.h" // nullptr
 
-#if defined(XP_UNIX) || defined(XP_OS2)
+#if defined(XP_UNIX)
 # include <unistd.h>
 #elif defined(XP_WIN)
 # include <io.h>

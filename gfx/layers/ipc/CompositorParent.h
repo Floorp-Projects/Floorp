@@ -100,6 +100,7 @@ public:
                                    const TargetConfig& aTargetConfig,
                                    bool aIsFirstPaint,
                                    bool aScheduleComposite) MOZ_OVERRIDE;
+  virtual AsyncCompositionManager* GetCompositionManager() MOZ_OVERRIDE { return mCompositionManager; }
   /**
    * This forces the is-first-paint flag to true. This is intended to
    * be called by the widget code when it loses its viewport information
@@ -243,8 +244,8 @@ protected:
   virtual bool DeallocPLayerTransactionParent(PLayerTransactionParent* aLayers) MOZ_OVERRIDE;
   virtual void ScheduleTask(CancelableTask*, int);
   void Composite();
-  void CompositeInTransaction();
-  virtual void ComposeToTarget(gfx::DrawTarget* aTarget);
+  void CompositeToTarget(gfx::DrawTarget* aTarget);
+  void ForceComposeToTarget(gfx::DrawTarget* aTarget);
 
   void SetEGLSurfaceSize(int width, int height);
 

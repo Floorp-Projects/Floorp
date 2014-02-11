@@ -138,7 +138,9 @@ FinishCreate(XPCWrappedNativeScope* Scope,
 // case the logic and do some things in a different order.
 nsresult
 XPCWrappedNative::WrapNewGlobal(xpcObjectHelper &nativeHelper,
-                                nsIPrincipal *principal, bool initStandardClasses,
+                                nsIPrincipal *principal,
+                                bool initStandardClasses,
+                                bool fireOnNewGlobalHook,
                                 JS::CompartmentOptions& aOptions,
                                 XPCWrappedNative **wrappedGlobal)
 {
@@ -266,7 +268,8 @@ XPCWrappedNative::WrapNewGlobal(xpcObjectHelper &nativeHelper,
                                wrapper, wrappedGlobal);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    JS_FireOnNewGlobalObject(cx, global);
+    if (fireOnNewGlobalHook)
+        JS_FireOnNewGlobalObject(cx, global);
     return NS_OK;
 }
 

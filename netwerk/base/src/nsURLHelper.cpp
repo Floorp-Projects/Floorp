@@ -614,7 +614,7 @@ net_FilterURIString(const char *str, nsACString& result)
     return writing;
 }
 
-#if defined(XP_WIN) || defined(XP_OS2)
+#if defined(XP_WIN)
 bool
 net_NormalizeFileURL(const nsACString &aURL, nsCString &aResultBuf)
 {

@@ -63,12 +63,6 @@
 #endif
 #endif
 
-#ifdef XP_OS2
-#define INCL_DOS
-#define INCL_DOSERRORS
-#include <os2.h>
-#endif
-
 #include "nsJSNPRuntime.h"
 #include "nsIHttpAuthManager.h"
 #include "nsICookieService.h"
@@ -431,7 +425,7 @@ nsNPAPIPlugin::CreatePlugin(nsPluginTag *aPluginTag, nsNPAPIPlugin** aResult)
   nsresult rv;
 
 // Exchange NPAPI entry points.
-#if defined(XP_WIN) || defined(XP_OS2)
+#if defined(XP_WIN)
   // NP_GetEntryPoints must be called before NP_Initialize on Windows.
   rv = pluginLib->NP_GetEntryPoints(&plugin->mPluginFuncs, &pluginCallError);
   if (rv != NS_OK || pluginCallError != NPERR_NO_ERROR) {
@@ -864,7 +858,7 @@ namespace mozilla {
 namespace plugins {
 namespace parent {
 
-NPError NP_CALLBACK
+NPError
 _geturl(NPP npp, const char* relativeURL, const char* target)
 {
   if (!NS_IsMainThread()) {
@@ -900,7 +894,7 @@ _geturl(NPP npp, const char* relativeURL, const char* target)
                                     eNPPStreamTypeInternal_Get);
 }
 
-NPError NP_CALLBACK
+NPError
 _geturlnotify(NPP npp, const char* relativeURL, const char* target,
               void* notifyData)
 {
@@ -920,7 +914,7 @@ _geturlnotify(NPP npp, const char* relativeURL, const char* target,
                                     notifyData);
 }
 
-NPError NP_CALLBACK
+NPError
 _posturlnotify(NPP npp, const char *relativeURL, const char *target,
                uint32_t len, const char *buf, NPBool file, void *notifyData)
 {
@@ -944,7 +938,7 @@ _posturlnotify(NPP npp, const char *relativeURL, const char *target,
                                     notifyData, len, buf, file);
 }
 
-NPError NP_CALLBACK
+NPError
 _posturl(NPP npp, const char *relativeURL, const char *target,
          uint32_t len, const char *buf, NPBool file)
 {
@@ -964,7 +958,7 @@ _posturl(NPP npp, const char *relativeURL, const char *target,
                                     len, buf, file);
 }
 
-NPError NP_CALLBACK
+NPError
 _newstream(NPP npp, NPMIMEType type, const char* target, NPStream* *result)
 {
   if (!NS_IsMainThread()) {
@@ -998,7 +992,7 @@ _newstream(NPP npp, NPMIMEType type, const char* target, NPStream* *result)
   return err;
 }
 
-int32_t NP_CALLBACK
+int32_t
 _write(NPP npp, NPStream *pstream, int32_t len, void *buffer)
 {
   if (!NS_IsMainThread()) {
@@ -1035,7 +1029,7 @@ _write(NPP npp, NPStream *pstream, int32_t len, void *buffer)
   return (int32_t)count;
 }
 
-NPError NP_CALLBACK
+NPError
 _destroystream(NPP npp, NPStream *pstream, NPError reason)
 {
   if (!NS_IsMainThread()) {
@@ -1085,7 +1079,7 @@ _destroystream(NPP npp, NPStream *pstream, NPError reason)
   return NPERR_NO_ERROR;
 }
 
-void NP_CALLBACK
+void
 _status(NPP npp, const char *message)
 {
   if (!NS_IsMainThread()) {
@@ -1107,7 +1101,7 @@ _status(NPP npp, const char *message)
   inst->ShowStatus(message);
 }
 
-void NP_CALLBACK
+void
 _memfree (void *ptr)
 {
   if (!NS_IsMainThread()) {
@@ -1119,7 +1113,7 @@ _memfree (void *ptr)
     nsMemory::Free(ptr);
 }
 
-uint32_t NP_CALLBACK
+uint32_t
 _memflush(uint32_t size)
 {
   if (!NS_IsMainThread()) {
@@ -1131,7 +1125,7 @@ _memflush(uint32_t size)
   return 0;
 }
 
-void NP_CALLBACK
+void
 _reloadplugins(NPBool reloadPages)
 {
   if (!NS_IsMainThread()) {
@@ -1148,7 +1142,7 @@ _reloadplugins(NPBool reloadPages)
   pluginHost->ReloadPlugins();
 }
 
-void NP_CALLBACK
+void
 _invalidaterect(NPP npp, NPRect *invalidRect)
 {
   if (!NS_IsMainThread()) {
@@ -1172,7 +1166,7 @@ _invalidaterect(NPP npp, NPRect *invalidRect)
   inst->InvalidateRect((NPRect *)invalidRect);
 }
 
-void NP_CALLBACK
+void
 _invalidateregion(NPP npp, NPRegion invalidRegion)
 {
   if (!NS_IsMainThread()) {
@@ -1195,12 +1189,12 @@ _invalidateregion(NPP npp, NPRegion invalidRegion)
   inst->InvalidateRegion((NPRegion)invalidRegion);
 }
 
-void NP_CALLBACK
+void
 _forceredraw(NPP npp)
 {
 }
 
-NPObject* NP_CALLBACK
+NPObject*
 _getwindowobject(NPP npp)
 {
   if (!NS_IsMainThread()) {
@@ -1220,7 +1214,7 @@ _getwindowobject(NPP npp)
   return nsJSObjWrapper::GetNewOrUsed(npp, cx, global);
 }
 
-NPObject* NP_CALLBACK
+NPObject*
 _getpluginelement(NPP npp)
 {
   if (!NS_IsMainThread()) {
@@ -1257,7 +1251,7 @@ _getpluginelement(NPP npp)
   return nsJSObjWrapper::GetNewOrUsed(npp, cx, obj);
 }
 
-NPIdentifier NP_CALLBACK
+NPIdentifier
 _getstringidentifier(const NPUTF8* name)
 {
   if (!name) {
@@ -1272,7 +1266,7 @@ _getstringidentifier(const NPUTF8* name)
   return doGetIdentifier(cx, name);
 }
 
-void NP_CALLBACK
+void
 _getstringidentifiers(const NPUTF8** names, int32_t nameCount,
                       NPIdentifier *identifiers)
 {
@@ -1292,7 +1286,7 @@ _getstringidentifiers(const NPUTF8** names, int32_t nameCount,
   }
 }
 
-NPIdentifier NP_CALLBACK
+NPIdentifier
 _getintidentifier(int32_t intid)
 {
   if (!NS_IsMainThread()) {
@@ -1301,7 +1295,7 @@ _getintidentifier(int32_t intid)
   return IntToNPIdentifier(intid);
 }
 
-NPUTF8* NP_CALLBACK
+NPUTF8*
 _utf8fromidentifier(NPIdentifier id)
 {
   if (!NS_IsMainThread()) {
@@ -1321,7 +1315,7 @@ _utf8fromidentifier(NPIdentifier id)
                                       ::JS_GetStringLength(str)));
 }
 
-int32_t NP_CALLBACK
+int32_t
 _intfromidentifier(NPIdentifier id)
 {
   if (!NS_IsMainThread()) {
@@ -1335,7 +1329,7 @@ _intfromidentifier(NPIdentifier id)
   return NPIdentifierToInt(id);
 }
 
-bool NP_CALLBACK
+bool
 _identifierisstring(NPIdentifier id)
 {
   if (!NS_IsMainThread()) {
@@ -1345,7 +1339,7 @@ _identifierisstring(NPIdentifier id)
   return NPIdentifierIsString(id);
 }
 
-NPObject* NP_CALLBACK
+NPObject*
 _createobject(NPP npp, NPClass* aClass)
 {
   if (!NS_IsMainThread()) {
@@ -1388,7 +1382,7 @@ _createobject(NPP npp, NPClass* aClass)
   return npobj;
 }
 
-NPObject* NP_CALLBACK
+NPObject*
 _retainobject(NPObject* npobj)
 {
   if (!NS_IsMainThread()) {
@@ -1405,7 +1399,7 @@ _retainobject(NPObject* npobj)
   return npobj;
 }
 
-void NP_CALLBACK
+void
 _releaseobject(NPObject* npobj)
 {
   if (!NS_IsMainThread()) {
@@ -1431,7 +1425,7 @@ _releaseobject(NPObject* npobj)
   }
 }
 
-bool NP_CALLBACK
+bool
 _invoke(NPP npp, NPObject* npobj, NPIdentifier method, const NPVariant *args,
         uint32_t argCount, NPVariant *result)
 {
@@ -1454,7 +1448,7 @@ _invoke(NPP npp, NPObject* npobj, NPIdentifier method, const NPVariant *args,
   return npobj->_class->invoke(npobj, method, args, argCount, result);
 }
 
-bool NP_CALLBACK
+bool
 _invokeDefault(NPP npp, NPObject* npobj, const NPVariant *args,
                uint32_t argCount, NPVariant *result)
 {
@@ -1475,7 +1469,7 @@ _invokeDefault(NPP npp, NPObject* npobj, const NPVariant *args,
   return npobj->_class->invokeDefault(npobj, args, argCount, result);
 }
 
-bool NP_CALLBACK
+bool
 _evaluate(NPP npp, NPObject* npobj, NPString *script, NPVariant *result)
 {
   if (!NS_IsMainThread()) {
@@ -1567,7 +1561,7 @@ _evaluate(NPP npp, NPObject* npobj, NPString *script, NPVariant *result)
          (!result || JSValToNPVariant(npp, cx, rval, result));
 }
 
-bool NP_CALLBACK
+bool
 _getproperty(NPP npp, NPObject* npobj, NPIdentifier property,
              NPVariant *result)
 {
@@ -1673,7 +1667,7 @@ _getproperty(NPP npp, NPObject* npobj, NPIdentifier property,
   return true;
 }
 
-bool NP_CALLBACK
+bool
 _setproperty(NPP npp, NPObject* npobj, NPIdentifier property,
              const NPVariant *value)
 {
@@ -1694,7 +1688,7 @@ _setproperty(NPP npp, NPObject* npobj, NPIdentifier property,
   return npobj->_class->setProperty(npobj, property, value);
 }
 
-bool NP_CALLBACK
+bool
 _removeproperty(NPP npp, NPObject* npobj, NPIdentifier property)
 {
   if (!NS_IsMainThread()) {
@@ -1714,7 +1708,7 @@ _removeproperty(NPP npp, NPObject* npobj, NPIdentifier property)
   return npobj->_class->removeProperty(npobj, property);
 }
 
-bool NP_CALLBACK
+bool
 _hasproperty(NPP npp, NPObject* npobj, NPIdentifier propertyName)
 {
   if (!NS_IsMainThread()) {
@@ -1734,7 +1728,7 @@ _hasproperty(NPP npp, NPObject* npobj, NPIdentifier propertyName)
   return npobj->_class->hasProperty(npobj, propertyName);
 }
 
-bool NP_CALLBACK
+bool
 _hasmethod(NPP npp, NPObject* npobj, NPIdentifier methodName)
 {
   if (!NS_IsMainThread()) {
@@ -1754,7 +1748,7 @@ _hasmethod(NPP npp, NPObject* npobj, NPIdentifier methodName)
   return npobj->_class->hasMethod(npobj, methodName);
 }
 
-bool NP_CALLBACK
+bool
 _enumerate(NPP npp, NPObject *npobj, NPIdentifier **identifier,
            uint32_t *count)
 {
@@ -1781,7 +1775,7 @@ _enumerate(NPP npp, NPObject *npobj, NPIdentifier **identifier,
   return npobj->_class->enumerate(npobj, identifier, count);
 }
 
-bool NP_CALLBACK
+bool
 _construct(NPP npp, NPObject* npobj, const NPVariant *args,
                uint32_t argCount, NPVariant *result)
 {
@@ -1801,7 +1795,7 @@ _construct(NPP npp, NPObject* npobj, const NPVariant *args,
   return npobj->_class->construct(npobj, args, argCount, result);
 }
 
-void NP_CALLBACK
+void
 _releasevariantvalue(NPVariant* variant)
 {
   if (!NS_IsMainThread()) {
@@ -1858,7 +1852,7 @@ _releasevariantvalue(NPVariant* variant)
   VOID_TO_NPVARIANT(*variant);
 }
 
-void NP_CALLBACK
+void
 _setexception(NPObject* npobj, const NPUTF8 *message)
 {
   if (!NS_IsMainThread()) {
@@ -1877,7 +1871,7 @@ _setexception(NPObject* npobj, const NPUTF8 *message)
   gNPPException = strdup(message);
 }
 
-NPError NP_CALLBACK
+NPError
 _getvalue(NPP npp, NPNVariable variable, void *result)
 {
   if (!NS_IsMainThread()) {
@@ -1940,8 +1934,7 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
     return NPERR_GENERIC_ERROR;
 #endif
 
-#if defined(XP_WIN) || defined(XP_OS2) || (MOZ_WIDGET_GTK == 2) \
- || defined(MOZ_WIDGET_QT)
+#if defined(XP_WIN) || (MOZ_WIDGET_GTK == 2) || defined(MOZ_WIDGET_QT)
   case NPNVnetscapeWindow: {
     if (!npp || !npp->ndata)
       return NPERR_INVALID_INSTANCE_ERROR;
@@ -2348,7 +2341,7 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
   }
 }
 
-NPError NP_CALLBACK
+NPError
 _setvalue(NPP npp, NPPVariable variable, void *result)
 {
   if (!NS_IsMainThread()) {
@@ -2444,7 +2437,7 @@ _setvalue(NPP npp, NPPVariable variable, void *result)
   }
 }
 
-NPError NP_CALLBACK
+NPError
 _requestread(NPStream *pstream, NPByteRange *rangeList)
 {
   if (!NS_IsMainThread()) {
@@ -2490,14 +2483,14 @@ _requestread(NPStream *pstream, NPByteRange *rangeList)
 }
 
 // Deprecated, only stubbed out
-void* NP_CALLBACK /* OJI type: JRIEnv* */
+void* /* OJI type: JRIEnv* */
 _getJavaEnv()
 {
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("NPN_GetJavaEnv\n"));
   return nullptr;
 }
 
-const char * NP_CALLBACK
+const char *
 _useragent(NPP npp)
 {
   if (!NS_IsMainThread()) {
@@ -2520,7 +2513,7 @@ _useragent(NPP npp)
   return retstr;
 }
 
-void * NP_CALLBACK
+void *
 _memalloc (uint32_t size)
 {
   if (!NS_IsMainThread()) {
@@ -2531,14 +2524,14 @@ _memalloc (uint32_t size)
 }
 
 // Deprecated, only stubbed out
-void* NP_CALLBACK /* OJI type: jref */
+void* /* OJI type: jref */
 _getJavaPeer(NPP npp)
 {
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL, ("NPN_GetJavaPeer: npp=%p\n", (void*)npp));
   return nullptr;
 }
 
-void NP_CALLBACK
+void
 _pushpopupsenabledstate(NPP npp, NPBool enabled)
 {
   if (!NS_IsMainThread()) {
@@ -2552,7 +2545,7 @@ _pushpopupsenabledstate(NPP npp, NPBool enabled)
   inst->PushPopupsEnabledState(enabled);
 }
 
-void NP_CALLBACK
+void
 _poppopupsenabledstate(NPP npp)
 {
   if (!NS_IsMainThread()) {
@@ -2566,7 +2559,7 @@ _poppopupsenabledstate(NPP npp)
   inst->PopPopupsEnabledState();
 }
 
-void NP_CALLBACK
+void
 _pluginthreadasynccall(NPP instance, PluginThreadCallback func, void *userData)
 {
   if (NS_IsMainThread()) {
@@ -2582,7 +2575,7 @@ _pluginthreadasynccall(NPP instance, PluginThreadCallback func, void *userData)
   }
 }
 
-NPError NP_CALLBACK
+NPError
 _getvalueforurl(NPP instance, NPNURLVariable variable, const char *url,
                 char **value, uint32_t *len)
 {
@@ -2641,7 +2634,7 @@ _getvalueforurl(NPP instance, NPNURLVariable variable, const char *url,
   return NPERR_GENERIC_ERROR;
 }
 
-NPError NP_CALLBACK
+NPError
 _setvalueforurl(NPP instance, NPNURLVariable variable, const char *url,
                 const char *value, uint32_t len)
 {
@@ -2695,7 +2688,7 @@ _setvalueforurl(NPP instance, NPNURLVariable variable, const char *url,
   return NPERR_GENERIC_ERROR;
 }
 
-NPError NP_CALLBACK
+NPError
 _getauthenticationinfo(NPP instance, const char *protocol, const char *host,
                        int32_t port, const char *scheme, const char *realm,
                        char **username, uint32_t *ulen, char **password,
@@ -2754,7 +2747,7 @@ _getauthenticationinfo(NPP instance, const char *protocol, const char *host,
   return NPERR_NO_ERROR;
 }
 
-uint32_t NP_CALLBACK
+uint32_t
 _scheduletimer(NPP instance, uint32_t interval, NPBool repeat, PluginTimerFunc timerFunc)
 {
   nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *)instance->ndata;
@@ -2764,7 +2757,7 @@ _scheduletimer(NPP instance, uint32_t interval, NPBool repeat, PluginTimerFunc t
   return inst->ScheduleTimer(interval, repeat, timerFunc);
 }
 
-void NP_CALLBACK
+void
 _unscheduletimer(NPP instance, uint32_t timerID)
 {
 #ifdef MOZ_WIDGET_ANDROID
@@ -2780,7 +2773,7 @@ _unscheduletimer(NPP instance, uint32_t timerID)
   inst->UnscheduleTimer(timerID);
 }
 
-NPError NP_CALLBACK
+NPError
 _popupcontextmenu(NPP instance, NPMenu* menu)
 {
   nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *)instance->ndata;
@@ -2790,7 +2783,7 @@ _popupcontextmenu(NPP instance, NPMenu* menu)
   return inst->PopUpContextMenu(menu);
 }
 
-NPError NP_CALLBACK
+NPError
 _initasyncsurface(NPP instance, NPSize *size, NPImageFormat format, void *initData, NPAsyncSurface *surface)
 {
   nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *)instance->ndata;
@@ -2800,7 +2793,7 @@ _initasyncsurface(NPP instance, NPSize *size, NPImageFormat format, void *initDa
   return inst->InitAsyncSurface(size, format, initData, surface);
 }
 
-NPError NP_CALLBACK
+NPError
 _finalizeasyncsurface(NPP instance, NPAsyncSurface *surface)
 {
   nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *)instance->ndata;
@@ -2810,7 +2803,7 @@ _finalizeasyncsurface(NPP instance, NPAsyncSurface *surface)
   return inst->FinalizeAsyncSurface(surface);
 }
 
-void NP_CALLBACK
+void
 _setcurrentasyncsurface(NPP instance, NPAsyncSurface *surface, NPRect *changed)
 {
   nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *)instance->ndata;
@@ -2820,7 +2813,7 @@ _setcurrentasyncsurface(NPP instance, NPAsyncSurface *surface, NPRect *changed)
   inst->SetCurrentAsyncSurface(surface, changed);
 }
 
-NPBool NP_CALLBACK
+NPBool
 _convertpoint(NPP instance, double sourceX, double sourceY, NPCoordinateSpace sourceSpace, double *destX, double *destY, NPCoordinateSpace destSpace)
 {
   nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *)instance->ndata;
@@ -2830,7 +2823,7 @@ _convertpoint(NPP instance, double sourceX, double sourceY, NPCoordinateSpace so
   return inst->ConvertPoint(sourceX, sourceY, sourceSpace, destX, destY, destSpace);
 }
 
-void NP_CALLBACK
+void
 _urlredirectresponse(NPP instance, void* notifyData, NPBool allow)
 {
   nsNPAPIPluginInstance *inst = (nsNPAPIPluginInstance *)instance->ndata;
