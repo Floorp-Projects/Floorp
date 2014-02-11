@@ -335,12 +335,9 @@ public:
     return this;
   }
 
-  InternalAnimationEvent(bool aIsTrusted, uint32_t aMessage,
-                         const nsAString& aAnimationName, float aElapsedTime,
-                         const nsAString& aPseudoElement) :
-    WidgetEvent(aIsTrusted, aMessage, NS_ANIMATION_EVENT),
-    animationName(aAnimationName), elapsedTime(aElapsedTime),
-    pseudoElement(aPseudoElement)
+  InternalAnimationEvent(bool aIsTrusted, uint32_t aMessage)
+    : WidgetEvent(aIsTrusted, aMessage, NS_ANIMATION_EVENT)
+    , elapsedTime(0.0)
   {
     mFlags.mCancelable = false;
   }
@@ -349,9 +346,7 @@ public:
   {
     MOZ_ASSERT(eventStructType == NS_ANIMATION_EVENT,
                "Duplicate() must be overridden by sub class");
-    InternalAnimationEvent* result =
-      new InternalAnimationEvent(false, message, animationName,
-                                 elapsedTime, pseudoElement);
+    InternalAnimationEvent* result = new InternalAnimationEvent(false, message);
     result->AssignAnimationEventData(*this, true);
     result->mFlags = mFlags;
     return result;
@@ -366,8 +361,9 @@ public:
   {
     AssignEventData(aEvent, aCopyTargets);
 
-    // animationName, elapsedTime and pseudoElement must have been initialized
-    // with the constructor.
+    animationName = aEvent.animationName;
+    elapsedTime = aEvent.elapsedTime;
+    pseudoElement = aEvent.pseudoElement;
   }
 };
 
