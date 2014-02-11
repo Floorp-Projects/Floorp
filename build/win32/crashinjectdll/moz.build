@@ -11,3 +11,5 @@ SOURCES += [
 LIBRARY_NAME = 'crashinjectdll'
 
 FORCE_SHARED_LIB = True
+
+USE_STATIC_LIBS = True
