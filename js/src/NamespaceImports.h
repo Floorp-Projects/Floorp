@@ -118,6 +118,9 @@ using JS::MutableHandleScript;
 using JS::MutableHandleString;
 using JS::MutableHandleValue;
 
+using JS::NullHandleValue;
+using JS::UndefinedHandleValue;
+
 using JS::Zone;
 
 } /* namespace js */
