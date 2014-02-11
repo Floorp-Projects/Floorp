@@ -325,13 +325,13 @@ VARIABLES = {
     'RCFILE': (unicode, unicode,
         """The program .rc file.
 
-        This variable can only be used on Windows (and OS/2).
+        This variable can only be used on Windows.
         """, None),
 
     'RESFILE': (unicode, unicode,
         """The program .res file.
 
-        This variable can only be used on Windows (and OS/2).
+        This variable can only be used on Windows.
         """, None),
 
     'SDK_LIBRARY': (StrictOrderingOnAppendList, list,

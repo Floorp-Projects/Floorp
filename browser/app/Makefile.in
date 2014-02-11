@@ -26,13 +26,6 @@ endif #} LIBXUL_SDK
 
 # Build a binary bootstrapping with XRE_main
 
-LOCAL_INCLUDES += \
-  -I$(topsrcdir)/toolkit/xre \
-  -I$(topsrcdir)/xpcom/base \
-  -I$(topsrcdir)/xpcom/build \
-  -I$(DEPTH)/build \
-  $(NULL)
-
 STL_FLAGS=
 
 LIBS += \
@@ -81,11 +74,6 @@ RCFLAGS += -DMOZ_PHOENIX --include-dir $(srcdir)
 endif
 endif
 
-ifeq ($(OS_ARCH),OS2)
-RCFLAGS += -DMOZ_PHOENIX
-RCFLAGS += -DFIREFOX_ICO='"$(DIST)/branding/firefox-os2.ico"' -DDOCUMENT_ICO='"$(DIST)/branding/document-os2.ico"'
-endif
-
 PROGRAMS_DEST = $(DIST)/bin
 
 include $(topsrcdir)/config/rules.mk
@@ -106,7 +94,7 @@ LDFLAGS += /HEAP:0x40000
 endif #}
 endif #}
 
-ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
+ifneq (,$(filter-out WINNT,$(OS_ARCH)))
 
 ifdef COMPILE_ENVIRONMENT
 libs:: 

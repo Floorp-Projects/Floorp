@@ -257,37 +257,6 @@ private:
   pthread_t thr;
 };
 
-#elif defined(XP_OS2)
-
-class Thread
-{
-public:
-  int Run(ThreadFunc func, void *param)
-  {
-    mThreadFunc = func;
-    mThreadParam = param;
-
-    mThread = _beginthread(ThreadMain, nullptr, 16384, (void *)this);
-
-    return mThread ? 0 : -1;
-  }
-  int Join()
-  {
-    int status;
-    waitpid(mThread, &status, 0);
-    return 0;
-  }
-private:
-  static void ThreadMain(void *p)
-  {
-    Thread *self = (Thread *) p;
-    self->mThreadFunc(self->mThreadParam);
-  }
-  int        mThread;
-  ThreadFunc mThreadFunc;
-  void      *mThreadParam;
-};
-
 #else
 #error "Unsupported platform"
 #endif

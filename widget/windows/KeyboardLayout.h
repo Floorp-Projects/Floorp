@@ -328,12 +328,6 @@ private:
    */
   bool IsIMEDoingKakuteiUndo() const;
 
-  /*
-   * Dispatches a plugin event after the specified message is removed.
-   * Returns true if the widget is destoyed.  Otherwise, false.
-   */
-  bool RemoveMessageAndDispatchPluginEvent(UINT aFirstMsg, UINT aLastMsg) const;
-
   bool IsKeyDownMessage() const
   {
     return (mMsg.message == WM_KEYDOWN || mMsg.message == WM_SYSKEYDOWN);
@@ -374,9 +368,8 @@ private:
   {
     return (aMessage == WM_SYSCHAR || aMessage == WM_SYSDEADCHAR);
   }
-  bool IsFollowedByCharMessage() const;
   bool IsFollowedByDeadCharMessage() const;
-  MSG RemoveFollowingCharMessage() const;
+  bool GetFollowingCharMessage(MSG& aCharMsg) const;
 
   /**
    * Wraps MapVirtualKeyEx() with MAPVK_VSC_TO_VK.
@@ -423,10 +416,10 @@ private:
 
   /**
    * DispatchKeyPressEventForFollowingCharMessage() dispatches keypress event
-   * for following WM_*CHAR message.
+   * for following WM_*CHAR message which is removed and set to aCharMsg.
    * Returns true if the event is consumed.  Otherwise, false.
    */
-  bool DispatchKeyPressEventForFollowingCharMessage() const;
+  bool DispatchKeyPressEventForFollowingCharMessage(const MSG& aCharMsg) const;
 
   /**
    * Checkes whether the key event down message is handled without following

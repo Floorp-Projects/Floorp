@@ -43,8 +43,6 @@
 #include "gfxPSSurface.h"
 #elif XP_WIN
 #include "gfxWindowsSurface.h"
-#elif defined(XP_OS2)
-#include "gfxOS2Surface.h"
 #elif XP_MACOSX
 #include "gfxQuartzSurface.h"
 #endif
@@ -319,15 +317,6 @@ nsDeviceContext::SetDPI()
             int32_t OSVal = GetDeviceCaps(dc, LOGPIXELSY);
             dpi = 144.0f;
             mPrintingScale = float(OSVal) / dpi;
-            break;
-        }
-#endif
-#ifdef XP_OS2
-        case gfxSurfaceType::OS2: {
-            LONG lDPI;
-            HDC dc = GpiQueryDevice(reinterpret_cast<gfxOS2Surface*>(mPrintingSurface.get())->GetPS());
-            if (DevQueryCaps(dc, CAPS_VERTICAL_FONT_RES, 1, &lDPI))
-                dpi = lDPI;
             break;
         }
 #endif
@@ -698,26 +687,6 @@ nsDeviceContext::CalcPrintingSize()
         }
 #endif
 
-#ifdef XP_OS2
-    case gfxSurfaceType::OS2:
-        {
-            inPoints = false;
-            // we already set the size in the surface constructor we set for
-            // printing, so just get those values here
-            size = reinterpret_cast<gfxOS2Surface*>(mPrintingSurface.get())->GetSize();
-            // as they are in pixels we need to scale them to app units
-            size.width = NSFloatPixelsToAppUnits(size.width, AppUnitsPerDevPixel());
-            size.height = NSFloatPixelsToAppUnits(size.height, AppUnitsPerDevPixel());
-            // still need to get the depth from the device context
-            HDC dc = GpiQueryDevice(reinterpret_cast<gfxOS2Surface*>(mPrintingSurface.get())->GetPS());
-            LONG value;
-            if (DevQueryCaps(dc, CAPS_COLOR_BITCOUNT, 1, &value))
-                mDepth = value;
-            else
-                mDepth = 8; // default to 8bpp, should be enough for printers
-            break;
-        }
-#endif
     default:
         NS_ERROR("trying to print to unknown surface type");
     }

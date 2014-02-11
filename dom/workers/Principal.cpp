@@ -12,10 +12,10 @@ BEGIN_WORKERS_NAMESPACE
 JSPrincipals*
 GetWorkerPrincipal()
 {
-  static Atomic<uint32_t> sInitialized(0);
+  static Atomic<bool> sInitialized(false);
   static JSPrincipals sPrincipal;
 
-  uint32_t isInitialized = sInitialized.exchange(1);
+  bool isInitialized = sInitialized.exchange(true);
   if (!isInitialized) {
     sPrincipal.refcount = 1;
 #ifdef DEBUG

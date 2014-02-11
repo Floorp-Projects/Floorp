@@ -31,6 +31,7 @@ builtin(include, build/autoconf/linux.m4)dnl
 builtin(include, build/autoconf/python-virtualenv.m4)dnl
 builtin(include, build/autoconf/winsdk.m4)dnl
 builtin(include, build/autoconf/icu.m4)dnl
+builtin(include, build/autoconf/ffi.m4)dnl
 
 MOZ_PROG_CHECKMSYS()
 

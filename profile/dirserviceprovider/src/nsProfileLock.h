@@ -14,12 +14,6 @@ class nsIProfileUnlocker;
 #include <windows.h>
 #endif
 
-#if defined (XP_OS2)
-#define INCL_DOSERRORS
-#define INCL_DOSFILEMGR
-#include <os2.h>
-#endif
-
 #if defined (XP_UNIX)
 #include <signal.h>
 #include "prclist.h"
@@ -67,8 +61,6 @@ private:
 
 #if defined (XP_WIN)
     HANDLE                  mLockFileHandle;
-#elif defined (XP_OS2)
-    LHANDLE                 mLockFileHandle;
 #elif defined (XP_UNIX)
 
     struct RemovePidLockFilesExiting {

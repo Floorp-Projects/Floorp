@@ -276,6 +276,19 @@ template<class T, class Alloc>
 nsresult
 ReadTArray(nsIInputStream* aStream, nsTArray_Impl<T, Alloc>* aArray, uint32_t aNumElements)
 {
+  aArray->SetLength(aNumElements);
+
+  void *buffer = aArray->Elements();
+  nsresult rv = NS_ReadInputStreamToBuffer(aStream, &buffer,
+                                           (aNumElements * sizeof(T)));
+  NS_ENSURE_SUCCESS(rv, rv);
+  return NS_OK;
+}
+
+template<class T>
+nsresult
+ReadTArray(nsIInputStream* aStream, FallibleTArray<T>* aArray, uint32_t aNumElements)
+{
   if (!aArray->SetLength(aNumElements))
     return NS_ERROR_OUT_OF_MEMORY;
 

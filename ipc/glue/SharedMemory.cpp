@@ -48,8 +48,8 @@ SharedMemory::SharedMemory()
   : mAllocSize(0)
   , mMappedSize(0)
 {
-  static Atomic<uint32_t> registered;
-  if (registered.compareExchange(0, 1)) {
+  static Atomic<bool> registered;
+  if (registered.compareExchange(false, true)) {
     RegisterStrongMemoryReporter(new ShmemReporter());
   }
 }

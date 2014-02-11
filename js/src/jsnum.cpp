@@ -14,12 +14,6 @@
 #include "mozilla/PodOperations.h"
 #include "mozilla/RangedPtr.h"
 
-#ifdef XP_OS2
-#define _PC_53  PC_53
-#define _MCW_EM MCW_EM
-#define _MCW_PC MCW_PC
-#endif
-
 #ifdef HAVE_LOCALECONV
 #include <locale.h>
 #endif

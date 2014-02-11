@@ -133,6 +133,19 @@ HTMLImageMapAccessible::UpdateChildAreas(bool aDoFireEvents)
     mDoc->FireDelayedEvent(reorderEvent);
 }
 
+Accessible*
+HTMLImageMapAccessible::GetChildAccessibleFor(const nsINode* aNode) const
+{
+  uint32_t length = mChildren.Length();
+  for (uint32_t i = 0; i < length; i++) {
+    Accessible* area = mChildren[i];
+    if (area->GetContent() == aNode)
+      return area;
+  }
+
+  return nullptr;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // HTMLImageMapAccessible: Accessible protected
 

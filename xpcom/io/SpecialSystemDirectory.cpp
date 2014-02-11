@@ -23,19 +23,6 @@
 
 using mozilla::IsWin7OrLater;
 
-#elif defined(XP_OS2)
-
-#define MAX_PATH _MAX_PATH
-#define INCL_WINWORKPLACE
-#define INCL_DOSMISC
-#define INCL_DOSMODULEMGR
-#define INCL_DOSPROCESS
-#define INCL_WINSHELLDATA
-#include <os2.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include "prenv.h"
-
 #elif defined(XP_UNIX)
 
 #include <limits.h>
@@ -485,9 +472,6 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
             return NS_NewLocalFile(nsDependentString(path),
                                    true,
                                    aFile);
-#elif defined(XP_OS2)
-            if (DosQueryPathInfo( ".", FIL_QUERYFULLNAME, path, MAXPATHLEN))
-                return NS_ERROR_FAILURE;
 #else
             if(!getcwd(path, MAXPATHLEN))
                 return NS_ERROR_FAILURE;
@@ -512,18 +496,6 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
                                    true,
                                    aFile);
         }
-#elif defined(XP_OS2)
-        {
-            ULONG ulBootDrive = 0;
-            char  buffer[] = " :\\OS2\\";
-            DosQuerySysInfo( QSV_BOOT_DRIVE, QSV_BOOT_DRIVE,
-                             &ulBootDrive, sizeof ulBootDrive);
-            buffer[0] = 'A' - 1 + ulBootDrive; // duh, 1-based index...
-
-            return NS_NewNativeLocalFile(nsDependentCString(buffer),
-                                         true,
-                                         aFile);
-        }
 #else
         return NS_NewNativeLocalFile(nsDependentCString("/"),
                                      true,
@@ -540,23 +512,6 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
             return NS_NewLocalFile(nsDependentString(path, len),
                                    true,
                                    aFile);
-        }
-#elif defined(XP_OS2)
-        {
-            char *tPath = PR_GetEnv("TMP");
-            if (!tPath || !*tPath) {
-                tPath = PR_GetEnv("TEMP");
-                if (!tPath || !*tPath) {
-                    // if an OS/2 system has neither TMP nor TEMP defined
-                    // then it is severely broken, so this will never happen.
-                    return NS_ERROR_UNEXPECTED;
-                }
-            }
-            nsCString tString = nsDependentCString(tPath);
-            if (tString.Find("/", false, 0, -1)) {
-                tString.ReplaceChar('/','\\');
-            }
-            return NS_NewNativeLocalFile(tString, true, aFile);
         }
 #elif defined(MOZ_WIDGET_COCOA)
         {
@@ -843,77 +798,6 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
             return GetUnixXDGUserDirectory(aSystemSystemDirectory, aFile);
 #endif
 
-#ifdef XP_OS2
-        case OS2_SystemDirectory:
-        {
-            ULONG ulBootDrive = 0;
-            char  buffer[] = " :\\OS2\\System\\";
-            DosQuerySysInfo( QSV_BOOT_DRIVE, QSV_BOOT_DRIVE,
-                             &ulBootDrive, sizeof ulBootDrive);
-            buffer[0] = 'A' - 1 + ulBootDrive; // duh, 1-based index...
-
-            return NS_NewNativeLocalFile(nsDependentCString(buffer),
-                                         true,
-                                         aFile);
-        }
-
-     case OS2_OS2Directory:
-        {
-            ULONG ulBootDrive = 0;
-            char  buffer[] = " :\\OS2\\";
-            DosQuerySysInfo( QSV_BOOT_DRIVE, QSV_BOOT_DRIVE,
-                             &ulBootDrive, sizeof ulBootDrive);
-            buffer[0] = 'A' - 1 + ulBootDrive; // duh, 1-based index...
-
-            return NS_NewNativeLocalFile(nsDependentCString(buffer),
-                                         true,
-                                         aFile);
-        }
-
-     case OS2_HomeDirectory:
-        {
-            nsresult rv;
-            char *tPath = PR_GetEnv("MOZILLA_HOME");
-            char buffer[CCHMAXPATH];
-            /* If MOZILLA_HOME is not set, use GetCurrentProcessDirectory */
-            /* To ensure we get a long filename system */
-            if (!tPath || !*tPath) {
-                PPIB ppib;
-                PTIB ptib;
-                DosGetInfoBlocks( &ptib, &ppib);
-                DosQueryModuleName( ppib->pib_hmte, CCHMAXPATH, buffer);
-                *strrchr( buffer, '\\') = '\0'; // XXX DBCS misery
-                tPath = buffer;
-            }
-            rv = NS_NewNativeLocalFile(nsDependentCString(tPath),
-                                       true,
-                                       aFile);
-
-            PrfWriteProfileString(HINI_USERPROFILE, "Mozilla", "Home", tPath);
-            return rv;
-        }
-
-        case OS2_DesktopDirectory:
-        {
-            char szPath[CCHMAXPATH + 1];
-            BOOL fSuccess;
-            fSuccess = WinQueryActiveDesktopPathname (szPath, sizeof(szPath));
-            if (!fSuccess) {
-                // this could happen if we are running without the WPS, return
-                // the Home directory instead
-                return GetSpecialSystemDirectory(OS2_HomeDirectory, aFile);
-            }
-            int len = strlen (szPath);
-            if (len > CCHMAXPATH -1)
-                break;
-            szPath[len] = '\\';
-            szPath[len + 1] = '\0';
-
-            return NS_NewNativeLocalFile(nsDependentCString(szPath),
-                                         true,
-                                         aFile);
-        }
-#endif
         default:
             break;
     }

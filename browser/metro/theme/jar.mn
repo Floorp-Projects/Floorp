@@ -140,6 +140,7 @@ chrome.jar:
   skin/images/appbar-icons.png              (images/appbar-icons.png)
   skin/images/pinned-hdpi.png               (images/pinned-hdpi.png)
   skin/images/tile-selected-check-hdpi.png  (images/tile-selected-check-hdpi.png)
+  skin/images/tile-selected-check-rtl-hdpi.png  (images/tile-selected-check-rtl-hdpi.png)
   skin/images/plus-34.png                   (images/plus-34.png)
   skin/images/plus-24.png                   (images/plus-24.png)
   skin/images/progresscircle.png            (images/progresscircle.png)

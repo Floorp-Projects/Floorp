@@ -371,10 +371,15 @@ CloneLayerTreePropertiesInternal(Layer* aRoot)
   }
 
   switch (aRoot->GetType()) {
-    case Layer::TYPE_CONTAINER:  return new ContainerLayerProperties(aRoot->AsContainerLayer());
-    case Layer::TYPE_COLOR:  return new ColorLayerProperties(static_cast<ColorLayer*>(aRoot));
-    case Layer::TYPE_IMAGE:  return new ImageLayerProperties(static_cast<ImageLayer*>(aRoot));
-    default: return new LayerPropertiesBase(aRoot);
+    case Layer::TYPE_CONTAINER:
+    case Layer::TYPE_REF:
+      return new ContainerLayerProperties(aRoot->AsContainerLayer());
+    case Layer::TYPE_COLOR:
+      return new ColorLayerProperties(static_cast<ColorLayer*>(aRoot));
+    case Layer::TYPE_IMAGE:
+      return new ImageLayerProperties(static_cast<ImageLayer*>(aRoot));
+    default:
+      return new LayerPropertiesBase(aRoot);
   }
 
   return nullptr;

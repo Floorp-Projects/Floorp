@@ -200,16 +200,6 @@ UNIFIED_SOURCES += [
     '../util/uscan.c',
 ]
 
-if CONFIG['OS_ARCH'] == 'OS2':
-    UNIFIED_SOURCES += [
-        '../ucvibm/nsCP1125ToUnicode.cpp',
-        '../ucvibm/nsCP1131ToUnicode.cpp',
-        '../ucvibm/nsCP869ToUnicode.cpp',
-        '../ucvibm/nsUnicodeToCP1125.cpp',
-        '../ucvibm/nsUnicodeToCP1131.cpp',
-        '../ucvibm/nsUnicodeToCP869.cpp',
-    ]
-
 if CONFIG['INTEL_ARCHITECTURE']:
     SOURCES += [
         'nsUTF8ToUnicodeSSE2.cpp',
