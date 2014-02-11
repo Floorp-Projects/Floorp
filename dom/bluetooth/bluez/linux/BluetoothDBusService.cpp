@@ -177,7 +177,6 @@ static nsString sAdapterPath;
  * The adapter name may not be ready whenever event 'AdapterAdded' is received,
  * so we'd like to wait for a bit.
  */
-static bool sAdapterNameIsReady = false;
 static int sWaitingForAdapterNameInterval = 1000; //unit: ms
 
 // Keep the pairing requests.
@@ -764,16 +763,6 @@ GetProperty(DBusMessageIter aIter, Properties* aPropertyTypes,
     for (uint32_t i= 0; i < length; i++) {
       nsString& data = propertyValue.get_ArrayOfnsString()[i];
       data = GetAddressFromObjectPath(data);
-    }
-  } else if (!sAdapterNameIsReady &&
-             aPropertyTypes == sAdapterProperties &&
-             propertyName.EqualsLiteral("Name")) {
-    MOZ_ASSERT(propertyValue.type() == BluetoothValue::TnsString);
-
-    // Notify BluetoothManager whenever adapter name is ready.
-    if (!propertyValue.get_nsString().IsEmpty()) {
-      sAdapterNameIsReady = true;
-      NS_DispatchToMainThread(new TryFiringAdapterAddedRunnable(false));
     }
   }
 
@@ -1856,8 +1845,6 @@ BluetoothDBusService::StopInternal()
 
   sAuthorizedServiceClass.Clear();
   sControllerArray.Clear();
-
-  sAdapterNameIsReady = false;
 
   StopDBus();
   return NS_OK;
