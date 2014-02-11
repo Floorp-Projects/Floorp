@@ -35,7 +35,21 @@ App.prototype = {
 var HelperApps =  {
   get defaultHttpHandlers() {
     delete this.defaultHttpHandlers;
-    return this.defaultHttpHandlers = this.getAppsForProtocol("http");
+    this.defaultHttpHandlers = this.getAppsForProtocol("http");
+    return this.defaultHttpHandlers;
+  },
+
+  get defaultHtmlHandlers() {
+    delete this.defaultHtmlHandlers;
+    this.defaultHtmlHandlers = {};
+    let handlers = this.getAppsForUri(Services.io.newURI("http://www.example.com/index.html", null, null), {
+      filterHtml: false
+    });
+
+    handlers.forEach(function(app) {
+      this.defaultHtmlHandlers[app.name] = app;
+    }, this);
+    return this.defaultHtmlHandlers;
   },
 
   get protoSvc() {
@@ -70,8 +84,9 @@ var HelperApps =  {
     return results;
   },
 
-  getAppsForUri: function getAppsForUri(uri, flags = { filterHttp: true }) {
+  getAppsForUri: function getAppsForUri(uri, flags = { filterHttp: true, filterHtml: true }) {
     flags.filterHttp = "filterHttp" in flags ? flags.filterHttp : true;
+    flags.filterHtml = "filterHtml" in flags ? flags.filterHtml : true;
 
     // Query for apps that can/can't handle the mimetype
     let msg = this._getMessage("Intent:GetHandlers", uri, flags);
@@ -85,6 +100,16 @@ var HelperApps =  {
       apps = apps.filter(function(app) {
         return app.name && !this.defaultHttpHandlers[app.name];
       }, this);
+    }
+
+    if (flags.filterHtml) {
+      // Matches from the first '.' to the end of the string, '?', or '#'
+      let ext = /\.([^\?#]*)/.exec(uri.path);
+      if (ext && (ext[1] === "html" || ext[1] === "htm")) {
+        apps = apps.filter(function(app) {
+          return app.name && !this.defaultHtmlHandlers[app.name];
+        }, this);
+      }
     }
 
     return apps;
