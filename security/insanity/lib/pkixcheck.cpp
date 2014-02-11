@@ -231,9 +231,13 @@ CheckNameConstraints(BackCert& cert)
     PORT_Assert(names);
     CERTGeneralName* currentName = const_cast<CERTGeneralName*>(names);
     do {
-      rv = MapSECStatus(CERT_CheckNameSpace(arena, constraints, currentName));
-      if (rv != Success) {
-        return rv;
+      if (CERT_CheckNameSpace(arena, constraints, currentName) != SECSuccess) {
+        // XXX: It seems like CERT_CheckNameSpace doesn't always call
+        // PR_SetError when it fails. We set the error code here, though this
+        // may be papering over some fatal errors. NSS's
+        // cert_VerifyCertChainOld does something similar.
+        PR_SetError(SEC_ERROR_CERT_NOT_IN_NAME_SPACE, 0);
+        return RecoverableError;
       }
       currentName = CERT_GetNextGeneralName(currentName);
     } while (currentName != names);
@@ -354,11 +358,6 @@ CheckIssuerIndependentProperties(TrustDomain& trustDomain,
   bool isTrustAnchor = endEntityOrCA == MustBeCA &&
                        trustLevel == TrustDomain::TrustAnchor;
 
-  rv = CheckTimes(cert.GetNSSCert(), time);
-  if (rv != Success) {
-    return rv;
-  }
-
   // 4.2.1.1. Authority Key Identifier dealt with as part of path building
   // 4.2.1.2. Subject Key Identifier dealt with as part of path building
 
@@ -401,6 +400,13 @@ CheckIssuerIndependentProperties(TrustDomain& trustDomain,
 
   // 4.2.1.13. CRL Distribution Points will be dealt with elsewhere
   // 4.2.1.14. Inhibit anyPolicy
+
+  // IMPORTANT: This check must come after the other checks in order for error
+  // ranking to work correctly.
+  rv = CheckTimes(cert.GetNSSCert(), time);
+  if (rv != Success) {
+    return rv;
+  }
 
   return Success;
 }
