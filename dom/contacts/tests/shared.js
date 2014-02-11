@@ -389,7 +389,7 @@ function checkCount(count, msg, then) {
 var index = 0;
 
 function next() {
-  ok(true, "Begin!");
+  info("Step " + index);
   if (index >= steps.length) {
     ok(false, "Shouldn't get here!");
     return;
