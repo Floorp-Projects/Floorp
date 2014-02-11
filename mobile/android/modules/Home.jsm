@@ -11,6 +11,7 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/SharedPreferences.jsm");
+Cu.import("resource://gre/modules/Messaging.jsm");
 
 // See bug 915424
 function resolveGeckoURI(aURI) {
@@ -25,10 +26,6 @@ function resolveGeckoURI(aURI) {
     return handler.resolveURI(Services.io.newURI(aURI, null, null));
   }
   return aURI;
-}
-
-function sendMessageToJava(message) {
-  return Services.androidBridge.handleGeckoMessage(JSON.stringify(message));
 }
 
 function BannerMessage(options) {
