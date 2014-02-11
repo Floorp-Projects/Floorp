@@ -2,7 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.gecko.util;
+package org.mozilla.gecko;
+
+import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoEvent;
+import org.mozilla.gecko.util.GeckoEventListener;
 
 import org.json.JSONObject;
 
@@ -14,6 +18,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 public final class EventDispatcher {
     private static final String LOGTAG = "GeckoEventDispatcher";
+    private static final String GUID = "__guid__";
 
     private final Map<String, CopyOnWriteArrayList<GeckoEventListener>> mEventListeners
                   = new HashMap<String, CopyOnWriteArrayList<GeckoEventListener>>();
@@ -52,18 +57,16 @@ public final class EventDispatcher {
         }
     }
 
-    public String dispatchEvent(String message) {
+    public void dispatchEvent(String message) {
         try {
             JSONObject json = new JSONObject(message);
-            return dispatchEvent(json);
+            dispatchEvent(json);
         } catch (Exception e) {
             Log.e(LOGTAG, "dispatchEvent: malformed JSON.", e);
         }
-
-        return "";
     }
 
-    public String dispatchEvent(JSONObject json) {
+    public void dispatchEvent(JSONObject json) {
         // {
         //   "type": "value",
         //   "event_specific": "value",
@@ -87,29 +90,29 @@ public final class EventDispatcher {
 
             if (listeners == null || listeners.size() == 0) {
                 Log.d(LOGTAG, "dispatchEvent: no listeners registered for event '" + type + "'");
-                return "";
+                return;
             }
-
-            String response = null;
 
             for (GeckoEventListener listener : listeners) {
                 listener.handleMessage(type, json);
-                if (listener instanceof GeckoEventResponder) {
-                    String newResponse = ((GeckoEventResponder)listener).getResponse(json);
-                    if (response != null && newResponse != null) {
-                        Log.e(LOGTAG, "Received two responses for message of type " + type);
-                    }
-                    response = newResponse;
-                }
             }
-
-            if (response != null)
-                return response;
-
         } catch (Exception e) {
             Log.e(LOGTAG, "handleGeckoMessage throws " + e, e);
         }
 
-        return "";
+    }
+
+    public static void sendResponse(JSONObject message, JSONObject response) {
+        try {
+            response.put(GUID, message.getString(GUID));
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent(message.getString("type") + ":Return", response.toString()));
+        } catch(Exception ex) { }
+    }
+
+    public static void sendError(JSONObject message, JSONObject error) {
+        try {
+            error.put(GUID, message.getString(GUID));
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent(message.getString("type") + ":Error", error.toString()));
+        } catch(Exception ex) { }
     }
 }
