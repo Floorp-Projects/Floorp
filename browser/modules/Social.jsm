@@ -25,6 +25,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "SocialService",
   "resource://gre/modules/SocialService.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
+  "resource://gre/modules/PrivateBrowsingUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
   "resource://gre/modules/Promise.jsm");
 
@@ -397,6 +399,9 @@ function CreateSocialStatusWidget(aId, aProvider) {
       node.setAttribute("label", aProvider.name);
       node.setAttribute("tooltiptext", aProvider.name);
       node.setAttribute("oncommand", "SocialStatus.showPopup(this);");
+
+      if (PrivateBrowsingUtils.isWindowPrivate(aDocument.defaultView))
+        node.setAttribute("disabled", "true");
 
       return node;
     }
