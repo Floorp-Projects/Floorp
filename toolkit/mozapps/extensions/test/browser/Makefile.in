@@ -38,6 +38,7 @@ MOCHITEST_BROWSER_MAIN_FILES = \
   browser_discovery.js \
   browser_dragdrop.js \
   browser_list.js \
+  browser_metadataTimeout.js \
   browser_searching.js \
   browser_sorting.js \
   browser_uninstalling.js \
