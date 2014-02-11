@@ -243,8 +243,9 @@ protected:
                                  bool* aSuccess) MOZ_OVERRIDE;
   virtual bool DeallocPLayerTransactionParent(PLayerTransactionParent* aLayers) MOZ_OVERRIDE;
   virtual void ScheduleTask(CancelableTask*, int);
-  void Composite(gfx::DrawTarget* aTarget);
-  virtual void ComposeToTarget(gfx::DrawTarget* aTarget);
+  void Composite();
+  void CompositeToTarget(gfx::DrawTarget* aTarget);
+  void ForceComposeToTarget(gfx::DrawTarget* aTarget);
 
   void SetEGLSurfaceSize(int width, int height);
 
