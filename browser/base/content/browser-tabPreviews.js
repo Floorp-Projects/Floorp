@@ -202,14 +202,9 @@ var ctrlTab = {
     list = list.filter(function (tab) !tab.closing);
 
     if (this.recentlyUsedLimit != 0) {
-      let recentlyUsedTabs = [];
-      for (let tab of this._recentlyUsedTabs) {
-        if (!tab.hidden && !tab.closing) {
-          recentlyUsedTabs.push(tab);
-          if (this.recentlyUsedLimit > 0 && recentlyUsedTabs.length >= this.recentlyUsedLimit)
-            break;
-        }
-      }
+      let recentlyUsedTabs = this._recentlyUsedTabs;
+      if (this.recentlyUsedLimit > 0)
+        recentlyUsedTabs = this._recentlyUsedTabs.slice(0, this.recentlyUsedLimit);
       for (let i = recentlyUsedTabs.length - 1; i >= 0; i--) {
         list.splice(list.indexOf(recentlyUsedTabs[i]), 1);
         list.unshift(recentlyUsedTabs[i]);
