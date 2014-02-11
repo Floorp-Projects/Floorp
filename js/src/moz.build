@@ -27,6 +27,12 @@ CONFIGURE_SUBST_FILES += [
     'js.pc',
 ]
 
+if not CONFIG['JS_STANDALONE']:
+    CONFIGURE_SUBST_FILES += [
+        '../../config/autoconf-js.mk',
+        '../../config/emptyvars-js.mk',
+    ]
+
 CONFIGURE_DEFINE_FILES += [
     'js-config.h',
 ]

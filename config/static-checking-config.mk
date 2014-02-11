@@ -43,11 +43,7 @@ OS_CXXFLAGS += $(DEHYDRA_FLAGS)
 endif
 
 ifdef ENABLE_CLANG_PLUGIN
-ifndef BUILDING_JS
 CLANG_PLUGIN := $(DEPTH)/build/clang-plugin/$(DLL_PREFIX)clang-plugin$(DLL_SUFFIX)
-else
-CLANG_PLUGIN := $(DEPTH)/../../build/clang-plugin/$(DLL_PREFIX)clang-plugin$(DLL_SUFFIX)
-endif
 OS_CXXFLAGS += -Xclang -load -Xclang $(CLANG_PLUGIN) -Xclang -add-plugin -Xclang moz-check
 OS_CFLAGS += -Xclang -load -Xclang $(CLANG_PLUGIN) -Xclang -add-plugin -Xclang moz-check
 endif

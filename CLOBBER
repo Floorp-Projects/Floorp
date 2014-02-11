@@ -22,4 +22,4 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Bug 964200 - Touching webidl files in this bug doesn't work without a clobber. Tried landing already and had to back out.
+Bug 969164 changes the directory layout under js/src during gecko builds, and that causes a build failure on incremental builds because of the js shell trying to replace a directory with the same name.

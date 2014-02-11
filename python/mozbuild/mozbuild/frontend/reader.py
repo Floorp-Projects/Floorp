@@ -169,6 +169,13 @@ class MozbuildSandbox(Sandbox):
         relpath = mozpath.relpath(path, topsrcdir)
         reldir = mozpath.dirname(relpath)
 
+        if mozpath.dirname(relpath) == 'js/src' and \
+                not config.substs.get('JS_STANDALONE'):
+            config = ConfigEnvironment.from_config_status(
+                mozpath.join(topobjdir, reldir, 'config.status'))
+            config.topobjdir = topobjdir
+            self.config = config
+
         with self._globals.allow_all_writes() as d:
             d['TOPSRCDIR'] = topsrcdir
             d['TOPOBJDIR'] = topobjdir
