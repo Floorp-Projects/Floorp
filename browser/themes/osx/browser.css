@@ -4114,6 +4114,10 @@ window > chatbox {
   margin-bottom: 0px;
 }
 
+#main-window:not([tabsintitlebar]):-moz-lwtheme > #titlebar {
+  margin-bottom: 5px;
+}
+
 #main-window[tabsintitlebar]:-moz-lwtheme > #titlebar > #titlebar-content {
   margin-top: 11px;
   margin-bottom: 11px;
