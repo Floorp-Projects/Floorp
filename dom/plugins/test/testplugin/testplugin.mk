@@ -17,7 +17,6 @@ EXTRA_DSO_LDOPTS = \
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-DEFFILE   = $(win_srcdir)/nptest.def
 OS_LIBS  += $(call EXPAND_LIBNAME,msimg32)
 
 # Windows opt builds without PGO break nptest.dll

@@ -45,3 +45,4 @@ USE_STATIC_LIBS = True
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     RCFILE  = 'nptest.rc'
     RESFILE = 'nptest.res'
+    DEFFILE = SRCDIR + '/nptest.def'

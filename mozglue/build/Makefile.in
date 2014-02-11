@@ -35,8 +35,6 @@ endif
 endif
 
 ifeq (WINNT,$(OS_TARGET))
-DEFFILE = mozglue.def
-
 mozglue.def: mozglue.def.in
 	$(call py_action,preprocessor,$(if $(MOZ_REPLACE_MALLOC),-DMOZ_REPLACE_MALLOC) $(ACDEFINES) $< -o $@)
 

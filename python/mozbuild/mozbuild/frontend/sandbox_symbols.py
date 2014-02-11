@@ -341,6 +341,12 @@ VARIABLES = {
         This variable can only be used on Windows.
         """, None),
 
+    'DEFFILE': (unicode, unicode,
+        """The program .def (module definition) file.
+
+        This variable can only be used on Windows.
+        """, None),
+
     'RESOURCE_FILES': (HierarchicalStringListWithFlagsFactory({'preprocess': bool}), list,
         """List of resources to be exported, and in which subdirectories.
 
