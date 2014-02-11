@@ -3824,26 +3824,6 @@ MOZ_ARG_ENABLE_BOOL(shared-js,
     JS_SHARED_LIBRARY=)
 
 dnl ========================================================
-dnl System ICU Support
-dnl ========================================================
-MOZ_NATIVE_ICU=
-MOZ_ARG_WITH_BOOL(system-icu,
-[  --with-system-icu
-                          Use system ICU (located with pkgconfig)],
-    MOZ_NATIVE_ICU=1)
-
-if test -n "$MOZ_NATIVE_ICU"; then
-    PKG_CHECK_MODULES(MOZ_ICU, icu-i18n >= 50.1)
-    MOZ_JS_STATIC_LIBS="$MOZ_JS_STATIC_LIBS $MOZ_ICU_LIBS"
-    MOZ_SHARED_ICU=1
-else
-    MOZ_ICU_CFLAGS='-I$(topsrcdir)/intl/icu/source/common -I$(topsrcdir)/intl/icu/source/i18n'
-    AC_SUBST(MOZ_ICU_CFLAGS)
-fi
-
-AC_SUBST(MOZ_NATIVE_ICU)
-
-dnl ========================================================
 dnl Java SDK support
 dnl ========================================================
 
@@ -8721,80 +8701,26 @@ HAVE_SYS_MOUNT_H
 
 AC_SUBST(STLPORT_LIBS)
 
-MOZ_ARG_WITH_STRING(intl-api,
-[  --with-intl-api, --with-intl-api=build, --without-intl-api
-    Determine the status of the ECMAScript Internationalization API.  The first
-    (or lack of any of these) builds and exposes the API.  The second builds it
-    but doesn't use ICU or expose the API to script.  The third doesn't build
-    ICU at all.],
-    _INTL_API=$withval,
-    _INTL_API=yes)
+dnl ========================================================
+dnl ICU Support
+dnl ========================================================
 
-WITH_INTL="--with-intl-api=$_INTL_API"
-ENABLE_INTL_API=
-case "$_INTL_API" in
-no)
-    ;;
-build)
-    ENABLE_INTL_API=1
-    ;;
-yes)
-    ENABLE_INTL_API=1
-    ;;
-*)
-    AC_MSG_ERROR([Invalid value passed to --with-intl-api: $_INTL_API])
-    ;;
-esac
-
-if test -n "$ENABLE_INTL_API"; then
 if test "$MOZ_BUILD_APP" = "browser"; then
-    WITH_INTL="--with-intl-api"
+    _INTL_API=yes
 else
     # Internationalization isn't built or exposed by default in non-desktop
     # builds.  Bugs to enable:
     #
     #   Android:  bug 864843
     #   B2G:      bug 866301
-    WITH_INTL="--without-intl-api"
-    ENABLE_INTL_API=
-fi
+    _INTL_API=no
 fi
 
-dnl Settings for the implementation of the ECMAScript Internationalization API
-if test -n "$ENABLE_INTL_API"; then
-    AC_DEFINE(ENABLE_INTL_API)
+MOZ_CONFIG_ICU(/js/src)
 
-    MOZ_CONFIG_ICU()
-
-    dnl Build ICU as a shared library for shared js builds.
-    if test -z "$MOZ_NATIVE_ICU" -a -n "$JS_SHARED_LIBRARY"; then
-        case "$OS_TARGET" in
-            WINNT)
-                ICU_LIB_NAMES="icuin icuuc icudt"
-                DBG_SUFFIX=
-                if test -n "$MOZ_DEBUG"; then
-                    DBG_SUFFIX=d
-                fi
-                MOZ_ICU_LIBS='$(foreach lib,$(ICU_LIB_NAMES),$(DEPTH)/js/src/intl/icu/target/lib/$(LIB_PREFIX)$(lib)$(DBG_SUFFIX).$(LIB_SUFFIX))'
-                ;;
-            Darwin)
-                ICU_LIB_NAMES="icui18n icuuc icudata"
-                MOZ_ICU_LIBS='$(foreach lib,$(ICU_LIB_NAMES),$(DEPTH)/js/src/intl/icu/target/lib/$(DLL_PREFIX)$(lib).$(MOZ_ICU_VERSION)$(DLL_SUFFIX))'
-                ;;
-            Linux|DragonFly|FreeBSD|NetBSD|OpenBSD)
-                ICU_LIB_NAMES="icui18n icuuc icudata"
-                MOZ_ICU_LIBS='$(foreach lib,$(ICU_LIB_NAMES),$(DEPTH)/js/src/intl/icu/target/lib/$(DLL_PREFIX)$(lib)$(DLL_SUFFIX).$(MOZ_ICU_VERSION))'
-                ;;
-            *)
-                AC_MSG_ERROR([ECMAScript Internationalization API is not yet supported on this platform])
-        esac
-    fi
+if test -n "$MOZ_NATIVE_ICU"; then
+    MOZ_JS_STATIC_LIBS="$MOZ_JS_STATIC_LIBS $MOZ_ICU_LIBS"
 fi
-
-AC_SUBST(DBG_SUFFIX)
-AC_SUBST(ENABLE_INTL_API)
-AC_SUBST(ICU_LIB_NAMES)
-AC_SUBST(MOZ_ICU_LIBS)
 
 export WRITE_MOZINFO=1
 AC_OUTPUT()
@@ -9011,7 +8937,9 @@ dist=$MOZ_BUILD_ROOT/dist
 ac_configure_args="$_SUBDIR_CONFIG_ARGS"
 ac_configure_args="$ac_configure_args --enable-threadsafe"
 
-ac_configure_args="$ac_configure_args $WITH_INTL"
+if test "$_INTL_API" = no; then
+    ac_configure_args="$ac_configure_args --without-intl-api"
+fi
 
 if test "$BUILD_CTYPES"; then
     # Build js-ctypes on the platforms we can.
