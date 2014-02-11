@@ -41,3 +41,6 @@ FORCE_STATIC_LIB = True
 # at this stage, since we're only interested in the streaming API, but we
 # define it here anyways for consistency.
 DEFINES['_FILE_OFFSET_BITS'] = 64
+
+if CONFIG['OS_ARCH'] == 'WINNT':
+    USE_STATIC_LIBS = True

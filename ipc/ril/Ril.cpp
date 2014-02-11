@@ -164,17 +164,17 @@ private:
 bool
 DispatchRILEvent::RunTask(JSContext *aCx)
 {
-    JSObject *obj = JS::CurrentGlobalOrNull(aCx);
+    JS::Rooted<JSObject*> obj(aCx, JS::CurrentGlobalOrNull(aCx));
 
     JSObject *array = JS_NewUint8Array(aCx, mMessage->mSize);
     if (!array) {
         return false;
     }
+    JS::Rooted<JS::Value> arrayVal(aCx, JS::ObjectValue(*array));
 
     memcpy(JS_GetArrayBufferViewData(array), mMessage->mData, mMessage->mSize);
-    JS::Value argv[] = { OBJECT_TO_JSVAL(array) };
-    return JS_CallFunctionName(aCx, obj, "onRILMessage",
-                               mozilla::ArrayLength(argv), argv, argv);
+    JS::Rooted<JS::Value> rval(aCx);
+    return JS_CallFunctionName(aCx, obj, "onRILMessage", arrayVal, rval.address());
 }
 
 class RilConnector : public mozilla::ipc::UnixSocketConnector

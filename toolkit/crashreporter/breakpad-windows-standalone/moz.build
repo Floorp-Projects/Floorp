@@ -20,3 +20,5 @@ include('/toolkit/crashreporter/google-breakpad/src/client/windows/crash_generat
 SOURCES += objs_common
 SOURCES += objs_crash_generation
 SOURCES += objs_handler
+
+USE_STATIC_LIBS = True

@@ -17,18 +17,6 @@ include $(topsrcdir)/config/rules.mk
 nsStyleStructList.h : $(srcdir)/generate-stylestructlist.py
 	$(PYTHON) $< > $@
 
-_FILES	= \
-	contenteditable.css \
-	designmode.css \
-	ImageDocument.css \
-	TopLevelImageDocument.css \
-	TopLevelVideoDocument.css \
-	$(NULL)
-
 GARBAGE	+= \
-	$(addprefix $(DIST)/bin/res/,$(_FILES)) \
 	nsStyleStructList.h \
 	$(NULL)
-
-libs:: $(_FILES)
-	$(INSTALL) $^ $(DIST)/bin/res

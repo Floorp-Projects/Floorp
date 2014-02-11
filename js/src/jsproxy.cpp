@@ -683,9 +683,10 @@ Trap2(JSContext *cx, HandleObject handler, HandleValue fval, HandleId id, Value 
     if (!str)
         return false;
     rval.setString(str);
-    Value argv[2] = { rval.get(), v };
-    AutoValueArray ava(cx, argv, 2);
-    return Trap(cx, handler, fval, 2, argv, rval);
+    JS::AutoValueArray<2> argv(cx);
+    argv[0].set(rval);
+    argv[1].set(v);
+    return Trap(cx, handler, fval, 2, argv.begin(), rval);
 }
 
 static bool
@@ -969,14 +970,15 @@ ScriptedIndirectProxyHandler::get(JSContext *cx, HandleObject proxy, HandleObjec
     if (!str)
         return false;
     RootedValue value(cx, StringValue(str));
-    Value argv[] = { ObjectOrNullValue(receiver), value };
-    AutoValueArray ava(cx, argv, 2);
+    JS::AutoValueArray<2> argv(cx);
+    argv[0].setObjectOrNull(receiver);
+    argv[1].set(value);
     RootedValue fval(cx);
     if (!GetDerivedTrap(cx, handler, cx->names().get, &fval))
         return false;
     if (!js_IsCallable(fval))
         return BaseProxyHandler::get(cx, proxy, receiver, id, vp);
-    return Trap(cx, handler, fval, 2, ava.start(), vp);
+    return Trap(cx, handler, fval, 2, argv.begin(), vp);
 }
 
 bool
@@ -989,14 +991,16 @@ ScriptedIndirectProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObjec
     if (!str)
         return false;
     RootedValue value(cx, StringValue(str));
-    Value argv[] = { ObjectOrNullValue(receiver), value, vp.get() };
-    AutoValueArray ava(cx, argv, 3);
+    JS::AutoValueArray<3> argv(cx);
+    argv[0].setObjectOrNull(receiver);
+    argv[1].set(value);
+    argv[2].set(vp);
     RootedValue fval(cx);
     if (!GetDerivedTrap(cx, handler, cx->names().set, &fval))
         return false;
     if (!js_IsCallable(fval))
         return BaseProxyHandler::set(cx, proxy, receiver, id, strict, vp);
-    return Trap(cx, handler, fval, 3, ava.start(), &value);
+    return Trap(cx, handler, fval, 3, argv.begin(), &value);
 }
 
 bool

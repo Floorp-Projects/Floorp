@@ -214,18 +214,17 @@ nsresult nsDateTimeFormatMac::FormatTMTime(nsILocale* locale,
   CFStringRef formattedDate = CFDateFormatterCreateStringWithAbsoluteTime(nullptr,
                                                                           formatter,
                                                                           absTime);
-  
+
   CFIndex stringLen = CFStringGetLength(formattedDate);
-  
+
   nsAutoTArray<UniChar, 256> stringBuffer;
-  if (stringBuffer.SetLength(stringLen + 1)) {
-    CFStringGetCharacters(formattedDate, CFRangeMake(0, stringLen), stringBuffer.Elements());
-    stringOut.Assign(reinterpret_cast<char16_t*>(stringBuffer.Elements()), stringLen);
-  }
-  
+  stringBuffer.SetLength(stringLen + 1);
+  CFStringGetCharacters(formattedDate, CFRangeMake(0, stringLen), stringBuffer.Elements());
+  stringOut.Assign(reinterpret_cast<char16_t*>(stringBuffer.Elements()), stringLen);
+
   CFRelease(formattedDate);
   CFRelease(formatter);
-  
+
   return res;
 }
 

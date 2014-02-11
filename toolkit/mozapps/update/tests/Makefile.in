@@ -79,9 +79,6 @@ else
 LIBS += $(call EXPAND_LIBNAME_PATH,updatecommon,../common)
 endif
 
-ifeq ($(OS_ARCH),WINNT)
-USE_STATIC_LIBS = 1
-endif # WINNT
 endif # Not Android
 
 include $(topsrcdir)/config/rules.mk

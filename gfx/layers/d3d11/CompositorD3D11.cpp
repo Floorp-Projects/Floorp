@@ -342,7 +342,7 @@ TemporaryRef<DataTextureSource>
 CompositorD3D11::CreateDataTextureSource(TextureFlags aFlags)
 {
   RefPtr<DataTextureSource> result = new DataTextureSourceD3D11(gfx::SurfaceFormat::UNKNOWN,
-                                                                this);
+                                                                this, aFlags);
   return result.forget();
 }
 

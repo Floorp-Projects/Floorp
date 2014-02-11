@@ -89,8 +89,7 @@ CompositorD3D9::GetMaxTextureSize() const
 TemporaryRef<DataTextureSource>
 CompositorD3D9::CreateDataTextureSource(TextureFlags aFlags)
 {
-  return new DataTextureSourceD3D9(SurfaceFormat::UNKNOWN, this,
-                                   !(aFlags & TEXTURE_DISALLOW_BIGIMAGE));
+  return new DataTextureSourceD3D9(SurfaceFormat::UNKNOWN, this, aFlags);
 }
 
 TemporaryRef<CompositingRenderTarget>

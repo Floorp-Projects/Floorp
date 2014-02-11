@@ -408,13 +408,6 @@ public:
   }
 
   /**
-   * Notify the compositor that a layers transaction has occured. This is only
-   * used for FPS information at the moment.
-   * XXX: surely there is a better way to do this?
-   */
-  virtual void NotifyLayersTransaction() = 0;
-
-  /**
    * Notify the compositor that composition is being paused. This allows the
    * compositor to temporarily release any resources.
    * Between calling Pause and Resume, compositing may fail.
@@ -452,6 +445,17 @@ public:
    * This can only be used from the compositor thread!
    */
   static LayersBackend GetBackend();
+
+  size_t GetFillRatio() {
+    float fillRatio = 0;
+    if (mPixelsFilled > 0 && mPixelsPerFrame > 0) {
+      fillRatio = 100.0f * float(mPixelsFilled) / float(mPixelsPerFrame);
+      if (fillRatio > 999.0f) {
+        fillRatio = 999.0f;
+      }
+    }
+    return fillRatio;
+  }
 
 protected:
   void DrawDiagnosticsInternal(DiagnosticFlags aFlags,

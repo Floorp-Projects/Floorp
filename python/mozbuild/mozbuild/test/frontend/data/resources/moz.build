@@ -1,0 +1,30 @@
+# Any copyright is dedicated to the Public Domain.
+# http://creativecommons.org/publicdomain/zero/1.0/
+
+DEFINES['FOO'] = True
+DEFINES['BAR'] = 'BAZ'
+
+RESOURCE_FILES += ['foo.res']
+RESOURCE_FILES += ['bar.res', 'baz.res']
+RESOURCE_FILES.mozilla += ['mozilla1.res']
+RESOURCE_FILES.mozilla += ['mozilla2.res']
+RESOURCE_FILES.mozilla.dom += ['dom1.res']
+RESOURCE_FILES.mozilla.dom += ['dom2.res', 'dom3.res']
+RESOURCE_FILES.mozilla.gfx += ['gfx.res']
+RESOURCE_FILES.vpx = ['mem.res']
+RESOURCE_FILES.vpx += ['mem2.res']
+RESOURCE_FILES.nspr.private = ['pprio.res', 'pprthred.res']
+RESOURCE_FILES.overwrite = ['old.res']
+RESOURCE_FILES.overwrite = ['new.res']
+
+RESOURCE_FILES += ['foo_p.res.in']
+RESOURCE_FILES['foo_p.res.in'].preprocess=True
+
+RESOURCE_FILES += ['bar_p.res.in', 'baz_p.res.in']
+RESOURCE_FILES['bar_p.res.in'].preprocess=True
+RESOURCE_FILES['baz_p.res.in'].preprocess=True
+
+RESOURCE_FILES.mozilla += ['mozilla1_p.res.in']
+RESOURCE_FILES.mozilla += ['mozilla2_p.res.in']
+RESOURCE_FILES.mozilla['mozilla1_p.res.in'].preprocess=True
+RESOURCE_FILES.mozilla['mozilla2_p.res.in'].preprocess=True

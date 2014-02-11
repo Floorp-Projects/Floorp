@@ -999,7 +999,7 @@ mozJSComponentLoader::ObjectForLocation(nsIFile *aComponentFile,
             ok = JS_ExecuteScriptVersion(cx, obj, script, nullptr, JSVERSION_LATEST);
         } else {
             RootedValue rval(cx);
-            ok = JS_CallFunction(cx, obj, function, 0, nullptr, rval.address());
+            ok = JS_CallFunction(cx, obj, function, JS::EmptyValueArray, rval.address());
         }
      }
 

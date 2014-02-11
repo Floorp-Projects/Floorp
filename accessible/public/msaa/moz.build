@@ -19,3 +19,5 @@ GENERATED_SOURCES += [
 FORCE_SHARED_LIB = True
 
 DEFINES['REGISTER_PROXY_DLL'] = True
+
+DEFFILE = SRCDIR + '/AccessibleMarshal.def'

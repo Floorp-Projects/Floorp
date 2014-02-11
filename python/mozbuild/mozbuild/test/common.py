@@ -34,5 +34,7 @@ class MockConfig(object):
         self.substs_unicode = ReadOnlyDict({k.decode('utf-8'): v.decode('utf-8',
             'replace') for k, v in self.substs.items()})
 
+        self.defines = self.substs
+
     def child_path(self, p):
         return os.path.join(self.topsrcdir, p)

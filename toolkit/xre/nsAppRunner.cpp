@@ -131,11 +131,6 @@
 
 #include <stdlib.h>
 
-// for old system jemalloc version check
-#if !defined(MOZ_MEMORY) && defined(__NetBSD__)
-#include <sys/param.h>
-#endif
-
 #ifdef XP_UNIX
 #include <sys/stat.h>
 #include <unistd.h>
@@ -4003,8 +3998,7 @@ XREMain::XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   ScopedLogging log;
 
 #if defined(MOZ_WIDGET_GTK)
-#if defined(MOZ_MEMORY) || defined(__FreeBSD__) \
-  || defined(__NetBSD__) && __NetBSD_Version__ >= 500000000
+#if defined(MOZ_MEMORY) || defined(__FreeBSD__) || defined(__NetBSD__)
   // Disable the slice allocator, since jemalloc already uses similar layout
   // algorithms, and using a sub-allocator tends to increase fragmentation.
   // This must be done before g_thread_init() is called.
