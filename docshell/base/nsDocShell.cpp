@@ -829,6 +829,7 @@ nsDocShell::nsDocShell():
     mIsAppTab(false),
     mUseGlobalHistory(false),
     mInPrivateBrowsing(false),
+    mUseRemoteTabs(false),
     mDeviceSizeIsPageSize(false),
     mCanExecuteScripts(false),
     mFiredUnloadEvent(false),
@@ -2242,6 +2243,22 @@ nsDocShell::SetPrivateBrowsing(bool aUsePrivateBrowsing)
             }
         }
     }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::GetUseRemoteTabs(bool* aUseRemoteTabs)
+{
+    NS_ENSURE_ARG_POINTER(aUseRemoteTabs);
+
+    *aUseRemoteTabs = mUseRemoteTabs;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::SetRemoteTabs(bool aUseRemoteTabs)
+{
+    mUseRemoteTabs = aUseRemoteTabs;
     return NS_OK;
 }
 

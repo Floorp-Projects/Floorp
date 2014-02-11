@@ -696,6 +696,8 @@ TabChild::Init()
   MOZ_ASSERT(loadContext);
   loadContext->SetPrivateBrowsing(
       mChromeFlags & nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW);
+  loadContext->SetRemoteTabs(
+      mChromeFlags & nsIWebBrowserChrome::CHROME_REMOTE_WINDOW);
 
   nsCOMPtr<nsIWebProgress> webProgress = do_GetInterface(docShell);
   NS_ENSURE_TRUE(webProgress, NS_ERROR_FAILURE);
