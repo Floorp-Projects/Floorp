@@ -169,8 +169,7 @@ nsHTTPIndex::OnFTPControlLog(bool server, const char *msg)
     JSString* jsMsgStr = JS_NewUCStringCopyZ(cx, unicodeMsg.get());
     NS_ENSURE_TRUE(jsMsgStr, NS_ERROR_OUT_OF_MEMORY);
 
-    JS::AutoValueVector params(cx);
-    MOZ_ALWAYS_TRUE(params.resize(2));
+    JS::AutoValueArray<2> params(cx);
     params[0].setBoolean(server);
     params[1].setString(jsMsgStr);
 
@@ -178,8 +177,7 @@ nsHTTPIndex::OnFTPControlLog(bool server, const char *msg)
     JS_CallFunctionName(cx,
                         global,
                         "OnFTPControlLog",
-                        2,
-                        params.begin(),
+                        params,
                         val.address());
     return NS_OK;
 }

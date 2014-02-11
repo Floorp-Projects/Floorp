@@ -11294,14 +11294,12 @@ class CallbackMethod(CallbackMember):
             "callGuard": self.getCallGuard()
             }
         if self.argCount > 0:
-            replacements["argv"] = "argv.begin()"
-            replacements["argc"] = "argc"
+            replacements["args"] = "JS::HandleValueArray::subarray(argv, 0, argc)"
         else:
-            replacements["argv"] = "nullptr"
-            replacements["argc"] = "0"
+            replacements["args"] = "JS::EmptyValueArray"
         return string.Template("${getCallable}"
                 "if (${callGuard}!JS::Call(cx, ${thisVal}, callable,\n"
-                "              ${argc}, ${argv}, &rval)) {\n"
+                "              ${args}, &rval)) {\n"
                 "  aRv.Throw(NS_ERROR_UNEXPECTED);\n"
                 "  return${errorReturn};\n"
                 "}\n").substitute(replacements)

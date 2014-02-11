@@ -129,7 +129,7 @@ Invoke(JSContext *cx, CallArgs args, MaybeConstruct construct = NO_CONSTRUCT);
  * arguments onto the stack.
  */
 extern bool
-Invoke(JSContext *cx, const Value &thisv, const Value &fval, unsigned argc, Value *argv,
+Invoke(JSContext *cx, const Value &thisv, const Value &fval, unsigned argc, const Value *argv,
        MutableHandleValue rval);
 
 /*
