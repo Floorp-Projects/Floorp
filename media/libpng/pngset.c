@@ -532,7 +532,7 @@ png_set_PLTE(png_structrp png_ptr, png_inforp info_ptr,
 #        endif
       ))
    {
-      png_chunk_report(png_ptr, "Invalid palette", PNG_CHUNK_ERROR);
+      png_chunk_error(png_ptr, "Invalid palette");
       return;
    }
 
