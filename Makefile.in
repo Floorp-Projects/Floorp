@@ -45,7 +45,7 @@ libs binaries export tools:: $(topsrcdir)/js/src/configure js/src/config.status
 endif
 endif
 
-ifdef BUILDING_JS
+ifdef JS_STANDALONE
 .PHONY: CLOBBER
 CLOBBER:
 else
@@ -115,7 +115,7 @@ install-manifests: $(addprefix install-dist-,$(install_manifests))
 # that would remove the resulting files.
 # Eventually, a standalone js build would just be able to build nspr itself,
 # removing the need for the former.
-ifdef BUILDING_JS
+ifdef JS_STANDALONE
 NO_REMOVE=1
 endif
 
@@ -156,7 +156,7 @@ endif
 # with no regard for PGO passes. This decision could probably be revisited.
 export:: install-dist-sdk
 
-ifndef BUILDING_JS
+ifndef JS_STANDALONE
 ifdef ENABLE_TESTS
 # Additional makefile targets to call automated test suites
 include $(topsrcdir)/testing/testsuite-targets.mk
@@ -200,7 +200,7 @@ endif
 
 SYM_STORE_SOURCE_DIRS := $(topsrcdir)
 
-ifndef BUILDING_JS
+ifndef JS_STANDALONE
 include $(topsrcdir)/toolkit/mozapps/installer/package-name.mk
 
 ifdef MOZ_SYMBOLS_EXTRA_BUILDID
@@ -271,7 +271,7 @@ check::
 	@relcount=`find $(DIST)/bin -name '*.so' | xargs objdump -R | grep R_386_PC32 | wc -l` && if test $$relcount -gt 0; then echo 'FAILED: R_386_PC32 relocations detected in a shared library.  Did you use a system header without adding it to config/system-headers?'; exit 1; else echo 'PASSED'; fi
 endif
 
-ifdef BUILDING_JS
+ifdef JS_STANDALONE
 # Delegate js-specific rules to js
 check-%:
 	$(MAKE) -C js/src $@
