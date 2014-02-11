@@ -145,7 +145,7 @@
 
     <panelview id="PanelUI-helpView" flex="1" class="PanelUI-subView">
       <label value="&helpMenu.label;" class="panel-subview-header"/>
-      <vbox id="PanelUI-helpItems"/>
+      <vbox id="PanelUI-helpItems" class="panel-subview-body"/>
     </panelview>
 
     <panelview id="PanelUI-developer" flex="1">
