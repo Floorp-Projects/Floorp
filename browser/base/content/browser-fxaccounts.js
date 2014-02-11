@@ -195,8 +195,12 @@ let gFxAccounts = {
   },
 
   onMenuPanelCommand: function (event) {
-    if (event.originalTarget.hasAttribute("signedin")) {
+    let button = event.originalTarget;
+
+    if (button.hasAttribute("signedin")) {
       this.openPreferences();
+    } else if (button.hasAttribute("failed")) {
+      this.openSignInAgainPage();
     } else {
       this.openAccountsPage();
     }
