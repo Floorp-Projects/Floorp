@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Bug 970891</title>
+  <style type="text/css">
+    @font-face {
+      font-family: "test";
+      src: url(../fonts/markA.ttf);
+    }
+    div {
+      font-family: test, monospace;
+      font-size: 16px;
+      line-height: 32px;
+    }
+    span {
+      font-family: monospace;
+    }
+  </style>
+</head>
+
+<body>
+  <div><b>A</b><span> </span><b>A</b><span> </span><i>A</i><span> </span><i>A</i></div>
+</body>
+
+</html>

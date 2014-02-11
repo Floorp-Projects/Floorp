@@ -295,3 +295,6 @@ pref(layout.css.text-align-true-value.enabled,true) == text-align-true.html text
 != control-chars-02.html control-chars-02-notref.html
 == control-chars-03a.html control-chars-03-ref.html
 == control-chars-03b.html control-chars-03-ref.html
+
+# font fallback for <space> when not supported in the primary font family - bug 970891
+HTTP(..) == space-font-1.html space-font-1-ref.html
