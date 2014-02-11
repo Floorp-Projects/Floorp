@@ -1525,13 +1525,13 @@ XPCWrappedNative::InitTearOff(XPCWrappedNativeTearOff* aTearOff,
         // when asked for nsIPropertyBag. It need not actually *implement*
         // nsIPropertyBag - xpconnect will do that work.
 
-        nsXPCWrappedJSClass* clazz;
+        nsXPCWrappedJSClass* clasp;
         if (iid->Equals(NS_GET_IID(nsIPropertyBag)) && jso &&
-            NS_SUCCEEDED(nsXPCWrappedJSClass::GetNewOrUsed(cx,*iid,&clazz))&&
-            clazz) {
+            NS_SUCCEEDED(nsXPCWrappedJSClass::GetNewOrUsed(cx,*iid,&clasp))&&
+            clasp) {
             RootedObject answer(cx,
-                                clazz->CallQueryInterfaceOnJSObject(cx, jso, *iid));
-            NS_RELEASE(clazz);
+                                clasp->CallQueryInterfaceOnJSObject(cx, jso, *iid));
+            NS_RELEASE(clasp);
             if (!answer) {
                 NS_RELEASE(obj);
                 aTearOff->SetInterface(nullptr);
