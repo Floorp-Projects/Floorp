@@ -32,6 +32,8 @@ esac
 
 if test -d "$1"; then
     (cd "$1"; $PYTHON $_topsrcdir/build/subconfigure.py dump "$_CONFIG_SHELL")
+else
+    mkdir -p "$1"
 fi
 $2
 (cd "$1"; $PYTHON $_topsrcdir/build/subconfigure.py adjust $ac_sub_configure)
