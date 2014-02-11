@@ -367,6 +367,7 @@ public:
     void GetShaderInfoLog(WebGLShader *shader, nsACString& retval);
     void GetShaderInfoLog(WebGLShader *shader, nsAString& retval);
     void GetShaderSource(WebGLShader *shader, nsAString& retval);
+    void GetShaderTranslatedSource(WebGLShader *shader, nsAString& retval);
     JS::Value GetTexParameter(GLenum target, GLenum pname);
     JS::Value GetTexParameter(JSContext * /* unused */, GLenum target,
                               GLenum pname) {
@@ -906,6 +907,7 @@ protected:
         WEBGL_compressed_texture_pvrtc,
         WEBGL_compressed_texture_s3tc,
         WEBGL_debug_renderer_info,
+        WEBGL_debug_shaders,
         WEBGL_depth_texture,
         WEBGL_lose_context,
         WEBGL_draw_buffers,
