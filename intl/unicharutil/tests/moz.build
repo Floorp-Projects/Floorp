@@ -19,3 +19,4 @@ LOCAL_INCLUDES += [
     '../public',
 ]
 
+USE_STATIC_LIBS = True

@@ -12,3 +12,5 @@ SIMPLE_PROGRAMS = [
 SOURCES += [
     '%s.cpp' % s for s in SIMPLE_PROGRAMS
 ]
+
+USE_STATIC_LIBS = True

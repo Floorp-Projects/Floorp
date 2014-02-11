@@ -18,3 +18,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     FINAL_TARGET = 'dist/XUL.framework/Versions/%(MOZILLA_VERSION)s' % CONFIG
 
 DEFINES['XPCOM_GLUE'] = True
+
+# Statically link against the RTL on windows
+USE_STATIC_LIBS = True
