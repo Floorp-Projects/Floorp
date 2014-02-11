@@ -701,7 +701,9 @@ nsIContent::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
   // inside chrome access only content.
   bool isAnonForEvents = IsRootOfChromeAccessOnlySubtree();
   if ((aVisitor.mEvent->message == NS_MOUSE_ENTER_SYNTH ||
-       aVisitor.mEvent->message == NS_MOUSE_EXIT_SYNTH) &&
+       aVisitor.mEvent->message == NS_MOUSE_EXIT_SYNTH ||
+       aVisitor.mEvent->message == NS_POINTER_OVER ||
+       aVisitor.mEvent->message == NS_POINTER_OUT) &&
       // Check if we should stop event propagation when event has just been
       // dispatched or when we're about to propagate from
       // chrome access only subtree.
