@@ -169,24 +169,6 @@ class BuildBackend(LoggingMixin):
         This exists so child classes don't need to implement __init__.
         """
 
-    def get_environment(self, obj):
-        """Obtain the ConfigEnvironment for a specific object.
-
-        This is used to support external source directories which operate in
-        their own topobjdir and have their own ConfigEnvironment.
-
-        This is somewhat hacky and should be considered for rewrite if external
-        project integration is rewritten.
-        """
-        environment = self._environments.get(obj.topobjdir, None)
-        if not environment:
-            config_status = mozpath.join(obj.topobjdir, 'config.status')
-
-            environment = ConfigEnvironment.from_config_status(config_status)
-            self._environments[obj.topobjdir] = environment
-
-        return environment
-
     def consume(self, objs):
         """Consume a stream of TreeMetadata instances.
 
@@ -310,7 +292,7 @@ class BuildBackend(LoggingMixin):
         in the current environment.'''
         pp = Preprocessor()
         srcdir = mozpath.dirname(obj.input_path)
-        pp.context.update(self.environment.substs)
+        pp.context.update(obj.config.substs)
         pp.context.update(
             top_srcdir=obj.topsrcdir,
             srcdir=srcdir,
