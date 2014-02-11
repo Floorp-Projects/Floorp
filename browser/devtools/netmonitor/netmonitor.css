@@ -39,13 +39,6 @@
   }
 }
 
-@media (min-width: 701px) and (max-width: 1280px) {
-  #body:not([pane-collapsed]) .requests-menu-filter-button,
-  #body:not([pane-collapsed]) .requests-menu-footer-spacer {
-    display: none;
-  }
-}
-
 @media (min-width: 701px) {
   #network-table[waterfall-overflows] .requests-menu-waterfall {
     display: none;

@@ -47,7 +47,7 @@ li {
 }
 
 #errorTitle {
-  background: url("chrome://browser/content/images/errorpage-warning.png") left center no-repeat;
+  background: url("chrome://b2g/content/images/errorpage-warning.png") left center no-repeat;
   /* Scaled by .666 of their actual size */
   background-size: 40px 40px;
   background-origin: content-box;
@@ -60,11 +60,11 @@ li {
 }
 
 #errorPage.certerror #errorTitle {
-  background-image: url("chrome://browser/content/images/errorpage-larry-black.png");
+  background-image: url("chrome://b2g/content/images/errorpage-larry-black.png");
 }
 
 #errorPage.blockedsite #errorTitle {
-  background-image: url("chrome://browser/content/images/errorpage-larry-white.png");
+  background-image: url("chrome://b2g/content/images/errorpage-larry-white.png");
   color: white;
 }
 
@@ -107,18 +107,18 @@ li {
 
 div[collapsed] {
   padding-left: 15px;
-  background-image: url("chrome://browser/skin/images/arrowright-16.png");
+  background-image: url("chrome://b2g/content/images/arrowright-16.png");
   background-size: 11px 11px;
   background-repeat: no-repeat;
   background-position: left 0.3em;
 }
 
 div[collapsed="true"] {
-  background-image: url("chrome://browser/skin/images/arrowright-16.png");
+  background-image: url("chrome://b2g/content/images/arrowright-16.png");
 }
 
 div[collapsed="false"] {
-  background-image: url("chrome://browser/skin/images/arrowdown-16.png");
+  background-image: url("chrome://b2g/content/images/arrowdown-16.png");
 }
 
 div[collapsed="true"] > p,

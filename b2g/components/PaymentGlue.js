@@ -11,7 +11,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 // JS shim that contains the callback functions to be triggered from the
 // payment provider's code in order to fire DOMRequest events.
-const kPaymentShimFile = "chrome://browser/content/payment.js";
+const kPaymentShimFile = "chrome://b2g/content/payment.js";
 
 // Type of MozChromEvents to handle payment dialogs.
 const kOpenPaymentConfirmationEvent = "open-payment-confirmation-dialog";

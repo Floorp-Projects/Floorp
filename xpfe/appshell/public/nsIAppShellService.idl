@@ -17,7 +17,7 @@ interface nsIAppShell;
 #include "js/TypeDecls.h"
 %}
 
-[scriptable, uuid(3927a495-575a-4a12-b9ab-6b948f76ec1f)]
+[scriptable, uuid(2fa2f813-c216-4efb-8a8c-de60108ce5e5)]
 interface nsIAppShellService : nsISupports
 {
   /**
@@ -132,4 +132,14 @@ interface nsIAppShellService : nsISupports
    */
   [noscript]
   readonly attribute boolean hasHiddenPrivateWindow;
+
+  /**
+   * Start/stop tracking lags in the event loop.
+   * If the event loop gets unresponsive, a "event-loop-lag" notification
+   * is sent. Note that calling `startEventLoopLagTracking` when tracking
+   * is already enabled has no effect.
+   * @return true if tracking succeeded.
+   */
+  bool startEventLoopLagTracking();
+  void stopEventLoopLagTracking();
 };

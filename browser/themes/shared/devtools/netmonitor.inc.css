@@ -375,10 +375,6 @@ box.requests-menu-status {
 
 /* Network request details */
 
-#details-pane {
-  max-width: 500px;
-}
-
 #details-pane-toggle {
   background: none;
   box-shadow: none;
@@ -502,12 +498,20 @@ box.requests-menu-status {
   border-top: solid 1px hsla(210,5%,5%,.3);
 }
 
+.theme-dark #requests-menu-footer {
+  background: url(background-noise-toolbar.png), #343c45; /* Toolbars */
+}
+
+.theme-light #requests-menu-footer {
+  background: url(background-noise-toolbar.png), #f0f1f2; /* Toolbars */
+}
+
 .requests-menu-footer-button,
 .requests-menu-footer-label {
   min-width: 1em;
   margin: 0;
   border: none;
-  padding: 2px 0.75vw;
+  padding: 2px 1vw;
 }
 
 .theme-dark .requests-menu-footer-button,
@@ -740,13 +744,7 @@ box.requests-menu-status {
     min-height: 20px;
   }
 
-  .requests-menu-footer-button,
-  .requests-menu-footer-label {
-    padding: 2px 1vw;
-  }
-
   #details-pane {
-    max-width: none;
     margin: 0 !important;
     /* To prevent all the margin hacks to hide the sidebar. */
   }
