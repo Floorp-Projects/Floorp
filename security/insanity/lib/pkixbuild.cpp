@@ -164,7 +164,12 @@ BuildForwardInner(TrustDomain& trustDomain,
   return Success;
 }
 
-// Caller must check for expiration before calling this function
+// Recursively build the path from the given subject certificate to the root.
+//
+// Be very careful about changing the order of checks. The order is significant
+// because it affects which error we return when a certificate or certificate
+// chain has multiple problems. See the error ranking documentation in
+// insanity/pkix.h.
 static Result
 BuildForward(TrustDomain& trustDomain,
              BackCert& subject,
@@ -186,14 +191,23 @@ BuildForward(TrustDomain& trustDomain,
   Result rv;
 
   TrustDomain::TrustLevel trustLevel;
-
+  bool expiredEndEntity = false;
   rv = CheckIssuerIndependentProperties(trustDomain, subject, time,
                                         endEntityOrCA,
                                         requiredKeyUsagesIfPresent,
                                         requiredEKUIfPresent, subCACount,
                                         &trustLevel);
   if (rv != Success) {
-    return rv;
+    // CheckIssuerIndependentProperties checks for expiration last, so if
+    // it returned SEC_ERROR_EXPIRED_CERTIFICATE we know that is the only
+    // problem with the cert found so far. Keep going to see if we can build
+    // a path; if not, it's better to return the path building failure.
+    expiredEndEntity = endEntityOrCA == MustBeEndEntity &&
+                       trustLevel != TrustDomain::TrustAnchor &&
+                       PR_GetError() == SEC_ERROR_EXPIRED_CERTIFICATE;
+    if (!expiredEndEntity) {
+      return rv;
+    }
   }
 
   if (trustLevel == TrustDomain::TrustAnchor) {
@@ -219,6 +233,8 @@ BuildForward(TrustDomain& trustDomain,
     return Fail(RecoverableError, SEC_ERROR_UNKNOWN_ISSUER);
   }
 
+  PRErrorCode errorToReturn = 0;
+
   for (CERTCertListNode* n = CERT_LIST_HEAD(candidates);
        !CERT_LIST_END(n, candidates); n = CERT_LIST_NEXT(n)) {
     rv = BuildForwardInner(trustDomain, subject, time, endEntityOrCA,
@@ -226,6 +242,14 @@ BuildForward(TrustDomain& trustDomain,
                            n->cert, stapledOCSPResponse, subCACount,
                            results);
     if (rv == Success) {
+      if (expiredEndEntity) {
+        // We deferred returning this error to see if we should return
+        // "unknown issuer" instead. Since we found a valid issuer, it's
+        // time to return "expired."
+        PR_SetError(SEC_ERROR_EXPIRED_CERTIFICATE, 0);
+        return RecoverableError;
+      }
+
       SECStatus srv = trustDomain.CheckRevocation(endEntityOrCA,
                                                   subject.GetNSSCert(),
                                                   n->cert, time,
@@ -240,9 +264,31 @@ BuildForward(TrustDomain& trustDomain,
     if (rv != RecoverableError) {
       return rv;
     }
+
+    PRErrorCode currentError = PR_GetError();
+    switch (currentError) {
+      case 0:
+        PR_NOT_REACHED("Error code not set!");
+        PR_SetError(PR_INVALID_STATE_ERROR, 0);
+        return FatalError;
+      case SEC_ERROR_UNTRUSTED_CERT:
+        currentError = SEC_ERROR_UNTRUSTED_ISSUER;
+        break;
+      default:
+        break;
+    }
+    if (errorToReturn == 0) {
+      errorToReturn = currentError;
+    } else if (errorToReturn != currentError) {
+      errorToReturn = SEC_ERROR_UNKNOWN_ISSUER;
+    }
   }
 
-  return Fail(RecoverableError, SEC_ERROR_UNKNOWN_ISSUER);
+  if (errorToReturn == 0) {
+    errorToReturn = SEC_ERROR_UNKNOWN_ISSUER;
+  }
+
+  return Fail(RecoverableError, errorToReturn);
 }
 
 SECStatus
