@@ -83,17 +83,9 @@ ifdef JAVA_JAR_TARGETS #{
 # Arg 3: List of extra jars to link against.  We do not use VPATH so
 #        jars must be relative to $(CURDIR).
 # Arg 4: Additional JAVAC_FLAGS.
-
-# Note: Proguard fails when stale .class files corresponding to
-# removed inner classes are present in the object directory.  These
-# stale class files get packaged into the .jar file, which then gets
-# processed by Proguard.  To work around this, we always delete any
-# existing jarfile-classes directory and start fresh.
-
 define java_jar_template
 $(1): $(2) $(3)
 	$$(REPORT_BUILD)
-	@$$(RM) -rf $(1:.jar=)-classes
 	@$$(NSINSTALL) -D $(1:.jar=)-classes
 	@$$(if $$(filter-out .,$$(@D)),$$(NSINSTALL) -D $$(@D))
 	$$(JAVAC) $$(JAVAC_FLAGS)\
@@ -111,7 +103,7 @@ endef
 $(foreach jar,$(JAVA_JAR_TARGETS),\
   $(if $($(jar)_DEST),,$(error Missing $(jar)_DEST))\
   $(if $($(jar)_JAVAFILES),,$(error Missing $(jar)_JAVAFILES))\
-  $(eval $(call java_jar_template,$($(jar)_DEST),$($(jar)_JAVAFILES) $(addprefix $(CURDIR)/,$($(jar)_PP_JAVAFILES)),$($(jar)_EXTRA_JARS),$($(jar)_JAVAC_FLAGS)))\
+  $(eval $(call java_jar_template,$($(jar)_DEST),$($(jar)_JAVAFILES) $($(jar)_PP_JAVAFILES),$($(jar)_EXTRA_JARS),$($(jar)_JAVAC_FLAGS)))\
 )
 endif #} JAVA_JAR_TARGETS
 
