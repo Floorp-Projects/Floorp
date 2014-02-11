@@ -1181,20 +1181,23 @@ class AssemblerX86Shared
         masm.push_m(src.offset, src.base.code());
     }
 
-    void pop(const Operand &src) {
-        switch (src.kind()) {
+    void pop(const Operand &dest) {
+        switch (dest.kind()) {
           case Operand::REG:
-            masm.pop_r(src.reg());
+            masm.pop_r(dest.reg());
             break;
           case Operand::MEM_REG_DISP:
-            masm.pop_m(src.disp(), src.base());
+            masm.pop_m(dest.disp(), dest.base());
             break;
           default:
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
-    void pop(const Register &src) {
-        masm.pop_r(src.code());
+    void pop(const Register &dest) {
+        masm.pop_r(dest.code());
+    }
+    void pop(const Address &dest) {
+        masm.pop_m(dest.offset, dest.base.code());
     }
 
     void pushFlags() {

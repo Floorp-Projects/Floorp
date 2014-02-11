@@ -633,14 +633,11 @@ MacroAssembler::clampDoubleToUint8(FloatRegister input, Register output)
 #endif
 }
 
+// Inlined version of gc::CheckAllocatorState that checks the bare essentials
+// and bails for anything that cannot be handled with our jit allocators.
 void
-MacroAssembler::newGCThing(const Register &result, gc::AllocKind allocKind, Label *fail,
-                           gc::InitialHeap initialHeap /* = gc::DefaultHeap */)
+MacroAssembler::checkAllocatorState(Label *fail)
 {
-    // Inlined equivalent of js::gc::NewGCThing() without failure case handling.
-
-    int thingSize = int(gc::Arena::thingSize(allocKind));
-
 #ifdef JS_GC_ZEAL
     // Don't execute the inline path if gcZeal is active.
     branch32(Assembler::NotEqual,
@@ -652,59 +649,164 @@ MacroAssembler::newGCThing(const Register &result, gc::AllocKind allocKind, Labe
     // as the metadata to use for the object may vary between executions of the op.
     if (GetIonContext()->compartment->hasObjectMetadataCallback())
         jump(fail);
+}
+
+// Inline Nursery::allocateObject, when it is okay to do so. Return true if we
+// emitted a nursery allocation path.
+bool
+MacroAssembler::nurseryAllocate(const Register &result, gc::AllocKind allocKind, Label *fail,
+                                size_t nDynamicSlots, gc::InitialHeap initialHeap)
+{
+    JS_ASSERT(allocKind >= gc::FINALIZE_OBJECT0 && allocKind <= gc::FINALIZE_OBJECT_LAST);
 
 #ifdef JSGC_GENERATIONAL
     const Nursery &nursery = GetIonContext()->runtime->gcNursery();
-    if (nursery.isEnabled() &&
-        allocKind <= gc::FINALIZE_OBJECT_LAST &&
-        initialHeap != gc::TenuredHeap)
-    {
-        // Inline Nursery::allocate. No explicit check for nursery.isEnabled()
-        // is needed, as the comparison with the nursery's end will always fail
-        // in such cases.
-        loadPtr(AbsoluteAddress(nursery.addressOfPosition()), result);
-        addPtr(Imm32(thingSize), result);
-        branchPtr(Assembler::BelowOrEqual, AbsoluteAddress(nursery.addressOfCurrentEnd()), result, fail);
-        storePtr(result, AbsoluteAddress(nursery.addressOfPosition()));
+
+    // When the nursery is not enabled, the nursery's position == end pointer,
+    // so allocations will naturally fall back to the interpreter. Thus, the
+    // following check is not technically necessary. However, the nursery is
+    // generally only perma-disabled or disabled when using zeal, so prefer to
+    // compile the tenured fast-path instead so we don't bail constantly.
+    if (!nursery.isEnabled())
+        return false;
+
+    // Explicitly request for tenured allocation for these objects.
+    if (initialHeap == gc::TenuredHeap)
+        return false;
+
+    // This allocation site is requesting too many dynamic slots.
+    if (nDynamicSlots > Nursery::MaxNurserySlots)
+        return false;
+
+    // No explicit check for nursery.isEnabled() is needed, as the comparison
+    // with the nursery's end will always fail in such cases.
+    int thingSize = int(gc::Arena::thingSize(allocKind));
+    int totalSize = thingSize + nDynamicSlots * sizeof(HeapSlot);
+    loadPtr(AbsoluteAddress(nursery.addressOfPosition()), result);
+    addPtr(Imm32(totalSize), result);
+    branchPtr(Assembler::BelowOrEqual, AbsoluteAddress(nursery.addressOfCurrentEnd()), result, fail);
+    storePtr(result, AbsoluteAddress(nursery.addressOfPosition()));
+
+    if (!nDynamicSlots) {
+        JS_ASSERT(thingSize == totalSize);
+        subPtr(Imm32(totalSize), result);
+    } else {
+        // Offset to get the slots pointer in |result|.
+        subPtr(Imm32(totalSize - thingSize), result);
+        // Store the slots pointer into slots address as an offset from the
+        // slots so that we do not need to take a second register.
+        JS_ASSERT(int(JSObject::offsetOfSlots()) - thingSize < 0);
+        storePtr(result, Address(result, int(JSObject::offsetOfSlots()) - thingSize));
+        // Load the start of the object into result.
         subPtr(Imm32(thingSize), result);
-        return;
     }
+
+    return true;
+#else
+    return false;
 #endif // JSGC_GENERATIONAL
+}
 
+// Inlined version of FreeSpan::allocate.
+void
+MacroAssembler::freeSpanAllocate(const Register &result, gc::AllocKind allocKind, Label *fail)
+{
     CompileZone *zone = GetIonContext()->compartment->zone();
+    int thingSize = int(gc::Arena::thingSize(allocKind));
 
-    // Inline FreeSpan::allocate.
-    // There is always exactly one FreeSpan per allocKind per JSCompartment.
-    // If a FreeSpan is replaced, its members are updated in the freeLists table,
-    // which the code below always re-reads.
+    // Load FreeSpan::first of |zone|'s freeLists for |allocKind|. If there is
+    // no room remaining in the span, we bail to finish the allocation. The
+    // interpreter will call |refillFreeLists|, setting up a new FreeSpan so
+    // that we can continue allocating in the jit.
     loadPtr(AbsoluteAddress(zone->addressOfFreeListFirst(allocKind)), result);
     branchPtr(Assembler::BelowOrEqual, AbsoluteAddress(zone->addressOfFreeListLast(allocKind)), result, fail);
-
     addPtr(Imm32(thingSize), result);
     storePtr(result, AbsoluteAddress(zone->addressOfFreeListFirst(allocKind)));
     subPtr(Imm32(thingSize), result);
 }
 
+// Inlined equivalent of gc::AllocateObject, without failure case handling.
 void
-MacroAssembler::newGCThing(const Register &result, JSObject *templateObject,
-                           Label *fail, gc::InitialHeap initialHeap)
+MacroAssembler::allocateObject(const Register &result, gc::AllocKind allocKind, Label *fallback,
+                               Label *mallocEntry, Label *mallocRejoin, Label *freeEntry,
+                               size_t nDynamicSlots, gc::InitialHeap initialHeap)
+{
+    JS_ASSERT_IF(nDynamicSlots, mallocEntry && mallocRejoin && freeEntry);
+
+    checkAllocatorState(fallback);
+    if (nurseryAllocate(result, allocKind, fallback, nDynamicSlots, initialHeap))
+        return;
+
+    if (!nDynamicSlots) {
+        freeSpanAllocate(result, allocKind, fallback);
+    } else {
+        // Exit to do the malloc out-of-line.
+        jump(mallocEntry);
+
+        // Since we have to jump out-of-line anyway, insert our failure
+        // handling code into the jumped-over block so that it does not force a
+        // jump in the success case below.
+        Label allocFail;
+        bind(&allocFail);
+        pop(result);
+        jump(freeEntry);
+
+        // Rejoin from successful malloc; malloc failure falls straight though
+        // to the fallback since there is no cleanup to do yet.
+        bind(mallocRejoin);
+
+        // Save our malloc pointer to the stack so we can re-use the register.
+        push(result);
+
+        // Allocate the object and write the malloced slots.
+        freeSpanAllocate(result, allocKind, &allocFail);
+        pop(Address(result, JSObject::offsetOfSlots()));
+    }
+}
+
+// Inlined equivalent of gc::AllocateNonObject, without failure case handling.
+// Non-object allocation does not need to worry about slots, so can take a
+// simpler path.
+void
+MacroAssembler::allocateNonObject(const Register &result, gc::AllocKind allocKind, Label *fail)
+{
+    checkAllocatorState(fail);
+    freeSpanAllocate(result, allocKind, fail);
+}
+
+void
+MacroAssembler::newGCObject(const Register &result, JSObject *templateObject, Label *fallback,
+                            gc::InitialHeap initialHeap)
+{
+    gc::AllocKind allocKind = templateObject->tenuredGetAllocKind();
+    JS_ASSERT(allocKind >= gc::FINALIZE_OBJECT0 && allocKind <= gc::FINALIZE_OBJECT_LAST);
+    JS_ASSERT(templateObject->numDynamicSlots() == 0);
+
+    allocateObject(result, allocKind, fallback, nullptr, nullptr, nullptr, 0, initialHeap);
+}
+
+void
+MacroAssembler::newGCObjectAndSlots(const Register &result, JSObject *templateObject, Label *fallback,
+                                    Label *mallocEntry, Label *mallocRejoin, Label *freeEntry,
+                                    gc::InitialHeap initialHeap)
 {
     gc::AllocKind allocKind = templateObject->tenuredGetAllocKind();
     JS_ASSERT(allocKind >= gc::FINALIZE_OBJECT0 && allocKind <= gc::FINALIZE_OBJECT_LAST);
 
-    newGCThing(result, allocKind, fail, initialHeap);
+    allocateObject(result, allocKind, fallback, mallocEntry, mallocRejoin, freeEntry,
+                   templateObject->numDynamicSlots(), initialHeap);
 }
 
 void
 MacroAssembler::newGCString(const Register &result, Label *fail)
 {
-    newGCThing(result, js::gc::FINALIZE_STRING, fail);
+    allocateNonObject(result, js::gc::FINALIZE_STRING, fail);
 }
 
 void
 MacroAssembler::newGCShortString(const Register &result, Label *fail)
 {
-    newGCThing(result, js::gc::FINALIZE_SHORT_STRING, fail);
+    allocateNonObject(result, js::gc::FINALIZE_SHORT_STRING, fail);
 }
 
 void
@@ -753,6 +855,9 @@ MacroAssembler::newGCThingPar(const Register &result, const Register &cx,
     // Update `first`
     // tempReg1->first = tempReg2;
     storePtr(tempReg2, Address(tempReg1, offsetof(gc::FreeSpan, first)));
+
+    // Initialize slots to nullptr, so that we can share initGCObject.
+    storePtr(ImmPtr(nullptr), Address(result, JSObject::offsetOfSlots()));
 }
 
 void
@@ -783,7 +888,31 @@ MacroAssembler::newGCShortStringPar(const Register &result, const Register &cx,
 }
 
 void
-MacroAssembler::initGCThing(const Register &obj, JSObject *templateObject)
+MacroAssembler::initGCSlots(const Register &obj, JSObject *templateObject)
+{
+    // Slots of non-array objects are required to be initialized.
+    // Use the values currently in the template object.
+    uint32_t nslots = templateObject->lastProperty()->slotSpan(templateObject->getClass());
+    if (nslots == 0)
+        return;
+
+    uint32_t nfixed = Min(templateObject->numFixedSlots(), nslots);
+    for (unsigned i = 0; i < nfixed; i++)
+        storeValue(templateObject->getFixedSlot(i), Address(obj, JSObject::getFixedSlotOffset(i)));
+
+    if (nfixed < nslots) {
+        JS_ASSERT(nslots - nfixed <= templateObject->numDynamicSlots());
+
+        push(obj);
+        loadPtr(Address(obj, JSObject::offsetOfSlots()), obj);
+        for (unsigned i = 0; i < nslots - nfixed; ++i)
+            storeValue(templateObject->getDynamicSlot(i), Address(obj, i * sizeof(HeapSlot)));
+        pop(obj);
+    }
+}
+
+void
+MacroAssembler::initGCObject(const Register &obj, JSObject *templateObject)
 {
     // Fast initialization of an empty object returned by NewGCThing().
 
@@ -791,7 +920,9 @@ MacroAssembler::initGCThing(const Register &obj, JSObject *templateObject)
 
     storePtr(ImmGCPtr(templateObject->lastProperty()), Address(obj, JSObject::offsetOfShape()));
     storePtr(ImmGCPtr(templateObject->type()), Address(obj, JSObject::offsetOfType()));
-    storePtr(ImmPtr(nullptr), Address(obj, JSObject::offsetOfSlots()));
+    // Note: if we needed external slots, |slots| was initialized by object allocation.
+    if (!templateObject->hasDynamicSlots())
+        storePtr(ImmPtr(nullptr), Address(obj, JSObject::offsetOfSlots()));
 
     if (templateObject->is<ArrayObject>()) {
         JS_ASSERT(!templateObject->getDenseInitializedLength());
@@ -813,23 +944,15 @@ MacroAssembler::initGCThing(const Register &obj, JSObject *templateObject)
                       ? ObjectElements::CONVERT_DOUBLE_ELEMENTS
                       : 0),
                 Address(obj, elementsOffset + ObjectElements::offsetOfFlags()));
+        JS_ASSERT(!templateObject->hasPrivate());
     } else {
         storePtr(ImmPtr(emptyObjectElements), Address(obj, JSObject::offsetOfElements()));
-
-        // Fixed slots of non-array objects are required to be initialized.
-        // Use the values currently in the template object.
-        size_t nslots = Min(templateObject->numFixedSlots(),
-                            templateObject->lastProperty()->slotSpan(templateObject->getClass()));
-        for (unsigned i = 0; i < nslots; i++) {
-            storeValue(templateObject->getFixedSlot(i),
-                       Address(obj, JSObject::getFixedSlotOffset(i)));
+        initGCSlots(obj, templateObject);
+        if (templateObject->hasPrivate()) {
+            uint32_t nfixed = templateObject->numFixedSlots();
+            storePtr(ImmPtr(templateObject->getPrivate()),
+                     Address(obj, JSObject::getPrivateDataOffset(nfixed)));
         }
-    }
-
-    if (templateObject->hasPrivate()) {
-        uint32_t nfixed = templateObject->numFixedSlots();
-        storePtr(ImmPtr(templateObject->getPrivate()),
-                 Address(obj, JSObject::getPrivateDataOffset(nfixed)));
     }
 }
 

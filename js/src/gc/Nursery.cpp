@@ -269,19 +269,13 @@ js::Nursery::allocateHugeSlots(JSContext *cx, size_t nslots)
 }
 
 void
-js::Nursery::notifyInitialSlots(Cell *cell, HeapSlot *slots)
-{
-    if (isInside(cell) && !isInside(slots)) {
-        /* If this put fails, we will only leak the slots. */
-        (void)hugeSlots.put(slots);
-    }
-}
-
-void
 js::Nursery::notifyNewElements(gc::Cell *cell, ObjectElements *elements)
 {
     JS_ASSERT(!isInside(elements));
-    notifyInitialSlots(cell, reinterpret_cast<HeapSlot *>(elements));
+    if (isInside(cell)) {
+        /* If this put fails, we will only leak the slots. */
+        (void)hugeSlots.put(reinterpret_cast<HeapSlot *>(elements));
+    }
 }
 
 void

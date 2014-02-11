@@ -1387,6 +1387,12 @@ class ObjectImpl : public gc::BarrieredCell<ObjectImpl>
         return fixedSlots()[slot];
     }
 
+    const Value &getDynamicSlot(uint32_t slot) const {
+        MOZ_ASSERT(slots);
+        MOZ_ASSERT(slot < numDynamicSlots());
+        return slots[slot];
+    }
+
     void setFixedSlot(uint32_t slot, const Value &value) {
         MOZ_ASSERT(slot < numFixedSlots());
         fixedSlots()[slot].set(this->asObjectPtr(), HeapSlot::Slot, slot, value);

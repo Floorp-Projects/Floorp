@@ -142,6 +142,133 @@ MNewStringObject::templateObj() const {
     return &templateObj_->as<StringObject>();
 }
 
+// API call to malloc for slots.
+class OutOfLineMallocSlots : public OutOfLineCodeBase<CodeGenerator>
+{
+    const Register result_;
+    int32_t nDynamicSlots_;
+    Label *failure_;
+
+  public:
+    OutOfLineMallocSlots(const Register &result, size_t nslots, Label *failure)
+      : result_(result), nDynamicSlots_(int32_t(nslots)), failure_(failure)
+    {
+        JS_ASSERT(nslots < INT32_MAX);
+    }
+
+    bool accept(CodeGenerator *codegen) {
+        return codegen->visitOutOfLineMallocSlots(this);
+    }
+
+    const Register &result() const {
+        return result_;
+    }
+
+    int32_t numDynamicSlots() const {
+        return nDynamicSlots_;
+    }
+
+    Label *failure() const {
+        return failure_;
+    }
+};
+
+bool
+CodeGenerator::visitOutOfLineMallocSlots(OutOfLineMallocSlots *ool)
+{
+    saveVolatile(ool->result());
+
+    RegisterSet regs = RegisterSet::Volatile();
+    regs.takeUnchecked(ool->result());
+    Register regRuntime = regs.takeGeneral();
+    Register regNSlots = regs.takeGeneral();
+
+    masm.setupUnalignedABICall(2, ool->result());
+    masm.movePtr(ImmPtr(GetIonContext()->runtime), regRuntime);
+    masm.passABIArg(regRuntime);
+    masm.move32(Imm32(uint32_t(ool->numDynamicSlots())), regNSlots);
+    masm.passABIArg(regNSlots);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, NewSlots));
+    masm.storeCallResult(ool->result());
+
+    restoreVolatile(ool->result());
+
+    masm.branchTestPtr(Assembler::Zero, ool->result(), ool->result(), ool->failure());
+
+    masm.jump(ool->rejoin());
+    return true;
+}
+
+// API call to free slots data on allocation failure.
+class OutOfLineFreeSlots : public OutOfLineCodeBase<CodeGenerator>
+{
+    const Register slots_;
+    Label *fallback_;
+
+  public:
+    OutOfLineFreeSlots(const Register &reg, Label *fallback)
+      : slots_(reg), fallback_(fallback)
+    { }
+
+    bool accept(CodeGenerator *codegen) {
+        return codegen->visitOutOfLineFreeSlots(this);
+    }
+
+    Register slots() const {
+        return slots_;
+    }
+
+    Label *fallback() const {
+        return fallback_;
+    }
+};
+
+bool
+CodeGenerator::visitOutOfLineFreeSlots(OutOfLineFreeSlots *ool)
+{
+    saveVolatile(ool->slots());
+
+    RegisterSet regs = RegisterSet::Volatile();
+    regs.takeUnchecked(ool->slots());
+    Register temp = regs.takeGeneral();
+
+    masm.setupUnalignedABICall(1, temp);
+    masm.passABIArg(ool->slots());
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, FreeSlots));
+    restoreVolatile(ool->slots());
+
+    masm.jump(ool->fallback());
+    return true;
+}
+
+// Emit out-of-line code to provide malloc and free paths to allocate slots for
+// objects that require them. In the case that such paths are not required, the
+// given labels are returned as nullptr.
+bool
+CodeGenerator::emitOutOfLineMallocFree(const Register &reg, size_t nDynamicSlots,
+                                       Label *fallback, Label **mallocEntry, Label **mallocRejoin,
+                                       Label **freeEntry)
+{
+    *mallocEntry = nullptr;
+    *mallocRejoin = nullptr;
+    *freeEntry = nullptr;
+    if (!nDynamicSlots)
+        return true;
+
+    OutOfLineMallocSlots *oolMalloc = new(alloc()) OutOfLineMallocSlots(reg, nDynamicSlots, fallback);
+    if (!addOutOfLineCode(oolMalloc))
+        return false;
+
+    OutOfLineFreeSlots *oolFree = new(alloc()) OutOfLineFreeSlots(reg, fallback);
+    if (!addOutOfLineCode(oolFree))
+        return false;
+
+    *mallocEntry = oolMalloc->entry();
+    *mallocRejoin = oolMalloc->rejoin();
+    *freeEntry = oolFree->entry();
+    return true;
+}
+
 CodeGenerator::CodeGenerator(MIRGenerator *gen, LIRGraph *graph, MacroAssembler *masm)
   : CodeGeneratorSpecific(gen, graph, masm)
 #ifdef DEBUG
@@ -972,8 +1099,8 @@ CodeGenerator::visitLambda(LLambda *lir)
 
     JS_ASSERT(!info.singletonType);
 
-    masm.newGCThing(output, info.fun, ool->entry(), gc::DefaultHeap);
-    masm.initGCThing(output, info.fun);
+    masm.newGCObject(output, info.fun, ool->entry(), gc::DefaultHeap);
+    masm.initGCObject(output, info.fun);
 
     emitLambdaInit(output, scopeChain, info);
 
@@ -3360,29 +3487,6 @@ CodeGenerator::visitNewDerivedTypedObject(LNewDerivedTypedObject *lir)
     return callVM(CreateDerivedTypedObjInfo, lir);
 }
 
-bool
-CodeGenerator::visitNewSlots(LNewSlots *lir)
-{
-    Register temp1 = ToRegister(lir->temp1());
-    Register temp2 = ToRegister(lir->temp2());
-    Register temp3 = ToRegister(lir->temp3());
-    Register output = ToRegister(lir->output());
-
-    masm.mov(ImmPtr(GetIonContext()->runtime), temp1);
-    masm.mov(ImmWord(lir->mir()->nslots()), temp2);
-
-    masm.setupUnalignedABICall(2, temp3);
-    masm.passABIArg(temp1);
-    masm.passABIArg(temp2);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, NewSlots));
-
-    masm.testPtr(output, output);
-    if (!bailoutIf(Assembler::Zero, lir->snapshot()))
-        return false;
-
-    return true;
-}
-
 bool CodeGenerator::visitAtan2D(LAtan2D *lir)
 {
     Register temp = ToRegister(lir->temp());
@@ -3430,8 +3534,8 @@ CodeGenerator::visitNewArray(LNewArray *lir)
     if (!addOutOfLineCode(ool))
         return false;
 
-    masm.newGCThing(objReg, templateObject, ool->entry(), lir->mir()->initialHeap());
-    masm.initGCThing(objReg, templateObject);
+    masm.newGCObject(objReg, templateObject, ool->entry(), lir->mir()->initialHeap());
+    masm.initGCObject(objReg, templateObject);
 
     masm.bind(ool->rejoin());
     return true;
@@ -3507,7 +3611,7 @@ CodeGenerator::visitNewObject(LNewObject *lir)
 {
     JS_ASSERT(gen->info().executionMode() == SequentialExecution);
     Register objReg = ToRegister(lir->output());
-    JSObject *templateObject = lir->mir()->templateObject();
+    JSObject *templateObj = lir->mir()->templateObject();
 
     if (lir->mir()->shouldUseVM())
         return visitNewObjectVMCall(lir);
@@ -3516,8 +3620,8 @@ CodeGenerator::visitNewObject(LNewObject *lir)
     if (!addOutOfLineCode(ool))
         return false;
 
-    masm.newGCThing(objReg, templateObject, ool->entry(), lir->mir()->initialHeap());
-    masm.initGCThing(objReg, templateObject);
+    masm.newGCObject(objReg, templateObj, ool->entry(), lir->mir()->initialHeap());
+    masm.initGCObject(objReg, templateObj);
 
     masm.bind(ool->rejoin());
     return true;
@@ -3551,53 +3655,46 @@ CodeGenerator::visitNewDeclEnvObject(LNewDeclEnvObject *lir)
     if (!ool)
         return false;
 
-    masm.newGCThing(obj, templateObj, ool->entry(), gc::DefaultHeap);
-    masm.initGCThing(obj, templateObj);
+    masm.newGCObject(obj, templateObj, ool->entry(), gc::DefaultHeap);
+    masm.initGCObject(obj, templateObj);
     masm.bind(ool->rejoin());
     return true;
 }
 
-typedef JSObject *(*NewCallObjectFn)(JSContext *, HandleScript, HandleShape,
-                                     HandleTypeObject, HeapSlot *);
-static const VMFunction NewCallObjectInfo =
-    FunctionInfo<NewCallObjectFn>(NewCallObject);
+typedef JSObject *(*NewCallObjectFn)(JSContext *, HandleScript, HandleShape, HandleTypeObject);
+static const VMFunction NewCallObjectInfo = FunctionInfo<NewCallObjectFn>(NewCallObject);
 
 bool
 CodeGenerator::visitNewCallObject(LNewCallObject *lir)
 {
-    Register obj = ToRegister(lir->output());
+    Register objReg = ToRegister(lir->output());
 
     JSObject *templateObj = lir->mir()->templateObject();
 
     // If we have a template object, we can inline call object creation.
-    OutOfLineCode *ool;
-    if (lir->slots()->isRegister()) {
-        ool = oolCallVM(NewCallObjectInfo, lir,
-                        (ArgList(), ImmGCPtr(lir->mir()->block()->info().script()),
-                                    ImmGCPtr(templateObj->lastProperty()),
-                                    ImmGCPtr(templateObj->hasSingletonType() ? nullptr : templateObj->type()),
-                                    ToRegister(lir->slots())),
-                        StoreRegisterTo(obj));
-    } else {
-        ool = oolCallVM(NewCallObjectInfo, lir,
-                        (ArgList(), ImmGCPtr(lir->mir()->block()->info().script()),
-                                    ImmGCPtr(templateObj->lastProperty()),
-                                    ImmGCPtr(templateObj->hasSingletonType() ? nullptr : templateObj->type()),
-                                    ImmPtr(nullptr)),
-                        StoreRegisterTo(obj));
-    }
+    OutOfLineCode *ool =
+        oolCallVM(NewCallObjectInfo, lir,
+                  (ArgList(), ImmGCPtr(lir->mir()->block()->info().script()),
+                              ImmGCPtr(templateObj->lastProperty()),
+                              ImmGCPtr(templateObj->hasSingletonType() ? nullptr : templateObj->type())),
+                  StoreRegisterTo(objReg));
     if (!ool)
         return false;
+
+    Label *mallocEntry, *mallocRejoin, *freeEntry;
+    if (!emitOutOfLineMallocFree(objReg, templateObj->numDynamicSlots(), ool->entry(),
+                                 &mallocEntry, &mallocRejoin, &freeEntry))
+    {
+        return false;
+    }
 
     if (lir->mir()->needsSingletonType()) {
         // Objects can only be given singleton types in VM calls.
         masm.jump(ool->entry());
     } else {
-        masm.newGCThing(obj, templateObj, ool->entry(), gc::DefaultHeap);
-        masm.initGCThing(obj, templateObj);
-
-        if (lir->slots()->isRegister())
-            masm.storePtr(ToRegister(lir->slots()), Address(obj, JSObject::offsetOfSlots()));
+        masm.newGCObjectAndSlots(objReg, templateObj, ool->entry(), mallocEntry, mallocRejoin,
+                                 freeEntry, gc::DefaultHeap);
+        masm.initGCObject(objReg, templateObj);
     }
 
     masm.bind(ool->rejoin());
@@ -3614,17 +3711,6 @@ CodeGenerator::visitNewCallObjectPar(LNewCallObjectPar *lir)
     JSObject *templateObj = lir->mir()->templateObj();
 
     emitAllocateGCThingPar(lir, resultReg, cxReg, tempReg1, tempReg2, templateObj);
-
-    // NB: !lir->slots()->isRegister() implies that there is no slots
-    // array at all, and the memory is already zeroed when copying
-    // from the template object
-
-    if (lir->slots()->isRegister()) {
-        Register slotsReg = ToRegister(lir->slots());
-        JS_ASSERT(slotsReg != resultReg);
-        masm.storePtr(slotsReg, Address(resultReg, JSObject::offsetOfSlots()));
-    }
-
     return true;
 }
 
@@ -3648,7 +3734,7 @@ CodeGenerator::visitNewDenseArrayPar(LNewDenseArrayPar *lir)
     // reality, we should probably just have the C helper also
     // *allocate* the array, but that would require that it initialize
     // the various fields of the object, and I didn't want to
-    // duplicate the code in initGCThing() that already does such an
+    // duplicate the code in initGCObject() that already does such an
     // admirable job.
     masm.setupUnalignedABICall(3, tempReg0);
     masm.passABIArg(cxReg);
@@ -3683,8 +3769,8 @@ CodeGenerator::visitNewStringObject(LNewStringObject *lir)
     if (!ool)
         return false;
 
-    masm.newGCThing(output, templateObj, ool->entry(), gc::DefaultHeap);
-    masm.initGCThing(output, templateObj);
+    masm.newGCObject(output, templateObj, ool->entry(), gc::DefaultHeap);
+    masm.initGCObject(output, templateObj);
 
     masm.loadStringLength(input, temp);
 
@@ -3737,7 +3823,7 @@ CodeGenerator::emitAllocateGCThingPar(LInstruction *lir, const Register &objReg,
 
     masm.newGCThingPar(objReg, cxReg, tempReg1, tempReg2, templateObj, ool->entry());
     masm.bind(ool->rejoin());
-    masm.initGCThing(objReg, templateObj);
+    masm.initGCObject(objReg, templateObj);
     return true;
 }
 
@@ -3929,11 +4015,11 @@ CodeGenerator::visitCreateThisWithTemplate(LCreateThisWithTemplate *lir)
         return false;
 
     // Allocate. If the FreeList is empty, call to VM, which may GC.
-    masm.newGCThing(objReg, templateObject, ool->entry(), lir->mir()->initialHeap());
+    masm.newGCObject(objReg, templateObject, ool->entry(), lir->mir()->initialHeap());
 
     // Initialize based on the templateObject.
     masm.bind(ool->rejoin());
-    masm.initGCThing(objReg, templateObject);
+    masm.initGCObject(objReg, templateObject);
 
     return true;
 }
@@ -5647,8 +5733,8 @@ CodeGenerator::visitArrayConcat(LArrayConcat *lir)
 
     // Try to allocate an object.
     JSObject *templateObj = lir->mir()->templateObj();
-    masm.newGCThing(temp1, templateObj, &fail, lir->mir()->initialHeap());
-    masm.initGCThing(temp1, templateObj);
+    masm.newGCObject(temp1, templateObj, &fail, lir->mir()->initialHeap());
+    masm.initGCObject(temp1, templateObj);
     masm.jump(&call);
     {
         masm.bind(&fail);
@@ -6019,8 +6105,8 @@ CodeGenerator::visitRest(LRest *lir)
     JSObject *templateObject = lir->mir()->templateObject();
 
     Label joinAlloc, failAlloc;
-    masm.newGCThing(temp2, templateObject, &failAlloc, gc::DefaultHeap);
-    masm.initGCThing(temp2, templateObject);
+    masm.newGCObject(temp2, templateObject, &failAlloc, gc::DefaultHeap);
+    masm.initGCObject(temp2, templateObject);
     masm.jump(&joinAlloc);
     {
         masm.bind(&failAlloc);
