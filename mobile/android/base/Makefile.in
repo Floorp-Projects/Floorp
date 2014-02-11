@@ -78,8 +78,8 @@ include $(topsrcdir)/config/config.mk
 # because Android resource classes must be compiled together in order to avoid overlapping resource
 # indices.
 
-classes.dex: proguard-jars
-	@echo 'DX classes.dex'
+classes.dex: .proguard.deps
+	$(REPORT_BUILD)
 	$(DX) --dex --output=classes.dex jars-proguarded $(ANDROID_COMPAT_LIB)
 
 ifdef MOZ_DISABLE_PROGUARD
@@ -92,8 +92,15 @@ else
   endif
 endif
 
-proguard-jars: $(ALL_JARS)
-	java -jar $(ANDROID_SDK_ROOT)/tools/proguard/lib/proguard.jar @$(topsrcdir)/mobile/android/config/proguard.cfg -optimizationpasses $(PROGUARD_PASSES) -injars $(subst ::,:,$(subst $(NULL) ,:,$(strip $(ALL_JARS)))) -outjars jars-proguarded -libraryjars $(ANDROID_SDK)/android.jar:$(ANDROID_COMPAT_LIB)
+.proguard.deps: $(ALL_JARS)
+	$(REPORT_BUILD)
+	java -jar $(ANDROID_SDK_ROOT)/tools/proguard/lib/proguard.jar \
+		@$(topsrcdir)/mobile/android/config/proguard.cfg \
+		-optimizationpasses $(PROGUARD_PASSES) \
+		-injars $(subst ::,:,$(subst $(NULL) ,:,$(strip $(ALL_JARS)))) \
+		-outjars jars-proguarded \
+		-libraryjars $(ANDROID_SDK)/android.jar:$(ANDROID_COMPAT_LIB)
+	@$(TOUCH) $@
 
 CLASSES_WITH_JNI= \
     org.mozilla.gecko.GeckoAppShell \
