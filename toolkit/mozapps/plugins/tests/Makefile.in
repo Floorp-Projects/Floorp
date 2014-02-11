@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 TESTROOT = $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
-USE_STATIC_LIBS = 1
 
 MOCHITEST_BROWSER_FILES = \
   $(filter disabled-for-leaks--bug-751100, browser_bug435788.js) \

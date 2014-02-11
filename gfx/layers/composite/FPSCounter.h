@@ -19,6 +19,7 @@ class GLContext;
 }
 namespace layers {
 
+class DataTextureSource;
 class ShaderProgramOGL;
 
 const double kFpsWindowMs = 250.0;
@@ -71,18 +72,19 @@ private:
 };
 
 struct FPSState {
-  GLuint mTexture;
   FPSCounter mCompositionFps;
   FPSCounter mTransactionFps;
-  gl::VBOArena mVBOs;
 
-  FPSState() : mTexture(0) { }
+  FPSState() {}
 
-  void DrawFPS(TimeStamp, unsigned, gl::GLContext*, ShaderProgramOGL*);
+  void DrawFPS(TimeStamp, unsigned, Compositor* aCompositor);
 
   void NotifyShadowTreeTransaction() {
     mTransactionFps.AddFrame(TimeStamp::Now());
   }
+
+private:
+  RefPtr<DataTextureSource> mFPSTextureSource;
 };
 
 }

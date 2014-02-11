@@ -156,3 +156,11 @@ LOCAL_INCLUDES += [
 ]
 
 JAR_MANIFESTS += ['jar.mn']
+
+RESOURCE_FILES += [
+    'contenteditable.css',
+    'designmode.css',
+    'ImageDocument.css',
+    'TopLevelImageDocument.css',
+    'TopLevelVideoDocument.css',
+]

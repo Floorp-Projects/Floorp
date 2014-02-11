@@ -73,6 +73,11 @@ class CompartmentChecker
     }
 
     template<typename T>
+    void check(const Rooted<T>& rooted) {
+        check(rooted.get());
+    }
+
+    template<typename T>
     void check(Handle<T> handle) {
         check(handle.get());
     }
@@ -97,6 +102,11 @@ class CompartmentChecker
     void check(const JSValueArray &arr) {
         for (size_t i = 0; i < arr.length; i++)
             check(arr.array[i]);
+    }
+
+    void check(const JS::HandleValueArray &arr) {
+        for (size_t i = 0; i < arr.length(); i++)
+            check(arr[i]);
     }
 
     void check(const CallArgs &args) {

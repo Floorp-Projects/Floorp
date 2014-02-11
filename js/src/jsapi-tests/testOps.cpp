@@ -55,7 +55,7 @@ BEGIN_TEST(testOps_bug559006)
 
     for (int i = 0; i < 9; i++) {
         JS::RootedValue rval(cx);
-        CHECK(JS_CallFunctionName(cx, global, "main", 0, nullptr, rval.address()));
+        CHECK(JS_CallFunctionName(cx, global, "main", JS::EmptyValueArray, rval.address()));
         CHECK_SAME(rval, INT_TO_JSVAL(123));
     }
     return true;

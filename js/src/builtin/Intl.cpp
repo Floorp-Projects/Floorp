@@ -692,8 +692,7 @@ InitCollatorClass(JSContext *cx, HandleObject Intl, Handle<GlobalObject*> global
     RootedValue getter(cx);
     if (!GlobalObject::getIntrinsicValue(cx, cx->global(), cx->names().CollatorCompareGet, &getter))
         return nullptr;
-    RootedValue undefinedValue(cx, UndefinedValue());
-    if (!JSObject::defineProperty(cx, proto, cx->names().compare, undefinedValue,
+    if (!JSObject::defineProperty(cx, proto, cx->names().compare, UndefinedHandleValue,
                                   JS_DATA_TO_FUNC_PTR(JSPropertyOp, &getter.toObject()),
                                   nullptr, JSPROP_GETTER))
     {
@@ -701,10 +700,11 @@ InitCollatorClass(JSContext *cx, HandleObject Intl, Handle<GlobalObject*> global
     }
 
     // 10.2.1 and 10.3
-    RootedValue locales(cx, UndefinedValue());
-    RootedValue options(cx, UndefinedValue());
-    if (!IntlInitialize(cx, proto, cx->names().InitializeCollator, locales, options))
+    if (!IntlInitialize(cx, proto, cx->names().InitializeCollator, UndefinedHandleValue,
+                        UndefinedHandleValue))
+    {
         return nullptr;
+    }
 
     // 8.1
     RootedValue ctorValue(cx, ObjectValue(*ctor));
@@ -1180,8 +1180,7 @@ InitNumberFormatClass(JSContext *cx, HandleObject Intl, Handle<GlobalObject*> gl
     RootedValue getter(cx);
     if (!GlobalObject::getIntrinsicValue(cx, cx->global(), cx->names().NumberFormatFormatGet, &getter))
         return nullptr;
-    RootedValue undefinedValue(cx, UndefinedValue());
-    if (!JSObject::defineProperty(cx, proto, cx->names().format, undefinedValue,
+    if (!JSObject::defineProperty(cx, proto, cx->names().format, UndefinedHandleValue,
                                   JS_DATA_TO_FUNC_PTR(JSPropertyOp, &getter.toObject()),
                                   nullptr, JSPROP_GETTER))
     {
@@ -1189,10 +1188,11 @@ InitNumberFormatClass(JSContext *cx, HandleObject Intl, Handle<GlobalObject*> gl
     }
 
     // 11.2.1 and 11.3
-    RootedValue locales(cx, UndefinedValue());
-    RootedValue options(cx, UndefinedValue());
-    if (!IntlInitialize(cx, proto, cx->names().InitializeNumberFormat, locales, options))
+    if (!IntlInitialize(cx, proto, cx->names().InitializeNumberFormat, UndefinedHandleValue,
+                        UndefinedHandleValue))
+    {
         return nullptr;
+    }
 
     // 8.1
     RootedValue ctorValue(cx, ObjectValue(*ctor));
@@ -1637,8 +1637,7 @@ InitDateTimeFormatClass(JSContext *cx, HandleObject Intl, Handle<GlobalObject*> 
     RootedValue getter(cx);
     if (!GlobalObject::getIntrinsicValue(cx, cx->global(), cx->names().DateTimeFormatFormatGet, &getter))
         return nullptr;
-    RootedValue undefinedValue(cx, UndefinedValue());
-    if (!JSObject::defineProperty(cx, proto, cx->names().format, undefinedValue,
+    if (!JSObject::defineProperty(cx, proto, cx->names().format, UndefinedHandleValue,
                                   JS_DATA_TO_FUNC_PTR(JSPropertyOp, &getter.toObject()),
                                   nullptr, JSPROP_GETTER))
     {
@@ -1646,10 +1645,11 @@ InitDateTimeFormatClass(JSContext *cx, HandleObject Intl, Handle<GlobalObject*> 
     }
 
     // 12.2.1 and 12.3
-    RootedValue locales(cx, UndefinedValue());
-    RootedValue options(cx, UndefinedValue());
-    if (!IntlInitialize(cx, proto, cx->names().InitializeDateTimeFormat, locales, options))
+    if (!IntlInitialize(cx, proto, cx->names().InitializeDateTimeFormat, UndefinedHandleValue,
+                        UndefinedHandleValue))
+    {
         return nullptr;
+    }
 
     // 8.1
     RootedValue ctorValue(cx, ObjectValue(*ctor));

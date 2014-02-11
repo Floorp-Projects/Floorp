@@ -536,6 +536,7 @@ public:
     , tiltY(0)
     , isPrimary(true)
   {
+    UpdateFlags();
   }
 
   WidgetPointerEvent(const WidgetMouseEvent& aEvent)
@@ -548,6 +549,19 @@ public:
     , isPrimary(true)
   {
     eventStructType = NS_POINTER_EVENT;
+    UpdateFlags();
+  }
+
+  void UpdateFlags()
+  {
+    switch (message) {
+      case NS_POINTER_ENTER:
+      case NS_POINTER_LEAVE:
+        mFlags.mBubbles = false;
+        break;
+      default:
+        break;
+    }
   }
 
   virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE

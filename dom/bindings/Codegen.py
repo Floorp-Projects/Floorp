@@ -64,6 +64,49 @@ class CGThing():
         """Produce the deps for a pp file"""
         assert(False) # Override me!
 
+class CGStringTable(CGThing):
+    """
+    Generate a string table for the given strings with a function accessor:
+
+    const char *accessorName(unsigned int index) {
+      static const char table[] = "...";
+      static const uint16_t indices = { ... };
+      return &table[indices[index]];
+    }
+
+    This is more efficient than the more natural:
+
+    const char *table[] = {
+      ...
+    };
+
+    The uint16_t indices are smaller than the pointer equivalents, and the
+    string table requires no runtime relocations.
+    """
+    def __init__(self, accessorName, strings):
+        CGThing.__init__(self)
+        self.accessorName = accessorName
+        self.strings = strings
+
+    def declare(self):
+        return "extern const char *%s(unsigned int aIndex);\n" % self.accessorName
+
+    def define(self):
+        table = ' "\\0" '.join('"%s"' % s for s in self.strings)
+        indices = []
+        currentIndex = 0
+        for s in self.strings:
+            indices.append(currentIndex)
+            currentIndex += len(s) + 1 # for the null terminator
+        return """const char *%s(unsigned int aIndex)
+{
+  static const char table[] = %s;
+  static const uint16_t indices[] = { %s };
+  static_assert(%d <= UINT16_MAX, "string table overflow!");
+  return &table[indices[aIndex]];
+}
+""" % (self.accessorName, table, ", ".join("%d" % index for index in indices), currentIndex)
+
 class CGNativePropertyHooks(CGThing):
     """
     Generate a NativePropertyHooks for a given descriptor
@@ -303,7 +346,7 @@ class CGPrototypeJSClass(CGThing):
         slotCount = "DOM_INTERFACE_PROTO_SLOTS_BASE"
         if UseHolderForUnforgeable(self.descriptor):
             slotCount += " + 1 /* slot for the JSObject holding the unforgeable properties */"
-        return """static DOMIfaceAndProtoJSClass PrototypeClass = {
+        return """static const DOMIfaceAndProtoJSClass PrototypeClass = {
   {
     "%sPrototype",
     JSCLASS_IS_DOMIFACEANDPROTOJSCLASS | JSCLASS_HAS_RESERVED_SLOTS(%s),
@@ -360,7 +403,7 @@ class CGInterfaceObjectJSClass(CGThing):
             slotCount += (" + %i /* slots for the named constructors */" %
                           len(self.descriptor.interface.namedConstructors))
         return """
-static DOMIfaceAndProtoJSClass InterfaceObjectClass = {
+static const DOMIfaceAndProtoJSClass InterfaceObjectClass = {
   {
     "Function",
     JSCLASS_IS_DOMIFACEANDPROTOJSCLASS | JSCLASS_HAS_RESERVED_SLOTS(%s),
@@ -11294,14 +11337,12 @@ class CallbackMethod(CallbackMember):
             "callGuard": self.getCallGuard()
             }
         if self.argCount > 0:
-            replacements["argv"] = "argv.begin()"
-            replacements["argc"] = "argc"
+            replacements["args"] = "JS::HandleValueArray::subarray(argv, 0, argc)"
         else:
-            replacements["argv"] = "nullptr"
-            replacements["argc"] = "0"
+            replacements["args"] = "JS::EmptyValueArray"
         return string.Template("${getCallable}"
                 "if (${callGuard}!JS::Call(cx, ${thisVal}, callable,\n"
-                "              ${argc}, ${argv}, &rval)) {\n"
+                "              ${args}, &rval)) {\n"
                 "  aRv.Throw(NS_ERROR_UNEXPECTED);\n"
                 "  return${errorReturn};\n"
                 "}\n").substitute(replacements)
@@ -11565,7 +11606,8 @@ class GlobalGenRoots():
                                    CGWrapper(idEnum, pre='\n'))
         idEnum = CGWrapper(idEnum, post='\n')
 
-        curr = CGList([idEnum])
+        curr = CGList([CGGeneric(define="#include <stdint.h>\n\n"),
+                       idEnum])
 
         # Let things know the maximum length of the prototype chain.
         maxMacroName = "MAX_PROTOTYPE_CHAIN_LENGTH"
@@ -11592,17 +11634,10 @@ struct PrototypeTraits;
 """)]
         traitsDecls.extend(CGPrototypeTraitsClass(d) for d in descriptorsWithPrototype)
 
-        ifaceNamesWithProto = ['  "%s"' % d.interface.identifier.name
+        ifaceNamesWithProto = [d.interface.identifier.name
                                for d in descriptorsWithPrototype]
-        traitsDecls.append(CGGeneric(
-                declare=("extern const char* NamesOfInterfacesWithProtos[%d];\n\n" %
-                         len(ifaceNamesWithProto)),
-                define=("\n"
-                        "const char* NamesOfInterfacesWithProtos[%d] = {\n"
-                        "%s"
-                        "\n};\n\n" %
-                        (len(ifaceNamesWithProto),
-                         ",\n".join(ifaceNamesWithProto)))))
+        traitsDecls.append(CGStringTable("NamesOfInterfacesWithProtos",
+                                         ifaceNamesWithProto))
 
         traitsDecl = CGNamespace.build(['mozilla', 'dom'],
                                         CGList(traitsDecls, "\n"))

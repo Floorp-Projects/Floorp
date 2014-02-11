@@ -122,3 +122,6 @@ LOCAL_INCLUDES += [
     '../ds',
 ]
 
+RESOURCE_FILES += [
+    'test.properties',
+]
