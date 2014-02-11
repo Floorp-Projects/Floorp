@@ -778,7 +778,7 @@ SpecialPowersAPI.prototype = {
     var transaction = this._pendingPermissions.shift();
     var pendingActions = transaction[0];
     var callback = transaction[1];
-    var lastPermission = pendingActions[pendingActions.length-1];
+    lastPermission = pendingActions[pendingActions.length-1];
 
     var self = this;
     var os = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
