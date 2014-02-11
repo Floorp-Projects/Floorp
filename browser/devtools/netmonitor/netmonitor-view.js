@@ -591,6 +591,17 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
   },
 
   /**
+   * Same as `filterOn`, except that it only allows a single type exclusively.
+   *
+   * @param string aType
+   *        @see RequestsMenuView.prototype.fitlerOn
+   */
+  filterOnlyOn: function(aType = "all") {
+    this._activeFilters.slice().forEach(this._disableFilter, this);
+    this.filterOn(aType);
+  },
+
+  /**
    * Disables the given filter, its button and toggles 'all' on if the filter to
    * be disabled is the last one active.
    *
@@ -2465,7 +2476,7 @@ PerformanceStatisticsView.prototype = {
     });
 
     chart.on("click", (_, item) => {
-      NetMonitorView.RequestsMenu.filterOn(item.label);
+      NetMonitorView.RequestsMenu.filterOnlyOn(item.label);
       NetMonitorView.showNetworkInspectorView();
     });
 

@@ -307,3 +307,42 @@ function waitFor (subject, eventName) {
   subject.once(eventName, deferred.resolve);
   return deferred.promise;
 }
+
+/**
+ * Tests if a button for a filter of given type is the only one checked.
+ *
+ * @param string aFilterType
+ *        The type of the filter that should be the only one checked.
+ */
+function testFilterButtons(aMonitor, aFilterType) {
+  let doc = aMonitor.panelWin.document;
+  let target = doc.querySelector("#requests-menu-filter-" + aFilterType + "-button");
+  let buttons = doc.querySelectorAll(".requests-menu-footer-button");
+
+  // Only target should be checked.
+  let checkStatus = [(button == target) ? 1 : 0 for (button of buttons)]
+  testFilterButtonsCustom(aMonitor, checkStatus);
+}
+
+/**
+ * Tests if filter buttons have 'checked' attributes set correctly.
+ *
+ * @param array aIsChecked
+ *        An array specifying if a button at given index should have a
+ *        'checked' attribute. For example, if the third item of the array
+ *        evaluates to true, the third button should be checked.
+ */
+function testFilterButtonsCustom(aMonitor, aIsChecked) {
+  let doc = aMonitor.panelWin.document;
+  let buttons = doc.querySelectorAll(".requests-menu-footer-button");
+  for (let i = 0; i < aIsChecked.length; i++) {
+    let button = buttons[i];
+    if (aIsChecked[i]) {
+      is(button.hasAttribute("checked"), true,
+        "The " + button.id + " button should have a 'checked' attribute.");
+    } else {
+      is(button.hasAttribute("checked"), false,
+        "The " + button.id + " button should not have a 'checked' attribute.");
+    }
+  }
+}
