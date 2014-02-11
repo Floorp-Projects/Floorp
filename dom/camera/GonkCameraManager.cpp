@@ -16,36 +16,35 @@
 
 #include <camera/Camera.h>
 
-#include "CameraCommon.h"
 #include "GonkCameraControl.h"
-#include "ICameraControl.h"
+#include "DOMCameraManager.h"
+#include "CameraCommon.h"
+#include "mozilla/ErrorResult.h"
 
 using namespace mozilla;
 
-// From ICameraControl, gonk-specific management functions
+// From nsDOMCameraManager, but gonk-specific!
 nsresult
-ICameraControl::GetNumberOfCameras(int32_t& aDeviceCount)
+nsDOMCameraManager::GetNumberOfCameras(int32_t& aDeviceCount)
 {
   aDeviceCount = android::Camera::getNumberOfCameras();
   return NS_OK;
 }
 
 nsresult
-ICameraControl::GetCameraName(uint32_t aDeviceNum, nsCString& aDeviceName)
+nsDOMCameraManager::GetCameraName(uint32_t aDeviceNum, nsCString& aDeviceName)
 {
   int32_t count = android::Camera::getNumberOfCameras();
-  int32_t deviceNum = static_cast<int32_t>(aDeviceNum);
-
   DOM_CAMERA_LOGI("GetCameraName : getNumberOfCameras() returned %d\n", count);
-  if (deviceNum < 0 || deviceNum > count) {
-    DOM_CAMERA_LOGE("GetCameraName : invalid device number (%u)\n", aDeviceNum);
+  if (aDeviceNum > count) {
+    DOM_CAMERA_LOGE("GetCameraName : invalid device number");
     return NS_ERROR_NOT_AVAILABLE;
   }
 
   android::CameraInfo info;
-  int rv = android::Camera::getCameraInfo(deviceNum, &info);
+  int rv = android::Camera::getCameraInfo(aDeviceNum, &info);
   if (rv != 0) {
-    DOM_CAMERA_LOGE("GetCameraName : get_camera_info(%d) failed: %d\n", deviceNum, rv);
+    DOM_CAMERA_LOGE("GetCameraName : get_camera_info(%d) failed: %d\n", aDeviceNum, rv);
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -60,27 +59,27 @@ ICameraControl::GetCameraName(uint32_t aDeviceNum, nsCString& aDeviceName)
 
     default:
       aDeviceName.Assign("extra-camera-");
-      aDeviceName.AppendInt(deviceNum);
+      aDeviceName.AppendInt(aDeviceNum);
       break;
   }
   return NS_OK;
 }
 
-nsresult
-ICameraControl::GetListOfCameras(nsTArray<nsString>& aList)
+void
+nsDOMCameraManager::GetListOfCameras(nsTArray<nsString>& aList, ErrorResult& aRv)
 {
   int32_t count = android::Camera::getNumberOfCameras();
-  DOM_CAMERA_LOGI("getListOfCameras : getNumberOfCameras() returned %d\n", count);
   if (count <= 0) {
-    return NS_OK;
+    return;
   }
+
+  DOM_CAMERA_LOGI("getListOfCameras : getNumberOfCameras() returned %d\n", count);
 
   // Allocate 2 extra slots to reserve space for 'front' and 'back' cameras
   // at the front of the array--we will collapse any empty slots below.
   aList.SetLength(2);
   uint32_t extraIdx = 2;
-  bool gotFront = false;
-  bool gotBack = false;
+  bool gotFront = false, gotBack = false;
   while (count--) {
     nsCString cameraName;
     nsresult result = GetCameraName(count, cameraName);
@@ -105,28 +104,8 @@ ICameraControl::GetListOfCameras(nsTArray<nsString>& aList)
   if (!gotFront) {
     aList.RemoveElementAt(1);
   }
-
+  
   if (!gotBack) {
     aList.RemoveElementAt(0);
   }
-
-  return NS_OK;
-}
-
-// implementation-specific camera factory
-already_AddRefed<ICameraControl>
-ICameraControl::Create(uint32_t aCameraId, const Configuration* aInitialConfig)
-{
-  if (aInitialConfig) {
-    DOM_CAMERA_LOGI("Creating camera %d control, initial mode '%s'\n",
-      aCameraId, aInitialConfig->mMode == kVideoMode ? "video" : "picture");
-  } else {
-    DOM_CAMERA_LOGI("Creating camera %d control, no intial configuration\n", aCameraId);
-  }
-
-  nsRefPtr<nsGonkCameraControl> control = new nsGonkCameraControl(aCameraId);
-  nsresult rv = control->Init(aInitialConfig);
-  NS_ENSURE_SUCCESS(rv, nullptr);
-
-  return control.forget();
 }

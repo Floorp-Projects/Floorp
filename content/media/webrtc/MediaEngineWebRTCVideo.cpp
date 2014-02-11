@@ -312,9 +312,7 @@ nsresult
 MediaEngineWebRTCVideoSource::Start(SourceMediaStream* aStream, TrackID aID)
 {
   LOG((__FUNCTION__));
-#ifndef MOZ_B2G_CAMERA
   int error = 0;
-#endif
   if (!mInitDone || !aStream) {
     return NS_ERROR_FAILURE;
   }
@@ -415,7 +413,7 @@ MediaEngineWebRTCVideoSource::Init()
 {
 #ifdef MOZ_B2G_CAMERA
   nsAutoCString deviceName;
-  ICameraControl::GetCameraName(mCaptureIndex, deviceName);
+  mCameraManager->GetCameraName(mCaptureIndex, deviceName);
   CopyUTF8toUTF16(deviceName, mDeviceName);
   CopyUTF8toUTF16(deviceName, mUniqueId);
 #else
@@ -494,95 +492,125 @@ void
 MediaEngineWebRTCVideoSource::AllocImpl() {
   MOZ_ASSERT(NS_IsMainThread());
 
-  mCameraControl = ICameraControl::Create(mCaptureIndex, nullptr);
-  mCameraControl->AddListener(this);
+  mDOMCameraControl = new nsDOMCameraControl(mCaptureIndex,
+                                             mCameraThread,
+                                             this,
+                                             this,
+                                             nsGlobalWindow::GetInnerWindowWithId(mWindowId));
+  mCameraManager->Register(mDOMCameraControl);
 }
 
 void
 MediaEngineWebRTCVideoSource::DeallocImpl() {
   MOZ_ASSERT(NS_IsMainThread());
 
-  mCameraControl->ReleaseHardware();
-  mCameraControl = nullptr;
+  mNativeCameraControl->ReleaseHardware(this, this);
+  mNativeCameraControl = nullptr;
 }
 
 void
 MediaEngineWebRTCVideoSource::StartImpl(webrtc::CaptureCapability aCapability) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  ICameraControl::Configuration config;
-  config.mMode = ICameraControl::kPictureMode;
-  config.mPreviewSize.width = aCapability.width;
-  config.mPreviewSize.height = aCapability.height;
-  mCameraControl->SetConfiguration(config);
-  mCameraControl->Set(CAMERA_PARAM_PICTURESIZE, config.mPreviewSize);
+  idl::CameraSize size;
+  size.width = aCapability.width;
+  size.height = aCapability.height;
+  mNativeCameraControl->GetPreviewStream(size, this, this);
 }
 
 void
 MediaEngineWebRTCVideoSource::StopImpl() {
   MOZ_ASSERT(NS_IsMainThread());
 
-  mCameraControl->StopPreview();
+  mNativeCameraControl->StopPreview();
+  mPreviewStream = nullptr;
 }
 
 void
 MediaEngineWebRTCVideoSource::SnapshotImpl() {
+
   MOZ_ASSERT(NS_IsMainThread());
-  mCameraControl->TakePicture();
+
+  idl::CameraSize size;
+  size.width = mCapability.width;
+  size.height = mCapability.height;
+
+  idl::CameraPosition cameraPosition;
+  cameraPosition.latitude = NAN;
+  cameraPosition.longitude = NAN;
+  cameraPosition.altitude = NAN;
+  cameraPosition.timestamp = NAN;
+
+  mNativeCameraControl->TakePicture(size, 0, NS_LITERAL_STRING("jpeg"), cameraPosition, PR_Now() / 1000000, this, this);
 }
 
-void
-MediaEngineWebRTCVideoSource::OnHardwareStateChange(HardwareState aState)
-{
+// nsICameraGetCameraCallback
+nsresult
+MediaEngineWebRTCVideoSource::HandleEvent(nsISupports* /* unused */) {
+  MOZ_ASSERT(NS_IsMainThread());
   ReentrantMonitorAutoEnter sync(mCallbackMonitor);
-  if (aState == CameraControlListener::kHardwareOpen) {
-    mState = kAllocated;
-  } else {
-    mState = kReleased;
-    mCameraControl->RemoveListener(this);
-  }
+  mNativeCameraControl = static_cast<nsGonkCameraControl*>(mDOMCameraControl->GetNativeCameraControl().get());
+  mState = kAllocated;
   mCallbackMonitor.Notify();
+  return NS_OK;
 }
 
-void
-MediaEngineWebRTCVideoSource::OnConfigurationChange(const CameraListenerConfiguration& aConfiguration)
-{
+// nsICameraPreviewStreamCallback
+nsresult
+MediaEngineWebRTCVideoSource::HandleEvent(nsIDOMMediaStream* stream) {
+  MOZ_ASSERT(NS_IsMainThread());
   ReentrantMonitorAutoEnter sync(mCallbackMonitor);
+  mPreviewStream = static_cast<DOMCameraPreview*>(stream);
+  mPreviewStream->Start();
+  CameraPreviewMediaStream* cameraStream = static_cast<CameraPreviewMediaStream*>(mPreviewStream->GetStream());
+  cameraStream->SetFrameCallback(this);
   mState = kStarted;
   mCallbackMonitor.Notify();
+  return NS_OK;
 }
 
-void
-MediaEngineWebRTCVideoSource::OnError(CameraErrorContext aContext, const nsACString& aError)
-{
+// nsICameraTakePictureCallback
+nsresult
+MediaEngineWebRTCVideoSource::HandleEvent(nsIDOMBlob* picture) {
+  MOZ_ASSERT(NS_IsMainThread());
+  ReentrantMonitorAutoEnter sync(mCallbackMonitor);
+  mLastCapture = static_cast<nsIDOMFile*>(picture);
+  mCallbackMonitor.Notify();
+  return NS_OK;
+}
+
+// nsICameraReleaseCallback
+nsresult
+MediaEngineWebRTCVideoSource::HandleEvent() {
+  MOZ_ASSERT(NS_IsMainThread());
+  ReentrantMonitorAutoEnter sync(mCallbackMonitor);
+  mState = kReleased;
+  mCallbackMonitor.Notify();
+  return NS_OK;
+}
+
+// nsICameraErrorCallback
+nsresult
+MediaEngineWebRTCVideoSource::HandleEvent(const nsAString& error) {
+  MOZ_ASSERT(NS_IsMainThread());
   ReentrantMonitorAutoEnter sync(mCallbackMonitor);
   mCallbackMonitor.Notify();
+  return NS_OK;
 }
 
+//Except this one. This callback should called on camera preview thread.
 void
-MediaEngineWebRTCVideoSource::OnTakePictureComplete(uint8_t* aData, uint32_t aLength, const nsAString& aMimeType)
-{
-  ReentrantMonitorAutoEnter sync(mCallbackMonitor);
-  mLastCapture =
-    static_cast<nsIDOMFile*>(new nsDOMMemoryFile(static_cast<void*>(aData),
-                                                 static_cast<uint64_t>(aLength),
-                                                 aMimeType));
-  mCallbackMonitor.Notify();
-}
-
-bool
-MediaEngineWebRTCVideoSource::OnNewPreviewFrame(layers::Image* aImage, uint32_t aWidth, uint32_t aHeight) {
+MediaEngineWebRTCVideoSource::OnNewFrame(const gfxIntSize& aIntrinsicSize, layers::Image* aImage) {
   MonitorAutoLock enter(mMonitor);
   if (mState == kStopped) {
-    return false;
+    return;
   }
   mImage = aImage;
-  if (mWidth != static_cast<int>(aWidth) || mHeight != static_cast<int>(aHeight)) {
-    mWidth = aWidth;
-    mHeight = aHeight;
+  if (mWidth != aIntrinsicSize.width || mHeight != aIntrinsicSize.height) {
+    mWidth = aIntrinsicSize.width;
+    mHeight = aIntrinsicSize.height;
     LOG(("Video FrameSizeChange: %ux%u", mWidth, mHeight));
   }
-  return true; // return true because we're accepting the frame
 }
 #endif
 

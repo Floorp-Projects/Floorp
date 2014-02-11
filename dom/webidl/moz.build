@@ -41,7 +41,6 @@ WEBIDL_FILES = [
     'BrowserElementDictionaries.webidl',
     'CallEvent.webidl',
     'CallsList.webidl',
-    'CameraCapabilities.webidl',
     'CameraControl.webidl',
     'CameraManager.webidl',
     'CanvasRenderingContext2D.webidl',
