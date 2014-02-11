@@ -514,21 +514,23 @@ NewSlots(JSRuntime *rt, unsigned nslots)
 {
     JS_STATIC_ASSERT(sizeof(Value) == sizeof(HeapSlot));
 
-    Value *slots = reinterpret_cast<Value *>(rt->malloc_(nslots * sizeof(Value)));
+    Value *slots = rt->pod_malloc<Value>(nslots);
     if (!slots)
         return nullptr;
-
-    for (unsigned i = 0; i < nslots; i++)
-        slots[i] = UndefinedValue();
 
     return reinterpret_cast<HeapSlot *>(slots);
 }
 
-JSObject *
-NewCallObject(JSContext *cx, HandleScript script,
-              HandleShape shape, HandleTypeObject type, HeapSlot *slots)
+void
+FreeSlots(HeapSlot *slots)
 {
-    JSObject *obj = CallObject::create(cx, script, shape, type, slots);
+    js_free(slots);
+}
+
+JSObject *
+NewCallObject(JSContext *cx, HandleScript script, HandleShape shape, HandleTypeObject type)
+{
+    JSObject *obj = CallObject::create(cx, script, shape, type);
     if (!obj)
         return nullptr;
 

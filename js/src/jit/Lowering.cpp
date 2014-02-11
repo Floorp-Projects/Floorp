@@ -161,17 +161,6 @@ LIRGenerator::visitDefFun(MDefFun *ins)
 }
 
 bool
-LIRGenerator::visitNewSlots(MNewSlots *ins)
-{
-    // No safepoint needed, since we don't pass a cx.
-    LNewSlots *lir = new(alloc()) LNewSlots(tempFixed(CallTempReg0), tempFixed(CallTempReg1),
-                                            tempFixed(CallTempReg2));
-    if (!assignSnapshot(lir))
-        return false;
-    return defineReturn(lir, ins);
-}
-
-bool
 LIRGenerator::visitNewArray(MNewArray *ins)
 {
     LNewArray *lir = new(alloc()) LNewArray();
@@ -195,13 +184,7 @@ LIRGenerator::visitNewDeclEnvObject(MNewDeclEnvObject *ins)
 bool
 LIRGenerator::visitNewCallObject(MNewCallObject *ins)
 {
-    LAllocation slots;
-    if (ins->slots()->type() == MIRType_Slots)
-        slots = useRegister(ins->slots());
-    else
-        slots = LConstantIndex::Bogus();
-
-    LNewCallObject *lir = new(alloc()) LNewCallObject(slots);
+    LNewCallObject *lir = new(alloc()) LNewCallObject();
     if (!define(lir, ins))
         return false;
 
@@ -228,14 +211,7 @@ LIRGenerator::visitNewCallObjectPar(MNewCallObjectPar *ins)
     const LDefinition &temp1 = temp();
     const LDefinition &temp2 = temp();
 
-    LNewCallObjectPar *lir;
-    if (ins->slots()->type() == MIRType_Slots) {
-        const LAllocation &slots = useRegister(ins->slots());
-        lir = LNewCallObjectPar::NewWithSlots(alloc(), parThreadContext, slots, temp1, temp2);
-    } else {
-        lir = LNewCallObjectPar::NewSansSlots(alloc(), parThreadContext, temp1, temp2);
-    }
-
+    LNewCallObjectPar *lir = LNewCallObjectPar::New(alloc(), parThreadContext, temp1, temp2);
     return define(lir, ins);
 }
 

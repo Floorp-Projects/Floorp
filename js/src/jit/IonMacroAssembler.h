@@ -783,10 +783,24 @@ class MacroAssembler : public MacroAssemblerSpecific
                                  Label *label);
 
     // Inline allocation.
-    void newGCThing(const Register &result, gc::AllocKind allocKind, Label *fail,
-                    gc::InitialHeap initialHeap = gc::DefaultHeap);
-    void newGCThing(const Register &result, JSObject *templateObject, Label *fail,
-                    gc::InitialHeap initialHeap);
+  private:
+    void checkAllocatorState(Label *fail);
+    bool nurseryAllocate(const Register &result, gc::AllocKind allocKind, Label *fail,
+                         size_t nDynamicSlots, gc::InitialHeap initialHeap);
+    void freeSpanAllocate(const Register &result, gc::AllocKind allocKind, Label *fail);
+    void allocateObject(const Register &result, gc::AllocKind allocKind, Label *fail,
+                        Label *oolMalloc, Label *oolMallocExit, Label *oolFree,
+                        size_t nDynamicSlots, gc::InitialHeap initialHeap);
+    void allocateNonObject(const Register &result, gc::AllocKind allocKind, Label *fail);
+    void initGCSlots(const Register &obj, JSObject *templateObject);
+  public:
+    void newGCObject(const Register &result, JSObject *templateObject, Label *fail,
+                     gc::InitialHeap initialHeap);
+    void newGCObjectAndSlots(const Register &result, JSObject *templateObject, Label *fail,
+                             Label *oolMalloc, Label *oolMallocExit, Label *oolFree,
+                             gc::InitialHeap initialHeap);
+    void initGCObject(const Register &obj, JSObject *templateObject);
+
     void newGCString(const Register &result, Label *fail);
     void newGCShortString(const Register &result, Label *fail);
 
@@ -796,13 +810,13 @@ class MacroAssembler : public MacroAssemblerSpecific
     void newGCThingPar(const Register &result, const Register &cx,
                        const Register &tempReg1, const Register &tempReg2,
                        JSObject *templateObject, Label *fail);
+
     void newGCStringPar(const Register &result, const Register &cx,
                         const Register &tempReg1, const Register &tempReg2,
                         Label *fail);
     void newGCShortStringPar(const Register &result, const Register &cx,
                              const Register &tempReg1, const Register &tempReg2,
                              Label *fail);
-    void initGCThing(const Register &obj, JSObject *templateObject);
 
     // Compares two strings for equality based on the JSOP.
     // This checks for identical pointers, atoms and length and fails for everything else.
