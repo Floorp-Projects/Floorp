@@ -433,7 +433,7 @@ CompositorParent::ResumeComposition()
 
   mPaused = false;
 
-  Composite();
+  Composite(nullptr);
 
   // if anyone's waiting to make sure that composition really got resumed, tell them
   lock.NotifyAll();
@@ -565,7 +565,7 @@ CompositorParent::ScheduleComposition()
   mExpectedComposeTime = TimeStamp::Now() + minFrameDelta;
 #endif
 
-  mCurrentCompositeTask = NewRunnableMethod(this, &CompositorParent::Composite);
+  mCurrentCompositeTask = NewRunnableMethod(this, &CompositorParent::Composite, nullptr);
 
   if (!initialComposition && delta < minFrameDelta) {
     TimeDuration delay = minFrameDelta - delta;
@@ -579,16 +579,7 @@ CompositorParent::ScheduleComposition()
 }
 
 void
-CompositorParent::Composite()
-{
-  if (CanComposite()) {
-    mLayerManager->BeginTransaction();
-  }
-  CompositeInTransaction();
-}
-
-void
-CompositorParent::CompositeInTransaction()
+CompositorParent::Composite(DrawTarget* aTarget)
 {
   profiler_tracing("Paint", "Composite", TRACING_INTERVAL_START);
   PROFILER_LABEL("CompositorParent", "Composite");
@@ -603,6 +594,13 @@ CompositorParent::CompositeInTransaction()
   }
 
   AutoResolveRefLayers resolve(mCompositionManager);
+
+  if (aTarget) {
+    mLayerManager->BeginTransactionWithDrawTarget(aTarget);
+  } else {
+    mLayerManager->BeginTransaction();
+  }
+
   if (mForceCompositionTask && !mOverrideComposeReadiness) {
     if (mCompositionManager->ReadyForCompose()) {
       mForceCompositionTask->Cancel();
@@ -659,13 +657,7 @@ CompositorParent::ComposeToTarget(DrawTarget* aTarget)
   AutoRestore<bool> override(mOverrideComposeReadiness);
   mOverrideComposeReadiness = true;
 
-  if (!CanComposite()) {
-    return;
-  }
-  mLayerManager->BeginTransactionWithDrawTarget(aTarget);
-  // Since CanComposite() is true, Composite() must end the layers txn
-  // we opened above.
-  CompositeInTransaction();
+  Composite(aTarget);
 }
 
 bool
