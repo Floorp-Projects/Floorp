@@ -226,6 +226,7 @@ class TreeMetadataEmitter(LoggingMixin):
             'FILES_PER_UNIFIED_FILE',
             'FORCE_SHARED_LIB',
             'FORCE_STATIC_LIB',
+            'USE_STATIC_LIBS',
             'GENERATED_FILES',
             'HOST_LIBRARY_NAME',
             'IS_COMPONENT',

@@ -44,3 +44,5 @@ DELAYLOAD_DLLS = ['foo.dll', 'bar.dll']
 
 RCFILE = 'foo.rc'
 RESFILE = 'bar.res'
+
+USE_STATIC_LIBS = True

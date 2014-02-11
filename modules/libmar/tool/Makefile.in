@@ -4,10 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-ifeq ($(OS_ARCH),WINNT)
-USE_STATIC_LIBS = 1
-endif
-
 # The mar executable is output into dist/host/bin since it is something that
 # would only be used by our build system and should not itself be included in a
 # Mozilla distribution.

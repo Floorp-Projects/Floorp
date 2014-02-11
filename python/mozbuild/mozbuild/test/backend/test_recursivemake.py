@@ -334,6 +334,9 @@ class TestRecursiveMakeBackend(BackendTester):
             'RESFILE': [
                 'RESFILE := bar.res',
             ],
+            'USE_STATIC_LIBS': [
+                'USE_STATIC_LIBS := 1',
+            ],
         }
 
         for var, val in expected.items():

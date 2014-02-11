@@ -35,3 +35,7 @@ LOCAL_INCLUDES += [
     '../../build',
 ]
 
+# Pretend we're statically linking the CRT, even though we might not be: this
+# avoids "msvcrp" and assembly dependencies from creeping into the directives
+# for this library on Windows.
+USE_STATIC_LIBS = True
