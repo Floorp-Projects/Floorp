@@ -29,20 +29,20 @@ struct AnimationEventInfo {
                      const nsString& aAnimationName,
                      uint32_t aMessage, mozilla::TimeDuration aElapsedTime,
                      const nsAString& aPseudoElement)
-    : mElement(aElement),
-      mEvent(true, aMessage, aAnimationName, aElapsedTime.ToSeconds(),
-             aPseudoElement)
+    : mElement(aElement), mEvent(true, aMessage)
   {
+    // XXX Looks like nobody initialize WidgetEvent::time
+    mEvent.animationName = aAnimationName;
+    mEvent.elapsedTime = aElapsedTime.ToSeconds();
+    mEvent.pseudoElement = aPseudoElement;
   }
 
   // InternalAnimationEvent doesn't support copy-construction, so we need
   // to ourselves in order to work with nsTArray
   AnimationEventInfo(const AnimationEventInfo &aOther)
-    : mElement(aOther.mElement),
-      mEvent(true, aOther.mEvent.message,
-             aOther.mEvent.animationName, aOther.mEvent.elapsedTime,
-             aOther.mEvent.pseudoElement)
+    : mElement(aOther.mElement), mEvent(true, aOther.mEvent.message)
   {
+    mEvent.AssignAnimationEventData(aOther.mEvent, false);
   }
 };
 
