@@ -507,6 +507,13 @@ toolbar .toolbarbutton-1:not([type="menu-button"]),
   -moz-margin-start: 10px;
 }
 
+#nav-bar #PanelUI-menu-button {
+  margin-top: 0;
+  margin-bottom: 0;
+  -moz-margin-start: 9px;
+  -moz-margin-end: 7px;
+}
+
 @media not all and (min-resolution: 2dppx) {
 %include ../shared/toolbarbuttons.inc.css
 %include ../shared/menupanel.inc.css
