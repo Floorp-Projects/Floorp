@@ -36,6 +36,28 @@ class TabParent;
 }
 }
 
+class OverOutElementsWrapper MOZ_FINAL : public nsISupports
+{
+public:
+  OverOutElementsWrapper() : mLastOverFrame(nullptr) {}
+  ~OverOutElementsWrapper() {}
+
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(OverOutElementsWrapper)
+
+  nsWeakFrame mLastOverFrame;
+
+  nsCOMPtr<nsIContent> mLastOverElement;
+
+  // The last element on which we fired a over event, or null if
+  // the last over event we fired has finished processing.
+  nsCOMPtr<nsIContent> mFirstOverEventElement;
+
+  // The last element on which we fired a out event, or null if
+  // the last out event we fired has finished processing.
+  nsCOMPtr<nsIContent> mFirstOutEventElement;
+};
+
 /*
  * Event listener manager
  */
@@ -282,6 +304,14 @@ protected:
                       nsIContent* aMovingInto);
   void GenerateDragDropEnterExit(nsPresContext* aPresContext,
                                  mozilla::WidgetDragEvent* aDragEvent);
+
+  /**
+   * Return mMouseEnterLeaveHelper or relevant mPointersEnterLeaveHelper elements wrapper.
+   * If mPointersEnterLeaveHelper does not contain wrapper for pointerId it create new one
+   */
+  OverOutElementsWrapper*
+  GetWrapperByEventID(mozilla::WidgetMouseEvent* aMouseEvent);
+
   /**
    * Fire the dragenter and dragexit/dragleave events when the mouse moves to a
    * new target.
@@ -764,6 +794,9 @@ private:
                                   nsIContent* aStopBefore,
                                   nsEventStates aState,
                                   bool aAddState);
+  static PLDHashOperator ResetLastOverForContent(const uint32_t& aIdx,
+                                                 nsRefPtr<OverOutElementsWrapper>& aChunk,
+                                                 void* aClosure);
 
   int32_t     mLockCursor;
 
@@ -781,8 +814,6 @@ private:
 
   nsWeakFrame mCurrentTarget;
   nsCOMPtr<nsIContent> mCurrentTargetContent;
-  nsWeakFrame mLastMouseOverFrame;
-  nsCOMPtr<nsIContent> mLastMouseOverElement;
   static nsWeakFrame sLastDragOverFrame;
 
   // Stores the refPoint (the offset from the widget's origin in device
@@ -813,14 +844,6 @@ private:
   static nsCOMPtr<nsIContent> sDragOverContent;
   nsCOMPtr<nsIContent> mURLTargetContent;
 
-  // The last element on which we fired a mouseover event, or null if
-  // the last mouseover event we fired has finished processing.
-  nsCOMPtr<nsIContent> mFirstMouseOverEventElement;
-
-  // The last element on which we fired a mouseout event, or null if
-  // the last mouseout event we fired has finished processing.
-  nsCOMPtr<nsIContent> mFirstMouseOutEventElement;
-
   nsPresContext* mPresContext;      // Not refcnted
   nsCOMPtr<nsIDocument> mDocument;   // Doesn't necessarily need to be owner
 
@@ -832,6 +855,9 @@ private:
 
   // Time at which we began handling user input.
   static TimeStamp sHandlingInputStart;
+
+  nsRefPtr<OverOutElementsWrapper> mMouseEnterLeaveHelper;
+  nsRefPtrHashtable<nsUint32HashKey, OverOutElementsWrapper> mPointersEnterLeaveHelper;
 
 public:
   static nsresult UpdateUserActivityTimer(void);
