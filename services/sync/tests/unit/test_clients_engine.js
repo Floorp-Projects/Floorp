@@ -32,8 +32,9 @@ function check_record_version(user, id) {
 
     _("Payload is " + JSON.stringify(cleartext));
     do_check_eq(Services.appinfo.version, cleartext.version);
-    do_check_eq(1, cleartext.protocols.length);
+    do_check_eq(2, cleartext.protocols.length);
     do_check_eq("1.1", cleartext.protocols[0]);
+    do_check_eq("1.5", cleartext.protocols[1]);
 }
 
 add_test(function test_bad_hmac() {
