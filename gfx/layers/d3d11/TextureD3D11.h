@@ -100,7 +100,8 @@ class DataTextureSourceD3D11 : public DataTextureSource
                              , public TileIterator
 {
 public:
-  DataTextureSourceD3D11(gfx::SurfaceFormat aFormat, CompositorD3D11* aCompositor);
+  DataTextureSourceD3D11(gfx::SurfaceFormat aFormat, CompositorD3D11* aCompositor,
+                         TextureFlags aFlags);
 
   DataTextureSourceD3D11(gfx::SurfaceFormat aFormat, CompositorD3D11* aCompositor,
                          ID3D11Texture2D* aTexture);

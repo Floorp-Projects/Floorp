@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Migration tests</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<h1>migration tests</h1>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="text/javascript;version=1.8" src="shared.js"></script>
+<script class="testbody" type="text/javascript">
+"use strict";
+
+var backend, contactsCount, allContacts;
+function loadChromeScript() {
+  var url = SimpleTest.getTestFileURL("test_migration_chrome.js");
+  backend = SpecialPowers.loadChromeScript(url);
+}
+
+function addBackendEvents() {
+  backend.addMessageListener("createDB.success", function(count) {
+    contactsCount = count;
+    ok(true, "Created the database");
+    next();
+  });
+  backend.addMessageListener("createDB.error", function(err) {
+    ok(false, err);
+    next();
+  });
+
+  backend.addMessageListener("deleteDB.success", function() {
+    ok(true, "Deleted the database");
+    next();
+  });
+  backend.addMessageListener("deleteDB.error", function(err) {
+    ok(false, err);
+    next();
+  });
+}
+
+function createDB(version) {
+  info("Will create the DB at version " + version);
+  backend.sendAsyncMessage("createDB", version);
+}
+
+function deleteDB() {
+  info("Will delete the DB.");
+  backend.sendAsyncMessage("deleteDB");
+}
+
+function setSubstringMatching(value) {
+  info("Setting substring matching to " + value);
+
+  if (value) {
+    SpecialPowers.setIntPref("dom.phonenumber.substringmatching.BR", value);
+
+    // this is the Mcc for Brazil, so that we trigger the previous pref
+    SpecialPowers.setCharPref("ril.lastKnownSimMcc", "724");
+  } else {
+    SpecialPowers.clearUserPref("dom.phonenumber.substringmatching.BR");
+    SpecialPowers.clearUserPref("ril.lastKnownSimMcc");
+  }
+
+  next();
+}
+
+var steps = [
+  function setupChromeScript() {
+    loadChromeScript();
+    addBackendEvents();
+    next();
+  },
+
+  deleteDB, // let's be sure the DB does not exist yet
+  createDB.bind(null, 12),
+  setSubstringMatching.bind(null, 7),
+
+  function testAccessMozContacts() {
+    info("Checking we have the right number of contacts: " + contactsCount);
+    var req = mozContacts.getCount();
+    req.onsuccess = function onsuccess() {
+      ok(true, "Could access the mozContacts API");
+      ise(this.result, contactsCount, "Contacts count is correct");
+      next();
+    };
+
+    req.onerror = function onerror() {
+      ok(false, "Couldn't access the mozContacts API");
+      next();
+    };
+  },
+
+  function testRetrieveAllContacts() {
+    /* if the migration does not work right, either we'll have an error, or the
+       contacts won't be migrated properly and thus will fail WebIDL conversion,
+       which will manifest as a timeout */
+    info("Checking the contacts are corrected to obey WebIDL constraints.  (upgrades 14 to 17)");
+    var req = mozContacts.find();
+    req.onsuccess = function onsuccess() {
+      if (this.result) {
+        ise(this.result.length, contactsCount, "Contacts array length is correct");
+        allContacts = this.result;
+        next();
+      } else {
+        ok(false, "Could access the mozContacts API but got no contacts!");
+        next();
+      }
+    };
+
+    req.onerror = function onerror() {
+      ok(false, "Couldn't access the mozContacts API");
+      next();
+    };
+  },
+
+  function checkNameIndex() {
+    info("Checking name index migration (upgrades 17 to 19).");
+    if (!allContacts) {
+      next();
+    }
+
+    var count = allContacts.length;
+
+    function finishRequest() {
+      count--;
+      if (!count) {
+        next();
+      }
+    }
+
+    allContacts.forEach(function(contact) {
+      var name = contact.name && contact.name[0];
+      if (!name) {
+        count--;
+        return;
+      }
+
+      var req = mozContacts.find({
+        filterBy: ["name"],
+        filterValue: name,
+        filterOp: "equals"
+      });
+
+      req.onsuccess = function onsuccess() {
+        if (this.result) {
+          info("Found contact '" + name + "', checking it's the correct one.");
+          checkContacts(this.result[0], contact);
+        } else {
+          ok(false, "Could not find contact with name '" + name + "'");
+        }
+
+        finishRequest();
+      };
+
+      req.onerror = function onerror() {
+        ok(false, "Error while finding contact with name '" + name + "'!");
+        finishRequest();
+      }
+    });
+
+    if (!count) {
+      ok(false, "No contact had a name, this is unexpected.");
+      next();
+    }
+  },
+
+  function checkSubstringMatching() {
+    var subject = "0004567890"; // the last 7 digits are the same that at least one contact
+    info("Looking for a contact matching " + subject);
+    var req = mozContacts.find({
+      filterValue: subject,
+      filterOp: "match",
+      filterBy: ["tel"],
+      filterLimit: 1
+    });
+
+    req.onsuccess = function onsuccess() {
+      if (this.result && this.result[0]) {
+        ok(true, "Found a contact with number " + this.result[0].tel[0].value);
+      }
+      next();
+    };
+
+    req.onerror = function onerror() {
+      ok(false, "Error while finding contact for substring matching check!");
+      next();
+    };
+  },
+
+  deleteDB,
+  setSubstringMatching.bind(null, null),
+
+  function finish() {
+    backend.destroy();
+    info("all done!\n");
+    SimpleTest.finish();
+  }
+];
+
+start_tests();
+</script>
+</pre>
+</body>
+</html>

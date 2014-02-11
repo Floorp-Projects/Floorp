@@ -7,3 +7,6 @@ LIBRARY_NAME = 'updatecommon-standalone'
 srcdir = '../common'
 
 include('../common/sources.mozbuild')
+
+if CONFIG['OS_ARCH'] == 'WINNT':
+    USE_STATIC_LIBS = True

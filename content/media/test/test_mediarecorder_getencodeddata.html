@@ -1,0 +1,68 @@
+﻿﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 957452 Test GetEncodedData problem on asan build</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({"set": [["media.ogg.enabled", false]]},
+  function () {
+    var ac = new window.AudioContext();
+    var dest = ac.createMediaStreamDestination();
+    var stream = dest.stream;
+    var onErrorFired = false;
+    var expectedMimeType = '';
+    var ondataavailableFired = false;
+    setTimeout(function() {
+      var mediaRecorder = new MediaRecorder(stream);
+      mediaRecorder.onstop = function(e) {
+        is(e.target.state, 'inactive',
+           'Media recorder is inactive after being stopped');
+        ok(onErrorFired, 'onStop after onError');
+        ok(ondataavailableFired, 'ondataavailableFired');
+
+        SimpleTest.finish();
+      }
+      mediaRecorder.ondataavailable = function(evt) {
+        if (onErrorFired) {
+          ondataavailableFired = true;
+          ok(evt instanceof BlobEvent,
+             'Events fired from ondataavailable should be BlobEvent');
+          is(evt.type, 'dataavailable',
+             'Event type should dataavailable');
+          is(evt.data.size, 0,
+             'Blob data size received is equal to zero');
+          is(evt.data.type, expectedMimeType,
+             'Blob data received should have type = ' + expectedMimeType);
+          is(evt.target.mimeType, expectedMimeType,
+             'Mime type in ondataavailable = ' + expectedMimeType);
+        } else {
+          ok(false, 'should get onError first');
+        }
+      }
+      mediaRecorder.onerror = function(evt) {
+        ok(evt instanceof RecordErrorEvent,
+          'Events fired from onerror should be RecordErrorEvent');
+        is(evt.type, 'error',
+           'Event type should onerror');
+        is(evt.name, 'GenericError',
+           'Event name is GenericError');
+        onErrorFired = true;
+      }
+      mediaRecorder.start(0);
+      is(mediaRecorder.state, 'recording', 'Media recorder should be recording');
+      is(mediaRecorder.stream, stream,
+         'Media recorder stream = element stream at the start of recording');
+      mediaRecorder.requestData();
+      mediaRecorder.stop();
+    }, 100);
+  }
+);
+</script>
+</pre>
+</body>
+</html>

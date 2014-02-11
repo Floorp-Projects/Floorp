@@ -1,21 +1,6 @@
 #ifndef QCMS_TYPES_H
 #define QCMS_TYPES_H
 
-#ifdef MOZ_QCMS
-
-#include "prtypes.h"
-#include <stdint.h>
-
-/* prtypes.h defines IS_LITTLE_ENDIAN and IS_BIG ENDIAN */
-
-#if defined(_AIX)
-#include <sys/types.h>
-#elif defined(__OS2__)
-#include <stdlib.h>
-#endif
-
-#else // MOZ_QCMS
-
 #if BYTE_ORDER == LITTLE_ENDIAN
 #define IS_LITTLE_ENDIAN
 #elif BYTE_ORDER == BIG_ENDIAN
@@ -38,7 +23,7 @@
 
 #if defined (_SVR4) || defined (SVR4) || defined (__OpenBSD__) || defined (_sgi) || defined (__sun) || defined (sun) || defined (__digital__)
 #  include <inttypes.h>
-#elif defined (_MSC_VER)
+#elif defined (_MSC_VER) && _MSC_VER < 1600
 typedef __int8 int8_t;
 typedef unsigned __int8 uint8_t;
 typedef __int16 int16_t;
@@ -57,8 +42,6 @@ typedef unsigned long uintptr_t;
 #  include <sys/inttypes.h>
 #else
 #  include <stdint.h>
-#endif
-
 #endif
 
 typedef qcms_bool bool;

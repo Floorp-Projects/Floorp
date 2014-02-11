@@ -332,22 +332,15 @@ class MozbuildDeletionError(Exception):
     pass
 
 
-def StrictOrderingOnAppendListWithFlagsFactory(flags):
-    """Returns a StrictOrderingOnAppendList-like object, with optional
-    flags on each item.
+def FlagsFactory(flags):
+    """Returns a class which holds optional flags for an item in a list.
 
     The flags are defined in the dict given as argument, where keys are
     the flag names, and values the type used for the value of that flag.
 
-    Example:
-        FooList = StrictOrderingOnAppendListWithFlagsFactory({
-            'foo': bool, 'bar': unicode
-        })
-        foo = FooList(['a', 'b', 'c'])
-        foo['a'].foo = True
-        foo['b'].bar = 'bar'
+    The resulting class is used by the various <TypeName>WithFlagsFactory
+    functions below.
     """
-
     assert isinstance(flags, dict)
     assert all(isinstance(v, type) for v in flags.values())
 
@@ -379,10 +372,28 @@ def StrictOrderingOnAppendListWithFlagsFactory(flags):
         def __delattr__(self, name):
             raise MozbuildDeletionError('Unable to delete attributes for this object')
 
+    return Flags
+
+
+def StrictOrderingOnAppendListWithFlagsFactory(flags):
+    """Returns a StrictOrderingOnAppendList-like object, with optional
+    flags on each item.
+
+    The flags are defined in the dict given as argument, where keys are
+    the flag names, and values the type used for the value of that flag.
+
+    Example:
+        FooList = StrictOrderingOnAppendListWithFlagsFactory({
+            'foo': bool, 'bar': unicode
+        })
+        foo = FooList(['a', 'b', 'c'])
+        foo['a'].foo = True
+        foo['b'].bar = 'bar'
+    """
     class StrictOrderingOnAppendListWithFlags(StrictOrderingOnAppendList):
         def __init__(self, iterable=[]):
             StrictOrderingOnAppendList.__init__(self, iterable)
-            self._flags_type = Flags
+            self._flags_type = FlagsFactory(flags)
             self._flags = dict()
 
         def __getitem__(self, name):
@@ -472,6 +483,58 @@ class HierarchicalStringList(object):
                 raise ValueError(
                     'Expected a list of strings, not an element of %s' % type(v))
 
+
+def HierarchicalStringListWithFlagsFactory(flags):
+    """Returns a HierarchicalStringList-like object, with optional
+    flags on each item.
+
+    The flags are defined in the dict given as argument, where keys are
+    the flag names, and values the type used for the value of that flag.
+
+    Example:
+        FooList = HierarchicalStringListWithFlagsFactory({
+            'foo': bool, 'bar': unicode
+        })
+        foo = FooList(['a', 'b', 'c'])
+        foo['a'].foo = True
+        foo['b'].bar = 'bar'
+        foo.sub = ['x, 'y']
+        foo.sub['x'].foo = False
+        foo.sub['y'].bar = 'baz'
+    """
+    class HierarchicalStringListWithFlags(HierarchicalStringList):
+        __flag_slots__ = ('_flags_type', '_flags')
+
+        def __init__(self):
+            HierarchicalStringList.__init__(self)
+            self._flags_type = FlagsFactory(flags)
+            self._flags = dict()
+
+        def __setattr__(self, name, value):
+            if name in self.__flag_slots__:
+                return object.__setattr__(self, name, value)
+            HierarchicalStringList.__setattr__(self, name, value)
+
+        def __getattr__(self, name):
+            if name in self.__flag_slots__:
+                return object.__getattr__(self, name)
+            return HierarchicalStringList.__getattr__(self, name)
+
+        def __getitem__(self, name):
+            if name not in self._flags:
+                if name not in self._strings:
+                    raise KeyError("'%s'" % name)
+                self._flags[name] = self._flags_type()
+            return self._flags[name]
+
+        def __setitem__(self, name, value):
+            raise TypeError("'%s' object does not support item assignment" %
+                            self.__class__.__name__)
+
+        def _get_exportvariable(self, name):
+            return self._children.setdefault(name, HierarchicalStringListWithFlags())
+
+    return HierarchicalStringListWithFlags
 
 class LockFile(object):
     """LockFile is used by the lock_file method to hold the lock.

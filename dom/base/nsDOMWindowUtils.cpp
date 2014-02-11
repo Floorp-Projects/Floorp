@@ -753,6 +753,88 @@ nsDOMWindowUtils::SendMouseEventCommon(const nsAString& aType,
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::SendPointerEvent(const nsAString& aType,
+                                   float aX,
+                                   float aY,
+                                   int32_t aButton,
+                                   int32_t aClickCount,
+                                   int32_t aModifiers,
+                                   bool aIgnoreRootScrollFrame,
+                                   float aPressure,
+                                   unsigned short aInputSourceArg,
+                                   int32_t aPointerId,
+                                   int32_t aWidth,
+                                   int32_t aHeight,
+                                   int32_t tiltX,
+                                   int32_t tiltY,
+                                   bool aIsPrimary,
+                                   bool aIsSynthesized,
+                                   uint8_t aOptionalArgCount,
+                                   bool* aPreventDefault)
+{
+  if (!nsContentUtils::IsCallerChrome()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  // get the widget to send the event to
+  nsPoint offset;
+  nsCOMPtr<nsIWidget> widget = GetWidget(&offset);
+  if (!widget) {
+    return NS_ERROR_FAILURE;
+  }
+
+  int32_t msg;
+  if (aType.EqualsLiteral("pointerdown")) {
+    msg = NS_POINTER_DOWN;
+  } else if (aType.EqualsLiteral("pointerup")) {
+    msg = NS_POINTER_UP;
+  } else if (aType.EqualsLiteral("pointermove")) {
+    msg = NS_POINTER_MOVE;
+  } else if (aType.EqualsLiteral("pointerover")) {
+    msg = NS_POINTER_OVER;
+  } else if (aType.EqualsLiteral("pointerout")) {
+    msg = NS_POINTER_OUT;
+  } else {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (aInputSourceArg == nsIDOMMouseEvent::MOZ_SOURCE_UNKNOWN) {
+    aInputSourceArg = nsIDOMMouseEvent::MOZ_SOURCE_MOUSE;
+  }
+
+  WidgetPointerEvent event(true, msg, widget);
+  event.modifiers = GetWidgetModifiers(aModifiers);
+  event.button = aButton;
+  event.buttons = GetButtonsFlagForButton(aButton);
+  event.widget = widget;
+  event.pressure = aPressure;
+  event.inputSource = aInputSourceArg;
+  event.pointerId = aPointerId;
+  event.width = aWidth;
+  event.height = aHeight;
+  event.tiltX = tiltX;
+  event.tiltY = tiltY;
+  event.isPrimary = aIsPrimary;
+  event.clickCount = aClickCount;
+  event.time = PR_IntervalNow();
+  event.mFlags.mIsSynthesizedForTests = aOptionalArgCount >= 10 ? aIsSynthesized : true;
+
+  nsPresContext* presContext = GetPresContext();
+  if (!presContext) {
+    return NS_ERROR_FAILURE;
+  }
+
+  event.refPoint = ToWidgetPoint(CSSPoint(aX, aY), offset, presContext);
+  event.ignoreRootScrollFrame = aIgnoreRootScrollFrame;
+
+  nsEventStatus status;
+  nsresult rv = widget->DispatchEvent(&event, status);
+  *aPreventDefault = (status == nsEventStatus_eConsumeNoDefault);
+
+  return rv;
+}
+
+NS_IMETHODIMP
 nsDOMWindowUtils::SendWheelEvent(float aX,
                                  float aY,
                                  double aDeltaX,

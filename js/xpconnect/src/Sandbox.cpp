@@ -766,8 +766,7 @@ xpc::SandboxCallableProxyHandler::call(JSContext *cx, JS::Handle<JSObject*> prox
         thisVal = ObjectValue(*js::GetProxyTargetObject(sandboxProxy));
     }
 
-    return JS::Call(cx, thisVal, js::GetProxyPrivate(proxy), args.length(), args.array(),
-                    args.rval());
+    return JS::Call(cx, thisVal, js::GetProxyPrivate(proxy), args, args.rval());
 }
 
 xpc::SandboxCallableProxyHandler xpc::sandboxCallableProxyHandler;
@@ -1748,7 +1747,7 @@ NonCloningFunctionForwarder(JSContext *cx, unsigned argc, Value *vp)
     if (!obj) {
         return false;
     }
-    return JS_CallFunctionValue(cx, obj, v, args.length(), args.array(), vp);
+    return JS_CallFunctionValue(cx, obj, v, args, vp);
 }
 
 /*
@@ -1778,8 +1777,7 @@ CloningFunctionForwarder(JSContext *cx, unsigned argc, Value *vp)
         RootedValue functionVal(cx);
         functionVal.setObject(*origFunObj);
 
-        if (!JS_CallFunctionValue(cx, nullptr, functionVal, args.length(), args.array(),
-                                  args.rval().address()))
+        if (!JS_CallFunctionValue(cx, nullptr, functionVal, args, args.rval().address()))
             return false;
     }
 

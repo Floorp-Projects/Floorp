@@ -4736,9 +4736,9 @@ nsImageRenderer::DrawBorderImageComponent(nsPresContext*       aPresContext,
                               presContext->CSSPixelsToDevPixels(aSrc.y),
                               presContext->CSSPixelsToDevPixels(aSrc.width),
                               presContext->CSSPixelsToDevPixels(aSrc.height));
-    nsRefPtr<gfxASurface> srcSlice = gfxPlatform::GetPlatform()->
-      CreateOffscreenSurface(IntSize(srcRect.width, srcRect.height),
-                             gfxContentType::COLOR_ALPHA);
+    RefPtr<DrawTarget> srcSlice = gfxPlatform::GetPlatform()->
+      CreateOffscreenContentDrawTarget(IntSize(srcRect.width, srcRect.height),
+                             SurfaceFormat::B8G8R8A8);
     nsRefPtr<gfxContext> ctx = new gfxContext(srcSlice);
 
     // grab the entire source

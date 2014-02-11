@@ -14,3 +14,4 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     SOURCES += [
         'win32-screenshot.cpp',
     ]
+    USE_STATIC_LIBS = True

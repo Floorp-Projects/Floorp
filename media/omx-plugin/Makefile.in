@@ -15,9 +15,6 @@
 # Don't use STL wrappers; this isn't Gecko code
 STL_FLAGS =
 
-# must link statically with the CRT; this isn't Gecko code
-USE_STATIC_LIBS = 1
-
 include $(topsrcdir)/config/rules.mk
 
 ifdef GNU_CXX

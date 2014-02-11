@@ -231,6 +231,15 @@ static void split(char* str, const char* sep, nsTArray<nsCString>& result)
   }
 }
 
+static void split(char* str, const char* sep, nsTArray<nsString>& result)
+{
+  char *s = strtok(str, sep);
+  while (s != nullptr) {
+    result.AppendElement(NS_ConvertUTF8toUTF16(s));
+    s = strtok(nullptr, sep);
+  }
+}
+
 /**
  * Helper function that implement join function.
  */

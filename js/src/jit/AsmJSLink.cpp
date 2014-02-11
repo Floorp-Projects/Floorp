@@ -166,6 +166,8 @@ ValidateMathBuiltinFunction(JSContext *cx, AsmJSModule::Global &global, HandleVa
       case AsmJSMathBuiltin_log: native = math_log; break;
       case AsmJSMathBuiltin_pow: native = js_math_pow; break;
       case AsmJSMathBuiltin_sqrt: native = js_math_sqrt; break;
+      case AsmJSMathBuiltin_min: native = js_math_min; break;
+      case AsmJSMathBuiltin_max: native = js_math_max; break;
       case AsmJSMathBuiltin_abs: native = js_math_abs; break;
       case AsmJSMathBuiltin_atan2: native = math_atan2; break;
       case AsmJSMathBuiltin_imul: native = math_imul; break;
@@ -216,15 +218,15 @@ DynamicallyLinkModule(JSContext *cx, CallArgs args, AsmJSModule &module)
                             "Function constructor).");
     module.setIsLinked();
 
-    RootedValue globalVal(cx, UndefinedValue());
+    RootedValue globalVal(cx);
     if (args.length() > 0)
         globalVal = args[0];
 
-    RootedValue importVal(cx, UndefinedValue());
+    RootedValue importVal(cx);
     if (args.length() > 1)
         importVal = args[1];
 
-    RootedValue bufferVal(cx, UndefinedValue());
+    RootedValue bufferVal(cx);
     if (args.length() > 2)
         bufferVal = args[2];
 

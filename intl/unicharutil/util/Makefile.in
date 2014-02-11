@@ -10,8 +10,6 @@
 DIST_INSTALL = 1
 SDK_LIBRARY = $(LIBRARY)
 
-USE_STATIC_LIBS = 1
-
 include $(topsrcdir)/config/rules.mk
 
 ifdef ENABLE_INTL_API

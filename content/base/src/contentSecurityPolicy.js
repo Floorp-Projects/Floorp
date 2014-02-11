@@ -411,6 +411,18 @@ ContentSecurityPolicy.prototype = {
    */
   appendPolicy:
   function csp_appendPolicy(aPolicy, selfURI, aReportOnly, aSpecCompliant) {
+    return this._appendPolicyInternal(aPolicy, selfURI, aReportOnly,
+                                      aSpecCompliant, true);
+  },
+
+  /**
+   * Adds a new policy to our list of policies for this CSP context.
+   * Only to be called from this module (not exported)
+   * @returns the count of policies.
+   */
+  _appendPolicyInternal:
+  function csp_appendPolicy(aPolicy, selfURI, aReportOnly, aSpecCompliant,
+                            aEnforceSelfChecks) {
 #ifndef MOZ_B2G
     CSPdebug("APPENDING POLICY: " + aPolicy);
     CSPdebug("            SELF: " + (selfURI ? selfURI.asciiSpec : " null"));
@@ -443,13 +455,15 @@ ContentSecurityPolicy.prototype = {
                                                  selfURI,
                                                  aReportOnly,
                                                  this._weakDocRequest.get(),
-                                                 this);
+                                                 this,
+                                                 aEnforceSelfChecks);
     } else {
       newpolicy = CSPRep.fromString(aPolicy,
                                     selfURI,
                                     aReportOnly,
                                     this._weakDocRequest.get(),
-                                    this);
+                                    this,
+                                    aEnforceSelfChecks);
     }
 
     newpolicy._specCompliant = !!aSpecCompliant;
@@ -950,7 +964,8 @@ ContentSecurityPolicy.prototype = {
       let specCompliant = aStream.readBoolean();
       // don't need self info because when the policy is turned back into a
       // string, 'self' is replaced with the explicit source expression.
-      this.appendPolicy(polStr, null, reportOnly, specCompliant);
+      this._appendPolicyInternal(polStr, null, reportOnly, specCompliant,
+                                 false);
     }
 
     // NOTE: the document instance that's deserializing this object (via its

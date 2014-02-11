@@ -22,6 +22,11 @@
 #include <gst/video/video.h>
 #pragma GCC diagnostic pop
 
+#if GST_VERSION_MAJOR == 1
+#include <gst/video/gstvideometa.h>
+#include <gst/video/gstvideopool.h>
+#endif
+
 namespace mozilla {
 
 /*
@@ -41,5 +46,8 @@ bool load_gstreamer();
 #undef REPLACE_FUNC
 
 }
+
+#undef GST_CAPS_ANY
+#define GST_CAPS_ANY (*_gst_caps_any)
 
 #endif // GStreamerLoader_h_
