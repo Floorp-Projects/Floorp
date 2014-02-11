@@ -991,6 +991,8 @@ AllOnOnePage(uintptr_t start, int size)
 static CachePage *
 GetCachePage(SimulatorRuntime::ICacheMap &i_cache, void *page)
 {
+    MOZ_ASSERT(Simulator::ICacheCheckingEnabled);
+
     SimulatorRuntime::ICacheMap::AddPtr p = i_cache.lookupForAdd(page);
     if (p)
         return p->value();
@@ -1085,6 +1087,8 @@ Simulator::setLastDebuggerInput(char *input)
 void
 Simulator::FlushICache(void *start_addr, size_t size)
 {
+    if (!Simulator::ICacheCheckingEnabled)
+        return;
     SimulatorRuntime *srt = Simulator::Current()->srt_;
     AutoLockSimulatorRuntime alsr(srt);
     js::jit::FlushICache(srt->icache(), start_addr, size);
@@ -1173,7 +1177,8 @@ class Redirection
         Simulator *sim = Simulator::Current();
         SimulatorRuntime *srt = sim->srt_;
         next_ = srt->redirection();
-        FlushICache(srt->icache(), addressOfSwiInstruction(), SimInstruction::kInstrSize);
+        if (Simulator::ICacheCheckingEnabled)
+            FlushICache(srt->icache(), addressOfSwiInstruction(), SimInstruction::kInstrSize);
         srt->setRedirection(this);
     }
 
