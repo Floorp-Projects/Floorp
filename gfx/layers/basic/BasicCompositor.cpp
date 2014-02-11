@@ -310,6 +310,11 @@ DrawSurfaceWithTextureCoords(DrawTarget *aDest,
                                   gfxPoint(aDestRect.XMost(), aDestRect.y),
                                   gfxPoint(aDestRect.XMost(), aDestRect.YMost()));
   Matrix matrix = ToMatrix(transform);
+
+  // Only use REPEAT if aTextureCoords is outside (0, 0, 1, 1).
+  gfx::Rect unitRect(0, 0, 1, 1);
+  ExtendMode mode = unitRect.Contains(aTextureCoords) ? ExtendMode::CLAMP : ExtendMode::REPEAT;
+
   if (aMask) {
     aDest->PushClipRect(aDestRect);
     Matrix maskTransformInverse = aMaskTransform;
@@ -317,13 +322,13 @@ DrawSurfaceWithTextureCoords(DrawTarget *aDest,
     Matrix dtTransform = aDest->GetTransform();
     aDest->SetTransform(aMaskTransform);
     Matrix patternMatrix = maskTransformInverse * dtTransform * matrix;
-    aDest->MaskSurface(SurfacePattern(aSource, ExtendMode::REPEAT, patternMatrix, aFilter),
+    aDest->MaskSurface(SurfacePattern(aSource, mode, patternMatrix, aFilter),
                        aMask, Point(), DrawOptions(aOpacity));
     aDest->SetTransform(dtTransform);
     aDest->PopClip();
   } else {
     aDest->FillRect(aDestRect,
-                    SurfacePattern(aSource, ExtendMode::REPEAT, matrix, aFilter),
+                    SurfacePattern(aSource, mode, matrix, aFilter),
                     DrawOptions(aOpacity));
   }
 }
