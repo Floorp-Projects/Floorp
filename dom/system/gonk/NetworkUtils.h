@@ -75,12 +75,12 @@ public:
 
   NetworkParams(const NetworkCommandOptions& aOther) {
 
-#define COPY_SEQUENCE_FIELD(prop)                                                            \
+#define COPY_SEQUENCE_FIELD(prop, type)                                                      \
     if (aOther.prop.WasPassed()) {                                                           \
-      mozilla::dom::Sequence<nsString > const & currentValue = aOther.prop.InternalValue();  \
+      mozilla::dom::Sequence<type > const & currentValue = aOther.prop.InternalValue();      \
       uint32_t length = currentValue.Length();                                               \
       for (uint32_t idx = 0; idx < length; idx++) {                                          \
-        mHostnames.AppendElement(currentValue[idx]);                                         \
+        prop.AppendElement(currentValue[idx]);                                               \
       }                                                                                      \
     }
 
@@ -110,7 +110,7 @@ public:
     COPY_OPT_STRING_FIELD(mDns2_str, EmptyString())
     COPY_OPT_STRING_FIELD(mGateway, EmptyString())
     COPY_OPT_STRING_FIELD(mGateway_str, EmptyString())
-    COPY_SEQUENCE_FIELD(mHostnames)
+    COPY_SEQUENCE_FIELD(mHostnames, nsString)
     COPY_OPT_STRING_FIELD(mIfname, EmptyString())
     COPY_OPT_STRING_FIELD(mIp, EmptyString())
     COPY_OPT_STRING_FIELD(mNetmask, EmptyString())
@@ -128,7 +128,7 @@ public:
     COPY_OPT_STRING_FIELD(mKey, EmptyString())
     COPY_OPT_STRING_FIELD(mPrefix, EmptyString())
     COPY_OPT_STRING_FIELD(mLink, EmptyString())
-    COPY_SEQUENCE_FIELD(mInterfaceList)
+    COPY_SEQUENCE_FIELD(mInterfaceList, nsString)
     COPY_OPT_STRING_FIELD(mWifiStartIp, EmptyString())
     COPY_OPT_STRING_FIELD(mWifiEndIp, EmptyString())
     COPY_OPT_STRING_FIELD(mUsbStartIp, EmptyString())
@@ -178,7 +178,7 @@ public:
   nsString mKey;
   nsString mPrefix;
   nsString mLink;
-  nsTArray<nsCString> mInterfaceList;
+  nsTArray<nsString> mInterfaceList;
   nsString mWifiStartIp;
   nsString mWifiEndIp;
   nsString mUsbStartIp;
