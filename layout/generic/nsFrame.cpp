@@ -1021,12 +1021,14 @@ bool
 nsIFrame::Preserves3DChildren() const
 {
   if (StyleDisplay()->mTransformStyle != NS_STYLE_TRANSFORM_STYLE_PRESERVE_3D ||
-      !StyleDisplay()->HasTransform(this))
-      return false;
+      !StyleDisplay()->HasTransform(this)) {
+    return false;
+  }
 
   // If we're all scroll frame, then all descendants will be clipped, so we can't preserve 3d.
-  if (GetType() == nsGkAtoms::scrollFrame)
-      return false;
+  if (GetType() == nsGkAtoms::scrollFrame) {
+    return false;
+  }
 
   nsRect temp;
   const nsStyleDisplay* displayStyle = StyleDisplay();
