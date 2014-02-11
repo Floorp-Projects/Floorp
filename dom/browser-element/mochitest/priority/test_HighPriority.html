@@ -119,8 +119,7 @@ const priorityChangeGracePeriod = 100;
 addEventListener('testready', function() {
   SpecialPowers.pushPrefEnv(
     {set: [['dom.ipc.processPriorityManager.backgroundGracePeriodMS',
-            priorityChangeGracePeriod],
-           ['dom.wakelock.enabled', true]]},
+            priorityChangeGracePeriod]]},
     runTest);
 });
 
