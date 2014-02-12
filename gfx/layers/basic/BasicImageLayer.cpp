@@ -65,33 +65,88 @@ protected:
   }
 
   // only paints the image if aContext is non-null
-  already_AddRefed<gfxPattern>
-  GetAndPaintCurrentImage(gfxContext* aContext,
+  void
+  GetAndPaintCurrentImage(DrawTarget* aTarget,
                           float aOpacity,
-                          Layer* aMaskLayer);
+                          SourceSurface* aMaskSurface);
+  already_AddRefed<gfxPattern>
+  DeprecatedGetAndPaintCurrentImage(gfxContext* aContext,
+                                    float aOpacity,
+                                    Layer* aMaskLayer);
 
   gfx::IntSize mSize;
 };
 
+static void
+DeprecatedPaintContext(gfxPattern* aPattern,
+                       const nsIntRegion& aVisible,
+                       float aOpacity,
+                       gfxContext* aContext,
+                       Layer* aMaskLayer);
+
 void
 BasicImageLayer::Paint(DrawTarget* aTarget, SourceSurface* aMaskSurface)
 {
-  DeprecatedPaint(new gfxContext(aTarget), nullptr); //TODO: null->aMaskSurface
+  if (IsHidden()) {
+    return;
+  }
+  GetAndPaintCurrentImage(aTarget, GetEffectiveOpacity(), aMaskSurface);
 }
 
 void
 BasicImageLayer::DeprecatedPaint(gfxContext* aContext, Layer* aMaskLayer)
 {
-  if (IsHidden())
+  if (IsHidden()) {
     return;
+  }
   nsRefPtr<gfxPattern> dontcare =
-    GetAndPaintCurrentImage(aContext, GetEffectiveOpacity(), aMaskLayer);
+    DeprecatedGetAndPaintCurrentImage(aContext,
+                                      GetEffectiveOpacity(),
+                                      aMaskLayer);
+}
+
+void
+BasicImageLayer::GetAndPaintCurrentImage(DrawTarget* aTarget,
+                                         float aOpacity,
+                                         SourceSurface* aMaskSurface)
+{
+  if (!mContainer) {
+    return;
+  }
+
+  mContainer->SetImageFactory(mManager->IsCompositingCheap() ?
+                              nullptr :
+                              BasicManager()->GetImageFactory());
+  IntSize size;
+  Image* image = nullptr;
+  RefPtr<SourceSurface> surf =
+    mContainer->LockCurrentAsSourceSurface(&size, &image);
+
+  if (!surf) {
+    return;
+  }
+
+  if (aTarget) {
+    // The visible region can extend outside the image, so just draw
+    // within the image bounds.
+    SurfacePattern pat(surf, ExtendMode::CLAMP, Matrix(), ToFilter(mFilter));
+    CompositionOp mixBlendMode = GetEffectiveMixBlendMode();
+    CompositionOp op =
+    mixBlendMode != CompositionOp::OP_OVER ? mixBlendMode : GetOperator();
+    DrawOptions opts(aOpacity, op);
+
+    aTarget->MaskSurface(pat, aMaskSurface, Point(0, 0), opts);
+
+    GetContainer()->NotifyPaintedImage(image);
+  }
+
+  mContainer->UnlockCurrentImage();
 }
 
 already_AddRefed<gfxPattern>
-BasicImageLayer::GetAndPaintCurrentImage(gfxContext* aContext,
-                                         float aOpacity,
-                                         Layer* aMaskLayer)
+BasicImageLayer::DeprecatedGetAndPaintCurrentImage(gfxContext* aContext,
+                                                   float aOpacity,
+                                                   Layer* aMaskLayer)
 {
   if (!mContainer)
     return nullptr;
@@ -122,7 +177,7 @@ BasicImageLayer::GetAndPaintCurrentImage(gfxContext* aContext,
       mixBlendMode != CompositionOp::OP_OVER ? mixBlendMode : GetOperator();
     AutoSetOperator setOptimizedOperator(aContext, ThebesOp(op));
 
-    PaintContext(pat,
+    DeprecatedPaintContext(pat,
                  nsIntRegion(nsIntRect(0, 0, size.width, size.height)),
                  aOpacity, aContext, aMaskLayer);
 
@@ -132,12 +187,12 @@ BasicImageLayer::GetAndPaintCurrentImage(gfxContext* aContext,
   return pat.forget();
 }
 
-void
-PaintContext(gfxPattern* aPattern,
-             const nsIntRegion& aVisible,
-             float aOpacity,
-             gfxContext* aContext,
-             Layer* aMaskLayer)
+static void
+DeprecatedPaintContext(gfxPattern* aPattern,
+                       const nsIntRegion& aVisible,
+                       float aOpacity,
+                       gfxContext* aContext,
+                       Layer* aMaskLayer)
 {
   // Set PAD mode so that when the video is being scaled, we do not sample
   // outside the bounds of the video image.
