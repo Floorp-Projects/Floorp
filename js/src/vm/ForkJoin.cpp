@@ -2171,11 +2171,11 @@ intrinsic_SetForkJoinTargetRegionPar(ForkJoinContext *cx, unsigned argc, Value *
 
     CallArgs args = CallArgsFromVp(argc, vp);
     JS_ASSERT(argc == 3);
-    JS_ASSERT(args[0].isObject() && args[0].toObject().is<TypedDatum>());
+    JS_ASSERT(args[0].isObject() && args[0].toObject().is<TypedObject>());
     JS_ASSERT(args[1].isInt32());
     JS_ASSERT(args[2].isInt32());
 
-    uint8_t *mem = args[0].toObject().as<TypedDatum>().typedMem();
+    uint8_t *mem = args[0].toObject().as<TypedObject>().typedMem();
     int32_t start = args[1].toInt32();
     int32_t end = args[2].toInt32();
 
