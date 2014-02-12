@@ -30,11 +30,10 @@
   padding: 4px;
   background-color: hsla(0,0%,100%,.97);
   background-clip: padding-box;
-  border-right: 1px solid hsla(210,4%,10%,.2);
-  border-left: 1px solid hsla(210,4%,10%,.2);
+  border-left: 1px solid hsla(210,4%,10%,.3);
   box-shadow: 0 3px 5px hsla(210,4%,10%,.1),
               0 0 7px hsla(210,4%,10%,.1);
-  color: #222426;
+  color: hsl(0,0%,15%);
   -moz-margin-start: @exitSubviewGutterWidth@;
 }
 
@@ -63,19 +62,13 @@
 .panel-subview-header,
 .subviewbutton.panel-subview-footer {
   padding: 12px;
-  background-color: hsla(210,4%,10%,.04);
 }
 
 .panel-subview-header {
   margin: -4px -4px 4px;
-  box-shadow: 0 -1px 0 hsla(210,4%,10%,.08) inset;
-  color: #797c80;
-}
-
-.subviewbutton.panel-subview-footer {
-  margin: 4px -4px -4px;
-  box-shadow: 0 1px 0 hsla(210,4%,10%,.08) inset;
-  border-radius: 0;
+  background-color: hsla(210,4%,10%,.05);
+  box-shadow: 0 -1px 0 hsla(210,4%,10%,.05) inset;
+  color: hsl(0,0%,50%);
 }
 
 .cui-widget-panelview .panel-subview-header {
@@ -197,8 +190,8 @@ toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-it
 }
 
 /* Help SDK buttons fit in. */
-toolbarpaletteitem[place="palette"] > toolbarbutton[sdk-button="true"] > .toolbarbutton-icon,
-toolbarbutton[sdk-button="true"][cui-areatype="menu-panel"] > .toolbarbutton-icon {
+toolbarpaletteitem[place="palette"] > #personal-bookmarks > #bookmarks-toolbar-placeholder,
+#personal-bookmarks[cui-areatype="menu-panel"] > #bookmarks-toolbar-placeholder {
   height: 32px;
   width: 32px;
 }
@@ -316,20 +309,19 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   display: flex;
   flex-shrink: 0;
   flex-direction: column;
-  background-color: rgba(0, 0, 0, 0.05);
-  box-shadow: 0 -1px 0 rgba(0,0,0,.15);
+  background-color: hsla(210,4%,10%,.07);
   padding: 0;
   margin: 0;
 }
 
 #PanelUI-footer-inner {
   display: flex;
-  box-shadow: 0 -1px 0 rgba(0,0,0,.15);
+  border-top: 1px solid hsla(210,4%,10%,.14);
 }
 
 #PanelUI-footer-inner > toolbarseparator {
   border: 0;
-  border-left: 1px solid rgba(0,0,0,0.1);
+  border-left: 1px solid hsla(210,4%,10%,.14);
   margin: 7px 0 7px;
 }
 
@@ -347,15 +339,16 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   -moz-appearance: none;
   box-shadow: none;
   background-image: none;
-  border: 1px solid transparent;
-  border-bottom-style: none;
+  border: none;  
   border-radius: 0;
   transition: background-color;
   -moz-box-orient: horizontal;
 }
 
 #PanelUI-fxa-status {
-  border-bottom-style: solid;
+  border-top: 1px solid hsla(210,4%,10%,.14);
+  border-bottom: 1px solid transparent;
+  margin-bottom: -1px;
 }
 
 #PanelUI-fxa-status > .toolbarbutton-text {
@@ -446,18 +439,26 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   opacity: 0.4;
 }
 
+#PanelUI-fxa-status:not([disabled]):hover,
 #PanelUI-help:not([disabled]):hover,
 #PanelUI-customize:hover,
 #PanelUI-quit:not([disabled]):hover {
-  outline: 1px solid rgba(0,0,0,0.1);
-  background-color: rgba(0,0,0,0.1);
-  box-shadow: none;
+  outline: 1px solid hsla(210,4%,10%,.07);
+  background-color: hsla(210,4%,10%,.07);
 }
 
-#PanelUI-fxa-status:not([disabled]):hover {
-  background-color: rgba(0,0,0,0.1);
-  border-bottom-color: rgba(0,0,0,0.1);
-  box-shadow: 0 -1px 0 rgba(0,0,0,0.2);
+#PanelUI-fxa-status:not([disabled]):hover:active,
+#PanelUI-help:not([disabled]):hover:active,
+#PanelUI-customize:hover:active,
+#PanelUI-quit:not([disabled]):hover:active {
+  outline: 1px solid hsla(210,4%,10%,.12);
+  background-color: hsla(210,4%,10%,.12);
+  box-shadow: 0 1px 0 hsla(210,4%,10%,.05) inset;
+}
+
+#PanelUI-fxa-status:not([disabled]):hover,
+#PanelUI-fxa-status:not([disabled]):hover:active {
+  outline: none;
 }
 
 #PanelUI-quit:not([disabled]):hover {
@@ -467,6 +468,7 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 
 #PanelUI-quit:not([disabled]):hover:active {
   background-color: #ad3434;
+  outline-color: #992e2e;
 }
 
 #customization-panelHolder #PanelUI-customize {
@@ -553,12 +555,12 @@ panelview .toolbarbutton-1@buttonStateHover@,
 #edit-controls@inAnyPanel@ > toolbarbutton@buttonStateHover@,
 #zoom-controls@inAnyPanel@ > toolbarbutton@buttonStateHover@ {
   background-color: hsla(210,4%,10%,.08);
-  border-color: hsla(210,4%,10%,.1);
+  border-color: hsla(210,4%,10%,.11);
 }
 
 #edit-controls@inAnyPanel@@buttonStateHover@,
 #zoom-controls@inAnyPanel@@buttonStateHover@ {
-  border-color: hsla(210,4%,10%,.1);
+  border-color: hsla(210,4%,10%,.11);
 }
 
 panelview .toolbarbutton-1@buttonStateActive@,
@@ -566,9 +568,28 @@ panelview .toolbarbutton-1@buttonStateActive@,
 .widget-overflow-list .toolbarbutton-1@buttonStateActive@,
 #edit-controls@inAnyPanel@ > toolbarbutton@buttonStateActive@,
 #zoom-controls@inAnyPanel@ > toolbarbutton@buttonStateActive@ {
+  background-color: hsla(210,4%,10%,.12);
+  border-color: hsla(210,4%,10%,.14);
+  box-shadow: 0 1px 0 hsla(210,4%,10%,.03) inset;
+}
+
+.subviewbutton.panel-subview-footer {
+  margin: 4px -4px -4px;
+  background-color: hsla(210,4%,10%,.07);
+  border-top: 1px solid hsla(210,4%,10%,.12);
+  border-radius: 0;
+  color: hsl(0,0%,25%)
+}
+
+.subviewbutton.panel-subview-footer@buttonStateHover@ {
+  background-color: hsla(210,4%,10%,.1);
+  border-top: 1px solid hsla(210,4%,10%,.12);
+}
+
+.subviewbutton.panel-subview-footer@buttonStateActive@ {
   background-color: hsla(210,4%,10%,.15);
-  border-color: hsla(210,4%,10%,.15);
-  box-shadow: 0 1px 0 0 hsla(210,4%,10%,.05) inset;
+  border-top: 1px solid hsla(210,4%,10%,.12);
+  box-shadow: 0 1px 0 hsla(210,4%,10%,.05) inset;
 }
 
 #BMB_bookmarksPopup > .subviewbutton {
