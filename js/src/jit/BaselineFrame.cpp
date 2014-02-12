@@ -17,8 +17,18 @@
 using namespace js;
 using namespace js::jit;
 
+static void
+MarkLocals(BaselineFrame *frame, JSTracer *trc, unsigned start, unsigned end)
+{
+    if (start < end) {
+        // Stack grows down.
+        Value *last = frame->valueSlot(end - 1);
+        gc::MarkValueRootRange(trc, end - start, last, "baseline-stack");
+    }
+}
+
 void
-BaselineFrame::trace(JSTracer *trc)
+BaselineFrame::trace(JSTracer *trc, IonFrameIterator &frameIterator)
 {
     replaceCalleeToken(MarkCalleeToken(trc, calleeToken()));
 
@@ -45,11 +55,41 @@ BaselineFrame::trace(JSTracer *trc)
         gc::MarkObjectRoot(trc, &argsObj_, "baseline-args-obj");
 
     // Mark locals and stack values.
-    size_t nvalues = numValueSlots();
-    if (nvalues > 0) {
-        // The stack grows down, so start at the last Value.
-        Value *last = valueSlot(nvalues - 1);
-        gc::MarkValueRootRange(trc, nvalues, last, "baseline-stack");
+    JSScript *script = this->script();
+    size_t nfixed = script->nfixed();
+    size_t nlivefixed = script->nfixedvars();
+
+    if (nfixed != nlivefixed) {
+        jsbytecode *pc;
+        NestedScopeObject *staticScope;
+
+        frameIterator.baselineScriptAndPc(nullptr, &pc);
+        staticScope = script->getStaticScope(pc);
+        while (staticScope && !staticScope->is<StaticBlockObject>())
+            staticScope = staticScope->enclosingNestedScope();
+
+        if (staticScope) {
+            StaticBlockObject &blockObj = staticScope->as<StaticBlockObject>();
+            nlivefixed = blockObj.localOffset() + blockObj.slotCount();
+        }
+    }
+
+    JS_ASSERT(nlivefixed <= nfixed);
+    JS_ASSERT(nlivefixed >= script->nfixedvars());
+
+    if (nfixed == nlivefixed) {
+        // All locals are live.
+        MarkLocals(this, trc, 0, numValueSlots());
+    } else {
+        // Mark operand stack.
+        MarkLocals(this, trc, nfixed, numValueSlots());
+
+        // Clear dead locals.
+        while (nfixed > nlivefixed)
+            unaliasedLocal(--nfixed, DONT_CHECK_ALIASING).setUndefined();
+
+        // Mark live locals.
+        MarkLocals(this, trc, 0, nlivefixed);
     }
 }
 
