@@ -1,4 +1,4 @@
-expected = "TypeError: a is not a function";
+expected = "TypeError: NaN is not a function";
 actual = "";
 
 try {
@@ -10,4 +10,4 @@ try {
     actual = '' + e;
 }
 
-assertEq(actual, expected);
+assertEq(expected, actual);
