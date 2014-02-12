@@ -16,16 +16,13 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.nio.IntBuffer;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import android.app.Activity;
-import android.opengl.GLSurfaceView;
 import android.view.View;
 import android.util.Log;
 
@@ -36,8 +33,6 @@ import com.jayway.android.robotium.solo.Solo;
 public class FennecNativeDriver implements Driver {
     private static final int FRAME_TIME_THRESHOLD = 25;     // allow 25ms per frame (40fps)
 
-    // Map of IDs to element names.
-    private HashMap mLocators = null;
     private Activity mActivity;
     private Solo mSolo;
     private String mRootPath;
@@ -67,9 +62,6 @@ public class FennecNativeDriver implements Driver {
         mActivity = activity;
         mSolo = robocop;
         mRootPath = rootPath;
-
-        // Set up table of fennec_ids.
-        mLocators = convertTextToTable(getFile(mRootPath + "/fennec_ids.txt"));
     }
 
     //Information on the location of the Gecko Frame.
@@ -80,7 +72,7 @@ public class FennecNativeDriver implements Driver {
     private int mGeckoWidth = 1024;
 
     private void getGeckoInfo() {
-        View geckoLayout = mActivity.findViewById(Integer.decode((String)mLocators.get("gecko_layout")));
+        View geckoLayout = mActivity.findViewById(R.id.gecko_layout);
         if (geckoLayout != null) {
             int[] pos = new int[2];
             geckoLayout.getLocationOnScreen(pos);
