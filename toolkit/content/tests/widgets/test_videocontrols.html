@@ -2,7 +2,7 @@
 <html>
 <head>
   <title>Video controls test</title>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>  
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
@@ -10,7 +10,7 @@
 <p id="display"></p>
 
 <div id="content">
-  <video width="320" height="240" id="video" src="seek_with_sound.ogg" controls mozNoDynamicControls preload="auto"></video>
+  <video width="320" height="240" id="video" controls mozNoDynamicControls preload="auto"></video>
 </div>
 
 <pre id="test">
@@ -166,7 +166,7 @@ function runTest(event) {
       synthesizeMouse(video, endDragX,   scrubberCenterY, { type: "mousemove", button: 0 });
       synthesizeMouse(video, endDragX,   scrubberCenterY, { type: "mouseup",   button: 0 });
       break;
-                      
+
     case 12:
       is(event.type, "seeking", "checking event type");
       ok(true, "video position is at " + video.currentTime);
@@ -211,46 +211,33 @@ function runTest(event) {
   testnum++;
 }
 
-var canplaythroughsavedevent = null;
-var gotcanplaythroughevent = false;
-var gotloadevent = false;
-
-function canplaythroughevent(event) {
-  canplaythroughsavedevent = event;
-  gotcanplaythroughevent = true;
-  video.removeEventListener("canplaythrough",  canplaythroughevent, false);
-  maybeStartTest();
-}
-
-function loadevent(event) {
-  gotloadevent = true;
-  maybeStartTest();
-}
-
-// setTimeout so that test starts after paint suppression ends
-function maybeStartTest() {
-  if (!gotcanplaythroughevent || !gotloadevent)
-    return;
-
-  setTimeout("runTest(canplaythroughsavedevent);", 0);
-}
 
 var testnum = 1;
 var video = document.getElementById("video");
 
-SpecialPowers.pushPrefEnv({"set": [["media.cache_size", 40000]]}, startTest);
-function startTest() {
-  // Kick off test once video has loaded.
-  video.addEventListener("canplaythrough",  canplaythroughevent, false);
-  window.addEventListener("load",  loadevent, false);
-
+function canplaythroughevent(event) {
+  video.removeEventListener("canplaythrough",  canplaythroughevent, false);
   // Other events expected by the test.
   video.addEventListener("play",  runTest, false);
   video.addEventListener("pause", runTest, false);
   video.addEventListener("volumechange", runTest, false);
   video.addEventListener("seeking", runTest, false);
   video.addEventListener("seeked", runTest, false);
+  // Begin the test.
+  runTest(event);
 }
+
+function startMediaLoad() {
+  // Kick off test once video has loaded, in its canplaythrough event handler.
+  video.src = "seek_with_sound.ogg";
+  video.addEventListener("canplaythrough", canplaythroughevent, false);
+}
+
+function loadevent(event) {
+  SpecialPowers.pushPrefEnv({"set": [["media.cache_size", 40000]]}, startMediaLoad);
+}
+
+window.addEventListener("load",  loadevent, false);
 
 SimpleTest.waitForExplicitFinish();
 
