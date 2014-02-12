@@ -31,10 +31,12 @@
 #include <windows.h>
 #endif
 
+#include "jscntxt.h"
+#include "jsfun.h"
 #include "jsnum.h"
 #include "jsprf.h"
 
-#include "builtin/TypeRepresentation.h"
+#include "builtin/TypedObject.h"
 #include "ctypes/Library.h"
 
 using namespace std;
@@ -2183,29 +2185,29 @@ bool CanConvertTypedArrayItemTo(JSObject *baseType, JSObject *valObj, JSContext 
   }
   TypeCode elementTypeCode;
   switch (JS_GetArrayBufferViewType(valObj)) {
-  case ScalarTypeRepresentation::TYPE_INT8:
+  case ScalarTypeDescr::TYPE_INT8:
     elementTypeCode = TYPE_int8_t;
     break;
-  case ScalarTypeRepresentation::TYPE_UINT8:
-  case ScalarTypeRepresentation::TYPE_UINT8_CLAMPED:
+  case ScalarTypeDescr::TYPE_UINT8:
+  case ScalarTypeDescr::TYPE_UINT8_CLAMPED:
     elementTypeCode = TYPE_uint8_t;
     break;
-  case ScalarTypeRepresentation::TYPE_INT16:
+  case ScalarTypeDescr::TYPE_INT16:
     elementTypeCode = TYPE_int16_t;
     break;
-  case ScalarTypeRepresentation::TYPE_UINT16:
+  case ScalarTypeDescr::TYPE_UINT16:
     elementTypeCode = TYPE_uint16_t;
     break;
-  case ScalarTypeRepresentation::TYPE_INT32:
+  case ScalarTypeDescr::TYPE_INT32:
     elementTypeCode = TYPE_int32_t;
     break;
-  case ScalarTypeRepresentation::TYPE_UINT32:
+  case ScalarTypeDescr::TYPE_UINT32:
     elementTypeCode = TYPE_uint32_t;
     break;
-  case ScalarTypeRepresentation::TYPE_FLOAT32:
+  case ScalarTypeDescr::TYPE_FLOAT32:
     elementTypeCode = TYPE_float32_t;
     break;
-  case ScalarTypeRepresentation::TYPE_FLOAT64:
+  case ScalarTypeDescr::TYPE_FLOAT64:
     elementTypeCode = TYPE_float64_t;
     break;
   default:

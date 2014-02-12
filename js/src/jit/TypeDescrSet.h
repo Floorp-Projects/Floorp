@@ -7,7 +7,7 @@
 #ifndef jit_TypeRepresentationSet_h
 #define jit_TypeRepresentationSet_h
 
-#include "builtin/TypeRepresentation.h"
+#include "builtin/TypedObject.h"
 #include "jit/IonAllocPolicy.h"
 #include "js/HashTable.h"
 
@@ -37,59 +37,59 @@ namespace js {
 namespace jit {
 
 class IonBuilder;
-class TypeRepresentationSet;
+class TypeDescrSet;
 
-class TypeRepresentationSetBuilder {
+class TypeDescrSetBuilder {
   private:
-    Vector<TypeRepresentation *, 4, SystemAllocPolicy> entries_;
+    Vector<TypeDescr *, 4, SystemAllocPolicy> entries_;
     bool invalid_;
 
-    bool overlaps(TypeRepresentation *a, TypeRepresentation *b);
-
   public:
-    TypeRepresentationSetBuilder();
+    TypeDescrSetBuilder();
 
-    bool insert(TypeRepresentation *typeRepr);
-    bool build(IonBuilder &builder, TypeRepresentationSet *out);
+    bool insert(TypeDescr *typeRepr);
+    bool build(IonBuilder &builder, TypeDescrSet *out);
 };
 
-class TypeRepresentationSet {
+class TypeDescrSet {
   private:
-    friend struct TypeRepresentationSetHasher;
-    friend class TypeRepresentationSetBuilder;
+    friend struct TypeDescrSetHasher;
+    friend class TypeDescrSetBuilder;
 
     size_t length_;
-    TypeRepresentation **entries_; // Allocated using temp policy
+    TypeDescr **entries_; // Allocated using temp policy
 
-    TypeRepresentationSet(size_t length, TypeRepresentation **entries);
+    TypeDescrSet(size_t length, TypeDescr **entries);
 
     size_t length() const {
         return length_;
     }
 
-    TypeRepresentation *get(uint32_t i) const {
+    TypeDescr *get(uint32_t i) const {
         return entries_[i];
     }
+
+    template<typename T>
+    bool genericType(typename T::Type *out);
 
   public:
     //////////////////////////////////////////////////////////////////////
     // Constructors
     //
     // For more flexible constructors, see
-    // TypeRepresentationSetBuilder above.
+    // TypeDescrSetBuilder above.
 
-    TypeRepresentationSet(const TypeRepresentationSet &c);
-    TypeRepresentationSet(); // empty set
+    TypeDescrSet(const TypeDescrSet &c);
+    TypeDescrSet(); // empty set
 
     //////////////////////////////////////////////////////////////////////
     // Query the set
 
     bool empty();
-    bool singleton();
-    bool allOfKind(TypeRepresentation::Kind kind);
+    bool allOfKind(TypeDescr::Kind kind);
 
     // Returns true only when non-empty and `kind()` is
-    // `TypeRepresentation::Array`
+    // `TypeDescr::Array`
     bool allOfArrayKind();
 
     // Returns true only if (1) non-empty, (2) for all types t in this
@@ -105,32 +105,54 @@ class TypeRepresentationSet {
     //////////////////////////////////////////////////////////////////////
     // The following operations are only valid on a non-empty set:
 
-    TypeRepresentation::Kind kind();
+    TypeDescr::Kind kind();
 
     //////////////////////////////////////////////////////////////////////
-    // The following operations are only valid on a singleton set:
+    // Scalar operations
+    //
+    // Only valid when `kind() == TypeDescr::Scalar`
 
-    TypeRepresentation *getTypeRepresentation();
+    // If all type descrs in this set have a single type, returns true
+    // and sets *out. Else returns false.
+    bool scalarType(ScalarTypeDescr::Type *out);
+
+    //////////////////////////////////////////////////////////////////////
+    // Reference operations
+    //
+    // Only valid when `kind() == TypeDescr::Reference`
+
+    // If all type descrs in this set have a single type, returns true
+    // and sets *out. Else returns false.
+    bool referenceType(ReferenceTypeDescr::Type *out);
+
+    //////////////////////////////////////////////////////////////////////
+    // Reference operations
+    //
+    // Only valid when `kind() == TypeDescr::X4`
+
+    // If all type descrs in this set have a single type, returns true
+    // and sets *out. Else returns false.
+    bool x4Type(X4TypeDescr::Type *out);
 
     //////////////////////////////////////////////////////////////////////
     // SizedArray operations
     //
-    // Only valid when `kind() == TypeRepresentation::SizedArray`
+    // Only valid when `kind() == TypeDescr::SizedArray`
 
     // Determines whether all arrays in this set have the same,
     // statically known, array length and return that length
     // (via `*length`) if so. Otherwise returns false.
     bool hasKnownArrayLength(size_t *length);
 
-    // Returns a `TypeRepresentationSet` representing the element
+    // Returns a `TypeDescrSet` representing the element
     // types of the various array types in this set. The returned set
     // may be the empty set.
-    bool arrayElementType(IonBuilder &builder, TypeRepresentationSet *out);
+    bool arrayElementType(IonBuilder &builder, TypeDescrSet *out);
 
     //////////////////////////////////////////////////////////////////////
     // Struct operations
     //
-    // Only valid when `kind() == TypeRepresentation::Struct`
+    // Only valid when `kind() == TypeDescr::Struct`
 
     // Searches the type in the set for a field named `id`. All
     // possible types must agree on the offset of the field within the
@@ -152,21 +174,21 @@ class TypeRepresentationSet {
     bool fieldNamed(IonBuilder &builder,
                     jsid id,
                     size_t *offset,
-                    TypeRepresentationSet *out,
+                    TypeDescrSet *out,
                     size_t *index);
 };
 
-struct TypeRepresentationSetHasher
+struct TypeDescrSetHasher
 {
-    typedef TypeRepresentationSet Lookup;
-    static HashNumber hash(TypeRepresentationSet key);
-    static bool match(TypeRepresentationSet key1,
-                      TypeRepresentationSet key2);
+    typedef TypeDescrSet Lookup;
+    static HashNumber hash(TypeDescrSet key);
+    static bool match(TypeDescrSet key1,
+                      TypeDescrSet key2);
 };
 
-typedef js::HashSet<TypeRepresentationSet,
-                    TypeRepresentationSetHasher,
-                    IonAllocPolicy> TypeRepresentationSetHash;
+typedef js::HashSet<TypeDescrSet,
+                    TypeDescrSetHasher,
+                    IonAllocPolicy> TypeDescrSetHash;
 
 } // namespace jit
 } // namespace js

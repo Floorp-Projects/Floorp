@@ -1397,15 +1397,15 @@ ArrayBufferViewObject::trace(JSTracer *trc, JSObject *obj)
 }
 
 template<typename NativeType> static inline const int TypeIDOfType();
-template<> inline const int TypeIDOfType<int8_t>() { return ScalarTypeRepresentation::TYPE_INT8; }
-template<> inline const int TypeIDOfType<uint8_t>() { return ScalarTypeRepresentation::TYPE_UINT8; }
-template<> inline const int TypeIDOfType<int16_t>() { return ScalarTypeRepresentation::TYPE_INT16; }
-template<> inline const int TypeIDOfType<uint16_t>() { return ScalarTypeRepresentation::TYPE_UINT16; }
-template<> inline const int TypeIDOfType<int32_t>() { return ScalarTypeRepresentation::TYPE_INT32; }
-template<> inline const int TypeIDOfType<uint32_t>() { return ScalarTypeRepresentation::TYPE_UINT32; }
-template<> inline const int TypeIDOfType<float>() { return ScalarTypeRepresentation::TYPE_FLOAT32; }
-template<> inline const int TypeIDOfType<double>() { return ScalarTypeRepresentation::TYPE_FLOAT64; }
-template<> inline const int TypeIDOfType<uint8_clamped>() { return ScalarTypeRepresentation::TYPE_UINT8_CLAMPED; }
+template<> inline const int TypeIDOfType<int8_t>() { return ScalarTypeDescr::TYPE_INT8; }
+template<> inline const int TypeIDOfType<uint8_t>() { return ScalarTypeDescr::TYPE_UINT8; }
+template<> inline const int TypeIDOfType<int16_t>() { return ScalarTypeDescr::TYPE_INT16; }
+template<> inline const int TypeIDOfType<uint16_t>() { return ScalarTypeDescr::TYPE_UINT16; }
+template<> inline const int TypeIDOfType<int32_t>() { return ScalarTypeDescr::TYPE_INT32; }
+template<> inline const int TypeIDOfType<uint32_t>() { return ScalarTypeDescr::TYPE_UINT32; }
+template<> inline const int TypeIDOfType<float>() { return ScalarTypeDescr::TYPE_FLOAT32; }
+template<> inline const int TypeIDOfType<double>() { return ScalarTypeDescr::TYPE_FLOAT64; }
+template<> inline const int TypeIDOfType<uint8_clamped>() { return ScalarTypeDescr::TYPE_UINT8_CLAMPED; }
 
 template<typename ElementType>
 static inline JSObject *
@@ -1542,7 +1542,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
             JS_ASSERT(sizeof(NativeType) <= 4);
             uint32_t n = ToUint32(d);
             setIndex(tarray, index, NativeType(n));
-        } else if (ArrayTypeID() == ScalarTypeRepresentation::TYPE_UINT8_CLAMPED) {
+        } else if (ArrayTypeID() == ScalarTypeDescr::TYPE_UINT8_CLAMPED) {
             // The uint8_clamped type has a special rounding converter
             // for doubles.
             setIndex(tarray, index, NativeType(d));
@@ -2403,50 +2403,50 @@ class TypedArrayObjectTemplate : public TypedArrayObject
 
         unsigned srclen = tarray->length();
         switch (tarray->type()) {
-          case ScalarTypeRepresentation::TYPE_INT8: {
+          case ScalarTypeDescr::TYPE_INT8: {
             int8_t *src = static_cast<int8_t*>(tarray->viewData());
             for (unsigned i = 0; i < srclen; ++i)
                 *dest++ = NativeType(*src++);
             break;
           }
-          case ScalarTypeRepresentation::TYPE_UINT8:
-          case ScalarTypeRepresentation::TYPE_UINT8_CLAMPED: {
+          case ScalarTypeDescr::TYPE_UINT8:
+          case ScalarTypeDescr::TYPE_UINT8_CLAMPED: {
             uint8_t *src = static_cast<uint8_t*>(tarray->viewData());
             for (unsigned i = 0; i < srclen; ++i)
                 *dest++ = NativeType(*src++);
             break;
           }
-          case ScalarTypeRepresentation::TYPE_INT16: {
+          case ScalarTypeDescr::TYPE_INT16: {
             int16_t *src = static_cast<int16_t*>(tarray->viewData());
             for (unsigned i = 0; i < srclen; ++i)
                 *dest++ = NativeType(*src++);
             break;
           }
-          case ScalarTypeRepresentation::TYPE_UINT16: {
+          case ScalarTypeDescr::TYPE_UINT16: {
             uint16_t *src = static_cast<uint16_t*>(tarray->viewData());
             for (unsigned i = 0; i < srclen; ++i)
                 *dest++ = NativeType(*src++);
             break;
           }
-          case ScalarTypeRepresentation::TYPE_INT32: {
+          case ScalarTypeDescr::TYPE_INT32: {
             int32_t *src = static_cast<int32_t*>(tarray->viewData());
             for (unsigned i = 0; i < srclen; ++i)
                 *dest++ = NativeType(*src++);
             break;
           }
-          case ScalarTypeRepresentation::TYPE_UINT32: {
+          case ScalarTypeDescr::TYPE_UINT32: {
             uint32_t *src = static_cast<uint32_t*>(tarray->viewData());
             for (unsigned i = 0; i < srclen; ++i)
                 *dest++ = NativeType(*src++);
             break;
           }
-          case ScalarTypeRepresentation::TYPE_FLOAT32: {
+          case ScalarTypeDescr::TYPE_FLOAT32: {
             float *src = static_cast<float*>(tarray->viewData());
             for (unsigned i = 0; i < srclen; ++i)
                 *dest++ = NativeType(*src++);
             break;
           }
-          case ScalarTypeRepresentation::TYPE_FLOAT64: {
+          case ScalarTypeDescr::TYPE_FLOAT64: {
             double *src = static_cast<double*>(tarray->viewData());
             for (unsigned i = 0; i < srclen; ++i)
                 *dest++ = NativeType(*src++);
@@ -2483,50 +2483,50 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         js_memcpy(srcbuf, tarray->viewData(), byteLength);
 
         switch (tarray->type()) {
-          case ScalarTypeRepresentation::TYPE_INT8: {
+          case ScalarTypeDescr::TYPE_INT8: {
             int8_t *src = (int8_t*) srcbuf;
             for (unsigned i = 0; i < tarray->length(); ++i)
                 *dest++ = NativeType(*src++);
             break;
           }
-          case ScalarTypeRepresentation::TYPE_UINT8:
-          case ScalarTypeRepresentation::TYPE_UINT8_CLAMPED: {
+          case ScalarTypeDescr::TYPE_UINT8:
+          case ScalarTypeDescr::TYPE_UINT8_CLAMPED: {
             uint8_t *src = (uint8_t*) srcbuf;
             for (unsigned i = 0; i < tarray->length(); ++i)
                 *dest++ = NativeType(*src++);
             break;
           }
-          case ScalarTypeRepresentation::TYPE_INT16: {
+          case ScalarTypeDescr::TYPE_INT16: {
             int16_t *src = (int16_t*) srcbuf;
             for (unsigned i = 0; i < tarray->length(); ++i)
                 *dest++ = NativeType(*src++);
             break;
           }
-          case ScalarTypeRepresentation::TYPE_UINT16: {
+          case ScalarTypeDescr::TYPE_UINT16: {
             uint16_t *src = (uint16_t*) srcbuf;
             for (unsigned i = 0; i < tarray->length(); ++i)
                 *dest++ = NativeType(*src++);
             break;
           }
-          case ScalarTypeRepresentation::TYPE_INT32: {
+          case ScalarTypeDescr::TYPE_INT32: {
             int32_t *src = (int32_t*) srcbuf;
             for (unsigned i = 0; i < tarray->length(); ++i)
                 *dest++ = NativeType(*src++);
             break;
           }
-          case ScalarTypeRepresentation::TYPE_UINT32: {
+          case ScalarTypeDescr::TYPE_UINT32: {
             uint32_t *src = (uint32_t*) srcbuf;
             for (unsigned i = 0; i < tarray->length(); ++i)
                 *dest++ = NativeType(*src++);
             break;
           }
-          case ScalarTypeRepresentation::TYPE_FLOAT32: {
+          case ScalarTypeDescr::TYPE_FLOAT32: {
             float *src = (float*) srcbuf;
             for (unsigned i = 0; i < tarray->length(); ++i)
                 *dest++ = NativeType(*src++);
             break;
           }
-          case ScalarTypeRepresentation::TYPE_FLOAT64: {
+          case ScalarTypeDescr::TYPE_FLOAT64: {
             double *src = (double*) srcbuf;
             for (unsigned i = 0; i < tarray->length(); ++i)
                 *dest++ = NativeType(*src++);
@@ -2557,55 +2557,55 @@ class TypedArrayObjectTemplate : public TypedArrayObject
 
 class Int8ArrayObject : public TypedArrayObjectTemplate<int8_t> {
   public:
-    enum { ACTUAL_TYPE = ScalarTypeRepresentation::TYPE_INT8 };
+    enum { ACTUAL_TYPE = ScalarTypeDescr::TYPE_INT8 };
     static const JSProtoKey key = JSProto_Int8Array;
     static const JSFunctionSpec jsfuncs[];
 };
 class Uint8ArrayObject : public TypedArrayObjectTemplate<uint8_t> {
   public:
-    enum { ACTUAL_TYPE = ScalarTypeRepresentation::TYPE_UINT8 };
+    enum { ACTUAL_TYPE = ScalarTypeDescr::TYPE_UINT8 };
     static const JSProtoKey key = JSProto_Uint8Array;
     static const JSFunctionSpec jsfuncs[];
 };
 class Int16ArrayObject : public TypedArrayObjectTemplate<int16_t> {
   public:
-    enum { ACTUAL_TYPE = ScalarTypeRepresentation::TYPE_INT16 };
+    enum { ACTUAL_TYPE = ScalarTypeDescr::TYPE_INT16 };
     static const JSProtoKey key = JSProto_Int16Array;
     static const JSFunctionSpec jsfuncs[];
 };
 class Uint16ArrayObject : public TypedArrayObjectTemplate<uint16_t> {
   public:
-    enum { ACTUAL_TYPE = ScalarTypeRepresentation::TYPE_UINT16 };
+    enum { ACTUAL_TYPE = ScalarTypeDescr::TYPE_UINT16 };
     static const JSProtoKey key = JSProto_Uint16Array;
     static const JSFunctionSpec jsfuncs[];
 };
 class Int32ArrayObject : public TypedArrayObjectTemplate<int32_t> {
   public:
-    enum { ACTUAL_TYPE = ScalarTypeRepresentation::TYPE_INT32 };
+    enum { ACTUAL_TYPE = ScalarTypeDescr::TYPE_INT32 };
     static const JSProtoKey key = JSProto_Int32Array;
     static const JSFunctionSpec jsfuncs[];
 };
 class Uint32ArrayObject : public TypedArrayObjectTemplate<uint32_t> {
   public:
-    enum { ACTUAL_TYPE = ScalarTypeRepresentation::TYPE_UINT32 };
+    enum { ACTUAL_TYPE = ScalarTypeDescr::TYPE_UINT32 };
     static const JSProtoKey key = JSProto_Uint32Array;
     static const JSFunctionSpec jsfuncs[];
 };
 class Float32ArrayObject : public TypedArrayObjectTemplate<float> {
   public:
-    enum { ACTUAL_TYPE = ScalarTypeRepresentation::TYPE_FLOAT32 };
+    enum { ACTUAL_TYPE = ScalarTypeDescr::TYPE_FLOAT32 };
     static const JSProtoKey key = JSProto_Float32Array;
     static const JSFunctionSpec jsfuncs[];
 };
 class Float64ArrayObject : public TypedArrayObjectTemplate<double> {
   public:
-    enum { ACTUAL_TYPE = ScalarTypeRepresentation::TYPE_FLOAT64 };
+    enum { ACTUAL_TYPE = ScalarTypeDescr::TYPE_FLOAT64 };
     static const JSProtoKey key = JSProto_Float64Array;
     static const JSFunctionSpec jsfuncs[];
 };
 class Uint8ClampedArrayObject : public TypedArrayObjectTemplate<uint8_clamped> {
   public:
-    enum { ACTUAL_TYPE = ScalarTypeRepresentation::TYPE_UINT8_CLAMPED };
+    enum { ACTUAL_TYPE = ScalarTypeDescr::TYPE_UINT8_CLAMPED };
     static const JSProtoKey key = JSProto_Uint8ClampedArray;
     static const JSFunctionSpec jsfuncs[];
 };
@@ -3391,31 +3391,31 @@ TypedArrayObject::copyTypedArrayElement(uint32_t index, MutableHandleValue vp)
     JS_ASSERT(index < length());
 
     switch (type()) {
-      case ScalarTypeRepresentation::TYPE_INT8:
+      case ScalarTypeDescr::TYPE_INT8:
         TypedArrayObjectTemplate<int8_t>::copyIndexToValue(this, index, vp);
         break;
-      case ScalarTypeRepresentation::TYPE_UINT8:
+      case ScalarTypeDescr::TYPE_UINT8:
         TypedArrayObjectTemplate<uint8_t>::copyIndexToValue(this, index, vp);
         break;
-      case ScalarTypeRepresentation::TYPE_UINT8_CLAMPED:
+      case ScalarTypeDescr::TYPE_UINT8_CLAMPED:
         TypedArrayObjectTemplate<uint8_clamped>::copyIndexToValue(this, index, vp);
         break;
-      case ScalarTypeRepresentation::TYPE_INT16:
+      case ScalarTypeDescr::TYPE_INT16:
         TypedArrayObjectTemplate<int16_t>::copyIndexToValue(this, index, vp);
         break;
-      case ScalarTypeRepresentation::TYPE_UINT16:
+      case ScalarTypeDescr::TYPE_UINT16:
         TypedArrayObjectTemplate<uint16_t>::copyIndexToValue(this, index, vp);
         break;
-      case ScalarTypeRepresentation::TYPE_INT32:
+      case ScalarTypeDescr::TYPE_INT32:
         TypedArrayObjectTemplate<int32_t>::copyIndexToValue(this, index, vp);
         break;
-      case ScalarTypeRepresentation::TYPE_UINT32:
+      case ScalarTypeDescr::TYPE_UINT32:
         TypedArrayObjectTemplate<uint32_t>::copyIndexToValue(this, index, vp);
         break;
-      case ScalarTypeRepresentation::TYPE_FLOAT32:
+      case ScalarTypeDescr::TYPE_FLOAT32:
         TypedArrayObjectTemplate<float>::copyIndexToValue(this, index, vp);
         break;
-      case ScalarTypeRepresentation::TYPE_FLOAT64:
+      case ScalarTypeDescr::TYPE_FLOAT64:
         TypedArrayObjectTemplate<double>::copyIndexToValue(this, index, vp);
         break;
       default:
@@ -3720,7 +3720,7 @@ IMPL_TYPED_ARRAY_STATICS(Float32Array);
 IMPL_TYPED_ARRAY_STATICS(Float64Array);
 IMPL_TYPED_ARRAY_STATICS(Uint8ClampedArray);
 
-const Class TypedArrayObject::classes[ScalarTypeRepresentation::TYPE_MAX] = {
+const Class TypedArrayObject::classes[ScalarTypeDescr::TYPE_MAX] = {
     IMPL_TYPED_ARRAY_FAST_CLASS(Int8Array),
     IMPL_TYPED_ARRAY_FAST_CLASS(Uint8Array),
     IMPL_TYPED_ARRAY_FAST_CLASS(Int16Array),
@@ -3732,7 +3732,7 @@ const Class TypedArrayObject::classes[ScalarTypeRepresentation::TYPE_MAX] = {
     IMPL_TYPED_ARRAY_FAST_CLASS(Uint8ClampedArray)
 };
 
-const Class TypedArrayObject::protoClasses[ScalarTypeRepresentation::TYPE_MAX] = {
+const Class TypedArrayObject::protoClasses[ScalarTypeDescr::TYPE_MAX] = {
     IMPL_TYPED_ARRAY_PROTO_CLASS(Int8Array),
     IMPL_TYPED_ARRAY_PROTO_CLASS(Uint8Array),
     IMPL_TYPED_ARRAY_PROTO_CLASS(Int16Array),
@@ -3978,23 +3978,23 @@ bool
 js::IsTypedArrayConstructor(HandleValue v, uint32_t type)
 {
     switch (type) {
-      case ScalarTypeRepresentation::TYPE_INT8:
+      case ScalarTypeDescr::TYPE_INT8:
         return IsNativeFunction(v, Int8ArrayObject::class_constructor);
-      case ScalarTypeRepresentation::TYPE_UINT8:
+      case ScalarTypeDescr::TYPE_UINT8:
         return IsNativeFunction(v, Uint8ArrayObject::class_constructor);
-      case ScalarTypeRepresentation::TYPE_INT16:
+      case ScalarTypeDescr::TYPE_INT16:
         return IsNativeFunction(v, Int16ArrayObject::class_constructor);
-      case ScalarTypeRepresentation::TYPE_UINT16:
+      case ScalarTypeDescr::TYPE_UINT16:
         return IsNativeFunction(v, Uint16ArrayObject::class_constructor);
-      case ScalarTypeRepresentation::TYPE_INT32:
+      case ScalarTypeDescr::TYPE_INT32:
         return IsNativeFunction(v, Int32ArrayObject::class_constructor);
-      case ScalarTypeRepresentation::TYPE_UINT32:
+      case ScalarTypeDescr::TYPE_UINT32:
         return IsNativeFunction(v, Uint32ArrayObject::class_constructor);
-      case ScalarTypeRepresentation::TYPE_FLOAT32:
+      case ScalarTypeDescr::TYPE_FLOAT32:
         return IsNativeFunction(v, Float32ArrayObject::class_constructor);
-      case ScalarTypeRepresentation::TYPE_FLOAT64:
+      case ScalarTypeDescr::TYPE_FLOAT64:
         return IsNativeFunction(v, Float64ArrayObject::class_constructor);
-      case ScalarTypeRepresentation::TYPE_UINT8_CLAMPED:
+      case ScalarTypeDescr::TYPE_UINT8_CLAMPED:
         return IsNativeFunction(v, Uint8ClampedArrayObject::class_constructor);
     }
     MOZ_ASSUME_UNREACHABLE("unexpected typed array type");
@@ -4088,9 +4088,10 @@ JS_NewArrayBufferWithContents(JSContext *cx, void *contents)
 }
 
 JS_PUBLIC_API(bool)
-JS_AllocateArrayBufferContents(JSContext *cx, uint32_t nbytes, void **contents, uint8_t **data)
+JS_AllocateArrayBufferContents(JSContext *maybecx, uint32_t nbytes,
+                               void **contents, uint8_t **data)
 {
-    js::ObjectElements *header = AllocateArrayBufferContents(cx, nbytes);
+    js::ObjectElements *header = AllocateArrayBufferContents(maybecx, nbytes);
     if (!header)
         return false;
 

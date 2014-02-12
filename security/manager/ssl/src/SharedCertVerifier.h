@@ -15,10 +15,17 @@ class SharedCertVerifier : public mozilla::psm::CertVerifier,
                            public mozilla::AtomicRefCounted<SharedCertVerifier>
 {
 public:
-  SharedCertVerifier(implementation_config ic, missing_cert_download_config ac,
-                     crl_download_config cdc, ocsp_download_config odc,
-                     ocsp_strict_config osc, ocsp_get_config ogc)
-    : mozilla::psm::CertVerifier(ic, ac, cdc, odc, osc, ogc)
+  SharedCertVerifier(implementation_config ic,
+#ifndef NSS_NO_LIBPKIX
+                     missing_cert_download_config ac, crl_download_config cdc,
+#endif
+                     ocsp_download_config odc, ocsp_strict_config osc,
+                     ocsp_get_config ogc)
+    : mozilla::psm::CertVerifier(ic,
+#ifndef NSS_NO_LIBPKIX
+                                 ac, cdc,
+#endif
+                                 odc, osc, ogc)
   {
   }
   ~SharedCertVerifier();

@@ -7,10 +7,13 @@
 #include "WorkerScope.h"
 
 #include "jsapi.h"
-#include "mozilla/Debug.h"
 #include "mozilla/dom/FunctionBinding.h"
 #include "mozilla/dom/DedicatedWorkerGlobalScopeBinding.h"
 #include "mozilla/dom/SharedWorkerGlobalScopeBinding.h"
+
+#ifdef ANDROID
+#include <android/log.h>
+#endif
 
 #include "Console.h"
 #include "Location.h"
@@ -258,8 +261,13 @@ WorkerGlobalScope::Dump(const Optional<nsAString>& aString) const
     return;
   }
 
-  PrintToDebugger(aString.Value(), stdout, kPrintToStream
-                                           | kPrintInfoLog);
+  NS_ConvertUTF16toUTF8 str(aString.Value());
+
+#ifdef ANDROID
+  __android_log_print(ANDROID_LOG_INFO, "Gecko", "%s", str.get());
+#endif
+  fputs(str.get(), stdout);
+  fflush(stdout);
 }
 
 DedicatedWorkerGlobalScope::DedicatedWorkerGlobalScope(WorkerPrivate* aWorkerPrivate)

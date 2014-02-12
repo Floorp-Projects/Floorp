@@ -14,7 +14,7 @@ interface nsIDOMElement;
  * can be queried for various information about where the load is
  * happening.
  */
-[scriptable, uuid(d0029474-0cc4-42fd-bb21-d9ff22f5293c)]
+[scriptable, uuid(852ed1f0-8ec0-11e3-baa8-0800200c9a66)]
 interface nsILoadContext : nsISupports
 {
   /**
@@ -66,6 +66,11 @@ interface nsILoadContext : nsISupports
    */
   attribute boolean usePrivateBrowsing;
 
+  /**
+   * Attribute that determines if remote (out-of-process) tabs should be used.
+   */
+  readonly attribute boolean useRemoteTabs;
+
 %{C++
   /**
    * De-XPCOMed getter to make call-sites cleaner.
@@ -75,12 +80,23 @@ interface nsILoadContext : nsISupports
     GetUsePrivateBrowsing(&usingPB);
     return usingPB;
   }
+
+  bool UseRemoteTabs() {
+    bool usingRT;
+    GetUseRemoteTabs(&usingRT);
+    return usingRT;
+  }
 %}
 
   /**
    * Set the private browsing state of the load context, meant to be used internally.
    */
   [noscript] void SetPrivateBrowsing(in boolean aInPrivateBrowsing);
+
+  /**
+   * Set the remote tabs state of the load context, meant to be used internally.
+   */
+  [noscript] void SetRemoteTabs(in boolean aUseRemoteTabs);
 
   /**
    * Returns true iff the load is occurring inside a browser element.
