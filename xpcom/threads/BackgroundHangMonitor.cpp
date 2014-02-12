@@ -410,6 +410,7 @@ BackgroundHangThread::NotifyActivity()
 BackgroundHangThread*
 BackgroundHangThread::FindThread()
 {
+#ifdef MOZ_ENABLE_BACKGROUND_HANG_MONITOR
   if (sTlsKey.initialized()) {
     // Use TLS if available
     return sTlsKey.get();
@@ -427,6 +428,7 @@ BackgroundHangThread::FindThread()
       return thread;
     }
   }
+#endif
   // Current thread is not initialized
   return nullptr;
 }
@@ -435,15 +437,18 @@ BackgroundHangThread::FindThread()
 void
 BackgroundHangMonitor::Startup()
 {
+#ifdef MOZ_ENABLE_BACKGROUND_HANG_MONITOR
   MOZ_ASSERT(!BackgroundHangManager::sInstance, "Already initialized");
   ThreadStackHelper::Startup();
   BackgroundHangThread::Startup();
   BackgroundHangManager::sInstance = new BackgroundHangManager();
+#endif
 }
 
 void
 BackgroundHangMonitor::Shutdown()
 {
+#ifdef MOZ_ENABLE_BACKGROUND_HANG_MONITOR
   MOZ_ASSERT(BackgroundHangManager::sInstance, "Not initialized");
   /* Scope our lock inside Shutdown() because the sInstance object can
      be destroyed as soon as we set sInstance to nullptr below, and
@@ -451,6 +456,7 @@ BackgroundHangMonitor::Shutdown()
   BackgroundHangManager::sInstance->Shutdown();
   BackgroundHangManager::sInstance = nullptr;
   ThreadStackHelper::Shutdown();
+#endif
 }
 
 BackgroundHangMonitor::BackgroundHangMonitor(const char* aName,
@@ -458,15 +464,19 @@ BackgroundHangMonitor::BackgroundHangMonitor(const char* aName,
                                              uint32_t aMaxTimeoutMs)
   : mThread(BackgroundHangThread::FindThread())
 {
+#ifdef MOZ_ENABLE_BACKGROUND_HANG_MONITOR
   if (!mThread) {
     mThread = new BackgroundHangThread(aName, aTimeoutMs, aMaxTimeoutMs);
   }
+#endif
 }
 
 BackgroundHangMonitor::BackgroundHangMonitor()
   : mThread(BackgroundHangThread::FindThread())
 {
+#ifdef MOZ_ENABLE_BACKGROUND_HANG_MONITOR
   MOZ_ASSERT(mThread, "Thread not initialized for hang monitoring");
+#endif
 }
 
 BackgroundHangMonitor::~BackgroundHangMonitor()
@@ -476,13 +486,17 @@ BackgroundHangMonitor::~BackgroundHangMonitor()
 void
 BackgroundHangMonitor::NotifyActivity()
 {
+#ifdef MOZ_ENABLE_BACKGROUND_HANG_MONITOR
   mThread->NotifyActivity();
+#endif
 }
 
 void
 BackgroundHangMonitor::NotifyWait()
 {
+#ifdef MOZ_ENABLE_BACKGROUND_HANG_MONITOR
   mThread->NotifyWait();
+#endif
 }
 
 
