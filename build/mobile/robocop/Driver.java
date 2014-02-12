@@ -12,10 +12,10 @@ public interface Driver {
      * Find the first Element using the given method.
      * 
      * @param activity The activity the element belongs to
-     * @param name The name of the element
+     * @param id The resource id of the element
      * @return The first matching element on the current context, or null if not found.
      */
-    Element findElement(Activity activity, String name);
+    Element findElement(Activity activity, int id);
 
     /**
      * Sets up scroll handling so that data is received from the extension.
