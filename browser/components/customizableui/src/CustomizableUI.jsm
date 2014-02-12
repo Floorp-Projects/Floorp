@@ -128,6 +128,8 @@ let gGroupWrapperCache = new Map();
 let gSingleWrapperCache = new WeakMap();
 let gListeners = new Set();
 
+let gUIStateBeforeReset = null;
+
 let gModuleName = "[CustomizableUI]";
 #include logging.js
 
@@ -693,6 +695,10 @@ let CustomizableUIInternal = {
 
   onWidgetAdded: function(aWidgetId, aArea, aPosition) {
     this.insertNode(aWidgetId, aArea, aPosition, true);
+
+    if (!gResetting) {
+      gUIStateBeforeReset = null;
+    }
   },
 
   onWidgetRemoved: function(aWidgetId, aArea) {
@@ -749,10 +755,20 @@ let CustomizableUIInternal = {
         windowCache.delete(aWidgetId);
       }
     }
+    if (!gResetting) {
+      gUIStateBeforeReset = null;
+    }
   },
 
   onWidgetMoved: function(aWidgetId, aArea, aOldPosition, aNewPosition) {
     this.insertNode(aWidgetId, aArea, aNewPosition);
+    if (!gResetting) {
+      gUIStateBeforeReset = null;
+    }
+  },
+
+  onCustomizeEnd: function(aWindow) {
+    gUIStateBeforeReset = null;
   },
 
   registerBuildArea: function(aArea, aNode) {
@@ -2049,6 +2065,20 @@ let CustomizableUIInternal = {
 
   reset: function() {
     gResetting = true;
+    this._resetUIState();
+
+    // Rebuild each registered area (across windows) to reflect the state that
+    // was reset above.
+    this._rebuildRegisteredAreas();
+
+    gResetting = false;
+  },
+
+  _resetUIState: function() {
+    try {
+      gUIStateBeforeReset = Services.prefs.getCharPref(kPrefCustomizationState);
+    } catch(e) { }
+
     Services.prefs.clearUserPref(kPrefCustomizationState);
     LOG("State reset");
 
@@ -2062,9 +2092,9 @@ let CustomizableUIInternal = {
     for (let [areaId,] of gAreas) {
       this.restoreStateForArea(areaId);
     }
+  },
 
-    // Rebuild each registered area (across windows) to reflect the state that
-    // was reset above.
+  _rebuildRegisteredAreas: function() {
     for (let [areaId, areaNodes] of gBuildAreas) {
       let placements = gPlacements.get(areaId);
       for (let areaNode of areaNodes) {
@@ -2078,7 +2108,23 @@ let CustomizableUIInternal = {
         }
       }
     }
-    gResetting = false;
+  },
+
+  /**
+   * Undoes a previous reset, restoring the state of the UI to the state prior to the reset.
+   */
+  undoReset: function() {
+    if (!gUIStateBeforeReset) {
+      return;
+    }
+    Services.prefs.setCharPref(kPrefCustomizationState, gUIStateBeforeReset);
+    this.loadSavedState();
+    for (let areaId of Object.keys(gSavedState.placements)) {
+      let placements = gSavedState.placements[areaId];
+      gPlacements.set(areaId, placements);
+    }
+    this._rebuildRegisteredAreas();
+    gUIStateBeforeReset = null;
   },
 
   /**
@@ -2832,6 +2878,25 @@ this.CustomizableUI = {
   reset: function() {
     CustomizableUIInternal.reset();
   },
+
+  /**
+   * Undo the previous reset, can only be called immediately after a reset.
+   * @return a promise that will be resolved when the operation is complete.
+   */
+  undoReset: function() {
+    CustomizableUIInternal.undoReset();
+  },
+
+  /**
+   * Can the last Restore Defaults operation be undone.
+   *
+   * @return A boolean stating whether an undo of the
+   *         Restore Defaults can be performed.
+   */
+  get canUndoReset() {
+    return !!gUIStateBeforeReset;
+  },
+
   /**
    * Get the placement of a widget. This is by far the best way to obtain
    * information about what the state of your widget is. The internals of
