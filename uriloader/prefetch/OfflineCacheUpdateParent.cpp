@@ -234,6 +234,18 @@ OfflineCacheUpdateParent::SetPrivateBrowsing(bool aUsePrivateBrowsing)
 }
 
 NS_IMETHODIMP
+OfflineCacheUpdateParent::GetUseRemoteTabs(bool *aUseRemoteTabs)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+OfflineCacheUpdateParent::SetRemoteTabs(bool aUseRemoteTabs)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 OfflineCacheUpdateParent::GetIsInBrowserElement(bool *aIsInBrowserElement)
 {
     *aIsInBrowserElement = mIsInBrowserElement;

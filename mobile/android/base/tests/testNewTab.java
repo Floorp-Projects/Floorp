@@ -24,9 +24,9 @@ public class testNewTab extends BaseTest {
         blockForGeckoReady();
 
         Activity activity = getActivity();
-        tabCount = mDriver.findElement(activity, "tabs_counter");
-        tabs = mDriver.findElement(activity, "tabs");
-        addTab = mDriver.findElement(activity, "add_tab");
+        tabCount = mDriver.findElement(activity, R.id.tabs_counter);
+        tabs = mDriver.findElement(activity, R.id.tabs);
+        addTab = mDriver.findElement(activity, R.id.add_tab);
         mAsserter.ok(tabCount != null &&
                      tabs != null &&
                      addTab != null, 

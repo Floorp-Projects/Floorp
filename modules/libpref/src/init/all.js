@@ -1804,11 +1804,7 @@ pref("layout.css.scope-pseudo.enabled", true);
 #endif
 
 // Is support for background-blend-mode enabled?
-#ifdef RELEASE_BUILD
-pref("layout.css.background-blend-mode.enabled", false);
-#else
 pref("layout.css.background-blend-mode.enabled", true);
-#endif
 
 // Is support for CSS vertical text enabled?
 pref("layout.css.vertical-text.enabled", false);
@@ -3858,6 +3854,7 @@ pref("webgl.lose-context-on-heap-minimize", false);
 pref("webgl.can-lose-context-in-foreground", true);
 pref("webgl.max-warnings-per-context", 32);
 pref("webgl.enable-draft-extensions", false);
+pref("webgl.enable-privileged-extensions", false);
 #ifdef MOZ_WIDGET_GONK
 pref("gfx.gralloc.fence-with-readpixels", false);
 #endif
@@ -4309,3 +4306,6 @@ pref("urlclassifier.download_allow_table", "");
 
 // Turn off Spatial navigation by default.
 pref("snav.enabled", false);
+
+// Wakelock is disabled by default.
+pref("dom.wakelock.enabled", false);

@@ -7,15 +7,18 @@
 </head>
 <body>
  <script type="application/javascript">
- try {
-   var wl = navigator.requestWakeLock('');
-   ok(false, "RequestWakeLock throws an exception!");
- } catch(e) {
-   ok(true, "RequestWakeLock throws an exception!");
- }
-
- info("Still alive!");
-
+  SimpleTest.waitForExplicitFinish();
+  function test() {
+    try {
+      var wl = navigator.requestWakeLock('');
+      ok(false, "RequestWakeLock throws an exception!");
+    } catch(e) {
+      ok(true, "RequestWakeLock throws an exception!");
+    }
+    info("Still alive!");
+    SimpleTest.finish();
+  }
+  SpecialPowers.pushPrefEnv({"set": [["dom.wakelock.enabled", true]]}, test);
  </script>
 </body>
 </html>

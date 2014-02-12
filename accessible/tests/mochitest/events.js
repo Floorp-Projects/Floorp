@@ -1212,17 +1212,17 @@ function synthUpKey(aNodeOrID, aCheckerOrEventSeq, aArgs)
 /**
  * Left arrow key invoker.
  */
-function synthLeftKey(aNodeOrID, aCheckerOrEventSeq)
+function synthLeftKey(aNodeOrID, aCheckerOrEventSeq, aArgs)
 {
-  this.__proto__ = new synthKey(aNodeOrID, "VK_LEFT", null, aCheckerOrEventSeq);
+  this.__proto__ = new synthKey(aNodeOrID, "VK_LEFT", aArgs, aCheckerOrEventSeq);
 }
 
 /**
  * Right arrow key invoker.
  */
-function synthRightKey(aNodeOrID, aCheckerOrEventSeq)
+function synthRightKey(aNodeOrID, aCheckerOrEventSeq, aArgs)
 {
-  this.__proto__ = new synthKey(aNodeOrID, "VK_RIGHT", null, aCheckerOrEventSeq);
+  this.__proto__ = new synthKey(aNodeOrID, "VK_RIGHT", aArgs, aCheckerOrEventSeq);
 }
 
 /**
@@ -1764,7 +1764,12 @@ function textSelectionChecker(aID, aStartOffset, aEndOffset)
 
   this.check = function textSelectionChecker_check(aEvent)
   {
-    testTextGetSelection(aID, aStartOffset, aEndOffset, 0);
+    if (aStartOffset == aEndOffset) {
+      is(getAccessible(aID, [nsIAccessibleText]).caretOffset, aStartOffset,
+         "Wrong collapsed selection!");
+    } else {
+      testTextGetSelection(aID, aStartOffset, aEndOffset, 0);
+    }
   }
 }
 

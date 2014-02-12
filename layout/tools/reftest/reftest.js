@@ -239,7 +239,7 @@ this.OnRefTestLoad = function OnRefTestLoad(win)
     var prefs = Components.classes["@mozilla.org/preferences-service;1"].
                 getService(Components.interfaces.nsIPrefBranch);
     try {
-        gBrowserIsRemote = prefs.getBoolPref("browser.tabs.remote");
+        gBrowserIsRemote = prefs.getBoolPref("browser.tabs.remote.autostart");
     } catch (e) {
         gBrowserIsRemote = false;
     }

@@ -75,9 +75,9 @@ function runTestEnabled() {
 
     // if no source has been defined or compileShader() has not been called,
     // getTranslatedShaderSource() should return an empty string.
-    shouldBeNull("ext.getTranslatedShaderSource(shader)");
+    shouldBe("ext.getTranslatedShaderSource(shader)", '""');
     gl.shaderSource(shader, source);
-    shouldBeNull("ext.getTranslatedShaderSource(shader)");
+    shouldBe("ext.getTranslatedShaderSource(shader)", '""');
     gl.compileShader(shader);
     shouldBeTrue("gl.getShaderParameter(shader, gl.COMPILE_STATUS)");
     var translatedSource = ext.getTranslatedShaderSource(shader);

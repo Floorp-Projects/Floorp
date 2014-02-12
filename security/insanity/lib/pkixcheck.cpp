@@ -149,12 +149,17 @@ CheckBasicConstraints(const BackCert& cert,
     // CA certificates are not trusted as EE certs.
 
     if (basicConstraints.isCA) {
-      // XXX: We use SEC_ERROR_INADEQUATE_CERT_TYPE here so we can distinguish
+      // XXX: We use SEC_ERROR_CA_CERT_INVALID here so we can distinguish
       // this error from other errors, given that NSS does not have a "CA cert
       // used as end-entity" error code since it doesn't have such a
       // prohibition. We should add such an error code and stop abusing
-      // SEC_ERROR_INADEQUATE_CERT_TYPE this way.
-      return Fail(RecoverableError, SEC_ERROR_INADEQUATE_CERT_TYPE);
+      // SEC_ERROR_CA_CERT_INVALID this way.
+      //
+      // Note, in particular, that this check prevents a delegated OCSP
+      // response signing certificate with the CA bit from successfully
+      // validating when we check it from pkixocsp.cpp, which is a good thing.
+      //
+      return Fail(RecoverableError, SEC_ERROR_CA_CERT_INVALID);
     }
 
     return Success;
@@ -177,6 +182,142 @@ CheckBasicConstraints(const BackCert& cert,
   return Success;
 }
 
+Result
+BackCert::GetConstrainedNames(/*out*/ const CERTGeneralName** result)
+{
+  if (!constrainedNames) {
+    if (!GetArena()) {
+      return FatalError;
+    }
+
+    constrainedNames =
+      CERT_GetConstrainedCertificateNames(nssCert, arena.get(),
+                                          cnOptions == IncludeCN);
+    if (!constrainedNames) {
+      return MapSECStatus(SECFailure);
+    }
+  }
+
+  *result = constrainedNames;
+  return Success;
+}
+
+// 4.2.1.10. Name Constraints
+Result
+CheckNameConstraints(BackCert& cert)
+{
+  if (!cert.encodedNameConstraints) {
+    return Success;
+  }
+
+  PLArenaPool* arena = cert.GetArena();
+  if (!arena) {
+    return FatalError;
+  }
+
+  // Owned by arena
+  const CERTNameConstraints* constraints =
+    CERT_DecodeNameConstraintsExtension(arena, cert.encodedNameConstraints);
+  if (!constraints) {
+    return MapSECStatus(SECFailure);
+  }
+
+  for (BackCert* prev = cert.childCert; prev; prev = prev->childCert) {
+    const CERTGeneralName* names = nullptr;
+    Result rv = prev->GetConstrainedNames(&names);
+    if (rv != Success) {
+      return rv;
+    }
+    PORT_Assert(names);
+    CERTGeneralName* currentName = const_cast<CERTGeneralName*>(names);
+    do {
+      rv = MapSECStatus(CERT_CheckNameSpace(arena, constraints, currentName));
+      if (rv != Success) {
+        return rv;
+      }
+      currentName = CERT_GetNextGeneralName(currentName);
+    } while (currentName != names);
+  }
+
+  return Success;
+}
+
+// 4.2.1.12. Extended Key Usage (id-ce-extKeyUsage)
+// 4.2.1.12. Extended Key Usage (id-ce-extKeyUsage)
+Result
+CheckExtendedKeyUsage(EndEntityOrCA endEntityOrCA, const SECItem* encodedEKUs,
+                      SECOidTag requiredEKU)
+{
+  // TODO: Either do not allow anyExtendedKeyUsage to be passed as requiredEKU,
+  // or require that callers pass anyExtendedKeyUsage instead of
+  // SEC_OID_UNKNWON and disallow SEC_OID_UNKNWON.
+
+  // XXX: We're using SEC_ERROR_INADEQUATE_CERT_TYPE here so that callers can
+  // distinguish EKU mismatch from KU mismatch from basic constraints mismatch.
+  // We should probably add a new error code that is more clear for this type
+  // of problem.
+
+  bool foundOCSPSigning = false;
+
+  if (encodedEKUs) {
+    ScopedPtr<CERTOidSequence, CERT_DestroyOidSequence>
+      seq(CERT_DecodeOidSequence(encodedEKUs));
+    if (!seq) {
+      PR_SetError(SEC_ERROR_INADEQUATE_CERT_TYPE, 0);
+      return RecoverableError;
+    }
+
+    bool found = false;
+
+    // XXX: We allow duplicate entries.
+    for (const SECItem* const* oids = seq->oids; oids && *oids; ++oids) {
+      SECOidTag oidTag = SECOID_FindOIDTag(*oids);
+      if (requiredEKU != SEC_OID_UNKNOWN && oidTag == requiredEKU) {
+        found = true;
+      }
+      if (oidTag == SEC_OID_OCSP_RESPONDER) {
+        foundOCSPSigning = true;
+      }
+    }
+
+    // If the EKU extension was included, then the required EKU must be in the
+    // list.
+    if (!found) {
+      PR_SetError(SEC_ERROR_INADEQUATE_CERT_TYPE, 0);
+      return RecoverableError;
+    }
+  }
+
+  // pkixocsp.cpp depends on the following additional checks.
+
+  if (foundOCSPSigning) {
+    // When validating anything other than an delegated OCSP signing cert,
+    // reject any cert that also claims to be an OCSP responder, because such
+    // a cert does not make sense. For example, if an SSL certificate were to
+    // assert id-kp-OCSPSigning then it could sign OCSP responses for itself,
+    // if not for this check.
+    if (requiredEKU != SEC_OID_OCSP_RESPONDER) {
+      PR_SetError(SEC_ERROR_INADEQUATE_CERT_TYPE, 0);
+      return RecoverableError;
+    }
+  } else if (requiredEKU == SEC_OID_OCSP_RESPONDER &&
+             endEntityOrCA == MustBeEndEntity) {
+    // http://tools.ietf.org/html/rfc6960#section-4.2.2.2:
+    // "OCSP signing delegation SHALL be designated by the inclusion of
+    // id-kp-OCSPSigning in an extended key usage certificate extension
+    // included in the OCSP response signer's certificate."
+    //
+    // id-kp-OCSPSigning is the only EKU that isn't implicitly assumed when the
+    // EKU extension is missing from an end-entity certificate. However, any CA
+    // certificate can issue a delegated OCSP response signing certificate, so
+    // we can't require the EKU be explicitly included for CA certificates.
+    PR_SetError(SEC_ERROR_INADEQUATE_CERT_TYPE, 0);
+    return RecoverableError;
+  }
+
+  return Success;
+}
+
 // Checks extensions that apply to both EE and intermediate certs,
 // except for AIA, CRL, and AKI/SKI, which are handled elsewhere.
 Result
@@ -184,6 +325,7 @@ CheckExtensions(BackCert& cert,
                 EndEntityOrCA endEntityOrCA,
                 bool isTrustAnchor,
                 KeyUsages requiredKeyUsagesIfPresent,
+                SECOidTag requiredEKUIfPresent,
                 unsigned int subCACount)
 {
   // 4.2.1.1. Authority Key Identifier dealt with as part of path building
@@ -220,7 +362,14 @@ CheckExtensions(BackCert& cert,
 
   // 4.2.1.10. Name Constraints
   // 4.2.1.11. Policy Constraints
+
   // 4.2.1.12. Extended Key Usage
+  rv = CheckExtendedKeyUsage(endEntityOrCA, cert.encodedExtendedKeyUsage,
+                             requiredEKUIfPresent);
+  if (rv != Success) {
+    return rv;
+  }
+
   // 4.2.1.13. CRL Distribution Points will be dealt with elsewhere
   // 4.2.1.14. Inhibit anyPolicy
 

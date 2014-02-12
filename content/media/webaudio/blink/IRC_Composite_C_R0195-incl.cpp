@@ -416,15 +416,23 @@ const int16_t irc_composite_c_r0195_p090[][256] =
   {/* IRC_Composite_C_R0195_T000_P090.wav */
    {-1,1,-1,1,-1,1,-1,2,-2,2,-3,3,-3,4,-5,5,-7,8,-10,14,-25,-385,-133,-356,-344,-390,-312,-438,-400,-852,-107,-995,-245,-186,1358,-771,1473,28,-1710,-3762,-3025,4119,8200,5927,-785,1558,2250,1837,2098,631,-318,150,-77,1215,-23,792,865,600,981,659,366,950,511,766,502,516,589,299,331,571,105,609,462,485,538,594,470,640,393,432,325,604,259,355,336,454,33,263,182,-24,-124,121,-231,-50,-93,49,-230,-101,25,-196,-123,-21,-160,-161,-132,-136,-155,-268,-121,-146,-311,-112,-328,-201,-220,-280,-214,-304,-233,-227,-250,-242,-334,-256,-283,-393,-267,-285,-332,-331,-224,-295,-279,-171,-151,-361,-199,-239,-227,-317,-168,-211,-370,-182,-150,-343,-204,-192,-224,-319,-203,-137,-357,-146,-223,-237,-276,-162,-201,-262,-186,-209,-147,-267,-46,-252,-162,-146,-182,-199,-143,-218,-204,-108,-250,-163,-90,-241,-137,-125,-122,-272,-111,-188,-211,-160,-160,-164,-201,-231,-114,-175,-180,-212,-172,-181,-129,-130,-77,-150,-114,-39,12,-122,-9,-11,-46,-21,-4,7,-73,-20,-50,-21,-80,-102,2,-103,-66,-67,-8,-41,-119,-26,29,-208,3,-108,-34,-228,114,-196,-84,-28,1,-109,-92,77,-169,-27,48,-12,-79,3,-100,-44,-53,13,-103,-90,-14,-91,-23,-64,-21,-116}};
 
+struct Elevation
+{
+    /**
+     * An array of |count| impulse responses of 256 samples for the left ear.
+     * The impulse responses in each elevation are at equally spaced azimuths
+     * for a full 360 degree revolution, ordered clockwise from in front the
+     * listener.
+     */
+    const int16_t (*azimuths)[256];
+    int count;
+};
+
 /**
  * irc_composite_c_r0195 is an array with each element containing data for one
- * elevation.  For each elevation, |azimuths| is an array of |count| impulse
- * responses of 256 samples for the left ear.  The impulse responses in each
- * elevation are at equally spaced azimuths for a full 360 degree revolution,
- * ordered clockwise from in front the listener.
+ * elevation.
  */
-const struct { const int16_t (*azimuths)[256]; int count; }
-  irc_composite_c_r0195[] =
+const Elevation irc_composite_c_r0195[] =
   {{irc_composite_c_r0195_p315, MOZ_ARRAY_LENGTH(irc_composite_c_r0195_p315)},
    {irc_composite_c_r0195_p330, MOZ_ARRAY_LENGTH(irc_composite_c_r0195_p330)},
    {irc_composite_c_r0195_p345, MOZ_ARRAY_LENGTH(irc_composite_c_r0195_p345)},

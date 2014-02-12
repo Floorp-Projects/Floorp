@@ -155,12 +155,18 @@ this.EventManager.prototype = {
         let event = aEvent.
           QueryInterface(Ci.nsIAccessibleVirtualCursorChangeEvent);
         let reason = event.reason;
+        let oldAccessible = event.oldAccessible;
+
+        if (oldAccessible && oldAccessible.role == Roles.INTERNAL_FRAME) {
+          let mm = Utils.getMessageManager(oldAccessible.DOMNode);
+          mm.sendAsyncMessage('AccessFu:ClearCursor', {});
+        }
 
         if (this.editState.editing) {
           aEvent.accessibleDocument.takeFocus();
         }
         this.present(
-          Presentation.pivotChanged(position, event.oldAccessible, reason,
+          Presentation.pivotChanged(position, oldAccessible, reason,
                                     pivot.startOffset, pivot.endOffset));
 
         break;
@@ -184,7 +190,7 @@ this.EventManager.prototype = {
       }
       case Events.SCROLLING_START:
       {
-        let vc = Utils.getVirtualCursor(aEvent.accessibleDocument);
+        let vc = Utils.getVirtualCursor(this.contentScope.content.document);
         vc.moveNext(TraversalRules.Simple, aEvent.accessible, true);
         break;
       }
@@ -275,7 +281,7 @@ this.EventManager.prototype = {
         let doc = aEvent.accessibleDocument;
         if (acc.role != Roles.DOCUMENT && doc.role != Roles.CHROME_WINDOW) {
           this.contentScope.content.clearTimeout(this._autoMove);
-          let vc = Utils.getVirtualCursor(doc);
+          let vc = Utils.getVirtualCursor(this.contentScope.content.document);
           vc.moveNext(TraversalRules.Simple, acc, true);
         }
         break;
@@ -283,7 +289,7 @@ this.EventManager.prototype = {
       case Events.DOCUMENT_LOAD_COMPLETE:
       {
         this._autoMove = this.contentScope.content.setTimeout(() => {
-          Utils.getVirtualCursor(aEvent.accessibleDocument)
+          Utils.getVirtualCursor(this.contentScope.content.document)
             .moveNext(TraversalRules.Simple, aEvent.accessible, true);
         }, 500);
         break;

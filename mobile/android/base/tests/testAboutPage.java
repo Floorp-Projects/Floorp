@@ -13,7 +13,7 @@ public class testAboutPage extends PixelTest {
     }
 
     private void ensureTitleMatches(final String regex) {
-        Element urlBarTitle = mDriver.findElement(getActivity(), URL_BAR_TITLE_ID);
+        Element urlBarTitle = mDriver.findElement(getActivity(), R.id.url_bar_title);
         mAsserter.isnot(urlBarTitle, null, "Got the URL bar title");
         assertMatches(urlBarTitle.getText(), regex, "page title match");
     }
