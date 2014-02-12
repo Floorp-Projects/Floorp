@@ -349,9 +349,9 @@ gbjar.sources += [
     'webapp/InstallHelper.java',
     'webapp/InstallListener.java',
     'webapp/UninstallListener.java',
-    'webapp/WebAppImpl.java',
-    'WebAppAllocator.java',
-    'WebAppImpl.java',
+    'webapp/WebappImpl.java',
+    'WebappAllocator.java',
+    'WebappImpl.java',
     'widget/ActivityChooserModel.java',
     'widget/AllCapsTextView.java',
     'widget/AnimatedHeightLayout.java',
@@ -385,7 +385,7 @@ android_package_dir = CONFIG['ANDROID_PACKAGE_NAME'].replace('.', '/')
 # R.java is handled even more specially than the others!
 gbjar.generated_sources += [ android_package_dir + f for f in [
     '/App.java',
-    '/WebApp.java',
+    '/Webapp.java',
     '/WebApps.java',
 ] ]
 gbjar.generated_sources += [
