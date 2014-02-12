@@ -25,7 +25,7 @@ FRAGMENT(Root, handle) {
 
 FRAGMENT(Root, HeapSlot) {
   JS::Rooted<jsval> plinth(cx, STRING_TO_JSVAL(JS_NewStringCopyZ(cx, "plinth")));
-  JS::Rooted<JSObject *> array(cx, JS_NewArrayObject(cx, 1, plinth.address()));
+  JS::Rooted<JSObject *> array(cx, JS_NewArrayObject(cx, plinth));
 
   breakpoint();
 

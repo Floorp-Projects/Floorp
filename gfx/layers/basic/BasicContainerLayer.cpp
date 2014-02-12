@@ -59,7 +59,7 @@ BasicContainerLayer::ComputeEffectiveTransforms(const Matrix4x4& aTransformToSur
   Layer* child = GetFirstChild();
   bool hasSingleBlendingChild = false;
   if (!HasMultipleChildren() && child) {
-    hasSingleBlendingChild = child->GetMixBlendMode() != gfxContext::OPERATOR_OVER;
+    hasSingleBlendingChild = child->GetMixBlendMode() != CompositionOp::OP_OVER;
   }
 
   /* If we have a single childand it is not blending,, it can just inherit our opacity,
@@ -72,7 +72,7 @@ BasicContainerLayer::ComputeEffectiveTransforms(const Matrix4x4& aTransformToSur
   mUseIntermediateSurface =
     GetMaskLayer() ||
     GetForceIsolatedGroup() ||
-    (GetMixBlendMode() != gfxContext::OPERATOR_OVER && HasMultipleChildren()) ||
+    (GetMixBlendMode() != CompositionOp::OP_OVER && HasMultipleChildren()) ||
     (GetEffectiveOpacity() != 1.0 && (HasMultipleChildren() || hasSingleBlendingChild));
 }
 

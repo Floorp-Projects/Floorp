@@ -301,9 +301,17 @@ RotatedContentBuffer::BufferContentType()
 bool
 RotatedContentBuffer::BufferSizeOkFor(const nsIntSize& aSize)
 {
-  return (aSize == mBufferRect.Size() ||
-          (SizedToVisibleBounds != mBufferSizePolicy &&
-           aSize < mBufferRect.Size()));
+  if (aSize == mBufferRect.Size()) {
+    return true;
+  }
+
+  if (SizedToVisibleBounds != mBufferSizePolicy &&
+      aSize < mBufferRect.Size()) {
+    return (aSize.width * 2 > mBufferRect.width) &&
+           (aSize.height * 2 > mBufferRect.height);
+  }
+
+  return false;
 }
 
 bool
@@ -503,8 +511,9 @@ RotatedContentBuffer::BeginPaint(ThebesLayer* aLayer,
   // or call CreateBuffer before this call.
   FinalizeFrame(result.mRegionToDraw);
 
-  if (result.mRegionToDraw.IsEmpty())
+  if (result.mRegionToDraw.IsEmpty()) {
     return result;
+  }
 
   nsIntRect drawBounds = result.mRegionToDraw.GetBounds();
   RefPtr<DrawTarget> destDTBuffer;
@@ -614,7 +623,7 @@ RotatedContentBuffer::BeginPaint(ThebesLayer* aLayer,
       mBufferRotation = nsIntPoint(0,0);
     }
   } else {
-    // The buffer's not big enough, so allocate a new one
+    // The buffer's not big enough or the buffer needs to shrink, so allocate a new one
     CreateBuffer(result.mContentType, destBufferRect, bufferFlags,
                  &destDTBuffer, &destDTBufferOnWhite);
     if (!destDTBuffer) {

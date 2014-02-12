@@ -460,9 +460,9 @@ var BrowserApp = {
 
   _initRuntime: function(status, url, callback) {
     let sandbox = {};
-    Services.scriptloader.loadSubScript("chrome://browser/content/WebAppRT.js", sandbox);
-    window.WebAppRT = sandbox.WebAppRT;
-    WebAppRT.init(status, url, callback);
+    Services.scriptloader.loadSubScript("chrome://browser/content/WebappRT.js", sandbox);
+    window.WebappRT = sandbox.WebappRT;
+    WebappRT.init(status, url, callback);
   },
 
   initContextMenu: function ba_initContextMenu() {
@@ -7116,7 +7116,7 @@ var WebappsUI = {
         break;
       case "webapps-uninstall":
         sendMessageToJava({
-          type: "WebApps:Uninstall",
+          type: "Webapps:Uninstall",
           origin: data.origin
         });
         break;
@@ -7132,7 +7132,7 @@ var WebappsUI = {
       // Get a profile for the app to be installed in. We'll download everything before creating the icons.
       let origin = aData.app.origin;
       let profilePath = sendMessageToJava({
-        type: "WebApps:PreInstall",
+        type: "Webapps:Preinstall",
         name: manifest.name,
         manifestURL: aData.app.manifestURL,
         origin: origin
@@ -7164,7 +7164,7 @@ var WebappsUI = {
 
                   // aData.app.origin may now point to the app: url that hosts this app
                   sendMessageToJava({
-                    type: "WebApps:PostInstall",
+                    type: "Webapps:Postinstall",
                     name: localeManifest.name,
                     manifestURL: aData.app.manifestURL,
                     originalOrigin: origin,
@@ -7232,7 +7232,7 @@ var WebappsUI = {
 
   openURL: function openURL(aManifestURL, aOrigin) {
     sendMessageToJava({
-      type: "WebApps:Open",
+      type: "Webapps:Open",
       manifestURL: aManifestURL,
       origin: aOrigin
     });

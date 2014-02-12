@@ -86,7 +86,7 @@ StatementRow::GetProperty(nsIXPConnectWrappedNative *aWrapper,
       uint32_t length;
       const uint8_t *blob = static_cast<mozIStorageStatement *>(mStatement)->
         AsSharedBlob(idx, &length);
-      JSObject *obj = ::JS_NewArrayObject(aCtx, length, nullptr);
+      JSObject *obj = ::JS_NewArrayObject(aCtx, length);
       if (!obj) {
         *_retval = false;
         return NS_OK;

@@ -216,7 +216,6 @@ const Class js::ScalarTypeDescr::class_ = {
 
 const JSFunctionSpec js::ScalarTypeDescr::typeObjectMethods[] = {
     JS_SELF_HOSTED_FN("toSource", "DescrToSourceMethod", 0, 0),
-    {"handle", {nullptr, nullptr}, 2, 0, "HandleCreate"},
     {"array", {nullptr, nullptr}, 1, 0, "ArrayShorthand"},
     {"equivalent", {nullptr, nullptr}, 1, 0, "TypeDescrEquivalent"},
     JS_FS_END
@@ -317,7 +316,6 @@ const Class js::ReferenceTypeDescr::class_ = {
 
 const JSFunctionSpec js::ReferenceTypeDescr::typeObjectMethods[] = {
     JS_SELF_HOSTED_FN("toSource", "DescrToSourceMethod", 0, 0),
-    {"handle", {nullptr, nullptr}, 2, 0, "HandleCreate"},
     {"array", {nullptr, nullptr}, 1, 0, "ArrayShorthand"},
     {"equivalent", {nullptr, nullptr}, 1, 0, "TypeDescrEquivalent"},
     JS_FS_END
@@ -467,7 +465,6 @@ const JSPropertySpec ArrayMetaTypeDescr::typeObjectProperties[] = {
 };
 
 const JSFunctionSpec ArrayMetaTypeDescr::typeObjectMethods[] = {
-    {"handle", {nullptr, nullptr}, 2, 0, "HandleCreate"},
     {"array", {nullptr, nullptr}, 1, 0, "ArrayShorthand"},
     JS_FN("dimension", UnsizedArrayTypeDescr::dimension, 1, 0),
     JS_SELF_HOSTED_FN("toSource", "DescrToSourceMethod", 0, 0),
@@ -756,7 +753,6 @@ const JSPropertySpec StructMetaTypeDescr::typeObjectProperties[] = {
 };
 
 const JSFunctionSpec StructMetaTypeDescr::typeObjectMethods[] = {
-    {"handle", {nullptr, nullptr}, 2, 0, "HandleCreate"},
     {"array", {nullptr, nullptr}, 1, 0, "ArrayShorthand"},
     JS_SELF_HOSTED_FN("toSource", "DescrToSourceMethod", 0, 0),
     {"equivalent", {nullptr, nullptr}, 1, 0, "TypeDescrEquivalent"},
@@ -1249,24 +1245,6 @@ GlobalObject::initTypedObjectModule(JSContext *cx, Handle<GlobalObject*> global)
                                   nullptr, nullptr,
                                   JSPROP_READONLY | JSPROP_PERMANENT))
         return nullptr;
-
-    //  Handle
-
-    RootedObject handle(cx, NewBuiltinClassInstance(cx, &JSObject::class_));
-    if (!module)
-        return nullptr;
-
-    if (!JS_DefineFunctions(cx, handle, TypedHandle::handleStaticMethods))
-        return nullptr;
-
-    RootedValue handleValue(cx, ObjectValue(*handle));
-    if (!JSObject::defineProperty(cx, module, cx->names().Handle,
-                                  handleValue,
-                                  nullptr, nullptr,
-                                  JSPROP_READONLY | JSPROP_PERMANENT))
-    {
-        return nullptr;
-    }
 
     // Everything is setup, install module on the global object:
     RootedValue moduleValue(cx, ObjectValue(*module));

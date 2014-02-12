@@ -2715,7 +2715,7 @@ public abstract class GeckoApp
     }
 
     protected boolean getIsDebuggable() {
-        // Return false so Fennec doesn't appear to be debuggable.  WebAppImpl
+        // Return false so Fennec doesn't appear to be debuggable.  WebappImpl
         // then overrides this and returns the value of android:debuggable for
         // the webapp APK, so webapps get the behavior supported by this method
         // (i.e. automatic configuration and enabling of the remote debugger).

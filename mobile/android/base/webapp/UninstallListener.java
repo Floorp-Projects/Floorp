@@ -28,7 +28,7 @@ import java.util.ArrayList;
 
 public class UninstallListener extends BroadcastReceiver {
 
-    private static String LOGTAG = "GeckoWebAppUninstallListener";
+    private static String LOGTAG = "GeckoWebappUninstallListener";
 
     @Override
     public void onReceive(Context context, Intent intent) {

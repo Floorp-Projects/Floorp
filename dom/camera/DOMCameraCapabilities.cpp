@@ -121,7 +121,7 @@ DOMCameraCapabilities::ParameterListToNewArray(JSContext* aCx,
     return NS_OK;
   }
 
-  aArray.set(JS_NewArrayObject(aCx, 0, nullptr));
+  aArray.set(JS_NewArrayObject(aCx, 0));
   if (!aArray) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -378,7 +378,7 @@ DOMCameraCapabilities::GetVideoSizes(JSContext* cx, JS::MutableHandle<JS::Value>
     return NS_OK;
   }
 
-  JS::Rooted<JSObject*> array(cx, JS_NewArrayObject(cx, 0, nullptr));
+  JS::Rooted<JSObject*> array(cx, JS_NewArrayObject(cx, 0));
   if (!array) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

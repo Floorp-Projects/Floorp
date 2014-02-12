@@ -41,15 +41,16 @@ public:
   virtual bool IsDataValid(const Data& aData);
 
 protected:
-  void PaintWithOpacity(gfxContext* aContext,
+  void PaintWithOpacity(gfx::DrawTarget* aTarget,
                         float aOpacity,
-                        Layer* aMaskLayer,
-                        gfxContext::GraphicsOperator aOperator = gfxContext::OPERATOR_OVER);
+                        gfx::SourceSurface* aMaskSurface,
+                        gfx::CompositionOp aOperator = gfx::CompositionOp::OP_OVER);
 
-  void UpdateSurface(gfxASurface* aDestSurface = nullptr,
-                     Layer* aMaskLayer = nullptr);
+  void UpdateTarget(gfx::DrawTarget* aDestTarget = nullptr,
+                    gfx::SourceSurface* aMaskSurface = nullptr);
 
-  nsRefPtr<gfxASurface> mSurface;
+  RefPtr<gfx::SourceSurface> mSurface;
+  nsRefPtr<gfxASurface> mDeprecatedSurface;
   nsRefPtr<mozilla::gl::GLContext> mGLContext;
   mozilla::RefPtr<mozilla::gfx::DrawTarget> mDrawTarget;
 
@@ -59,13 +60,30 @@ protected:
   bool mNeedsYFlip;
   bool mForceReadback;
 
-  nsRefPtr<gfxImageSurface> mCachedTempSurface;
+  RefPtr<gfx::DataSourceSurface> mCachedTempSurface;
+  nsRefPtr<gfxImageSurface> mDeprecatedCachedTempSurface;
   gfx::IntSize mCachedSize;
-  gfxImageFormat mCachedFormat;
+  gfx::SurfaceFormat mCachedFormat;
+  gfxImageFormat mDeprecatedCachedFormat;
 
-  gfxImageSurface* GetTempSurface(const gfx::IntSize& aSize, const gfxImageFormat aFormat);
+  gfx::DataSourceSurface* GetTempSurface(const gfx::IntSize& aSize,
+                                         const gfx::SurfaceFormat aFormat);
 
   void DiscardTempSurface();
+
+  /* Deprecated thebes methods */
+protected:
+  void DeprecatedPaintWithOpacity(gfxContext* aContext,
+                                  float aOpacity,
+                                  Layer* aMaskLayer,
+                                  gfxContext::GraphicsOperator aOperator = gfxContext::OPERATOR_OVER);
+
+  void DeprecatedUpdateSurface(gfxASurface* aDestSurface = nullptr,
+                               Layer* aMaskLayer = nullptr);
+
+  gfxImageSurface* DeprecatedGetTempSurface(const gfx::IntSize& aSize,
+                                            const gfxImageFormat aFormat);
+
 };
 
 }
