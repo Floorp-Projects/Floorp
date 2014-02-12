@@ -9,7 +9,6 @@
 #include "SampleSink.h"
 #include "prlog.h"
 
-#include <initguid.h>
 #include <wmsdkidl.h>
 
 using namespace mozilla::media;
