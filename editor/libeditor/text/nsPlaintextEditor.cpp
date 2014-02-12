@@ -853,21 +853,19 @@ nsPlaintextEditor::UpdateIMEComposition(nsIDOMEvent* aDOMTextEvent)
     do_QueryInterface(aDOMTextEvent);
   NS_ENSURE_TRUE(privateTextEvent, NS_ERROR_INVALID_ARG);
 
-  // XXX This approach is ugly, we should sort out the text event handling.
-  mComposition->EditorWillHandleTextEvent(widgetTextEvent);
-
-  // Update information of clauses in the new composition string.
-  // This will be refered by followed methods.
-  mIMETextRangeList = privateTextEvent->GetInputRange();
-  NS_ABORT_IF_FALSE(mIMETextRangeList, "mIMETextRangeList must not be nullptr");
-
   {
+    TextComposition::TextEventHandlingMarker
+      textEventHandlingMarker(mComposition, widgetTextEvent);
+
+    // Update information of clauses in the new composition string.
+    // This will be refered by followed methods.
+    mIMETextRangeList = privateTextEvent->GetInputRange();
+    NS_ABORT_IF_FALSE(mIMETextRangeList,
+                      "mIMETextRangeList must not be nullptr");
+
     nsAutoPlaceHolderBatch batch(this, nsGkAtoms::IMETxnName);
 
     rv = InsertText(widgetTextEvent->theText);
-
-    // XXX This approach is ugly, we should sort out the text event handling.
-    mComposition->EditorDidHandleTextEvent();
 
     if (caretP) {
       caretP->SetCaretDOMSelection(selection);
