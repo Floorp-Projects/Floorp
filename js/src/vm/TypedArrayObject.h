@@ -224,25 +224,23 @@ class ArrayBufferViewObject : public JSObject
 {
   protected:
     /* Offset of view in underlying ArrayBufferObject */
-    static const size_t BYTEOFFSET_SLOT  = 0;
+    static const size_t BYTEOFFSET_SLOT  = JS_DATUM_SLOT_BYTEOFFSET;
 
     /* Byte length of view */
-    static const size_t BYTELENGTH_SLOT  = 1;
+    static const size_t BYTELENGTH_SLOT  = JS_DATUM_SLOT_BYTELENGTH;
 
     /* Underlying ArrayBufferObject */
-    static const size_t BUFFER_SLOT      = 2;
+    static const size_t BUFFER_SLOT      = JS_DATUM_SLOT_OWNER;
 
     /* ArrayBufferObjects point to a linked list of views, chained through this slot */
-    static const size_t NEXT_VIEW_SLOT   = 3;
+    static const size_t NEXT_VIEW_SLOT   = JS_DATUM_SLOT_NEXT_VIEW;
 
     /*
      * When ArrayBufferObjects are traced during GC, they construct a linked
      * list of ArrayBufferObjects with more than one view, chained through this
      * slot of the first view of each ArrayBufferObject.
      */
-    static const size_t NEXT_BUFFER_SLOT = 4;
-
-    static const size_t NUM_SLOTS        = 5;
+    static const size_t NEXT_BUFFER_SLOT = JS_DATUM_SLOT_NEXT_BUFFER;
 
   public:
     JSObject *bufferObject() const {
@@ -281,10 +279,10 @@ class TypedArrayObject : public ArrayBufferViewObject
   protected:
     // Typed array properties stored in slots, beyond those shared by all
     // ArrayBufferViews.
-    static const size_t LENGTH_SLOT    = ArrayBufferViewObject::NUM_SLOTS;
-    static const size_t TYPE_SLOT      = ArrayBufferViewObject::NUM_SLOTS + 1;
-    static const size_t RESERVED_SLOTS = ArrayBufferViewObject::NUM_SLOTS + 2;
-    static const size_t DATA_SLOT      = 7; // private slot, based on alloc kind
+    static const size_t LENGTH_SLOT    = JS_DATUM_SLOT_LENGTH;
+    static const size_t TYPE_SLOT      = JS_DATUM_SLOT_TYPE_DESCR;
+    static const size_t RESERVED_SLOTS = JS_DATUM_SLOTS;
+    static const size_t DATA_SLOT      = JS_DATUM_SLOT_DATA;
 
   public:
     static const Class classes[ScalarTypeDescr::TYPE_MAX];
@@ -420,8 +418,8 @@ TypedArrayShift(ArrayBufferView::ViewType viewType)
 
 class DataViewObject : public ArrayBufferViewObject
 {
-    static const size_t RESERVED_SLOTS = ArrayBufferViewObject::NUM_SLOTS;
-    static const size_t DATA_SLOT      = 7; // private slot, based on alloc kind
+    static const size_t RESERVED_SLOTS = JS_DATAVIEW_SLOTS;
+    static const size_t DATA_SLOT      = JS_DATUM_SLOT_DATA;
 
   private:
     static const Class protoClass;
@@ -567,6 +565,8 @@ ClampIntForUint8Array(int32_t x)
 
 bool ToDoubleForTypedArray(JSContext *cx, JS::HandleValue vp, double *d);
 
+extern js::ArrayBufferObject * const UNSET_BUFFER_LINK;
+
 } // namespace js
 
 template <>
@@ -580,7 +580,8 @@ template <>
 inline bool
 JSObject::is<js::ArrayBufferViewObject>() const
 {
-    return is<js::DataViewObject>() || is<js::TypedArrayObject>();
+    return is<js::DataViewObject>() || is<js::TypedArrayObject>() ||
+           IsTypedDatumClass(getClass());
 }
 
 #endif /* vm_TypedArrayObject_h */

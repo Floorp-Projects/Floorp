@@ -29,6 +29,10 @@
 
 // Typed object slots
 
+#define DATUM_BYTEOFFSET(obj) \
+    TO_INT32(UnsafeGetReservedSlot(obj, JS_DATUM_SLOT_BYTEOFFSET))
+#define DATUM_BYTELENGTH(obj) \
+    TO_INT32(UnsafeGetReservedSlot(obj, JS_DATUM_SLOT_BYTELENGTH))
 #define DATUM_TYPE_DESCR(obj) \
     UnsafeGetReservedSlot(obj, JS_DATUM_SLOT_TYPE_DESCR)
 #define DATUM_OWNER(obj) \
@@ -320,7 +324,7 @@ TypedObjectPointer.prototype.moveToFieldIndex = function(index) {
 // a scalar, it will return a JS number, but otherwise the reified
 // result will be a datum of the same class as the ptr's datum.
 TypedObjectPointer.prototype.get = function() {
-  assert(ObjectIsAttached(this.datum), "get() called with unattached datum");
+  assert(DatumIsAttached(this.datum), "get() called with unattached datum");
 
   switch (this.kind()) {
   case JS_TYPEREPR_SCALAR_KIND:
@@ -431,7 +435,7 @@ TypedObjectPointer.prototype.getX4 = function() {
 // to `typeRepr` as needed. This is the most general entry point and
 // works for any type.
 TypedObjectPointer.prototype.set = function(fromValue) {
-  assert(ObjectIsAttached(this.datum), "set() called with unattached datum");
+  assert(DatumIsAttached(this.datum), "set() called with unattached datum");
 
   // Fast path: `fromValue` is a typed object with same type
   // representation as the destination. In that case, we can just do a
@@ -439,7 +443,7 @@ TypedObjectPointer.prototype.set = function(fromValue) {
   if (IsObject(fromValue) && ObjectIsTypedDatum(fromValue)) {
     var typeRepr = DESCR_TYPE_REPR(this.descr);
     if (!typeRepr.variable && DATUM_TYPE_REPR(fromValue) === typeRepr) {
-      if (!ObjectIsAttached(fromValue))
+      if (!DatumIsAttached(fromValue))
         ThrowError(JSMSG_TYPEDOBJECT_HANDLE_UNATTACHED);
 
       var size = DESCR_SIZE(this.descr);
@@ -602,7 +606,7 @@ function ConvertAndCopyTo(destDescr,
   assert(IsObject(destDatum) && ObjectIsTypedDatum(destDatum),
          "ConvertAndCopyTo: not type datum");
 
-  if (!ObjectIsAttached(destDatum))
+  if (!DatumIsAttached(destDatum))
     ThrowError(JSMSG_TYPEDOBJECT_HANDLE_UNATTACHED);
 
   var ptr = new TypedObjectPointer(destDescr, destDatum, destOffset);
@@ -618,7 +622,7 @@ function Reify(sourceDescr,
   assert(IsObject(sourceDatum) && ObjectIsTypedDatum(sourceDatum),
          "Reify: not type datum");
 
-  if (!ObjectIsAttached(sourceDatum))
+  if (!DatumIsAttached(sourceDatum))
     ThrowError(JSMSG_TYPEDOBJECT_HANDLE_UNATTACHED);
 
   var ptr = new TypedObjectPointer(sourceDescr, sourceDatum, sourceOffset);
@@ -779,6 +783,29 @@ function ArrayShorthand(...dims) {
   return accum;
 }
 
+// This is the `storage()` function defined in the spec.  When
+// provided with a *transparent* typed object, it returns an object
+// containing buffer, byteOffset, byteLength. When given an opaque
+// typed object, it returns null. Otherwise it throws.
+//
+// Warning: user exposed!
+function StorageOfTypedDatum(obj) {
+  if (IsObject(obj)) {
+    // Opaque
+    if (ObjectIsTypedHandle(obj))
+      return null;
+
+    // Transparent
+    if (ObjectIsTypedDatum(obj))
+      return { buffer: DATUM_OWNER(obj),
+               byteLength: DATUM_BYTELENGTH(obj),
+               byteOffset: DATUM_BYTEOFFSET(obj) };
+  }
+
+  ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
+  return null; // pacify silly "always returns a value" lint
+}
+
 // This is the `objectType()` function defined in the spec.
 // It returns the type of its argument.
 //
@@ -807,13 +834,6 @@ function TypeOfTypedDatum(obj) {
 function ObjectIsTypedDatum(obj) {
   assert(IsObject(obj), "ObjectIsTypedDatum invoked with non-object")
   return ObjectIsTypedObject(obj) || ObjectIsTypedHandle(obj);
-}
-
-function ObjectIsAttached(obj) {
-  assert(IsObject(obj), "ObjectIsAttached invoked with non-object")
-  assert(ObjectIsTypedDatum(obj),
-         "ObjectIsAttached() invoked on invalid obj");
-  return DATUM_OWNER(obj) != null;
 }
 
 ///////////////////////////////////////////////////////////////////////////

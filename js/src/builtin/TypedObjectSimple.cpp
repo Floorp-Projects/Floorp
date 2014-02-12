@@ -24,6 +24,11 @@ TypeDescr::kind() const {
     return typeRepresentation()->kind();
 }
 
+bool
+TypeDescr::opaque() const {
+    return typeRepresentation()->opaque();
+}
+
 /***************************************************************************
  * Scalar type objects
  *

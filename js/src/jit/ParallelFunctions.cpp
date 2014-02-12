@@ -93,7 +93,7 @@ jit::ParallelWriteGuard(ForkJoinContext *cx, JSObject *object)
             return true;
 
         // Also check whether owner is thread-local.
-        TypedDatum &owner = datum.owner();
+        ArrayBufferObject &owner = datum.owner();
         return cx->isThreadLocal(&owner);
     }
 
