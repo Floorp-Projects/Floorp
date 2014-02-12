@@ -599,7 +599,10 @@ public:
   /** Find the deep first and last children. */
   nsINode* GetFirstEditableNode(nsINode* aRoot);
 
-  int32_t GetIMEBufferLength();
+  /**
+   * Returns current composition.
+   */
+  mozilla::TextComposition* GetComposition() const;
   /**
    * Returns true if there is composition string and not fixed.
    */
@@ -860,7 +863,6 @@ protected:
   EditAction        mAction;             // the current editor action
 
   uint32_t          mIMETextOffset;    // offset in text node where IME comp string begins
-  uint32_t          mIMEBufferLength;  // current length of IME comp string
 
   EDirection        mDirection;          // the current direction of editor action
   int8_t            mDocDirtyState;      // -1 = not initialized
