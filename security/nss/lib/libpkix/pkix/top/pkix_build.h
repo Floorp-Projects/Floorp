@@ -11,7 +11,9 @@
 #ifndef _PKIX_BUILD_H
 #define _PKIX_BUILD_H
 #include "pkix_tools.h"
+#ifndef NSS_PKIX_NO_LDAP
 #include "pkix_pl_ldapt.h"
+#endif
 #include "pkix_ekuchecker.h"
 
 #ifdef __cplusplus

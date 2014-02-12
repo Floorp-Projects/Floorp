@@ -12,11 +12,7 @@ PRIVATE_EXPORTS = \
 	pkix_pl_colcertstore.h \
 	pkix_pl_httpcertstore.h \
 	pkix_pl_httpdefaultclient.h \
-	pkix_pl_ldapt.h \
-	pkix_pl_ldapcertstore.h \
-	pkix_pl_ldapresponse.h \
-	pkix_pl_ldaprequest.h \
-	pkix_pl_ldapdefaultclient.h \
+	$(LDAP_HEADERS) \
 	pkix_pl_nsscontext.h \
 	pkix_pl_pk11certstore.h \
 	pkix_pl_socket.h \
@@ -32,11 +28,7 @@ CSRCS = \
 	pkix_pl_colcertstore.c \
 	pkix_pl_httpcertstore.c \
 	pkix_pl_httpdefaultclient.c \
-	pkix_pl_ldaptemplates.c \
-	pkix_pl_ldapcertstore.c \
-	pkix_pl_ldapresponse.c \
-	pkix_pl_ldaprequest.c \
-	pkix_pl_ldapdefaultclient.c \
+	$(LDAP_CSRCS) \
 	pkix_pl_nsscontext.c \
 	pkix_pl_pk11certstore.c \
 	pkix_pl_socket.c \
