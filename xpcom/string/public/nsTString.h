@@ -380,6 +380,11 @@ class nsTString_CharT : public nsTSubstring_CharT
 
 #endif // !MOZ_STRING_WITH_OBSOLETE_API
 
+        /**
+         * Allow this string to be bound to a character buffer
+         * until the string is rebound or mutated; the caller
+         * must ensure that the buffer outlives the string.
+         */
       void Rebind( const char_type* data, size_type length );
 
         /**
