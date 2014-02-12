@@ -186,3 +186,7 @@ fails == whitespace-trim-4.html whitespace-trim-4-ref.html # Bug 787215
 == ssty-4.html ssty-4-ref.html
 == mathscript-1.html mathscript-1-ref.html
 == mathscript-2.html mathscript-2-ref.html
+== mo-accent-dynamic.html mo-accent-dynamic-ref.html
+== mo-movablelimits-dynamic.html mo-movablelimits-dynamic-ref.html
+== munderover-accent-dynamic.html munderover-accent-dynamic-ref.html
+== munderover-accentunder-dynamic.html munderover-accentunder-dynamic-ref.html

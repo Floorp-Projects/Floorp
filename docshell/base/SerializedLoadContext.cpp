@@ -59,6 +59,7 @@ SerializedLoadContext::Init(nsILoadContext* aLoadContext)
     mIsPrivateBitValid = true;
     aLoadContext->GetIsContent(&mIsContent);
     aLoadContext->GetUsePrivateBrowsing(&mUsePrivateBrowsing);
+    aLoadContext->GetUseRemoteTabs(&mUseRemoteTabs);
     aLoadContext->GetAppId(&mAppId);
     aLoadContext->GetIsInBrowserElement(&mIsInBrowserElement);
   } else {
@@ -68,6 +69,7 @@ SerializedLoadContext::Init(nsILoadContext* aLoadContext)
     // we won't be GetInterfaced to nsILoadContext
     mIsContent = true;
     mUsePrivateBrowsing = false;
+    mUseRemoteTabs = false;
     mAppId = 0;
     mIsInBrowserElement = false;
   }

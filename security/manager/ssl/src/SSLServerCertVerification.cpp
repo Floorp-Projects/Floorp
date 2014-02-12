@@ -744,6 +744,8 @@ AuthCertificate(CertVerifier& certVerifier, TransportSecurityInfo* infoObject,
 
   SECStatus rv;
 
+  // TODO: Remove this after we switch to insanity::pkix as the
+  // only option
   if (stapledOCSPResponse) {
     CERTCertDBHandle* handle = CERT_GetDefaultCertDB();
     rv = CERT_CacheOCSPResponseFromSideChannel(handle, cert, PR_Now(),
@@ -920,6 +922,12 @@ SSLServerCertVerificationJob::Run()
           = Telemetry::SSL_SUCCESFUL_CERT_VALIDATION_TIME_CLASSIC;
         failureTelemetry
           = Telemetry::SSL_INITIAL_FAILED_CERT_VALIDATION_TIME_CLASSIC;
+        break;
+      case CertVerifier::insanity:
+        successTelemetry
+          = Telemetry::SSL_SUCCESFUL_CERT_VALIDATION_TIME_INSANITY;
+        failureTelemetry
+          = Telemetry::SSL_INITIAL_FAILED_CERT_VALIDATION_TIME_INSANITY;
         break;
 #ifndef NSS_NO_LIBPKIX
       case CertVerifier::libpkix:

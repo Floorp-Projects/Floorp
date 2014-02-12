@@ -14,6 +14,8 @@
 #include <string>
 #include <algorithm>
 
+#include "nsDebug.h"
+
 //------------------------------------------------------------------------------
 
 static_assert(MOZ_ALIGNOF(Pickle::memberAlignmentType) >= MOZ_ALIGNOF(uint32_t),
@@ -114,6 +116,9 @@ Pickle::Pickle(int header_size)
   DCHECK(static_cast<memberAlignmentType>(header_size) >= sizeof(Header));
   DCHECK(header_size <= kPayloadUnit);
   Resize(kPayloadUnit);
+  if (!header_) {
+    NS_ABORT_OOM(kPayloadUnit);
+  }
   header_->payload_size = 0;
 }
 
@@ -133,7 +138,9 @@ Pickle::Pickle(const Pickle& other)
       variable_buffer_offset_(other.variable_buffer_offset_) {
   uint32_t payload_size = header_size_ + other.header_->payload_size;
   bool resized = Resize(payload_size);
-  CHECK(resized);  // Realloc failed.
+  if (!resized) {
+    NS_ABORT_OOM(payload_size);
+  }
   memcpy(header_, other.header_, payload_size);
 }
 
@@ -149,7 +156,9 @@ Pickle& Pickle::operator=(const Pickle& other) {
     header_size_ = other.header_size_;
   }
   bool resized = Resize(other.header_size_ + other.header_->payload_size);
-  CHECK(resized);  // Realloc failed.
+  if (!resized) {
+    NS_ABORT_OOM(other.header_size_ + other.header_->payload_size);
+  }
   memcpy(header_, other.header_, header_size_ + other.header_->payload_size);
   variable_buffer_offset_ = other.variable_buffer_offset_;
   return *this;

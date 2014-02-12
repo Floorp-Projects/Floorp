@@ -6,43 +6,38 @@ import android.database.Cursor;
 import android.net.Uri;
 
 public class testHomeListsProvider extends ContentProviderTest {
+    // This test does not run, so it just needs to compile. The test was
+    // disabled at the time the real Contract was removed; to leave a skeleton
+    // for a future re-implementor, we include this dummy Contract class.
+    private static class Contract {
+        public static final Uri CONTENT_URI = null;
+        public static final Uri CONTENT_FAKE_URI = null;
 
-    private Uri mItemsFakeUri;
-    private Uri mItemsUri;
-
-    private String mItemsIdCol;
-    private String mItemsProviderIdCol;
-    private String mItemsTitleCol;
-    private String mItemsUrlCol;
+        public static final String _ID = null;
+        public static final String PROVIDER_ID = null;
+        public static final String TITLE = null;
+        public static final String URL = null;
+    }
 
     @Override
     protected int getTestType() {
         return TEST_MOCHITEST;
     }
 
-    private void loadContractInfo() throws Exception {
-        mItemsFakeUri = getUriColumn("HomeListItems", "CONTENT_FAKE_URI");
-        mItemsUri = getContentUri("HomeListItems");
-
-        mItemsIdCol = getStringColumn("HomeListItems", "_ID");
-        mItemsProviderIdCol = getStringColumn("HomeListItems", "PROVIDER_ID");
-        mItemsTitleCol = getStringColumn("HomeListItems", "TITLE");
-        mItemsUrlCol = getStringColumn("HomeListItems", "URL");
-    }
-
-    private void ensureEmptyDatabase() throws Exception {
+    @SuppressWarnings("unused")
+  private void ensureEmptyDatabase() throws Exception {
         // Delete all the list entries.
-        mProvider.delete(mItemsUri, null, null);
+        mProvider.delete(Contract.CONTENT_URI, null, null);
 
-        final Cursor c = mProvider.query(mItemsUri, null, null, null, null);
+        final Cursor c = mProvider.query(Contract.CONTENT_URI, null, null, null, null);
         mAsserter.is(c.getCount(), 0, "All list entries were deleted");
         c.close();
     }
 
     @Override
     public void setUp() throws Exception {
-        super.setUp("org.mozilla.gecko.db.HomeListsProvider", "AUTHORITY", "homelists.db");
-        loadContractInfo();
+        // This test is disabled, so this just needs to compile.
+        super.setUp(null, null, "homelists.db");
 
         mTests.add(new TestFakeItems());
 
@@ -83,13 +78,13 @@ public class testHomeListsProvider extends ContentProviderTest {
             final String title = "Example";
             final String url = "http://example.com";
 
-            final Cursor c = mProvider.query(mItemsFakeUri, null, null, null, null);
+            final Cursor c = mProvider.query(Contract.CONTENT_FAKE_URI, null, null, null, null);
             mAsserter.is(c.moveToFirst(), true, "Fake list item found");
 
-            mAsserter.is(c.getLong(c.getColumnIndex(mItemsIdCol)), id, "Fake list item has correct ID");
-            mAsserter.is(c.getString(c.getColumnIndex(mItemsProviderIdCol)), providerId, "Fake list item has correct provider ID");
-            mAsserter.is(c.getString(c.getColumnIndex(mItemsTitleCol)), title, "Fake list item has correct title");
-            mAsserter.is(c.getString(c.getColumnIndex(mItemsUrlCol)), url, "Fake list item has correct URL");
+            mAsserter.is(c.getLong(c.getColumnIndex(Contract._ID)), id, "Fake list item has correct ID");
+            mAsserter.is(c.getString(c.getColumnIndex(Contract.PROVIDER_ID)), providerId, "Fake list item has correct provider ID");
+            mAsserter.is(c.getString(c.getColumnIndex(Contract.TITLE)), title, "Fake list item has correct title");
+            mAsserter.is(c.getString(c.getColumnIndex(Contract.URL)), url, "Fake list item has correct URL");
 
             c.close();
         }
@@ -104,19 +99,19 @@ public class testHomeListsProvider extends ContentProviderTest {
 
             // Insert a new list item with test values.
             final ContentValues cv = new ContentValues();
-            cv.put(mItemsProviderIdCol, providerId);
-            cv.put(mItemsTitleCol, title);
-            cv.put(mItemsUrlCol, url);
+            cv.put(Contract.PROVIDER_ID, providerId);
+            cv.put(Contract.TITLE, title);
+            cv.put(Contract.URL, url);
 
-            final long id = ContentUris.parseId(mProvider.insert(mItemsUri, cv));
+            final long id = ContentUris.parseId(mProvider.insert(Contract.CONTENT_URI, cv));
 
             // Check that the item was inserted correctly.
-            final Cursor c = mProvider.query(mItemsUri, null, mItemsIdCol + " = ?", new String[] { String.valueOf(id) }, null);
+            final Cursor c = mProvider.query(Contract.CONTENT_URI, null, Contract._ID + " = ?", new String[] { String.valueOf(id) }, null);
             mAsserter.is(c.moveToFirst(), true, "Inserted list item found");
 
-            mAsserter.is(c.getString(c.getColumnIndex(mItemsProviderIdCol)), providerId, "Inserted list item has correct provider ID");
-            mAsserter.is(c.getString(c.getColumnIndex(mItemsTitleCol)), title, "Inserted list item has correct title");
-            mAsserter.is(c.getString(c.getColumnIndex(mItemsUrlCol)), url, "Inserted list item has correct URL");
+            mAsserter.is(c.getString(c.getColumnIndex(Contract.PROVIDER_ID)), providerId, "Inserted list item has correct provider ID");
+            mAsserter.is(c.getString(c.getColumnIndex(Contract.TITLE)), title, "Inserted list item has correct title");
+            mAsserter.is(c.getString(c.getColumnIndex(Contract.URL)), url, "Inserted list item has correct URL");
 
             c.close();
         }

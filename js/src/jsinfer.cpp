@@ -1712,7 +1712,7 @@ TemporaryTypeSet::getTypedArrayType()
 
     if (clasp && IsTypedArrayClass(clasp))
         return clasp - &TypedArrayObject::classes[0];
-    return ScalarTypeRepresentation::TYPE_MAX;
+    return ScalarTypeDescr::TYPE_MAX;
 }
 
 bool
@@ -4633,14 +4633,16 @@ TypeObject::setAddendum(TypeObjectAddendum *addendum)
 }
 
 bool
-TypeObject::addTypedObjectAddendum(JSContext *cx,
-                                   TypeTypedObject::Kind kind,
-                                   TypeRepresentation *repr)
+TypeObject::addTypedObjectAddendum(JSContext *cx, Handle<TypeDescr*> descr)
 {
     if (!cx->typeInferenceEnabled())
         return true;
 
-    JS_ASSERT(repr);
+    // Type descriptors are always pre-tenured. This is both because
+    // we expect them to live a long time and so that they can be
+    // safely accessed during ion compilation.
+    JS_ASSERT(!IsInsideNursery(cx->runtime(), descr));
+    JS_ASSERT(descr);
 
     if (flags() & OBJECT_FLAG_ADDENDUM_CLEARED)
         return true;
@@ -4649,11 +4651,11 @@ TypeObject::addTypedObjectAddendum(JSContext *cx,
 
     if (addendum) {
         JS_ASSERT(hasTypedObject());
-        JS_ASSERT(typedObject()->typeRepr == repr);
+        JS_ASSERT(&typedObject()->descr() == descr);
         return true;
     }
 
-    TypeTypedObject *typedObject = js_new<TypeTypedObject>(kind, repr);
+    TypeTypedObject *typedObject = js_new<TypeTypedObject>(descr);
     if (!typedObject)
         return false;
     addendum = typedObject;
@@ -4672,10 +4674,14 @@ TypeNewScript::TypeNewScript()
   : TypeObjectAddendum(NewScript)
 {}
 
-TypeTypedObject::TypeTypedObject(Kind kind,
-                                 TypeRepresentation *repr)
+TypeTypedObject::TypeTypedObject(Handle<TypeDescr*> descr)
   : TypeObjectAddendum(TypedObject),
-    kind(kind),
-    typeRepr(repr)
+    descr_(descr)
 {
 }
+
+TypeDescr &
+js::types::TypeTypedObject::descr() {
+    return descr_->as<TypeDescr>();
+}
+
