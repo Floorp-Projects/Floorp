@@ -352,10 +352,20 @@ JSObject::getChildPropertyOnDictionary(ThreadSafeContext *cx, JS::HandleObject o
                 return nullptr;
             child.setSlot(slot);
         } else {
-            /* Slots can only be allocated out of order on objects in dictionary mode. */
+            /*
+             * Slots can only be allocated out of order on objects in
+             * dictionary mode.  Otherwise the child's slot must be after the
+             * parent's slot (if it has one), because slot number determines
+             * slot span for objects with that shape.  Usually child slot
+             * *immediately* follows parent slot, but there may be a slot gap
+             * when the object uses some -- but not all -- of its reserved
+             * slots to store properties.
+             */
             JS_ASSERT(obj->inDictionaryMode() ||
                       parent->hasMissingSlot() ||
-                      child.slot() == parent->maybeSlot() + 1);
+                      child.slot() == parent->maybeSlot() + 1 ||
+                      (parent->maybeSlot() + 1 < JSSLOT_FREE(obj->getClass()) &&
+                       child.slot() == JSSLOT_FREE(obj->getClass())));
         }
     }
 
