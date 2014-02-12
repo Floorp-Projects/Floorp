@@ -1,15 +1,16 @@
 package org.mozilla.gecko.tests;
 
-import org.mozilla.gecko.*;
-import com.jayway.android.robotium.solo.Condition;
-import com.jayway.android.robotium.solo.Solo;
-import android.graphics.Rect;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.mozilla.gecko.Actions;
+import org.mozilla.gecko.R;
+
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
-import java.util.ArrayList;
-import org.json.JSONException;
-import org.json.JSONObject;
+
+import com.jayway.android.robotium.solo.Condition;
+import com.jayway.android.robotium.solo.Solo;
 
 /**
  * This patch tests the Reader Mode feature by adding and removing items in reading list
@@ -20,9 +21,6 @@ import org.json.JSONObject;
 public class testReaderMode extends AboutHomeTest {
     static final int EVENT_CLEAR_DELAY_MS = 3000;
     static final int READER_ICON_MAX_WAIT_MS = 15000;
-
-    // IDs for UI views.
-    private static final String PAGE_ACTION_LAYOUT_ID = "page_action_layout";
 
     @Override
     protected int getTestType() {
@@ -156,7 +154,7 @@ public class testReaderMode extends AboutHomeTest {
 
     // Get the reader icon method
     protected View getReaderIcon() {
-        View pageActionLayout = mSolo.getView(PAGE_ACTION_LAYOUT_ID);
+        View pageActionLayout = mSolo.getView(R.id.page_action_layout);
         final ViewGroup actionLayoutEntry = (ViewGroup)pageActionLayout;
         View icon = actionLayoutEntry.getChildAt(1);
         if (icon == null || icon.getVisibility() != View.VISIBLE) {

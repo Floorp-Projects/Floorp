@@ -46,10 +46,10 @@ public class testFindInPage extends PixelTest {
 
     public void findText(String text, int nrOfMatches){
         selectMenuItem("Find in Page");
-        close = mDriver.findElement(getActivity(), "find_close");
+        close = mDriver.findElement(getActivity(), R.id.find_close);
         boolean success = waitForTest ( new BooleanTest() {
             public boolean test() {
-                next = mDriver.findElement(getActivity(), "find_next");
+                next = mDriver.findElement(getActivity(), R.id.find_next);
                 if (next != null) {
                     return true;
                 } else {

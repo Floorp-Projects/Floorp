@@ -1257,7 +1257,7 @@ IonBuilder::inlineUnsafePutElements(CallInfo &callInfo)
 
         // We can only inline setelem on dense arrays that do not need type
         // barriers and on typed arrays.
-        ScalarTypeRepresentation::Type arrayType;
+        ScalarTypeDescr::Type arrayType;
         if ((!isDenseNative || writeNeedsBarrier) &&
             !ElementAccessIsTypedArray(obj, id, &arrayType))
         {
@@ -1286,7 +1286,7 @@ IonBuilder::inlineUnsafePutElements(CallInfo &callInfo)
             continue;
         }
 
-        ScalarTypeRepresentation::Type arrayType;
+        ScalarTypeDescr::Type arrayType;
         if (ElementAccessIsTypedArray(obj, id, &arrayType)) {
             if (!inlineUnsafeSetTypedArrayElement(callInfo, base, arrayType))
                 return InliningStatus_Error;
@@ -1323,7 +1323,7 @@ IonBuilder::inlineUnsafeSetDenseArrayElement(CallInfo &callInfo, uint32_t base)
 bool
 IonBuilder::inlineUnsafeSetTypedArrayElement(CallInfo &callInfo,
                                              uint32_t base,
-                                             ScalarTypeRepresentation::Type arrayType)
+                                             ScalarTypeDescr::Type arrayType)
 {
     // Note: we do not check the conditions that are asserted as true
     // in intrinsic_UnsafePutElements():

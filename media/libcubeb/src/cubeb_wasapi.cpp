@@ -687,8 +687,9 @@ handle_channel_layout(cubeb_stream * stm,  WAVEFORMATEX ** mix_format, const cub
     CoTaskMemFree(*mix_format);
     *mix_format = closest;
   } else if (hr == AUDCLNT_E_UNSUPPORTED_FORMAT) {
-    /* Not supported, no suggestion, there is a bug somewhere. */
-    assert(false && "Format not supported, and no suggestion from WASAPI.");
+    /* Not supported, no suggestion. This should not happen, but it does in the
+     * field with some sound cards. We simply bail out and let the rest of the
+     * code figure out the right conversion path. */
   } else if (hr == S_OK) {
     LOG("Requested format accepted by WASAPI.");
   }

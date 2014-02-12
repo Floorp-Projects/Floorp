@@ -7,7 +7,6 @@
 #ifndef mozilla_psm__CertVerifier_h
 #define mozilla_psm__CertVerifier_h
 
-#include "certt.h"
 #include "insanity/pkixtypes.h"
 
 namespace mozilla { namespace psm {
@@ -49,6 +48,7 @@ public:
 #ifndef NSS_NO_LIBPKIX
     libpkix = 1,
 #endif
+    insanity = 2
   };
 
   enum missing_cert_download_config { missing_cert_download_off = 0, missing_cert_download_on };
@@ -59,18 +59,31 @@ public:
 
   bool IsOCSPDownloadEnabled() const { return mOCSPDownloadEnabled; }
 
-  CertVerifier(implementation_config ic, missing_cert_download_config ac,
-               crl_download_config cdc, ocsp_download_config odc,
-               ocsp_strict_config osc, ocsp_get_config ogc);
+  CertVerifier(implementation_config ic,
+#ifndef NSS_NO_LIBPKIX
+               missing_cert_download_config ac, crl_download_config cdc,
+#endif
+               ocsp_download_config odc, ocsp_strict_config osc,
+               ocsp_get_config ogc);
   ~CertVerifier();
 
-public:
   const implementation_config mImplementation;
+#ifndef NSS_NO_LIBPKIX
   const bool mMissingCertDownloadEnabled;
   const bool mCRLDownloadEnabled;
+#endif
   const bool mOCSPDownloadEnabled;
   const bool mOCSPStrict;
   const bool mOCSPGETEnabled;
+
+private:
+  SECStatus InsanityVerifyCert(CERTCertificate* cert,
+      /*optional*/ const SECItem* stapledOCSPResponse,
+      const SECCertificateUsage usage,
+      const PRTime time,
+      void* pinArg,
+      const Flags flags,
+      /*optional out*/ insanity::pkix::ScopedCERTCertList* validationChain);
 };
 
 void InitCertVerifierLog();

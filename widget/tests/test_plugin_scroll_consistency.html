@@ -25,7 +25,7 @@ for (var tag of pluginTags) {
   </div>
 </p>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 </pre>
@@ -40,10 +40,10 @@ function consistencyCheck(state) {
   ok(s == "", "Consistency check: " + state + ": " + s);
 }
 
-consistencyCheck("Initial state");
-
 function runTests()
 {
+  consistencyCheck("Initial state");
+
   var scroll = document.getElementById("scroll");
   scroll.scrollTop = 10;
   consistencyCheck("Scrolled down a bit");
@@ -52,7 +52,7 @@ function runTests()
     consistencyCheck("Before scrolling back to top");
     scroll.scrollTop = 0;
     consistencyCheck("Scrolled to top");
-  
+
     setTimeout(function() {
       consistencyCheck("After scrolling to top");
 

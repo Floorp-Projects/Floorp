@@ -109,7 +109,7 @@ public class testClearPrivateData extends PixelTest {
     public void checkOption(String option, String button) {
         if (mDevice.version.equals("2.x")) {
             // Use the context menu in pre-11
-            final View toolbarView = mSolo.getView("browser_toolbar");
+            final View toolbarView = mSolo.getView(R.id.browser_toolbar);
             mSolo.clickLongOnView(toolbarView);
             mAsserter.ok(waitForText(StringHelper.CONTEXT_MENU_ITEMS_IN_URL_BAR[2]), "Waiting for the pop-up to open", "Pop up was opened");
         } else {

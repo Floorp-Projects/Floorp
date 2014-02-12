@@ -90,6 +90,26 @@ LoadContext::SetPrivateBrowsing(bool aUsePrivateBrowsing)
 }
 
 NS_IMETHODIMP
+LoadContext::GetUseRemoteTabs(bool* aUseRemoteTabs)
+{
+  MOZ_ASSERT(mIsNotNull);
+
+  NS_ENSURE_ARG_POINTER(aUseRemoteTabs);
+
+  *aUseRemoteTabs = mUseRemoteTabs;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadContext::SetRemoteTabs(bool aUseRemoteTabs)
+{
+  MOZ_ASSERT(mIsNotNull);
+
+  // We shouldn't need this on parent...
+  return NS_ERROR_UNEXPECTED;
+}
+
+NS_IMETHODIMP
 LoadContext::GetIsInBrowserElement(bool* aIsInBrowserElement)
 {
   MOZ_ASSERT(mIsNotNull);

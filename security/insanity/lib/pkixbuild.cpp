@@ -41,6 +41,7 @@ BackCert::Init()
   const SECItem* dummyEncodedSubjectKeyIdentifier = nullptr;
   const SECItem* dummyEncodedAuthorityKeyIdentifier = nullptr;
   const SECItem* dummyEncodedAuthorityInfoAccess = nullptr;
+  const SECItem* dummyEncodedSubjectAltName = nullptr;
 
   for (const CERTCertExtension* ext = *exts; ext; ext = *++exts) {
     const SECItem** out = nullptr;
@@ -51,8 +52,11 @@ BackCert::Init()
       switch (ext->id.data[2]) {
         case 14: out = &dummyEncodedSubjectKeyIdentifier; break; // bug 965136
         case 15: out = &encodedKeyUsage; break;
+        case 17: out = &dummyEncodedSubjectAltName; break; // bug 970542
         case 19: out = &encodedBasicConstraints; break;
+        case 30: out = &encodedNameConstraints; break;
         case 35: out = &dummyEncodedAuthorityKeyIdentifier; break; // bug 965136
+        case 37: out = &encodedExtendedKeyUsage; break;
       }
     } else if (ext->id.len == 9 &&
                ext->id.data[0] == 0x2b && ext->id.data[1] == 0x06 &&
@@ -91,6 +95,7 @@ static Result BuildForward(TrustDomain& trustDomain,
                            PRTime time,
                            EndEntityOrCA endEntityOrCA,
                            KeyUsages requiredKeyUsagesIfPresent,
+                           SECOidTag requiredEKUIfPresent,
                            unsigned int subCACount,
                            /*out*/ ScopedCERTCertList& results);
 
@@ -100,13 +105,15 @@ BuildForwardInner(TrustDomain& trustDomain,
                   BackCert& subject,
                   PRTime time,
                   EndEntityOrCA endEntityOrCA,
+                  SECOidTag requiredEKUIfPresent,
                   CERTCertificate* potentialIssuerCertToDup,
                   unsigned int subCACount,
                   ScopedCERTCertList& results)
 {
   PORT_Assert(potentialIssuerCertToDup);
 
-  BackCert potentialIssuer(potentialIssuerCertToDup, &subject);
+  BackCert potentialIssuer(potentialIssuerCertToDup, &subject,
+                           BackCert::ExcludeCN);
   Result rv = potentialIssuer.Init();
   if (rv != Success) {
     return rv;
@@ -134,6 +141,11 @@ BuildForwardInner(TrustDomain& trustDomain,
     return rv;
   }
 
+  rv = CheckNameConstraints(potentialIssuer);
+  if (rv != Success) {
+    return rv;
+  }
+
   unsigned int newSubCACount = subCACount;
   if (endEntityOrCA == MustBeCA) {
     newSubCACount = subCACount + 1;
@@ -142,7 +154,7 @@ BuildForwardInner(TrustDomain& trustDomain,
   }
 
   rv = BuildForward(trustDomain, potentialIssuer, time, MustBeCA,
-                    KU_KEY_CERT_SIGN,
+                    KU_KEY_CERT_SIGN, requiredEKUIfPresent,
                     newSubCACount, results);
   if (rv != Success) {
     return rv;
@@ -163,6 +175,7 @@ BuildForward(TrustDomain& trustDomain,
              PRTime time,
              EndEntityOrCA endEntityOrCA,
              KeyUsages requiredKeyUsagesIfPresent,
+             SECOidTag requiredEKUIfPresent,
              unsigned int subCACount,
              /*out*/ ScopedCERTCertList& results)
 {
@@ -191,7 +204,7 @@ BuildForward(TrustDomain& trustDomain,
 
   rv = CheckExtensions(subject, endEntityOrCA,
                        trustLevel == TrustDomain::TrustAnchor,
-                       requiredKeyUsagesIfPresent,
+                       requiredKeyUsagesIfPresent, requiredEKUIfPresent,
                        subCACount);
   if (rv != Success) {
     return rv;
@@ -223,6 +236,7 @@ BuildForward(TrustDomain& trustDomain,
   for (CERTCertListNode* n = CERT_LIST_HEAD(candidates);
        !CERT_LIST_END(n, candidates); n = CERT_LIST_NEXT(n)) {
     rv = BuildForwardInner(trustDomain, subject, time, endEntityOrCA,
+                           requiredEKUIfPresent,
                            n->cert, subCACount, results);
     if (rv == Success) {
       // We found a trusted issuer. At this point, we know the cert is valid
@@ -240,7 +254,9 @@ SECStatus
 BuildCertChain(TrustDomain& trustDomain,
                CERTCertificate* certToDup,
                PRTime time,
+               EndEntityOrCA endEntityOrCA,
                /*optional*/ KeyUsages requiredKeyUsagesIfPresent,
+               /*optional*/ SECOidTag requiredEKUIfPresent,
                /*out*/ ScopedCERTCertList& results)
 {
   PORT_Assert(certToDup);
@@ -253,14 +269,22 @@ BuildCertChain(TrustDomain& trustDomain,
   // The only non-const operation on the cert we are allowed to do is
   // CERT_DupCertificate.
 
-  BackCert ee(certToDup, nullptr);
-  Result rv = ee.Init();
+  // XXX: Support the legacy use of the subject CN field for indicating the
+  // domain name the certificate is valid for.
+  BackCert::ConstrainedNameOptions cnOptions
+    = endEntityOrCA == MustBeEndEntity &&
+      requiredEKUIfPresent == SEC_OID_EXT_KEY_USAGE_SERVER_AUTH
+    ? BackCert::IncludeCN
+    : BackCert::ExcludeCN;
+
+  BackCert cert(certToDup, nullptr, cnOptions);
+  Result rv = cert.Init();
   if (rv != Success) {
     return SECFailure;
   }
 
-  rv = BuildForward(trustDomain, ee, time, MustBeEndEntity,
-                    requiredKeyUsagesIfPresent,
+  rv = BuildForward(trustDomain, cert, time, endEntityOrCA,
+                    requiredKeyUsagesIfPresent, requiredEKUIfPresent,
                     0, results);
   if (rv != Success) {
     results = nullptr;
@@ -269,7 +293,7 @@ BuildCertChain(TrustDomain& trustDomain,
 
   // Build the cert chain even if the cert is expired, because we would
   // rather report the untrusted issuer error than the expired error.
-  if (CheckTimes(ee.GetNSSCert(), time) != Success) {
+  if (CheckTimes(cert.GetNSSCert(), time) != Success) {
     PR_SetError(SEC_ERROR_EXPIRED_CERTIFICATE, 0);
     return SECFailure;
   }

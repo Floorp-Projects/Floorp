@@ -1,0 +1,18 @@
+<html class="reftest-wait">
+   <head>
+     <title>munderover@accentunder</title>
+     <meta charset="utf-8"/>
+     <script type="text/javascript">
+       function doTest() {
+         document.getElementById('mathOperator').setAttribute('accentunder', 'true');
+         document.documentElement.removeAttribute("class");
+       }
+       window.addEventListener("MozReftestInvalidate",doTest, false);
+     </script>
+    </head>
+    <body>
+     <math>
+      <munderover id="mathOperator"><mtext>X</mtext><mo>O</mo><mo>O</mo></munderover>
+     </math>
+    </body>
+</html>

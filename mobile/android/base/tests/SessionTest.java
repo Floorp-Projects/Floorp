@@ -6,15 +6,12 @@ import java.io.IOException;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 public abstract class SessionTest extends BaseTest {
-    private File mSessionDir;
     protected Navigation mNavigation;
 
     @Override
