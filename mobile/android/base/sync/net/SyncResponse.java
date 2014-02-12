@@ -49,6 +49,20 @@ public class SyncResponse {
     return this.getStatusCode() == 200;
   }
 
+  /**
+   * Fetch the content type of the HTTP response body.
+   *
+   * @return a <code>Header</code> instance, or <code>null</code> if there was
+   *         no body or no valid Content-Type.
+   */
+  public Header getContentType() {
+    HttpEntity entity = this.response.getEntity();
+    if (entity == null) {
+      return null;
+    }
+    return entity.getContentType();
+  }
+
   private String body = null;
   public String body() throws IllegalStateException, IOException {
     if (body != null) {
@@ -146,6 +160,14 @@ public class SyncResponse {
   }
 
   /**
+   * @return A number of seconds, or -1 if the 'X-Backoff' header was not
+   *         present.
+   */
+  public int backoffInSeconds() throws NumberFormatException {
+    return this.getIntegerHeader("x-backoff");
+  }
+
+  /**
    * @return A number of seconds, or -1 if the 'X-Weave-Backoff' header was not
    *         present.
    */
@@ -154,14 +176,21 @@ public class SyncResponse {
   }
 
   /**
-   * @return A number of milliseconds, or -1 if neither the 'Retry-After' or
-   *         'X-Weave-Backoff' header was present.
+   * Extract a number of seconds, or -1 if none of the specified headers were present.
+   *
+   * @param includeRetryAfter
+   *          if <code>true</code>, the Retry-After header is excluded. This is
+   *          useful for processing non-error responses where a Retry-After
+   *          header would be unexpected.
+   * @return the maximum of the three possible backoff headers, in seconds.
    */
-  public long totalBackoffInMilliseconds() {
+  public int totalBackoffInSeconds(boolean includeRetryAfter) {
     int retryAfterInSeconds = -1;
-    try {
-      retryAfterInSeconds = retryAfterInSeconds();
-    } catch (NumberFormatException e) {
+    if (includeRetryAfter) {
+      try {
+        retryAfterInSeconds = retryAfterInSeconds();
+      } catch (NumberFormatException e) {
+      }
     }
 
     int weaveBackoffInSeconds = -1;
@@ -170,7 +199,26 @@ public class SyncResponse {
     } catch (NumberFormatException e) {
     }
 
-    long totalBackoff = (long) Math.max(retryAfterInSeconds, weaveBackoffInSeconds);
+    int backoffInSeconds = -1;
+    try {
+      backoffInSeconds = backoffInSeconds();
+    } catch (NumberFormatException e) {
+    }
+
+    int totalBackoff = Math.max(retryAfterInSeconds, Math.max(backoffInSeconds, weaveBackoffInSeconds));
+    if (totalBackoff < 0) {
+      return -1;
+    } else {
+      return totalBackoff;
+    }
+  }
+
+  /**
+   * @return A number of milliseconds, or -1 if neither the 'Retry-After',
+   *         'X-Backoff', or 'X-Weave-Backoff' header were present.
+   */
+  public long totalBackoffInMilliseconds() {
+    long totalBackoff = totalBackoffInSeconds(true);
     if (totalBackoff < 0) {
       return -1;
     } else {
