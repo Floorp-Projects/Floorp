@@ -39,6 +39,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsINode.h"
 #include "nsIPresShell.h"
+#include "nsIPrivateTextEvent.h"
 #include "nsIPrivateTextRange.h"
 #include "nsISelection.h"
 #include "nsISelectionController.h"
@@ -811,7 +812,7 @@ NS_IMETHODIMP nsPlaintextEditor::InsertLineBreak()
 }
 
 nsresult
-nsPlaintextEditor::BeginIMEComposition()
+nsPlaintextEditor::BeginIMEComposition(WidgetCompositionEvent* aEvent)
 {
   NS_ENSURE_TRUE(!mInIMEMode, NS_OK);
 
@@ -825,14 +826,20 @@ nsPlaintextEditor::BeginIMEComposition()
     textEditRules->ResetIMETextPWBuf();
   }
 
-  return nsEditor::BeginIMEComposition();
+  return nsEditor::BeginIMEComposition(aEvent);
 }
 
 nsresult
-nsPlaintextEditor::UpdateIMEComposition(const nsAString& aCompositionString,
-                                        nsIPrivateTextRangeList* aTextRangeList)
+nsPlaintextEditor::UpdateIMEComposition(nsIDOMEvent* aDOMTextEvent)
 {
-  NS_ABORT_IF_FALSE(aTextRangeList, "aTextRangeList must not be nullptr");
+  NS_ABORT_IF_FALSE(aDOMTextEvent, "aDOMTextEvent must not be nullptr");
+
+  WidgetTextEvent* widgetTextEvent =
+    aDOMTextEvent->GetInternalNSEvent()->AsTextEvent();
+  NS_ENSURE_TRUE(widgetTextEvent, NS_ERROR_INVALID_ARG);
+
+  EnsureComposition(widgetTextEvent);
+  mInIMEMode = true;
 
   nsCOMPtr<nsIPresShell> ps = GetPresShell();
   NS_ENSURE_TRUE(ps, NS_ERROR_NOT_INITIALIZED);
@@ -845,7 +852,11 @@ nsPlaintextEditor::UpdateIMEComposition(const nsAString& aCompositionString,
 
   // Update information of clauses in the new composition string.
   // This will be refered by followed methods.
-  mIMETextRangeList = aTextRangeList;
+  nsCOMPtr<nsIPrivateTextEvent> privateTextEvent =
+    do_QueryInterface(aDOMTextEvent);
+  NS_ENSURE_TRUE(privateTextEvent, NS_ERROR_INVALID_ARG);
+  mIMETextRangeList = privateTextEvent->GetInputRange();
+  NS_ABORT_IF_FALSE(mIMETextRangeList, "mIMETextRangeList must not be nullptr");
 
   // We set mIsIMEComposing properly.
   SetIsIMEComposing();
@@ -853,9 +864,9 @@ nsPlaintextEditor::UpdateIMEComposition(const nsAString& aCompositionString,
   {
     nsAutoPlaceHolderBatch batch(this, nsGkAtoms::IMETxnName);
 
-    rv = InsertText(aCompositionString);
+    rv = InsertText(widgetTextEvent->theText);
 
-    mIMEBufferLength = aCompositionString.Length();
+    mIMEBufferLength = widgetTextEvent->theText.Length();
 
     if (caretP) {
       caretP->SetCaretDOMSelection(selection);

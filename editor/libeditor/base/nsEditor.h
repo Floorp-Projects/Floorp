@@ -69,6 +69,7 @@ class nsTransactionManager;
 
 namespace mozilla {
 class Selection;
+class TextComposition;
 
 namespace dom {
 class Element;
@@ -242,9 +243,8 @@ public:
                              mozilla::dom::Element** aContent);
 
   // IME event handlers
-  virtual nsresult BeginIMEComposition();
-  virtual nsresult UpdateIMEComposition(const nsAString &aCompositionString,
-                                        nsIPrivateTextRangeList *aTextRange)=0;
+  virtual nsresult BeginIMEComposition(mozilla::WidgetCompositionEvent* aEvent);
+  virtual nsresult UpdateIMEComposition(nsIDOMEvent* aDOMTextEvent) = 0;
   void EndIMEComposition();
 
   void SwitchTextDirectionTo(uint32_t aDirection);
@@ -412,6 +412,13 @@ protected:
     // regardless of DOM. Also, check to see if spell check should be skipped or not.
     return !IsPasswordEditor() && !IsReadonly() && !IsDisabled() && !ShouldSkipSpellCheck();
   }
+
+  /**
+   * EnsureComposition() should be composition event handlers or text event
+   * handler.  This tries to get the composition for the event and set it to
+   * mComposition.
+   */
+  void EnsureComposition(mozilla::WidgetGUIEvent* aEvent);
 
 public:
 
@@ -830,6 +837,9 @@ protected:
   nsIAtom          *mPlaceHolderName;    // name of placeholder transaction
   nsSelectionState *mSelState;           // saved selection state for placeholder txn batching
   nsString         *mPhonetic;
+  // IME composition this is not null between compositionstart and
+  // compositionend.
+  nsRefPtr<mozilla::TextComposition> mComposition;
 
   // various listeners
   nsCOMArray<nsIEditActionListener> mActionListeners;  // listens to all low level actions on the doc
