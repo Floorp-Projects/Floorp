@@ -1268,8 +1268,8 @@ js::CheckLocalUnaliased(MaybeCheckAliasing checkAliasing, JSScript *script, uint
     if (!checkAliasing)
         return;
 
-    JS_ASSERT(i < script->nfixed());
-    if (i < script->bindings.numVars()) {
+    JS_ASSERT(i < script->nslots());
+    if (i < script->nfixed()) {
         JS_ASSERT(!script->varIsAliased(i));
     } else {
         // FIXME: The callers of this function do not easily have the PC of the

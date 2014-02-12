@@ -28,9 +28,8 @@ struct StmtInfoPC : public StmtInfoBase {
     StmtInfoPC      *downScope;     /* next enclosing lexical scope */
 
     uint32_t        blockid;        /* for simplified dominance computation */
-    uint32_t        innerBlockScopeDepth; /* maximum depth of nested block scopes, in slots */
 
-    StmtInfoPC(ExclusiveContext *cx) : StmtInfoBase(cx), innerBlockScopeDepth(0) {}
+    StmtInfoPC(ExclusiveContext *cx) : StmtInfoBase(cx) {}
 };
 
 typedef HashSet<JSAtom *> FuncStmtSet;
@@ -119,7 +118,6 @@ struct ParseContext : public GenericParseContext
     bool isLegacyGenerator() const { return generatorKind() == LegacyGenerator; }
     bool isStarGenerator() const { return generatorKind() == StarGenerator; }
 
-    uint32_t        blockScopeDepth; /* maximum depth of nested block scopes, in slots */
     Node            blockNode;      /* parse node for a block with let declarations
                                        (block with its own lexical scope)  */
   private:
@@ -135,6 +133,11 @@ struct ParseContext : public GenericParseContext
     uint32_t numArgs() const {
         JS_ASSERT(sc->isFunctionBox());
         return args_.length();
+    }
+
+    uint32_t numVars() const {
+        JS_ASSERT(sc->isFunctionBox());
+        return vars_.length();
     }
 
     /*
@@ -240,7 +243,7 @@ struct ParseContext : public GenericParseContext
     ParseContext(Parser<ParseHandler> *prs, GenericParseContext *parent,
                  Node maybeFunction, SharedContext *sc,
                  Directives *newDirectives,
-                 unsigned staticLevel, uint32_t bodyid, uint32_t blockScopeDepth)
+                 unsigned staticLevel, uint32_t bodyid)
       : GenericParseContext(parent, sc),
         bodyid(0),           // initialized in init()
         blockidGen(bodyid),  // used to set |bodyid| and subsequently incremented in init()
@@ -250,7 +253,6 @@ struct ParseContext : public GenericParseContext
         maybeFunction(maybeFunction),
         staticLevel(staticLevel),
         lastYieldOffset(NoYieldOffset),
-        blockScopeDepth(blockScopeDepth),
         blockNode(ParseHandler::null()),
         decls_(prs->context, prs->alloc),
         args_(prs->context),
@@ -545,8 +547,7 @@ class Parser : private AutoGCRooter, public StrictModeGetter
     Node condition();
     Node comprehensionTail(Node kid, unsigned blockid, bool isGenexp,
                            ParseContext<ParseHandler> *outerpc,
-                           ParseNodeKind kind, JSOp op,
-                           unsigned innerBlockScopeDepth);
+                           ParseNodeKind kind = PNK_SEMI, JSOp op = JSOP_NOP);
     bool arrayInitializerComprehensionTail(Node pn);
     Node generatorExpr(Node kid);
     bool argumentList(Node listNode, bool *isSpread);
