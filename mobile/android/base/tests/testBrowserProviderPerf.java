@@ -10,6 +10,7 @@ import java.util.Random;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserDB;
+import org.mozilla.gecko.db.BrowserProvider;
 
 /*
  * This test is meant to exercise the performance of Fennec's
@@ -182,7 +183,7 @@ public class testBrowserProviderPerf extends ContentProviderTest {
 
     @Override
     public void setUp() throws Exception {
-        super.setUp("org.mozilla.gecko.db.BrowserProvider", BrowserContract.AUTHORITY, "browser.db");
+        super.setUp(sBrowserProviderCallable, BrowserContract.AUTHORITY, "browser.db");
 
         mGenerator = new Random(19580427);
     }
