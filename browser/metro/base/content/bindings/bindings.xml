@@ -196,7 +196,7 @@
         if (event.mozInputSource == Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH) {
           if (typeof SelectionHelperUI != 'undefined') {
             SelectionHelperUI.attachEditSession(ChromeSelectionHandler,
-                                                event.clientX, event.clientY);
+                event.clientX, event.clientY, this);
           } else {
             // If we don't have access to SelectionHelperUI then we are using this
             // binding for browser content (e.g. about:config)
@@ -295,7 +295,7 @@
           if (event.mozInputSource == Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH) {
             if (typeof SelectionHelperUI != 'undefined') {
               SelectionHelperUI.attachEditSession(ChromeSelectionHandler,
-                                                  event.clientX, event.clientY);
+                  event.clientX, event.clientY, this);
             } else {
               // If we don't have access to SelectionHelperUI then we are using this
               // binding for browser content (e.g. about:config)

@@ -448,9 +448,11 @@ IdentityManager.prototype = {
    * Deletes Sync credentials from the password manager.
    */
   deleteSyncCredentials: function deleteSyncCredentials() {
-    let logins = Services.logins.findLogins({}, PWDMGR_HOST, "", "");
-    for each (let login in logins) {
-      Services.logins.removeLogin(login);
+    for (let host of Utils.getSyncCredentialsHosts()) {
+      let logins = Services.logins.findLogins({}, host, "", "");
+      for each (let login in logins) {
+        Services.logins.removeLogin(login);
+      }
     }
 
     // Wait until after store is updated in case it fails.

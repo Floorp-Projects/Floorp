@@ -13,9 +13,13 @@
 #include "unistd.h"
 #include "dirent.h"
 #include "sys/stat.h"
-#if !defined(ANDROID)
+#if defined(ANDROID)
+#include <sys/vfs.h>
+#define statvfs statfs
+#else
+#include "sys/statvfs.h"
 #include <spawn.h>
-#endif // !defined(ANDROID)
+#endif // defined(ANDROID)
 #endif // defined(XP_UNIX)
 
 #if defined(XP_LINUX)
@@ -526,6 +530,9 @@ static const dom::ConstantSpec gLibcProperties[] =
   // The size of |time_t|.
   { "OSFILE_SIZEOF_TIME_T", INT_TO_JSVAL(sizeof (time_t)) },
 
+  // The size of |fsblkcnt_t|.
+  { "OSFILE_SIZEOF_FSBLKCNT_T", INT_TO_JSVAL(sizeof (fsblkcnt_t)) },
+
 #if !defined(ANDROID)
   // The size of |posix_spawn_file_actions_t|.
   { "OSFILE_SIZEOF_POSIX_SPAWN_FILE_ACTIONS_T", INT_TO_JSVAL(sizeof (posix_spawn_file_actions_t)) },
@@ -584,6 +591,13 @@ static const dom::ConstantSpec gLibcProperties[] =
 #if defined(_DARWIN_FEATURE_64_BIT_INODE)
   { "OSFILE_OFFSETOF_STAT_ST_BIRTHTIME", INT_TO_JSVAL(offsetof (struct stat, st_birthtime)) },
 #endif // defined(_DARWIN_FEATURE_64_BIT_INODE)
+
+  // Defining |statvfs|
+
+  { "OSFILE_SIZEOF_STATVFS", INT_TO_JSVAL(sizeof (struct statvfs)) },
+
+  { "OSFILE_OFFSETOF_STATVFS_F_BSIZE", INT_TO_JSVAL(offsetof (struct statvfs, f_bsize)) },
+  { "OSFILE_OFFSETOF_STATVFS_F_BAVAIL", INT_TO_JSVAL(offsetof (struct statvfs, f_bavail)) },
 
 #endif // defined(XP_UNIX)
 

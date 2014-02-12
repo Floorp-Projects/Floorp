@@ -7236,3 +7236,11 @@ let BrowserChromeTest = {
       this._cb = cb;
   }
 };
+
+function BrowserOpenNewTabOrWindow(event) {
+  if (event.shiftKey) {
+    OpenBrowserWindow();
+  } else {
+    BrowserOpenTab();
+  }
+}

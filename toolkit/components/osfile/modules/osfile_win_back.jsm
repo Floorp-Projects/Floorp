@@ -296,6 +296,14 @@
                     /*buf*/    Type.out_path
                    );
 
+       libc.declareLazyFFI(SysFile, "GetDiskFreeSpaceEx",
+         "GetDiskFreeSpaceExW", ctypes.winapi_abi,
+                    /*return*/ Type.zero_or_nothing,
+                    /*directoryName*/ Type.path,
+                    /*freeBytesForUser*/ Type.uint64_t.out_ptr,
+                    /*totalBytesForUser*/ Type.uint64_t.out_ptr,
+                    /*freeTotalBytesOnDrive*/ Type.uint64_t.out_ptr);
+
        libc.declareLazyFFI(SysFile, "GetFileInformationByHandle",
          "GetFileInformationByHandle", ctypes.winapi_abi,
                     /*return*/ Type.zero_or_nothing,
