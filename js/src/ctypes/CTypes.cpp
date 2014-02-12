@@ -5138,7 +5138,7 @@ StructType::BuildFieldsArray(JSContext* cx, JSObject* obj)
       return nullptr;
   }
 
-  RootedObject fieldsProp(cx, JS_NewArrayObject(cx, len, fieldsVec.begin()));
+  RootedObject fieldsProp(cx, JS_NewArrayObject(cx, fieldsVec));
   if (!fieldsProp)
     return nullptr;
 
@@ -5946,7 +5946,7 @@ FunctionType::ArgTypesGetter(JSContext* cx, JS::CallArgs args)
       for (size_t i = 0; i < len; ++i)
         vec[i] = JS::ObjectValue(*fninfo->mArgTypes[i]);
 
-      argTypes = JS_NewArrayObject(cx, len, vec.begin());
+      argTypes = JS_NewArrayObject(cx, vec);
       if (!argTypes)
         return false;
   }

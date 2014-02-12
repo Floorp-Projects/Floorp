@@ -1362,7 +1362,7 @@ XPCConvert::NativeArray2JS(MutableHandleValue d, const void** s,
 
     // XXX add support to indicate *which* array element was not convertable
 
-    RootedObject array(cx, JS_NewArrayObject(cx, count, nullptr));
+    RootedObject array(cx, JS_NewArrayObject(cx, count));
     if (!array)
         return false;
 

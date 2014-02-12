@@ -608,7 +608,7 @@ public:
     MOZ_ASSERT(aCountdown != 0);
     JSContext* cx = aGlobal.GetContext();
     JSAutoCompartment ac(cx, aGlobal.Get());
-    mValues = JS_NewArrayObject(cx, aCountdown, nullptr);
+    mValues = JS_NewArrayObject(cx, aCountdown);
     mozilla::HoldJSObjects(this);
   }
 
@@ -731,7 +731,7 @@ Promise::All(const GlobalObject& aGlobal, JSContext* aCx,
   }
 
   if (aIterable.Length() == 0) {
-    JS::Rooted<JSObject*> empty(aCx, JS_NewArrayObject(aCx, 0, nullptr));
+    JS::Rooted<JSObject*> empty(aCx, JS_NewArrayObject(aCx, 0));
     if (!empty) {
       aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
       return nullptr;
