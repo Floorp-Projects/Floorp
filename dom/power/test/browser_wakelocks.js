@@ -222,12 +222,15 @@ function runNextStep() {
   if (gCurStepIndex < gSteps.length) {
     gSteps[gCurStepIndex]();
   } else {
-    SpecialPowers.removePermission("power", kUrlSource);
     finish();
   }
 }
 
 function test() {
-  SpecialPowers.addPermission("power", true, kUrlSource);
-  runNextStep();
+  SpecialPowers.pushPermissions([
+    {type: "power", allow: true, context: kUrlSource}
+  ], function () {
+    SpecialPowers.pushPrefEnv({"set": [["dom.wakelock.enabled", true]]},
+                              runNextStep);
+  });
 }

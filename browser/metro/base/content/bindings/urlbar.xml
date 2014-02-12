@@ -292,6 +292,12 @@
 
             if (aShouldDismiss)
               ContextUI.dismissTabs();
+
+            if (!InputSourceHelper.isPrecise && this.textLength) {
+              let inputRectangle = this.inputField.getBoundingClientRect();
+              SelectionHelperUI.attachEditSession(ChromeSelectionHandler,
+                  inputRectangle.left, inputRectangle.top, this);
+            }
           ]]>
         </body>
       </method>
@@ -448,6 +454,15 @@
 
       <handler event="click" phase="capturing">
         <![CDATA[
+          // workaround for bug 925457: taping browser chrome resets last tap
+          // co-ordinates to 'undefined' so that we know not to shift the
+          // browser when the keyboard is up in SelectionHandler's
+          // _calcNewContentPosition().
+          Browser.selectedTab.browser.messageManager.sendAsyncMessage(
+              "Browser:ResetLastPos", {
+                xPos: null,
+                yPos: null
+              });
           this.beginEditing(true);
         ]]>
       </handler>
