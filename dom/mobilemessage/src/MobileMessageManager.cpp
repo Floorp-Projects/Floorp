@@ -241,7 +241,7 @@ MobileMessageManager::Send(JS::Handle<JS::Value> aNumber,
   }
 
   JS::Rooted<JSObject*> obj(aCx);
-  obj = JS_NewArrayObject(aCx, requests.length(), requests.begin());
+  obj = JS_NewArrayObject(aCx, requests);
   if (!obj) {
     return NS_ERROR_FAILURE;
   }

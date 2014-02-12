@@ -145,7 +145,7 @@ SmsFilter::GetNumbers(JSContext* aCx, JS::MutableHandle<JS::Value> aNumbers)
     numbers[i].setString(str);
   }
 
-  JSObject* obj = JS_NewArrayObject(aCx, numbers.length(), numbers.begin());
+  JSObject* obj = JS_NewArrayObject(aCx, numbers);
   if (!obj) {
     return NS_ERROR_FAILURE;
   }

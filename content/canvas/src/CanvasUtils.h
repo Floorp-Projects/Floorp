@@ -158,7 +158,7 @@ DashArrayToJSVal(FallibleTArray<T>& dashes,
         return JSVAL_NULL;
     }
     JS::Rooted<JSObject*> obj(cx,
-        JS_NewArrayObject(cx, dashes.Length(), nullptr));
+        JS_NewArrayObject(cx, dashes.Length()));
     if (!obj) {
         rv.Throw(NS_ERROR_OUT_OF_MEMORY);
         return JSVAL_NULL;

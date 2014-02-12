@@ -58,7 +58,7 @@ ConvertCloneReadInfosToArrayInternal(
                                 nsTArray<StructuredCloneReadInfo>& aReadInfos,
                                 JS::MutableHandle<JS::Value> aResult)
 {
-  JS::Rooted<JSObject*> array(aCx, JS_NewArrayObject(aCx, 0, nullptr));
+  JS::Rooted<JSObject*> array(aCx, JS_NewArrayObject(aCx, 0));
   if (!array) {
     IDB_WARNING("Failed to make array!");
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;

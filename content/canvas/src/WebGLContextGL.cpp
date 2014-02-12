@@ -1907,10 +1907,10 @@ WebGLContext::GetUniform(JSContext* cx, WebGLProgram *prog,
         if (unitSize == 1) {
             return JS::BooleanValue(iv[0] ? true : false);
         } else {
-            JS::Value uv[16];
+            JS::AutoValueArray<16> uv(cx);
             for (int k = 0; k < unitSize; k++)
-                uv[k] = JS::BooleanValue(iv[k] ? true : false);
-            JSObject* obj = JS_NewArrayObject(cx, unitSize, uv);
+                uv[k].setBoolean(iv[k]);
+            JSObject* obj = JS_NewArrayObject(cx, JS::HandleValueArray::subarray(uv, 0, unitSize));
             if (!obj) {
                 ErrorOutOfMemory("getUniform: out of memory");
                 return JS::NullValue();

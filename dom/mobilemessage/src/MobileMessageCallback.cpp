@@ -167,7 +167,7 @@ MobileMessageCallback::NotifyMessageDeleted(bool *aDeleted, uint32_t aSize)
   NS_ENSURE_TRUE(cx, NS_ERROR_FAILURE);
 
   JS::Rooted<JSObject*> deleteArrayObj(cx,
-                                       JS_NewArrayObject(cx, aSize, nullptr));
+                                       JS_NewArrayObject(cx, aSize));
   for (uint32_t i = 0; i < aSize; i++) {
     JS_SetElement(cx, deleteArrayObj, i, aDeleted[i]);
   }

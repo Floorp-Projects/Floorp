@@ -483,7 +483,7 @@ MmsMessage::GetDeliveryInfo(JSContext* aCx, JS::MutableHandle<JS::Value> aDelive
   }
 
   JS::Rooted<JSObject*> deliveryInfo(
-    aCx, JS_NewArrayObject(aCx, length, nullptr));
+    aCx, JS_NewArrayObject(aCx, length));
   NS_ENSURE_TRUE(deliveryInfo, NS_ERROR_OUT_OF_MEMORY);
 
   for (uint32_t i = 0; i < length; ++i) {
@@ -614,7 +614,7 @@ MmsMessage::GetAttachments(JSContext* aCx, JS::MutableHandle<JS::Value> aAttachm
   uint32_t length = mAttachments.Length();
 
   JS::Rooted<JSObject*> attachments(
-    aCx, JS_NewArrayObject(aCx, length, nullptr));
+    aCx, JS_NewArrayObject(aCx, length));
   NS_ENSURE_TRUE(attachments, NS_ERROR_OUT_OF_MEMORY);
 
   for (uint32_t i = 0; i < length; ++i) {

@@ -7940,9 +7940,13 @@ nsGlobalWindow::PostMessageMoz(JSContext* aCx, JS::Handle<JS::Value> aMessage,
   JS::Rooted<JS::Value> transferArray(aCx, JS::UndefinedValue());
   if (aTransfer.WasPassed()) {
     const Sequence<JS::Value >& values = aTransfer.Value();
-    transferArray = JS::ObjectOrNullValue(JS_NewArrayObject(aCx,
-                                                            values.Length(),
-                                                            const_cast<JS::Value*>(values.Elements())));
+
+    // The input sequence only comes from the generated bindings code, which
+    // ensures it is rooted.
+    JS::HandleValueArray elements =
+      JS::HandleValueArray::fromMarkedLocation(values.Length(), values.Elements());
+
+    transferArray = JS::ObjectOrNullValue(JS_NewArrayObject(aCx, elements));
     if (transferArray.isNull()) {
       aError.Throw(NS_ERROR_OUT_OF_MEMORY);
       return;
