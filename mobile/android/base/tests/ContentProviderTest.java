@@ -51,7 +51,6 @@ abstract class ContentProviderTest extends BaseTest {
     protected ArrayList<Runnable> mTests;
     protected String mDatabaseName;
     protected Class mProviderClass;
-    protected Class mProviderContract;
     protected String mProviderAuthority;
     protected IsolatedContext mProviderContext;
 
@@ -172,13 +171,6 @@ abstract class ContentProviderTest extends BaseTest {
         }
     }
 
-    private void setUpProviderClassAndAuthority(String providerClassName,
-            String authorityField) throws Exception {
-        mProviderContract = mClassLoader.loadClass("org.mozilla.gecko.db.BrowserContract");
-        mProviderAuthority = (String) mProviderContract.getField(authorityField).get(null);
-        mProviderClass = mClassLoader.loadClass(providerClassName);
-    }
-
     private void setUpContentProvider() throws Exception {
         mResolver = new ChangeRecordingMockContentResolver();
 
@@ -214,14 +206,16 @@ abstract class ContentProviderTest extends BaseTest {
     }
 
     // TODO: Take the actual class as an arg.
-    public void setUp(String providerClassName, String authorityUriField, String databaseName) throws Exception {
+    public void setUp(String providerClassName, String authority, String databaseName) throws Exception {
         super.setUp();
 
         mClassLoader = getInstrumentation().getContext().getClassLoader();
         mTests = new ArrayList<Runnable>();
         mDatabaseName = databaseName;
 
-        setUpProviderClassAndAuthority(providerClassName, authorityUriField);
+        mProviderAuthority = authority;
+        mProviderClass = mClassLoader.loadClass(providerClassName);
+
         setUpContentProvider();
     }
 

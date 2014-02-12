@@ -1,11 +1,12 @@
 package org.mozilla.gecko.tests;
 
 import org.mozilla.gecko.*;
+import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.SharedPreferences;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
@@ -303,7 +304,7 @@ public class testDistribution extends ContentProviderTest {
     @Override
     public void setUp() throws Exception {
         // TODO: Set up the content provider after setting the distribution.
-        super.setUp("org.mozilla.gecko.db.BrowserProvider", "AUTHORITY", "browser.db");
+        super.setUp("org.mozilla.gecko.db.BrowserProvider", BrowserContract.AUTHORITY, "browser.db");
     }
 
     private void delete(File file) throws Exception {
