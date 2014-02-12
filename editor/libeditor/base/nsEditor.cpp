@@ -144,7 +144,6 @@ nsEditor::nsEditor()
 ,  mDirection(eNone)
 ,  mDocDirtyState(-1)
 ,  mSpellcheckCheckboxState(eTriUnset)
-,  mIsIMEComposing(false)
 ,  mShouldTxnSetSelection(true)
 ,  mDidPreDestroy(false)
 ,  mDidPostCreate(false)
@@ -2058,7 +2057,6 @@ nsEditor::EndIMEComposition()
   mIMETextNode = nullptr;
   mIMETextOffset = 0;
   mIMEBufferLength = 0;
-  mIsIMEComposing = false;
   mComposition = nullptr;
 
   // notify editor observers of action
@@ -4201,39 +4199,10 @@ nsEditor::GetIMEBufferLength()
   return mIMEBufferLength;
 }
 
-void
-nsEditor::SetIsIMEComposing(){  
-  // We set mIsIMEComposing according to mIMETextRangeList.
-  nsCOMPtr<nsIPrivateTextRange> rangePtr;
-  uint16_t listlen, type;
-
-  mIsIMEComposing = false;
-  listlen = mIMETextRangeList->GetLength();
-
-  for (uint16_t i = 0; i < listlen; i++)
-  {
-      rangePtr = mIMETextRangeList->Item(i);
-      if (!rangePtr) continue;
-      nsresult result = rangePtr->GetRangeType(&type);
-      if (NS_FAILED(result)) continue;
-      if ( type == nsIPrivateTextRange::TEXTRANGE_RAWINPUT ||
-           type == nsIPrivateTextRange::TEXTRANGE_CONVERTEDTEXT ||
-           type == nsIPrivateTextRange::TEXTRANGE_SELECTEDRAWTEXT ||
-           type == nsIPrivateTextRange::TEXTRANGE_SELECTEDCONVERTEDTEXT )
-      {
-        mIsIMEComposing = true;
-#ifdef DEBUG_IME
-        printf("nsEditor::mIsIMEComposing = true\n");
-#endif
-        break;
-      }
-  }
-  return;
-}
-
 bool
-nsEditor::IsIMEComposing() {
-  return mIsIMEComposing;
+nsEditor::IsIMEComposing() const
+{
+  return mComposition && mComposition->IsComposing();
 }
 
 nsresult

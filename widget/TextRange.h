@@ -147,6 +147,14 @@ struct TextRange
   TextRangeStyle mRangeStyle;
 
   uint32_t Length() const { return mEndOffset - mStartOffset; }
+
+  bool IsClause() const
+  {
+    MOZ_ASSERT(mRangeType >= NS_TEXTRANGE_CARETPOSITION &&
+                 mRangeType <= NS_TEXTRANGE_SELECTEDCONVERTEDTEXT,
+               "Invalid range type");
+    return mRangeType != NS_TEXTRANGE_CARETPOSITION;
+  }
 };
 
 /******************************************************************************

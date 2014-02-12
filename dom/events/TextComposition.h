@@ -73,6 +73,18 @@ public:
    */
   uint32_t OffsetOfTargetClause() const { return mCompositionTargetOffset; }
 
+  /**
+   * Returns true if there is non-empty composition string and it's not fixed.
+   * Otherwise, false.
+   */
+  bool IsComposing() const { return mIsComposing; }
+
+  /**
+   * EditorWillHandleTextEvent() must be called before the focused editor
+   * handles the text event.
+   */
+  void EditorWillHandleTextEvent(const WidgetTextEvent* aTextEvent);
+
 private:
   // This class holds nsPresContext weak.  This instance shouldn't block
   // destroying it.  When the presContext is being destroyed, it's notified to
@@ -97,6 +109,9 @@ private:
 
   // See the comment for IsSynthesizedForTests().
   bool mIsSynthesizedForTests;
+
+  // See the comment for IsComposing().
+  bool mIsComposing;
 
   // Hide the default constructor and copy constructor.
   TextComposition() {}
