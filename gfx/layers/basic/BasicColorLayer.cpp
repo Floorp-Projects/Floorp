@@ -43,13 +43,21 @@ public:
     ColorLayer::SetVisibleRegion(aRegion);
   }
 
-  virtual void Paint(gfxContext* aContext, Layer* aMaskLayer)
+  virtual void Paint(DrawTarget* aTarget, SourceSurface* aMaskSurface)
+  {
+    DeprecatedPaint(new gfxContext(aTarget), nullptr); //TODO: null->aMaskSurface
+  }
+
+  virtual void DeprecatedPaint(gfxContext* aContext, Layer* aMaskLayer)
   {
     if (IsHidden())
       return;
     gfxContextAutoSaveRestore contextSR(aContext);
-    gfxContext::GraphicsOperator mixBlendMode = GetEffectiveMixBlendMode();
-    AutoSetOperator setOptimizedOperator(aContext, mixBlendMode != gfxContext::OPERATOR_OVER ? mixBlendMode : GetOperator());
+    gfxContext::GraphicsOperator mixBlendMode = DeprecatedGetEffectiveMixBlendMode();
+    AutoSetOperator setOptimizedOperator(aContext,
+                                         mixBlendMode != gfxContext::OPERATOR_OVER ?
+                                           mixBlendMode :
+                                           DeprecatedGetOperator());
 
     aContext->SetColor(mColor);
 

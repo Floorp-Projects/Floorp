@@ -46,7 +46,7 @@ CanvasLayerD3D9::Initialize(const Data& aData)
 
   if (aData.mDrawTarget) {
     mDrawTarget = aData.mDrawTarget;
-    mSurface = gfxPlatform::GetPlatform()->GetThebesSurfaceForDrawTarget(mDrawTarget);
+    mSurface = mDrawTarget->Snapshot();
     mNeedsYFlip = false;
     mDataIsPremultiplied = true;
   } else if (aData.mGLContext) {
@@ -124,41 +124,25 @@ CanvasLayerD3D9::UpdateSurface()
 
     D3DLOCKED_RECT lockedRect = textureLock.GetLockRect();
 
-    nsRefPtr<gfxImageSurface> sourceSurface;
+    RefPtr<DataSourceSurface> dataSourceSurf = mSurface->GetDataSurface();
 
-    if (mSurface->GetType() == gfxSurfaceType::Win32) {
-      sourceSurface = mSurface->GetAsImageSurface();
-    } else if (mSurface->GetType() == gfxSurfaceType::Image) {
-      sourceSurface = static_cast<gfxImageSurface*>(mSurface.get());
-      if (sourceSurface->Format() != gfxImageFormat::ARGB32 &&
-          sourceSurface->Format() != gfxImageFormat::RGB24)
-      {
-        return;
-      }
-    } else {
-      sourceSurface = new gfxImageSurface(gfxIntSize(mBounds.width, mBounds.height),
-                                          gfxImageFormat::ARGB32);
-      nsRefPtr<gfxContext> ctx = new gfxContext(sourceSurface);
-      ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
-      ctx->SetSource(mSurface);
-      ctx->Paint();
+    if (dataSourceSurf->GetFormat() != SurfaceFormat::B8G8R8A8 &&
+      dataSourceSurf->GetFormat() != SurfaceFormat::B8G8R8X8 &&
+      dataSourceSurf->GetFormat() != SurfaceFormat::R8G8B8A8 &&
+      dataSourceSurf->GetFormat() != SurfaceFormat::R8G8B8X8)
+    {
+      return;
     }
+    mHasAlpha = (dataSourceSurf->GetFormat() == SurfaceFormat::B8G8R8A8 ||
+                 dataSourceSurf->GetFormat() == SurfaceFormat::R8G8B8A8);
 
-    uint8_t *startBits = sourceSurface->Data();
-    uint32_t sourceStride = sourceSurface->Stride();
-
-    if (sourceSurface->Format() != gfxImageFormat::ARGB32) {
-      mHasAlpha = false;
-    } else {
-      mHasAlpha = true;
-    }
-
+    DataSourceSurface::MappedSurface ms;
+    dataSourceSurf->Map(DataSourceSurface::MapType::READ, &ms);
     for (int y = 0; y < mBounds.height; y++) {
       memcpy((uint8_t*)lockedRect.pBits + lockedRect.Pitch * y,
-             startBits + sourceStride * y,
+             ms.mData + ms.mStride * y,
              mBounds.width * 4);
     }
-
   }
 }
 
