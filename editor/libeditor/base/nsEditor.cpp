@@ -357,6 +357,10 @@ nsEditor::RemoveEventListeners()
     return;
   }
   reinterpret_cast<nsEditorEventListener*>(mEventListener.get())->Disconnect();
+  if (mComposition) {
+    mComposition->EndHandlingComposition(this);
+    mComposition = nullptr;
+  }
   mEventTarget = nullptr;
 }
 
@@ -2020,6 +2024,7 @@ nsEditor::EnsureComposition(mozilla::WidgetGUIEvent* aEvent)
   if (!mComposition) {
     MOZ_CRASH("nsIMEStateManager doesn't return proper composition");
   }
+  mComposition->StartHandlingComposition(this);
 }
 
 nsresult
@@ -2053,6 +2058,7 @@ nsEditor::EndIMEComposition()
   /* reset the data we need to construct a transaction */
   mIMETextNode = nullptr;
   mIMETextOffset = 0;
+  mComposition->EndHandlingComposition(this);
   mComposition = nullptr;
 
   // notify editor observers of action

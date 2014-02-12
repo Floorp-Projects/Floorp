@@ -9,6 +9,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsINode.h"
+#include "nsIWeakReference.h"
 #include "nsIWidget.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
@@ -17,8 +18,8 @@
 #include "mozilla/EventForwards.h"
 
 class nsDispatchingCallback;
+class nsIEditor;
 class nsIMEStateManager;
-class nsIWidget;
 
 namespace mozilla {
 
@@ -98,6 +99,13 @@ public:
    */
   void EditorDidHandleTextEvent();
 
+  /**
+   * StartHandlingComposition() and EndHandlingComposition() are called by
+   * editor when it holds a TextComposition instance and release it.
+   */
+  void StartHandlingComposition(nsIEditor* aEditor);
+  void EndHandlingComposition(nsIEditor* aEditor);
+
 private:
   // This class holds nsPresContext weak.  This instance shouldn't block
   // destroying it.  When the presContext is being destroyed, it's notified to
@@ -109,6 +117,9 @@ private:
   // mNativeContext stores a opaque pointer.  This works as the "ID" for this
   // composition.  Don't access the instance, it may not be available.
   void* mNativeContext;
+
+  // mEditorWeak is a weak reference to the focused editor handling composition.
+  nsWeakPtr mEditorWeak;
 
   // mLastData stores the data attribute of the latest composition event (except
   // the compositionstart event).
@@ -134,6 +145,16 @@ private:
   TextComposition() {}
   TextComposition(const TextComposition& aOther);
 
+  /**
+   * GetEditor() returns nsIEditor pointer of mEditorWeak.
+   */
+  already_AddRefed<nsIEditor> GetEditor() const;
+
+  /**
+   * HasEditor() returns true if mEditorWeak holds nsIEditor instance which is
+   * alive.  Otherwise, false.
+   */
+  bool HasEditor() const;
 
   /**
    * DispatchEvent() dispatches the aEvent to the mContent synchronously.
