@@ -10,9 +10,10 @@
 
 #include "mozilla/a11y/Accessible.h"
 
-class nsISelection;
-
 namespace mozilla {
+
+class Selection;
+
 namespace a11y {
 
 class DocAccessible;
@@ -366,7 +367,8 @@ private:
 class AccTextSelChangeEvent : public AccEvent
 {
 public:
-  AccTextSelChangeEvent(HyperTextAccessible* aTarget, nsISelection* aSelection);
+  AccTextSelChangeEvent(HyperTextAccessible* aTarget, Selection* aSelection,
+                        int32_t aReason);
   virtual ~AccTextSelChangeEvent();
 
   // AccEvent
@@ -376,8 +378,16 @@ public:
     return AccEvent::GetEventGroups() | (1U << eTextSelChangeEvent);
   }
 
+  // AccTextSelChangeEvent
+
+  /**
+   * Return true if the text selection change wasn't caused by pure caret move.
+   */
+  bool IsCaretMoveOnly() const;
+
 private:
-  nsCOMPtr<nsISelection> mSel;
+  nsRefPtr<Selection> mSel;
+  int32_t mReason;
 
   friend class EventQueue;
   friend class SelectionManager;

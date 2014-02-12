@@ -38,6 +38,8 @@ class AccEvent;
  * selection change events.
  */
 
+struct SelData;
+
 class SelectionManager : public nsISelectionListener
 {
 public:
@@ -83,7 +85,7 @@ protected:
   /**
    * Process DOM selection change. Fire selection and caret move events.
    */
-  void ProcessSelectionChanged(nsISelection* aSelection);
+  void ProcessSelectionChanged(SelData* aSelData);
 
 private:
   // Currently focused control.
