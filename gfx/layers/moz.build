@@ -261,6 +261,7 @@ UNIFIED_SOURCES += [
     'LayerScope.cpp',
     'LayersLogging.cpp',
     'LayerSorter.cpp',
+    'LayerUtils.cpp',
     'opengl/CompositingRenderTargetOGL.cpp',
     'opengl/CompositorOGL.cpp',
     'opengl/OGLShaderProgram.cpp',
@@ -324,3 +325,7 @@ if CONFIG['MOZ_DEBUG']:
 
 if CONFIG['MOZ_ENABLE_D3D10_LAYER']:
     DEFINES['MOZ_ENABLE_D3D10_LAYER'] = True
+
+GENERATED_FILES = [
+    'PremultiplyTables.h',
+]
