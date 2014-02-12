@@ -1321,6 +1321,8 @@ class MTest
     }
     void infer();
     MDefinition *foldsTo(TempAllocator &alloc, bool useValueNumbers);
+    void filtersUndefinedOrNull(bool trueBranch, MDefinition **subject, bool *filtersUndefined,
+                                bool *filtersNull);
 
     void markOperandCantEmulateUndefined() {
         operandMightEmulateUndefined_ = false;
@@ -2278,6 +2280,8 @@ class MCompare
     bool tryFold(bool *result);
     bool evaluateConstantOperands(bool *result);
     MDefinition *foldsTo(TempAllocator &alloc, bool useValueNumbers);
+    void filtersUndefinedOrNull(bool trueBranch, MDefinition **subject, bool *filtersUndefined,
+                                bool *filtersNull);
 
     void infer(BaselineInspector *inspector, jsbytecode *pc);
     CompareType compareType() const {
@@ -8733,6 +8737,37 @@ class MGuardThreadExclusive
     }
     bool possiblyCalls() const {
         return true;
+    }
+};
+
+class MFilterTypeSet
+  : public MUnaryInstruction
+{
+    MFilterTypeSet(MDefinition *def, types::TemporaryTypeSet *types)
+      : MUnaryInstruction(def)
+    {
+        JS_ASSERT(!types->unknown());
+
+        MIRType type = MIRTypeFromValueType(types->getKnownTypeTag());
+        setResultType(type);
+        setResultTypeSet(types);
+    }
+
+  public:
+    INSTRUCTION_HEADER(FilterTypeSet)
+
+    static MFilterTypeSet *New(TempAllocator &alloc, MDefinition *def, types::TemporaryTypeSet *types) {
+        return new(alloc) MFilterTypeSet(def, types);
+    }
+
+    bool congruentTo(MDefinition *def) const {
+        return false;
+    }
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+    virtual bool neverHoist() const {
+        return resultTypeSet()->empty();
     }
 };
 
