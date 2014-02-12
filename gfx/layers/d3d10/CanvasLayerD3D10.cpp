@@ -82,25 +82,12 @@ CanvasLayerD3D10::Initialize(const Data& aData)
     
     // XXX we should store mDrawTarget and use it directly in UpdateSurface,
     // bypassing Thebes
-    mSurface = gfxPlatform::GetPlatform()->GetThebesSurfaceForDrawTarget(mDrawTarget);
+    mSurface = mDrawTarget->Snapshot();
   } else {
     NS_ERROR("CanvasLayer created without mSurface, mDrawTarget or mGLContext?");
   }
 
   mBounds.SetRect(0, 0, aData.mSize.width, aData.mSize.height);
-
-  if (mSurface && mSurface->GetType() == gfxSurfaceType::D2D) {
-    void *data = mSurface->GetData(&gKeyD3D10Texture);
-    if (data) {
-      mTexture = static_cast<ID3D10Texture2D*>(data);
-      mIsD2DTexture = true;
-      device()->CreateShaderResourceView(mTexture, nullptr, getter_AddRefs(mSRView));
-      mHasAlpha =
-        mSurface->GetContentType() == gfxContentType::COLOR_ALPHA;
-      return;
-    }
-  }
-
   mIsD2DTexture = false;
 
   // Create a texture in case we need to readback.
@@ -127,7 +114,6 @@ CanvasLayerD3D10::UpdateSurface()
   if (mDrawTarget) {
     mDrawTarget->Flush();
   } else if (mIsD2DTexture) {
-    mSurface->Flush();
     return;
   }
 
@@ -179,12 +165,6 @@ CanvasLayerD3D10::UpdateSurface()
         MOZ_CRASH("Unhandled SharedSurfaceType.");
     }
   } else if (mSurface) {
-    RECT r;
-    r.left = 0;
-    r.top = 0;
-    r.right = mBounds.width;
-    r.bottom = mBounds.height;
-
     D3D10_MAPPED_TEXTURE2D map;
     HRESULT hr = mTexture->Map(0, D3D10_MAP_WRITE_DISCARD, 0, &map);
 
@@ -193,17 +173,13 @@ CanvasLayerD3D10::UpdateSurface()
       return;
     }
 
-    nsRefPtr<gfxImageSurface> dstSurface;
+    RefPtr<DrawTarget> destTarget =
+      Factory::CreateDrawTargetForD3D10Texture(mTexture,
+                                               SurfaceFormat::R8G8B8A8);
+    Rect r(Point(0, 0), ToRect(mBounds).Size());
+    destTarget->DrawSurface(mSurface, r, r, DrawSurfaceOptions(),
+                            DrawOptions(1.0F, CompositionOp::OP_SOURCE));
 
-    dstSurface = new gfxImageSurface((unsigned char*)map.pData,
-                                     gfxIntSize(mBounds.width, mBounds.height),
-                                     map.RowPitch,
-                                     gfxImageFormat::ARGB32);
-    nsRefPtr<gfxContext> ctx = new gfxContext(dstSurface);
-    ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
-    ctx->SetSource(mSurface);
-    ctx->Paint();
-    
     mTexture->Unmap(0);
     mSRView = mUploadSRView;
   }

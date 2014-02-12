@@ -146,7 +146,7 @@ CameraControlImpl::Get(JSContext* aCx, uint32_t aKey, JS::Value* aValue)
 
   GetParameter(aKey, regionArray);
 
-  JS::Rooted<JSObject*> array(aCx, JS_NewArrayObject(aCx, 0, nullptr));
+  JS::Rooted<JSObject*> array(aCx, JS_NewArrayObject(aCx, 0));
   if (!array) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

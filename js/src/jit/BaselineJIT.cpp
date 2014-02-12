@@ -218,7 +218,7 @@ jit::BaselineCompile(JSContext *cx, HandleScript script)
 {
     JS_ASSERT(!script->hasBaselineScript());
     JS_ASSERT(script->canBaselineCompile());
-
+    JS_ASSERT(IsBaselineEnabled(cx));
     LifoAlloc alloc(BASELINE_LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
 
     script->ensureNonLazyCanonicalFunction(cx);

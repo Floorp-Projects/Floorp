@@ -29,7 +29,6 @@ which makes Windows Media Foundation unavailable.
 #include <mferror.h>
 #include <propvarutil.h>
 #include <wmcodecdsp.h>
-#include <initguid.h>
 #include <d3d9.h>
 #include <dxva2api.h>
 #include <wmcodecdsp.h>
