@@ -14,6 +14,7 @@
 #include "nsWindowsHelpers.h"
 #include "mozilla/CheckedInt.h"
 #include "VideoUtils.h"
+#include <initguid.h>
 
 #ifdef WMF_MUST_DEFINE_AAC_MFT_CLSID
 // Some SDK versions don't define the AAC decoder CLSID.

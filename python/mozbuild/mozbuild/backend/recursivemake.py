@@ -664,6 +664,11 @@ class RecursiveMakeBackend(CommonBackend):
                     '#error "%(cppfile)s forces NSPR logging, '
                     'so it cannot be built in unified mode."\n'
                     '#undef FORCE_PR_LOG\n'
+                    '#endif\n'
+                    '#ifdef INITGUID\n'
+                    '#error "%(cppfile)s defines INITGUID, '
+                    'so it cannot be built in unified mode."\n'
+                    '#undef INITGUID\n'
                     '#endif')
                 f.write('\n'.join(includeTemplate % { "cppfile": s } for
                                   s in source_filenames))
