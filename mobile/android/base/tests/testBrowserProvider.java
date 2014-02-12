@@ -22,14 +22,6 @@ import org.mozilla.gecko.db.BrowserContract;
  * code.
  */
 public class testBrowserProvider extends ContentProviderTest {
-    private String PLACES_FOLDER_GUID;
-    private String MOBILE_FOLDER_GUID;
-    private String MENU_FOLDER_GUID;
-    private String TAGS_FOLDER_GUID;
-    private String TOOLBAR_FOLDER_GUID;
-    private String UNFILED_FOLDER_GUID;
-    private String READING_LIST_FOLDER_GUID;
-
     private String mBookmarksIdCol;
     private String mBookmarksTitleCol;
     private String mBookmarksUrlCol;
@@ -84,14 +76,6 @@ public class testBrowserProvider extends ContentProviderTest {
     }
 
     private void loadContractInfo() throws Exception {
-        PLACES_FOLDER_GUID = getStringColumn("Bookmarks", "PLACES_FOLDER_GUID");
-        MOBILE_FOLDER_GUID = getStringColumn("Bookmarks", "MOBILE_FOLDER_GUID");
-        MENU_FOLDER_GUID = getStringColumn("Bookmarks", "MENU_FOLDER_GUID");
-        TAGS_FOLDER_GUID = getStringColumn("Bookmarks", "TAGS_FOLDER_GUID");
-        TOOLBAR_FOLDER_GUID = getStringColumn("Bookmarks", "TOOLBAR_FOLDER_GUID");
-        UNFILED_FOLDER_GUID = getStringColumn("Bookmarks", "UNFILED_FOLDER_GUID");
-        READING_LIST_FOLDER_GUID = getStringColumn("Bookmarks", "READING_LIST_FOLDER_GUID");
-
         mBookmarksIdCol = getStringColumn("Bookmarks", "_ID");
         mBookmarksTitleCol = getStringColumn("Bookmarks", "TITLE");
         mBookmarksUrlCol = getStringColumn("Bookmarks", "URL");
@@ -169,13 +153,13 @@ public class testBrowserProvider extends ContentProviderTest {
                          guid + " != ? AND " +
                          guid + " != ? AND " +
                          guid + " != ?",
-                         new String[] { PLACES_FOLDER_GUID,
-                                        MOBILE_FOLDER_GUID,
-                                        MENU_FOLDER_GUID,
-                                        TAGS_FOLDER_GUID,
-                                        TOOLBAR_FOLDER_GUID,
-                                        UNFILED_FOLDER_GUID,
-                                        READING_LIST_FOLDER_GUID });
+                         new String[] { BrowserContract.Bookmarks.PLACES_FOLDER_GUID,
+                                        BrowserContract.Bookmarks.MOBILE_FOLDER_GUID,
+                                        BrowserContract.Bookmarks.MENU_FOLDER_GUID,
+                                        BrowserContract.Bookmarks.TAGS_FOLDER_GUID,
+                                        BrowserContract.Bookmarks.TOOLBAR_FOLDER_GUID,
+                                        BrowserContract.Bookmarks.UNFILED_FOLDER_GUID,
+                                        BrowserContract.Bookmarks.READING_LIST_FOLDER_GUID });
 
         c = mProvider.query(appendUriParam(BrowserContract.Bookmarks.CONTENT_URI, "PARAM_SHOW_DELETED", "1"), null, null, null, null);
         mAsserter.is(c.getCount(), 7, "All non-special bookmarks and folders were deleted");
@@ -561,13 +545,13 @@ public class testBrowserProvider extends ContentProviderTest {
                                        mBookmarksGuidCol + " = ? OR " +
                                        mBookmarksGuidCol + " = ? OR " +
                                        mBookmarksGuidCol + " = ?",
-                                       new String[] { PLACES_FOLDER_GUID,
-                                                      MOBILE_FOLDER_GUID,
-                                                      MENU_FOLDER_GUID,
-                                                      TAGS_FOLDER_GUID,
-                                                      TOOLBAR_FOLDER_GUID,
-                                                      UNFILED_FOLDER_GUID,
-                                                      READING_LIST_FOLDER_GUID },
+                                       new String[] { BrowserContract.Bookmarks.PLACES_FOLDER_GUID,
+                                                      BrowserContract.Bookmarks.MOBILE_FOLDER_GUID,
+                                                      BrowserContract.Bookmarks.MENU_FOLDER_GUID,
+                                                      BrowserContract.Bookmarks.TAGS_FOLDER_GUID,
+                                                      BrowserContract.Bookmarks.TOOLBAR_FOLDER_GUID,
+                                                      BrowserContract.Bookmarks.UNFILED_FOLDER_GUID,
+                                                      BrowserContract.Bookmarks.READING_LIST_FOLDER_GUID },
                                        null);
 
             mAsserter.is(c.getCount(), 7, "Right number of special folders");
@@ -580,9 +564,9 @@ public class testBrowserProvider extends ContentProviderTest {
                 String guid = c.getString(c.getColumnIndex(mBookmarksGuidCol));
                 int parentId = c.getInt(c.getColumnIndex(mBookmarksParentCol));
 
-                if (guid.equals(PLACES_FOLDER_GUID)) {
+                if (guid.equals(BrowserContract.Bookmarks.PLACES_FOLDER_GUID)) {
                     mAsserter.is(new Integer(id), new Integer(rootId), "The id of places folder is correct");
-                } else if (guid.equals(READING_LIST_FOLDER_GUID)) {
+                } else if (guid.equals(BrowserContract.Bookmarks.READING_LIST_FOLDER_GUID)) {
                     mAsserter.is(new Integer(id), new Integer(readingListId), "The id of reading list folder is correct");
                 }
 
