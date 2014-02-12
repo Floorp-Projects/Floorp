@@ -130,6 +130,16 @@ void
 TextComposition::EditorWillHandleTextEvent(const WidgetTextEvent* aTextEvent)
 {
   mIsComposing = aTextEvent->IsComposing();
+
+  MOZ_ASSERT(mLastData == aTextEvent->theText,
+    "The text of a text event must be same as previous data attribute value "
+    "of the latest compositionupdate event");
+}
+
+void
+TextComposition::EditorDidHandleTextEvent()
+{
+  mString = mLastData;
 }
 
 /******************************************************************************
