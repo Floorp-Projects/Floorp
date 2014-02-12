@@ -81,7 +81,8 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
 
     enum Result {
         GENERAL,
-        DOUBLE
+        DOUBLE,
+        FLOAT
     };
 
     typedef MoveResolver::MoveOperand MoveOperand;

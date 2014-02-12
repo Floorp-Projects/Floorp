@@ -3911,7 +3911,7 @@ CodeGenerator::visitMathFunctionF(LMathFunctionF *ins)
         MOZ_ASSUME_UNREACHABLE("Unknown or unsupported float32 math function");
     }
 
-    masm.callWithABI(funptr, MacroAssembler::DOUBLE);
+    masm.callWithABI(funptr, MacroAssembler::FLOAT);
     return true;
 }
 

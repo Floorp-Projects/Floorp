@@ -1528,6 +1528,15 @@ class AssemblerX86Shared
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
+    void fstp32(const Operand &src) {
+        switch (src.kind()) {
+          case Operand::MEM_REG_DISP:
+            masm.fstp32_m(src.disp(), src.base());
+            break;
+          default:
+            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+        }
+    }
 
     // Defined for compatibility with ARM's assembler
     uint32_t actualOffset(uint32_t x) {
