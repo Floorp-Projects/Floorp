@@ -650,9 +650,9 @@ function FillTypedArrayWithValue(destArray, fromValue) {
 // Warning: user exposed!
 function TypeDescrEquivalent(otherDescr) {
   if (!IsObject(this) || !ObjectIsTypeDescr(this))
-    ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, "this", "type object");
+    ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
   if (!IsObject(otherDescr) || !ObjectIsTypeDescr(otherDescr))
-    ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, "1", "type object");
+    ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
   return DESCR_TYPE_REPR(this) === DESCR_TYPE_REPR(otherDescr);
 }
 
@@ -678,10 +678,10 @@ function TypeDescrEquivalent(otherDescr) {
 // Warning: user exposed!
 function TypedArrayRedimension(newArrayType) {
   if (!IsObject(this) || !ObjectIsTypedDatum(this))
-    ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, "this", "typed array");
+    ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
 
   if (!IsObject(newArrayType) || !ObjectIsTypeDescr(newArrayType))
-    ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, 1, "type object");
+    ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
 
   // Peel away the outermost array layers from the type of `this` to find
   // the core element type. In the process, count the number of elements.
@@ -699,7 +699,7 @@ function TypedArrayRedimension(newArrayType) {
     break;
 
   default:
-    ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, "this", "typed array");
+    ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
   }
   while (DESCR_KIND(oldElementType) === JS_TYPEREPR_SIZED_ARRAY_KIND) {
     oldElementCount *= oldElementType.length;
@@ -717,14 +717,12 @@ function TypedArrayRedimension(newArrayType) {
 
   // Check that the total number of elements does not change.
   if (oldElementCount !== newElementCount) {
-    ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, 1,
-               "New number of elements does not match old number of elements");
+    ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
   }
 
   // Check that the element types are equivalent.
   if (DESCR_TYPE_REPR(oldElementType) !== DESCR_TYPE_REPR(newElementType)) {
-    ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, 1,
-               "New element type is not equivalent to old element type");
+    ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
   }
 
   // Together, this should imply that the sizes are unchanged.
@@ -768,8 +766,7 @@ function X4ToSource() {
 // Warning: user exposed!
 function ArrayShorthand(...dims) {
   if (!IsObject(this) || !ObjectIsTypeDescr(this))
-    ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS,
-               "this", "typed object");
+    ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
 
   var T = GetTypedObjectModule();
 
@@ -828,7 +825,7 @@ function TypedObjectArrayTypeBuild(a,b,c) {
   // Arguments (this unsized) : length, [depth], func
 
   if (!IsObject(this) || !ObjectIsTypeDescr(this))
-    ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, "this", "type object");
+    ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
   var kind = DESCR_KIND(this);
   switch (kind) {
   case JS_TYPEREPR_SIZED_ARRAY_KIND:
@@ -837,9 +834,9 @@ function TypedObjectArrayTypeBuild(a,b,c) {
     else if (typeof a === "number" && typeof b === "function")
       return BuildTypedSeqImpl(this, this.length, a, b);
     else if (typeof a === "number")
-      return ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, "2", "function");
+      return ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
     else
-      return ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, "1", "function");
+      return ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
   case JS_TYPEREPR_UNSIZED_ARRAY_KIND:
     var len = a;
     if (typeof b === "function")
@@ -847,11 +844,11 @@ function TypedObjectArrayTypeBuild(a,b,c) {
     else if (typeof b === "number" && typeof c === "function")
       return BuildTypedSeqImpl(this, len, b, c);
     else if (typeof b === "number")
-      return ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, "3", "function");
+      return ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
     else
-      return ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, "2", "function");
+      return ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
   default:
-    return ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, "this", "type object");
+    return ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
   }
 }
 
@@ -860,7 +857,7 @@ function TypedObjectArrayTypeFrom(a, b, c) {
   // Arguments: arrayLike, [depth], func
 
   if (!IsObject(this) || !ObjectIsTypeDescr(this))
-    ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, "this", "type object");
+    ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
 
   var untypedInput = !IsObject(a) || !ObjectIsTypedDatum(a);
 
@@ -876,7 +873,7 @@ function TypedObjectArrayTypeFrom(a, b, c) {
     else if (IsCallable(b))
       return MapUntypedSeqImpl(a, this, b);
     else
-      return ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, "2", "function");
+      return ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
   } else {
     var explicitDepth = (typeof b === "number");
     if (explicitDepth && IsCallable(c))
@@ -884,19 +881,19 @@ function TypedObjectArrayTypeFrom(a, b, c) {
     else if (IsCallable(b))
       return MapTypedSeqImpl(a, 1, this, b);
     else if (explicitDepth)
-      return ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, "3", "function");
+      return ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
     else
-      return ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, "2", "number");
+      return ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
   }
 }
 
 // Warning: user exposed!
 function TypedArrayMap(a, b) {
   if (!IsObject(this) || !ObjectIsTypedDatum(this))
-    return ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, "this", "typed array");
+    return ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
   var thisType = DATUM_TYPE_DESCR(this);
   if (!TypeDescrIsArrayType(thisType))
-    return ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, "this", "typed array");
+    return ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
 
   // Arguments: [depth], func
   if (typeof a === "number" && typeof b === "function")
@@ -904,22 +901,22 @@ function TypedArrayMap(a, b) {
   else if (typeof a === "function")
     return MapTypedSeqImpl(this, 1, thisType, a);
   else if (typeof a === "number")
-    return ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, "3", "function");
+    return ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
   else
-    return ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, "2", "function");
+    return ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
 }
 
 // Warning: user exposed!
 function TypedArrayReduce(a, b) {
   // Arguments: func, [initial]
   if (!IsObject(this) || !ObjectIsTypedDatum(this))
-    return ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, "this", "typed array");
+    return ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
   var thisType = DATUM_TYPE_DESCR(this);
   if (!TypeDescrIsArrayType(thisType))
-    return ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, "this", "typed array");
+    return ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
 
   if (a !== undefined && typeof a !== "function")
-    return ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, "1", "function");
+    return ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
 
   var outputType = thisType.elementType;
   return ReduceTypedSeqImpl(this, outputType, a, b);
@@ -929,16 +926,16 @@ function TypedArrayReduce(a, b) {
 function TypedArrayScatter(a, b, c, d) {
   // Arguments: outputArrayType, indices, defaultValue, conflictFunction
   if (!IsObject(this) || !ObjectIsTypedDatum(this))
-    return ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, "this", "typed array");
+    return ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
   var thisType = DATUM_TYPE_DESCR(this);
   if (!TypeDescrIsArrayType(thisType))
-    return ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, "this", "typed array");
+    return ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
 
   if (!IsObject(a) || !ObjectIsTypeDescr(a) || !TypeDescrIsSizedArrayType(a))
-    return ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, "1", "sized array type");
+    return ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
 
   if (d !== undefined && typeof d !== "function")
-    return ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, "4", "function");
+    return ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
 
   return ScatterTypedSeqImpl(this, a, b, c, d);
 }
@@ -947,13 +944,13 @@ function TypedArrayScatter(a, b, c, d) {
 function TypedArrayFilter(func) {
   // Arguments: predicate
   if (!IsObject(this) || !ObjectIsTypedDatum(this))
-    return ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, "this", "typed array");
+    return ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
   var thisType = DATUM_TYPE_DESCR(this);
   if (!TypeDescrIsArrayType(thisType))
-    return ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, "this", "typed array");
+    return ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
 
   if (typeof func !== "function")
-    return ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, "1", "function");
+    return ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
 
   return FilterTypedSeqImpl(this, func);
 }
@@ -1019,7 +1016,7 @@ function TypeDescrIsArrayType(t) {
   case JS_TYPEREPR_STRUCT_KIND:
     return false;
   default:
-    return ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, 1, "unknown kind of typed object");
+    return ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
   }
 }
 
@@ -1037,7 +1034,7 @@ function TypeDescrIsSizedArrayType(t) {
   case JS_TYPEREPR_STRUCT_KIND:
     return false;
   default:
-    return ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, 1, "unknown kind of typed object");
+    return ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
   }
 }
 
@@ -1055,7 +1052,7 @@ function TypeDescrIsSimpleType(t) {
   case JS_TYPEREPR_STRUCT_KIND:
     return false;
   default:
-    return ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, 1, "unknown kind of typed object");
+    return ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
   }
 }
 
@@ -1065,7 +1062,7 @@ function BuildTypedSeqImpl(arrayType, len, depth, func) {
 
   if (depth <= 0 || TO_INT32(depth) !== depth)
     // RangeError("bad depth")
-    ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, "depth", "positive int");
+    ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
 
   // For example, if we have as input
   //    ArrayType(ArrayType(T, 4), 5)
@@ -1214,14 +1211,14 @@ function MapTypedSeqImpl(inArray, depth, outputType, func) {
   assert(TypeDescrIsArrayType(outputType), "Map/From called on non array-type outputType");
 
   if (depth <= 0 || TO_INT32(depth) !== depth)
-    ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, "depth", "positive int");
+    ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
 
   // Compute iteration space for input and output and check for compatibility.
   var inputType = TypeOfTypedDatum(inArray);
   var [inIterationSpace, inGrainType, _] =
     ComputeIterationSpace(inputType, depth, inArray.length);
   if (!IsObject(inGrainType) || !ObjectIsTypeDescr(inGrainType))
-    ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, 1, "type object");
+    ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
   var [iterationSpace, outGrainType, totalLength] =
     ComputeIterationSpace(outputType, depth, outputType.variable ? inArray.length : outputType.length);
   for (var i = 0; i < depth; i++)
@@ -1374,7 +1371,7 @@ function FilterTypedSeqImpl(array, func) {
 
   var arrayType = TypeOfTypedDatum(array);
   if (!TypeDescrIsArrayType(arrayType))
-    ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, "this", "typed array");
+    ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
 
   var elementType = arrayType.elementType;
   var flags = new Uint8Array(NUM_BYTES(array.length));
