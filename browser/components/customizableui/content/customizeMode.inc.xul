@@ -30,6 +30,13 @@
         <menupopup id="customization-toolbar-menu" onpopupshowing="onViewToolbarsPopupShowing(event)"/>
       </button>
       <spacer flex="1"/>
+      <label id="customization-undo-reset"
+             hidden="true"
+             onclick="gCustomizeMode.undoReset();"
+             onkeypress="gCustomizeMode.undoReset();"
+             class="text-link">
+        &undoCmd.label;
+      </label>
       <button id="customization-reset-button" oncommand="gCustomizeMode.reset();" label="&customizeMode.restoreDefaults;" class="customizationmode-button"/>
     </hbox>
   </vbox>

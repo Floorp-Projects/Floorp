@@ -239,6 +239,7 @@ CustomizeMode.prototype = {
       document.getElementById("PanelUI-quit").setAttribute("disabled", true);
 
       this._updateResetButton();
+      this._updateUndoResetButton();
 
       this._skipSourceNodeCheck = Services.prefs.getPrefType(kSkipSourceNodePref) == Ci.nsIPrefBranch.PREF_BOOL &&
                                   Services.prefs.getBoolPref(kSkipSourceNodePref);
@@ -854,8 +855,31 @@ CustomizeMode.prototype = {
       this.persistCurrentSets(true);
 
       this._updateResetButton();
+      this._updateUndoResetButton();
       this._updateEmptyPaletteNotice();
       this._showPanelCustomizationPlaceholders();
+      this.resetting = false;
+    }.bind(this)).then(null, ERROR);
+  },
+
+  undoReset: function() {
+    this.resetting = true;
+
+    return Task.spawn(function() {
+      this._removePanelCustomizationPlaceholders();
+      yield this.depopulatePalette();
+      yield this._unwrapToolbarItems();
+
+      CustomizableUI.undoReset();
+
+      yield this._wrapToolbarItems();
+      yield this.populatePalette();
+
+      this.persistCurrentSets(true);
+
+      this._updateResetButton();
+      this._updateUndoResetButton();
+      this._updateEmptyPaletteNotice();
       this.resetting = false;
     }.bind(this)).then(null, ERROR);
   },
@@ -958,6 +982,7 @@ CustomizeMode.prototype = {
     this._changed = true;
     if (!this.resetting) {
       this._updateResetButton();
+      this._updateUndoResetButton();
       this._updateEmptyPaletteNotice();
     }
     this.dispatchToolboxEvent("customizationchange");
@@ -971,6 +996,11 @@ CustomizeMode.prototype = {
   _updateResetButton: function() {
     let btn = this.document.getElementById("customization-reset-button");
     btn.disabled = CustomizableUI.inDefaultState;
+  },
+
+  _updateUndoResetButton: function() {
+    let undoReset =  this.document.getElementById("customization-undo-reset");
+    undoReset.hidden = !CustomizableUI.canUndoReset;
   },
 
   handleEvent: function(aEvent) {
