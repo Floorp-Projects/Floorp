@@ -24,7 +24,7 @@ function pref(name, value) {
   }
 }
 
-let WebAppRT = {
+let WebappRT = {
   DEFAULT_PREFS_FILENAME: "default-prefs.js",
 
   prefs: [

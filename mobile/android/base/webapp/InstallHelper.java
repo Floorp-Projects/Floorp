@@ -27,8 +27,8 @@ import android.net.Uri;
 import android.util.Log;
 
 public class InstallHelper implements GeckoEventListener {
-    private static final String LOGTAG = "GeckoWebAppInstallHelper";
-    private static final String[] INSTALL_EVENT_NAMES = new String[] {"WebApps:PostInstall"};
+    private static final String LOGTAG = "GeckoWebappInstallHelper";
+    private static final String[] INSTALL_EVENT_NAMES = new String[] {"Webapps:Postinstall"};
     private final Context mContext;
     private final InstallCallback mCallback;
     private final ApkResources mApkResources;
@@ -86,7 +86,7 @@ public class InstallHelper implements GeckoEventListener {
             message.put("title", mApkResources.getAppName());
             message.put("manifest", new JSONObject(mApkResources.getManifest(mContext)));
 
-            String appType = mApkResources.getWebAppType();
+            String appType = mApkResources.getWebappType();
             message.putOpt("type", appType);
             if ("packaged".equals(appType)) {
                 message.putOpt("updateManifest", new JSONObject(mApkResources.getMiniManifest(mContext)));

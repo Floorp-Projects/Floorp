@@ -85,7 +85,7 @@ this.WebappManager = {
     }
 
     sendMessageToJava({
-      type: "WebApps:InstallApk",
+      type: "Webapps:InstallApk",
       filePath: filePath,
       data: JSON.stringify(aMessage),
     });
@@ -157,7 +157,7 @@ this.WebappManager = {
 
         // aData.app.origin may now point to the app: url that hosts this app.
         sendMessageToJava({
-          type: "WebApps:PostInstall",
+          type: "Webapps:Postinstall",
           apkPackageName: aData.app.apkPackageName,
           origin: aData.app.origin,
         });
@@ -171,7 +171,7 @@ this.WebappManager = {
     log("launchWebapp: " + manifestURL);
 
     sendMessageToJava({
-      type: "WebApps:Open",
+      type: "Webapps:Open",
       manifestURL: manifestURL,
       origin: origin
     });
@@ -285,7 +285,7 @@ this.WebappManager = {
 
       // Map APK names to APK versions.
       let apkNameToVersion = JSON.parse(sendMessageToJava({
-        type: "WebApps:GetApkVersions",
+        type: "Webapps:GetApkVersions",
         packageNames: installedApps.map(app => app.packageName).filter(packageName => !!packageName)
       }));
 
@@ -450,11 +450,11 @@ this.WebappManager = {
       for (let apk of downloadedApks) {
         let msg = {
           app: apk.app,
-          // TODO: figure out why WebApps:InstallApk needs the "from" property.
+          // TODO: figure out why Webapps:InstallApk needs the "from" property.
           from: apk.app.installOrigin,
         };
         sendMessageToJava({
-          type: "WebApps:InstallApk",
+          type: "Webapps:InstallApk",
           filePath: apk.filePath,
           data: JSON.stringify(msg),
         });

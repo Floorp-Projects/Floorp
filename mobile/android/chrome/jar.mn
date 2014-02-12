@@ -40,7 +40,7 @@ chrome.jar:
   content/SelectHelper.js              (content/SelectHelper.js)
   content/SelectionHandler.js          (content/SelectionHandler.js)
   content/dbg-browser-actors.js        (content/dbg-browser-actors.js)
-* content/WebAppRT.js                  (content/WebAppRT.js)
+* content/WebappRT.js                  (content/WebappRT.js)
   content/InputWidgetHelper.js         (content/InputWidgetHelper.js)
   content/WebrtcUI.js                  (content/WebrtcUI.js)
   content/MemoryObserver.js            (content/MemoryObserver.js)
