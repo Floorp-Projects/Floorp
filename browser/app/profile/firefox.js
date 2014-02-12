@@ -1201,13 +1201,13 @@ pref("devtools.gcli.eagerHelper", 2);
 
 // Remember the Web Console filters
 pref("devtools.webconsole.filter.network", true);
-pref("devtools.webconsole.filter.networkinfo", true);
+pref("devtools.webconsole.filter.networkinfo", false);
 pref("devtools.webconsole.filter.netwarn", true);
 pref("devtools.webconsole.filter.csserror", true);
 pref("devtools.webconsole.filter.cssparser", false);
 pref("devtools.webconsole.filter.csslog", false);
 pref("devtools.webconsole.filter.exception", true);
-pref("devtools.webconsole.filter.jswarn", true);
+pref("devtools.webconsole.filter.jswarn", false);
 pref("devtools.webconsole.filter.jslog", true);
 pref("devtools.webconsole.filter.error", true);
 pref("devtools.webconsole.filter.warn", true);
