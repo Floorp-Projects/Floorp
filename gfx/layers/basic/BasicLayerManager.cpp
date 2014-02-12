@@ -415,7 +415,7 @@ MarkLayersHidden(Layer* aLayer, const nsIntRect& aClipRect,
   }
 
   BasicImplData* data = ToData(aLayer);
-  data->SetOperator(gfxContext::OPERATOR_OVER);
+  data->SetOperator(CompositionOp::OP_OVER);
   data->SetClipToVisibleRegion(false);
   data->SetDrawAtomically(false);
 
@@ -500,13 +500,13 @@ ApplyDoubleBuffering(Layer* aLayer, const nsIntRect& aVisibleRect)
   // using OPERATOR_SOURCE to ensure that alpha values in a transparent window
   // are cleared. This can also be faster than OPERATOR_OVER.
   if (!container) {
-    data->SetOperator(gfxContext::OPERATOR_SOURCE);
+    data->SetOperator(CompositionOp::OP_SOURCE);
     data->SetDrawAtomically(true);
   } else {
     if (container->UseIntermediateSurface() ||
         !container->ChildrenPartitionVisibleRegion(newVisibleRect)) {
       // We need to double-buffer this container.
-      data->SetOperator(gfxContext::OPERATOR_SOURCE);
+      data->SetOperator(CompositionOp::OP_SOURCE);
       container->ForceIntermediateSurface();
     } else {
       // Tell the children to clip to their visible regions so our assumption
@@ -824,7 +824,7 @@ BasicLayerManager::PaintSelfOrChildren(PaintLayerContext& aPaintContext,
           aPaintContext.mCallback, aPaintContext.mCallbackData,
           aPaintContext.mReadback);
     } else {
-      data->Paint(aGroupTarget, aPaintContext.mLayer->GetMaskLayer());
+      data->DeprecatedPaint(aGroupTarget, aPaintContext.mLayer->GetMaskLayer());
     }
   } else {
     ReadbackProcessor readback;
@@ -862,7 +862,8 @@ BasicLayerManager::FlushGroup(PaintLayerContext& aPaintContext, bool aNeedsClipT
                              aPaintContext.mLayer->GetEffectiveVisibleRegion());
     }
     BasicContainerLayer* container = static_cast<BasicContainerLayer*>(aPaintContext.mLayer);
-    AutoSetOperator setOperator(aPaintContext.mTarget, container->GetOperator());
+    AutoSetOperator setOperator(aPaintContext.mTarget,
+                                ThebesOp(container->GetOperator()));
     PaintWithMask(aPaintContext.mTarget, aPaintContext.mLayer->GetEffectiveOpacity(),
                   aPaintContext.mLayer->GetMaskLayer());
   }
@@ -896,7 +897,7 @@ BasicLayerManager::PaintLayer(gfxContext* aTarget,
   bool needsClipToVisibleRegion =
     data->GetClipToVisibleRegion() && !aLayer->AsThebesLayer();
   NS_ASSERTION(needsGroup || !aLayer->GetFirstChild() ||
-               container->GetOperator() == gfxContext::OPERATOR_OVER,
+               container->GetOperator() == CompositionOp::OP_OVER,
                "non-OVER operator should have forced UseIntermediateSurface");
   NS_ASSERTION(!aLayer->GetFirstChild() || !aLayer->GetMaskLayer() ||
                container->UseIntermediateSurface(),

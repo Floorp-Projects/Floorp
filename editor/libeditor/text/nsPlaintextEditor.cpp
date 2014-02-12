@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
+#include "TextComposition.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Selection.h"
@@ -39,6 +40,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsINode.h"
 #include "nsIPresShell.h"
+#include "nsIPrivateTextEvent.h"
 #include "nsIPrivateTextRange.h"
 #include "nsISelection.h"
 #include "nsISelectionController.h"
@@ -695,8 +697,7 @@ NS_IMETHODIMP nsPlaintextEditor::InsertText(const nsAString &aStringToInsert)
   nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
 
   EditAction opID = EditAction::insertText;
-  if (mInIMEMode) 
-  {
+  if (mComposition) {
     opID = EditAction::insertIMEText;
   }
   nsAutoPlaceHolderBatch batch(this, nullptr); 
@@ -811,9 +812,9 @@ NS_IMETHODIMP nsPlaintextEditor::InsertLineBreak()
 }
 
 nsresult
-nsPlaintextEditor::BeginIMEComposition()
+nsPlaintextEditor::BeginIMEComposition(WidgetCompositionEvent* aEvent)
 {
-  NS_ENSURE_TRUE(!mInIMEMode, NS_OK);
+  NS_ENSURE_TRUE(!mComposition, NS_OK);
 
   if (IsPasswordEditor()) {
     NS_ENSURE_TRUE(mRules, NS_ERROR_NULL_POINTER);
@@ -825,14 +826,19 @@ nsPlaintextEditor::BeginIMEComposition()
     textEditRules->ResetIMETextPWBuf();
   }
 
-  return nsEditor::BeginIMEComposition();
+  return nsEditor::BeginIMEComposition(aEvent);
 }
 
 nsresult
-nsPlaintextEditor::UpdateIMEComposition(const nsAString& aCompositionString,
-                                        nsIPrivateTextRangeList* aTextRangeList)
+nsPlaintextEditor::UpdateIMEComposition(nsIDOMEvent* aDOMTextEvent)
 {
-  NS_ABORT_IF_FALSE(aTextRangeList, "aTextRangeList must not be nullptr");
+  NS_ABORT_IF_FALSE(aDOMTextEvent, "aDOMTextEvent must not be nullptr");
+
+  WidgetTextEvent* widgetTextEvent =
+    aDOMTextEvent->GetInternalNSEvent()->AsTextEvent();
+  NS_ENSURE_TRUE(widgetTextEvent, NS_ERROR_INVALID_ARG);
+
+  EnsureComposition(widgetTextEvent);
 
   nsCOMPtr<nsIPresShell> ps = GetPresShell();
   NS_ENSURE_TRUE(ps, NS_ERROR_NOT_INITIALIZED);
@@ -843,19 +849,23 @@ nsPlaintextEditor::UpdateIMEComposition(const nsAString& aCompositionString,
 
   nsRefPtr<nsCaret> caretP = ps->GetCaret();
 
-  // Update information of clauses in the new composition string.
-  // This will be refered by followed methods.
-  mIMETextRangeList = aTextRangeList;
-
-  // We set mIsIMEComposing properly.
-  SetIsIMEComposing();
+  nsCOMPtr<nsIPrivateTextEvent> privateTextEvent =
+    do_QueryInterface(aDOMTextEvent);
+  NS_ENSURE_TRUE(privateTextEvent, NS_ERROR_INVALID_ARG);
 
   {
+    TextComposition::TextEventHandlingMarker
+      textEventHandlingMarker(mComposition, widgetTextEvent);
+
+    // Update information of clauses in the new composition string.
+    // This will be refered by followed methods.
+    mIMETextRangeList = privateTextEvent->GetInputRange();
+    NS_ABORT_IF_FALSE(mIMETextRangeList,
+                      "mIMETextRangeList must not be nullptr");
+
     nsAutoPlaceHolderBatch batch(this, nsGkAtoms::IMETxnName);
 
-    rv = InsertText(aCompositionString);
-
-    mIMEBufferLength = aCompositionString.Length();
+    rv = InsertText(widgetTextEvent->theText);
 
     if (caretP) {
       caretP->SetCaretDOMSelection(selection);
@@ -866,7 +876,7 @@ nsPlaintextEditor::UpdateIMEComposition(const nsAString& aCompositionString,
   // Note that if committed, we don't need to notify it since it will be
   // notified at followed compositionend event.
   // NOTE: We must notify after the auto batch will be gone.
-  if (mIsIMEComposing) {
+  if (IsIMEComposing()) {
     NotifyEditorObservers();
   }
 

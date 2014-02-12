@@ -383,6 +383,14 @@ class MochitestOptions(optparse.OptionParser):
            "help": "Produce a DMD dump after each test in the directory specified "
                   "by --dump-output-directory."
         }],
+        [["--slowscript"],
+         { "action": "store_true",
+           "default": False,
+           "dest": "slowscript",
+           "help": "Do not set the JS_DISABLE_SLOW_SCRIPT_SIGNALS env variable; "
+                   "when not set, recoverable but misleading SIGSEGV instances "
+                   "may occur in Ion/Odin JIT code."
+        }],
     ]
 
     def __init__(self, **kwargs):
