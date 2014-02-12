@@ -2257,7 +2257,7 @@ abstract public class BrowserApp extends GeckoApp
                     item.setIcon(R.drawable.ic_menu_bookmark_add);
                 } else {
                     tab.addBookmark();
-                    mToast.show(false,
+                    getButtonToast().show(false,
                         getResources().getString(R.string.bookmark_added),
                         getResources().getString(R.string.bookmark_options),
                         null,
