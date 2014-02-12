@@ -2102,8 +2102,7 @@ TypedObject::construct(JSContext *cx, unsigned int argc, Value *vp)
         // First argument is a length.
         if (nextArg >= argc || !args[nextArg].isInt32()) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage,
-                                 nullptr, JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS,
-                                 "1", "array length");
+                                 nullptr, JSMSG_TYPEDOBJECT_BAD_ARGS);
             return false;
         }
         length = args[nextArg++].toInt32();
