@@ -864,9 +864,7 @@ protected:
   int8_t            mDocDirtyState;      // -1 = not initialized
   uint8_t           mSpellcheckCheckboxState; // a Tristate value
 
-  bool mInIMEMode;        // are we inside an IME composition?
   bool mIsIMEComposing;   // is IME in composition state?
-                                                       // This is different from mInIMEMode. see Bug 98434.
 
   bool mShouldTxnSetSelection;  // turn off for conservative selection adjustment by txns
   bool mDidPreDestroy;    // whether PreDestroy has been called
