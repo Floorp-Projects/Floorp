@@ -30,14 +30,6 @@ public class testBrowserProvider extends ContentProviderTest {
     private String UNFILED_FOLDER_GUID;
     private String READING_LIST_FOLDER_GUID;
 
-    private Uri mBookmarksUri;
-    private Uri mBookmarksPositionUri;
-    private Uri mHistoryUri;
-    private Uri mHistoryOldUri;
-    private Uri mCombinedUri;
-    private Uri mFaviconsUri;
-    private Uri mThumbnailsUri;
-
     private String mBookmarksIdCol;
     private String mBookmarksTitleCol;
     private String mBookmarksUrlCol;
@@ -92,15 +84,6 @@ public class testBrowserProvider extends ContentProviderTest {
     }
 
     private void loadContractInfo() throws Exception {
-        mBookmarksUri = getContentUri("Bookmarks");
-        mHistoryUri = getContentUri("History");
-        mHistoryOldUri = getUriColumn("History", "CONTENT_OLD_URI");
-        mCombinedUri = getContentUri("Combined");
-        mFaviconsUri = getContentUri("Favicons");
-        mThumbnailsUri = getContentUri("Thumbnails");
-
-        mBookmarksPositionUri = getUriColumn("Bookmarks", "POSITIONS_CONTENT_URI");
-
         PLACES_FOLDER_GUID = getStringColumn("Bookmarks", "PLACES_FOLDER_GUID");
         MOBILE_FOLDER_GUID = getStringColumn("Bookmarks", "MOBILE_FOLDER_GUID");
         MENU_FOLDER_GUID = getStringColumn("Bookmarks", "MENU_FOLDER_GUID");
@@ -178,7 +161,7 @@ public class testBrowserProvider extends ContentProviderTest {
 
         String guid = getStringColumn("Bookmarks", "GUID");
 
-        mProvider.delete(appendUriParam(mBookmarksUri, "PARAM_IS_SYNC", "1"),
+        mProvider.delete(appendUriParam(BrowserContract.Bookmarks.CONTENT_URI, "PARAM_IS_SYNC", "1"),
                          guid + " != ? AND " +
                          guid + " != ? AND " +
                          guid + " != ? AND " +
@@ -194,17 +177,17 @@ public class testBrowserProvider extends ContentProviderTest {
                                         UNFILED_FOLDER_GUID,
                                         READING_LIST_FOLDER_GUID });
 
-        c = mProvider.query(appendUriParam(mBookmarksUri, "PARAM_SHOW_DELETED", "1"), null, null, null, null);
+        c = mProvider.query(appendUriParam(BrowserContract.Bookmarks.CONTENT_URI, "PARAM_SHOW_DELETED", "1"), null, null, null, null);
         mAsserter.is(c.getCount(), 7, "All non-special bookmarks and folders were deleted");
 
-        mProvider.delete(appendUriParam(mHistoryUri, "PARAM_IS_SYNC", "1"), null, null);
-        c = mProvider.query(appendUriParam(mHistoryUri, "PARAM_SHOW_DELETED", "1"), null, null, null, null);
+        mProvider.delete(appendUriParam(BrowserContract.History.CONTENT_URI, "PARAM_IS_SYNC", "1"), null, null);
+        c = mProvider.query(appendUriParam(BrowserContract.History.CONTENT_URI, "PARAM_SHOW_DELETED", "1"), null, null, null, null);
         mAsserter.is(c.getCount(), 0, "All history entries were deleted");
 
-        mProvider.delete(mFaviconsUri, null, null);
+        mProvider.delete(BrowserContract.Favicons.CONTENT_URI, null, null);
         mAsserter.is(c.getCount(), 0, "All favicons were deleted");
 
-        mProvider.delete(mThumbnailsUri, null, null);
+        mProvider.delete(BrowserContract.Thumbnails.CONTENT_URI, null, null);
         mAsserter.is(c.getCount(), 0, "All thumbnails were deleted");
     }
 
@@ -231,25 +214,25 @@ public class testBrowserProvider extends ContentProviderTest {
 
     private Cursor getBookmarksByParent(long parent) throws Exception {
         // Order by position.
-        return mProvider.query(mBookmarksUri, null,
+        return mProvider.query(BrowserContract.Bookmarks.CONTENT_URI, null,
                                mBookmarksParentCol + " = ?",
                                new String[] { String.valueOf(parent) },
                                mBookmarksPositionCol);
     }
 
     private Cursor getBookmarkByGuid(String guid) throws Exception {
-        return mProvider.query(mBookmarksUri, null,
+        return mProvider.query(BrowserContract.Bookmarks.CONTENT_URI, null,
                                mBookmarksGuidCol + " = ?",
                                new String[] { guid },
                                null);
     }
 
     private Cursor getBookmarkById(long id) throws Exception {
-        return getBookmarkById(mBookmarksUri, id, null);
+        return getBookmarkById(BrowserContract.Bookmarks.CONTENT_URI, id, null);
     }
 
     private Cursor getBookmarkById(long id, String[] projection) throws Exception {
-        return getBookmarkById(mBookmarksUri, id, projection);
+        return getBookmarkById(BrowserContract.Bookmarks.CONTENT_URI, id, projection);
     }
 
     private Cursor getBookmarkById(Uri bookmarksUri, long id) throws Exception {
@@ -298,11 +281,11 @@ public class testBrowserProvider extends ContentProviderTest {
     }
 
     private Cursor getHistoryEntryById(long id) throws Exception {
-        return getHistoryEntryById(mHistoryUri, id, null);
+        return getHistoryEntryById(BrowserContract.History.CONTENT_URI, id, null);
     }
 
     private Cursor getHistoryEntryById(long id, String[] projection) throws Exception {
-        return getHistoryEntryById(mHistoryUri, id, projection);
+        return getHistoryEntryById(BrowserContract.History.CONTENT_URI, id, projection);
     }
 
     private Cursor getHistoryEntryById(Uri historyUri, long id) throws Exception {
@@ -317,14 +300,14 @@ public class testBrowserProvider extends ContentProviderTest {
     }
 
     private Cursor getFaviconsByUrl(String url) throws Exception {
-        return mProvider.query(mCombinedUri, null,
+        return mProvider.query(BrowserContract.Combined.CONTENT_URI, null,
                                mCombinedUrlCol + " = ?",
                                new String[] { url },
                                null);
     }
 
     private Cursor getThumbnailByUrl(String url) throws Exception {
-        return mProvider.query(mThumbnailsUri, null,
+        return mProvider.query(BrowserContract.Thumbnails.CONTENT_URI, null,
                                mThumbnailsUrlCol + " = ?",
                                new String[] { url },
                                null);
@@ -411,7 +394,7 @@ public class testBrowserProvider extends ContentProviderTest {
                 values.put(mHistoryUrlCol, "http://www.test.org/" + i);
 
                 // Insert
-                builder = ContentProviderOperation.newInsert(mHistoryUri);
+                builder = ContentProviderOperation.newInsert(BrowserContract.History.CONTENT_URI);
                 builder.withValues(values);
                 // Queue the operation
                 mOperations.add(builder.build());
@@ -422,7 +405,7 @@ public class testBrowserProvider extends ContentProviderTest {
 
             boolean allFound = true;
             for (int i = 0; i < TESTCOUNT; i++) {
-                Cursor cursor = mProvider.query(mHistoryUri,
+                Cursor cursor = mProvider.query(BrowserContract.History.CONTENT_URI,
                                                 null,
                                                 mHistoryUrlCol + " = ?",
                                                 new String[] { "http://www.test.org/" + i },
@@ -439,7 +422,7 @@ public class testBrowserProvider extends ContentProviderTest {
             values.clear();
             values.put(mHistoryVisitsCol, 1);
             for (int i = 0; i < TESTCOUNT; i++) {
-                builder = ContentProviderOperation.newUpdate(mHistoryUri);
+                builder = ContentProviderOperation.newUpdate(BrowserContract.History.CONTENT_URI);
                 builder.withSelection(mHistoryUrlCol  + " = ?",
                                       new String[] {"http://www.test.org/" + i});
                 builder.withValues(values);
@@ -459,7 +442,7 @@ public class testBrowserProvider extends ContentProviderTest {
 
             // Delte all visits
             for (int i = 0; i < TESTCOUNT; i++) {
-                builder = ContentProviderOperation.newDelete(mHistoryUri);
+                builder = ContentProviderOperation.newDelete(BrowserContract.History.CONTENT_URI);
                 builder.withSelection(mHistoryUrlCol  + " = ?",
                                       new String[] {"http://www.test.org/" + i});
                 builder.withExpectedCount(1);
@@ -482,18 +465,18 @@ public class testBrowserProvider extends ContentProviderTest {
             // Test a bunch of inserts with applyBatch
             ContentProviderOperation.Builder builder = null;
             ContentValues values = createFaviconEntry("http://www.test.org", "FAVICON");
-            builder = ContentProviderOperation.newInsert(mFaviconsUri);
+            builder = ContentProviderOperation.newInsert(BrowserContract.Favicons.CONTENT_URI);
             builder.withValues(values);
             mOperations.add(builder.build());
 
             // Make a duplicate, this will fail because of a UNIQUE constraint
-            builder = ContentProviderOperation.newInsert(mFaviconsUri);
+            builder = ContentProviderOperation.newInsert(BrowserContract.Favicons.CONTENT_URI);
             builder.withValues(values);
             mOperations.add(builder.build());
 
             // This is valid and should be in the table afterwards
             values.put(mFaviconsUrlCol, "http://www.test.org/valid.ico");
-            builder = ContentProviderOperation.newInsert(mFaviconsUri);
+            builder = ContentProviderOperation.newInsert(BrowserContract.Favicons.CONTENT_URI);
             builder.withValues(values);
             mOperations.add(builder.build());
 
@@ -510,7 +493,7 @@ public class testBrowserProvider extends ContentProviderTest {
             mAsserter.is(seenException, true, "Expected failure in favicons table");
 
             boolean allFound = true;
-            Cursor cursor = mProvider.query(mFaviconsUri,
+            Cursor cursor = mProvider.query(BrowserContract.Favicons.CONTENT_URI,
                                             null,
                                             mFaviconsUrlCol + " = ?",
                                             new String[] { "http://www.test.org/valid.ico" },
@@ -533,12 +516,12 @@ public class testBrowserProvider extends ContentProviderTest {
                 allVals[i].put(mHistoryUrlCol, "http://www.test.org/" + i);
             }
 
-            int inserts = mProvider.bulkInsert(mHistoryUri, allVals);
+            int inserts = mProvider.bulkInsert(BrowserContract.History.CONTENT_URI, allVals);
             mAsserter.is(inserts, TESTCOUNT, "Excepted number of inserts matches");
 
             boolean allFound = true;
             for (int i = 0; i < TESTCOUNT; i++) {
-                Cursor cursor = mProvider.query(mHistoryUri,
+                Cursor cursor = mProvider.query(BrowserContract.History.CONTENT_URI,
                                                 null,
                                                 mHistoryUrlCol + " = ?",
                                                 new String[] { "http://www.test.org/" + i },
@@ -567,7 +550,7 @@ public class testBrowserProvider extends ContentProviderTest {
     class TestSpecialFolders extends Test {
         @Override
         public void test() throws Exception {
-            Cursor c = mProvider.query(mBookmarksUri,
+            Cursor c = mProvider.query(BrowserContract.Bookmarks.CONTENT_URI,
                                        new String[] { mBookmarksIdCol,
                                                       mBookmarksGuidCol,
                                                       mBookmarksParentCol },
@@ -616,7 +599,7 @@ public class testBrowserProvider extends ContentProviderTest {
             long id = -1;
 
             try {
-                id = ContentUris.parseId(mProvider.insert(mBookmarksUri, b));
+                id = ContentUris.parseId(mProvider.insert(BrowserContract.Bookmarks.CONTENT_URI, b));
             } catch (Exception e) {}
 
             return id;
@@ -625,7 +608,7 @@ public class testBrowserProvider extends ContentProviderTest {
         @Override
         public void test() throws Exception {
             ContentValues b = createOneBookmark();
-            long id = ContentUris.parseId(mProvider.insert(mBookmarksUri, b));
+            long id = ContentUris.parseId(mProvider.insert(BrowserContract.Bookmarks.CONTENT_URI, b));
             Cursor c = getBookmarkById(id);
 
             mAsserter.is(c.moveToFirst(), true, "Inserted bookmark found");
@@ -664,7 +647,7 @@ public class testBrowserProvider extends ContentProviderTest {
                 id = -1;
 
                 try {
-                    id = ContentUris.parseId(mProvider.insert(mBookmarksUri, b));
+                    id = ContentUris.parseId(mProvider.insert(BrowserContract.Bookmarks.CONTENT_URI, b));
                 } catch (Exception e) {}
 
                 mAsserter.is(new Long(id), new Long(-1),
@@ -673,7 +656,7 @@ public class testBrowserProvider extends ContentProviderTest {
 
             b = createOneBookmark();
             b.remove(mBookmarksTypeCol);
-            id = ContentUris.parseId(mProvider.insert(mBookmarksUri, b));
+            id = ContentUris.parseId(mProvider.insert(BrowserContract.Bookmarks.CONTENT_URI, b));
             c = getBookmarkById(id);
 
             mAsserter.is(c.moveToFirst(), true, "Inserted bookmark found");
@@ -691,10 +674,10 @@ public class testBrowserProvider extends ContentProviderTest {
             final String favicon = "FAVICON";
             final String pageUrl = b.getAsString(mBookmarksUrlCol);
 
-            long id = ContentUris.parseId(mProvider.insert(mBookmarksUri, b));
+            long id = ContentUris.parseId(mProvider.insert(BrowserContract.Bookmarks.CONTENT_URI, b));
 
             // Insert the favicon into the favicons table
-            mProvider.insert(mFaviconsUri, createFaviconEntry(pageUrl, favicon));
+            mProvider.insert(BrowserContract.Favicons.CONTENT_URI, createFaviconEntry(pageUrl, favicon));
 
             Cursor c = getBookmarkById(id, new String[] { mBookmarksFaviconCol });
 
@@ -714,7 +697,7 @@ public class testBrowserProvider extends ContentProviderTest {
     class TestDeleteBookmarks extends Test {
         private long insertOneBookmark() throws Exception {
             ContentValues b = createOneBookmark();
-            long id = ContentUris.parseId(mProvider.insert(mBookmarksUri, b));
+            long id = ContentUris.parseId(mProvider.insert(BrowserContract.Bookmarks.CONTENT_URI, b));
 
             Cursor c = getBookmarkById(id);
             mAsserter.is(c.moveToFirst(), true, "Inserted bookmark found");
@@ -726,27 +709,27 @@ public class testBrowserProvider extends ContentProviderTest {
         public void test() throws Exception {
             long id = insertOneBookmark();
 
-            int deleted = mProvider.delete(mBookmarksUri,
+            int deleted = mProvider.delete(BrowserContract.Bookmarks.CONTENT_URI,
                                            mBookmarksIdCol + " = ?",
                                            new String[] { String.valueOf(id) });
 
             mAsserter.is((deleted == 1), true, "Inserted bookmark was deleted");
 
-            Cursor c = getBookmarkById(appendUriParam(mBookmarksUri, "PARAM_SHOW_DELETED", "1"), id);
+            Cursor c = getBookmarkById(appendUriParam(BrowserContract.Bookmarks.CONTENT_URI, "PARAM_SHOW_DELETED", "1"), id);
             mAsserter.is(c.moveToFirst(), true, "Deleted bookmark was only marked as deleted");
 
-            deleted = mProvider.delete(appendUriParam(mBookmarksUri, "PARAM_IS_SYNC", "1"),
+            deleted = mProvider.delete(appendUriParam(BrowserContract.Bookmarks.CONTENT_URI, "PARAM_IS_SYNC", "1"),
                                        mBookmarksIdCol + " = ?",
                                        new String[] { String.valueOf(id) });
 
             mAsserter.is((deleted == 1), true, "Inserted bookmark was deleted");
 
-            c = getBookmarkById(appendUriParam(mBookmarksUri, "PARAM_SHOW_DELETED", "1"), id);
+            c = getBookmarkById(appendUriParam(BrowserContract.Bookmarks.CONTENT_URI, "PARAM_SHOW_DELETED", "1"), id);
             mAsserter.is(c.moveToFirst(), false, "Inserted bookmark is now actually deleted");
 
             id = insertOneBookmark();
 
-            deleted = mProvider.delete(ContentUris.withAppendedId(mBookmarksUri, id), null, null);
+            deleted = mProvider.delete(ContentUris.withAppendedId(BrowserContract.Bookmarks.CONTENT_URI, id), null, null);
             mAsserter.is((deleted == 1), true,
                          "Inserted bookmark was deleted using URI with id");
 
@@ -759,20 +742,20 @@ public class testBrowserProvider extends ContentProviderTest {
                 ContentValues b = createBookmark("Folder", null, mMobileFolderId,
                         mBookmarksTypeFolder, 0, "folderTags", "folderDescription", "folderKeyword");
 
-                long parentId = ContentUris.parseId(mProvider.insert(mBookmarksUri, b));
+                long parentId = ContentUris.parseId(mProvider.insert(BrowserContract.Bookmarks.CONTENT_URI, b));
                 c = getBookmarkById(parentId);
                 mAsserter.is(c.moveToFirst(), true, "Inserted bookmarks folder found");
 
                 b = createBookmark("Example", "http://example.com", parentId,
                         mBookmarksTypeBookmark, 0, "tags", "description", "keyword");
 
-                id = ContentUris.parseId(mProvider.insert(mBookmarksUri, b));
+                id = ContentUris.parseId(mProvider.insert(BrowserContract.Bookmarks.CONTENT_URI, b));
                 c = getBookmarkById(id);
                 mAsserter.is(c.moveToFirst(), true, "Inserted bookmark found");
 
                 deleted = 0;
                 try {
-                    Uri uri = ContentUris.withAppendedId(mBookmarksUri, parentId);
+                    Uri uri = ContentUris.withAppendedId(BrowserContract.Bookmarks.CONTENT_URI, parentId);
                     deleted = mProvider.delete(appendUriParam(uri, "PARAM_IS_SYNC", "1"), null, null);
                 } catch(Exception e) {}
 
@@ -788,15 +771,15 @@ public class testBrowserProvider extends ContentProviderTest {
             ContentValues b = createOneBookmark();
 
             final String pageUrl = b.getAsString(mBookmarksUrlCol);
-            long id = ContentUris.parseId(mProvider.insert(mBookmarksUri, b));
+            long id = ContentUris.parseId(mProvider.insert(BrowserContract.Bookmarks.CONTENT_URI, b));
 
             // Insert the favicon into the favicons table
-            mProvider.insert(mFaviconsUri, createFaviconEntry(pageUrl, "FAVICON"));
+            mProvider.insert(BrowserContract.Favicons.CONTENT_URI, createFaviconEntry(pageUrl, "FAVICON"));
 
             Cursor c = getFaviconsByUrl(pageUrl);
             mAsserter.is(c.moveToFirst(), true, "Inserted favicon found");
 
-            mProvider.delete(ContentUris.withAppendedId(mBookmarksUri, id), null, null);
+            mProvider.delete(ContentUris.withAppendedId(BrowserContract.Bookmarks.CONTENT_URI, id), null, null);
 
             c = getFaviconsByUrl(pageUrl);
             mAsserter.is(c.moveToFirst(), false, "Favicon is deleted with last reference to it");
@@ -811,7 +794,7 @@ public class testBrowserProvider extends ContentProviderTest {
             int updated = 0;
 
             try {
-                updated = mProvider.update(mBookmarksUri, u,
+                updated = mProvider.update(BrowserContract.Bookmarks.CONTENT_URI, u,
                                            mBookmarksIdCol + " = ?",
                                            new String[] { String.valueOf(id) });
             } catch (Exception e) {}
@@ -822,7 +805,7 @@ public class testBrowserProvider extends ContentProviderTest {
         @Override
         public void test() throws Exception {
             ContentValues b = createOneBookmark();
-            long id = ContentUris.parseId(mProvider.insert(mBookmarksUri, b));
+            long id = ContentUris.parseId(mProvider.insert(BrowserContract.Bookmarks.CONTENT_URI, b));
 
             Cursor c = getBookmarkById(id);
             mAsserter.is(c.moveToFirst(), true, "Inserted bookmark found");
@@ -839,7 +822,7 @@ public class testBrowserProvider extends ContentProviderTest {
             u.put(mBookmarksTypeCol, mBookmarksTypeFolder);
             u.put(mBookmarksPositionCol, 10);
 
-            int updated = mProvider.update(mBookmarksUri, u,
+            int updated = mProvider.update(BrowserContract.Bookmarks.CONTENT_URI, u,
                                            mBookmarksIdCol + " = ?",
                                            new String[] { String.valueOf(id) });
 
@@ -882,7 +865,7 @@ public class testBrowserProvider extends ContentProviderTest {
             u = new ContentValues();
             u.put(mBookmarksUrlCol, "http://examples2.com");
 
-            updated = mProvider.update(ContentUris.withAppendedId(mBookmarksUri, id), u, null, null);
+            updated = mProvider.update(ContentUris.withAppendedId(BrowserContract.Bookmarks.CONTENT_URI, id), u, null, null);
 
             c = getBookmarkById(id);
             mAsserter.is(c.moveToFirst(), true, "Updated bookmark found");
@@ -901,11 +884,11 @@ public class testBrowserProvider extends ContentProviderTest {
             final String newFavicon = "NEW_FAVICON";
             final String pageUrl = b.getAsString(mBookmarksUrlCol);
 
-            mProvider.insert(mBookmarksUri, b);
+            mProvider.insert(BrowserContract.Bookmarks.CONTENT_URI, b);
 
             // Insert the favicon into the favicons table
             ContentValues f = createFaviconEntry(pageUrl, favicon);
-            long faviconId = ContentUris.parseId(mProvider.insert(mFaviconsUri, f));
+            long faviconId = ContentUris.parseId(mProvider.insert(BrowserContract.Favicons.CONTENT_URI, f));
 
             Cursor c = getFaviconsByUrl(pageUrl);
             mAsserter.is(c.moveToFirst(), true, "Inserted favicon found");
@@ -914,7 +897,7 @@ public class testBrowserProvider extends ContentProviderTest {
                          favicon, "Inserted favicon has corresponding favicon image");
 
             ContentValues u = createFaviconEntry(pageUrl, newFavicon);
-            mProvider.update(mFaviconsUri, u, null, null);
+            mProvider.update(BrowserContract.Favicons.CONTENT_URI, u, null, null);
 
             c = getFaviconsByUrl(pageUrl);
             mAsserter.is(c.moveToFirst(), true, "Updated favicon found");
@@ -966,7 +949,7 @@ public class testBrowserProvider extends ContentProviderTest {
                                                   mBookmarksTypeFolder, 0, "",
                                                   "description", "keyword");
             folder.put(mBookmarksGuidCol, "folderfolder");
-            long folderId = ContentUris.parseId(mProvider.insert(mBookmarksUri, folder));
+            long folderId = ContentUris.parseId(mProvider.insert(BrowserContract.Bookmarks.CONTENT_URI, folder));
 
             // Create the children.
             String[] items = new String[NUMBER_OF_CHILDREN];
@@ -983,7 +966,7 @@ public class testBrowserProvider extends ContentProviderTest {
                 item.put(mBookmarksPositionCol, i);
                 item.put(mBookmarksUrlCol, "http://example.com/" + guid);
                 item.put(mBookmarksTitleCol, "Test Bookmark " + guid);
-                mProvider.insert(mBookmarksUri, item);
+                mProvider.insert(BrowserContract.Bookmarks.CONTENT_URI, item);
             }
 
             Cursor c;
@@ -1003,7 +986,7 @@ public class testBrowserProvider extends ContentProviderTest {
             }
 
             // Impose the positions.
-            long updated = mProvider.update(mBookmarksPositionUri, null, null, items);
+            long updated = mProvider.update(BrowserContract.Bookmarks.POSITIONS_CONTENT_URI, null, null, items);
             mAsserter.is(updated, (long) NUMBER_OF_CHILDREN, "Updated " + NUMBER_OF_CHILDREN + " positions.");
 
             // Verify that the database was updated.
@@ -1020,7 +1003,7 @@ public class testBrowserProvider extends ContentProviderTest {
             long id = -1;
 
             try {
-                id = ContentUris.parseId(mProvider.insert(mHistoryUri, h));
+                id = ContentUris.parseId(mProvider.insert(BrowserContract.History.CONTENT_URI, h));
             } catch (Exception e) {}
 
             return id;
@@ -1029,7 +1012,7 @@ public class testBrowserProvider extends ContentProviderTest {
         @Override
         public void test() throws Exception {
             ContentValues h = createOneHistoryEntry();
-            long id = ContentUris.parseId(mProvider.insert(mHistoryUri, h));
+            long id = ContentUris.parseId(mProvider.insert(BrowserContract.History.CONTENT_URI, h));
             Cursor c = getHistoryEntryById(id);
 
             mAsserter.is(c.moveToFirst(), true, "Inserted history entry found");
@@ -1063,10 +1046,10 @@ public class testBrowserProvider extends ContentProviderTest {
             final String favicon = "FAVICON";
             final String pageUrl = h.getAsString(mHistoryUrlCol);
 
-            long id = ContentUris.parseId(mProvider.insert(mHistoryUri, h));
+            long id = ContentUris.parseId(mProvider.insert(BrowserContract.History.CONTENT_URI, h));
 
             // Insert the favicon into the favicons table
-            mProvider.insert(mFaviconsUri, createFaviconEntry(pageUrl, favicon));
+            mProvider.insert(BrowserContract.Favicons.CONTENT_URI, createFaviconEntry(pageUrl, favicon));
 
             Cursor c = getHistoryEntryById(id, new String[] { mHistoryFaviconCol });
 
@@ -1086,7 +1069,7 @@ public class testBrowserProvider extends ContentProviderTest {
     class TestDeleteHistory extends Test {
         private long insertOneHistoryEntry() throws Exception {
             ContentValues h = createOneHistoryEntry();
-            long id = ContentUris.parseId(mProvider.insert(mHistoryUri, h));
+            long id = ContentUris.parseId(mProvider.insert(BrowserContract.History.CONTENT_URI, h));
 
             Cursor c = getHistoryEntryById(id);
             mAsserter.is(c.moveToFirst(), true, "Inserted history entry found");
@@ -1098,27 +1081,27 @@ public class testBrowserProvider extends ContentProviderTest {
         public void test() throws Exception {
             long id = insertOneHistoryEntry();
 
-            int deleted = mProvider.delete(mHistoryUri,
+            int deleted = mProvider.delete(BrowserContract.History.CONTENT_URI,
                                            mHistoryIdCol + " = ?",
                                            new String[] { String.valueOf(id) });
 
             mAsserter.is((deleted == 1), true, "Inserted history entry was deleted");
 
-            Cursor c = getHistoryEntryById(appendUriParam(mHistoryUri, "PARAM_SHOW_DELETED", "1"), id);
+            Cursor c = getHistoryEntryById(appendUriParam(BrowserContract.History.CONTENT_URI, "PARAM_SHOW_DELETED", "1"), id);
             mAsserter.is(c.moveToFirst(), true, "Deleted history entry was only marked as deleted");
 
-            deleted = mProvider.delete(appendUriParam(mHistoryUri, "PARAM_IS_SYNC", "1"),
+            deleted = mProvider.delete(appendUriParam(BrowserContract.History.CONTENT_URI, "PARAM_IS_SYNC", "1"),
                                        mHistoryIdCol + " = ?",
                                        new String[] { String.valueOf(id) });
 
             mAsserter.is((deleted == 1), true, "Inserted history entry was deleted");
 
-            c = getHistoryEntryById(appendUriParam(mHistoryUri, "PARAM_SHOW_DELETED", "1"), id);
+            c = getHistoryEntryById(appendUriParam(BrowserContract.History.CONTENT_URI, "PARAM_SHOW_DELETED", "1"), id);
             mAsserter.is(c.moveToFirst(), false, "Inserted history is now actually deleted");
 
             id = insertOneHistoryEntry();
 
-            deleted = mProvider.delete(ContentUris.withAppendedId(mHistoryUri, id), null, null);
+            deleted = mProvider.delete(ContentUris.withAppendedId(BrowserContract.History.CONTENT_URI, id), null, null);
             mAsserter.is((deleted == 1), true,
                          "Inserted history entry was deleted using URI with id");
 
@@ -1133,16 +1116,16 @@ public class testBrowserProvider extends ContentProviderTest {
         public void test() throws Exception {
             ContentValues h = createOneHistoryEntry();
 
-            long id = ContentUris.parseId(mProvider.insert(mHistoryUri, h));
+            long id = ContentUris.parseId(mProvider.insert(BrowserContract.History.CONTENT_URI, h));
             final String pageUrl = h.getAsString(mHistoryUrlCol);
 
             // Insert the favicon into the favicons table
-            mProvider.insert(mFaviconsUri, createFaviconEntry(pageUrl, "FAVICON"));
+            mProvider.insert(BrowserContract.Favicons.CONTENT_URI, createFaviconEntry(pageUrl, "FAVICON"));
 
             Cursor c = getFaviconsByUrl(pageUrl);
             mAsserter.is(c.moveToFirst(), true, "Inserted favicon found");
 
-            mProvider.delete(ContentUris.withAppendedId(mHistoryUri, id), null, null);
+            mProvider.delete(ContentUris.withAppendedId(BrowserContract.History.CONTENT_URI, id), null, null);
 
             c = getFaviconsByUrl(pageUrl);
             mAsserter.is(c.moveToFirst(), false, "Favicon is deleted with last reference to it");
@@ -1157,7 +1140,7 @@ public class testBrowserProvider extends ContentProviderTest {
             int updated = 0;
 
             try {
-                updated = mProvider.update(mHistoryUri, u,
+                updated = mProvider.update(BrowserContract.History.CONTENT_URI, u,
                                            mHistoryIdCol + " = ?",
                                            new String[] { String.valueOf(id) });
             } catch (Exception e) {}
@@ -1168,7 +1151,7 @@ public class testBrowserProvider extends ContentProviderTest {
         @Override
         public void test() throws Exception {
             ContentValues h = createOneHistoryEntry();
-            long id = ContentUris.parseId(mProvider.insert(mHistoryUri, h));
+            long id = ContentUris.parseId(mProvider.insert(BrowserContract.History.CONTENT_URI, h));
 
             Cursor c = getHistoryEntryById(id);
             mAsserter.is(c.moveToFirst(), true, "Inserted history entry found");
@@ -1182,7 +1165,7 @@ public class testBrowserProvider extends ContentProviderTest {
             u.put(mHistoryTitleCol, h.getAsString(mHistoryTitleCol) + "CHANGED");
             u.put(mHistoryUrlCol, h.getAsString(mHistoryUrlCol) + "/more/stuff");
 
-            int updated = mProvider.update(mHistoryUri, u,
+            int updated = mProvider.update(BrowserContract.History.CONTENT_URI, u,
                                            mHistoryIdCol + " = ?",
                                            new String[] { String.valueOf(id) });
 
@@ -1219,7 +1202,7 @@ public class testBrowserProvider extends ContentProviderTest {
             u = new ContentValues();
             u.put(mHistoryUrlCol, "http://examples2.com");
 
-            updated = mProvider.update(ContentUris.withAppendedId(mHistoryUri, id), u, null, null);
+            updated = mProvider.update(ContentUris.withAppendedId(BrowserContract.History.CONTENT_URI, id), u, null, null);
 
             c = getHistoryEntryById(id);
             mAsserter.is(c.moveToFirst(), true, "Updated history entry found");
@@ -1238,10 +1221,10 @@ public class testBrowserProvider extends ContentProviderTest {
             final String newFavicon = "NEW_FAVICON";
             final String pageUrl = h.getAsString(mHistoryUrlCol);
 
-            mProvider.insert(mHistoryUri, h);
+            mProvider.insert(BrowserContract.History.CONTENT_URI, h);
 
             // Insert the favicon into the favicons table
-            mProvider.insert(mFaviconsUri, createFaviconEntry(pageUrl, favicon));
+            mProvider.insert(BrowserContract.Favicons.CONTENT_URI, createFaviconEntry(pageUrl, favicon));
 
             Cursor c = getFaviconsByUrl(pageUrl);
             mAsserter.is(c.moveToFirst(), true, "Inserted favicon found");
@@ -1251,7 +1234,7 @@ public class testBrowserProvider extends ContentProviderTest {
 
             ContentValues u = createFaviconEntry(pageUrl, newFavicon);
 
-            mProvider.update(mFaviconsUri, u, null, null);
+            mProvider.update(BrowserContract.Favicons.CONTENT_URI, u, null, null);
 
             c = getFaviconsByUrl(pageUrl);
             mAsserter.is(c.moveToFirst(), true, "Updated favicon found");
@@ -1267,7 +1250,7 @@ public class testBrowserProvider extends ContentProviderTest {
         private final String TEST_TITLE = "Example";
 
         private long getHistoryEntryIdByUrl(String url) {
-            Cursor c = mProvider.query(mHistoryUri,
+            Cursor c = mProvider.query(BrowserContract.History.CONTENT_URI,
                                        new String[] { mHistoryIdCol },
                                        mHistoryUrlCol + " = ?",
                                        new String[] { url },
@@ -1281,9 +1264,9 @@ public class testBrowserProvider extends ContentProviderTest {
 
         @Override
         public void test() throws Exception {
-            Uri updateHistoryUri = mHistoryUri.buildUpon().
+            Uri updateHistoryUri = BrowserContract.History.CONTENT_URI.buildUpon().
                 appendQueryParameter("increment_visits", "true").build();
-            Uri updateOrInsertHistoryUri = mHistoryUri.buildUpon().
+            Uri updateOrInsertHistoryUri = BrowserContract.History.CONTENT_URI.buildUpon().
                 appendQueryParameter("insert_if_needed", "true").
                 appendQueryParameter("increment_visits", "true").build();
 
@@ -1295,7 +1278,7 @@ public class testBrowserProvider extends ContentProviderTest {
                                            mHistoryUrlCol + " = ?",
                                            new String[] { TEST_URL_1 });
             mAsserter.is((updated == 0), true, "History entry was not updated");
-            Cursor c = mProvider.query(mHistoryUri, null, null, null, null);
+            Cursor c = mProvider.query(BrowserContract.History.CONTENT_URI, null, null, null, null);
             mAsserter.is(c.moveToFirst(), false, "History entry was not inserted");
             c.close();
 
@@ -1396,10 +1379,10 @@ public class testBrowserProvider extends ContentProviderTest {
             final String thumbnail = "THUMBNAIL";
             final String pageUrl = h.getAsString(mHistoryUrlCol);
 
-            long id = ContentUris.parseId(mProvider.insert(mHistoryUri, h));
+            long id = ContentUris.parseId(mProvider.insert(BrowserContract.History.CONTENT_URI, h));
 
             // Insert the thumbnail into the thumbnails table
-            mProvider.insert(mThumbnailsUri, createThumbnailEntry(pageUrl, thumbnail));
+            mProvider.insert(BrowserContract.Thumbnails.CONTENT_URI, createThumbnailEntry(pageUrl, thumbnail));
 
             Cursor c = getThumbnailByUrl(pageUrl);
             mAsserter.is(c.moveToFirst(), true, "Inserted thumbnail found");
@@ -1418,10 +1401,10 @@ public class testBrowserProvider extends ContentProviderTest {
             final String newThumbnail = "NEW_THUMBNAIL";
             final String pageUrl = h.getAsString(mHistoryUrlCol);
 
-            mProvider.insert(mHistoryUri, h);
+            mProvider.insert(BrowserContract.History.CONTENT_URI, h);
 
             // Insert the thumbnail into the thumbnails table
-            mProvider.insert(mThumbnailsUri, createThumbnailEntry(pageUrl, thumbnail));
+            mProvider.insert(BrowserContract.Thumbnails.CONTENT_URI, createThumbnailEntry(pageUrl, thumbnail));
 
             Cursor c = getThumbnailByUrl(pageUrl);
             mAsserter.is(c.moveToFirst(), true, "Inserted thumbnail found");
@@ -1431,7 +1414,7 @@ public class testBrowserProvider extends ContentProviderTest {
 
             ContentValues u = createThumbnailEntry(pageUrl, newThumbnail);
 
-            mProvider.update(mThumbnailsUri, u, null, null);
+            mProvider.update(BrowserContract.Thumbnails.CONTENT_URI, u, null, null);
 
             c = getThumbnailByUrl(pageUrl);
             mAsserter.is(c.moveToFirst(), true, "Updated thumbnail found");
@@ -1446,16 +1429,16 @@ public class testBrowserProvider extends ContentProviderTest {
         public void test() throws Exception {
             ContentValues h = createOneHistoryEntry();
 
-            long id = ContentUris.parseId(mProvider.insert(mHistoryUri, h));
+            long id = ContentUris.parseId(mProvider.insert(BrowserContract.History.CONTENT_URI, h));
             final String pageUrl = h.getAsString(mHistoryUrlCol);
 
             // Insert the thumbnail into the thumbnails table
-            mProvider.insert(mThumbnailsUri, createThumbnailEntry(pageUrl, "THUMBNAIL"));
+            mProvider.insert(BrowserContract.Thumbnails.CONTENT_URI, createThumbnailEntry(pageUrl, "THUMBNAIL"));
 
             Cursor c = getThumbnailByUrl(pageUrl);
             mAsserter.is(c.moveToFirst(), true, "Inserted thumbnail found");
 
-            mProvider.delete(ContentUris.withAppendedId(mHistoryUri, id), null, null);
+            mProvider.delete(ContentUris.withAppendedId(BrowserContract.History.CONTENT_URI, id), null, null);
 
             c = getThumbnailByUrl(pageUrl);
             mAsserter.is(c.moveToFirst(), false, "Thumbnail is deleted with last reference to it");
@@ -1480,34 +1463,34 @@ public class testBrowserProvider extends ContentProviderTest {
 
             // Create a basic history entry
             ContentValues basicHistory = createHistoryEntry(TITLE_1, URL_1, VISITS, LAST_VISITED);
-            long basicHistoryId = ContentUris.parseId(mProvider.insert(mHistoryUri, basicHistory));
+            long basicHistoryId = ContentUris.parseId(mProvider.insert(BrowserContract.History.CONTENT_URI, basicHistory));
 
             // Create a basic bookmark entry
             ContentValues basicBookmark = createBookmark(TITLE_2, URL_2, mMobileFolderId,
                 mBookmarksTypeBookmark, 0, "tags", "description", "keyword");
-            long basicBookmarkId = ContentUris.parseId(mProvider.insert(mBookmarksUri, basicBookmark));
+            long basicBookmarkId = ContentUris.parseId(mProvider.insert(BrowserContract.Bookmarks.CONTENT_URI, basicBookmark));
 
             // Create a history entry and bookmark entry with the same URL to
             // represent a visited bookmark
             ContentValues combinedHistory = createHistoryEntry(TITLE_3_HISTORY, URL_3, VISITS, LAST_VISITED);
-            long combinedHistoryId = ContentUris.parseId(mProvider.insert(mHistoryUri, combinedHistory));
+            long combinedHistoryId = ContentUris.parseId(mProvider.insert(BrowserContract.History.CONTENT_URI, combinedHistory));
 
 
             ContentValues combinedBookmark = createBookmark(TITLE_3_BOOKMARK, URL_3, mMobileFolderId,
                 mBookmarksTypeBookmark, 0, "tags", "description", "keyword");
-            long combinedBookmarkId = ContentUris.parseId(mProvider.insert(mBookmarksUri, combinedBookmark));
+            long combinedBookmarkId = ContentUris.parseId(mProvider.insert(BrowserContract.Bookmarks.CONTENT_URI, combinedBookmark));
 
             ContentValues combinedBookmark2 = createBookmark(TITLE_3_BOOKMARK2, URL_3, mMobileFolderId,
                 mBookmarksTypeBookmark, 0, "tags", "description", "keyword");
-            long combinedBookmarkId2 = ContentUris.parseId(mProvider.insert(mBookmarksUri, combinedBookmark2));
+            long combinedBookmarkId2 = ContentUris.parseId(mProvider.insert(BrowserContract.Bookmarks.CONTENT_URI, combinedBookmark2));
 
             // Create a bookmark folder to make sure it _doesn't_ show up in the results
             ContentValues folderBookmark = createBookmark("", "", mMobileFolderId,
                 mBookmarksTypeFolder, 0, "tags", "description", "keyword");
-            mProvider.insert(mBookmarksUri, folderBookmark);
+            mProvider.insert(BrowserContract.Bookmarks.CONTENT_URI, folderBookmark);
 
             // Sort entries by url so we can check them individually
-            Cursor c = mProvider.query(mCombinedUri, null, "", null, mCombinedUrlCol);
+            Cursor c = mProvider.query(BrowserContract.Combined.CONTENT_URI, null, "", null, mCombinedUrlCol);
 
             mAsserter.is(c.getCount(), 3, "3 combined entries found");
 
@@ -1588,33 +1571,33 @@ public class testBrowserProvider extends ContentProviderTest {
 
             // Create a basic history entry
             ContentValues basicHistory = createHistoryEntry(TITLE_1, URL_1, VISITS, LAST_VISITED);
-            ContentUris.parseId(mProvider.insert(mHistoryUri, basicHistory));
+            ContentUris.parseId(mProvider.insert(BrowserContract.History.CONTENT_URI, basicHistory));
 
             // Create a basic bookmark entry
             ContentValues basicBookmark = createBookmark(TITLE_2, URL_2, mMobileFolderId,
                 mBookmarksTypeBookmark, 0, "tags", "description", "keyword");
-            mProvider.insert(mBookmarksUri, basicBookmark);
+            mProvider.insert(BrowserContract.Bookmarks.CONTENT_URI, basicBookmark);
 
             // Create a history entry and bookmark entry with the same URL to
             // represent a visited bookmark
             ContentValues combinedHistory = createHistoryEntry(TITLE_3_HISTORY, URL_3, VISITS, LAST_VISITED);
-            mProvider.insert(mHistoryUri, combinedHistory);
+            mProvider.insert(BrowserContract.History.CONTENT_URI, combinedHistory);
 
             ContentValues combinedBookmark = createBookmark(TITLE_3_BOOKMARK, URL_3, mMobileFolderId,
                 mBookmarksTypeBookmark, 0, "tags", "description", "keyword");
-            mProvider.insert(mBookmarksUri, combinedBookmark);
+            mProvider.insert(BrowserContract.Bookmarks.CONTENT_URI, combinedBookmark);
 
             // Create a reading list entries
             int readingListId = getIntColumn("Bookmarks", "FIXED_READING_LIST_ID");
             ContentValues readingListItem = createBookmark(TITLE_3_BOOKMARK, URL_3, readingListId,
                 mBookmarksTypeBookmark, 0, "tags", "description", "keyword");
-            long readingListItemId = ContentUris.parseId(mProvider.insert(mBookmarksUri, readingListItem));
+            long readingListItemId = ContentUris.parseId(mProvider.insert(BrowserContract.Bookmarks.CONTENT_URI, readingListItem));
 
             ContentValues readingListItem2 = createBookmark(TITLE_4, URL_4, readingListId,
                 mBookmarksTypeBookmark, 0, "tags", "description", "keyword");
-            long readingListItemId2 = ContentUris.parseId(mProvider.insert(mBookmarksUri, readingListItem2));
+            long readingListItemId2 = ContentUris.parseId(mProvider.insert(BrowserContract.Bookmarks.CONTENT_URI, readingListItem2));
 
-            Cursor c = mProvider.query(mCombinedUri, null, "", null, null);
+            Cursor c = mProvider.query(BrowserContract.Combined.CONTENT_URI, null, "", null, null);
             mAsserter.is(c.getCount(), 4, "4 combined entries found");
 
             while (c.moveToNext()) {
@@ -1639,27 +1622,27 @@ public class testBrowserProvider extends ContentProviderTest {
 
             // Create a combined history entry
             ContentValues combinedHistory = createHistoryEntry(TITLE, URL, VISITS, LAST_VISITED);
-            mProvider.insert(mHistoryUri, combinedHistory);
+            mProvider.insert(BrowserContract.History.CONTENT_URI, combinedHistory);
 
             // Create a combined bookmark entry
             ContentValues combinedBookmark = createBookmark(TITLE, URL, mMobileFolderId,
                 mBookmarksTypeBookmark, 0, "tags", "description", "keyword");
-            long combinedBookmarkId = ContentUris.parseId(mProvider.insert(mBookmarksUri, combinedBookmark));
+            long combinedBookmarkId = ContentUris.parseId(mProvider.insert(BrowserContract.Bookmarks.CONTENT_URI, combinedBookmark));
 
-            Cursor c = mProvider.query(mCombinedUri, null, "", null, null);
+            Cursor c = mProvider.query(BrowserContract.Combined.CONTENT_URI, null, "", null, null);
             mAsserter.is(c.getCount(), 1, "1 combined entry found");
 
             mAsserter.is(c.moveToFirst(), true, "Found combined entry with bookmark id");
             mAsserter.is(new Long(c.getLong(c.getColumnIndex(mCombinedBookmarkIdCol))), new Long(combinedBookmarkId),
                          "Bookmark id should be set correctly on combined entry");
 
-            int deleted = mProvider.delete(mBookmarksUri,
+            int deleted = mProvider.delete(BrowserContract.Bookmarks.CONTENT_URI,
                                            mBookmarksIdCol + " = ?",
                                            new String[] { String.valueOf(combinedBookmarkId) });
 
             mAsserter.is((deleted == 1), true, "Inserted combined bookmark was deleted");
 
-            c = mProvider.query(mCombinedUri, null, "", null, null);
+            c = mProvider.query(BrowserContract.Combined.CONTENT_URI, null, "", null, null);
             mAsserter.is(c.getCount(), 1, "1 combined entry found");
 
             mAsserter.is(c.moveToFirst(), true, "Found combined entry without bookmark id");
@@ -1678,15 +1661,15 @@ public class testBrowserProvider extends ContentProviderTest {
 
             // Create a combined history entry
             ContentValues combinedHistory = createHistoryEntry(TITLE, URL, VISITS, LAST_VISITED);
-            mProvider.insert(mHistoryUri, combinedHistory);
+            mProvider.insert(BrowserContract.History.CONTENT_URI, combinedHistory);
 
             // Create a combined bookmark entry
             int readingListId = getIntColumn("Bookmarks", "FIXED_READING_LIST_ID");
             ContentValues combinedReadingListItem = createBookmark(TITLE, URL, readingListId,
                 mBookmarksTypeBookmark, 0, "tags", "description", "keyword");
-            long combinedReadingListItemId = ContentUris.parseId(mProvider.insert(mBookmarksUri, combinedReadingListItem));
+            long combinedReadingListItemId = ContentUris.parseId(mProvider.insert(BrowserContract.Bookmarks.CONTENT_URI, combinedReadingListItem));
 
-            Cursor c = mProvider.query(mCombinedUri, null, "", null, null);
+            Cursor c = mProvider.query(BrowserContract.Combined.CONTENT_URI, null, "", null, null);
             mAsserter.is(c.getCount(), 1, "1 combined entry found");
 
             mAsserter.is(c.moveToFirst(), true, "Found combined entry with bookmark id");
@@ -1695,13 +1678,13 @@ public class testBrowserProvider extends ContentProviderTest {
             mAsserter.is(new Long(c.getLong(c.getColumnIndex(mCombinedDisplayCol))), new Long(mCombinedDisplayReader),
                          "Combined entry should have reader display type");
 
-            int deleted = mProvider.delete(mBookmarksUri,
+            int deleted = mProvider.delete(BrowserContract.Bookmarks.CONTENT_URI,
                                            mBookmarksIdCol + " = ?",
                                            new String[] { String.valueOf(combinedReadingListItemId) });
 
             mAsserter.is((deleted == 1), true, "Inserted combined reading list item was deleted");
 
-            c = mProvider.query(mCombinedUri, null, "", null, null);
+            c = mProvider.query(BrowserContract.Combined.CONTENT_URI, null, "", null, null);
             mAsserter.is(c.getCount(), 1, "1 combined entry found");
 
             mAsserter.is(c.moveToFirst(), true, "Found combined entry without bookmark id");
@@ -1725,7 +1708,7 @@ public class testBrowserProvider extends ContentProviderTest {
                 allVals[i].put(mHistoryLastVisitedCol, time);
             }
 
-            int inserts = mProvider.bulkInsert(mHistoryUri, allVals);
+            int inserts = mProvider.bulkInsert(BrowserContract.History.CONTENT_URI, allVals);
             mAsserter.is(inserts, count, "Expected number of inserts matches");
 
             // inserting a new entry sets the date created and modified automatically
@@ -1734,11 +1717,11 @@ public class testBrowserProvider extends ContentProviderTest {
                 ContentValues cv = new ContentValues();
                 cv.put(mHistoryDateCreatedCol, time);
                 cv.put(mHistoryDateModifiedCol, time);
-                mProvider.update(mHistoryUri, cv, mHistoryUrlCol + " = ?",
+                mProvider.update(BrowserContract.History.CONTENT_URI, cv, mHistoryUrlCol + " = ?",
                                  new String[] { "http://www.test.org/" + i });
             }
 
-            Cursor c = mProvider.query(mHistoryUri, null, "", null, null);
+            Cursor c = mProvider.query(BrowserContract.History.CONTENT_URI, null, "", null, null);
             mAsserter.is(c.getCount(), count, count + " history entries found");
 
             // add thumbnails for each entry
@@ -1749,10 +1732,10 @@ public class testBrowserProvider extends ContentProviderTest {
                 allVals[i].put(mThumbnailsUrlCol, "http://www.test.org/" + i);
             }
 
-            inserts = mProvider.bulkInsert(mThumbnailsUri, allVals);
+            inserts = mProvider.bulkInsert(BrowserContract.Thumbnails.CONTENT_URI, allVals);
             mAsserter.is(inserts, count, "Expected number of inserts matches");
 
-            c = mProvider.query(mThumbnailsUri, null, null, null, null);
+            c = mProvider.query(BrowserContract.Thumbnails.CONTENT_URI, null, null, null, null);
             mAsserter.is(c.getCount(), count, count + " thumbnails entries found");
         }
 
@@ -1765,13 +1748,13 @@ public class testBrowserProvider extends ContentProviderTest {
             createFakeHistory(0, count);
 
             // expiring with a normal priority should not delete new entries
-            Uri url = appendUriParam(mHistoryOldUri, "PARAM_EXPIRE_PRIORITY", "NORMAL");
+            Uri url = appendUriParam(BrowserContract.History.CONTENT_OLD_URI, "PARAM_EXPIRE_PRIORITY", "NORMAL");
             mProvider.delete(url, null, null);
-            Cursor c = mProvider.query(mHistoryUri, null, "", null, null);
+            Cursor c = mProvider.query(BrowserContract.History.CONTENT_URI, null, "", null, null);
             mAsserter.is(c.getCount(), count, count + " history entries found");
 
             // expiring with a normal priority should delete all but 10 thumbnails
-            c = mProvider.query(mThumbnailsUri, null, null, null, null);
+            c = mProvider.query(BrowserContract.Thumbnails.CONTENT_URI, null, null, null, null);
             mAsserter.is(c.getCount(), thumbCount, thumbCount + " thumbnails found");
 
             ensureEmptyDatabase();
@@ -1779,13 +1762,13 @@ public class testBrowserProvider extends ContentProviderTest {
             createFakeHistory(0, count);
 
             // expiring with a aggressive priority should leave 500 entries
-            url = appendUriParam(mHistoryOldUri, "PARAM_EXPIRE_PRIORITY", "AGGRESSIVE");
+            url = appendUriParam(BrowserContract.History.CONTENT_OLD_URI, "PARAM_EXPIRE_PRIORITY", "AGGRESSIVE");
             mProvider.delete(url, null, null);
-            c = mProvider.query(mHistoryUri, null, "", null, null);
+            c = mProvider.query(BrowserContract.History.CONTENT_URI, null, "", null, null);
             mAsserter.is(c.getCount(), 500, "500 history entries found");
 
             // expiring with a aggressive priority should delete all but 10 thumbnails
-            c = mProvider.query(mThumbnailsUri, null, null, null, null);
+            c = mProvider.query(BrowserContract.Thumbnails.CONTENT_URI, null, null, null, null);
             mAsserter.is(c.getCount(), thumbCount, thumbCount + " thumbnails found");
 
             ensureEmptyDatabase();
@@ -1795,13 +1778,13 @@ public class testBrowserProvider extends ContentProviderTest {
 
             // expiring with an normal priority should remove at most 1000 entries
             // entries leaving at least 2000
-            url = appendUriParam(mHistoryOldUri, "PARAM_EXPIRE_PRIORITY", "NORMAL");
+            url = appendUriParam(BrowserContract.History.CONTENT_OLD_URI, "PARAM_EXPIRE_PRIORITY", "NORMAL");
             mProvider.delete(url, null, null);
-            c = mProvider.query(mHistoryUri, null, "", null, null);
+            c = mProvider.query(BrowserContract.History.CONTENT_URI, null, "", null, null);
             mAsserter.is(c.getCount(), 2000, "2000 history entries found");
 
             // expiring with a normal priority should delete all but 10 thumbnails
-            c = mProvider.query(mThumbnailsUri, null, null, null, null);
+            c = mProvider.query(BrowserContract.Thumbnails.CONTENT_URI, null, null, null, null);
             mAsserter.is(c.getCount(), thumbCount, thumbCount + " thumbnails found");
 
             ensureEmptyDatabase();
@@ -1811,13 +1794,13 @@ public class testBrowserProvider extends ContentProviderTest {
 
             // expiring with an agressive priority should remove old
             // entries leaving at least 500
-            url = appendUriParam(mHistoryOldUri, "PARAM_EXPIRE_PRIORITY", "AGGRESSIVE");
+            url = appendUriParam(BrowserContract.History.CONTENT_OLD_URI, "PARAM_EXPIRE_PRIORITY", "AGGRESSIVE");
             mProvider.delete(url, null, null);
-            c = mProvider.query(mHistoryUri, null, "", null, null);
+            c = mProvider.query(BrowserContract.History.CONTENT_URI, null, "", null, null);
             mAsserter.is(c.getCount(), 500, "500 history entries found");
 
             // expiring with an aggressive priority should delete all but 10 thumbnails
-            c = mProvider.query(mThumbnailsUri, null, null, null, null);
+            c = mProvider.query(BrowserContract.Thumbnails.CONTENT_URI, null, null, null, null);
             mAsserter.is(c.getCount(), thumbCount, thumbCount + " thumbnails found");
         }
     }
@@ -1862,19 +1845,19 @@ public class testBrowserProvider extends ContentProviderTest {
             final ContentValues h = createOneHistoryEntry();
 
             mResolver.notifyChangeList.clear();
-            long id = ContentUris.parseId(mProvider.insert(mHistoryUri, h));
+            long id = ContentUris.parseId(mProvider.insert(BrowserContract.History.CONTENT_URI, h));
 
             mAsserter.isnot(Long.valueOf(id),
                             Long.valueOf(-1),
                             "Inserted item has valid id");
 
-            ensureOnlyChangeNotifiedStartsWith(mHistoryUri, "insert");
+            ensureOnlyChangeNotifiedStartsWith(BrowserContract.History.CONTENT_URI, "insert");
 
             // Update
             mResolver.notifyChangeList.clear();
             h.put(mHistoryTitleCol, "http://newexample.com");
 
-            long numUpdated = mProvider.update(mHistoryUri, h,
+            long numUpdated = mProvider.update(BrowserContract.History.CONTENT_URI, h,
                                                mHistoryIdCol + " = ?",
                                                new String[] { String.valueOf(id) });
 
@@ -1882,29 +1865,29 @@ public class testBrowserProvider extends ContentProviderTest {
                          Long.valueOf(1),
                          "Correct number of items are updated");
 
-            ensureOnlyChangeNotifiedStartsWith(mHistoryUri, "update");
+            ensureOnlyChangeNotifiedStartsWith(BrowserContract.History.CONTENT_URI, "update");
 
             // Delete
             mResolver.notifyChangeList.clear();
-            long numDeleted = mProvider.delete(mHistoryUri, null, null);
+            long numDeleted = mProvider.delete(BrowserContract.History.CONTENT_URI, null, null);
 
             mAsserter.is(Long.valueOf(numDeleted),
                          Long.valueOf(1),
                          "Correct number of items are deleted");
 
-            ensureOnlyChangeNotifiedStartsWith(mHistoryUri, "delete");
+            ensureOnlyChangeNotifiedStartsWith(BrowserContract.History.CONTENT_URI, "delete");
 
             // Bulk insert
             final ContentValues[] hs = new ContentValues[] { createOneHistoryEntry() };
 
             mResolver.notifyChangeList.clear();
-            long numBulkInserted = mProvider.bulkInsert(mHistoryUri, hs);
+            long numBulkInserted = mProvider.bulkInsert(BrowserContract.History.CONTENT_URI, hs);
 
             mAsserter.is(Long.valueOf(numBulkInserted),
                          Long.valueOf(1),
                          "Correct number of items are bulkInserted");
 
-            ensureOnlyChangeNotifiedStartsWith(mHistoryUri, "bulkInsert");
+            ensureOnlyChangeNotifiedStartsWith(BrowserContract.History.CONTENT_URI, "bulkInsert");
         }
     }
 }
