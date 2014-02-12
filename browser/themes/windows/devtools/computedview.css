@@ -59,7 +59,8 @@ body {
 }
 
 .property-name {
-  width: 50%;
+  /* -12px is so the expander triangle isn't pushed up above the property */
+  width: calc(100% - 12px);
   overflow-x: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -67,8 +68,7 @@ body {
 }
 
 .property-value {
-  width: 50%;
-  max-width: 100%;
+  width: 100%;
   overflow-x: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -93,7 +93,8 @@ body {
     width: 200px;
   }
   .property-value {
-    width: auto;
+    /* -212px is accounting for the 200px property-name and the 12px triangle */
+    width: calc(100% - 212px);
   }
 }
 
