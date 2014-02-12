@@ -32,62 +32,18 @@ public class testBrowserProviderPerf extends ContentProviderTest {
     private final String MOBILE_FOLDER_GUID = "mobile";
     private long mMobileFolderId;
 
-    private String mBookmarksIdCol;
-    private String mBookmarksTitleCol;
-    private String mBookmarksUrlCol;
-    private String mBookmarksParentCol;
-    private String mBookmarksTypeCol;
-    private String mBookmarksPositionCol;
-    private String mBookmarksTagsCol;
-    private String mBookmarksDescriptionCol;
-    private String mBookmarksKeywordCol;
-    private String mBookmarksGuidCol;
-    private int mBookmarksTypeBookmark;
-
-    private String mHistoryTitleCol;
-    private String mHistoryUrlCol;
-    private String mHistoryVisitsCol;
-    private String mHistoryLastVisitedCol;
-
-    private String mFaviconsUrlCol;
-    private String mFaviconsPageUrlCol;
-    private String mFaviconsDataCol;
-
     @Override
     protected int getTestType() {
         return TEST_TALOS;
     }
 
-    private void loadContractInfo() throws Exception {
-        mBookmarksIdCol = getStringColumn("Bookmarks", "_ID");
-        mBookmarksTitleCol = getStringColumn("Bookmarks", "TITLE");
-        mBookmarksUrlCol = getStringColumn("Bookmarks", "URL");
-        mBookmarksParentCol = getStringColumn("Bookmarks", "PARENT");
-        mBookmarksTypeCol = getStringColumn("Bookmarks", "TYPE");
-        mBookmarksPositionCol = getStringColumn("Bookmarks", "POSITION");
-        mBookmarksTagsCol = getStringColumn("Bookmarks", "TAGS");
-        mBookmarksDescriptionCol = getStringColumn("Bookmarks", "DESCRIPTION");
-        mBookmarksKeywordCol= getStringColumn("Bookmarks", "KEYWORD");
-        mBookmarksGuidCol= getStringColumn("Bookmarks", "GUID");
-        mBookmarksTypeBookmark = getIntColumn("Bookmarks", "TYPE_BOOKMARK");
-
-        mHistoryTitleCol = getStringColumn("History", "TITLE");
-        mHistoryUrlCol = getStringColumn("History", "URL");
-        mHistoryVisitsCol = getStringColumn("History", "VISITS");
-        mHistoryLastVisitedCol = getStringColumn("History", "DATE_LAST_VISITED");
-
-        mFaviconsUrlCol = getStringColumn("Favicons", "URL");
-        mFaviconsPageUrlCol = getStringColumn("Favicons", "PAGE_URL");
-        mFaviconsDataCol = getStringColumn("Favicons", "DATA");
-    }
-
     private void loadMobileFolderId() throws Exception {
         Cursor c = mProvider.query(BrowserContract.Bookmarks.CONTENT_URI, null,
-                                   mBookmarksGuidCol + " = ?",
+                                   BrowserContract.Bookmarks.GUID + " = ?",
                                    new String[] { MOBILE_FOLDER_GUID },
                                    null);
         c.moveToFirst();
-        mMobileFolderId = c.getLong(c.getColumnIndex(mBookmarksIdCol));
+        mMobileFolderId = c.getLong(c.getColumnIndex(BrowserContract.Bookmarks._ID));
 
         c.close();
     }
@@ -96,21 +52,21 @@ public class testBrowserProviderPerf extends ContentProviderTest {
             int type, int position, String tags, String description, String keyword) throws Exception {
         ContentValues bookmark = new ContentValues();
 
-        bookmark.put(mBookmarksTitleCol, title);
-        bookmark.put(mBookmarksUrlCol, url);
-        bookmark.put(mBookmarksParentCol, parentId);
-        bookmark.put(mBookmarksTypeCol, type);
-        bookmark.put(mBookmarksPositionCol, position);
-        bookmark.put(mBookmarksTagsCol, tags);
-        bookmark.put(mBookmarksDescriptionCol, description);
-        bookmark.put(mBookmarksKeywordCol, keyword);
+        bookmark.put(BrowserContract.Bookmarks.TITLE, title);
+        bookmark.put(BrowserContract.Bookmarks.URL, url);
+        bookmark.put(BrowserContract.Bookmarks.PARENT, parentId);
+        bookmark.put(BrowserContract.Bookmarks.TYPE, type);
+        bookmark.put(BrowserContract.Bookmarks.POSITION, position);
+        bookmark.put(BrowserContract.Bookmarks.TAGS, tags);
+        bookmark.put(BrowserContract.Bookmarks.DESCRIPTION, description);
+        bookmark.put(BrowserContract.Bookmarks.KEYWORD, keyword);
 
         return bookmark;
     }
 
     private ContentValues createBookmarkEntryWithUrl(String url) throws Exception {
         return createBookmarkEntry(url, url, mMobileFolderId,
-            mBookmarksTypeBookmark, 0, "tags", "description", "keyword");
+            BrowserContract.Bookmarks.TYPE_BOOKMARK, 0, "tags", "description", "keyword");
     }
 
     private ContentValues createRandomBookmarkEntry() throws Exception {
@@ -126,10 +82,10 @@ public class testBrowserProviderPerf extends ContentProviderTest {
             long lastVisited) throws Exception {
         ContentValues historyEntry = new ContentValues();
 
-        historyEntry.put(mHistoryTitleCol, title);
-        historyEntry.put(mHistoryUrlCol, url);
-        historyEntry.put(mHistoryVisitsCol, visits);
-        historyEntry.put(mHistoryLastVisitedCol, lastVisited);
+        historyEntry.put(BrowserContract.History.TITLE, title);
+        historyEntry.put(BrowserContract.History.URL, url);
+        historyEntry.put(BrowserContract.History.VISITS, visits);
+        historyEntry.put(BrowserContract.History.DATE_LAST_VISITED, lastVisited);
 
         return historyEntry;
     }
@@ -152,9 +108,9 @@ public class testBrowserProviderPerf extends ContentProviderTest {
     private ContentValues createFaviconEntryWithUrl(String url) throws Exception {
         ContentValues faviconEntry = new ContentValues();
 
-        faviconEntry.put(mFaviconsUrlCol, url + "/favicon.ico");
-        faviconEntry.put(mFaviconsPageUrlCol, url);
-        faviconEntry.put(mFaviconsDataCol, url.getBytes("UTF8"));
+        faviconEntry.put(BrowserContract.Favicons.URL, url + "/favicon.ico");
+        faviconEntry.put(BrowserContract.Favicons.PAGE_URL, url);
+        faviconEntry.put(BrowserContract.Favicons.DATA, url.getBytes("UTF8"));
 
         return faviconEntry;
     }
@@ -187,7 +143,7 @@ public class testBrowserProviderPerf extends ContentProviderTest {
 
             for (int j = 0; j < BATCH_SIZE; j++) {
                 historyEntries[j] = createRandomHistoryEntry();
-                faviconEntries[j] = createFaviconEntryWithUrl(historyEntries[j].getAsString(mHistoryUrlCol));
+                faviconEntries[j] = createFaviconEntryWithUrl(historyEntries[j].getAsString(BrowserContract.History.URL));
             }
 
             mProvider.bulkInsert(BrowserContract.History.CONTENT_URI, historyEntries);
@@ -217,7 +173,7 @@ public class testBrowserProviderPerf extends ContentProviderTest {
         faviconEntries = new ContentValues[NUMBER_OF_KNOWN_URLS];
         for (int i = 0; i < NUMBER_OF_KNOWN_URLS; i++) {
             historyEntries[i] = createRandomHistoryEntry(KNOWN_PREFIX);
-            faviconEntries[i] = createFaviconEntryWithUrl(historyEntries[i].getAsString(mHistoryUrlCol));
+            faviconEntries[i] = createFaviconEntryWithUrl(historyEntries[i].getAsString(BrowserContract.History.URL));
         }
 
         mProvider.bulkInsert(BrowserContract.History.CONTENT_URI, historyEntries);
@@ -229,8 +185,6 @@ public class testBrowserProviderPerf extends ContentProviderTest {
         super.setUp("org.mozilla.gecko.db.BrowserProvider", "AUTHORITY", "browser.db");
 
         mGenerator = new Random(19580427);
-
-        loadContractInfo();
     }
 
     public void testBrowserProviderPerf() throws Exception {
