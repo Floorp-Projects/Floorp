@@ -15,15 +15,32 @@
 
     <content>
       <xul:stack>
-        <xul:toolbarbutton anonid="progressButton" class="circularprogressindicator-progressButton"/>
-        <html:div anonid="progressTrack" xbl:inherits="progress" class="circularprogressindicator-progressTrack"></html:div>
-        <html:canvas anonid="progressRing" xbl:inherits="progress" class="circularprogressindicator-progressRing" width="40" height="40"></html:canvas>
+        <xul:toolbarbutton anonid="progressButton"
+                           class="circularprogressindicator-progressButton"/>
+        <html:div anonid="progressTrack"
+                  xbl:inherits="progress"
+                  class="circularprogressindicator-progressTrack">
+        </html:div>
+        <html:canvas anonid="progressRing"
+                     xbl:inherits="progress"
+                     class="circularprogressindicator-progressRing"
+                     width="40"
+                     height="40">
+        </html:canvas>
+        <html:div anonid="progressNotification"
+                  xbl:inherits="progress"
+                  class="circularprogressindicator-progressNotification">
+        </html:div>
       </xul:stack>
     </content>
 
     <implementation>
       <field name="_progressCanvas">
-          document.getAnonymousElementByAttribute(this, "anonid", "progressRing");
+        document.getAnonymousElementByAttribute(this, "anonid", "progressRing");
+      </field>
+      <field name="_progressNotification">
+        document.getAnonymousElementByAttribute(this, "anonid",
+            "progressNotification");
       </field>
       <field name="_progressCircleCtx">null</field>
       <field name="_img">null</field>
@@ -89,6 +106,26 @@
             this._progressCircleCtx.clearRect(0, 0,
               this._progressCanvas.width, this._progressCanvas.height);
             this.removeAttribute("progress");
+          ]]>
+        </body>
+      </method>
+      <method name="notify">
+        <body>
+          <![CDATA[
+            this.addEventListener("transitionend", this._onNotificationEnd);
+
+            this._progressNotification.classList.add(
+                "progressNotification-active");
+          ]]>
+        </body>
+      </method>
+      <method name="_onNotificationEnd">
+        <body>
+          <![CDATA[
+            this.removeEventListener("transitionend", this._onNotificationEnd);
+
+            this._progressNotification.classList.remove(
+                "progressNotification-active");
           ]]>
         </body>
       </method>
