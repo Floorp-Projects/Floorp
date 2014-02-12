@@ -4428,7 +4428,7 @@ if (%s.IsNull()) {
         innerTemplate = CGIndenter(CGGeneric(innerTemplate), 6).define()
         return (("""
 uint32_t length = %s.Length();
-JS::Rooted<JSObject*> returnArray(cx, JS_NewArrayObject(cx, length, nullptr));
+JS::Rooted<JSObject*> returnArray(cx, JS_NewArrayObject(cx, length));
 if (!returnArray) {
 %s
 }

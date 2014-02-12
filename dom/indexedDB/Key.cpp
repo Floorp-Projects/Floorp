@@ -191,7 +191,7 @@ Key::DecodeJSValInternal(const unsigned char*& aPos, const unsigned char* aEnd,
   NS_ENSURE_TRUE(aRecursionDepth < MaxRecursionDepth, NS_ERROR_DOM_INDEXEDDB_DATA_ERR);
 
   if (*aPos - aTypeOffset >= eArray) {
-    JS::Rooted<JSObject*> array(aCx, JS_NewArrayObject(aCx, 0, nullptr));
+    JS::Rooted<JSObject*> array(aCx, JS_NewArrayObject(aCx, 0));
     if (!array) {
       NS_WARNING("Failed to make array!");
       IDB_REPORT_INTERNAL_ERR();

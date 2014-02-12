@@ -17,7 +17,7 @@ nsTArrayToJSArray(JSContext* aCx, const nsTArray<T>& aSourceArray,
   MOZ_ASSERT(aCx);
 
   JS::Rooted<JSObject*> arrayObj(aCx,
-    JS_NewArrayObject(aCx, aSourceArray.Length(), nullptr));
+    JS_NewArrayObject(aCx, aSourceArray.Length()));
   if (!arrayObj) {
     NS_WARNING("JS_NewArrayObject failed!");
     return NS_ERROR_OUT_OF_MEMORY;
@@ -59,7 +59,7 @@ nsTArrayToJSArray<nsString>(JSContext* aCx,
   MOZ_ASSERT(aCx);
 
   JS::Rooted<JSObject*> arrayObj(aCx,
-    JS_NewArrayObject(aCx, aSourceArray.Length(), nullptr));
+    JS_NewArrayObject(aCx, aSourceArray.Length()));
   if (!arrayObj) {
     NS_WARNING("JS_NewArrayObject failed!");
     return NS_ERROR_OUT_OF_MEMORY;
