@@ -22,7 +22,6 @@
 #startui-body {
   height: 100%;
   margin: 0;
-  padding-bottom: @toolbar_height@;
 }
 
 #start-container {
