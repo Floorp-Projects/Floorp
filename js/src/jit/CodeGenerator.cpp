@@ -4088,7 +4088,7 @@ CodeGenerator::visitNeuterCheck(LNeuterCheck *lir)
 {
     Register obj = ToRegister(lir->object());
     Register temp = ToRegister(lir->temp());
-    masm.loadPtr(Address(obj, TypedObject::dataOffset()), temp);
+    masm.loadPtr(Address(obj, TypedDatum::dataOffset()), temp);
     masm.testPtr(temp, temp);
     if (!bailoutIf(Assembler::Zero, lir->snapshot()))
         return false;
@@ -4100,7 +4100,7 @@ CodeGenerator::visitTypedObjectElements(LTypedObjectElements *lir)
 {
     Register obj = ToRegister(lir->object());
     Register out = ToRegister(lir->output());
-    masm.loadPtr(Address(obj, TypedObject::dataOffset()), out);
+    masm.loadPtr(Address(obj, TypedDatum::dataOffset()), out);
     return true;
 }
 
