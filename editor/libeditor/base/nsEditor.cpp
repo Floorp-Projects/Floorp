@@ -5208,6 +5208,23 @@ nsEditor::IsAcceptableInputEvent(nsIDOMEvent* aEvent)
     if (!focusedContent) {
       return false;
     }
+  } else {
+    nsAutoString eventType;
+    aEvent->GetType(eventType);
+    // If composition event or text event isn't dispatched via widget,
+    // we need to ignore them since they cannot be managed by TextComposition.
+    // E.g., the event was created by chrome JS.
+    // Note that if we allow to handle such events, editor may be confused by
+    // strange event order.
+    if (eventType.EqualsLiteral("text") ||
+        eventType.EqualsLiteral("compositionstart") ||
+        eventType.EqualsLiteral("compositionend")) {
+      WidgetGUIEvent* widgetGUIEvent =
+        aEvent->GetInternalNSEvent()->AsGUIEvent();
+      if (!widgetGUIEvent || !widgetGUIEvent->widget) {
+        return false;
+      }
+    }
   }
 
   bool isTrusted;
