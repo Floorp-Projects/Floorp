@@ -88,23 +88,37 @@ public:
   bool IsComposing() const { return mIsComposing; }
 
   /**
-   * EditorWillHandleTextEvent() must be called before the focused editor
-   * handles the text event.
-   */
-  void EditorWillHandleTextEvent(const WidgetTextEvent* aTextEvent);
-
-  /**
-   * EditorDidHandleTextEvent() must be called after the focused editor handles
-   * a text event.
-   */
-  void EditorDidHandleTextEvent();
-
-  /**
    * StartHandlingComposition() and EndHandlingComposition() are called by
    * editor when it holds a TextComposition instance and release it.
    */
   void StartHandlingComposition(nsIEditor* aEditor);
   void EndHandlingComposition(nsIEditor* aEditor);
+
+  /**
+   * TextEventHandlingMarker class should be created at starting to handle text
+   * event in focused editor.  This calls EditorWillHandleTextEvent() and
+   * EditorDidHandleTextEvent() automatically.
+   */
+  class MOZ_STACK_CLASS TextEventHandlingMarker
+  {
+  public:
+    TextEventHandlingMarker(TextComposition* aComposition,
+                            const WidgetTextEvent* aTextEvent)
+      : mComposition(aComposition)
+    {
+      mComposition->EditorWillHandleTextEvent(aTextEvent);
+    }
+
+    ~TextEventHandlingMarker()
+    {
+      mComposition->EditorDidHandleTextEvent();
+    }
+
+  private:
+    nsRefPtr<TextComposition> mComposition;
+    TextEventHandlingMarker();
+    TextEventHandlingMarker(const TextEventHandlingMarker& aOther);
+  };
 
 private:
   // This class holds nsPresContext weak.  This instance shouldn't block
@@ -155,6 +169,18 @@ private:
    * alive.  Otherwise, false.
    */
   bool HasEditor() const;
+
+  /**
+   * EditorWillHandleTextEvent() must be called before the focused editor
+   * handles the text event.
+   */
+  void EditorWillHandleTextEvent(const WidgetTextEvent* aTextEvent);
+
+  /**
+   * EditorDidHandleTextEvent() must be called after the focused editor handles
+   * a text event.
+   */
+  void EditorDidHandleTextEvent();
 
   /**
    * DispatchEvent() dispatches the aEvent to the mContent synchronously.
