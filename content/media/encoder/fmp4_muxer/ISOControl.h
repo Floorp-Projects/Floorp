@@ -229,11 +229,7 @@ private:
   //
   nsTArray<nsTArray<uint8_t>> mOutBuffers;
 
-  // Last written position of current box, it is for box checking purpose and
-  // calculating the sample offset in moof.
-  uint32_t mLastWrittenBoxPos;
-
-  // Accumulate size of output fragments.
+  // Accumulate output size from Write().
   uint64_t mOutputSize;
 
   // Bit writing operation. Note: the mBitCount should be 0 before any
