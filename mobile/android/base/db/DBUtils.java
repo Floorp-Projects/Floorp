@@ -81,19 +81,4 @@ public class DBUtils {
         Log.d(LOGTAG, "Failed to unlock database");
         GeckoAppShell.listOfOpenFiles();
     }
-
-    /**
-     * Verifies that 0-byte arrays aren't added as favicon or thumbnail data.
-     * @param values        ContentValues of query
-     * @param columnName    Name of data column to verify
-     */
-    public static void stripEmptyByteArray(ContentValues values, String columnName) {
-        if (values.containsKey(columnName)) {
-            byte[] data = values.getAsByteArray(columnName);
-            if (data == null || data.length == 0) {
-                Log.w(LOGTAG, "Tried to insert an empty or non-byte-array image. Ignoring.");
-                values.putNull(columnName);
-            }
-        }
-    }
 }
