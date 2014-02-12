@@ -42,11 +42,10 @@ CanvasLayerD3D9::~CanvasLayerD3D9()
 void
 CanvasLayerD3D9::Initialize(const Data& aData)
 {
-  NS_ASSERTION(mSurface == nullptr, "BasicCanvasLayer::Initialize called twice!");
+  NS_ASSERTION(mDrawTarget == nullptr, "BasicCanvasLayer::Initialize called twice!");
 
   if (aData.mDrawTarget) {
     mDrawTarget = aData.mDrawTarget;
-    mSurface = mDrawTarget->Snapshot();
     mNeedsYFlip = false;
     mDataIsPremultiplied = true;
   } else if (aData.mGLContext) {
@@ -55,7 +54,7 @@ CanvasLayerD3D9::Initialize(const Data& aData)
     mDataIsPremultiplied = aData.mIsGLAlphaPremult;
     mNeedsYFlip = true;
   } else {
-    NS_ERROR("CanvasLayer created without mSurface, mGLContext or mDrawTarget?");
+    NS_ERROR("CanvasLayer created without mGLContext or mDrawTarget?");
   }
 
   mBounds.SetRect(0, 0, aData.mSize.width, aData.mSize.height);
@@ -79,71 +78,37 @@ CanvasLayerD3D9::UpdateSurface()
     }
   }
 
+  RefPtr<SourceSurface> surface;
+
   if (mGLContext) {
     SharedSurface* surf = mGLContext->RequestFrame();
     if (!surf)
         return;
 
     SharedSurface_Basic* shareSurf = SharedSurface_Basic::Cast(surf);
-
-    // WebGL reads entire surface.
-    LockTextureRectD3D9 textureLock(mTexture);
-    if (!textureLock.HasLock()) {
-      NS_WARNING("Failed to lock CanvasLayer texture.");
-      return;
-    }
-
-    D3DLOCKED_RECT rect = textureLock.GetLockRect();
-    
-    DataSourceSurface* frameData = shareSurf->GetData();
-    // Scope for DrawTarget, so it's destroyed early.
-    {
-      RefPtr<DrawTarget> rectDt = Factory::CreateDrawTargetForData(BackendType::CAIRO,
-                                                                   (uint8_t*)rect.pBits,
-                                                                   frameData->GetSize(),
-                                                                   rect.Pitch,
-                                                                   SurfaceFormat::B8G8R8A8);
-
-      Rect drawRect(0, 0, frameData->GetSize().width, frameData->GetSize().height);
-      rectDt->DrawSurface(frameData, drawRect, drawRect,
-                          DrawSurfaceOptions(),  DrawOptions(1.0F, CompositionOp::OP_SOURCE));
-      rectDt->Flush();
-    }
+    surface = shareSurf->GetData();
   } else {
-    RECT r;
-    r.left = mBounds.x;
-    r.top = mBounds.y;
-    r.right = mBounds.XMost();
-    r.bottom = mBounds.YMost();
-
-    LockTextureRectD3D9 textureLock(mTexture);
-    if (!textureLock.HasLock()) {
-      NS_WARNING("Failed to lock CanvasLayer texture.");
-      return;
-    }
-
-    D3DLOCKED_RECT lockedRect = textureLock.GetLockRect();
-
-    RefPtr<DataSourceSurface> dataSourceSurf = mSurface->GetDataSurface();
-
-    if (dataSourceSurf->GetFormat() != SurfaceFormat::B8G8R8A8 &&
-      dataSourceSurf->GetFormat() != SurfaceFormat::B8G8R8X8 &&
-      dataSourceSurf->GetFormat() != SurfaceFormat::R8G8B8A8 &&
-      dataSourceSurf->GetFormat() != SurfaceFormat::R8G8B8X8)
-    {
-      return;
-    }
-    mHasAlpha = (dataSourceSurf->GetFormat() == SurfaceFormat::B8G8R8A8 ||
-                 dataSourceSurf->GetFormat() == SurfaceFormat::R8G8B8A8);
-
-    DataSourceSurface::MappedSurface ms;
-    dataSourceSurf->Map(DataSourceSurface::MapType::READ, &ms);
-    for (int y = 0; y < mBounds.height; y++) {
-      memcpy((uint8_t*)lockedRect.pBits + lockedRect.Pitch * y,
-             ms.mData + ms.mStride * y,
-             mBounds.width * 4);
-    }
+    surface = mDrawTarget->Snapshot();
   }
+
+  // WebGL reads entire surface.
+  LockTextureRectD3D9 textureLock(mTexture);
+  if (!textureLock.HasLock()) {
+    NS_WARNING("Failed to lock CanvasLayer texture.");
+    return;
+  }
+
+  D3DLOCKED_RECT rect = textureLock.GetLockRect();
+  RefPtr<DrawTarget> rectDt = Factory::CreateDrawTargetForData(BackendType::CAIRO,
+                                                               (uint8_t*)rect.pBits,
+                                                               surface->GetSize(),
+                                                               rect.Pitch,
+                                                               SurfaceFormat::B8G8R8A8);
+
+  Rect drawRect(0, 0, surface->GetSize().width, surface->GetSize().height);
+  rectDt->DrawSurface(surface, drawRect, drawRect,
+                      DrawSurfaceOptions(),  DrawOptions(1.0F, CompositionOp::OP_SOURCE));
+  rectDt->Flush();
 }
 
 Layer*
