@@ -10,9 +10,13 @@
 
 #include "nsIDOMWindowUtils.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/BasicEvents.h"
 
 class nsGlobalWindow;
 class nsIPresShell;
+class nsIWidget;
+class nsPresContext;
+class nsPoint;
 
 class nsDOMWindowUtils MOZ_FINAL : public nsIDOMWindowUtils,
                                    public nsSupportsWeakReference
