@@ -10,6 +10,7 @@
 #include "jsfun.h"
 
 #include "jit/Registers.h"
+#include "vm/ScopeObject.h"
 
 namespace js {
 namespace jit {
@@ -60,20 +61,24 @@ class CompileInfo
             JS_ASSERT(fun_->isTenured());
         }
 
+        osrStaticScope_ = osrPc ? script->getStaticScope(osrPc) : nullptr;
+
         nimplicit_ = StartArgSlot(script)                   /* scope chain and argument obj */
                    + (fun ? 1 : 0);                         /* this */
         nargs_ = fun ? fun->nargs() : 0;
+        nfixedvars_ = script->nfixedvars();
         nlocals_ = script->nfixed();
         nstack_ = script->nslots() - script->nfixed();
         nslots_ = nimplicit_ + nargs_ + nlocals_ + nstack_;
     }
 
     CompileInfo(unsigned nlocals, ExecutionMode executionMode)
-      : script_(nullptr), fun_(nullptr), osrPc_(nullptr), constructing_(false),
-        executionMode_(executionMode), scriptNeedsArgsObj_(false)
+      : script_(nullptr), fun_(nullptr), osrPc_(nullptr), osrStaticScope_(nullptr),
+        constructing_(false), executionMode_(executionMode), scriptNeedsArgsObj_(false)
     {
         nimplicit_ = 0;
         nargs_ = 0;
+        nfixedvars_ = 0;
         nlocals_ = nlocals;
         nstack_ = 1;  /* For FunctionCompiler::pushPhiInput/popPhiOutput */
         nslots_ = nlocals_ + nstack_;
@@ -90,6 +95,9 @@ class CompileInfo
     }
     jsbytecode *osrPc() {
         return osrPc_;
+    }
+    NestedScopeObject *osrStaticScope() const {
+        return osrStaticScope_;
     }
 
     bool hasOsrAt(jsbytecode *pc) {
@@ -155,7 +163,13 @@ class CompileInfo
     unsigned nargs() const {
         return nargs_;
     }
-    // Number of slots needed for local variables.
+    // Number of slots needed for "fixed vars".  Note that this is only non-zero
+    // for function code.
+    unsigned nfixedvars() const {
+        return nfixedvars_;
+    }
+    // Number of slots needed for all local variables.  This includes "fixed
+    // vars" (see above) and also block-scoped locals.
     unsigned nlocals() const {
         return nlocals_;
     }
@@ -223,26 +237,47 @@ class CompileInfo
         return nimplicit() + nargs() + nlocals();
     }
 
-    bool isSlotAliased(uint32_t index) const {
+    bool isSlotAliased(uint32_t index, NestedScopeObject *staticScope) const {
+        JS_ASSERT(index >= startArgSlot());
+
         if (funMaybeLazy() && index == thisSlot())
             return false;
 
         uint32_t arg = index - firstArgSlot();
-        if (arg < nargs()) {
-            if (script()->formalIsAliased(arg))
-                return true;
-            return false;
-        }
+        if (arg < nargs())
+            return script()->formalIsAliased(arg);
 
-        uint32_t var = index - firstLocalSlot();
-        if (var < nlocals()) {
-            if (script()->varIsAliased(var))
-                return true;
+        uint32_t local = index - firstLocalSlot();
+        if (local < nlocals()) {
+            // First, check if this local is a var.
+            if (local < nfixedvars())
+                return script()->varIsAliased(local);
+
+            // Otherwise, it might be part of a block scope.
+            for (; staticScope; staticScope = staticScope->enclosingNestedScope()) {
+                if (!staticScope->is<StaticBlockObject>())
+                    continue;
+                StaticBlockObject &blockObj = staticScope->as<StaticBlockObject>();
+                if (blockObj.localOffset() < local) {
+                    if (local - blockObj.localOffset() < blockObj.slotCount())
+                        return blockObj.isAliased(local - blockObj.localOffset());
+                    return false;
+                }
+            }
+
+            // In this static scope, this var is dead.
             return false;
         }
 
         JS_ASSERT(index >= firstStackSlot());
         return false;
+    }
+
+    bool isSlotAliasedAtEntry(uint32_t index) const {
+        return isSlotAliased(index, nullptr);
+    }
+    bool isSlotAliasedAtOsr(uint32_t index) const {
+        return isSlotAliased(index, osrStaticScope());
     }
 
     bool hasArguments() const {
@@ -269,12 +304,14 @@ class CompileInfo
   private:
     unsigned nimplicit_;
     unsigned nargs_;
+    unsigned nfixedvars_;
     unsigned nlocals_;
     unsigned nstack_;
     unsigned nslots_;
     JSScript *script_;
     JSFunction *fun_;
     jsbytecode *osrPc_;
+    NestedScopeObject *osrStaticScope_;
     bool constructing_;
     ExecutionMode executionMode_;
 

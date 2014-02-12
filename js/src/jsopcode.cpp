@@ -117,8 +117,6 @@ js::StackUses(JSScript *script, jsbytecode *pc)
     switch (op) {
       case JSOP_POPN:
         return GET_UINT16(pc);
-      case JSOP_POPNV:
-        return GET_UINT16(pc) + 1;
       default:
         /* stack: fun, this, [argc arguments] */
         JS_ASSERT(op == JSOP_NEW || op == JSOP_CALL || op == JSOP_EVAL ||
@@ -467,6 +465,16 @@ BytecodeParser::simulateOp(JSOp op, uint32_t offset, uint32_t *offsetStack, uint
             offsetStack[stackDepth + 3] = offsetStack[stackDepth + 1];
         }
         break;
+
+      case JSOP_DUPAT: {
+        JS_ASSERT(ndefs == 1);
+        jsbytecode *pc = script_->offsetToPC(offset);
+        unsigned n = GET_UINT24(pc);
+        JS_ASSERT(n < stackDepth);
+        if (offsetStack)
+            offsetStack[stackDepth] = offsetStack[stackDepth - 1 - n];
+        break;
+      }
 
       case JSOP_SWAP:
         JS_ASSERT(ndefs == 2);
@@ -832,10 +840,9 @@ ToDisassemblySource(JSContext *cx, HandleValue v, JSAutoByteString *bytes)
 
     if (!JSVAL_IS_PRIMITIVE(v)) {
         JSObject *obj = JSVAL_TO_OBJECT(v);
-        if (obj->is<BlockObject>()) {
-            Rooted<BlockObject*> block(cx, &obj->as<BlockObject>());
-            char *source = JS_sprintf_append(nullptr, "depth %d {",
-                                             block->stackDepth());
+        if (obj->is<StaticBlockObject>()) {
+            Rooted<StaticBlockObject*> block(cx, &obj->as<StaticBlockObject>());
+            char *source = JS_sprintf_append(nullptr, "depth %d {", block->localOffset());
             if (!source)
                 return false;
 
@@ -1027,7 +1034,8 @@ js_Disassemble1(JSContext *cx, HandleScript script, jsbytecode *pc,
         goto print_int;
 
       case JOF_UINT24:
-        JS_ASSERT(op == JSOP_UINT24 || op == JSOP_NEWARRAY || op == JSOP_INITELEM_ARRAY);
+        JS_ASSERT(op == JSOP_UINT24 || op == JSOP_NEWARRAY || op == JSOP_INITELEM_ARRAY ||
+                  op == JSOP_DUPAT);
         i = (int)GET_UINT24(pc);
         goto print_int;
 
@@ -1438,9 +1446,8 @@ struct ExpressionDecompiler
     bool init();
     bool decompilePCForStackOperand(jsbytecode *pc, int i);
     bool decompilePC(jsbytecode *pc);
-    JSAtom *getVar(uint32_t slot);
+    JSAtom *getFixed(uint32_t slot, jsbytecode *pc);
     JSAtom *getArg(unsigned slot);
-    JSAtom *findLetVar(jsbytecode *pc, unsigned depth);
     JSAtom *loadAtom(jsbytecode *pc);
     bool quote(JSString *s, uint32_t quote);
     bool write(const char *s);
@@ -1506,18 +1513,9 @@ ExpressionDecompiler::decompilePC(jsbytecode *pc)
       case JSOP_GETLOCAL:
       case JSOP_CALLLOCAL: {
         uint32_t i = GET_LOCALNO(pc);
-        JSAtom *atom;
-        if (i >= script->nfixed()) {
-            i -= script->nfixed();
-            JS_ASSERT(i < unsigned(parser.stackDepthAtPC(pc)));
-            atom = findLetVar(pc, i);
-            if (!atom)
-                return decompilePCForStackOperand(pc, i); // Destructing temporary
-        } else {
-            atom = getVar(i);
-        }
-        JS_ASSERT(atom);
-        return write(atom);
+        if (JSAtom *atom = getFixed(i, pc))
+            return write(atom);
+        return write("(intermediate value)");
       }
       case JSOP_CALLALIASEDVAR:
       case JSOP_GETALIASEDVAR: {
@@ -1643,26 +1641,6 @@ ExpressionDecompiler::loadAtom(jsbytecode *pc)
 }
 
 JSAtom *
-ExpressionDecompiler::findLetVar(jsbytecode *pc, uint32_t depth)
-{
-    for (JSObject *chain = script->getStaticScope(pc); chain; chain = chain->getParent()) {
-        if (!chain->is<StaticBlockObject>())
-            continue;
-        StaticBlockObject &block = chain->as<StaticBlockObject>();
-        uint32_t blockDepth = block.stackDepth();
-        uint32_t blockCount = block.slotCount();
-        if (depth - blockDepth < blockCount) {
-            for (Shape::Range<NoGC> r(block.lastProperty()); !r.empty(); r.popFront()) {
-                const Shape &shape = r.front();
-                if (block.shapeToIndex(shape) == depth - blockDepth)
-                    return JSID_TO_ATOM(shape.propid());
-            }
-        }
-    }
-    return nullptr;
-}
-
-JSAtom *
 ExpressionDecompiler::getArg(unsigned slot)
 {
     JS_ASSERT(fun);
@@ -1671,12 +1649,33 @@ ExpressionDecompiler::getArg(unsigned slot)
 }
 
 JSAtom *
-ExpressionDecompiler::getVar(uint32_t slot)
+ExpressionDecompiler::getFixed(uint32_t slot, jsbytecode *pc)
 {
-    JS_ASSERT(fun);
-    slot += fun->nargs();
-    JS_ASSERT(slot < script->bindings.count());
-    return (*localNames)[slot].name();
+    if (slot < script->nfixedvars()) {
+        JS_ASSERT(fun);
+        slot += fun->nargs();
+        JS_ASSERT(slot < script->bindings.count());
+        return (*localNames)[slot].name();
+    }
+    for (NestedScopeObject *chain = script->getStaticScope(pc);
+         chain;
+         chain = chain->enclosingNestedScope()) {
+        if (!chain->is<StaticBlockObject>())
+            continue;
+        StaticBlockObject &block = chain->as<StaticBlockObject>();
+        if (slot < block.localOffset())
+            continue;
+        slot -= block.localOffset();
+        if (slot >= block.slotCount())
+            return nullptr;
+        for (Shape::Range<NoGC> r(block.lastProperty()); !r.empty(); r.popFront()) {
+            const Shape &shape = r.front();
+            if (block.shapeToIndex(shape) == slot)
+                return JSID_TO_ATOM(shape.propid());
+        }
+        break;
+    }
+    return nullptr;
 }
 
 bool

@@ -21,7 +21,8 @@ namespace js {
 
 inline
 Bindings::Bindings()
-    : callObjShape_(nullptr), bindingArrayAndFlag_(TEMPORARY_STORAGE_BIT), numArgs_(0), numVars_(0)
+    : callObjShape_(nullptr), bindingArrayAndFlag_(TEMPORARY_STORAGE_BIT),
+      numArgs_(0), numBlockScoped_(0), numVars_(0)
 {}
 
 inline
