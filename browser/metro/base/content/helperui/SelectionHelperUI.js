@@ -435,10 +435,12 @@ var SelectionHelperUI = {
    *
    * Attaches to existing selection and begins editing.
    *
-   * @param aMsgTarget - Browser or chrome message target
-   * @param aX, aY - Browser relative client coordinates.
+   * @param aMsgTarget - Browser or chrome message target.
+   * @param aX Tap browser relative client X coordinate.
+   * @param aY Tap browser relative client Y coordinate.
+   * @param aTarget Actual tap target (optional).
    */
-  attachEditSession: function attachEditSession(aMsgTarget, aX, aY) {
+  attachEditSession: function attachEditSession(aMsgTarget, aX, aY, aTarget) {
     if (!aMsgTarget || this.isActive)
       return;
     this._init(aMsgTarget);
@@ -448,6 +450,7 @@ var SelectionHelperUI = {
     // back with information on the current selection. SelectionAttach
     // takes client coordinates.
     this._sendAsyncMessage("Browser:SelectionAttach", {
+      target: aTarget,
       xPos: aX,
       yPos: aY
     });
@@ -464,11 +467,12 @@ var SelectionHelperUI = {
    * Once the user starts a drag, the caret marker is hidden, and
    * the start and end markers take over.
    *
-   * @param aMsgTarget - Browser or chrome message target
-   * @param aX, aY - Browser relative client coordinates of the tap
-   * that initiated the session.
+   * @param aMsgTarget - Browser or chrome message target.
+   * @param aX Tap browser relative client X coordinate.
+   * @param aY Tap browser relative client Y coordinate.
+   * @param aTarget Actual tap target (optional).
    */
-  attachToCaret: function attachToCaret(aMsgTarget, aX, aY) {
+  attachToCaret: function attachToCaret(aMsgTarget, aX, aY, aTarget) {
     if (!this.isActive) {
       this._init(aMsgTarget);
       this._setupDebugOptions();
@@ -476,9 +480,14 @@ var SelectionHelperUI = {
       this._hideMonocles();
     }
 
-    this._lastPoint = { xPos: aX, yPos: aY };
+    this._lastCaretAttachment = {
+      target: aTarget,
+      xPos: aX,
+      yPos: aY
+    };
 
     this._sendAsyncMessage("Browser:CaretAttach", {
+      target: aTarget,
       xPos: aX,
       yPos: aY
     });
@@ -517,37 +526,13 @@ var SelectionHelperUI = {
   },
 
   /*
-   * Event handler on the navbar text input. Called from navbar bindings
-   * when focus is applied to the edit.
-   */
-  urlbarTextboxClick: function(aEdit) {
-    // workaround for bug 925457: taping browser chrome resets last tap
-    // co-ordinates to 'undefined' so that we know not to shift the browser
-    // when the keyboard is up in SelectionHandler's _calcNewContentPosition().
-    Browser.selectedTab.browser.messageManager.sendAsyncMessage("Browser:ResetLastPos", {
-      xPos: null,
-      yPos: null
-    });
-
-    if (InputSourceHelper.isPrecise || !aEdit.textLength) {
-      return;
-    }
-
-    // Enable selection when there's text in the control
-    let innerRect = aEdit.inputField.getBoundingClientRect();
-    this.attachEditSession(ChromeSelectionHandler,
-                           innerRect.left,
-                           innerRect.top);
-  },
-
-  /*
    * Click handler for chrome pages loaded into the browser (about:config).
    * Called from the text input bindings via the attach_edit_session_to_content
    * observer.
    */
   chromeTextboxClick: function (aEvent) {
-    this.attachEditSession(Browser.selectedTab.browser,
-                           aEvent.clientX, aEvent.clientY);
+    this.attachEditSession(Browser.selectedTab.browser, aEvent.clientX,
+        aEvent.clientY, aEvent.target);
   },
 
   /*
@@ -875,12 +860,13 @@ var SelectionHelperUI = {
 
   /*
    * Handles taps that move the current caret around in text edits,
-   * clear active selection and focus when neccessary, or change
-   * modes. Only active afer SelectionHandlerUI is initialized.
+   * clear active selection and focus when necessary, or change
+   * modes. Only active after SelectionHandlerUI is initialized.
    */
   _onClick: function(aEvent) {
     if (this.layerMode == kChromeLayer && this._targetIsEditable) {
-      this.attachToCaret(this._msgTarget, aEvent.clientX, aEvent.clientY);
+      this.attachToCaret(this._msgTarget, aEvent.clientX, aEvent.clientY,
+          aEvent.target);
     }
   },
 
@@ -909,7 +895,8 @@ var SelectionHelperUI = {
    */
   _onDeckOffsetChanged: function _onDeckOffsetChanged(aEvent) {
     // Update the monocle position and display
-    this.attachToCaret(null, this._lastPoint.xPos, this._lastPoint.yPos);
+    this.attachToCaret(null, this._lastCaretAttachment.xPos,
+        this._lastCaretAttachment.yPos, this._lastCaretAttachment.target);
   },
 
   /*

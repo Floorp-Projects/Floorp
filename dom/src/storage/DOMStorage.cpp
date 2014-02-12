@@ -161,14 +161,15 @@ namespace {
 class StorageNotifierRunnable : public nsRunnable
 {
 public:
-  StorageNotifierRunnable(nsISupports* aSubject)
-    : mSubject(aSubject)
+  StorageNotifierRunnable(nsISupports* aSubject, const char16_t* aType)
+    : mSubject(aSubject), mType(aType)
   { }
 
   NS_DECL_NSIRUNNABLE
 
 private:
   nsCOMPtr<nsISupports> mSubject;
+  const char16_t* mType;
 };
 
 NS_IMETHODIMP
@@ -177,7 +178,7 @@ StorageNotifierRunnable::Run()
   nsCOMPtr<nsIObserverService> observerService =
     mozilla::services::GetObserverService();
   if (observerService) {
-    observerService->NotifyObservers(mSubject, "dom-storage2-changed", nullptr);
+    observerService->NotifyObservers(mSubject, "dom-storage2-changed", mType);
   }
   return NS_OK;
 }
@@ -207,7 +208,11 @@ DOMStorage::BroadcastChangeNotification(const nsSubstring& aKey,
     return;
   }
 
-  nsRefPtr<StorageNotifierRunnable> r = new StorageNotifierRunnable(event);
+  nsRefPtr<StorageNotifierRunnable> r =
+    new StorageNotifierRunnable(event,
+                                GetType() == LocalStorage
+                                  ? MOZ_UTF16("localStorage")
+                                  : MOZ_UTF16("sessionStorage"));
   NS_DispatchToMainThread(r);
 }
 

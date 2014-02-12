@@ -572,6 +572,26 @@
      };
 
      /**
+      * Gets the number of bytes available on disk to the current user.
+      *
+      * @param {string} sourcePath Platform-specific path to a directory on 
+      * the disk to query for free available bytes.
+      *
+      * @return {number} The number of bytes available for the current user.
+      * @throws {OS.File.Error} In case of any error.
+      */
+     File.getAvailableFreeSpace = function Win_getAvailableFreeSpace(sourcePath) {
+       let freeBytesAvailableToUser = new Type.uint64_t.implementation(0);
+       let freeBytesAvailableToUserPtr = freeBytesAvailableToUser.address();
+
+       throw_on_zero("getAvailableFreeSpace",
+         WinFile.GetDiskFreeSpaceEx(sourcePath, freeBytesAvailableToUserPtr, null, null)
+       );
+
+       return freeBytesAvailableToUser.value;
+     };
+
+     /**
       * A global value used to receive data during time conversions.
       */
      let gSystemTime = new Type.SystemTime.implementation();

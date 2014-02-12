@@ -8,8 +8,6 @@
 
 /** Test for Power API **/
 
-ok('mozPower' in navigator, "navigator.mozPower should exist");
-
 /** Test permission **/
 // In b2g, addPermission 'power' is only working after a document reload
 // See bug 802312
@@ -17,6 +15,12 @@ ok('mozPower' in navigator, "navigator.mozPower should exist");
 SimpleTest.waitForExplicitFinish();
 
 function startTest() {
+  SpecialPowers.pushPermissions([
+    {type: "power", allow: true, context: window.frames[0].document}
+  ], doTest1);
+}
+
+function doTest1() {
   window.frames[0].frameElement.setAttribute('onload', 'doTest2()');
   power = window.frames[0].navigator.mozPower;
   ok(power, "Should be able to access power manager with permission.");

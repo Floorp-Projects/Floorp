@@ -785,6 +785,21 @@ File.move = function move(sourcePath, destPath, options) {
 };
 
 /**
+ * Gets the number of bytes available on disk to the current user.
+ *
+ * @param {string} Platform-specific path to a directory on the disk to 
+ * query for free available bytes.
+ *
+ * @return {number} The number of bytes available for the current user.
+ * @throws {OS.File.Error} In case of any error.
+ */
+File.getAvailableFreeSpace = function getAvailableFreeSpace(sourcePath) {
+  return Scheduler.post("getAvailableFreeSpace",
+    [Type.path.toMsg(sourcePath)], sourcePath
+  ).then(Type.uint64_t.fromMsg);
+};
+
+/**
  * Remove an empty directory.
  *
  * @param {string} path The name of the directory to remove.
