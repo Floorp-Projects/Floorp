@@ -375,11 +375,49 @@ StackFrame::mark(JSTracer *trc)
     gc::MarkValueUnbarriered(trc, returnValue().address(), "rval");
 }
 
+static void
+MarkLocals(StackFrame *frame, JSTracer *trc, unsigned start, unsigned end)
+{
+    if (start < end)
+        gc::MarkValueRootRange(trc, end - start, frame->slots() + start, "vm_stack");
+}
+
 void
-StackFrame::markValues(JSTracer *trc, Value *sp)
+StackFrame::markValues(JSTracer *trc, Value *sp, jsbytecode *pc)
 {
     JS_ASSERT(sp >= slots());
-    gc::MarkValueRootRange(trc, sp - slots(), slots(), "vm_stack");
+
+    NestedScopeObject *staticScope;
+
+    staticScope = script()->getStaticScope(pc);
+    while (staticScope && !staticScope->is<StaticBlockObject>())
+        staticScope = staticScope->enclosingNestedScope();
+
+    size_t nfixed = script()->nfixed();
+    size_t nlivefixed;
+
+    if (staticScope) {
+        StaticBlockObject &blockObj = staticScope->as<StaticBlockObject>();
+        nlivefixed = blockObj.localOffset() + blockObj.slotCount();
+    } else {
+        nlivefixed = script()->nfixedvars();
+    }
+
+    if (nfixed == nlivefixed) {
+        // All locals are live.
+        MarkLocals(this, trc, 0, sp - slots());
+    } else {
+        // Mark operand stack.
+        MarkLocals(this, trc, nfixed, sp - slots());
+
+        // Clear dead locals.
+        while (nfixed > nlivefixed)
+            unaliasedLocal(--nfixed, DONT_CHECK_ALIASING).setUndefined();
+
+        // Mark live locals.
+        MarkLocals(this, trc, 0, nlivefixed);
+    }
+
     if (hasArgs()) {
         // Mark callee, |this| and arguments.
         unsigned argc = Max(numActualArgs(), numFormalArgs());
@@ -395,7 +433,7 @@ MarkInterpreterActivation(JSTracer *trc, InterpreterActivation *act)
 {
     for (InterpreterFrameIterator frames(act); !frames.done(); ++frames) {
         StackFrame *fp = frames.frame();
-        fp->markValues(trc, frames.sp());
+        fp->markValues(trc, frames.sp(), frames.pc());
         fp->mark(trc);
     }
 }
@@ -1274,8 +1312,8 @@ js::CheckLocalUnaliased(MaybeCheckAliasing checkAliasing, JSScript *script, uint
     if (!checkAliasing)
         return;
 
-    JS_ASSERT(i < script->nslots());
-    if (i < script->nfixed()) {
+    JS_ASSERT(i < script->nfixed());
+    if (i < script->bindings.numVars()) {
         JS_ASSERT(!script->varIsAliased(i));
     } else {
         // FIXME: The callers of this function do not easily have the PC of the

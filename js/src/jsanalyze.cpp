@@ -766,7 +766,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
 
     RootedScript script(cx, script_);
     for (BindingIter bi(script); bi; bi++) {
-        if (bi->kind() == ARGUMENT)
+        if (bi->kind() == Binding::ARGUMENT)
             escapedSlots[ArgSlot(bi.frameIndex())] = allArgsAliased || bi->aliased();
         else
             escapedSlots[LocalSlot(script_, bi.frameIndex())] = allVarsAliased || bi->aliased();
@@ -928,32 +928,11 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
             break;
           }
 
-          case JSOP_GETLOCAL: {
-            /*
-             * Watch for uses of variables not known to be defined, and mark
-             * them as having possible uses before definitions.  Ignore GETLOCAL
-             * followed by a POP, these are generated for, e.g. 'var x;'
-             */
-            jsbytecode *next = pc + JSOP_GETLOCAL_LENGTH;
-            if (JSOp(*next) != JSOP_POP || jumpTarget(next)) {
-                uint32_t local = GET_LOCALNO(pc);
-                if (local >= script_->nfixed()) {
-                    localsAliasStack_ = true;
-                    break;
-                }
-            }
-            break;
-          }
-
+          case JSOP_GETLOCAL:
           case JSOP_CALLLOCAL:
-          case JSOP_SETLOCAL: {
-            uint32_t local = GET_LOCALNO(pc);
-            if (local >= script_->nfixed()) {
-                localsAliasStack_ = true;
-                break;
-            }
+          case JSOP_SETLOCAL:
+            JS_ASSERT(GET_LOCALNO(pc) < script_->nfixed());
             break;
-          }
 
           case JSOP_PUSHBLOCKSCOPE:
             localsAliasStack_ = true;
@@ -1821,6 +1800,13 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
             stack[stackDepth - 1].v = stack[stackDepth - 3].v = code->poppedValues[0];
             stack[stackDepth - 2].v = stack[stackDepth - 4].v = code->poppedValues[1];
             break;
+
+          case JSOP_DUPAT: {
+            unsigned pickedDepth = GET_UINT24 (pc);
+            JS_ASSERT(pickedDepth < stackDepth - 1);
+            stack[stackDepth - 1].v = stack[stackDepth - 2 - pickedDepth].v;
+            break;
+          }
 
           case JSOP_SWAP:
             /* Swap is like pick 1. */

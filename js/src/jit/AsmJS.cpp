@@ -5263,7 +5263,8 @@ ParseFunction(ModuleCompiler &m, ParseNode **fnOut)
 
     Directives newDirectives = directives;
     AsmJSParseContext funpc(&m.parser(), outerpc, fn, funbox, &newDirectives,
-                            outerpc->staticLevel + 1, outerpc->blockidGen);
+                            outerpc->staticLevel + 1, outerpc->blockidGen,
+                            /* blockScopeDepth = */ 0);
     if (!funpc.init(m.parser().tokenStream))
         return false;
 
