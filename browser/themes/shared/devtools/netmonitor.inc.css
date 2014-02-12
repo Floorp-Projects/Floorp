@@ -494,15 +494,15 @@ box.requests-menu-status {
 
 /* Footer */
 
-#requests-menu-footer {
-  border-top: solid 1px hsla(210,5%,5%,.3);
-}
-
 .theme-dark #requests-menu-footer {
+  border-top: 1px solid @table_itemDarkStartBorder@;
+  box-shadow: 0 1px 0 @table_itemDarkEndBorder@ inset;
   background: url(background-noise-toolbar.png), #343c45; /* Toolbars */
 }
 
 .theme-light #requests-menu-footer {
+  border-top: 1px solid @table_itemLightStartBorder@;
+  box-shadow: 0 1px 0 @table_itemLightEndBorder@ inset;
   background: url(background-noise-toolbar.png), #f0f1f2; /* Toolbars */
 }
 
@@ -530,14 +530,14 @@ box.requests-menu-status {
 
 .theme-dark .requests-menu-footer-spacer:not(:first-child),
 .theme-dark .requests-menu-footer-button:not(:first-child) {
-  -moz-border-start: 1px solid @table_itemDarkStartBorder@;
-  box-shadow: -1px 0 0 @table_itemDarkEndBorder@;
+  -moz-border-start: 1px solid @table_itemDarkEndBorder@;
+  box-shadow: -1px 0 0 @table_itemDarkStartBorder@;
 }
 
 .theme-light .requests-menu-footer-spacer:not(:first-child),
 .theme-light .requests-menu-footer-button:not(:first-child) {
-  -moz-border-start: 1px solid @table_itemLightStartBorder@;
-  box-shadow: -1px 0 0 @table_itemLightEndBorder@;
+  -moz-border-start: 1px solid @table_itemLightEndBorder@;
+  box-shadow: -1px 0 0 @table_itemLightStartBorder@;
 }
 
 .requests-menu-footer-button {
@@ -546,18 +546,25 @@ box.requests-menu-status {
 }
 
 .requests-menu-footer-button:hover {
-  background: rgba(0,0,0,0.20);
+  background: rgba(0,0,0,0.10);
 }
 
-.requests-menu-footer-button:hover:active {
-  background: rgba(0,0,0,0.35);
+.theme-dark .requests-menu-footer-button:hover:active {
+  background-color: rgba(29,79,115,0.4); /* Select Highlight Blue at 40% opacity */
 }
 
-.requests-menu-footer-button:not(:active)[checked] {
-  background-color: rgba(0,0,0,0.25);
-  background-image: radial-gradient(farthest-side at center top, hsla(200,100%,70%,.7), hsla(200,100%,70%,0.3));
-  background-size: 100% 1px;
-  background-repeat: no-repeat;
+.theme-light .requests-menu-footer-button:hover:active {
+  background-color: rgba(76,158,217,0.4); /* Select Highlight Blue at 40% opacity */
+}
+
+.theme-dark .requests-menu-footer-button:not(:active)[checked] {
+  background-color: rgba(29,79,115,1); /* Select Highlight Blue */
+  color: rgba(245,247,250,1); /* Light foreground text */
+}
+
+.theme-light .requests-menu-footer-button:not(:active)[checked] {
+  background-color: rgba(76,158,217,1); /* Select Highlight Blue */
+  color: rgba(245,247,250,1); /* Light foreground text */
 }
 
 .requests-menu-footer-label {
