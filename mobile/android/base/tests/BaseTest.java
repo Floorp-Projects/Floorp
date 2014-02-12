@@ -180,7 +180,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
      */
     protected final void focusUrlBar() {
         // Click on the browser toolbar to enter editing mode
-        final View toolbarView = mSolo.getView("browser_toolbar");
+        final View toolbarView = mSolo.getView(R.id.browser_toolbar);
         mSolo.clickOnView(toolbarView);
 
         // Wait for highlighed text to gain focus
@@ -201,7 +201,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     }
 
     protected final void enterUrl(String url) {
-        final EditText urlEditView = (EditText) mSolo.getView("url_edit_text");
+        final EditText urlEditView = (EditText) mSolo.getView(R.id.url_edit_text);
 
         focusUrlBar();
 
@@ -255,7 +255,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     }
 
     public final void verifyUrl(String url) {
-        final EditText urlEditText = (EditText) mSolo.getView("url_edit_text");
+        final EditText urlEditText = (EditText) mSolo.getView(R.id.url_edit_text);
         String urlBarText = null;
         if (urlEditText != null) {
             // wait for a short time for the expected text, in case there is a delay
@@ -483,7 +483,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     }
 
     public final void verifyHomePagerHidden() {
-        final View homePagerView = mSolo.getView("home_pager");
+        final View homePagerView = mSolo.getView(R.id.home_pager);
 
         boolean rc = waitForCondition(new Condition() {
             @Override
@@ -498,7 +498,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     }
 
     public final void verifyPageTitle(String title) {
-        final TextView urlBarTitle = (TextView) mSolo.getView("url_bar_title");
+        final TextView urlBarTitle = (TextView) mSolo.getView(R.id.url_bar_title);
         String pageTitle = null;
         if (urlBarTitle != null) {
             // Wait for the title to make sure it has been displayed in case the view
@@ -538,12 +538,12 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     }
 
     public void addTab() {
-        mSolo.clickOnView(mSolo.getView("tabs"));
+        mSolo.clickOnView(mSolo.getView(R.id.tabs));
         // wait for addTab to appear (this is usually immediate)
         boolean success = waitForCondition(new Condition() {
             @Override
             public boolean isSatisfied() {
-                View addTabView = mSolo.getView("add_tab");
+                View addTabView = mSolo.getView(R.id.add_tab);
                 if (addTabView == null) {
                     return false;
                 }
@@ -551,8 +551,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
             }
         }, MAX_WAIT_MS);
         mAsserter.ok(success, "waiting for add tab view", "add tab view available");
-        final View addTabView = mSolo.getView("add_tab");
-        mSolo.clickOnView(mSolo.getView("add_tab"));
+        mSolo.clickOnView(mSolo.getView(R.id.add_tab));
     }
 
     public void addTab(String url) {
