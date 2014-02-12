@@ -7,26 +7,17 @@ package org.mozilla.gecko;
 import android.app.Activity;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.TextSwitcher;
-import android.app.Instrumentation;
-import com.jayway.android.robotium.solo.Solo;
-import java.util.List;
+import android.widget.TextView;
 
 public class FennecNativeElement implements Element {
     private final Activity mActivity;
     private Integer mId;
-    private Solo mSolo;
-    // max time to wait for thread synchronization
-    private static final int MAX_WAIT_MS = 60000;
 
-    public FennecNativeElement(Integer id, Activity activity, Solo solo) {
+    public FennecNativeElement(Integer id, Activity activity) {
         mId = id;
         mActivity = activity;
-        mSolo = solo;
     }
 
     public Integer getId() {

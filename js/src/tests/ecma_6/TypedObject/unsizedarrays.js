@@ -14,6 +14,7 @@ function runTests() {
   print(BUGNUMBER + ": " + summary);
 
   (function SimpleArrayOfTwoObjects() {
+    print("SimpleArrayOfTwoObjects");
     var Objects = new ArrayType(ObjectType);
     var objects2 = new Objects(2, [{f: "Hello"},
                                    {f: "World"}]);
@@ -23,12 +24,14 @@ function runTests() {
   })();
 
   (function EmbedUnsizedArraysBad() {
+    print("EmbedUnsizedArraysBad");
     var Objects = new ArrayType(ObjectType);
     assertThrows(() => new ArrayType(Objects));
     assertThrows(() => new StructType({f: Objects}));
   })();
 
   (function MultipleSizes() {
+    print("MultipleSizes");
     var Uints = new ArrayType(uint32);
     var Point = new StructType({values: new ArrayType(uint32).dimension(3)});
 

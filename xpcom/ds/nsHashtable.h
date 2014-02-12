@@ -258,43 +258,6 @@ public:
     uint32_t GetValue() { return mKey; }
 };
 
-////////////////////////////////////////////////////////////////////////////////
-// nsVoidKey: Where keys are void* objects that don't get refcounted.
-
-class nsVoidKey : public nsHashKey {
-  protected:
-    void* mKey;
-
-  public:
-    nsVoidKey(const nsVoidKey& aKey) : mKey(aKey.mKey) {
-#ifdef DEBUG
-        mKeyType = aKey.mKeyType;
-#endif
-    }
-
-    nsVoidKey(void* key) {
-#ifdef DEBUG
-        mKeyType = VoidKey;
-#endif
-        mKey = key;
-    }
-
-    uint32_t HashCode(void) const {
-        return NS_PTR_TO_INT32(mKey);
-    }
-
-    bool Equals(const nsHashKey *aKey) const {
-        NS_ASSERTION(aKey->GetKeyType() == VoidKey, "mismatched key types");
-        return (mKey == ((const nsVoidKey *) aKey)->mKey);
-    }
-
-    nsHashKey *Clone() const {
-        return new nsVoidKey(mKey);
-    }
-
-    void* GetValue() { return mKey; }
-};
-
 // for null-terminated c-strings
 class nsCStringKey : public nsHashKey {
   public:
