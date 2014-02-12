@@ -172,6 +172,10 @@ class MacroAssembler : public MacroAssemblerSpecific
     bool enoughMemory_;
     bool embedsNurseryPointers_;
 
+    // SPS instrumentation, only used for Ion caches.
+    mozilla::Maybe<IonInstrumentation> spsInstrumentation_;
+    jsbytecode *spsPc_;
+
   private:
     // This field is used to manage profiling instrumentation output. If
     // provided and enabled, then instrumentation will be emitted around call
@@ -212,7 +216,8 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     // This constructor should only be used when there is no IonContext active
     // (for example, Trampoline-$(ARCH).cpp and IonCaches.cpp).
-    MacroAssembler(JSContext *cx, IonScript *ion = nullptr)
+    MacroAssembler(JSContext *cx, IonScript *ion = nullptr,
+                   JSScript *script = nullptr, jsbytecode *pc = nullptr)
       : enoughMemory_(true),
         embedsNurseryPointers_(false),
         sps_(nullptr)
@@ -225,8 +230,17 @@ class MacroAssembler : public MacroAssemblerSpecific
         initWithAllocator();
         m_buffer.id = GetIonContext()->getNextAssemblerId();
 #endif
-        if (ion)
+        if (ion) {
             setFramePushed(ion->frameSize());
+            if (pc && cx->runtime()->spsProfiler.enabled()) {
+                // We have to update the SPS pc when this IC stub calls into
+                // the VM.
+                spsPc_ = pc;
+                spsInstrumentation_.construct(&cx->runtime()->spsProfiler, &spsPc_);
+                sps_ = spsInstrumentation_.addr();
+                sps_->setPushed(script);
+            }
+        }
     }
 
     // asm.js compilation handles its own IonContet-pushing
