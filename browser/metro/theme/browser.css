@@ -263,6 +263,22 @@ documenttab[selected] .documenttab-selection:-moz-locale-dir(rtl) {
   visibility: collapse;
 }
 
+/* Watermark */
+#startui-body::after {
+  content: '';
+  width: 256px;
+  height: 256px;
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  margin-top: -128px;
+  margin-left: -128px;
+  z-index: -1;
+  background-image: url("chrome://browser/skin/images/firefox-watermark.png");
+  background-repeat: no-repeat;
+  background-position: center center;
+}
+
 #autocomplete-overlay {
   display: none;
   background-color: black;
