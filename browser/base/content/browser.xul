@@ -269,7 +269,14 @@
                 class="customize-context-removeFromToolbar"/>
       <menuseparator/>
       <menuseparator id="viewToolbarsMenuSeparator"/>
-      <menuitem command="cmd_CustomizeToolbars"
+      <!-- XXXgijs: we're using oncommand handler here to avoid the event being
+                    redirected to the command element, thus preventing
+                    listeners on the menupopup or further up the tree from
+                    seeing the command event pass by. The observes attribute is
+                    here so that the menuitem is still disabled and re-enabled
+                    correctly. -->
+      <menuitem oncommand="BrowserCustomizeToolbar()"
+                observes="cmd_CustomizeToolbars"
                 class="viewCustomizeToolbar"
                 label="&viewCustomizeToolbar.label;"
                 accesskey="&viewCustomizeToolbar.accesskey;"/>
