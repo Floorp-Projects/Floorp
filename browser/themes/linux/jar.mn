@@ -270,15 +270,15 @@ browser.jar:
   skin/classic/browser/devtools/app-manager/noise.png                 (../shared/devtools/app-manager/images/noise.png)
   skin/classic/browser/devtools/app-manager/default-app-icon.png      (../shared/devtools/app-manager/images/default-app-icon.png)
 #ifdef MOZ_SERVICES_SYNC
-  skin/classic/browser/sync-16-throbber.png
   skin/classic/browser/sync-16.png
-  skin/classic/browser/sync-24-throbber.png
   skin/classic/browser/sync-32.png
   skin/classic/browser/sync-bg.png
   skin/classic/browser/sync-128.png
   skin/classic/browser/sync-desktopIcon.png
   skin/classic/browser/sync-mobileIcon.png
   skin/classic/browser/sync-notification-24.png
+  skin/classic/browser/syncProgress-menuPanel.png
+  skin/classic/browser/syncProgress-toolbar.png
   skin/classic/browser/syncSetup.css
   skin/classic/browser/syncCommon.css
   skin/classic/browser/syncQuota.css
