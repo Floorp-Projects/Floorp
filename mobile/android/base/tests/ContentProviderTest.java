@@ -198,10 +198,6 @@ abstract class ContentProviderTest extends BaseTest {
         mResolver.addProvider(mProviderAuthority, mProvider);
     }
 
-    public Uri getContentUri(String className) throws Exception {
-        return getUriColumn(className, "CONTENT_URI");
-    }
-
     public Uri getUriColumn(String className, String columnId) throws Exception {
         Class aClass = mClassLoader.loadClass("org.mozilla.gecko.db.BrowserContract$" + className);
         return (Uri) aClass.getField(columnId).get(null);

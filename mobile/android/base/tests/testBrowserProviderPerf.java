@@ -1,14 +1,14 @@
 package org.mozilla.gecko.tests;
 
-import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.database.Cursor;
-import android.net.Uri;
 import android.os.SystemClock;
+
 import java.util.UUID;
 import java.util.Random;
 
 import org.mozilla.gecko.GeckoProfile;
+import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserDB;
 
 /*
@@ -31,10 +31,6 @@ public class testBrowserProviderPerf extends ContentProviderTest {
 
     private final String MOBILE_FOLDER_GUID = "mobile";
     private long mMobileFolderId;
-
-    private Uri mBookmarksUri;
-    private Uri mHistoryUri;
-    private Uri mFaviconsUri;
 
     private String mBookmarksIdCol;
     private String mBookmarksTitleCol;
@@ -63,10 +59,6 @@ public class testBrowserProviderPerf extends ContentProviderTest {
     }
 
     private void loadContractInfo() throws Exception {
-        mBookmarksUri = getContentUri("Bookmarks");
-        mHistoryUri = getContentUri("History");
-        mFaviconsUri = getContentUri("Favicons");
-
         mBookmarksIdCol = getStringColumn("Bookmarks", "_ID");
         mBookmarksTitleCol = getStringColumn("Bookmarks", "TITLE");
         mBookmarksUrlCol = getStringColumn("Bookmarks", "URL");
@@ -90,7 +82,7 @@ public class testBrowserProviderPerf extends ContentProviderTest {
     }
 
     private void loadMobileFolderId() throws Exception {
-        Cursor c = mProvider.query(mBookmarksUri, null,
+        Cursor c = mProvider.query(BrowserContract.Bookmarks.CONTENT_URI, null,
                                    mBookmarksGuidCol + " = ?",
                                    new String[] { MOBILE_FOLDER_GUID },
                                    null);
@@ -182,7 +174,7 @@ public class testBrowserProviderPerf extends ContentProviderTest {
                 bookmarkEntries[j] = createRandomBookmarkEntry();
             }
 
-            mProvider.bulkInsert(mBookmarksUri, bookmarkEntries);
+            mProvider.bulkInsert(BrowserContract.Bookmarks.CONTENT_URI, bookmarkEntries);
         }
 
         // Create some random history entries
@@ -198,8 +190,8 @@ public class testBrowserProviderPerf extends ContentProviderTest {
                 faviconEntries[j] = createFaviconEntryWithUrl(historyEntries[j].getAsString(mHistoryUrlCol));
             }
 
-            mProvider.bulkInsert(mHistoryUri, historyEntries);
-            mProvider.bulkInsert(mFaviconsUri, faviconEntries);
+            mProvider.bulkInsert(BrowserContract.History.CONTENT_URI, historyEntries);
+            mProvider.bulkInsert(BrowserContract.Favicons.CONTENT_URI, faviconEntries);
         }
 
 
@@ -215,9 +207,9 @@ public class testBrowserProviderPerf extends ContentProviderTest {
                 faviconEntries[j] = createFaviconEntryWithUrl(url);
             }
 
-            mProvider.bulkInsert(mBookmarksUri, bookmarkEntries);
-            mProvider.bulkInsert(mHistoryUri, historyEntries);
-            mProvider.bulkInsert(mFaviconsUri, faviconEntries);
+            mProvider.bulkInsert(BrowserContract.Bookmarks.CONTENT_URI, bookmarkEntries);
+            mProvider.bulkInsert(BrowserContract.History.CONTENT_URI, historyEntries);
+            mProvider.bulkInsert(BrowserContract.Favicons.CONTENT_URI, faviconEntries);
         }
 
         // Create some history entries with a known prefix
@@ -228,8 +220,8 @@ public class testBrowserProviderPerf extends ContentProviderTest {
             faviconEntries[i] = createFaviconEntryWithUrl(historyEntries[i].getAsString(mHistoryUrlCol));
         }
 
-        mProvider.bulkInsert(mHistoryUri, historyEntries);
-        mProvider.bulkInsert(mFaviconsUri, faviconEntries);
+        mProvider.bulkInsert(BrowserContract.History.CONTENT_URI, historyEntries);
+        mProvider.bulkInsert(BrowserContract.Favicons.CONTENT_URI, faviconEntries);
     }
 
     @Override
