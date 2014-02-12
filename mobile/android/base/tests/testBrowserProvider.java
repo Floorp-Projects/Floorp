@@ -48,7 +48,7 @@ public class testBrowserProvider extends ContentProviderTest {
 
         String guid = BrowserContract.Bookmarks.GUID;
 
-        mProvider.delete(appendUriParam(BrowserContract.Bookmarks.CONTENT_URI, "PARAM_IS_SYNC", "1"),
+        mProvider.delete(appendUriParam(BrowserContract.Bookmarks.CONTENT_URI, BrowserContract.PARAM_IS_SYNC, "1"),
                          guid + " != ? AND " +
                          guid + " != ? AND " +
                          guid + " != ? AND " +
@@ -64,11 +64,11 @@ public class testBrowserProvider extends ContentProviderTest {
                                         BrowserContract.Bookmarks.UNFILED_FOLDER_GUID,
                                         BrowserContract.Bookmarks.READING_LIST_FOLDER_GUID });
 
-        c = mProvider.query(appendUriParam(BrowserContract.Bookmarks.CONTENT_URI, "PARAM_SHOW_DELETED", "1"), null, null, null, null);
+        c = mProvider.query(appendUriParam(BrowserContract.Bookmarks.CONTENT_URI, BrowserContract.PARAM_SHOW_DELETED, "1"), null, null, null, null);
         mAsserter.is(c.getCount(), 7, "All non-special bookmarks and folders were deleted");
 
-        mProvider.delete(appendUriParam(BrowserContract.History.CONTENT_URI, "PARAM_IS_SYNC", "1"), null, null);
-        c = mProvider.query(appendUriParam(BrowserContract.History.CONTENT_URI, "PARAM_SHOW_DELETED", "1"), null, null, null, null);
+        mProvider.delete(appendUriParam(BrowserContract.History.CONTENT_URI, BrowserContract.PARAM_IS_SYNC, "1"), null, null);
+        c = mProvider.query(appendUriParam(BrowserContract.History.CONTENT_URI, BrowserContract.PARAM_SHOW_DELETED, "1"), null, null, null, null);
         mAsserter.is(c.getCount(), 0, "All history entries were deleted");
 
         mProvider.delete(BrowserContract.Favicons.CONTENT_URI, null, null);
@@ -601,16 +601,16 @@ public class testBrowserProvider extends ContentProviderTest {
 
             mAsserter.is((deleted == 1), true, "Inserted bookmark was deleted");
 
-            Cursor c = getBookmarkById(appendUriParam(BrowserContract.Bookmarks.CONTENT_URI, "PARAM_SHOW_DELETED", "1"), id);
+            Cursor c = getBookmarkById(appendUriParam(BrowserContract.Bookmarks.CONTENT_URI, BrowserContract.PARAM_SHOW_DELETED, "1"), id);
             mAsserter.is(c.moveToFirst(), true, "Deleted bookmark was only marked as deleted");
 
-            deleted = mProvider.delete(appendUriParam(BrowserContract.Bookmarks.CONTENT_URI, "PARAM_IS_SYNC", "1"),
+            deleted = mProvider.delete(appendUriParam(BrowserContract.Bookmarks.CONTENT_URI, BrowserContract.PARAM_IS_SYNC, "1"),
                                        BrowserContract.Bookmarks._ID + " = ?",
                                        new String[] { String.valueOf(id) });
 
             mAsserter.is((deleted == 1), true, "Inserted bookmark was deleted");
 
-            c = getBookmarkById(appendUriParam(BrowserContract.Bookmarks.CONTENT_URI, "PARAM_SHOW_DELETED", "1"), id);
+            c = getBookmarkById(appendUriParam(BrowserContract.Bookmarks.CONTENT_URI, BrowserContract.PARAM_SHOW_DELETED, "1"), id);
             mAsserter.is(c.moveToFirst(), false, "Inserted bookmark is now actually deleted");
 
             id = insertOneBookmark();
@@ -642,7 +642,7 @@ public class testBrowserProvider extends ContentProviderTest {
                 deleted = 0;
                 try {
                     Uri uri = ContentUris.withAppendedId(BrowserContract.Bookmarks.CONTENT_URI, parentId);
-                    deleted = mProvider.delete(appendUriParam(uri, "PARAM_IS_SYNC", "1"), null, null);
+                    deleted = mProvider.delete(appendUriParam(uri, BrowserContract.PARAM_IS_SYNC, "1"), null, null);
                 } catch(Exception e) {}
 
                 mAsserter.is((deleted == 0), true,
@@ -973,16 +973,16 @@ public class testBrowserProvider extends ContentProviderTest {
 
             mAsserter.is((deleted == 1), true, "Inserted history entry was deleted");
 
-            Cursor c = getHistoryEntryById(appendUriParam(BrowserContract.History.CONTENT_URI, "PARAM_SHOW_DELETED", "1"), id);
+            Cursor c = getHistoryEntryById(appendUriParam(BrowserContract.History.CONTENT_URI, BrowserContract.PARAM_SHOW_DELETED, "1"), id);
             mAsserter.is(c.moveToFirst(), true, "Deleted history entry was only marked as deleted");
 
-            deleted = mProvider.delete(appendUriParam(BrowserContract.History.CONTENT_URI, "PARAM_IS_SYNC", "1"),
+            deleted = mProvider.delete(appendUriParam(BrowserContract.History.CONTENT_URI, BrowserContract.PARAM_IS_SYNC, "1"),
                                        BrowserContract.History._ID + " = ?",
                                        new String[] { String.valueOf(id) });
 
             mAsserter.is((deleted == 1), true, "Inserted history entry was deleted");
 
-            c = getHistoryEntryById(appendUriParam(BrowserContract.History.CONTENT_URI, "PARAM_SHOW_DELETED", "1"), id);
+            c = getHistoryEntryById(appendUriParam(BrowserContract.History.CONTENT_URI, BrowserContract.PARAM_SHOW_DELETED, "1"), id);
             mAsserter.is(c.moveToFirst(), false, "Inserted history is now actually deleted");
 
             id = insertOneHistoryEntry();
@@ -1634,7 +1634,7 @@ public class testBrowserProvider extends ContentProviderTest {
             createFakeHistory(0, count);
 
             // expiring with a normal priority should not delete new entries
-            Uri url = appendUriParam(BrowserContract.History.CONTENT_OLD_URI, "PARAM_EXPIRE_PRIORITY", "NORMAL");
+            Uri url = appendUriParam(BrowserContract.History.CONTENT_OLD_URI, BrowserContract.PARAM_EXPIRE_PRIORITY, "NORMAL");
             mProvider.delete(url, null, null);
             Cursor c = mProvider.query(BrowserContract.History.CONTENT_URI, null, "", null, null);
             mAsserter.is(c.getCount(), count, count + " history entries found");
@@ -1648,7 +1648,7 @@ public class testBrowserProvider extends ContentProviderTest {
             createFakeHistory(0, count);
 
             // expiring with a aggressive priority should leave 500 entries
-            url = appendUriParam(BrowserContract.History.CONTENT_OLD_URI, "PARAM_EXPIRE_PRIORITY", "AGGRESSIVE");
+            url = appendUriParam(BrowserContract.History.CONTENT_OLD_URI, BrowserContract.PARAM_EXPIRE_PRIORITY, "AGGRESSIVE");
             mProvider.delete(url, null, null);
             c = mProvider.query(BrowserContract.History.CONTENT_URI, null, "", null, null);
             mAsserter.is(c.getCount(), 500, "500 history entries found");
@@ -1664,7 +1664,7 @@ public class testBrowserProvider extends ContentProviderTest {
 
             // expiring with an normal priority should remove at most 1000 entries
             // entries leaving at least 2000
-            url = appendUriParam(BrowserContract.History.CONTENT_OLD_URI, "PARAM_EXPIRE_PRIORITY", "NORMAL");
+            url = appendUriParam(BrowserContract.History.CONTENT_OLD_URI, BrowserContract.PARAM_EXPIRE_PRIORITY, "NORMAL");
             mProvider.delete(url, null, null);
             c = mProvider.query(BrowserContract.History.CONTENT_URI, null, "", null, null);
             mAsserter.is(c.getCount(), 2000, "2000 history entries found");
@@ -1680,7 +1680,7 @@ public class testBrowserProvider extends ContentProviderTest {
 
             // expiring with an agressive priority should remove old
             // entries leaving at least 500
-            url = appendUriParam(BrowserContract.History.CONTENT_OLD_URI, "PARAM_EXPIRE_PRIORITY", "AGGRESSIVE");
+            url = appendUriParam(BrowserContract.History.CONTENT_OLD_URI, BrowserContract.PARAM_EXPIRE_PRIORITY, "AGGRESSIVE");
             mProvider.delete(url, null, null);
             c = mProvider.query(BrowserContract.History.CONTENT_URI, null, "", null, null);
             mAsserter.is(c.getCount(), 500, "500 history entries found");
