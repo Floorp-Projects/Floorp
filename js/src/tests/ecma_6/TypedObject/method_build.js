@@ -19,15 +19,11 @@ var int32 = TypedObject.int32;
 var float32 = TypedObject.float32;
 var float64 = TypedObject.float64;
 
-var Handle = TypedObject.Handle;
-
 function oneDimensionalArrayOfUints() {
   var grain = uint32;
   var type = grain.array(4);
   var r1 = type.build(x => x * 2);
-  var r2 = type.build((x, out) => Handle.set(out, x * 2));
   assertTypedEqual(type, r1, new type([0, 2, 4, 6]));
-  assertTypedEqual(type, r1, r2);
 }
 
 function oneDimensionalArrayOfStructs() {
@@ -87,10 +83,8 @@ function threeDimensionalArrayOfUintsWithDepth3() {
   var grain = uint32;
   var type = grain.array(2).array(2).array(2);
   var r1 = type.build(3, (x,y,z) => x * 100 + y * 10 + z);
-  var r2 = type.build(3, (x,y,z, out) => Handle.set(out, x * 100 + y * 10 + z));
   assertTypedEqual(type, r1, new type([[[  0,   1], [ 10,  11]],
                                        [[100, 101], [110, 111]]]));
-  assertTypedEqual(type, r1, r2);
 }
 
 function threeDimensionalArrayOfUintsWithDepth2() {

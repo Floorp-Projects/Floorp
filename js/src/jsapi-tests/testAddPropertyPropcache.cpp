@@ -42,7 +42,7 @@ BEGIN_TEST(testAddPropertyHook)
     JS_InitClass(cx, global, obj, &AddPropertyClass, nullptr, 0, nullptr, nullptr, nullptr,
                  nullptr);
 
-    obj = JS_NewArrayObject(cx, 0, nullptr);
+    obj = JS_NewArrayObject(cx, 0);
     CHECK(obj);
     JS::RootedValue arr(cx, OBJECT_TO_JSVAL(obj));
 

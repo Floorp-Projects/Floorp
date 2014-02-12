@@ -626,7 +626,7 @@ class HandleValueArray
         return HandleValueArray(len, elements);
     }
 
-    static HandleValueArray subarray(const AutoValueVector& values, size_t startIndex, size_t len) {
+    static HandleValueArray subarray(const HandleValueArray& values, size_t startIndex, size_t len) {
         JS_ASSERT(startIndex + len <= values.length());
         return HandleValueArray(len, values.begin() + startIndex);
     }
@@ -3070,7 +3070,10 @@ JS_DeleteUCProperty2(JSContext *cx, JS::HandleObject obj, const jschar *name, si
                      bool *succeeded);
 
 extern JS_PUBLIC_API(JSObject *)
-JS_NewArrayObject(JSContext *cx, int length, jsval *vector);
+JS_NewArrayObject(JSContext *cx, const JS::HandleValueArray& contents);
+
+extern JS_PUBLIC_API(JSObject *)
+JS_NewArrayObject(JSContext *cx, size_t length);
 
 extern JS_PUBLIC_API(bool)
 JS_IsArrayObject(JSContext *cx, JS::HandleValue value);

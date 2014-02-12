@@ -641,7 +641,7 @@ VARIANT_DONE:
         }
         case nsIDataType::VTYPE_EMPTY_ARRAY:
         {
-            JSObject* array = JS_NewArrayObject(cx, 0, nullptr);
+            JSObject* array = JS_NewArrayObject(cx, 0);
             if (!array)
                 return false;
             pJSVal.setObject(*array);
