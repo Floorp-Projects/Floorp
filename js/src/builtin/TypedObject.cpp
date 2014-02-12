@@ -2427,6 +2427,11 @@ TypedObject::constructUnsized(JSContext *cx, unsigned int argc, Value *vp)
     // Length constructor.
     if (args[0].isInt32()) {
         int32_t length = args[0].toInt32();
+        if (length < 0) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage,
+                                 nullptr, JSMSG_TYPEDOBJECT_BAD_ARGS);
+            return nullptr;
+        }
         Rooted<TypedObject*> obj(cx, createZeroed(cx, callee, length));
         if (!obj)
             return false;
