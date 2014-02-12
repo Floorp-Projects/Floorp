@@ -1122,8 +1122,10 @@ CustomizeMode.prototype = {
         DragPositionManager.start(this.window);
         if (item.nextSibling) {
           this._setDragActive(item.nextSibling, "before", draggedItem.id, isInToolbar);
+          this._dragOverItem = item.nextSibling;
         } else if (isInToolbar && item.previousSibling) {
           this._setDragActive(item.previousSibling, "after", draggedItem.id, isInToolbar);
+          this._dragOverItem = item.previousSibling;
         }
       }
       this._initializeDragAfterMove = null;
