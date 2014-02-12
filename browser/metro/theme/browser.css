@@ -245,10 +245,6 @@ documenttab[selected] .documenttab-selection:-moz-locale-dir(rtl) {
 
 /* Start UI ----------------------------------------------------------------- */
 
-#content-viewport[startpage] .active-tab-notificationbox {
-  padding-bottom: @toolbar_height@;
-}
-
 #urlbar-autocomplete[viewstate="snapped"],
 #urlbar-autocomplete[viewstate="portrait"]{
   -moz-box-orient: vertical;
