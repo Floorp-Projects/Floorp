@@ -1,59 +1,71 @@
-/* vim:set ts=2 sw=2 sts=2 et: */
-/* ***** BEGIN LICENSE BLOCK *****
- * Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/
- *
- * Contributor(s):
- *  Mihai Șucan <mihai.sucan@gmail.com>
- *
- * ***** END LICENSE BLOCK ***** */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-function consoleOpened(HUD) {
-  HUD.jsterm.clearOutput();
+// Test that the console output scrolls to JS eval results when there are many
+// messages displayed. See bug 601352.
 
-  let longMessage = "";
-  for (let i = 0; i < 50; i++) {
-    longMessage += "LongNonwrappingMessage";
-  }
+function test() {
+  Task.spawn(runner).then(finishTest);
 
-  for (let i = 0; i < 50; i++) {
-    content.console.log("test message " + i);
-  }
+  function* runner() {
+    let {tab} = yield loadTab("data:text/html;charset=utf-8,Web Console test for bug 601352");
+    let hud = yield openConsole(tab);
+    hud.jsterm.clearOutput();
 
-  content.console.log(longMessage);
+    let longMessage = "";
+    for (let i = 0; i < 50; i++) {
+      longMessage += "LongNonwrappingMessage";
+    }
 
-  for (let i = 0; i < 50; i++) {
-    content.console.log("test message " + i);
-  }
+    for (let i = 0; i < 50; i++) {
+      content.console.log("test1 message " + i);
+    }
 
-  HUD.jsterm.execute("1+1", performTest);
+    content.console.log(longMessage);
 
-  function performTest(node) {
-    let scrollNode = HUD.outputNode.parentNode;
+    for (let i = 0; i < 50; i++) {
+      content.console.log("test2 message " + i);
+    }
+
+    yield waitForMessages({
+      webconsole: hud,
+      messages: [{
+        text: "test1 message 0",
+      }, {
+        text: "test1 message 49",
+      }, {
+        text: "LongNonwrappingMessage",
+      }, {
+        text: "test2 message 0",
+      }, {
+        text: "test2 message 49",
+      }],
+    });
+
+    let nodeDeferred = promise.defer();
+    hud.jsterm.execute("1+1", (node) => { nodeDeferred.resolve(node); });
+    let node = yield nodeDeferred.promise;
+
+    let scrollNode = hud.outputNode.parentNode;
     let rectNode = node.getBoundingClientRect();
     let rectOutput = scrollNode.getBoundingClientRect();
+    console.debug("rectNode", rectNode, "rectOutput", rectOutput);
+    console.log("scrollNode scrollHeight", scrollNode.scrollHeight, "scrollTop", scrollNode.scrollTop, "clientHeight", scrollNode.clientHeight);
 
     isnot(scrollNode.scrollTop, 0, "scroll location is not at the top");
 
-    // Visible scroll viewport.
-    let height = scrollNode.scrollHeight - scrollNode.scrollTop;
+    // The bounding client rect .top/left coordinates are relative to the
+    // console iframe.
 
-    // Top position of the last message node, relative to the outputNode.
-    let top = rectNode.top + scrollNode.scrollTop;
-    let bottom = top + node.clientHeight;
-    info("output height " + height + " node top " + top + " node bottom " + bottom + " node height " + node.clientHeight);
+    // Visible scroll viewport.
+    let height = rectOutput.height;
+
+    // Top and bottom coordinates of the last message node, relative to the outputNode.
+    let top = rectNode.top - rectOutput.top;
+    let bottom = top + rectNode.height;
+    info("node top " + top + " node bottom " + bottom + " node clientHeight " + node.clientHeight);
 
     ok(top >= 0 && bottom <= height, "last message is visible");
-
-    finishTest();
-  };
+  }
 }
-
-function test() {
-  addTab("data:text/html;charset=utf-8,Web Console test for bug 601352");
-  browser.addEventListener("load", function tabLoad(aEvent) {
-    browser.removeEventListener(aEvent.type, tabLoad, true);
-    openConsole(null, consoleOpened);
-  }, true);
-}
-

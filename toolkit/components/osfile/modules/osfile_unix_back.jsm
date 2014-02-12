@@ -218,6 +218,24 @@
            ctypes.ArrayType(Type.timeval.implementation, 2));
        }
 
+       // Types fsblkcnt_t and fsfilcnt_t, used by structure |statvfs|
+       Type.fsblkcnt_t =
+         Type.uintn_t(Const.OSFILE_SIZEOF_FSBLKCNT_T).withName("fsblkcnt_t");
+
+       // Structure |statvfs|
+       // Use an hollow structure
+       {
+         let statvfs = new SharedAll.HollowStructure("statvfs",
+           Const.OSFILE_SIZEOF_STATVFS);
+
+         statvfs.add_field_at(Const.OSFILE_OFFSETOF_STATVFS_F_BSIZE,
+                        "f_bsize", Type.unsigned_long.implementation);
+         statvfs.add_field_at(Const.OSFILE_OFFSETOF_STATVFS_F_BAVAIL,
+                        "f_bavail", Type.fsblkcnt_t.implementation);
+
+         Type.statvfs = statvfs.getType();
+       }
+
        // Declare libc functions as functions of |OS.Unix.File|
 
        // Finalizer-related functions
@@ -505,6 +523,12 @@
                     /*off_out*/Type.off_t.in_ptr,
                     /*len*/    Type.size_t,
                     /*flags*/  Type.unsigned_int); // Linux/Android-specific
+
+       libc.declareLazyFFI(SysFile,  "statvfs",
+                               "statvfs", ctypes.default_abi,
+                    /*return*/ Type.negativeone_or_nothing,
+                    /*path*/   Type.path,
+                    /*buf*/    Type.statvfs.out_ptr);
 
        libc.declareLazyFFI(SysFile,  "symlink",
                                "symlink", ctypes.default_abi,
