@@ -854,16 +854,10 @@ BaselineCompiler::emit_JSOP_POPN()
 }
 
 bool
-BaselineCompiler::emit_JSOP_DUPAT()
+BaselineCompiler::emit_JSOP_POPNV()
 {
-    frame.syncStack(0);
-
-    // DUPAT takes a value on the stack and re-pushes it on top.  It's like
-    // GETLOCAL but it addresses from the top of the stack instead of from the
-    // stack frame.
-
-    int depth = -(GET_UINT24(pc) + 1);
-    masm.loadValue(frame.addressOfStackValue(frame.peek(depth)), R0);
+    frame.popRegsAndSync(1);
+    frame.popn(GET_UINT16(pc));
     frame.push(R0);
     return true;
 }
@@ -2296,7 +2290,17 @@ BaselineCompiler::emit_JSOP_INITELEM_SETTER()
 bool
 BaselineCompiler::emit_JSOP_GETLOCAL()
 {
-    frame.pushLocal(GET_LOCALNO(pc));
+    uint32_t local = GET_LOCALNO(pc);
+
+    if (local >= frame.nlocals()) {
+        // Destructuring assignments may use GETLOCAL to access stack values.
+        frame.syncStack(0);
+        masm.loadValue(Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfLocal(local)), R0);
+        frame.push(R0);
+        return true;
+    }
+
+    frame.pushLocal(local);
     return true;
 }
 

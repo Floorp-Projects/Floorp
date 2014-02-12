@@ -100,14 +100,13 @@ inline Value &
 StackFrame::unaliasedVar(uint32_t i, MaybeCheckAliasing checkAliasing)
 {
     JS_ASSERT_IF(checkAliasing, !script()->varIsAliased(i));
-    JS_ASSERT(i < script()->nfixedvars());
+    JS_ASSERT(i < script()->nfixed());
     return slots()[i];
 }
 
 inline Value &
 StackFrame::unaliasedLocal(uint32_t i, MaybeCheckAliasing checkAliasing)
 {
-    JS_ASSERT(i < script()->nfixed());
 #ifdef DEBUG
     CheckLocalUnaliased(checkAliasing, script(), i);
 #endif

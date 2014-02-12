@@ -243,7 +243,6 @@ class FrameInfo
         sv->setRegister(val, knownType);
     }
     inline void pushLocal(uint32_t local) {
-        JS_ASSERT(local < nlocals());
         StackValue *sv = rawPush();
         sv->setLocalSlot(local);
     }
@@ -261,7 +260,15 @@ class FrameInfo
         sv->setStack();
     }
     inline Address addressOfLocal(size_t local) const {
-        JS_ASSERT(local < nlocals());
+#ifdef DEBUG
+        if (local >= nlocals()) {
+            // GETLOCAL and SETLOCAL can be used to access stack values. This is
+            // fine, as long as they are synced.
+            size_t slot = local - nlocals();
+            JS_ASSERT(slot < stackDepth());
+            JS_ASSERT(stack[slot].kind() == StackValue::Stack);
+        }
+#endif
         return Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfLocal(local));
     }
     Address addressOfArg(size_t arg) const {

@@ -421,6 +421,8 @@ class FullParseHandler
     inline bool addCatchBlock(ParseNode *catchList, ParseNode *letBlock,
                               ParseNode *catchName, ParseNode *catchGuard, ParseNode *catchBody);
 
+    inline void setLeaveBlockResult(ParseNode *block, ParseNode *kid, bool leaveBlockExpr);
+
     inline void setLastFunctionArgumentDefault(ParseNode *funcpn, ParseNode *pn);
     inline ParseNode *newFunctionDefinition();
     void setFunctionBody(ParseNode *pn, ParseNode *kid) {
@@ -433,10 +435,7 @@ class FullParseHandler
     void addFunctionArgument(ParseNode *pn, ParseNode *argpn) {
         pn->pn_body->append(argpn);
     }
-
     inline ParseNode *newLexicalScope(ObjectBox *blockbox);
-    inline void setLexicalScopeBody(ParseNode *block, ParseNode *body);
-
     bool isOperationWithoutParens(ParseNode *pn, ParseNodeKind kind) {
         return pn->isKind(kind) && !pn->isInParens();
     }
@@ -599,6 +598,15 @@ FullParseHandler::addCatchBlock(ParseNode *catchList, ParseNode *letBlock,
 }
 
 inline void
+FullParseHandler::setLeaveBlockResult(ParseNode *block, ParseNode *kid, bool leaveBlockExpr)
+{
+    JS_ASSERT(block->isOp(JSOP_POPN));
+    if (leaveBlockExpr)
+        block->setOp(JSOP_POPNV);
+    block->pn_expr = kid;
+}
+
+inline void
 FullParseHandler::setLastFunctionArgumentDefault(ParseNode *funcpn, ParseNode *defaultValue)
 {
     ParseNode *arg = funcpn->pn_body->last();
@@ -626,16 +634,11 @@ FullParseHandler::newLexicalScope(ObjectBox *blockbox)
     if (!pn)
         return nullptr;
 
+    pn->setOp(JSOP_POPN);
     pn->pn_objbox = blockbox;
     pn->pn_cookie.makeFree();
     pn->pn_dflags = 0;
     return pn;
-}
-
-inline void
-FullParseHandler::setLexicalScopeBody(ParseNode *block, ParseNode *kid)
-{
-    block->pn_expr = kid;
 }
 
 inline bool
