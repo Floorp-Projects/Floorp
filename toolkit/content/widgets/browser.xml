@@ -748,14 +748,14 @@
       <constructor>
         <![CDATA[
           try {
-            if (this.docShell && !this.hasAttribute("disablehistory")) {
+            // |webNavigation.sessionHistory| will have been set by the frame
+            // loader when creating the docShell as long as this xul:browser
+            // doesn't have the 'disablehistory' attribute set.
+            if (this.docShell && this.webNavigation.sessionHistory) {
               var os = Components.classes["@mozilla.org/observer-service;1"]
                                  .getService(Components.interfaces.nsIObserverService);
               os.addObserver(this, "browser:purge-session-history", false);
-              // wire up session history
-              this.webNavigation.sessionHistory =
-                      Components.classes["@mozilla.org/browser/shistory;1"]
-                                .createInstance(Components.interfaces.nsISHistory);
+
               // enable global history if we weren't told otherwise
               if (!this.hasAttribute("disableglobalhistory") && !this.isRemoteBrowser) {
                 try {
@@ -798,7 +798,7 @@
             return;
           this.mDestroyed = true;
 
-          if (!this.hasAttribute("disablehistory")) {
+          if (this.docShell && this.webNavigation.sessionHistory) {
             var os = Components.classes["@mozilla.org/observer-service;1"]
                                .getService(Components.interfaces.nsIObserverService);
             try {
