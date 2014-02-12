@@ -27,7 +27,8 @@ TextComposition::TextComposition(nsPresContext* aPresContext,
   mPresContext(aPresContext), mNode(aNode),
   mNativeContext(aEvent->widget->GetInputContext().mNativeIMEContext),
   mCompositionStartOffset(0), mCompositionTargetOffset(0),
-  mIsSynthesizedForTests(aEvent->mFlags.mIsSynthesizedForTests)
+  mIsSynthesizedForTests(aEvent->mFlags.mIsSynthesizedForTests),
+  mIsComposing(false)
 {
 }
 
@@ -48,6 +49,8 @@ TextComposition::DispatchEvent(WidgetGUIEvent* aEvent,
 
   nsEventDispatcher::Dispatch(mNode, mPresContext,
                               aEvent, nullptr, aStatus, aCallBack);
+
+  MOZ_ASSERT_IF(aEvent->message == NS_COMPOSITION_END, !mIsComposing);
 
   // Notify composition update to widget if possible
   NotityUpdateComposition(aEvent);
@@ -121,6 +124,12 @@ TextComposition::NotifyIME(widget::NotificationToIME aNotification)
 {
   NS_ENSURE_TRUE(mPresContext, NS_ERROR_NOT_AVAILABLE);
   return nsIMEStateManager::NotifyIME(aNotification, mPresContext);
+}
+
+void
+TextComposition::EditorWillHandleTextEvent(const WidgetTextEvent* aTextEvent)
+{
+  mIsComposing = aTextEvent->IsComposing();
 }
 
 /******************************************************************************

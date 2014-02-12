@@ -600,8 +600,10 @@ public:
   nsINode* GetFirstEditableNode(nsINode* aRoot);
 
   int32_t GetIMEBufferLength();
-  bool IsIMEComposing();    /* test if IME is in composition state */
-  void SetIsIMEComposing(); /* call this before |IsIMEComposing()| */
+  /**
+   * Returns true if there is composition string and not fixed.
+   */
+  bool IsIMEComposing() const;
 
   /** from html rules code - migration in progress */
   static nsresult GetTagString(nsIDOMNode *aNode, nsAString& outString);
@@ -863,8 +865,6 @@ protected:
   EDirection        mDirection;          // the current direction of editor action
   int8_t            mDocDirtyState;      // -1 = not initialized
   uint8_t           mSpellcheckCheckboxState; // a Tristate value
-
-  bool mIsIMEComposing;   // is IME in composition state?
 
   bool mShouldTxnSetSelection;  // turn off for conservative selection adjustment by txns
   bool mDidPreDestroy;    // whether PreDestroy has been called
