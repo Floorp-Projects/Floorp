@@ -39,7 +39,6 @@ protected:
 
   void UpdateSurface();
 
-  RefPtr<gfx::SourceSurface> mSurface;
   nsRefPtr<GLContext> mGLContext;
   nsRefPtr<IDirect3DTexture9> mTexture;
   RefPtr<gfx::DrawTarget> mDrawTarget;
