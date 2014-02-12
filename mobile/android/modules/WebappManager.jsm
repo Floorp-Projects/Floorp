@@ -530,7 +530,11 @@ this.WebappManager = {
       // build any app specific default prefs
       let prefs = [];
       if (aManifest.orientation) {
-        prefs.push({name:"app.orientation.default", value: aManifest.orientation.join(",") });
+        let orientation = aManifest.orientation;
+        if (Array.isArray(orientation)) {
+          orientation = orientation.join(",");
+        }
+        prefs.push({ name: "app.orientation.default", value: orientation });
       }
 
       // write them into the app profile
