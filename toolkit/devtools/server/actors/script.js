@@ -2460,7 +2460,14 @@ SourceActor.prototype = {
     // XXX bug 865252: Don't load from the cache if this is a source mapped
     // source because we can't guarantee that the cache has the most up to date
     // content for this source like we can if it isn't source mapped.
-    return fetch(this._url, { loadFromCache: !this._sourceMap });
+    let sourceFetched = fetch(this._url, { loadFromCache: !this._sourceMap });
+
+    // Record the contentType we just learned during fetching
+    sourceFetched.then(({ contentType }) => {
+      this._contentType = contentType;
+    });
+
+    return sourceFetched;
   },
 
   /**

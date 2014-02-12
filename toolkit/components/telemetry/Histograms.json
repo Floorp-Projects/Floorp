@@ -4242,7 +4242,15 @@
     "extended_statistics_ok": true,
     "description": "Time spent on a successful cert  verification in classic mode (ms)"
   },
-  "SSL_INITIAL_FAILED_CERT_VALIDATION_TIME_LIBPKIX": {
+  "SSL_SUCCESFUL_CERT_VALIDATION_TIME_INSANITY" : {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "60000",
+    "n_buckets": 50,
+    "extended_statistics_ok": true,
+    "description": "Time spent on a successful cert verification in insanity mode (ms)"
+  },
+  "SSL_INITIAL_FAILED_CERT_VALIDATION_TIME_LIBPKIX" : {
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "60000",
@@ -4257,6 +4265,14 @@
     "n_buckets": 50,
     "extended_statistics_ok": true,
     "description": "Time spent on an initially failed cert  verification in classic mode (ms)"
+  },
+  "SSL_INITIAL_FAILED_CERT_VALIDATION_TIME_INSANITY" : {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "60000",
+    "n_buckets": 50,
+    "extended_statistics_ok": true,
+    "description": "Time spent on an initially failed cert verification in insanity mode (ms)"
   },
   "HEALTHREPORT_DB_OPEN_FIRSTRUN_MS": {
     "expires_in_version": "never",

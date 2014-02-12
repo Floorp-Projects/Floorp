@@ -1,0 +1,17 @@
+[
+{
+"sixgill_version": "0.9.1-177"
+},
+{
+"size": 2562168,
+"digest": "1421953d217bf084bf5da62b322f52e4735f4dbea5c663733ce558c908e268a69500b824a0973157f94915a1ec83f0473df24135de6b43dea2e12e4bdc0b091c",
+"algorithm": "sha512",
+"filename": "sixgill.tar.xz"
+},
+{
+"size": 48,
+"digest": "9f4a123b8b037c4313c7065f872e07af38390f352f2498b41779c389fa1a0712e5f588d7b3d9a124875916f5257434da83553b560d7d146192f3f6c8da6f0412",
+"algorithm": "sha512",
+"filename": "setup.sh.sixgill"
+}
+]

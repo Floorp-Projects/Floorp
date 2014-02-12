@@ -651,6 +651,7 @@
     "dom/plugins/test/mochitest/test_bug813906.html": "Bug 931116, b2g desktop specific, initial triage",
     "dom/plugins/test/mochitest/test_bug854082.html": "Bug 931116, b2g desktop specific, initial triage",
     "dom/plugins/test/mochitest/test_bug863792.html": "Bug 931116, b2g desktop specific, initial triage",
+    "dom/plugins/test/mochitest/test_bug967694.html": "Bug 967694, b2g desktop doesn't allow plugins",
     "dom/plugins/test/mochitest/test_cookies.html": "Bug 931116, b2g desktop specific, initial triage",
     "dom/plugins/test/mochitest/test_copyText.html": "Bug 931116, b2g desktop specific, initial triage",
     "dom/plugins/test/mochitest/test_crash_nested_loop.html": "Bug 931116, b2g desktop specific, initial triage",

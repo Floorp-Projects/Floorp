@@ -14,12 +14,22 @@
 #include "nsIAccessibleTypes.h"
 #include "nsIDOMDocument.h"
 #include "nsIPresShell.h"
-#include "nsISelectionPrivate.h"
 #include "mozilla/Selection.h"
 #include "mozilla/dom/Element.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
+
+struct mozilla::a11y::SelData
+{
+  SelData(Selection* aSel, int32_t aReason) :
+    mSel(aSel), mReason(aReason) {}
+
+  nsRefPtr<Selection> mSel;
+  int16_t mReason;
+
+  NS_INLINE_DECL_REFCOUNTING(SelData);
+};
 
 void
 SelectionManager::ClearControlSelectionListener()
@@ -110,17 +120,16 @@ SelectionManager::RemoveDocSelectionListener(nsIPresShell* aPresShell)
 void
 SelectionManager::ProcessTextSelChangeEvent(AccEvent* aEvent)
 {
+  // Fire selection change event if it's not pure caret-move selection change,
+  // i.e. the accessible has or had not collapsed selection.
   AccTextSelChangeEvent* event = downcast_accEvent(aEvent);
-  Selection* sel = static_cast<Selection*>(event->mSel.get());
-
-  // Fire selection change event if it's not pure caret-move selection change.
-  if (sel->GetRangeCount() != 1 || !sel->IsCollapsed())
+  if (!event->IsCaretMoveOnly())
     nsEventShell::FireEvent(aEvent);
 
   // Fire caret move event if there's a caret in the selection.
   nsINode* caretCntrNode =
-    nsCoreUtils::GetDOMNodeFromDOMPoint(sel->GetFocusNode(),
-                                        sel->FocusOffset());
+    nsCoreUtils::GetDOMNodeFromDOMPoint(event->mSel->GetFocusNode(),
+                                        event->mSel->FocusOffset());
   if (!caretCntrNode)
     return;
 
@@ -150,7 +159,7 @@ SelectionManager::NotifySelectionChanged(nsIDOMDocument* aDOMDocument,
 
 #ifdef A11Y_LOG
   if (logging::IsEnabled(logging::eSelection))
-    logging::SelChange(aSelection, document);
+    logging::SelChange(aSelection, document, aReason);
 #endif
 
   // Don't fire events until document is loaded.
@@ -158,17 +167,19 @@ SelectionManager::NotifySelectionChanged(nsIDOMDocument* aDOMDocument,
     // Selection manager has longer lifetime than any document accessible,
     // so that we are guaranteed that the notification is processed before
     // the selection manager is destroyed.
-    document->HandleNotification<SelectionManager, nsISelection>
-      (this, &SelectionManager::ProcessSelectionChanged, aSelection);
+    nsRefPtr<SelData> selData =
+      new SelData(static_cast<Selection*>(aSelection), aReason);
+    document->HandleNotification<SelectionManager, SelData>
+      (this, &SelectionManager::ProcessSelectionChanged, selData);
   }
 
   return NS_OK;
 }
 
 void
-SelectionManager::ProcessSelectionChanged(nsISelection* aSelection)
+SelectionManager::ProcessSelectionChanged(SelData* aSelData)
 {
-  Selection* selection = static_cast<Selection*>(aSelection);
+  Selection* selection = aSelData->mSel;
   if (!selection->GetPresShell())
     return;
 
@@ -176,11 +187,12 @@ SelectionManager::ProcessSelectionChanged(nsISelection* aSelection)
   nsINode* cntrNode = nullptr;
   if (range)
     cntrNode = range->GetCommonAncestor();
+
   if (!cntrNode) {
     cntrNode = selection->GetFrameSelection()->GetAncestorLimiter();
     if (!cntrNode) {
       cntrNode = selection->GetPresShell()->GetDocument();
-      NS_ASSERTION(selection->GetPresShell()->ConstFrameSelection() == selection->GetFrameSelection(),
+      NS_ASSERTION(aSelData->mSel->GetPresShell()->ConstFrameSelection() == selection->GetFrameSelection(),
                    "Wrong selection container was used!");
     }
   }
@@ -192,7 +204,8 @@ SelectionManager::ProcessSelectionChanged(nsISelection* aSelection)
   }
 
   if (selection->GetType() == nsISelectionController::SELECTION_NORMAL) {
-    nsRefPtr<AccEvent> event = new AccTextSelChangeEvent(text, aSelection);
+    nsRefPtr<AccEvent> event =
+      new AccTextSelChangeEvent(text, selection, aSelData->mReason);
     text->Document()->FireDelayedEvent(event);
 
   } else if (selection->GetType() == nsISelectionController::SELECTION_SPELLCHECK) {

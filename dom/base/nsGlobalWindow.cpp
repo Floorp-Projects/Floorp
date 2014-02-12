@@ -232,6 +232,10 @@ class nsIScriptTimeoutHandler;
 #endif // check
 #include "AccessCheck.h"
 
+#ifdef ANDROID
+#include <android/log.h>
+#endif
+
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gDOMLeakPRLog;
 #endif
@@ -5809,7 +5813,31 @@ nsGlobalWindow::Dump(const nsAString& aStr)
     return NS_OK;
   }
 
-  PrintToDebugger(aStr, gDumpFile ? gDumpFile : stdout);
+  char *cstr = ToNewUTF8String(aStr);
+
+#if defined(XP_MACOSX)
+  // have to convert \r to \n so that printing to the console works
+  char *c = cstr, *cEnd = cstr + strlen(cstr);
+  while (c < cEnd) {
+    if (*c == '\r')
+      *c = '\n';
+    c++;
+  }
+#endif
+
+  if (cstr) {
+#ifdef XP_WIN
+    PrintToDebugger(cstr);
+#endif
+#ifdef ANDROID
+    __android_log_write(ANDROID_LOG_INFO, "GeckoDump", cstr);
+#endif
+    FILE *fp = gDumpFile ? gDumpFile : stdout;
+    fputs(cstr, fp);
+    fflush(fp);
+    nsMemory::Free(cstr);
+  }
+
   return NS_OK;
 }
 

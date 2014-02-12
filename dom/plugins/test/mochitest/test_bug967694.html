@@ -1,0 +1,78 @@
+<!doctype html>
+<html>
+<head>
+  <title>Test for Bug 967694</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+</head>
+<body>
+<script type="application/javascript">
+
+// Touching a plugin from chrome scope should not spawn it, bug should
+// synchronously spawn it from content scope
+
+setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
+
+var plugin;
+var spPlugin;
+
+function recreatePlugin() {
+  if (plugin) {
+    document.body.removeChild(plugin);
+  }
+  plugin = document.createElement("embed");
+  plugin.type = "application/x-test";
+
+  document.body.appendChild(plugin);
+  // Plugin should now be queued for async spawning.
+  spPlugin = SpecialPowers.wrap(plugin);
+
+  is(spPlugin.displayedType, spPlugin.TYPE_PLUGIN, "Should be configured as plugin");
+  ok(!spPlugin.hasRunningPlugin, "Should not be spawned yet");
+}
+
+recreatePlugin();
+
+// Try various JS operations with chrome context
+var thrown = false;
+// Get and set non-existent Property
+var hi = spPlugin._testShouldntExist;
+spPlugin._testShouldntExist = 5;
+// Call some test-plugin function
+try {
+  var val = spPlugin.getObjectValue();
+} catch (e) {
+  thrown = true;
+}
+
+ok(thrown, "Function call should have thrown");
+ok(!spPlugin.hasRunningPlugin, "Plugin should not have spawned");
+
+// Try property access from content
+var hi = plugin._testShouldntExistContent;
+ok(spPlugin.hasRunningPlugin, "Should've caused plugin to spawn");
+
+// Property set
+recreatePlugin();
+plugin._testShouldntExistContent = 5;
+ok(spPlugin.hasRunningPlugin, "Should've caused plugin to spawn");
+
+// Call test plugin function. Should succeed.
+recreatePlugin();
+thrown = false;
+try {
+  var value = plugin.getObjectValue();
+} catch (e) {
+  thrown = true;
+}
+
+ok(!thrown, "Call should have succeeded");
+ok(spPlugin.hasRunningPlugin, "Call should have synchronously spawned plugin");
+ok(plugin.checkObjectValue(value), "Plugin should recognize self");
+
+</script>
+</body>
+</html>
