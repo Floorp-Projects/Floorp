@@ -41,7 +41,9 @@ MOCHITEST_FILES = \
 		test_browserElement_inproc_Metachange.html \
 		test_browserElement_inproc_Opensearch.html \
 		browserElement_GetScreenshot.js \
+		browserElement_GetScreenshotDppx.js \
 		test_browserElement_inproc_GetScreenshot.html \
+		test_browserElement_inproc_GetScreenshotDppx.html \
 		browserElement_BadScreenshot.js \
 		test_browserElement_inproc_BadScreenshot.html \
 		browserElement_SetVisible.js \
@@ -212,6 +214,7 @@ MOCHITEST_FILES += \
 		test_browserElement_oop_Metachange.html \
 		test_browserElement_oop_Opensearch.html \
 		test_browserElement_oop_GetScreenshot.html \
+		test_browserElement_oop_GetScreenshotDppx.html \
 		test_browserElement_oop_BadScreenshot.html \
 		test_browserElement_oop_XFrameOptions.html \
 		test_browserElement_oop_XFrameOptionsDeny.html \
