@@ -3,13 +3,7 @@ package org.mozilla.gecko.tests;
 import org.mozilla.gecko.db.BrowserDB;
 
 import android.content.ContentResolver;
-import android.graphics.Bitmap;
 import android.graphics.Color;
-import android.graphics.drawable.BitmapDrawable;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.TextView;
 
 /**
  * Test for thumbnail updates.
@@ -20,20 +14,12 @@ import android.widget.TextView;
  * - finally, test that BrowserDB.removeThumbnails drops the thumbnails
  */
 public class testThumbnails extends BaseTest {
-    private int mTopSitesId;
-    private int mThumbnailId;
-    private int mTitleId;
-
     @Override
     protected int getTestType() {
         return TEST_MOCHITEST;
     }
 
     public void testThumbnails() {
-        mTopSitesId = mDriver.findElement(getActivity(), "top_sites_grid").getId();
-        mThumbnailId = mDriver.findElement(getActivity(), "thumbnail").getId();
-        mTitleId = mDriver.findElement(getActivity(), "title").getId();
-
         final String site1Url = getAbsoluteUrl("/robocop/robocop_404.sjs?type=changeColor");
         final String site2Url = getAbsoluteUrl("/robocop/robocop_404.sjs?type=do404");
         final String site1Title = "changeColor";
@@ -96,33 +82,35 @@ public class testThumbnails extends BaseTest {
     }
 
     private int getTopSiteThumbnailColor(String title) {
-        ViewGroup topSites = (ViewGroup) getActivity().findViewById(mTopSitesId);
-        if (topSites != null) {
-            final int childCount = topSites.getChildCount();
-            for (int i = 0; i < childCount; i++) {
-                View child = topSites.getChildAt(i);
-                if (child != null) {
-                    TextView titleView = (TextView) child.findViewById(mTitleId);
-                    if (titleView != null) {
-                        if (titleView.getText().equals(title)) {
-                            ImageView thumbnailView = (ImageView) child.findViewById(mThumbnailId);
-                            if (thumbnailView != null) {
-                                Bitmap thumbnail = ((BitmapDrawable) thumbnailView.getDrawable()).getBitmap();
-                                return thumbnail.getPixel(0, 0);
-                            } else {
-                                mAsserter.dumpLog("getTopSiteThumbnailColor: unable to find mThumbnailId: "+mThumbnailId);
-                            }
-                        }
-                    } else {
-                        mAsserter.dumpLog("getTopSiteThumbnailColor: unable to find mTitleId: "+mTitleId);
-                    }
-                } else {
-                    mAsserter.dumpLog("getTopSiteThumbnailColor: skipped null child at index "+i);
-                }
-            }
-        } else {
-            mAsserter.dumpLog("getTopSiteThumbnailColor: unable to find mTopSitesId: "+mTopSitesId);
-        }
+        // This test is not currently run, so this just needs to compile.
         return -1;
+//        ViewGroup topSites = (ViewGroup) getActivity().findViewById(mTopSitesId);
+//        if (topSites != null) {
+//            final int childCount = topSites.getChildCount();
+//            for (int i = 0; i < childCount; i++) {
+//                View child = topSites.getChildAt(i);
+//                if (child != null) {
+//                    TextView titleView = (TextView) child.findViewById(R.id.title);
+//                    if (titleView != null) {
+//                        if (titleView.getText().equals(title)) {
+//                            ImageView thumbnailView = (ImageView) child.findViewById(R.id.thumbnail);
+//                            if (thumbnailView != null) {
+//                                Bitmap thumbnail = ((BitmapDrawable) thumbnailView.getDrawable()).getBitmap();
+//                                return thumbnail.getPixel(0, 0);
+//                            } else {
+//                                mAsserter.dumpLog("getTopSiteThumbnailColor: unable to find mThumbnailId: "+R.id.thumbnail);
+//                            }
+//                        }
+//                    } else {
+//                        mAsserter.dumpLog("getTopSiteThumbnailColor: unable to find R.id.title: "+R.id.title);
+//                    }
+//                } else {
+//                    mAsserter.dumpLog("getTopSiteThumbnailColor: skipped null child at index "+i);
+//                }
+//            }
+//        } else {
+//            mAsserter.dumpLog("getTopSiteThumbnailColor: unable to find mTopSitesId: " + mTopSitesId);
+//        }
+//        return -1;
     }
 }

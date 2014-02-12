@@ -3,10 +3,29 @@
 ///////////////////////////////////////////////////////////////////////////
 // Getters and setters for various slots.
 
+// Type repr slots
+
+#define REPR_KIND(obj)   \
+    TO_INT32(UnsafeGetReservedSlot(obj, JS_TYPEREPR_SLOT_KIND))
+
 // Type object slots
 
-#define TYPE_TYPE_REPR(obj) \
-    UnsafeGetReservedSlot(obj, JS_TYPEOBJ_SLOT_TYPE_REPR)
+#define DESCR_TYPE_REPR(obj) \
+    UnsafeGetReservedSlot(obj, JS_DESCR_SLOT_TYPE_REPR)
+#define DESCR_KIND(obj) \
+    REPR_KIND(DESCR_TYPE_REPR(obj))
+#define DESCR_SIZE(obj) \
+    UnsafeGetReservedSlot(obj, JS_DESCR_SLOT_SIZE)
+#define DESCR_SIZED_ARRAY_LENGTH(obj) \
+    TO_INT32(UnsafeGetReservedSlot(obj, JS_DESCR_SLOT_SIZED_ARRAY_LENGTH))
+#define DESCR_TYPE(obj)   \
+    UnsafeGetReservedSlot(obj, JS_DESCR_SLOT_TYPE)
+#define DESCR_STRUCT_FIELD_NAMES(obj) \
+    UnsafeGetReservedSlot(obj, JS_DESCR_SLOT_STRUCT_FIELD_NAMES)
+#define DESCR_STRUCT_FIELD_TYPES(obj) \
+    UnsafeGetReservedSlot(obj, JS_DESCR_SLOT_STRUCT_FIELD_TYPES)
+#define DESCR_STRUCT_FIELD_OFFSETS(obj) \
+    UnsafeGetReservedSlot(obj, JS_DESCR_SLOT_STRUCT_FIELD_OFFSETS)
 
 // Typed object slots
 
@@ -17,25 +36,97 @@
 #define DATUM_LENGTH(obj) \
     TO_INT32(UnsafeGetReservedSlot(obj, JS_DATUM_SLOT_LENGTH))
 
-// Type repr slots
-
-#define REPR_KIND(obj)   \
-    TO_INT32(UnsafeGetReservedSlot(obj, JS_TYPEREPR_SLOT_KIND))
-#define REPR_SIZE(obj)   \
-    TO_INT32(UnsafeGetReservedSlot(obj, JS_TYPEREPR_SLOT_SIZE))
-#define REPR_ALIGNMENT(obj) \
-    TO_INT32(UnsafeGetReservedSlot(obj, JS_TYPEREPR_SLOT_ALIGNMENT))
-#define REPR_LENGTH(obj)   \
-    TO_INT32(UnsafeGetReservedSlot(obj, JS_TYPEREPR_SLOT_LENGTH))
-#define REPR_TYPE(obj)   \
-    TO_INT32(UnsafeGetReservedSlot(obj, JS_TYPEREPR_SLOT_TYPE))
-
 #define HAS_PROPERTY(obj, prop) \
     callFunction(std_Object_hasOwnProperty, obj, prop)
 
 function DATUM_TYPE_REPR(obj) {
   // Eventually this will be a slot on typed objects
-  return TYPE_TYPE_REPR(DATUM_TYPE_DESCR(obj));
+  return DESCR_TYPE_REPR(DATUM_TYPE_DESCR(obj));
+}
+
+///////////////////////////////////////////////////////////////////////////
+// DescrToSource
+//
+// Converts a type descriptor to a descriptive string
+
+// toSource() for type descriptors.
+//
+// Warning: user exposed!
+function DescrToSourceMethod() {
+  if (!IsObject(this) || !ObjectIsTypeDescr(this))
+    ThrowError(JSMSG_INCOMPATIBLE_PROTO, "Type", "toSource", "value");
+
+  return DescrToSource(this);
+}
+
+function DescrToSource(descr) {
+  assert(IsObject(descr) && ObjectIsTypeDescr(descr),
+         "DescrToSource: not type descr");
+
+  switch (DESCR_KIND(descr)) {
+  case JS_TYPEREPR_SCALAR_KIND:
+    switch (DESCR_TYPE(descr)) {
+    case JS_SCALARTYPEREPR_INT8: return "int8";
+    case JS_SCALARTYPEREPR_UINT8: return "uint8";
+    case JS_SCALARTYPEREPR_UINT8_CLAMPED: return "uint8Clamped";
+    case JS_SCALARTYPEREPR_INT16: return "int16";
+    case JS_SCALARTYPEREPR_UINT16: return "uint16";
+    case JS_SCALARTYPEREPR_INT32: return "int32";
+    case JS_SCALARTYPEREPR_UINT32: return "uint32";
+    case JS_SCALARTYPEREPR_FLOAT32: return "float32";
+    case JS_SCALARTYPEREPR_FLOAT64: return "float64";
+    }
+    assert(false, "Unhandled type: " + DESCR_TYPE(descr));
+    return undefined;
+
+  case JS_TYPEREPR_REFERENCE_KIND:
+    switch (DESCR_TYPE(descr)) {
+    case JS_REFERENCETYPEREPR_ANY: return "any";
+    case JS_REFERENCETYPEREPR_OBJECT: return "Object";
+    case JS_REFERENCETYPEREPR_STRING: return "string";
+    }
+    assert(false, "Unhandled type: " + DESCR_TYPE(descr));
+    return undefined;
+
+  case JS_TYPEREPR_X4_KIND:
+    switch (DESCR_TYPE(descr)) {
+    case JS_X4TYPEREPR_FLOAT32: return "float32x4";
+    case JS_X4TYPEREPR_INT32: return "int32x4";
+    }
+    assert(false, "Unhandled type: " + DESCR_TYPE(descr));
+    return undefined;
+
+  case JS_TYPEREPR_STRUCT_KIND:
+    var result = "new StructType({";
+    var fieldNames = DESCR_STRUCT_FIELD_NAMES(descr);
+    var fieldTypes = DESCR_STRUCT_FIELD_TYPES(descr);
+    for (var i = 0; i < fieldNames.length; i++) {
+      if (i != 0)
+        result += ", ";
+
+      result += fieldNames[i];
+      result += ": ";
+      result += DescrToSource(fieldTypes[i]);
+    }
+    result += "})";
+    return result;
+
+  case JS_TYPEREPR_UNSIZED_ARRAY_KIND:
+    return "new ArrayType(" + DescrToSource(descr.elementType) + ")";
+
+  case JS_TYPEREPR_SIZED_ARRAY_KIND:
+    var result = ".array";
+    var sep = "(";
+    while (DESCR_KIND(descr) == JS_TYPEREPR_SIZED_ARRAY_KIND) {
+      result += sep + DESCR_SIZED_ARRAY_LENGTH(descr);
+      descr = descr.elementType;
+      sep = ", ";
+    }
+    return DescrToSource(descr) + result + ")";
+  }
+
+  assert(false, "Unhandled kind: " + DESCR_KIND(descr));
+  return undefined;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -43,8 +134,7 @@ function DATUM_TYPE_REPR(obj) {
 //
 // TypedObjectPointers are internal structs used to represent a
 // pointer into typed object memory. They pull together:
-// - typeRepr: the internal type representation
-// - descr: the user-visible type object
+// - descr: the type descriptor
 // - datum: the typed object that contains the allocated block of memory
 // - offset: an offset into that typed object
 //
@@ -58,8 +148,11 @@ function DATUM_TYPE_REPR(obj) {
 // they mutate the receiver in place, because it makes for prettier
 // code.
 
-function TypedObjectPointer(typeRepr, descr, datum, offset) {
-  this.typeRepr = typeRepr;
+function TypedObjectPointer(descr, datum, offset) {
+  assert(IsObject(descr) && ObjectIsTypeDescr(descr), "Not descr");
+  assert(IsObject(datum) && ObjectIsTypedDatum(datum), "Not datum");
+  assert(TO_INT32(offset) === offset, "offset not int");
+
   this.descr = descr;
   this.datum = datum;
   this.offset = offset;
@@ -68,25 +161,20 @@ function TypedObjectPointer(typeRepr, descr, datum, offset) {
 MakeConstructible(TypedObjectPointer, {});
 
 TypedObjectPointer.fromTypedDatum = function(typed) {
-  return new TypedObjectPointer(DATUM_TYPE_REPR(typed),
-                                DATUM_TYPE_DESCR(typed),
-                                typed,
-                                0);
+  return new TypedObjectPointer(DATUM_TYPE_DESCR(typed), typed, 0);
 }
 
 #ifdef DEBUG
 TypedObjectPointer.prototype.toString = function() {
-  return "Ptr(" + this.descr.toSource() + " @ " + this.offset + ")";
+  return "Ptr(" + DescrToSource(this.descr) + " @ " + this.offset + ")";
 };
 #endif
 
 TypedObjectPointer.prototype.copy = function() {
-  return new TypedObjectPointer(this.typeRepr, this.descr,
-                                this.datum, this.offset);
+  return new TypedObjectPointer(this.descr, this.datum, this.offset);
 };
 
 TypedObjectPointer.prototype.reset = function(inPtr) {
-  this.typeRepr = inPtr.typeRepr;
   this.descr = inPtr.descr;
   this.datum = inPtr.datum;
   this.offset = inPtr.offset;
@@ -94,19 +182,21 @@ TypedObjectPointer.prototype.reset = function(inPtr) {
 };
 
 TypedObjectPointer.prototype.kind = function() {
-  return REPR_KIND(this.typeRepr);
+  return DESCR_KIND(this.descr);
 }
 
+// Extract the length. This does a switch on kind, so it's
+// best if we can avoid it.
 TypedObjectPointer.prototype.length = function() {
   switch (this.kind()) {
   case JS_TYPEREPR_SIZED_ARRAY_KIND:
-    return REPR_LENGTH(this.typeRepr);
+    return DESCR_SIZED_ARRAY_LENGTH(this.descr);
 
   case JS_TYPEREPR_UNSIZED_ARRAY_KIND:
-    return DATUM_LENGTH(this.datum);
+    return this.datum.length;
   }
-  assert(false, "length() invoked on non-array-type");
-  return 0;
+  assert(false, "Invalid kind for length");
+  return false;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -125,15 +215,10 @@ TypedObjectPointer.prototype.moveTo = function(propName) {
     break;
 
   case JS_TYPEREPR_SIZED_ARRAY_KIND:
+    return this.moveToArray(propName, DESCR_SIZED_ARRAY_LENGTH(this.descr));
+
   case JS_TYPEREPR_UNSIZED_ARRAY_KIND:
-    // For an array, property must be an element. Note that we use the
-    // length as loaded from the type *representation* as opposed to
-    // the type *object*; this is because some type objects represent
-    // unsized arrays and hence do not have a length.
-    var index = TO_INT32(propName);
-    if (index === propName && index >= 0 && index < this.length())
-      return this.moveToElem(index);
-    break;
+    return this.moveToArray(propName, this.datum.length);
 
   case JS_TYPEREPR_STRUCT_KIND:
     if (HAS_PROPERTY(this.descr.fieldTypes, propName))
@@ -145,6 +230,20 @@ TypedObjectPointer.prototype.moveTo = function(propName) {
   return undefined;
 };
 
+TypedObjectPointer.prototype.moveToArray = function(propName, length) {
+  // For an array, property must be an element. Note that we take
+  // the length as an argument rather than loading it from the descriptor.
+  // This is because this same helper is used for *unsized arrays*, where
+  // the length is drawn from the datum, and *sized arrays*, where the
+  // length is drawn from the type.
+  var index = TO_INT32(propName);
+  if (index === propName && index >= 0 && index < length)
+    return this.moveToElem(index);
+
+  ThrowError(JSMSG_TYPEDOBJECT_NO_SUCH_PROP, propName);
+  return undefined;
+}
+
 // Adjust `this` in place to point at the element `index`.  `this`
 // must be a array type and `index` must be within bounds. Returns
 // `this`.
@@ -155,13 +254,11 @@ TypedObjectPointer.prototype.moveToElem = function(index) {
   assert(TO_INT32(index) === index,
          "moveToElem invoked with non-integer index");
   assert(index >= 0 && index < this.length(),
-         "moveToElem invoked with out-of-bounds index: " + index);
+         "moveToElem invoked with negative index: " + index);
 
-  var elementTypeObj = this.descr.elementType;
-  var elementTypeRepr = TYPE_TYPE_REPR(elementTypeObj);
-  this.typeRepr = elementTypeRepr;
-  this.descr = elementTypeObj;
-  var elementSize = REPR_SIZE(elementTypeRepr);
+  var elementDescr = this.descr.elementType;
+  this.descr = elementDescr;
+  var elementSize = DESCR_SIZE(elementDescr);
 
   // Note: we do not allow construction of arrays where the offset
   // of an element cannot be represented by an int32.
@@ -170,22 +267,36 @@ TypedObjectPointer.prototype.moveToElem = function(index) {
   return this;
 };
 
+TypedObjectPointer.prototype.moveToField = function(propName) {
+  var fieldNames = DESCR_STRUCT_FIELD_NAMES(this.descr);
+  var index = fieldNames.indexOf(propName);
+  if (index != -1)
+    return this.moveToFieldIndex(index);
+
+  ThrowError(JSMSG_TYPEDOBJECT_NO_SUCH_PROP, propName);
+  return undefined;
+}
+
 // Adjust `this` to point at the field `propName`.  `this` must be a
 // struct type and `propName` must be a valid field name. Returns
 // `this`.
-TypedObjectPointer.prototype.moveToField = function(propName) {
+TypedObjectPointer.prototype.moveToFieldIndex = function(index) {
   assert(this.kind() == JS_TYPEREPR_STRUCT_KIND,
-         "moveToField invoked on non-struct");
-  assert(HAS_PROPERTY(this.descr.fieldTypes, propName),
-         "moveToField invoked with undefined field");
+         "moveToFieldIndex invoked on non-struct");
+  assert(index >= 0 && index < DESCR_STRUCT_FIELD_NAMES(this.descr).length,
+         "moveToFieldIndex invoked with invalid field index " + index);
 
-  var fieldTypeObj = this.descr.fieldTypes[propName];
-  var fieldOffset = TO_INT32(this.descr.fieldOffsets[propName]);
-  this.descr = fieldTypeObj;
-  this.typeRepr = TYPE_TYPE_REPR(fieldTypeObj);
+  var fieldDescr = DESCR_STRUCT_FIELD_TYPES(this.descr)[index];
+  var fieldOffset = TO_INT32(DESCR_STRUCT_FIELD_OFFSETS(this.descr)[index]);
 
-  // Note: we do not allow construction of structs where the
-  // offset of a field cannot be represented by an int32.
+  assert(IsObject(fieldDescr) && ObjectIsTypeDescr(fieldDescr),
+         "bad field descr");
+  assert(TO_INT32(fieldOffset) === fieldOffset,
+         "bad field offset");
+  assert(fieldOffset >= 0 && fieldOffset < DESCR_SIZE(this.descr),
+         "out of bounds field offset");
+
+  this.descr = fieldDescr;
   this.offset += fieldOffset;
 
   return this;
@@ -206,7 +317,7 @@ TypedObjectPointer.prototype.moveToField = function(propName) {
 TypedObjectPointer.prototype.get = function() {
   assert(ObjectIsAttached(this.datum), "get() called with unattached datum");
 
-  switch (REPR_KIND(this.typeRepr)) {
+  switch (this.kind()) {
   case JS_TYPEREPR_SCALAR_KIND:
     return this.getScalar();
 
@@ -223,15 +334,15 @@ TypedObjectPointer.prototype.get = function() {
     return NewDerivedTypedDatum(this.descr, this.datum, this.offset);
 
   case JS_TYPEREPR_UNSIZED_ARRAY_KIND:
-    assert(false, "Unhandled repr kind: " + REPR_KIND(this.typeRepr));
+    assert(false, "Unhandled repr kind: " + this.kind());
   }
 
-  assert(false, "Unhandled kind: " + REPR_KIND(this.typeRepr));
+  assert(false, "Unhandled kind: " + this.kind());
   return undefined;
 }
 
 TypedObjectPointer.prototype.getScalar = function() {
-  var type = REPR_TYPE(this.typeRepr);
+  var type = DESCR_TYPE(this.descr);
   switch (type) {
   case JS_SCALARTYPEREPR_INT8:
     return Load_int8(this.datum, this.offset);
@@ -264,7 +375,7 @@ TypedObjectPointer.prototype.getScalar = function() {
 }
 
 TypedObjectPointer.prototype.getReference = function() {
-  var type = REPR_TYPE(this.typeRepr);
+  var type = DESCR_TYPE(this.descr);
   switch (type) {
   case JS_REFERENCETYPEREPR_ANY:
     return Load_Any(this.datum, this.offset);
@@ -281,7 +392,7 @@ TypedObjectPointer.prototype.getReference = function() {
 }
 
 TypedObjectPointer.prototype.getX4 = function() {
-  var type = REPR_TYPE(this.typeRepr);
+  var type = DESCR_TYPE(this.descr);
   switch (type) {
   case JS_X4TYPEREPR_FLOAT32:
     var x = Load_float32(this.datum, this.offset + 0);
@@ -313,23 +424,22 @@ TypedObjectPointer.prototype.getX4 = function() {
 TypedObjectPointer.prototype.set = function(fromValue) {
   assert(ObjectIsAttached(this.datum), "set() called with unattached datum");
 
-  var typeRepr = this.typeRepr;
-
   // Fast path: `fromValue` is a typed object with same type
   // representation as the destination. In that case, we can just do a
   // memcpy.
   if (IsObject(fromValue) && ObjectIsTypedDatum(fromValue)) {
+    var typeRepr = DESCR_TYPE_REPR(this.descr);
     if (!typeRepr.variable && DATUM_TYPE_REPR(fromValue) === typeRepr) {
       if (!ObjectIsAttached(fromValue))
         ThrowError(JSMSG_TYPEDOBJECT_HANDLE_UNATTACHED);
 
-      var size = REPR_SIZE(typeRepr);
+      var size = DESCR_SIZE(this.descr);
       Memcpy(this.datum, this.offset, fromValue, 0, size);
       return;
     }
   }
 
-  switch (REPR_KIND(typeRepr)) {
+  switch (this.kind()) {
   case JS_TYPEREPR_SCALAR_KIND:
     this.setScalar(fromValue);
     return;
@@ -343,25 +453,14 @@ TypedObjectPointer.prototype.set = function(fromValue) {
     return;
 
   case JS_TYPEREPR_SIZED_ARRAY_KIND:
+    if (this.setArray(fromValue, DESCR_SIZED_ARRAY_LENGTH(this.descr)))
+      return;
+    break;
+
   case JS_TYPEREPR_UNSIZED_ARRAY_KIND:
-    if (!IsObject(fromValue))
-      break;
-
-    // Check that "array-like" fromValue has an appropriate length.
-    var length = this.length();
-    if (fromValue.length !== length)
-      break;
-
-    // Adapt each element.
-    if (length > 0) {
-      var tempPtr = this.copy().moveToElem(0);
-      var size = REPR_SIZE(tempPtr.typeRepr);
-      for (var i = 0; i < length; i++) {
-        tempPtr.set(fromValue[i]);
-        tempPtr.offset += size;
-      }
-    }
-    return;
+    if (this.setArray(fromValue, this.datum.length))
+      return;
+    break;
 
   case JS_TYPEREPR_STRUCT_KIND:
     if (!IsObject(fromValue))
@@ -369,25 +468,46 @@ TypedObjectPointer.prototype.set = function(fromValue) {
 
     // Adapt each field.
     var tempPtr = this.copy();
-    var fieldNames = this.descr.fieldNames;
+    var fieldNames = DESCR_STRUCT_FIELD_NAMES(this.descr);
     for (var i = 0; i < fieldNames.length; i++) {
       var fieldName = fieldNames[i];
-      tempPtr.reset(this).moveToField(fieldName).set(fromValue[fieldName]);
+      tempPtr.reset(this).moveToFieldIndex(i).set(fromValue[fieldName]);
     }
     return;
   }
 
   ThrowError(JSMSG_CANT_CONVERT_TO,
              typeof(fromValue),
-             this.typeRepr.toSource());
+             DescrToSource(this.descr));
+}
+
+TypedObjectPointer.prototype.setArray = function(fromValue, length) {
+  if (!IsObject(fromValue))
+    return false;
+
+  // Check that "array-like" fromValue has an appropriate length.
+  if (fromValue.length !== length)
+    return false;
+
+  // Adapt each element.
+  if (length > 0) {
+    var tempPtr = this.copy().moveToElem(0);
+    var size = DESCR_SIZE(tempPtr.descr);
+    for (var i = 0; i < length; i++) {
+      tempPtr.set(fromValue[i]);
+      tempPtr.offset += size;
+    }
+  }
+
+  return true;
 }
 
 // Sets `fromValue` to `this` assuming that `this` is a scalar type.
 TypedObjectPointer.prototype.setScalar = function(fromValue) {
-  assert(REPR_KIND(this.typeRepr) == JS_TYPEREPR_SCALAR_KIND,
+  assert(this.kind() == JS_TYPEREPR_SCALAR_KIND,
          "setScalar called with non-scalar");
 
-  var type = REPR_TYPE(this.typeRepr);
+  var type = DESCR_TYPE(this.descr);
   switch (type) {
   case JS_SCALARTYPEREPR_INT8:
     return Store_int8(this.datum, this.offset,
@@ -429,7 +549,7 @@ TypedObjectPointer.prototype.setScalar = function(fromValue) {
 }
 
 TypedObjectPointer.prototype.setReference = function(fromValue) {
-  var type = REPR_TYPE(this.typeRepr);
+  var type = DESCR_TYPE(this.descr);
   switch (type) {
   case JS_REFERENCETYPEREPR_ANY:
     return Store_Any(this.datum, this.offset, fromValue);
@@ -454,7 +574,7 @@ TypedObjectPointer.prototype.setX4 = function(fromValue) {
   // to "adapt" fromValue, but there are no legal adaptions.
   ThrowError(JSMSG_CANT_CONVERT_TO,
              typeof(fromValue),
-             this.typeRepr.toSource());
+             DescrToSource(this.descr));
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -463,15 +583,12 @@ TypedObjectPointer.prototype.setX4 = function(fromValue) {
 // These helpers are invoked by C++ code or used as method bodies.
 
 // Wrapper for use from C++ code.
-function ConvertAndCopyTo(destTypeRepr,
-                          destTypeObj,
+function ConvertAndCopyTo(destDescr,
                           destDatum,
                           destOffset,
                           fromValue)
 {
-  assert(IsObject(destTypeRepr) && ObjectIsTypeRepresentation(destTypeRepr),
-         "ConvertAndCopyTo: not type repr");
-  assert(IsObject(destTypeObj) && ObjectIsTypeDescr(destTypeObj),
+  assert(IsObject(destDescr) && ObjectIsTypeDescr(destDescr),
          "ConvertAndCopyTo: not type obj");
   assert(IsObject(destDatum) && ObjectIsTypedDatum(destDatum),
          "ConvertAndCopyTo: not type datum");
@@ -479,19 +596,15 @@ function ConvertAndCopyTo(destTypeRepr,
   if (!ObjectIsAttached(destDatum))
     ThrowError(JSMSG_TYPEDOBJECT_HANDLE_UNATTACHED);
 
-  var ptr = new TypedObjectPointer(destTypeRepr, destTypeObj,
-                                   destDatum, destOffset);
+  var ptr = new TypedObjectPointer(destDescr, destDatum, destOffset);
   ptr.set(fromValue);
 }
 
 // Wrapper for use from C++ code.
-function Reify(sourceTypeRepr,
-               sourceTypeObj,
+function Reify(sourceDescr,
                sourceDatum,
                sourceOffset) {
-  assert(IsObject(sourceTypeRepr) && ObjectIsTypeRepresentation(sourceTypeRepr),
-         "Reify: not type repr");
-  assert(IsObject(sourceTypeObj) && ObjectIsTypeDescr(sourceTypeObj),
+  assert(IsObject(sourceDescr) && ObjectIsTypeDescr(sourceDescr),
          "Reify: not type obj");
   assert(IsObject(sourceDatum) && ObjectIsTypedDatum(sourceDatum),
          "Reify: not type datum");
@@ -499,15 +612,17 @@ function Reify(sourceTypeRepr,
   if (!ObjectIsAttached(sourceDatum))
     ThrowError(JSMSG_TYPEDOBJECT_HANDLE_UNATTACHED);
 
-  var ptr = new TypedObjectPointer(sourceTypeRepr, sourceTypeObj,
-                                   sourceDatum, sourceOffset);
+  var ptr = new TypedObjectPointer(sourceDescr, sourceDatum, sourceOffset);
 
   return ptr.get();
 }
 
 function FillTypedArrayWithValue(destArray, fromValue) {
-  var typeRepr = DATUM_TYPE_REPR(destArray);
-  var length = REPR_LENGTH(typeRepr);
+  assert(IsObject(handle) && ObjectIsTypedDatum(destArray),
+         "FillTypedArrayWithValue: not typed handle");
+
+  var descr = DATUM_TYPE_DESCR(destArray);
+  var length = DESCR_SIZED_ARRAY_LENGTH(descr);
   if (length === 0)
     return;
 
@@ -517,19 +632,19 @@ function FillTypedArrayWithValue(destArray, fromValue) {
   ptr.set(fromValue);
 
   // Stamp out the remaining copies:
-  var elementSize = REPR_SIZE(ptr.typeRepr);
+  var elementSize = DESCR_SIZE(ptr.descr);
   var totalSize = length * elementSize;
   for (var offset = elementSize; offset < totalSize; offset += elementSize)
     Memcpy(destArray, offset, destArray, 0, elementSize);
 }
 
 // Warning: user exposed!
-function TypeDescrEquivalent(otherTypeObj) {
+function TypeDescrEquivalent(otherDescr) {
   if (!IsObject(this) || !ObjectIsTypeDescr(this))
     ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, "this", "type object");
-  if (!IsObject(otherTypeObj) || !ObjectIsTypeDescr(otherTypeObj))
+  if (!IsObject(otherDescr) || !ObjectIsTypeDescr(otherDescr))
     ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, "1", "type object");
-  return TYPE_TYPE_REPR(this) === TYPE_TYPE_REPR(otherTypeObj);
+  return DESCR_TYPE_REPR(this) === DESCR_TYPE_REPR(otherDescr);
 }
 
 // TypedArray.redimension(newArrayType)
@@ -562,7 +677,7 @@ function TypedArrayRedimension(newArrayType) {
   // Peel away the outermost array layers from the type of `this` to find
   // the core element type. In the process, count the number of elements.
   var oldArrayType = DATUM_TYPE_DESCR(this);
-  var oldArrayReprKind = REPR_KIND(TYPE_TYPE_REPR(oldArrayType));
+  var oldArrayReprKind = DESCR_KIND(oldArrayType);
   var oldElementType = oldArrayType;
   var oldElementCount = 1;
   switch (oldArrayReprKind) {
@@ -577,7 +692,7 @@ function TypedArrayRedimension(newArrayType) {
   default:
     ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, "this", "typed array");
   }
-  while (REPR_KIND(TYPE_TYPE_REPR(oldElementType)) === JS_TYPEREPR_SIZED_ARRAY_KIND) {
+  while (DESCR_KIND(oldElementType) === JS_TYPEREPR_SIZED_ARRAY_KIND) {
     oldElementCount *= oldElementType.length;
     oldElementType = oldElementType.elementType;
   }
@@ -586,7 +701,7 @@ function TypedArrayRedimension(newArrayType) {
   // process, count the number of elements.
   var newElementType = newArrayType;
   var newElementCount = 1;
-  while (REPR_KIND(TYPE_TYPE_REPR(newElementType)) == JS_TYPEREPR_SIZED_ARRAY_KIND) {
+  while (DESCR_KIND(newElementType) == JS_TYPEREPR_SIZED_ARRAY_KIND) {
     newElementCount *= newElementType.length;
     newElementType = newElementType.elementType;
   }
@@ -598,14 +713,13 @@ function TypedArrayRedimension(newArrayType) {
   }
 
   // Check that the element types are equivalent.
-  if (TYPE_TYPE_REPR(oldElementType) !== TYPE_TYPE_REPR(newElementType)) {
+  if (DESCR_TYPE_REPR(oldElementType) !== DESCR_TYPE_REPR(newElementType)) {
     ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, 1,
                "New element type is not equivalent to old element type");
   }
 
   // Together, this should imply that the sizes are unchanged.
-  assert(REPR_SIZE(TYPE_TYPE_REPR(oldArrayType)) ==
-         REPR_SIZE(TYPE_TYPE_REPR(newArrayType)),
+  assert(DESCR_SIZE(oldArrayType) == DESCR_SIZE(newArrayType),
          "Byte sizes should be equal");
 
   // Rewrap the data from `this` in a new type.
@@ -626,7 +740,7 @@ function HandleCreate(obj, ...path) {
   if (!IsObject(this) || !ObjectIsTypeDescr(this))
     ThrowError(JSMSG_INCOMPATIBLE_PROTO, "Type", "handle", "value");
 
-  switch (REPR_KIND(TYPE_TYPE_REPR(this))) {
+  switch (DESCR_KIND(this)) {
   case JS_TYPEREPR_SCALAR_KIND:
   case JS_TYPEREPR_REFERENCE_KIND:
   case JS_TYPEREPR_X4_KIND:
@@ -667,7 +781,7 @@ function HandleMoveInternal(handle, obj, path) {
     ptr.moveTo(path[i]);
 
   // Check that the new destination is equivalent to the handle type.
-  if (ptr.typeRepr !== DATUM_TYPE_REPR(handle))
+  if (DESCR_TYPE_REPR(ptr.descr) !== DATUM_TYPE_REPR(handle))
     ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_TYPE);
 
   AttachHandle(handle, ptr.datum, ptr.offset)
@@ -724,11 +838,11 @@ function X4ToSource() {
   if (!IsObject(this) || !ObjectIsTypedDatum(this))
     ThrowError(JSMSG_INCOMPATIBLE_PROTO, "X4", "toSource", typeof this);
 
-  var repr = DATUM_TYPE_REPR(this);
-  if (REPR_KIND(repr) != JS_TYPEREPR_X4_KIND)
+  if (DESCR_KIND(this) != JS_TYPEREPR_X4_KIND)
     ThrowError(JSMSG_INCOMPATIBLE_PROTO, "X4", "toSource", typeof this);
 
-  var type = REPR_TYPE(repr);
+  var descr = DATUM_TYPE_DESCR(this);
+  var type = DESCR_TYPE(descr);
   return X4ProtoString(type)+"("+this.x+", "+this.y+", "+this.z+", "+this.w+")";
 }
 
@@ -799,7 +913,7 @@ function TypedObjectArrayTypeBuild(a,b,c) {
 
   if (!IsObject(this) || !ObjectIsTypeDescr(this))
     ThrowError(JSMSG_TYPEDOBJECT_HANDLE_BAD_ARGS, "this", "type object");
-  var kind = REPR_KIND(TYPE_TYPE_REPR(this));
+  var kind = DESCR_KIND(this);
   switch (kind) {
   case JS_TYPEREPR_SIZED_ARRAY_KIND:
     if (typeof a === "function") // XXX here and elsewhere: these type dispatches are fragile at best.
@@ -979,7 +1093,7 @@ function GET_BIT(data, index) {
 function TypeDescrIsArrayType(t) {
   assert(IsObject(t) && ObjectIsTypeDescr(t), "TypeDescrIsArrayType called on non-type-object");
 
-  var kind = REPR_KIND(TYPE_TYPE_REPR(t));
+  var kind = DESCR_KIND(t);
   switch (kind) {
   case JS_TYPEREPR_SIZED_ARRAY_KIND:
   case JS_TYPEREPR_UNSIZED_ARRAY_KIND:
@@ -997,7 +1111,7 @@ function TypeDescrIsArrayType(t) {
 function TypeDescrIsSizedArrayType(t) {
   assert(IsObject(t) && ObjectIsTypeDescr(t), "TypeDescrIsSizedArrayType called on non-type-object");
 
-  var kind = REPR_KIND(TYPE_TYPE_REPR(t));
+  var kind = DESCR_KIND(t);
   switch (kind) {
   case JS_TYPEREPR_SIZED_ARRAY_KIND:
     return true;
@@ -1015,7 +1129,7 @@ function TypeDescrIsSizedArrayType(t) {
 function TypeDescrIsSimpleType(t) {
   assert(IsObject(t) && ObjectIsTypeDescr(t), "TypeDescrIsSimpleType called on non-type-object");
 
-  var kind = REPR_KIND(TYPE_TYPE_REPR(t));
+  var kind = DESCR_KIND(t);
   switch (kind) {
   case JS_TYPEREPR_SCALAR_KIND:
   case JS_TYPEREPR_REFERENCE_KIND:
@@ -1071,7 +1185,7 @@ function BuildTypedSeqImpl(arrayType, len, depth, func) {
       HandleSet(handle, r);                 // *handle = r
     }
     // Increment indices.
-    offset += REPR_SIZE(TYPE_TYPE_REPR(grainType));
+    offset += DESCR_SIZE(grainType);
     IncrementIterationSpace(indices, iterationSpace);
   }
 
@@ -1148,7 +1262,7 @@ function MapUntypedSeqImpl(inArray, outputType, maybeFunc) {
   var result = outputType.variable ? new outputType(inArray.length) : new outputType();
 
   var outHandle = callFunction(HandleCreate, outGrainType);
-  var outUnitSize = REPR_SIZE(TYPE_TYPE_REPR(outGrainType));
+  var outUnitSize = DESCR_SIZE(outGrainType);
 
   // Core of map computation starts here (comparable to
   // DoMapTypedSeqDepth1 and DoMapTypedSeqDepthN below).
@@ -1208,8 +1322,8 @@ function MapTypedSeqImpl(inArray, depth, outputType, func) {
 
   var inHandle = callFunction(HandleCreate, inGrainType);
   var outHandle = callFunction(HandleCreate, outGrainType);
-  var inUnitSize = REPR_SIZE(TYPE_TYPE_REPR(inGrainType));
-  var outUnitSize = REPR_SIZE(TYPE_TYPE_REPR(outGrainType));
+  var inUnitSize = DESCR_SIZE(inGrainType);
+  var outUnitSize = DESCR_SIZE(outGrainType);
 
   var inGrainTypeIsSimple = TypeDescrIsSimpleType(inGrainType);
 

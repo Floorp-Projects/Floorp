@@ -24,18 +24,29 @@
     // gA11yEventDumpID = "eventdump"; // debug stuff
     //gA11yEventDumpToConsole = true;
 
+    function getOnclickSeq(aID)
+    {
+      return [
+        new caretMoveChecker(0, aID), 
+        new unexpectedInvokerChecker(EVENT_TEXT_SELECTION_CHANGED, aID)
+      ];
+    }
+
     function doTests()
     {
       // test caret move events and caret offsets
       gQueue = new eventQueue();
 
-      var onclickSeq = [
-        new caretMoveChecker(0, "c1_p1"), 
-        new unexpectedInvokerChecker(EVENT_TEXT_SELECTION_CHANGED, "c1_p1")
-      ];
-      gQueue.push(new synthClick("c1_p1", onclickSeq));
+      gQueue.push(new synthClick("c1_p1", getOnclickSeq("c1_p1")));
       gQueue.push(new synthDownKey("c1", new textSelectionChecker("c1", 0, 1), { shiftKey: true }));
       gQueue.push(new synthDownKey("c1", new textSelectionChecker("c1", 0, 2), { shiftKey: true }));
+
+      gQueue.push(new synthClick("ta1", getOnclickSeq("ta1")));
+      gQueue.push(new synthRightKey("ta1",
+                                    new textSelectionChecker("ta1", 0, 1),
+                                    { shiftKey: true }));
+      gQueue.push(new synthLeftKey("ta1",
+                                    new textSelectionChecker("ta1", 0, 0)));
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
@@ -52,6 +63,11 @@
      title="Text selection change event has a wrong target when selection is spanned through several objects">
     Bug 762934
   </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=956032"
+     title="Text selection change event missed when selected text becomes unselected">
+    Bug 956032
+  </a>
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
@@ -61,6 +77,8 @@
     <p id="c1_p1">paragraph</p>
     <p id="c1_p2">paragraph</p>
   </div>
+
+  <textarea id="ta1">Hello world</textarea>
 
   <div id="eventdump"></div>
 </body>

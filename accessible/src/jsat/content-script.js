@@ -27,6 +27,15 @@ Logger.debug('content-script.js');
 
 let eventManager = null;
 
+function clearCursor(aMessage) {
+  try {
+    Utils.getVirtualCursor(content.document).position = null;
+    forwardToChild(aMessage);
+  } catch (x) {
+    Logger.logException(x);
+  }
+}
+
 function moveCursor(aMessage) {
   if (Logger.logLevel >= Logger.DEBUG) {
     Logger.debug(aMessage.name, JSON.stringify(aMessage.json, null, ' '));
@@ -144,7 +153,11 @@ function forwardToChild(aMessage, aListener, aVCPosition) {
   }
 
   let mm = Utils.getMessageManager(acc.DOMNode);
-  mm.addMessageListener(aMessage.name, aListener);
+
+  if (aListener) {
+    mm.addMessageListener(aMessage.name, aListener);
+  }
+
   // XXX: This is a silly way to make a deep copy
   let newJSON = JSON.parse(JSON.stringify(aMessage.json));
   newJSON.origin = 'parent';
@@ -381,6 +394,7 @@ addMessageListener(
     addMessageListener('AccessFu:AdjustRange', adjustRange);
     addMessageListener('AccessFu:MoveCaret', moveCaret);
     addMessageListener('AccessFu:MoveByGranularity', moveByGranularity);
+    addMessageListener('AccessFu:ClearCursor', clearCursor);
 
     if (!eventManager) {
       eventManager = new EventManager(this);
@@ -401,6 +415,7 @@ addMessageListener(
     removeMessageListener('AccessFu:Scroll', scroll);
     removeMessageListener('AccessFu:MoveCaret', moveCaret);
     removeMessageListener('AccessFu:MoveByGranularity', moveByGranularity);
+    removeMessageListener('AccessFu:ClearCursor', clearCursor);
 
     eventManager.stop();
   });
