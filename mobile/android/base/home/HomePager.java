@@ -318,10 +318,11 @@ public class HomePager extends ViewPager {
         setAdapter(adapter);
 
         // Use the default panel as defined in the HomePager's configuration
-        // if the initial panel wasn't explicitly set by the show() caller.
-        if (mInitialPanelId != null) {
-            // XXX: Handle the case where the desired panel isn't currently in the adapter (bug 949178)
-            setCurrentItem(adapter.getItemPosition(mInitialPanelId), false);
+        // if the initial panel wasn't explicitly set by the show() caller,
+        // or if the initial panel is not found in the adapter.
+        final int itemPosition = (mInitialPanelId == null) ? -1 : adapter.getItemPosition(mInitialPanelId);
+        if (itemPosition > -1) {
+            setCurrentItem(itemPosition, false);
             mInitialPanelId = null;
         } else {
             for (int i = 0; i < count; i++) {
