@@ -242,7 +242,7 @@ ROLE(COLUMN,
 
 ROLE(ROW,
      "row",
-     ATK_ROLE_LIST_ITEM,
+     ATK_ROLE_TABLE_ROW,
      NSAccessibilityRowRole,
      ROLE_SYSTEM_ROW,
      ROLE_SYSTEM_ROW,
