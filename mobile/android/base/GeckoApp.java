@@ -93,7 +93,6 @@ import android.view.SurfaceView;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewStub;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.AbsoluteLayout;
@@ -822,17 +821,6 @@ public abstract class GeckoApp
         });
     }
 
-    protected ButtonToast getButtonToast() {
-        if (mToast != null) {
-            return mToast;
-        }
-
-        ViewStub toastStub = (ViewStub) findViewById(R.id.toast);
-        mToast = new ButtonToast(toastStub.inflate());
-
-        return mToast;
-    }
-
     void showButtonToast(final String message, final String buttonText,
                          final String buttonIcon, final String buttonId) {
         BitmapUtils.getDrawable(GeckoApp.this, buttonIcon, new BitmapUtils.BitmapLoader() {
@@ -841,7 +829,7 @@ public abstract class GeckoApp
                 ThreadUtils.postToUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        getButtonToast().show(false, message, buttonText, d, new ButtonToast.ToastListener() {
+                        mToast.show(false, message, buttonText, d, new ButtonToast.ToastListener() {
                             @Override
                             public void onButtonClicked() {
                                 GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Toast:Click", buttonId));
@@ -1259,6 +1247,8 @@ public abstract class GeckoApp
         // Set up Gecko layout.
         mGeckoLayout = (RelativeLayout) findViewById(R.id.gecko_layout);
         mMainLayout = (RelativeLayout) findViewById(R.id.main_layout);
+
+        mToast = new ButtonToast(findViewById(R.id.toast));
 
         // Determine whether we should restore tabs.
         mShouldRestore = getSessionRestoreState(savedInstanceState);
