@@ -826,6 +826,24 @@ darwin*)
 linux*)
     HOST_OS_ARCH=Linux
     ;;
+kfreebsd*-gnu)
+    HOST_OS_ARCH=GNU_kFreeBSD
+    ;;
+gnu*)
+    HOST_OS_ARCH=GNU
+    ;;
+dragonfly*)
+    HOST_OS_ARCH=DragonFly
+    ;;
+freebsd*)
+    HOST_OS_ARCH=FreeBSD
+    ;;
+netbsd*)
+    HOST_OS_ARCH=NetBSD
+    ;;
+openbsd*)
+    HOST_OS_ARCH=OpenBSD
+    ;;
 solaris*)
     HOST_OS_ARCH=SunOS
     SOLARIS_SUNPRO_CC=

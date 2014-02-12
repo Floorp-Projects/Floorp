@@ -1093,7 +1093,7 @@ ProcessArgs(JSContext *cx, JS::Handle<JSObject*> obj, char **argv, int argc, XPC
      * Create arguments early and define it to root it, so it's safe from any
      * GC calls nested below, and so it is available to -f <file> arguments.
      */
-    argsObj = JS_NewArrayObject(cx, 0, nullptr);
+    argsObj = JS_NewArrayObject(cx, 0);
     if (!argsObj)
         return 1;
     if (!JS_DefineProperty(cx, obj, "arguments", OBJECT_TO_JSVAL(argsObj),

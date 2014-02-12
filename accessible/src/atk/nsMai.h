@@ -39,7 +39,8 @@ extern int atkMajorVersion, atkMinorVersion;
 static inline bool
 IsAtkVersionAtLeast(int aMajor, int aMinor)
 {
-  return aMajor < atkMajorVersion && aMinor < atkMinorVersion;
+  return aMajor < atkMajorVersion ||
+         (aMajor == atkMajorVersion && aMinor <= atkMinorVersion);
 }
 
 #endif /* __NS_MAI_H__ */

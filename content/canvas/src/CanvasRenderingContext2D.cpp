@@ -1245,14 +1245,13 @@ CanvasRenderingContext2D::SetTransform(double m11, double m12,
 JSObject*
 MatrixToJSObject(JSContext* cx, const Matrix& matrix, ErrorResult& error)
 {
-  JS::Value elts[] = {
-    DOUBLE_TO_JSVAL(matrix._11), DOUBLE_TO_JSVAL(matrix._12),
-    DOUBLE_TO_JSVAL(matrix._21), DOUBLE_TO_JSVAL(matrix._22),
-    DOUBLE_TO_JSVAL(matrix._31), DOUBLE_TO_JSVAL(matrix._32)
-  };
+  JS::AutoValueArray<6> elts(cx);
+  elts[0].setDouble(matrix._11); elts[1].setDouble(matrix._12);
+  elts[2].setDouble(matrix._21); elts[3].setDouble(matrix._22);
+  elts[4].setDouble(matrix._31); elts[5].setDouble(matrix._32);
 
   // XXX Should we enter GetWrapper()'s compartment?
-  JSObject* obj = JS_NewArrayObject(cx, 6, elts);
+  JSObject* obj = JS_NewArrayObject(cx, elts);
   if  (!obj) {
     error.Throw(NS_ERROR_OUT_OF_MEMORY);
   }

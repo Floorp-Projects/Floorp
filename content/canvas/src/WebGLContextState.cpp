@@ -423,11 +423,12 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
         {
             realGLboolean gl_bv[4] = { 0 };
             gl->fGetBooleanv(pname, gl_bv);
-            JS::Value vals[4] = { JS::BooleanValue(bool(gl_bv[0])),
-                JS::BooleanValue(bool(gl_bv[1])),
-                JS::BooleanValue(bool(gl_bv[2])),
-                JS::BooleanValue(bool(gl_bv[3])) };
-            JSObject* obj = JS_NewArrayObject(cx, 4, vals);
+            JS::AutoValueArray<4> vals(cx);
+            vals[0].setBoolean(gl_bv[0]);
+            vals[1].setBoolean(gl_bv[1]);
+            vals[2].setBoolean(gl_bv[2]);
+            vals[3].setBoolean(gl_bv[3]);
+            JSObject* obj = JS_NewArrayObject(cx, vals);
             if (!obj) {
                 rv = NS_ERROR_OUT_OF_MEMORY;
             }

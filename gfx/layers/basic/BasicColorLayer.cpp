@@ -9,6 +9,7 @@
 #include "BasicLayers.h"                // for BasicLayerManager
 #include "gfxContext.h"                 // for gfxContext, etc
 #include "gfxRect.h"                    // for gfxRect
+#include "gfx2DGlue.h"
 #include "mozilla/mozalloc.h"           // for operator new
 #include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsCOMPtr.h"                   // for already_AddRefed
@@ -43,13 +44,35 @@ public:
     ColorLayer::SetVisibleRegion(aRegion);
   }
 
-  virtual void Paint(gfxContext* aContext, Layer* aMaskLayer)
+  virtual void Paint(DrawTarget* aTarget, SourceSurface* aMaskSurface)
   {
-    if (IsHidden())
+    if (IsHidden()) {
       return;
+    }
+    CompositionOp mixBlendMode = GetEffectiveMixBlendMode();
+    CompositionOp op =
+      mixBlendMode != CompositionOp::OP_OVER ? mixBlendMode : GetOperator();
+
+    DrawOptions opts = DrawOptions();
+    opts.mCompositionOp = op;
+    ColorPattern pattern(ToColor(mColor));
+    aTarget->MaskSurface(pattern,
+                         aMaskSurface,
+                         ToIntRect(GetBounds()).TopLeft(),
+                         opts);
+  }
+
+  virtual void DeprecatedPaint(gfxContext* aContext, Layer* aMaskLayer)
+  {
+    if (IsHidden()) {
+      return;
+    }
     gfxContextAutoSaveRestore contextSR(aContext);
-    gfxContext::GraphicsOperator mixBlendMode = GetEffectiveMixBlendMode();
-    AutoSetOperator setOptimizedOperator(aContext, mixBlendMode != gfxContext::OPERATOR_OVER ? mixBlendMode : GetOperator());
+    gfxContext::GraphicsOperator mixBlendMode = DeprecatedGetEffectiveMixBlendMode();
+    AutoSetOperator setOptimizedOperator(aContext,
+                                         mixBlendMode != gfxContext::OPERATOR_OVER ?
+                                           mixBlendMode :
+                                           DeprecatedGetOperator());
 
     aContext->SetColor(mColor);
 
