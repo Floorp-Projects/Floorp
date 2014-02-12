@@ -44,6 +44,7 @@ const Class js::TypedObjectModuleObject::class_ = {
 
 static const JSFunctionSpec TypedObjectMethods[] = {
     JS_SELF_HOSTED_FN("objectType", "TypeOfTypedDatum", 1, 0),
+    JS_SELF_HOSTED_FN("storage", "StorageOfTypedDatum", 1, 0),
     JS_FS_END
 };
 
@@ -301,14 +302,15 @@ js::InitializeCommonTypeDescriptorProperties(JSContext *cx,
     TypeRepresentation *typeRepr =
         TypeRepresentation::fromOwnerObject(*typeReprOwnerObj);
 
+    obj->initReservedSlot(JS_DESCR_SLOT_ALIGNMENT,
+                          Int32Value(typeRepr->alignment()));
+
     // Regardless of whether the data is transparent, we always
     // store the internal size/alignment slots.
     if (typeRepr->isSized()) {
         SizedTypeRepresentation *sizedTypeRepr = typeRepr->asSized();
         obj->initReservedSlot(JS_DESCR_SLOT_SIZE,
                               Int32Value(sizedTypeRepr->size()));
-        obj->initReservedSlot(JS_DESCR_SLOT_ALIGNMENT,
-                              Int32Value(sizedTypeRepr->alignment()));
     }
 
     // If data is transparent, also store the public slots.
@@ -1142,21 +1144,17 @@ TypedObjectModuleObject::getSuitableClaspAndProto(JSContext *cx,
  * TypedObject.h.
  */
 
-template<class T>
-/*static*/ T *
+/*static*/ TypedDatum *
 TypedDatum::createUnattached(JSContext *cx,
-                             HandleTypeDescr type,
+                             HandleTypeDescr descr,
                              int32_t length)
 {
-    JS_STATIC_ASSERT(T::IsTypedDatumClass);
-
-    RootedObject obj(cx);
-    obj = createUnattachedWithClass(cx, &T::class_, type, length);
-    if (!obj)
-        return nullptr;
-
-    return &obj->as<T>();
+    if (descr->opaque())
+        return createUnattachedWithClass(cx, &TypedHandle::class_, descr, length);
+    else
+        return createUnattachedWithClass(cx, &TypedObject::class_, descr, length);
 }
+
 
 /*static*/ TypedDatum *
 TypedDatum::createUnattachedWithClass(JSContext *cx,
@@ -1187,9 +1185,13 @@ TypedDatum::createUnattachedWithClass(JSContext *cx,
         return nullptr;
 
     obj->setPrivate(nullptr);
-    obj->initReservedSlot(JS_DATUM_SLOT_TYPE_DESCR, ObjectValue(*type));
+    obj->initReservedSlot(JS_DATUM_SLOT_BYTEOFFSET, Int32Value(0));
+    obj->initReservedSlot(JS_DATUM_SLOT_BYTELENGTH, Int32Value(0));
     obj->initReservedSlot(JS_DATUM_SLOT_OWNER, NullValue());
+    obj->initReservedSlot(JS_DATUM_SLOT_NEXT_VIEW, PrivateValue(nullptr));
+    obj->initReservedSlot(JS_DATUM_SLOT_NEXT_BUFFER, PrivateValue(UNSET_BUFFER_LINK));
     obj->initReservedSlot(JS_DATUM_SLOT_LENGTH, Int32Value(length));
+    obj->initReservedSlot(JS_DATUM_SLOT_TYPE_DESCR, ObjectValue(*type));
 
     // Tag the type object for this instance with the type
     // representation, if that has not been done already.
@@ -1206,26 +1208,21 @@ TypedDatum::createUnattachedWithClass(JSContext *cx,
 }
 
 void
-TypedDatum::attach(uint8_t *memory)
+TypedDatum::attach(ArrayBufferObject &buffer, int32_t offset)
 {
-    setPrivate(memory);
-    setReservedSlot(JS_DATUM_SLOT_OWNER, ObjectValue(*this));
+    JS_ASSERT(offset >= 0);
+    JS_ASSERT(offset + size() <= buffer.byteLength());
+
+    buffer.addView(this);
+    setPrivate(buffer.dataPointer() + offset);
+    setReservedSlot(JS_DATUM_SLOT_BYTEOFFSET, Int32Value(offset));
+    setReservedSlot(JS_DATUM_SLOT_OWNER, ObjectValue(buffer));
 }
 
 void
-TypedDatum::attach(TypedDatum &datum, uint32_t offset)
+TypedDatum::attach(TypedDatum &datum, int32_t offset)
 {
-    JS_ASSERT(datum.getReservedSlot(JS_DATUM_SLOT_OWNER).isObject());
-    JS_ASSERT(offset + size() <= datum.size());
-
-    // find the location in memory
-    uint8_t *mem = datum.typedMem(offset);
-
-    // find the owner, which is often but not always `datum`
-    TypedDatum &owner = datum.owner();
-
-    setPrivate(mem);
-    setReservedSlot(JS_DATUM_SLOT_OWNER, ObjectValue(owner));
+    attach(datum.owner(), datum.offset() + offset);
 }
 
 // Returns a suitable JS_DATUM_SLOT_LENGTH value for an instance of
@@ -1260,13 +1257,70 @@ TypedDatum::createDerived(JSContext *cx, HandleSizedTypeDescr type,
     int32_t length = DatumLengthFromType(*type);
 
     const js::Class *clasp = datum->getClass();
-    Rooted<TypedDatum*> obj(
-        cx, createUnattachedWithClass(cx, clasp, type, length));
+    Rooted<TypedDatum*> obj(cx);
+    obj = createUnattachedWithClass(cx, clasp, type, length);
     if (!obj)
         return nullptr;
 
     obj->attach(*datum, offset);
     return obj;
+}
+
+/*static*/ TypedDatum *
+TypedDatum::createZeroed(JSContext *cx,
+                         HandleTypeDescr descr,
+                         int32_t length)
+{
+    // Create unattached wrapper object.
+    Rooted<TypedDatum*> obj(cx, createUnattached(cx, descr, length));
+    if (!obj)
+        return nullptr;
+
+    // Allocate and initialize the memory for this instance.
+    // Also initialize the JS_DATUM_SLOT_LENGTH slot.
+    TypeRepresentation *typeRepr = descr->typeRepresentation();
+    switch (descr->kind()) {
+      case TypeDescr::Scalar:
+      case TypeDescr::Reference:
+      case TypeDescr::Struct:
+      case TypeDescr::X4:
+      case TypeDescr::SizedArray:
+      {
+        size_t totalSize = descr->as<SizedTypeDescr>().size();
+        Rooted<ArrayBufferObject*> buffer(cx);
+        buffer = ArrayBufferObject::create(cx, totalSize, false);
+        if (!buffer)
+            return nullptr;
+        typeRepr->asSized()->initInstance(cx->runtime(), buffer->dataPointer(), 1);
+        obj->attach(*buffer, 0);
+        return obj;
+      }
+
+      case TypeDescr::UnsizedArray:
+      {
+        SizedTypeRepresentation *elementTypeRepr =
+            typeRepr->asUnsizedArray()->element();
+
+        int32_t totalSize;
+        if (!SafeMul(elementTypeRepr->size(), length, &totalSize)) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
+                                 JSMSG_TYPEDOBJECT_TOO_BIG);
+            return nullptr;
+        }
+
+        Rooted<ArrayBufferObject*> buffer(cx);
+        buffer = ArrayBufferObject::create(cx, totalSize, false);
+        if (!buffer)
+            return nullptr;
+
+        if (length)
+            elementTypeRepr->initInstance(cx->runtime(), buffer->dataPointer(), length);
+        obj->attach(*buffer, 0);
+        return obj;
+      }
+    }
+
+    MOZ_ASSUME_UNREACHABLE("Bad TypeRepresentation Kind");
 }
 
 static bool
@@ -1305,12 +1359,13 @@ ReportDatumTypeError(JSContext *cx,
 /*static*/ void
 TypedDatum::obj_trace(JSTracer *trace, JSObject *object)
 {
+    gc::MarkSlot(trace, &object->getReservedSlotRef(JS_DATUM_SLOT_TYPE_DESCR),
+                 "TypedObjectTypeDescr");
+
+    ArrayBufferViewObject::trace(trace, object);
+
     JS_ASSERT(object->is<TypedDatum>());
     TypedDatum &datum = object->as<TypedDatum>();
-
-    for (size_t i = 0; i < JS_DATUM_SLOTS; i++)
-        gc::MarkSlot(trace, &object->getReservedSlotRef(i), "TypedObjectSlot");
-
     TypeRepresentation *repr = datum.typeRepresentation();
     if (repr->opaque()) {
         uint8_t *mem = datum.typedMem();
@@ -1330,23 +1385,6 @@ TypedDatum::obj_trace(JSTracer *trace, JSObject *object)
             repr->asUnsizedArray()->element()->traceInstance(trace, mem, datum.length());
             break;
         }
-    }
-}
-
-/*static*/ void
-TypedDatum::obj_finalize(js::FreeOp *op, JSObject *obj)
-{
-    // if the obj owns the memory, indicating by the owner slot being
-    // set to itself, then we must free it when finalized.
-
-    JS_ASSERT(obj->getReservedSlotRef(JS_DATUM_SLOT_OWNER).isObjectOrNull());
-
-    if (obj->getReservedSlot(JS_DATUM_SLOT_OWNER).isNull())
-        return; // Unattached
-
-    if (&obj->getReservedSlot(JS_DATUM_SLOT_OWNER).toObject() == obj) {
-        JS_ASSERT(obj->getPrivate());
-        op->free_(obj->getPrivate());
     }
 }
 
@@ -1952,7 +1990,17 @@ TypedDatum::obj_enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op,
 /* static */ size_t
 TypedDatum::dataOffset()
 {
-    return JSObject::getPrivateDataOffset(JS_DATUM_SLOTS);
+    // the offset of 7 is based on the alloc kind
+    return JSObject::getPrivateDataOffset(JS_DATUM_SLOT_DATA);
+}
+
+void
+TypedDatum::neuter(JSContext *cx)
+{
+    setSlot(JS_DATUM_SLOT_LENGTH, Int32Value(0));
+    setSlot(JS_DATUM_SLOT_BYTELENGTH, Int32Value(0));
+    setSlot(JS_DATUM_SLOT_BYTEOFFSET, Int32Value(0));
+    setPrivate(nullptr);
 }
 
 /******************************************************************************
@@ -1972,7 +2020,7 @@ const Class TypedObject::class_ = {
     JS_EnumerateStub,
     JS_ResolveStub,
     JS_ConvertStub,
-    TypedDatum::obj_finalize,
+    nullptr,        /* finalize    */
     nullptr,        /* call        */
     nullptr,        /* construct   */
     nullptr,        /* hasInstance */
@@ -2028,74 +2076,36 @@ LengthForType(TypeDescr &descr)
     MOZ_ASSUME_UNREACHABLE("Invalid kind");
 }
 
-/*static*/ TypedObject *
-TypedObject::createZeroed(JSContext *cx,
-                          HandleTypeDescr descr,
-                          int32_t length)
+static bool
+CheckOffset(int32_t offset,
+            int32_t size,
+            int32_t alignment,
+            int32_t bufferLength)
 {
-    // Create unattached wrapper object.
-    Rooted<TypedObject*> obj(cx);
-    obj = createUnattached<TypedObject>(cx, descr, length);
-    if (!obj)
-        return nullptr;
+    JS_ASSERT(size >= 0);
+    JS_ASSERT(alignment >= 0);
 
-    // Allocate and initialize the memory for this instance.
-    // Also initialize the JS_DATUM_SLOT_LENGTH slot.
-    TypeRepresentation *typeRepr = descr->typeRepresentation();
-    switch (descr->kind()) {
-      case TypeDescr::Scalar:
-      case TypeDescr::Reference:
-      case TypeDescr::Struct:
-      case TypeDescr::X4:
-      {
-        uint8_t *memory =
-            (uint8_t*) cx->malloc_(descr->as<SizedTypeDescr>().size());
-        if (!memory)
-            return nullptr;
-        typeRepr->asSized()->initInstance(cx->runtime(), memory, 1);
-        obj->attach(memory);
-        return obj;
-      }
+    // No negative offsets.
+    if (offset < 0)
+        return false;
 
-      case TypeDescr::SizedArray:
-      {
-        uint8_t *memory =
-            (uint8_t*) cx->malloc_(descr->as<SizedTypeDescr>().size());
-        if (!memory)
-            return nullptr;
-        typeRepr->asSizedArray()->initInstance(cx->runtime(), memory, 1);
-        obj->attach(memory);
-        return obj;
-      }
+    // Offset (plus size) must be fully contained within the buffer.
+    if (offset > bufferLength)
+        return false;
+    if (offset + size < offset)
+        return false;
+    if (offset + size > bufferLength)
+        return false;
 
-      case TypeDescr::UnsizedArray:
-      {
-        SizedTypeRepresentation *elementTypeRepr =
-            typeRepr->asUnsizedArray()->element();
+    // Offset must be aligned.
+    if ((offset % alignment) != 0)
+        return false;
 
-        int32_t totalSize;
-        if (!SafeMul(elementTypeRepr->size(), length, &totalSize)) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
-                                 JSMSG_TYPEDOBJECT_TOO_BIG);
-            return nullptr;
-        }
-
-        uint8_t *memory = (uint8_t*) JS_malloc(cx, totalSize);
-        if (!memory)
-            return nullptr;
-
-        if (length)
-            elementTypeRepr->initInstance(cx->runtime(), memory, length);
-        obj->attach(memory);
-        return obj;
-      }
-    }
-
-    MOZ_ASSUME_UNREACHABLE("Bad TypeRepresentation Kind");
+    return true;
 }
 
 /*static*/ bool
-TypedObject::constructSized(JSContext *cx, unsigned int argc, Value *vp)
+TypedDatum::constructSized(JSContext *cx, unsigned int argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -2106,10 +2116,8 @@ TypedObject::constructSized(JSContext *cx, unsigned int argc, Value *vp)
     // three ways, in order of precedence:
     //
     //   new TypeObj()
-    //   new TypeObj(buffer, [offset]) [1]
+    //   new TypeObj(buffer, [offset])
     //   new TypeObj(data)
-    //
-    // [1] coming in a later patch in this series
 
     // Zero argument constructor:
     if (argc == 0) {
@@ -2117,6 +2125,48 @@ TypedObject::constructSized(JSContext *cx, unsigned int argc, Value *vp)
         Rooted<TypedDatum*> obj(cx, createZeroed(cx, callee, length));
         if (!obj)
             return false;
+        args.rval().setObject(*obj);
+        return true;
+    }
+
+    // Buffer constructor.
+    if (args[0].isObject() && args[0].toObject().is<ArrayBufferObject>()) {
+        Rooted<ArrayBufferObject*> buffer(cx);
+        buffer = &args[0].toObject().as<ArrayBufferObject>();
+
+        int32_t offset;
+        if (argc >= 2 && !args[1].isUndefined()) {
+            if (!args[1].isInt32()) {
+                JS_ReportErrorNumber(cx, js_GetErrorMessage,
+                                     nullptr, JSMSG_TYPEDOBJECT_BAD_ARGS);
+                return false;
+            }
+
+            offset = args[1].toInt32();
+        } else {
+            offset = 0;
+        }
+
+        if (argc >= 3 && !args[2].isUndefined()) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage,
+                                 nullptr, JSMSG_TYPEDOBJECT_BAD_ARGS);
+            return false;
+        }
+
+        if (!CheckOffset(offset, callee->size(), callee->alignment(),
+                         buffer->byteLength()))
+        {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage,
+                                 nullptr, JSMSG_TYPEDOBJECT_BAD_ARGS);
+            return false;
+        }
+
+        Rooted<TypedDatum*> obj(cx);
+        obj = TypedDatum::createUnattached(cx, callee, LengthForType(*callee));
+        if (!obj)
+            return false;
+
+        obj->attach(*buffer, offset);
         args.rval().setObject(*obj);
         return true;
     }
@@ -2143,7 +2193,7 @@ TypedObject::constructSized(JSContext *cx, unsigned int argc, Value *vp)
 }
 
 /*static*/ bool
-TypedObject::constructUnsized(JSContext *cx, unsigned int argc, Value *vp)
+TypedDatum::constructUnsized(JSContext *cx, unsigned int argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -2154,12 +2204,12 @@ TypedObject::constructUnsized(JSContext *cx, unsigned int argc, Value *vp)
     // Typed object constructors for unsized arrays are overloaded in
     // four ways, in order of precedence:
     //
-    //   new TypeObj(buffer, [offset, [length]]) [1]
-    //   new TypeObj(length)
+    //   new TypeObj(buffer, [offset, [length]]) // [1]
+    //   new TypeObj(length)                     // [1]
     //   new TypeObj(data)
     //   new TypeObj()
     //
-    // [1] coming in a later patch in this series
+    // [1] Explicit lengths only available for unsized arrays.
 
     // Zero argument constructor:
     if (argc == 0) {
@@ -2178,6 +2228,66 @@ TypedObject::constructUnsized(JSContext *cx, unsigned int argc, Value *vp)
             return false;
         args.rval().setObject(*obj);
         return true;
+    }
+
+    // Buffer constructor.
+    if (args[0].isObject() && args[0].toObject().is<ArrayBufferObject>()) {
+        Rooted<ArrayBufferObject*> buffer(cx);
+        buffer = &args[0].toObject().as<ArrayBufferObject>();
+
+        int32_t offset;
+        if (argc >= 2 && !args[1].isUndefined()) {
+            if (!args[1].isInt32()) {
+                JS_ReportErrorNumber(cx, js_GetErrorMessage,
+                                     nullptr, JSMSG_TYPEDOBJECT_BAD_ARGS);
+                return false;
+            }
+
+            offset = args[1].toInt32();
+        } else {
+            offset = 0;
+        }
+
+        if (!CheckOffset(offset, 0, callee->alignment(), buffer->byteLength())) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage,
+                                 nullptr, JSMSG_TYPEDOBJECT_BAD_ARGS);
+            return false;
+        }
+
+        int32_t elemSize = callee->elementType().size();
+        int32_t bytesRemaining = buffer->byteLength() - offset;
+        int32_t maximumLength = bytesRemaining / elemSize;
+
+        int32_t length;
+        if (argc >= 3 && !args[2].isUndefined()) {
+            if (!args[2].isInt32()) {
+                JS_ReportErrorNumber(cx, js_GetErrorMessage,
+                                     nullptr, JSMSG_TYPEDOBJECT_BAD_ARGS);
+                return false;
+            }
+            length = args[2].toInt32();
+
+            if (length < 0 || length > maximumLength) {
+                JS_ReportErrorNumber(cx, js_GetErrorMessage,
+                                     nullptr, JSMSG_TYPEDOBJECT_BAD_ARGS);
+                return false;
+            }
+        } else {
+            if ((bytesRemaining % elemSize) != 0) {
+                JS_ReportErrorNumber(cx, js_GetErrorMessage,
+                                     nullptr, JSMSG_TYPEDOBJECT_BAD_ARGS);
+                return false;
+            }
+
+            length = maximumLength;
+        }
+
+        Rooted<TypedDatum*> obj(cx);
+        obj = TypedDatum::createUnattached(cx, callee, length);
+        if (!obj)
+            return false;
+
+        obj->attach(args[0].toObject().as<ArrayBufferObject>(), offset);
     }
 
     // Data constructor for unsized values
@@ -2238,7 +2348,7 @@ const Class TypedHandle::class_ = {
     JS_EnumerateStub,
     JS_ResolveStub,
     JS_ConvertStub,
-    TypedDatum::obj_finalize,
+    nullptr,        /* finalize    */
     nullptr,        /* call        */
     nullptr,        /* construct   */
     nullptr,        /* hasInstance */
@@ -2295,8 +2405,8 @@ js::NewTypedHandle(JSContext *cx, unsigned argc, Value *vp)
 
     Rooted<SizedTypeDescr*> descr(cx, &args[0].toObject().as<SizedTypeDescr>());
     int32_t length = DatumLengthFromType(*descr);
-    Rooted<TypedHandle*> obj(cx);
-    obj = TypedDatum::createUnattached<TypedHandle>(cx, descr, length);
+    Rooted<TypedDatum*> obj(cx);
+    obj = TypedDatum::createUnattachedWithClass(cx, &TypedHandle::class_, descr, length);
     if (!obj)
         return false;
     args.rval().setObject(*obj);
@@ -2358,20 +2468,6 @@ JS_JITINFO_NATIVE_PARALLEL_THREADSAFE(js::ObjectIsTypeDescrJitInfo, ObjectIsType
                                       js::ObjectIsTypeDescr);
 
 bool
-js::ObjectIsTypeRepresentation(ThreadSafeContext *, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    JS_ASSERT(argc == 1);
-    JS_ASSERT(args[0].isObject());
-    args.rval().setBoolean(TypeRepresentation::isOwnerObject(args[0].toObject()));
-    return true;
-}
-
-JS_JITINFO_NATIVE_PARALLEL_THREADSAFE(js::ObjectIsTypeRepresentationJitInfo,
-                                      ObjectIsTypeRepresentationJitInfo,
-                                      js::ObjectIsTypeRepresentation);
-
-bool
 js::ObjectIsTypedHandle(ThreadSafeContext *, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -2398,7 +2494,7 @@ JS_JITINFO_NATIVE_PARALLEL_THREADSAFE(js::ObjectIsTypedObjectJitInfo, ObjectIsTy
                                       js::ObjectIsTypedObject);
 
 bool
-js::IsAttached(ThreadSafeContext *cx, unsigned argc, Value *vp)
+js::DatumIsAttached(ThreadSafeContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     JS_ASSERT(args[0].isObject() && args[0].toObject().is<TypedDatum>());
@@ -2407,7 +2503,7 @@ js::IsAttached(ThreadSafeContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-JS_JITINFO_NATIVE_PARALLEL_THREADSAFE(js::IsAttachedJitInfo, IsAttachedJitInfo, js::IsAttached);
+JS_JITINFO_NATIVE_PARALLEL_THREADSAFE(js::DatumIsAttachedJitInfo, DatumIsAttachedJitInfo, js::DatumIsAttached);
 
 bool
 js::ClampToUint8(ThreadSafeContext *, unsigned argc, Value *vp)

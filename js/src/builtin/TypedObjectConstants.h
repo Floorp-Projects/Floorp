@@ -19,8 +19,8 @@
 
 // Slots on all type objects
 #define JS_DESCR_SLOT_TYPE_REPR          0  // Associated Type Representation
-#define JS_DESCR_SLOT_SIZE               1  // Size in bytes, if sized
-#define JS_DESCR_SLOT_ALIGNMENT          2  // Alignment in bytes, if sized
+#define JS_DESCR_SLOT_ALIGNMENT          1  // Alignment in bytes
+#define JS_DESCR_SLOT_SIZE               2  // Size in bytes, if sized, else 0
 
 // Slots on scalars, references, and x4s
 #define JS_DESCR_SLOT_TYPE               3  // Type code
@@ -103,12 +103,21 @@
 #define JS_X4TYPEREPR_FLOAT32       1
 
 ///////////////////////////////////////////////////////////////////////////
-// Slots for typed objects (actually, any TypedContents objects)
+// Slots for datums (base class of all typed objects)
 
-#define JS_DATUM_SLOT_TYPE_DESCR 0  // Type descr for a given typed object
-#define JS_DATUM_SLOT_OWNER      1  // Owner of data (if null, this is owner)
-#define JS_DATUM_SLOT_LENGTH     2  // Length of array (see (*) below)
-#define JS_DATUM_SLOTS           3  // Number of slots for typed objs
+#define JS_DATUM_SLOT_BYTEOFFSET       0
+#define JS_DATUM_SLOT_BYTELENGTH       1
+#define JS_DATUM_SLOT_OWNER            2
+#define JS_DATUM_SLOT_NEXT_VIEW        3
+#define JS_DATUM_SLOT_NEXT_BUFFER      4
+
+#define JS_DATAVIEW_SLOTS              5 // Number of slots for data views
+
+#define JS_DATUM_SLOT_LENGTH           5 // Length of array (see (*) below)
+#define JS_DATUM_SLOT_TYPE_DESCR       6 // For typed objects, type descr
+
+#define JS_DATUM_SLOT_DATA             7 // private slot, based on alloc kind
+#define JS_DATUM_SLOTS                 7 // Number of slots for typed objs
 
 // (*) The JS_DATUM_SLOT_LENGTH slot stores the length for datums of
 // sized and unsized array type. The slot contains 0 for non-arrays.
