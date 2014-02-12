@@ -3396,7 +3396,11 @@ OverflowableToolbar.prototype = {
         this._onResize(aEvent);
         break;
       case "command":
-        this._onClickChevron(aEvent);
+        if (aEvent.target == this._chevron) {
+          this._onClickChevron(aEvent);
+        } else {
+          this._panel.hidePopup();
+        }
         break;
       case "popuphiding":
         this._onPanelHiding(aEvent);
@@ -3431,11 +3435,13 @@ OverflowableToolbar.prototype = {
   },
 
   _onClickChevron: function(aEvent) {
-    if (this._chevron.open)
+    if (this._chevron.open) {
       this._panel.hidePopup();
-    else {
+    } else {
       let doc = aEvent.target.ownerDocument;
       this._panel.hidden = false;
+      let contextMenu = doc.getElementById(this._panel.getAttribute("context"));
+      gELS.addSystemEventListener(contextMenu, 'command', this, true);
       let anchor = doc.getAnonymousElementByAttribute(this._chevron, "class", "toolbarbutton-icon");
       this._panel.openPopup(anchor || this._chevron, "bottomcenter topright");
     }
@@ -3444,6 +3450,9 @@ OverflowableToolbar.prototype = {
 
   _onPanelHiding: function(aEvent) {
     this._chevron.open = false;
+    let doc = aEvent.target.ownerDocument;
+    let contextMenu = doc.getElementById(this._panel.getAttribute("context"));
+    gELS.removeSystemEventListener(contextMenu, 'command', this, true);
   },
 
   onOverflow: function(aEvent) {
