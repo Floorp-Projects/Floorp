@@ -66,7 +66,7 @@ static const uint8_t ARRAYBUFFER_RESERVED_SLOTS = JSObject::MAX_FIXED_SLOTS - 1;
 
 // Sentinel value used to initialize ArrayBufferViewObjects' NEXT_BUFFER_SLOTs
 // to show that they have not yet been added to any ArrayBufferObject list.
-js::ArrayBufferObject * const UNSET_BUFFER_LINK = reinterpret_cast<js::ArrayBufferObject*>(0x2);
+js::ArrayBufferObject * const js::UNSET_BUFFER_LINK = reinterpret_cast<js::ArrayBufferObject*>(0x2);
 
 static bool
 ValueIsLength(const Value &v, uint32_t *len)
@@ -588,7 +588,7 @@ ArrayBufferObject::addView(ArrayBufferViewObject *view)
 ArrayBufferObject *
 ArrayBufferObject::create(JSContext *cx, uint32_t nbytes, bool clear /* = true */)
 {
-    RootedObject obj(cx, NewBuiltinClassInstance(cx, &class_));
+    Rooted<ArrayBufferObject*> obj(cx, NewBuiltinClassInstance<ArrayBufferObject>(cx));
     if (!obj)
         return nullptr;
     JS_ASSERT_IF(obj->isTenured(), obj->tenuredGetAllocKind() == gc::FINALIZE_OBJECT16_BACKGROUND);
@@ -611,27 +611,25 @@ ArrayBufferObject::create(JSContext *cx, uint32_t nbytes, bool clear /* = true *
     // length. The rest of it is a flat data store for the array buffer.
     size_t usableSlots = ARRAYBUFFER_RESERVED_SLOTS - ObjectElements::VALUES_PER_HEADER;
 
-    Handle<ArrayBufferObject*> buffer = obj.as<ArrayBufferObject>();
-
     if (nbytes > sizeof(Value) * usableSlots) {
         ObjectElements *header = AllocateArrayBufferContents(cx, nbytes);
         if (!header)
             return nullptr;
-        buffer->elements = header->elements();
+        obj->elements = header->elements();
 
 #ifdef JSGC_GENERATIONAL
-        JSRuntime *rt = buffer->runtimeFromMainThread();
-        rt->gcNursery.notifyNewElements(buffer, header);
+        JSRuntime *rt = obj->runtimeFromMainThread();
+        rt->gcNursery.notifyNewElements(obj, header);
 #endif
     } else {
-        buffer->setFixedElements();
+        obj->setFixedElements();
         if (clear)
-            memset(buffer->dataPointer(), 0, nbytes);
+            memset(obj->dataPointer(), 0, nbytes);
     }
 
-    buffer->initElementsHeader(buffer->getElementsHeader(), nbytes);
+    obj->initElementsHeader(obj->getElementsHeader(), nbytes);
 
-    return buffer;
+    return obj;
 }
 
 JSObject *
@@ -2639,8 +2637,10 @@ ArrayBufferViewObject::neuter(JSContext *cx)
 {
     if (is<DataViewObject>())
         as<DataViewObject>().neuter();
-    else
+    else if (is<TypedArrayObject>())
         as<TypedArrayObject>().neuter(cx);
+    else
+        as<TypedDatum>().neuter(cx);
 }
 
 // this default implementation is only valid for integer types

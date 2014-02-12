@@ -73,6 +73,12 @@ class TypeDescr : public JSObject
     TypeRepresentation *typeRepresentation() const;
 
     TypeDescr::Kind kind() const;
+
+    bool opaque() const;
+
+    size_t alignment() {
+        return getReservedSlot(JS_DESCR_SLOT_ALIGNMENT).toInt32();
+    }
 };
 
 typedef Handle<TypeDescr*> HandleTypeDescr;
@@ -206,6 +212,8 @@ class X4TypeDescr : public SizedTypeDescr
 #define JS_FOR_EACH_X4_TYPE_REPR(macro_)                             \
     macro_(X4TypeDescr::TYPE_INT32, int32_t, int32)                  \
     macro_(X4TypeDescr::TYPE_FLOAT32, float, float32)
+
+bool IsTypedDatumClass(const Class *clasp); // Defined in TypedArrayObject.h
 
 } // namespace js
 
