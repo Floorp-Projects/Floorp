@@ -52,7 +52,8 @@ public:
     ImageLayer::SetVisibleRegion(aRegion);
   }
 
-  virtual void Paint(gfxContext* aContext, Layer* aMaskLayer);
+  virtual void Paint(DrawTarget* aTarget, SourceSurface* aMaskSurface);
+  virtual void DeprecatedPaint(gfxContext* aContext, Layer* aMaskLayer);
 
   virtual bool GetAsSurface(gfxASurface** aSurface,
                             SurfaceDescriptor* aDescriptor);
@@ -73,7 +74,13 @@ protected:
 };
 
 void
-BasicImageLayer::Paint(gfxContext* aContext, Layer* aMaskLayer)
+BasicImageLayer::Paint(DrawTarget* aTarget, SourceSurface* aMaskSurface)
+{
+  DeprecatedPaint(new gfxContext(aTarget), nullptr); //TODO: null->aMaskSurface
+}
+
+void
+BasicImageLayer::DeprecatedPaint(gfxContext* aContext, Layer* aMaskLayer)
 {
   if (IsHidden())
     return;
@@ -110,8 +117,10 @@ BasicImageLayer::GetAndPaintCurrentImage(gfxContext* aContext,
   // The visible region can extend outside the image, so just draw
   // within the image bounds.
   if (aContext) {
-    gfxContext::GraphicsOperator mixBlendMode = GetEffectiveMixBlendMode();
-    AutoSetOperator setOptimizedOperator(aContext, mixBlendMode != gfxContext::OPERATOR_OVER ? mixBlendMode : GetOperator());
+    CompositionOp mixBlendMode = GetEffectiveMixBlendMode();
+    CompositionOp op =
+      mixBlendMode != CompositionOp::OP_OVER ? mixBlendMode : GetOperator();
+    AutoSetOperator setOptimizedOperator(aContext, ThebesOp(op));
 
     PaintContext(pat,
                  nsIntRegion(nsIntRect(0, 0, size.width, size.height)),
