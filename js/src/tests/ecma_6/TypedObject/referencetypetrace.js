@@ -49,7 +49,7 @@ function TestArrayElements(RefType) {
 function TestUnsizedArrayElements(RefType) {
   var rabbit = {};
   var S1 = new ArrayType(RefType);
-  var s1 = new S1(1, [rabbit]);
+  var s1 = new S1([rabbit]);
   assertCanReach(s1, rabbit);
   s1[0] = null;
   assertCannotReach(s1, rabbit);

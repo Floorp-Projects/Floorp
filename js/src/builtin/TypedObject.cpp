@@ -238,7 +238,7 @@ const Class UnsizedArrayTypeDescr::class_ = {
     nullptr,
     nullptr,
     nullptr,
-    TypedObject::construct,
+    TypedObject::constructUnsized,
     nullptr
 };
 
@@ -255,7 +255,7 @@ const Class SizedArrayTypeDescr::class_ = {
     nullptr,
     nullptr,
     nullptr,
-    TypedObject::construct,
+    TypedObject::constructSized,
     nullptr
 };
 
@@ -543,7 +543,7 @@ const Class StructTypeDescr::class_ = {
     nullptr, /* finalize */
     nullptr, /* call */
     nullptr, /* hasInstance */
-    TypedObject::construct,
+    TypedObject::constructSized,
     nullptr  /* trace */
 };
 
@@ -2008,6 +2008,26 @@ const Class TypedObject::class_ = {
     }
 };
 
+static int32_t
+LengthForType(TypeDescr &descr)
+{
+    switch (descr.kind()) {
+      case TypeDescr::Scalar:
+      case TypeDescr::Reference:
+      case TypeDescr::Struct:
+      case TypeDescr::X4:
+        return 0;
+
+      case TypeDescr::SizedArray:
+        return descr.as<SizedArrayTypeDescr>().length();
+
+      case TypeDescr::UnsizedArray:
+        return 0;
+    }
+
+    MOZ_ASSUME_UNREACHABLE("Invalid kind");
+}
+
 /*static*/ TypedObject *
 TypedObject::createZeroed(JSContext *cx,
                           HandleTypeDescr descr,
@@ -2075,53 +2095,130 @@ TypedObject::createZeroed(JSContext *cx,
 }
 
 /*static*/ bool
-TypedObject::construct(JSContext *cx, unsigned int argc, Value *vp)
+TypedObject::constructSized(JSContext *cx, unsigned int argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    JS_ASSERT(args.callee().is<SizedTypeDescr>());
+    Rooted<SizedTypeDescr*> callee(cx, &args.callee().as<SizedTypeDescr>());
+
+    // Typed object constructors for sized types are overloaded in
+    // three ways, in order of precedence:
+    //
+    //   new TypeObj()
+    //   new TypeObj(buffer, [offset]) [1]
+    //   new TypeObj(data)
+    //
+    // [1] coming in a later patch in this series
+
+    // Zero argument constructor:
+    if (argc == 0) {
+        int32_t length = LengthForType(*callee);
+        Rooted<TypedDatum*> obj(cx, createZeroed(cx, callee, length));
+        if (!obj)
+            return false;
+        args.rval().setObject(*obj);
+        return true;
+    }
+
+    // Data constructor.
+    if (args[0].isObject()) {
+        // Create the typed object.
+        int32_t length = LengthForType(*callee);
+        Rooted<TypedDatum*> obj(cx, createZeroed(cx, callee, length));
+        if (!obj)
+            return false;
+
+        // Initialize from `arg`.
+        if (!ConvertAndCopyTo(cx, obj, args[0]))
+            return false;
+        args.rval().setObject(*obj);
+        return true;
+    }
+
+    // Something bogus.
+    JS_ReportErrorNumber(cx, js_GetErrorMessage,
+                         nullptr, JSMSG_TYPEDOBJECT_BAD_ARGS);
+    return false;
+}
+
+/*static*/ bool
+TypedObject::constructUnsized(JSContext *cx, unsigned int argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
     JS_ASSERT(args.callee().is<TypeDescr>());
-    Rooted<TypeDescr*> callee(cx, &args.callee().as<TypeDescr>());
-    TypeRepresentation *typeRepr = callee->typeRepresentation();
+    Rooted<UnsizedArrayTypeDescr*> callee(cx);
+    callee = &args.callee().as<UnsizedArrayTypeDescr>();
 
-    // Determine the length based on the target type.
-    uint32_t nextArg = 0;
-    int32_t length = 0;
-    switch (typeRepr->kind()) {
-      case TypeDescr::Scalar:
-      case TypeDescr::Reference:
-      case TypeDescr::Struct:
-      case TypeDescr::X4:
-        length = 0;
-        break;
+    // Typed object constructors for unsized arrays are overloaded in
+    // four ways, in order of precedence:
+    //
+    //   new TypeObj(buffer, [offset, [length]]) [1]
+    //   new TypeObj(length)
+    //   new TypeObj(data)
+    //   new TypeObj()
+    //
+    // [1] coming in a later patch in this series
 
-      case TypeDescr::SizedArray:
-        length = typeRepr->asSizedArray()->length();
-        break;
+    // Zero argument constructor:
+    if (argc == 0) {
+        Rooted<TypedDatum*> obj(cx, createZeroed(cx, callee, 0));
+        if (!obj)
+            return false;
+        args.rval().setObject(*obj);
+        return true;
+    }
 
-      case TypeDescr::UnsizedArray:
-        // First argument is a length.
-        if (nextArg >= argc || !args[nextArg].isInt32()) {
+    // Length constructor.
+    if (args[0].isInt32()) {
+        int32_t length = args[0].toInt32();
+        Rooted<TypedDatum*> obj(cx, createZeroed(cx, callee, length));
+        if (!obj)
+            return false;
+        args.rval().setObject(*obj);
+        return true;
+    }
+
+    // Data constructor for unsized values
+    if (args[0].isObject()) {
+        // Read length out of the object.
+        RootedObject arg(cx, &args[0].toObject());
+        RootedValue lengthVal(cx);
+        if (!JSObject::getProperty(cx, arg, arg, cx->names().length, &lengthVal))
+            return false;
+        if (!lengthVal.isInt32()) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage,
                                  nullptr, JSMSG_TYPEDOBJECT_BAD_ARGS);
             return false;
         }
-        length = args[nextArg++].toInt32();
-        break;
-    }
+        int32_t length = lengthVal.toInt32();
 
-    // Create zeroed wrapper object.
-    Rooted<TypedObject*> obj(cx, createZeroed(cx, callee, length));
-    if (!obj)
-        return nullptr;
-
-    if (nextArg < argc) {
-        RootedValue initial(cx, args[nextArg++]);
-        if (!ConvertAndCopyTo(cx, obj, initial))
+        // Check that length * elementSize does not overflow.
+        int32_t elementSize = callee->elementType().size();
+        int32_t byteLength;
+        if (!SafeMul(elementSize, length, &byteLength)) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage,
+                                 nullptr, JSMSG_TYPEDOBJECT_BAD_ARGS);
             return false;
+        }
+
+        // Create the unsized array.
+        Rooted<TypedDatum*> obj(cx, createZeroed(cx, callee, length));
+        if (!obj)
+            return false;
+
+        // Initialize from `arg`
+        if (!ConvertAndCopyTo(cx, obj, args[0]))
+            return false;
+        args.rval().setObject(*obj);
+        return true;
     }
 
-    args.rval().setObject(*obj);
-    return true;
+    // Something bogus.
+    JS_ReportErrorNumber(cx, js_GetErrorMessage,
+                         nullptr, JSMSG_TYPEDOBJECT_BAD_ARGS);
+    return false;
 }
 
 /******************************************************************************

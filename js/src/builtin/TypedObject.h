@@ -452,7 +452,10 @@ class TypedObject : public TypedDatum
                                      int32_t length);
 
     // user-accessible constructor (`new TypeDescriptor(...)`)
-    static bool construct(JSContext *cx, unsigned argc, Value *vp);
+    static bool constructSized(JSContext *cx, unsigned argc, Value *vp);
+
+    // user-accessible constructor (`new TypeDescriptor(...)`)
+    static bool constructUnsized(JSContext *cx, unsigned argc, Value *vp);
 };
 
 typedef Handle<TypedObject*> HandleTypedObject;
