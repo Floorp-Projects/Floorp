@@ -2097,10 +2097,6 @@ RadioInterface.prototype = {
       case "cdmaCallWaiting":
         gTelephonyProvider.notifyCdmaCallWaiting(this.clientId, message.number);
         break;
-      case "callError":
-        gTelephonyProvider.notifyCallError(this.clientId, message.callIndex,
-                                           message.errorMsg);
-        break;
       case "suppSvcNotification":
         gTelephonyProvider.notifySupplementaryService(this.clientId,
                                                       message.callIndex,
