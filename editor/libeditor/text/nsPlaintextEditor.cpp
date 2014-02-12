@@ -696,8 +696,7 @@ NS_IMETHODIMP nsPlaintextEditor::InsertText(const nsAString &aStringToInsert)
   nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
 
   EditAction opID = EditAction::insertText;
-  if (mInIMEMode) 
-  {
+  if (mComposition) {
     opID = EditAction::insertIMEText;
   }
   nsAutoPlaceHolderBatch batch(this, nullptr); 
@@ -814,7 +813,7 @@ NS_IMETHODIMP nsPlaintextEditor::InsertLineBreak()
 nsresult
 nsPlaintextEditor::BeginIMEComposition(WidgetCompositionEvent* aEvent)
 {
-  NS_ENSURE_TRUE(!mInIMEMode, NS_OK);
+  NS_ENSURE_TRUE(!mComposition, NS_OK);
 
   if (IsPasswordEditor()) {
     NS_ENSURE_TRUE(mRules, NS_ERROR_NULL_POINTER);
@@ -839,7 +838,6 @@ nsPlaintextEditor::UpdateIMEComposition(nsIDOMEvent* aDOMTextEvent)
   NS_ENSURE_TRUE(widgetTextEvent, NS_ERROR_INVALID_ARG);
 
   EnsureComposition(widgetTextEvent);
-  mInIMEMode = true;
 
   nsCOMPtr<nsIPresShell> ps = GetPresShell();
   NS_ENSURE_TRUE(ps, NS_ERROR_NOT_INITIALIZED);

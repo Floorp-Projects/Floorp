@@ -144,7 +144,6 @@ nsEditor::nsEditor()
 ,  mDirection(eNone)
 ,  mDocDirtyState(-1)
 ,  mSpellcheckCheckboxState(eTriUnset)
-,  mInIMEMode(false)
 ,  mIsIMEComposing(false)
 ,  mShouldTxnSetSelection(true)
 ,  mDidPreDestroy(false)
@@ -967,7 +966,9 @@ nsEditor::EndPlaceHolderTransaction()
       }
       // notify editor observers of action but if composing, it's done by
       // text event handler.
-      if (!mInIMEMode) NotifyEditorObservers();
+      if (!mComposition) {
+        NotifyEditorObservers();
+      }
     }
   }
   mPlaceHolderBatch--;
@@ -2030,7 +2031,6 @@ nsEditor::BeginIMEComposition(WidgetCompositionEvent* aCompositionEvent)
 {
   MOZ_ASSERT(!mComposition, "There is composition already");
   EnsureComposition(aCompositionEvent);
-  mInIMEMode = true;
   if (mPhonetic) {
     mPhonetic->Truncate(0);
   }
@@ -2040,7 +2040,7 @@ nsEditor::BeginIMEComposition(WidgetCompositionEvent* aCompositionEvent)
 void
 nsEditor::EndIMEComposition()
 {
-  NS_ENSURE_TRUE_VOID(mInIMEMode); // nothing to do
+  NS_ENSURE_TRUE_VOID(mComposition); // nothing to do
 
   // commit the IME transaction..we can get at it via the transaction mgr.
   // Note that this means IME won't work without an undo stack!
@@ -2058,7 +2058,6 @@ nsEditor::EndIMEComposition()
   mIMETextNode = nullptr;
   mIMETextOffset = 0;
   mIMEBufferLength = 0;
-  mInIMEMode = false;
   mIsIMEComposing = false;
   mComposition = nullptr;
 
@@ -2090,7 +2089,7 @@ nsEditor::ForceCompositionEnd()
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  if (!mInIMEMode) {
+  if (!mComposition) {
     // XXXmnakano see bug 558976, ResetInputState() has two meaning which are
     // "commit the composition" and "cursor is moved".  This method name is
     // "ForceCompositionEnd", so, ResetInputState() should be used only for the
@@ -2329,7 +2328,7 @@ nsEditor::InsertTextImpl(const nsAString& aStringToInsert,
 
   NS_ENSURE_TRUE(aInOutNode && *aInOutNode && aInOutOffset && aDoc,
                  NS_ERROR_NULL_POINTER);
-  if (!mInIMEMode && aStringToInsert.IsEmpty()) {
+  if (!mComposition && aStringToInsert.IsEmpty()) {
     return NS_OK;
   }
 
@@ -2369,7 +2368,7 @@ nsEditor::InsertTextImpl(const nsAString& aStringToInsert,
   }
 
   nsresult res;
-  if (mInIMEMode) {
+  if (mComposition) {
     if (!node->IsNodeOfType(nsINode::eTEXT)) {
       // create a text node
       nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDoc);
@@ -2424,7 +2423,7 @@ nsresult nsEditor::InsertTextIntoTextNodeImpl(const nsAString& aStringToInsert,
   bool isIMETransaction = false;
   // aSuppressIME is used when editor must insert text, yet this text is not
   // part of current ime operation.  example: adjusting whitespace around an ime insertion.
-  if (mIMETextRangeList && mInIMEMode && !aSuppressIME)
+  if (mIMETextRangeList && mComposition && !aSuppressIME)
   {
     if (!mIMETextNode)
     {
