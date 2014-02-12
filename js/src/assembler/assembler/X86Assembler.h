@@ -740,6 +740,11 @@ public:
         spew("fstp       %s0x%x(%s)", PRETTY_PRINT_OFFSET(offset), nameIReg(base));
         m_formatter.oneByteOp(OP_FPU6, FPU6_OP_FSTP, base, offset);
     }
+    void fstp32_m(int offset, RegisterID base)
+    {
+        spew("fstp32     %s0x%x(%s)", PRETTY_PRINT_OFFSET(offset), nameIReg(base));
+        m_formatter.oneByteOp(OP_FLD32, FPU6_OP_FSTP, base, offset);
+    }
 
     void negl_r(RegisterID dst)
     {
