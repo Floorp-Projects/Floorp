@@ -132,7 +132,7 @@ public class FennecNativeDriver implements Driver {
             return null;
         }
         if (mLocators.containsKey(name)) {
-            return new FennecNativeElement(Integer.decode((String)mLocators.get(name)), activity, mSolo);
+            return new FennecNativeElement(Integer.decode((String)mLocators.get(name)), activity);
         }
         FennecNativeDriver.log(FennecNativeDriver.LogLevel.ERROR,
             "findElement: Element '"+name+"' does not exist in the list");
