@@ -444,10 +444,12 @@ LayerManagerComposite::Render()
   /** Our more efficient but less powerful alter ego, if one is available. */
   nsRefPtr<Composer2D> composer2D = mCompositor->GetWidget()->GetComposer2D();
 
-  if (mFPS && composer2D && composer2D->TryRender(mRoot, mWorldMatrix)) {
-    double fps = mFPS->mCompositionFps.AddFrameAndGetFps(TimeStamp::Now());
-    if (gfxPlatform::GetPrefLayersDrawFPS()) {
-      printf_stderr("HWComposer: FPS is %g\n", fps);
+  if (composer2D && composer2D->TryRender(mRoot, mWorldMatrix)) {
+    if (mFPS) {
+      double fps = mFPS->mCompositionFps.AddFrameAndGetFps(TimeStamp::Now());
+      if (gfxPlatform::GetPrefLayersDrawFPS()) {
+        printf_stderr("HWComposer: FPS is %g\n", fps);
+      }
     }
     mCompositor->EndFrameForExternalComposition(mWorldMatrix);
     return;
