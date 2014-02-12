@@ -202,7 +202,7 @@ public class testBrowserProvider extends ContentProviderTest {
 
     @Override
     public void setUp() throws Exception {
-        super.setUp("org.mozilla.gecko.db.BrowserProvider", BrowserContract.AUTHORITY, "browser.db");
+        super.setUp(sBrowserProviderCallable, BrowserContract.AUTHORITY, "browser.db");
 
         mTests.add(new TestSpecialFolders());
 

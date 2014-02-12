@@ -22,8 +22,10 @@ import android.test.mock.MockContext;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.concurrent.Callable;
 
 import org.mozilla.gecko.db.BrowserContract;
+import org.mozilla.gecko.db.BrowserProvider;
 
 /*
  * ContentProviderTest provides the infrastructure to run content provider
@@ -47,10 +49,8 @@ import org.mozilla.gecko.db.BrowserContract;
 abstract class ContentProviderTest extends BaseTest {
     protected ContentProvider mProvider;
     protected ChangeRecordingMockContentResolver mResolver;
-    protected ClassLoader mClassLoader;
     protected ArrayList<Runnable> mTests;
     protected String mDatabaseName;
-    protected Class mProviderClass;
     protected String mProviderAuthority;
     protected IsolatedContext mProviderContext;
 
@@ -171,7 +171,20 @@ abstract class ContentProviderTest extends BaseTest {
         }
     }
 
-    private void setUpContentProvider() throws Exception {
+    /**
+     * Factory function that makes new ContentProvider instances.
+     * <p>
+     * We want a fresh provider each test, so this should be invoked in
+     * <code>setUp</code> before each individual test.
+     */
+    protected static Callable<ContentProvider> sBrowserProviderCallable = new Callable<ContentProvider>() {
+        @Override
+        public ContentProvider call() {
+            return new BrowserProvider();
+        }
+    };
+
+    private void setUpContentProvider(ContentProvider targetProvider) throws Exception {
         mResolver = new ChangeRecordingMockContentResolver();
 
         final String filenamePrefix = this.getClass().getSimpleName() + ".";
@@ -183,7 +196,6 @@ abstract class ContentProviderTest extends BaseTest {
 
         mProviderContext = new IsolatedContext(mResolver, targetContextWrapper);
 
-        ContentProvider targetProvider = (ContentProvider) mProviderClass.newInstance();
         targetProvider.attachInfo(mProviderContext, null);
 
         mProvider = new DelegatingTestContentProvider(targetProvider);
@@ -202,21 +214,18 @@ abstract class ContentProviderTest extends BaseTest {
 
     @Override
     public void setUp() throws Exception {
-        throw new Exception("You should call setUp(providerClassName, authorityUriField, databaseName) instead");
+        throw new UnsupportedOperationException("You should call setUp(authority, databaseName) instead");
     }
 
-    // TODO: Take the actual class as an arg.
-    public void setUp(String providerClassName, String authority, String databaseName) throws Exception {
+    public void setUp(Callable<ContentProvider> contentProviderFactory, String authority, String databaseName) throws Exception {
         super.setUp();
 
-        mClassLoader = getInstrumentation().getContext().getClassLoader();
         mTests = new ArrayList<Runnable>();
         mDatabaseName = databaseName;
 
         mProviderAuthority = authority;
-        mProviderClass = mClassLoader.loadClass(providerClassName);
 
-        setUpContentProvider();
+        setUpContentProvider(contentProviderFactory.call());
     }
 
     @Override
