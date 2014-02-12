@@ -720,7 +720,7 @@ public class GeckoAppShell
         gRestartScheduled = true;
     }
 
-    public static Intent getWebAppIntent(String aURI, String aOrigin, String aTitle, Bitmap aIcon) {
+    public static Intent getWebappIntent(String aURI, String aOrigin, String aTitle, Bitmap aIcon) {
         Intent intent;
 
         if (AppConstants.MOZ_ANDROID_SYNTHAPKS) {
@@ -738,21 +738,21 @@ public class GeckoAppShell
         } else {
             int index;
             if (aIcon != null && !TextUtils.isEmpty(aTitle))
-                index = WebAppAllocator.getInstance(getContext()).findAndAllocateIndex(aOrigin, aTitle, aIcon);
+                index = WebappAllocator.getInstance(getContext()).findAndAllocateIndex(aOrigin, aTitle, aIcon);
             else
-                index = WebAppAllocator.getInstance(getContext()).getIndexForApp(aOrigin);
+                index = WebappAllocator.getInstance(getContext()).getIndexForApp(aOrigin);
 
             if (index == -1)
                 return null;
 
-            intent = getWebAppIntent(index, aURI);
+            intent = getWebappIntent(index, aURI);
         }
 
         return intent;
     }
 
-    // The old implementation of getWebAppIntent.  Not used by MOZ_ANDROID_SYNTHAPKS.
-    public static Intent getWebAppIntent(int aIndex, String aURI) {
+    // The old implementation of getWebappIntent.  Not used by MOZ_ANDROID_SYNTHAPKS.
+    public static Intent getWebappIntent(int aIndex, String aURI) {
         Intent intent = new Intent();
         intent.setAction(GeckoApp.ACTION_WEBAPP_PREFIX + aIndex);
         intent.setData(Uri.parse(aURI));
@@ -807,7 +807,7 @@ public class GeckoAppShell
         // The intent to be launched by the shortcut.
         Intent shortcutIntent;
         if (aType.equalsIgnoreCase(SHORTCUT_TYPE_WEBAPP)) {
-            shortcutIntent = getWebAppIntent(aURI, aUniqueURI, aTitle, aIcon);
+            shortcutIntent = getWebappIntent(aURI, aUniqueURI, aTitle, aIcon);
         } else {
             shortcutIntent = new Intent();
             shortcutIntent.setAction(GeckoApp.ACTION_BOOKMARK);
@@ -844,7 +844,7 @@ public class GeckoAppShell
                 // the intent to be launched by the shortcut
                 Intent shortcutIntent;
                 if (aType.equalsIgnoreCase(SHORTCUT_TYPE_WEBAPP)) {
-                    shortcutIntent = getWebAppIntent(aURI, aUniqueURI, "", null);
+                    shortcutIntent = getWebappIntent(aURI, aUniqueURI, "", null);
                     if (shortcutIntent == null)
                         return;
                 } else {
