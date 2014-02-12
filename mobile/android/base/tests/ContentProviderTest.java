@@ -18,9 +18,12 @@ import android.test.IsolatedContext;
 import android.test.RenamingDelegatingContext;
 import android.test.mock.MockContentResolver;
 import android.test.mock.MockContext;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.LinkedList;
+
+import org.mozilla.gecko.db.BrowserContract;
 
 /*
  * ContentProviderTest provides the infrastructure to run content provider
@@ -101,7 +104,7 @@ abstract class ContentProviderTest extends BaseTest {
 
         private Uri appendTestParam(Uri uri) {
             try {
-                return appendUriParam(uri, "PARAM_IS_TEST", "1");
+                return appendUriParam(uri, BrowserContract.PARAM_IS_TEST, "1");
             } catch (Exception e) {}
 
             return null;
@@ -197,8 +200,7 @@ abstract class ContentProviderTest extends BaseTest {
         mResolver.addProvider(mProviderAuthority, mProvider);
     }
 
-    public Uri appendUriParam(Uri uri, String paramName, String value) throws Exception {
-        String param = (String) mProviderContract.getField(paramName).get(null);
+    public Uri appendUriParam(Uri uri, String param, String value) throws Exception {
         return uri.buildUpon().appendQueryParameter(param, value).build();
     }
 
