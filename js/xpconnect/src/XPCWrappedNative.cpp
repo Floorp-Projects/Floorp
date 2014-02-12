@@ -2311,11 +2311,15 @@ CallMethodHelper::CleanupParam(nsXPTCMiniVariant& param, nsXPTType& type)
             break;
         case nsXPTType::T_ASTRING:
         case nsXPTType::T_DOMSTRING:
-            nsXPConnect::GetRuntimeInstance()->DeleteString((nsAString*)param.val.p);
+            nsXPConnect::GetRuntimeInstance()->DeleteShortLivedString((nsString*)param.val.p);
             break;
         case nsXPTType::T_UTF8STRING:
         case nsXPTType::T_CSTRING:
-            delete (nsCString*) param.val.p;
+            {
+                nsCString* rs = (nsCString*)param.val.p;
+                if (rs != &EmptyCString() && rs != &NullCString())
+                    delete rs;
+            }
             break;
         default:
             MOZ_ASSERT(!type.IsArithmetic(), "Cleanup requested on unexpected type.");
