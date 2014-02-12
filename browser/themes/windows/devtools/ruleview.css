@@ -109,6 +109,10 @@
   text-decoration: line-through;
 }
 
+.theme-light .ruleview-overridden {
+  -moz-text-decoration-color: #667380; /*  Content (Text) - Dark Grey */
+}
+
 .styleinspector-propertyeditor {
   border: 1px solid #CCC;
   padding: 0;
