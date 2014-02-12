@@ -17,6 +17,7 @@ EXTRA_JS_MODULES += [
     'Sanitizer.jsm',
     'SharedPreferences.jsm',
     'SimpleServiceDiscovery.jsm',
+    'SSLExceptions.jsm',
 ]
 
 if CONFIG['MOZ_ANDROID_SYNTHAPKS']:

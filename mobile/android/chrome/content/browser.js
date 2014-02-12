@@ -56,6 +56,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "Prompt",
 XPCOMUtils.defineLazyModuleGetter(this, "HelperApps",
                                   "resource://gre/modules/HelperApps.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "SSLExceptions",
+                                  "resource://gre/modules/SSLExceptions.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "FormHistory",
                                   "resource://gre/modules/FormHistory.jsm");
 
