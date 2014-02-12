@@ -33,10 +33,12 @@
 #include "pkix_pl_crlentry.h"
 #include "pkix_pl_crl.h"
 #include "pkix_pl_colcertstore.h"
+#ifndef NSS_PKIX_NO_LDAP
 #include "pkix_pl_ldapcertstore.h"
 #include "pkix_pl_ldapdefaultclient.h"
 #include "pkix_pl_ldaprequest.h"
 #include "pkix_pl_ldapresponse.h"
+#endif /* !NSS_PKIX_NO_LDAP */
 #include "pkix_pl_socket.h"
 #include "pkix_pl_infoaccess.h"
 #include "pkix_store.h"

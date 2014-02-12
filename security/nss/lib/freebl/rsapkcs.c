@@ -24,16 +24,14 @@
 /*
  * RSA block types
  *
- * The actual values are important -- they are fixed, *not* arbitrary.
- * The explicit value assignments are not needed (because C would give
- * us those same values anyway) but are included as a reminder...
+ * The values of RSA_BlockPrivate and RSA_BlockPublic are fixed.
+ * The value of RSA_BlockRaw isn't fixed by definition, but we are keeping
+ * the value that NSS has been using in the past.
  */
 typedef enum {
-    RSA_BlockUnused = 0,    /* unused */
     RSA_BlockPrivate = 1,   /* pad for a private-key operation */
     RSA_BlockPublic = 2,    /* pad for a public-key operation */
-    RSA_BlockRaw = 4,       /* simply justify the block appropriately */
-    RSA_BlockTotal
+    RSA_BlockRaw = 4        /* simply justify the block appropriately */
 } RSA_BlockType;
 
 /* Needed for RSA-PSS functions */

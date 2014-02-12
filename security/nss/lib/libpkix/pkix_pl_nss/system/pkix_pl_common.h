@@ -38,7 +38,9 @@
 /* private PKIX_PL_NSS system headers */
 #include "pkix_pl_object.h"
 #include "pkix_pl_string.h"
+#ifndef NSS_PKIX_NO_LDAP
 #include "pkix_pl_ldapt.h"
+#endif /* !NSS_PKIX_NO_LDAP */
 #include "pkix_pl_aiamgr.h"
 #include "pkix_pl_bigint.h"
 #include "pkix_pl_oid.h"
@@ -62,9 +64,11 @@
 #include "pkix_pl_ocspresponse.h"
 #include "pkix_pl_pk11certstore.h"
 #include "pkix_pl_socket.h"
+#ifndef NSS_PKIX_NO_LDAP
 #include "pkix_pl_ldapcertstore.h"
 #include "pkix_pl_ldaprequest.h"
 #include "pkix_pl_ldapresponse.h"
+#endif /* !NSS_PKIX_NO_LDAP */
 #include "pkix_pl_nsscontext.h"
 #include "pkix_pl_httpcertstore.h"
 #include "pkix_pl_httpdefaultclient.h"

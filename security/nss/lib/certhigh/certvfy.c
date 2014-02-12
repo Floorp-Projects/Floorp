@@ -506,7 +506,18 @@ cert_VerifyCertChainOld(CERTCertDBHandle *handle, CERTCertificate *cert,
 	    PORT_SetError (SEC_ERROR_PATH_LEN_CONSTRAINT_INVALID);
 	    LOG_ERROR_OR_EXIT(log, issuerCert, count+1, pathLengthLimit);
 	}
-	
+
+        /* make sure that the entire chain is within the name space of the
+         * current issuer certificate.
+         */
+        rv = CERT_CompareNameSpace(issuerCert, namesList, certsList,
+                                   arena, &badCert);
+        if (rv != SECSuccess || badCert != NULL) {
+            PORT_SetError(SEC_ERROR_CERT_NOT_IN_NAME_SPACE);
+            LOG_ERROR_OR_EXIT(log, badCert, count + 1, 0);
+            goto loser;
+        }
+
 	/* XXX - the error logging may need to go down into CRL stuff at some
 	 * point
 	 */
@@ -628,16 +639,6 @@ cert_VerifyCertChainOld(CERTCertDBHandle *handle, CERTCertificate *cert,
 	    }
 	}
 
-	/* make sure that the entire chain is within the name space of the 
-	** current issuer certificate.
-	*/
-	rv = CERT_CompareNameSpace(issuerCert, namesList, certsList, 
-	                           arena, &badCert);
-	if (rv != SECSuccess || badCert != NULL) {
-	    PORT_SetError(SEC_ERROR_CERT_NOT_IN_NAME_SPACE);
-            LOG_ERROR_OR_EXIT(log, badCert, count + 1, 0);
-	    goto loser;
-	}
 	/* make sure that the issuer is not self signed.  If it is, then
 	 * stop here to prevent looping.
 	 */
