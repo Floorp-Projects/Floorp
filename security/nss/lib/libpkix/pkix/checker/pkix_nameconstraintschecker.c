@@ -167,6 +167,7 @@ pkix_NameConstraintsChecker_Check(
         PKIX_PL_CertNameConstraints *nameConstraints = NULL;
         PKIX_PL_CertNameConstraints *mergedNameConstraints = NULL;
         PKIX_Boolean selfIssued = PKIX_FALSE;
+        PKIX_Boolean lastCert = PKIX_FALSE;
 
         PKIX_ENTER(CERTCHAINCHECKER, "pkix_NameConstraintsChecker_Check");
         PKIX_NULLCHECK_THREE(checker, cert, pNBIOContext);
@@ -178,6 +179,7 @@ pkix_NameConstraintsChecker_Check(
                     PKIX_CERTCHAINCHECKERGETCERTCHAINCHECKERSTATEFAILED);
 
         state->certsRemaining--;
+        lastCert = state->certsRemaining == 0;
 
         /* Get status of self issued */
         PKIX_CHECK(pkix_IsCertSelfIssued(cert, &selfIssued, plContext),
@@ -185,13 +187,14 @@ pkix_NameConstraintsChecker_Check(
 
         /* Check on non self-issued and if so only for last cert */
         if (selfIssued == PKIX_FALSE ||
-            (selfIssued == PKIX_TRUE && state->certsRemaining == 0)) {
+            (selfIssued == PKIX_TRUE && lastCert)) {
                 PKIX_CHECK(PKIX_PL_Cert_CheckNameConstraints
-                    (cert, state->nameConstraints, plContext),
+                    (cert, state->nameConstraints, lastCert,
+                      plContext),
                     PKIX_CERTCHECKNAMECONSTRAINTSFAILED);
         }
 
-        if (state->certsRemaining != 0) {
+        if (!lastCert) {
 
             PKIX_CHECK(PKIX_PL_Cert_GetNameConstraints
                     (cert, &nameConstraints, plContext),

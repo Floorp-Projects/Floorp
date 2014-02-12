@@ -27,7 +27,9 @@ struct PKIX_PL_AIAMgrStruct {
         PKIX_PL_GeneralName *location;
         PKIX_List *results;
 	union {
+#ifndef NSS_PKIX_NO_LDAP
 	        PKIX_PL_LdapClient *ldapClient;
+#endif
 		struct {
 		        const SEC_HttpClientFcn *httpClient;
 			SEC_HTTP_SERVER_SESSION serverSession;
@@ -41,6 +43,7 @@ struct PKIX_PL_AIAMgrStruct {
 
 PKIX_Error *pkix_pl_AIAMgr_RegisterSelf(void *plContext);
 
+#ifndef NSS_PKIX_NO_LDAP
 PKIX_Error *PKIX_PL_LdapClient_InitiateRequest(
         PKIX_PL_LdapClient *client,
         LDAPRequestParams *requestParams,
@@ -53,6 +56,7 @@ PKIX_Error *PKIX_PL_LdapClient_ResumeRequest(
         void **pPollDesc,
         PKIX_List **pResponse,
         void *plContext);
+#endif /* !NSS_PKIX_NO_LDAP */
 
 #ifdef __cplusplus
 }

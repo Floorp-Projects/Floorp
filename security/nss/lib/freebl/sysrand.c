@@ -8,7 +8,9 @@
 
 #include "seccomon.h"
 
+#ifndef XP_WIN
 static size_t rng_systemFromNoise(unsigned char *dest, size_t maxLen);
+#endif
 
 #if defined(XP_UNIX) || defined(XP_BEOS)
 #include "unix_rand.c"
@@ -20,6 +22,7 @@ static size_t rng_systemFromNoise(unsigned char *dest, size_t maxLen);
 #include "os2_rand.c"
 #endif
 
+#ifndef XP_WIN
 /*
  * Normal RNG_SystemRNG() isn't available, use the system noise to collect
  * the required amount of entropy.
@@ -43,4 +46,4 @@ rng_systemFromNoise(unsigned char *dest, size_t maxLen)
    }
    return retBytes;
 }
-
+#endif
