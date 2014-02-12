@@ -173,11 +173,16 @@ function uninstallFakePAC() {
   Cm.nsIComponentRegistrar.unregisterFactory(CID, PACSystemSettings);
 }
 
-// We want to ensure the legacy provider is used for most of these tests; the
-// tests that know how to deal with the Firefox Accounts identity hack things
-// to ensure that still works.
+// We want to ensure the legacy provider is used for most of these tests,
+// including after a service.startOver.  The tests that know how to deal with
+// the Firefox Accounts identity hack things to ensure that still works.
 function setDefaultIdentityConfig() {
   Cu.import("resource://gre/modules/Services.jsm");
   Services.prefs.setBoolPref("services.sync.fxaccounts.enabled", false);
+  Services.prefs.setBoolPref("services.sync-testing.startOverKeepIdentity", true);
+  do_register_cleanup(function() {
+    Services.prefs.clearUserPref("services.sync.fxaccounts.enabled");
+    Services.prefs.clearUserPref("services.sync-testing.startOverKeepIdentity");
+  });
 }
 setDefaultIdentityConfig();
