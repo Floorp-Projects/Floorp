@@ -710,8 +710,8 @@ class AutoLockImage
 {
 public:
   AutoLockImage(ImageContainer *aContainer) : mContainer(aContainer) { mImage = mContainer->LockCurrentImage(); }
-  AutoLockImage(ImageContainer *aContainer, gfxASurface **aSurface) : mContainer(aContainer) {
-    *aSurface = mContainer->DeprecatedLockCurrentAsSurface(&mSize, getter_AddRefs(mImage)).get();
+  AutoLockImage(ImageContainer *aContainer, RefPtr<gfx::SourceSurface> *aSurface) : mContainer(aContainer) {
+    *aSurface = mContainer->LockCurrentAsSourceSurface(&mSize, getter_AddRefs(mImage));
   }
   ~AutoLockImage() { if (mContainer) { mContainer->UnlockCurrentImage(); } }
 
