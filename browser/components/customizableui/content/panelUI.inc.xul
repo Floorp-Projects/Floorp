@@ -223,8 +223,10 @@
        role="group"
        type="arrow"
        level="top"
+       context="toolbar-context-menu"
        hidden="true">
   <vbox id="widget-overflow-scroller">
-    <vbox id="widget-overflow-list" class="widget-overflow-list"/>
+    <vbox id="widget-overflow-list" class="widget-overflow-list"
+          overflowfortoolbar="nav-bar"/>
   </vbox>
 </panel>
