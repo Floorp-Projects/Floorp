@@ -29,7 +29,8 @@ webrtc_non_unified_sources = [
     'trunk/webrtc/modules/video_capture/mac/qtkit/video_capture_qtkit.mm',       # Because of name clash in the nsAutoreleasePool class
     'trunk/webrtc/modules/video_capture/mac/qtkit/video_capture_qtkit_info.mm',  # Because of name clash in the nsAutoreleasePool class
     'trunk/webrtc/modules/video_capture/windows/device_info_ds.cc',              # Because of the MEDIASUBTYPE_HDYC variable
-    'trunk/webrtc/modules/video_capture/windows/sink_filter_ds.cc',              # Because of the MEDIASUBTYPE_HDYC variable
+    'trunk/webrtc/modules/video_capture/windows/help_functions_ds.cc',           # Because of initguid.h
+    'trunk/webrtc/modules/video_capture/windows/sink_filter_ds.cc',              # Because of the MEDIASUBTYPE_HDYC variable and initguid.h
 ]
 
 GYP_DIRS += ['trunk']

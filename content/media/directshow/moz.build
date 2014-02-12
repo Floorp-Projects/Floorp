@@ -13,13 +13,16 @@ EXPORTS += [
 ]
 
 UNIFIED_SOURCES += [
-    'AudioSinkFilter.cpp',
     'AudioSinkInputPin.cpp',
     'DirectShowDecoder.cpp',
     'DirectShowReader.cpp',
     'DirectShowUtils.cpp',
     'SampleSink.cpp',
     'SourceFilter.cpp',
+]
+
+SOURCES += [
+    'AudioSinkFilter.cpp',
 ]
 
 # If WebRTC isn't being built, we need to compile the DirectShow base classes so that

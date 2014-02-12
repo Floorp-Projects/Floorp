@@ -268,7 +268,7 @@ include('/ipc/chromium/chromium-config.mozbuild')
 FINAL_LIBRARY = 'xul'
 
 GENERATED_FILES = [
-    'PremultiplyTables.h',
+    'DeprecatedPremultiplyTables.h',
 ]
 
 LOCAL_INCLUDES += [

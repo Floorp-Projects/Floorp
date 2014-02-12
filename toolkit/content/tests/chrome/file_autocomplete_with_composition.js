@@ -280,7 +280,7 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
     { description: "compositionupdate shouldn't reopen the popup",
       completeDefaultIndex: false,
       execute: function (aWindow) {
-        synthesizeComposition({ type: "compositionupdate", data: "ll" }, aWindow);
+        synthesizeComposition({ type: "compositionupdate", data: "zi" }, aWindow);
         synthesizeText(
           { "composition":
             { "string": "zi",

@@ -76,9 +76,10 @@ CanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
     return;
   }
 
-  nsRefPtr<gfxASurface> surface = mBuffer->AsTextureClientSurface()->GetAsSurface();
-  if (surface) {
-    aLayer->UpdateSurface(surface);
+  RefPtr<DrawTarget> drawTarget =
+    mBuffer->AsTextureClientDrawTarget()->GetAsDrawTarget();
+  if (drawTarget) {
+    aLayer->UpdateTarget(drawTarget);
   }
 
   mBuffer->Unlock();
@@ -88,7 +89,7 @@ CanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
     return;
   }
 
-  if (surface) {
+  if (drawTarget) {
     GetForwarder()->UpdatedTexture(this, mBuffer, nullptr);
     GetForwarder()->UseTexture(this, mBuffer);
   }
@@ -215,7 +216,7 @@ DeprecatedCanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
   }
 
   gfxASurface* surface = mDeprecatedTextureClient->LockSurface();
-  aLayer->UpdateSurface(surface);
+  aLayer->DeprecatedUpdateSurface(surface);
   mDeprecatedTextureClient->Unlock();
 }
 
