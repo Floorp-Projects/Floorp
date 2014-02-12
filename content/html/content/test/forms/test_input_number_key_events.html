@@ -146,10 +146,10 @@ function test() {
 
   for (key of ["VK_UP", "VK_DOWN"]) {
     // Start at middle:
-    oldVal = elem.value = 0;
+    oldVal = elem.value = -1;
     expectedVal = expectedValAfterKeyEvent(key, elem);
     synthesizeKey(key, {});
-    is(elem.value, expectedVal, "Test " + key + " for number control with value set to the midpoint (" + oldVal + ")");
+    is(elem.value, expectedVal, "Test " + key + " for number control with value set between min/max (" + oldVal + ")");
 
     // Same again:
     expectedVal = expectedValAfterKeyEvent(key, elem);
@@ -196,6 +196,13 @@ function test() {
     synthesizeKey(key, {});
     is(elem.value, expectedVal, "Test " + key + " for number control with value set to the midpoint and step='any' (" + oldVal + ")");
     elem.step = oldStep; // restore
+
+    // Test that invalid input blocks UI initiated stepping:
+    oldVal = elem.value = "";
+    elem.select();
+    sendString("abc");
+    synthesizeKey(key, {});
+    is(elem.value, "", "Test " + key + " does nothing when the input is invalid");
   }
 }
 
