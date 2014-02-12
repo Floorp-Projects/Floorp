@@ -114,10 +114,10 @@ namespace mozilla
   { return IsWindowsVersionOrLater(0x06020000ul); }
 
   MOZ_ALWAYS_INLINE bool
-  IsWin7RTMOrLater()
+  IsNotWin7PreRTM()
   {
-    return IsWin7SP1OrLater() ||
-           (IsWin7OrLater() && IsWindowsBuildOrLater(7600));
+    return IsWin7SP1OrLater() || !IsWin7OrLater() ||
+           IsWindowsBuildOrLater(7600);
   }
 }
 
