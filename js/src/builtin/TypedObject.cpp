@@ -239,7 +239,7 @@ const Class UnsizedArrayTypeDescr::class_ = {
     nullptr,
     nullptr,
     nullptr,
-    TypedObject::constructUnsized,
+    TypedDatum::constructUnsized,
     nullptr
 };
 
@@ -256,7 +256,7 @@ const Class SizedArrayTypeDescr::class_ = {
     nullptr,
     nullptr,
     nullptr,
-    TypedObject::constructSized,
+    TypedDatum::constructSized,
     nullptr
 };
 
@@ -545,7 +545,7 @@ const Class StructTypeDescr::class_ = {
     nullptr, /* finalize */
     nullptr, /* call */
     nullptr, /* hasInstance */
-    TypedObject::constructSized,
+    TypedDatum::constructSized,
     nullptr  /* trace */
 };
 
@@ -1150,9 +1150,9 @@ TypedDatum::createUnattached(JSContext *cx,
                              int32_t length)
 {
     if (descr->opaque())
-        return createUnattachedWithClass(cx, &TypedHandle::class_, descr, length);
+        return createUnattachedWithClass(cx, &OpaqueTypedObject::class_, descr, length);
     else
-        return createUnattachedWithClass(cx, &TypedObject::class_, descr, length);
+        return createUnattachedWithClass(cx, &TransparentTypedObject::class_, descr, length);
 }
 
 
@@ -1162,7 +1162,8 @@ TypedDatum::createUnattachedWithClass(JSContext *cx,
                                       HandleTypeDescr type,
                                       int32_t length)
 {
-    JS_ASSERT(clasp == &TypedObject::class_ || clasp == &TypedHandle::class_);
+    JS_ASSERT(clasp == &TransparentTypedObject::class_ ||
+              clasp == &OpaqueTypedObject::class_);
     JS_ASSERT(JSCLASS_RESERVED_SLOTS(clasp) == JS_DATUM_SLOTS);
     JS_ASSERT(clasp->hasPrivate());
 
@@ -2007,7 +2008,7 @@ TypedDatum::neuter(JSContext *cx)
  * Typed Objects
  */
 
-const Class TypedObject::class_ = {
+const Class TransparentTypedObject::class_ = {
     "TypedObject",
     Class::NON_NATIVE |
     JSCLASS_HAS_RESERVED_SLOTS(JS_DATUM_SLOTS) |
@@ -2335,7 +2336,7 @@ TypedDatum::constructUnsized(JSContext *cx, unsigned int argc, Value *vp)
  * Handles
  */
 
-const Class TypedHandle::class_ = {
+const Class OpaqueTypedObject::class_ = {
     "Handle",
     Class::NON_NATIVE |
     JSCLASS_HAS_RESERVED_SLOTS(JS_DATUM_SLOTS) |
@@ -2384,7 +2385,7 @@ const Class TypedHandle::class_ = {
     }
 };
 
-const JSFunctionSpec TypedHandle::handleStaticMethods[] = {
+const JSFunctionSpec OpaqueTypedObject::handleStaticMethods[] = {
     {"move", {nullptr, nullptr}, 3, 0, "HandleMove"},
     {"get", {nullptr, nullptr}, 1, 0, "HandleGet"},
     {"set", {nullptr, nullptr}, 2, 0, "HandleSet"},
@@ -2397,7 +2398,7 @@ const JSFunctionSpec TypedHandle::handleStaticMethods[] = {
  */
 
 bool
-js::NewTypedHandle(JSContext *cx, unsigned argc, Value *vp)
+js::NewOpaqueTypedObject(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     JS_ASSERT(args.length() == 1);
@@ -2406,7 +2407,7 @@ js::NewTypedHandle(JSContext *cx, unsigned argc, Value *vp)
     Rooted<SizedTypeDescr*> descr(cx, &args[0].toObject().as<SizedTypeDescr>());
     int32_t length = DatumLengthFromType(*descr);
     Rooted<TypedDatum*> obj(cx);
-    obj = TypedDatum::createUnattachedWithClass(cx, &TypedHandle::class_, descr, length);
+    obj = TypedDatum::createUnattachedWithClass(cx, &OpaqueTypedObject::class_, descr, length);
     if (!obj)
         return false;
     args.rval().setObject(*obj);
@@ -2436,23 +2437,24 @@ js::NewDerivedTypedDatum(JSContext *cx, unsigned argc, Value *vp)
 }
 
 bool
-js::AttachHandle(ThreadSafeContext *, unsigned argc, Value *vp)
+js::AttachDatum(ThreadSafeContext *, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     JS_ASSERT(args.length() == 3);
-    JS_ASSERT(args[0].isObject() && args[0].toObject().is<TypedHandle>());
+    JS_ASSERT(args[0].isObject() && args[0].toObject().is<TypedDatum>());
     JS_ASSERT(args[1].isObject() && args[1].toObject().is<TypedDatum>());
     JS_ASSERT(args[2].isInt32());
 
-    TypedHandle &handle = args[0].toObject().as<TypedHandle>();
+    TypedDatum &handle = args[0].toObject().as<TypedDatum>();
     TypedDatum &target = args[1].toObject().as<TypedDatum>();
+    JS_ASSERT(handle.typedMem() == nullptr); // must not be attached already
     size_t offset = args[2].toInt32();
     handle.attach(target, offset);
     return true;
 }
 
-JS_JITINFO_NATIVE_PARALLEL_THREADSAFE(js::AttachHandleJitInfo, AttachHandleJitInfo,
-                                      js::AttachHandle);
+JS_JITINFO_NATIVE_PARALLEL_THREADSAFE(js::AttachDatumJitInfo, AttachDatumJitInfo,
+                                      js::AttachDatum);
 
 bool
 js::ObjectIsTypeDescr(ThreadSafeContext *, unsigned argc, Value *vp)
@@ -2468,30 +2470,32 @@ JS_JITINFO_NATIVE_PARALLEL_THREADSAFE(js::ObjectIsTypeDescrJitInfo, ObjectIsType
                                       js::ObjectIsTypeDescr);
 
 bool
-js::ObjectIsTypedHandle(ThreadSafeContext *, unsigned argc, Value *vp)
+js::ObjectIsOpaqueTypedObject(ThreadSafeContext *, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     JS_ASSERT(args.length() == 1);
     JS_ASSERT(args[0].isObject());
-    args.rval().setBoolean(args[0].toObject().is<TypedHandle>());
+    args.rval().setBoolean(args[0].toObject().is<OpaqueTypedObject>());
     return true;
 }
 
-JS_JITINFO_NATIVE_PARALLEL_THREADSAFE(js::ObjectIsTypedHandleJitInfo, ObjectIsTypedHandleJitInfo,
-                                      js::ObjectIsTypedHandle);
+JS_JITINFO_NATIVE_PARALLEL_THREADSAFE(js::ObjectIsOpaqueTypedObjectJitInfo,
+                                      ObjectIsOpaqueTypedObjectJitInfo,
+                                      js::ObjectIsOpaqueTypedObject);
 
 bool
-js::ObjectIsTypedObject(ThreadSafeContext *, unsigned argc, Value *vp)
+js::ObjectIsTransparentTypedObject(ThreadSafeContext *, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     JS_ASSERT(args.length() == 1);
     JS_ASSERT(args[0].isObject());
-    args.rval().setBoolean(args[0].toObject().is<TypedObject>());
+    args.rval().setBoolean(args[0].toObject().is<TransparentTypedObject>());
     return true;
 }
 
-JS_JITINFO_NATIVE_PARALLEL_THREADSAFE(js::ObjectIsTypedObjectJitInfo, ObjectIsTypedObjectJitInfo,
-                                      js::ObjectIsTypedObject);
+JS_JITINFO_NATIVE_PARALLEL_THREADSAFE(js::ObjectIsTransparentTypedObjectJitInfo,
+                                      ObjectIsTransparentTypedObjectJitInfo,
+                                      js::ObjectIsTransparentTypedObject);
 
 bool
 js::DatumIsAttached(ThreadSafeContext *cx, unsigned argc, Value *vp)
@@ -2503,7 +2507,9 @@ js::DatumIsAttached(ThreadSafeContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-JS_JITINFO_NATIVE_PARALLEL_THREADSAFE(js::DatumIsAttachedJitInfo, DatumIsAttachedJitInfo, js::DatumIsAttached);
+JS_JITINFO_NATIVE_PARALLEL_THREADSAFE(js::DatumIsAttachedJitInfo,
+                                      DatumIsAttachedJitInfo,
+                                      js::DatumIsAttached);
 
 bool
 js::ClampToUint8(ThreadSafeContext *, unsigned argc, Value *vp)
