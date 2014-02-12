@@ -17,6 +17,11 @@ namespace Telemetry {
 class ThreadHangStats;
 };
 
+#ifndef RELEASE_BUILD
+// Undefine to disable background hang monitor
+#define MOZ_ENABLE_BACKGROUND_HANG_MONITOR
+#endif
+
 class BackgroundHangThread;
 
 /**

@@ -2098,6 +2098,7 @@ TelemetryImpl::GetThreadHangStats(JSContext* cx, JS::MutableHandle<JS::Value> re
   }
   size_t threadIndex = 0;
 
+#ifdef MOZ_ENABLE_BACKGROUND_HANG_MONITOR
   /* First add active threads; we need to hold |iter| (and its lock)
      throughout this method to avoid a race condition where a thread can
      be recorded twice if the thread is destroyed while this method is
@@ -2111,6 +2112,7 @@ TelemetryImpl::GetThreadHangStats(JSContext* cx, JS::MutableHandle<JS::Value> re
       return NS_ERROR_FAILURE;
     }
   }
+#endif
 
   // Add saved threads next
   MutexAutoLock autoLock(mThreadHangStatsMutex);
