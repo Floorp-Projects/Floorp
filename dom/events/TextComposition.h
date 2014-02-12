@@ -47,7 +47,14 @@ public:
   nsPresContext* GetPresContext() const { return mPresContext; }
   nsINode* GetEventTargetNode() const { return mNode; }
   // The latest CompositionEvent.data value except compositionstart event.
-  const nsString& GetLastData() const { return mLastData; }
+  // This value is modified at dispatching compositionupdate.
+  const nsString& LastData() const { return mLastData; }
+  // The composition string which is already handled by the focused editor.
+  // I.e., this value must be same as the composition string on the focused
+  // editor.  This value is modified at a call of EditorDidHandleTextEvent().
+  // Note that mString and mLastData are different between dispatcing
+  // compositionupdate and text event handled by focused editor.
+  const nsString& String() const { return mString; }
   // Returns true if the composition is started with synthesized event which
   // came from nsDOMWindowUtils.
   bool IsSynthesizedForTests() const { return mIsSynthesizedForTests; }
@@ -85,6 +92,12 @@ public:
    */
   void EditorWillHandleTextEvent(const WidgetTextEvent* aTextEvent);
 
+  /**
+   * EditorDidHandleTextEvent() must be called after the focused editor handles
+   * a text event.
+   */
+  void EditorDidHandleTextEvent();
+
 private:
   // This class holds nsPresContext weak.  This instance shouldn't block
   // destroying it.  When the presContext is being destroyed, it's notified to
@@ -100,6 +113,10 @@ private:
   // mLastData stores the data attribute of the latest composition event (except
   // the compositionstart event).
   nsString mLastData;
+
+  // mString stores the composition text which has been handled by the focused
+  // editor.
+  nsString mString;
 
   // Offset of the composition string from start of the editor
   uint32_t mCompositionStartOffset;

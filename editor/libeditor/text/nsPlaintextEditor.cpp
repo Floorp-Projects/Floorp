@@ -866,7 +866,8 @@ nsPlaintextEditor::UpdateIMEComposition(nsIDOMEvent* aDOMTextEvent)
 
     rv = InsertText(widgetTextEvent->theText);
 
-    mIMEBufferLength = widgetTextEvent->theText.Length();
+    // XXX This approach is ugly, we should sort out the text event handling.
+    mComposition->EditorDidHandleTextEvent();
 
     if (caretP) {
       caretP->SetCaretDOMSelection(selection);
