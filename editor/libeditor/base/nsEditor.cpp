@@ -21,6 +21,7 @@
 #include "JoinElementTxn.h"             // for JoinElementTxn
 #include "PlaceholderTxn.h"             // for PlaceholderTxn
 #include "SplitElementTxn.h"            // for SplitElementTxn
+#include "TextComposition.h"            // for TextComposition
 #include "mozFlushType.h"               // for mozFlushType::Flush_Frames
 #include "mozISpellCheckingEngine.h"
 #include "mozInlineSpellChecker.h"      // for mozInlineSpellChecker
@@ -2010,10 +2011,25 @@ nsEditor::StopPreservingSelection()
   mSavedSel.MakeEmpty();
 }
 
+void
+nsEditor::EnsureComposition(mozilla::WidgetGUIEvent* aEvent)
+{
+  if (mComposition) {
+    return;
+  }
+  // The compositionstart event must cause creating new TextComposition
+  // instance at being dispatched by nsIMEStateManager.
+  mComposition = nsIMEStateManager::GetTextCompositionFor(aEvent);
+  if (!mComposition) {
+    MOZ_CRASH("nsIMEStateManager doesn't return proper composition");
+  }
+}
 
 nsresult
-nsEditor::BeginIMEComposition()
+nsEditor::BeginIMEComposition(WidgetCompositionEvent* aCompositionEvent)
 {
+  MOZ_ASSERT(!mComposition, "There is composition already");
+  EnsureComposition(aCompositionEvent);
   mInIMEMode = true;
   if (mPhonetic) {
     mPhonetic->Truncate(0);
@@ -2044,6 +2060,7 @@ nsEditor::EndIMEComposition()
   mIMEBufferLength = 0;
   mInIMEMode = false;
   mIsIMEComposing = false;
+  mComposition = nullptr;
 
   // notify editor observers of action
   NotifyEditorObservers();

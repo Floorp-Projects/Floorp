@@ -1126,9 +1126,23 @@ nsIMEStateManager::GetFocusSelectionAndRoot(nsISelection** aSel,
   return NS_OK;
 }
 
-TextComposition*
+// static
+already_AddRefed<TextComposition>
 nsIMEStateManager::GetTextCompositionFor(nsIWidget* aWidget)
 {
-  return sTextCompositions ?
-    sTextCompositions->GetCompositionFor(aWidget) : nullptr;
+  if (!sTextCompositions) {
+    return nullptr;
+  }
+  nsRefPtr<TextComposition> textComposition =
+    sTextCompositions->GetCompositionFor(aWidget);
+  return textComposition.forget();
+}
+
+// static
+already_AddRefed<TextComposition>
+nsIMEStateManager::GetTextCompositionFor(WidgetGUIEvent* aEvent)
+{
+  MOZ_ASSERT(aEvent->AsCompositionEvent() || aEvent->AsTextEvent(),
+             "aEvent has to be WidgetCompositionEvent or WidgetTextEvent");
+  return GetTextCompositionFor(aEvent->widget);
 }
