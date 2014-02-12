@@ -100,8 +100,8 @@
     /* spreadcall variant of JSOP_EVAL */ \
     macro(JSOP_SPREADEVAL,43, "spreadeval", NULL,         1,  3,  1, JOF_BYTE|JOF_INVOKE|JOF_TYPESET) \
     \
-    /* Pop N values, preserving top value. */ \
-    macro(JSOP_POPNV,     44, "popnv",      NULL,         3, -1,  1,  JOF_UINT16) \
+    /* Dup the Nth value from the top. */ \
+    macro(JSOP_DUPAT,     44, "dupat",      NULL,         4,  0,  1,  JOF_UINT24) \
     \
     macro(JSOP_UNUSED45,  45, "unused45",   NULL,         1,  0,  0,  JOF_BYTE) \
     macro(JSOP_UNUSED46,  46, "unused46",   NULL,         1,  0,  0,  JOF_BYTE) \
