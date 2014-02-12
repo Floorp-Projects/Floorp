@@ -156,6 +156,7 @@ function startTest(test, token) {
   element.stream = element.mozCaptureStream();
 
   element.oncanplaythrough = function () {
+    element.oncanplaythrough = null;
     runStateTransitionTests(element.stream);
     manager.finished(token);
   };

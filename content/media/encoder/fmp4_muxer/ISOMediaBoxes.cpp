@@ -42,9 +42,6 @@ Box::BoxSizeChecker::~BoxSizeChecker()
     MOZ_ASSERT(false);
   }
 
-  // Keeps the last box size position, it is for counting the sample offset when
-  // generating moof.
-  mControl->mLastWrittenBoxPos += box_size;
   MOZ_COUNT_DTOR(BoxSizeChecker);
 }
 

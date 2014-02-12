@@ -86,6 +86,7 @@ function startTest(test, token) {
 
   // Start recording once canplaythrough fires
   element.oncanplaythrough = function() {
+    element.oncanplaythrough = null;
     mediaRecorder.start(250);
     is(mediaRecorder.state, 'recording', 'Media recorder should be recording');
     is(mediaRecorder.stream, element.stream,
