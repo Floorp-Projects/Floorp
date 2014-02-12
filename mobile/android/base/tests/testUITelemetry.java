@@ -1,5 +1,7 @@
 package org.mozilla.gecko.tests;
 
+import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.Telemetry;
 
 import android.util.Log;
@@ -12,8 +14,13 @@ public class testUITelemetry extends JavascriptTest {
     @Override
     public void testJavascript() throws Exception {
         blockForGeckoReady();
-        Log.i("GeckoTest", "Adding telemetry events.");
 
+        // We can't run these tests unless telemetry is turned on --
+        // the events will be dropped on the floor.
+        Log.i("GeckoTest", "Enabling telemetry.");
+        PrefsHelper.setPref(AppConstants.TELEMETRY_PREF_NAME, true);
+
+        Log.i("GeckoTest", "Adding telemetry events.");
         try {
             Telemetry.sendUIEvent("enone", "method0");
             Telemetry.startUISession("foo");

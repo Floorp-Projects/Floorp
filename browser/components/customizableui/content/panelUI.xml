@@ -66,6 +66,8 @@
       <property name="_mainViewId" onget="return this.getAttribute('mainViewId');" onset="this.setAttribute('mainViewId', val); return val;"/>
       <property name="_mainView" readonly="true"
                 onget="return this._mainViewId ? document.getElementById(this._mainViewId) : null;"/>
+      <property name="showingSubViewAsMainView" readonly="true"
+                onget="return this.getAttribute('mainViewIsSubView') == 'true'"/>
 
       <property name="ignoreMutations">
         <getter>
@@ -322,8 +324,13 @@
       <method name="_syncContainerWithMainView">
         <body><![CDATA[
           if (!this.ignoreMutations && !this.showingSubView && !this._transitioning) {
-            this._viewContainer.style.height =
-              this._mainView.scrollHeight + "px";
+            let height;
+            if (this.showingSubViewAsMainView) {
+              height = this._heightOfSubview(this._mainView);
+            } else {
+              height = this._mainView.scrollHeight;
+            }
+            this._viewContainer.style.height = height + "px";
           }
         ]]></body>
       </method>

@@ -49,8 +49,6 @@ public:
   already_AddRefed<SVGAnimatedNumber> Dy();
 
 protected:
-  nsIntPoint GetOffset(const nsSVGFilterInstance& aInstance);
-
   virtual NumberAttributesInfo GetNumberInfo() MOZ_OVERRIDE;
   virtual StringAttributesInfo GetStringInfo() MOZ_OVERRIDE;
 
