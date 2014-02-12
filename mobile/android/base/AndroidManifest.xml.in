@@ -224,6 +224,7 @@
             android:label="@string/crash_reporter_title"
             android:icon="@drawable/crash_reporter"
             android:theme="@style/Gecko"
+            android:exported="false"
             android:excludeFromRecents="true">
           <intent-filter>
             <action android:name="org.mozilla.gecko.reportCrash" />
