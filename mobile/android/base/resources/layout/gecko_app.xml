@@ -98,18 +98,8 @@
 
     </view>
 
-    <LinearLayout android:id="@+id/toast"
-                  style="@style/Toast">
-
-        <TextView android:id="@+id/toast_message"
-                  style="@style/ToastMessage" />
-
-        <ImageView android:id="@+id/toast_divider"
-                   style="@style/ToastDivider" />
-
-        <Button android:id="@+id/toast_button"
-                style="@style/ToastButton" />
-
-    </LinearLayout>
+    <ViewStub android:id="@+id/toast"
+              android:layout="@layout/button_toast"
+              style="@style/Toast"/>
 
 </RelativeLayout>
