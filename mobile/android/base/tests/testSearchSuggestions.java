@@ -37,9 +37,6 @@ public class testSearchSuggestions extends BaseTest {
         final HashMap<String, ArrayList<String>> suggestMap = new HashMap<String, ArrayList<String>>();
         buildSuggestMap(suggestMap);
 
-        final int suggestionLayoutId = mDriver.findElement(getActivity(), "suggestion_layout").getId();
-        final int suggestionTextId = mDriver.findElement(getActivity(), "suggestion_text").getId();
-
         focusUrlBar();
 
         for (int i = 0; i < TEST_QUERY.length(); i++) {
@@ -65,7 +62,7 @@ public class testSearchSuggestions extends BaseTest {
                 @Override
                 public boolean test() {
                     // get the first suggestion row
-                    ViewGroup suggestionGroup = (ViewGroup) getActivity().findViewById(suggestionLayoutId);
+                    ViewGroup suggestionGroup = (ViewGroup) getActivity().findViewById(R.id.suggestion_layout);
                     if (suggestionGroup == null)
                         return false;
 
@@ -75,7 +72,7 @@ public class testSearchSuggestions extends BaseTest {
                         if (queryChild == null || queryChild.getVisibility() == View.GONE)
                             return false;
 
-                        String suggestion = ((TextView) queryChild.findViewById(suggestionTextId)).getText().toString();
+                        String suggestion = ((TextView) queryChild.findViewById(R.id.suggestion_text)).getText().toString();
                         if (!suggestion.equals(expected.get(i)))
                             return false;
                     }

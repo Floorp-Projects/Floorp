@@ -59,11 +59,6 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     public static final int MAX_WAIT_MS = 4500;
     public static final int LONG_PRESS_TIME = 6000;
 
-    // IDs for UI views
-    private static final String BROWSER_TOOLBAR_ID = "browser_toolbar";
-    protected static final String URL_EDIT_TEXT_ID = "url_edit_text";
-    protected static final String URL_BAR_TITLE_ID = "url_bar_title";
-
     private static Class<Activity> mLauncherActivityClass;
     private Activity mActivity;
     protected Solo mSolo;
@@ -185,7 +180,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
      */
     protected final void focusUrlBar() {
         // Click on the browser toolbar to enter editing mode
-        final View toolbarView = mSolo.getView(BROWSER_TOOLBAR_ID);
+        final View toolbarView = mSolo.getView("browser_toolbar");
         mSolo.clickOnView(toolbarView);
 
         // Wait for highlighed text to gain focus
@@ -206,7 +201,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     }
 
     protected final void enterUrl(String url) {
-        final EditText urlEditView = (EditText) mSolo.getView(URL_EDIT_TEXT_ID);
+        final EditText urlEditView = (EditText) mSolo.getView("url_edit_text");
 
         focusUrlBar();
 
@@ -260,7 +255,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     }
 
     public final void verifyUrl(String url) {
-        final EditText urlEditText = (EditText) mSolo.getView(URL_EDIT_TEXT_ID);
+        final EditText urlEditText = (EditText) mSolo.getView("url_edit_text");
         String urlBarText = null;
         if (urlEditText != null) {
             // wait for a short time for the expected text, in case there is a delay
@@ -503,7 +498,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     }
 
     public final void verifyPageTitle(String title) {
-        final TextView urlBarTitle = (TextView) mSolo.getView(URL_BAR_TITLE_ID);
+        final TextView urlBarTitle = (TextView) mSolo.getView("url_bar_title");
         String pageTitle = null;
         if (urlBarTitle != null) {
             // Wait for the title to make sure it has been displayed in case the view
@@ -515,8 +510,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     }
 
     public final void verifyTabCount(int expectedTabCount) {
-        Activity activity = getActivity();
-        Element tabCount = mDriver.findElement(activity, "tabs_counter");
+        Element tabCount = mDriver.findElement(getActivity(), R.id.tabs_counter);
         String tabCountText = tabCount.getText();
         int tabCountInt = Integer.parseInt(tabCountText);
         mAsserter.is(tabCountInt, expectedTabCount, "The correct number of tabs are opened");
@@ -574,11 +568,9 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
      * @return List view in the tabs tray
      */
     private final AdapterView<ListAdapter> getTabsList() {
-        Element tabs = mDriver.findElement(getActivity(), "tabs");
+        Element tabs = mDriver.findElement(getActivity(), R.id.tabs);
         tabs.click();
-        Element listElem = mDriver.findElement(getActivity(), "normal_tabs");
-        int listId = listElem.getId();
-        return (AdapterView<ListAdapter>) getActivity().findViewById(listId);
+        return (AdapterView<ListAdapter>) getActivity().findViewById(R.id.normal_tabs);
     }
 
     /**
@@ -639,8 +631,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
      * @param index Index of tab to close
      */
     public void closeTabAt(final int index) {
-        Element close = mDriver.findElement(getActivity(), "close");
-        View closeButton = getTabViewAt(index).findViewById(close.getId());
+        View closeButton = getTabViewAt(index).findViewById(R.id.close);
 
         mSolo.clickOnView(closeButton);
     }
@@ -749,7 +740,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
             Actions.EventExpecter pageShowExpecter = mActions.expectGeckoEvent("Content:PageShow");
 
             if (devType.equals("tablet")) {
-                Element backBtn = mDriver.findElement(getActivity(), "back");
+                Element backBtn = mDriver.findElement(getActivity(), R.id.back);
                 backBtn.click();
             } else {
                 mActions.sendSpecialKey(Actions.SpecialKey.BACK);
@@ -763,13 +754,13 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
             Actions.EventExpecter pageShowExpecter = mActions.expectGeckoEvent("Content:PageShow");
 
             if (devType.equals("tablet")) {
-                Element fwdBtn = mDriver.findElement(getActivity(), "forward");
+                Element fwdBtn = mDriver.findElement(getActivity(), R.id.forward);
                 fwdBtn.click();
             } else {
                 mActions.sendSpecialKey(Actions.SpecialKey.MENU);
                 waitForText("^New Tab$");
                 if (!osVersion.equals("2.x")) {
-                    Element fwdBtn = mDriver.findElement(getActivity(), "forward");
+                    Element fwdBtn = mDriver.findElement(getActivity(), R.id.forward);
                     fwdBtn.click();
                 } else {
                     mSolo.clickOnText("^Forward$");
@@ -783,13 +774,13 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
 
         public void reload() {
             if (devType.equals("tablet")) {
-                Element reloadBtn = mDriver.findElement(getActivity(), "reload");
+                Element reloadBtn = mDriver.findElement(getActivity(), R.id.reload);
                 reloadBtn.click();
             } else {
                 mActions.sendSpecialKey(Actions.SpecialKey.MENU);
                 waitForText("^New Tab$");
                 if (!osVersion.equals("2.x")) {
-                    Element reloadBtn = mDriver.findElement(getActivity(), "reload");
+                    Element reloadBtn = mDriver.findElement(getActivity(), R.id.reload);
                     reloadBtn.click();
                 } else {
                     mSolo.clickOnText("^Reload$");
@@ -807,7 +798,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
                 // This is the Android 2.x so the button has text
                 mSolo.clickOnText("^Bookmark$");
             } else {
-                Element bookmarkBtn = mDriver.findElement(getActivity(), "bookmark");
+                Element bookmarkBtn = mDriver.findElement(getActivity(), R.id.bookmark);
                 if (bookmarkBtn != null) {
                     // We are on Android 4.x so the button is an image button
                     bookmarkBtn.click();
