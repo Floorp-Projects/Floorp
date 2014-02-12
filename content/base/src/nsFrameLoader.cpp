@@ -53,6 +53,7 @@
 #include "nsIEditor.h"
 #include "nsIMozBrowserFrame.h"
 #include "nsIPermissionManager.h"
+#include "nsISHistory.h"
 
 #include "nsLayoutUtils.h"
 #include "nsView.h"
@@ -1669,6 +1670,18 @@ nsFrameLoader::MaybeCreateDocShell()
     // Do not call Destroy() here. See bug 472312.
     NS_WARNING("Something wrong when creating the docshell for a frameloader!");
     return NS_ERROR_FAILURE;
+  }
+
+  if (mIsTopLevelContent &&
+      mOwnerContent->IsXUL(nsGkAtoms::browser) &&
+      !mOwnerContent->HasAttr(kNameSpaceID_None, nsGkAtoms::disablehistory)) {
+    nsresult rv;
+    nsCOMPtr<nsISHistory> sessionHistory =
+      do_CreateInstance(NS_SHISTORY_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
+    webNav->SetSessionHistory(sessionHistory);
   }
 
   EnsureMessageManager();
