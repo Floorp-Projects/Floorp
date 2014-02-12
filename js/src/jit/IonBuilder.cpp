@@ -6632,7 +6632,7 @@ IonBuilder::checkTypedObjectIndexInBounds(size_t elemSize,
         // then we still need to check if the object was neutered.
         *canBeNeutered = true;
     } else {
-        MInstruction *lengthValue = MLoadFixedSlot::New(alloc(), obj, JS_DATUM_SLOT_LENGTH);
+        MInstruction *lengthValue = MLoadFixedSlot::New(alloc(), obj, JS_TYPEDOBJ_SLOT_LENGTH);
         current->add(lengthValue);
 
         MInstruction *length32 = MTruncateToInt32::New(alloc(), lengthValue);
@@ -6763,7 +6763,7 @@ IonBuilder::pushDerivedTypedObject(bool *emitted,
     MDefinition *owner, *ownerOffset;
     loadTypedObjectData(obj, offset, canBeNeutered, &owner, &ownerOffset);
 
-    // Create the derived datum.
+    // Create the derived typed object.
     MInstruction *derivedTypedObj = MNewDerivedTypedObject::New(alloc(),
                                                                 derivedTypeDescrs,
                                                                 derivedTypeObj,
@@ -9829,7 +9829,7 @@ IonBuilder::loadTypedObjectType(MDefinition *typedObj)
         return typedObj->toNewDerivedTypedObject()->type();
 
     MInstruction *load = MLoadFixedSlot::New(alloc(), typedObj,
-                                             JS_DATUM_SLOT_TYPE_DESCR);
+                                             JS_TYPEDOBJ_SLOT_TYPE_DESCR);
     current->add(load);
     return load;
 }

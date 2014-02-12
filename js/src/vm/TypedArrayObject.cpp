@@ -2640,7 +2640,7 @@ ArrayBufferViewObject::neuter(JSContext *cx)
     else if (is<TypedArrayObject>())
         as<TypedArrayObject>().neuter(cx);
     else
-        as<TypedDatum>().neuter(cx);
+        as<TypedObject>().neuter(cx);
 }
 
 // this default implementation is only valid for integer types
