@@ -667,15 +667,17 @@ ClonedBlockObject::create(JSContext *cx, Handle<StaticBlockObject *> block, Abst
     JS_ASSERT(obj->slotSpan() >= block->slotCount() + RESERVED_SLOTS);
 
     obj->setReservedSlot(SCOPE_CHAIN_SLOT, ObjectValue(*frame.scopeChain()));
+    obj->setReservedSlot(DEPTH_SLOT, PrivateUint32Value(block->stackDepth()));
 
     /*
      * Copy in the closed-over locals. Closed-over locals don't need
      * any fixup since the initial value is 'undefined'.
      */
     unsigned nslots = block->slotCount();
+    unsigned base = frame.script()->nfixed() + block->stackDepth();
     for (unsigned i = 0; i < nslots; ++i) {
         if (block->isAliased(i))
-            obj->as<ClonedBlockObject>().setVar(i, frame.unaliasedLocal(block->varToLocalIndex(i)));
+            obj->as<ClonedBlockObject>().setVar(i, frame.unaliasedLocal(base + i));
     }
 
     JS_ASSERT(obj->isDelegate());
@@ -687,9 +689,10 @@ void
 ClonedBlockObject::copyUnaliasedValues(AbstractFramePtr frame)
 {
     StaticBlockObject &block = staticBlock();
+    unsigned base = frame.script()->nfixed() + block.stackDepth();
     for (unsigned i = 0; i < slotCount(); ++i) {
         if (!block.isAliased(i))
-            setVar(i, frame.unaliasedLocal(block.varToLocalIndex(i)), DONT_CHECK_ALIASING);
+            setVar(i, frame.unaliasedLocal(base + i), DONT_CHECK_ALIASING);
     }
 }
 
@@ -718,7 +721,7 @@ StaticBlockObject::addVar(ExclusiveContext *cx, Handle<StaticBlockObject*> block
                           unsigned index, bool *redeclared)
 {
     JS_ASSERT(JSID_IS_ATOM(id) || (JSID_IS_INT(id) && JSID_TO_INT(id) == (int)index));
-    JS_ASSERT(index < LOCAL_INDEX_LIMIT);
+    JS_ASSERT(index < VAR_INDEX_LIMIT);
 
     *redeclared = false;
 
@@ -766,12 +769,16 @@ js::XDRStaticBlockObject(XDRState<mode> *xdr, HandleObject enclosingScope,
     JSContext *cx = xdr->cx();
 
     Rooted<StaticBlockObject*> obj(cx);
-    uint32_t count = 0, offset = 0;
+    uint32_t count = 0;
+    uint32_t depthAndCount = 0;
 
     if (mode == XDR_ENCODE) {
         obj = *objp;
+        uint32_t depth = obj->stackDepth();
+        JS_ASSERT(depth <= UINT16_MAX);
         count = obj->slotCount();
-        offset = obj->localOffset();
+        JS_ASSERT(count <= UINT16_MAX);
+        depthAndCount = (depth << 16) | uint16_t(count);
     }
 
     if (mode == XDR_DECODE) {
@@ -782,13 +789,13 @@ js::XDRStaticBlockObject(XDRState<mode> *xdr, HandleObject enclosingScope,
         *objp = obj;
     }
 
-    if (!xdr->codeUint32(&count))
-        return false;
-    if (!xdr->codeUint32(&offset))
+    if (!xdr->codeUint32(&depthAndCount))
         return false;
 
     if (mode == XDR_DECODE) {
-        obj->setLocalOffset(offset);
+        uint32_t depth = uint16_t(depthAndCount >> 16);
+        count = uint16_t(depthAndCount);
+        obj->setStackDepth(depth);
 
         /*
          * XDR the block object's properties. We know that there are 'count'
@@ -873,7 +880,7 @@ CloneStaticBlockObject(JSContext *cx, HandleObject enclosingScope, Handle<Static
         return nullptr;
 
     clone->initEnclosingNestedScope(enclosingScope);
-    clone->setLocalOffset(srcBlock->localOffset());
+    clone->setStackDepth(srcBlock->stackDepth());
 
     /* Shape::Range is reverse order, so build a list in forward order. */
     AutoShapeVector shapes(cx);
@@ -1187,7 +1194,7 @@ class DebugScopeProxy : public BaseProxyHandler
             if (!bi)
                 return false;
 
-            if (bi->kind() == Binding::VARIABLE || bi->kind() == Binding::CONSTANT) {
+            if (bi->kind() == VARIABLE || bi->kind() == CONSTANT) {
                 uint32_t i = bi.frameIndex();
                 if (script->varIsAliased(i))
                     return false;
@@ -1209,7 +1216,7 @@ class DebugScopeProxy : public BaseProxyHandler
                         vp.set(UndefinedValue());
                 }
             } else {
-                JS_ASSERT(bi->kind() == Binding::ARGUMENT);
+                JS_ASSERT(bi->kind() == ARGUMENT);
                 unsigned i = bi.frameIndex();
                 if (script->formalIsAliased(i))
                     return false;
@@ -1259,12 +1266,12 @@ class DebugScopeProxy : public BaseProxyHandler
             if (maybeLiveScope) {
                 AbstractFramePtr frame = maybeLiveScope->frame();
                 JSScript *script = frame.script();
-                uint32_t local = block->staticBlock().varToLocalIndex(i);
+                uint32_t local = block->slotToLocalIndex(script->bindings, shape->slot());
                 if (action == GET)
                     vp.set(frame.unaliasedLocal(local));
                 else
                     frame.unaliasedLocal(local) = vp;
-                JS_ASSERT(analyze::LocalSlot(script, local) < analyze::TotalSlots(script));
+                JS_ASSERT(analyze::LocalSlot(script, local) >= analyze::TotalSlots(script));
             } else {
                 if (action == GET)
                     vp.set(block->var(i, DONT_CHECK_ALIASING));
