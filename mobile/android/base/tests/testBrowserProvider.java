@@ -46,7 +46,7 @@ public class testBrowserProvider extends ContentProviderTest {
     private void ensureEmptyDatabase() throws Exception {
         Cursor c = null;
 
-        String guid = getStringColumn("Bookmarks", "GUID");
+        String guid = BrowserContract.Bookmarks.GUID;
 
         mProvider.delete(appendUriParam(BrowserContract.Bookmarks.CONTENT_URI, "PARAM_IS_SYNC", "1"),
                          guid + " != ? AND " +
@@ -458,8 +458,8 @@ public class testBrowserProvider extends ContentProviderTest {
 
             mAsserter.is(c.getCount(), 7, "Right number of special folders");
 
-            int rootId = getIntColumn("Bookmarks", "FIXED_ROOT_ID");
-            int readingListId = getIntColumn("Bookmarks", "FIXED_READING_LIST_ID");
+            int rootId = BrowserContract.Bookmarks.FIXED_ROOT_ID;
+            int readingListId = BrowserContract.Bookmarks.FIXED_READING_LIST_ID;
 
             while (c.moveToNext()) {
                 int id = c.getInt(c.getColumnIndex(BrowserContract.Bookmarks._ID));
@@ -1474,7 +1474,7 @@ public class testBrowserProvider extends ContentProviderTest {
             mProvider.insert(BrowserContract.Bookmarks.CONTENT_URI, combinedBookmark);
 
             // Create a reading list entries
-            int readingListId = getIntColumn("Bookmarks", "FIXED_READING_LIST_ID");
+            int readingListId = BrowserContract.Bookmarks.FIXED_READING_LIST_ID;
             ContentValues readingListItem = createBookmark(TITLE_3_BOOKMARK, URL_3, readingListId,
                 BrowserContract.Bookmarks.TYPE_BOOKMARK, 0, "tags", "description", "keyword");
             long readingListItemId = ContentUris.parseId(mProvider.insert(BrowserContract.Bookmarks.CONTENT_URI, readingListItem));
@@ -1550,7 +1550,7 @@ public class testBrowserProvider extends ContentProviderTest {
             mProvider.insert(BrowserContract.History.CONTENT_URI, combinedHistory);
 
             // Create a combined bookmark entry
-            int readingListId = getIntColumn("Bookmarks", "FIXED_READING_LIST_ID");
+            int readingListId = BrowserContract.Bookmarks.FIXED_READING_LIST_ID;
             ContentValues combinedReadingListItem = createBookmark(TITLE, URL, readingListId,
                 BrowserContract.Bookmarks.TYPE_BOOKMARK, 0, "tags", "description", "keyword");
             long combinedReadingListItemId = ContentUris.parseId(mProvider.insert(BrowserContract.Bookmarks.CONTENT_URI, combinedReadingListItem));

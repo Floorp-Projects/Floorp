@@ -19,7 +19,6 @@ import android.test.RenamingDelegatingContext;
 import android.test.mock.MockContentResolver;
 import android.test.mock.MockContext;
 import java.io.File;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.LinkedList;
 
@@ -196,22 +195,6 @@ abstract class ContentProviderTest extends BaseTest {
         mProvider.attachInfo(mProviderContext, null);
 
         mResolver.addProvider(mProviderAuthority, mProvider);
-    }
-
-    public Uri getUriColumn(String className, String columnId) throws Exception {
-        Class aClass = mClassLoader.loadClass("org.mozilla.gecko.db.BrowserContract$" + className);
-        return (Uri) aClass.getField(columnId).get(null);
-    }
-
-    public String getStringColumn(String className, String columnId) throws Exception {
-        Class aClass = mClassLoader.loadClass("org.mozilla.gecko.db.BrowserContract$" + className);
-        return (String) aClass.getField(columnId).get(null);
-    }
-
-    public int getIntColumn(String className, String columnId) throws Exception {
-        Class aClass = mClassLoader.loadClass("org.mozilla.gecko.db.BrowserContract$" + className);
-        Integer intColumn = (Integer) aClass.getField(columnId).get(null);
-        return intColumn.intValue();
     }
 
     public Uri appendUriParam(Uri uri, String paramName, String value) throws Exception {
