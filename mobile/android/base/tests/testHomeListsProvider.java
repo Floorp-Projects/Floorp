@@ -36,7 +36,8 @@ public class testHomeListsProvider extends ContentProviderTest {
 
     @Override
     public void setUp() throws Exception {
-        super.setUp("org.mozilla.gecko.db.HomeListsProvider", "AUTHORITY", "homelists.db");
+        // This test is disabled, so this just needs to compile.
+        super.setUp(null, null, "homelists.db");
 
         mTests.add(new TestFakeItems());
 
