@@ -13,6 +13,8 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.Random;
 
+import org.mozilla.gecko.db.BrowserContract;
+
 /*
  * This test is meant to exercise all operations exposed by Fennec's
  * history and bookmarks content provider. It does so in an isolated
@@ -158,10 +160,17 @@ public class testBrowserProvider extends ContentProviderTest {
     }
 
     private void loadMobileFolderId() throws Exception {
-        Cursor c = getBookmarkByGuid(MOBILE_FOLDER_GUID);
-        mAsserter.is(c.moveToFirst(), true, "Mobile bookmarks folder is present");
+        Cursor c = null;
+        try {
+            c = getBookmarkByGuid(BrowserContract.Bookmarks.MOBILE_FOLDER_GUID);
+            mAsserter.is(c.moveToFirst(), true, "Mobile bookmarks folder is present");
 
-        mMobileFolderId = c.getLong(c.getColumnIndex(mBookmarksIdCol));
+            mMobileFolderId = c.getLong(c.getColumnIndex(BrowserContract.Bookmarks._ID));
+        } finally {
+            if (c != null) {
+                c.close();
+            }
+        }
     }
 
     private void ensureEmptyDatabase() throws Exception {
