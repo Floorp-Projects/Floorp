@@ -25,9 +25,15 @@ public class Dispatcher extends Activity {
 
         if (bundle == null) {
             Log.e(LOGTAG, "Passed intent data missing.");
+            return;
         }
 
         String packageName = bundle.getString("packageName");
+
+        if (packageName == null) {
+            Log.e(LOGTAG, "Package name data missing.");
+            return;
+        }
 
         int index = allocator.getIndexForApp(packageName);
         boolean isInstalled = index >= 0;
