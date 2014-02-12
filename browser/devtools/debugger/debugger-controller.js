@@ -240,11 +240,7 @@ let DebuggerController = {
       } else {
         this._startDebuggingTab(startedDebugging.resolve);
         const startedTracing = promise.defer();
-        if (Prefs.tracerEnabled && traceActor) {
-          this._startTracingTab(traceActor, startedTracing.resolve);
-        } else {
-          startedTracing.resolve();
-        }
+        this._startTracingTab(traceActor, startedTracing.resolve);
 
         return promise.all([startedDebugging.promise, startedTracing.promise]);
       }
