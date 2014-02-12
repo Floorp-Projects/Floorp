@@ -122,21 +122,12 @@ public class FennecNativeDriver implements Driver {
         return mGeckoWidth;
     }
 
-    /** Find the named element in the list of known Fennec views. 
+    /** Find the element with given id.
+     *
      *  @return An Element representing the view, or null if the view is not found.
      */
-    public Element findElement(Activity activity, String name) {
-        if (name == null) {
-            FennecNativeDriver.log(FennecNativeDriver.LogLevel.ERROR,
-                "Can not findElements when passed a null");
-            return null;
-        }
-        if (mLocators.containsKey(name)) {
-            return new FennecNativeElement(Integer.decode((String)mLocators.get(name)), activity);
-        }
-        FennecNativeDriver.log(FennecNativeDriver.LogLevel.ERROR,
-            "findElement: Element '"+name+"' does not exist in the list");
-        return null;
+    public Element findElement(Activity activity, int id) {
+        return new FennecNativeElement(id, activity);
     }
 
     public void startFrameRecording() {
