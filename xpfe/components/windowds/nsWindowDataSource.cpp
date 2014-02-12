@@ -126,22 +126,17 @@ nsWindowDataSource::OnWindowTitleChange(nsIXULWindow *window,
                                         const char16_t *newTitle)
 {
     nsresult rv;
-    
-    nsVoidKey key(window);
 
-    nsCOMPtr<nsISupports> sup =
-        dont_AddRef(mWindowResources.Get(&key));
+    nsCOMPtr<nsIRDFResource> windowResource;
+    mWindowResources.Get(window, getter_AddRefs(windowResource));
 
     // oops, make sure this window is in the hashtable!
-    if (!sup) {
+    if (!windowResource) {
         OnOpenWindow(window);
-        sup = dont_AddRef(mWindowResources.Get(&key));
+        mWindowResources.Get(window, getter_AddRefs(windowResource));
     }
-    
-    NS_ENSURE_TRUE(sup, NS_ERROR_UNEXPECTED);
 
-    nsCOMPtr<nsIRDFResource> windowResource =
-        do_QueryInterface(sup);
+    NS_ENSURE_TRUE(windowResource, NS_ERROR_UNEXPECTED);
 
     nsCOMPtr<nsIRDFLiteral> newTitleLiteral;
     rv = gRDFService->GetLiteral(newTitle, getter_AddRefs(newTitleLiteral));
@@ -151,7 +146,7 @@ nsWindowDataSource::OnWindowTitleChange(nsIXULWindow *window,
     nsCOMPtr<nsIRDFNode> oldTitleNode;
     rv = GetTarget(windowResource, kNC_Name, true,
                    getter_AddRefs(oldTitleNode));
-    
+
     // assert the change
     if (NS_SUCCEEDED(rv) && oldTitleNode)
         // has an existing window title, update it
@@ -164,7 +159,7 @@ nsWindowDataSource::OnWindowTitleChange(nsIXULWindow *window,
     {
       NS_ERROR("unable to set window name");
     }
-    
+
     return NS_OK;
 }
 
@@ -178,8 +173,7 @@ nsWindowDataSource::OnOpenWindow(nsIXULWindow *window)
     nsCOMPtr<nsIRDFResource> windowResource;
     gRDFService->GetResource(windowId, getter_AddRefs(windowResource));
 
-    nsVoidKey key(window);
-    mWindowResources.Put(&key, windowResource);
+    mWindowResources.Put(window, windowResource);
 
     // assert the new window
     if (mContainer)
@@ -192,38 +186,39 @@ nsWindowDataSource::OnOpenWindow(nsIXULWindow *window)
 NS_IMETHODIMP
 nsWindowDataSource::OnCloseWindow(nsIXULWindow *window)
 {
-    nsVoidKey key(window);
-    nsCOMPtr<nsIRDFResource> resource;
-
     nsresult rv;
-
-    if (!mWindowResources.Remove(&key, getter_AddRefs(resource)))
+    nsCOMPtr<nsIRDFResource> resource;
+    mWindowResources.Get(window, getter_AddRefs(resource));
+    if (!resource) {
         return NS_ERROR_UNEXPECTED;
+    }
+
+    mWindowResources.Remove(window);
 
     // make sure we're not shutting down
     if (!mContainer) return NS_OK;
-    
+
     nsCOMPtr<nsIRDFNode> oldKeyNode;
     nsCOMPtr<nsIRDFInt> oldKeyInt;
-    
+
     // get the old keyIndex, if any
     rv = GetTarget(resource, kNC_KeyIndex, true,
                    getter_AddRefs(oldKeyNode));
     if (NS_SUCCEEDED(rv) && (rv != NS_RDF_NO_VALUE))
         oldKeyInt = do_QueryInterface(oldKeyNode);
 
-    
+
     // update RDF and keyindex - from this point forward we'll ignore
     // errors, because they just indicate some kind of RDF inconsistency
     int32_t winIndex = -1;
     rv = mContainer->IndexOf(resource, &winIndex);
-        
+
     if (NS_FAILED(rv))
         return NS_OK;
-            
+
     // unassert the old window, ignore any error
     mContainer->RemoveElement(resource, true);
-    
+
     nsCOMPtr<nsISimpleEnumerator> children;
     rv = mContainer->GetElements(getter_AddRefs(children));
     if (NS_FAILED(rv))
@@ -264,12 +259,12 @@ nsWindowDataSource::OnCloseWindow(nsIXULWindow *window)
         // from (none) to "9"
         else if (newKeyInt)
             Assert(windowResource, kNC_KeyIndex, newKeyInt, true);
-        
+
         // somehow inserting a window above this one,
         // "9" to (none)
         else if (oldKeyInt)
             Unassert(windowResource, kNC_KeyIndex, oldKeyInt);
-        
+
     }
     return NS_OK;
 }
@@ -279,24 +274,16 @@ struct findWindowClosure {
     nsIXULWindow *resultWindow;
 };
 
-static bool
-findWindow(nsHashKey* aKey, void *aData, void* aClosure)
+static PLDHashOperator
+findWindow(nsIXULWindow* aWindow, nsIRDFResource* aResource, void* aClosure)
 {
-    nsVoidKey *thisKey = static_cast<nsVoidKey*>(aKey);
+    findWindowClosure* closure = static_cast<findWindowClosure*>(aClosure);
 
-    nsIRDFResource *resource =
-        static_cast<nsIRDFResource*>(aData);
-    
-    findWindowClosure* closure =
-        static_cast<findWindowClosure*>(aClosure);
-
-    if (resource == closure->targetResource) {
-        closure->resultWindow =
-            static_cast<nsIXULWindow*>
-                       (thisKey->GetValue());
-        return false;         // stop enumerating
+    if (aResource == closure->targetResource) {
+        closure->resultWindow = aWindow;
+        return PL_DHASH_STOP;
     }
-    return true;
+    return PL_DHASH_NEXT;
 }
 
 // nsIWindowDataSource implementation
@@ -311,7 +298,7 @@ nsWindowDataSource::GetWindowForResource(const char *aResourceString,
 
     // now reverse-lookup in the hashtable
     findWindowClosure closure = { windowResource.get(), nullptr };
-    mWindowResources.Enumerate(findWindow, (void*)&closure);
+    mWindowResources.EnumerateRead(findWindow, &closure);
     if (closure.resultWindow) {
 
         // this sucks, we have to jump through docshell to go from
@@ -321,7 +308,7 @@ nsWindowDataSource::GetWindowForResource(const char *aResourceString,
 
         if (docShell) {
             nsCOMPtr<nsIDOMWindow> result = do_GetInterface(docShell);
-        
+
             *aResult = result;
             NS_IF_ADDREF(*aResult);
         }
@@ -341,12 +328,12 @@ nsWindowDataSource::GetWindowForResource(const char *aResourceString,
 NS_IMETHODIMP nsWindowDataSource::GetURI(char * *aURI)
 {
     NS_ENSURE_ARG_POINTER(aURI);
-    
+
     *aURI = ToNewCString(NS_LITERAL_CSTRING("rdf:window-mediator"));
 
     if (!*aURI)
         return NS_ERROR_OUT_OF_MEMORY;
-    
+
     return NS_OK;
 }
 
@@ -373,11 +360,10 @@ NS_IMETHODIMP nsWindowDataSource::GetTarget(nsIRDFResource *aSource, nsIRDFResou
         rv = gRDFService->GetIntLiteral(theIndex, getter_AddRefs(indexInt));
         if (NS_FAILED(rv)) return(rv);
         if (!indexInt) return(NS_ERROR_FAILURE);
-        
+
         return CallQueryInterface(indexInt, _retval);
     }
 
-    
     return mInner->GetTarget(aSource, aProperty, aTruthValue, _retval);
 }
 
@@ -532,7 +518,7 @@ NS_IMETHODIMP nsWindowDataSource::BeginUpdateBatch()
         return mInner->BeginUpdateBatch();
     return NS_OK;
 }
-                                                                                
+
 /* void endUpdateBatch (); */
 NS_IMETHODIMP nsWindowDataSource::EndUpdateBatch()
 {
@@ -561,7 +547,7 @@ static const mozilla::Module::CategoryEntry kWindowDSCategories[] = {
     { "app-startup", "Window Data Source", "service," NS_RDF_DATASOURCE_CONTRACTID_PREFIX "window-mediator" },
     { nullptr }
 };
-        
+
 static const mozilla::Module kWindowDSModule = {
     mozilla::Module::kVersion,
     kWindowDSCIDs,

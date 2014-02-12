@@ -806,6 +806,12 @@ interface WebGLExtensionDebugRendererInfo
 };
 
 [NoInterfaceObject]
+interface WebGLExtensionDebugShaders
+{
+    DOMString getTranslatedShaderSource(WebGLShader? shader);
+};
+
+[NoInterfaceObject]
 interface WebGLExtensionDepthTexture
 {
     const GLenum UNSIGNED_INT_24_8_WEBGL = 0x84FA;

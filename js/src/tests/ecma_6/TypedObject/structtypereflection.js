@@ -20,20 +20,25 @@ function runTests() {
     var S = new StructType({x: int32, y: uint8, z: float64});
     assertEq(S.__proto__, StructType.prototype);
     assertEq(S.prototype.__proto__, StructType.prototype.prototype);
-    assertEq(S.toSource(), "StructType({x: int32, y: uint8, z: float64})");
+    assertEq(S.toSource(), "new StructType({x: int32, y: uint8, z: float64})");
     assertEq(S.variable, false);
     assertEq(S.byteLength, 16);
     assertEq(S.byteAlignment, 8);
-    assertEq(S.fieldNames[0], "x");
-    assertEq(S.fieldNames[1], "y");
-    assertEq(S.fieldNames[2], "z");
-    assertEq(S.fieldNames.length, 3);
+    var fieldNames = Object.getOwnPropertyNames(S.fieldTypes);
+    assertEq(fieldNames[0], "x");
+    assertEq(fieldNames[1], "y");
+    assertEq(fieldNames[2], "z");
+    assertEq(fieldNames.length, 3);
     assertEq(S.fieldTypes.x, int32);
     assertEq(S.fieldTypes.y, uint8);
     assertEq(S.fieldTypes.z, float64);
     assertEq(S.fieldOffsets.x, 0);
     assertEq(S.fieldOffsets.y, 4);
     assertEq(S.fieldOffsets.z, 8);
+
+    // fieldTypes and fieldOffsets should be frozen
+    assertEq(Object.isFrozen(S.fieldTypes), true);
+    assertEq(Object.isFrozen(S.fieldOffsets), true);
 
     if (typeof reportCompare === "function")
         reportCompare(true, true);
