@@ -153,16 +153,16 @@ BasicImageLayer::DeprecatedGetAndPaintCurrentImage(gfxContext* aContext,
 
   mContainer->SetImageFactory(mManager->IsCompositingCheap() ? nullptr : BasicManager()->GetImageFactory());
 
-  nsRefPtr<gfxASurface> surface;
-  AutoLockImage autoLock(mContainer, getter_AddRefs(surface));
+  RefPtr<gfx::SourceSurface> surface;
+  AutoLockImage autoLock(mContainer, &surface);
   Image *image = autoLock.GetImage();
   gfx::IntSize size = mSize = autoLock.GetSize();
 
-  if (!surface || surface->CairoStatus()) {
+  if (!surface || !surface->IsValid()) {
     return nullptr;
   }
 
-  nsRefPtr<gfxPattern> pat = new gfxPattern(surface);
+  nsRefPtr<gfxPattern> pat = new gfxPattern(surface, gfx::Matrix());
   if (!pat) {
     return nullptr;
   }
