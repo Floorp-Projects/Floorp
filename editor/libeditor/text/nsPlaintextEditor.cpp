@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
+#include "TextComposition.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Selection.h"
@@ -848,16 +849,17 @@ nsPlaintextEditor::UpdateIMEComposition(nsIDOMEvent* aDOMTextEvent)
 
   nsRefPtr<nsCaret> caretP = ps->GetCaret();
 
-  // Update information of clauses in the new composition string.
-  // This will be refered by followed methods.
   nsCOMPtr<nsIPrivateTextEvent> privateTextEvent =
     do_QueryInterface(aDOMTextEvent);
   NS_ENSURE_TRUE(privateTextEvent, NS_ERROR_INVALID_ARG);
+
+  // XXX This approach is ugly, we should sort out the text event handling.
+  mComposition->EditorWillHandleTextEvent(widgetTextEvent);
+
+  // Update information of clauses in the new composition string.
+  // This will be refered by followed methods.
   mIMETextRangeList = privateTextEvent->GetInputRange();
   NS_ABORT_IF_FALSE(mIMETextRangeList, "mIMETextRangeList must not be nullptr");
-
-  // We set mIsIMEComposing properly.
-  SetIsIMEComposing();
 
   {
     nsAutoPlaceHolderBatch batch(this, nsGkAtoms::IMETxnName);
@@ -875,7 +877,7 @@ nsPlaintextEditor::UpdateIMEComposition(nsIDOMEvent* aDOMTextEvent)
   // Note that if committed, we don't need to notify it since it will be
   // notified at followed compositionend event.
   // NOTE: We must notify after the auto batch will be gone.
-  if (mIsIMEComposing) {
+  if (IsIMEComposing()) {
     NotifyEditorObservers();
   }
 
