@@ -9,6 +9,7 @@
 #include "nsContentUtils.h"
 #include "nsEventDispatcher.h"
 #include "nsIContent.h"
+#include "nsIEditor.h"
 #include "nsIMEStateManager.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
@@ -50,7 +51,19 @@ TextComposition::DispatchEvent(WidgetGUIEvent* aEvent,
   nsEventDispatcher::Dispatch(mNode, mPresContext,
                               aEvent, nullptr, aStatus, aCallBack);
 
-  MOZ_ASSERT_IF(aEvent->message == NS_COMPOSITION_END, !mIsComposing);
+  // Emulate editor behavior of text event handler if no editor handles
+  // composition/text events.
+  if (aEvent->message == NS_TEXT_TEXT && !HasEditor()) {
+    EditorWillHandleTextEvent(aEvent->AsTextEvent());
+    EditorDidHandleTextEvent();
+  }
+
+#ifdef DEBUG
+  else if (aEvent->message == NS_COMPOSITION_END) {
+    MOZ_ASSERT(!mIsComposing, "Why is the editor still composing?");
+    MOZ_ASSERT(!HasEditor(), "Why does the editor still keep to hold this?");
+  }
+#endif // #ifdef DEBUG
 
   // Notify composition update to widget if possible
   NotityUpdateComposition(aEvent);
@@ -140,6 +153,37 @@ void
 TextComposition::EditorDidHandleTextEvent()
 {
   mString = mLastData;
+}
+
+void
+TextComposition::StartHandlingComposition(nsIEditor* aEditor)
+{
+  MOZ_ASSERT(!HasEditor(), "There is a handling editor already");
+  mEditorWeak = do_GetWeakReference(aEditor);
+}
+
+void
+TextComposition::EndHandlingComposition(nsIEditor* aEditor)
+{
+#ifdef DEBUG
+  nsCOMPtr<nsIEditor> editor = GetEditor();
+  MOZ_ASSERT(editor == aEditor, "Another editor handled the composition?");
+#endif // #ifdef DEBUG
+  mEditorWeak = nullptr;
+}
+
+already_AddRefed<nsIEditor>
+TextComposition::GetEditor() const
+{
+  nsCOMPtr<nsIEditor> editor = do_QueryReferent(mEditorWeak);
+  return editor.forget();
+}
+
+bool
+TextComposition::HasEditor() const
+{
+  nsCOMPtr<nsIEditor> editor = GetEditor();
+  return !!editor;
 }
 
 /******************************************************************************
