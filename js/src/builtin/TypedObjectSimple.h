@@ -213,7 +213,7 @@ class X4TypeDescr : public SizedTypeDescr
     macro_(X4TypeDescr::TYPE_INT32, int32_t, int32)                  \
     macro_(X4TypeDescr::TYPE_FLOAT32, float, float32)
 
-bool IsTypedDatumClass(const Class *clasp); // Defined in TypedArrayObject.h
+bool IsTypedObjectClass(const Class *clasp); // Defined in TypedArrayObject.h
 
 } // namespace js
 

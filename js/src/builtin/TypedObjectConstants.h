@@ -103,25 +103,25 @@
 #define JS_X4TYPEREPR_FLOAT32       1
 
 ///////////////////////////////////////////////////////////////////////////
-// Slots for datums (base class of all typed objects)
+// Slots for typed objects
 
-#define JS_DATUM_SLOT_BYTEOFFSET       0
-#define JS_DATUM_SLOT_BYTELENGTH       1
-#define JS_DATUM_SLOT_OWNER            2
-#define JS_DATUM_SLOT_NEXT_VIEW        3
-#define JS_DATUM_SLOT_NEXT_BUFFER      4
+#define JS_TYPEDOBJ_SLOT_BYTEOFFSET       0
+#define JS_TYPEDOBJ_SLOT_BYTELENGTH       1
+#define JS_TYPEDOBJ_SLOT_OWNER            2
+#define JS_TYPEDOBJ_SLOT_NEXT_VIEW        3
+#define JS_TYPEDOBJ_SLOT_NEXT_BUFFER      4
 
 #define JS_DATAVIEW_SLOTS              5 // Number of slots for data views
 
-#define JS_DATUM_SLOT_LENGTH           5 // Length of array (see (*) below)
-#define JS_DATUM_SLOT_TYPE_DESCR       6 // For typed objects, type descr
+#define JS_TYPEDOBJ_SLOT_LENGTH           5 // Length of array (see (*) below)
+#define JS_TYPEDOBJ_SLOT_TYPE_DESCR       6 // For typed objects, type descr
 
-#define JS_DATUM_SLOT_DATA             7 // private slot, based on alloc kind
-#define JS_DATUM_SLOTS                 7 // Number of slots for typed objs
+#define JS_TYPEDOBJ_SLOT_DATA             7 // private slot, based on alloc kind
+#define JS_TYPEDOBJ_SLOTS                 7 // Number of slots for typed objs
 
-// (*) The JS_DATUM_SLOT_LENGTH slot stores the length for datums of
+// (*) The JS_TYPEDOBJ_SLOT_LENGTH slot stores the length for typed objects of
 // sized and unsized array type. The slot contains 0 for non-arrays.
-// The slot also contains 0 for *unattached* datums, no matter what
+// The slot also contains 0 for *unattached* typed objects, no matter what
 // type they have.
 
 #endif

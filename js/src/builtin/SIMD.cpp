@@ -39,14 +39,14 @@ extern const JSFunctionSpec Int32x4Methods[];
     bool Type32x4##Lane##lane(JSContext *cx, unsigned argc, Value *vp) { \
         static const char *laneNames[] = {"lane 0", "lane 1", "lane 2", "lane3"}; \
         CallArgs args = CallArgsFromVp(argc, vp); \
-        if(!args.thisv().isObject() || !args.thisv().toObject().is<TypedDatum>()) {        \
+        if(!args.thisv().isObject() || !args.thisv().toObject().is<TypedObject>()) {        \
             JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO, \
                                  X4TypeDescr::class_.name, laneNames[lane], \
                                  InformalValueTypeName(args.thisv())); \
             return false; \
         } \
-        TypedDatum &datum = args.thisv().toObject().as<TypedDatum>();        \
-        TypeDescr &descr = datum.typeDescr(); \
+        TypedObject &typedObj = args.thisv().toObject().as<TypedObject>(); \
+        TypeDescr &descr = typedObj.typeDescr(); \
         if (descr.kind() != TypeDescr::X4 || \
             descr.as<X4TypeDescr>().type() != Type32x4::type) \
         {  \
@@ -55,7 +55,7 @@ extern const JSFunctionSpec Int32x4Methods[];
                                  InformalValueTypeName(args.thisv())); \
             return false; \
         } \
-        Type32x4::Elem *data = reinterpret_cast<Type32x4::Elem *>(datum.typedMem()); \
+        Type32x4::Elem *data = reinterpret_cast<Type32x4::Elem *>(typedObj.typedMem()); \
         Type32x4::setReturn(args, data[lane]); \
         return true; \
     }
@@ -72,14 +72,14 @@ extern const JSFunctionSpec Int32x4Methods[];
 #define SIGN_MASK(Type32x4) \
     bool Type32x4##SignMask(JSContext *cx, unsigned argc, Value *vp) { \
         CallArgs args = CallArgsFromVp(argc, vp); \
-        if(!args.thisv().isObject() || !args.thisv().toObject().is<TypedDatum>()) {        \
+        if(!args.thisv().isObject() || !args.thisv().toObject().is<TypedObject>()) {        \
             JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO, \
                                  X4TypeDescr::class_.name, "signMask", \
                                  InformalValueTypeName(args.thisv())); \
             return false; \
         } \
-        TypedDatum &datum = args.thisv().toObject().as<TypedDatum>();        \
-        TypeDescr &descr = datum.typeDescr(); \
+        TypedObject &typedObj = args.thisv().toObject().as<TypedObject>(); \
+        TypeDescr &descr = typedObj.typeDescr(); \
         if (descr.kind() != TypeDescr::X4 || \
             descr.as<X4TypeDescr>().type() != Type32x4::type) \
         { \
@@ -88,7 +88,7 @@ extern const JSFunctionSpec Int32x4Methods[];
                                  InformalValueTypeName(args.thisv())); \
             return false; \
         } \
-        Type32x4::Elem *data = reinterpret_cast<Type32x4::Elem *>(datum.typedMem()); \
+        Type32x4::Elem *data = reinterpret_cast<Type32x4::Elem *>(typedObj.typedMem()); \
         int32_t mx = data[0] < 0.0 ? 1 : 0; \
         int32_t my = data[1] < 0.0 ? 1 : 0; \
         int32_t mz = data[2] < 0.0 ? 1 : 0; \
@@ -124,15 +124,15 @@ class Int32x4Defn {
   public:
     static const X4TypeDescr::Type type = X4TypeDescr::TYPE_INT32;
     static const JSFunctionSpec TypeDescriptorMethods[];
-    static const JSPropertySpec TypedDatumProperties[];
-    static const JSFunctionSpec TypedDatumMethods[];
+    static const JSPropertySpec TypedObjectProperties[];
+    static const JSFunctionSpec TypedObjectMethods[];
 };
 class Float32x4Defn {
   public:
     static const X4TypeDescr::Type type = X4TypeDescr::TYPE_FLOAT32;
     static const JSFunctionSpec TypeDescriptorMethods[];
-    static const JSPropertySpec TypedDatumProperties[];
-    static const JSFunctionSpec TypedDatumMethods[];
+    static const JSPropertySpec TypedObjectProperties[];
+    static const JSFunctionSpec TypedObjectMethods[];
 };
 } // namespace js
 
@@ -143,7 +143,7 @@ const JSFunctionSpec js::Float32x4Defn::TypeDescriptorMethods[] = {
     JS_FS_END
 };
 
-const JSPropertySpec js::Float32x4Defn::TypedDatumProperties[] = {
+const JSPropertySpec js::Float32x4Defn::TypedObjectProperties[] = {
     JS_PSG("x", Float32x4Lane0, JSPROP_PERMANENT),
     JS_PSG("y", Float32x4Lane1, JSPROP_PERMANENT),
     JS_PSG("z", Float32x4Lane2, JSPROP_PERMANENT),
@@ -152,7 +152,7 @@ const JSPropertySpec js::Float32x4Defn::TypedDatumProperties[] = {
     JS_PS_END
 };
 
-const JSFunctionSpec js::Float32x4Defn::TypedDatumMethods[] = {
+const JSFunctionSpec js::Float32x4Defn::TypedObjectMethods[] = {
     JS_SELF_HOSTED_FN("toSource", "X4ToSource", 0, 0),
     JS_FS_END
 };
@@ -164,7 +164,7 @@ const JSFunctionSpec js::Int32x4Defn::TypeDescriptorMethods[] = {
     JS_FS_END,
 };
 
-const JSPropertySpec js::Int32x4Defn::TypedDatumProperties[] = {
+const JSPropertySpec js::Int32x4Defn::TypedObjectProperties[] = {
     JS_PSG("x", Int32x4Lane0, JSPROP_PERMANENT),
     JS_PSG("y", Int32x4Lane1, JSPROP_PERMANENT),
     JS_PSG("z", Int32x4Lane2, JSPROP_PERMANENT),
@@ -173,7 +173,7 @@ const JSPropertySpec js::Int32x4Defn::TypedDatumProperties[] = {
     JS_PS_END
 };
 
-const JSFunctionSpec js::Int32x4Defn::TypedDatumMethods[] = {
+const JSFunctionSpec js::Int32x4Defn::TypedObjectMethods[] = {
     JS_SELF_HOSTED_FN("toSource", "X4ToSource", 0, 0),
     JS_FS_END
 };
@@ -218,8 +218,8 @@ CreateX4Class(JSContext *cx, Handle<GlobalObject*> global)
         return nullptr;
 
     if (!LinkConstructorAndPrototype(cx, x4, proto) ||
-        !DefinePropertiesAndBrand(cx, proto, T::TypedDatumProperties,
-                                  T::TypedDatumMethods))
+        !DefinePropertiesAndBrand(cx, proto, T::TypedObjectProperties,
+                                  T::TypedObjectMethods))
     {
         return nullptr;
     }
@@ -246,7 +246,7 @@ X4TypeDescr::call(JSContext *cx, unsigned argc, Value *vp)
     }
 
     Rooted<X4TypeDescr*> descr(cx, &args.callee().as<X4TypeDescr>());
-    Rooted<TypedDatum*> result(cx, TypedDatum::createZeroed(cx, descr, 0));
+    Rooted<TypedObject*> result(cx, TypedObject::createZeroed(cx, descr, 0));
     if (!result)
         return false;
 
@@ -366,9 +366,9 @@ js_InitSIMDClass(JSContext *cx, HandleObject obj)
 template<typename V>
 static bool
 ObjectIsVector(JSObject &obj) {
-    if (!obj.is<TypedDatum>())
+    if (!obj.is<TypedObject>())
         return false;
-    TypeDescr &typeRepr = obj.as<TypedDatum>().typeDescr();
+    TypeDescr &typeRepr = obj.as<TypedObject>().typeDescr();
     if (typeRepr.kind() != TypeDescr::X4)
         return false;
     return typeRepr.as<X4TypeDescr>().type() == V::type;
@@ -381,7 +381,7 @@ js::Create(JSContext *cx, typename V::Elem *data)
     Rooted<TypeDescr*> typeDescr(cx, &V::GetTypeDescr(*cx->global()));
     JS_ASSERT(typeDescr);
 
-    Rooted<TypedDatum *> result(cx, TypedDatum::createZeroed(cx, typeDescr, 0));
+    Rooted<TypedObject *> result(cx, TypedObject::createZeroed(cx, typeDescr, 0));
     if (!result)
         return nullptr;
 
@@ -533,7 +533,7 @@ Func(JSContext *cx, unsigned argc, Value *vp)
         }
         typename V::Elem *val =
             reinterpret_cast<typename V::Elem *>(
-                args[0].toObject().as<TypedDatum>().typedMem());
+                args[0].toObject().as<TypedObject>().typedMem());
         typename Vret::Elem result[Vret::lanes];
         for (int32_t i = 0; i < Vret::lanes; i++)
             result[i] = Op::apply(val[i], 0);
@@ -555,10 +555,10 @@ Func(JSContext *cx, unsigned argc, Value *vp)
 
         typename V::Elem *left =
             reinterpret_cast<typename V::Elem *>(
-                args[0].toObject().as<TypedDatum>().typedMem());
+                args[0].toObject().as<TypedObject>().typedMem());
         typename V::Elem *right =
             reinterpret_cast<typename V::Elem *>(
-                args[1].toObject().as<TypedDatum>().typedMem());
+                args[1].toObject().as<TypedObject>().typedMem());
 
         typename Vret::Elem result[Vret::lanes];
         for (int32_t i = 0; i < Vret::lanes; i++)
@@ -592,7 +592,7 @@ FuncWith(JSContext *cx, unsigned argc, Value *vp)
 
     typename V::Elem *val =
         reinterpret_cast<typename V::Elem *>(
-            args[0].toObject().as<TypedDatum>().typedMem());
+            args[0].toObject().as<TypedObject>().typedMem());
 
     typename Vret::Elem result[Vret::lanes];
     for (int32_t i = 0; i < Vret::lanes; i++) {
@@ -628,7 +628,7 @@ FuncShuffle(JSContext *cx, unsigned argc, Value *vp)
 
         typename V::Elem *val =
             reinterpret_cast<typename V::Elem *>(
-                args[0].toObject().as<TypedDatum>().typedMem());
+                args[0].toObject().as<TypedObject>().typedMem());
         typename Vret::Elem result[Vret::lanes];
         for (int32_t i = 0; i < Vret::lanes; i++) {
             typename Vret::Elem arg1;
@@ -651,10 +651,10 @@ FuncShuffle(JSContext *cx, unsigned argc, Value *vp)
         }
         typename V::Elem *val1 =
             reinterpret_cast<typename V::Elem *>(
-                args[0].toObject().as<TypedDatum>().typedMem());
+                args[0].toObject().as<TypedObject>().typedMem());
         typename V::Elem *val2 =
             reinterpret_cast<typename V::Elem *>(
-                args[1].toObject().as<TypedDatum>().typedMem());
+                args[1].toObject().as<TypedObject>().typedMem());
         typename Vret::Elem result[Vret::lanes];
         for (int32_t i = 0; i < Vret::lanes; i++) {
             typename Vret::Elem arg2;
@@ -691,7 +691,7 @@ FuncConvert(JSContext *cx, unsigned argc, Value *vp)
     }
     typename V::Elem *val =
         reinterpret_cast<typename V::Elem *>(
-            args[0].toObject().as<TypedDatum>().typedMem());
+            args[0].toObject().as<TypedObject>().typedMem());
     typename Vret::Elem result[Vret::lanes];
     for (int32_t i = 0; i < Vret::lanes; i++)
         result[i] = static_cast<typename Vret::Elem>(val[i]);
@@ -718,7 +718,7 @@ FuncConvertBits(JSContext *cx, unsigned argc, Value *vp)
     }
     typename Vret::Elem *val =
         reinterpret_cast<typename Vret::Elem *>(
-            args[0].toObject().as<TypedDatum>().typedMem());
+            args[0].toObject().as<TypedObject>().typedMem());
 
     RootedObject obj(cx, Create<Vret>(cx, val));
     if (!obj)
@@ -813,11 +813,11 @@ Float32x4Clamp(JSContext *cx, unsigned argc, Value *vp)
         return false;
     }
     float *val = reinterpret_cast<float *>(
-        args[0].toObject().as<TypedDatum>().typedMem());
+        args[0].toObject().as<TypedObject>().typedMem());
     float *lowerLimit = reinterpret_cast<float *>(
-        args[1].toObject().as<TypedDatum>().typedMem());
+        args[1].toObject().as<TypedObject>().typedMem());
     float *upperLimit = reinterpret_cast<float *>(
-        args[2].toObject().as<TypedDatum>().typedMem());
+        args[2].toObject().as<TypedObject>().typedMem());
 
     float result[Float32x4::lanes];
     result[0] = val[0] < lowerLimit[0] ? lowerLimit[0] : val[0];
@@ -850,11 +850,11 @@ Int32x4Select(JSContext *cx, unsigned argc, Value *vp)
         return false;
     }
     int32_t *val = reinterpret_cast<int32_t *>(
-        args[0].toObject().as<TypedDatum>().typedMem());
+        args[0].toObject().as<TypedObject>().typedMem());
     int32_t *tv = reinterpret_cast<int32_t *>(
-        args[1].toObject().as<TypedDatum>().typedMem());
+        args[1].toObject().as<TypedObject>().typedMem());
     int32_t *fv = reinterpret_cast<int32_t *>(
-        args[2].toObject().as<TypedDatum>().typedMem());
+        args[2].toObject().as<TypedObject>().typedMem());
     int32_t tr[Int32x4::lanes];
     for (int32_t i = 0; i < Int32x4::lanes; i++)
         tr[i] = And<int32_t, Int32x4>::apply(val[i], tv[i]);
