@@ -55,6 +55,7 @@ function startTest(test, token) {
   }
 
   element.oncanplaythrough = function () {
+    element.oncanplaythrough = null;
     for (var i = 0; i < mExpectStopCount; i++) {
       mediaRecorder.start(1000);
       mediaRecorder.stop();

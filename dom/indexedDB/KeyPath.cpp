@@ -389,7 +389,7 @@ KeyPath::ExtractKeyAsJSVal(JSContext* aCx, const JS::Value& aValue,
   }
 
   const uint32_t len = mStrings.Length();
-  JS::Rooted<JSObject*> arrayObj(aCx, JS_NewArrayObject(aCx, len, nullptr));
+  JS::Rooted<JSObject*> arrayObj(aCx, JS_NewArrayObject(aCx, len));
   if (!arrayObj) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -501,7 +501,7 @@ KeyPath::ToJSVal(JSContext* aCx, JS::MutableHandle<JS::Value> aValue) const
 {
   if (IsArray()) {
     uint32_t len = mStrings.Length();
-    JS::Rooted<JSObject*> array(aCx, JS_NewArrayObject(aCx, len, nullptr));
+    JS::Rooted<JSObject*> array(aCx, JS_NewArrayObject(aCx, len));
     if (!array) {
       IDB_WARNING("Failed to make array!");
       return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;

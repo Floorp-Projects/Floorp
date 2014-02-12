@@ -9,6 +9,8 @@
 #include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsCOMPtr.h"                   // for already_AddRefed
 #include "nsISupportsImpl.h"            // for Layer::AddRef, etc
+#include "gfx2DGlue.h"
+
 class gfxContext;
 
 using namespace mozilla::gfx;
@@ -18,17 +20,39 @@ namespace mozilla {
 namespace layers {
 
 void
-BasicCanvasLayer::Paint(gfxContext* aContext, Layer* aMaskLayer)
+BasicCanvasLayer::Paint(DrawTarget* aTarget, SourceSurface* aMaskSurface)
 {
   if (IsHidden())
     return;
 
   FirePreTransactionCallback();
-  UpdateSurface();
+  UpdateTarget();
   FireDidTransactionCallback();
 
-  gfxContext::GraphicsOperator mixBlendMode = GetEffectiveMixBlendMode();
-  PaintWithOpacity(aContext, GetEffectiveOpacity(), aMaskLayer, mixBlendMode != gfxContext::OPERATOR_OVER ? mixBlendMode : GetOperator());
+  CompositionOp mixBlendMode = GetEffectiveMixBlendMode();
+  PaintWithOpacity(aTarget,
+                   GetEffectiveOpacity(),
+                   aMaskSurface,
+                   mixBlendMode != CompositionOp::OP_OVER ? mixBlendMode : GetOperator());
+}
+
+void
+BasicCanvasLayer::DeprecatedPaint(gfxContext* aContext, Layer* aMaskLayer)
+{
+  if (IsHidden())
+    return;
+
+  FirePreTransactionCallback();
+  DeprecatedUpdateSurface();
+  FireDidTransactionCallback();
+
+  gfxContext::GraphicsOperator mixBlendMode = DeprecatedGetEffectiveMixBlendMode();
+  DeprecatedPaintWithOpacity(aContext,
+                             GetEffectiveOpacity(),
+                             aMaskLayer,
+                             mixBlendMode != gfxContext::OPERATOR_OVER ?
+                               mixBlendMode :
+                               DeprecatedGetOperator());
 }
 
 already_AddRefed<CanvasLayer>
