@@ -70,7 +70,11 @@ function check_getchain(ee_cert, ssl_ca, email_ca){
   check_matching_issuer_and_getchain(ee_cert.issuer.serialNumber, ee_cert);
 }
 
-function run_test() {
+function run_test_in_mode(useInsanity) {
+  Services.prefs.setBoolPref("security.use_insanity_verification", useInsanity);
+  clearOCSPCache();
+  clearSessionCache();
+
   for (let i = 0 ; i < certList.length; i++) {
     load_cert(certList[i], ',,');
   }
@@ -83,7 +87,9 @@ function run_test() {
   check_getchain(ee_cert, ca[1], ca[2]);
   // Swap ca certs to deal alternate trust settings.
   check_getchain(ee_cert, ca[2], ca[1]);
-
-  run_next_test();
 }
 
+function run_test() {
+  run_test_in_mode(true);
+  run_test_in_mode(false);
+}

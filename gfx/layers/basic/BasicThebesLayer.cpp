@@ -62,7 +62,7 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
   }
 
   float opacity = GetEffectiveOpacity();
-  gfxContext::GraphicsOperator mixBlendMode = GetEffectiveMixBlendMode();
+  CompositionOp mixBlendMode = GetEffectiveMixBlendMode();
 
   if (!BasicManager()->IsRetained()) {
     NS_ASSERTION(readbackUpdates.IsEmpty(), "Can't do readback for non-retained layer");
@@ -83,14 +83,17 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
       aContext->Save();
 
       bool needsClipToVisibleRegion = GetClipToVisibleRegion();
-      bool needsGroup =
-          opacity != 1.0 || GetOperator() != gfxContext::OPERATOR_OVER || mixBlendMode != gfxContext::OPERATOR_OVER || aMaskLayer;
+      bool needsGroup = opacity != 1.0 ||
+                        GetOperator() != CompositionOp::OP_OVER ||
+                        mixBlendMode != CompositionOp::OP_OVER ||
+                        aMaskLayer;
       nsRefPtr<gfxContext> groupContext;
       if (needsGroup) {
         groupContext =
           BasicManager()->PushGroupForLayer(aContext, this, toDraw,
                                             &needsClipToVisibleRegion);
-        if (GetOperator() != gfxContext::OPERATOR_OVER || mixBlendMode != gfxContext::OPERATOR_OVER) {
+        if (GetOperator() != CompositionOp::OP_OVER ||
+            mixBlendMode != CompositionOp::OP_OVER) {
           needsClipToVisibleRegion = true;
         }
       } else {
@@ -103,7 +106,9 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
         if (needsClipToVisibleRegion) {
           gfxUtils::ClipToRegion(aContext, toDraw);
         }
-        AutoSetOperator setOptimizedOperator(aContext, mixBlendMode != gfxContext::OPERATOR_OVER ? mixBlendMode : GetOperator());
+        CompositionOp op =
+          mixBlendMode != CompositionOp::OP_OVER ? mixBlendMode : GetOperator();
+        AutoSetOperator setOptimizedOperator(aContext, ThebesOp(op));
         PaintWithMask(aContext, opacity, aMaskLayer);
       }
 
@@ -132,7 +137,7 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
 
   if (!IsHidden() && !clipExtents.IsEmpty()) {
     mContentClient->DrawTo(this, aContext->GetDrawTarget(), opacity,
-                           CompositionOpForOp(GetOperator()),
+                           GetOperator(),
                            maskSurface, &maskTransform);
   }
 

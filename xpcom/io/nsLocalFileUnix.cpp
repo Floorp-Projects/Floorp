@@ -2000,6 +2000,43 @@ nsLocalFile::MoveTo(nsIFile *newParentDir, const nsAString &newName)
 {
     SET_UCS_2ARGS_2(MoveToNative, newParentDir, newName);
 }
+
+NS_IMETHODIMP
+nsLocalFile::RenameTo(nsIFile *newParentDir, const nsAString &newName)
+{
+  nsresult rv;
+
+  // check to make sure that this has been initialized properly
+  CHECK_mPath();
+
+  // check to make sure that we have a new parent
+  nsAutoCString newPathName;
+  nsAutoCString newNativeName;
+  rv = NS_CopyUnicodeToNative(newName, newNativeName);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  rv = GetNativeTargetPathName(newParentDir, newNativeName, newPathName);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  // try for atomic rename
+  if (rename(mPath.get(), newPathName.get()) < 0) {
+#ifdef VMS
+    if (errno == EXDEV || errno == ENXIO) {
+#else
+    if (errno == EXDEV) {
+#endif
+      rv = NS_ERROR_FILE_ACCESS_DENIED;
+    } else {
+      rv = NSRESULT_FOR_ERRNO();
+    }
+  }
+
+  return rv;
+}
+
 nsresult
 nsLocalFile::GetTarget(nsAString &_retval)
 {   
