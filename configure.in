@@ -5513,6 +5513,8 @@ MOZ_ARG_ENABLE_STRING(gstreamer,
   # API version, eg 0.10, 1.0 etc
   if test -z "$enableval" -o "$enableval" = "yes"; then
     GST_API_VERSION=0.10
+  elif test "$enableval" = "no"; then
+    MOZ_GSTREAMER=
   else
     GST_API_VERSION=$enableval
   fi],
