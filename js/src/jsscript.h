@@ -425,7 +425,7 @@ class ScriptSource
     bool hasIntroductionOffset_:1;
 
   public:
-    ScriptSource(JSPrincipals *originPrincipals)
+    explicit ScriptSource(JSPrincipals *originPrincipals)
       : refs(0),
         length_(0),
         compressedLength_(0),
