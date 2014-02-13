@@ -1714,7 +1714,7 @@ bool
 XrayWrapper<Base, Traits>::getOwnPropertyNames(JSContext *cx, HandleObject wrapper,
                                                AutoIdVector &props)
 {
-    assertEnteredPolicy(cx, wrapper, JSID_VOID, BaseProxyHandler::GET);
+    assertEnteredPolicy(cx, wrapper, JSID_VOID, BaseProxyHandler::ENUMERATE);
     return enumerate(cx, wrapper, JSITER_OWNONLY | JSITER_HIDDEN, props);
 }
 
@@ -1741,7 +1741,7 @@ bool
 XrayWrapper<Base, Traits>::enumerate(JSContext *cx, HandleObject wrapper, unsigned flags,
                                      AutoIdVector &props)
 {
-    assertEnteredPolicy(cx, wrapper, JSID_VOID, BaseProxyHandler::GET);
+    assertEnteredPolicy(cx, wrapper, JSID_VOID, BaseProxyHandler::ENUMERATE);
     if (!AccessCheck::wrapperSubsumes(wrapper)) {
         JS_ReportError(cx, "Not allowed to enumerate cross origin objects");
         return false;

@@ -231,7 +231,7 @@ BaseProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject receiver,
 bool
 BaseProxyHandler::keys(JSContext *cx, HandleObject proxy, AutoIdVector &props)
 {
-    assertEnteredPolicy(cx, proxy, JSID_VOID, GET);
+    assertEnteredPolicy(cx, proxy, JSID_VOID, ENUMERATE);
     JS_ASSERT(props.length() == 0);
 
     if (!getOwnPropertyNames(cx, proxy, props))
@@ -260,7 +260,7 @@ BaseProxyHandler::keys(JSContext *cx, HandleObject proxy, AutoIdVector &props)
 bool
 BaseProxyHandler::iterate(JSContext *cx, HandleObject proxy, unsigned flags, MutableHandleValue vp)
 {
-    assertEnteredPolicy(cx, proxy, JSID_VOID, GET);
+    assertEnteredPolicy(cx, proxy, JSID_VOID, ENUMERATE);
 
     AutoIdVector props(cx);
     if ((flags & JSITER_OWNONLY)
@@ -439,7 +439,7 @@ bool
 DirectProxyHandler::getOwnPropertyNames(JSContext *cx, HandleObject proxy,
                                         AutoIdVector &props)
 {
-    assertEnteredPolicy(cx, proxy, JSID_VOID, GET);
+    assertEnteredPolicy(cx, proxy, JSID_VOID, ENUMERATE);
     RootedObject target(cx, proxy->as<ProxyObject>().target());
     return GetPropertyNames(cx, target, JSITER_OWNONLY | JSITER_HIDDEN, &props);
 }
@@ -456,7 +456,7 @@ bool
 DirectProxyHandler::enumerate(JSContext *cx, HandleObject proxy,
                               AutoIdVector &props)
 {
-    assertEnteredPolicy(cx, proxy, JSID_VOID, GET);
+    assertEnteredPolicy(cx, proxy, JSID_VOID, ENUMERATE);
     JS_ASSERT(!hasPrototype()); // Should never be called if there's a prototype.
     RootedObject target(cx, proxy->as<ProxyObject>().target());
     return GetPropertyNames(cx, target, 0, &props);
@@ -610,7 +610,7 @@ DirectProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject receiver
 bool
 DirectProxyHandler::keys(JSContext *cx, HandleObject proxy, AutoIdVector &props)
 {
-    assertEnteredPolicy(cx, proxy, JSID_VOID, GET);
+    assertEnteredPolicy(cx, proxy, JSID_VOID, ENUMERATE);
     RootedObject target(cx, proxy->as<ProxyObject>().target());
     return GetPropertyNames(cx, target, JSITER_OWNONLY, &props);
 }
@@ -619,7 +619,7 @@ bool
 DirectProxyHandler::iterate(JSContext *cx, HandleObject proxy, unsigned flags,
                             MutableHandleValue vp)
 {
-    assertEnteredPolicy(cx, proxy, JSID_VOID, GET);
+    assertEnteredPolicy(cx, proxy, JSID_VOID, ENUMERATE);
     JS_ASSERT(!hasPrototype()); // Should never be called if there's a prototype.
     RootedObject target(cx, proxy->as<ProxyObject>().target());
     return GetIterator(cx, target, flags, vp);
@@ -2411,7 +2411,7 @@ Proxy::getOwnPropertyNames(JSContext *cx, HandleObject proxy, AutoIdVector &prop
 {
     JS_CHECK_RECURSION(cx, return false);
     BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
-    AutoEnterPolicy policy(cx, handler, proxy, JSID_VOIDHANDLE, BaseProxyHandler::GET, true);
+    AutoEnterPolicy policy(cx, handler, proxy, JSID_VOIDHANDLE, BaseProxyHandler::ENUMERATE, true);
     if (!policy.allowed())
         return policy.returnValue();
     return proxy->as<ProxyObject>().handler()->getOwnPropertyNames(cx, proxy, props);
@@ -2454,7 +2454,7 @@ Proxy::enumerate(JSContext *cx, HandleObject proxy, AutoIdVector &props)
 {
     JS_CHECK_RECURSION(cx, return false);
     BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
-    AutoEnterPolicy policy(cx, handler, proxy, JSID_VOIDHANDLE, BaseProxyHandler::GET, true);
+    AutoEnterPolicy policy(cx, handler, proxy, JSID_VOIDHANDLE, BaseProxyHandler::ENUMERATE, true);
     if (!policy.allowed())
         return policy.returnValue();
     if (!handler->hasPrototype())
@@ -2579,7 +2579,7 @@ Proxy::keys(JSContext *cx, HandleObject proxy, AutoIdVector &props)
 {
     JS_CHECK_RECURSION(cx, return false);
     BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
-    AutoEnterPolicy policy(cx, handler, proxy, JSID_VOIDHANDLE, BaseProxyHandler::GET, true);
+    AutoEnterPolicy policy(cx, handler, proxy, JSID_VOIDHANDLE, BaseProxyHandler::ENUMERATE, true);
     if (!policy.allowed())
         return policy.returnValue();
     return handler->keys(cx, proxy, props);
@@ -2593,7 +2593,7 @@ Proxy::iterate(JSContext *cx, HandleObject proxy, unsigned flags, MutableHandleV
     vp.setUndefined(); // default result if we refuse to perform this action
     if (!handler->hasPrototype()) {
         AutoEnterPolicy policy(cx, handler, proxy, JSID_VOIDHANDLE,
-                               BaseProxyHandler::GET, true);
+                               BaseProxyHandler::ENUMERATE, true);
         // If the policy denies access but wants us to return true, we need
         // to hand a valid (empty) iterator object to the caller.
         if (!policy.allowed()) {
