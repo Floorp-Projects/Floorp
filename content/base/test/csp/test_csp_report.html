@@ -1,7 +1,10 @@
 <!DOCTYPE HTML>
 <html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=548193
+-->
 <head>
-  <title>Test for CSP JSON violation report</title>
+  <title>Test for Bug 548193</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
@@ -73,13 +76,13 @@ examiner.prototype  = {
 }
 
 // content file that triggers a violation report
-var testFile = "file_bug548193.sjs";
+var testFile = "file_csp_report.sjs";
 
 window.checkResults = function(reportObj) {
   var cspReport = reportObj["csp-report"];
   // correct violating request
   is(cspReport["document-uri"],
-     "http://mochi.test:8888/tests/content/base/test/" + testFile,
+     "http://mochi.test:8888/tests/content/base/test/csp/" + testFile,
      "Incorrect violating request");
   // correct blocked-uri
   is(cspReport["blocked-uri"],

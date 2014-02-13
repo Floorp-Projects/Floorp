@@ -1,4 +1,5 @@
-// SJS file for tests for bug650386, this serves as CSP violation report target
+// https://bugzilla.mozilla.org/show_bug.cgi?id=650386
+// This SJS file serves as CSP violation report target
 // and issues a redirect, to make sure the browser does not post to the target
 // of the redirect, per CSP spec.
 // This handles 301, 302, 303 and 307 redirects. The HTTP status code
