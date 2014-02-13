@@ -87,7 +87,7 @@ bool
 FilteringWrapper<Base, Policy>::getOwnPropertyNames(JSContext *cx, HandleObject wrapper,
                                                     AutoIdVector &props)
 {
-    assertEnteredPolicy(cx, wrapper, JSID_VOID, BaseProxyHandler::GET);
+    assertEnteredPolicy(cx, wrapper, JSID_VOID, BaseProxyHandler::ENUMERATE);
     return Base::getOwnPropertyNames(cx, wrapper, props) &&
            Filter<Policy>(cx, wrapper, props);
 }
@@ -97,7 +97,7 @@ bool
 FilteringWrapper<Base, Policy>::enumerate(JSContext *cx, HandleObject wrapper,
                                           AutoIdVector &props)
 {
-    assertEnteredPolicy(cx, wrapper, JSID_VOID, BaseProxyHandler::GET);
+    assertEnteredPolicy(cx, wrapper, JSID_VOID, BaseProxyHandler::ENUMERATE);
     return Base::enumerate(cx, wrapper, props) &&
            Filter<Policy>(cx, wrapper, props);
 }
@@ -107,7 +107,7 @@ bool
 FilteringWrapper<Base, Policy>::keys(JSContext *cx, HandleObject wrapper,
                                      AutoIdVector &props)
 {
-    assertEnteredPolicy(cx, wrapper, JSID_VOID, BaseProxyHandler::GET);
+    assertEnteredPolicy(cx, wrapper, JSID_VOID, BaseProxyHandler::ENUMERATE);
     return Base::keys(cx, wrapper, props) &&
            Filter<Policy>(cx, wrapper, props);
 }
@@ -117,7 +117,7 @@ bool
 FilteringWrapper<Base, Policy>::iterate(JSContext *cx, HandleObject wrapper,
                                         unsigned flags, MutableHandleValue vp)
 {
-    assertEnteredPolicy(cx, wrapper, JSID_VOID, BaseProxyHandler::GET);
+    assertEnteredPolicy(cx, wrapper, JSID_VOID, BaseProxyHandler::ENUMERATE);
     // We refuse to trigger the iterator hook across chrome wrappers because
     // we don't know how to censor custom iterator objects. Instead we trigger
     // the default proxy iterate trap, which will ask enumerate() for the list
