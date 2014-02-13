@@ -1719,7 +1719,7 @@ protected:
   // which won't call Init() and set up the auto buffer!
   nsAutoArrayBase(const self_type &aOther) {
     Init();
-    AppendElements(aOther);
+    this->AppendElements(aOther);
   }
 
 private:
