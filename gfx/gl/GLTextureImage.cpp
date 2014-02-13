@@ -90,14 +90,9 @@ TextureImage::UpdateFromDataSource(gfx::DataSourceSurface *aSurface,
                                          : nsIntRect(0, 0,
                                                      aSurface->GetSize().width,
                                                      aSurface->GetSize().height);
-    nsIntPoint thebesSrcPoint = aSrcPoint ? nsIntPoint(aSrcPoint->x, aSrcPoint->y)
-                                          : nsIntPoint(0, 0);
-    RefPtr<gfxASurface> thebesSurf
-        = new gfxImageSurface(aSurface->GetData(),
-                              ThebesIntSize(aSurface->GetSize()),
-                              aSurface->Stride(),
-                              SurfaceFormatToImageFormat(aSurface->GetFormat()));
-    return DeprecatedDirectUpdate(thebesSurf, destRegion, thebesSrcPoint);
+    gfx::IntPoint srcPoint = aSrcPoint ? *aSrcPoint
+                                       : gfx::IntPoint(0, 0);
+    return DirectUpdate(aSurface, destRegion, srcPoint);
 }
 
 gfx::IntRect TextureImage::GetTileRect() {
@@ -222,20 +217,6 @@ BasicTextureImage::FinishedSurfaceUpdate()
 void
 BasicTextureImage::FinishedSurfaceUpload()
 {
-}
-
-bool
-BasicTextureImage::DeprecatedDirectUpdate(gfxASurface* aSurf, const nsIntRegion& aRegion, const nsIntPoint& aFrom /* = nsIntPoint(0, 0) */)
-{
-    nsRefPtr<gfxImageSurface> imageSurf = aSurf->GetAsImageSurface();
-    NS_ASSERTION(imageSurf, "surface is not an image surface");
-
-    RefPtr<gfx::DataSourceSurface> wrappedSurf =
-        gfx::Factory::CreateWrappingDataSourceSurface(imageSurf->Data(),
-                                                      imageSurf->Stride(),
-                                                      gfx::ToIntSize(imageSurf->GetSize()),
-                                                      gfx::ImageFormatToSurfaceFormat(imageSurf->Format()));
-    return DirectUpdate(wrappedSurf, aRegion, gfx::IntPoint(aFrom.x, aFrom.y));
 }
 
 bool
@@ -371,20 +352,6 @@ TiledTextureImage::TiledTextureImage(GLContext* aGL,
 
 TiledTextureImage::~TiledTextureImage()
 {
-}
-
-bool
-TiledTextureImage::DeprecatedDirectUpdate(gfxASurface* aSurf, const nsIntRegion& aRegion, const nsIntPoint& aFrom /* = nsIntPoint(0, 0) */)
-{
-    nsRefPtr<gfxImageSurface> imageSurf = aSurf->GetAsImageSurface();
-    NS_ASSERTION(imageSurf, "surface is not an image surface");
-
-    RefPtr<gfx::DataSourceSurface> wrappedSurf =
-        gfx::Factory::CreateWrappingDataSourceSurface(imageSurf->Data(),
-                                                      imageSurf->Stride(),
-                                                      gfx::ToIntSize(imageSurf->GetSize()),
-                                                      gfx::ImageFormatToSurfaceFormat(imageSurf->Format()));
-    return DirectUpdate(wrappedSurf, aRegion, gfx::IntPoint(aFrom.x, aFrom.y));
 }
 
 bool
