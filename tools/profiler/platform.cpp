@@ -111,8 +111,10 @@ ThreadInfo::~ThreadInfo() {
 }
 
 ProfilerMarker::ProfilerMarker(const char* aMarkerName,
-    ProfilerMarkerPayload* aPayload)
+    ProfilerMarkerPayload* aPayload,
+    float aTime)
   : mMarkerName(strdup(aMarkerName))
+  , mTime(aTime)
   , mPayload(aPayload)
 {
 }
@@ -127,6 +129,11 @@ ProfilerMarker::SetGeneration(int aGenID) {
   mGenID = aGenID;
 }
 
+float
+ProfilerMarker::GetTime() {
+  return mTime;
+}
+
 template<typename Builder> void
 ProfilerMarker::BuildJSObject(Builder& b, typename Builder::ArrayHandle markers) const {
   typename Builder::RootedObject marker(b.context(), b.CreateObject());
@@ -139,6 +146,7 @@ ProfilerMarker::BuildJSObject(Builder& b, typename Builder::ArrayHandle markers)
                                               mPayload->PreparePayload(b));
     b.DefineProperty(marker, "data", markerData);
   }
+  b.DefineProperty(marker, "time", mTime);
   b.ArrayPush(markers, marker);
 }
 
@@ -896,7 +904,8 @@ void mozilla_sampler_add_marker(const char *aMarker, ProfilerMarkerPayload *aPay
   if (!stack) {
     return;
   }
-  stack->addMarker(aMarker, payload.forget());
+  TimeDuration delta = TimeStamp::Now() - sStartTime;
+  stack->addMarker(aMarker, payload.forget(), static_cast<float>(delta.ToMilliseconds()));
 }
 
 // END externally visible functions
