@@ -66,7 +66,7 @@ class ArrayBufferObject : public JSObject
 
     static bool class_constructor(JSContext *cx, unsigned argc, Value *vp);
 
-    static JSObject *create(JSContext *cx, uint32_t nbytes, bool clear = true);
+    static ArrayBufferObject *create(JSContext *cx, uint32_t nbytes, bool clear = true);
 
     static JSObject *createSlice(JSContext *cx, Handle<ArrayBufferObject*> arrayBuffer,
                                  uint32_t begin, uint32_t end);
@@ -167,8 +167,6 @@ class ArrayBufferObject : public JSObject
     }
 
     void addView(ArrayBufferViewObject *view);
-
-    bool allocateSlots(JSContext *cx, uint32_t size, bool clear);
 
     void changeContents(JSContext *cx, ObjectElements *newHeader);
 
