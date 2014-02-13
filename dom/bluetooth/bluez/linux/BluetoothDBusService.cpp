@@ -49,6 +49,7 @@
 
 #if defined(MOZ_WIDGET_GONK)
 #include "cutils/properties.h"
+#include <dlfcn.h>
 #endif
 
 /**
@@ -86,6 +87,56 @@ USING_BLUETOOTH_NAMESPACE
  * turn off Bluetooth.
  */
 #define TIMEOUT_FORCE_TO_DISABLE_BT 5
+
+#ifdef MOZ_WIDGET_GONK
+static struct BluedroidFunctions
+{
+  bool initialized;
+
+  BluedroidFunctions() :
+    initialized(false)
+  {
+  }
+
+  int (* bt_enable)();
+  int (* bt_disable)();
+  int (* bt_is_enabled)();
+} sBluedroidFunctions;
+
+static bool
+EnsureBluetoothInit()
+{
+  if (sBluedroidFunctions.initialized) {
+    return true;
+  }
+
+  void* handle = dlopen("libbluedroid.so", RTLD_LAZY);
+
+  if (!handle) {
+    NS_ERROR("Failed to open libbluedroid.so, bluetooth cannot run");
+    return false;
+  }
+
+  sBluedroidFunctions.bt_enable = (int (*)())dlsym(handle, "bt_enable");
+  if (!sBluedroidFunctions.bt_enable) {
+    NS_ERROR("Failed to attach bt_enable function");
+    return false;
+  }
+  sBluedroidFunctions.bt_disable = (int (*)())dlsym(handle, "bt_disable");
+  if (!sBluedroidFunctions.bt_disable) {
+    NS_ERROR("Failed to attach bt_disable function");
+    return false;
+  }
+  sBluedroidFunctions.bt_is_enabled = (int (*)())dlsym(handle, "bt_is_enabled");
+  if (!sBluedroidFunctions.bt_is_enabled) {
+    NS_ERROR("Failed to attach bt_is_enabled function");
+    return false;
+  }
+
+  sBluedroidFunctions.initialized = true;
+  return true;
+}
+#endif
 
 typedef struct {
   const char* name;
@@ -1732,11 +1783,65 @@ BluetoothDBusService::IsReady()
   return true;
 }
 
+#if MOZ_WIDGET_GONK
+static nsresult
+StartStopGonkBluetooth(bool aShouldEnable)
+{
+  bool result;
+
+  // Platform specific check for gonk until object is divided in
+  // different implementations per platform. Linux doesn't require
+  // bluetooth firmware loading, but code should work otherwise.
+  if (!EnsureBluetoothInit()) {
+    NS_ERROR("Failed to load bluedroid library.\n");
+    return NS_ERROR_FAILURE;
+  }
+
+  // return 1 if it's enabled, 0 if it's disabled, and -1 on error
+  int isEnabled = sBluedroidFunctions.bt_is_enabled();
+
+  if ((isEnabled == 1 && aShouldEnable) || (isEnabled == 0 && !aShouldEnable)) {
+    return NS_OK;
+  }
+  if (aShouldEnable) {
+    result = (sBluedroidFunctions.bt_enable() == 0) ? true : false;
+    if (sBluedroidFunctions.bt_is_enabled() < 0) {
+      // if isEnabled < 0, this means we brought up the firmware, but something
+      // went wrong with bluetoothd. Post a warning message, but try to proceed
+      // with firmware unloading if that was requested, so we can retry later.
+      BT_WARNING("Bluetooth firmware up, but cannot connect to HCI socket! "
+        "Check bluetoothd and try stopping/starting bluetooth again.");
+      // Just disable now, return an error.
+      if (sBluedroidFunctions.bt_disable() != 0) {
+        BT_WARNING("Problem shutting down bluetooth after error in bringup!");
+      }
+      return NS_ERROR_FAILURE;
+    }
+  } else {
+    result = (sBluedroidFunctions.bt_disable() == 0) ? true : false;
+  }
+  if (!result) {
+    BT_WARNING("Could not set gonk bluetooth firmware!");
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+#endif
+
 nsresult
 BluetoothDBusService::StartInternal()
 {
   // This could block. It should never be run on the main thread.
   MOZ_ASSERT(!NS_IsMainThread());
+
+#ifdef MOZ_WIDGET_GONK
+  nsresult ret = StartStopGonkBluetooth(true);
+
+  if (NS_FAILED(ret)) {
+    return ret;
+  }
+#endif
 
   if (!StartDBus()) {
     BT_WARNING("Cannot start DBus thread!");
@@ -1858,13 +1963,28 @@ BluetoothDBusService::StopInternal()
   sControllerArray.Clear();
 
   StopDBus();
+
+#ifdef MOZ_WIDGET_GONK
+  return StartStopGonkBluetooth(false);
+#else
   return NS_OK;
+#endif
 }
 
 bool
 BluetoothDBusService::IsEnabledInternal()
 {
+#ifdef MOZ_WIDGET_GONK
+  MOZ_ASSERT(!NS_IsMainThread());
+
+  if (!EnsureBluetoothInit()) {
+    NS_ERROR("Failed to load bluedroid library.\n");
+    return false;
+  }
+  return (sBluedroidFunctions.bt_is_enabled() == 1);
+#else
   return mEnabled;
+#endif
 }
 
 class DefaultAdapterPathReplyHandler : public DBusReplyHandler
