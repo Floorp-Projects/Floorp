@@ -9,6 +9,8 @@
 
 #include "jsapi.h"
 
+class JSAtom;
+
 namespace js {
 
 /*
@@ -19,6 +21,12 @@ namespace js {
  * nothing else.
  */
 extern const JSWrapObjectCallbacks SelfHostingWrapObjectCallbacks;
+
+/*
+ * Check whether the given JSFunction is a self-hosted function whose
+ * self-hosted name is the given name.
+ */
+bool IsSelfHostedFunctionWithName(JSFunction *fun, JSAtom *name);
 
 } /* namespace js */
 
