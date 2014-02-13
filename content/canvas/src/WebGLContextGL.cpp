@@ -530,6 +530,18 @@ WebGLContext::CopyTexImage2D(GLenum target,
             return ErrorInvalidValue("copyTexImage2D: with level > 0, width and height must be powers of two");
     }
 
+    if (internalformat == LOCAL_GL_DEPTH_COMPONENT ||
+        internalformat == LOCAL_GL_DEPTH_STENCIL)
+        return ErrorInvalidOperation("copyTexImage2D: a base internal format of DEPTH_COMPONENT or DEPTH_STENCIL isn't supported");
+
+    WebGLTexture *tex = activeBoundTextureForTarget(target);
+    if (!tex)
+        return ErrorInvalidOperation("copyTexImage2D: no texture bound to this target");
+    
+    if (mBoundFramebuffer)
+        if (!mBoundFramebuffer->CheckAndInitializeAttachments())
+            return ErrorInvalidFramebufferOperation("copyTexImage2D: incomplete framebuffer");
+
     bool texFormatRequiresAlpha = internalformat == LOCAL_GL_RGBA ||
                                     internalformat == LOCAL_GL_ALPHA ||
                                     internalformat == LOCAL_GL_LUMINANCE_ALPHA;
@@ -538,18 +550,6 @@ WebGLContext::CopyTexImage2D(GLenum target,
     if (texFormatRequiresAlpha && !fboFormatHasAlpha)
         return ErrorInvalidOperation("copyTexImage2D: texture format requires an alpha channel "
                                      "but the framebuffer doesn't have one");
-
-    if (internalformat == LOCAL_GL_DEPTH_COMPONENT ||
-        internalformat == LOCAL_GL_DEPTH_STENCIL)
-        return ErrorInvalidOperation("copyTexImage2D: a base internal format of DEPTH_COMPONENT or DEPTH_STENCIL isn't supported");
-
-    if (mBoundFramebuffer)
-        if (!mBoundFramebuffer->CheckAndInitializeAttachments())
-            return ErrorInvalidFramebufferOperation("copyTexImage2D: incomplete framebuffer");
-
-    WebGLTexture *tex = activeBoundTextureForTarget(target);
-    if (!tex)
-        return ErrorInvalidOperation("copyTexImage2D: no texture bound to this target");
 
     // copyTexImage2D only generates textures with type = UNSIGNED_BYTE
     GLenum type = LOCAL_GL_UNSIGNED_BYTE;
@@ -639,16 +639,6 @@ WebGLContext::CopyTexSubImage2D(GLenum target,
       return ErrorInvalidValue("copyTexSubImage2D: yoffset+height is too large");
 
     GLenum internalFormat = imageInfo.InternalFormat();
-    bool texFormatRequiresAlpha = (internalFormat == LOCAL_GL_RGBA ||
-                                   internalFormat == LOCAL_GL_ALPHA ||
-                                   internalFormat == LOCAL_GL_LUMINANCE_ALPHA);
-    bool fboFormatHasAlpha = mBoundFramebuffer ? mBoundFramebuffer->ColorAttachment(0).HasAlpha()
-                                               : bool(gl->GetPixelFormat().alpha > 0);
-
-    if (texFormatRequiresAlpha && !fboFormatHasAlpha)
-        return ErrorInvalidOperation("copyTexSubImage2D: texture format requires an alpha channel "
-                                     "but the framebuffer doesn't have one");
-
     if (IsGLDepthFormat(internalFormat) ||
         IsGLDepthStencilFormat(internalFormat))
     {
@@ -658,6 +648,16 @@ WebGLContext::CopyTexSubImage2D(GLenum target,
     if (mBoundFramebuffer)
         if (!mBoundFramebuffer->CheckAndInitializeAttachments())
             return ErrorInvalidFramebufferOperation("copyTexSubImage2D: incomplete framebuffer");
+
+    bool texFormatRequiresAlpha = (internalFormat == LOCAL_GL_RGBA ||
+                                   internalFormat == LOCAL_GL_ALPHA ||
+                                   internalFormat == LOCAL_GL_LUMINANCE_ALPHA);
+    bool fboFormatHasAlpha = mBoundFramebuffer ? mBoundFramebuffer->ColorAttachment(0).HasAlpha()
+                                               : bool(gl->GetPixelFormat().alpha > 0);
+
+    if (texFormatRequiresAlpha && !fboFormatHasAlpha)
+        return ErrorInvalidOperation("copyTexSubImage2D: texture format requires an alpha channel "
+                                     "but the framebuffer doesn't have one");
 
     if (imageInfo.HasUninitializedImageData()) {
         tex->DoDeferredImageInitialization(target, level);
