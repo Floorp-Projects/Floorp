@@ -17,13 +17,6 @@
 #include "HelpersCairo.h"
 #endif
 
-#ifdef CAIRO_HAS_FT_FONT
-#include <ft2build.h>
-#include FT_FREETYPE_H
-#include FT_TRUETYPE_TABLES_H
-#include "cairo-ft.h"
-#endif
-
 #include <vector>
 #include <cmath>
 
@@ -190,63 +183,6 @@ ScaledFontBase::SetCairoScaledFont(cairo_scaled_font_t* font)
 
   mScaledFont = font;
   cairo_scaled_font_reference(mScaledFont);
-}
-
-bool
-ScaledFontBase::GetFontFileData(FontFileDataOutput aDataCallback, void *aBaton)
-{
-#ifdef USE_CAIRO_SCALED_FONT
-
-  switch (cairo_scaled_font_get_type(mScaledFont)) {
-#ifdef CAIRO_HAS_FT_FONT
-  case CAIRO_FONT_TYPE_FT:
-    {
-      FT_Face face = cairo_ft_scaled_font_lock_face(mScaledFont);
-
-      if (!face) {
-	gfxWarning() << "Failed to lock FT_Face for cairo font.";
-	cairo_ft_scaled_font_unlock_face(mScaledFont);	
-	return false;
-      }
-
-      if (!FT_IS_SFNT(face)) {
-	if (face->stream && face->stream->base) {
-	  aDataCallback((uint8_t*)&face->stream->base, face->stream->size, 0, mSize, aBaton);
-	  cairo_ft_scaled_font_unlock_face(mScaledFont);
-	  return true;
-	}
-
-	gfxWarning() << "Non sfnt font with non-memory stream.";
-	cairo_ft_scaled_font_unlock_face(mScaledFont);
-	return false;
-      }
-
-      // Get the length of the whole font
-      FT_ULong length = 0;
-      FT_Error error = FT_Load_Sfnt_Table(face, 0, 0, nullptr, &length);
-      if (error || !length) {
-	cairo_ft_scaled_font_unlock_face(mScaledFont);
-	gfxWarning() << "Failed to get font file from Freetype font. " << error;
-	return false;
-      }
-
-      // Get the font data
-      std::vector<FT_Byte> buffer(length);
-      FT_Load_Sfnt_Table(face, 0, 0, &buffer.front(), &length);
-
-      aDataCallback((uint8_t*)&buffer.front(), length, 0, mSize, aBaton);
-
-      cairo_ft_scaled_font_unlock_face(mScaledFont);
-
-      return true;
-    }
-#endif
-  default:
-    return false;
-  }
-#endif
-
-  return false;
 }
 #endif
 
