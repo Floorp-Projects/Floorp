@@ -31,7 +31,8 @@ public:
                                   nsIFrame* aFrame,
                                   uint8_t aWidgetType,
                                   const nsRect& aRect,
-                                  const nsRect& aDirtyRect);
+                                  const nsRect& aDirtyRect,
+                                  nsIntRegion* aRegionToClear);
 
   NS_IMETHOD GetWidgetBorder(nsDeviceContext* aContext, 
                              nsIFrame* aFrame,
