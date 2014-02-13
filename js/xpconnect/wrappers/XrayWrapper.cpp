@@ -1007,6 +1007,8 @@ XPCWrappedNativeXrayTraits::enumerateNames(JSContext *cx, HandleObject wrapper, 
         if (!js::GetPropertyNames(cx, target, flags, &wnProps))
             return false;
     }
+    if (!JS_WrapAutoIdVector(cx, wnProps))
+        return false;
 
     // Go through the properties we got and enumerate all native ones.
     for (size_t n = 0; n < wnProps.length(); ++n) {
