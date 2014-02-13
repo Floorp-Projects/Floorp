@@ -377,6 +377,13 @@ XPCWrappedNative::GetNewOrUsed(xpcObjectHelper& helper,
 
         if (parent != plannedParent) {
             XPCWrappedNativeScope* betterScope = GetObjectScope(parent);
+            if (MOZ_UNLIKELY(!betterScope)) {
+                printf("Uh oh, hit an object without a scope! Crashing shortly.\n");
+                printf("Object class: %s\n", js::GetObjectClass(parent)->name);
+                printf("Global class: %s\n", js::GetObjectClass(js::GetGlobalForObjectCrossCompartment(parent))->name);
+                printf("IsMainThread: %u\n", (uint32_t) NS_IsMainThread());
+                MOZ_CRASH();
+            }
             if (betterScope != Scope)
                 return GetNewOrUsed(helper, betterScope, Interface, resultWrapper);
 
