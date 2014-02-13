@@ -323,27 +323,6 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
           }
 #endif
 
-#ifdef CAIRO_HAS_D2D_SURFACE
-          if (!targetSurface &&
-              IsRenderMode(gfxWindowsPlatform::RENDER_DIRECT2D))
-          {
-            if (!mD2DWindowSurface) {
-              gfxContentType content = gfxContentType::COLOR;
-#if defined(MOZ_XUL)
-              if (mTransparencyMode != eTransparencyOpaque) {
-                content = gfxContentType::COLOR_ALPHA;
-              }
-#endif
-              mD2DWindowSurface = new gfxD2DSurface(mWnd, content);
-            }
-            if (!mD2DWindowSurface->CairoStatus()) {
-              targetSurface = mD2DWindowSurface;
-            } else {
-              mD2DWindowSurface = nullptr;
-            }
-          }
-#endif
-
           nsRefPtr<gfxWindowsSurface> targetSurfaceWin;
           if (!targetSurface &&
               (IsRenderMode(gfxWindowsPlatform::RENDER_GDI) ||
@@ -451,13 +430,7 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
             UpdateTranslucentWindow();
           } else
 #endif
-#ifdef CAIRO_HAS_D2D_SURFACE
-          if (result) {
-            if (mD2DWindowSurface) {
-              mD2DWindowSurface->Present();
-            }
-          }
-#endif
+
           if (result) {
             if (IsRenderMode(gfxWindowsPlatform::RENDER_IMAGE_STRETCH24) ||
                 IsRenderMode(gfxWindowsPlatform::RENDER_IMAGE_STRETCH32))
