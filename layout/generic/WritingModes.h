@@ -192,6 +192,21 @@ public:
     }
   }
 
+  // For unicode-bidi: plaintext, reset the direction of the writing mode from
+  // the bidi paragraph level of the content
+
+  //XXX change uint8_t to UBiDiLevel after bug 924851
+  void SetDirectionFromBidiLevel(uint8_t level)
+  {
+    if (level & 1) {
+      // odd level, set RTL
+      mWritingMode |= eBidiMask;
+    } else {
+      // even level, set LTR
+      mWritingMode &= ~eBidiMask;
+    }
+  }
+
   /**
    * Compare two WritingModes for equality.
    */
