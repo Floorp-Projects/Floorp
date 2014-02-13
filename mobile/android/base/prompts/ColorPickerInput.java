@@ -45,7 +45,7 @@ public class ColorPickerInput extends PromptInput {
     }
 
     @Override
-    public Object getValue() {
+    public String getValue() {
         BasicColorPicker cp = (BasicColorPicker) mView.findViewById(R.id.colorpicker);
         int color = cp.getColor();
         return "#" + Integer.toHexString(color).substring(2);
