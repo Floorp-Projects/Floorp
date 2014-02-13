@@ -3173,9 +3173,9 @@ JS_StealArrayBufferContents(JSContext *cx, JS::HandleObject obj, void **contents
  * the number of payload bytes required. The pointer to pass to
  * JS_NewArrayBufferWithContents is returned in |contents|. The pointer to the
  * |nbytes| of usable memory is returned in |data|. (*|contents| will contain a
- * header before |data|.) The only legal operations on *|contents| is to free
- * it, or pass it to JS_NewArrayBufferWithContents or
- * JS_ReallocateArrayBufferContents.
+ * header before |data|.) The only legal operations on *|contents| are to pass
+ * it to either JS_NewArrayBufferWithContents or
+ * JS_ReallocateArrayBufferContents, or free it with js_free or JS_free.
  */
 extern JS_PUBLIC_API(bool)
 JS_AllocateArrayBufferContents(JSContext *maybecx, uint32_t nbytes, void **contents, uint8_t **data);
