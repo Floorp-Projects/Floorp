@@ -17,15 +17,15 @@ GetUserMediaRequest::GetUserMediaRequest(
     nsPIDOMWindow* aInnerWindow,
     const nsAString& aCallID,
     const MediaStreamConstraintsInternal& aConstraints)
-  : mInnerWindow(aInnerWindow)
-  , mWindowID(aInnerWindow->GetOuterWindow()->WindowID())
+  : mInnerWindowID(aInnerWindow->WindowID())
+  , mOuterWindowID(aInnerWindow->GetOuterWindow()->WindowID())
   , mCallID(aCallID)
   , mConstraints(aConstraints)
 {
   SetIsDOMBinding();
 }
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(GetUserMediaRequest, mInnerWindow)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(GetUserMediaRequest)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(GetUserMediaRequest)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(GetUserMediaRequest)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(GetUserMediaRequest)
@@ -41,7 +41,7 @@ GetUserMediaRequest::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 
 nsISupports* GetUserMediaRequest::GetParentObject()
 {
-  return mInnerWindow;
+  return nullptr;
 }
 
 void GetUserMediaRequest::GetCallID(nsString& retval)
@@ -51,7 +51,12 @@ void GetUserMediaRequest::GetCallID(nsString& retval)
 
 uint64_t GetUserMediaRequest::WindowID()
 {
-  return mWindowID;
+  return mOuterWindowID;
+}
+
+uint64_t GetUserMediaRequest::InnerWindowID()
+{
+  return mInnerWindowID;
 }
 
 void
