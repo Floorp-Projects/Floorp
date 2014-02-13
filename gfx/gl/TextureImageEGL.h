@@ -32,7 +32,7 @@ public:
 
     virtual void EndUpdate();
 
-    virtual bool DirectUpdate(gfxASurface* aSurf, const nsIntRegion& aRegion, const nsIntPoint& aFrom /* = nsIntPoint(0, 0) */);
+    virtual bool DeprecatedDirectUpdate(gfxASurface* aSurf, const nsIntRegion& aRegion, const nsIntPoint& aFrom /* = nsIntPoint(0, 0) */);
 
     virtual void BindTexture(GLenum aTextureUnit);
 

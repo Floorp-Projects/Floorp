@@ -744,7 +744,7 @@ TextureImageDeprecatedTextureHostOGL::UpdateImpl(const SurfaceDescriptor& aImage
   if (aOffset) {
     offset = *aOffset;
   }
-  mTexture->DirectUpdate(surf.Get(), updateRegion, offset);
+  mTexture->DeprecatedDirectUpdate(surf.Get(), updateRegion, offset);
   mFormat = mTexture->GetTextureFormat();
 
   if (mTexture->InUpdate()) {
