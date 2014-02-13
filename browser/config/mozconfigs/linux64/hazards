@@ -2,7 +2,18 @@
 # hazard analysis build, see
 # https://wiki.mozilla.org/Javascript:SpiderMonkey:ExactStackRooting
 
-. "$topsrcdir/build/unix/mozconfig.linux"
+# Do NOT include build/unix/mozconfig.linux because it points directly at the
+# tooltool-installed gcc, and the analysis works by wrapping the gcc invocation
+# with a script that invokes the real gcc with -fplugin and its configuration
+# directives. Instead, duplicate the contents of that mozconfig here:
+
+. "$topsrcdir/build/mozconfig.common"
+ac_add_options --enable-elf-hack
+ac_add_options --enable-stdcxx-compat
+
+# The objdir must be at a known location so its path can be stripped from the
+# filenames stored by the analysis
+mk_add_options MOZ_OBJDIR=obj-analyzed
 
 # The configuration options are chosen to compile the most code
 # (--enable-debug, --enable-tests) in the trickiest way possible
