@@ -220,9 +220,9 @@ ContentHostBase::Composite(EffectChain& aEffectChain,
 void
 ContentHostBase::UseTextureHost(TextureHost* aTexture)
 {
+  CompositableHost::UseTextureHost(aTexture);
   mTextureHost = aTexture;
   mTextureHostOnWhite = nullptr;
-  mTextureHost->SetCompositor(GetCompositor());
 }
 
 void
