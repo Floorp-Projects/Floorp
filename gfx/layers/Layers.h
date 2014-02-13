@@ -596,11 +596,18 @@ public:
 
   bool IsInTransaction() const { return mInTransaction; }
 
+  virtual void SetRegionToClear(const nsIntRegion& aRegion)
+  {
+    mRegionToClear = aRegion;
+  }
+
 protected:
   nsRefPtr<Layer> mRoot;
   gfx::UserData mUserData;
   bool mDestroyed;
   bool mSnapEffectiveTransforms;
+
+  nsIntRegion mRegionToClear;
 
   // Print interesting information about this into aTo.  Internally
   // used to implement Dump*() and Log*().
@@ -1334,6 +1341,7 @@ public:
 #endif
 
   virtual LayerRenderState GetRenderState() { return LayerRenderState(); }
+
 
   void Mutated()
   {

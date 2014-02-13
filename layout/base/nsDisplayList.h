@@ -641,6 +641,10 @@ public:
 
   DisplayListClipState& ClipState() { return mClipState; }
 
+  void AddRegionToClear(const nsIntRegion& aRegion) { mRegionToClear.Or(mRegionToClear, aRegion); }
+  const nsIntRegion& GetRegionToClear() { return mRegionToClear; }
+  void ResetRegionToClear() { mRegionToClear.SetEmpty(); }
+
 private:
   void MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame, nsIFrame* aFrame,
                                     const nsRect& aDirtyRect);
@@ -674,6 +678,8 @@ private:
   const nsIFrame*                mCachedReferenceFrame;
   nsPoint                        mCachedOffset;
   nsRegion                       mExcludedGlassRegion;
+  // Area of the window (in pixels) to clear so the OS can draw them.
+  nsIntRegion                    mRegionToClear;
   // The display item for the Windows window glass background, if any
   nsDisplayItem*                 mGlassDisplayItem;
   nsTArray<DisplayItemClip*>     mDisplayItemClipsToDestroy;

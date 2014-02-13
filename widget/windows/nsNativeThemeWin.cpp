@@ -1536,7 +1536,8 @@ nsNativeThemeWin::DrawWidgetBackground(nsRenderingContext* aContext,
                                        nsIFrame* aFrame,
                                        uint8_t aWidgetType,
                                        const nsRect& aRect,
-                                       const nsRect& aDirtyRect)
+                                       const nsRect& aDirtyRect,
+                                       nsIntRegion* aRegionToClear)
 {
   HANDLE theme = GetTheme(aWidgetType);
   if (!theme)
@@ -1905,35 +1906,13 @@ RENDER_AGAIN:
   {
     // The caption buttons are drawn by the DWM, we just need to clear the area where they
     // are because we might have drawn something above them (like a background-image).
-    ctx->Save();
-    ctx->ResetClip();
-    ctx->Translate(dr.TopLeft());
-
-    // Create a rounded rectangle to follow the buttons' look.
-    gfxRect buttonbox1(0.0, 0.0, dr.Width(), dr.Height() - 2.0);
-    gfxRect buttonbox2(1.0, dr.Height() - 2.0, dr.Width() - 1.0, 1.0);
-    gfxRect buttonbox3(2.0, dr.Height() - 1.0, dr.Width() - 3.0, 1.0);
-
-    gfxContext::GraphicsOperator currentOp = ctx->CurrentOperator();
-    ctx->SetOperator(gfxContext::OPERATOR_CLEAR);
-
-   // Each rectangle is drawn individually because OPERATOR_CLEAR takes
-   // the fallback path to cairo_d2d_acquire_dest if the area to fill
-   // is a complex region.
-    ctx->NewPath();
-    ctx->Rectangle(buttonbox1, true);
-    ctx->Fill();
-
-    ctx->NewPath();
-    ctx->Rectangle(buttonbox2, true);
-    ctx->Fill();
-
-    ctx->NewPath();
-    ctx->Rectangle(buttonbox3, true);
-    ctx->Fill();
-
-    ctx->Restore();
-    ctx->SetOperator(currentOp);
+    NS_ASSERTION(aRegionToClear, "Must have a clear region to set!");
+    if (aRegionToClear) {
+      // Create a rounded rectangle to follow the buttons' look.
+      *aRegionToClear = nsIntRect(dr.X(), dr.Y(), dr.Width(), dr.Height() - 2.0);
+      aRegionToClear->Or(*aRegionToClear, nsIntRect(dr.X() + 1.0, dr.YMost() - 2.0, dr.Width() - 1.0, 1.0));
+      aRegionToClear->Or(*aRegionToClear, nsIntRect(dr.X() + 2.0, dr.YMost() - 1.0, dr.Width() - 3.0, 1.0));
+    }
   }
 
   nativeDrawing.EndNativeDrawing();
