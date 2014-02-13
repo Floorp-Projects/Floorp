@@ -146,7 +146,7 @@ class JS_FRIEND_API(BaseProxyHandler)
      * assertEnteredPolicy would pass GET | SET.
      */
     typedef uint32_t Action;
-    static const Action VOID = 0x00;
+    static const Action NONE = 0x00;
     static const Action GET  = 0x01;
     static const Action SET  = 0x02;
     static const Action CALL = 0x04;
@@ -488,7 +488,7 @@ class JS_FRIEND_API(AutoEnterPolicy)
     AutoEnterPolicy()
 #ifdef JS_DEBUG
         : context(nullptr)
-        , enteredAction(BaseProxyHandler::VOID)
+        , enteredAction(BaseProxyHandler::NONE)
 #endif
         {};
     void reportErrorIfExceptionIsNotPending(JSContext *cx, jsid id);
