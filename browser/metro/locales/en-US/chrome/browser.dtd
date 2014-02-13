@@ -63,6 +63,7 @@
 <!ENTITY consoleErrFile.label      "Source File:">
 <!ENTITY consoleErrLine.label      "Line:">
 <!ENTITY consoleErrColumn.label    "Column:">
+<!ENTITY consoleFollowCheckbox.label "Follow">
 
 <!--  TEXT CONTEXT MENU -->
 <!ENTITY contextTextCut.label              "Cut">
