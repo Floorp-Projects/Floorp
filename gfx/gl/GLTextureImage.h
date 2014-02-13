@@ -176,7 +176,7 @@ public:
      * aRegion - the region in this image to update
      * aFrom - offset in the source to update from
      */
-    virtual bool DirectUpdate(gfxASurface *aSurf, const nsIntRegion& aRegion, const nsIntPoint& aFrom = nsIntPoint(0,0)) = 0;
+    virtual bool DeprecatedDirectUpdate(gfxASurface* aSurf, const nsIntRegion& aRegion, const nsIntPoint& aFrom = nsIntPoint(0,0)) = 0;
     // Moz2D equivalent
     bool UpdateFromDataSource(gfx::DataSourceSurface *aSurf,
                               const nsIntRegion* aDstRegion = nullptr,
@@ -282,7 +282,7 @@ public:
     virtual gfxASurface* BeginUpdate(nsIntRegion& aRegion);
     virtual void GetUpdateRegion(nsIntRegion& aForRegion);
     virtual void EndUpdate();
-    virtual bool DirectUpdate(gfxASurface* aSurf, const nsIntRegion& aRegion, const nsIntPoint& aFrom = nsIntPoint(0,0));
+    virtual bool DeprecatedDirectUpdate(gfxASurface* aSurf, const nsIntRegion& aRegion, const nsIntPoint& aFrom = nsIntPoint(0,0));
     virtual GLuint GetTextureID() { return mTexture; }
     // Returns a surface to draw into
     virtual already_AddRefed<gfxASurface>
@@ -342,7 +342,7 @@ public:
     virtual GLuint GetTextureID() {
         return mImages[mCurrentImage]->GetTextureID();
     }
-    virtual bool DirectUpdate(gfxASurface* aSurf, const nsIntRegion& aRegion, const nsIntPoint& aFrom = nsIntPoint(0,0));
+    virtual bool DeprecatedDirectUpdate(gfxASurface* aSurf, const nsIntRegion& aRegion, const nsIntPoint& aFrom = nsIntPoint(0,0));
     virtual bool InUpdate() const { return mInUpdate; }
     virtual void BindTexture(GLenum);
 
