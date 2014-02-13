@@ -1302,7 +1302,19 @@ class XPCShellTests(object):
             if not os.path.isfile(mozInfoFile):
                 self.log.error("Error: couldn't find mozinfo.json at '%s'. Perhaps you need to use --build-info-json?" % mozInfoFile)
                 return False
-            self.mozInfo = json.loads(open(mozInfoFile).read())
+            self.mozInfo = json.load(open(mozInfoFile))
+
+        # mozinfo.info is used as kwargs.  Some builds are done with
+        # an older Python that can't handle Unicode keys in kwargs.
+        # All of the keys in question should be ASCII.
+        if 'info' in self.mozInfo:
+            fixedInfo = {}
+            for k, v in self.mozInfo['info'].items():
+                if isinstance(k, unicode):
+                    k = k.encode('ascii')
+                fixedInfo[k] = v
+            self.mozInfo['info'] = fixedInfo
+
         mozinfo.update(self.mozInfo)
 
         # buildEnvironment() needs mozInfo, so we call it after mozInfo is initialized.
