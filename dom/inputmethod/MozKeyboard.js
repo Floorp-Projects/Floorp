@@ -329,6 +329,7 @@ MozInputMethod.prototype = {
   },
 
   uninit: function mozInputMethodUninit() {
+    this.setActive(false);
     Services.obs.removeObserver(this, "inner-window-destroyed");
     cpmm.removeMessageListener('Keyboard:FocusChange', this);
     cpmm.removeMessageListener('Keyboard:SelectionChange', this);
@@ -428,9 +429,11 @@ MozInputMethod.prototype = {
       // If there is already an active context, then this will trigger
       // a GetContext:Result:OK event, and we can initialize ourselves.
       // Otherwise silently ignored.
+      cpmm.sendAsyncMessage('Keyboard:Register', {});
       cpmm.sendAsyncMessage("Keyboard:GetContext", {});
     } else {
       // Deactive current input method.
+      cpmm.sendAsyncMessage('Keyboard:Unregister', {});
       if (this._inputcontext) {
         this.setInputContext(null);
       }
