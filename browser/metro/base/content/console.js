@@ -120,7 +120,6 @@ let ConsolePanelView = {
       }
     }
     if (this.follow) {
-      Util.dumpLn(index);
       this._list.ensureIndexIsVisible(index);
     }
   },
