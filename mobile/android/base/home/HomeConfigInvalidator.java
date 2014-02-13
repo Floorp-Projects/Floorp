@@ -25,6 +25,7 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -44,7 +45,7 @@ public class HomeConfigInvalidator implements GeckoEventListener {
     private Context mContext;
     private HomeConfig mHomeConfig;
 
-    private final ConcurrentLinkedQueue<PanelConfig> mPendingChanges = new ConcurrentLinkedQueue<PanelConfig>();
+    private final Queue<PanelConfig> mPendingChanges = new ConcurrentLinkedQueue<PanelConfig>();
     private final Runnable mInvalidationRunnable = new InvalidationRunnable();
 
     public static HomeConfigInvalidator getInstance() {
