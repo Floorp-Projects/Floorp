@@ -47,7 +47,7 @@
  * B2G blueZ:
  *   MOZ_B2G_BT and MOZ_B2G_BT_BLUEZ are both defined.
  */
-#include "BluetoothGonkService.h"
+#include "BluetoothDBusService.h"
 #elif defined(MOZ_B2G_BT_BLUEDROID)
 /**
  * B2G bluedroid:
@@ -315,7 +315,7 @@ BluetoothService::Create()
   }
 
 #if defined(MOZ_B2G_BT_BLUEZ)
-  return new BluetoothGonkService();
+  return new BluetoothDBusService();
 #elif defined(MOZ_B2G_BT_BLUEDROID)
   return new BluetoothServiceBluedroid();
 #endif
