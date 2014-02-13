@@ -376,7 +376,7 @@ class JarReader(object):
             entry = JarCdirEntry(self._data[offset:])
             offset += entry.size
             # Creator host system. 0 is MSDOS, 3 is Unix
-            host = entry['creator_version'] >> 16
+            host = entry['creator_version'] >> 8
             # External attributes values depend on host above. On Unix the
             # higher bits are the stat.st_mode value. On MSDOS, the lower bits
             # are the FAT attributes.
@@ -564,7 +564,7 @@ class JarWriter(object):
         self._data.write(end.serialize())
         self._data.close()
 
-    def add(self, name, data, compress=None):
+    def add(self, name, data, compress=None, mode=None):
         '''
         Add a new member to the jar archive, with the given name and the given
         data.
@@ -574,6 +574,8 @@ class JarWriter(object):
         When the data should be compressed (True or None with self.compress ==
         True), it is only really compressed if the compressed size is smaller
         than the uncompressed size.
+        The mode option gives the unix permissions that should be stored
+        for the jar entry.
         The given data may be a buffer, a file-like instance, a Deflater or a
         JarFileReader instance. The latter two allow to avoid uncompressing
         data to recompress it.
@@ -597,9 +599,12 @@ class JarWriter(object):
                                      type(data))
         # Fill a central directory entry for this new member.
         entry = JarCdirEntry()
-        # Not storing as created on unix, which avoids having to deal with
-        # st_mode.
         entry['creator_version'] = 20
+        if mode is not None:
+            # Set creator host system (upper byte of creator_version)
+            # to 3 (Unix) so mode is honored when there is one.
+            entry['creator_version'] |= 3 << 8
+            entry['external_attr'] = (mode & 0xFFFF) << 16L
         if deflater.compressed:
             entry['min_version'] = 20  # Version 2.0 supports deflated streams
             entry['general_flag'] = 2  # Max compression

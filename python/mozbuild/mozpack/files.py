@@ -4,6 +4,7 @@
 
 import errno
 import os
+import platform
 import re
 import shutil
 import stat
@@ -165,6 +166,13 @@ class BaseFile(object):
         assert self.path is not None
         return open(self.path, 'rb')
 
+    @property
+    def mode(self):
+        '''
+        Return the file's unix mode, or None if it has no meaning.
+        '''
+        return None
+
 
 class File(BaseFile):
     '''
@@ -173,6 +181,15 @@ class File(BaseFile):
     def __init__(self, path):
         self.path = path
 
+    @property
+    def mode(self):
+        '''
+        Return the file's unix mode, as returned by os.stat().st_mode.
+        '''
+        if platform.system() == 'Windows':
+            return None
+        assert self.path is not None
+        return os.stat(self.path).st_mode
 
 class ExecutableFile(File):
     '''
