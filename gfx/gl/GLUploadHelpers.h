@@ -7,11 +7,9 @@
 #define GLUploadHelpers_h_
 
 #include "GLDefs.h"
-#include "gfxTypes.h"
 #include "mozilla/gfx/Types.h"
 #include "nsPoint.h"
 
-class gfxASurface;
 class nsIntRegion;
 
 namespace mozilla {
@@ -66,20 +64,6 @@ UploadImageDataToTexture(GLContext* gl,
                          bool aPixelBuffer = false,
                          GLenum aTextureUnit = LOCAL_GL_TEXTURE0,
                          GLenum aTextureTarget = LOCAL_GL_TEXTURE_2D);
-
-/**
-  * Convenience wrapper around UploadImageDataToTexture for gfxASurfaces.
-  */
-gfx::SurfaceFormat
-DeprecatedUploadSurfaceToTexture(GLContext* gl,
-                       gfxASurface *aSurface,
-                       const nsIntRegion& aDstRegion,
-                       GLuint& aTexture,
-                       bool aOverwrite = false,
-                       const nsIntPoint& aSrcPoint = nsIntPoint(0, 0),
-                       bool aPixelBuffer = false,
-                       GLenum aTextureUnit = LOCAL_GL_TEXTURE0,
-                       GLenum aTextureTarget = LOCAL_GL_TEXTURE_2D);
 
 /**
   * Convenience wrapper around UploadImageDataToTexture for gfx::DataSourceSurface's.
