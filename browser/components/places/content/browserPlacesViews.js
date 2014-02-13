@@ -293,6 +293,7 @@ PlacesViewBase.prototype = {
     let type = aPlacesNode.type;
     if (type == Ci.nsINavHistoryResultNode.RESULT_TYPE_SEPARATOR) {
       element = document.createElement("menuseparator");
+      element.setAttribute("class", "small-separator");
     }
     else {
       let itemId = aPlacesNode.itemId;
@@ -1808,6 +1809,7 @@ PlacesPanelMenuView.prototype = {
     let button;
     if (type == Ci.nsINavHistoryResultNode.RESULT_TYPE_SEPARATOR) {
       button = document.createElement("toolbarseparator");
+      button.setAttribute("class", "small-separator");
     }
     else {
       button = document.createElement("toolbarbutton");
