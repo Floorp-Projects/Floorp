@@ -14,7 +14,6 @@ import org.mozilla.gecko.home.HomeConfig.PanelType;
 import org.mozilla.gecko.util.HardwareUtils;
 
 import android.content.Context;
-import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -51,9 +50,6 @@ public class HomePager extends ViewPager {
 
     // Whether or not we need to restart the loader when we show the HomePager.
     private boolean mRestartLoader;
-
-    // Cached original ViewPager background.
-    private final Drawable mOriginalBackground;
 
     // This is mostly used by UI tests to easily fetch
     // specific list views at runtime.
@@ -126,8 +122,6 @@ public class HomePager extends ViewPager {
         //  ensure there is always a focusable view. This would ordinarily be done via an XML
         //  attribute, but it is not working properly.
         setFocusableInTouchMode(true);
-
-        mOriginalBackground = getBackground();
     }
 
     @Override
@@ -316,18 +310,9 @@ public class HomePager extends ViewPager {
         // Update the adapter with the new panel configs
         adapter.update(enabledPanels);
 
+        // Hide the tab strip if the new configuration contains no panels.
         final int count = enabledPanels.size();
-        if (count == 0) {
-            // Set firefox watermark as background.
-            setBackgroundResource(R.drawable.home_pager_empty_state);
-            // Hide the tab strip as there are no panels.
-            mTabStrip.setVisibility(View.INVISIBLE);
-        } else {
-            mTabStrip.setVisibility(View.VISIBLE);
-            // Restore original background.
-            setBackground(mOriginalBackground);
-        }
-
+        mTabStrip.setVisibility(count > 0 ? View.VISIBLE : View.INVISIBLE);
         // Re-install the adapter with the final state
         // in the pager.
         setAdapter(adapter);
