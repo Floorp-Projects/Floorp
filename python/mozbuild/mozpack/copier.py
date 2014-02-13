@@ -134,6 +134,15 @@ class FileRegistry(object):
         '''
         return self._files.iteritems()
 
+    def required_directories(self):
+        '''
+        Return the set of directories required by the paths in the container,
+        in no particular order.  The returned directories are relative to an
+        unspecified (virtual) root directory (and do not include said root
+        directory).
+        '''
+        return set(k for k, v in self._required_directories.items() if v > 0)
+
 
 class FileCopyResult(object):
     """Represents results of a FileCopier.copy operation."""

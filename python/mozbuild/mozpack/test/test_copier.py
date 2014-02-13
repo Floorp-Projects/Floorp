@@ -116,6 +116,33 @@ class TestFileRegistry(MatchTestTemplate, unittest.TestCase):
         self.registry.remove('bar/zot')
         self.registry.add('bar/zot', GeneratedFile('barzot'))
 
+    def test_required_directories(self):
+        self.registry = FileRegistry()
+
+        self.registry.add('foo', GeneratedFile('foo'))
+        self.assertEqual(self.registry.required_directories(), set())
+
+        self.registry.add('bar/baz', GeneratedFile('barbaz'))
+        self.assertEqual(self.registry.required_directories(), {'bar'})
+
+        self.registry.add('bar/zot', GeneratedFile('barzot'))
+        self.assertEqual(self.registry.required_directories(), {'bar'})
+
+        self.registry.add('bar/zap/zot', GeneratedFile('barzapzot'))
+        self.assertEqual(self.registry.required_directories(), {'bar', 'bar/zap'})
+
+        self.registry.remove('bar/zap/zot')
+        self.assertEqual(self.registry.required_directories(), {'bar'})
+
+        self.registry.remove('bar/baz')
+        self.assertEqual(self.registry.required_directories(), {'bar'})
+
+        self.registry.remove('bar/zot')
+        self.assertEqual(self.registry.required_directories(), set())
+
+        self.registry.add('x/y/z', GeneratedFile('xyz'))
+        self.assertEqual(self.registry.required_directories(), {'x', 'x/y'})
+
 
 class TestFileCopier(TestWithTmpDir):
     def all_dirs(self, base):
