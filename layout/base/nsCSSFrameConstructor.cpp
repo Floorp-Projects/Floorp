@@ -2392,68 +2392,64 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
   else
 #endif
   if (aDocElement->IsSVG()) {
-    if (aDocElement->Tag() == nsGkAtoms::svg) {
-      // We're going to call the right function ourselves, so no need to give a
-      // function to this FrameConstructionData.
-
-      // XXXbz on the other hand, if we converted this whole function to
-      // FrameConstructionData/Item, then we'd need the right function
-      // here... but would probably be able to get away with less code in this
-      // function in general.
-      // Use a null PendingBinding, since our binding is not in fact pending.
-      static const FrameConstructionData rootSVGData = FCDATA_DECL(0, nullptr);
-      nsRefPtr<nsStyleContext> extraRef(styleContext);
-      FrameConstructionItem item(&rootSVGData, aDocElement,
-                                 aDocElement->Tag(), kNameSpaceID_SVG,
-                                 nullptr, extraRef.forget(), true, nullptr);
-
-      nsFrameItems frameItems;
-      contentFrame = ConstructOuterSVG(state, item, mDocElementContainingBlock,
-                                       styleContext->StyleDisplay(),
-                                       frameItems);
-      newFrame = frameItems.FirstChild();
-      NS_ASSERTION(frameItems.OnlyChild(), "multiple root element frames");
-    } else {
+    if (aDocElement->Tag() != nsGkAtoms::svg) {
       return nullptr;
     }
+    // We're going to call the right function ourselves, so no need to give a
+    // function to this FrameConstructionData.
+
+    // XXXbz on the other hand, if we converted this whole function to
+    // FrameConstructionData/Item, then we'd need the right function
+    // here... but would probably be able to get away with less code in this
+    // function in general.
+    // Use a null PendingBinding, since our binding is not in fact pending.
+    static const FrameConstructionData rootSVGData = FCDATA_DECL(0, nullptr);
+    nsRefPtr<nsStyleContext> extraRef(styleContext);
+    FrameConstructionItem item(&rootSVGData, aDocElement,
+                               aDocElement->Tag(), kNameSpaceID_SVG,
+                               nullptr, extraRef.forget(), true, nullptr);
+
+    nsFrameItems frameItems;
+    contentFrame = ConstructOuterSVG(state, item, mDocElementContainingBlock,
+                                     styleContext->StyleDisplay(),
+                                     frameItems);
+    newFrame = frameItems.FirstChild();
+    NS_ASSERTION(frameItems.OnlyChild(), "multiple root element frames");
+  } else if (display->mDisplay == NS_STYLE_DISPLAY_TABLE) {
+    // We're going to call the right function ourselves, so no need to give a
+    // function to this FrameConstructionData.
+
+    // XXXbz on the other hand, if we converted this whole function to
+    // FrameConstructionData/Item, then we'd need the right function
+    // here... but would probably be able to get away with less code in this
+    // function in general.
+    // Use a null PendingBinding, since our binding is not in fact pending.
+    static const FrameConstructionData rootTableData = FCDATA_DECL(0, nullptr);
+    nsRefPtr<nsStyleContext> extraRef(styleContext);
+    FrameConstructionItem item(&rootTableData, aDocElement,
+                               aDocElement->Tag(), kNameSpaceID_None,
+                               nullptr, extraRef.forget(), true, nullptr);
+
+    nsFrameItems frameItems;
+    // if the document is a table then just populate it.
+    contentFrame = ConstructTable(state, item, mDocElementContainingBlock,
+                                  styleContext->StyleDisplay(),
+                                  frameItems);
+    newFrame = frameItems.FirstChild();
+    NS_ASSERTION(frameItems.OnlyChild(), "multiple root element frames");
   } else {
-    bool docElemIsTable = (display->mDisplay == NS_STYLE_DISPLAY_TABLE);
-    if (docElemIsTable) {
-      // We're going to call the right function ourselves, so no need to give a
-      // function to this FrameConstructionData.
-
-      // XXXbz on the other hand, if we converted this whole function to
-      // FrameConstructionData/Item, then we'd need the right function
-      // here... but would probably be able to get away with less code in this
-      // function in general.
-      // Use a null PendingBinding, since our binding is not in fact pending.
-      static const FrameConstructionData rootTableData = FCDATA_DECL(0, nullptr);
-      nsRefPtr<nsStyleContext> extraRef(styleContext);
-      FrameConstructionItem item(&rootTableData, aDocElement,
-                                 aDocElement->Tag(), kNameSpaceID_None,
-                                 nullptr, extraRef.forget(), true, nullptr);
-
-      nsFrameItems frameItems;
-      // if the document is a table then just populate it.
-      contentFrame = ConstructTable(state, item, mDocElementContainingBlock,
-                                    styleContext->StyleDisplay(),
-                                    frameItems);
-      newFrame = frameItems.FirstChild();
-      NS_ASSERTION(frameItems.OnlyChild(), "multiple root element frames");
-    } else {
-      contentFrame = NS_NewBlockFormattingContext(mPresShell, styleContext);
-      nsFrameItems frameItems;
-      // Use a null PendingBinding, since our binding is not in fact pending.
-      ConstructBlock(state, display, aDocElement,
-                     state.GetGeometricParent(display,
-                                              mDocElementContainingBlock),
-                     mDocElementContainingBlock, styleContext,
-                     &contentFrame, frameItems,
-                     display->IsPositioned(contentFrame) ? contentFrame : nullptr,
-                     nullptr);
-      newFrame = frameItems.FirstChild();
-      NS_ASSERTION(frameItems.OnlyChild(), "multiple root element frames");
-    }
+    contentFrame = NS_NewBlockFormattingContext(mPresShell, styleContext);
+    nsFrameItems frameItems;
+    // Use a null PendingBinding, since our binding is not in fact pending.
+    ConstructBlock(state, display, aDocElement,
+                   state.GetGeometricParent(display,
+                                            mDocElementContainingBlock),
+                   mDocElementContainingBlock, styleContext,
+                   &contentFrame, frameItems,
+                   display->IsPositioned(contentFrame) ? contentFrame : nullptr,
+                   nullptr);
+    newFrame = frameItems.FirstChild();
+    NS_ASSERTION(frameItems.OnlyChild(), "multiple root element frames");
   }
 
   MOZ_ASSERT(newFrame);
