@@ -690,8 +690,8 @@ ProxyAutoConfig::GetProxyForURI(const nsCString &aTestURI,
     args[1].setString(hostString);
 
     JS::Rooted<JS::Value> rval(cx);
-    bool ok = JS_CallFunctionName(cx, mJSRuntime->Global(),
-                                  "FindProxyForURL", args, rval.address());
+    JS::Rooted<JSObject*> global(cx, mJSRuntime->Global());
+    bool ok = JS_CallFunctionName(cx, global, "FindProxyForURL", args, &rval);
 
     if (ok && rval.isString()) {
       nsDependentJSString pacString;

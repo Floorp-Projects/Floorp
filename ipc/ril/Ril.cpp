@@ -174,7 +174,7 @@ DispatchRILEvent::RunTask(JSContext *aCx)
 
     memcpy(JS_GetArrayBufferViewData(array), mMessage->mData, mMessage->mSize);
     JS::Rooted<JS::Value> rval(aCx);
-    return JS_CallFunctionName(aCx, obj, "onRILMessage", arrayVal, rval.address());
+    return JS_CallFunctionName(aCx, obj, "onRILMessage", arrayVal, &rval);
 }
 
 class RilConnector : public mozilla::ipc::UnixSocketConnector
