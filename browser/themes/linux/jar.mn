@@ -275,6 +275,7 @@ browser.jar:
   skin/classic/browser/sync-bg.png
   skin/classic/browser/sync-128.png
   skin/classic/browser/sync-desktopIcon.png
+  skin/classic/browser/sync-horizontalbar.png
   skin/classic/browser/sync-mobileIcon.png
   skin/classic/browser/sync-notification-24.png
   skin/classic/browser/syncProgress-menuPanel.png
@@ -283,6 +284,7 @@ browser.jar:
   skin/classic/browser/syncCommon.css
   skin/classic/browser/syncQuota.css
   skin/classic/browser/syncProgress.css
+  skin/classic/browser/syncProgress-horizontalbar.png
 #endif
   skin/classic/browser/notification-pluginNormal.png  (../shared/plugins/notification-pluginNormal.png)
   skin/classic/browser/notification-pluginAlert.png   (../shared/plugins/notification-pluginAlert.png)
