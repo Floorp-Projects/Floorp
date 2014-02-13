@@ -8,7 +8,10 @@ from mozpack.copier import (
     FileRegistry,
     Jarrer,
 )
-from mozpack.files import GeneratedFile
+from mozpack.files import (
+    GeneratedFile,
+    ExistingFile,
+)
 from mozpack.mozjar import JarReader
 import mozpack.path
 import unittest
@@ -282,6 +285,33 @@ class TestFileCopier(TestWithTmpDir):
             'populateddir']))
         self.assertEqual(result.removed_files, set())
         self.assertEqual(result.removed_directories, set())
+
+    def test_optional_exists_creates_unneeded_directory(self):
+        """Demonstrate that a directory not strictly required, but specified
+        as the path to an optional file, will be unnecessarily created.
+
+        This behaviour is wrong; fixing it is tracked by Bug 972432;
+        and this test exists to guard against unexpected changes in
+        behaviour.
+        """
+
+        dest = self.tmppath('dest')
+
+        copier = FileCopier()
+        copier.add('foo/bar', ExistingFile(required=False))
+
+        result = copier.copy(dest)
+
+        st = os.lstat(self.tmppath('dest/foo'))
+        self.assertFalse(stat.S_ISLNK(st.st_mode))
+        self.assertTrue(stat.S_ISDIR(st.st_mode))
+
+        # What's worse, we have no record that dest was created.
+        self.assertEquals(len(result.updated_files), 0)
+
+        # But we do have an erroneous record of an optional file
+        # existing when it does not.
+        self.assertIn(self.tmppath('dest/foo/bar'), result.existing_files)
 
 
 class TestFilePurger(TestWithTmpDir):
