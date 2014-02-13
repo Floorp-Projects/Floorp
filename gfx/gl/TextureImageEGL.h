@@ -32,8 +32,6 @@ public:
 
     virtual void EndUpdate();
 
-    virtual bool DeprecatedDirectUpdate(gfxASurface* aSurf, const nsIntRegion& aRegion, const nsIntPoint& aFrom /* = nsIntPoint(0, 0) */);
-
     virtual bool DirectUpdate(gfx::DataSourceSurface* aSurf, const nsIntRegion& aRegion, const gfx::IntPoint& aFrom = gfx::IntPoint(0,0));
 
     virtual void BindTexture(GLenum aTextureUnit);
