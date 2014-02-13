@@ -6509,6 +6509,19 @@ nsWindow::StartAllowingD3D9(bool aReinitialize)
   }
 }
 
+bool
+nsWindow::ShouldUseOffMainThreadCompositing()
+{
+  // We don't currently support using an accelerated layer manager with
+  // transparent windows so don't even try. I'm also not sure if we even
+  // want to support this case. See bug 593471
+  if (mTransparencyMode == eTransparencyTransparent) {
+    return false;
+  }
+
+  return nsBaseWidget::ShouldUseOffMainThreadCompositing();
+}
+
 void
 nsWindow::GetPreferredCompositorBackends(nsTArray<LayersBackend>& aHints)
 {
