@@ -4,6 +4,19 @@
 
 "use strict";
 
+let openUILinkInCalled = false;
+let expectOpenUILinkInCall = false;
+this.originalOpenUILinkIn = openUILinkIn;
+openUILinkIn = (aUrl, aWhichTab) => {
+  is(aUrl, Services.search.defaultEngine.searchForm, "Search page should be requested to open.");
+  is(aWhichTab, "current", "Should use the current tab for the search page.");
+  openUILinkInCalled = true;
+  if (!expectOpenUILinkInCall) {
+    ok(false, "OpenUILink in was called when it shouldn't have been.");
+  }
+};
+logActiveElement();
+
 // Ctrl+K should open the menu panel and focus the search bar if the search bar is in the panel.
 add_task(function() {
   let searchbar = document.getElementById("searchbar");
@@ -88,26 +101,27 @@ add_task(function() {
 
 // Ctrl+K should open the search page if the search bar has been customized out.
 add_task(function() {
-  this.originalOpenUILinkIn = openUILinkIn;
   try {
+    expectOpenUILinkInCall = true;
     CustomizableUI.removeWidgetFromArea("search-container");
     let placement = CustomizableUI.getPlacementOfWidget("search-container");
     is(placement, null, "Search container should be in palette");
 
-    let openUILinkInCalled = false;
-    openUILinkIn = (aUrl, aWhichTab) => {
-      is(aUrl, Services.search.defaultEngine.searchForm, "Search page should be requested to open.");
-      is(aWhichTab, "current", "Should use the current tab for the search page.");
-      openUILinkInCalled = true;
-    };
+    openUILinkInCalled = false;
+
     sendWebSearchKeyCommand();
     yield waitForCondition(function() openUILinkInCalled);
     ok(openUILinkInCalled, "The search page should have been opened.")
+    expectOpenUILinkInCall = false;
   } catch (e) {
     ok(false, e);
   }
-  openUILinkIn = this.originalOpenUILinkIn;
   CustomizableUI.reset();
+});
+
+registerCleanupFunction(function() {
+  openUILinkIn = this.originalOpenUILinkIn;
+  delete this.originalOpenUILinkIn;
 });
 
 function sendWebSearchKeyCommand() {
@@ -119,7 +133,10 @@ function sendWebSearchKeyCommand() {
 
 function logActiveElement() {
   let element = document.activeElement;
-  info("Active element: " + element ?
-    element + " (" + element.localName + "#" + element.id + "." + [...element.classList].join(".") + ")" :
-    "null");
+  let str = "";
+  while (element && element.parentNode) {
+    str = " (" + element.localName + "#" + element.id + "." + [...element.classList].join(".") + ") >" + str;
+    element = element.parentNode;
+  }
+  info("Active element: " + element ? str : "null");
 }
