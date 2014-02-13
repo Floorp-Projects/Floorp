@@ -176,13 +176,13 @@ class ArrayBufferObject : public JSObject
      * Copy the data into freshly-allocated memory. Used when un-inlining or
      * when converting an ArrayBuffer to an AsmJS (MMU-assisted) ArrayBuffer.
      */
-    bool copyData(JSContext *maybecx);
+    bool copyData(JSContext *cx);
 
     /*
      * Ensure data is not stored inline in the object. Used when handing back a
      * GC-safe pointer.
      */
-    bool ensureNonInline(JSContext *maybecx);
+    bool ensureNonInline(JSContext *cx);
 
     uint32_t byteLength() const {
         return getElementsHeader()->initializedLength;
@@ -194,7 +194,7 @@ class ArrayBufferObject : public JSObject
      * the returned contents (which is the case for inline or asm.js buffers),
      * and false if the ArrayBuffer still owns the pointer.
      */
-    ObjectElements *getTransferableContents(JSContext *maybecx, bool *callerOwns);
+    ObjectElements *getTransferableContents(JSContext *cx, bool *callerOwns);
 
     /*
      * Neuter all views of an ArrayBuffer.
@@ -209,7 +209,7 @@ class ArrayBufferObject : public JSObject
      * Discard the ArrayBuffer contents. For asm.js buffers, at least, should
      * be called after neuterViews().
      */
-    void neuter(JSContext *maybecx);
+    void neuter(JSContext *cx);
 
     /*
      * Check if the arrayBuffer contains any data. This will return false for
