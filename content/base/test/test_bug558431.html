@@ -1,11 +1,8 @@
 <!DOCTYPE HTML>
 <html>
-<!--
-https://bugzilla.mozilla.org/show_bug.cgi?id=558431
--->
 <head>
-  <title>Test for Bug 558431</title>
-  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <title>Test for CSP async policy-uri</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
@@ -27,7 +24,7 @@ f.addEventListener('load', function() {
   SimpleTest.finish();
 }, false);
 // load the test frame
-f.src = "file_policyuri_async_fetch.html";
+f.src = "file_bug558431.html";
 SimpleTest.waitForExplicitFinish();
 </script>
 </body>

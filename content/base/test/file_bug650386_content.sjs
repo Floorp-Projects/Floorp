@@ -1,7 +1,6 @@
-// https://bugzilla.mozilla.org/show_bug.cgi?id=650386
-// This SJS file serves file_redirect_content.html
+// SJS file for tests for bug650386, serves file_bug650386_content.html
 // with a CSP that will trigger a violation and that will report it
-// to file_redirect_report.sjs
+// to file_bug650386_report.sjs
 //
 // This handles 301, 302, 303 and 307 redirects. The HTTP status code
 // returned/type of redirect to do comes from the query string
@@ -23,7 +22,7 @@ function handleRequest(request, response) {
     return;
   }
 
-  var csp = "default-src \'self\';report-uri http://mochi.test:8888/tests/content/base/test/csp/file_redirect_report.sjs?" + redirect;
+  var csp = "default-src \'self\';report-uri http://mochi.test:8888/tests/content/base/test/file_bug650386_report.sjs?" + redirect;
 
   response.setHeader("X-Content-Security-Policy", csp, false);
 
