@@ -276,6 +276,25 @@ static uint64_t gContentChildID = 1;
 // Can't be a static constant.
 #define MAGIC_PREALLOCATED_APP_MANIFEST_URL NS_LITERAL_STRING("{{template}}")
 
+static const char* sObserverTopics[] = {
+    "xpcom-shutdown",
+    NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC,
+    "child-memory-reporter-request",
+    "memory-pressure",
+    "child-gc-request",
+    "child-cc-request",
+    "child-mmu-request",
+    "last-pb-context-exited",
+    "file-watcher-update",
+#ifdef MOZ_WIDGET_GONK
+    NS_VOLUME_STATE_CHANGED,
+    "phone-state-changed",
+#endif
+#ifdef ACCESSIBILITY
+    "a11y-init-or-shutdown",
+#endif
+};
+
 /* static */ already_AddRefed<ContentParent>
 ContentParent::RunNuwaProcess()
 {
@@ -652,22 +671,10 @@ ContentParent::Init()
 {
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     if (obs) {
-        obs->AddObserver(this, "xpcom-shutdown", false);
-        obs->AddObserver(this, NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC, false);
-        obs->AddObserver(this, "child-memory-reporter-request", false);
-        obs->AddObserver(this, "memory-pressure", false);
-        obs->AddObserver(this, "child-gc-request", false);
-        obs->AddObserver(this, "child-cc-request", false);
-        obs->AddObserver(this, "child-mmu-request", false);
-        obs->AddObserver(this, "last-pb-context-exited", false);
-        obs->AddObserver(this, "file-watcher-update", false);
-#ifdef MOZ_WIDGET_GONK
-        obs->AddObserver(this, NS_VOLUME_STATE_CHANGED, false);
-        obs->AddObserver(this, "phone-state-changed", false);
-#endif
-#ifdef ACCESSIBILITY
-        obs->AddObserver(this, "a11y-init-or-shutdown", false);
-#endif
+        size_t length = ArrayLength(sObserverTopics);
+        for (size_t i = 0; i < length; ++i) {
+            obs->AddObserver(this, sObserverTopics[i], false);
+        }
     }
     Preferences::AddStrongObserver(this, "");
     nsCOMPtr<nsIThreadInternal>
@@ -1036,22 +1043,11 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
         kungFuDeathGrip(static_cast<nsIThreadObserver*>(this));
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     if (obs) {
-        obs->RemoveObserver(static_cast<nsIObserver*>(this), "xpcom-shutdown");
-        obs->RemoveObserver(static_cast<nsIObserver*>(this), "memory-pressure");
-        obs->RemoveObserver(static_cast<nsIObserver*>(this), "child-memory-reporter-request");
-        obs->RemoveObserver(static_cast<nsIObserver*>(this), NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC);
-        obs->RemoveObserver(static_cast<nsIObserver*>(this), "child-gc-request");
-        obs->RemoveObserver(static_cast<nsIObserver*>(this), "child-cc-request");
-        obs->RemoveObserver(static_cast<nsIObserver*>(this), "child-mmu-request");
-        obs->RemoveObserver(static_cast<nsIObserver*>(this), "last-pb-context-exited");
-        obs->RemoveObserver(static_cast<nsIObserver*>(this), "file-watcher-update");
-#ifdef MOZ_WIDGET_GONK
-        obs->RemoveObserver(static_cast<nsIObserver*>(this), NS_VOLUME_STATE_CHANGED);
-        obs->RemoveObserver(static_cast<nsIObserver*>(this), "phone-state-changed");
-#endif
-#ifdef ACCESSIBILITY
-        obs->RemoveObserver(static_cast<nsIObserver*>(this), "a11y-init-or-shutdown");
-#endif
+        size_t length = ArrayLength(sObserverTopics);
+        for (size_t i = 0; i < length; ++i) {
+            obs->RemoveObserver(static_cast<nsIObserver*>(this),
+                                sObserverTopics[i]);
+        }
     }
 
     if (ppm) {
