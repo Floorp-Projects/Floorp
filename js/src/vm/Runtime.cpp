@@ -302,10 +302,11 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     useHelperThreads_(useHelperThreads),
     parallelIonCompilationEnabled_(true),
     parallelParsingEnabled_(true),
-    isWorkerRuntime_(false)
+    isWorkerRuntime_(false),
 #ifdef DEBUG
-    , enteredPolicy(nullptr)
+    enteredPolicy(nullptr),
 #endif
+    largeAllocationFailureCallback(nullptr)
 {
     liveRuntimesCount++;
 
