@@ -189,18 +189,21 @@ GetJumpOffset(jsbytecode *pc)
 }
 
 IonBuilder::CFGState
-IonBuilder::CFGState::If(jsbytecode *join, MBasicBlock *ifFalse)
+IonBuilder::CFGState::If(jsbytecode *join, MTest *test)
 {
     CFGState state;
     state.state = IF_TRUE;
     state.stopAt = join;
-    state.branch.ifFalse = ifFalse;
+    state.branch.ifFalse = test->ifFalse();
+    state.branch.test = test;
     return state;
 }
 
 IonBuilder::CFGState
-IonBuilder::CFGState::IfElse(jsbytecode *trueEnd, jsbytecode *falseEnd, MBasicBlock *ifFalse)
+IonBuilder::CFGState::IfElse(jsbytecode *trueEnd, jsbytecode *falseEnd, MTest *test)
 {
+    MBasicBlock *ifFalse = test->ifFalse();
+
     CFGState state;
     // If the end of the false path is the same as the start of the
     // false path, then the "else" block is empty and we can devolve
@@ -213,6 +216,7 @@ IonBuilder::CFGState::IfElse(jsbytecode *trueEnd, jsbytecode *falseEnd, MBasicBl
     state.stopAt = trueEnd;
     state.branch.falseEnd = falseEnd;
     state.branch.ifFalse = ifFalse;
+    state.branch.test = test;
     return state;
 }
 
@@ -223,6 +227,7 @@ IonBuilder::CFGState::AndOr(jsbytecode *join, MBasicBlock *joinStart)
     state.state = AND_OR;
     state.stopAt = join;
     state.branch.ifFalse = joinStart;
+    state.branch.test = nullptr;
     return state;
 }
 
@@ -1891,6 +1896,10 @@ IonBuilder::processIfElseTrueEnd(CFGState &state)
     pc = state.branch.ifFalse->pc();
     setCurrentAndSpecializePhis(state.branch.ifFalse);
     graph().moveBlockToEnd(current);
+
+    if (state.branch.test)
+        filterTypesAtTest(state.branch.test);
+
     return ControlStatus_Jumped;
 }
 
@@ -3002,6 +3011,60 @@ IonBuilder::tableSwitch(JSOp op, jssrcnote *sn)
 }
 
 bool
+IonBuilder::filterTypesAtTest(MTest *test)
+{
+    JS_ASSERT(test->ifTrue() == current || test->ifFalse() == current);
+
+    bool trueBranch = test->ifTrue() == current;
+
+    MDefinition *subject = nullptr;
+    bool removeUndefined;
+    bool removeNull;
+
+    test->filtersUndefinedOrNull(trueBranch, &subject, &removeUndefined, &removeNull);
+
+    // The test filters no undefined or null.
+    if (!subject)
+        return true;
+
+    // There is no TypeSet that can get filtered.
+    if (!subject->resultTypeSet())
+        return true;
+
+    // Only do this optimization if the typeset does contains null or undefined.
+    if (!((removeUndefined && subject->resultTypeSet()->hasType(types::Type::UndefinedType())) ||
+        (removeNull && subject->resultTypeSet()->hasType(types::Type::NullType()))))
+    {
+        return true;
+    }
+
+    //printf("%d: replacing\n", script()->lineno());
+    // Find all values on the stack that correspond to the subject
+    // and replace it with a MIR with filtered TypeSet information.
+    // Create the replacement MIR lazily upon first occurence.
+    MDefinition *replace = nullptr;
+    for (uint32_t i = 0; i < current->stackDepth(); i++) {
+        if (current->getSlot(i) != subject)
+            continue;
+
+        // Create replacement MIR with filtered TypesSet.
+        if (!replace) {
+            types::TemporaryTypeSet *type =
+                subject->resultTypeSet()->filter(alloc_->lifoAlloc(), removeUndefined,
+                                                                      removeNull);
+            if (!type)
+                return false;
+
+            replace = ensureDefiniteTypeSet(subject, type);
+        }
+
+        current->setSlot(i, replace);
+    }
+
+   return true;
+}
+
+bool
 IonBuilder::jsop_label()
 {
     JS_ASSERT(JSOp(*pc) == JSOP_LABEL);
@@ -3419,7 +3482,7 @@ IonBuilder::jsop_ifeq(JSOp op)
     // IF case, the IFEQ offset is the join point.
     switch (SN_TYPE(sn)) {
       case SRC_IF:
-        if (!cfgStack_.append(CFGState::If(falseStart, ifFalse)))
+        if (!cfgStack_.append(CFGState::If(falseStart, test)))
             return false;
         break;
 
@@ -3438,7 +3501,7 @@ IonBuilder::jsop_ifeq(JSOp op)
         JS_ASSERT(falseEnd > trueEnd);
         JS_ASSERT(falseEnd >= falseStart);
 
-        if (!cfgStack_.append(CFGState::IfElse(trueEnd, falseEnd, ifFalse)))
+        if (!cfgStack_.append(CFGState::IfElse(trueEnd, falseEnd, test)))
             return false;
         break;
       }
@@ -3450,6 +3513,9 @@ IonBuilder::jsop_ifeq(JSOp op)
     // Switch to parsing the true branch. Note that no PC update is needed,
     // it's the next instruction.
     setCurrentAndSpecializePhis(ifTrue);
+
+    // Filter the types in the true branch.
+    filterTypesAtTest(test);
 
     return true;
 }
@@ -6236,6 +6302,26 @@ IonBuilder::ensureDefiniteType(MDefinition *def, JSValueType definiteType)
 
     current->add(replace);
     return replace;
+}
+
+MDefinition *
+IonBuilder::ensureDefiniteTypeSet(MDefinition *def, types::TemporaryTypeSet *types)
+{
+    // We cannot arbitrarily add a typeset to a definition. It can be shared
+    // in another path. So we always need to create a new MIR.
+
+    // Use ensureDefiniteType to do unboxing. If that happened the type can
+    // be added on the newly created unbox operation.
+    MDefinition *replace = ensureDefiniteType(def, types->getKnownTypeTag());
+    if (replace != def) {
+        replace->setResultTypeSet(types);
+        return replace;
+    }
+
+    // Create a NOP mir instruction to filter the typeset.
+    MFilterTypeSet *filter = MFilterTypeSet::New(alloc(), def, types);
+    current->add(filter);
+    return filter;
 }
 
 static size_t
