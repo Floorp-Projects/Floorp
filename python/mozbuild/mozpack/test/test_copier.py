@@ -199,9 +199,34 @@ class TestFileCopier(TestWithTmpDir):
 
         self.assertEqual(self.all_files(self.tmpdir), set(['foo', 'bar',
             'populateddir/foo']))
+        self.assertEqual(self.all_dirs(self.tmpdir), set(['populateddir']))
         self.assertEqual(result.removed_files, set())
         self.assertEqual(result.removed_directories,
             set([self.tmppath('emptydir')]))
+
+    def test_no_remove_empty_directories(self):
+        copier = FileCopier()
+        copier.add('foo', GeneratedFile('foo'))
+
+        with open(self.tmppath('bar'), 'a'):
+            pass
+
+        os.mkdir(self.tmppath('emptydir'))
+        d = self.tmppath('populateddir')
+        os.mkdir(d)
+
+        with open(self.tmppath('populateddir/foo'), 'a'):
+            pass
+
+        result = copier.copy(self.tmpdir, remove_unaccounted=False,
+            remove_empty_directories=False)
+
+        self.assertEqual(self.all_files(self.tmpdir), set(['foo', 'bar',
+            'populateddir/foo']))
+        self.assertEqual(self.all_dirs(self.tmpdir), set(['emptydir',
+            'populateddir']))
+        self.assertEqual(result.removed_files, set())
+        self.assertEqual(result.removed_directories, set())
 
 
 class TestFilePurger(TestWithTmpDir):

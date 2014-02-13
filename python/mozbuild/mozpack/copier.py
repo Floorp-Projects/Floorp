@@ -148,7 +148,7 @@ class FileCopier(FileRegistry):
     FileRegistry with the ability to copy the registered files to a separate
     directory.
     '''
-    def copy(self, destination, skip_if_older=True, remove_unaccounted=True):
+    def copy(self, destination, skip_if_older=True, remove_unaccounted=True, remove_empty_directories=True):
         '''
         Copy all registered files to the given destination path. The given
         destination can be an existing directory, or not exist at all. It
@@ -158,7 +158,8 @@ class FileCopier(FileRegistry):
 
         By default, files in the destination directory that aren't registered
         are removed and empty directories are deleted. To disable removing of
-        unregistered files, pass remove_unaccounted=False.
+        unregistered files, pass remove_unaccounted=False. To disable removing
+        empty directories, pass remove_empty_directories=False.
 
         Returns a FileCopyResult that details what changed.
         '''
@@ -294,6 +295,9 @@ class FileCopier(FileRegistry):
                 result.updated_files.add(destfile)
             else:
                 result.existing_files.add(destfile)
+
+        if not remove_empty_directories:
+            return result
 
         # Figure out which directories can be removed. This is complicated
         # by the fact we optionally remove existing files. This would be easy
