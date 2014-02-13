@@ -996,15 +996,11 @@ MPhi::computeRange(TempAllocator &alloc)
         return;
 
     Range *range = nullptr;
-    JS_ASSERT(getOperand(0)->op() != MDefinition::Op_OsrValue);
     for (size_t i = 0, e = numOperands(); i < e; i++) {
         if (getOperand(i)->block()->earlyAbort()) {
             IonSpew(IonSpew_Range, "Ignoring unreachable input %d", getOperand(i)->id());
             continue;
         }
-
-        if (isOSRLikeValue(getOperand(i)))
-            continue;
 
         // Peek at the pre-bailout range so we can take a short-cut; if any of
         // the operands has an unknown range, this phi has an unknown range.
