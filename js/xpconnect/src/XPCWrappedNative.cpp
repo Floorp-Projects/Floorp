@@ -2367,10 +2367,10 @@ CallMethodHelper::HandleDipperParam(nsXPTCVariant* dp,
                type_tag == nsXPTType::T_CSTRING,
                "Unexpected dipper type!");
 
-    // ASTRING and DOMSTRING are very similar, and both use nsAutoString.
+    // ASTRING and DOMSTRING are very similar, and both use nsString.
     // UTF8_STRING and CSTRING are also quite similar, and both use nsCString.
     if (type_tag == nsXPTType::T_ASTRING || type_tag == nsXPTType::T_DOMSTRING)
-        dp->val.p = new nsAutoString();
+        dp->val.p = nsXPConnect::GetRuntimeInstance()->NewShortLivedString();
     else
         dp->val.p = new nsCString();
 
