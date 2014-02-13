@@ -447,6 +447,11 @@ TypedObjectPointer.prototype.getX4 = function() {
 //
 // The methods in this section modify the data pointed at by `this`.
 
+// Convenience function
+function SetTypedObjectValue(descr, typedObj, offset, fromValue) {
+  new TypedObjectPointer(descr, typedObj, offset).set(fromValue);
+}
+
 // Assigns `fromValue` to the memory pointed at by `this`, adapting it
 // to `typeRepr` as needed. This is the most general entry point and
 // works for any type.
@@ -934,10 +939,23 @@ function TypedArrayMap(a, b) {
     return MapTypedSeqImpl(this, a, thisType, b);
   else if (typeof a === "function")
     return MapTypedSeqImpl(this, 1, thisType, a);
-  else if (typeof a === "number")
+  return ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
+}
+
+// Warning: user exposed!
+function TypedArrayMapPar(a, b) {
+  if (!IsObject(this) || !ObjectIsTypedObject(this))
     return ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
-  else
+  var thisType = TYPEDOBJ_TYPE_DESCR(this);
+  if (!TypeDescrIsArrayType(thisType))
     return ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
+
+  // Arguments: [depth], func
+  if (typeof a === "number" && typeof b === "function")
+    return MapTypedParImpl(this, a, thisType, b);
+  else if (typeof a === "function")
+    return MapTypedParImpl(this, 1, thisType, a);
+  return ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
 }
 
 // Warning: user exposed!
@@ -1002,11 +1020,6 @@ function TypedObjectArrayTypeFromPar(a,b,c) {
 }
 
 // Warning: user exposed!
-function TypedArrayMapPar(a, b) {
-  return callFunction(TypedArrayMap, this, a, b);
-}
-
-// Warning: user exposed!
 function TypedArrayReducePar(a, b) {
   return callFunction(TypedArrayReduce, this, a, b);
 }
@@ -1034,6 +1047,12 @@ function GET_BIT(data, index) {
   var word = index >> 3;
   var mask = 1 << (index & 0x7);
   return (data[word] & mask) != 0;
+}
+
+function TypeDescrIsUnsizedArrayType(t) {
+  assert(IsObject(t) && ObjectIsTypeDescr(t),
+         "TypeDescrIsArrayType called on non-type-object");
+  return DESCR_KIND(t) === JS_TYPEREPR_UNSIZED_ARRAY_KIND;
 }
 
 function TypeDescrIsArrayType(t) {
@@ -1073,7 +1092,8 @@ function TypeDescrIsSizedArrayType(t) {
 }
 
 function TypeDescrIsSimpleType(t) {
-  assert(IsObject(t) && ObjectIsTypeDescr(t), "TypeDescrIsSimpleType called on non-type-object");
+  assert(IsObject(t) && ObjectIsTypeDescr(t),
+         "TypeDescrIsSimpleType called on non-type-object");
 
   var kind = DESCR_KIND(t);
   switch (kind) {
@@ -1325,6 +1345,183 @@ function MapTypedSeqImpl(inArray, depth, outputType, func) {
   }
 
 }
+
+// Implements |map| and |from| methods for typed |inArray|.
+function MapTypedParImpl(inArray, depth, outputType, func) {
+  assert(IsObject(outputType) && ObjectIsTypeDescr(outputType),
+         "Map/From called on non-type-object outputType");
+  assert(IsObject(inArray) && ObjectIsTypedObject(inArray),
+         "Map/From called on non-object or untyped input array.");
+  assert(TypeDescrIsArrayType(outputType),
+         "Map/From called on non array-type outputType");
+
+  var inArrayType = TypeOfTypedObject(inArray);
+
+  if (ShouldForceSequential() ||
+      depth <= 0 ||
+      TO_INT32(depth) !== depth ||
+      !TypeDescrIsArrayType(inArrayType) ||
+      !TypeDescrIsUnsizedArrayType(outputType))
+  {
+    // defer error cases to seq implementation:
+    return MapTypedSeqImpl(inArray, depth, outputType, func);
+  }
+
+  switch (depth) {
+  case 1:
+    return MapTypedParImplDepth1(inArray, inArrayType, outputType, func);
+  default:
+    return MapTypedSeqImpl(inArray, depth, outputType, func);
+  }
+}
+
+function RedirectPointer(typedObj, offset, outputIsScalar) {
+  if (!outputIsScalar || !InParallelSection()) {
+    // ^ Subtle note: always check InParallelSection() last, because
+    // otherwise the other if conditions will not execute during
+    // sequential mode and we will not gather enough type
+    // information.
+
+    // Here `typedObj` represents the input or output pointer we will
+    // pass to the user function. Ideally, we will just update the
+    // offset of `typedObj` in place so that it moves along the
+    // input/output buffer without incurring any allocation costs. But
+    // we can only do this if these changes are invisible to the user.
+    //
+    // Under normal uses, such changes *should* be invisible -- the
+    // in/out pointers are only intended to be used during the
+    // callback and then discarded, but of course in the general case
+    // nothing prevents them from escaping.
+    //
+    // However, if we are in parallel mode, we know that the pointers
+    // will not escape into global state. They could still escape by
+    // being returned into the resulting array, but even that avenue
+    // is impossible if the result array cannot contain objects.
+    //
+    // Therefore, we reuse a pointer if we are both in parallel mode
+    // and we have a transparent output type.  It'd be nice to loosen
+    // this condition later by using fancy ion optimizations that
+    // assume the value won't escape and copy it if it does. But those
+    // don't exist yet. Moreover, checking if the type is transparent
+    // is an overapproximation: users can manually declare opaque
+    // types that nonetheless only contain scalar data.
+
+    typedObj = NewDerivedTypedObject(TYPEDOBJ_TYPE_DESCR(typedObj),
+                                     typedObj, 0);
+  }
+
+  SetTypedObjectOffset(typedObj, offset);
+  return typedObj;
+}
+SetScriptHints(RedirectPointer,         { inline: true });
+
+function MapTypedParImplDepth1(inArray, inArrayType, outArrayType, func) {
+  assert(IsObject(inArrayType) && ObjectIsTypeDescr(inArrayType) &&
+         TypeDescrIsArrayType(inArrayType),
+         "DoMapTypedParDepth1: invalid inArrayType");
+  assert(IsObject(outArrayType) && ObjectIsTypeDescr(outArrayType) &&
+         TypeDescrIsArrayType(outArrayType),
+         "DoMapTypedParDepth1: invalid outArrayType");
+  assert(IsObject(inArray) && ObjectIsTypedObject(inArray),
+         "DoMapTypedParDepth1: invalid inArray");
+
+  // Determine the grain types of the input and output.
+  const inGrainType = inArrayType.elementType;
+  const outGrainType = outArrayType.elementType;
+  const inGrainTypeSize = DESCR_SIZE(inGrainType);
+  const outGrainTypeSize = DESCR_SIZE(outGrainType);
+  const inGrainTypeIsComplex = !TypeDescrIsSimpleType(inGrainType);
+  const outGrainTypeIsComplex = !TypeDescrIsSimpleType(outGrainType);
+
+  const length = inArray.length;
+  const mode = undefined;
+
+  const outArray = new outArrayType(length);
+
+  const outGrainTypeIsTransparent = ObjectIsTransparentTypedObject(outArray);
+
+  // Construct the slices and initial pointers for each worker:
+  const slicesInfo = ComputeSlicesInfo(length);
+  const numWorkers = ForkJoinNumWorkers();
+  assert(numWorkers > 0, "Should have at least the main thread");
+  const pointers = [];
+  for (var i = 0; i < numWorkers; i++) {
+    const inPointer = new TypedObjectPointer(inGrainType, inArray, 0);
+    const inTypedObject = inPointer.getDerivedIf(inGrainTypeIsComplex);
+    const outPointer = new TypedObjectPointer(outGrainType, outArray, 0);
+    const outTypedObject = outPointer.getOpaqueIf(outGrainTypeIsComplex);
+    ARRAY_PUSH(pointers, ({ inTypedObject: inTypedObject,
+                            outTypedObject: outTypedObject }));
+  }
+
+  // Below we will be adjusting offsets within the input to point at
+  // successive entries; we'll need to know the offset of inArray
+  // relative to its owner (which is often but not always 0).
+  const inBaseOffset = TYPEDOBJ_BYTEOFFSET(inArray);
+
+  ForkJoin(mapThread, ShrinkLeftmost(slicesInfo), ForkJoinMode(mode));
+  return outArray;
+
+  function mapThread(workerId, warmup) {
+    assert(TO_INT32(workerId) === workerId,
+           "workerId not int: " + workerId);
+    assert(workerId >= 0 && workerId < pointers.length,
+          "workerId too large: " + workerId + " >= " + pointers.length);
+    assert(!!pointers[workerId],
+          "no pointer data for workerId: " + workerId);
+
+    var sliceId;
+    const { inTypedObject, outTypedObject } = pointers[workerId];
+
+    while (GET_SLICE(slicesInfo, sliceId)) {
+      const indexStart = SLICE_START(slicesInfo, sliceId);
+      const indexEnd = SLICE_END(slicesInfo, indexStart, length);
+
+      var inOffset = inBaseOffset + std_Math_imul(inGrainTypeSize, indexStart);
+      var outOffset = std_Math_imul(outGrainTypeSize, indexStart);
+
+      // Set the target region so that user is only permitted to write
+      // within the range set aside for this slice. This prevents user
+      // from writing to typed objects that escaped from prior slices
+      // during sequential iteration. Note that, for any particular
+      // iteration of the loop below, it's only valid to write to the
+      // memory range corresponding to the index `i` -- however, since
+      // the different iterations cannot communicate typed object
+      // pointers to one another during parallel exec, we need only
+      // fear escaped typed objects from *other* slices, so we can
+      // just set the target region once.
+      const endOffset = std_Math_imul(outGrainTypeSize, indexEnd);
+      SetForkJoinTargetRegion(outArray, outOffset, endOffset);
+
+      for (var i = indexStart; i < indexEnd; i++) {
+        var inVal = (inGrainTypeIsComplex
+                     ? RedirectPointer(inTypedObject, inOffset,
+                                       outGrainTypeIsTransparent)
+                     : inArray[i]);
+        var outVal = (outGrainTypeIsComplex
+                      ? RedirectPointer(outTypedObject, outOffset,
+                                        outGrainTypeIsTransparent)
+                      : undefined);
+        const r = func(inVal, i, inArray, outVal);
+        if (r !== undefined) {
+          if (outGrainTypeIsComplex)
+            SetTypedObjectValue(outGrainType, outArray, outOffset, r);
+          else
+            outArray[i] = r;
+        }
+        inOffset += inGrainTypeSize;
+        outOffset += outGrainTypeSize;
+      }
+
+      MARK_SLICE_DONE(slicesInfo, sliceId);
+      if (warmup)
+        return;
+    }
+  }
+
+  return undefined;
+}
+SetScriptHints(MapTypedParImplDepth1,         { cloneAtCallsite: true });
 
 function ReduceTypedSeqImpl(array, outputType, func, initial) {
   assert(IsObject(array) && ObjectIsTypedObject(array), "Reduce called on non-object or untyped input array.");
