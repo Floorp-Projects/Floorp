@@ -15,6 +15,7 @@
 #include "prlog.h"
 
 #include "gfxPlatform.h"
+#include "gfxPrefs.h"
 
 #ifdef XP_WIN
 #include <process.h>
@@ -372,6 +373,13 @@ gfxPlatform::Init()
     }
     gEverInitialized = true;
 
+    /* Pref migration hook. */
+    MigratePrefs();
+
+    // Initialize the preferences by creating the singleton.  This should
+    // be done after the preference migration using MigratePrefs().
+    gfxPrefs::One();
+
 #ifdef PR_LOGGING
     sFontlistLog = PR_NewLogModule("fontlist");
     sFontInitLog = PR_NewLogModule("fontinit");
@@ -455,9 +463,6 @@ gfxPlatform::Init()
     if (NS_FAILED(rv)) {
         NS_RUNTIMEABORT("Could not initialize gfxFontCache");
     }
-
-    /* Pref migration hook. */
-    MigratePrefs();
 
     /* Create and register our CMS Override observer. */
     gPlatform->mSRGBOverrideObserver = new SRGBOverrideObserver();
@@ -572,6 +577,8 @@ gfxPlatform::Shutdown()
     CompositorParent::ShutDown();
 
     delete gGfxPlatformPrefsLock;
+
+    gfxPrefs::Destroy();
 
     delete gPlatform;
     gPlatform = nullptr;
@@ -1880,7 +1887,10 @@ static void ShutdownCMS()
 static void MigratePrefs()
 {
     /* Migrate from the boolean color_management.enabled pref - we now use
-       color_management.mode. */
+       color_management.mode.  These calls should be made before gfxPrefs
+       is initialized, otherwise we may not pick up the correct values
+       with the gfxPrefs functions.
+    */
     if (Preferences::HasUserValue(GFX_PREF_CMS_ENABLED_OBSOLETE)) {
         if (Preferences::GetBool(GFX_PREF_CMS_ENABLED_OBSOLETE, false)) {
             Preferences::SetInt(GFX_PREF_CMS_MODE, static_cast<int32_t>(eCMSMode_All));
