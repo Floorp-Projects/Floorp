@@ -89,53 +89,110 @@ USING_BLUETOOTH_NAMESPACE
 #define TIMEOUT_FORCE_TO_DISABLE_BT 5
 
 #ifdef MOZ_WIDGET_GONK
-static struct BluedroidFunctions
+class Bluedroid
 {
-  bool initialized;
-
-  BluedroidFunctions() :
-    initialized(false)
+  struct ScopedDlHandleTraits
   {
+    typedef void* type;
+    static void* empty()
+    {
+      return nullptr;
+    }
+    static void release(void* handle)
+    {
+      if (!handle) {
+        return;
+      }
+      int res = dlclose(handle);
+      if (res) {
+        BT_WARNING("Failed to close libbluedroid.so: %s", dlerror());
+      }
+    }
+  };
+
+public:
+  Bluedroid()
+  : m_bt_enable(nullptr)
+  , m_bt_disable(nullptr)
+  , m_bt_is_enabled(nullptr)
+  {}
+
+  bool Enable()
+  {
+    MOZ_ASSERT(!NS_IsMainThread()); // BT thread
+
+    if (!mHandle && !Init()) {
+      return false;
+    } else if (m_bt_is_enabled() == 1) {
+      return true;
+    }
+    // 0 == success, -1 == error
+    return !m_bt_enable();
   }
 
-  int (* bt_enable)();
-  int (* bt_disable)();
-  int (* bt_is_enabled)();
-} sBluedroidFunctions;
+  bool Disable()
+  {
+    MOZ_ASSERT(!NS_IsMainThread()); // BT thread
 
-static bool
-EnsureBluetoothInit()
-{
-  if (sBluedroidFunctions.initialized) {
+    if (!IsEnabled()) {
+      return true;
+    }
+    // 0 == success, -1 == error
+    return !m_bt_disable();
+  }
+
+  bool IsEnabled() const
+  {
+    MOZ_ASSERT(!NS_IsMainThread()); // BT thread
+
+    if (!mHandle) {
+      return false;
+    }
+    // 1 == enabled, 0 == disabled, -1 == error
+    return m_bt_is_enabled() > 0;
+  }
+
+private:
+  bool Init()
+  {
+    MOZ_ASSERT(!mHandle);
+
+    Scoped<ScopedDlHandleTraits> handle(dlopen("libbluedroid.so", RTLD_LAZY));
+    if (!handle) {
+      BT_WARNING("Failed to open libbluedroid.so: %s", dlerror());
+      return false;
+    }
+    int (*bt_enable)() = (int (*)())dlsym(handle, "bt_enable");
+    if (!bt_enable) {
+      BT_WARNING("Failed to lookup bt_enable: %s", dlerror());
+      return false;
+    }
+    int (*bt_disable)() = (int (*)())dlsym(handle, "bt_disable");
+    if (!bt_disable) {
+      BT_WARNING("Failed to lookup bt_disable: %s", dlerror());
+      return false;
+    }
+    int (*bt_is_enabled)() = (int (*)())dlsym(handle, "bt_is_enabled");
+    if (!bt_is_enabled) {
+      BT_WARNING("Failed to lookup bt_is_enabled: %s", dlerror());
+      return false;
+    }
+
+    m_bt_enable = bt_enable;
+    m_bt_disable = bt_disable;
+    m_bt_is_enabled = bt_is_enabled;
+    mHandle.reset(handle.forget());
+
     return true;
   }
 
-  void* handle = dlopen("libbluedroid.so", RTLD_LAZY);
+  Scoped<ScopedDlHandleTraits> mHandle;
+  int (* m_bt_enable)(void);
+  int (* m_bt_disable)(void);
+  int (* m_bt_is_enabled)(void);
+};
 
-  if (!handle) {
-    NS_ERROR("Failed to open libbluedroid.so, bluetooth cannot run");
-    return false;
-  }
-
-  sBluedroidFunctions.bt_enable = (int (*)())dlsym(handle, "bt_enable");
-  if (!sBluedroidFunctions.bt_enable) {
-    NS_ERROR("Failed to attach bt_enable function");
-    return false;
-  }
-  sBluedroidFunctions.bt_disable = (int (*)())dlsym(handle, "bt_disable");
-  if (!sBluedroidFunctions.bt_disable) {
-    NS_ERROR("Failed to attach bt_disable function");
-    return false;
-  }
-  sBluedroidFunctions.bt_is_enabled = (int (*)())dlsym(handle, "bt_is_enabled");
-  if (!sBluedroidFunctions.bt_is_enabled) {
-    NS_ERROR("Failed to attach bt_is_enabled function");
-    return false;
-  }
-
-  sBluedroidFunctions.initialized = true;
-  return true;
-}
+static class Bluedroid sBluedroid;
 #endif
 
 typedef struct {
@@ -1792,33 +1849,16 @@ StartStopGonkBluetooth(bool aShouldEnable)
   // Platform specific check for gonk until object is divided in
   // different implementations per platform. Linux doesn't require
   // bluetooth firmware loading, but code should work otherwise.
-  if (!EnsureBluetoothInit()) {
-    NS_ERROR("Failed to load bluedroid library.\n");
-    return NS_ERROR_FAILURE;
-  }
 
-  // return 1 if it's enabled, 0 if it's disabled, and -1 on error
-  int isEnabled = sBluedroidFunctions.bt_is_enabled();
+  bool isEnabled = sBluedroid.IsEnabled();
 
-  if ((isEnabled == 1 && aShouldEnable) || (isEnabled == 0 && !aShouldEnable)) {
+  if ((isEnabled && aShouldEnable) || (!isEnabled && !aShouldEnable)) {
     return NS_OK;
   }
   if (aShouldEnable) {
-    result = (sBluedroidFunctions.bt_enable() == 0) ? true : false;
-    if (sBluedroidFunctions.bt_is_enabled() < 0) {
-      // if isEnabled < 0, this means we brought up the firmware, but something
-      // went wrong with bluetoothd. Post a warning message, but try to proceed
-      // with firmware unloading if that was requested, so we can retry later.
-      BT_WARNING("Bluetooth firmware up, but cannot connect to HCI socket! "
-        "Check bluetoothd and try stopping/starting bluetooth again.");
-      // Just disable now, return an error.
-      if (sBluedroidFunctions.bt_disable() != 0) {
-        BT_WARNING("Problem shutting down bluetooth after error in bringup!");
-      }
-      return NS_ERROR_FAILURE;
-    }
+    result = sBluedroid.Enable();
   } else {
-    result = (sBluedroidFunctions.bt_disable() == 0) ? true : false;
+    result = sBluedroid.Disable();
   }
   if (!result) {
     BT_WARNING("Could not set gonk bluetooth firmware!");
@@ -1974,14 +2014,10 @@ BluetoothDBusService::StopInternal()
 bool
 BluetoothDBusService::IsEnabledInternal()
 {
-#ifdef MOZ_WIDGET_GONK
-  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(!NS_IsMainThread()); // BT thread
 
-  if (!EnsureBluetoothInit()) {
-    NS_ERROR("Failed to load bluedroid library.\n");
-    return false;
-  }
-  return (sBluedroidFunctions.bt_is_enabled() == 1);
+#ifdef MOZ_WIDGET_GONK
+  return sBluedroid.IsEnabled();
 #else
   return mEnabled;
 #endif
