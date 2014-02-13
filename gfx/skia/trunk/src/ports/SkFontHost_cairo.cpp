@@ -167,6 +167,7 @@ SkTypeface* SkCreateTypefaceFromCairoFont(cairo_font_face_t* fontFace, SkTypefac
     return typeface;
 }
 
+#ifdef SK_FONTHOST_DOES_NOT_USE_FONTMGR
 SkTypeface* SkFontHost::CreateTypeface(const SkTypeface* familyFace,
                                      const char famillyName[],
                                      SkTypeface::Style style)
@@ -186,6 +187,7 @@ SkTypeface* SkFontHost::CreateTypefaceFromFile(char const*)
     SkDEBUGFAIL("SkFontHost::CreateTypefaceFromFile unimplemented");
     return NULL;
 }
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -237,13 +239,13 @@ SkScalerContext_CairoFT::SkScalerContext_CairoFT(SkTypeface* typeface, const SkD
             break;
         case SkPaint::kNormal_Hinting:
             cairo_font_options_set_hint_style(fontOptions, CAIRO_HINT_STYLE_MEDIUM);
-            if (fRec.fFlags & SkScalerContext::kAutohinting_Flag) {
+            if (fRec.fFlags & SkScalerContext::kForceAutohinting_Flag) {
                 loadFlags = FT_LOAD_FORCE_AUTOHINT;
             }
             break;
         case SkPaint::kFull_Hinting:
             cairo_font_options_set_hint_style(fontOptions, CAIRO_HINT_STYLE_FULL);
-            if (fRec.fFlags & SkScalerContext::kAutohinting_Flag) {
+            if (fRec.fFlags & SkScalerContext::kForceAutohinting_Flag) {
                 loadFlags = FT_LOAD_FORCE_AUTOHINT;
             }
             if (isLCD(fRec)) {
@@ -305,10 +307,10 @@ void SkScalerContext_CairoFT::generateMetrics(SkGlyph* glyph)
 
     glyph->fAdvanceX = SkDoubleToFixed(extents.x_advance);
     glyph->fAdvanceY = SkDoubleToFixed(extents.y_advance);
-    glyph->fWidth = SkToU16(SkScalarCeil(extents.width));
-    glyph->fHeight = SkToU16(SkScalarCeil(extents.height));
-    glyph->fLeft = SkToS16(SkScalarCeil(extents.x_bearing));
-    glyph->fTop = SkToS16(SkScalarCeil(extents.y_bearing));
+    glyph->fWidth = SkToU16(SkScalarCeilToInt(extents.width));
+    glyph->fHeight = SkToU16(SkScalarCeilToInt(extents.height));
+    glyph->fLeft = SkToS16(SkScalarCeilToInt(extents.x_bearing));
+    glyph->fTop = SkToS16(SkScalarCeilToInt(extents.y_bearing));
     glyph->fLsbDelta = 0;
     glyph->fRsbDelta = 0;
 }
