@@ -416,24 +416,21 @@ ArrayBufferObject::neuter(JSContext *cx)
     getElementsHeader()->setIsNeuteredBuffer();
 }
 
-bool
-ArrayBufferObject::copyData(JSContext *cx)
+/* static */ bool
+ArrayBufferObject::ensureNonInline(JSContext *cx, Handle<ArrayBufferObject*> buffer)
 {
-    ObjectElements *newHeader = AllocateArrayBufferContents(cx, byteLength());
+    if (buffer->hasDynamicElements())
+        return true;
+
+    ObjectElements *newHeader = AllocateArrayBufferContents(cx, buffer->byteLength());
     if (!newHeader)
         return false;
 
-    memcpy(reinterpret_cast<void*>(newHeader->elements()), dataPointer(), byteLength());
-    changeContents(cx, newHeader);
-    return true;
-}
+    void *newHeaderDataPointer = reinterpret_cast<void*>(newHeader->elements());
+    memcpy(newHeaderDataPointer, buffer->dataPointer(), buffer->byteLength());
 
-bool
-ArrayBufferObject::ensureNonInline(JSContext *cx)
-{
-    if (hasDynamicElements())
-        return true;
-    return copyData(cx);
+    buffer->changeContents(cx, newHeader);
+    return true;
 }
 
 // If the ArrayBuffer already contains dynamic contents, hand them back.
@@ -555,10 +552,10 @@ ArrayBufferObject::prepareForAsmJS(JSContext *cx, Handle<ArrayBufferObject*> buf
     if (buffer->isAsmJSArrayBuffer())
         return true;
 
-    if (!buffer->ensureNonInline(cx))
+    if (!ensureNonInline(cx, buffer))
         return false;
-    JS_ASSERT(buffer->hasDynamicElements());
 
+    JS_ASSERT(buffer->hasDynamicElements());
     buffer->getElementsHeader()->setIsAsmJSArrayBuffer();
     return true;
 }
@@ -4043,10 +4040,12 @@ JS_GetStableArrayBufferData(JSContext *cx, JSObject *obj)
     obj = CheckedUnwrap(obj);
     if (!obj)
         return nullptr;
-    ArrayBufferObject &buffer = obj->as<ArrayBufferObject>();
-    if (!buffer.ensureNonInline(cx))
+
+    Rooted<ArrayBufferObject*> buffer(cx, &obj->as<ArrayBufferObject>());
+    if (!ArrayBufferObject::ensureNonInline(cx, buffer))
         return nullptr;
-    return buffer.dataPointer();
+
+    return buffer->dataPointer();
 }
 
 JS_FRIEND_API(bool)
