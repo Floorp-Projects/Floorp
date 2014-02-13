@@ -14,7 +14,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=840488
      target="_blank">Mozilla Bug 840488</a>
   </body>
 
-  <iframe id="root" name="root" onload="go();" type="content"/>
+  <iframe id="root" name="root" type="content"/>
+  <iframe id="chromeFrame" name="chromeFrame" type="content"/>
 
   <!-- test code goes here -->
   <script type="application/javascript">
@@ -32,7 +33,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=840488
   const path = "/tests/caps/tests/mochitest/file_disableScript.html";
   const uri = "http://www.example.com" + path;
   var rootFrame = document.getElementById('root');
-  rootFrame.setAttribute('src', uri + "?name=rootframe");
+  var chromeFrame = document.getElementById('chromeFrame');
+  navigateFrame(rootFrame, uri + "?name=rootframe").then(function() {
+    navigateFrame(chromeFrame, "file_disableScript.html").then(go);
+  });
 
   function navigateFrame(ifr, src) {
     let deferred = Promise.defer();
@@ -137,15 +141,21 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=840488
   }
 
   function go() {
-    rootFrame.setAttribute('onload', null);
+    var rootWin = rootFrame.contentWindow;
+    var chromeWin = chromeFrame.contentWindow;
 
     // Test simple docshell enable/disable.
-    var rootWin = rootFrame.contentWindow;
     checkScriptEnabled(rootWin, true);
     setScriptEnabledForDocShell(rootWin, false);
     checkScriptEnabled(rootWin, false);
     setScriptEnabledForDocShell(rootWin, true);
     checkScriptEnabled(rootWin, true);
+
+    // Privileged frames are immune to docshell flags.
+    ok(ssm.isSystemPrincipal(chromeWin.document.nodePrincipal), "Sanity check for System Principal");
+    setScriptEnabledForDocShell(chromeWin, false);
+    checkScriptEnabled(chromeWin, true);
+    setScriptEnabledForDocShell(chromeWin, true);
 
     // Play around with the docshell tree and make sure everything works as
     // we expect.
@@ -209,6 +219,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=840488
       return reloadFrame(rootFrame);
     }).then(function() {
       checkScriptEnabled(rootWin, false);
+      checkScriptEnabled(chromeWin, true);
       setScriptEnabledForBrowser(true);
       return reloadFrame(rootFrame);
     }).then(function() {
@@ -223,6 +234,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=840488
       Cu.unblockScriptForGlobal(rootWin);
       checkScriptEnabled(rootWin, true);
       Cu.blockScriptForGlobal(rootWin);
+      try {
+        Cu.blockScriptForGlobal(chromeWin);
+        ok(false, "Should have thrown");
+      } catch (e) {
+        ok(/may not be disabled/.test(e),
+           "Shouldn't be able to programmatically block script for system globals");
+      }
       return reloadFrame(rootFrame);
     }).then(function() {
       checkScriptEnabled(rootWin, true);

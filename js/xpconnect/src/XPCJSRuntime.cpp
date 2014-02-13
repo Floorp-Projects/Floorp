@@ -489,7 +489,7 @@ Scriptability::Unblock()
 void
 Scriptability::SetDocShellAllowsScript(bool aAllowed)
 {
-    mDocShellAllowsScript = aAllowed;
+    mDocShellAllowsScript = aAllowed || mImmuneToScriptPolicy;
 }
 
 /* static */
