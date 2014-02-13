@@ -109,6 +109,8 @@ public class BrowserProvider extends ContentProvider {
     static final String VIEW_HISTORY_WITH_FAVICONS = "history_with_favicons";
     static final String VIEW_COMBINED_WITH_FAVICONS = "combined_with_favicons";
 
+    static final String VIEW_FLAGS = "flags";
+
     // Bookmark matches
     static final int BOOKMARKS = 100;
     static final int BOOKMARKS_ID = 101;
@@ -140,6 +142,8 @@ public class BrowserProvider extends ContentProvider {
     // Thumbnail matches
     static final int THUMBNAILS = 800;
     static final int THUMBNAIL_ID = 801;
+
+    static final int FLAGS = 900;
 
     static final String DEFAULT_BOOKMARKS_SORT_ORDER = Bookmarks.TYPE
             + " ASC, " + Bookmarks.POSITION + " ASC, " + Bookmarks._ID
@@ -304,6 +308,8 @@ public class BrowserProvider extends ContentProvider {
 
         // Search Suggest
         URI_MATCHER.addURI(BrowserContract.AUTHORITY, SearchManager.SUGGEST_URI_PATH_QUERY + "/*", SEARCH_SUGGEST);
+
+        URI_MATCHER.addURI(BrowserContract.AUTHORITY, "flags", FLAGS);
 
         map = new HashMap<String, String>();
         map.put(SearchManager.SUGGEST_COLUMN_TEXT_1,
@@ -2154,6 +2160,9 @@ public class BrowserProvider extends ContentProvider {
             case SEARCH_SUGGEST:
                 trace("URI is SEARCH_SUGGEST: " + uri);
                 return SearchManager.SUGGEST_MIME_TYPE;
+            case FLAGS:
+                trace("URI is FLAGS.");
+                return Bookmarks.CONTENT_ITEM_TYPE;
         }
 
         debug("URI has unrecognized type: " + uri);
@@ -2491,6 +2500,40 @@ public class BrowserProvider extends ContentProvider {
             String[] selectionArgs, String sortOrder) {
         SQLiteDatabase db = getReadableDatabase(uri);
         final int match = URI_MATCHER.match(uri);
+
+        // The first selectionArgs value is the URI for which to query.
+        if (match == FLAGS) {
+            // We don't need the QB below for this.
+            //
+            // There are three possible kinds of bookmarks:
+            // * Regular bookmarks
+            // * Bookmarks whose parent is FIXED_READING_LIST_ID (reading list items)
+            // * Bookmarks whose parent is FIXED_PINNED_LIST_ID (pinned items).
+            //
+            // Although SQLite doesn't have an aggregate operator for bitwise-OR, we're
+            // using disjoint flags, so we can simply use SUM and DISTINCT to get the
+            // flags we need.
+            // We turn parents into flags according to the three kinds, above.
+            //
+            // When this query is extended to support queries across multiple tables, simply
+            // extend it to look like
+            //
+            // SELECT COALESCE((SELECT ...), 0) | COALESCE(...) | ...
+            final String query = "SELECT COALESCE(SUM(flag), 0) AS flags " +
+                "FROM ( SELECT DISTINCT CASE" +
+                " WHEN " + Bookmarks.PARENT + " = " + Bookmarks.FIXED_READING_LIST_ID +
+                " THEN " + Bookmarks.FLAG_READING +
+
+                " WHEN " + Bookmarks.PARENT + " = " + Bookmarks.FIXED_PINNED_LIST_ID +
+                " THEN " + Bookmarks.FLAG_PINNED +
+
+                " ELSE " + Bookmarks.FLAG_BOOKMARK +
+                " END flag " +
+                "FROM " + TABLE_BOOKMARKS + " WHERE " + Bookmarks.URL + " = ? " +
+                ")";
+
+            return db.rawQuery(query, selectionArgs);
+        }
 
         SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
         String limit = uri.getQueryParameter(BrowserContract.PARAM_LIMIT);
