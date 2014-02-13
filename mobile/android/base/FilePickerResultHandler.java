@@ -34,7 +34,7 @@ class FilePickerResultHandler implements ActivityResultHandler {
     private static final String LOGTAG = "GeckoFilePickerResultHandler";
 
     protected final Queue<String> mFilePickerResult;
-    protected final ActivityHandlerHelper.FileResultHandler mHandler;
+    protected final ActivityHandlerHelper.ResultHandler mHandler;
 
     // this code is really hacky and doesn't belong anywhere so I'm putting it here for now
     // until I can come up with a better solution.
@@ -46,7 +46,7 @@ class FilePickerResultHandler implements ActivityResultHandler {
     }
 
     /* Use this constructor to asynchronously listen for results */
-    public FilePickerResultHandler(ActivityHandlerHelper.FileResultHandler handler) {
+    public FilePickerResultHandler(ActivityHandlerHelper.ResultHandler handler) {
         mFilePickerResult = null;
         mHandler = handler;
     }
