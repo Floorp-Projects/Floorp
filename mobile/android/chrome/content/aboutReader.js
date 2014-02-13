@@ -7,6 +7,9 @@ let Ci = Components.interfaces, Cc = Components.classes, Cu = Components.utils;
 Cu.import("resource://gre/modules/Services.jsm")
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+// Panel ID defined in HomeConfig.java.
+const READING_LIST_PANEL_ID = "20f4549a-64ad-4c32-93e4-1dcef792733b";
+
 XPCOMUtils.defineLazyGetter(window, "gChromeWin", function ()
   window.QueryInterface(Ci.nsIInterfaceRequestor)
     .getInterface(Ci.nsIWebNavigation)
@@ -366,7 +369,7 @@ AboutReader.prototype = {
     if (!this._article || this._readingListCount < 1)
       return;
 
-    gChromeWin.BrowserApp.loadURI("about:home?page=reading_list");
+    gChromeWin.BrowserApp.loadURI("about:home?page=" + READING_LIST_PANEL_ID);
   },
 
   _onShare: function Reader_onShare() {

@@ -106,8 +106,7 @@ public final class HomeConfig {
 
         public enum Flags {
             DEFAULT_PANEL,
-            DISABLED_PANEL,
-            DELETED_PANEL
+            DISABLED_PANEL
         }
 
         public PanelConfig(JSONObject json) throws JSONException, IllegalArgumentException {
@@ -283,18 +282,6 @@ public final class HomeConfig {
                 mFlags.add(Flags.DISABLED_PANEL);
             } else {
                 mFlags.remove(Flags.DISABLED_PANEL);
-            }
-        }
-
-        public boolean isDeleted() {
-            return mFlags.contains(Flags.DELETED_PANEL);
-        }
-
-        public void setIsDeleted(boolean isDeleted) {
-            if (isDeleted) {
-                mFlags.add(Flags.DELETED_PANEL);
-            } else {
-                mFlags.remove(Flags.DELETED_PANEL);
             }
         }
 
@@ -596,12 +583,6 @@ public final class HomeConfig {
     }
 
     public void save(List<PanelConfig> panelConfigs) {
-        for (PanelConfig panelConfig : panelConfigs) {
-            if (panelConfig.isDeleted()) {
-                throw new IllegalArgumentException("Should never save a deleted PanelConfig: " + panelConfig.getId());
-            }
-        }
-
         mBackend.save(panelConfigs);
     }
 

@@ -116,6 +116,12 @@ public:
   {
     NS_StringSetData(*this, &aChar, 1);
   }
+#ifdef MOZ_USE_CHAR16_WRAPPER
+  NS_HIDDEN_(void) Assign(char16ptr_t aData, size_type aLength = UINT32_MAX)
+  {
+    NS_StringSetData(*this, aData, aLength);
+  }
+#endif
 
   NS_HIDDEN_(void) AssignLiteral(const char *aStr);
   NS_HIDDEN_(void) AssignASCII(const char *aStr) { AssignLiteral(aStr); }
@@ -123,6 +129,9 @@ public:
   NS_HIDDEN_(self_type&) operator=(const self_type& aString) { Assign(aString);   return *this; }
   NS_HIDDEN_(self_type&) operator=(const char_type* aPtr)    { Assign(aPtr);      return *this; }
   NS_HIDDEN_(self_type&) operator=(char_type aChar)          { Assign(aChar);     return *this; }
+#ifdef MOZ_USE_CHAR16_WRAPPER
+  NS_HIDDEN_(self_type&) operator=(char16ptr_t aPtr)         { Assign(aPtr);      return *this; }
+#endif
 
   NS_HIDDEN_(void) Replace( index_type cutStart, size_type cutLength, const char_type* data, size_type length = size_type(-1) )
   {
@@ -224,6 +233,12 @@ public:
   {
     return Equals(other);
   }
+#ifdef MOZ_USE_CHAR16_WRAPPER
+  NS_HIDDEN_(bool) operator == (char16ptr_t other) const
+  {
+    return Equals(other);
+  }
+#endif
 
   NS_HIDDEN_(bool) operator >= (const self_type &other) const
   {

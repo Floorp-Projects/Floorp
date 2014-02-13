@@ -37,10 +37,11 @@ const JSClass sHTMLDocumentAllClass = {
   JS_DeletePropertyStub,                                   /* delProperty */
   nsHTMLDocumentSH::DocumentAllGetProperty,                /* getProperty */
   JS_StrictPropertyStub,                                   /* setProperty */
-  JS_EnumerateStub,                                        /* enumerate */
-  (JSResolveOp)nsHTMLDocumentSH::DocumentAllNewResolve,    /* resolve */
-  JS_ConvertStub,                                          /* convert */
-  nsHTMLDocumentSH::ReleaseDocument                        /* finalize */
+  JS_EnumerateStub,
+  (JSResolveOp)nsHTMLDocumentSH::DocumentAllNewResolve,
+  JS_ConvertStub,
+  nsHTMLDocumentSH::ReleaseDocument,
+  nsHTMLDocumentSH::CallToGetPropMapper
 };
 
 namespace mozilla {
@@ -371,12 +372,14 @@ bool
 nsHTMLDocumentSH::CallToGetPropMapper(JSContext *cx, unsigned argc, jsval *vp)
 {
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+  // Handle document.all("foo") style access to document.all.
 
   if (args.length() != 1) {
     // XXX: Should throw NS_ERROR_XPC_NOT_ENOUGH_ARGS for argc < 1,
     // and create a new NS_ERROR_XPC_TOO_MANY_ARGS for argc > 1? IE
     // accepts nothing other than one arg.
     xpc::Throw(cx, NS_ERROR_INVALID_ARG);
+
     return false;
   }
 
@@ -386,9 +389,16 @@ nsHTMLDocumentSH::CallToGetPropMapper(JSContext *cx, unsigned argc, jsval *vp)
     return false;
   }
 
-  JS::Rooted<JSObject*> self(cx, JS_THIS_OBJECT(cx, vp));
-  if (!self) {
-    return false;
+  // If we are called via document.all(id) instead of document.all.item(i) or
+  // another method, use the document.all callee object as self.
+  JS::Rooted<JSObject*> self(cx);
+  if (args.calleev().isObject() &&
+      JS_GetClass(&args.calleev().toObject()) == &sHTMLDocumentAllClass) {
+    self = &args.calleev().toObject();
+  } else {
+    self = JS_THIS_OBJECT(cx, vp);
+    if (!self)
+      return false;
   }
 
   size_t length;
