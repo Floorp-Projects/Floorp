@@ -206,6 +206,20 @@ TextureImageEGL::EndUpdate()
 bool
 TextureImageEGL::DeprecatedDirectUpdate(gfxASurface* aSurf, const nsIntRegion& aRegion, const nsIntPoint& aFrom /* = nsIntPoint(0, 0) */)
 {
+    nsRefPtr<gfxImageSurface> imageSurf = aSurf->GetAsImageSurface();
+    NS_ASSERTION(imageSurf, "surface is not an image surface");
+
+    RefPtr<gfx::DataSourceSurface> wrappedSurf =
+        gfx::Factory::CreateWrappingDataSourceSurface(imageSurf->Data(),
+                                                      imageSurf->Stride(),
+                                                      gfx::ToIntSize(imageSurf->GetSize()),
+                                                      gfx::ImageFormatToSurfaceFormat(imageSurf->Format()));
+    return DirectUpdate(wrappedSurf, aRegion, gfx::IntPoint(aFrom.x, aFrom.y));
+}
+
+bool
+TextureImageEGL::DirectUpdate(gfx::DataSourceSurface* aSurf, const nsIntRegion& aRegion, const gfx::IntPoint& aFrom /* = gfx::IntPoint(0,0) */)
+{
     nsIntRect bounds = aRegion.GetBounds();
 
     nsIntRegion region;
@@ -217,12 +231,12 @@ TextureImageEGL::DeprecatedDirectUpdate(gfxASurface* aSurf, const nsIntRegion& a
     }
 
     mTextureFormat =
-      DeprecatedUploadSurfaceToTexture(mGLContext,
+      UploadSurfaceToTexture(mGLContext,
                              aSurf,
                              region,
                              mTexture,
                              mTextureState == Created,
-                             bounds.TopLeft() + aFrom,
+                             bounds.TopLeft() + nsIntPoint(aFrom.x, aFrom.y),
                              false);
 
     mTextureState = Valid;
