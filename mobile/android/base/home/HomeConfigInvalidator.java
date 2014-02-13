@@ -39,12 +39,14 @@ public class HomeConfigInvalidator implements GeckoEventListener {
 
     private static final String EVENT_HOMEPANELS_INSTALL = "HomePanels:Install";
     private static final String EVENT_HOMEPANELS_REMOVE = "HomePanels:Remove";
+    private static final String EVENT_HOMEPANELS_REFRESH = "HomePanels:Refresh";
 
     private static final String JSON_KEY_PANEL = "panel";
 
     private enum ChangeType {
         REMOVE,
-        INSTALL
+        INSTALL,
+        REFRESH
     }
 
     private static class ConfigChange {
@@ -73,6 +75,11 @@ public class HomeConfigInvalidator implements GeckoEventListener {
 
         GeckoAppShell.getEventDispatcher().registerEventListener(EVENT_HOMEPANELS_INSTALL, this);
         GeckoAppShell.getEventDispatcher().registerEventListener(EVENT_HOMEPANELS_REMOVE, this);
+        GeckoAppShell.getEventDispatcher().registerEventListener(EVENT_HOMEPANELS_REFRESH, this);
+    }
+
+    public void refreshAll() {
+        handlePanelRefresh(null);
     }
 
     @Override
@@ -87,6 +94,9 @@ public class HomeConfigInvalidator implements GeckoEventListener {
             } else if (event.equals(EVENT_HOMEPANELS_REMOVE)) {
                 Log.d(LOGTAG, EVENT_HOMEPANELS_REMOVE);
                 handlePanelRemove(panelConfig);
+            } else if (event.equals(EVENT_HOMEPANELS_REFRESH)) {
+                Log.d(LOGTAG, EVENT_HOMEPANELS_REFRESH);
+                handlePanelRefresh(panelConfig);
             }
         } catch (Exception e) {
             Log.e(LOGTAG, "Failed to handle event " + event, e);
@@ -109,6 +119,19 @@ public class HomeConfigInvalidator implements GeckoEventListener {
     private void handlePanelRemove(PanelConfig panelConfig) {
         mPendingChanges.offer(new ConfigChange(ChangeType.REMOVE, panelConfig));
         Log.d(LOGTAG, "handlePanelRemove: " + mPendingChanges.size());
+
+        scheduleInvalidation();
+    }
+
+    /**
+     * Schedules a panel refresh in HomeConfig. Runs in the gecko thread.
+     *
+     * @param panelConfig the target PanelConfig instance or NULL to refresh
+     *                    all HomeConfig entries.
+     */
+    private void handlePanelRefresh(PanelConfig panelConfig) {
+        mPendingChanges.offer(new ConfigChange(ChangeType.REFRESH, panelConfig));
+        Log.d(LOGTAG, "handlePanelRefresh: " + mPendingChanges.size());
 
         scheduleInvalidation();
     }
@@ -145,29 +168,43 @@ public class HomeConfigInvalidator implements GeckoEventListener {
      * Runs in the background thread.
      */
     private List<PanelConfig> executePendingChanges(List<PanelConfig> panelConfigs) {
+        boolean shouldRefreshAll = false;
+
         while (!mPendingChanges.isEmpty()) {
             final ConfigChange pendingChange = mPendingChanges.poll();
             final PanelConfig panelConfig = pendingChange.target;
 
-            final String id = panelConfig.getId();
-
             switch (pendingChange.type) {
                 case REMOVE:
                     if (panelConfigs.remove(panelConfig)) {
-                        Log.d(LOGTAG, "executePendingChanges: removed panel " + id);
+                        Log.d(LOGTAG, "executePendingChanges: removed panel " + panelConfig.getId());
                     }
                     break;
 
                 case INSTALL:
                     if (!replacePanelConfig(panelConfigs, panelConfig)) {
                         panelConfigs.add(panelConfig);
-                        Log.d(LOGTAG, "executePendingChanges: added panel " + id);
+                        Log.d(LOGTAG, "executePendingChanges: added panel " + panelConfig.getId());
+                    }
+                    break;
+
+                case REFRESH:
+                    if (panelConfig != null) {
+                        if (!replacePanelConfig(panelConfigs, panelConfig)) {
+                            Log.w(LOGTAG, "Tried to refresh non-existing panel " + panelConfig.getId());
+                        }
+                    } else {
+                        shouldRefreshAll = true;
                     }
                     break;
             }
         }
 
-        return executeRefresh(panelConfigs);
+        if (shouldRefreshAll) {
+            return executeRefresh(panelConfigs);
+        } else {
+            return panelConfigs;
+        }
     }
 
     /**
