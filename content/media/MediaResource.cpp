@@ -153,6 +153,16 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest)
   nsresult rv = aRequest->GetStatus(&status);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  if (status == NS_BINDING_ABORTED) {
+    // Request was aborted before we had a chance to receive any data, or
+    // even an OnStartRequest(). Close the channel. This is important, as
+    // we don't want to mess up our state, as if we're cloned that would
+    // cause the clone to copy incorrect metadata (like whether we're
+    // infinite for example).
+    CloseChannel();
+    return status;
+  }
+
   if (element->ShouldCheckAllowOrigin()) {
     // If the request was cancelled by nsCORSListenerProxy due to failing
     // the CORS security check, send an error through to the media element.
