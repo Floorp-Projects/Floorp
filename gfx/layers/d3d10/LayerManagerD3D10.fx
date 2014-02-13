@@ -448,6 +448,18 @@ technique10 RenderSolidColorLayer
   }
 }
 
+technique10 RenderClearLayer
+{
+  pass P0
+  {
+    SetRasterizerState( LayerRast );
+    SetBlendState( NoBlendDual, float4( 0.0f, 0.0f, 0.0f, 0.0f ), 0xFFFFFFFF );
+    SetVertexShader( CompileShader( vs_4_0_level_9_3, LayerQuadVS() ) );
+    SetGeometryShader( NULL );
+    SetPixelShader( CompileShader( ps_4_0_level_9_3, SolidColorShader() ) );
+  }
+}
+
 technique10 PrepareAlphaExtractionTextures
 {
     pass P0
