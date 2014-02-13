@@ -4861,30 +4861,13 @@ SetAsmJSCacheOps(JSRuntime *rt, const AsmJSCacheOps *callbacks);
 class MOZ_STACK_CLASS JS_PUBLIC_API(ForOfIterator) {
   protected:
     JSContext *cx_;
-    /*
-     * Use the ForOfPIC on the global object (see vm/GlobalObject.h) to try
-     * to optimize iteration across arrays.
-     *
-     *  Case 1: Regular Iteration
-     *      iterator - pointer to the iterator object.
-     *      index - fixed to NOT_ARRAY (== UINT32_MAX)
-     *
-     *  Case 2: Optimized Array Iteration
-     *      iterator - pointer to the array object.
-     *      index - current position in array.
-     *
-     * The cases are distinguished by whether or not |index| is equal to NOT_ARRAY.
-     */
     JS::RootedObject iterator;
-    uint32_t index;
-
-    static const uint32_t NOT_ARRAY = UINT32_MAX;
 
     ForOfIterator(const ForOfIterator &) MOZ_DELETE;
     ForOfIterator &operator=(const ForOfIterator &) MOZ_DELETE;
 
   public:
-    ForOfIterator(JSContext *cx) : cx_(cx), iterator(cx_), index(NOT_ARRAY) { }
+    ForOfIterator(JSContext *cx) : cx_(cx), iterator(cx) { }
 
     enum NonIterableBehavior {
         ThrowOnNonIterable,
@@ -4913,10 +4896,6 @@ class MOZ_STACK_CLASS JS_PUBLIC_API(ForOfIterator) {
     bool valueIsIterable() const {
         return iterator;
     }
-
-  private:
-    inline bool nextFromOptimizedArray(MutableHandleValue val, bool *done);
-    bool materializeArrayIterator();
 };
 
 } /* namespace JS */

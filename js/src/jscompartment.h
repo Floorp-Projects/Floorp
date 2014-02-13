@@ -13,7 +13,6 @@
 #include "builtin/TypeRepresentation.h"
 #include "gc/Zone.h"
 #include "vm/GlobalObject.h"
-#include "vm/PIC.h"
 
 namespace js {
 
