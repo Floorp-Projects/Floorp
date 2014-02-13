@@ -436,7 +436,7 @@ class Jarrer(FileRegistry, BaseFile):
                 else:
                     deflater = DeflaterDest(compress=self.compress)
                 file.copy(deflater, skip_if_older)
-                jar.add(path, deflater.deflater)
+                jar.add(path, deflater.deflater, mode=file.mode)
             if self._preload:
                 jar.preload(self._preload)
 
