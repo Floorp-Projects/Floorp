@@ -610,6 +610,10 @@ Desktop browser's sync prefs.
                       class="show-text"
                       label="&consoleClear.label;"
                       oncommand="ConsolePanelView.clearConsole();"/>
+              <button id="console-copy"
+                      class="show-text"
+                      label="&consoleCopyAll.label;"
+                      oncommand="ConsolePanelView.copyAll();"/>
             </hbox>
           </vbox>
 
