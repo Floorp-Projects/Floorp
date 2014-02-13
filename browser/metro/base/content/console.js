@@ -247,6 +247,27 @@ let ConsolePanelView = {
     this.selectedItem = null;
   },
 
+  copyAll: function () {
+    let mode = document.getElementById("console-filter").value;
+    let rows = this._list.childNodes;
+    let copyText = "";
+    for (let i=0; i < rows.length; i++) {
+      let row = rows[i];
+      if (mode == "all" || row.getAttribute ("type") == mode) {
+        let text = "* " + row.getAttribute("msg");
+        if (row.hasAttribute("href")) {
+          text += "\r\n " + row.getAttribute("href") + " line:" + row.getAttribute("line");
+        }
+        if (row.hasAttribute("code")) {
+          text += "\r\n " + row.getAttribute("code") + " col:" + row.getAttribute("col");
+        }
+        copyText += text + "\r\n";
+      }
+    }
+    let clip = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
+    clip.copyString(copyText, document);
+  },
+
   changeMode: function cv_changeMode() {
     let mode = document.getElementById("console-filter").value;
     if (this._list.getAttribute("mode") != mode) {
@@ -266,7 +287,7 @@ let ConsolePanelView = {
   onContextMenu: function cv_onContextMenu(aEvent) {
     let row = aEvent.target;
     let text = ["msg", "href", "line", "code", "col"].map(function(attr) row.getAttribute(attr))
-               .filter(function(x) x).join("\n");
+               .filter(function(x) x).join("\r\n");
 
     ContextMenuUI.showContextMenu({
       target: row,
