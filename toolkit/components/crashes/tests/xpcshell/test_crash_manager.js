@@ -41,8 +41,6 @@ add_task(function* test_get_manager() {
 
   yield m.createDummyDump(true);
   yield m.createDummyDump(false);
-
-  run_next_test();
 });
 
 // Unsubmitted dump files on disk are detected properly.

@@ -74,12 +74,10 @@ add_test(function test_bad_argument() {
 
 add_task(function test_stringAsHex() {
   do_check_eq(TEST_HEX, CommonUtils.stringAsHex(TEST_STR));
-  run_next_test();
 });
 
 add_task(function test_hexAsString() {
   do_check_eq(TEST_STR, CommonUtils.hexAsString(TEST_HEX));
-  run_next_test();
 });
 
 add_task(function test_hexToBytes() {
@@ -88,38 +86,32 @@ add_task(function test_hexToBytes() {
   // Ensure that the decimal values of each byte are correct
   do_check_true(arraysEqual(TEST_BYTES,
       CommonUtils.stringToByteArray(bytes)));
-  run_next_test();
 });
 
 add_task(function test_bytesToHex() {
   // Create a list of our character bytes from the reference int values
   let bytes = CommonUtils.byteArrayToString(TEST_BYTES);
   do_check_eq(TEST_HEX, CommonUtils.bytesAsHex(bytes));
-  run_next_test();
 });
 
 add_task(function test_stringToBytes() {
   do_check_true(arraysEqual(TEST_BYTES,
       CommonUtils.stringToByteArray(CommonUtils.stringToBytes(TEST_STR))));
-  run_next_test();
 });
 
 add_task(function test_stringRoundTrip() {
   do_check_eq(TEST_STR,
     CommonUtils.hexAsString(CommonUtils.stringAsHex(TEST_STR)));
-  run_next_test();
 });
 
 add_task(function test_hexRoundTrip() {
   do_check_eq(TEST_HEX,
     CommonUtils.stringAsHex(CommonUtils.hexAsString(TEST_HEX)));
-  run_next_test();
 });
 
 add_task(function test_byteArrayRoundTrip() {
   do_check_true(arraysEqual(TEST_BYTES,
     CommonUtils.stringToByteArray(CommonUtils.byteArrayToString(TEST_BYTES))));
-  run_next_test();
 });
 
 // turn formatted test vectors into normal hex strings
