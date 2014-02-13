@@ -41,6 +41,8 @@ public class HomePager extends ViewPager {
     private volatile boolean mLoaded;
     private Decor mDecor;
     private View mTabStrip;
+    private HomeBanner mHomeBanner;
+    private int mDefaultPageIndex = -1;
 
     private final OnAddPanelListener mAddPanelListener;
 
@@ -125,6 +127,7 @@ public class HomePager extends ViewPager {
         setFocusableInTouchMode(true);
 
         mOriginalBackground = getBackground();
+        setOnPageChangeListener(new PageChangeListener());
     }
 
     @Override
@@ -139,21 +142,6 @@ public class HomePager extends ViewPager {
                 public void onTitleClicked(int index) {
                     setCurrentItem(index, true);
                 }
-            });
-
-            setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
-                @Override
-                public void onPageSelected(int position) {
-                    mDecor.onPageSelected(position);
-                }
-
-                @Override
-                public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-                    mDecor.onPageScrolled(position, positionOffset, positionOffsetPixels);
-                }
-
-                @Override
-                public void onPageScrollStateChanged(int state) { }
             });
         } else if (child instanceof HomePagerTabStrip) {
             mTabStrip = child;
@@ -247,6 +235,19 @@ public class HomePager extends ViewPager {
         return super.onInterceptTouchEvent(event);
     }
 
+    public void setBanner(HomeBanner banner) {
+        mHomeBanner = banner;
+    }
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent event) {
+        if (mHomeBanner != null) {
+            mHomeBanner.handleHomeTouch(event);
+        }
+
+        return super.dispatchTouchEvent(event);
+    }
+
     private void updateUiFromPanelConfigs(List<PanelConfig> panelConfigs) {
         // We only care about the adapter if HomePager is currently
         // loaded, which means it's visible in the activity.
@@ -303,6 +304,7 @@ public class HomePager extends ViewPager {
             for (int i = 0; i < count; i++) {
                 final PanelConfig panelConfig = enabledPanels.get(i);
                 if (panelConfig.isDefault()) {
+                    mDefaultPageIndex = i;
                     setCurrentItem(i, false);
                     break;
                 }
@@ -324,5 +326,32 @@ public class HomePager extends ViewPager {
         @Override
         public void onLoaderReset(Loader<List<PanelConfig>> loader) {
         }
+    }
+
+    private class PageChangeListener implements ViewPager.OnPageChangeListener {
+        @Override
+        public void onPageSelected(int position) {
+            if (mDecor != null) {
+                mDecor.onPageSelected(position);
+            }
+
+            if (mHomeBanner != null) {
+                mHomeBanner.setEnabled(position == mDefaultPageIndex);
+            }
+        }
+
+        @Override
+        public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+            if (mDecor != null) {
+                mDecor.onPageScrolled(position, positionOffset, positionOffsetPixels);
+            }
+
+            if (mHomeBanner != null) {
+                mHomeBanner.setScrollingPages(positionOffsetPixels != 0);
+            }
+        }
+
+        @Override
+        public void onPageScrollStateChanged(int state) { }
     }
 }

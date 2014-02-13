@@ -44,7 +44,8 @@
                                                    android:gravity="center_vertical"
                                                    android:visibility="gone"
                                                    android:clickable="true"
-                                                   android:focusable="true"/>
+                                                   android:focusable="true"
+                                                   android:translationY="@dimen/home_banner_height"/>
 
             </FrameLayout>
 
