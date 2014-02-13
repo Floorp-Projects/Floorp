@@ -1051,6 +1051,9 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     this.filterContents();
     this.refreshSummary();
     this.refreshZebra();
+
+    // Rescale all the waterfalls so that everything is visible at once.
+    this._flushWaterfallViews();
   },
 
   /**
@@ -1185,14 +1188,6 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
         timingsNode.insertBefore(timingBox, timingsTotal);
       }
     }
-
-    // Don't paint things while the waterfall view isn't even visible.
-    if (NetMonitorView.currentFrontendMode != "network-inspector-view") {
-      return;
-    }
-
-    // Rescale all the waterfalls so that everything is visible at once.
-    this._flushWaterfallViews();
   },
 
   /**
@@ -1202,6 +1197,12 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    *        True if this container's width was changed.
    */
   _flushWaterfallViews: function(aReset) {
+    // Don't paint things while the waterfall view isn't even visible,
+    // or there are no items added to this container.
+    if (NetMonitorView.currentFrontendMode != "network-inspector-view" || !this.itemCount) {
+      return;
+    }
+
     // To avoid expensive operations like getBoundingClientRect() and
     // rebuilding the waterfall background each time a new request comes in,
     // stuff is cached. However, in certain scenarios like when the window
@@ -1429,11 +1430,6 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    * The resize listener for this container's window.
    */
   _onResize: function(e) {
-    // Don't paint things while the waterfall view isn't even visible.
-    if (NetMonitorView.currentFrontendMode != "network-inspector-view") {
-      return;
-    }
-
     // Allow requests to settle down first.
     setNamedTimeout(
       "resize-events", RESIZE_REFRESH_RATE, () => this._flushWaterfallViews(true));
@@ -1634,13 +1630,6 @@ SidebarView.prototype = {
       $("#details-pane").selectedIndex = isCustom ? 0 : 1
       window.emit(EVENTS.SIDEBAR_POPULATED);
     });
-  },
-
-  /**
-   * Hides this container.
-   */
-  reset: function() {
-    this.toggle(false);
   }
 }
 
@@ -1838,13 +1827,6 @@ NetworkDetailsView.prototype = {
   },
 
   /**
-   * Resets this container (removes all the networking information).
-   */
-  reset: function() {
-    this._dataSrc = null;
-  },
-
-  /**
    * Populates this view with the specified data.
    *
    * @param object aData
@@ -1860,6 +1842,18 @@ NetworkDetailsView.prototype = {
     $("#response-content-json-box").hidden = true;
     $("#response-content-textarea-box").hidden = true;
     $("#response-content-image-box").hidden = true;
+
+    let isHtml = RequestsMenuView.prototype.isHtml({ attachment: aData });
+
+    // Show the "Preview" tabpanel only for plain HTML responses.
+    $("#preview-tab").hidden = !isHtml;
+    $("#preview-tabpanel").hidden = !isHtml;
+
+    // Switch to the "Headers" tabpanel if the "Preview" previously selected
+    // and this is not an HTML response.
+    if (!isHtml && this.widget.selectedIndex == 5) {
+      this.widget.selectedIndex = 0;
+    }
 
     this._headers.empty();
     this._cookies.empty();
@@ -1906,6 +1900,9 @@ NetworkDetailsView.prototype = {
           break;
         case 4: // "Timings"
           yield view._setTimingsInformation(src.eventTimings);
+          break;
+        case 5: // "Preview"
+          yield view._setHtmlPreview(src.responseContent);
           break;
       }
       populated[tab] = true;
@@ -2343,6 +2340,30 @@ NetworkDetailsView.prototype = {
       .style.transform = "translateX(" + (scale * (blocked + dns + connect + send)) + "px)";
     $("#timings-summary-receive .requests-menu-timings-total")
       .style.transform = "translateX(" + (scale * (blocked + dns + connect + send + wait)) + "px)";
+  },
+
+  /**
+   * Sets the preview for HTML responses shown in this view.
+   *
+   * @param object aResponse
+   *        The message received from the server.
+   * @return object
+   *        A promise that is resolved when the response body is set
+   */
+  _setHtmlPreview: function(aResponse) {
+    if (!aResponse) {
+      return promise.resolve();
+    }
+    let { text } = aResponse.content;
+    let iframe = $("#response-preview");
+
+    return gNetwork.getString(text).then(aString => {
+      // Always disable JS when previewing HTML responses.
+      iframe.contentDocument.docShell.allowJavascript = false;
+      iframe.contentDocument.documentElement.innerHTML = aString;
+
+      window.emit(EVENTS.RESPONSE_HTML_PREVIEW_DISPLAYED);
+    });
   },
 
   _dataSrc: null,
