@@ -291,6 +291,27 @@ private:
   const uint32_t mProviderFlags;
 };
 
+// A probe value of 1 means "no error".
+uint32_t
+MapCertErrorToProbeValue(PRErrorCode errorCode)
+{
+  switch (errorCode)
+  {
+    case SEC_ERROR_UNKNOWN_ISSUER:                     return  2;
+    case SEC_ERROR_CA_CERT_INVALID:                    return  3;
+    case SEC_ERROR_UNTRUSTED_ISSUER:                   return  4;
+    case SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE:         return  5;
+    case SEC_ERROR_UNTRUSTED_CERT:                     return  6;
+    case SEC_ERROR_INADEQUATE_KEY_USAGE:               return  7;
+    case SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED:  return  8;
+    case SSL_ERROR_BAD_CERT_DOMAIN:                    return  9;
+    case SEC_ERROR_EXPIRED_CERTIFICATE:                return 10;
+  }
+  NS_WARNING("Unknown certificate error code. Does MapCertErrorToProbeValue "
+             "handle everything in PRErrorCodeToOverrideType?");
+  return 0;
+}
+
 SSLServerCertVerificationResult*
 CertErrorRunnable::CheckCertOverrides()
 {
@@ -357,6 +378,22 @@ CertErrorRunnable::CheckCertOverrides()
     }
 
     if (!remaining_display_errors) {
+      // This can double- or triple-count one certificate with multiple
+      // different types of errors. Since this is telemetry and we just
+      // want a ballpark answer, we don't care.
+      if (mErrorCodeTrust != 0) {
+        uint32_t probeValue = MapCertErrorToProbeValue(mErrorCodeTrust);
+        Telemetry::Accumulate(Telemetry::SSL_CERT_ERROR_OVERRIDES, probeValue);
+      }
+      if (mErrorCodeMismatch != 0) {
+        uint32_t probeValue = MapCertErrorToProbeValue(mErrorCodeMismatch);
+        Telemetry::Accumulate(Telemetry::SSL_CERT_ERROR_OVERRIDES, probeValue);
+      }
+      if (mErrorCodeExpired != 0) {
+        uint32_t probeValue = MapCertErrorToProbeValue(mErrorCodeExpired);
+        Telemetry::Accumulate(Telemetry::SSL_CERT_ERROR_OVERRIDES, probeValue);
+      }
+
       // all errors are covered by override rules, so let's accept the cert
       PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
              ("[%p][%p] All errors covered by override rules\n",
@@ -952,6 +989,7 @@ SSLServerCertVerificationJob::Run()
         new SSLServerCertVerificationResult(mInfoObject, 0,
                                             successTelemetry, interval));
       restart->Dispatch();
+      Telemetry::Accumulate(Telemetry::SSL_CERT_ERROR_OVERRIDES, 1);
       return NS_OK;
     }
 
@@ -1103,6 +1141,7 @@ AuthCertificateHook(void* arg, PRFileDesc* fd, PRBool checkSig, PRBool isServer)
   SECStatus rv = AuthCertificate(*certVerifier, socketInfo, serverCert,
                                  stapledOCSPResponse, providerFlags, now);
   if (rv == SECSuccess) {
+    Telemetry::Accumulate(Telemetry::SSL_CERT_ERROR_OVERRIDES, 1);
     return SECSuccess;
   }
 
