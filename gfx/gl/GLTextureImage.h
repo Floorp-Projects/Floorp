@@ -13,12 +13,14 @@
 #include "GLContextTypes.h"
 #include "GraphicsFilter.h"
 #include "mozilla/gfx/Rect.h"
+#include "mozilla/RefPtr.h"
 
 class gfxASurface;
 
 namespace mozilla {
 namespace gfx {
 class DataSourceSurface;
+class DrawTarget;
 }
 }
 
@@ -100,7 +102,7 @@ public:
      * inconsistent state.  Unsuccessful BeginUpdate()s must not be
      * followed by EndUpdate().
      */
-    virtual gfxASurface* BeginUpdate(nsIntRegion& aRegion) = 0;
+    virtual gfx::DrawTarget* BeginUpdate(nsIntRegion& aRegion) = 0;
     /**
      * Retrieves the region that will require updating, given a
      * region that needs to be updated. This can be used for
@@ -278,14 +280,13 @@ public:
 
     virtual void BindTexture(GLenum aTextureUnit);
 
-    virtual gfxASurface* BeginUpdate(nsIntRegion& aRegion);
+    virtual gfx::DrawTarget* BeginUpdate(nsIntRegion& aRegion);
     virtual void GetUpdateRegion(nsIntRegion& aForRegion);
     virtual void EndUpdate();
     virtual bool DirectUpdate(gfx::DataSourceSurface* aSurf, const nsIntRegion& aRegion, const gfx::IntPoint& aFrom = gfx::IntPoint(0,0));
     virtual GLuint GetTextureID() { return mTexture; }
-    // Returns a surface to draw into
-    virtual already_AddRefed<gfxASurface>
-      GetSurfaceForUpdate(const gfxIntSize& aSize, ImageFormat aFmt);
+    virtual TemporaryRef<gfx::DrawTarget>
+      GetDrawTargetForUpdate(const gfx::IntSize& aSize, gfx::SurfaceFormat aFmt);
 
     virtual void MarkValid() { mTextureState = Valid; }
 
@@ -297,7 +298,7 @@ public:
     // Call after surface data has been uploaded to a texture.
     virtual void FinishedSurfaceUpload();
 
-    virtual bool InUpdate() const { return !!mUpdateSurface; }
+    virtual bool InUpdate() const { return !!mUpdateDrawTarget; }
 
     virtual void Resize(const gfx::IntSize& aSize);
 
@@ -305,7 +306,7 @@ protected:
     GLuint mTexture;
     TextureState mTextureState;
     nsRefPtr<GLContext> mGLContext;
-    nsRefPtr<gfxASurface> mUpdateSurface;
+    RefPtr<gfx::DrawTarget> mUpdateDrawTarget;
     nsIntRegion mUpdateRegion;
 
     // The offset into the update surface at which the update rect is located.
@@ -328,7 +329,7 @@ public:
                       TextureImage::ImageFormat aImageFormat = gfxImageFormat::Unknown);
     ~TiledTextureImage();
     void DumpDiv();
-    virtual gfxASurface* BeginUpdate(nsIntRegion& aRegion);
+    virtual gfx::DrawTarget* BeginUpdate(nsIntRegion& aRegion);
     virtual void GetUpdateRegion(nsIntRegion& aForRegion);
     virtual void EndUpdate();
     virtual void Resize(const gfx::IntSize& aSize);
@@ -357,8 +358,8 @@ protected:
     unsigned int mTileSize;
     unsigned int mRows, mColumns;
     GLContext* mGL;
-    // A temporary surface to faciliate cross-tile updates.
-    nsRefPtr<gfxASurface> mUpdateSurface;
+    // A temporary draw target to faciliate cross-tile updates.
+    RefPtr<gfx::DrawTarget> mUpdateDrawTarget;
     // The region of update requested
     nsIntRegion mUpdateRegion;
     TextureState mTextureState;
