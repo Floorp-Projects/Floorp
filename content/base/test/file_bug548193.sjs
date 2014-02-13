@@ -1,5 +1,4 @@
 // SJS file for CSP violation report test
-// https://bugzilla.mozilla.org/show_bug.cgi?id=548193
 function handleRequest(request, response)
 {
   var query = {};
