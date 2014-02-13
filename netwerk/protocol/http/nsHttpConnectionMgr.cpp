@@ -2224,7 +2224,9 @@ nsHttpConnectionMgr::OnMsgCancelTransaction(int32_t reason, void *param)
         // anything that might get canceled from the rest of gecko, so best
         // to assume that's what was meant by the cancel we did receive if
         // it only applied to something in the queue.
-        for (uint32_t index = 0; index < ent->mActiveConns.Length(); ++index) {
+        for (uint32_t index = 0;
+             ent && (index < ent->mActiveConns.Length());
+             ++index) {
             nsHttpConnection *activeConn = ent->mActiveConns[index];
             nsAHttpTransaction *liveTransaction = activeConn->Transaction();
             if (liveTransaction && liveTransaction->IsNullTransaction()) {
