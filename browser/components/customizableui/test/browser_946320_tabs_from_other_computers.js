@@ -5,7 +5,6 @@
 "use strict";
 
 let Preferences = Cu.import("resource://gre/modules/Preferences.jsm", {}).Preferences;
-Cu.import("resource://gre/modules/Promise.jsm");
 
 let tmp = {};
 Cu.import("resource://gre/modules/FxAccounts.jsm", tmp);
