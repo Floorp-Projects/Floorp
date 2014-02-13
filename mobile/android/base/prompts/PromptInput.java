@@ -83,10 +83,10 @@ public class PromptInput {
             mView = (View)input;
             return mView;
         }
-
-        public String getValue() {
+        @Override
+        public Object getValue() {
             EditText edit = (EditText)mView;
-            return edit.getText().toString();
+            return edit.getText();
         }
     }
 
@@ -118,10 +118,10 @@ public class PromptInput {
                                InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
             return input;
         }
-
-        public String getValue() {
+        @Override
+        public Object getValue() {
             EditText edit = (EditText)mView;
-            return edit.getText().toString();
+            return edit.getText();
         }
     }
 
@@ -142,10 +142,10 @@ public class PromptInput {
             mView = (View)checkbox;
             return mView;
         }
-
-        public String getValue() {
+        @Override
+        public Object getValue() {
             CheckBox checkbox = (CheckBox)mView;
-            return checkbox.isChecked() ? "true" : "false";
+            return checkbox.isChecked() ? Boolean.TRUE : Boolean.FALSE;
         }
     }
 
@@ -220,8 +220,8 @@ public class PromptInput {
         private static String formatDateString(String dateFormat, Calendar calendar) {
             return new SimpleDateFormat(dateFormat).format(calendar.getTime());
         }
-
-        public String getValue() {
+        @Override
+        public Object getValue() {
             if (Build.VERSION.SDK_INT < 11 && mType.equals("date")) {
                 // We can't use the custom DateTimePicker with a sdk older than 11.
                 // Fallback on the native DatePicker.
@@ -300,9 +300,9 @@ public class PromptInput {
 
             return spinner;
         }
-
-        public String getValue() {
-            return Integer.toString(spinner.getSelectedItemPosition());
+        @Override
+        public Object getValue() {
+            return new Integer(spinner.getSelectedItemPosition());
         }
     }
 
@@ -319,8 +319,8 @@ public class PromptInput {
             mView = view;
             return mView;
         }
-
-        public String getValue() {
+        @Override
+        public Object getValue() {
             return "";
         }
     }
@@ -369,7 +369,7 @@ public class PromptInput {
         return mId;
     }
 
-    public String getValue() {
+    public Object getValue() {
         return "";
     }
 
