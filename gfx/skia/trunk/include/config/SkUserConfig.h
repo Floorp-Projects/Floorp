@@ -63,7 +63,7 @@
     allow instance count tracking in either debug or release builds. By
     default it is enabled in debug but disabled in release.
  */
-//#define SK_ENABLE_INST_COUNT 1
+#define SK_ENABLE_INST_COUNT 0
 
 /*  If, in debugging mode, Skia needs to stop (presumably to invoke a debugger)
     it will call SK_CRASH(). If this is not defined it, it is defined in
