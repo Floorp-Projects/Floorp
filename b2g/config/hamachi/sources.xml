@@ -11,7 +11,7 @@
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
   <project name="fake-dalvik" path="dalvik" remote="b2g" revision="ca1f327d5acc198bb4be62fa51db2c039032c9ce"/>
-  <project name="gaia.git" path="gaia" remote="mozillaorg" revision="a403bdf3cf2a09b5ed0ed5aee362d8b7b31810b3"/>
+  <project name="gaia.git" path="gaia" remote="mozillaorg" revision="3c2e748e4d57551527366eba00428a0f5ccc4012"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="78b908b493bfe0b477e3d4f6edec8c46a2c0d096"/>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="827214fcf38d6569aeb5c6d6f31cb296d1f09272"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="84f2f2fce22605e17d511ff1767e54770067b5b5"/>
@@ -84,7 +84,7 @@
   <project name="platform/ndk" path="ndk" revision="9f555971e1481854d5b4dc11b3e6af9fff4f241f"/>
   <project name="platform/prebuilt" path="prebuilt" revision="248d92592df169569c387a91db56b1fedd6e5d29"/>
   <project name="platform/system/bluetooth" path="system/bluetooth" revision="395aff045276107a285daf0392d0884a98b9f538"/>
-  <project name="platform/system/core" path="system/core" revision="f792bc7b4a6f49643232278286284333ca3f83c6"/>
+  <project name="platform/system/core" path="system/core" revision="70229cf62037cfb70ec2257f7c78b5550628fb53"/>
   <project name="platform/system/extras" path="system/extras" revision="a5dd0ea60ce973c2c762b41835a43316fb4ff9e3"/>
   <project name="platform/system/media" path="system/media" revision="fbb3d9b4c5bf59071424e820e872e3f64f0a244a"/>
   <project name="platform/system/netd" path="system/netd" revision="2e226e6e636ca0a8cc4c51093e46f4baba1ffcce"/>

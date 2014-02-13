@@ -155,9 +155,8 @@ crash data grows. As new data is accumulated, we need to read and write
 an entire file to make small updates. LZ4 compression helps reduce I/O.
 But, there is a potential for unbounded file growth. We establish a
 limit for the max age of records. Anything older than that limit is
-pruned. Future patches will also limit the maximum number of records. This
-will establish a hard limit on the size of the file, at least in terms of
-crashes.
-
-Care must be taken when new crash data is recorded, as this will increase
-the size of the file and make I/O a larger concern.
+pruned. We also establish a daily limit on the number of crashes we will
+store. All crashes beyond the first N in a day have no payload and are
+only recorded by the presence of a count. This count ensures we can
+distinguish between ``N`` and ``100 * N``, which are very different
+values!

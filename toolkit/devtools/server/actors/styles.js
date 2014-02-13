@@ -357,6 +357,10 @@ var PageStyleActor = protocol.ActorClass({
    */
   addElementRules: function(element, inherited, options, rules)
   {
+    if (!element.style) {
+      return;
+    }
+
     let elementStyle = this._styleRef(element);
 
     if (!inherited || this._hasInheritedProps(element.style)) {

@@ -13,8 +13,14 @@ function run_test() {
   _("When imported, Service.onStartup is called");
   initTestLogging("Trace");
 
+  let xps = Cc["@mozilla.org/weave/service;1"]
+              .getService(Ci.nsISupports)
+              .wrappedJSObject;
+  do_check_false(xps.enabled);
+
   // Test fixtures
   Service.identity.username = "johndoe";
+  do_check_false(xps.enabled);
 
   Cu.import("resource://services-sync/service.js");
 
@@ -29,10 +35,6 @@ function run_test() {
   _("Observers are notified of startup");
   do_test_pending();
 
-  let xps = Cc["@mozilla.org/weave/service;1"]
-              .getService(Ci.nsISupports)
-              .wrappedJSObject;
-
   do_check_false(Service.status.ready);
   do_check_false(xps.ready);
   Observers.add("weave:service:ready", function (subject, data) {
@@ -43,4 +45,10 @@ function run_test() {
     Svc.Prefs.resetBranch("");
     do_test_finished();
   });
+
+  do_check_false(xps.enabled);
+
+  Service.identity.account = "johndoe";
+  Service.clusterURL = "http://localhost/";
+  do_check_true(xps.enabled);
 }

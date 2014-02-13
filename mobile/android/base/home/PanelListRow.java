@@ -12,6 +12,7 @@ import com.squareup.picasso.Picasso;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.View;
 import android.widget.ImageView;
@@ -50,9 +51,14 @@ public class PanelListRow extends TwoLineRow {
         int imageIndex = cursor.getColumnIndexOrThrow(HomeItems.IMAGE_URL);
         final String imageUrl = cursor.getString(imageIndex);
 
-        Picasso.with(getContext())
-               .load(imageUrl)
-               .error(R.drawable.favicon)
-               .into(mIcon);
+        final boolean hasImageUrl = !TextUtils.isEmpty(imageUrl);
+        mIcon.setVisibility(hasImageUrl ? View.VISIBLE : View.GONE);
+
+        if (hasImageUrl) {
+            Picasso.with(getContext())
+                   .load(imageUrl)
+                   .error(R.drawable.favicon)
+                   .into(mIcon);
+        }
     }
 }

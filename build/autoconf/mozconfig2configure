@@ -68,7 +68,7 @@ ac_echo_options() {
 
 # Main
 #--------------------------------------------------
-topsrcdir=`dirname $0`
+topsrcdir=$(cd `dirname $0`; pwd -W 2>/dev/null || pwd)
 ac_options=
 mozconfig_ac_options=
 

@@ -475,13 +475,13 @@ public class BrowserToolbar extends GeckoRelativeLayout
                 case LOCATION_CHANGE:
                 case LOAD_ERROR:
                 case LOADED:
+                case STOP:
                     flags.add(UpdateFlags.PROGRESS);
                     if (mProgressBar.getVisibility() == View.VISIBLE) {
                         mProgressBar.animateProgress(tab.getLoadProgress());
                     }
                     break;
 
-                case STOP:
                 case SELECTED:
                     flags.add(UpdateFlags.PROGRESS);
                     updateProgressVisibility();
