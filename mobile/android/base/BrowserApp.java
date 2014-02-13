@@ -24,6 +24,7 @@ import org.mozilla.gecko.health.BrowserHealthReporter;
 import org.mozilla.gecko.health.HealthRecorder;
 import org.mozilla.gecko.health.SessionInformation;
 import org.mozilla.gecko.home.BrowserSearch;
+import org.mozilla.gecko.home.HomeBanner;
 import org.mozilla.gecko.home.HomeConfigInvalidator;
 import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
@@ -1678,6 +1679,9 @@ abstract public class BrowserApp extends GeckoApp
         if (mHomePager == null) {
             final ViewStub homePagerStub = (ViewStub) findViewById(R.id.home_pager_stub);
             mHomePager = (HomePager) homePagerStub.inflate();
+
+            HomeBanner homeBanner = (HomeBanner) findViewById(R.id.home_banner);
+            mHomePager.setBanner(homeBanner);
         }
 
         mHomePagerContainer.setVisibility(View.VISIBLE);
