@@ -7571,6 +7571,13 @@ let Reader = {
       case "Reader:Remove": {
         this.removeArticleFromCache(aData, function(success) {
           this.log("Reader:Remove success=" + success + ", url=" + aData);
+
+          if (success) {
+            sendMessageToJava({
+              type: "Reader:Removed",
+              url: url
+            });
+          }
         }.bind(this));
         break;
       }
