@@ -166,6 +166,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitInterruptCheck(MInterruptCheck *ins);
     bool visitInterruptCheckPar(MInterruptCheckPar *ins);
     bool visitStoreSlot(MStoreSlot *ins);
+    bool visitFilterTypeSet(MFilterTypeSet *ins);
     bool visitTypeBarrier(MTypeBarrier *ins);
     bool visitMonitorTypes(MMonitorTypes *ins);
     bool visitPostWriteBarrier(MPostWriteBarrier *ins);
