@@ -5,6 +5,10 @@
 
 package org.mozilla.gecko.home;
 
+import org.mozilla.gecko.animation.PropertyAnimator;
+import org.mozilla.gecko.animation.PropertyAnimator.Property;
+import org.mozilla.gecko.animation.PropertyAnimator.PropertyAnimationListener;
+import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.R;
@@ -23,6 +27,7 @@ import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -32,6 +37,22 @@ import android.widget.TextView;
 public class HomeBanner extends LinearLayout
                         implements GeckoEventListener {
     private static final String LOGTAG = "GeckoHomeBanner";
+
+    // Used for tracking scroll length
+    private float mTouchY = -1;
+
+    // Used to detect for upwards scroll to push banner all the way up
+    private boolean mSnapBannerToTop;
+
+    // Tracks if the banner has been enabled by HomePager to avoid race conditions.
+    private boolean mEnabled = false;
+
+    // The user is currently swiping between HomePager pages
+    private boolean mScrollingPages = false;
+
+    // Tracks whether the user swiped the banner down, preventing us from autoshowing when the user
+    // switches back to the default page.
+    private boolean mUserSwipedDown = false;
 
     public HomeBanner(Context context) {
         this(context, null);
@@ -82,9 +103,9 @@ public class HomeBanner extends LinearLayout
         GeckoAppShell.getEventDispatcher().unregisterEventListener("HomeBanner:Data", this);
      }
 
-    public boolean isDismissed() {
-        return (getVisibility() == View.GONE);
-    }
+     public void setScrollingPages(boolean scrollingPages) {
+         mScrollingPages = scrollingPages;
+     }
 
     @Override
     public void handleMessage(String event, JSONObject message) {
@@ -101,7 +122,8 @@ public class HomeBanner extends LinearLayout
                 @Override
                 public void run() {
                     textView.setText(text);
-                    setVisibility(View.VISIBLE);
+                    setVisibility(VISIBLE);
+                    animateUp();
                 }
             });
         } catch (JSONException e) {
@@ -136,5 +158,103 @@ public class HomeBanner extends LinearLayout
                 });
             }
         });
+    }
+
+    public void setEnabled(boolean enabled) {
+        // No need to animate if not changing
+        if (mEnabled == enabled) {
+            return;
+        }
+
+        mEnabled = enabled;
+        if (enabled) {
+            animateUp();
+        } else {
+            animateDown();
+        }
+    }
+
+    private void animateUp() {
+        // Check to make sure that message has been received and the banner has been enabled.
+        // Necessary to avoid race conditions between show() and handleMessage() calls.
+        TextView textView = (TextView) findViewById(R.id.text);
+        if (!mEnabled || TextUtils.isEmpty(textView.getText()) || mUserSwipedDown) {
+            return;
+        }
+
+        // No need to animate if already translated.
+        if (ViewHelper.getTranslationY(this) == 0) {
+            return;
+        }
+
+        final PropertyAnimator animator = new PropertyAnimator(100);
+        animator.attach(this, Property.TRANSLATION_Y, 0);
+        animator.start();
+    }
+
+    private void animateDown() {
+        // No need to animate if already translated or gone.
+        if (ViewHelper.getTranslationY(this) == getHeight()) {
+            return;
+        }
+
+        final PropertyAnimator animator = new PropertyAnimator(100);
+        animator.attach(this, Property.TRANSLATION_Y, getHeight());
+        animator.start();
+    }
+
+    public void handleHomeTouch(MotionEvent event) {
+        if (!mEnabled || getVisibility() == GONE || mScrollingPages) {
+            return;
+        }
+
+        switch (event.getActionMasked()) {
+            case MotionEvent.ACTION_DOWN: {
+                // Track the beginning of the touch
+                mTouchY = event.getRawY();
+                break;
+            }
+
+            case MotionEvent.ACTION_MOVE: {
+                final float curY = event.getRawY();
+                final float delta = mTouchY - curY;
+                mSnapBannerToTop = delta <= 0.0f;
+
+                final float height = getHeight();
+                float newTranslationY = ViewHelper.getTranslationY(this) + delta;
+
+                // Clamp the values to be between 0 and height.
+                if (newTranslationY < 0.0f) {
+                    newTranslationY = 0.0f;
+                } else if (newTranslationY > height) {
+                    newTranslationY = height;
+                }
+
+                // Don't change this value if it wasn't a significant movement
+                if (delta >= 10 || delta <= -10) {
+                    mUserSwipedDown = newTranslationY == height;
+                }
+
+                ViewHelper.setTranslationY(this, newTranslationY);
+                mTouchY = curY;
+                break;
+            }
+
+            case MotionEvent.ACTION_UP:
+            case MotionEvent.ACTION_CANCEL: {
+                mTouchY = -1;
+                final float y = ViewHelper.getTranslationY(this);
+                final float height = getHeight();
+                if (y > 0.0f && y < height) {
+                    if (mSnapBannerToTop) {
+                        animateUp();
+                    } else {
+                        animateDown();
+                        mUserSwipedDown = true;
+                    }
+                }
+                break;
+            }
+        }
     }
 }
