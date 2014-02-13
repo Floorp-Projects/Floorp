@@ -16,6 +16,9 @@ XPCOMUtils.defineLazyServiceGetter(this, "CrashReporter",
   "@mozilla.org/xre/app-info;1", "nsICrashReporter");
 #endif
 
+XPCOMUtils.defineLazyModuleGetter(this, "CrashMonitor",
+  "resource://gre/modules/CrashMonitor.jsm");
+
 XPCOMUtils.defineLazyServiceGetter(this, "gUUIDGenerator",
   "@mozilla.org/uuid-generator;1", "nsIUUIDGenerator");
 
@@ -75,6 +78,25 @@ SessionStore.prototype = {
     } catch (ex) {
       // swallow exception that occurs if metro-tabs measure is already set up
     }
+
+    CrashMonitor.previousCheckpoints.then(checkpoints => {
+      let previousSessionCrashed = false;
+
+      if (checkpoints) {
+        // If the previous session finished writing the final state, we'll
+        // assume there was no crash.
+        previousSessionCrashed = !checkpoints["sessionstore-final-state-write-complete"];
+      } else {
+        // If no checkpoints are saved, this is the first run with CrashMonitor or the
+        // metroSessionCheckpoints file was corrupted/deleted, so fallback to defining
+        // a crash as init-ing with an unexpected previousExecutionState
+        // 1 == RUNNING, 2 == SUSPENDED
+        previousSessionCrashed = Services.metro.previousExecutionState == 1 ||
+          Services.metro.previousExecutionState == 2;
+      }
+
+      Services.telemetry.getHistogramById("SHUTDOWN_OK").add(!previousSessionCrashed);
+    });
 
     try {
       let shutdownWasUnclean = false;
@@ -291,8 +313,8 @@ SessionStore.prototype = {
         if (this._saveTimer) {
           this._saveTimer.cancel();
           this._saveTimer = null;
-          this.saveState();
         }
+        this.saveState();
         break;
       case "browser:purge-session-history": // catch sanitization
         this._clearDisk();
@@ -644,6 +666,9 @@ SessionStore.prototype = {
     let istream = converter.convertToInputStream(aData);
     NetUtil.asyncCopy(istream, ostream, function(rc) {
       if (Components.isSuccessCode(rc)) {
+        if (Services.startup.shuttingDown) {
+          Services.obs.notifyObservers(null, "sessionstore-final-state-write-complete", "");
+        }
         Services.obs.notifyObservers(null, "sessionstore-state-write-complete", "");
       }
     });
