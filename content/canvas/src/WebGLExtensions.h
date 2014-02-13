@@ -108,6 +108,18 @@ public:
     DECL_WEBGL_EXTENSION_GOOP
 };
 
+class WebGLExtensionFragDepth
+    : public WebGLExtensionBase
+{
+public:
+    WebGLExtensionFragDepth(WebGLContext*);
+    virtual ~WebGLExtensionFragDepth();
+
+    static bool IsSupported(const WebGLContext* context);
+
+    DECL_WEBGL_EXTENSION_GOOP
+};
+
 class WebGLExtensionLoseContext
     : public WebGLExtensionBase
 {
