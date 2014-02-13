@@ -842,7 +842,8 @@ DrawTargetCG::FillRect(const Rect &aRect,
 
   if (isGradient(aPattern)) {
     CGContextClipToRect(cg, RectToCGRect(aRect));
-    DrawGradient(cg, aPattern, RectToCGRect(aRect));
+    CGRect clipBounds = CGContextGetClipBoundingBox(cg);
+    DrawGradient(cg, aPattern, clipBounds);
   } else {
     if (aPattern.GetType() == PatternType::SURFACE && static_cast<const SurfacePattern&>(aPattern).mExtendMode != ExtendMode::REPEAT) {
       // SetFillFromPattern can handle this case but using CGContextDrawImage
