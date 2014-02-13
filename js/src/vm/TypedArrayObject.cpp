@@ -241,14 +241,14 @@ AllocateArrayBufferContents(JSContext *maybecx, uint32_t nbytes, void *oldptr = 
         ObjectElements *oldheader = static_cast<ObjectElements *>(oldptr);
         uint32_t oldnbytes = ArrayBufferObject::headerInitializedLength(oldheader);
 
-        void *p = maybecx ? maybecx->realloc_(oldptr, size) : js_realloc(oldptr, size);
+        void *p = maybecx ? maybecx->runtime()->reallocCanGC(oldptr, size) : js_realloc(oldptr, size);
         newheader = static_cast<ObjectElements *>(p);
 
         // if we grew the array, we need to set the new bytes to 0
         if (newheader && nbytes > oldnbytes)
             memset(reinterpret_cast<uint8_t*>(newheader->elements()) + oldnbytes, 0, nbytes - oldnbytes);
     } else {
-        void *p = maybecx ? maybecx->calloc_(size) : js_calloc(size);
+        void *p = maybecx ? maybecx->runtime()->callocCanGC(size) : js_calloc(size);
         newheader = static_cast<ObjectElements *>(p);
     }
     if (!newheader) {
@@ -257,7 +257,6 @@ AllocateArrayBufferContents(JSContext *maybecx, uint32_t nbytes, void *oldptr = 
         return nullptr;
     }
 
-    // we rely on this being correct
     ArrayBufferObject::updateElementsHeader(newheader, nbytes);
 
     return newheader;

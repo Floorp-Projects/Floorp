@@ -4919,6 +4919,20 @@ class MOZ_STACK_CLASS JS_PUBLIC_API(ForOfIterator) {
     bool materializeArrayIterator();
 };
 
+
+/*
+ * If a large allocation fails, the JS engine may call the large-allocation-
+ * failure callback, if set, to allow the embedding to flush caches, possibly
+ * perform shrinking GCs, etc. to make some room so that the allocation will
+ * succeed if retried.
+ */
+
+typedef void
+(* LargeAllocationFailureCallback)();
+
+extern JS_PUBLIC_API(void)
+SetLargeAllocationFailureCallback(JSRuntime *rt, LargeAllocationFailureCallback afc);
+
 } /* namespace JS */
 
 #endif /* jsapi_h */
