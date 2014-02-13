@@ -6312,3 +6312,9 @@ JSAutoByteString::encodeLatin1(ExclusiveContext *cx, JSString *str)
     mBytes = LossyTwoByteCharsToNewLatin1CharsZ(cx, linear->range()).c_str();
     return mBytes;
 }
+
+JS_PUBLIC_API(void)
+JS::SetLargeAllocationFailureCallback(JSRuntime *rt, JS::LargeAllocationFailureCallback lafc)
+{
+    rt->largeAllocationFailureCallback = lafc;
+}
