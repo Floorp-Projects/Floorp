@@ -326,8 +326,11 @@ ShellOperationCallback(JSContext *cx)
         JSAutoCompartment ac(cx, &gTimeoutFunc.toObject());
         RootedValue rval(cx);
         HandleValue timeoutFunc = HandleValue::fromMarkedLocation(&gTimeoutFunc);
-        if (!JS_CallFunctionValue(cx, JS::NullPtr(), timeoutFunc, JS::EmptyValueArray, &rval))
+        if (!JS_CallFunctionValue(cx, JS::NullPtr(), timeoutFunc,
+                                  JS::HandleValueArray::empty(), &rval))
+        {
             return false;
+        }
         if (rval.isBoolean())
             result = rval.toBoolean();
         else
@@ -4256,7 +4259,7 @@ WithSourceHook(JSContext *cx, unsigned argc, jsval *vp)
     SourceHook *savedHook = js::ForgetSourceHook(cx->runtime());
     js::SetSourceHook(cx->runtime(), hook);
     RootedObject fun(cx, &args[1].toObject());
-    bool result = Call(cx, UndefinedHandleValue, fun, JS::EmptyValueArray, args.rval());
+    bool result = Call(cx, UndefinedHandleValue, fun, JS::HandleValueArray::empty(), args.rval());
     js::SetSourceHook(cx->runtime(), savedHook);
     return result;
 }

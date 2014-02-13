@@ -116,8 +116,6 @@ using js::frontend::Parser;
 JS_STATIC_ASSERT((jschar)-1 > 0);
 JS_STATIC_ASSERT(sizeof(jschar) == 2);
 
-const JS::HandleValueArray JS::EmptyValueArray;
-
 JS_PUBLIC_API(int64_t)
 JS_Now()
 {

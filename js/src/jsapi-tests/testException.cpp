@@ -15,7 +15,7 @@ BEGIN_TEST(testException_bug860435)
     CHECK(fun.isObject());
 
     JS::RootedValue v(cx);
-    JS_CallFunctionValue(cx, global, fun, JS::EmptyValueArray, &v);
+    JS_CallFunctionValue(cx, global, fun, JS::HandleValueArray::empty(), &v);
     CHECK(v.isObject());
     JS::RootedObject obj(cx, &v.toObject());
 
