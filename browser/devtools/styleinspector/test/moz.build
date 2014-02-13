@@ -5,3 +5,4 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 BROWSER_CHROME_MANIFESTS += ['browser.ini']
+XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']

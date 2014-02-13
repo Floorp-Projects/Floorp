@@ -35,8 +35,9 @@ import android.view.View;
  * perceived performance.
  */
 public class ToolbarProgressView extends ImageView {
-    public static final int MAX_PROGRESS = 10000;
-    private static final int MSG_UPDATE = 42;
+    private static final int MAX_PROGRESS = 10000;
+    private static final int MSG_UPDATE = 0;
+    private static final int MSG_HIDE = 1;
     private static final int STEPS = 10;
     private static final int DELAY = 40;
 
@@ -68,15 +69,23 @@ public class ToolbarProgressView extends ImageView {
         mHandler = new Handler() {
             @Override
             public void handleMessage(Message msg) {
-                if (msg.what == MSG_UPDATE) {
-                    final int progress = Math.min(mTargetProgress, mCurrentProgress + mIncrement);
-                    mCurrentProgress = progress;
+                switch (msg.what) {
+                    case MSG_UPDATE:
+                        mCurrentProgress = Math.min(mTargetProgress, mCurrentProgress + mIncrement);
 
-                    updateBounds();
+                        updateBounds();
 
-                    if (progress < mTargetProgress) {
-                        sendMessageDelayed(mHandler.obtainMessage(MSG_UPDATE), DELAY);
-                    }
+                        if (mCurrentProgress < mTargetProgress) {
+                            final int delay = (mTargetProgress < MAX_PROGRESS) ? DELAY : DELAY / 4;
+                            sendMessageDelayed(mHandler.obtainMessage(msg.what), delay);
+                        } else if (mCurrentProgress == MAX_PROGRESS) {
+                            sendMessageDelayed(mHandler.obtainMessage(MSG_HIDE), DELAY);
+                        }
+                        break;
+
+                    case MSG_HIDE:
+                        setVisibility(View.GONE);
+                        break;
                 }
             }
 
@@ -107,7 +116,7 @@ public class ToolbarProgressView extends ImageView {
         mCurrentProgress = mTargetProgress = getAbsoluteProgress(progressPercentage);
         updateBounds();
 
-        mHandler.removeMessages(MSG_UPDATE);
+        clearMessages();
     }
 
     /**
@@ -118,16 +127,24 @@ public class ToolbarProgressView extends ImageView {
      */
     void animateProgress(int progressPercentage) {
         final int absoluteProgress = getAbsoluteProgress(progressPercentage);
-        if (absoluteProgress == mTargetProgress) {
+        if (absoluteProgress <= mTargetProgress) {
+            // After we manually click stop, we can still receive page load
+            // events (e.g., DOMContentLoaded). Updating for other updates
+            // after a STOP event can freeze the progress bar, so guard against
+            // that here.
             return;
         }
 
-        mCurrentProgress = mTargetProgress;
         mTargetProgress = absoluteProgress;
         mIncrement = (mTargetProgress - mCurrentProgress) / STEPS;
 
-        mHandler.removeMessages(MSG_UPDATE);
+        clearMessages();
         mHandler.sendEmptyMessage(MSG_UPDATE);
+    }
+
+    private void clearMessages() {
+        mHandler.removeMessages(MSG_UPDATE);
+        mHandler.removeMessages(MSG_HIDE);
     }
 
     private int getAbsoluteProgress(int progressPercentage) {

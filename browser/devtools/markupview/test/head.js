@@ -8,6 +8,7 @@ let {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 let TargetFactory = devtools.TargetFactory;
 let {console} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
 let promise = devtools.require("sdk/core/promise");
+let {getInplaceEditorForSpan: inplaceEditor} = devtools.require("devtools/shared/inplace-editor");
 
 // Clear preferences that may be set during the course of tests.
 function clearUserPrefs() {
@@ -18,15 +19,23 @@ function clearUserPrefs() {
 
 registerCleanupFunction(clearUserPrefs);
 
-Services.prefs.setBoolPref("devtools.debugger.log", true);
-SimpleTest.registerCleanupFunction(() => {
-  Services.prefs.clearUserPref("devtools.debugger.log");
-});
+/**
+ * Add a new test tab in the browser and load the given url.
+ * @param {String} url The url to be loaded in the new tab
+ * @return a promise that resolves when the url is loaded
+ */
+function addTab(url) {
+  let def = promise.defer();
 
-function getContainerForRawNode(markupView, rawNode) {
-  let front = markupView.walker.frontForRawNode(rawNode);
-  let container = markupView.getContainer(front);
-  return container;
+  gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.selectedBrowser.addEventListener("load", function onload() {
+    gBrowser.selectedBrowser.removeEventListener("load", onload, true);
+    info("URL " + url + " loading complete into new test tab");
+    waitForFocus(def.resolve, content);
+  }, true);
+  content.location = url;
+
+  return def.promise;
 }
 
 /**
@@ -34,19 +43,41 @@ function getContainerForRawNode(markupView, rawNode) {
  * @return a promise that resolves when the inspector is ready
  */
 function openInspector() {
-  let deferred = promise.defer();
+  let def = promise.defer();
 
   let target = TargetFactory.forTab(gBrowser.selectedTab);
   gDevTools.showToolbox(target, "inspector").then(function(toolbox) {
+    info("Toolbox open");
     let inspector = toolbox.getCurrentPanel();
     inspector.once("inspector-updated", () => {
-      deferred.resolve({toolbox: toolbox, inspector: inspector});
+      info("Inspector panel active and ready");
+      def.resolve({toolbox: toolbox, inspector: inspector});
     });
   }).then(null, console.error);
 
-  return deferred.promise;
+  return def.promise;
 }
 
+/**
+ * Get the MarkupContainer object instance that corresponds to the given
+ * HTML node
+ * @param {MarkupView} markupView The instance of MarkupView currently loaded into the inspector panel
+ * @param {DOMNode} rawNode The DOM node for which the container is required
+ * @return {MarkupContainer}
+ */
+function getContainerForRawNode(markupView, rawNode) {
+  let front = markupView.walker.frontForRawNode(rawNode);
+  let container = markupView.getContainer(front);
+  ok(container, "A markup-container object was found");
+  return container;
+}
+
+/**
+ * Simple DOM node accesor function that takes either a node or a string css
+ * selector as argument and returns the corresponding node
+ * @param {String|DOMNode} nodeOrSelector
+ * @return {DOMNode}
+ */
 function getNode(nodeOrSelector) {
   let node = nodeOrSelector;
 
@@ -61,23 +92,30 @@ function getNode(nodeOrSelector) {
 /**
  * Set the inspector's current selection to a node or to the first match of the
  * given css selector
+ * @param {String|DOMNode} nodeOrSelector
+ * @param {InspectorPanel} inspector The instance of InspectorPanel currently loaded in the toolbox
+ * @param {String} reason Defaults to "test" which instructs the inspector not to highlight the node upon selection
  * @return a promise that resolves when the inspector is updated with the new
  * node
  */
-function selectNode(nodeOrSelector, inspector) {
+function selectNode(nodeOrSelector, inspector, reason="test") {
+  info("Selecting the node " + nodeOrSelector);
   let node = getNode(nodeOrSelector);
   let updated = inspector.once("inspector-updated");
-  inspector.selection.setNode(node, "test");
+  inspector.selection.setNode(node, reason);
   return updated;
 }
 
 /**
  * Simulate a mouse-over on the markup-container (a line in the markup-view)
  * that corresponds to the node or selector passed.
+ * @param {String|DOMNode} nodeOrSelector
+ * @param {InspectorPanel} inspector The instance of InspectorPanel currently loaded in the toolbox
  * @return a promise that resolves when the container is hovered and the higlighter
  * is shown on the corresponding node
  */
 function hoverContainer(nodeOrSelector, inspector) {
+  info("Hovering over the markup-container for node " + nodeOrSelector);
   let highlit = inspector.toolbox.once("node-highlight");
   let container = getContainerForRawNode(inspector.markup, getNode(nodeOrSelector));
   EventUtils.synthesizeMouse(container.tagLine, 2, 2, {type: "mousemove"},
@@ -88,9 +126,12 @@ function hoverContainer(nodeOrSelector, inspector) {
 /**
  * Simulate a click on the markup-container (a line in the markup-view)
  * that corresponds to the node or selector passed.
+ * @param {String|DOMNode} nodeOrSelector
+ * @param {InspectorPanel} inspector The instance of InspectorPanel currently loaded in the toolbox
  * @return a promise that resolves when the node has been selected.
  */
 function clickContainer(nodeOrSelector, inspector) {
+  info("Clicking on the markup-container for node " + nodeOrSelector);
   let updated = inspector.once("inspector-updated");
   let container = getContainerForRawNode(inspector.markup, getNode(nodeOrSelector));
   EventUtils.synthesizeMouseAtCenter(container.tagLine, {type: "mousedown"},
@@ -102,6 +143,7 @@ function clickContainer(nodeOrSelector, inspector) {
 
 /**
  * Checks if the highlighter is visible currently
+ * @return {Boolean}
  */
 function isHighlighterVisible() {
   let outline = gBrowser.selectedBrowser.parentNode.querySelector(".highlighter-container .highlighter-outline");
@@ -110,18 +152,91 @@ function isHighlighterVisible() {
 
 /**
  * Simulate the mouse leaving the markup-view area
+ * @param {InspectorPanel} inspector The instance of InspectorPanel currently loaded in the toolbox
  * @return a promise when done
  */
 function mouseLeaveMarkupView(inspector) {
-  let deferred = promise.defer();
+  info("Leaving the markup-view area");
+  let def = promise.defer();
 
   // Find another element to mouseover over in order to leave the markup-view
   let btn = inspector.toolbox.doc.querySelector(".toolbox-dock-button");
 
   EventUtils.synthesizeMouse(btn, 2, 2, {type: "mousemove"},
     inspector.toolbox.doc.defaultView);
-  executeSoon(deferred.resolve);
+  executeSoon(def.resolve);
 
-  return deferred.promise;
+  return def.promise;
 }
 
+/**
+ * Focus a given editable element, enter edit mode, set value, and commit
+ * @param {DOMNode} field The element that gets editable after receiving focus and <ENTER> keypress
+ * @param {String} value The string value to be set into the edited field
+ * @param {InspectorPanel} inspector The instance of InspectorPanel currently loaded in the toolbox
+ */
+function setEditableFieldValue(field, value, inspector) {
+  field.focus();
+  EventUtils.sendKey("return", inspector.panelWin);
+  let input = inplaceEditor(field).input;
+  ok(input, "Found editable field for setting value: " + value);
+  input.value = value;
+  EventUtils.sendKey("return", inspector.panelWin);
+}
+
+/**
+ * Checks that a node has the given attributes
+ *
+ * @param {HTMLNode} element The node to check.
+ * @param {Object} attrs An object containing the attributes to check.
+ *        e.g. {id: "id1", class: "someclass"}
+ *
+ * Note that node.getAttribute() returns attribute values provided by the HTML
+ * parser. The parser only provides unescaped entities so &amp; will return &.
+ */
+function assertAttributes(element, attrs) {
+  is(element.attributes.length, Object.keys(attrs).length,
+    "Node has the correct number of attributes.");
+  for (let attr in attrs) {
+    is(element.getAttribute(attr), attrs[attr],
+      "Node has the correct " + attr + " attribute.");
+  }
+}
+
+/**
+ * Undo the last markup-view action and wait for the corresponding mutation to
+ * occur
+ * @param {InspectorPanel} inspector The instance of InspectorPanel currently loaded in the toolbox
+ * @return a promise that resolves when the markup-mutation has been treated or
+ * rejects if no undo action is possible
+ */
+function undoChange(inspector) {
+  let canUndo = inspector.markup.undo.canUndo();
+  ok(canUndo, "The last change in the markup-view can be undone");
+  if (!canUndo) {
+    return promise.reject();
+  }
+
+  let mutated = inspector.once("markupmutation");
+  inspector.markup.undo.undo();
+  return mutated;
+}
+
+/**
+ * Redo the last markup-view action and wait for the corresponding mutation to
+ * occur
+ * @param {InspectorPanel} inspector The instance of InspectorPanel currently loaded in the toolbox
+ * @return a promise that resolves when the markup-mutation has been treated or
+ * rejects if no redo action is possible
+ */
+function redoChange(inspector) {
+  let canRedo = inspector.markup.undo.canRedo();
+  ok(canRedo, "The last change in the markup-view can be redone");
+  if (!canRedo) {
+    return promise.reject();
+  }
+
+  let mutated = inspector.once("markupmutation");
+  inspector.markup.undo.redo();
+  return mutated;
+}

@@ -92,6 +92,11 @@ WeaveService.prototype = {
     return deferred.promise;
   },
 
+  /**
+   * Whether Firefox Accounts is enabled.
+   *
+   * @return bool
+   */
   get fxAccountsEnabled() {
     // work out what identity manager to use.  This is stored in a preference;
     // if the preference exists, we trust it.
@@ -110,6 +115,21 @@ WeaveService.prototype = {
     // except when sync is reset - but this 1 exception is enough that we can't
     // cache the value.
     return fxAccountsEnabled;
+  },
+
+  /**
+   * Whether Sync appears to be enabled.
+   *
+   * This returns true if all the Sync preferences for storing account
+   * and server configuration are populated.
+   *
+   * It does *not* perform a robust check to see if the client is working.
+   * For that, you'll want to check Weave.Status.checkSetup().
+   */
+  get enabled() {
+    let prefs = Services.prefs.getBranch(SYNC_PREFS_BRANCH);
+    return prefs.prefHasUserValue("username") &&
+           prefs.prefHasUserValue("clusterURL");
   },
 
   observe: function (subject, topic, data) {

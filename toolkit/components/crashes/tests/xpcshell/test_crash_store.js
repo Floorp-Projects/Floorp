@@ -181,3 +181,51 @@ add_task(function* test_add_mixed_types() {
   Assert.equal(s.pluginCrashes.length, 1);
   Assert.equal(s.pluginHangs.length, 1);
 });
+
+// Crashes added beyond the high water mark behave properly.
+add_task(function* test_high_water() {
+  let s = yield getStore();
+
+  let d1 = new Date(2014, 0, 1, 0, 0, 0);
+  let d2 = new Date(2014, 0, 2, 0, 0, 0);
+
+  for (let i = 0; i < s.HIGH_WATER_DAILY_THRESHOLD + 1; i++) {
+    s.addMainProcessCrash("m1" + i, d1);
+    s.addMainProcessCrash("m2" + i, d2);
+    s.addPluginCrash("pc1" + i, d1);
+    s.addPluginCrash("pc2" + i, d2);
+    s.addPluginHang("ph1" + i, d1);
+    s.addPluginHang("ph2" + i, d2);
+  }
+
+  // We preserve main process crashes. Plugin crashes and hangs beyond should
+  // be discarded.
+  Assert.equal(s.crashesCount, 6 * s.HIGH_WATER_DAILY_THRESHOLD + 2);
+  Assert.equal(s.mainProcessCrashes.length, 2 * s.HIGH_WATER_DAILY_THRESHOLD + 2);
+  Assert.equal(s.pluginCrashes.length, 2 * s.HIGH_WATER_DAILY_THRESHOLD);
+  Assert.equal(s.pluginHangs.length, 2 * s.HIGH_WATER_DAILY_THRESHOLD);
+
+  // But raw counts should be preserved.
+  let day1 = bsp.dateToDays(d1);
+  let day2 = bsp.dateToDays(d2);
+  Assert.ok(s._countsByDay.has(day1));
+  Assert.ok(s._countsByDay.has(day2));
+  Assert.equal(s._countsByDay.get(day1).get(s.TYPE_MAIN_CRASH),
+               s.HIGH_WATER_DAILY_THRESHOLD + 1);
+  Assert.equal(s._countsByDay.get(day1).get(s.TYPE_PLUGIN_CRASH),
+               s.HIGH_WATER_DAILY_THRESHOLD + 1);
+  Assert.equal(s._countsByDay.get(day1).get(s.TYPE_PLUGIN_HANG),
+               s.HIGH_WATER_DAILY_THRESHOLD + 1);
+
+  yield s.save();
+  yield s.load();
+
+  Assert.ok(s._countsByDay.has(day1));
+  Assert.ok(s._countsByDay.has(day2));
+  Assert.equal(s._countsByDay.get(day1).get(s.TYPE_MAIN_CRASH),
+               s.HIGH_WATER_DAILY_THRESHOLD + 1);
+  Assert.equal(s._countsByDay.get(day1).get(s.TYPE_PLUGIN_CRASH),
+               s.HIGH_WATER_DAILY_THRESHOLD + 1);
+  Assert.equal(s._countsByDay.get(day1).get(s.TYPE_PLUGIN_HANG),
+               s.HIGH_WATER_DAILY_THRESHOLD + 1);
+});

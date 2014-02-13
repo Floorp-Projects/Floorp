@@ -6,6 +6,7 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.SiteIdentity.SecurityMode;
+import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.gfx.Layer;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -418,9 +419,9 @@ public class Tab {
                     return;
                 }
 
-                mBookmark = BrowserDB.isBookmark(getContentResolver(), url);
-                mReadingListItem = BrowserDB.isReadingListItem(getContentResolver(), url);
-
+                final int flags = BrowserDB.getItemFlags(getContentResolver(), url);
+                mBookmark = (flags & Bookmarks.FLAG_BOOKMARK) > 0;
+                mReadingListItem = (flags & Bookmarks.FLAG_READING) > 0;
                 Tabs.getInstance().notifyListeners(Tab.this, Tabs.TabEvents.MENU_UPDATED);
             }
         });

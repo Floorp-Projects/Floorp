@@ -15,8 +15,7 @@ Cu.import("resource://services-crypto/utils.js");
 Cu.import("resource://gre/modules/FxAccountsCommon.js");
 Cu.import("resource://gre/modules/Credentials.jsm");
 
-// Default can be changed by the preference 'identity.fxaccounts.auth.uri'
-let _host = "https://api-accounts.dev.lcip.org/v1";
+let _host = "https://api.accounts.firefox.com/v1"
 try {
   _host = Services.prefs.getCharPref("identity.fxaccounts.auth.uri");
 } catch(keepDefault) {}
