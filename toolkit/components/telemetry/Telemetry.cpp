@@ -43,7 +43,11 @@
 #include "nsHashKeys.h"
 #include "nsBaseHashtable.h"
 #include "nsXULAppAPI.h"
+#include "nsReadableUtils.h"
 #include "nsThreadUtils.h"
+#if defined(XP_WIN)
+#include "nsUnicharUtils.h"
+#endif
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "plstr.h"
@@ -394,24 +398,19 @@ void TelemetryIOInterposeObserver::Observe(Observation& aOb)
     return;
   }
 
+#if defined(XP_WIN)
+  nsCaseInsensitiveStringComparator comparator;
+#else
+  nsDefaultStringComparator comparator;
+#endif
   nsAutoString      processedName;
   nsDependentString filenameStr(filename);
-  uint32_t filenameStrLen = filenameStr.Length();
   uint32_t safeDirsLen = mSafeDirs.Length();
   for (uint32_t i = 0; i < safeDirsLen; ++i) {
-    uint32_t curSafeDirLen = mSafeDirs[i].mPath.Length();
-    if (curSafeDirLen <= filenameStrLen) {
-#if defined(_MSC_VER)
-      if (!_wcsnicmp(filename, mSafeDirs[i].mPath.get(), curSafeDirLen)) {
-#else
-      if (!std::char_traits<char16_t>::compare(filename,
-                                               mSafeDirs[i].mPath.get(),
-                                               curSafeDirLen)) {
-#endif
-        processedName = mSafeDirs[i].mSubstName;
-        processedName += Substring(filenameStr, curSafeDirLen);
-        break;
-      }
+    if (StringBeginsWith(filenameStr, mSafeDirs[i].mPath, comparator)) {
+      processedName = mSafeDirs[i].mSubstName;
+      processedName += Substring(filenameStr, mSafeDirs[i].mPath.Length());
+      break;
     }
   }
 
