@@ -35,7 +35,7 @@ CallTrusted(JSContext *cx, unsigned argc, jsval *vp)
     {
         JSAutoCompartment ac(cx, trusted_glob);
         JS::RootedValue funVal(cx, JS::ObjectValue(*trusted_fun));
-        ok = JS_CallFunctionValue(cx, JS::NullPtr(), funVal, JS::EmptyValueArray, args.rval());
+        ok = JS_CallFunctionValue(cx, JS::NullPtr(), funVal, JS::HandleValueArray::empty(), args.rval());
     }
     JS_RestoreFrameChain(cx);
     return ok;
