@@ -27,7 +27,9 @@ CONFIGURE_SUBST_FILES += [
     'js.pc',
 ]
 
-if not CONFIG['JS_STANDALONE']:
+if CONFIG['JS_STANDALONE']:
+    DEFINES['IMPL_MFBT'] = True
+else:
     CONFIGURE_SUBST_FILES += [
         '../../config/autoconf-js.mk',
         '../../config/emptyvars-js.mk',
