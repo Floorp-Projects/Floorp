@@ -20,7 +20,8 @@ BEGIN_TEST(testErrorCopying_columnCopied)
 
     JS::RootedValue rval(cx);
     JS_SetErrorReporter(cx, my_ErrorReporter);
-    CHECK(!JS_CallFunctionName(cx, global, "check", JS::EmptyValueArray, &rval));
+    CHECK(!JS_CallFunctionName(cx, global, "check", JS::HandleValueArray::empty(),
+                               &rval));
     CHECK(column == 27);
     return true;
 }

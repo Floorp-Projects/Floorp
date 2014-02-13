@@ -11351,7 +11351,7 @@ class CallbackMethod(CallbackMember):
         if self.argCount > 0:
             replacements["args"] = "JS::HandleValueArray::subarray(argv, 0, argc)"
         else:
-            replacements["args"] = "JS::EmptyValueArray"
+            replacements["args"] = "JS::HandleValueArray::empty()"
         return string.Template("${declCallable}${declThis}"
                 "if (${callGuard}!JS::Call(cx, ${thisVal}, callable,\n"
                 "              ${args}, &rval)) {\n"
