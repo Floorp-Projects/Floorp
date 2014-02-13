@@ -433,29 +433,6 @@ ArrayBufferObject::ensureNonInline(JSContext *cx, Handle<ArrayBufferObject*> buf
     return true;
 }
 
-// If the ArrayBuffer already contains dynamic contents, hand them back.
-// Otherwise, allocate some new contents and copy the data over, but in no case
-// modify the original ArrayBuffer. (Also, any allocated contents will have no
-// views linked to in its header.)
-ObjectElements *
-ArrayBufferObject::getTransferableContents(JSContext *cx, bool *callerOwns)
-{
-    if (hasDynamicElements() && !isAsmJSArrayBuffer()) {
-        *callerOwns = false;
-        return getElementsHeader();
-    }
-
-    uint32_t byteLen = byteLength();
-    ObjectElements *newheader = AllocateArrayBufferContents(cx, byteLen);
-    if (!newheader)
-        return nullptr;
-
-    initElementsHeader(newheader, byteLen);
-    memcpy(reinterpret_cast<void*>(newheader->elements()), dataPointer(), byteLen);
-    *callerOwns = true;
-    return newheader;
-}
-
 #if defined(JS_ION) && defined(JS_CPU_X64)
 // To avoid dynamically checking bounds on each load/store, asm.js code relies
 // on the SIGSEGV handler in AsmJSSignalHandlers.cpp. However, this only works
@@ -708,31 +685,48 @@ ArrayBufferObject::createDataViewForThis(JSContext *cx, unsigned argc, Value *vp
     return CallNonGenericMethod<IsArrayBuffer, createDataViewForThisImpl>(cx, args);
 }
 
-bool
+/* static */ bool
 ArrayBufferObject::stealContents(JSContext *cx, Handle<ArrayBufferObject*> buffer, void **contents,
                                  uint8_t **data)
 {
-    // Make the data stealable
-    bool own;
-    ObjectElements *header = reinterpret_cast<ObjectElements*>(buffer->getTransferableContents(cx, &own));
-    if (!header)
-        return false;
-    JS_ASSERT(!IsInsideNursery(cx->runtime(), header));
-    *contents = header;
-    *data = reinterpret_cast<uint8_t *>(header + 1);
+    // If the ArrayBuffer's elements are dynamically allocated and nothing else
+    // prevents us from stealing them, transfer ownership directly.  Otherwise,
+    // the elements are small and allocated inside the ArrayBuffer object's GC
+    // header so we must make a copy.
+    ObjectElements *transferableHeader;
+    bool stolen;
+    if (buffer->hasDynamicElements() && !buffer->isAsmJSArrayBuffer()) {
+        stolen = true;
+        transferableHeader = buffer->getElementsHeader();
+    } else {
+        stolen = false;
+
+        uint32_t byteLen = buffer->byteLength();
+        transferableHeader = AllocateArrayBufferContents(cx, byteLen);
+        if (!transferableHeader)
+            return false;
+
+        initElementsHeader(transferableHeader, byteLen);
+        void *headerDataPointer = reinterpret_cast<void*>(transferableHeader->elements());
+        memcpy(headerDataPointer, buffer->dataPointer(), byteLen);
+    }
+
+    JS_ASSERT(!IsInsideNursery(cx->runtime(), transferableHeader));
+    *contents = transferableHeader;
+    *data = reinterpret_cast<uint8_t *>(transferableHeader + 1);
 
     // Neuter the views, which may also mprotect(PROT_NONE) the buffer. So do
     // it after copying out the data.
     if (!ArrayBufferObject::neuterViews(cx, buffer))
         return false;
 
-    if (!own) {
-        // If header has dynamically allocated elements, revert it back to
-        // fixed-element storage before neutering it.
+    // If the elements were taken from the neutered buffer, revert it back to
+    // using inline storage so it doesn't attempt to free the stolen elements
+    // when finalized.
+    if (stolen)
         buffer->changeContents(cx, ObjectElements::fromElements(buffer->fixedElements()));
-    }
-    buffer->neuter(cx);
 
+    buffer->neuter(cx);
     return true;
 }
 
