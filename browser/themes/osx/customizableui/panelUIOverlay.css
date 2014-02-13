@@ -11,6 +11,14 @@
     background-size: 16px, auto;
   }
 
+  #PanelUI-fxa-status {
+    list-style-image: url(chrome://browser/skin/sync-horizontalbar@2x.png);
+  }
+
+  #PanelUI-fxa-status[status="active"] {
+    list-style-image: url(chrome://browser/skin/syncProgress-horizontalbar@2x.png);
+  }
+
   #PanelUI-customize {
     list-style-image: url(chrome://browser/skin/menuPanel-customize@2x.png);
   }
@@ -27,6 +35,7 @@
     list-style-image: url(chrome://browser/skin/menuPanel-exit@2x.png);
   }
 
+  #PanelUI-fxa-status,
   #PanelUI-customize,
   #PanelUI-help,
   #PanelUI-quit {

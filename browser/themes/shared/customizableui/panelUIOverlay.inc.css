@@ -399,6 +399,17 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   flex: 1;
   -moz-padding-start: 15px;
   -moz-border-start-style: none;
+}
+
+#PanelUI-fxa-status {
+  list-style-image: url(chrome://browser/skin/sync-horizontalbar.png);
+}
+
+#PanelUI-fxa-status[status="active"] {
+  list-style-image: url(chrome://browser/skin/syncProgress-horizontalbar.png);
+}
+
+#PanelUI-customize {
   list-style-image: url(chrome://browser/skin/menuPanel-customize.png);
 }
 
