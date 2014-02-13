@@ -2393,6 +2393,8 @@ PExternalHelperAppParent*
 ContentParent::AllocPExternalHelperAppParent(const OptionalURIParams& uri,
                                              const nsCString& aMimeContentType,
                                              const nsCString& aContentDisposition,
+                                             const uint32_t& aContentDispositionHint,
+                                             const nsString& aContentDispositionFilename,
                                              const bool& aForceSave,
                                              const int64_t& aContentLength,
                                              const OptionalURIParams& aReferrer,
@@ -2400,7 +2402,14 @@ ContentParent::AllocPExternalHelperAppParent(const OptionalURIParams& uri,
 {
     ExternalHelperAppParent *parent = new ExternalHelperAppParent(uri, aContentLength);
     parent->AddRef();
-    parent->Init(this, aMimeContentType, aContentDisposition, aForceSave, aReferrer, aBrowser);
+    parent->Init(this, 
+                 aMimeContentType, 
+                 aContentDisposition,
+                 aContentDispositionHint,
+                 aContentDispositionFilename,
+                 aForceSave, 
+                 aReferrer, 
+                 aBrowser);
     return parent;
 }
 

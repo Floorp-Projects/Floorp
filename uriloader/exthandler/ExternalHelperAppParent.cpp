@@ -48,6 +48,8 @@ void
 ExternalHelperAppParent::Init(ContentParent *parent,
                               const nsCString& aMimeContentType,
                               const nsCString& aContentDispositionHeader,
+                              const uint32_t& aContentDispositionHint,
+                              const nsString& aContentDispositionFilename,
                               const bool& aForceSave,
                               const OptionalURIParams& aReferrer,
                               PBrowserParent* aBrowser)
@@ -61,8 +63,17 @@ ExternalHelperAppParent::Init(ContentParent *parent,
     SetPropertyAsInterface(NS_LITERAL_STRING("docshell.internalReferrer"), referrer);
 
   mContentDispositionHeader = aContentDispositionHeader;
-  NS_GetFilenameFromDisposition(mContentDispositionFilename, mContentDispositionHeader, mURI);
-  mContentDisposition = NS_GetContentDispositionFromHeader(mContentDispositionHeader, this);
+  if (!mContentDispositionHeader.IsEmpty()) {  
+    NS_GetFilenameFromDisposition(mContentDispositionFilename, 
+                                  mContentDispositionHeader, 
+                                  mURI);
+    mContentDisposition = 
+      NS_GetContentDispositionFromHeader(mContentDispositionHeader, this);
+  }
+  else {
+    mContentDisposition = aContentDispositionHint;
+    mContentDispositionFilename = aContentDispositionFilename;
+  }
 
   nsCOMPtr<nsIInterfaceRequestor> window;
   if (aBrowser) {
@@ -301,7 +312,8 @@ ExternalHelperAppParent::GetContentDisposition(uint32_t *aContentDisposition)
 NS_IMETHODIMP
 ExternalHelperAppParent::SetContentDisposition(uint32_t aContentDisposition)
 {
-  return NS_ERROR_NOT_AVAILABLE;
+  mContentDisposition = aContentDisposition;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -317,7 +329,8 @@ ExternalHelperAppParent::GetContentDispositionFilename(nsAString& aContentDispos
 NS_IMETHODIMP
 ExternalHelperAppParent::SetContentDispositionFilename(const nsAString& aContentDispositionFilename)
 {
-  return NS_ERROR_NOT_AVAILABLE;
+  mContentDispositionFilename = aContentDispositionFilename;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
