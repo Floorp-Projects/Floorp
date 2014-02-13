@@ -171,16 +171,10 @@ class ArrayBufferObject : public JSObject
     void changeContents(JSContext *cx, ObjectElements *newHeader);
 
     /*
-     * Copy the data into freshly-allocated memory. Used when un-inlining or
-     * when converting an ArrayBuffer to an AsmJS (MMU-assisted) ArrayBuffer.
-     */
-    bool copyData(JSContext *cx);
-
-    /*
      * Ensure data is not stored inline in the object. Used when handing back a
      * GC-safe pointer.
      */
-    bool ensureNonInline(JSContext *cx);
+    static bool ensureNonInline(JSContext *cx, Handle<ArrayBufferObject*> buffer);
 
     uint32_t byteLength() const {
         return getElementsHeader()->initializedLength;
