@@ -150,6 +150,7 @@ class JS_FRIEND_API(BaseProxyHandler)
     static const Action GET  = 0x01;
     static const Action SET  = 0x02;
     static const Action CALL = 0x04;
+    static const Action ENUMERATE = 0x08;
 
     virtual bool enter(JSContext *cx, HandleObject wrapper, HandleId id, Action act,
                        bool *bp);

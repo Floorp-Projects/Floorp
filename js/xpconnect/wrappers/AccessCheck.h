@@ -76,7 +76,7 @@ struct CrossOriginAccessiblePropertiesOnly : public Policy {
     }
     static bool deny(js::Wrapper::Action act, JS::HandleId id) {
         // Silently fail for enumerate-like operations.
-        if (act == js::Wrapper::GET && id == JSID_VOIDHANDLE)
+        if (act == js::Wrapper::ENUMERATE)
             return true;
         return false;
     }
@@ -92,8 +92,8 @@ struct ExposedPropertiesOnly : public Policy {
     static bool check(JSContext *cx, JSObject *wrapper, jsid id, js::Wrapper::Action act);
 
     static bool deny(js::Wrapper::Action act, JS::HandleId id) {
-        // Fail silently for GETs.
-        return act == js::Wrapper::GET;
+        // Fail silently for GETs and ENUMERATEs.
+        return act == js::Wrapper::GET || act == js::Wrapper::ENUMERATE;
     }
     static bool allowNativeCall(JSContext *cx, JS::IsAcceptableThis test, JS::NativeImpl impl);
 };
