@@ -175,6 +175,15 @@ class PinSiteDialog extends DialogFragment {
         filter("");
     }
 
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+
+        // Discard any additional site selection as the dialog
+        // is getting destroyed (see bug 935542).
+        setOnSiteSelectedListener(null);
+    }
+
     public void setSearchTerm(String searchTerm) {
         mSearchTerm = searchTerm;
     }
