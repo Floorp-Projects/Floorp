@@ -297,6 +297,10 @@ private:
     // process, for the specified manifest URL.
     void TransformPreallocatedIntoApp(const nsAString& aAppManifestURL);
 
+    // Transform a pre-allocated app process into a browser process. If this
+    // returns false, the child process has died.
+    void TransformPreallocatedIntoBrowser();
+
     /**
      * Mark this ContentParent as dead for the purposes of Get*().
      * This method is idempotent.
