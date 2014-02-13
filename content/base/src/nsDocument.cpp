@@ -11447,7 +11447,7 @@ nsDocument::Evaluate(const nsAString& aExpression, nsIDOMNode* aContextNode,
 {
   return XPathEvaluator()->Evaluate(aExpression, aContextNode, aResolver, aType,
                                     aInResult, aResult);
-} 
+}
 
 // This is just a hack around the fact that window.document is not
 // [Unforgeable] yet.
@@ -11477,12 +11477,14 @@ nsIDocument::WrapObject(JSContext *aCx, JS::Handle<JSObject*> aScope)
   JS::Rooted<JS::Value> winVal(aCx);
   nsresult rv = nsContentUtils::WrapNative(aCx, obj, win,
                                            &NS_GET_IID(nsIDOMWindow),
-                                           &winVal,
-                                           false);
+                                           &winVal);
   if (NS_FAILED(rv)) {
     Throw(aCx, rv);
     return nullptr;
   }
+
+  MOZ_ASSERT(&winVal.toObject() == js::UncheckedUnwrap(&winVal.toObject()),
+             "WrapNative shouldn't create a cross-compartment wrapper");
 
   NS_NAMED_LITERAL_STRING(doc_str, "document");
 
