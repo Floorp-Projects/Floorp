@@ -6,11 +6,13 @@
 #ifndef nsMathMLChar_h___
 #define nsMathMLChar_h___
 
+#include "nsAutoPtr.h"
 #include "nsMathMLOperators.h"
 #include "nsPoint.h"
 #include "nsRect.h"
 #include "nsString.h"
 #include "nsBoundingMetrics.h"
+#include "gfxFont.h"
 
 class nsGlyphTable;
 class nsIFrame;
@@ -41,24 +43,35 @@ enum {
   NS_STRETCH_MAXWIDTH = 0x40
 };
 
-// A single glyph in our internal representation is characterized by a
-// 'code@font' pair. The 'code' is interpreted as a Unicode point or as the
-// direct glyph index (depending on the type of nsGlyphTable where this comes
-// from). The 'font' is a numeric identifier given to the font to which the
-// glyph belongs.
+// A single glyph in our internal representation is either
+// 1) a 'code@font' pair from the mathfontFONTFAMILY.properties table. The
+// 'code' is interpreted as a Unicode point. The 'font' is a numeric
+// identifier given to the font to which the glyph belongs, which is 0 for the
+// FONTFAMILY and > 0 for 'external' fonts.
+// 2) a glyph index from the Open Type MATH table. In that case, all the glyphs
+// come from the font containing that table and 'font' is just set to -1.
 struct nsGlyphCode {
-  char16_t code[2]; 
-  int32_t   font;
+  union {
+    char16_t code[2];
+    uint32_t glyphID;
+  };
+  int8_t   font;
 
-  int32_t Length() { return (code[1] == char16_t('\0') ? 1 : 2); }
+  bool IsGlyphID() const { return font == -1; }
+
+  int32_t Length() const {
+    return (IsGlyphID() || code[1] == PRUnichar('\0') ? 1 : 2);
+  }
   bool Exists() const
   {
-    return (code[0] != 0);
+    return IsGlyphID() ? glyphID != 0 : code[0] != 0;
   }
   bool operator==(const nsGlyphCode& other) const
   {
-    return (other.code[0] == code[0] && other.code[1] == code[1] && 
-            other.font == font);
+    return (other.font == font &&
+            ((IsGlyphID() && other.glyphID == glyphID) ||
+             (!IsGlyphID() && other.code[0] == code[0] &&
+              other.code[1] == code[1])));
   }
   bool operator!=(const nsGlyphCode& other) const
   {
@@ -77,7 +90,7 @@ public:
     mStyleContext = nullptr;
     mUnscaledAscent = 0;
     mScaleX = mScaleY = 1.0;
-    mDrawNormal = true;
+    mDraw = DRAW_NORMAL;
     mMirrored = false;
   }
 
@@ -193,17 +206,25 @@ private:
   nsStretchDirection mDirection;
   nsBoundingMetrics  mBoundingMetrics;
   nsStyleContext*    mStyleContext;
-  nsGlyphTable*      mGlyphTable;
-  nsGlyphCode        mGlyph;
-  // mFamily is non-empty when the family for the current size is different
-  // from the family in the nsStyleContext.
-  nsString           mFamily;
+  // mGlyphs/mBmData are arrays describing the glyphs used to draw the operator.
+  // See the drawing methods below.
+  nsAutoPtr<gfxTextRun> mGlyphs[4];
+  nsBoundingMetrics     mBmData[4];
   // mUnscaledAscent is the actual ascent of the char.
   nscoord            mUnscaledAscent;
   // mScaleX, mScaleY are the factors by which we scale the char.
   float              mScaleX, mScaleY;
-  // mDrawNormal indicates whether we use special glyphs or not.
-  bool               mDrawNormal;
+
+  // mDraw indicates how we draw the stretchy operator:
+  // - DRAW_NORMAL: we render the mData string normally.
+  // - DRAW_VARIANT: we draw a larger size variant given by mGlyphs[0].
+  // - DRAW_PARTS: we assemble several parts given by mGlyphs[0], ... mGlyphs[4]
+  // XXXfredw: the MATH table can have any numbers of parts and extenders.
+  enum DrawingMethod {
+    DRAW_NORMAL, DRAW_VARIANT, DRAW_PARTS
+  };
+  DrawingMethod mDraw;
+
   // mMirrored indicates whether the character is mirrored. 
   bool               mMirrored;
 
@@ -211,9 +232,17 @@ private:
   friend class StretchEnumContext;
 
   // helper methods
+  bool
+  SetFontFamily(nsPresContext*          aPresContext,
+                const nsGlyphTable*     aGlyphTable,
+                const nsGlyphCode&      aGlyphCode,
+                const nsAString&        aDefaultFamily,
+                nsFont&                 aFont,
+                nsRefPtr<gfxFontGroup>* aFontGroup);
+
   nsresult
   StretchInternal(nsPresContext*           aPresContext,
-                  nsRenderingContext&     aRenderingContext,
+                  gfxContext*              aThebesContext,
                   nsStretchDirection&      aStretchDirection,
                   const nsBoundingMetrics& aContainerSize,
                   nsBoundingMetrics&       aDesiredStretchSize,
@@ -222,23 +251,18 @@ private:
                   bool            aMaxSizeIsAbsolute = false);
 
   nsresult
-  PaintVertically(nsPresContext*       aPresContext,
-                  nsRenderingContext& aRenderingContext,
-                  nsFont&              aFont,
-                  nsStyleContext*      aStyleContext,
-                  nsGlyphTable*        aGlyphTable,
-                  nsRect&              aRect);
+  PaintVertically(nsPresContext* aPresContext,
+                  gfxContext*    aThebesContext,
+                  nsRect&        aRect);
 
   nsresult
-  PaintHorizontally(nsPresContext*       aPresContext,
-                    nsRenderingContext& aRenderingContext,
-                    nsFont&              aFont,
-                    nsStyleContext*      aStyleContext,
-                    nsGlyphTable*        aGlyphTable,
-                    nsRect&              aRect);
+  PaintHorizontally(nsPresContext* aPresContext,
+                    gfxContext*    aThebesContext,
+                    nsRect&        aRect);
 
   void
-  ApplyTransforms(nsRenderingContext& aRenderingContext, nsRect &r);
+  ApplyTransforms(gfxContext* aThebesContext, int32_t aAppUnitsPerGfxUnit,
+                  nsRect &r);
 };
 
 #endif /* nsMathMLChar_h___ */

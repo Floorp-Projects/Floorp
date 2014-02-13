@@ -33,7 +33,7 @@ using namespace mozilla;
 //#define NOISY_SEARCH 1
 
 // -----------------------------------------------------------------------------
-static const nsGlyphCode kNullGlyph = {{0, 0}, 0};
+static const nsGlyphCode kNullGlyph = {{{0, 0}}, 0};
 typedef enum {eExtension_base, eExtension_variants, eExtension_parts}
   nsMathfontPrefExtension;
 
@@ -45,10 +45,8 @@ typedef enum {eExtension_base, eExtension_variants, eExtension_parts}
 // can be taken in other additional fonts when stretching certain characters.
 // These supplementary fonts are referred to as "external" fonts to the table.
 //
-// A char for which nsGlyphTable::Has(aChar) is true means that the table
-// contains some glyphs (bigger and/or partial) that can be used to render
-// the char. Bigger sizes (if any) of the char can then be retrieved with
-// BigOf(aSize). Partial glyphs can be retrieved with TopOf(), GlueOf(), etc.
+// Bigger sizes (if any) of the char can then be retrieved with
+// BigOf(aSize). Partial glyphs can be retrieved with ElementAt()
 //
 // A table consists of "nsGlyphCode"s which are viewed either as Unicode
 // points or as direct glyph indices, depending on the type of the table.
@@ -126,46 +124,28 @@ public:
 
   const nsAString& FontNameFor(const nsGlyphCode& aGlyphCode) const
   {
+    NS_ASSERTION(!aGlyphCode.IsGlyphID(),
+                 "nsGlyphTable can only access glyphs by Unicode code point");
     return mFontName[aGlyphCode.font];
   }
 
-  // True if this table contains some glyphs (variants and/or parts)
-  // or contains child chars that can be used to render this char
-  bool Has(nsPresContext* aPresContext, nsMathMLChar* aChar);
-
-  // True if this table contains variants of larger sizes to render this char
-  bool HasVariantsOf(nsPresContext* aPresContext, nsMathMLChar* aChar);
+  // Getters for the parts
+  nsGlyphCode ElementAt(char16_t aChar, uint32_t aPosition);
+  nsGlyphCode BigOf(char16_t aChar, int32_t aSize) {
+    return ElementAt(aChar, 4 + aSize);
+  }
 
   // True if this table contains parts to render this char
-  bool HasPartsOf(nsPresContext* aPresContext, nsMathMLChar* aChar);
-
-  // Getters for the parts
-  nsGlyphCode TopOf(nsPresContext* aPresContext, nsMathMLChar* aChar) {
-    return ElementAt(aPresContext, aChar, 0);
-  }
-  nsGlyphCode MiddleOf(nsPresContext* aPresContext, nsMathMLChar* aChar) {
-    return ElementAt(aPresContext, aChar, 1);
-  }
-  nsGlyphCode BottomOf(nsPresContext* aPresContext, nsMathMLChar* aChar) {
-    return ElementAt(aPresContext, aChar, 2);
-  }
-  nsGlyphCode GlueOf(nsPresContext* aPresContext, nsMathMLChar* aChar) {
-    return ElementAt(aPresContext, aChar, 3);
-  }
-  nsGlyphCode BigOf(nsPresContext* aPresContext, nsMathMLChar* aChar,
-                    int32_t aSize) {
-    return ElementAt(aPresContext, aChar, 4 + aSize);
-  }
-  nsGlyphCode LeftOf(nsPresContext* aPresContext, nsMathMLChar* aChar) {
-    return ElementAt(aPresContext, aChar, 0);
-  }
-  nsGlyphCode RightOf(nsPresContext* aPresContext, nsMathMLChar* aChar) {
-    return ElementAt(aPresContext, aChar, 2);
+  bool HasPartsOf(char16_t aChar) {
+    return (ElementAt(aChar, 0).Exists() || ElementAt(aChar, 1).Exists() ||
+            ElementAt(aChar, 2).Exists() || ElementAt(aChar, 3).Exists());
   }
 
+  gfxTextRun* MakeTextRun(gfxContext*        aThebesContext,
+                          int32_t            aAppUnitsPerDevPixel,
+                          gfxFontGroup*      aFontGroup,
+                          const nsGlyphCode& aGlyph);
 private:
-  nsGlyphCode ElementAt(nsPresContext* aPresContext, nsMathMLChar* aChar,
-                        uint32_t aPosition);
 
   // mFontName[0] is the primary font associated to this table. The others 
   // are possible "external" fonts for glyphs not in the primary font
@@ -202,8 +182,7 @@ private:
 };
 
 nsGlyphCode
-nsGlyphTable::ElementAt(nsPresContext* aPresContext, nsMathMLChar* aChar,
-                        uint32_t aPosition)
+nsGlyphTable::ElementAt(char16_t aChar, uint32_t aPosition)
 {
   if (mState == NS_TABLE_STATE_ERROR) return kNullGlyph;
   // Load glyph properties if this is the first time we have been here
@@ -239,11 +218,10 @@ nsGlyphTable::ElementAt(nsPresContext* aPresContext, nsMathMLChar* aChar,
   }
 
   // Update our cache if it is not associated to this character
-  char16_t uchar = aChar->mData[0];
-  if (mCharCache != uchar) {
+  if (mCharCache != aChar) {
     // The key in the property file is interpreted as ASCII and kept
     // as such ...
-    char key[10]; PR_snprintf(key, sizeof(key), "\\u%04X", uchar);
+    char key[10]; PR_snprintf(key, sizeof(key), "\\u%04X", aChar);
     nsAutoString value;
     nsresult rv = mGlyphProperties->GetStringProperty(nsDependentCString(key),
                                                       value);
@@ -295,7 +273,7 @@ nsGlyphTable::ElementAt(nsPresContext* aPresContext, nsMathMLChar* aChar,
     }
     // update our cache with the new settings
     mGlyphCache.Assign(buffer);
-    mCharCache = uchar;
+    mCharCache = aChar;
   }
 
   // 3* is to account for the code@font pairs
@@ -308,26 +286,16 @@ nsGlyphTable::ElementAt(nsPresContext* aPresContext, nsMathMLChar* aChar,
   return ch.code[0] == char16_t(0xFFFD) ? kNullGlyph : ch;
 }
 
-bool
-nsGlyphTable::Has(nsPresContext* aPresContext, nsMathMLChar* aChar)
+gfxTextRun*
+nsGlyphTable::MakeTextRun(gfxContext*        aThebesContext,
+                          int32_t            aAppUnitsPerDevPixel,
+                          gfxFontGroup*      aFontGroup,
+                          const nsGlyphCode& aGlyph)
 {
-  return HasVariantsOf(aPresContext, aChar) || HasPartsOf(aPresContext, aChar);
-}
-
-bool
-nsGlyphTable::HasVariantsOf(nsPresContext* aPresContext, nsMathMLChar* aChar)
-{
-  //XXXkt all variants must be in the same file as size 1
-  return BigOf(aPresContext, aChar, 1).Exists();
-}
-
-bool
-nsGlyphTable::HasPartsOf(nsPresContext* aPresContext, nsMathMLChar* aChar)
-{
-  return GlueOf(aPresContext, aChar).Exists() ||
-    TopOf(aPresContext, aChar).Exists() ||
-    BottomOf(aPresContext, aChar).Exists() ||
-    MiddleOf(aPresContext, aChar).Exists();
+  NS_ASSERTION(!aGlyph.IsGlyphID(), "not yet implemented");
+  return aFontGroup->
+    MakeTextRun(aGlyph.code, aGlyph.Length(), aThebesContext,
+                aAppUnitsPerDevPixel, 0);
 }
 
 // -----------------------------------------------------------------------------
@@ -362,11 +330,6 @@ public:
   // Add a glyph table in the list, return the new table that was added
   nsGlyphTable*
   AddGlyphTable(const nsString& aPrimaryFontName);
-
-  // Find a glyph table in the list that has a glyph for the given char
-  nsGlyphTable*
-  GetGlyphTableFor(nsPresContext* aPresContext,
-                   nsMathMLChar*  aChar);
 
   // Find the glyph table in the list corresponding to the given font family.
   nsGlyphTable*
@@ -444,23 +407,6 @@ nsGlyphTableList::AddGlyphTable(const nsString& aPrimaryFontName)
   // allocate a table
   glyphTable = mTableList.AppendElement(aPrimaryFontName);
   return glyphTable;
-}
-
-nsGlyphTable*
-nsGlyphTableList::GetGlyphTableFor(nsPresContext* aPresContext, 
-                                   nsMathMLChar*   aChar)
-{
-  if (mUnicodeTable.Has(aPresContext, aChar))
-    return &mUnicodeTable;
-
-  int32_t i;
-  for (i = 0; i < Count(); i++) {
-    nsGlyphTable* glyphTable = TableAt(i);
-    if (glyphTable->Has(aPresContext, aChar)) {
-      return glyphTable;
-    }
-  }
-  return nullptr;
 }
 
 nsGlyphTable*
@@ -645,13 +591,11 @@ nsMathMLChar::SetData(nsPresContext* aPresContext,
   // note that mGlyph is not initialized
   mDirection = NS_STRETCH_DIRECTION_UNSUPPORTED;
   mBoundingMetrics = nsBoundingMetrics();
-  mGlyphTable = nullptr;
   // check if stretching is applicable ...
   if (gGlyphTableList && (1 == mData.Length())) {
     mDirection = nsMathMLOperators::GetStretchyDirection(mData);
     // default tentative table (not the one that is necessarily going
     // to be used)
-    mGlyphTable = gGlyphTableList->GetGlyphTableFor(aPresContext, this);
   }
 }
 
@@ -906,33 +850,34 @@ insert:
   }
 }
 
-// Update the font and rendering context if there is a family change
-static bool
-SetFontFamily(nsStyleContext*      aStyleContext,
-              nsRenderingContext&  aRenderingContext,
-              nsFont&              aFont,
-              const nsGlyphTable*  aGlyphTable,
-              const nsGlyphCode&   aGlyphCode,
-              const nsAString&     aDefaultFamily)
+// Update the font if there is a family change and returns the font group.
+bool
+nsMathMLChar::SetFontFamily(nsPresContext*          aPresContext,
+                            const nsGlyphTable*     aGlyphTable,
+                            const nsGlyphCode&      aGlyphCode,
+                            const nsAString&        aDefaultFamily,
+                            nsFont&                 aFont,
+                            nsRefPtr<gfxFontGroup>* aFontGroup)
 {
   const nsAString& family =
     aGlyphCode.font ? aGlyphTable->FontNameFor(aGlyphCode) : aDefaultFamily;
-  if (! family.Equals(aFont.name)) {
+  if (!*aFontGroup || !family.Equals(aFont.name)) {
     nsFont font = aFont;
     font.name = family;
     nsRefPtr<nsFontMetrics> fm;
-    aRenderingContext.DeviceContext()->GetMetricsFor(font,
-      aStyleContext->StyleFont()->mLanguage,
-      aStyleContext->PresContext()->GetUserFontSet(),
-      aStyleContext->PresContext()->GetTextPerfMetrics(),
-      *getter_AddRefs(fm));
+    aPresContext->DeviceContext()->
+      GetMetricsFor(font,
+                    mStyleContext->StyleFont()->mLanguage,
+                    aPresContext->GetUserFontSet(),
+                    aPresContext->GetTextPerfMetrics(),
+                    *getter_AddRefs(fm));
     // Set the font if it is an unicode table
     // or if the same family name has been found
     if (aGlyphTable == &gGlyphTableList->mUnicodeTable ||
         fm->GetThebesFontGroup()->GetFontAt(0)->GetFontEntry()->
         FamilyName() == family) {
       aFont.name = family;
-      aRenderingContext.SetFont(fm);
+      *aFontGroup = fm->GetThebesFontGroup();
     } else {
       return false; // We did not set the font
     }
@@ -940,11 +885,29 @@ SetFontFamily(nsStyleContext*      aStyleContext,
   return true;
 }
 
+static nsBoundingMetrics
+MeasureTextRun(gfxContext* aThebesContext, gfxTextRun* aTextRun)
+{
+  gfxTextRun::Metrics metrics =
+    aTextRun->MeasureText(0, aTextRun->GetLength(),
+                          gfxFont::TIGHT_HINTED_OUTLINE_EXTENTS,
+                          aThebesContext, nullptr);
+
+  nsBoundingMetrics bm;
+  bm.leftBearing = NSToCoordFloor(metrics.mBoundingBox.X());
+  bm.rightBearing = NSToCoordCeil(metrics.mBoundingBox.XMost());
+  bm.ascent = NSToCoordCeil(-metrics.mBoundingBox.Y());
+  bm.descent = NSToCoordCeil(metrics.mBoundingBox.YMost());
+  bm.width = NSToCoordRound(metrics.mAdvanceWidth);
+
+  return bm;
+}
+
 class nsMathMLChar::StretchEnumContext {
 public:
   StretchEnumContext(nsMathMLChar*        aChar,
                      nsPresContext*       aPresContext,
-                     nsRenderingContext& aRenderingContext,
+                     gfxContext*          aThebesContext,
                      nsStretchDirection   aStretchDirection,
                      nscoord              aTargetSize,
                      uint32_t             aStretchHint,
@@ -953,7 +916,7 @@ public:
                      bool&              aGlyphFound)
     : mChar(aChar),
       mPresContext(aPresContext),
-      mRenderingContext(aRenderingContext),
+      mThebesContext(aThebesContext),
       mDirection(aStretchDirection),
       mTargetSize(aTargetSize),
       mStretchHint(aStretchHint),
@@ -972,7 +935,7 @@ private:
 
   nsMathMLChar* mChar;
   nsPresContext* mPresContext;
-  nsRenderingContext& mRenderingContext;
+  gfxContext* mThebesContext;
   const nsStretchDirection mDirection;
   const nscoord mTargetSize;
   const uint32_t mStretchHint;
@@ -986,7 +949,6 @@ public:
 
 private:
   nsAutoTArray<nsGlyphTable*,16> mTablesTried;
-  nsGlyphTable* mGlyphTable; // for this callback
   bool&       mGlyphFound;
 };
 
@@ -1001,7 +963,7 @@ nsMathMLChar::StretchEnumContext::TryVariants(nsGlyphTable*    aGlyphTable,
   // Use our stretchy style context now that stretching is in progress
   nsStyleContext *sc = mChar->mStyleContext;
   nsFont font = sc->StyleFont()->mFont;
-  // Ensure mRenderingContext.SetFont will be called:
+  // Ensure SetFontFamily will set the font
   font.name.Truncate();
 
   bool isVertical = (mDirection == NS_STRETCH_DIRECTION_VERTICAL);
@@ -1023,22 +985,23 @@ nsMathMLChar::StretchEnumContext::TryVariants(nsGlyphTable*    aGlyphTable,
 #endif
 
   nsGlyphCode ch;
-  while ((ch = aGlyphTable->BigOf(mPresContext, mChar, size)).Exists()) {
+  nsRefPtr<gfxFontGroup> fontGroup;
+  while ((ch = aGlyphTable->BigOf(mChar->mData[0], size)).Exists()) {
 
-    if(!SetFontFamily(sc, mRenderingContext, font, aGlyphTable, ch, aFamily)) {
+    if (!mChar->SetFontFamily(mPresContext, aGlyphTable, ch, aFamily, font,
+                              &fontGroup)) {
       // if largeopOnly is set, break now
       if (largeopOnly) break;
       ++size;
       continue;
     }
 
-    NS_ASSERTION(maxWidth || ch.code[0] != mChar->mGlyph.code[0] ||
-                 ch.code[1] != mChar->mGlyph.code[1] ||
-                 !font.name.Equals(mChar->mFamily),
-                 "glyph table incorrectly set -- duplicate found");
+    nsAutoPtr<gfxTextRun> textRun;
+    textRun = aGlyphTable->MakeTextRun(mThebesContext,
+                                       mPresContext->AppUnitsPerDevPixel(),
+                                       fontGroup, ch);
+    nsBoundingMetrics bm = MeasureTextRun(mThebesContext, textRun);
 
-    nsBoundingMetrics bm = mRenderingContext.GetBoundingMetrics(ch.code,
-                                                                ch.Length());
     nscoord charSize =
       isVertical ? bm.ascent + bm.descent
       : bm.rightBearing - bm.leftBearing;
@@ -1062,9 +1025,8 @@ nsMathMLChar::StretchEnumContext::TryVariants(nsGlyphTable*    aGlyphTable,
         mBoundingMetrics = bm;
         haveBetter = true;
         bestSize = charSize;
-        mChar->mGlyphTable = aGlyphTable;
-        mChar->mGlyph = ch;
-        mChar->mFamily = font.name;
+        mChar->mGlyphs[0] = textRun;
+        mChar->mDraw = DRAW_VARIANT;
       }
 #ifdef NOISY_SEARCH
       printf("    size:%d Current best\n", size);
@@ -1095,48 +1057,38 @@ bool
 nsMathMLChar::StretchEnumContext::TryParts(nsGlyphTable*    aGlyphTable,
                                            const nsAString& aFamily)
 {
-  if (!aGlyphTable->HasPartsOf(mPresContext, mChar))
+  if (!aGlyphTable->HasPartsOf(mChar->mData[0]))
     return false; // to next table
 
   // See if the parts of this table fit in the desired space //////////////////
 
   // Use our stretchy style context now that stretching is in progress
   nsFont font = mChar->mStyleContext->StyleFont()->mFont;
-  // Ensure mRenderingContext.SetFont will be called:
+  // Ensure SetFontFamily will set the font
   font.name.Truncate();
 
   // Compute the bounding metrics of all partial glyphs
+  nsAutoPtr<gfxTextRun> textRun[4];
   nsGlyphCode chdata[4];
   nsBoundingMetrics bmdata[4];
   nscoord sizedata[4];
-  nsGlyphCode glue = aGlyphTable->GlueOf(mPresContext, mChar);
 
   bool isVertical = (mDirection == NS_STRETCH_DIRECTION_VERTICAL);
   bool maxWidth = (NS_STRETCH_MAXWIDTH & mStretchHint) != 0;
+  nsRefPtr<gfxFontGroup> fontGroup;
 
   for (int32_t i = 0; i < 4; i++) {
-    nsGlyphCode ch;
-    switch (i) {
-    case 0: ch = aGlyphTable->TopOf(mPresContext, mChar);    break;
-    case 1: ch = aGlyphTable->MiddleOf(mPresContext, mChar); break;
-    case 2: ch = aGlyphTable->BottomOf(mPresContext, mChar); break;
-    case 3: ch = glue;                                       break;
-    }
-    // empty slots are filled with the glue if it is not null
-    if (!ch.Exists()) ch = glue;
+    nsGlyphCode ch = aGlyphTable->ElementAt(mChar->mData[0], i);
     chdata[i] = ch;
-    if (!ch.Exists()) {
-      // Null glue indicates that a rule will be drawn, which can stretch to
-      // fill any space.  Leave bounding metrics at 0.
-      sizedata[i] = mTargetSize;
-    }
-    else {
-      if (!SetFontFamily(mChar->mStyleContext, mRenderingContext,
-                         font, aGlyphTable, ch, aFamily))
+    if (ch.Exists()) {
+      if (!mChar->SetFontFamily(mPresContext, aGlyphTable, ch, aFamily, font,
+                                &fontGroup))
         return false;
 
-      nsBoundingMetrics bm = mRenderingContext.GetBoundingMetrics(ch.code,
-                                                                  ch.Length());
+      textRun[i] = aGlyphTable->MakeTextRun(mThebesContext,
+                                            mPresContext->AppUnitsPerDevPixel(),
+                                            fontGroup, ch);
+      nsBoundingMetrics bm = MeasureTextRun(mThebesContext, textRun[i]);
 
       // TODO: For the generic Unicode table, ideally we should check that the
       // glyphs are actually found and that they each come from the same
@@ -1144,6 +1096,12 @@ nsMathMLChar::StretchEnumContext::TryParts(nsGlyphTable*    aGlyphTable,
       bmdata[i] = bm;
       sizedata[i] = isVertical ? bm.ascent + bm.descent
                                : bm.rightBearing - bm.leftBearing;
+    } else {
+      // Null glue indicates that a rule will be drawn, which can stretch to
+      // fill any space.
+      textRun[i] = nullptr;
+      bmdata[i] = nsBoundingMetrics();
+      sizedata[i] = i == 3 ? mTargetSize : 0;
     }
   }
 
@@ -1173,26 +1131,27 @@ nsMathMLChar::StretchEnumContext::TryParts(nsGlyphTable*    aGlyphTable,
   // now is the time to compute and cache our bounding metrics
   if (isVertical) {
     int32_t i;
-    nscoord lbearing;
-    nscoord rbearing;
-    nscoord width;
+    // Try and find the first existing part and then determine the extremal
+    // horizontal metrics of the parts.
+    for (i = 0; i <= 3 && !textRun[i]; i++);
+    if (i == 4) {
+      NS_ERROR("Cannot stretch - All parts missing");
+      return false;
+    }
+    nscoord lbearing = bmdata[i].leftBearing;
+    nscoord rbearing = bmdata[i].rightBearing;
+    nscoord width = bmdata[i].width;
+    i++;
+    for (; i <= 3; i++) {
+      if (!textRun[i]) continue;
+      lbearing = std::min(lbearing, bmdata[i].leftBearing);
+      rbearing = std::max(rbearing, bmdata[i].rightBearing);
+      width = std::max(width, bmdata[i].width);
+    }
     if (maxWidth) {
-      lbearing = mBoundingMetrics.leftBearing;
-      rbearing = mBoundingMetrics.rightBearing;
-      width = mBoundingMetrics.width;
-      i = 0;
-    }
-    else {
-      lbearing = bmdata[0].leftBearing;
-      rbearing = bmdata[0].rightBearing;
-      width = bmdata[0].width;
-      i = 1;
-    }
-    for (; i < 4; i++) {
-      const nsBoundingMetrics& bm = bmdata[i];
-      if (width < bm.width) width = bm.width;
-      if (lbearing > bm.leftBearing) lbearing = bm.leftBearing;
-      if (rbearing < bm.rightBearing) rbearing = bm.rightBearing;
+      lbearing = std::min(lbearing, mBoundingMetrics.leftBearing);
+      rbearing = std::max(rbearing, mBoundingMetrics.rightBearing);
+      width = std::max(width, mBoundingMetrics.width);
     }
     mBoundingMetrics.width = width;
     // When maxWidth, updating ascent and descent indicates that no characters
@@ -1205,12 +1164,21 @@ nsMathMLChar::StretchEnumContext::TryParts(nsGlyphTable*    aGlyphTable,
     mBoundingMetrics.rightBearing = rbearing;
   }
   else {
-    nscoord ascent = bmdata[0].ascent;
-    nscoord descent = bmdata[0].descent;
-    for (int32_t i = 1; i < 4; i++) {
-      const nsBoundingMetrics& bm = bmdata[i];
-      if (ascent < bm.ascent) ascent = bm.ascent;
-      if (descent < bm.descent) descent = bm.descent;
+    int32_t i;
+    // Try and find the first existing part and then determine the extremal
+    // vertical metrics of the parts.
+    for (i = 0; i <= 3 && !textRun[i]; i++);
+    if (i == 4) {
+      NS_ERROR("Cannot stretch - All parts missing");
+      return false;
+    }
+    nscoord ascent = bmdata[i].ascent;
+    nscoord descent = bmdata[i].descent;
+    i++;
+    for (; i <= 3; i++) {
+      if (!textRun[i]) continue;
+      ascent = std::max(ascent, bmdata[i].ascent);
+      descent = std::max(descent, bmdata[i].descent);
     }
     mBoundingMetrics.width = computedSize;
     mBoundingMetrics.ascent = ascent;
@@ -1223,9 +1191,11 @@ nsMathMLChar::StretchEnumContext::TryParts(nsGlyphTable*    aGlyphTable,
     return false; // Continue to check other sizes
 
   // reset
-  mChar->mGlyph = kNullGlyph; // this will tell paint to build by parts
-  mChar->mGlyphTable = aGlyphTable;
-  mChar->mFamily = aFamily;
+  mChar->mDraw = DRAW_PARTS;
+  for (int32_t i = 0; i < 4; i++) {
+    mChar->mGlyphs[i] = textRun[i];
+    mChar->mBmData[i] = bmdata[i];
+  }
 
   return IsSizeOK(mPresContext, computedSize, mTargetSize, mStretchHint);
 }
@@ -1250,11 +1220,11 @@ nsMathMLChar::StretchEnumContext::EnumCallback(const nsString& aFamily,
   // We test with the kNullGlyph
   nsStyleContext *sc = context->mChar->mStyleContext;
   nsFont font = sc->StyleFont()->mFont;
-  if (!aGeneric && !SetFontFamily(sc, context->mRenderingContext,
-                                  font, nullptr, kNullGlyph, aFamily))
+  nsRefPtr<gfxFontGroup> fontGroup;
+  if (!aGeneric && !context->mChar->SetFontFamily(context->mPresContext,
+                                                  nullptr, kNullGlyph, aFamily,
+                                                  font, &fontGroup))
      return true; // Could not set the family
-
-  context->mGlyphTable = glyphTable;
 
   // Now see if the table has a glyph that matches the container
 
@@ -1276,7 +1246,7 @@ nsMathMLChar::StretchEnumContext::EnumCallback(const nsString& aFamily,
 
 nsresult
 nsMathMLChar::StretchInternal(nsPresContext*           aPresContext,
-                              nsRenderingContext&     aRenderingContext,
+                              gfxContext*              aThebesContext,
                               nsStretchDirection&      aStretchDirection,
                               const nsBoundingMetrics& aContainerSize,
                               nsBoundingMetrics&       aDesiredStretchSize,
@@ -1304,20 +1274,21 @@ nsMathMLChar::StretchInternal(nsPresContext*           aPresContext,
 
   // Don't modify this nsMathMLChar when doing GetMaxWidth()
   bool maxWidth = (NS_STRETCH_MAXWIDTH & aStretchHint) != 0;
-  if (!maxWidth) {
-    // Record the families in case there is no stretch.  But don't bother
-    // storing families when they are just those from the StyleContext.
-    mFamily = families;
-  }
 
   nsRefPtr<nsFontMetrics> fm;
-  aRenderingContext.DeviceContext()->GetMetricsFor(font,
-    mStyleContext->StyleFont()->mLanguage,
-    aPresContext->GetUserFontSet(),
-    aPresContext->GetTextPerfMetrics(), *getter_AddRefs(fm));
-  aRenderingContext.SetFont(fm);
-  aDesiredStretchSize =
-    aRenderingContext.GetBoundingMetrics(mData.get(), uint32_t(mData.Length()));
+  aPresContext->DeviceContext()->
+    GetMetricsFor(font,
+                  mStyleContext->StyleFont()->mLanguage,
+                  aPresContext->GetUserFontSet(),
+                  aPresContext->GetTextPerfMetrics(),
+                  *getter_AddRefs(fm));
+  uint32_t len = uint32_t(mData.Length());
+  nsAutoPtr<gfxTextRun> textRun;
+  textRun = fm->GetThebesFontGroup()->
+    MakeTextRun(mData.get(), len, aThebesContext,
+                aPresContext->AppUnitsPerDevPixel(), 0);
+  aDesiredStretchSize = MeasureTextRun(aThebesContext, textRun);
+  mGlyphs[0] = textRun;
 
   if (!maxWidth) {
     mUnscaledAscent = aDesiredStretchSize.ascent;
@@ -1394,9 +1365,9 @@ nsMathMLChar::StretchInternal(nsPresContext*           aPresContext,
     isVertical ? initialSize.ascent + initialSize.descent
     : initialSize.rightBearing - initialSize.leftBearing;
 
-  bool done = (mGlyphTable ? false : true);
+  bool done = false;
 
-  if (!done && !maxWidth && !largeop) {
+  if (!maxWidth && !largeop) {
     // Doing Stretch() not GetMaxWidth(),
     // and not a largeop in display mode; we're done if size fits
     if ((targetSize <= 0) || 
@@ -1421,7 +1392,7 @@ nsMathMLChar::StretchInternal(nsPresContext*           aPresContext,
   if (!done && GetFontExtensionPref(mData[0], eExtension_variants, families)) {
     font.name = families;
 
-    StretchEnumContext enumData(this, aPresContext, aRenderingContext,
+    StretchEnumContext enumData(this, aPresContext, aThebesContext,
                                 aStretchDirection, targetSize, aStretchHint,
                                 aDesiredStretchSize, font.name, glyphFound);
     enumData.mTryParts = false;
@@ -1434,7 +1405,7 @@ nsMathMLChar::StretchInternal(nsPresContext*           aPresContext,
       && GetFontExtensionPref(mData[0], eExtension_parts, families)) {
     font.name = families;
 
-    StretchEnumContext enumData(this, aPresContext, aRenderingContext,
+    StretchEnumContext enumData(this, aPresContext, aThebesContext,
                                 aStretchDirection, targetSize, aStretchHint,
                                 aDesiredStretchSize, font.name, glyphFound);
     enumData.mTryVariants = false;
@@ -1455,7 +1426,7 @@ nsMathMLChar::StretchInternal(nsPresContext*           aPresContext,
     printf("Searching in "%s" for a glyph of appropriate size for: 0x%04X:%c\n",
            font.name, mData[0], mData[0]&0x00FF);
 #endif
-    StretchEnumContext enumData(this, aPresContext, aRenderingContext,
+    StretchEnumContext enumData(this, aPresContext, aThebesContext,
                                 aStretchDirection, targetSize, aStretchHint,
                                 aDesiredStretchSize, font.name, glyphFound);
     enumData.mTryParts = !largeopOnly;
@@ -1466,7 +1437,6 @@ nsMathMLChar::StretchInternal(nsPresContext*           aPresContext,
   if (!maxWidth) {
     // Now, we know how we are going to draw the char. Update the member
     // variables accordingly.
-    mDrawNormal = !glyphFound;
     mUnscaledAscent = aDesiredStretchSize.ascent;
   }
     
@@ -1557,12 +1527,12 @@ nsMathMLChar::Stretch(nsPresContext*           aPresContext,
                    NS_STRETCH_INTEGRAL)),
                "Unexpected stretch flags");
 
-  mDrawNormal = true;
+  mDraw = DRAW_NORMAL;
   mMirrored = aRTL && nsMathMLOperators::IsMirrorableOperator(mData);
   mScaleY = mScaleX = 1.0;
   mDirection = aStretchDirection;
   nsresult rv =
-    StretchInternal(aPresContext, aRenderingContext, mDirection,
+    StretchInternal(aPresContext, aRenderingContext.ThebesContext(), mDirection,
                     aContainerSize, aDesiredStretchSize, aStretchHint);
 
   // Record the metrics
@@ -1593,8 +1563,8 @@ nsMathMLChar::GetMaxWidth(nsPresContext* aPresContext,
   nsStretchDirection direction = NS_STRETCH_DIRECTION_VERTICAL;
   const nsBoundingMetrics container; // zero target size
 
-  StretchInternal(aPresContext, aRenderingContext, direction, container,
-                  bm, aStretchHint | NS_STRETCH_MAXWIDTH);
+  StretchInternal(aPresContext, aRenderingContext.ThebesContext(), direction,
+                  container, bm, aStretchHint | NS_STRETCH_MAXWIDTH);
 
   return std::max(bm.width, bm.rightBearing) - std::min(0, bm.leftBearing);
 }
@@ -1780,7 +1750,7 @@ nsMathMLChar::Display(nsDisplayListBuilder*   aBuilder,
   nsStyleContext* parentContext = mStyleContext->GetParent();
   nsStyleContext* styleContext = mStyleContext;
 
-  if (mDrawNormal) {
+  if (mDraw == DRAW_NORMAL) {
     // normal drawing if there is nothing special about this char
     // Set default context to the parent context
     styleContext = parentContext;
@@ -1822,15 +1792,23 @@ nsMathMLChar::Display(nsDisplayListBuilder*   aBuilder,
 }
 
 void
-nsMathMLChar::ApplyTransforms(nsRenderingContext& aRenderingContext, nsRect &r)
+nsMathMLChar::ApplyTransforms(gfxContext* aThebesContext,
+                              int32_t aAppUnitsPerGfxUnit,
+                              nsRect &r)
 {
   // apply the transforms
   if (mMirrored) {
-    aRenderingContext.Translate(r.TopRight());
-    aRenderingContext.Scale(-mScaleX, mScaleY);
+    nsPoint pt = r.TopRight();
+    aThebesContext->
+      Translate(gfxPoint(NSAppUnitsToFloatPixels(pt.x, aAppUnitsPerGfxUnit),
+                         NSAppUnitsToFloatPixels(pt.y, aAppUnitsPerGfxUnit)));
+    aThebesContext->Scale(-mScaleX, mScaleY);
   } else {
-    aRenderingContext.Translate(r.TopLeft());
-    aRenderingContext.Scale(mScaleX, mScaleY);
+    nsPoint pt = r.TopLeft();
+    aThebesContext->
+      Translate(gfxPoint(NSAppUnitsToFloatPixels(pt.x, aAppUnitsPerGfxUnit),
+                         NSAppUnitsToFloatPixels(pt.y, aAppUnitsPerGfxUnit)));
+    aThebesContext->Scale(mScaleX, mScaleY);
   }
 
   // update the bounding rectangle.
@@ -1848,11 +1826,13 @@ nsMathMLChar::PaintForeground(nsPresContext* aPresContext,
   nsStyleContext* parentContext = mStyleContext->GetParent();
   nsStyleContext* styleContext = mStyleContext;
 
-  if (mDrawNormal) {
+  if (mDraw == DRAW_NORMAL) {
     // normal drawing if there is nothing special about this char
     // Set default context to the parent context
     styleContext = parentContext;
   }
+
+  nsRefPtr<gfxContext> thebesContext = aRenderingContext.ThebesContext();
 
   // Set color ...
   nscolor fgColor = styleContext->GetVisitedDependentColor(eCSSProperty_color);
@@ -1861,47 +1841,34 @@ nsMathMLChar::PaintForeground(nsPresContext* aPresContext,
     fgColor = LookAndFeel::GetColor(LookAndFeel::eColorID_TextSelectForeground,
                                     fgColor);
   }
-  aRenderingContext.SetColor(fgColor);
-
-  nsFont theFont(styleContext->StyleFont()->mFont);
-  if (! mFamily.IsEmpty()) {
-    theFont.name = mFamily;
-  }
-  nsRefPtr<nsFontMetrics> fm;
-  aRenderingContext.DeviceContext()->GetMetricsFor(theFont,
-    styleContext->StyleFont()->mLanguage,
-    aPresContext->GetUserFontSet(), aPresContext->GetTextPerfMetrics(),
-    *getter_AddRefs(fm));
-  aRenderingContext.SetFont(fm);
-
-  aRenderingContext.PushState();
+  thebesContext->SetColor(fgColor);
+  thebesContext->Save();
   nsRect r = mRect + aPt;
-  ApplyTransforms(aRenderingContext, r);
+  ApplyTransforms(thebesContext, aPresContext->AppUnitsPerDevPixel(), r);
 
-  if (mDrawNormal) {
-    // normal drawing if there is nothing special about this char ...
-    // Grab some metrics to adjust the placements ...
-    uint32_t len = uint32_t(mData.Length());
-    aRenderingContext.DrawString(mData.get(), len, 0, mUnscaledAscent);
-  }
-  else {
-    // Grab some metrics to adjust the placements ...
-    // if there is a glyph of appropriate size, paint that glyph
-    if (mGlyph.Exists()) {
-      aRenderingContext.DrawString(mGlyph.code, mGlyph.Length(),
-                                   0, mUnscaledAscent);
-    }
-    else { // paint by parts
+  switch(mDraw)
+  {
+    case DRAW_NORMAL:
+    case DRAW_VARIANT:
+      // draw a single glyph (base size or size variant)
+      mGlyphs[0]->Draw(thebesContext, gfxPoint(0.0, mUnscaledAscent),
+                       DrawMode::GLYPH_FILL, 0, mGlyphs[0]->GetLength(),
+                       nullptr, nullptr, nullptr);
+      break;
+    case DRAW_PARTS: {
+      // paint by parts
       if (NS_STRETCH_DIRECTION_VERTICAL == mDirection)
-        PaintVertically(aPresContext, aRenderingContext, theFont, styleContext,
-                        mGlyphTable, r);
+        PaintVertically(aPresContext, thebesContext, r);
       else if (NS_STRETCH_DIRECTION_HORIZONTAL == mDirection)
-        PaintHorizontally(aPresContext, aRenderingContext, theFont,
-                          styleContext, mGlyphTable, r);
+        PaintHorizontally(aPresContext, thebesContext, r);
+      break;
     }
+    default:
+      NS_NOTREACHED("Unknown drawing method");
+      break;
   }
 
-  aRenderingContext.PopState();
+  thebesContext->Restore();
 }
 
 /* =============================================================================
@@ -1909,15 +1876,19 @@ nsMathMLChar::PaintForeground(nsPresContext* aPresContext,
  */
 
 class AutoPushClipRect {
-  nsRenderingContext& mCtx;
+  gfxContext* mThebesContext;
 public:
-  AutoPushClipRect(nsRenderingContext& aCtx, const nsRect& aRect)
-    : mCtx(aCtx) {
-    mCtx.PushState();
-    mCtx.IntersectClip(aRect);
+  AutoPushClipRect(gfxContext* aThebesContext, int32_t aAppUnitsPerGfxUnit,
+                   const nsRect& aRect)
+    : mThebesContext(aThebesContext) {
+    mThebesContext->Save();
+    mThebesContext->NewPath();
+    gfxRect clip = nsLayoutUtils::RectToGfxRect(aRect, aAppUnitsPerGfxUnit);
+    mThebesContext->SnappedRectangle(clip);
+    mThebesContext->Clip();
   }
   ~AutoPushClipRect() {
-    mCtx.PopState();
+    mThebesContext->Restore();
   }
 };
 
@@ -1934,14 +1905,22 @@ SnapToDevPixels(const gfxContext* aThebesContext, int32_t aAppUnitsPerGfxUnit,
                  NSFloatPixelsToAppUnits(pt.y, aAppUnitsPerGfxUnit));
 }
 
+static void
+PaintRule(gfxContext* aThebesContext,
+          int32_t     aAppUnitsPerGfxUnit,
+          nsRect&     aRect)
+{
+  aThebesContext->NewPath();
+  gfxRect rect = nsLayoutUtils::RectToGfxRect(aRect, aAppUnitsPerGfxUnit);
+  aThebesContext->SnappedRectangle(rect);
+  aThebesContext->Fill();
+}
+
 // paint a stretchy char by assembling glyphs vertically
 nsresult
-nsMathMLChar::PaintVertically(nsPresContext*      aPresContext,
-                              nsRenderingContext& aRenderingContext,
-                              nsFont&              aFont,
-                              nsStyleContext*      aStyleContext,
-                              nsGlyphTable*        aGlyphTable,
-                              nsRect&              aRect)
+nsMathMLChar::PaintVertically(nsPresContext* aPresContext,
+                              gfxContext*    aThebesContext,
+                              nsRect&        aRect)
 {
   // Get the device pixel size in the vertical direction.
   // (This makes no effort to optimize for non-translation transformations.)
@@ -1949,51 +1928,15 @@ nsMathMLChar::PaintVertically(nsPresContext*      aPresContext,
 
   // get metrics data to be re-used later
   int32_t i = 0;
-  nsGlyphCode ch, chdata[4];
-  nsBoundingMetrics bmdata[4];
-  int32_t glue, bottom;
-  nsGlyphCode chGlue = aGlyphTable->GlueOf(aPresContext, this);
-  for (int32_t j = 0; j < 4; ++j) {
-    switch (j) {
-      case 0:
-        ch = aGlyphTable->TopOf(aPresContext, this);
-        break;
-      case 1:
-        ch = aGlyphTable->MiddleOf(aPresContext, this);
-        if (!ch.Exists())
-          continue; // no middle
-        break;
-      case 2:
-        ch = aGlyphTable->BottomOf(aPresContext, this);
-        bottom = i;
-        break;
-      case 3:
-        ch = chGlue;
-        glue = i;
-        break;
-    }
-    // empty slots are filled with the glue if it is not null
-    if (!ch.Exists()) ch = chGlue;
-    // if (!ch.Exists()) glue is null, leave bounding metrics at 0
-    if (ch.Exists()) {
-      SetFontFamily(aStyleContext, aRenderingContext,
-                    aFont, aGlyphTable, ch, mFamily);
-      bmdata[i] = aRenderingContext.GetBoundingMetrics(ch.code, ch.Length());
-    }
-    chdata[i] = ch;
-    ++i;
-  }
   nscoord dx = aRect.x;
   nscoord offset[3], start[3], end[3];
-  nsRefPtr<gfxContext> ctx = aRenderingContext.ThebesContext();
-  for (i = 0; i <= bottom; ++i) {
-    ch = chdata[i];
-    const nsBoundingMetrics& bm = bmdata[i];
+  for (i = 0; i <= 2; ++i) {
+    const nsBoundingMetrics& bm = mBmData[i];
     nscoord dy;
     if (0 == i) { // top
       dy = aRect.y + bm.ascent;
     }
-    else if (bottom == i) { // bottom
+    else if (2 == i) { // bottom
       dy = aRect.y + aRect.height - bm.descent;
     }
     else { // middle
@@ -2002,18 +1945,25 @@ nsMathMLChar::PaintVertically(nsPresContext*      aPresContext,
     // _cairo_scaled_font_show_glyphs snaps origins to device pixels.
     // Do this now so that we can get the other dimensions right.
     // (This may not achieve much with non-rectangular transformations.)
-    dy = SnapToDevPixels(ctx, oneDevPixel, nsPoint(dx, dy)).y;
-    // abcissa passed to DrawString
+    dy = SnapToDevPixels(aThebesContext, oneDevPixel, nsPoint(dx, dy)).y;
+    // abcissa passed to Draw
     offset[i] = dy;
     // _cairo_scaled_font_glyph_device_extents rounds outwards to the nearest
     // pixel, so the bm values can include 1 row of faint pixels on each edge.
     // Don't rely on this pixel as it can look like a gap.
-    start[i] = dy - bm.ascent + oneDevPixel; // top join
-    end[i] = dy + bm.descent - oneDevPixel; // bottom join
+    if (bm.ascent + bm.descent >= 2 * oneDevPixel) {
+      start[i] = dy - bm.ascent + oneDevPixel; // top join
+      end[i] = dy + bm.descent - oneDevPixel; // bottom join
+    } else {
+      // To avoid overlaps, we don't add one pixel on each side when the part
+      // is too small.
+      start[i] = dy - bm.ascent; // top join
+      end[i] = dy + bm.descent; // bottom join
+    }
   }
 
   // If there are overlaps, then join at the mid point
-  for (i = 0; i < bottom; ++i) {
+  for (i = 0; i < 2; ++i) {
     if (end[i] > start[i+1]) {
       end[i] = (end[i] + start[i+1]) / 2;
       start[i+1] = end[i];
@@ -2028,10 +1978,9 @@ nsMathMLChar::PaintVertically(nsPresContext*      aPresContext,
 
   /////////////////////////////////////
   // draw top, middle, bottom
-  for (i = 0; i <= bottom; ++i) {
-    ch = chdata[i];
-    // glue can be null, and other parts could have been set to glue
-    if (ch.Exists()) {
+  for (i = 0; i <= 2; ++i) {
+    // glue can be null
+    if (mGlyphs[i]) {
       nscoord dy = offset[i];
       // Draw a glyph in a clipped area so that we don't have hairy chars
       // pending outside
@@ -2039,13 +1988,12 @@ nsMathMLChar::PaintVertically(nsPresContext*      aPresContext,
       // Clip at the join to get a solid edge (without overlap or gap), when
       // this won't change the glyph too much.  If the glyph is too small to
       // clip then we'll overlap rather than have a gap.
-      nscoord height = bmdata[i].ascent + bmdata[i].descent;
-      if (ch == chGlue ||
-          height * (1.0 - NS_MATHML_DELIMITER_FACTOR) > oneDevPixel) {
+      nscoord height = mBmData[i].ascent + mBmData[i].descent;
+      if (height * (1.0 - NS_MATHML_DELIMITER_FACTOR) > oneDevPixel) {
         if (0 == i) { // top
           clipRect.height = end[i] - clipRect.y;
         }
-        else if (bottom == i) { // bottom
+        else if (2 == i) { // bottom
           clipRect.height -= start[i] - clipRect.y;
           clipRect.y = start[i];
         }
@@ -2055,17 +2003,17 @@ nsMathMLChar::PaintVertically(nsPresContext*      aPresContext,
         }
       }
       if (!clipRect.IsEmpty()) {
-        AutoPushClipRect clip(aRenderingContext, clipRect);
-        SetFontFamily(aStyleContext, aRenderingContext,
-                      aFont, aGlyphTable, ch, mFamily);
-        aRenderingContext.DrawString(ch.code, ch.Length(), dx, dy);
+        AutoPushClipRect clip(aThebesContext, oneDevPixel, clipRect);
+        mGlyphs[i]->Draw(aThebesContext, gfxPoint(dx, dy),
+                         DrawMode::GLYPH_FILL, 0, mGlyphs[i]->GetLength(),
+                         nullptr, nullptr, nullptr);
       }
     }
   }
 
   ///////////////
   // fill the gap between top and middle, and between middle and bottom.
-  if (!chGlue.Exists()) { // null glue : draw a rule
+  if (!mGlyphs[3]) { // null glue : draw a rule
     // figure out the dimensions of the rule to be drawn :
     // set lbearing to rightmost lbearing among the two current successive
     // parts.
@@ -2075,20 +2023,20 @@ nsMathMLChar::PaintVertically(nsPresContext*      aPresContext,
     // in Symbol for small font sizes in unix.
     nscoord lbearing, rbearing;
     int32_t first = 0, last = 1;
-    while (last <= bottom) {
-      if (chdata[last].Exists()) {
-        lbearing = bmdata[last].leftBearing;
-        rbearing = bmdata[last].rightBearing;
-        if (chdata[first].Exists()) {
-          if (lbearing < bmdata[first].leftBearing)
-            lbearing = bmdata[first].leftBearing;
-          if (rbearing > bmdata[first].rightBearing)
-            rbearing = bmdata[first].rightBearing;
+    while (last <= 2) {
+      if (mGlyphs[last]) {
+        lbearing = mBmData[last].leftBearing;
+        rbearing = mBmData[last].rightBearing;
+        if (mGlyphs[first]) {
+          if (lbearing < mBmData[first].leftBearing)
+            lbearing = mBmData[first].leftBearing;
+          if (rbearing > mBmData[first].rightBearing)
+            rbearing = mBmData[first].rightBearing;
         }
       }
-      else if (chdata[first].Exists()) {
-        lbearing = bmdata[first].leftBearing;
-        rbearing = bmdata[first].rightBearing;
+      else if (mGlyphs[first]) {
+        lbearing = mBmData[first].leftBearing;
+        rbearing = mBmData[first].rightBearing;
       }
       else {
         NS_ERROR("Cannot stretch - All parts missing");
@@ -2097,15 +2045,14 @@ nsMathMLChar::PaintVertically(nsPresContext*      aPresContext,
       // paint the rule between the parts
       nsRect rule(aRect.x + lbearing, end[first],
                   rbearing - lbearing, start[last] - end[first]);
-      if (!rule.IsEmpty())
-        aRenderingContext.FillRect(rule);
+      PaintRule(aThebesContext, oneDevPixel, rule);
       first = last;
       last++;
     }
   }
-  else if (bmdata[glue].ascent + bmdata[glue].descent > 0) {
+  else if (mBmData[3].ascent + mBmData[3].descent > 0) {
     // glue is present
-    nsBoundingMetrics& bm = bmdata[glue];
+    nsBoundingMetrics& bm = mBmData[3];
     // Ensure the stride for the glue is not reduced to less than one pixel
     if (bm.ascent + bm.descent >= 3 * oneDevPixel) {
       // To protect against gaps, pretend the glue is smaller than it is,
@@ -2114,27 +2061,27 @@ nsMathMLChar::PaintVertically(nsPresContext*      aPresContext,
       bm.descent -= oneDevPixel;
     }
 
-    SetFontFamily(aStyleContext, aRenderingContext,
-                  aFont, aGlyphTable, chGlue, mFamily);
     nsRect clipRect = unionRect;
 
-    for (i = 0; i < bottom; ++i) {
+    for (i = 0; i < 2; ++i) {
       // Make sure not to draw outside the character
       nscoord dy = std::max(end[i], aRect.y);
       nscoord fillEnd = std::min(start[i+1], aRect.YMost());
       while (dy < fillEnd) {
         clipRect.y = dy;
         clipRect.height = std::min(bm.ascent + bm.descent, fillEnd - dy);
-        AutoPushClipRect clip(aRenderingContext, clipRect);
+        AutoPushClipRect clip(aThebesContext, oneDevPixel, clipRect);
         dy += bm.ascent;
-        aRenderingContext.DrawString(chGlue.code, chGlue.Length(), dx, dy);
+        mGlyphs[3]->Draw(aThebesContext, gfxPoint(dx, dy),
+                            DrawMode::GLYPH_FILL, 0, mGlyphs[3]->GetLength(),
+                            nullptr, nullptr, nullptr);
         dy += bm.descent;
       }
     }
   }
 #ifdef DEBUG
   else {
-    for (i = 0; i < bottom; ++i) {
+    for (i = 0; i < 2; ++i) {
       NS_ASSERTION(end[i] >= start[i+1],
                    "gap between parts with missing glue glyph");
     }
@@ -2145,12 +2092,9 @@ nsMathMLChar::PaintVertically(nsPresContext*      aPresContext,
 
 // paint a stretchy char by assembling glyphs horizontally
 nsresult
-nsMathMLChar::PaintHorizontally(nsPresContext*      aPresContext,
-                                nsRenderingContext& aRenderingContext,
-                                nsFont&              aFont,
-                                nsStyleContext*      aStyleContext,
-                                nsGlyphTable*        aGlyphTable,
-                                nsRect&              aRect)
+nsMathMLChar::PaintHorizontally(nsPresContext* aPresContext,
+                                gfxContext*    aThebesContext,
+                                nsRect&        aRect)
 {
   // Get the device pixel size in the horizontal direction.
   // (This makes no effort to optimize for non-translation transformations.)
@@ -2158,51 +2102,15 @@ nsMathMLChar::PaintHorizontally(nsPresContext*      aPresContext,
 
   // get metrics data to be re-used later
   int32_t i = 0;
-  nsGlyphCode ch, chdata[4];
-  nsBoundingMetrics bmdata[4];
-  int32_t glue, right;
-  nsGlyphCode chGlue = aGlyphTable->GlueOf(aPresContext, this);
-  for (int32_t j = 0; j < 4; ++j) {
-    switch (j) {
-      case 0:
-        ch = aGlyphTable->LeftOf(aPresContext, this);
-        break;
-      case 1:
-        ch = aGlyphTable->MiddleOf(aPresContext, this);
-        if (!ch.Exists())
-          continue; // no middle
-        break;
-      case 2:
-        ch = aGlyphTable->RightOf(aPresContext, this);
-        right = i;
-        break;
-      case 3:
-        ch = chGlue;
-        glue = i;
-        break;
-    }
-    // empty slots are filled with the glue if it is not null
-    if (!ch.Exists()) ch = chGlue;
-    // if (!ch.Exists()) glue is null, leave bounding metrics at 0.
-    if (ch.Exists()) {
-      SetFontFamily(aStyleContext, aRenderingContext,
-                    aFont, aGlyphTable, ch, mFamily);
-      bmdata[i] = aRenderingContext.GetBoundingMetrics(ch.code, ch.Length());
-    }
-    chdata[i] = ch;
-    ++i;
-  }
   nscoord dy = aRect.y + mBoundingMetrics.ascent;
   nscoord offset[3], start[3], end[3];
-  nsRefPtr<gfxContext> ctx = aRenderingContext.ThebesContext();
-  for (i = 0; i <= right; ++i) {
-    ch = chdata[i];
-    const nsBoundingMetrics& bm = bmdata[i];
+  for (i = 0; i <= 2; ++i) {
+    const nsBoundingMetrics& bm = mBmData[i];
     nscoord dx;
     if (0 == i) { // left
       dx = aRect.x - bm.leftBearing;
     }
-    else if (right == i) { // right
+    else if (2 == i) { // right
       dx = aRect.x + aRect.width - bm.rightBearing;
     }
     else { // middle
@@ -2211,18 +2119,25 @@ nsMathMLChar::PaintHorizontally(nsPresContext*      aPresContext,
     // _cairo_scaled_font_show_glyphs snaps origins to device pixels.
     // Do this now so that we can get the other dimensions right.
     // (This may not achieve much with non-rectangular transformations.)
-    dx = SnapToDevPixels(ctx, oneDevPixel, nsPoint(dx, dy)).x;
-    // abcissa passed to DrawString
+    dx = SnapToDevPixels(aThebesContext, oneDevPixel, nsPoint(dx, dy)).x;
+    // abcissa passed to Draw
     offset[i] = dx;
     // _cairo_scaled_font_glyph_device_extents rounds outwards to the nearest
     // pixel, so the bm values can include 1 row of faint pixels on each edge.
     // Don't rely on this pixel as it can look like a gap.
-    start[i] = dx + bm.leftBearing + oneDevPixel; // left join
-    end[i] = dx + bm.rightBearing - oneDevPixel; // right join
+    if (bm.rightBearing - bm.leftBearing >= 2 * oneDevPixel) { 
+      start[i] = dx + bm.leftBearing + oneDevPixel; // left join
+      end[i] = dx + bm.rightBearing - oneDevPixel; // right join
+    } else {
+      // To avoid overlaps, we don't add one pixel on each side when the part
+      // is too small.
+      start[i] = dx + bm.leftBearing; // left join
+      end[i] = dx + bm.rightBearing; // right join
+    }
   }
 
   // If there are overlaps, then join at the mid point
-  for (i = 0; i < right; ++i) {
+  for (i = 0; i < 2; ++i) {
     if (end[i] > start[i+1]) {
       end[i] = (end[i] + start[i+1]) / 2;
       start[i+1] = end[i];
@@ -2234,22 +2149,20 @@ nsMathMLChar::PaintHorizontally(nsPresContext*      aPresContext,
 
   ///////////////////////////
   // draw left, middle, right
-  for (i = 0; i <= right; ++i) {
-    ch = chdata[i];
-    // glue can be null, and other parts could have been set to glue
-    if (ch.Exists()) {
+  for (i = 0; i <= 2; ++i) {
+    // glue can be null
+    if (mGlyphs[i]) {
       nscoord dx = offset[i];
       nsRect clipRect = unionRect;
       // Clip at the join to get a solid edge (without overlap or gap), when
       // this won't change the glyph too much.  If the glyph is too small to
       // clip then we'll overlap rather than have a gap.
-      nscoord width = bmdata[i].rightBearing - bmdata[i].leftBearing;
-      if (ch == chGlue ||
-          width * (1.0 - NS_MATHML_DELIMITER_FACTOR) > oneDevPixel) {
+      nscoord width = mBmData[i].rightBearing - mBmData[i].leftBearing;
+      if (width * (1.0 - NS_MATHML_DELIMITER_FACTOR) > oneDevPixel) {
         if (0 == i) { // left
           clipRect.width = end[i] - clipRect.x;
         }
-        else if (right == i) { // right
+        else if (2 == i) { // right
           clipRect.width -= start[i] - clipRect.x;
           clipRect.x = start[i];
         }
@@ -2259,17 +2172,17 @@ nsMathMLChar::PaintHorizontally(nsPresContext*      aPresContext,
         }
       }
       if (!clipRect.IsEmpty()) {
-        AutoPushClipRect clip(aRenderingContext, clipRect);
-        SetFontFamily(aStyleContext, aRenderingContext,
-                      aFont, aGlyphTable, ch, mFamily);
-        aRenderingContext.DrawString(ch.code, ch.Length(), dx, dy);
+        AutoPushClipRect clip(aThebesContext, oneDevPixel, clipRect);
+        mGlyphs[i]->Draw(aThebesContext, gfxPoint(dx, dy),
+                         DrawMode::GLYPH_FILL, 0, mGlyphs[i]->GetLength(),
+                         nullptr, nullptr, nullptr);
       }
     }
   }
 
   ////////////////
   // fill the gap between left and middle, and between middle and right.
-  if (!chGlue.Exists()) { // null glue : draw a rule
+  if (!mGlyphs[3]) { // null glue : draw a rule
     // figure out the dimensions of the rule to be drawn :
     // set ascent to lowest ascent among the two current successive parts.
     // set descent to highest descent among the two current successive parts.
@@ -2277,20 +2190,20 @@ nsMathMLChar::PaintHorizontally(nsPresContext*      aPresContext,
     // fix broken fonts.
     nscoord ascent, descent;
     int32_t first = 0, last = 1;
-    while (last <= right) {
-      if (chdata[last].Exists()) {
-        ascent = bmdata[last].ascent;
-        descent = bmdata[last].descent;
-        if (chdata[first].Exists()) {
-          if (ascent > bmdata[first].ascent)
-            ascent = bmdata[first].ascent;
-          if (descent > bmdata[first].descent)
-            descent = bmdata[first].descent;
+    while (last <= 2) {
+      if (mGlyphs[last]) {
+        ascent = mBmData[last].ascent;
+        descent = mBmData[last].descent;
+        if (mGlyphs[first]) {
+          if (ascent > mBmData[first].ascent)
+            ascent = mBmData[first].ascent;
+          if (descent > mBmData[first].descent)
+            descent = mBmData[first].descent;
         }
       }
-      else if (chdata[first].Exists()) {
-        ascent = bmdata[first].ascent;
-        descent = bmdata[first].descent;
+      else if (mGlyphs[first]) {
+        ascent = mBmData[first].ascent;
+        descent = mBmData[first].descent;
       }
       else {
         NS_ERROR("Cannot stretch - All parts missing");
@@ -2299,15 +2212,14 @@ nsMathMLChar::PaintHorizontally(nsPresContext*      aPresContext,
       // paint the rule between the parts
       nsRect rule(end[first], dy - ascent,
                   start[last] - end[first], ascent + descent);
-      if (!rule.IsEmpty())
-        aRenderingContext.FillRect(rule);
+      PaintRule(aThebesContext, oneDevPixel, rule);
       first = last;
       last++;
     }
   }
-  else if (bmdata[glue].rightBearing - bmdata[glue].leftBearing > 0) {
+  else if (mBmData[3].rightBearing - mBmData[3].leftBearing > 0) {
     // glue is present
-    nsBoundingMetrics& bm = bmdata[glue];
+    nsBoundingMetrics& bm = mBmData[3];
     // Ensure the stride for the glue is not reduced to less than one pixel
     if (bm.rightBearing - bm.leftBearing >= 3 * oneDevPixel) {
       // To protect against gaps, pretend the glue is smaller than it is,
@@ -2316,27 +2228,27 @@ nsMathMLChar::PaintHorizontally(nsPresContext*      aPresContext,
       bm.rightBearing -= oneDevPixel;
     }
 
-    SetFontFamily(aStyleContext, aRenderingContext,
-                  aFont, aGlyphTable, chGlue, mFamily);
     nsRect clipRect = unionRect;
 
-    for (i = 0; i < right; ++i) {
+    for (i = 0; i < 2; ++i) {
       // Make sure not to draw outside the character
       nscoord dx = std::max(end[i], aRect.x);
       nscoord fillEnd = std::min(start[i+1], aRect.XMost());
       while (dx < fillEnd) {
         clipRect.x = dx;
         clipRect.width = std::min(bm.rightBearing - bm.leftBearing, fillEnd - dx);
-        AutoPushClipRect clip(aRenderingContext, clipRect);
+        AutoPushClipRect clip(aThebesContext, oneDevPixel, clipRect);
         dx -= bm.leftBearing;
-        aRenderingContext.DrawString(chGlue.code, chGlue.Length(), dx, dy);
+        mGlyphs[3]->Draw(aThebesContext, gfxPoint(dx, dy),
+                            DrawMode::GLYPH_FILL, 0, mGlyphs[3]->GetLength(),
+                            nullptr, nullptr, nullptr);
         dx += bm.rightBearing;
       }
     }
   }
 #ifdef DEBUG
   else { // no glue
-    for (i = 0; i < right; ++i) {
+    for (i = 0; i < 2; ++i) {
       NS_ASSERTION(end[i] >= start[i+1],
                    "gap between parts with missing glue glyph");
     }
