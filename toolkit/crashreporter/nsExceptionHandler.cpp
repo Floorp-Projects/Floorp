@@ -221,6 +221,10 @@ static const char kIsGarbageCollectingParameter[] = "IsGarbageCollecting=";
 static const int kIsGarbageCollectingParameterLen =
   sizeof(kIsGarbageCollectingParameter)-1;
 
+static const char kEventLoopNestingLevelParameter[] = "EventLoopNestingLevel=";
+static const int kEventLoopNestingLevelParameterLen =
+  sizeof(kEventLoopNestingLevelParameter)-1;
+
 #ifdef XP_WIN
 static const char kBreakpadReserveAddressParameter[] = "BreakpadReserveAddress=";
 static const int kBreakpadReserveAddressParameterLen =
@@ -238,6 +242,7 @@ static AnnotationTable* crashReporterAPIData_Hash;
 static nsCString* crashReporterAPIData = nullptr;
 static nsCString* notesField = nullptr;
 static bool isGarbageCollecting;
+static uint32_t eventloopNestingLevel = 0;
 
 // Avoid a race during application termination.
 static Mutex* dumpSafetyLock;
@@ -583,6 +588,14 @@ bool MinidumpCallback(
       char buffer[128];
       int bufferLen;
 
+      if (eventloopNestingLevel > 0) {
+        WriteFile(hFile, kEventLoopNestingLevelParameter, kEventLoopNestingLevelParameterLen,
+                  &nBytes, nullptr);
+        _ultoa(eventloopNestingLevel, buffer, 10);
+        WriteFile(hFile, buffer, strlen(buffer), &nBytes, nullptr);
+        WriteFile(hFile, "\n", 1, &nBytes, nullptr);
+      }
+
       if (gBreakpadReservedVM) {
         WriteFile(hFile, kBreakpadReserveAddressParameter, kBreakpadReserveAddressParameterLen, &nBytes, nullptr);
         _ui64toa(uintptr_t(gBreakpadReservedVM), buffer, 10);
@@ -683,6 +696,13 @@ bool MinidumpCallback(
       if (isGarbageCollecting) {
         unused << sys_write(fd, kIsGarbageCollectingParameter, kIsGarbageCollectingParameterLen);
         unused << sys_write(fd, isGarbageCollecting ? "1" : "0", 1);
+        unused << sys_write(fd, "\n", 1);
+      }
+      if (eventloopNestingLevel > 0) {
+        unused << sys_write(fd, kEventLoopNestingLevelParameter, kEventLoopNestingLevelParameterLen);
+        char buffer[16];
+        XP_TTOA(eventloopNestingLevel, buffer, 10);
+        unused << sys_write(fd, buffer, my_strlen(buffer));
         unused << sys_write(fd, "\n", 1);
       }
       if (oomAllocationSizeBufferLen) {
@@ -1578,6 +1598,11 @@ nsresult SetGarbageCollecting(bool collecting)
   isGarbageCollecting = collecting;
 
   return NS_OK;
+}
+
+void SetEventloopNestingLevel(uint32_t level)
+{
+  eventloopNestingLevel = level;
 }
 
 nsresult AppendAppNotesToCrashReport(const nsACString& data)
