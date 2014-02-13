@@ -4659,6 +4659,11 @@
     "n_values": 8,
     "description": "For non-stapling cases, is OCSP fetching a possibility? (0=yes, 1=no because missing/invalid OCSP URI, 2=no because fetching disabled, 3=no because both)"
   },
+  "SSL_CERT_ERROR_OVERRIDES": {
+    "kind": "enumerated",
+    "n_values": 24,
+    "description": "Was a certificate error overridden on this handshake? What was it? (0=unknown error (indicating bug), 1=no, >1=a specific error)"
+  },
   "CERT_OCSP_ENABLED": {
     "kind": "boolean",
     "description": "Is OCSP fetching enabled? (pref security.OCSP.enabled)"
