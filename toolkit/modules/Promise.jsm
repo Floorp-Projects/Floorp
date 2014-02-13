@@ -292,115 +292,237 @@ const ERRORS_TO_REPORT = ["EvalError", "RangeError", "ReferenceError", "TypeErro
 //// Promise
 
 /**
- * This object provides the public module functions.
+ * The Promise constructor. Creates a new promise given an executor callback.
+ * The executor callback is called with the resolve and reject handlers.
+ *
+ * @param aExecutor
+ *        The callback that will be called with resolve and reject.
  */
-this.Promise = Object.freeze({
-  /**
-   * Creates a new pending promise and provides methods to resolve or reject it.
-   *
-   * @return A new object, containing the new promise in the "promise" property,
-   *         and the methods to change its state in the "resolve" and "reject"
-   *         properties.  See the Deferred documentation for details.
-   */
-  defer: function ()
-  {
-    return new Deferred();
-  },
+this.Promise = function Promise(aExecutor)
+{
+  if (typeof(aExecutor) != "function") {
+    throw new TypeError("Promise constructor must be called with an executor.");
+  }
 
-  /**
-   * Creates a new promise resolved with the specified value, or propagates the
-   * state of an existing promise.
-   *
-   * @param aValue
-   *        If this value is not a promise, including "undefined", it becomes
-   *        the resolution value of the returned promise.  If this value is a
-   *        promise, then the returned promise will eventually assume the same
-   *        state as the provided promise.
-   *
-   * @return A promise that can be pending, resolved, or rejected.
+  /*
+   * Internal status of the promise.  This can be equal to STATUS_PENDING,
+   * STATUS_RESOLVED, or STATUS_REJECTED.
    */
-  resolve: function (aValue)
-  {
-    let promise = new PromiseImpl();
-    PromiseWalker.completePromise(promise, STATUS_RESOLVED, aValue);
-    return promise;
-  },
+  Object.defineProperty(this, N_STATUS, { value: STATUS_PENDING,
+                                          writable: true });
+
+  /*
+   * When the N_STATUS property is STATUS_RESOLVED, this contains the final
+   * resolution value, that cannot be a promise, because resolving with a
+   * promise will cause its state to be eventually propagated instead.  When the
+   * N_STATUS property is STATUS_REJECTED, this contains the final rejection
+   * reason, that could be a promise, even if this is uncommon.
+   */
+  Object.defineProperty(this, N_VALUE, { writable: true });
+
+  /*
+   * Array of Handler objects registered by the "then" method, and not processed
+   * yet.  Handlers are removed when the promise is resolved or rejected.
+   */
+  Object.defineProperty(this, N_HANDLERS, { value: [] });
 
   /**
-   * Creates a new promise rejected with the specified reason.
-   *
-   * @param aReason
-   *        The rejection reason for the returned promise.  Although the reason
-   *        can be "undefined", it is generally an Error object, like in
-   *        exception handling.
-   *
-   * @return A rejected promise.
-   *
-   * @note The aReason argument should not be a promise.  Using a rejected
-   *       promise for the value of aReason would make the rejection reason
-   *       equal to the rejected promise itself, and not its rejection reason.
+   * When the N_STATUS property is STATUS_REJECTED and until there is
+   * a rejection callback, this contains an array
+   * - {string} id An id for use with |PendingErrors|;
+   * - {FinalizationWitness} witness A witness broadcasting |id| on
+   *   notification "promise-finalization-witness".
    */
-  reject: function (aReason)
-  {
-    let promise = new PromiseImpl();
-    PromiseWalker.completePromise(promise, STATUS_REJECTED, aReason);
-    return promise;
-  },
+  Object.defineProperty(this, N_WITNESS, { writable: true });
 
-  /**
-   * Returns a promise that is resolved or rejected when all values are
-   * resolved or any is rejected.
-   *
-   * @param aValues
-   *        Array of promises that may be pending, resolved, or rejected. When
-   *        all are resolved or any is rejected, the returned promise will be
-   *        resolved or rejected as well.
-   *
-   * @return A new promise that is fulfilled when all values are resolved or
-   *         that is rejected when any of the values are rejected. Its
-   *         resolution value will be an array of all resolved values in the
-   *         given order, or undefined if aValues is an empty array. The reject
-   *         reason will be forwarded from the first promise in the list of
-   *         given promises to be rejected.
-   */
-  all: function (aValues)
-  {
-    if (!Array.isArray(aValues)) {
-      throw new Error("Promise.all() expects an array of promises or values.");
+  Object.seal(this);
+
+  let resolve = PromiseWalker.completePromise
+                             .bind(PromiseWalker, this, STATUS_RESOLVED);
+  let reject = PromiseWalker.completePromise
+                            .bind(PromiseWalker, this, STATUS_REJECTED);
+
+  try {
+    Function.prototype.call.call(aExecutor, this, resolve, reject);
+  } catch (ex) {
+    reject(ex);
+  }
+}
+
+/**
+ * Calls one of the provided functions as soon as this promise is either
+ * resolved or rejected.  A new promise is returned, whose state evolves
+ * depending on this promise and the provided callback functions.
+ *
+ * The appropriate callback is always invoked after this method returns, even
+ * if this promise is already resolved or rejected.  You can also call the
+ * "then" method multiple times on the same promise, and the callbacks will be
+ * invoked in the same order as they were registered.
+ *
+ * @param aOnResolve
+ *        If the promise is resolved, this function is invoked with the
+ *        resolution value of the promise as its only argument, and the
+ *        outcome of the function determines the state of the new promise
+ *        returned by the "then" method.  In case this parameter is not a
+ *        function (usually "null"), the new promise returned by the "then"
+ *        method is resolved with the same value as the original promise.
+ *
+ * @param aOnReject
+ *        If the promise is rejected, this function is invoked with the
+ *        rejection reason of the promise as its only argument, and the
+ *        outcome of the function determines the state of the new promise
+ *        returned by the "then" method.  In case this parameter is not a
+ *        function (usually left "undefined"), the new promise returned by the
+ *        "then" method is rejected with the same reason as the original
+ *        promise.
+ *
+ * @return A new promise that is initially pending, then assumes a state that
+ *         depends on the outcome of the invoked callback function:
+ *          - If the callback returns a value that is not a promise, including
+ *            "undefined", the new promise is resolved with this resolution
+ *            value, even if the original promise was rejected.
+ *          - If the callback throws an exception, the new promise is rejected
+ *            with the exception as the rejection reason, even if the original
+ *            promise was resolved.
+ *          - If the callback returns a promise, the new promise will
+ *            eventually assume the same state as the returned promise.
+ *
+ * @note If the aOnResolve callback throws an exception, the aOnReject
+ *       callback is not invoked.  You can register a rejection callback on
+ *       the returned promise instead, to process any exception occurred in
+ *       either of the callbacks registered on this promise.
+ */
+Promise.prototype.then = function (aOnResolve, aOnReject)
+{
+  let handler = new Handler(this, aOnResolve, aOnReject);
+  this[N_HANDLERS].push(handler);
+
+  // Ensure the handler is scheduled for processing if this promise is already
+  // resolved or rejected.
+  if (this[N_STATUS] != STATUS_PENDING) {
+
+    // This promise is not the last in the chain anymore. Remove any watchdog.
+    if (this[N_WITNESS] != null) {
+      let [id, witness] = this[N_WITNESS];
+      this[N_WITNESS] = null;
+      witness.forget();
+      PendingErrors.unregister(id);
     }
 
-    if (!aValues.length) {
-      return Promise.resolve([]);
+    PromiseWalker.schedulePromise(this);
+  }
+
+  return handler.nextPromise;
+};
+
+
+/**
+ * Creates a new pending promise and provides methods to resolve or reject it.
+ *
+ * @return A new object, containing the new promise in the "promise" property,
+ *         and the methods to change its state in the "resolve" and "reject"
+ *         properties.  See the Deferred documentation for details.
+ */
+Promise.defer = function ()
+{
+  return new Deferred();
+};
+
+/**
+ * Creates a new promise resolved with the specified value, or propagates the
+ * state of an existing promise.
+ *
+ * @param aValue
+ *        If this value is not a promise, including "undefined", it becomes
+ *        the resolution value of the returned promise.  If this value is a
+ *        promise, then the returned promise will eventually assume the same
+ *        state as the provided promise.
+ *
+ * @return A promise that can be pending, resolved, or rejected.
+ */
+Promise.resolve = function (aValue)
+{
+  return new Promise((aResolve) => aResolve(aValue));
+};
+
+/**
+ * Creates a new promise rejected with the specified reason.
+ *
+ * @param aReason
+ *        The rejection reason for the returned promise.  Although the reason
+ *        can be "undefined", it is generally an Error object, like in
+ *        exception handling.
+ *
+ * @return A rejected promise.
+ *
+ * @note The aReason argument should not be a promise.  Using a rejected
+ *       promise for the value of aReason would make the rejection reason
+ *       equal to the rejected promise itself, and not its rejection reason.
+ */
+Promise.reject = function (aReason)
+{
+  return new Promise((_, aReject) => aReject(aReason));
+};
+
+/**
+ * Returns a promise that is resolved or rejected when all values are
+ * resolved or any is rejected.
+ *
+ * @param aValues
+ *        Iterable of promises that may be pending, resolved, or rejected. When
+ *        all are resolved or any is rejected, the returned promise will be
+ *        resolved or rejected as well.
+ *
+ * @return A new promise that is fulfilled when all values are resolved or
+ *         that is rejected when any of the values are rejected. Its
+ *         resolution value will be an array of all resolved values in the
+ *         given order, or undefined if aValues is an empty array. The reject
+ *         reason will be forwarded from the first promise in the list of
+ *         given promises to be rejected.
+ */
+Promise.all = function (aValues)
+{
+  if (aValues == null || typeof(aValues["@@iterator"]) != "function") {
+    throw new Error("Promise.all() expects an iterable.");
+  }
+
+  if (!Array.isArray(aValues)) {
+    aValues = [...aValues];
+  }
+
+  if (!aValues.length) {
+    return Promise.resolve([]);
+  }
+
+  let countdown = aValues.length;
+  let deferred = Promise.defer();
+  let resolutionValues = new Array(countdown);
+
+  function checkForCompletion(aValue, aIndex) {
+    resolutionValues[aIndex] = aValue;
+
+    if (--countdown === 0) {
+      deferred.resolve(resolutionValues);
     }
+  }
 
-    let countdown = aValues.length;
-    let deferred = Promise.defer();
-    let resolutionValues = new Array(countdown);
+  for (let i = 0; i < aValues.length; i++) {
+    let index = i;
+    let value = aValues[i];
+    let resolve = val => checkForCompletion(val, index);
 
-    function checkForCompletion(aValue, aIndex) {
-      resolutionValues[aIndex] = aValue;
-
-      if (--countdown === 0) {
-        deferred.resolve(resolutionValues);
-      }
+    if (value && typeof(value.then) == "function") {
+      value.then(resolve, deferred.reject);
+    } else {
+      // Given value is not a promise, forward it as a resolution value.
+      resolve(value);
     }
+  }
 
-    for (let i = 0; i < aValues.length; i++) {
-      let index = i;
-      let value = aValues[i];
-      let resolve = val => checkForCompletion(val, index);
+  return deferred.promise;
+};
 
-      if (value && typeof(value.then) == "function") {
-        value.then(resolve, deferred.reject);
-      } else {
-        // Given value is not a promise, forward it as a resolution value.
-        resolve(value);
-      }
-    }
-
-    return deferred.promise;
-  },
-});
+Object.freeze(Promise);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// PromiseWalker
@@ -545,10 +667,10 @@ PromiseWalker.walkerLoop = PromiseWalker.walkerLoop.bind(PromiseWalker);
  */
 function Deferred()
 {
-  this.promise = new PromiseImpl();
-  this.resolve = this.resolve.bind(this);
-  this.reject = this.reject.bind(this);
-
+  this.promise = new Promise((aResolve, aReject) => {
+    this.resolve = aResolve;
+    this.reject = aReject;
+  });
   Object.freeze(this);
 }
 
@@ -576,9 +698,7 @@ Deferred.prototype = {
    *       and then calling it again with another value before the promise is
    *       resolved or rejected, has unspecified behavior and should be avoided.
    */
-  resolve: function (aValue) {
-    PromiseWalker.completePromise(this.promise, STATUS_RESOLVED, aValue);
-  },
+  resolve: null,
 
   /**
    * Rejects the associated promise with the specified reason.  If the promise
@@ -597,120 +717,7 @@ Deferred.prototype = {
    *       rejection reason equal to the rejected promise itself, not to the
    *       rejection reason of the rejected promise.
    */
-  reject: function (aReason) {
-    PromiseWalker.completePromise(this.promise, STATUS_REJECTED, aReason);
-  },
-};
-
-////////////////////////////////////////////////////////////////////////////////
-//// PromiseImpl
-
-/**
- * The promise object implementation.  This includes the public "then" method,
- * as well as private state properties.
- */
-function PromiseImpl()
-{
-  /*
-   * Internal status of the promise.  This can be equal to STATUS_PENDING,
-   * STATUS_RESOLVED, or STATUS_REJECTED.
-   */
-  Object.defineProperty(this, N_STATUS, { value: STATUS_PENDING,
-                                          writable: true });
-
-  /*
-   * When the N_STATUS property is STATUS_RESOLVED, this contains the final
-   * resolution value, that cannot be a promise, because resolving with a
-   * promise will cause its state to be eventually propagated instead.  When the
-   * N_STATUS property is STATUS_REJECTED, this contains the final rejection
-   * reason, that could be a promise, even if this is uncommon.
-   */
-  Object.defineProperty(this, N_VALUE, { writable: true });
-
-  /*
-   * Array of Handler objects registered by the "then" method, and not processed
-   * yet.  Handlers are removed when the promise is resolved or rejected.
-   */
-  Object.defineProperty(this, N_HANDLERS, { value: [] });
-
-  /**
-   * When the N_STATUS property is STATUS_REJECTED and until there is
-   * a rejection callback, this contains an array
-   * - {string} id An id for use with |PendingErrors|;
-   * - {FinalizationWitness} witness A witness broadcasting |id| on
-   *   notification "promise-finalization-witness".
-   */
-  Object.defineProperty(this, N_WITNESS, { writable: true });
-
-  Object.seal(this);
-}
-
-PromiseImpl.prototype = {
-  /**
-   * Calls one of the provided functions as soon as this promise is either
-   * resolved or rejected.  A new promise is returned, whose state evolves
-   * depending on this promise and the provided callback functions.
-   *
-   * The appropriate callback is always invoked after this method returns, even
-   * if this promise is already resolved or rejected.  You can also call the
-   * "then" method multiple times on the same promise, and the callbacks will be
-   * invoked in the same order as they were registered.
-   *
-   * @param aOnResolve
-   *        If the promise is resolved, this function is invoked with the
-   *        resolution value of the promise as its only argument, and the
-   *        outcome of the function determines the state of the new promise
-   *        returned by the "then" method.  In case this parameter is not a
-   *        function (usually "null"), the new promise returned by the "then"
-   *        method is resolved with the same value as the original promise.
-   *
-   * @param aOnReject
-   *        If the promise is rejected, this function is invoked with the
-   *        rejection reason of the promise as its only argument, and the
-   *        outcome of the function determines the state of the new promise
-   *        returned by the "then" method.  In case this parameter is not a
-   *        function (usually left "undefined"), the new promise returned by the
-   *        "then" method is rejected with the same reason as the original
-   *        promise.
-   *
-   * @return A new promise that is initially pending, then assumes a state that
-   *         depends on the outcome of the invoked callback function:
-   *          - If the callback returns a value that is not a promise, including
-   *            "undefined", the new promise is resolved with this resolution
-   *            value, even if the original promise was rejected.
-   *          - If the callback throws an exception, the new promise is rejected
-   *            with the exception as the rejection reason, even if the original
-   *            promise was resolved.
-   *          - If the callback returns a promise, the new promise will
-   *            eventually assume the same state as the returned promise.
-   *
-   * @note If the aOnResolve callback throws an exception, the aOnReject
-   *       callback is not invoked.  You can register a rejection callback on
-   *       the returned promise instead, to process any exception occurred in
-   *       either of the callbacks registered on this promise.
-   */
-  then: function (aOnResolve, aOnReject)
-  {
-    let handler = new Handler(this, aOnResolve, aOnReject);
-    this[N_HANDLERS].push(handler);
-
-    // Ensure the handler is scheduled for processing if this promise is already
-    // resolved or rejected.
-    if (this[N_STATUS] != STATUS_PENDING) {
-
-      // This promise is not the last in the chain anymore. Remove any watchdog.
-      if (this[N_WITNESS] != null) {
-        let [id, witness] = this[N_WITNESS];
-        this[N_WITNESS] = null;
-        witness.forget();
-        PendingErrors.unregister(id);
-      }
-
-      PromiseWalker.schedulePromise(this);
-    }
-
-    return handler.nextPromise;
-  },
+  reject: null,
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -724,7 +731,7 @@ function Handler(aThisPromise, aOnResolve, aOnReject)
   this.thisPromise = aThisPromise;
   this.onResolve = aOnResolve;
   this.onReject = aOnReject;
-  this.nextPromise = new PromiseImpl();
+  this.nextPromise = new Promise(() => {});
 }
 
 Handler.prototype = {
