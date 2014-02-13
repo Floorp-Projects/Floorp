@@ -473,7 +473,7 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
     {
         if (JSVAL_IS_VOID(s)) {
             if (useAllocator)
-                *((const nsAString**)d) = &EmptyString();
+                *((const nsAString**)d) = &NullString();
             else
                 (**((nsAString**)d)).SetIsVoid(true);
             return true;
