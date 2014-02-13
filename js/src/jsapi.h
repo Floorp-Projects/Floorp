@@ -3916,49 +3916,51 @@ Evaluate(JSContext *cx, JS::HandleObject obj, const ReadOnlyCompileOptions &opti
 } /* namespace JS */
 
 extern JS_PUBLIC_API(bool)
-JS_CallFunction(JSContext *cx, JSObject *obj, JSFunction *fun, const JS::HandleValueArray& args,
-                jsval *rval);
+JS_CallFunction(JSContext *cx, JS::HandleObject obj, JS::HandleFunction fun,
+                const JS::HandleValueArray& args, JS::MutableHandleValue rval);
 
 extern JS_PUBLIC_API(bool)
-JS_CallFunctionName(JSContext *cx, JSObject *obj, const char *name, const JS::HandleValueArray& args,
-                    jsval *rval);
+JS_CallFunctionName(JSContext *cx, JS::HandleObject obj, const char *name,
+                    const JS::HandleValueArray& args, JS::MutableHandleValue rval);
 
 extern JS_PUBLIC_API(bool)
-JS_CallFunctionValue(JSContext *cx, JSObject *obj, jsval fval, const JS::HandleValueArray& args,
-                     jsval *rval);
+JS_CallFunctionValue(JSContext *cx, JS::HandleObject obj, JS::HandleValue fval,
+                     const JS::HandleValueArray& args, JS::MutableHandleValue rval);
 
 namespace JS {
 
 static inline bool
-Call(JSContext *cx, JSObject *thisObj, JSFunction *fun, const JS::HandleValueArray &args,
-     MutableHandleValue rval)
+Call(JSContext *cx, JS::HandleObject thisObj, JS::HandleFunction fun,
+     const JS::HandleValueArray &args, MutableHandleValue rval)
 {
-    return !!JS_CallFunction(cx, thisObj, fun, args, rval.address());
+    return !!JS_CallFunction(cx, thisObj, fun, args, rval);
 }
 
 static inline bool
-Call(JSContext *cx, JSObject *thisObj, const char *name, const JS::HandleValueArray& args,
+Call(JSContext *cx, JS::HandleObject thisObj, const char *name, const JS::HandleValueArray& args,
      MutableHandleValue rval)
 {
-    return !!JS_CallFunctionName(cx, thisObj, name, args, rval.address());
+    return !!JS_CallFunctionName(cx, thisObj, name, args, rval);
 }
 
 static inline bool
-Call(JSContext *cx, JSObject *thisObj, jsval fun, const JS::HandleValueArray& args,
+Call(JSContext *cx, JS::HandleObject thisObj, JS::HandleValue fun, const JS::HandleValueArray& args,
      MutableHandleValue rval)
 {
-    return !!JS_CallFunctionValue(cx, thisObj, fun, args, rval.address());
+    return !!JS_CallFunctionValue(cx, thisObj, fun, args, rval);
 }
 
 extern JS_PUBLIC_API(bool)
-Call(JSContext *cx, jsval thisv, jsval fun, const JS::HandleValueArray& args,
+Call(JSContext *cx, JS::HandleValue thisv, JS::HandleValue fun, const JS::HandleValueArray& args,
      MutableHandleValue rval);
 
 static inline bool
-Call(JSContext *cx, jsval thisv, JSObject *funObj, const JS::HandleValueArray& args,
+Call(JSContext *cx, JS::HandleValue thisv, JS::HandleObject funObj, const JS::HandleValueArray& args,
      MutableHandleValue rval)
 {
-    return Call(cx, thisv, OBJECT_TO_JSVAL(funObj), args, rval);
+    JS_ASSERT(funObj);
+    JS::RootedValue fun(cx, JS::ObjectValue(*funObj));
+    return Call(cx, thisv, fun, args, rval);
 }
 
 } /* namespace JS */

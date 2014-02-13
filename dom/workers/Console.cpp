@@ -327,7 +327,7 @@ private:
     args[2].set(stackValue);
 
     JS::Rooted<JS::Value> ret(cx);
-    JS_CallFunctionName(cx, consoleObj, "queueCall", args, ret.address());
+    JS_CallFunctionName(cx, consoleObj, "queueCall", args, &ret);
   }
 
   WorkerConsole* mConsole;

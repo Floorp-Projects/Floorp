@@ -5395,14 +5395,11 @@ WorkerPrivate::RunExpiredTimeouts(JSContext* aCx)
 
     if (!info->mTimeoutCallable.isUndefined()) {
       JS::Rooted<JS::Value> rval(aCx);
-      /*
-       * unsafeGet() is needed below because the argument is a not a const
-       * pointer, even though values are not modified.
-       */
       JS::HandleValueArray args =
         JS::HandleValueArray::fromMarkedLocation(info->mExtraArgVals.Length(),
-                                                 info->mExtraArgVals.Elements()->unsafeGet());
-      if (!JS_CallFunctionValue(aCx, global, info->mTimeoutCallable, args, rval.address()) &&
+                                                 info->mExtraArgVals.Elements()->address());
+      JS::Rooted<JS::Value> callable(aCx, info->mTimeoutCallable);
+      if (!JS_CallFunctionValue(aCx, global, callable, args, &rval) &&
           !JS_ReportPendingException(aCx)) {
         retval = false;
         break;
