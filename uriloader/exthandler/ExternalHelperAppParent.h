@@ -50,6 +50,8 @@ public:
     void Init(ContentParent *parent,
               const nsCString& aMimeContentType,
               const nsCString& aContentDisposition,
+              const uint32_t& aContentDispositionHint,
+              const nsString& aContentDispositionFilename,
               const bool& aForceSave,
               const OptionalURIParams& aReferrer,
               PBrowserParent* aBrowser);
