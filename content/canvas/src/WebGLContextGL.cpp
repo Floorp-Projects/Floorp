@@ -3087,6 +3087,9 @@ WebGLContext::CompileShader(WebGLShader *shader)
         resources.MaxFragmentUniformVectors = mGLMaxFragmentUniformVectors;
         resources.MaxDrawBuffers = mGLMaxDrawBuffers;
 
+        if (IsExtensionEnabled(EXT_frag_depth))
+            resources.EXT_frag_depth = 1;
+
         if (IsExtensionEnabled(OES_standard_derivatives))
             resources.OES_standard_derivatives = 1;
 
