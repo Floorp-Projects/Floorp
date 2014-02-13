@@ -263,39 +263,6 @@ AllocateArrayBufferContents(JSContext *maybecx, uint32_t nbytes, void *oldptr = 
     return newheader;
 }
 
-bool
-ArrayBufferObject::allocateSlots(JSContext *cx, uint32_t bytes, bool clear)
-{
-    /*
-     * ArrayBufferObjects delegate added properties to another JSObject, so
-     * their internal layout can use the object's fixed slots for storage.
-     * Set up the object to look like an array with an elements header.
-     */
-    JS_ASSERT(!hasDynamicSlots() && !hasDynamicElements());
-
-    size_t usableSlots = ARRAYBUFFER_RESERVED_SLOTS - ObjectElements::VALUES_PER_HEADER;
-
-    if (bytes > sizeof(Value) * usableSlots) {
-        ObjectElements *header = AllocateArrayBufferContents(cx, bytes);
-        if (!header)
-            return false;
-        elements = header->elements();
-
-#ifdef JSGC_GENERATIONAL
-        JSRuntime *rt = runtimeFromMainThread();
-        rt->gcNursery.notifyNewElements(this, header);
-#endif
-    } else {
-        setFixedElements();
-        if (clear)
-            memset(dataPointer(), 0, bytes);
-    }
-
-    initElementsHeader(getElementsHeader(), bytes);
-
-    return true;
-}
-
 static inline void
 PostBarrierTypedArrayObject(JSObject *obj)
 {
@@ -645,7 +612,7 @@ ArrayBufferObject::addView(ArrayBufferViewObject *view)
     SetViewList(this, view);
 }
 
-JSObject *
+ArrayBufferObject *
 ArrayBufferObject::create(JSContext *cx, uint32_t nbytes, bool clear /* = true */)
 {
     RootedObject obj(cx, NewBuiltinClassInstance(cx, &class_));
@@ -661,14 +628,37 @@ ArrayBufferObject::create(JSContext *cx, uint32_t nbytes, bool clear /* = true *
         return nullptr;
     obj->setLastPropertyInfallible(empty);
 
-    /*
-     * The beginning stores an ObjectElements header structure holding the
-     * length. The rest of it is a flat data store for the array buffer.
-     */
-    if (!obj->as<ArrayBufferObject>().allocateSlots(cx, nbytes, clear))
-        return nullptr;
+    // ArrayBufferObjects delegate added properties to another JSObject, so
+    // their internal layout can use the object's fixed slots for storage.
+    // Set up the object to look like an array with an elements header.
+    JS_ASSERT(!obj->hasDynamicSlots());
+    JS_ASSERT(!obj->hasDynamicElements());
 
-    return obj;
+    // The beginning stores an ObjectElements header structure holding the
+    // length. The rest of it is a flat data store for the array buffer.
+    size_t usableSlots = ARRAYBUFFER_RESERVED_SLOTS - ObjectElements::VALUES_PER_HEADER;
+
+    Handle<ArrayBufferObject*> buffer = obj.as<ArrayBufferObject>();
+
+    if (nbytes > sizeof(Value) * usableSlots) {
+        ObjectElements *header = AllocateArrayBufferContents(cx, nbytes);
+        if (!header)
+            return nullptr;
+        buffer->elements = header->elements();
+
+#ifdef JSGC_GENERATIONAL
+        JSRuntime *rt = buffer->runtimeFromMainThread();
+        rt->gcNursery.notifyNewElements(buffer, header);
+#endif
+    } else {
+        buffer->setFixedElements();
+        if (clear)
+            memset(buffer->dataPointer(), 0, nbytes);
+    }
+
+    buffer->initElementsHeader(buffer->getElementsHeader(), nbytes);
+
+    return buffer;
 }
 
 JSObject *
