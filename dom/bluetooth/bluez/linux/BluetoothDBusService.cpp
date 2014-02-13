@@ -1840,35 +1840,6 @@ BluetoothDBusService::IsReady()
   return true;
 }
 
-#if MOZ_WIDGET_GONK
-static nsresult
-StartStopGonkBluetooth(bool aShouldEnable)
-{
-  bool result;
-
-  // Platform specific check for gonk until object is divided in
-  // different implementations per platform. Linux doesn't require
-  // bluetooth firmware loading, but code should work otherwise.
-
-  bool isEnabled = sBluedroid.IsEnabled();
-
-  if ((isEnabled && aShouldEnable) || (!isEnabled && !aShouldEnable)) {
-    return NS_OK;
-  }
-  if (aShouldEnable) {
-    result = sBluedroid.Enable();
-  } else {
-    result = sBluedroid.Disable();
-  }
-  if (!result) {
-    BT_WARNING("Could not set gonk bluetooth firmware!");
-    return NS_ERROR_FAILURE;
-  }
-
-  return NS_OK;
-}
-#endif
-
 nsresult
 BluetoothDBusService::StartInternal()
 {
@@ -1876,10 +1847,9 @@ BluetoothDBusService::StartInternal()
   MOZ_ASSERT(!NS_IsMainThread());
 
 #ifdef MOZ_WIDGET_GONK
-  nsresult ret = StartStopGonkBluetooth(true);
-
-  if (NS_FAILED(ret)) {
-    return ret;
+  if (!sBluedroid.Enable()) {
+    BT_WARNING("Bluetooth not available.");
+    return NS_ERROR_FAILURE;
   }
 #endif
 
@@ -2005,10 +1975,13 @@ BluetoothDBusService::StopInternal()
   StopDBus();
 
 #ifdef MOZ_WIDGET_GONK
-  return StartStopGonkBluetooth(false);
-#else
-  return NS_OK;
+  MOZ_ASSERT(sBluedroid.IsEnabled());
+  if (!sBluedroid.Disable()) {
+    return NS_ERROR_FAILURE;
+  }
 #endif
+
+  return NS_OK;
 }
 
 bool
