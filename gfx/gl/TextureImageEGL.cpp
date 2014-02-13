@@ -217,7 +217,7 @@ TextureImageEGL::DirectUpdate(gfxASurface* aSurf, const nsIntRegion& aRegion, co
     }
 
     mTextureFormat =
-      UploadSurfaceToTexture(mGLContext,
+      DeprecatedUploadSurfaceToTexture(mGLContext,
                              aSurf,
                              region,
                              mTexture,
