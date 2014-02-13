@@ -1287,6 +1287,7 @@ jit::AssertBasicGraphCoherency(MIRGraph &graph)
 
     // Assert successor and predecessor list coherency.
     uint32_t count = 0;
+    size_t compares = 0;
     for (MBasicBlockIterator block(graph.begin()); block != graph.end(); block++) {
         count++;
 
@@ -1300,6 +1301,8 @@ jit::AssertBasicGraphCoherency(MIRGraph &graph)
 
         // Assert that use chains are valid for this instruction.
         for (MDefinitionIterator iter(*block); iter; iter++) {
+            if (iter->isCompare())
+                compares++;
             for (uint32_t i = 0, e = iter->numOperands(); i < e; i++)
                 JS_ASSERT(CheckOperandImpliesUse(*iter, iter->getOperand(i)));
         }
@@ -1647,42 +1650,31 @@ TryEliminateTypeBarrierFromTest(MTypeBarrier *barrier, bool filtersNull, bool fi
         input = inputUnbox->input();
     }
 
-    if (test->getOperand(0) == input && direction == TRUE_BRANCH) {
-        *eliminated = true;
-        if (inputUnbox)
-            inputUnbox->makeInfallible();
-        barrier->replaceAllUsesWith(barrier->input());
-        return;
-    }
+    MDefinition *subject = nullptr;
+    bool removeUndefined;
+    bool removeNull;
+    test->filtersUndefinedOrNull(direction == TRUE_BRANCH, &subject, &removeUndefined, &removeNull);
 
-    if (!test->getOperand(0)->isCompare())
+    // The Test doesn't filter undefined nor null.
+    if (!subject)
         return;
 
-    MCompare *compare = test->getOperand(0)->toCompare();
-    MCompare::CompareType compareType = compare->compareType();
-
-    if (compareType != MCompare::Compare_Undefined && compareType != MCompare::Compare_Null)
-        return;
-    if (compare->getOperand(0) != input)
+    // Make sure the subject equals the input to the TypeBarrier.
+    if (subject != input)
         return;
 
-    JSOp op = compare->jsop();
-    JS_ASSERT(op == JSOP_EQ || op == JSOP_STRICTEQ ||
-              op == JSOP_NE || op == JSOP_STRICTNE);
-
-    if ((direction == TRUE_BRANCH) != (op == JSOP_NE || op == JSOP_STRICTNE))
+    // When the TypeBarrier filters undefined, the test must at least also do,
+    // this, before the TypeBarrier can get removed.
+    if (!removeUndefined && filtersUndefined)
         return;
 
-    // A test 'if (x.f != null)' or 'if (x.f != undefined)' filters both null
-    // and undefined. If strict equality is used, only the specified rhs is
-    // tested for.
-    if (op == JSOP_STRICTEQ || op == JSOP_STRICTNE) {
-        if (compareType == MCompare::Compare_Undefined && !filtersUndefined)
-            return;
-        if (compareType == MCompare::Compare_Null && !filtersNull)
-            return;
-    }
+    // When the TypeBarrier filters null, the test must at least also do,
+    // this, before the TypeBarrier can get removed.
+    if (!removeNull && filtersNull)
+        return;
 
+    // Eliminate the TypeBarrier. The possible TypeBarrier unboxing is kept,
+    // but made infallible.
     *eliminated = true;
     if (inputUnbox)
         inputUnbox->makeInfallible();

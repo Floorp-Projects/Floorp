@@ -1377,8 +1377,8 @@ OptimizeMIR(MIRGenerator *mir)
         // before its bounds check.
         if (!EliminateRedundantChecks(graph))
             return false;
-        IonSpewPass("Bounds Check Elimination");
         AssertGraphCoherency(graph);
+        IonSpewPass("Bounds Check Elimination");
     }
 
     return true;
@@ -1396,7 +1396,7 @@ GenerateLIR(MIRGenerator *mir)
     LIRGenerator lirgen(mir, graph, *lir);
     if (!lirgen.generate())
         return nullptr;
-    IonSpewPass("Generate LIR");
+    //IonSpewPass("Generate LIR");
 
     if (mir->shouldCancel("Generate LIR"))
         return nullptr;
@@ -1419,7 +1419,7 @@ GenerateLIR(MIRGenerator *mir)
             return nullptr;
 #endif
 
-        IonSpewPass("Allocate Registers [LSRA]", &regalloc);
+        //IonSpewPass("Allocate Registers [LSRA]", &regalloc);
         break;
       }
 
@@ -1438,7 +1438,7 @@ GenerateLIR(MIRGenerator *mir)
             return nullptr;
 #endif
 
-        IonSpewPass("Allocate Registers [Backtracking]");
+        //IonSpewPass("Allocate Registers [Backtracking]");
         break;
       }
 
@@ -1453,7 +1453,7 @@ GenerateLIR(MIRGenerator *mir)
             return nullptr;
         if (!integrity.check(true))
             return nullptr;
-        IonSpewPass("Allocate Registers [Stupid]");
+        //IonSpewPass("Allocate Registers [Stupid]");
         break;
       }
 
@@ -1468,7 +1468,7 @@ GenerateLIR(MIRGenerator *mir)
     // critical edges to avoid unnecessary jumps.
     if (!UnsplitEdges(lir))
         return nullptr;
-    IonSpewPass("Unsplit Critical Edges");
+    //IonSpewPass("Unsplit Critical Edges");
     AssertBasicGraphCoherency(graph);
 
     return lir;
