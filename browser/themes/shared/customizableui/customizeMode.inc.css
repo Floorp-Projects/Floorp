@@ -104,6 +104,15 @@
               inset 0 1px rgb(196, 196, 196);
 }
 
+#customization-undo-reset {
+  padding-left: 12px;
+  padding-right: 12px;
+%ifdef XP_MACOSX
+  padding-top: 6px;
+%else
+  padding-top: 7px;
+%endif
+}
 
 #main-window[customize-entered] #customization-panel-container {
   background-image: url("chrome://browser/skin/customizableui/customizeMode-separatorHorizontal.png"),
