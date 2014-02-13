@@ -42,10 +42,25 @@ public class HomeConfigInvalidator implements GeckoEventListener {
 
     private static final String JSON_KEY_PANEL = "panel";
 
+    private enum ChangeType {
+        REMOVE,
+        INSTALL
+    }
+
+    private static class ConfigChange {
+        private final ChangeType type;
+        private final PanelConfig target;
+
+        public ConfigChange(ChangeType type, PanelConfig target) {
+            this.type = type;
+            this.target = target;
+        }
+    }
+
     private Context mContext;
     private HomeConfig mHomeConfig;
 
-    private final Queue<PanelConfig> mPendingChanges = new ConcurrentLinkedQueue<PanelConfig>();
+    private final Queue<ConfigChange> mPendingChanges = new ConcurrentLinkedQueue<ConfigChange>();
     private final Runnable mInvalidationRunnable = new InvalidationRunnable();
 
     public static HomeConfigInvalidator getInstance() {
@@ -82,7 +97,7 @@ public class HomeConfigInvalidator implements GeckoEventListener {
      * Runs in the gecko thread.
      */
     private void handlePanelInstall(PanelConfig panelConfig) {
-        mPendingChanges.offer(panelConfig);
+        mPendingChanges.offer(new ConfigChange(ChangeType.INSTALL, panelConfig));
         Log.d(LOGTAG, "handlePanelInstall: " + mPendingChanges.size());
 
         scheduleInvalidation();
@@ -92,8 +107,7 @@ public class HomeConfigInvalidator implements GeckoEventListener {
      * Runs in the gecko thread.
      */
     private void handlePanelRemove(PanelConfig panelConfig) {
-        panelConfig.setIsDeleted(true);
-        mPendingChanges.offer(panelConfig);
+        mPendingChanges.offer(new ConfigChange(ChangeType.REMOVE, panelConfig));
         Log.d(LOGTAG, "handlePanelRemove: " + mPendingChanges.size());
 
         scheduleInvalidation();
@@ -116,22 +130,28 @@ public class HomeConfigInvalidator implements GeckoEventListener {
      */
     private List<PanelConfig> executePendingChanges(List<PanelConfig> panelConfigs) {
         while (!mPendingChanges.isEmpty()) {
-            final PanelConfig panelConfig = mPendingChanges.poll();
+            final ConfigChange pendingChange = mPendingChanges.poll();
+            final PanelConfig panelConfig = pendingChange.target;
+
             final String id = panelConfig.getId();
 
-            if (panelConfig.isDeleted()) {
-                if (panelConfigs.remove(panelConfig)) {
-                    Log.d(LOGTAG, "executePendingChanges: removed panel " + id);
-                }
-            } else {
-                final int index = panelConfigs.indexOf(panelConfig);
-                if (index >= 0) {
-                    panelConfigs.set(index, panelConfig);
-                    Log.d(LOGTAG, "executePendingChanges: replaced position " + index + " with " + id);
-                } else {
-                    panelConfigs.add(panelConfig);
-                    Log.d(LOGTAG, "executePendingChanges: added panel " + id);
-                }
+            switch (pendingChange.type) {
+                case REMOVE:
+                    if (panelConfigs.remove(panelConfig)) {
+                        Log.d(LOGTAG, "executePendingChanges: removed panel " + id);
+                    }
+                    break;
+
+                case INSTALL:
+                    final int index = panelConfigs.indexOf(panelConfig);
+                    if (index >= 0) {
+                        panelConfigs.set(index, panelConfig);
+                        Log.d(LOGTAG, "executePendingChanges: replaced position " + index + " with " + id);
+                    } else {
+                        panelConfigs.add(panelConfig);
+                        Log.d(LOGTAG, "executePendingChanges: added panel " + id);
+                    }
+                    break;
             }
         }
 
