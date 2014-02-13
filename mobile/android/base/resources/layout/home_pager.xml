@@ -11,8 +11,7 @@
                                   android:id="@+id/home_pager"
                                   android:layout_width="fill_parent"
                                   android:layout_height="fill_parent"
-                                  android:background="@android:color/white"
-                                  android:visibility="gone">
+                                  android:background="@android:color/white">
 
     <org.mozilla.gecko.home.HomePagerTabStrip android:layout_width="fill_parent"
                                               android:layout_height="32dip"
