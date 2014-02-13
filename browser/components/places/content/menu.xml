@@ -489,7 +489,7 @@
   <!-- Most of this is copied from the arrowpanel binding in popup.xml -->
   <binding id="places-popup-arrow"
            extends="chrome://browser/content/places/menu.xml#places-popup-base">
-    <content flip="both" side="top" position="bottomcenter topleft">
+    <content flip="both" side="top" position="bottomcenter topright">
       <xul:vbox anonid="container" class="panel-arrowcontainer" flex="1"
                xbl:inherits="side,panelopen">
         <xul:box anonid="arrowbox" class="panel-arrowbox">

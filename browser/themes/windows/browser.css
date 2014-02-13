@@ -510,6 +510,10 @@ menuitem.bookmark-item {
   margin-top: -3px;
 }
 
+#nav-bar .toolbarbutton-1 > menupopup.cui-widget-panel {
+  margin-top: -8px;
+}
+
 #nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   -moz-padding-end: 0;
 }
