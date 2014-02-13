@@ -686,6 +686,15 @@ public:
   nsRect GetRectRelativeToSelf() const {
     return nsRect(nsPoint(0, 0), mRect.Size());
   }
+  /**
+   * Rect and position in logical coordinates in the frame's writing mode
+   */
+  mozilla::LogicalRect GetLogicalRect(nscoord aContainerWidth) const {
+    return mozilla::LogicalRect(GetWritingMode(), GetRect(), aContainerWidth);
+  }
+  mozilla::LogicalPoint GetLogicalPosition(nscoord aContainerWidth) const {
+    return GetLogicalRect(aContainerWidth).Origin(GetWritingMode());
+  }
 
   /**
    * When we change the size of the frame's border-box rect, we may need to
@@ -702,6 +711,22 @@ public:
     } else {
       mRect = aRect;
     }
+  }
+  /**
+   * Set this frame's rect from a logical rect in its own writing direction
+   */
+  void SetRectFromLogicalRect(const mozilla::LogicalRect& aRect,
+                              nscoord aContainerWidth) {
+    SetRectFromLogicalRect(GetWritingMode(), aRect, aContainerWidth);
+  }
+  /**
+   * Set this frame's rect from a logical rect in a different writing direction
+   * (GetPhysicalRect will assert if the writing mode doesn't match)
+   */
+  void SetRectFromLogicalRect(mozilla::WritingMode aWritingMode,
+                              const mozilla::LogicalRect& aRect,
+                              nscoord aContainerWidth) {
+    SetRect(aRect.GetPhysicalRect(aWritingMode, aContainerWidth));
   }
   void SetSize(const nsSize& aSize) {
     SetRect(nsRect(mRect.TopLeft(), aSize));
