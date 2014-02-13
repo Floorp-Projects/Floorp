@@ -30,6 +30,26 @@ from ..compilation.warnings import (
     WarningsDatabase,
 )
 
+from textwrap import TextWrapper
+
+INSTALL_TESTS_CLOBBER = ''.join([TextWrapper().fill(line) + '\n' for line in
+'''
+The build system was unable to install tests because the CLOBBER file has \
+been updated. This means if you edited any test files, your changes may not \
+be picked up until a full/clobber build is performed.
+
+The easiest and fastest way to perform a clobber build is to run:
+
+ $ mach clobber
+ $ mach build
+
+If you did not modify any test files, it is safe to ignore this message \
+and proceed with running tests. To do this run:
+
+ $ touch {clobber_file}
+'''.splitlines()])
+
+
 
 BuildOutputResult = namedtuple('BuildOutputResult',
     ('warning', 'state_changed', 'for_display'))
@@ -574,6 +594,11 @@ class BuildDriver(MozbuildObject):
 
     def install_tests(self, remove=True):
         """Install test files (through manifest)."""
+
+        if self.is_clobber_needed():
+            print(INSTALL_TESTS_CLOBBER.format(
+                  clobber_file=os.path.join(self.topobjdir, 'CLOBBER')))
+            sys.exit(1)
 
         env = {}
         if not remove:
