@@ -709,6 +709,30 @@ LayerManagerD3D10::Render(EndTransactionFlags aFlags)
 
   static_cast<LayerD3D10*>(mRoot->ImplData())->RenderLayer();
 
+  if (!mRegionToClear.IsEmpty()) {
+    float color[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+    gfx::Matrix4x4 transform;
+    effect()->GetVariableByName("mLayerTransform")->SetRawValue(&transform, 0, 64);
+    effect()->GetVariableByName("fLayerColor")->AsVector()->SetFloatVector(color);
+
+    ID3D10EffectTechnique *technique = effect()->GetTechniqueByName("RenderClearLayer");
+
+    nsIntRegionRectIterator iter(mRegionToClear);
+    const nsIntRect *r;
+    while ((r = iter.Next())) {
+      effect()->GetVariableByName("vLayerQuad")->AsVector()->SetFloatVector(
+        ShaderConstantRectD3D10(
+        (float)r->x,
+        (float)r->y,
+        (float)r->width,
+        (float)r->height)
+        );
+
+      technique->GetPassByIndex(0)->Apply(0);
+      device()->Draw(4, 0);
+    }
+  }
+
   // See bug 630197 - we have some reasons to believe if an earlier call
   // returned an error, the upcoming present call may raise an exception.
   // This will check if any of the calls done recently has returned an error
