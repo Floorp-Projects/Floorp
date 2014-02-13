@@ -16,16 +16,22 @@ import android.widget.TextView;
 public class PanelsPreference extends CustomListPreference {
     protected String LOGTAG = "PanelsPreference";
 
-    private static final int INDEX_SHOW_BUTTON = 1;
-    private static final int INDEX_REMOVE_BUTTON = 2;
+    /**
+     * Index of the context menu button for controlling display options.
+     * For (removable) Dynamic panels, this button removes the panel.
+     * For built-in panels, this button toggles showing or hiding the panel.
+     */
+    private static final int INDEX_DISPLAY_BUTTON = 1;
 
     private String LABEL_HIDE;
     private String LABEL_SHOW;
 
     protected boolean mIsHidden = false;
+    private boolean mIsRemovable;
 
-    public PanelsPreference(Context context, CustomListCategory parentCategory) {
+    public PanelsPreference(Context context, CustomListCategory parentCategory, boolean isRemovable) {
         super(context, parentCategory);
+        mIsRemovable = isRemovable;
     }
 
     @Override
@@ -49,15 +55,17 @@ public class PanelsPreference extends CustomListPreference {
     }
 
     @Override
-    protected String[] getDialogStrings() {
+    protected String[] createDialogItems() {
+        if (mIsRemovable) {
+            return new String[] { LABEL_SET_AS_DEFAULT, LABEL_REMOVE };
+        }
+
+        // Built-in panels can't be removed, so use show/hide options.
         Resources res = getContext().getResources();
         LABEL_HIDE = res.getString(R.string.pref_panels_hide);
         LABEL_SHOW = res.getString(R.string.pref_panels_show);
 
-        // XXX: Don't provide the "Remove" string for now, because we only support built-in
-        // panels, which can only be disabled.
-        return new String[] { LABEL_SET_AS_DEFAULT,
-                              LABEL_HIDE };
+        return new String[] { LABEL_SET_AS_DEFAULT, LABEL_HIDE };
     }
 
     @Override
@@ -81,12 +89,15 @@ public class PanelsPreference extends CustomListPreference {
                 mParentCategory.setDefault(this);
                 break;
 
-            case INDEX_SHOW_BUTTON:
-                ((PanelsPreferenceCategory) mParentCategory).setHidden(this, !mIsHidden);
-                break;
-
-            case INDEX_REMOVE_BUTTON:
-                mParentCategory.uninstall(this);
+            case INDEX_DISPLAY_BUTTON:
+                // Handle display options for the panel.
+                if (mIsRemovable) {
+                    // For removable panels, the button displays text for removing the panel.
+                    mParentCategory.uninstall(this);
+                } else {
+                    // Otherwise, the button toggles between text for showing or hiding the panel.
+                    ((PanelsPreferenceCategory) mParentCategory).setHidden(this, !mIsHidden);
+                }
                 break;
 
             default:
@@ -99,8 +110,10 @@ public class PanelsPreference extends CustomListPreference {
         super.configureShownDialog();
 
         // Handle Show/Hide buttons.
-        final TextView hideButton = (TextView) mDialog.getListView().getChildAt(INDEX_SHOW_BUTTON);
-        hideButton.setText(mIsHidden ? LABEL_SHOW : LABEL_HIDE);
+        if (!mIsRemovable) {
+            final TextView hideButton = (TextView) mDialog.getListView().getChildAt(INDEX_DISPLAY_BUTTON);
+            hideButton.setText(mIsHidden ? LABEL_SHOW : LABEL_HIDE);
+        }
     }
 
     public void setHidden(boolean toHide) {
