@@ -1,12 +1,15 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict"
 
 let Cc = Components.classes;
 let Ci = Components.interfaces;
 let Cu = Components.utils;
 
 Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
+
+this.EXPORTED_SYMBOLS = ["SSLExceptions"];
 
 /**
   A class to add exceptions to override SSL certificate problems. The functionality
@@ -48,8 +51,8 @@ SSLExceptions.prototype = {
    */
   _checkCert: function SSLE_checkCert(aURI) {
     this._sslStatus = null;
-  
-    let req = new XMLHttpRequest();
+
+    let req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Ci.nsIXMLHttpRequest);
     try {
       if (aURI) {
         req.open("GET", aURI.prePath, false);

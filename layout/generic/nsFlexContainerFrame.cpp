@@ -3087,9 +3087,11 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
 /* virtual */ nscoord
 nsFlexContainerFrame::GetMinWidth(nsRenderingContext* aRenderingContext)
 {
+  nscoord minWidth = 0;
+  DISPLAY_MIN_WIDTH(this, minWidth);
+
   FlexboxAxisTracker axisTracker(this);
 
-  nscoord minWidth = 0;
   for (nsFrameList::Enumerator e(mFrames); !e.AtEnd(); e.Next()) {
     nscoord childMinWidth =
       nsLayoutUtils::IntrinsicForContainer(aRenderingContext, e.get(),
@@ -3111,6 +3113,9 @@ nsFlexContainerFrame::GetMinWidth(nsRenderingContext* aRenderingContext)
 /* virtual */ nscoord
 nsFlexContainerFrame::GetPrefWidth(nsRenderingContext* aRenderingContext)
 {
+  nscoord prefWidth = 0;
+  DISPLAY_PREF_WIDTH(this, prefWidth);
+
   // XXXdholbert Optimization: We could cache our intrinsic widths like
   // nsBlockFrame does (and return it early from this function if it's set).
   // Whenever anything happens that might change it, set it to
@@ -3118,7 +3123,6 @@ nsFlexContainerFrame::GetPrefWidth(nsRenderingContext* aRenderingContext)
   // does)
   FlexboxAxisTracker axisTracker(this);
 
-  nscoord prefWidth = 0;
   for (nsFrameList::Enumerator e(mFrames); !e.AtEnd(); e.Next()) {
     nscoord childPrefWidth =
       nsLayoutUtils::IntrinsicForContainer(aRenderingContext, e.get(),
