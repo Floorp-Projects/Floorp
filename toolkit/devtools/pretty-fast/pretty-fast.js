@@ -464,6 +464,13 @@
   }
 
   /**
+   * Make sure that we put "\'" into the single-quoted output instead of raw single quotes.
+   */
+  function sanitizeSingleQuotes(str) {
+    return str.replace(/\'/g, "\\'");
+  }
+
+  /**
    * Add the given token to the pretty printed results.
    *
    * @param Object token
@@ -475,7 +482,7 @@
    */
   function addToken(token, write, options) {
     if (token.type.type == "string") {
-      write("'" + sanitizeNewlines(token.value) + "'",
+      write("'" + sanitizeSingleQuotes(sanitizeNewlines(token.value)) + "'",
             token.startLoc.line,
             token.startLoc.column);
     } else {
