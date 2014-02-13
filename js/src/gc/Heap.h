@@ -1115,7 +1115,7 @@ InFreeList(ArenaHeader *aheader, void *thing)
 // safely be performed off thread without racing. When running with thread
 // safety checking on, any access to a GC thing outside of AutoThreadSafeAccess
 // will cause an access violation.
-class AutoThreadSafeAccess
+class MOZ_STACK_CLASS AutoThreadSafeAccess
 {
 public:
 #if defined(DEBUG) && defined(JS_CPU_X64) && !defined(XP_WIN)
