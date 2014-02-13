@@ -2260,6 +2260,11 @@ FilterNodeConvolveMatrixSoftware::DoRender(const IntRect& aRect,
   }
 
   IntRect srcRect = InflatedSourceRect(aRect);
+
+  // Inflate the source rect by another pixel because the bilinear filtering in
+  // ColorComponentAtPoint may want to access the margins.
+  srcRect.Inflate(1);
+
   RefPtr<DataSourceSurface> input =
     GetInputDataSourceSurface(IN_CONVOLVE_MATRIX_IN, srcRect, NEED_COLOR_CHANNELS, mEdgeMode, &mSourceRect);
 
@@ -3260,6 +3265,11 @@ FilterNodeLightingSoftware<LightType, LightingType>::DoRender(const IntRect& aRe
   IntSize size = aRect.Size();
   srcRect.Inflate(ceil(float(aKernelUnitLengthX)),
                   ceil(float(aKernelUnitLengthY)));
+
+  // Inflate the source rect by another pixel because the bilinear filtering in
+  // ColorComponentAtPoint may want to access the margins.
+  srcRect.Inflate(1);
+
   RefPtr<DataSourceSurface> input =
     GetInputDataSourceSurface(IN_LIGHTING_IN, srcRect, CAN_HANDLE_A8,
                               EDGE_MODE_DUPLICATE);
