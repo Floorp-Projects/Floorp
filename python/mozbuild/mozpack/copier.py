@@ -13,6 +13,7 @@ from mozpack.files import (
 import mozpack.path
 import errno
 from collections import (
+    Counter,
     OrderedDict,
 )
 
@@ -31,6 +32,19 @@ class FileRegistry(object):
 
     def __init__(self):
         self._files = OrderedDict()
+        self._required_directories = Counter()
+
+    def _partial_paths(self, path):
+        '''
+        Turn "foo/bar/baz/zot" into ["foo/bar/baz", "foo/bar", "foo"].
+        '''
+        partial_paths = []
+        partial_path = path
+        while partial_path:
+            partial_path = mozpack.path.dirname(partial_path)
+            if partial_path:
+                partial_paths.append(partial_path)
+        return partial_paths
 
     def add(self, path, content):
         '''
@@ -39,14 +53,17 @@ class FileRegistry(object):
         assert isinstance(content, BaseFile)
         if path in self._files:
             return errors.error("%s already added" % path)
+        if self._required_directories[path] > 0:
+            return errors.error("Can't add %s: it is a required directory" %
+                                path)
         # Check whether any parent of the given path is already stored
-        partial_path = path
-        while partial_path:
-            partial_path = mozpack.path.dirname(partial_path)
+        partial_paths = self._partial_paths(path)
+        for partial_path in partial_paths:
             if partial_path in self._files:
                 return errors.error("Can't add %s: %s is a file" %
                                     (path, partial_path))
         self._files[path] = content
+        self._required_directories.update(partial_paths)
 
     def match(self, pattern):
         '''
@@ -76,6 +93,7 @@ class FileRegistry(object):
                                 "not matching anything previously added"))
         for i in items:
             del self._files[i]
+            self._required_directories.subtract(self._partial_paths(i))
 
     def paths(self):
         '''

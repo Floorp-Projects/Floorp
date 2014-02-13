@@ -88,6 +88,34 @@ class TestFileRegistry(MatchTestTemplate, unittest.TestCase):
         self.add('foo/.foo')
         self.assertTrue(self.registry.contains('foo/.foo'))
 
+    def test_registry_paths(self):
+        self.registry = FileRegistry()
+
+        # Can't add a file if it requires a directory in place of a
+        # file we also require.
+        self.registry.add('foo', GeneratedFile('foo'))
+        self.assertRaises(ErrorMessage, self.registry.add, 'foo/bar',
+                          GeneratedFile('foobar'))
+
+        # Can't add a file if we already have a directory there.
+        self.registry.add('bar/baz', GeneratedFile('barbaz'))
+        self.assertRaises(ErrorMessage, self.registry.add, 'bar',
+                          GeneratedFile('bar'))
+
+        # Bump the count of things that require bar/ to 2.
+        self.registry.add('bar/zot', GeneratedFile('barzot'))
+        self.assertRaises(ErrorMessage, self.registry.add, 'bar',
+                          GeneratedFile('bar'))
+
+        # Drop the count of things that require bar/ to 1.
+        self.registry.remove('bar/baz')
+        self.assertRaises(ErrorMessage, self.registry.add, 'bar',
+                          GeneratedFile('bar'))
+
+        # Drop the count of things that require bar/ to 0.
+        self.registry.remove('bar/zot')
+        self.registry.add('bar/zot', GeneratedFile('barzot'))
+
 
 class TestFileCopier(TestWithTmpDir):
     def all_dirs(self, base):
