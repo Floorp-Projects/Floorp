@@ -415,7 +415,20 @@ function run_test() {
 }
 
 function end_test() {
-  gServer.stop(do_test_finished);
+  let testDir = gProfD.clone();
+  testDir.append("extensions");
+  testDir.append("staged");
+  gServer.stop(function() {
+    function loop() {
+      if (!testDir.exists()) {
+        do_print("Staged directory has been cleaned up");
+        do_test_finished();
+      }
+      do_print("Waiting 1 second until cleanup is complete");
+      do_timeout(1000, loop);
+    }
+    loop();
+  });
 }
 
 // Tests homepageURL, getRecommendedURL() and getSearchURL()

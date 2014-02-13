@@ -20,7 +20,7 @@ ac_add_options --enable-warnings-as-errors
 # B2G Stuff
 ac_add_options --enable-application=b2g
 ac_add_options --enable-debug-symbols
-ac_add_options --with-ccache
+. "$topsrcdir/build/mozconfig.cache"
 ENABLE_MARIONETTE=1
 
 export CXXFLAGS=-DMOZ_ENABLE_JS_DUMP

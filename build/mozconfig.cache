@@ -1,0 +1,26 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Setup for build cache
+
+bucket=
+if test -f "$topsrcdir/sccache/sccache.py"; then
+    case `hostname` in
+    try*spot*.use1.mozilla.com|try*ec2*.use1.mozilla.com)
+        bucket=mozilla-releng-s3-cache-us-east-1-try
+        ;;
+    try*spot*.usw2.mozilla.com|try*ec2*.usw2.mozilla.com)
+        bucket=mozilla-releng-s3-cache-us-west-2-try
+        ;;
+    esac
+fi
+
+if test -z "$bucket"; then
+    ac_add_options --with-ccache
+else
+    mk_add_options "export SCCACHE_BUCKET=$bucket"
+    mk_add_options "export SCCACHE_NAMESERVER=169.254.169.253"
+    export CC="python2.7 $topsrcdir/sccache/sccache.py $CC"
+    export CXX="python2.7 $topsrcdir/sccache/sccache.py $CXX"
+fi

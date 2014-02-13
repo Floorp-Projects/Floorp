@@ -130,8 +130,10 @@ class BookmarksListAdapter extends MultiTypeCursorAdapter {
      * @return Whether the adapter successfully moved to a parent folder.
      */
     public boolean moveToParentFolder() {
-        // If we're already at the root, we can't move to a parent folder
-        if (mParentStack.size() == 1) {
+        // If we're already at the root, we can't move to a parent folder.
+        // An empty parent stack here means we're still waiting for the
+        // initial list of bookmarks and can't go to a parent folder.
+        if (mParentStack.size() <= 1) {
             return false;
         }
 

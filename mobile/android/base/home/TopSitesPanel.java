@@ -449,7 +449,7 @@ public class TopSitesPanel extends HomeFragment {
         public void onEditPinnedSite(int position, String searchTerm) {
             mPosition = position;
 
-            final FragmentManager manager = getActivity().getSupportFragmentManager();
+            final FragmentManager manager = getChildFragmentManager();
             PinSiteDialog dialog = (PinSiteDialog) manager.findFragmentByTag(TAG_PIN_SITE);
             if (dialog == null) {
                 dialog = PinSiteDialog.newInstance();

@@ -41,8 +41,8 @@ public class BrowserDB {
         @RobocopTarget
         public Cursor filter(ContentResolver cr, CharSequence constraint, int limit);
 
-        // This should onlyl return frecent sites, BrowserDB.getTopSites will do the
-        // work to combine that list with the pinned sites list
+        // This should only return frecent sites. BrowserDB.getTopSites will do the
+        // work to combine that list with the pinned sites list.
         public Cursor getTopSites(ContentResolver cr, int limit);
 
         public void updateVisitedHistory(ContentResolver cr, String uri);
@@ -77,6 +77,12 @@ public class BrowserDB {
         public boolean isBookmark(ContentResolver cr, String uri);
 
         public boolean isReadingListItem(ContentResolver cr, String uri);
+
+        /**
+         * Return a combination of fields about the provided URI
+         * in a single hit on the DB.
+         */
+        public int getItemFlags(ContentResolver cr, String uri);
 
         public String getUrlForKeyword(ContentResolver cr, String keyword);
 
@@ -230,6 +236,13 @@ public class BrowserDB {
 
     public static boolean isReadingListItem(ContentResolver cr, String uri) {
         return (sAreContentProvidersEnabled && sDb.isReadingListItem(cr, uri));
+    }
+
+    public static int getItemFlags(ContentResolver cr, String uri) {
+        if (!sAreContentProvidersEnabled) {
+            return 0;
+        }
+        return sDb.getItemFlags(cr, uri);
     }
 
     public static void addBookmark(ContentResolver cr, String title, String uri) {
