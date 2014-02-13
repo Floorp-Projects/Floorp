@@ -8,7 +8,6 @@
 #include "MetroWidget.h"
 #include "MetroInput.h"
 #include "gfxWindowsPlatform.h"
-#include "gfxD2DSurface.h"
 #include "nsDataHashtable.h"
 
 #include "mozwrlbase.h"

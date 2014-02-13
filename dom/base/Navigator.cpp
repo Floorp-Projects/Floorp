@@ -1602,7 +1602,7 @@ Navigator::DoNewResolve(JSContext* aCx, JS::Handle<JSObject*> aObject,
   }
 
   if (JSVAL_IS_PRIMITIVE(prop_val) && !JSVAL_IS_NULL(prop_val)) {
-    rv = nsContentUtils::WrapNative(aCx, aObject, native, &prop_val, true);
+    rv = nsContentUtils::WrapNative(aCx, aObject, native, &prop_val);
 
     if (NS_FAILED(rv)) {
       return Throw(aCx, rv);

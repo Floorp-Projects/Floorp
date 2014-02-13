@@ -8,7 +8,7 @@ ac_add_options --enable-signmar
 export MOZILLA_OFFICIAL=1
 
 # Use ccache
-ac_add_options --with-ccache=/usr/bin/ccache
+. "$topsrcdir/build/mozconfig.cache"
 
 # Treat warnings as errors in directories with FAIL_ON_WARNINGS.
 ac_add_options --enable-warnings-as-errors
