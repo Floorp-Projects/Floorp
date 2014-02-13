@@ -20,7 +20,6 @@
 #include "vm/Compression.h"
 #include "vm/ForkJoin.h"
 #include "vm/Interpreter.h"
-#include "vm/String.h"
 
 #include "jsfuninlines.h"
 #include "jsscriptinlines.h"
@@ -1166,10 +1165,4 @@ js::SelfHostedFunction(JSContext *cx, HandlePropertyName propName)
     JS_ASSERT(func.isObject());
     JS_ASSERT(func.toObject().is<JSFunction>());
     return &func.toObject().as<JSFunction>();
-}
-
-bool
-js::IsSelfHostedFunctionWithName(JSFunction *fun, JSAtom *name)
-{
-    return fun->isSelfHostedBuiltin() && fun->getExtendedSlot(0).toString() == name;
 }
