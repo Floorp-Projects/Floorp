@@ -161,6 +161,11 @@ let gSyncUI = {
       this.updateUI();
       return;
     }
+    // if we are still waiting for the identity manager to initialize, don't show errors
+    if (Weave.Status.login == Weave.LOGIN_FAILED_NOT_READY) {
+      this.updateUI();
+      return;
+    }
 
     let title = this._stringBundle.GetStringFromName("error.login.title");
 
