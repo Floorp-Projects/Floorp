@@ -523,6 +523,15 @@ CSPRep.fromString = function(aStr, self, reportOnly, docRequest, csp,
     cspWarn(aCSPR, CSPLocalizer.getStr("allowOrDefaultSrcRequired"));
     return CSPRep.fromString("default-src 'none'", null, reportOnly);
   }
+
+  // If this is a Report-Only header and report-uri is not in the directive
+  // list, tell developer either specify report-uri directive or use
+  // a non-Report-Only CSP header.
+  if (aCSPR._reportOnlyMode && !aCSPR._directives.hasOwnProperty(UD.REPORT_URI)) {
+    cspWarn(aCSPR, CSPLocalizer.getFormatStr("reportURInotInReportOnlyHeader",
+                                             [selfUri ? selfUri.prePath : "undefined"]))
+  }
+
   return aCSPR;
 };
 
@@ -762,6 +771,14 @@ CSPRep.fromStringSpecCompliant = function(aStr, self, reportOnly, docRequest, cs
     cspWarn(aCSPR, CSPLocalizer.getFormatStr("couldNotProcessUnknownDirective", [dirname]));
 
   } // end directive: loop
+
+  // If this is a Report-Only header and report-uri is not in the directive
+  // list, tell developer either specify report-uri directive or use
+  // a non-Report-Only CSP header.
+  if (aCSPR._reportOnlyMode && !aCSPR._directives.hasOwnProperty(UD.REPORT_URI)) {
+    cspWarn(aCSPR, CSPLocalizer.getFormatStr("reportURInotInReportOnlyHeader",
+                                             [selfUri ? selfUri.prePath : "undefined"]));
+  }
 
   return aCSPR;
 };
