@@ -36,45 +36,13 @@ function test() {
     storage.asyncVisitStorage(new Visitor(), true /* Do walk entries */);
   }
 
-  function contextMenuOpened(aWindow, event) {
-    cache.clear();
-
-    event.currentTarget.removeEventListener("popupshown", contextMenuOpened);
-
-    // Create the folder the image will be saved into.
-    var destDir = createTemporarySaveDirectory();
-    var destFile = destDir.clone();
-
-    MockFilePicker.displayDirectory = destDir;
-    MockFilePicker.showCallback = function(fp) {
-      fileName = fp.defaultString;
-      destFile.append (fileName);
-      MockFilePicker.returnFiles = [destFile];
-      MockFilePicker.filterIndex = 1; // kSaveAsType_URL
-    };
-
-    mockTransferCallback = onTransferComplete;
-    mockTransferRegisterer.register();
-
-    registerCleanupFunction(function () {
-      mockTransferRegisterer.unregister();
-      MockFilePicker.cleanup();
-      destDir.remove(true);
-    });
-
-    // Select "Save Image As" option from context menu
-    var saveVideoCommand = aWindow.document.getElementById("context-saveimage");
-    saveVideoCommand.doCommand();
-
-    event.target.hidePopup();
-  }
-
   function onTransferComplete(downloadSuccess) {
     ok(downloadSuccess, "Image file should have been downloaded successfully");
 
     // Give the request a chance to finish and create a cache entry
     executeSoon(function() {
       checkDiskCacheFor(fileName, finish);
+      mockTransferCallback = null;
     });
   }
 
@@ -89,6 +57,39 @@ function test() {
   }
 
   function doTest(aIsPrivateMode, aWindow, aCallback) {
+    function contextMenuOpened(event) {
+      cache.clear();
+
+      aWindow.document.removeEventListener("popupshown", contextMenuOpened);
+
+      // Create the folder the image will be saved into.
+      var destDir = createTemporarySaveDirectory();
+      var destFile = destDir.clone();
+
+      MockFilePicker.displayDirectory = destDir;
+      MockFilePicker.showCallback = function(fp) {
+        fileName = fp.defaultString;
+        destFile.append (fileName);
+        MockFilePicker.returnFiles = [destFile];
+        MockFilePicker.filterIndex = 1; // kSaveAsType_URL
+      };
+
+      mockTransferCallback = onTransferComplete;
+      mockTransferRegisterer.register();
+
+      registerCleanupFunction(function () {
+        mockTransferRegisterer.unregister();
+        MockFilePicker.cleanup();
+        destDir.remove(true);
+      });
+
+      // Select "Save Image As" option from context menu
+      var saveVideoCommand = aWindow.document.getElementById("context-saveimage");
+      saveVideoCommand.doCommand();
+
+      event.target.hidePopup();
+    }
+
     aWindow.gBrowser.addEventListener("pageshow", function pageShown(event) {
       // If data: -url PAC file isn't loaded soon enough, we may get about:privatebrowsing loaded
       if (event.target.location == "about:blank" ||
@@ -98,14 +99,13 @@ function test() {
       }
       aWindow.gBrowser.removeEventListener("pageshow", pageShown);
 
-      executeSoon(function () {
-        aWindow.document.addEventListener("popupshown",
-                                          function(e) contextMenuOpened(aWindow, e), false);
+      waitForFocus(function () {
+        aWindow.document.addEventListener("popupshown", contextMenuOpened, false);
         var img = aWindow.gBrowser.selectedBrowser.contentDocument.getElementById("img");
         EventUtils.synthesizeMouseAtCenter(img,
                                            { type: "contextmenu", button: 2 },
                                            aWindow.gBrowser.contentWindow);
-      });
+      }, aWindow.gBrowser.selectedBrowser.contentWindow);
     });
   }
 
