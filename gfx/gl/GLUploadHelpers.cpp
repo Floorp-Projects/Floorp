@@ -27,23 +27,6 @@ DataOffset(const nsIntPoint &aPoint, int32_t aStride, SurfaceFormat aFormat)
   return data;
 }
 
-static gfxImageFormat
-ImageFormatForSurfaceFormat(gfx::SurfaceFormat aFormat)
-{
-    switch (aFormat) {
-        case gfx::SurfaceFormat::B8G8R8A8:
-            return gfxImageFormat::ARGB32;
-        case gfx::SurfaceFormat::B8G8R8X8:
-            return gfxImageFormat::RGB24;
-        case gfx::SurfaceFormat::R5G6B5:
-            return gfxImageFormat::RGB16_565;
-        case gfx::SurfaceFormat::A8:
-            return gfxImageFormat::A8;
-        default:
-            return gfxImageFormat::Unknown;
-    }
-}
-
 static GLint GetAddressAlignment(ptrdiff_t aAddress)
 {
     if (!(aAddress & 0x7)) {
