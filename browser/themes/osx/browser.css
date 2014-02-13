@@ -1280,6 +1280,10 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
   margin-top: 1px;
 }
 
+.toolbarbutton-1 > menupopup.cui-widget-panel {
+  margin-top: -5px;
+}
+
 /* Common back and forward button styles */
 
 #back-button,
