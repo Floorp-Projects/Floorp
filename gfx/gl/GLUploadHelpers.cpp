@@ -8,9 +8,6 @@
 #include "GLContext.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Tools.h"  // For BytesPerPixel
-#include "gfxASurface.h"
-#include "gfxUtils.h"
-#include "gfxContext.h"
 #include "nsRegion.h"
 
 namespace mozilla {
@@ -18,6 +15,39 @@ namespace mozilla {
 using namespace gfx;
 
 namespace gl {
+
+/* These two techniques are suggested by "Bit Twiddling Hacks"
+ */
+
+/**
+ * Returns true if |aNumber| is a power of two
+ * 0 is incorreclty considered a power of two
+ */
+static bool
+IsPowerOfTwo(int aNumber)
+{
+    return (aNumber & (aNumber - 1)) == 0;
+}
+
+/**
+ * Returns the first integer greater than |aNumber| which is a power of two
+ * Undefined for |aNumber| < 0
+ */
+static int
+NextPowerOfTwo(int aNumber)
+{
+#if defined(__arm__)
+    return 1 << (32 - __builtin_clz(aNumber - 1));
+#else
+    --aNumber;
+    aNumber |= aNumber >> 1;
+    aNumber |= aNumber >> 2;
+    aNumber |= aNumber >> 4;
+    aNumber |= aNumber >> 8;
+    aNumber |= aNumber >> 16;
+    return ++aNumber;
+#endif
+}
 
 static unsigned int
 DataOffset(const nsIntPoint &aPoint, int32_t aStride, SurfaceFormat aFormat)
@@ -255,13 +285,13 @@ TexImage2DHelper(GLContext *gl,
 
         if (!CanUploadNonPowerOfTwo(gl)
             && (stride != width * pixelsize
-            || !gfx::IsPowerOfTwo(width)
-            || !gfx::IsPowerOfTwo(height))) {
+            || !IsPowerOfTwo(width)
+            || !IsPowerOfTwo(height))) {
 
             // Pad out texture width and height to the next power of two
             // as we don't support/want non power of two texture uploads
-            GLsizei paddedWidth = gfx::NextPowerOfTwo(width);
-            GLsizei paddedHeight = gfx::NextPowerOfTwo(height);
+            GLsizei paddedWidth = NextPowerOfTwo(width);
+            GLsizei paddedHeight = NextPowerOfTwo(height);
 
             GLvoid* paddedPixels = new unsigned char[paddedWidth * paddedHeight * pixelsize];
 
@@ -492,61 +522,6 @@ UploadImageDataToTexture(GLContext* gl,
     }
 
     return surfaceFormat;
-}
-
-SurfaceFormat
-DeprecatedUploadSurfaceToTexture(GLContext* gl,
-                       gfxASurface *aSurface,
-                       const nsIntRegion& aDstRegion,
-                       GLuint& aTexture,
-                       bool aOverwrite,
-                       const nsIntPoint& aSrcPoint,
-                       bool aPixelBuffer,
-                       GLenum aTextureUnit,
-                       GLenum aTextureTarget)
-{
-
-    nsRefPtr<gfxImageSurface> imageSurface = aSurface->GetAsImageSurface();
-    unsigned char* data = nullptr;
-
-    if (!imageSurface ||
-        (imageSurface->Format() != gfxImageFormat::ARGB32 &&
-         imageSurface->Format() != gfxImageFormat::RGB24 &&
-         imageSurface->Format() != gfxImageFormat::RGB16_565 &&
-         imageSurface->Format() != gfxImageFormat::A8)) {
-        // We can't get suitable pixel data for the surface, make a copy
-        nsIntRect bounds = aDstRegion.GetBounds();
-        imageSurface =
-          new gfxImageSurface(gfxIntSize(bounds.width, bounds.height),
-                              gfxImageFormat::ARGB32);
-
-        nsRefPtr<gfxContext> context = new gfxContext(imageSurface);
-
-        context->Translate(-gfxPoint(aSrcPoint.x, aSrcPoint.y));
-        context->SetSource(aSurface);
-        context->Paint();
-        data = imageSurface->Data();
-        NS_ASSERTION(!aPixelBuffer,
-                     "Must be using an image compatible surface with pixel buffers!");
-    } else {
-        // If a pixel buffer is bound the data pointer parameter is relative
-        // to the start of the data block.
-        if (!aPixelBuffer) {
-              data = imageSurface->Data();
-        }
-        data += DataOffset(aSrcPoint, imageSurface->Stride(),
-                           ImageFormatToSurfaceFormat(imageSurface->Format()));
-    }
-
-    MOZ_ASSERT(imageSurface);
-    imageSurface->Flush();
-
-    return UploadImageDataToTexture(gl,
-                                    data,
-                                    imageSurface->Stride(),
-                                    ImageFormatToSurfaceFormat(imageSurface->Format()),
-                                    aDstRegion, aTexture, aOverwrite,
-                                    aPixelBuffer, aTextureUnit, aTextureTarget);
 }
 
 SurfaceFormat
