@@ -167,7 +167,7 @@ public class HomePager extends ViewPager {
      *
      * @param fm FragmentManager for the adapter
      */
-    public void show(LoaderManager lm, FragmentManager fm, String panelId, PropertyAnimator animator) {
+    public void load(LoaderManager lm, FragmentManager fm, String panelId, PropertyAnimator animator) {
         mLoaded = true;
         mInitialPanelId = panelId;
 
@@ -178,8 +178,6 @@ public class HomePager extends ViewPager {
         adapter.setOnAddPanelListener(mAddPanelListener);
         adapter.setCanLoadHint(!shouldAnimate);
         setAdapter(adapter);
-
-        setVisibility(VISIBLE);
 
         // Don't show the tabs strip until we have the
         // list of panels in place.
@@ -211,23 +209,22 @@ public class HomePager extends ViewPager {
     }
 
     /**
-     * Hides the pager and removes all child fragments.
+     * Removes all child fragments to free memory.
      */
-    public void hide() {
+    public void unload() {
         mLoaded = false;
-        setVisibility(GONE);
         setAdapter(null);
     }
 
     /**
-     * Determines whether the pager is visible.
+     * Determines whether the pager is loaded.
      *
      * Unlike getVisibility(), this method does not need to be called on the UI
      * thread.
      *
-     * @return Whether the pager and its fragments are being displayed
+     * @return Whether the pager and its fragments are loaded
      */
-    public boolean isVisible() {
+    public boolean isLoaded() {
         return mLoaded;
     }
 
@@ -296,7 +293,7 @@ public class HomePager extends ViewPager {
         setAdapter(adapter);
 
         // Use the default panel as defined in the HomePager's configuration
-        // if the initial panel wasn't explicitly set by the show() caller,
+        // if the initial panel wasn't explicitly set by the load() caller,
         // or if the initial panel is not found in the adapter.
         final int itemPosition = (mInitialPanelId == null) ? -1 : adapter.getItemPosition(mInitialPanelId);
         if (itemPosition > -1) {
