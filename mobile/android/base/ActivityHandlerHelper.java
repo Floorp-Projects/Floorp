@@ -34,33 +34,15 @@ import java.util.concurrent.TimeUnit;
 public class ActivityHandlerHelper implements GeckoEventListener {
     private static final String LOGTAG = "GeckoActivityHandlerHelper";
 
-    private final ConcurrentLinkedQueue<String> mFilePickerResult;
 
     private final ActivityResultHandlerMap mActivityResultHandlerMap;
-    private final FilePickerResultHandlerSync mFilePickerResultHandlerSync;
-    private final CameraImageResultHandler mCameraImageResultHandler;
-    private final CameraVideoResultHandler mCameraVideoResultHandler;
-
     public interface FileResultHandler {
         public void gotFile(String filename);
     }
 
     @SuppressWarnings("serial")
     public ActivityHandlerHelper() {
-        mFilePickerResult = new ConcurrentLinkedQueue<String>() {
-            @Override public boolean offer(String e) {
-                if (super.offer(e)) {
-                    // poke the Gecko thread in case it's waiting for new events
-                    GeckoAppShell.sendEventToGecko(GeckoEvent.createNoOpEvent());
-                    return true;
-                }
-                return false;
-            }
-        };
         mActivityResultHandlerMap = new ActivityResultHandlerMap();
-        mFilePickerResultHandlerSync = new FilePickerResultHandlerSync(mFilePickerResult);
-        mCameraImageResultHandler = new CameraImageResultHandler(mFilePickerResult);
-        mCameraVideoResultHandler = new CameraVideoResultHandler(mFilePickerResult);
         GeckoAppShell.getEventDispatcher().registerEventListener("FilePicker:Show", this);
     }
 
@@ -130,7 +112,7 @@ public class ActivityHandlerHelper implements GeckoEventListener {
         return addIntentActivitiesToList(context, intent, aItems, aIntents);
     }
 
-    private Prompt.PromptListItem[] getItemsAndIntentsForFilePicker(Context context, String aMimeType, ArrayList<Intent> aIntents) {
+    private Prompt.PromptListItem[] getItemsAndIntentsForFilePicker(Context context, String aMimeType, final FilePickerResultHandler fileHandler, ArrayList<Intent> aIntents) {
         ArrayList<Prompt.PromptListItem> items = new ArrayList<Prompt.PromptListItem>();
 
         if (aMimeType.equals("audio/*")) {
@@ -141,7 +123,7 @@ public class ActivityHandlerHelper implements GeckoEventListener {
             Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
             intent.putExtra(MediaStore.EXTRA_OUTPUT,
                             Uri.fromFile(new File(Environment.getExternalStorageDirectory(),
-                                                  CameraImageResultHandler.generateImageName())));
+                                                  fileHandler.generateImageName())));
             addIntentActivitiesToList(context, intent, items, aIntents);
 
             if (addFilePickingActivities(context, items, "image/*", aIntents) <= 0) {
@@ -158,7 +140,7 @@ public class ActivityHandlerHelper implements GeckoEventListener {
             Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
             intent.putExtra(MediaStore.EXTRA_OUTPUT,
                             Uri.fromFile(new File(Environment.getExternalStorageDirectory(),
-                                                  CameraImageResultHandler.generateImageName())));
+                                                  fileHandler.generateImageName())));
             addIntentActivitiesToList(context, intent, items, aIntents);
 
             intent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
@@ -191,10 +173,10 @@ public class ActivityHandlerHelper implements GeckoEventListener {
      * one of the intents is selected. If the caller passes in null for the handler, will still
      * prompt for the activity, but will throw away the result.
      */
-    private void getFilePickerIntentAsync(final Context context, String aMimeType, final IntentHandler handler) {
+    private void getFilePickerIntentAsync(final Context context, String aMimeType, final FilePickerResultHandler fileHandler, final IntentHandler handler) {
         final ArrayList<Intent> intents = new ArrayList<Intent>();
         final Prompt.PromptListItem[] items =
-            getItemsAndIntentsForFilePicker(context, aMimeType, intents);
+            getItemsAndIntentsForFilePicker(context, aMimeType, fileHandler, intents);
 
         if (intents.size() == 0) {
             Log.i(LOGTAG, "no activities for the file picker!");
@@ -243,7 +225,8 @@ public class ActivityHandlerHelper implements GeckoEventListener {
      * pick and launch the file picker, but will throw away the result.
      */
     public void showFilePickerAsync(final Activity parentActivity, String aMimeType, final FileResultHandler handler) {
-        getFilePickerIntentAsync(parentActivity, aMimeType, new IntentHandler() {
+        final FilePickerResultHandler fileHandler = new FilePickerResultHandler(handler);
+        getFilePickerIntentAsync(parentActivity, aMimeType, fileHandler, new IntentHandler() {
             public void gotIntent(Intent intent) {
                 if (handler == null) {
                     return;
@@ -254,20 +237,7 @@ public class ActivityHandlerHelper implements GeckoEventListener {
                     return;
                 }
 
-                if (MediaStore.ACTION_IMAGE_CAPTURE.equals(intent.getAction())) {
-                    CameraImageResultHandler cam = new CameraImageResultHandler(handler);
-                    parentActivity.startActivityForResult(intent, mActivityResultHandlerMap.put(cam));
-                } else if (MediaStore.ACTION_VIDEO_CAPTURE.equals(intent.getAction())) {
-                    CameraVideoResultHandler vid = new CameraVideoResultHandler(handler);
-                    parentActivity.startActivityForResult(intent, mActivityResultHandlerMap.put(vid));
-                } else if (Intent.ACTION_GET_CONTENT.equals(intent.getAction())) {
-                    FilePickerResultHandlerSync file = new FilePickerResultHandlerSync(handler);
-                    parentActivity.startActivityForResult(intent, mActivityResultHandlerMap.put(file));
-                } else {
-                    Log.e(LOGTAG, "We should not get an intent with another action!");
-                    handler.gotFile("");
-                    return;
-                }
+                parentActivity.startActivityForResult(intent, mActivityResultHandlerMap.put(fileHandler));
             }
         });
     }
