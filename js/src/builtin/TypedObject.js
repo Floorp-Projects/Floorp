@@ -354,6 +354,22 @@ TypedObjectPointer.prototype.getDerived = function() {
   return NewDerivedTypedObject(this.descr, this.typedObj, this.offset);
 }
 
+TypedObjectPointer.prototype.getDerivedIf = function(cond) {
+  return (cond ? this.getDerived() : undefined);
+}
+
+TypedObjectPointer.prototype.getOpaque = function() {
+  assert(!TypeDescrIsSimpleType(this.descr),
+         "getDerived() used with simple type");
+  var typedObj = NewOpaqueTypedObject(this.descr);
+  AttachTypedObject(typedObj, this.typedObj, this.offset);
+  return typedObj;
+}
+
+TypedObjectPointer.prototype.getOpaqueIf = function(cond) {
+  return (cond ? this.getOpaque() : undefined);
+}
+
 TypedObjectPointer.prototype.getScalar = function() {
   var type = DESCR_TYPE(this.descr);
   switch (type) {
@@ -1098,14 +1114,12 @@ function BuildTypedSeqImpl(arrayType, len, depth, func) {
     indices[i] = 0;
   }
 
-  var grainTypeIsSimple = TypeDescrIsSimpleType(grainType);
+  var grainTypeIsComplex = !TypeDescrIsSimpleType(grainType);
   var size = DESCR_SIZE(grainType);
   var outPointer = new TypedObjectPointer(grainType, result, 0);
   for (i = 0; i < totalLength; i++) {
     // Position out-pointer to point at &result[...indices], if appropriate.
-    var userOutPointer = (grainTypeIsSimple
-                          ? undefined
-                          : outPointer.getDerived());
+    var userOutPointer = outPointer.getOpaqueIf(grainTypeIsComplex);
 
     // Invoke func(...indices, userOutPointer) and store the result
     callFunction(std_Array_push, indices, userOutPointer);
@@ -1192,7 +1206,7 @@ function MapUntypedSeqImpl(inArray, outputType, maybeFunc) {
   var result = outputType.variable ? new outputType(inArray.length) : new outputType();
 
   var outUnitSize = DESCR_SIZE(outGrainType);
-  var outGrainTypeIsSimple = TypeDescrIsSimpleType(outGrainType);
+  var outGrainTypeIsComplex = !TypeDescrIsSimpleType(outGrainType);
   var outPointer = new TypedObjectPointer(outGrainType, result, 0);
 
   // Core of map computation starts here (comparable to
@@ -1206,7 +1220,7 @@ function MapUntypedSeqImpl(inArray, outputType, maybeFunc) {
       var element = inArray[i];
 
       // Create out pointer to point at &array[...indices] for result array.
-      var out = (outGrainTypeIsSimple ? undefined : outPointer.getDerived());
+      var out = outPointer.getOpaqueIf(outGrainTypeIsComplex);
 
       // Invoke: var r = func(element, ...indices, collection, out);
       var r = func(element, i, inArray, out);
@@ -1247,8 +1261,8 @@ function MapTypedSeqImpl(inArray, depth, outputType, func) {
   // Create a zeroed instance with no data
   var result = outputType.variable ? new outputType(inArray.length) : new outputType();
 
-  var inGrainTypeIsSimple = TypeDescrIsSimpleType(inGrainType);
-  var outGrainTypeIsSimple = TypeDescrIsSimpleType(outGrainType);
+  var inGrainTypeIsComplex = !TypeDescrIsSimpleType(inGrainType);
+  var outGrainTypeIsComplex = !TypeDescrIsSimpleType(outGrainType);
 
   var inPointer = new TypedObjectPointer(inGrainType, inArray, 0);
   var outPointer = new TypedObjectPointer(outGrainType, result, 0);
@@ -1264,7 +1278,7 @@ function MapTypedSeqImpl(inArray, depth, outputType, func) {
 
       // Prepare input element/handle and out pointer
       var element = inPointer.get();
-      var out = (outGrainTypeIsSimple ? undefined : outPointer.getDerived());
+      var out = outPointer.getOpaqueIf(outGrainTypeIsComplex);
 
       // Invoke: var r = func(element, ...indices, collection, out);
       var r = func(element, i, inArray, out);
@@ -1285,7 +1299,7 @@ function MapTypedSeqImpl(inArray, depth, outputType, func) {
     for (var i = 0; i < totalLength; i++) {
       // Prepare input element and out pointer
       var element = inPointer.get();
-      var out = (outGrainTypeIsSimple ? undefined : outPointer.getDerived());
+      var out = outPointer.getOpaqueIf(outGrainTypeIsComplex);
 
       // Invoke: var r = func(element, ...indices, collection, out);
       var args = [element];
