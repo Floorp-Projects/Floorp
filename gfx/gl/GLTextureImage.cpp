@@ -184,7 +184,7 @@ BasicTextureImage::EndUpdate()
     bool relative = FinishedSurfaceUpdate();
 
     mTextureFormat =
-        UploadSurfaceToTexture(mGLContext,
+        DeprecatedUploadSurfaceToTexture(mGLContext,
                                mUpdateSurface,
                                mUpdateRegion,
                                mTexture,
@@ -237,7 +237,7 @@ BasicTextureImage::DirectUpdate(gfxASurface* aSurf, const nsIntRegion& aRegion, 
     }
 
     mTextureFormat =
-        UploadSurfaceToTexture(mGLContext,
+        DeprecatedUploadSurfaceToTexture(mGLContext,
                                aSurf,
                                region,
                                mTexture,
