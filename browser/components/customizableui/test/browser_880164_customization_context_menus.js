@@ -4,8 +4,6 @@
 
 "use strict";
 
-Cu.import("resource://gre/modules/Promise.jsm");
-
 const isOSX = (Services.appinfo.OS === "Darwin");
 
 // Right-click on the home button should
