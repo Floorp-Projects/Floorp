@@ -1455,8 +1455,12 @@ if test "$GNU_CXX"; then
 
     # Turn off the following warnings that -Wall turns on:
     # -Wno-invalid-offsetof - we use offsetof on non-POD types frequently
+    # -Wno-inline-new-delete - we inline 'new' and 'delete' in mozalloc
+    #   for performance reasons, and because GCC and clang accept it (though
+    #   clang warns about it).
     #
     MOZ_CXX_SUPPORTS_WARNING(-Wno-, invalid-offsetof, ac_cxx_has_wno_invalid_offsetof)
+    MOZ_CXX_SUPPORTS_WARNING(-Wno-, inline-new-delete, ac_cxx_has_wno_inline_new_delete)
 
     if test -z "$INTEL_CXX" -a -z "$CLANG_CXX"; then
        # Don't use -Wcast-align with ICC or clang
@@ -5509,6 +5513,8 @@ MOZ_ARG_ENABLE_STRING(gstreamer,
   # API version, eg 0.10, 1.0 etc
   if test -z "$enableval" -o "$enableval" = "yes"; then
     GST_API_VERSION=0.10
+  elif test "$enableval" = "no"; then
+    MOZ_GSTREAMER=
   else
     GST_API_VERSION=$enableval
   fi],
@@ -7683,14 +7689,6 @@ dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(Static build options)
 
-if test -n "$JS_SHARED_LIBRARY"; then
-  MOZ_JS_LIBS="$MOZ_JS_SHARED_LIBS"
-else
-  MOZ_JS_LIBS="$MOZ_JS_STATIC_LIBS"
-  AC_DEFINE(MOZ_STATIC_JS)
-fi
-AC_SUBST(JS_SHARED_LIBRARY)
-
 AC_SUBST(LIBXUL_LIBS)
 XPCOM_LIBS="$LIBXUL_LIBS"
 
@@ -8745,6 +8743,14 @@ MOZ_CONFIG_ICU()
 if test -n "$MOZ_NATIVE_ICU"; then
     MOZ_JS_STATIC_LIBS="$MOZ_JS_STATIC_LIBS $MOZ_ICU_LIBS"
 fi
+
+if test -n "$JS_SHARED_LIBRARY"; then
+  MOZ_JS_LIBS="$MOZ_JS_SHARED_LIBS"
+else
+  MOZ_JS_LIBS="$MOZ_JS_STATIC_LIBS"
+  AC_DEFINE(MOZ_STATIC_JS)
+fi
+AC_SUBST(JS_SHARED_LIBRARY)
 
 MOZ_CREATE_CONFIG_STATUS()
 

@@ -1213,7 +1213,7 @@ GetPropertyIC::tryAttachNative(JSContext *cx, IonScript *ion, HandleObject obj,
 
     *emitted = true;
 
-    MacroAssembler masm(cx, ion);
+    MacroAssembler masm(cx, ion, script_, pc_);
     SkipRoot skip(cx, &masm);
 
     RepatchStubAppender attacher(*this);
@@ -1370,7 +1370,7 @@ GetPropertyIC::tryAttachDOMProxyShadowed(JSContext *cx, IonScript *ion,
     *emitted = true;
 
     Label failures;
-    MacroAssembler masm(cx, ion);
+    MacroAssembler masm(cx, ion, script_, pc_);
     RepatchStubAppender attacher(*this);
 
     // Guard on the shape of the object.
@@ -1437,7 +1437,7 @@ GetPropertyIC::tryAttachDOMProxyUnshadowed(JSContext *cx, IonScript *ion, Handle
     }
 
     Label failures;
-    MacroAssembler masm(cx, ion);
+    MacroAssembler masm(cx, ion, script_, pc_);
     RepatchStubAppender attacher(*this);
 
     // Guard on the shape of the object.
@@ -1552,7 +1552,7 @@ GetPropertyIC::tryAttachGenericProxy(JSContext *cx, IonScript *ion, HandleObject
     *emitted = true;
 
     Label failures;
-    MacroAssembler masm(cx, ion);
+    MacroAssembler masm(cx, ion, script_, pc_);
     RepatchStubAppender attacher(*this);
 
     Register scratchReg = output().valueReg().scratchReg();
@@ -2120,7 +2120,7 @@ SetPropertyIC::attachGenericProxy(JSContext *cx, IonScript *ion, void *returnAdd
 {
     JS_ASSERT(!hasGenericProxyStub());
 
-    MacroAssembler masm(cx, ion);
+    MacroAssembler masm(cx, ion, script_, pc_);
     RepatchStubAppender attacher(*this);
 
     Label failures;
@@ -2177,7 +2177,7 @@ SetPropertyIC::attachDOMProxyShadowed(JSContext *cx, IonScript *ion, HandleObjec
     JS_ASSERT(IsCacheableDOMProxy(obj));
 
     Label failures;
-    MacroAssembler masm(cx, ion);
+    MacroAssembler masm(cx, ion, script_, pc_);
     RepatchStubAppender attacher(*this);
 
     // Guard on the shape of the object.
@@ -2407,7 +2407,7 @@ SetPropertyIC::attachDOMProxyUnshadowed(JSContext *cx, IonScript *ion, HandleObj
     JS_ASSERT(IsCacheableDOMProxy(obj));
 
     Label failures;
-    MacroAssembler masm(cx, ion);
+    MacroAssembler masm(cx, ion, script_, pc_);
     RepatchStubAppender attacher(*this);
 
     // Guard on the shape of the object.
@@ -2462,7 +2462,7 @@ SetPropertyIC::attachCallSetter(JSContext *cx, IonScript *ion,
 {
     JS_ASSERT(obj->isNative());
 
-    MacroAssembler masm(cx, ion);
+    MacroAssembler masm(cx, ion, script_, pc_);
     RepatchStubAppender attacher(*this);
 
     Label failure;
@@ -4243,7 +4243,7 @@ bool
 NameIC::attachCallGetter(JSContext *cx, IonScript *ion, JSObject *obj, JSObject *holder,
                          HandleShape shape, void *returnAddr)
 {
-    MacroAssembler masm(cx, ion);
+    MacroAssembler masm(cx, ion, script_, pc_);
 
     RepatchStubAppender attacher(*this);
     if (!GenerateCallGetter(cx, ion, masm, attacher, obj, name(), holder, shape, liveRegs_,

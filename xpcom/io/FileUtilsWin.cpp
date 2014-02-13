@@ -49,7 +49,7 @@ HandleToFilename(HANDLE aHandle, const LARGE_INTEGER& aOffset,
   do {
     mappedFilename.SetLength(mappedFilename.Length() + MAX_PATH);
     len = GetMappedFileNameW(GetCurrentProcess(), view,
-                             mappedFilename.BeginWriting(),
+                             wwc(mappedFilename.BeginWriting()),
                              mappedFilename.Length());
   } while (!len && GetLastError() == ERROR_INSUFFICIENT_BUFFER);
   if (!len) {

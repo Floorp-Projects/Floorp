@@ -35,7 +35,7 @@ NtPathToDosPath(const nsAString& aNtPath, nsAString& aDosPath)
   nsAutoString logicalDrives;
   DWORD len = 0;
   while(true) {
-    len = GetLogicalDriveStringsW(len, logicalDrives.BeginWriting());
+    len = GetLogicalDriveStringsW(len, reinterpret_cast<wchar_t*>(logicalDrives.BeginWriting()));
     if (!len) {
       return false;
     } else if (len > logicalDrives.Length()) {
@@ -56,7 +56,7 @@ NtPathToDosPath(const nsAString& aNtPath, nsAString& aDosPath)
     DWORD targetPathLen = 0;
     SetLastError(ERROR_SUCCESS);
     while (true) {
-      targetPathLen = QueryDosDeviceW(driveTemplate, targetPath.BeginWriting(),
+      targetPathLen = QueryDosDeviceW(driveTemplate, reinterpret_cast<wchar_t*>(targetPath.BeginWriting()),
                                       targetPath.Length());
       if (targetPathLen || GetLastError() != ERROR_INSUFFICIENT_BUFFER) {
         break;
@@ -68,7 +68,7 @@ NtPathToDosPath(const nsAString& aNtPath, nsAString& aDosPath)
       size_t firstTargetPathLen = wcslen(targetPath.get());
       const char16_t* pathComponent = aNtPath.BeginReading() +
                                       firstTargetPathLen;
-      bool found = _wcsnicmp(aNtPath.BeginReading(), targetPath.get(),
+      bool found = _wcsnicmp(char16ptr_t(aNtPath.BeginReading()), targetPath.get(),
                              firstTargetPathLen) == 0 &&
                    *pathComponent == L'\\';
       if (found) {
