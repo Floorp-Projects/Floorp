@@ -5,11 +5,6 @@
 /**
  * Managing safe shutdown of asynchronous services.
  *
- *     THIS API IS EXPERIMENTAL AND SUBJECT TO CHANGE WITHOUT PRIOR NOTICE
- *        IF YOUR CODE USES IT, IT MAY HAVE STOPPED WORKING ALREADY
- *                          YOU HAVE BEEN WARNED
- *
- *
  * Firefox shutdown is composed of phases that take place
  * sequentially. Typically, each shutdown phase removes some
  * capabilities from the application. For instance, at the end of
