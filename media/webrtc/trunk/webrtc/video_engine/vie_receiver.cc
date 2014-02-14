@@ -335,7 +335,7 @@ int ViEReceiver::InsertRTCPPacket(const int8_t* rtcp_packet,
   int received_packet_length = rtcp_packet_length;
   {
     CriticalSectionScoped cs(receive_cs_.get());
-    if (!receiving_) {
+    if (!receiving_rtcp_) {
       return -1;
     }
 
