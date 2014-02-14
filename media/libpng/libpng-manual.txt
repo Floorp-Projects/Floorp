@@ -1,9 +1,9 @@
 libpng-manual.txt - A description on how to use and modify libpng
 
- libpng version 1.6.7 - November 14, 2013
+ libpng version 1.6.9 - February 6, 2014
  Updated and distributed by Glenn Randers-Pehrson
  <glennrp at users.sourceforge.net>
- Copyright (c) 1998-2013 Glenn Randers-Pehrson
+ Copyright (c) 1998-2014 Glenn Randers-Pehrson
 
  This document is released under the libpng license.
  For conditions of distribution and use, see the disclaimer
@@ -11,9 +11,9 @@ libpng-manual.txt - A description on how to use and modify libpng
 
  Based on:
 
- libpng versions 0.97, January 1998, through 1.6.7 - November 14, 2013
+ libpng versions 0.97, January 1998, through 1.6.9 - February 6, 2014
  Updated and distributed by Glenn Randers-Pehrson
- Copyright (c) 1998-2013 Glenn Randers-Pehrson
+ Copyright (c) 1998-2014 Glenn Randers-Pehrson
 
  libpng 1.0 beta 6  version 0.96 May 28, 1997
  Updated and distributed by Andreas Dilger
@@ -4393,6 +4393,9 @@ png_set_error_fn(), which is essentially the same function, but with a new
 name to force compilation errors with applications that try to use the old
 method.
 
+Support for the sCAL, iCCP, iTXt, and sPLT chunks was added at libpng-1.0.6;
+however, iTXt support was not enabled by default.
+
 Starting with version 1.0.7, you can find out which version of the library
 you are using at run-time:
 
@@ -4621,12 +4624,13 @@ XI.  Changes to Libpng from version 1.4.x to 1.5.x
 
 From libpng-1.4.0 until 1.4.4, the png_get_uint_16 macro (but not the
 function) incorrectly returned a value of type png_uint_32.
+The incorrect macro was removed from libpng-1.4.5.
 
-Checking for invalid palette index on read or write was added at libpng
-1.5.10.  When an invalid index is found, libpng issues a benign error.
-This is enabled by default because this condition is an error according
-to the PNG specification, Clause 11.3.2, but the error can be ignored in
-each png_ptr with
+Checking for invalid palette index on write was added at libpng
+1.5.10.  If a pixel contains an invalid (out-of-range) index libpng issues
+a benign error.  This is enabled by default because this condition is an
+error according to the PNG specification, Clause 11.3.2, but the error can
+be ignored in each png_ptr with
 
    png_set_check_for_invalid_index(png_ptr, allowed);
 
@@ -4725,7 +4729,10 @@ and the accuracy of PNG fixed point values is insufficient for
 representation of these values. Consequently a "string" API
 (png_get_sCAL_s and png_set_sCAL_s) is the only reliable way of reading
 arbitrary sCAL chunks in the absence of either the floating point API or
-internal floating point calculations.
+internal floating point calculations.  Starting with libpng-1.5.0, both
+of these functions are present when PNG_sCAL_SUPPORTED is defined.  Prior
+to libpng-1.5.0, their presence also depended upon PNG_FIXED_POINT_SUPPORTED
+being defined and PNG_FLOATING_POINT_SUPPORTED not being defined.
 
 Applications no longer need to include the optional distribution header
 file pngusr.h or define the corresponding macros during application
@@ -4745,11 +4752,6 @@ reset by pngusr.h or by explicit settings on the compiler command line.
 These settings may produce compiler warnings or errors in 1.5.0 because
 of macro redefinition.
 
-From libpng-1.4.0 until 1.4.4, the png_get_uint_16 macro (but not the
-function) incorrectly returned a value of type png_uint_32.  libpng 1.5.0
-is consistent with the implementation in 1.4.5 and 1.2.x (where the macro
-did not exist.)
-
 Applications can now choose whether to use these macros or to call the
 corresponding function by defining PNG_USE_READ_MACROS or
 PNG_NO_USE_READ_MACROS before including png.h.  Notice that this is
@@ -4767,7 +4769,10 @@ option was off by default, and slightly inaccurate scaling occurred.
 This option can no longer be turned off, and the choice of accurate
 or inaccurate 16-to-8 scaling is by using the new png_set_scale_16_to_8()
 API for accurate scaling or the old png_set_strip_16_to_8() API for simple
-chopping.
+chopping.  In libpng-1.5.4, the PNG_READ_16_TO_8_ACCURATE_SCALE_SUPPORTED
+macro became PNG_READ_SCALE_16_TO_8_SUPPORTED, and the PNG_READ_16_TO_8
+macro became PNG_READ_STRIP_16_TO_8_SUPPORTED, to enable the two
+png_set_*_16_to_8() functions separately.
 
 Prior to libpng-1.5.4, the png_set_user_limits() function could only be
 used to reduce the width and height limits from the value of
@@ -5051,18 +5056,19 @@ The machine-generated configure files are no longer included in branches
 libpng16 and later of the GIT repository.  They continue to be included
 in the tarball releases, however.
 
-Libpng-1.6.0 and later use the CMF bytes at the beginning of the IDAT stream
-to set the size of the sliding window for reading instead of using the default
-32-kbyte sliding window size.  It was discovered that there are hundreds of PNG
-files in the wild that have incorrect CMF bytes that cause libpng to now issue
-a "too far back" error and reject the file.  Libpng-1.6.3 provides a way to
-revert to the libpng-1.5.x behavior (ignoring the CMF bytes and using a
+Libpng-1.6.0 through 1.6.2 used the CMF bytes at the beginning of the IDAT
+stream to set the size of the sliding window for reading instead of using the
+default 32-kbyte sliding window size.  It was discovered that there are
+hundreds of PNG files in the wild that have incorrect CMF bytes that caused
+libpng to issue a "too far back" error and reject the file.  Libpng-1.6.3 and
+later calculate their own safe CMF from the image dimensions, provide a way
+to revert to the libpng-1.5.x behavior (ignoring the CMF bytes and using a
 32-kbyte sliding window), by using
 
     png_set_option(png_ptr, PNG_MAXIMUM_INFLATE_WINDOW,
         PNG_OPTION_ON);
 
-and provides a tool (contrib/tools/pngfix) for optimizing the CMF bytes
+and provide a tool (contrib/tools/pngfix) for optimizing the CMF bytes
 correctly.
 
 Libpng-1.6.0 and libpng-1.6.1 wrote uncompressed iTXt chunks with the wrong
@@ -5232,13 +5238,13 @@ Other rules can be inferred by inspecting the libpng source.
 
 XVI. Y2K Compliance in libpng
 
-November 14, 2013
+February 6, 2014
 
 Since the PNG Development group is an ad-hoc body, we can't make
 an official declaration.
 
 This is your unofficial assurance that libpng from version 0.71 and
-upward through 1.6.7 are Y2K compliant.  It is my belief that earlier
+upward through 1.6.9 are Y2K compliant.  It is my belief that earlier
 versions were also Y2K compliant.
 
 Libpng only has two year fields.  One is a 2-byte unsigned integer
