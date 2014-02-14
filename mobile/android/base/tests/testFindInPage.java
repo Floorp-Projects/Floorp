@@ -23,6 +23,7 @@ public class testFindInPage extends PixelTest {
         height = mDriver.getGeckoHeight()/8;
         width = mDriver.getGeckoWidth()/8;
 
+        /* Disabled by bug 958111.
         // Search that does not find the term and therefor should not pan the page
         Actions.RepeatedEventExpecter paintExpecter = mActions.expectPaint();
         findText("Robocoop", 3); // This will be close enough to existing text to test that search finds just what it should
@@ -33,11 +34,12 @@ public class testFindInPage extends PixelTest {
         } finally {
             painted.close();
         }
+        */
 
         // Search that finds matches and therefor pans the page
-        paintExpecter = mActions.expectPaint();
+        Actions.RepeatedEventExpecter paintExpecter = mActions.expectPaint();
         findText("Robocop", 3);
-        painted = waitForPaint(paintExpecter);
+        PaintedSurface painted = waitForPaint(paintExpecter);
         paintExpecter.unregisterListener();
         try {
             mAsserter.isnotpixel(painted.getPixelAt(width,height), 255, 0, 0, "Pixel at " + String.valueOf(width) + "," + String.valueOf(height));
