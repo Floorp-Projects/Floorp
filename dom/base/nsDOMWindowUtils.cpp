@@ -2601,6 +2601,55 @@ nsDOMWindowUtils::GetIsTestControllingRefreshes(bool *aResult)
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::SetAsyncScrollOffset(nsIDOMNode* aNode,
+                                       int32_t aX, int32_t aY)
+{
+  nsCOMPtr<Element> element = do_QueryInterface(aNode);
+  if (!element) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  nsIFrame* frame = element->GetPrimaryFrame();
+  if (!frame) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  nsIScrollableFrame* scrollable = do_QueryFrame(frame);
+  nsPresContext* presContext = frame->PresContext();
+  nsIFrame* rootScrollFrame = presContext->PresShell()->GetRootScrollFrame();
+  if (!scrollable) {
+    if (rootScrollFrame && rootScrollFrame->GetContent() == element) {
+      frame = rootScrollFrame;
+      scrollable = do_QueryFrame(frame);
+    }
+  }
+  if (!scrollable) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  Layer* layer = FrameLayerBuilder::GetDedicatedLayer(scrollable->GetScrolledFrame(),
+    nsDisplayItem::TYPE_SCROLL_LAYER);
+  if (!layer) {
+    if (rootScrollFrame == frame && !presContext->GetParentPresContext()) {
+      nsIWidget* widget = GetWidget();
+      if (widget) {
+        LayerManager* manager = widget->GetLayerManager();
+        if (manager) {
+          layer = manager->GetRoot();
+        }
+      }
+    }
+    if (!layer) {
+      return NS_ERROR_UNEXPECTED;
+    }
+  }
+  ShadowLayerForwarder* forwarder = layer->Manager()->AsShadowForwarder();
+  if (!forwarder || !forwarder->HasShadowManager()) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  forwarder->GetShadowManager()->SendSetAsyncScrollOffset(
+    layer->AsShadowableLayer()->GetShadow(), aX, aY);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMWindowUtils::ComputeAnimationDistance(nsIDOMElement* aElement,
                                            const nsAString& aProperty,
                                            const nsAString& aValue1,

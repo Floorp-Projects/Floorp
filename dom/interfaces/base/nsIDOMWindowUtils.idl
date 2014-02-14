@@ -43,7 +43,7 @@ interface nsIDOMEventTarget;
 interface nsIRunnable;
 interface nsICompositionStringSynthesizer;
 
-[scriptable, uuid(c378a808-7474-403a-8e5c-7d9ff052b0c1)]
+[scriptable, uuid(17fccbaa-9cef-4217-9c98-3275d9a6c6de)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -1292,6 +1292,13 @@ interface nsIDOMWindowUtils : nsISupports {
    * (see advanceTimeAndRefresh and restoreNormalRefresh above).
    */
   readonly attribute bool isTestControllingRefreshes;
+
+  /**
+   * Set async scroll offset on an element. The next composite will render
+   * with that offset if async scrolling is enabled, and then the offset
+   * will be removed. Only call this while test-controlled refreshes is enabled.
+   */
+  void setAsyncScrollOffset(in nsIDOMNode aNode, in int32_t aX, in int32_t aY);
 
   /**
    * Method for testing nsStyleAnimation::ComputeDistance.
