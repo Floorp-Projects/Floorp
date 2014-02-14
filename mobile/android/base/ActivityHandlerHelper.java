@@ -22,11 +22,15 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.os.Environment;
+import android.os.Parcelable;
 import android.provider.MediaStore;
 import android.util.Log;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
@@ -79,75 +83,86 @@ public class ActivityHandlerHelper implements GeckoEventListener {
         activity.startActivityForResult(intent, mActivityResultHandlerMap.put(activityResultHandler));
     }
 
-    private int addIntentActivitiesToList(Context context, Intent intent, ArrayList<Prompt.PromptListItem> items, ArrayList<Intent> aIntents) {
+    private void addActivities(Context context, Intent intent, HashMap<String, Intent> intents, HashMap<String, Intent> filters) {
         PackageManager pm = context.getPackageManager();
         List<ResolveInfo> lri = pm.queryIntentActivityOptions(GeckoAppShell.getGeckoInterface().getActivity().getComponentName(), null, intent, 0);
-
-        if (lri == null) {
-            return 0;
-        }
-
         for (ResolveInfo ri : lri) {
-            Intent rintent = new Intent(intent);
-            rintent.setComponent(new ComponentName(
-                    ri.activityInfo.applicationInfo.packageName,
-                    ri.activityInfo.name));
-
-            Prompt.PromptListItem item = new Prompt.PromptListItem(ri.loadLabel(pm).toString());
-            item.icon = ri.loadIcon(pm);
-            items.add(item);
-            aIntents.add(rintent);
+            ComponentName cn = new ComponentName(ri.activityInfo.applicationInfo.packageName, ri.activityInfo.name);
+            if (filters != null && !filters.containsKey(cn.toString())) {
+                Intent rintent = new Intent(intent);
+                rintent.setComponent(cn);
+                intents.put(cn.toString(), rintent);
+            }
         }
-
-        return lri.size();
     }
 
-    private int addFilePickingActivities(Context context, ArrayList<Prompt.PromptListItem> aItems, String aType, ArrayList<Intent> aIntents) {
+    private Intent getIntent(Context context, String mimeType) {
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-        intent.setType(aType);
+        intent.setType(mimeType);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
-
-        return addIntentActivitiesToList(context, intent, aItems, aIntents);
+        return intent;
     }
 
-    private Prompt.PromptListItem[] getItemsAndIntentsForFilePicker(Context context, String aMimeType, final FilePickerResultHandler fileHandler, ArrayList<Intent> aIntents) {
-        ArrayList<Prompt.PromptListItem> items = new ArrayList<Prompt.PromptListItem>();
+    private List<Intent> getIntentsForFilePicker(final Context context,
+                                                       final String mimeType,
+                                                       final FilePickerResultHandler fileHandler) {
+        // The base intent to use for the file picker. Even if this is an implicit intent, Android will
+        // still show a list of Activitiees that match this action/type.
+        Intent baseIntent;
+        // A HashMap of Activities the base intent will show in the chooser. This is used
+        // to filter activities from other intents so that we don't show duplicates.
+        HashMap<String, Intent> baseIntents = new HashMap<String, Intent>();
+        // A list of other activities to shwo in the picker (and the intents to launch them).
+        HashMap<String, Intent> intents = new HashMap<String, Intent> ();
 
-        if (aMimeType.equals("audio/*")) {
-            if (addFilePickingActivities(context, items, "audio/*", aIntents) <= 0) {
-                addFilePickingActivities(context, items, "*/*", aIntents);
-            }
-        } else if (aMimeType.equals("image/*")) {
-            Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-            intent.putExtra(MediaStore.EXTRA_OUTPUT,
+        if ("audio/*".equals(mimeType)) {
+            // For audio the only intent is the mimetype
+            baseIntent = getIntent(context, mimeType);
+            addActivities(context, baseIntent, baseIntents, null);
+        } else if ("image/*".equals(mimeType)) {
+            // For images the base is a capture intent
+            baseIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+            baseIntent.putExtra(MediaStore.EXTRA_OUTPUT,
                             Uri.fromFile(new File(Environment.getExternalStorageDirectory(),
                                                   fileHandler.generateImageName())));
-            addIntentActivitiesToList(context, intent, items, aIntents);
+            addActivities(context, baseIntent, baseIntents, null);
 
-            if (addFilePickingActivities(context, items, "image/*", aIntents) <= 0) {
-                addFilePickingActivities(context, items, "*/*", aIntents);
-            }
-        } else if (aMimeType.equals("video/*")) {
-            Intent intent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
-            addIntentActivitiesToList(context, intent, items, aIntents);
+            // We also add the mimetype intent
+            addActivities(context, getIntent(context, mimeType), intents, baseIntents);
+        } else if ("video/*".equals(mimeType)) {
+            // For videos the base is a capture intent
+            baseIntent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
+            addActivities(context, baseIntent, baseIntents, null);
 
-            if (addFilePickingActivities(context, items, "video/*", aIntents) <= 0) {
-                addFilePickingActivities(context, items, "*/*", aIntents);
-            }
+            // We also add the mimetype intent
+            addActivities(context, getIntent(context, mimeType), intents, baseIntents);
         } else {
+            // If we don't have a known mimetype, we just search for */*
+            baseIntent = getIntent(context, "*/*");
+            addActivities(context, baseIntent, baseIntents, null);
+
+            // But we also add the video and audio capture intents
             Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
             intent.putExtra(MediaStore.EXTRA_OUTPUT,
                             Uri.fromFile(new File(Environment.getExternalStorageDirectory(),
                                                   fileHandler.generateImageName())));
-            addIntentActivitiesToList(context, intent, items, aIntents);
+            addActivities(context, intent, intents, baseIntents);
 
             intent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
-            addIntentActivitiesToList(context, intent, items, aIntents);
-
-            addFilePickingActivities(context, items, "*/*", aIntents);
+            addActivities(context, intent, intents, baseIntents);
         }
 
-        return items.toArray(new Prompt.PromptListItem[] {});
+        // If we didn't find any activities, we fall back to the */* mimetype intent
+        if (baseIntents.size() == 0 && intents.size() == 0) {
+            intents.clear();
+
+            baseIntent = getIntent(context, "*/*");
+            addActivities(context, baseIntent, baseIntents, null);
+        }
+
+        ArrayList<Intent> vals = new ArrayList<Intent>(intents.values());
+        vals.add(0, baseIntent);
+        return vals;
     }
 
     private String getFilePickerTitle(Context context, String aMimeType) {
@@ -171,10 +186,11 @@ public class ActivityHandlerHelper implements GeckoEventListener {
      * one of the intents is selected. If the caller passes in null for the handler, will still
      * prompt for the activity, but will throw away the result.
      */
-    private void getFilePickerIntentAsync(final Context context, String aMimeType, final FilePickerResultHandler fileHandler, final IntentHandler handler) {
-        final ArrayList<Intent> intents = new ArrayList<Intent>();
-        final Prompt.PromptListItem[] items =
-            getItemsAndIntentsForFilePicker(context, aMimeType, fileHandler, intents);
+    private void getFilePickerIntentAsync(final Context context,
+                                          final String mimeType,
+                                          final FilePickerResultHandler fileHandler,
+                                          final IntentHandler handler) {
+        List<Intent> intents = getIntentsForFilePicker(context, mimeType, fileHandler);
 
         if (intents.size() == 0) {
             Log.i(LOGTAG, "no activities for the file picker!");
@@ -182,40 +198,15 @@ public class ActivityHandlerHelper implements GeckoEventListener {
             return;
         }
 
-        if (intents.size() == 1) {
-            handler.gotIntent(intents.get(0));
+        Intent base = intents.remove(0);
+        if (intents.size() == 0) {
+            handler.gotIntent(base);
             return;
         }
 
-        final Prompt prompt = new Prompt(context, new Prompt.PromptCallback() {
-            public void onPromptFinished(String promptServiceResult) {
-                if (handler == null) {
-                    return;
-                }
-
-                int itemId = -1;
-                try {
-                    itemId = new JSONObject(promptServiceResult).getInt("button");
-                } catch (JSONException e) {
-                    Log.e(LOGTAG, "result from promptservice was invalid: ", e);
-                }
-
-                if (itemId == -1) {
-                    handler.gotIntent(null);
-                } else {
-                    handler.gotIntent(intents.get(itemId));
-                }
-            }
-        });
-
-        final String title = getFilePickerTitle(context, aMimeType);
-        // Runnable has to be called to show an intent-like
-        // context menu UI using the PromptService.
-        ThreadUtils.postToUiThread(new Runnable() {
-            @Override public void run() {
-                prompt.show(title, "", items, false);
-            }
-        });
+        Intent chooser = Intent.createChooser(base, getFilePickerTitle(context, mimeType));
+        chooser.putExtra(Intent.EXTRA_INITIAL_INTENTS, intents.toArray(new Parcelable[]{}));
+        handler.gotIntent(chooser);
     }
 
     /* Allows the user to pick an activity to load files from using a list prompt. Then opens the activity and
