@@ -58,8 +58,6 @@ LazyScript::functionDelazifying(JSContext *cx) const
 inline JSFunction *
 JSScript::functionDelazifying() const
 {
-    js::AutoThreadSafeAccess ts(this);
-    JS_ASSERT(js::CurrentThreadCanWriteCompilationData());
     if (function_ && function_->isInterpretedLazy()) {
         function_->setUnlazifiedScript(const_cast<JSScript *>(this));
         // If this script has a LazyScript, make sure the LazyScript has a
@@ -81,19 +79,15 @@ inline void
 JSScript::ensureNonLazyCanonicalFunction(JSContext *cx)
 {
     // Infallibly delazify the canonical script.
-    if (function_ && function_->isInterpretedLazy()) {
-        js::AutoLockForCompilation lock(cx);
+    if (function_ && function_->isInterpretedLazy())
         functionDelazifying();
-    }
 }
 
 inline JSFunction *
 JSScript::getFunction(size_t index)
 {
     JSFunction *fun = &getObject(index)->as<JSFunction>();
-#ifdef DEBUG
     JS_ASSERT_IF(fun->isNative(), IsAsmJSModuleNative(fun->native()));
-#endif
     return fun;
 }
 
@@ -138,7 +132,6 @@ JSScript::global() const
      * A JSScript always marks its compartment's global (via bindings) so we
      * can assert that maybeGlobal is non-null here.
      */
-    js::AutoThreadSafeAccess ts(this);
     return *compartment()->maybeGlobal();
 }
 
@@ -156,7 +149,8 @@ JSScript::originalFunction() const {
 }
 
 inline void
-JSScript::setIsCallsiteClone(JSObject *fun) {
+JSScript::setIsCallsiteClone(JSObject *fun)
+{
     JS_ASSERT(shouldCloneAtCallsite());
     shouldCloneAtCallsite_ = false;
     isCallsiteClone_ = true;
@@ -166,14 +160,12 @@ JSScript::setIsCallsiteClone(JSObject *fun) {
 }
 
 inline void
-JSScript::setBaselineScript(JSContext *maybecx, js::jit::BaselineScript *baselineScript) {
+JSScript::setBaselineScript(JSContext *maybecx, js::jit::BaselineScript *baselineScript)
+{
 #ifdef JS_ION
     if (hasBaselineScript())
         js::jit::BaselineScript::writeBarrierPre(tenuredZone(), baseline);
 #endif
-    mozilla::Maybe<js::AutoLockForCompilation> lock;
-    if (maybecx)
-        lock.construct(maybecx);
     baseline = baselineScript;
     updateBaselineOrIonRaw();
 }

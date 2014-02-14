@@ -89,7 +89,6 @@ class JitCode : public gc::BarrieredCell<JitCode>
 
   public:
     uint8_t *raw() const {
-        AutoThreadSafeAccess ts(this);
         return code_;
     }
     size_t instructionsSize() const {

@@ -779,17 +779,6 @@ class IonBuilder : public MIRGenerator
     // Constraints for recording dependencies on type information.
     types::CompilerConstraintList *constraints_;
 
-    mozilla::Maybe<AutoLockForCompilation> lock_;
-
-    void lock() {
-        if (!analysisContext)
-            lock_.construct(compartment);
-    }
-    void unlock() {
-        if (!analysisContext)
-            lock_.destroy();
-    }
-
     // Basic analysis information about the script.
     BytecodeAnalysis analysis_;
     BytecodeAnalysis &analysis() {
