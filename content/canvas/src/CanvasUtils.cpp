@@ -56,13 +56,7 @@ DoDrawImageSecurityCheck(dom::HTMLCanvasElement *aCanvasElement,
     if (CORSUsed)
         return;
 
-    // Ignore document.domain in this check.
-    bool subsumes;
-    nsresult rv =
-        aCanvasElement->NodePrincipal()->SubsumesIgnoringDomain(aPrincipal,
-                                                                &subsumes);
-
-    if (NS_SUCCEEDED(rv) && subsumes) {
+    if (aCanvasElement->NodePrincipal()->Subsumes(aPrincipal)) {
         // This canvas has access to that image anyway
         return;
     }

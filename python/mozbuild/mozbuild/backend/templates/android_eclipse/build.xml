@@ -1,0 +1,15 @@
+#filter substitution
+<?xml version="1.0" encoding="UTF-8"?>
+<project>
+    <target name="compile">
+        <property name="topsrcdir" value="@IDE_TOPSRCDIR@"/>
+        <property name="topobjdir" value="@IDE_TOPOBJDIR@"/>
+        <property name="objdir" value="@IDE_OBJDIR@"/>
+        <property name="project_name" value="@IDE_PROJECT_NAME@"/>
+
+        <exec executable="${topsrcdir}/mach" dir="${topobjdir}" failonerror="true">
+            <arg value="build"/>
+            <arg value="${objdir}/ANDROID_ECLIPSE_PROJECT_${project_name}"/>
+        </exec>
+    </target>
+</project>

@@ -37,7 +37,7 @@ BEGIN_TEST(testTypedArrays)
     CHECK(!JS_IsArrayBufferObject(dummy));
 
     CHECK_EQUAL(JS_GetArrayBufferByteLength(buffer), nbytes);
-    memset(JS_GetArrayBufferData(buffer), 1, nbytes);
+    memset(JS_GetStableArrayBufferData(cx, buffer), 1, nbytes);
 
     ok = ok &&
         TestArrayFromBuffer<JS_NewInt8ArrayWithBuffer, JS_NewInt8ArrayFromArray, int8_t, JS_GetInt8ArrayData>(cx) &&
@@ -97,7 +97,7 @@ TestArrayFromBuffer(JSContext *cx)
     size_t nbytes = elts * sizeof(Element);
     RootedObject buffer(cx, JS_NewArrayBuffer(cx, nbytes));
     uint8_t *bufdata;
-    CHECK(bufdata = JS_GetArrayBufferData(buffer));
+    CHECK(bufdata = JS_GetStableArrayBufferData(cx, buffer));
     memset(bufdata, 1, nbytes);
 
     {
@@ -113,7 +113,7 @@ TestArrayFromBuffer(JSContext *cx)
 
     Element *data;
     CHECK(data = GetData(array));
-    CHECK(bufdata = JS_GetArrayBufferData(buffer));
+    CHECK(bufdata = JS_GetStableArrayBufferData(cx, buffer));
     CHECK_EQUAL((void*) data, (void*) bufdata);
 
     CHECK_EQUAL(*bufdata, 1);

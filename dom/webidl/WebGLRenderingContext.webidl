@@ -823,6 +823,11 @@ interface WebGLExtensionElementIndexUint
 };
 
 [NoInterfaceObject]
+interface WebGLExtensionFragDepth
+{
+};
+
+[NoInterfaceObject]
 interface WebGLExtensionLoseContext {
     void loseContext();
     void restoreContext();

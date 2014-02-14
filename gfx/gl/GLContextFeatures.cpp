@@ -112,6 +112,15 @@ static const FeatureInfo sFeatureInfoArr[] = {
         }
     },
     {
+        "frag_depth",
+        200, // OpenGL version
+        300, // OpenGL ES version
+        {
+            GLContext::EXT_frag_depth,
+            GLContext::Extensions_End
+        }
+    },
+    {
         "framebuffer_blit",
         300, // OpenGL version
         300, // OpenGL ES version

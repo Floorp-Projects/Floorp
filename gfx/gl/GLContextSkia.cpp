@@ -142,12 +142,12 @@ GrGLvoid glCullFace_mozilla(GrGLenum mode)
 
 GrGLvoid glDeleteBuffers_mozilla(GrGLsizei n, const GrGLuint* buffers)
 {
-    return sGLContext.get()->fDeleteBuffers(n, const_cast<GrGLuint*>(buffers));
+    return sGLContext.get()->fDeleteBuffers(n, buffers);
 }
 
 GrGLvoid glDeleteFramebuffers_mozilla(GrGLsizei n, const GrGLuint* framebuffers)
 {
-    return sGLContext.get()->fDeleteFramebuffers(n, const_cast<GrGLuint*>(framebuffers));
+    return sGLContext.get()->fDeleteFramebuffers(n, framebuffers);
 }
 
 GrGLvoid glDeleteProgram_mozilla(GrGLuint program)
@@ -157,7 +157,7 @@ GrGLvoid glDeleteProgram_mozilla(GrGLuint program)
 
 GrGLvoid glDeleteRenderbuffers_mozilla(GrGLsizei n, const GrGLuint* renderbuffers)
 {
-    return sGLContext.get()->fDeleteRenderbuffers(n, const_cast<GrGLuint*>(renderbuffers));
+    return sGLContext.get()->fDeleteRenderbuffers(n, renderbuffers);
 }
 
 GrGLvoid glDeleteShader_mozilla(GrGLuint shader)
@@ -167,7 +167,7 @@ GrGLvoid glDeleteShader_mozilla(GrGLuint shader)
 
 GrGLvoid glDeleteTextures_mozilla(GrGLsizei n, const GrGLuint* textures)
 {
-    return sGLContext.get()->fDeleteTextures(n, const_cast<GrGLuint*>(textures));
+    return sGLContext.get()->fDeleteTextures(n, textures);
 }
 
 GrGLvoid glDepthMask_mozilla(GrGLboolean flag)
@@ -447,7 +447,7 @@ GrGLvoid glTexParameteri_mozilla(GrGLenum target, GrGLenum pname, GrGLint param)
 
 GrGLvoid glTexParameteriv_mozilla(GrGLenum target, GrGLenum pname, const GrGLint* params)
 {
-    return sGLContext.get()->fTexParameteriv(target, pname, const_cast<GrGLint*>(params));
+    return sGLContext.get()->fTexParameteriv(target, pname, params);
 }
 
 GrGLvoid glTexSubImage2D_mozilla(GrGLenum target, GrGLint level,
@@ -619,7 +619,7 @@ GrGLvoid glGenQueries_mozilla(GrGLsizei n, GrGLuint* ids)
 
 GrGLvoid glDeleteQueries_mozilla(GrGLsizei n, const GrGLuint* ids)
 {
-    return sGLContext.get()->fDeleteQueries(n, const_cast<GrGLuint*>(ids));
+    return sGLContext.get()->fDeleteQueries(n, ids);
 }
 
 GrGLvoid glBeginQuery_mozilla(GrGLenum target, GrGLuint id)
@@ -651,7 +651,7 @@ GrGLvoid glGetQueryObjectuiv_mozilla(GrGLuint id, GrGLenum pname, GrGLuint* para
 
 GrGLvoid glDrawBuffers_mozilla(GrGLsizei n, const GrGLenum* bufs)
 {
-    return sGLContext.get()->fDrawBuffers(n, const_cast<GrGLenum*>(bufs));
+    return sGLContext.get()->fDrawBuffers(n, bufs);
 }
 
 // GLContext supports glMapBuffer on everything (GL_OES_mapbuffer)

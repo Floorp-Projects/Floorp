@@ -2347,7 +2347,7 @@ let BrowserOnClick = {
    */
   onE10sAboutNewTab: function(aEvent, aOwnerDoc) {
     let isTopFrame = (aOwnerDoc.defaultView.parent === aOwnerDoc.defaultView);
-    if (!isTopFrame) {
+    if (!isTopFrame || aEvent.button != 0) {
       return;
     }
 
