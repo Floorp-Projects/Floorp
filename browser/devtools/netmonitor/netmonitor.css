@@ -60,7 +60,7 @@
     -moz-box-flex: 1;
   }
 
-  #network-table[domain-overflows] .requests-menu-file {
+  #network-table[domain-overflows] .requests-menu-icon-and-file {
     -moz-box-flex: 1;
   }
 }
