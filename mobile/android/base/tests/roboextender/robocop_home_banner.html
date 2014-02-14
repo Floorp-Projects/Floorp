@@ -15,8 +15,10 @@ function start() {
   window[test]();
 }
 
+var messageId;
+
 function addMessage() {
-  Home.banner.add({
+  messageId = Home.banner.add({
     text: TEXT,
     onclick: function() {
       sendMessageToJava({ type: "TestHomeBanner:MessageClicked" });
@@ -26,6 +28,11 @@ function addMessage() {
     }
   });
   sendMessageToJava({ type: "TestHomeBanner:MessageAdded" });
+}
+
+function removeMessage() {
+  Home.banner.remove(messageId);
+  sendMessageToJava({ type: "TestHomeBanner:MessageRemoved" });
 }
 
     </script>
