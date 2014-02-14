@@ -5033,6 +5033,8 @@ dnl enable once PeerConnection lands
     MOZ_SRTP=1
     AC_DEFINE(MOZ_SCTP)
     AC_DEFINE(MOZ_SRTP)
+else
+    MOZ_SYNTH_PICO=
 fi
 
 AC_SUBST(MOZ_WEBRTC)
