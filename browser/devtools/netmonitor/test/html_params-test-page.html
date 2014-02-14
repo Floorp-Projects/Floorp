@@ -1,0 +1,54 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Network Monitor test page</title>
+  </head>
+
+  <body>
+    <p>Request params type test</p>
+
+    <script type="text/javascript">
+      function post(aAddress, aQuery, aContentType, aPostBody) {
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", aAddress + aQuery, true);
+        xhr.setRequestHeader("content-type", aContentType);
+        xhr.send(aPostBody);
+      }
+
+      function performRequests() {
+        var urlencoded = "application/x-www-form-urlencoded";
+
+        setTimeout(function() {
+          post("baz", "?a", urlencoded, '{ "foo": "bar" }');
+
+          setTimeout(function() {
+            post("baz", "?a=b", urlencoded, '{ "foo": "bar" }');
+
+            setTimeout(function() {
+              post("baz", "?a=b", urlencoded, '?foo=bar');
+
+              setTimeout(function() {
+                post("baz", "?a", undefined, '{ "foo": "bar" }');
+
+                setTimeout(function() {
+                  post("baz", "?a=b", undefined, '{ "foo": "bar" }');
+
+                  setTimeout(function() {
+                    post("baz", "?a=b", undefined, '?foo=bar');
+
+                    // Done.
+                  }, 10);
+                }, 10);
+              }, 10);
+            }, 10);
+          }, 10);
+        }, 10);
+      }
+    </script>
+  </body>
+
+</html>

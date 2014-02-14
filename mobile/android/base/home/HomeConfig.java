@@ -469,16 +469,71 @@ public final class HomeConfig {
         };
     }
 
+    public static enum ItemHandler implements Parcelable {
+        BROWSER("browser"),
+        INTENT("intent");
+
+        private final String mId;
+
+        ItemHandler(String id) {
+            mId = id;
+        }
+
+        public static ItemHandler fromId(String id) {
+            if (id == null) {
+                throw new IllegalArgumentException("Could not convert null String to ItemHandler");
+            }
+
+            for (ItemHandler itemHandler : ItemHandler.values()) {
+                if (TextUtils.equals(itemHandler.mId, id.toLowerCase())) {
+                    return itemHandler;
+                }
+            }
+
+            throw new IllegalArgumentException("Could not convert String id to ItemHandler");
+        }
+
+        @Override
+        public String toString() {
+            return mId;
+        }
+
+        @Override
+        public int describeContents() {
+            return 0;
+        }
+
+        @Override
+        public void writeToParcel(Parcel dest, int flags) {
+            dest.writeInt(ordinal());
+        }
+
+        public static final Creator<ItemHandler> CREATOR = new Creator<ItemHandler>() {
+            @Override
+            public ItemHandler createFromParcel(final Parcel source) {
+                return ItemHandler.values()[source.readInt()];
+            }
+
+            @Override
+            public ItemHandler[] newArray(final int size) {
+                return new ItemHandler[size];
+            }
+        };
+    }
+
     public static class ViewConfig implements Parcelable {
         private final ViewType mType;
         private final String mDatasetId;
+        private final ItemHandler mItemHandler;
 
         private static final String JSON_KEY_TYPE = "type";
         private static final String JSON_KEY_DATASET = "dataset";
+        private static final String JSON_KEY_ITEM_HANDLER = "itemHandler";
 
         public ViewConfig(JSONObject json) throws JSONException, IllegalArgumentException {
             mType = ViewType.fromId(json.getString(JSON_KEY_TYPE));
             mDatasetId = json.getString(JSON_KEY_DATASET);
+            mItemHandler = ItemHandler.fromId(json.getString(JSON_KEY_ITEM_HANDLER));
 
             validate();
         }
@@ -487,6 +542,7 @@ public final class HomeConfig {
         public ViewConfig(Parcel in) {
             mType = (ViewType) in.readParcelable(getClass().getClassLoader());
             mDatasetId = in.readString();
+            mItemHandler = (ItemHandler) in.readParcelable(getClass().getClassLoader());
 
             validate();
         }
@@ -494,13 +550,15 @@ public final class HomeConfig {
         public ViewConfig(ViewConfig viewConfig) {
             mType = viewConfig.mType;
             mDatasetId = viewConfig.mDatasetId;
+            mItemHandler = viewConfig.mItemHandler;
 
             validate();
         }
 
-        public ViewConfig(ViewType type, String datasetId) {
+        public ViewConfig(ViewType type, String datasetId, ItemHandler itemHandler) {
             mType = type;
             mDatasetId = datasetId;
+            mItemHandler = itemHandler;
 
             validate();
         }
@@ -513,6 +571,10 @@ public final class HomeConfig {
             if (TextUtils.isEmpty(mDatasetId)) {
                 throw new IllegalArgumentException("Can't create ViewConfig with empty dataset ID");
             }
+
+            if (mItemHandler == null) {
+                throw new IllegalArgumentException("Can't create ViewConfig with null item handler");
+            }
         }
 
         public ViewType getType() {
@@ -523,11 +585,16 @@ public final class HomeConfig {
             return mDatasetId;
         }
 
+        public ItemHandler getItemHandler() {
+            return mItemHandler;
+        }
+
         public JSONObject toJSON() throws JSONException {
             final JSONObject json = new JSONObject();
 
             json.put(JSON_KEY_TYPE, mType.toString());
             json.put(JSON_KEY_DATASET, mDatasetId);
+            json.put(JSON_KEY_ITEM_HANDLER, mItemHandler.toString());
 
             return json;
         }
@@ -541,6 +608,7 @@ public final class HomeConfig {
         public void writeToParcel(Parcel dest, int flags) {
             dest.writeParcelable(mType, 0);
             dest.writeString(mDatasetId);
+            dest.writeParcelable(mItemHandler, 0);
         }
 
         public static final Creator<ViewConfig> CREATOR = new Creator<ViewConfig>() {

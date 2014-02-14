@@ -179,7 +179,7 @@ var testCases = [
   {
     name: "String with quote",
     input: "var foo = \"'\";\n",
-    output: "var foo = '\'';\n"
+    output: "var foo = '\\'';\n"
   },
 
   {
