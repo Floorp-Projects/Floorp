@@ -51,7 +51,6 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSISERIALIZABLE
   NS_IMETHOD Equals(nsIPrincipal* other, bool* _retval);
-  NS_IMETHOD EqualsIgnoringDomain(nsIPrincipal* other, bool* _retval);
   NS_IMETHOD EqualsConsideringDomain(nsIPrincipal* other, bool* _retval);
   NS_IMETHOD GetHashValue(uint32_t* aHashValue);
   NS_IMETHOD GetURI(nsIURI** aURI);
@@ -59,7 +58,6 @@ public:
   NS_IMETHOD SetDomain(nsIURI* aDomain);
   NS_IMETHOD GetOrigin(char** aOrigin);
   NS_IMETHOD Subsumes(nsIPrincipal* other, bool* _retval);
-  NS_IMETHOD SubsumesIgnoringDomain(nsIPrincipal* other, bool* _retval);
   NS_IMETHOD SubsumesConsideringDomain(nsIPrincipal* other, bool* _retval);
   NS_IMETHOD CheckMayLoad(nsIURI* uri, bool report, bool allowIfInheritsPrincipal);
   NS_IMETHOD GetJarPrefix(nsACString& aJarPrefix);
@@ -136,7 +134,6 @@ public:
   NS_DECL_NSIEXPANDEDPRINCIPAL
   NS_DECL_NSISERIALIZABLE
   NS_IMETHOD Equals(nsIPrincipal* other, bool* _retval);
-  NS_IMETHOD EqualsIgnoringDomain(nsIPrincipal* other, bool* _retval);
   NS_IMETHOD EqualsConsideringDomain(nsIPrincipal* other, bool* _retval);
   NS_IMETHOD GetHashValue(uint32_t* aHashValue);
   NS_IMETHOD GetURI(nsIURI** aURI);
@@ -144,7 +141,6 @@ public:
   NS_IMETHOD SetDomain(nsIURI* aDomain);
   NS_IMETHOD GetOrigin(char** aOrigin);
   NS_IMETHOD Subsumes(nsIPrincipal* other, bool* _retval);
-  NS_IMETHOD SubsumesIgnoringDomain(nsIPrincipal* other, bool* _retval);
   NS_IMETHOD SubsumesConsideringDomain(nsIPrincipal* other, bool* _retval);
   NS_IMETHOD CheckMayLoad(nsIURI* uri, bool report, bool allowIfInheritsPrincipal);
   NS_IMETHOD GetJarPrefix(nsACString& aJarPrefix);
