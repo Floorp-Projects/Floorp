@@ -231,7 +231,7 @@ nsPrincipal::GetOrigin(char **aOrigin)
 }
 
 NS_IMETHODIMP
-nsPrincipal::Equals(nsIPrincipal *aOther, bool *aResult)
+nsPrincipal::EqualsConsideringDomain(nsIPrincipal *aOther, bool *aResult)
 {
   *aResult = false;
 
@@ -245,14 +245,13 @@ nsPrincipal::Equals(nsIPrincipal *aOther, bool *aResult)
     return NS_OK;
   }
 
-  // Codebases are equal if they have the same origin.
   *aResult = NS_SUCCEEDED(
                nsScriptSecurityManager::CheckSameOriginPrincipal(this, aOther));
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPrincipal::EqualsIgnoringDomain(nsIPrincipal *aOther, bool *aResult)
+nsPrincipal::Equals(nsIPrincipal *aOther, bool *aResult)
 {
   *aResult = false;
 
@@ -286,7 +285,7 @@ nsPrincipal::EqualsIgnoringDomain(nsIPrincipal *aOther, bool *aResult)
 }
 
 NS_IMETHODIMP
-nsPrincipal::EqualsConsideringDomain(nsIPrincipal *aOther, bool *aResult)
+nsPrincipal::EqualsIgnoringDomain(nsIPrincipal *aOther, bool *aResult)
 {
   return Equals(aOther, aResult);
 }
@@ -306,7 +305,7 @@ nsPrincipal::SubsumesIgnoringDomain(nsIPrincipal *aOther, bool *aResult)
 NS_IMETHODIMP
 nsPrincipal::SubsumesConsideringDomain(nsIPrincipal *aOther, bool *aResult)
 {
-  return Subsumes(aOther, aResult);
+  return EqualsConsideringDomain(aOther, aResult);
 }
 
 NS_IMETHODIMP

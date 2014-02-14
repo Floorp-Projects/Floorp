@@ -31,12 +31,12 @@ interface nsIPrincipal : nsISerializable
     boolean equals(in nsIPrincipal other);
 
     /**
-     * Like equals, but doesn't take document.domain changes into account.
+     * An alias for equals() (for now).
      */
     boolean equalsIgnoringDomain(in nsIPrincipal other);
 
     /**
-     * An alias for equals() (for now).
+     * Like equals, but takes document.domain changes into account.
      */
     boolean equalsConsideringDomain(in nsIPrincipal other);
 
@@ -101,13 +101,13 @@ interface nsIPrincipal : nsISerializable
     boolean subsumes(in nsIPrincipal other);
 
     /**
-     * Same as the previous method, subsumes(), but for codebase principals
-     * ignores changes to document.domain.
+     * An alias for subsumes() (for now);
      */
     boolean subsumesIgnoringDomain(in nsIPrincipal other);
 
     /**
-     * An alias for subsumes() (for now);
+     * Same as the previous method, subsumes(), but takes document.domain into
+     * account.
      */
     boolean subsumesConsideringDomain(in nsIPrincipal other);
 
