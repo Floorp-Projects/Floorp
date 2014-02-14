@@ -10,8 +10,10 @@
 #include "nsCoord.h"
 
 class nsScrollbarFrame;
+class nsIDOMEventTarget;
+class nsIFrame;
 
-class nsIScrollbarMediator
+class nsIScrollbarMediator : public nsQueryFrame
 {
 public:
   NS_DECL_QUERYFRAME_TARGET(nsIScrollbarMediator)
@@ -45,6 +47,18 @@ public:
                           nscoord aOldPos,
                           nscoord aNewPos) = 0;
   virtual void VisibilityChanged(bool aVisible) = 0;
+
+  /**
+   * Obtain the frame for the horizontal or vertical scrollbar, or null
+   * if there is no such box.
+   */
+  virtual nsIFrame* GetScrollbarBox(bool aVertical) = 0;
+  /**
+   * Show or hide scrollbars on 2 fingers touch.
+   * Subclasses should call their ScrollbarActivity's corresponding methods.
+   */
+  virtual void ScrollbarActivityStarted() const = 0;
+  virtual void ScrollbarActivityStopped() const = 0;
 };
 
 #endif

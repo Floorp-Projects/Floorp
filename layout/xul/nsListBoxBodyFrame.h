@@ -64,6 +64,9 @@ public:
                           int32_t aOldPos,
                           int32_t aNewPos) MOZ_OVERRIDE;
   virtual void VisibilityChanged(bool aVisible) MOZ_OVERRIDE;
+  virtual nsIFrame* GetScrollbarBox(bool aVertical) MOZ_OVERRIDE;
+  virtual void ScrollbarActivityStarted() const MOZ_OVERRIDE {}
+  virtual void ScrollbarActivityStopped() const MOZ_OVERRIDE {}
 
 
   // nsIReflowCallback

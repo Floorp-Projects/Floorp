@@ -431,6 +431,13 @@ nsListBoxBodyFrame::VisibilityChanged(bool aVisible)
   }
 }
 
+nsIFrame*
+nsListBoxBodyFrame::GetScrollbarBox(bool aVertical)
+{
+  nsIScrollableFrame* scrollFrame = nsLayoutUtils::GetScrollableFrameFor(this);
+  return scrollFrame ? scrollFrame->GetScrollbarBox(true) : nullptr;
+}
+
 void
 nsListBoxBodyFrame::UpdateIndex(int32_t aDirection)
 {

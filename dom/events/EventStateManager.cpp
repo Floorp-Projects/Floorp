@@ -2254,7 +2254,7 @@ EventStateManager::ComputeScrollTarget(nsIFrame* aTargetFrame,
 }
 
 // Overload ComputeScrollTarget method to allow passing "test" dx and dy when looking
-// for which scrollbarowners to activate when two finger down on trackpad
+// for which scrollbarmediators to activate when two finger down on trackpad
 // and before any actual motion
 nsIScrollableFrame*
 EventStateManager::ComputeScrollTarget(nsIFrame* aTargetFrame,
