@@ -134,7 +134,7 @@ nsNullPrincipal::Equals(nsIPrincipal *aOther, bool *aResult)
 }
 
 NS_IMETHODIMP
-nsNullPrincipal::EqualsIgnoringDomain(nsIPrincipal *aOther, bool *aResult)
+nsNullPrincipal::EqualsConsideringDomain(nsIPrincipal *aOther, bool *aResult)
 {
   return Equals(aOther, aResult);
 }
@@ -211,7 +211,7 @@ nsNullPrincipal::Subsumes(nsIPrincipal *aOther, bool *aResult)
 }
 
 NS_IMETHODIMP
-nsNullPrincipal::SubsumesIgnoringDomain(nsIPrincipal *aOther, bool *aResult)
+nsNullPrincipal::SubsumesConsideringDomain(nsIPrincipal *aOther, bool *aResult)
 {
   return Subsumes(aOther, aResult);
 }

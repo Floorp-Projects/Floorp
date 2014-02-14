@@ -5,3 +5,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 include('android-services.mozbuild')
+
+main = add_android_eclipse_project('BackgroundInstrumentationTests', OBJDIR + '/AndroidManifest.xml')
+main.package_name = 'org.mozilla.background.test'
+main.res = SRCDIR + '/res'
+main.recursive_make_targets += [
+    OBJDIR + '/AndroidManifest.xml',
+    TOPOBJDIR + '/mobile/android/base/tests/TestConstants.java']
+main.referenced_projects += ['Fennec']
+
+main.add_classpathentry('src', SRCDIR + '/src',
+    dstdir='src/org/mozilla/gecko/background')
