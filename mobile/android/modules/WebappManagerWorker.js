@@ -26,14 +26,22 @@ onmessage = function(event) {
   request.onreadystatechange = function(event) {
     log("onreadystatechange: " + request.readyState);
 
-    if (request.readyState == 4) {
-      file.close();
+    if (request.readyState !== 4) {
+      return;
+    }
 
-      if (request.status == 200 || request.status == 0) {
-        postMessage({ type: "success" });
-      } else {
-        postMessage({ type: "failure", message: request.statusText });
+    file.close();
+
+    if (request.status === 200) {
+      postMessage({ type: "success" });
+    } else {
+      try {
+        OS.File.remove(path);
+      } catch(ex) {
+        log("error removing " + path + ": " + ex);
       }
+      let statusMessage = request.status + " - " + request.statusText;
+      postMessage({ type: "failure", message: statusMessage });
     }
   };
 

@@ -631,13 +631,6 @@ public abstract class GeckoApp
                 final String title = message.getString("title");
                 final String type = message.getString("shortcutType");
                 GeckoAppShell.removeShortcut(title, url, origin, type);
-            } else if (!AppConstants.MOZ_ANDROID_SYNTHAPKS && event.equals("WebApps:PreInstall")) {
-                String name = message.getString("name");
-                String manifestURL = message.getString("manifestURL");
-                String origin = message.getString("origin");
-
-                // preInstallWebapp will return a File object pointing to the profile directory of the webapp
-                mCurrentResponse = EventListener.preInstallWebApp(name, manifestURL, origin).toString();
             } else if (event.equals("Share:Text")) {
                 String text = message.getString("text");
                 GeckoAppShell.openUriExternal(text, "text/plain", "", "", Intent.ACTION_SEND, "");
@@ -1555,7 +1548,6 @@ public abstract class GeckoApp
         registerEventListener("Locale:Set");
         registerEventListener("NativeApp:IsDebuggable");
         registerEventListener("SystemUI:Visibility");
-        registerEventListener("WebApps:PreInstall");
 
         EventListener.registerEvents();
 
@@ -2084,7 +2076,6 @@ public abstract class GeckoApp
         unregisterEventListener("Locale:Set");
         unregisterEventListener("NativeApp:IsDebuggable");
         unregisterEventListener("SystemUI:Visibility");
-        unregisterEventListener("WebApps:PreInstall");
 
         EventListener.unregisterEvents();
 
