@@ -142,8 +142,8 @@ window.addEventListener('ContentStart', function() {
 
   // Now scale the browser element as needed
   if (scale !== 1) {
-    browser.style.MozTransformOrigin = 'top left';
-    browser.style.MozTransform = 'scale(' + scale + ',' + scale + ')';
+    browser.style.transformOrigin = 'top left';
+    browser.style.transform = 'scale(' + scale + ',' + scale + ')';
   }
 
   // Set the pixel density that we want to simulate.
