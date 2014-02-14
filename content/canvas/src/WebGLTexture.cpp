@@ -350,8 +350,8 @@ WebGLTexture::ResolvedFakeBlackStatus() {
                                       "Try enabling the OES_texture_float_linear extension if supported.", msg_rendering_as_black);
             mFakeBlackStatus = WebGLTextureFakeBlackStatus::IncompleteTexture;
         }
-    }
-    else if (ImageInfoBase().mType == LOCAL_GL_HALF_FLOAT_OES)
+    } else if (ImageInfoBase().mType == LOCAL_GL_HALF_FLOAT_OES &&
+               !Context()->IsExtensionEnabled(WebGLContext::OES_texture_half_float_linear))
     {
         if (mMinFilter == LOCAL_GL_LINEAR ||
             mMinFilter == LOCAL_GL_LINEAR_MIPMAP_LINEAR ||
