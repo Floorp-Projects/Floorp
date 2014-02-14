@@ -76,6 +76,8 @@ class WindowsDllNopSpacePatcher
   byteptr_t mPatchedFns[maxPatchedFns];
   int mPatchedFnsLen;
 
+  static const uint16_t opTrampolineShortJump = 0xf9eb;
+
 public:
   WindowsDllNopSpacePatcher()
     : mModule(0)
@@ -88,6 +90,11 @@ public:
 
     for (int i = 0; i < mPatchedFnsLen; i++) {
       byteptr_t fn = mPatchedFns[i];
+
+      // If other code has changed this function, it is not safe to modify.
+      if (*((uint16_t*)fn) != opTrampolineShortJump) {
+        continue;
+      }
 
       // Ensure we can write to the code.
       DWORD op;
@@ -190,7 +197,7 @@ public:
     *origFunc = fn + 2;
 
     // Short jump up into our long jump.
-    *((uint16_t*)(fn)) = 0xf9eb; // jmp $-5
+    *((uint16_t*)(fn)) = opTrampolineShortJump; // jmp $-5
 
     // I think this routine is safe without this, but it can't hurt.
     FlushInstructionCache(GetCurrentProcess(),
@@ -230,6 +237,25 @@ public:
 #error "Unknown processor type"
 #endif
       byteptr_t origBytes = *((byteptr_t *)p);
+
+      // If CreateTrampoline failed, we may have an empty trampoline.
+      if (!origBytes) {
+        continue;
+      }
+
+      // If other code has changed this function, it is not safe to modify.
+#if defined(_M_IX86)
+      if (*origBytes != opTrampolineRelativeJump) {
+        continue;
+      }
+#elif defined(_M_X64)
+      if (*((uint16_t*)origBytes) != opTrampolineRegLoad) {
+        continue;
+      }
+#else
+#error "Unknown processor type"
+#endif
+
       // ensure we can modify the original code
       DWORD op;
       if (!VirtualProtectEx(GetCurrentProcess(), origBytes, nBytes, PAGE_EXECUTE_READWRITE, &op)) {
@@ -318,6 +344,9 @@ public:
 protected:
   const static int kPageSize = 4096;
   const static int kHookSize = 128;
+
+  const static uint8_t opTrampolineRelativeJump = 0xe9;
+  const static uint16_t opTrampolineRegLoad = 0xbb49;
 
   HMODULE mModule;
   byteptr_t mHookPage;
@@ -561,15 +590,14 @@ protected:
       // Adjust jump target displacement to jump location in the trampoline.
       *((intptr_t*)(tramp+pJmp32+1)) += origBytes - tramp;
     } else {
-      tramp[nBytes] = 0xE9; // jmp
+      tramp[nBytes] = opTrampolineRelativeJump; // jmp
       *((intptr_t*)(tramp+nBytes+1)) = (intptr_t)trampDest - (intptr_t)(tramp+nBytes+5); // target displacement
     }
 #elif defined(_M_X64)
     // If JMP32 opcode found, we don't insert to trampoline jump 
     if (pJmp32 >= 0) {
       // mov r11, address
-      tramp[pJmp32]   = 0x49;
-      tramp[pJmp32+1] = 0xbb;
+      *((uint16_t*)(tramp+pJmp32)) = opTrampolineRegLoad;
       *((intptr_t*)(tramp+pJmp32+2)) = (intptr_t)directJmpAddr;
 
       // jmp r11
@@ -578,8 +606,7 @@ protected:
       tramp[pJmp32+12] = 0xe3;
     } else {
       // mov r11, address
-      tramp[nBytes] = 0x49;
-      tramp[nBytes+1] = 0xbb;
+      *((uint16_t*)(tramp+nBytes)) = opTrampolineRegLoad;
       *((intptr_t*)(tramp+nBytes+2)) = (intptr_t)trampDest;
 
       // jmp r11
@@ -601,13 +628,11 @@ protected:
 
 #if defined(_M_IX86)
     // now modify the original bytes
-    origBytes[0] = 0xE9; // jmp
+    origBytes[0] = opTrampolineRelativeJump; // jmp
     *((intptr_t*)(origBytes+1)) = dest - (intptr_t)(origBytes+5); // target displacement
 #elif defined(_M_X64)
     // mov r11, address
-    origBytes[0] = 0x49;
-    origBytes[1] = 0xbb;
-
+    *((uint16_t*)(origBytes)) = opTrampolineRegLoad;
     *((intptr_t*)(origBytes+2)) = dest;
 
     // jmp r11
