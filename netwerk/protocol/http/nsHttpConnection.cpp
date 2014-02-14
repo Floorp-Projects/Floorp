@@ -364,16 +364,16 @@ nsHttpConnection::Activate(nsAHttpTransaction *trans, uint32_t caps, int32_t pri
     mResponseTimeoutEnabled = mTransaction->ResponseTimeout() > 0 &&
                               mTransaction->ResponseTimeoutEnabled();
 
-    rv = OnOutputStreamReady(mSocketOut);
-
     if (NS_SUCCEEDED(rv)) {
         nsresult rv2 = StartShortLivedTCPKeepalives();
         if (NS_WARN_IF(NS_FAILED(rv2))) {
             LOG(("nsHttpConnection::Activate [%p] "
                  "StartShortLivedTCPKeepalives failed rv2[0x%x]",
-                 this, rv));
+                 this, rv2));
         }
     }
+
+    rv = OnOutputStreamReady(mSocketOut);
 
 failed_activation:
     if (NS_FAILED(rv)) {
@@ -1638,8 +1638,7 @@ nsHttpConnection::ReportDataUsage(bool allowDefer)
 nsresult
 nsHttpConnection::StartShortLivedTCPKeepalives()
 {
-    MOZ_ASSERT(!mUsingSpdyVersion, "Don't use TCP Keepalive with SPDY!");
-    if (NS_WARN_IF(mUsingSpdyVersion)) {
+    if (mUsingSpdyVersion) {
         return NS_OK;
     }
     MOZ_ASSERT(mSocketTransport);
