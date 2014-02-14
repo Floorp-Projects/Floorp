@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko.webapp;
 
+import org.mozilla.gecko.ActivityHandlerHelper;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoProfile;
@@ -223,7 +224,7 @@ public class EventListener implements GeckoEventListener {
         intent.setDataAndType(Uri.fromFile(file), "application/vnd.android.package-archive");
 
         // Now call the package installer.
-        GeckoAppShell.sActivityHelper.startIntentForActivity(context, intent, new ActivityResultHandler() {
+        ActivityHandlerHelper.startIntentForActivity(context, intent, new ActivityResultHandler() {
             @Override
             public void onActivityResult(int resultCode, Intent data) {
                 // The InstallListener will catch the case where the user pressed install.
