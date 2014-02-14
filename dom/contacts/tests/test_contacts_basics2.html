@@ -681,12 +681,15 @@ var steps = [
     req.onerror = onFailure;
   },
   function() {
-    ok(true, "Test setting array properties to scalar values")
+    ok(true, "Test that after setting array properties to scalar values the property os not a non-array")
     const FIELDS = ["email","url","adr","tel","impp"];
     createResult1 = new mozContact();
     for (var prop of FIELDS) {
-      createResult1[prop] = {type: ["foo"]};
-      ok(Array.isArray(createResult1[prop]), prop + " is array");
+      try {
+        createResult1[prop] = {type: ["foo"]};
+      } catch (e) {}
+      ok(createResult1[prop] === null ||
+         Array.isArray(createResult1[prop]), prop + " is array");
     }
     next();
   },
