@@ -349,7 +349,6 @@ SharedSurface_GLTexture::~SharedSurface_GLTexture()
         return;
 
     if (mOwnsTex) {
-        GLuint tex = mTex;
         mGL->fDeleteTextures(1, &mTex);
     }
 
