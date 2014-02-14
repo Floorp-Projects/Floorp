@@ -323,7 +323,7 @@ DEBUG_CheckUnwrapSafety(HandleObject obj, js::Wrapper *handler,
         // this case.
     } else {
         // Otherwise, it should depend on whether the target subsumes the origin.
-        MOZ_ASSERT(handler->hasSecurityPolicy() == !AccessCheck::subsumes(target, origin));
+        MOZ_ASSERT(handler->hasSecurityPolicy() == !AccessCheck::subsumesConsideringDomain(target, origin));
     }
 }
 #else
@@ -385,8 +385,8 @@ WrapperFactory::Rewrap(JSContext *cx, HandleObject existing, HandleObject obj,
     JSCompartment *target = js::GetContextCompartment(cx);
     bool originIsChrome = AccessCheck::isChrome(origin);
     bool targetIsChrome = AccessCheck::isChrome(target);
-    bool originSubsumesTarget = AccessCheck::subsumes(origin, target);
-    bool targetSubsumesOrigin = AccessCheck::subsumes(target, origin);
+    bool originSubsumesTarget = AccessCheck::subsumesConsideringDomain(origin, target);
+    bool targetSubsumesOrigin = AccessCheck::subsumesConsideringDomain(target, origin);
     bool sameOrigin = targetSubsumesOrigin && originSubsumesTarget;
     XrayType xrayType = GetXrayType(obj);
     bool waiveXrayFlag = flags & WAIVE_XRAY_WRAPPER_FLAG;
