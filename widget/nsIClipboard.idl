@@ -11,12 +11,11 @@
 
 interface nsIArray;
 
-[scriptable, uuid(ceaa0047-647f-4b8e-ad1c-aff9fa62aa51)]
+[scriptable, uuid(38984945-8674-4d04-b786-5c0ca9434457)]
 interface nsIClipboard : nsISupports
 {
     const long kSelectionClipboard = 0;
     const long kGlobalClipboard = 1;
-    const long kFindClipboard = 2;
     
    /**
     * Given a transferable, set the data on the native clipboard
@@ -74,14 +73,6 @@ interface nsIClipboard : nsISupports
     * @result NS_OK if successful.
     */
     boolean supportsSelectionClipboard ( ) ;
-
-    /**
-    * Allows clients to determine if the implementation supports the concept of a
-    * separate clipboard for find search strings.
-    *
-    * @result NS_OK if successful.
-    */
-    boolean supportsFindClipboard ( ) ;
 };
 
 
