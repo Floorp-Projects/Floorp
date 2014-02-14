@@ -79,6 +79,9 @@ TextAttrsMgr::GetAttributes(nsIPersistentProperties* aAttributes,
   if (mOffsetAcc) {
     offsetNode = mOffsetAcc->GetContent();
     offsetElm = nsCoreUtils::GetDOMElementFor(offsetNode);
+    NS_ASSERTION(offsetElm, "No element for offset accessible!");
+    if (!offsetElm)
+      return;
     frame = offsetElm->GetPrimaryFrame();
   }
 

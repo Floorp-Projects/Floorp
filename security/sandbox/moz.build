@@ -13,7 +13,10 @@ elif CONFIG['OS_ARCH'] == 'WINNT':
     EXPORT_LIBRARY = True
     FORCE_STATIC_LIB = True
 
-    DIRS += ['win/src/sandboxbroker']
+    DIRS += [
+        'win/src/sandboxbroker',
+        'win/src/sandboxtarget',
+    ]
 
     SOURCES += [
         'chromium/base/at_exit.cc',
