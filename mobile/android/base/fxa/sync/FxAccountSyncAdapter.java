@@ -5,6 +5,7 @@
 package org.mozilla.gecko.fxa.sync;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -31,8 +32,10 @@ import org.mozilla.gecko.fxa.login.Married;
 import org.mozilla.gecko.fxa.login.State;
 import org.mozilla.gecko.fxa.login.State.Action;
 import org.mozilla.gecko.fxa.login.State.StateLabel;
+import org.mozilla.gecko.sync.BackoffHandler;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.GlobalSession;
+import org.mozilla.gecko.sync.PrefsBackoffHandler;
 import org.mozilla.gecko.sync.SharedPreferencesClientsDataDelegate;
 import org.mozilla.gecko.sync.SyncConfiguration;
 import org.mozilla.gecko.sync.Utils;
@@ -52,6 +55,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.AbstractThreadedSyncAdapter;
 import android.content.ContentProviderClient;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -64,6 +68,9 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
   private static final String LOG_TAG = FxAccountSyncAdapter.class.getSimpleName();
 
   public static final int NOTIFICATION_ID = LOG_TAG.hashCode();
+
+  // Tracks the last seen storage hostname for backoff purposes.
+  private static final String PREF_BACKOFF_STORAGE_HOST = "backoffStorageHost";
 
   protected final ExecutorService executor;
 
@@ -163,34 +170,57 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
       setSyncResultSoftError();
       latch.countDown();
     }
+
+    public void postponeSync(long millis) {
+      if (millis <= 0) {
+        Logger.debug(LOG_TAG, "Asked to postpone sync, but zero delay. Short-circuiting.");
+      } else {
+        // delayUntil is broken: https://code.google.com/p/android/issues/detail?id=65669
+        // So we don't bother doing this. Instead, we rely on the periodic sync
+        // we schedule, and the backoff handler for the rest.
+        /*
+        Logger.warn(LOG_TAG, "Postponing sync by " + millis + "ms.");
+        syncResult.delayUntil = millis / 1000;
+         */
+      }
+      setSyncResultSoftError();
+      latch.countDown();
+    }
   }
 
-  /**
-   * A trivial global session callback that ignores backoff requests, upgrades,
-   * and authorization errors. It simply waits until the sync completes.
-   */
   protected static class SessionCallback implements BaseGlobalSessionCallback {
     protected final SyncDelegate syncDelegate;
+    protected final SchedulePolicy schedulePolicy;
+    protected volatile BackoffHandler storageBackoffHandler;
 
-    public SessionCallback(SyncDelegate syncDelegate) {
+    public SessionCallback(SyncDelegate syncDelegate, SchedulePolicy schedulePolicy) {
       this.syncDelegate = syncDelegate;
+      this.schedulePolicy = schedulePolicy;
+    }
+
+    public void setBackoffHandler(BackoffHandler backoffHandler) {
+      this.storageBackoffHandler = backoffHandler;
     }
 
     @Override
-    public boolean shouldBackOff() {
-      return false;
+    public boolean shouldBackOffStorage() {
+      return storageBackoffHandler.delayMilliseconds() > 0;
     }
 
     @Override
-    public void requestBackoff(long backoff) {
+    public void requestBackoff(long backoffMillis) {
+      final boolean onlyExtend = true;      // Because we trust what the storage server says.
+      schedulePolicy.configureBackoffMillisOnBackoff(storageBackoffHandler, backoffMillis, onlyExtend);
     }
 
     @Override
     public void informUpgradeRequiredResponse(GlobalSession session) {
+      schedulePolicy.onUpgradeRequired();
     }
 
     @Override
     public void informUnauthorizedResponse(GlobalSession globalSession, URI oldClusterURL) {
+      schedulePolicy.onUnauthorized();
     }
 
     @Override
@@ -200,34 +230,110 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
     @Override
     public void handleSuccess(GlobalSession globalSession) {
       Logger.info(LOG_TAG, "Global session succeeded.");
-      syncDelegate.handleSuccess();
+
+      // Get the number of clients, so we can schedule the sync interval accordingly.
+      try {
+        int otherClientsCount = globalSession.getClientsDelegate().getClientsCount();
+        Logger.debug(LOG_TAG, "" + otherClientsCount + " other client(s).");
+        this.schedulePolicy.onSuccessfulSync(otherClientsCount);
+      } finally {
+        // Continue with the usual success flow.
+        syncDelegate.handleSuccess();
+      }
     }
 
     @Override
     public void handleError(GlobalSession globalSession, Exception e) {
       Logger.warn(LOG_TAG, "Global session failed."); // Exception will be dumped by delegate below.
       syncDelegate.handleError(e);
+      // TODO: should we reduce the periodic sync interval?
     }
 
     @Override
     public void handleAborted(GlobalSession globalSession, String reason) {
       Logger.warn(LOG_TAG, "Global session aborted: " + reason);
       syncDelegate.handleError(null);
+      // TODO: should we reduce the periodic sync interval?
     }
   };
 
+  /**
+   * Return true if the provided {@link BackoffHandler} isn't reporting that we're in
+   * a backoff state, or the provided {@link Bundle} contains flags that indicate
+   * we should force a sync.
+   */
+  private boolean shouldPerformSync(final BackoffHandler backoffHandler, final String kind, final Bundle extras) {
+    final long delay = backoffHandler.delayMilliseconds();
+    if (delay <= 0) {
+      return true;
+    }
+
+    if (extras == null) {
+      return false;
+    }
+
+    final boolean forced = extras.getBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, false);
+    if (forced) {
+      Logger.info(LOG_TAG, "Forced sync (" + kind + "): overruling remaining backoff of " + delay + "ms.");
+    } else {
+      Logger.info(LOG_TAG, "Not syncing (" + kind + "): must wait another " + delay + "ms.");
+    }
+    return forced;
+  }
+
   protected void syncWithAssertion(final String audience,
                                    final String assertion,
-                                   URI tokenServerEndpointURI,
+                                   final URI tokenServerEndpointURI,
+                                   final BackoffHandler tokenBackoffHandler,
                                    final SharedPreferences sharedPrefs,
                                    final KeyBundle syncKeyBundle,
                                    final String clientState,
-                                   final BaseGlobalSessionCallback callback) {
-    TokenServerClient tokenServerclient = new TokenServerClient(tokenServerEndpointURI, executor);
-    tokenServerclient.getTokenFromBrowserIDAssertion(assertion, true, clientState, new TokenServerClientDelegate() {
+                                   final SessionCallback callback,
+                                   final Bundle extras) {
+    final TokenServerClientDelegate delegate = new TokenServerClientDelegate() {
+      private boolean didReceiveBackoff = false;
+
       @Override
       public void handleSuccess(final TokenServerToken token) {
         FxAccountConstants.pii(LOG_TAG, "Got token! uid is " + token.uid + " and endpoint is " + token.endpoint + ".");
+
+        if (!didReceiveBackoff) {
+          // We must be OK to touch this token server.
+          tokenBackoffHandler.setEarliestNextRequest(0L);
+        }
+
+        final URI storageServerURI;
+        try {
+          storageServerURI = new URI(token.endpoint);
+        } catch (URISyntaxException e) {
+          handleError(e);
+          return;
+        }
+        final String storageHostname = storageServerURI.getHost();
+
+        // We back off on a per-host basis. When we have an endpoint URI from a token, we
+        // can check on the backoff status for that host.
+        // If we're supposed to be backing off, we abort the not-yet-started session.
+        final BackoffHandler storageBackoffHandler = new PrefsBackoffHandler(sharedPrefs, "sync.storage");
+        callback.setBackoffHandler(storageBackoffHandler);
+
+        String lastStorageHost = sharedPrefs.getString(PREF_BACKOFF_STORAGE_HOST, null);
+        final boolean storageHostIsUnchanged = lastStorageHost != null &&
+                                               lastStorageHost.equalsIgnoreCase(storageHostname);
+        if (storageHostIsUnchanged) {
+          Logger.debug(LOG_TAG, "Storage host is unchanged.");
+          if (!shouldPerformSync(storageBackoffHandler, "storage", extras)) {
+            Logger.info(LOG_TAG, "Not syncing: storage server requested backoff.");
+            callback.handleAborted(null, "Storage backoff");
+            return;
+          }
+        } else {
+          Logger.debug(LOG_TAG, "Received new storage host.");
+        }
+
+        // Invalidate the previous backoff, because our storage host has changed,
+        // or we never had one at all, or we're OK to sync.
+        storageBackoffHandler.setEarliestNextRequest(0L);
 
         FxAccountGlobalSession globalSession = null;
         try {
@@ -237,15 +343,13 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
           // skew adjustment that the HawkAuthHeaderProvider uses to adjust its
           // timestamps. Eventually we might want this to adapt within the scope of a
           // global session.
-          final SkewHandler tokenServerSkewHandler = SkewHandler.getSkewHandlerFromEndpointString(token.endpoint);
+          final SkewHandler tokenServerSkewHandler = SkewHandler.getSkewHandlerForHostname(storageHostname);
           final long tokenServerSkew = tokenServerSkewHandler.getSkewInSeconds();
-          AuthHeaderProvider authHeaderProvider = new HawkAuthHeaderProvider(token.id, token.key.getBytes("UTF-8"), false, tokenServerSkew);
+          final AuthHeaderProvider authHeaderProvider = new HawkAuthHeaderProvider(token.id, token.key.getBytes("UTF-8"), false, tokenServerSkew);
 
           final Context context = getContext();
-          SyncConfiguration syncConfig = new SyncConfiguration(token.uid, authHeaderProvider, sharedPrefs, syncKeyBundle);
+          final SyncConfiguration syncConfig = new SyncConfiguration(token.uid, authHeaderProvider, sharedPrefs, syncKeyBundle);
 
-          // EXTRAS
-          final Bundle extras = Bundle.EMPTY;
           globalSession = new FxAccountGlobalSession(token.endpoint, syncConfig, callback, context, extras, clientsDataDelegate);
           globalSession.start();
         } catch (Exception e) {
@@ -268,8 +372,22 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
 
       @Override
       public void handleBackoff(int backoffSeconds) {
+        // This is the token server telling us to back off.
+        Logger.info(LOG_TAG, "Token server requesting backoff of " + backoffSeconds + "s. Backoff handler: " + tokenBackoffHandler);
+        didReceiveBackoff = true;
+
+        // If we've already stored a backoff, overrule it: we only use the server
+        // value for token server scheduling.
+        tokenBackoffHandler.setEarliestNextRequest(delay(backoffSeconds * 1000));
       }
-    });
+
+      private long delay(long delay) {
+        return System.currentTimeMillis() + delay;
+      }
+    };
+
+    TokenServerClient tokenServerclient = new TokenServerClient(tokenServerEndpointURI, executor);
+    tokenServerclient.getTokenFromBrowserIDAssertion(assertion, true, clientState, delegate);
   }
 
   protected static void showNotification(Context context, State state) {
@@ -324,10 +442,10 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
     }
 
     final CountDownLatch latch = new CountDownLatch(1);
-    final SyncDelegate syncDelegate = new SyncDelegate(getContext(), latch, syncResult, fxAccount);
+    final SyncDelegate syncDelegate = new SyncDelegate(context, latch, syncResult, fxAccount);
 
     try {
-      State state;
+      final State state;
       try {
         state = fxAccount.getState();
       } catch (Exception e) {
@@ -335,8 +453,21 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
         return;
       }
 
-      // This will be the same chunk of SharedPreferences that GlobalSession/SyncConfiguration will later create.
+      // This will be the same chunk of SharedPreferences that we pass through to GlobalSession/SyncConfiguration.
       final SharedPreferences sharedPrefs = fxAccount.getSyncPrefs();
+
+      // Check for a backoff right here.
+      final BackoffHandler schedulerBackoffHandler = new PrefsBackoffHandler(sharedPrefs, "scheduler");
+      if (!shouldPerformSync(schedulerBackoffHandler, "scheduler", extras)) {
+        Logger.info(LOG_TAG, "Not syncing (scheduler).");
+        syncDelegate.postponeSync(schedulerBackoffHandler.delayMilliseconds());
+        return;
+      }
+
+      final SchedulePolicy schedulePolicy = new FxAccountSchedulePolicy(context, fxAccount);
+
+      // Set a small scheduled 'backoff' to rate-limit the next sync.
+      schedulePolicy.configureBackoffMillisBeforeSyncing(schedulerBackoffHandler);
 
       final String audience = fxAccount.getAudience();
       final String authServerEndpoint = fxAccount.getAccountServerURI();
@@ -372,25 +503,59 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
           Logger.info(LOG_TAG, "handleTransition: " + transition + " to " + state.getStateLabel());
         }
 
+        private boolean shouldRequestToken(final BackoffHandler tokenBackoffHandler, final Bundle extras) {
+          return shouldPerformSync(tokenBackoffHandler, "token", extras);
+        }
+
         @Override
         public void handleFinal(State state) {
           Logger.info(LOG_TAG, "handleFinal: in " + state.getStateLabel());
           fxAccount.setState(state);
-
+          schedulePolicy.onHandleFinal(state.getNeededAction());
           try {
             if (state.getStateLabel() != StateLabel.Married) {
               syncDelegate.handleCannotSync(state);
               return;
             }
 
-            Married married = (Married) state;
-            final long now = System.currentTimeMillis();
+            final Married married = (Married) state;
             SkewHandler skewHandler = SkewHandler.getSkewHandlerFromEndpointString(tokenServerEndpoint);
-            String assertion = married.generateAssertion(audience, JSONWebTokenUtils.DEFAULT_ASSERTION_ISSUER,
-                now + skewHandler.getSkewInMillis(),
-                this.getAssertionDurationInMilliseconds());
-            final BaseGlobalSessionCallback sessionCallback = new SessionCallback(syncDelegate);
-            syncWithAssertion(audience, assertion, tokenServerEndpointURI, sharedPrefs, married.getSyncKeyBundle(), married.getClientState(), sessionCallback);
+            final long now = System.currentTimeMillis();
+            final long issuedAtMillis = now + skewHandler.getSkewInMillis();
+            final long assertionDurationMillis = this.getAssertionDurationInMilliseconds();
+            final String assertion = married.generateAssertion(audience, JSONWebTokenUtils.DEFAULT_ASSERTION_ISSUER, issuedAtMillis, assertionDurationMillis);
+
+            /*
+             * At this point we're in the correct state to sync, and we're ready to fetch
+             * a token and do some work.
+             *
+             * But first we need to do two things:
+             * 1. Check to see whether we're in a backoff situation for the token server.
+             *    If we are, but we're not forcing a sync, then we go no further.
+             * 2. Clear an existing backoff (if we're syncing it doesn't matter, and if
+             *    we're forcing we'll get a new backoff if things are still bad).
+             *
+             * Note that we don't check the storage backoff before the token dance: the token
+             * server tells us which server we're syncing to!
+             *
+             * That logic lives in the TokenServerClientDelegate elsewhere in this file.
+             */
+
+            // Strictly speaking this backoff check could be done prior to walking through
+            // the login state machine, allowing us to short-circuit sooner.
+            // We don't expect many token server backoffs, and most users will be sitting
+            // in the Married state, so instead we simply do this here, once.
+            final BackoffHandler tokenBackoffHandler = new PrefsBackoffHandler(sharedPrefs, "token");
+            if (!shouldRequestToken(tokenBackoffHandler, extras)) {
+              Logger.info(LOG_TAG, "Not syncing (token server).");
+              syncDelegate.postponeSync(tokenBackoffHandler.delayMilliseconds());
+              return;
+            }
+
+            final SessionCallback sessionCallback = new SessionCallback(syncDelegate, schedulePolicy);
+            final KeyBundle syncKeyBundle = married.getSyncKeyBundle();
+            final String clientState = married.getClientState();
+            syncWithAssertion(audience, assertion, tokenServerEndpointURI, tokenBackoffHandler, sharedPrefs, syncKeyBundle, clientState, sessionCallback, extras);
           } catch (Exception e) {
             syncDelegate.handleError(e);
             return;

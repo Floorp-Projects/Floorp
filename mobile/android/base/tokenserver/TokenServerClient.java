@@ -146,6 +146,7 @@ public class TokenServerClient {
     }
 
     // Responses should *always* be a valid JSON object.
+    // It turns out that right now they're not always, but that's a server bug...
     ExtendedJSONObject result;
     try {
       result = res.jsonObjectBody();

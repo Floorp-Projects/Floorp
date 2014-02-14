@@ -96,7 +96,7 @@ public class EnsureClusterURLStage extends AbstractNonRepositorySyncStage {
        *
        * 404: user not found | empty body
        *
-       * {@link http://docs.services.mozilla.com/reg/apis.html}
+       * {@link "http://docs.services.mozilla.com/reg/apis.html"}
        */
       @Override
       public void handleHttpResponse(HttpResponse response) {
