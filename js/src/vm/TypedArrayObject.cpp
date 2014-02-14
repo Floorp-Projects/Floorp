@@ -1213,8 +1213,6 @@ TypedArrayObject::isArrayIndex(jsid id, uint32_t *ip)
 void
 TypedArrayObject::neuter(JSContext *cx)
 {
-    AutoLockForCompilation lock(cx);
-
     setSlot(LENGTH_SLOT, Int32Value(0));
     setSlot(BYTELENGTH_SLOT, Int32Value(0));
     setSlot(BYTEOFFSET_SLOT, Int32Value(0));

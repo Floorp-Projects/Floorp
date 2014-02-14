@@ -256,13 +256,10 @@ IonBuilder::inlineArray(CallInfo &callInfo)
 
     types::TemporaryTypeSet::DoubleConversion conversion =
         getInlineReturnTypeSet()->convertDoubleElements(constraints());
-    {
-        AutoThreadSafeAccess ts(templateObject);
-        if (conversion == types::TemporaryTypeSet::AlwaysConvertToDoubles)
-            templateObject->setShouldConvertDoubleElements();
-        else
-            templateObject->clearShouldConvertDoubleElements();
-    }
+    if (conversion == types::TemporaryTypeSet::AlwaysConvertToDoubles)
+        templateObject->setShouldConvertDoubleElements();
+    else
+        templateObject->clearShouldConvertDoubleElements();
 
     MNewArray *ins = MNewArray::New(alloc(), constraints(), initLength, templateObject,
                                     templateObject->type()->initialHeap(constraints()),

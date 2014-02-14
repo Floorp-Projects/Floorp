@@ -327,11 +327,9 @@ class TypedArrayObject : public ArrayBufferViewObject
         return tarr->getFixedSlot(BYTEOFFSET_SLOT);
     }
     static Value byteLengthValue(TypedArrayObject *tarr) {
-        AutoThreadSafeAccess ts(tarr);
         return tarr->getFixedSlot(BYTELENGTH_SLOT);
     }
     static Value lengthValue(TypedArrayObject *tarr) {
-        AutoThreadSafeAccess ts(tarr);
         return tarr->getFixedSlot(LENGTH_SLOT);
     }
 
@@ -349,11 +347,9 @@ class TypedArrayObject : public ArrayBufferViewObject
     }
 
     uint32_t type() const {
-        AutoThreadSafeAccess ts(this);
         return getFixedSlot(TYPE_SLOT).toInt32();
     }
     void *viewData() const {
-        AutoThreadSafeAccess ts(this);
         return static_cast<void*>(getPrivate(DATA_SLOT));
     }
 

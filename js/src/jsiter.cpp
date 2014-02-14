@@ -1949,7 +1949,6 @@ GlobalObject::initIteratorClasses(JSContext *cx, Handle<GlobalObject *> global)
         if (!LinkConstructorAndPrototype(cx, genFunction, genFunctionProto))
             return false;
 
-        AutoLockForCompilation lock(cx);
         global->setSlot(STAR_GENERATOR_OBJECT_PROTO, ObjectValue(*genObjectProto));
         global->setConstructor(JSProto_GeneratorFunction, ObjectValue(*genFunction));
         global->setPrototype(JSProto_GeneratorFunction, ObjectValue(*genFunctionProto));

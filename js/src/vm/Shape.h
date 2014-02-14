@@ -1026,13 +1026,11 @@ class Shape : public gc::BarrieredCell<Shape>
 
         void popFront() {
             JS_ASSERT(!empty());
-            AutoThreadSafeAccess ts(cursor);
             cursor = cursor->parent;
         }
     };
 
     const Class *getObjectClass() const {
-        AutoThreadSafeAccess ts(base());
         return base()->clasp;
     }
     JSObject *getObjectParent() const { return base()->parent; }
@@ -1092,7 +1090,6 @@ class Shape : public gc::BarrieredCell<Shape>
     };
 
     bool inDictionary() const {
-        AutoThreadSafeAccess ts(this);
         return (flags & IN_DICTIONARY) != 0;
     }
     unsigned getFlags() const { return flags & PUBLIC_FLAGS; }
@@ -1158,20 +1155,14 @@ class Shape : public gc::BarrieredCell<Shape>
     BaseShape *base() const { return base_.get(); }
 
     bool hasSlot() const {
-        AutoThreadSafeAccess ts(this);
         return (attrs & JSPROP_SHARED) == 0;
     }
     uint32_t slot() const { JS_ASSERT(hasSlot() && !hasMissingSlot()); return maybeSlot(); }
     uint32_t maybeSlot() const {
-        // Note: Reading a shape's slot off thread can race against main thread
-        // updates to the number of linear searches on the shape, which is
-        // stored in the same slotInfo field. We tolerate this.
-        AutoThreadSafeAccess ts(this);
         return slotInfo & SLOT_MASK;
     }
 
     bool isEmptyShape() const {
-        AutoThreadSafeAccess ts(this);
         JS_ASSERT_IF(JSID_IS_EMPTY(propid_), hasMissingSlot());
         return JSID_IS_EMPTY(propid_);
     }
@@ -1193,8 +1184,6 @@ class Shape : public gc::BarrieredCell<Shape>
     }
 
     uint32_t numFixedSlots() const {
-        // Note: The same race applies here as in maybeSlot().
-        AutoThreadSafeAccess ts(this);
         return (slotInfo >> FIXED_SLOTS_SHIFT);
     }
 
@@ -1216,7 +1205,6 @@ class Shape : public gc::BarrieredCell<Shape>
     }
 
     const EncapsulatedId &propid() const {
-        AutoThreadSafeAccess ts(this);
         JS_ASSERT(!isEmptyShape());
         JS_ASSERT(!JSID_IS_VOID(propid_));
         return propid_;
@@ -1224,7 +1212,6 @@ class Shape : public gc::BarrieredCell<Shape>
     EncapsulatedId &propidRef() { JS_ASSERT(!JSID_IS_VOID(propid_)); return propid_; }
     jsid propidRaw() const {
         // Return the actual jsid, not an internal reference.
-        AutoThreadSafeAccess ts(this);
         return propid();
     }
 
@@ -1241,8 +1228,6 @@ class Shape : public gc::BarrieredCell<Shape>
     bool configurable() const { return (attrs & JSPROP_PERMANENT) == 0; }
     bool enumerable() const { return (attrs & JSPROP_ENUMERATE) != 0; }
     bool writable() const {
-        // JS_ASSERT(isDataDescriptor());
-        AutoThreadSafeAccess ts(this);
         return (attrs & JSPROP_READONLY) == 0;
     }
     bool hasGetterValue() const { return attrs & JSPROP_GETTER; }
@@ -1279,10 +1264,6 @@ class Shape : public gc::BarrieredCell<Shape>
     uint32_t entryCount() {
         if (hasTable())
             return table().entryCount;
-        return entryCountForCompilation();
-    }
-
-    uint32_t entryCountForCompilation() {
         uint32_t count = 0;
         for (Shape::Range<NoGC> r(this); !r.empty(); r.popFront())
             ++count;
@@ -1649,7 +1630,6 @@ Shape::searchLinear(jsid id)
     JS_ASSERT(!inDictionary());
 
     for (Shape *shape = this; shape; ) {
-        AutoThreadSafeAccess ts(shape);
         if (shape->propidRef() == id)
             return shape;
         shape = shape->parent;

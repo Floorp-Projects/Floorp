@@ -157,7 +157,7 @@ class GlobalObject : public JSObject
   public:
     Value getConstructor(JSProtoKey key) const {
         JS_ASSERT(key <= JSProto_LIMIT);
-        return getSlotForCompilation(APPLICATION_SLOTS + key);
+        return getSlot(APPLICATION_SLOTS + key);
     }
     bool ensureConstructor(JSContext *cx, JSProtoKey key);
 
@@ -168,7 +168,7 @@ class GlobalObject : public JSObject
 
     Value getPrototype(JSProtoKey key) const {
         JS_ASSERT(key <= JSProto_LIMIT);
-        return getSlotForCompilation(APPLICATION_SLOTS + JSProto_LIMIT + key);
+        return getSlot(APPLICATION_SLOTS + JSProto_LIMIT + key);
     }
 
     void setPrototype(JSProtoKey key, const Value &value) {
@@ -455,19 +455,6 @@ class GlobalObject : public JSObject
         return &self->getSlot(slot).toObject();
     }
 
-    Value getSlotForCompilation(uint32_t slot) const {
-        // This method should only be used for slots that are either eagerly
-        // initialized on creation of the global or only change under the
-        // compilation lock. Note that the dynamic slots pointer for global
-        // objects can only change under the compilation lock.
-        JS_ASSERT(slot < JSCLASS_RESERVED_SLOTS(getClass()));
-        uint32_t fixed = numFixedSlotsForCompilation();
-        AutoThreadSafeAccess ts(this);
-        if (slot < fixed)
-            return fixedSlots()[slot];
-        return slots[slot - fixed];
-    }
-
   public:
     static JSObject *getOrCreateIteratorPrototype(JSContext *cx,
                                                   Handle<GlobalObject*> global)
@@ -545,17 +532,12 @@ class GlobalObject : public JSObject
     }
 
     JSObject *intrinsicsHolder() {
-        JS_ASSERT(!getSlotForCompilation(INTRINSICS).isUndefined());
-        return &getSlotForCompilation(INTRINSICS).toObject();
+        JS_ASSERT(!getSlot(INTRINSICS).isUndefined());
+        return &getSlot(INTRINSICS).toObject();
     }
 
     bool maybeGetIntrinsicValue(jsid id, Value *vp) {
-        JS_ASSERT(CurrentThreadCanReadCompilationData());
         JSObject *holder = intrinsicsHolder();
-
-        AutoThreadSafeAccess ts0(holder);
-        AutoThreadSafeAccess ts1(holder->lastProperty());
-        AutoThreadSafeAccess ts2(holder->lastProperty()->base());
 
         if (Shape *shape = holder->nativeLookupPure(id)) {
             *vp = holder->getSlot(shape->slot());
@@ -594,8 +576,7 @@ class GlobalObject : public JSObject
                                unsigned nargs, MutableHandleValue funVal);
 
     RegExpStatics *getRegExpStatics() const {
-        JSObject &resObj = getSlotForCompilation(REGEXP_STATICS).toObject();
-        AutoThreadSafeAccess ts(&resObj);
+        JSObject &resObj = getSlot(REGEXP_STATICS).toObject();
         return static_cast<RegExpStatics *>(resObj.getPrivate(/* nfixed = */ 1));
     }
 
