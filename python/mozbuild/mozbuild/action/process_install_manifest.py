@@ -16,6 +16,7 @@ COMPLETE = 'From {dest}: Kept {existing} existing; Added/updated {updated}; ' \
 
 def process_manifest(destdir, paths,
         remove_unaccounted=True,
+        remove_all_directory_symlinks=True,
         remove_empty_directories=True):
     manifest = InstallManifest()
     for path in paths:
@@ -25,6 +26,7 @@ def process_manifest(destdir, paths,
     manifest.populate_registry(copier)
     return copier.copy(destdir,
         remove_unaccounted=remove_unaccounted,
+        remove_all_directory_symlinks=remove_all_directory_symlinks,
         remove_empty_directories=remove_empty_directories)
 
 
@@ -36,6 +38,8 @@ def main(argv):
     parser.add_argument('manifests', nargs='+', help='Path to manifest file(s).')
     parser.add_argument('--no-remove', action='store_true',
         help='Do not remove unaccounted files from destination.')
+    parser.add_argument('--no-remove-all-directory-symlinks', action='store_true',
+        help='Do not remove all directory symlinks from destination.')
     parser.add_argument('--no-remove-empty-directories', action='store_true',
         help='Do not remove empty directories from destination.')
 
@@ -43,6 +47,7 @@ def main(argv):
 
     result = process_manifest(args.destdir, args.manifests,
         remove_unaccounted=not args.no_remove,
+        remove_all_directory_symlinks=not args.no_remove_all_directory_symlinks,
         remove_empty_directories=not args.no_remove_empty_directories)
 
     print(COMPLETE.format(dest=args.destdir,
