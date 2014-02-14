@@ -1768,6 +1768,5 @@ CodeGeneratorX86Shared::visitNegF(LNegF *ins)
     return true;
 }
 
-
 } // namespace jit
 } // namespace js
