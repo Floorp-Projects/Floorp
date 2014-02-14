@@ -90,9 +90,14 @@ TextureImage::UpdateFromDataSource(gfx::DataSourceSurface *aSurface,
                                          : nsIntRect(0, 0,
                                                      aSurface->GetSize().width,
                                                      aSurface->GetSize().height);
-    gfx::IntPoint srcPoint = aSrcPoint ? *aSrcPoint
-                                       : gfx::IntPoint(0, 0);
-    return DirectUpdate(aSurface, destRegion, srcPoint);
+    nsIntPoint thebesSrcPoint = aSrcPoint ? nsIntPoint(aSrcPoint->x, aSrcPoint->y)
+                                          : nsIntPoint(0, 0);
+    RefPtr<gfxASurface> thebesSurf
+        = new gfxImageSurface(aSurface->GetData(),
+                              ThebesIntSize(aSurface->GetSize()),
+                              aSurface->Stride(),
+                              SurfaceFormatToImageFormat(aSurface->GetFormat()));
+    return DirectUpdate(thebesSurf, destRegion, thebesSrcPoint);
 }
 
 gfx::IntRect TextureImage::GetTileRect() {
@@ -119,10 +124,10 @@ BasicTextureImage::~BasicTextureImage()
     }
 }
 
-gfx::DrawTarget*
+gfxASurface*
 BasicTextureImage::BeginUpdate(nsIntRegion& aRegion)
 {
-    NS_ASSERTION(!mUpdateDrawTarget, "BeginUpdate() without EndUpdate()?");
+    NS_ASSERTION(!mUpdateSurface, "BeginUpdate() without EndUpdate()?");
 
     // determine the region the client will need to repaint
     if (CanUploadSubTextures(mGLContext)) {
@@ -139,13 +144,20 @@ BasicTextureImage::BeginUpdate(nsIntRegion& aRegion)
         return nullptr;
     }
 
-    gfx::SurfaceFormat format =
+    ImageFormat format =
         (GetContentType() == gfxContentType::COLOR) ?
-        gfx::SurfaceFormat::B8G8R8X8 : gfx::SurfaceFormat::B8G8R8A8;
-    mUpdateDrawTarget =
-        GetDrawTargetForUpdate(gfx::IntSize(rgnSize.width, rgnSize.height), format);
+        gfxImageFormat::RGB24 : gfxImageFormat::ARGB32;
+    mUpdateSurface =
+        GetSurfaceForUpdate(gfxIntSize(rgnSize.width, rgnSize.height), format);
 
-    return mUpdateDrawTarget;
+    if (!mUpdateSurface || mUpdateSurface->CairoStatus()) {
+        mUpdateSurface = nullptr;
+        return nullptr;
+    }
+
+    mUpdateSurface->SetDeviceOffset(gfxPoint(-rgnSize.x, -rgnSize.y));
+
+    return mUpdateSurface;
 }
 
 void
@@ -161,18 +173,19 @@ BasicTextureImage::GetUpdateRegion(nsIntRegion& aForRegion)
 void
 BasicTextureImage::EndUpdate()
 {
-    NS_ASSERTION(!!mUpdateDrawTarget, "EndUpdate() without BeginUpdate()?");
+    NS_ASSERTION(!!mUpdateSurface, "EndUpdate() without BeginUpdate()?");
 
     // FIXME: this is the slow boat.  Make me fast (with GLXPixmap?).
 
-    RefPtr<gfx::SourceSurface> updateSnapshot = mUpdateDrawTarget->Snapshot();
-    RefPtr<gfx::DataSourceSurface> updateData = updateSnapshot->GetDataSurface();
+    // Undo the device offset that BeginUpdate set; doesn't much matter for us here,
+    // but important if we ever do anything directly with the surface.
+    mUpdateSurface->SetDeviceOffset(gfxPoint(0, 0));
 
     bool relative = FinishedSurfaceUpdate();
 
     mTextureFormat =
         UploadSurfaceToTexture(mGLContext,
-                               updateData,
+                               mUpdateSurface,
                                mUpdateRegion,
                                mTexture,
                                mTextureState == Created,
@@ -180,7 +193,7 @@ BasicTextureImage::EndUpdate()
                                relative);
     FinishedSurfaceUpload();
 
-    mUpdateDrawTarget = nullptr;
+    mUpdateSurface = nullptr;
     mTextureState = Valid;
 }
 
@@ -192,10 +205,12 @@ BasicTextureImage::BindTexture(GLenum aTextureUnit)
     mGLContext->fActiveTexture(LOCAL_GL_TEXTURE0);
 }
 
-TemporaryRef<gfx::DrawTarget>
-BasicTextureImage::GetDrawTargetForUpdate(const gfx::IntSize& aSize, gfx::SurfaceFormat aFmt)
+already_AddRefed<gfxASurface>
+BasicTextureImage::GetSurfaceForUpdate(const gfxIntSize& aSize, ImageFormat aFmt)
 {
-    return gfx::Factory::CreateDrawTarget(gfx::BackendType::CAIRO, aSize, aFmt);
+    return gfxPlatform::GetPlatform()->
+        CreateOffscreenSurface(aSize.ToIntSize(),
+                               gfxASurface::ContentFromFormat(aFmt));
 }
 
 bool
@@ -210,7 +225,7 @@ BasicTextureImage::FinishedSurfaceUpload()
 }
 
 bool
-BasicTextureImage::DirectUpdate(gfx::DataSourceSurface* aSurf, const nsIntRegion& aRegion, const gfx::IntPoint& aFrom /* = gfx::IntPoint(0, 0) */)
+BasicTextureImage::DirectUpdate(gfxASurface* aSurf, const nsIntRegion& aRegion, const nsIntPoint& aFrom /* = nsIntPoint(0, 0) */)
 {
     nsIntRect bounds = aRegion.GetBounds();
     nsIntRegion region;
@@ -227,7 +242,7 @@ BasicTextureImage::DirectUpdate(gfx::DataSourceSurface* aSurf, const nsIntRegion
                                region,
                                mTexture,
                                mTextureState == Created,
-                               bounds.TopLeft() + nsIntPoint(aFrom.x, aFrom.y),
+                               bounds.TopLeft() + aFrom,
                                false);
     mTextureState = Valid;
     return true;
@@ -236,7 +251,7 @@ BasicTextureImage::DirectUpdate(gfx::DataSourceSurface* aSurf, const nsIntRegion
 void
 BasicTextureImage::Resize(const gfx::IntSize& aSize)
 {
-    NS_ASSERTION(!mUpdateDrawTarget, "Resize() while in update?");
+    NS_ASSERTION(!mUpdateSurface, "Resize() while in update?");
 
     mGLContext->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
 
@@ -345,7 +360,7 @@ TiledTextureImage::~TiledTextureImage()
 }
 
 bool
-TiledTextureImage::DirectUpdate(gfx::DataSourceSurface* aSurf, const nsIntRegion& aRegion, const gfx::IntPoint& aFrom /* = gfx::IntPoint(0, 0) */)
+TiledTextureImage::DirectUpdate(gfxASurface* aSurf, const nsIntRegion& aRegion, const nsIntPoint& aFrom /* = nsIntPoint(0, 0) */)
 {
     if (mSize.width == 0 || mSize.height == 0) {
         return true;
@@ -383,7 +398,7 @@ TiledTextureImage::DirectUpdate(gfx::DataSourceSurface* aSurf, const nsIntRegion
         }
 
         result &= mImages[mCurrentImage]->
-          DirectUpdate(aSurf, tileRegion, aFrom + gfx::IntPoint(xPos, yPos));
+          DirectUpdate(aSurf, tileRegion, aFrom + nsIntPoint(xPos, yPos));
 
         if (mCurrentImage == mImages.Length() - 1) {
             // We know we're done, but we still need to ensure that the callback
@@ -441,7 +456,7 @@ TiledTextureImage::GetUpdateRegion(nsIntRegion& aForRegion)
     aForRegion = newRegion;
 }
 
-gfx::DrawTarget*
+gfxASurface*
 TiledTextureImage::BeginUpdate(nsIntRegion& aRegion)
 {
     NS_ASSERTION(!mInUpdate, "nested update");
@@ -472,14 +487,18 @@ TiledTextureImage::BeginUpdate(nsIntRegion& aRegion)
             // adjust for tile offset
             aRegion.MoveBy(-xPos, -yPos);
             // forward the actual call
-            RefPtr<gfx::DrawTarget> drawTarget = mImages[i]->BeginUpdate(aRegion);
+            nsRefPtr<gfxASurface> surface = mImages[i]->BeginUpdate(aRegion);
             // caller expects container space
             aRegion.MoveBy(xPos, yPos);
+            // Correct the device offset
+            gfxPoint offset = surface->GetDeviceOffset();
+            surface->SetDeviceOffset(gfxPoint(offset.x - xPos,
+                                              offset.y - yPos));
             // we don't have a temp surface
-            mUpdateDrawTarget = nullptr;
+            mUpdateSurface = nullptr;
             // remember which image to EndUpdate
             mCurrentImage = i;
-            return drawTarget.get();
+            return surface.get();
         }
     }
 
@@ -490,34 +509,28 @@ TiledTextureImage::BeginUpdate(nsIntRegion& aRegion)
     bounds = aRegion.GetBounds();
 
     // update covers multiple Images - create a temp surface to paint in
-    gfx::SurfaceFormat format =
+    gfxImageFormat format =
         (GetContentType() == gfxContentType::COLOR) ?
-        gfx::SurfaceFormat::B8G8R8X8: gfx::SurfaceFormat::B8G8R8A8;
-    mUpdateDrawTarget = gfx::Factory::CreateDrawTarget(gfx::BackendType::CAIRO,
-                                                       bounds.Size().ToIntSize(),
-                                                       format);
+        gfxImageFormat::RGB24 : gfxImageFormat::ARGB32;
+    mUpdateSurface = gfxPlatform::GetPlatform()->
+        CreateOffscreenSurface(bounds.Size().ToIntSize(),
+                               gfxASurface::ContentFromFormat(format));
+    mUpdateSurface->SetDeviceOffset(gfxPoint(-bounds.x, -bounds.y));
 
-    return mUpdateDrawTarget;;
+    return mUpdateSurface;
 }
 
 void
 TiledTextureImage::EndUpdate()
 {
     NS_ASSERTION(mInUpdate, "EndUpdate not in update");
-    if (!mUpdateDrawTarget) { // update was to a single TextureImage
+    if (!mUpdateSurface) { // update was to a single TextureImage
         mImages[mCurrentImage]->EndUpdate();
         mInUpdate = false;
         mTextureState = Valid;
         mTextureFormat = mImages[mCurrentImage]->GetTextureFormat();
         return;
     }
-
-    RefPtr<gfx::SourceSurface> updateSnapshot = mUpdateDrawTarget->Snapshot();
-    RefPtr<gfx::DataSourceSurface> updateData = updateSnapshot->GetDataSurface();
-    nsRefPtr<gfxASurface> updateSurface = new gfxImageSurface(updateData->GetData(),
-                                                              gfx::ThebesIntSize(updateData->GetSize()),
-                                                              updateData->Stride(),
-                                                              gfx::SurfaceFormatToImageFormat(updateData->GetFormat()));
 
     // upload tiles from temp surface
     for (unsigned i = 0; i < mImages.Length(); i++) {
@@ -531,17 +544,17 @@ TiledTextureImage::EndUpdate()
         if (subregion.IsEmpty())
             continue;
         subregion.MoveBy(-xPos, -yPos); // Tile-local space
-        // copy tile from temp target
-        gfx::DrawTarget* drawTarget = mImages[i]->BeginUpdate(subregion);
-        nsRefPtr<gfxContext> ctx = new gfxContext(drawTarget);
+        // copy tile from temp surface
+        gfxASurface* surf = mImages[i]->BeginUpdate(subregion);
+        nsRefPtr<gfxContext> ctx = new gfxContext(surf);
         gfxUtils::ClipToRegion(ctx, subregion);
         ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
-        ctx->SetSource(updateSurface, gfxPoint(-xPos, -yPos));
+        ctx->SetSource(mUpdateSurface, gfxPoint(-xPos, -yPos));
         ctx->Paint();
         mImages[i]->EndUpdate();
     }
 
-    mUpdateDrawTarget = nullptr;
+    mUpdateSurface = nullptr;
     mInUpdate = false;
     mTextureFormat = mImages[0]->GetTextureFormat();
     mTextureState = Valid;

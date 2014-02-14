@@ -15,34 +15,35 @@ namespace mozilla {
 namespace gl {
 
 static GLenum
-GLFormatForImage(gfx::SurfaceFormat aFormat)
+GLFormatForImage(gfxImageFormat aFormat)
 {
     switch (aFormat) {
-    case gfx::SurfaceFormat::B8G8R8A8:
-    case gfx::SurfaceFormat::B8G8R8X8:
+    case gfxImageFormat::ARGB32:
+    case gfxImageFormat::RGB24:
+        // Thebes only supports RGBX, not packed RGB.
         return LOCAL_GL_RGBA;
-    case gfx::SurfaceFormat::R5G6B5:
+    case gfxImageFormat::RGB16_565:
         return LOCAL_GL_RGB;
-    case gfx::SurfaceFormat::A8:
+    case gfxImageFormat::A8:
         return LOCAL_GL_LUMINANCE;
     default:
-        NS_WARNING("Unknown GL format for Surface format");
+        NS_WARNING("Unknown GL format for Image format");
     }
     return 0;
 }
 
 static GLenum
-GLTypeForImage(gfx::SurfaceFormat aFormat)
+GLTypeForImage(gfxImageFormat aFormat)
 {
     switch (aFormat) {
-    case gfx::SurfaceFormat::B8G8R8A8:
-    case gfx::SurfaceFormat::B8G8R8X8:
-    case gfx::SurfaceFormat::A8:
+    case gfxImageFormat::ARGB32:
+    case gfxImageFormat::RGB24:
+    case gfxImageFormat::A8:
         return LOCAL_GL_UNSIGNED_BYTE;
-    case gfx::SurfaceFormat::R5G6B5:
+    case gfxImageFormat::RGB16_565:
         return LOCAL_GL_UNSIGNED_SHORT_5_6_5;
     default:
-        NS_WARNING("Unknown GL format for Surface format");
+        NS_WARNING("Unknown GL format for Image format");
     }
     return 0;
 }
@@ -57,7 +58,7 @@ TextureImageEGL::TextureImageEGL(GLuint aTexture,
                                  TextureImage::ImageFormat aImageFormat)
     : TextureImage(aSize, aWrapMode, aContentType, aFlags)
     , mGLContext(aContext)
-    , mUpdateFormat(gfx::ImageFormatToSurfaceFormat(aImageFormat))
+    , mUpdateFormat(aImageFormat)
     , mEGLImage(nullptr)
     , mTexture(aTexture)
     , mSurface(nullptr)
@@ -65,14 +66,16 @@ TextureImageEGL::TextureImageEGL(GLuint aTexture,
     , mTextureState(aTextureState)
     , mBound(false)
 {
-    if (mUpdateFormat == gfx::SurfaceFormat::UNKNOWN) {
-        mUpdateFormat = gfx::ImageFormatToSurfaceFormat(
-                gfxPlatform::GetPlatform()->OptimalFormatForContent(GetContentType()));
+    if (mUpdateFormat == gfxImageFormat::Unknown) {
+        mUpdateFormat = gfxPlatform::GetPlatform()->OptimalFormatForContent(GetContentType());
     }
 
-    if (mUpdateFormat == gfx::SurfaceFormat::R5G6B5) {
+    if (mUpdateFormat == gfxImageFormat::RGB16_565) {
         mTextureFormat = gfx::SurfaceFormat::R8G8B8X8;
-    } else if (mUpdateFormat == gfx::SurfaceFormat::B8G8R8X8) {
+    } else if (mUpdateFormat == gfxImageFormat::RGB24) {
+        // RGB24 means really RGBX for Thebes, which means we have to
+        // use the right shader and ignore the uninitialized alpha
+        // value.
         mTextureFormat = gfx::SurfaceFormat::B8G8R8X8;
     } else {
         mTextureFormat = gfx::SurfaceFormat::B8G8R8A8;
@@ -111,10 +114,10 @@ TextureImageEGL::GetUpdateRegion(nsIntRegion& aForRegion)
     aForRegion = nsIntRegion(aForRegion.GetBounds());
 }
 
-gfx::DrawTarget*
+gfxASurface*
 TextureImageEGL::BeginUpdate(nsIntRegion& aRegion)
 {
-    NS_ASSERTION(!mUpdateDrawTarget, "BeginUpdate() without EndUpdate()?");
+    NS_ASSERTION(!mUpdateSurface, "BeginUpdate() without EndUpdate()?");
 
     // determine the region the client will need to repaint
     GetUpdateRegion(aRegion);
@@ -128,17 +131,19 @@ TextureImageEGL::BeginUpdate(nsIntRegion& aRegion)
 
     //printf_stderr("creating image surface %dx%d format %d\n", mUpdateRect.width, mUpdateRect.height, mUpdateFormat);
 
-    mUpdateDrawTarget = gfx::Factory::CreateDrawTarget(gfx::BackendType::CAIRO,
-                                                       gfx::IntSize(mUpdateRect.width, mUpdateRect.height),
-                                                       mUpdateFormat);
+    mUpdateSurface =
+        new gfxImageSurface(gfxIntSize(mUpdateRect.width, mUpdateRect.height),
+                            mUpdateFormat);
 
-    return mUpdateDrawTarget;
+    mUpdateSurface->SetDeviceOffset(gfxPoint(-mUpdateRect.x, -mUpdateRect.y));
+
+    return mUpdateSurface;
 }
 
 void
 TextureImageEGL::EndUpdate()
 {
-    NS_ASSERTION(!!mUpdateDrawTarget, "EndUpdate() without BeginUpdate()?");
+    NS_ASSERTION(!!mUpdateSurface, "EndUpdate() without BeginUpdate()?");
 
     //printf_stderr("EndUpdate: slow path");
 
@@ -146,15 +151,19 @@ TextureImageEGL::EndUpdate()
     // a fast mapping between our cairo target surface and the GL
     // texture, so we have to upload data.
 
-    RefPtr<gfx::SourceSurface> updateSurface = nullptr;
-    RefPtr<gfx::DataSourceSurface> uploadImage = nullptr;
-    gfx::IntSize updateSize(mUpdateRect.width, mUpdateRect.height);
+    // Undo the device offset that BeginUpdate set; doesn't much
+    // matter for us here, but important if we ever do anything
+    // directly with the surface.
+    mUpdateSurface->SetDeviceOffset(gfxPoint(0, 0));
 
-    NS_ASSERTION(mUpdateDrawTarget->GetSize() == updateSize,
-                  "Upload image is the wrong size!");
+    nsRefPtr<gfxImageSurface> uploadImage = nullptr;
+    gfxIntSize updateSize(mUpdateRect.width, mUpdateRect.height);
 
-    updateSurface = mUpdateDrawTarget->Snapshot();
-    uploadImage = updateSurface->GetDataSurface();
+    NS_ASSERTION(mUpdateSurface->GetType() == gfxSurfaceType::Image &&
+                  mUpdateSurface->GetSize() == updateSize,
+                  "Upload image isn't an image surface when one is expected, or is wrong size!");
+
+    uploadImage = static_cast<gfxImageSurface*>(mUpdateSurface.get());
 
     if (!uploadImage) {
         return;
@@ -174,9 +183,9 @@ TextureImageEGL::EndUpdate()
                                 mUpdateRect.width,
                                 mUpdateRect.height,
                                 0,
-                                GLFormatForImage(uploadImage->GetFormat()),
-                                GLTypeForImage(uploadImage->GetFormat()),
-                                uploadImage->GetData());
+                                GLFormatForImage(uploadImage->Format()),
+                                GLTypeForImage(uploadImage->Format()),
+                                uploadImage->Data());
     } else {
         mGLContext->fTexSubImage2D(LOCAL_GL_TEXTURE_2D,
                                     0,
@@ -184,18 +193,18 @@ TextureImageEGL::EndUpdate()
                                     mUpdateRect.y,
                                     mUpdateRect.width,
                                     mUpdateRect.height,
-                                    GLFormatForImage(uploadImage->GetFormat()),
-                                    GLTypeForImage(uploadImage->GetFormat()),
-                                    uploadImage->GetData());
+                                    GLFormatForImage(uploadImage->Format()),
+                                    GLTypeForImage(uploadImage->Format()),
+                                    uploadImage->Data());
     }
 
-    mUpdateDrawTarget = nullptr;
+    mUpdateSurface = nullptr;
     mTextureState = Valid;
     return;         // mTexture is bound
 }
 
 bool
-TextureImageEGL::DirectUpdate(gfx::DataSourceSurface* aSurf, const nsIntRegion& aRegion, const gfx::IntPoint& aFrom /* = gfx::IntPoint(0,0) */)
+TextureImageEGL::DirectUpdate(gfxASurface* aSurf, const nsIntRegion& aRegion, const nsIntPoint& aFrom /* = nsIntPoint(0, 0) */)
 {
     nsIntRect bounds = aRegion.GetBounds();
 
@@ -213,7 +222,7 @@ TextureImageEGL::DirectUpdate(gfx::DataSourceSurface* aSurf, const nsIntRegion& 
                              region,
                              mTexture,
                              mTextureState == Created,
-                             bounds.TopLeft() + nsIntPoint(aFrom.x, aFrom.y),
+                             bounds.TopLeft() + aFrom,
                              false);
 
     mTextureState = Valid;
@@ -236,7 +245,7 @@ TextureImageEGL::BindTexture(GLenum aTextureUnit)
 void
 TextureImageEGL::Resize(const gfx::IntSize& aSize)
 {
-    NS_ASSERTION(!mUpdateDrawTarget, "Resize() while in update?");
+    NS_ASSERTION(!mUpdateSurface, "Resize() while in update?");
 
     if (mSize == aSize && mTextureState != Created)
         return;
