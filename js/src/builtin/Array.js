@@ -498,13 +498,16 @@ function ArrayFindIndex(predicate/*, thisArg*/) {
 #define ITEM_KIND_KEY 2
 
 // ES6 draft specification, section 22.1.5.1, version 2013-09-05.
-function CreateArrayIterator(obj, kind) {
+function CreateArrayIteratorAt(obj, kind, n) {
     var iteratedObject = ToObject(obj);
     var iterator = NewArrayIterator();
     UnsafeSetReservedSlot(iterator, ARRAY_ITERATOR_SLOT_ITERATED_OBJECT, iteratedObject);
-    UnsafeSetReservedSlot(iterator, ARRAY_ITERATOR_SLOT_NEXT_INDEX, 0);
+    UnsafeSetReservedSlot(iterator, ARRAY_ITERATOR_SLOT_NEXT_INDEX, n);
     UnsafeSetReservedSlot(iterator, ARRAY_ITERATOR_SLOT_ITEM_KIND, kind);
     return iterator;
+}
+function CreateArrayIterator(obj, kind) {
+    return CreateArrayIteratorAt(obj, kind, 0);
 }
 
 function ArrayIteratorIdentity() {
@@ -542,6 +545,10 @@ function ArrayIteratorNext() {
 
     assert(itemKind === ITEM_KIND_KEY, itemKind);
     return { value: index, done: false };
+}
+
+function ArrayValuesAt(n) {
+    return CreateArrayIteratorAt(this, ITEM_KIND_VALUE, n);
 }
 
 function ArrayValues() {

@@ -4,8 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-TEST_DIRS += ['tests']
-
 UNIFIED_SOURCES += [
     'nsInternetCiter.cpp',
     'nsPlaintextDataTransfer.cpp',
@@ -25,3 +23,7 @@ LOCAL_INCLUDES += [
 ]
 
 FINAL_LIBRARY = 'gklayout'
+
+MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
+
+MOCHITEST_CHROME_MANIFESTS += ['tests/chrome.ini']

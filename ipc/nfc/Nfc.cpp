@@ -167,7 +167,7 @@ DispatchNFCEvent::RunTask(JSContext* aCx)
 
     memcpy(JS_GetArrayBufferViewData(array), mMessage->mData, mMessage->mSize);
     JS::Rooted<JS::Value> rval(aCx);
-    return JS_CallFunctionName(aCx, obj, "onNfcMessage", arrayVal, rval.address());
+    return JS_CallFunctionName(aCx, obj, "onNfcMessage", arrayVal, &rval);
 }
 
 class NfcConnector : public mozilla::ipc::UnixSocketConnector

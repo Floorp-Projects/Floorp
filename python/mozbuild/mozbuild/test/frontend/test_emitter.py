@@ -316,6 +316,17 @@ class TestEmitterBasic(unittest.TestCase):
         paths = sorted([k[len(o.directory)+1:] for k in o.installs.keys()])
         self.assertEqual(paths, ["foo.txt", "just-support.ini"])
 
+    def test_test_manifest_support_files_disabled_test(self):
+        """A test manifest with just disabled tests and support-files is supported."""
+        reader = self.reader('test-manifest-support-disabled-tests')
+
+        objs = self.read_topsrcdir(reader)
+        self.assertEqual(len(objs), 1)
+        o = objs[0]
+        self.assertEqual(len(o.installs), 2)
+        paths = sorted([k[len(o.directory)+1:] for k in o.installs.keys()])
+        self.assertEqual(paths, ["foo.txt", "support-disabled-tests.ini"])
+
     def test_test_manifest_keys_extracted(self):
         """Ensure all metadata from test manifests is extracted."""
         reader = self.reader('test-manifest-keys-extracted')
