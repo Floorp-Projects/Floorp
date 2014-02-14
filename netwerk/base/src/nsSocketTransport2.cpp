@@ -2821,7 +2821,11 @@ nsSocketTransport::PRFileDescAutoLock::SetKeepaliveVals(bool aEnabled,
     return NS_OK;
 
 #elif defined(XP_UNIX)
-    // Linux uses sec; supports idle time, retry interval and ping count.
+    // Not all *nix OSes support the following setsockopt() options
+    // ... but we assume they are supported in the Android kernel;
+    // build errors will tell us if they are not.
+#if defined(ANDROID) || defined(TCP_KEEPIDLE)
+    // Idle time until first keepalive probe; interval between ack'd probes; seconds.
     int err = setsockopt(sock, IPPROTO_TCP, TCP_KEEPIDLE,
                          &aIdleTime, sizeof(aIdleTime));
     if (NS_WARN_IF(err)) {
@@ -2830,7 +2834,9 @@ nsSocketTransport::PRFileDescAutoLock::SetKeepaliveVals(bool aEnabled,
         return NS_ERROR_UNEXPECTED;
     }
 
-    // Linux also has a few extra knobs to tweak
+#endif
+#if defined(ANDROID) || defined(TCP_KEEPINTVL)
+    // Interval between unack'd keepalive probes; seconds.
     err = setsockopt(sock, IPPROTO_TCP, TCP_KEEPINTVL,
                         &aRetryInterval, sizeof(aRetryInterval));
     if (NS_WARN_IF(err)) {
@@ -2839,6 +2845,9 @@ nsSocketTransport::PRFileDescAutoLock::SetKeepaliveVals(bool aEnabled,
         return NS_ERROR_UNEXPECTED;
     }
 
+#endif
+#if defined(ANDROID) || defined(TCP_KEEPCNT)
+    // Number of unack'd keepalive probes before connection times out.
     err = setsockopt(sock, IPPROTO_TCP, TCP_KEEPCNT,
                      &aProbeCount, sizeof(aProbeCount));
     if (NS_WARN_IF(err)) {
@@ -2847,6 +2856,7 @@ nsSocketTransport::PRFileDescAutoLock::SetKeepaliveVals(bool aEnabled,
         return NS_ERROR_UNEXPECTED;
     }
 
+#endif
     return NS_OK;
 #else
     MOZ_ASSERT(false, "nsSocketTransport::PRFileDescAutoLock::SetKeepaliveVals "

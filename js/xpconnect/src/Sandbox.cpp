@@ -760,13 +760,14 @@ xpc::SandboxCallableProxyHandler::call(JSContext *cx, JS::Handle<JSObject*> prox
     // methods are always non-strict, we can just assume non-strict semantics
     // if the sandboxPrototype is an Xray Wrapper, which lets us appropriately
     // remap |this|.
-    JS::Value thisVal =
-      WrapperFactory::IsXrayWrapper(sandboxProxy) ? args.computeThis(cx) : args.thisv();
+    bool isXray = WrapperFactory::IsXrayWrapper(sandboxProxy);
+    RootedValue thisVal(cx, isXray ? args.computeThis(cx) : args.thisv());
     if (thisVal == ObjectValue(*sandboxGlobal)) {
         thisVal = ObjectValue(*js::GetProxyTargetObject(sandboxProxy));
     }
 
-    return JS::Call(cx, thisVal, js::GetProxyPrivate(proxy), args, args.rval());
+    RootedValue func(cx, js::GetProxyPrivate(proxy));
+    return JS::Call(cx, thisVal, func, args, args.rval());
 }
 
 xpc::SandboxCallableProxyHandler xpc::sandboxCallableProxyHandler;
@@ -1743,11 +1744,11 @@ NonCloningFunctionForwarder(JSContext *cx, unsigned argc, Value *vp)
     RootedValue v(cx, js::GetFunctionNativeReserved(&args.callee(), 0));
     MOZ_ASSERT(v.isObject(), "weird function");
 
-    JSObject *obj = JS_THIS_OBJECT(cx, vp);
+    RootedObject obj(cx, JS_THIS_OBJECT(cx, vp));
     if (!obj) {
         return false;
     }
-    return JS_CallFunctionValue(cx, obj, v, args, vp);
+    return JS_CallFunctionValue(cx, obj, v, args, args.rval());
 }
 
 /*
@@ -1774,10 +1775,9 @@ CloningFunctionForwarder(JSContext *cx, unsigned argc, Value *vp)
 
         // JS API does not support any JSObject to JSFunction conversion,
         // so let's use JS_CallFunctionValue instead.
-        RootedValue functionVal(cx);
-        functionVal.setObject(*origFunObj);
+        RootedValue functionVal(cx, ObjectValue(*origFunObj));
 
-        if (!JS_CallFunctionValue(cx, nullptr, functionVal, args, args.rval().address()))
+        if (!JS_CallFunctionValue(cx, JS::NullPtr(), functionVal, args, args.rval()))
             return false;
     }
 

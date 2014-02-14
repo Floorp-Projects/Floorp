@@ -55,8 +55,7 @@ const GENERIC_VARIABLES_VIEW_SETTINGS = {
   editableNameTooltip: "",
   preventDisableOnChange: true,
   preventDescriptorModifiers: true,
-  eval: () => {},
-  switch: () => {}
+  eval: () => {}
 };
 const NETWORK_ANALYSIS_PIE_CHART_DIAMETER = 200; // px
 
@@ -1051,6 +1050,9 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     this.filterContents();
     this.refreshSummary();
     this.refreshZebra();
+
+    // Rescale all the waterfalls so that everything is visible at once.
+    this._flushWaterfallViews();
   },
 
   /**
@@ -1185,14 +1187,6 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
         timingsNode.insertBefore(timingBox, timingsTotal);
       }
     }
-
-    // Don't paint things while the waterfall view isn't even visible.
-    if (NetMonitorView.currentFrontendMode != "network-inspector-view") {
-      return;
-    }
-
-    // Rescale all the waterfalls so that everything is visible at once.
-    this._flushWaterfallViews();
   },
 
   /**
@@ -1202,6 +1196,12 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    *        True if this container's width was changed.
    */
   _flushWaterfallViews: function(aReset) {
+    // Don't paint things while the waterfall view isn't even visible,
+    // or there are no items added to this container.
+    if (NetMonitorView.currentFrontendMode != "network-inspector-view" || !this.itemCount) {
+      return;
+    }
+
     // To avoid expensive operations like getBoundingClientRect() and
     // rebuilding the waterfall background each time a new request comes in,
     // stuff is cached. However, in certain scenarios like when the window
@@ -1429,11 +1429,6 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    * The resize listener for this container's window.
    */
   _onResize: function(e) {
-    // Don't paint things while the waterfall view isn't even visible.
-    if (NetMonitorView.currentFrontendMode != "network-inspector-view") {
-      return;
-    }
-
     // Allow requests to settle down first.
     setNamedTimeout(
       "resize-events", RESIZE_REFRESH_RATE, () => this._flushWaterfallViews(true));
@@ -1634,13 +1629,6 @@ SidebarView.prototype = {
       $("#details-pane").selectedIndex = isCustom ? 0 : 1
       window.emit(EVENTS.SIDEBAR_POPULATED);
     });
-  },
-
-  /**
-   * Hides this container.
-   */
-  reset: function() {
-    this.toggle(false);
   }
 }
 
@@ -1838,13 +1826,6 @@ NetworkDetailsView.prototype = {
   },
 
   /**
-   * Resets this container (removes all the networking information).
-   */
-  reset: function() {
-    this._dataSrc = null;
-  },
-
-  /**
    * Populates this view with the specified data.
    *
    * @param object aData
@@ -1860,6 +1841,18 @@ NetworkDetailsView.prototype = {
     $("#response-content-json-box").hidden = true;
     $("#response-content-textarea-box").hidden = true;
     $("#response-content-image-box").hidden = true;
+
+    let isHtml = RequestsMenuView.prototype.isHtml({ attachment: aData });
+
+    // Show the "Preview" tabpanel only for plain HTML responses.
+    $("#preview-tab").hidden = !isHtml;
+    $("#preview-tabpanel").hidden = !isHtml;
+
+    // Switch to the "Headers" tabpanel if the "Preview" previously selected
+    // and this is not an HTML response.
+    if (!isHtml && this.widget.selectedIndex == 5) {
+      this.widget.selectedIndex = 0;
+    }
 
     this._headers.empty();
     this._cookies.empty();
@@ -1906,6 +1899,9 @@ NetworkDetailsView.prototype = {
           break;
         case 4: // "Timings"
           yield view._setTimingsInformation(src.eventTimings);
+          break;
+        case 5: // "Preview"
+          yield view._setHtmlPreview(src.responseContent);
           break;
       }
       populated[tab] = true;
@@ -2104,32 +2100,45 @@ NetworkDetailsView.prototype = {
     if (!aHeadersResponse || !aPostDataResponse) {
       return promise.resolve();
     }
-    return gNetwork.getString(aPostDataResponse.postData.text).then(aString => {
-      // Handle query strings (poor man's forms, e.g. "?foo=bar&baz=42").
-      let cType = aHeadersResponse.headers.filter(({ name }) => name == "Content-Type")[0];
-      let cString = cType ? cType.value : "";
-      if (cString.contains("x-www-form-urlencoded") ||
-          aString.contains("x-www-form-urlencoded")) {
-        let formDataGroups = aString.split(/\r\n|\n|\r/);
-        for (let group of formDataGroups) {
-          this._addParams(this._paramsFormData, group);
-        }
-      }
-      // Handle actual forms ("multipart/form-data" content type).
-      else {
-        // This is really awkward, but hey, it works. Let's show an empty
-        // scope in the params view and place the source editor containing
-        // the raw post data directly underneath.
-        $("#request-params-box").removeAttribute("flex");
-        let paramsScope = this._params.addScope(this._paramsPostPayload);
-        paramsScope.expanded = true;
-        paramsScope.locked = true;
+    return gNetwork.getString(aPostDataResponse.postData.text).then(aPostData => {
+      let contentTypeHeader = aHeadersResponse.headers.filter(({ name }) => name == "Content-Type")[0];
+      let contentTypeLongString = contentTypeHeader ? contentTypeHeader.value : "";
 
-        $("#request-post-data-textarea-box").hidden = false;
-        return NetMonitorView.editor("#request-post-data-textarea").then(aEditor => {
-          aEditor.setText(aString);
-        });
-      }
+      return gNetwork.getString(contentTypeLongString).then(aContentType => {
+        let urlencoded = "x-www-form-urlencoded";
+
+        // Handle query strings (poor man's forms, e.g. "?foo=bar&baz=42").
+        if (aContentType.contains(urlencoded)) {
+          let formDataGroups = aPostData.split(/\r\n|\r|\n/);
+          for (let group of formDataGroups) {
+            this._addParams(this._paramsFormData, group);
+          }
+        }
+        // Handle actual forms ("multipart/form-data" content type).
+        else {
+          // This is really awkward, but hey, it works. Let's show an empty
+          // scope in the params view and place the source editor containing
+          // the raw post data directly underneath.
+          $("#request-params-box").removeAttribute("flex");
+          let paramsScope = this._params.addScope(this._paramsPostPayload);
+          paramsScope.expanded = true;
+          paramsScope.locked = true;
+
+          $("#request-post-data-textarea-box").hidden = false;
+          return NetMonitorView.editor("#request-post-data-textarea").then(aEditor => {
+            // Most POST bodies are usually JSON, so they can be neatly
+            // syntax highlighted as JS. Otheriwse, fall back to plain text.
+            try {
+              JSON.parse(aPostData);
+              aEditor.setMode(Editor.modes.js);
+            } catch (e) {
+              aEditor.setMode(Editor.modes.text);
+            } finally {
+              aEditor.setText(aPostData);
+            }
+          });
+        }
+      });
     }).then(() => window.emit(EVENTS.REQUEST_POST_PARAMS_DISPLAYED));
   },
 
@@ -2150,8 +2159,8 @@ NetworkDetailsView.prototype = {
     paramsScope.expanded = true;
 
     for (let param of paramsArray) {
-      let headerVar = paramsScope.addItem(param.name, {}, true);
-      headerVar.setGrip(param.value);
+      let paramVar = paramsScope.addItem(param.name, {}, true);
+      paramVar.setGrip(param.value);
     }
   },
 
@@ -2343,6 +2352,30 @@ NetworkDetailsView.prototype = {
       .style.transform = "translateX(" + (scale * (blocked + dns + connect + send)) + "px)";
     $("#timings-summary-receive .requests-menu-timings-total")
       .style.transform = "translateX(" + (scale * (blocked + dns + connect + send + wait)) + "px)";
+  },
+
+  /**
+   * Sets the preview for HTML responses shown in this view.
+   *
+   * @param object aResponse
+   *        The message received from the server.
+   * @return object
+   *        A promise that is resolved when the response body is set
+   */
+  _setHtmlPreview: function(aResponse) {
+    if (!aResponse) {
+      return promise.resolve();
+    }
+    let { text } = aResponse.content;
+    let iframe = $("#response-preview");
+
+    return gNetwork.getString(text).then(aString => {
+      // Always disable JS when previewing HTML responses.
+      iframe.contentDocument.docShell.allowJavascript = false;
+      iframe.contentDocument.documentElement.innerHTML = aString;
+
+      window.emit(EVENTS.RESPONSE_HTML_PREVIEW_DISPLAYED);
+    });
   },
 
   _dataSrc: null,
@@ -2570,14 +2603,16 @@ nsIURL.store = new Map();
  */
 function parseQueryString(aQueryString) {
   // Make sure there's at least one param available.
-  if (!aQueryString || !aQueryString.contains("=")) {
+  // Be careful here, params don't necessarily need to have values, so
+  // no need to verify the existence of a "=".
+  if (!aQueryString) {
     return;
   }
   // Turn the params string into an array containing { name: value } tuples.
   let paramsArray = aQueryString.replace(/^[?&]/, "").split("&").map(e =>
     let (param = e.split("=")) {
-      name: NetworkHelper.convertToUnicode(unescape(param[0])),
-      value: NetworkHelper.convertToUnicode(unescape(param[1]))
+      name: param[0] ? NetworkHelper.convertToUnicode(unescape(param[0])) : "",
+      value: param[1] ? NetworkHelper.convertToUnicode(unescape(param[1])) : ""
     });
   return paramsArray;
 }

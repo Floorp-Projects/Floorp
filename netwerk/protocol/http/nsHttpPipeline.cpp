@@ -62,8 +62,7 @@ private:
 //-----------------------------------------------------------------------------
 
 nsHttpPipeline::nsHttpPipeline()
-    : mConnection(nullptr)
-    , mStatus(NS_OK)
+    : mStatus(NS_OK)
     , mRequestIsPartial(false)
     , mResponseIsPartial(false)
     , mClosed(false)
@@ -83,8 +82,6 @@ nsHttpPipeline::~nsHttpPipeline()
     // make sure we aren't still holding onto any transactions!
     Close(NS_ERROR_ABORT);
 
-    NS_IF_RELEASE(mConnection);
-
     if (mPushBackBuf)
         free(mPushBackBuf);
 }
@@ -97,7 +94,7 @@ nsHttpPipeline::AddTransaction(nsAHttpTransaction *trans)
     if (mRequestQ.Length() || mResponseQ.Length())
         mUtilizedPipeline = true;
 
-    NS_ADDREF(trans);
+    trans->AddRef(); // ref held by mRequestQ
     mRequestQ.AppendElement(trans);
     uint32_t qlen = PipelineDepth();
 
@@ -205,10 +202,11 @@ nsHttpPipeline::OnHeadersAvailable(nsAHttpTransaction *trans,
 }
 
 void
-nsHttpPipeline::CloseTransaction(nsAHttpTransaction *trans, nsresult reason)
+nsHttpPipeline::CloseTransaction(nsAHttpTransaction *aTrans, nsresult reason)
 {
+    nsRefPtr<nsAHttpTransaction> trans(dont_AddRef(aTrans));
     LOG(("nsHttpPipeline::CloseTransaction [this=%p trans=%x reason=%x]\n",
-        this, trans, reason));
+         this, trans.get(), reason));
 
     MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
     MOZ_ASSERT(NS_FAILED(reason), "expecting failure code");
@@ -243,7 +241,7 @@ nsHttpPipeline::CloseTransaction(nsAHttpTransaction *trans, nsresult reason)
     DontReuse();
 
     trans->Close(reason);
-    NS_RELEASE(trans);
+    trans = nullptr;
 
     if (killPipeline) {
         // reschedule anything from this pipeline onto a different connection
@@ -385,12 +383,11 @@ nsHttpPipeline::TakeSubTransactions(
 
     int32_t i, count = mRequestQ.Length();
     for (i = 0; i < count; ++i) {
-        nsAHttpTransaction *trans = Request(i);
+        nsRefPtr<nsAHttpTransaction> trans(dont_AddRef(Request(i)));
         // set the transaction conneciton object back to the underlying
         // nsHttpConnectionHandle
         trans->SetConnection(mConnection);
         outTransactions.AppendElement(trans);
-        NS_RELEASE(trans);
     }
     mRequestQ.Clear();
 
@@ -409,14 +406,13 @@ nsHttpPipeline::SetConnection(nsAHttpConnection *conn)
 
     MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
     MOZ_ASSERT(!mConnection, "already have a connection");
-
-    NS_IF_ADDREF(mConnection = conn);
+    mConnection = conn;
 }
 
 nsAHttpConnection *
 nsHttpPipeline::Connection()
 {
-    LOG(("nsHttpPipeline::Connection [this=%p conn=%x]\n", this, mConnection));
+    LOG(("nsHttpPipeline::Connection [this=%p conn=%x]\n", this, mConnection.get()));
 
     MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
     return mConnection;
@@ -688,7 +684,7 @@ nsHttpPipeline::WriteSegments(nsAHttpSegmentWriter *writer,
 
             // Release the transaction if it is not IsProxyConnectInProgress()
             if (trans == Response(0)) {
-                NS_RELEASE(trans);
+                nsRefPtr<nsAHttpTransaction> listReference(dont_AddRef(trans));
                 mResponseQ.RemoveElementAt(0);
                 mResponseIsPartial = false;
                 ++mHttp1xTransactionCount;
@@ -731,7 +727,6 @@ uint32_t
 nsHttpPipeline::CancelPipeline(nsresult originalReason)
 {
     uint32_t i, reqLen, respLen, total;
-    nsAHttpTransaction *trans;
 
     reqLen = mRequestQ.Length();
     respLen = mResponseQ.Length();
@@ -747,12 +742,12 @@ nsHttpPipeline::CancelPipeline(nsresult originalReason)
     // any pending requests can ignore this error and be restarted
     // unless it is during a CONNECT tunnel request
     for (i = 0; i < reqLen; ++i) {
-        trans = Request(i);
+        // Each element on the list has a reference held by the list
+        nsRefPtr<nsAHttpTransaction> trans(dont_AddRef(Request(i)));
         if (mConnection && mConnection->IsProxyConnectInProgress())
             trans->Close(originalReason);
         else
             trans->Close(NS_ERROR_NET_RESET);
-        NS_RELEASE(trans);
     }
     mRequestQ.Clear();
 
@@ -761,9 +756,8 @@ nsHttpPipeline::CancelPipeline(nsresult originalReason)
     // Higher levels of callers ensure that we don't process non-idempotent
     // tranasction with the NS_HTTP_ALLOW_PIPELINING bit set
     for (i = 1; i < respLen; ++i) {
-        trans = Response(i);
+        nsRefPtr<nsAHttpTransaction> trans(dont_AddRef(Response(i)));
         trans->Close(NS_ERROR_NET_RESET);
-        NS_RELEASE(trans);
     }
 
     if (respLen > 1)
@@ -801,9 +795,10 @@ nsHttpPipeline::Close(nsresult reason)
         gHttpHandler->ConnMgr()->PipelineFeedbackInfo(
             ci, nsHttpConnectionMgr::RedCanceledPipeline, nullptr, 0);
 
-    nsAHttpTransaction *trans = Response(0);
-    if (!trans)
+    if (!Response(0)) {
         return;
+    }
+    nsRefPtr<nsAHttpTransaction> trans(dont_AddRef(Response(0)));
 
     // The current transaction can be restarted via reset
     // if the response has not started to arrive and the reason
@@ -819,7 +814,7 @@ nsHttpPipeline::Close(nsresult reason)
         trans->Close(reason);
     }
 
-    NS_RELEASE(trans);
+    trans = nullptr;
     mResponseQ.Clear();
 }
 

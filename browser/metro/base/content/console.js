@@ -13,6 +13,14 @@ let ConsolePanelView = {
   _showChromeErrors: -1,
   _enabledPref: "devtools.errorconsole.enabled",
 
+  get enabled() {
+    return Services.prefs.getBoolPref(this._enabledPref);
+  },
+
+  get follow() {
+    return document.getElementById("console-follow-checkbox").checked;
+  },
+
   init: function cv_init() {
     if (this._list)
       return;
@@ -23,6 +31,7 @@ let ConsolePanelView = {
 
     this._count = 0;
     this.limit = 250;
+    this.fieldMaxLength = 140;
 
     try {
       // update users using the legacy pref
@@ -63,10 +72,6 @@ let ConsolePanelView = {
     Services.prefs.removeObserver(this._enabledPref, this, false);
   },
 
-  get enabled() {
-    return Services.prefs.getBoolPref(this._enabledPref);
-  },
-
   observe: function(aSubject, aTopic, aData) {
     if (aTopic == "nsPref:changed") {
       // We may choose to create a new menu in v2
@@ -89,6 +94,7 @@ let ConsolePanelView = {
   },
 
   appendItem: function cv_appendItem(aObject) {
+    let index = -1;
     try {
       // Try to QI it to a script error to get more info
       let scriptError = aObject.QueryInterface(Ci.nsIScriptError);
@@ -96,7 +102,7 @@ let ConsolePanelView = {
       // filter chrome urls
       if (!this.showChromeErrors && scriptError.sourceName.substr(0, 9) == "chrome://")
         return;
-      this.appendError(scriptError);
+      index = this.appendError(scriptError);
     }
     catch (ex) {
       try {
@@ -104,15 +110,30 @@ let ConsolePanelView = {
         let msg = aObject.QueryInterface(Ci.nsIConsoleMessage);
 
         if (msg.message)
-          this.appendMessage(msg.message);
+          index = this.appendMessage(msg.message);
         else // observed a null/"clear" message
           this.clearConsole();
       }
       catch (ex2) {
         // Give up and append the object itself as a string
-        this.appendMessage(aObject);
+        index = this.appendMessage(aObject);
       }
     }
+    if (this.follow) {
+      this._list.ensureIndexIsVisible(index);
+    }
+  },
+
+  truncateIfNecessary: function (aString) {
+    if (!aString || aString.length <= this.fieldMaxLength) {
+      return aString;
+    }
+    let truncatedString = aString.substring(0, this.fieldMaxLength);
+    let Ci = Components.interfaces;
+    let ellipsis = Services.prefs.getComplexValue("intl.ellipsis",
+                                                  Ci.nsIPrefLocalizedString).data;
+    truncatedString = truncatedString + ellipsis;
+    return truncatedString;
   },
 
   appendError: function cv_appendError(aObject) {
@@ -134,26 +155,26 @@ let ConsolePanelView = {
     else {
       row.setAttribute("hideSource", "true");
     }
+    // hide code by default, otherwise initial item display will
+    // hang the browser.
+    row.setAttribute("hideCode", "true");
+    row.setAttribute("hideCaret", "true");
+
     if (aObject.sourceLine) {
-      row.setAttribute("code", aObject.sourceLine.replace(/\s/g, " "));
+      row.setAttribute("code", this.truncateIfNecessary(aObject.sourceLine.replace(/\s/g, " ")));
       if (aObject.columnNumber) {
         row.setAttribute("col", aObject.columnNumber);
-        row.setAttribute("errorDots", this.repeatChar(" ", aObject.columnNumber));
-        row.setAttribute("errorCaret", " ");
       }
-      else {
-        row.setAttribute("hideCaret", "true");
-      }
-    }
-    else {
-      row.setAttribute("hideCode", "true");
     }
 
     let mode = document.getElementById("console-filter").value;
-    if (mode != "all" && mode != row.getAttribute("type"))
+    if (mode != "all" && mode != row.getAttribute("type")) {
       row.collapsed = true;
+    }
 
+    row.setAttribute("onclick", "ConsolePanelView.onRowClick(this)");
     this.appendConsoleRow(row);
+    return this._list.getIndexOfItem(row);
   },
 
   appendMessage: function cv_appendMessage (aMessage) {
@@ -166,6 +187,7 @@ let ConsolePanelView = {
       row.collapsed = true;
 
     this.appendConsoleRow(row);
+    return this._list.getIndexOfItem(row);
   },
 
   createConsoleRow: function cv_createConsoleRow() {
@@ -176,8 +198,9 @@ let ConsolePanelView = {
 
   appendConsoleRow: function cv_appendConsoleRow(aRow) {
     this._list.appendChild(aRow);
-    if (++this._count > this.limit)
+    if (++this._count > this.limit) {
       this.deleteFirst();
+    }
   },
 
   deleteFirst: function cv_deleteFirst() {
@@ -187,6 +210,7 @@ let ConsolePanelView = {
   },
 
   appendInitialItems: function cv_appendInitialItems() {
+    this._list.collapsed = true;
     let messages = Services.console.getMessageArray();
 
     // In case getMessageArray returns 0-length array as null
@@ -198,13 +222,17 @@ let ConsolePanelView = {
       limit = 0;
 
     // Checks if console ever been cleared
-    for (var i = messages.length - 1; i >= limit; --i)
-      if (!messages[i].message)
+    for (var i = messages.length - 1; i >= limit; --i) {
+      if (!messages[i].message) {
         break;
+      }
+    }
 
     // Populate with messages after latest "clear"
-    while (++i < messages.length)
+    while (++i < messages.length) {
       this.appendItem(messages[i]);
+    }
+    this._list.collapsed = false;
   },
 
   clearConsole: function cv_clearConsole() {
@@ -216,6 +244,27 @@ let ConsolePanelView = {
     this._list.parentNode.replaceChild(newRows, this._list);
     this._list = newRows;
     this.selectedItem = null;
+  },
+
+  copyAll: function () {
+    let mode = document.getElementById("console-filter").value;
+    let rows = this._list.childNodes;
+    let copyText = "";
+    for (let i=0; i < rows.length; i++) {
+      let row = rows[i];
+      if (mode == "all" || row.getAttribute ("type") == mode) {
+        let text = "* " + row.getAttribute("msg");
+        if (row.hasAttribute("href")) {
+          text += "\r\n " + row.getAttribute("href") + " line:" + row.getAttribute("line");
+        }
+        if (row.hasAttribute("code")) {
+          text += "\r\n " + row.getAttribute("code") + " col:" + row.getAttribute("col");
+        }
+        copyText += text + "\r\n";
+      }
+    }
+    let clip = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
+    clip.copyString(copyText, document);
   },
 
   changeMode: function cv_changeMode() {
@@ -237,7 +286,7 @@ let ConsolePanelView = {
   onContextMenu: function cv_onContextMenu(aEvent) {
     let row = aEvent.target;
     let text = ["msg", "href", "line", "code", "col"].map(function(attr) row.getAttribute(attr))
-               .filter(function(x) x).join("\n");
+               .filter(function(x) x).join("\r\n");
 
     ContextMenuUI.showContextMenu({
       target: row,
@@ -248,6 +297,15 @@ let ConsolePanelView = {
         yPos: aEvent.clientY
       }
     });
+  },
+
+  onRowClick: function (aRow) {
+    if (aRow.hasAttribute("code")) {
+      aRow.setAttribute("hideCode", "false");
+    }
+    if (aRow.hasAttribute("col")) {
+      aRow.setAttribute("hideCaret", "false");
+    }
   },
 
   onEvalKeyPress: function cv_onEvalKeyPress(aEvent) {

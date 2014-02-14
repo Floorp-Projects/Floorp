@@ -3,7 +3,6 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-
 <!DOCTYPE bindings [
 <!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd">
 %browserDTD;
@@ -13,7 +12,6 @@
     xmlns="http://www.mozilla.org/xbl"
     xmlns:xbl="http://www.mozilla.org/xbl"
     xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-
   <binding id="error" extends="chrome://browser/content/bindings/bindings.xml#richlistitem">
     <content orient="vertical">
       <xul:hbox class="console-row-internal-box" flex="1">
@@ -22,7 +20,6 @@
             <xul:label class="label title" xbl:inherits="value=typetext"/>
             <xul:description class="console-error-msg title" xbl:inherits="xbl:text=msg" flex="1"/>
           </xul:hbox>
-          
           <xul:hbox class="console-row-file" xbl:inherits="hidden=hideSource">
             <xul:label class="label title" value="&consoleErrFile.label;"/>
             <xul:label class="title" xbl:inherits="value=href" crop="right"/>
@@ -32,20 +29,13 @@
               <xul:label class="label title" xbl:inherits="value=line"/>
             </xul:hbox>
           </xul:hbox>
-          
           <xul:vbox class="console-row-code" xbl:inherits="hidden=hideCode">
             <xul:label class="monospace console-code" xbl:inherits="value=code" crop="end"/>
-            <xul:hbox xbl:inherits="hidden=hideCaret">
-              <xul:label class="monospace console-dots title" xbl:inherits="value=errorDots"/>
-              <xul:label class="monospace console-caret title" xbl:inherits="value=errorCaret"/>
-              <xul:spacer flex="1"/>
-            </xul:hbox>
           </xul:vbox>
         </xul:vbox>
       </xul:hbox>
     </content>
   </binding>
-    
   <binding id="message" extends="chrome://browser/content/bindings/bindings.xml#richlistitem">
     <content>
       <xul:hbox class="console-internal-box" flex="1">
@@ -57,5 +47,4 @@
       </xul:hbox>
     </content>
   </binding>
-  
 </bindings>

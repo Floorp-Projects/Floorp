@@ -26,14 +26,16 @@ static JSObject *trusted_fun = nullptr;
 static bool
 CallTrusted(JSContext *cx, unsigned argc, jsval *vp)
 {
+    JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+
     if (!JS_SaveFrameChain(cx))
         return false;
 
     bool ok = false;
     {
         JSAutoCompartment ac(cx, trusted_glob);
-        ok = JS_CallFunctionValue(cx, nullptr, JS::ObjectValue(*trusted_fun),
-                                  JS::EmptyValueArray, vp);
+        JS::RootedValue funVal(cx, JS::ObjectValue(*trusted_fun));
+        ok = JS_CallFunctionValue(cx, JS::NullPtr(), funVal, JS::EmptyValueArray, args.rval());
     }
     JS_RestoreFrameChain(cx);
     return ok;
@@ -49,7 +51,7 @@ BEGIN_TEST(testChromeBuffer)
     if (!JS_AddNamedObjectRoot(cx, &trusted_glob, "trusted-global"))
         return false;
 
-    JSFunction *fun;
+    JS::RootedFunction fun(cx);
 
     /*
      * Check that, even after untrusted content has exhausted the stack, code
@@ -91,7 +93,7 @@ BEGIN_TEST(testChromeBuffer)
                                        bytes, strlen(bytes), options));
 
         JS::RootedValue rval(cx);
-        CHECK(JS_CallFunction(cx, nullptr, fun, v, rval.address()));
+        CHECK(JS_CallFunction(cx, JS::NullPtr(), fun, v, &rval));
         CHECK(JSVAL_TO_INT(rval) == 100);
     }
 
@@ -132,7 +134,7 @@ BEGIN_TEST(testChromeBuffer)
                                        bytes, strlen(bytes), options));
 
         JS::RootedValue rval(cx);
-        CHECK(JS_CallFunction(cx, nullptr, fun, v, rval.address()));
+        CHECK(JS_CallFunction(cx, JS::NullPtr(), fun, v, &rval));
         bool match;
         CHECK(JS_StringEqualsAscii(cx, JSVAL_TO_STRING(rval), "From trusted: InternalError: too much recursion", &match));
         CHECK(match);
@@ -171,7 +173,7 @@ BEGIN_TEST(testChromeBuffer)
 
         JS::RootedValue arg(cx, JS::ObjectValue(*callTrusted));
         JS::RootedValue rval(cx);
-        CHECK(JS_CallFunction(cx, nullptr, fun, arg, rval.address()));
+        CHECK(JS_CallFunction(cx, JS::NullPtr(), fun, arg, &rval));
         CHECK(JSVAL_TO_INT(rval) == 42);
     }
 
