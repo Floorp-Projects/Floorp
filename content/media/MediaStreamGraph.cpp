@@ -2200,7 +2200,9 @@ SourceMediaStream::DispatchWhenNotEnoughBuffered(TrackID aID,
   }
 
   if (data->mHaveEnough) {
-    data->mDispatchWhenNotEnough.AppendElement()->Init(aSignalThread, aSignalRunnable);
+    if (data->mDispatchWhenNotEnough.IsEmpty()) {
+      data->mDispatchWhenNotEnough.AppendElement()->Init(aSignalThread, aSignalRunnable);
+    }
   } else {
     aSignalThread->Dispatch(aSignalRunnable, 0);
   }
