@@ -105,13 +105,7 @@
 }
 
 #customization-undo-reset {
-  padding-left: 12px;
-  padding-right: 12px;
-%ifdef XP_MACOSX
-  padding-top: 6px;
-%else
-  padding-top: 7px;
-%endif
+  -moz-margin-end: 10px;
 }
 
 #main-window[customize-entered] #customization-panel-container {

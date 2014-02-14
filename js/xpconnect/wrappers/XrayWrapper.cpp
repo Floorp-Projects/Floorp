@@ -350,7 +350,6 @@ XrayTraits::expandoObjectMatchesConsumer(JSContext *cx,
 
     // First, compare the principals.
     nsIPrincipal *o = GetExpandoObjectPrincipal(expandoObject);
-    bool equal;
     // Note that it's very important here to ignore document.domain. We
     // pull the principal for the expando object off of the first consumer
     // for a given origin, and freely share the expandos amongst multiple
@@ -358,9 +357,8 @@ XrayTraits::expandoObjectMatchesConsumer(JSContext *cx,
     // no way to know whether _all_ consumers have opted in to collaboration
     // by explicitly setting document.domain. So we just mandate that expando
     // sharing is unaffected by it.
-    nsresult rv = consumerOrigin->EqualsIgnoringDomain(o, &equal);
-    if (NS_FAILED(rv) || !equal)
-        return false;
+    if (!consumerOrigin->Equals(o))
+      return false;
 
     // Sandboxes want exclusive expando objects.
     JSObject *owner = JS_GetReservedSlot(expandoObject,
