@@ -740,18 +740,11 @@ TextureImageDeprecatedTextureHostOGL::UpdateImpl(const SurfaceDescriptor& aImage
   } else {
     updateRegion = *aRegion;
   }
-  gfx::IntPoint offset;
+  nsIntPoint offset;
   if (aOffset) {
-    offset.x = aOffset->x;
-    offset.y = aOffset->y;
+    offset = *aOffset;
   }
-  nsRefPtr<gfxImageSurface> thebesSurf = surf.GetAsImage();
-  RefPtr<DataSourceSurface> sourceSurf =
-    gfx::Factory::CreateWrappingDataSourceSurface(thebesSurf->Data(),
-                                                  thebesSurf->Stride(),
-                                                  ToIntSize(thebesSurf->GetSize()),
-                                                  ImageFormatToSurfaceFormat(thebesSurf->Format()));
-  mTexture->DirectUpdate(sourceSurf, updateRegion, offset);
+  mTexture->DirectUpdate(surf.Get(), updateRegion, offset);
   mFormat = mTexture->GetTextureFormat();
 
   if (mTexture->InUpdate()) {
