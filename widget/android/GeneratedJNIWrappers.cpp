@@ -81,9 +81,6 @@ jmethodID GeckoAppShell::jSetFullScreen = 0;
 jmethodID GeckoAppShell::jSetKeepScreenOn = 0;
 jmethodID GeckoAppShell::jSetURITitle = 0;
 jmethodID GeckoAppShell::jShowAlertNotificationWrapper = 0;
-jmethodID GeckoAppShell::jShowFilePickerAsyncWrapper = 0;
-jmethodID GeckoAppShell::jShowFilePickerForExtensionsWrapper = 0;
-jmethodID GeckoAppShell::jShowFilePickerForMimeTypeWrapper = 0;
 jmethodID GeckoAppShell::jShowInputMethodPicker = 0;
 jmethodID GeckoAppShell::jUnlockProfile = 0;
 jmethodID GeckoAppShell::jUnlockScreenOrientation = 0;
@@ -132,7 +129,7 @@ void GeckoAppShell::InitStubs(JNIEnv *jEnv) {
     jGetScreenOrientationWrapper = getStaticMethod("getScreenOrientation", "()S");
     jGetShowPasswordSetting = getStaticMethod("getShowPasswordSetting", "()Z");
     jGetSystemColoursWrapper = getStaticMethod("getSystemColors", "()[I");
-    jHandleGeckoMessageWrapper = getStaticMethod("handleGeckoMessage", "(Ljava/lang/String;)Ljava/lang/String;");
+    jHandleGeckoMessageWrapper = getStaticMethod("handleGeckoMessage", "(Ljava/lang/String;)V");
     jHandleUncaughtException = getStaticMethod("handleUncaughtException", "(Ljava/lang/Thread;Ljava/lang/Throwable;)V");
     jHideProgressDialog = getStaticMethod("hideProgressDialog", "()V");
     jInitCameraWrapper = getStaticMethod("initCamera", "(Ljava/lang/String;III)[I");
@@ -163,9 +160,6 @@ void GeckoAppShell::InitStubs(JNIEnv *jEnv) {
     jSetKeepScreenOn = getStaticMethod("setKeepScreenOn", "(Z)V");
     jSetURITitle = getStaticMethod("setUriTitle", "(Ljava/lang/String;Ljava/lang/String;)V");
     jShowAlertNotificationWrapper = getStaticMethod("showAlertNotification", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
-    jShowFilePickerAsyncWrapper = getStaticMethod("showFilePickerAsync", "(Ljava/lang/String;J)V");
-    jShowFilePickerForExtensionsWrapper = getStaticMethod("showFilePickerForExtensions", "(Ljava/lang/String;)Ljava/lang/String;");
-    jShowFilePickerForMimeTypeWrapper = getStaticMethod("showFilePickerForMimeType", "(Ljava/lang/String;)Ljava/lang/String;");
     jShowInputMethodPicker = getStaticMethod("showInputMethodPicker", "()V");
     jUnlockProfile = getStaticMethod("unlockProfile", "()Z");
     jUnlockScreenOrientation = getStaticMethod("unlockScreenOrientation", "()V");
@@ -703,19 +697,18 @@ jintArray GeckoAppShell::GetSystemColoursWrapper() {
     return ret;
 }
 
-jstring GeckoAppShell::HandleGeckoMessageWrapper(const nsAString& a0) {
+void GeckoAppShell::HandleGeckoMessageWrapper(const nsAString& a0) {
     JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (env->PushLocalFrame(2) != 0) {
+    if (env->PushLocalFrame(1) != 0) {
         AndroidBridge::HandleUncaughtException(env);
         MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
     }
 
     jstring j0 = AndroidBridge::NewJavaString(env, a0);
 
-    jobject temp = env->CallStaticObjectMethod(mGeckoAppShellClass, jHandleGeckoMessageWrapper, j0);
+    env->CallStaticVoidMethod(mGeckoAppShellClass, jHandleGeckoMessageWrapper, j0);
     AndroidBridge::HandleUncaughtException(env);
-    jstring ret = static_cast<jstring>(env->PopLocalFrame(temp));
-    return ret;
+    env->PopLocalFrame(nullptr);
 }
 
 void GeckoAppShell::HandleUncaughtException(jobject a0, jthrowable a1) {
@@ -1134,50 +1127,6 @@ void GeckoAppShell::ShowAlertNotificationWrapper(const nsAString& a0, const nsAS
     env->CallStaticVoidMethodA(mGeckoAppShellClass, jShowAlertNotificationWrapper, args);
     AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
-}
-
-void GeckoAppShell::ShowFilePickerAsyncWrapper(const nsAString& a0, int64_t a1) {
-    JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (env->PushLocalFrame(1) != 0) {
-        AndroidBridge::HandleUncaughtException(env);
-        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
-    }
-
-    jstring j0 = AndroidBridge::NewJavaString(env, a0);
-
-    env->CallStaticVoidMethod(mGeckoAppShellClass, jShowFilePickerAsyncWrapper, j0, a1);
-    AndroidBridge::HandleUncaughtException(env);
-    env->PopLocalFrame(nullptr);
-}
-
-jstring GeckoAppShell::ShowFilePickerForExtensionsWrapper(const nsAString& a0) {
-    JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (env->PushLocalFrame(2) != 0) {
-        AndroidBridge::HandleUncaughtException(env);
-        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
-    }
-
-    jstring j0 = AndroidBridge::NewJavaString(env, a0);
-
-    jobject temp = env->CallStaticObjectMethod(mGeckoAppShellClass, jShowFilePickerForExtensionsWrapper, j0);
-    AndroidBridge::HandleUncaughtException(env);
-    jstring ret = static_cast<jstring>(env->PopLocalFrame(temp));
-    return ret;
-}
-
-jstring GeckoAppShell::ShowFilePickerForMimeTypeWrapper(const nsAString& a0) {
-    JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (env->PushLocalFrame(2) != 0) {
-        AndroidBridge::HandleUncaughtException(env);
-        MOZ_ASSUME_UNREACHABLE("Exception should have caused crash.");
-    }
-
-    jstring j0 = AndroidBridge::NewJavaString(env, a0);
-
-    jobject temp = env->CallStaticObjectMethod(mGeckoAppShellClass, jShowFilePickerForMimeTypeWrapper, j0);
-    AndroidBridge::HandleUncaughtException(env);
-    jstring ret = static_cast<jstring>(env->PopLocalFrame(temp));
-    return ret;
 }
 
 void GeckoAppShell::ShowInputMethodPicker() {
