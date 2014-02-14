@@ -1,7 +1,7 @@
 
 /* pngpread.c - read a png file in push mode
  *
- * Last changed in libpng 1.6.0 [February 14, 2013]
+ * Last changed in libpng 1.6.8 [December 19, 2013]
  * Copyright (c) 1998-2013 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
@@ -185,7 +185,7 @@ void /* PRIVATE */
 png_push_read_chunk(png_structrp png_ptr, png_inforp info_ptr)
 {
    png_uint_32 chunk_name;
-#ifdef PNG_SET_UNKNOWN_CHUNKS_SUPPORTED
+#ifdef PNG_HANDLE_AS_UNKNOWN_SUPPORTED
    int keep; /* unknown handling method */
 #endif
 
@@ -374,7 +374,7 @@ png_push_read_chunk(png_structrp png_ptr, png_inforp info_ptr)
       png_push_have_end(png_ptr, info_ptr);
    }
 
-#ifdef PNG_SET_UNKNOWN_CHUNKS_SUPPORTED
+#ifdef PNG_HANDLE_AS_UNKNOWN_SUPPORTED
    else if ((keep = png_chunk_unknown_handling(png_ptr, chunk_name)) != 0)
    {
       if (png_ptr->push_length + 4 > png_ptr->buffer_size)
@@ -388,8 +388,8 @@ png_push_read_chunk(png_structrp png_ptr, png_inforp info_ptr)
       if (chunk_name == png_PLTE)
          png_ptr->mode |= PNG_HAVE_PLTE;
    }
-
 #endif
+
    else if (chunk_name == png_PLTE)
    {
       if (png_ptr->push_length + 4 > png_ptr->buffer_size)
@@ -634,8 +634,8 @@ png_push_read_chunk(png_structrp png_ptr, png_inforp info_ptr)
 
       png_handle_iTXt(png_ptr, info_ptr, png_ptr->push_length);
    }
-
 #endif
+
 #ifdef PNG_READ_APNG_SUPPORTED
    else if (chunk_name == png_acTL)
    {
@@ -658,8 +658,8 @@ png_push_read_chunk(png_structrp png_ptr, png_inforp info_ptr)
 
       png_handle_fcTL(png_ptr, info_ptr, png_ptr->push_length);
    }
-#endif /* PNG_READ_APNG_SUPPORTED */
 
+#endif /* PNG_READ_APNG_SUPPORTED */
    else
    {
       if (png_ptr->push_length + 4 > png_ptr->buffer_size)
