@@ -225,15 +225,12 @@ class DeviceSuccessCallbackRunnable: public nsRunnable
 {
 public:
   DeviceSuccessCallbackRunnable(
-    uint64_t aWindowID,
     already_AddRefed<nsIGetUserMediaDevicesSuccessCallback> aSuccess,
     already_AddRefed<nsIDOMGetUserMediaErrorCallback> aError,
     nsTArray<nsCOMPtr<nsIMediaDevice> >* aDevices)
     : mSuccess(aSuccess)
     , mError(aError)
-    , mDevices(aDevices)
-    , mWindowID(aWindowID)
-    , mManager(MediaManager::GetInstance()) {}
+    , mDevices(aDevices) {}
 
   NS_IMETHOD
   Run()
@@ -242,11 +239,6 @@ public:
 
     nsCOMPtr<nsIGetUserMediaDevicesSuccessCallback> success(mSuccess);
     nsCOMPtr<nsIDOMGetUserMediaErrorCallback> error(mError);
-
-    // Only run if window is still on our active list.
-    if (!mManager->IsWindowStillActive(mWindowID)) {
-      return NS_OK;
-    }
 
     nsCOMPtr<nsIWritableVariant> devices =
       do_CreateInstance("@mozilla.org/variant;1");
@@ -281,8 +273,6 @@ private:
   already_AddRefed<nsIGetUserMediaDevicesSuccessCallback> mSuccess;
   already_AddRefed<nsIDOMGetUserMediaErrorCallback> mError;
   nsAutoPtr<nsTArray<nsCOMPtr<nsIMediaDevice> > > mDevices;
-  uint64_t mWindowID;
-  nsRefPtr<MediaManager> mManager;
 };
 
 // Handle removing GetUserMediaCallbackMediaStreamListener from main thread
@@ -1086,8 +1076,7 @@ public:
                                         mLoopbackAudioDevice));
       final->MoveElementsFrom(*s);
     }
-    NS_DispatchToMainThread(new DeviceSuccessCallbackRunnable(mWindowId,
-                                                              mSuccess, mError,
+    NS_DispatchToMainThread(new DeviceSuccessCallbackRunnable(mSuccess, mError,
                                                               final.forget()));
     return NS_OK;
   }
@@ -1098,7 +1087,6 @@ private:
   already_AddRefed<nsIDOMGetUserMediaErrorCallback> mError;
   nsRefPtr<MediaManager> mManager;
   uint64_t mWindowId;
-  const nsString mCallId;
   // Audio & Video loopback devices to be used based on
   // the preference settings. This is currently used for
   // automated media tests only.
@@ -1461,8 +1449,7 @@ nsresult
 MediaManager::GetUserMediaDevices(nsPIDOMWindow* aWindow,
   const MediaStreamConstraintsInternal& aConstraints,
   nsIGetUserMediaDevicesSuccessCallback* aOnSuccess,
-  nsIDOMGetUserMediaErrorCallback* aOnError,
-  uint64_t aInnerWindowID)
+  nsIDOMGetUserMediaErrorCallback* aOnError)
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
 
@@ -1487,9 +1474,9 @@ MediaManager::GetUserMediaDevices(nsPIDOMWindow* aWindow,
 #endif
 
   nsCOMPtr<nsIRunnable> gUMDRunnable = new GetUserMediaDevicesRunnable(
-    aConstraints, onSuccess.forget(), onError.forget(),
-    (aInnerWindowID ? aInnerWindowID : aWindow->WindowID()),
-    loopbackAudioDevice, loopbackVideoDevice);
+    aConstraints, onSuccess.forget(), onError.forget(), aWindow->WindowID(),
+    loopbackAudioDevice, loopbackVideoDevice
+  );
 
   nsCOMPtr<nsIThread> deviceThread;
   rv = NS_NewThread(getter_AddRefs(deviceThread));

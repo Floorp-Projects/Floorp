@@ -66,20 +66,19 @@ function getBrowserForWindow(aContentWindow) {
 
 function handleRequest(aSubject, aTopic, aData) {
   let constraints = aSubject.getConstraints();
-  let contentWindow = Services.wm.getOuterWindowWithId(aSubject.windowID);
 
-  contentWindow.navigator.mozGetUserMediaDevices(
+  Services.wm.getMostRecentWindow(null).navigator.mozGetUserMediaDevices(
     constraints,
     function (devices) {
-      prompt(contentWindow, aSubject.callID, constraints.audio,
+      prompt(aSubject.windowID, aSubject.callID, constraints.audio,
              constraints.video || constraints.picture, devices);
     },
     function (error) {
       // bug 827146 -- In the future, the UI should catch NO_DEVICES_FOUND
       // and allow the user to plug in a device, instead of immediately failing.
       denyRequest(aSubject.callID, error);
-    },
-    aSubject.innerWindowID);
+    }
+  );
 }
 
 function denyRequest(aCallID, aError) {
@@ -91,7 +90,7 @@ function denyRequest(aCallID, aError) {
   Services.obs.notifyObservers(msg, "getUserMedia:response:deny", aCallID);
 }
 
-function prompt(aContentWindow, aCallID, aAudioRequested, aVideoRequested, aDevices) {
+function prompt(aWindowID, aCallID, aAudioRequested, aVideoRequested, aDevices) {
   let audioDevices = [];
   let videoDevices = [];
   for (let device of aDevices) {
@@ -120,8 +119,9 @@ function prompt(aContentWindow, aCallID, aAudioRequested, aVideoRequested, aDevi
     return;
   }
 
-  let host = aContentWindow.document.documentURIObject.host;
-  let browser = getBrowserForWindow(aContentWindow);
+  let contentWindow = Services.wm.getOuterWindowWithId(aWindowID);
+  let host = contentWindow.document.documentURIObject.host;
+  let browser = getBrowserForWindow(contentWindow);
   let chromeDoc = browser.ownerDocument;
   let chromeWin = chromeDoc.defaultView;
   let stringBundle = chromeWin.gNavigatorBundle;
