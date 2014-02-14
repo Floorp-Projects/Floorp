@@ -77,6 +77,13 @@ struct InefficientNonFlatteningStringHashPolicy
     static bool match(const JSString *const &k, const Lookup &l);
 };
 
+struct CStringHashPolicy
+{
+    typedef const char *Lookup;
+    static HashNumber hash(const Lookup &l);
+    static bool match(const char *const &k, const Lookup &l);
+};
+
 // This file features many classes with numerous size_t fields, and each such
 // class has one or more methods that need to operate on all of these fields.
 // Writing these individually is error-prone -- it's easy to add a new field
@@ -268,6 +275,67 @@ struct NotableStringInfo : public StringInfo
     NotableStringInfo(const NotableStringInfo& info) MOZ_DELETE;
 };
 
+// This class holds information about the memory taken up by script sources
+// from a particular file.
+struct ScriptSourceInfo
+{
+#define FOR_EACH_SIZE(macro) \
+    macro(_, _, compressed) \
+    macro(_, _, uncompressed) \
+    macro(_, _, misc)
+
+    ScriptSourceInfo()
+      : FOR_EACH_SIZE(ZERO_SIZE)
+        numScripts(0)
+    {}
+
+    void add(const ScriptSourceInfo &other) {
+        FOR_EACH_SIZE(ADD_OTHER_SIZE)
+        numScripts++;
+    }
+
+    void subtract(const ScriptSourceInfo &other) {
+        FOR_EACH_SIZE(SUB_OTHER_SIZE)
+        numScripts--;
+    }
+
+    bool isNotable() const {
+        static const size_t NotabilityThreshold = 16 * 1024;
+        size_t n = 0;
+        FOR_EACH_SIZE(ADD_SIZE_TO_N)
+        return n >= NotabilityThreshold;
+    }
+
+    FOR_EACH_SIZE(DECL_SIZE)
+    uint32_t numScripts;    // How many ScriptSources come from this file? (It
+                            // can be more than one in XML files that have
+                            // multiple scripts in CDATA sections.)
+#undef FOR_EACH_SIZE
+};
+
+// Holds data about a notable script source file (one whose combined
+// script sources use more than a certain amount of memory) so we can report it
+// individually.
+//
+// The only difference between this class and ScriptSourceInfo is that this
+// class holds a copy of the filename.
+struct NotableScriptSourceInfo : public ScriptSourceInfo
+{
+    NotableScriptSourceInfo();
+    NotableScriptSourceInfo(const char *filename, const ScriptSourceInfo &info);
+    NotableScriptSourceInfo(NotableScriptSourceInfo &&info);
+    NotableScriptSourceInfo &operator=(NotableScriptSourceInfo &&info);
+
+    ~NotableScriptSourceInfo() {
+        js_free(filename_);
+    }
+
+    char *filename_;
+
+  private:
+    NotableScriptSourceInfo(const NotableScriptSourceInfo& info) MOZ_DELETE;
+};
+
 // These measurements relate directly to the JSRuntime, and not to zones and
 // compartments within it.
 struct RuntimeSizes
@@ -283,17 +351,45 @@ struct RuntimeSizes
     macro(_, _, mathCache) \
     macro(_, _, sourceDataCache) \
     macro(_, _, scriptData) \
-    macro(_, _, scriptSources)
 
     RuntimeSizes()
       : FOR_EACH_SIZE(ZERO_SIZE)
+        scriptSourceInfo(),
         code(),
-        gc()
-    {}
+        gc(),
+        notableScriptSources()
+    {
+        allScriptSources = js_new<ScriptSourcesHashMap>();
+        if (!allScriptSources || !allScriptSources->init())
+            MOZ_CRASH("oom");
+    }
 
+    ~RuntimeSizes() {
+        // |allScriptSources| is usually deleted and set to nullptr before this
+        // destructor runs. But there are failure cases due to OOMs that may
+        // prevent that, so it doesn't hurt to try again here.
+        js_delete(allScriptSources);
+    }
+
+    // The script source measurements in |scriptSourceInfo| are initially for
+    // all script sources.  At the end, if the measurement granularity is
+    // FineGrained, we subtract the measurements of the notable script sources
+    // and move them into |notableScriptSources|.
     FOR_EACH_SIZE(DECL_SIZE)
-    CodeSizes code;
-    GCSizes   gc;
+    ScriptSourceInfo    scriptSourceInfo;
+    CodeSizes           code;
+    GCSizes             gc;
+
+    typedef js::HashMap<const char*, ScriptSourceInfo,
+                        js::CStringHashPolicy,
+                        js::SystemAllocPolicy> ScriptSourcesHashMap;
+
+    // |allScriptSources| is only used transiently.  During the reporting phase
+    // it is filled with info about every script source in the runtime.  It's
+    // then used to fill in |notableScriptSources| (which actually gets
+    // reported), and immediately discarded afterwards.
+    ScriptSourcesHashMap *allScriptSources;
+    js::Vector<NotableScriptSourceInfo, 0, js::SystemAllocPolicy> notableScriptSources;
 
 #undef FOR_EACH_SIZE
 };
