@@ -1294,6 +1294,7 @@ ScriptSource::setSourceCopy(ExclusiveContext *cx, const jschar *src, uint32_t le
     argumentsNotIncluded_ = argumentsNotIncluded;
 
     // There are several cases where source compression is not a good idea:
+    //  - If the script is tiny, then compression will save little or no space.
     //  - If the script is enormous, then decompression can take seconds. With
     //    lazy parsing, decompression is not uncommon, so this can significantly
     //    increase latency.
@@ -1320,8 +1321,9 @@ ScriptSource::setSourceCopy(ExclusiveContext *cx, const jschar *src, uint32_t le
 #else
     bool canCompressOffThread = false;
 #endif
+    const size_t TINY_SCRIPT = 256;
     const size_t HUGE_SCRIPT = 5 * 1024 * 1024;
-    if (length < HUGE_SCRIPT && canCompressOffThread) {
+    if (TINY_SCRIPT <= length && length < HUGE_SCRIPT && canCompressOffThread) {
         task->ss = this;
         task->chars = src;
         ready_ = false;
@@ -1360,48 +1362,46 @@ SourceCompressionTask::work()
     // threadsafe. We have to use the js_* variants.
 
 #ifdef USE_ZLIB
-    const size_t COMPRESS_THRESHOLD = 512;
-    if (nbytes >= COMPRESS_THRESHOLD) {
-        // Try to keep the maximum memory usage down by only allocating half the
-        // size of the string, first.
-        size_t firstSize = nbytes / 2;
-        if (!ss->adjustDataSize(firstSize))
-            return false;
-        Compressor comp(reinterpret_cast<const unsigned char *>(chars), nbytes);
-        if (!comp.init())
-            return false;
-        comp.setOutput(ss->data.compressed, firstSize);
-        bool cont = !abort_;
-        while (cont) {
-            switch (comp.compressMore()) {
-              case Compressor::CONTINUE:
-                break;
-              case Compressor::MOREOUTPUT: {
-                if (comp.outWritten() == nbytes) {
-                    cont = false;
-                    break;
-                }
-
-                // The compressed output is greater than half the size of the
-                // original string. Reallocate to the full size.
-                if (!ss->adjustDataSize(nbytes))
-                    return false;
-                comp.setOutput(ss->data.compressed, nbytes);
-                break;
-              }
-              case Compressor::DONE:
+    // Try to keep the maximum memory usage down by only allocating half the
+    // size of the string, first.
+    size_t firstSize = nbytes / 2;
+    if (!ss->adjustDataSize(firstSize))
+        return false;
+    Compressor comp(reinterpret_cast<const unsigned char *>(chars), nbytes);
+    if (!comp.init())
+        return false;
+    comp.setOutput(ss->data.compressed, firstSize);
+    bool cont = !abort_;
+    while (cont) {
+        switch (comp.compressMore()) {
+          case Compressor::CONTINUE:
+            break;
+          case Compressor::MOREOUTPUT: {
+            if (comp.outWritten() == nbytes) {
                 cont = false;
                 break;
-              case Compressor::OOM:
-                return false;
             }
-            cont = cont && !abort_;
+
+            // The compressed output is greater than half the size of the
+            // original string. Reallocate to the full size.
+            if (!ss->adjustDataSize(nbytes))
+                return false;
+            comp.setOutput(ss->data.compressed, nbytes);
+            break;
+          }
+          case Compressor::DONE:
+            cont = false;
+            break;
+          case Compressor::OOM:
+            return false;
         }
-        compressedLength = comp.outWritten();
-        if (abort_ || compressedLength == nbytes)
-            compressedLength = 0;
+        cont = cont && !abort_;
     }
+    compressedLength = comp.outWritten();
+    if (abort_ || compressedLength == nbytes)
+        compressedLength = 0;
 #endif
+
     if (compressedLength == 0) {
         if (!ss->adjustDataSize(nbytes))
             return false;

@@ -240,13 +240,16 @@ AllocateArrayBufferContents(JSContext *maybecx, uint32_t nbytes, void *oldptr = 
     if (oldptr) {
         ObjectElements *oldheader = static_cast<ObjectElements *>(oldptr);
         uint32_t oldnbytes = ArrayBufferObject::headerInitializedLength(oldheader);
-        newheader = static_cast<ObjectElements *>(maybecx ? maybecx->realloc_(oldptr, size) : js_realloc(oldptr, size));
+
+        void *p = maybecx ? maybecx->runtime()->reallocCanGC(oldptr, size) : js_realloc(oldptr, size);
+        newheader = static_cast<ObjectElements *>(p);
 
         // if we grew the array, we need to set the new bytes to 0
         if (newheader && nbytes > oldnbytes)
             memset(reinterpret_cast<uint8_t*>(newheader->elements()) + oldnbytes, 0, nbytes - oldnbytes);
     } else {
-        newheader = static_cast<ObjectElements *>(maybecx ? maybecx->calloc_(size) : js_calloc(size));
+        void *p = maybecx ? maybecx->runtime()->callocCanGC(size) : js_calloc(size);
+        newheader = static_cast<ObjectElements *>(p);
     }
     if (!newheader) {
         if (maybecx)
@@ -254,43 +257,9 @@ AllocateArrayBufferContents(JSContext *maybecx, uint32_t nbytes, void *oldptr = 
         return nullptr;
     }
 
-    // we rely on this being correct
     ArrayBufferObject::updateElementsHeader(newheader, nbytes);
 
     return newheader;
-}
-
-bool
-ArrayBufferObject::allocateSlots(JSContext *maybecx, uint32_t bytes, bool clear)
-{
-    /*
-     * ArrayBufferObjects delegate added properties to another JSObject, so
-     * their internal layout can use the object's fixed slots for storage.
-     * Set up the object to look like an array with an elements header.
-     */
-    JS_ASSERT(!hasDynamicSlots() && !hasDynamicElements());
-
-    size_t usableSlots = ARRAYBUFFER_RESERVED_SLOTS - ObjectElements::VALUES_PER_HEADER;
-
-    if (bytes > sizeof(Value) * usableSlots) {
-        ObjectElements *header = AllocateArrayBufferContents(maybecx, bytes);
-        if (!header)
-            return false;
-        elements = header->elements();
-
-#ifdef JSGC_GENERATIONAL
-        JSRuntime *rt = runtimeFromMainThread();
-        rt->gcNursery.notifyNewElements(this, header);
-#endif
-    } else {
-        setFixedElements();
-        if (clear)
-            memset(dataPointer(), 0, bytes);
-    }
-
-    initElementsHeader(getElementsHeader(), bytes);
-
-    return true;
 }
 
 static inline void
@@ -386,7 +355,7 @@ ArrayBufferObject::neuterViews(JSContext *cx, Handle<ArrayBufferObject*> buffer)
 }
 
 void
-ArrayBufferObject::changeContents(JSContext *maybecx, ObjectElements *newHeader)
+ArrayBufferObject::changeContents(JSContext *cx, ObjectElements *newHeader)
 {
     JS_ASSERT(!isAsmJSArrayBuffer());
 
@@ -402,8 +371,7 @@ ArrayBufferObject::changeContents(JSContext *maybecx, ObjectElements *newHeader)
         view->setPrivate(reinterpret_cast<uint8_t*>(newDataPtr));
 
         // Notify compiled jit code that the base pointer has moved.
-        if (maybecx)
-            MarkObjectStateChange(maybecx, view);
+        MarkObjectStateChange(cx, view);
     }
 
     // The list of views in the old header is reachable if the contents are
@@ -447,47 +415,21 @@ ArrayBufferObject::neuter(JSContext *cx)
     getElementsHeader()->setIsNeuteredBuffer();
 }
 
-bool
-ArrayBufferObject::copyData(JSContext *maybecx)
+/* static */ bool
+ArrayBufferObject::ensureNonInline(JSContext *cx, Handle<ArrayBufferObject*> buffer)
 {
-    ObjectElements *newHeader = AllocateArrayBufferContents(maybecx, byteLength());
+    if (buffer->hasDynamicElements())
+        return true;
+
+    ObjectElements *newHeader = AllocateArrayBufferContents(cx, buffer->byteLength());
     if (!newHeader)
         return false;
 
-    memcpy(reinterpret_cast<void*>(newHeader->elements()), dataPointer(), byteLength());
-    changeContents(maybecx, newHeader);
+    void *newHeaderDataPointer = reinterpret_cast<void*>(newHeader->elements());
+    memcpy(newHeaderDataPointer, buffer->dataPointer(), buffer->byteLength());
+
+    buffer->changeContents(cx, newHeader);
     return true;
-}
-
-bool
-ArrayBufferObject::ensureNonInline(JSContext *maybecx)
-{
-    if (hasDynamicElements())
-        return true;
-    return copyData(maybecx);
-}
-
-// If the ArrayBuffer already contains dynamic contents, hand them back.
-// Otherwise, allocate some new contents and copy the data over, but in no case
-// modify the original ArrayBuffer. (Also, any allocated contents will have no
-// views linked to in its header.)
-ObjectElements *
-ArrayBufferObject::getTransferableContents(JSContext *maybecx, bool *callerOwns)
-{
-    if (hasDynamicElements() && !isAsmJSArrayBuffer()) {
-        *callerOwns = false;
-        return getElementsHeader();
-    }
-
-    uint32_t byteLen = byteLength();
-    ObjectElements *newheader = AllocateArrayBufferContents(maybecx, byteLen);
-    if (!newheader)
-        return nullptr;
-
-    initElementsHeader(newheader, byteLen);
-    memcpy(reinterpret_cast<void*>(newheader->elements()), dataPointer(), byteLen);
-    *callerOwns = true;
-    return newheader;
 }
 
 #if defined(JS_ION) && defined(JS_CPU_X64)
@@ -586,10 +528,10 @@ ArrayBufferObject::prepareForAsmJS(JSContext *cx, Handle<ArrayBufferObject*> buf
     if (buffer->isAsmJSArrayBuffer())
         return true;
 
-    if (!buffer->ensureNonInline(cx))
+    if (!ensureNonInline(cx, buffer))
         return false;
-    JS_ASSERT(buffer->hasDynamicElements());
 
+    JS_ASSERT(buffer->hasDynamicElements());
     buffer->getElementsHeader()->setIsAsmJSArrayBuffer();
     return true;
 }
@@ -643,7 +585,7 @@ ArrayBufferObject::addView(ArrayBufferViewObject *view)
     SetViewList(this, view);
 }
 
-JSObject *
+ArrayBufferObject *
 ArrayBufferObject::create(JSContext *cx, uint32_t nbytes, bool clear /* = true */)
 {
     RootedObject obj(cx, NewBuiltinClassInstance(cx, &class_));
@@ -659,14 +601,37 @@ ArrayBufferObject::create(JSContext *cx, uint32_t nbytes, bool clear /* = true *
         return nullptr;
     obj->setLastPropertyInfallible(empty);
 
-    /*
-     * The beginning stores an ObjectElements header structure holding the
-     * length. The rest of it is a flat data store for the array buffer.
-     */
-    if (!obj->as<ArrayBufferObject>().allocateSlots(cx, nbytes, clear))
-        return nullptr;
+    // ArrayBufferObjects delegate added properties to another JSObject, so
+    // their internal layout can use the object's fixed slots for storage.
+    // Set up the object to look like an array with an elements header.
+    JS_ASSERT(!obj->hasDynamicSlots());
+    JS_ASSERT(!obj->hasDynamicElements());
 
-    return obj;
+    // The beginning stores an ObjectElements header structure holding the
+    // length. The rest of it is a flat data store for the array buffer.
+    size_t usableSlots = ARRAYBUFFER_RESERVED_SLOTS - ObjectElements::VALUES_PER_HEADER;
+
+    Handle<ArrayBufferObject*> buffer = obj.as<ArrayBufferObject>();
+
+    if (nbytes > sizeof(Value) * usableSlots) {
+        ObjectElements *header = AllocateArrayBufferContents(cx, nbytes);
+        if (!header)
+            return nullptr;
+        buffer->elements = header->elements();
+
+#ifdef JSGC_GENERATIONAL
+        JSRuntime *rt = buffer->runtimeFromMainThread();
+        rt->gcNursery.notifyNewElements(buffer, header);
+#endif
+    } else {
+        buffer->setFixedElements();
+        if (clear)
+            memset(buffer->dataPointer(), 0, nbytes);
+    }
+
+    buffer->initElementsHeader(buffer->getElementsHeader(), nbytes);
+
+    return buffer;
 }
 
 JSObject *
@@ -719,31 +684,48 @@ ArrayBufferObject::createDataViewForThis(JSContext *cx, unsigned argc, Value *vp
     return CallNonGenericMethod<IsArrayBuffer, createDataViewForThisImpl>(cx, args);
 }
 
-bool
+/* static */ bool
 ArrayBufferObject::stealContents(JSContext *cx, Handle<ArrayBufferObject*> buffer, void **contents,
                                  uint8_t **data)
 {
-    // Make the data stealable
-    bool own;
-    ObjectElements *header = reinterpret_cast<ObjectElements*>(buffer->getTransferableContents(cx, &own));
-    if (!header)
-        return false;
-    JS_ASSERT(!IsInsideNursery(cx->runtime(), header));
-    *contents = header;
-    *data = reinterpret_cast<uint8_t *>(header + 1);
+    // If the ArrayBuffer's elements are dynamically allocated and nothing else
+    // prevents us from stealing them, transfer ownership directly.  Otherwise,
+    // the elements are small and allocated inside the ArrayBuffer object's GC
+    // header so we must make a copy.
+    ObjectElements *transferableHeader;
+    bool stolen;
+    if (buffer->hasDynamicElements() && !buffer->isAsmJSArrayBuffer()) {
+        stolen = true;
+        transferableHeader = buffer->getElementsHeader();
+    } else {
+        stolen = false;
+
+        uint32_t byteLen = buffer->byteLength();
+        transferableHeader = AllocateArrayBufferContents(cx, byteLen);
+        if (!transferableHeader)
+            return false;
+
+        initElementsHeader(transferableHeader, byteLen);
+        void *headerDataPointer = reinterpret_cast<void*>(transferableHeader->elements());
+        memcpy(headerDataPointer, buffer->dataPointer(), byteLen);
+    }
+
+    JS_ASSERT(!IsInsideNursery(cx->runtime(), transferableHeader));
+    *contents = transferableHeader;
+    *data = reinterpret_cast<uint8_t *>(transferableHeader + 1);
 
     // Neuter the views, which may also mprotect(PROT_NONE) the buffer. So do
     // it after copying out the data.
     if (!ArrayBufferObject::neuterViews(cx, buffer))
         return false;
 
-    if (!own) {
-        // If header has dynamically allocated elements, revert it back to
-        // fixed-element storage before neutering it.
+    // If the elements were taken from the neutered buffer, revert it back to
+    // using inline storage so it doesn't attempt to free the stolen elements
+    // when finalized.
+    if (stolen)
         buffer->changeContents(cx, ObjectElements::fromElements(buffer->fixedElements()));
-    }
-    buffer->neuter(cx);
 
+    buffer->neuter(cx);
     return true;
 }
 
@@ -4042,10 +4024,21 @@ JS_GetArrayBufferData(JSObject *obj)
     obj = CheckedUnwrap(obj);
     if (!obj)
         return nullptr;
-    ArrayBufferObject &buffer = obj->as<ArrayBufferObject>();
-    if (!buffer.ensureNonInline(nullptr))
+    return obj->as<ArrayBufferObject>().dataPointer();
+}
+
+JS_FRIEND_API(uint8_t *)
+JS_GetStableArrayBufferData(JSContext *cx, JSObject *obj)
+{
+    obj = CheckedUnwrap(obj);
+    if (!obj)
         return nullptr;
-    return buffer.dataPointer();
+
+    Rooted<ArrayBufferObject*> buffer(cx, &obj->as<ArrayBufferObject>());
+    if (!ArrayBufferObject::ensureNonInline(cx, buffer))
+        return nullptr;
+
+    return buffer->dataPointer();
 }
 
 JS_FRIEND_API(bool)
@@ -4103,9 +4096,9 @@ JS_AllocateArrayBufferContents(JSContext *maybecx, uint32_t nbytes,
 }
 
 JS_PUBLIC_API(bool)
-JS_ReallocateArrayBufferContents(JSContext *cx, uint32_t nbytes, void **contents, uint8_t **data)
+JS_ReallocateArrayBufferContents(JSContext *maybecx, uint32_t nbytes, void **contents, uint8_t **data)
 {
-    js::ObjectElements *header = AllocateArrayBufferContents(cx, nbytes, *contents);
+    js::ObjectElements *header = AllocateArrayBufferContents(maybecx, nbytes, *contents);
     if (!header)
         return false;
 

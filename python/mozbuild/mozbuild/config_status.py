@@ -16,13 +16,29 @@ from optparse import OptionParser
 
 from mach.logging import LoggingManager
 from mozbuild.backend.configenvironment import ConfigEnvironment
+from mozbuild.backend.android_eclipse import AndroidEclipseBackend
 from mozbuild.backend.recursivemake import RecursiveMakeBackend
+from mozbuild.base import MachCommandConditions
 from mozbuild.frontend.emitter import TreeMetadataEmitter
 from mozbuild.frontend.reader import BuildReader
 from mozbuild.mozinfo import write_mozinfo
 
 
 log_manager = LoggingManager()
+
+
+ANDROID_ECLIPSE_ADVERTISEMENT = '''
+=============
+ADVERTISEMENT
+
+You are building Firefox for Android. You might want to run
+`mach build-backend --backend=AndroidEclipse`
+to generate Eclipse project files.
+
+PLEASE BE AWARE THAT ECLIPSE SUPPORT IS EXPERIMENTAL. You should
+verify any changes using |mach build|.
+=============
+'''.strip()
 
 
 def config_status(topobjdir='.', topsrcdir='.',
@@ -66,6 +82,10 @@ def config_status(topobjdir='.', topsrcdir='.',
                       help='do not consider current directory as top object directory')
     parser.add_option('-d', '--diff', action='store_true',
                       help='print diffs of changed files.')
+    parser.add_option('-b', '--backend',
+                      choices=['RecursiveMake', 'AndroidEclipse'],
+                      default='RecursiveMake',
+                      help='what backend to build (default: RecursiveMake).')
     options, args = parser.parse_args()
 
     # Without -n, the current directory is meant to be the top object directory
@@ -80,9 +100,17 @@ def config_status(topobjdir='.', topsrcdir='.',
     if 'WRITE_MOZINFO' in os.environ:
         write_mozinfo(os.path.join(topobjdir, 'mozinfo.json'), env, os.environ)
 
+    # Make an appropriate backend instance, defaulting to RecursiveMakeBackend.
+    backend_cls = RecursiveMakeBackend
+    if options.backend == 'AndroidEclipse':
+        if not MachCommandConditions.is_android(env):
+            raise Exception('The Android Eclipse backend is not available with this configuration.')
+        backend_cls = AndroidEclipseBackend
+
+    the_backend = backend_cls(env)
+
     reader = BuildReader(env)
     emitter = TreeMetadataEmitter(env)
-    backend = RecursiveMakeBackend(env)
     # This won't actually do anything because of the magic of generators.
     definitions = emitter.emit(reader.read_topsrcdir())
 
@@ -96,7 +124,7 @@ def config_status(topobjdir='.', topsrcdir='.',
     log_manager.enable_unstructured()
 
     print('Reticulating splines...', file=sys.stderr)
-    summary = backend.consume(definitions)
+    summary = the_backend.consume(definitions)
 
     for line in summary.summaries():
         print(line, file=sys.stderr)
@@ -104,3 +132,8 @@ def config_status(topobjdir='.', topsrcdir='.',
     if options.diff:
         for path, diff in sorted(summary.file_diffs.items()):
             print(diff)
+
+    # Advertise Eclipse if it is appropriate.
+    if MachCommandConditions.is_android(env):
+        if options.backend == 'RecursiveMake':
+            print(ANDROID_ECLIPSE_ADVERTISEMENT)

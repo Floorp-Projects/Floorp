@@ -4,6 +4,7 @@
 
 from __future__ import unicode_literals
 
+import filecmp
 import os
 import re
 import subprocess
@@ -96,7 +97,40 @@ class MozconfigLoader(ProcessExecutionMixin):
 
         env_path = env.get('MOZCONFIG', None)
         if env_path is not None:
-            if not os.path.exists(env_path):
+            if not os.path.isabs(env_path):
+                potential_roots = [self.topsrcdir, os.getcwd()]
+                # Attempt to eliminate duplicates for e.g.
+                # self.topsrcdir == os.curdir.
+                potential_roots = set(os.path.abspath(p) for p in potential_roots)
+                existing = [root for root in potential_roots
+                            if os.path.exists(os.path.join(root, env_path))]
+                if len(existing) > 1:
+                    # There are multiple files, but we might have a setup like:
+                    #
+                    # somedirectory/
+                    #   srcdir/
+                    #   objdir/
+                    #
+                    # MOZCONFIG=../srcdir/some/path/to/mozconfig
+                    #
+                    # and be configuring from the objdir.  So even though we
+                    # have multiple existing files, they are actually the same
+                    # file.
+                    mozconfigs = [os.path.join(root, env_path)
+                                  for root in existing]
+                    if not all(map(lambda p1, p2: filecmp.cmp(p1, p2, shallow=False),
+                                   mozconfigs[:-1], mozconfigs[1:])):
+                        raise MozconfigFindException(
+                            'MOZCONFIG environment variable refers to a path that ' +
+                            'exists in more than one of ' + ', '.join(potential_roots) +
+                            '. Remove all but one.')
+                elif not existing:
+                    raise MozconfigFindException(
+                        'MOZCONFIG environment variable refers to a path that ' +
+                        'does not exist in any of ' + ', '.join(potential_roots))
+
+                env_path = os.path.join(existing[0], env_path)
+            elif not os.path.exists(env_path): # non-relative path
                 raise MozconfigFindException(
                     'MOZCONFIG environment variable refers to a path that '
                     'does not exist: ' + env_path)

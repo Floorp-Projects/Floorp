@@ -44,7 +44,7 @@ BEGIN_TEST(testArrayBuffer_bug720949_steal)
         CHECK_SAME(v, INT_TO_JSVAL(size));
 
         // Modifying the underlying data should update the value returned through the view
-        uint8_t *data = JS_GetArrayBufferData(obj);
+        uint8_t *data = JS_GetStableArrayBufferData(cx, obj);
         CHECK(data != nullptr);
         *reinterpret_cast<uint32_t*>(data) = MAGIC_VALUE_2;
         CHECK(JS_GetElement(cx, view, 0, &v));
@@ -74,13 +74,13 @@ BEGIN_TEST(testArrayBuffer_bug720949_steal)
         // Transfer to a new ArrayBuffer
         JS::RootedObject dst(cx, JS_NewArrayBufferWithContents(cx, contents));
         CHECK(JS_IsArrayBufferObject(dst));
-        data = JS_GetArrayBufferData(obj);
+        data = JS_GetStableArrayBufferData(cx, obj);
 
         JS::RootedObject dstview(cx, JS_NewInt32ArrayWithBuffer(cx, dst, 0, -1));
         CHECK(dstview != nullptr);
 
         CHECK_EQUAL(JS_GetArrayBufferByteLength(dst), size);
-        data = JS_GetArrayBufferData(dst);
+        data = JS_GetStableArrayBufferData(cx, dst);
         CHECK(data != nullptr);
         CHECK_EQUAL(*reinterpret_cast<uint32_t*>(data), MAGIC_VALUE_2);
         CHECK(JS_GetElement(cx, dstview, 0, &v));

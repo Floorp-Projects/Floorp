@@ -28,11 +28,11 @@
                           command="Tools:PrivateBrowsing"
                           key="key_privatebrowsing"/>
                 <menuitem id="menu_newRemoteWindow"
-                          label="New OOP Window"
+                          label="New e10s Window"
                           hidden="true"
                           command="Tools:RemoteWindow"/>
                 <menuitem id="menu_newNonRemoteWindow"
-                          label="New In-process Window"
+                          label="New Non-e10s Window"
                           hidden="true"
                           command="Tools:NonRemoteWindow"/>
                 <menuitem id="menu_openFile"

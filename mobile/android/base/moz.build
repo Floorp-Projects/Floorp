@@ -485,3 +485,35 @@ if '-march=armv7' in CONFIG['OS_CFLAGS']:
     DEFINES['MOZ_MIN_CPU_VERSION'] = 7
 else:
     DEFINES['MOZ_MIN_CPU_VERSION'] = 5
+
+generated = add_android_eclipse_library_project('FennecGeneratedResources')
+generated.package_name = 'org.mozilla.fennec.generatedresources'
+generated.res = OBJDIR + '/res'
+
+branding = add_android_eclipse_library_project('FennecBrandingResources')
+branding.package_name = 'org.mozilla.fennec.brandingresources'
+branding.res = TOPSRCDIR + '/' + CONFIG['MOZ_BRANDING_DIRECTORY'] + '/res'
+
+main = add_android_eclipse_project('Fennec', OBJDIR + '/AndroidManifest.xml')
+main.package_name = 'org.mozilla.gecko'
+main.res = SRCDIR + '/resources'
+
+main.recursive_make_targets += ['.aapt.deps'] # Captures dependencies on Android manifest and all resources.
+main.recursive_make_targets += [OBJDIR + '/generated/' + f for f in mgjar.generated_sources]
+main.recursive_make_targets += [OBJDIR + '/generated/' + f for f in gbjar.generated_sources]
+
+main.included_projects += ['../' + generated.name, '../' + branding.name]
+main.extra_jars += [CONFIG['ANDROID_COMPAT_LIB']]
+main.assets = TOPOBJDIR + '/dist/fennec/assets'
+main.libs = TOPOBJDIR + '/dist/fennec/lib'
+
+cpe = main.add_classpathentry('src', SRCDIR,
+    dstdir='src/org/mozilla/gecko',
+    exclude_patterns=['org/mozilla/gecko/tests/**'])
+if not CONFIG['MOZ_CRASHREPORTER']:
+    cpe.exclude_patterns += ['org/mozilla/gecko/CrashReporter.java']
+main.add_classpathentry('generated', OBJDIR + '/generated',
+    dstdir='generated')
+main.add_classpathentry('thirdparty', TOPSRCDIR + '/mobile/android/thirdparty',
+    dstdir='thirdparty',
+    ignore_warnings=True)

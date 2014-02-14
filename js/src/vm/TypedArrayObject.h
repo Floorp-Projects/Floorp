@@ -66,7 +66,7 @@ class ArrayBufferObject : public JSObject
 
     static bool class_constructor(JSContext *cx, unsigned argc, Value *vp);
 
-    static JSObject *create(JSContext *cx, uint32_t nbytes, bool clear = true);
+    static ArrayBufferObject *create(JSContext *cx, uint32_t nbytes, bool clear = true);
 
     static JSObject *createSlice(JSContext *cx, Handle<ArrayBufferObject*> arrayBuffer,
                                  uint32_t begin, uint32_t end);
@@ -168,33 +168,17 @@ class ArrayBufferObject : public JSObject
 
     void addView(ArrayBufferViewObject *view);
 
-    bool allocateSlots(JSContext *cx, uint32_t size, bool clear);
-
     void changeContents(JSContext *cx, ObjectElements *newHeader);
-
-    /*
-     * Copy the data into freshly-allocated memory. Used when un-inlining or
-     * when converting an ArrayBuffer to an AsmJS (MMU-assisted) ArrayBuffer.
-     */
-    bool copyData(JSContext *maybecx);
 
     /*
      * Ensure data is not stored inline in the object. Used when handing back a
      * GC-safe pointer.
      */
-    bool ensureNonInline(JSContext *maybecx);
+    static bool ensureNonInline(JSContext *cx, Handle<ArrayBufferObject*> buffer);
 
     uint32_t byteLength() const {
         return getElementsHeader()->initializedLength;
     }
-
-    /*
-     * Return the contents of an ArrayBuffer without modifying the ArrayBuffer
-     * itself. Set *callerOwns to true if the caller has the only pointer to
-     * the returned contents (which is the case for inline or asm.js buffers),
-     * and false if the ArrayBuffer still owns the pointer.
-     */
-    ObjectElements *getTransferableContents(JSContext *maybecx, bool *callerOwns);
 
     /*
      * Neuter all views of an ArrayBuffer.
@@ -209,7 +193,7 @@ class ArrayBufferObject : public JSObject
      * Discard the ArrayBuffer contents. For asm.js buffers, at least, should
      * be called after neuterViews().
      */
-    void neuter(JSContext *maybecx);
+    void neuter(JSContext *cx);
 
     /*
      * Check if the arrayBuffer contains any data. This will return false for
