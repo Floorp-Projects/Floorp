@@ -1150,7 +1150,6 @@ JSFunction::createScriptForLazilyInterpretedFunction(JSContext *cx, HandleFuncti
         RootedScript script(cx, lazy->maybeScript());
 
         if (script) {
-            AutoLockForCompilation lock(cx);
             fun->setUnlazifiedScript(script);
             // Remember the lazy script on the compiled script, so it can be
             // stored on the function again in case of re-lazification.
@@ -1167,7 +1166,6 @@ JSFunction::createScriptForLazilyInterpretedFunction(JSContext *cx, HandleFuncti
             if (!script)
                 return false;
 
-            AutoLockForCompilation lock(cx);
             fun->setUnlazifiedScript(script);
             return true;
         }
@@ -1196,10 +1194,7 @@ JSFunction::createScriptForLazilyInterpretedFunction(JSContext *cx, HandleFuncti
             fun->initAtom(script->functionNonDelazifying()->displayAtom());
             clonedScript->setFunction(fun);
 
-            {
-                AutoLockForCompilation lock(cx);
-                fun->setUnlazifiedScript(clonedScript);
-            }
+            fun->setUnlazifiedScript(clonedScript);
 
             CallNewScriptHook(cx, clonedScript, fun);
 

@@ -18,7 +18,6 @@ import org.mozilla.gecko.mozglue.JNITarget;
 import org.mozilla.gecko.mozglue.RobocopTarget;
 import org.mozilla.gecko.prompts.PromptService;
 import org.mozilla.gecko.util.ActivityResultHandler;
-import org.mozilla.gecko.util.EventDispatcher;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.ProxySelector;
@@ -1427,20 +1426,6 @@ public class GeckoAppShell
             getGeckoInterface().setFullScreen(fullscreen);
     }
 
-    @WrapElementForJNI(stubName = "ShowFilePickerForExtensionsWrapper")
-    public static String showFilePickerForExtensions(String aExtensions) {
-        if (getGeckoInterface() != null)
-            return sActivityHelper.showFilePicker(getGeckoInterface().getActivity(), getMimeTypeFromExtensions(aExtensions));
-        return "";
-    }
-
-    @WrapElementForJNI(stubName = "ShowFilePickerForMimeTypeWrapper")
-    public static String showFilePickerForMimeType(String aMimeType) {
-        if (getGeckoInterface() != null)
-            return sActivityHelper.showFilePicker(getGeckoInterface().getActivity(), aMimeType);
-        return "";
-    }
-
     @WrapElementForJNI
     public static void performHapticFeedback(boolean aIsLongPress) {
         // Don't perform haptic feedback if a vibration is currently playing,
@@ -2345,8 +2330,8 @@ public class GeckoAppShell
     }
 
     @WrapElementForJNI(stubName = "HandleGeckoMessageWrapper")
-    public static String handleGeckoMessage(String message) {
-        return sEventDispatcher.dispatchEvent(message);
+    public static void handleGeckoMessage(String message) {
+        sEventDispatcher.dispatchEvent(message);
     }
 
     @WrapElementForJNI
@@ -2628,17 +2613,6 @@ public class GeckoAppShell
             msg.getTarget().dispatchMessage(msg);
         msg.recycle();
         return true;
-    }
-
-    static native void notifyFilePickerResult(String filePath, long id);
-
-    @WrapElementForJNI(stubName = "ShowFilePickerAsyncWrapper")
-    public static void showFilePickerAsync(String aMimeType, final long id) {
-        sActivityHelper.showFilePickerAsync(getGeckoInterface().getActivity(), aMimeType, new ActivityHandlerHelper.FileResultHandler() {
-            public void gotFile(String filename) {
-                GeckoAppShell.notifyFilePickerResult(filename, id);
-            }
-        });
     }
 
     @WrapElementForJNI

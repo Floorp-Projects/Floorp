@@ -561,6 +561,18 @@
   color: #585959; /* Grey foreground text */
 }
 
+.theme-dark .variables-view-scope:focus > .title,
+.theme-dark .variable-or-property:focus > .title {
+  background-color: #1d4f73; /* Selection colors */
+  color: #f5f7fa;
+}
+
+.theme-light .variables-view-scope:focus > .title,
+.theme-light .variable-or-property:focus > .title {
+  background-color: #4c9ed9; /* Selection colors */
+  color: #f5f7fa;
+}
+
 .variables-view-scope > .title {
   border-top-width: 1px;
   border-top-style: solid;

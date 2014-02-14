@@ -22,14 +22,7 @@ JSCompartment::initGlobal(js::GlobalObject &global)
 js::GlobalObject *
 JSCompartment::maybeGlobal() const
 {
-#ifdef DEBUG
-    if (global_) {
-        js::AutoThreadSafeAccess ts0(global_);
-        js::AutoThreadSafeAccess ts1(global_->lastProperty());
-        js::AutoThreadSafeAccess ts2(global_->lastProperty()->base());
-        JS_ASSERT(global_->compartment() == this);
-    }
-#endif
+    JS_ASSERT_IF(global_, global_->compartment() == this);
     return global_;
 }
 

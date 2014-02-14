@@ -284,10 +284,9 @@ this.WebappManager = {
       }
 
       // Map APK names to APK versions.
-      let apkNameToVersion = JSON.parse(sendMessageToJava({
-        type: "Webapps:GetApkVersions",
-        packageNames: installedApps.map(app => app.packageName).filter(packageName => !!packageName)
-      }));
+      let apkNameToVersion = yield this._getAPKVersions(installedApps.map(app =>
+        app.packageName).filter(packageName => !!packageName)
+      );
 
       // Map manifest URLs to APK versions, which is what the service needs
       // in order to tell us which apps are outdated; and also map them to app
@@ -335,6 +334,17 @@ this.WebappManager = {
       this._checkingForUpdates = false;
     }
   }).bind(this)); },
+
+  _getAPKVersions: function(packageNames) {
+    let deferred = Promise.defer();
+
+    sendMessageToJava({
+      type: "Webapps:GetApkVersions",
+      packageNames: packageNames 
+    }, data => deferred.resolve(JSON.parse(data).versions));
+
+    return deferred.promise;
+  },
 
   _getInstalledApps: function() {
     let deferred = Promise.defer();

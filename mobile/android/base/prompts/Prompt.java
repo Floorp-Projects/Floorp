@@ -5,7 +5,6 @@
 
 package org.mozilla.gecko.prompts;
 
-import org.mozilla.gecko.util.GeckoEventResponder;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.widget.DateTimePicker;
@@ -54,7 +53,6 @@ import android.widget.TimePicker;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 
 public class Prompt implements OnClickListener, OnCancelListener, OnItemClickListener {
@@ -66,7 +64,6 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
     private AlertDialog mDialog;
 
     private final LayoutInflater mInflater;
-    private ConcurrentLinkedQueue<String> mPromptQueue;
     private final Context mContext;
     private PromptCallback mCallback;
     private String mGuid;
@@ -80,16 +77,9 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
     private static int mInputPaddingSize;
     private static int mMinRowSize;
 
-    public Prompt(Context context, ConcurrentLinkedQueue<String> queue) {
-        this(context);
-        mCallback = null;
-        mPromptQueue = queue;
-    }
-
     public Prompt(Context context, PromptCallback callback) {
         this(context);
         mCallback = callback;
-        mPromptQueue = null;
     }
 
     private Prompt(Context context) {
@@ -414,10 +404,6 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
         try {
             aReturn.put("guid", mGuid);
         } catch(JSONException ex) { }
-
-        if (mPromptQueue != null) {
-            mPromptQueue.offer(aReturn.toString());
-        }
 
         // poke the Gecko thread in case it's waiting for new events
         GeckoAppShell.sendEventToGecko(GeckoEvent.createNoOpEvent());

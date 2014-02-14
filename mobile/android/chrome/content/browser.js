@@ -27,6 +27,9 @@ Cu.import("resource://gre/modules/accessibility/AccessFu.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
                                   "resource://gre/modules/PluralForm.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "sendMessageToJava",
+                                  "resource://gre/modules/Messaging.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "DebuggerServer",
                                   "resource://gre/modules/devtools/dbg-server.jsm");
 
@@ -167,10 +170,6 @@ const kDoNotTrackPrefState = Object.freeze({
 
 function dump(a) {
   Services.console.logStringMessage(a);
-}
-
-function sendMessageToJava(aMessage) {
-  return Services.androidBridge.handleGeckoMessage(JSON.stringify(aMessage));
 }
 
 function doChangeMaxLineBoxWidth(aWidth) {
@@ -7138,18 +7137,20 @@ var WebappsUI = {
   doInstall: function doInstall(aData) {
     let jsonManifest = aData.isPackage ? aData.app.updateManifest : aData.app.manifest;
     let manifest = new ManifestHelper(jsonManifest, aData.app.origin);
-    let showPrompt = true;
 
-    if (!showPrompt || Services.prompt.confirm(null, Strings.browser.GetStringFromName("webapps.installTitle"), manifest.name + "\n" + aData.app.origin)) {
+    if (Services.prompt.confirm(null, Strings.browser.GetStringFromName("webapps.installTitle"), manifest.name + "\n" + aData.app.origin)) {
       // Get a profile for the app to be installed in. We'll download everything before creating the icons.
       let origin = aData.app.origin;
-      let profilePath = sendMessageToJava({
-        type: "Webapps:Preinstall",
-        name: manifest.name,
-        manifestURL: aData.app.manifestURL,
-        origin: origin
-      });
-      if (profilePath) {
+      sendMessageToJava({
+         type: "Webapps:Preinstall",
+         name: manifest.name,
+         manifestURL: aData.app.manifestURL,
+         origin: origin
+      }, (data) => {
+        let profilePath = JSON.parse(data).profile;
+        if (!profilePath)
+          return;
+
         let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
         file.initWithPath(profilePath);
 
@@ -8032,12 +8033,12 @@ var ExternalApps = {
   },
 
   updatePageAction: function updatePageAction(uri) {
-    let apps = HelperApps.getAppsForUri(uri);
-
-    if (apps.length > 0)
-      this._setUriForPageAction(uri, apps);
-    else
-      this._removePageAction();
+    HelperApps.getAppsForUri(uri, { filterHttp: true }, (apps) => {
+      if (apps.length > 0)
+        this._setUriForPageAction(uri, apps);
+      else
+        this._removePageAction();
+    });
   },
 
   _setUriForPageAction: function setUriForPageAction(uri, apps) {
