@@ -262,6 +262,9 @@
     "dom/browser-element/mochitest/test_browserElement_oop_OpenWindowRejected.html":"",
     "dom/browser-element/mochitest/test_browserElement_oop_SecurityChange.html":"",
     "dom/browser-element/mochitest/test_browserElement_oop_TargetBlank.html":"",
+
+    "dom/downloads/tests/test_downloads_pause_resume.html":"bug 947167",
+
     "dom/events/test/test_bug226361.xhtml":"",
     "dom/events/test/test_bug238987.html":"",
     "dom/events/test/test_bug409604.html":"",

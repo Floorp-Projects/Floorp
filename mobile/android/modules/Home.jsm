@@ -169,6 +169,12 @@ let HomePanels = Object.freeze({
     REFRESH: "refresh"
   }),
 
+  // Valid item handlers for a panel view.
+  ItemHandler: Object.freeze({
+    BROWSER: "browser",
+    INTENT: "intent"
+  }),
+
   // Holds the currrent set of registered panels.
   _panels: {},
 
@@ -223,6 +229,13 @@ let HomePanels = Object.freeze({
     for (let view of panel.views) {
       if (!this._valueExists(this.View, view.type)) {
         throw "Home.panels: Invalid view type: panel.id = " + panel.id + ", view.type = " + view.type;
+      }
+
+      if (!view.itemHandler) {
+        // Use BROWSER item handler by default
+        view.itemHandler = this.ItemHandler.BROWSER;
+      } else if (!this._valueExists(this.ItemHandler, view.itemHandler)) {
+        throw "Home.panels: Invalid item handler: panel.id = " + panel.id + ", view.itemHandler = " + view.itemHandler;
       }
 
       if (!view.dataset) {
