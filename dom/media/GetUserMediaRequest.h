@@ -20,7 +20,8 @@ class MediaStreamConstraintsInternal;
 class GetUserMediaRequest : public nsISupports, public nsWrapperCache
 {
 public:
-  GetUserMediaRequest(nsPIDOMWindow* aInnerWindow, const nsAString& aCallID,
+  GetUserMediaRequest(nsPIDOMWindow* aInnerWindow,
+                      const nsAString& aCallID,
                       const MediaStreamConstraintsInternal& aConstraints);
   virtual ~GetUserMediaRequest() {};
 
@@ -32,12 +33,12 @@ public:
   nsISupports* GetParentObject();
 
   uint64_t WindowID();
+  uint64_t InnerWindowID();
   void GetCallID(nsString& retval);
   void GetConstraints(MediaStreamConstraintsInternal &result);
 
 private:
-  nsCOMPtr<nsPIDOMWindow> mInnerWindow;
-  uint64_t mWindowID;
+  uint64_t mInnerWindowID, mOuterWindowID;
   const nsString mCallID;
   MediaStreamConstraintsInternal mConstraints;
 };
