@@ -174,12 +174,6 @@
   box-shadow: 0 0 0 1px #EFEFEF;
 }
 
-.variables-view-scope:focus > .title,
-.variable-or-property:focus > .title {
-  background:  #4c9ed9; /* fg-color2 */
-  color: #f5f7fa;
-}
-
 /* CodeMirror specific styles.
  * Best effort to match the existing theme, some of the colors
  * are duplicated here to prevent weirdness in the main theme. */

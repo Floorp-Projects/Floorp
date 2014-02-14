@@ -9,14 +9,11 @@ let Ci = Components.interfaces;
 let Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Messaging.jsm");
 document.addEventListener("DOMContentLoaded", init, false);
 
 function dump(a) {
   Services.console.logStringMessage(a);
-}
-
-function sendMessageToJava(aMessage) {
-  Services.androidBridge.handleGeckoMessage(JSON.stringify(aMessage));
 }
 
 function init() {

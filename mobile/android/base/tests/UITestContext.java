@@ -21,6 +21,7 @@ public interface UITestContext {
 
     public static enum ComponentType {
         ABOUTHOME,
+        APPMENU,
         TOOLBAR
     }
 

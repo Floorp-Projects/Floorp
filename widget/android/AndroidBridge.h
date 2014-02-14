@@ -282,7 +282,7 @@ public:
     bool LockWindow(void *window, unsigned char **bits, int *width, int *height, int *format, int *stride);
     bool UnlockWindow(void *window);
     
-    void HandleGeckoMessage(const nsAString& message, nsAString &aRet);
+    void HandleGeckoMessage(const nsAString& message);
 
     bool InitCamera(const nsCString& contentType, uint32_t camera, uint32_t *width, uint32_t *height, uint32_t *fps);
 
