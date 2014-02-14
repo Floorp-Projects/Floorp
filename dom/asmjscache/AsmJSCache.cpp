@@ -138,6 +138,98 @@ ReadMetadataFile(nsIFile* aMetadataFile, Metadata& aMetadata)
   return NS_OK;
 }
 
+nsresult
+GetCacheFile(nsIFile* aDirectory, unsigned aModuleIndex, nsIFile** aCacheFile)
+{
+  nsCOMPtr<nsIFile> cacheFile;
+  nsresult rv = aDirectory->Clone(getter_AddRefs(cacheFile));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsString cacheFileName = NS_LITERAL_STRING(ASMJSCACHE_ENTRY_FILE_NAME_BASE);
+  cacheFileName.AppendInt(aModuleIndex);
+  rv = cacheFile->Append(cacheFileName);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  cacheFile.forget(aCacheFile);
+  return NS_OK;
+}
+
+class AutoDecreaseUsageForOrigin
+{
+  const nsACString& mGroup;
+  const nsACString& mOrigin;
+
+public:
+  uint64_t mFreed;
+
+  AutoDecreaseUsageForOrigin(const nsACString& aGroup,
+                             const nsACString& aOrigin)
+
+  : mGroup(aGroup),
+    mOrigin(aOrigin),
+    mFreed(0)
+  { }
+
+  ~AutoDecreaseUsageForOrigin()
+  {
+    AssertIsOnIOThread();
+
+    if (!mFreed) {
+      return;
+    }
+
+    QuotaManager* qm = QuotaManager::Get();
+    MOZ_ASSERT(qm, "We are on the QuotaManager's IO thread");
+
+    qm->DecreaseUsageForOrigin(quota::PERSISTENCE_TYPE_TEMPORARY,
+                               mGroup, mOrigin, mFreed);
+  }
+};
+
+static void
+EvictEntries(nsIFile* aDirectory, const nsACString& aGroup,
+             const nsACString& aOrigin, uint64_t aNumBytes,
+             Metadata& aMetadata)
+{
+  AssertIsOnIOThread();
+
+  AutoDecreaseUsageForOrigin usage(aGroup, aOrigin);
+
+  for (int i = Metadata::kLastEntry; i >= 0 && usage.mFreed < aNumBytes; i--) {
+    Metadata::Entry& entry = aMetadata.mEntries[i];
+    unsigned moduleIndex = entry.mModuleIndex;
+
+    nsCOMPtr<nsIFile> file;
+    nsresult rv = GetCacheFile(aDirectory, moduleIndex, getter_AddRefs(file));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
+    }
+
+    bool exists;
+    rv = file->Exists(&exists);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return;
+    }
+
+    if (exists) {
+      int64_t fileSize;
+      rv = file->GetFileSize(&fileSize);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return;
+      }
+
+      rv = file->Remove(false);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return;
+      }
+
+      usage.mFreed += fileSize;
+    }
+
+    entry.clear();
+  }
+}
+
 // FileDescriptorHolder owns a file descriptor and its memory mapping.
 // FileDescriptorHolder is derived by all three runnable classes (that is,
 // (Single|Parent|Child)ProcessRunnable. To avoid awkward workarouds,
@@ -282,7 +374,7 @@ public:
   };
 
   bool
-  BlockUntilOpen(AutoClose *aCloser)
+  BlockUntilOpen(AutoClose* aCloser)
   {
     MOZ_ASSERT(!mWaiting, "Can only call BlockUntilOpen once");
     MOZ_ASSERT(!mOpened, "Can only call BlockUntilOpen once");
@@ -611,29 +703,11 @@ MainProcessRunnable::ReadMetadata()
     // Initialize Metadata with a valid empty state for the LRU cache.
     for (unsigned i = 0; i < Metadata::kNumEntries; i++) {
       Metadata::Entry& entry = mMetadata.mEntries[i];
-      entry.mFastHash = -1;
-      entry.mNumChars = -1;
-      entry.mFullHash = -1;
       entry.mModuleIndex = i;
+      entry.clear();
     }
   }
 
-  return NS_OK;
-}
-
-nsresult
-GetCacheFile(nsIFile* aDirectory, unsigned aModuleIndex, nsIFile** aCacheFile)
-{
-  nsCOMPtr<nsIFile> cacheFile;
-  nsresult rv = aDirectory->Clone(getter_AddRefs(cacheFile));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsString cacheFileName = NS_LITERAL_STRING(ASMJSCACHE_ENTRY_FILE_NAME_BASE);
-  cacheFileName.AppendInt(aModuleIndex);
-  rv = cacheFile->Append(cacheFileName);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  cacheFile.forget(aCacheFile);
   return NS_OK;
 }
 
@@ -663,9 +737,15 @@ MainProcessRunnable::OpenCacheFileForWrite()
   NS_ENSURE_STATE(mQuotaObject);
 
   // Let the QuotaManager know we're about to consume more storage. The
-  // QuotaManager may veto this or schedule other storage to get evicted.
+  // QuotaManager may veto this or evict other storage. If allocation failed, it
+  // might be because mOrigin is using too much space (MaybeAllocateMoreSpace
+  // will not evict our origin since it is active). Try to make some space by
+  // evicting entries until there is enough space.
   if (!mQuotaObject->MaybeAllocateMoreSpace(0, mWriteParams.mSize)) {
-    return NS_ERROR_FAILURE;
+    EvictEntries(mDirectory, mGroup, mOrigin, mWriteParams.mSize, mMetadata);
+    if (!mQuotaObject->MaybeAllocateMoreSpace(0, mWriteParams.mSize)) {
+      return NS_ERROR_FAILURE;
+    }
   }
 
   int32_t openFlags = PR_RDWR | PR_TRUNCATE | PR_CREATE_FILE;
@@ -875,7 +955,7 @@ MainProcessRunnable::Run()
 
 bool
 FindHashMatch(const Metadata& aMetadata, const ReadParams& aReadParams,
-              uint32_t* aModuleIndex)
+              unsigned* aModuleIndex)
 {
   // Perform a fast hash of the first sNumFastHashChars chars. Each cache entry
   // also stores an mFastHash of its first sNumFastHashChars so this gives us a
