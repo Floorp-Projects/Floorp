@@ -274,6 +274,8 @@
     "dom/browser-element/mochitest/test_browserElement_inproc_CloseFromOpener.html":"",
     "dom/browser-element/":"",
 
+    "dom/downloads/tests/test_downloads_pause_resume.html":"bug 947167",
+
     "dom/events/test/test_bug226361.xhtml":"",
     "dom/events/test/test_bug238987.html":"",
     "dom/events/test/test_bug409604.html":"",

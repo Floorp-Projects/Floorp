@@ -68,6 +68,10 @@
   -  in the network details pane identifying the timings tab. -->
 <!ENTITY netmonitorUI.tab.timings         "Timings">
 
+<!-- LOCALIZATION NOTE (debuggerUI.tab.preview): This is the label displayed
+  -  in the network details pane identifying the preview tab. -->
+<!ENTITY netmonitorUI.tab.preview         "Preview">
+
 <!-- LOCALIZATION NOTE (debuggerUI.footer.filterAll): This is the label displayed
   -  in the network details footer for the "All" filtering button. -->
 <!ENTITY netmonitorUI.footer.filterAll    "All">

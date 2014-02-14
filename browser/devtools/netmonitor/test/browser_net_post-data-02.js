@@ -55,6 +55,7 @@ function test() {
           "baz", "The second query param name was incorrect.");
         is(postScope.querySelectorAll(".variables-view-variable .value")[1].getAttribute("value"),
           "\"123\"", "The second query param value was incorrect.");
+
         teardown(aMonitor).then(finish);
       });
     });
