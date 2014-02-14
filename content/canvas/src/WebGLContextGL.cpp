@@ -1975,6 +1975,7 @@ WebGLContext::Hint(GLenum target, GLenum mode)
     if (!isValid)
         return ErrorInvalidEnum("hint: invalid hint");
 
+    MakeContextCurrent();
     gl->fHint(target, mode);
 }
 
