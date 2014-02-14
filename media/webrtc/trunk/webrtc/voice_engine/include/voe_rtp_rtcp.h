@@ -192,7 +192,7 @@ public:
     // Gets RTP statistics for a specific |channel|.
     virtual int GetRTPStatistics(
         int channel, unsigned int& averageJitterMs, unsigned int& maxJitterMs,
-        unsigned int& discardedPackets) = 0;
+        unsigned int& discardedPackets, unsigned int& cumulativeLost) = 0;
 
     // Gets RTCP statistics for a specific |channel|.
     virtual int GetRTCPStatistics(int channel, CallStatistics& stats) = 0;

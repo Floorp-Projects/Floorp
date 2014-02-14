@@ -37,6 +37,7 @@ dictionary RTCInboundRTPStreamStats : RTCRTPStreamStats {
   unsigned long packetsReceived;
   unsigned long long bytesReceived;
   double jitter;
+  unsigned long packetsLost;
 };
 
 dictionary RTCOutboundRTPStreamStats : RTCRTPStreamStats {
