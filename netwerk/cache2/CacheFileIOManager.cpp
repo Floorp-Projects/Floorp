@@ -916,7 +916,12 @@ CacheFileIOManager::OnProfile()
 {
   LOG(("CacheFileIOManager::OnProfile() [gInstance=%p]", gInstance));
 
-  MOZ_ASSERT(gInstance);
+  nsRefPtr<CacheFileIOManager> ioMan = gInstance;
+  if (!ioMan) {
+    // CacheFileIOManager::Init() failed, probably could not create the IO
+    // thread, just go with it...
+    return NS_ERROR_NOT_INITIALIZED;
+  }
 
   nsresult rv;
 
@@ -941,10 +946,10 @@ CacheFileIOManager::OnProfile()
   }
 
   if (directory) {
-    rv = directory->Clone(getter_AddRefs(gInstance->mCacheDirectory));
+    rv = directory->Clone(getter_AddRefs(ioMan->mCacheDirectory));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = gInstance->mCacheDirectory->Append(NS_LITERAL_STRING("cache2"));
+    rv = ioMan->mCacheDirectory->Append(NS_LITERAL_STRING("cache2"));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
