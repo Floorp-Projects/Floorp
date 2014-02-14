@@ -532,6 +532,7 @@ class Build(MachCommandBase):
     # conditions, but that is for another day.
     @CommandArgument('-b', '--backend',
         choices=['RecursiveMake', 'AndroidEclipse'],
+        default='RecursiveMake',
         help='Which backend to build (default: RecursiveMake).')
     def build_backend(self, backend='RecursiveMake', diff=False):
         python = self.virtualenv_manager.python_path
