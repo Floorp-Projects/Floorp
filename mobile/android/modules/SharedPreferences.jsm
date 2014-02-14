@@ -11,10 +11,7 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 // For adding observers.
 Cu.import("resource://gre/modules/Services.jsm");
-
-function sendMessageToJava(message) {
-  return Services.androidBridge.handleGeckoMessage(JSON.stringify(message));
-}
+Cu.import("resource://gre/modules/Messaging.jsm");
 
 /**
  * Create an interface to an Android SharedPreferences branch.
@@ -62,13 +59,21 @@ SharedPreferences.prototype = Object.freeze({
     this._setOne(prefName, value, "int");
   },
 
-  _get: function _get(prefs) {
-    let values = sendMessageToJava({
+  _get: function _get(prefs, callback) {
+    let result = null;
+    sendMessageToJava({
       type: "SharedPreferences:Get",
       preferences: prefs,
       branch: this._branch,
+    }, (data) => {
+      result = JSON.parse(data).values;
     });
-    return JSON.parse(values);
+
+    let thread = Services.tm.currentThread;
+    while (result == null)
+      thread.processNextEvent(true);
+
+    return result;
   },
 
   _getOne: function _getOne(prefName, type) {

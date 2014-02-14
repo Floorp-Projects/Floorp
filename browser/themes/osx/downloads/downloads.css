@@ -4,6 +4,10 @@
 
 /*** Panel and outer controls ***/
 
+#downloadsPanel {
+  margin-top: -1px;
+}
+
 #downloadsPanel > .panel-arrowcontainer > .panel-arrowcontent {
   padding: 0;
 }
@@ -19,19 +23,14 @@
 }
 
 #downloadsFooter {
-  border-bottom-left-radius: 6px;
-  border-bottom-right-radius: 6px;
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
 }
 
 #downloadsHistory {
   background: transparent;
   color: hsl(210,100%,75%);
   cursor: pointer;
-}
-
-#downloadsPanel:not([hasdownloads]) > #downloadsFooter > #downloadsHistory {
-  border-top-left-radius: 6px;
-  border-top-right-radius: 6px;
 }
 
 #downloadsPanel[hasdownloads] > #downloadsFooter {
@@ -49,18 +48,13 @@
 #downloadsPanel[keyfocus] > #downloadsFooter > #downloadsHistory:focus {
   outline: 2px -moz-mac-focusring solid;
   outline-offset: -2px;
-  -moz-outline-radius-bottomleft: 5px;
-  -moz-outline-radius-bottomright: 5px;
+  -moz-outline-radius-bottomleft: 4px;
+  -moz-outline-radius-bottomright: 4px;
 }
 
 #downloadsPanel:not([hasdownloads]) > #downloadsFooter > #downloadsHistory:focus {
-  -moz-outline-radius-topleft: 5px;
-  -moz-outline-radius-topright: 5px;
-}
-
-#downloadsPanel:not([hasdownloads]) > #downloadsFooter > #downloadsHistory:focus > .button-box {
-  border-bottom-left-radius: 6px;
-  border-bottom-right-radius: 6px;
+  -moz-outline-radius-topleft: 4px;
+  -moz-outline-radius-topright: 4px;
 }
 
 /*** Downloads Summary and List items ***/
