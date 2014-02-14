@@ -6,6 +6,7 @@ package org.mozilla.gecko.tests.helpers;
 
 import static org.mozilla.gecko.tests.helpers.AssertionHelper.*;
 
+import org.mozilla.gecko.tests.components.AppMenuComponent;
 import org.mozilla.gecko.tests.components.ToolbarComponent;
 import org.mozilla.gecko.tests.UITestContext;
 import org.mozilla.gecko.tests.UITestContext.ComponentType;
@@ -22,12 +23,14 @@ final public class NavigationHelper {
     private static UITestContext sContext;
     private static Solo sSolo;
 
+    private static AppMenuComponent sAppMenu;
     private static ToolbarComponent sToolbar;
 
     protected static void init(final UITestContext context) {
         sContext = context;
         sSolo = context.getSolo();
 
+        sAppMenu = (AppMenuComponent) context.getComponent(ComponentType.APPMENU);
         sToolbar = (ToolbarComponent) context.getComponent(ComponentType.TOOLBAR);
     }
 
@@ -81,8 +84,7 @@ final public class NavigationHelper {
         WaitHelper.waitForPageLoad(new Runnable() {
             @Override
             public void run() {
-                // TODO: Press forward with APPMENU component
-                throw new UnsupportedOperationException("Not yet implemented.");
+                sAppMenu.pressMenuItem(AppMenuComponent.MenuItem.FORWARD);
             }
         });
     }
