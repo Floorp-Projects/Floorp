@@ -23,7 +23,17 @@ SandboxBroker::SandboxBroker()
         sBrokerService = nullptr;
       }
     }
+
+    // We'll start to increase the restrictions over time.
+    mPolicy = sBrokerService->CreatePolicy();
   }
+}
+
+bool
+SandboxBroker::AllowPipe(const wchar_t *aPath)
+{
+  return mPolicy->AddRule(sandbox::TargetPolicy::SUBSYS_NAMED_PIPES,
+                          sandbox::TargetPolicy::NAMEDPIPES_ALLOW_ANY, aPath);
 }
 
 bool
@@ -32,7 +42,7 @@ SandboxBroker::LaunchApp(const wchar_t *aPath,
                            void **aProcessHandle)
 {
   // If the broker service isn't already initialized, do it now
-  if (!sBrokerService) {
+  if (!sBrokerService || !mPolicy) {
     return false;
   }
 
@@ -40,16 +50,15 @@ SandboxBroker::LaunchApp(const wchar_t *aPath,
   // Medium integrity, unrestricted, in the same window station, within the
   // same desktop, and has no job object.
   // We'll start to increase the restrictions over time.
-  sandbox::TargetPolicy *policy = sBrokerService->CreatePolicy();
-  policy->SetJobLevel(sandbox::JOB_NONE, 0);
-  policy->SetTokenLevel(sandbox::USER_RESTRICTED_SAME_ACCESS,
-                        sandbox::USER_RESTRICTED_SAME_ACCESS);
-  policy->SetDelayedIntegrityLevel(sandbox::INTEGRITY_LEVEL_MEDIUM);
+  mPolicy->SetJobLevel(sandbox::JOB_NONE, 0);
+  mPolicy->SetTokenLevel(sandbox::USER_RESTRICTED_SAME_ACCESS,
+                         sandbox::USER_RESTRICTED_SAME_ACCESS);
+  mPolicy->SetDelayedIntegrityLevel(sandbox::INTEGRITY_LEVEL_UNTRUSTED);
 
   // Ceate the sandboxed process
   PROCESS_INFORMATION targetInfo;
   sandbox::ResultCode result;
-  result = sBrokerService->SpawnTarget(aPath, aArguments, policy, &targetInfo);
+  result = sBrokerService->SpawnTarget(aPath, aArguments, mPolicy, &targetInfo);
 
   // The sandboxed process is started in a suspended state, resumeit now that
   // we'eve set things up.
@@ -59,13 +68,15 @@ SandboxBroker::LaunchApp(const wchar_t *aPath,
   // Return the process handle to the caller
   *aProcessHandle = targetInfo.hProcess;
 
-  policy->Release();
-
   return true;
 }
 
 SandboxBroker::~SandboxBroker()
 {
+  if (mPolicy) {
+    mPolicy->Release();
+    mPolicy = nullptr;
+  }
 }
 
 }
