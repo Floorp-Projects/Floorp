@@ -175,6 +175,8 @@ var BrowserUI = {
         Util.dumpLn("Exception in delay load module:", ex.message);
       }
 
+      BrowserUI._initFirstRunContent();
+
       // check for left over crash reports and submit them if found.
       BrowserUI.startupCrashCheck();
 
@@ -1215,6 +1217,24 @@ var BrowserUI = {
     }
 
     prefsClearButton.disabled = false;
+  },
+
+  _initFirstRunContent: function () {
+    let dismissed = Services.prefs.getBoolPref("browser.firstrun-content.dismissed");
+    let firstRunCount = Services.prefs.getIntPref("browser.firstrun.count");
+
+    if (!dismissed && firstRunCount > 0) {
+      document.loadOverlay("chrome://browser/content/FirstRunContentOverlay.xul", null);
+    }
+  },
+
+  firstRunContentDismiss: function() {
+    let firstRunElements = Elements.stack.querySelectorAll(".firstrun-content");
+    for (let node of firstRunElements) {
+      node.parentNode.removeChild(node);
+    }
+
+    Services.prefs.setBoolPref("browser.firstrun-content.dismissed", true);
   },
 };
 

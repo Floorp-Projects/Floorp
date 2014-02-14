@@ -23,6 +23,7 @@ chrome.jar:
   skin/touchcontrols.css                    (touchcontrols.css)
 * skin/netError.css                         (netError.css)
   skin/firstrun.css                         (firstrun.css)
+* skin/firstruncontent.css                  (firstruncontent.css)
 * skin/start.css                            (start.css)
 % override chrome://global/skin/about.css chrome://browser/skin/about.css
 % override chrome://global/skin/media/videocontrols.css chrome://browser/skin/touchcontrols.css
@@ -160,6 +161,12 @@ chrome.jar:
   skin/images/arrow-left.png                (images/arrow-left.png)
   skin/images/arrow-left@1.4x.png           (images/arrow-left@1.4x.png)
   skin/images/arrow-left@1.8x.png           (images/arrow-left@1.8x.png)
+  skin/images/arrow-top-light.png           (images/arrow-top-light.png)
+  skin/images/arrow-top-light@1.4x.png      (images/arrow-top-light@1.4x.png)
+  skin/images/arrow-top-light@1.8x.png      (images/arrow-top-light@1.8x.png)
+  skin/images/arrow-left-light.png          (images/arrow-left-light.png)
+  skin/images/arrow-left-light@1.4x.png     (images/arrow-left-light@1.4x.png)
+  skin/images/arrow-left-light@1.8x.png     (images/arrow-left-light@1.8x.png)
 
 # AboutConfig specific:
   skin/images/textfield.png                 (images/textfield.png)
