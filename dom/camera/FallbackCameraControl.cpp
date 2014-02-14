@@ -2,215 +2,74 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "DOMCameraControl.h"
 #include "CameraControlImpl.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
 
 namespace mozilla {
-class RecorderProfileManager;
+  class RecorderProfileManager;
+
+  namespace layers {
+    class GraphicBufferLocked;
+  }
 }
 
 /**
- * Fallback camera control subclass.  Can be used as a template for the
+ * Fallback camera control subclass. Can be used as a template for the
  * definition of new camera support classes.
  */
-class nsFallbackCameraControl : public CameraControlImpl
+class FallbackCameraControl : public CameraControlImpl
 {
 public:
-  nsFallbackCameraControl(uint32_t aCameraId, nsIThread* aCameraThread, nsDOMCameraControl* aDOMCameraControl, nsICameraGetCameraCallback* onSuccess, nsICameraErrorCallback* onError, uint64_t aWindowId);
+  FallbackCameraControl(uint32_t aCameraId) : CameraControlImpl(aCameraId) { }
 
-  const char* GetParameter(const char* aKey);
-  const char* GetParameterConstChar(uint32_t aKey);
-  double GetParameterDouble(uint32_t aKey);
-  int32_t GetParameterInt32(uint32_t aKey);
-  void GetParameter(uint32_t aKey, nsTArray<idl::CameraRegion>& aRegions);
-  void GetParameter(uint32_t aKey, idl::CameraSize& aSize);
-  void SetParameter(const char* aKey, const char* aValue);
-  void SetParameter(uint32_t aKey, const char* aValue);
-  void SetParameter(uint32_t aKey, double aValue);
-  void SetParameter(uint32_t aKey, const nsTArray<idl::CameraRegion>& aRegions);
-  void SetParameter(uint32_t aKey, const idl::CameraSize& aSize);
-  nsresult GetVideoSizes(nsTArray<idl::CameraSize>& aVideoSizes);
-  nsresult PushParameters();
+  void OnAutoFocusComplete(bool aSuccess);
+  void OnTakePictureComplete(uint8_t* aData, uint32_t aLength) { }
+  void OnTakePictureError() { }
+  void OnNewPreviewFrame(layers::GraphicBufferLocked* aBuffer) { }
+  void OnRecorderEvent(int msg, int ext1, int ext2) { }
+  void OnError(CameraControlListener::CameraErrorContext aWhere,
+               CameraControlListener::CameraError aError) { }
+
+  virtual nsresult Set(uint32_t aKey, const nsAString& aValue) MOZ_OVERRIDE { return NS_ERROR_FAILURE; }
+  virtual nsresult Get(uint32_t aKey, nsAString& aValue) MOZ_OVERRIDE { return NS_ERROR_FAILURE; }
+  virtual nsresult Set(uint32_t aKey, double aValue) MOZ_OVERRIDE { return NS_ERROR_FAILURE; }
+  virtual nsresult Get(uint32_t aKey, double& aValue) MOZ_OVERRIDE { return NS_ERROR_FAILURE; }
+  virtual nsresult Set(uint32_t aKey, int32_t aValue) MOZ_OVERRIDE { return NS_ERROR_FAILURE; }
+  virtual nsresult Get(uint32_t aKey, int32_t& aValue) MOZ_OVERRIDE { return NS_ERROR_FAILURE; }
+  virtual nsresult Set(uint32_t aKey, int64_t aValue) MOZ_OVERRIDE { return NS_ERROR_FAILURE; }
+  virtual nsresult Get(uint32_t aKey, int64_t& aValue) MOZ_OVERRIDE { return NS_ERROR_FAILURE; }
+  virtual nsresult Set(uint32_t aKey, const Size& aValue) MOZ_OVERRIDE { return NS_ERROR_FAILURE; }
+  virtual nsresult Get(uint32_t aKey, Size& aValue) MOZ_OVERRIDE { return NS_ERROR_FAILURE; }
+  virtual nsresult Set(uint32_t aKey, const nsTArray<Region>& aRegions) MOZ_OVERRIDE { return NS_ERROR_FAILURE; }
+  virtual nsresult Get(uint32_t aKey, nsTArray<Region>& aRegions) MOZ_OVERRIDE { return NS_ERROR_FAILURE; }
+
+  virtual nsresult SetLocation(const Position& aLocation) MOZ_OVERRIDE { return NS_ERROR_FAILURE; }
+
+  virtual nsresult Get(uint32_t aKey, nsTArray<Size>& aSizes) MOZ_OVERRIDE { return NS_ERROR_FAILURE; }
+  virtual nsresult Get(uint32_t aKey, nsTArray<nsString>& aValues) MOZ_OVERRIDE { return NS_ERROR_FAILURE; }
+  virtual nsresult Get(uint32_t aKey, nsTArray<double>& aValues) MOZ_OVERRIDE { return NS_ERROR_FAILURE; }
+
+  nsresult PushParameters() { return NS_ERROR_FAILURE; }
+  nsresult PullParameters() { return NS_ERROR_FAILURE; }
 
 protected:
-  ~nsFallbackCameraControl();
+  ~FallbackCameraControl();
 
-  nsresult GetPreviewStreamImpl(GetPreviewStreamTask* aGetPreviewStream);
-  nsresult StartPreviewImpl(StartPreviewTask* aStartPreview);
-  nsresult StopPreviewImpl(StopPreviewTask* aStopPreview);
-  nsresult AutoFocusImpl(AutoFocusTask* aAutoFocus);
-  nsresult TakePictureImpl(TakePictureTask* aTakePicture);
-  nsresult StartRecordingImpl(StartRecordingTask* aStartRecording);
-  nsresult StopRecordingImpl(StopRecordingTask* aStopRecording);
-  nsresult PushParametersImpl();
-  nsresult PullParametersImpl();
-  already_AddRefed<RecorderProfileManager> GetRecorderProfileManagerImpl();
+  virtual nsresult StartPreviewImpl() { return NS_ERROR_FAILURE; }
+  virtual nsresult StopPreviewImpl() { return NS_ERROR_FAILURE; }
+  virtual nsresult AutoFocusImpl(bool aCancelExistingCall) { return NS_ERROR_FAILURE; }
+  virtual nsresult TakePictureImpl() { return NS_ERROR_FAILURE; }
+  virtual nsresult StartRecordingImpl(DeviceStorageFileDescriptor* aFileDescriptor,
+                                      const StartRecordingOptions* aOptions = nullptr)
+                                        { return NS_ERROR_FAILURE; }
+  virtual nsresult StopRecordingImpl() { return NS_ERROR_FAILURE; }
+  virtual nsresult PushParametersImpl() { return NS_ERROR_FAILURE; }
+  virtual nsresult PullParametersImpl() { return NS_ERROR_FAILURE; }
+  virtual already_AddRefed<RecorderProfileManager> GetRecorderProfileManagerImpl() { return nullptr; }
 
 private:
-  nsFallbackCameraControl(const nsFallbackCameraControl&) MOZ_DELETE;
-  nsFallbackCameraControl& operator=(const nsFallbackCameraControl&) MOZ_DELETE;
+  FallbackCameraControl(const FallbackCameraControl&) MOZ_DELETE;
+  FallbackCameraControl& operator=(const FallbackCameraControl&) MOZ_DELETE;
 };
-
-/**
- * Stub implementation of the DOM-facing camera control constructor.
- *
- * This should never get called--it exists to keep the linker happy; if
- * implemented, it should construct (e.g.) nsFallbackCameraControl and
- * store a reference in the 'mCameraControl' member (which is why it is
- * defined here).
- */
-nsDOMCameraControl::nsDOMCameraControl(uint32_t aCameraId, nsIThread* aCameraThread, nsICameraGetCameraCallback* onSuccess, nsICameraErrorCallback* onError, nsPIDOMWindow* aWindow) :
-  mWindow(aWindow)
-{
-  MOZ_ASSERT(aWindow, "shouldn't be created with null window!");
-  SetIsDOMBinding();
-}
-
-/**
- * Stub implemetations of the fallback camera control.
- *
- * None of these should ever get called--they exist to keep the linker happy,
- * and may be used as templates for new camera support classes.
- */
-nsFallbackCameraControl::nsFallbackCameraControl(uint32_t aCameraId, nsIThread* aCameraThread, nsDOMCameraControl* aDOMCameraControl, nsICameraGetCameraCallback* onSuccess, nsICameraErrorCallback* onError, uint64_t aWindowId)
-  : CameraControlImpl(aCameraId, aCameraThread, aWindowId)
-{
-}
-
-nsFallbackCameraControl::~nsFallbackCameraControl()
-{
-}
-
-const char*
-nsFallbackCameraControl::GetParameter(const char* aKey)
-{
-  return nullptr;
-}
-
-const char*
-nsFallbackCameraControl::GetParameterConstChar(uint32_t aKey)
-{
-  return nullptr;
-}
-
-double
-nsFallbackCameraControl::GetParameterDouble(uint32_t aKey)
-{
-  return NAN;
-}
-
-int32_t
-nsFallbackCameraControl::GetParameterInt32(uint32_t aKey)
-{
-  return 0;
-}
-
-void
-nsFallbackCameraControl::GetParameter(uint32_t aKey, nsTArray<idl::CameraRegion>& aRegions)
-{
-}
-
-void
-nsFallbackCameraControl::GetParameter(uint32_t aKey, idl::CameraSize& aSize)
-{
-}
-
-void
-nsFallbackCameraControl::SetParameter(const char* aKey, const char* aValue)
-{
-}
-
-void
-nsFallbackCameraControl::SetParameter(uint32_t aKey, const char* aValue)
-{
-}
-
-void
-nsFallbackCameraControl::SetParameter(uint32_t aKey, double aValue)
-{
-}
-
-void
-nsFallbackCameraControl::SetParameter(uint32_t aKey, const nsTArray<idl::CameraRegion>& aRegions)
-{
-}
-
-void
-nsFallbackCameraControl::SetParameter(uint32_t aKey, const idl::CameraSize& aSize)
-{
-}
-
-nsresult
-nsFallbackCameraControl::PushParameters()
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-nsresult
-nsFallbackCameraControl::GetPreviewStreamImpl(GetPreviewStreamTask* aGetPreviewStream)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-nsresult
-nsFallbackCameraControl::StartPreviewImpl(StartPreviewTask* aGetPreviewStream)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-nsresult
-nsFallbackCameraControl::StopPreviewImpl(StopPreviewTask* aGetPreviewStream)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-nsresult
-nsFallbackCameraControl::AutoFocusImpl(AutoFocusTask* aAutoFocus)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-nsresult
-nsFallbackCameraControl::TakePictureImpl(TakePictureTask* aTakePicture)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-nsresult
-nsFallbackCameraControl::StartRecordingImpl(StartRecordingTask* aStartRecording)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-nsresult
-nsFallbackCameraControl::StopRecordingImpl(StopRecordingTask* aStopRecording)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-nsresult
-nsFallbackCameraControl::PushParametersImpl()
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-nsresult
-nsFallbackCameraControl::PullParametersImpl()
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-nsresult
-nsFallbackCameraControl::GetVideoSizes(nsTArray<idl::CameraSize>& aVideoSizes)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-already_AddRefed<RecorderProfileManager> 
-nsFallbackCameraControl::GetRecorderProfileManagerImpl()
-{
-  return nullptr;
-}
