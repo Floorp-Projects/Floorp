@@ -890,6 +890,12 @@ abstract public class BrowserApp extends GeckoApp
 
         // Intercept key events for gamepad shortcuts
         mLayerView.setOnKeyListener(this);
+
+        // Initialize the actionbar menu items on startup for both large and small tablets
+        if (HardwareUtils.isTablet()) {
+            onCreatePanelMenu(Window.FEATURE_OPTIONS_PANEL, null);
+            invalidateOptionsMenu();
+        }
     }
 
     private void shareCurrentUrl() {
