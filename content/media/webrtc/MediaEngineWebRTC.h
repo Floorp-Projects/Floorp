@@ -46,9 +46,8 @@
 #include "webrtc/video_engine/include/vie_render.h"
 #include "webrtc/video_engine/include/vie_capture.h"
 #ifdef MOZ_B2G_CAMERA
-#include "CameraPreviewMediaStream.h"
-#include "DOMCameraManager.h"
-#include "GonkCameraControl.h"
+#include "CameraControlListener.h"
+#include "ICameraControl.h"
 #include "ImageContainer.h"
 #include "nsGlobalWindow.h"
 #include "prprf.h"
@@ -73,7 +72,7 @@ class GetCameraNameRunnable;
  *   mSources, mImageContainer, mSources, mState, mImage, mLastCapture
  *
  * MainThread:
- *   mDOMCameraControl, mCaptureIndex, mCameraThread, mWindowId, mCameraManager,
+ *   mCaptureIndex, mWindowId,
  *   mNativeCameraControl, mPreviewStream, mState, mLastCapture, mWidth, mHeight
  *
  * Where mWidth, mHeight, mImage are protected by mMonitor
@@ -83,24 +82,15 @@ class GetCameraNameRunnable;
 class MediaEngineWebRTCVideoSource : public MediaEngineVideoSource
                                    , public nsRunnable
 #ifdef MOZ_B2G_CAMERA
-                                   , public nsICameraGetCameraCallback
-                                   , public nsICameraPreviewStreamCallback
-                                   , public nsICameraTakePictureCallback
-                                   , public nsICameraReleaseCallback
-                                   , public nsICameraErrorCallback
-                                   , public CameraPreviewFrameCallback
+                                   , public CameraControlListener
 #else
                                    , public webrtc::ExternalRenderer
 #endif
 {
 public:
 #ifdef MOZ_B2G_CAMERA
-  MediaEngineWebRTCVideoSource(nsDOMCameraManager* aCameraManager,
-    int aIndex, uint64_t aWindowId)
-    : mCameraManager(aCameraManager)
-    , mNativeCameraControl(nullptr)
-    , mPreviewStream(nullptr)
-    , mWindowId(aWindowId)
+  MediaEngineWebRTCVideoSource(int aIndex)
+    : mCameraControl(nullptr)
     , mCallbackMonitor("WebRTCCamera.CallbackMonitor")
     , mCaptureIndex(aIndex)
     , mMonitor("WebRTCCamera.Monitor")
@@ -111,7 +101,6 @@ public:
     , mSnapshotPath(nullptr)
   {
     mState = kReleased;
-    NS_NewNamedThread("CameraThread", getter_AddRefs(mCameraThread));
     Init();
   }
 #else
@@ -167,20 +156,17 @@ public:
 
   NS_DECL_THREADSAFE_ISUPPORTS
 #ifdef MOZ_B2G_CAMERA
-  NS_DECL_NSICAMERAGETCAMERACALLBACK
-  NS_DECL_NSICAMERAPREVIEWSTREAMCALLBACK
-  NS_DECL_NSICAMERATAKEPICTURECALLBACK
-  NS_DECL_NSICAMERARELEASECALLBACK
-  NS_DECL_NSICAMERAERRORCALLBACK
+  void OnHardwareStateChange(HardwareState aState);
+  void OnConfigurationChange(const CameraListenerConfiguration& aConfiguration);
+  bool OnNewPreviewFrame(layers::Image* aImage, uint32_t aWidth, uint32_t aHeight);
+  void OnError(CameraErrorContext aContext, const nsACString& aError);
+  void OnTakePictureComplete(uint8_t* aData, uint32_t aLength, const nsAString& aMimeType);
 
   void AllocImpl();
   void DeallocImpl();
   void StartImpl(webrtc::CaptureCapability aCapability);
   void StopImpl();
   void SnapshotImpl();
-
-  virtual void OnNewFrame(const gfxIntSize& aIntrinsicSize, layers::Image* aImage);
-
 #endif
 
   // This runnable is for creating a temporary file on the main thread.
@@ -212,20 +198,8 @@ private:
 
   // Engine variables.
 #ifdef MOZ_B2G_CAMERA
-  // MediaEngine hold this DOM object, and the MediaEngine is hold by Navigator
-  // Their life time is always much longer than this object. Use a raw-pointer
-  // here should be safe.
-  // We need raw pointer here since such DOM-object should not addref/release on
-  // any thread other than main thread, but we must use this object for now. To
-  // avoid any bad thing do to addref/release DOM-object on other thread, we use
-  // raw-pointer for now.
-  nsDOMCameraManager* mCameraManager;
-  nsRefPtr<nsDOMCameraControl> mDOMCameraControl;
-  nsRefPtr<nsGonkCameraControl> mNativeCameraControl;
-  nsRefPtr<DOMCameraPreview> mPreviewStream;
-  uint64_t mWindowId;
+  nsRefPtr<ICameraControl> mCameraControl;
   mozilla::ReentrantMonitor mCallbackMonitor; // Monitor for camera callback handling
-  nsRefPtr<nsIThread> mCameraThread;
   nsRefPtr<nsIDOMFile> mLastCapture;
 #else
   webrtc::VideoEngine* mVideoEngine; // Weak reference, don't free.
@@ -351,24 +325,7 @@ private:
 class MediaEngineWebRTC : public MediaEngine
 {
 public:
-#ifdef MOZ_B2G_CAMERA
-  MediaEngineWebRTC(nsDOMCameraManager* aCameraManager, uint64_t aWindowId)
-    : mMutex("mozilla::MediaEngineWebRTC")
-    , mVideoEngine(nullptr)
-    , mVoiceEngine(nullptr)
-    , mVideoEngineInit(false)
-    , mAudioEngineInit(false)
-    , mCameraManager(aCameraManager)
-    , mWindowId(aWindowId)
-    , mHasTabVideoSource(false)
-  {
-    AsyncLatencyLogger::Get(true)->AddRef();
-    mLoadMonitor = new LoadMonitor();
-    mLoadMonitor->Init(mLoadMonitor);
-  }
-#else
   MediaEngineWebRTC(MediaEnginePrefs &aPrefs);
-#endif
   ~MediaEngineWebRTC() {
     Shutdown();
 #ifdef MOZ_B2G_CAMERA
@@ -400,19 +357,7 @@ private:
   nsRefPtrHashtable<nsStringHashKey, MediaEngineWebRTCVideoSource > mVideoSources;
   nsRefPtrHashtable<nsStringHashKey, MediaEngineWebRTCAudioSource > mAudioSources;
 
-#ifdef MOZ_B2G_CAMERA
-  // MediaEngine hold this DOM object, and the MediaEngine is hold by Navigator
-  // Their life time is always much longer than this object. Use a raw-pointer
-  // here should be safe.
-  // We need raw pointer here since such DOM-object should not addref/release on
-  // any thread other than main thread, but we must use this object for now. To
-  // avoid any bad thing do to addref/release DOM-object on other thread, we use
-  // raw-pointer for now.
-  nsDOMCameraManager* mCameraManager;
-  uint64_t mWindowId;
-#endif
-
-   nsRefPtr<LoadMonitor> mLoadMonitor;
+  nsRefPtr<LoadMonitor> mLoadMonitor;
 };
 
 }

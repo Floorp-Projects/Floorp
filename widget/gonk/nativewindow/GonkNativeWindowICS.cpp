@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2010 The Android Open Source Project
- * Copyright (C) 2012 Mozilla Foundation
+ * Copyright (C) 2012-2013 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,12 +37,12 @@ using namespace mozilla::gfx;
 using namespace mozilla::layers;
 
 GonkNativeWindow::GonkNativeWindow() :
+    mAbandoned(false),
     mDefaultWidth(1),
     mDefaultHeight(1),
     mPixelFormat(PIXEL_FORMAT_RGBA_8888),
     mBufferCount(MIN_BUFFER_SLOTS + 1),
     mConnectedApi(NO_CONNECTED_API),
-    mAbandoned(false),
     mFrameCounter(0),
     mGeneration(0),
     mNewFrameCallback(nullptr) {
@@ -108,6 +108,7 @@ void GonkNativeWindow::releaseBufferFreeListUnlocked(nsTArray<SurfaceDescriptor>
 void GonkNativeWindow::clearRenderingStateBuffersLocked()
 {
     ++mGeneration;
+    CNW_LOGD("clearRenderingStateBuffersLocked: mGeneration=%d\n", mGeneration);
 
     for (int i = 0; i < NUM_BUFFER_SLOTS; ++i) {
         if (mSlots[i].mGraphicBuffer != NULL) {
@@ -244,22 +245,33 @@ status_t GonkNativeWindow::dequeueBuffer(int *outBuf, uint32_t w, uint32_t h,
             renderingCount = 0;
             for (int i = 0; i < mBufferCount; i++) {
                 const int state = mSlots[i].mBufferState;
-                if (state == BufferSlot::DEQUEUED) {
-                    dequeuedCount++;
-                }
-                else if (state == BufferSlot::RENDERING) {
-                    renderingCount++;
-                }
-                else if (state == BufferSlot::FREE) {
-                    /* We return the oldest of the free buffers to avoid
-                     * stalling the producer if possible.  This is because
-                     * the consumer may still have pending reads of the
-                     * buffers in flight.
-                     */
-                    if (found < 0 ||
-                        mSlots[i].mFrameNumber < mSlots[found].mFrameNumber) {
-                        found = i;
-                    }
+                switch (state) {
+                    case BufferSlot::DEQUEUED:
+                        CNW_LOGD("dequeueBuffer: slot %d is DEQUEUED\n", i);
+                        dequeuedCount++;
+                        break;
+
+                    case BufferSlot::RENDERING:
+                        CNW_LOGD("dequeueBuffer: slot %d is RENDERING\n", i);
+                        renderingCount++;
+                        break;
+
+                    case BufferSlot::FREE:
+                        CNW_LOGD("dequeueBuffer: slot %d is FREE\n", i);
+                        /* We return the oldest of the free buffers to avoid
+                         * stalling the producer if possible.  This is because
+                         * the consumer may still have pending reads of the
+                         * buffers in flight.
+                         */
+                        if (found < 0 ||
+                            mSlots[i].mFrameNumber < mSlots[found].mFrameNumber) {
+                            found = i;
+                        }
+                        break;
+
+                    default:
+                        CNW_LOGD("dequeueBuffer: slot %d is %d\n", i, state);
+                        break;
                 }
             }
 
@@ -330,10 +342,10 @@ status_t GonkNativeWindow::dequeueBuffer(int *outBuf, uint32_t w, uint32_t h,
     // after trying to create the surface descriptor below.
     //
     // So we don't need mMutex locked, which would otherwise run the risk
-    // of a deadlock on calling AllocSurfaceDescriptorGralloc().    
+    // of a deadlock on calling AllocSurfaceDescriptorGralloc().
 
     SurfaceDescriptor desc;
-    ImageBridgeChild* ibc;
+    ImageBridgeChild* ibc = nullptr;
     sp<GraphicBuffer> graphicBuffer;
     if (alloc) {
         usage |= GraphicBuffer::USAGE_HW_TEXTURE;
@@ -437,6 +449,7 @@ status_t GonkNativeWindow::queueBuffer(int buf, int64_t timestamp,
     {
         Mutex::Autolock lock(mMutex);
         CNW_LOGD("queueBuffer: E");
+        CNW_LOGD("queueBuffer: buf=%d", buf);
 
         if (mAbandoned) {
             CNW_LOGE("queueBuffer: GonkNativeWindow has been abandoned!");
@@ -498,6 +511,7 @@ GonkNativeWindow::getCurrentBuffer()
 
   Fifo::iterator front(mQueue.begin());
   int buf = *front;
+  CNW_LOGD("getCurrentBuffer: buf=%d", buf);
 
   mSlots[buf].mBufferState = BufferSlot::RENDERING;
 
@@ -524,7 +538,7 @@ GonkNativeWindow::returnBuffer(uint32_t aIndex, uint32_t aGeneration)
       aGeneration, mGeneration);
     return false;
   }
-  if (aIndex >= mBufferCount) {
+  if (static_cast<int>(aIndex) >= mBufferCount) {
     CNW_LOGE("returnBuffer: slot index out of range [0, %d]: %d",
              mBufferCount, aIndex);
     return false;
