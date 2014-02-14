@@ -7,6 +7,7 @@ let Cc = Components.classes;
 let Ci = Components.interfaces;
 
 Components.utils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/Messaging.jsm");
 
 this.EXPORTED_SYMBOLS = ["Prompt"];
 
@@ -36,8 +37,6 @@ function Prompt(aOptions) {
     this.msg.hint = aOptions.hint;
 
   let idService = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator); 
-  this.guid = idService.generateUUID().toString();
-  this.msg.guid = this.guid;
 }
 
 Prompt.prototype = {
@@ -152,24 +151,20 @@ Prompt.prototype = {
   show: function(callback) {
     this.callback = callback;
     log("Sending message");
-    Services.obs.addObserver(this, "Prompt:Reply", false);
+    Services.obs.addObserver(this, "Prompt:Return", false);
     this._innerShow();
   },
 
   _innerShow: function() {
-    Services.androidBridge.handleGeckoMessage(JSON.stringify(this.msg));
-  },
+    sendMessageToJava(this.msg, (aData) => {
+      log("observe " + aData);
+      let data = JSON.parse(aData);
 
-  observe: function(aSubject, aTopic, aData) {
-    log("observe " + aData);
-    let data = JSON.parse(aData);
-    if (data.guid != this.guid)
-      return;
+      Services.obs.removeObserver(this, "Prompt:Return", false);
 
-    Services.obs.removeObserver(this, "Prompt:Reply", false);
-
-    if (this.callback)
-      this.callback(data);
+      if (this.callback)
+        this.callback(data);
+    });
   },
 
   _setListItems: function(aItems) {

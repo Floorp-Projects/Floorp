@@ -15,6 +15,12 @@ XPCOMUtils.defineLazyGetter(this, 'WebConsoleUtils', function() {
   return devtools.require("devtools/toolkit/webconsole/utils").Utils;
 });
 
+XPCOMUtils.defineLazyGetter(this, 'EventLoopLagFront', function() {
+  const {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+  return devtools.require("devtools/server/actors/eventlooplag").EventLoopLagFront;
+});
+
+
 /**
  * The Widget Panel is an on-device developer tool that displays widgets,
  * showing visual debug information about apps. Each widget corresponds to a
@@ -358,4 +364,67 @@ let consoleWatcher = {
     return source;
   }
 };
+
 devtoolsWidgetPanel.registerWatcher(consoleWatcher);
+
+
+let jankWatcher = {
+  _client: null,
+  _fronts: new Map(),
+  _active: false,
+
+  init: function(client) {
+    this._client = client;
+
+    SettingsListener.observe('devtools.hud.jank', false,
+      this.settingsListener.bind(this));
+  },
+
+  settingsListener: function(value) {
+    if (this._active == value) {
+      return;
+    }
+    this._active = value;
+
+    // Toggle the state of existing fronts.
+    let fronts = this._fronts;
+    for (let app of fronts.keys()) {
+      if (value) {
+        fronts.get(app).start();
+      } else {
+        fronts.get(app).stop();
+        app.metrics.set('jank', 0);
+        app.display();
+      }
+    }
+  },
+
+  trackApp: function(app) {
+    app.metrics.set('jank', 0);
+
+    let front = new EventLoopLagFront(this._client, app.actor);
+    this._fronts.set(app, front);
+
+    front.on('event-loop-lag', time => {
+      app.metrics.set('jank', time);
+
+      if (!app.display()) {
+        devtoolsWidgetPanel.log('jank: ' + time + 'ms');
+      }
+    });
+
+    if (this._active) {
+      front.start();
+    }
+  },
+
+  untrackApp: function(app) {
+    let fronts = this._fronts;
+    if (fronts.has(app)) {
+      fronts.get(app).destroy();
+      fronts.delete(app);
+    }
+  }
+};
+
+devtoolsWidgetPanel.registerWatcher(jankWatcher);

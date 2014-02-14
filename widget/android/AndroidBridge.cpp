@@ -42,8 +42,6 @@ using namespace mozilla;
 using namespace mozilla::widget::android;
 using namespace mozilla::gfx;
 
-NS_IMPL_ISUPPORTS0(nsFilePickerCallback)
-
 StaticRefPtr<AndroidBridge> AndroidBridge::sBridge;
 static unsigned sJavaEnvThreadIndex = 0;
 static jobject sGlobalContext = nullptr;
@@ -484,41 +482,6 @@ AndroidBridge::GetScreenDepth()
         return DEFAULT_DEPTH;
 
     return sDepth;
-}
-
-void
-AndroidBridge::ShowFilePickerForExtensions(nsAString& aFilePath, const nsAString& aExtensions)
-{
-    JNIEnv *env = GetJNIEnv();
-
-    AutoLocalJNIFrame jniFrame(env, 1);
-    jstring jstr = GeckoAppShell::ShowFilePickerForExtensionsWrapper(aExtensions);
-    if (jstr == nullptr) {
-        return;
-    }
-
-    aFilePath.Assign(nsJNIString(jstr, env));
-}
-
-void
-AndroidBridge::ShowFilePickerForMimeType(nsAString& aFilePath, const nsAString& aMimeType)
-{
-    JNIEnv *env = GetJNIEnv();
-
-    AutoLocalJNIFrame jniFrame(env, 1);
-    jstring jstr = GeckoAppShell::ShowFilePickerForMimeTypeWrapper(aMimeType);
-    if (jstr == nullptr) {
-        return;
-    }
-
-    aFilePath.Assign(nsJNIString(jstr, env));
-}
-
-void
-AndroidBridge::ShowFilePickerAsync(const nsAString& aMimeType, nsFilePickerCallback* callback)
-{
-    callback->AddRef();
-    GeckoAppShell::ShowFilePickerAsyncWrapper(aMimeType, (int64_t) callback);
 }
 
 void
@@ -999,21 +962,14 @@ AndroidBridge::GetCurrentBatteryInformation(hal::BatteryInformation* aBatteryInf
 }
 
 void
-AndroidBridge::HandleGeckoMessage(const nsAString &aMessage, nsAString &aRet)
+AndroidBridge::HandleGeckoMessage(const nsAString &aMessage)
 {
     ALOG_BRIDGE("%s", __PRETTY_FUNCTION__);
 
     JNIEnv *env = GetJNIEnv();
 
     AutoLocalJNIFrame jniFrame(env, 1);
-    jstring returnMessage = GeckoAppShell::HandleGeckoMessageWrapper(aMessage);
-
-    if (!returnMessage)
-        return;
-
-    nsJNIString jniStr(returnMessage, env);
-    aRet.Assign(jniStr);
-    ALOG_BRIDGE("leaving %s", __PRETTY_FUNCTION__);
+    GeckoAppShell::HandleGeckoMessageWrapper(aMessage);
 }
 
 nsresult
@@ -1534,9 +1490,9 @@ nsAndroidBridge::~nsAndroidBridge()
 }
 
 /* void handleGeckoEvent (in AString message); */
-NS_IMETHODIMP nsAndroidBridge::HandleGeckoMessage(const nsAString & message, nsAString &aRet)
+NS_IMETHODIMP nsAndroidBridge::HandleGeckoMessage(const nsAString & message)
 {
-    AndroidBridge::Bridge()->HandleGeckoMessage(message, aRet);
+    AndroidBridge::Bridge()->HandleGeckoMessage(message);
     return NS_OK;
 }
 
