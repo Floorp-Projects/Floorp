@@ -26,7 +26,7 @@ import org.mozilla.gecko.background.healthreport.HealthReportStorage.Measurement
 import org.mozilla.gecko.background.healthreport.HealthReportStorage.MeasurementFields.FieldSpec;
 import org.mozilla.gecko.background.healthreport.ProfileInformationCache;
 
-import org.mozilla.gecko.util.EventDispatcher;
+import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
 

@@ -57,7 +57,7 @@ public:
     static int16_t GetScreenOrientationWrapper();
     static bool GetShowPasswordSetting();
     static jintArray GetSystemColoursWrapper();
-    static jstring HandleGeckoMessageWrapper(const nsAString& a0);
+    static void HandleGeckoMessageWrapper(const nsAString& a0);
     static void HandleUncaughtException(jobject a0, jthrowable a1);
     static void HideProgressDialog();
     static jintArray InitCameraWrapper(const nsAString& a0, int32_t a1, int32_t a2, int32_t a3);
@@ -88,9 +88,6 @@ public:
     static void SetKeepScreenOn(bool a0);
     static void SetURITitle(const nsAString& a0, const nsAString& a1);
     static void ShowAlertNotificationWrapper(const nsAString& a0, const nsAString& a1, const nsAString& a2, const nsAString& a3, const nsAString& a4);
-    static void ShowFilePickerAsyncWrapper(const nsAString& a0, int64_t a1);
-    static jstring ShowFilePickerForExtensionsWrapper(const nsAString& a0);
-    static jstring ShowFilePickerForMimeTypeWrapper(const nsAString& a0);
     static void ShowInputMethodPicker();
     static bool UnlockProfile();
     static void UnlockScreenOrientation();
@@ -169,9 +166,6 @@ protected:
     static jmethodID jSetKeepScreenOn;
     static jmethodID jSetURITitle;
     static jmethodID jShowAlertNotificationWrapper;
-    static jmethodID jShowFilePickerAsyncWrapper;
-    static jmethodID jShowFilePickerForExtensionsWrapper;
-    static jmethodID jShowFilePickerForMimeTypeWrapper;
     static jmethodID jShowInputMethodPicker;
     static jmethodID jUnlockProfile;
     static jmethodID jUnlockScreenOrientation;
