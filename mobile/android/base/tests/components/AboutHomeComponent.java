@@ -17,6 +17,7 @@ import com.jayway.android.robotium.solo.Solo;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.view.View;
+import android.widget.TextView;
 
 /**
  * A class representing any interactions that take place on the Awesomescreen.
@@ -62,6 +63,10 @@ public class AboutHomeComponent extends BaseComponent {
         return (ViewPager) mSolo.getView(R.id.home_pager);
     }
 
+    private View getHomeBannerView() {
+        return mSolo.getView(R.id.home_banner);
+    }
+
     public AboutHomeComponent assertCurrentPanel(final PanelType expectedPanel) {
         assertVisible();
 
@@ -80,6 +85,35 @@ public class AboutHomeComponent extends BaseComponent {
     public AboutHomeComponent assertVisible() {
         assertEquals("The HomePager is visible",
                      View.VISIBLE, getHomePagerView().getVisibility());
+        return this;
+    }
+
+    public AboutHomeComponent assertBannerNotVisible() {
+        assertFalse("The HomeBanner is not visible",
+                    getHomeBannerView().getVisibility() == View.VISIBLE);
+        return this;
+    }
+
+    public AboutHomeComponent assertBannerVisible() {
+        assertEquals("The HomeBanner is visible",
+                     View.VISIBLE, getHomeBannerView().getVisibility());
+        return this;
+    }
+
+    public AboutHomeComponent assertBannerText(String text) {
+        assertBannerVisible();
+
+        final TextView textView = (TextView) getHomeBannerView().findViewById(R.id.text);
+        assertEquals("The correct HomeBanner text is shown",
+                     text, textView.getText().toString());
+        return this;
+    }
+
+    public AboutHomeComponent clickOnBanner() {
+        assertBannerVisible();
+
+        mTestContext.dumpLog(LOGTAG, "Clicking on HomeBanner.");
+        mSolo.clickOnView(getHomeBannerView());
         return this;
     }
 
