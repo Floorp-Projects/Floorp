@@ -286,6 +286,12 @@ nsPrincipal::EqualsIgnoringDomain(nsIPrincipal *aOther, bool *aResult)
 }
 
 NS_IMETHODIMP
+nsPrincipal::EqualsConsideringDomain(nsIPrincipal *aOther, bool *aResult)
+{
+  return Equals(aOther, aResult);
+}
+
+NS_IMETHODIMP
 nsPrincipal::Subsumes(nsIPrincipal *aOther, bool *aResult)
 {
   return Equals(aOther, aResult);
@@ -295,6 +301,12 @@ NS_IMETHODIMP
 nsPrincipal::SubsumesIgnoringDomain(nsIPrincipal *aOther, bool *aResult)
 {
   return EqualsIgnoringDomain(aOther, aResult);
+}
+
+NS_IMETHODIMP
+nsPrincipal::SubsumesConsideringDomain(nsIPrincipal *aOther, bool *aResult)
+{
+  return Subsumes(aOther, aResult);
 }
 
 NS_IMETHODIMP
@@ -674,6 +686,12 @@ nsExpandedPrincipal::EqualsIgnoringDomain(nsIPrincipal* aOther, bool* aResult)
   return ::Equals(this, &nsIPrincipal::SubsumesIgnoringDomain, aOther, aResult);
 }
 
+NS_IMETHODIMP
+nsExpandedPrincipal::EqualsConsideringDomain(nsIPrincipal* aOther, bool* aResult)
+{
+  return ::Equals(this, &nsIPrincipal::SubsumesConsideringDomain, aOther, aResult);
+}
+
 // nsExpandedPrincipal::Subsumes and nsExpandedPrincipal::SubsumesIgnoringDomain
 // shares the same logic. The difference only that Subsumes calls are replaced
 //with SubsumesIgnoringDomain calls in the second case.
@@ -724,6 +742,12 @@ NS_IMETHODIMP
 nsExpandedPrincipal::SubsumesIgnoringDomain(nsIPrincipal* aOther, bool* aResult)
 {
   return ::Subsumes(this, &nsIPrincipal::SubsumesIgnoringDomain, aOther, aResult);
+}
+
+NS_IMETHODIMP
+nsExpandedPrincipal::SubsumesConsideringDomain(nsIPrincipal* aOther, bool* aResult)
+{
+  return ::Subsumes(this, &nsIPrincipal::SubsumesConsideringDomain, aOther, aResult);
 }
 
 NS_IMETHODIMP
