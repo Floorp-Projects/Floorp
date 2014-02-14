@@ -291,11 +291,6 @@ XPCConvert::NativeData2JS(MutableHandleValue d, const void* s,
                 if (!cString || cString->IsVoid())
                     break;
 
-                if (cString->IsEmpty()) {
-                    d.set(JS_GetEmptyStringValue(cx));
-                    break;
-                }
-
                 // c-strings (binary blobs) are deliberately not converted from
                 // UTF-8 to UTF-16. T_UTF8Sting is for UTF-8 encoded strings
                 // with automatic conversion.
