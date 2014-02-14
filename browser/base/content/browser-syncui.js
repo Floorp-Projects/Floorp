@@ -104,14 +104,18 @@ let gSyncUI = {
     if (!gBrowser)
       return;
 
-    let button = document.getElementById("sync-button");
-    if (!button)
-      return;
+    let syncButton = document.getElementById("sync-button");
+    let panelHorizontalButton = document.getElementById("PanelUI-fxa-status");
+    [syncButton, panelHorizontalButton].forEach(function(button) {
+      if (!button)
+        return;
+      button.removeAttribute("status");
+    });
 
-    button.removeAttribute("status");
+    if (needsSetup && syncButton)
+      syncButton.removeAttribute("tooltiptext");
+
     this._updateLastSyncTime();
-    if (needsSetup)
-      button.removeAttribute("tooltiptext");
   },
 
 
@@ -120,11 +124,12 @@ let gSyncUI = {
     if (!gBrowser)
       return;
 
-    let button = document.getElementById("sync-button");
-    if (!button)
-      return;
-
-    button.setAttribute("status", "active");
+    ["sync-button", "PanelUI-fxa-status"].forEach(function(id) {
+      let button = document.getElementById(id);
+      if (!button)
+        return;
+      button.setAttribute("status", "active");
+    });
   },
 
   onSyncDelay: function SUI_onSyncDelay() {
@@ -158,6 +163,11 @@ let gSyncUI = {
 
     // if we haven't set up the client, don't show errors
     if (this._needsSetup()) {
+      this.updateUI();
+      return;
+    }
+    // if we are still waiting for the identity manager to initialize, don't show errors
+    if (Weave.Status.login == Weave.LOGIN_FAILED_NOT_READY) {
       this.updateUI();
       return;
     }
