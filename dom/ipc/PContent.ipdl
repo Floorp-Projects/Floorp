@@ -422,9 +422,14 @@ parent:
 
     CloseAlert(nsString name, Principal principal);
 
-    PExternalHelperApp(OptionalURIParams uri, nsCString aMimeContentType,
-                       nsCString aContentDisposition, bool aForceSave,
-                       int64_t aContentLength, OptionalURIParams aReferrer,
+    PExternalHelperApp(OptionalURIParams uri, 
+                       nsCString aMimeContentType,
+                       nsCString aContentDisposition, 
+                       uint32_t aContentDispositionHint, 
+                       nsString aContentDispositionFilename, 
+                       bool aForceSave,
+                       int64_t aContentLength,
+                       OptionalURIParams aReferrer,
                        nullable PBrowser aBrowser);
 
     AddGeolocationListener(Principal principal, bool highAccuracy);
