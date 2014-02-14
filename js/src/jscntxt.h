@@ -1087,69 +1087,6 @@ class AutoLockForExclusiveAccess
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
-class AutoLockForCompilation
-{
-#ifdef JS_THREADSAFE
-    JSRuntime *runtime;
-
-    void init(JSRuntime *rt) {
-        runtime = rt;
-        if (runtime->numCompilationThreads) {
-            runtime->assertCanLock(JSRuntime::CompilationLock);
-            PR_Lock(runtime->compilationLock);
-#ifdef DEBUG
-            runtime->compilationLockOwner = PR_GetCurrentThread();
-#endif
-        } else {
-#ifdef DEBUG
-            JS_ASSERT(!runtime->mainThreadHasCompilationLock);
-            runtime->mainThreadHasCompilationLock = true;
-#endif
-        }
-    }
-
-  public:
-    AutoLockForCompilation(ExclusiveContext *cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM) {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-        if (cx->isJSContext())
-            init(cx->asJSContext()->runtime());
-        else
-            runtime = nullptr;
-    }
-    AutoLockForCompilation(jit::CompileCompartment *compartment MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
-    ~AutoLockForCompilation() {
-        if (runtime) {
-            if (runtime->numCompilationThreads) {
-                JS_ASSERT(runtime->compilationLockOwner == PR_GetCurrentThread());
-#ifdef DEBUG
-                runtime->compilationLockOwner = nullptr;
-#endif
-                PR_Unlock(runtime->compilationLock);
-            } else {
-#ifdef DEBUG
-                JS_ASSERT(runtime->mainThreadHasCompilationLock);
-                runtime->mainThreadHasCompilationLock = false;
-#endif
-            }
-        }
-    }
-#else // JS_THREADSAFE
-  public:
-    AutoLockForCompilation(ExclusiveContext *cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM) {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-    AutoLockForCompilation(jit::CompileCompartment *compartment MOZ_GUARD_OBJECT_NOTIFIER_PARAM) {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-    ~AutoLockForCompilation() {
-        // An empty destructor is needed to avoid warnings from clang about
-        // unused local variables of this type.
-    }
-#endif // JS_THREADSAFE
-
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
-
 } /* namespace js */
 
 #ifdef _MSC_VER

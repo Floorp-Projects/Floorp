@@ -33,10 +33,6 @@ JitOptions::JitOptions()
     // RangeAnalysis results.
     checkRangeAnalysis = false;
 
-    // Whether to protect the GC heap during Ion compilation and ensure that
-    // only threadsafe operations are performed on it.
-    checkThreadSafety = false;
-
     // Whether Ion should compile try-catch statements.
     compileTryCatch = true;
 

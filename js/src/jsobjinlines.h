@@ -400,9 +400,6 @@ JSObject::clearType(JSContext *cx, js::HandleObject obj)
 inline void
 JSObject::setType(js::types::TypeObject *newType)
 {
-    // Note: This is usually called for newly created objects that haven't
-    // escaped to script yet, so don't require that the compilation lock be
-    // held here.
     JS_ASSERT(newType);
     JS_ASSERT(!hasSingletonType());
     type_ = newType;
@@ -978,11 +975,8 @@ DefineConstructorAndPrototype(JSContext *cx, Handle<GlobalObject*> global,
     JS_ASSERT(!global->nativeLookup(cx, id));
 
     /* Set these first in case AddTypePropertyId looks for this class. */
-    {
-        AutoLockForCompilation lock(cx);
-        global->setConstructor(key, ObjectValue(*ctor));
-        global->setPrototype(key, ObjectValue(*proto));
-    }
+    global->setConstructor(key, ObjectValue(*ctor));
+    global->setPrototype(key, ObjectValue(*proto));
     global->setConstructorPropertySlot(key, ObjectValue(*ctor));
 
     if (!global->addDataProperty(cx, id, GlobalObject::constructorPropertySlot(key), 0)) {
