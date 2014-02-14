@@ -134,6 +134,7 @@ gbjar.sources += [
     'favicons/Favicons.java',
     'favicons/LoadFaviconTask.java',
     'favicons/OnFaviconLoadedListener.java',
+    'FilePicker.java',
     'FilePickerResultHandler.java',
     'FindInPageBar.java',
     'FormAssistPopup.java',
