@@ -3143,7 +3143,7 @@ nsObjectLoadingContent::GetContentDocument()
   }
 
   // Return null for cross-origin contentDocument.
-  if (!nsContentUtils::GetSubjectPrincipal()->Subsumes(sub_doc->NodePrincipal())) {
+  if (!nsContentUtils::GetSubjectPrincipal()->SubsumesConsideringDomain(sub_doc->NodePrincipal())) {
     return nullptr;
   }
 
