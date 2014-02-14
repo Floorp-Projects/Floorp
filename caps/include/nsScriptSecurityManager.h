@@ -75,9 +75,6 @@ public:
     ReportError(JSContext* cx, const nsAString& messageTag,
                 nsIURI* aSource, nsIURI* aTarget);
 
-    static nsresult
-    CheckSameOriginPrincipal(nsIPrincipal* aSubject,
-                             nsIPrincipal* aObject);
     static uint32_t
     HashPrincipalByOrigin(nsIPrincipal* aPrincipal);
 

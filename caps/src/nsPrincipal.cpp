@@ -245,8 +245,31 @@ nsPrincipal::EqualsConsideringDomain(nsIPrincipal *aOther, bool *aResult)
     return NS_OK;
   }
 
-  *aResult = NS_SUCCEEDED(
-               nsScriptSecurityManager::CheckSameOriginPrincipal(this, aOther));
+  if (!nsScriptSecurityManager::AppAttributesEqual(this, aOther)) {
+      return NS_OK;
+  }
+
+  // If either the subject or the object has changed its principal by
+  // explicitly setting document.domain then the other must also have
+  // done so in order to be considered the same origin. This prevents
+  // DNS spoofing based on document.domain (154930)
+
+  nsCOMPtr<nsIURI> thisURI;
+  this->GetDomain(getter_AddRefs(thisURI));
+  bool thisSetDomain = !!thisURI;
+  if (!thisURI) {
+      this->GetURI(getter_AddRefs(thisURI));
+  }
+
+  nsCOMPtr<nsIURI> otherURI;
+  aOther->GetDomain(getter_AddRefs(otherURI));
+  bool otherSetDomain = !!otherURI;
+  if (!otherURI) {
+      aOther->GetURI(getter_AddRefs(otherURI));
+  }
+
+  *aResult = thisSetDomain == otherSetDomain &&
+             nsScriptSecurityManager::SecurityCompareURIs(thisURI, otherURI);
   return NS_OK;
 }
 
