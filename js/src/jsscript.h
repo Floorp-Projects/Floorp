@@ -25,6 +25,10 @@
 #include "jit/IonCode.h"
 #include "vm/Shape.h"
 
+namespace JS {
+struct ScriptSourceInfo;
+}
+
 namespace js {
 
 namespace jit {
@@ -482,7 +486,8 @@ class ScriptSource
     }
     const jschar *chars(JSContext *cx, const SourceDataCache::AutoSuppressPurge &asp);
     JSFlatString *substring(JSContext *cx, uint32_t start, uint32_t stop);
-    size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
+    void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
+                                JS::ScriptSourceInfo *info) const;
 
     // XDR handling
     template <XDRMode mode>
