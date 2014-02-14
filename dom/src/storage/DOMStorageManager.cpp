@@ -91,17 +91,7 @@ PrincipalsEqual(nsIPrincipal* aObjectPrincipal, nsIPrincipal* aSubjectPrincipal)
     return false;
   }
 
-  bool equals;
-  nsresult rv = aSubjectPrincipal->EqualsIgnoringDomain(aObjectPrincipal, &equals);
-
-  NS_ASSERTION(NS_SUCCEEDED(rv) && equals,
-               "Trying to get DOM storage for wrong principal!");
-
-  if (NS_FAILED(rv) || !equals) {
-    return false;
-  }
-
-  return true;
+  return aSubjectPrincipal->Equals(aObjectPrincipal);
 }
 
 NS_IMPL_ISUPPORTS1(DOMStorageManager,

@@ -7720,7 +7720,7 @@ PostMessageEvent::Run()
     //       don't do that in other places it seems better to hold the line for
     //       now.  Long-term, we want HTML5 to address this so that we can
     //       be compliant while being safer.
-    if (!targetPrin->EqualsIgnoringDomain(mProvidedPrincipal)) {
+    if (!targetPrin->Equals(mProvidedPrincipal)) {
       return NS_OK;
     }
   }

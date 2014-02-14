@@ -51,15 +51,6 @@ AccessCheck::subsumes(JSObject *a, JSObject *b)
     return subsumes(js::GetObjectCompartment(a), js::GetObjectCompartment(b));
 }
 
-// Same as above, but ignoring document.domain.
-bool
-AccessCheck::subsumesIgnoringDomain(JSCompartment *a, JSCompartment *b)
-{
-    nsIPrincipal *aprin = GetCompartmentPrincipal(a);
-    nsIPrincipal *bprin = GetCompartmentPrincipal(b);
-    return aprin->SubsumesIgnoringDomain(bprin);
-}
-
 // Same as above, but considering document.domain.
 bool
 AccessCheck::subsumesConsideringDomain(JSCompartment *a, JSCompartment *b)
