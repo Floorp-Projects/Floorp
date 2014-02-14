@@ -22,13 +22,6 @@
 #include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc
 
 namespace mozilla {
-
-namespace gfx {
-class SurfaceStream;
-class SharedSurface;
-class SurfaceFactory;
-}
-
 namespace layers {
 
 class CanvasClientWebGL;
@@ -60,8 +53,6 @@ protected:
   nsRefPtr<gfxASurface> mDeprecatedSurface;
   nsRefPtr<mozilla::gl::GLContext> mGLContext;
   mozilla::RefPtr<mozilla::gfx::DrawTarget> mDrawTarget;
-
-  gfx::SurfaceStream* mStream;
 
   uint32_t mCanvasFramebuffer;
 

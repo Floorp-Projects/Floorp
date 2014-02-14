@@ -962,16 +962,17 @@ public:
     return mPermitSubpixelAA;
   }
 
-#ifdef USE_SKIA_GPU
-  virtual void InitWithGrContext(GrContext* aGrContext,
-                                 const IntSize &aSize,
-                                 SurfaceFormat aFormat)
-  {
-    MOZ_CRASH();
+  virtual GenericRefCountedBase* GetGLContext() const {
+    return nullptr;
   }
 
-  virtual uint32_t GetTextureID() const {
-    return 0;
+#ifdef USE_SKIA_GPU
+  virtual void InitWithGLContextAndGrGLInterface(GenericRefCountedBase* aGLContext,
+                                            GrGLInterface* aGrGLInterface,
+                                            const IntSize &aSize,
+                                            SurfaceFormat aFormat)
+  {
+    MOZ_CRASH();
   }
 #endif
 
@@ -1074,9 +1075,13 @@ public:
 
 #ifdef USE_SKIA_GPU
   static TemporaryRef<DrawTarget>
-    CreateDrawTargetSkiaWithGrContext(GrContext* aGrContext,
-                                      const IntSize &aSize,
-                                      SurfaceFormat aFormat);
+    CreateDrawTargetSkiaWithGLContextAndGrGLInterface(GenericRefCountedBase* aGLContext,
+                                                      GrGLInterface* aGrGLInterface,
+                                                      const IntSize &aSize,
+                                                      SurfaceFormat aFormat);
+
+  static void
+    SetGlobalSkiaCacheLimits(int aCount, int aSizeInBytes);
 #endif
 
   static void PurgeAllCaches();
