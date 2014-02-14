@@ -55,4 +55,7 @@ public class SyncConstants {
   public static final String PER_ACCOUNT_TYPE_PERMISSION = "@MOZ_ANDROID_SHARED_ACCOUNT_TYPE@.permission.PER_ACCOUNT_TYPE";
 
   public static final String DEFAULT_AUTH_SERVER = "https://auth.services.mozilla.com/";
+
+  // Used for BackoffHandler storage for Sync 1.1's SyncAdapter.
+  public static final String BACKOFF_PREF_SUFFIX_11 = "sync";
 }

@@ -251,7 +251,6 @@ public class SyncConfiguration {
   public static final String PREF_USER_SELECTED_ENGINES_TO_SYNC = "userSelectedEngines";
   public static final String PREF_USER_SELECTED_ENGINES_TO_SYNC_TIMESTAMP = "userSelectedEnginesTimestamp";
 
-  public static final String PREF_EARLIEST_NEXT_SYNC = "earliestnextsync";
   public static final String PREF_CLUSTER_URL_IS_STALE = "clusterurlisstale";
 
   public static final String PREF_ACCOUNT_GUID = "account.guid";
