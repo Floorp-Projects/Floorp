@@ -59,7 +59,7 @@ gfx::SurfaceFormat
 UploadImageDataToTexture(GLContext* gl,
                          unsigned char* aData,
                          int32_t aStride,
-                         gfxImageFormat aFormat,
+                         gfx::SurfaceFormat aFormat,
                          const nsIntRegion& aDstRegion,
                          GLuint& aTexture,
                          bool aOverwrite = false,
