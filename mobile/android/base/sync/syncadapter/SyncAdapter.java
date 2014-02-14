@@ -14,9 +14,11 @@ import org.mozilla.gecko.background.common.GlobalConstants;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.sync.AlreadySyncingException;
+import org.mozilla.gecko.sync.BackoffHandler;
 import org.mozilla.gecko.sync.CredentialException;
 import org.mozilla.gecko.sync.GlobalSession;
 import org.mozilla.gecko.sync.NonObjectJSONException;
+import org.mozilla.gecko.sync.PrefsBackoffHandler;
 import org.mozilla.gecko.sync.SharedPreferencesClientsDataDelegate;
 import org.mozilla.gecko.sync.SharedPreferencesNodeAssignmentCallback;
 import org.mozilla.gecko.sync.Sync11Configuration;
@@ -48,7 +50,6 @@ import android.content.ContentProviderClient;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.content.SharedPreferences.Editor;
 import android.content.SyncResult;
 import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteException;
@@ -65,31 +66,11 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter implements BaseGlob
 
   protected long syncStartTimestamp;
 
+  protected volatile BackoffHandler backoffHandler;
+
   public SyncAdapter(Context context, boolean autoInitialize) {
     super(context, autoInitialize);
     mContext = context;
-  }
-
-  /**
-   * Backoff.
-   */
-  public synchronized long getEarliestNextSync() {
-    return accountSharedPreferences.getLong(SyncConfiguration.PREF_EARLIEST_NEXT_SYNC, 0);
-  }
-
-  public synchronized void setEarliestNextSync(long next) {
-    Editor edit = accountSharedPreferences.edit();
-    edit.putLong(SyncConfiguration.PREF_EARLIEST_NEXT_SYNC, next);
-    edit.commit();
-  }
-
-  public synchronized void extendEarliestNextSync(long next) {
-    if (accountSharedPreferences.getLong(SyncConfiguration.PREF_EARLIEST_NEXT_SYNC, 0) >= next) {
-      return;
-    }
-    Editor edit = accountSharedPreferences.edit();
-    edit.putLong(SyncConfiguration.PREF_EARLIEST_NEXT_SYNC, next);
-    edit.commit();
   }
 
   /**
@@ -202,20 +183,27 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter implements BaseGlob
   protected SharedPreferencesNodeAssignmentCallback nodeAssignmentDelegate;
 
   /**
-   * Return the number of milliseconds until we're allowed to sync again,
-   * or 0 if now is fine.
+   * Request that no sync start right away.  A new sync won't start until
+   * at least <code>backoff</code> milliseconds from now.
+   *
+   * Don't call this unless you are inside `run`.
+   *
+   * @param backoff time to wait in milliseconds.
    */
-  public long delayMilliseconds() {
-    long earliestNextSync = getEarliestNextSync();
-    if (earliestNextSync <= 0) {
-      return 0;
+  @Override
+  public void requestBackoff(final long backoff) {
+    if (this.backoffHandler == null) {
+      throw new IllegalStateException("No backoff handler: requesting backoff outside run()?");
     }
-    long now = System.currentTimeMillis();
-    return Math.max(0, earliestNextSync - now);
+    if (backoff > 0) {
+      // Fuzz the backoff time (up to 25% more) to prevent client lock-stepping; agrees with desktop.
+      final long fuzzedBackoff = backoff + Math.round((double) backoff * 0.25d * Math.random());
+      this.backoffHandler.extendEarliestNextRequest(System.currentTimeMillis() + fuzzedBackoff);
+    }
   }
 
   @Override
-  public boolean shouldBackOff() {
+  public boolean shouldBackOffStorage() {
     if (thisSyncIsForced) {
       /*
        * If the user asks us to sync, we should sync regardless. This path is
@@ -236,22 +224,10 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter implements BaseGlob
       return false;
     }
 
-    return delayMilliseconds() > 0;
-  }
-
-  /**
-   * Request that no sync start right away.  A new sync won't start until
-   * at least <code>backoff</code> milliseconds from now.
-   *
-   * @param backoff time to wait in milliseconds.
-   */
-  @Override
-  public void requestBackoff(final long backoff) {
-    if (backoff > 0) {
-      // Fuzz the backoff time (up to 25% more) to prevent client lock-stepping; agrees with desktop.
-      final long fuzzedBackoff = backoff + Math.round((double) backoff * 0.25d * Math.random());
-      this.extendEarliestNextSync(System.currentTimeMillis() + fuzzedBackoff);
+    if (this.backoffHandler == null) {
+      throw new IllegalStateException("No backoff handler: checking backoff outside run()?");
     }
+    return this.backoffHandler.delayMilliseconds() > 0;
   }
 
   /**
@@ -365,6 +341,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter implements BaseGlob
           final long version = SyncConfiguration.CURRENT_PREFS_VERSION;
           self.accountSharedPreferences = Utils.getSharedPreferences(mContext, product, username, serverURL, profile, version);
           self.clientsDataDelegate = new SharedPreferencesClientsDataDelegate(accountSharedPreferences);
+          self.backoffHandler = new PrefsBackoffHandler(accountSharedPreferences, SyncConstants.BACKOFF_PREF_SUFFIX_11);
           final String nodeWeaveURL = Utils.nodeWeaveURL(serverURL, username);
           self.nodeAssignmentDelegate = new SharedPreferencesNodeAssignmentCallback(accountSharedPreferences, nodeWeaveURL);
 
@@ -373,19 +350,15 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter implements BaseGlob
               ", has client guid " + clientsDataDelegate.getAccountGUID() +
               ", and has " + clientsDataDelegate.getClientsCount() + " clients.");
 
-          thisSyncIsForced = (extras != null) && (extras.getBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, false));
-          long delay = delayMilliseconds();
-          if (delay > 0) {
-            if (thisSyncIsForced) {
-              Logger.info(LOG_TAG, "Forced sync: overruling remaining backoff of " + delay + "ms.");
-            } else {
-              Logger.info(LOG_TAG, "Not syncing: must wait another " + delay + "ms.");
-              long remainingSeconds = delay / 1000;
-              syncResult.delayUntil = remainingSeconds + BACKOFF_PAD_SECONDS;
-              setNextSync.set(false);
-              self.notifyMonitor();
-              return;
-            }
+          final boolean thisSyncIsForced = (extras != null) && (extras.getBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, false));
+          final long delayMillis = backoffHandler.delayMilliseconds();
+          boolean shouldSync = thisSyncIsForced || (delayMillis <= 0L);
+          if (!shouldSync) {
+            long remainingSeconds = delayMillis / 1000;
+            syncResult.delayUntil = remainingSeconds + BACKOFF_PAD_SECONDS;
+            setNextSync.set(false);
+            self.notifyMonitor();
+            return;
           }
 
           final String prefsPath = Utils.getPrefsPath(product, username, serverURL, profile, version);
@@ -418,10 +391,10 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter implements BaseGlob
 
           if (thisSyncIsForced) {
             Logger.info(LOG_TAG, "Setting minimum next sync time to " + next + " (" + interval + "ms from now).");
-            setEarliestNextSync(next);
+            self.backoffHandler.setEarliestNextRequest(next);
           } else {
             Logger.info(LOG_TAG, "Extending minimum next sync time to " + next + " (" + interval + "ms from now).");
-            extendEarliestNextSync(next);
+            self.backoffHandler.extendEarliestNextRequest(next);
           }
         }
         Logger.info(LOG_TAG, "Sync took " + Utils.formatDuration(syncStartTimestamp, System.currentTimeMillis()) + ".");

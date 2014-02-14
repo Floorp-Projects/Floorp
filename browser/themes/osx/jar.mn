@@ -385,12 +385,16 @@ browser.jar:
   skin/classic/browser/sync-bg.png
   skin/classic/browser/sync-128.png
   skin/classic/browser/sync-desktopIcon.png
+  skin/classic/browser/sync-horizontalbar.png
+  skin/classic/browser/sync-horizontalbar@2x.png
   skin/classic/browser/sync-mobileIcon.png
   skin/classic/browser/sync-notification-24.png
   skin/classic/browser/syncSetup.css
   skin/classic/browser/syncCommon.css
   skin/classic/browser/syncQuota.css
   skin/classic/browser/syncProgress.css
+  skin/classic/browser/syncProgress-horizontalbar.png
+  skin/classic/browser/syncProgress-horizontalbar@2x.png
 #endif
   skin/classic/browser/lion/keyhole-circle.png              (keyhole-circle-lion.png)
   skin/classic/browser/keyhole-circle@2x.png                (keyhole-circle-lion@2x.png)
