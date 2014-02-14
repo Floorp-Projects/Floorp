@@ -340,6 +340,10 @@ partial interface Navigator {
   [Throws, ChromeOnly]
   void mozGetUserMediaDevices(MediaStreamConstraintsInternal constraints,
                               MozGetUserMediaDevicesSuccessCallback onsuccess,
-                              NavigatorUserMediaErrorCallback onerror);
+                              NavigatorUserMediaErrorCallback onerror,
+                              // The originating innerWindowID is needed to
+                              // avoid calling the callbacks if the window has
+                              // navigated away. It is optional only as legacy.
+                              optional unsigned long long innerWindowID = 0);
 };
 #endif // MOZ_MEDIA_NAVIGATOR
