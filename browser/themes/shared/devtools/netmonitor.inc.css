@@ -458,6 +458,17 @@ box.requests-menu-status {
   margin-bottom: 10px;
 }
 
+/* Preview tabpanel */
+
+#preview-tabpanel {
+  background: #fff;
+}
+
+#response-preview {
+  display: -moz-box;
+  -moz-box-flex: 1;
+}
+
 /* Timings tabpanel */
 
 #timings-tabpanel .tabpanel-summary-label {

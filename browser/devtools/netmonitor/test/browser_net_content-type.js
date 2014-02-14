@@ -6,7 +6,7 @@
  */
 
 function test() {
-  initNetMonitor(CONTENT_TYPE_URL).then(([aTab, aDebuggee, aMonitor]) => {
+  initNetMonitor(CONTENT_TYPE_WITHOUT_CACHE_URL).then(([aTab, aDebuggee, aMonitor]) => {
     info("Starting test... ");
 
     let { document, L10N, Editor, NetMonitorView } = aMonitor.panelWin;
@@ -62,6 +62,7 @@ function test() {
         });
       verifyRequestItemTarget(RequestsMenu.getItemAtIndex(5),
         "GET", TEST_IMAGE, {
+          fuzzyUrl: true,
           status: 200,
           statusText: "OK",
           type: "png",

@@ -13,7 +13,8 @@
   %netmonitorDTD;
 ]>
 
-<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml">
 
   <script type="application/javascript;version=1.8"
           src="chrome://browser/content/devtools/theme-switching.js"/>
@@ -238,14 +239,21 @@
                   class="devtools-sidebar-tabs"
                   handleCtrlTab="false">
             <tabs>
-              <tab label="&netmonitorUI.tab.headers;"/>
-              <tab label="&netmonitorUI.tab.cookies;"/>
-              <tab label="&netmonitorUI.tab.params;"/>
-              <tab label="&netmonitorUI.tab.response;"/>
-              <tab label="&netmonitorUI.tab.timings;"/>
+              <tab id="headers-tab"
+                   label="&netmonitorUI.tab.headers;"/>
+              <tab id="cookies-tab"
+                   label="&netmonitorUI.tab.cookies;"/>
+              <tab id="params-tab"
+                   label="&netmonitorUI.tab.params;"/>
+              <tab id="response-tab"
+                   label="&netmonitorUI.tab.response;"/>
+              <tab id="timings-tab"
+                   label="&netmonitorUI.tab.timings;"/>
+              <tab id="preview-tab"
+                   label="&netmonitorUI.tab.preview;"/>
             </tabs>
             <tabpanels flex="1">
-              <tabpanel id="headers-tabppanel"
+              <tabpanel id="headers-tabpanel"
                         class="tabpanel-content">
                 <vbox flex="1">
                   <hbox id="headers-summary-url"
@@ -412,6 +420,12 @@
                     <label class="plain requests-menu-timings-total"/>
                   </hbox>
                 </vbox>
+              </tabpanel>
+              <tabpanel id="preview-tabpanel"
+                        class="tabpanel-content">
+                <html:iframe id="response-preview"
+                             frameborder="0"
+                             sandbox=""/>
               </tabpanel>
             </tabpanels>
           </tabbox>

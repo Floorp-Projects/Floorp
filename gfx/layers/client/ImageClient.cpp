@@ -125,7 +125,16 @@ bool
 ImageClientSingle::UpdateImage(ImageContainer* aContainer,
                                uint32_t aContentFlags)
 {
+  bool isSwapped = false;
+  return UpdateImageInternal(aContainer, aContentFlags, &isSwapped);
+}
+
+bool
+ImageClientSingle::UpdateImageInternal(ImageContainer* aContainer,
+                                       uint32_t aContentFlags, bool* aIsSwapped)
+{
   AutoLockImage autoLock(aContainer);
+  *aIsSwapped = false;
 
   Image *image = autoLock.GetImage();
   if (!image) {
@@ -270,6 +279,7 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer,
 
   mLastPaintedImageSerial = image->GetSerial();
   aContainer->NotifyPaintedImage(image);
+  *aIsSwapped = true;
   return true;
 }
 
@@ -280,7 +290,17 @@ ImageClientBuffered::UpdateImage(ImageContainer* aContainer,
   RefPtr<TextureClient> temp = mFrontBuffer;
   mFrontBuffer = mBackBuffer;
   mBackBuffer = temp;
-  return ImageClientSingle::UpdateImage(aContainer, aContentFlags);
+
+  bool isSwapped = false;
+  bool ret = ImageClientSingle::UpdateImageInternal(aContainer, aContentFlags, &isSwapped);
+
+  if (!isSwapped) {
+    // If buffer swap did not happen at Host side, swap back the buffers.
+    RefPtr<TextureClient> temp = mFrontBuffer;
+    mFrontBuffer = mBackBuffer;
+    mBackBuffer = temp;
+  }
+  return ret;
 }
 
 bool
