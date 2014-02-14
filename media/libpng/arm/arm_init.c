@@ -90,7 +90,7 @@ safe_read(png_structp png_ptr, int fd, void *buffer_in, size_t nbytes)
          if (errno != EINTR)
          {
             png_warning(png_ptr, "/proc read failed");
-            return 0; /* I.e. a permanent failure */
+            return 0; /* I.e., a permanent failure */
          }
       }
 
