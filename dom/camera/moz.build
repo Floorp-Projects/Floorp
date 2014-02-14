@@ -4,8 +4,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+XPIDL_SOURCES += [
+    'nsIDOMCameraManager.idl',
+]
+
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     TEST_DIRS += ['test']
+
+XPIDL_MODULE = 'dom_camera'
 
 EXPORTS += [
     'CameraCommon.h',
@@ -20,8 +26,8 @@ SOURCES += [
     'CameraRecorderProfiles.cpp',
     'DOMCameraCapabilities.cpp',
     'DOMCameraControl.cpp',
-    'DOMCameraControlListener.cpp',
     'DOMCameraManager.cpp',
+    'DOMCameraPreview.cpp',
 ]
 
 if CONFIG['MOZ_B2G_CAMERA']:
@@ -29,7 +35,6 @@ if CONFIG['MOZ_B2G_CAMERA']:
         'GonkCameraControl.cpp',
         'GonkCameraHwMgr.cpp',
         'GonkCameraManager.cpp',
-        'GonkCameraParameters.cpp',
         'GonkCameraSource.cpp',
         'GonkRecorder.cpp',
         'GonkRecorderProfiles.cpp',
