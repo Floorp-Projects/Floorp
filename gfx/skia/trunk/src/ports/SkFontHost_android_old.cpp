@@ -359,17 +359,10 @@ static bool get_name_and_style(const char path[], SkString* name,
     SkString        fullpath;
     GetFullPathForSysFonts(&fullpath, path);
 
-    SkFILEStream stream(fullpath.c_str());
-    if (stream.getLength() > 0) {
-        find_name_and_attributes(&stream, name, style, isFixedWidth);
+    SkAutoTUnref<SkStream> stream(SkStream::NewFromFile(fullpath.c_str()));
+    if (stream.get()) {
+        find_name_and_attributes(stream, name, style, isFixedWidth);
         return true;
-    }
-    else {
-        SkFILEStream stream(fullpath.c_str());
-        if (stream.getLength() > 0) {
-            find_name_and_attributes(&stream, name, style, isFixedWidth);
-            return true;
-        }
     }
 
     if (isExpected) {
@@ -549,7 +542,8 @@ SkTypeface* SkFontHost::CreateTypeface(const SkTypeface* familyFace,
     return tf;
 }
 
-SkTypeface* SkAndroidNextLogicalFont(SkFontID currFontID, SkFontID origFontID) {
+SkTypeface* SkAndroidNextLogicalTypeface(SkFontID currFontID, SkFontID origFontID,
+                                         const SkPaintOptionsAndroid& options) {
     load_system_fonts();
 
     /*  First see if fontID is already one of our fallbacks. If so, return
@@ -591,14 +585,5 @@ SkTypeface* SkFontHost::CreateTypefaceFromFile(const char path[]) {
     // since we created the stream, we let go of our ref() here
     stream->unref();
     return face;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
-#include "SkFontMgr.h"
-
-SkFontMgr* SkFontMgr::Factory() {
-    // todo
-    return NULL;
 }
 
