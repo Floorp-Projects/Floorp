@@ -140,6 +140,12 @@ nsNullPrincipal::EqualsIgnoringDomain(nsIPrincipal *aOther, bool *aResult)
 }
 
 NS_IMETHODIMP
+nsNullPrincipal::EqualsConsideringDomain(nsIPrincipal *aOther, bool *aResult)
+{
+  return Equals(aOther, aResult);
+}
+
+NS_IMETHODIMP
 nsNullPrincipal::GetHashValue(uint32_t *aResult)
 {
   *aResult = (NS_PTR_TO_INT32(this) >> 2);
@@ -212,6 +218,12 @@ nsNullPrincipal::Subsumes(nsIPrincipal *aOther, bool *aResult)
 
 NS_IMETHODIMP
 nsNullPrincipal::SubsumesIgnoringDomain(nsIPrincipal *aOther, bool *aResult)
+{
+  return Subsumes(aOther, aResult);
+}
+
+NS_IMETHODIMP
+nsNullPrincipal::SubsumesConsideringDomain(nsIPrincipal *aOther, bool *aResult)
 {
   return Subsumes(aOther, aResult);
 }

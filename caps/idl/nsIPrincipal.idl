@@ -20,7 +20,7 @@ interface nsIContentSecurityPolicy;
 [ptr] native JSPrincipals(JSPrincipals);
 [ptr] native PrincipalArray(nsTArray<nsCOMPtr<nsIPrincipal> >);
 
-[scriptable, builtinclass, uuid(f09d8a53-a6c8-4f68-b329-9a76a709d24e)]
+[scriptable, builtinclass, uuid(0416bfa5-c94b-485c-81a7-e48305c60289)]
 interface nsIPrincipal : nsISerializable
 {
     /**
@@ -35,6 +35,11 @@ interface nsIPrincipal : nsISerializable
      */
     boolean equalsIgnoringDomain(in nsIPrincipal other);
 
+    /**
+     * An alias for equals() (for now).
+     */
+    boolean equalsConsideringDomain(in nsIPrincipal other);
+
     %{C++
     inline bool Equals(nsIPrincipal* aOther) {
       bool equal = false;
@@ -44,6 +49,11 @@ interface nsIPrincipal : nsISerializable
     inline bool EqualsIgnoringDomain(nsIPrincipal* aOther) {
       bool equal = false;
       return NS_SUCCEEDED(EqualsIgnoringDomain(aOther, &equal)) && equal;
+    }
+
+    inline bool EqualsConsideringDomain(nsIPrincipal* aOther) {
+      bool equal = false;
+      return NS_SUCCEEDED(EqualsConsideringDomain(aOther, &equal)) && equal;
     }
     %}
 
@@ -96,6 +106,11 @@ interface nsIPrincipal : nsISerializable
      */
     boolean subsumesIgnoringDomain(in nsIPrincipal other);
 
+    /**
+     * An alias for subsumes() (for now);
+     */
+    boolean subsumesConsideringDomain(in nsIPrincipal other);
+
     %{C++
     inline bool Subsumes(nsIPrincipal* aOther) {
       bool subsumes = false;
@@ -105,6 +120,11 @@ interface nsIPrincipal : nsISerializable
     inline bool SubsumesIgnoringDomain(nsIPrincipal* aOther) {
       bool subsumes = false;
       return NS_SUCCEEDED(SubsumesIgnoringDomain(aOther, &subsumes)) && subsumes;
+    }
+
+    inline bool SubsumesConsideringDomain(nsIPrincipal* aOther) {
+      bool subsumes = false;
+      return NS_SUCCEEDED(SubsumesConsideringDomain(aOther, &subsumes)) && subsumes;
     }
     %}
 
