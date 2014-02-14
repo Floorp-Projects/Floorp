@@ -3280,6 +3280,10 @@
     "extended_statistics_ok": true,
     "description": "Number of sites blocked from the new tab page."
   },
+  "NEWTAB_PAGE_SHOWN": {
+    "kind": "boolean",
+    "description": "Number of times about:newtab was shown from opening a new tab or window."
+  },
   "PANORAMA_INITIALIZATION_TIME_MS": {
     "kind": "exponential",
     "high": "10000",
