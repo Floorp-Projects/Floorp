@@ -19,6 +19,9 @@ DEFINES['OPUS_BUILD'] = True
 DEFINES['OPUS_VERSION'] = '"v1.1-mozilla"'
 DEFINES['USE_ALLOCA'] = True
 
+if CONFIG['MOZ_DEBUG']:
+    DEFINES['ENABLE_ASSERTIONS'] = True
+
 if CONFIG['OS_ARCH'] in ('Linux', 'Darwin', 'DragonFly', 'FreeBSD',
                          'NetBSD', 'OpenBSD'):
     DEFINES['HAVE_LRINTF'] = True
