@@ -175,7 +175,10 @@ class FileCopier(FileRegistry):
     FileRegistry with the ability to copy the registered files to a separate
     directory.
     '''
-    def copy(self, destination, skip_if_older=True, remove_unaccounted=True, remove_empty_directories=True):
+    def copy(self, destination, skip_if_older=True,
+             remove_unaccounted=True,
+             remove_all_directory_symlinks=True,
+             remove_empty_directories=True):
         '''
         Copy all registered files to the given destination path. The given
         destination can be an existing directory, or not exist at all. It
@@ -183,10 +186,24 @@ class FileCopier(FileRegistry):
         The copy process acts a bit like rsync: files are not copied when they
         don't need to (see mozpack.files for details on file.copy).
 
-        By default, files in the destination directory that aren't registered
-        are removed and empty directories are deleted. To disable removing of
-        unregistered files, pass remove_unaccounted=False. To disable removing
-        empty directories, pass remove_empty_directories=False.
+        By default, files in the destination directory that aren't
+        registered are removed and empty directories are deleted. In
+        addition, all directory symlinks in the destination directory
+        are deleted: this is a conservative approach to ensure that we
+        never accidently write files into a directory that is not the
+        destination directory. In the worst case, we might have a
+        directory symlink in the object directory to the source
+        directory.
+
+        To disable removing of unregistered files, pass
+        remove_unaccounted=False. To disable removing empty
+        directories, pass remove_empty_directories=False. In rare
+        cases, you might want to maintain directory symlinks in the
+        destination directory (at least those that are not required to
+        be regular directories): pass
+        remove_all_directory_symlinks=False. Exercise caution with
+        this flag: you almost certainly do not want to preserve
+        directory symlinks.
 
         Returns a FileCopyResult that details what changed.
         '''
@@ -275,9 +292,14 @@ class FileCopier(FileRegistry):
                     full = os.path.join(root, d)
                     st = os.lstat(full)
                     if stat.S_ISLNK(st.st_mode):
-                        os.remove(full)
-                        # We don't need to recreate it because the code above
-                        # would have created it as necessary.
+                        # This directory symlink is not a required
+                        # directory: any such symlink would have been
+                        # removed and a directory created above.
+                        if remove_all_directory_symlinks:
+                            os.remove(full)
+                            result.removed_files.add(os.path.normpath(full))
+                        else:
+                            existing_files.add(os.path.normpath(full))
                     else:
                         filtered.append(d)
 

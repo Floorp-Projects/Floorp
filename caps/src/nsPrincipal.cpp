@@ -231,7 +231,7 @@ nsPrincipal::GetOrigin(char **aOrigin)
 }
 
 NS_IMETHODIMP
-nsPrincipal::Equals(nsIPrincipal *aOther, bool *aResult)
+nsPrincipal::EqualsConsideringDomain(nsIPrincipal *aOther, bool *aResult)
 {
   *aResult = false;
 
@@ -245,14 +245,36 @@ nsPrincipal::Equals(nsIPrincipal *aOther, bool *aResult)
     return NS_OK;
   }
 
-  // Codebases are equal if they have the same origin.
-  *aResult = NS_SUCCEEDED(
-               nsScriptSecurityManager::CheckSameOriginPrincipal(this, aOther));
+  if (!nsScriptSecurityManager::AppAttributesEqual(this, aOther)) {
+      return NS_OK;
+  }
+
+  // If either the subject or the object has changed its principal by
+  // explicitly setting document.domain then the other must also have
+  // done so in order to be considered the same origin. This prevents
+  // DNS spoofing based on document.domain (154930)
+
+  nsCOMPtr<nsIURI> thisURI;
+  this->GetDomain(getter_AddRefs(thisURI));
+  bool thisSetDomain = !!thisURI;
+  if (!thisURI) {
+      this->GetURI(getter_AddRefs(thisURI));
+  }
+
+  nsCOMPtr<nsIURI> otherURI;
+  aOther->GetDomain(getter_AddRefs(otherURI));
+  bool otherSetDomain = !!otherURI;
+  if (!otherURI) {
+      aOther->GetURI(getter_AddRefs(otherURI));
+  }
+
+  *aResult = thisSetDomain == otherSetDomain &&
+             nsScriptSecurityManager::SecurityCompareURIs(thisURI, otherURI);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPrincipal::EqualsIgnoringDomain(nsIPrincipal *aOther, bool *aResult)
+nsPrincipal::Equals(nsIPrincipal *aOther, bool *aResult)
 {
   *aResult = false;
 
@@ -292,9 +314,9 @@ nsPrincipal::Subsumes(nsIPrincipal *aOther, bool *aResult)
 }
 
 NS_IMETHODIMP
-nsPrincipal::SubsumesIgnoringDomain(nsIPrincipal *aOther, bool *aResult)
+nsPrincipal::SubsumesConsideringDomain(nsIPrincipal *aOther, bool *aResult)
 {
-  return EqualsIgnoringDomain(aOther, aResult);
+  return EqualsConsideringDomain(aOther, aResult);
 }
 
 NS_IMETHODIMP
@@ -639,15 +661,15 @@ typedef nsresult (NS_STDCALL nsIPrincipal::*nsIPrincipalMemFn)(nsIPrincipal* aOt
                                                                bool* aResult);
 #define CALL_MEMBER_FUNCTION(THIS,MEM_FN)  ((THIS)->*(MEM_FN))
 
-// nsExpandedPrincipal::Equals and nsExpandedPrincipal::EqualsIgnoringDomain
+// nsExpandedPrincipal::Equals and nsExpandedPrincipal::EqualsConsideringDomain
 // shares the same logic. The difference only that Equals requires 'this'
-// and 'aOther' to Subsume each other while EqualsIgnoringDomain requires
-// bidirectional SubsumesIgnoringDomain.
+// and 'aOther' to Subsume each other while EqualsConsideringDomain requires
+// bidirectional SubsumesConsideringDomain.
 static nsresult
 Equals(nsExpandedPrincipal* aThis, nsIPrincipalMemFn aFn, nsIPrincipal* aOther,
        bool* aResult)
 {
-  // If (and only if) 'aThis' and 'aOther' both Subsume/SubsumesIgnoringDomain
+  // If (and only if) 'aThis' and 'aOther' both Subsume/SubsumesConsideringDomain
   // each other, then they are Equal.
   *aResult = false;
   // Calling the corresponding subsume function on this (aFn).
@@ -669,14 +691,14 @@ nsExpandedPrincipal::Equals(nsIPrincipal* aOther, bool* aResult)
 }
 
 NS_IMETHODIMP
-nsExpandedPrincipal::EqualsIgnoringDomain(nsIPrincipal* aOther, bool* aResult)
+nsExpandedPrincipal::EqualsConsideringDomain(nsIPrincipal* aOther, bool* aResult)
 {
-  return ::Equals(this, &nsIPrincipal::SubsumesIgnoringDomain, aOther, aResult);
+  return ::Equals(this, &nsIPrincipal::SubsumesConsideringDomain, aOther, aResult);
 }
 
-// nsExpandedPrincipal::Subsumes and nsExpandedPrincipal::SubsumesIgnoringDomain
+// nsExpandedPrincipal::Subsumes and nsExpandedPrincipal::SubsumesConsideringDomain
 // shares the same logic. The difference only that Subsumes calls are replaced
-//with SubsumesIgnoringDomain calls in the second case.
+//with SubsumesConsideringDomain calls in the second case.
 static nsresult
 Subsumes(nsExpandedPrincipal* aThis, nsIPrincipalMemFn aFn, nsIPrincipal* aOther,
          bool* aResult)
@@ -721,9 +743,9 @@ nsExpandedPrincipal::Subsumes(nsIPrincipal* aOther, bool* aResult)
 }
 
 NS_IMETHODIMP
-nsExpandedPrincipal::SubsumesIgnoringDomain(nsIPrincipal* aOther, bool* aResult)
+nsExpandedPrincipal::SubsumesConsideringDomain(nsIPrincipal* aOther, bool* aResult)
 {
-  return ::Subsumes(this, &nsIPrincipal::SubsumesIgnoringDomain, aOther, aResult);
+  return ::Subsumes(this, &nsIPrincipal::SubsumesConsideringDomain, aOther, aResult);
 }
 
 NS_IMETHODIMP

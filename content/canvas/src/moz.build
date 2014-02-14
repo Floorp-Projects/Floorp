@@ -52,6 +52,7 @@ if CONFIG['MOZ_WEBGL']:
         'WebGLExtensionDepthTexture.cpp',
         'WebGLExtensionDrawBuffers.cpp',
         'WebGLExtensionElementIndexUint.cpp',
+        'WebGLExtensionFragDepth.cpp',
         'WebGLExtensionInstancedArrays.cpp',
         'WebGLExtensionLoseContext.cpp',
         'WebGLExtensionSRGB.cpp',

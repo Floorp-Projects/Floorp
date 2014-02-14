@@ -48,6 +48,7 @@ nsresult AppendAppNotesToCrashReport(const nsACString& data);
 
 void AnnotateOOMAllocationSize(size_t size);
 nsresult SetGarbageCollecting(bool collecting);
+void SetEventloopNestingLevel(uint32_t level);
 
 nsresult SetRestartArgs(int argc, char** argv);
 nsresult SetupExtraData(nsIFile* aAppDataDirectory,

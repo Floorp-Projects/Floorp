@@ -144,6 +144,8 @@ public:
             const OptionalURIParams& uri,
             const nsCString& aMimeContentType,
             const nsCString& aContentDisposition,
+            const uint32_t& aContentDispositionHint,
+            const nsString& aContentDispositionFilename,
             const bool& aForceSave,
             const int64_t& aContentLength,
             const OptionalURIParams& aReferrer,
