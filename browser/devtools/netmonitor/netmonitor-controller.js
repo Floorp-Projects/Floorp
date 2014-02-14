@@ -108,6 +108,7 @@ const require = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devt
 const promise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
 const EventEmitter = require("devtools/shared/event-emitter");
 const Editor = require("devtools/sourceeditor/editor");
+const {Tooltip} = require("devtools/shared/widgets/Tooltip");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Chart",
   "resource:///modules/devtools/Chart.jsm");
