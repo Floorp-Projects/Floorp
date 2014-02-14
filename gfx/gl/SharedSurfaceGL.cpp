@@ -284,6 +284,7 @@ SharedSurface_Basic::SharedSurface_Basic(GLContext* gl,
                        size,
                        hasAlpha)
     , mTex(tex)
+    , mFB(gl, tex)
 {
     mData = Factory::CreateDataSourceSurfaceWithStride(size, format,
               GetAlignedStride<4>(size.width * BytesPerPixel(format)));
@@ -300,9 +301,9 @@ SharedSurface_Basic::~SharedSurface_Basic()
 void
 SharedSurface_Basic::Fence()
 {
-    MOZ_ASSERT(mData->GetSize() == mGL->OffscreenSize());
-
     mGL->MakeCurrent();
+
+    ScopedBindFramebuffer autoFB(mGL, mFB.FB());
 
     DataSourceSurface::MappedSurface map;
     mData->Map(DataSourceSurface::MapType::WRITE, &map);
@@ -311,7 +312,7 @@ SharedSurface_Basic::Fence()
                           ThebesIntSize(mData->GetSize()),
                           map.mStride,
                           SurfaceFormatToImageFormat(mData->GetFormat()));
-    ReadScreenIntoImageSurface(mGL, wrappedData);
+    ReadPixelsIntoImageSurface(mGL, wrappedData);
     mData->Unmap();
 }
 
@@ -322,15 +323,24 @@ SharedSurface_GLTexture::Create(GLContext* prodGL,
                                 GLContext* consGL,
                                 const GLFormats& formats,
                                 const gfx::IntSize& size,
-                                bool hasAlpha)
+                                bool hasAlpha,
+                                GLuint texture)
 {
     MOZ_ASSERT(prodGL);
     MOZ_ASSERT(!consGL || prodGL->SharesWith(consGL));
 
     prodGL->MakeCurrent();
-    GLuint tex = CreateTextureForOffscreen(prodGL, formats, size);
 
-    return new SharedSurface_GLTexture(prodGL, consGL, size, hasAlpha, tex);
+    GLuint tex = texture;
+
+    bool ownsTex = false;
+
+    if (!tex) {
+      tex = CreateTextureForOffscreen(prodGL, formats, size);
+      ownsTex = true;
+    }
+
+    return new SharedSurface_GLTexture(prodGL, consGL, size, hasAlpha, tex, ownsTex);
 }
 
 SharedSurface_GLTexture::~SharedSurface_GLTexture()
@@ -338,7 +348,10 @@ SharedSurface_GLTexture::~SharedSurface_GLTexture()
     if (!mGL->MakeCurrent())
         return;
 
-    mGL->fDeleteTextures(1, &mTex);
+    if (mOwnsTex) {
+        GLuint tex = mTex;
+        mGL->fDeleteTextures(1, &mTex);
+    }
 
     if (mSync) {
         mGL->fDeleteSync(mSync);
