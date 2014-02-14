@@ -3094,35 +3094,31 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
             arrayRef = "${declName}"
 
         # NOTE: Keep this in sync with variadic conversions as needed
-        templateBody = ("""JS::ForOfIterator iter(cx);
-if (!iter.init(${val}, JS::ForOfIterator::AllowNonIterable)) {
+        templateBody = ("""JS::Rooted<JSObject*> seq(cx, &${val}.toObject());\n
+if (!IsArrayLike(cx, seq)) {
 %s
 }
-if (!iter.valueIsIterable()) {
+uint32_t length;
+// JS_GetArrayLength actually works on all objects
+if (!JS_GetArrayLength(cx, seq, &length)) {
 %s
 }
 %s &arr = %s;
-JS::Rooted<JS::Value> temp(cx);
-while (true) {
-  bool done;
-  if (!iter.next(&temp, &done)) {
+if (!arr.SetCapacity(length)) {
+  JS_ReportOutOfMemory(cx);
+%s
+}
+for (uint32_t i = 0; i < length; ++i) {
+  JS::Rooted<JS::Value> temp(cx);
+  if (!JS_GetElement(cx, seq, i, &temp)) {
 %s
   }
-  if (done) {
-    break;
-  }
-  %s* slotPtr = arr.AppendElement();
-  if (!slotPtr) {
-    JS_ReportOutOfMemory(cx);
-%s
-  }
-  %s& slot = *slotPtr;
-""" % (exceptionCodeIndented.define(),
-       CGIndenter(CGGeneric(notSequence)).define(),
+  %s& slot = *arr.AppendElement();
+""" % (CGIndenter(CGGeneric(notSequence)).define(),
+       exceptionCodeIndented.define(),
        sequenceType,
        arrayRef,
-       CGIndenter(exceptionCodeIndented).define(),
-       elementInfo.declType.define(),
+       exceptionCodeIndented.define(),
        CGIndenter(exceptionCodeIndented).define(),
        elementInfo.declType.define()))
 
@@ -3189,7 +3185,12 @@ while (true) {
 
         arrayObjectMemberTypes = filter(lambda t: t.isArray() or t.isSequence(), memberTypes)
         if len(arrayObjectMemberTypes) > 0:
-            raise TypeError("Bug 767924: We don't support sequences in unions yet")
+            assert len(arrayObjectMemberTypes) == 1
+            memberType = arrayObjectMemberTypes[0]
+            name = memberType.name
+            arrayObject = CGGeneric("done = (failed = !%s.TrySetTo%s(cx, ${val}, ${mutableVal}, tryNext)) || !tryNext;" % (unionArgumentObj, name))
+            arrayObject = CGIfWrapper(arrayObject, "IsArrayLike(cx, argObj)")
+            names.append(name)
         else:
             arrayObject = None
 
