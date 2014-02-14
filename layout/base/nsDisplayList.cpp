@@ -4386,11 +4386,10 @@ already_AddRefed<Layer> nsDisplayTransform::BuildLayer(nsDisplayListBuilder *aBu
     return nullptr;
   }
 
-  uint32_t flags = ShouldPrerenderTransformedContent(aBuilder, mFrame, false) ?
-    FrameLayerBuilder::CONTAINER_NOT_CLIPPED_BY_ANCESTORS : 0;
   nsRefPtr<ContainerLayer> container = aManager->GetLayerBuilder()->
     BuildContainerLayerFor(aBuilder, aManager, mFrame, this, *mStoredList.GetChildren(),
-                           aContainerParameters, &newTransformMatrix, flags);
+                           aContainerParameters, &newTransformMatrix,
+                           FrameLayerBuilder::CONTAINER_NOT_CLIPPED_BY_ANCESTORS);
 
   if (!container) {
     return nullptr;
