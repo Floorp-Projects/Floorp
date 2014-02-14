@@ -1340,6 +1340,9 @@ pref("network.disable.ipc.security", true);
 // CustomizableUI debug logging.
 pref("browser.uiCustomization.debug", false);
 
+// CustomizableUI state of the browser's user interface
+pref("browser.uiCustomization.state", "");
+
 // The URL where remote content that composes the UI for Firefox Accounts should
 // be fetched. Must use HTTPS.
 pref("identity.fxaccounts.remote.uri", "https://accounts.firefox.com/?service=sync&context=fx_desktop_v1");
