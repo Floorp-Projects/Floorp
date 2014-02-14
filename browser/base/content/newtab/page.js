@@ -85,6 +85,8 @@ let gPage = {
 
     this._mutationObserver = new MutationObserver(() => {
       if (this.allowBackgroundCaptures) {
+        Services.telemetry.getHistogramById("NEWTAB_PAGE_SHOWN").add(true);
+
         for (let site of gGrid.sites) {
           if (site) {
             site.captureIfMissing();
