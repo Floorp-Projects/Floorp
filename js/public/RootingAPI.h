@@ -844,6 +844,24 @@ class MOZ_STACK_CLASS Rooted : public js::RootedBase<T>
 namespace js {
 
 /*
+ * Augment the generic Rooted<T> interface when T = JSObject* with
+ * class-querying and downcasting operations.
+ *
+ * Given a Rooted<JSObject*> obj, one can view
+ *   Handle<StringObject*> h = obj.as<StringObject*>();
+ * as an optimization of
+ *   Rooted<StringObject*> rooted(cx, &obj->as<StringObject*>());
+ *   Handle<StringObject*> h = rooted;
+ */
+template <>
+class RootedBase<JSObject*>
+{
+  public:
+    template <class U>
+    JS::Handle<U*> as() const;
+};
+
+/*
  * Mark a stack location as a root for the rooting analysis, without actually
  * rooting it in release builds. This should only be used for stack locations
  * of GC things that cannot be relocated by a garbage collection, and that

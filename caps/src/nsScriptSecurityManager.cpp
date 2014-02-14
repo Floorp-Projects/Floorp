@@ -486,71 +486,6 @@ nsScriptSecurityManager::CheckSameOriginURI(nsIURI* aSourceURI,
     return NS_OK;
 }
 
-/* static */
-nsresult
-nsScriptSecurityManager::CheckSameOriginPrincipal(nsIPrincipal* aSubject,
-                                                  nsIPrincipal* aObject)
-{
-    /*
-    ** Get origin of subject and object and compare.
-    */
-    if (aSubject == aObject)
-        return NS_OK;
-
-    if (!AppAttributesEqual(aSubject, aObject)) {
-        return NS_ERROR_DOM_PROP_ACCESS_DENIED;
-    }
-
-    // Default to false, and change if that turns out wrong.
-    bool subjectSetDomain = false;
-    bool objectSetDomain = false;
-    
-    nsCOMPtr<nsIURI> subjectURI;
-    nsCOMPtr<nsIURI> objectURI;
-
-    aSubject->GetDomain(getter_AddRefs(subjectURI));
-    if (!subjectURI) {
-        aSubject->GetURI(getter_AddRefs(subjectURI));
-    } else {
-        subjectSetDomain = true;
-    }
-
-    aObject->GetDomain(getter_AddRefs(objectURI));
-    if (!objectURI) {
-        aObject->GetURI(getter_AddRefs(objectURI));
-    } else {
-        objectSetDomain = true;
-    }
-
-    if (SecurityCompareURIs(subjectURI, objectURI))
-    {   // If either the subject or the object has changed its principal by
-        // explicitly setting document.domain then the other must also have
-        // done so in order to be considered the same origin. This prevents
-        // DNS spoofing based on document.domain (154930)
-
-        // If both or neither explicitly set their domain, allow the access
-        if (subjectSetDomain == objectSetDomain)
-            return NS_OK;
-    }
-
-    /*
-    ** Access tests failed, so now report error.
-    */
-    return NS_ERROR_DOM_PROP_ACCESS_DENIED;
-}
-
-// It's important that
-//
-//   CheckSameOriginPrincipal(A, B) == NS_OK
-//
-// imply
-//
-//   HashPrincipalByOrigin(A) == HashPrincipalByOrigin(B)
-//
-// if principals A and B could ever be used as keys in a hashtable.
-// Violation of this invariant leads to spurious failures of hashtable
-// lookups.  See bug 454850.
-
 /*static*/ uint32_t
 nsScriptSecurityManager::HashPrincipalByOrigin(nsIPrincipal* aPrincipal)
 {
@@ -579,33 +514,6 @@ nsScriptSecurityManager::AppAttributesEqual(nsIPrincipal* aFirst,
 
     return ((firstAppId == secondAppId) &&
             (aFirst->GetIsInBrowserElement() == aSecond->GetIsInBrowserElement()));
-}
-
-nsresult
-nsScriptSecurityManager::CheckSameOriginDOMProp(nsIPrincipal* aSubject,
-                                                nsIPrincipal* aObject,
-                                                uint32_t aAction)
-{
-    nsresult rv;
-    bool subsumes;
-    rv = aSubject->Subsumes(aObject, &subsumes);
-    if (NS_SUCCEEDED(rv) && !subsumes) {
-        rv = NS_ERROR_DOM_PROP_ACCESS_DENIED;
-    }
-    
-    if (NS_SUCCEEDED(rv))
-        return NS_OK;
-
-    /*
-    * Content can't ever touch chrome (we check for UniversalXPConnect later)
-    */
-    if (aObject == mSystemPrincipal)
-        return NS_ERROR_DOM_PROP_ACCESS_DENIED;
-
-    /*
-    ** Access tests failed, so now report error.
-    */
-    return NS_ERROR_DOM_PROP_ACCESS_DENIED;
 }
 
 NS_IMETHODIMP

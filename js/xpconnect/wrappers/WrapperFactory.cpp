@@ -166,9 +166,9 @@ WrapperFactory::PrepareForWrapping(JSContext *cx, HandleObject scope,
     //
     // NB: We need to ignore domain here so that the security relationship we
     // compute here can't change over time. See the comment above the other
-    // subsumesIgnoringDomain call below.
-    bool subsumes = AccessCheck::subsumesIgnoringDomain(js::GetContextCompartment(cx),
-                                                        js::GetObjectCompartment(obj));
+    // subsumes call below.
+    bool subsumes = AccessCheck::subsumes(js::GetContextCompartment(cx),
+                                          js::GetObjectCompartment(obj));
     XrayType xrayType = GetXrayType(obj);
     if (!subsumes && xrayType == NotXray) {
         JSProtoKey key = JSProto_Null;
@@ -269,8 +269,8 @@ WrapperFactory::PrepareForWrapping(JSContext *cx, HandleObject scope,
             // the correct (opaque) wrapper for the object below given the security
             // characteristics of the two compartments.
             if (!AccessCheck::isChrome(js::GetObjectCompartment(wrapScope)) &&
-                 AccessCheck::subsumesIgnoringDomain(js::GetObjectCompartment(wrapScope),
-                                                     js::GetObjectCompartment(obj)))
+                 AccessCheck::subsumes(js::GetObjectCompartment(wrapScope),
+                                       js::GetObjectCompartment(obj)))
             {
                 return DoubleWrap(cx, obj, flags);
             }
@@ -323,7 +323,7 @@ DEBUG_CheckUnwrapSafety(HandleObject obj, js::Wrapper *handler,
         // this case.
     } else {
         // Otherwise, it should depend on whether the target subsumes the origin.
-        MOZ_ASSERT(handler->hasSecurityPolicy() == !AccessCheck::subsumes(target, origin));
+        MOZ_ASSERT(handler->hasSecurityPolicy() == !AccessCheck::subsumesConsideringDomain(target, origin));
     }
 }
 #else
@@ -385,8 +385,8 @@ WrapperFactory::Rewrap(JSContext *cx, HandleObject existing, HandleObject obj,
     JSCompartment *target = js::GetContextCompartment(cx);
     bool originIsChrome = AccessCheck::isChrome(origin);
     bool targetIsChrome = AccessCheck::isChrome(target);
-    bool originSubsumesTarget = AccessCheck::subsumes(origin, target);
-    bool targetSubsumesOrigin = AccessCheck::subsumes(target, origin);
+    bool originSubsumesTarget = AccessCheck::subsumesConsideringDomain(origin, target);
+    bool targetSubsumesOrigin = AccessCheck::subsumesConsideringDomain(target, origin);
     bool sameOrigin = targetSubsumesOrigin && originSubsumesTarget;
     XrayType xrayType = GetXrayType(obj);
     bool waiveXrayFlag = flags & WAIVE_XRAY_WRAPPER_FLAG;

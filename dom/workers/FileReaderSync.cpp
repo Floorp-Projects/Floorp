@@ -75,7 +75,11 @@ FileReaderSync::ReadAsArrayBuffer(JSContext* aCx,
   }
 
   uint32_t bufferLength = JS_GetArrayBufferByteLength(jsArrayBuffer);
-  uint8_t* arrayBuffer = JS_GetArrayBufferData(jsArrayBuffer);
+  uint8_t* arrayBuffer = JS_GetStableArrayBufferData(aCx, jsArrayBuffer);
+  if (!arrayBuffer) {
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return nullptr;
+  }
 
   nsCOMPtr<nsIInputStream> stream;
   rv = blob->GetInternalStream(getter_AddRefs(stream));
