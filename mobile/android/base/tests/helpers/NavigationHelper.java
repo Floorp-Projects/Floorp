@@ -46,11 +46,11 @@ final public class NavigationHelper {
     private static String adjustUrl(final String url) {
         assertNotNull("url is not null", url);
 
-        if (!url.startsWith("about:")) {
-            return sContext.getAbsoluteHostnameUrl(url);
+        if (url.startsWith("about:") || url.startsWith("chrome:")) {
+            return url;
         }
 
-        return url;
+        return sContext.getAbsoluteHostnameUrl(url);
     }
 
     public static void goBack() {
