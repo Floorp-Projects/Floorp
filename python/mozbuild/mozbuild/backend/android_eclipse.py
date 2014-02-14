@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 
 import itertools
 import os
+import types
 import xml.etree.ElementTree as ET
 
 from mozpack.copier import FileCopier
@@ -30,6 +31,19 @@ class AndroidEclipseBackend(CommonBackend):
     def _init(self):
         CommonBackend._init(self)
 
+        def detailed(summary):
+            s = 'Wrote {:d} Android Eclipse projects to {:s}; ' \
+                '{:d} created; {:d} updated'.format(
+                summary.created_count + summary.updated_count,
+                mozpath.join(self.environment.topobjdir, 'android_eclipse'),
+                summary.created_count,
+                summary.updated_count)
+
+            return s
+
+        # This is a little kludgy and could be improved with a better API.
+        self.summary.backend_detailed_summary = types.MethodType(detailed,
+            self.summary)
 
     def consume_object(self, obj):
         """Write out Android Eclipse project files."""
@@ -187,4 +201,8 @@ class AndroidEclipseBackend(CommonBackend):
                 extra_depends={mozpath.join(finder.base, input_filename)}))
 
         # When we re-create the build backend, we kill everything that was there.
+        if os.path.isdir(project_directory):
+            self.summary.updated_count += 1
+        else:
+            self.summary.created_count += 1
         copier.copy(project_directory, skip_if_older=False, remove_unaccounted=True)
