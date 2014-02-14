@@ -68,8 +68,8 @@
                         flex="1">
                 </button>
               </hbox>
-              <hbox id="requests-menu-file-header-box"
-                    class="requests-menu-header requests-menu-file"
+              <hbox id="requests-menu-icon-and-file-header-box"
+                    class="requests-menu-header requests-menu-icon-and-file"
                     align="center">
                 <button id="requests-menu-file-button"
                         class="requests-menu-header-button requests-menu-file"
@@ -152,8 +152,13 @@
                        crop="end"
                        flex="1"/>
               </hbox>
-              <label class="plain requests-menu-subitem requests-menu-file"
-                     crop="end"/>
+              <hbox class="requests-menu-subitem requests-menu-icon-and-file"
+                    align="center">
+                <image class="requests-menu-icon" hidden="true"/>
+                <label class="plain requests-menu-file"
+                       crop="end"
+                       flex="1"/>
+              </hbox>
               <label class="plain requests-menu-subitem requests-menu-domain"
                      crop="end"/>
               <label class="plain requests-menu-subitem requests-menu-type"

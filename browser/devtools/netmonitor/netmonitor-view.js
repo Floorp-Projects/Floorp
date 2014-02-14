@@ -1010,13 +1010,14 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
             this.updateMenuView(requestItem, key, value);
             break;
           case "responseContent":
-            requestItem.attachment.responseContent = value;
             // If there's no mime type available when the response content
             // is received, assume text/plain as a fallback.
             if (!requestItem.attachment.mimeType) {
               requestItem.attachment.mimeType = "text/plain";
               this.updateMenuView(requestItem, "mimeType", "text/plain");
             }
+            requestItem.attachment.responseContent = value;
+            this.updateMenuView(requestItem, key, value);
             break;
           case "totalTime":
             requestItem.attachment.totalTime = value;
@@ -1112,9 +1113,9 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
         let nameWithQuery = this._getUriNameWithQuery(uri);
         let hostPort = this._getUriHostPort(uri);
 
-        let node = $(".requests-menu-file", target);
-        node.setAttribute("value", nameWithQuery);
-        node.setAttribute("tooltiptext", nameWithQuery);
+        let file = $(".requests-menu-file", target);
+        file.setAttribute("value", nameWithQuery);
+        file.setAttribute("tooltiptext", nameWithQuery);
 
         let domain = $(".requests-menu-domain", target);
         domain.setAttribute("value", hostPort);
@@ -1146,6 +1147,21 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
         let text = CONTENT_MIME_TYPE_ABBREVIATIONS[type] || type;
         node.setAttribute("value", text);
         node.setAttribute("tooltiptext", aValue);
+        break;
+      }
+      case "responseContent": {
+        let { mimeType } = aItem.attachment;
+        let { text, encoding } = aValue.content;
+
+        if (mimeType.contains("image/")) {
+          gNetwork.getString(text).then(aString => {
+            let node = $(".requests-menu-icon", target);
+            node.src = "data:" + mimeType + ";" + encoding + "," + aString;
+            node.setAttribute("type", "thumbnail");
+            node.removeAttribute("hidden");
+            window.emit(EVENTS.RESPONSE_IMAGE_THUMBNAIL_DISPLAYED);
+          });
+        }
         break;
       }
       case "totalTime": {
@@ -1626,7 +1642,7 @@ SidebarView.prototype = {
       NetMonitorView.NetworkDetails;
 
     return view.populate(aData).then(() => {
-      $("#details-pane").selectedIndex = isCustom ? 0 : 1
+      $("#details-pane").selectedIndex = isCustom ? 0 : 1;
       window.emit(EVENTS.SIDEBAR_POPULATED);
     });
   }
@@ -1906,6 +1922,7 @@ NetworkDetailsView.prototype = {
       }
       populated[tab] = true;
       window.emit(EVENTS.TAB_UPDATED);
+      NetMonitorView.RequestsMenu.ensureSelectedItemIsVisible();
     });
   },
 
