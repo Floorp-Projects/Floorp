@@ -51,20 +51,11 @@ nsClipboardHelper::CopyStringToClipboard(const nsAString& aString,
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(clipboard, NS_ERROR_FAILURE);
 
-  bool clipboardSupported;
   // don't go any further if they're asking for the selection
   // clipboard on a platform which doesn't support it (i.e., unix)
   if (nsIClipboard::kSelectionClipboard == aClipboardID) {
+    bool clipboardSupported;
     rv = clipboard->SupportsSelectionClipboard(&clipboardSupported);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (!clipboardSupported)
-      return NS_ERROR_FAILURE;
-  }
-
-  // don't go any further if they're asking for the find clipboard on a platform
-  // which doesn't support it (i.e., non-osx)
-  if (nsIClipboard::kFindClipboard == aClipboardID) {
-    rv = clipboard->SupportsFindClipboard(&clipboardSupported);
     NS_ENSURE_SUCCESS(rv, rv);
     if (!clipboardSupported)
       return NS_ERROR_FAILURE;
