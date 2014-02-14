@@ -303,12 +303,16 @@ browser.jar:
         skin/classic/browser/sync-128.png
         skin/classic/browser/sync-bg.png
         skin/classic/browser/sync-desktopIcon.png
+        skin/classic/browser/sync-horizontalbar.png
+        skin/classic/browser/sync-horizontalbar-XPVista7.png
         skin/classic/browser/sync-mobileIcon.png
         skin/classic/browser/sync-notification-24.png
         skin/classic/browser/syncSetup.css
         skin/classic/browser/syncCommon.css
         skin/classic/browser/syncQuota.css
         skin/classic/browser/syncProgress.css
+        skin/classic/browser/syncProgress-horizontalbar.png
+        skin/classic/browser/syncProgress-horizontalbar-XPVista7.png
 #endif
         skin/classic/browser/devtools/tooltip/arrow-horizontal-dark.png   (../shared/devtools/tooltip/arrow-horizontal-dark.png)
         skin/classic/browser/devtools/tooltip/arrow-horizontal-dark@2x.png   (../shared/devtools/tooltip/arrow-horizontal-dark@2x.png)
@@ -617,12 +621,16 @@ browser.jar:
         skin/classic/aero/browser/sync-128.png
         skin/classic/aero/browser/sync-bg.png
         skin/classic/aero/browser/sync-desktopIcon.png
+        skin/classic/aero/browser/sync-horizontalbar.png
+        skin/classic/aero/browser/sync-horizontalbar-XPVista7.png
         skin/classic/aero/browser/sync-mobileIcon.png
         skin/classic/aero/browser/sync-notification-24.png
         skin/classic/aero/browser/syncSetup.css
         skin/classic/aero/browser/syncCommon.css
         skin/classic/aero/browser/syncQuota.css
         skin/classic/aero/browser/syncProgress.css
+        skin/classic/aero/browser/syncProgress-horizontalbar.png
+        skin/classic/aero/browser/syncProgress-horizontalbar-XPVista7.png
 #endif
 #endif
         skin/classic/aero/browser/devtools/tooltip/arrow-horizontal-dark.png   (../shared/devtools/tooltip/arrow-horizontal-dark.png)
@@ -633,3 +641,6 @@ browser.jar:
         skin/classic/aero/browser/devtools/tooltip/arrow-horizontal-light@2x.png   (../shared/devtools/tooltip/arrow-horizontal-light@2x.png)
         skin/classic/aero/browser/devtools/tooltip/arrow-vertical-light.png   (../shared/devtools/tooltip/arrow-vertical-light.png)
         skin/classic/aero/browser/devtools/tooltip/arrow-vertical-light@2x.png   (../shared/devtools/tooltip/arrow-vertical-light@2x.png)
+
+% override chrome://browser/skin/sync-horizontalbar.png          chrome://browser/skin/sync-horizontalbar-XPVista7.png          os=WINNT osversion<6.2
+% override chrome://browser/skin/syncProgress-horizontalbar.png  chrome://browser/skin/syncProgress-horizontalbar-XPVista7.png  os=WINNT osversion<6.2
