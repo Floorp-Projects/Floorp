@@ -1,0 +1,68 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://browser/skin/firstruncontent.css" type="text/css"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE window [
+  <!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd">
+  %browserDTD;
+  <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
+  %brandDTD;
+]>
+
+<overlay id="firstruncontent"
+         xmlns:html="http://www.w3.org/1999/xhtml"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <stack id="stack">
+    <box id="firstrun-bg-pane" insertafter="page" class="firstrun-content"></box>
+
+    <box id="instruction-tabs" class="firstrun-content">
+      <vbox class="instruction-content-container" align="center">
+        <image class="instruction-arrow arrow-top" />
+        <label class="instruction-label">&firstRunTabs.label;</label>
+      </vbox>
+    </box>
+
+    <box id="instruction-back" class="firstrun-content">
+      <vbox class="instruction-content-container" align="start">
+        <image class="instruction-arrow arrow-back" />
+        <label class="instruction-label">&firstRunBack.label;</label>
+      </vbox>
+    </box>
+
+    <box id="instruction-plus" class="firstrun-content">
+      <vbox class="instruction-content-container" align="end">
+        <image class="instruction-arrow arrow-forward" />
+        <label class="instruction-label">&firstRunNewTab.label;</label>
+      </vbox>
+    </box>
+
+    <appbar id="navbar">
+
+      <box id="instruction-star" class="firstrun-content">
+        <hbox class="instruction-content-container">
+          <label class="instruction-label">&firstRunStar.label;</label>
+          <image class="instruction-arrow arrow-down" />
+        </hbox>
+      </box>
+
+      <box id="instruction-pin" class="firstrun-content">
+        <vbox class="instruction-content-container" align="end">
+          <label class="instruction-label">&firstRunPin.label;</label>
+          <image class="instruction-arrow arrow-down-reverse" />
+        </vbox>
+      </box>
+
+      <box id="firstrun-gotit" class="firstrun-content">
+        <button class="firstrun-button" label="&firstRunGotIt.label;" oncommand="BrowserUI.firstRunContentDismiss()" />
+      </box>
+
+    </appbar>
+
+
+  </stack>
+</overlay>

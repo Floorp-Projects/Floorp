@@ -12,8 +12,6 @@
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"
 
-using mozilla::Mutex;
-
 class nsITimer;
 
 namespace mozilla {
@@ -123,7 +121,8 @@ public:
 
   // Functions that (a) implement distinguished amounts, and (b) are outside of
   // this module.
-  struct AmountFns {
+  struct AmountFns
+  {
     mozilla::InfallibleAmountFn mJSMainRuntimeGCHeap;
     mozilla::InfallibleAmountFn mJSMainRuntimeTemporaryPeak;
     mozilla::InfallibleAmountFn mJSMainRuntimeCompartmentsSystem;
@@ -143,11 +142,15 @@ public:
   AmountFns mAmountFns;
 
   // Functions that measure per-tab memory consumption.
-  struct SizeOfTabFns {
+  struct SizeOfTabFns
+  {
     mozilla::JSSizeOfTabFn    mJS;
     mozilla::NonJSSizeOfTabFn mNonJS;
 
-    SizeOfTabFns() { mozilla::PodZero(this); }
+    SizeOfTabFns()
+    {
+      mozilla::PodZero(this);
+    }
   };
   SizeOfTabFns mSizeOfTabFns;
 
@@ -158,7 +161,7 @@ private:
   static void TimeoutCallback(nsITimer* aTimer, void* aData);
   static const uint32_t kTimeoutLengthMS = 5000;
 
-  Mutex mMutex;
+  mozilla::Mutex mMutex;
   bool mIsRegistrationBlocked;
 
   StrongReportersTable* mStrongReporters;
@@ -171,7 +174,8 @@ private:
   uint32_t mNumChildProcesses;
   uint32_t mNextGeneration;
 
-  struct GetReportsState {
+  struct GetReportsState
+  {
     uint32_t                             mGeneration;
     nsCOMPtr<nsITimer>                   mTimer;
     uint32_t                             mNumChildProcesses;
@@ -187,15 +191,16 @@ private:
                     nsISupports* aHandleReportData,
                     nsIFinishReportingCallback* aFinishReporting,
                     nsISupports* aFinishReportingData)
-      : mGeneration(aGeneration),
-        mTimer(aTimer),
-        mNumChildProcesses(aNumChildProcesses),
-        mNumChildProcessesCompleted(0),
-        mHandleReport(aHandleReport),
-        mHandleReportData(aHandleReportData),
-        mFinishReporting(aFinishReporting),
-        mFinishReportingData(aFinishReportingData)
-    {}
+      : mGeneration(aGeneration)
+      , mTimer(aTimer)
+      , mNumChildProcesses(aNumChildProcesses)
+      , mNumChildProcessesCompleted(0)
+      , mHandleReport(aHandleReport)
+      , mHandleReportData(aHandleReportData)
+      , mFinishReporting(aFinishReporting)
+      , mFinishReportingData(aFinishReportingData)
+    {
+    }
   };
 
   // When this is non-null, a request is in flight.  Note: We use manual

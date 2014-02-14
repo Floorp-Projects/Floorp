@@ -59,8 +59,102 @@ class TestMozconfigLoader(unittest.TestCase):
 
         self.assertTrue(e.exception.message.startswith('The MOZ_MYCONFIG'))
 
-    def test_find_path_not_exist(self):
-        """Ensure missing files are detected."""
+    def test_find_multiple_configs(self):
+        """Ensure multiple relative-path MOZCONFIGs result in error."""
+        relative_mozconfig = '.mconfig'
+        os.environ[b'MOZCONFIG'] = relative_mozconfig
+
+        srcdir = self.get_temp_dir()
+        curdir = self.get_temp_dir()
+        dirs = [srcdir, curdir]
+        loader = MozconfigLoader(srcdir)
+        for d in dirs:
+            path = os.path.join(d, relative_mozconfig)
+            with open(path, 'wb') as f:
+                f.write(path)
+
+        orig_dir = os.getcwd()
+        try:
+            os.chdir(curdir)
+            with self.assertRaises(MozconfigFindException) as e:
+                loader.find_mozconfig()
+        finally:
+            os.chdir(orig_dir)
+
+        self.assertIn('exists in more than one of', e.exception.message)
+        for d in dirs:
+            self.assertIn(d, e.exception.message)
+
+    def test_find_multiple_but_identical_configs(self):
+        """Ensure multiple relative-path MOZCONFIGs pointing at the same file are OK."""
+        relative_mozconfig = '../src/.mconfig'
+        os.environ[b'MOZCONFIG'] = relative_mozconfig
+
+        topdir = self.get_temp_dir()
+        srcdir = os.path.join(topdir, 'src')
+        os.mkdir(srcdir)
+        curdir = os.path.join(topdir, 'obj')
+        os.mkdir(curdir)
+
+        loader = MozconfigLoader(srcdir)
+        path = os.path.join(srcdir, relative_mozconfig)
+        with open(path, 'w'):
+            pass
+
+        orig_dir = os.getcwd()
+        try:
+            os.chdir(curdir)
+            self.assertEqual(os.path.realpath(loader.find_mozconfig()),
+                             os.path.realpath(path))
+        finally:
+            os.chdir(orig_dir)
+
+    def test_find_no_relative_configs(self):
+        """Ensure a missing relative-path MOZCONFIG is detected."""
+        relative_mozconfig = '.mconfig'
+        os.environ[b'MOZCONFIG'] = relative_mozconfig
+
+        srcdir = self.get_temp_dir()
+        curdir = self.get_temp_dir()
+        dirs = [srcdir, curdir]
+        loader = MozconfigLoader(srcdir)
+
+        orig_dir = os.getcwd()
+        try:
+            os.chdir(curdir)
+            with self.assertRaises(MozconfigFindException) as e:
+                loader.find_mozconfig()
+        finally:
+            os.chdir(orig_dir)
+
+        self.assertIn('does not exist in any of', e.exception.message)
+        for d in dirs:
+            self.assertIn(d, e.exception.message)
+
+    def test_find_relative_mozconfig(self):
+        """Ensure a relative MOZCONFIG can be found in the srcdir."""
+        relative_mozconfig = '.mconfig'
+        os.environ[b'MOZCONFIG'] = relative_mozconfig
+
+        srcdir = self.get_temp_dir()
+        curdir = self.get_temp_dir()
+        dirs = [srcdir, curdir]
+        loader = MozconfigLoader(srcdir)
+
+        path = os.path.join(srcdir, relative_mozconfig)
+        with open(path, 'w'):
+            pass
+
+        orig_dir = os.getcwd()
+        try:
+            os.chdir(curdir)
+            self.assertEqual(os.path.normpath(loader.find_mozconfig()),
+                             os.path.normpath(path))
+        finally:
+            os.chdir(orig_dir)
+
+    def test_find_abs_path_not_exist(self):
+        """Ensure a missing absolute path is detected."""
         os.environ[b'MOZCONFIG'] = '/foo/bar/does/not/exist'
 
         with self.assertRaises(MozconfigFindException) as e:
