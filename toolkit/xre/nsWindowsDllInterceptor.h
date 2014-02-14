@@ -413,10 +413,22 @@ protected:
       } else if (origBytes[nBytes] == 0x6A) {
         // PUSH imm8
         nBytes += 2;
+      } else if (origBytes[nBytes] == 0xa1) {
+        // MOV EAX, dword ptr [m32]
+        nBytes += 5;
       } else if (origBytes[nBytes] == 0xe9) {
         pJmp32 = nBytes;
         // jmp 32bit offset
         nBytes += 5;
+      } else if (origBytes[nBytes] == 0xf6 &&
+                 origBytes[nBytes+1] == 0x05) {
+        // TEST byte ptr [m32], imm8
+        nBytes += 7;
+      } else if (origBytes[nBytes] == 0xff &&
+                 origBytes[nBytes+1] == 0x25) {
+        // JMP dword ptr [m32]
+        // This is an indirect absolute jump; don't set pJmp32
+        nBytes += 6;
       } else {
         //printf ("Unknown x86 instruction byte 0x%02x, aborting trampoline\n", origBytes[nBytes]);
         return;
