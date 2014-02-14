@@ -2140,6 +2140,33 @@ ReportCompartmentStats(const JS::CompartmentStats &cStats,
 }
 
 static nsresult
+ReportScriptSourceStats(const ScriptSourceInfo &scriptSourceInfo,
+                        const nsACString &path,
+                        nsIHandleReportCallback *cb, nsISupports *closure,
+                        size_t &rtTotal)
+{
+    if (scriptSourceInfo.compressed > 0) {
+        RREPORT_BYTES(path + NS_LITERAL_CSTRING("compressed"),
+            KIND_HEAP, scriptSourceInfo.compressed,
+            "Compressed JavaScript source code.");
+    }
+
+    if (scriptSourceInfo.uncompressed > 0) {
+        RREPORT_BYTES(path + NS_LITERAL_CSTRING("uncompressed"),
+            KIND_HEAP, scriptSourceInfo.uncompressed,
+            "Uncompressed JavaScript source code.");
+    }
+
+    if (scriptSourceInfo.misc > 0) {
+        RREPORT_BYTES(path + NS_LITERAL_CSTRING("misc"),
+            KIND_HEAP, scriptSourceInfo.misc,
+            "Miscellaneous data relating to JavaScript source code.");
+    }
+
+    return NS_OK;
+}
+
+static nsresult
 ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
                                  const nsACString &rtPath,
                                  amIAddonManager* addonManager,
@@ -2214,9 +2241,35 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
         KIND_HEAP, rtStats.runtime.scriptData,
         "The table holding script data shared in the runtime.");
 
-    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/script-sources"),
-        KIND_HEAP, rtStats.runtime.scriptSources,
-        "JavaScript source code (possibly compressed) and filenames.");
+    nsCString nonNotablePath =
+        rtPath + nsPrintfCString("runtime/script-sources/source(scripts=%d, <non-notable files>)/",
+                                 rtStats.runtime.scriptSourceInfo.numScripts);
+
+    rv = ReportScriptSourceStats(rtStats.runtime.scriptSourceInfo,
+                                 nonNotablePath, cb, closure, rtTotal);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    for (size_t i = 0; i < rtStats.runtime.notableScriptSources.length(); i++) {
+        const JS::NotableScriptSourceInfo& scriptSourceInfo =
+            rtStats.runtime.notableScriptSources[i];
+
+        // Escape / to \ before we put the filename into the memory reporter
+        // path, because we don't want any forward slashes in the string to
+        // count as path separators. Consumers of memory reporters (e.g.
+        // about:memory) will convert them back to / after doing path
+        // splitting.
+        nsDependentCString filename(scriptSourceInfo.filename_);
+        nsCString escapedFilename(filename);
+        escapedFilename.ReplaceSubstring("/", "\\");
+
+        nsCString notablePath = rtPath +
+            nsPrintfCString("runtime/script-sources/source(scripts=%d, %s)/",
+                            scriptSourceInfo.numScripts, escapedFilename.get());
+
+        rv = ReportScriptSourceStats(scriptSourceInfo, notablePath,
+                                     cb, closure, rtTotal);
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
 
     RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/code/ion"),
         KIND_NONHEAP, rtStats.runtime.code.ion,

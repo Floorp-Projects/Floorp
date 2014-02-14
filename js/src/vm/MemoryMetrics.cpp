@@ -25,6 +25,7 @@
 using mozilla::DebugOnly;
 using mozilla::MallocSizeOf;
 using mozilla::Move;
+using mozilla::PodCopy;
 using mozilla::PodEqual;
 
 using namespace js;
@@ -89,6 +90,18 @@ InefficientNonFlatteningStringHashPolicy::match(const JSString *const &k, const 
     return PodEqual(c1, c2, k->length());
 }
 
+/* static */ HashNumber
+CStringHashPolicy::hash(const Lookup &l)
+{
+    return mozilla::HashString(l);
+}
+
+/* static */ bool
+CStringHashPolicy::match(const char *const &k, const Lookup &l)
+{
+    return strcmp(k, l) == 0;
+}
+
 } // namespace js
 
 namespace JS {
@@ -141,6 +154,38 @@ NotableStringInfo &NotableStringInfo::operator=(NotableStringInfo &&info)
     new (this) NotableStringInfo(Move(info));
     return *this;
 }
+
+NotableScriptSourceInfo::NotableScriptSourceInfo()
+  : ScriptSourceInfo(),
+    filename_(nullptr)
+{
+}
+
+NotableScriptSourceInfo::NotableScriptSourceInfo(const char *filename, const ScriptSourceInfo &info)
+  : ScriptSourceInfo(info)
+{
+    size_t bytes = strlen(filename) + 1;
+    filename_ = js_pod_malloc<char>(bytes);
+    if (!filename_)
+        MOZ_CRASH("oom");
+    PodCopy(filename_, filename, bytes);
+}
+
+NotableScriptSourceInfo::NotableScriptSourceInfo(NotableScriptSourceInfo &&info)
+  : ScriptSourceInfo(Move(info))
+{
+    filename_ = info.filename_;
+    info.filename_ = nullptr;
+}
+
+NotableScriptSourceInfo &NotableScriptSourceInfo::operator=(NotableScriptSourceInfo &&info)
+{
+    MOZ_ASSERT(this != &info, "self-move assignment is prohibited");
+    this->~NotableScriptSourceInfo();
+    new (this) NotableScriptSourceInfo(Move(info));
+    return *this;
+}
+
 
 } // namespace JS
 
@@ -346,9 +391,30 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
         ScriptSource *ss = script->scriptSource();
         SourceSet::AddPtr entry = closure->seenSources.lookupForAdd(ss);
         if (!entry) {
-            closure->seenSources.add(entry, ss); // Not much to be done on failure.
-            rtStats->runtime.scriptSources += ss->sizeOfIncludingThis(rtStats->mallocSizeOf_);
+            (void)closure->seenSources.add(entry, ss); // Not much to be done on failure.
+
+            JS::ScriptSourceInfo info;  // This zeroes all the sizes.
+            ss->addSizeOfIncludingThis(rtStats->mallocSizeOf_, &info);
+            MOZ_ASSERT(info.compressed == 0 || info.uncompressed == 0);
+
+            rtStats->runtime.scriptSourceInfo.add(info);
+
+            if (granularity == FineGrained) {
+                const char* filename = ss->filename();
+                if (!filename)
+                    filename = "<no filename>";
+
+                JS::RuntimeSizes::ScriptSourcesHashMap::AddPtr p =
+                    rtStats->runtime.allScriptSources->lookupForAdd(filename);
+                if (!p) {
+                    // Ignore failure -- we just won't record the script source as notable.
+                    (void)rtStats->runtime.allScriptSources->add(p, filename, info);
+                } else {
+                    p->value().add(info);
+                }
+            }
         }
+
         break;
       }
 
@@ -429,6 +495,40 @@ ZoneStats::initStrings(JSRuntime *rt)
     return true;
 }
 
+static bool
+FindNotableScriptSources(JS::RuntimeSizes &runtime)
+{
+    using namespace JS;
+
+    // We should only run FindNotableScriptSources once per RuntimeSizes.
+    MOZ_ASSERT(runtime.notableScriptSources.empty());
+
+    for (RuntimeSizes::ScriptSourcesHashMap::Range r = runtime.allScriptSources->all();
+         !r.empty();
+         r.popFront())
+    {
+        const char *filename = r.front().key();
+        ScriptSourceInfo &info = r.front().value();
+
+        if (!info.isNotable())
+            continue;
+
+        if (!runtime.notableScriptSources.growBy(1))
+            return false;
+
+        runtime.notableScriptSources.back() = NotableScriptSourceInfo(filename, info);
+
+        // We're moving this script source from a non-notable to a notable
+        // bucket, so subtract its sizes from the non-notable tallies.
+        runtime.scriptSourceInfo.subtract(info);
+    }
+    // Delete |allScriptSources| now, rather than waiting for zStats's
+    // destruction, to reduce peak memory consumption during reporting.
+    js_delete(runtime.allScriptSources);
+    runtime.allScriptSources = nullptr;
+    return true;
+}
+
 JS_PUBLIC_API(bool)
 JS::CollectRuntimeStats(JSRuntime *rt, RuntimeStats *rtStats, ObjectPrivateVisitor *opv)
 {
@@ -456,6 +556,9 @@ JS::CollectRuntimeStats(JSRuntime *rt, RuntimeStats *rtStats, ObjectPrivateVisit
 
     // Take the "explicit/js/runtime/" measurements.
     rt->addSizeOfIncludingThis(rtStats->mallocSizeOf_, &rtStats->runtime);
+
+    if (!FindNotableScriptSources(rtStats->runtime))
+        return false;
 
     ZoneStatsVector &zs = rtStats->zoneStatsVector;
     ZoneStats &zTotals = rtStats->zTotals;
