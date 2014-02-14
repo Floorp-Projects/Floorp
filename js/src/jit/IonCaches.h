@@ -530,7 +530,6 @@ class GetPropertyIC : public RepatchIonCache
     size_t locationsIndex_;
     size_t numLocations_;
 
-    bool allowGetters_ : 1;
     bool monitoredResult_ : 1;
     bool hasTypedArrayLengthStub_ : 1;
     bool hasStrictArgumentsLengthStub_ : 1;
@@ -541,14 +540,13 @@ class GetPropertyIC : public RepatchIonCache
     GetPropertyIC(RegisterSet liveRegs,
                   Register object, PropertyName *name,
                   TypedOrValueRegister output,
-                  bool allowGetters, bool monitoredResult)
+                  bool monitoredResult)
       : liveRegs_(liveRegs),
         object_(object),
         name_(name),
         output_(output),
         locationsIndex_(0),
         numLocations_(0),
-        allowGetters_(allowGetters),
         monitoredResult_(monitoredResult),
         hasTypedArrayLengthStub_(false),
         hasStrictArgumentsLengthStub_(false),
@@ -569,9 +567,6 @@ class GetPropertyIC : public RepatchIonCache
     }
     TypedOrValueRegister output() const {
         return output_;
-    }
-    bool allowGetters() const {
-        return allowGetters_ && !idempotent();
     }
     bool monitoredResult() const {
         return monitoredResult_;
@@ -609,6 +604,9 @@ class GetPropertyIC : public RepatchIonCache
     // Helpers for CanAttachNativeGetProp
     typedef JSContext * Context;
     bool allowArrayLength(Context cx, HandleObject obj) const;
+    bool allowGetters() const {
+        return monitoredResult() && !idempotent();
+    }
 
     // Attach the proper stub, if possible
     bool tryAttachStub(JSContext *cx, IonScript *ion, HandleObject obj,

@@ -13,16 +13,13 @@
 /* Architecture-specific frequently used syscalls */
 #if defined(__arm__)
 #define SECCOMP_WHITELIST_ARCH_HIGH \
-  ALLOW_SYSCALL(msgget), \
-  ALLOW_SYSCALL(recv), \
   ALLOW_SYSCALL(mmap2),
 #elif defined(__i386__)
 #define SECCOMP_WHITELIST_ARCH_HIGH \
   ALLOW_SYSCALL(ipc), \
   ALLOW_SYSCALL(mmap2),
 #elif defined(__x86_64__)
-#define SECCOMP_WHITELIST_ARCH_HIGH \
-  ALLOW_SYSCALL(msgget),
+#define SECCOMP_WHITELIST_ARCH_HIGH
 #else
 #define SECCOMP_WHITELIST_ARCH_HIGH
 #endif
@@ -111,13 +108,13 @@
 #if defined(MOZ_B2G)
 
 #define SECCOMP_WHITELIST_B2G_HIGH \
+  ALLOW_SYSCALL(clock_gettime), \
+  ALLOW_SYSCALL(epoll_wait), \
   ALLOW_SYSCALL(gettimeofday),
 
 #define SECCOMP_WHITELIST_B2G_MED \
-  ALLOW_SYSCALL(clock_gettime), \
   ALLOW_SYSCALL(getpid), \
   ALLOW_SYSCALL(rt_sigreturn), \
-  ALLOW_SYSCALL(epoll_wait),
 
 #define SECCOMP_WHITELIST_B2G_LOW \
   ALLOW_SYSCALL(getdents64), \
@@ -223,6 +220,7 @@
  */
 #define SECCOMP_WHITELIST \
   /* These are calls we're ok to allow */ \
+  ALLOW_SYSCALL(futex), \
   SECCOMP_WHITELIST_ARCH_HIGH \
   SECCOMP_WHITELIST_B2G_HIGH \
   ALLOW_SYSCALL(read), \
@@ -242,7 +240,6 @@
   ALLOW_SYSCALL(gettid), \
   ALLOW_SYSCALL(getrusage), \
   ALLOW_SYSCALL(madvise), \
-  ALLOW_SYSCALL(futex), \
   ALLOW_SYSCALL(dup), \
   ALLOW_SYSCALL(nanosleep), \
   SECCOMP_WHITELIST_ARCH_LOW \

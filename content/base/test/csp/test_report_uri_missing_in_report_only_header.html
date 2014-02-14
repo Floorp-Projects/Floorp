@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=847081
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 847081</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=847081">Mozilla Bug 847081</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<iframe id="cspframe"></iframe>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var stringBundleService = SpecialPowers.Cc["@mozilla.org/intl/stringbundle;1"]
+                          .getService(SpecialPowers.Ci.nsIStringBundleService);
+var localizer = stringBundleService.createBundle("chrome://global/locale/security/csp.properties");
+var warningMsg = localizer.formatStringFromName("reportURInotInReportOnlyHeader", [window.location.origin], 1);
+function cleanup() {
+  SpecialPowers.postConsoleSentinel();
+  SimpleTest.finish();
+}
+
+SpecialPowers.registerConsoleListener(function ConsoleMsgListener(aMsg) {
+  if (aMsg.message.indexOf(warningMsg) > -1) {
+    ok(true, "report-uri not specified in Report-Only should throw a CSP warning.");
+    SimpleTest.executeSoon(cleanup);
+    return;
+  } else {
+    // if some other console message is present, we wait
+    return;
+  }
+});
+
+
+// set up and start testing
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv(
+  {'set': [["security.csp.speccompliant", true]]},
+  function() {
+    document.getElementById('cspframe').src = 'file_report_uri_missing_in_report_only_header.html';
+});
+</script>
+</pre>
+</body>
+</html>

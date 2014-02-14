@@ -1278,6 +1278,28 @@ ForOfIterator::init(HandleValue iterable, NonIterableBehavior nonIterableBehavio
     if (!iterableObj)
         return false;
 
+    JS_ASSERT(index == NOT_ARRAY);
+
+    // Check the PIC first for a match.
+    if (iterableObj->is<ArrayObject>()) {
+        ForOfPIC::Chain *stubChain = ForOfPIC::getOrCreate(cx);
+        if (!stubChain)
+            return false;
+
+        bool optimized;
+        if (!stubChain->tryOptimizeArray(cx, iterableObj, &optimized))
+            return false;
+
+        if (optimized) {
+            // Got optimized stub.  Array is optimizable.
+            index = 0;
+            iterator = iterableObj;
+            return true;
+        }
+    }
+
+    JS_ASSERT(index == NOT_ARRAY);
+
     // The iterator is the result of calling obj[@@iterator]().
     InvokeArgs args(cx);
     if (!args.init(0))
@@ -1314,37 +1336,110 @@ ForOfIterator::init(HandleValue iterable, NonIterableBehavior nonIterableBehavio
     return true;
 }
 
+inline bool
+ForOfIterator::nextFromOptimizedArray(MutableHandleValue vp, bool *done)
+{
+    JS_ASSERT(index != NOT_ARRAY);
+
+    if (!JS_CHECK_OPERATION_LIMIT(cx_))
+        return false;
+
+    JS_ASSERT(iterator->isNative());
+    JS_ASSERT(iterator->is<ArrayObject>());
+
+    if (index >= iterator->as<ArrayObject>().length()) {
+        vp.setUndefined();
+        *done = true;
+        return true;
+    }
+    *done = false;
+
+    // Try to get array element via direct access.
+    if (index < iterator->getDenseInitializedLength()) {
+        vp.set(iterator->getDenseElement(index));
+        if (!vp.isMagic(JS_ELEMENTS_HOLE)) {
+            ++index;
+            return true;
+        }
+    }
+
+    return JSObject::getElement(cx_, iterator, iterator, index++, vp);
+}
+
 bool
 ForOfIterator::next(MutableHandleValue vp, bool *done)
 {
     JS_ASSERT(iterator);
 
-    JSContext *cx = cx_;
-    RootedValue method(cx);
-    if (!JSObject::getProperty(cx, iterator, iterator, cx->names().next, &method))
+    if (index != NOT_ARRAY) {
+        ForOfPIC::Chain *stubChain = ForOfPIC::getOrCreate(cx_);
+        if (!stubChain)
+            return false;
+
+        if (stubChain->isArrayNextStillSane())
+            return nextFromOptimizedArray(vp, done);
+
+        // ArrayIterator.prototype.next changed, materialize a proper
+        // ArrayIterator instance and fall through to slowpath case.
+        if (!materializeArrayIterator())
+            return false;
+    }
+
+    RootedValue method(cx_);
+    if (!JSObject::getProperty(cx_, iterator, iterator, cx_->names().next, &method))
         return false;
 
-    InvokeArgs args(cx);
+    InvokeArgs args(cx_);
     if (!args.init(1))
         return false;
     args.setCallee(method);
     args.setThis(ObjectValue(*iterator));
     args[0].setUndefined();
-    if (!Invoke(cx, args))
+    if (!Invoke(cx_, args))
         return false;
 
-    RootedObject resultObj(cx, ToObject(cx, args.rval()));
+    RootedObject resultObj(cx_, ToObject(cx_, args.rval()));
     if (!resultObj)
         return false;
-    RootedValue doneVal(cx);
-    if (!JSObject::getProperty(cx, resultObj, resultObj, cx->names().done, &doneVal))
+    RootedValue doneVal(cx_);
+    if (!JSObject::getProperty(cx_, resultObj, resultObj, cx_->names().done, &doneVal))
         return false;
     *done = ToBoolean(doneVal);
     if (*done) {
         vp.setUndefined();
         return true;
     }
-    return JSObject::getProperty(cx, resultObj, resultObj, cx->names().value, vp);
+    return JSObject::getProperty(cx_, resultObj, resultObj, cx_->names().value, vp);
+}
+
+bool
+ForOfIterator::materializeArrayIterator()
+{
+    JS_ASSERT(index != NOT_ARRAY);
+
+    const char *nameString = "ArrayValuesAt";
+
+    RootedAtom name(cx_, Atomize(cx_, nameString, strlen(nameString)));
+    if (!name)
+        return false;
+
+    RootedValue val(cx_);
+    if (!cx_->global()->getSelfHostedFunction(cx_, name, name, 1, &val))
+        return false;
+
+    InvokeArgs args(cx_);
+    if (!args.init(1))
+        return false;
+    args.setCallee(val);
+    args.setThis(ObjectValue(*iterator));
+    args[0].set(Int32Value(index));
+    if (!Invoke(cx_, args))
+        return false;
+
+    index = NOT_ARRAY;
+    // Result of call to ArrayValuesAt must be an object.
+    iterator = &args.rval().toObject();
+    return true;
 }
 
 /*** Generators **********************************************************************************/

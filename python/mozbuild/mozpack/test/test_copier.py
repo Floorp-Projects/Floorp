@@ -8,7 +8,10 @@ from mozpack.copier import (
     FileRegistry,
     Jarrer,
 )
-from mozpack.files import GeneratedFile
+from mozpack.files import (
+    GeneratedFile,
+    ExistingFile,
+)
 from mozpack.mozjar import JarReader
 import mozpack.path
 import unittest
@@ -87,6 +90,61 @@ class TestFileRegistry(MatchTestTemplate, unittest.TestCase):
 
         self.add('foo/.foo')
         self.assertTrue(self.registry.contains('foo/.foo'))
+
+    def test_registry_paths(self):
+        self.registry = FileRegistry()
+
+        # Can't add a file if it requires a directory in place of a
+        # file we also require.
+        self.registry.add('foo', GeneratedFile('foo'))
+        self.assertRaises(ErrorMessage, self.registry.add, 'foo/bar',
+                          GeneratedFile('foobar'))
+
+        # Can't add a file if we already have a directory there.
+        self.registry.add('bar/baz', GeneratedFile('barbaz'))
+        self.assertRaises(ErrorMessage, self.registry.add, 'bar',
+                          GeneratedFile('bar'))
+
+        # Bump the count of things that require bar/ to 2.
+        self.registry.add('bar/zot', GeneratedFile('barzot'))
+        self.assertRaises(ErrorMessage, self.registry.add, 'bar',
+                          GeneratedFile('bar'))
+
+        # Drop the count of things that require bar/ to 1.
+        self.registry.remove('bar/baz')
+        self.assertRaises(ErrorMessage, self.registry.add, 'bar',
+                          GeneratedFile('bar'))
+
+        # Drop the count of things that require bar/ to 0.
+        self.registry.remove('bar/zot')
+        self.registry.add('bar/zot', GeneratedFile('barzot'))
+
+    def test_required_directories(self):
+        self.registry = FileRegistry()
+
+        self.registry.add('foo', GeneratedFile('foo'))
+        self.assertEqual(self.registry.required_directories(), set())
+
+        self.registry.add('bar/baz', GeneratedFile('barbaz'))
+        self.assertEqual(self.registry.required_directories(), {'bar'})
+
+        self.registry.add('bar/zot', GeneratedFile('barzot'))
+        self.assertEqual(self.registry.required_directories(), {'bar'})
+
+        self.registry.add('bar/zap/zot', GeneratedFile('barzapzot'))
+        self.assertEqual(self.registry.required_directories(), {'bar', 'bar/zap'})
+
+        self.registry.remove('bar/zap/zot')
+        self.assertEqual(self.registry.required_directories(), {'bar'})
+
+        self.registry.remove('bar/baz')
+        self.assertEqual(self.registry.required_directories(), {'bar'})
+
+        self.registry.remove('bar/zot')
+        self.assertEqual(self.registry.required_directories(), set())
+
+        self.registry.add('x/y/z', GeneratedFile('xyz'))
+        self.assertEqual(self.registry.required_directories(), {'x', 'x/y'})
 
 
 class TestFileCopier(TestWithTmpDir):
@@ -199,9 +257,61 @@ class TestFileCopier(TestWithTmpDir):
 
         self.assertEqual(self.all_files(self.tmpdir), set(['foo', 'bar',
             'populateddir/foo']))
+        self.assertEqual(self.all_dirs(self.tmpdir), set(['populateddir']))
         self.assertEqual(result.removed_files, set())
         self.assertEqual(result.removed_directories,
             set([self.tmppath('emptydir')]))
+
+    def test_no_remove_empty_directories(self):
+        copier = FileCopier()
+        copier.add('foo', GeneratedFile('foo'))
+
+        with open(self.tmppath('bar'), 'a'):
+            pass
+
+        os.mkdir(self.tmppath('emptydir'))
+        d = self.tmppath('populateddir')
+        os.mkdir(d)
+
+        with open(self.tmppath('populateddir/foo'), 'a'):
+            pass
+
+        result = copier.copy(self.tmpdir, remove_unaccounted=False,
+            remove_empty_directories=False)
+
+        self.assertEqual(self.all_files(self.tmpdir), set(['foo', 'bar',
+            'populateddir/foo']))
+        self.assertEqual(self.all_dirs(self.tmpdir), set(['emptydir',
+            'populateddir']))
+        self.assertEqual(result.removed_files, set())
+        self.assertEqual(result.removed_directories, set())
+
+    def test_optional_exists_creates_unneeded_directory(self):
+        """Demonstrate that a directory not strictly required, but specified
+        as the path to an optional file, will be unnecessarily created.
+
+        This behaviour is wrong; fixing it is tracked by Bug 972432;
+        and this test exists to guard against unexpected changes in
+        behaviour.
+        """
+
+        dest = self.tmppath('dest')
+
+        copier = FileCopier()
+        copier.add('foo/bar', ExistingFile(required=False))
+
+        result = copier.copy(dest)
+
+        st = os.lstat(self.tmppath('dest/foo'))
+        self.assertFalse(stat.S_ISLNK(st.st_mode))
+        self.assertTrue(stat.S_ISDIR(st.st_mode))
+
+        # What's worse, we have no record that dest was created.
+        self.assertEquals(len(result.updated_files), 0)
+
+        # But we do have an erroneous record of an optional file
+        # existing when it does not.
+        self.assertIn(self.tmppath('dest/foo/bar'), result.existing_files)
 
 
 class TestFilePurger(TestWithTmpDir):

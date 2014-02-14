@@ -33,6 +33,7 @@ EXPORTS += [
     'gfxPoint.h',
     'gfxPoint3D.h',
     'gfxPointH3D.h',
+    'gfxPrefs.h',
     'gfxQuad.h',
     'gfxQuaternion.h',
     'gfxRect.h',
@@ -218,6 +219,7 @@ SOURCES += [
     'gfxPlatform.cpp',
     # Uses FORCE_PR_LOG
     'gfxPlatformFontList.cpp',
+    'gfxPrefs.cpp',
     # Uses FORCE_PR_LOG
     'gfxUserFontSet.cpp',
 ]
