@@ -2439,16 +2439,16 @@ onInstallSuccessAck: function onInstallSuccessAck(aManifestURL,
         // respond Webapps:Install:Return:Ack, which calls onInstallSuccessAck.
         this.broadcastMessage("Webapps:Install:Return:OK", aData);
       }
+      if (!aData.isPackage) {
+        this.updateAppHandlers(null, app.manifest, app);
+        if (aInstallSuccessCallback) {
+          aInstallSuccessCallback(app.manifest);
+        }
+      }
       Services.obs.notifyObservers(null, "webapps-installed",
         JSON.stringify({ manifestURL: app.manifestURL }));
     });
 
-    if (!aData.isPackage) {
-      this.updateAppHandlers(null, app.manifest, app);
-      if (aInstallSuccessCallback) {
-        aInstallSuccessCallback(app.manifest);
-      }
-    }
     let dontNeedNetwork = false;
     if (manifest.package_path) {
       // If it is a local app then it must been installed from a local file
