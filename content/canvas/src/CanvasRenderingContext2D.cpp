@@ -97,11 +97,13 @@
 #ifdef USE_SKIA_GPU
 #undef free // apparently defined by some windows header, clashing with a free()
             // method in SkTypes.h
-#include "GLContextSkia.h"
+#include "SkiaGLGlue.h"
+#include "SurfaceStream.h"
 #include "SurfaceTypes.h"
-#include "nsIGfxInfo.h"
 #endif
+
 using mozilla::gl::GLContext;
+using mozilla::gl::SkiaGLGlue;
 using mozilla::gl::GLContextProvider;
 
 #ifdef XP_WIN
@@ -430,28 +432,18 @@ public:
     }
   }
 
-#ifdef USE_SKIA_GPU
   static void PreTransactionCallback(void* aData)
   {
     CanvasRenderingContext2DUserData* self =
       static_cast<CanvasRenderingContext2DUserData*>(aData);
     CanvasRenderingContext2D* context = self->mContext;
-    if (!context)
+    if (!context || !context->mStream || !context->mTarget)
       return;
 
-    GLContext* glContext = static_cast<GLContext*>(context->mTarget->GetGLContext());
-    if (!glContext)
-      return;
-
-    if (context->mTarget) {
-      // Since SkiaGL default to store drawing command until flush
-      // We will have to flush it before present.
-      context->mTarget->Flush();
-    }
-    glContext->MakeCurrent();
-    glContext->PublishFrame();
+    // Since SkiaGL default to store drawing command until flush
+    // We will have to flush it before present.
+    context->mTarget->Flush();
   }
-#endif
 
   static void DidTransactionCallback(void* aData)
   {
@@ -542,18 +534,15 @@ DrawTarget* CanvasRenderingContext2D::sErrorTarget = nullptr;
 
 
 CanvasRenderingContext2D::CanvasRenderingContext2D()
-  : mZero(false), mOpaque(false), mResetLayer(true)
+  : mForceSoftware(false), mZero(false), mOpaque(false), mResetLayer(true)
   , mIPC(false)
+  , mStream(nullptr)
   , mIsEntireFrameInvalid(false)
   , mPredictManyRedrawCalls(false), mPathTransformWillUpdate(false)
   , mInvalidateCount(0)
 {
   sNumLivingContexts++;
   SetIsDOMBinding();
-
-#ifdef USE_SKIA_GPU
-  mForceSoftware = false;
-#endif
 }
 
 CanvasRenderingContext2D::~CanvasRenderingContext2D()
@@ -568,9 +557,7 @@ CanvasRenderingContext2D::~CanvasRenderingContext2D()
     NS_IF_RELEASE(sErrorTarget);
   }
 
-#ifdef USE_SKIA_GPU
   RemoveDemotableContext(this);
-#endif
 }
 
 JSObject*
@@ -629,6 +616,7 @@ CanvasRenderingContext2D::Reset()
   }
 
   mTarget = nullptr;
+  mStream = nullptr;
 
   // Since the target changes the backing texture will change, and this will
   // no longer be valid.
@@ -750,8 +738,7 @@ CanvasRenderingContext2D::RedrawUser(const gfxRect& r)
 
 void CanvasRenderingContext2D::Demote()
 {
-#ifdef  USE_SKIA_GPU
-  if (!IsTargetValid() || mForceSoftware || !mTarget->GetGLContext())
+  if (!IsTargetValid() || mForceSoftware || !mStream)
     return;
 
   RemoveDemotableContext(this);
@@ -759,6 +746,7 @@ void CanvasRenderingContext2D::Demote()
   RefPtr<SourceSurface> snapshot = mTarget->Snapshot();
   RefPtr<DrawTarget> oldTarget = mTarget;
   mTarget = nullptr;
+  mStream = nullptr;
   mResetLayer = true;
   mForceSoftware = true;
 
@@ -777,10 +765,7 @@ void CanvasRenderingContext2D::Demote()
   }
 
   mTarget->SetTransform(oldTarget->GetTransform());
-#endif
 }
-
-#ifdef USE_SKIA_GPU
 
 std::vector<CanvasRenderingContext2D*>&
 CanvasRenderingContext2D::DemotableContexts()
@@ -792,11 +777,7 @@ CanvasRenderingContext2D::DemotableContexts()
 void
 CanvasRenderingContext2D::DemoteOldestContextIfNecessary()
 {
-#ifdef MOZ_GFX_OPTIMIZE_MOBILE
-  const size_t kMaxContexts = 2;
-#else
-  const size_t kMaxContexts = 16;
-#endif
+  const size_t kMaxContexts = 64;
 
   std::vector<CanvasRenderingContext2D*>& contexts = DemotableContexts();
   if (contexts.size() < kMaxContexts)
@@ -830,8 +811,6 @@ CheckSizeForSkiaGL(IntSize size) {
   return size.width >= minsize && size.height >= minsize;
 }
 
-#endif
-
 void
 CanvasRenderingContext2D::EnsureTarget()
 {
@@ -857,42 +836,29 @@ CanvasRenderingContext2D::EnsureTarget()
     }
 
      if (layerManager) {
-#ifdef USE_SKIA_GPU
-      if (gfxPlatform::GetPlatform()->UseAcceleratedSkiaCanvas()) {
-        SurfaceCaps caps = SurfaceCaps::ForRGBA();
-        caps.preserve = true;
-
-#ifdef MOZ_WIDGET_GONK
-        layers::ShadowLayerForwarder *forwarder = layerManager->AsShadowForwarder();
-        if (forwarder) {
-          caps.surfaceAllocator = static_cast<layers::ISurfaceAllocator*>(forwarder);
-        }
-#endif
-
+      if (gfxPlatform::GetPlatform()->UseAcceleratedSkiaCanvas() &&
+          !mForceSoftware &&
+          CheckSizeForSkiaGL(size)) {
         DemoteOldestContextIfNecessary();
 
-        nsRefPtr<GLContext> glContext;
-        nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
-        nsString vendor;
+#ifdef USE_SKIA_GPU
+        SkiaGLGlue* glue = gfxPlatform::GetPlatform()->GetSkiaGLGlue();
 
-        if (!mForceSoftware && CheckSizeForSkiaGL(size))
-        {
-          glContext = GLContextProvider::CreateOffscreen(gfxIntSize(size.width, size.height),
-                                                         caps);
-        }
+        if (glue) {
+          mTarget = Factory::CreateDrawTargetSkiaWithGrContext(glue->GetGrContext(), size, format);
+          MOZ_ASSERT(mTarget, "Failed to create SkiaGL DrawTarget");
 
-        if (glContext) {
-          SkAutoTUnref<GrGLInterface> i(CreateGrGLInterfaceFromGLContext(glContext));
-          mTarget = Factory::CreateDrawTargetSkiaWithGLContextAndGrGLInterface(glContext, i, size, format);
+          mStream = gfx::SurfaceStream::CreateForType(SurfaceStreamType::TripleBuffer, glue->GetGLContext());
           AddDemotableContext(this);
-        } else {
+        } else
+#endif
+        {
           mTarget = layerManager->CreateDrawTarget(size, format);
         }
       } else
-#endif
-       mTarget = layerManager->CreateDrawTarget(size, format);
+        mTarget = layerManager->CreateDrawTarget(size, format);
      } else {
-       mTarget = gfxPlatform::GetPlatform()->CreateOffscreenCanvasDrawTarget(size, format);
+        mTarget = gfxPlatform::GetPlatform()->CreateOffscreenCanvasDrawTarget(size, format);
      }
   }
 
@@ -1077,12 +1043,10 @@ CanvasRenderingContext2D::SetContextOptions(JSContext* aCx, JS::Handle<JS::Value
   ContextAttributes2D attributes;
   NS_ENSURE_TRUE(attributes.Init(aCx, aOptions), NS_ERROR_UNEXPECTED);
 
-#ifdef USE_SKIA_GPU
   if (Preferences::GetBool("gfx.canvas.willReadFrequently.enable", false)) {
     // Use software when there is going to be a lot of readback
     mForceSoftware = attributes.mWillReadFrequently;
   }
-#endif
 
   return NS_OK;
 }
@@ -3246,7 +3210,6 @@ CanvasRenderingContext2D::DrawDirectlyToCanvas(
   NS_ENSURE_SUCCESS_VOID(rv);
 }
 
-#ifdef USE_SKIA_GPU
 static bool
 IsStandardCompositeOp(CompositionOp op)
 {
@@ -3262,7 +3225,6 @@ IsStandardCompositeOp(CompositionOp op)
             op == CompositionOp::OP_ADD ||
             op == CompositionOp::OP_XOR);
 }
-#endif
 
 void
 CanvasRenderingContext2D::SetGlobalCompositeOperation(const nsAString& op,
@@ -3303,11 +3265,9 @@ CanvasRenderingContext2D::SetGlobalCompositeOperation(const nsAString& op,
   // XXX ERRMSG we need to report an error to developers here! (bug 329026)
   else return;
 
-#ifdef USE_SKIA_GPU
   if (!IsStandardCompositeOp(comp_op)) {
     Demote();
   }
-#endif
 
 #undef CANVAS_OP_TO_GFX_OP
   CurrentState().op = comp_op;
@@ -3353,11 +3313,9 @@ CanvasRenderingContext2D::GetGlobalCompositeOperation(nsAString& op,
     error.Throw(NS_ERROR_FAILURE);
   }
 
-#ifdef USE_SKIA_GPU
   if (!IsStandardCompositeOp(comp_op)) {
     Demote();
   }
-#endif
 
 #undef CANVAS_OP_TO_GFX_OP
 }
@@ -4057,7 +4015,20 @@ CanvasRenderingContext2D::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
         aOldLayer->GetUserData(&g2DContextLayerUserData));
 
     CanvasLayer::Data data;
-    data.mGLContext = static_cast<GLContext*>(mTarget->GetGLContext());
+#ifdef USE_SKIA_GPU
+    if (mStream) {
+      SkiaGLGlue* glue = gfxPlatform::GetPlatform()->GetSkiaGLGlue();
+
+      if (glue) {
+        data.mGLContext = glue->GetGLContext();
+        data.mStream = mStream.get();
+      }
+    } else
+#endif
+    {
+      data.mDrawTarget = mTarget;
+    }
+
     if (userData && userData->IsForContext(this) && aOldLayer->IsDataValid(data)) {
       nsRefPtr<CanvasLayer> ret = aOldLayer;
       return ret.forget();
@@ -4091,11 +4062,16 @@ CanvasRenderingContext2D::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
 
   CanvasLayer::Data data;
 #ifdef USE_SKIA_GPU
-  GLContext* glContext = static_cast<GLContext*>(mTarget->GetGLContext());
-  if (glContext) {
-    canvasLayer->SetPreTransactionCallback(
-            CanvasRenderingContext2DUserData::PreTransactionCallback, userData);
-    data.mGLContext = glContext;
+  if (mStream) {
+    SkiaGLGlue* glue = gfxPlatform::GetPlatform()->GetSkiaGLGlue();
+
+    if (glue) {
+      canvasLayer->SetPreTransactionCallback(
+              CanvasRenderingContext2DUserData::PreTransactionCallback, userData);
+      data.mGLContext = glue->GetGLContext();
+      data.mStream = mStream.get();
+      data.mTexID = mTarget->GetTextureID();
+    }
   } else
 #endif
   {

@@ -7,6 +7,7 @@
 
 #include "gfxPoint.h"
 #include "SharedSurface.h"
+#include "SharedSurfaceGL.h"
 #include "SurfaceFactory.h"
 #include "GeckoProfiler.h"
 
@@ -54,6 +55,20 @@ SurfaceStream::CreateForType(SurfaceStreamType type, mozilla::gl::GLContext* glC
 
     result->mGLContext = glContext;
     return result;
+}
+
+void
+SurfaceStream_TripleBuffer::CopySurfaceToProducer(SharedSurface* src, SurfaceFactory* factory)
+{
+    if (!mProducer) {
+        New(factory, src->Size(), mProducer);
+    }
+
+    MOZ_ASSERT(mProducer);
+
+    mProducer->LockProd();
+    SharedSurface::Copy(src, mProducer, factory);
+    mProducer->UnlockProd();
 }
 
 void
