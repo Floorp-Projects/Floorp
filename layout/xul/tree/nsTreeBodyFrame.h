@@ -24,7 +24,6 @@
 #include "nsScrollbarFrame.h"
 #include "nsThreadUtils.h"
 #include "mozilla/LookAndFeel.h"
-#include "nsIScrollbarOwner.h"
 
 class nsOverflowChecker;
 class nsTreeImageListener;
@@ -52,7 +51,6 @@ class nsTreeBodyFrame MOZ_FINAL
   , public nsICSSPseudoComparator
   , public nsIScrollbarMediator
   , public nsIReflowCallback
-  , public nsIScrollbarOwner
 {
 public:
   typedef mozilla::layout::ScrollbarActivity ScrollbarActivity;
@@ -142,12 +140,12 @@ public:
                           nscoord aOldPos,
                           nscoord aNewPos) MOZ_OVERRIDE;
   virtual void VisibilityChanged(bool aVisible) MOZ_OVERRIDE { Invalidate(); }
-
-  // nsIScrollbarOwner
   virtual nsIFrame* GetScrollbarBox(bool aVertical) MOZ_OVERRIDE {
     ScrollParts parts = GetScrollParts();
     return aVertical ? parts.mVScrollbar : parts.mHScrollbar;
   }
+  virtual void ScrollbarActivityStarted() const MOZ_OVERRIDE;
+  virtual void ScrollbarActivityStopped() const MOZ_OVERRIDE;
 
   // Overridden from nsIFrame to cache our pres context.
   virtual void Init(nsIContent*       aContent,
@@ -468,9 +466,6 @@ protected:
 
   void PostScrollEvent();
   void FireScrollEvent();
-
-  virtual void ScrollbarActivityStarted() const MOZ_OVERRIDE;
-  virtual void ScrollbarActivityStopped() const MOZ_OVERRIDE;
 
   /**
    * Clear the pointer to this frame for all nsTreeImageListeners that were

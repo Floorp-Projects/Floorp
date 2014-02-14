@@ -430,13 +430,13 @@ ScrollbarsForWheel::SetActiveScrollTarget(nsIScrollableFrame* aScrollTarget)
   if (!sHadWheelStart) {
     return;
   }
-  nsIScrollbarOwner* scrollbarOwner = do_QueryFrame(aScrollTarget);
-  if (!scrollbarOwner) {
+  nsIScrollbarMediator* scrollbarMediator = do_QueryFrame(aScrollTarget);
+  if (!scrollbarMediator) {
     return;
   }
   sHadWheelStart = false;
   sActiveOwner = do_QueryFrame(aScrollTarget);
-  scrollbarOwner->ScrollbarActivityStarted();
+  scrollbarMediator->ScrollbarActivityStarted();
 }
 
 /* static */ void
@@ -452,9 +452,9 @@ ScrollbarsForWheel::MayInactivate()
 /* static */ void
 ScrollbarsForWheel::Inactivate()
 {
-  nsIScrollbarOwner* scrollbarOwner = do_QueryFrame(sActiveOwner);
-  if (scrollbarOwner) {
-    scrollbarOwner->ScrollbarActivityStopped();
+  nsIScrollbarMediator* scrollbarMediator = do_QueryFrame(sActiveOwner);
+  if (scrollbarMediator) {
+    scrollbarMediator->ScrollbarActivityStopped();
   }
   sActiveOwner = nullptr;
   DeactivateAllTemporarilyActivatedScrollTargets();
@@ -498,11 +498,11 @@ ScrollbarsForWheel::TemporarilyActivateAllPossibleScrollTargets(
     nsIScrollableFrame* target =
       aESM->ComputeScrollTarget(aTargetFrame, dir->deltaX, dir->deltaY, aEvent,
               EventStateManager::COMPUTE_DEFAULT_ACTION_TARGET);
-    nsIScrollbarOwner* scrollbarOwner = do_QueryFrame(target);
-    if (scrollbarOwner) {
+    nsIScrollbarMediator* scrollbarMediator = do_QueryFrame(target);
+    if (scrollbarMediator) {
       nsIFrame* targetFrame = do_QueryFrame(target);
       *scrollTarget = targetFrame;
-      scrollbarOwner->ScrollbarActivityStarted();
+      scrollbarMediator->ScrollbarActivityStarted();
     }
   }
 }
@@ -513,9 +513,9 @@ ScrollbarsForWheel::DeactivateAllTemporarilyActivatedScrollTargets()
   for (size_t i = 0; i < kNumberOfTargets; i++) {
     nsWeakFrame* scrollTarget = &sActivatedScrollTargets[i];
     if (*scrollTarget) {
-      nsIScrollbarOwner* scrollbarOwner = do_QueryFrame(*scrollTarget);
-      if (scrollbarOwner) {
-        scrollbarOwner->ScrollbarActivityStopped();
+      nsIScrollbarMediator* scrollbarMediator = do_QueryFrame(*scrollTarget);
+      if (scrollbarMediator) {
+        scrollbarMediator->ScrollbarActivityStopped();
       }
       *scrollTarget = nullptr;
     }

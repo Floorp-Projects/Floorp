@@ -1870,9 +1870,9 @@ TabChild::RecvNotifyAPZStateChange(const ViewID& aViewId,
   case APZStateChange::TransformBegin:
   {
     nsIScrollableFrame* sf = nsLayoutUtils::FindScrollableFrameFor(aViewId);
-    nsIScrollbarOwner* scrollbarOwner = do_QueryFrame(sf);
-    if (scrollbarOwner) {
-      scrollbarOwner->ScrollbarActivityStarted();
+    nsIScrollbarMediator* scrollbarMediator = do_QueryFrame(sf);
+    if (scrollbarMediator) {
+      scrollbarMediator->ScrollbarActivityStarted();
     }
 
     nsCOMPtr<nsIDocument> doc = GetDocument();
@@ -1888,9 +1888,9 @@ TabChild::RecvNotifyAPZStateChange(const ViewID& aViewId,
   case APZStateChange::TransformEnd:
   {
     nsIScrollableFrame* sf = nsLayoutUtils::FindScrollableFrameFor(aViewId);
-    nsIScrollbarOwner* scrollbarOwner = do_QueryFrame(sf);
-    if (scrollbarOwner) {
-      scrollbarOwner->ScrollbarActivityStopped();
+    nsIScrollbarMediator* scrollbarMediator = do_QueryFrame(sf);
+    if (scrollbarMediator) {
+      scrollbarMediator->ScrollbarActivityStopped();
     }
 
     nsCOMPtr<nsIDocument> doc = GetDocument();
