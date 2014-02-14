@@ -3086,8 +3086,8 @@ onInstallSuccessAck: function onInstallSuccessAck(aManifestURL,
   _openSignedPackage: function(aZipFile, aCertDb) {
     let deferred = Promise.defer();
 
-    aCertDb.openSignedJARFileAsync(
-       aZipFile,
+    aCertDb.openSignedAppFileAsync(
+       Ci.nsIX509CertDB.AppMarketplaceProdPublicRoot, aZipFile,
        function(aRv, aZipReader) {
          deferred.resolve([aRv, aZipReader]);
        }
