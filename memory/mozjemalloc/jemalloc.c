@@ -164,15 +164,15 @@
  */
 #define MALLOC_STATS
 
+/* Memory filling (junk/zero). */
+#define MALLOC_FILL
+
 #ifndef MALLOC_PRODUCTION
    /*
     * MALLOC_DEBUG enables assertions and other sanity checks, and disables
     * inline functions.
     */
 #  define MALLOC_DEBUG
-
-   /* Memory filling (junk/zero). */
-#  define MALLOC_FILL
 
    /* Allocation tracing. */
 #  ifndef MOZ_MEMORY_WINDOWS
@@ -1287,13 +1287,16 @@ const char	*_malloc_options = MOZ_MALLOC_OPTIONS;
 static bool	opt_abort = true;
 #ifdef MALLOC_FILL
 static bool	opt_junk = true;
+static bool	opt_zero = false;
 #endif
 #else
 static bool	opt_abort = false;
 #ifdef MALLOC_FILL
-static bool	opt_junk = false;
+static const bool	opt_junk = false;
+static const bool	opt_zero = false;
 #endif
 #endif
+
 static size_t	opt_dirty_max = DIRTY_MAX_DEFAULT;
 #ifdef MALLOC_BALANCE
 static uint64_t	opt_balance_threshold = BALANCE_THRESHOLD_DEFAULT;
@@ -1319,9 +1322,6 @@ static bool	opt_sysv = false;
 #endif
 #ifdef MALLOC_XMALLOC
 static bool	opt_xmalloc = false;
-#endif
-#ifdef MALLOC_FILL
-static bool	opt_zero = false;
 #endif
 static int	opt_narenas_lshift = 0;
 
@@ -5760,12 +5760,14 @@ MALLOC_OUT:
 						opt_dirty_max <<= 1;
 					break;
 #ifdef MALLOC_FILL
+#ifndef MALLOC_PRODUCTION
 				case 'j':
 					opt_junk = false;
 					break;
 				case 'J':
 					opt_junk = true;
 					break;
+#endif
 #endif
 #ifndef MALLOC_STATIC_SIZES
 				case 'k':
@@ -5851,12 +5853,14 @@ MALLOC_OUT:
 					break;
 #endif
 #ifdef MALLOC_FILL
+#ifndef MALLOC_PRODUCTION
 				case 'z':
 					opt_zero = false;
 					break;
 				case 'Z':
 					opt_zero = true;
 					break;
+#endif
 #endif
 				default: {
 					char cbuf[2];
