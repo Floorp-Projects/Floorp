@@ -516,33 +516,6 @@ nsScriptSecurityManager::AppAttributesEqual(nsIPrincipal* aFirst,
             (aFirst->GetIsInBrowserElement() == aSecond->GetIsInBrowserElement()));
 }
 
-nsresult
-nsScriptSecurityManager::CheckSameOriginDOMProp(nsIPrincipal* aSubject,
-                                                nsIPrincipal* aObject,
-                                                uint32_t aAction)
-{
-    nsresult rv;
-    bool subsumes;
-    rv = aSubject->Subsumes(aObject, &subsumes);
-    if (NS_SUCCEEDED(rv) && !subsumes) {
-        rv = NS_ERROR_DOM_PROP_ACCESS_DENIED;
-    }
-    
-    if (NS_SUCCEEDED(rv))
-        return NS_OK;
-
-    /*
-    * Content can't ever touch chrome (we check for UniversalXPConnect later)
-    */
-    if (aObject == mSystemPrincipal)
-        return NS_ERROR_DOM_PROP_ACCESS_DENIED;
-
-    /*
-    ** Access tests failed, so now report error.
-    */
-    return NS_ERROR_DOM_PROP_ACCESS_DENIED;
-}
-
 NS_IMETHODIMP
 nsScriptSecurityManager::CheckLoadURIFromScript(JSContext *cx, nsIURI *aURI)
 {
