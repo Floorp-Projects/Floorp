@@ -191,8 +191,9 @@ class TestFileCopier(TestWithTmpDir):
         self.assertEqual(result.removed_files, set(self.tmppath(p) for p in
             ('foo/bar', 'foo/qux', 'foo/deep/nested/directory/file')))
 
-    def test_symlink_directory(self):
-        """Directory symlinks in destination are deleted."""
+    def test_symlink_directory_replaced(self):
+        """Directory symlinks in destination are replaced if they need to be
+        real directories."""
         if not self.symlink_supported:
             return
 
@@ -217,6 +218,75 @@ class TestFileCopier(TestWithTmpDir):
 
         self.assertEqual(result.removed_directories, set())
         self.assertEqual(len(result.updated_files), 1)
+
+    def test_remove_unaccounted_directory_symlinks(self):
+        """Directory symlinks in destination that are not in the way are
+        deleted according to remove_unaccounted and
+        remove_all_directory_symlinks.
+        """
+        if not self.symlink_supported:
+            return
+
+        dest = self.tmppath('dest')
+
+        copier = FileCopier()
+        copier.add('foo/bar/baz', GeneratedFile('foobarbaz'))
+
+        os.makedirs(self.tmppath('dest/foo'))
+        dummy = self.tmppath('dummy')
+        os.mkdir(dummy)
+
+        os.mkdir(self.tmppath('dest/zot'))
+        link = self.tmppath('dest/zot/zap')
+        os.symlink(dummy, link)
+
+        # If not remove_unaccounted but remove_empty_directories, then
+        # the symlinked directory remains (as does its containing
+        # directory).
+        result = copier.copy(dest, remove_unaccounted=False,
+            remove_empty_directories=True,
+            remove_all_directory_symlinks=False)
+
+        st = os.lstat(link)
+        self.assertTrue(stat.S_ISLNK(st.st_mode))
+        self.assertFalse(stat.S_ISDIR(st.st_mode))
+
+        self.assertEqual(self.all_files(dest), set(copier.paths()))
+        self.assertEqual(self.all_dirs(dest), set(['foo/bar']))
+
+        self.assertEqual(result.removed_directories, set())
+        self.assertEqual(len(result.updated_files), 1)
+
+        # If remove_unaccounted but not remove_empty_directories, then
+        # only the symlinked directory is removed.
+        result = copier.copy(dest, remove_unaccounted=True,
+            remove_empty_directories=False,
+            remove_all_directory_symlinks=False)
+
+        st = os.lstat(self.tmppath('dest/zot'))
+        self.assertFalse(stat.S_ISLNK(st.st_mode))
+        self.assertTrue(stat.S_ISDIR(st.st_mode))
+
+        self.assertEqual(result.removed_files, set([link]))
+        self.assertEqual(result.removed_directories, set())
+
+        self.assertEqual(self.all_files(dest), set(copier.paths()))
+        self.assertEqual(self.all_dirs(dest), set(['foo/bar', 'zot']))
+
+        # If remove_unaccounted and remove_empty_directories, then
+        # both the symlink and its containing directory are removed.
+        link = self.tmppath('dest/zot/zap')
+        os.symlink(dummy, link)
+
+        result = copier.copy(dest, remove_unaccounted=True,
+            remove_empty_directories=True,
+            remove_all_directory_symlinks=False)
+
+        self.assertEqual(result.removed_files, set([link]))
+        self.assertEqual(result.removed_directories, set([self.tmppath('dest/zot')]))
+
+        self.assertEqual(self.all_files(dest), set(copier.paths()))
+        self.assertEqual(self.all_dirs(dest), set(['foo/bar']))
 
     def test_permissions(self):
         """Ensure files without write permission can be deleted."""
