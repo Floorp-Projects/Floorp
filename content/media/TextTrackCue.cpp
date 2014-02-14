@@ -79,8 +79,8 @@ TextTrackCue::TextTrackCue(nsISupports* aGlobal,
   }
 }
 
-/** Save a reference to our creating document so it's available
- *  even when unlinked during discard/teardown.
+/** Save a reference to our creating document so we don't have to
+ *  keep getting it from our window.
  */
 nsresult
 TextTrackCue::StashDocument(nsISupports* aGlobal)
@@ -99,7 +99,11 @@ TextTrackCue::StashDocument(nsISupports* aGlobal)
 already_AddRefed<DocumentFragment>
 TextTrackCue::GetCueAsHTML()
 {
-  MOZ_ASSERT(mDocument);
+  // mDocument may be null during cycle collector shutdown.
+  // See bug 941701.
+  if (!mDocument) {
+    return nullptr;
+  }
 
   if (!sParserWrapper) {
     nsresult rv;
