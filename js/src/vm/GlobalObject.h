@@ -111,9 +111,10 @@ class GlobalObject : public JSObject
     static const unsigned INTRINSICS              = DEBUGGERS + 1;
     static const unsigned FLOAT32X4_TYPE_DESCR   = INTRINSICS + 1;
     static const unsigned INT32X4_TYPE_DESCR     = FLOAT32X4_TYPE_DESCR + 1;
+    static const unsigned FOR_OF_PIC_CHAIN        = INT32X4_TYPE_DESCR + 1;
 
     /* Total reserved-slot count for global objects. */
-    static const unsigned RESERVED_SLOTS = INT32X4_TYPE_DESCR + 1;
+    static const unsigned RESERVED_SLOTS = FOR_OF_PIC_CHAIN + 1;
 
     /*
      * The slot count must be in the public API for JSCLASS_GLOBAL_FLAGS, and
@@ -674,6 +675,14 @@ class GlobalObject : public JSObject
      * exist. Returns nullptr only on OOM.
      */
     static DebuggerVector *getOrCreateDebuggers(JSContext *cx, Handle<GlobalObject*> global);
+
+    inline JSObject *getForOfPICObject() {
+        Value forOfPIC = getReservedSlot(FOR_OF_PIC_CHAIN);
+        if (forOfPIC.isUndefined())
+            return nullptr;
+        return &forOfPIC.toObject();
+    }
+    static JSObject *getOrCreateForOfPICObject(JSContext *cx, Handle<GlobalObject*> global);
 
     static bool addDebugger(JSContext *cx, Handle<GlobalObject*> global, Debugger *dbg);
 };

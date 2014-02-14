@@ -232,7 +232,7 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(JSContext* cx,
             AutoSaveContextOptions asco(cx);
             ContextOptionsRef(cx).setDontReportUncaught(true);
             RootedValue arg(cx, JS::ObjectValue(*id));
-            success = JS_CallFunctionValue(cx, jsobj, fun, arg, retval.address());
+            success = JS_CallFunctionValue(cx, jsobj, fun, arg, &retval);
         }
 
         if (!success && JS_IsExceptionPending(cx)) {
@@ -1282,7 +1282,7 @@ pre_call_clean_up:
             AutoSaveContextOptions asco(cx);
             ContextOptionsRef(cx).setDontReportUncaught(true);
 
-            success = JS_CallFunctionValue(cx, thisObj, fval, args, rval.address());
+            success = JS_CallFunctionValue(cx, thisObj, fval, args, &rval);
         } else {
             // The property was not an object so can't be a function.
             // Let's build and 'throw' an exception.
