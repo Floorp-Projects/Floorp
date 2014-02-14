@@ -35,7 +35,8 @@ extern void EnsureLogInitialized();
 
 nsClipboard::nsClipboard() : nsBaseClipboard()
 {
-  mChangeCount = 0;
+  mChangeCountGeneral = 0;
+  mChangeCountFind = 0;
 
   EnsureLogInitialized();
 }
@@ -65,7 +66,7 @@ nsClipboard::SetNativeClipboardData(int32_t aWhichClipboard)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  if ((aWhichClipboard != kGlobalClipboard) || !mTransferable)
+  if ((aWhichClipboard != kGlobalClipboard && aWhichClipboard != kFindClipboard) || !mTransferable)
     return NS_ERROR_FAILURE;
 
   mIgnoreEmptyNotification = true;
@@ -74,28 +75,44 @@ nsClipboard::SetNativeClipboardData(int32_t aWhichClipboard)
   if (!pasteboardOutputDict)
     return NS_ERROR_FAILURE;
 
-  // write everything out to the general pasteboard
   unsigned int outputCount = [pasteboardOutputDict count];
   NSArray* outputKeys = [pasteboardOutputDict allKeys];
-  NSPasteboard* generalPBoard = [NSPasteboard generalPasteboard];
-  [generalPBoard declareTypes:outputKeys owner:nil];
+  NSPasteboard* cocoaPasteboard;
+  if (aWhichClipboard == kFindClipboard) {
+    cocoaPasteboard = [NSPasteboard pasteboardWithName:NSFindPboard];
+    [cocoaPasteboard declareTypes:[NSArray arrayWithObject:NSStringPboardType] owner:nil];
+  } else {
+    // Write everything else out to the general pasteboard.
+    cocoaPasteboard = [NSPasteboard generalPasteboard];
+    [cocoaPasteboard declareTypes:outputKeys owner:nil];
+  }
+
   for (unsigned int i = 0; i < outputCount; i++) {
     NSString* currentKey = [outputKeys objectAtIndex:i];
     id currentValue = [pasteboardOutputDict valueForKey:currentKey];
-    if (currentKey == NSStringPboardType ||
-        currentKey == kCorePboardType_url ||
-        currentKey == kCorePboardType_urld ||
-        currentKey == kCorePboardType_urln) {
-      [generalPBoard setString:currentValue forType:currentKey];
-    } else if (currentKey == NSHTMLPboardType) {
-      [generalPBoard setString:(nsClipboard::WrapHtmlForSystemPasteboard(currentValue))
-                       forType:currentKey];
+    if (aWhichClipboard == kFindClipboard) {
+      if (currentKey == NSStringPboardType)
+        [cocoaPasteboard setString:currentValue forType:currentKey];
     } else {
-      [generalPBoard setData:currentValue forType:currentKey];
+      if (currentKey == NSStringPboardType ||
+          currentKey == kCorePboardType_url ||
+          currentKey == kCorePboardType_urld ||
+          currentKey == kCorePboardType_urln) {
+        [cocoaPasteboard setString:currentValue forType:currentKey];
+      } else if (currentKey == NSHTMLPboardType) {
+        [cocoaPasteboard setString:(nsClipboard::WrapHtmlForSystemPasteboard(currentValue))
+                         forType:currentKey];
+      } else {
+        [cocoaPasteboard setData:currentValue forType:currentKey];
+      }
     }
   }
 
-  mChangeCount = [generalPBoard changeCount];
+  if (aWhichClipboard == kFindClipboard) {
+    mChangeCountFind = [cocoaPasteboard changeCount];
+  } else {
+    mChangeCountGeneral = [cocoaPasteboard changeCount];
+  }
 
   mIgnoreEmptyNotification = false;
 
@@ -238,10 +255,15 @@ nsClipboard::GetNativeClipboardData(nsITransferable* aTransferable, int32_t aWhi
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  if ((aWhichClipboard != kGlobalClipboard) || !aTransferable)
+  if ((aWhichClipboard != kGlobalClipboard && aWhichClipboard != kFindClipboard) || !aTransferable)
     return NS_ERROR_FAILURE;
 
-  NSPasteboard* cocoaPasteboard = [NSPasteboard generalPasteboard];
+  NSPasteboard* cocoaPasteboard;
+  if (aWhichClipboard == kFindClipboard) {
+    cocoaPasteboard = [NSPasteboard pasteboardWithName:NSFindPboard];
+  } else {
+    cocoaPasteboard = [NSPasteboard generalPasteboard];
+  }
   if (!cocoaPasteboard)
     return NS_ERROR_FAILURE;
 
@@ -254,9 +276,10 @@ nsClipboard::GetNativeClipboardData(nsITransferable* aTransferable, int32_t aWhi
   uint32_t flavorCount;
   flavorList->Count(&flavorCount);
 
+  int changeCount = (aWhichClipboard == kFindClipboard) ? mChangeCountFind : mChangeCountGeneral;
   // If we were the last ones to put something on the pasteboard, then just use the cached
   // transferable. Otherwise clear it because it isn't relevant any more.
-  if (mChangeCount == [cocoaPasteboard changeCount]) {
+  if (changeCount == [cocoaPasteboard changeCount]) {
     if (mTransferable) {
       for (uint32_t i = 0; i < flavorCount; i++) {
         nsCOMPtr<nsISupports> genericFlavor;
@@ -277,9 +300,8 @@ nsClipboard::GetNativeClipboardData(nsITransferable* aTransferable, int32_t aWhi
         }
       }
     }
-  }
-  else {
-    nsBaseClipboard::EmptyClipboard(kGlobalClipboard);
+  } else {
+    nsBaseClipboard::EmptyClipboard(aWhichClipboard);
   }
 
   // at this point we can't satisfy the request from cache data so let's look
@@ -356,6 +378,14 @@ nsClipboard::HasDataMatchingFlavors(const char** aFlavorList, uint32_t aLength,
   return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}
+
+NS_IMETHODIMP
+nsClipboard::SupportsFindClipboard(bool *_retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = true;
+  return NS_OK;
 }
 
 // This function converts anything that other applications might understand into the system format
