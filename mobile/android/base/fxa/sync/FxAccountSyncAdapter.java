@@ -61,6 +61,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SyncResult;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationCompat.Builder;
 
@@ -71,6 +72,10 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
 
   // Tracks the last seen storage hostname for backoff purposes.
   private static final String PREF_BACKOFF_STORAGE_HOST = "backoffStorageHost";
+
+  // Used to do cheap in-memory rate limiting.
+  private static final int MINIMUM_SYNC_DELAY_MILLIS = 5000;
+  private volatile long lastSyncRealtimeMillis = 0L;
 
   protected final ExecutorService executor;
 
@@ -430,6 +435,13 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
     Logger.setThreadLogTag(FxAccountConstants.GLOBAL_LOG_TAG);
     Logger.resetLogging();
 
+    if (this.lastSyncRealtimeMillis > 0L &&
+        (this.lastSyncRealtimeMillis + MINIMUM_SYNC_DELAY_MILLIS) > SystemClock.elapsedRealtime()) {
+      Logger.info(LOG_TAG, "Not syncing FxAccount " + Utils.obfuscateEmail(account.name) +
+                           ": minimum interval not met.");
+      return;
+    }
+
     Logger.info(LOG_TAG, "Syncing FxAccount" +
         " account named like " + Utils.obfuscateEmail(account.name) +
         " for authority " + authority +
@@ -569,7 +581,8 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
       syncDelegate.handleError(e);
     }
 
-    Logger.error(LOG_TAG, "Syncing done.");
+    Logger.info(LOG_TAG, "Syncing done.");
+    lastSyncRealtimeMillis = SystemClock.elapsedRealtime();
   }
 
   protected void debugAssertion(String audience, String assertion) {
