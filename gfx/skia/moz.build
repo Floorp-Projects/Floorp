@@ -697,6 +697,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gonk'):
     SOURCES += [
         'trunk/src/images/SkImageRef_ashmem.cpp',
         'trunk/src/ports/SkDebug_android.cpp',
+        'trunk/src/ports/SkFontHost_android_old.cpp',
         'trunk/src/ports/SkFontHost_cairo.cpp',
         'trunk/src/ports/SkFontHost_FreeType.cpp',
         'trunk/src/ports/SkFontHost_FreeType_common.cpp',
@@ -708,6 +709,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gonk'):
         'trunk/src/utils/SkThreadUtils_pthread.cpp',
         'trunk/src/utils/SkThreadUtils_pthread_other.cpp',
     ]
+    DEFINES['SK_FONTHOST_CAIRO_STANDALONE'] = 0
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     SOURCES += [
         'trunk/src/ports/SkDebug_stdio.cpp',
