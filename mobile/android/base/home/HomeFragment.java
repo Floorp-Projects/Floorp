@@ -117,7 +117,7 @@ abstract class HomeFragment extends Fragment {
         }
 
         final HomeContextMenuInfo info = (HomeContextMenuInfo) menuInfo;
-        final Context context = getActivity().getApplicationContext();
+        final Context context = getActivity();
 
         final int itemId = item.getItemId();
         if (itemId == R.id.home_share) {
@@ -160,7 +160,7 @@ abstract class HomeFragment extends Fragment {
 
         if (itemId == R.id.home_edit_bookmark) {
             // UI Dialog associates to the activity context, not the applications'.
-            new EditBookmarkDialog(getActivity()).show(info.url);
+            new EditBookmarkDialog(context).show(info.url);
             return true;
         }
 
