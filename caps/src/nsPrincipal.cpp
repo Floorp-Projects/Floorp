@@ -308,21 +308,9 @@ nsPrincipal::Equals(nsIPrincipal *aOther, bool *aResult)
 }
 
 NS_IMETHODIMP
-nsPrincipal::EqualsIgnoringDomain(nsIPrincipal *aOther, bool *aResult)
-{
-  return Equals(aOther, aResult);
-}
-
-NS_IMETHODIMP
 nsPrincipal::Subsumes(nsIPrincipal *aOther, bool *aResult)
 {
   return Equals(aOther, aResult);
-}
-
-NS_IMETHODIMP
-nsPrincipal::SubsumesIgnoringDomain(nsIPrincipal *aOther, bool *aResult)
-{
-  return EqualsIgnoringDomain(aOther, aResult);
 }
 
 NS_IMETHODIMP
@@ -673,15 +661,15 @@ typedef nsresult (NS_STDCALL nsIPrincipal::*nsIPrincipalMemFn)(nsIPrincipal* aOt
                                                                bool* aResult);
 #define CALL_MEMBER_FUNCTION(THIS,MEM_FN)  ((THIS)->*(MEM_FN))
 
-// nsExpandedPrincipal::Equals and nsExpandedPrincipal::EqualsIgnoringDomain
+// nsExpandedPrincipal::Equals and nsExpandedPrincipal::EqualsConsideringDomain
 // shares the same logic. The difference only that Equals requires 'this'
-// and 'aOther' to Subsume each other while EqualsIgnoringDomain requires
-// bidirectional SubsumesIgnoringDomain.
+// and 'aOther' to Subsume each other while EqualsConsideringDomain requires
+// bidirectional SubsumesConsideringDomain.
 static nsresult
 Equals(nsExpandedPrincipal* aThis, nsIPrincipalMemFn aFn, nsIPrincipal* aOther,
        bool* aResult)
 {
-  // If (and only if) 'aThis' and 'aOther' both Subsume/SubsumesIgnoringDomain
+  // If (and only if) 'aThis' and 'aOther' both Subsume/SubsumesConsideringDomain
   // each other, then they are Equal.
   *aResult = false;
   // Calling the corresponding subsume function on this (aFn).
@@ -703,20 +691,14 @@ nsExpandedPrincipal::Equals(nsIPrincipal* aOther, bool* aResult)
 }
 
 NS_IMETHODIMP
-nsExpandedPrincipal::EqualsIgnoringDomain(nsIPrincipal* aOther, bool* aResult)
-{
-  return ::Equals(this, &nsIPrincipal::SubsumesIgnoringDomain, aOther, aResult);
-}
-
-NS_IMETHODIMP
 nsExpandedPrincipal::EqualsConsideringDomain(nsIPrincipal* aOther, bool* aResult)
 {
   return ::Equals(this, &nsIPrincipal::SubsumesConsideringDomain, aOther, aResult);
 }
 
-// nsExpandedPrincipal::Subsumes and nsExpandedPrincipal::SubsumesIgnoringDomain
+// nsExpandedPrincipal::Subsumes and nsExpandedPrincipal::SubsumesConsideringDomain
 // shares the same logic. The difference only that Subsumes calls are replaced
-//with SubsumesIgnoringDomain calls in the second case.
+//with SubsumesConsideringDomain calls in the second case.
 static nsresult
 Subsumes(nsExpandedPrincipal* aThis, nsIPrincipalMemFn aFn, nsIPrincipal* aOther,
          bool* aResult)
@@ -758,12 +740,6 @@ NS_IMETHODIMP
 nsExpandedPrincipal::Subsumes(nsIPrincipal* aOther, bool* aResult)
 {
   return ::Subsumes(this, &nsIPrincipal::Subsumes, aOther, aResult);
-}
-
-NS_IMETHODIMP
-nsExpandedPrincipal::SubsumesIgnoringDomain(nsIPrincipal* aOther, bool* aResult)
-{
-  return ::Subsumes(this, &nsIPrincipal::SubsumesIgnoringDomain, aOther, aResult);
 }
 
 NS_IMETHODIMP
