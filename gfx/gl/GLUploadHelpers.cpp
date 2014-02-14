@@ -7,6 +7,7 @@
 
 #include "GLContext.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/Tools.h"  // For BytesPerPixel
 #include "gfxASurface.h"
 #include "gfxUtils.h"
 #include "gfxContext.h"
@@ -14,15 +15,15 @@
 
 namespace mozilla {
 
-using gfx::SurfaceFormat;
+using namespace gfx;
 
 namespace gl {
 
 static unsigned int
-DataOffset(const nsIntPoint &aPoint, int32_t aStride, gfxImageFormat aFormat)
+DataOffset(const nsIntPoint &aPoint, int32_t aStride, SurfaceFormat aFormat)
 {
   unsigned int data = aPoint.y * aStride;
-  data += aPoint.x * gfxASurface::BytePerPixelFromFormat(aFormat);
+  data += aPoint.x * BytesPerPixel(aFormat);
   return data;
 }
 
@@ -369,7 +370,7 @@ SurfaceFormat
 UploadImageDataToTexture(GLContext* gl,
                          unsigned char* aData,
                          int32_t aStride,
-                         gfxImageFormat aFormat,
+                         SurfaceFormat aFormat,
                          const nsIntRegion& aDstRegion,
                          GLuint& aTexture,
                          bool aOverwrite,
@@ -411,54 +412,54 @@ UploadImageDataToTexture(GLContext* gl,
     GLenum format;
     GLenum internalFormat;
     GLenum type;
-    int32_t pixelSize = gfxASurface::BytePerPixelFromFormat(aFormat);
+    int32_t pixelSize = BytesPerPixel(aFormat);
     SurfaceFormat surfaceFormat;
 
     MOZ_ASSERT(gl->GetPreferredARGB32Format() == LOCAL_GL_BGRA ||
                gl->GetPreferredARGB32Format() == LOCAL_GL_RGBA);
     switch (aFormat) {
-        case gfxImageFormat::ARGB32:
+        case SurfaceFormat::B8G8R8A8:
             if (gl->GetPreferredARGB32Format() == LOCAL_GL_BGRA) {
               format = LOCAL_GL_BGRA;
-              surfaceFormat = gfx::SurfaceFormat::R8G8B8A8;
+              surfaceFormat = SurfaceFormat::R8G8B8A8;
               type = LOCAL_GL_UNSIGNED_INT_8_8_8_8_REV;
             } else {
               format = LOCAL_GL_RGBA;
-              surfaceFormat = gfx::SurfaceFormat::B8G8R8A8;
+              surfaceFormat = SurfaceFormat::B8G8R8A8;
               type = LOCAL_GL_UNSIGNED_BYTE;
             }
             internalFormat = LOCAL_GL_RGBA;
             break;
-        case gfxImageFormat::RGB24:
-            // Treat RGB24 surfaces as RGBA32 except for the surface
+        case SurfaceFormat::B8G8R8X8:
+            // Treat BGRX surfaces as BGRA except for the surface
             // format used.
             if (gl->GetPreferredARGB32Format() == LOCAL_GL_BGRA) {
               format = LOCAL_GL_BGRA;
-              surfaceFormat = gfx::SurfaceFormat::R8G8B8X8;
+              surfaceFormat = SurfaceFormat::R8G8B8X8;
               type = LOCAL_GL_UNSIGNED_INT_8_8_8_8_REV;
             } else {
               format = LOCAL_GL_RGBA;
-              surfaceFormat = gfx::SurfaceFormat::B8G8R8X8;
+              surfaceFormat = SurfaceFormat::B8G8R8X8;
               type = LOCAL_GL_UNSIGNED_BYTE;
             }
             internalFormat = LOCAL_GL_RGBA;
             break;
-        case gfxImageFormat::RGB16_565:
+        case SurfaceFormat::R5G6B5:
             internalFormat = format = LOCAL_GL_RGB;
             type = LOCAL_GL_UNSIGNED_SHORT_5_6_5;
-            surfaceFormat = gfx::SurfaceFormat::R5G6B5;
+            surfaceFormat = SurfaceFormat::R5G6B5;
             break;
-        case gfxImageFormat::A8:
+        case SurfaceFormat::A8:
             internalFormat = format = LOCAL_GL_LUMINANCE;
             type = LOCAL_GL_UNSIGNED_BYTE;
             // We don't have a specific luminance shader
-            surfaceFormat = gfx::SurfaceFormat::A8;
+            surfaceFormat = SurfaceFormat::A8;
             break;
         default:
             NS_ASSERTION(false, "Unhandled image surface format!");
             format = 0;
             type = 0;
-            surfaceFormat = gfx::SurfaceFormat::UNKNOWN;
+            surfaceFormat = SurfaceFormat::UNKNOWN;
     }
 
     nsIntRegionRectIterator iter(paintRegion);
@@ -551,7 +552,7 @@ UploadSurfaceToTexture(GLContext* gl,
               data = imageSurface->Data();
         }
         data += DataOffset(aSrcPoint, imageSurface->Stride(),
-                           imageSurface->Format());
+                           ImageFormatToSurfaceFormat(imageSurface->Format()));
     }
 
     MOZ_ASSERT(imageSurface);
@@ -560,14 +561,14 @@ UploadSurfaceToTexture(GLContext* gl,
     return UploadImageDataToTexture(gl,
                                     data,
                                     imageSurface->Stride(),
-                                    imageSurface->Format(),
+                                    ImageFormatToSurfaceFormat(imageSurface->Format()),
                                     aDstRegion, aTexture, aOverwrite,
                                     aPixelBuffer, aTextureUnit, aTextureTarget);
 }
 
 SurfaceFormat
 UploadSurfaceToTexture(GLContext* gl,
-                       gfx::DataSourceSurface *aSurface,
+                       DataSourceSurface *aSurface,
                        const nsIntRegion& aDstRegion,
                        GLuint& aTexture,
                        bool aOverwrite,
@@ -578,8 +579,7 @@ UploadSurfaceToTexture(GLContext* gl,
 {
     unsigned char* data = aPixelBuffer ? nullptr : aSurface->GetData();
     int32_t stride = aSurface->Stride();
-    gfxImageFormat format =
-        ImageFormatForSurfaceFormat(aSurface->GetFormat());
+    SurfaceFormat format = aSurface->GetFormat();
     data += DataOffset(aSrcPoint, stride, format);
     return UploadImageDataToTexture(gl, data, stride, format,
                                     aDstRegion, aTexture, aOverwrite,
