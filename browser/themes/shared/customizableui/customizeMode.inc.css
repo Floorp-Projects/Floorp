@@ -83,6 +83,10 @@
   -moz-appearance: none;
 }
 
+.customizationmode-button[disabled="true"] {
+  opacity: .5;
+}
+
 #customization-titlebar-visibility-button {
   list-style-image: url("chrome://browser/skin/customizableui/customize-titleBar-toggle.png");
   -moz-image-region: rect(0, 24px, 24px, 0);
