@@ -352,16 +352,10 @@ AboutReader.prototype = {
         });
       }.bind(this));
     } else {
-      gChromeWin.Reader.removeArticleFromCache(this._article.url , function(success) {
-        dump("Reader:Remove (in reader) success=" + success);
-
-        Services.obs.notifyObservers(null, "Reader:Remove", this._article.url);
-
-        gChromeWin.sendMessageToJava({
-          type: "Reader:Removed",
-          url: this._article.url
-        });
-      }.bind(this));
+      // In addition to removing the article from the cache (handled in
+      // browser.js), sending this message will cause the toggle button to be
+      // updated (handled in this file).
+      Services.obs.notifyObservers(null, "Reader:Remove", this._article.url);
     }
   },
 

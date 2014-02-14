@@ -35,7 +35,11 @@ void ProfilerIOInterposeObserver::Observe(Observation& aObservation)
       return;
   }
   ProfilerBacktrace* stack = profiler_get_backtrace();
+
+  const char *filename = (NS_ConvertUTF16toUTF8(aObservation.Filename())).get();
+
   IOMarkerPayload* markerPayload = new IOMarkerPayload(aObservation.Reference(),
+                                                       filename,
                                                        aObservation.Start(),
                                                        aObservation.End(),
                                                        stack);

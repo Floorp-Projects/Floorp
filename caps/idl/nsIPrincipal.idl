@@ -20,7 +20,7 @@ interface nsIContentSecurityPolicy;
 [ptr] native JSPrincipals(JSPrincipals);
 [ptr] native PrincipalArray(nsTArray<nsCOMPtr<nsIPrincipal> >);
 
-[scriptable, builtinclass, uuid(f09d8a53-a6c8-4f68-b329-9a76a709d24e)]
+[scriptable, builtinclass, uuid(204555e7-04ad-4cc8-9f0e-840615cc43e8)]
 interface nsIPrincipal : nsISerializable
 {
     /**
@@ -31,9 +31,9 @@ interface nsIPrincipal : nsISerializable
     boolean equals(in nsIPrincipal other);
 
     /**
-     * Like equals, but doesn't take document.domain changes into account.
+     * Like equals, but takes document.domain changes into account.
      */
-    boolean equalsIgnoringDomain(in nsIPrincipal other);
+    boolean equalsConsideringDomain(in nsIPrincipal other);
 
     %{C++
     inline bool Equals(nsIPrincipal* aOther) {
@@ -41,9 +41,9 @@ interface nsIPrincipal : nsISerializable
       return NS_SUCCEEDED(Equals(aOther, &equal)) && equal;
     }
 
-    inline bool EqualsIgnoringDomain(nsIPrincipal* aOther) {
+    inline bool EqualsConsideringDomain(nsIPrincipal* aOther) {
       bool equal = false;
-      return NS_SUCCEEDED(EqualsIgnoringDomain(aOther, &equal)) && equal;
+      return NS_SUCCEEDED(EqualsConsideringDomain(aOther, &equal)) && equal;
     }
     %}
 
@@ -91,10 +91,10 @@ interface nsIPrincipal : nsISerializable
     boolean subsumes(in nsIPrincipal other);
 
     /**
-     * Same as the previous method, subsumes(), but for codebase principals
-     * ignores changes to document.domain.
+     * Same as the previous method, subsumes(), but takes document.domain into
+     * account.
      */
-    boolean subsumesIgnoringDomain(in nsIPrincipal other);
+    boolean subsumesConsideringDomain(in nsIPrincipal other);
 
     %{C++
     inline bool Subsumes(nsIPrincipal* aOther) {
@@ -102,9 +102,9 @@ interface nsIPrincipal : nsISerializable
       return NS_SUCCEEDED(Subsumes(aOther, &subsumes)) && subsumes;
     }
 
-    inline bool SubsumesIgnoringDomain(nsIPrincipal* aOther) {
+    inline bool SubsumesConsideringDomain(nsIPrincipal* aOther) {
       bool subsumes = false;
-      return NS_SUCCEEDED(SubsumesIgnoringDomain(aOther, &subsumes)) && subsumes;
+      return NS_SUCCEEDED(SubsumesConsideringDomain(aOther, &subsumes)) && subsumes;
     }
     %}
 

@@ -361,6 +361,15 @@ class ScriptSource
 {
     friend class SourceCompressionTask;
 
+    // A note on concurrency:
+    //
+    // The source may be compressed by a worker thread during parsing. (See
+    // SourceCompressionTask.) When compression is running in the background,
+    // ready() returns false. The compression thread touches the |data| union
+    // and |compressedLength_|. Therefore, it is not safe to read these members
+    // unless ready() is true. With that said, users of the public ScriptSource
+    // API should be fine.
+
     union {
         // Before setSourceCopy or setSource are successfully called, this union
         // has a nullptr pointer. When the script source is ready,
@@ -416,7 +425,7 @@ class ScriptSource
     bool hasIntroductionOffset_:1;
 
   public:
-    ScriptSource(JSPrincipals *originPrincipals)
+    explicit ScriptSource(JSPrincipals *originPrincipals)
       : refs(0),
         length_(0),
         compressedLength_(0),
@@ -451,7 +460,7 @@ class ScriptSource
     bool ready() const { return ready_; }
     void setSourceRetrievable() { sourceRetrievable_ = true; }
     bool sourceRetrievable() const { return sourceRetrievable_; }
-    bool hasSourceData() const { return !!data.source || !ready(); }
+    bool hasSourceData() const { return !ready() || !!data.source; }
     uint32_t length() const {
         JS_ASSERT(hasSourceData());
         return length_;
