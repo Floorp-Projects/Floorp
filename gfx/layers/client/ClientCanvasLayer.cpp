@@ -36,34 +36,27 @@ void
 ClientCanvasLayer::Initialize(const Data& aData)
 {
   CopyableCanvasLayer::Initialize(aData);
-
+ 
   mCanvasClient = nullptr;
 
   if (mGLContext) {
     GLScreenBuffer* screen = mGLContext->Screen();
-
-    SurfaceCaps caps = screen->Caps();
-    if (mStream) {
-      // The screen caps are irrelevant if we're using a separate stream
-      caps = GetContentFlags() & CONTENT_OPAQUE ? SurfaceCaps::ForRGB() : SurfaceCaps::ForRGBA();
-    }
-
     SurfaceStreamType streamType =
         SurfaceStream::ChooseGLStreamType(SurfaceStream::OffMainThread,
                                           screen->PreserveBuffer());
     SurfaceFactory_GL* factory = nullptr;
     if (!mForceReadback) {
-      if (ClientManager()->AsShadowForwarder()->GetCompositorBackendType() == mozilla::layers::LAYERS_OPENGL) {
+      if (ClientManager()->AsShadowForwarder()->GetCompositorBackendType() == mozilla::layers::LayersBackend::LAYERS_OPENGL) {
         if (mGLContext->GetContextType() == GLContextType::EGL) {
           bool isCrossProcess = !(XRE_GetProcessType() == GeckoProcessType_Default);
 
           if (!isCrossProcess) {
             // [Basic/OGL Layers, OMTC] WebGL layer init.
-            factory = SurfaceFactory_EGLImage::Create(mGLContext, caps);
+            factory = SurfaceFactory_EGLImage::Create(mGLContext, screen->Caps());
           } else {
             // [Basic/OGL Layers, OOPC] WebGL layer init. (Out Of Process Compositing)
 #ifdef MOZ_WIDGET_GONK
-            factory = new SurfaceFactory_Gralloc(mGLContext, caps, ClientManager()->AsShadowForwarder());
+            factory = new SurfaceFactory_Gralloc(mGLContext, screen->Caps(), ClientManager()->AsShadowForwarder());
 #else
             // we could do readback here maybe
             NS_NOTREACHED("isCrossProcess but not on native B2G!");
@@ -73,34 +66,16 @@ ClientCanvasLayer::Initialize(const Data& aData)
           // [Basic Layers, OMTC] WebGL layer init.
           // Well, this *should* work...
 #ifdef XP_MACOSX
-          factory = new SurfaceFactory_IOSurface(mGLContext, caps);
+          factory = new SurfaceFactory_IOSurface(mGLContext, screen->Caps());
 #else
-          factory = new SurfaceFactory_GLTexture(mGLContext, nullptr, caps);
+          factory = new SurfaceFactory_GLTexture(mGLContext, nullptr, screen->Caps());
 #endif
         }
       }
     }
 
     if (factory) {
-      if (mStream) {
-        // We're using a stream other than the one in the default screen
-        mFactory = factory;
-
-        gfx::IntSize size = gfx::IntSize(aData.mSize.width, aData.mSize.height);
-        mTextureSurface = SharedSurface_GLTexture::Create(mGLContext, mGLContext,
-                                                          mGLContext->GetGLFormats(),
-                                                          size, caps.alpha, aData.mTexID);
-        SharedSurface* producer = mStream->SwapProducer(mFactory, size);
-        if (!producer) {
-          // Fallback to basic factory
-          delete mFactory;
-          mFactory = new SurfaceFactory_Basic(mGLContext, caps);
-          producer = mStream->SwapProducer(mFactory, size);
-          MOZ_ASSERT(producer, "Failed to create initial canvas surface with basic factory");
-        }
-      } else {
-        screen->Morph(factory, streamType);
-      }
+      screen->Morph(factory, streamType);
     }
   }
 }

@@ -32,7 +32,6 @@ namespace layers {
 
 CopyableCanvasLayer::CopyableCanvasLayer(LayerManager* aLayerManager, void *aImplData) :
   CanvasLayer(aLayerManager, aImplData)
-  , mStream(nullptr)
 {
   MOZ_COUNT_CTOR(CopyableCanvasLayer);
   mForceReadback = Preferences::GetBool("webgl.force-layers-readback", false);
@@ -50,7 +49,6 @@ CopyableCanvasLayer::Initialize(const Data& aData)
 
   if (aData.mGLContext) {
     mGLContext = aData.mGLContext;
-    mStream = aData.mStream;
     mIsGLAlphaPremult = aData.mIsGLAlphaPremult;
     mNeedsYFlip = true;
     MOZ_ASSERT(mGLContext->IsOffscreen(), "canvas gl context isn't offscreen");
@@ -73,7 +71,7 @@ CopyableCanvasLayer::Initialize(const Data& aData)
 bool
 CopyableCanvasLayer::IsDataValid(const Data& aData)
 {
-  return mGLContext == aData.mGLContext && mStream == aData.mStream;
+  return mGLContext == aData.mGLContext;
 }
 
 void
