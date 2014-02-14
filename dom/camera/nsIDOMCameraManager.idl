@@ -1,0 +1,229 @@
+#include "domstubs.idl"
+
+#include "nsIDOMMediaStream.idl"
+#include "nsIDOMDOMRequest.idl"
+
+
+interface nsIDOMBlob;
+interface nsIDOMDeviceStorage;
+
+/* Used to set the dimensions of a captured picture,
+   a preview stream, a video capture stream, etc. */
+dictionary CameraSize {
+    unsigned long width;
+    unsigned long height;
+};
+
+/* Camera regions are used to set focus and metering areas;
+   the coordinates are referenced to the sensor:
+     (-1000, -1000) is the top left corner
+     (1000, 1000) is the bottom left corner
+   The weight of the region can range from 0 to 1000. */
+dictionary CameraRegion {
+    long top;
+    long left;
+    long bottom;
+    long right;
+    unsigned long weight;
+};
+
+/* The position information to record in the image header.
+   'NaN' indicates the information is not available. */
+dictionary CameraPosition {
+    double latitude;
+    double longitude;
+    double altitude;
+    double timestamp;
+};
+
+[scriptable, uuid(0711a4af-73c2-481d-85bc-0ba3ec36c004)]
+interface nsICameraCapabilities : nsISupports
+{
+    /* an array of objects with 'height' and 'width' properties
+       supported for the preview stream */
+    [implicit_jscontext]
+    readonly attribute jsval        previewSizes;
+
+    /* an array of objects with 'height' and 'width' properties
+       supported for picture taking */
+    [implicit_jscontext]
+    readonly attribute jsval        pictureSizes;
+
+    /* an array of objects with 'height' and 'width' properties
+       supported for thumbnail sizes in taken pictures */
+    [implicit_jscontext]
+    readonly attribute jsval        thumbnailSizes;
+
+    /* an array of strings, e.g. [ "jpeg", "rgb565" ] */
+    [implicit_jscontext]
+    readonly attribute jsval        fileFormats;
+
+    /* an array of strings, e.g. [ "auto", "fluorescent", etc. ] */
+    [implicit_jscontext]
+    readonly attribute jsval        whiteBalanceModes;
+
+    /* an array of strings, e.g. [ "auto", "night", "beach", etc. ] */
+    [implicit_jscontext]
+    readonly attribute jsval        sceneModes;
+
+    /* an array of strings, e.g. [ "normal", "sepia", "mono", etc. ] */
+    [implicit_jscontext]
+    readonly attribute jsval        effects;
+
+    /* an array of strings, e.g. [ "auto", "off", "on", etc. ] */
+    [implicit_jscontext]
+    readonly attribute jsval        flashModes;
+
+    /* an array of strings, e.g. [ "auto", "fixed", "macro", etc. ] */
+    [implicit_jscontext]
+    readonly attribute jsval        focusModes;
+
+    /* the maximum number of focus areas supported by the camera */
+    [implicit_jscontext]
+    readonly attribute long         maxFocusAreas;
+
+    /* the minimum supported exposure compensation value */
+    [implicit_jscontext]
+    readonly attribute double       minExposureCompensation;
+
+    /* the maximum supported exposure compensation value */
+    [implicit_jscontext]
+    readonly attribute double       maxExposureCompensation;
+
+    /* exposure compensation minimum step-size */
+    [implicit_jscontext]
+    readonly attribute double       stepExposureCompensation;
+
+    /* the maximum number of metering areas supported by the camera */
+    [implicit_jscontext]
+    readonly attribute long         maxMeteringAreas;
+
+    /* an array of doubles, e.g. [ 1.0, 1.2, 1.5, 2.0, 3.0, etc. ],
+       or null if zooming is not supported */
+    [implicit_jscontext]
+    readonly attribute jsval        zoomRatios;
+
+    /* an array of objects with 'height' and 'width' properties
+       supported for video recording */
+    [implicit_jscontext]
+    readonly attribute jsval        videoSizes;
+
+    /* an object with attributes for each of the supported recorder
+       profiles, e.g. recorderProfiles.cif, recorderProfiles.qvga,
+       etc. */
+    [implicit_jscontext]
+    readonly attribute jsval        recorderProfiles;
+};
+
+/* These properties affect the video recording preview, e.g.
+      {
+         profile: "1080p",
+         rotation: 0
+      }
+
+   'profile' is one of the profiles returned by
+   nsICameraCapabilities.recorderProfiles'; if this profile is missing,
+   an arbitrary profile will be chosen.
+
+   'rotation' is the degrees clockwise to rotate the preview; if
+   this option is not supported, it will be ignored; if this option
+   is missing, the default is 0.
+*/
+dictionary CameraRecorderOptions
+{
+    DOMString profile;
+    long      rotation;
+};
+
+/* These properties affect the actual video recording, e.g.
+      {
+         rotation: 0,
+         maxFileSizeBytes: 1024 * 1024,
+         maxVideoLengthMs: 0
+      }
+
+   'rotation' is the degrees clockwise to rotate the recorded video; if
+   this options is not supported, it will be ignored; if this option is
+   missing, the default is 0.
+
+   'maxFileSizeBytes' is the maximum size in bytes to which the recorded
+   video file will be allowed to grow.
+
+   'maxVideoLengthMs' is the maximum length in milliseconds to which the
+   recorded video will be allowed to grow.
+
+   if either 'maxFileSizeBytes' or 'maxVideoLengthMs' is missing, zero,
+   or negative, that limit will be disabled.
+*/
+dictionary CameraStartRecordingOptions
+{
+    long      rotation;
+    long long maxFileSizeBytes;
+    long long maxVideoLengthMs;
+};
+
+[scriptable, function, uuid(0444a687-4bc9-462c-8246-5423f0fe46a4)]
+interface nsICameraPreviewStreamCallback : nsISupports
+{
+    void handleEvent(in nsIDOMMediaStream stream);
+};
+
+[scriptable, function, uuid(6baa4ac7-9c25-4c48-9bb0-5193b38b9b0a)]
+interface nsICameraAutoFocusCallback : nsISupports
+{
+    void handleEvent(in boolean success);
+};
+
+[scriptable, function, uuid(17af779e-cb6f-4ca5-890c-06468ff82e4f)]
+interface nsICameraTakePictureCallback : nsISupports
+{
+    void handleEvent(in nsIDOMBlob picture);
+};
+
+[scriptable, function, uuid(89a762f8-581b-410a-ad86-e2bd2113ad82)]
+interface nsICameraStartRecordingCallback : nsISupports
+{
+    void handleEvent();
+};
+
+[scriptable, function, uuid(fb80db71-e315-42f0-9ea9-dd3dd312ed70)]
+interface nsICameraShutterCallback : nsISupports
+{
+    void handleEvent();
+};
+
+[scriptable, function, uuid(0ef0f01e-ce74-4741-9bba-54376adfb7a2)]
+interface nsICameraClosedCallback : nsISupports
+{
+    void handleEvent();
+};
+
+[scriptable, function, uuid(550d675a-257d-4713-8b3d-0da53eba68fc)]
+interface nsICameraRecorderStateChange : nsISupports
+{
+    void handleStateChange(in DOMString newState);
+};
+
+[scriptable, function, uuid(d1634592-43fd-4117-a2b2-419aec841cc4)]
+interface nsICameraPreviewStateChange : nsISupports
+{
+    void handleStateChange(in DOMString newState);
+};
+
+[scriptable, function, uuid(f84d607b-554c-413d-8810-cf848642765a)]
+interface nsICameraReleaseCallback : nsISupports
+{
+    void handleEvent();
+};
+
+[scriptable, function, uuid(a302c6c9-3776-4d1d-a395-f4105d47c3d3)]
+interface nsICameraErrorCallback : nsISupports
+{
+    void handleEvent(in DOMString error);
+};
+
+[scriptable, function, uuid(16de7703-dc43-4766-99c5-ff30a9ab92d7)]
+interface nsICameraGetCameraCallback : nsISupports
+{
+    void handleEvent(in nsISupports camera);
+};
