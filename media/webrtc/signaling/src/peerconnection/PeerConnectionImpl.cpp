@@ -1993,9 +1993,11 @@ PeerConnectionImpl::GetStatsImpl_s(
           uint32_t jitterMs;
           uint32_t packetsReceived;
           uint64_t bytesReceived;
+          uint32_t packetsLost;
           if (mp.Conduit()->GetRTCPReceiverReport(&timestamp, &jitterMs,
                                                   &packetsReceived,
-                                                  &bytesReceived)) {
+                                                  &bytesReceived,
+                                                  &packetsLost)) {
             remoteId = NS_LITERAL_STRING("outbound_rtcp_") + idstr;
             RTCInboundRTPStreamStats s;
             s.mTimestamp.Construct(timestamp);
@@ -2009,6 +2011,7 @@ PeerConnectionImpl::GetStatsImpl_s(
             s.mIsRemote = true;
             s.mPacketsReceived.Construct(packetsReceived);
             s.mBytesReceived.Construct(bytesReceived);
+            s.mPacketsLost.Construct(packetsLost);
             report->mInboundRTPStreamStats.Value().AppendElement(s);
           }
         }
@@ -2067,9 +2070,10 @@ PeerConnectionImpl::GetStatsImpl_s(
         if (ssrc.Length()) {
           s.mSsrc.Construct(ssrc);
         }
-        unsigned int jitterMs;
-        if (mp.Conduit()->GetRTPJitter(&jitterMs)) {
+        unsigned int jitterMs, packetsLost;
+        if (mp.Conduit()->GetRTPStats(&jitterMs, &packetsLost)) {
           s.mJitter.Construct(double(jitterMs)/1000);
+          s.mPacketsLost.Construct(packetsLost);
         }
         if (remoteId.Length()) {
           s.mRemoteId.Construct(remoteId);
