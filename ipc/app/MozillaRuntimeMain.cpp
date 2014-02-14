@@ -25,6 +25,7 @@
 #include "sandbox/chromium/base/basictypes.h"
 #include "sandbox/win/src/sandbox.h"
 #include "sandbox/win/src/sandbox_factory.h"
+#include "mozilla/sandboxTarget.h"
 #endif
 
 #ifdef MOZ_WIDGET_GONK
@@ -67,14 +68,27 @@ InitializeBinder(void *aDummy) {
 }
 #endif
 
+#if defined(XP_WIN) && defined(MOZ_CONTENT_SANDBOX)
+static bool gIsSandboxEnabled = false;
+void StartSandboxCallback()
+{
+    if (gIsSandboxEnabled) {
+        sandbox::TargetServices* target_service =
+            sandbox::SandboxFactory::GetTargetServices();
+        target_service->LowerToken();
+    }
+}
+#endif
+
 int
 main(int argc, char* argv[])
 {
     bool isNuwa = false;
-    bool isSandboxEnabled = false;
     for (int i = 1; i < argc; i++) {
         isNuwa |= strcmp(argv[i], "-nuwa") == 0;
-        isSandboxEnabled |= strcmp(argv[i], "-sandbox") == 0;
+#if defined(XP_WIN) && defined(MOZ_CONTENT_SANDBOX)
+        gIsSandboxEnabled |= strcmp(argv[i], "-sandbox") == 0;
+#endif
     }
 
 #ifdef MOZ_NUWA_PROCESS
@@ -100,24 +114,6 @@ main(int argc, char* argv[])
 #endif
 #endif
 
-#if defined(XP_WIN) && defined(MOZ_CONTENT_SANDBOX)
-    if (isSandboxEnabled) {
-        sandbox::TargetServices* target_service =
-            sandbox::SandboxFactory::GetTargetServices();
-        if (!target_service) {
-            return 1;
-        }
-
-        sandbox::ResultCode result = target_service->Init();
-        if (result != sandbox::SBOX_ALL_OK) {
-            return 2;
-        }
-
-        // Initialization is finished, switch to the lowered token
-        target_service->LowerToken();
-    }
-#endif
-
     // Check for the absolute minimum number of args we need to move
     // forward here. We expect the last arg to be the child process type.
     if (argc < 1)
@@ -132,6 +128,22 @@ main(int argc, char* argv[])
         mozilla::SanitizeEnvironmentVariables();
         SetDllDirectory(L"");
     }
+
+#ifdef MOZ_CONTENT_SANDBOX
+    if (gIsSandboxEnabled) {
+        sandbox::TargetServices* target_service =
+            sandbox::SandboxFactory::GetTargetServices();
+        if (!target_service) {
+            return 1;
+        }
+
+        sandbox::ResultCode result = target_service->Init();
+        if (result != sandbox::SBOX_ALL_OK) {
+           return 2;
+        }
+        mozilla::SandboxTarget::Instance()->SetStartSandboxCallback(StartSandboxCallback);
+    }
+#endif
 #endif
 
     nsresult rv = XRE_InitChildProcess(argc, argv, proctype);
