@@ -41,6 +41,7 @@
 #include "GeckoProfiler.h"
 #include "mozilla/layers/TextureHost.h"
 #include "mozilla/layers/AsyncCompositionManager.h"
+#include "AsyncPanZoomController.h"
 
 typedef std::vector<mozilla::layers::EditReply> EditReplyVector;
 
@@ -641,6 +642,26 @@ LayerTransactionParent::RecvGetAnimationTransform(PLayerParent* aParent,
   transform._43 *= devPerCss;
 
   *aTransform = transform;
+  return true;
+}
+
+bool
+LayerTransactionParent::RecvSetAsyncScrollOffset(PLayerParent* aLayer,
+                                                 const int32_t& aX, const int32_t& aY)
+{
+  if (mDestroyed || !layer_manager() || layer_manager()->IsDestroyed()) {
+    return false;
+  }
+
+  ContainerLayer* layer = cast(aLayer)->AsLayer()->AsContainerLayer();
+  if (!layer) {
+    return true;
+  }
+  AsyncPanZoomController* controller = layer->GetAsyncPanZoomController();
+  if (!controller) {
+    return true;
+  }
+  controller->SetTestAsyncScrollOffset(CSSPoint(aX, aY));
   return true;
 }
 
