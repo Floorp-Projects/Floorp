@@ -123,7 +123,7 @@ def config_status(topobjdir='.', topsrcdir='.',
     log_manager.add_terminal_logging(level=log_level)
     log_manager.enable_unstructured()
 
-    print('Reticulating splines for %s backend...' % options.backend, file=sys.stderr)
+    print('Reticulating splines...', file=sys.stderr)
     summary = the_backend.consume(definitions)
 
     for line in summary.summaries():
