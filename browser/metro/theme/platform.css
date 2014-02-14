@@ -922,3 +922,8 @@ appbar toolbar[labelled] toolbarbutton > .toolbarbutton-text {
 .flyout-narrow .flyoutpanel-hack {
   max-width: calc(346px - 2 * 40px);
 }
+
+.console-row-code {
+   padding-top: 2px;
+   font-size: small;
+}

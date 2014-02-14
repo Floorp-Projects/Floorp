@@ -53,7 +53,7 @@ ContentClient::CreateContentClient(CompositableForwarder* aForwarder)
   // XXX We need support for gralloc with non-deprecated textures content before
   // we can use them with FirefoxOS (bug 946720). We need the same locking for
   // Windows.
-#if !defined(MOZ_WIDGET_GONK) && !defined(XP_WIN)
+#if !defined(XP_WIN)
   useDeprecatedTextures = gfxPlatform::GetPlatform()->UseDeprecatedTextures();
 #endif
 

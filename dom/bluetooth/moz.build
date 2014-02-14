@@ -35,12 +35,10 @@ if CONFIG['MOZ_B2G_BT']:
                 'bluez/BluetoothSocket.cpp',
                 'bluez/BluetoothUnixSocketConnector.cpp',
                 'bluez/BluetoothUtils.cpp',
-                'bluez/gonk/BluetoothGonkService.cpp',
                 'bluez/linux/BluetoothDBusService.cpp',
             ]
             LOCAL_INCLUDES += [
                 'bluez',
-                'bluez/gonk',
                 'bluez/linux',
             ]
             DEFINES['MOZ_B2G_BT_BLUEZ'] = True
