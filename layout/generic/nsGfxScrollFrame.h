@@ -561,14 +561,6 @@ public:
   virtual void AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
                                         uint32_t aFilter) MOZ_OVERRIDE;
 
-  // nsIScrollbarOwner
-  virtual nsIFrame* GetScrollbarBox(bool aVertical) MOZ_OVERRIDE {
-    return mHelper.GetScrollbarBox(aVertical);
-  }
-
-  virtual void ScrollbarActivityStarted() const MOZ_OVERRIDE;
-  virtual void ScrollbarActivityStopped() const MOZ_OVERRIDE;
-
   // nsIScrollableFrame
   virtual nsIFrame* GetScrolledFrame() const MOZ_OVERRIDE {
     return mHelper.GetScrolledFrame();
@@ -755,6 +747,11 @@ public:
     mHelper.ThumbMoved(aScrollbar, aOldPos, aNewPos);
   }
   virtual void VisibilityChanged(bool aVisible) {}
+  virtual nsIFrame* GetScrollbarBox(bool aVertical) MOZ_OVERRIDE {
+    return mHelper.GetScrollbarBox(aVertical);
+  }
+  virtual void ScrollbarActivityStarted() const MOZ_OVERRIDE;
+  virtual void ScrollbarActivityStopped() const MOZ_OVERRIDE;
   
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;
@@ -905,14 +902,6 @@ public:
 
   static void AdjustReflowStateForPrintPreview(nsBoxLayoutState& aState, bool& aSetBack);
   static void AdjustReflowStateBack(nsBoxLayoutState& aState, bool aSetBack);
-
-  // nsIScrollbarOwner
-  virtual nsIFrame* GetScrollbarBox(bool aVertical) MOZ_OVERRIDE {
-    return mHelper.GetScrollbarBox(aVertical);
-  }
-
-  virtual void ScrollbarActivityStarted() const MOZ_OVERRIDE;
-  virtual void ScrollbarActivityStopped() const MOZ_OVERRIDE;
 
   // nsIScrollableFrame
   virtual nsIFrame* GetScrolledFrame() const MOZ_OVERRIDE {
@@ -1104,6 +1093,12 @@ public:
     mHelper.ThumbMoved(aScrollbar, aOldPos, aNewPos);
   }
   virtual void VisibilityChanged(bool aVisible) {}
+  virtual nsIFrame* GetScrollbarBox(bool aVertical) MOZ_OVERRIDE {
+    return mHelper.GetScrollbarBox(aVertical);
+  }
+
+  virtual void ScrollbarActivityStarted() const MOZ_OVERRIDE;
+  virtual void ScrollbarActivityStopped() const MOZ_OVERRIDE;
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;

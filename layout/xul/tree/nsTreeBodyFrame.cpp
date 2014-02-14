@@ -103,7 +103,6 @@ NS_IMPL_FRAMEARENA_HELPERS(nsTreeBodyFrame)
 
 NS_QUERYFRAME_HEAD(nsTreeBodyFrame)
   NS_QUERYFRAME_ENTRY(nsIScrollbarMediator)
-  NS_QUERYFRAME_ENTRY(nsIScrollbarOwner)
   NS_QUERYFRAME_ENTRY(nsTreeBodyFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsLeafBoxFrame)
 
@@ -174,7 +173,7 @@ nsTreeBodyFrame::Init(nsIContent*       aContent,
 
   if (LookAndFeel::GetInt(LookAndFeel::eIntID_UseOverlayScrollbars) != 0) {
     mScrollbarActivity = new ScrollbarActivity(
-                           static_cast<nsIScrollbarOwner*>(this));
+                           static_cast<nsIScrollbarMediator*>(this));
   }
 }
 
