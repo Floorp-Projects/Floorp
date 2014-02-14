@@ -36,7 +36,7 @@ public class ActivityHandlerHelper implements GeckoEventListener {
 
 
     private final ActivityResultHandlerMap mActivityResultHandlerMap;
-    public interface FileResultHandler {
+    public interface ResultHandler {
         public void gotFile(String filename);
     }
 
@@ -57,9 +57,7 @@ public class ActivityHandlerHelper implements GeckoEventListener {
             else if ("extension".equals(mode))
                 mimeType = GeckoAppShell.getMimeTypeFromExtensions(message.optString("extensions"));
 
-            Log.i(LOGTAG, "Mime: " + mimeType);
-
-            showFilePickerAsync(GeckoAppShell.getGeckoInterface().getActivity(), mimeType, new FileResultHandler() {
+            showFilePickerAsync(GeckoAppShell.getGeckoInterface().getActivity(), mimeType, new ResultHandler() {
                 public void gotFile(String filename) {
                     try {
                         message.put("file", filename);
@@ -224,9 +222,10 @@ public class ActivityHandlerHelper implements GeckoEventListener {
      * sends the file returned to the passed in handler. If a null handler is passed in, will still
      * pick and launch the file picker, but will throw away the result.
      */
-    public void showFilePickerAsync(final Activity parentActivity, String aMimeType, final FileResultHandler handler) {
+    public void showFilePickerAsync(final Activity parentActivity, String aMimeType, final ResultHandler handler) {
         final FilePickerResultHandler fileHandler = new FilePickerResultHandler(handler);
         getFilePickerIntentAsync(parentActivity, aMimeType, fileHandler, new IntentHandler() {
+            @Override
             public void gotIntent(Intent intent) {
                 if (handler == null) {
                     return;
