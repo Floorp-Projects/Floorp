@@ -30,6 +30,9 @@
     var gFindBar = null;
     var gBrowser;
 
+    var gClipboard = Cc["@mozilla.org/widget/clipboard;1"].getService("nsIClipboard");
+    var gHasFindClipboard = gClipboard.supportsFindClipboard();
+
     var gStatusText;
     var gXULBrowserWindow = {
       QueryInterface: function(aIID) {
@@ -94,7 +97,8 @@
       testFindbarSelection();
       testDrop();
       testQuickFindLink();
-      testStatusText();
+      if (gHasFindClipboard)
+        testStatusText();
       testQuickFindClose();
     }
 
@@ -104,8 +108,12 @@
         ok(!gFindBar.hidden, "testFindbarSelection: failed to open findbar: " + aTestName);
         ok(document.commandDispatcher.focusedElement == gFindBar._findField.inputField,
            "testFindbarSelection: find field is not focused: " + aTestName);
-        ok(gFindBar._findField.value == aExpSelection,
-           "Incorrect selection in testFindbarSelection: "  + aTestName + ". Selection: " + gFindBar._findField.value);
+        if (gHasFindClipboard) {
+          ok(gFindBar._findField.value == aExpSelection,
+             "Incorrect selection in testFindbarSelection: "  + aTestName +
+             ". Selection: " + gFindBar._findField.value);
+        }
+        testClipboardSearchString(aExpSelection);
 
         // Clear the value, close the findbar
         gFindBar._findField.value = "";
@@ -185,12 +193,14 @@
       enterStringIntoFindField(searchStr);
       ok(gBrowser.contentWindow.getSelection().toString().toLowerCase() == searchStr,
          "testNormalFind: failed to find '" + searchStr + "'");
+      testClipboardSearchString(gBrowser.contentWindow.getSelection().toString());
 
       if (!matchCaseCheckbox.hidden) {
         matchCaseCheckbox.click();
         enterStringIntoFindField("t");
         ok(gBrowser.contentWindow.getSelection() != searchStr,
            "testNormalFind: Case-sensitivy is broken '" + searchStr + "'");
+        testClipboardSearchString(gBrowser.contentWindow.getSelection().toString());
         matchCaseCheckbox.click();
       }
     }
@@ -228,6 +238,7 @@
 
       ok(gBrowser.contentWindow.getSelection().toString().toLowerCase() != searchStr,
          "testNormalFindWithComposition: text shouldn't be found during composition");
+      testClipboardSearchString(gBrowser.contentWindow.getSelection().toString());
 
       synthesizeText(
         { "composition":
@@ -243,6 +254,7 @@
 
       ok(gBrowser.contentWindow.getSelection().toString().toLowerCase() == searchStr,
          "testNormalFindWithComposition: text should be found after committing composition");
+      testClipboardSearchString(gBrowser.contentWindow.getSelection().toString());
 
       if (clicked) {
         matchCaseCheckbox.click();
@@ -302,6 +314,7 @@
       enterStringIntoFindField(searchStr);
       ok(gBrowser.contentWindow.getSelection() == searchStr,
           "testQuickFindLink: failed to find sample link");
+      testClipboardSearchString(searchStr);
     }
 
     function testQuickFindText() {
@@ -319,6 +332,18 @@
       enterStringIntoFindField(SEARCH_TEXT);
       ok(gBrowser.contentWindow.getSelection() == SEARCH_TEXT,
          "testQuickFindText: failed to find '" + SEARCH_TEXT + "'");
+      testClipboardSearchString(SEARCH_TEXT);
+    }
+
+    function testClipboardSearchString(aExpected) {
+      if (!gHasFindClipboard)
+        return;
+
+      if (!aExpected)
+        aExpected = "";
+      var searchStr = gFindBar.browser.finder.clipboardSearchString;
+      ok(searchStr == aExpected, "testClipboardSearchString: search string not " +
+         "set to '" + aExpected + "', instead found '" + searchStr + "'");
     }
   ]]></script>
 
