@@ -49,6 +49,7 @@
 
 #if defined(MOZ_WIDGET_GONK)
 #include "cutils/properties.h"
+#include <dlfcn.h>
 #endif
 
 /**
@@ -86,6 +87,113 @@ USING_BLUETOOTH_NAMESPACE
  * turn off Bluetooth.
  */
 #define TIMEOUT_FORCE_TO_DISABLE_BT 5
+
+#ifdef MOZ_WIDGET_GONK
+class Bluedroid
+{
+  struct ScopedDlHandleTraits
+  {
+    typedef void* type;
+    static void* empty()
+    {
+      return nullptr;
+    }
+    static void release(void* handle)
+    {
+      if (!handle) {
+        return;
+      }
+      int res = dlclose(handle);
+      if (res) {
+        BT_WARNING("Failed to close libbluedroid.so: %s", dlerror());
+      }
+    }
+  };
+
+public:
+  Bluedroid()
+  : m_bt_enable(nullptr)
+  , m_bt_disable(nullptr)
+  , m_bt_is_enabled(nullptr)
+  {}
+
+  bool Enable()
+  {
+    MOZ_ASSERT(!NS_IsMainThread()); // BT thread
+
+    if (!mHandle && !Init()) {
+      return false;
+    } else if (m_bt_is_enabled() == 1) {
+      return true;
+    }
+    // 0 == success, -1 == error
+    return !m_bt_enable();
+  }
+
+  bool Disable()
+  {
+    MOZ_ASSERT(!NS_IsMainThread()); // BT thread
+
+    if (!IsEnabled()) {
+      return true;
+    }
+    // 0 == success, -1 == error
+    return !m_bt_disable();
+  }
+
+  bool IsEnabled() const
+  {
+    MOZ_ASSERT(!NS_IsMainThread()); // BT thread
+
+    if (!mHandle) {
+      return false;
+    }
+    // 1 == enabled, 0 == disabled, -1 == error
+    return m_bt_is_enabled() > 0;
+  }
+
+private:
+  bool Init()
+  {
+    MOZ_ASSERT(!mHandle);
+
+    Scoped<ScopedDlHandleTraits> handle(dlopen("libbluedroid.so", RTLD_LAZY));
+    if (!handle) {
+      BT_WARNING("Failed to open libbluedroid.so: %s", dlerror());
+      return false;
+    }
+    int (*bt_enable)() = (int (*)())dlsym(handle, "bt_enable");
+    if (!bt_enable) {
+      BT_WARNING("Failed to lookup bt_enable: %s", dlerror());
+      return false;
+    }
+    int (*bt_disable)() = (int (*)())dlsym(handle, "bt_disable");
+    if (!bt_disable) {
+      BT_WARNING("Failed to lookup bt_disable: %s", dlerror());
+      return false;
+    }
+    int (*bt_is_enabled)() = (int (*)())dlsym(handle, "bt_is_enabled");
+    if (!bt_is_enabled) {
+      BT_WARNING("Failed to lookup bt_is_enabled: %s", dlerror());
+      return false;
+    }
+
+    m_bt_enable = bt_enable;
+    m_bt_disable = bt_disable;
+    m_bt_is_enabled = bt_is_enabled;
+    mHandle.reset(handle.forget());
+
+    return true;
+  }
+
+  Scoped<ScopedDlHandleTraits> mHandle;
+  int (* m_bt_enable)(void);
+  int (* m_bt_disable)(void);
+  int (* m_bt_is_enabled)(void);
+};
+
+static class Bluedroid sBluedroid;
+#endif
 
 typedef struct {
   const char* name;
@@ -1738,6 +1846,13 @@ BluetoothDBusService::StartInternal()
   // This could block. It should never be run on the main thread.
   MOZ_ASSERT(!NS_IsMainThread());
 
+#ifdef MOZ_WIDGET_GONK
+  if (!sBluedroid.Enable()) {
+    BT_WARNING("Bluetooth not available.");
+    return NS_ERROR_FAILURE;
+  }
+#endif
+
   if (!StartDBus()) {
     BT_WARNING("Cannot start DBus thread!");
     return NS_ERROR_FAILURE;
@@ -1858,13 +1973,27 @@ BluetoothDBusService::StopInternal()
   sControllerArray.Clear();
 
   StopDBus();
+
+#ifdef MOZ_WIDGET_GONK
+  MOZ_ASSERT(sBluedroid.IsEnabled());
+  if (!sBluedroid.Disable()) {
+    return NS_ERROR_FAILURE;
+  }
+#endif
+
   return NS_OK;
 }
 
 bool
 BluetoothDBusService::IsEnabledInternal()
 {
+  MOZ_ASSERT(!NS_IsMainThread()); // BT thread
+
+#ifdef MOZ_WIDGET_GONK
+  return sBluedroid.IsEnabled();
+#else
   return mEnabled;
+#endif
 }
 
 class DefaultAdapterPathReplyHandler : public DBusReplyHandler
