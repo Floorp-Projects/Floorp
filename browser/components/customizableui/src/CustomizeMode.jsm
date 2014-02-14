@@ -1015,8 +1015,8 @@ CustomizeMode.prototype = {
   },
 
   _updateUndoResetButton: function() {
-    let undoReset =  this.document.getElementById("customization-undo-reset");
-    undoReset.hidden = !CustomizableUI.canUndoReset;
+    let undoResetButton =  this.document.getElementById("customization-undo-reset-button");
+    undoResetButton.hidden = !CustomizableUI.canUndoReset;
   },
 
   handleEvent: function(aEvent) {
@@ -1068,7 +1068,9 @@ CustomizeMode.prototype = {
   observe: function(aSubject, aTopic, aData) {
     switch (aTopic) {
       case "nsPref:changed":
+        this._updateResetButton();
         this._updateTitlebarButton();
+        this._updateUndoResetButton();
         break;
     }
   },
