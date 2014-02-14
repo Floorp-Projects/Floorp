@@ -377,7 +377,8 @@ RilConsumer::OnDisconnect()
 {
     CHROMIUM_LOG("RIL[%lu]: %s\n", mClientId, __FUNCTION__);
     if (!mShutdown) {
-        ConnectSocket(new RilConnector(mClientId), mAddress.get(), 1000);
+        ConnectSocket(new RilConnector(mClientId), mAddress.get(),
+                      GetSuggestedConnectDelayMs());
     }
 }
 
