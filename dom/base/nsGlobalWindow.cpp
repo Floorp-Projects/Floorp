@@ -7438,7 +7438,9 @@ JSObject* nsGlobalWindow::CallerGlobal()
   // isn't, something is screwy, and we want to clamp to the cx global.
   JS::Rooted<JSObject*> scriptedGlobal(cx, JS_GetScriptedGlobal(cx));
   JS::Rooted<JSObject*> cxGlobal(cx, JS::CurrentGlobalOrNull(cx));
-  if (!xpc::AccessCheck::subsumes(cxGlobal, scriptedGlobal)) {
+  nsIPrincipal* scriptedPrin = nsContentUtils::GetObjectPrincipal(scriptedGlobal);
+  nsIPrincipal* cxPrin = nsContentUtils::GetObjectPrincipal(cxGlobal);
+  if (!cxPrin->SubsumesConsideringDomain(scriptedPrin)) {
     NS_WARNING("Something nasty is happening! Applying countermeasures...");
     return cxGlobal;
   }
