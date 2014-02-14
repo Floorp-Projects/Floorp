@@ -49,7 +49,7 @@ xul|scrollbar[orient="horizontal"] xul|thumb {
 xul|scrollbar:not([active="true"]),
 xul|scrollbar[disabled] {
   opacity: 0;
-  -moz-transition: opacity 1s ease;
+  transition: opacity 1s ease;
 }
 
 xul|scrollbarbutton {
