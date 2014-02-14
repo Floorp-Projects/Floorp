@@ -1496,11 +1496,7 @@ MediaManager::GetBackend(uint64_t aWindowId)
   MutexAutoLock lock(mMutex);
   if (!mBackend) {
 #if defined(MOZ_WEBRTC)
-  #ifndef MOZ_B2G_CAMERA
     mBackend = new MediaEngineWebRTC(mPrefs);
-  #else
-    mBackend = new MediaEngineWebRTC(mCameraManager, aWindowId);
-  #endif
 #else
     mBackend = new MediaEngineDefault();
 #endif

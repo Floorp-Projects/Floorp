@@ -27,15 +27,12 @@
 
 #include "GonkCameraListener.h"
 #include "GonkNativeWindow.h"
+#include "GonkCameraParameters.h"
 #include "mozilla/ReentrantMonitor.h"
-
-// config
-#define GIHM_TIMING_RECEIVEFRAME    0
-#define GIHM_TIMING_OVERALL         1
-
 
 namespace mozilla {
   class nsGonkCameraControl;
+  class GonkCameraParameters;
 }
 
 namespace android {
@@ -86,7 +83,9 @@ public:
   void     CancelTakePicture();
   int      StartPreview();
   void     StopPreview();
+  int      PushParameters(const mozilla::GonkCameraParameters& aParams);
   int      PushParameters(const CameraParameters& aParams);
+  nsresult PullParameters(mozilla::GonkCameraParameters& aParams);
   void     PullParameters(CameraParameters& aParams);
   int      StartRecording();
   int      StopRecording();
@@ -98,15 +97,10 @@ protected:
 
   uint32_t                      mCameraId;
   bool                          mClosing;
-  mozilla::ReentrantMonitor     mMonitor;
   uint32_t                      mNumFrames;
   sp<Camera>                    mCamera;
   mozilla::nsGonkCameraControl* mTarget;
   sp<GonkNativeWindow>          mNativeWindow;
-#if GIHM_TIMING_OVERALL
-  struct timespec               mStart;
-  struct timespec               mAutoFocusStart;
-#endif
   sp<GonkCameraListener>        mListener;
   bool                          mInitialized;
   int                           mRawSensorOrientation;
