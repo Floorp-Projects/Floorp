@@ -20,6 +20,10 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
+#ifndef SK_FONTHOST_CAIRO_STANDALONE
+#define SK_FONTHOST_CAIRO_STANDALONE 1
+#endif
+
 static cairo_user_data_key_t kSkTypefaceKey;
 
 class SkScalerContext_CairoFT : public SkScalerContext_FreeType_Base {
@@ -167,7 +171,7 @@ SkTypeface* SkCreateTypefaceFromCairoFont(cairo_font_face_t* fontFace, SkTypefac
     return typeface;
 }
 
-#ifdef SK_FONTHOST_DOES_NOT_USE_FONTMGR
+#if defined(SK_FONTHOST_DOES_NOT_USE_FONTMGR) && SK_FONTHOST_CAIRO_STANDALONE
 SkTypeface* SkFontHost::CreateTypeface(const SkTypeface* familyFace,
                                      const char famillyName[],
                                      SkTypeface::Style style)
@@ -376,13 +380,6 @@ SkUnichar SkScalerContext_CairoFT::generateGlyphToChar(uint16_t glyph)
 
     return 0;
 }
-
-#ifdef SK_BUILD_FOR_ANDROID
-SkTypeface* SkAndroidNextLogicalTypeface(SkFontID currFontID, SkFontID origFontID,
-                                         const SkPaintOptionsAndroid& options) {
-    return NULL;
-}
-#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 
