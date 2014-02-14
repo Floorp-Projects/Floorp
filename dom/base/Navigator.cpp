@@ -1022,7 +1022,6 @@ void
 Navigator::MozGetUserMediaDevices(const MediaStreamConstraintsInternal& aConstraints,
                                   MozGetUserMediaDevicesSuccessCallback& aOnSuccess,
                                   NavigatorUserMediaErrorCallback& aOnError,
-                                  uint64_t aInnerWindowID,
                                   ErrorResult& aRv)
 {
   CallbackObjectHolder<MozGetUserMediaDevicesSuccessCallback,
@@ -1041,8 +1040,7 @@ Navigator::MozGetUserMediaDevices(const MediaStreamConstraintsInternal& aConstra
   }
 
   MediaManager* manager = MediaManager::Get();
-  aRv = manager->GetUserMediaDevices(mWindow, aConstraints, onsuccess, onerror,
-                                     aInnerWindowID);
+  aRv = manager->GetUserMediaDevices(mWindow, aConstraints, onsuccess, onerror);
 }
 #endif
 

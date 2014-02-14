@@ -230,7 +230,6 @@ public:
   void MozGetUserMediaDevices(const MediaStreamConstraintsInternal& aConstraints,
                               MozGetUserMediaDevicesSuccessCallback& aOnSuccess,
                               NavigatorUserMediaErrorCallback& aOnError,
-                              uint64_t aInnerWindowID,
                               ErrorResult& aRv);
 #endif // MOZ_MEDIA_NAVIGATOR
   bool DoNewResolve(JSContext* aCx, JS::Handle<JSObject*> aObject,

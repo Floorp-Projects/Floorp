@@ -74,18 +74,17 @@ var WebrtcUI = {
 
   handleRequest: function handleRequest(aSubject, aTopic, aData) {
     let constraints = aSubject.getConstraints();
-    let contentWindow = Services.wm.getOuterWindowWithId(aSubject.windowID);
 
-    contentWindow.navigator.mozGetUserMediaDevices(
+    Services.wm.getMostRecentWindow(null).navigator.mozGetUserMediaDevices(
       constraints,
       function (devices) {
-        WebrtcUI.prompt(contentWindow, aSubject.callID, constraints.audio,
+        WebrtcUI.prompt(aSubject.windowID, aSubject.callID, constraints.audio,
                         constraints.video, devices);
       },
       function (error) {
         Cu.reportError(error);
-      },
-      aSubject.innerWindowID);
+      }
+    );
   },
 
   getDeviceButtons: function(audioDevices, videoDevices, aCallID) {
@@ -154,8 +153,7 @@ var WebrtcUI = {
     }
   },
 
-  prompt: function prompt(contentWindow, aCallID, aAudioRequested,
-                          aVideoRequested, aDevices) {
+  prompt: function prompt(aWindowID, aCallID, aAudioRequested, aVideoRequested, aDevices) {
     let audioDevices = [];
     let videoDevices = [];
     for (let device of aDevices) {
@@ -182,7 +180,8 @@ var WebrtcUI = {
     else
       return;
 
-    let host = aContentWindow.document.documentURIObject.host;
+    let contentWindow = Services.wm.getOuterWindowWithId(aWindowID);
+    let host = contentWindow.document.documentURIObject.host;
     let requestor = BrowserApp.manifest ? "'" + BrowserApp.manifest.name  + "'" : host;
     let message = Strings.browser.formatStringFromName("getUserMedia.share" + requestType + ".message", [ requestor ], 1);
 
