@@ -1294,7 +1294,7 @@ static bool	opt_zero = false;
 static bool	opt_abort = false;
 #ifdef MALLOC_FILL
 static const bool	opt_junk = false;
-static const bool	opt_poison = false;
+static const bool	opt_poison = true;
 static const bool	opt_zero = false;
 #endif
 #endif
