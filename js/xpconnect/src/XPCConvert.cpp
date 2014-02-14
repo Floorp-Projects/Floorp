@@ -516,6 +516,14 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
 
         if (!str) {
             ws->AssignLiteral(MOZ_UTF16("undefined"));
+        } else if (XPCStringConvert::IsDOMString(str)) {
+            // The characters represent an existing nsStringBuffer that
+            // was shared by XPCStringConvert::ReadableToJSVal.
+            nsStringBuffer::FromData((void *)chars)->ToString(length, *ws);
+        } else if (XPCStringConvert::IsLiteral(str)) {
+            // The characters represent a literal char16_t string constant
+            // compiled into libxul, such as the string "undefined" above.
+            ws->AssignLiteral(chars, length);
         } else if (useAllocator && STRING_TO_JSVAL(str) == s) {
             // The JS string will exist over the function call.
             // We don't need to copy the characters in this case.

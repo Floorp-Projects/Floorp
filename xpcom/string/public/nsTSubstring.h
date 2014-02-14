@@ -834,12 +834,15 @@ class nsTSubstring_CharT
           mFlags = dataFlags | (mFlags & 0xFFFF0000);
         }
 
-      void NS_FASTCALL AssignLiteral( const char_type* data, size_type length );
       void NS_FASTCALL ReplaceLiteral( index_type cutStart, size_type cutLength, const char_type* data, size_type length );
 
       static int AppendFunc( void* arg, const char* s, uint32_t len);
 
     public:
+
+      // NOTE: this method is declared public _only_ for convenience for
+      // callers who don't have access to the original nsLiteralString_CharT.
+      void NS_FASTCALL AssignLiteral( const char_type* data, size_type length );
 
       // mFlags is a bitwise combination of the following flags.  the meaning
       // and interpretation of these flags is an implementation detail.
