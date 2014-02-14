@@ -2084,11 +2084,6 @@ bool
 NonVoidByteStringToJsval(JSContext *cx, const nsACString &str,
                          JS::MutableHandle<JS::Value> rval)
 {
-    if (str.IsEmpty()) {
-        rval.set(JS_GetEmptyStringValue(cx));
-        return true;
-    }
-
     // ByteStrings are not UTF-8 encoded.
     JSString* jsStr = JS_NewStringCopyN(cx, str.Data(), str.Length());
 
