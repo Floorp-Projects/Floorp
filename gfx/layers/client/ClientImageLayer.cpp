@@ -108,8 +108,15 @@ protected:
     RefPtr<gfx::SourceSurface> surface;
     AutoLockImage autoLock(mContainer, &surface);
 
+#ifdef MOZ_WIDGET_GONK
+    // gralloc buffer needs BUFFER_IMAGE_BUFFERED to prevent
+    // the buffer's usage conflict.
+    mImageClientTypeContainer = autoLock.GetImage() ?
+                                  BUFFER_IMAGE_BUFFERED : BUFFER_UNKNOWN;
+#else
     mImageClientTypeContainer = autoLock.GetImage() ?
                                   BUFFER_IMAGE_SINGLE : BUFFER_UNKNOWN;
+#endif
     return mImageClientTypeContainer;
   }
 

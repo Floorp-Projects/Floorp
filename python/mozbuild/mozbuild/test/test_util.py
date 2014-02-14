@@ -114,10 +114,11 @@ class TestFileAvoidWrite(unittest.TestCase):
     def test_diff_not_default(self):
         """Diffs are not produced by default."""
 
-        faw = FileAvoidWrite('doesnotexist')
-        faw.write('dummy')
-        faw.close()
-        self.assertIsNone(faw.diff)
+        with MockedOpen({'file': 'old'}):
+            faw = FileAvoidWrite('file')
+            faw.write('dummy')
+            faw.close()
+            self.assertIsNone(faw.diff)
 
     def test_diff_update(self):
         """Diffs are produced on file update."""

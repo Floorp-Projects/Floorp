@@ -24,6 +24,7 @@
 #include "builtin/RegExp.h"
 #include "builtin/SIMD.h"
 #include "builtin/TypedObject.h"
+#include "vm/PIC.h"
 #include "vm/RegExpStatics.h"
 #include "vm/StopIterationObject.h"
 #include "vm/WeakMapObject.h"
@@ -739,6 +740,21 @@ GlobalObject::addDebugger(JSContext *cx, Handle<GlobalObject*> global, Debugger 
         return false;
     }
     return true;
+}
+
+/* static */ JSObject *
+GlobalObject::getOrCreateForOfPICObject(JSContext *cx, Handle<GlobalObject *> global)
+{
+    assertSameCompartment(cx, global);
+    JSObject *forOfPIC = global->getForOfPICObject();
+    if (forOfPIC)
+        return forOfPIC;
+
+    forOfPIC = ForOfPIC::createForOfPICObject(cx, global);
+    if (!forOfPIC)
+        return nullptr;
+    global->setReservedSlot(FOR_OF_PIC_CHAIN, ObjectValue(*forOfPIC));
+    return forOfPIC;
 }
 
 bool

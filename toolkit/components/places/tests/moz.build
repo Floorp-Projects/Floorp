@@ -4,13 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-TEST_DIRS += [
-    'chrome',
-    'mochitest/bug_411966',
-    'mochitest/bug_461710',
-    'browser',
-]
-
 TEST_TOOL_DIRS += ['cpp']
 
 XPCSHELL_TESTS_MANIFESTS += [
@@ -23,4 +16,18 @@ XPCSHELL_TESTS_MANIFESTS += [
     'network/xpcshell.ini',
     'queries/xpcshell.ini',
     'unit/xpcshell.ini',
+    'xpcshell.ini',
+]
+
+BROWSER_CHROME_MANIFESTS += ['browser/browser.ini']
+MOCHITEST_CHROME_MANIFESTS += [
+    'chrome.ini',
+    'chrome/chrome.ini',
+]
+MOCHITEST_MANIFESTS += [
+    'browser/mochitest.ini',
+    'chrome/mochitest.ini',
+    'mochitest.ini',
+    'mochitest/bug_411966/mochitest.ini',
+    'mochitest/bug_461710/mochitest.ini',
 ]

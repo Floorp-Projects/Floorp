@@ -67,7 +67,7 @@ ChromeObjectWrapper::getPropertyDescriptor(JSContext *cx,
                                            JS::MutableHandle<JSPropertyDescriptor> desc,
                                            unsigned flags)
 {
-    assertEnteredPolicy(cx, wrapper, id);
+    assertEnteredPolicy(cx, wrapper, id, GET | SET);
     // First, try a lookup on the base wrapper if permitted.
     desc.object().set(nullptr);
     if (AllowedByBase(cx, wrapper, id, Wrapper::GET) &&
@@ -98,7 +98,7 @@ bool
 ChromeObjectWrapper::has(JSContext *cx, HandleObject wrapper,
                          HandleId id, bool *bp)
 {
-    assertEnteredPolicy(cx, wrapper, id);
+    assertEnteredPolicy(cx, wrapper, id, GET);
     // Try the lookup on the base wrapper if permitted.
     if (AllowedByBase(cx, wrapper, id, js::Wrapper::GET) &&
         !ChromeObjectWrapperBase::has(cx, wrapper, id, bp))
@@ -127,7 +127,7 @@ ChromeObjectWrapper::get(JSContext *cx, HandleObject wrapper,
                          HandleObject receiver, HandleId id,
                          MutableHandleValue vp)
 {
-    assertEnteredPolicy(cx, wrapper, id);
+    assertEnteredPolicy(cx, wrapper, id, GET);
     vp.setUndefined();
     // Only call through to the get trap on the underlying object if we're
     // allowed to see the property, and if what we'll find is not on a standard
@@ -177,13 +177,13 @@ ChromeObjectWrapper::enter(JSContext *cx, HandleObject wrapper,
         return true;
     // COWs fail silently for GETs, and that also happens to be the only case
     // where we might want to redirect the lookup to the home prototype chain.
-    *bp = (act == Wrapper::GET);
+    *bp = act == Wrapper::GET || act == Wrapper::ENUMERATE;
     if (!*bp || id == JSID_VOID)
         return false;
 
     // Note that PropIsFromStandardPrototype needs to invoke getPropertyDescriptor
     // before we've fully entered the policy. Waive our policy.
-    js::AutoWaivePolicy policy(cx, wrapper, id);
+    js::AutoWaivePolicy policy(cx, wrapper, id, act);
     return PropIsFromStandardPrototype(cx, wrapper, id);
 }
 
