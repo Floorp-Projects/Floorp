@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=969460
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 969460</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="property_database.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=969460">Mozilla Bug 969460</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <div id="float" style="float: left"></div>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 969460: Test that "display" on the root node is computed
+    using the same conversion that we use for display on floated elements **/
+
+function test_display_value(val)
+{
+  var floatElem = document.getElementById("float");
+  floatElem.style.display = val;
+  var floatConversion = window.getComputedStyle(floatElem, null).display;
+  floatElem.style.display = "";
+
+  var rootNode = document.documentElement;
+  rootNode.style.display = val;
+  rootNode.offsetHeight; // (Flush layout, to be sure layout can handle 'val')
+  var rootConversion = window.getComputedStyle(rootNode, null).display;
+  rootNode.style.display = "";
+
+  // Special case: "display:list-item" does not get modified by 'float',
+  // but the spec allows us to convert it to 'block' on the root node
+  // (and we do convert it, so that we don't have to support documents whose
+  // root node is a list-item).
+  if (val == "list-item") {
+    is(floatConversion, val, "'float' shouldn't affect 'display:list-item'");
+    is(rootConversion, "block",
+       "We traditionally convert 'display:list-item' on the root node to " +
+       "'display:block' (though if that changes, it's not technically a bug, " +
+       "as long as we support it properly).");
+  } else {
+    is(rootConversion, floatConversion,
+       "root node should make 'display:" + val + "' compute to the same " +
+       "value that it computes to on a floated element");
+  }
+}
+
+var displayInfo = gCSSProperties["display"];
+displayInfo.initial_values.forEach(test_display_value);
+displayInfo.other_values.forEach(test_display_value);
+
+</script>
+</pre>
+</body>
+</html>
