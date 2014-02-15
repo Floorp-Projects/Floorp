@@ -13,8 +13,6 @@ EXTRA_DSO_LDOPTS += \
 		$(MOZ_DBUS_GLIB_LIBS) \
 		$(NULL)
 
-LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/components/build/
-
 include $(topsrcdir)/config/rules.mk
 
 CXXFLAGS += \

@@ -98,3 +98,8 @@ DEFINES['UNICODE'] = True
 DEFINES['_UNICODE'] = True
 
 JAR_MANIFESTS += ['jar.mn']
+
+LOCAL_INCLUDES += [
+    'google-breakpad/src',
+]
+

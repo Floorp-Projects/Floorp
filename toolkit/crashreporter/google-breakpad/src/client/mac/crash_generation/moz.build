@@ -12,3 +12,8 @@ UNIFIED_SOURCES += [
 XPI_NAME = 'crashreporter'
 
 FINAL_LIBRARY = 'xulapp_s'
+
+LOCAL_INCLUDES += [
+    '../../..',
+]
+
