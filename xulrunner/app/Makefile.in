@@ -10,13 +10,6 @@ DEFINES += -DAB_CD=$(AB_CD)
 
 STL_FLAGS=
 
-LOCAL_INCLUDES += \
-  -I$(topsrcdir)/toolkit/xre \
-  -I$(topsrcdir)/toolkit/profile \
-  -I$(topsrcdir)/xpcom/base \
-  -I$(topsrcdir)/xpcom/build \
-  $(NULL)
-
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 TK_LIBS := -framework Cocoa $(TK_LIBS)
 endif
