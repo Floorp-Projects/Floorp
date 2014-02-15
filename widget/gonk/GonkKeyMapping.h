@@ -184,7 +184,7 @@ static const unsigned long kKeyMapping[] = {
     NS_VK_ADD,
     NS_VK_PERIOD,
     NS_VK_COMMA,
-    NS_VK_ENTER,
+    NS_VK_RETURN,
     NS_VK_EQUALS,
     // There are more but we don't map them
 };

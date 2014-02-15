@@ -48,22 +48,32 @@ public:
     mStack.RemoveElementAt(mStack.Length() - 1);
   }
 
-  nsIGlobalObject* Incumbent() {
+  ScriptSettingsStackEntry* Incumbent() {
     if (!mStack.Length()) {
       return nullptr;
     }
-    return mStack.LastElement()->mGlobalObject;
+    return mStack.LastElement();
   }
 
-  nsIGlobalObject* EntryPoint() {
+  nsIGlobalObject* IncumbentGlobal() {
+    ScriptSettingsStackEntry *entry = Incumbent();
+    return entry ? entry->mGlobalObject : nullptr;
+  }
+
+  ScriptSettingsStackEntry* EntryPoint() {
     if (!mStack.Length())
       return nullptr;
     for (int i = mStack.Length() - 1; i >= 0; --i) {
       if (mStack[i]->mIsCandidateEntryPoint) {
-        return mStack[i]->mGlobalObject;
+        return mStack[i];
       }
     }
     MOZ_ASSUME_UNREACHABLE("Non-empty stack should always have an entry point");
+  }
+
+  nsIGlobalObject* EntryGlobal() {
+    ScriptSettingsStackEntry *entry = EntryPoint();
+    return entry ? entry->mGlobalObject : nullptr;
   }
 
 private:
@@ -102,10 +112,10 @@ BrokenGetEntryGlobal()
   // We need the current JSContext in order to check the JS for
   // scripted frames that may have appeared since anyone last
   // manipulated the stack. If it's null, that means that there
-  // must be no entry point on the stack.
+  // must be no entry global on the stack.
   JSContext *cx = nsContentUtils::GetCurrentJSContextForThread();
   if (!cx) {
-    MOZ_ASSERT(ScriptSettingsStack::Ref().EntryPoint() == nullptr);
+    MOZ_ASSERT(ScriptSettingsStack::Ref().EntryGlobal() == nullptr);
     return nullptr;
   }
 
@@ -121,11 +131,11 @@ GetIncumbentGlobal()
   // We need the current JSContext in order to check the JS for
   // scripted frames that may have appeared since anyone last
   // manipulated the stack. If it's null, that means that there
-  // must be no entry point on the stack, and therefore no incumbent
+  // must be no entry global on the stack, and therefore no incumbent
   // global either.
   JSContext *cx = nsContentUtils::GetCurrentJSContextForThread();
   if (!cx) {
-    MOZ_ASSERT(ScriptSettingsStack::Ref().EntryPoint() == nullptr);
+    MOZ_ASSERT(ScriptSettingsStack::Ref().EntryGlobal() == nullptr);
     return nullptr;
   }
 
@@ -142,14 +152,53 @@ GetIncumbentGlobal()
 
   // Ok, nothing from the JS engine. Let's use whatever's on the
   // explicit stack.
-  return ScriptSettingsStack::Ref().Incumbent();
+  return ScriptSettingsStack::Ref().IncumbentGlobal();
+}
+
+nsIPrincipal*
+GetWebIDLCallerPrincipal()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  ScriptSettingsStackEntry *entry = ScriptSettingsStack::Ref().EntryPoint();
+
+  // If we have an entry point that is not the system singleton, we know it
+  // must be an AutoEntryScript.
+  if (!entry || entry->IsSystemSingleton()) {
+    return nullptr;
+  }
+  AutoEntryScript* aes = static_cast<AutoEntryScript*>(entry);
+
+  // We can't yet rely on the Script Settings Stack to properly determine the
+  // entry script, because there are still lots of places in the tree where we
+  // don't yet use an AutoEntryScript (bug 951991 tracks this work). In the
+  // mean time though, we can make some observations to hack around the
+  // problem:
+  //
+  // (1) All calls into JS-implemented WebIDL go through CallSetup, which goes
+  //     through AutoEntryScript.
+  // (2) The top candidate entry point in the Script Settings Stack is the
+  //     entry point if and only if no other JSContexts have been pushed on
+  //     top of the push made by that entry's AutoEntryScript.
+  //
+  // Because of (1), all of the cases where we might return a non-null
+  // WebIDL Caller are guaranteed to have put an entry on the Script Settings
+  // Stack, so we can restrict our search to that. Moreover, (2) gives us a
+  // criterion to determine whether an entry in the Script Setting Stack means
+  // that we should return a non-null WebIDL Caller.
+  //
+  // Once we fix bug 951991, this can all be simplified.
+  if (!aes->mCxPusher.ref().IsStackTop()) {
+    return nullptr;
+  }
+
+  return aes->mWebIDLCallerPrincipal;
 }
 
 AutoEntryScript::AutoEntryScript(nsIGlobalObject* aGlobalObject,
                                  bool aIsMainThread,
                                  JSContext* aCx)
-  : mStack(ScriptSettingsStack::Ref())
-  , mEntry(aGlobalObject, /* aCandidate = */ true)
+  : ScriptSettingsStackEntry(aGlobalObject, /* aCandidate = */ true)
+  , mStack(ScriptSettingsStack::Ref())
 {
   MOZ_ASSERT(aGlobalObject);
   if (!aCx) {
@@ -167,29 +216,29 @@ AutoEntryScript::AutoEntryScript(nsIGlobalObject* aGlobalObject,
     }
   }
   if (aIsMainThread) {
-    mCxPusher.Push(aCx);
+    mCxPusher.construct(aCx);
   }
   mAc.construct(aCx, aGlobalObject->GetGlobalJSObject());
-  mStack.Push(&mEntry);
+  mStack.Push(this);
 }
 
 AutoEntryScript::~AutoEntryScript()
 {
-  MOZ_ASSERT(mStack.Incumbent() == mEntry.mGlobalObject);
+  MOZ_ASSERT(mStack.Incumbent() == this);
   mStack.Pop();
 }
 
 AutoIncumbentScript::AutoIncumbentScript(nsIGlobalObject* aGlobalObject)
-  : mStack(ScriptSettingsStack::Ref())
-  , mEntry(aGlobalObject, /* aCandidate = */ false)
+  : ScriptSettingsStackEntry(aGlobalObject, /* aCandidate = */ false)
+  , mStack(ScriptSettingsStack::Ref())
   , mCallerOverride(nsContentUtils::GetCurrentJSContextForThread())
 {
-  mStack.Push(&mEntry);
+  mStack.Push(this);
 }
 
 AutoIncumbentScript::~AutoIncumbentScript()
 {
-  MOZ_ASSERT(mStack.Incumbent() == mEntry.mGlobalObject);
+  MOZ_ASSERT(mStack.Incumbent() == this);
   mStack.Pop();
 }
 
@@ -197,7 +246,8 @@ AutoSystemCaller::AutoSystemCaller(bool aIsMainThread)
   : mStack(ScriptSettingsStack::Ref())
 {
   if (aIsMainThread) {
-    mCxPusher.PushNull();
+    mCxPusher.construct(static_cast<JSContext*>(nullptr),
+                        /* aAllowNull = */ true);
   }
   mStack.PushSystem();
 }

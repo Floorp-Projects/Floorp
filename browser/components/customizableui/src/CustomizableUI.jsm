@@ -1333,8 +1333,7 @@ let CustomizableUIInternal = {
 
   maybeAutoHidePanel: function(aEvent) {
     if (aEvent.type == "keypress") {
-      if (aEvent.keyCode != aEvent.DOM_VK_ENTER &&
-          aEvent.keyCode != aEvent.DOM_VK_RETURN) {
+      if (aEvent.keyCode != aEvent.DOM_VK_RETURN) {
         return;
       }
       // If the user hit enter/return, we don't check preventDefault - it makes sense

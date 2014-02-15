@@ -118,7 +118,7 @@ function performTest() {
   ok(isCaretPos(gPanel, 26, 11 + token.length),
     "The editor didn't jump to the correct token (4).");
 
-  EventUtils.sendKey("ENTER", gDebugger);
+  EventUtils.sendKey("RETURN", gDebugger);
   is(gFiltering.searchData.toSource(), '["#", ["", "debugger"]]',
     "The searchbox data wasn't parsed correctly.");
   ok(isCaretPos(gPanel, 8, 12 + token.length),
@@ -222,7 +222,7 @@ function performTest() {
   ok(isCaretPos(gPanel, 8, 12 + token.length),
     "The editor shouldn't jump to another token (20).");
 
-  EventUtils.sendKey("ENTER", gDebugger);
+  EventUtils.sendKey("RETURN", gDebugger);
   is(gFiltering.searchData.toSource(), '["", [""]]',
     "The searchbox data wasn't parsed correctly.");
   ok(isCaretPos(gPanel, 8, 12 + token.length),
@@ -259,7 +259,7 @@ function performTest() {
   ok(isCaretPos(gPanel, 26, 11 + token.length),
     "The editor didn't jump to the correct token (26).");
 
-  EventUtils.sendKey("ENTER", gDebugger);
+  EventUtils.sendKey("RETURN", gDebugger);
   is(gFiltering.searchData.toSource(), '["#", ["#don\'t#find#me#instead#find", "debugger"]]',
     "The searchbox data wasn't parsed correctly.");
   ok(isCaretPos(gPanel, 8, 12 + token.length),

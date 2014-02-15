@@ -1726,7 +1726,7 @@ struct JSRuntime : public JS::shadow::Runtime,
         if (!largeAllocationFailureCallback || bytes < LARGE_ALLOCATION)
             return nullptr;
         largeAllocationFailureCallback();
-        return js_calloc(bytes);
+        return onOutOfMemory(reinterpret_cast<void *>(1), bytes);
     }
 
     void *reallocCanGC(void *p, size_t bytes) {
@@ -1736,7 +1736,7 @@ struct JSRuntime : public JS::shadow::Runtime,
         if (!largeAllocationFailureCallback || bytes < LARGE_ALLOCATION)
             return nullptr;
         largeAllocationFailureCallback();
-        return js_realloc(p, bytes);
+        return onOutOfMemory(p, bytes);
     }
 };
 

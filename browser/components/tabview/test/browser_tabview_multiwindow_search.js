@@ -126,7 +126,7 @@ function cleanup(contentWindow) {
       });
   }
   window.addEventListener("tabviewhidden", onTabViewHidden, false);
-  EventUtils.synthesizeKey("VK_ENTER", {});
+  EventUtils.synthesizeKey("VK_RETURN", {});
 }
 
 function whenWindowObservesOnce(win, topic, func) {

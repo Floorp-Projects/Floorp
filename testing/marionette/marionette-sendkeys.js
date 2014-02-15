@@ -94,10 +94,8 @@ var type = function(doc, element, text, releaseModifiers,
       keyCode = Components.interfaces.nsIDOMKeyEvent.DOM_VK_TAB;
     } else if (c == '\uE005') {
       keyCode = Components.interfaces.nsIDOMKeyEvent.DOM_VK_CLEAR;
-    } else if (c == '\uE006') {
+    } else if (c == '\uE006' || c == '\uE007') {
       keyCode = Components.interfaces.nsIDOMKeyEvent.DOM_VK_RETURN;
-    } else if (c == '\uE007') {
-      keyCode = Components.interfaces.nsIDOMKeyEvent.DOM_VK_ENTER;
     } else if (c == '\uE008') {
       keyCode = Components.interfaces.nsIDOMKeyEvent.DOM_VK_SHIFT;
       shiftKey = !shiftKey;

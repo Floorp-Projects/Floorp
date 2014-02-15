@@ -14,7 +14,7 @@ nsDOMTimeEvent::nsDOMTimeEvent(mozilla::dom::EventTarget* aOwner,
                                nsPresContext* aPresContext,
                                WidgetEvent* aEvent)
   : nsDOMEvent(aOwner, aPresContext,
-               aEvent ? aEvent : new InternalUIEvent(false, 0, 0)),
+               aEvent ? aEvent : new InternalUIEvent(false, 0)),
     mDetail(0)
 {
   SetIsDOMBinding();
