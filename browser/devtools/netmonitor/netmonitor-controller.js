@@ -60,7 +60,10 @@ const EVENTS = {
   // When the html response preview is displayed in the UI.
   RESPONSE_HTML_PREVIEW_DISPLAYED: "NetMonitor:ResponseHtmlPreviewAvailable",
 
-  // When `onTabSelect` is fired and subsequently rendered.
+  // When the image response thumbnail is displayed in the UI.
+  RESPONSE_IMAGE_THUMBNAIL_DISPLAYED: "NetMonitor:ResponseImageThumbnailAvailable",
+
+  // When a tab is selected in the NetworkDetailsView and subsequently rendered.
   TAB_UPDATED: "NetMonitor:TabUpdated",
 
   // Fired when Sidebar has finished being populated.
@@ -105,6 +108,7 @@ const require = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devt
 const promise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
 const EventEmitter = require("devtools/shared/event-emitter");
 const Editor = require("devtools/sourceeditor/editor");
+const {Tooltip} = require("devtools/shared/widgets/Tooltip");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Chart",
   "resource:///modules/devtools/Chart.jsm");

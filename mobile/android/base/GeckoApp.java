@@ -979,14 +979,14 @@ public abstract class GeckoApp
                 intent.setData(Uri.parse(path));
 
                 // Removes the image from storage once the chooser activity ends.
-                GeckoAppShell.sActivityHelper.startIntentForActivity(this,
-                                                                    Intent.createChooser(intent, sAppContext.getString(R.string.set_image_chooser_title)),
-                                                                    new ActivityResultHandler() {
-                                                                        @Override
-                                                                        public void onActivityResult (int resultCode, Intent data) {
-                                                                            getContentResolver().delete(intent.getData(), null, null);
-                                                                        }
-                                                                    });
+                ActivityHandlerHelper.startIntentForActivity(this,
+                                                            Intent.createChooser(intent, sAppContext.getString(R.string.set_image_chooser_title)),
+                                                            new ActivityResultHandler() {
+                                                                @Override
+                                                                public void onActivityResult (int resultCode, Intent data) {
+                                                                    getContentResolver().delete(intent.getData(), null, null);
+                                                                }
+                                                            });
             } else {
                 Toast.makeText(sAppContext, R.string.set_image_fail, Toast.LENGTH_SHORT).show();
             }
@@ -2321,7 +2321,7 @@ public abstract class GeckoApp
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (!GeckoAppShell.sActivityHelper.handleActivityResult(requestCode, resultCode, data)) {
+        if (!ActivityHandlerHelper.handleActivityResult(requestCode, resultCode, data)) {
             super.onActivityResult(requestCode, resultCode, data);
         }
     }

@@ -1,0 +1,16 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Debugger global method override test page</title>
+  </head>
+  <body>
+    <script type="text/javascript">
+      console.log( "Error: " + toString( { x: 0, y: 0 } ) );
+      function toString(v) { return "[ " + v.x + ", " + v.y + " ]"; }
+    </script>
+  </body>
+</html>

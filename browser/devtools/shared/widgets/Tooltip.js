@@ -399,12 +399,12 @@ Tooltip.prototype = {
 
   _showOnHover: function(target) {
     let res = this._targetNodeCb(target, this);
+    let show = arg => this.show(arg instanceof Ci.nsIDOMNode ? arg : target);
+
     if (res && res.then) {
-      res.then(() => {
-        this.show(target);
-      });
+      res.then(show);
     } else if (res) {
-      this.show(target);
+      show(res);
     }
   },
 
