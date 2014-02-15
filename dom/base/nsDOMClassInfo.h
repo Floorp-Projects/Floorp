@@ -20,6 +20,7 @@
 
 class nsContentList;
 class nsDocument;
+struct nsGlobalNameStruct;
 class nsGlobalWindow;
 class nsIScriptSecurityManager;
 
@@ -273,15 +274,10 @@ public:
   NS_IMETHOD OuterObject(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
                          JSObject * obj, JSObject * *_retval) MOZ_OVERRIDE;
 
-  static bool GlobalScopePolluterNewResolve(JSContext *cx, JS::Handle<JSObject*> obj,
-                                            JS::Handle<jsid> id, unsigned flags,
-                                            JS::MutableHandle<JSObject*> objp);
-  static bool GlobalScopePolluterGetProperty(JSContext *cx, JS::Handle<JSObject*> obj,
-                                             JS::Handle<jsid> id, JS::MutableHandle<JS::Value> vp);
-  static bool InvalidateGlobalScopePolluter(JSContext *cx,
-                                            JS::Handle<JSObject*> obj);
-  static nsresult InstallGlobalScopePolluter(JSContext *cx,
-                                             JS::Handle<JSObject*> obj);
+  static bool NameStructEnabled(JSContext* aCx, nsGlobalWindow *aWin,
+                                const nsAString& aName,
+                                const nsGlobalNameStruct& aNameStruct);
+
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
     return new nsWindowSH(aData);

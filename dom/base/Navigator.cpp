@@ -1961,11 +1961,32 @@ Navigator::DoNewResolve(JSContext* aCx, JS::Handle<JSObject*> aObject,
   return true;
 }
 
-static PLDHashOperator
-SaveNavigatorName(const nsAString& aName, void* aClosure)
+struct NavigatorNameEnumeratorClosure
 {
-  nsTArray<nsString>* arr = static_cast<nsTArray<nsString>*>(aClosure);
-  arr->AppendElement(aName);
+  NavigatorNameEnumeratorClosure(JSContext* aCx, JSObject* aWrapper,
+                                 nsTArray<nsString>& aNames)
+    : mCx(aCx),
+      mWrapper(aCx, aWrapper),
+      mNames(aNames)
+  {
+  }
+
+  JSContext* mCx;
+  JS::Rooted<JSObject*> mWrapper;
+  nsTArray<nsString>& mNames;
+};
+
+static PLDHashOperator
+SaveNavigatorName(const nsAString& aName,
+                  const nsGlobalNameStruct& aNameStruct,
+                  void* aClosure)
+{
+  NavigatorNameEnumeratorClosure* closure =
+    static_cast<NavigatorNameEnumeratorClosure*>(aClosure);
+  if (!aNameStruct.mConstructorEnabled ||
+      aNameStruct.mConstructorEnabled(closure->mCx, closure->mWrapper)) {
+    closure->mNames.AppendElement(aName);
+  }
   return PL_DHASH_NEXT;
 }
 
@@ -1980,7 +2001,8 @@ Navigator::GetOwnPropertyNames(JSContext* aCx, nsTArray<nsString>& aNames,
     return;
   }
 
-  nameSpaceManager->EnumerateNavigatorNames(SaveNavigatorName, &aNames);
+  NavigatorNameEnumeratorClosure closure(aCx, GetWrapper(), aNames);
+  nameSpaceManager->EnumerateNavigatorNames(SaveNavigatorName, &closure);
 }
 
 JSObject*

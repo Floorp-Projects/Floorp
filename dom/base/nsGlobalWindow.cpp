@@ -4178,11 +4178,42 @@ nsGlobalWindow::DoNewResolve(JSContext* aCx, JS::Handle<JSObject*> aObj,
   return true;
 }
 
-static PLDHashOperator
-EnumerateGlobalName(const nsAString& aName, void* aClosure)
+struct GlobalNameEnumeratorClosure
 {
-  nsTArray<nsString>* arr = static_cast<nsTArray<nsString>*>(aClosure);
-  arr->AppendElement(aName);
+  GlobalNameEnumeratorClosure(JSContext* aCx, nsGlobalWindow* aWindow,
+                              nsTArray<nsString>& aNames)
+    : mCx(aCx),
+      mWindow(aWindow),
+      mWrapper(aCx, aWindow->GetWrapper()),
+      mNames(aNames)
+  {
+  }
+
+  JSContext* mCx;
+  nsGlobalWindow* mWindow;
+  JS::Rooted<JSObject*> mWrapper;
+  nsTArray<nsString>& mNames;
+};
+
+static PLDHashOperator
+EnumerateGlobalName(const nsAString& aName,
+                    const nsGlobalNameStruct& aNameStruct,
+                    void* aClosure)
+{
+  GlobalNameEnumeratorClosure* closure =
+    static_cast<GlobalNameEnumeratorClosure*>(aClosure);
+
+  if (aNameStruct.mType == nsGlobalNameStruct::eTypeStaticNameSet) {
+    // We have no idea what names this might install.
+    return PL_DHASH_NEXT;
+  }
+
+  if (nsWindowSH::NameStructEnabled(closure->mCx, closure->mWindow, aName,
+                                    aNameStruct) &&
+      (!aNameStruct.mConstructorEnabled ||
+       aNameStruct.mConstructorEnabled(closure->mCx, closure->mWrapper))) {
+    closure->mNames.AppendElement(aName);
+  }
   return PL_DHASH_NEXT;
 }
 
@@ -4190,9 +4221,13 @@ void
 nsGlobalWindow::GetOwnPropertyNames(JSContext* aCx, nsTArray<nsString>& aNames,
                                     ErrorResult& aRv)
 {
+  // "Components" is marked as enumerable but only resolved on demand :-/.
+  //aNames.AppendElement(NS_LITERAL_STRING("Components"));
+
   nsScriptNameSpaceManager* nameSpaceManager = GetNameSpaceManager();
   if (nameSpaceManager) {
-    nameSpaceManager->EnumerateGlobalNames(EnumerateGlobalName, &aNames);
+    GlobalNameEnumeratorClosure closure(aCx, this, aNames);
+    nameSpaceManager->EnumerateGlobalNames(EnumerateGlobalName, &closure);
   }
 }
 

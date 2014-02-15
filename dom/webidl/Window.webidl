@@ -372,7 +372,8 @@ partial interface Window {
 };
 #endif
 
-[ChromeOnly] interface ChromeWindow {
+[Func="IsChromeOrXBL"]
+interface ChromeWindow {
   [Func="nsGlobalWindow::IsChromeWindow"]
   const unsigned short STATE_MAXIMIZED = 1;
   [Func="nsGlobalWindow::IsChromeWindow"]
