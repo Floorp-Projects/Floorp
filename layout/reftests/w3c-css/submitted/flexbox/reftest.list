@@ -140,6 +140,10 @@ fuzzy-if(Android,158,32) == flexbox-align-self-vert-rtl-1.xhtml  flexbox-align-s
 == flexbox-paint-ordering-1.xhtml flexbox-paint-ordering-1-ref.xhtml
 == flexbox-paint-ordering-2.xhtml flexbox-paint-ordering-2-ref.xhtml
 
+# Tests for "display:flex" on root node
+== flexbox-root-node-1a.html flexbox-root-node-1-ref.html
+== flexbox-root-node-1b.html flexbox-root-node-1-ref.html
+
 # Tests for sizing of flex containers, e.g. under min/max size constraints
 == flexbox-sizing-horiz-1.xhtml flexbox-sizing-horiz-1-ref.xhtml
 == flexbox-sizing-horiz-2.xhtml flexbox-sizing-horiz-2-ref.xhtml
