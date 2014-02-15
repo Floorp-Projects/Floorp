@@ -11,7 +11,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 var gGlobal = this;
 function checkGlobal(obj) {
-  if (typeof obj == 'object' && Cu.getGlobalForObject(obj) != gGlobal) {
+  if (Object(obj) === obj && Cu.getGlobalForObject(obj) != gGlobal) {
     // This message may not make it to the caller in a useful form, so dump
     // as well.
     var msg = "TestInterfaceJS received an object from a different scope!";
@@ -44,6 +44,8 @@ TestInterfaceJS.prototype = {
   set objectAttr(val) { checkGlobal(val); this._objectAttr = val; },
   pingPongAny: function(any) { checkGlobal(any); return any; },
   pingPongObject: function(obj) { checkGlobal(obj); return obj; },
+
+  getCallerPrincipal: function() { return Cu.getWebIDLCallerPrincipal().origin; }
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([TestInterfaceJS])
