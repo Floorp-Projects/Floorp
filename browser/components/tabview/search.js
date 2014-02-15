@@ -470,9 +470,8 @@ let Search = {
     let matcher = this.createSearchTabMatcher();
     let matches = matcher.matched();
     let others =  matcher.matchedTabsFromOtherWindows();
-    if ((event.keyCode == event.DOM_VK_RETURN ||
-         event.keyCode == event.DOM_VK_ENTER) &&
-         (matches.length > 0 || others.length > 0)) {
+    if (event.keyCode == event.DOM_VK_RETURN &&
+        (matches.length > 0 || others.length > 0)) {
       this.hide(event);
       if (matches.length > 0) 
         matches[0].zoomIn();

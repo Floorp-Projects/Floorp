@@ -911,7 +911,7 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
    * The keypress listener for the breakpoints conditional expression textbox.
    */
   _onConditionalTextboxKeyPress: function(e) {
-    if (e.keyCode == e.DOM_VK_RETURN || e.keyCode == e.DOM_VK_ENTER) {
+    if (e.keyCode == e.DOM_VK_RETURN) {
       this._hideConditionalPopup();
     }
   },
@@ -2268,7 +2268,6 @@ WatchExpressionsView.prototype = Heritage.extend(WidgetMethods, {
   _onKeyPress: function(e) {
     switch(e.keyCode) {
       case e.DOM_VK_RETURN:
-      case e.DOM_VK_ENTER:
       case e.DOM_VK_ESCAPE:
         e.stopPropagation();
         DebuggerView.editor.focus();

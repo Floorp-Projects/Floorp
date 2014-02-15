@@ -49,7 +49,6 @@
   </commandset>
 
   <keyset id="downloadKeys">
-    <key keycode="VK_ENTER" oncommand="doDefaultForSelected();"/>
     <key keycode="VK_RETURN" oncommand="doDefaultForSelected();"/>
     <key id="key_pauseResume" key=" " oncommand="performCommand('cmd_pauseResume');"/>
     <key id="key_removeFromList"  keycode="VK_DELETE" oncommand="performCommand('cmd_removeFromList');"/>

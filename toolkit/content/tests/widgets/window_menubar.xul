@@ -199,7 +199,7 @@ var popupTests = [
   }
 },
 {
-  // on Windows, a disabled item is selected, so pressing ENTER should close
+  // on Windows, a disabled item is selected, so pressing RETURN should close
   // the menu but not fire a command event
   testname: "enter on disabled",
   events: function() {
@@ -215,7 +215,7 @@ var popupTests = [
                "command copy", "popuphiding editpopup", "popuphidden editpopup",
                "DOMMenuItemInactive copy" ];
   },
-  test: function() { sendKey("ENTER"); },
+  test: function() { sendKey("RETURN"); },
   result: function(testname) {
     checkClosed("editmenu", testname);
     is(document.getElementById("editmenu").openedWithKey, false, testname + " openedWithKey");
@@ -282,7 +282,7 @@ var popupTests = [
     else
       return [ "popupshowing toolbarpopup", "popupshown toolbarpopup" ];
   },
-  test: function() { sendKey("ENTER"); },
+  test: function() { sendKey("RETURN"); },
   result: function(testname) {
     checkOpen("viewmenu", testname);
     checkOpen("toolbar", testname);
@@ -319,7 +319,7 @@ var popupTests = [
     else
       return [ "popupshowing toolbarpopup", "popupshown toolbarpopup" ];
   },
-  test: function() { sendKey("ENTER"); },
+  test: function() { sendKey("RETURN"); },
   result: function(testname) {
     checkOpen("viewmenu", testname);
     checkOpen("toolbar", testname);
