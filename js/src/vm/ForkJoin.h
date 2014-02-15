@@ -406,6 +406,11 @@ class ForkJoinContext : public ThreadSafeContext
     // Initializes the thread-local state.
     static bool initialize();
 
+    // Used in inlining GetForkJoinSlice.
+    static size_t offsetOfWorker() {
+        return offsetof(ForkJoinContext, worker_);
+    }
+
   private:
     friend class AutoSetForkJoinContext;
 
