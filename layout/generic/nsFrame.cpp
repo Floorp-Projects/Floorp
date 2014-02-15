@@ -4976,27 +4976,6 @@ ComputeEffectsRect(nsIFrame* aFrame, const nsRect& aOverflowRect,
   // box-shadow
   r.UnionRect(r, nsLayoutUtils::GetBoxShadowRectForFrame(aFrame, aNewSize));
 
-  const nsStyleOutline* outline = aFrame->StyleOutline();
-  uint8_t outlineStyle = outline->GetOutlineStyle();
-  if (outlineStyle != NS_STYLE_BORDER_STYLE_NONE) {
-    nscoord width;
-    DebugOnly<bool> result = outline->GetOutlineWidth(width);
-    NS_ASSERTION(result, "GetOutlineWidth had no cached outline width");
-    if (width > 0) {
-      aFrame->Properties().
-        Set(nsIFrame::OutlineInnerRectProperty(), new nsRect(r));
-
-      nscoord offset = outline->mOutlineOffset;
-      nscoord inflateBy = std::max(width + offset, 0);
-      // FIXME (bug 599652): We probably want outline to be drawn around
-      // something smaller than the visual overflow rect (perhaps the
-      // scrollable overflow rect is correct).  When we change that, we
-      // need to keep this code (and the storing of properties just
-      // above) in sync with GetOutlineInnerRect in nsCSSRendering.cpp.
-      r.Inflate(inflateBy, inflateBy);
-    }
-  }
-
   // border-image-outset.
   // We need to include border-image-outset because it can cause the
   // border image to be drawn beyond the border box.
@@ -6854,6 +6833,172 @@ IsInlineFrame(nsIFrame *aFrame)
   return type == nsGkAtoms::inlineFrame;
 }
 
+/**
+ * Compute the union of the border boxes of aFrame and its descendants,
+ * in aFrame's coordinate space (if aApplyTransform is false) or its
+ * post-transform coordinate space (if aApplyTransform is true).
+ */
+static nsRect
+UnionBorderBoxes(nsIFrame* aFrame, bool aApplyTransform,
+                 const nsSize* aSizeOverride = nullptr)
+{
+  const nsRect bounds(nsPoint(0, 0),
+                      aSizeOverride ? *aSizeOverride : aFrame->GetSize());
+
+  // Start from our border-box, transformed.  See comment below about
+  // transform of children.
+  nsRect u;
+  bool doTransform = aApplyTransform && aFrame->IsTransformed();
+  if (doTransform) {
+    u = nsDisplayTransform::TransformRect(bounds, aFrame,
+                                          nsPoint(0, 0), &bounds);
+  } else {
+    u = bounds;
+  }
+
+  // Only iterate through the children if the overflow areas suggest
+  // that we might need to, and if the frame doesn't clip its overflow
+  // anyway.
+  const nsStyleDisplay* disp = aFrame->StyleDisplay();
+  nsIAtom* fType = aFrame->GetType();
+  if (!u.IsEqualEdges(aFrame->GetVisualOverflowRect()) &&
+      !u.IsEqualEdges(aFrame->GetScrollableOverflowRect()) &&
+      !nsFrame::ShouldApplyOverflowClipping(aFrame, disp) &&
+      fType != nsGkAtoms::scrollFrame &&
+      fType != nsGkAtoms::svgOuterSVGFrame) {
+
+    nsRect clipPropClipRect;
+    bool hasClipPropClip =
+      aFrame->GetClipPropClipRect(disp, &clipPropClipRect, bounds.Size());
+
+    // Iterate over all children except pop-ups.
+    const nsIFrame::ChildListIDs skip(nsIFrame::kPopupList |
+                                      nsIFrame::kSelectPopupList);
+    for (nsIFrame::ChildListIterator childLists(aFrame);
+         !childLists.IsDone(); childLists.Next()) {
+      if (skip.Contains(childLists.CurrentID())) {
+        continue;
+      }
+
+      nsFrameList children = childLists.CurrentList();
+      for (nsFrameList::Enumerator e(children); !e.AtEnd(); e.Next()) {
+        nsIFrame* child = e.get();
+        // Note that passing |true| for aApplyTransform when
+        // child->Preserves3D() is incorrect if our aApplyTransform is
+        // false... but the opposite would be as well.  This is because
+        // elements within a preserve-3d scene are always transformed up
+        // to the top of the scene.  This means we don't have a
+        // mechanism for getting a transform up to an intermediate point
+        // within the scene.  We choose to over-transform rather than
+        // under-transform because this is consistent with other
+        // overflow areas.
+        nsRect childRect = UnionBorderBoxes(child, true) +
+                           child->GetPosition();
+
+        if (hasClipPropClip) {
+          // Intersect with the clip before transforming.
+          childRect.IntersectRect(childRect, clipPropClipRect);
+        }
+
+        // Note that we transform each child separately according to
+        // aFrame's transform, and then union, which gives a different
+        // (smaller) result from unioning and then transforming the
+        // union.  This doesn't match the way we handle overflow areas
+        // with 2-D transforms, though it does match the way we handle
+        // overflow areas in preserve-3d 3-D scenes.
+        if (doTransform && !child->Preserves3D()) {
+          childRect = nsDisplayTransform::TransformRect(childRect, aFrame,
+                                                        nsPoint(0, 0), &bounds);
+        }
+        u.UnionRectEdges(u, childRect);
+      }
+    }
+  }
+
+  return u;
+}
+
+static void
+ComputeAndIncludeOutlineArea(nsIFrame* aFrame, nsOverflowAreas& aOverflowAreas,
+                             const nsSize& aNewSize)
+{
+  const nsStyleOutline* outline = aFrame->StyleOutline();
+  if (outline->GetOutlineStyle() == NS_STYLE_BORDER_STYLE_NONE) {
+    return;
+  }
+
+  nscoord width;
+  DebugOnly<bool> result = outline->GetOutlineWidth(width);
+  NS_ASSERTION(result, "GetOutlineWidth had no cached outline width");
+  if (width <= 0) {
+    return;
+  }
+
+  // When the outline property is set on :-moz-anonymous-block or
+  // :-moz-anonymous-positioned-block pseudo-elements, it inherited
+  // that outline from the inline that was broken because it
+  // contained a block.  In that case, we don't want a really wide
+  // outline if the block inside the inline is narrow, so union the
+  // actual contents of the anonymous blocks.
+  nsIFrame *frameForArea = aFrame;
+  do {
+    nsIAtom *pseudoType = frameForArea->StyleContext()->GetPseudo();
+    if (pseudoType != nsCSSAnonBoxes::mozAnonymousBlock &&
+        pseudoType != nsCSSAnonBoxes::mozAnonymousPositionedBlock)
+      break;
+    // If we're done, we really want it and all its later siblings.
+    frameForArea = frameForArea->GetFirstPrincipalChild();
+    NS_ASSERTION(frameForArea, "anonymous block with no children?");
+  } while (frameForArea);
+
+  // Find the union of the border boxes of all descendants, or in
+  // the block-in-inline case, all descendants we care about.
+  //
+  // Note that the interesting perspective-related cases are taken
+  // care of by the code that handles those issues for overflow
+  // calling FinishAndStoreOverflow again, which in turn calls this
+  // function again.  We still need to deal with preserve-3d a bit.
+  nsRect innerRect;
+  if (frameForArea == aFrame) {
+    innerRect = UnionBorderBoxes(aFrame, false, &aNewSize);
+  } else {
+    for (; frameForArea; frameForArea = frameForArea->GetNextSibling()) {
+      nsRect r(UnionBorderBoxes(frameForArea, true));
+
+      // Adjust for offsets transforms up to aFrame's pre-transform
+      // (i.e., normal) coordinate space; see comments in
+      // UnionBorderBoxes for some of the subtlety here.
+      for (nsIFrame *f = frameForArea, *parent = f->GetParent();
+           /* see middle of loop */;
+           f = parent, parent = f->GetParent()) {
+        r += f->GetPosition();
+        if (parent == aFrame) {
+          break;
+        }
+        if (parent->IsTransformed() && !f->Preserves3D()) {
+          r = nsDisplayTransform::TransformRect(r, parent, nsPoint(0, 0));
+        }
+      }
+
+      innerRect.UnionRect(innerRect, r);
+    }
+  }
+
+  aFrame->Properties().Set(nsIFrame::OutlineInnerRectProperty(),
+                           new nsRect(innerRect));
+
+  nscoord offset = outline->mOutlineOffset;
+  nscoord inflateBy = std::max(width + offset, 0);
+
+  // Keep this code (and the storing of properties just above) in
+  // sync with GetOutlineInnerRect in nsCSSRendering.cpp.
+  nsRect outerRect(innerRect);
+  outerRect.Inflate(inflateBy, inflateBy);
+
+  nsRect& vo = aOverflowAreas.VisualOverflow();
+  vo.UnionRectEdges(vo, outerRect);
+}
+
 bool
 nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
                                  nsSize aNewSize, nsSize* aOldSize)
@@ -6932,6 +7077,8 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
       vo.UnionRectEdges(vo, r);
     }
   }
+
+  ComputeAndIncludeOutlineArea(this, aOverflowAreas, aNewSize);
 
   // Nothing in here should affect scrollable overflow.
   aOverflowAreas.VisualOverflow() =
