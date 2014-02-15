@@ -170,6 +170,12 @@ public:
     return mConnectionStatus;
   }
 
+  int GetSuggestedConnectDelayMs() const
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    return mConnectDelayMs;
+  }
+
   /**
    * Function to be called whenever data is received. This is only called on the
    * main thread.
@@ -266,8 +272,12 @@ public:
   void GetSocketAddr(nsAString& aAddrStr);
 
 private:
+  uint32_t CalculateConnectDelayMs() const;
+
   UnixSocketImpl* mImpl;
   SocketConnectionStatus mConnectionStatus;
+  PRIntervalTime mConnectTimestamp;
+  uint32_t mConnectDelayMs;
 };
 
 } // namespace ipc

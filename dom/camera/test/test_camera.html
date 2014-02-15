@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <title>Test for mozCameras</title>
+  <title>Test for mozCameras.getCamera() with separate .setConfiguration() call</title>
   <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
@@ -11,8 +11,14 @@
 <img src="#" alt="This image is going to load" id="testimage"/>
 <script class="testbody" type="text/javascript;version=1.7">
 
+var whichCamera = navigator.mozCameras.getListOfCameras()[0];
 var options = {
-  camera: navigator.mozCameras.getListOfCameras()[0]
+  mode: 'picture',
+  recorderProfile: 'cif',
+  previewSize: {
+    width: 352,
+    height: 288
+  }
 };
 
 var config = {
@@ -24,6 +30,9 @@ var config = {
 
 function onError(e) {
   ok(false, "Error" + JSON.stringify(e));
+  Camera.cameraObj.release();
+  Camera.cameraObj = null;
+  Camera.viewfinder.mozSrcObject = null;
 }
 
 var capabilities = [ 'previewSizes', 'pictureSizes', 'fileFormats', 'maxFocusAreas', 'minExposureCompensation',
@@ -96,7 +105,9 @@ var Camera = {
       Camera._testsCompleted++;
       if(Camera._testsCompleted == Camera._tests.length) {
         ok(true, "test finishing");
-        Camera.cameraObj.release();
+        Camera.cameraObj.release(function() {
+          Camera.cameraObj = null;
+        }, onError);
         Camera.viewfinder.mozSrcObject = null;
         SimpleTest.finish();
       } else {
@@ -114,27 +125,16 @@ var Camera = {
                            Camera._shutter + " times");
 
   },
-  streamReady: function onStreamReady (stream) {
-    Camera.viewfinder.mozSrcObject = stream;
-    Camera.viewfinder.play();
-    ok(true, "on Stream is ready and playing");
-    Camera.cameraObj.onPreviewStateChange = function(state) {
-      if (state === 'started') {
-        Camera.cameraObj.onPreviewStateChange = null;
-        Camera.onReady();
-      }
-    };
-
-    //window.setTimeout(Camera.onReady, 500);
-  },
   onReady: function onReady() {
     var camcap = Camera.cameraObj.capabilities;
     var tests = {};
     for (var prop in capabilities) {
       prop = capabilities[prop];
       ok(camcap[prop] || isFinite(camcap[prop]) || camcap[prop] == null, "Camera Capability: " +
-                    prop + " is exposed, value = " +JSON.stringify(camcap[prop]));
-    } 
+                    prop + " is exposed, value = " + JSON.stringify(camcap[prop]));
+    }
+    ok(camcap.maxMeteringAreas >= 0, "maxMeteringAreas = " + camcap.maxMeteringAreas);
+    ok(camcap.maxFocusAreas >= 0, "maxFocusAreas = " + camcap.maxFocusAreas);
     for (var prop in camcap) {
       if(camcap[prop] && camcap[prop].length > 1)  {
         tests[prop] = camcap[prop];
@@ -165,24 +165,34 @@ var Camera = {
     Camera.setFlashMode(test.flashMode);
     config.fileFormat = test.fileFormat;
     config.pictureSize = test.pictureSize;
-    ok(true, JSON.stringify(config.pictureSize));
+    ok(true, "testing picture size " + JSON.stringify(config.pictureSize));
     Camera.cameraObj.takePicture(config, this.takePictureSuccess.bind(this), onError);
+  },
+  onConfigChange: function onConfigChange(config) {
+    ok(config.mode === options.mode, "configuration mode = " + config.mode);
+    ok(config.recorderProfile === options.recorderProfile, "recorder profile = " + config.recorderProfile);
+    ok(config.previewSize.width === options.previewSize.width &&
+      config.previewSize.height === options.previewSize.height,
+      "preview size (w x h) = " + config.previewSize.width + " x " + config.previewSize.height);
   },
   setUp: function setup_tests() {
     function onSuccess(camera) {
       Camera.cameraObj = camera;
-      var size = {
-        profile: 'cif',
-        rotation: 0,
-        width: 352,
-        height: 288
+      Camera.viewfinder.mozSrcObject = camera;
+      Camera.viewfinder.play();
+      Camera.cameraObj.onPreviewStateChange = function(state) {
+        if (state === 'started') {
+          ok(true, "viewfinder is ready and playing");
+          Camera.cameraObj.onPreviewStateChange = null;
+          Camera.onReady();
+        }
       };
-      SimpleTest.expectAssertions(34);
+      SimpleTest.expectAssertions(0);
       ok(true, "Camera Control object has been successfully initialized");
-      Camera.cameraObj.getPreviewStream(size, Camera.streamReady);
+      Camera.cameraObj.setConfiguration(options, Camera.onConfigChange, onError);
       Camera.cameraObj.onShutter = Camera.shutter;
     };
-    navigator.mozCameras.getCamera(options, onSuccess, onError);
+    navigator.mozCameras.getCamera(whichCamera, null, onSuccess, onError);
   }
 }
 

@@ -1375,8 +1375,15 @@ function add_task(func) {
  */
 let _gRunningTest = null;
 let _gTestIndex = 0; // The index of the currently running test.
+let _gTaskRunning = false;
 function run_next_test()
 {
+  if (_gTaskRunning) {
+    throw new Error("run_next_test() called from an add_task() test function. " +
+                    "run_next_test() should not be called from inside add_task() " +
+                    "under any circumstances!");
+  }
+
   function _run_next_test()
   {
     if (_gTestIndex < _gTests.length) {
@@ -1386,8 +1393,11 @@ function run_next_test()
       do_test_pending(_gRunningTest.name);
 
       if (_isTask) {
-        _Task.spawn(_gRunningTest)
-             .then(run_next_test, do_report_unexpected_exception);
+        _gTaskRunning = true;
+        _Task.spawn(_gRunningTest).then(
+          () => { _gTaskRunning = false; run_next_test(); },
+          (ex) => { _gTaskRunning = false; do_report_unexpected_exception(ex); }
+        );
       } else {
         // Exceptions do not kill asynchronous tests, so they'll time out.
         try {

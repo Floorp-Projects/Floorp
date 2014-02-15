@@ -57,6 +57,7 @@ function TestTabActor(aConnection, aGlobal)
 {
   this.conn = aConnection;
   this._global = aGlobal;
+  this._global.wrappedJSObject = aGlobal;
   this._threadActor = new ThreadActor(this, this._global);
   this.conn.addActor(this._threadActor);
   this._attached = false;
