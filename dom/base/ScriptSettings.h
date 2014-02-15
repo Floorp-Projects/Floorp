@@ -82,7 +82,7 @@ public:
 private:
   dom::ScriptSettingsStack& mStack;
   dom::ScriptSettingsStackEntry mEntry;
-  nsCxPusher mCxPusher;
+  mozilla::Maybe<AutoCxPusher> mCxPusher;
   mozilla::Maybe<JSAutoCompartment> mAc; // This can de-Maybe-fy when mCxPusher
                                          // goes away.
 };
@@ -111,7 +111,7 @@ public:
   ~AutoSystemCaller();
 private:
   dom::ScriptSettingsStack& mStack;
-  nsCxPusher mCxPusher;
+  mozilla::Maybe<AutoCxPusher> mCxPusher;
 };
 
 } // namespace dom
