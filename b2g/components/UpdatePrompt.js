@@ -366,16 +366,33 @@ UpdatePrompt.prototype = {
   restartProcess: function UP_restartProcess() {
     log("Update downloaded, restarting to apply it");
 
+    let callbackAfterSet = function() {
 #ifndef MOZ_WIDGET_GONK
-    let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"]
-                     .getService(Ci.nsIAppStartup);
-    appStartup.quit(appStartup.eForceQuit | appStartup.eRestart);
+      let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"]
+                       .getService(Ci.nsIAppStartup);
+      appStartup.quit(appStartup.eForceQuit | appStartup.eRestart);
 #else
-    // NB: on Gonk, we rely on the system process manager to restart us.
-    let pmService = Cc["@mozilla.org/power/powermanagerservice;1"]
-                    .getService(Ci.nsIPowerManagerService);
-    pmService.restart();
+      // NB: on Gonk, we rely on the system process manager to restart us.
+      let pmService = Cc["@mozilla.org/power/powermanagerservice;1"]
+                      .getService(Ci.nsIPowerManagerService);
+      pmService.restart();
 #endif
+    }
+
+    // Save current os version in deviceinfo.previous_os
+    let lock = Services.settings.createLock({
+      handle: callbackAfterSet,
+      handleAbort: function(error) {
+        log("Abort callback when trying to set previous_os: " + error);
+        callbackAfterSet();
+      }
+    });
+    lock.get("deviceinfo.os", {
+      handle: function(name, value) {
+        log("Set previous_os to: " + value);
+        lock.set("deviceinfo.previous_os", value, null, null);
+      }
+    });
   },
 
   forceUpdateCheck: function UP_forceUpdateCheck() {

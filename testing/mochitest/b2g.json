@@ -11,6 +11,7 @@
 "excludetests": {
     "content/xul":"tests that use xul",
     "layout/xul" : "",
+    "dom/apps":"bug 972927, nearly perma-fail",
     "dom/tests/mochitest/general/test_focusrings.xul":"",
     "layout/base/tests/test_bug465448.xul":"",
 
@@ -247,6 +248,9 @@
     "dom/browser-element/mochitest/test_browserElement_inproc_OpenWindowRejected.html":"",
     "dom/browser-element/mochitest/test_browserElement_inproc_SecurityChange.html":"",
     "dom/browser-element/mochitest/test_browserElement_inproc_TargetBlank.html":"",
+	
+    "dom/browser-element/mochitest/test_browserElement_NoPref.html":"bug 970290 - Should not send mozbrowserloadstart event.",
+    "dom/browser-element/mochitest/test_browserElement_NoWhitelist.html":"bug 970290 - Should not send mozbrowserloadstart event.",
 
     "dom/browser-element/mochitest/test_browserElement_oop_AppFramePermission.html":"",
     "dom/browser-element/mochitest/test_browserElement_oop_AppWindowNamespace.html":"",
