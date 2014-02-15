@@ -28,6 +28,9 @@ function addMessage() {
     },
     onshown: function() {
       sendMessageToJava({ type: "TestHomeBanner:MessageShown" });
+    },
+    ondismiss: function() {
+      sendMessageToJava({ type: "TestHomeBanner:MessageDismissed" });
     }
   });
   sendMessageToJava({ type: "TestHomeBanner:MessageAdded" });
