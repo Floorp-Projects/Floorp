@@ -16,7 +16,7 @@ function test() {
 
     let groupItem = cw.GroupItems.groupItems[0];
     let shield = groupItem.$titleShield[0];
-    let keys = ["RETURN", "ENTER", "ESCAPE"];
+    let keys = ["RETURN", "ESCAPE"];
 
     ok(win.TabView.isVisible(), "tabview is visible");
 

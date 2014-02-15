@@ -62,13 +62,12 @@ function main()
   testOk('accessKey(-)', '-');
   testOk('accessKey(\\)', '\\');
   testOk('accessKey( )', ' ');
-  testOk('accessKey(\x0D)', 0, 13);   // Return
-  testOk('accessKey(\x0D)', 0, 14);   // Enter
-  testOk('accessKey(\n)', 0, 13);     // New line
-  testOk('accessKey(\r)', 0, 13);     // Carriage return
-  testOk('accessKey(\x08)', 0, 8);    // Backspace
-  testOk('accessKey(\x1B)', 0, 0x1B); // Escape
-  testOk('accessKey(\x7F)', 0, 46);   // Del
+  testOk('accessKey(\x0D)', 0, KeyboardEvent.DOM_VK_RETURN);
+  testOk('accessKey(\n)', 0, KeyboardEvent.DOM_VK_RETURN); // New line
+  testOk('accessKey(\r)', 0, KeyboardEvent.DOM_VK_RETURN); // Carriage return
+  testOk('accessKey(\x08)', 0, KeyboardEvent.DOM_VK_BACK_SPACE);
+  testOk('accessKey(\x1B)', 0, KeyboardEvent.DOM_VK_ESCAPE);
+  testOk('accessKey(\x7F)', 0, KeyboardEvent.DOM_VK_DELETE);
 
   // Check some disallowed keys
   // -- For now we don't allow tab since the interaction with focus causes

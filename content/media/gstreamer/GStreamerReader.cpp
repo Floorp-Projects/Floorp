@@ -81,7 +81,8 @@ GStreamerReader::GStreamerReader(AbstractMediaDecoder* aDecoder)
   mVideoSinkBufferCount(0),
   mAudioSinkBufferCount(0),
   mGstThreadsMonitor("media.gst.threads"),
-  mReachedEos(false),
+  mReachedAudioEos(false),
+  mReachedVideoEos(false),
 #if GST_VERSION_MAJOR >= 1
   mConfigureAlignment(true),
 #endif
@@ -534,7 +535,8 @@ nsresult GStreamerReader::ResetDecode()
 
   mVideoSinkBufferCount = 0;
   mAudioSinkBufferCount = 0;
-  mReachedEos = false;
+  mReachedAudioEos = false;
+  mReachedVideoEos = false;
 #if GST_VERSION_MAJOR >= 1
   mConfigureAlignment = true;
 #endif
@@ -553,7 +555,7 @@ bool GStreamerReader::DecodeAudioData()
   {
     ReentrantMonitorAutoEnter mon(mGstThreadsMonitor);
 
-    if (mReachedEos) {
+    if (mReachedAudioEos && !mAudioSinkBufferCount) {
       return false;
     }
 
@@ -637,7 +639,7 @@ bool GStreamerReader::DecodeVideoFrame(bool &aKeyFrameSkip,
   {
     ReentrantMonitorAutoEnter mon(mGstThreadsMonitor);
 
-    if (mReachedEos) {
+    if (mReachedVideoEos && !mVideoSinkBufferCount) {
       return false;
     }
 
@@ -691,7 +693,7 @@ bool GStreamerReader::DecodeVideoFrame(bool &aKeyFrameSkip,
                "frame has invalid timestamp");
 
   timestamp = GST_TIME_AS_USECONDS(timestamp);
-  int64_t duration;
+  int64_t duration = 0;
   if (GST_CLOCK_TIME_IS_VALID(GST_BUFFER_DURATION(buffer)))
     duration = GST_TIME_AS_USECONDS(GST_BUFFER_DURATION(buffer));
   else if (fpsNum && fpsDen)
@@ -709,7 +711,7 @@ bool GStreamerReader::DecodeVideoFrame(bool &aKeyFrameSkip,
 
   if (!buffer)
     /* no more frames */
-    return false;
+    return true;
 
 #if GST_VERSION_MAJOR >= 1
   if (mConfigureAlignment && buffer->pool) {
@@ -1060,16 +1062,24 @@ void GStreamerReader::NewAudioBuffer()
 void GStreamerReader::EosCb(GstAppSink* aSink, gpointer aUserData)
 {
   GStreamerReader* reader = reinterpret_cast<GStreamerReader*>(aUserData);
-  reader->Eos();
+  reader->Eos(aSink);
 }
 
-void GStreamerReader::Eos()
+void GStreamerReader::Eos(GstAppSink* aSink)
 {
   /* We reached the end of the stream */
   {
     ReentrantMonitorAutoEnter mon(mGstThreadsMonitor);
     /* Potentially unblock DecodeVideoFrame and DecodeAudioData */
-    mReachedEos = true;
+    if (aSink == mVideoAppSink) {
+      mReachedVideoEos = true;
+    } else if (aSink == mAudioAppSink) {
+      mReachedAudioEos = true;
+    } else {
+      // Assume this is an error causing an EOS.
+      mReachedAudioEos = true;
+      mReachedVideoEos = true;
+    }
     mon.NotifyAll();
   }
 

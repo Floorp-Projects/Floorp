@@ -150,7 +150,7 @@ function test()
         synthesizeKey("VK_DOWN", {}, win);
 
         // Enter key to retry the download
-        synthesizeKey("VK_ENTER", {}, win);
+        synthesizeKey("VK_RETURN", {}, win);
       }, aSubject);
     }
   };

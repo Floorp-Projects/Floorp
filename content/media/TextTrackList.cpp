@@ -67,11 +67,17 @@ TextTrackList::AddTextTrack(TextTrackKind aKind,
                             const nsAString& aLanguage)
 {
   nsRefPtr<TextTrack> track = new TextTrack(mGlobal, this, aKind, aLabel, aLanguage);
-  if (mTextTracks.AppendElement(track)) {
-    CreateAndDispatchTrackEventRunner(track, NS_LITERAL_STRING("addtrack"));
-  }
-
+  AddTextTrack(track);
   return track.forget();
+}
+
+void
+TextTrackList::AddTextTrack(TextTrack* aTextTrack)
+{
+  if (mTextTracks.AppendElement(aTextTrack)) {
+    aTextTrack->SetTextTrackList(this);
+    CreateAndDispatchTrackEventRunner(aTextTrack, NS_LITERAL_STRING("addtrack"));
+  }
 }
 
 TextTrack*

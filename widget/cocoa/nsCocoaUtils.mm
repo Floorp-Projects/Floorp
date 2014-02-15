@@ -712,7 +712,6 @@ static const KeyConversionData gKeyConversions[] = {
   KEYCODE_ENTRY(VK_TAB, NSTabCharacter),
   KEYCODE_ENTRY(VK_CLEAR, NSClearLineFunctionKey),
   KEYCODE_ENTRY(VK_RETURN, NSEnterCharacter),
-  KEYCODE_ENTRY(VK_ENTER, NSEnterCharacter),
   KEYCODE_ENTRY(VK_SHIFT, 0),
   KEYCODE_ENTRY(VK_CONTROL, 0),
   KEYCODE_ENTRY(VK_ALT, 0),

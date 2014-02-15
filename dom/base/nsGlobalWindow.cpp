@@ -7431,20 +7431,25 @@ JSObject* nsGlobalWindow::CallerGlobal()
   // If somebody does sameOriginIframeWindow.postMessage(...), they probably
   // expect the .source attribute of the resulting message event to be |window|
   // rather than |sameOriginIframeWindow|, even though the transparent wrapper
-  // semantics of same-origin access will cause us to be in the iframe's cx at
-  // the time of the call. So we do some nasty poking in the JS engine and
-  // retrieve the global corresponding to the innermost scripted frame. Then,
-  // we verify that its principal is subsumed by the subject principal. If it
-  // isn't, something is screwy, and we want to clamp to the cx global.
-  JS::Rooted<JSObject*> scriptedGlobal(cx, JS_GetScriptedGlobal(cx));
-  JS::Rooted<JSObject*> cxGlobal(cx, JS::CurrentGlobalOrNull(cx));
-  nsIPrincipal* scriptedPrin = nsContentUtils::GetObjectPrincipal(scriptedGlobal);
-  nsIPrincipal* cxPrin = nsContentUtils::GetObjectPrincipal(cxGlobal);
-  if (!cxPrin->SubsumesConsideringDomain(scriptedPrin)) {
-    NS_WARNING("Something nasty is happening! Applying countermeasures...");
-    return cxGlobal;
-  }
-  return scriptedGlobal;
+  // semantics of same-origin access will cause us to be in the iframe's
+  // compartment at the time of the call. This means that we want the incumbent
+  // global here, rather than the global of the current compartment.
+  //
+  // There are various edge cases in which the incumbent global and the current
+  // global would not be same-origin. They include:
+  // * A privileged caller (System Principal or Expanded Principal) manipulating
+  //   less-privileged content via Xray Waivers.
+  // * An unprivileged caller invoking a cross-origin function that was exposed
+  //   to it by privileged code (i.e. Sandbox.importFunction).
+  //
+  // In these cases, we probably don't want the privileged global appearing in the
+  // .source attribute. So we fall back to the compartment global there.
+  JS::Rooted<JSObject*> incumbentGlobal(cx, &IncumbentJSGlobal());
+  JS::Rooted<JSObject*> compartmentGlobal(cx, JS::CurrentGlobalOrNull(cx));
+  nsIPrincipal* incumbentPrin = nsContentUtils::GetObjectPrincipal(incumbentGlobal);
+  nsIPrincipal* compartmentPrin = nsContentUtils::GetObjectPrincipal(compartmentGlobal);
+  return incumbentPrin->EqualsConsideringDomain(compartmentPrin) ? incumbentGlobal
+                                                                 : compartmentGlobal;
 }
 
 
@@ -8557,7 +8562,16 @@ nsGlobalWindow::GetFrameElement(ErrorResult& aError)
     return nullptr;
   }
 
-  return GetRealFrameElement(aError);
+  // Per HTML5, the frameElement getter returns null in cross-origin situations.
+  Element* element = GetRealFrameElement(aError);
+  if (aError.Failed() || !element) {
+    return nullptr;
+  }
+  if (!nsContentUtils::GetSubjectPrincipal()->
+         SubsumesConsideringDomain(element->NodePrincipal())) {
+    return nullptr;
+  }
+  return element;
 }
 
 Element*

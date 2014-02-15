@@ -577,7 +577,7 @@ GetOutlineInnerRect(nsIFrame* aFrame)
     return *savedOutlineInnerRect;
   // FIXME (bug 599652): We probably want something narrower than either
   // overflow rect here, but for now use the visual overflow in order to
-  // be consistent with ComputeOutlineAndEffectsRect in nsFrame.cpp.
+  // be consistent with ComputeEffectsRect in nsFrame.cpp.
   return aFrame->GetVisualOverflowRect();
 }
 

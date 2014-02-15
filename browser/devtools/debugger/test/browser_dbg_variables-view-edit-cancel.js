@@ -32,7 +32,7 @@ function test() {
     is(value.hidden, false,
       "The value element should not be hidden.");
 
-    for (let key of ["ESCAPE", "ENTER"]) {
+    for (let key of ["ESCAPE", "RETURN"]) {
       EventUtils.sendMouseEvent({ type: "dblclick" }, name, win);
 
       is(separator.hidden, true,
