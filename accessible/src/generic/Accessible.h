@@ -888,16 +888,6 @@ protected:
   // helper method to verify frames
   static nsresult GetFullKeyName(const nsAString& aModifierName, const nsAString& aKeyName, nsAString& aStringOut);
 
-  /**
-   * Return an accessible for the given DOM node, or if that node isn't
-   * accessible, return the accessible for the next DOM node which has one
-   * (based on forward depth first search).
-   *
-   * @param  aStartNode  [in] the DOM node to start from
-   * @return              the resulting accessible
-   */
-  Accessible* GetFirstAvailableAccessible(nsINode* aStartNode) const;
-
   //////////////////////////////////////////////////////////////////////////////
   // Action helpers
 

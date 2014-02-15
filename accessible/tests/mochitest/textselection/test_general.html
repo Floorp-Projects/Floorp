@@ -109,6 +109,44 @@
       }
     }
 
+    function changeDOMSelection(aID, aNodeID1, aNodeOffset1,
+                                aNodeID2, aNodeOffset2,
+                                aStartOffset, aEndOffset)
+    {
+      this.hyperText = getAccessible(aID, [ nsIAccessibleText ]);
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_TEXT_SELECTION_CHANGED, aID)
+      ];
+
+      this.invoke = function changeDOMSelection_invoke()
+      {
+        var sel = window.getSelection();
+        var range = document.createRange();
+        range.setStart(getNode(aNodeID1), aNodeOffset1);
+        range.setEnd(getNode(aNodeID2), aNodeOffset2);
+        sel.addRange(range);
+      }
+
+      this.finalCheck = function changeDOMSelection_finalCheck()
+      {
+        is(this.hyperText.selectionCount, 1,
+           "setSelectionBounds: Wrong selection count for " + aID);
+        var startOffset = {}, endOffset = {};
+        this.hyperText.getSelectionBounds(0, startOffset, endOffset);
+
+        is(startOffset.value, aStartOffset,
+           "setSelectionBounds: Wrong start offset for " + aID);
+        is(endOffset.value, aEndOffset,
+           "setSelectionBounds: Wrong end offset for " + aID);
+      }
+
+      this.getID = function changeDOMSelection_getID()
+      {
+        return "DOM selection change for " + aID;
+      }
+    }
+
     function onfocusEventSeq(aID)
     {
       var caretMovedChecker =
@@ -141,6 +179,7 @@
       gQueue.push(new synthFocus("textarea", onfocusEventSeq("textarea")));
       gQueue.push(new changeSelection("textarea", 1, 3));
 
+      gQueue.push(new changeDOMSelection("c1", "c1_span1", 0, "c1_span2", 0, 2, 2));
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
 
@@ -169,6 +208,7 @@
   <p id="paragraph">hello</p>
   <input id="textbox" value="hello"/>
   <textarea id="textarea">hello</textarea>
+  <div id="c1">hi<span id="c1_span1"></span><span id="c1_span2"></span>hi</div>
 
 </body>
 </html>
