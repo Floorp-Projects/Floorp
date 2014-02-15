@@ -25,7 +25,7 @@ using namespace mozilla;
 nsDOMUIEvent::nsDOMUIEvent(mozilla::dom::EventTarget* aOwner,
                            nsPresContext* aPresContext, WidgetGUIEvent* aEvent)
   : nsDOMEvent(aOwner, aPresContext,
-               aEvent ? aEvent : new InternalUIEvent(false, 0, 0))
+               aEvent ? aEvent : new InternalUIEvent(false, 0))
   , mClientPoint(0, 0), mLayerPoint(0, 0), mPagePoint(0, 0), mMovementPoint(0, 0)
   , mIsPointerLocked(nsEventStateManager::sIsPointerLocked)
   , mLastClientPoint(nsEventStateManager::sLastClientPoint)

@@ -22,9 +22,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=590554
     SimpleTest.waitForFocus(function() {
       var t = document.querySelector("textarea");
       t.focus();
-      synthesizeKey("VK_ENTER", {});
+      synthesizeKey("VK_RETURN", {});
       is(t.value, "\n", "Pressing enter should work the first time");
-      synthesizeKey("VK_ENTER", {});
+      synthesizeKey("VK_RETURN", {});
       is(t.value, "\n", "Pressing enter should not work the second time");
       SimpleTest.finish();
     });

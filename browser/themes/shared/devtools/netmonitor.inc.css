@@ -126,9 +126,29 @@
   font-weight: 600;
 }
 
-.requests-menu-file {
+.requests-menu-icon-and-file {
   width: 20vw;
   min-width: 4em;
+}
+
+.requests-menu-icon {
+  background: #fff;
+  width: calc(1em + 4px);
+  height: calc(1em + 4px);
+  margin: -4px 0px;
+  -moz-margin-end: 4px;
+}
+
+.theme-dark .requests-menu-icon {
+  outline: 1px solid @table_itemDarkStartBorder@;
+}
+
+.theme-light .requests-menu-icon {
+  outline: 1px solid @table_itemLightStartBorder@;
+}
+
+.requests-menu-file {
+  text-align: start;
 }
 
 .requests-menu-domain {
@@ -288,8 +308,6 @@ box.requests-menu-status {
   -moz-padding-end: 4px;
   background-repeat: repeat-y; /* Background created on a <canvas> in js. */
   background-position: -1px center;
-  margin-top: -1px; /* Compensate borders. */
-  margin-bottom: -1px;
 }
 
 .requests-menu-subitem.requests-menu-waterfall:-moz-locale-dir(rtl) {
@@ -771,7 +789,10 @@ box.requests-menu-status {
     width: 16vw;
   }
 
-  .requests-menu-file,
+  .requests-menu-icon-and-file {
+    width: 30vw;
+  }
+
   .requests-menu-domain {
     width: 30vw;
   }
@@ -797,7 +818,7 @@ box.requests-menu-status {
        right border and box-shadow of "Domain" column should be hidden. */
   }
 
-  #network-table[domain-overflows] .requests-menu-file {
+  #network-table[domain-overflows] .requests-menu-icon-and-file {
     border-width: 0 !important;
     box-shadow: none !important;
     /* The "Domain" header is not visible anymore, and thus the

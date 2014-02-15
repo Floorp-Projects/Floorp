@@ -1975,6 +1975,7 @@ WebGLContext::Hint(GLenum target, GLenum mode)
     if (!isValid)
         return ErrorInvalidEnum("hint: invalid hint");
 
+    MakeContextCurrent();
     gl->fHint(target, mode);
 }
 
@@ -3380,6 +3381,7 @@ WebGLContext::CompressedTexImage2D(GLenum target, GLint level, GLenum internalfo
         return;
     }
 
+    MakeContextCurrent();
     gl->fCompressedTexImage2D(target, level, internalformat, width, height, border, byteLength, view.Data());
     tex->SetImageInfo(target, level, width, height, internalformat, LOCAL_GL_UNSIGNED_BYTE,
                       WebGLImageDataStatus::InitializedImageData);
@@ -3484,6 +3486,7 @@ WebGLContext::CompressedTexSubImage2D(GLenum target, GLint level, GLint xoffset,
         tex->DoDeferredImageInitialization(target, level);
     }
 
+    MakeContextCurrent();
     gl->fCompressedTexSubImage2D(target, level, xoffset, yoffset, width, height, format, byteLength, view.Data());
 
     return;

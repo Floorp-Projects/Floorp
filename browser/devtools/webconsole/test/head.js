@@ -750,10 +750,10 @@ function updateVariablesViewProperty(aOptions)
 
   switch (aOptions.field) {
     case "name":
-      EventUtils.synthesizeKey("VK_ENTER", { shiftKey: true }, view.window);
+      EventUtils.synthesizeKey("VK_RETURN", { shiftKey: true }, view.window);
       break;
     case "value":
-      EventUtils.synthesizeKey("VK_ENTER", {}, view.window);
+      EventUtils.synthesizeKey("VK_RETURN", {}, view.window);
       break;
     default:
       throw new Error("options.field is incorrect");
@@ -771,7 +771,7 @@ function updateVariablesViewProperty(aOptions)
       aOptions.webconsole.jsterm.once("variablesview-fetched", aOptions.callback);
     }
 
-    EventUtils.synthesizeKey("VK_ENTER", {}, view.window);
+    EventUtils.synthesizeKey("VK_RETURN", {}, view.window);
 
     if (!aOptions.webconsole) {
       executeSoon(aOptions.callback);

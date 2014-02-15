@@ -91,10 +91,3 @@ nsClipboardProxy::SupportsSelectionClipboard(bool *aIsSupported)
   return NS_OK;
 }
 
-
-NS_IMETHODIMP
-nsClipboardProxy::SupportsFindClipboard(bool *aIsSupported)
-{
-  *aIsSupported = false;
-  return NS_OK;
-}

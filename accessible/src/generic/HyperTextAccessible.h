@@ -473,25 +473,6 @@ protected:
                                     Accessible* aAccessible,
                                     mozilla::a11y::DOMPoint* aPoint);
 
-
-  /**
-   * Return hyper text offset for the specified bound of the given DOM range.
-   * If the bound is outside of the hyper text then offset value is either
-   * 0 or number of characters of hyper text, it depends on type of requested
-   * offset. The method is a wrapper for DOMPointToOffset.
-   *
-   * @param aRange          [in] the given range
-   * @param aIsStartBound   [in] specifies whether the required range bound is
-   *                        start bound
-   * @param aIsStartOffset  [in] the offset type, used when the range bound is
-   *                        outside of hyper text
-   * @param aHTOffset       [out] the result offset
-   */
-  nsresult RangeBoundToHypertextOffset(nsRange *aRange,
-                                       bool aIsStartBound,
-                                       bool aIsStartOffset,
-                                       int32_t *aHTOffset);
-
   /**
    * Set 'misspelled' text attribute and return range offsets where the
    * attibute is stretched. If the text is not misspelled at the given offset

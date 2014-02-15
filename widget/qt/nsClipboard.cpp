@@ -556,12 +556,3 @@ nsClipboard::SupportsSelectionClipboard(bool *_retval)
 
     return NS_OK;
 }
-
-NS_IMETHODIMP
-nsClipboard::SupportsFindClipboard(bool* _retval)
-{
-  NS_ENSURE_ARG_POINTER(_retval);
-
-  *_retval = false;
-  return NS_OK;
-}

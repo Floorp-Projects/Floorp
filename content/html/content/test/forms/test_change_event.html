@@ -99,7 +99,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=722599
     for (var i = 0; i < textInputTypes.length; ++i) {
       input = document.getElementById("input_" + textInputTypes[i]);
       input.focus();
-      synthesizeKey("VK_ENTER", {});
+      synthesizeKey("VK_RETURN", {});
       is(textInputChange[i], 0, "Change event shouldn't be dispatched on " + textInputTypes[i] + " input element");
 
       synthesizeKey("m", {});
