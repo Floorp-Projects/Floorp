@@ -69,7 +69,7 @@
 
       this.invoke = function openSubMenu_invoke()
       {
-        synthesizeKey("VK_ENTER", { });
+        synthesizeKey("VK_RETURN", { });
       }
 
       this.finalCheck = function openSubMenu_finalCheck(aEvent)

@@ -93,7 +93,7 @@ function runTests()
     ok(inputEvent.isTrusted, aDescription + "input event by 'B' key wasn't trusted event");
 
     inputEvent = null;
-    synthesizeKey("VK_ENTER", { }, aWindow);
+    synthesizeKey("VK_RETURN", { }, aWindow);
     ok(inputEvent, aDescription + "input event wasn't fired by Enter key");
     ok(inputEvent.isTrusted, aDescription + "input event by Enter key wasn't trusted event");
 
@@ -103,7 +103,7 @@ function runTests()
     ok(inputEvent.isTrusted, aDescription + "input event by 'C' key wasn't trusted event");
 
     inputEvent = null;
-    synthesizeKey("VK_ENTER", { }, aWindow);
+    synthesizeKey("VK_RETURN", { }, aWindow);
     ok(inputEvent, aDescription + "input event wasn't fired by Enter key (again)");
     ok(inputEvent.isTrusted, aDescription + "input event by Enter key (again) wasn't trusted event");
 

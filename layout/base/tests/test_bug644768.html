@@ -41,7 +41,7 @@ function test() {
   synthesizeKey("VK_UP", { });
   synthesizeKey("VK_UP", { });
   synthesizeKey("VK_DELETE", { });
-  synthesizeKey("VK_ENTER", { });
+  synthesizeKey("VK_RETURN", { });
   s2 = snapshotWindow(window);
 
   [equal, str1, str2] = compareSnapshots(s1, s2, true);

@@ -19,7 +19,7 @@ function test()
     ["i", "b1", false],
     ["v", "d1", true],
     ["VK_DOWN", "d2", true],
-    ["VK_ENTER", "d1", true],
+    ["VK_RETURN", "d1", true],
     [".", "d1", false],
     ["c", "d1", false],
     ["1", "d2", true],

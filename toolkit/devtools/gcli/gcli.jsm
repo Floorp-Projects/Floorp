@@ -1162,7 +1162,6 @@ else {
     DOM_VK_TAB: 9,
     DOM_VK_CLEAR: 12,
     DOM_VK_RETURN: 13,
-    DOM_VK_ENTER: 14,
     DOM_VK_SHIFT: 16,
     DOM_VK_CONTROL: 17,
     DOM_VK_ALT: 18,
