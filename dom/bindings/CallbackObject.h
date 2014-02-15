@@ -154,11 +154,10 @@ protected:
      */
   public:
     // If aExceptionHandling == eRethrowContentExceptions then aCompartment
-    // needs to be set to the compartment in which exceptions will be rethrown.
+    // needs to be set to the caller's compartment.
     CallSetup(CallbackObject* aCallback, ErrorResult& aRv,
               ExceptionHandling aExceptionHandling,
-              JSCompartment* aCompartment = nullptr,
-              bool aIsJSImplementedWebIDL = false);
+              JSCompartment* aCompartment = nullptr);
     ~CallSetup();
 
     JSContext* GetContext() const

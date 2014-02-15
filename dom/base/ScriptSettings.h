@@ -12,7 +12,6 @@
 #include "nsCxPusher.h"
 #include "MainThreadUtils.h"
 #include "nsIGlobalObject.h"
-#include "nsIPrincipal.h"
 
 #include "mozilla/Maybe.h"
 
@@ -38,24 +37,6 @@ nsIGlobalObject* BrokenGetEntryGlobal();
 // browser with AutoEntryScript. But GetIncumbentGlobal is simpler, because it
 // can mostly be inferred from the JS stack.
 nsIGlobalObject* GetIncumbentGlobal();
-
-// JS-implemented WebIDL presents an interesting situation with respect to the
-// subject principal. A regular C++-implemented API can simply examine the
-// compartment of the most-recently-executed script, and use that to infer the
-// responsible party. However, JS-implemented APIs are run with system
-// principal, and thus clobber the subject principal of the script that
-// invoked the API. So we have to do some extra work to keep track of this
-// information.
-//
-// We therefore implement the following behavior:
-// * Each Script Settings Object has an optional WebIDL Caller Principal field.
-//   This defaults to null.
-// * When we push an Entry Point in preparation to run a JS-implemented WebIDL
-//   callback, we grab the subject principal at the time of invocation, and
-//   store that as the WebIDL Caller Principal.
-// * When non-null, callers can query this principal from script via an API on
-//   Components.utils.
-nsIPrincipal* GetWebIDLCallerPrincipal();
 
 class ScriptSettingsStack;
 struct ScriptSettingsStackEntry {
@@ -90,7 +71,7 @@ private:
 /*
  * A class that represents a new script entry point.
  */
-class AutoEntryScript : protected ScriptSettingsStackEntry {
+class AutoEntryScript {
 public:
   AutoEntryScript(nsIGlobalObject* aGlobalObject,
                   bool aIsMainThread = NS_IsMainThread(),
@@ -98,28 +79,24 @@ public:
                   JSContext* aCx = nullptr);
   ~AutoEntryScript();
 
-  void SetWebIDLCallerPrincipal(nsIPrincipal *aPrincipal) {
-    mWebIDLCallerPrincipal = aPrincipal;
-  }
-
 private:
   dom::ScriptSettingsStack& mStack;
-  nsCOMPtr<nsIPrincipal> mWebIDLCallerPrincipal;
-  mozilla::Maybe<AutoCxPusher> mCxPusher;
+  dom::ScriptSettingsStackEntry mEntry;
+  nsCxPusher mCxPusher;
   mozilla::Maybe<JSAutoCompartment> mAc; // This can de-Maybe-fy when mCxPusher
                                          // goes away.
-  friend nsIPrincipal* GetWebIDLCallerPrincipal();
 };
 
 /*
  * A class that can be used to force a particular incumbent script on the stack.
  */
-class AutoIncumbentScript : protected ScriptSettingsStackEntry {
+class AutoIncumbentScript {
 public:
   AutoIncumbentScript(nsIGlobalObject* aGlobalObject);
   ~AutoIncumbentScript();
 private:
   dom::ScriptSettingsStack& mStack;
+  dom::ScriptSettingsStackEntry mEntry;
   JS::AutoHideScriptedCaller mCallerOverride;
 };
 
@@ -134,7 +111,7 @@ public:
   ~AutoSystemCaller();
 private:
   dom::ScriptSettingsStack& mStack;
-  mozilla::Maybe<AutoCxPusher> mCxPusher;
+  nsCxPusher mCxPusher;
 };
 
 } // namespace dom

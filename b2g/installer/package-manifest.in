@@ -565,11 +565,6 @@
 @BINPATH@/components/MozKeyboard.js
 @BINPATH@/components/InputMethod.manifest
 
-#ifdef MOZ_DEBUG
-@BINPATH@/components/TestInterfaceJS.js
-@BINPATH@/components/TestInterfaceJS.manifest
-#endif
-
 ; Modules
 @BINPATH@/modules/*
 
