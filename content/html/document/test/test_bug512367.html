@@ -25,8 +25,8 @@ var frame = document.getElementById("i");
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(function() {
   var viewer =
-    SpecialPowers.wrap(frame.contentWindow
-                 .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor))
+    SpecialPowers.wrap(frame.contentWindow)
+                 .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
                  .getInterface(SpecialPowers.Ci.nsIWebNavigation)
                  .QueryInterface(SpecialPowers.Ci.nsIDocShell)
                  .contentViewer
