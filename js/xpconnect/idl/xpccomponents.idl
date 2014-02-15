@@ -14,6 +14,7 @@ interface nsIClassInfo;
 interface nsIComponentManager;
 interface nsIJSCID;
 interface nsIJSIID;
+interface nsIPrincipal;
 interface nsIStackFrame;
 
 /**
@@ -120,7 +121,7 @@ interface ScheduledGCCallback : nsISupports
 /**
 * interface of Components.utils
 */
-[scriptable, uuid(cd4bccf4-3433-492e-8dfd-dfdb3fe9efa1)]
+[scriptable, uuid(f4b12240-02aa-47e5-99d5-43cd50fbd4b7)]
 interface nsIXPCComponents_Utils : nsISupports
 {
 
@@ -561,6 +562,22 @@ interface nsIXPCComponents_Utils : nsISupports
      */
     [implicit_jscontext]
     jsval cloneInto(in jsval value, in jsval scope, [optional] in jsval options);
+
+    /*
+     * When C++-Implemented code does security checks, it can generally query
+     * the subject principal (i.e. the principal of the most-recently-executed
+     * script) in order to determine the responsible party. However, when an API
+     * is implemented in JS, this doesn't work - the most-recently-executed
+     * script is always the System-Principaled API implementation. So we need
+     * another mechanism.
+     *
+     * Hence the notion of the "WebIDL Caller". If the current Entry Script on
+     * the Script Settings Stack represents the invocation of JS-implemented
+     * WebIDL, this API returns the principal of the caller at the time
+     * of invocation. Otherwise (i.e. outside of JS-implemented WebIDL), this
+     * function throws. If it throws, you probably shouldn't be using it.
+     */
+    nsIPrincipal getWebIDLCallerPrincipal();
 };
 
 /**
