@@ -10,3 +10,4 @@ random-if(B2G) == fieldset-overflow-auto-1.html fieldset-overflow-auto-1-ref.htm
 == relpos-legend-2.html relpos-legend-2-ref.html
 test-pref(layout.css.sticky.enabled,true) == sticky-legend-1.html sticky-legend-1-ref.html
 == abs-pos-child-sizing.html abs-pos-child-sizing-ref.html
+== overflow-hidden.html overflow-hidden-ref.html
