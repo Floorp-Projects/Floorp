@@ -5,7 +5,7 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-Cu.import("resource://gre/modules/CrashManager.jsm", this);
+let bsp = Cu.import("resource://gre/modules/CrashManager.jsm", this);
 Cu.import("resource://gre/modules/Promise.jsm", this);
 Cu.import("resource://gre/modules/Task.jsm", this);
 Cu.import("resource://gre/modules/osfile.jsm", this);
@@ -41,8 +41,6 @@ add_task(function* test_get_manager() {
 
   yield m.createDummyDump(true);
   yield m.createDummyDump(false);
-
-  run_next_test();
 });
 
 // Unsubmitted dump files on disk are detected properly.

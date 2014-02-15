@@ -64,8 +64,6 @@ add_task(function test_onepw_setup_credentials() {
   let unwrapKey = hkdf(quickStretchedPW, hkdfSalt, unwrapKeyInfo, hkdfLen);
 
   do_check_eq(b2h(unwrapKey), "8ff58975be391338e4ec5d7138b5ed7b65c7d1bfd1f3a4f93e05aa47d5b72be9");
-
-  run_next_test();
 });
 
 add_task(function test_client_stretch_kdf() {
@@ -103,8 +101,6 @@ add_task(function test_client_stretch_kdf() {
 
   do_check_eq(expected.authPW, b2h(results.authPW),
       "authPW is wrong");
-
-  run_next_test();
 });
 
 // End of tests

@@ -59,6 +59,11 @@ NSSCertDBTrustDomain::FindPotentialIssuers(
   results = CERT_CreateSubjectCertList(nullptr, CERT_GetDefaultCertDB(),
                                        encodedIssuerName, time, true);
   if (!results) {
+    // NSS sometimes returns this unhelpful error code upon failing to find any
+    // candidate certificates.
+    if (PR_GetError() == SEC_ERROR_BAD_DATABASE) {
+      PR_SetError(SEC_ERROR_UNKNOWN_ISSUER, 0);
+    }
     return SECFailure;
   }
 

@@ -1,0 +1,29 @@
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+GEN_CERT_HEADER = $(srcdir)/gen_cert_header.py
+
+marketplace-prod-public.inc: marketplace-prod-public.crt $(GEN_CERT_HEADER)
+	$(PYTHON) $(GEN_CERT_HEADER) marketplaceProdPublicRoot $< > $@
+
+marketplace-prod-reviewers.inc: marketplace-prod-reviewers.crt $(GEN_CERT_HEADER)
+	$(PYTHON) $(GEN_CERT_HEADER) marketplaceProdReviewersRoot $< > $@
+
+marketplace-dev-public.inc: marketplace-dev-public.crt $(GEN_CERT_HEADER)
+	$(PYTHON) $(GEN_CERT_HEADER) marketplaceDevPublicRoot $< > $@
+
+marketplace-dev-reviewers.inc: marketplace-dev-reviewers.crt $(GEN_CERT_HEADER)
+	$(PYTHON) $(GEN_CERT_HEADER) marketplaceDevReviewersRoot $< > $@
+
+xpcshell.inc: $(srcdir)/../manager/ssl/tests/unit/test_signed_apps/trusted_ca1.der $(GEN_CERT_HEADER)
+	$(PYTHON) $(GEN_CERT_HEADER) xpcshellRoot $< > $@
+
+export:: \
+  marketplace-prod-public.inc \
+  marketplace-prod-reviewers.inc \
+  marketplace-dev-public.inc \
+  marketplace-dev-reviewers.inc \
+  xpcshell.inc \
+  $(NULL)

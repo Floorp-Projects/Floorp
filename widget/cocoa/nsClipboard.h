@@ -23,7 +23,6 @@ public:
   // nsIClipboard  
   NS_IMETHOD HasDataMatchingFlavors(const char** aFlavorList, uint32_t aLength,
                                     int32_t aWhichClipboard, bool *_retval);
-  NS_IMETHOD SupportsFindClipboard(bool *_retval);
 
   // Helper methods, used also by nsDragService
   static NSDictionary* PasteboardDictFromTransferable(nsITransferable *aTransferable);
@@ -38,12 +37,7 @@ protected:
   NS_IMETHOD GetNativeClipboardData(nsITransferable * aTransferable, int32_t aWhichClipboard);
   
 private:
-  // This is always set to the native change count after any modification of the
-  // general clipboard.
-  int mChangeCountGeneral;
-  // This is always set to the native change count after any modification of the
-  // find clipboard.
-  int mChangeCountFind;
+  int mChangeCount; // this is always set to the native change count after any clipboard modifications
 
 };
 

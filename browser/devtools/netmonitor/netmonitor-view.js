@@ -11,6 +11,8 @@ const SOURCE_SYNTAX_HIGHLIGHT_MAX_FILE_SIZE = 102400; // 100 KB in bytes
 const RESIZE_REFRESH_RATE = 50; // ms
 const REQUESTS_REFRESH_RATE = 50; // ms
 const REQUESTS_HEADERS_SAFE_BOUNDS = 30; // px
+const REQUESTS_TOOLTIP_POSITION = "topcenter bottomleft";
+const REQUESTS_TOOLTIP_IMAGE_MAX_DIM = 400; // px
 const REQUESTS_WATERFALL_SAFE_BOUNDS = 90; // px
 const REQUESTS_WATERFALL_HEADER_TICKS_MULTIPLE = 5; // ms
 const REQUESTS_WATERFALL_HEADER_TICKS_SPACING_MIN = 60; // px
@@ -318,7 +320,9 @@ function RequestsMenuView() {
   dumpn("RequestsMenuView was instantiated");
 
   this._flushRequests = this._flushRequests.bind(this);
+  this._onHover = this._onHover.bind(this);
   this._onSelect = this._onSelect.bind(this);
+  this._onSwap = this._onSwap.bind(this);
   this._onResize = this._onResize.bind(this);
   this._byFile = this._byFile.bind(this);
   this._byDomain = this._byDomain.bind(this);
@@ -345,6 +349,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     this.widget.autoscrollWithAppendedItems = true;
 
     this.widget.addEventListener("select", this._onSelect, false);
+    this.widget.addEventListener("swap", this._onSwap, false);
     this._splitter.addEventListener("mousemove", this._onResize, false);
     window.addEventListener("resize", this._onResize, false);
 
@@ -390,6 +395,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     Prefs.filters = this._activeFilters;
 
     this.widget.removeEventListener("select", this._onSelect, false);
+    this.widget.removeEventListener("swap", this._onSwap, false);
     this._splitter.removeEventListener("mousemove", this._onResize, false);
     window.removeEventListener("resize", this._onResize, false);
 
@@ -463,11 +469,21 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
       }
     });
 
+    // Create a tooltip for the newly appended network request item.
+    let requestTooltip = requestItem.attachment.tooltip = new Tooltip(document, {
+      closeOnEvents: [{
+        emitter: $("#requests-menu-contents"),
+        event: "scroll",
+        useCapture: true
+      }]
+    });
+
     $("#details-pane-toggle").disabled = false;
     $("#requests-menu-empty-notice").hidden = true;
 
     this.refreshSummary();
     this.refreshZebra();
+    this.refreshTooltip(requestItem);
 
     if (aId == this._preferredItemId) {
       this.selectedItem = requestItem;
@@ -497,6 +513,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
   copyImageAsDataUri: function() {
     let selected = this.selectedItem.attachment;
     let { mimeType, text, encoding } = selected.responseContent.content;
+
     gNetwork.getString(text).then(aString => {
       let data = "data:" + mimeType + ";" + encoding + "," + aString;
       clipboardHelper.copyString(data, document);
@@ -923,6 +940,19 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
   },
 
   /**
+   * Refreshes the toggling anchor for the specified item's tooltip.
+   *
+   * @param object aItem
+   *        The network request item in this container.
+   */
+  refreshTooltip: function(aItem) {
+    let tooltip = aItem.attachment.tooltip;
+    tooltip.hide();
+    tooltip.startTogglingOnHover(aItem.target, this._onHover);
+    tooltip.defaultPosition = REQUESTS_TOOLTIP_POSITION;
+  },
+
+  /**
    * Schedules adding additional information to a network request.
    *
    * @param string aId
@@ -1010,13 +1040,14 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
             this.updateMenuView(requestItem, key, value);
             break;
           case "responseContent":
-            requestItem.attachment.responseContent = value;
             // If there's no mime type available when the response content
             // is received, assume text/plain as a fallback.
             if (!requestItem.attachment.mimeType) {
               requestItem.attachment.mimeType = "text/plain";
               this.updateMenuView(requestItem, "mimeType", "text/plain");
             }
+            requestItem.attachment.responseContent = value;
+            this.updateMenuView(requestItem, key, value);
             break;
           case "totalTime":
             requestItem.attachment.totalTime = value;
@@ -1112,9 +1143,9 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
         let nameWithQuery = this._getUriNameWithQuery(uri);
         let hostPort = this._getUriHostPort(uri);
 
-        let node = $(".requests-menu-file", target);
-        node.setAttribute("value", nameWithQuery);
-        node.setAttribute("tooltiptext", nameWithQuery);
+        let file = $(".requests-menu-file", target);
+        file.setAttribute("value", nameWithQuery);
+        file.setAttribute("tooltiptext", nameWithQuery);
 
         let domain = $(".requests-menu-domain", target);
         domain.setAttribute("value", hostPort);
@@ -1146,6 +1177,21 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
         let text = CONTENT_MIME_TYPE_ABBREVIATIONS[type] || type;
         node.setAttribute("value", text);
         node.setAttribute("tooltiptext", aValue);
+        break;
+      }
+      case "responseContent": {
+        let { mimeType } = aItem.attachment;
+        let { text, encoding } = aValue.content;
+
+        if (mimeType.contains("image/")) {
+          gNetwork.getString(text).then(aString => {
+            let node = $(".requests-menu-icon", aItem.target);
+            node.src = "data:" + mimeType + ";" + encoding + "," + aString;
+            node.setAttribute("type", "thumbnail");
+            node.removeAttribute("hidden");
+            window.emit(EVENTS.RESPONSE_IMAGE_THUMBNAIL_DISPLAYED);
+          });
+        }
         break;
       }
       case "totalTime": {
@@ -1426,6 +1472,49 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
   },
 
   /**
+   * The swap listener for this container.
+   * Called when two items switch places, when the contents are sorted.
+   */
+  _onSwap: function({ detail: [firstItem, secondItem] }) {
+    // Sorting will create new anchor nodes for all the swapped request items
+    // in this container, so it's necessary to refresh the Tooltip instances.
+    this.refreshTooltip(firstItem);
+    this.refreshTooltip(secondItem);
+  },
+
+  /**
+   * The predicate used when deciding whether a popup should be shown
+   * over a request item or not.
+   *
+   * @param nsIDOMNode aTarget
+   *        The element node currently being hovered.
+   * @param object aTooltip
+   *        The current tooltip instance.
+   */
+  _onHover: function(aTarget, aTooltip) {
+    let requestItem = this.getItemForElement(aTarget);
+    if (!requestItem || !requestItem.attachment.responseContent) {
+      return;
+    }
+
+    let hovered = requestItem.attachment;
+    let { url } = hovered;
+    let { mimeType, text, encoding } = hovered.responseContent.content;
+
+    if (mimeType && mimeType.contains("image/") && (
+      aTarget.classList.contains("requests-menu-icon") ||
+      aTarget.classList.contains("requests-menu-file")))
+    {
+      return gNetwork.getString(text).then(aString => {
+        let anchor = $(".requests-menu-icon", requestItem.target);
+        let src = "data:" + mimeType + ";" + encoding + "," + aString;
+        aTooltip.setImageContent(src, { maxDim: REQUESTS_TOOLTIP_IMAGE_MAX_DIM });
+        return anchor;
+      });
+    }
+  },
+
+  /**
    * The resize listener for this container's window.
    */
   _onResize: function(e) {
@@ -1626,7 +1715,7 @@ SidebarView.prototype = {
       NetMonitorView.NetworkDetails;
 
     return view.populate(aData).then(() => {
-      $("#details-pane").selectedIndex = isCustom ? 0 : 1
+      $("#details-pane").selectedIndex = isCustom ? 0 : 1;
       window.emit(EVENTS.SIDEBAR_POPULATED);
     });
   }
@@ -1906,6 +1995,7 @@ NetworkDetailsView.prototype = {
       }
       populated[tab] = true;
       window.emit(EVENTS.TAB_UPDATED);
+      NetMonitorView.RequestsMenu.ensureSelectedItemIsVisible();
     });
   },
 
