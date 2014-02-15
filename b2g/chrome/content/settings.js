@@ -235,6 +235,10 @@ SettingsListener.observe('devtools.overlay', false, (value) => {
   }
 });
 
+SettingsListener.observe('devtools.eventlooplag.threshold', 100, function(value) {
+  Services.prefs.setIntPref('devtools.eventlooplag.threshold', value);
+});
+
 // =================== Debugger / ADB ====================
 
 #ifdef MOZ_WIDGET_GONK
