@@ -248,6 +248,9 @@
     "dom/browser-element/mochitest/test_browserElement_inproc_OpenWindowRejected.html":"",
     "dom/browser-element/mochitest/test_browserElement_inproc_SecurityChange.html":"",
     "dom/browser-element/mochitest/test_browserElement_inproc_TargetBlank.html":"",
+	
+    "dom/browser-element/mochitest/test_browserElement_NoPref.html":"bug 970290 - Should not send mozbrowserloadstart event.",
+    "dom/browser-element/mochitest/test_browserElement_NoWhitelist.html":"bug 970290 - Should not send mozbrowserloadstart event.",
 
     "dom/browser-element/mochitest/test_browserElement_oop_AppFramePermission.html":"",
     "dom/browser-element/mochitest/test_browserElement_oop_AppWindowNamespace.html":"",
