@@ -3060,40 +3060,6 @@ Accessible::GetSiblingAtOffset(int32_t aOffset, nsresult* aError) const
   return child;
 }
 
-Accessible* 
-Accessible::GetFirstAvailableAccessible(nsINode *aStartNode) const
-{
-  Accessible* accessible = mDoc->GetAccessible(aStartNode);
-  if (accessible)
-    return accessible;
-
-  nsCOMPtr<nsIDocument> doc = aStartNode->OwnerDoc();
-
-  nsCOMPtr<nsINode> currentNode = aStartNode;
-  ErrorResult rv;
-  nsRefPtr<dom::TreeWalker> walker =
-    doc->CreateTreeWalker(*GetNode(),
-                          nsIDOMNodeFilter::SHOW_ELEMENT | nsIDOMNodeFilter::SHOW_TEXT,
-                          nullptr, rv);
-  NS_ENSURE_TRUE(walker, nullptr);
-
-  walker->SetCurrentNode(*currentNode, rv);
-  if (rv.Failed())
-    return nullptr;
-
-  while (true) {
-    currentNode = walker->NextNode(rv);
-    if (!currentNode || rv.Failed())
-      return nullptr;
-
-    Accessible* accessible = mDoc->GetAccessible(currentNode);
-    if (accessible)
-      return accessible;
-  }
-
-  return nullptr;
-}
-
 double
 Accessible::AttrNumericValue(nsIAtom* aAttr) const
 {
