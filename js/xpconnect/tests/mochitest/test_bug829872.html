@@ -10,7 +10,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=829872
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript">
 
-  /** Test for Bug 829872 **/
+  /** Test for Bug 829872 and Bug 968003 **/
   SimpleTest.waitForExplicitFinish();
 
   var gLoadCount = 0;
@@ -19,13 +19,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=829872
       go();
   }
 
+  function check(elem, desc) {
+    is(elem.contentDocument, null, "null cross-origin contentDocument for " + desc);
+    ok(SpecialPowers.wrap(elem).contentWindow.eval('frameElement === null;'),
+       "null cross-origin frameElement for " + desc);
+    if (!(elem instanceof HTMLFrameElement))
+      is(elem.getSVGDocument(), null, "null cross-origin getSVGDocument() for " + desc);
+  }
 
   function go() {
     ok(true, "Starting test");
-    is($('ifr').contentDocument, null, "null cross-origin contentDocument for iframe");
-    is($('obj').contentDocument, null, "null cross-origin contentDocument for obj");
-    is($('obj').getSVGDocument(), null, "null cross-origin getSVGDocument() for obj");
-    is($('framesetholder').contentDocument.getElementById('fr').contentDocument, null, "null cross-origin contentDocument for frame");
+    check($('ifr'), "iframe element");
+    check($('obj'), "object element");
+    check($('framesetholder').contentDocument.getElementById('fr'), "frameset frame");
     SimpleTest.finish();
   }
 

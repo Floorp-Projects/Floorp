@@ -8562,7 +8562,16 @@ nsGlobalWindow::GetFrameElement(ErrorResult& aError)
     return nullptr;
   }
 
-  return GetRealFrameElement(aError);
+  // Per HTML5, the frameElement getter returns null in cross-origin situations.
+  Element* element = GetRealFrameElement(aError);
+  if (aError.Failed() || !element) {
+    return nullptr;
+  }
+  if (!nsContentUtils::GetSubjectPrincipal()->
+         SubsumesConsideringDomain(element->NodePrincipal())) {
+    return nullptr;
+  }
+  return element;
 }
 
 Element*
