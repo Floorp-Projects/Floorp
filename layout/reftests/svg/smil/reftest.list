@@ -127,7 +127,7 @@ skip-if(B2G) == anim-polygon-points-01.svg anim-polygon-points-01-ref.svg
 == anim-polyline-points-01.svg anim-polyline-points-01-ref.svg
 
 # animate path data:
-skip-if(B2G) fuzzy-if(/^Windows\x20NT\x205\.1/.test(http.oscpu),2,1) fuzzy-if(cocoaWidget&&layersGPUAccelerated,1,13) == anim-path-d-01.svg anim-path-d-01-ref.svg # Bug 726400 # bug 773482
+== anim-path-d-01.svg anim-path-d-01-ref.svg
 
 # animate some enumeration attributes:
 skip-if(B2G) == anim-feComposite-operator-01.svg lime.svg
