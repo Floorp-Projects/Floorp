@@ -154,3 +154,8 @@ LOCAL_INCLUDES += [
     '/xpcom/build',
 ]
 
+if CONFIG['MOZ_ENABLE_XREMOTE']:
+    LOCAL_INCLUDES += [
+        '/widget/xremoteclient',
+    ]
+

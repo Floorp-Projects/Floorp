@@ -24,6 +24,11 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     DEFINES['_UNICODE'] = True
     USE_STATIC_LIBS = True
 
+    # Pick up nsWindowsRestart.cpp
+    LOCAL_INCLUDES += [
+        '/toolkit/xre',
+    ]
+
 if CONFIG['MOZ_ENABLE_GTK']:
     have_progressui = 1
     SOURCES += [
