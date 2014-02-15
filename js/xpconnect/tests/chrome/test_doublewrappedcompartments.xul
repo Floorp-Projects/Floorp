@@ -22,9 +22,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=533596
 
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
-      const Ci = Components.interfaces;
-      const utils = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                          .getInterface(Ci.nsIDOMWindowUtils);
+      const utils = SpecialPowers.DOMWindowUtils;
 
       function go() {
         var wrappedWin = $('ifr').contentWindow;
@@ -33,11 +31,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=533596
         var unwrapped = wrappedWin.wrappedJSObject;
 
         var expando = unwrapped.expando;
-        is(utils.getClassName(expando), 'Proxy', 'properly wrapped');
+        isnot(expando, 'undefined', 'properly wrapped');
         is(typeof expando.querySelector, 'function', 'double wrapped');
 
-        ok(unwrapped.testme(expando),
-           "content didn't get a proxy, but another double wrapped object");
         SimpleTest.finish();
       }
 
