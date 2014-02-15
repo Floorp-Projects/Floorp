@@ -17,29 +17,37 @@ XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
   "@mozilla.org/parentprocessmessagemanager;1", "nsIMessageBroadcaster");
 
 this.Keyboard = {
-  _messageManager: null,
+  _formMM: null,     // The current web page message manager.
+  _keyboardMM: null, // The keyboard app message manager.
   _messageNames: [
     'SetValue', 'RemoveFocus', 'SetSelectedOption', 'SetSelectedOptions',
     'SetSelectionRange', 'ReplaceSurroundingText', 'ShowInputMethodPicker',
     'SwitchToNextInputMethod', 'HideInputMethod',
     'GetText', 'SendKey', 'GetContext',
-    'SetComposition', 'EndComposition'
+    'SetComposition', 'EndComposition',
+    'Register', 'Unregister'
   ],
 
-  get messageManager() {
-    if (this._messageManager && !Cu.isDeadWrapper(this._messageManager))
-      return this._messageManager;
+  get formMM() {
+    if (this._formMM && !Cu.isDeadWrapper(this._formMM))
+      return this._formMM;
 
     return null;
   },
 
-  set messageManager(mm) {
-    this._messageManager = mm;
+  set formMM(mm) {
+    this._formMM = mm;
   },
 
-  sendAsyncMessage: function(name, data) {
+  sendToForm: function(name, data) {
     try {
-      this.messageManager.sendAsyncMessage(name, data);
+      this.formMM.sendAsyncMessage(name, data);
+    } catch(e) { }
+  },
+
+  sendToKeyboard: function(name, data) {
+    try {
+      this._keyboardMM.sendAsyncMessage(name, data);
     } catch(e) { }
   },
 
@@ -57,10 +65,10 @@ this.Keyboard = {
     let mm = frameLoader.messageManager;
 
     if (topic == 'oop-frameloader-crashed') {
-      if (this.messageManager == mm) {
+      if (this.formMM == mm) {
         // The application has been closed unexpectingly. Let's tell the
         // keyboard app that the focus has been lost.
-        ppmm.broadcastAsyncMessage('Keyboard:FocusChange', { 'type': 'blur' });
+        this.sendToKeyboard('Keyboard:FocusChange', { 'type': 'blur' });
       }
     } else {
       this.initFormsFrameScript(mm);
@@ -85,12 +93,14 @@ this.Keyboard = {
   receiveMessage: function keyboardReceiveMessage(msg) {
     // If we get a 'Keyboard:XXX' message, check that the sender has the
     // input permission.
+    let mm;
+    let isKeyboardRegistration = msg.name == "Keyboard:Register" ||
+                                 msg.name == "Keyboard:Unregister";
     if (msg.name.indexOf("Keyboard:") != -1) {
-      if (!this.messageManager) {
+      if (!this.formMM && !isKeyboardRegistration) {
         return;
       }
 
-      let mm;
       try {
         mm = msg.target.QueryInterface(Ci.nsIFrameLoaderOwner)
                        .frameLoader.messageManager;
@@ -109,7 +119,8 @@ this.Keyboard = {
         testing = Services.prefs.getBoolPref("dom.mozInputMethod.testing");
       } catch (e) {
       }
-      if (!testing && !mm.assertPermission("input")) {
+      if (!isKeyboardRegistration && !testing &&
+          !mm.assertPermission("input")) {
         dump("Keyboard message " + msg.name +
         " from a content process with no 'input' privileges.");
         return;
@@ -174,14 +185,20 @@ this.Keyboard = {
       case 'Keyboard:EndComposition':
         this.endComposition(msg);
         break;
+      case 'Keyboard:Register':
+        this._keyboardMM = mm;
+        break;
+      case 'Keyboard:Unregister':
+        this._keyboardMM = null;
+        break;
     }
   },
 
   forwardEvent: function keyboardForwardEvent(newEventName, msg) {
-    this.messageManager = msg.target.QueryInterface(Ci.nsIFrameLoaderOwner)
-                             .frameLoader.messageManager;
+    this.formMM = msg.target.QueryInterface(Ci.nsIFrameLoaderOwner)
+                            .frameLoader.messageManager;
 
-    ppmm.broadcastAsyncMessage(newEventName, msg.data);
+    this.sendToKeyboard(newEventName, msg.data);
   },
 
   handleFocusChange: function keyboardHandleFocusChange(msg) {
@@ -200,27 +217,27 @@ this.Keyboard = {
   },
 
   setSelectedOption: function keyboardSetSelectedOption(msg) {
-    this.sendAsyncMessage('Forms:Select:Choice', msg.data);
+    this.sendToForm('Forms:Select:Choice', msg.data);
   },
 
   setSelectedOptions: function keyboardSetSelectedOptions(msg) {
-    this.sendAsyncMessage('Forms:Select:Choice', msg.data);
+    this.sendToForm('Forms:Select:Choice', msg.data);
   },
 
   setSelectionRange: function keyboardSetSelectionRange(msg) {
-    this.sendAsyncMessage('Forms:SetSelectionRange', msg.data);
+    this.sendToForm('Forms:SetSelectionRange', msg.data);
   },
 
   setValue: function keyboardSetValue(msg) {
-    this.sendAsyncMessage('Forms:Input:Value', msg.data);
+    this.sendToForm('Forms:Input:Value', msg.data);
   },
 
   removeFocus: function keyboardRemoveFocus() {
-    this.sendAsyncMessage('Forms:Select:Blur', {});
+    this.sendToForm('Forms:Select:Blur', {});
   },
 
   replaceSurroundingText: function keyboardReplaceSurroundingText(msg) {
-    this.sendAsyncMessage('Forms:ReplaceSurroundingText', msg.data);
+    this.sendToForm('Forms:ReplaceSurroundingText', msg.data);
   },
 
   showInputMethodPicker: function keyboardShowInputMethodPicker() {
@@ -236,27 +253,27 @@ this.Keyboard = {
   },
 
   getText: function keyboardGetText(msg) {
-    this.sendAsyncMessage('Forms:GetText', msg.data);
+    this.sendToForm('Forms:GetText', msg.data);
   },
 
   sendKey: function keyboardSendKey(msg) {
-    this.sendAsyncMessage('Forms:Input:SendKey', msg.data);
+    this.sendToForm('Forms:Input:SendKey', msg.data);
   },
 
   getContext: function keyboardGetContext(msg) {
     if (this._layouts) {
-      ppmm.broadcastAsyncMessage('Keyboard:LayoutsChange', this._layouts);
+      this.sendToKeyboard('Keyboard:LayoutsChange', this._layouts);
     }
 
-    this.sendAsyncMessage('Forms:GetContext', msg.data);
+    this.sendToForm('Forms:GetContext', msg.data);
   },
 
   setComposition: function keyboardSetComposition(msg) {
-    this.sendAsyncMessage('Forms:SetComposition', msg.data);
+    this.sendToForm('Forms:SetComposition', msg.data);
   },
 
   endComposition: function keyboardEndComposition(msg) {
-    this.sendAsyncMessage('Forms:EndComposition', msg.data);
+    this.sendToForm('Forms:EndComposition', msg.data);
   },
 
   /**
@@ -269,7 +286,7 @@ this.Keyboard = {
     // of going back and forth between keyboard_manager
     this._layouts = layouts;
 
-    ppmm.broadcastAsyncMessage('Keyboard:LayoutsChange', layouts);
+    this.sendToKeyboard('Keyboard:LayoutsChange', layouts);
   },
 
   sendChromeEvent: function(event) {

@@ -565,7 +565,7 @@ BluetoothService::HandleStartup()
   NS_ENSURE_TRUE(settings, NS_ERROR_UNEXPECTED);
 
   nsCOMPtr<nsISettingsServiceLock> settingsLock;
-  nsresult rv = settings->CreateLock(getter_AddRefs(settingsLock));
+  nsresult rv = settings->CreateLock(nullptr, getter_AddRefs(settingsLock));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsRefPtr<StartupTask> callback = new StartupTask();

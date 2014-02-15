@@ -2432,6 +2432,7 @@ this.GECKO_DETAILED_RADIOSTATE_ENABLED    = "enabled";
 this.GECKO_DETAILED_RADIOSTATE_DISABLING  = "disabling";
 this.GECKO_DETAILED_RADIOSTATE_DISABLED   = "disabled";
 
+this.GECKO_CARDSTATE_UNINITIALIZED                 = "uninitialized";
 this.GECKO_CARDSTATE_UNDETECTED                    = null;
 this.GECKO_CARDSTATE_ILLEGAL                       = "illegal";
 this.GECKO_CARDSTATE_UNKNOWN                       = "unknown";
