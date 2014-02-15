@@ -571,7 +571,7 @@ var popupTests = [
   testname: "open submenu with enter",
   events: [ "popupshowing submenupopup", "DOMMenuItemActive submenuitem",
             "popupshown submenupopup" ],
-  test: function() { synthesizeKey("VK_ENTER", { }); },
+  test: function() { synthesizeKey("VK_RETURN", { }); },
   result: function(testname) {
     checkOpen("trigger", testname);
     checkOpen("submenu", testname);
@@ -778,7 +778,7 @@ var popupTests = [
             "DOMMenuItemInactive item1" ],
   test: function(testname, step) {
     synthesizeKey("VK_DOWN", { });
-    synthesizeKey("VK_ENTER", { });
+    synthesizeKey("VK_RETURN", { });
   },
   result: function(testname, step) { checkClosed("trigger", testname); }
 },

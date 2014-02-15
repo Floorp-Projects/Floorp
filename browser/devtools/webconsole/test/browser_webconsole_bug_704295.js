@@ -25,7 +25,7 @@ function testCompletion(hud) {
   EventUtils.synthesizeKey(";", {});
   is(input.value, "var d = 5;", "var d = 5;");
   is(jsterm.completeNode.value, "", "no completion");
-  EventUtils.synthesizeKey("VK_ENTER", {});
+  EventUtils.synthesizeKey("VK_RETURN", {});
   is(jsterm.completeNode.value, "", "clear completion on execute()");
   
   // Test typing 'var a = d' and press RETURN
@@ -33,7 +33,7 @@ function testCompletion(hud) {
   EventUtils.synthesizeKey("d", {});
   is(input.value, "var a = d", "var a = d");
   is(jsterm.completeNode.value, "", "no completion");
-  EventUtils.synthesizeKey("VK_ENTER", {});
+  EventUtils.synthesizeKey("VK_RETURN", {});
   is(jsterm.completeNode.value, "", "clear completion on execute()");
   
   jsterm = input = null;

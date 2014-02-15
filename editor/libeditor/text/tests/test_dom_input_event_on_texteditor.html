@@ -64,7 +64,7 @@ function runTests()
 
     if (aIsTextarea) {
       inputEvent = null;
-      synthesizeKey("VK_ENTER", { });
+      synthesizeKey("VK_RETURN", { });
       is(aElement.value, "\n", aDescription + "Enter key didn't change the value");
       ok(inputEvent, aDescription + "input event wasn't fired by Enter key");
       ok(inputEvent.isTrusted, aDescription + "input event by Enter key wasn't trusted event");

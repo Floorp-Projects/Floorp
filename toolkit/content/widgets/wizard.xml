@@ -446,8 +446,6 @@
     </implementation>
 
     <handlers>
-      <handler event="keypress" keycode="VK_ENTER"
-               group="system" action="this._hitEnter(event)"/>
       <handler event="keypress" keycode="VK_RETURN"
                group="system" action="this._hitEnter(event)"/>
       <handler event="keypress" keycode="VK_ESCAPE" group="system">

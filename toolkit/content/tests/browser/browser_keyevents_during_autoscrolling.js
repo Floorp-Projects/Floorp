@@ -95,11 +95,11 @@ function test()
     sendChar("A");
     sendKey("DOWN");
     sendKey("RETURN");
-    sendKey("ENTER");
+    sendKey("RETURN");
     sendKey("HOME");
     sendKey("END");
     sendKey("TAB");
-    sendKey("ENTER");
+    sendKey("RETURN");
 
     // Finish autoscrolling by ESC key.  Note that only keydown and keypress
     // events are eaten because keyup event is fired *after* the autoscrolling

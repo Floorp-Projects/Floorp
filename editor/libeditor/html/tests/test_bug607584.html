@@ -25,7 +25,7 @@ SimpleTest.waitForFocus(function() {
   content.focus();
   var sel = getSelection();
   sel.collapse(document.getElementById("foo").firstChild, 5);
-  synthesizeKey("VK_ENTER", {});
+  synthesizeKey("VK_RETURN", {});
   var paragraphs = content.querySelectorAll("p");
   is(paragraphs.length, 2, "The paragraph should be split in two");
   is(paragraphs[0].textContent, "Hello", "The first paragraph should have the correct content");

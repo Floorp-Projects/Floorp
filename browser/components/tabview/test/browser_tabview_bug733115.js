@@ -32,10 +32,10 @@ function test() {
 
           finish();
         });
-        EventUtils.synthesizeKey("VK_ENTER", {}, contentWindow);
+        EventUtils.synthesizeKey("VK_RETURN", {}, contentWindow);
       });
     });
-    EventUtils.synthesizeKey("VK_ENTER", {}, contentWindow);
+    EventUtils.synthesizeKey("VK_RETURN", {}, contentWindow);
   });
 }
 

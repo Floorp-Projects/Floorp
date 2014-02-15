@@ -46,7 +46,6 @@
 </menupopup>
 
 <keyset id="configTreeKeyset" disabled="true">
-  <key keycode="VK_ENTER" oncommand="ModifySelected();"/>
   <key keycode="VK_RETURN" oncommand="ModifySelected();"/>
   <key key="&focusSearch.key;" modifiers="accel" oncommand="document.getElementById('textbox').focus();"/>
 </keyset>

@@ -1871,7 +1871,6 @@
     <handlers>
       <!-- The _accept method checks for .defaultPrevented so that if focus is in a button,
            enter activates the button and not this default action -->
-      <handler event="keypress" keycode="VK_ENTER" group="system" action="this._accept(event);"/>
       <handler event="keypress" keycode="VK_RETURN" group="system" action="this._accept(event);"/>
     </handlers>
   </binding>

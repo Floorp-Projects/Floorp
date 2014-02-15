@@ -90,11 +90,11 @@ function performTest() {
     is(gVariablesView._parent.scrollTop, 0,
       "The 'variables' view shouldn't scroll when pressing the UP key.");
 
-    // Part 2: Make sure that ENTER/ESCAPE toggle input elements.
+    // Part 2: Make sure that RETURN/ESCAPE toggle input elements.
 
-    yield synthesizeKeyAndWaitForElement("VK_ENTER", {}, ".element-value-input", true);
+    yield synthesizeKeyAndWaitForElement("VK_RETURN", {}, ".element-value-input", true);
     yield synthesizeKeyAndWaitForElement("VK_ESCAPE", {}, ".element-value-input", false);
-    yield synthesizeKeyAndWaitForElement("VK_ENTER", { shiftKey: true }, ".element-name-input", true);
+    yield synthesizeKeyAndWaitForElement("VK_RETURN", { shiftKey: true }, ".element-name-input", true);
     yield synthesizeKeyAndWaitForElement("VK_ESCAPE", {}, ".element-name-input", false);
 
     // Part 3: Test simple navigation.

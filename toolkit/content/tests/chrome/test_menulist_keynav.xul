@@ -139,7 +139,7 @@ function checkEnter()
   list.addEventListener("popuphidden", checkEnterWithModifiers, false);
   list.addEventListener("command", checkModifiers, false);
   list.open = true;
-  synthesizeKey("VK_ENTER", { });
+  synthesizeKey("VK_RETURN", { });
 }
 
 function checkEnterWithModifiers()
@@ -153,7 +153,7 @@ function checkEnterWithModifiers()
   list.addEventListener("popuphidden", done, false);
   list.open = true;
 
-  synthesizeKey("VK_ENTER", { shiftKey: true, ctrlKey: true, altKey: true, metaKey: true });
+  synthesizeKey("VK_RETURN", { shiftKey: true, ctrlKey: true, altKey: true, metaKey: true });
 }
 
 function done()
