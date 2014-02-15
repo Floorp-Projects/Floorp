@@ -62,7 +62,6 @@ struct nsGlobalNameStruct
   // initialized for eTypeNewDOMBinding structs.
   bool mChromeOnly : 1;
   bool mAllowXBL : 1;
-  bool mDisabled : 1;
 
   union {
     int32_t mDOMClassInfoID; // eTypeClassConstructor
@@ -123,7 +122,6 @@ public:
                              int32_t aDOMClassInfoID,
                              bool aPrivileged,
                              bool aXBLAllowed,
-                             bool aDisabled,
                              const char16_t **aResult);
 
   nsresult RegisterClassProto(const char *aClassName,
@@ -174,7 +172,9 @@ public:
   }
 
   typedef PLDHashOperator
-  (* NameEnumerator)(const nsAString& aGlobalName, void* aClosure);
+  (* NameEnumerator)(const nsAString& aGlobalName,
+                     const nsGlobalNameStruct& aGlobalNameStruct,
+                     void* aClosure);
 
   void EnumerateGlobalNames(NameEnumerator aEnumerator,
                             void* aClosure);

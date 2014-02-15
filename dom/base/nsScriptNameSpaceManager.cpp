@@ -435,8 +435,7 @@ nsScriptNameSpaceManager::LookupNameInternal(const nsAString& aName,
                (PL_DHashTableOperate(&mGlobalNames, &aName,
                                         PL_DHASH_LOOKUP));
 
-  if (PL_DHASH_ENTRY_IS_BUSY(entry) &&
-      !((&entry->mGlobalName)->mDisabled)) {
+  if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
     if (aClassName) {
       *aClassName = entry->mKey.get();
     }
@@ -457,8 +456,7 @@ nsScriptNameSpaceManager::LookupNavigatorName(const nsAString& aName)
                (PL_DHashTableOperate(&mNavigatorNames, &aName,
                                      PL_DHASH_LOOKUP));
 
-  if (!PL_DHASH_ENTRY_IS_BUSY(entry) ||
-      entry->mGlobalName.mDisabled) {
+  if (!PL_DHASH_ENTRY_IS_BUSY(entry)) {
     return nullptr;
   }
 
@@ -470,7 +468,6 @@ nsScriptNameSpaceManager::RegisterClassName(const char *aClassName,
                                             int32_t aDOMClassInfoID,
                                             bool aPrivileged,
                                             bool aXBLAllowed,
-                                            bool aDisabled,
                                             const char16_t **aResult)
 {
   if (!nsCRT::IsAscii(aClassName)) {
@@ -500,7 +497,6 @@ nsScriptNameSpaceManager::RegisterClassName(const char *aClassName,
   s->mDOMClassInfoID = aDOMClassInfoID;
   s->mChromeOnly = aPrivileged;
   s->mAllowXBL = aXBLAllowed;
-  s->mDisabled = aDisabled;
 
   return NS_OK;
 }
@@ -834,7 +830,7 @@ EnumerateName(PLDHashTable*, PLDHashEntryHdr *hdr, uint32_t, void* aClosure)
 {
   GlobalNameMapEntry *entry = static_cast<GlobalNameMapEntry *>(hdr);
   NameClosure* closure = static_cast<NameClosure*>(aClosure);
-  return closure->enumerator(entry->mKey, closure->closure);
+  return closure->enumerator(entry->mKey, entry->mGlobalName, closure->closure);
 }
 
 void
