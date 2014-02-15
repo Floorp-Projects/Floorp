@@ -1537,7 +1537,7 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter,
   , mResizerBox(nullptr)
   , mOuter(aOuter)
   , mAsyncScroll(nullptr)
-  , mOriginOfLastScroll(nullptr)
+  , mOriginOfLastScroll(nsGkAtoms::other)
   , mDestination(0, 0)
   , mScrollPosAtLastPaint(0, 0)
   , mRestorePos(-1, -1)
