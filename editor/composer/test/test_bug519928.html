@@ -22,7 +22,8 @@ var iframe = document.getElementById("load-frame");
 function enableJS() allowJS(true, iframe);
 function disableJS() allowJS(false, iframe);
 function allowJS(allow, frame) {
-  SpecialPowers.wrap(frame.contentWindow.QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor))
+  SpecialPowers.wrap(frame.contentWindow)
+               .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
                .getInterface(SpecialPowers.Ci.nsIWebNavigation)
                .QueryInterface(SpecialPowers.Ci.nsIDocShell)
                .allowJavascript = allow;
