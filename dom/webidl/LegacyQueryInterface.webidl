@@ -88,6 +88,7 @@ TreeWalker implements LegacyQueryInterface;
 UndoManager implements LegacyQueryInterface;
 ValidityState implements LegacyQueryInterface;
 WebSocket implements LegacyQueryInterface;
+Window implements LegacyQueryInterface;
 XMLHttpRequest implements LegacyQueryInterface;
 XMLHttpRequestUpload implements LegacyQueryInterface;
 XMLSerializer implements LegacyQueryInterface;

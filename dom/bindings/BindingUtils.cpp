@@ -814,13 +814,20 @@ QueryInterface(JSContext* cx, unsigned argc, JS::Value* vp)
   // Get the object. It might be a security wrapper, in which case we do a checked
   // unwrap.
   JS::Rooted<JSObject*> origObj(cx, &thisv.toObject());
-  JSObject* obj = js::CheckedUnwrap(origObj);
+  JSObject* obj = js::CheckedUnwrap(origObj, /* stopAtOuter = */ false);
   if (!obj) {
       JS_ReportError(cx, "Permission denied to access object");
       return false;
   }
 
-  nsISupports* native = UnwrapDOMObjectToISupports(obj);
+  // Switch this to UnwrapDOMObjectToISupports once our global objects are
+  // using new bindings.
+  JS::Rooted<JS::Value> val(cx, JS::ObjectValue(*obj));
+  nsISupports* native = nullptr;
+  nsCOMPtr<nsISupports> nativeRef;
+  xpc_qsUnwrapArg<nsISupports>(cx, val, &native,
+                               static_cast<nsISupports**>(getter_AddRefs(nativeRef)),
+                               &val);
   if (!native) {
     return Throw(cx, NS_ERROR_FAILURE);
   }
@@ -859,6 +866,30 @@ QueryInterface(JSContext* cx, unsigned argc, JS::Value* vp)
 
   *vp = thisv;
   return true;
+}
+
+JS::Value
+GetInterfaceImpl(JSContext* aCx, nsIInterfaceRequestor* aRequestor,
+                 nsWrapperCache* aCache, nsIJSID* aIID, ErrorResult& aError)
+{
+  const nsID* iid = aIID->GetID();
+
+  nsCOMPtr<nsISupports> result;
+  JS::Rooted<JS::Value> v(aCx, JSVAL_NULL);
+  aError = aRequestor->GetInterface(*iid, getter_AddRefs(result));
+  if (aError.Failed()) {
+    return JS::NullValue();
+  }
+
+  JS::Rooted<JSObject*> wrapper(aCx, aCache->GetWrapper());
+  JSAutoCompartment ac(aCx, wrapper);
+  JS::Rooted<JSObject*> global(aCx, JS_GetGlobalForObject(aCx, wrapper));
+  aError = nsContentUtils::WrapNative(aCx, global, result, iid, &v);
+  if (aError.Failed()) {
+    return JS::NullValue();
+  }
+
+  return v;
 }
 
 bool

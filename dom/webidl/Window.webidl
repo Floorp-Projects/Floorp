@@ -16,6 +16,7 @@
  */
 
 interface ApplicationCache;
+interface IID;
 interface MozFrameRequestCallback;
 interface nsIBrowserDOMWindow;
 interface nsIMessageBroadcaster;
@@ -336,6 +337,8 @@ partial interface Window {
   [Replaceable, Throws] readonly attribute object? content;
 
   [ChromeOnly, Throws] readonly attribute object? __content;
+
+  [Throws, ChromeOnly] any getInterface(IID iid);
 };
 
 Window implements TouchEventHandlers;
