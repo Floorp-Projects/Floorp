@@ -22,6 +22,7 @@ Important Concepts
    mozinfo
    preprocessor
    jar-manifests
+   visualstudio
 
 mozbuild
 ========
