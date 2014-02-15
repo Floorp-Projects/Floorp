@@ -822,7 +822,11 @@ public abstract class GeckoApp
         ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
-                Toast.makeText(GeckoApp.this, resId, duration).show();
+                try {
+                    Toast.makeText(GeckoApp.this, resId, duration).show();
+                } catch (Exception e) {
+                    Log.e(LOGTAG, "Error showing toast", e);
+                }
             }
         });
     }
@@ -831,13 +835,17 @@ public abstract class GeckoApp
         ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
-                Toast toast;
-                if (duration.equals("long")) {
-                    toast = Toast.makeText(GeckoApp.this, message, Toast.LENGTH_LONG);
-                } else {
-                    toast = Toast.makeText(GeckoApp.this, message, Toast.LENGTH_SHORT);
+                try {
+                    Toast toast;
+                    if (duration.equals("long")) {
+                        toast = Toast.makeText(GeckoApp.this, message, Toast.LENGTH_LONG);
+                    } else {
+                        toast = Toast.makeText(GeckoApp.this, message, Toast.LENGTH_SHORT);
+                    }
+                    toast.show();
+                } catch (Exception e) {
+                    Log.e(LOGTAG, "Error showing toast", e);
                 }
-                toast.show();
             }
         });
     }
