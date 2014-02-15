@@ -534,18 +534,9 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
     nsContainerFrame::PositionChildViews(legend);
   }
 
-  // Return our size and our result
-  if (aReflowState.ComputedHeight() == NS_INTRINSICSIZE) {
-    aDesiredSize.Height() = mLegendSpace + 
-                          border.TopBottom() +
+  // Return our size and our result.
+  aDesiredSize.Height() = mLegendSpace + border.TopBottom() +
                           (inner ? inner->GetRect().height : 0);
-  } else {
-    nscoord min = border.TopBottom() + mLegendRect.height;
-    aDesiredSize.Height() =
-      aReflowState.ComputedHeight() + aReflowState.ComputedPhysicalBorderPadding().TopBottom();
-    if (aDesiredSize.Height() < min)
-      aDesiredSize.Height() = min;
-  }
   aDesiredSize.Width() = contentRect.width + border.LeftRight();
   aDesiredSize.SetOverflowAreasToDesiredBounds();
   if (legend)

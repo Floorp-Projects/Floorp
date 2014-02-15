@@ -1,0 +1,175 @@
+<!DOCTYPE HTML>
+<html><head>
+    <meta charset="utf-8">
+    <title>Testcase for bug 971933</title>
+    <style type="text/css">
+        html,body {
+            color:black; background-color:white; font-size:16px;
+        }
+#f0 div::before { content: "f0"; }
+#f1 div::before { content: "f1"; }
+#f2 div::before { content: "f2"; }
+#f3 div::before { content: "f3"; }
+#f4 div::before { content: "f4"; }
+#f5 div::before { content: "f5"; }
+#f6 div::before { content: "f6"; }
+#f7 div::before { content: "f7"; }
+#f8 div::before { content: "f8"; }
+#f9 div::before { content: "f9"; }
+
+legend { background:pink; height:30px; }
+div { background:yellow; height:100px; overflow:hidden; }
+fieldset {
+    border-width:0;
+    padding:0;
+    margin:0;
+    margin-top:6px;
+    outline:1px dotted black;
+    height:auto;
+    background:grey;
+
+    padding-bottom:0px;
+    padding-top:5px;
+    border:1px solid blue;
+    border-top-width:7px;
+}
+
+#f1 { }
+#f2 { border-top-width:0; }
+#f3 { border-width:0; }
+#f4 { border-bottom-width:0; }
+#f5 { border-width:0; padding:0; }
+#f6 { border-width:0; padding-bottom:0; }
+#f7 { border-width:0; padding-top:0; }
+#f8 { padding-top:0; }
+#f9 { padding-bottom:0; }
+#f0 { padding:0; }
+
+#c2 fieldset { height:29px; }
+
+#c3 fieldset { height:39px; }
+
+#c4 fieldset { height:29px; }
+#c4 legend { height: 20px; }
+
+#c5 legend { height:21px; }
+#c5 fieldset { border-top-width:31px; }
+
+.col { float:left; width:10ch; margin-left:6px; }
+
+#c1 div { height:3px; } #c1 #f6 div, #c1 #f9 div, #c1 #f0 div { height:0; }
+#c1 #f5 div { height:0px; }
+
+#c2 div { height:9px; }
+  #c2 #f1 { padding-bottom:3px; } #c2 #f1 div { height:9px;}
+  #c2 #f2 { padding-bottom:3px; } #c2 #f2 div { height:3px; }
+  #c2 #f3 { padding-bottom:3px; } #c2 #f3 div { height:3px; }
+  #c2 #f4 { padding-bottom:3px; }
+  #c2 #f5 div { height:0; }
+  #c2 #f6 div { height:0; }
+  #c2 #f7 { padding-bottom:3px; } #c2 #f7 div { height:3px; }
+  #c2 #f8 { padding-bottom:3px; } #c2 #f8 div { height:9px; }
+  #c2 #f9 div { height:6px; }
+  #c2 #f0 div { height:6px; }
+
+#c3 fieldset { padding-bottom:3px; }
+  #c3 #f1 div { height:19px; }
+  #c3 #f2 div { height:12px; }
+  #c3 #f3 div { height:12px; }
+  #c3 #f4 div { height:19px; }
+  #c3 #f5 { padding-bottom:0; } #c3 #f5 div { height:9px; }
+  #c3 #f6 { padding-bottom:0; } #c3 #f6 div { height:9px; }
+  #c3 #f7 div { height:12px; }
+  #c3 #f8 div { height:19px; }
+  #c3 #f9 { padding-bottom:0; } #c3 #f9 div { height:16px; }
+  #c3 #f0 { padding-bottom:0; } #c3 #f0 div { height:16px; }
+
+#c4 fieldset { padding-bottom:3px; }
+  #c4 #f1 div { height:19px; }
+  #c4 #f2 div { height:12px; }
+  #c4 #f3 div { height:12px; }
+  #c4 #f4 div { height:19px; }
+  #c4 #f5 { padding-bottom:0; } #c4 #f5 div { height:9px; }
+  #c4 #f6 { padding-bottom:0; } #c4 #f6 div { height:9px; }
+  #c4 #f7 div { height:12px; }
+  #c4 #f8 div { height:19px; }
+  #c4 #f9 { padding-bottom:0; } #c4 #f9 div { height:16px; }
+  #c4 #f0 { padding-bottom:0; } #c4 #f0 div { height:16px; }
+
+  #c5 #f1 div { height:18px; }
+  #c5 #f2 div { height:18px; }
+  #c5 #f3 div { height:18px; }
+  #c5 #f4 div { height:18px; }
+  #c5 #f5 div { height:15px; }
+  #c5 #f6 div { height:15px; }
+  #c5 #f7 div { height:18px; }
+  #c5 #f8 div { height:18px; }
+  #c5 #f9 div { height:15px; }
+  #c5 #f0 div { height:15px; }
+
+</style>
+</head>
+<body>
+<span id=c1 class=col>C1
+        <fieldset id=f1><legend>LEGEND</legend><div></div></fieldset>
+        <fieldset id=f2><legend>LEGEND</legend><div></div></fieldset>
+        <fieldset id=f3><legend>LEGEND</legend><div></div></fieldset>
+        <fieldset id=f4><legend>LEGEND</legend><div></div></fieldset>
+        <fieldset id=f5><legend>LEGEND</legend><div></div></fieldset>
+        <fieldset id=f6><legend>LEGEND</legend><div></div></fieldset>
+        <fieldset id=f7><legend>LEGEND</legend><div></div></fieldset>
+        <fieldset id=f8><legend>LEGEND</legend><div></div></fieldset>
+        <fieldset id=f9><legend>LEGEND</legend><div></div></fieldset>
+        <fieldset id=f0><legend>LEGEND</legend><div></div></fieldset>
+</span>
+<span id=c2 class=col>C2
+        <fieldset id=f1><legend>LEGEND</legend><div></div></fieldset>
+        <fieldset id=f2><legend>LEGEND</legend><div></div></fieldset>
+        <fieldset id=f3><legend>LEGEND</legend><div></div></fieldset>
+        <fieldset id=f4><legend>LEGEND</legend><div></div></fieldset>
+        <fieldset id=f5><legend>LEGEND</legend><div></div></fieldset>
+        <fieldset id=f6><legend>LEGEND</legend><div></div></fieldset>
+        <fieldset id=f7><legend>LEGEND</legend><div></div></fieldset>
+        <fieldset id=f8><legend>LEGEND</legend><div></div></fieldset>
+        <fieldset id=f9><legend>LEGEND</legend><div></div></fieldset>
+        <fieldset id=f0><legend>LEGEND</legend><div></div></fieldset>
+</span>
+<span id=c3 class=col>C3
+        <fieldset id=f1><legend>LEGEND</legend><div></div></fieldset>
+        <fieldset id=f2><legend>LEGEND</legend><div></div></fieldset>
+        <fieldset id=f3><legend>LEGEND</legend><div></div></fieldset>
+        <fieldset id=f4><legend>LEGEND</legend><div></div></fieldset>
+        <fieldset id=f5><legend>LEGEND</legend><div></div></fieldset>
+        <fieldset id=f6><legend>LEGEND</legend><div></div></fieldset>
+        <fieldset id=f7><legend>LEGEND</legend><div></div></fieldset>
+        <fieldset id=f8><legend>LEGEND</legend><div></div></fieldset>
+        <fieldset id=f9><legend>LEGEND</legend><div></div></fieldset>
+        <fieldset id=f0><legend>LEGEND</legend><div></div></fieldset>
+</span>
+<span id=c4 class=col>C4
+        <fieldset id=f1><legend>LEGEND</legend><div></div></fieldset>
+        <fieldset id=f2><legend>LEGEND</legend><div></div></fieldset>
+        <fieldset id=f3><legend>LEGEND</legend><div></div></fieldset>
+        <fieldset id=f4><legend>LEGEND</legend><div></div></fieldset>
+        <fieldset id=f5><legend>LEGEND</legend><div></div></fieldset>
+        <fieldset id=f6><legend>LEGEND</legend><div></div></fieldset>
+        <fieldset id=f7><legend>LEGEND</legend><div></div></fieldset>
+        <fieldset id=f8><legend>LEGEND</legend><div></div></fieldset>
+        <fieldset id=f9><legend>LEGEND</legend><div></div></fieldset>
+        <fieldset id=f0><legend>LEGEND</legend><div></div></fieldset>
+</span>
+<span id=c5 class=col>C5
+        <fieldset id=f1><legend>LEGEND</legend><div></div></fieldset>
+        <fieldset id=f2><legend>LEGEND</legend><div></div></fieldset>
+        <fieldset id=f3><legend>LEGEND</legend><div></div></fieldset>
+        <fieldset id=f4><legend>LEGEND</legend><div></div></fieldset>
+        <fieldset id=f5><legend>LEGEND</legend><div></div></fieldset>
+        <fieldset id=f6><legend>LEGEND</legend><div></div></fieldset>
+        <fieldset id=f7><legend>LEGEND</legend><div></div></fieldset>
+        <fieldset id=f8><legend>LEGEND</legend><div></div></fieldset>
+        <fieldset id=f9><legend>LEGEND</legend><div></div></fieldset>
+        <fieldset id=f0><legend>LEGEND</legend><div></div></fieldset>
+</span>
+
+</body>
+</html>
