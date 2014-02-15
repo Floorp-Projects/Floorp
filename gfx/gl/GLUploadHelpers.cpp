@@ -7,40 +7,54 @@
 
 #include "GLContext.h"
 #include "mozilla/gfx/2D.h"
-#include "gfxASurface.h"
-#include "gfxUtils.h"
-#include "gfxContext.h"
+#include "mozilla/gfx/Tools.h"  // For BytesPerPixel
 #include "nsRegion.h"
 
 namespace mozilla {
 
-using gfx::SurfaceFormat;
+using namespace gfx;
 
 namespace gl {
 
-static unsigned int
-DataOffset(const nsIntPoint &aPoint, int32_t aStride, gfxImageFormat aFormat)
+/* These two techniques are suggested by "Bit Twiddling Hacks"
+ */
+
+/**
+ * Returns true if |aNumber| is a power of two
+ * 0 is incorreclty considered a power of two
+ */
+static bool
+IsPowerOfTwo(int aNumber)
 {
-  unsigned int data = aPoint.y * aStride;
-  data += aPoint.x * gfxASurface::BytePerPixelFromFormat(aFormat);
-  return data;
+    return (aNumber & (aNumber - 1)) == 0;
 }
 
-static gfxImageFormat
-ImageFormatForSurfaceFormat(gfx::SurfaceFormat aFormat)
+/**
+ * Returns the first integer greater than |aNumber| which is a power of two
+ * Undefined for |aNumber| < 0
+ */
+static int
+NextPowerOfTwo(int aNumber)
 {
-    switch (aFormat) {
-        case gfx::SurfaceFormat::B8G8R8A8:
-            return gfxImageFormat::ARGB32;
-        case gfx::SurfaceFormat::B8G8R8X8:
-            return gfxImageFormat::RGB24;
-        case gfx::SurfaceFormat::R5G6B5:
-            return gfxImageFormat::RGB16_565;
-        case gfx::SurfaceFormat::A8:
-            return gfxImageFormat::A8;
-        default:
-            return gfxImageFormat::Unknown;
-    }
+#if defined(__arm__)
+    return 1 << (32 - __builtin_clz(aNumber - 1));
+#else
+    --aNumber;
+    aNumber |= aNumber >> 1;
+    aNumber |= aNumber >> 2;
+    aNumber |= aNumber >> 4;
+    aNumber |= aNumber >> 8;
+    aNumber |= aNumber >> 16;
+    return ++aNumber;
+#endif
+}
+
+static unsigned int
+DataOffset(const nsIntPoint &aPoint, int32_t aStride, SurfaceFormat aFormat)
+{
+  unsigned int data = aPoint.y * aStride;
+  data += aPoint.x * BytesPerPixel(aFormat);
+  return data;
 }
 
 static GLint GetAddressAlignment(ptrdiff_t aAddress)
@@ -271,13 +285,13 @@ TexImage2DHelper(GLContext *gl,
 
         if (!CanUploadNonPowerOfTwo(gl)
             && (stride != width * pixelsize
-            || !gfx::IsPowerOfTwo(width)
-            || !gfx::IsPowerOfTwo(height))) {
+            || !IsPowerOfTwo(width)
+            || !IsPowerOfTwo(height))) {
 
             // Pad out texture width and height to the next power of two
             // as we don't support/want non power of two texture uploads
-            GLsizei paddedWidth = gfx::NextPowerOfTwo(width);
-            GLsizei paddedHeight = gfx::NextPowerOfTwo(height);
+            GLsizei paddedWidth = NextPowerOfTwo(width);
+            GLsizei paddedHeight = NextPowerOfTwo(height);
 
             GLvoid* paddedPixels = new unsigned char[paddedWidth * paddedHeight * pixelsize];
 
@@ -369,7 +383,7 @@ SurfaceFormat
 UploadImageDataToTexture(GLContext* gl,
                          unsigned char* aData,
                          int32_t aStride,
-                         gfxImageFormat aFormat,
+                         SurfaceFormat aFormat,
                          const nsIntRegion& aDstRegion,
                          GLuint& aTexture,
                          bool aOverwrite,
@@ -411,54 +425,54 @@ UploadImageDataToTexture(GLContext* gl,
     GLenum format;
     GLenum internalFormat;
     GLenum type;
-    int32_t pixelSize = gfxASurface::BytePerPixelFromFormat(aFormat);
+    int32_t pixelSize = BytesPerPixel(aFormat);
     SurfaceFormat surfaceFormat;
 
     MOZ_ASSERT(gl->GetPreferredARGB32Format() == LOCAL_GL_BGRA ||
                gl->GetPreferredARGB32Format() == LOCAL_GL_RGBA);
     switch (aFormat) {
-        case gfxImageFormat::ARGB32:
+        case SurfaceFormat::B8G8R8A8:
             if (gl->GetPreferredARGB32Format() == LOCAL_GL_BGRA) {
               format = LOCAL_GL_BGRA;
-              surfaceFormat = gfx::SurfaceFormat::R8G8B8A8;
+              surfaceFormat = SurfaceFormat::R8G8B8A8;
               type = LOCAL_GL_UNSIGNED_INT_8_8_8_8_REV;
             } else {
               format = LOCAL_GL_RGBA;
-              surfaceFormat = gfx::SurfaceFormat::B8G8R8A8;
+              surfaceFormat = SurfaceFormat::B8G8R8A8;
               type = LOCAL_GL_UNSIGNED_BYTE;
             }
             internalFormat = LOCAL_GL_RGBA;
             break;
-        case gfxImageFormat::RGB24:
-            // Treat RGB24 surfaces as RGBA32 except for the surface
+        case SurfaceFormat::B8G8R8X8:
+            // Treat BGRX surfaces as BGRA except for the surface
             // format used.
             if (gl->GetPreferredARGB32Format() == LOCAL_GL_BGRA) {
               format = LOCAL_GL_BGRA;
-              surfaceFormat = gfx::SurfaceFormat::R8G8B8X8;
+              surfaceFormat = SurfaceFormat::R8G8B8X8;
               type = LOCAL_GL_UNSIGNED_INT_8_8_8_8_REV;
             } else {
               format = LOCAL_GL_RGBA;
-              surfaceFormat = gfx::SurfaceFormat::B8G8R8X8;
+              surfaceFormat = SurfaceFormat::B8G8R8X8;
               type = LOCAL_GL_UNSIGNED_BYTE;
             }
             internalFormat = LOCAL_GL_RGBA;
             break;
-        case gfxImageFormat::RGB16_565:
+        case SurfaceFormat::R5G6B5:
             internalFormat = format = LOCAL_GL_RGB;
             type = LOCAL_GL_UNSIGNED_SHORT_5_6_5;
-            surfaceFormat = gfx::SurfaceFormat::R5G6B5;
+            surfaceFormat = SurfaceFormat::R5G6B5;
             break;
-        case gfxImageFormat::A8:
+        case SurfaceFormat::A8:
             internalFormat = format = LOCAL_GL_LUMINANCE;
             type = LOCAL_GL_UNSIGNED_BYTE;
             // We don't have a specific luminance shader
-            surfaceFormat = gfx::SurfaceFormat::A8;
+            surfaceFormat = SurfaceFormat::A8;
             break;
         default:
             NS_ASSERTION(false, "Unhandled image surface format!");
             format = 0;
             type = 0;
-            surfaceFormat = gfx::SurfaceFormat::UNKNOWN;
+            surfaceFormat = SurfaceFormat::UNKNOWN;
     }
 
     nsIntRegionRectIterator iter(paintRegion);
@@ -512,62 +526,7 @@ UploadImageDataToTexture(GLContext* gl,
 
 SurfaceFormat
 UploadSurfaceToTexture(GLContext* gl,
-                       gfxASurface *aSurface,
-                       const nsIntRegion& aDstRegion,
-                       GLuint& aTexture,
-                       bool aOverwrite,
-                       const nsIntPoint& aSrcPoint,
-                       bool aPixelBuffer,
-                       GLenum aTextureUnit,
-                       GLenum aTextureTarget)
-{
-
-    nsRefPtr<gfxImageSurface> imageSurface = aSurface->GetAsImageSurface();
-    unsigned char* data = nullptr;
-
-    if (!imageSurface ||
-        (imageSurface->Format() != gfxImageFormat::ARGB32 &&
-         imageSurface->Format() != gfxImageFormat::RGB24 &&
-         imageSurface->Format() != gfxImageFormat::RGB16_565 &&
-         imageSurface->Format() != gfxImageFormat::A8)) {
-        // We can't get suitable pixel data for the surface, make a copy
-        nsIntRect bounds = aDstRegion.GetBounds();
-        imageSurface =
-          new gfxImageSurface(gfxIntSize(bounds.width, bounds.height),
-                              gfxImageFormat::ARGB32);
-
-        nsRefPtr<gfxContext> context = new gfxContext(imageSurface);
-
-        context->Translate(-gfxPoint(aSrcPoint.x, aSrcPoint.y));
-        context->SetSource(aSurface);
-        context->Paint();
-        data = imageSurface->Data();
-        NS_ASSERTION(!aPixelBuffer,
-                     "Must be using an image compatible surface with pixel buffers!");
-    } else {
-        // If a pixel buffer is bound the data pointer parameter is relative
-        // to the start of the data block.
-        if (!aPixelBuffer) {
-              data = imageSurface->Data();
-        }
-        data += DataOffset(aSrcPoint, imageSurface->Stride(),
-                           imageSurface->Format());
-    }
-
-    MOZ_ASSERT(imageSurface);
-    imageSurface->Flush();
-
-    return UploadImageDataToTexture(gl,
-                                    data,
-                                    imageSurface->Stride(),
-                                    imageSurface->Format(),
-                                    aDstRegion, aTexture, aOverwrite,
-                                    aPixelBuffer, aTextureUnit, aTextureTarget);
-}
-
-SurfaceFormat
-UploadSurfaceToTexture(GLContext* gl,
-                       gfx::DataSourceSurface *aSurface,
+                       DataSourceSurface *aSurface,
                        const nsIntRegion& aDstRegion,
                        GLuint& aTexture,
                        bool aOverwrite,
@@ -578,8 +537,7 @@ UploadSurfaceToTexture(GLContext* gl,
 {
     unsigned char* data = aPixelBuffer ? nullptr : aSurface->GetData();
     int32_t stride = aSurface->Stride();
-    gfxImageFormat format =
-        ImageFormatForSurfaceFormat(aSurface->GetFormat());
+    SurfaceFormat format = aSurface->GetFormat();
     data += DataOffset(aSrcPoint, stride, format);
     return UploadImageDataToTexture(gl, data, stride, format,
                                     aDstRegion, aTexture, aOverwrite,

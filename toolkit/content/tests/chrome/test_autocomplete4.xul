@@ -136,7 +136,7 @@ const tests = [
     result: "Result",
     start: 6, end: 6
   },
-  { desc: "ENTER key",
+  { desc: "RETURN key",
     key: "VK_RETURN",
     removeSelection: false,
     result: "Result",

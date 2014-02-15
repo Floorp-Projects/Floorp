@@ -3760,8 +3760,11 @@ HTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
     WidgetMouseEvent* mouseEvent = aVisitor.mEvent->AsMouseEvent();
     if (mouseEvent && mouseEvent->IsLeftClickEvent() &&
         !ShouldPreventDOMActivateDispatch(aVisitor.mEvent->originalTarget)) {
+      // XXX Activating actually occurs even if it's caused by untrusted event.
+      //     Therefore, shouldn't this be always trusted event?
       InternalUIEvent actEvent(aVisitor.mEvent->mFlags.mIsTrusted,
-                               NS_UI_ACTIVATE, 1);
+                               NS_UI_ACTIVATE);
+      actEvent.detail = 1;
 
       nsCOMPtr<nsIPresShell> shell = aVisitor.mPresContext->GetPresShell();
       if (shell) {
@@ -3993,8 +3996,7 @@ HTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
            */
 
           if (aVisitor.mEvent->message == NS_KEY_PRESS &&
-              (keyEvent->keyCode == NS_VK_RETURN ||
-               keyEvent->keyCode == NS_VK_ENTER) &&
+              keyEvent->keyCode == NS_VK_RETURN &&
                (IsSingleLineTextControl(false, mType) ||
                 mType == NS_FORM_INPUT_NUMBER ||
                 IsExperimentalMobileType(mType))) {
@@ -6909,17 +6911,12 @@ HTMLInputElement::IsValidEmailAddress(const nsAString& aValue)
 
   uint32_t atPos;
   nsAutoCString value;
+  // This call also checks whether aValue contains a correctly-placed '@' sign.
   if (!PunycodeEncodeEmailAddress(aValue, value, &atPos)) {
     return false;
   }
 
   uint32_t length = value.Length();
-
-  // Email addresses must contain a '@', but can't begin or end with it.
-  if (atPos == (uint32_t)kNotFound || atPos == 0 || atPos == length - 1) {
-    return false;
-  }
-
   uint32_t i = 0;
 
   // Parsing the username.

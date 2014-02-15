@@ -14,8 +14,7 @@ nsDOMSimpleGestureEvent::nsDOMSimpleGestureEvent(mozilla::dom::EventTarget* aOwn
                                                  WidgetSimpleGestureEvent* aEvent)
   : nsDOMMouseEvent(aOwner, aPresContext,
                     aEvent ? aEvent :
-                             new WidgetSimpleGestureEvent(false, 0, nullptr,
-                                                          0, 0.0))
+                             new WidgetSimpleGestureEvent(false, 0, nullptr))
 {
   NS_ASSERTION(mEvent->eventStructType == NS_SIMPLE_GESTURE_EVENT, "event type mismatch");
 

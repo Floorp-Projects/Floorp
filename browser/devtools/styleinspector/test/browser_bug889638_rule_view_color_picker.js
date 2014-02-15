@@ -180,12 +180,12 @@ function testPressingEnterCommitsChanges() {
 
       cPicker.tooltip.once("hidden", () => {
         is(contentWin.getComputedStyle(contentDoc.body).borderLeftColor,
-          "rgba(0, 255, 0, 0.5)", "The element's border was kept after ENTER");
+          "rgba(0, 255, 0, 0.5)", "The element's border was kept after RETURN");
         is(swatch.style.backgroundColor, "rgba(0, 255, 0, 0.5)",
-          "The color swatch's background was kept after ENTER");
+          "The color swatch's background was kept after RETURN");
         is(getRuleViewProperty("border").valueSpan.textContent,
           "2em solid rgba(0, 255, 0, 0.5)",
-          "The text of the border css property was kept after ENTER");
+          "The text of the border css property was kept after RETURN");
 
         endTests();
       });

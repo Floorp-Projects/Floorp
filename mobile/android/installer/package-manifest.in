@@ -425,6 +425,11 @@
 @BINPATH@/components/dom_webspeechsynth.xpt
 #endif
 
+#ifdef MOZ_DEBUG
+@BINPATH@/components/TestInterfaceJS.js
+@BINPATH@/components/TestInterfaceJS.manifest
+#endif
+
 ; Modules
 @BINPATH@/modules/*
 

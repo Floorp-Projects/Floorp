@@ -172,7 +172,6 @@ function onEditorKeypress(ed, event) {
     case event.DOM_VK_END:
     case event.DOM_VK_BACK_SPACE:
     case event.DOM_VK_DELETE:
-    case event.DOM_VK_ENTER:
     case event.DOM_VK_RETURN:
       private.doNotAutocomplete = true;
       private.popup.hidePopup();
