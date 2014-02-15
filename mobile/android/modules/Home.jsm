@@ -46,6 +46,9 @@ function BannerMessage(options) {
 
   if ("onclick" in options && typeof options.onclick === "function")
     this.onclick = options.onclick;
+
+  if ("ondismiss" in options && typeof options.ondismiss === "function")
+    this.ondismiss = options.ondismiss;
 }
 
 let HomeBanner = {
@@ -63,6 +66,10 @@ let HomeBanner = {
 
       case "HomeBanner:Click":
         this._handleClick(data);
+        break;
+
+      case "HomeBanner:Dismiss":
+        this._handleDismiss(data);
         break;
     }
   },
@@ -91,6 +98,12 @@ let HomeBanner = {
       message.onclick();
   },
 
+  _handleDismiss: function(id) {
+    let message = this._messages[id];
+    if (message.ondismiss)
+      message.ondismiss();
+  },
+
   /**
    * Adds a new banner message to the rotation.
    *
@@ -108,6 +121,7 @@ let HomeBanner = {
     if (Object.keys(this._messages).length == 1) {
       Services.obs.addObserver(this, "HomeBanner:Get", false);
       Services.obs.addObserver(this, "HomeBanner:Click", false);
+      Services.obs.addObserver(this, "HomeBanner:Dismiss", false);
 
       // Send a message to Java, in case there's an active HomeBanner
       // waiting for a response.
@@ -133,6 +147,7 @@ let HomeBanner = {
     if (Object.keys(this._messages).length == 0) {
       Services.obs.removeObserver(this, "HomeBanner:Get");
       Services.obs.removeObserver(this, "HomeBanner:Click");
+      Services.obs.removeObserver(this, "HomeBanner:Dismiss");
     }
   }
 };
