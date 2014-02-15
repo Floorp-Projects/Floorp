@@ -1122,8 +1122,7 @@ DrawTargetCG::FillGlyphs(ScaledFont *aFont, const GlyphBuffer &aBuffer, const Pa
   positions.resize(aBuffer.mNumGlyphs);
 
   // Handle the flip
-  CGAffineTransform matrix = CGAffineTransformMakeScale(1, -1);
-  CGContextConcatCTM(cg, matrix);
+  CGContextScaleCTM(cg, 1, -1);
   // CGContextSetTextMatrix works differently with kCGTextClip && kCGTextFill
   // It seems that it transforms the positions with TextFill and not with TextClip
   // Therefore we'll avoid it. See also:
@@ -1159,6 +1158,7 @@ DrawTargetCG::FillGlyphs(ScaledFont *aFont, const GlyphBuffer &aBuffer, const Pa
                                      aBuffer.mNumGlyphs);
       delete bboxes;
     }
+    CGContextScaleCTM(cg, 1, -1);
     DrawGradient(cg, aPattern, extents);
   } else {
     //XXX: with CoreGraphics we can stroke text directly instead of going
