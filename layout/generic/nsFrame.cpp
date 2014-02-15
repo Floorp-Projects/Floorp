@@ -1022,7 +1022,7 @@ nsIFrame::Preserves3DChildren() const
 {
   const nsStyleDisplay* disp = StyleDisplay();
   if (disp->mTransformStyle != NS_STYLE_TRANSFORM_STYLE_PRESERVE_3D ||
-      !disp->HasTransform(this)) {
+      !IsFrameOfType(nsIFrame::eSupportsCSSTransforms)) {
     return false;
   }
 
