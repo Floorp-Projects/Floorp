@@ -118,6 +118,16 @@ add_task(function test() {
 });
 '''
 
+ADD_TASK_RUN_NEXT_TEST = '''
+function run_test() { run_next_test(); }
+
+add_task(function () {
+  Assert.ok(true);
+
+  run_next_test();
+});
+'''
+
 ADD_TEST_THROW_STRING = '''
 function run_test() {do_throw("Passing a string to do_throw")};
 '''
@@ -510,6 +520,19 @@ tail =
         self.writeFile("test_add_task_failure_inside.js",
             ADD_TASK_FAILURE_INSIDE)
         self.writeManifest(["test_add_task_failure_inside.js"])
+
+        self.assertTestResult(False)
+        self.assertEquals(1, self.x.testCount)
+        self.assertEquals(0, self.x.passCount)
+        self.assertEquals(1, self.x.failCount)
+
+    def testAddTaskRunNextTest(self):
+        """
+        Calling run_next_test() from inside add_task() results in failure.
+        """
+        self.writeFile("test_add_task_run_next_test.js",
+            ADD_TASK_RUN_NEXT_TEST)
+        self.writeManifest(["test_add_task_run_next_test.js"])
 
         self.assertTestResult(False)
         self.assertEquals(1, self.x.testCount)
