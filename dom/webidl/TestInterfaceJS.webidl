@@ -6,7 +6,7 @@
 
 [JSImplementation="@mozilla.org/dom/test-interface-js;1",
  Pref="dom.expose_test_interfaces",
- Constructor(any anyArg, object objectArg)]
+ Constructor(optional any anyArg, optional object objectArg)]
 interface TestInterfaceJS {
   readonly attribute any anyArg;
   readonly attribute object objectArg;
@@ -14,4 +14,7 @@ interface TestInterfaceJS {
   attribute object objectAttr;
   any pingPongAny(any arg);
   object pingPongObject(any obj);
+
+  // For testing bug 968335.
+  DOMString getCallerPrincipal();
 };
