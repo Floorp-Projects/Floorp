@@ -99,7 +99,5 @@ function test()
 
 function getWindowId(aWindow)
 {
-  return aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                .getInterface(Ci.nsIDOMWindowUtils)
-                .currentInnerWindowID;
+  return SpecialPowers.getDOMWindowUtils(aWindow).currentInnerWindowID;
 }
