@@ -55,6 +55,7 @@
 
 #include <stdio.h>
 
+#include "mozilla/Preferences.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/WidgetTraceEvent.h"
 #include "nsDebug.h"
@@ -81,6 +82,7 @@ bool sExit = false;
 
 struct TracerStartClosure {
   bool mLogTracing;
+  int32_t mThresholdInterval;
 };
 
 #ifdef MOZ_WIDGET_GONK
@@ -127,9 +129,10 @@ void TracerThread(void *arg)
   // These are the defaults. They can be overridden by environment vars.
   // This should be set to the maximum latency we'd like to allow
   // for responsiveness.
-  PRIntervalTime threshold = PR_MillisecondsToInterval(20);
+  int32_t thresholdInterval = threadArgs->mThresholdInterval;
+  PRIntervalTime threshold = PR_MillisecondsToInterval(thresholdInterval);
   // This is the sampling interval.
-  PRIntervalTime interval = PR_MillisecondsToInterval(10);
+  PRIntervalTime interval = PR_MillisecondsToInterval(thresholdInterval / 2);
 
   sExit = false;
   FILE* log = nullptr;
@@ -225,6 +228,11 @@ bool InitEventTracing(bool aLog)
   // The tracer thread owns the object and will delete it.
   TracerStartClosure* args = new TracerStartClosure();
   args->mLogTracing = aLog;
+
+  // Pass the default threshold interval.
+  int32_t thresholdInterval = 20;
+  Preferences::GetInt("devtools.eventlooplag.threshold", &thresholdInterval);
+  args->mThresholdInterval = thresholdInterval;
 
   // Create a thread that will fire events back at the
   // main thread to measure responsiveness.
