@@ -143,11 +143,11 @@ xpc_qsDefineQuickStubs(JSContext *cx, JSObject *protoArg, unsigned flags,
 
                 if (entry->newBindingProperties) {
                     if (entry->newBindingProperties->regular) {
-                        mozilla::dom::DefineWebIDLBindingPropertiesOnXPCObject(cx, proto, entry->newBindingProperties->regular, false);
+                        mozilla::dom::DefineWebIDLBindingPropertiesOnXPCObject(cx, proto, entry->newBindingProperties->regular);
                     }
                     if (entry->newBindingProperties->chromeOnly &&
                         xpc::AccessCheck::isChrome(js::GetContextCompartment(cx))) {
-                        mozilla::dom::DefineWebIDLBindingPropertiesOnXPCObject(cx, proto, entry->newBindingProperties->chromeOnly, false);
+                        mozilla::dom::DefineWebIDLBindingPropertiesOnXPCObject(cx, proto, entry->newBindingProperties->chromeOnly);
                     }
                 }
                 // Next.
