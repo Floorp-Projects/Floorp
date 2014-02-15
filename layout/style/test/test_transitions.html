@@ -430,6 +430,19 @@ function check_transition_value(func, start_time, end_time,
                                 start_value, end_value, cval, desc,
                                 xfail)
 {
+    /**
+     * Compute the value at a given time |elapsed|, by normalizing the
+     * input to the timing function using start_time and end_time and
+     * then turning the output into a value using start_value and
+     * end_value.
+     *
+     * The |error_direction| argument should be either -1, 0, or 1,
+     * suggesting adding on a little bit of error, to allow for the
+     * cubic-bezier calculation being an approximation.  The amount of
+     * error is proportional to the slope of the timing function, since
+     * the error is added to the *input* of the timing function (after
+     * normalization to 0-1 based on start_time and end_time).
+     */
     function value_at(elapsed, error_direction) {
         var time_portion = (elapsed - start_time) / (end_time - start_time);
         if (time_portion < 0)
@@ -438,7 +451,7 @@ function check_transition_value(func, start_time, end_time,
             time_portion = 1;
         // Assume a small error since bezier computation can be off slightly.
         // (This test's computation is probably more accurate than Mozilla's.)
-        var value_portion = func(time_portion) + error_direction * 0.0015;
+        var value_portion = func(time_portion + error_direction * 0.0005);
         if (value_portion < 0)
             value_portion = 0;
         else if (value_portion > 1)
