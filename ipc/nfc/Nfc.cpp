@@ -344,7 +344,8 @@ NfcConsumer::OnDisconnect()
 {
     CHROMIUM_LOG("NFC: %s\n", __FUNCTION__);
     if (!mShutdown) {
-        ConnectSocket(new NfcConnector(), mAddress.get(), 1000);
+        ConnectSocket(new NfcConnector(), mAddress.get(),
+                      GetSuggestedConnectDelayMs());
     }
 }
 

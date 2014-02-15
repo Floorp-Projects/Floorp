@@ -427,7 +427,7 @@ FMRadioService::Enable(double aFrequencyInMHz,
       do_GetService("@mozilla.org/settingsService;1");
 
     nsCOMPtr<nsISettingsServiceLock> settingsLock;
-    nsresult rv = settings->CreateLock(getter_AddRefs(settingsLock));
+    nsresult rv = settings->CreateLock(nullptr, getter_AddRefs(settingsLock));
     if (NS_FAILED(rv)) {
       TransitionState(ErrorResponse(
         NS_LITERAL_STRING("Can't create settings lock")), Disabled);
