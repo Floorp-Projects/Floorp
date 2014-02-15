@@ -391,7 +391,9 @@ class TestManifest(SandboxDerived):
         'flavor',
 
         # Maps source filename to destination filename. The destination
-        # path is relative from the tests root directory.
+        # path is relative from the tests root directory. Values are 2-tuples
+        # of (destpath, is_test_file) where the 2nd item is True if this
+        # item represents a test file (versus a support file).
         'installs',
 
         # A list of pattern matching installs to perform. Entries are

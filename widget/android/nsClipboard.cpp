@@ -109,9 +109,3 @@ nsClipboard::SupportsSelectionClipboard(bool *aIsSupported)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsClipboard::SupportsFindClipboard(bool* _retval)
-{
-  *_retval = false;
-  return NS_OK;
-}

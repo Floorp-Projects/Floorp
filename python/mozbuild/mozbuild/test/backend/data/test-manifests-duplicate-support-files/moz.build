@@ -1,0 +1,7 @@
+# Any copyright is dedicated to the Public Domain.
+# http://creativecommons.org/publicdomain/zero/1.0/
+
+MOCHITEST_MANIFESTS += [
+    'mochitest1.ini',
+    'mochitest2.ini',
+]

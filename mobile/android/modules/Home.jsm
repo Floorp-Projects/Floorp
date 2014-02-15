@@ -43,6 +43,9 @@ function BannerMessage(options) {
 
   if ("onclick" in options && typeof options.onclick === "function")
     this.onclick = options.onclick;
+
+  if ("ondismiss" in options && typeof options.ondismiss === "function")
+    this.ondismiss = options.ondismiss;
 }
 
 let HomeBanner = (function () {
@@ -77,6 +80,12 @@ let HomeBanner = (function () {
       message.onclick();
   };
 
+  let _handleDismiss = function(id) {
+    let message = _messages[id];
+    if (message.ondismiss)
+      message.ondismiss();
+  };
+
   return Object.freeze({
     observe: function(subject, topic, data) {
       switch(topic) {
@@ -87,6 +96,10 @@ let HomeBanner = (function () {
         case "HomeBanner:Click":
           _handleClick(data);
           break;
+
+        case "HomeBanner:Dismiss":
+          _handleDismiss(data);
+          break; 
       }
     },
 
@@ -107,6 +120,7 @@ let HomeBanner = (function () {
       if (Object.keys(_messages).length == 1) {
         Services.obs.addObserver(this, "HomeBanner:Get", false);
         Services.obs.addObserver(this, "HomeBanner:Click", false);
+        Services.obs.addObserver(this, "HomeBanner:Dismiss", false);
 
         // Send a message to Java, in case there's an active HomeBanner
         // waiting for a response.
@@ -132,6 +146,7 @@ let HomeBanner = (function () {
       if (Object.keys(_messages).length == 0) {
         Services.obs.removeObserver(this, "HomeBanner:Get");
         Services.obs.removeObserver(this, "HomeBanner:Click");
+        Services.obs.removeObserver(this, "HomeBanner:Dismiss");
       }
     }
   });
