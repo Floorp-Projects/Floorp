@@ -10,6 +10,11 @@ LIBXUL_LIBRARY = True
 
 LIBRARY_NAME = 'dombindings_test_s'
 
+EXTRA_COMPONENTS += [
+    'TestInterfaceJS.js',
+    'TestInterfaceJS.manifest',
+]
+
 MOCHITEST_MANIFESTS += ['mochitest.ini']
 
 MOCHITEST_CHROME_MANIFESTS += ['chrome.ini']
