@@ -34,6 +34,7 @@
 
 #include "nsWrapperCacheInlines.h"
 
+class nsIJSID;
 class nsPIDOMWindow;
 
 extern nsresult
@@ -1463,6 +1464,17 @@ WantsQueryInterface
     return NS_IsMainThread() && IsChromeOrXBL(aCx, aGlobal);
   }
 };
+
+JS::Value
+GetInterfaceImpl(JSContext* aCx, nsIInterfaceRequestor* aRequestor,
+                 nsWrapperCache* aCache, nsIJSID* aIID, ErrorResult& aError);
+
+template<class T>
+JS::Value
+GetInterface(JSContext* aCx, T* aThis, nsIJSID* aIID, ErrorResult& aError)
+{
+  return GetInterfaceImpl(aCx, aThis, aThis, aIID, aError);
+}
 
 bool
 ThrowingConstructor(JSContext* cx, unsigned argc, JS::Value* vp);
