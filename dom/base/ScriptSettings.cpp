@@ -48,22 +48,32 @@ public:
     mStack.RemoveElementAt(mStack.Length() - 1);
   }
 
-  nsIGlobalObject* Incumbent() {
+  ScriptSettingsStackEntry* Incumbent() {
     if (!mStack.Length()) {
       return nullptr;
     }
-    return mStack.LastElement()->mGlobalObject;
+    return mStack.LastElement();
   }
 
-  nsIGlobalObject* EntryPoint() {
+  nsIGlobalObject* IncumbentGlobal() {
+    ScriptSettingsStackEntry *entry = Incumbent();
+    return entry ? entry->mGlobalObject : nullptr;
+  }
+
+  ScriptSettingsStackEntry* EntryPoint() {
     if (!mStack.Length())
       return nullptr;
     for (int i = mStack.Length() - 1; i >= 0; --i) {
       if (mStack[i]->mIsCandidateEntryPoint) {
-        return mStack[i]->mGlobalObject;
+        return mStack[i];
       }
     }
     MOZ_ASSUME_UNREACHABLE("Non-empty stack should always have an entry point");
+  }
+
+  nsIGlobalObject* EntryGlobal() {
+    ScriptSettingsStackEntry *entry = EntryPoint();
+    return entry ? entry->mGlobalObject : nullptr;
   }
 
 private:
@@ -102,10 +112,10 @@ BrokenGetEntryGlobal()
   // We need the current JSContext in order to check the JS for
   // scripted frames that may have appeared since anyone last
   // manipulated the stack. If it's null, that means that there
-  // must be no entry point on the stack.
+  // must be no entry global on the stack.
   JSContext *cx = nsContentUtils::GetCurrentJSContextForThread();
   if (!cx) {
-    MOZ_ASSERT(ScriptSettingsStack::Ref().EntryPoint() == nullptr);
+    MOZ_ASSERT(ScriptSettingsStack::Ref().EntryGlobal() == nullptr);
     return nullptr;
   }
 
@@ -121,11 +131,11 @@ GetIncumbentGlobal()
   // We need the current JSContext in order to check the JS for
   // scripted frames that may have appeared since anyone last
   // manipulated the stack. If it's null, that means that there
-  // must be no entry point on the stack, and therefore no incumbent
+  // must be no entry global on the stack, and therefore no incumbent
   // global either.
   JSContext *cx = nsContentUtils::GetCurrentJSContextForThread();
   if (!cx) {
-    MOZ_ASSERT(ScriptSettingsStack::Ref().EntryPoint() == nullptr);
+    MOZ_ASSERT(ScriptSettingsStack::Ref().EntryGlobal() == nullptr);
     return nullptr;
   }
 
@@ -142,7 +152,7 @@ GetIncumbentGlobal()
 
   // Ok, nothing from the JS engine. Let's use whatever's on the
   // explicit stack.
-  return ScriptSettingsStack::Ref().Incumbent();
+  return ScriptSettingsStack::Ref().IncumbentGlobal();
 }
 
 AutoEntryScript::AutoEntryScript(nsIGlobalObject* aGlobalObject,
@@ -175,7 +185,7 @@ AutoEntryScript::AutoEntryScript(nsIGlobalObject* aGlobalObject,
 
 AutoEntryScript::~AutoEntryScript()
 {
-  MOZ_ASSERT(mStack.Incumbent() == mEntry.mGlobalObject);
+  MOZ_ASSERT(mStack.Incumbent() == &mEntry);
   mStack.Pop();
 }
 
@@ -189,7 +199,7 @@ AutoIncumbentScript::AutoIncumbentScript(nsIGlobalObject* aGlobalObject)
 
 AutoIncumbentScript::~AutoIncumbentScript()
 {
-  MOZ_ASSERT(mStack.Incumbent() == mEntry.mGlobalObject);
+  MOZ_ASSERT(mStack.Incumbent() == &mEntry);
   mStack.Pop();
 }
 
