@@ -1471,8 +1471,10 @@ nsDOMWindowUtils::SendSimpleGestureEvent(const nsAString& aType,
   else
     return NS_ERROR_FAILURE;
  
-  WidgetSimpleGestureEvent event(true, msg, widget, aDirection, aDelta);
+  WidgetSimpleGestureEvent event(true, msg, widget);
   event.modifiers = GetWidgetModifiers(aModifiers);
+  event.direction = aDirection;
+  event.delta = aDelta;
   event.clickCount = aClickCount;
   event.time = PR_IntervalNow();
 
