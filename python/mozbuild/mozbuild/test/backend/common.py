@@ -61,6 +61,13 @@ CONFIGS = DefaultOnReadDict({
             ('foo', 'bar baz'),
         ],
     },
+    'visual-studio': {
+        'defines': [],
+        'non_global_defines': [],
+        'substs': [
+            ('MOZ_APP_NAME', 'my_app'),
+        ],
+    },
 }, global_default={
     'defines': [],
     'non_global_defines': [],
