@@ -58,7 +58,6 @@
 
       // Simulate typical input
       textbox.focus();
-      gFindBar.clear();
       sendChar("m");
       ok(gFindBar.canClear, "canClear property true after input");
       let preSelection = gBrowser.contentWindow.getSelection();
