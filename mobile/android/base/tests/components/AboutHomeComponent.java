@@ -117,6 +117,14 @@ public class AboutHomeComponent extends BaseComponent {
         return this;
     }
 
+    public AboutHomeComponent dismissBanner() {
+        assertBannerVisible();
+
+        mTestContext.dumpLog(LOGTAG, "Clicking on HomeBanner close button.");
+        mSolo.clickOnView(getHomeBannerView().findViewById(R.id.close));
+        return this;
+    }
+
     public AboutHomeComponent swipeToPanelOnRight() {
         mTestContext.dumpLog(LOGTAG, "Swiping to the panel on the right.");
         swipeToPanel(Solo.RIGHT);

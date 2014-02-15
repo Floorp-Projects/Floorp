@@ -49,6 +49,19 @@ public class testHomeBanner extends UITest {
         NavigationHelper.enterAndLoadUrl("about:home");
         mAboutHome.assertVisible()
                   .assertBannerNotVisible();
+
+        // Add back the banner message to test the dismiss functionality.
+        addBannerMessage();
+
+        NavigationHelper.enterAndLoadUrl("about:home");
+        mAboutHome.assertVisible();
+
+        // Test to make sure the ondismiss handler is called when the close button is clicked.
+        eventExpecter = getActions().expectGeckoEvent("TestHomeBanner:MessageDismissed");
+        mAboutHome.dismissBanner();
+        eventExpecter.blockForEvent();
+
+        mAboutHome.assertBannerNotVisible();
     }
 
     /**
