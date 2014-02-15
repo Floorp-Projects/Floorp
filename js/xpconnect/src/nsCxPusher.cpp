@@ -115,7 +115,6 @@ AutoCxPusher::AutoCxPusher(JSContext* cx, bool allowNull)
   if (!stack->Push(cx)) {
     MOZ_CRASH();
   }
-  mStackDepthAfterPush = stack->Count();
 
 #ifdef DEBUG
   mPushedContext = cx;
@@ -162,14 +161,6 @@ AutoCxPusher::~AutoCxPusher()
   MOZ_ASSERT(mPushedContext == nsXPConnect::XPConnect()->GetCurrentJSContext());
   XPCJSRuntime::Get()->GetJSContextStack()->Pop();
   mScx = nullptr;
-}
-
-bool
-AutoCxPusher::IsStackTop()
-{
-  uint32_t currentDepth = XPCJSRuntime::Get()->GetJSContextStack()->Count();
-  MOZ_ASSERT(currentDepth >= mStackDepthAfterPush);
-  return currentDepth == mStackDepthAfterPush;
 }
 
 AutoJSContext::AutoJSContext(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL)
