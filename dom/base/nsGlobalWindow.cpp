@@ -1940,6 +1940,39 @@ nsGlobalWindow::TraceGlobalJSObject(JSTracer* aTrc)
   TraceWrapper(aTrc, "active window global");
 }
 
+/* static */
+JSObject*
+nsGlobalWindow::OuterObject(JSContext* aCx, JS::HandleObject aObj)
+{
+  nsGlobalWindow *origWin;
+  UNWRAP_OBJECT(Window, aObj, origWin);
+  nsGlobalWindow *win = origWin->GetOuterWindowInternal();
+
+  if (!win) {
+    // If we no longer have an outer window. No code should ever be
+    // running on a window w/o an outer, which means this hook should
+    // never be called when we have no outer. But just in case, return
+    // null to prevent leaking an inner window to code in a different
+    // window.
+    NS_WARNING("nsGlobalWindow::OuterObject shouldn't fail!");
+    return nullptr;
+  }
+
+  JS::Rooted<JSObject*> winObj(aCx, win->FastGetGlobalJSObject());
+  MOZ_ASSERT(winObj);
+
+  // Note that while |wrapper| is same-compartment with cx, the outer window
+  // might not be. If we're running script in an inactive scope and evalute
+  // |this|, the outer window is actually a cross-compartment wrapper. So we
+  // need to wrap here.
+  if (!JS_WrapObject(aCx, &winObj)) {
+    NS_WARNING("nsGlobalWindow::OuterObject shouldn't fail!");
+    return nullptr;
+  }
+
+  return winObj;
+}
+
 bool
 nsGlobalWindow::WouldReuseInnerWindow(nsIDocument *aNewDocument)
 {
@@ -4360,10 +4393,10 @@ nsGlobalWindow::SetOpener(nsIDOMWindow* aOpener, ErrorResult& aError)
 {
   // Check if we were called from a privileged chrome script.  If not, and if
   // aOpener is not null, just define aOpener on our inner window's JS object,
-  // wapped into the current compartment so that for Xrays we define on the Xray
-  // expando object, but don't set it on the outer window, so that it'll get
-  // reset on navigation.  This is just like replaceable properties, but we're
-  // not quite readonly.
+  // wrapped into the current compartment so that for Xrays we define on the
+  // Xray expando object, but don't set it on the outer window, so that it'll
+  // get reset on navigation.  This is just like replaceable properties, but
+  // we're not quite readonly.
   if (aOpener && !nsContentUtils::IsCallerChrome()) {
     // JS_WrapObject will outerize, so we don't care if aOpener is an inner.
     nsCOMPtr<nsIGlobalObject> glob = do_QueryInterface(aOpener);
