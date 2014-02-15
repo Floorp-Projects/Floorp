@@ -2482,13 +2482,17 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
         else:
             domClass = "nullptr"
 
-        if self.properties.hasNonChromeOnly():
+        isGlobal = self.descriptor.interface.getExtendedAttribute("Global") is not None
+        if not isGlobal and self.properties.hasNonChromeOnly():
             properties = "&sNativeProperties"
+        elif self.properties.hasNonChromeOnly():
+            properties = "!GlobalPropertiesAreOwn() ? &sNativeProperties : nullptr"
         else:
             properties = "nullptr"
-        if self.properties.hasChromeOnly():
-            accessCheck = "nsContentUtils::ThreadsafeIsCallerChrome()"
-            chromeProperties = accessCheck + " ? &sChromeOnlyNativeProperties : nullptr"
+        if not isGlobal and self.properties.hasChromeOnly():
+            chromeProperties = "nsContentUtils::ThreadsafeIsCallerChrome() ? &sChromeOnlyNativeProperties : nullptr"
+        elif self.properties.hasChromeOnly():
+            chromeProperties = "!GlobalPropertiesAreOwn() && nsContentUtils::ThreadsafeIsCallerChrome() ? &sChromeOnlyNativeProperties : nullptr"
         else:
             chromeProperties = "nullptr"
 
@@ -2963,6 +2967,15 @@ class CGWrapGlobalMethod(CGAbstractMethod):
         self.properties = properties
 
     def definition_body(self):
+        if self.properties.hasNonChromeOnly():
+            properties = "GlobalPropertiesAreOwn() ? &sNativeProperties : nullptr"
+        else:
+            properties = "nullptr"
+        if self.properties.hasChromeOnly():
+            chromeProperties = "GlobalPropertiesAreOwn() && nsContentUtils::ThreadsafeIsCallerChrome() ? &sChromeOnlyNativeProperties : nullptr"
+        else:
+            chromeProperties = "nullptr"
+
         return fill(
             """
             ${assertions}
@@ -2980,6 +2993,10 @@ class CGWrapGlobalMethod(CGAbstractMethod):
               // obj is a new global, so has a new compartment.  Enter it
               // before doing anything with it.
               JSAutoCompartment ac(aCx, obj);
+
+              if (!DefineProperties(aCx, obj, ${properties}, ${chromeProperties})) {
+                return nullptr;
+              }
               $*{unforgeable}
 
               $*{slots}
@@ -2991,6 +3008,8 @@ class CGWrapGlobalMethod(CGAbstractMethod):
             """,
             assertions=AssertInheritanceChain(self.descriptor),
             nativeType=self.descriptor.nativeType,
+            properties=properties,
+            chromeProperties=chromeProperties,
             unforgeable=InitUnforgeableProperties(self.descriptor, self.properties),
             slots=InitMemberSlots(self.descriptor, True))
 

@@ -581,6 +581,24 @@ CreateInterfaceObjects(JSContext* cx, JS::Handle<JSObject*> global,
                        const NativeProperties* chromeOnlyProperties,
                        const char* name, bool defineOnGlobal);
 
+/**
+ * Define the properties (regular and chrome-only) on obj.
+ *
+ * obj the object to instal the properties on. This should be the interface
+ *     prototype object for regular interfaces and the instance object for
+ *     interfaces marked with Global.
+ * properties contains the methods, attributes and constants to be defined on
+ *            objects in any compartment.
+ * chromeProperties contains the methods, attributes and constants to be defined
+ *                  on objects in chrome compartments. This must be null if the
+ *                  interface doesn't have any ChromeOnly properties or if the
+ *                  object is being created in non-chrome compartment.
+ */
+bool
+DefineProperties(JSContext* cx, JS::Handle<JSObject*> obj,
+                 const NativeProperties* properties,
+                 const NativeProperties* chromeOnlyProperties);
+
 /*
  * Define the unforgeable attributes on an object.
  */
@@ -589,10 +607,14 @@ DefineUnforgeableAttributes(JSContext* cx, JS::Handle<JSObject*> obj,
                             const Prefable<const JSPropertySpec>* props);
 
 bool
+DefineWebIDLBindingUnforgeablePropertiesOnXPCObject(JSContext* cx,
+                                                    JS::Handle<JSObject*> obj,
+                                                    const NativeProperties* properties);
+
+bool
 DefineWebIDLBindingPropertiesOnXPCObject(JSContext* cx,
                                          JS::Handle<JSObject*> obj,
-                                         const NativeProperties* properties,
-                                         bool defineUnforgeableAttributes);
+                                         const NativeProperties* properties);
 
 #ifdef _MSC_VER
 #define HAS_MEMBER_CHECK(_name)                                           \
@@ -2660,6 +2682,15 @@ bool
 ConvertExceptionToPromise(JSContext* cx,
                           JSObject* promiseScope,
                           JS::MutableHandle<JS::Value> rval);
+
+// While we wait for the outcome of spec discussions on whether properties for
+// DOM global objects live on the object or the prototype, we supply this one
+// place to switch the behaviour, so we can easily turn this off on branches.
+inline bool
+GlobalPropertiesAreOwn()
+{
+  return true;
+}
 
 } // namespace dom
 } // namespace mozilla
