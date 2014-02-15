@@ -2980,26 +2980,11 @@ Tab.prototype = {
       return;
 
     let url = currentURI.spec;
-    let flags = Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE;
+    let flags = Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE |
+                Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY;
     if (this.originalURI && !this.originalURI.equals(currentURI)) {
       // We were redirected; reload the original URL
       url = this.originalURI.spec;
-      flags |= Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY;
-    } else {
-      // Many sites use mobile-specific URLs, such as:
-      //   http://m.yahoo.com
-      //   http://www.google.com/m
-      // If the user clicks "Request Desktop Site" while on a mobile site, it
-      // will appear to do nothing since the mobile URL is still being
-      // requested. To address this, we do the following:
-      //   1) Remove the path from the URL (http://www.google.com/m?q=query -> http://www.google.com)
-      //   2) If a host subdomain is "m", remove it (http://en.m.wikipedia.org -> http://en.wikipedia.org)
-      // This means the user is sent to site's home page, but this is better
-      // than the setting having no effect at all.
-      if (aDesktopMode)
-        url = currentURI.prePath.replace(/([\/\.])m\./g, "$1");
-      else
-        flags |= Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY;
     }
 
     this.browser.docShell.loadURI(url, flags, null, null, null);
