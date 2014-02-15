@@ -805,23 +805,19 @@ nsDOMClassInfo::RegisterExternalClasses()
   return nameSpaceManager->RegisterExternalInterfaces(true);
 }
 
-#define _DOM_CLASSINFO_MAP_BEGIN(_class, _ifptr, _has_class_if, _disabled)    \
+#define _DOM_CLASSINFO_MAP_BEGIN(_class, _ifptr, _has_class_if)               \
   {                                                                           \
     nsDOMClassInfoData &d = sClassInfoData[eDOMClassInfo_##_class##_id];      \
     d.mProtoChainInterface = _ifptr;                                          \
     d.mHasClassInterface = _has_class_if;                                     \
     d.mInterfacesBitmap = kDOMClassInfo_##_class##_interfaces;                \
-    d.mDisabled = _disabled;                                                  \
     static const nsIID *interface_list[] = {
 
 #define DOM_CLASSINFO_MAP_BEGIN(_class, _interface)                           \
-  _DOM_CLASSINFO_MAP_BEGIN(_class, &NS_GET_IID(_interface), true, false)
-
-#define DOM_CLASSINFO_MAP_BEGIN_MAYBE_DISABLE(_class, _interface, _disable)   \
-  _DOM_CLASSINFO_MAP_BEGIN(_class, &NS_GET_IID(_interface), true, _disable)
+  _DOM_CLASSINFO_MAP_BEGIN(_class, &NS_GET_IID(_interface), true)
 
 #define DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(_class, _interface)               \
-  _DOM_CLASSINFO_MAP_BEGIN(_class, &NS_GET_IID(_interface), false, false)
+  _DOM_CLASSINFO_MAP_BEGIN(_class, &NS_GET_IID(_interface), false)
 
 #define DOM_CLASSINFO_MAP_ENTRY(_if)                                          \
       &NS_GET_IID(_if),
@@ -1205,10 +1201,13 @@ nsDOMClassInfo::Init()
   int32_t i;
 
   for (i = 0; i < eDOMClassInfoIDCount; ++i) {
+    if (i == eDOMClassInfo_DOMPrototype_id) {
+      continue;
+    }
+
     nsDOMClassInfoData& data = sClassInfoData[i];
     nameSpaceManager->RegisterClassName(data.mName, i, data.mChromeOnly,
-                                        data.mAllowXBL, data.mDisabled,
-                                        &data.mNameUTF16);
+                                        data.mAllowXBL, &data.mNameUTF16);
   }
 
   for (i = 0; i < eDOMClassInfoIDCount; ++i) {
@@ -1553,7 +1552,7 @@ nsDOMClassInfo::OuterObject(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
 
 static nsresult
 GetExternalClassInfo(nsScriptNameSpaceManager *aNameSpaceManager,
-                     const nsString &aName,
+                     const nsAString &aName,
                      const nsGlobalNameStruct *aStruct,
                      const nsGlobalNameStruct **aResult)
 {
@@ -1877,7 +1876,9 @@ struct ResolveGlobalNameClosure
 };
 
 static PLDHashOperator
-ResolveGlobalName(const nsAString& aName, void* aClosure)
+ResolveGlobalName(const nsAString& aName,
+                  const nsGlobalNameStruct& aNameStruct,
+                  void* aClosure)
 {
   ResolveGlobalNameClosure* closure =
     static_cast<ResolveGlobalNameClosure*>(aClosure);
@@ -2728,14 +2729,22 @@ static bool
 OldBindingConstructorEnabled(const nsGlobalNameStruct *aStruct,
                              nsGlobalWindow *aWin, JSContext *cx)
 {
-  MOZ_ASSERT(aStruct->mType == nsGlobalNameStruct::eTypeClassConstructor ||
+  MOZ_ASSERT(aStruct->mType == nsGlobalNameStruct::eTypeProperty ||
+             aStruct->mType == nsGlobalNameStruct::eTypeClassConstructor ||
              aStruct->mType == nsGlobalNameStruct::eTypeExternalClassInfo);
 
   // Don't expose chrome only constructors to content windows.
-  if (aStruct->mChromeOnly &&
-      (aStruct->mAllowXBL ? !IsChromeOrXBL(cx, nullptr) :
-       !nsContentUtils::IsSystemPrincipal(aWin->GetPrincipal()))) {
-    return false;
+  if (aStruct->mChromeOnly) {
+    bool expose;
+    if (aStruct->mAllowXBL) {
+      expose = IsChromeOrXBL(cx, nullptr);
+    } else {
+      expose = nsContentUtils::IsSystemPrincipal(aWin->GetPrincipal());
+    }
+
+    if (!expose) {
+      return false;
+    }
   }
 
   // Don't expose CSSSupportsRule unless @supports processing is enabled.
@@ -2757,6 +2766,26 @@ static nsresult
 LookupComponentsShim(JSContext *cx, JS::Handle<JSObject*> global,
                      nsPIDOMWindow *win,
                      JS::MutableHandle<JSPropertyDescriptor> desc);
+
+bool
+nsWindowSH::NameStructEnabled(JSContext* aCx, nsGlobalWindow *aWin,
+                              const nsAString& aName,
+                              const nsGlobalNameStruct& aNameStruct)
+{
+  const nsGlobalNameStruct* nameStruct = &aNameStruct;
+  if (nameStruct->mType == nsGlobalNameStruct::eTypeExternalClassInfoCreator) {
+    nsresult rv = GetExternalClassInfo(GetNameSpaceManager(), aName, nameStruct,
+                                       &nameStruct);
+    if (NS_FAILED(rv) || !nameStruct) {
+      return false;
+    }
+  }
+
+  return (nameStruct->mType != nsGlobalNameStruct::eTypeProperty &&
+          nameStruct->mType != nsGlobalNameStruct::eTypeClassConstructor &&
+          nameStruct->mType != nsGlobalNameStruct::eTypeExternalClassInfo) ||
+         OldBindingConstructorEnabled(nameStruct, aWin, aCx);
+}
 
 // static
 nsresult
@@ -3020,9 +3049,7 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
   }
 
   if (name_struct->mType == nsGlobalNameStruct::eTypeProperty) {
-    if (name_struct->mChromeOnly &&
-        (name_struct->mAllowXBL ? !IsChromeOrXBL(cx, nullptr) :
-         !nsContentUtils::IsCallerChrome()))
+    if (!OldBindingConstructorEnabled(name_struct, aWin, cx))
       return NS_OK;
 
     // Before defining a global property, check for a named subframe of the
