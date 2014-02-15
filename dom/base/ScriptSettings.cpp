@@ -177,7 +177,7 @@ AutoEntryScript::AutoEntryScript(nsIGlobalObject* aGlobalObject,
     }
   }
   if (aIsMainThread) {
-    mCxPusher.Push(aCx);
+    mCxPusher.construct(aCx);
   }
   mAc.construct(aCx, aGlobalObject->GetGlobalJSObject());
   mStack.Push(&mEntry);
@@ -207,7 +207,7 @@ AutoSystemCaller::AutoSystemCaller(bool aIsMainThread)
   : mStack(ScriptSettingsStack::Ref())
 {
   if (aIsMainThread) {
-    mCxPusher.PushNull();
+    mCxPusher.construct(nullptr, /* aAllowNull = */ true);
   }
   mStack.PushSystem();
 }
