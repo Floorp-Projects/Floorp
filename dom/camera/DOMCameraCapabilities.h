@@ -1,59 +1,96 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef DOM_CAMERA_DOMCAMERACAPABILITIES_H
-#define DOM_CAMERA_DOMCAMERACAPABILITIES_H
+#ifndef mozilla_dom_CameraCapabilities_h__
+#define mozilla_dom_CameraCapabilities_h__
 
-#include "ICameraControl.h"
+#include "nsString.h"
 #include "nsAutoPtr.h"
-#include "CameraCommon.h"
+#include "mozilla/Attributes.h"
+#include "mozilla/ErrorResult.h"
+#include "mozilla/dom/CameraManagerBinding.h"
+#include "nsCycleCollectionParticipant.h"
+#include "nsWrapperCache.h"
+
+struct JSContext;
+class nsPIDOMWindow;
 
 namespace mozilla {
 
-typedef nsresult (*ParseItemAndAddFunc)(JSContext* aCx, JS::Handle<JSObject*> aArray,
-                                        uint32_t aIndex, const char* aStart, char** aEnd);
+class ICameraControl;
+class RecorderProfileManager;
 
-class DOMCameraCapabilities MOZ_FINAL : public nsICameraCapabilities
+namespace dom {
+
+class CameraCapabilities MOZ_FINAL : public nsISupports
+                                   , public nsWrapperCache
 {
 public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSICAMERACAPABILITIES
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(CameraCapabilities)
 
-  DOMCameraCapabilities(ICameraControl* aCamera)
-    : mCamera(aCamera)
-  {
-    DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
-  }
+  CameraCapabilities(nsPIDOMWindow* aWindow);
+  ~CameraCapabilities();
 
-  nsresult ParameterListToNewArray(
-    JSContext* cx,
-    JS::MutableHandle<JSObject*> aArray,
-    uint32_t aKey,
-    ParseItemAndAddFunc aParseItemAndAdd
-  );
-  nsresult StringListToNewObject(JSContext* aCx,
-                                 JS::MutableHandle<JS::Value> aArray,
-                                 uint32_t aKey);
-  nsresult DimensionListToNewObject(JSContext* aCx,
-                                    JS::MutableHandle<JS::Value> aArray,
-                                    uint32_t aKey);
+  nsresult Populate(ICameraControl* aCameraControl);
 
-private:
-  DOMCameraCapabilities(const DOMCameraCapabilities&) MOZ_DELETE;
-  DOMCameraCapabilities& operator=(const DOMCameraCapabilities&) MOZ_DELETE;
+  nsPIDOMWindow* GetParentObject() const { return mWindow; }
+
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
+
+  void GetPreviewSizes(nsTArray<CameraSize>& aRetVal) const;
+  void GetPictureSizes(nsTArray<CameraSize>& aRetVal) const;
+  void GetThumbnailSizes(nsTArray<CameraSize>& aRetVal) const;
+  void GetVideoSizes(nsTArray<CameraSize>& aRetVal) const;
+  void GetFileFormats(nsTArray<nsString>& aRetVal) const;
+  void GetWhiteBalanceModes(nsTArray<nsString>& aRetVal) const;
+  void GetSceneModes(nsTArray<nsString>& aRetVal) const;
+  void GetEffects(nsTArray<nsString>& aRetVal) const;
+  void GetFlashModes(nsTArray<nsString>& aRetVal) const;
+  void GetFocusModes(nsTArray<nsString>& aRetVal) const;
+  void GetZoomRatios(nsTArray<double>& aRetVal) const;
+  uint32_t MaxFocusAreas() const;
+  uint32_t MaxMeteringAreas() const;
+  double MinExposureCompensation() const;
+  double MaxExposureCompensation() const;
+  double ExposureCompensationStep() const;
+  JS::Value RecorderProfiles(JSContext* cx) const;
 
 protected:
-  /* additional members */
-  ~DOMCameraCapabilities()
-  {
-    // destructor code
-    DOM_CAMERA_LOGT("%s:%d : this=%p, mCamera=%p\n", __func__, __LINE__, this, mCamera.get());
-  }
+  nsresult TranslateToDictionary(ICameraControl* aCameraControl,
+                                 uint32_t aKey, nsTArray<CameraSize>& aSizes);
 
-  nsRefPtr<ICameraControl> mCamera;
+  nsTArray<CameraSize> mPreviewSizes;
+  nsTArray<CameraSize> mPictureSizes;
+  nsTArray<CameraSize> mThumbnailSizes;
+  nsTArray<CameraSize> mVideoSizes;
+
+  nsTArray<nsString> mFileFormats;
+  nsTArray<nsString> mWhiteBalanceModes;
+  nsTArray<nsString> mSceneModes;
+  nsTArray<nsString> mEffects;
+  nsTArray<nsString> mFlashModes;
+  nsTArray<nsString> mFocusModes;
+
+  nsTArray<double> mZoomRatios;
+
+  uint32_t mMaxFocusAreas;
+  uint32_t mMaxMeteringAreas;
+
+  double mMinExposureCompensation;
+  double mMaxExposureCompensation;
+  double mExposureCompensationStep;
+
+  nsRefPtr<RecorderProfileManager> mRecorderProfileManager;
+  JS::Heap<JS::Value> mRecorderProfiles;
+
+  nsRefPtr<nsPIDOMWindow> mWindow;
 };
 
+} // namespace dom
 } // namespace mozilla
 
-#endif // DOM_CAMERA_DOMCAMERACAPABILITIES_H
+#endif // mozilla_dom_CameraCapabilities_h__

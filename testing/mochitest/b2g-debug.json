@@ -11,6 +11,7 @@
 "excludetests": {
     "content/xul":"tests that use xul",
     "layout/xul" : "",
+    "dom/apps":"bug 972927, nearly perma-fail",
     "dom/datastore/tests/test_changes.html":"intermittent failures, bug 961021",
     "dom/tests/mochitest/general/test_focusrings.xul":"",
     "layout/base/tests/test_bug465448.xul":"",
@@ -459,7 +460,6 @@
     "dom/apps/tests/test_packaged_app_update.html": "debug-only timeout",
     "dom/apps/tests/test_uninstall_errors.html": "debug-only timeout",
     "dom/bindings/test/test_exceptions_from_jsimplemented.html": "debug-only failure; bug 926547",
-    "dom/camera/test/test_camera.html": "debug-only failure; no assertions when 34 were expected",
     "dom/contacts/tests/test_contacts_basics.html": "debug-only failure",
     "dom/contacts/tests/test_contacts_getall.html": "debug-only failure",
     "dom/datastore/tests/test_arrays.html": "debug-only failure; time out",

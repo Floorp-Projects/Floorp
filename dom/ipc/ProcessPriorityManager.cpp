@@ -1031,10 +1031,8 @@ ParticularProcessPriorityManager::SetPriorityNow(ProcessPriority aPriority,
     unused << mContentParent->SendNotifyProcessPriorityChanged(mPriority);
   }
 
-  if (aPriority >= PROCESS_PRIORITY_FOREGROUND) {
-    unused << mContentParent->SendCancelMinimizeMemoryUsage();
-  } else {
-    unused << mContentParent->SendMinimizeMemoryUsage();
+  if (aPriority < PROCESS_PRIORITY_FOREGROUND) {
+    unused << mContentParent->SendFlushMemory(NS_LITERAL_STRING("low-memory"));
   }
 
   FireTestOnlyObserverNotification("process-priority-set",
