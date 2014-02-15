@@ -39,3 +39,8 @@ if CONFIG['OS_ARCH'] == 'Darwin':
     UNIFIED_SOURCES += [
         'crashreporter_osx.mm',
     ]
+
+LOCAL_INCLUDES += [
+    '../google-breakpad/src',
+]
+

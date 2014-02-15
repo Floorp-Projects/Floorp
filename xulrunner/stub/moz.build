@@ -19,5 +19,11 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
 
 DEFINES['XPCOM_GLUE'] = True
 
+LOCAL_INCLUDES += [
+    '/xpcom/base',
+    '/xpcom/build',
+]
+
+
 # Statically link against the RTL on windows
 USE_STATIC_LIBS = True

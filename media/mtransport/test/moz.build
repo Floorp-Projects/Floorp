@@ -40,3 +40,24 @@ else:
 
 if CONFIG['OS_TARGET'] in ('Darwin', 'Android'):
     DEFINES['GTEST_USE_OWN_TR1_TUPLE'] = 1
+
+LOCAL_INCLUDES += [
+    '/media/mtransport/',
+    '/media/mtransport/third_party/',
+    '/media/mtransport/third_party/nICEr/src/crypto',
+    '/media/mtransport/third_party/nICEr/src/ice',
+    '/media/mtransport/third_party/nICEr/src/net',
+    '/media/mtransport/third_party/nICEr/src/stun',
+    '/media/mtransport/third_party/nICEr/src/util',
+    '/media/mtransport/third_party/nrappkit/src/event',
+    '/media/mtransport/third_party/nrappkit/src/log',
+    '/media/mtransport/third_party/nrappkit/src/plugin',
+    '/media/mtransport/third_party/nrappkit/src/registry',
+    '/media/mtransport/third_party/nrappkit/src/share',
+    '/media/mtransport/third_party/nrappkit/src/stats',
+    '/media/mtransport/third_party/nrappkit/src/util/',
+    '/media/mtransport/third_party/nrappkit/src/util/libekr',
+    '/media/webrtc/trunk/testing/gtest/include/',
+    '/netwerk/sctp/src/',
+]
+

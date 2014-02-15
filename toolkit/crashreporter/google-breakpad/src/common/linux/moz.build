@@ -42,3 +42,8 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     DEFINES['ELFSIZE'] = 32
 
 DEFINES['NO_STABS_SUPPORT'] = True
+
+LOCAL_INCLUDES += [
+    '/toolkit/crashreporter/google-breakpad/src',
+]
+

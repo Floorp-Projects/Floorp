@@ -54,6 +54,12 @@ DEFINES['NS_NO_XPCOM'] = True
 for var in ('MAR_CHANNEL_ID', 'MOZ_APP_VERSION'):
     DEFINES[var] = '"%s"' % CONFIG[var]
 
+LOCAL_INCLUDES += [
+    '../common',
+    '/xpcom/glue',
+]
+
+
 DELAYLOAD_DLLS += [
     'crypt32.dll',
     'userenv.dll',

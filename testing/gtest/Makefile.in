@@ -5,13 +5,6 @@
 # Avoid recursive make to avoid having to add files to the gtest/ subdirectory
 # (which is third-party code), and to make the build faster.
 
-LOCAL_INCLUDES += \
-  -I$(srcdir)/gtest \
-  -I$(srcdir)/gtest/include \
-  -I$(srcdir)/gmock \
-  -I$(srcdir)/gmock/include \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
 ifeq (browser,$(MOZ_BUILD_APP))
