@@ -155,6 +155,45 @@ GetIncumbentGlobal()
   return ScriptSettingsStack::Ref().IncumbentGlobal();
 }
 
+nsIPrincipal*
+GetWebIDLCallerPrincipal()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  ScriptSettingsStackEntry *entry = ScriptSettingsStack::Ref().EntryPoint();
+
+  // If we have an entry point that is not the system singleton, we know it
+  // must be an AutoEntryScript.
+  if (!entry || entry->IsSystemSingleton()) {
+    return nullptr;
+  }
+  AutoEntryScript* aes = static_cast<AutoEntryScript*>(entry);
+
+  // We can't yet rely on the Script Settings Stack to properly determine the
+  // entry script, because there are still lots of places in the tree where we
+  // don't yet use an AutoEntryScript (bug 951991 tracks this work). In the
+  // mean time though, we can make some observations to hack around the
+  // problem:
+  //
+  // (1) All calls into JS-implemented WebIDL go through CallSetup, which goes
+  //     through AutoEntryScript.
+  // (2) The top candidate entry point in the Script Settings Stack is the
+  //     entry point if and only if no other JSContexts have been pushed on
+  //     top of the push made by that entry's AutoEntryScript.
+  //
+  // Because of (1), all of the cases where we might return a non-null
+  // WebIDL Caller are guaranteed to have put an entry on the Script Settings
+  // Stack, so we can restrict our search to that. Moreover, (2) gives us a
+  // criterion to determine whether an entry in the Script Setting Stack means
+  // that we should return a non-null WebIDL Caller.
+  //
+  // Once we fix bug 951991, this can all be simplified.
+  if (!aes->mCxPusher.ref().IsStackTop()) {
+    return nullptr;
+  }
+
+  return aes->mWebIDLCallerPrincipal;
+}
+
 AutoEntryScript::AutoEntryScript(nsIGlobalObject* aGlobalObject,
                                  bool aIsMainThread,
                                  JSContext* aCx)
