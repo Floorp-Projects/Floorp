@@ -28,7 +28,6 @@
 <keyset id="CustomizeToolbarKeyset">
   <key id="cmd_close1" keycode="VK_ESCAPE" oncommand="onClose();"/>
   <key id="cmd_close2" keycode="VK_RETURN" oncommand="onClose();"/>
-  <key id="cmd_close3" keycode="VK_ENTER"  oncommand="onClose();"/>
 </keyset>
 
 <vbox id="main-box" flex="1">

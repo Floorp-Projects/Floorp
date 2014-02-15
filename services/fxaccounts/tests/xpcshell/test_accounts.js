@@ -485,16 +485,12 @@ add_task(function test_resend_email_not_signed_in() {
   } catch(err) {
     do_check_eq(err.message,
       "Cannot resend verification email; no signed-in user");
-    do_test_finished();
-    run_next_test();
     return;
   }
   do_throw("Should not be able to resend email when nobody is signed in");
 });
 
-add_task(function test_resend_email() {
-  do_test_pending();
-
+add_test(function test_resend_email() {
   let fxa = new MockFxAccounts();
   let alice = getTestUser("alice");
 
@@ -528,7 +524,6 @@ add_task(function test_resend_email() {
 
         // Ok abort polling before we go on to the next test
         fxa.internal.abortExistingFlow();
-        do_test_finished();
         run_next_test();
       });
     });

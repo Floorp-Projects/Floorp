@@ -9,7 +9,7 @@ function test() {
   initNetMonitor(CONTENT_TYPE_URL).then(([aTab, aDebuggee, aMonitor]) => {
     info("Starting test... ");
 
-    let { $, document, NetMonitorView } = aMonitor.panelWin;
+    let { $, document, EVENTS, NetMonitorView } = aMonitor.panelWin;
     let { RequestsMenu } = NetMonitorView;
 
     RequestsMenu.lazyUpdate = false;
@@ -35,8 +35,7 @@ function test() {
       is($("#preview-tabpanel").hidden, false,
         "The preview tabpanel should be visible now.");
 
-      let RESPONSE_HTML_PREVIEW_DISPLAYED = aMonitor.panelWin.EVENTS.RESPONSE_HTML_PREVIEW_DISPLAYED;
-      waitFor(aMonitor.panelWin, RESPONSE_HTML_PREVIEW_DISPLAYED).then(() => {
+      waitFor(aMonitor.panelWin, EVENTS.RESPONSE_HTML_PREVIEW_DISPLAYED).then(() => {
         let iframe = $("#response-preview");
         ok(iframe,
           "There should be a response preview iframe available.");

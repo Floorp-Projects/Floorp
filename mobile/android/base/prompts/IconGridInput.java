@@ -103,8 +103,8 @@ public class IconGridInput extends PromptInput implements OnItemClickListener {
     }
 
     @Override
-    public String getValue() {
-        return Integer.toString(mSelected);
+    public Object getValue() {
+        return new Integer(mSelected);
     }
 
     @Override

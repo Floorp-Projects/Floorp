@@ -57,7 +57,7 @@ function testVariablesAndPropertiesFiltering() {
     },
     function() {
       assertExpansion([true, false, false, false]);
-      EventUtils.sendKey("ENTER", gDebugger);
+      EventUtils.sendKey("RETURN", gDebugger);
     },
     function() {
       assertExpansion([true, false, false, false]);
@@ -73,7 +73,7 @@ function testVariablesAndPropertiesFiltering() {
     },
     function() {
       assertExpansion([true, true, true, true]);
-      EventUtils.sendKey("ENTER", gDebugger);
+      EventUtils.sendKey("RETURN", gDebugger);
     },
     function() {
       assertExpansion([true, true, true, true]);
@@ -89,7 +89,7 @@ function testVariablesAndPropertiesFiltering() {
     },
     function() {
       assertExpansion([true, true, true, true]);
-      EventUtils.sendKey("ENTER", gDebugger);
+      EventUtils.sendKey("RETURN", gDebugger);
     },
     function() {
       assertExpansion([true, true, true, true]);
@@ -108,7 +108,7 @@ function testVariablesAndPropertiesFiltering() {
     },
     function() {
       assertExpansion([false, false, false, false]);
-      EventUtils.sendKey("ENTER", gDebugger);
+      EventUtils.sendKey("RETURN", gDebugger);
     },
     function() {
       assertExpansion([false, false, false, false]);
@@ -125,7 +125,7 @@ function testVariablesAndPropertiesFiltering() {
     },
     function() {
       assertExpansion([true, true, true, true]);
-      EventUtils.sendKey("ENTER", gDebugger);
+      EventUtils.sendKey("RETURN", gDebugger);
     },
     function() {
       assertExpansion([true, true, true, true]);
@@ -141,7 +141,7 @@ function testVariablesAndPropertiesFiltering() {
     },
     function() {
       assertExpansion([true, true, true, true]);
-      EventUtils.sendKey("ENTER", gDebugger);
+      EventUtils.sendKey("RETURN", gDebugger);
     },
     function() {
       assertExpansion([true, true, true, true]);

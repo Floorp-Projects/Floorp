@@ -32,7 +32,7 @@ const BORDER_RE = /^border(-(top|bottom|left|right))?$/ig;
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 const SPECTRUM_FRAME = "chrome://browser/content/devtools/spectrum-frame.xhtml";
 const ESCAPE_KEYCODE = Ci.nsIDOMKeyEvent.DOM_VK_ESCAPE;
-const ENTER_KEYCODE = Ci.nsIDOMKeyEvent.DOM_VK_RETURN;
+const RETURN_KEYCODE = Ci.nsIDOMKeyEvent.DOM_VK_RETURN;
 const POPUP_EVENTS = ["shown", "hidden", "showing", "hiding"];
 
 /**
@@ -399,12 +399,12 @@ Tooltip.prototype = {
 
   _showOnHover: function(target) {
     let res = this._targetNodeCb(target, this);
+    let show = arg => this.show(arg instanceof Ci.nsIDOMNode ? arg : target);
+
     if (res && res.then) {
-      res.then(() => {
-        this.show(target);
-      });
+      res.then(show);
     } else if (res) {
-      this.show(target);
+      show(res);
     }
   },
 
@@ -762,7 +762,7 @@ function SwatchBasedEditorTooltip(doc) {
   // It will also close on <escape> and <enter>
   this.tooltip = new Tooltip(doc, {
     consumeOutsideClick: true,
-    closeOnKeys: [ESCAPE_KEYCODE, ENTER_KEYCODE],
+    closeOnKeys: [ESCAPE_KEYCODE, RETURN_KEYCODE],
     noAutoFocus: false
   });
 
@@ -771,7 +771,7 @@ function SwatchBasedEditorTooltip(doc) {
   this._onTooltipKeypress = (event, code) => {
     if (code === ESCAPE_KEYCODE) {
       this.revert();
-    } else if (code === ENTER_KEYCODE) {
+    } else if (code === RETURN_KEYCODE) {
       this.commit();
     }
   };

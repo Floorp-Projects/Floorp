@@ -36,6 +36,7 @@ const kSpecialWidgetPfx = "customizableui-special-";
 const kPrefCustomizationState        = "browser.uiCustomization.state";
 const kPrefCustomizationAutoAdd      = "browser.uiCustomization.autoAdd";
 const kPrefCustomizationDebug        = "browser.uiCustomization.debug";
+const kPrefDrawInTitlebar            = "browser.tabs.drawInTitlebar";
 
 /**
  * The keys are the handlers that are fired when the event type (the value)
@@ -128,7 +129,10 @@ let gGroupWrapperCache = new Map();
 let gSingleWrapperCache = new WeakMap();
 let gListeners = new Set();
 
-let gUIStateBeforeReset = null;
+let gUIStateBeforeReset = {
+  uiCustomizationState: null,
+  drawInTitlebar: null,
+};
 
 let gModuleName = "[CustomizableUI]";
 #include logging.js
@@ -697,7 +701,7 @@ let CustomizableUIInternal = {
     this.insertNode(aWidgetId, aArea, aPosition, true);
 
     if (!gResetting) {
-      gUIStateBeforeReset = null;
+      this._clearPreviousUIState();
     }
   },
 
@@ -756,19 +760,19 @@ let CustomizableUIInternal = {
       }
     }
     if (!gResetting) {
-      gUIStateBeforeReset = null;
+      this._clearPreviousUIState();
     }
   },
 
   onWidgetMoved: function(aWidgetId, aArea, aOldPosition, aNewPosition) {
     this.insertNode(aWidgetId, aArea, aNewPosition);
     if (!gResetting) {
-      gUIStateBeforeReset = null;
+      this._clearPreviousUIState();
     }
   },
 
   onCustomizeEnd: function(aWindow) {
-    gUIStateBeforeReset = null;
+    this._clearPreviousUIState();
   },
 
   registerBuildArea: function(aArea, aNode) {
@@ -1333,8 +1337,7 @@ let CustomizableUIInternal = {
 
   maybeAutoHidePanel: function(aEvent) {
     if (aEvent.type == "keypress") {
-      if (aEvent.keyCode != aEvent.DOM_VK_ENTER &&
-          aEvent.keyCode != aEvent.DOM_VK_RETURN) {
+      if (aEvent.keyCode != aEvent.DOM_VK_RETURN) {
         return;
       }
       // If the user hit enter/return, we don't check preventDefault - it makes sense
@@ -2076,10 +2079,12 @@ let CustomizableUIInternal = {
 
   _resetUIState: function() {
     try {
-      gUIStateBeforeReset = Services.prefs.getCharPref(kPrefCustomizationState);
+      gUIStateBeforeReset.drawInTitlebar = Services.prefs.getBoolPref(kPrefDrawInTitlebar);
+      gUIStateBeforeReset.uiCustomizationState = Services.prefs.getCharPref(kPrefCustomizationState);
     } catch(e) { }
 
     Services.prefs.clearUserPref(kPrefCustomizationState);
+    Services.prefs.clearUserPref(kPrefDrawInTitlebar);
     LOG("State reset");
 
     // Reset placements to make restoring default placements possible.
@@ -2114,17 +2119,31 @@ let CustomizableUIInternal = {
    * Undoes a previous reset, restoring the state of the UI to the state prior to the reset.
    */
   undoReset: function() {
-    if (!gUIStateBeforeReset) {
+    if (gUIStateBeforeReset.uiCustomizationState == null ||
+        gUIStateBeforeReset.drawInTitlebar == null) {
       return;
     }
-    Services.prefs.setCharPref(kPrefCustomizationState, gUIStateBeforeReset);
+    let uiCustomizationState = gUIStateBeforeReset.uiCustomizationState;
+    let drawInTitlebar = gUIStateBeforeReset.drawInTitlebar;
+
+    // Need to clear the previous state before setting the prefs
+    // because pref observers may check if there is a previous UI state.
+    this._clearPreviousUIState();
+
+    Services.prefs.setCharPref(kPrefCustomizationState, uiCustomizationState);
+    Services.prefs.setBoolPref(kPrefDrawInTitlebar, drawInTitlebar);
     this.loadSavedState();
     for (let areaId of Object.keys(gSavedState.placements)) {
       let placements = gSavedState.placements[areaId];
       gPlacements.set(areaId, placements);
     }
     this._rebuildRegisteredAreas();
-    gUIStateBeforeReset = null;
+  },
+
+  _clearPreviousUIState: function() {
+    Object.getOwnPropertyNames(gUIStateBeforeReset).forEach((prop) => {
+      gUIStateBeforeReset[prop] = null;
+    });
   },
 
   /**
@@ -2269,6 +2288,11 @@ let CustomizableUIInternal = {
           return false;
         }
       }
+    }
+
+    if (Services.prefs.prefHasUserValue(kPrefDrawInTitlebar)) {
+      LOG(kPrefDrawInTitlebar + " pref is non-default");
+      return false;
     }
 
     return true;
@@ -2894,7 +2918,8 @@ this.CustomizableUI = {
    *         Restore Defaults can be performed.
    */
   get canUndoReset() {
-    return !!gUIStateBeforeReset;
+    return gUIStateBeforeReset.uiCustomizationState != null ||
+           gUIStateBeforeReset.drawInTitlebar != null;
   },
 
   /**
@@ -3396,7 +3421,11 @@ OverflowableToolbar.prototype = {
         this._onResize(aEvent);
         break;
       case "command":
-        this._onClickChevron(aEvent);
+        if (aEvent.target == this._chevron) {
+          this._onClickChevron(aEvent);
+        } else {
+          this._panel.hidePopup();
+        }
         break;
       case "popuphiding":
         this._onPanelHiding(aEvent);
@@ -3431,11 +3460,13 @@ OverflowableToolbar.prototype = {
   },
 
   _onClickChevron: function(aEvent) {
-    if (this._chevron.open)
+    if (this._chevron.open) {
       this._panel.hidePopup();
-    else {
+    } else {
       let doc = aEvent.target.ownerDocument;
       this._panel.hidden = false;
+      let contextMenu = doc.getElementById(this._panel.getAttribute("context"));
+      gELS.addSystemEventListener(contextMenu, 'command', this, true);
       let anchor = doc.getAnonymousElementByAttribute(this._chevron, "class", "toolbarbutton-icon");
       this._panel.openPopup(anchor || this._chevron, "bottomcenter topright");
     }
@@ -3444,6 +3475,9 @@ OverflowableToolbar.prototype = {
 
   _onPanelHiding: function(aEvent) {
     this._chevron.open = false;
+    let doc = aEvent.target.ownerDocument;
+    let contextMenu = doc.getElementById(this._panel.getAttribute("context"));
+    gELS.removeSystemEventListener(contextMenu, 'command', this, true);
   },
 
   onOverflow: function(aEvent) {
