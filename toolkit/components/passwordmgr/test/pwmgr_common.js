@@ -117,9 +117,9 @@ function doKey(aKey, modifier) {
         modifier = null;
 
     // Window utils for sending fake sey events.
-    var wutils = window.QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor).
+    var wutils = SpecialPowers.wrap(window).
+                          QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor).
                           getInterface(SpecialPowers.Ci.nsIDOMWindowUtils);
-    wutils = SpecialPowers.wrap(wutils);
 
     if (wutils.sendKeyEvent("keydown",  key, 0, modifier)) {
       wutils.sendKeyEvent("keypress", key, 0, modifier);
