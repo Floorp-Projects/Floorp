@@ -49,7 +49,8 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
                                      ErrorResult& aRv,
                                      ExceptionHandling aExceptionHandling,
-                                     JSCompartment* aCompartment)
+                                     JSCompartment* aCompartment,
+                                     bool aIsJSImplementedWebIDL)
   : mCx(nullptr)
   , mCompartment(aCompartment)
   , mErrorResult(aRv)
@@ -59,6 +60,14 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
   if (mIsMainThread) {
     nsContentUtils::EnterMicroTask();
   }
+
+  // Compute the caller's subject principal (if necessary) early, before we
+  // do anything that might perturb the relevant state.
+  nsIPrincipal* webIDLCallerPrincipal = nullptr;
+  if (aIsJSImplementedWebIDL) {
+    webIDLCallerPrincipal = nsContentUtils::GetSubjectPrincipal();
+  }
+
   // We need to produce a useful JSContext here.  Ideally one that the callback
   // is in some sense associated with, so that we can sort of treat it as a
   // "script entry point".  Though once we actually have script entry points,
@@ -112,6 +121,7 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
     }
 
     mAutoEntryScript.construct(globalObject, mIsMainThread, cx);
+    mAutoEntryScript.ref().SetWebIDLCallerPrincipal(webIDLCallerPrincipal);
     if (aCallback->IncumbentGlobalOrNull()) {
       mAutoIncumbentScript.construct(aCallback->IncumbentGlobalOrNull());
     }
