@@ -71,7 +71,7 @@ private:
 /*
  * A class that represents a new script entry point.
  */
-class AutoEntryScript {
+class AutoEntryScript : protected ScriptSettingsStackEntry {
 public:
   AutoEntryScript(nsIGlobalObject* aGlobalObject,
                   bool aIsMainThread = NS_IsMainThread(),
@@ -81,7 +81,6 @@ public:
 
 private:
   dom::ScriptSettingsStack& mStack;
-  dom::ScriptSettingsStackEntry mEntry;
   mozilla::Maybe<AutoCxPusher> mCxPusher;
   mozilla::Maybe<JSAutoCompartment> mAc; // This can de-Maybe-fy when mCxPusher
                                          // goes away.
@@ -90,13 +89,12 @@ private:
 /*
  * A class that can be used to force a particular incumbent script on the stack.
  */
-class AutoIncumbentScript {
+class AutoIncumbentScript : protected ScriptSettingsStackEntry {
 public:
   AutoIncumbentScript(nsIGlobalObject* aGlobalObject);
   ~AutoIncumbentScript();
 private:
   dom::ScriptSettingsStack& mStack;
-  dom::ScriptSettingsStackEntry mEntry;
   JS::AutoHideScriptedCaller mCallerOverride;
 };
 
