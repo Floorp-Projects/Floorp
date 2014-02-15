@@ -84,6 +84,7 @@ class nsIDOMCrypto;
 class nsIDOMOfflineResourceList;
 class nsIScrollableFrame;
 class nsIControllers;
+class nsIJSID;
 class nsIScriptContext;
 class nsIScriptTimeoutHandler;
 class nsIWebBrowserChrome;
@@ -999,6 +1000,9 @@ public:
   JS::Value GetReturnValue(JSContext* aCx, mozilla::ErrorResult& aError);
   void SetReturnValue(JSContext* aCx, JS::Handle<JS::Value> aReturnValue,
                       mozilla::ErrorResult& aError);
+
+  JS::Value GetInterface(JSContext* aCx, nsIJSID* aIID,
+                         mozilla::ErrorResult& aError);
 
 protected:
   // Array of idle observers that are notified of idle events.
