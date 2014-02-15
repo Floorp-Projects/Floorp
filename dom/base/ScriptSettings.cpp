@@ -158,8 +158,8 @@ GetIncumbentGlobal()
 AutoEntryScript::AutoEntryScript(nsIGlobalObject* aGlobalObject,
                                  bool aIsMainThread,
                                  JSContext* aCx)
-  : mStack(ScriptSettingsStack::Ref())
-  , mEntry(aGlobalObject, /* aCandidate = */ true)
+  : ScriptSettingsStackEntry(aGlobalObject, /* aCandidate = */ true)
+  , mStack(ScriptSettingsStack::Ref())
 {
   MOZ_ASSERT(aGlobalObject);
   if (!aCx) {
@@ -180,26 +180,26 @@ AutoEntryScript::AutoEntryScript(nsIGlobalObject* aGlobalObject,
     mCxPusher.construct(aCx);
   }
   mAc.construct(aCx, aGlobalObject->GetGlobalJSObject());
-  mStack.Push(&mEntry);
+  mStack.Push(this);
 }
 
 AutoEntryScript::~AutoEntryScript()
 {
-  MOZ_ASSERT(mStack.Incumbent() == &mEntry);
+  MOZ_ASSERT(mStack.Incumbent() == this);
   mStack.Pop();
 }
 
 AutoIncumbentScript::AutoIncumbentScript(nsIGlobalObject* aGlobalObject)
-  : mStack(ScriptSettingsStack::Ref())
-  , mEntry(aGlobalObject, /* aCandidate = */ false)
+  : ScriptSettingsStackEntry(aGlobalObject, /* aCandidate = */ false)
+  , mStack(ScriptSettingsStack::Ref())
   , mCallerOverride(nsContentUtils::GetCurrentJSContextForThread())
 {
-  mStack.Push(&mEntry);
+  mStack.Push(this);
 }
 
 AutoIncumbentScript::~AutoIncumbentScript()
 {
-  MOZ_ASSERT(mStack.Incumbent() == &mEntry);
+  MOZ_ASSERT(mStack.Incumbent() == this);
   mStack.Pop();
 }
 
