@@ -6265,15 +6265,6 @@ JS_DecodeInterpretedFunction(JSContext *cx, const void *data, uint32_t length,
     return funobj;
 }
 
-JS_PUBLIC_API(JSObject *)
-JS_GetScriptedGlobal(JSContext *cx)
-{
-    ScriptFrameIter i(cx);
-    if (i.done())
-        return cx->global();
-    return &i.scopeChain()->global();
-}
-
 JS_PUBLIC_API(bool)
 JS_PreventExtensions(JSContext *cx, JS::HandleObject obj)
 {
