@@ -57,6 +57,14 @@ nsIGlobalObject* GetIncumbentGlobal();
 //   Components.utils.
 nsIPrincipal* GetWebIDLCallerPrincipal();
 
+// This may be used by callers that know that their incumbent global is non-
+// null (i.e. they know there have been no System Caller pushes since the
+// inner-most script execution).
+inline JSObject& IncumbentJSGlobal()
+{
+  return *GetIncumbentGlobal()->GetGlobalJSObject();
+}
+
 class ScriptSettingsStack;
 struct ScriptSettingsStackEntry {
   nsCOMPtr<nsIGlobalObject> mGlobalObject;
