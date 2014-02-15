@@ -234,6 +234,18 @@ public:
     static void FreeZoneCache(JS::Zone *zone);
     static void ClearZoneCache(JS::Zone *zone);
 
+    static MOZ_ALWAYS_INLINE bool IsLiteral(JSString *str)
+    {
+        return JS_IsExternalString(str) &&
+               JS_GetExternalStringFinalizer(str) == &sLiteralFinalizer;
+    }
+
+    static MOZ_ALWAYS_INLINE bool IsDOMString(JSString *str)
+    {
+        return JS_IsExternalString(str) &&
+               JS_GetExternalStringFinalizer(str) == &sDOMStringFinalizer;
+    }
+
 private:
     static const JSStringFinalizer sLiteralFinalizer, sDOMStringFinalizer;
 

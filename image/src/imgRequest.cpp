@@ -27,6 +27,7 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsContentUtils.h"
 
 #include "nsICacheEntry.h"
 
@@ -600,8 +601,7 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
   /* Get our principal */
   nsCOMPtr<nsIChannel> chan(do_QueryInterface(aRequest));
   if (chan) {
-    nsCOMPtr<nsIScriptSecurityManager> secMan =
-      do_GetService("@mozilla.org/scriptsecuritymanager;1");
+    nsCOMPtr<nsIScriptSecurityManager> secMan = nsContentUtils::GetSecurityManager();
     if (secMan) {
       nsresult rv = secMan->GetChannelPrincipal(chan,
                                                 getter_AddRefs(mPrincipal));

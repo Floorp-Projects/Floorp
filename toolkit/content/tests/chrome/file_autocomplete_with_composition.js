@@ -131,7 +131,7 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
             "caret": { "start": 2, "length": 0 }
           }, aWindow);
         synthesizeComposition({ type: "compositionend", data: "Mo" }, aWindow);
-        synthesizeKey("VK_ENTER", { type: "keyup" }, aWindow);
+        synthesizeKey("VK_RETURN", { type: "keyup" }, aWindow);
       }, popup: true, value: "Mo", searchString: "Mo"
     },
     // If composition starts when popup is shown, the compositionstart event
@@ -184,7 +184,7 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
             "caret": { "start": 2, "length": 0 }
           });
         synthesizeComposition({ type: "compositionend", data: "zi" }, aWindow);
-        synthesizeKey("VK_ENTER", { type: "keyup" }, aWindow);
+        synthesizeKey("VK_RETURN", { type: "keyup" }, aWindow);
       }, popup: true, value: "Mozi", searchString: "Mozi"
     },
     // If composition is cancelled, the value shouldn't be changed.
@@ -614,7 +614,7 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
             "caret": { "start": 2, "length": 0 }
           }, aWindow);
         synthesizeComposition({ type: "compositionend", data: "Mo" }, aWindow);
-        synthesizeKey("VK_ENTER", { type: "keyup" }, aWindow);
+        synthesizeKey("VK_RETURN", { type: "keyup" }, aWindow);
       }, popup: true, value: "Mozilla", searchString: "Mo"
     },
     // House keeping...

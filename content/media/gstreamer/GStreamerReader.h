@@ -154,7 +154,10 @@ private:
 
   /* Called at end of stream, when decoding has finished */
   static void EosCb(GstAppSink* aSink, gpointer aUserData);
-  void Eos();
+  /* Notifies that a sink will no longer receive any more data. If nullptr
+   * is passed to this, we'll assume all streams have reached EOS (for example
+   * an error has occurred). */
+  void Eos(GstAppSink* aSink = nullptr);
 
   /* Called when an element is added inside playbin. We use it to find the
    * decodebin instance.
@@ -221,7 +224,8 @@ private:
   /* bool used to signal when gst has detected the end of stream and
    * DecodeAudioData and DecodeVideoFrame should not expect any more data
    */
-  bool mReachedEos;
+  bool mReachedAudioEos;
+  bool mReachedVideoEos;
 #if GST_VERSION_MAJOR >= 1
   bool mConfigureAlignment;
 #endif

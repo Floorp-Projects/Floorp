@@ -1549,10 +1549,8 @@ function sendKeysToElement(msg) {
           keyCode = "VK_CLEAR";
           break;
         case '\uE006':
-          keyCode = "VK_RETURN";
-          break;
         case '\uE007':
-          keyCode = "VK_ENTER";
+          keyCode = "VK_RETURN";
           break;
         case '\uE008':
           keyCode = "VK_SHIFT";

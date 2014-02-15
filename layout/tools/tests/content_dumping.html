@@ -61,7 +61,7 @@ function DumpWebShells()
 
 function InputKey(inEvent)
 {
-  if (inEvent.keyCode == KeyEvent.DOM_VK_ENTER || inEvent.keyCode == KeyEvent.DOM_VK_RETURN)
+  if (inEvent.keyCode == KeyEvent.DOM_VK_RETURN)
   {
     var pageFrame = window.frames.pageframe;
     pageFrame.location.href = document.dumpform.urlfield.value;

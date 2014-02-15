@@ -1026,10 +1026,7 @@ LayerManager::StartFrameTimeRecording(int32_t aBufferSize)
     mRecording.mIsPaused = false;
 
     if (!mRecording.mIntervals.Length()) { // Initialize recording buffers
-      if (!mRecording.mIntervals.SetLength(aBufferSize)) {
-        mRecording.mIsPaused = true; // OOM
-        mRecording.mIntervals.Clear();
-      }
+      mRecording.mIntervals.SetLength(aBufferSize);
     }
 
     // After being paused, recent values got invalid. Update them to now.
@@ -1085,11 +1082,12 @@ LayerManager::StopFrameTimeRecording(uint32_t         aStartIndex,
     length = 0;
   }
 
-  // Set length in advance to avoid possibly repeated reallocations (and OOM checks).
-  if (!length || !aFrameIntervals.SetLength(length)) {
+  if (!length) {
     aFrameIntervals.Clear();
-    return; // empty recording or OOM, return empty arrays.
+    return; // empty recording, return empty arrays.
   }
+  // Set length in advance to avoid possibly repeated reallocations
+  aFrameIntervals.SetLength(length);
 
   uint32_t cyclicPos = aStartIndex % bufferSize;
   for (uint32_t i = 0; i < length; i++, cyclicPos++) {

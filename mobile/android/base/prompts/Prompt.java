@@ -160,18 +160,25 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
 
     /* Adds to a result value from the lists that can be shown in dialogs.
      *  Will set the selected value(s) to the button attribute of the
-     *  object that's passed in. If this is a multi-select dialog, can set
-     *  the button attribute to an array.
+     *  object that's passed in. If this is a multi-select dialog, sets a
+     *  selected attribute to an array of booleans.
      */
     private void addListResult(final JSONObject result, int which) {
         try {
             if (mSelected != null) {
                 JSONArray selected = new JSONArray();
                 for (int i = 0; i < mSelected.length; i++) {
-                    selected.put(mSelected[i]);
+                    if (mSelected[i]) {
+                        selected.put(i);
+                    }
                 }
-                result.put("button", selected);
+                result.put("list", selected);
             } else {
+                // Mirror the selected array from multi choice for consistency.
+                JSONArray selected = new JSONArray();
+                selected.put(which);
+                result.put("list", selected);
+                // Make the button be the index of the select item.
                 result.put("button", which);
             }
         } catch(JSONException ex) { }
@@ -212,12 +219,12 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
         JSONObject ret = new JSONObject();
         try {
             ListView list = mDialog.getListView();
+            addButtonResult(ret, which);
+            addInputValues(ret);
+
             if (list != null || mSelected != null) {
                 addListResult(ret, which);
-            } else {
-                addButtonResult(ret, which);
             }
-            addInputValues(ret);
         } catch(Exception ex) {
             Log.i(LOGTAG, "Error building return: " + ex);
         }

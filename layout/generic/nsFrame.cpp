@@ -1022,7 +1022,7 @@ nsIFrame::Preserves3DChildren() const
 {
   const nsStyleDisplay* disp = StyleDisplay();
   if (disp->mTransformStyle != NS_STYLE_TRANSFORM_STYLE_PRESERVE_3D ||
-      !disp->HasTransform(this)) {
+      !IsFrameOfType(nsIFrame::eSupportsCSSTransforms)) {
     return false;
   }
 
@@ -4955,16 +4955,10 @@ nsIFrame::InvalidateLayer(uint32_t aDisplayItemKey,
   return layer;
 }
 
-/**
- * @param aAnyOutlineOrEffects set to true if this frame has any
- * outline, SVG effects or box shadows that mean we need to invalidate
- * the whole overflow area if the frame's size changes.
- */
 static nsRect
-ComputeOutlineAndEffectsRect(nsIFrame* aFrame,
-                             const nsRect& aOverflowRect,
-                             const nsSize& aNewSize,
-                             bool aStoreRectProperties) {
+ComputeEffectsRect(nsIFrame* aFrame, const nsRect& aOverflowRect,
+                   const nsSize& aNewSize)
+{
   nsRect r = aOverflowRect;
 
   if (aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT) {
@@ -4972,10 +4966,8 @@ ComputeOutlineAndEffectsRect(nsIFrame* aFrame,
     // TODO: We could also take account of clipPath and mask to reduce the
     // visual overflow, but that's not essential.
     if (aFrame->StyleSVGReset()->HasFilters()) {
-      if (aStoreRectProperties) {
-        aFrame->Properties().
-          Set(nsIFrame::PreEffectsBBoxProperty(), new nsRect(r));
-      }
+      aFrame->Properties().
+        Set(nsIFrame::PreEffectsBBoxProperty(), new nsRect(r));
       r = nsSVGUtils::GetPostFilterVisualOverflowRect(aFrame, aOverflowRect);
     }
     return r;
@@ -4991,10 +4983,8 @@ ComputeOutlineAndEffectsRect(nsIFrame* aFrame,
     DebugOnly<bool> result = outline->GetOutlineWidth(width);
     NS_ASSERTION(result, "GetOutlineWidth had no cached outline width");
     if (width > 0) {
-      if (aStoreRectProperties) {
-        aFrame->Properties().
-          Set(nsIFrame::OutlineInnerRectProperty(), new nsRect(r));
-      }
+      aFrame->Properties().
+        Set(nsIFrame::OutlineInnerRectProperty(), new nsRect(r));
 
       nscoord offset = outline->mOutlineOffset;
       nscoord inflateBy = std::max(width + offset, 0);
@@ -5036,10 +5026,8 @@ ComputeOutlineAndEffectsRect(nsIFrame* aFrame,
   // the frame dies.
 
   if (nsSVGIntegrationUtils::UsingEffectsForFrame(aFrame)) {
-    if (aStoreRectProperties) {
-      aFrame->Properties().
-        Set(nsIFrame::PreEffectsBBoxProperty(), new nsRect(r));
-    }
+    aFrame->Properties().
+      Set(nsIFrame::PreEffectsBBoxProperty(), new nsRect(r));
     r = nsSVGIntegrationUtils::ComputePostEffectsVisualOverflowRect(aFrame, r);
   }
 
@@ -5145,11 +5133,18 @@ nsIFrame::GetPreEffectsVisualOverflowRect() const
   return r ? *r : GetVisualOverflowRectRelativeToSelf();
 }
 
+inline static bool
+FrameMaintainsOverflow(nsIFrame* aFrame)
+{
+  return (aFrame->GetStateBits() &
+          (NS_FRAME_SVG_LAYOUT | NS_FRAME_IS_NONDISPLAY)) !=
+         (NS_FRAME_SVG_LAYOUT | NS_FRAME_IS_NONDISPLAY);
+}
+
 /* virtual */ bool
 nsFrame::UpdateOverflow()
 {
-  MOZ_ASSERT(!(mState & NS_FRAME_SVG_LAYOUT) ||
-             !(mState & NS_FRAME_IS_NONDISPLAY),
+  MOZ_ASSERT(FrameMaintainsOverflow(this),
              "Non-display SVG do not maintain visual overflow rects");
 
   nsRect rect(nsPoint(0, 0), GetSize());
@@ -6863,8 +6858,7 @@ bool
 nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
                                  nsSize aNewSize, nsSize* aOldSize)
 {
-  NS_ASSERTION(!((GetStateBits() & NS_FRAME_SVG_LAYOUT) &&
-                 (GetStateBits() & NS_FRAME_IS_NONDISPLAY)),
+  NS_ASSERTION(FrameMaintainsOverflow(this),
                "Don't call - overflow rects not maintained on these SVG frames");
 
   nsRect bounds(nsPoint(0, 0), aNewSize);
@@ -6941,8 +6935,7 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
 
   // Nothing in here should affect scrollable overflow.
   aOverflowAreas.VisualOverflow() =
-    ComputeOutlineAndEffectsRect(this, aOverflowAreas.VisualOverflow(), 
-                                 aNewSize, true);
+    ComputeEffectsRect(this, aOverflowAreas.VisualOverflow(), aNewSize);
 
   // Absolute position clipping
   nsRect clipPropClipRect;
@@ -7010,8 +7003,7 @@ nsIFrame::RecomputePerspectiveChildrenOverflow(const nsStyleContext* aStartStyle
     nsFrameList::Enumerator childFrames(lists.CurrentList());
     for (; !childFrames.AtEnd(); childFrames.Next()) {
       nsIFrame* child = childFrames.get();
-      if ((child->GetStateBits() & NS_FRAME_SVG_LAYOUT) &&
-          (child->GetStateBits() & NS_FRAME_IS_NONDISPLAY)) {
+      if (!FrameMaintainsOverflow(child)) {
         continue; // frame does not maintain overflow rects
       }
       if (child->HasPerspective()) {
@@ -7060,8 +7052,7 @@ RecomputePreserve3DChildrenOverflow(nsIFrame* aFrame, const nsRect* aBounds)
     nsFrameList::Enumerator childFrames(lists.CurrentList());
     for (; !childFrames.AtEnd(); childFrames.Next()) {
       nsIFrame* child = childFrames.get();
-      if ((child->GetStateBits() & NS_FRAME_SVG_LAYOUT) &&
-          (child->GetStateBits() & NS_FRAME_IS_NONDISPLAY)) {
+      if (!FrameMaintainsOverflow(child)) {
         continue; // frame does not maintain overflow rects
       }
       if (child->Preserves3DChildren()) {
