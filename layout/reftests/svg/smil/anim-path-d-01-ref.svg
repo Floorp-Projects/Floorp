@@ -1,6 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg">
   <style type="text/css">
-    path { fill: none; stroke: blue; stroke-width: 1px; }
+    path { fill: none; stroke: blue; stroke-width: 1px;
+           shape-rendering: crispEdges; }
   </style>
 
   <path d="M10,10
