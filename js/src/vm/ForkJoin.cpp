@@ -1422,8 +1422,8 @@ ForkJoinShared::execute()
     }
 
 #ifdef DEBUG
-    Spew(SpewOps, "Completed parallel job [slices %d, threads: %d (+1), stolen: %d (work stealing:%s)]",
-         sliceTo_ - sliceFrom_,
+    Spew(SpewOps, "Completed parallel job [slices: %d, threads: %d, stolen: %d (work stealing:%s)]",
+         sliceTo_ - sliceFrom_ + 1,
          threadPool_->numWorkers(),
          threadPool_->stolenSlices(),
          threadPool_->workStealing() ? "ON" : "OFF");

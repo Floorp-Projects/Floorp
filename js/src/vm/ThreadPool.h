@@ -99,6 +99,10 @@ class ThreadPoolWorker
     static size_t offsetOfSliceBounds() {
         return offsetof(ThreadPoolWorker, sliceBounds_);
     }
+
+    static size_t offsetOfSchedulerRNGState() {
+        return offsetof(ThreadPoolWorker, schedulerRNGState_);
+    }
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -192,6 +196,18 @@ class ThreadPool : public Monitor
     ThreadPoolWorker *mainThreadWorker() { return workers_[0]; }
 
   public:
+#ifdef DEBUG
+    static size_t offsetOfStolenSlices() {
+        return offsetof(ThreadPool, stolenSlices_);
+    }
+#endif
+    static size_t offsetOfPendingSlices() {
+        return offsetof(ThreadPool, pendingSlices_);
+    }
+    static size_t offsetOfWorkers() {
+        return offsetof(ThreadPool, workers_);
+    }
+
     ThreadPool(JSRuntime *rt);
     ~ThreadPool();
 

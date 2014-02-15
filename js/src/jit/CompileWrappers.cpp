@@ -79,6 +79,12 @@ CompileRuntime::addressOfInterruptPar()
 }
 #endif
 
+const void *
+CompileRuntime::addressOfThreadPool()
+{
+    return &runtime()->threadPool;
+}
+
 const JitRuntime *
 CompileRuntime::jitRuntime()
 {

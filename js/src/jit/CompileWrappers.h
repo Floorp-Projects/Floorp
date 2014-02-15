@@ -56,6 +56,8 @@ class CompileRuntime
     const void *addressOfInterruptPar();
 #endif
 
+    const void *addressOfThreadPool();
+
     const JitRuntime *jitRuntime();
 
     // Compilation does not occur off thread when the SPS profiler is enabled.

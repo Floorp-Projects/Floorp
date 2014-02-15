@@ -88,6 +88,7 @@ class LIRGeneratorARM : public LIRGeneratorShared
     bool visitAsmJSStoreHeap(MAsmJSStoreHeap *ins);
     bool visitAsmJSLoadFuncPtr(MAsmJSLoadFuncPtr *ins);
     bool visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic *ins);
+    bool visitForkJoinGetSlice(MForkJoinGetSlice *ins);
 
     static bool allowFloat32Optimizations() {
         return true;
