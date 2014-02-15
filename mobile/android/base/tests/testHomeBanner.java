@@ -16,10 +16,26 @@ public class testHomeBanner extends UITest {
     public void testHomeBanner() {
         GeckoHelper.blockForReady();
 
-        // Make sure the banner is not visible.
+        // Make sure the banner is not visible to start.
         mAboutHome.assertVisible()
                   .assertBannerNotVisible();
 
+        // These test methods depend on being run in this order.
+        addBannerTest();
+        removeBannerTest();
+
+        // Make sure to test dismissing the banner after everything else, since dismissing
+        // the banner will prevent it from showing up again.
+        dismissBannerTest();
+    }
+
+    /**
+     * Adds a banner message, verifies that it appears when it should, and verifies that
+     * onshown/onclick handlers are called in JS.
+     *
+     * Note: This test does not remove the message after it is done.
+     */
+    private void addBannerTest() {
         addBannerMessage();
 
         // Load about:home again, and make sure the onshown handler is called.
@@ -42,14 +58,30 @@ public class testHomeBanner extends UITest {
         // view is not present, so we need to use findViewById in this case.
         final View banner = getActivity().findViewById(R.id.home_banner);
         assertTrue("The HomeBanner is not visible", banner == null || banner.getVisibility() != View.VISIBLE);
+    }
 
+
+    /**
+     * Removes a banner message, and verifies that it no longer appears on about:home.
+     *
+     * Note: This test expects for a message to have been added before it runs.
+     */
+    private void removeBannerTest() {
         removeBannerMessage();
 
         // Verify that the banner no longer appears.
         NavigationHelper.enterAndLoadUrl("about:home");
         mAboutHome.assertVisible()
                   .assertBannerNotVisible();
+    }
 
+    /**
+     * Adds a banner message, verifies that its ondismiss handler is called in JS,
+     * and verifies that the banner is no longer shown after it is dismissed.
+     *
+     * Note: This test does not remove the message after it is done.
+     */
+    private void dismissBannerTest() {
         // Add back the banner message to test the dismiss functionality.
         addBannerMessage();
 
@@ -57,7 +89,7 @@ public class testHomeBanner extends UITest {
         mAboutHome.assertVisible();
 
         // Test to make sure the ondismiss handler is called when the close button is clicked.
-        eventExpecter = getActions().expectGeckoEvent("TestHomeBanner:MessageDismissed");
+        final Actions.EventExpecter eventExpecter = getActions().expectGeckoEvent("TestHomeBanner:MessageDismissed");
         mAboutHome.dismissBanner();
         eventExpecter.blockForEvent();
 
