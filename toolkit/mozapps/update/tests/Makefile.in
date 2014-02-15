@@ -65,12 +65,6 @@ INI_TEST_FILES = \
   TestAUSReadStrings3.ini \
   $(NULL)
 
-LOCAL_INCLUDES += \
-  -I$(srcdir) \
-  -I$(topsrcdir)/toolkit/mozapps/update \
-  -I$(topsrcdir)/toolkit/mozapps/update/common \
-  $(NULL)
-
 MOZ_WINCONSOLE = 1
 
 ifeq ($(OS_ARCH),WINNT)
