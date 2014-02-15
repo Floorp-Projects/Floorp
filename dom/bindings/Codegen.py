@@ -11289,8 +11289,7 @@ class CallbackMember(CGNativeMember):
         if self.rethrowContentException:
             # getArgs doesn't add the aExceptionHandling argument but does add
             # aCompartment for us.
-            callSetup += ", eRethrowContentExceptions, aCompartment, /* aIsJSImplementedWebIDL = */ "
-            callSetup += toStringBool(isJSImplementedDescriptor(self.descriptorProvider))
+            callSetup += ", eRethrowContentExceptions, aCompartment"
         else:
             callSetup += ", aExceptionHandling"
         callSetup += ");"

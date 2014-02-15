@@ -31,15 +31,10 @@ public:
 
   nsIScriptContext* GetScriptContext() { return mScx; }
 
-  // Returns true if this AutoCxPusher performed the push that is currently at
-  // the top of the cx stack.
-  bool IsStackTop();
-
 private:
   mozilla::Maybe<JSAutoRequest> mAutoRequest;
   mozilla::Maybe<JSAutoCompartment> mAutoCompartment;
   nsCOMPtr<nsIScriptContext> mScx;
-  uint32_t mStackDepthAfterPush;
 #ifdef DEBUG
   JSContext* mPushedContext;
   unsigned mCompartmentDepthOnEntry;
