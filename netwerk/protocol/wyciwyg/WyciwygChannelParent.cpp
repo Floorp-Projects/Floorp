@@ -112,8 +112,8 @@ WyciwygChannelParent::SetupAppData(const IPC::SerializedLoadContext& loadContext
                                                             loadContext,
                                                             mLoadContext);
   if (error) {
-    printf_stderr(nsPrintfCString("WyciwygChannelParent::SetupAppData: FATAL ERROR: %s\n",
-                                  error).get());
+    printf_stderr("WyciwygChannelParent::SetupAppData: FATAL ERROR: %s\n",
+                  error);
     return false;
   }
 
