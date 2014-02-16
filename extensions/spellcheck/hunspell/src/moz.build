@@ -33,3 +33,7 @@ LOCAL_INCLUDES += [
     '/extensions/spellcheck/src',
 ]
 
+LOCAL_INCLUDES += [
+    '/editor/libeditor/base',
+]
+
