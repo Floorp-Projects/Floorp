@@ -79,6 +79,7 @@ ImageHost::Composite(EffectChain& aEffectChain,
 
   // Make sure the front buffer has a compositor
   mFrontBuffer->SetCompositor(GetCompositor());
+  mFrontBuffer->SetCompositableBackendSpecificData(GetCompositableBackendSpecificData());
 
   AutoLockTextureHost autoLock(mFrontBuffer);
   if (autoLock.Failed()) {
