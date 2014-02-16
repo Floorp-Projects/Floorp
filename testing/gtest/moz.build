@@ -67,3 +67,10 @@ LIBXUL_LIBRARY = True
 
 EXPORT_LIBRARY = True
 
+LOCAL_INCLUDES += [
+    'gmock',
+    'gmock/include',
+    'gtest',
+    'gtest/include',
+]
+

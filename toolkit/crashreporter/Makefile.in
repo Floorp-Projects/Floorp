@@ -9,8 +9,6 @@ TARGET_LOCAL_INCLUDES = \
   $(NULL)
 endif
 
-LOCAL_INCLUDES += -I$(srcdir)/google-breakpad/src
-
 include $(topsrcdir)/config/rules.mk
 
 check::
