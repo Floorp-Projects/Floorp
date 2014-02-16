@@ -22,7 +22,6 @@
 #include "GrallocImages.h"
 #endif
 #include "gfx2DGlue.h"
-#include "mozilla/gfx/2D.h"
 
 #ifdef XP_MACOSX
 #include "mozilla/gfx/QuartzSupport.h"
@@ -39,12 +38,15 @@
 
 using namespace mozilla::ipc;
 using namespace android;
-using namespace mozilla::gfx;
+using mozilla::gfx::DataSourceSurface;
+using mozilla::gfx::SourceSurface;
 
 
 namespace mozilla {
 namespace layers {
 
+class DataSourceSurface;
+class SourceSurface;
 
 Atomic<int32_t> Image::sSerialCounter(0);
 
@@ -707,46 +709,6 @@ RemoteBitmapImage::GetAsSourceSurface()
   }
 
   return newSurf;
-}
-
-CairoImage::CairoImage()
-  : Image(nullptr, ImageFormat::CAIRO_SURFACE)
-{}
-
-CairoImage::~CairoImage()
-{
-}
-
-TextureClient*
-CairoImage::GetTextureClient(CompositableClient *aClient)
-{
-  CompositableForwarder* forwarder = aClient->GetForwarder();
-  RefPtr<TextureClient> textureClient = mTextureClients.Get(forwarder->GetSerial());
-  if (textureClient) {
-    return textureClient;
-  }
-
-  RefPtr<SourceSurface> surface = GetAsSourceSurface();
-  MOZ_ASSERT(surface);
-
-  textureClient = aClient->CreateTextureClientForDrawing(surface->GetFormat(),
-                                                         TEXTURE_FLAGS_DEFAULT);
-  MOZ_ASSERT(textureClient->AsTextureClientDrawTarget());
-  if (!textureClient->AsTextureClientDrawTarget()->AllocateForSurface(surface->GetSize()) ||
-      !textureClient->Lock(OPEN_WRITE_ONLY)) {
-    return nullptr;
-  }
-
-  {
-    // We must not keep a reference to the DrawTarget after it has been unlocked.
-    RefPtr<DrawTarget> dt = textureClient->AsTextureClientDrawTarget()->GetAsDrawTarget();
-    dt->CopySurface(surface, IntRect(IntPoint(), surface->GetSize()), IntPoint());
-  }
-
-  textureClient->Unlock();
-
-  mTextureClients.Put(forwarder->GetSerial(), textureClient);
-  return textureClient;
 }
 
 } // namespace

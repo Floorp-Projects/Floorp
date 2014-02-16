@@ -265,6 +265,7 @@ public:
         aLayer == mLayer ||
         aFlags & FORCE_DETACH) {
       SetLayer(nullptr);
+      SetCompositor(nullptr);
       mAttached = false;
       mKeepAttached = false;
       if (mBackendData) {

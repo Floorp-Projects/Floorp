@@ -48,8 +48,7 @@ class CompositableForwarder : public ISurfaceAllocator
 public:
 
   CompositableForwarder()
-    : mSerial(++sSerialCounter)
-    , mMultiProcess(false)
+    : mMultiProcess(false)
   {}
 
   /**
@@ -247,14 +246,10 @@ public:
     return mTextureFactoryIdentifier;
   }
 
-  int32_t GetSerial() { return mSerial; }
-
 protected:
   TextureFactoryIdentifier mTextureFactoryIdentifier;
-  nsTArray<RefPtr<TextureClient> > mTexturesToRemove;
-  const int32_t mSerial;
-  static mozilla::Atomic<int32_t> sSerialCounter;
   bool mMultiProcess;
+  nsTArray<RefPtr<TextureClient> > mTexturesToRemove;
 };
 
 } // namespace
