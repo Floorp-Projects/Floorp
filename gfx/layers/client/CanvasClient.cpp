@@ -133,7 +133,7 @@ CanvasClientSurfaceStream::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
     SharedSurface_Gralloc* grallocSurf = SharedSurface_Gralloc::Cast(surf);
 
     GrallocTextureClientOGL* grallocTextureClient =
-      static_cast<GrallocTextureClientOGL*>(grallocSurf->GetTextureClient());
+      static_cast<GrallocTextureClientOGL*>(grallocSurf->GetTextureClient(this));
 
     // If IPDLActor is null means this TextureClient didn't AddTextureClient yet
     if (!grallocTextureClient->GetIPDLActor()) {
