@@ -136,6 +136,11 @@ CustomizeMode.prototype = {
 
     this._handler.isEnteringCustomizeMode = true;
 
+    // Always disable the reset button at the start of customize mode, it'll be re-enabled
+    // if necessary when we finish entering:
+    let resetButton = this.document.getElementById("customization-reset-button");
+    resetButton.setAttribute("disabled", "true");
+
     Task.spawn(function() {
       // We shouldn't start customize mode until after browser-delayed-startup has finished:
       if (!this.window.gBrowserInit.delayedStartupFinished) {
@@ -312,6 +317,11 @@ CustomizeMode.prototype = {
     // during the transition for increased perf.
     let panelContents = window.PanelUI.contents;
     panelContents.setAttribute("customize-transitioning", "true");
+
+    // Disable the reset and undo reset buttons while transitioning:
+    let resetButton = this.document.getElementById("customization-reset-button");
+    let undoResetButton = this.document.getElementById("customization-undo-reset-button");
+    undoResetButton.hidden = resetButton.disabled = true;
 
     this._transitioning = true;
 
