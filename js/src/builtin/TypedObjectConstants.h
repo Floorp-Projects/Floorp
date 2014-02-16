@@ -18,50 +18,29 @@
 // working with, even though this is mildly wasteful.
 
 // Slots on all type objects
-#define JS_DESCR_SLOT_TYPE_REPR          0  // Associated Type Representation
-#define JS_DESCR_SLOT_ALIGNMENT          1  // Alignment in bytes
-#define JS_DESCR_SLOT_SIZE               2  // Size in bytes, if sized, else 0
-#define JS_DESCR_SLOT_PROTO              3  // Prototype for instances, if any
+#define JS_DESCR_SLOT_KIND               0  // Atomized string representation
+#define JS_DESCR_SLOT_STRING_REPR        1  // Atomized string representation
+#define JS_DESCR_SLOT_ALIGNMENT          2  // Alignment in bytes
+#define JS_DESCR_SLOT_SIZE               3  // Size in bytes, if sized, else 0
+#define JS_DESCR_SLOT_OPAQUE             4  // Atomized string representation
+#define JS_DESCR_SLOT_PROTO              5  // Prototype for instances, if any
 
 // Slots on scalars, references, and x4s
-#define JS_DESCR_SLOT_TYPE               4  // Type code
+#define JS_DESCR_SLOT_TYPE               6  // Type code
 
 // Slots on all array descriptors
-#define JS_DESCR_SLOT_ARRAY_ELEM_TYPE    4
+#define JS_DESCR_SLOT_ARRAY_ELEM_TYPE    6
 
 // Slots on sized array descriptors
-#define JS_DESCR_SLOT_SIZED_ARRAY_LENGTH 5
+#define JS_DESCR_SLOT_SIZED_ARRAY_LENGTH 7
 
 // Slots on struct type objects
-#define JS_DESCR_SLOT_STRUCT_FIELD_NAMES 4
-#define JS_DESCR_SLOT_STRUCT_FIELD_TYPES 5
-#define JS_DESCR_SLOT_STRUCT_FIELD_OFFSETS 6
+#define JS_DESCR_SLOT_STRUCT_FIELD_NAMES 6
+#define JS_DESCR_SLOT_STRUCT_FIELD_TYPES 7
+#define JS_DESCR_SLOT_STRUCT_FIELD_OFFSETS 8
 
 // Maximum number of slots for any descriptor
-#define JS_DESCR_SLOTS                   7
-
-///////////////////////////////////////////////////////////////////////////
-// Slots for type representation objects
-//
-// Some slots apply to all type representations and some are specific
-// to particular kinds of type representations. Because all type
-// representations share the same class, however, they always have the
-// same number of slots, though not all of them will be initialized or
-// used in the same way.
-
-// Slots on *all* type representations:
-#define JS_TYPEREPR_SLOT_KIND      0 // One of the `kind` constants below
-#define JS_TYPEREPR_SLOT_SIZE      1 // Size in bytes.
-#define JS_TYPEREPR_SLOT_ALIGNMENT 2 // Alignment in bytes.
-
-// Slots on sized arrays:
-#define JS_TYPEREPR_SLOT_LENGTH    3 // Length of the array
-
-// Slots on scalars, references, and X4s:
-#define JS_TYPEREPR_SLOT_TYPE      3 // One of the constants below
-
-// Maximum number of slots for any type representation
-#define JS_TYPEREPR_SLOTS          4
+#define JS_DESCR_SLOTS                   9
 
 // These constants are for use exclusively in JS code. In C++ code,
 // prefer TypeRepresentation::Scalar etc, which allows you to

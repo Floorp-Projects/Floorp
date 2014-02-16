@@ -3,23 +3,24 @@
 ///////////////////////////////////////////////////////////////////////////
 // Getters and setters for various slots.
 
-// Type repr slots
-
-#define REPR_KIND(obj)   \
-    TO_INT32(UnsafeGetReservedSlot(obj, JS_TYPEREPR_SLOT_KIND))
-
 // Type object slots
 
-#define DESCR_TYPE_REPR(obj) \
-    UnsafeGetReservedSlot(obj, JS_DESCR_SLOT_TYPE_REPR)
 #define DESCR_KIND(obj) \
-    REPR_KIND(DESCR_TYPE_REPR(obj))
+    UnsafeGetReservedSlot(obj, JS_DESCR_SLOT_KIND)
+#define DESCR_STRING_REPR(obj) \
+    UnsafeGetReservedSlot(obj, JS_DESCR_SLOT_STRING_REPR)
+#define DESCR_ALIGNMENT(obj) \
+    UnsafeGetReservedSlot(obj, JS_DESCR_SLOT_ALIGNMENT)
 #define DESCR_SIZE(obj) \
     UnsafeGetReservedSlot(obj, JS_DESCR_SLOT_SIZE)
-#define DESCR_SIZED_ARRAY_LENGTH(obj) \
-    TO_INT32(UnsafeGetReservedSlot(obj, JS_DESCR_SLOT_SIZED_ARRAY_LENGTH))
+#define DESCR_OPAQUE(obj) \
+    UnsafeGetReservedSlot(obj, JS_DESCR_SLOT_OPAQUE)
 #define DESCR_TYPE(obj)   \
     UnsafeGetReservedSlot(obj, JS_DESCR_SLOT_TYPE)
+#define DESCR_ARRAY_ELEMENT_TYPE(obj) \
+    TO_INT32(UnsafeGetReservedSlot(obj, JS_DESCR_SLOT_ARRAY_ELEM_TYPE))
+#define DESCR_SIZED_ARRAY_LENGTH(obj) \
+    TO_INT32(UnsafeGetReservedSlot(obj, JS_DESCR_SLOT_SIZED_ARRAY_LENGTH))
 #define DESCR_STRUCT_FIELD_NAMES(obj) \
     UnsafeGetReservedSlot(obj, JS_DESCR_SLOT_STRUCT_FIELD_NAMES)
 #define DESCR_STRUCT_FIELD_TYPES(obj) \
@@ -43,95 +44,10 @@
 #define HAS_PROPERTY(obj, prop) \
     callFunction(std_Object_hasOwnProperty, obj, prop)
 
-function TYPEDOBJ_TYPE_REPR(obj) {
-  // Eventually this will be a slot on typed objects
-  return DESCR_TYPE_REPR(TYPEDOBJ_TYPE_DESCR(obj));
-}
-
 ///////////////////////////////////////////////////////////////////////////
 // DescrToSource
 //
 // Converts a type descriptor to a descriptive string
-
-// toSource() for type descriptors.
-//
-// Warning: user exposed!
-function DescrToSourceMethod() {
-  if (!IsObject(this) || !ObjectIsTypeDescr(this))
-    ThrowError(JSMSG_INCOMPATIBLE_PROTO, "Type", "toSource", "value");
-
-  return DescrToSource(this);
-}
-
-function DescrToSource(descr) {
-  assert(IsObject(descr) && ObjectIsTypeDescr(descr),
-         "DescrToSource: not type descr");
-
-  switch (DESCR_KIND(descr)) {
-  case JS_TYPEREPR_SCALAR_KIND:
-    switch (DESCR_TYPE(descr)) {
-    case JS_SCALARTYPEREPR_INT8: return "int8";
-    case JS_SCALARTYPEREPR_UINT8: return "uint8";
-    case JS_SCALARTYPEREPR_UINT8_CLAMPED: return "uint8Clamped";
-    case JS_SCALARTYPEREPR_INT16: return "int16";
-    case JS_SCALARTYPEREPR_UINT16: return "uint16";
-    case JS_SCALARTYPEREPR_INT32: return "int32";
-    case JS_SCALARTYPEREPR_UINT32: return "uint32";
-    case JS_SCALARTYPEREPR_FLOAT32: return "float32";
-    case JS_SCALARTYPEREPR_FLOAT64: return "float64";
-    }
-    assert(false, "Unhandled type: " + DESCR_TYPE(descr));
-    return undefined;
-
-  case JS_TYPEREPR_REFERENCE_KIND:
-    switch (DESCR_TYPE(descr)) {
-    case JS_REFERENCETYPEREPR_ANY: return "any";
-    case JS_REFERENCETYPEREPR_OBJECT: return "Object";
-    case JS_REFERENCETYPEREPR_STRING: return "string";
-    }
-    assert(false, "Unhandled type: " + DESCR_TYPE(descr));
-    return undefined;
-
-  case JS_TYPEREPR_X4_KIND:
-    switch (DESCR_TYPE(descr)) {
-    case JS_X4TYPEREPR_FLOAT32: return "float32x4";
-    case JS_X4TYPEREPR_INT32: return "int32x4";
-    }
-    assert(false, "Unhandled type: " + DESCR_TYPE(descr));
-    return undefined;
-
-  case JS_TYPEREPR_STRUCT_KIND:
-    var result = "new StructType({";
-    var fieldNames = DESCR_STRUCT_FIELD_NAMES(descr);
-    var fieldTypes = DESCR_STRUCT_FIELD_TYPES(descr);
-    for (var i = 0; i < fieldNames.length; i++) {
-      if (i != 0)
-        result += ", ";
-
-      result += fieldNames[i];
-      result += ": ";
-      result += DescrToSource(fieldTypes[i]);
-    }
-    result += "})";
-    return result;
-
-  case JS_TYPEREPR_UNSIZED_ARRAY_KIND:
-    return "new ArrayType(" + DescrToSource(descr.elementType) + ")";
-
-  case JS_TYPEREPR_SIZED_ARRAY_KIND:
-    var result = ".array";
-    var sep = "(";
-    while (DESCR_KIND(descr) == JS_TYPEREPR_SIZED_ARRAY_KIND) {
-      result += sep + DESCR_SIZED_ARRAY_LENGTH(descr);
-      descr = descr.elementType;
-      sep = ", ";
-    }
-    return DescrToSource(descr) + result + ")";
-  }
-
-  assert(false, "Unhandled kind: " + DESCR_KIND(descr));
-  return undefined;
-}
 
 ///////////////////////////////////////////////////////////////////////////
 // TypedObjectPointer
@@ -170,7 +86,7 @@ TypedObjectPointer.fromTypedObject = function(typed) {
 
 #ifdef DEBUG
 TypedObjectPointer.prototype.toString = function() {
-  return "Ptr(" + DescrToSource(this.descr) + " @ " + this.offset + ")";
+  return "Ptr(" + DESCR_STRING_REPR(this.descr) + " @ " + this.offset + ")";
 };
 #endif
 
@@ -454,7 +370,7 @@ function SetTypedObjectValue(descr, typedObj, offset, fromValue) {
 }
 
 // Writes `fromValue` into the memory pointed at by `this`, adapting
-// it to `typeRepr` as needed. This is the most general entry point
+// it to `this.descr` as needed. This is the most general entry point
 // and works for any type.
 TypedObjectPointer.prototype.set = function(fromValue) {
   assert(TypedObjectIsAttached(this.typedObj), "set() called with unattached typedObj");
@@ -463,8 +379,7 @@ TypedObjectPointer.prototype.set = function(fromValue) {
   // representation as the destination. In that case, we can just do a
   // memcpy.
   if (IsObject(fromValue) && ObjectIsTypedObject(fromValue)) {
-    var typeRepr = DESCR_TYPE_REPR(this.descr);
-    if (!this.descr.variable && TYPEDOBJ_TYPE_REPR(fromValue) === typeRepr) {
+    if (!this.descr.variable && DescrsEquiv(this.descr, TYPEDOBJ_TYPE_DESCR(fromValue))) {
       if (!TypedObjectIsAttached(fromValue))
         ThrowError(JSMSG_TYPEDOBJECT_HANDLE_UNATTACHED);
 
@@ -513,7 +428,7 @@ TypedObjectPointer.prototype.set = function(fromValue) {
 
   ThrowError(JSMSG_CANT_CONVERT_TO,
              typeof(fromValue),
-             DescrToSource(this.descr));
+             DESCR_STRING_REPR(this.descr));
 }
 
 TypedObjectPointer.prototype.setArray = function(fromValue, length) {
@@ -609,7 +524,7 @@ TypedObjectPointer.prototype.setX4 = function(fromValue) {
   // to "adapt" fromValue, but there are no legal adaptions.
   ThrowError(JSMSG_CANT_CONVERT_TO,
              typeof(fromValue),
-             DescrToSource(this.descr));
+             DESCR_STRING_REPR(this.descr));
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -679,7 +594,7 @@ function TypeDescrEquivalent(otherDescr) {
     ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
   if (!IsObject(otherDescr) || !ObjectIsTypeDescr(otherDescr))
     ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
-  return DESCR_TYPE_REPR(this) === DESCR_TYPE_REPR(otherDescr);
+  return DescrsEquiv(this, otherDescr);
 }
 
 // TypedArray.redimension(newArrayType)
@@ -747,7 +662,7 @@ function TypedArrayRedimension(newArrayType) {
   }
 
   // Check that the element types are equivalent.
-  if (DESCR_TYPE_REPR(oldElementType) !== DESCR_TYPE_REPR(newElementType)) {
+  if (!DescrsEquiv(oldElementType, newElementType)) {
     ThrowError(JSMSG_TYPEDOBJECT_BAD_ARGS);
   }
 
@@ -789,6 +704,29 @@ function X4ToSource() {
 
 ///////////////////////////////////////////////////////////////////////////
 // Miscellaneous
+
+function DescrsEquiv(descr1, descr2) {
+  assert(IsObject(descr1) && ObjectIsTypeDescr(descr1), "descr1 not descr");
+  assert(IsObject(descr2) && ObjectIsTypeDescr(descr2), "descr2 not descr");
+
+  // Potential optimization: these two strings are guaranteed to be
+  // atoms, and hence this string comparison can just be a pointer
+  // comparison.  However, I don't think ion knows that. If this ever
+  // becomes a bottleneck, we can add a intrinsic at some point that
+  // is treated specially by Ion.  (Bug 976688)
+
+  return DESCR_STRING_REPR(descr1) === DESCR_STRING_REPR(descr2);
+}
+
+// toSource() for type descriptors.
+//
+// Warning: user exposed!
+function DescrToSource() {
+  if (!IsObject(this) || !ObjectIsTypeDescr(this))
+    ThrowError(JSMSG_INCOMPATIBLE_PROTO, "Type", "toSource", "value");
+
+  return DESCR_STRING_REPR(this);
+}
 
 // Warning: user exposed!
 function ArrayShorthand(...dims) {

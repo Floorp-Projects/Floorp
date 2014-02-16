@@ -137,7 +137,7 @@ class Float32x4Defn {
 } // namespace js
 
 const JSFunctionSpec js::Float32x4Defn::TypeDescriptorMethods[] = {
-    JS_SELF_HOSTED_FN("toSource", "DescrToSourceMethod", 0, 0),
+    JS_SELF_HOSTED_FN("toSource", "DescrToSource", 0, 0),
     JS_SELF_HOSTED_FN("array", "ArrayShorthand", 1, 0),
     JS_SELF_HOSTED_FN("equivalent", "TypeDescrEquivalent", 1, 0),
     JS_FS_END
@@ -158,7 +158,7 @@ const JSFunctionSpec js::Float32x4Defn::TypedObjectMethods[] = {
 };
 
 const JSFunctionSpec js::Int32x4Defn::TypeDescriptorMethods[] = {
-    JS_SELF_HOSTED_FN("toSource", "DescrToSourceMethod", 0, 0),
+    JS_SELF_HOSTED_FN("toSource", "DescrToSource", 0, 0),
     JS_SELF_HOSTED_FN("array", "ArrayShorthand", 1, 0),
     JS_SELF_HOSTED_FN("equivalent", "TypeDescrEquivalent", 1, 0),
     JS_FS_END,
@@ -180,17 +180,14 @@ const JSFunctionSpec js::Int32x4Defn::TypedObjectMethods[] = {
 
 template<typename T>
 static JSObject *
-CreateX4Class(JSContext *cx, Handle<GlobalObject*> global)
+CreateX4Class(JSContext *cx,
+              Handle<GlobalObject*> global,
+              HandlePropertyName stringRepr)
 {
+    const X4TypeDescr::Type type = T::type;
+
     RootedObject funcProto(cx, global->getOrCreateFunctionPrototype(cx));
     if (!funcProto)
-        return nullptr;
-
-    // Create type representation.
-
-    RootedObject typeReprObj(cx);
-    typeReprObj = X4TypeRepresentation::Create(cx, T::type);
-    if (!typeReprObj)
         return nullptr;
 
     // Create prototype property, which inherits from Object.prototype.
@@ -207,11 +204,19 @@ CreateX4Class(JSContext *cx, Handle<GlobalObject*> global)
 
     Rooted<X4TypeDescr*> x4(cx);
     x4 = NewObjectWithProto<X4TypeDescr>(cx, funcProto, global, TenuredObject);
-    if (!x4 || !InitializeCommonTypeDescriptorProperties(cx, x4, typeReprObj))
+    if (!x4)
         return nullptr;
-    x4->initReservedSlot(JS_DESCR_SLOT_TYPE_REPR, ObjectValue(*typeReprObj));
+
+    x4->initReservedSlot(JS_DESCR_SLOT_KIND, Int32Value(TypeDescr::X4));
+    x4->initReservedSlot(JS_DESCR_SLOT_STRING_REPR, StringValue(stringRepr));
+    x4->initReservedSlot(JS_DESCR_SLOT_ALIGNMENT, Int32Value(X4TypeDescr::size(type)));
+    x4->initReservedSlot(JS_DESCR_SLOT_SIZE, Int32Value(X4TypeDescr::alignment(type)));
+    x4->initReservedSlot(JS_DESCR_SLOT_OPAQUE, BooleanValue(false));
     x4->initReservedSlot(JS_DESCR_SLOT_TYPE, Int32Value(T::type));
     x4->initReservedSlot(JS_DESCR_SLOT_PROTO, ObjectValue(*proto));
+
+    if (!CreateUserSizeAndAlignmentProperties(cx, x4))
+        return nullptr;
 
     // Link constructor to prototype and install properties.
 
@@ -310,7 +315,9 @@ SIMDObject::initClass(JSContext *cx, Handle<GlobalObject *> global)
 
     // float32x4
 
-    RootedObject float32x4Object(cx, CreateX4Class<Float32x4Defn>(cx, global));
+    RootedObject float32x4Object(cx);
+    float32x4Object = CreateX4Class<Float32x4Defn>(cx, global,
+                                                   cx->names().float32x4);
     if (!float32x4Object)
         return nullptr;
 
@@ -325,7 +332,9 @@ SIMDObject::initClass(JSContext *cx, Handle<GlobalObject *> global)
 
     // int32x4
 
-    RootedObject int32x4Object(cx, CreateX4Class<Int32x4Defn>(cx, global));
+    RootedObject int32x4Object(cx);
+    int32x4Object = CreateX4Class<Int32x4Defn>(cx, global,
+                                               cx->names().int32x4);
     if (!int32x4Object)
         return nullptr;
 

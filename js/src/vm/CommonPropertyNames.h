@@ -48,7 +48,6 @@
     macro(DateTimeFormatFormatGet, DateTimeFormatFormatGet, "Intl_DateTimeFormat_format_get") \
     macro(decodeURI, decodeURI, "decodeURI") \
     macro(decodeURIComponent, decodeURIComponent, "decodeURIComponent") \
-    macro(DescrToSource, DescrToSource, "DescrToSource") \
     macro(default_, default_, "default") \
     macro(defineProperty, defineProperty, "defineProperty") \
     macro(defineGetter, defineGetter, "__defineGetter__") \
