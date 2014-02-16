@@ -245,7 +245,7 @@ GLBlitTextureImageHelper::UseBlitProgram()
             mGL->fGetShaderInfoLog(shaders[i], len, (GLint*) &len, (char*) log.BeginWriting());
             log.SetLength(len);
 
-            printf_stderr("Shader %d compilation failed:\n%s\n", log.get());
+            printf_stderr("Shader %d compilation failed:\n%s\n", i, log.get());
             return;
         }
 
