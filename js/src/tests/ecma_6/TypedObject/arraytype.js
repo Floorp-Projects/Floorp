@@ -33,7 +33,7 @@ function runTests() {
     assertEq(A.length, 10);
     assertEq(A.elementType, uint8);
     assertEq(A.byteLength, 10);
-    assertEq(A.toSource(), "uint8.array(10)");
+    assertEq(A.toSource(), "new ArrayType(uint8).dimension(10)");
 
     assertEq(A.prototype.__proto__.__proto__, ArrayType.prototype.prototype);
 
