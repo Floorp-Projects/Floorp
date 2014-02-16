@@ -10,6 +10,3 @@ ifdef MOZ_NATIVE_HUNSPELL
 CXXFLAGS += $(MOZ_HUNSPELL_CFLAGS)
 endif
 
-LOCAL_INCLUDES += \
-	-I$(topsrcdir)/editor/libeditor/base \
-	$(NULL)

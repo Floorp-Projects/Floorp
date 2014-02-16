@@ -3,8 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # This makefile just builds support for reading archives.
-LOCAL_INCLUDES += -I$(srcdir)/../src
-
 ifneq ($(OS_ARCH),WINNT)
 LOCAL_INCLUDES += -I$(srcdir)/../sign
 endif
