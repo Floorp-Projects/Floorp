@@ -1639,12 +1639,38 @@ nsLayoutUtils::ChangeMatrixBasis(const gfxPoint3D &aOrigin,
  *
  * @param aVal The value to constrain (in/out)
  */
-static void ConstrainToCoordValues(gfxFloat &aVal)
+static void ConstrainToCoordValues(gfxFloat& aVal)
 {
   if (aVal <= nscoord_MIN)
     aVal = nscoord_MIN;
   else if (aVal >= nscoord_MAX)
     aVal = nscoord_MAX;
+}
+
+static void ConstrainToCoordValues(gfxFloat& aStart, gfxFloat& aSize)
+{
+  gfxFloat max = aStart + aSize;
+
+  // Clamp the end points to within nscoord range
+  ConstrainToCoordValues(aStart);
+  ConstrainToCoordValues(max);
+
+  aSize = max - aStart;
+  // If the width if still greater than the max nscoord, then bring both
+  // endpoints in by the same amount until it fits.
+  if (aSize > nscoord_MAX) {
+    gfxFloat excess = aSize - nscoord_MAX;
+    excess /= 2;
+
+    aStart += excess;
+    aSize = nscoord_MAX;
+  } else if (aSize < nscoord_MIN) {
+    gfxFloat excess = aSize - nscoord_MIN;
+    excess /= 2;
+
+    aStart -= excess;
+    aSize = nscoord_MIN;
+  }
 }
 
 nsRect
@@ -1655,10 +1681,8 @@ nsLayoutUtils::RoundGfxRectToAppRect(const gfxRect &aRect, float aFactor)
   scaledRect.ScaleRoundOut(aFactor);
 
   /* We now need to constrain our results to the max and min values for coords. */
-  ConstrainToCoordValues(scaledRect.x);
-  ConstrainToCoordValues(scaledRect.y);
-  ConstrainToCoordValues(scaledRect.width);
-  ConstrainToCoordValues(scaledRect.height);
+  ConstrainToCoordValues(scaledRect.x, scaledRect.width);
+  ConstrainToCoordValues(scaledRect.y, scaledRect.height);
 
   /* Now typecast everything back.  This is guaranteed to be safe. */
   return nsRect(nscoord(scaledRect.X()), nscoord(scaledRect.Y()),
