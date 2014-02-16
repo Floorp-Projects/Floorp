@@ -10,21 +10,7 @@ include $(topsrcdir)/config/makefiles/makeutils.mk
 
 milestone_txt = $(topsrcdir)/config/milestone.txt
 
-ifdef MOZ_ENABLE_XREMOTE
-LOCAL_INCLUDES += -I$(topsrcdir)/widget/xremoteclient
-endif
-
 include $(topsrcdir)/config/rules.mk
-
-LOCAL_INCLUDES += \
-  -I$(topsrcdir)/testing/gtest/mozilla \
-  -I$(srcdir)/../profile \
-  -I$(topsrcdir)/dom/ipc \
-  -I$(topsrcdir)/toolkit/crashreporter \
-  -I$(topsrcdir)/dom/base \
-  -I$(topsrcdir)/xpcom/build \
-  -I$(topsrcdir)/config \
-  $(NULL)
 
 CXXFLAGS += $(TK_CFLAGS) $(MOZ_DBUS_CFLAGS) $(MOZ_DBUS_GLIB_CFLAGS)
 

@@ -15,3 +15,8 @@ SIMPLE_PROGRAMS = [
 SOURCES += [
     '%s.cpp' % s for s in SIMPLE_PROGRAMS
 ]
+
+LOCAL_INCLUDES += [
+    '../lib',
+]
+

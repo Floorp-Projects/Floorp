@@ -302,7 +302,16 @@ HyperTextAccessible::DOMPointToOffset(nsINode* aNode, int32_t aNodeOffset,
       // This <br> is the hacky "bogus node" used when there is no text in a control
       return 0;
     }
-    descendant = GetFirstAvailableAccessible(findNode);
+
+    descendant = mDoc->GetAccessible(findNode);
+    if (!descendant && findNode->IsContent()) {
+      Accessible* container = mDoc->GetContainerAccessible(findNode);
+      if (container) {
+        TreeWalker walker(container, findNode->AsContent(),
+                          TreeWalker::eWalkContextTree);
+        descendant = walker.NextChild();
+      }
+    }
   }
 
   return TransformOffset(descendant, offset, aIsEndOffset);

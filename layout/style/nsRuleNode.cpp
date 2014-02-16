@@ -127,17 +127,29 @@ nsRuleNode::ChildrenHashOps = {
 //  - if the display value (argument) is not a block-type
 //    then we set it to a valid block display value
 //  - For enforcing the floated/positioned element CSS2 rules
+//  - We allow the behavior of "list-item" to be customized.
+//    CSS21 says that position/float do not convert 'list-item' to 'block',
+//    but it explicitly does not define whether 'list-item' should be
+//    converted to block *on the root node*. To allow for flexibility
+//    (so that we don't have to support a list-item root node), this method
+//    lets the caller pick either behavior, using the 'aConvertListItem' arg.
+//    Reference: http://www.w3.org/TR/CSS21/visuren.html#dis-pos-flo
 /* static */
 void
-nsRuleNode::EnsureBlockDisplay(uint8_t& display)
+nsRuleNode::EnsureBlockDisplay(uint8_t& display,
+                               bool aConvertListItem /* = false */)
 {
   // see if the display value is already a block
   switch (display) {
+  case NS_STYLE_DISPLAY_LIST_ITEM :
+    if (aConvertListItem) {
+      display = NS_STYLE_DISPLAY_BLOCK;
+      break;
+    } // else, fall through to share the 'break' for non-changing display vals
   case NS_STYLE_DISPLAY_NONE :
     // never change display:none *ever*
   case NS_STYLE_DISPLAY_TABLE :
   case NS_STYLE_DISPLAY_BLOCK :
-  case NS_STYLE_DISPLAY_LIST_ITEM :
   case NS_STYLE_DISPLAY_FLEX :
     // do not muck with these at all - already blocks
     // This is equivalent to nsStyleDisplay::IsBlockOutside.  (XXX Maybe we

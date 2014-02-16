@@ -15,4 +15,10 @@ SOURCES += [
 
 DEFINES['NS_NO_XPCOM'] = True
 
+LOCAL_INCLUDES += [
+    '/config',
+    '/toolkit/xre',
+]
+
+
 USE_STATIC_LIBS = True
