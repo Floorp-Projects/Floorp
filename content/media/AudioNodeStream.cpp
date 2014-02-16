@@ -60,9 +60,7 @@ void
 AudioNodeStream::SetStreamTimeParameterImpl(uint32_t aIndex, MediaStream* aRelativeToStream,
                                             double aStreamTime)
 {
-  TrackTicks ticks =
-      WebAudioUtils::ConvertDestinationStreamTimeToSourceStreamTime(
-          aStreamTime, this, aRelativeToStream);
+  TrackTicks ticks = TicksFromDestinationTime(aRelativeToStream, aStreamTime);
   mEngine->SetStreamTimeParameter(aIndex, ticks);
 }
 
@@ -515,6 +513,28 @@ AudioNodeStream::FinishOutput()
                                 track->GetSegment()->GetDuration(),
                                 MediaStreamListener::TRACK_EVENT_ENDED, emptySegment);
   }
+}
+
+TrackTicks
+AudioNodeStream::TicksFromDestinationTime(MediaStream* aDestination,
+                                          double aSeconds)
+{
+  StreamTime streamTime = std::max<MediaTime>(0, SecondsToMediaTime(aSeconds));
+  GraphTime graphTime = aDestination->StreamTimeToGraphTime(streamTime);
+  StreamTime thisStreamTime = GraphTimeToStreamTimeOptimistic(graphTime);
+  TrackTicks ticks = TimeToTicksRoundUp(SampleRate(), thisStreamTime);
+  return ticks;
+}
+
+double
+AudioNodeStream::DestinationTimeFromTicks(AudioNodeStream* aDestination,
+                                          TrackTicks aPosition)
+{
+  MOZ_ASSERT(SampleRate() == aDestination->SampleRate());
+  StreamTime sourceTime = TicksToTimeRoundDown(SampleRate(), aPosition);
+  GraphTime graphTime = StreamTimeToGraphTime(sourceTime);
+  StreamTime destinationTime = aDestination->GraphTimeToStreamTimeOptimistic(graphTime);
+  return MediaTimeToSeconds(destinationTime);
 }
 
 }
