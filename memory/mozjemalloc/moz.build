@@ -31,3 +31,8 @@ DEFINES['MOZ_JEMALLOC_IMPL'] = True
 # See bug 419470
 if CONFIG['OS_TARGET'] == 'Linux':
     NO_PGO = True
+
+LOCAL_INCLUDES += [
+    '/memory/build',
+]
+

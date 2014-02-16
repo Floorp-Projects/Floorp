@@ -24,6 +24,11 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     DEFINES['_UNICODE'] = True
     USE_STATIC_LIBS = True
 
+    # Pick up nsWindowsRestart.cpp
+    LOCAL_INCLUDES += [
+        '/toolkit/xre',
+    ]
+
 if CONFIG['MOZ_ENABLE_GTK']:
     have_progressui = 1
     SOURCES += [
@@ -53,6 +58,12 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
 DEFINES['NS_NO_XPCOM'] = True
 for var in ('MAR_CHANNEL_ID', 'MOZ_APP_VERSION'):
     DEFINES[var] = '"%s"' % CONFIG[var]
+
+LOCAL_INCLUDES += [
+    '../common',
+    '/xpcom/glue',
+]
+
 
 DELAYLOAD_DLLS += [
     'crypt32.dll',

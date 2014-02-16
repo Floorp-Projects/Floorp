@@ -10,3 +10,8 @@ HOST_SOURCES += [
 
 HOST_PROGRAM = 'dump_syms'
 
+LOCAL_INCLUDES += [
+    '../../..',
+    '../../../common/mac',
+]
+

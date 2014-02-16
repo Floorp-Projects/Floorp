@@ -17,3 +17,11 @@ DEFINES['XPCOM_GLUE'] = True
 
 if CONFIG['TARGET_XPCOM_ABI']:
     DEFINES['TARGET_XPCOM_ABI'] = '"%s"' % CONFIG['TARGET_XPCOM_ABI']
+
+LOCAL_INCLUDES += [
+    '/toolkit/profile',
+    '/toolkit/xre',
+    '/xpcom/base',
+    '/xpcom/build',
+]
+

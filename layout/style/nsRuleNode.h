@@ -664,7 +664,9 @@ private:
 
 public:
   static nsRuleNode* CreateRootNode(nsPresContext* aPresContext);
-  static void EnsureBlockDisplay(uint8_t& display);
+
+  static void EnsureBlockDisplay(uint8_t& display,
+                                 bool aConvertListItem = false);
 
   // Transition never returns null; on out of memory it'll just return |this|.
   nsRuleNode* Transition(nsIStyleRule* aRule, uint8_t aLevel,

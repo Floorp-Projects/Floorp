@@ -10,3 +10,12 @@ UNIFIED_SOURCES += [
 ]
 
 FINAL_LIBRARY = 'xulapp_s'
+
+LOCAL_INCLUDES += [
+    '/toolkit/crashreporter/google-breakpad/src',
+]
+
+if CONFIG['OS_TARGET'] == 'Android':
+    LOCAL_INCLUDES += [
+        '/toolkit/crashreporter/google-breakpad/src/common/android/include',
+    ]
