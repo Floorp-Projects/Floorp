@@ -86,7 +86,7 @@ public:
 
   bool AllocateBuffer(nsIntSize aSize, gfxImageFormat aImageFormat);
 
-  TextureClient* GetTextureClient() MOZ_OVERRIDE { return nullptr; }
+  TextureClient* GetTextureClient(CompositableClient* aClient) MOZ_OVERRIDE { return nullptr; }
 
 protected:
   gfx::IntSize mSize;
@@ -110,7 +110,7 @@ public:
 
   virtual ISharedImage* AsSharedImage() MOZ_OVERRIDE { return this; }
 
-  virtual TextureClient* GetTextureClient() MOZ_OVERRIDE;
+  virtual TextureClient* GetTextureClient(CompositableClient* aClient) MOZ_OVERRIDE;
 
   virtual uint8_t* GetBuffer() MOZ_OVERRIDE;
 
