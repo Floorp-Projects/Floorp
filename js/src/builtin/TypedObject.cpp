@@ -830,7 +830,7 @@ StructMetaTypeDescr::create(JSContext *cx,
     RootedObject userFieldOffsets(cx); // User-exposed {f:offset} object
     RootedObject userFieldTypes(cx);   // User-exposed {f:descr} object.
     int32_t sizeSoFar = 0;             // Size of struct thus far.
-    size_t alignment = 1;              // Alignment of struct.
+    int32_t alignment = 1;             // Alignment of struct.
     bool opaque = false;               // Opacity of struct.
 
     userFieldOffsets = NewObjectWithProto<JSObject>(cx, nullptr, nullptr, TenuredObject);
@@ -1101,7 +1101,7 @@ StructTypeDescr::fieldName(size_t index)
     return fieldNames.getDenseElement(index).toString()->asAtom();
 }
 
-size_t
+int32_t
 StructTypeDescr::fieldOffset(size_t index)
 {
     JSObject &fieldOffsets =
@@ -1498,7 +1498,7 @@ void
 TypedObject::attach(ArrayBufferObject &buffer, int32_t offset)
 {
     JS_ASSERT(offset >= 0);
-    JS_ASSERT(offset + size() <= buffer.byteLength());
+    JS_ASSERT((size_t) (offset + size()) <= buffer.byteLength());
 
     buffer.addView(this);
     InitArrayBufferViewDataPointer(this, &buffer, offset);
@@ -1538,7 +1538,7 @@ TypedObjLengthFromType(TypeDescr &descr)
 
 /*static*/ TypedObject *
 TypedObject::createDerived(JSContext *cx, HandleSizedTypeDescr type,
-                           HandleTypedObject typedObj, size_t offset)
+                           HandleTypedObject typedObj, int32_t offset)
 {
     JS_ASSERT(!typedObj->owner().isNeutered());
     JS_ASSERT(typedObj->typedMem() != NULL);
@@ -1559,8 +1559,8 @@ TypedObject::createDerived(JSContext *cx, HandleSizedTypeDescr type,
 
 /*static*/ TypedObject *
 TypedObject::createZeroed(JSContext *cx,
-                         HandleTypeDescr descr,
-                         int32_t length)
+                          HandleTypeDescr descr,
+                          int32_t length)
 {
     // Create unattached wrapper object.
     Rooted<TypedObject*> obj(cx, createUnattached(cx, descr, length));
@@ -1894,7 +1894,7 @@ TypedObject::obj_getArrayElement(JSContext *cx,
 {
     JS_ASSERT(typeDescr->is<T>());
 
-    if (index >= typedObj->length()) {
+    if (index >= (size_t) typedObj->length()) {
         vp.setUndefined();
         return true;
     }
@@ -1992,7 +1992,7 @@ TypedObject::obj_setArrayElement(JSContext *cx,
 {
     JS_ASSERT(descr->is<T>());
 
-    if (index >= typedObj->length()) {
+    if (index >= (size_t) typedObj->length()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage,
                              nullptr, JSMSG_TYPEDOBJECT_BINARYARRAY_BAD_INDEX);
         return false;
@@ -2129,7 +2129,7 @@ bool
 TypedObject::obj_enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op,
                            MutableHandleValue statep, MutableHandleId idp)
 {
-    uint32_t index;
+    int32_t index;
 
     JS_ASSERT(obj->is<TypedObject>());
     Rooted<TypedObject *> typedObj(cx, &obj->as<TypedObject>());
@@ -2190,7 +2190,7 @@ TypedObject::obj_enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op,
           case JSENUMERATE_NEXT:
             index = static_cast<uint32_t>(statep.toInt32());
 
-            if (index < descr->as<StructTypeDescr>().fieldCount()) {
+            if ((size_t) index < descr->as<StructTypeDescr>().fieldCount()) {
                 idp.set(AtomToId(&descr->as<StructTypeDescr>().fieldName(index)));
                 statep.setInt32(index + 1);
             } else {
@@ -2878,8 +2878,8 @@ js::Memcpy(ThreadSafeContext *, unsigned argc, Value *vp)
     JS_ASSERT(targetOffset >= 0);
     JS_ASSERT(sourceOffset >= 0);
     JS_ASSERT(size >= 0);
-    JS_ASSERT((size_t) (size + targetOffset) <= targetTypedObj.size());
-    JS_ASSERT((size_t) (size + sourceOffset) <= sourceTypedObj.size());
+    JS_ASSERT(size + targetOffset <= targetTypedObj.size());
+    JS_ASSERT(size + sourceOffset <= sourceTypedObj.size());
 
     uint8_t *target = targetTypedObj.typedMem(targetOffset);
     uint8_t *source = sourceTypedObj.typedMem(sourceOffset);
@@ -3099,7 +3099,7 @@ visitReferences(SizedTypeDescr &descr,
       {
         SizedArrayTypeDescr &arrayDescr = descr.as<SizedArrayTypeDescr>();
         SizedTypeDescr &elementDescr = arrayDescr.elementType();
-        for (size_t i = 0; i < arrayDescr.length(); i++) {
+        for (int32_t i = 0; i < arrayDescr.length(); i++) {
             visitReferences(elementDescr, mem, visitor);
             mem += elementDescr.size();
         }

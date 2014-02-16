@@ -100,7 +100,7 @@ class TypeDescrSet {
     //
     // At the moment condition (2) trivially holds.  When Bug 922115
     // lands, some array types will be unsized.
-    bool allHaveSameSize(size_t *out);
+    bool allHaveSameSize(int32_t *out);
 
     types::TemporaryTypeSet *suitableTypeSet(IonBuilder &builder,
                                              const Class *knownClass);
@@ -150,7 +150,7 @@ class TypeDescrSet {
     // Determines whether all arrays in this set have the same,
     // statically known, array length and return that length
     // (via `*length`) if so. Otherwise returns false.
-    bool hasKnownArrayLength(size_t *length);
+    bool hasKnownArrayLength(int32_t *length);
 
     // Returns a `TypeDescrSet` representing the element
     // types of the various array types in this set. The returned set
@@ -181,7 +181,7 @@ class TypeDescrSet {
     // uint16})` and `new StructType({a: uint16, c: uint16})`.
     bool fieldNamed(IonBuilder &builder,
                     jsid id,
-                    size_t *offset,
+                    int32_t *offset,
                     TypeDescrSet *out,
                     size_t *index);
 };
