@@ -519,10 +519,20 @@ TrackTicks
 AudioNodeStream::TicksFromDestinationTime(MediaStream* aDestination,
                                           double aSeconds)
 {
-  StreamTime streamTime = std::max<MediaTime>(0, SecondsToMediaTime(aSeconds));
+  MOZ_ASSERT(aDestination->AsAudioNodeStream() &&
+             aDestination->AsAudioNodeStream()->SampleRate() == SampleRate());
+
+  double destinationSeconds = std::max(0.0, aSeconds);
+  StreamTime streamTime = SecondsToMediaTime(destinationSeconds);
+  // MediaTime does not have the resolution of double
+  double offset = destinationSeconds - MediaTimeToSeconds(streamTime);
+
   GraphTime graphTime = aDestination->StreamTimeToGraphTime(streamTime);
   StreamTime thisStreamTime = GraphTimeToStreamTimeOptimistic(graphTime);
-  TrackTicks ticks = TimeToTicksRoundUp(SampleRate(), thisStreamTime);
+  double thisSeconds = MediaTimeToSeconds(thisStreamTime) + offset;
+  MOZ_ASSERT(thisSeconds >= 0.0);
+  // Round to nearest
+  TrackTicks ticks = thisSeconds * SampleRate() + 0.5;
   return ticks;
 }
 
