@@ -133,6 +133,9 @@ fails == flexbox-inlinecontent-horiz-1b.xhtml flexbox-inlinecontent-horiz-1-ref.
 # Tests for flexbox in an iframe that gets resized.
 skip-if(B2G) == flexbox-resizeviewport-1.xhtml flexbox-resizeviewport-1-ref.xhtml
 
+# Tests for flexbox styling on things that don't support it
+== flexbox-styling-on-svg-1.svg flexbox-styling-on-svg-1-ref.svg
+
 # Tests with widgets as flex items
 fuzzy-if(gtk2Widget,1,66) == flexbox-widget-flex-items-1.html flexbox-widget-flex-items-1-ref.html
 fuzzy-if(gtk2Widget,1,74) == flexbox-widget-flex-items-2.html flexbox-widget-flex-items-2-ref.html

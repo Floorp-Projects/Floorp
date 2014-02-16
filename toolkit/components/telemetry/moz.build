@@ -52,3 +52,9 @@ GENERATED_FILES = [
 
 if CONFIG['MOZILLA_OFFICIAL']:
     DEFINES['MOZILLA_OFFICIAL'] = True
+
+LOCAL_INCLUDES += [
+    '/xpcom/build',
+    '/xpcom/threads',
+]
+

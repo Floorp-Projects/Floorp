@@ -6,6 +6,7 @@
 #ifndef mozilla_a11y_TreeWalker_h_
 #define mozilla_a11y_TreeWalker_h_
 
+#include "mozilla/Attributes.h"
 #include <stdint.h>
 
 class nsIContent;
@@ -21,11 +22,26 @@ struct WalkState;
 /**
  * This class is used to walk the DOM tree to create accessible tree.
  */
-class TreeWalker
+class TreeWalker MOZ_FINAL
 {
 public:
-  TreeWalker(Accessible* aContext, nsIContent* aNode, bool aWalkCache = false);
-  virtual ~TreeWalker();
+  enum {
+    // used to walk the existing tree of the given node
+    eWalkCache = 1,
+    // used to walk the context tree starting from given node
+    eWalkContextTree = 2 | eWalkCache
+  };
+
+  /**
+   * Constructor
+   *
+   * @param aContext [in] container accessible for the given node, used to
+   *                   define accessible context
+   * @param aNode    [in] the node the search will be prepared relative to
+   * @param aFlags   [in] flags (see enum above)
+   */
+  TreeWalker(Accessible* aContext, nsIContent* aNode, uint32_t aFlags = 0);
+  ~TreeWalker();
 
   /**
    * Return the next child accessible.
@@ -59,7 +75,7 @@ private:
    * @note State stack is used to navigate up/down the DOM subtree during
    *        accessible children search.
    */
-  bool PushState(nsIContent *aNode);
+  void PushState(nsIContent* aNode);
 
   /**
    * Pop state from stack.
@@ -69,7 +85,7 @@ private:
   DocAccessible* mDoc;
   Accessible* mContext;
   int32_t mChildFilter;
-  bool mWalkCache;
+  uint32_t mFlags;
   WalkState* mState;
 };
 

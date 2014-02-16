@@ -311,7 +311,10 @@ GCParameter(JSContext *cx, unsigned argc, Value *vp)
     }
 
     uint32_t value;
-    if (!ToUint32(cx, args[1], &value)) {
+    if (!ToUint32(cx, args[1], &value))
+        return false;
+
+    if (!value) {
         JS_ReportError(cx, "the second argument must be convertable to uint32_t "
                            "with non-zero value");
         return false;

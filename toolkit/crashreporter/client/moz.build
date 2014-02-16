@@ -12,6 +12,10 @@ UNIFIED_SOURCES += [
     'crashreporter.cpp',
 ]
 
+LOCAL_INCLUDES += [
+    '../google-breakpad/src',
+]
+
 if CONFIG['OS_ARCH'] == 'WINNT':
     UNIFIED_SOURCES += [
         'crashreporter_win.cpp',
@@ -20,7 +24,11 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     DEFINES['_UNICODE'] = True
 elif CONFIG['OS_ARCH'] == 'Darwin':
     UNIFIED_SOURCES += [
+        'crashreporter_osx.mm',
         'crashreporter_unix_common.cpp',
+    ]
+    LOCAL_INCLUDES += [
+        '../google-breakpad/src/common/mac',
     ]
 elif CONFIG['OS_ARCH'] == 'SunOS':
     SOURCES += [
@@ -33,9 +41,5 @@ if CONFIG['MOZ_ENABLE_GTK']:
         'crashreporter_gtk_common.cpp',
         'crashreporter_linux.cpp',
         'crashreporter_unix_common.cpp'
-        ]
-
-if CONFIG['OS_ARCH'] == 'Darwin':
-    UNIFIED_SOURCES += [
-        'crashreporter_osx.mm',
     ]
+
