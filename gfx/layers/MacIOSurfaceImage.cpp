@@ -10,7 +10,7 @@ using namespace mozilla;
 using namespace mozilla::layers;
 
 TextureClient*
-MacIOSurfaceImage::GetTextureClient(CompositableClient* aClient)
+MacIOSurfaceImage::GetTextureClient()
 {
   if (!mTextureClient) {
     RefPtr<MacIOSurfaceTextureClientOGL> buffer =
