@@ -49,7 +49,7 @@ let TEST_CASES = [
   ['VK_RETURN', -1],
   ['b', 2, 0],
   ['u', 1, 0],
-  ['VK_TAB', -1],
+  ['VK_RETURN', -1, 0, 1],
   ['{', -1],
   ['VK_HOME', -1],
   ['VK_DOWN', -1],
@@ -147,6 +147,13 @@ function checkState() {
     }
     else {
       ok(!gPopup.isOpen, "Popup is closed for index " + index);
+      if (inserted) {
+        let { preLabel, label } = gPopup.getItemAtIndex(current);
+        let { line, ch } = gEditor.getCursor();
+        let lineText = gEditor.getText(line);
+        is(lineText.substring(ch - label.length, ch), label,
+           "Current suggestion from the popup is inserted into the editor.");
+      }
     }
     index++;
     testState();
