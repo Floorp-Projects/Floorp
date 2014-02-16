@@ -380,7 +380,7 @@ GrallocImage::GetAsSourceSurface()
 
 
 TextureClient*
-GrallocImage::GetTextureClient()
+GrallocImage::GetTextureClient(CompositableClient* aClient)
 {
   if (!mTextureClient) {
     const SurfaceDescriptor& sd = GetSurfaceDescriptor();

@@ -145,9 +145,9 @@ ImageClientSingle::UpdateImageInternal(ImageContainer* aContainer,
     return true;
   }
 
-  if (image->AsSharedImage() && image->AsSharedImage()->GetTextureClient()) {
+  if (image->AsSharedImage() && image->AsSharedImage()->GetTextureClient(this)) {
     // fast path: no need to allocate and/or copy image data
-    RefPtr<TextureClient> texture = image->AsSharedImage()->GetTextureClient();
+    RefPtr<TextureClient> texture = image->AsSharedImage()->GetTextureClient(this);
 
 
     if (mFrontBuffer) {

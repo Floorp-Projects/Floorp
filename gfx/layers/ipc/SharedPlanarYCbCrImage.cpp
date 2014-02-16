@@ -63,7 +63,7 @@ DeprecatedSharedPlanarYCbCrImage::~DeprecatedSharedPlanarYCbCrImage() {
 }
 
 TextureClient*
-SharedPlanarYCbCrImage::GetTextureClient()
+SharedPlanarYCbCrImage::GetTextureClient(CompositableClient* aClient)
 {
   return mTextureClient.get();
 }
