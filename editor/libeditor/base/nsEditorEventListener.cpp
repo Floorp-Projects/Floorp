@@ -1038,6 +1038,12 @@ nsEditorEventListener::ShouldHandleNativeKeyBindings(nsIDOMEvent* aKeyEvent)
     return false;
   }
 
+  nsCOMPtr<nsIDocument> doc = mEditor->GetDocument();
+  if (doc->HasFlag(NODE_IS_EDITABLE)) {
+    // Don't need to perform any checks in designMode documents.
+    return true;
+  }
+
   nsIContent* editingHost = htmlEditor->GetActiveEditingHost();
   if (!editingHost) {
     return false;
