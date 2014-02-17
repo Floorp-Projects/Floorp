@@ -47,7 +47,7 @@ MacIOSurfaceTextureHostOGL::MacIOSurfaceTextureHostOGL(uint64_t aID,
 bool
 MacIOSurfaceTextureHostOGL::Lock()
 {
-  if (!mCompositor) {
+  if (!mCompositor || !mSurface) {
     return false;
   }
 
@@ -90,11 +90,17 @@ MacIOSurfaceTextureSourceOGL::gl() const
 
 gfx::SurfaceFormat
 MacIOSurfaceTextureHostOGL::GetFormat() const {
+  if (!mSurface) {
+    return gfx::FORMAT_UNKNOWN;
+  }
   return mSurface->HasAlpha() ? gfx::FORMAT_R8G8B8A8 : gfx::FORMAT_B8G8R8X8;
 }
 
 gfx::IntSize
 MacIOSurfaceTextureHostOGL::GetSize() const {
+  if (!mSurface) {
+    return gfx::IntSize();
+  }
   return gfx::IntSize(mSurface->GetDevicePixelWidth(),
                       mSurface->GetDevicePixelHeight());
 }
