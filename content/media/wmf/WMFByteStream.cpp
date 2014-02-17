@@ -63,7 +63,7 @@ WMFByteStream::Init()
 {
   NS_ASSERTION(NS_IsMainThread(), "Must be on main thread.");
 
-  mThreadPool = SharedThreadPool::Get(NS_LITERAL_CSTRING("WMFByteStream IO"));
+  mThreadPool = SharedThreadPool::Get(NS_LITERAL_CSTRING("WMFByteStream IO"), 4);
   NS_ENSURE_TRUE(mThreadPool, NS_ERROR_FAILURE);
 
   NS_ConvertUTF8toUTF16 contentTypeUTF16(mResource->GetContentType());

@@ -31,7 +31,8 @@ public:
   // Gets (possibly creating) the shared thread pool singleton instance with
   // thread pool named aName.
   // *Must* be called on the main thread.
-  static TemporaryRef<SharedThreadPool> Get(const nsCString& aName);
+  static TemporaryRef<SharedThreadPool> Get(const nsCString& aName,
+                                            uint32_t aThreadLimit = 4);
 
   // We implement custom threadsafe AddRef/Release pair, that destroys the
   // the shared pool singleton when the refcount drops to 0. The addref/release
@@ -54,8 +55,11 @@ private:
   // Creates a singleton SharedThreadPool wrapper around aPool.
   // aName is the name of the aPool, and is used to lookup the
   // SharedThreadPool in the hash table of all created pools.
-  SharedThreadPool(const nsCString& aName, nsIThreadPool* aPool);
+  SharedThreadPool(const nsCString& aName,
+                   nsIThreadPool* aPool);
   virtual ~SharedThreadPool();
+
+  nsresult EnsureThreadLimitIsAtLeast(uint32_t aThreadLimit);
 
   // Name of mPool.
   const nsCString mName;
