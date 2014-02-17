@@ -380,6 +380,10 @@ FRAME_STATE_BIT(Text, 28, TEXT_ISNOT_ONLY_WHITESPACE)
 // Set when this text frame is mentioned in the userdata for mTextRun
 FRAME_STATE_BIT(Text, 29, TEXT_IN_TEXTRUN_USER_DATA)
 
+// This state bit is set on frames whose character data offsets need to be
+// fixed up
+FRAME_STATE_BIT(Text, 30, TEXT_OFFSETS_NEED_FIXING)
+
 // This state bit is set on frames that have some non-collapsed characters after
 // reflow
 FRAME_STATE_BIT(Text, 31, TEXT_HAS_NONCOLLAPSED_CHARACTERS)
