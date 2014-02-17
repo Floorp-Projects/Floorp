@@ -219,6 +219,8 @@ skip-if(Android||B2G) include native-theme/reftest.list
 # netwerk/
 skip-if(B2G) include ../../netwerk/test/reftest/reftest.list
 
+include outline/reftest.list
+
 # object/
 skip-if(B2G) include object/reftest.list
 
