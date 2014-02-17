@@ -118,8 +118,9 @@ function newWriteHexOctetAsUint8Worker() {
     }
   });
 
-  worker.GsmPDUHelper.writeHexOctet = function(value) {
-    worker.Buf.writeUint8(value);
+  let context = worker.ContextPool._contexts[0];
+  context.GsmPDUHelper.writeHexOctet = function(value) {
+    context.Buf.writeUint8(value);
   };
 
   return worker;
@@ -139,7 +140,7 @@ function add_test_receiving_sms(expected, pdu) {
 
     do_print("expect: " + expected);
     do_print("pdu: " + pdu);
-    worker.onRILMessage(newSmsParcel(pdu));
+    worker.onRILMessage(0, newSmsParcel(pdu));
 
     run_next_test();
   });
@@ -154,8 +155,9 @@ function test_receiving_7bit_alphabets(lst, sst) {
   }
   let ril = test_receiving_7bit_alphabets__ril;
   let worker = test_receiving_7bit_alphabets__worker;
-  let helper = worker.GsmPDUHelper;
-  let buf = worker.Buf;
+  let context = worker.ContextPool._contexts[0];
+  let helper = context.GsmPDUHelper;
+  let buf = context.Buf;
 
   function get7bitRawBytes(expected) {
     buf.outgoingIndex = 0;
@@ -183,11 +185,12 @@ function test_receiving_7bit_alphabets(lst, sst) {
 
 function test_receiving_ucs2_alphabets(text) {
   let worker = test_receiving_7bit_alphabets__worker;
-  let buf = worker.Buf;
+  let context = worker.ContextPool._contexts[0];
+  let buf = context.Buf;
 
   function getUCS2RawBytes(expected) {
     buf.outgoingIndex = 0;
-    worker.GsmPDUHelper.writeUCS2String(expected);
+    context.GsmPDUHelper.writeUCS2String(expected);
 
     let subArray = buf.outgoingBytes.subarray(0, buf.outgoingIndex);
     return Array.slice(subArray);
@@ -220,8 +223,9 @@ test_receiving_ucs2_alphabets(ucs2str);
 // Bug 820220: B2G SMS: wrong order and truncated content in multi-part messages
 add_test(function test_sendSMS_UCS2_without_langIndex_langShiftIndex_defined() {
   let worker = newWriteHexOctetAsUint8Worker();
+  let context = worker.ContextPool._contexts[0];
 
-  worker.Buf.sendParcel = function() {
+  context.Buf.sendParcel = function() {
     // Each sendParcel() call represents one outgoing segment of a multipart
     // SMS message. Here, we have the first segment send, so it's "Hello "
     // only.
@@ -242,7 +246,7 @@ add_test(function test_sendSMS_UCS2_without_langIndex_langShiftIndex_defined() {
     run_next_test();
   };
 
-  worker.RIL.sendSMS({
+  context.RIL.sendSMS({
     number: "1",
     segmentMaxSeq: 2,
     fullBody: "Hello World!",

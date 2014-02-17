@@ -23,15 +23,16 @@ function newWorkerWithParcel(parcelBuf) {
   let index = 0; // index for read
   let buf = parcelBuf;
 
-  worker.Buf.readUint8 = function() {
+  let context = worker.ContextPool._contexts[0];
+  context.Buf.readUint8 = function() {
     return buf[index++];
   };
 
-  worker.Buf.readUint16 = function() {
+  context.Buf.readUint16 = function() {
     return buf[index++];
   };
 
-  worker.Buf.readInt32 = function() {
+  context.Buf.readInt32 = function() {
     return buf[index++];
   };
 
@@ -50,7 +51,8 @@ add_test(function test_display() {
                 0x09, // length: 9
                 0x54, 0x65, 0x73, 0x74, 0x20, 0x49, 0x6E, 0x66,
                 0x6F, 0x00]);
-  let helper = worker.CdmaPDUHelper;
+  let context = worker.ContextPool._contexts[0];
+  let helper = context.CdmaPDUHelper;
   let record = helper.decodeInformationRecord();
 
   do_check_eq(record.display, "Test Info");
@@ -72,7 +74,8 @@ add_test(function test_extended_display() {
                 0x9B, // Text
                 0x09, 0x54, 0x65, 0x73, 0x74, 0x20, 0x49, 0x6E,
                 0x66, 0x6F, 0x00]);
-  let helper = worker.CdmaPDUHelper;
+  let context = worker.ContextPool._contexts[0];
+  let helper = context.CdmaPDUHelper;
   let record = helper.decodeInformationRecord();
 
   do_check_eq(record.extendedDisplay.indicator, 1);
@@ -103,7 +106,8 @@ add_test(function test_mixed() {
                 0x9B, // Text
                 0x09, 0x54, 0x65, 0x73, 0x74, 0x20, 0x49, 0x6E,
                 0x66, 0x6F, 0x00]);
-  let helper = worker.CdmaPDUHelper;
+  let context = worker.ContextPool._contexts[0];
+  let helper = context.CdmaPDUHelper;
   let record = helper.decodeInformationRecord();
 
   do_check_eq(record.display, "Test Info");
