@@ -38,15 +38,16 @@ function _getWorker() {
 add_test(function test_setCLIR_success() {
   let workerHelper = _getWorker();
   let worker = workerHelper.worker;
+  let context = worker.ContextPool._contexts[0];
 
-  worker.RIL.setCLIR = function fakeSetCLIR(options) {
-    worker.RIL[REQUEST_SET_CLIR](0, {
+  context.RIL.setCLIR = function fakeSetCLIR(options) {
+    context.RIL[REQUEST_SET_CLIR](0, {
       rilMessageType: "setCLIR",
       rilRequestError: ERROR_SUCCESS
     });
   };
 
-  worker.RIL.setCLIR({
+  context.RIL.setCLIR({
     clirMode: CLIR_DEFAULT
   });
 
@@ -61,15 +62,16 @@ add_test(function test_setCLIR_success() {
 add_test(function test_setCLIR_generic_failure() {
   let workerHelper = _getWorker();
   let worker = workerHelper.worker;
+  let context = worker.ContextPool._contexts[0];
 
-  worker.RIL.setCLIR = function fakeSetCLIR(options) {
-    worker.RIL[REQUEST_SET_CLIR](0, {
+  context.RIL.setCLIR = function fakeSetCLIR(options) {
+    context.RIL[REQUEST_SET_CLIR](0, {
       rilMessageType: "setCLIR",
       rilRequestError: ERROR_GENERIC_FAILURE
     });
   };
 
-  worker.RIL.setCLIR({
+  context.RIL.setCLIR({
     clirMode: CLIR_DEFAULT
   });
 
@@ -84,25 +86,26 @@ add_test(function test_setCLIR_generic_failure() {
 add_test(function test_getCLIR_n0_m1() {
   let workerHelper = _getWorker();
   let worker = workerHelper.worker;
+  let context = worker.ContextPool._contexts[0];
 
-  worker.Buf.readInt32 = function fakeReadUint32() {
-    return worker.Buf.int32Array.pop();
+  context.Buf.readInt32 = function fakeReadUint32() {
+    return context.Buf.int32Array.pop();
   };
 
-  worker.RIL.getCLIR = function fakeGetCLIR(options) {
-    worker.Buf.int32Array = [
+  context.RIL.getCLIR = function fakeGetCLIR(options) {
+    context.Buf.int32Array = [
       1,  // Presentation indicator is used according to the subscription
           // of the CLIR service.
       0,  // CLIR provisioned in permanent mode.
       2   // Length.
     ];
-    worker.RIL[REQUEST_GET_CLIR](1, {
+    context.RIL[REQUEST_GET_CLIR](1, {
       rilMessageType: "setCLIR",
       rilRequestError: ERROR_SUCCESS
     });
   };
 
-  worker.RIL.getCLIR({});
+  context.RIL.getCLIR({});
 
   let postedMessage = workerHelper.postedMessage;
 
@@ -116,25 +119,26 @@ add_test(function test_getCLIR_n0_m1() {
 add_test(function test_getCLIR_error_generic_failure_invalid_length() {
   let workerHelper = _getWorker();
   let worker = workerHelper.worker;
+  let context = worker.ContextPool._contexts[0];
 
-  worker.Buf.readInt32 = function fakeReadUint32() {
-    return worker.Buf.int32Array.pop();
+  context.Buf.readInt32 = function fakeReadUint32() {
+    return context.Buf.int32Array.pop();
   };
 
-  worker.RIL.getCLIR = function fakeGetCLIR(options) {
-    worker.Buf.int32Array = [
+  context.RIL.getCLIR = function fakeGetCLIR(options) {
+    context.Buf.int32Array = [
       1,  // Presentation indicator is used according to the subscription
           // of the CLIR service.
       0,  // CLIR provisioned in permanent mode.
       0   // Length (invalid one).
     ];
-    worker.RIL[REQUEST_GET_CLIR](1, {
+    context.RIL[REQUEST_GET_CLIR](1, {
       rilMessageType: "setCLIR",
       rilRequestError: ERROR_SUCCESS
     });
   };
 
-  worker.RIL.getCLIR({});
+  context.RIL.getCLIR({});
 
   let postedMessage = workerHelper.postedMessage;
 
