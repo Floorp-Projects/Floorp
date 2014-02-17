@@ -476,8 +476,11 @@ SurfaceStream_TripleBuffer_Async::WaitForCompositor()
     PROFILER_LABEL("SurfaceStream_TripleBuffer_Async", "WaitForCompositor");
 
     // We are assumed to be locked
-    while (mStaging)
-        mMonitor.Wait();
+    while (mStaging) {
+        if (!NS_SUCCEEDED(mMonitor.Wait(PR_MillisecondsToInterval(100)))) {
+            return false;
+        }
+    }
 
     return true;
 }
