@@ -8,7 +8,7 @@
 #include "windows.h"
 #include "mmsystem.h"
 #endif
- 
+
 #include "mozilla/DebugOnly.h"
 #include <stdint.h>
 
@@ -30,6 +30,7 @@
 #include "MediaShutdownManager.h"
 #include "SharedThreadPool.h"
 #include "MediaTaskQueue.h"
+#include "nsIEventTarget.h"
 #include "prenv.h"
 #include "mozilla/Preferences.h"
 #include "gfx2DGlue.h"
@@ -147,109 +148,6 @@ static int64_t DurationToUsecs(TimeDuration aDuration) {
   return static_cast<int64_t>(aDuration.ToSeconds() * USECS_PER_S);
 }
 
-class StateMachineTracker
-{
-private:
-  StateMachineTracker()
-    : mMonitor("media.statemachinetracker")
-    , mStateMachineCount(0)
-  {
-     MOZ_COUNT_CTOR(StateMachineTracker);
-     NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
-  }
-
-  ~StateMachineTracker()
-  {
-    NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
-    MOZ_COUNT_DTOR(StateMachineTracker);
-  }
-
-public:
-  // Access singleton instance. This is initially called on the main
-  // thread in the MediaDecoderStateMachine constructor resulting
-  // in the global object being created lazily. Non-main thread
-  // access always occurs after this and uses the monitor to
-  // safely access the decode thread counts.
-  static StateMachineTracker& Instance();
-
-  // Instantiate the global state machine thread if required.
-  // Call on main thread only.
-  void EnsureGlobalStateMachine();
-
-  // Destroy global state machine thread if required.
-  // Call on main thread only.
-  void CleanupGlobalStateMachine();
-
-  // Return the global state machine thread. Call from any thread.
-  nsIThread* GetGlobalStateMachineThread()
-  {
-    ReentrantMonitorAutoEnter mon(mMonitor);
-    NS_ASSERTION(mStateMachineThread, "Should have non-null state machine thread!");
-    return mStateMachineThread->GetThread();
-  }
-
-private:
-  // Holds global instance of StateMachineTracker.
-  // Writable on main thread only.
-  static StateMachineTracker* sInstance;
-
-  // Reentrant monitor that must be obtained to access
-  // the decode thread count member and methods.
-  ReentrantMonitor mMonitor;
-
-  // Number of instances of MediaDecoderStateMachine
-  // that are currently instantiated. Access on the
-  // main thread only.
-  uint32_t mStateMachineCount;
-
-  // Global state machine thread. Write on the main thread
-  // only, read from the decoder threads. Synchronized via
-  // the mMonitor.
-  nsRefPtr<StateMachineThread> mStateMachineThread;
-};
-
-StateMachineTracker* StateMachineTracker::sInstance = nullptr;
-
-StateMachineTracker& StateMachineTracker::Instance()
-{
-  if (!sInstance) {
-    NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
-    sInstance = new StateMachineTracker();
-  }
-  return *sInstance;
-}
-
-void StateMachineTracker::EnsureGlobalStateMachine()
-{
-  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
-  ReentrantMonitorAutoEnter mon(mMonitor);
-  if (mStateMachineCount == 0) {
-    NS_ASSERTION(!mStateMachineThread, "Should have null state machine thread!");
-    mStateMachineThread = new StateMachineThread();
-    DebugOnly<nsresult> rv = mStateMachineThread->Init();
-    NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), "Can't create media state machine thread");
-  }
-  mStateMachineCount++;
-}
-
-void StateMachineTracker::CleanupGlobalStateMachine()
-{
-  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
-  NS_ABORT_IF_FALSE(mStateMachineCount > 0,
-    "State machine ref count must be > 0");
-  mStateMachineCount--;
-  if (mStateMachineCount == 0) {
-    DECODER_LOG(PR_LOG_DEBUG, ("Destroying media state machine thread"));
-    {
-      ReentrantMonitorAutoEnter mon(mMonitor);
-      mStateMachineThread->Shutdown();
-      mStateMachineThread = nullptr;
-      sInstance = nullptr;
-    }
-    delete this;
-  }
-}
-
 MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
                                                    MediaDecoderReader* aReader,
                                                    bool aRealTime) :
@@ -295,8 +193,6 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   MOZ_COUNT_CTOR(MediaDecoderStateMachine);
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
 
-  StateMachineTracker::Instance().EnsureGlobalStateMachine();
-
   // only enable realtime mode when "media.realtime_decoder.enabled" is true.
   if (Preferences::GetBool("media.realtime_decoder.enabled", false) == false)
     mRealTime = false;
@@ -332,7 +228,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
 
 MediaDecoderStateMachine::~MediaDecoderStateMachine()
 {
-  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
+  MOZ_ASSERT(NS_IsMainThread(), "Should be on main thread.");
   MOZ_COUNT_DTOR(MediaDecoderStateMachine);
   NS_ASSERTION(!mPendingWakeDecoder.get(),
                "WakeDecoder should have been revoked already");
@@ -348,7 +244,6 @@ MediaDecoderStateMachine::~MediaDecoderStateMachine()
   mTimer = nullptr;
   mReader = nullptr;
 
-  StateMachineTracker::Instance().CleanupGlobalStateMachine();
 #ifdef XP_WIN
   timeEndPeriod(1);
 #endif
@@ -1189,6 +1084,10 @@ nsresult MediaDecoderStateMachine::Init(MediaDecoderStateMachine* aCloneDonor)
                           Preferences::GetUint("media.num-decode-threads", 25)));
   NS_ENSURE_TRUE(decodePool, NS_ERROR_FAILURE);
 
+  RefPtr<SharedThreadPool> stateMachinePool(
+    SharedThreadPool::Get(NS_LITERAL_CSTRING("Media State Machine"), 1));
+  NS_ENSURE_TRUE(stateMachinePool, NS_ERROR_FAILURE);
+
   mDecodeTaskQueue = new MediaTaskQueue(decodePool.forget());
   NS_ENSURE_TRUE(mDecodeTaskQueue, NS_ERROR_FAILURE);
 
@@ -1196,6 +1095,8 @@ nsresult MediaDecoderStateMachine::Init(MediaDecoderStateMachine* aCloneDonor)
   if (aCloneDonor) {
     cloneReader = static_cast<MediaDecoderStateMachine*>(aCloneDonor)->mReader;
   }
+
+  mStateMachineThreadPool = stateMachinePool;
 
   return mReader->Init(cloneReader);
 }
@@ -2043,7 +1944,8 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
       // finished and released its monitor/references. That event then will
       // dispatch an event to the main thread to release the decoder and
       // state machine.
-      NS_DispatchToCurrentThread(new nsDispatchDisposeEvent(mDecoder, this));
+      GetStateMachineThread()->Dispatch(
+        new nsDispatchDisposeEvent(mDecoder, this), NS_DISPATCH_NORMAL);
       return NS_OK;
     }
 
@@ -2622,7 +2524,7 @@ nsresult MediaDecoderStateMachine::CallRunStateMachine()
 
   if (mRunAgain && !mDispatchedRunEvent) {
     mDispatchedRunEvent = true;
-    return NS_DispatchToCurrentThread(this);
+    return GetStateMachineThread()->Dispatch(this, NS_DISPATCH_NORMAL);
   }
 
   return res;
@@ -2725,12 +2627,14 @@ bool MediaDecoderStateMachine::OnDecodeThread() const
 
 bool MediaDecoderStateMachine::OnStateMachineThread() const
 {
-  return IsCurrentThread(GetStateMachineThread());
+  bool rv = false;
+  mStateMachineThreadPool->IsOnCurrentThread(&rv);
+  return rv;
 }
 
-nsIThread* MediaDecoderStateMachine::GetStateMachineThread()
+nsIEventTarget* MediaDecoderStateMachine::GetStateMachineThread()
 {
-  return StateMachineTracker::Instance().GetGlobalStateMachineThread();
+  return mStateMachineThreadPool->GetEventTarget();
 }
 
 void MediaDecoderStateMachine::NotifyAudioAvailableListener()

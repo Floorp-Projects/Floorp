@@ -25,7 +25,8 @@ namespace mozilla {
 // the pool is shutdown and deleted. Users aren't required to manually
 // shutdown the pool, and can release references on any thread. On Windows
 // all threads in the pool have MSCOM initialized with COINIT_MULTITHREADED.
-class SharedThreadPool : public nsIThreadPool {
+class SharedThreadPool : public nsIThreadPool
+{
 public:
 
   // Gets (possibly creating) the shared thread pool singleton instance with

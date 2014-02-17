@@ -32,21 +32,19 @@ class StateMachineThread;
 // waiting for its threads to shutdown it will block other xpcom-shutdown
 // notifications from firing, and shutdown of one part of the media pipeline
 // (say the State Machine thread) may depend another part to be shutdown
-// first (the MediaDecoder threads). Additionally we need to not interfere
-// with shutdown in the the non-xpcom-shutdown case, where we need to be able
-// to recreate the State Machine thread after it's been destroyed without
-// affecting the shutdown of the old State Machine thread. The
-// MediaShutdownManager encapsulates all these dependencies, and provides
-// a single xpcom-shutdown listener for the MediaDecoder infrastructure, to
-// ensure that no shutdown order dependencies leak out of the MediaDecoder
-// stack. The MediaShutdownManager is a singleton.
+// first (the MediaDecoder threads). The MediaShutdownManager encapsulates
+// all these dependencies, and provides a single xpcom-shutdown listener
+// for the MediaDecoder infrastructure, to ensure that no shutdown order
+// dependencies leak out of the MediaDecoder stack. The MediaShutdownManager
+// is a singleton.
 //
 // The MediaShutdownManager ensures that the MediaDecoder stack is shutdown
 // before returning from its xpcom-shutdown observer by keeping track of all
 // the active MediaDecoders, and upon xpcom-shutdown calling Shutdown() on
-// every MediaDecoder and then spinning the main thread event loop until the
-// State Machine thread has shutdown. Once the State Machine thread has been
-// shutdown, the xpcom-shutdown observer returns.
+// every MediaDecoder and then spinning the main thread event loop until all
+// SharedThreadPools have shutdown. Once the SharedThreadPools are shutdown,
+// all the state machines and their threads have been shutdown, the
+// xpcom-shutdown observer returns.
 //
 // Note that calling the Unregister() functions may result in the singleton
 // being deleted, so don't store references to the singleton, always use the
@@ -78,18 +76,6 @@ public:
   // xpcom-shutdown listener.
   void Unregister(MediaDecoder* aDecoder);
 
-  // Notifies the MediaShutdownManager of a state machine thread that
-  // must be tracked. Note that we track State Machine threads individually
-  // as their shutdown and the construction of a new state machine thread
-  // can interleave. This stores a strong ref to the state machine.
-  void Register(StateMachineThread* aThread);
-
-  // Notifies the MediaShutdownManager that a StateMachineThread that it was
-  // tracking has shutdown, and it no longer needs to be shutdown in the
-  // xpcom-shutdown listener. This drops the strong reference to the
-  // StateMachineThread, which may destroy it.
-  void Unregister(StateMachineThread* aThread);
-
 private:
 
   MediaShutdownManager();
@@ -108,60 +94,10 @@ private:
   // we're shutting down (in the non xpcom-shutdown case).
   nsTHashtable<nsRefPtrHashKey<MediaDecoder>> mDecoders;
 
-  // References to the state machine threads that we're tracking shutdown
-  // of. Note that although there is supposed to be a single state machine,
-  // the construction and shutdown of these can interleave, so we must track
-  // individual instances of the state machine threads.
-  // These are strong references.
-  nsTHashtable<nsRefPtrHashKey<StateMachineThread>> mStateMachineThreads;
-
   // True if we have an XPCOM shutdown observer.
   bool mIsObservingShutdown;
 
   bool mIsDoingXPCOMShutDown;
-};
-
-// A wrapper for the state machine thread. We must wrap this so that the
-// state machine threads can shutdown independently from the
-// StateMachineTracker, under the control of the MediaShutdownManager.
-// The state machine thread is shutdown naturally when all decoders
-// complete their shutdown. So if a new decoder is created just as the
-// old state machine thread has shutdown, we need to be able to shutdown
-// the old state machine thread independently of the StateMachineTracker
-// creating a new state machine thread. Also if this happens we need to
-// be able to force both state machine threads to shutdown in the
-// MediaShutdownManager, which is why we maintain a set of state machine
-// threads, even though there's supposed to only be one alive at once.
-// This class does not enforce its own thread safety, the StateMachineTracker
-// ensures thread safety when it uses the StateMachineThread.
-class StateMachineThread {
-public:
-  StateMachineThread();
-  ~StateMachineThread();
-
-  NS_INLINE_DECL_REFCOUNTING(StateMachineThread);
-
-  // Creates the wrapped thread.
-  nsresult Init();
-
-  // Returns a reference to the underlying thread. Don't shut this down
-  // directly, use StateMachineThread::Shutdown() instead.
-  nsIThread* GetThread();
-
-  // Dispatches an event to the main thread to shutdown the wrapped thread.
-  // The owner's (StateMachineTracker's) reference to the StateMachineThread
-  // can be dropped, the StateMachineThread will shutdown itself
-  // asynchronously.
-  void Shutdown();
-
-  // Processes events on the main thread event loop until this thread
-  // has been shutdown. Use this to block until the asynchronous shutdown
-  // has complete.
-  void SpinUntilShutdownComplete();
-
-private:
-  void ShutdownThread();
-  nsCOMPtr<nsIThread> mThread;
 };
 
 } // namespace mozilla

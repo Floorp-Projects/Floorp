@@ -122,7 +122,6 @@ public:
                                bool aRealTime = false);
   ~MediaDecoderStateMachine();
 
-  // nsDecoderStateMachine interface
   nsresult Init(MediaDecoderStateMachine* aCloneDonor);
 
   // Enumeration for the valid decoding states
@@ -303,7 +302,7 @@ public:
   void SetFrameBufferLength(uint32_t aLength);
 
   // Returns the shared state machine thread.
-  static nsIThread* GetStateMachineThread();
+  nsIEventTarget* GetStateMachineThread();
 
   // Calls ScheduleStateMachine() after taking the decoder lock. Also
   // notifies the decoder thread in case it's waiting on the decoder lock.
@@ -615,6 +614,8 @@ private:
   // the "decode thread", though in practise tasks can run on a different
   // thread every time they're called.
   RefPtr<MediaTaskQueue> mDecodeTaskQueue;
+
+  RefPtr<SharedThreadPool> mStateMachineThreadPool;
 
   // Timer to call the state machine Run() method. Used by
   // ScheduleStateMachine(). Access protected by decoder monitor.
