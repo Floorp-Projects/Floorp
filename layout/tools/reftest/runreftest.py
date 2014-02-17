@@ -170,6 +170,9 @@ class RefTest(object):
         sys.exit(1)
       prefs[thispref[0]] = mozprofile.Preferences.cast(thispref[1].strip())
 
+    # We need to set this here, see bug 972099
+    prefs['gfx.color_management.force_srgb'] = True
+
     # install the reftest extension bits into the profile
     addons = []
     addons.append(os.path.join(SCRIPT_DIRECTORY, "reftest"))
