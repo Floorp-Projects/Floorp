@@ -43,14 +43,10 @@ function newWorker(custom_ns) {
     onmessage: undefined,
     onerror: undefined,
 
-    CLIENT_ID: 0,
     DEBUG: true
   };
   // The 'self' variable in a worker points to the worker's own namespace.
   worker_ns.self = worker_ns;
-
-  // systemlibs.js utilizes ctypes for loading native libraries.
-  Cu.import("resource://gre/modules/ctypes.jsm", worker_ns);
 
   // Copy the custom definitions over.
   for (let key in custom_ns) {
@@ -75,6 +71,9 @@ function newWorker(custom_ns) {
 
   // Load the RIL worker itself.
   worker_ns.importScripts("ril_worker.js");
+
+  // Register at least one client.
+  worker_ns.ContextPool.registerClient({ clientId: 0 });
 
   return worker_ns;
 }

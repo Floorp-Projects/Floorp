@@ -27,7 +27,8 @@ add_test(function test_RadioInterface__countGsm7BitSeptets() {
     }
   });
 
-  let helper = worker.GsmPDUHelper;
+  let context = worker.ContextPool._contexts[0];
+  let helper = context.GsmPDUHelper;
   helper.resetOctetWritten = function() {
     helper.octetsWritten = 0;
   };
