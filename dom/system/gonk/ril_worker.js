@@ -53,6 +53,8 @@ if (!this.debug) {
   };
 }
 
+let RIL_CELLBROADCAST_DISABLED;
+let RIL_CLIR_MODE;
 let RIL_EMERGENCY_NUMBERS;
 const DEFAULT_EMERGENCY_NUMBERS = ["112", "911"];
 
@@ -194,6 +196,8 @@ let Buf = {
  * and acts upon state changes accordingly.
  */
 let RIL = {
+  v5Legacy: null,
+
   /**
    * Valid calls.
    */
@@ -483,9 +487,9 @@ let RIL = {
    */
   enterICCPIN: function(options) {
     Buf.newParcel(REQUEST_ENTER_SIM_PIN, options);
-    Buf.writeInt32(RILQUIRKS_V5_LEGACY ? 1 : 2);
+    Buf.writeInt32(this.v5Legacy ? 1 : 2);
     Buf.writeString(options.pin);
-    if (!RILQUIRKS_V5_LEGACY) {
+    if (!this.v5Legacy) {
       Buf.writeString(options.aid || this.aid);
     }
     Buf.sendParcel();
@@ -501,9 +505,9 @@ let RIL = {
    */
   enterICCPIN2: function(options) {
     Buf.newParcel(REQUEST_ENTER_SIM_PIN2, options);
-    Buf.writeInt32(RILQUIRKS_V5_LEGACY ? 1 : 2);
+    Buf.writeInt32(this.v5Legacy ? 1 : 2);
     Buf.writeString(options.pin);
-    if (!RILQUIRKS_V5_LEGACY) {
+    if (!this.v5Legacy) {
       Buf.writeString(options.aid || this.aid);
     }
     Buf.sendParcel();
@@ -577,10 +581,10 @@ let RIL = {
    */
   changeICCPIN: function(options) {
     Buf.newParcel(REQUEST_CHANGE_SIM_PIN, options);
-    Buf.writeInt32(RILQUIRKS_V5_LEGACY ? 2 : 3);
+    Buf.writeInt32(this.v5Legacy ? 2 : 3);
     Buf.writeString(options.pin);
     Buf.writeString(options.newPin);
-    if (!RILQUIRKS_V5_LEGACY) {
+    if (!this.v5Legacy) {
       Buf.writeString(options.aid || this.aid);
     }
     Buf.sendParcel();
@@ -598,10 +602,10 @@ let RIL = {
    */
   changeICCPIN2: function(options) {
     Buf.newParcel(REQUEST_CHANGE_SIM_PIN2, options);
-    Buf.writeInt32(RILQUIRKS_V5_LEGACY ? 2 : 3);
+    Buf.writeInt32(this.v5Legacy ? 2 : 3);
     Buf.writeString(options.pin);
     Buf.writeString(options.newPin);
-    if (!RILQUIRKS_V5_LEGACY) {
+    if (!this.v5Legacy) {
       Buf.writeString(options.aid || this.aid);
     }
     Buf.sendParcel();
@@ -618,10 +622,10 @@ let RIL = {
    */
    enterICCPUK: function(options) {
      Buf.newParcel(REQUEST_ENTER_SIM_PUK, options);
-     Buf.writeInt32(RILQUIRKS_V5_LEGACY ? 2 : 3);
+     Buf.writeInt32(this.v5Legacy ? 2 : 3);
      Buf.writeString(options.puk);
      Buf.writeString(options.newPin);
-     if (!RILQUIRKS_V5_LEGACY) {
+     if (!this.v5Legacy) {
        Buf.writeString(options.aid || this.aid);
      }
      Buf.sendParcel();
@@ -639,10 +643,10 @@ let RIL = {
    */
    enterICCPUK2: function(options) {
      Buf.newParcel(REQUEST_ENTER_SIM_PUK2, options);
-     Buf.writeInt32(RILQUIRKS_V5_LEGACY ? 2 : 3);
+     Buf.writeInt32(this.v5Legacy ? 2 : 3);
      Buf.writeString(options.puk);
      Buf.writeString(options.newPin);
-     if (!RILQUIRKS_V5_LEGACY) {
+     if (!this.v5Legacy) {
        Buf.writeString(options.aid || this.aid);
      }
      Buf.sendParcel();
@@ -739,11 +743,11 @@ let RIL = {
    */
   queryICCFacilityLock: function(options) {
     Buf.newParcel(REQUEST_QUERY_FACILITY_LOCK, options);
-    Buf.writeInt32(RILQUIRKS_V5_LEGACY ? 3 : 4);
+    Buf.writeInt32(this.v5Legacy ? 3 : 4);
     Buf.writeString(options.facility);
     Buf.writeString(options.password);
     Buf.writeString(options.serviceClass.toString());
-    if (!RILQUIRKS_V5_LEGACY) {
+    if (!this.v5Legacy) {
       Buf.writeString(options.aid || this.aid);
     }
     Buf.sendParcel();
@@ -765,12 +769,12 @@ let RIL = {
    */
   setICCFacilityLock: function(options) {
     Buf.newParcel(REQUEST_SET_FACILITY_LOCK, options);
-    Buf.writeInt32(RILQUIRKS_V5_LEGACY ? 4 : 5);
+    Buf.writeInt32(this.v5Legacy ? 4 : 5);
     Buf.writeString(options.facility);
     Buf.writeString(options.enabled ? "1" : "0");
     Buf.writeString(options.password);
     Buf.writeString(options.serviceClass.toString());
-    if (!RILQUIRKS_V5_LEGACY) {
+    if (!this.v5Legacy) {
       Buf.writeString(options.aid || this.aid);
     }
     Buf.sendParcel();
@@ -823,7 +827,7 @@ let RIL = {
       Buf.writeString(null);
     }
 
-    if (!RILQUIRKS_V5_LEGACY) {
+    if (!this.v5Legacy) {
       Buf.writeString(options.aid || this.aid);
     }
     Buf.sendParcel();
@@ -836,7 +840,7 @@ let RIL = {
    *        AID value.
    */
   getIMSI: function(aid) {
-    if (RILQUIRKS_V5_LEGACY) {
+    if (this.v5Legacy) {
       Buf.simpleRequest(REQUEST_GET_IMSI);
       return;
     }
@@ -1863,7 +1867,7 @@ let RIL = {
     //
     // See also bug 901232 and 867873
     let radioTech;
-    if (RILQUIRKS_V5_LEGACY) {
+    if (this.v5Legacy) {
       radioTech = this._isCdma ? DATACALL_RADIOTECHNOLOGY_CDMA
                                : DATACALL_RADIOTECHNOLOGY_GSM;
     } else {
@@ -4967,9 +4971,10 @@ let RIL = {
 
   setInitialOptions: function(options) {
     DEBUG = DEBUG_WORKER || options.debug;
-    this.cellBroadcastDisabled = options.cellBroadcastDisabled;
-    this.clirMode = options.clirMode;
     RIL_EMERGENCY_NUMBERS = options.rilEmergencyNumbers;
+    RIL_CELLBROADCAST_DISABLED = options.cellBroadcastDisabled;
+    RIL_CLIR_MODE = options.clirMode;
+
     let quirks = options.quirks;
     RILQUIRKS_CALLSTATE_EXTRA_UINT32 = quirks.callstateExtraUint32;
     RILQUIRKS_V5_LEGACY = quirks.v5Legacy;
@@ -4983,10 +4988,15 @@ let RIL = {
 
   registerClient: function(aOptions) {
     CLIENT_ID = aOptions.clientId;
+
+    // Init properties that are only initialized once.
+    this.v5Legacy = RILQUIRKS_V5_LEGACY;
+    this.cellBroadcastDisabled = RIL_CELLBROADCAST_DISABLED;
+    this.clirMode = RIL_CLIR_MODE;
+
+    this.initRILState();
   }
 };
-
-RIL.initRILState();
 
 RIL[REQUEST_GET_SIM_STATUS] = function REQUEST_GET_SIM_STATUS(length, options) {
   if (options.rilRequestError) {
@@ -4998,7 +5008,7 @@ RIL[REQUEST_GET_SIM_STATUS] = function REQUEST_GET_SIM_STATUS(length, options) {
   iccStatus.universalPINState = Buf.readInt32(); // CARD_PINSTATE_*
   iccStatus.gsmUmtsSubscriptionAppIndex = Buf.readInt32();
   iccStatus.cdmaSubscriptionAppIndex = Buf.readInt32();
-  if (!RILQUIRKS_V5_LEGACY) {
+  if (!this.v5Legacy) {
     iccStatus.imsSubscriptionAppIndex = Buf.readInt32();
   }
 
@@ -5206,7 +5216,7 @@ RIL[REQUEST_SIGNAL_STRENGTH] = function REQUEST_SIGNAL_STRENGTH(length, options)
     evdoSNR:           Buf.readInt32()
   };
 
-  if (!RILQUIRKS_V5_LEGACY) {
+  if (!this.v5Legacy) {
     signal.lteSignalStrength = Buf.readInt32();
     signal.lteRSRP =           Buf.readInt32();
     signal.lteRSRQ =           Buf.readInt32();
@@ -5304,7 +5314,7 @@ RIL[REQUEST_SETUP_DATA_CALL] = function REQUEST_SETUP_DATA_CALL(length, options)
     return;
   }
 
-  if (RILQUIRKS_V5_LEGACY) {
+  if (this.v5Legacy) {
     // Populate the `options` object with the data call information. That way
     // we retain the APN and other info about how the data call was set up.
     this.readSetupDataCall_v5(options);
@@ -5853,7 +5863,7 @@ RIL[REQUEST_DATA_CALL_LIST] = function REQUEST_DATA_CALL_LIST(length, options) {
   }
 
   let version = 0;
-  if (!RILQUIRKS_V5_LEGACY) {
+  if (!this.v5Legacy) {
     version = Buf.readInt32();
   }
   let num = Buf.readInt32();
@@ -6266,7 +6276,7 @@ RIL[UNSOLICITED_SIGNAL_STRENGTH] = function UNSOLICITED_SIGNAL_STRENGTH(length) 
   this[REQUEST_SIGNAL_STRENGTH](length, {rilRequestError: ERROR_SUCCESS});
 };
 RIL[UNSOLICITED_DATA_CALL_LIST_CHANGED] = function UNSOLICITED_DATA_CALL_LIST_CHANGED(length) {
-  if (RILQUIRKS_V5_LEGACY) {
+  if (this.v5Legacy) {
     this.getDataCallList();
     return;
   }
@@ -6394,10 +6404,10 @@ RIL[UNSOLICITED_RIL_CONNECTED] = function UNSOLICITED_RIL_CONNECTED(length) {
   }
 
   let version = Buf.readInt32List()[0];
-  RILQUIRKS_V5_LEGACY = (version < 5);
+  this.v5Legacy = (version < 5);
   if (DEBUG) {
     debug("Detected RIL version " + version);
-    debug("RILQUIRKS_V5_LEGACY is " + RILQUIRKS_V5_LEGACY);
+    debug("this.v5Legacy is " + this.v5Legacy);
   }
 
   this.initRILState();
