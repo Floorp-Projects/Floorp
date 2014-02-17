@@ -144,6 +144,22 @@ ConnectWorkerToRIL::RunTask(JSContext *aCx)
     NS_ASSERTION(!JS_IsRunning(aCx), "Are we being called somehow?");
     JS::Rooted<JSObject*> workerGlobal(aCx, JS::CurrentGlobalOrNull(aCx));
 
+    // Check whether |postRILMessage| has been defined.  No one but this class
+    // should ever define |postRILMessage| in a RIL worker, so we call to
+    // |JS_LookupProperty| instead of |JS_GetProperty| here.
+    JS::Rooted<JS::Value> val(aCx);
+    if (!JS_LookupProperty(aCx, workerGlobal, "postRILMessage", &val)) {
+        JS_ReportPendingException(aCx);
+        return false;
+    }
+
+    // |JS_LookupProperty| could still return JS_TRUE with an "undefined"
+    // |postRILMessage|, so we have to make sure that with an additional call
+    // to |JS_TypeOfValue|.
+    if (JSTYPE_FUNCTION == JS_TypeOfValue(aCx, val)) {
+        return true;
+    }
+
     return !!JS_DefineFunction(aCx, workerGlobal,
                                "postRILMessage", PostToRIL, 2, 0);
 }
@@ -151,13 +167,16 @@ ConnectWorkerToRIL::RunTask(JSContext *aCx)
 class DispatchRILEvent : public WorkerTask
 {
 public:
-        DispatchRILEvent(UnixSocketRawData* aMessage)
-            : mMessage(aMessage)
+        DispatchRILEvent(unsigned long aClient,
+                         UnixSocketRawData* aMessage)
+            : mClientId(aClient)
+            , mMessage(aMessage)
         { }
 
         virtual bool RunTask(JSContext *aCx);
 
 private:
+        unsigned long mClientId;
         nsAutoPtr<UnixSocketRawData> mMessage;
 };
 
@@ -166,15 +185,18 @@ DispatchRILEvent::RunTask(JSContext *aCx)
 {
     JS::Rooted<JSObject*> obj(aCx, JS::CurrentGlobalOrNull(aCx));
 
-    JSObject *array = JS_NewUint8Array(aCx, mMessage->mSize);
+    JS::Rooted<JSObject*> array(aCx, JS_NewUint8Array(aCx, mMessage->mSize));
     if (!array) {
         return false;
     }
-    JS::Rooted<JS::Value> arrayVal(aCx, JS::ObjectValue(*array));
-
     memcpy(JS_GetArrayBufferViewData(array), mMessage->mData, mMessage->mSize);
+
+    JS::AutoValueArray<2> args(aCx);
+    args[0].setNumber((uint32_t)mClientId);
+    args[1].setObject(*array);
+
     JS::Rooted<JS::Value> rval(aCx);
-    return JS_CallFunctionName(aCx, obj, "onRILMessage", arrayVal, &rval);
+    return JS_CallFunctionName(aCx, obj, "onRILMessage", args, &rval);
 }
 
 class RilConnector : public mozilla::ipc::UnixSocketConnector
@@ -354,7 +376,7 @@ RilConsumer::ReceiveSocketData(nsAutoPtr<UnixSocketRawData>& aMessage)
 {
     MOZ_ASSERT(NS_IsMainThread());
 
-    nsRefPtr<DispatchRILEvent> dre(new DispatchRILEvent(aMessage.forget()));
+    nsRefPtr<DispatchRILEvent> dre(new DispatchRILEvent(mClientId, aMessage.forget()));
     mDispatcher->PostTask(dre);
 }
 
