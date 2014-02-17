@@ -1564,7 +1564,7 @@
       <constructor><![CDATA[
         const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
         let sortedActions = [];
-        for (let action of this.notification.options.centerActions.values()) {
+        for (let action of this.notification.options.pluginData.values()) {
           sortedActions.push(action);
         }
         sortedActions.sort((a, b) => a.pluginName.localeCompare(b.pluginName));
