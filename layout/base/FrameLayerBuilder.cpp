@@ -1690,6 +1690,10 @@ ContainerState::FindFixedPosFrameForLayerData(const nsIFrame* aAnimatedGeometryR
         result = f;
         break;
       }
+      if (f == mContainerReferenceFrame) {
+        // The metadata will go on an ancestor layer if necessary.
+        return nullptr;
+      }
     }
     if (!result) {
       return nullptr;
