@@ -149,7 +149,7 @@ public:
 
   virtual ISharedImage* AsSharedImage() MOZ_OVERRIDE { return this; }
 
-  virtual TextureClient* GetTextureClient() MOZ_OVERRIDE;
+  virtual TextureClient* GetTextureClient(CompositableClient* aClient) MOZ_OVERRIDE;
 
   virtual uint8_t* GetBuffer()
   {

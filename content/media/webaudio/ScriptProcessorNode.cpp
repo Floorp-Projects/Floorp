@@ -314,10 +314,9 @@ private:
     // Add the delay caused by the main thread
     playbackTick += mSharedBuffers->DelaySoFar();
     // Compute the playback time in the coordinate system of the destination
+    // FIXME: bug 970773
     double playbackTime =
-      WebAudioUtils::StreamPositionToDestinationTime(playbackTick,
-                                                     mSource,
-                                                     mDestination);
+      mSource->DestinationTimeFromTicks(mDestination, playbackTick);
 
     class Command : public nsRunnable
     {
