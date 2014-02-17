@@ -4648,7 +4648,8 @@ IonBuilder::createThisScripted(MDefinition *callee)
     //       and thus invalidation.
     MInstruction *getProto;
     if (!invalidatedIdempotentCache()) {
-        MGetPropertyCache *getPropCache = MGetPropertyCache::New(alloc(), callee, names().prototype);
+        MGetPropertyCache *getPropCache = MGetPropertyCache::New(alloc(), callee, names().prototype,
+                                                                 /* monitoredResult = */ false);
         getPropCache->setIdempotent();
         getProto = getPropCache;
     } else {
@@ -8611,8 +8612,19 @@ IonBuilder::getPropTryCache(bool *emitted, PropertyName *name,
             return true;
     }
 
+    if (accessGetter)
+        barrier = true;
+
+    if (needsToMonitorMissingProperties(types))
+        barrier = true;
+
+    // Caches can read values from prototypes, so update the barrier to
+    // reflect such possible values.
+    if (!barrier)
+        barrier = PropertyReadOnPrototypeNeedsTypeBarrier(constraints(), obj, name, types);
+
     current->pop();
-    MGetPropertyCache *load = MGetPropertyCache::New(alloc(), obj, name);
+    MGetPropertyCache *load = MGetPropertyCache::New(alloc(), obj, name, barrier);
 
     // Try to mark the cache as idempotent.
     //
@@ -8641,17 +8653,6 @@ IonBuilder::getPropTryCache(bool *emitted, PropertyName *name,
 
     if (load->isEffectful() && !resumeAfter(load))
         return false;
-
-    if (accessGetter)
-        barrier = true;
-
-    if (needsToMonitorMissingProperties(types))
-        barrier = true;
-
-    // Caches can read values from prototypes, so update the barrier to
-    // reflect such possible values.
-    if (!barrier)
-        barrier = PropertyReadOnPrototypeNeedsTypeBarrier(constraints(), obj, name, types);
 
     MIRType rvalType = MIRTypeFromValueType(types->getKnownTypeTag());
     if (barrier || IsNullOrUndefined(rvalType))
