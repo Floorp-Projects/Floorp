@@ -91,6 +91,9 @@
       testQuickFindText();
       gFindBar.close();
       ok(gFindBar.hidden, "Failed to close findbar after testQuickFindText");
+      testFindWithHighlight();
+      gFindBar.close();
+      ok(gFindBar.hidden, "Failed to close findbar after testFindWithHighlight");
       testFindbarSelection();
       testDrop();
       testQuickFindLink();
@@ -302,6 +305,52 @@
       enterStringIntoFindField(searchStr);
       ok(gBrowser.contentWindow.getSelection() == searchStr,
           "testQuickFindLink: failed to find sample link");
+    }
+
+    // See bug 963925 for more details on this test.
+    function testFindWithHighlight() {
+      //clearFocus();
+      gFindBar._findField.value = "";
+
+      let findCommand = document.getElementById("cmd_find");
+      findCommand.doCommand();
+
+      let searchStr = "e";
+      enterStringIntoFindField(searchStr);
+
+      let a = gFindBar._findField.value;
+      let b = gFindBar._browser.finder._fastFind.searchString;
+      let c = gFindBar._browser.finder.searchString;
+      ok(a == b && b == c, "testFindWithHighlight: " + a + ", " + b + ", " + c + ".");
+
+      let oldGetInitialSelection = gFindBar._getInitialSelection;
+      let searchStr = "t";
+      gFindBar._getInitialSelection = () => searchStr;
+      findCommand.doCommand();
+      gFindBar._getInitialSelection = oldGetInitialSelection;
+
+      a = gFindBar._findField.value;
+      b = gFindBar._browser.finder._fastFind.searchString;
+      c = gFindBar._browser.finder.searchString;
+      ok(a == searchStr && b == c, "testFindWithHighlight: " + a + ", " + b + ", " + c + ".");
+
+      let highlightButton = gFindBar.getElement("highlight");
+      highlightButton.click();
+      ok(highlightButton.checked, "testFindWithHighlight: Highlight All should be checked.");
+
+      a = gFindBar._findField.value;
+      b = gFindBar._browser.finder._fastFind.searchString;
+      c = gFindBar._browser.finder.searchString;
+      ok(a == searchStr && b == c, "testFindWithHighlight: " + a + ", " + b + ", " + c + ".");
+
+      gFindBar.onFindAgainCommand();
+      a = gFindBar._findField.value;
+      b = gFindBar._browser.finder._fastFind.searchString;
+      c = gFindBar._browser.finder.searchString;
+      ok(a == b && b == c, "testFindWithHighlight: " + a + ", " + b + ", " + c + ".");
+
+      highlightButton.click();
+      ok(!highlightButton.checked, "testFindWithHighlight: Highlight All should be unchecked.");
     }
 
     function testQuickFindText() {
