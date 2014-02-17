@@ -90,6 +90,17 @@ MediaTaskQueue::IsEmpty()
   return mTasks.empty();
 }
 
+bool
+MediaTaskQueue::IsCurrentThreadIn()
+{
+#ifdef DEBUG
+  MonitorAutoLock mon(mQueueMonitor);
+  return NS_GetCurrentThread() == mRunningThread;
+#else
+  return false;
+#endif
+}
+
 nsresult
 MediaTaskQueue::Runner::Run()
 {
@@ -97,6 +108,7 @@ MediaTaskQueue::Runner::Run()
   {
     MonitorAutoLock mon(mQueue->mQueueMonitor);
     MOZ_ASSERT(mQueue->mIsRunning);
+    mQueue->mRunningThread = NS_GetCurrentThread();
     if (mQueue->mTasks.size() == 0) {
       mQueue->mIsRunning = false;
       mon.NotifyAll();
@@ -120,6 +132,7 @@ MediaTaskQueue::Runner::Run()
       // No more events to run. Exit the task runner.
       mQueue->mIsRunning = false;
       mon.NotifyAll();
+      mQueue->mRunningThread = nullptr;
       return NS_OK;
     }
   }
@@ -129,13 +142,20 @@ MediaTaskQueue::Runner::Run()
   // run in a loop here so that we don't hog the thread pool. This means we may
   // run on another thread next time, but we rely on the memory fences from
   // mQueueMonitor for thread safety of non-threadsafe tasks.
-  nsresult rv = mQueue->mPool->Dispatch(this, NS_DISPATCH_NORMAL);
-  if (NS_FAILED(rv)) {
-    // Failed to dispatch, shutdown!
+  {
     MonitorAutoLock mon(mQueue->mQueueMonitor);
-    mQueue->mIsRunning = false;
-    mQueue->mIsShutdown = true;
-    mon.NotifyAll();
+    // Note: Hold the monitor *before* we dispatch, in case we context switch
+    // to another thread pool in the queue immediately and take the lock in the
+    // other thread; mRunningThread could be set to the new thread's value and
+    // then incorrectly anulled below in that case.
+    nsresult rv = mQueue->mPool->Dispatch(this, NS_DISPATCH_NORMAL);
+    if (NS_FAILED(rv)) {
+      // Failed to dispatch, shutdown!
+      mQueue->mIsRunning = false;
+      mQueue->mIsShutdown = true;
+      mon.NotifyAll();
+    }
+    mQueue->mRunningThread = nullptr;
   }
 
   return NS_OK;

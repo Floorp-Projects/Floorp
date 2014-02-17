@@ -43,6 +43,10 @@ public:
 
   bool IsEmpty();
 
+  // Returns true if the current thread is currently running a Runnable in
+  // the task queue. This is for debugging/validation purposes only.
+  bool IsCurrentThreadIn();
+
 private:
 
   // Blocks until all task finish executing. Called internally by methods
@@ -57,6 +61,11 @@ private:
 
   // Queue of tasks to run.
   std::queue<RefPtr<nsIRunnable>> mTasks;
+
+  // The thread currently running the task queue. We store a reference
+  // to this so that IsCurrentThreadIn() can tell if the current thread
+  // is the thread currently running in the task queue.
+  RefPtr<nsIThread> mRunningThread;
 
   // True if we've dispatched an event to the pool to execute events from
   // the queue.

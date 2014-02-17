@@ -44,7 +44,11 @@ public:
 
   // Forward behaviour to wrapped thread pool implementation.
   NS_FORWARD_SAFE_NSITHREADPOOL(mPool);
-  NS_FORWARD_SAFE_NSIEVENTTARGET(mEventTarget);
+  NS_FORWARD_SAFE_NSIEVENTTARGET(GetEventTarget());
+
+  nsIEventTarget* GetEventTarget() {
+    return mEventTarget;
+  }
 
 private:
 
