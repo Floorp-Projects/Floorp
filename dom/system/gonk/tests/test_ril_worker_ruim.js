@@ -12,18 +12,19 @@ function run_test() {
  */
 function newUint8Worker() {
   let worker = newWorker();
+  let context = worker.ContextPool._contexts[0];
   let index = 0; // index for read
   let buf = [];
 
-  worker.Buf.writeUint8 = function(value) {
+  context.Buf.writeUint8 = function(value) {
     buf.push(value);
   };
 
-  worker.Buf.readUint8 = function() {
+  context.Buf.readUint8 = function() {
     return buf[index++];
   };
 
-  worker.Buf.seekIncoming = function(offset) {
+  context.Buf.seekIncoming = function(offset) {
     index += offset;
   };
 
@@ -37,12 +38,13 @@ function newUint8Worker() {
  */
 add_test(function test_is_ruim_service_available() {
   let worker = newWorker();
-  worker.RIL._isCdma = true;
-  worker.RIL.appType = CARD_APPTYPE_RUIM;
+  let context = worker.ContextPool._contexts[0];
+  context.RIL._isCdma = true;
+  context.RIL.appType = CARD_APPTYPE_RUIM;
 
   function test_table(cst, geckoService, enabled) {
-    worker.RIL.iccInfoPrivate.cst = cst;
-    do_check_eq(worker.ICCUtilsHelper.isICCServiceAvailable(geckoService),
+    context.RIL.iccInfoPrivate.cst = cst;
+    do_check_eq(context.ICCUtilsHelper.isICCServiceAvailable(geckoService),
                 enabled);
   }
 
@@ -59,8 +61,9 @@ add_test(function test_is_ruim_service_available() {
  */
 add_test(function test_ruim_file_path_id() {
   let worker = newWorker();
-  let RIL = worker.RIL;
-  let ICCFileHelper = worker.ICCFileHelper;
+  let context = worker.ContextPool._contexts[0];
+  let RIL = context.RIL;
+  let ICCFileHelper = context.ICCFileHelper;
 
   RIL.appType = CARD_APPTYPE_RUIM;
   do_check_eq(ICCFileHelper.getEFPath(ICC_EF_CSIM_CST),
@@ -71,8 +74,9 @@ add_test(function test_ruim_file_path_id() {
 
 add_test(function test_fetch_ruim_recodes() {
   let worker = newWorker();
-  let RIL = worker.RIL;
-  let ruimHelper = worker.RuimRecordHelper;
+  let context = worker.ContextPool._contexts[0];
+  let RIL = context.RIL;
+  let ruimHelper = context.RuimRecordHelper;
 
   function testFetchRuimRecordes(expectCalled) {
     let ifCalled = [];
@@ -115,9 +119,10 @@ add_test(function test_fetch_ruim_recodes() {
  */
 add_test(function test_decode_imsi_value() {
   let worker = newUint8Worker();
+  let context = worker.ContextPool._contexts[0];
 
   function testDecodeImsiValue(encoded, length, expect) {
-    let decoded = worker.RuimRecordHelper.decodeIMSIValue(encoded, length);
+    let decoded = context.RuimRecordHelper.decodeIMSIValue(encoded, length);
 
     do_check_eq(expect, decoded);
   }
@@ -145,9 +150,10 @@ add_test(function test_decode_imsi_value() {
  */
 add_test(function test_get_imsi_m() {
   let worker = newUint8Worker();
-  let helper = worker.GsmPDUHelper;
-  let buf    = worker.Buf;
-  let io     = worker.ICCIOHelper;
+  let context = worker.ContextPool._contexts[0];
+  let helper = context.GsmPDUHelper;
+  let buf    = context.Buf;
+  let io     = context.ICCIOHelper;
 
   function testDecodeImsi(encodedImsi, expectedImsi) {
     io.loadTransparentEF = function fakeLoadTransparentEF(options) {
@@ -167,8 +173,8 @@ add_test(function test_get_imsi_m() {
       }
     };
 
-    worker.RuimRecordHelper.getIMSI_M();
-    let imsi = worker.RIL.iccInfoPrivate.imsi;
+    context.RuimRecordHelper.getIMSI_M();
+    let imsi = context.RIL.iccInfoPrivate.imsi;
 
     do_check_eq(expectedImsi, imsi)
   }
@@ -187,9 +193,10 @@ add_test(function test_get_imsi_m() {
  */
 add_test(function test_read_cdmahome() {
   let worker = newUint8Worker();
-  let helper = worker.GsmPDUHelper;
-  let buf    = worker.Buf;
-  let io     = worker.ICCIOHelper;
+  let context = worker.ContextPool._contexts[0];
+  let helper = context.GsmPDUHelper;
+  let buf    = context.Buf;
+  let io     = context.ICCIOHelper;
 
   io.loadLinearFixedEF = function fakeLoadLinearFixedEF(options)  {
     let cdmaHome = [0xc1, 0x34, 0xff, 0xff, 0x00];
@@ -214,8 +221,8 @@ add_test(function test_read_cdmahome() {
   };
 
   function testCdmaHome(expectedSystemIds, expectedNetworkIds) {
-    worker.RuimRecordHelper.readCDMAHome();
-    let cdmaHome = worker.RIL.cdmaHome;
+    context.RuimRecordHelper.readCDMAHome();
+    let cdmaHome = context.RIL.cdmaHome;
     for (let i = 0; i < expectedSystemIds.length; i++) {
       do_check_eq(cdmaHome.systemId[i], expectedSystemIds[i]);
       do_check_eq(cdmaHome.networkId[i], expectedNetworkIds[i]);
@@ -234,9 +241,10 @@ add_test(function test_read_cdmahome() {
  */
 add_test(function test_read_cdmaspn() {
   let worker = newUint8Worker();
-  let helper = worker.GsmPDUHelper;
-  let buf    = worker.Buf;
-  let io     = worker.ICCIOHelper;
+  let context = worker.ContextPool._contexts[0];
+  let helper = context.GsmPDUHelper;
+  let buf    = context.Buf;
+  let io     = context.ICCIOHelper;
 
   function testReadSpn(file, expectedSpn, expectedDisplayCondition) {
     io.loadTransparentEF = function fakeLoadTransparentEF(options)  {
@@ -256,9 +264,9 @@ add_test(function test_read_cdmaspn() {
       }
     };
 
-    worker.RuimRecordHelper.readSPN();
-    do_check_eq(worker.RIL.iccInfo.spn, expectedSpn);
-    do_check_eq(worker.RIL.iccInfoPrivate.spnDisplayCondition,
+    context.RuimRecordHelper.readSPN();
+    do_check_eq(context.RIL.iccInfo.spn, expectedSpn);
+    do_check_eq(context.RIL.iccInfoPrivate.spnDisplayCondition,
                 expectedDisplayCondition);
   }
 
@@ -297,8 +305,9 @@ add_test(function test_cdma_spn_display_condition() {
       // Do nothing
     }
   });
-  let RIL = worker.RIL;
-  let ICCUtilsHelper = worker.ICCUtilsHelper;
+  let context = worker.ContextPool._contexts[0];
+  let RIL = context.RIL;
+  let ICCUtilsHelper = context.ICCUtilsHelper;
 
   // Set cdma.
   RIL._isCdma = true;
