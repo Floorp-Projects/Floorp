@@ -7,10 +7,12 @@
 
 #include "nsIEventTarget.h"
 #include "nsIRunnable.h"
+#include "nsThreadUtils.h"
+
+#include "mozilla/DebugOnly.h"
 
 #include "js/RootingAPI.h"
 #include "js/Value.h"
-#include "nsThreadUtils.h"
 
 #include "WorkerPrivate.h"
 
@@ -478,3 +480,43 @@ MainThreadWorkerControlRunnable::PostDispatch(JSContext* aCx,
 }
 
 NS_IMPL_ISUPPORTS_INHERITED0(WorkerControlRunnable, WorkerRunnable)
+
+bool
+WorkerSameThreadRunnable::PreDispatch(JSContext* aCx,
+                                      WorkerPrivate* aWorkerPrivate)
+{
+  aWorkerPrivate->AssertIsOnWorkerThread();
+  return true;
+}
+
+void
+WorkerSameThreadRunnable::PostDispatch(JSContext* aCx,
+                                       WorkerPrivate* aWorkerPrivate,
+                                       bool aDispatchResult)
+{
+  aWorkerPrivate->AssertIsOnWorkerThread();
+  if (aDispatchResult) {
+    DebugOnly<bool> willIncrement = aWorkerPrivate->ModifyBusyCountFromWorker(aCx, true);
+    // Should never fail since if this thread is still running, so should the
+    // parent and it should be able to process a control runnable.
+    MOZ_ASSERT(willIncrement);
+  }
+}
+
+void
+WorkerSameThreadRunnable::PostRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
+                                  bool aRunResult)
+{
+  MOZ_ASSERT(aCx);
+  MOZ_ASSERT(aWorkerPrivate);
+
+  aWorkerPrivate->AssertIsOnWorkerThread();
+
+  DebugOnly<bool> willDecrement = aWorkerPrivate->ModifyBusyCountFromWorker(aCx, false);
+  MOZ_ASSERT(willDecrement);
+
+  if (!aRunResult) {
+    JS_ReportPendingException(aCx);
+  }
+}
+
