@@ -1268,3 +1268,17 @@ function getTestPluginTag() {
   ok(false, "Unable to find plugin");
   return null;
 }
+
+// Call this to set the test plugin(s) initially expected enabled state.
+// It will automatically be reset to it's previous value after the test
+// ends
+function setTestPluginEnabledState(newEnabledState, pluginTag) {
+  if (!pluginTag) {
+    pluginTag = getTestPluginTag();
+  }
+  var oldEnabledState = pluginTag.enabledState;
+  pluginTag.enabledState = newEnabledState;
+  SimpleTest.registerCleanupFunction(function() {
+    pluginTag.enabledState = oldEnabledState;
+  });
+}
