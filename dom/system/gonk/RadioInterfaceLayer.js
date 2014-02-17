@@ -1561,7 +1561,10 @@ function RadioInterfaceLayer() {
   if (DEBUG) debug(numIfaces + " interfaces");
   this.radioInterfaces = [];
   for (let clientId = 0; clientId < numIfaces; clientId++) {
-    this.radioInterfaces.push(new RadioInterface(clientId));
+    let workerMessenger = new WorkerMessenger();
+    workerMessenger.init();
+
+    this.radioInterfaces.push(new RadioInterface(clientId, workerMessenger));
   }
 
   Services.obs.addObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
@@ -1636,20 +1639,17 @@ XPCOMUtils.defineLazyGetter(RadioInterfaceLayer.prototype,
   return 1;
 });
 
-function WorkerMessenger(radioInterface) {
+function WorkerMessenger() {
   // Initial owning attributes.
-  this.radioInterface = radioInterface;
+  this.radioInterfaces = [];
   this.tokenCallbackMap = {};
-
-  // Add a convenient alias to |radioInterface.debug()|.
-  this.debug = radioInterface.debug.bind(radioInterface);
 
   this.worker = new ChromeWorker("resource://gre/modules/ril_worker.js");
   this.worker.onerror = this.onerror.bind(this);
   this.worker.onmessage = this.onmessage.bind(this);
 }
 WorkerMessenger.prototype = {
-  radioInterface: null,
+  radioInterfaces: null,
   worker: null,
 
   // This gets incremented each time we send out a message.
@@ -1694,16 +1694,17 @@ WorkerMessenger.prototype = {
       options.clirMode = Services.prefs.getIntPref(kPrefClirModePreference);
     } catch(e) {}
 
-    if (DEBUG) this.debug("Starting RIL Worker");
-    let clientId = this.radioInterface.clientId;
-    options.clientId = clientId;
-    this.send("setInitialOptions", options);
-    gSystemWorkerManager.registerRilWorker(clientId, this.worker);
+    this.send(null, "setInitialOptions", options);
+  },
+
+  debug: function(aClientId, aMessage) {
+    // We use the same debug subject with RadioInterface's here.
+    dump("-*- RadioInterface[" + aClientId + "]: " + aMessage + "\n");
   },
 
   onerror: function(event) {
     if (DEBUG) {
-      this.debug("Got an error: " + event.filename + ":" +
+      this.debug("X", "Got an error: " + event.filename + ":" +
                  event.lineno + ": " + event.message + "\n");
     }
     event.preventDefault();
@@ -1714,20 +1715,26 @@ WorkerMessenger.prototype = {
    */
   onmessage: function(event) {
     let message = event.data;
+    let clientId = message.rilMessageClientId;
+    if (clientId === null) {
+      return;
+    }
+
     if (DEBUG) {
-      this.debug("Received message from worker: " + JSON.stringify(message));
+      this.debug(clientId, "Received message from worker: " + JSON.stringify(message));
     }
 
     let token = message.rilMessageToken;
     if (token == null) {
       // That's an unsolicited message.  Pass to RadioInterface directly.
-      this.radioInterface.handleUnsolicitedWorkerMessage(message);
+      let radioInterface = this.radioInterfaces[clientId];
+      radioInterface.handleUnsolicitedWorkerMessage(message);
       return;
     }
 
     let callback = this.tokenCallbackMap[message.rilMessageToken];
     if (!callback) {
-      if (DEBUG) this.debug("Ignore orphan token: " + message.rilMessageToken);
+      if (DEBUG) this.debug(clientId, "Ignore orphan token: " + message.rilMessageToken);
       return;
     }
 
@@ -1735,12 +1742,22 @@ WorkerMessenger.prototype = {
     try {
       keep = callback(message);
     } catch(e) {
-      if (DEBUG) this.debug("callback throws an exception: " + e);
+      if (DEBUG) this.debug(clientId, "callback throws an exception: " + e);
     }
 
     if (!keep) {
       delete this.tokenCallbackMap[message.rilMessageToken];
     }
+  },
+
+  registerClient: function(aClientId, aRadioInterface) {
+    if (DEBUG) this.debug(aClientId, "Starting RIL Worker");
+
+    // Keep a reference so that we can dispatch unsolicited messages to it.
+    this.radioInterfaces[aClientId] = aRadioInterface;
+
+    this.send(null, "registerClient", { clientId: aClientId });
+    gSystemWorkerManager.registerRilWorker(aClientId, this.worker);
   },
 
   /**
@@ -1758,9 +1775,10 @@ WorkerMessenger.prototype = {
    *        value true to keep current token-callback mapping and wait for
    *        another worker reply, or false to remove the mapping.
    */
-  send: function(rilMessageType, message, callback) {
+  send: function(clientId, rilMessageType, message, callback) {
     message = message || {};
 
+    message.rilMessageClientId = clientId;
     message.rilMessageToken = this.token;
     this.token++;
 
@@ -1791,11 +1809,11 @@ WorkerMessenger.prototype = {
    *
    * @TODO: Bug 815526 - deprecate RILContentHelper.
    */
-  sendWithIPCMessage: function(msg, rilMessageType, ipcType) {
-    this.send(rilMessageType, msg.json.data, (function(reply) {
+  sendWithIPCMessage: function(clientId, msg, rilMessageType, ipcType) {
+    this.send(clientId, rilMessageType, msg.json.data, (function(reply) {
       ipcType = ipcType || msg.name;
       msg.target.sendAsyncMessage(ipcType, {
-        clientId: this.radioInterface.clientId,
+        clientId: clientId,
         data: reply
       });
       return false;
@@ -1803,10 +1821,14 @@ WorkerMessenger.prototype = {
   }
 };
 
-function RadioInterface(aClientId) {
+function RadioInterface(aClientId, aWorkerMessenger) {
   this.clientId = aClientId;
-  this.workerMessenger = new WorkerMessenger(this);
-  this.workerMessenger.init();
+  this.workerMessenger = {
+    send: aWorkerMessenger.send.bind(aWorkerMessenger, aClientId),
+    sendWithIPCMessage:
+      aWorkerMessenger.sendWithIPCMessage.bind(aWorkerMessenger, aClientId),
+  };
+  aWorkerMessenger.registerClient(aClientId, this);
 
   this.supportedNetworkTypes = this.getSupportedNetworkTypes();
 
@@ -1899,7 +1921,7 @@ RadioInterface.prototype = {
                                          Ci.nsIObserver,
                                          Ci.nsISettingsServiceCallback]),
 
-  // A private WorkerMessenger instance.
+  // A private wrapped WorkerMessenger instance.
   workerMessenger: null,
 
   debug: function(s) {
