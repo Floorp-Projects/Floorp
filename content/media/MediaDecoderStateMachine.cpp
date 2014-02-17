@@ -659,10 +659,14 @@ void MediaDecoderStateMachine::SendStreamData()
       if (mInfo.HasAudio()) {
         AudioSegment* audio = new AudioSegment();
         mediaStream->AddTrack(TRACK_AUDIO, mInfo.mAudio.mRate, 0, audio);
+        stream->mStream->DispatchWhenNotEnoughBuffered(TRACK_AUDIO,
+            GetStateMachineThread(), GetWakeDecoderRunnable());
       }
       if (mInfo.HasVideo()) {
         VideoSegment* video = new VideoSegment();
         mediaStream->AddTrack(TRACK_VIDEO, RATE_VIDEO, 0, video);
+        stream->mStream->DispatchWhenNotEnoughBuffered(TRACK_VIDEO,
+            GetStateMachineThread(), GetWakeDecoderRunnable());
       }
       stream->mStreamInitialized = true;
     }
