@@ -38,12 +38,12 @@ typedef ScopedPtr<SECMODModule, SECMOD_DestroyModule> ScopedSECMODModule;
 } // unnamed namespace
 
 NSSCertDBTrustDomain::NSSCertDBTrustDomain(SECTrustType certDBTrustType,
-                                           bool /*ocspDownloadEnabled*/,
-                                           bool /*ocspStrict*/,
+                                           bool ocspDownloadEnabled,
+                                           bool ocspStrict,
                                            void* pinArg)
   : mCertDBTrustType(certDBTrustType)
-//  , mOCSPDownloadEnabled(ocspDownloadEnabled)
-//  , mOCSPStrict(ocspStrict)
+  , mOCSPDownloadEnabled(ocspDownloadEnabled)
+  , mOCSPStrict(ocspStrict)
   , mPinArg(pinArg)
 {
 }
@@ -122,6 +122,118 @@ NSSCertDBTrustDomain::VerifySignedData(const CERTSignedData* signedData,
                                        const CERTCertificate* cert)
 {
   return ::insanity::pkix::VerifySignedData(signedData, cert, mPinArg);
+}
+
+SECStatus
+NSSCertDBTrustDomain::CheckRevocation(
+  insanity::pkix::EndEntityOrCA endEntityOrCA,
+  const CERTCertificate* cert,
+  /*const*/ CERTCertificate* issuerCert,
+  PRTime time,
+  /*optional*/ const SECItem* stapledOCSPResponse)
+{
+  // Actively distrusted certificates will have already been blocked by
+  // GetCertTrust.
+
+  // TODO: need to verify that IsRevoked isn't called for trust anchors AND
+  // that that fact is documented in insanity.
+
+  PR_LOG(gCertVerifierLog, PR_LOG_DEBUG,
+         ("NSSCertDBTrustDomain: Top of CheckRevocation\n"));
+
+  PORT_Assert(cert);
+  PORT_Assert(issuerCert);
+  if (!cert || !issuerCert) {
+    PORT_SetError(SEC_ERROR_INVALID_ARGS);
+    return SECFailure;
+  }
+
+  // If we have a stapled OCSP response then the verification of that response
+  // determines the result unless the OCSP response is expired. We make an
+  // exception for expired responses because some servers, nginx in particular,
+  // are known to serve expired responses due to bugs.
+  if (stapledOCSPResponse) {
+    PR_ASSERT(endEntityOrCA == MustBeEndEntity);
+    SECStatus rv = VerifyEncodedOCSPResponse(*this, cert, issuerCert, time,
+                                             stapledOCSPResponse);
+    if (rv == SECSuccess) {
+      return rv;
+    }
+    if (PR_GetError() != SEC_ERROR_OCSP_OLD_RESPONSE) {
+      return rv;
+    }
+  }
+
+  // TODO(bug 921885): We need to change this when we add EV support.
+
+  // TODO: when !mOCSPDownloadEnabled, we still need to handle the fallback for
+  // expired responses. But, if/when we disable OCSP fetching by default, it
+  // would be ambiguous whether !mOCSPDownloadEnabled means "I want the default"
+  // or "I really never want you to ever fetch OCSP."
+  if (mOCSPDownloadEnabled) {
+    // We don't do OCSP fetching for intermediates.
+    if (endEntityOrCA == MustBeCA) {
+      PR_ASSERT(!stapledOCSPResponse);
+      return SECSuccess;
+    }
+
+    ScopedPtr<char, PORT_Free_string>
+      url(CERT_GetOCSPAuthorityInfoAccessLocation(cert));
+
+    // Nothing to do if we don't have an OCSP responder URI for the cert; just
+    // assume it is good. Note that this is the confusing, but intended,
+    // interpretation of "strict" revocation checking in the face of a
+    // certificate that lacks an OCSP responder URI.
+    if (!url) {
+      if (stapledOCSPResponse) {
+        PR_SetError(SEC_ERROR_OCSP_OLD_RESPONSE, 0);
+        return SECFailure;
+      }
+      return SECSuccess;
+    }
+
+    ScopedPLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
+    if (!arena) {
+      return SECFailure;
+    }
+
+    const SECItem* request
+      = CreateEncodedOCSPRequest(arena.get(), cert, issuerCert);
+    if (!request) {
+      return SECFailure;
+    }
+
+    const SECItem* response(CERT_PostOCSPRequest(arena.get(), url.get(),
+                                                 request));
+    if (!response) {
+      if (mOCSPStrict) {
+        return SECFailure;
+      }
+      // Soft fail -> success :(
+    } else {
+      SECStatus rv = VerifyEncodedOCSPResponse(*this, cert, issuerCert, time,
+                                               response);
+      if (rv == SECSuccess) {
+        return SECSuccess;
+      }
+      PRErrorCode error = PR_GetError();
+      switch (error) {
+        case SEC_ERROR_OCSP_UNKNOWN_CERT:
+        case SEC_ERROR_REVOKED_CERTIFICATE:
+          return SECFailure;
+        default:
+          if (mOCSPStrict) {
+            return SECFailure;
+          }
+          break; // Soft fail -> success :(
+      }
+    }
+  }
+
+  PR_LOG(gCertVerifierLog, PR_LOG_DEBUG,
+         ("NSSCertDBTrustDomain: end of CheckRevocation"));
+
+  return SECSuccess;
 }
 
 namespace {
