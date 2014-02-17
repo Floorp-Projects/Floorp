@@ -68,6 +68,21 @@ DestroySharedThreadPoolHashTable()
   }
 }
 
+/* static */
+void
+SharedThreadPool::SpinUntilShutdown()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  // Wait until the ShutdownPoolsEvent has been run and shutdown the pool.
+  while (sPools) {
+    if (!NS_ProcessNextEvent(NS_GetCurrentThread(), true)) {
+      break;
+    }
+  }
+  MOZ_ASSERT(!sPools);
+  MOZ_ASSERT(!sMonitor);
+}
+
 TemporaryRef<SharedThreadPool>
 SharedThreadPool::Get(const nsCString& aName, uint32_t aThreadLimit)
 {
@@ -163,11 +178,13 @@ SharedThreadPool::SharedThreadPool(const nsCString& aName,
   , mPool(aPool)
   , mRefCnt(0)
 {
+  MOZ_COUNT_CTOR(SharedThreadPool);
   mEventTarget = do_QueryInterface(aPool);
 }
 
 SharedThreadPool::~SharedThreadPool()
 {
+  MOZ_COUNT_DTOR(SharedThreadPool);
 }
 
 #ifdef XP_WIN
