@@ -11,29 +11,6 @@
 namespace mozilla {
 namespace layers {
 
-MacIOSurfaceTextureSourceOGL::MacIOSurfaceTextureSourceOGL(
-                                CompositorOGL* aCompositor,
-                                MacIOSurface* aSurface)
-  : mCompositor(aCompositor)
-  , mSurface(aSurface)
-{}
-
-MacIOSurfaceTextureSourceOGL::~MacIOSurfaceTextureSourceOGL()
-{}
-
-gfx::IntSize
-MacIOSurfaceTextureSourceOGL::GetSize() const
-{
-  return gfx::IntSize(mSurface->GetDevicePixelWidth(),
-                      mSurface->GetDevicePixelHeight());
-}
-
-gfx::SurfaceFormat
-MacIOSurfaceTextureSourceOGL::GetFormat() const
-{
-  return mSurface->HasAlpha() ? gfx::SurfaceFormat::R8G8B8A8 : gfx::SurfaceFormat::B8G8R8X8;
-}
-
 MacIOSurfaceTextureHostOGL::MacIOSurfaceTextureHostOGL(TextureFlags aFlags,
                                                        const SurfaceDescriptorMacIOSurface& aDescriptor)
   : TextureHost(aFlags)
@@ -66,6 +43,46 @@ MacIOSurfaceTextureHostOGL::SetCompositor(Compositor* aCompositor)
   }
 }
 
+gfx::SurfaceFormat
+MacIOSurfaceTextureHostOGL::GetFormat() const {
+  if (!mSurface) {
+    return gfx::SurfaceFormat::UNKNOWN;
+  }
+  return mSurface->HasAlpha() ? gfx::SurfaceFormat::R8G8B8A8 : gfx::SurfaceFormat::B8G8R8X8;
+}
+
+gfx::IntSize
+MacIOSurfaceTextureHostOGL::GetSize() const {
+  if (!mSurface) {
+    return gfx::IntSize();
+  }
+  return gfx::IntSize(mSurface->GetDevicePixelWidth(),
+                      mSurface->GetDevicePixelHeight());
+}
+
+MacIOSurfaceTextureSourceOGL::MacIOSurfaceTextureSourceOGL(
+                                CompositorOGL* aCompositor,
+                                MacIOSurface* aSurface)
+  : mCompositor(aCompositor)
+  , mSurface(aSurface)
+{}
+
+MacIOSurfaceTextureSourceOGL::~MacIOSurfaceTextureSourceOGL()
+{}
+
+gfx::IntSize
+MacIOSurfaceTextureSourceOGL::GetSize() const
+{
+  return gfx::IntSize(mSurface->GetDevicePixelWidth(),
+                      mSurface->GetDevicePixelHeight());
+}
+
+gfx::SurfaceFormat
+MacIOSurfaceTextureSourceOGL::GetFormat() const
+{
+  return mSurface->HasAlpha() ? gfx::SurfaceFormat::R8G8B8A8 : gfx::SurfaceFormat::B8G8R8X8;
+}
+
 void
 MacIOSurfaceTextureSourceOGL::BindTexture(GLenum aTextureUnit)
 {
@@ -91,23 +108,6 @@ gl::GLContext*
 MacIOSurfaceTextureSourceOGL::gl() const
 {
   return mCompositor ? mCompositor->gl() : nullptr;
-}
-
-gfx::SurfaceFormat
-MacIOSurfaceTextureHostOGL::GetFormat() const {
-  if (!mSurface) {
-    return gfx::SurfaceFormat::UNKNOWN;
-  }
-  return mSurface->HasAlpha() ? gfx::SurfaceFormat::R8G8B8A8 : gfx::SurfaceFormat::B8G8R8X8;
-}
-
-gfx::IntSize
-MacIOSurfaceTextureHostOGL::GetSize() const {
-  if (!mSurface) {
-    return gfx::IntSize();
-  }
-  return gfx::IntSize(mSurface->GetDevicePixelWidth(),
-                      mSurface->GetDevicePixelHeight());
 }
 
 }
