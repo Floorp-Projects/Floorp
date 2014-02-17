@@ -129,7 +129,8 @@ const LEVELS = {
   groupCollapsed: SEVERITY_LOG,
   groupEnd: SEVERITY_LOG,
   time: SEVERITY_LOG,
-  timeEnd: SEVERITY_LOG
+  timeEnd: SEVERITY_LOG,
+  count: SEVERITY_LOG
 };
 
 // The lowest HTTP response code (inclusive) that is considered an error.
@@ -1244,6 +1245,20 @@ WebConsoleFrame.prototype = {
         break;
       }
 
+      case "count": {
+        let counter = aMessage.counter;
+        if (!counter) {
+          return null;
+        }
+        if (counter.error) {
+          Cu.reportError(l10n.getStr(counter.error));
+          return null;
+        }
+        let msg = new Messages.ConsoleGeneric(aMessage);
+        node = msg.init(this.output).render().element;
+        break;
+      }
+
       default:
         Cu.reportError("Unknown Console API log level: " + level);
         return null;
@@ -1257,6 +1272,7 @@ WebConsoleFrame.prototype = {
       case "groupEnd":
       case "time":
       case "timeEnd":
+      case "count":
         for (let actor of objectActors) {
           this._releaseObject(actor);
         }
