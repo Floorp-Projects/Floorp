@@ -19,7 +19,7 @@ def format_char(c):
         return "\\"
     elif c == 0x22:
         return "\\\""
-    elif c == 0x39:
+    elif c == 0x27:
         return "\\'"
     elif c < 0x20 or c >= 0x80 and c <= 0xff:
         return "\\x%02x" % c

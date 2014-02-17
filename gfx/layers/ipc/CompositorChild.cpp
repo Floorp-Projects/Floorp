@@ -28,6 +28,8 @@ namespace layers {
 
 /*static*/ CompositorChild* CompositorChild::sCompositor;
 
+Atomic<int32_t> CompositableForwarder::sSerialCounter(0);
+
 CompositorChild::CompositorChild(ClientLayerManager *aLayerManager)
   : mLayerManager(aLayerManager)
 {
