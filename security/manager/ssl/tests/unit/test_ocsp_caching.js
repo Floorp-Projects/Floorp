@@ -107,7 +107,7 @@ function run_test() {
 
   //---------------------------------------------------------------------------
 
-  add_test(function() { ocspResponder.stop(run_next_test); run_next_test(); });
+  add_test(function() { ocspResponder.stop(run_next_test); });
 
   run_next_test();
 }
