@@ -19,11 +19,12 @@ add_test(function test_CdmaPDUHelper_encodeUserDataReplyOption() {
       // Do nothing
     }
   });
+  let context = worker.ContextPool._contexts[0];
 
   let testDataBuffer = [];
-  worker.BitBufferHelper.startWrite(testDataBuffer);
+  context.BitBufferHelper.startWrite(testDataBuffer);
 
-  let helper = worker.CdmaPDUHelper;
+  let helper = context.CdmaPDUHelper;
   helper.encodeUserDataReplyOption({requestStatusReport: true});
 
   let expectedDataBuffer = [PDU_CDMA_MSG_USERDATA_REPLY_OPTION, 0x01, 0x40];
@@ -49,11 +50,12 @@ add_test(function test_CdmaPDUHelper_decodeUserDataMsgStatus() {
       // Do nothing
     }
   });
+  let context = worker.ContextPool._contexts[0];
 
-  let helper = worker.CdmaPDUHelper;
+  let helper = context.CdmaPDUHelper;
   function test_MsgStatus(octet) {
     let testDataBuffer = [octet];
-    worker.BitBufferHelper.startRead(testDataBuffer);
+    context.BitBufferHelper.startRead(testDataBuffer);
     let result = helper.decodeUserDataMsgStatus();
 
     do_check_eq(result.errorClass, octet >>> 6);
@@ -85,10 +87,11 @@ add_test(function test_CdmaPDUHelper_decodeCdmaPDUMsg_Shift_jis() {
       // Do nothing
     }
   });
+  let context = worker.ContextPool._contexts[0];
 
-  let helper = worker.CdmaPDUHelper;
+  let helper = context.CdmaPDUHelper;
   function test_decodePDUMsg(testDataBuffer, expected, encoding, msgType, msgBodySize) {
-    worker.BitBufferHelper.startRead(testDataBuffer);
+    context.BitBufferHelper.startRead(testDataBuffer);
     let result = helper.decodeCdmaPDUMsg(encoding, msgType, msgBodySize);
     do_check_eq(result, expected);
   }
