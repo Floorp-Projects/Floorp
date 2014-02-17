@@ -155,7 +155,7 @@ NS_IMETHODIMP_(nsrefcnt) SharedThreadPool::Release(void)
   return 0;
 }
 
-NS_IMPL_QUERY_INTERFACE1(SharedThreadPool, nsIThreadPool)
+NS_IMPL_QUERY_INTERFACE2(SharedThreadPool, nsIThreadPool, nsIEventTarget)
 
 SharedThreadPool::SharedThreadPool(const nsCString& aName,
                                    nsIThreadPool* aPool)
