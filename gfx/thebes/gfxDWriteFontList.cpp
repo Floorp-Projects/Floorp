@@ -543,6 +543,14 @@ gfxDWriteFontEntry::ReadCMAP(FontInfoData *aFontInfoData)
 
     mHasCmapTable = NS_SUCCEEDED(rv);
     if (mHasCmapTable) {
+        // Bug 969504: exclude U+25B6 from Segoe UI family, because it's used
+        // by sites to represent a "Play" icon, but the glyph in Segoe UI Light
+        // and Semibold on Windows 7 is too thin. (Ditto for leftward U+25C0.)
+        // Fallback to Segoe UI Symbol is preferred.
+        if (FamilyName().EqualsLiteral("Segoe UI")) {
+            charmap->clear(0x25b6);
+            charmap->clear(0x25c0);
+        }
         gfxPlatformFontList *pfl = gfxPlatformFontList::PlatformFontList();
         mCharacterMap = pfl->FindCharMap(charmap);
     } else {
