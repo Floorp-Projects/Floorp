@@ -27,15 +27,6 @@ const LPCWSTR kClassName       = L"D3D9WindowClass";
 
 #define USE_D3D9EX
 
-typedef IDirect3D9* (WINAPI*Direct3DCreate9Func)(
-  UINT SDKVersion
-);
-
-typedef HRESULT (WINAPI*Direct3DCreate9ExFunc)(
-  UINT SDKVersion,
-  IDirect3D9Ex **ppD3D
-);
-
 struct vertex {
   float x, y;
 };
@@ -224,11 +215,11 @@ DeviceManagerD3D9::Init()
   } 
 
   HMODULE d3d9 = LoadLibraryW(L"d3d9.dll");
-  Direct3DCreate9Func d3d9Create = (Direct3DCreate9Func)
+  decltype(Direct3DCreate9)* d3d9Create = (decltype(Direct3DCreate9)*)
     GetProcAddress(d3d9, "Direct3DCreate9");
-  Direct3DCreate9ExFunc d3d9CreateEx = (Direct3DCreate9ExFunc)
+  decltype(Direct3DCreate9Ex)* d3d9CreateEx = (decltype(Direct3DCreate9Ex)*)
     GetProcAddress(d3d9, "Direct3DCreate9Ex");
-  
+
 #ifdef USE_D3D9EX
   if (d3d9CreateEx) {
     hr = d3d9CreateEx(D3D_SDK_VERSION, getter_AddRefs(mD3D9Ex));

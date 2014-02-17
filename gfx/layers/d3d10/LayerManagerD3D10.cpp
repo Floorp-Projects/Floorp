@@ -38,15 +38,6 @@ using namespace mozilla::gfx;
 namespace mozilla {
 namespace layers {
 
-typedef HRESULT (WINAPI*D3D10CreateEffectFromMemoryFunc)(
-    void *pData,
-    SIZE_T DataLength,
-    UINT FXFlags,
-    ID3D10Device *pDevice, 
-    ID3D10EffectPool *pEffectPool,
-    ID3D10Effect **ppEffect
-);
-
 struct Vertex
 {
     float position[2];
@@ -159,8 +150,9 @@ LayerManagerD3D10::Initialize(bool force, HRESULT* aHresultPtr)
     mDevice->SetPrivateData(sDeviceAttachments, sizeof(attachments), &attachments);
 
     SetLastError(0);
-    D3D10CreateEffectFromMemoryFunc createEffect = (D3D10CreateEffectFromMemoryFunc)
-      GetProcAddress(LoadLibraryA("d3d10_1.dll"), "D3D10CreateEffectFromMemory");
+    decltype(D3D10CreateEffectFromMemory)* createEffect =
+      (decltype(D3D10CreateEffectFromMemory)*)
+        GetProcAddress(LoadLibraryA("d3d10_1.dll"), "D3D10CreateEffectFromMemory");
     if (!createEffect) {
       SetHRESULT(aHresultPtr, HRESULT_FROM_WIN32(GetLastError()));
       return false;

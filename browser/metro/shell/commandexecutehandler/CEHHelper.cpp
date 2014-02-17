@@ -16,11 +16,6 @@ LPCWSTR metroLastAHE = L"MetroLastAHE";
 LPCWSTR cehDumpDebugStrings = L"CEHDump";
 extern const WCHAR* kFirefoxExe;
 
-typedef HRESULT (WINAPI*D3D10CreateDevice1Func)
-  (IDXGIAdapter *, D3D10_DRIVER_TYPE, HMODULE, UINT,
-   D3D10_FEATURE_LEVEL1, UINT, ID3D10Device1 **);
-typedef HRESULT(WINAPI*CreateDXGIFactory1Func)(REFIID , void **);
-
 void
 Log(const wchar_t *fmt, ...)
 {
@@ -70,10 +65,9 @@ IsImmersiveProcessDynamic(HANDLE process)
     return false;
   }
 
-  typedef BOOL (WINAPI* IsImmersiveProcessFunc)(HANDLE process);
-  IsImmersiveProcessFunc IsImmersiveProcessPtr =
-    (IsImmersiveProcessFunc)GetProcAddress(user32DLL,
-                                           "IsImmersiveProcess");
+  decltype(IsImmersiveProcess)* IsImmersiveProcessPtr =
+    (decltype(IsImmersiveProcess)*) GetProcAddress(user32DLL,
+                                                   "IsImmersiveProcess");
   if (!IsImmersiveProcessPtr) {
     FreeLibrary(user32DLL);
     return false;
@@ -151,8 +145,8 @@ IsDX10Available()
     SetDWORDRegKey(metroDX10Available, 0);
     return false;
   }
-  CreateDXGIFactory1Func createDXGIFactory1 =
-    (CreateDXGIFactory1Func) GetProcAddress(dxgiModule, "CreateDXGIFactory1");
+  decltype(CreateDXGIFactory1)* createDXGIFactory1 =
+    (decltype(CreateDXGIFactory1)*) GetProcAddress(dxgiModule, "CreateDXGIFactory1");
   if (!createDXGIFactory1) {
     SetDWORDRegKey(metroDX10Available, 0);
     return false;
@@ -163,9 +157,9 @@ IsDX10Available()
     SetDWORDRegKey(metroDX10Available, 0);
     return false;
   }
-  D3D10CreateDevice1Func createD3DDevice =
-    (D3D10CreateDevice1Func) GetProcAddress(d3d10module,
-                                            "D3D10CreateDevice1");
+  decltype(D3D10CreateDevice1)* createD3DDevice =
+    (decltype(D3D10CreateDevice1)*) GetProcAddress(d3d10module,
+                                                   "D3D10CreateDevice1");
   if (!createD3DDevice) {
     SetDWORDRegKey(metroDX10Available, 0);
     return false;
