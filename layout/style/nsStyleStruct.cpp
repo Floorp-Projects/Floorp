@@ -1543,7 +1543,7 @@ nsStyleGradient::HasCalc()
       return true;
   }
   return mBgPosX.IsCalcUnit() || mBgPosY.IsCalcUnit() || mAngle.IsCalcUnit() ||
-         mRadiusX.IsCalcUnit() || mRadiusX.IsCalcUnit();
+         mRadiusX.IsCalcUnit() || mRadiusY.IsCalcUnit();
 }
 
 // --------------------
