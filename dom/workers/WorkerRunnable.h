@@ -314,6 +314,34 @@ protected:
                bool aDispatchResult) MOZ_OVERRIDE;
 };
 
+// A WorkerRunnable that should be dispatched from the worker to itself for
+// async tasks. This will increment the busy count PostDispatch() (only if
+// dispatch was successful) and decrement it in PostRun().
+//
+// Async tasks will almost always want to use this since
+// a WorkerSameThreadRunnable keeps the Worker from being GCed.
+class WorkerSameThreadRunnable : public WorkerRunnable
+{
+protected:
+  WorkerSameThreadRunnable(WorkerPrivate* aWorkerPrivate)
+  : WorkerRunnable(aWorkerPrivate, WorkerThreadModifyBusyCount)
+  { }
+
+  virtual ~WorkerSameThreadRunnable()
+  { }
+
+  virtual bool
+  PreDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate) MOZ_OVERRIDE;
+
+  virtual void
+  PostDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
+               bool aDispatchResult) MOZ_OVERRIDE;
+
+  virtual void
+  PostRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
+          bool aRunResult) MOZ_OVERRIDE;
+};
+
 END_WORKERS_NAMESPACE
 
 #endif // mozilla_dom_workers_workerrunnable_h__
