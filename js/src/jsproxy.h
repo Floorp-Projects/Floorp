@@ -146,11 +146,13 @@ class JS_FRIEND_API(BaseProxyHandler)
      * assertEnteredPolicy would pass GET | SET.
      */
     typedef uint32_t Action;
-    static const Action NONE = 0x00;
-    static const Action GET  = 0x01;
-    static const Action SET  = 0x02;
-    static const Action CALL = 0x04;
-    static const Action ENUMERATE = 0x08;
+    enum {
+        NONE      = 0x00,
+        GET       = 0x01,
+        SET       = 0x02,
+        CALL      = 0x04,
+        ENUMERATE = 0x08
+    };
 
     virtual bool enter(JSContext *cx, HandleObject wrapper, HandleId id, Action act,
                        bool *bp);
