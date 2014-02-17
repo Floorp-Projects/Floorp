@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=966155
+-->
+<head>
+  <title>Test for Bug 966155</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=966155">Mozilla Bug 966155</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+
+addLoadEvent(function() {
+  var win = window.open("data:text/html,<input><iframe onload=\"contentDocument.designMode = 'on';\">", "", "test-966155");
+  win.addEventListener("load", function onLoad() {
+    win.removeEventListener("load", onLoad);
+    runTest(win);
+  }, false);
+});
+
+function runTest(win) {
+  SimpleTest.waitForFocus(function() {
+    var doc = win.document;
+    var iframe = doc.querySelector("iframe");
+    var iframeDoc = iframe.contentDocument;
+    var input = doc.querySelector("input");
+    iframe.focus();
+    iframeDoc.body.focus();
+    // Type some text
+    "test".split("").forEach(function(letter) {
+      synthesizeKey(letter, {}, win);
+    });
+    is(iframeDoc.body.textContent, "test", "entered the text");
+    // focus the input box
+    input.focus();
+    // press tab
+    synthesizeKey("VK_TAB", {}, win);
+    // Now press Ctrl+Backspace
+    synthesizeKey("VK_BACK_SPACE", {ctrlKey: true}, win);
+    is(iframeDoc.body.textContent, "", "deleted the text");
+    win.close();
+    SimpleTest.finish();
+  }, win);
+}
+
+</script>
+</pre>
+</body>
+</html>
