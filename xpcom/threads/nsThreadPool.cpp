@@ -52,6 +52,7 @@ nsThreadPool::nsThreadPool()
   : mThreadLimit(DEFAULT_THREAD_LIMIT)
   , mIdleThreadLimit(DEFAULT_IDLE_THREAD_LIMIT)
   , mIdleThreadTimeout(DEFAULT_IDLE_THREAD_TIMEOUT)
+  , mStackSize(nsIThreadManager::DEFAULT_STACK_SIZE)
   , mIdleCount(0)
   , mShutdown(false)
 {
@@ -68,8 +69,9 @@ nsresult
 nsThreadPool::PutEvent(nsIRunnable *event)
 {
   // Avoid spawning a new thread while holding the event queue lock...
- 
+
   bool spawnThread = false;
+  uint32_t stackSize = 0;
   {
     ReentrantMonitorAutoEnter mon(mEvents.GetReentrantMonitor());
 
@@ -82,6 +84,7 @@ nsThreadPool::PutEvent(nsIRunnable *event)
       spawnThread = true;
 
     mEvents.PutEvent(event);
+    stackSize = mStackSize;
   }
 
   LOG(("THRD-P(%p) put [spawn=%d]\n", this, spawnThread));
@@ -90,7 +93,7 @@ nsThreadPool::PutEvent(nsIRunnable *event)
 
   nsCOMPtr<nsIThread> thread;
   nsThreadManager::get()->NewThread(0,
-                                    nsIThreadManager::DEFAULT_STACK_SIZE,
+                                    stackSize,
                                     getter_AddRefs(thread));
   if (NS_WARN_IF(!thread))
     return NS_ERROR_UNEXPECTED;
@@ -352,6 +355,22 @@ nsThreadPool::SetIdleThreadTimeout(uint32_t value)
   if (mIdleThreadTimeout < oldTimeout && mIdleCount > 0) {
     mon.NotifyAll();  // wake up threads so they observe this change
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsThreadPool::GetThreadStackSize(uint32_t* value)
+{
+  ReentrantMonitorAutoEnter mon(mEvents.GetReentrantMonitor());
+  *value = mStackSize;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsThreadPool::SetThreadStackSize(uint32_t value)
+{
+  ReentrantMonitorAutoEnter mon(mEvents.GetReentrantMonitor());
+  mStackSize = value;
   return NS_OK;
 }
 
