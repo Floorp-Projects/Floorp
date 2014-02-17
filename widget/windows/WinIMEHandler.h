@@ -119,14 +119,7 @@ public:
 
 private:
 #ifdef NS_ENABLE_TSF
-  typedef HRESULT (WINAPI *SetInputScopesFunc)(HWND windowHandle,
-                                               const InputScope *inputScopes,
-                                               UINT numInputScopes,
-                                               wchar_t **phrase_list,
-                                               UINT numPhraseList,
-                                               wchar_t *regExp,
-                                               wchar_t *srgs);
-  static SetInputScopesFunc sSetInputScopes;
+  static decltype(SetInputScopes)* sSetInputScopes;
   static void SetInputScopeForIMM32(nsWindow* aWindow,
                                     const nsAString& aHTMLInputType);
   static bool sIsInTSFMode;
