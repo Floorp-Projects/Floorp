@@ -7,6 +7,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=391728
   <title>Test for Bug 391728</title>
   <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/ChromeUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
 </head>
 <body>
@@ -100,7 +101,6 @@ function start_test(plugin) {
 function finish_test(plugin) {
   Services.prefs.clearUserPref("extensions.blocklist.suppressUI");
   resetBlocklist();
-  plugin.enabledState = Components.interfaces.nsIPluginTag.STATE_ENABLED;
   SimpleTest.finish();
 }
 
@@ -152,7 +152,7 @@ function test_normal(plugin) {
   is(gDisabled.length, 0, "Should not have been any disabled plugins");
   is(gBlocked.length, 0, "Should not have been any blocked plugins");
   test_style("solid");
-  plugin.enabledState = Components.interfaces.nsIPluginTag.STATE_DISABLED;
+  setTestPluginEnabledState(Components.interfaces.nsIPluginTag.STATE_DISABLED);
   load_frame(test_disabled, "file_bug391728");
 }
 
@@ -163,7 +163,7 @@ function test_disabled(plugin) {
   is(gBlocked.length, 0, "Should not have been any blocked plugins");
   test_style("dotted");
   ok(plugin.disabled, "Plugin lost its disabled status");
-  plugin.enabledState = Components.interfaces.nsIPluginTag.STATE_ENABLED;
+  setTestPluginEnabledState(Components.interfaces.nsIPluginTag.STATE_ENABLED);
 
   setAndUpdateBlocklist(gHttpTestRoot + "blockPluginHard.xml",
     function() {
@@ -194,6 +194,7 @@ function test_unknown(plugin) {
 }
 
 SimpleTest.waitForExplicitFinish();
+setTestPluginEnabledState(Components.interfaces.nsIPluginTag.STATE_ENABLED);
 window.addEventListener("load", init_test, false);
 </script>
 </pre>
