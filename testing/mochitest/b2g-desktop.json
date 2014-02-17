@@ -15,6 +15,7 @@
     "dom/plugins": "tests that use plugins",
     "dom/tests/mochitest/general/test_focusrings.xul":"",
     "layout/base/tests/test_bug465448.xul":"",
+    "layout/forms/test/test_bug287446.html": "bug 947789",
 
     "layout/forms/test/test_bug478219.xhtml":"window.closed not working, bug 907795",
     "content/media/test":"bug 918299",
