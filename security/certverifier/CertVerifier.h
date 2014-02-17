@@ -78,11 +78,11 @@ public:
 
 private:
   SECStatus InsanityVerifyCert(CERTCertificate* cert,
-      /*optional*/ const SECItem* stapledOCSPResponse,
       const SECCertificateUsage usage,
       const PRTime time,
       void* pinArg,
       const Flags flags,
+      /*optional*/ const SECItem* stapledOCSPResponse,
       /*optional out*/ insanity::pkix::ScopedCERTCertList* validationChain);
 };
 

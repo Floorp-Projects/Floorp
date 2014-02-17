@@ -96,6 +96,7 @@ static Result BuildForward(TrustDomain& trustDomain,
                            EndEntityOrCA endEntityOrCA,
                            KeyUsages requiredKeyUsagesIfPresent,
                            SECOidTag requiredEKUIfPresent,
+                           /*optional*/ const SECItem* stapledOCSPResponse,
                            unsigned int subCACount,
                            /*out*/ ScopedCERTCertList& results);
 
@@ -107,6 +108,7 @@ BuildForwardInner(TrustDomain& trustDomain,
                   EndEntityOrCA endEntityOrCA,
                   SECOidTag requiredEKUIfPresent,
                   CERTCertificate* potentialIssuerCertToDup,
+                  /*optional*/ const SECItem* stapledOCSPResponse,
                   unsigned int subCACount,
                   ScopedCERTCertList& results)
 {
@@ -136,11 +138,6 @@ BuildForwardInner(TrustDomain& trustDomain,
     }
   }
 
-  rv = CheckTimes(potentialIssuer.GetNSSCert(), time);
-  if (rv != Success) {
-    return rv;
-  }
-
   rv = CheckNameConstraints(potentialIssuer);
   if (rv != Success) {
     return rv;
@@ -152,10 +149,9 @@ BuildForwardInner(TrustDomain& trustDomain,
   } else {
     PR_ASSERT(newSubCACount == 0);
   }
-
   rv = BuildForward(trustDomain, potentialIssuer, time, MustBeCA,
                     KU_KEY_CERT_SIGN, requiredEKUIfPresent,
-                    newSubCACount, results);
+                    nullptr, newSubCACount, results);
   if (rv != Success) {
     return rv;
   }
@@ -176,6 +172,7 @@ BuildForward(TrustDomain& trustDomain,
              EndEntityOrCA endEntityOrCA,
              KeyUsages requiredKeyUsagesIfPresent,
              SECOidTag requiredEKUIfPresent,
+             /*optional*/ const SECItem* stapledOCSPResponse,
              unsigned int subCACount,
              /*out*/ ScopedCERTCertList& results)
 {
@@ -186,26 +183,15 @@ BuildForward(TrustDomain& trustDomain,
     return RecoverableError;
   }
 
-  TrustDomain::TrustLevel trustLevel;
-  Result rv = MapSECStatus(trustDomain.GetCertTrust(endEntityOrCA,
-                                                    subject.GetNSSCert(),
-                                                    &trustLevel));
-  if (rv != Success) {
-    return rv;
-  }
-  if (trustLevel == TrustDomain::ActivelyDistrusted) {
-    return Fail(RecoverableError, SEC_ERROR_UNTRUSTED_CERT);
-  }
-  if (trustLevel != TrustDomain::TrustAnchor &&
-      trustLevel != TrustDomain::InheritsTrust) {
-    // The TrustDomain returned a trust level that we weren't expecting.
-    return Fail(FatalError, PR_INVALID_STATE_ERROR);
-  }
+  Result rv;
 
-  rv = CheckExtensions(subject, endEntityOrCA,
-                       trustLevel == TrustDomain::TrustAnchor,
-                       requiredKeyUsagesIfPresent, requiredEKUIfPresent,
-                       subCACount);
+  TrustDomain::TrustLevel trustLevel;
+
+  rv = CheckIssuerIndependentProperties(trustDomain, subject, time,
+                                        endEntityOrCA,
+                                        requiredKeyUsagesIfPresent,
+                                        requiredEKUIfPresent, subCACount,
+                                        &trustLevel);
   if (rv != Success) {
     return rv;
   }
@@ -237,8 +223,17 @@ BuildForward(TrustDomain& trustDomain,
        !CERT_LIST_END(n, candidates); n = CERT_LIST_NEXT(n)) {
     rv = BuildForwardInner(trustDomain, subject, time, endEntityOrCA,
                            requiredEKUIfPresent,
-                           n->cert, subCACount, results);
+                           n->cert, stapledOCSPResponse, subCACount,
+                           results);
     if (rv == Success) {
+      SECStatus srv = trustDomain.CheckRevocation(endEntityOrCA,
+                                                  subject.GetNSSCert(),
+                                                  n->cert, time,
+                                                  stapledOCSPResponse);
+      if (srv != SECSuccess) {
+        return MapSECStatus(SECFailure);
+      }
+
       // We found a trusted issuer. At this point, we know the cert is valid
       return subject.PrependNSSCertToList(results.get());
     }
@@ -257,6 +252,7 @@ BuildCertChain(TrustDomain& trustDomain,
                EndEntityOrCA endEntityOrCA,
                /*optional*/ KeyUsages requiredKeyUsagesIfPresent,
                /*optional*/ SECOidTag requiredEKUIfPresent,
+               /*optional*/ const SECItem* stapledOCSPResponse,
                /*out*/ ScopedCERTCertList& results)
 {
   PORT_Assert(certToDup);
@@ -285,16 +281,9 @@ BuildCertChain(TrustDomain& trustDomain,
 
   rv = BuildForward(trustDomain, cert, time, endEntityOrCA,
                     requiredKeyUsagesIfPresent, requiredEKUIfPresent,
-                    0, results);
+                    stapledOCSPResponse, 0, results);
   if (rv != Success) {
     results = nullptr;
-    return SECFailure;
-  }
-
-  // Build the cert chain even if the cert is expired, because we would
-  // rather report the untrusted issuer error than the expired error.
-  if (CheckTimes(cert.GetNSSCert(), time) != Success) {
-    PR_SetError(SEC_ERROR_EXPIRED_CERTIFICATE, 0);
     return SECFailure;
   }
 
