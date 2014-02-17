@@ -489,15 +489,21 @@ UnloadDLLs()
   return S_OK;
 }
 
-#define ENSURE_FUNCTION_PTR(FunctionName, DLL) \
-  static FunctionName##Ptr_t FunctionName##Ptr = nullptr; \
+#define ENSURE_FUNCTION_PTR_HELPER(FunctionType, FunctionName, DLL) \
+  static FunctionType FunctionName##Ptr = nullptr; \
   if (!FunctionName##Ptr) { \
-    FunctionName##Ptr = (FunctionName##Ptr_t)GetProcAddress(GetModuleHandle( #DLL ), #FunctionName ); \
+    FunctionName##Ptr = (FunctionType) GetProcAddress(GetModuleHandle(#DLL), #FunctionName); \
     if (!FunctionName##Ptr) { \
-      NS_WARNING("Failed to get GetProcAddress of " #FunctionName " from " #DLL ); \
+      NS_WARNING("Failed to get GetProcAddress of " #FunctionName " from " #DLL); \
       return E_FAIL; \
     } \
   }
+
+#define ENSURE_FUNCTION_PTR(FunctionName, DLL) \
+  ENSURE_FUNCTION_PTR_HELPER(decltype(::FunctionName)*, FunctionName, DLL) \
+
+#define ENSURE_FUNCTION_PTR_(FunctionName, DLL) \
+  ENSURE_FUNCTION_PTR_HELPER(FunctionName##Ptr_t, FunctionName, DLL) \
 
 #define DECL_FUNCTION_PTR(FunctionName, ...) \
   typedef HRESULT (STDMETHODCALLTYPE * FunctionName##Ptr_t)(__VA_ARGS__)
@@ -508,8 +514,9 @@ MFStartup()
   const int MF_VISTA_VERSION = (0x0001 << 16 | MF_API_VERSION);
   const int MF_WIN7_VERSION = (0x0002 << 16 | MF_API_VERSION);
 
+  // decltype is unusable for functions having default parameters
   DECL_FUNCTION_PTR(MFStartup, ULONG, DWORD);
-  ENSURE_FUNCTION_PTR(MFStartup, Mfplat.dll)
+  ENSURE_FUNCTION_PTR_(MFStartup, Mfplat.dll)
   if (!IsWin7OrLater())
     return MFStartupPtr(MF_VISTA_VERSION, MFSTARTUP_FULL);
   else
@@ -519,7 +526,6 @@ MFStartup()
 HRESULT
 MFShutdown()
 {
-  DECL_FUNCTION_PTR(MFShutdown);
   ENSURE_FUNCTION_PTR(MFShutdown, Mfplat.dll)
   return (MFShutdownPtr)();
 }
@@ -530,7 +536,6 @@ MFCreateAsyncResult(IUnknown *aUnkObject,
                     IUnknown *aUnkState,
                     IMFAsyncResult **aOutAsyncResult)
 {
-  DECL_FUNCTION_PTR(MFCreateAsyncResult, IUnknown*, IMFAsyncCallback*, IUnknown*, IMFAsyncResult**);
   ENSURE_FUNCTION_PTR(MFCreateAsyncResult, Mfplat.dll)
   return (MFCreateAsyncResultPtr)(aUnkObject, aCallback, aUnkState, aOutAsyncResult);
 }
@@ -538,7 +543,6 @@ MFCreateAsyncResult(IUnknown *aUnkObject,
 HRESULT
 MFInvokeCallback(IMFAsyncResult *aAsyncResult)
 {
-  DECL_FUNCTION_PTR(MFInvokeCallback, IMFAsyncResult*);
   ENSURE_FUNCTION_PTR(MFInvokeCallback, Mfplat.dll);
   return (MFInvokeCallbackPtr)(aAsyncResult);
 }
@@ -546,7 +550,6 @@ MFInvokeCallback(IMFAsyncResult *aAsyncResult)
 HRESULT
 MFCreateMediaType(IMFMediaType **aOutMFType)
 {
-  DECL_FUNCTION_PTR(MFCreateMediaType, IMFMediaType**);
   ENSURE_FUNCTION_PTR(MFCreateMediaType, Mfplat.dll)
   return (MFCreateMediaTypePtr)(aOutMFType);
 }
@@ -556,7 +559,6 @@ MFCreateSourceReaderFromByteStream(IMFByteStream *aByteStream,
                                    IMFAttributes *aAttributes,
                                    IMFSourceReader **aOutSourceReader)
 {
-  DECL_FUNCTION_PTR(MFCreateSourceReaderFromByteStream, IMFByteStream*, IMFAttributes*, IMFSourceReader**);
   ENSURE_FUNCTION_PTR(MFCreateSourceReaderFromByteStream, Mfreadwrite.dll)
   return (MFCreateSourceReaderFromByteStreamPtr)(aByteStream,
                                                  aAttributes,
@@ -566,14 +568,14 @@ MFCreateSourceReaderFromByteStream(IMFByteStream *aByteStream,
 HRESULT
 PropVariantToUInt32(REFPROPVARIANT aPropvar, ULONG *aOutUL)
 {
+  // decltype is unusable for overloaded functions
   DECL_FUNCTION_PTR(PropVariantToUInt32, REFPROPVARIANT, ULONG *);
-  ENSURE_FUNCTION_PTR(PropVariantToUInt32, Propsys.dll)
+  ENSURE_FUNCTION_PTR_(PropVariantToUInt32, Propsys.dll)
   return (PropVariantToUInt32Ptr)(aPropvar, aOutUL);
 }
 
 HRESULT PropVariantToInt64(REFPROPVARIANT aPropVar, LONGLONG *aOutLL)
 {
-  DECL_FUNCTION_PTR(PropVariantToInt64, REFPROPVARIANT, LONGLONG *);
   ENSURE_FUNCTION_PTR(PropVariantToInt64, Propsys.dll)
   return (PropVariantToInt64Ptr)(aPropVar, aOutLL);
 }
@@ -587,7 +589,6 @@ MFTGetInfo(CLSID aClsidMFT,
            UINT32 *aOutNumOutputTypes,
            IMFAttributes **aOutAttributes)
 {
-  DECL_FUNCTION_PTR(MFTGetInfo, CLSID, LPWSTR*, MFT_REGISTER_TYPE_INFO**, UINT32*, MFT_REGISTER_TYPE_INFO**, UINT32*, IMFAttributes**);
   ENSURE_FUNCTION_PTR(MFTGetInfo, Mfplat.dll)
   return (MFTGetInfoPtr)(aClsidMFT,
                          aOutName,
@@ -603,7 +604,6 @@ MFGetStrideForBitmapInfoHeader(DWORD aFormat,
                                DWORD aWidth,
                                LONG *aOutStride)
 {
-  DECL_FUNCTION_PTR(MFGetStrideForBitmapInfoHeader, DWORD, DWORD, LONG*);
   ENSURE_FUNCTION_PTR(MFGetStrideForBitmapInfoHeader, Mfplat.dll)
   return (MFGetStrideForBitmapInfoHeaderPtr)(aFormat, aWidth, aOutStride);
 }
@@ -613,7 +613,6 @@ MFCreateSourceReaderFromURL(LPCWSTR aURL,
                             IMFAttributes *aAttributes,
                             IMFSourceReader **aSourceReader)
 {
-  DECL_FUNCTION_PTR(MFCreateSourceReaderFromURL, LPCWSTR, IMFAttributes*, IMFSourceReader**);
   ENSURE_FUNCTION_PTR(MFCreateSourceReaderFromURL, Mfreadwrite.dll)
   return (MFCreateSourceReaderFromURLPtr)(aURL, aAttributes, aSourceReader);
 }
@@ -621,7 +620,6 @@ MFCreateSourceReaderFromURL(LPCWSTR aURL,
 HRESULT
 MFCreateAttributes(IMFAttributes **ppMFAttributes, UINT32 cInitialSize)
 {
-  DECL_FUNCTION_PTR(MFCreateAttributes, IMFAttributes**, UINT32);
   ENSURE_FUNCTION_PTR(MFCreateAttributes, mfplat.dll)
   return (MFCreateAttributesPtr)(ppMFAttributes, cInitialSize);
 }
@@ -629,7 +627,6 @@ MFCreateAttributes(IMFAttributes **ppMFAttributes, UINT32 cInitialSize)
 HRESULT
 MFGetPluginControl(IMFPluginControl **aOutPluginControl)
 {
-  DECL_FUNCTION_PTR(MFGetPluginControl, IMFPluginControl **);
   ENSURE_FUNCTION_PTR(MFGetPluginControl, mfplat.dll)
   return (MFGetPluginControlPtr)(aOutPluginControl);
 }
@@ -642,7 +639,6 @@ MFTEnumEx(GUID guidCategory,
           IMFActivate ***pppMFTActivate,
           UINT32 *pcMFTActivate)
 {
-  DECL_FUNCTION_PTR(MFTEnumEx, GUID, UINT32, const MFT_REGISTER_TYPE_INFO *, const MFT_REGISTER_TYPE_INFO *, IMFActivate ***, UINT32 *);
   ENSURE_FUNCTION_PTR(MFTEnumEx, mfplat.dll)
   return (MFTEnumExPtr)(guidCategory, Flags, pInputType, pOutputType, pppMFTActivate, pcMFTActivate);
 }
@@ -652,7 +648,6 @@ HRESULT MFGetService(IUnknown *punkObject,
                      REFIID riid,
                      LPVOID *ppvObject)
 {
-  DECL_FUNCTION_PTR(MFGetService, IUnknown*, REFGUID, REFIID, LPVOID *);
   ENSURE_FUNCTION_PTR(MFGetService, mf.dll)
   return (MFGetServicePtr)(punkObject, guidService, riid, ppvObject);
 }
@@ -661,7 +656,6 @@ HRESULT
 DXVA2CreateDirect3DDeviceManager9(UINT *pResetToken,
                                   IDirect3DDeviceManager9 **ppDXVAManager)
 {
-  DECL_FUNCTION_PTR(DXVA2CreateDirect3DDeviceManager9, UINT*, IDirect3DDeviceManager9 **);
   ENSURE_FUNCTION_PTR(DXVA2CreateDirect3DDeviceManager9, dxva2.dll)
   return (DXVA2CreateDirect3DDeviceManager9Ptr)(pResetToken, ppDXVAManager);
 }
@@ -669,7 +663,6 @@ DXVA2CreateDirect3DDeviceManager9(UINT *pResetToken,
 HRESULT
 MFCreateSample(IMFSample **ppIMFSample)
 {
-  DECL_FUNCTION_PTR(MFCreateSample, IMFSample **);
   ENSURE_FUNCTION_PTR(MFCreateSample, mfplat.dll)
   return (MFCreateSamplePtr)(ppIMFSample);
 }
@@ -679,7 +672,6 @@ MFCreateAlignedMemoryBuffer(DWORD cbMaxLength,
                             DWORD fAlignmentFlags,
                             IMFMediaBuffer **ppBuffer)
 {
-  DECL_FUNCTION_PTR(MFCreateAlignedMemoryBuffer, DWORD, DWORD, IMFMediaBuffer**);
   ENSURE_FUNCTION_PTR(MFCreateAlignedMemoryBuffer, mfplat.dll)
   return (MFCreateAlignedMemoryBufferPtr)(cbMaxLength, fAlignmentFlags, ppBuffer);
 }

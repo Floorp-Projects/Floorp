@@ -27,7 +27,7 @@ namespace widget {
 bool IMEHandler::sIsInTSFMode = false;
 bool IMEHandler::sIsIMMEnabled = true;
 bool IMEHandler::sPluginHasFocus = false;
-IMEHandler::SetInputScopesFunc IMEHandler::sSetInputScopes = nullptr;
+decltype(SetInputScopes)* IMEHandler::sSetInputScopes = nullptr;
 #endif // #ifdef NS_ENABLE_TSF
 
 // static
@@ -46,7 +46,7 @@ IMEHandler::Initialize()
     HMODULE module = nullptr;
     if (GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_PIN, L"msctf.dll",
                            &module)) {
-      sSetInputScopes = reinterpret_cast<SetInputScopesFunc>(
+      sSetInputScopes = reinterpret_cast<decltype(SetInputScopes)*>(
         GetProcAddress(module, "SetInputScopes"));
     }
   }

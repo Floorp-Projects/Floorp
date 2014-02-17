@@ -26,17 +26,15 @@
 #include <iptypes.h>
 #include <iphlpapi.h>
 
-typedef void (WINAPI *NcFreeNetconPropertiesFunc)(NETCON_PROPERTIES*);
-
 static HMODULE sNetshell;
-static NcFreeNetconPropertiesFunc sNcFreeNetconProperties;
+static decltype(NcFreeNetconProperties)* sNcFreeNetconProperties;
 
 static void InitNetshellLibrary(void)
 {
     if (!sNetshell) {
         sNetshell = LoadLibraryW(L"Netshell.dll");
         if (sNetshell) {
-            sNcFreeNetconProperties = (NcFreeNetconPropertiesFunc)
+            sNcFreeNetconProperties = (decltype(NcFreeNetconProperties)*)
                 GetProcAddress(sNetshell, "NcFreeNetconProperties");
         }
     }
