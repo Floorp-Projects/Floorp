@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test when and currentTime are in the same coordinate system</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  var freq = 330;
+
+  var context = new AudioContext();
+
+  var buffer = context.createBuffer(1, context.sampleRate / freq, context.sampleRate);
+  for (var i = 0; i < buffer.length; ++i) {
+    buffer.getChannelData(0)[i] = Math.sin(2 * Math.PI * i / buffer.length);
+  }
+
+  var source = context.createBufferSource();
+  source.loop = true;
+  source.buffer = buffer;
+
+  setTimeout(function () {
+      var finished = false;
+
+      source.start(context.currentTime);
+      var processor = context.createScriptProcessor(256, 1, 1);
+      processor.onaudioprocess = function (e) {
+          if (finished) return;
+          var c = e.inputBuffer.getChannelData(0);
+          var result = true;
+
+          for (var i = 0; i < buffer.length; ++i) {
+              if (Math.abs(c[i] - buffer.getChannelData(0)[i]) > 1e-9) {
+                  result = false;
+                  break;
+              }
+          }
+          finished = true;
+          ok(result, "when and currentTime are in same time coordinate system");
+          SimpleTest.finish();
+      }
+      processor.connect(context.destination);
+      source.connect(processor);
+  }, 500);
+});
+
+</script>
+</pre>
+</body>
+</html>
