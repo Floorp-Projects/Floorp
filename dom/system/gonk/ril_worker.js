@@ -92,9 +92,6 @@ let RILQUIRKS_SEND_STK_PROFILE_DOWNLOAD;
 // Ril quirk to attach data registration on demand.
 let RILQUIRKS_DATA_REGISTRATION_ON_DEMAND;
 
-// Marker object.
-let PENDING_NETWORK_TYPE = {};
-
 let Buf = {
   __proto__: (function(){
     return require("resource://gre/modules/workers/worker_buf.js").Buf;
@@ -229,6 +226,11 @@ let RIL = {
    * preserved over rild reset.
    */
   preferredNetworkType: null,
+
+  /**
+   * Marker object.
+   */
+  pendingNetworkType: {},
 
   /**
    * Global Cell Broadcast switch.
@@ -3142,7 +3144,7 @@ let RIL = {
 
     // We still need to track states for events that aren't fired.
     if (!(type in pending)) {
-      pending[type] = PENDING_NETWORK_TYPE;
+      pending[type] = this.pendingNetworkType;
     }
 
     // Pending network info is ready to be sent when no more messages
@@ -3159,7 +3161,7 @@ let RIL = {
     // a response message, so we don't have unused keys in the outbound
     // networkinfochanged message.
     for (let key in pending) {
-      if (pending[key] == PENDING_NETWORK_TYPE) {
+      if (pending[key] == this.pendingNetworkType) {
         delete pending[key];
       }
     }
