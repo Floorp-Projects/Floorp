@@ -1,0 +1,331 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for scroll snapping</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<p id="display"></p>
+<div id="sc" style="margin: 0px; padding: 0px; overflow: scroll; width:250px; height: 250px;">
+  <div id="sd" style="margin: 0px; padding: 0px; width: 1250px; height: 1250px;"></div>
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var runtime = SpecialPowers.Cc["@mozilla.org/xre/app-info;1"]
+                                .getService(SpecialPowers.Ci.nsIXULRuntime);
+var isMac = navigator.platform.indexOf("Mac") != -1;
+var isGtk = runtime.widgetToolkit.indexOf("gtk") != -1;
+var isWin = navigator.platform.indexOf("Win") != -1;
+var isSN = /mac os x 10\.6/.test(navigator.userAgent.toLowerCase());
+
+// Half of the scrollbar control width, in CSS pixels
+var scrollbarOffset = isWin ? 8 : 5;
+
+// OSX 10.6 scroll bar thumbs are off-center due to the bundling of buttons on one end
+// of the scroll bar frame.
+var scrollbarCenter = isSN ? 100 : 125;
+
+var testCases = [
+  {
+    "description"   : "Drag scrollbar left, expect scroll snapping.",
+    "snapCoord"     : "500px 500px",
+    "startScroll"   : { "x" : 500, "y" : 500 },
+    "endScroll"     : { "x" : 500, "y" : 500 },
+    "mousePosition" : { "x" : scrollbarCenter, "y" : 250 - scrollbarOffset },
+    "mouseOffset"   : { "x" : -10, "y" : 0 },
+    "duration"      : "0",
+    "runMac"        : true,
+    "runGtk"        : true,
+    "runWin"        : true
+  },
+  {
+    "description"   : "Drag scrollbar right, expect scroll snapping.",
+    "snapCoord"     : "500px 500px",
+    "startScroll"   : { "x" : 500, "y" : 500 },
+    "endScroll"     : { "x" : 500, "y" : 500 },
+    "mousePosition" : { "x" : scrollbarCenter, "y" : 250 - scrollbarOffset },
+    "mouseOffset"   : { "x" : 10, "y" : 0 },
+    "duration"      : "0",
+    "runMac"        : true,
+    "runGtk"        : true,
+    "runWin"        : true
+  },
+  {
+    "description"   : "Drag scrollbar up, expect scroll snapping.",
+    "snapCoord"     : "500px 500px",
+    "startScroll"   : { "x" : 500, "y" : 500 },
+    "endScroll"     : { "x" : 500, "y" : 500 },
+    "mousePosition" : { "x" : 250 - scrollbarOffset, "y" :  scrollbarCenter },
+    "mouseOffset"   : { "x" : 0, "y" : -10 },
+    "duration"      : "0",
+    "runMac"        : true,
+    "runGtk"        : true,
+    "runWin"        : true
+  },
+  {
+    "description"   : "Drag scrollbar down, expect scroll snapping.",
+    "snapCoord"     : "500px 500px",
+    "startScroll"   : { "x" : 500, "y" : 500 },
+    "endScroll"     : { "x" : 500, "y" : 500 },
+    "mousePosition" : { "x" : 250 - scrollbarOffset, "y" :  scrollbarCenter },
+    "mouseOffset"   : { "x" : 0, "y" : 10 },
+    "duration"      : "0",
+    "runMac"        : true,
+    "runGtk"        : true,
+    "runWin"        : true
+  },
+  {
+    "description"   : "Page scrollbar left, expect scroll snapping.",
+    "snapCoord"     : "500px 500px, 1000px 500px",
+    "startScroll"   : { "x" : 1000, "y" : 500 },
+    "endScroll"     : { "x" : 500, "y" : 500 },
+    "mousePosition" : { "x" : 50, "y" : 250 - scrollbarOffset },
+    "mouseOffset"   : { "x" : 0, "y" : 0 },
+    "duration"      : "0",
+    "runMac"        : true,
+    "runGtk"        : true,
+    "runWin"        : true
+  },
+  {
+    "description"   : "Page scrollbar right, expect scroll snapping.",
+    "snapCoord"     : "500px 500px, 0px 500px",
+    "startScroll"   : { "x" : 0, "y" : 500 },
+    "endScroll"     : { "x" : 500, "y" : 500 },
+    "mousePosition" : { "x" : 200, "y" : 250 - scrollbarOffset },
+    "mouseOffset"   : { "x" : 0, "y" : 0 },
+    "duration"      : "0",
+    "runMac"        : true,
+    "runGtk"        : true,
+    "runWin"        : true
+  },
+  {
+    "description"   : "Page scrollbar up, expect scroll snapping.",
+    "snapCoord"     : "500px 500px, 500px 1000px",
+    "startScroll"   : { "x" : 500, "y" : 1000 },
+    "endScroll"     : { "x" : 500, "y" : 500 },
+    "mousePosition" : { "x" : 250 - scrollbarOffset, "y" : 50 },
+    "mouseOffset"   : { "x" : 0, "y" : 0 },
+    "duration"      : "0",
+    "runMac"        : true,
+    "runGtk"        : true,
+    "runWin"        : true
+  },
+  {
+    "description"   : "Page scrollbar down, expect scroll snapping.",
+    "snapCoord"     : "500px 500px, 500px 0px",
+    "startScroll"   : { "x" : 500, "y" : 0 },
+    "endScroll"     : { "x" : 500, "y" : 500 },
+    "mousePosition" : { "x" : 250 - scrollbarOffset, "y" : 200 },
+    "mouseOffset"   : { "x" : 0, "y" : 0 },
+    "duration"      : "0",
+    "runMac"        : true,
+    "runGtk"        : true,
+    "runWin"        : true
+  },
+  {
+    "description"   : "Click scrollbar left button, expect scroll snapping.",
+    "snapCoord"     : "50px 500px, 250px 500px, 500px 500px, 750px 500px, 950px 500px",
+    "startScroll"   : { "x" : 500, "y" : 500 },
+    "endScroll"     : { "x" : 250, "y" : 500 },
+    "mousePosition" : { "x" : scrollbarOffset, "y" : 250 - scrollbarOffset },
+    "mouseOffset"   : { "x" : 0, "y" : 0 },
+    "duration"      : "0",
+    "runMac"        : false, // OSX does not have have line-scroll buttons
+    "runGtk"        : true,
+    "runWin"        : true
+  },
+  {
+    "description"   : "Hold scrollbar left button until repeating, expect scroll snapping.",
+    "snapCoord"     : "50px 500px, 500px 500px, 950px 500px",
+    "startScroll"   : { "x" : 500, "y" : 500 },
+    "endScroll"     : { "x" : 50, "y" : 500 },
+    "mousePosition" : { "x" : scrollbarOffset, "y" : 250 - scrollbarOffset },
+    "mouseOffset"   : { "x" : 0, "y" : 0 },
+    "duration"      : "500",
+    "runMac"        : false, // OSX does not have have line-scroll buttons
+    "runGtk"        : true,
+    "runWin"        : true
+  },
+  {
+    "description"   : "Click scrollbar right button, expect scroll snapping.",
+    "snapCoord"     : "50px 500px, 250px 500px, 500px 500px, 750px 500px, 950px 500px",
+    "startScroll"   : { "x" : 500, "y" : 500 },
+    "endScroll"     : { "x" : 750, "y" : 500 },
+    "mousePosition" : { "x" : 250 - scrollbarOffset * 3, "y" : 250 - scrollbarOffset },
+    "mouseOffset"   : { "x" : 0, "y" : 0 },
+    "duration"      : "0",
+    "runMac"        : false, // OSX does not have have line-scroll buttons
+    "runGtk"        : true,
+    "runWin"        : true
+  },
+  {
+    "description"   : "Hold scrollbar right button until repeating, expect scroll snapping.",
+    "snapCoord"     : "50px 500px, 500px 500px, 950px 500px",
+    "startScroll"   : { "x" : 500, "y" : 500 },
+    "endScroll"     : { "x" : 950, "y" : 500 },
+    "mousePosition" : { "x" : 250 - scrollbarOffset * 3, "y" : 250 - scrollbarOffset },
+    "mouseOffset"   : { "x" : 0, "y" : 0 },
+    "duration"      : "500",
+    "runMac"        : false, // OSX does not have have line-scroll buttons
+    "runGtk"        : true,
+    "runWin"        : true
+  },
+  {
+    "description"   : "Click scrollbar up button, expect scroll snapping.",
+    "snapCoord"     : "500px 50px, 500px 250px, 500px 500px, 500px 750px, 500px 950px",
+    "startScroll"   : { "x" : 500, "y" : 500 },
+    "endScroll"     : { "x" : 500, "y" : 250 },
+    "mousePosition" : { "x" : 250 - scrollbarOffset, "y" : scrollbarOffset },
+    "mouseOffset"   : { "x" : 0, "y" : 0 },
+    "duration"      : "0",
+    "runMac"        : false, // OSX does not have have line-scroll buttons
+    "runGtk"        : true,
+    "runWin"        : true
+  },
+  {
+    "description"   : "Hold scrollbar up button until repeating, expect scroll snapping.",
+    "snapCoord"     : "500px 50px, 500px 500px, 500px 950px",
+    "startScroll"   : { "x" : 500, "y" : 500 },
+    "endScroll"     : { "x" : 500, "y" : 50 },
+    "mousePosition" : { "x" : 250 - scrollbarOffset, "y" : scrollbarOffset },
+    "mouseOffset"   : { "x" : 0, "y" : 0 },
+    "duration"      : "500",
+    "runMac"        : false, // OSX does not have have line-scroll buttons
+    "runGtk"        : true,
+    "runWin"        : true
+  },
+  {
+    "description"   : "Click scrollbar down button, expect scroll snapping.",
+    "snapCoord"     : "500px 50px, 500px 250px, 500px 500px, 500px 750px, 500px 950px",
+    "startScroll"   : { "x" : 500, "y" : 500 },
+    "endScroll"     : { "x" : 500, "y" : 750 },
+    "mousePosition" : { "x" : 250 - scrollbarOffset, "y" : 250 - scrollbarOffset * 3},
+    "mouseOffset"   : { "x" : 0, "y" : 0 },
+    "duration"      : "0",
+    "runMac"        : false, // OSX does not have have line-scroll buttons
+    "runGtk"        : true,
+    "runWin"        : true
+  },
+  {
+    "description"   : "Hold scrollbar down button until repeating, expect scroll snapping.",
+    "snapCoord"     : "500px 50px, 500px 500px, 500px 950px",
+    "startScroll"   : { "x" : 500, "y" : 500 },
+    "endScroll"     : { "x" : 500, "y" : 950 },
+    "mousePosition" : { "x" : 250 - scrollbarOffset, "y" : 250 - scrollbarOffset * 3},
+    "mouseOffset"   : { "x" : 0, "y" : 0 },
+    "duration"      : "500",
+    "runMac"        : false, // OSX does not have have line-scroll buttons
+    "runGtk"        : true,
+    "runWin"        : true
+  },
+
+];
+
+var step = 0;
+var sc; // Scroll Container
+var sd; // Scrolled Div
+
+var lastScrollTop;
+var lastScrollLeft;
+var stopFrameCount;
+
+function doTest() {
+  var testCase = testCases[step];
+
+  stopFrameCount = 0;
+  lastScrollTop = sc.scrollTop;
+  lastScrollLeft = sc.scrollLeft;
+
+  sc.scrollTo(testCase.startScroll.x, testCase.startScroll.y);
+  sc.style.scrollSnapType = "mandatory";
+  sd.style.scrollSnapCoordinate = testCase.snapCoord;
+
+  synthesizeMouse(sc,
+                  testCase.mousePosition.x,
+                  testCase.mousePosition.y,
+                  { type: "mousedown" });
+
+  synthesizeMouse(sc,
+                  testCase.mousePosition.x + testCase.mouseOffset.x,
+                  testCase.mousePosition.y + testCase.mouseOffset.y,
+                  { type: "mousemove" });
+
+  window.requestAnimationFrame(function() {
+    isnot("(" + sc.scrollLeft + "," + sc.scrollTop + ")",
+          "(" + testCase.startScroll.x +"," + testCase.startScroll.y + ")",
+          "Step " + step + ": Synthesized mouse events move scroll position. ("
+            + testCase.description + ")");
+
+    window.setTimeout(function() {
+      synthesizeMouse(sc,
+                      testCase.mousePosition.x + testCase.mouseOffset.x,
+                      testCase.mousePosition.y + testCase.mouseOffset.y,
+                      { type: "mouseup" });
+
+      window.requestAnimationFrame(waitForScrollStop);
+    }, testCase.duration);
+  });
+}
+
+function waitForScrollStop() {
+  if (stopFrameCount > 30) {
+    // We have the same position for 30 consecutive frames -- we are stopped
+    verifyTest();
+  } else {
+    // Still moving
+    if (lastScrollTop == sc.scrollTop && lastScrollLeft == sc.scrollLeft) {
+      stopFrameCount++;
+    } else {
+      stopFrameCount = 0;
+      lastScrollTop = sc.scrollTop;
+      lastScrollLeft = sc.scrollLeft;
+    }
+    window.requestAnimationFrame(waitForScrollStop);
+  }
+}
+
+function verifyTest() {
+  // Test ended, check if scroll position matches expected position
+  var testCase = testCases[step];
+  is("(" + sc.scrollLeft + "," + sc.scrollTop + ")",
+     "(" + testCase.endScroll.x +"," + testCase.endScroll.y + ")",
+      "Step " + step + ": " + testCase.description);
+
+  // Find next test to run
+  while (true) {
+    if (++step == testCases.length) {
+      SimpleTest.finish();
+      break;
+    } else {
+      testCase = testCases[step];
+      if ((testCase.runGtk && isGtk)
+          || (testCase.runMac && isMac)
+          || (testCase.runWin && isWin)) {
+        doTest();
+        break;
+      }
+    }
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestFlakyTimeout("Delays added to allow synthesized mouse " +
+                               "events to trigger scrollbar repeating scrolls.");
+addLoadEvent(function() {
+  sc = document.getElementById("sc");
+  sd = document.getElementById("sd");
+  SpecialPowers.pushPrefEnv({
+    "set": [["layout.css.scroll-snap.enabled", true],
+            ["layout.css.scroll-snap.proximity-threshold", 100]]},
+    doTest);
+});
+</script>
+</pre>
+</body>
+
+</html>
