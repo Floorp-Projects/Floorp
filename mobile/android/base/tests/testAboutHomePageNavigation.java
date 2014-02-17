@@ -13,7 +13,7 @@ public class testAboutHomePageNavigation extends UITest {
     // enum for both phone and tablet, then swiping through the pages. This will also
     // benefit having a HomePager with custom pages.
     public void testAboutHomePageNavigation() {
-        GeckoHelper.blockForDelayedStartup();
+        GeckoHelper.blockForReady();
 
         mAboutHome.assertVisible()
                   .assertCurrentPage(Page.TOP_SITES);

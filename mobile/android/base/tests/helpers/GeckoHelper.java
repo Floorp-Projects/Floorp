@@ -27,25 +27,13 @@ public final class GeckoHelper {
     }
 
     public static void blockForReady() {
-        blockForEvent("Gecko:Ready");
-    }
+        final EventExpecter geckoReady = sActions.expectGeckoEvent("Gecko:Ready");
 
-    /**
-     * Blocks for the "Gecko:DelayedStartup" event, which occurs after "Gecko:Ready" and the
-     * first page load.
-     */
-    public static void blockForDelayedStartup() {
-        blockForEvent("Gecko:DelayedStartup");
-    }
-
-    private static void blockForEvent(final String eventName) {
-        final EventExpecter eventExpecter = sActions.expectGeckoEvent(eventName);
-
-        final boolean isRunning = GeckoThread.checkLaunchState(LaunchState.GeckoRunning);
-        if (!isRunning) {
-            eventExpecter.blockForEvent();
+        final boolean isReady = GeckoThread.checkLaunchState(LaunchState.GeckoRunning);
+        if (!isReady) {
+            geckoReady.blockForEvent();
         }
 
-        eventExpecter.unregisterListener();
+        geckoReady.unregisterListener();
     }
 }
