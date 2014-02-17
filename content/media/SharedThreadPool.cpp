@@ -244,6 +244,9 @@ CreateThreadPool(const nsCString& aName)
   rv = pool->SetName(aName);
   NS_ENSURE_SUCCESS(rv, nullptr);
 
+  rv = pool->SetThreadStackSize(MEDIA_THREAD_STACK_SIZE);
+  NS_ENSURE_SUCCESS(rv, nullptr);
+
 #ifdef XP_WIN
   // Ensure MSCOM is initialized on the thread pools threads.
   nsCOMPtr<nsIThreadPoolListener> listener = new MSCOMInitThreadPoolListener();
