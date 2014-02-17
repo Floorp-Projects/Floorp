@@ -12,71 +12,6 @@
 
 namespace mozilla {
 
-StateMachineThread::StateMachineThread()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_COUNT_CTOR(StateMachineThread);
-}
-
-StateMachineThread::~StateMachineThread()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_COUNT_DTOR(StateMachineThread);
-}
-
-void
-StateMachineThread::Shutdown()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mThread);
-  if (mThread) {
-    nsCOMPtr<nsIRunnable> event =
-      NS_NewRunnableMethod(this, &StateMachineThread::ShutdownThread);
-    NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
-  }
-}
-
-void
-StateMachineThread::ShutdownThread()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mThread);
-  mThread->Shutdown();
-  mThread = nullptr;
-  MediaShutdownManager::Instance().Unregister(this);
-}
-
-nsresult
-StateMachineThread::Init()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  nsresult rv = NS_NewNamedThread("Media State", getter_AddRefs(mThread));
-  NS_ENSURE_SUCCESS(rv, rv);
-  MediaShutdownManager::Instance().Register(this);
-  return NS_OK;
-}
-
-nsIThread*
-StateMachineThread::GetThread()
-{
-  MOZ_ASSERT(mThread);
-  return mThread;
-}
-
-void
-StateMachineThread::SpinUntilShutdownComplete()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  while (mThread) {
-    bool processed = false;
-    nsresult rv = NS_GetCurrentThread()->ProcessNextEvent(true, &processed);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("Failed to spin main thread while awaiting media shutdown");
-      break;
-    }
-  }
-}
-
 NS_IMPL_ISUPPORTS1(MediaShutdownManager, nsIObserver)
 
 MediaShutdownManager::MediaShutdownManager()
@@ -111,8 +46,7 @@ void
 MediaShutdownManager::EnsureCorrectShutdownObserverState()
 {
   MOZ_ASSERT(!mIsDoingXPCOMShutDown);
-  bool needShutdownObserver = (mDecoders.Count() > 0) ||
-                              (mStateMachineThreads.Count() > 0);
+  bool needShutdownObserver = mDecoders.Count() > 0;
   if (needShutdownObserver != mIsObservingShutdown) {
     mIsObservingShutdown = needShutdownObserver;
     if (mIsObservingShutdown) {
@@ -162,43 +96,10 @@ MediaShutdownManager::Observe(nsISupports *aSubjet,
   return NS_OK;
 }
 
-void
-MediaShutdownManager::Register(StateMachineThread* aThread)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!mStateMachineThreads.Contains(aThread));
-  mStateMachineThreads.PutEntry(aThread);
-  MOZ_ASSERT(mStateMachineThreads.Contains(aThread));
-  MOZ_ASSERT(mStateMachineThreads.Count() > 0);
-  EnsureCorrectShutdownObserverState();
-}
-
-void
-MediaShutdownManager::Unregister(StateMachineThread* aThread)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mStateMachineThreads.Contains(aThread));
-  if (!mIsDoingXPCOMShutDown) {
-    mStateMachineThreads.RemoveEntry(aThread);
-    EnsureCorrectShutdownObserverState();
-  }
-}
-
 static PLDHashOperator
 ShutdownMediaDecoder(nsRefPtrHashKey<MediaDecoder>* aEntry, void*)
 {
   aEntry->GetKey()->Shutdown();
-  return PL_DHASH_REMOVE;
-}
-
-static PLDHashOperator
-JoinStateMachineThreads(nsRefPtrHashKey<StateMachineThread>* aEntry, void*)
-{
-  // Hold a strong reference to the StateMachineThread, so that if it
-  // is Unregistered() and the hashtable's owning reference is cleared,
-  // it won't be destroyed while we're spinning here.
-  RefPtr<StateMachineThread> thread = aEntry->GetKey();
-  thread->SpinUntilShutdownComplete();
   return PL_DHASH_REMOVE;
 }
 
@@ -216,13 +117,6 @@ MediaShutdownManager::Shutdown()
   // Iterate over the decoders and shut them down, and remove them from the
   // hashtable.
   mDecoders.EnumerateEntries(ShutdownMediaDecoder, nullptr);
- 
-  // Iterate over the StateMachineThreads and wait for them to have finished
-  // shutting down, and remove them from the hashtable. Once all the decoders
-  // have shutdown the active state machine thread will naturally shutdown
-  // asynchronously. We may also have another state machine thread active,
-  // if construction and shutdown of the state machine thread has interleaved.
-  mStateMachineThreads.EnumerateEntries(JoinStateMachineThreads, nullptr);
  
   // Remove the MediaShutdownManager instance from the shutdown observer
   // list.

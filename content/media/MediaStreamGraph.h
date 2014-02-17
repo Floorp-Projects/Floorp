@@ -675,7 +675,7 @@ public:
    * does not exist. No op if a runnable is already present for this track.
    */
   void DispatchWhenNotEnoughBuffered(TrackID aID,
-      nsIThread* aSignalThread, nsIRunnable* aSignalRunnable);
+      nsIEventTarget* aSignalThread, nsIRunnable* aSignalRunnable);
   /**
    * Indicate that a track has ended. Do not do any more API calls
    * affecting this track.
@@ -728,13 +728,13 @@ public:
   friend class MediaStreamGraphImpl;
 
   struct ThreadAndRunnable {
-    void Init(nsIThread* aThread, nsIRunnable* aRunnable)
+    void Init(nsIEventTarget* aTarget, nsIRunnable* aRunnable)
     {
-      mThread = aThread;
+      mTarget = aTarget;
       mRunnable = aRunnable;
     }
 
-    nsCOMPtr<nsIThread> mThread;
+    nsCOMPtr<nsIEventTarget> mTarget;
     nsCOMPtr<nsIRunnable> mRunnable;
   };
   enum TrackCommands {
