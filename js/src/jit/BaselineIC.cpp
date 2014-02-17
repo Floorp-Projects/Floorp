@@ -4618,7 +4618,7 @@ ICGetElem_TypedArray::Compiler::generateStubCode(MacroAssembler &masm)
 bool
 ICGetElem_Arguments::Compiler::generateStubCode(MacroAssembler &masm)
 {
-    // Variatns of GetElem_Arguments can enter stub frames if entered in CallProp
+    // Variants of GetElem_Arguments can enter stub frames if entered in CallProp
     // context when noSuchMethod support is on.
 #if JS_HAS_NO_SUCH_METHOD
 #ifdef DEBUG
