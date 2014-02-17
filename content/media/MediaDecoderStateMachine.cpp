@@ -281,6 +281,10 @@ void MediaDecoderStateMachine::DecodeThreadRun()
 {
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
 
+  if (mReader) {
+    mReader->OnDecodeThreadStart();
+  }
+
   if (mState == DECODER_STATE_DECODING_METADATA &&
       NS_FAILED(DecodeMetadata())) {
     NS_ASSERTION(mState == DECODER_STATE_SHUTDOWN,
@@ -313,6 +317,10 @@ void MediaDecoderStateMachine::DecodeThreadRun()
     } else if (mState == DECODER_STATE_DORMANT) {
       mDecoder->GetReentrantMonitor().Wait();
     }
+  }
+
+  if (mReader) {
+    mReader->OnDecodeThreadFinish();
   }
 
   DECODER_LOG(PR_LOG_DEBUG, ("%p Decode thread finished", mDecoder.get()));
