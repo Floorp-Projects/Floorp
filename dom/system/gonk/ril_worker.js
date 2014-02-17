@@ -43,13 +43,13 @@ importScripts("resource://gre/modules/workers/require.js");
 
 // set to true in ril_consts.js to see debug messages
 let DEBUG = DEBUG_WORKER;
-let CLIENT_ID = -1;
+let clientId = -1;
 let GLOBAL = this;
 
 if (!this.debug) {
   // Debugging stub that goes nowhere.
   this.debug = function debug(message) {
-    dump("RIL Worker[" + CLIENT_ID + "]: " + message + "\n");
+    dump("RIL Worker[" + clientId + "]: " + message + "\n");
   };
 }
 
@@ -185,7 +185,7 @@ BufObject.prototype = {
   },
 
   onSendParcel: function(parcel) {
-    postRILMessage(CLIENT_ID, parcel);
+    postRILMessage(this.context.clientId, parcel);
   }
 };
 
@@ -5051,7 +5051,7 @@ RilObject.prototype = {
    * Send messages to the main thread.
    */
   sendChromeMessage: function(message) {
-    message.rilMessageClientId = CLIENT_ID;
+    message.rilMessageClientId = this.context.clientId;
     postMessage(message);
   },
 
@@ -5087,7 +5087,7 @@ RilObject.prototype = {
   },
 
   registerClient: function(aOptions) {
-    CLIENT_ID = aOptions.clientId;
+    this.context.clientId = aOptions.clientId;
 
     // Init properties that are only initialized once.
     this.v5Legacy = RILQUIRKS_V5_LEGACY;
