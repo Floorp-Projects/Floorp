@@ -27,7 +27,7 @@ nsHttpConnectionInfo::nsHttpConnectionInfo(const nsACString &host, int32_t port,
     , mUsingSSL(usingSSL)
     , mUsingConnect(false)
 {
-    LOG(("Creating nsHttpConnectionInfo @%p\n", this));
+    LOG(("Creating nsHttpConnectionInfo @%x\n", this));
 
     mUsingHttpProxy = (proxyInfo && proxyInfo->IsHTTP());
 
