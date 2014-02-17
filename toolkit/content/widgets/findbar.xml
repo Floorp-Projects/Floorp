@@ -123,8 +123,7 @@
       <handler event="compositionend"><![CDATA[
         let findbar = this.findbar;
         findbar._isIMEComposing = false;
-        if (findbar._findMode != findbar.FIND_NORMAL &&
-            !findbar.hidden)
+        if (findbar._findMode != findbar.FIND_NORMAL)
           findbar._setFindCloseTimeout();
       ]]></handler>
 
@@ -410,17 +409,18 @@
           if (this._quickFindTimeout)
             clearTimeout(this._quickFindTimeout);
 
-          // Don't close the find toolbar while IME is composing.
-          if (this._isIMEComposing) {
+          // Don't close the find toolbar while IME is composing OR when the
+          // findbar is already hidden.
+          if (this._isIMEComposing || this.hidden) {
             this._quickFindTimeout = null;
             return;
           }
 
-          this._quickFindTimeout =
-            setTimeout(function(aSelf) {
-                         if (aSelf._findMode != aSelf.FIND_NORMAL)
-                           aSelf.close();
-                       }, this._quickFindTimeoutLength, this);
+          this._quickFindTimeout = setTimeout(() => {
+             if (this._findMode != this.FIND_NORMAL)
+               this.close();
+             this._quickFindTimeout = null;
+           }, this._quickFindTimeoutLength);
         ]]></body>
       </method>
 
@@ -1127,7 +1127,7 @@
           else
             this._findFailedString = null;
 
-          if (this._findMode != this.FIND_NORMAL && !this.hidden)
+          if (this._findMode != this.FIND_NORMAL)
             this._setFindCloseTimeout();
         ]]></body>
       </method>
