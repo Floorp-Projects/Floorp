@@ -42,7 +42,6 @@ UNIFIED_SOURCES += [
     'testIntern.cpp',
     'testIntString.cpp',
     'testIntTypesABI.cpp',
-    'testJitRValueAlloc.cpp',
     'testJSEvaluateScript.cpp',
     'testLookup.cpp',
     'testLooselyEqual.cpp',
@@ -72,6 +71,11 @@ UNIFIED_SOURCES += [
     'testUTF8.cpp',
     'testXDR.cpp',
 ]
+
+if CONFIG['ENABLE_ION']:
+    UNIFIED_SOURCES += [
+        'testJitRValueAlloc.cpp',
+    ]
 
 DEFINES['EXPORT_JS_API'] = True
 # Building against js_static requires that we declare mfbt sybols "exported"
