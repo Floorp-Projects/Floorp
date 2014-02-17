@@ -7,10 +7,18 @@
 #include "MediaShutdownManager.h"
 #include "nsContentUtils.h"
 #include "mozilla/StaticPtr.h"
-#include "mozilla/ClearOnShutdown.h"
 #include "MediaDecoder.h"
+#include "SharedThreadPool.h"
+#include "prlog.h"
 
 namespace mozilla {
+
+#ifdef PR_LOGGING
+extern PRLogModuleInfo* gMediaDecoderLog;
+#define DECODER_LOG(type, msg) PR_LOG(gMediaDecoderLog, type, msg)
+#else
+#define DECODER_LOG(type, msg)
+#endif
 
 NS_IMPL_ISUPPORTS1(MediaShutdownManager, nsIObserver)
 
@@ -109,6 +117,8 @@ MediaShutdownManager::Shutdown()
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(sInstance);
 
+  DECODER_LOG(PR_LOG_DEBUG, ("MediaShutdownManager::Shutdown() start..."));
+
   // Mark that we're shutting down, so that Unregister(*) calls don't remove
   // hashtable entries. If Unregsiter(*) was to remove from the hash table,
   // the iterations over the hashtables below would be disrupted.
@@ -117,7 +127,12 @@ MediaShutdownManager::Shutdown()
   // Iterate over the decoders and shut them down, and remove them from the
   // hashtable.
   mDecoders.EnumerateEntries(ShutdownMediaDecoder, nullptr);
- 
+
+  // Ensure all media shared thread pools are shutdown. This joins with all
+  // threads in the state machine thread pool, the decoder thread pool, and
+  // any others.
+  SharedThreadPool::SpinUntilShutdown();
+
   // Remove the MediaShutdownManager instance from the shutdown observer
   // list.
   nsContentUtils::UnregisterShutdownObserver(this);
@@ -127,6 +142,8 @@ MediaShutdownManager::Shutdown()
   // MediaShutdownManager will be deleted once the observer service cleans
   // up after it finishes its notifications.
   sInstance = nullptr;
+
+  DECODER_LOG(PR_LOG_DEBUG, ("MediaShutdownManager::Shutdown() end."));
 }
 
 } // namespace mozilla
