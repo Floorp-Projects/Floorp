@@ -218,6 +218,13 @@ Result
 ExpectTagAndGetLength(Input& input, uint8_t expectedTag, uint16_t& length);
 
 inline Result
+ExpectTagAndIgnoreLength(Input& input, uint8_t expectedTag)
+{
+  uint16_t ignored;
+  return ExpectTagAndGetLength(input, expectedTag, ignored);
+}
+
+inline Result
 End(Input& input)
 {
   if (!input.AtEnd()) {
