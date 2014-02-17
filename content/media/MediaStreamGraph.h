@@ -672,7 +672,7 @@ public:
    * Ensures that aSignalRunnable will be dispatched to aSignalThread
    * when we don't have enough buffered data in the track (which could be
    * immediately). Will dispatch the runnable immediately if the track
-   * does not exist. No op if a runnable is already present for this track.
+   * does not exist.
    */
   void DispatchWhenNotEnoughBuffered(TrackID aID,
       nsIThread* aSignalThread, nsIRunnable* aSignalRunnable);
