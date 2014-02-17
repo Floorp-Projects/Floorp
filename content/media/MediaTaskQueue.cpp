@@ -126,6 +126,13 @@ MediaTaskQueue::Runner::Run()
   // in this task queue.
   event->Run();
 
+  // Drop the reference to event. The event will hold a reference to the
+  // object it's calling, and we don't want to keep it alive, it may be
+  // making assumptions what holds references to it. This is especially
+  // the case if the object is waiting for us to shutdown, so that it
+  // can shutdown (like in the MediaDecoderStateMachine's SHUTDOWN case).
+  event = nullptr;
+
   {
     MonitorAutoLock mon(mQueue->mQueueMonitor);
     if (mQueue->mTasks.size() == 0) {
