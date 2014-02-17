@@ -57,11 +57,11 @@ private:
   nsRefPtr<Promise> mPromise;
 };
 
-class WorkerPromiseTask MOZ_FINAL : public WorkerRunnable
+class WorkerPromiseTask MOZ_FINAL : public WorkerSameThreadRunnable
 {
 public:
   WorkerPromiseTask(WorkerPrivate* aWorkerPrivate, Promise* aPromise)
-    : WorkerRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount)
+    : WorkerSameThreadRunnable(aWorkerPrivate)
     , mPromise(aPromise)
   {
     MOZ_ASSERT(aPromise);
@@ -161,7 +161,7 @@ public:
   }
 };
 
-class WorkerPromiseResolverTask MOZ_FINAL : public WorkerRunnable,
+class WorkerPromiseResolverTask MOZ_FINAL : public WorkerSameThreadRunnable,
                                             public PromiseResolverMixin
 {
 public:
@@ -169,7 +169,7 @@ public:
                             Promise* aPromise,
                             JS::Handle<JS::Value> aValue,
                             Promise::PromiseState aState)
-    : WorkerRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount),
+    : WorkerSameThreadRunnable(aWorkerPrivate),
       PromiseResolverMixin(aPromise, aValue, aState)
   {}
 
@@ -832,7 +832,7 @@ Promise::AppendCallbacks(PromiseCallback* aResolveCallback,
       WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
       MOZ_ASSERT(worker);
       nsRefPtr<WorkerPromiseTask> task = new WorkerPromiseTask(worker, this);
-      worker->Dispatch(task);
+      task->Dispatch(worker->GetJSContext());
     }
     mTaskPending = true;
   }
@@ -1045,7 +1045,7 @@ Promise::RunResolveTask(JS::Handle<JS::Value> aValue,
       MOZ_ASSERT(worker);
       nsRefPtr<WorkerPromiseResolverTask> task =
         new WorkerPromiseResolverTask(worker, this, aValue, aState);
-      worker->Dispatch(task);
+      task->Dispatch(worker->GetJSContext());
     }
     return;
   }
