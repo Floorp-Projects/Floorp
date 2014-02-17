@@ -29,6 +29,7 @@ function _getWorker() {
 add_test(function test_notification() {
   let workerHelper = _getWorker();
   let worker = workerHelper.worker;
+  let context = worker.ContextPool._contexts[0];
 
   function Call(callIndex, number) {
     this.callIndex = callIndex;
@@ -69,7 +70,7 @@ add_test(function test_notification() {
     do_print('Test case info: ' + JSON.stringify(testInfo));
 
     // Set current calls.
-    worker.RIL._processCalls(calls);
+    context.RIL._processCalls(calls);
 
     let notificationInfo = {
       notificationType: 1,  // MT
@@ -79,7 +80,7 @@ add_test(function test_notification() {
       number: number
     };
 
-    worker.RIL._processSuppSvcNotification(notificationInfo);
+    context.RIL._processSuppSvcNotification(notificationInfo);
 
     let postedMessage = workerHelper.postedMessage;
     do_check_eq(postedMessage.rilMessageType, 'suppSvcNotification');
@@ -87,7 +88,7 @@ add_test(function test_notification() {
     do_check_eq(postedMessage.callIndex, resultCallIndex);
 
     // Clear all existed calls.
-    worker.RIL._processCalls(null);
+    context.RIL._processCalls(null);
   }
 
   testNotification(oneCall, SUPP_SVC_NOTIFICATION_CODE2_PUT_ON_HOLD, null,
