@@ -178,4 +178,16 @@ AppTrustDomain::VerifySignedData(const CERTSignedData* signedData,
   return ::insanity::pkix::VerifySignedData(signedData, cert, mPinArg);
 }
 
+SECStatus
+AppTrustDomain::CheckRevocation(EndEntityOrCA,
+                                const CERTCertificate*,
+                                /*const*/ CERTCertificate*,
+                                PRTime time,
+                                /*optional*/ const SECItem*)
+{
+  // We don't currently do revocation checking. If we need to distrust an Apps
+  // certificate, we will use the active distrust mechanism.
+  return SECSuccess;
+}
+
 } }

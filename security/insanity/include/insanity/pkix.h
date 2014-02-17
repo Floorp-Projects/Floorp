@@ -29,6 +29,7 @@ SECStatus BuildCertChain(TrustDomain& trustDomain,
                          EndEntityOrCA endEntityOrCA,
             /*optional*/ KeyUsages requiredKeyUsagesIfPresent,
             /*optional*/ SECOidTag requiredEKUIfPresent,
+            /*optional*/ const SECItem* stapledOCSPResponse,
                  /*out*/ ScopedCERTCertList& results);
 
 // Verify the given signed data using the public key of the given certificate.
@@ -36,6 +37,17 @@ SECStatus BuildCertChain(TrustDomain& trustDomain,
 SECStatus VerifySignedData(const CERTSignedData* sd,
                            const CERTCertificate* cert,
                            void* pkcs11PinArg);
+
+// The return value, if non-null, is owned by the arena and MUST NOT be freed.
+SECItem* CreateEncodedOCSPRequest(PLArenaPool* arena,
+                                  const CERTCertificate* cert,
+                                  const CERTCertificate* issuerCert);
+
+SECStatus VerifyEncodedOCSPResponse(TrustDomain& trustDomain,
+                                    const CERTCertificate* cert,
+                                    CERTCertificate* issuerCert,
+                                    PRTime time,
+                                    const SECItem* encodedResponse);
 
 } } // namespace insanity::pkix
 
