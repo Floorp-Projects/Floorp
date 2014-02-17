@@ -17,6 +17,10 @@
 class nsTextPaintStyle;
 class PropertyProvider;
 
+// This state bit is set on frames whose character data offsets need to be
+// fixed up
+#define TEXT_OFFSETS_NEED_FIXING         NS_FRAME_STATE_BIT(30)
+
 // This state bit is set on frames that have some non-collapsed characters after
 // reflow
 #define TEXT_HAS_NONCOLLAPSED_CHARACTERS NS_FRAME_STATE_BIT(31)
