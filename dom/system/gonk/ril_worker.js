@@ -43,13 +43,12 @@ importScripts("resource://gre/modules/workers/require.js");
 
 // set to true in ril_consts.js to see debug messages
 let DEBUG = DEBUG_WORKER;
-let clientId = -1;
 let GLOBAL = this;
 
 if (!this.debug) {
   // Debugging stub that goes nowhere.
   this.debug = function debug(message) {
-    dump("RIL Worker[" + clientId + "]: " + message + "\n");
+    dump("RIL Worker: " + message + "\n");
   };
 }
 
@@ -218,6 +217,11 @@ function RilObject(aContext) {
   this._pendingSentSmsMap = {};
   this.pendingNetworkType = {};
   this._receivedSmsCbPagesMap = {};
+
+  // Init properties that are only initialized once.
+  this.v5Legacy = RILQUIRKS_V5_LEGACY;
+  this.cellBroadcastDisabled = RIL_CELLBROADCAST_DISABLED;
+  this.clirMode = RIL_CLIR_MODE;
 }
 RilObject.prototype = {
   context: null,
@@ -5106,34 +5110,6 @@ RilObject.prototype = {
       if (DEBUG) this.context.debug("Handling parcel as " + method.name);
       method.call(this, length, options);
     }
-  },
-
-  setInitialOptions: function(options) {
-    DEBUG = DEBUG_WORKER || options.debug;
-    RIL_EMERGENCY_NUMBERS = options.rilEmergencyNumbers;
-    RIL_CELLBROADCAST_DISABLED = options.cellBroadcastDisabled;
-    RIL_CLIR_MODE = options.clirMode;
-
-    let quirks = options.quirks;
-    RILQUIRKS_CALLSTATE_EXTRA_UINT32 = quirks.callstateExtraUint32;
-    RILQUIRKS_V5_LEGACY = quirks.v5Legacy;
-    RILQUIRKS_REQUEST_USE_DIAL_EMERGENCY_CALL = quirks.requestUseDialEmergencyCall;
-    RILQUIRKS_SIM_APP_STATE_EXTRA_FIELDS = quirks.simAppStateExtraFields;
-    RILQUIRKS_EXTRA_UINT32_2ND_CALL = quirks.extraUint2ndCall;
-    RILQUIRKS_HAVE_QUERY_ICC_LOCK_RETRY_COUNT = quirks.haveQueryIccLockRetryCount;
-    RILQUIRKS_SEND_STK_PROFILE_DOWNLOAD = quirks.sendStkProfileDownload;
-    RILQUIRKS_DATA_REGISTRATION_ON_DEMAND = quirks.dataRegistrationOnDemand;
-  },
-
-  registerClient: function(aOptions) {
-    this.context.clientId = aOptions.clientId;
-
-    // Init properties that are only initialized once.
-    this.v5Legacy = RILQUIRKS_V5_LEGACY;
-    this.cellBroadcastDisabled = RIL_CELLBROADCAST_DISABLED;
-    this.clirMode = RIL_CLIR_MODE;
-
-    this.initRILState();
   }
 };
 
@@ -8275,7 +8251,7 @@ GsmPDUHelperObject.prototype = {
 /**
  * Provide buffer with bitwise read/write function so make encoding/decoding easier.
  */
-function BitBufferHelperObject() {
+function BitBufferHelperObject(/* unused */aContext) {
   this.readBuffer = [];
   this.writeBuffer = [];
 }
@@ -14465,36 +14441,109 @@ ICCContactHelperObject.prototype = {
  * Global stuff.
  */
 
-let Buf = new BufObject(this);
-Buf.init();
+function Context(aClientId) {
+  this.clientId = aClientId;
 
-let RIL = new RilObject(this);
-RIL.initRILState();
+  this.Buf = new BufObject(this);
+  this.Buf.init();
 
-let GsmPDUHelper = new GsmPDUHelperObject(this);
-let BitBufferHelper = new BitBufferHelperObject();
-let CdmaPDUHelper = new CdmaPDUHelperObject(this);
-let ICCPDUHelper = new ICCPDUHelperObject(this);
-let StkCommandParamsFactory = new StkCommandParamsFactoryObject(this);
-let StkProactiveCmdHelper = new StkProactiveCmdHelperObject(this);
-let ComprehensionTlvHelper = new ComprehensionTlvHelperObject(this);
-let BerTlvHelper = new BerTlvHelperObject(this);
-let ICCFileHelper = new ICCFileHelperObject(this);
-let ICCIOHelper = new ICCIOHelperObject(this);
-let ICCRecordHelper = new ICCRecordHelperObject(this);
-let SimRecordHelper = new SimRecordHelperObject(this);
-let RuimRecordHelper = new RuimRecordHelperObject(this);
-let ICCUtilsHelper = new ICCUtilsHelperObject(this);
-let ICCContactHelper = new ICCContactHelperObject(this);
+  this.RIL = new RilObject(this);
+  this.RIL.initRILState();
+}
+Context.prototype = {
+  clientId: null,
+  Buf: null,
+  RIL: null,
 
-function onRILMessage(/*unused*/aClientId, data) {
-  Buf.processIncoming(data);
+  debug: function(aMessage) {
+    GLOBAL.debug("[" + this.clientId + "] " + aMessage);
+  }
+};
+
+(function() {
+  let lazySymbols = [
+    "BerTlvHelper", "BitBufferHelper", "CdmaPDUHelper",
+    "ComprehensionTlvHelper", "GsmPDUHelper", "ICCContactHelper",
+    "ICCFileHelper", "ICCIOHelper", "ICCPDUHelper", "ICCRecordHelper",
+    "ICCUtilsHelper", "RuimRecordHelper", "SimRecordHelper",
+    "StkCommandParamsFactory", "StkProactiveCmdHelper",
+  ];
+
+  for (let i = 0; i < lazySymbols.length; i++) {
+    let symbol = lazySymbols[i];
+    Object.defineProperty(Context.prototype, symbol, {
+      get: function() {
+        let real = new GLOBAL[symbol + "Object"](this);
+        Object.defineProperty(this, symbol, {
+          value: real,
+          enumerable: true
+        });
+        return real;
+      },
+      configurable: true,
+      enumerable: true
+    });
+  }
+})();
+
+let ContextPool = {
+  _contexts: [],
+
+  handleRilMessage: function(aClientId, aUint8Array) {
+    let context = this._contexts[aClientId];
+    context.Buf.processIncoming(aUint8Array);
+  },
+
+  handleChromeMessage: function(aMessage) {
+    let clientId = aMessage.rilMessageClientId;
+    if (clientId != null) {
+      let context = this._contexts[clientId];
+      context.RIL.handleChromeMessage(aMessage);
+      return;
+    }
+
+    if (DEBUG) debug("Received global chrome message " + JSON.stringify(aMessage));
+    let method = this[aMessage.rilMessageType];
+    if (typeof method != "function") {
+      if (DEBUG) {
+        debug("Don't know what to do");
+      }
+      return;
+    }
+    method.call(this, aMessage);
+  },
+
+  setInitialOptions: function(aOptions) {
+    DEBUG = DEBUG_WORKER || aOptions.debug;
+    RIL_EMERGENCY_NUMBERS = aOptions.rilEmergencyNumbers;
+    RIL_CELLBROADCAST_DISABLED = aOptions.cellBroadcastDisabled;
+    RIL_CLIR_MODE = aOptions.clirMode;
+
+    let quirks = aOptions.quirks;
+    RILQUIRKS_CALLSTATE_EXTRA_UINT32 = quirks.callstateExtraUint32;
+    RILQUIRKS_V5_LEGACY = quirks.v5Legacy;
+    RILQUIRKS_REQUEST_USE_DIAL_EMERGENCY_CALL = quirks.requestUseDialEmergencyCall;
+    RILQUIRKS_SIM_APP_STATE_EXTRA_FIELDS = quirks.simAppStateExtraFields;
+    RILQUIRKS_EXTRA_UINT32_2ND_CALL = quirks.extraUint2ndCall;
+    RILQUIRKS_HAVE_QUERY_ICC_LOCK_RETRY_COUNT = quirks.haveQueryIccLockRetryCount;
+    RILQUIRKS_SEND_STK_PROFILE_DOWNLOAD = quirks.sendStkProfileDownload;
+    RILQUIRKS_DATA_REGISTRATION_ON_DEMAND = quirks.dataRegistrationOnDemand;
+  },
+
+  registerClient: function(aOptions) {
+    let clientId = aOptions.clientId;
+    this._contexts[clientId] = new Context(clientId);
+  },
+};
+
+function onRILMessage(aClientId, aUint8Array) {
+  ContextPool.handleRilMessage(aClientId, aUint8Array);
 }
 
 onmessage = function onmessage(event) {
-  RIL.handleChromeMessage(event.data);
+  ContextPool.handleChromeMessage(event.data);
 };
 
 onerror = function onerror(event) {
-  if (DEBUG) debug("RIL Worker error" + event.message + "\n");
+  if (DEBUG) debug("onerror" + event.message + "\n");
 };
