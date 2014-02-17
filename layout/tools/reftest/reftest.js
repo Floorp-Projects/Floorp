@@ -1655,7 +1655,7 @@ function RecordResult(testRunTime, errorMsg, scriptResults)
                         result += "REFTEST   IMAGE 2 (REFERENCE): " + gCanvas2.toDataURL() + "\n";
                     } else {
                         result += "\n";
-                        gDumpLog("REFTEST   IMAGE: " + gCanvas1.toDataURL() + "\n");
+                        result += "REFTEST   IMAGE: " + gCanvas1.toDataURL() + "\n";
                     }
                 } else {
                     result += "\n";
