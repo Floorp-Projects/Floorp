@@ -236,5 +236,9 @@
         <attr name="strip" format="reference"/>
     </declare-styleable>
 
+    <declare-styleable name="EllipsisTextView">
+        <attr name="ellipsizeAtLine" format="integer"/>
+    </declare-styleable>
+
 </resources>
 
