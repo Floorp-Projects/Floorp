@@ -10,7 +10,7 @@
 #include "nsContentCreatorFunctions.h"
 #include "nsContentList.h"
 #include "nsContentUtils.h"
-#include "nsCSSRenderingBorders.h"
+#include "nsCSSRendering.h"
 #include "nsFormControlFrame.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
@@ -82,6 +82,14 @@ nsRangeFrame::Init(nsIContent* aContent,
       }
     }
   }
+
+  nsStyleSet *styleSet = PresContext()->StyleSet();
+
+  mOuterFocusStyle =
+    styleSet->ProbePseudoElementStyle(aContent->AsElement(),
+                                      nsCSSPseudoElements::ePseudo_mozFocusOuter,
+                                      StyleContext());
+
   return nsContainerFrame::Init(aContent, aParent, aPrevInFlow);
 }
 
@@ -166,45 +174,39 @@ public:
     MOZ_COUNT_DTOR(nsDisplayRangeFocusRing);
   }
 #endif
-  
+
+  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) MOZ_OVERRIDE;
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsRenderingContext* aCtx) MOZ_OVERRIDE;
   NS_DISPLAY_DECL_NAME("RangeFocusRing", TYPE_OUTLINE)
 };
+
+nsRect
+nsDisplayRangeFocusRing::GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap)
+{
+  *aSnap = false;
+  nsRect rect(ToReferenceFrame(), Frame()->GetSize());
+
+  // We want to paint as if specifying a border for ::-moz-focus-outer
+  // specifies an outline for our frame, so inflate by the border widths:
+  nsStyleContext* styleContext =
+    static_cast<nsRangeFrame*>(mFrame)->mOuterFocusStyle;
+  MOZ_ASSERT(styleContext, "We only exist if mOuterFocusStyle is non-null");
+  rect.Inflate(styleContext->StyleBorder()->GetComputedBorder());
+
+  return rect;
+}
 
 void
 nsDisplayRangeFocusRing::Paint(nsDisplayListBuilder* aBuilder,
                                nsRenderingContext* aCtx)
 {
-  nsPresContext *presContext = mFrame->PresContext();
-  nscoord appUnitsPerDevPixel = presContext->DevPixelsToAppUnits(1);
-  gfxContext* ctx = aCtx->ThebesContext();
-  nsRect r = nsRect(ToReferenceFrame(), mFrame->GetSize());
-  gfxRect pxRect(nsLayoutUtils::RectToGfxRect(r, appUnitsPerDevPixel));
-  uint8_t borderStyles[4] = { NS_STYLE_BORDER_STYLE_DOTTED,
-                              NS_STYLE_BORDER_STYLE_DOTTED,
-                              NS_STYLE_BORDER_STYLE_DOTTED,
-                              NS_STYLE_BORDER_STYLE_DOTTED };
-  gfxFloat borderWidths[4] = { 1, 1, 1, 1 };
-  gfxCornerSizes borderRadii(0);
-  nscolor borderColors[4] = { NS_RGB(0, 0, 0), NS_RGB(0, 0, 0),
-                              NS_RGB(0, 0, 0), NS_RGB(0, 0, 0) };
-  nsStyleContext* bgContext = mFrame->StyleContext();
-  nscolor bgColor =
-    bgContext->GetVisitedDependentColor(eCSSProperty_background_color);
-
-  ctx->Save();
-  nsCSSBorderRenderer br(appUnitsPerDevPixel,
-                         ctx,
-                         pxRect,
-                         borderStyles,
-                         borderWidths,
-                         borderRadii,
-                         borderColors,
-                         nullptr,
-                         0,
-                         bgColor);
-  br.DrawBorders();
-  ctx->Restore();
+  bool unused;
+  nsStyleContext* styleContext =
+    static_cast<nsRangeFrame*>(mFrame)->mOuterFocusStyle;
+  MOZ_ASSERT(styleContext, "We only exist if mOuterFocusStyle is non-null");
+  nsCSSRendering::PaintBorder(mFrame->PresContext(), *aCtx, mFrame,
+                              mVisibleRect, GetBounds(aBuilder, &unused),
+                              styleContext);
 }
 
 void
@@ -231,19 +233,35 @@ nsRangeFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   }
 
   // Draw a focus outline if appropriate:
-  nsEventStates eventStates = mContent->AsElement()->State();
-  if (!eventStates.HasState(NS_EVENT_STATE_FOCUSRING) ||
-      eventStates.HasState(NS_EVENT_STATE_DISABLED)) {
+
+  if (!aBuilder->IsForPainting() ||
+      !IsVisibleForPainting(aBuilder)) {
+    // we don't want the focus ring item for hit-testing or if the item isn't
+    // in the area being [re]painted
     return;
   }
-  nsPresContext *presContext = PresContext();
-  const nsStyleDisplay *disp = StyleDisplay();
-  if ((!IsThemed(disp) ||
-       !presContext->GetTheme()->ThemeDrawsFocusForWidget(disp->mAppearance)) &&
-      IsVisibleForPainting(aBuilder)) {
-    aLists.Content()->AppendNewToTop(
-      new (aBuilder) nsDisplayRangeFocusRing(aBuilder, this));
+
+  nsEventStates eventStates = mContent->AsElement()->State();
+  if (eventStates.HasState(NS_EVENT_STATE_DISABLED) ||
+      !eventStates.HasState(NS_EVENT_STATE_FOCUSRING)) {
+    return; // can't have focus or doesn't match :-moz-focusring
   }
+
+  if (!mOuterFocusStyle ||
+      !mOuterFocusStyle->StyleBorder()->HasBorder()) {
+    // no ::-moz-focus-outer specified border (how style specifies a focus ring
+    // for range)
+    return;
+  }
+
+  const nsStyleDisplay *disp = StyleDisplay();
+  if (IsThemed(disp) &&
+      PresContext()->GetTheme()->ThemeDrawsFocusForWidget(disp->mAppearance)) {
+    return; // the native theme displays its own visual indication of focus
+  }
+
+  aLists.Content()->AppendNewToTop(
+    new (aBuilder) nsDisplayRangeFocusRing(aBuilder, this));
 }
 
 nsresult
@@ -844,4 +862,24 @@ nsRangeFrame::GetPseudoElement(nsCSSPseudoElements::Type aType)
   }
 
   return nsContainerFrame::GetPseudoElement(aType);
+}
+
+nsStyleContext*
+nsRangeFrame::GetAdditionalStyleContext(int32_t aIndex) const
+{
+  // We only implement this so that SetAdditionalStyleContext will be
+  // called if style changes that would change the -moz-focus-outer
+  // pseudo-element have occurred.
+  return aIndex == 0 ? mOuterFocusStyle : nullptr;
+}
+
+void
+nsRangeFrame::SetAdditionalStyleContext(int32_t aIndex,
+                                        nsStyleContext* aStyleContext)
+{
+  MOZ_ASSERT(aIndex == 0,
+             "GetAdditionalStyleContext is handling other indexes?");
+
+  // The -moz-focus-outer pseudo-element's style has changed.
+  mOuterFocusStyle = aStyleContext;
 }
