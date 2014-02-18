@@ -27,6 +27,8 @@ public:
   /** default destructor
    */
   virtual ~nsMenuBarListener();
+
+  static void InitializeStatics();
    
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) MOZ_OVERRIDE;
   
