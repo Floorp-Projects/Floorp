@@ -159,10 +159,10 @@ jsd_CallExecutionHook(JSDContext* jsdc,
             break;
         case JSD_HOOK_RETURN_CONTINUE_THROW:
             /* only makes sense for jsd_ThrowHandler (which init'd rval) */
-            JS_ASSERT(JSD_HOOK_THROW == type);
+            MOZ_ASSERT(JSD_HOOK_THROW == type);
             return JSTRAP_THROW;
         default:
-            JS_ASSERT(0);
+            MOZ_ASSERT(0);
             break;
     }
     return JSTRAP_CONTINUE;

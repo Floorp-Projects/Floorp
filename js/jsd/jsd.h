@@ -734,13 +734,13 @@ extern JSDStaticLock* _jsd_global_lock;
     JS_BEGIN_MACRO                               \
         if(!_jsd_global_lock)                    \
             _jsd_global_lock = jsd_CreateLock(); \
-        JS_ASSERT(_jsd_global_lock);             \
+        MOZ_ASSERT(_jsd_global_lock);            \
         jsd_Lock(_jsd_global_lock);              \
     JS_END_MACRO
 
 #define JSD_UNLOCK()                             \
     JS_BEGIN_MACRO                               \
-        JS_ASSERT(_jsd_global_lock);             \
+        MOZ_ASSERT(_jsd_global_lock);            \
         jsd_Unlock(_jsd_global_lock);            \
     JS_END_MACRO
 

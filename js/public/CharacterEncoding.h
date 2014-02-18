@@ -50,13 +50,13 @@ class Latin1CharsZ : public mozilla::RangedPtr<unsigned char>
     Latin1CharsZ(char *aBytes, size_t aLength)
       : Base(reinterpret_cast<unsigned char *>(aBytes), aLength)
     {
-        JS_ASSERT(aBytes[aLength] == '\0');
+        MOZ_ASSERT(aBytes[aLength] == '\0');
     }
 
     Latin1CharsZ(unsigned char *aBytes, size_t aLength)
       : Base(aBytes, aLength)
     {
-        JS_ASSERT(aBytes[aLength] == '\0');
+        MOZ_ASSERT(aBytes[aLength] == '\0');
     }
 
     using Base::operator=;
@@ -91,13 +91,13 @@ class UTF8CharsZ : public mozilla::RangedPtr<unsigned char>
     UTF8CharsZ(char *aBytes, size_t aLength)
       : Base(reinterpret_cast<unsigned char *>(aBytes), aLength)
     {
-        JS_ASSERT(aBytes[aLength] == '\0');
+        MOZ_ASSERT(aBytes[aLength] == '\0');
     }
 
     UTF8CharsZ(unsigned char *aBytes, size_t aLength)
       : Base(aBytes, aLength)
     {
-        JS_ASSERT(aBytes[aLength] == '\0');
+        MOZ_ASSERT(aBytes[aLength] == '\0');
     }
 
     using Base::operator=;
@@ -136,7 +136,7 @@ class TwoByteCharsZ : public mozilla::RangedPtr<jschar>
     TwoByteCharsZ(jschar *chars, size_t length)
       : Base(chars, length)
     {
-        JS_ASSERT(chars[length] == '\0');
+        MOZ_ASSERT(chars[length] == '\0');
     }
 
     using Base::operator=;
