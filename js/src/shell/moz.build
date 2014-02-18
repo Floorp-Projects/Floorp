@@ -23,3 +23,6 @@ if CONFIG['_MSC_VER']:
     # necessary to link PGO lib on gcc when a object/static lib are compiled
     # for PGO.
     NO_PGO = True
+
+LOCAL_INCLUDES += ['..']
+GENERATED_INCLUDES += ['..']
