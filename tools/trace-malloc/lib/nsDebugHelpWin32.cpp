@@ -25,7 +25,7 @@
 
 PRLock*           DHWImportHooker::gLock  = nullptr;
 DHWImportHooker*  DHWImportHooker::gHooks = nullptr;
-GETPROCADDRESS    DHWImportHooker::gRealGetProcAddress = nullptr;
+decltype(GetProcAddress)* DHWImportHooker::gRealGetProcAddress = nullptr;
 
 
 static bool
@@ -47,7 +47,7 @@ dhwEnsureImageHlpInitialized()
     }
 
 #define INIT_PROC(typename_, name_) \
-    dhw##name_ = (typename_) ::GetProcAddress(module, #name_); \
+    dhw##name_ = (decltype(name_)*) ::GetProcAddress(module, #name_); \
     if(!dhw##name_) return false;
 
 #ifdef _WIN64
@@ -312,8 +312,7 @@ HMODULE WINAPI
 DHWImportHooker::LoadLibraryW(PCWSTR path)
 {
     //wprintf(L"LoadLibraryW %s\n",path);
-    DHW_DECLARE_FUN_TYPE(HMODULE, __stdcall, LOADLIBRARYW_, (PCWSTR));
-    HMODULE hmod = DHW_ORIGINAL(LOADLIBRARYW_, getLoadLibraryWHooker())(path);
+    HMODULE hmod = DHW_ORIGINAL(::LoadLibraryW, getLoadLibraryWHooker())(path);
     ModuleLoaded(hmod, 0);
     return hmod;
 }
@@ -324,8 +323,7 @@ HMODULE WINAPI
 DHWImportHooker::LoadLibraryExW(PCWSTR path, HANDLE file, DWORD flags)
 {
     //wprintf(L"LoadLibraryExW %s\n",path);
-    DHW_DECLARE_FUN_TYPE(HMODULE, __stdcall, LOADLIBRARYEXW_, (PCWSTR, HANDLE, DWORD));
-    HMODULE hmod = DHW_ORIGINAL(LOADLIBRARYEXW_, getLoadLibraryExWHooker())(path, file, flags);
+    HMODULE hmod = DHW_ORIGINAL(::LoadLibraryExW, getLoadLibraryExWHooker())(path, file, flags);
     ModuleLoaded(hmod, flags);
     return hmod;
 }    
@@ -335,9 +333,7 @@ HMODULE WINAPI
 DHWImportHooker::LoadLibraryA(PCSTR path)
 {
     //printf("LoadLibraryA %s\n",path);
-
-    DHW_DECLARE_FUN_TYPE(HMODULE, __stdcall, LOADLIBRARYA_, (PCSTR));
-    HMODULE hmod = DHW_ORIGINAL(LOADLIBRARYA_, getLoadLibraryAHooker())(path);
+    HMODULE hmod = DHW_ORIGINAL(::LoadLibraryA, getLoadLibraryAHooker())(path);
     ModuleLoaded(hmod, 0);
     return hmod;
 }
@@ -347,8 +343,7 @@ HMODULE WINAPI
 DHWImportHooker::LoadLibraryExA(PCSTR path, HANDLE file, DWORD flags)
 {
     //printf("LoadLibraryExA %s\n",path);
-    DHW_DECLARE_FUN_TYPE(HMODULE, __stdcall, LOADLIBRARYEXA_, (PCSTR, HANDLE, DWORD));
-    HMODULE hmod = DHW_ORIGINAL(LOADLIBRARYEXA_, getLoadLibraryExAHooker())(path, file, flags);
+    HMODULE hmod = DHW_ORIGINAL(::LoadLibraryExA, getLoadLibraryExAHooker())(path, file, flags);
     ModuleLoaded(hmod, flags);
     return hmod;
 }     

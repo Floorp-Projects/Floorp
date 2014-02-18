@@ -17,6 +17,16 @@ class TestOutput:
         self.dt = dt       # float: run time
         self.timed_out = timed_out # bool: did the test time out
 
+    def describe_failure(self):
+        if self.timed_out:
+            return "Timeout"
+        lines = self.err.splitlines()
+        for line in lines:
+            # Skip the asm.js compilation success message.
+            if "Successfully compiled asm.js code" not in line:
+                return line
+        return "Unknown"
+
 class NullTestOutput:
     """Variant of TestOutput that indicates a test was not run."""
     def __init__(self, test):

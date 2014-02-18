@@ -3186,15 +3186,17 @@ nsTextStore::GetIMEUpdatePreference()
 }
 
 nsresult
-nsTextStore::OnTextChangeInternal(uint32_t aStart,
-                                  uint32_t aOldEnd,
-                                  uint32_t aNewEnd)
+nsTextStore::OnTextChangeInternal(const IMENotification& aIMENotification)
 {
   PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
-         ("TSF: 0x%p   nsTextStore::OnTextChangeInternal(aStart=%lu, "
-          "aOldEnd=%lu, aNewEnd=%lu), mSink=0x%p, mSinkMask=%s, "
+         ("TSF: 0x%p   nsTextStore::OnTextChangeInternal(aIMENotification={ "
+          "mMessage=0x%08X, mTextChangeData={ mStartOffset=%lu, "
+          "mOldEndOffset=%lu, mNewEndOffset=%lu}), mSink=0x%p, mSinkMask=%s, "
           "mComposition.IsComposing()=%s",
-          this, aStart, aOldEnd, aNewEnd, mSink.get(),
+          this, aIMENotification.mMessage,
+          aIMENotification.mTextChangeData.mStartOffset,
+          aIMENotification.mTextChangeData.mOldEndOffset,
+          aIMENotification.mTextChangeData.mNewEndOffset, mSink.get(),
           GetSinkMaskNameStr(mSinkMask).get(),
           GetBoolName(mComposition.IsComposing())));
 
@@ -3208,7 +3210,7 @@ nsTextStore::OnTextChangeInternal(uint32_t aStart,
     return NS_OK;
   }
 
-  if (aStart >= INT32_MAX || aOldEnd >= INT32_MAX || aNewEnd >= INT32_MAX) {
+  if (!aIMENotification.mTextChangeData.IsInInt32Range()) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
            ("TSF: 0x%p   nsTextStore::OnTextChangeInternal() FAILED due to "
             "offset is too big for calling mSink->OnTextChange()...",
@@ -3229,12 +3231,15 @@ nsTextStore::OnTextChangeInternal(uint32_t aStart,
   }
 
   TS_TEXTCHANGE textChange;
-  textChange.acpStart = static_cast<LONG>(aStart);
-  textChange.acpOldEnd = static_cast<LONG>(aOldEnd);
-  textChange.acpNewEnd = static_cast<LONG>(aNewEnd);
+  textChange.acpStart =
+    static_cast<LONG>(aIMENotification.mTextChangeData.mStartOffset);
+  textChange.acpOldEnd =
+    static_cast<LONG>(aIMENotification.mTextChangeData.mOldEndOffset);
+  textChange.acpNewEnd =
+    static_cast<LONG>(aIMENotification.mTextChangeData.mNewEndOffset);
 
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
-         ("TSF: 0x%p   nsTextStore::OnTextChangeInternal(), calling"
+         ("TSF: 0x%p   nsTextStore::OnTextChangeInternal(), calling "
           "mSink->OnTextChange(0, { acpStart=%ld, acpOldEnd=%ld, "
           "acpNewEnd=%ld })...", this, textChange.acpStart,
           textChange.acpOldEnd, textChange.acpNewEnd));

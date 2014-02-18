@@ -240,7 +240,7 @@ MediaStreamGraphImpl::UpdateBufferSufficiencyState(SourceMediaStream* aStream)
   }
 
   for (uint32_t i = 0; i < runnables.Length(); ++i) {
-    runnables[i].mThread->Dispatch(runnables[i].mRunnable, 0);
+    runnables[i].mTarget->Dispatch(runnables[i].mRunnable, 0);
   }
 }
 
@@ -2190,7 +2190,7 @@ SourceMediaStream::HaveEnoughBuffered(TrackID aID)
 
 void
 SourceMediaStream::DispatchWhenNotEnoughBuffered(TrackID aID,
-    nsIThread* aSignalThread, nsIRunnable* aSignalRunnable)
+    nsIEventTarget* aSignalThread, nsIRunnable* aSignalRunnable)
 {
   MutexAutoLock lock(mMutex);
   TrackData* data = FindDataForTrack(aID);
