@@ -78,3 +78,16 @@ if CONFIG['TARGET_XPCOM_ABI']:
 
 if CONFIG['MOZ_OPTIMIZE']:
     DEFINES['MOZ_OPTIMIZE'] = True
+
+GENERATED_INCLUDES += ['..']
+LOCAL_INCLUDES += [
+    '../base',
+    '../components',
+    '../ds',
+    '../glue',
+    '../io',
+    '../reflect/xptinfo/src',
+    '../threads',
+    '/chrome/src',
+    '/docshell/base',
+]

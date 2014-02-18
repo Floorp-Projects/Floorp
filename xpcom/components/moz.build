@@ -43,3 +43,13 @@ FAIL_ON_WARNINGS = True
 MSVC_ENABLE_PGO = True
 
 FINAL_LIBRARY = 'xpcom_core'
+
+GENERATED_INCLUDES += ['..']
+LOCAL_INCLUDES += [
+    '../base',
+    '../build',
+    '../ds',
+    '../reflect/xptinfo/src',
+    '/chrome/src',
+    '/modules/libjar',
+]
