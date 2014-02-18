@@ -24,6 +24,9 @@ if CONFIG['MOZ_CONTENT_SANDBOX']:
 # builds fail.
 add_tier_dir('platform', 'security/certverifier')
 
+# Depends on certverifier
+add_tier_dir('platform', 'security/apps')
+
 # the signing related bits of libmar depend on nss
 if CONFIG['MOZ_UPDATER']:
     add_tier_dir('platform', 'modules/libmar')
