@@ -32,6 +32,7 @@
     "content/media/test/test_info_leak.html": "2 failures",
     "content/media/test/test_media_selection.html": "timed out",
     "content/media/test/test_mediarecorder_record_4ch_audiocontext.html": "",
+    "content/media/test/test_mediarecorder_record_gum_video_timeslice.html": "mimetype check, bug 969289",
     "content/media/test/test_playback.html": "Test timed out, bug 668973?",
     "content/media/test/test_playback_rate.html": "",
     "content/media/test/test_playback_rate_playpause.html": "",
