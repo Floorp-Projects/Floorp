@@ -361,10 +361,6 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   width: 0; /* Fancy cropping solution for flexbox. */
 }
 
-#PanelUI-fxa-status[signedin] {
-  font-weight: bold;
-}
-
 #PanelUI-help,
 #PanelUI-quit {
   min-width: 46px;
