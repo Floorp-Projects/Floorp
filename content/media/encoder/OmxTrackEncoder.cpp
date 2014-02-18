@@ -112,12 +112,16 @@ OmxVideoTrackEncoder::GetEncodedTrack(EncodedFrameContainer& aData)
 
   // Send the EOS signal to OMXCodecWrapper.
   if (mEndOfStream && iter.IsEnded() && !mEosSetInEncoder) {
-    mEosSetInEncoder = true;
     uint64_t totalDurationUs = mTotalFrameDuration * USECS_PER_S / mTrackRate;
     layers::Image* img = (!mLastFrame.GetImage() || mLastFrame.GetForceBlack())
                          ? nullptr : mLastFrame.GetImage();
-    mEncoder->Encode(img, mFrameWidth, mFrameHeight, totalDurationUs,
-                     OMXCodecWrapper::BUFFER_EOS);
+    nsresult result = mEncoder->Encode(img, mFrameWidth, mFrameHeight,
+                                       totalDurationUs,
+                                       OMXCodecWrapper::BUFFER_EOS);
+    // Keep sending EOS signal until OMXVideoEncoder gets it.
+    if (result == NS_OK) {
+      mEosSetInEncoder = true;
+    }
   }
 
   // Dequeue an encoded frame from the output buffers of OMXCodecWrapper.
