@@ -195,19 +195,15 @@ CacheFile::Init(const nsACString &aKey,
                 bool aCreateNew,
                 bool aMemoryOnly,
                 bool aPriority,
-                bool aKeyIsHash,
                 CacheFileListener *aCallback)
 {
   MOZ_ASSERT(!mListener);
   MOZ_ASSERT(!mHandle);
-  MOZ_ASSERT(!(aCreateNew && aKeyIsHash));
-  MOZ_ASSERT(!(aMemoryOnly && aKeyIsHash));
 
   nsresult rv;
 
   mKey = aKey;
   mMemoryOnly = aMemoryOnly;
-  mKeyIsHash = aKeyIsHash;
 
   LOG(("CacheFile::Init() [this=%p, key=%s, createNew=%d, memoryOnly=%d, "
        "listener=%p]", this, mKey.get(), aCreateNew, aMemoryOnly, aCallback));
@@ -215,7 +211,6 @@ CacheFile::Init(const nsACString &aKey,
   if (mMemoryOnly) {
     MOZ_ASSERT(!aCallback);
 
-    MOZ_ASSERT(!mKeyIsHash);
     mMetadata = new CacheFileMetadata(mKey);
     mReady = true;
     mDataSize = mMetadata->Offset();
@@ -228,7 +223,6 @@ CacheFile::Init(const nsACString &aKey,
       flags = CacheFileIOManager::CREATE_NEW;
 
       // make sure we can use this entry immediately
-      MOZ_ASSERT(!mKeyIsHash);
       mMetadata = new CacheFileMetadata(mKey);
       mReady = true;
       mDataSize = mMetadata->Offset();
@@ -236,37 +230,33 @@ CacheFile::Init(const nsACString &aKey,
     else {
       flags = CacheFileIOManager::CREATE;
 
-      if (!mKeyIsHash) {
-        // Have a look into index and change to CREATE_NEW when we are sure
-        // that the entry does not exist.
-        CacheIndex::EntryStatus status;
-        rv = CacheIndex::HasEntry(mKey, &status);
-        if (status == CacheIndex::DOES_NOT_EXIST) {
-          LOG(("CacheFile::Init() - Forcing CREATE_NEW flag since we don't have"
-               " this entry according to index"));
-          flags = CacheFileIOManager::CREATE_NEW;
+      // Have a look into index and change to CREATE_NEW when we are sure
+      // that the entry does not exist.
+      CacheIndex::EntryStatus status;
+      rv = CacheIndex::HasEntry(mKey, &status);
+      if (status == CacheIndex::DOES_NOT_EXIST) {
+        LOG(("CacheFile::Init() - Forcing CREATE_NEW flag since we don't have"
+             " this entry according to index"));
+        flags = CacheFileIOManager::CREATE_NEW;
 
-          // make sure we can use this entry immediately
-          mMetadata = new CacheFileMetadata(mKey);
-          mReady = true;
-          mDataSize = mMetadata->Offset();
+        // make sure we can use this entry immediately
+        mMetadata = new CacheFileMetadata(mKey);
+        mReady = true;
+        mDataSize = mMetadata->Offset();
 
-          // Notify callback now and don't store it in mListener, no further
-          // operation can change the result.
-          nsRefPtr<NotifyCacheFileListenerEvent> ev;
-          ev = new NotifyCacheFileListenerEvent(aCallback, NS_OK, true);
-          rv = NS_DispatchToCurrentThread(ev);
-          NS_ENSURE_SUCCESS(rv, rv);
+        // Notify callback now and don't store it in mListener, no further
+        // operation can change the result.
+        nsRefPtr<NotifyCacheFileListenerEvent> ev;
+        ev = new NotifyCacheFileListenerEvent(aCallback, NS_OK, true);
+        rv = NS_DispatchToCurrentThread(ev);
+        NS_ENSURE_SUCCESS(rv, rv);
 
-          aCallback = nullptr;
-        }
+        aCallback = nullptr;
       }
     }
 
     if (aPriority)
       flags |= CacheFileIOManager::PRIORITY;
-    if (aKeyIsHash)
-      flags |= CacheFileIOManager::NOHASH;
 
     mOpeningFile = true;
     mListener = aCallback;
@@ -290,7 +280,6 @@ CacheFile::Init(const nsACString &aKey,
              "initializing entry as memory-only. [this=%p]", this));
 
         mMemoryOnly = true;
-        MOZ_ASSERT(!mKeyIsHash);
         mMetadata = new CacheFileMetadata(mKey);
         mReady = true;
         mDataSize = mMetadata->Offset();
@@ -488,7 +477,6 @@ CacheFile::OnFileOpened(CacheFileHandle *aHandle, nsresult aResult)
              this));
 
         mMemoryOnly = true;
-        MOZ_ASSERT(!mKeyIsHash);
         mMetadata = new CacheFileMetadata(mKey);
         mReady = true;
         mDataSize = mMetadata->Offset();
@@ -530,7 +518,7 @@ CacheFile::OnFileOpened(CacheFileHandle *aHandle, nsresult aResult)
   MOZ_ASSERT(!mMetadata);
   MOZ_ASSERT(mListener);
 
-  mMetadata = new CacheFileMetadata(mHandle, mKey, mKeyIsHash);
+  mMetadata = new CacheFileMetadata(mHandle, mKey);
 
   rv = mMetadata->ReadMetadata(this);
   if (NS_FAILED(rv)) {
@@ -565,13 +553,6 @@ CacheFile::OnMetadataRead(nsresult aResult)
 
   bool isNew = false;
   if (NS_SUCCEEDED(aResult)) {
-    MOZ_ASSERT(!mMetadata->KeyIsHash());
-
-    if (mKeyIsHash) {
-      mMetadata->GetKey(mKey);
-      mKeyIsHash = false;
-    }
-
     mReady = true;
     mDataSize = mMetadata->Offset();
     if (mDataSize == 0 && mMetadata->ElementsSize() == 0) {
@@ -752,6 +733,10 @@ CacheFile::Doom(CacheFileListener *aCallback)
   nsresult rv = NS_OK;
 
   if (mMemoryOnly) {
+    return NS_ERROR_FILE_NOT_FOUND;
+  }
+
+  if (mHandle && mHandle->IsDoomed()) {
     return NS_ERROR_FILE_NOT_FOUND;
   }
 
@@ -1358,6 +1343,17 @@ CacheFile::DataSize(int64_t* aSize)
 
   *aSize = mDataSize;
   return true;
+}
+
+bool
+CacheFile::IsDoomed()
+{
+  CacheFileAutoLock lock(this);
+
+  if (!mHandle)
+    return false;
+
+  return mHandle->IsDoomed();
 }
 
 bool
