@@ -12,6 +12,7 @@
 #include "CacheStorage.h"
 #include "AppCacheStorage.h"
 #include "CacheEntry.h"
+#include "CacheFileUtils.h"
 
 #include "OldWrappers.h"
 #include "nsCacheService.h"
@@ -32,23 +33,6 @@ namespace mozilla {
 namespace net {
 
 namespace {
-
-void LoadContextInfoMappingKey(nsAutoCString &key, nsILoadContextInfo* aInfo)
-{
-  /**
-   * This key is used to salt file hashes.  When form of the key is changed
-   * cache entries will fail to find on disk.
-   */
-  key.Append(aInfo->IsPrivate() ? 'P' : '-');
-  key.Append(aInfo->IsAnonymous() ? 'A' : '-');
-  key.Append(':');
-  if (aInfo->AppId() != nsILoadContextInfo::NO_APP_ID) {
-    key.AppendInt(aInfo->AppId());
-  }
-  if (aInfo->IsInBrowserElement()) {
-    key.Append('B');
-  }
-}
 
 void AppendMemoryStorageID(nsAutoCString &key)
 {
@@ -513,7 +497,6 @@ public:
   ~CacheFilesDeletor();
 
   nsresult DeleteAll();
-  nsresult DeleteOverLimit();
   nsresult DeleteDoomed();
 
 private:
@@ -530,7 +513,6 @@ private:
   uint32_t mRunning;
   enum {
     ALL,
-    OVERLIMIT,
     DOOMED
   } mMode;
   nsresult mRv;
@@ -565,12 +547,6 @@ CacheFilesDeletor::~CacheFilesDeletor()
 nsresult CacheFilesDeletor::DeleteAll()
 {
   mMode = ALL;
-  return Init(CacheFileIOManager::ENTRIES);
-}
-
-nsresult CacheFilesDeletor::DeleteOverLimit()
-{
-  mMode = OVERLIMIT;
   return Init(CacheFileIOManager::ENTRIES);
 }
 
@@ -662,21 +638,6 @@ nsresult CacheFilesDeletor::Execute()
   TimeStamp start;
 
   switch (mMode) {
-  case OVERLIMIT:
-    // Examine file by file and delete what is considered expired/unused.
-    while (mEnumerator->HasMore()) {
-      rv = mEnumerator->GetNextCacheFile(this);
-      if (NS_FAILED(rv))
-        return rv;
-
-      // Limit up to 5 concurrent file opens
-      if (mRunning >= 5)
-        break;
-
-      ++mRunning;
-    }
-    break;
-
   case ALL:
   case DOOMED:
     // Simply delete all files, don't doom then though the backend
@@ -697,13 +658,6 @@ nsresult CacheFilesDeletor::Execute()
       rv = file->Remove(false);
       if (NS_FAILED(rv)) {
         LOG(("  could not remove the file, probably doomed, rv=0x%08x", rv));
-#if 0
-        // No need to open and doom the file manually since we doom all entries
-        // we currently have loaded in memory.
-        rv = mEnumerator->GetCacheFileFromFile(file, this);
-        if (NS_FAILED(rv))
-          return rv;
-#endif
       }
 
       ++mRunning;
@@ -744,15 +698,6 @@ void CacheFilesDeletor::OnFile(CacheFile* aFile)
 #endif
 
   switch (mMode) {
-  case OVERLIMIT:
-    if (mEnumerator->HasMore())
-      mEnumerator->GetNextCacheFile(this);
-
-    // NO BREAK ..so far..
-    // mayhemer TODO - here we should decide based on frecency and exp time
-    // whether to delete the file or not.  Then we have to check the consumption
-    // as well.
-
   case ALL:
   case DOOMED:
     LOG(("  dooming file with key=%s", key.get()));
@@ -1208,7 +1153,7 @@ CacheStorageService::AddStorageEntry(CacheStorage const* aStorage,
   NS_ENSURE_ARG(aStorage);
 
   nsAutoCString contextKey;
-  LoadContextInfoMappingKey(contextKey, aStorage->LoadInfo());
+  CacheFileUtils::CreateKeyPrefix(aStorage->LoadInfo(), contextKey);
 
   return AddStorageEntry(contextKey, aURI, aIdExtension,
                          aStorage->WriteToDisk(), aCreateIfNotExist, aReplace,
@@ -1252,6 +1197,11 @@ CacheStorageService::AddStorageEntry(nsCSubstring const& aContextKey,
     }
 
     bool entryExists = entries->Get(entryKey, getter_AddRefs(entry));
+
+    // check whether the file is already doomed
+    if (entryExists && entry->IsFileDoomed() && !aReplace) {
+      aReplace = true;
+    }
 
     // Check entry that is memory-only is also in related memory-only hashtable.
     // If not, it has been evicted and we will truncate it ; doom is pending for it,
@@ -1361,7 +1311,7 @@ CacheStorageService::DoomStorageEntry(CacheStorage const* aStorage,
   NS_ENSURE_ARG(aURI);
 
   nsAutoCString contextKey;
-  LoadContextInfoMappingKey(contextKey, aStorage->LoadInfo());
+  CacheFileUtils::CreateKeyPrefix(aStorage->LoadInfo(), contextKey);
 
   nsAutoCString entryKey;
   nsresult rv = CacheEntry::HashingKey(EmptyCString(), aIdExtension, aURI, entryKey);
@@ -1402,7 +1352,7 @@ CacheStorageService::DoomStorageEntry(CacheStorage const* aStorage,
 
   if (aStorage->WriteToDisk()) {
     nsAutoCString contextKey;
-    LoadContextInfoMappingKey(contextKey, aStorage->LoadInfo());
+    CacheFileUtils::CreateKeyPrefix(aStorage->LoadInfo(), contextKey);
 
     rv = CacheEntry::HashingKey(contextKey, aIdExtension, aURI, entryKey);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1433,7 +1383,7 @@ CacheStorageService::DoomStorageEntries(CacheStorage const* aStorage,
   NS_ENSURE_ARG(aStorage);
 
   nsAutoCString contextKey;
-  LoadContextInfoMappingKey(contextKey, aStorage->LoadInfo());
+  CacheFileUtils::CreateKeyPrefix(aStorage->LoadInfo(), contextKey);
 
   mozilla::MutexAutoLock lock(mLock);
 
@@ -1486,12 +1436,39 @@ CacheStorageService::WalkStorageEntries(CacheStorage const* aStorage,
   NS_ENSURE_ARG(aStorage);
 
   nsAutoCString contextKey;
-  LoadContextInfoMappingKey(contextKey, aStorage->LoadInfo());
+  CacheFileUtils::CreateKeyPrefix(aStorage->LoadInfo(), contextKey);
 
   nsRefPtr<WalkRunnable> event = new WalkRunnable(
     contextKey, aVisitEntries, aStorage->WriteToDisk(), aVisitor);
   return Dispatch(event);
 }
+
+nsresult
+CacheStorageService::CacheFileDoomed(nsILoadContextInfo* aLoadContextInfo,
+                                     const nsACString & aURL)
+{
+  nsRefPtr<CacheEntry> entry;
+  nsAutoCString contextKey;
+  CacheFileUtils::CreateKeyPrefix(aLoadContextInfo, contextKey);
+
+  {
+    mozilla::MutexAutoLock lock(mLock);
+
+    NS_ENSURE_FALSE(mShutdown, NS_ERROR_NOT_INITIALIZED);
+
+    CacheEntryTable* entries;
+    if (sGlobalEntryTables->Get(contextKey, &entries)) {
+      entries->Get(aURL, getter_AddRefs(entry));
+    }
+  }
+
+  if (entry && entry->IsFileDoomed()) {
+    entry->PurgeAndDoom();
+  }
+
+  return NS_OK;
+}
+
 
 } // net
 } // mozilla
