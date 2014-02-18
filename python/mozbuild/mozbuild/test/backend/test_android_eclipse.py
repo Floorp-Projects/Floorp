@@ -96,6 +96,16 @@ class TestAndroidEclipseBackend(BackendTester):
         lines = [line.strip() for line in lines]
         self.assertIn('<classpathentry combineaccessrules="false" kind="src" path="/library1" />', lines)
 
+    def test_extra_jars(self):
+        """Ensure we add class path entries to extra jars iff asked to."""
+        self.env = self._consume('android_eclipse', AndroidEclipseBackend)
+        self.assertExists('main2', '.classpath')
+        # This is brittle but simple.
+        with open(mozpath.join(self.env.topobjdir, 'android_eclipse', 'main2', '.classpath'), 'rt') as fh:
+            lines = fh.readlines()
+        lines = [line.strip() for line in lines]
+        self.assertIn('<classpathentry exported="true" kind="lib" path="%s/main2/extra.jar" />' % self.env.topsrcdir, lines)
+
     def test_included_projects(self):
         """Ensure we include another project correctly."""
         self.env = self._consume('android_eclipse', AndroidEclipseBackend)
@@ -139,12 +149,6 @@ class TestAndroidEclipseBackend(BackendTester):
         self.env = self._consume('android_eclipse', AndroidEclipseBackend)
         self.assertNotInManifest('main1', 'assets')
         self.assertInManifest('main2', 'assets')
-
-    def test_manifest_extra_jars(self):
-        """Ensure we symlink extra jars iff asked to."""
-        self.env = self._consume('android_eclipse', AndroidEclipseBackend)
-        self.assertNotInManifest('main1', 'libs')
-        self.assertInManifest('main2', 'libs/extra.jar')
 
 
 if __name__ == '__main__':
