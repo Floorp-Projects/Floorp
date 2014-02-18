@@ -11,6 +11,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/devtools/SourceMap.jsm");
+Cu.import("resource://gre/modules/Task.jsm");
 
 const promise = require("sdk/core/promise");
 const events = require("sdk/event/core");
@@ -94,18 +95,7 @@ let StyleSheetsActor = protocol.ActorClass({
     let window = this.window;
     var domReady = () => {
       window.removeEventListener("DOMContentLoaded", domReady, true);
-
-      let documents = [this.document];
-      let actors = [];
-      for (let doc of documents) {
-        let sheets = this._addStyleSheets(doc.styleSheets);
-        actors = actors.concat(sheets);
-        // Recursively handle style sheets of the documents in iframes.
-        for (let iframe of doc.getElementsByTagName("iframe")) {
-          documents.push(iframe.contentDocument);
-        }
-      }
-      deferred.resolve(actors);
+      this._addAllStyleSheets().then(deferred.resolve, Cu.reportError);
     };
 
     if (window.document.readyState === "loading") {
@@ -121,28 +111,54 @@ let StyleSheetsActor = protocol.ActorClass({
   }),
 
   /**
+   * Add all the stylesheets in this document and its subframes.
+   * Assumes the document is loaded.
+   *
+   * @return {Promise}
+   *         Promise that resolves with an array of StyleSheetActors
+   */
+  _addAllStyleSheets: function() {
+    return Task.spawn(function() {
+      let documents = [this.document];
+      let actors = [];
+
+      for (let doc of documents) {
+        let sheets = yield this._addStyleSheets(doc.styleSheets);
+        actors = actors.concat(sheets);
+
+        // Recursively handle style sheets of the documents in iframes.
+        for (let iframe of doc.getElementsByTagName("iframe")) {
+          documents.push(iframe.contentDocument);
+        }
+      }
+      throw new Task.Result(actors);
+    }.bind(this));
+  },
+
+  /**
    * Add all the stylesheets to the map and create an actor for each one
-   * if not already created. Send event that there are new stylesheets.
+   * if not already created.
    *
    * @param {[DOMStyleSheet]} styleSheets
    *        Stylesheets to add
-   * @return {[object]}
-   *         Array of actors for each StyleSheetActor created
+   *
+   * @return {Promise}
+   *         Promise that resolves to an array of StyleSheetActors
    */
   _addStyleSheets: function(styleSheets)
   {
-    let sheets = [];
-    for (let i = 0; i < styleSheets.length; i++) {
-      let styleSheet = styleSheets[i];
-      sheets.push(styleSheet);
+    return Task.spawn(function() {
+      let actors = [];
+      for (let i = 0; i < styleSheets.length; i++) {
+        let actor = this._createStyleSheetActor(styleSheets[i]);
+        actors.push(actor);
 
-      // Get all sheets, including imported ones
-      let imports = this._getImported(styleSheet);
-      sheets = sheets.concat(imports);
-    }
-    let actors = sheets.map(this._createStyleSheetActor.bind(this));
-
-    return actors;
+        // Get all sheets, including imported ones
+        let imports = yield this._getImported(actor);
+        actors = actors.concat(imports);
+      }
+      throw new Task.Result(actors);
+    }.bind(this));
   },
 
   /**
@@ -150,31 +166,37 @@ let StyleSheetsActor = protocol.ActorClass({
    *
    * @param  {DOMStyleSheet} styleSheet
    *         Style sheet to search
-   * @return {array}
-   *         All the imported stylesheets
+   * @return {Promise}
+   *         A promise that resolves with an array of StyleSheetActors
    */
   _getImported: function(styleSheet) {
-   let imported = [];
+    return Task.spawn(function() {
+      let rules = yield styleSheet.getCSSRules();
+      let imported = [];
 
-   for (let i = 0; i < styleSheet.cssRules.length; i++) {
-      let rule = styleSheet.cssRules[i];
-      if (rule.type == Ci.nsIDOMCSSRule.IMPORT_RULE) {
-        // Associated styleSheet may be null if it has already been seen due to
-        // duplicate @imports for the same URL.
-        if (!rule.styleSheet) {
-          continue;
+      for (let i = 0; i < rules.length; i++) {
+        let rule = rules[i];
+        if (rule.type == Ci.nsIDOMCSSRule.IMPORT_RULE) {
+          // Associated styleSheet may be null if it has already been seen due
+          // to duplicate @imports for the same URL.
+          if (!rule.styleSheet) {
+            continue;
+          }
+          let actor = this._createStyleSheetActor(rule.styleSheet);
+          imported.push(actor);
+
+          // recurse imports in this stylesheet as well
+          let children = yield this._getImported(actor);
+          imported = imported.concat(children);
         }
-        imported.push(rule.styleSheet);
+        else if (rule.type != Ci.nsIDOMCSSRule.CHARSET_RULE) {
+          // @import rules must precede all others except @charset
+          break;
+        }
+      }
 
-        // recurse imports in this stylesheet as well
-        imported = imported.concat(this._getImported(rule.styleSheet));
-      }
-      else if (rule.type != Ci.nsIDOMCSSRule.CHARSET_RULE) {
-        // @import rules must precede all others except @charset
-        break;
-      }
-    }
-    return imported;
+      throw new Task.Result(imported);
+    }.bind(this));
   },
 
   /**
@@ -319,17 +341,50 @@ let StyleSheetActor = protocol.ActorClass({
     this._styleSheetIndex = -1;
 
     this._transitionRefCount = 0;
+  },
 
-    // if this sheet has an @import, then it's rules are loaded async
-    let ownerNode = this.rawSheet.ownerNode;
-    if (ownerNode) {
-      let onSheetLoaded = function(event) {
-        ownerNode.removeEventListener("load", onSheetLoaded, false);
-        this._notifyPropertyChanged("ruleCount");
-      }.bind(this);
-
-      ownerNode.addEventListener("load", onSheetLoaded, false);
+  /**
+   * Get the raw stylesheet's cssRules once the sheet has been loaded.
+   *
+   * @return {Promise}
+   *         Promise that resolves with a CSSRuleList
+   */
+  getCSSRules: function() {
+    let rules;
+    try {
+      rules = this.rawSheet.cssRules;
     }
+    catch (e) {
+      // sheet isn't loaded yet
+    }
+
+    if (rules) {
+      return promise.resolve(rules);
+    }
+
+    let ownerNode = this.rawSheet.ownerNode;
+    if (!ownerNode) {
+      return promise.resolve([]);
+    }
+
+    if (this._cssRules) {
+      return this._cssRules;
+    }
+
+    let deferred = promise.defer();
+
+    let onSheetLoaded = function(event) {
+      ownerNode.removeEventListener("load", onSheetLoaded, false);
+
+      deferred.resolve(this.rawSheet.cssRules);
+    }.bind(this);
+
+    ownerNode.addEventListener("load", onSheetLoaded, false);
+
+    // cache so we don't add many listeners if this is called multiple times.
+    this._cssRules = deferred.promise;
+
+    return this._cssRules;
   },
 
   /**
@@ -369,6 +424,9 @@ let StyleSheetActor = protocol.ActorClass({
     }
     catch(e) {
       // stylesheet had an @import rule that wasn't loaded yet
+      this.getCSSRules().then(() => {
+        this._notifyPropertyChanged("ruleCount");
+      });
     }
     return form;
   },
