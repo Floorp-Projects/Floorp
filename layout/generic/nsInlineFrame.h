@@ -73,9 +73,9 @@ public:
                              uint32_t aFlags) MOZ_OVERRIDE;
   virtual nsRect ComputeTightBounds(gfxContext* aContext) const MOZ_OVERRIDE;
   virtual nsresult Reflow(nsPresContext* aPresContext,
-                    nsHTMLReflowMetrics& aDesiredSize,
-                    const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus& aStatus) MOZ_OVERRIDE;
+                          nsHTMLReflowMetrics& aDesiredSize,
+                          const nsHTMLReflowState& aReflowState,
+                          nsReflowStatus& aStatus) MOZ_OVERRIDE;
 
   virtual bool CanContinueTextRun() const MOZ_OVERRIDE;
 
@@ -194,9 +194,9 @@ public:
 #endif
   virtual nsIAtom* GetType() const MOZ_OVERRIDE;
   virtual nsresult Reflow(nsPresContext* aPresContext,
-                    nsHTMLReflowMetrics& aDesiredSize,
-                    const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus& aStatus) MOZ_OVERRIDE;
+                          nsHTMLReflowMetrics& aDesiredSize,
+                          const nsHTMLReflowState& aReflowState,
+                          nsReflowStatus& aStatus) MOZ_OVERRIDE;
 
   virtual void Init(nsIContent* aContent, nsIFrame* aParent,
                     nsIFrame* aPrevInFlow) MOZ_OVERRIDE;

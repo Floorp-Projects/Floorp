@@ -35,9 +35,9 @@ public:
                                 int32_t* aOffset, PeekWordState* aState);
 
   virtual nsresult Reflow(nsPresContext* aPresContext,
-                    nsHTMLReflowMetrics& aDesiredSize,
-                    const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus& aStatus);
+                          nsHTMLReflowMetrics& aDesiredSize,
+                          const nsHTMLReflowState& aReflowState,
+                          nsReflowStatus& aStatus);
   virtual void AddInlineMinWidth(nsRenderingContext *aRenderingContext,
                                  InlineMinWidthData *aData);
   virtual void AddInlinePrefWidth(nsRenderingContext *aRenderingContext,

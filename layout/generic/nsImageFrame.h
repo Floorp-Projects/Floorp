@@ -82,20 +82,20 @@ public:
   virtual mozilla::IntrinsicSize GetIntrinsicSize();
   virtual nsSize GetIntrinsicRatio();
   virtual nsresult Reflow(nsPresContext*          aPresContext,
-                    nsHTMLReflowMetrics&     aDesiredSize,
-                    const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus&          aStatus);
+                          nsHTMLReflowMetrics&     aDesiredSize,
+                          const nsHTMLReflowState& aReflowState,
+                          nsReflowStatus&          aStatus);
   
   virtual nsresult  GetContentForEvent(mozilla::WidgetEvent* aEvent,
-                                 nsIContent** aContent);
+                                       nsIContent** aContent);
   virtual nsresult HandleEvent(nsPresContext* aPresContext,
-                         mozilla::WidgetGUIEvent* aEvent,
-                         nsEventStatus* aEventStatus);
+                               mozilla::WidgetGUIEvent* aEvent,
+                               nsEventStatus* aEventStatus);
   virtual nsresult GetCursor(const nsPoint& aPoint,
-                       nsIFrame::Cursor& aCursor);
+                             nsIFrame::Cursor& aCursor);
   virtual nsresult AttributeChanged(int32_t aNameSpaceID,
-                              nsIAtom* aAttribute,
-                              int32_t aModType);
+                                    nsIAtom* aAttribute,
+                                    int32_t aModType);
 
 #ifdef ACCESSIBILITY
   virtual mozilla::a11y::AccType AccessibleType() MOZ_OVERRIDE;

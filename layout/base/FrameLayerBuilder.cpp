@@ -2293,16 +2293,18 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
 {
   PROFILER_LABEL("ContainerState", "ProcessDisplayItems");
 
-  const nsIFrame* lastAnimatedGeometryRoot = mContainerReferenceFrame;
-  nsPoint topLeft(0,0);
+  const nsIFrame* lastAnimatedGeometryRoot = nullptr;
+  nsPoint topLeft;
 
   // When NO_COMPONENT_ALPHA is set, items will be flattened into a single
   // layer, so we need to choose which active scrolled root to use for all
   // items.
   if (aFlags & NO_COMPONENT_ALPHA) {
-    if (ChooseAnimatedGeometryRoot(aList, &lastAnimatedGeometryRoot)) {
-      topLeft = lastAnimatedGeometryRoot->GetOffsetToCrossDoc(mContainerReferenceFrame);
+    if (!ChooseAnimatedGeometryRoot(aList, &lastAnimatedGeometryRoot)) {
+      lastAnimatedGeometryRoot = mContainerReferenceFrame;
     }
+
+    topLeft = lastAnimatedGeometryRoot->GetOffsetToCrossDoc(mContainerReferenceFrame);
   }
 
   int32_t maxLayers = nsDisplayItem::MaxActiveLayers();
@@ -2342,14 +2344,7 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
       animatedGeometryRoot = lastAnimatedGeometryRoot;
     } else {
       forceInactive = false;
-      if (mManager->IsWidgetLayerManager()) {
-        animatedGeometryRoot = nsLayoutUtils::GetAnimatedGeometryRootFor(item, mBuilder);
-      } else {
-        // For inactive layer subtrees, splitting content into ThebesLayers
-        // based on animated geometry roots is pointless. It's more efficient
-        // to build the minimum number of layers.
-        animatedGeometryRoot = mContainerReferenceFrame;
-      }
+      animatedGeometryRoot = nsLayoutUtils::GetAnimatedGeometryRootFor(item, mBuilder);
       if (animatedGeometryRoot != lastAnimatedGeometryRoot) {
         lastAnimatedGeometryRoot = animatedGeometryRoot;
         topLeft = animatedGeometryRoot->GetOffsetToCrossDoc(mContainerReferenceFrame);
