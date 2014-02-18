@@ -109,14 +109,14 @@ public:
                     nsIFrame*        aParent,
                     nsIFrame*        aPrevInFlow) MOZ_OVERRIDE;
   virtual nsresult SetInitialChildList(ChildListID     aListID,
-                                 nsFrameList&    aChildList) MOZ_OVERRIDE;
+                                       nsFrameList&    aChildList) MOZ_OVERRIDE;
   virtual nsresult  AppendFrames(ChildListID     aListID,
-                           nsFrameList&    aFrameList) MOZ_OVERRIDE;
+                                 nsFrameList&    aFrameList) MOZ_OVERRIDE;
   virtual nsresult  InsertFrames(ChildListID     aListID,
-                           nsIFrame*       aPrevFrame,
-                           nsFrameList&    aFrameList) MOZ_OVERRIDE;
+                                 nsIFrame*       aPrevFrame,
+                                 nsFrameList&    aFrameList) MOZ_OVERRIDE;
   virtual nsresult  RemoveFrame(ChildListID     aListID,
-                          nsIFrame*       aOldFrame) MOZ_OVERRIDE;
+                                nsIFrame*       aOldFrame) MOZ_OVERRIDE;
   virtual const nsFrameList& GetChildList(ChildListID aListID) const MOZ_OVERRIDE;
   virtual void GetChildLists(nsTArray<ChildList>* aLists) const MOZ_OVERRIDE;
   virtual nscoord GetBaseline() const MOZ_OVERRIDE;
@@ -261,14 +261,14 @@ public:
                           nsHTMLReflowMetrics&     aMetrics,
                           nscoord                  aConsumed);
 
-  virtual nsresult Reflow(nsPresContext*          aPresContext,
-                    nsHTMLReflowMetrics&     aDesiredSize,
-                    const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus&          aStatus) MOZ_OVERRIDE;
+  virtual nsresult Reflow(nsPresContext*           aPresContext,
+                          nsHTMLReflowMetrics&     aDesiredSize,
+                          const nsHTMLReflowState& aReflowState,
+                          nsReflowStatus&          aStatus) MOZ_OVERRIDE;
 
   virtual nsresult AttributeChanged(int32_t         aNameSpaceID,
-                              nsIAtom*        aAttribute,
-                              int32_t         aModType) MOZ_OVERRIDE;
+                                    nsIAtom*        aAttribute,
+                                    int32_t         aModType) MOZ_OVERRIDE;
 
   /**
    * Move any frames on our overflow list to the end of our principal list.

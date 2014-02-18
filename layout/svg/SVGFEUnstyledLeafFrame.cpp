@@ -49,8 +49,8 @@ public:
   virtual nsIAtom* GetType() const;
 
   virtual nsresult AttributeChanged(int32_t  aNameSpaceID,
-                              nsIAtom* aAttribute,
-                              int32_t  aModType);
+                                    nsIAtom* aAttribute,
+                                    int32_t  aModType);
 
   virtual bool UpdateOverflow() {
     // We don't maintain a visual overflow rect

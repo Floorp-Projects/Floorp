@@ -52,8 +52,8 @@ public:
 #endif
 
   virtual nsresult  AttributeChanged(int32_t         aNameSpaceID,
-                               nsIAtom*        aAttribute,
-                               int32_t         aModType) MOZ_OVERRIDE;
+                                     nsIAtom*        aAttribute,
+                                     int32_t         aModType) MOZ_OVERRIDE;
 
   /** @see nsIFrame::DidSetStyleContext */
   virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext) MOZ_OVERRIDE;
@@ -62,12 +62,12 @@ public:
   // so these functions should never be called. They assert and return
   // NS_ERROR_NOT_IMPLEMENTED
   virtual nsresult AppendFrames(ChildListID     aListID,
-                          nsFrameList&    aFrameList) MOZ_OVERRIDE;
+                                nsFrameList&    aFrameList) MOZ_OVERRIDE;
   virtual nsresult InsertFrames(ChildListID     aListID,
-                          nsIFrame*       aPrevFrame,
-                          nsFrameList&    aFrameList) MOZ_OVERRIDE;
+                                nsIFrame*       aPrevFrame,
+                                nsFrameList&    aFrameList) MOZ_OVERRIDE;
   virtual nsresult RemoveFrame(ChildListID     aListID,
-                         nsIFrame*       aOldFrame) MOZ_OVERRIDE;
+                               nsIFrame*       aOldFrame) MOZ_OVERRIDE;
 
   virtual nsIFrame* GetContentInsertionFrame() MOZ_OVERRIDE {
     return GetFirstPrincipalChild()->GetContentInsertionFrame();
@@ -105,9 +105,9 @@ public:
     IntrinsicWidthOffsets(nsRenderingContext* aRenderingContext) MOZ_OVERRIDE;
 
   virtual nsresult Reflow(nsPresContext*      aPresContext,
-                    nsHTMLReflowMetrics& aDesiredSize,
-                    const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus&      aStatus) MOZ_OVERRIDE;
+                          nsHTMLReflowMetrics& aDesiredSize,
+                          const nsHTMLReflowState& aReflowState,
+                          nsReflowStatus&      aStatus) MOZ_OVERRIDE;
 
   /**
    * Get the "type" of the frame

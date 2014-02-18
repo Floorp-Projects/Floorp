@@ -144,15 +144,15 @@ public:
   virtual void Init(nsIContent*      aContent,
                     nsIFrame*        aParent,
                     nsIFrame*        asPrevInFlow) MOZ_OVERRIDE;
-  virtual nsresult  SetInitialChildList(ChildListID        aListID,
-                                  nsFrameList&       aChildList) MOZ_OVERRIDE;
+  virtual nsresult  SetInitialChildList(ChildListID  aListID,
+                                        nsFrameList& aChildList) MOZ_OVERRIDE;
   virtual nsresult  AppendFrames(ChildListID     aListID,
-                           nsFrameList&    aFrameList) MOZ_OVERRIDE;
+                                 nsFrameList&    aFrameList) MOZ_OVERRIDE;
   virtual nsresult  InsertFrames(ChildListID     aListID,
-                           nsIFrame*       aPrevFrame,
-                           nsFrameList&    aFrameList) MOZ_OVERRIDE;
+                                 nsIFrame*       aPrevFrame,
+                                 nsFrameList&    aFrameList) MOZ_OVERRIDE;
   virtual nsresult  RemoveFrame(ChildListID     aListID,
-                          nsIFrame*       aOldFrame) MOZ_OVERRIDE;
+                                nsIFrame*       aOldFrame) MOZ_OVERRIDE;
   virtual void DestroyFrom(nsIFrame* aDestructRoot) MOZ_OVERRIDE;
   virtual nsStyleContext* GetAdditionalStyleContext(int32_t aIndex) const MOZ_OVERRIDE;
   virtual void SetAdditionalStyleContext(int32_t aIndex,
@@ -163,20 +163,20 @@ public:
   virtual void GetChildLists(nsTArray<ChildList>* aLists) const MOZ_OVERRIDE;
 
   virtual nsresult  HandleEvent(nsPresContext* aPresContext, 
-                          mozilla::WidgetGUIEvent* aEvent,
-                          nsEventStatus* aEventStatus) MOZ_OVERRIDE;
+                                mozilla::WidgetGUIEvent* aEvent,
+                                nsEventStatus* aEventStatus) MOZ_OVERRIDE;
   virtual nsresult  GetContentForEvent(mozilla::WidgetEvent* aEvent,
-                                 nsIContent** aContent) MOZ_OVERRIDE;
+                                       nsIContent** aContent) MOZ_OVERRIDE;
   virtual nsresult  GetCursor(const nsPoint&    aPoint,
-                        nsIFrame::Cursor& aCursor) MOZ_OVERRIDE;
+                              nsIFrame::Cursor& aCursor) MOZ_OVERRIDE;
 
-  virtual nsresult  GetPointFromOffset(int32_t                inOffset,
-                                 nsPoint*               outPoint) MOZ_OVERRIDE;
+  virtual nsresult  GetPointFromOffset(int32_t  inOffset,
+                                       nsPoint* outPoint) MOZ_OVERRIDE;
 
-  virtual nsresult  GetChildFrameContainingOffset(int32_t     inContentOffset,
-                                 bool                   inHint,
-                                 int32_t*               outFrameContentOffset,
-                                 nsIFrame*              *outChildFrame) MOZ_OVERRIDE;
+  virtual nsresult  GetChildFrameContainingOffset(int32_t    inContentOffset,
+                                                  bool       inHint,
+                                                  int32_t*   outFrameContentOffset,
+                                                  nsIFrame** outChildFrame) MOZ_OVERRIDE;
 
   static nsresult  GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
                                         nsPeekOffsetStruct *aPos, 
@@ -187,8 +187,8 @@ public:
 
   virtual nsresult  CharacterDataChanged(CharacterDataChangeInfo* aInfo) MOZ_OVERRIDE;
   virtual nsresult  AttributeChanged(int32_t         aNameSpaceID,
-                               nsIAtom*        aAttribute,
-                               int32_t         aModType) MOZ_OVERRIDE;
+                                     nsIAtom*        aAttribute,
+                                     int32_t         aModType) MOZ_OVERRIDE;
   virtual nsSplittableType GetSplittableType() const MOZ_OVERRIDE;
   virtual nsIFrame* GetPrevContinuation() const MOZ_OVERRIDE;
   virtual void SetPrevContinuation(nsIFrame*) MOZ_OVERRIDE;
@@ -318,13 +318,13 @@ public:
    * Note: if it's only the overflow rect(s) of a frame that need to be
    * updated, then UpdateOverflow should be called instead of Reflow.
    */
-  virtual nsresult  Reflow(nsPresContext*          aPresContext,
-                     nsHTMLReflowMetrics&     aDesiredSize,
-                     const nsHTMLReflowState& aReflowState,
-                     nsReflowStatus&          aStatus) MOZ_OVERRIDE;
+  virtual nsresult  Reflow(nsPresContext*           aPresContext,
+                           nsHTMLReflowMetrics&     aDesiredSize,
+                           const nsHTMLReflowState& aReflowState,
+                           nsReflowStatus&          aStatus) MOZ_OVERRIDE;
   virtual nsresult  DidReflow(nsPresContext*           aPresContext,
-                        const nsHTMLReflowState*  aReflowState,
-                        nsDidReflowStatus         aStatus) MOZ_OVERRIDE;
+                              const nsHTMLReflowState* aReflowState,
+                              nsDidReflowStatus        aStatus) MOZ_OVERRIDE;
 
   /**
    * NOTE: aStatus is assumed to be already-initialized. The reflow statuses of
@@ -675,7 +675,7 @@ public:
    * For more information, see XXX.
    */
   virtual nsresult  DumpRegressionData(nsPresContext* aPresContext,
-                                 FILE* out, int32_t aIndent) MOZ_OVERRIDE;
+                                       FILE* out, int32_t aIndent) MOZ_OVERRIDE;
 
   /**
    * See if style tree verification is enabled. To enable style tree

@@ -74,12 +74,12 @@ public:
 
   // nsIFrame:
   virtual nsresult AppendFrames(ChildListID     aListID,
-                          nsFrameList&    aFrameList) MOZ_OVERRIDE;
+                                nsFrameList&    aFrameList) MOZ_OVERRIDE;
   virtual nsresult InsertFrames(ChildListID     aListID,
-                          nsIFrame*       aPrevFrame,
-                          nsFrameList&    aFrameList) MOZ_OVERRIDE;
+                                nsIFrame*       aPrevFrame,
+                                nsFrameList&    aFrameList) MOZ_OVERRIDE;
   virtual nsresult RemoveFrame(ChildListID     aListID,
-                         nsIFrame*       aOldFrame) MOZ_OVERRIDE;
+                               nsIFrame*       aOldFrame) MOZ_OVERRIDE;
 
   virtual bool IsFrameOfType(uint32_t aFlags) const MOZ_OVERRIDE
   {
@@ -129,10 +129,10 @@ public:
 
   // nsIFrame:
   virtual nsresult InsertFrames(ChildListID     aListID,
-                          nsIFrame*       aPrevFrame,
-                          nsFrameList&    aFrameList) MOZ_OVERRIDE;
+                                nsIFrame*       aPrevFrame,
+                                nsFrameList&    aFrameList) MOZ_OVERRIDE;
   virtual nsresult RemoveFrame(ChildListID     aListID,
-                         nsIFrame*       aOldFrame) MOZ_OVERRIDE;
+                               nsIFrame*       aOldFrame) MOZ_OVERRIDE;
  virtual void Init(nsIContent*      aContent,
                    nsIFrame*        aParent,
                    nsIFrame*        aPrevInFlow) MOZ_OVERRIDE;
