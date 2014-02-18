@@ -58,7 +58,7 @@ public:
   virtual void DestroyFrom(nsIFrame* aDestructRoot) MOZ_OVERRIDE;
   
   virtual nsresult GetCursor(const nsPoint& aPoint,
-                       nsIFrame::Cursor& aCursor) MOZ_OVERRIDE;
+                             nsIFrame::Cursor& aCursor) MOZ_OVERRIDE;
   
   virtual nsresult CharacterDataChanged(CharacterDataChangeInfo* aInfo) MOZ_OVERRIDE;
                                   
@@ -159,13 +159,13 @@ public:
   
   virtual void AdjustOffsetsForBidi(int32_t start, int32_t end) MOZ_OVERRIDE;
   
-  virtual nsresult GetPointFromOffset(int32_t                 inOffset,
-                                nsPoint*                outPoint) MOZ_OVERRIDE;
+  virtual nsresult GetPointFromOffset(int32_t  inOffset,
+                                      nsPoint* outPoint) MOZ_OVERRIDE;
   
-  virtual nsresult  GetChildFrameContainingOffset(int32_t     inContentOffset,
-                                            bool                    inHint,
-                                            int32_t*                outFrameContentOffset,
-                                            nsIFrame*               *outChildFrame) MOZ_OVERRIDE;
+  virtual nsresult GetChildFrameContainingOffset(int32_t inContentOffset,
+                                                 bool    inHint,
+                                                 int32_t* outFrameContentOffset,
+                                                 nsIFrame** outChildFrame) MOZ_OVERRIDE;
   
   virtual bool IsVisibleInSelection(nsISelection* aSelection) MOZ_OVERRIDE;
   
@@ -216,9 +216,9 @@ public:
                                            nscoord* aX,
                                            nscoord* aXMost) MOZ_OVERRIDE;
   virtual nsresult Reflow(nsPresContext* aPresContext,
-                    nsHTMLReflowMetrics& aMetrics,
-                    const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus& aStatus) MOZ_OVERRIDE;
+                          nsHTMLReflowMetrics& aMetrics,
+                          const nsHTMLReflowState& aReflowState,
+                          nsReflowStatus& aStatus) MOZ_OVERRIDE;
   virtual bool CanContinueTextRun() const MOZ_OVERRIDE;
   // Method that is called for a text frame that is logically
   // adjacent to the end of the line (i.e. followed only by empty text frames,

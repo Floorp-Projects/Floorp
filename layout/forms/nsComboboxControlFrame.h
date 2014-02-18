@@ -69,14 +69,14 @@ public:
 
   virtual nscoord GetPrefWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
 
-  virtual nsresult Reflow(nsPresContext*          aCX,
-                    nsHTMLReflowMetrics&     aDesiredSize,
-                    const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus&          aStatus) MOZ_OVERRIDE;
+  virtual nsresult Reflow(nsPresContext*           aCX,
+                          nsHTMLReflowMetrics&     aDesiredSize,
+                          const nsHTMLReflowState& aReflowState,
+                          nsReflowStatus&          aStatus) MOZ_OVERRIDE;
 
   virtual nsresult HandleEvent(nsPresContext* aPresContext,
-                         mozilla::WidgetGUIEvent* aEvent,
-                         nsEventStatus* aEventStatus);
+                               mozilla::WidgetGUIEvent* aEvent,
+                               nsEventStatus* aEventStatus);
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
@@ -104,7 +104,7 @@ public:
 #endif
   virtual void DestroyFrom(nsIFrame* aDestructRoot) MOZ_OVERRIDE;
   virtual nsresult SetInitialChildList(ChildListID     aListID,
-                                 nsFrameList&    aChildList) MOZ_OVERRIDE;
+                                       nsFrameList&    aChildList) MOZ_OVERRIDE;
   virtual const nsFrameList& GetChildList(ChildListID aListID) const MOZ_OVERRIDE;
   virtual void GetChildLists(nsTArray<ChildList>* aLists) const MOZ_OVERRIDE;
 

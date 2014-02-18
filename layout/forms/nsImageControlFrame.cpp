@@ -38,14 +38,14 @@ public:
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS
 
-  virtual nsresult Reflow(nsPresContext*          aPresContext,
-                    nsHTMLReflowMetrics&     aDesiredSize,
-                    const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus&          aStatus);
+  virtual nsresult Reflow(nsPresContext*           aPresContext,
+                          nsHTMLReflowMetrics&     aDesiredSize,
+                          const nsHTMLReflowState& aReflowState,
+                          nsReflowStatus&          aStatus);
 
   virtual nsresult HandleEvent(nsPresContext* aPresContext,
-                         WidgetGUIEvent* aEvent,
-                         nsEventStatus* aEventStatus);
+                               WidgetGUIEvent* aEvent,
+                               nsEventStatus* aEventStatus);
 
   virtual nsIAtom* GetType() const;
 
@@ -60,7 +60,7 @@ public:
 #endif
 
   virtual nsresult GetCursor(const nsPoint&    aPoint,
-                       nsIFrame::Cursor& aCursor);
+                             nsIFrame::Cursor& aCursor);
   // nsIFormContromFrame
   virtual void SetFocus(bool aOn, bool aRepaint);
   virtual nsresult SetFormProperty(nsIAtom* aName, const nsAString& aValue);

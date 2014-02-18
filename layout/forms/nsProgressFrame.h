@@ -33,9 +33,9 @@ public:
                                 const nsDisplayListSet& aLists) MOZ_OVERRIDE;
 
   virtual nsresult Reflow(nsPresContext*           aCX,
-                    nsHTMLReflowMetrics&     aDesiredSize,
-                    const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus&          aStatus) MOZ_OVERRIDE;
+                          nsHTMLReflowMetrics&     aDesiredSize,
+                          const nsHTMLReflowState& aReflowState,
+                          nsReflowStatus&          aStatus) MOZ_OVERRIDE;
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE {
@@ -51,8 +51,8 @@ public:
                                         uint32_t aFilter) MOZ_OVERRIDE;
 
   virtual nsresult AttributeChanged(int32_t  aNameSpaceID,
-                              nsIAtom* aAttribute,
-                              int32_t  aModType) MOZ_OVERRIDE;
+                                    nsIAtom* aAttribute,
+                                    int32_t  aModType) MOZ_OVERRIDE;
 
   virtual nsSize ComputeAutoSize(nsRenderingContext *aRenderingContext,
                                  nsSize aCBSize, nscoord aAvailableWidth,
