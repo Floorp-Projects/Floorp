@@ -1416,7 +1416,7 @@ ReturnType Simulator::getFromVFPRegister(int reg_index)
 void
 Simulator::getFpArgs(double *x, double *y, int32_t *z)
 {
-    if (use_eabi_hardfloat()) {
+    if (useHardFpABI()) {
         *x = get_double_from_d_register(0);
         *y = get_double_from_d_register(1);
         *z = get_register(0);
@@ -1431,7 +1431,7 @@ void
 Simulator::setCallResultDouble(double result)
 {
     // The return value is either in r0/r1 or d0.
-    if (use_eabi_hardfloat()) {
+    if (useHardFpABI()) {
         char buffer[2 * sizeof(vfp_registers_[0])];
         memcpy(buffer, &result, sizeof(buffer));
         // Copy result to d0.
@@ -1447,8 +1447,11 @@ Simulator::setCallResultDouble(double result)
 void
 Simulator::setCallResultFloat(float result)
 {
-    if (use_eabi_hardfloat()) {
-        MOZ_ASSUME_UNREACHABLE("NYI");
+    if (useHardFpABI()) {
+        char buffer[sizeof(registers_[0])];
+        memcpy(buffer, &result, sizeof(buffer));
+        // Copy result to s0.
+        memcpy(vfp_registers_, buffer, sizeof(buffer));
     } else {
         char buffer[sizeof(registers_[0])];
         memcpy(buffer, &result, sizeof(buffer));
@@ -2202,7 +2205,11 @@ Simulator::softwareInterrupt(SimInstruction *instr)
             break;
           }
           case Args_Float32_Float32: {
-            float fval0 = mozilla::BitwiseCast<float>(arg0);
+            float fval0;
+            if (useHardFpABI())
+                fval0 = get_float_from_s_register(0);
+            else
+                fval0 = mozilla::BitwiseCast<float>(arg0);
             Prototype_Float32_Float32 target = reinterpret_cast<Prototype_Float32_Float32>(external);
             float fresult = target(fval0);
             scratchVolatileRegisters(/* scratchFloat = true */);
@@ -2237,9 +2244,12 @@ Simulator::softwareInterrupt(SimInstruction *instr)
             break;
           }
           case Args_Double_IntDouble: {
-            MOZ_ASSERT(!use_eabi_hardfloat()); // NYI
             int32_t ival = get_register(0);
-            double dval0 = get_double_from_register_pair(2);
+            double dval0;
+            if (useHardFpABI())
+                dval0 = get_double_from_d_register(0);
+            else
+                dval0 = get_double_from_register_pair(2);
             Prototype_Double_IntDouble target = reinterpret_cast<Prototype_Double_IntDouble>(external);
             double dresult = target(ival, dval0);
             scratchVolatileRegisters(/* scratchFloat = true */);
@@ -2247,9 +2257,12 @@ Simulator::softwareInterrupt(SimInstruction *instr)
             break;
           }
           case Args_Int_IntDouble: {
-            MOZ_ASSERT(!use_eabi_hardfloat()); // NYI
             int32_t ival = get_register(0);
-            double dval0 = get_double_from_register_pair(2);
+            double dval0;
+            if (useHardFpABI())
+                dval0 = get_double_from_d_register(0);
+            else
+                dval0 = get_double_from_register_pair(2);
             Prototype_Int_IntDouble target = reinterpret_cast<Prototype_Int_IntDouble>(external);
             int32_t result = target(ival, dval0);
             scratchVolatileRegisters(/* scratchFloat = true */);

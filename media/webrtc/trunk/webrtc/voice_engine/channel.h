@@ -275,7 +275,8 @@ public:
                                          unsigned short dataLengthInBytes);
     int GetRTPStatistics(unsigned int& averageJitterMs,
                          unsigned int& maxJitterMs,
-                         unsigned int& discardedPackets);
+                         unsigned int& discardedPackets,
+                         unsigned int& cumulativeLost);
     int GetRemoteRTCPSenderInfo(SenderInfo* sender_info);
     int GetRemoteRTCPReportBlocks(std::vector<ReportBlock>* report_blocks);
     int GetRTPStatistics(CallStatistics& stats);

@@ -3490,13 +3490,11 @@ MacroAssemblerARMCompat::setupABICall(uint32_t args)
     args_ = args;
     passedArgs_ = 0;
     passedArgTypes_ = 0;
-#ifdef JS_CODEGEN_ARM_HARDFP
     usedIntSlots_ = 0;
+#if defined(JS_CODEGEN_ARM_HARDFP) || defined(JS_ARM_SIMULATOR)
     usedFloatSlots_ = 0;
     usedFloat32_ = false;
     padding_ = 0;
-#else
-    usedSlots_ = 0;
 #endif
     floatArgsInGPR[0] = MoveOperand();
     floatArgsInGPR[1] = MoveOperand();
@@ -3525,9 +3523,9 @@ MacroAssemblerARMCompat::setupUnalignedABICall(uint32_t args, const Register &sc
     ma_push(scratch);
 }
 
-#ifdef JS_CODEGEN_ARM_HARDFP
+#if defined(JS_CODEGEN_ARM_HARDFP) || defined(JS_ARM_SIMULATOR)
 void
-MacroAssemblerARMCompat::passABIArg(const MoveOperand &from, MoveOp::Type type)
+MacroAssemblerARMCompat::passHardFpABIArg(const MoveOperand &from, MoveOp::Type type)
 {
     MoveOperand to;
     ++passedArgs_;
@@ -3596,10 +3594,11 @@ MacroAssemblerARMCompat::passABIArg(const MoveOperand &from, MoveOp::Type type)
 
     enoughMemory_ = moveResolver_.addMove(from, to, type);
 }
+#endif
 
-#else
+#if !defined(JS_CODEGEN_ARM_HARDFP) || defined(JS_ARM_SIMULATOR)
 void
-MacroAssemblerARMCompat::passABIArg(const MoveOperand &from, MoveOp::Type type)
+MacroAssemblerARMCompat::passSoftFpABIArg(const MoveOperand &from, MoveOp::Type type)
 {
     MoveOperand to;
     uint32_t increment = 1;
@@ -3609,7 +3608,7 @@ MacroAssemblerARMCompat::passABIArg(const MoveOperand &from, MoveOp::Type type)
       case MoveOp::DOUBLE:
         // Double arguments need to be rounded up to the nearest doubleword
         // boundary, even if it is in a register!
-        usedSlots_ = (usedSlots_ + 1) & ~1;
+        usedIntSlots_ = (usedIntSlots_ + 1) & ~1;
         increment = 2;
         passedArgTypes_ = (passedArgTypes_ << ArgType_Shift) | ArgType_Double;
         break;
@@ -3625,7 +3624,7 @@ MacroAssemblerARMCompat::passABIArg(const MoveOperand &from, MoveOp::Type type)
 
     Register destReg;
     MoveOperand dest;
-    if (GetIntArgReg(usedSlots_, 0, &destReg)) {
+    if (GetIntArgReg(usedIntSlots_, 0, &destReg)) {
         if (type == MoveOp::DOUBLE || type == MoveOp::FLOAT32) {
             floatArgsInGPR[destReg.code() >> 1] = from;
             floatArgsInGPRValid[destReg.code() >> 1] = true;
@@ -3637,15 +3636,30 @@ MacroAssemblerARMCompat::passABIArg(const MoveOperand &from, MoveOp::Type type)
             dest = MoveOperand(destReg);
         }
     } else {
-        uint32_t disp = GetArgStackDisp(usedSlots_);
+        uint32_t disp = GetArgStackDisp(usedIntSlots_);
         dest = MoveOperand(sp, disp);
     }
 
     if (useResolver)
         enoughMemory_ = enoughMemory_ && moveResolver_.addMove(from, dest, type);
-    usedSlots_ += increment;
+    usedIntSlots_ += increment;
 }
 #endif
+
+void
+MacroAssemblerARMCompat::passABIArg(const MoveOperand &from, MoveOp::Type type)
+{
+#if defined(JS_ARM_SIMULATOR)
+    if (useHardFpABI())
+        MacroAssemblerARMCompat::passHardFpABIArg(from, type);
+    else
+        MacroAssemblerARMCompat::passSoftFpABIArg(from, type);
+#elif defined(JS_CODEGEN_ARM_HARDFP)
+    MacroAssemblerARMCompat::passHardFpABIArg(from, type);
+#else
+    MacroAssemblerARMCompat::passSoftFpABIArg(from, type);
+#endif
+}
 
 void
 MacroAssemblerARMCompat::passABIArg(const Register &reg)
@@ -3671,11 +3685,11 @@ void
 MacroAssemblerARMCompat::callWithABIPre(uint32_t *stackAdjust)
 {
     JS_ASSERT(inCall_);
-#ifdef JS_CODEGEN_ARM_HARDFP
+
     *stackAdjust = ((usedIntSlots_ > NumIntArgRegs) ? usedIntSlots_ - NumIntArgRegs : 0) * sizeof(intptr_t);
-    *stackAdjust += 2*((usedFloatSlots_ > NumFloatArgRegs) ? usedFloatSlots_ - NumFloatArgRegs : 0) * sizeof(intptr_t);
-#else
-    *stackAdjust = ((usedSlots_ > NumIntArgRegs) ? usedSlots_ - NumIntArgRegs : 0) * sizeof(intptr_t);
+#if defined(JS_CODEGEN_ARM_HARDFP) || defined(JS_ARM_SIMULATOR)
+    if (useHardFpABI())
+        *stackAdjust += 2*((usedFloatSlots_ > NumFloatArgRegs) ? usedFloatSlots_ - NumFloatArgRegs : 0) * sizeof(intptr_t);
 #endif
     if (!dynamicAlignment_) {
         *stackAdjust += ComputeByteAlignment(framePushed_ + *stackAdjust, StackAlignment);
@@ -3733,17 +3747,17 @@ MacroAssemblerARMCompat::callWithABIPost(uint32_t stackAdjust, MoveOp::Type resu
 
     switch (result) {
       case MoveOp::DOUBLE:
-#ifndef JS_CODEGEN_ARM_HARDFP
-        // Move double from r0/r1 to ReturnFloatReg.
-        as_vxfer(r0, r1, ReturnFloatReg, CoreToFloat);
-        break;
-#endif
+        if (!useHardFpABI()) {
+            // Move double from r0/r1 to ReturnFloatReg.
+            as_vxfer(r0, r1, ReturnFloatReg, CoreToFloat);
+            break;
+        }
       case MoveOp::FLOAT32:
-#ifndef JS_CODEGEN_ARM_HARDFP
-        // Move float32 from r0 to ReturnFloatReg.
-        as_vxfer(r0, InvalidReg, VFPRegister(d0).singleOverlay(), CoreToFloat);
-        break;
-#endif
+        if (!useHardFpABI()) {
+            // Move float32 from r0 to ReturnFloatReg.
+            as_vxfer(r0, InvalidReg, VFPRegister(d0).singleOverlay(), CoreToFloat);
+            break;
+        }
       case MoveOp::GENERAL:
         break;
 
