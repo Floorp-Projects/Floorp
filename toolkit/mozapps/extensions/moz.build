@@ -53,7 +53,7 @@ if CONFIG['MOZ_UPDATE_CHANNEL'] not in ('aurora', 'beta', 'release', 'esr'):
 DEFINES['MOZ_EXTENSIONS_DB_SCHEMA'] = 16
 
 # Additional debugging info is exposed in debug builds
-if CONFIG['MOZ_DEBUG']:
+if CONFIG['MOZ_EM_DEBUG']:
     DEFINES['MOZ_EM_DEBUG'] = 1
 
 JAR_MANIFESTS += ['jar.mn']

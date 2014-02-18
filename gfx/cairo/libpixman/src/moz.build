@@ -75,3 +75,56 @@ if CONFIG['_MSC_VER']:
 DEFINES['PACKAGE'] = 'mozpixman'
 
 DEFINES['_USE_MATH_DEFINES'] = True
+
+use_mmx = False
+use_sse2 = False
+use_vmx = False
+use_arm_simd_gcc = False
+use_arm_neon_gcc = False
+if '86' in CONFIG['OS_TEST']:
+    if '64' in CONFIG['OS_TEST']:
+        if CONFIG['GNU_CC']:
+            use_sse2 = True
+    else:
+        if CONFIG['_MSC_VER']:
+            use_mmx = True
+        if CONFIG['HAVE_GCC_ALIGN_ARG_POINTER']:
+            use_sse2 = True
+    if CONFIG['GNU_CC']:
+        use_mmx = True
+    if CONFIG['_MSC_VER']:
+        use_sse2 = True
+elif 'ppc' in CONFIG['OS_TEST']:
+    if CONFIG['GNU_CC']:
+        use_vmx = True
+# Apple's arm assembler doesn't support the same syntax as
+# the standard GNU assembler, so use the C fallback paths for now.
+# This may be fixable if clang's ARM/iOS assembler improves into a
+# viable solution in the future.
+elif 'arm' in CONFIG['OS_TEST']:
+    if CONFIG['OS_ARCH'] != 'Darwin':
+        if CONFIG['HAVE_ARM_SIMD']:
+            use_arm_simd_gcc = True
+        if CONFIG['HAVE_ARM_NEON']:
+            use_arm_neon_gcc = True
+
+if use_mmx:
+    DEFINES['USE_MMX'] = True
+    SOURCES += ['pixman-mmx.c']
+
+if use_sse2:
+    DEFINES['USE_SSE'] = True
+    DEFINES['USE_SSE2'] = True
+    SOURCES += ['pixman-sse2.c']
+
+if use_vmx:
+    DEFINES['USE_VMX'] = True
+    SOURCES += ['pixman-vmx.c']
+
+if use_arm_simd_gcc:
+    DEFINES['USE_ARM_SIMD'] = True
+    SOURCES += ['pixman-arm-simd.c']
+
+if use_arm_neon_gcc:
+    DEFINES['USE_ARM_NEON'] = True
+    SOURCES += ['pixman-arm-neon.c']
