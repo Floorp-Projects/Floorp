@@ -36,7 +36,7 @@ public:
     ePluginState_MaxValue = 3,
   };
 
-  nsPluginTag(nsPluginInfo* aPluginInfo);
+  nsPluginTag(nsPluginInfo* aPluginInfo, int64_t aLastModifiedTime);
   nsPluginTag(const char* aName,
               const char* aDescription,
               const char* aFileName,
@@ -46,7 +46,7 @@ public:
               const char* const* aMimeDescriptions,
               const char* const* aExtensions,
               int32_t aVariants,
-              int64_t aLastModifiedTime = 0,
+              int64_t aLastModifiedTime,
               bool aArgsAreUTF8 = false);
   virtual ~nsPluginTag();
 
