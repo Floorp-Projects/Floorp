@@ -65,9 +65,9 @@ public:
 
   // nsIFrame
   virtual nsresult  Reflow(nsPresContext*      aPresContext,
-                     nsHTMLReflowMetrics& aDesiredSize,
-                     const nsHTMLReflowState& aMaxSize,
-                     nsReflowStatus&      aStatus) MOZ_OVERRIDE;
+                           nsHTMLReflowMetrics& aDesiredSize,
+                           const nsHTMLReflowState& aMaxSize,
+                           nsReflowStatus&      aStatus) MOZ_OVERRIDE;
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,

@@ -41,9 +41,9 @@ public:
                                 const nsDisplayListSet& aLists) MOZ_OVERRIDE;
 
   virtual nsresult Reflow(nsPresContext*           aPresContext,
-                    nsHTMLReflowMetrics&     aDesiredSize,
-                    const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus&          aStatus) MOZ_OVERRIDE;
+                          nsHTMLReflowMetrics&     aDesiredSize,
+                          const nsHTMLReflowState& aReflowState,
+                          nsReflowStatus&          aStatus) MOZ_OVERRIDE;
 
   virtual nscoord
     GetMinWidth(nsRenderingContext* aRenderingContext) MOZ_OVERRIDE;

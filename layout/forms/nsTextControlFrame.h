@@ -50,10 +50,10 @@ public:
                                  nsSize aMargin, nsSize aBorder,
                                  nsSize aPadding, bool aShrinkWrap) MOZ_OVERRIDE;
 
-  virtual nsresult Reflow(nsPresContext*          aPresContext,
-                    nsHTMLReflowMetrics&     aDesiredSize,
-                    const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus&          aStatus) MOZ_OVERRIDE;
+  virtual nsresult Reflow(nsPresContext*           aPresContext,
+                          nsHTMLReflowMetrics&     aDesiredSize,
+                          const nsHTMLReflowState& aReflowState,
+                          nsReflowStatus&          aStatus) MOZ_OVERRIDE;
 
   virtual nsSize GetMinSize(nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
   virtual bool IsCollapsed() MOZ_OVERRIDE;
@@ -88,7 +88,7 @@ public:
   // Utility methods to set current widget state
 
   virtual nsresult SetInitialChildList(ChildListID     aListID,
-                                 nsFrameList&    aChildList) MOZ_OVERRIDE;
+                                       nsFrameList&    aChildList) MOZ_OVERRIDE;
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
@@ -139,8 +139,8 @@ public:
 
   /** handler for attribute changes to mContent */
   virtual nsresult AttributeChanged(int32_t         aNameSpaceID,
-                              nsIAtom*        aAttribute,
-                              int32_t         aModType) MOZ_OVERRIDE;
+                                    nsIAtom*        aAttribute,
+                                    int32_t         aModType) MOZ_OVERRIDE;
 
   nsresult GetText(nsString& aText);
 

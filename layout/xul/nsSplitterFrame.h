@@ -34,15 +34,15 @@ public:
 
   // nsIFrame overrides
   virtual nsresult AttributeChanged(int32_t aNameSpaceID,
-                              nsIAtom* aAttribute,
-                              int32_t aModType) MOZ_OVERRIDE;
+                                    nsIAtom* aAttribute,
+                                    int32_t aModType) MOZ_OVERRIDE;
 
   virtual void Init(nsIContent*      aContent,
                     nsIFrame*        aParent,
                     nsIFrame*        aPrevInFlow) MOZ_OVERRIDE;
 
   virtual nsresult GetCursor(const nsPoint&    aPoint,
-                       nsIFrame::Cursor& aCursor) MOZ_OVERRIDE;
+                             nsIFrame::Cursor& aCursor) MOZ_OVERRIDE;
 
   NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
 
@@ -64,8 +64,8 @@ public:
                            nsEventStatus* aEventStatus) MOZ_OVERRIDE;
 
   virtual nsresult HandleEvent(nsPresContext* aPresContext,
-                         mozilla::WidgetGUIEvent* aEvent,
-                         nsEventStatus* aEventStatus) MOZ_OVERRIDE;
+                               mozilla::WidgetGUIEvent* aEvent,
+                               nsEventStatus* aEventStatus) MOZ_OVERRIDE;
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
