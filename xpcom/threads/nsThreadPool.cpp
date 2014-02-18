@@ -52,8 +52,8 @@ nsThreadPool::nsThreadPool()
   : mThreadLimit(DEFAULT_THREAD_LIMIT)
   , mIdleThreadLimit(DEFAULT_IDLE_THREAD_LIMIT)
   , mIdleThreadTimeout(DEFAULT_IDLE_THREAD_TIMEOUT)
-  , mStackSize(nsIThreadManager::DEFAULT_STACK_SIZE)
   , mIdleCount(0)
+  , mStackSize(nsIThreadManager::DEFAULT_STACK_SIZE)
   , mShutdown(false)
 {
 }
@@ -256,7 +256,7 @@ nsThreadPool::IsOnCurrentThread(bool *result)
 {
   ReentrantMonitorAutoEnter mon(mEvents.GetReentrantMonitor());
   nsIThread* thread = NS_GetCurrentThread();
-  for (uint32_t i = 0; i < mThreads.Count(); ++i) {
+  for (uint32_t i = 0; i < static_cast<uint32_t>(mThreads.Count()); ++i) {
     if (mThreads[i] == thread) {
       *result = true;
       return NS_OK;
