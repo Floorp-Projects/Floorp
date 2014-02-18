@@ -3,7 +3,8 @@ include email/reftest.list
 include tel/reftest.list
 include search/reftest.list
 include url/reftest.list
-include number/reftest.list
+# number is disabled in v28
+#include number/reftest.list
 include file/reftest.list
 include radio/reftest.list
 include range/reftest.list
