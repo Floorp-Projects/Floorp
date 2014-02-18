@@ -207,7 +207,7 @@
             <deck id="fxaLoginStatus">
 
               <!-- logged in and verified and all is good -->
-              <hbox flex="1">
+              <hbox>
                 <label id="fxaEmailAddress1"/>
                 <label class="text-link"
                        onclick="gSyncPane.manageFirefoxAccount();"
