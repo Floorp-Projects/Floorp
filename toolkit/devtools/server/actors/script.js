@@ -175,7 +175,7 @@ BreakpointStore.prototype = {
    *          - line (optional; requires the url property)
    *          - column (optional; requires the line property)
    */
-  findBreakpoints: function (aSearchParams={}) {
+  findBreakpoints: function* (aSearchParams={}) {
     if (aSearchParams.column != null) {
       dbg_assert(aSearchParams.line != null);
     }
@@ -199,7 +199,7 @@ BreakpointStore.prototype = {
     }
   },
 
-  _iterUrls: function (aUrl) {
+  _iterUrls: function* (aUrl) {
     if (aUrl) {
       if (this._breakpoints[aUrl] || this._wholeLineBreakpoints[aUrl]) {
         yield aUrl;
@@ -217,7 +217,7 @@ BreakpointStore.prototype = {
     }
   },
 
-  _iterLines: function (aUrl, aLine) {
+  _iterLines: function* (aUrl, aLine) {
     if (aLine != null) {
       if ((this._wholeLineBreakpoints[aUrl]
            && this._wholeLineBreakpoints[aUrl][aLine])
@@ -245,7 +245,7 @@ BreakpointStore.prototype = {
     }
   },
 
-  _iterColumns: function (aUrl, aLine, aColumn) {
+  _iterColumns: function* (aUrl, aLine, aColumn) {
     if (!this._breakpoints[aUrl] || !this._breakpoints[aUrl][aLine]) {
       return;
     }
@@ -4822,7 +4822,7 @@ ThreadSources.prototype = {
     return base.spec;
   },
 
-  iter: function () {
+  iter: function* () {
     for (let url in this._sourceActors) {
       yield this._sourceActors[url];
     }
