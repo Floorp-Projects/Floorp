@@ -68,7 +68,6 @@ UNIFIED_SOURCES += [
 # The rest cannot be built in unified mode because they want to force NSPR
 # logging.
 SOURCES += [
-    'JARSignatureVerification.cpp',
     'nsCryptoHash.cpp',
     'nsNSSCertificateDB.cpp',
     'nsNSSComponent.cpp',

@@ -19,10 +19,12 @@ interface nsIX509CertList;
 #define NS_X509CERTDB_CONTRACTID "@mozilla.org/security/x509certdb;1"
 %}
 
-[scriptable, function, uuid(25a048e8-bb1c-4c33-ad3a-eacf2ad9e9ee)]
-interface nsIOpenSignedJARFileCallback : nsISupports
+typedef uint32_t AppTrustedRoot;
+
+[scriptable, function, uuid(e12aec59-7153-4e84-9376-2e851311b7a3)]
+interface nsIOpenSignedAppFileCallback : nsISupports
 {
-  void openSignedJARFileFinished(in nsresult rv,
+  void openSignedAppFileFinished(in nsresult rv,
                                  in nsIZipReader aZipReader,
                                  in nsIX509Cert3 aSignerCert);
 };
@@ -31,7 +33,7 @@ interface nsIOpenSignedJARFileCallback : nsISupports
  * This represents a service to access and manipulate 
  * X.509 certificates stored in a database.
  */
-[scriptable, uuid(38463592-8527-11e3-b240-180373d97f23)]
+[scriptable, uuid(398dfa21-f29d-4530-bb42-136c6e7d9486)]
 interface nsIX509CertDB : nsISupports {
 
   /**
@@ -297,8 +299,14 @@ interface nsIX509CertDB : nsISupports {
    *  as input, to encourage users of the API to verify the signature as the
    *  first step in opening the JAR.
    */
-  void openSignedJARFileAsync(in nsIFile aJarFile,
-                              in nsIOpenSignedJARFileCallback callback);
+  const AppTrustedRoot AppMarketplaceProdPublicRoot = 1;
+  const AppTrustedRoot AppMarketplaceProdReviewersRoot = 2;
+  const AppTrustedRoot AppMarketplaceDevPublicRoot = 3;
+  const AppTrustedRoot AppMarketplaceDevReviewersRoot = 4;
+  const AppTrustedRoot AppXPCShellRoot = 5;
+  void openSignedAppFileAsync(in AppTrustedRoot trustedRoot,
+                              in nsIFile aJarFile,
+                              in nsIOpenSignedAppFileCallback callback);
 
   /* 
    * Add a cert to a cert DB from a binary string.
