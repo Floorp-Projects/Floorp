@@ -388,12 +388,6 @@ parent:
     async StartVisitedQuery(URIParams uri);
     async VisitURI(URIParams uri, OptionalURIParams referrer, uint32_t flags);
     async SetURITitle(URIParams uri, nsString title);
-    
-    // filepicker remoting
-    sync ShowFilePicker(int16_t mode, int16_t selectedType, bool addToRecentDocs,
-                        nsString title, nsString defaultFile, nsString defaultExtension,
-                        nsString[] filters, nsString[] filterNames)
-        returns (nsString[] files, int16_t retValue, nsresult result);
 
     async LoadURIExternal(URIParams uri);
 

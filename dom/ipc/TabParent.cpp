@@ -56,6 +56,7 @@
 #include "PermissionMessageUtils.h"
 #include "StructuredCloneUtils.h"
 #include "JavaScriptParent.h"
+#include "FilePickerParent.h"
 #include "TabChild.h"
 #include "LoadContext.h"
 #include "nsNetCID.h"
@@ -632,6 +633,19 @@ TabParent::AllocPContentPermissionRequestParent(const InfallibleTArray<Permissio
 
 bool
 TabParent::DeallocPContentPermissionRequestParent(PContentPermissionRequestParent* actor)
+{
+  delete actor;
+  return true;
+}
+
+PFilePickerParent*
+TabParent::AllocPFilePickerParent(const nsString& aTitle, const int16_t& aMode)
+{
+  return new FilePickerParent(aTitle, aMode);
+}
+
+bool
+TabParent::DeallocPFilePickerParent(PFilePickerParent* actor)
 {
   delete actor;
   return true;
