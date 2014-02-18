@@ -502,13 +502,15 @@ main.recursive_make_targets += [OBJDIR + '/generated/' + f for f in mgjar.genera
 main.recursive_make_targets += [OBJDIR + '/generated/' + f for f in gbjar.generated_sources]
 
 main.included_projects += ['../' + generated.name, '../' + branding.name]
+main.referenced_projects += [generated.name, branding.name]
 main.extra_jars += [CONFIG['ANDROID_COMPAT_LIB']]
 main.assets = TOPOBJDIR + '/dist/fennec/assets'
 main.libs = TOPOBJDIR + '/dist/fennec/lib'
 
 cpe = main.add_classpathentry('src', SRCDIR,
     dstdir='src/org/mozilla/gecko',
-    exclude_patterns=['org/mozilla/gecko/tests/**'])
+    exclude_patterns=['org/mozilla/gecko/tests/**',
+        'org/mozilla/gecko/resources/**'])
 if not CONFIG['MOZ_CRASHREPORTER']:
     cpe.exclude_patterns += ['org/mozilla/gecko/CrashReporter.java']
 main.add_classpathentry('generated', OBJDIR + '/generated',
