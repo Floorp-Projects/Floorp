@@ -2223,10 +2223,15 @@ nsJSContext::EndCycleCollectionCallback(CycleCollectorResults &aResults)
     PokeGC(JS::gcreason::CC_WAITING);
   }
 
-  TimeStamp endCCTime = TimeStamp::Now();
+  TimeStamp endCCTimeStamp = TimeStamp::Now();
+
+  PRTime endCCTime;
+  if (sPostGCEventsToObserver) {
+    endCCTime = PR_Now();
+  }
 
   // Log information about the CC via telemetry, JSON and the console.
-  uint32_t ccNowDuration = TimeBetween(gCCStats.mBeginTime, endCCTime);
+  uint32_t ccNowDuration = TimeBetween(gCCStats.mBeginTime, endCCTimeStamp);
   Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_FINISH_IGC, gCCStats.mAnyLockedOut);
   Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_SYNC_SKIPPABLE, gCCStats.mRanSyncForgetSkippable);
   Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_FULL, ccNowDuration);
@@ -2236,7 +2241,7 @@ nsJSContext::EndCycleCollectionCallback(CycleCollectorResults &aResults)
     uint32_t timeBetween = TimeBetween(sLastCCEndTime, gCCStats.mBeginTime);
     Telemetry::Accumulate(Telemetry::CYCLE_COLLECTOR_TIME_BETWEEN, timeBetween);
   }
-  sLastCCEndTime = endCCTime;
+  sLastCCEndTime = endCCTimeStamp;
 
   Telemetry::Accumulate(Telemetry::FORGET_SKIPPABLE_MAX,
                         sMaxForgetSkippableTime / PR_USEC_PER_MSEC);
