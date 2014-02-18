@@ -52,6 +52,7 @@
 
 namespace mozilla {
 
+using namespace std;
 using namespace gfx;
 
 namespace layers {
@@ -177,19 +178,6 @@ CompositorOGL::CreateContext()
   return context.forget();
 }
 
-void
-CompositorOGL::AddPrograms(ShaderProgramType aType)
-{
-  for (uint32_t maskType = MaskNone; maskType < NumMaskTypes; ++maskType) {
-    if (ProgramProfileOGL::ProgramExists(aType, static_cast<MaskType>(maskType))) {
-      mPrograms[aType].mVariations[maskType] = new ShaderProgramOGL(this->gl(),
-        ProgramProfileOGL::GetProfileFor(aType, static_cast<MaskType>(maskType)));
-    } else {
-      mPrograms[aType].mVariations[maskType] = nullptr;
-    }
-  }
-}
-
 GLuint
 CompositorOGL::GetTemporaryTexture(GLenum aTextureUnit)
 {
@@ -239,7 +227,12 @@ CompositorOGL::CleanupResources()
     ctx = mGLContext;
   }
 
-  mPrograms.Clear();
+  for (std::map<ShaderConfigOGL, ShaderProgramOGL *>::iterator iter = mPrograms.begin();
+       iter != mPrograms.end();
+       iter++) {
+    delete iter->second;
+  }
+  mPrograms.clear();
 
   if (!ctx->MakeCurrent()) {
     mQuadVBO = 0;
@@ -285,13 +278,10 @@ CompositorOGL::Initialize()
                                  LOCAL_GL_ONE, LOCAL_GL_ONE);
   mGLContext->fEnable(LOCAL_GL_BLEND);
 
-  mPrograms.AppendElements(NumProgramTypes);
-  for (int type = 0; type < NumProgramTypes; ++type) {
-    AddPrograms(static_cast<ShaderProgramType>(type));
-  }
-
   // initialise a common shader to check that we can actually compile a shader
-  if (!mPrograms[RGBALayerProgramType].mVariations[MaskNone]->Initialize()) {
+  RefPtr<EffectSolidColor> effect = new EffectSolidColor(Color(0, 0, 0, 0));
+  ShaderConfigOGL config = GetShaderConfigFor(effect);
+  if (!GetShaderProgramFor(config)) {
     return false;
   }
 
@@ -543,21 +533,7 @@ CompositorOGL::PrepareViewport(const gfx::IntSize& aSize,
   Matrix4x4 matrix3d = Matrix4x4::From2D(viewMatrix);
   matrix3d._33 = 0.0f;
 
-  SetLayerProgramProjectionMatrix(matrix3d);
-}
-
-void
-CompositorOGL::SetLayerProgramProjectionMatrix(const Matrix4x4& aMatrix)
-{
-  // Update the projection matrix in all of the programs, without activating them.
-  // The uniform will actually be set the next time the program is activated.
-  for (unsigned int i = 0; i < mPrograms.Length(); ++i) {
-    for (uint32_t mask = MaskNone; mask < NumMaskTypes; ++mask) {
-      if (mPrograms[i].mVariations[mask]) {
-        mPrograms[i].mVariations[mask]->DelayedSetProjectionMatrix(aMatrix);
-      }
-    }
-  }
+  mProjMatrix = matrix3d;
 }
 
 TemporaryRef<CompositingRenderTarget>
@@ -835,31 +811,62 @@ CompositorOGL::CreateFBOWithTexture(const IntRect& aRect, bool aCopyFromSource,
   *aTexture = tex;
 }
 
-ShaderProgramType
-CompositorOGL::GetProgramTypeForEffect(Effect *aEffect) const
+ShaderConfigOGL
+CompositorOGL::GetShaderConfigFor(Effect *aEffect, MaskType aMask) const
 {
+  ShaderConfigOGL config;
+
   switch(aEffect->mType) {
   case EFFECT_SOLID_COLOR:
-    return ColorLayerProgramType;
-  case EFFECT_RGBA:
-  case EFFECT_RGBX:
-  case EFFECT_BGRA:
-  case EFFECT_BGRX:
+    config.SetRenderColor(true);
+    break;
+  case EFFECT_YCBCR:
+    config.SetYCbCr(true);
+    break;
+  case EFFECT_COMPONENT_ALPHA:
+    config.SetComponentAlpha(true);
+    break;
+  case EFFECT_RENDER_TARGET:
+    config.SetTextureTarget(mFBOTextureTarget);
+    break;
+  default:
   {
+    MOZ_ASSERT(aEffect->mType == EFFECT_RGB);
     TexturedEffect* texturedEffect =
         static_cast<TexturedEffect*>(aEffect);
     TextureSourceOGL* source = texturedEffect->mTexture->AsSourceOGL();
+    MOZ_ASSERT_IF(source->GetTextureTarget() == LOCAL_GL_TEXTURE_EXTERNAL,
+                  source->GetFormat() == gfx::SurfaceFormat::R8G8B8A8);
+    MOZ_ASSERT_IF(source->GetTextureTarget() == LOCAL_GL_TEXTURE_RECTANGLE_ARB,
+                  source->GetFormat() == gfx::SurfaceFormat::R8G8B8A8 ||
+                  source->GetFormat() == gfx::SurfaceFormat::R8G8B8X8 ||
+                  source->GetFormat() == gfx::SurfaceFormat::R5G6B5);
+    config = ShaderConfigFromTargetAndFormat(source->GetTextureTarget(),
+                                             source->GetFormat());
+    break;
+  }
+  }
+  config.SetMask2D(aMask == Mask2d);
+  config.SetMask3D(aMask == Mask3d);
+  return config;
+}
 
-    return ShaderProgramFromTargetAndFormat(source->GetTextureTarget(),
-                                            source->GetFormat());
+ShaderProgramOGL*
+CompositorOGL::GetShaderProgramFor(const ShaderConfigOGL &aConfig)
+{
+  std::map<ShaderConfigOGL, ShaderProgramOGL *>::iterator iter = mPrograms.find(aConfig);
+  if (iter != mPrograms.end())
+    return iter->second;
+
+  ProgramProfileOGL profile = ProgramProfileOGL::GetProfileFor(aConfig);
+  ShaderProgramOGL *shader = new ShaderProgramOGL(gl(), profile);
+  if (!shader->Initialize()) {
+    delete shader;
+    return nullptr;
   }
-  case EFFECT_YCBCR:
-    return YCbCrLayerProgramType;
-  case EFFECT_RENDER_TARGET:
-    return GetFBOLayerProgramType();
-  default:
-    return RGBALayerProgramType;
-  }
+
+  mPrograms[aConfig] = shader;
+  return shader;
 }
 
 struct MOZ_STACK_CLASS AutoBindTexture
@@ -1029,39 +1036,45 @@ CompositorOGL::DrawQuadInternal(const Rect& aRect,
 
   mPixelsFilled += aRect.width * aRect.height;
 
-  ShaderProgramType programType = GetProgramTypeForEffect(aEffectChain.mPrimaryEffect);
-  ShaderProgramOGL *program = GetProgram(programType, maskType);
+  // Determine the color if this is a color shader and fold the opacity into
+  // the color since color shaders don't have an opacity uniform.
+  Color color;
+  if (aEffectChain.mPrimaryEffect->mType == EFFECT_SOLID_COLOR) {
+    EffectSolidColor* effectSolidColor =
+      static_cast<EffectSolidColor*>(aEffectChain.mPrimaryEffect.get());
+    color = effectSolidColor->mColor;
+
+    Float opacity = aOpacity * color.a;
+    color.r *= opacity;
+    color.g *= opacity;
+    color.b *= opacity;
+    color.a = opacity;
+
+    // We can fold opacity into the color, so no need to consider it further.
+    aOpacity = 1.f;
+  }
+
+  ShaderConfigOGL config = GetShaderConfigFor(aEffectChain.mPrimaryEffect, maskType);
+  config.SetOpacity(aOpacity != 1.f);
+  ShaderProgramOGL *program = GetShaderProgramFor(config);
   program->Activate();
-  if (programType == RGBARectLayerProgramType ||
-      programType == RGBXRectLayerProgramType) {
+  program->SetProjectionMatrix(mProjMatrix);
+  program->SetLayerQuadRect(aRect);
+  program->SetLayerTransform(aTransform);
+  IntPoint offset = mCurrentRenderTarget->GetOrigin();
+  program->SetRenderOffset(offset.x, offset.y);
+  if (aOpacity != 1.f)
+    program->SetLayerOpacity(aOpacity);
+  if (config.mFeatures & ENABLE_TEXTURE_RECT) {
     TexturedEffect* texturedEffect =
         static_cast<TexturedEffect*>(aEffectChain.mPrimaryEffect.get());
     TextureSourceOGL* source = texturedEffect->mTexture->AsSourceOGL();
     // This is used by IOSurface that use 0,0...w,h coordinate rather then 0,0..1,1.
     program->SetTexCoordMultiplier(source->GetSize().width, source->GetSize().height);
   }
-  program->SetLayerQuadRect(aRect);
-  program->SetLayerTransform(aTransform);
-  IntPoint offset = mCurrentRenderTarget->GetOrigin();
-  program->SetRenderOffset(offset.x, offset.y);
 
   switch (aEffectChain.mPrimaryEffect->mType) {
     case EFFECT_SOLID_COLOR: {
-      EffectSolidColor* effectSolidColor =
-        static_cast<EffectSolidColor*>(aEffectChain.mPrimaryEffect.get());
-
-      Color color = effectSolidColor->mColor;
-      /* Multiply color by the layer opacity, as the shader
-       * ignores layer opacity and expects a final color to
-       * write to the color buffer.  This saves a needless
-       * multiply in the fragment shader.
-       */
-      Float opacity = aOpacity * color.a;
-      color.r *= opacity;
-      color.g *= opacity;
-      color.b *= opacity;
-      color.a = opacity;
-
       program->SetRenderColor(color);
 
       AutoSaveTexture bindMask(mGLContext, LOCAL_GL_TEXTURE0);
@@ -1073,13 +1086,9 @@ CompositorOGL::DrawQuadInternal(const Rect& aRect,
     }
     break;
 
-  case EFFECT_BGRA:
-  case EFFECT_BGRX:
-  case EFFECT_RGBA:
-  case EFFECT_RGBX: {
+  case EFFECT_RGB: {
       TexturedEffect* texturedEffect =
           static_cast<TexturedEffect*>(aEffectChain.mPrimaryEffect.get());
-      Rect textureCoords;
       TextureSource *source = texturedEffect->mTexture;
 
       if (!texturedEffect->mPremultiplied) {
@@ -1109,7 +1118,6 @@ CompositorOGL::DrawQuadInternal(const Rect& aRect,
                                 source->AsSourceOGL()->GetTextureTarget());
 
       program->SetTextureUnit(0);
-      program->SetLayerOpacity(aOpacity);
 
       AutoSaveTexture bindMask(mGLContext, LOCAL_GL_TEXTURE1);
       if (maskType != MaskNone) {
@@ -1149,7 +1157,6 @@ CompositorOGL::DrawQuadInternal(const Rect& aRect,
       ApplyFilterToBoundTexture(mGLContext, filter);
 
       program->SetYCbCrTextureUnits(Y, Cb, Cr);
-      program->SetLayerOpacity(aOpacity);
 
       AutoSaveTexture bindMask(mGLContext, LOCAL_GL_TEXTURE3);
       if (maskType != MaskNone) {
@@ -1167,14 +1174,10 @@ CompositorOGL::DrawQuadInternal(const Rect& aRect,
       RefPtr<CompositingRenderTargetOGL> surface
         = static_cast<CompositingRenderTargetOGL*>(effectRenderTarget->mRenderTarget.get());
 
-      ShaderProgramOGL *program = GetProgram(GetFBOLayerProgramType(), maskType);
-
       surface->BindTexture(LOCAL_GL_TEXTURE0, mFBOTextureTarget);
 
-      program->Activate();
-      program->SetTextureUnit(0);
-      program->SetLayerOpacity(aOpacity);
       program->SetTextureTransform(Matrix4x4());
+      program->SetTextureUnit(0);
 
       AutoSaveTexture bindMask(mGLContext, LOCAL_GL_TEXTURE1);
       if (maskType != MaskNone) {
@@ -1183,7 +1186,7 @@ CompositorOGL::DrawQuadInternal(const Rect& aRect,
         program->SetMaskLayerTransform(maskQuadTransform);
       }
 
-      if (program->GetTexCoordMultiplierUniformLocation() != -1) {
+      if (config.mFeatures & ENABLE_TEXTURE_RECT) {
         // 2DRect case, get the multiplier right for a sampler2DRect
         program->SetTexCoordMultiplier(aRect.width, aRect.height);
       }
@@ -1207,47 +1210,37 @@ CompositorOGL::DrawQuadInternal(const Rect& aRect,
         return;
       }
 
-      for (int32_t pass = 1; pass <=2; ++pass) {
-        ShaderProgramOGL* program;
-        if (pass == 1) {
-          ShaderProgramType type = gl()->GetPreferredARGB32Format() == LOCAL_GL_BGRA ?
-                                   ComponentAlphaPass1RGBProgramType :
-                                   ComponentAlphaPass1ProgramType;
-          program = GetProgram(type, maskType);
-          gl()->fBlendFuncSeparate(LOCAL_GL_ZERO, LOCAL_GL_ONE_MINUS_SRC_COLOR,
-                                   LOCAL_GL_ONE, LOCAL_GL_ONE);
-        } else {
-          ShaderProgramType type = gl()->GetPreferredARGB32Format() == LOCAL_GL_BGRA ?
-                                   ComponentAlphaPass2RGBProgramType :
-                                   ComponentAlphaPass2ProgramType;
-          program = GetProgram(type, maskType);
-          gl()->fBlendFuncSeparate(LOCAL_GL_ONE, LOCAL_GL_ONE,
-                                   LOCAL_GL_ONE, LOCAL_GL_ONE);
-        }
+      AutoBindTexture bindSourceOnBlack(mGLContext, sourceOnBlack, LOCAL_GL_TEXTURE0);
+      AutoBindTexture bindSourceOnWhite(mGLContext, sourceOnWhite, LOCAL_GL_TEXTURE1);
 
-        AutoBindTexture bindSourceOnBlack(mGLContext, sourceOnBlack, LOCAL_GL_TEXTURE0);
-        AutoBindTexture bindSourceOnWhite(mGLContext, sourceOnWhite, LOCAL_GL_TEXTURE1);
+      program->SetBlackTextureUnit(0);
+      program->SetWhiteTextureUnit(1);
+      program->SetTextureTransform(gfx::Matrix4x4());
 
-        program->Activate();
-        program->SetBlackTextureUnit(0);
-        program->SetWhiteTextureUnit(1);
-        program->SetLayerOpacity(aOpacity);
-        program->SetLayerTransform(aTransform);
-        program->SetRenderOffset(offset.x, offset.y);
-        program->SetLayerQuadRect(aRect);
-        AutoSaveTexture bindMask(mGLContext, LOCAL_GL_TEXTURE2);
-        if (maskType != MaskNone) {
-          BindMaskForProgram(program, sourceMask, LOCAL_GL_TEXTURE2, maskQuadTransform);
-        }
-
-        BindAndDrawQuadWithTextureRect(program,
-                                       gfx3DMatrix(),
-                                       effectComponentAlpha->mTextureCoords,
-                                       effectComponentAlpha->mOnBlack);
-
-        mGLContext->fBlendFuncSeparate(LOCAL_GL_ONE, LOCAL_GL_ONE_MINUS_SRC_ALPHA,
-                                       LOCAL_GL_ONE, LOCAL_GL_ONE);
+      AutoBindTexture bindMask(mGLContext);
+      if (maskType != MaskNone) {
+        BindMaskForProgram(program, sourceMask, LOCAL_GL_TEXTURE2, maskQuadTransform);
       }
+      // Pass 1.
+      gl()->fBlendFuncSeparate(LOCAL_GL_ZERO, LOCAL_GL_ONE_MINUS_SRC_COLOR,
+                               LOCAL_GL_ONE, LOCAL_GL_ONE);
+      program->SetTexturePass2(false);
+      BindAndDrawQuadWithTextureRect(program,
+                                     gfx3DMatrix(),
+                                     effectComponentAlpha->mTextureCoords,
+                                     effectComponentAlpha->mOnBlack);
+
+      // Pass 2.
+      gl()->fBlendFuncSeparate(LOCAL_GL_ONE, LOCAL_GL_ONE,
+                               LOCAL_GL_ONE, LOCAL_GL_ONE);
+      program->SetTexturePass2(true);
+      BindAndDrawQuadWithTextureRect(program,
+                                     gfx3DMatrix(),
+                                     effectComponentAlpha->mTextureCoords,
+                                     effectComponentAlpha->mOnBlack);
+
+      mGLContext->fBlendFuncSeparate(LOCAL_GL_ONE, LOCAL_GL_ONE_MINUS_SRC_ALPHA,
+                                     LOCAL_GL_ONE, LOCAL_GL_ONE);
     }
     break;
   default:

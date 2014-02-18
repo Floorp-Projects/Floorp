@@ -8,10 +8,7 @@ from logging import *
 # 'from logging import *'
 # see https://bugzilla.mozilla.org/show_bug.cgi?id=700415#c35
 from logging import getLoggerClass, addLevelName, setLoggerClass, shutdown, debug, info, basicConfig
-try:
-    import json
-except ImportError:
-    import simplejson as json
+import json
 
 _default_level = INFO
 _LoggerClass = getLoggerClass()
@@ -63,7 +60,7 @@ class MozLogger(_LoggerClass):
 
     def log_structured(self, action, params=None):
         """Logs a structured message object."""
-        if (params is None):
+        if params is None:
             params = {}
 
         level = params.get('_level', _default_level)
@@ -80,23 +77,36 @@ class MozLogger(_LoggerClass):
             if not isinstance(level, int):
                 level = _default_level
 
-        params['_namespace'] = self.name
         params['action'] = action
 
-        message = params.get('message', 'UNKNOWN')
+        # The can message be None. This is expected, and shouldn't cause
+        # unstructured formatters to fail.
+        message = params.get('_message')
+
         self.log(level, message, extra={'params': params})
 
 class JSONFormatter(Formatter):
     """Log formatter for emitting structured JSON entries."""
 
     def format(self, record):
-        params = getattr(record, 'params')
-        params['_time'] = int(round(record.created * 1000, 0))
+        # Default values determined by logger metadata
+        output = {
+            '_time': int(round(record.created * 1000, 0)),
+            '_namespace': record.name,
+            '_level': getLevelName(record.levelno),
+        }
 
-        if params.get('indent') is not None:
-            return json.dumps(params, indent=params['indent'])
+        # If this message was created by a call to log_structured,
+        # anything specified by the caller's params should act as
+        # an override.
+        output.update(getattr(record, 'params', {}))
 
-        return json.dumps(params)
+        if record.msg and output.get('_message') is None:
+            # For compatibility with callers using the printf like
+            # API exposed by python logging, call the default formatter.
+            output['_message'] = Formatter.format(self, record)
+
+        return json.dumps(output, indent=output.get('indent'))
 
 class MozFormatter(Formatter):
     """
@@ -107,11 +117,13 @@ class MozFormatter(Formatter):
     level_length = 0
     max_level_length = len('TEST-START')
 
-    def __init__(self):
+    def __init__(self, include_timestamp=False):
         """
         Formatter.__init__ has fmt and datefmt parameters that won't have
         any affect on a MozFormatter instance. Bypass it to avoid confusion.
         """
+        self.include_timestamp = include_timestamp
+        self.datefmt = None
 
     def format(self, record):
         record.message = record.getMessage()
@@ -125,6 +137,8 @@ class MozFormatter(Formatter):
             pad = self.level_length - len(record.levelname) + 1
         sep = '|'.rjust(pad)
         fmt = '%(name)s %(levelname)s ' + sep + ' %(message)s'
+        if self.include_timestamp:
+            fmt = self.formatTime(record, self.datefmt) + ' ' + fmt
         return fmt % record.__dict__
 
 def getLogger(name, handler=None):
@@ -143,7 +157,7 @@ def getLogger(name, handler=None):
     setLoggerClass(MozLogger)
 
     if name in Logger.manager.loggerDict:
-        if (handler):
+        if handler:
             raise ValueError('The handler parameter requires ' + \
                              'that a logger by this name does ' + \
                              'not already exist')

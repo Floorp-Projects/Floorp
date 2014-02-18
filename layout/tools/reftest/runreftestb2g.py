@@ -253,13 +253,14 @@ class B2GRemoteReftest(RefTest):
                 sys.exit(5)
 
         # Delete any bundled extensions
-        extensionDir = os.path.join(profileDir, 'extensions', 'staged')
-        for filename in os.listdir(extensionDir):
-            try:
-                self._devicemanager._checkCmdAs(['shell', 'rm', '-rf',
-                                                 os.path.join(self.bundlesDir, filename)])
-            except DMError:
-                pass
+        if profileDir:
+            extensionDir = os.path.join(profileDir, 'extensions', 'staged')
+            for filename in os.listdir(extensionDir):
+                try:
+                    self._devicemanager._checkCmd(['shell', 'rm', '-rf',
+                                                     os.path.join(self.bundlesDir, filename)])
+                except DMError:
+                    pass
 
         # Restore the original profiles.ini.
         if self.originalProfilesIni:
@@ -276,8 +277,8 @@ class B2GRemoteReftest(RefTest):
             self._devicemanager.removeDir(self.remoteTestRoot)
 
             # Restore the original user.js.
-            self._devicemanager._checkCmdAs(['shell', 'rm', '-f', self.userJS])
-            self._devicemanager._checkCmdAs(['shell', 'dd', 'if=%s.orig' % self.userJS, 'of=%s' % self.userJS])
+            self._devicemanager._checkCmd(['shell', 'rm', '-f', self.userJS])
+            self._devicemanager._checkCmd(['shell', 'dd', 'if=%s.orig' % self.userJS, 'of=%s' % self.userJS])
 
             # We've restored the original profile, so reboot the device so that
             # it gets picked up.
@@ -441,9 +442,9 @@ class B2GRemoteReftest(RefTest):
         # Copy the extensions to the B2G bundles dir.
         extensionDir = os.path.join(profileDir, 'extensions', 'staged')
         # need to write to read-only dir
-        self._devicemanager._checkCmdAs(['remount'])
+        self._devicemanager._checkCmd(['remount'])
         for filename in os.listdir(extensionDir):
-            self._devicemanager._checkCmdAs(['shell', 'rm', '-rf',
+            self._devicemanager._checkCmd(['shell', 'rm', '-rf',
                                              os.path.join(self.bundlesDir, filename)])
         try:
             self._devicemanager.pushDir(extensionDir, self.bundlesDir)
@@ -453,8 +454,8 @@ class B2GRemoteReftest(RefTest):
 
         # In B2G, user.js is always read from /data/local, not the profile
         # directory.  Backup the original user.js first so we can restore it.
-        self._devicemanager._checkCmdAs(['shell', 'rm', '-f', '%s.orig' % self.userJS])
-        self._devicemanager._checkCmdAs(['shell', 'dd', 'if=%s' % self.userJS, 'of=%s.orig' % self.userJS])
+        self._devicemanager._checkCmd(['shell', 'rm', '-f', '%s.orig' % self.userJS])
+        self._devicemanager._checkCmd(['shell', 'dd', 'if=%s' % self.userJS, 'of=%s.orig' % self.userJS])
         self._devicemanager.pushFile(os.path.join(profileDir, "user.js"), self.userJS)
 
         self.updateProfilesIni(self.remoteProfile)

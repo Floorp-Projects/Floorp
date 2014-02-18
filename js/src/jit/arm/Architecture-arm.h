@@ -13,9 +13,10 @@
 #include "js/Utility.h"
 
 // gcc appears to use __ARM_PCS_VFP to denote that the target is a hard-float target.
-#ifdef __ARM_PCS_VFP
+#if defined(__ARM_PCS_VFP)
 #define JS_CODEGEN_ARM_HARDFP
 #endif
+
 namespace js {
 namespace jit {
 
@@ -231,6 +232,21 @@ bool hasVFPv3();
 bool hasVFP();
 bool has16DP();
 bool hasIDIV();
+
+// If the simulator is used then the ABI choice is dynamic.  Otherwise the ABI is static
+// and useHardFpABI is inlined so that unused branches can be optimized away.
+#if defined(JS_ARM_SIMULATOR)
+bool useHardFpABI();
+#else
+static inline bool useHardFpABI()
+{
+#if defined(JS_CODEGEN_ARM_HARDFP)
+    return true;
+#else
+    return false;
+#endif
+}
+#endif
 
 } // namespace jit
 } // namespace js

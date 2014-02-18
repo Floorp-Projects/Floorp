@@ -559,6 +559,12 @@ ConvertAndWrite(const nsAString& aString,
   startCharLength = charLength;
   NS_ENSURE_SUCCESS(rv, rv);
 
+  if (!charLength) {
+    // Nothing to write.  Besides, a length 0 string has an immutable buffer, so
+    // attempts to null-terminate it will crash.
+    return NS_OK;
+  }
+
   nsAutoCString charXferString;
   if (!charXferString.SetLength(charLength, fallible_t()))
     return NS_ERROR_OUT_OF_MEMORY;

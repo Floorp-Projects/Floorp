@@ -247,7 +247,7 @@ var gPrivacyPane = {
   },
 
   _lastMode: null,
-  _lasCheckState: null,
+  _lastCheckState: null,
   updateAutostart: function PPP_updateAutostart() {
       let mode = document.getElementById("historyMode");
       let autoStart = document.getElementById("privateBrowsingAutoStart");
@@ -299,6 +299,7 @@ var gPrivacyPane = {
       } else {
         autoStart.removeAttribute('checked');
       }
+      pref.value = autoStart.hasAttribute('checked');
       mode.selectedIndex = this._lastMode;
       mode.doCommand();
 

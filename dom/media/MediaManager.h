@@ -494,7 +494,8 @@ public:
   nsresult GetUserMediaDevices(nsPIDOMWindow* aWindow,
     const dom::MediaStreamConstraintsInternal& aConstraints,
     nsIGetUserMediaDevicesSuccessCallback* onSuccess,
-    nsIDOMGetUserMediaErrorCallback* onError);
+    nsIDOMGetUserMediaErrorCallback* onError,
+    uint64_t aInnerWindowID = 0);
   void OnNavigation(uint64_t aWindowID);
 
   MediaEnginePrefs mPrefs;
