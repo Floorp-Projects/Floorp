@@ -2786,6 +2786,10 @@ public abstract class GeckoApp
     }
 
     private void setSystemUiVisible(final boolean visible) {
+        if (Build.VERSION.SDK_INT < 14) {
+            return;
+        }
+
         ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
