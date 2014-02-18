@@ -1044,7 +1044,8 @@ TabParent::RecvNotifyIMEFocus(const bool& aFocus,
   mIMETabParent = aFocus ? this : nullptr;
   mIMESelectionAnchor = 0;
   mIMESelectionFocus = 0;
-  widget->NotifyIME(aFocus ? NOTIFY_IME_OF_FOCUS : NOTIFY_IME_OF_BLUR);
+  widget->NotifyIME(IMENotification(aFocus ? NOTIFY_IME_OF_FOCUS :
+                                             NOTIFY_IME_OF_BLUR));
 
   if (aFocus) {
     *aPreference = widget->GetIMEUpdatePreference();
@@ -1066,7 +1067,11 @@ TabParent::RecvNotifyIMETextChange(const uint32_t& aStart,
   NS_ASSERTION(widget->GetIMEUpdatePreference().WantTextChange(),
                "Don't call Send/RecvNotifyIMETextChange without NOTIFY_TEXT_CHANGE");
 
-  widget->NotifyIMEOfTextChange(aStart, aEnd, aNewEnd);
+  IMENotification notification(NOTIFY_IME_OF_TEXT_CHANGE);
+  notification.mTextChangeData.mStartOffset = aStart;
+  notification.mTextChangeData.mOldEndOffset = aEnd;
+  notification.mTextChangeData.mNewEndOffset = aNewEnd;
+  widget->NotifyIME(notification);
   return true;
 }
 
@@ -1084,7 +1089,7 @@ TabParent::RecvNotifyIMESelectedCompositionRect(const uint32_t& aOffset,
   if (!widget) {
     return true;
   }
-  widget->NotifyIME(NOTIFY_IME_OF_COMPOSITION_UPDATE);
+  widget->NotifyIME(IMENotification(NOTIFY_IME_OF_COMPOSITION_UPDATE));
   return true;
 }
 
@@ -1101,7 +1106,7 @@ TabParent::RecvNotifyIMESelection(const uint32_t& aSeqno,
     mIMESelectionAnchor = aAnchor;
     mIMESelectionFocus = aFocus;
     if (widget->GetIMEUpdatePreference().WantSelectionChange()) {
-      widget->NotifyIME(NOTIFY_IME_OF_SELECTION_CHANGE);
+      widget->NotifyIME(IMENotification(NOTIFY_IME_OF_SELECTION_CHANGE));
     }
   }
   return true;
@@ -1358,8 +1363,8 @@ TabParent::RecvEndIMEComposition(const bool& aCancel,
 
   mIMECompositionEnding = true;
 
-  widget->NotifyIME(aCancel ? REQUEST_TO_CANCEL_COMPOSITION :
-                              REQUEST_TO_COMMIT_COMPOSITION);
+  widget->NotifyIME(IMENotification(aCancel ? REQUEST_TO_CANCEL_COMPOSITION :
+                                              REQUEST_TO_COMMIT_COMPOSITION));
 
   mIMECompositionEnding = false;
   *aComposition = mIMECompositionText;

@@ -100,8 +100,8 @@ typedef void* nsNativeWidget;
 #endif
 
 #define NS_IWIDGET_IID \
-{ 0x67da44c4, 0xe21b, 0x4742, \
-  { 0x9c, 0x2b, 0x26, 0xc7, 0x70, 0x21, 0xde, 0x87 } }
+{ 0xb979c607, 0xf0aa, 0x4fee, \
+  { 0xb2, 0x7b, 0xd4, 0x46, 0xa2, 0xe, 0x8b, 0x27 } }
 
 /*
  * Window shadow styles
@@ -207,12 +207,12 @@ enum nsTopLevelWidgetZPlacement { // for PlaceBehind()
  * Preference for receiving IME updates
  *
  * If mWantUpdates is not NOTIFY_NOTHING, nsTextStateManager will observe text
- * change and/or selection change and call nsIWidget::NotifyIMEOfTextChange()
- * and/or nsIWidget::NotifyIME(NOTIFY_IME_OF_SELECTION_CHANGE).
+ * change and/or selection change and call nsIWidget::NotifyIME() with
+ * NOTIFY_IME_OF_SELECTION_CHANGE and/or NOTIFY_IME_OF_TEXT_CHANGE.
  * Please note that the text change observing cost is very expensive especially
  * on an HTML editor has focus.
  * If the IME implementation on a particular platform doesn't care about
- * NotifyIMEOfTextChange() and/or NotifyIME(NOTIFY_IME_OF_SELECTION_CHANGE),
+ * NOTIFY_IME_OF_SELECTION_CHANGE and/or NOTIFY_IME_OF_TEXT_CHANGE,
  * they should set mWantUpdates to NOTIFY_NOTHING to avoid the cost.
  * If the IME implementation needs notifications even while our process is
  * deactive, it should also set NOTIFY_DURING_DEACTIVE.
@@ -448,8 +448,10 @@ struct SizeConstraints {
   nsIntSize mMaxSize;
 };
 
-// NotificationToIME is shared by nsIMEStateManager and TextComposition.
-enum NotificationToIME {
+// IMEMessage is shared by nsIMEStateManager and TextComposition.
+// XXX Negative values are used in Android...
+enum IMEMessage MOZ_ENUM_TYPE(int8_t)
+{
   // XXX We should replace NOTIFY_IME_OF_CURSOR_POS_CHANGED with
   //     NOTIFY_IME_OF_SELECTION_CHANGE later.
   NOTIFY_IME_OF_CURSOR_POS_CHANGED,
@@ -459,10 +461,62 @@ enum NotificationToIME {
   NOTIFY_IME_OF_BLUR,
   // Selection in the focused editable content is changed
   NOTIFY_IME_OF_SELECTION_CHANGE,
-  REQUEST_TO_COMMIT_COMPOSITION,
-  REQUEST_TO_CANCEL_COMPOSITION,
+  // Text in the focused editable content is changed
+  NOTIFY_IME_OF_TEXT_CHANGE,
   // Composition string has been updated
-  NOTIFY_IME_OF_COMPOSITION_UPDATE
+  NOTIFY_IME_OF_COMPOSITION_UPDATE,
+  // Request to commit current composition to IME
+  // (some platforms may not support)
+  REQUEST_TO_COMMIT_COMPOSITION,
+  // Request to cancel current composition to IME
+  // (some platforms may not support)
+  REQUEST_TO_CANCEL_COMPOSITION
+};
+
+struct IMENotification
+{
+  IMENotification(IMEMessage aMessage)
+    : mMessage(aMessage)
+  {
+    switch (aMessage) {
+      case NOTIFY_IME_OF_TEXT_CHANGE:
+        mTextChangeData.mStartOffset = 0;
+        mTextChangeData.mOldEndOffset = 0;
+        mTextChangeData.mNewEndOffset = 0;
+        break;
+      default:
+        break;
+    }
+  }
+
+  IMEMessage mMessage;
+
+  union
+  {
+    // NOTIFY_IME_OF_TEXT_CHANGE specific data
+    struct
+    {
+      uint32_t mStartOffset;
+      uint32_t mOldEndOffset;
+      uint32_t mNewEndOffset;
+
+      uint32_t OldLength() const { return mOldEndOffset - mStartOffset; }
+      uint32_t NewLength() const { return mNewEndOffset - mStartOffset; }
+      int32_t AdditionalLength() const
+      {
+        return static_cast<int32_t>(mNewEndOffset - mOldEndOffset);
+      }
+      bool IsInInt32Range() const
+      {
+        return mStartOffset <= INT32_MAX &&
+               mOldEndOffset <= INT32_MAX &&
+               mNewEndOffset <= INT32_MAX;
+      }
+    } mTextChangeData;
+  };
+
+private:
+  IMENotification();
 };
 
 } // namespace widget
@@ -483,7 +537,8 @@ class nsIWidget : public nsISupports {
     typedef mozilla::layers::LayerManagerComposite LayerManagerComposite;
     typedef mozilla::layers::LayersBackend LayersBackend;
     typedef mozilla::layers::PLayerTransactionChild PLayerTransactionChild;
-    typedef mozilla::widget::NotificationToIME NotificationToIME;
+    typedef mozilla::widget::IMEMessage IMEMessage;
+    typedef mozilla::widget::IMENotification IMENotification;
     typedef mozilla::widget::IMEState IMEState;
     typedef mozilla::widget::InputContext InputContext;
     typedef mozilla::widget::InputContextAction InputContextAction;
@@ -1705,7 +1760,7 @@ public:
     /**
      * Notify IME of the specified notification.
      */
-    NS_IMETHOD NotifyIME(NotificationToIME aNotification) = 0;
+    NS_IMETHOD NotifyIME(const IMENotification& aIMENotification) = 0;
 
     /*
      * Notifies the input context changes.
@@ -1733,16 +1788,6 @@ public:
      * state), this method returns NS_ERROR_NOT_IMPLEMENTED.
      */
     NS_IMETHOD GetToggledKeyState(uint32_t aKeyCode, bool* aLEDState) = 0;
-
-    /*
-     * Text content of the focused node has changed
-     * aStart is the starting offset of the change
-     * aOldEnd is the ending offset of the change
-     * aNewEnd is the caret offset after the change
-     */
-    NS_IMETHOD NotifyIMEOfTextChange(uint32_t aStart,
-                                     uint32_t aOldEnd,
-                                     uint32_t aNewEnd) = 0;
 
     /*
      * Retrieves preference for IME updates
