@@ -1,0 +1,38 @@
+/* -*- Mode: C++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 8 -*- */
+/* vim: set sw=4 ts=8 et tw=80 ft=cpp : */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBrowser;
+
+using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
+
+namespace mozilla {
+namespace dom {
+
+struct InputFiles
+{
+  nsString[] files;
+};
+
+union MaybeInputFiles
+{
+  InputFiles;
+  void_t;
+};
+
+protocol PFilePicker
+{
+  manager PBrowser;
+
+parent:
+    Open(int16_t selectedType, bool addToRecentDocs, nsString defaultFile,
+         nsString defaultExtension, nsString[] filters, nsString[] filterNames);
+
+child:
+    __delete__(MaybeInputFiles files, int16_t result);
+};
+
+} // namespace dom
+} // namespace mozilla
