@@ -350,7 +350,7 @@ MobileMessageManager::Delete(JS::Handle<JS::Value> aParam, JSContext* aCx,
     // Int32[], SmsMessage[], or MmsMessage[]
     JS::Rooted<JSObject*> ids(aCx, &aParam.toObject());
 
-    JS_ALWAYS_TRUE(JS_GetArrayLength(aCx, ids, &size));
+    MOZ_ALWAYS_TRUE(JS_GetArrayLength(aCx, ids, &size));
     nsAutoArrayPtr<int32_t> idAutoArray(new int32_t[size]);
 
     JS::Rooted<JS::Value> idJsValue(aCx);
