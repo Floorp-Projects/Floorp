@@ -4,32 +4,35 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-__all__ = ['CLI',
-           'cli',
-           'package_metadata',
-           'LocalRunner',
-           'local_runners',
-           'FirefoxRunner',
-           'MetroFirefoxRunner',
-           'ThunderbirdRunner']
-
+import ConfigParser
 import mozinfo
 import optparse
 import os
 import platform
 import subprocess
 import sys
-import ConfigParser
-
-from utils import get_metadata_from_egg
-from utils import findInPath
-from mozprofile import Profile, FirefoxProfile, MetroFirefoxProfile, ThunderbirdProfile, MozProfileCLI
-from runner import Runner
 
 if mozinfo.isMac:
     from plistlib import readPlist
 
+from mozprofile import Profile, FirefoxProfile, MetroFirefoxProfile, ThunderbirdProfile, MozProfileCLI
+
+from .base import Runner
+from .utils import findInPath, get_metadata_from_egg
+
+
+__all__ = ['CLI',
+           'cli',
+           'LocalRunner',
+           'local_runners',
+           'package_metadata',
+           'FirefoxRunner',
+           'MetroFirefoxRunner',
+           'ThunderbirdRunner']
+
+
 package_metadata = get_metadata_from_egg('mozrunner')
+
 
 # Map of debugging programs to information about them
 # from http://mxr.mozilla.org/mozilla-central/source/build/automationutils.py#59
@@ -39,14 +42,15 @@ debuggers = {'gdb': {'interactive': True,
                           'args': ['--leak-check=full']}
              }
 
-def debugger_arguments(debugger, arguments=None, interactive=None):
-    """
-    finds debugger arguments from debugger given and defaults
-    * debugger : debugger name or path to debugger
-    * arguments : arguments to the debugger, or None to use defaults
-    * interactive : whether the debugger should be run in interactive mode, or None to use default
-    """
 
+def debugger_arguments(debugger, arguments=None, interactive=None):
+    """Finds debugger arguments from debugger given and defaults
+
+    :param debugger: name or path to debugger
+    :param arguments: arguments for the debugger, or None to use defaults
+    :param interactive: whether the debugger should run in interactive mode
+
+    """
     # find debugger executable if not a file
     executable = debugger
     if not os.path.exists(executable):
@@ -66,8 +70,9 @@ def debugger_arguments(debugger, arguments=None, interactive=None):
         interactive = debuggers[debugger].get('interactive', False)
     return ([executable] + arguments, interactive)
 
+
 class LocalRunner(Runner):
-    """Handles all running operations. Finds bins, runs and kills the process."""
+    """Handles all running operations. Finds bins, runs and kills the process"""
 
     profile_class = Profile # profile class to use by default
 
@@ -81,8 +86,8 @@ class LocalRunner(Runner):
     def __init__(self, profile, binary, cmdargs=None, env=None,
                  kp_kwargs=None, clean_profile=None, process_class=None, **kwargs):
 
-        super(LocalRunner, self).__init__(profile, clean_profile=clean_profile, kp_kwargs=kp_kwargs,
-                                          process_class=process_class, env=env, **kwargs)
+        Runner.__init__(self, profile, clean_profile=clean_profile, kp_kwargs=kp_kwargs,
+                        process_class=process_class, env=env, **kwargs)
 
         # find the binary
         self.binary = binary
@@ -134,15 +139,23 @@ class LocalRunner(Runner):
 
     @property
     def command(self):
-        """Returns the command list to run."""
+        """Returns the command list to run"""
         commands = [self.binary, '-profile', self.profile.profile]
+
         # Bug 775416 - Ensure that binary options are passed in first
         commands[1:1] = self.cmdargs
+
+        # If running on OS X 10.5 or older, wrap |cmd| so that it will
+        # be executed as an i386 binary, in case it's a 32-bit/64-bit universal
+        # binary.
+        if mozinfo.isMac and hasattr(platform, 'mac_ver') and \
+                platform.mac_ver()[0][:4] < '10.6':
+            commands = ["arch", "-arch", "i386"] + commands
+
         return commands
 
     def get_repositoryInfo(self):
-        """Read repository information from application.ini and platform.ini."""
-
+        """Read repository information from application.ini and platform.ini"""
         config = ConfigParser.RawConfigParser()
         dirname = os.path.dirname(self.binary)
         repository = { }
@@ -160,51 +173,6 @@ class LocalRunner(Runner):
         return repository
 
 
-    def start(self, debug_args=None, interactive=False, timeout=None, outputTimeout=None):
-        """
-        Run self.command in the proper environment.
-        - debug_args: arguments for the debugger
-        - interactive: uses subprocess.Popen directly
-        - read_output: sends program output to stdout [default=False]
-        - timeout: see process_handler.waitForFinish
-        - outputTimeout: see process_handler.waitForFinish
-        """
-
-        # ensure you are stopped
-        self.stop()
-
-        # ensure the profile exists
-        if not self.profile.exists():
-            self.profile.reset()
-            assert self.profile.exists(), "%s : failure to reset profile" % self.__class__.__name__
-
-        cmd = self._wrap_command(self.command)
-
-        # attach a debugger, if specified
-        if debug_args:
-            cmd = list(debug_args) + cmd
-
-        if interactive:
-            self.process_handler = subprocess.Popen(cmd, env=self.env)
-            # TODO: other arguments
-        else:
-            # this run uses the managed processhandler
-            self.process_handler = self.process_class(cmd, env=self.env, **self.kp_kwargs)
-            self.process_handler.run(timeout, outputTimeout)
-
-
-    def _wrap_command(self, cmd):
-        """
-        If running on OS X 10.5 or older, wrap |cmd| so that it will
-        be executed as an i386 binary, in case it's a 32-bit/64-bit universal
-        binary.
-        """
-        if mozinfo.isMac and hasattr(platform, 'mac_ver') and \
-                               platform.mac_ver()[0][:4] < '10.6':
-            return ["arch", "-arch", "i386"] + cmd
-        return cmd
-
-
 class FirefoxRunner(LocalRunner):
     """Specialized LocalRunner subclass for running Firefox."""
 
@@ -212,13 +180,13 @@ class FirefoxRunner(LocalRunner):
 
     def __init__(self, profile, binary=None, **kwargs):
 
-        # take the binary from BROWSER_PATH environment variable
+        # if no binary given take it from the BROWSER_PATH environment variable
         binary = binary or os.environ.get('BROWSER_PATH')
         LocalRunner.__init__(self, profile, binary, **kwargs)
 
 
 class MetroFirefoxRunner(LocalRunner):
-    """Specialized LocalRunner subclass for running Firefox.Metro"""
+    """Specialized LocalRunner subclass for running Firefox Metro"""
 
     profile_class = MetroFirefoxProfile
 
@@ -230,7 +198,7 @@ class MetroFirefoxRunner(LocalRunner):
 
     def __init__(self, profile, binary=None, **kwargs):
 
-        # take the binary from BROWSER_PATH environment variable
+        # if no binary given take it from the BROWSER_PATH environment variable
         binary = binary or os.environ.get('BROWSER_PATH')
         LocalRunner.__init__(self, profile, binary, **kwargs)
 
@@ -252,21 +220,18 @@ class ThunderbirdRunner(LocalRunner):
     """Specialized LocalRunner subclass for running Thunderbird"""
     profile_class = ThunderbirdProfile
 
+
 local_runners = {'firefox': FirefoxRunner,
                  'metrofirefox' : MetroFirefoxRunner,
                  'thunderbird': ThunderbirdRunner}
 
+
 class CLI(MozProfileCLI):
-    """Command line interface."""
+    """Command line interface"""
 
     module = "mozrunner"
 
     def __init__(self, args=sys.argv[1:]):
-        """
-        Setup command line parser and parse arguments
-        - args : command line arguments
-        """
-
         self.metadata = getattr(sys.modules[self.module],
                                 'package_metadata',
                                 {})
@@ -358,9 +323,11 @@ class CLI(MozProfileCLI):
         runner.cleanup()
 
     def debugger_arguments(self):
-        """
+        """Get the debugger arguments
+
         returns a 2-tuple of debugger arguments:
-        (debugger_arguments, interactive)
+            (debugger_arguments, interactive)
+
         """
         debug_args = self.options.debugger_args
         if debug_args is not None:
@@ -371,13 +338,16 @@ class CLI(MozProfileCLI):
         return debug_args, interactive
 
     def start(self, runner):
-        """Starts the runner and waits for Firefox to exit or Keyboard Interrupt.
-        Shoule be overwritten to provide custom running of the runner instance."""
+        """Starts the runner and waits for the application to exit
 
+        It can also happen via a keyboard interrupt. It should be
+        overwritten to provide custom running of the runner instance.
+
+        """
         # attach a debugger if specified
         debug_args, interactive = self.debugger_arguments()
         runner.start(debug_args=debug_args, interactive=interactive)
-        print 'Starting:', ' '.join(runner.command)
+        print 'Starting: ' + ' '.join(runner.command)
         try:
             runner.wait()
         except KeyboardInterrupt:
@@ -386,6 +356,7 @@ class CLI(MozProfileCLI):
 
 def cli(args=sys.argv[1:]):
     CLI(args).run()
+
 
 if __name__ == '__main__':
     cli()
