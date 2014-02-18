@@ -42,22 +42,9 @@ NS_IMETHODIMP nsColorPicker::Init(nsIDOMWindow *parent,
                                   const nsAString& title,
                                   const nsAString& initialColor)
 {
-  // Input color string should be 7 length (i.e. a string representing a valid
-  // simple color)
-  if (initialColor.Length() != 7) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  const nsAString& withoutHash  = StringTail(initialColor, 6);
-  nscolor color;
-  if (!NS_HexToRGB(withoutHash, &color)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  mDefaultColor = convertToGdkColor(color);
-
   mParentWidget = mozilla::widget::WidgetUtils::DOMWindowToWidget(parent);
-  mTitle.Assign(title);
+  mTitle = title;
+  mInitialColor = initialColor;
 
   return NS_OK;
 }
@@ -65,6 +52,21 @@ NS_IMETHODIMP nsColorPicker::Init(nsIDOMWindow *parent,
 /* void open (in nsIColorPickerShownCallback aColorPickerShownCallback); */
 NS_IMETHODIMP nsColorPicker::Open(nsIColorPickerShownCallback *aColorPickerShownCallback)
 {
+
+  // Input color string should be 7 length (i.e. a string representing a valid
+  // simple color)
+  if (mInitialColor.Length() != 7) {
+    return NS_ERROR_FAILURE;
+  }
+
+  const nsAString& withoutHash  = StringTail(mInitialColor, 6);
+  nscolor color;
+  if (!NS_HexToRGB(withoutHash, &color)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  GdkColor color_gdk = convertToGdkColor(color);
+
   if (mCallback) {
     // It means Open has already been called: this is not allowed
     NS_WARNING("mCallback is already set. Open called twice?");
@@ -84,7 +86,7 @@ NS_IMETHODIMP nsColorPicker::Open(nsIColorPickerShownCallback *aColorPickerShown
   }
 
   gtk_color_selection_set_current_color(WidgetGetColorSelection(color_chooser),
-                                        &mDefaultColor);
+                                        &color_gdk);
 
   NS_ADDREF_THIS();
   g_signal_connect(WidgetGetColorSelection(color_chooser), "color-changed",
@@ -138,6 +140,7 @@ nsColorPicker::Done(GtkWidget* color_chooser, gint response)
     case GTK_RESPONSE_CANCEL:
     case GTK_RESPONSE_CLOSE:
     case GTK_RESPONSE_DELETE_EVENT:
+      mColor = mInitialColor;
       break;
     default:
       NS_WARNING("Unexpected response");
