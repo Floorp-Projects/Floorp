@@ -103,7 +103,11 @@ def dependentlibs(lib, libpaths, func):
             deppath = os.path.join(dir, dep)
             if os.path.exists(deppath):
                 deps.extend([d for d in dependentlibs(deppath, libpaths, func) if not d in deps])
-                deps.append(dep)
+                # Black list the ICU data DLL because preloading it at startup
+                # leads to startup performance problems because of its excessive
+                # size (around 10MB).
+                if not dep.startswith("icudt"):
+                    deps.append(dep)
                 break
 
     return deps
