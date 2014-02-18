@@ -44,6 +44,13 @@ var ContextMenus = {
 
   init: function() {
     document.addEventListener("contextmenu", this, false);
+    document.getElementById("contextmenu-open").addEventListener("click", this.open.bind(this), false);
+    document.getElementById("contextmenu-retry").addEventListener("click", this.retry.bind(this), false);
+    document.getElementById("contextmenu-remove").addEventListener("click", this.remove.bind(this), false);
+    document.getElementById("contextmenu-pause").addEventListener("click", this.pause.bind(this), false);
+    document.getElementById("contextmenu-resume").addEventListener("click", this.resume.bind(this), false);
+    document.getElementById("contextmenu-cancel").addEventListener("click", this.cancel.bind(this), false);
+    document.getElementById("contextmenu-removeall").addEventListener("click", this.removeAll.bind(this), false);
     this.items = [
       { name: "open", states: [Downloads._dlmgr.DOWNLOAD_FINISHED] },
       { name: "retry", states: [Downloads._dlmgr.DOWNLOAD_FAILED, Downloads._dlmgr.DOWNLOAD_CANCELED] },
@@ -599,3 +606,8 @@ let Downloads = {
     return this;
   }
 }
+
+document.addEventListener("DOMContentLoaded", Downloads.init.bind(Downloads), true);
+window.addEventListener("unload", Downloads.uninit.bind(Downloads), false);
+
+

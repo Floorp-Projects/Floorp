@@ -66,7 +66,7 @@ CrashReporterParent::CrashReporterParent()
 #ifdef MOZ_CRASHREPORTER
       mNotes(4),
 #endif
-      mStartTime(time(nullptr))
+      mStartTime(::time(nullptr))
     , mInitialized(false)
 {
     MOZ_COUNT_CTOR(CrashReporterParent);

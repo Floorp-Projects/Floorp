@@ -337,6 +337,14 @@ strong {
   display: inline;
 }
 
+.project-type {
+  display: none;
+  margin-left: 10px;
+}
+[type="hosted"] > .project-type.hosted,
+[type="packaged"] > .project-type.packaged {
+  display: inline;
+}
 
 /********* PROJECT BUTTONS ***********/
 
