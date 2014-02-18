@@ -65,29 +65,7 @@ endif
 endif
 
 
-ifdef USE_MMX
-CSRCS += pixman-mmx.c
-DEFINES += -DUSE_MMX
-endif
-
-ifdef USE_SSE2
-CSRCS += pixman-sse2.c
-DEFINES += -DUSE_SSE -DUSE_SSE2
-endif
-
-ifdef USE_VMX
-CSRCS += pixman-vmx.c
-DEFINES += -DUSE_VMX
-endif
-
-ifdef USE_ARM_SIMD_GCC
-CSRCS += pixman-arm-simd.c
-DEFINES += -DUSE_ARM_SIMD
-endif
-
 ifdef USE_ARM_NEON_GCC
-CSRCS += pixman-arm-neon.c
-DEFINES += -DUSE_ARM_NEON
 ARM_NEON_CFLAGS = -mfpu=neon
 endif
 
