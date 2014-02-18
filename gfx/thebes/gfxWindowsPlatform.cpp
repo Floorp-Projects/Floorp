@@ -173,46 +173,6 @@ NS_IMPL_ISUPPORTS1(GfxD2DVramReporter, nsIMemoryReporter)
 #define GFX_CLEARTYPE_PARAMS_STRUCTURE "gfx.font_rendering.cleartype_params.pixel_structure"
 #define GFX_CLEARTYPE_PARAMS_MODE      "gfx.font_rendering.cleartype_params.rendering_mode"
 
-#ifdef CAIRO_HAS_DWRITE_FONT
-// DirectWrite is not available on all platforms, we need to use the function
-// pointer.
-typedef HRESULT (WINAPI*DWriteCreateFactoryFunc)(
-  DWRITE_FACTORY_TYPE factoryType,
-  REFIID iid,
-  IUnknown **factory
-);
-#endif
-
-#ifdef CAIRO_HAS_D2D_SURFACE
-typedef HRESULT (WINAPI*D3D10CreateDevice1Func)(
-  IDXGIAdapter *pAdapter,
-  D3D10_DRIVER_TYPE DriverType,
-  HMODULE Software,
-  UINT Flags,
-  D3D10_FEATURE_LEVEL1 HardwareLevel,
-  UINT SDKVersion,
-  ID3D10Device1 **ppDevice
-);
-#endif
-
-typedef HRESULT(WINAPI*CreateDXGIFactory1Func)(
-  REFIID riid,
-  void **ppFactory
-);
-
-typedef HRESULT (WINAPI*D3D11CreateDeviceFunc)(
-  IDXGIAdapter *pAdapter,
-  D3D_DRIVER_TYPE DriverType,
-  HMODULE Software,
-  UINT Flags,
-  D3D_FEATURE_LEVEL *pFeatureLevels,
-  UINT FeatureLevels,
-  UINT SDKVersion,
-  ID3D11Device **ppDevice,
-  D3D_FEATURE_LEVEL *pFeatureLevel,
-  ID3D11DeviceContext *ppImmediateContext
-);
-
 class GPUAdapterReporter : public nsIMemoryReporter
 {
     // Callers must Release the DXGIAdapter after use or risk mem-leak
@@ -466,7 +426,7 @@ gfxWindowsPlatform::UpdateRenderMode()
     // we're going to use D2D.
     if (!mDWriteFactory && (mUseDirectWrite && isVistaOrHigher)) {
         mozilla::ScopedGfxFeatureReporter reporter("DWrite");
-        DWriteCreateFactoryFunc createDWriteFactory = (DWriteCreateFactoryFunc)
+        decltype(DWriteCreateFactory)* createDWriteFactory = (decltype(DWriteCreateFactory)*)
             GetProcAddress(LoadLibraryW(L"dwrite.dll"), "DWriteCreateFactory");
 
         if (createDWriteFactory) {
@@ -518,8 +478,8 @@ gfxWindowsPlatform::CreateDevice(nsRefPtr<IDXGIAdapter1> &adapter1,
   nsModuleHandle d3d10module(LoadLibrarySystem32(L"d3d10_1.dll"));
   if (!d3d10module)
     return E_FAIL;
-  D3D10CreateDevice1Func createD3DDevice =
-    (D3D10CreateDevice1Func)GetProcAddress(d3d10module, "D3D10CreateDevice1");
+  decltype(D3D10CreateDevice1)* createD3DDevice =
+    (decltype(D3D10CreateDevice1)*) GetProcAddress(d3d10module, "D3D10CreateDevice1");
   if (!createD3DDevice)
     return E_FAIL;
 
@@ -1460,7 +1420,7 @@ gfxWindowsPlatform::GetD3D11Device()
   mD3D11DeviceInitialized = true;
 
   nsModuleHandle d3d11Module(LoadLibrarySystem32(L"d3d11.dll"));
-  D3D11CreateDeviceFunc d3d11CreateDevice = (D3D11CreateDeviceFunc)
+  decltype(D3D11CreateDevice)* d3d11CreateDevice = (decltype(D3D11CreateDevice)*)
     GetProcAddress(d3d11Module, "D3D11CreateDevice");
 
   if (!d3d11CreateDevice) {
@@ -1528,7 +1488,7 @@ gfxWindowsPlatform::GetDXGIAdapter()
   }
 
   nsModuleHandle dxgiModule(LoadLibrarySystem32(L"dxgi.dll"));
-  CreateDXGIFactory1Func createDXGIFactory1 = (CreateDXGIFactory1Func)
+  decltype(CreateDXGIFactory1)* createDXGIFactory1 = (decltype(CreateDXGIFactory1)*)
     GetProcAddress(dxgiModule, "CreateDXGIFactory1");
 
   // Try to use a DXGI 1.1 adapter in order to share resources

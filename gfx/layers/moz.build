@@ -158,13 +158,17 @@ EXPORTS.mozilla.layers += [
 if CONFIG['MOZ_X11']:
     EXPORTS.mozilla.layers += [
         'basic/TextureClientX11.h',
-        'basic/TextureHostX11.h',
+        'basic/X11TextureSourceBasic.h',
+        'composite/X11TextureHost.h',
         'ipc/ShadowLayerUtilsX11.h',
+        'opengl/X11TextureSourceOGL.h',
     ]
     SOURCES += [
         'basic/TextureClientX11.cpp',
-        'basic/TextureHostX11.cpp',
-        'ipc/ShadowLayerUtilsX11.cpp'
+        'basic/X11TextureSourceBasic.cpp',
+        'composite/X11TextureHost.cpp',
+        'ipc/ShadowLayerUtilsX11.cpp',
+        'opengl/X11TextureSourceOGL.cpp',
     ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
