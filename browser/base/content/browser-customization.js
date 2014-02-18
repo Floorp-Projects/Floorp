@@ -41,7 +41,6 @@ let CustomizationHandler = {
     CombinedStopReload.uninit();
     CombinedBackForward.uninit();
     PlacesToolbarHelper.customizeStart();
-    BookmarkingUI.customizeStart();
     DownloadsButton.customizeStart();
 
     // The additional padding on the sides of the browser
@@ -55,7 +54,6 @@ let CustomizationHandler = {
 
   _customizationChange: function() {
     gHomeButton.updatePersonalToolbarStyle();
-    BookmarkingUI.customizeChange();
     PlacesToolbarHelper.customizeChange();
   },
 
@@ -84,7 +82,6 @@ let CustomizationHandler = {
     }
 
     PlacesToolbarHelper.customizeDone();
-    BookmarkingUI.customizeDone();
     DownloadsButton.customizeDone();
 
     // The url bar splitter state is dependent on whether stop/reload

@@ -1153,22 +1153,52 @@ let BookmarkingUI = {
       this.button._placesView.uninit();
   },
 
-  customizeStart: function BUI_customizeStart() {
-    this._uninitView();
+  onCustomizeStart: function BUI_customizeStart(aWindow) {
+    if (aWindow == window) {
+      this._uninitView();
+      this._isCustomizing = true;
+    }
   },
 
-  customizeChange: function BUI_customizeChange() {
+  onWidgetAdded: function BUI_widgetAdded(aWidgetId) {
+    if (aWidgetId != "bookmarks-menu-button") {
+      return;
+    }
+
     let usedToUpdateStarState = this._shouldUpdateStarState();
     this._updateCustomizationState();
-    if (usedToUpdateStarState != this._shouldUpdateStarState()) {
+    if (!usedToUpdateStarState && this._shouldUpdateStarState()) {
       this.updateStarState();
+    } else if (usedToUpdateStarState && !this._shouldUpdateStarState()) {
+      this._updateStar();
+    }
+    // If we're moved outside of customize mode, we need to uninit
+    // our view so it gets reconstructed.
+    if (!this._isCustomizing) {
+      this._uninitView();
     }
     this._updateToolbarStyle();
   },
 
-  customizeDone: function BUI_customizeDone() {
-    this.onToolbarVisibilityChange();
+  onWidgetRemoved: function BUI_widgetRemoved(aWidgetId) {
+    if (aWidgetId != "bookmarks-menu-button") {
+      return;
+    }
+    // If we're moved outside of customize mode, we need to uninit
+    // our view so it gets reconstructed.
+    if (!this._isCustomizing) {
+      this._uninitView();
+    }
+    this._updateCustomizationState();
     this._updateToolbarStyle();
+  },
+
+  onCustomizeEnd: function BUI_customizeEnd(aWindow) {
+    if (aWindow == window) {
+      this._isCustomizing = false;
+      this.onToolbarVisibilityChange();
+      this._updateToolbarStyle();
+    }
   },
 
   init: function() {
@@ -1194,11 +1224,14 @@ let BookmarkingUI = {
     }
   },
 
-  updateStarState: function BUI_updateStarState() {
+  onLocationChange: function BUI_onLocationChange() {
     if (this._uri && gBrowser.currentURI.equals(this._uri)) {
       return;
     }
+    this.updateStarState();
+  },
 
+  updateStarState: function BUI_updateStarState() {
     // Reset tracked values.
     this._uri = gBrowser.currentURI;
     this._itemIds = [];
@@ -1487,10 +1520,9 @@ let BookmarkingUI = {
     if (aNode.id != "bookmarks-menu-button" || win != window)
       return;
 
-    // If the button hasn't been in the overflow panel before, we may ignore
-    // this event.
-    if (!this._starButtonLabel)
-      return;
+    // The view gets broken by being removed and reinserted. Uninit
+    // here so popupshowing will generate a new one:
+    this._uninitView();
 
     if (aNode.getAttribute("label") != this._starButtonLabel)
       aNode.setAttribute("label", this._starButtonLabel);
