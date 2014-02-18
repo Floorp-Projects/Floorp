@@ -397,4 +397,7 @@
   <string name="actionbar_menu">&actionbar_menu;</string>
   <string name="actionbar_done">&actionbar_done;</string>
 
+  <!-- Miscellaneous -->
+  <string name="ellipsis">&ellipsis;</string>
+
 </resources>
