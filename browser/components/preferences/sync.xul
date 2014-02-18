@@ -188,7 +188,7 @@
         <vbox id="noFxaAccount">
           <description>&welcome.description;</description>
           <label class="text-link"
-                 onclick="gSyncPane.signIn(); return false;"
+                 onclick="gSyncPane.signUp(); return false;"
                  value="&welcome.createAccount.label;"/>
           <label class="text-link"
                  onclick="gSyncPane.signIn(); return false;"
@@ -207,7 +207,7 @@
             <deck id="fxaLoginStatus">
 
               <!-- logged in and verified and all is good -->
-              <hbox flex="1">
+              <hbox>
                 <label id="fxaEmailAddress1"/>
                 <label class="text-link"
                        onclick="gSyncPane.manageFirefoxAccount();"
