@@ -1,0 +1,9 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Additional debugging info is exposed by setting the MOZ_EM_DEBUG
+# environment variable when building.
+ifneq (,$(MOZ_EM_DEBUG))
+DEFINES += -DMOZ_EM_DEBUG=1
+endif
