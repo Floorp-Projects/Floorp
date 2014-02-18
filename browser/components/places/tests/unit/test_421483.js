@@ -4,91 +4,78 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// Get bookmarks service
-try {
-  var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-              getService(Ci.nsINavBookmarksService);
-} catch(ex) {
-  do_throw("Could not get Bookmarks service\n");
-}
-
-// Get annotation service
-try {
-  var annosvc = Cc["@mozilla.org/browser/annotation-service;1"].
-                getService(Ci.nsIAnnotationService);
-} catch(ex) {
-  do_throw("Could not get Annotation service\n");
-}
-
-// Get browser glue
-try {
-  var gluesvc = Cc["@mozilla.org/browser/browserglue;1"].
-                getService(Ci.nsIBrowserGlue).
-                QueryInterface(Ci.nsIObserver);
-  // Avoid default bookmarks import.
-  gluesvc.observe(null, "initial-migration-will-import-default-bookmarks", "");
-//  gluesvc.observe(null, "initial-migration-did-import-default-bookmarks", "");
-} catch(ex) {
-  do_throw("Could not get BrowserGlue service\n");
-}
-
-// Get pref service
-try {
-  var pref =  Cc["@mozilla.org/preferences-service;1"].
-              getService(Ci.nsIPrefBranch);
-} catch(ex) {
-  do_throw("Could not get Preferences service\n");
-}
 
 const SMART_BOOKMARKS_ANNO = "Places/SmartBookmark";
 const SMART_BOOKMARKS_PREF = "browser.places.smartBookmarksVersion";
 
-// main
+let gluesvc = Cc["@mozilla.org/browser/browserglue;1"].
+                getService(Ci.nsIBrowserGlue).
+                QueryInterface(Ci.nsIObserver);
+// Avoid default bookmarks import.
+gluesvc.observe(null, "initial-migration-will-import-default-bookmarks", "");
+
 function run_test() {
-  // TEST 1: smart bookmarks disabled
-  pref.setIntPref("browser.places.smartBookmarksVersion", -1);
-  gluesvc.ensurePlacesDefaultQueriesInitialized();
-  var smartBookmarkItemIds = annosvc.getItemsWithAnnotation(SMART_BOOKMARKS_ANNO);
-  do_check_eq(smartBookmarkItemIds.length, 0);
-  // check that pref has not been bumped up
-  do_check_eq(pref.getIntPref("browser.places.smartBookmarksVersion"), -1);
-
-  // TEST 2: create smart bookmarks
-  pref.setIntPref("browser.places.smartBookmarksVersion", 0);
-  gluesvc.ensurePlacesDefaultQueriesInitialized();
-  smartBookmarkItemIds = annosvc.getItemsWithAnnotation(SMART_BOOKMARKS_ANNO);
-  do_check_neq(smartBookmarkItemIds.length, 0);
-  // check that pref has been bumped up
-  do_check_true(pref.getIntPref("browser.places.smartBookmarksVersion") > 0);
-
-  var smartBookmarksCount = smartBookmarkItemIds.length;
-
-  // TEST 3: smart bookmarks restore
-  // remove one smart bookmark and restore
-  bmsvc.removeItem(smartBookmarkItemIds[0]);
-  pref.setIntPref("browser.places.smartBookmarksVersion", 0);
-  gluesvc.ensurePlacesDefaultQueriesInitialized();
-  smartBookmarkItemIds = annosvc.getItemsWithAnnotation(SMART_BOOKMARKS_ANNO);
-  do_check_eq(smartBookmarkItemIds.length, smartBookmarksCount);
-  // check that pref has been bumped up
-  do_check_true(pref.getIntPref("browser.places.smartBookmarksVersion") > 0);
-
-  // TEST 4: move a smart bookmark, change its title, then restore
-  // smart bookmark should be restored in place
-  var parent = bmsvc.getFolderIdForItem(smartBookmarkItemIds[0]);
-  var oldTitle = bmsvc.getItemTitle(smartBookmarkItemIds[0]);
-  // create a subfolder and move inside it
-  var newParent = bmsvc.createFolder(parent, "test", bmsvc.DEFAULT_INDEX);
-  bmsvc.moveItem(smartBookmarkItemIds[0], newParent, bmsvc.DEFAULT_INDEX);
-  // change title
-  bmsvc.setItemTitle(smartBookmarkItemIds[0], "new title");
-  // restore
-  pref.setIntPref("browser.places.smartBookmarksVersion", 0);
-  gluesvc.ensurePlacesDefaultQueriesInitialized();
-  smartBookmarkItemIds = annosvc.getItemsWithAnnotation(SMART_BOOKMARKS_ANNO);
-  do_check_eq(smartBookmarkItemIds.length, smartBookmarksCount);
-  do_check_eq(bmsvc.getFolderIdForItem(smartBookmarkItemIds[0]), newParent);
-  do_check_eq(bmsvc.getItemTitle(smartBookmarkItemIds[0]), oldTitle);
-  // check that pref has been bumped up
-  do_check_true(pref.getIntPref("browser.places.smartBookmarksVersion") > 0);
+  run_next_test();
 }
+
+add_task(function smart_bookmarks_disabled() {
+  Services.prefs.setIntPref("browser.places.smartBookmarksVersion", -1);
+  gluesvc.ensurePlacesDefaultQueriesInitialized();
+  let smartBookmarkItemIds =
+    PlacesUtils.annotations.getItemsWithAnnotation(SMART_BOOKMARKS_ANNO);
+  do_check_eq(smartBookmarkItemIds.length, 0);
+  do_log_info("check that pref has not been bumped up");
+  do_check_eq(Services.prefs.getIntPref("browser.places.smartBookmarksVersion"), -1);
+});
+
+add_task(function create_smart_bookmarks() {
+  Services.prefs.setIntPref("browser.places.smartBookmarksVersion", 0);
+  gluesvc.ensurePlacesDefaultQueriesInitialized();
+  let smartBookmarkItemIds =
+    PlacesUtils.annotations.getItemsWithAnnotation(SMART_BOOKMARKS_ANNO);
+  do_check_neq(smartBookmarkItemIds.length, 0);
+  do_log_info("check that pref has been bumped up");
+  do_check_true(Services.prefs.getIntPref("browser.places.smartBookmarksVersion") > 0);
+});
+
+add_task(function remove_smart_bookmark_and_restore() {
+  let smartBookmarkItemIds =
+    PlacesUtils.annotations.getItemsWithAnnotation(SMART_BOOKMARKS_ANNO);
+  let smartBookmarksCount = smartBookmarkItemIds.length;
+  do_log_info("remove one smart bookmark and restore");
+  PlacesUtils.bookmarks.removeItem(smartBookmarkItemIds[0]);
+  Services.prefs.setIntPref("browser.places.smartBookmarksVersion", 0);
+  gluesvc.ensurePlacesDefaultQueriesInitialized();
+  let smartBookmarkItemIds =
+    PlacesUtils.annotations.getItemsWithAnnotation(SMART_BOOKMARKS_ANNO);
+  do_check_eq(smartBookmarkItemIds.length, smartBookmarksCount);
+  do_log_info("check that pref has been bumped up");
+  do_check_true(Services.prefs.getIntPref("browser.places.smartBookmarksVersion") > 0);
+});
+
+add_task(function move_smart_bookmark_rename_and_restore() {
+  let smartBookmarkItemIds =
+    PlacesUtils.annotations.getItemsWithAnnotation(SMART_BOOKMARKS_ANNO);
+  let smartBookmarksCount = smartBookmarkItemIds.length;
+  do_log_info("smart bookmark should be restored in place");
+  let parent = PlacesUtils.bookmarks.getFolderIdForItem(smartBookmarkItemIds[0]);
+  let oldTitle = PlacesUtils.bookmarks.getItemTitle(smartBookmarkItemIds[0]);
+  // create a subfolder and move inside it
+  let newParent =
+    PlacesUtils.bookmarks.createFolder(parent, "test",
+                                       PlacesUtils.bookmarks.DEFAULT_INDEX);
+  PlacesUtils.bookmarks.moveItem(smartBookmarkItemIds[0], newParent,
+                                 PlacesUtils.bookmarks.DEFAULT_INDEX);
+  // change title
+  PlacesUtils.bookmarks.setItemTitle(smartBookmarkItemIds[0], "new title");
+  // restore
+  Services.prefs.setIntPref("browser.places.smartBookmarksVersion", 0);
+  gluesvc.ensurePlacesDefaultQueriesInitialized();
+  smartBookmarkItemIds =
+    PlacesUtils.annotations.getItemsWithAnnotation(SMART_BOOKMARKS_ANNO);
+  do_check_eq(smartBookmarkItemIds.length, smartBookmarksCount);
+  do_check_eq(PlacesUtils.bookmarks.getFolderIdForItem(smartBookmarkItemIds[0]), newParent);
+  do_check_eq(PlacesUtils.bookmarks.getItemTitle(smartBookmarkItemIds[0]), oldTitle);
+  do_log_info("check that pref has been bumped up");
+  do_check_true(Services.prefs.getIntPref("browser.places.smartBookmarksVersion") > 0);
+});

@@ -4,63 +4,130 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const NUMBER_OF_BACKUPS = 1;
+// Since PlacesBackups.getbackupFiles() is a lazy getter, these tests must
+// run in the given order, to avoid making it out-of-sync.
+
+add_task(function check_max_backups_is_respected() {
+  // Get bookmarkBackups directory
+  let backupFolder = yield PlacesBackups.getBackupFolder();
+
+  // Create an html dummy backup in the past.
+  let htmlPath = OS.Path.join(backupFolder, "bookmarks-2008-01-01.html");
+  let htmlFile = yield OS.File.open(htmlPath, { truncate: true });
+  htmlFile.close();
+  do_check_true(yield OS.File.exists(htmlPath));
+
+  // Create a json dummy backup in the past.
+  let jsonPath = OS.Path.join(backupFolder, "bookmarks-2008-01-31.json");
+  let jsonFile = yield OS.File.open(jsonPath, { truncate: true });
+  jsonFile.close();
+  do_check_true(yield OS.File.exists(jsonPath));
+
+  // Export bookmarks to JSON.
+  // Allow 2 backups, the older one should be removed.
+  yield PlacesBackups.create(2);
+  let backupFilename = PlacesBackups.getFilenameForDate();
+  let re = new RegExp("^" + backupFilename.replace(/\.json/, "") + "(_[0-9]+){0,1}\.json$");
+
+  let count = 0;
+  let lastBackupPath = null;
+  let iterator = new OS.File.DirectoryIterator(backupFolder);
+  try {
+    yield iterator.forEach(aEntry => {
+      count++;
+      if (aEntry.name.match(re))
+        lastBackupPath = aEntry.path;
+    });
+  } finally {
+    iterator.close();
+  }
+
+  do_check_eq(count, 2);
+  do_check_neq(lastBackupPath, null);
+  do_check_false(yield OS.File.exists(htmlPath));
+  do_check_true(yield OS.File.exists(jsonPath));
+});
+
+add_task(function check_max_backups_greater_than_backups() {
+  // Get bookmarkBackups directory
+  let backupFolder = yield PlacesBackups.getBackupFolder();
+
+  // Export bookmarks to JSON.
+  // Allow 3 backups, none should be removed.
+  yield PlacesBackups.create(3);
+  let backupFilename = PlacesBackups.getFilenameForDate();
+  let re = new RegExp("^" + backupFilename.replace(/\.json/, "") + "(_[0-9]+){0,1}\.json$");
+
+  let count = 0;
+  let lastBackupPath = null;
+  let iterator = new OS.File.DirectoryIterator(backupFolder);
+  try {
+    yield iterator.forEach(aEntry => {
+      count++;
+      if (aEntry.name.match(re))
+        lastBackupPath = aEntry.path;
+    });
+  } finally {
+    iterator.close();
+  }
+  do_check_eq(count, 2);
+  do_check_neq(lastBackupPath, null);
+});
+
+add_task(function check_max_backups_null() {
+  // Get bookmarkBackups directory
+  let backupFolder = yield PlacesBackups.getBackupFolder();
+
+  // Export bookmarks to JSON.
+  // Allow infinite backups, none should be removed, a new one is not created
+  // since one for today already exists.
+  yield PlacesBackups.create(null);
+  let backupFilename = PlacesBackups.getFilenameForDate();
+  let re = new RegExp("^" + backupFilename.replace(/\.json/, "") + "(_[0-9]+){0,1}\.json$");
+
+  let count = 0;
+  let lastBackupPath = null;
+  let iterator = new OS.File.DirectoryIterator(backupFolder);
+  try {
+    yield iterator.forEach(aEntry => {
+      count++;
+      if (aEntry.name.match(re))
+        lastBackupPath = aEntry.path;
+    });
+  } finally {
+    iterator.close();
+  }
+  do_check_eq(count, 2);
+  do_check_neq(lastBackupPath, null);
+});
+
+add_task(function check_max_backups_undefined() {
+  // Get bookmarkBackups directory
+  let backupFolder = yield PlacesBackups.getBackupFolder();
+
+  // Export bookmarks to JSON.
+  // Allow infinite backups, none should be removed, a new one is not created
+  // since one for today already exists.
+  yield PlacesBackups.create();
+  let backupFilename = PlacesBackups.getFilenameForDate();
+  let re = new RegExp("^" + backupFilename.replace(/\.json/, "") + "(_[0-9]+){0,1}\.json$");
+
+  let count = 0;
+  let lastBackupPath = null;
+  let iterator = new OS.File.DirectoryIterator(backupFolder);
+  try {
+    yield iterator.forEach(aEntry => {
+      count++;
+      if (aEntry.name.match(re))
+        lastBackupPath = aEntry.path;
+    });
+  } finally {
+    iterator.close();
+  }
+  do_check_eq(count, 2);
+  do_check_neq(lastBackupPath, null);
+});
 
 function run_test() {
-  do_test_pending();
-
-  Task.spawn(function() {
-    // Get bookmarkBackups directory
-    let backupFolder = yield PlacesBackups.getBackupFolder();
-    let bookmarksBackupDir = new FileUtils.File(backupFolder);
-
-    // Create an html dummy backup in the past
-    var htmlBackupFile = bookmarksBackupDir.clone();
-    htmlBackupFile.append("bookmarks-2008-01-01.html");
-    if (htmlBackupFile.exists())
-      htmlBackupFile.remove(false);
-    do_check_false(htmlBackupFile.exists());
-    htmlBackupFile.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, 0600);
-    do_check_true(htmlBackupFile.exists());
-
-    // Create a json dummy backup in the past
-    var jsonBackupFile = bookmarksBackupDir.clone();
-    jsonBackupFile.append("bookmarks-2008-01-31.json");
-    if (jsonBackupFile.exists())
-      jsonBackupFile.remove(false);
-    do_check_false(jsonBackupFile.exists());
-    jsonBackupFile.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, 0600);
-    do_check_true(jsonBackupFile.exists());
-
-    // Export bookmarks to JSON.
-    var backupFilename = PlacesBackups.getFilenameForDate();
-    var rx = new RegExp("^" + backupFilename.replace(/\.json/, "") + "(_[0-9]+){0,1}\.json$");
-    var files = bookmarksBackupDir.directoryEntries;
-    var entry;
-    while (files.hasMoreElements()) {
-      entry = files.getNext().QueryInterface(Ci.nsIFile);
-      if (entry.leafName.match(rx))
-        entry.remove(false);
-    }
-
-    yield PlacesBackups.create(NUMBER_OF_BACKUPS);
-    files = bookmarksBackupDir.directoryEntries;
-    while (files.hasMoreElements()) {
-      entry = files.getNext().QueryInterface(Ci.nsIFile);
-      if (entry.leafName.match(rx))
-        lastBackupFile = entry;
-    }
-    do_check_true(lastBackupFile.exists());
-
-    // Check that last backup has been retained
-    do_check_false(htmlBackupFile.exists());
-    do_check_false(jsonBackupFile.exists());
-    do_check_true(lastBackupFile.exists());
-
-    // cleanup
-    lastBackupFile.remove(false);
-    do_check_false(lastBackupFile.exists());
-
-    do_test_finished();
-  });
+  run_next_test();
 }
