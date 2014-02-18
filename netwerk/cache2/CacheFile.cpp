@@ -8,6 +8,7 @@
 #include "CacheFileChunk.h"
 #include "CacheFileInputStream.h"
 #include "CacheFileOutputStream.h"
+#include "CacheIndex.h"
 #include "nsThreadUtils.h"
 #include "mozilla/DebugOnly.h"
 #include <algorithm>
@@ -135,6 +136,12 @@ public:
     return NS_ERROR_UNEXPECTED;
   }
 
+  NS_IMETHOD OnFileRenamed(CacheFileHandle *aHandle, nsresult aResult)
+  {
+    MOZ_CRASH("DoomFileHelper::OnFileRenamed should not be called!");
+    return NS_ERROR_UNEXPECTED;
+  }
+
 private:
   virtual ~DoomFileHelper()
   {
@@ -226,8 +233,35 @@ CacheFile::Init(const nsACString &aKey,
       mReady = true;
       mDataSize = mMetadata->Offset();
     }
-    else
+    else {
       flags = CacheFileIOManager::CREATE;
+
+      if (!mKeyIsHash) {
+        // Have a look into index and change to CREATE_NEW when we are sure
+        // that the entry does not exist.
+        CacheIndex::EntryStatus status;
+        rv = CacheIndex::HasEntry(mKey, &status);
+        if (status == CacheIndex::DOES_NOT_EXIST) {
+          LOG(("CacheFile::Init() - Forcing CREATE_NEW flag since we don't have"
+               " this entry according to index"));
+          flags = CacheFileIOManager::CREATE_NEW;
+
+          // make sure we can use this entry immediately
+          mMetadata = new CacheFileMetadata(mKey);
+          mReady = true;
+          mDataSize = mMetadata->Offset();
+
+          // Notify callback now and don't store it in mListener, no further
+          // operation can change the result.
+          nsRefPtr<NotifyCacheFileListenerEvent> ev;
+          ev = new NotifyCacheFileListenerEvent(aCallback, NS_OK, true);
+          rv = NS_DispatchToCurrentThread(ev);
+          NS_ENSURE_SUCCESS(rv, rv);
+
+          aCallback = nullptr;
+        }
+      }
+    }
 
     if (aPriority)
       flags |= CacheFileIOManager::PRIORITY;
@@ -474,10 +508,12 @@ CacheFile::OnFileOpened(CacheFileHandle *aHandle, nsresult aResult)
       mHandle = aHandle;
 
       if (mMetadata) {
+        InitIndexEntry();
+
         // The entry was initialized as createNew, don't try to read metadata.
         mMetadata->SetHandle(mHandle);
 
-        // Write all cached chunks, otherwise thay may stay unwritten.
+        // Write all cached chunks, otherwise they may stay unwritten.
         mCachedChunks.Enumerate(&CacheFile::WriteAllCachedChunks, this);
 
         return NS_OK;
@@ -542,6 +578,8 @@ CacheFile::OnMetadataRead(nsresult aResult)
       isNew = true;
       mMetadata->MarkDirty();
     }
+
+    InitIndexEntry();
   }
 
   nsCOMPtr<CacheFileListener> listener;
@@ -606,6 +644,13 @@ nsresult
 CacheFile::OnEOFSet(CacheFileHandle *aHandle, nsresult aResult)
 {
   MOZ_CRASH("CacheFile::OnEOFSet should not be called!");
+  return NS_ERROR_UNEXPECTED;
+}
+
+nsresult
+CacheFile::OnFileRenamed(CacheFileHandle *aHandle, nsresult aResult)
+{
+  MOZ_CRASH("CacheFile::OnFileRenamed should not be called!");
   return NS_ERROR_UNEXPECTED;
 }
 
@@ -786,6 +831,10 @@ CacheFile::SetExpirationTime(uint32_t aExpirationTime)
   NS_ENSURE_TRUE(mMetadata, NS_ERROR_UNEXPECTED);
 
   PostWriteTimer();
+
+  if (mHandle && !mHandle->IsDoomed())
+    CacheFileIOManager::UpdateIndexEntry(mHandle, nullptr, &aExpirationTime);
+
   return mMetadata->SetExpirationTime(aExpirationTime);
 }
 
@@ -828,6 +877,10 @@ CacheFile::SetFrecency(uint32_t aFrecency)
   NS_ENSURE_TRUE(mMetadata, NS_ERROR_UNEXPECTED);
 
   PostWriteTimer();
+
+  if (mHandle && !mHandle->IsDoomed())
+    CacheFileIOManager::UpdateIndexEntry(mHandle, &aFrecency, nullptr);
+
   return mMetadata->SetFrecency(aFrecency);
 }
 
@@ -1473,6 +1526,34 @@ CacheFile::PadChunkWithZeroes(uint32_t aChunkIdx)
                         false);
 
   ReleaseOutsideLock(chunk.forget().get());
+
+  return NS_OK;
+}
+
+nsresult
+CacheFile::InitIndexEntry()
+{
+  MOZ_ASSERT(mHandle);
+
+  if (mHandle->IsDoomed())
+    return NS_OK;
+
+  nsresult rv;
+
+  rv = CacheFileIOManager::InitIndexEntry(mHandle,
+                                          mMetadata->AppId(),
+                                          mMetadata->IsAnonymous(),
+                                          mMetadata->IsInBrowser());
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  uint32_t expTime;
+  mMetadata->GetExpirationTime(&expTime);
+
+  uint32_t frecency;
+  mMetadata->GetFrecency(&frecency);
+
+  rv = CacheFileIOManager::UpdateIndexEntry(mHandle, &frecency, &expTime);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
