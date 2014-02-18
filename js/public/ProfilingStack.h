@@ -51,16 +51,16 @@ class ProfileEntry
     // were marked as volatile as well.
 
     bool js() const volatile {
-        JS_ASSERT_IF(sp == nullptr, script_ != nullptr);
+        MOZ_ASSERT_IF(sp == nullptr, script_ != nullptr);
         return sp == nullptr;
     }
 
-    uint32_t line() const volatile { JS_ASSERT(!js()); return idx; }
-    JSScript *script() const volatile { JS_ASSERT(js()); return script_; }
+    uint32_t line() const volatile { MOZ_ASSERT(!js()); return idx; }
+    JSScript *script() const volatile { MOZ_ASSERT(js()); return script_; }
     void *stackAddress() const volatile { return sp; }
     const char *label() const volatile { return string; }
 
-    void setLine(uint32_t aLine) volatile { JS_ASSERT(!js()); idx = aLine; }
+    void setLine(uint32_t aLine) volatile { MOZ_ASSERT(!js()); idx = aLine; }
     void setLabel(const char *aString) volatile { string = aString; }
     void setStackAddress(void *aSp) volatile { sp = aSp; }
     void setScript(JSScript *aScript) volatile { script_ = aScript; }

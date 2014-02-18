@@ -390,7 +390,7 @@ JSD_PUBLIC_API(JSDSourceText*)
 JSD_FindSourceForURL(JSDContext* jsdc, const char* url)
 {
     JSD_ASSERT_VALID_CONTEXT(jsdc);
-    JS_ASSERT(url);
+    MOZ_ASSERT(url);
     return jsd_FindSourceForURL(jsdc, url);
 }
 
@@ -408,8 +408,8 @@ JSD_GetSourceText(JSDContext* jsdc, JSDSourceText* jsdsrc,
 {
     JSD_ASSERT_VALID_CONTEXT(jsdc);
     JSD_ASSERT_VALID_SOURCE_TEXT(jsdsrc);
-    JS_ASSERT(ppBuf);
-    JS_ASSERT(pLen);
+    MOZ_ASSERT(ppBuf);
+    MOZ_ASSERT(pLen);
     return jsd_GetSourceText(jsdc, jsdsrc, ppBuf, pLen);
 }
 
@@ -473,7 +473,7 @@ JSD_PUBLIC_API(JSDSourceText*)
 JSD_NewSourceText(JSDContext* jsdc, const char* url)
 {
     JSD_ASSERT_VALID_CONTEXT(jsdc);
-    JS_ASSERT(url);
+    MOZ_ASSERT(url);
     return jsd_NewSourceText(jsdc, url);
 }
 
@@ -508,7 +508,7 @@ JSD_AddFullSourceText(JSDContext* jsdc,
                       const char* url)
 {
     JSD_ASSERT_VALID_CONTEXT(jsdc);
-    JS_ASSERT(url);
+    MOZ_ASSERT(url);
     return jsd_AddFullSourceText(jsdc, text, length, url);
 }
 
@@ -769,9 +769,9 @@ JSD_EvaluateUCScriptInStackFrame(JSDContext* jsdc,
                                  const char *filename, unsigned lineno, JS::MutableHandleValue rval)
 {
     JSD_ASSERT_VALID_CONTEXT(jsdc);
-    JS_ASSERT(bytes);
-    JS_ASSERT(length);
-    JS_ASSERT(filename);
+    MOZ_ASSERT(bytes);
+    MOZ_ASSERT(length);
+    MOZ_ASSERT(filename);
 
     return jsd_EvaluateUCScriptInStackFrame(jsdc, jsdthreadstate,jsdframe,
                                             bytes, length, filename, lineno,
@@ -787,9 +787,9 @@ JSD_AttemptUCScriptInStackFrame(JSDContext* jsdc,
                                 JS::MutableHandleValue rval)
 {
     JSD_ASSERT_VALID_CONTEXT(jsdc);
-    JS_ASSERT(bytes);
-    JS_ASSERT(length);
-    JS_ASSERT(filename);
+    MOZ_ASSERT(bytes);
+    MOZ_ASSERT(length);
+    MOZ_ASSERT(filename);
 
     return jsd_EvaluateUCScriptInStackFrame(jsdc, jsdthreadstate,jsdframe,
                                             bytes, length, filename, lineno,
@@ -804,9 +804,9 @@ JSD_EvaluateScriptInStackFrame(JSDContext* jsdc,
                                const char *filename, unsigned lineno, JS::MutableHandleValue rval)
 {
     JSD_ASSERT_VALID_CONTEXT(jsdc);
-    JS_ASSERT(bytes);
-    JS_ASSERT(length);
-    JS_ASSERT(filename);
+    MOZ_ASSERT(bytes);
+    MOZ_ASSERT(length);
+    MOZ_ASSERT(filename);
 
     return jsd_EvaluateScriptInStackFrame(jsdc, jsdthreadstate,jsdframe,
                                           bytes, length,
@@ -821,9 +821,9 @@ JSD_AttemptScriptInStackFrame(JSDContext* jsdc,
                               const char *filename, unsigned lineno, JS::MutableHandleValue rval)
 {
     JSD_ASSERT_VALID_CONTEXT(jsdc);
-    JS_ASSERT(bytes);
-    JS_ASSERT(length);
-    JS_ASSERT(filename);
+    MOZ_ASSERT(bytes);
+    MOZ_ASSERT(length);
+    MOZ_ASSERT(filename);
 
     return jsd_EvaluateScriptInStackFrame(jsdc, jsdthreadstate,jsdframe,
                                           bytes, length,
@@ -1128,7 +1128,7 @@ JSD_IterateProperties(JSDContext* jsdc, JSDValue* jsdval, JSDProperty **iterp)
 {
     JSD_ASSERT_VALID_CONTEXT(jsdc);
     JSD_ASSERT_VALID_VALUE(jsdval);
-    JS_ASSERT(iterp);
+    MOZ_ASSERT(iterp);
     return jsd_IterateProperties(jsdc, jsdval, iterp);
 }
 
@@ -1137,7 +1137,7 @@ JSD_GetValueProperty(JSDContext* jsdc, JSDValue* jsdval, JSString* name)
 {
     JSD_ASSERT_VALID_CONTEXT(jsdc);
     JSD_ASSERT_VALID_VALUE(jsdval);
-    JS_ASSERT(name);
+    MOZ_ASSERT(name);
     return jsd_GetValueProperty(jsdc, jsdval, name);
 }
 
@@ -1299,7 +1299,7 @@ JSD_PUBLIC_API(JSDObject*)
 JSD_GetJSDObjectForJSObject(JSDContext* jsdc, JSObject* jsobj)
 {
     JSD_ASSERT_VALID_CONTEXT(jsdc);
-    JS_ASSERT(jsobj);
+    MOZ_ASSERT(jsobj);
     return jsd_GetJSDObjectForJSObject(jsdc, jsobj);
 }
 

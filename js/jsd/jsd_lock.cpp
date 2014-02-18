@@ -58,13 +58,13 @@ JS_BEGIN_MACRO                                                                \
     if(!out)                                                                  \
         out = (void*) JS_AttachThread(PR_USER_THREAD, PR_PRIORITY_NORMAL,     \
                                       nullptr);                               \
-    JS_ASSERT(out);                                                           \
+    MOZ_ASSERT(out);                                                          \
 JS_END_MACRO
 #else
 #define _CURRENT_THREAD(out)             \
 JS_BEGIN_MACRO                           \
     out = (void*) PR_GetCurrentThread(); \
-    JS_ASSERT(out);                      \
+    MOZ_ASSERT(out);                     \
 JS_END_MACRO
 #endif
 
@@ -72,10 +72,10 @@ JS_END_MACRO
 #define JSD_LOCK_SIG 0x10CC10CC
 void ASSERT_VALID_LOCK(JSDStaticLock* lock)
 {
-    JS_ASSERT(lock);
-    JS_ASSERT(lock->lock);
-    JS_ASSERT(lock->count >= 0);
-    JS_ASSERT(lock->sig == (uint16_t) JSD_LOCK_SIG);
+    MOZ_ASSERT(lock);
+    MOZ_ASSERT(lock->lock);
+    MOZ_ASSERT(lock->count >= 0);
+    MOZ_ASSERT(lock->sig == (uint16_t) JSD_LOCK_SIG);
 }    
 #else
 #define ASSERT_VALID_LOCK(x) ((void)0)
@@ -111,13 +111,13 @@ jsd_Lock(JSDStaticLock* lock)
     if(lock->owner == me)
     {
         lock->count++;
-        JS_ASSERT(lock->count > 1);
+        MOZ_ASSERT(lock->count > 1);
     }
     else
     {
         PR_Lock(lock->lock);            /* this can block... */
-        JS_ASSERT(lock->owner == 0);
-        JS_ASSERT(lock->count == 0);
+        MOZ_ASSERT(lock->owner == 0);
+        MOZ_ASSERT(lock->count == 0);
         lock->count = 1;
         lock->owner = me;
     }
@@ -131,7 +131,7 @@ jsd_Unlock(JSDStaticLock* lock)
     _CURRENT_THREAD(me);
 
     /* it's an error to unlock a lock you don't own */
-    JS_ASSERT(lock->owner == me);
+    MOZ_ASSERT(lock->owner == me);
     if(lock->owner != me)
         return;
 
@@ -151,7 +151,7 @@ jsd_IsLocked(JSDStaticLock* lock)
     _CURRENT_THREAD(me);
     if (lock->owner != me)
         return false;
-    JS_ASSERT(lock->count > 0);
+    MOZ_ASSERT(lock->count > 0);
     return true;
 }    
 #endif /* DEBUG */
