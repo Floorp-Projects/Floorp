@@ -35,7 +35,7 @@ public:
   }
 
 #ifdef DEBUG_FRAME_DUMP
-  NS_IMETHOD GetFrameName(nsAString& aResult) const
+  virtual nsresult GetFrameName(nsAString& aResult) const
   {
     return MakeFrameName(NS_LITERAL_STRING("SVGFEUnstyledLeaf"), aResult);
   }
@@ -48,7 +48,7 @@ public:
    */
   virtual nsIAtom* GetType() const;
 
-  NS_IMETHOD AttributeChanged(int32_t  aNameSpaceID,
+  virtual nsresult AttributeChanged(int32_t  aNameSpaceID,
                               nsIAtom* aAttribute,
                               int32_t  aModType);
 
@@ -72,7 +72,7 @@ SVGFEUnstyledLeafFrame::GetType() const
   return nsGkAtoms::svgFEUnstyledLeafFrame;
 }
 
-NS_IMETHODIMP
+nsresult
 SVGFEUnstyledLeafFrame::AttributeChanged(int32_t  aNameSpaceID,
                                          nsIAtom* aAttribute,
                                          int32_t  aModType)

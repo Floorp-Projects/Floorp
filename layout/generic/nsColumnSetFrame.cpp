@@ -120,7 +120,7 @@ nsColumnSetFrame::PaintColumnRule(nsRenderingContext* aCtx,
   }
 }
 
-NS_IMETHODIMP
+nsresult
 nsColumnSetFrame::SetInitialChildList(ChildListID     aListID,
                                       nsFrameList&    aChildList)
 {
@@ -949,7 +949,7 @@ nsColumnSetFrame::FindBestBalanceHeight(const nsHTMLReflowState& aReflowState,
   aRunWasFeasible = feasible;
 }
 
-NS_IMETHODIMP 
+nsresult 
 nsColumnSetFrame::Reflow(nsPresContext*           aPresContext,
                          nsHTMLReflowMetrics&     aDesiredSize,
                          const nsHTMLReflowState& aReflowState,
@@ -1041,7 +1041,7 @@ nsColumnSetFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   }
 }
 
-NS_IMETHODIMP
+nsresult
 nsColumnSetFrame::AppendFrames(ChildListID     aListID,
                                nsFrameList&    aFrameList)
 {
@@ -1053,7 +1053,7 @@ nsColumnSetFrame::AppendFrames(ChildListID     aListID,
   return NS_ERROR_INVALID_ARG;
 }
 
-NS_IMETHODIMP
+nsresult
 nsColumnSetFrame::InsertFrames(ChildListID     aListID,
                                nsIFrame*       aPrevFrame,
                                nsFrameList&    aFrameList)
@@ -1066,7 +1066,7 @@ nsColumnSetFrame::InsertFrames(ChildListID     aListID,
   return NS_ERROR_INVALID_ARG;
 }
 
-NS_IMETHODIMP
+nsresult
 nsColumnSetFrame::RemoveFrame(ChildListID     aListID,
                               nsIFrame*       aOldFrame)
 {

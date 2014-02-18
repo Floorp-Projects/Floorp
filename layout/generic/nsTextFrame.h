@@ -57,10 +57,10 @@ public:
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot) MOZ_OVERRIDE;
   
-  NS_IMETHOD GetCursor(const nsPoint& aPoint,
+  virtual nsresult GetCursor(const nsPoint& aPoint,
                        nsIFrame::Cursor& aCursor) MOZ_OVERRIDE;
   
-  NS_IMETHOD CharacterDataChanged(CharacterDataChangeInfo* aInfo) MOZ_OVERRIDE;
+  virtual nsresult CharacterDataChanged(CharacterDataChangeInfo* aInfo) MOZ_OVERRIDE;
                                   
   virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext) MOZ_OVERRIDE;
   
@@ -117,12 +117,12 @@ public:
 
 #ifdef DEBUG_FRAME_DUMP
   void List(FILE* out = stderr, const char* aPrefix = "", uint32_t aFlags = 0) const MOZ_OVERRIDE;
-  NS_IMETHOD GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;
+  virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;
   void ToCString(nsCString& aBuf, int32_t* aTotalContentLength) const;
 #endif
 
 #ifdef DEBUG
-  NS_IMETHOD_(nsFrameState) GetDebugStateBits() const MOZ_OVERRIDE;
+  virtual nsFrameState GetDebugStateBits() const MOZ_OVERRIDE;
 #endif
   
   virtual ContentOffsets CalcContentOffsetsFromFramePoint(nsPoint aPoint) MOZ_OVERRIDE;
@@ -146,7 +146,7 @@ public:
   virtual bool PeekOffsetWord(bool aForward, bool aWordSelectEatSpace, bool aIsKeyboardSelect,
                                 int32_t* aOffset, PeekWordState* aState) MOZ_OVERRIDE;
 
-  NS_IMETHOD CheckVisibility(nsPresContext* aContext, int32_t aStartIndex, int32_t aEndIndex, bool aRecurse, bool *aFinished, bool *_retval) MOZ_OVERRIDE;
+  virtual nsresult CheckVisibility(nsPresContext* aContext, int32_t aStartIndex, int32_t aEndIndex, bool aRecurse, bool *aFinished, bool *_retval) MOZ_OVERRIDE;
   
   // Flags for aSetLengthFlags
   enum { ALLOW_FRAME_CREATION_AND_DESTRUCTION = 0x01 };
@@ -155,14 +155,14 @@ public:
   void SetLength(int32_t aLength, nsLineLayout* aLineLayout,
                  uint32_t aSetLengthFlags = 0);
   
-  NS_IMETHOD GetOffsets(int32_t &start, int32_t &end)const MOZ_OVERRIDE;
+  virtual nsresult GetOffsets(int32_t &start, int32_t &end)const MOZ_OVERRIDE;
   
   virtual void AdjustOffsetsForBidi(int32_t start, int32_t end) MOZ_OVERRIDE;
   
-  NS_IMETHOD GetPointFromOffset(int32_t                 inOffset,
+  virtual nsresult GetPointFromOffset(int32_t                 inOffset,
                                 nsPoint*                outPoint) MOZ_OVERRIDE;
   
-  NS_IMETHOD  GetChildFrameContainingOffset(int32_t     inContentOffset,
+  virtual nsresult  GetChildFrameContainingOffset(int32_t     inContentOffset,
                                             bool                    inHint,
                                             int32_t*                outFrameContentOffset,
                                             nsIFrame*               *outChildFrame) MOZ_OVERRIDE;
@@ -215,7 +215,7 @@ public:
   virtual nsresult GetPrefWidthTightBounds(nsRenderingContext* aContext,
                                            nscoord* aX,
                                            nscoord* aXMost) MOZ_OVERRIDE;
-  NS_IMETHOD Reflow(nsPresContext* aPresContext,
+  virtual nsresult Reflow(nsPresContext* aPresContext,
                     nsHTMLReflowMetrics& aMetrics,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus& aStatus) MOZ_OVERRIDE;

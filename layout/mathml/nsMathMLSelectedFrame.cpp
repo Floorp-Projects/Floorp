@@ -56,7 +56,7 @@ nsMathMLSelectedFrame::ChildListChanged(int32_t aModType)
   return nsMathMLContainerFrame::ChildListChanged(aModType);
 }
 
-NS_IMETHODIMP
+nsresult
 nsMathMLSelectedFrame::SetInitialChildList(ChildListID     aListID,
                                            nsFrameList&    aChildList)
 {
@@ -99,7 +99,7 @@ nsMathMLSelectedFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 }
 
 // Only reflow the selected child ...
-NS_IMETHODIMP
+nsresult
 nsMathMLSelectedFrame::Reflow(nsPresContext*          aPresContext,
                               nsHTMLReflowMetrics&     aDesiredSize,
                               const nsHTMLReflowState& aReflowState,

@@ -27,7 +27,7 @@ nsMathMLmunderoverFrame::~nsMathMLmunderoverFrame()
 {
 }
 
-NS_IMETHODIMP
+nsresult
 nsMathMLmunderoverFrame::AttributeChanged(int32_t         aNameSpaceID,
                                           nsIAtom*        aAttribute,
                                           int32_t         aModType)

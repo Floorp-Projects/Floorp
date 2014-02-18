@@ -43,7 +43,7 @@ nsPopupSetFrame::GetType() const
   return nsGkAtoms::popupSetFrame;
 }
 
-NS_IMETHODIMP
+nsresult
 nsPopupSetFrame::AppendFrames(ChildListID     aListID,
                               nsFrameList&    aFrameList)
 {
@@ -54,7 +54,7 @@ nsPopupSetFrame::AppendFrames(ChildListID     aListID,
   return nsBoxFrame::AppendFrames(aListID, aFrameList);
 }
 
-NS_IMETHODIMP
+nsresult
 nsPopupSetFrame::RemoveFrame(ChildListID     aListID,
                              nsIFrame*       aOldFrame)
 {
@@ -65,7 +65,7 @@ nsPopupSetFrame::RemoveFrame(ChildListID     aListID,
   return nsBoxFrame::RemoveFrame(aListID, aOldFrame);
 }
 
-NS_IMETHODIMP
+nsresult
 nsPopupSetFrame::InsertFrames(ChildListID     aListID,
                               nsIFrame*       aPrevFrame,
                               nsFrameList&    aFrameList)
@@ -77,7 +77,7 @@ nsPopupSetFrame::InsertFrames(ChildListID     aListID,
   return nsBoxFrame::InsertFrames(aListID, aPrevFrame, aFrameList);
 }
 
-NS_IMETHODIMP
+nsresult
 nsPopupSetFrame::SetInitialChildList(ChildListID     aListID,
                                      nsFrameList&    aChildList)
 {

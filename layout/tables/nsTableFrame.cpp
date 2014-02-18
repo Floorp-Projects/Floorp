@@ -254,7 +254,7 @@ nsTableFrame::PageBreakAfter(nsIFrame* aSourceFrame,
 
 // XXX this needs to be cleaned up so that the frame constructor breaks out col group
 // frames into a separate child list, bug 343048.
-NS_IMETHODIMP
+nsresult
 nsTableFrame::SetInitialChildList(ChildListID     aListID,
                                   nsFrameList&    aChildList)
 {
@@ -1681,7 +1681,7 @@ nsTableFrame::RequestSpecialHeightReflow(const nsHTMLReflowState& aReflowState)
  ******************************************************************************************/
 
 /* Layout the entire inner table. */
-NS_METHOD nsTableFrame::Reflow(nsPresContext*           aPresContext,
+nsresult nsTableFrame::Reflow(nsPresContext*           aPresContext,
                                nsHTMLReflowMetrics&     aDesiredSize,
                                const nsHTMLReflowState& aReflowState,
                                nsReflowStatus&          aStatus)
@@ -2064,7 +2064,7 @@ nsTableFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 
 
 
-NS_IMETHODIMP
+nsresult
 nsTableFrame::AppendFrames(ChildListID     aListID,
                            nsFrameList&    aFrameList)
 {
@@ -2121,7 +2121,7 @@ struct ChildListInsertions {
   nsFrameList mList;
 };
 
-NS_IMETHODIMP
+nsresult
 nsTableFrame::InsertFrames(ChildListID     aListID,
                            nsIFrame*       aPrevFrame,
                            nsFrameList&    aFrameList)
@@ -2339,7 +2339,7 @@ nsTableFrame::DoRemoveFrame(ChildListID     aListID,
   }
 }
 
-NS_IMETHODIMP
+nsresult
 nsTableFrame::RemoveFrame(ChildListID     aListID,
                           nsIFrame*       aOldFrame)
 {
@@ -3483,7 +3483,7 @@ nsTableFrame::IsAutoLayout()
 }
 
 #ifdef DEBUG_FRAME_DUMP
-NS_IMETHODIMP
+nsresult
 nsTableFrame::GetFrameName(nsAString& aResult) const
 {
   return MakeFrameName(NS_LITERAL_STRING("Table"), aResult);

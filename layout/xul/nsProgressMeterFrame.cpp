@@ -116,7 +116,7 @@ nsProgressMeterFrame::DoLayout(nsBoxLayoutState& aState)
   return nsBoxFrame::DoLayout(aState);
 }
 
-NS_IMETHODIMP
+nsresult
 nsProgressMeterFrame::AttributeChanged(int32_t aNameSpaceID,
                                        nsIAtom* aAttribute,
                                        int32_t aModType)
@@ -176,7 +176,7 @@ nsProgressMeterFrame::AttributeChanged(int32_t aNameSpaceID,
 }
 
 #ifdef DEBUG_FRAME_DUMP
-NS_IMETHODIMP
+nsresult
 nsProgressMeterFrame::GetFrameName(nsAString& aResult) const
 {
   return MakeFrameName(NS_LITERAL_STRING("ProgressMeter"), aResult);
