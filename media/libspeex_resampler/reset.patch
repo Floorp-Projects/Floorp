@@ -1,0 +1,35 @@
+# HG changeset patch
+# Parent b65da7e13aaee4756135be04016e081a95e86855
+# User Karl Tomlinson <karlt+@karlt.net>
+b=973374 complete speex_resampler_reset_mem r=jmspeex
+
+sample_frac_num is the array most likely to be non-zero after resampling a
+previous stream, but the other arrays can also be left at non-zero values
+in other situations.
+
+diff --git a/media/libspeex_resampler/src/resample.c b/media/libspeex_resampler/src/resample.c
+--- a/media/libspeex_resampler/src/resample.c
++++ b/media/libspeex_resampler/src/resample.c
+@@ -1141,16 +1141,22 @@ SPX_RESAMPLE_EXPORT int speex_resampler_
+    for (i=0;i<st->nb_channels;i++)
+       st->last_sample[i] = st->filt_len/2;
+    return RESAMPLER_ERR_SUCCESS;
+ }
+ 
+ SPX_RESAMPLE_EXPORT int speex_resampler_reset_mem(SpeexResamplerState *st)
+ {
+    spx_uint32_t i;
++   for (i=0;i<st->nb_channels;i++)
++   {
++      st->last_sample[i] = 0;
++      st->magic_samples[i] = 0;
++      st->samp_frac_num[i] = 0;
++   }
+    for (i=0;i<st->nb_channels*(st->filt_len-1);i++)
+       st->mem[i] = 0;
+    return RESAMPLER_ERR_SUCCESS;
+ }
+ 
+ SPX_RESAMPLE_EXPORT const char *speex_resampler_strerror(int err)
+ {
+    switch (err)

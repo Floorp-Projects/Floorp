@@ -135,14 +135,12 @@ public:
         return NS_ERROR_NOT_IMPLEMENTED;
     }
 
-    NS_IMETHOD NotifyIME(NotificationToIME aNotification) MOZ_OVERRIDE;
+    NS_IMETHOD NotifyIME(const IMENotification& aIMENotification) MOZ_OVERRIDE;
     NS_IMETHOD_(void) SetInputContext(const InputContext& aContext,
                                       const InputContextAction& aAction);
     NS_IMETHOD_(InputContext) GetInputContext();
 
-    NS_IMETHOD NotifyIMEOfTextChange(uint32_t aStart,
-                                     uint32_t aOldEnd,
-                                     uint32_t aNewEnd) MOZ_OVERRIDE;
+    nsresult NotifyIMEOfTextChange(const IMENotification& aIMENotification);
     virtual nsIMEUpdatePreference GetIMEUpdatePreference();
 
     LayerManager* GetLayerManager (PLayerTransactionChild* aShadowManager = nullptr,
@@ -210,9 +208,16 @@ protected:
             mStart(-1), mOldEnd(-1), mNewEnd(-1)
         {
         }
-        IMEChange(int32_t start, int32_t oldEnd, int32_t newEnd) :
-            mStart(start), mOldEnd(oldEnd), mNewEnd(newEnd)
+        IMEChange(const IMENotification& aIMENotification)
+            : mStart(aIMENotification.mTextChangeData.mStartOffset)
+            , mOldEnd(aIMENotification.mTextChangeData.mOldEndOffset)
+            , mNewEnd(aIMENotification.mTextChangeData.mNewEndOffset)
         {
+            MOZ_ASSERT(aIMENotification.mMessage ==
+                           mozilla::widget::NOTIFY_IME_OF_TEXT_CHANGE,
+                       "IMEChange initialized with wrong notification");
+            MOZ_ASSERT(aIMENotification.mTextChangeData.IsInInt32Range(),
+                       "The text change notification is out of range");
         }
         bool IsEmpty()
         {

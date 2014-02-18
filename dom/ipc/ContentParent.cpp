@@ -67,7 +67,6 @@
 #include "mozilla/dom/WakeLock.h"
 #include "nsIDOMWindow.h"
 #include "nsIExternalProtocolService.h"
-#include "nsIFilePicker.h"
 #include "nsIGfxInfo.h"
 #include "nsIIdleService.h"
 #include "nsIMemoryReporter.h"
@@ -2657,81 +2656,6 @@ ContentParent::RecvSetURITitle(const URIParams& uri,
     if (history) {
         history->SetURITitle(ourURI, title);
     }
-    return true;
-}
-
-bool
-ContentParent::RecvShowFilePicker(const int16_t& mode,
-                                  const int16_t& selectedType,
-                                  const bool& addToRecentDocs,
-                                  const nsString& title,
-                                  const nsString& defaultFile,
-                                  const nsString& defaultExtension,
-                                  const InfallibleTArray<nsString>& filters,
-                                  const InfallibleTArray<nsString>& filterNames,
-                                  InfallibleTArray<nsString>* files,
-                                  int16_t* retValue,
-                                  nsresult* result)
-{
-    nsCOMPtr<nsIFilePicker> filePicker = do_CreateInstance("@mozilla.org/filepicker;1");
-    if (!filePicker) {
-        *result = NS_ERROR_NOT_AVAILABLE;
-        return true;
-    }
-
-    // as the parent given to the content process would be meaningless in this
-    // process, always use active window as the parent
-    nsCOMPtr<nsIWindowWatcher> ww = do_GetService(NS_WINDOWWATCHER_CONTRACTID);
-    nsCOMPtr<nsIDOMWindow> window;
-    ww->GetActiveWindow(getter_AddRefs(window));
-
-    // initialize the "real" picker with all data given
-    *result = filePicker->Init(window, title, mode);
-    if (NS_FAILED(*result))
-        return true;
-
-    filePicker->SetAddToRecentDocs(addToRecentDocs);
-
-    uint32_t count = filters.Length();
-    for (uint32_t i = 0; i < count; ++i) {
-        filePicker->AppendFilter(filterNames[i], filters[i]);
-    }
-
-    filePicker->SetDefaultString(defaultFile);
-    filePicker->SetDefaultExtension(defaultExtension);
-    filePicker->SetFilterIndex(selectedType);
-
-    // and finally open the dialog
-    *result = filePicker->Show(retValue);
-    if (NS_FAILED(*result))
-        return true;
-
-    if (mode == nsIFilePicker::modeOpenMultiple) {
-        nsCOMPtr<nsISimpleEnumerator> fileIter;
-        *result = filePicker->GetFiles(getter_AddRefs(fileIter));
-
-        nsCOMPtr<nsIFile> singleFile;
-        bool loop = true;
-        while (NS_SUCCEEDED(fileIter->HasMoreElements(&loop)) && loop) {
-            fileIter->GetNext(getter_AddRefs(singleFile));
-            if (singleFile) {
-                nsAutoString filePath;
-                singleFile->GetPath(filePath);
-                files->AppendElement(filePath);
-            }
-        }
-        return true;
-    }
-    nsCOMPtr<nsIFile> file;
-    filePicker->GetFile(getter_AddRefs(file));
-
-    // Even with NS_OK file can be null if nothing was selected.
-    if (file) {
-        nsAutoString filePath;
-        file->GetPath(filePath);
-        files->AppendElement(filePath);
-    }
-
     return true;
 }
 

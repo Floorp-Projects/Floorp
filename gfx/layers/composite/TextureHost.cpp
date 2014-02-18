@@ -14,6 +14,9 @@
 #include "mozilla/layers/ISurfaceAllocator.h"  // for ISurfaceAllocator
 #include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor, etc
+#ifdef MOZ_X11
+#include "mozilla/layers/X11TextureHost.h"
+#endif
 #include "mozilla/layers/YCbCrImageDataSerializer.h"
 #include "nsAString.h"
 #include "nsAutoPtr.h"                  // for nsRefPtr
@@ -183,8 +186,11 @@ TextureHost::Create(const SurfaceDescriptor& aDesc,
         return CreateTextureHostBasic(aDesc, aDeallocator, aFlags);
       }
 #ifdef MOZ_X11
-    case SurfaceDescriptor::TSurfaceDescriptorX11:
-      return CreateTextureHostBasic(aDesc, aDeallocator, aFlags);
+    case SurfaceDescriptor::TSurfaceDescriptorX11: {
+      const SurfaceDescriptorX11& desc = aDesc.get_SurfaceDescriptorX11();
+      RefPtr<TextureHost> result = new X11TextureHost(aFlags, desc);
+      return result;
+    }
 #endif
 #ifdef XP_WIN
     case SurfaceDescriptor::TSurfaceDescriptorD3D9:
