@@ -28,34 +28,39 @@ function setupAutoCompletion(ctx, walker) {
     autoSelect: true
   });
 
-  let cycle = (reverse) => {
-    if (popup && popup.isOpen) {
-      cycleSuggestions(ed, reverse == true);
-      return;
-    }
-
-    return win.CodeMirror.Pass;
-  };
-
   let keyMap = {
-    "Tab": cycle,
-    "Down": cycle,
-    "Shift-Tab": cycle.bind(this, true),
-    "Up": cycle.bind(this, true),
-    "Enter": () => {
+    "Tab": cm => {
       if (popup && popup.isOpen) {
-        if (!privates.get(ed).suggestionInsertedOnce) {
-          privates.get(ed).insertingSuggestion = true;
-          let {label, preLabel} = popup.getItemAtIndex(0);
-          let cur = ed.getCursor();
-          ed.replaceText(label.slice(preLabel.length), cur, cur);
-        }
-        popup.hidePopup();
+        cycleSuggestions(ed);
         return;
       }
 
       return win.CodeMirror.Pass;
-    }
+    },
+    "Shift-Tab": cm => {
+      if (popup && popup.isOpen) {
+        cycleSuggestions(ed, true);
+        return;
+      }
+
+      return win.CodeMirror.Pass;
+    },
+    "Up": cm => {
+      if (popup && popup.isOpen) {
+        cycleSuggestions(ed, true);
+        return;
+      }
+
+      return win.CodeMirror.Pass;
+    },
+    "Down": cm => {
+      if (popup && popup.isOpen) {
+        cycleSuggestions(ed);
+        return;
+      }
+
+      return win.CodeMirror.Pass;
+    },
   };
   keyMap[Editor.accel("Space")] = cm => autoComplete(ctx);
   cm.addKeyMap(keyMap);
@@ -168,6 +173,7 @@ function onEditorKeypress(ed, event) {
     case event.DOM_VK_BACK_SPACE:
     case event.DOM_VK_DELETE:
     case event.DOM_VK_ENTER:
+    case event.DOM_VK_RETURN:
       private.doNotAutocomplete = true;
       private.popup.hidePopup();
       break;
