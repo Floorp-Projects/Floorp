@@ -11,7 +11,6 @@
 #include "nsTArrayHelpers.h" // For nsTArrayToJSArray
 #include "mozilla/dom/mobilemessage/Constants.h" // For MessageType
 
-
 using namespace mozilla::dom::mobilemessage;
 
 DOMCI_DATA(MozMobileMessageThread, mozilla::dom::MobileMessageThread)
@@ -61,7 +60,7 @@ MobileMessageThread::Create(const uint64_t aId,
     }
 
     uint32_t length;
-    JS_ALWAYS_TRUE(JS_GetArrayLength(aCx, obj, &length));
+    MOZ_ALWAYS_TRUE(JS_GetArrayLength(aCx, obj, &length));
     NS_ENSURE_TRUE(length, NS_ERROR_INVALID_ARG);
 
     for (uint32_t i = 0; i < length; ++i) {
