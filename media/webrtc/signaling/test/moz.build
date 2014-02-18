@@ -19,3 +19,58 @@ if CONFIG['OS_TARGET'] in ('Darwin', 'Android'):
 for var in ('USE_FAKE_MEDIA_STREAMS', 'USE_FAKE_PCOBSERVER',
             'NR_SOCKET_IS_VOID_PTR', 'HAVE_STRDUP'):
     DEFINES[var] = True
+
+GENERATED_INCLUDES += [
+  '/dom/bindings',
+]
+LOCAL_INCLUDES += [
+    '/ipc/chromium/src',
+    '/media/mtransport',
+    '/media/mtransport/test',
+    '/media/mtransport/third_party/nICEr/src/ice',
+    '/media/mtransport/third_party/nICEr/src/net',
+    '/media/mtransport/third_party/nICEr/src/stun',
+    '/media/mtransport/third_party/nrappkit/src/event',
+    '/media/mtransport/third_party/nrappkit/src/log',
+    '/media/mtransport/third_party/nrappkit/src/plugin',
+    '/media/mtransport/third_party/nrappkit/src/registry',
+    '/media/mtransport/third_party/nrappkit/src/share',
+    '/media/mtransport/third_party/nrappkit/src/stats',
+    '/media/mtransport/third_party/nrappkit/src/util/libekr',
+    '/media/webrtc/signaling/include',
+    '/media/webrtc/signaling/media-conduit',
+    '/media/webrtc/signaling/src/common/browser_logging',
+    '/media/webrtc/signaling/src/common/time_profiling',
+    '/media/webrtc/signaling/src/media',
+    '/media/webrtc/signaling/src/media-conduit',
+    '/media/webrtc/signaling/src/mediapipeline',
+    '/media/webrtc/signaling/src/peerconnection',
+    '/media/webrtc/signaling/src/sipcc/core/includes',
+    '/media/webrtc/signaling/src/sipcc/core/sdp',
+    '/media/webrtc/signaling/src/sipcc/cpr/include',
+    '/media/webrtc/signaling/src/sipcc/include',
+    '/media/webrtc/trunk/testing/gtest/include',
+    '/media/webrtc/trunk/third_party/libjingle/source',
+    '/xpcom/base',
+]
+
+if CONFIG['OS_TARGET'] == 'Android':
+    LOCAL_INCLUDES += [
+        '/media/mtransport/third_party/nrappkit/src/port/android/include',
+    ]
+
+if CONFIG['OS_TARGET'] == 'Linux':
+    LOCAL_INCLUDES += [
+        '/media/mtransport/third_party/nrappkit/src/port/linux/include',
+    ]
+
+if CONFIG['OS_TARGET'] == 'Darwin':
+    LOCAL_INCLUDES += [
+        '/media/mtransport/third_party/nrappkit/src/port/darwin/include',
+    ]
+
+if CONFIG['OS_TARGET'] in ('DragonFly', 'FreeBSD', 'NetBSD', 'OpenBSD'):
+    LOCAL_INCLUDES += [
+        '/media/mtransport/third_party/nrappkit/src/port/darwin/include',
+        '/media/mtransport/third_party/nrappkit/src/port/generic/include',
+    ]

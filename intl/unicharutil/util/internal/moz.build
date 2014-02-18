@@ -14,4 +14,3 @@ LOCAL_INCLUDES += [
     '..',
     '../../src',
 ]
-

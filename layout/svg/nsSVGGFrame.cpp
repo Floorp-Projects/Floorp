@@ -87,7 +87,7 @@ nsSVGGFrame::GetCanvasTM(uint32_t aFor, nsIFrame* aTransformRoot)
   return *mCanvasTM;
 }
 
-NS_IMETHODIMP
+nsresult
 nsSVGGFrame::AttributeChanged(int32_t         aNameSpaceID,
                               nsIAtom*        aAttribute,
                               int32_t         aModType)

@@ -33,7 +33,7 @@ public:
 #endif
 
   // nsIFrame:
-  NS_IMETHOD  AttributeChanged(int32_t         aNameSpaceID,
+  virtual nsresult  AttributeChanged(int32_t         aNameSpaceID,
                                nsIAtom*        aAttribute,
                                int32_t         aModType);
 
@@ -45,7 +45,7 @@ public:
   virtual nsIAtom* GetType() const;
 
 #ifdef DEBUG_FRAME_DUMP
-  NS_IMETHOD GetFrameName(nsAString& aResult) const
+  virtual nsresult GetFrameName(nsAString& aResult) const
   {
     return MakeFrameName(NS_LITERAL_STRING("SVGA"), aResult);
   }
@@ -88,7 +88,7 @@ nsSVGAFrame::Init(nsIContent* aContent,
 }
 #endif /* DEBUG */
 
-NS_IMETHODIMP
+nsresult
 nsSVGAFrame::AttributeChanged(int32_t         aNameSpaceID,
                               nsIAtom*        aAttribute,
                               int32_t         aModType)

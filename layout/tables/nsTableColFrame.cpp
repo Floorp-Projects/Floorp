@@ -47,7 +47,8 @@ nsTableColFrame::SetColType(nsTableColType aType)
                 GetPrevContinuation()->GetNextSibling() == this),
                "spanned content cols must be continuations");
   uint32_t type = aType - eColContent;
-  mState |= nsFrameState(type << COL_TYPE_OFFSET);
+  RemoveStateBits(COL_TYPE_BITS);
+  AddStateBits(nsFrameState(type << COL_TYPE_OFFSET));
 }
 
 /* virtual */ void
@@ -84,7 +85,7 @@ void nsTableColFrame::SetContinuousBCBorderWidth(uint8_t     aForSide,
   }
 }
 
-NS_METHOD nsTableColFrame::Reflow(nsPresContext*          aPresContext,
+nsresult nsTableColFrame::Reflow(nsPresContext*          aPresContext,
                                   nsHTMLReflowMetrics&     aDesiredSize,
                                   const nsHTMLReflowState& aReflowState,
                                   nsReflowStatus&          aStatus)
@@ -176,7 +177,7 @@ nsTableColFrame::GetType() const
 }
 
 #ifdef DEBUG_FRAME_DUMP
-NS_IMETHODIMP
+nsresult
 nsTableColFrame::GetFrameName(nsAString& aResult) const
 {
   return MakeFrameName(NS_LITERAL_STRING("TableCol"), aResult);

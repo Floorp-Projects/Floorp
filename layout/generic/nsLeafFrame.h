@@ -51,7 +51,7 @@ public:
    * borderpadding for the desired height.  Ascent will be set to the height,
    * and descent will be set to 0.
    */
-  NS_IMETHOD Reflow(nsPresContext*      aPresContext,
+  virtual nsresult Reflow(nsPresContext*      aPresContext,
                     nsHTMLReflowMetrics& aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&      aStatus) MOZ_OVERRIDE;
@@ -59,7 +59,7 @@ public:
   /**
    * This method does most of the work that Reflow() above need done.
    */
-  NS_IMETHOD DoReflow(nsPresContext*      aPresContext,
+  virtual nsresult DoReflow(nsPresContext*      aPresContext,
                       nsHTMLReflowMetrics& aDesiredSize,
                       const nsHTMLReflowState& aReflowState,
                       nsReflowStatus&      aStatus);
