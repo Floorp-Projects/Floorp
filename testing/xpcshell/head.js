@@ -93,6 +93,7 @@ try {
     let (crashReporter =
           Components.classes["@mozilla.org/toolkit/crash-reporter;1"]
           .getService(Components.interfaces.nsICrashReporter)) {
+      crashReporter.UpdateCrashEventsDir();
       crashReporter.minidumpPath = do_get_minidumpdir();
     }
   }
@@ -1183,6 +1184,15 @@ function do_get_profile() {
 
   let obsSvc = Components.classes["@mozilla.org/observer-service;1"].
         getService(Components.interfaces.nsIObserverService);
+
+  // We need to update the crash events directory when the profile changes.
+  if (runningInParent &&
+      "@mozilla.org/toolkit/crash-reporter;1" in Components.classes) {
+    let crashReporter =
+        Components.classes["@mozilla.org/toolkit/crash-reporter;1"]
+                          .getService(Components.interfaces.nsICrashReporter);
+    crashReporter.UpdateCrashEventsDir();
+  }
 
   if (!_profileInitialized) {
     obsSvc.notifyObservers(null, "profile-do-change", "xpcshell-do-get-profile");
