@@ -198,6 +198,9 @@ interface nsICacheEntry : nsISupports
    */
   boolean hasWriteAccess(in boolean aWriteAllowed);
 
+
+  const unsigned long NO_EXPIRATION_TIME = 0xFFFFFFFF;
+
   // *************** GET RID OF THESE ??? ***************
   void setDataSize(in unsigned long size);
   attribute nsCacheStoragePolicy storagePolicy;

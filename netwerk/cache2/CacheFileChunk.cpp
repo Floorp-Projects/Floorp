@@ -182,7 +182,7 @@ CacheFileChunk::InitNew(CacheFileChunkListener *aCallback)
 
 nsresult
 CacheFileChunk::Read(CacheFileHandle *aHandle, uint32_t aLen,
-                     CacheHashUtils::Hash16_t aHash,
+                     CacheHash::Hash16_t aHash,
                      CacheFileChunkListener *aCallback)
 {
   mFile->AssertOwnsLock();
@@ -342,7 +342,7 @@ CacheFileChunk::Index()
   return mIndex;
 }
 
-CacheHashUtils::Hash16_t
+CacheHash::Hash16_t
 CacheFileChunk::Hash()
 {
   mFile->AssertOwnsLock();
@@ -351,7 +351,7 @@ CacheFileChunk::Hash()
   MOZ_ASSERT(!mListener);
   MOZ_ASSERT(IsReady());
 
-  return CacheHashUtils::Hash16(BufForReading(), mDataSize);
+  return CacheHash::Hash16(BufForReading(), mDataSize);
 }
 
 uint32_t
@@ -517,8 +517,7 @@ CacheFileChunk::OnDataRead(CacheFileHandle *aHandle, char *aBuf,
     MOZ_ASSERT(mListener);
 
     if (NS_SUCCEEDED(aResult)) {
-      CacheHashUtils::Hash16_t hash = CacheHashUtils::Hash16(mRWBuf,
-                                                             mRWBufSize);
+      CacheHash::Hash16_t hash = CacheHash::Hash16(mRWBuf, mRWBufSize);
       if (hash != mReadHash) {
         LOG(("CacheFileChunk::OnDataRead() - Hash mismatch! Hash of the data is"
              " %hx, hash in metadata is %hx. [this=%p, idx=%d]",
@@ -587,6 +586,13 @@ nsresult
 CacheFileChunk::OnEOFSet(CacheFileHandle *aHandle, nsresult aResult)
 {
   MOZ_CRASH("CacheFileChunk::OnEOFSet should not be called!");
+  return NS_ERROR_UNEXPECTED;
+}
+
+nsresult
+CacheFileChunk::OnFileRenamed(CacheFileHandle *aHandle, nsresult aResult)
+{
+  MOZ_CRASH("CacheFileChunk::OnFileRenamed should not be called!");
   return NS_ERROR_UNEXPECTED;
 }
 
