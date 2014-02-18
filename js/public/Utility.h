@@ -42,16 +42,6 @@ namespace js {}
 
 #define JS_ASSERT(expr)           MOZ_ASSERT(expr)
 #define JS_ASSERT_IF(cond, expr)  MOZ_ASSERT_IF(cond, expr)
-#define JS_ALWAYS_TRUE(expr)      MOZ_ALWAYS_TRUE(expr)
-#define JS_ALWAYS_FALSE(expr)     MOZ_ALWAYS_FALSE(expr)
-
-#if defined(JS_DEBUG)
-# define JS_DIAGNOSTICS_ASSERT(expr) MOZ_ASSERT(expr)
-#elif defined(JS_CRASH_DIAGNOSTICS)
-# define JS_DIAGNOSTICS_ASSERT(expr) do { if (!(expr)) MOZ_CRASH(); } while(0)
-#else
-# define JS_DIAGNOSTICS_ASSERT(expr) ((void) 0)
-#endif
 
 #define JS_STATIC_ASSERT(cond)           static_assert(cond, "JS_STATIC_ASSERT")
 #define JS_STATIC_ASSERT_IF(cond, expr)  MOZ_STATIC_ASSERT_IF(cond, expr, "JS_STATIC_ASSERT_IF")

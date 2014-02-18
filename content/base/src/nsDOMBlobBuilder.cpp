@@ -234,7 +234,7 @@ nsDOMMultipartFile::ParseBlobArrayArgument(JSContext* aCx, JS::Value& aValue,
   BlobSet blobSet;
 
   uint32_t length;
-  JS_ALWAYS_TRUE(JS_GetArrayLength(aCx, obj, &length));
+  MOZ_ALWAYS_TRUE(JS_GetArrayLength(aCx, obj, &length));
   for (uint32_t i = 0; i < length; ++i) {
     JS::Rooted<JS::Value> element(aCx);
     if (!JS_GetElement(aCx, obj, i, &element))
