@@ -67,7 +67,10 @@
               <p class="project-validation valid">&projects.valid;</p>
               <p class="project-validation warning">&projects.warning;</p>
               <p class="project-validation error">&projects.error;</p>
-              <p class="project-type" template='{"type":"textContent","path":"type"}'></p>
+            </div>
+            <div class="project-status" template='{"type":"attribute","path":"type","name":"type"}'>
+            	<p class="project-type hosted">&projects.hosted;</p>
+            	<p class="project-type packaged">&projects.packaged;</p>
             </div>
           </div>
           <span template='{"type":"textContent","path":"manifest.developer.name"}'></span>
