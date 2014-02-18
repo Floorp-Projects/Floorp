@@ -214,7 +214,7 @@ MmsMessage::Create(int32_t               aId,
   }
 
   uint32_t length;
-  JS_ALWAYS_TRUE(JS_GetArrayLength(aCx, deliveryInfoObj, &length));
+  MOZ_ALWAYS_TRUE(JS_GetArrayLength(aCx, deliveryInfoObj, &length));
 
   nsTArray<MmsDeliveryInfo> deliveryInfo;
   JS::Rooted<JS::Value> infoJsVal(aCx);
@@ -240,7 +240,7 @@ MmsMessage::Create(int32_t               aId,
     return NS_ERROR_INVALID_ARG;
   }
 
-  JS_ALWAYS_TRUE(JS_GetArrayLength(aCx, receiversObj, &length));
+  MOZ_ALWAYS_TRUE(JS_GetArrayLength(aCx, receiversObj, &length));
 
   nsTArray<nsString> receivers;
   JS::Rooted<JS::Value> receiverJsVal(aCx);
@@ -275,7 +275,7 @@ MmsMessage::Create(int32_t               aId,
   }
 
   nsTArray<MmsAttachment> attachments;
-  JS_ALWAYS_TRUE(JS_GetArrayLength(aCx, attachmentsObj, &length));
+  MOZ_ALWAYS_TRUE(JS_GetArrayLength(aCx, attachmentsObj, &length));
 
   JS::Rooted<JS::Value> attachmentJsVal(aCx);
   for (uint32_t i = 0; i < length; ++i) {
