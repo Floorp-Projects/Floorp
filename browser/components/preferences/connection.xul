@@ -44,7 +44,10 @@
       <preference id="network.proxy.share_proxy_settings"
                   name="network.proxy.share_proxy_settings"
                   type="bool"/>
-      
+      <preference id="signon.autologin.proxy"
+                  name="signon.autologin.proxy"
+                  type="bool"/>
+
       <preference id="pref.advanced.proxies.disable_button.reload"
                   name="pref.advanced.proxies.disable_button.reload"
                   type="bool"/>
@@ -159,6 +162,13 @@
         </hbox>
       </radiogroup>
     </groupbox>
+    <separator class="thin"/>
+    <checkbox id="autologinProxy"
+              label="&autologinproxy.label;"
+              accesskey="&autologinproxy.accesskey;"
+              preference="signon.autologin.proxy"
+              tooltiptext="&autologinproxy.tooltip;"/>
+    <separator/>
   </prefpane>
 </prefwindow>
 
