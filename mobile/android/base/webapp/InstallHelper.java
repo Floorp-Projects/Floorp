@@ -82,7 +82,7 @@ public class InstallHelper implements GeckoEventListener {
 
         try {
             message.put("apkPackageName", mApkResources.getPackageName());
-            message.put("manifestUrl", mApkResources.getManifestUrl());
+            message.put("manifestURL", mApkResources.getManifestUrl());
             message.put("title", mApkResources.getAppName());
             message.put("manifest", new JSONObject(mApkResources.getManifest(mContext)));
 
