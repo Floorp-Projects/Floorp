@@ -35,6 +35,7 @@ public:
     MANAGEMENT,
     CLOSE,
     EVICT,
+    BUILD_OR_UPDATE_INDEX,
     LAST_LEVEL
   };
 
