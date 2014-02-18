@@ -23,26 +23,12 @@
 
 #include <dwrite.h>
 
+// decltype is not usable for overloaded functions.
 typedef HRESULT (WINAPI*D2D1CreateFactoryFunc)(
     D2D1_FACTORY_TYPE factoryType,
     REFIID iid,
     CONST D2D1_FACTORY_OPTIONS *pFactoryOptions,
     void **factory
-);
-
-typedef HRESULT (WINAPI*D3D10CreateEffectFromMemoryFunc)(
-    void *pData,
-    SIZE_T DataLength,
-    UINT FXFlags,
-    ID3D10Device *pDevice,
-    ID3D10EffectPool *pEffectPool,
-    ID3D10Effect **ppEffect
-);
-
-typedef HRESULT (WINAPI*DWriteCreateFactoryFunc)(
-  DWRITE_FACTORY_TYPE factoryType,
-  REFIID iid,
-  IUnknown **factory
 );
 
 using namespace std;
@@ -1388,9 +1374,9 @@ DrawTargetD2D::InitD3D10Data()
 
   mPrivateData = new PrivateD3D10DataD2D;
 
-  D3D10CreateEffectFromMemoryFunc createD3DEffect;
+  decltype(D3D10CreateEffectFromMemory)* createD3DEffect;
   HMODULE d3dModule = LoadLibraryW(L"d3d10_1.dll");
-  createD3DEffect = (D3D10CreateEffectFromMemoryFunc)
+  createD3DEffect = (decltype(D3D10CreateEffectFromMemory)*)
       GetProcAddress(d3dModule, "D3D10CreateEffectFromMemory");
 
   hr = createD3DEffect((void*)d2deffect, sizeof(d2deffect), 0, mDevice, nullptr, byRef(mPrivateData->mEffect));
@@ -2658,9 +2644,9 @@ DrawTargetD2D::GetDWriteFactory()
     return mDWriteFactory;
   }
 
-  DWriteCreateFactoryFunc createDWriteFactory;
+  decltype(DWriteCreateFactory)* createDWriteFactory;
   HMODULE dwriteModule = LoadLibraryW(L"dwrite.dll");
-  createDWriteFactory = (DWriteCreateFactoryFunc)
+  createDWriteFactory = (decltype(DWriteCreateFactory)*)
     GetProcAddress(dwriteModule, "DWriteCreateFactory");
 
   if (!createDWriteFactory) {

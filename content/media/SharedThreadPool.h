@@ -25,13 +25,19 @@ namespace mozilla {
 // the pool is shutdown and deleted. Users aren't required to manually
 // shutdown the pool, and can release references on any thread. On Windows
 // all threads in the pool have MSCOM initialized with COINIT_MULTITHREADED.
-class SharedThreadPool : public nsIThreadPool {
+class SharedThreadPool : public nsIThreadPool
+{
 public:
 
   // Gets (possibly creating) the shared thread pool singleton instance with
   // thread pool named aName.
   // *Must* be called on the main thread.
-  static TemporaryRef<SharedThreadPool> Get(const nsCString& aName);
+  static TemporaryRef<SharedThreadPool> Get(const nsCString& aName,
+                                            uint32_t aThreadLimit = 4);
+
+  // Spins the event loop until all thread pools are shutdown.
+  // *Must* be called on the main thread.
+  static void SpinUntilShutdown();
 
   // We implement custom threadsafe AddRef/Release pair, that destroys the
   // the shared pool singleton when the refcount drops to 0. The addref/release
@@ -43,7 +49,11 @@ public:
 
   // Forward behaviour to wrapped thread pool implementation.
   NS_FORWARD_SAFE_NSITHREADPOOL(mPool);
-  NS_FORWARD_SAFE_NSIEVENTTARGET(mEventTarget);
+  NS_FORWARD_SAFE_NSIEVENTTARGET(GetEventTarget());
+
+  nsIEventTarget* GetEventTarget() {
+    return mEventTarget;
+  }
 
 private:
 
@@ -54,8 +64,11 @@ private:
   // Creates a singleton SharedThreadPool wrapper around aPool.
   // aName is the name of the aPool, and is used to lookup the
   // SharedThreadPool in the hash table of all created pools.
-  SharedThreadPool(const nsCString& aName, nsIThreadPool* aPool);
+  SharedThreadPool(const nsCString& aName,
+                   nsIThreadPool* aPool);
   virtual ~SharedThreadPool();
+
+  nsresult EnsureThreadLimitIsAtLeast(uint32_t aThreadLimit);
 
   // Name of mPool.
   const nsCString mName;

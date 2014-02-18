@@ -94,6 +94,7 @@ gfxFT2LockedFace::GetMetrics(gfxFont::Metrics* aMetrics,
         yScale = FLOAT_FROM_26_6(FLOAT_FROM_16_16(ftMetrics.y_scale));
         emHeight = mFace->units_per_EM * yScale;
     } else { // Not scalable.
+        emHeight = ftMetrics.y_ppem;
         // FT_Face doc says units_per_EM and a bunch of following fields
         // are "only relevant to scalable outlines". If it's an sfnt,
         // we can get units_per_EM from the 'head' table instead; otherwise,
@@ -102,7 +103,6 @@ gfxFT2LockedFace::GetMetrics(gfxFont::Metrics* aMetrics,
             static_cast<TT_Header*>(FT_Get_Sfnt_Table(mFace, ft_sfnt_head));
         if (head) {
             gfxFloat emUnit = head->Units_Per_EM;
-            emHeight = ftMetrics.y_ppem;
             yScale = emHeight / emUnit;
         }
     }

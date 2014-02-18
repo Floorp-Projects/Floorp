@@ -37,7 +37,7 @@
 #error "Don't know filename of MSVC debug library."
 #endif
 
-DHW_DECLARE_FUN_TYPE_AND_PROTO(dhw_malloc, void*, __cdecl, MALLOC_, (size_t));
+decltype(malloc) dhw_malloc;
 
 DHWImportHooker &getMallocHooker()
 {
@@ -50,14 +50,14 @@ void * __cdecl dhw_malloc( size_t size )
     tm_thread *t = tm_get_thread();
     ++t->suppress_tracing;
     uint32_t start = PR_IntervalNow();
-    void* result = DHW_ORIGINAL(MALLOC_, getMallocHooker())(size);
+    void* result = DHW_ORIGINAL(malloc, getMallocHooker())(size);
     uint32_t end = PR_IntervalNow();
     --t->suppress_tracing;
     MallocCallback(result, size, start, end, t);
     return result;    
 }
 
-DHW_DECLARE_FUN_TYPE_AND_PROTO(dhw_calloc, void*, __cdecl, CALLOC_, (size_t,size_t));
+decltype(calloc) dhw_calloc;
 
 DHWImportHooker &getCallocHooker()
 {
@@ -70,14 +70,14 @@ void * __cdecl dhw_calloc( size_t count, size_t size )
     tm_thread *t = tm_get_thread();
     ++t->suppress_tracing;
     uint32_t start = PR_IntervalNow();
-    void* result = DHW_ORIGINAL(CALLOC_, getCallocHooker())(count,size);
+    void* result = DHW_ORIGINAL(calloc, getCallocHooker())(count,size);
     uint32_t end = PR_IntervalNow();
     --t->suppress_tracing;
     CallocCallback(result, count, size, start, end, t);
     return result;    
 }
 
-DHW_DECLARE_FUN_TYPE_AND_PROTO(dhw_free, void, __cdecl, FREE_, (void*));
+decltype(free) dhw_free;
 DHWImportHooker &getFreeHooker()
 {
   static DHWImportHooker gFreeHooker(NS_DEBUG_CRT, "free", (PROC) dhw_free);
@@ -89,7 +89,7 @@ void __cdecl dhw_free( void* p )
     tm_thread *t = tm_get_thread();
     ++t->suppress_tracing;
     uint32_t start = PR_IntervalNow();
-    DHW_ORIGINAL(FREE_, getFreeHooker())(p);
+    DHW_ORIGINAL(free, getFreeHooker())(p);
     uint32_t end = PR_IntervalNow();
     --t->suppress_tracing;
     /* FIXME bug 392008: We could race with reallocation of p. */
@@ -97,7 +97,7 @@ void __cdecl dhw_free( void* p )
 }
 
 
-DHW_DECLARE_FUN_TYPE_AND_PROTO(dhw_realloc, void*, __cdecl, REALLOC_, (void*, size_t));
+decltype(realloc) dhw_realloc;
 DHWImportHooker &getReallocHooker()
 {
   static DHWImportHooker gReallocHooker(NS_DEBUG_CRT, "realloc", (PROC) dhw_realloc);
@@ -109,7 +109,7 @@ void * __cdecl dhw_realloc(void * pin, size_t size)
     tm_thread *t = tm_get_thread();
     ++t->suppress_tracing;
     uint32_t start = PR_IntervalNow();
-    void* pout = DHW_ORIGINAL(REALLOC_, getReallocHooker())(pin, size);
+    void* pout = DHW_ORIGINAL(realloc, getReallocHooker())(pin, size);
     uint32_t end = PR_IntervalNow();
     --t->suppress_tracing;
     /* FIXME bug 392008: We could race with reallocation of pin. */
@@ -118,7 +118,7 @@ void * __cdecl dhw_realloc(void * pin, size_t size)
 }
 
 // Note the mangled name!
-DHW_DECLARE_FUN_TYPE_AND_PROTO(dhw_new, void*, __cdecl, NEW_, (size_t));
+void * __cdecl dhw_new(size_t size);
 DHWImportHooker &getNewHooker()
 {
   static DHWImportHooker gNewHooker(NS_DEBUG_CRT, "??2@YAPAXI@Z", (PROC) dhw_new);
@@ -130,7 +130,7 @@ void * __cdecl dhw_new(size_t size)
     tm_thread *t = tm_get_thread();
     ++t->suppress_tracing;
     uint32_t start = PR_IntervalNow();
-    void* result = DHW_ORIGINAL(NEW_, getNewHooker())(size);
+    void* result = DHW_ORIGINAL(dhw_new, getNewHooker())(size);
     uint32_t end = PR_IntervalNow();
     --t->suppress_tracing;
     MallocCallback(result, size, start, end, t);//do we need a different one for new?
@@ -138,7 +138,7 @@ void * __cdecl dhw_new(size_t size)
 }
 
 // Note the mangled name!
-DHW_DECLARE_FUN_TYPE_AND_PROTO(dhw_delete, void, __cdecl, DELETE_, (void*));
+void __cdecl dhw_delete(void* p);
 DHWImportHooker &getDeleteHooker()
 {
   static DHWImportHooker gDeleteHooker(NS_DEBUG_CRT, "??3@YAXPAX@Z", (PROC) dhw_delete);
@@ -150,14 +150,14 @@ void __cdecl dhw_delete(void* p)
     tm_thread *t = tm_get_thread();
     ++t->suppress_tracing;
     uint32_t start = PR_IntervalNow();
-    DHW_ORIGINAL(DELETE_, getDeleteHooker())(p);
+    DHW_ORIGINAL(dhw_delete, getDeleteHooker())(p);
     uint32_t end = PR_IntervalNow();
     --t->suppress_tracing;
     FreeCallback(p, start, end, t);
 }
 
 // Note the mangled name!
-DHW_DECLARE_FUN_TYPE_AND_PROTO(dhw_vec_new, void*, __cdecl, VEC_NEW_, (size_t));
+void * __cdecl dhw_vec_new(size_t size);
 DHWImportHooker &getVecNewHooker()
 {
   static DHWImportHooker gVecNewHooker(NS_DEBUG_CRT, "??_U@YAPAXI@Z", (PROC) dhw_vec_new);
@@ -169,7 +169,7 @@ void * __cdecl dhw_vec_new(size_t size)
     tm_thread *t = tm_get_thread();
     ++t->suppress_tracing; // need to suppress since new[] calls new
     uint32_t start = PR_IntervalNow();
-    void* result = DHW_ORIGINAL(VEC_NEW_, getVecNewHooker())(size);
+    void* result = DHW_ORIGINAL(dhw_vec_new, getVecNewHooker())(size);
     uint32_t end = PR_IntervalNow();
     --t->suppress_tracing;
     MallocCallback(result, size, start, end, t);//do we need a different one for new[]?
@@ -177,7 +177,7 @@ void * __cdecl dhw_vec_new(size_t size)
 }
 
 // Note the mangled name!
-DHW_DECLARE_FUN_TYPE_AND_PROTO(dhw_vec_delete, void, __cdecl, VEC_DELETE_, (void*));
+void __cdecl dhw_vec_delete(void* p);
 DHWImportHooker &getVecDeleteHooker()
 {
   static DHWImportHooker gVecDeleteHooker(NS_DEBUG_CRT, "??_V@YAXPAX@Z", (PROC) dhw_vec_delete);
@@ -189,7 +189,7 @@ void __cdecl dhw_vec_delete(void* p)
     tm_thread *t = tm_get_thread();
     ++t->suppress_tracing;
     uint32_t start = PR_IntervalNow();
-    DHW_ORIGINAL(VEC_DELETE_, getVecDeleteHooker())(p);
+    DHW_ORIGINAL(dhw_vec_delete, getVecDeleteHooker())(p);
     uint32_t end = PR_IntervalNow();
     --t->suppress_tracing;
     FreeCallback(p, start, end, t);
@@ -230,23 +230,23 @@ extern "C" {
 void*
 dhw_orig_malloc(size_t size)
 {
-    return DHW_ORIGINAL(MALLOC_, getMallocHooker())(size);
+    return DHW_ORIGINAL(malloc, getMallocHooker())(size);
 }
 
 void*
 dhw_orig_calloc(size_t count, size_t size)
 {
-    return DHW_ORIGINAL(CALLOC_, getCallocHooker())(count,size);
+    return DHW_ORIGINAL(calloc, getCallocHooker())(count,size);
 }
 
 void*
 dhw_orig_realloc(void* pin, size_t size)
 {
-    return DHW_ORIGINAL(REALLOC_, getReallocHooker())(pin, size);
+    return DHW_ORIGINAL(realloc, getReallocHooker())(pin, size);
 }
 
 void
 dhw_orig_free(void* p)
 {
-    DHW_ORIGINAL(FREE_, getFreeHooker())(p);
+    DHW_ORIGINAL(free, getFreeHooker())(p);
 }
