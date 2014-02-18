@@ -166,13 +166,15 @@ VisualPresenter.prototype = {
   },
 
   pivotChanged: function VisualPresenter_pivotChanged(aContext, aReason) {
+    if (!aContext.accessible) {
+      // XXX: Don't hide because another vc may be using the highlight.
+      return null;
+    }
+
     this._displayedAccessibles.set(aContext.accessible.document.window,
                                    { accessible: aContext.accessibleForBounds,
                                      startOffset: aContext.startOffset,
                                      endOffset: aContext.endOffset });
-
-    if (!aContext.accessibleForBounds)
-      return {type: this.type, details: {method: 'hideBounds'}};
 
     try {
       aContext.accessibleForBounds.scrollTo(
