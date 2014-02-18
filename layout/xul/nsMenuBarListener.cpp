@@ -52,6 +52,13 @@ nsMenuBarListener::~nsMenuBarListener()
 {
 }
 
+void
+nsMenuBarListener::InitializeStatics()
+{
+  Preferences::AddBoolVarCache(&mAccessKeyFocuses,
+                               "ui.key.menuAccessKeyFocuses");
+}
+
 nsresult
 nsMenuBarListener::GetMenuAccessKey(int32_t* aAccessKey)
 {
@@ -89,8 +96,6 @@ void nsMenuBarListener::InitAccessKey()
     mAccessKeyMask = MODIFIER_META;
   else if (mAccessKey == nsIDOMKeyEvent::DOM_VK_WIN)
     mAccessKeyMask = MODIFIER_OS;
-
-  mAccessKeyFocuses = Preferences::GetBool("ui.key.menuAccessKeyFocuses");
 }
 
 void
