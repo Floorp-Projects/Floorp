@@ -64,14 +64,20 @@ this.TelemetryFile = {
    *
    * @param {object} ping The content of the ping to save.
    * @param {string} file The destination file.
-   * @param {bool} overwrite If |true|, the file will be overwritten
-   * if it exists.
+   * @param {bool} overwrite If |true|, the file will be overwritten if it exists,
+   * if |false| the file will not be overwritten and no error will be reported if
+   * the file exists.
    * @returns {promise}
    */
   savePingToFile: function(ping, file, overwrite) {
-    let pingString = JSON.stringify(ping);
-    return OS.File.writeAtomic(file, pingString, {tmpPath: file + ".tmp",
-                                noOverwrite: !overwrite});
+    return Task.spawn(function*() {
+      try {
+        let pingString = JSON.stringify(ping);
+        yield OS.File.writeAtomic(file, pingString, {tmpPath: file + ".tmp",
+                                  noOverwrite: !overwrite});
+      } catch(e if e.becauseExists) {
+      }
+    })
   },
 
   /**
@@ -86,7 +92,7 @@ this.TelemetryFile = {
     return Task.spawn(function*() {
       yield getPingDirectory();
       let file = pingFilePath(ping);
-      return this.savePingToFile(ping, file, overwrite);
+      yield this.savePingToFile(ping, file, overwrite);
     }.bind(this));
   },
 
@@ -98,6 +104,8 @@ this.TelemetryFile = {
    */
   savePendingPings: function(sessionPing) {
     let p = pendingPings.reduce((p, ping) => {
+      // Restore the files with the previous pings if for some reason they have
+      // been deleted, don't overwrite them otherwise.
       p.push(this.savePing(ping, false));
       return p;}, [this.savePing(sessionPing, true)]);
 
