@@ -26,8 +26,12 @@ nsTableColGroupFrame::GetColType() const
 
 void nsTableColGroupFrame::SetColType(nsTableColGroupType aType) 
 {
+  NS_ASSERTION(GetColType() == eColGroupContent,
+               "should only call nsTableColGroupFrame::SetColType with aType "
+               "!= eColGroupContent once");
   uint32_t type = aType - eColGroupContent;
-  mState |= nsFrameState(type << COL_GROUP_TYPE_OFFSET);
+  RemoveStateBits(COL_GROUP_TYPE_BITS);
+  AddStateBits(nsFrameState(type << COL_GROUP_TYPE_OFFSET));
 }
 
 void nsTableColGroupFrame::ResetColIndices(nsIFrame*       aFirstColGroup,
