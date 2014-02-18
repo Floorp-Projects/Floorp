@@ -133,10 +133,11 @@ Spectrum.rgbToHsv = function(r, g, b, a) {
 Spectrum.getOffset = function(el) {
   let curleft = 0, curtop = 0;
   if (el.offsetParent) {
-    do {
+    while (el) {
       curleft += el.offsetLeft;
       curtop += el.offsetTop;
-    } while (el = el.offsetParent);
+      el = el.offsetParent;
+    }
   }
   return {
     left: curleft,

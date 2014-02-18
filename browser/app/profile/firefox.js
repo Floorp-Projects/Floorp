@@ -468,7 +468,6 @@ pref("browser.tabs.closeButtons", 1);
 pref("browser.tabs.selectOwnerOnClose", true);
 
 pref("browser.ctrlTab.previews", false);
-pref("browser.ctrlTab.recentlyUsedLimit", 7);
 
 // By default, do not export HTML at shutdown.
 // If true, at shutdown the bookmarks in your menu and toolbar will
@@ -1370,6 +1369,9 @@ pref("identity.fxaccounts.remote.uri", "https://accounts.firefox.com/?service=sy
 // The URL where remote content that forces re-authentication for Firefox Accounts
 // should be fetched.  Must use HTTPS.
 pref("identity.fxaccounts.remote.force_auth.uri", "https://accounts.firefox.com/force_auth?service=sync&context=fx_desktop_v1");
+
+// The remote content URL shown for signin in. Must use HTTPS.
+pref("identity.fxaccounts.remote.signin.uri", "https://accounts.firefox.com/signin?service=sync&context=fx_desktop_v1");
 
 // The URL we take the user to when they opt to "manage" their Firefox Account.
 // Note that this will always need to be in the same TLD as the
