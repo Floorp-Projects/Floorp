@@ -2844,6 +2844,30 @@
     "extended_statistics_ok": true,
     "description": "PLACES: Number of keywords"
   },
+  "PLACES_BACKUPS_DAYSFROMLAST": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 15,
+    "description": "PLACES: Days from last backup"
+  },
+  "PLACES_BACKUPS_BOOKMARKSTREE_MS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "low": 50,
+    "high": 2000,
+    "n_buckets": 10,
+    "extended_statistics_ok": true,
+    "description": "PLACES: Time to build the bookmarks tree"
+  },
+  "PLACES_BACKUPS_TOJSON_MS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "low": 50,
+    "high": 2000,
+    "n_buckets": 10,
+    "extended_statistics_ok": true,
+    "description": "PLACES: Time to convert and write the backup"
+  },
   "FENNEC_FAVICONS_COUNT": {
     "expires_in_version": "never",
     "kind": "exponential",
