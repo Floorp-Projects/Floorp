@@ -149,12 +149,10 @@ public:
                   bool* aAllowRetaining = nullptr);
   virtual gfxASurface*      GetThebesSurface();
 
-  NS_IMETHOD NotifyIME(NotificationToIME aNotification) MOZ_OVERRIDE;
+  NS_IMETHOD NotifyIME(const IMENotification& aIMENotification) MOZ_OVERRIDE;
   NS_IMETHOD_(void) SetInputContext(const InputContext& aContext,
                                     const InputContextAction& aAction);
   NS_IMETHOD_(InputContext) GetInputContext();
-  NS_IMETHOD NotifyIMEOfTextChange(uint32_t aOffset, uint32_t aEnd,
-                                   uint32_t aNewEnd) MOZ_OVERRIDE;
   virtual nsIMEUpdatePreference GetIMEUpdatePreference() MOZ_OVERRIDE;
 
   NS_IMETHOD SetCursor(nsCursor aCursor);
@@ -184,6 +182,7 @@ private:
   nsresult NotifyIMEOfFocusChange(bool aFocus);
   nsresult NotifyIMEOfSelectionChange();
   nsresult NotifyIMEOfUpdateComposition();
+  nsresult NotifyIMEOfTextChange(const IMENotification& aIMENotification);
 
   class PaintTask : public nsRunnable {
   public:
