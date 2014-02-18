@@ -312,7 +312,8 @@ VARIABLES = {
     'LIBXUL_LIBRARY': (bool, bool,
         """Whether the library in this directory is linked into libxul.
 
-        Implies ``MOZILLA_INTERNAL_API`` and ``FORCE_STATIC_LIB``.
+        Implies ``FORCE_STATIC_LIB`` and the ``MOZILLA_INTERNAL_API``
+        preprocessor macro.
         """, None),
 
     'LOCAL_INCLUDES': (StrictOrderingOnAppendList, list,

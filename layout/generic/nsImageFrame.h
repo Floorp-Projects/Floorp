@@ -81,19 +81,19 @@ public:
   virtual nscoord GetPrefWidth(nsRenderingContext *aRenderingContext);
   virtual mozilla::IntrinsicSize GetIntrinsicSize();
   virtual nsSize GetIntrinsicRatio();
-  NS_IMETHOD Reflow(nsPresContext*          aPresContext,
+  virtual nsresult Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
   
-  NS_IMETHOD  GetContentForEvent(mozilla::WidgetEvent* aEvent,
+  virtual nsresult  GetContentForEvent(mozilla::WidgetEvent* aEvent,
                                  nsIContent** aContent);
-  NS_IMETHOD HandleEvent(nsPresContext* aPresContext,
+  virtual nsresult HandleEvent(nsPresContext* aPresContext,
                          mozilla::WidgetGUIEvent* aEvent,
                          nsEventStatus* aEventStatus);
-  NS_IMETHOD GetCursor(const nsPoint& aPoint,
+  virtual nsresult GetCursor(const nsPoint& aPoint,
                        nsIFrame::Cursor& aCursor);
-  NS_IMETHOD AttributeChanged(int32_t aNameSpaceID,
+  virtual nsresult AttributeChanged(int32_t aNameSpaceID,
                               nsIAtom* aAttribute,
                               int32_t aModType);
 
@@ -109,7 +109,7 @@ public:
   }
 
 #ifdef DEBUG_FRAME_DUMP
-  NS_IMETHOD GetFrameName(nsAString& aResult) const;
+  virtual nsresult GetFrameName(nsAString& aResult) const;
   void List(FILE* out = stderr, const char* aPrefix = "", uint32_t aFlags = 0) const;
 #endif
 

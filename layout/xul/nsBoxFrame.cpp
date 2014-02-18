@@ -139,7 +139,7 @@ nsBoxFrame::~nsBoxFrame()
 {
 }
 
-NS_IMETHODIMP
+nsresult
 nsBoxFrame::SetInitialChildList(ChildListID     aListID,
                                 nsFrameList&    aChildList)
 {
@@ -551,7 +551,7 @@ nsBoxFrame::GetInitialAutoStretch(bool& aStretch)
   return true;
 }
 
-NS_IMETHODIMP
+nsresult
 nsBoxFrame::DidReflow(nsPresContext*           aPresContext,
                       const nsHTMLReflowState*  aReflowState,
                       nsDidReflowStatus         aStatus)
@@ -627,7 +627,7 @@ nsBoxFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
   return result;
 }
 
-NS_IMETHODIMP
+nsresult
 nsBoxFrame::Reflow(nsPresContext*          aPresContext,
                    nsHTMLReflowMetrics&     aDesiredSize,
                    const nsHTMLReflowState& aReflowState,
@@ -959,7 +959,7 @@ nsBoxFrame::DestroyFrom(nsIFrame* aDestructRoot)
 } 
 
 #ifdef DEBUG_LAYOUT
-NS_IMETHODIMP
+nsresult
 nsBoxFrame::SetDebug(nsBoxLayoutState& aState, bool aDebug)
 {
   // see if our state matches the given debug state
@@ -1002,7 +1002,7 @@ nsBoxFrame::MarkIntrinsicWidthsDirty()
   // IsBoxWrapped check.
 }
 
-NS_IMETHODIMP
+nsresult
 nsBoxFrame::RemoveFrame(ChildListID     aListID,
                         nsIFrame*       aOldFrame)
 {
@@ -1027,7 +1027,7 @@ nsBoxFrame::RemoveFrame(ChildListID     aListID,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsBoxFrame::InsertFrames(ChildListID     aListID,
                          nsIFrame*       aPrevFrame,
                          nsFrameList&    aFrameList)
@@ -1066,7 +1066,7 @@ nsBoxFrame::InsertFrames(ChildListID     aListID,
 }
 
 
-NS_IMETHODIMP
+nsresult
 nsBoxFrame::AppendFrames(ChildListID     aListID,
                          nsFrameList&    aFrameList)
 {
@@ -1109,7 +1109,7 @@ nsBoxFrame::GetContentInsertionFrame()
   return nsContainerFrame::GetContentInsertionFrame();
 }
 
-NS_IMETHODIMP
+nsresult
 nsBoxFrame::AttributeChanged(int32_t aNameSpaceID,
                              nsIAtom* aAttribute,
                              int32_t aModType)
@@ -1533,7 +1533,7 @@ nsBoxFrame::GetBoxName(nsAutoString& aName)
 #endif
 
 #ifdef DEBUG_FRAME_DUMP
-NS_IMETHODIMP
+nsresult
 nsBoxFrame::GetFrameName(nsAString& aResult) const
 {
   return MakeFrameName(NS_LITERAL_STRING("Box"), aResult);
@@ -1547,7 +1547,7 @@ nsBoxFrame::GetType() const
 }
 
 #ifdef DEBUG_LAYOUT
-NS_IMETHODIMP
+nsresult
 nsBoxFrame::GetDebug(bool& aDebug)
 {
   aDebug = (mState & NS_STATE_CURRENTLY_IN_DEBUG);
@@ -1940,7 +1940,7 @@ nsBoxFrame::LayoutChildAt(nsBoxLayoutState& aState, nsIFrame* aBox, const nsRect
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsBoxFrame::RelayoutChildAtOrdinal(nsBoxLayoutState& aState, nsIFrame* aChild)
 {
   if (!SupportsOrdinalsInChildren())

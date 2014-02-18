@@ -75,3 +75,24 @@ if CONFIG['_MSC_VER']:
 DEFINES['PACKAGE'] = 'mozpixman'
 
 DEFINES['_USE_MATH_DEFINES'] = True
+
+if CONFIG['USE_MMX']:
+    DEFINES['USE_MMX'] = True
+    SOURCES += ['pixman-mmx.c']
+
+if CONFIG['USE_SSE2']:
+    DEFINES['USE_SSE'] = True
+    DEFINES['USE_SSE2'] = True
+    SOURCES += ['pixman-sse2.c']
+
+if CONFIG['USE_VMX']:
+    DEFINES['USE_VMX'] = True
+    SOURCES += ['pixman-vmx.c']
+
+if CONFIG['USE_ARM_SIMD_GCC']:
+    DEFINES['USE_ARM_SIMD'] = True
+    SOURCES += ['pixman-arm-simd.c']
+
+if CONFIG['USE_ARM_NEON_GCC']:
+    DEFINES['USE_ARM_NEON'] = True
+    SOURCES += ['pixman-arm-neon.c']

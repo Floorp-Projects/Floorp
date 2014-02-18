@@ -32,21 +32,21 @@ public:
   virtual void SetBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRect,
                          bool aRemoveOverflowAreas = false) MOZ_OVERRIDE;
 
-  NS_IMETHOD GetBorder(nsMargin& aBorderAndPadding) MOZ_OVERRIDE;
-  NS_IMETHOD GetPadding(nsMargin& aBorderAndPadding) MOZ_OVERRIDE;
-  NS_IMETHOD GetMargin(nsMargin& aMargin) MOZ_OVERRIDE;
+  virtual nsresult GetBorder(nsMargin& aBorderAndPadding) MOZ_OVERRIDE;
+  virtual nsresult GetPadding(nsMargin& aBorderAndPadding) MOZ_OVERRIDE;
+  virtual nsresult GetMargin(nsMargin& aMargin) MOZ_OVERRIDE;
 
   virtual Valignment GetVAlign() const MOZ_OVERRIDE { return vAlign_Top; }
   virtual Halignment GetHAlign() const MOZ_OVERRIDE { return hAlign_Left; }
 
-  NS_IMETHOD RelayoutChildAtOrdinal(nsBoxLayoutState& aState, nsIFrame* aChild) MOZ_OVERRIDE;
+  virtual nsresult RelayoutChildAtOrdinal(nsBoxLayoutState& aState, nsIFrame* aChild) MOZ_OVERRIDE;
 
 #ifdef DEBUG_LAYOUT
   NS_IMETHOD GetDebugBoxAt(const nsPoint& aPoint, nsIFrame** aBox);
-  NS_IMETHOD GetDebug(bool& aDebug) MOZ_OVERRIDE;
-  NS_IMETHOD SetDebug(nsBoxLayoutState& aState, bool aDebug) MOZ_OVERRIDE;
+  virtual nsresult GetDebug(bool& aDebug) MOZ_OVERRIDE;
+  virtual nsresult SetDebug(nsBoxLayoutState& aState, bool aDebug) MOZ_OVERRIDE;
 
-  NS_IMETHOD DumpBox(FILE* out) MOZ_OVERRIDE;
+  virtual nsresult DumpBox(FILE* out) MOZ_OVERRIDE;
   NS_HIDDEN_(void) PropagateDebug(nsBoxLayoutState& aState);
 #endif
 

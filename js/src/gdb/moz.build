@@ -21,3 +21,6 @@ UNIFIED_SOURCES += [
 # on its behalf.
 for var in ('EXPORT_JS_API', 'IMPL_MFBT'):
     DEFINES[var] = True
+
+LOCAL_INCLUDES += ['..']
+GENERATED_INCLUDES += ['..']
