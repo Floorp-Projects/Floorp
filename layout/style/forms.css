@@ -890,7 +890,6 @@ input[type="number"] {
   width: 149px; /* to match type=text */
 }
 
-input[type=number] > div, /* work around bug 946184 */
 input[type=number]::-moz-number-wrapper {
   /* Prevent styling that would change the type of frame we construct. */
   display: flex;
@@ -899,7 +898,6 @@ input[type=number]::-moz-number-wrapper {
   height: 100%;
 }
 
-input[type=number] > div > input, /* work around bug 946184 */
 input[type=number]::-moz-number-text {
   -moz-appearance: none;
   /* work around autofocus bug 939248 on initial load */
@@ -917,7 +915,6 @@ input[type=number]::-moz-number-text {
   margin: 0;
 }
 
-input[type=number] > div > div, /* work around bug 946184 */
 input[type=number]::-moz-number-spin-box {
   display: flex;
   flex-direction: column;
@@ -932,7 +929,6 @@ input[type=number]::-moz-number-spin-box {
   justify-content: center;
 }
 
-input[type=number] > div > div > div:first-child, /* work around bug 946184 */
 input[type=number]::-moz-number-spin-up {
   -moz-appearance: spinner-upbutton;
   display: block; /* bug 926670 */
@@ -948,7 +944,6 @@ input[type=number]::-moz-number-spin-up {
   border-top-right-radius: 4px;
 }
 
-input[type=number] > div > div > div:not(:first-child), /* work around bug 946184 */
 input[type=number]::-moz-number-spin-down {
   -moz-appearance: spinner-downbutton;
   display: block; /* bug 926670 */
