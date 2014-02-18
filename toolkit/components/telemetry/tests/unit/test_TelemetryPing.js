@@ -18,6 +18,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/LightweightThemeManager.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://gre/modules/TelemetryPing.jsm", this);
+Cu.import("resource://gre/modules/TelemetryFile.jsm", this);
 Cu.import("resource://gre/modules/Task.jsm", this);
 Cu.import("resource://gre/modules/Promise.jsm", this);
 
@@ -398,6 +399,14 @@ function actualTest() {
 
   run_next_test();
 }
+
+// Ensure that not overwriting an existing file fails silently
+add_task(function* test_overwritePing() {
+  let ping = {slug: "foo"}
+  yield TelemetryFile.savePing(ping, true);
+  yield TelemetryFile.savePing(ping, false);
+  yield TelemetryFile.cleanupPingFile(ping);
+});
 
 // Ensures that expired histograms are not part of the payload.
 add_task(function* test_expiredHistogram() {

@@ -789,13 +789,13 @@ let Impl = {
 
     function handler(success) {
       return function(event) {
-        this.finishPingRequest(success, startTime, ping);
-
-        if (success) {
-          deferred.resolve();
-        } else {
-          deferred.reject(event);
-        }
+        this.finishPingRequest(success, startTime, ping).then(() => {
+          if (success) {
+            deferred.resolve();
+          } else {
+            deferred.reject(event);
+          }
+        });
       };
     }
     request.addEventListener("error", handler(false).bind(this), false);
