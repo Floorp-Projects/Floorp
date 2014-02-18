@@ -190,10 +190,14 @@ already_AddRefed<Layer> CreateLayerTree(
       lastLayer = nullptr;
     } else {
       nsRefPtr<Layer> layer = CreateLayer(aLayerTreeDescription[i], manager.get());
-      layer->SetVisibleRegion(aVisibleRegions[layerNumber]);
-      Matrix4x4 transform;
-      ToMatrix4x4(aTransforms[layerNumber], transform);
-      layer->SetBaseTransform(transform);
+      if (aVisibleRegions) {
+        layer->SetVisibleRegion(aVisibleRegions[layerNumber]);
+      }
+      if (aTransforms) {
+        Matrix4x4 transform;
+        ToMatrix4x4(aTransforms[layerNumber], transform);
+        layer->SetBaseTransform(transform);
+      }
       aLayersOut.AppendElement(layer);
       layerNumber++;
       if (rootLayer && !parentContainerLayer) {
@@ -243,3 +247,80 @@ TEST(Layers, LayerTree) {
   ASSERT_NE(nullLayer, layers[3]->AsThebesLayer());
 }
 
+static void ValidateTreePointers(Layer* aLayer) {
+  if (aLayer->GetNextSibling()) {
+    ASSERT_EQ(aLayer, aLayer->GetNextSibling()->GetPrevSibling());
+  } else if (aLayer->GetParent()) {
+    ASSERT_EQ(aLayer, aLayer->GetParent()->GetLastChild());
+  }
+  if (aLayer->GetPrevSibling()) {
+    ASSERT_EQ(aLayer, aLayer->GetPrevSibling()->GetNextSibling());
+  } else if (aLayer->GetParent()) {
+    ASSERT_EQ(aLayer, aLayer->GetParent()->GetFirstChild());
+  }
+  if (aLayer->GetFirstChild()) {
+    ASSERT_EQ(aLayer, aLayer->GetFirstChild()->GetParent());
+  }
+  if (aLayer->GetLastChild()) {
+    ASSERT_EQ(aLayer, aLayer->GetLastChild()->GetParent());
+  }
+}
+
+static void ValidateTreePointers(nsTArray<nsRefPtr<Layer> >& aLayers) {
+  for (uint32_t i = 0; i < aLayers.Length(); i++) {
+    ValidateTreePointers(aLayers[i]);
+  }
+}
+
+TEST(Layers, RepositionChild) {
+  const char* layerTreeSyntax = "c(ttt)";
+
+  nsTArray<nsRefPtr<Layer> > layers;
+  nsRefPtr<LayerManager> lm;
+  nsRefPtr<Layer> root = CreateLayerTree(layerTreeSyntax, nullptr, nullptr, lm, layers);
+  ContainerLayer* parent = root->AsContainerLayer();
+  ValidateTreePointers(layers);
+
+  // tree is currently like this (using indexes into layers):
+  //   0
+  // 1 2 3
+  ASSERT_EQ(layers[2], layers[1]->GetNextSibling());
+  ASSERT_EQ(layers[3], layers[2]->GetNextSibling());
+  ASSERT_EQ(nullptr, layers[3]->GetNextSibling());
+
+  parent->RepositionChild(layers[1], layers[3]);
+  ValidateTreePointers(layers);
+
+  // now the tree is like this:
+  //   0
+  // 2 3 1
+  ASSERT_EQ(layers[3], layers[2]->GetNextSibling());
+  ASSERT_EQ(layers[1], layers[3]->GetNextSibling());
+  ASSERT_EQ(nullptr, layers[1]->GetNextSibling());
+
+  parent->RepositionChild(layers[3], layers[2]);
+  ValidateTreePointers(layers);
+
+  // no change
+  ASSERT_EQ(layers[3], layers[2]->GetNextSibling());
+  ASSERT_EQ(layers[1], layers[3]->GetNextSibling());
+  ASSERT_EQ(nullptr, layers[1]->GetNextSibling());
+
+  parent->RepositionChild(layers[3], layers[1]);
+  ValidateTreePointers(layers);
+
+  //   0
+  // 2 1 3
+  ASSERT_EQ(layers[1], layers[2]->GetNextSibling());
+  ASSERT_EQ(layers[3], layers[1]->GetNextSibling());
+  ASSERT_EQ(nullptr, layers[3]->GetNextSibling());
+
+  parent->RepositionChild(layers[3], nullptr);
+  ValidateTreePointers(layers);
+
+  //   0
+  // 3 2 1
+  ASSERT_EQ(layers[2], layers[3]->GetNextSibling());
+  ASSERT_EQ(layers[1], layers[2]->GetNextSibling());
+  ASSERT_EQ(nullptr, layers[1]->GetNextSibling());
+}
