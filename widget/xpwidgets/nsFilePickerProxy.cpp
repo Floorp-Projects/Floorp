@@ -1,18 +1,21 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/dom/ContentChild.h"
 #include "nsFilePickerProxy.h"
+#include "nsComponentManagerUtils.h"
 #include "nsNetUtil.h"
+#include "nsIFile.h"
+#include "mozilla/dom/TabChild.h"
 
+using namespace mozilla::dom;
 
 NS_IMPL_ISUPPORTS1(nsFilePickerProxy, nsIFilePicker)
 
 nsFilePickerProxy::nsFilePickerProxy()
-{ 
+{
 }
 
 nsFilePickerProxy::~nsFilePickerProxy()
@@ -20,151 +23,154 @@ nsFilePickerProxy::~nsFilePickerProxy()
 }
 
 NS_IMETHODIMP
-nsFilePickerProxy::Init(nsIDOMWindow* /*aParent*/, const nsAString& aTitle,
+nsFilePickerProxy::Init(nsIDOMWindow* aParent, const nsAString& aTitle,
                         int16_t aMode)
 {
-    mTitle = aTitle;
-    mMode = aMode;
+  TabChild* tabChild = TabChild::GetFrom(aParent);
+  if (!tabChild) {
+    return NS_ERROR_FAILURE;
+  }
 
-    return NS_OK;
+  mMode = aMode;
+
+  NS_ADDREF_THIS();
+  tabChild->SendPFilePickerConstructor(this, nsString(aTitle), aMode);
+  return NS_OK;
 }
 
-void nsFilePickerProxy::InitNative(nsIWidget* aParent, const nsAString& aTitle)
+void
+nsFilePickerProxy::InitNative(nsIWidget* aParent, const nsAString& aTitle)
 {
 }
-
 
 NS_IMETHODIMP
 nsFilePickerProxy::AppendFilter(const nsAString& aTitle, const nsAString& aFilter)
 {
-    mFilters.AppendElement(aFilter);
-    mFilterNames.AppendElement(aTitle);  
-    return NS_OK;
+  mFilterNames.AppendElement(aTitle);
+  mFilters.AppendElement(aFilter);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsFilePickerProxy::GetDefaultString(nsAString& aDefaultString)
 {
-    aDefaultString = mDefault;
-    return NS_OK;
+  aDefaultString = mDefault;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsFilePickerProxy::SetDefaultString(const nsAString& aDefaultString)
 {
-    mDefault = aDefaultString;
-    return NS_OK;
+  mDefault = aDefaultString;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsFilePickerProxy::GetDefaultExtension(nsAString& aDefaultExtension)
 {
-    aDefaultExtension = mDefaultExtension;
-    return NS_OK;
+  aDefaultExtension = mDefaultExtension;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsFilePickerProxy::SetDefaultExtension(const nsAString& aDefaultExtension)
 {
-    mDefaultExtension = aDefaultExtension;
-    return NS_OK;
+  mDefaultExtension = aDefaultExtension;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsFilePickerProxy::GetFilterIndex(int32_t* aFilterIndex)
 {
-    *aFilterIndex = mSelectedType;
-    return NS_OK;
+  *aFilterIndex = mSelectedType;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsFilePickerProxy::SetFilterIndex(int32_t aFilterIndex)
 {
-    mSelectedType = aFilterIndex;
-    return NS_OK;
+  mSelectedType = aFilterIndex;
+  return NS_OK;
 }
 
 /* readonly attribute nsIFile file; */
 NS_IMETHODIMP
 nsFilePickerProxy::GetFile(nsIFile** aFile)
 {
-    NS_ENSURE_ARG_POINTER(aFile);
+  NS_ENSURE_ARG_POINTER(aFile);
 
-    *aFile = nullptr;
-    if (mFile.IsEmpty()) {
-        return NS_OK;
-    }
+  *aFile = nullptr;
+  if (mFiles.IsEmpty()) {
+      return NS_OK;
+  }
 
-    nsCOMPtr<nsIFile> file(do_CreateInstance("@mozilla.org/file/local;1"));
-    NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
-
-    file->InitWithPath(mFile);
-
-    file.forget(aFile);
-
-    return NS_OK;
+  nsCOMPtr<nsIFile> file = mFiles[0];
+  file.forget(aFile);
+  return NS_OK;
 }
 
 /* readonly attribute nsIFileURL fileURL; */
 NS_IMETHODIMP
 nsFilePickerProxy::GetFileURL(nsIURI** aFileURL)
 {
-    nsCOMPtr<nsIFile> file;
-    GetFile(getter_AddRefs(file));
+  nsCOMPtr<nsIFile> file;
+  GetFile(getter_AddRefs(file));
 
-    nsCOMPtr<nsIURI> uri;
-    NS_NewFileURI(getter_AddRefs(uri), file);
-    NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIURI> uri;
+  NS_NewFileURI(getter_AddRefs(uri), file);
+  NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
 
-    return CallQueryInterface(uri, aFileURL);
+  return CallQueryInterface(uri, aFileURL);
 }
 
 /* readonly attribute nsISimpleEnumerator files; */
 NS_IMETHODIMP
 nsFilePickerProxy::GetFiles(nsISimpleEnumerator** aFiles)
 {
-    NS_ENSURE_ARG_POINTER(aFiles);
+  NS_ENSURE_ARG_POINTER(aFiles);
 
-    if (mMode == nsIFilePicker::modeOpenMultiple) {
-        return NS_NewArrayEnumerator(aFiles, mFiles);
-    }
+  if (mMode == nsIFilePicker::modeOpenMultiple) {
+    return NS_NewArrayEnumerator(aFiles, mFiles);
+  }
 
-    return NS_ERROR_FAILURE;
+  return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsFilePickerProxy::Show(int16_t* aReturn)
+NS_IMETHODIMP
+nsFilePickerProxy::Show(int16_t* aReturn)
 {
-    mozilla::dom::ContentChild *cc = mozilla::dom::ContentChild::GetSingleton();
-    NS_ASSERTION(cc, "Content Protocol is NULL!");
-    
-    InfallibleTArray<nsString> filePaths;
-    
-    nsresult rv;
-    cc->SendShowFilePicker(mMode, mSelectedType,
-                           mAddToRecentDocs, mTitle,
-                           mDefault, mDefaultExtension,
-                           mFilters, mFilterNames,
-                           &filePaths, aReturn, &rv);
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 
-    NS_ENSURE_SUCCESS(rv, rv);
+NS_IMETHODIMP
+nsFilePickerProxy::Open(nsIFilePickerShownCallback* aCallback)
+{
+  mCallback = aCallback;
 
-    uint32_t count = filePaths.Length();
-    
-    if (mMode == nsIFilePicker::modeOpenMultiple) {
-        for (uint32_t i = 0; i < count; ++i) {
-            nsCOMPtr<nsIFile> file(do_CreateInstance("@mozilla.org/file/local;1"));
-            NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
+  SendOpen(mSelectedType, mAddToRecentDocs, mDefault,
+           mDefaultExtension, mFilters, mFilterNames);
 
-            file->InitWithPath(filePaths[i]);
-            mFiles.AppendObject(file);
-        }
-        return NS_OK;
+  return NS_OK;
+}
+
+bool
+nsFilePickerProxy::Recv__delete__(const MaybeInputFiles& aFiles,
+                                  const int16_t& aResult)
+{
+  if (aFiles.type() == MaybeInputFiles::TInputFiles) {
+    const InfallibleTArray<nsString>& files = aFiles.get_InputFiles().files();
+    for (uint32_t i = 0; i < files.Length(); ++i) {
+      nsCOMPtr<nsIFile> file(do_CreateInstance("@mozilla.org/file/local;1"));
+      NS_ENSURE_TRUE(file, true);
+      file->InitWithPath(files[i]);
+      mFiles.AppendObject(file);
     }
+  }
 
-    NS_ASSERTION(count == 1 || count == 0, "we should only have 1 or 0 files");
+  if (mCallback) {
+    mCallback->Done(aResult);
+    mCallback = nullptr;
+  }
 
-    if (count == 1)
-        mFile = filePaths[0];
-    
-    return NS_OK;
+  return true;
 }

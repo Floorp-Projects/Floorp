@@ -12,6 +12,8 @@
 #include "nsTArray.h"
 #include "nsCOMArray.h"
 
+#include "mozilla/dom/PFilePickerChild.h"
+
 class nsIWidget;
 class nsIFile;
 
@@ -21,7 +23,8 @@ class nsIFile;
   called, remotes everything to the chrome process which in turn can show a
   platform specific file picker.
 */
-class nsFilePickerProxy : public nsBaseFilePicker
+class nsFilePickerProxy : public nsBaseFilePicker,
+                          public mozilla::dom::PFilePickerChild
 {
 public:
     nsFilePickerProxy();
@@ -29,7 +32,7 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIFilePicker (less what's in nsBaseFilePicker)
-    NS_IMETHODIMP Init(nsIDOMWindow* parent, const nsAString& title, int16_t mode);
+    NS_IMETHODIMP Init(nsIDOMWindow* aParent, const nsAString& aTitle, int16_t aMode);
     NS_IMETHODIMP AppendFilter(const nsAString& aTitle, const nsAString& aFilter);
     NS_IMETHODIMP GetDefaultString(nsAString& aDefaultString);
     NS_IMETHODIMP SetDefaultString(const nsAString& aDefaultString);
@@ -41,16 +44,21 @@ public:
     NS_IMETHODIMP GetFileURL(nsIURI** aFileURL);
     NS_IMETHODIMP GetFiles(nsISimpleEnumerator** aFiles);
     NS_IMETHODIMP Show(int16_t* aReturn);
+    NS_IMETHODIMP Open(nsIFilePickerShownCallback* aCallback);
+
+    // PFilePickerChild
+    virtual bool
+    Recv__delete__(const MaybeInputFiles& aFiles, const int16_t& aResult);
 
 private:
     ~nsFilePickerProxy();
     void InitNative(nsIWidget*, const nsAString&);
 
     nsCOMArray<nsIFile> mFiles;
+    nsCOMPtr<nsIFilePickerShownCallback> mCallback;
 
     int16_t   mSelectedType;
     nsString  mFile;
-    nsString  mTitle;
     nsString  mDefault;
     nsString  mDefaultExtension;
 
