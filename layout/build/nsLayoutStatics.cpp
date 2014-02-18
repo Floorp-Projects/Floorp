@@ -130,7 +130,6 @@ using namespace mozilla;
 using namespace mozilla::net;
 using namespace mozilla::dom;
 using namespace mozilla::dom::ipc;
-using namespace mozilla::dom::time;
 
 nsrefcnt nsLayoutStatics::sLayoutStaticRefcnt = 0;
 
@@ -279,8 +278,6 @@ nsLayoutStatics::Initialize()
   nsPermissionManager::AppClearDataObserverInit();
   nsCookieService::AppClearDataObserverInit();
   nsApplicationCacheService::AppClearDataObserverInit();
-
-  InitializeDateCacheCleaner();
 
   HTMLVideoElement::Init();
 

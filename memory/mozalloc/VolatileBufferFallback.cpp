@@ -29,7 +29,7 @@ bool VolatileBuffer::Init(size_t aSize, size_t aAlignment)
 #if defined(MOZ_MEMORY)
   posix_memalign(&mBuf, aAlignment, aSize);
 #elif defined(HAVE_POSIX_MEMALIGN)
-  moz_posix_memalign(&mBuf, aAlignment, aSize);
+  (void)moz_posix_memalign(&mBuf, aAlignment, aSize);
 #else
 #error "No memalign implementation found"
 #endif

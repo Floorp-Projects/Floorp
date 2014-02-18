@@ -46,7 +46,7 @@ VolatileBuffer::Init(size_t aSize, size_t aAlignment)
   }
 
 heap_alloc:
-  moz_posix_memalign(&mBuf, aAlignment, aSize);
+  (void)moz_posix_memalign(&mBuf, aAlignment, aSize);
   mHeap = true;
   return !!mBuf;
 }

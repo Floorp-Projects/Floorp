@@ -22,6 +22,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Sntp.jsm");
 Cu.import("resource://gre/modules/systemlibs.js");
 Cu.import("resource://gre/modules/Promise.jsm");
+Cu.import("resource://gre/modules/FileUtils.jsm");
 
 var RIL = {};
 Cu.import("resource://gre/modules/ril_consts.js", RIL);
@@ -3298,6 +3299,16 @@ RadioInterface.prototype = {
           } else {
             // Or refresh the SNTP.
             this._sntp.request();
+          }
+        } else {
+          // Set a sane minimum time.
+          let buildTime = libcutils.property_get("ro.build.date.utc", "0") * 1000;
+          let file = FileUtils.File("/system/b2g/b2g");
+          if (file.lastModifiedTime > buildTime) {
+            buildTime = file.lastModifiedTime;
+          }
+          if (buildTime > Date.now()) {
+            gTimeService.set(buildTime);
           }
         }
         break;
