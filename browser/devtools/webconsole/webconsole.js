@@ -144,6 +144,9 @@ const HISTORY_FORWARD = 1;
 // The indent of a console group in pixels.
 const GROUP_INDENT = 12;
 
+// The default indent in pixels, applied even without any groups.
+const GROUP_INDENT_DEFAULT = 6;
+
 // The number of messages to display in a single display update. If we display
 // too many messages at once we slow the Firefox UI too much.
 const MESSAGES_IN_INTERVAL = DEFAULT_LOG_LIMIT;
@@ -2419,6 +2422,10 @@ WebConsoleFrame.prototype = {
     let iconContainer = this.document.createElementNS(XHTML_NS, "span");
     iconContainer.className = "icon";
 
+    // Apply the current group by indenting appropriately.
+    let iconMarginLeft = this.groupDepth * GROUP_INDENT + GROUP_INDENT_DEFAULT;
+    iconContainer.style.marginLeft = iconMarginLeft + "px";
+
     // Create the message body, which contains the actual text of the message.
     let bodyNode = this.document.createElementNS(XHTML_NS, "span");
     bodyNode.className = "body devtools-monospace";
@@ -2476,8 +2483,6 @@ WebConsoleFrame.prototype = {
     // Create the timestamp.
     let timestampNode = this.document.createElementNS(XHTML_NS, "span");
     timestampNode.className = "timestamp devtools-monospace";
-    // Apply the current group by indenting appropriately.
-    timestampNode.style.marginRight = this.groupDepth * GROUP_INDENT + "px";
 
     let timestampString = l10n.timestampString(timestamp);
     timestampNode.textContent = timestampString + " ";
