@@ -15,11 +15,11 @@ NS_IMPL_ISUPPORTS1(nsColorPicker, nsIColorPicker)
 
 int nsColorPicker::convertGdkColorComponent(guint16 color_component) {
   // GdkColor value is in range [0..65535]. We need something in range [0..255]
-  return (int(color_component)*255 + 127)/65535;
+  return (color_component * 255 + 127) / 65535;
 }
 
 guint16 nsColorPicker::convertToGdkColorComponent(int color_component) {
-  return color_component*65535/255;
+  return color_component * 65535 / 255;
 }
 
 GdkColor nsColorPicker::convertToGdkColor(nscolor color) {
@@ -29,6 +29,12 @@ GdkColor nsColorPicker::convertToGdkColor(nscolor color) {
       convertToGdkColorComponent(NS_GET_B(color)) };
 
   return result;
+}
+
+GtkColorSelection* nsColorPicker::WidgetGetColorSelection(GtkWidget* widget)
+{
+  return GTK_COLOR_SELECTION(gtk_color_selection_dialog_get_color_selection(
+                             GTK_COLOR_SELECTION_DIALOG(widget)));
 }
 
 /* void init (in nsIDOMWindow parent, in AString title, in short mode); */
@@ -77,17 +83,24 @@ NS_IMETHODIMP nsColorPicker::Open(nsIColorPickerShownCallback *aColorPickerShown
     gtk_window_set_destroy_with_parent(window, TRUE);
   }
 
-  gtk_color_selection_set_current_color(
-      GTK_COLOR_SELECTION(gtk_color_selection_dialog_get_color_selection(
-        GTK_COLOR_SELECTION_DIALOG(color_chooser))),
-      &mDefaultColor);
+  gtk_color_selection_set_current_color(WidgetGetColorSelection(color_chooser),
+                                        &mDefaultColor);
 
   NS_ADDREF_THIS();
+  g_signal_connect(WidgetGetColorSelection(color_chooser), "color-changed",
+                   G_CALLBACK(OnColorChanged), this);
   g_signal_connect(color_chooser, "response", G_CALLBACK(OnResponse), this);
   g_signal_connect(color_chooser, "destroy", G_CALLBACK(OnDestroy), this);
   gtk_widget_show(color_chooser);
 
   return NS_OK;
+}
+
+/* static */ void
+nsColorPicker::OnColorChanged(GtkColorSelection* colorselection,
+                              gpointer user_data)
+{
+  static_cast<nsColorPicker*>(user_data)->Update(colorselection);
 }
 
 /* static */ void
@@ -106,12 +119,21 @@ nsColorPicker::OnDestroy(GtkWidget* color_chooser, gpointer user_data)
 }
 
 void
+nsColorPicker::Update(GtkColorSelection* colorselection)
+{
+  ReadValueFromColorSelection(colorselection);
+  if (mCallback) {
+    mCallback->Update(mColor);
+  }
+}
+
+void
 nsColorPicker::Done(GtkWidget* color_chooser, gint response)
 {
   switch (response) {
     case GTK_RESPONSE_OK:
     case GTK_RESPONSE_ACCEPT:
-      ReadValueFromColorChooser(color_chooser);
+      ReadValueFromColorSelection(WidgetGetColorSelection(color_chooser));
       break;
     case GTK_RESPONSE_CANCEL:
     case GTK_RESPONSE_CLOSE:
@@ -145,13 +167,10 @@ nsString nsColorPicker::ToHexString(int n)
   return result;
 }
 
-void nsColorPicker::ReadValueFromColorChooser(GtkWidget* color_chooser)
+void nsColorPicker::ReadValueFromColorSelection(GtkColorSelection* colorselection)
 {
   GdkColor rgba;
-  gtk_color_selection_get_current_color(
-    GTK_COLOR_SELECTION(gtk_color_selection_dialog_get_color_selection(
-      GTK_COLOR_SELECTION_DIALOG(color_chooser))),
-    &rgba);
+  gtk_color_selection_get_current_color(colorselection, &rgba);
 
   mColor.AssignLiteral("#");
   mColor += ToHexString(convertGdkColorComponent(rgba.red));
