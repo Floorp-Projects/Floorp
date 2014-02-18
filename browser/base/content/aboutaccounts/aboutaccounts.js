@@ -243,6 +243,9 @@ function openPrefs() {
 function init() {
   if (window.location.href.contains("action=signin")) {
     show("remote");
+    wrapper.init(fxAccounts.getAccountsSignInURI());
+  } else if (window.location.href.contains("action=signup")) {
+    show("remote");
     wrapper.init();
   } else if (window.location.href.contains("action=reauth")) {
     fxAccounts.promiseAccountsForceSigninURI().then(url => {
