@@ -8,12 +8,6 @@ PREF_JS_EXPORTS = $(srcdir)/mobile.js
 
 ifndef LIBXUL_SDK
 ifneq (Android,$(OS_TARGET))
-
-LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/xre
-LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/base
-LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/build
-LOCAL_INCLUDES += -I$(DEPTH)/build
-
 STL_FLAGS=
 
 LIBS += \
