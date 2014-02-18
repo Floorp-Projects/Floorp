@@ -303,9 +303,6 @@ protected:
   // when an element has @itemprop but no @itemscope.
   virtual void GetItemValueText(nsAString& text);
   virtual void SetItemValueText(const nsAString& text);
-  nsDOMSettableTokenList* GetTokenList(nsIAtom* aAtom);
-  void GetTokenList(nsIAtom* aAtom, nsIVariant** aResult);
-  nsresult SetTokenList(nsIAtom* aAtom, nsIVariant* aValue);
 public:
   virtual already_AddRefed<mozilla::dom::UndoManager> GetUndoManager();
   virtual bool UndoScope() MOZ_OVERRIDE;
