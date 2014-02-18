@@ -27,3 +27,6 @@ LOCAL_INCLUDES += [
 
 # Statically link against the RTL on windows
 USE_STATIC_LIBS = True
+
+if CONFIG['OS_ARCH'] == 'WINNT':
+    LOCAL_INCLUDES += ['/toolkit/xre']

@@ -25,7 +25,6 @@ RCFLAGS += -DMOZ_XULRUNNER -I$(srcdir)
 else
 RCFLAGS += -DMOZ_XULRUNNER --include-dir $(srcdir)
 endif
-LOCAL_INCLUDES += -I$(topsrcdir)/toolkit/xre
 endif
 
 ifndef MOZ_WINCONSOLE
