@@ -47,7 +47,7 @@ private:
   nsCOMPtr<nsIColorPickerShownCallback> mCallback;
   nsString mTitle;
   nsString mColor;
-  GdkColor mDefaultColor;
+  nsString mInitialColor;
 };
 
 #endif // nsColorPicker_h__
