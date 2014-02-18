@@ -9,3 +9,11 @@ MOCHITEST_CHROME_MANIFESTS += ['mochitest/chrome.ini']
 XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
 
 JAR_MANIFESTS += ['jar.mn']
+
+#DEFINES['MOZILLA_INTERNAL_API'] = True
+
+# XXX Get this to work in libxul builds.
+## simple c++ tests (no xpcom)
+#CPP_UNIT_TESTS += [ \
+#    'TestUrlClassifierUtils.cpp', \
+#]

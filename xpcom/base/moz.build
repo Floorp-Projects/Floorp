@@ -158,6 +158,5 @@ LOCAL_INCLUDES += [
     '/xpcom/ds',
 ]
 
-
 if CONFIG['MOZ_OPTIMIZE']:
     DEFINES['MOZ_OPTIMIZE'] = True
