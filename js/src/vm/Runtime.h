@@ -1117,6 +1117,11 @@ struct JSRuntime : public JS::shadow::Runtime,
     bool                gcIncrementalEnabled;
 
     /*
+     * GGC can be enabled from the command line while testing.
+     */
+    unsigned            gcGenerationalDisabled;
+
+    /*
      * This is true if we are in the middle of a brain transplant (e.g.,
      * JS_TransplantObject) or some other operation that can manipulate
      * dead zones.

@@ -39,8 +39,6 @@ class OutOfLineLoadTypedArray;
 class OutOfLineNewGCThingPar;
 class OutOfLineUpdateCache;
 class OutOfLineCallPostWriteBarrier;
-class OutOfLineMallocSlots;
-class OutOfLineFreeSlots;
 
 class CodeGenerator : public CodeGeneratorSpecific
 {
@@ -134,10 +132,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitCallDirectEvalV(LCallDirectEvalV *lir);
     bool visitDoubleToInt32(LDoubleToInt32 *lir);
     bool visitFloat32ToInt32(LFloat32ToInt32 *lir);
-    bool visitOutOfLineMallocSlots(OutOfLineMallocSlots *ool);
-    bool visitOutOfLineFreeSlots(OutOfLineFreeSlots *ool);
-    bool emitOutOfLineMallocFree(const Register &reg, size_t nDynamicSlots, Label *fallback,
-                                 Label **mallocEntry, Label **mallocRejoin, Label **freeEntry);
+    bool visitNewSlots(LNewSlots *lir);
     bool visitNewArrayCallVM(LNewArray *lir);
     bool visitNewArray(LNewArray *lir);
     bool visitOutOfLineNewArray(OutOfLineNewArray *ool);
