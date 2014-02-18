@@ -41,6 +41,8 @@
 #include "nsDOMCSSAttrDeclaration.h"
 #include "nsNameSpaceManager.h"
 #include "nsContentList.h"
+#include "nsVariant.h"
+#include "nsDOMSettableTokenList.h"
 #include "nsDOMTokenList.h"
 #include "nsXBLPrototypeBinding.h"
 #include "nsError.h"
@@ -2524,6 +2526,81 @@ void
 Element::GetLinkTarget(nsAString& aTarget)
 {
   aTarget.Truncate();
+}
+
+static void
+nsDOMSettableTokenListPropertyDestructor(void *aObject, nsIAtom *aProperty,
+                                         void *aPropertyValue, void *aData)
+{
+  nsDOMSettableTokenList* list =
+    static_cast<nsDOMSettableTokenList*>(aPropertyValue);
+  NS_RELEASE(list);
+}
+
+static nsIAtom** sPropertiesToTraverseAndUnlink[] =
+  {
+    &nsGkAtoms::microdataProperties,
+    &nsGkAtoms::itemtype,
+    &nsGkAtoms::itemref,
+    &nsGkAtoms::itemprop,
+    &nsGkAtoms::sandbox,
+    &nsGkAtoms::sizes,
+    nullptr
+  };
+
+// static
+nsIAtom***
+nsGenericHTMLElement::PropertiesToTraverseAndUnlink()
+{
+  return sPropertiesToTraverseAndUnlink;
+}
+
+nsDOMSettableTokenList*
+Element::GetTokenList(nsIAtom* aAtom)
+{
+#ifdef DEBUG
+  nsIAtom*** props =
+    nsGenericHTMLElement::PropertiesToTraverseAndUnlink();
+  bool found = false;
+  for (uint32_t i = 0; props[i]; ++i) {
+    if (*props[i] == aAtom) {
+      found = true;
+      break;
+    }
+  }
+  MOZ_ASSERT(found, "Trying to use an unknown tokenlist!");
+#endif
+
+  nsDOMSettableTokenList* list = nullptr;
+  if (HasProperties()) {
+    list = static_cast<nsDOMSettableTokenList*>(GetProperty(aAtom));
+  }
+  if (!list) {
+    list = new nsDOMSettableTokenList(this, aAtom);
+    NS_ADDREF(list);
+    SetProperty(aAtom, list, nsDOMSettableTokenListPropertyDestructor);
+  }
+  return list;
+}
+
+void
+Element::GetTokenList(nsIAtom* aAtom, nsIVariant** aResult)
+{
+  nsISupports* itemType = GetTokenList(aAtom);
+  nsCOMPtr<nsIWritableVariant> out = new nsVariant();
+  out->SetAsInterface(NS_GET_IID(nsISupports), itemType);
+  out.forget(aResult);
+}
+
+nsresult
+Element::SetTokenList(nsIAtom* aAtom, nsIVariant* aValue)
+{
+  nsDOMSettableTokenList* itemType = GetTokenList(aAtom);
+  nsAutoString string;
+  aValue->GetAsAString(string);
+  ErrorResult rv;
+  itemType->SetValue(string, rv);
+  return rv.ErrorCode();
 }
 
 bool
