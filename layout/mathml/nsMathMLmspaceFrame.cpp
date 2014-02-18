@@ -91,7 +91,7 @@ nsMathMLmspaceFrame::ProcessAttributes(nsPresContext* aPresContext)
   }
 }
 
-NS_IMETHODIMP
+nsresult
 nsMathMLmspaceFrame::Reflow(nsPresContext*          aPresContext,
                             nsHTMLReflowMetrics&     aDesiredSize,
                             const nsHTMLReflowState& aReflowState,

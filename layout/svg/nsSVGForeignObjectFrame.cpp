@@ -83,7 +83,7 @@ nsSVGForeignObjectFrame::GetType() const
   return nsGkAtoms::svgForeignObjectFrame;
 }
 
-NS_IMETHODIMP
+nsresult
 nsSVGForeignObjectFrame::AttributeChanged(int32_t  aNameSpaceID,
                                           nsIAtom *aAttribute,
                                           int32_t  aModType)
@@ -116,7 +116,7 @@ nsSVGForeignObjectFrame::AttributeChanged(int32_t  aNameSpaceID,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsSVGForeignObjectFrame::Reflow(nsPresContext*           aPresContext,
                                 nsHTMLReflowMetrics&     aDesiredSize,
                                 const nsHTMLReflowState& aReflowState,

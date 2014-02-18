@@ -192,6 +192,9 @@ skip-if(B2G) include image-region/reftest.list
 # indic shaping with harfbuzz
 skip-if(B2G) include indic-shaping/reftest.list
 
+# inline layout
+include inline/reftest.list
+
 # inline borders and padding
 skip-if(B2G) include inline-borderpadding/reftest.list
 

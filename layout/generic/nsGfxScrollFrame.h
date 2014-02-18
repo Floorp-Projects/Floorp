@@ -445,7 +445,7 @@ public:
 
   // Called to set the child frames. We typically have three: the scroll area,
   // the vertical scrollbar, and the horizontal scrollbar.
-  NS_IMETHOD SetInitialChildList(ChildListID     aListID,
+  virtual nsresult SetInitialChildList(ChildListID     aListID,
                                  nsFrameList&    aChildList) MOZ_OVERRIDE;
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
@@ -476,10 +476,10 @@ public:
 
   virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
   virtual nscoord GetPrefWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
-  NS_IMETHOD GetPadding(nsMargin& aPadding) MOZ_OVERRIDE;
+  virtual nsresult GetPadding(nsMargin& aPadding) MOZ_OVERRIDE;
   virtual bool IsCollapsed() MOZ_OVERRIDE;
   
-  NS_IMETHOD Reflow(nsPresContext*          aPresContext,
+  virtual nsresult Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus) MOZ_OVERRIDE;
@@ -490,16 +490,16 @@ public:
 
   // Because there can be only one child frame, these two function return
   // NS_ERROR_FAILURE
-  NS_IMETHOD AppendFrames(ChildListID     aListID,
+  virtual nsresult AppendFrames(ChildListID     aListID,
                           nsFrameList&    aFrameList) MOZ_OVERRIDE;
-  NS_IMETHOD InsertFrames(ChildListID     aListID,
+  virtual nsresult InsertFrames(ChildListID     aListID,
                           nsIFrame*       aPrevFrame,
                           nsFrameList&    aFrameList) MOZ_OVERRIDE;
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot) MOZ_OVERRIDE;
 
 
-  NS_IMETHOD RemoveFrame(ChildListID     aListID,
+  virtual nsresult RemoveFrame(ChildListID     aListID,
                          nsIFrame*       aOldFrame) MOZ_OVERRIDE;
 
   virtual nsIScrollableFrame* GetScrollTargetFrame() MOZ_OVERRIDE {
@@ -682,7 +682,7 @@ public:
   virtual nsIAtom* GetType() const MOZ_OVERRIDE;
   
 #ifdef DEBUG_FRAME_DUMP
-  NS_IMETHOD GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;
+  virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;
 #endif
 
 #ifdef ACCESSIBILITY
@@ -742,7 +742,7 @@ public:
 
   // Called to set the child frames. We typically have three: the scroll area,
   // the vertical scrollbar, and the horizontal scrollbar.
-  NS_IMETHOD SetInitialChildList(ChildListID     aListID,
+  virtual nsresult SetInitialChildList(ChildListID     aListID,
                                  nsFrameList&    aChildList) MOZ_OVERRIDE;
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
@@ -762,15 +762,15 @@ public:
 
   // Because there can be only one child frame, these two function return
   // NS_ERROR_FAILURE
-  NS_IMETHOD AppendFrames(ChildListID     aListID,
+  virtual nsresult AppendFrames(ChildListID     aListID,
                           nsFrameList&    aFrameList) MOZ_OVERRIDE;
-  NS_IMETHOD InsertFrames(ChildListID     aListID,
+  virtual nsresult InsertFrames(ChildListID     aListID,
                           nsIFrame*       aPrevFrame,
                           nsFrameList&    aFrameList) MOZ_OVERRIDE;
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot) MOZ_OVERRIDE;
 
-  NS_IMETHOD RemoveFrame(ChildListID     aListID,
+  virtual nsresult RemoveFrame(ChildListID     aListID,
                          nsIFrame*       aOldFrame) MOZ_OVERRIDE;
 
   virtual nsIScrollableFrame* GetScrollTargetFrame() MOZ_OVERRIDE {
@@ -802,7 +802,7 @@ public:
   virtual nscoord GetBoxAscent(nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
 
   NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
-  NS_IMETHOD GetPadding(nsMargin& aPadding) MOZ_OVERRIDE;
+  virtual nsresult GetPadding(nsMargin& aPadding) MOZ_OVERRIDE;
 
   virtual bool GetBorderRadii(nscoord aRadii[8]) const MOZ_OVERRIDE {
     return mHelper.GetBorderRadii(aRadii);
@@ -994,7 +994,7 @@ public:
   }
 
 #ifdef DEBUG_FRAME_DUMP
-  NS_IMETHOD GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;
+  virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;
 #endif
 
 protected:

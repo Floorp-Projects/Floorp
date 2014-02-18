@@ -13,3 +13,10 @@ SOURCES += [
 FAIL_ON_WARNINGS = True
 
 DEFINES['XPCOM_GLUE'] = True
+
+GENERATED_INCLUDES += ['/build']
+LOCAL_INCLUDES += [
+    '/toolkit/xre',
+    '/xpcom/base',
+    '/xpcom/build',
+]

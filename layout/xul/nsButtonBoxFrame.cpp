@@ -45,7 +45,7 @@ nsButtonBoxFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
   nsBoxFrame::BuildDisplayListForChildren(aBuilder, aDirtyRect, aLists);
 }
 
-NS_IMETHODIMP
+nsresult
 nsButtonBoxFrame::HandleEvent(nsPresContext* aPresContext, 
                               WidgetGUIEvent* aEvent,
                               nsEventStatus* aEventStatus)
