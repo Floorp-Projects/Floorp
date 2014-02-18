@@ -319,7 +319,6 @@ bool CacheEntry::Load(bool aTruncate, bool aPriority)
                        aTruncate,
                        !mUseDisk,
                        aPriority,
-                       false /* key is not a hash */,
                        directLoad ? nullptr : this);
     }
 
@@ -835,6 +834,17 @@ bool CacheEntry::IsReferenced() const
   // Increasing this counter from 0 to non-null and this check both happen only
   // under the service lock.
   return mHandlersCount > 0;
+}
+
+bool CacheEntry::IsFileDoomed()
+{
+  mozilla::MutexAutoLock lock(mLock);
+
+  if (NS_SUCCEEDED(mFileStatus)) {
+    return mFile->IsDoomed();
+  }
+
+  return false;
 }
 
 uint32_t CacheEntry::GetMetadataMemoryConsumption()

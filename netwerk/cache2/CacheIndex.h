@@ -348,7 +348,7 @@ public:
     return mCount - mRemoved - mNotInitialized - mEmpty;
   }
 
-  int64_t Size() {
+  uint32_t Size() {
     MOZ_ASSERT(!mStateLogged, "CacheIndexStats::Size() - state logged!");
     return mSize;
   }
@@ -389,7 +389,7 @@ public:
             MOZ_ASSERT(mEmpty);
             mEmpty--;
           } else {
-            MOZ_ASSERT(mSize);
+            MOZ_ASSERT(mSize >= aEntry->GetFileSize());
             mSize -= aEntry->GetFileSize();
           }
         }
@@ -441,7 +441,7 @@ private:
   uint32_t mDirty;
   uint32_t mFresh;
   uint32_t mEmpty;
-  int64_t  mSize;
+  uint32_t mSize;
 #ifdef DEBUG
   // We completely remove the data about an entry from the stats in
   // BeforeChange() and set this flag to true. The entry is then modified,
@@ -511,6 +511,15 @@ public:
   // Returns status of the entry in index for the given key. It can be called
   // on any thread.
   static nsresult HasEntry(const nsACString &aKey, EntryStatus *_retval);
+
+  // Returns a hash of the least important entry that should be evicted if the
+  // cache size is over limit and also returns a total number of all entries in
+  // the index.
+  static nsresult GetEntryForEviction(SHA1Sum::Hash *aHash, uint32_t *aCnt);
+
+  // Returns cache size in kB.
+  static nsresult GetCacheSize(uint32_t *_retval);
+
 
 private:
   friend class CacheIndexEntryAutoManage;
