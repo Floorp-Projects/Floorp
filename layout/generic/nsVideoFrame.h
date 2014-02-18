@@ -46,8 +46,8 @@ public:
                                 const nsDisplayListSet& aLists) MOZ_OVERRIDE;
 
   virtual nsresult AttributeChanged(int32_t aNameSpaceID,
-                              nsIAtom* aAttribute,
-                              int32_t aModType) MOZ_OVERRIDE;
+                                    nsIAtom* aAttribute,
+                                    int32_t aModType) MOZ_OVERRIDE;
 
   /* get the size of the video's display */
   nsSize GetVideoIntrinsicSize(nsRenderingContext *aRenderingContext);
@@ -62,9 +62,9 @@ public:
   virtual bool IsLeaf() const MOZ_OVERRIDE;
 
   virtual nsresult Reflow(nsPresContext*          aPresContext,
-                    nsHTMLReflowMetrics&     aDesiredSize,
-                    const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus&          aStatus) MOZ_OVERRIDE;
+                          nsHTMLReflowMetrics&     aDesiredSize,
+                          const nsHTMLReflowState& aReflowState,
+                          nsReflowStatus&          aStatus) MOZ_OVERRIDE;
 
 #ifdef ACCESSIBILITY
   virtual mozilla::a11y::AccType AccessibleType() MOZ_OVERRIDE;

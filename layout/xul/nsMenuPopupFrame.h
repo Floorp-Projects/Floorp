@@ -178,8 +178,8 @@ public:
                     nsIFrame*        aPrevInFlow) MOZ_OVERRIDE;
 
   virtual nsresult AttributeChanged(int32_t aNameSpaceID,
-                              nsIAtom* aAttribute,
-                              int32_t aModType) MOZ_OVERRIDE;
+                                    nsIAtom* aAttribute,
+                                    int32_t aModType) MOZ_OVERRIDE;
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot) MOZ_OVERRIDE;
 
@@ -197,8 +197,8 @@ public:
   nsresult CreateWidgetForView(nsView* aView);
   uint8_t GetShadowStyle();
 
-  virtual nsresult SetInitialChildList(ChildListID     aListID,
-                                 nsFrameList&    aChildList) MOZ_OVERRIDE;
+  virtual nsresult SetInitialChildList(ChildListID  aListID,
+                                       nsFrameList& aChildList) MOZ_OVERRIDE;
 
   virtual bool IsLeaf() const MOZ_OVERRIDE;
 

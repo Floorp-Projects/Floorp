@@ -37,8 +37,8 @@ public:
                     nsIFrame*        aPrevInFlow) MOZ_OVERRIDE;
 
   virtual nsresult  AttributeChanged(int32_t         aNameSpaceID,
-                               nsIAtom*        aAttribute,
-                               int32_t         aModType);
+                                     nsIAtom*        aAttribute,
+                                     int32_t         aModType);
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot);
 

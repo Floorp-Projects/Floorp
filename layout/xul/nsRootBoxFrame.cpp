@@ -59,20 +59,20 @@ public:
   virtual nsresult RemoveTooltipSupport(nsIContent* aNode);
 
   virtual nsresult AppendFrames(ChildListID     aListID,
-                          nsFrameList&    aFrameList);
+                                nsFrameList&    aFrameList);
   virtual nsresult InsertFrames(ChildListID     aListID,
-                          nsIFrame*       aPrevFrame,
-                          nsFrameList&    aFrameList);
+                                nsIFrame*       aPrevFrame,
+                                nsFrameList&    aFrameList);
   virtual nsresult RemoveFrame(ChildListID     aListID,
-                         nsIFrame*       aOldFrame);
+                               nsIFrame*       aOldFrame);
 
   virtual nsresult Reflow(nsPresContext*          aPresContext,
-                    nsHTMLReflowMetrics&     aDesiredSize,
-                    const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus&          aStatus);
+                          nsHTMLReflowMetrics&     aDesiredSize,
+                          const nsHTMLReflowState& aReflowState,
+                          nsReflowStatus&          aStatus);
   virtual nsresult HandleEvent(nsPresContext* aPresContext,
-                         WidgetGUIEvent* aEvent,
-                         nsEventStatus* aEventStatus);
+                               WidgetGUIEvent* aEvent,
+                               nsEventStatus* aEventStatus);
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
