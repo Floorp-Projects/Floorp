@@ -46,7 +46,7 @@ var gConnectionsDialog = {
   proxyTypeChanged: function ()
   {
     var proxyTypePref = document.getElementById("network.proxy.type");
-    
+
     // Update http
     var httpProxyURLPref = document.getElementById("network.proxy.http");
     httpProxyURLPref.disabled = proxyTypePref.value != 1;
@@ -58,10 +58,11 @@ var gConnectionsDialog = {
 
     var shareProxiesPref = document.getElementById("network.proxy.share_proxy_settings");
     shareProxiesPref.disabled = proxyTypePref.value != 1;
-    
+    var autologinProxyPref = document.getElementById("signon.autologin.proxy");
+    autologinProxyPref.disabled = proxyTypePref.value == 0;
     var noProxiesPref = document.getElementById("network.proxy.no_proxies_on");
     noProxiesPref.disabled = proxyTypePref.value != 1;
-    
+
     var autoconfigURLPref = document.getElementById("network.proxy.autoconfig_url");
     autoconfigURLPref.disabled = proxyTypePref.value != 2;
 
