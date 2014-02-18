@@ -51,33 +51,6 @@ public:
   virtual void ComputeEffectiveTransforms(const Matrix4x4& aTransformToSurface) {
     DefaultComputeEffectiveTransforms(aTransformToSurface);
   }
-
-  virtual void RepositionChild(Layer* aChild, Layer* aAfter) {
-    MOZ_CRASH();
-  }
-
-  virtual void InsertAfter(Layer* aChild, Layer* aAfter) {
-    // Bad implementation but it should be fine for testing
-    if (this == aChild) {
-      MOZ_CRASH();
-    }
-    if (aAfter != nullptr && aAfter != mLastChild) {
-      // Fix the implementation to support this if you need it
-      MOZ_CRASH();
-    }
-    if (!mFirstChild) {
-      mFirstChild = aChild;
-    }
-    if (mLastChild) {
-      mLastChild->SetNextSibling(aChild);
-    }
-    aChild->SetPrevSibling(mLastChild);
-    mLastChild = aChild;
-  }
-
-  virtual void RemoveChild(Layer* aChild) {
-    MOZ_CRASH();
-  }
 };
 
 class TestThebesLayer: public ThebesLayer {
@@ -230,7 +203,7 @@ already_AddRefed<Layer> CreateLayerTree(
         rootLayer = layer;
       }
       if (parentContainerLayer) {
-        parentContainerLayer->InsertAfter(layer, nullptr);
+        parentContainerLayer->InsertAfter(layer, parentContainerLayer->GetLastChild());
         layer->SetParent(parentContainerLayer);
       }
       lastLayer = layer;
