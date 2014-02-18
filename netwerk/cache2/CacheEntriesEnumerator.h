@@ -30,9 +30,7 @@ public:
   ~CacheEntriesEnumerator();
 
   bool HasMore();
-  nsresult GetNextCacheFile(CacheEntriesEnumeratorCallback* aCallback);
   nsresult GetNextFile(nsIFile** aFile);
-  nsresult GetCacheFileFromFile(nsIFile* aFile, CacheEntriesEnumeratorCallback* aCallback);
 
 protected:
   friend class CacheFileIOManager;
