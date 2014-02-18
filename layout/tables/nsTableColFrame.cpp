@@ -85,7 +85,7 @@ void nsTableColFrame::SetContinuousBCBorderWidth(uint8_t     aForSide,
   }
 }
 
-NS_METHOD nsTableColFrame::Reflow(nsPresContext*          aPresContext,
+nsresult nsTableColFrame::Reflow(nsPresContext*          aPresContext,
                                   nsHTMLReflowMetrics&     aDesiredSize,
                                   const nsHTMLReflowState& aReflowState,
                                   nsReflowStatus&          aStatus)
@@ -177,7 +177,7 @@ nsTableColFrame::GetType() const
 }
 
 #ifdef DEBUG_FRAME_DUMP
-NS_IMETHODIMP
+nsresult
 nsTableColFrame::GetFrameName(nsAString& aResult) const
 {
   return MakeFrameName(NS_LITERAL_STRING("TableCol"), aResult);

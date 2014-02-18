@@ -27,7 +27,7 @@ public:
 
   nsResizerFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
-  NS_IMETHOD HandleEvent(nsPresContext* aPresContext,
+  virtual nsresult HandleEvent(nsPresContext* aPresContext,
                          mozilla::WidgetGUIEvent* aEvent,
                          nsEventStatus* aEventStatus) MOZ_OVERRIDE;
 

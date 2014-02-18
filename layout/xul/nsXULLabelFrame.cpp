@@ -80,7 +80,7 @@ nsXULLabelFrame::DestroyFrom(nsIFrame* aDestructRoot)
   nsBlockFrame::DestroyFrom(aDestructRoot);
 } 
 
-NS_IMETHODIMP
+nsresult
 nsXULLabelFrame::AttributeChanged(int32_t aNameSpaceID,
                                   nsIAtom* aAttribute,
                                   int32_t aModType)
@@ -106,7 +106,7 @@ nsXULLabelFrame::GetType() const
 // Diagnostics
 
 #ifdef DEBUG_FRAME_DUMP
-NS_IMETHODIMP
+nsresult
 nsXULLabelFrame::GetFrameName(nsAString& aResult) const
 {
   return MakeFrameName(NS_LITERAL_STRING("XULLabel"), aResult);

@@ -41,7 +41,7 @@ public:
     * Respond to a gui event
     * @see nsIFrame::HandleEvent
     */
-  NS_IMETHOD HandleEvent(nsPresContext* aPresContext, 
+  virtual nsresult HandleEvent(nsPresContext* aPresContext, 
                          mozilla::WidgetGUIEvent* aEvent,
                          nsEventStatus* aEventStatus) MOZ_OVERRIDE;
 
@@ -51,7 +51,7 @@ public:
     * Respond to the request to resize and/or reflow
     * @see nsIFrame::Reflow
     */
-  NS_IMETHOD Reflow(nsPresContext*      aCX,
+  virtual nsresult Reflow(nsPresContext*      aCX,
                     nsHTMLReflowMetrics& aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&      aStatus) MOZ_OVERRIDE;
