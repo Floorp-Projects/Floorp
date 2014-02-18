@@ -40,22 +40,7 @@
 
 #include <d3d10_1.h>
 
-typedef HRESULT (WINAPI*D3D10CreateDevice1Func)(
-  IDXGIAdapter *pAdapter,
-  D3D10_DRIVER_TYPE DriverType,
-  HMODULE Software,
-  UINT Flags,
-  D3D10_FEATURE_LEVEL1 HardwareLevel,
-  UINT SDKVersion,
-  ID3D10Device1 **ppDevice
-);
-
-typedef HRESULT(WINAPI*CreateDXGIFactory1Func)(
-  REFIID riid,
-  void **ppFactory
-);
-
- using namespace std;
+using namespace std;
 
 void SetSubclass(HWND hWnd, InstanceData* instanceData);
 void ClearSubclass(HWND hWnd);
@@ -126,13 +111,15 @@ getD3D10Device()
   ID3D10Device1 *device;
     
   HMODULE d3d10module = LoadLibraryA("d3d10_1.dll");
-  D3D10CreateDevice1Func createD3DDevice = (D3D10CreateDevice1Func)
-      GetProcAddress(d3d10module, "D3D10CreateDevice1");
+  decltype(D3D10CreateDevice1)* createD3DDevice =
+      (decltype(D3D10CreateDevice1)*) GetProcAddress(d3d10module,
+                                                     "D3D10CreateDevice1");
 
   if (createD3DDevice) {
     HMODULE dxgiModule = LoadLibraryA("dxgi.dll");
-    CreateDXGIFactory1Func createDXGIFactory1 = (CreateDXGIFactory1Func)
-        GetProcAddress(dxgiModule, "CreateDXGIFactory1");
+    decltype(CreateDXGIFactory1)* createDXGIFactory1 =
+        (decltype(CreateDXGIFactory1)*) GetProcAddress(dxgiModule,
+                                                       "CreateDXGIFactory1");
 
     HRESULT hr;
 

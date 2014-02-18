@@ -371,8 +371,11 @@ def check_output(out, err, rc, test):
 
 def print_tinderbox(ok, res):
     # Output test failures in a TBPL parsable format, eg:
-    # TEST-PASS | /foo/bar/baz.js | --ion-eager
-    # TEST-UNEXPECTED-FAIL | /foo/bar/baz.js | --no-ion: Assertion failure: ...
+    # TEST-RESULT | filename.js | Failure description (code N, args "--foobar")
+    #
+    # Example:
+    # TEST-PASS | foo/bar/baz.js | (code 0, args "--ion-eager")
+    # TEST-UNEXPECTED-FAIL | foo/bar/baz.js | TypeError: or something (code -9, args "--no-ion")
     # INFO exit-status     : 3
     # INFO timed-out       : False
     # INFO stdout          > foo
@@ -380,18 +383,20 @@ def print_tinderbox(ok, res):
     # INFO stdout          > baz
     # INFO stderr         2> TypeError: or something
     # TEST-UNEXPECTED-FAIL | jit_test.py: Test execution interrupted by user
-    label = "TEST-PASS" if ok else "TEST-UNEXPECTED-FAIL"
+    result = "TEST-PASS" if ok else "TEST-UNEXPECTED-FAIL"
+    message = "Success" if ok else res.describe_failure()
     jitflags = " ".join(res.test.jitflags)
-    print("%s | %s | %s" % (label, res.test.relpath_top, jitflags))
-    if ok:
-        return
+    print("{} | {} | {} (code {}, args \"{}\")".format(
+          result, res.test.relpath_top, message, res.rc, jitflags))
 
     # For failed tests, print as much information as we have, to aid debugging.
+    if ok:
+        return
     print("INFO exit-status     : {}".format(res.rc))
     print("INFO timed-out       : {}".format(res.timed_out))
-    for line in res.out.split('\n'):
+    for line in res.out.splitlines():
         print("INFO stdout          > " + line.strip())
-    for line in res.err.split('\n'):
+    for line in res.err.splitlines():
         print("INFO stderr         2> " + line.strip())
 
 def wrap_parallel_run_test(test, prefix, resultQueue, options):

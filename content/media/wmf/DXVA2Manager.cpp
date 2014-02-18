@@ -60,8 +60,6 @@ D3D9DXVA2Manager::GetDXVADeviceManager()
   return mDeviceManager;
 }
 
-typedef HRESULT (WINAPI*Direct3DCreate9Func)(UINT SDKVersion, IDirect3D9Ex**);
-
 HRESULT
 D3D9DXVA2Manager::Init()
 {
@@ -70,8 +68,8 @@ D3D9DXVA2Manager::Init()
   // Create D3D9Ex.
   HMODULE d3d9lib = LoadLibraryW(L"d3d9.dll");
   NS_ENSURE_TRUE(d3d9lib, E_FAIL);
-  Direct3DCreate9Func d3d9Create =
-    (Direct3DCreate9Func)GetProcAddress(d3d9lib, "Direct3DCreate9Ex");
+  decltype(Direct3DCreate9Ex)* d3d9Create =
+    (decltype(Direct3DCreate9Ex)*) GetProcAddress(d3d9lib, "Direct3DCreate9Ex");
   nsRefPtr<IDirect3D9Ex> d3d9Ex;
   HRESULT hr = d3d9Create(D3D_SDK_VERSION, getter_AddRefs(d3d9Ex));
   if (!d3d9Ex) {

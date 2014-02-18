@@ -10,6 +10,7 @@ include protocol PContent;
 include protocol PContentDialog;
 include protocol PDocumentRenderer;
 include protocol PContentPermissionRequest;
+include protocol PFilePicker;
 include protocol PRenderFrame;
 include protocol POfflineCacheUpdate;
 include protocol PIndexedDB;
@@ -59,6 +60,7 @@ intr protocol PBrowser
     manages PContentDialog;
     manages PDocumentRenderer;
     manages PContentPermissionRequest;
+    manages PFilePicker;
     manages PRenderFrame;
     manages POfflineCacheUpdate;
     manages PIndexedDB;
@@ -236,6 +238,8 @@ parent:
 
     PContentDialog(uint32_t aType, nsCString aName, nsCString aFeatures,
                    int32_t[] aIntParams, nsString[] aStringParams);
+
+    PFilePicker(nsString aTitle, int16_t aMode);
 
     /**
      * Create a layout frame (encapsulating a remote layer tree) for

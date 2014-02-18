@@ -15,6 +15,8 @@
 #include "nsComponentManagerUtils.h"
 #include "nsIMutableArray.h"
 
+#define DOT11_BSS_TYPE_UNUSED static_cast<DOT11_BSS_TYPE>(0)
+
 using namespace mozilla;
 
 nsresult
@@ -24,11 +26,11 @@ nsWifiMonitor::DoScan()
     if (!wlan_library)
       return NS_ERROR_NOT_AVAILABLE;
 
-    WlanOpenHandleFunction WlanOpenHandle = (WlanOpenHandleFunction) GetProcAddress(wlan_library, "WlanOpenHandle");
-    WlanEnumInterfacesFunction WlanEnumInterfaces = (WlanEnumInterfacesFunction) GetProcAddress(wlan_library, "WlanEnumInterfaces");
-    WlanGetNetworkBssListFunction WlanGetNetworkBssList = (WlanGetNetworkBssListFunction) GetProcAddress(wlan_library, "WlanGetNetworkBssList");
-    WlanFreeMemoryFunction WlanFreeMemory = (WlanFreeMemoryFunction) GetProcAddress(wlan_library, "WlanFreeMemory");
-    WlanCloseHandleFunction WlanCloseHandle = (WlanCloseHandleFunction) GetProcAddress(wlan_library, "WlanCloseHandle");
+    decltype(::WlanOpenHandle)* WlanOpenHandle = (decltype(::WlanOpenHandle)*) GetProcAddress(wlan_library, "WlanOpenHandle");
+    decltype(::WlanEnumInterfaces)* WlanEnumInterfaces = (decltype(::WlanEnumInterfaces)*) GetProcAddress(wlan_library, "WlanEnumInterfaces");
+    decltype(::WlanGetNetworkBssList)* WlanGetNetworkBssList = (decltype(::WlanGetNetworkBssList)*) GetProcAddress(wlan_library, "WlanGetNetworkBssList");
+    decltype(::WlanFreeMemory)* WlanFreeMemory = (decltype(::WlanFreeMemory)*) GetProcAddress(wlan_library, "WlanFreeMemory");
+    decltype(::WlanCloseHandle)* WlanCloseHandle = (decltype(::WlanCloseHandle)*) GetProcAddress(wlan_library, "WlanCloseHandle");
 
     if (!WlanOpenHandle ||
         !WlanEnumInterfaces ||

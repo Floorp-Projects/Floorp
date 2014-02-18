@@ -31,6 +31,7 @@ class nsIMEStateManager
 {
   friend class nsTextStateManager;
 protected:
+  typedef mozilla::widget::IMEMessage IMEMessage;
   typedef mozilla::widget::IMEState IMEState;
   typedef mozilla::widget::InputContext InputContext;
   typedef mozilla::widget::InputContextAction InputContextAction;
@@ -114,10 +115,8 @@ public:
    * Send a notification to IME.  It depends on the IME or platform spec what
    * will occur (or not occur).
    */
-  static nsresult NotifyIME(mozilla::widget::NotificationToIME aNotification,
-                            nsIWidget* aWidget);
-  static nsresult NotifyIME(mozilla::widget::NotificationToIME aNotification,
-                            nsPresContext* aPresContext);
+  static nsresult NotifyIME(IMEMessage aMessage, nsIWidget* aWidget);
+  static nsresult NotifyIME(IMEMessage aMessage, nsPresContext* aPresContext);
 
 protected:
   static nsresult OnChangeFocusInternal(nsPresContext* aPresContext,
