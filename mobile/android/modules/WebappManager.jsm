@@ -246,15 +246,6 @@ this.WebappManager = {
   _autoUpdate: function(aData, aOldApp) { return Task.spawn((function*() {
     log("_autoUpdate app of type " + aData.type);
 
-    // The data object has a manifestUrl property for the manifest URL,
-    // but updateHostedApp expects it to be called manifestURL, and we pass
-    // the data object to it, so we need to change the name.
-    // TODO: rename this to manifestURL upstream, so the data object always has
-    // a consistent name for the property (even if we name it differently
-    // internally).
-    aData.manifestURL = aData.manifestUrl;
-    delete aData.manifestUrl;
-
     if (aData.type == "hosted") {
       let oldManifest = yield DOMApplicationRegistry.getManifestFor(aData.manifestURL);
       DOMApplicationRegistry.updateHostedApp(aData, aOldApp.id, aOldApp, oldManifest, aData.manifest);
