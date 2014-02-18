@@ -70,8 +70,10 @@ class ProcTest(unittest.TestCase):
         """
         if 'returncode' in expectedfail:
             self.assertTrue(returncode, "Detected an unexpected return code of: %s" % returncode)
-        elif not isalive:
-            self.assertTrue(returncode == 0, "Detected non-zero return code of: %d" % returncode)
+        elif isalive:
+            self.assertEqual(returncode, None, "Detected not None return code of: %s" % returncode)
+        else:
+            self.assertNotEqual(returncode, None, "Detected unexpected None return code of")
 
         if 'didtimeout' in expectedfail:
             self.assertTrue(didtimeout, "Detected that process didn't time out")

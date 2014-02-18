@@ -213,7 +213,7 @@ public:
   void MarkSent() { mSent = true; }
   bool IsSentToCompositor() { return mSent; }
 
-  virtual TemporaryRef<gfx::SourceSurface> GetAsSourceSurface();
+  virtual TemporaryRef<gfx::SourceSurface> GetAsSourceSurface() = 0;
 
 protected:
   Image(void* aImplData, ImageFormat aFormat) :

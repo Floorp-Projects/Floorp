@@ -250,24 +250,24 @@ int nr_stun_server_process_request(nr_stun_server_ctx *ctx, nr_socket *sock, cha
         ABORT(r);
 
     if ((r=nr_stun_decode_message(req, nr_stun_server_get_password, ctx))) {
-        /* draft-ietf-behave-rfc3489bis-07.txt S 7.3 says "If any errors are
-         * detected, the message is silently discarded."  */
+        /* RFC5389 S 7.3 says "If any errors are detected, the message is
+         * silently discarded."  */
 #ifndef USE_STUN_PEDANTIC
         /* ... but that seems like a bad idea, at least return a 400 so
          * that the server isn't a black hole to the client */
-        nr_stun_form_error_response(req, res, 400, "Bad Request");
+        nr_stun_form_error_response(req, res, 400, "Bad Request - Failed to decode request");
         ABORT(R_ALREADY);
 #endif /* USE_STUN_PEDANTIC */
         ABORT(R_REJECTED);
     }
 
     if ((r=nr_stun_receive_message(0, req))) {
-        /* draft-ietf-behave-rfc3489bis-07.txt S 7.3 says "If any errors are
-         * detected, the message is silently discarded."  */
+        /* RFC5389 S 7.3 says "If any errors are detected, the message is
+         * silently discarded."  */
 #ifndef USE_STUN_PEDANTIC
         /* ... but that seems like a bad idea, at least return a 400 so
          * that the server isn't a black hole to the client */
-        nr_stun_form_error_response(req, res, 400, "Bad Request");
+        nr_stun_form_error_response(req, res, 400, "Bad Request - Section 7.3 check failed");
         ABORT(R_ALREADY);
 #endif /* USE_STUN_PEDANTIC */
         ABORT(R_REJECTED);
@@ -276,12 +276,12 @@ int nr_stun_server_process_request(nr_stun_server_ctx *ctx, nr_socket *sock, cha
     if (NR_STUN_GET_TYPE_CLASS(req->header.type) != NR_CLASS_REQUEST
      && NR_STUN_GET_TYPE_CLASS(req->header.type) != NR_CLASS_INDICATION) {
          r_log(NR_LOG_STUN,LOG_WARNING,"STUN-SERVER(%s): Illegal message type: %04x",ctx->label,req->header.type);
-        /* draft-ietf-behave-rfc3489bis-07.txt S 7.3 says "If any errors are
-         * detected, the message is silently discarded."  */
+        /* RFC5389 S 7.3 says "If any errors are detected, the message is
+         * silently discarded."  */
 #ifndef USE_STUN_PEDANTIC
         /* ... but that seems like a bad idea, at least return a 400 so
          * that the server isn't a black hole to the client */
-        nr_stun_form_error_response(req, res, 400, "Bad Request");
+        nr_stun_form_error_response(req, res, 400, "Bad Request - Unsupported message type");
         ABORT(R_ALREADY);
 #endif /* USE_STUN_PEDANTIC */
         ABORT(R_REJECTED);

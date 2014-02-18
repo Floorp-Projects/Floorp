@@ -50,6 +50,10 @@ public:
   virtual mozilla::a11y::AccType AccessibleType() MOZ_OVERRIDE;
 #endif
 
+  virtual nscoord GetMinWidth(nsRenderingContext* aRenderingContext) MOZ_OVERRIDE;
+
+  virtual nscoord GetPrefWidth(nsRenderingContext* aRenderingContext) MOZ_OVERRIDE;
+
   virtual nsresult Reflow(nsPresContext*           aPresContext,
                           nsHTMLReflowMetrics&     aDesiredSize,
                           const nsHTMLReflowState& aReflowState,
@@ -158,11 +162,6 @@ private:
                                 nsIAtom* aTagName,
                                 nsCSSPseudoElements::Type aPseudoType,
                                 nsStyleContext* aParentContext);
-
-  nsresult ReflowAnonymousContent(nsPresContext* aPresContext,
-                                  nsHTMLReflowMetrics& aWrappersDesiredSize,
-                                  const nsHTMLReflowState& aReflowState,
-                                  nsIFrame* aOuterWrapperFrame);
 
   class SyncDisabledStateEvent;
   friend class SyncDisabledStateEvent;

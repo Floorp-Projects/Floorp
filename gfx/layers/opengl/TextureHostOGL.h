@@ -93,29 +93,6 @@ protected:
  * sequence as simple as possible.
  */
 
-inline ShaderProgramType
-GetProgramTypeForSurfaceFormat(gfx::SurfaceFormat aFormat)
- {
-  switch (aFormat) {
-  case gfx::SurfaceFormat::B8G8R8A8:
-    return BGRALayerProgramType;;
-  case gfx::SurfaceFormat::B8G8R8X8:
-    return BGRXLayerProgramType;;
-  case gfx::SurfaceFormat::R8G8B8X8:
-    return RGBXLayerProgramType;;
-  case gfx::SurfaceFormat::R8G8B8A8:
-    return RGBALayerProgramType;;
-  default:
-    MOZ_CRASH("unhandled program type");
-  }
-}
-
-inline ShaderProgramType
-GetProgramTypeForTexture(const DeprecatedTextureHost *aDeprecatedTextureHost)
-{
-  return GetProgramTypeForSurfaceFormat(aDeprecatedTextureHost->GetFormat());
-}
-
 /**
  * TextureSourceOGL provides the necessary API for CompositorOGL to composite
  * a TextureSource.

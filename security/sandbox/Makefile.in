@@ -3,14 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ifeq ($(OS_ARCH),WINNT)
-
-LOCAL_INCLUDES += \
-    -I$(topsrcdir)/security/sandbox/chromium/base/shim \
-    -I$(topsrcdir)/security/sandbox/chromium \
-    -I$(topsrcdir)/security \
-    -I$(topsrcdir)/nsprpub \
-    $(NULL)
-
 EXTRA_SDK_DECLS = $(topsrcdir)/security/sandbox/chromium/base/shim/sdkdecls.h
 
 ifdef _MSC_VER
