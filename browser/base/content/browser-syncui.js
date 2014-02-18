@@ -106,7 +106,7 @@ let gSyncUI = {
 
     let syncButton = document.getElementById("sync-button");
     let panelHorizontalButton = document.getElementById("PanelUI-fxa-status");
-    [syncButton, panelHorizontalButton].forEach(function(button)) {
+    [syncButton, panelHorizontalButton].forEach(function(button) {
       if (!button)
         return;
       button.removeAttribute("status");
