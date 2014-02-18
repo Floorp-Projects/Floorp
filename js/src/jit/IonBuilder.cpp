@@ -7928,7 +7928,7 @@ IonBuilder::jsop_rest()
 
     // Unroll the argument copy loop. We don't need to do any bounds or hole
     // checking here.
-    MConstant *index;
+    MConstant *index = nullptr;
     for (unsigned i = numFormals; i < numActuals; i++) {
         index = MConstant::New(alloc(), Int32Value(i - numFormals));
         current->add(index);
