@@ -79,7 +79,7 @@ UNIFIED_SOURCES += [
     'nsPageFrame.cpp',
     'nsPlaceholderFrame.cpp',
     'nsSelection.cpp',
-    'nsSimplePageSequence.cpp',
+    'nsSimplePageSequenceFrame.cpp',
     'nsSplittableFrame.cpp',
     'nsSubDocumentFrame.cpp',
     'nsTextFrame.cpp',

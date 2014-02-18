@@ -59,12 +59,13 @@ function runTests(text, charWidth)
     }
   }
 
-  expectThrow(-1, 2);
-  expectThrow(-1, 0);
-  expectThrow(1, 3);
-  expectThrow(0, 4);
+  expectThrow(100, 2);
+  expectThrow(100, 0);
   expectThrow(3, 0);
+  expectThrow(3, 1);
 
+  expectValue(1, 3, chars(2));
+  expectValue(0, 4, chars(3));
   expectValue(0, 0, chars(0));
   expectValue(1, 0, chars(0));
   expectValue(2, 0, chars(0));
@@ -74,12 +75,8 @@ function runTests(text, charWidth)
   expectValue(0, 2, chars(2));
   expectValue(1, 2, chars(2));
   expectValue(0, 3, chars(3));
-
-  expectThrow(1, -1);
-  expectThrow(2, -1);
-  expectThrow(3, -1);
-  expectThrow(3, -3);
-  expectThrow(-1, -1);
+  expectValue(1, 100, chars(2));
+  expectValue(2, 100, chars(1));
 }
 
 

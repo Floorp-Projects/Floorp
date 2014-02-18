@@ -39,7 +39,7 @@ class ProcessHandlerMixin(object):
     :param env: is the environment to use for the process (defaults to os.environ).
     :param ignore_children: causes system to ignore child processes when True, defaults to False (which tracks child processes).
     :param kill_on_timeout: when True, the process will be killed when a timeout is reached. When False, the caller is responsible for killing the process. Failure to do so could cause a call to wait() to hang indefinitely. (Defaults to True.)
-    :param processOutputLine: function to be called for each line of output produced by the process (defaults to None).
+    :param processOutputLine: function or list of functions to be called for each line of output produced by the process (defaults to None).
     :param onTimeout: function to be called when the process times out.
     :param onFinish: function to be called when the process terminates normally without timing out.
     :param kwargs: additional keyword args to pass directly into Popen.
@@ -100,18 +100,18 @@ class ProcessHandlerMixin(object):
 
         def __del__(self, _maxint=sys.maxint):
             if isWin:
-                if self._handle:
+                handle = getattr(self, '_handle', None)
+                if handle:
                     if hasattr(self, '_internal_poll'):
                         self._internal_poll(_deadstate=_maxint)
                     else:
                         self.poll(_deadstate=sys.maxint)
-                if self._handle or self._job or self._io_port:
+                if handle or self._job or self._io_port:
                     self._cleanup()
             else:
                 subprocess.Popen.__del__(self)
 
         def kill(self, sig=None):
-            self.returncode = 0
             if isWin:
                 if not self._ignore_children and self._handle and self._job:
                     winprocess.TerminateJobObject(self._job, winprocess.ERROR_CONTROL_C_EXIT)
@@ -122,7 +122,7 @@ class ProcessHandlerMixin(object):
                         winprocess.TerminateProcess(self._handle, winprocess.ERROR_CONTROL_C_EXIT)
                     except:
                         err = "Could not terminate process"
-                    self.returncode = winprocess.GetExitCodeProcess(self._handle)
+                    winprocess.GetExitCodeProcess(self._handle)
                     self._cleanup()
                     if err is not None:
                         raise OSError(err)
@@ -137,10 +137,20 @@ class ProcessHandlerMixin(object):
                             print >> sys.stdout, "Could not kill process, could not find pid: %s, assuming it's already dead" % self.pid
                 else:
                     os.kill(self.pid, sig)
-                self.returncode = -sig
 
+            self.returncode = self.wait()
             self._cleanup()
             return self.returncode
+
+        def poll(self):
+            """ Popen.poll
+                Check if child process has terminated. Set and return returncode attribute.
+            """
+            # If we have a handle, the process is alive
+            if isWin and getattr(self, '_handle', None):
+                return None
+
+            return subprocess.Popen.poll(self)
 
         def wait(self):
             """ Popen.wait
@@ -157,12 +167,23 @@ class ProcessHandlerMixin(object):
 
         if isWin:
             # Redefine the execute child so that we can track process groups
-            def _execute_child(self, args, executable, preexec_fn, close_fds,
-                               cwd, env, universal_newlines, startupinfo,
-                               creationflags, shell,
-                               p2cread, p2cwrite,
-                               c2pread, c2pwrite,
-                               errread, errwrite):
+            def _execute_child(self, *args_tuple):
+                # workaround for bug 950894
+                if sys.hexversion < 0x02070600: # prior to 2.7.6
+                    (args, executable, preexec_fn, close_fds,
+                     cwd, env, universal_newlines, startupinfo,
+                     creationflags, shell,
+                     p2cread, p2cwrite,
+                     c2pread, c2pwrite,
+                     errread, errwrite) = args_tuple
+                    to_close = set()
+                else: # 2.7.6 and later
+                    (args, executable, preexec_fn, close_fds,
+                     cwd, env, universal_newlines, startupinfo,
+                     creationflags, shell, to_close,
+                     p2cread, p2cwrite,
+                     c2pread, c2pwrite,
+                     errread, errwrite) = args_tuple
                 if not isinstance(args, basestring):
                     args = subprocess.list2cmdline(args)
 
@@ -541,7 +562,8 @@ falling back to not using job objects for managing child processes"""
                             # close
                             print >> sys.stderr, "Encountered error waiting for pid to close: %s" % e
                             raise
-                        return 0
+
+                        return self.returncode
 
                 else:
                     # For non-group wait, call base class
@@ -588,6 +610,8 @@ falling back to not using job objects for managing child processes"""
         self.env = env
 
         # handlers
+        if callable(processOutputLine):
+            processOutputLine = [processOutputLine]
         self.processOutputLineHandlers = list(processOutputLine)
         self.onTimeoutHandlers = list(onTimeout)
         self.onFinishHandlers = list(onFinish)
@@ -657,7 +681,12 @@ falling back to not using job objects for managing child processes"""
                     (has no effect on Windows)
         """
         try:
-            return self.proc.kill(sig=sig)
+            self.proc.kill(sig=sig)
+
+            # When we kill the the managed process we also have to wait for the
+            # outThread to be finished. Otherwise consumers would have to assume
+            # that it still has not completely shutdown.
+            return self.wait()
         except AttributeError:
             # Try to print a relevant error message.
             if not self.proc:
@@ -694,6 +723,25 @@ falling back to not using job objects for managing child processes"""
         """Called when a process finishes without a timeout."""
         for handler in self.onFinishHandlers:
             handler()
+
+    def poll(self):
+        """Check if child process has terminated
+
+        Returns the current returncode value:
+        - None if the process hasn't terminated yet
+        - A negative number if the process was killed by signal N (Unix only)
+        - '0' if the process ended without failures
+
+        """
+        # Ensure that we first check for the outputThread status. Otherwise
+        # we might mark the process as finished while output is still getting
+        # processed.
+        if self.outThread and self.outThread.isAlive():
+            return None
+        elif hasattr(self.proc, "returncode"):
+            return self.proc.returncode
+        else:
+            return self.proc.poll()
 
     def processOutput(self, timeout=None, outputTimeout=None):
         """
@@ -753,9 +801,11 @@ falling back to not using job objects for managing child processes"""
         This timeout only causes the wait function to return and
         does not kill the process.
 
-        Returns the process' exit code. A None value indicates the
-        process hasn't terminated yet. A negative value -N indicates
-        the process was killed by signal N (Unix only).
+        Returns the process exit code value:
+        - None if the process hasn't terminated yet
+        - A negative number if the process was killed by signal N (Unix only)
+        - '0' if the process ended without failures
+
         """
         if self.outThread:
             # Thread.join() blocks the main thread until outThread is finished
@@ -879,9 +929,9 @@ class ProcessHandler(ProcessHandlerMixin):
     Convenience class for handling processes with default output handlers.
 
     If no processOutputLine keyword argument is specified, write all
-    output to stdout.  Otherwise, the function specified by this argument
-    will be called for each line of output; the output will not be written
-    to stdout automatically.
+    output to stdout.  Otherwise, the function or the list of functions
+    specified by this argument will be called for each line of output;
+    the output will not be written to stdout automatically.
 
     If storeOutput==True, the output produced by the process will be saved
     as self.output.
@@ -892,6 +942,8 @@ class ProcessHandler(ProcessHandlerMixin):
 
     def __init__(self, cmd, logfile=None, storeOutput=True, **kwargs):
         kwargs.setdefault('processOutputLine', [])
+        if callable(kwargs['processOutputLine']):
+            kwargs['processOutputLine'] = [kwargs['processOutputLine']]
 
         # Print to standard output only if no outputline provided
         if not kwargs['processOutputLine']:

@@ -168,12 +168,11 @@ nsConsoleService::LogMessageWithMode(nsIConsoleMessage *message, nsConsoleServic
     }
 
     if (NS_IsMainThread() && mDeliveringMessage) {
-        nsString msg;
-        message->GetMessageMoz(getter_Copies(msg));
+        nsCString msg;
+        message->ToString(msg);
         NS_WARNING(nsPrintfCString("Reentrancy error: some client attempted "
             "to display a message to the console while in a console listener. "
-            "The following message was discarded: \"%s\"",
-            NS_ConvertUTF16toUTF8(msg).get()).get());
+            "The following message was discarded: \"%s\"", msg.get()).get());
         return NS_ERROR_FAILURE;
     }
 
@@ -194,11 +193,10 @@ nsConsoleService::LogMessageWithMode(nsIConsoleMessage *message, nsConsoleServic
 #if defined(ANDROID)
         if (outputMode == OutputToLog)
         {
-            nsXPIDLString msg;
-            message->GetMessageMoz(getter_Copies(msg));
+            nsCString msg;
+            message->ToString(msg);
             __android_log_print(ANDROID_LOG_ERROR, "GeckoConsole",
-                        "%s",
-                        NS_LossyConvertUTF16toASCII(msg).get());
+                        "%s", msg.get());
         }
 #endif
 #ifdef XP_WIN

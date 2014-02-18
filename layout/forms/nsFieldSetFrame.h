@@ -33,9 +33,9 @@ public:
   virtual nsRect VisualBorderRectRelativeToSelf() const MOZ_OVERRIDE;
 
   virtual nsresult Reflow(nsPresContext*           aPresContext,
-                    nsHTMLReflowMetrics&     aDesiredSize,
-                    const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus&          aStatus);
+                          nsHTMLReflowMetrics&     aDesiredSize,
+                          const nsHTMLReflowState& aReflowState,
+                          nsReflowStatus&          aStatus);
                                
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
@@ -45,12 +45,12 @@ public:
     nsPoint aPt, const nsRect& aDirtyRect, uint32_t aBGFlags);
 
   virtual nsresult AppendFrames(ChildListID    aListID,
-                          nsFrameList&   aFrameList);
+                                nsFrameList&   aFrameList);
   virtual nsresult InsertFrames(ChildListID    aListID,
-                          nsIFrame*      aPrevFrame,
-                          nsFrameList&   aFrameList);
+                                nsIFrame*      aPrevFrame,
+                                nsFrameList&   aFrameList);
   virtual nsresult RemoveFrame(ChildListID    aListID,
-                         nsIFrame*      aOldFrame);
+                               nsIFrame*      aOldFrame);
 
   virtual nsIAtom* GetType() const;
   virtual bool IsFrameOfType(uint32_t aFlags) const
@@ -69,7 +69,7 @@ public:
 
 #ifdef DEBUG
   virtual nsresult SetInitialChildList(ChildListID    aListID,
-                                 nsFrameList&   aChildList);
+                                       nsFrameList&   aChildList);
 #endif
 
 #ifdef DEBUG_FRAME_DUMP

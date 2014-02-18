@@ -34,8 +34,8 @@ public:
 
   // nsIFrame:
   virtual nsresult  AttributeChanged(int32_t         aNameSpaceID,
-                               nsIAtom*        aAttribute,
-                               int32_t         aModType);
+                                     nsIAtom*        aAttribute,
+                                     int32_t         aModType);
 
   /**
    * Get the "type" of the frame

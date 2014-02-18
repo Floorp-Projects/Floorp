@@ -408,21 +408,27 @@ public:
                                            nsRect* aDisplayPort = nullptr);
 
   /**
-   * Finds the nearest ancestor frame to aItem that is considered to have (or
-   * will have) "animated geometry". For example the scrolled frames of
-   * scrollframes which are actively being scrolled fall into this category.
-   * Frames with certain CSS properties that are being animated (e.g.
-   * 'left'/'top' etc) are also placed in this category.
+   * Finds the nearest ancestor frame that is considered to have (or will have)
+   * "animated geometry". For example the scrolled frames of scrollframes which
+   * are actively being scrolled fall into this category. Frames with certain
+   * CSS properties that are being animated (e.g. 'left'/'top' etc) are also
+   * placed in this category. Frames with animated CSS transforms are not
+   * put in this category because they can be handled directly by
+   * nsDisplayTransform.
+   * Stop searching at aStopAtAncestor if there is no such ancestor before it
+   * in the ancestor chain.
    * Frames with different active geometry roots are in different ThebesLayers,
    * so that we can animate the geometry root by changing its transform (either
    * on the main thread or in the compositor).
-   * The animated geometry root is required to be a descendant (or equal to)
-   * aItem's ReferenceFrame(), which means that we will fall back to
-   * returning aItem->ReferenceFrame() when we can't find another animated
-   * geometry root.
+   * This function is idempotent: a frame returned by GetAnimatedGeometryRootFor
+   * is always returned again if you pass it to GetAnimatedGeometryRootFor.
    */
+  static nsIFrame* GetAnimatedGeometryRootFor(nsIFrame* aFrame,
+                                              const nsIFrame* aStopAtAncestor = nullptr);
+
   static nsIFrame* GetAnimatedGeometryRootFor(nsDisplayItem* aItem,
                                               nsDisplayListBuilder* aBuilder);
+
 
   /**
     * GetScrollableFrameFor returns the scrollable frame for a scrolled frame
@@ -1722,11 +1728,14 @@ public:
   static bool IsAnimationLoggingEnabled();
 
   /**
-   * Find the maximum scale for an element (aContent) over the course of any
-   * animations and transitions on the element. Will return 1,1 if there is no
-   * animated scaling.
+   * Find a suitable scale for an element (aContent) over the course of any
+   * animations and transitions on the element.
+   * It will check the maximum and minimum scale during the animations and
+   * transitions and return a suitable value for performance and quality.
+   * Will return scale(1,1) if there is no animated scaling.
+   * Always return positive value.
    */
-  static gfxSize GetMaximumAnimatedScale(nsIContent* aContent);
+  static gfxSize ComputeSuitableScaleForAnimation(nsIContent* aContent);
 
   /**
    * Checks if we should forcibly use nearest pixel filtering for the

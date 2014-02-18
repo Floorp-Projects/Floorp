@@ -226,15 +226,6 @@ void GStreamerReader::PlayBinSourceSetup(GstAppSrc* aSource)
   gst_app_src_set_callbacks(mSource, &mSrcCallbacks, (gpointer) this, nullptr);
   MediaResource* resource = mDecoder->GetResource();
 
-  /* do a short read to trigger a network request so that GetLength() below
-   * returns something meaningful and not -1
-   */
-  char buf[512];
-  unsigned int size = 0;
-  resource->Read(buf, sizeof(buf), &size);
-  resource->Seek(SEEK_SET, 0);
-
-  /* now we should have a length */
   int64_t resourceLength = resource->GetLength();
   gst_app_src_set_size(mSource, resourceLength);
   if (resource->IsDataCachedToEndOfResource(0) ||

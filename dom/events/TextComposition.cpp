@@ -114,8 +114,8 @@ TextComposition::NotityUpdateComposition(WidgetGUIEvent* aEvent)
 }
 
 void
-TextComposition::DispatchCompsotionEventRunnable(uint32_t aEventMessage,
-                                                 const nsAString& aData)
+TextComposition::DispatchCompositionEventRunnable(uint32_t aEventMessage,
+                                                  const nsAString& aData)
 {
   nsContentUtils::AddScriptRunner(
     new CompositionEventDispatcher(mPresContext, mNode,
@@ -128,10 +128,10 @@ TextComposition::SynthesizeCommit(bool aDiscard)
   nsRefPtr<TextComposition> kungFuDeathGrip(this);
   nsAutoString data(aDiscard ? EmptyString() : mLastData);
   if (mLastData != data) {
-    DispatchCompsotionEventRunnable(NS_COMPOSITION_UPDATE, data);
-    DispatchCompsotionEventRunnable(NS_TEXT_TEXT, data);
+    DispatchCompositionEventRunnable(NS_COMPOSITION_UPDATE, data);
+    DispatchCompositionEventRunnable(NS_TEXT_TEXT, data);
   }
-  DispatchCompsotionEventRunnable(NS_COMPOSITION_END, data);
+  DispatchCompositionEventRunnable(NS_COMPOSITION_END, data);
 }
 
 nsresult

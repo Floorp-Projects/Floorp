@@ -309,10 +309,27 @@ GetScaleForValue(const nsStyleAnimation::Value& aValue,
   return transform2d.ScaleFactors(true);
 }
 
-gfxSize
-nsLayoutUtils::GetMaximumAnimatedScale(nsIContent* aContent)
+float
+GetSuitableScale(float aMaxScale, float aMinScale)
 {
-  gfxSize result;
+  // If the minimum scale >= 1.0f, use it; if the maximum <= 1.0f, use it;
+  // otherwise use 1.0f.
+  if (aMinScale >= 1.0f) {
+    return aMinScale;
+  }
+  else if (aMaxScale <= 1.0f) {
+    return aMaxScale;
+  }
+
+  return 1.0f;
+}
+
+gfxSize
+nsLayoutUtils::ComputeSuitableScaleForAnimation(nsIContent* aContent)
+{
+  gfxSize maxScale(1.0f, 1.0f);
+  gfxSize minScale(1.0f, 1.0f);
+
   ElementAnimations* animations = HasAnimationOrTransitionForCompositor<ElementAnimations>
     (aContent, nsGkAtoms::animationsProperty, eCSSProperty_transform);
   if (animations) {
@@ -325,47 +342,50 @@ nsLayoutUtils::GetMaximumAnimatedScale(nsIContent* aContent)
             AnimationPropertySegment& segment = prop.mSegments[segIdx];
             gfxSize from = GetScaleForValue(segment.mFromValue,
                                             aContent->GetPrimaryFrame());
-            result.width = std::max<float>(result.width, from.width);
-            result.height = std::max<float>(result.height, from.height);
+            maxScale.width = std::max<float>(maxScale.width, from.width);
+            maxScale.height = std::max<float>(maxScale.height, from.height);
+            minScale.width = std::min<float>(minScale.width, from.width);
+            minScale.height = std::min<float>(minScale.height, from.height);
             gfxSize to = GetScaleForValue(segment.mToValue,
                                           aContent->GetPrimaryFrame());
-            result.width = std::max<float>(result.width, to.width);
-            result.height = std::max<float>(result.height, to.height);
+            maxScale.width = std::max<float>(maxScale.width, to.width);
+            maxScale.height = std::max<float>(maxScale.height, to.height);
+            minScale.width = std::min<float>(minScale.width, to.width);
+            minScale.height = std::min<float>(minScale.height, to.height);
           }
         }
       }
     }
   }
+
   ElementTransitions* transitions = HasAnimationOrTransitionForCompositor<ElementTransitions>
     (aContent, nsGkAtoms::transitionsProperty, eCSSProperty_transform);
   if (transitions) {
     for (uint32_t i = 0, i_end = transitions->mPropertyTransitions.Length();
-         i < i_end; ++i)
-    {
+         i < i_end; ++i){
       ElementPropertyTransition &pt = transitions->mPropertyTransitions[i];
       if (pt.IsRemovedSentinel()) {
         continue;
       }
-
       if (pt.mProperty == eCSSProperty_transform) {
         gfxSize start = GetScaleForValue(pt.mStartValue,
                                          aContent->GetPrimaryFrame());
-        result.width = std::max<float>(result.width, start.width);
-        result.height = std::max<float>(result.height, start.height);
+        maxScale.width = std::max<float>(maxScale.width, start.width);
+        maxScale.height = std::max<float>(maxScale.height, start.height);
+        minScale.width = std::min<float>(minScale.width, start.width);
+        minScale.height = std::min<float>(minScale.height, start.height);
         gfxSize end = GetScaleForValue(pt.mEndValue,
                                        aContent->GetPrimaryFrame());
-        result.width = std::max<float>(result.width, end.width);
-        result.height = std::max<float>(result.height, end.height);
+        maxScale.width = std::max<float>(maxScale.width, end.width);
+        maxScale.height = std::max<float>(maxScale.height, end.height);
+        minScale.width = std::min<float>(minScale.width, end.width);
+        minScale.height = std::min<float>(minScale.height, end.height);
       }
     }
   }
 
-  // If we didn't manage to find a max scale, use no scale rather than 0,0
-  if (result == gfxSize()) {
-    return gfxSize(1, 1);
-  }
-
-  return result;
+  return gfxSize(GetSuitableScale(maxScale.width, minScale.width),
+      GetSuitableScale(maxScale.height, minScale.height));
 }
 
 bool
@@ -1304,24 +1324,23 @@ nsLayoutUtils::IsFixedPosFrameInDisplayPort(const nsIFrame* aFrame, nsRect* aDis
   return ViewportHasDisplayPort(aFrame->PresContext(), aDisplayPort);
 }
 
-static nsIFrame*
-GetAnimatedGeometryRootForFrame(nsIFrame* aFrame,
-                                const nsIFrame* aStopAtAncestor)
+nsIFrame*
+nsLayoutUtils::GetAnimatedGeometryRootFor(nsIFrame* aFrame,
+                                          const nsIFrame* aStopAtAncestor)
 {
   nsIFrame* f = aFrame;
   nsIFrame* stickyFrame = nullptr;
   while (f != aStopAtAncestor) {
-    if (nsLayoutUtils::IsPopup(f))
+    if (IsPopup(f))
       break;
     if (ActiveLayerTracker::IsOffsetOrMarginStyleAnimated(f))
       break;
-    if (!f->GetParent() &&
-        nsLayoutUtils::ViewportHasDisplayPort(f->PresContext())) {
+    if (!f->GetParent() && ViewportHasDisplayPort(f->PresContext())) {
       // Viewport frames in a display port need to be animated geometry roots
       // for background-attachment:fixed elements.
       break;
     }
-    nsIFrame* parent = nsLayoutUtils::GetCrossDocParentFrame(f);
+    nsIFrame* parent = GetCrossDocParentFrame(f);
     if (!parent)
       break;
     nsIAtom* parentType = parent->GetType();
@@ -1352,7 +1371,7 @@ GetAnimatedGeometryRootForFrame(nsIFrame* aFrame,
       }
     }
     // Fixed-pos frames are parented by the viewport frame, which has no parent
-    if (nsLayoutUtils::IsFixedPosFrameInDisplayPort(f)) {
+    if (IsFixedPosFrameInDisplayPort(f)) {
       return f;
     }
     f = parent;
@@ -1369,7 +1388,7 @@ nsLayoutUtils::GetAnimatedGeometryRootFor(nsDisplayItem* aItem,
     nsDisplayScrollLayer* scrollLayerItem =
       static_cast<nsDisplayScrollLayer*>(aItem);
     nsIFrame* scrolledFrame = scrollLayerItem->GetScrolledFrame();
-    return GetAnimatedGeometryRootForFrame(scrolledFrame,
+    return nsLayoutUtils::GetAnimatedGeometryRootFor(scrolledFrame,
         aBuilder->FindReferenceFrameFor(scrolledFrame));
   }
   if (aItem->ShouldFixToViewport(aBuilder)) {
@@ -1380,10 +1399,10 @@ nsLayoutUtils::GetAnimatedGeometryRootFor(nsDisplayItem* aItem,
     nsIFrame* viewportFrame =
       nsLayoutUtils::GetClosestFrameOfType(f, nsGkAtoms::viewportFrame);
     NS_ASSERTION(viewportFrame, "no viewport???");
-    return GetAnimatedGeometryRootForFrame(viewportFrame,
+    return nsLayoutUtils::GetAnimatedGeometryRootFor(viewportFrame,
         aBuilder->FindReferenceFrameFor(viewportFrame));
   }
-  return GetAnimatedGeometryRootForFrame(f, aItem->ReferenceFrame());
+  return nsLayoutUtils::GetAnimatedGeometryRootFor(f, aItem->ReferenceFrame());
 }
 
 // static

@@ -66,9 +66,9 @@ public:
 
   // nsIHTMLReflow
   virtual nsresult Reflow(nsPresContext* aPresContext,
-                    nsHTMLReflowMetrics& aMetrics,
-                    const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus& aStatus) MOZ_OVERRIDE;
+                          nsHTMLReflowMetrics& aMetrics,
+                          const nsHTMLReflowState& aReflowState,
+                          nsReflowStatus& aStatus) MOZ_OVERRIDE;
   virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
   virtual nscoord GetPrefWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
 

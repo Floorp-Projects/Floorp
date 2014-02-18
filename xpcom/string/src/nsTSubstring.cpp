@@ -304,7 +304,7 @@ nsTSubstring_CharT::Assign( const char_type* data, size_type length )
 bool
 nsTSubstring_CharT::Assign( const char_type* data, size_type length, const fallible_t& )
   {
-    if (!data)
+    if (!data || length == 0)
       {
         Truncate();
         return true;

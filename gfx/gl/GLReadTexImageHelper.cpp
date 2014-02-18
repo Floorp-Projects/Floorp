@@ -82,13 +82,12 @@ readTextureImageFS_TEXTURE_RECTANGLE[] =
     "void main() { gl_FragColor = texture2DRect(uTexture, vTexCoord).bgra; }";
 
 GLuint
-GLReadTexImageHelper::TextureImageProgramFor(GLenum aTextureTarget, int aShader) {
+GLReadTexImageHelper::TextureImageProgramFor(GLenum aTextureTarget, int aConfig) {
     int variant = 0;
     const GLchar* readTextureImageFS = nullptr;
     if (aTextureTarget == LOCAL_GL_TEXTURE_2D)
     {
-        if (aShader == layers::BGRALayerProgramType ||
-            aShader == layers::BGRXLayerProgramType)
+        if (aConfig & mozilla::layers::ENABLE_TEXTURE_RB_SWAP)
         {   // Need to swizzle R/B.
             readTextureImageFS = readTextureImageFS_TEXTURE_2D_BGRA;
             variant = 1;
@@ -524,12 +523,9 @@ already_AddRefed<gfxImageSurface>
 GLReadTexImageHelper::ReadTexImage(GLuint aTextureId,
                                    GLenum aTextureTarget,
                                    const gfxIntSize& aSize,
-           /* ShaderProgramType */ int aShaderProgram,
+    /* ShaderConfigOGL.mFeature */ int aConfig,
                                    bool aYInvert)
 {
-    // Check aShaderProgram is in bounds for a layers::ShaderProgramType
-    MOZ_ASSERT(0 <= aShaderProgram && aShaderProgram < layers::NumProgramTypes);
-
     MOZ_ASSERT(aTextureTarget == LOCAL_GL_TEXTURE_2D ||
                aTextureTarget == LOCAL_GL_TEXTURE_EXTERNAL ||
                aTextureTarget == LOCAL_GL_TEXTURE_RECTANGLE_ARB);
@@ -590,8 +586,7 @@ GLReadTexImageHelper::ReadTexImage(GLuint aTextureId,
         MOZ_ASSERT(mGL->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER) == LOCAL_GL_FRAMEBUFFER_COMPLETE);
 
         /* Setup vertex and fragment shader */
-        layers::ShaderProgramType shaderProgram = (layers::ShaderProgramType) aShaderProgram;
-        GLuint program = TextureImageProgramFor(aTextureTarget, shaderProgram);
+        GLuint program = TextureImageProgramFor(aTextureTarget, aConfig);
         MOZ_ASSERT(program);
 
         mGL->fUseProgram(program);

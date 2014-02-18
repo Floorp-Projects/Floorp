@@ -25,12 +25,12 @@ public:
   virtual void DestroyFrom(nsIFrame* aDestructRoot);
 
   virtual nsresult AttributeChanged(int32_t aNameSpaceID,
-                              nsIAtom* aAttribute,
-                              int32_t aModType);
+                                    nsIAtom* aAttribute,
+                                    int32_t aModType);
 
   virtual nsresult HandleEvent(nsPresContext* aPresContext,
-                         WidgetGUIEvent* aEvent,
-                         nsEventStatus* aEventStatus);
+                               WidgetGUIEvent* aEvent,
+                               nsEventStatus* aEventStatus);
 
   NS_IMETHOD HandlePress(nsPresContext* aPresContext,
                          WidgetGUIEvent* aEvent,

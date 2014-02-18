@@ -21,9 +21,9 @@ public:
 
   // nsIFrame
   virtual nsresult  Reflow(nsPresContext*      aPresContext,
-                     nsHTMLReflowMetrics& aDesiredSize,
-                     const nsHTMLReflowState& aMaxSize,
-                     nsReflowStatus&      aStatus) MOZ_OVERRIDE;
+                           nsHTMLReflowMetrics& aDesiredSize,
+                           const nsHTMLReflowState& aMaxSize,
+                           nsReflowStatus&      aStatus) MOZ_OVERRIDE;
 
   virtual bool IsFrameOfType(uint32_t aFlags) const MOZ_OVERRIDE
   {

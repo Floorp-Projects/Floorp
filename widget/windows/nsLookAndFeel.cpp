@@ -429,6 +429,7 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
                 aResult = LookAndFeel::eOperatingSystemVersion_Windows7;
                 break;
             case WIN8_VERSION:
+            case WIN8_1_VERSION:
                 aResult = LookAndFeel::eOperatingSystemVersion_Windows8;
                 break;
             default:

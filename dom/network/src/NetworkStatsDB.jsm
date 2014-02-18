@@ -79,7 +79,15 @@ NetworkStatsDB.prototype = {
         // to modify the keyPath is mandatory to delete the object store
         // and create it again. Old data is going to be deleted because the
         // networkId for each sample can not be set.
-        db.deleteObjectStore(DEPRECATED_STORE_NAME);
+
+        // In version 1.2 objectStore name was 'net_stats_v2', to avoid errors when
+        // upgrading from 1.2 to 1.3 objectStore name should be checked.
+        let stores = db.objectStoreNames;
+        if(stores.contains("net_stats_v2")) {
+          db.deleteObjectStore("net_stats_v2");
+        } else {
+          db.deleteObjectStore(DEPRECATED_STORE_NAME);
+        }
 
         objectStore = db.createObjectStore(DEPRECATED_STORE_NAME, { keyPath: ["appId", "network", "timestamp"] });
         objectStore.createIndex("appId", "appId", { unique: false });
