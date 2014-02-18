@@ -36,6 +36,7 @@ WEBIDL_EXAMPLE_INTERFACES += [
     'TestExampleProxyInterface',
 ]
 
+GENERATED_INCLUDES += ['..']
 LOCAL_INCLUDES += [
     '/dom/bindings',
     '/js/xpconnect/src',

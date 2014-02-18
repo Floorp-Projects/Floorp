@@ -45,6 +45,3 @@ MODULE_OPTIMIZE_FLAGS = -O2
 endif
 
 include $(topsrcdir)/config/rules.mk
-
-# next line allows use of MOZ_OBJDIR in .mozconfig with older gcc on BeOS, maybe others
-LOCAL_INCLUDES += -I$(srcdir)
