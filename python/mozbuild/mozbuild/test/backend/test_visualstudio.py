@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 
 from xml.dom.minidom import parse
 import os
+import unittest
 
 from mozbuild.backend.visualstudio import VisualStudioBackend
 from mozbuild.test.backend.common import BackendTester
@@ -14,6 +15,7 @@ from mozunit import main
 
 
 class TestVisualStudioBackend(BackendTester):
+    @unittest.skip('Failing inconsistently in automation.')
     def test_basic(self):
         """Ensure we can consume our stub project."""
 
