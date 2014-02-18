@@ -539,7 +539,7 @@ nsFrame::Init(nsIContent*      aContent,
     InitBoxMetrics(false);
 }
 
-NS_IMETHODIMP nsFrame::SetInitialChildList(ChildListID     aListID,
+nsresult nsFrame::SetInitialChildList(ChildListID     aListID,
                                            nsFrameList&    aChildList)
 {
   // XXX This shouldn't be getting called at all, but currently is for backwards
@@ -553,7 +553,7 @@ NS_IMETHODIMP nsFrame::SetInitialChildList(ChildListID     aListID,
 #endif
 }
 
-NS_IMETHODIMP
+nsresult
 nsFrame::AppendFrames(ChildListID     aListID,
                       nsFrameList&    aFrameList)
 {
@@ -561,7 +561,7 @@ nsFrame::AppendFrames(ChildListID     aListID,
   return NS_ERROR_UNEXPECTED;
 }
 
-NS_IMETHODIMP
+nsresult
 nsFrame::InsertFrames(ChildListID     aListID,
                       nsIFrame*       aPrevFrame,
                       nsFrameList&    aFrameList)
@@ -570,7 +570,7 @@ nsFrame::InsertFrames(ChildListID     aListID,
   return NS_ERROR_UNEXPECTED;
 }
 
-NS_IMETHODIMP
+nsresult
 nsFrame::RemoveFrame(ChildListID     aListID,
                      nsIFrame*       aOldFrame)
 {
@@ -679,7 +679,7 @@ nsFrame::DestroyFrom(nsIFrame* aDestructRoot)
   shell->FreeFrame(id, this);
 }
 
-NS_IMETHODIMP
+nsresult
 nsFrame::GetOffsets(int32_t &aStart, int32_t &aEnd) const
 {
   aStart = 0;
@@ -2317,7 +2317,7 @@ nsIFrame::MarkAbsoluteFramesForDisplayList(nsDisplayListBuilder* aBuilder,
   }
 }
 
-NS_IMETHODIMP  
+nsresult  
 nsFrame::GetContentForEvent(WidgetEvent* aEvent,
                             nsIContent** aContent)
 {
@@ -2340,7 +2340,7 @@ nsFrame::FireDOMEvent(const nsAString& aDOMEventName, nsIContent *aContent)
   }
 }
 
-NS_IMETHODIMP
+nsresult
 nsFrame::HandleEvent(nsPresContext* aPresContext, 
                      WidgetGUIEvent* aEvent,
                      nsEventStatus* aEventStatus)
@@ -2491,7 +2491,7 @@ nsFrame::GetDataForTableSelection(const nsFrameSelection* aFrameSelection,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsFrame::IsSelectable(bool* aSelectable, uint8_t* aSelectStyle) const
 {
   if (!aSelectable) //it's ok if aSelectStyle is null
@@ -3638,7 +3638,7 @@ nsIFrame::AssociateImage(const nsStyleImage& aImage, nsPresContext* aPresContext
   loader->AssociateRequestToFrame(req, this);
 }
 
-NS_IMETHODIMP
+nsresult
 nsFrame::GetCursor(const nsPoint& aPoint,
                    nsIFrame::Cursor& aCursor)
 {
@@ -4137,7 +4137,7 @@ nsFrame::ShrinkWidthToFit(nsRenderingContext *aRenderingContext,
   return result;
 }
 
-NS_IMETHODIMP
+nsresult
 nsFrame::WillReflow(nsPresContext* aPresContext)
 {
 #ifdef DEBUG_dbaron_off
@@ -4152,7 +4152,7 @@ nsFrame::WillReflow(nsPresContext* aPresContext)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsFrame::DidReflow(nsPresContext*           aPresContext,
                    const nsHTMLReflowState*  aReflowState,
                    nsDidReflowStatus         aStatus)
@@ -4234,7 +4234,7 @@ nsFrame::CanContinueTextRun() const
   return false;
 }
 
-NS_IMETHODIMP
+nsresult
 nsFrame::Reflow(nsPresContext*          aPresContext,
                 nsHTMLReflowMetrics&     aDesiredSize,
                 const nsHTMLReflowState& aReflowState,
@@ -4248,14 +4248,14 @@ nsFrame::Reflow(nsPresContext*          aPresContext,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsFrame::CharacterDataChanged(CharacterDataChangeInfo* aInfo)
 {
   NS_NOTREACHED("should only be called for text frames");
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsFrame::AttributeChanged(int32_t         aNameSpaceID,
                           nsIAtom*        aAttribute,
                           int32_t         aModType)
@@ -5354,7 +5354,7 @@ nsIFrame::List(FILE* out, const char* aPrefix, uint32_t aFlags) const
   fprintf_stderr(out, "%s\n", str.get());
 }
 
-NS_IMETHODIMP
+nsresult
 nsFrame::GetFrameName(nsAString& aResult) const
 {
   return MakeFrameName(NS_LITERAL_STRING("Frame"), aResult);
@@ -5409,7 +5409,7 @@ nsIFrame::RootFrameList(nsPresContext* aPresContext, FILE* out, const char* aPre
 #endif
 
 #ifdef DEBUG
-NS_IMETHODIMP_(nsFrameState)
+nsFrameState
 nsFrame::GetDebugStateBits() const
 {
   // We'll ignore these flags for the purposes of comparing frame state:
@@ -5532,7 +5532,7 @@ nsFrame::IsSelfEmpty()
   return false;
 }
 
-NS_IMETHODIMP
+nsresult
 nsFrame::GetSelectionController(nsPresContext *aPresContext, nsISelectionController **aSelCon)
 {
   if (!aPresContext || !aSelCon)
@@ -5574,7 +5574,7 @@ nsIFrame::GetConstFrameSelection() const
 }
 
 #ifdef DEBUG
-NS_IMETHODIMP
+nsresult
 nsFrame::DumpRegressionData(nsPresContext* aPresContext, FILE* out, int32_t aIndent)
 {
   IndentBy(out, aIndent);
@@ -5650,7 +5650,7 @@ nsIFrame::IsFrameSelected() const
                                  GetContent()->GetChildCount());
 }
 
-NS_IMETHODIMP
+nsresult
 nsFrame::GetPointFromOffset(int32_t inOffset, nsPoint* outPoint)
 {
   NS_PRECONDITION(outPoint != nullptr, "Null parameter");
@@ -5673,7 +5673,7 @@ nsFrame::GetPointFromOffset(int32_t inOffset, nsPoint* outPoint)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsFrame::GetChildFrameContainingOffset(int32_t inContentOffset, bool inHint, int32_t* outFrameContentOffset, nsIFrame **outChildFrame)
 {
   NS_PRECONDITION(outChildFrame && outFrameContentOffset, "Null parameter");
@@ -6108,7 +6108,7 @@ static bool IsMovingInFrameDirection(nsIFrame* frame, nsDirection aDirection, bo
   return aDirection == (isReverseDirection ? eDirPrevious : eDirNext);
 }
 
-NS_IMETHODIMP
+nsresult
 nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
 {
   if (!aPos)
@@ -6528,7 +6528,7 @@ nsFrame::BreakWordBetweenPunctuation(const PeekWordState* aState,
   return aState->mSeenNonPunctuationSinceWhitespace;
 }
 
-NS_IMETHODIMP
+nsresult
 nsFrame::CheckVisibility(nsPresContext* , int32_t , int32_t , bool , bool *, bool *)
 {
   return NS_ERROR_NOT_IMPLEMENTED;

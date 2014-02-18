@@ -55,7 +55,7 @@ XPCOMUtils.defineLazyGetter(this, "libcutils", function() {
 #endif
 
 function debug(aMsg) {
-#ifdef MOZ_DEBUG
+#ifdef DEBUG
   dump("-*- Webapps.jsm : " + aMsg + "\n");
 #endif
 }

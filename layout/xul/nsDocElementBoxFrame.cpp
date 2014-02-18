@@ -55,7 +55,7 @@ public:
   }
 
 #ifdef DEBUG_FRAME_DUMP
-  NS_IMETHOD GetFrameName(nsAString& aResult) const;
+  virtual nsresult GetFrameName(nsAString& aResult) const;
 #endif
 private:
   nsCOMPtr<Element> mPopupgroupContent;
@@ -135,7 +135,7 @@ NS_QUERYFRAME_HEAD(nsDocElementBoxFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsBoxFrame)
 
 #ifdef DEBUG_FRAME_DUMP
-NS_IMETHODIMP
+nsresult
 nsDocElementBoxFrame::GetFrameName(nsAString& aResult) const
 {
   return MakeFrameName(NS_LITERAL_STRING("DocElementBox"), aResult);

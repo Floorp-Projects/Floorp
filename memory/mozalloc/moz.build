@@ -67,3 +67,5 @@ else:
 DEFINES['_GNU_SOURCE'] = True
 
 TEST_TOOL_DIRS += ['tests']
+
+GENERATED_INCLUDES += ['/xpcom']

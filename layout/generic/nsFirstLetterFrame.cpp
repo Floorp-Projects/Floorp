@@ -34,7 +34,7 @@ NS_QUERYFRAME_HEAD(nsFirstLetterFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 #ifdef DEBUG_FRAME_DUMP
-NS_IMETHODIMP
+nsresult
 nsFirstLetterFrame::GetFrameName(nsAString& aResult) const
 {
   return MakeFrameName(NS_LITERAL_STRING("Letter"), aResult);
@@ -76,7 +76,7 @@ nsFirstLetterFrame::Init(nsIContent*      aContent,
   nsContainerFrame::Init(aContent, aParent, aPrevInFlow);
 }
 
-NS_IMETHODIMP
+nsresult
 nsFirstLetterFrame::SetInitialChildList(ChildListID  aListID,
                                         nsFrameList& aChildList)
 {
@@ -91,7 +91,7 @@ nsFirstLetterFrame::SetInitialChildList(ChildListID  aListID,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsFirstLetterFrame::GetChildFrameContainingOffset(int32_t inContentOffset,
                                                   bool inHint,
                                                   int32_t* outFrameContentOffset,
@@ -153,7 +153,7 @@ nsFirstLetterFrame::ComputeSize(nsRenderingContext *aRenderingContext,
       aCBSize, aAvailableWidth, aMargin, aBorder, aPadding, aFlags);
 }
 
-NS_IMETHODIMP
+nsresult
 nsFirstLetterFrame::Reflow(nsPresContext*          aPresContext,
                            nsHTMLReflowMetrics&     aMetrics,
                            const nsHTMLReflowState& aReflowState,
