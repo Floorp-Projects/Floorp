@@ -73,7 +73,7 @@ nsFormControlFrame::GetBaseline() const
   return mRect.height - GetUsedBorderAndPadding().bottom;
 }
 
-NS_METHOD
+nsresult
 nsFormControlFrame::Reflow(nsPresContext*          aPresContext,
                            nsHTMLReflowMetrics&     aDesiredSize,
                            const nsHTMLReflowState& aReflowState,
@@ -132,7 +132,7 @@ nsFormControlFrame::SetFocus(bool aOn, bool aRepaint)
 {
 }
 
-NS_METHOD
+nsresult
 nsFormControlFrame::HandleEvent(nsPresContext* aPresContext, 
                                 WidgetGUIEvent* aEvent,
                                 nsEventStatus* aEventStatus)

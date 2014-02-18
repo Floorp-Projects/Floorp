@@ -127,7 +127,7 @@ nsTreeColFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
     nsDisplayXULTreeColSplitterTarget(aBuilder, this));
 }
 
-NS_IMETHODIMP
+nsresult
 nsTreeColFrame::AttributeChanged(int32_t aNameSpaceID,
                                  nsIAtom* aAttribute,
                                  int32_t aModType)

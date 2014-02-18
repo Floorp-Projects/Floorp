@@ -3179,7 +3179,7 @@ SVGTextFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     new (aBuilder) nsDisplaySVGText(aBuilder, this));
 }
 
-NS_IMETHODIMP
+nsresult
 SVGTextFrame::AttributeChanged(int32_t aNameSpaceID,
                                nsIAtom* aAttribute,
                                int32_t aModType)

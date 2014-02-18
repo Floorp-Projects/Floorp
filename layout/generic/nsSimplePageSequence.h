@@ -64,7 +64,7 @@ public:
   NS_DECL_FRAMEARENA_HELPERS
 
   // nsIFrame
-  NS_IMETHOD  Reflow(nsPresContext*      aPresContext,
+  virtual nsresult  Reflow(nsPresContext*      aPresContext,
                      nsHTMLReflowMetrics& aDesiredSize,
                      const nsHTMLReflowState& aMaxSize,
                      nsReflowStatus&      aStatus) MOZ_OVERRIDE;
@@ -109,7 +109,7 @@ public:
   virtual nsIAtom* GetType() const MOZ_OVERRIDE;
 
 #ifdef DEBUG_FRAME_DUMP
-  NS_IMETHOD  GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;
+  virtual nsresult  GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;
 #endif
 
 protected:

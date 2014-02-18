@@ -14,3 +14,4 @@ if CONFIG['MOZ_LINKER']:
     SIMPLE_PROGRAMS += [
         'TestZip',
     ]
+    LOCAL_INCLUDES += ['../linker']

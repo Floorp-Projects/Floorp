@@ -43,7 +43,7 @@ ViewportFrame::Init(nsIContent*      aContent,
   }
 }
 
-NS_IMETHODIMP
+nsresult
 ViewportFrame::SetInitialChildList(ChildListID     aListID,
                                    nsFrameList&    aChildList)
 {
@@ -70,7 +70,7 @@ ViewportFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   BuildDisplayListForChild(aBuilder, kid, aDirtyRect, aLists);
 }
 
-NS_IMETHODIMP
+nsresult
 ViewportFrame::AppendFrames(ChildListID     aListID,
                             nsFrameList&    aFrameList)
 {
@@ -81,7 +81,7 @@ ViewportFrame::AppendFrames(ChildListID     aListID,
   return nsContainerFrame::AppendFrames(aListID, aFrameList);
 }
 
-NS_IMETHODIMP
+nsresult
 ViewportFrame::InsertFrames(ChildListID     aListID,
                             nsIFrame*       aPrevFrame,
                             nsFrameList&    aFrameList)
@@ -93,7 +93,7 @@ ViewportFrame::InsertFrames(ChildListID     aListID,
   return nsContainerFrame::InsertFrames(aListID, aPrevFrame, aFrameList);
 }
 
-NS_IMETHODIMP
+nsresult
 ViewportFrame::RemoveFrame(ChildListID     aListID,
                            nsIFrame*       aOldFrame)
 {
@@ -173,7 +173,7 @@ ViewportFrame::AdjustReflowStateAsContainingBlock(nsHTMLReflowState* aReflowStat
   return rect;
 }
 
-NS_IMETHODIMP
+nsresult
 ViewportFrame::Reflow(nsPresContext*           aPresContext,
                       nsHTMLReflowMetrics&     aDesiredSize,
                       const nsHTMLReflowState& aReflowState,
@@ -299,7 +299,7 @@ ViewportFrame::GetType() const
 }
 
 #ifdef DEBUG_FRAME_DUMP
-NS_IMETHODIMP
+nsresult
 ViewportFrame::GetFrameName(nsAString& aResult) const
 {
   return MakeFrameName(NS_LITERAL_STRING("Viewport"), aResult);

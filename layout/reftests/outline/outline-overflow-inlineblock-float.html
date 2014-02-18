@@ -1,0 +1,14 @@
+<!DOCTYPE HTML>
+<title>outline goes around overflow, floats</title>
+<style>
+
+html, body { margin: 0; padding: 0; border: none }
+html { overflow:hidden /* avoid second reflow for scrollbars */ }
+
+body > div { margin: 100px; outline: 2px solid blue; display: inline-block; height: 0; width: 0 }
+
+body > div > div { float: left; width: 100px; height: 100px }
+
+</style>
+<body>
+<div><div></div></div>

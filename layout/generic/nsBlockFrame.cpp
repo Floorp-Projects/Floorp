@@ -384,7 +384,7 @@ nsBlockFrame::List(FILE* out, const char* aPrefix, uint32_t aFlags) const
   fprintf_stderr(out, "%s>\n", aPrefix);
 }
 
-NS_IMETHODIMP
+nsresult
 nsBlockFrame::GetFrameName(nsAString& aResult) const
 {
   return MakeFrameName(NS_LITERAL_STRING("Block"), aResult);
@@ -392,7 +392,7 @@ nsBlockFrame::GetFrameName(nsAString& aResult) const
 #endif
 
 #ifdef DEBUG
-NS_IMETHODIMP_(nsFrameState)
+nsFrameState
 nsBlockFrame::GetDebugStateBits() const
 {
   // We don't want to include our cursor flag in the bits the
@@ -933,7 +933,7 @@ CalculateContainingBlockSizeForAbsolutes(const nsHTMLReflowState& aReflowState,
   return cbSize;
 }
 
-NS_IMETHODIMP
+nsresult
 nsBlockFrame::Reflow(nsPresContext*           aPresContext,
                      nsHTMLReflowMetrics&     aMetrics,
                      const nsHTMLReflowState& aReflowState,
@@ -2664,7 +2664,7 @@ nsBlockFrame::SlideLine(nsBlockReflowState& aState,
   }
 }
 
-NS_IMETHODIMP 
+nsresult 
 nsBlockFrame::AttributeChanged(int32_t         aNameSpaceID,
                                nsIAtom*        aAttribute,
                                int32_t         aModType)
@@ -4678,7 +4678,7 @@ nsBlockFrame::RemovePushedFloats()
 //////////////////////////////////////////////////////////////////////
 // Frame list manipulation routines
 
-NS_IMETHODIMP
+nsresult
 nsBlockFrame::AppendFrames(ChildListID  aListID,
                            nsFrameList& aFrameList)
 {
@@ -4723,7 +4723,7 @@ nsBlockFrame::AppendFrames(ChildListID  aListID,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsBlockFrame::InsertFrames(ChildListID aListID,
                            nsIFrame* aPrevFrame,
                            nsFrameList& aFrameList)
@@ -5009,7 +5009,7 @@ static bool BlockHasAnyFloats(nsIFrame* aFrame)
   return false;
 }
 
-NS_IMETHODIMP
+nsresult
 nsBlockFrame::RemoveFrame(ChildListID aListID,
                           nsIFrame* aOldFrame)
 {
@@ -6469,7 +6469,7 @@ nsBlockFrame::Init(nsIContent*      aContent,
   }
 }
 
-NS_IMETHODIMP
+nsresult
 nsBlockFrame::SetInitialChildList(ChildListID     aListID,
                                   nsFrameList&    aChildList)
 {
