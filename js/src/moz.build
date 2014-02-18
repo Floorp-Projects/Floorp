@@ -370,6 +370,10 @@ if CONFIG['JS_HAS_CTYPES']:
         'ctypes/CTypes.cpp',
         'ctypes/Library.cpp',
     ]
+    if not CONFIG['MOZ_NATIVE_FFI']:
+        GENERATED_INCLUDES += [
+            'ctypes/libffi/include',
+        ]
 
 if CONFIG['MOZ_VTUNE']:
     SOURCES += [

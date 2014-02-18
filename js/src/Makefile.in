@@ -29,8 +29,6 @@ endif
 ifdef JS_HAS_CTYPES
 ifdef MOZ_NATIVE_FFI
 LOCAL_INCLUDES = $(MOZ_FFI_CFLAGS)
-else
-LOCAL_INCLUDES = -Ictypes/libffi/include
 endif
 
 ifdef MOZ_NATIVE_FFI
