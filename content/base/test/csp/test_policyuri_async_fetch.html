@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=558431
+-->
+<head>
+  <title>Test for Bug 558431</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<iframe id="cspframe"></iframe>
+<script type="text/javascript">
+// This tests that a policy is still attempted to be fetched
+// asynchronously (bug 558431) and that a default policy of
+// |allow 'none'| is applied when the fetching fails.
+
+var f = document.getElementById("cspframe");
+// run our test functions when the inner frame is finished loading
+f.addEventListener('load', function() {
+  var inner = this.contentDocument.getElementById("inner");
+  var test = inner.contentDocument.getElementById("test");
+  // the inner document should not exist because it has an invalid
+  // policy-uri and should have been blocked by the default
+  // |allow 'none'| policy that was applied
+  is(test, null, "test inner document");
+  SimpleTest.finish();
+}, false);
+// load the test frame
+f.src = "file_policyuri_async_fetch.html";
+SimpleTest.waitForExplicitFinish();
+</script>
+</body>
+</html>

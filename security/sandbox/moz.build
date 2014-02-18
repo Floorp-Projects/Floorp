@@ -123,3 +123,8 @@ elif CONFIG['OS_ARCH'] == 'WINNT':
     for var in ('UNICODE', '_UNICODE', 'NS_NO_XPCOM', 'SANDBOX_EXPORTS',
                 'NOMINMAX', '_CRT_RAND_S'):
         DEFINES[var] = True
+
+    LOCAL_INCLUDES += ['/security/sandbox/chromium/base/shim']
+    LOCAL_INCLUDES += ['/security/sandbox/chromium']
+    LOCAL_INCLUDES += ['/security']
+    LOCAL_INCLUDES += ['/nsprpub']

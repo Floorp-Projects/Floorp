@@ -59,19 +59,19 @@ public:
   virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext);
   virtual nscoord GetPrefWidth(nsRenderingContext *aRenderingContext);
   virtual nsresult Reflow(nsPresContext* aPresContext,
-                    nsHTMLReflowMetrics& aDesiredSize,
-                    const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus& aStatus);
+                          nsHTMLReflowMetrics& aDesiredSize,
+                          const nsHTMLReflowState& aReflowState,
+                          nsReflowStatus& aStatus);
   virtual nsresult DidReflow(nsPresContext* aPresContext,
-                       const nsHTMLReflowState* aReflowState,
-                       nsDidReflowStatus aStatus);
+                             const nsHTMLReflowState* aReflowState,
+                             nsDidReflowStatus aStatus);
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) MOZ_OVERRIDE;
 
   virtual nsresult  HandleEvent(nsPresContext* aPresContext,
-                          mozilla::WidgetGUIEvent* aEvent,
-                          nsEventStatus* aEventStatus);
+                                mozilla::WidgetGUIEvent* aEvent,
+                                nsEventStatus* aEventStatus);
 
   virtual nsIAtom* GetType() const;
 

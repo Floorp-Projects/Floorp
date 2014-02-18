@@ -5,20 +5,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-LOCAL_INCLUDES	= \
-		-I$(srcdir) \
-		-I.. \
-		-I$(srcdir)/../glue \
-		-I$(srcdir)/../base \
-		-I$(srcdir)/../ds \
-		-I$(srcdir)/../io \
-		-I$(srcdir)/../components \
-		-I$(srcdir)/../threads \
-		-I$(srcdir)/../reflect/xptinfo/src \
-		-I$(topsrcdir)/chrome/src \
-		-I$(srcdir)/../../docshell/base \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))

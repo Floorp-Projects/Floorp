@@ -7,7 +7,7 @@
 #include "nsPresContext.h"
 #include "nsGkAtoms.h"
 #include "nsIPresShell.h"
-#include "nsSimplePageSequence.h"
+#include "nsSimplePageSequenceFrame.h"
 
 nsIFrame*
 NS_NewPageContentFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)

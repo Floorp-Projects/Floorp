@@ -484,7 +484,7 @@ public:
    * @see     #Init()
    */
   virtual nsresult  SetInitialChildList(ChildListID     aListID,
-                                  nsFrameList&    aChildList) = 0;
+                                        nsFrameList&    aChildList) = 0;
 
   /**
    * This method is responsible for appending frames to the frame
@@ -502,7 +502,7 @@ public:
    *            child list.
    */
   virtual nsresult AppendFrames(ChildListID     aListID,
-                          nsFrameList&    aFrameList) = 0;
+                                nsFrameList&    aFrameList) = 0;
 
   /**
    * This method is responsible for inserting frames into the frame
@@ -521,8 +521,8 @@ public:
    *            child list.
    */
   virtual nsresult InsertFrames(ChildListID     aListID,
-                          nsIFrame*       aPrevFrame,
-                          nsFrameList&    aFrameList) = 0;
+                                nsIFrame*       aPrevFrame,
+                                nsFrameList&    aFrameList) = 0;
 
   /**
    * This method is responsible for removing a frame in the frame
@@ -540,7 +540,7 @@ public:
    *          NS_OK otherwise
    */
   virtual nsresult RemoveFrame(ChildListID     aListID,
-                         nsIFrame*       aOldFrame) = 0;
+                               nsIFrame*       aOldFrame) = 0;
 
   /**
    * Get the content object associated with this frame. Does not add a reference.
@@ -1207,11 +1207,11 @@ public:
    * @see     nsEventStatus
    */
   virtual nsresult  HandleEvent(nsPresContext* aPresContext,
-                          mozilla::WidgetGUIEvent* aEvent,
-                          nsEventStatus* aEventStatus) = 0;
+                                mozilla::WidgetGUIEvent* aEvent,
+                                nsEventStatus* aEventStatus) = 0;
 
   virtual nsresult  GetContentForEvent(mozilla::WidgetEvent* aEvent,
-                                 nsIContent** aContent) = 0;
+                                       nsIContent** aContent) = 0;
 
   // This structure keeps track of the content node and offsets associated with
   // a point; there is a primary and a secondary offset associated with any
@@ -1279,7 +1279,7 @@ public:
    * Get the cursor for a given frame.
    */
   virtual nsresult  GetCursor(const nsPoint&  aPoint,
-                        Cursor&         aCursor) = 0;
+                              Cursor&         aCursor) = 0;
 
   /**
    * Get a point (in the frame's coordinate space) given an offset into
@@ -1287,7 +1287,7 @@ public:
    * the correct horizontal offset
    */
   virtual nsresult  GetPointFromOffset(int32_t                  inOffset,
-                                 nsPoint*                 outPoint) = 0;
+                                       nsPoint*                 outPoint) = 0;
   
   /**
    * Get the child frame of this frame which contains the given
@@ -1297,10 +1297,10 @@ public:
    * to stick to the end of the first found frame or the beginning of the 
    * next in case the offset falls on a boundary.
    */
-  virtual nsresult  GetChildFrameContainingOffset(int32_t       inContentOffset,
-                                 bool                     inHint,//false stick left
-                                 int32_t*                 outFrameContentOffset,
-                                 nsIFrame*                *outChildFrame) = 0;
+  virtual nsresult GetChildFrameContainingOffset(int32_t    inContentOffset,
+                                                 bool       inHint,//false stick left
+                                                 int32_t*   outFrameContentOffset,
+                                                 nsIFrame** outChildFrame) = 0;
 
  /**
    * Get the current frame-state value for this frame. aResult is
@@ -1342,8 +1342,8 @@ public:
    *   The constants are defined in nsIDOMMutationEvent.h.
    */
   virtual nsresult  AttributeChanged(int32_t         aNameSpaceID,
-                               nsIAtom*        aAttribute,
-                               int32_t         aModType) = 0;
+                                     nsIAtom*        aAttribute,
+                                     int32_t         aModType) = 0;
 
   /**
    * When the content states of a content object change, this method is invoked
@@ -1744,9 +1744,9 @@ public:
    *          and whether the next-in-flow is dirty and needs to be reflowed
    */
   virtual nsresult Reflow(nsPresContext*          aPresContext,
-                    nsHTMLReflowMetrics&     aReflowMetrics,
-                    const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus&          aStatus) = 0;
+                          nsHTMLReflowMetrics&     aReflowMetrics,
+                          const nsHTMLReflowState& aReflowState,
+                          nsReflowStatus&          aStatus) = 0;
 
   /**
    * Post-reflow hook. After a frame is reflowed this method will be called
@@ -1764,8 +1764,8 @@ public:
    * a given reflow?
    */
   virtual nsresult  DidReflow(nsPresContext*           aPresContext,
-                        const nsHTMLReflowState*  aReflowState,
-                        nsDidReflowStatus         aStatus) = 0;
+                              const nsHTMLReflowState*  aReflowState,
+                              nsDidReflowStatus         aStatus) = 0;
 
   // XXX Maybe these three should be a separate interface?
 
@@ -3084,7 +3084,7 @@ public:
 public:
   virtual nsFrameState  GetDebugStateBits() const = 0;
   virtual nsresult  DumpRegressionData(nsPresContext* aPresContext,
-                                 FILE* out, int32_t aIndent) = 0;
+                                       FILE* out, int32_t aIndent) = 0;
 #endif
 };
 

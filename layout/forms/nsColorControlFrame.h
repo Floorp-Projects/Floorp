@@ -41,8 +41,8 @@ public:
 
   // nsIFrame
   virtual nsresult AttributeChanged(int32_t  aNameSpaceID,
-                              nsIAtom* aAttribute,
-                              int32_t  aModType) MOZ_OVERRIDE;
+                                    nsIAtom* aAttribute,
+                                    int32_t  aModType) MOZ_OVERRIDE;
   virtual bool IsLeaf() const MOZ_OVERRIDE { return true; }
   virtual nsIFrame* GetContentInsertionFrame() MOZ_OVERRIDE;
 

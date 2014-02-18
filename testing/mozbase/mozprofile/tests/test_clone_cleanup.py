@@ -8,7 +8,9 @@
 import os
 import tempfile
 import unittest
+
 from mozprofile.profile import Profile
+
 
 class CloneCleanupTest(unittest.TestCase):
     """

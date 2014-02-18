@@ -56,14 +56,14 @@ public:
                     nsIFrame*   aParent,
                     nsIFrame*   aPrevInFlow) MOZ_OVERRIDE;
   virtual nsresult SetInitialChildList(ChildListID  aListID,
-                                 nsFrameList& aChildList) MOZ_OVERRIDE;
+                                       nsFrameList& aChildList) MOZ_OVERRIDE;
   virtual nsresult AppendFrames(ChildListID  aListID,
-                          nsFrameList& aFrameList) MOZ_OVERRIDE;
+                                nsFrameList& aFrameList) MOZ_OVERRIDE;
   virtual nsresult InsertFrames(ChildListID aListID,
-                          nsIFrame* aPrevFrame,
-                          nsFrameList& aFrameList) MOZ_OVERRIDE;
+                                nsIFrame* aPrevFrame,
+                                nsFrameList& aFrameList) MOZ_OVERRIDE;
   virtual nsresult RemoveFrame(ChildListID aListID,
-                         nsIFrame* aOldFrame) MOZ_OVERRIDE;
+                               nsIFrame* aOldFrame) MOZ_OVERRIDE;
 
   virtual const nsFrameList& GetChildList(ChildListID aList) const MOZ_OVERRIDE;
   virtual void GetChildLists(nsTArray<ChildList>* aLists) const MOZ_OVERRIDE;

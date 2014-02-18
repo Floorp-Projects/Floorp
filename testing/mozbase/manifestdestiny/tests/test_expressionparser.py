@@ -64,6 +64,7 @@ class ExpressionParserTest(unittest.TestCase):
         self.assertTrue(parse("true && (true || false)"))
         self.assertTrue(parse("(true && false) || (true && (true || false))"))
 
+
     def test_comments(self):
         # comments in expressions work accidentally, via an implementation
         # detail - the '#' character doesn't match any of the regular
