@@ -2965,23 +2965,18 @@ void nsDisplayWrapList::Paint(nsDisplayListBuilder* aBuilder,
   NS_ERROR("nsDisplayWrapList should have been flattened away for painting");
 }
 
-/**
- * Returns true if all descendant display items can be placed in the same
- * ThebesLayer --- GetLayerState returns LAYER_INACTIVE or LAYER_NONE,
- * and they all have the expected animated geometry root.
- */
 static LayerState
-RequiredLayerStateForChildren(nsDisplayListBuilder* aBuilder,
-                              LayerManager* aManager,
-                              const ContainerLayerParameters& aParameters,
-                              const nsDisplayList& aList,
-                              nsIFrame* aExpectedAnimatedGeometryRootForChildren)
+RequiredLayerStateForChildrenInternal(nsDisplayListBuilder* aBuilder,
+                                      LayerManager* aManager,
+                                      const ContainerLayerParameters& aParameters,
+                                      const nsDisplayList& aList,
+                                      nsIFrame* aAnimatedGeometryRoot)
 {
   LayerState result = LAYER_INACTIVE;
   for (nsDisplayItem* i = aList.GetBottom(); i; i = i->GetAbove()) {
+    nsIFrame* f = i->Frame();
     if (result == LAYER_INACTIVE &&
-        nsLayoutUtils::GetAnimatedGeometryRootFor(i, aBuilder) !=
-          aExpectedAnimatedGeometryRootForChildren) {
+        nsLayoutUtils::GetAnimatedGeometryRootFor(f) != aAnimatedGeometryRoot) {
       result = LAYER_ACTIVE;
     }
 
@@ -2997,8 +2992,8 @@ RequiredLayerStateForChildren(nsDisplayListBuilder* aBuilder,
       nsDisplayList* list = i->GetSameCoordinateSystemChildren();
       if (list) {
         LayerState childState =
-          RequiredLayerStateForChildren(aBuilder, aManager, aParameters, *list,
-              aExpectedAnimatedGeometryRootForChildren);
+          RequiredLayerStateForChildrenInternal(aBuilder, aManager, aParameters, *list,
+              aAnimatedGeometryRoot);
         if (childState > result) {
           result = childState;
         }
@@ -3006,6 +3001,18 @@ RequiredLayerStateForChildren(nsDisplayListBuilder* aBuilder,
     }
   }
   return result;
+}
+
+LayerState
+nsDisplayWrapList::RequiredLayerStateForChildren(nsDisplayListBuilder* aBuilder,
+                                                 LayerManager* aManager,
+                                                 const ContainerLayerParameters& aParameters,
+                                                 const nsDisplayList& aList,
+                                                 nsIFrame* aItemFrame)
+{
+  return RequiredLayerStateForChildrenInternal(
+      aBuilder, aManager, aParameters, aList,
+      nsLayoutUtils::GetAnimatedGeometryRootFor(aItemFrame));
 }
 
 nsRect nsDisplayWrapList::GetComponentAlphaBounds(nsDisplayListBuilder* aBuilder)
@@ -3183,8 +3190,7 @@ nsDisplayOpacity::GetLayerState(nsDisplayListBuilder* aBuilder,
   if (NeedsActiveLayer())
     return LAYER_ACTIVE;
 
-  return RequiredLayerStateForChildren(aBuilder, aManager, aParameters, mList,
-    nsLayoutUtils::GetAnimatedGeometryRootFor(this, aBuilder));
+  return RequiredLayerStateForChildren(aBuilder, aManager, aParameters, mList, mFrame);
 }
 
 bool
@@ -4472,12 +4478,11 @@ nsDisplayTransform::GetLayerState(nsDisplayListBuilder* aBuilder,
     return LAYER_ACTIVE;
   }
 
-  // Expect the child display items to have this frame as their animated
-  // geometry root (since it will be their reference frame). If they have a
-  // different animated geometry root, we'll make this an active layer so the
-  // animation can be accelerated.
-  return RequiredLayerStateForChildren(aBuilder, aManager, aParameters,
-    *mStoredList.GetChildren(), Frame());
+  return mStoredList.RequiredLayerStateForChildren(aBuilder,
+                                                   aManager,
+                                                   aParameters,
+                                                   *mStoredList.GetChildren(),
+                                                   mFrame);
 }
 
 bool nsDisplayTransform::ComputeVisibility(nsDisplayListBuilder *aBuilder,

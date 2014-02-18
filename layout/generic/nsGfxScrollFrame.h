@@ -446,7 +446,7 @@ public:
   // Called to set the child frames. We typically have three: the scroll area,
   // the vertical scrollbar, and the horizontal scrollbar.
   virtual nsresult SetInitialChildList(ChildListID     aListID,
-                                 nsFrameList&    aChildList) MOZ_OVERRIDE;
+                                       nsFrameList&    aChildList) MOZ_OVERRIDE;
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
@@ -479,10 +479,10 @@ public:
   virtual nsresult GetPadding(nsMargin& aPadding) MOZ_OVERRIDE;
   virtual bool IsCollapsed() MOZ_OVERRIDE;
   
-  virtual nsresult Reflow(nsPresContext*          aPresContext,
-                    nsHTMLReflowMetrics&     aDesiredSize,
-                    const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus&          aStatus) MOZ_OVERRIDE;
+  virtual nsresult Reflow(nsPresContext*           aPresContext,
+                          nsHTMLReflowMetrics&     aDesiredSize,
+                          const nsHTMLReflowState& aReflowState,
+                          nsReflowStatus&          aStatus) MOZ_OVERRIDE;
 
   virtual bool UpdateOverflow() MOZ_OVERRIDE {
     return mHelper.UpdateOverflow();
@@ -491,16 +491,16 @@ public:
   // Because there can be only one child frame, these two function return
   // NS_ERROR_FAILURE
   virtual nsresult AppendFrames(ChildListID     aListID,
-                          nsFrameList&    aFrameList) MOZ_OVERRIDE;
+                                nsFrameList&    aFrameList) MOZ_OVERRIDE;
   virtual nsresult InsertFrames(ChildListID     aListID,
-                          nsIFrame*       aPrevFrame,
-                          nsFrameList&    aFrameList) MOZ_OVERRIDE;
+                                nsIFrame*       aPrevFrame,
+                                nsFrameList&    aFrameList) MOZ_OVERRIDE;
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot) MOZ_OVERRIDE;
 
 
   virtual nsresult RemoveFrame(ChildListID     aListID,
-                         nsIFrame*       aOldFrame) MOZ_OVERRIDE;
+                               nsIFrame*       aOldFrame) MOZ_OVERRIDE;
 
   virtual nsIScrollableFrame* GetScrollTargetFrame() MOZ_OVERRIDE {
     return this;
@@ -743,7 +743,7 @@ public:
   // Called to set the child frames. We typically have three: the scroll area,
   // the vertical scrollbar, and the horizontal scrollbar.
   virtual nsresult SetInitialChildList(ChildListID     aListID,
-                                 nsFrameList&    aChildList) MOZ_OVERRIDE;
+                                       nsFrameList&    aChildList) MOZ_OVERRIDE;
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
@@ -763,15 +763,15 @@ public:
   // Because there can be only one child frame, these two function return
   // NS_ERROR_FAILURE
   virtual nsresult AppendFrames(ChildListID     aListID,
-                          nsFrameList&    aFrameList) MOZ_OVERRIDE;
+                                nsFrameList&    aFrameList) MOZ_OVERRIDE;
   virtual nsresult InsertFrames(ChildListID     aListID,
-                          nsIFrame*       aPrevFrame,
-                          nsFrameList&    aFrameList) MOZ_OVERRIDE;
+                                nsIFrame*       aPrevFrame,
+                                nsFrameList&    aFrameList) MOZ_OVERRIDE;
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot) MOZ_OVERRIDE;
 
   virtual nsresult RemoveFrame(ChildListID     aListID,
-                         nsIFrame*       aOldFrame) MOZ_OVERRIDE;
+                               nsIFrame*       aOldFrame) MOZ_OVERRIDE;
 
   virtual nsIScrollableFrame* GetScrollTargetFrame() MOZ_OVERRIDE {
     return this;
