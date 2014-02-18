@@ -15,6 +15,9 @@ CXXFLAGS += -O2
 endif
 endif
 
+ifeq ($(OS_TEST),aarch64)
+ASFILES := xptcinvoke_asm_aarch64.s xptcstubs_asm_aarch64.s
+endif
 ######################################################################
 # HPPA
 ######################################################################
