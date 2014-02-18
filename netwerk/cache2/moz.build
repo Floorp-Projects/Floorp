@@ -39,6 +39,7 @@ SOURCES += [
     'CacheFileIOManager.cpp',
     'CacheFileMetadata.cpp',
     'CacheFileOutputStream.cpp',
+    'CacheIndex.cpp',
     'CacheLog.cpp',
     'CacheStorage.cpp',
     'CacheStorageService.cpp',
