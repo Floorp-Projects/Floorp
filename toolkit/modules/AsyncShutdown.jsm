@@ -111,11 +111,12 @@ function safeGetState(state) {
   if (!state) {
     return "(none)";
   }
+  let data, string;
   try {
     // Evaluate state(), normalize the result into something that we can
     // safely stringify or upload.
-    let string = JSON.stringify(state());
-    let data = JSON.parse(string);
+    string = JSON.stringify(state());
+    data = JSON.parse(string);
     // Simplify the rest of the code by ensuring that we can simply
     // concatenate the result to a message.
     if (data && typeof data == "object") {
@@ -125,6 +126,9 @@ function safeGetState(state) {
     }
     return data;
   } catch (ex) {
+    if (string) {
+      return string;
+    }
     try {
       return "Error getting state: " + ex + " at " + ex.stack;
     } catch (ex2) {
