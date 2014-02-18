@@ -940,13 +940,16 @@ JS::DisableGenerationalGC(JSRuntime *rt)
         rt->gcStoreBuffer.disable();
     }
 #endif
+    ++rt->gcGenerationalDisabled;
 }
 
 extern JS_FRIEND_API(void)
 JS::EnableGenerationalGC(JSRuntime *rt)
 {
+    JS_ASSERT(rt->gcGenerationalDisabled > 0);
+    --rt->gcGenerationalDisabled;
 #ifdef JSGC_GENERATIONAL
-    if (!IsGenerationalGCEnabled(rt)) {
+    if (IsGenerationalGCEnabled(rt)) {
         rt->gcNursery.enable();
         rt->gcStoreBuffer.enable();
     }
@@ -956,11 +959,7 @@ JS::EnableGenerationalGC(JSRuntime *rt)
 extern JS_FRIEND_API(bool)
 JS::IsGenerationalGCEnabled(JSRuntime *rt)
 {
-#ifdef JSGC_GENERATIONAL
-    return rt->gcNursery.isEnabled();
-#else
-    return false;
-#endif
+    return rt->gcGenerationalDisabled == 0;
 }
 
 JS_FRIEND_API(bool)
