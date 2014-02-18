@@ -2,8 +2,8 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#ifndef nsSimplePageSequence_h___
-#define nsSimplePageSequence_h___
+#ifndef nsSimplePageSequenceFrame_h___
+#define nsSimplePageSequenceFrame_h___
 
 #include "mozilla/Attributes.h"
 #include "nsIPageSequenceFrame.h"
@@ -163,5 +163,5 @@ protected:
   bool mCurrentCanvasListSetup;
 };
 
-#endif /* nsSimplePageSequence_h___ */
+#endif /* nsSimplePageSequenceFrame_h___ */
 
