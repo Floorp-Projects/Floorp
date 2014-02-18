@@ -341,10 +341,10 @@ private:
   nsTArray<nsString> mStrings;
 };
 
-class TeardownRunnable : public nsRunnable
+class TeardownConsoleRunnable : public nsRunnable
 {
 public:
-  TeardownRunnable(ConsoleProxy* aProxy)
+  TeardownConsoleRunnable(ConsoleProxy* aProxy)
     : mProxy(aProxy)
   {
   }
@@ -392,7 +392,8 @@ WorkerConsole::~WorkerConsole()
   MOZ_COUNT_DTOR(WorkerConsole);
 
   if (mProxy) {
-    nsRefPtr<TeardownRunnable> runnable = new TeardownRunnable(mProxy);
+    nsRefPtr<TeardownConsoleRunnable> runnable =
+      new TeardownConsoleRunnable(mProxy);
     mProxy = nullptr;
 
     if (NS_FAILED(NS_DispatchToMainThread(runnable))) {
