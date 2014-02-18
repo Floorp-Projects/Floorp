@@ -42,9 +42,13 @@ FORCE_STATIC_LIB = True
 
 if CONFIG['_MSC_VER']:
     DEFINES['DLLEXPORT'] = True
+    LOCAL_INCLUDES += ['src/include/msvc_compat']
 
 if CONFIG['OS_TARGET'] == 'Linux':
     # For mremap
     DEFINES['_GNU_SOURCE'] = True
 
 DEFINES['abort'] = 'moz_abort'
+
+GENERATED_INCLUDES += ['src/include']
+LOCAL_INCLUDES += ['src/include']

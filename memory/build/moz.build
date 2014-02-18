@@ -27,6 +27,9 @@ if CONFIG['MOZ_JEMALLOC3']:
     SOURCES += [
         'mozjemalloc_compat.c',
     ]
+    GENERATED_INCLUDES += ['../jemalloc/src/include']
+    if CONFIG['_MSC_VER']:
+        LOCAL_INCLUDES += ['/memory/jemalloc/src/include/msvc_compat']
 
 if CONFIG['MOZ_REPLACE_MALLOC']:
     SOURCES += [
@@ -39,3 +42,7 @@ LIBRARY_NAME = 'memory'
 if CONFIG['MOZ_MEMORY'] and (CONFIG['OS_TARGET'] in ('WINNT', 'Darwin', 'Android') or
                              CONFIG['MOZ_NATIVE_JEMALLOC']):
     FINAL_LIBRARY = 'mozglue'
+
+if CONFIG['MOZ_REPLACE_MALLOC'] and CONFIG['OS_TARGET'] == 'Darwin':
+    # The zone allocator for OSX needs some jemalloc internal functions
+    LOCAL_INCLUDES += ['/memory/jemalloc/src/include']
