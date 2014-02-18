@@ -2994,12 +2994,12 @@ ChooseScaleAndSetTransform(FrameLayerBuilder* aLayerBuilder,
   gfxSize scale;
   // XXX Should we do something for 3D transforms?
   if (canDraw2D) {
-//     // If the container's transform is animated off main thread, then use the
-    // maximum scale.
+    // If the container's transform is animated off main thread, fix a suitable scale size
+    // for animation
     if (aContainerFrame->GetContent() &&
         nsLayoutUtils::HasAnimationsForCompositor(
           aContainerFrame->GetContent(), eCSSProperty_transform)) {
-      scale = nsLayoutUtils::GetMaximumAnimatedScale(aContainerFrame->GetContent());
+      scale = nsLayoutUtils::ComputeSuitableScaleForAnimation(aContainerFrame->GetContent());
     } else {
       // Scale factors are normalized to a power of 2 to reduce the number of resolution changes
       scale = RoundToFloatPrecision(transform2d.ScaleFactors(true));

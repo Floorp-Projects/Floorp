@@ -1728,11 +1728,14 @@ public:
   static bool IsAnimationLoggingEnabled();
 
   /**
-   * Find the maximum scale for an element (aContent) over the course of any
-   * animations and transitions on the element. Will return 1,1 if there is no
-   * animated scaling.
+   * Find a suitable scale for an element (aContent) over the course of any
+   * animations and transitions on the element.
+   * It will check the maximum and minimum scale during the animations and
+   * transitions and return a suitable value for performance and quality.
+   * Will return scale(1,1) if there is no animated scaling.
+   * Always return positive value.
    */
-  static gfxSize GetMaximumAnimatedScale(nsIContent* aContent);
+  static gfxSize ComputeSuitableScaleForAnimation(nsIContent* aContent);
 
   /**
    * Checks if we should forcibly use nearest pixel filtering for the
