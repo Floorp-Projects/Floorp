@@ -468,7 +468,6 @@ pref("browser.tabs.closeButtons", 1);
 pref("browser.tabs.selectOwnerOnClose", true);
 
 pref("browser.ctrlTab.previews", false);
-pref("browser.ctrlTab.recentlyUsedLimit", 7);
 
 // By default, do not export HTML at shutdown.
 // If true, at shutdown the bookmarks in your menu and toolbar will
