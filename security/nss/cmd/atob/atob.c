@@ -35,13 +35,24 @@ output_binary (void *arg, const unsigned char *obuf, PRInt32 size)
     return nb;
 }
 
+static PRBool
+isBase64Char(char c)
+{
+    return ((c >= 'A' && c <= 'Z')
+	    || (c >= 'a' && c <= 'z')
+	    || (c >= '0' && c <= '9')
+	    || c == '+'
+	    || c == '/'
+	    || c == '=');
+}
+
 static SECStatus
 decode_file(FILE *outFile, FILE *inFile)
 {
     NSSBase64Decoder *cx;
-    int nb;
     SECStatus status = SECFailure;
     char ibuf[4096];
+    const char *ptr;
 
     cx = NSSBase64Decoder_Create(output_binary, outFile);
     if (!cx) {
@@ -50,19 +61,29 @@ decode_file(FILE *outFile, FILE *inFile)
 
     for (;;) {
 	if (feof(inFile)) break;
-	nb = fread(ibuf, 1, sizeof(ibuf), inFile);
-	if (nb != sizeof(ibuf)) {
-	    if (nb == 0) {
-		if (ferror(inFile)) {
-		    PORT_SetError(SEC_ERROR_IO);
-		    goto loser;
-		}
-		/* eof */
-		break;
+	if (!fgets(ibuf, sizeof(ibuf), inFile)) {
+	    if (ferror(inFile)) {
+		PORT_SetError(SEC_ERROR_IO);
+		goto loser;
+	    }
+	    /* eof */
+	    break;
+	}
+	for (ptr = ibuf; *ptr; ++ptr) {
+	    char c = *ptr;
+	    if (c == '\n' || c == '\r') {
+		break; /* found end of line */
+	    }
+	    if (!isBase64Char(c)) {
+	      ptr = ibuf; /* ignore line */
+	      break;
 	    }
 	}
+	if (ibuf == ptr) {
+	    continue; /* skip empty or non-base64 line */
+	}
 
-	status = NSSBase64Decoder_Update(cx, ibuf, nb);
+	status = NSSBase64Decoder_Update(cx, ibuf, ptr-ibuf);
 	if (status != SECSuccess) goto loser;
     }
 
@@ -99,10 +120,11 @@ int main(int argc, char **argv)
     progName = progName ? progName+1 : argv[0];
 
     /* Parse command line arguments */
-    optstate = PL_CreateOptState(argc, argv, "i:o:");
+    optstate = PL_CreateOptState(argc, argv, "?hi:o:");
     while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 	switch (optstate->option) {
 	  case '?':
+	  case 'h':
 	    Usage(progName);
 	    break;
 
