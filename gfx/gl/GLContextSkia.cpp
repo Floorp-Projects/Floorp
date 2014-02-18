@@ -125,12 +125,6 @@ GrGLvoid glCompileShader_mozilla(GrGLuint shader)
     return sGLContext.get()->fCompileShader(shader);
 }
 
-GrGLvoid glCopyTexSubImage2D_mozilla(GrGLenum target, GrGLint level, GrGLint xoffset, GrGLint yoffset,
-                                     GrGLint x, GrGLint y, GrGLsizei width, GrGLsizei height)
-{
-    return sGLContext.get()->fCopyTexSubImage2D(target, level, xoffset, yoffset, x, y, width, height);
-}
-
 GrGLuint glCreateProgram_mozilla(void)
 {
     return sGLContext.get()->fCreateProgram();
@@ -254,11 +248,6 @@ GrGLvoid glGenRenderbuffers_mozilla(GrGLsizei n, GrGLuint* renderbuffers)
 GrGLvoid glGenTextures_mozilla(GrGLsizei n, GrGLuint* textures)
 {
     return sGLContext.get()->fGenTextures(n, textures);
-}
-
-GrGLvoid glGenerateMipmap_mozilla(GrGLenum target)
-{
-    return sGLContext.get()->fGenerateMipmap(target);
 }
 
 GrGLvoid glGetBufferParameteriv_mozilla(GrGLenum target, GrGLenum pname, GrGLint* params)
@@ -721,57 +710,6 @@ GrGLvoid glGenVertexArrays_mozilla(GrGLsizei n, GrGLuint *arrays) {
     return sGLContext.get()->fGenVertexArrays(n, arrays);
 }
 
-// Additional functions required for desktop GL < version 3.2
-
-GrGLvoid glClientActiveTexture_mozilla(GrGLenum texture)
-{
-    return sGLContext.get()->fClientActiveTexture(texture);
-}
-
-GrGLvoid glDisableClientState_mozilla(GrGLenum capability)
-{
-    return sGLContext.get()->fDisableClientState(capability);
-}
-
-GrGLvoid glEnableClientState_mozilla(GrGLenum capability)
-{
-    return sGLContext.get()->fEnableClientState(capability);
-}
-
-GrGLvoid glLoadMatrixf_mozilla(const GLfloat* matrix)
-{
-    return sGLContext.get()->fLoadMatrixf(matrix);
-}
-
-GrGLvoid glLoadIdentity_mozilla()
-{
-    return sGLContext.get()->fLoadIdentity();
-}
-
-GrGLvoid glMatrixMode_mozilla(GrGLenum mode)
-{
-    return sGLContext.get()->fMatrixMode(mode);
-}
-
-GrGLvoid glTexGeni_mozilla(GrGLenum coord, GrGLenum pname, GrGLint param)
-{
-    return sGLContext.get()->fTexGeni(coord, pname, param);
-}
-
-GrGLvoid glTexGenf_mozilla(GrGLenum coord, GrGLenum pname, GrGLfloat param)
-{
-    return sGLContext.get()->fTexGenf(coord, pname, param);
-}
-
-GrGLvoid glTexGenfv_mozilla(GrGLenum coord, GrGLenum pname, const GrGLfloat* param)
-{
-    return sGLContext.get()->fTexGenfv(coord, pname, param);
-}
-
-GrGLvoid glVertexPointer_mozilla(GrGLint size, GrGLenum type, GrGLsizei stride, const GrGLvoid* pointer)
-{
-    return sGLContext.get()->fVertexPointer(size, type, stride, pointer);
-}
 
 } // extern "C"
 
@@ -799,7 +737,6 @@ GrGLInterface* CreateGrGLInterfaceFromGLContext(GLContext* context)
     i->fClearStencil = glClearStencil_mozilla;
     i->fColorMask = glColorMask_mozilla;
     i->fCompileShader = glCompileShader_mozilla;
-    i->fCopyTexSubImage2D = glCopyTexSubImage2D_mozilla;
     i->fCreateProgram = glCreateProgram_mozilla;
     i->fCreateShader = glCreateShader_mozilla;
     i->fCullFace = glCullFace_mozilla;
@@ -826,7 +763,6 @@ GrGLInterface* CreateGrGLInterfaceFromGLContext(GLContext* context)
     i->fGenRenderbuffers = glGenRenderbuffers_mozilla;
     i->fGetFramebufferAttachmentParameteriv = glGetFramebufferAttachmentParameteriv_mozilla;
     i->fGenTextures = glGenTextures_mozilla;
-    i->fGenerateMipmap = glGenerateMipmap_mozilla;
     i->fGetBufferParameteriv = glGetBufferParameteriv_mozilla;
     i->fGetError = glGetError_mozilla;
     i->fGetIntegerv = glGetIntegerv_mozilla;
@@ -912,18 +848,6 @@ GrGLInterface* CreateGrGLInterfaceFromGLContext(GLContext* context)
 
     // Desktop OpenGL > 2.0
     i->fDrawBuffers = glDrawBuffers_mozilla;
-
-    // Desktop OpenGL < 3.2 (which we pretend to be)
-    i->fClientActiveTexture = glClientActiveTexture_mozilla;
-    i->fDisableClientState = glDisableClientState_mozilla;
-    i->fEnableClientState = glEnableClientState_mozilla;
-    i->fLoadIdentity = glLoadIdentity_mozilla;
-    i->fLoadMatrixf = glLoadMatrixf_mozilla;
-    i->fMatrixMode = glMatrixMode_mozilla;
-    i->fTexGenf = glTexGenf_mozilla;
-    i->fTexGenfv = glTexGenfv_mozilla;
-    i->fTexGeni = glTexGeni_mozilla;
-    i->fVertexPointer = glVertexPointer_mozilla;
 
     // We support both desktop GL and GLES2
     if (context->IsGLES2()) {

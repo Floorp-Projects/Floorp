@@ -78,7 +78,7 @@ SourceSurfaceSkia::InitFromData(unsigned char* aData,
     ConvertBGRXToBGRA(reinterpret_cast<unsigned char*>(mBitmap.getPixels()), aSize, mBitmap.rowBytes());
     mBitmap.unlockPixels();
     mBitmap.notifyPixelsChanged();
-    mBitmap.setAlphaType(kOpaque_SkAlphaType);
+    mBitmap.setIsOpaque(true);
   }
 
   mSize = aSize;

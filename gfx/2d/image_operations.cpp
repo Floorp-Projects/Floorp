@@ -470,7 +470,7 @@ SkBitmap ImageOperations::ResizeSubpixel(const SkBitmap& source,
     src_row += h * row_words;
     dst_row += result.rowBytes() / 4;
   }
-  result.setAlphaType(img.alphaType());
+  result.setIsOpaque(img.isOpaque());
   return result;
 #else
   return SkBitmap();
@@ -534,7 +534,7 @@ SkBitmap ImageOperations::ResizeBasic(const SkBitmap& source,
                  /* sse = */ false);
 
   // Preserve the "opaque" flag for use as an optimization later.
-  result.setAlphaType(source.alphaType());
+  result.setIsOpaque(source.isOpaque());
 
   return result;
 }

@@ -18,18 +18,19 @@ bool Scale(uint8_t* srcData, int32_t srcWidth, int32_t srcHeight, int32_t srcStr
            SurfaceFormat format)
 {
 #ifdef USE_SKIA
-  SkAlphaType alphaType;
+  bool opaque;
   if (format == SurfaceFormat::B8G8R8A8) {
-    alphaType = kPremul_SkAlphaType;
+    opaque = false;
   } else {
-    alphaType = kOpaque_SkAlphaType;
+    opaque = true;
   }
 
   SkBitmap::Config config = GfxFormatToSkiaConfig(format);
 
   SkBitmap imgSrc;
-  imgSrc.setConfig(config, srcWidth, srcHeight, srcStride, alphaType);
+  imgSrc.setConfig(config, srcWidth, srcHeight, srcStride);
   imgSrc.setPixels(srcData);
+  imgSrc.setIsOpaque(opaque);
 
   // Rescaler is compatible with 32 bpp only. Convert to RGB32 if needed.
   if (config != SkBitmap::kARGB_8888_Config) {

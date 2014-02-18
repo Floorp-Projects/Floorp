@@ -61,9 +61,6 @@ static ANPTypefaceStyle anp_getStyle(const ANPTypeface* tf) {
 static int32_t anp_getFontPath(const ANPTypeface* tf, char fileName[],
                                int32_t length, int32_t* index) {
     SkStream* stream = tf->openStream(index);
-
-    return 0;
-    /*
     if (stream->getFileName()) {
       strcpy(fileName, stream->getFileName());
     } else {
@@ -71,7 +68,6 @@ static int32_t anp_getFontPath(const ANPTypeface* tf, char fileName[],
     }
 
     return strlen(fileName);
-    */
 }
 
 static const char* gFontDir;
