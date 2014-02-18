@@ -38,6 +38,7 @@
 #ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
 #endif
+#include "nsFilePickerProxy.h"
 #include "mozilla/dom/Element.h"
 #include "nsIBaseWindow.h"
 #include "nsICachedFileDescriptorListener.h"
@@ -2100,6 +2101,21 @@ TabChild::DeallocPContentPermissionRequestChild(PContentPermissionRequestChild* 
 #endif /* DEBUG */
     child->IPDLRelease();
     return true;
+}
+
+PFilePickerChild*
+TabChild::AllocPFilePickerChild(const nsString&, const int16_t&)
+{
+  NS_RUNTIMEABORT("unused");
+  return nullptr;
+}
+
+bool
+TabChild::DeallocPFilePickerChild(PFilePickerChild* actor)
+{
+  nsFilePickerProxy* filePicker = static_cast<nsFilePickerProxy*>(actor);
+  NS_RELEASE(filePicker);
+  return true;
 }
 
 bool
