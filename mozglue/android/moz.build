@@ -23,3 +23,28 @@ DEFINES['ANDROID_PACKAGE_NAME'] = '"%s"' % CONFIG['ANDROID_PACKAGE_NAME']
 
 if CONFIG['MOZ_FOLD_LIBS']:
     DEFINES['MOZ_FOLD_LIBS'] = True
+
+GENERATED_INCLUDES += ['/build']
+LOCAL_INCLUDES += [
+    '../linker',
+    '/db/sqlite3/src',
+    '/ipc/chromium/src',
+    '/nsprpub/lib/ds',
+    '/nsprpub/lib/libc/include',
+    '/nsprpub/pr/include',
+    '/security/nss/lib/base',
+    '/security/nss/lib/certdb',
+    '/security/nss/lib/cryptohi',
+    '/security/nss/lib/dev',
+    '/security/nss/lib/freebl',
+    '/security/nss/lib/nss',
+    '/security/nss/lib/pk11wrap',
+    '/security/nss/lib/pkcs7',
+    '/security/nss/lib/pki',
+    '/security/nss/lib/smime',
+    '/security/nss/lib/softoken',
+    '/security/nss/lib/ssl',
+    '/security/nss/lib/util',
+    '/toolkit/components/startup',
+    '/xpcom/build',
+]
