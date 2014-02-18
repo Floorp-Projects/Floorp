@@ -34,7 +34,7 @@ public:
   virtual bool PeekOffsetWord(bool aForward, bool aWordSelectEatSpace, bool aIsKeyboardSelect,
                                 int32_t* aOffset, PeekWordState* aState);
 
-  NS_IMETHOD Reflow(nsPresContext* aPresContext,
+  virtual nsresult Reflow(nsPresContext* aPresContext,
                     nsHTMLReflowMetrics& aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus& aStatus);
@@ -76,7 +76,7 @@ BRFrame::~BRFrame()
 {
 }
 
-NS_IMETHODIMP
+nsresult
 BRFrame::Reflow(nsPresContext* aPresContext,
                 nsHTMLReflowMetrics& aMetrics,
                 const nsHTMLReflowState& aReflowState,

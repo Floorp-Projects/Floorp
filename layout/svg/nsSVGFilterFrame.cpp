@@ -177,7 +177,7 @@ nsSVGFilterFrame::GetReferencedFilterIfNotInUse()
   return referenced;
 }
 
-NS_IMETHODIMP
+nsresult
 nsSVGFilterFrame::AttributeChanged(int32_t  aNameSpaceID,
                                    nsIAtom* aAttribute,
                                    int32_t  aModType)

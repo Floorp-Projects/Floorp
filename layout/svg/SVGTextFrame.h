@@ -275,7 +275,7 @@ public:
                     nsIFrame*   aParent,
                     nsIFrame*   aPrevInFlow) MOZ_OVERRIDE;
 
-  NS_IMETHOD AttributeChanged(int32_t aNamespaceID,
+  virtual nsresult AttributeChanged(int32_t aNamespaceID,
                               nsIAtom* aAttribute,
                               int32_t aModType) MOZ_OVERRIDE;
 
@@ -296,7 +296,7 @@ public:
   virtual nsIAtom* GetType() const MOZ_OVERRIDE;
 
 #ifdef DEBUG_FRAME_DUMP
-  NS_IMETHOD GetFrameName(nsAString& aResult) const MOZ_OVERRIDE
+  virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE
   {
     return MakeFrameName(NS_LITERAL_STRING("SVGText"), aResult);
   }

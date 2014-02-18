@@ -274,7 +274,7 @@ nsSVGClipPathFrame::IsValid()
   return true;
 }
 
-NS_IMETHODIMP
+nsresult
 nsSVGClipPathFrame::AttributeChanged(int32_t         aNameSpaceID,
                                      nsIAtom*        aAttribute,
                                      int32_t         aModType)

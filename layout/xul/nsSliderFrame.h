@@ -47,7 +47,7 @@ public:
   virtual ~nsSliderFrame();
 
 #ifdef DEBUG_FRAME_DUMP
-  NS_IMETHOD GetFrameName(nsAString& aResult) const MOZ_OVERRIDE {
+  virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE {
     return MakeFrameName(NS_LITERAL_STRING("SliderFrame"), aResult);
   }
 #endif
@@ -58,14 +58,14 @@ public:
   NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
 
   // nsIFrame overrides
-  NS_IMETHOD  AppendFrames(ChildListID     aListID,
+  virtual nsresult  AppendFrames(ChildListID     aListID,
                            nsFrameList&    aFrameList) MOZ_OVERRIDE;
 
-  NS_IMETHOD  InsertFrames(ChildListID     aListID,
+  virtual nsresult  InsertFrames(ChildListID     aListID,
                            nsIFrame*       aPrevFrame,
                            nsFrameList&    aFrameList) MOZ_OVERRIDE;
 
-  NS_IMETHOD  RemoveFrame(ChildListID     aListID,
+  virtual nsresult  RemoveFrame(ChildListID     aListID,
                           nsIFrame*       aOldFrame) MOZ_OVERRIDE;
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot) MOZ_OVERRIDE;
@@ -78,7 +78,7 @@ public:
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) MOZ_OVERRIDE;
  
-  NS_IMETHOD AttributeChanged(int32_t aNameSpaceID,
+  virtual nsresult AttributeChanged(int32_t aNameSpaceID,
                               nsIAtom* aAttribute,
                               int32_t aModType) MOZ_OVERRIDE;
 
@@ -87,11 +87,11 @@ public:
                     nsIFrame*        asPrevInFlow) MOZ_OVERRIDE;
 
 
-  NS_IMETHOD HandleEvent(nsPresContext* aPresContext,
+  virtual nsresult HandleEvent(nsPresContext* aPresContext,
                          mozilla::WidgetGUIEvent* aEvent,
                          nsEventStatus* aEventStatus) MOZ_OVERRIDE;
 
-  NS_IMETHOD SetInitialChildList(ChildListID     aListID,
+  virtual nsresult SetInitialChildList(ChildListID     aListID,
                                  nsFrameList&    aChildList) MOZ_OVERRIDE;
 
   virtual nsIAtom* GetType() const MOZ_OVERRIDE;

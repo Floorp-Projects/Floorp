@@ -38,12 +38,12 @@ public:
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS
 
-  NS_IMETHOD Reflow(nsPresContext*          aPresContext,
+  virtual nsresult Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
-  NS_IMETHOD HandleEvent(nsPresContext* aPresContext,
+  virtual nsresult HandleEvent(nsPresContext* aPresContext,
                          WidgetGUIEvent* aEvent,
                          nsEventStatus* aEventStatus);
 
@@ -54,12 +54,12 @@ public:
 #endif
 
 #ifdef DEBUG_FRAME_DUMP
-  NS_IMETHOD GetFrameName(nsAString& aResult) const {
+  virtual nsresult GetFrameName(nsAString& aResult) const {
     return MakeFrameName(NS_LITERAL_STRING("ImageControl"), aResult);
   }
 #endif
 
-  NS_IMETHOD GetCursor(const nsPoint&    aPoint,
+  virtual nsresult GetCursor(const nsPoint&    aPoint,
                        nsIFrame::Cursor& aCursor);
   // nsIFormContromFrame
   virtual void SetFocus(bool aOn, bool aRepaint);
@@ -132,7 +132,7 @@ nsImageControlFrame::GetType() const
   return nsGkAtoms::imageControlFrame; 
 }
 
-NS_METHOD
+nsresult
 nsImageControlFrame::Reflow(nsPresContext*         aPresContext,
                            nsHTMLReflowMetrics&     aDesiredSize,
                            const nsHTMLReflowState& aReflowState,
@@ -146,7 +146,7 @@ nsImageControlFrame::Reflow(nsPresContext*         aPresContext,
   return nsImageControlFrameSuper::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
 }
 
-NS_METHOD 
+nsresult 
 nsImageControlFrame::HandleEvent(nsPresContext* aPresContext,
                                  WidgetGUIEvent* aEvent,
                                  nsEventStatus* aEventStatus)
@@ -191,7 +191,7 @@ nsImageControlFrame::SetFocus(bool aOn, bool aRepaint)
 {
 }
 
-NS_IMETHODIMP
+nsresult
 nsImageControlFrame::GetCursor(const nsPoint&    aPoint,
                                nsIFrame::Cursor& aCursor)
 {

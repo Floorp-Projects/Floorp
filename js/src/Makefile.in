@@ -29,8 +29,6 @@ endif
 ifdef JS_HAS_CTYPES
 ifdef MOZ_NATIVE_FFI
 LOCAL_INCLUDES = $(MOZ_FFI_CFLAGS)
-else
-LOCAL_INCLUDES = -Ictypes/libffi/include
 endif
 
 ifdef MOZ_NATIVE_FFI
@@ -204,11 +202,6 @@ DIST_GARBAGE = config.cache config.log config.status* \
 
 distclean::
 	$(RM) $(DIST_GARBAGE)
-
-ifneq (,$(filter WINNT,$(OS_ARCH)))
-# _CRT_RAND_S must be #defined before #including stdlib.h to get rand_s()
-DEFINES         += -D_CRT_RAND_S
-endif
 
 ifneq ($(findstring -L,$(NSPR_LIBS)),)
 NSPR_STATIC_PATH = $(subst -L,,$(findstring -L,$(NSPR_LIBS)))
@@ -405,23 +398,6 @@ endif
 selfhosted.out.h: $(selfhosted_out_h_deps)
 	$(PYTHON) $(srcdir)/builtin/embedjs.py $(SELFHOSTED_DEFINES) \
 	  -p '$(CPP)' -m $(srcdir)/js.msg -o $@ $(selfhosting_srcs)
-
-###############################################
-# BEGIN kludges for the Nitro assembler
-#
-
-# Needed to "configure" it correctly.  Unfortunately these
-# flags wind up being applied to all code in js/src, not just
-# the code in js/src/assembler.
-CXXFLAGS += -DUSE_SYSTEM_MALLOC=1 -DENABLE_ASSEMBLER=1
-
-ifneq (,$(ENABLE_YARR_JIT))
-CXXFLAGS +=  -DENABLE_JIT=1
-endif
-
-#
-# END kludges for the Nitro assembler
-###############################################
 
 ###############################################
 # Generating source package tarballs

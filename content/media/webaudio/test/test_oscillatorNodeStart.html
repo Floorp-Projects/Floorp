@@ -31,7 +31,22 @@ addLoadEvent(function() {
     ok(isSilent, "OscillatorNode should be silent before calling start.");
     SimpleTest.finish();
   }
+
+  // Debug Logging for bug 966322
+
+  ok(true, "Load event ran");
+
+  var bs = context.createBufferSource();
+  bs.buffer = context.createBuffer(1, 1, context.sampleRate);
+  bs.start();
+  bs.onended = function() {
+    ok(true, "Graph is running");
+  }
+
 });
+
+// Debug Logging for bug 966322
+ok(true, "script ran");
 
 </script>
 </pre>
