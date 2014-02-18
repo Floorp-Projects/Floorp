@@ -70,6 +70,7 @@ CPP_UNIT_TESTS += [
     'TestPipe.cpp',
     'TestPLDHash.cpp',
     'TestRefPtr.cpp',
+    'TestStringAPI.cpp',
     'TestTArray.cpp',
     'TestTextFormatter.cpp',
     'TestThreadUtils.cpp'
@@ -111,11 +112,6 @@ if CONFIG['MOZ_DEBUG'] and CONFIG['OS_ARCH'] not in ('WINNT', 'Darwin'):
     CPP_UNIT_TESTS += [
         'TestDeadlockDetector.cpp',
         'TestDeadlockDetectorScalability.cpp',
-    ]
-
-if not CONFIG['MOZILLA_INTERNAL_API']:
-    CPP_UNIT_TESTS += [
-        'TestStringAPI.cpp',
     ]
 
 LOCAL_INCLUDES += [
