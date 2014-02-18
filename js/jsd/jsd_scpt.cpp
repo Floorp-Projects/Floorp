@@ -28,13 +28,13 @@ using mozilla::AutoSafeJSContext;
 #ifdef DEBUG
 void JSD_ASSERT_VALID_SCRIPT(JSDScript* jsdscript)
 {
-    JS_ASSERT(jsdscript);
-    JS_ASSERT(jsdscript->script);
+    MOZ_ASSERT(jsdscript);
+    MOZ_ASSERT(jsdscript->script);
 }
 void JSD_ASSERT_VALID_EXEC_HOOK(JSDExecHook* jsdhook)
 {
-    JS_ASSERT(jsdhook);
-    JS_ASSERT(jsdhook->hook);
+    MOZ_ASSERT(jsdhook);
+    MOZ_ASSERT(jsdhook->hook);
 }
 #endif
 
@@ -51,7 +51,7 @@ _newJSDScript(JSDContext*  jsdc,
     unsigned     lineno;
     const char* raw_filename;
 
-    JS_ASSERT(JSD_SCRIPTS_LOCKED(jsdc));
+    MOZ_ASSERT(JSD_SCRIPTS_LOCKED(jsdc));
 
     /* these are inlined javascript: urls and we can't handle them now */
     lineno = (unsigned) JS_GetScriptBaseLineNumber(cx, script);
@@ -82,7 +82,7 @@ static void
 _destroyJSDScript(JSDContext*  jsdc,
                   JSDScript*   jsdscript)
 {
-    JS_ASSERT(JSD_SCRIPTS_LOCKED(jsdc));
+    MOZ_ASSERT(JSD_SCRIPTS_LOCKED(jsdc));
 
     /* destroy all hooks */
     jsd_ClearAllExecutionHooksForScript(jsdc, jsdscript);
@@ -130,7 +130,7 @@ _dumpJSDScript(JSDContext* jsdc, JSDScript* jsdscript, const char* leadingtext)
             n += size_t(snprintf(Buf + n, sizeof(Buf) - n, "%s", "no fun"));
         } else {
             n += JS_PutEscapedFlatString(Buf + n, sizeof(Buf) - n,
-                                         JS_ASSERT_STRING_IS_FLAT(fun), 0);
+                                         MOZ_ASSERT_STRING_IS_FLAT(fun), 0);
             Buf[sizeof(Buf) - 1] = '\0';
         }
         if (n + 1 < sizeof(Buf))
@@ -218,7 +218,7 @@ JSDScript*
 jsd_FindJSDScript( JSDContext*  jsdc,
                    JSScript     *script )
 {
-    JS_ASSERT(JSD_SCRIPTS_LOCKED(jsdc));
+    MOZ_ASSERT(JSD_SCRIPTS_LOCKED(jsdc));
     return (JSDScript*) JS_HashTableLookup(jsdc->scriptsTable, (void *)script);
 }
 
@@ -230,7 +230,7 @@ jsd_FindOrCreateJSDScript(JSDContext    *jsdc,
 {
     JS::RootedScript script(cx, script_);
     JSDScript *jsdscript;
-    JS_ASSERT(JSD_SCRIPTS_LOCKED(jsdc));
+    MOZ_ASSERT(JSD_SCRIPTS_LOCKED(jsdc));
 
     jsdscript = jsd_FindJSDScript(jsdc, script);
     if (jsdscript)
@@ -369,7 +369,7 @@ jsd_IterateScripts(JSDContext* jsdc, JSDScript **iterp)
 {
     JSDScript *jsdscript = *iterp;
     
-    JS_ASSERT(JSD_SCRIPTS_LOCKED(jsdc));
+    MOZ_ASSERT(JSD_SCRIPTS_LOCKED(jsdc));
 
     if( !jsdscript )
         jsdscript = (JSDScript *)jsdc->scripts.next;
@@ -398,7 +398,7 @@ jsd_IsActiveScript(JSDContext* jsdc, JSDScript *jsdscript)
 {
     JSDScript *current;
 
-    JS_ASSERT(JSD_SCRIPTS_LOCKED(jsdc));
+    MOZ_ASSERT(JSD_SCRIPTS_LOCKED(jsdc));
 
     for( current = (JSDScript *)jsdc->scripts.next;
          current != (JSDScript *)&jsdc->scripts;
@@ -720,9 +720,9 @@ jsd_TrapHandler(JSContext *cx, JSScript *script_, jsbytecode *pc, jsval *rval,
     }
 
     JSD_ASSERT_VALID_EXEC_HOOK(jsdhook);
-    JS_ASSERT(!jsdhook->pc || jsdhook->pc == (uintptr_t)pc);
-    JS_ASSERT(jsdhook->jsdscript->script == script);
-    JS_ASSERT(jsdhook->jsdscript->jsdc == jsdc);
+    MOZ_ASSERT(!jsdhook->pc || jsdhook->pc == (uintptr_t)pc);
+    MOZ_ASSERT(jsdhook->jsdscript->script == script);
+    MOZ_ASSERT(jsdhook->jsdscript->jsdc == jsdc);
 
     hook = jsdhook->hook;
     hookData = jsdhook->callerdata;

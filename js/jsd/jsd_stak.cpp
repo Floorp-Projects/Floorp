@@ -17,14 +17,14 @@ using mozilla::AutoPushJSContext;
 #ifdef DEBUG
 void JSD_ASSERT_VALID_THREAD_STATE(JSDThreadState* jsdthreadstate)
 {
-    JS_ASSERT(jsdthreadstate);
-    JS_ASSERT(jsdthreadstate->stackDepth > 0);
+    MOZ_ASSERT(jsdthreadstate);
+    MOZ_ASSERT(jsdthreadstate->stackDepth > 0);
 }
 
 void JSD_ASSERT_VALID_STACK_FRAME(JSDStackFrameInfo* jsdframe)
 {
-    JS_ASSERT(jsdframe);
-    JS_ASSERT(jsdframe->jsdthreadstate);
+    MOZ_ASSERT(jsdframe);
+    MOZ_ASSERT(jsdframe->jsdthreadstate);
 }
 #endif
 
@@ -148,8 +148,8 @@ jsd_DestroyThreadState(JSDContext* jsdc, JSDThreadState* jsdthreadstate)
     JSDStackFrameInfo* jsdframe;
     JSCList* list;
 
-    JS_ASSERT(jsdthreadstate);
-    JS_ASSERT(JSD_CURRENT_THREAD() == jsdthreadstate->thread);
+    MOZ_ASSERT(jsdthreadstate);
+    MOZ_ASSERT(JSD_CURRENT_THREAD() == jsdthreadstate->thread);
 
     JSD_LOCK_THREADSTATES(jsdc);
     JS_REMOVE_LINK(&jsdthreadstate->links);
@@ -402,7 +402,7 @@ jsd_EvaluateUCScriptInStackFrame(JSDContext* jsdc,
     bool valid;
     JSExceptionState* exceptionState = nullptr;
 
-    JS_ASSERT(JSD_CURRENT_THREAD() == jsdthreadstate->thread);
+    MOZ_ASSERT(JSD_CURRENT_THREAD() == jsdthreadstate->thread);
 
     JSD_LOCK_THREADSTATES(jsdc);
     valid = jsd_IsValidFrameInThreadState(jsdc, jsdthreadstate, jsdframe);
@@ -412,7 +412,7 @@ jsd_EvaluateUCScriptInStackFrame(JSDContext* jsdc,
         return false;
 
     AutoPushJSContext cx(jsdthreadstate->context);
-    JS_ASSERT(cx);
+    MOZ_ASSERT(cx);
 
     if (eatExceptions)
         exceptionState = JS_SaveExceptionState(cx);
@@ -439,7 +439,7 @@ jsd_EvaluateScriptInStackFrame(JSDContext* jsdc,
     bool valid;
     JSExceptionState* exceptionState = nullptr;
 
-    JS_ASSERT(JSD_CURRENT_THREAD() == jsdthreadstate->thread);
+    MOZ_ASSERT(JSD_CURRENT_THREAD() == jsdthreadstate->thread);
 
     JSD_LOCK_THREADSTATES(jsdc);
     valid = jsd_IsValidFrameInThreadState(jsdc, jsdthreadstate, jsdframe);
@@ -449,7 +449,7 @@ jsd_EvaluateScriptInStackFrame(JSDContext* jsdc,
         return false;
 
     AutoPushJSContext cx(jsdthreadstate->context);
-    JS_ASSERT(cx);
+    MOZ_ASSERT(cx);
 
     if (eatExceptions)
         exceptionState = JS_SaveExceptionState(cx);
@@ -483,7 +483,7 @@ jsd_ValToStringInStackFrame(JSDContext* jsdc,
         return nullptr;
 
     cx = jsdthreadstate->context;
-    JS_ASSERT(cx);
+    MOZ_ASSERT(cx);
 
     JS::RootedValue v(cx, val);
     exceptionState = JS_SaveExceptionState(cx);
@@ -499,7 +499,7 @@ jsd_IsValidThreadState(JSDContext*        jsdc,
 {
     JSDThreadState *cur;
 
-    JS_ASSERT( JSD_THREADSTATES_LOCKED(jsdc) );
+    MOZ_ASSERT( JSD_THREADSTATES_LOCKED(jsdc) );
 
     for( cur = (JSDThreadState*)jsdc->threadsStates.next;
          cur != (JSDThreadState*)&jsdc->threadsStates;
@@ -516,7 +516,7 @@ jsd_IsValidFrameInThreadState(JSDContext*        jsdc,
                               JSDThreadState*    jsdthreadstate,
                               JSDStackFrameInfo* jsdframe)
 {
-    JS_ASSERT(JSD_THREADSTATES_LOCKED(jsdc));
+    MOZ_ASSERT(JSD_THREADSTATES_LOCKED(jsdc));
 
     if( ! jsd_IsValidThreadState(jsdc, jsdthreadstate) )
         return false;
