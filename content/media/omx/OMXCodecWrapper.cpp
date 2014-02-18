@@ -8,6 +8,7 @@
 #include "TrackEncoder.h"
 
 #include <binder/ProcessState.h>
+#include <cutils/properties.h>
 #include <media/ICrypto.h>
 #include <media/IOMX.h>
 #include <OMX_Component.h>
@@ -110,6 +111,15 @@ OMXCodecWrapper::Stop()
   return result;
 }
 
+// Check system property to see if we're running on emulator.
+static
+bool IsRunningOnEmulator()
+{
+  char qemu[PROPERTY_VALUE_MAX];
+  property_get("ro.kernel.qemu", qemu, "");
+  return strncmp(qemu, "1", 1) == 0;
+}
+
 nsresult
 OMXVideoEncoder::Configure(int aWidth, int aHeight, int aFrameRate)
 {
@@ -117,6 +127,19 @@ OMXVideoEncoder::Configure(int aWidth, int aHeight, int aFrameRate)
 
   NS_ENSURE_TRUE(aWidth > 0 && aHeight > 0 && aFrameRate > 0,
                  NS_ERROR_INVALID_ARG);
+
+  OMX_VIDEO_AVCLEVELTYPE level = OMX_VIDEO_AVCLevel3;
+  OMX_VIDEO_CONTROLRATETYPE bitrateMode = OMX_Video_ControlRateConstant;
+  // Limitation of soft AVC/H.264 encoder running on emulator in stagefright.
+  static bool emu = IsRunningOnEmulator();
+  if (emu) {
+    if (aWidth > 352 || aHeight > 288) {
+      CODEC_ERROR("SoftAVCEncoder doesn't support resolution larger than CIF");
+      return NS_ERROR_INVALID_ARG;
+    }
+    level = OMX_VIDEO_AVCLevel2;
+    bitrateMode = OMX_Video_ControlRateVariable;
+  }
 
   // Set up configuration parameters for AVC/H.264 encoder.
   sp<AMessage> format = new AMessage;
@@ -128,8 +151,8 @@ OMXVideoEncoder::Configure(int aWidth, int aHeight, int aFrameRate)
   // height is half that of Y
   format->setInt32("color-format", OMX_COLOR_FormatYUV420SemiPlanar);
   format->setInt32("profile", OMX_VIDEO_AVCProfileBaseline);
-  format->setInt32("level", OMX_VIDEO_AVCLevel3);
-  format->setInt32("bitrate-mode", OMX_Video_ControlRateConstant);
+  format->setInt32("level", level);
+  format->setInt32("bitrate-mode", bitrateMode);
   format->setInt32("store-metadata-in-buffers", 0);
   format->setInt32("prepend-sps-pps-to-idr-frames", 0);
   // Input values.
