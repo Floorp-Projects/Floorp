@@ -83,6 +83,8 @@
 <!ENTITY projects.valid "Valid">
 <!ENTITY projects.error "Error">
 <!ENTITY projects.warning "Warning">
+<!ENTITY projects.hosted "Hosted">
+<!ENTITY projects.packaged "Packaged">
 
 <!ENTITY help.title "App Manager">
 <!ENTITY help.close "Close">
