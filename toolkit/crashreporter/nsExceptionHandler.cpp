@@ -151,10 +151,15 @@ static const XP_CHAR dumpFileExtension[] = {'.', 'd', 'm', 'p',
 static const XP_CHAR extraFileExtension[] = {'.', 'e', 'x', 't',
                                              'r', 'a', '\0'}; // .extra
 
+static const char kCrashMainID[] = "crash.main.1\n";
+
 static google_breakpad::ExceptionHandler* gExceptionHandler = nullptr;
 
 static XP_CHAR* pendingDirectory;
 static XP_CHAR* crashReporterPath;
+
+// Where crash events should go.
+static XP_CHAR* eventsDirectory;
 
 // If this is false, we don't launch the crash reporter
 static bool doReport = true;
@@ -552,6 +557,63 @@ bool MinidumpCallback(
                       0600);
     if (fd != -1) {
       unused << sys_write(fd, crashTimeString, crashTimeStringLen);
+      sys_close(fd);
+    }
+#endif
+  }
+
+  // Write crash event file.
+
+  // Minidump IDs are UUIDs (36) + NULL.
+  static char id_ascii[37];
+#ifdef XP_LINUX
+  const char * index = strrchr(descriptor.path(), '/');
+  MOZ_ASSERT(index);
+  MOZ_ASSERT(strlen(index) == 1 + 36 + 4); // "/" + UUID + ".dmp"
+  for (uint32_t i = 0; i < 36; i++) {
+    id_ascii[i] = *(index + 1 + i);
+  }
+#else
+  MOZ_ASSERT(XP_STRLEN(minidump_id) == 36);
+  for (uint32_t i = 0; i < 36; i++) {
+    id_ascii[i] = *((char *)(minidump_id + i));
+  }
+#endif
+
+  if (eventsDirectory) {
+    static XP_CHAR crashEventPath[XP_PATH_MAX];
+    int size = XP_PATH_MAX;
+    XP_CHAR* p;
+    p = Concat(crashEventPath, eventsDirectory, &size);
+    p = Concat(p, XP_PATH_SEPARATOR, &size);
+#ifdef XP_LINUX
+    p = Concat(p, id_ascii, &size);
+#else
+    p = Concat(p, minidump_id, &size);
+#endif
+
+#if defined(XP_WIN32)
+    HANDLE hFile = CreateFile(crashEventPath, GENERIC_WRITE, 0,
+                              nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL,
+                              nullptr);
+    if (hFile != INVALID_HANDLE_VALUE) {
+      DWORD nBytes;
+      WriteFile(hFile, kCrashMainID, sizeof(kCrashMainID) - 1, &nBytes,
+                nullptr);
+      WriteFile(hFile, crashTimeString, crashTimeStringLen, &nBytes, nullptr);
+      WriteFile(hFile, "\n", 1, &nBytes, nullptr);
+      WriteFile(hFile, id_ascii, strlen(id_ascii), &nBytes, nullptr);
+      CloseHandle(hFile);
+    }
+#elif defined(XP_UNIX)
+    int fd = sys_open(crashEventPath,
+                      O_WRONLY | O_CREAT | O_TRUNC,
+                      0600);
+    if (fd != -1) {
+      unused << sys_write(fd, kCrashMainID, sizeof(kCrashMainID) - 1);
+      unused << sys_write(fd, crashTimeString, crashTimeStringLen);
+      unused << sys_write(fd, "\n", 1);
+      unused << sys_write(fd, id_ascii, strlen(id_ascii));
       sys_close(fd);
     }
 #endif
@@ -1271,6 +1333,19 @@ InitInstallTime(nsACString& aInstallTime)
   return NS_OK;
 }
 
+// Ensure a directory exists and create it if missing.
+static nsresult
+EnsureDirectoryExists(nsIFile* dir)
+{
+  nsresult rv = dir->Create(nsIFile::DIRECTORY_TYPE, 0700);
+
+  if (NS_WARN_IF(NS_FAILED(rv) && rv != NS_ERROR_FILE_ALREADY_EXISTS)) {
+	return rv;
+  }
+
+  return NS_OK;
+}
+
 // Annotate the crash report with a Unique User ID and time
 // since install.  Also do some prep work for recording
 // time since last crash, which must be calculated at
@@ -1286,14 +1361,7 @@ nsresult SetupExtraData(nsIFile* aAppDataDirectory,
   rv = dataDirectory->AppendNative(NS_LITERAL_CSTRING("Crash Reports"));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  bool exists;
-  rv = dataDirectory->Exists(&exists);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!exists) {
-    rv = dataDirectory->Create(nsIFile::DIRECTORY_TYPE, 0700);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+  EnsureDirectoryExists(dataDirectory);
 
 #if defined(XP_WIN32)
   nsAutoString dataDirEnv(NS_LITERAL_STRING("MOZ_CRASHREPORTER_DATA_DIRECTORY="));
@@ -1437,6 +1505,11 @@ nsresult UnsetExceptionHandler()
   if (crashReporterPath) {
     NS_Free(crashReporterPath);
     crashReporterPath = nullptr;
+  }
+
+  if (eventsDirectory) {
+    NS_Free(eventsDirectory);
+    eventsDirectory = nullptr;
   }
 
 #ifdef XP_MACOSX
@@ -1996,6 +2069,68 @@ nsresult SetSubmitReports(bool aSubmitReports)
     return NS_OK;
 }
 
+void
+UpdateCrashEventsDir()
+{
+  nsCOMPtr<nsIFile> eventsDir;
+
+  // We prefer the following locations in order:
+  //
+  // 1. If environment variable is present, use it. We don't expect
+  //    the environment variable except for tests and other atypical setups.
+  // 2. Inside the profile directory.
+  // 3. Inside the user application data directory (no profile available).
+  // 4. A temporary directory (setup likely is invalid / application is buggy).
+  const char *env = PR_GetEnv("CRASHES_EVENTS_DIR");
+  if (env) {
+    eventsDir = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);
+    if (!eventsDir) {
+      return;
+    }
+    eventsDir->InitWithNativePath(nsDependentCString(env));
+    EnsureDirectoryExists(eventsDir);
+  } else {
+    nsresult rv = NS_GetSpecialDirectory("ProfD", getter_AddRefs(eventsDir));
+    if (NS_SUCCEEDED(rv)) {
+      eventsDir->Append(NS_LITERAL_STRING("crashes"));
+      EnsureDirectoryExists(eventsDir);
+      eventsDir->Append(NS_LITERAL_STRING("events"));
+      EnsureDirectoryExists(eventsDir);
+    } else {
+      rv = NS_GetSpecialDirectory("UAppData", getter_AddRefs(eventsDir));
+      if (NS_SUCCEEDED(rv)) {
+        eventsDir->Append(NS_LITERAL_STRING("Crash Reports"));
+        EnsureDirectoryExists(eventsDir);
+        eventsDir->Append(NS_LITERAL_STRING("events"));
+        EnsureDirectoryExists(eventsDir);
+      } else {
+        NS_WARNING("Couldn't get the user appdata directory. Crash events may not be produced.");
+        return;
+      }
+    }
+  }
+
+#ifdef XP_WIN
+  nsString path;
+  eventsDir->GetPath(path);
+  eventsDirectory = reinterpret_cast<wchar_t*>(ToNewUnicode(path));
+#else
+  nsCString path;
+  eventsDir->GetNativePath(path);
+  eventsDirectory = ToNewCString(path);
+#endif
+}
+
+bool GetCrashEventsDir(nsAString& aPath)
+{
+  if (!eventsDirectory) {
+    return false;
+  }
+
+  aPath = CONVERT_XP_CHAR_TO_UTF16(eventsDirectory);
+  return true;
+}
+
 static void
 FindPendingDir()
 {
@@ -2406,6 +2541,7 @@ OOPInit()
   dumpMapLock = new Mutex("CrashReporter::dumpMapLock");
 
   FindPendingDir();
+  UpdateCrashEventsDir();
 }
 
 static void
