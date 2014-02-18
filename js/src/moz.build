@@ -441,3 +441,12 @@ if CONFIG['_MSC_VER']:
         SOURCES['builtin/RegExp.cpp'].no_pgo = True # Bug 772303
     elif CONFIG['CPU_ARCH'] == 'x86_64' and CONFIG['JS_HAS_CTYPES']:
         SOURCES['ctypes/CTypes.cpp'].no_pgo = True # Bug 810661
+
+# Needed to "configure" it correctly.  Unfortunately these
+# flags wind up being applied to all code in js/src, not just
+# the code in js/src/assembler.
+DEFINES['USE_SYSTEM_MALLOC'] = 1
+DEFINES['ENABLE_ASSEMBLER'] = 1
+
+if CONFIG['ENABLE_YARR_JIT']:
+    DEFINES['ENABLE_JIT'] = 1
