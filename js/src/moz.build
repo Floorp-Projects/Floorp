@@ -343,6 +343,8 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         'assembler/jit/ExecutableAllocatorWin.cpp',
         'yarr/OSAllocatorWin.cpp',
     ]
+    # _CRT_RAND_S must be #defined before #including stdlib.h to get rand_s()
+    DEFINES['_CRT_RAND_S'] = True
 else:
     SOURCES += [
         'assembler/jit/ExecutableAllocatorPosix.cpp',
