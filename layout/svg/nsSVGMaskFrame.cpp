@@ -267,7 +267,7 @@ nsSVGMaskFrame::ComputeMaskAlpha(nsRenderingContext *aContext,
   return retval.forget();
 }
 
-NS_IMETHODIMP
+nsresult
 nsSVGMaskFrame::AttributeChanged(int32_t  aNameSpaceID,
                                  nsIAtom* aAttribute,
                                  int32_t  aModType)

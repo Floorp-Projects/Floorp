@@ -24,11 +24,11 @@ public:
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot);
 
-  NS_IMETHOD AttributeChanged(int32_t aNameSpaceID,
+  virtual nsresult AttributeChanged(int32_t aNameSpaceID,
                               nsIAtom* aAttribute,
                               int32_t aModType);
 
-  NS_IMETHOD HandleEvent(nsPresContext* aPresContext,
+  virtual nsresult HandleEvent(nsPresContext* aPresContext,
                          WidgetGUIEvent* aEvent,
                          nsEventStatus* aEventStatus);
 
@@ -73,7 +73,7 @@ NS_NewAutoRepeatBoxFrame (nsIPresShell* aPresShell, nsStyleContext* aContext)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsAutoRepeatBoxFrame)
 
-NS_IMETHODIMP
+nsresult
 nsAutoRepeatBoxFrame::HandleEvent(nsPresContext* aPresContext,
                                   WidgetGUIEvent* aEvent,
                                   nsEventStatus* aEventStatus)
@@ -142,7 +142,7 @@ nsAutoRepeatBoxFrame::HandleRelease(nsPresContext* aPresContext,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsAutoRepeatBoxFrame::AttributeChanged(int32_t aNameSpaceID,
                                        nsIAtom* aAttribute,
                                        int32_t aModType)

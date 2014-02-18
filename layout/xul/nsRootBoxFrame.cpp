@@ -58,19 +58,19 @@ public:
   virtual nsresult AddTooltipSupport(nsIContent* aNode);
   virtual nsresult RemoveTooltipSupport(nsIContent* aNode);
 
-  NS_IMETHOD AppendFrames(ChildListID     aListID,
+  virtual nsresult AppendFrames(ChildListID     aListID,
                           nsFrameList&    aFrameList);
-  NS_IMETHOD InsertFrames(ChildListID     aListID,
+  virtual nsresult InsertFrames(ChildListID     aListID,
                           nsIFrame*       aPrevFrame,
                           nsFrameList&    aFrameList);
-  NS_IMETHOD RemoveFrame(ChildListID     aListID,
+  virtual nsresult RemoveFrame(ChildListID     aListID,
                          nsIFrame*       aOldFrame);
 
-  NS_IMETHOD Reflow(nsPresContext*          aPresContext,
+  virtual nsresult Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
-  NS_IMETHOD HandleEvent(nsPresContext* aPresContext,
+  virtual nsresult HandleEvent(nsPresContext* aPresContext,
                          WidgetGUIEvent* aEvent,
                          nsEventStatus* aEventStatus);
 
@@ -94,7 +94,7 @@ public:
   }
   
 #ifdef DEBUG_FRAME_DUMP
-  NS_IMETHOD GetFrameName(nsAString& aResult) const;
+  virtual nsresult GetFrameName(nsAString& aResult) const;
 #endif
 
   nsPopupSetFrame* mPopupSetFrame;
@@ -123,7 +123,7 @@ nsRootBoxFrame::nsRootBoxFrame(nsIPresShell* aShell, nsStyleContext* aContext):
   SetLayoutManager(layout);
 }
 
-NS_IMETHODIMP
+nsresult
 nsRootBoxFrame::AppendFrames(ChildListID     aListID,
                              nsFrameList&    aFrameList)
 {
@@ -144,7 +144,7 @@ nsRootBoxFrame::AppendFrames(ChildListID     aListID,
   return rv;
 }
 
-NS_IMETHODIMP
+nsresult
 nsRootBoxFrame::InsertFrames(ChildListID     aListID,
                              nsIFrame*       aPrevFrame,
                              nsFrameList&    aFrameList)
@@ -163,7 +163,7 @@ nsRootBoxFrame::InsertFrames(ChildListID     aListID,
   return rv;
 }
 
-NS_IMETHODIMP
+nsresult
 nsRootBoxFrame::RemoveFrame(ChildListID     aListID,
                             nsIFrame*       aOldFrame)
 {
@@ -186,7 +186,7 @@ nsRootBoxFrame::RemoveFrame(ChildListID     aListID,
 int32_t gReflows = 0;
 #endif
 
-NS_IMETHODIMP
+nsresult
 nsRootBoxFrame::Reflow(nsPresContext*           aPresContext,
                        nsHTMLReflowMetrics&     aDesiredSize,
                        const nsHTMLReflowState& aReflowState,
@@ -214,7 +214,7 @@ nsRootBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   BuildDisplayListForChildren(aBuilder, aDirtyRect, aLists);
 }
 
-NS_IMETHODIMP
+nsresult
 nsRootBoxFrame::HandleEvent(nsPresContext* aPresContext,
                             WidgetGUIEvent* aEvent,
                             nsEventStatus* aEventStatus)
@@ -302,7 +302,7 @@ NS_QUERYFRAME_HEAD(nsRootBoxFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsBoxFrame)
 
 #ifdef DEBUG_FRAME_DUMP
-NS_IMETHODIMP
+nsresult
 nsRootBoxFrame::GetFrameName(nsAString& aResult) const
 {
   return MakeFrameName(NS_LITERAL_STRING("RootBox"), aResult);

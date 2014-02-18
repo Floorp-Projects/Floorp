@@ -92,7 +92,7 @@ nsSliderFrame::Init(nsIContent*      aContent,
   mCurPos = GetCurrentPosition(aContent);
 }
 
-NS_IMETHODIMP
+nsresult
 nsSliderFrame::RemoveFrame(ChildListID     aListID,
                            nsIFrame*       aOldFrame)
 {
@@ -103,7 +103,7 @@ nsSliderFrame::RemoveFrame(ChildListID     aListID,
   return rv;
 }
 
-NS_IMETHODIMP
+nsresult
 nsSliderFrame::InsertFrames(ChildListID     aListID,
                             nsIFrame*       aPrevFrame,
                             nsFrameList&    aFrameList)
@@ -116,7 +116,7 @@ nsSliderFrame::InsertFrames(ChildListID     aListID,
   return rv;
 }
 
-NS_IMETHODIMP
+nsresult
 nsSliderFrame::AppendFrames(ChildListID     aListID,
                             nsFrameList&    aFrameList)
 {
@@ -217,7 +217,7 @@ public:
   bool mDragBeginning;
 };
 
-NS_IMETHODIMP
+nsresult
 nsSliderFrame::AttributeChanged(int32_t aNameSpaceID,
                                 nsIAtom* aAttribute,
                                 int32_t aModType)
@@ -410,7 +410,7 @@ nsSliderFrame::DoLayout(nsBoxLayoutState& aState)
 }
 
 
-NS_IMETHODIMP
+nsresult
 nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
                            WidgetGUIEvent* aEvent,
                            nsEventStatus* aEventStatus)
@@ -792,7 +792,7 @@ nsSliderFrame::GetType() const
   return nsGkAtoms::sliderFrame;
 }
 
-NS_IMETHODIMP
+nsresult
 nsSliderFrame::SetInitialChildList(ChildListID     aListID,
                                    nsFrameList&    aChildList)
 {

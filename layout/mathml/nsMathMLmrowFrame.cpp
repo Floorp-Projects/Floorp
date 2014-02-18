@@ -33,7 +33,7 @@ nsMathMLmrowFrame::InheritAutomaticData(nsIFrame* aParent)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsMathMLmrowFrame::AttributeChanged(int32_t  aNameSpaceID,
                                     nsIAtom* aAttribute,
                                     int32_t  aModType)

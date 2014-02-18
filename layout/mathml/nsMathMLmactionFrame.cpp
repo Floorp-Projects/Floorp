@@ -172,7 +172,7 @@ nsMathMLmactionFrame::GetSelectedFrame()
   return mSelectedFrame;
 }
 
-NS_IMETHODIMP
+nsresult
 nsMathMLmactionFrame::SetInitialChildList(ChildListID     aListID,
                                           nsFrameList&    aChildList)
 {
@@ -195,7 +195,7 @@ nsMathMLmactionFrame::SetInitialChildList(ChildListID     aListID,
   return rv;
 }
 
-NS_IMETHODIMP
+nsresult
 nsMathMLmactionFrame::AttributeChanged(int32_t  aNameSpaceID,
                                        nsIAtom* aAttribute,
                                        int32_t  aModType)

@@ -68,7 +68,7 @@ NS_QUERYFRAME_HEAD(nsTextBoxFrame)
   NS_QUERYFRAME_ENTRY(nsTextBoxFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsTextBoxFrameSuper)
 
-NS_IMETHODIMP
+nsresult
 nsTextBoxFrame::AttributeChanged(int32_t         aNameSpaceID,
                                  nsIAtom*        aAttribute,
                                  int32_t         aModType)
@@ -1090,7 +1090,7 @@ nsTextBoxFrame::GetBoxAscent(nsBoxLayoutState& aBoxLayoutState)
 }
 
 #ifdef DEBUG_FRAME_DUMP
-NS_IMETHODIMP
+nsresult
 nsTextBoxFrame::GetFrameName(nsAString& aResult) const
 {
     MakeFrameName(NS_LITERAL_STRING("TextBox"), aResult);

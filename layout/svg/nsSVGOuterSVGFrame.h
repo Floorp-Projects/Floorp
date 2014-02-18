@@ -49,12 +49,12 @@ public:
                              nsSize aMargin, nsSize aBorder, nsSize aPadding,
                              uint32_t aFlags) MOZ_OVERRIDE;
 
-  NS_IMETHOD Reflow(nsPresContext*          aPresContext,
+  virtual nsresult Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus) MOZ_OVERRIDE;
 
-  NS_IMETHOD  DidReflow(nsPresContext*   aPresContext,
+  virtual nsresult  DidReflow(nsPresContext*   aPresContext,
                         const nsHTMLReflowState*  aReflowState,
                         nsDidReflowStatus aStatus) MOZ_OVERRIDE;
 
@@ -78,13 +78,13 @@ public:
   virtual nsIAtom* GetType() const MOZ_OVERRIDE;
 
 #ifdef DEBUG_FRAME_DUMP
-  NS_IMETHOD GetFrameName(nsAString& aResult) const MOZ_OVERRIDE
+  virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE
   {
     return MakeFrameName(NS_LITERAL_STRING("SVGOuterSVG"), aResult);
   }
 #endif
 
-  NS_IMETHOD  AttributeChanged(int32_t         aNameSpaceID,
+  virtual nsresult  AttributeChanged(int32_t         aNameSpaceID,
                                nsIAtom*        aAttribute,
                                int32_t         aModType) MOZ_OVERRIDE;
 
@@ -251,7 +251,7 @@ public:
 #endif
 
 #ifdef DEBUG_FRAME_DUMP
-  NS_IMETHOD GetFrameName(nsAString& aResult) const MOZ_OVERRIDE {
+  virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE {
     return MakeFrameName(NS_LITERAL_STRING("SVGOuterSVGAnonChild"), aResult);
   }
 #endif

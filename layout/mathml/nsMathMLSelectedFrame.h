@@ -18,7 +18,7 @@ public:
   NS_IMETHOD
   TransmitAutomaticData() MOZ_OVERRIDE;
 
-  NS_IMETHOD
+  virtual nsresult
   SetInitialChildList(ChildListID     aListID,
                       nsFrameList&    aChildList) MOZ_OVERRIDE;
 
@@ -34,7 +34,7 @@ public:
         bool                 aPlaceOrigin,
         nsHTMLReflowMetrics& aDesiredSize) MOZ_OVERRIDE;
 
-  NS_IMETHOD
+  virtual nsresult
   Reflow(nsPresContext*          aPresContext,
          nsHTMLReflowMetrics&     aDesiredSize,
          const nsHTMLReflowState& aReflowState,

@@ -24,7 +24,7 @@ public:
                                            const nsRect&           aDirtyRect,
                                            const nsDisplayListSet& aLists) MOZ_OVERRIDE;
 
-  NS_IMETHOD HandleEvent(nsPresContext* aPresContext, 
+  virtual nsresult HandleEvent(nsPresContext* aPresContext, 
                          mozilla::WidgetGUIEvent* aEvent,
                          nsEventStatus* aEventStatus) MOZ_OVERRIDE;
 
@@ -33,7 +33,7 @@ public:
   { DoMouseClick(aEvent, false); }
 
 #ifdef DEBUG_FRAME_DUMP
-  NS_IMETHOD GetFrameName(nsAString& aResult) const MOZ_OVERRIDE {
+  virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE {
     return MakeFrameName(NS_LITERAL_STRING("ButtonBoxFrame"), aResult);
   }
 #endif
