@@ -214,4 +214,8 @@ html|a.inline-link:-moz-focusring {
   margin-bottom: 1em;
 }
 
+#fxaUnlinkButton {
+  margin: 0;
+}
+
 %endif
