@@ -6,7 +6,6 @@ __all__ = ['check_for_crashes',
            'check_for_java_exception']
 
 import glob
-import mozlog
 import os
 import re
 import shutil
@@ -16,8 +15,8 @@ import tempfile
 import urllib2
 import zipfile
 
-from mozfile import extract_zip
-from mozfile import is_url
+import mozfile
+import mozlog
 
 
 def check_for_crashes(dump_directory, symbols_path,
@@ -71,7 +70,7 @@ def check_for_crashes(dump_directory, symbols_path,
         remove_symbols = False
         # If our symbols are at a remote URL, download them now
         # We want to download URLs like http://... but not Windows paths like c:\...
-        if symbols_path and is_url(symbols_path):
+        if symbols_path and mozfile.is_url(symbols_path):
             log.info("Downloading symbols from: %s", symbols_path)
             remove_symbols = True
             # Get the symbols and write them to a temporary zipfile
@@ -82,7 +81,7 @@ def check_for_crashes(dump_directory, symbols_path,
             # processing all crashes)
             symbols_path = tempfile.mkdtemp()
             zfile = zipfile.ZipFile(symbols_file, 'r')
-            extract_zip(zfile, symbols_path)
+            mozfile.extract_zip(zfile, symbols_path)
             zfile.close()
 
         for d in dumps:
@@ -145,13 +144,12 @@ def check_for_crashes(dump_directory, symbols_path,
                 log.info("Saved dump as %s", os.path.join(dump_save_path,
                                                           os.path.basename(d)))
             else:
-                os.remove(d)
+                mozfile.remove(d)
             extra = os.path.splitext(d)[0] + ".extra"
-            if os.path.exists(extra):
-                os.remove(extra)
+            mozfile.remove(extra)
     finally:
         if remove_symbols:
-            shutil.rmtree(symbols_path)
+            mozfile.remove(symbols_path)
 
     return True
 

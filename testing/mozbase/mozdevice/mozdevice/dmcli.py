@@ -40,6 +40,8 @@ class DMCli(object):
                                                      'help': 'Don\'t fail if application is already running' }
                                                 ],
                                       'help': 'launches application on device' },
+                          'listapps': { 'function': self.listapps,
+                                        'help': 'list applications on device' },
                           'push': { 'function': self.push,
                                     'args': [ { 'name': 'local_file' },
                                               { 'name': 'remote_file' }
@@ -97,7 +99,11 @@ class DMCli(object):
                                            'help': 'clear the logcat'
                                          },
                           'reboot': { 'function': self.reboot,
-                                      'help': 'reboot the device'
+                                      'help': 'reboot the device',
+                                      'args': [ { 'name': '--wait',
+                                                  'action': 'store_true',
+                                                  'help': 'Wait for device to come back up before exiting' } ]
+
                                    },
                           'isfile': { 'function': self.isfile,
                                       'args': [ { 'name': 'remote_file' } ],
@@ -149,7 +155,9 @@ class DMCli(object):
                             help="Verbose output from DeviceManager",
                             default=False)
         parser.add_argument("--host", action="store",
-                            help="Device hostname (only if using TCP/IP)",
+                            help="Device hostname (only if using TCP/IP, " \
+                                "defaults to TEST_DEVICE environment " \
+                                "variable if present)",
                             default=os.environ.get('TEST_DEVICE'))
         parser.add_argument("-p", "--port", action="store",
                             type=int,
@@ -157,8 +165,9 @@ class DMCli(object):
                             "adb-over-tcp)", default=None)
         parser.add_argument("-m", "--dmtype", action="store",
                             help="DeviceManager type (adb or sut, defaults " \
-                                "to adb)", default=os.environ.get('DM_TRANS',
-                                                                  'adb'))
+                                "to DM_TRANS environment variable, if " \
+                                "present, or adb)",
+                            default=os.environ.get('DM_TRANS', 'adb'))
         parser.add_argument("-d", "--hwid", action="store",
                             help="HWID", default=None)
         parser.add_argument("--package-name", action="store",
@@ -248,6 +257,10 @@ class DMCli(object):
                                   args.intent, url=args.url,
                                   failIfRunning=(not args.no_fail_if_running))
 
+    def listapps(self, args):
+        for app in self.dm.getInstalledApps():
+            print app
+
     def kill(self, args):
         for name in args.process_name:
             self.dm.killProcess(name)
@@ -277,7 +290,7 @@ class DMCli(object):
         self.dm.recordLogcat()
 
     def reboot(self, args):
-        self.dm.reboot()
+        self.dm.reboot(wait=args.wait)
 
     def processlist(self, args):
         pslist = self.dm.getProcessList()
