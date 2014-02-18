@@ -157,7 +157,7 @@ function dumpStat(stat, label) {
     if (stat.bytesReceived !== undefined) {
       statsString += " (" + round00(stat.bytesReceived/1024) + " Kb)";
     }
-    statsString += " Jitter: " + stat.jitter;
+    statsString += " Jitter: " + stat.jitter + " Lost: " + stat.packetsLost;
   } else if (stat.packetsSent !== undefined) {
     statsString += " Sent: " + stat.packetsSent + " packets";
     if (stat.bytesSent !== undefined) {

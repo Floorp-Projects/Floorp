@@ -77,7 +77,7 @@ public:
                     nsIFrame*        aPrevInFlow) MOZ_OVERRIDE;
 
   virtual nsresult SetInitialChildList(ChildListID  aListID,
-                                 nsFrameList& aChildList) MOZ_OVERRIDE;
+                                       nsFrameList& aChildList) MOZ_OVERRIDE;
 
   static bool    gDragInProgress;
 
@@ -88,20 +88,20 @@ public:
                         nsIntPoint& aCellIndex);
 
   virtual nsresult HandleEvent(nsPresContext* aPresContext, 
-                         mozilla::WidgetGUIEvent* aEvent,
-                         nsEventStatus* aEventStatus) MOZ_OVERRIDE;
+                               mozilla::WidgetGUIEvent* aEvent,
+                               nsEventStatus* aEventStatus) MOZ_OVERRIDE;
 
   virtual nsresult GetCursor(const nsPoint&    aPoint,
-                       nsIFrame::Cursor& aCursor) MOZ_OVERRIDE;
+                             nsIFrame::Cursor& aCursor) MOZ_OVERRIDE;
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) MOZ_OVERRIDE;
 
-  virtual nsresult Reflow(nsPresContext*          aPresContext,
-                    nsHTMLReflowMetrics&     aDesiredSize,
-                    const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus&          aStatus) MOZ_OVERRIDE;
+  virtual nsresult Reflow(nsPresContext*           aPresContext,
+                          nsHTMLReflowMetrics&     aDesiredSize,
+                          const nsHTMLReflowState& aReflowState,
+                          nsReflowStatus&          aStatus) MOZ_OVERRIDE;
 
   virtual nsIAtom* GetType() const MOZ_OVERRIDE;
 #ifdef DEBUG_FRAME_DUMP

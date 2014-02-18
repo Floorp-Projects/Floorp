@@ -15,6 +15,8 @@
 
 #include "jit/arm/Assembler-arm.h"
 
+#define HWCAP_USE_HARDFP_ABI (1 << 28)
+
 #if !(defined(ANDROID) || defined(MOZ_B2G)) && !defined(JS_ARM_SIMULATOR)
 #define HWCAP_ARMv7 (1 << 29)
 #include <asm/hwcap.h>
@@ -39,6 +41,10 @@ uint32_t GetARMFlags()
     if (isSet)
         return flags;
 
+#ifdef JS_CODEGEN_ARM_HARDFP
+    flags |= HWCAP_USE_HARDFP_ABI;
+#endif
+
     static const char *env = getenv("ARMHWCAP");
 
     if (env && env[0]) {
@@ -56,6 +62,9 @@ uint32_t GetARMFlags()
                    "  vfpv4    \n"
                    "  idiva    \n"
                    "  idivt    \n"
+#if defined(JS_ARM_SIMULATOR)
+                   "  hardfp   \n"
+#endif
                    "\n"
                    );
             exit(0);
@@ -98,6 +107,10 @@ uint32_t GetARMFlags()
                     flags |= HWCAP_NEON;
                 else if (count == 5 && strncmp(start, "armv7", 5) == 0)
                     flags |= HWCAP_ARMv7;
+#if defined(JS_ARM_SIMULATOR)
+                else if (count == 6 && strncmp(start, "hardfp", 6) == 0)
+                    flags |= HWCAP_USE_HARDFP_ABI;
+#endif
                 else
                     fprintf(stderr, "Warning: unexpected ARMHWCAP flag at: %s\n", start);
                 start = end;
@@ -235,6 +248,14 @@ bool hasIDIV()
     return false;
 #endif
 }
+
+// This is defined in the header and inlined when not using the simulator.
+#if defined(JS_ARM_SIMULATOR)
+bool useHardFpABI()
+{
+    return GetARMFlags() & HWCAP_USE_HARDFP_ABI;
+}
+#endif
 
 Registers::Code
 Registers::FromName(const char *name)

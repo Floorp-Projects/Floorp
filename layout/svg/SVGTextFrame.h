@@ -276,8 +276,8 @@ public:
                     nsIFrame*   aPrevInFlow) MOZ_OVERRIDE;
 
   virtual nsresult AttributeChanged(int32_t aNamespaceID,
-                              nsIAtom* aAttribute,
-                              int32_t aModType) MOZ_OVERRIDE;
+                                    nsIAtom* aAttribute,
+                                    int32_t aModType) MOZ_OVERRIDE;
 
   virtual nsIFrame* GetContentInsertionFrame() MOZ_OVERRIDE
   {

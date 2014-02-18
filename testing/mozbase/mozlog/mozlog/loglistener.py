@@ -4,10 +4,7 @@
 
 import SocketServer
 import socket
-try:
-    import json
-except ImportError:
-    import simplejson as json
+import json
 
 class LogMessageServer(SocketServer.TCPServer):
     def __init__(self, server_address, logger, message_callback=None, timeout=3):

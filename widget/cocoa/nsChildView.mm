@@ -342,10 +342,15 @@ public:
   virtual ~GLPresenter();
 
   virtual GLContext* gl() const MOZ_OVERRIDE { return mGLContext; }
-  virtual ShaderProgramOGL* GetProgram(ShaderProgramType aType) MOZ_OVERRIDE
+  virtual ShaderProgramOGL* GetProgram(GLenum aTarget, gfx::SurfaceFormat aFormat) MOZ_OVERRIDE
   {
-    MOZ_ASSERT(aType == RGBARectLayerProgramType, "unexpected program type");
+    MOZ_ASSERT(aTarget == LOCAL_GL_TEXTURE_RECTANGLE_ARB);
+    MOZ_ASSERT(aFormat == gfx::SurfaceFormat::R8G8B8A8);
     return mRGBARectProgram;
+  }
+  virtual const gfx::Matrix4x4& GetProjMatrix() const MOZ_OVERRIDE
+  {
+    return mProjMatrix;
   }
   virtual void BindAndDrawQuad(ShaderProgramOGL *aProg) MOZ_OVERRIDE;
 
@@ -360,6 +365,7 @@ public:
 protected:
   nsRefPtr<mozilla::gl::GLContext> mGLContext;
   nsAutoPtr<mozilla::layers::ShaderProgramOGL> mRGBARectProgram;
+  gfx::Matrix4x4 mProjMatrix;
   GLuint mQuadVBO;
 };
 
@@ -2743,17 +2749,18 @@ RectTextureImage::Draw(GLManager* aManager,
                        const nsIntPoint& aLocation,
                        const gfx3DMatrix& aTransform)
 {
-  ShaderProgramOGL* program = aManager->GetProgram(RGBARectLayerProgramType);
+  ShaderProgramOGL* program = aManager->GetProgram(LOCAL_GL_TEXTURE_RECTANGLE_ARB,
+                                                   gfx::SurfaceFormat::R8G8B8A8);
 
   aManager->gl()->fBindTexture(LOCAL_GL_TEXTURE_RECTANGLE_ARB, mTexture);
 
   program->Activate();
+  program->SetProjectionMatrix(aManager->GetProjMatrix());
   program->SetLayerQuadRect(nsIntRect(nsIntPoint(0, 0), mUsedSize));
   gfx::Matrix4x4 transform;
   gfx::ToMatrix4x4(aTransform, transform);
   program->SetLayerTransform(transform * gfx::Matrix4x4().Translate(aLocation.x, aLocation.y, 0));
   program->SetTextureTransform(gfx::Matrix4x4());
-  program->SetLayerOpacity(1.0);
   program->SetRenderOffset(nsIntPoint(0, 0));
   program->SetTexCoordMultiplier(mUsedSize.width, mUsedSize.height);
   program->SetTextureUnit(0);
@@ -2769,8 +2776,10 @@ GLPresenter::GLPresenter(GLContext* aContext)
  : mGLContext(aContext)
 {
   mGLContext->MakeCurrent();
+  ShaderConfigOGL config;
+  config.SetTextureTarget(LOCAL_GL_TEXTURE_RECTANGLE_ARB);
   mRGBARectProgram = new ShaderProgramOGL(mGLContext,
-    ProgramProfileOGL::GetProfileFor(RGBARectLayerProgramType, MaskNone));
+    ProgramProfileOGL::GetProfileFor(config));
 
   // Create mQuadVBO.
   mGLContext->fGenBuffers(1, &mQuadVBO);
@@ -2796,7 +2805,7 @@ GLPresenter::~GLPresenter()
 }
 
 void
-GLPresenter::BindAndDrawQuad(ShaderProgramOGL* aProgram)
+GLPresenter::BindAndDrawQuad(ShaderProgramOGL *aProgram)
 {
   mGLContext->MakeCurrent();
 
@@ -2835,7 +2844,7 @@ GLPresenter::BeginFrame(nsIntSize aRenderSize)
   matrix3d._33 = 0.0f;
 
   // set the projection matrix for the next time the program is activated
-  mRGBARectProgram->DelayedSetProjectionMatrix(matrix3d);
+  mProjMatrix = matrix3d;
 
   // Default blend function implements "OVER"
   mGLContext->fBlendFuncSeparate(LOCAL_GL_ONE, LOCAL_GL_ONE_MINUS_SRC_ALPHA,

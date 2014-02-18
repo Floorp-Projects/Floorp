@@ -2093,11 +2093,10 @@ class InstructionIterator {
 static const uint32_t NumIntArgRegs = 4;
 static const uint32_t NumFloatArgRegs = 8;
 
-#ifdef JS_CODEGEN_ARM_HARDFP
 static inline bool
 GetIntArgReg(uint32_t usedIntArgs, uint32_t usedFloatArgs, Register *out)
 {
-   if (usedIntArgs >= NumIntArgRegs)
+    if (usedIntArgs >= NumIntArgRegs)
         return false;
     *out = Register::FromCode(usedIntArgs);
     return true;
@@ -2123,9 +2122,26 @@ GetTempRegForIntArg(uint32_t usedIntArgs, uint32_t usedFloatArgs, Register *out)
     return true;
 }
 
+
+#if !defined(JS_CODEGEN_ARM_HARDFP) || defined(JS_ARM_SIMULATOR)
+
+static inline uint32_t
+GetArgStackDisp(uint32_t arg)
+{
+    JS_ASSERT(!useHardFpABI());
+    JS_ASSERT(arg >= NumIntArgRegs);
+    return (arg - NumIntArgRegs) * sizeof(intptr_t);
+}
+
+#endif
+
+
+#if defined(JS_CODEGEN_ARM_HARDFP) || defined(JS_ARM_SIMULATOR)
+
 static inline bool
 GetFloatArgReg(uint32_t usedIntArgs, uint32_t usedFloatArgs, FloatRegister *out)
 {
+    JS_ASSERT(useHardFpABI());
     if (usedFloatArgs >= NumFloatArgRegs)
         return false;
     *out = FloatRegister::FromCode(usedFloatArgs);
@@ -2135,6 +2151,7 @@ GetFloatArgReg(uint32_t usedIntArgs, uint32_t usedFloatArgs, FloatRegister *out)
 static inline uint32_t
 GetIntArgStackDisp(uint32_t usedIntArgs, uint32_t usedFloatArgs, uint32_t *padding)
 {
+    JS_ASSERT(useHardFpABI());
     JS_ASSERT(usedIntArgs >= NumIntArgRegs);
     uint32_t doubleSlots = Max(0, (int32_t)usedFloatArgs - (int32_t)NumFloatArgRegs);
     doubleSlots *= 2;
@@ -2145,6 +2162,7 @@ GetIntArgStackDisp(uint32_t usedIntArgs, uint32_t usedFloatArgs, uint32_t *paddi
 static inline uint32_t
 GetFloat32ArgStackDisp(uint32_t usedIntArgs, uint32_t usedFloatArgs, uint32_t *padding)
 {
+    JS_ASSERT(useHardFpABI());
     JS_ASSERT(usedFloatArgs >= NumFloatArgRegs);
     uint32_t intSlots = 0;
     if (usedIntArgs > NumIntArgRegs)
@@ -2156,6 +2174,7 @@ GetFloat32ArgStackDisp(uint32_t usedIntArgs, uint32_t usedFloatArgs, uint32_t *p
 static inline uint32_t
 GetDoubleArgStackDisp(uint32_t usedIntArgs, uint32_t usedFloatArgs, uint32_t *padding)
 {
+    JS_ASSERT(useHardFpABI());
     JS_ASSERT(usedFloatArgs >= NumFloatArgRegs);
     uint32_t intSlots = 0;
     if (usedIntArgs > NumIntArgRegs) {
@@ -2167,45 +2186,10 @@ GetDoubleArgStackDisp(uint32_t usedIntArgs, uint32_t usedFloatArgs, uint32_t *pa
     doubleSlots *= 2;
     return (intSlots + doubleSlots + *padding) * sizeof(intptr_t);
 }
-#else
-static inline bool
-GetIntArgReg(uint32_t arg, uint32_t floatArg, Register *out)
-{
-    if (arg < NumIntArgRegs) {
-        *out = Register::FromCode(arg);
-        return true;
-    }
-    return false;
-}
-
-// Get a register in which we plan to put a quantity that will be used as an
-// integer argument.  This differs from GetIntArgReg in that if we have no more
-// actual argument registers to use we will fall back on using whatever
-// CallTempReg* don't overlap the argument registers, and only fail once those
-// run out too.
-static inline bool
-GetTempRegForIntArg(uint32_t usedIntArgs, uint32_t usedFloatArgs, Register *out)
-{
-    if (GetIntArgReg(usedIntArgs, usedFloatArgs, out))
-        return true;
-    // Unfortunately, we have to assume things about the point at which
-    // GetIntArgReg returns false, because we need to know how many registers it
-    // can allocate.
-    usedIntArgs -= NumIntArgRegs;
-    if (usedIntArgs >= NumCallTempNonArgRegs)
-        return false;
-    *out = CallTempNonArgRegs[usedIntArgs];
-    return true;
-}
-
-static inline uint32_t
-GetArgStackDisp(uint32_t arg)
-{
-    JS_ASSERT(arg >= NumIntArgRegs);
-    return (arg - NumIntArgRegs) * sizeof(intptr_t);
-}
 
 #endif
+
+
 
 class DoubleEncoder {
     uint32_t rep(bool b, uint32_t count) {

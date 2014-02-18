@@ -145,18 +145,18 @@ bool WebrtcVideoConduit::GetRemoteSSRC(unsigned int* ssrc) {
   return !mPtrRTP->GetRemoteSSRC(mChannel, *ssrc);
 }
 
-bool WebrtcVideoConduit::GetRTPJitter(unsigned int* jitterMs) {
+bool WebrtcVideoConduit::GetRTPStats(unsigned int* jitterMs,
+                                     unsigned int* cumulativeLost) {
   unsigned int ntpHigh, ntpLow;
   unsigned int packetsSent, bytesSent;
   unsigned short fractionLost;
-  unsigned int cumulativeLost;
   unsigned extendedMax;
   int rttMs;
   // GetReceivedRTCPStatistics is a poorly named GetRTPStatistics variant
   return !mPtrRTP->GetReceivedRTCPStatistics(mChannel, ntpHigh, ntpLow,
                                              packetsSent, bytesSent,
                                              fractionLost,
-                                             cumulativeLost,
+                                             *cumulativeLost,
                                              extendedMax,
                                              *jitterMs,
                                              rttMs);
@@ -165,25 +165,25 @@ bool WebrtcVideoConduit::GetRTPJitter(unsigned int* jitterMs) {
 bool WebrtcVideoConduit::GetRTCPReceiverReport(DOMHighResTimeStamp* timestamp,
                                                unsigned int* jitterMs,
                                                unsigned int* packetsReceived,
-                                               uint64_t* bytesReceived) {
+                                               uint64_t* bytesReceived,
+                                               unsigned int* cumulativeLost) {
   unsigned int ntpHigh, ntpLow;
   unsigned int packetsSent;
   unsigned int bytesSent32;
   unsigned short fractionLost;
-  unsigned int cumulativeLost;
   unsigned extendedMax;
   int rttMs;
   bool result = !mPtrRTP->GetSentRTCPStatistics(mChannel, ntpHigh, ntpLow,
                                                 bytesSent32, packetsSent,
                                                 fractionLost,
-                                                cumulativeLost,
+                                                *cumulativeLost,
                                                 extendedMax,
                                                 *jitterMs,
                                                 rttMs);
   if (result) {
     *timestamp = NTPtoDOMHighResTimeStamp(ntpHigh, ntpLow);
-    *packetsReceived = (packetsSent >= cumulativeLost) ?
-                       (packetsSent - cumulativeLost) : 0;
+    *packetsReceived = (packetsSent >= *cumulativeLost) ?
+                       (packetsSent - *cumulativeLost) : 0;
     *bytesReceived = (packetsSent ?
                       (bytesSent32 / packetsSent) : 0) * (*packetsReceived);
   }

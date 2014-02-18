@@ -50,13 +50,13 @@ public:
                              uint32_t aFlags) MOZ_OVERRIDE;
 
   virtual nsresult Reflow(nsPresContext*          aPresContext,
-                    nsHTMLReflowMetrics&     aDesiredSize,
-                    const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus&          aStatus) MOZ_OVERRIDE;
+                          nsHTMLReflowMetrics&     aDesiredSize,
+                          const nsHTMLReflowState& aReflowState,
+                          nsReflowStatus&          aStatus) MOZ_OVERRIDE;
 
   virtual nsresult  DidReflow(nsPresContext*   aPresContext,
-                        const nsHTMLReflowState*  aReflowState,
-                        nsDidReflowStatus aStatus) MOZ_OVERRIDE;
+                              const nsHTMLReflowState*  aReflowState,
+                              nsDidReflowStatus aStatus) MOZ_OVERRIDE;
 
   virtual bool UpdateOverflow() MOZ_OVERRIDE;
 
@@ -85,8 +85,8 @@ public:
 #endif
 
   virtual nsresult  AttributeChanged(int32_t         aNameSpaceID,
-                               nsIAtom*        aAttribute,
-                               int32_t         aModType) MOZ_OVERRIDE;
+                                     nsIAtom*        aAttribute,
+                                     int32_t         aModType) MOZ_OVERRIDE;
 
   virtual nsIFrame* GetContentInsertionFrame() MOZ_OVERRIDE {
     // Any children must be added to our single anonymous inner frame kid.

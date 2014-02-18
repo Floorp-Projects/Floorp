@@ -219,7 +219,7 @@ private:
   };
 
   /**
-   * DispatchCompsotionEventRunnable() dispatches a composition or text event
+   * DispatchCompositionEventRunnable() dispatches a composition or text event
    * to the content.  Be aware, if you use this method, nsPresShellEventCB
    * isn't used.  That means that nsIFrame::HandleEvent() is never called.
    * WARNING: The instance which is managed by nsIMEStateManager may be
@@ -231,8 +231,8 @@ private:
    *                            Used for theText value if aEventMessage is
    *                            NS_TEXT_TEXT.
    */
-  void DispatchCompsotionEventRunnable(uint32_t aEventMessage,
-                                       const nsAString& aData);
+  void DispatchCompositionEventRunnable(uint32_t aEventMessage,
+                                        const nsAString& aData);
 };
 
 /**

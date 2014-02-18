@@ -100,6 +100,20 @@ class DroidMixin(object):
         self.launchApplication(appName, ".App", intent, url=url, extras=extras,
                                wait=wait, failIfRunning=failIfRunning)
 
+    def getInstalledApps(self):
+        """
+        Lists applications installed on this Android device
+
+        Returns a list of application names in the form [ 'org.mozilla.fennec', ... ]
+        """
+        output = self.shellCheckOutput(["pm", "list", "packages", "-f"])
+        apps = []
+        for line in output.splitlines():
+            # lines are of form: package:/system/app/qik-tmo.apk=com.qiktmobile.android
+            apps.append(line.split('=')[1])
+
+        return apps
+
 class DroidADB(DeviceManagerADB, DroidMixin):
 
     def getTopActivity(self):

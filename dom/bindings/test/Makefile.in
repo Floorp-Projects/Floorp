@@ -13,7 +13,7 @@ OS_CXXFLAGS += -Wno-uninitialized
 endif
 
 # Bug 932082 tracks having bindings use namespaced includes.
-LOCAL_INCLUDES += -I$(DIST)/include/mozilla/dom -I..
+LOCAL_INCLUDES += -I$(DIST)/include/mozilla/dom
 
 # Include rules.mk before any of our targets so our first target is coming from
 # rules.mk and running make with no target in this dir does the right thing.
