@@ -74,7 +74,7 @@ public:
    * Send a notification to IME.  It depends on the IME or platform spec what
    * will occur (or not occur).
    */
-  nsresult NotifyIME(widget::NotificationToIME aNotification);
+  nsresult NotifyIME(widget::IMEMessage aMessage);
 
   /**
    * the offset of first selected clause or start of of compositon

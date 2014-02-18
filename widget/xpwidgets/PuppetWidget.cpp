@@ -377,9 +377,9 @@ PuppetWidget::IMEEndComposition(bool aCancel)
 }
 
 NS_IMETHODIMP
-PuppetWidget::NotifyIME(NotificationToIME aNotification)
+PuppetWidget::NotifyIME(const IMENotification& aIMENotification)
 {
-  switch (aNotification) {
+  switch (aIMENotification.mMessage) {
     case NOTIFY_IME_OF_CURSOR_POS_CHANGED:
     case REQUEST_TO_COMMIT_COMPOSITION:
       return IMEEndComposition(false);
@@ -391,6 +391,8 @@ PuppetWidget::NotifyIME(NotificationToIME aNotification)
       return NotifyIMEOfFocusChange(false);
     case NOTIFY_IME_OF_SELECTION_CHANGE:
       return NotifyIMEOfSelectionChange();
+    case NOTIFY_IME_OF_TEXT_CHANGE:
+      return NotifyIMEOfTextChange(aIMENotification);
     case NOTIFY_IME_OF_COMPOSITION_UPDATE:
       return NotifyIMEOfUpdateComposition();
     default:
@@ -526,10 +528,8 @@ PuppetWidget::GetIMEUpdatePreference()
 #endif
 }
 
-NS_IMETHODIMP
-PuppetWidget::NotifyIMEOfTextChange(uint32_t aStart,
-                                    uint32_t aEnd,
-                                    uint32_t aNewEnd)
+nsresult
+PuppetWidget::NotifyIMEOfTextChange(const IMENotification& aIMENotification)
 {
 #ifndef MOZ_CROSS_PROCESS_IME
   return NS_OK;
@@ -551,7 +551,10 @@ PuppetWidget::NotifyIMEOfTextChange(uint32_t aStart,
   // TabParent doesn't this this to cache.  we don't send the notification
   // if parent process doesn't request NOTIFY_TEXT_CHANGE.
   if (mIMEPreferenceOfParent.WantTextChange()) {
-    mTabChild->SendNotifyIMETextChange(aStart, aEnd, aNewEnd);
+    mTabChild->SendNotifyIMETextChange(
+      aIMENotification.mTextChangeData.mStartOffset,
+      aIMENotification.mTextChangeData.mOldEndOffset,
+      aIMENotification.mTextChangeData.mNewEndOffset);
   }
   return NS_OK;
 }

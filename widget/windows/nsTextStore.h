@@ -105,6 +105,7 @@ public: /*ITfInputProcessorProfileActivationSink*/
                            HKL, DWORD);
 
 protected:
+  typedef mozilla::widget::IMENotification IMENotification;
   typedef mozilla::widget::IMEState IMEState;
   typedef mozilla::widget::InputContext InputContext;
   typedef mozilla::widget::InputContextAction InputContextAction;
@@ -135,12 +136,10 @@ public:
   static nsresult OnFocusChange(bool aGotFocus,
                                 nsWindowBase* aFocusedWidget,
                                 IMEState::Enabled aIMEEnabled);
-  static nsresult OnTextChange(uint32_t aStart,
-                               uint32_t aOldEnd,
-                               uint32_t aNewEnd)
+  static nsresult OnTextChange(const IMENotification& aIMENotification)
   {
     NS_ENSURE_TRUE(sTsfTextStore, NS_ERROR_NOT_AVAILABLE);
-    return sTsfTextStore->OnTextChangeInternal(aStart, aOldEnd, aNewEnd);
+    return sTsfTextStore->OnTextChangeInternal(aIMENotification);
   }
 
   static nsresult OnSelectionChange(void)
@@ -258,7 +257,7 @@ protected:
   bool     InsertTextAtSelectionInternal(const nsAString &aInsertStr,
                                          TS_TEXTCHANGE* aTextChange);
   void     CommitCompositionInternal(bool);
-  nsresult OnTextChangeInternal(uint32_t, uint32_t, uint32_t);
+  nsresult OnTextChangeInternal(const IMENotification& aIMENotification);
   nsresult OnSelectionChangeInternal(void);
   HRESULT  GetDisplayAttribute(ITfProperty* aProperty,
                                ITfRange* aRange,
