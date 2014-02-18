@@ -381,6 +381,7 @@ gbjar.sources += [
     'widget/DateTimePicker.java',
     'widget/Divider.java',
     'widget/DoorHanger.java',
+    'widget/EllipsisTextView.java',
     'widget/FaviconView.java',
     'widget/FlowLayout.java',
     'widget/GeckoActionProvider.java',
