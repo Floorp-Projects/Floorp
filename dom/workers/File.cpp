@@ -46,7 +46,7 @@ public:
   static JSObject*
   Create(JSContext* aCx, nsIDOMBlob* aBlob)
   {
-    JS_ASSERT(SameCOMIdentity(static_cast<nsISupports*>(aBlob), aBlob));
+    MOZ_ASSERT(SameCOMIdentity(static_cast<nsISupports*>(aBlob), aBlob));
 
     JSObject* obj = JS_NewObject(aCx, &sClass, JS::NullPtr(), JS::NullPtr());
     if (obj) {
@@ -101,7 +101,7 @@ private:
   static void
   Finalize(JSFreeOp* aFop, JSObject* aObj)
   {
-    JS_ASSERT(JS_GetClass(aObj) == &sClass);
+    MOZ_ASSERT(JS_GetClass(aObj) == &sClass);
 
     nsIDOMBlob* blob = GetPrivate(aObj);
     NS_IF_RELEASE(blob);
@@ -248,7 +248,7 @@ public:
   static JSObject*
   Create(JSContext* aCx, nsIDOMFile* aFile)
   {
-    JS_ASSERT(SameCOMIdentity(static_cast<nsISupports*>(aFile), aFile));
+    MOZ_ASSERT(SameCOMIdentity(static_cast<nsISupports*>(aFile), aFile));
 
     JSObject* obj = JS_NewObject(aCx, &sClass, JS::NullPtr(), JS::NullPtr());
     if (obj) {
@@ -266,7 +266,7 @@ public:
       if (classPtr == &sClass) {
         nsISupports* priv = static_cast<nsISupports*>(JS_GetPrivate(aObj));
         nsCOMPtr<nsIDOMFile> file = do_QueryInterface(priv);
-        JS_ASSERT_IF(priv, file);
+        MOZ_ASSERT_IF(priv, file);
         return file;
       }
     }
@@ -306,7 +306,7 @@ private:
   static void
   Finalize(JSFreeOp* aFop, JSObject* aObj)
   {
-    JS_ASSERT(JS_GetClass(aObj) == &sClass);
+    MOZ_ASSERT(JS_GetClass(aObj) == &sClass);
 
     nsIDOMFile* file = GetPrivate(aObj);
     NS_IF_RELEASE(file);
@@ -450,7 +450,7 @@ Blob::GetPrivate(JSObject* aObj)
     if (classPtr == &sClass || classPtr == File::Class()) {
       nsISupports* priv = static_cast<nsISupports*>(JS_GetPrivate(aObj));
       nsCOMPtr<nsIDOMBlob> blob = do_QueryInterface(priv);
-      JS_ASSERT_IF(priv, blob);
+      MOZ_ASSERT_IF(priv, blob);
       return blob;
     }
   }
