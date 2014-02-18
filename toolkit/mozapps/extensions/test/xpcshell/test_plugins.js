@@ -74,6 +74,21 @@ function getFileSize(aFile) {
   return size;
 }
 
+function getPluginLastModifiedTime(aPluginFile) {
+  // On OS X we use the bundle contents last modified time as using
+  // the package directories modified date may be outdated.
+  // See bug 313700.
+  try {
+    let localFileMac = aPluginFile.QueryInterface(AM_Ci.nsILocalFileMac);
+    if (localFileMac) {
+      return localFileMac.bundleContentsLastModifiedTime;
+    }
+  } catch (e) {
+  }
+
+  return aPluginFile.lastModifiedTime;
+}
+
 // Tests that the test plugin exists
 function run_test_1() {
   var testPlugin = get_test_plugin();
@@ -111,10 +126,12 @@ function run_test_1() {
       do_check_true(p.size > 0);
       do_check_eq(p.size, getFileSize(testPlugin));
       do_check_true(p.updateDate > 0);
-      do_check_eq(p.updateDate.getTime(), testPlugin.lastModifiedTime);
-      do_check_eq(p.installDate.getTime(), testPlugin.lastModifiedTime);
       do_check_true("isCompatibleWith" in p);
       do_check_true("findUpdates" in p);
+
+      let lastModifiedTime = getPluginLastModifiedTime(testPlugin);
+      do_check_eq(p.updateDate.getTime(), lastModifiedTime);
+      do_check_eq(p.installDate.getTime(), lastModifiedTime);
 
       run_test_2(p);
     });
