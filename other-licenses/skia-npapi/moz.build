@@ -24,7 +24,7 @@ LOCAL_INCLUDES += [
     '/dom/plugins/base',
     '/dom/plugins/base/android',
     '/gfx/gl',
-    '/gfx/skia/trunk/include/config',
-    '/gfx/skia/trunk/include/core',
+    '/gfx/skia/include/config',
+    '/gfx/skia/include/core',
 ]
 

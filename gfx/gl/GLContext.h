@@ -862,12 +862,6 @@ public:
         AFTER_GL_CALL;
     }
 
-    void fClientActiveTexture(GLenum texture) {
-        BEFORE_GL_CALL;
-        mSymbols.fClientActiveTexture(texture);
-        AFTER_GL_CALL;
-    }
-
     void fColorMask(realGLboolean red, realGLboolean green, realGLboolean blue, realGLboolean alpha) {
         BEFORE_GL_CALL;
         mSymbols.fColorMask(red, green, blue, alpha);
@@ -960,12 +954,6 @@ public:
         AFTER_GL_CALL;
     }
 
-    void fDisableClientState(GLenum capability) {
-        BEFORE_GL_CALL;
-        mSymbols.fDisableClientState(capability);
-        AFTER_GL_CALL;
-    }
-
     void fDisableVertexAttribArray(GLuint index) {
         BEFORE_GL_CALL;
         mSymbols.fDisableVertexAttribArray(index);
@@ -1007,12 +995,6 @@ public:
     void fEnable(GLenum capability) {
         BEFORE_GL_CALL;
         mSymbols.fEnable(capability);
-        AFTER_GL_CALL;
-    }
-
-    void fEnableClientState(GLenum capability) {
-        BEFORE_GL_CALL;
-        mSymbols.fEnableClientState(capability);
         AFTER_GL_CALL;
     }
 
@@ -1361,24 +1343,6 @@ public:
         AFTER_GL_CALL;
     }
 
-    void fLoadIdentity() {
-        BEFORE_GL_CALL;
-        mSymbols.fLoadIdentity();
-        AFTER_GL_CALL;
-    }
-
-    void fLoadMatrixf(const GLfloat *matrix) {
-        BEFORE_GL_CALL;
-        mSymbols.fLoadMatrixf(matrix);
-        AFTER_GL_CALL;
-    }
-
-    void fMatrixMode(GLenum mode) {
-        BEFORE_GL_CALL;
-        mSymbols.fMatrixMode(mode);
-        AFTER_GL_CALL;
-    }
-
     void fPixelStorei(GLenum pname, GLint param) {
         BEFORE_GL_CALL;
         mSymbols.fPixelStorei(pname, param);
@@ -1503,24 +1467,6 @@ public:
     void fStencilOpSeparate(GLenum face, GLenum sfail, GLenum dpfail, GLenum dppass) {
         BEFORE_GL_CALL;
         mSymbols.fStencilOpSeparate(face, sfail, dpfail, dppass);
-        AFTER_GL_CALL;
-    }
-
-    void fTexGeni(GLenum coord, GLenum pname, GLint param) {
-        BEFORE_GL_CALL;
-        mSymbols.fTexGeni(coord, pname, param);
-        AFTER_GL_CALL;
-    }
-
-    void fTexGenf(GLenum coord, GLenum pname, GLfloat param) {
-        BEFORE_GL_CALL;
-        mSymbols.fTexGenf(coord, pname, param);
-        AFTER_GL_CALL;
-    }
-
-    void fTexGenfv(GLenum coord, GLenum pname, const GLfloat *params) {
-        BEFORE_GL_CALL;
-        mSymbols.fTexGenfv(coord, pname, params);
         AFTER_GL_CALL;
     }
 
@@ -1727,12 +1673,6 @@ public:
     void fVertexAttrib4fv(GLuint index, const GLfloat* v) {
         BEFORE_GL_CALL;
         mSymbols.fVertexAttrib4fv(index, v);
-        AFTER_GL_CALL;
-    }
-
-    void fVertexPointer(GLint size, GLenum type, GLsizei stride, const GLvoid* pointer) {
-        BEFORE_GL_CALL;
-        mSymbols.fVertexPointer(size, type, stride, pointer);
         AFTER_GL_CALL;
     }
 
