@@ -112,54 +112,6 @@ LIBS += \
   $(NULL)
 endif
 
-LOCAL_INCLUDES += \
- -I. \
- -I$(topsrcdir)/media/webrtc/trunk/testing/gtest/include \
- -I$(topsrcdir)/ipc/chromium/src \
- -I$(topsrcdir)/media/mtransport \
- -I$(topsrcdir)/media/mtransport/test \
- -I$(topsrcdir)/media/webrtc/signaling/include \
- -I$(topsrcdir)/media/webrtc/signaling/src/sipcc/core/sdp \
- -I$(topsrcdir)/media/webrtc/signaling/src/sipcc/cpr/include \
- -I$(topsrcdir)/media/webrtc/signaling/src/sipcc/core/includes \
- -I$(topsrcdir)/media/webrtc/signaling/src/common/browser_logging \
- -I$(topsrcdir)/media/webrtc/signaling/src/common/time_profiling \
- -I$(topsrcdir)/media/webrtc/signaling/src/media \
- -I$(topsrcdir)/media/webrtc/signaling/src/media-conduit \
- -I$(topsrcdir)/media/webrtc/signaling/src/mediapipeline \
- -I$(topsrcdir)/media/webrtc/signaling/src/sipcc/include \
- -I$(topsrcdir)/media/webrtc/signaling/src/peerconnection \
- -I$(topsrcdir)/media/webrtc/signaling/media-conduit\
- -I$(topsrcdir)/media/webrtc/trunk/third_party/libjingle/source/ \
- -I$(topsrcdir)/media/mtransport/third_party/nICEr/src/ice \
- -I$(topsrcdir)/media/mtransport/third_party/nICEr/src/net \
- -I$(topsrcdir)/media/mtransport/third_party/nICEr/src/stun \
- -I$(topsrcdir)/media/mtransport/third_party/nrappkit/src/share \
- -I$(topsrcdir)/media/mtransport/third_party/nrappkit/src/util/libekr \
- -I$(topsrcdir)/media/mtransport/third_party/nrappkit/src/log \
- -I$(topsrcdir)/media/mtransport/third_party/nrappkit/src/registry \
- -I$(topsrcdir)/media/mtransport/third_party/nrappkit/src/stats \
- -I$(topsrcdir)/media/mtransport/third_party/nrappkit/src/plugin \
- -I$(topsrcdir)/media/mtransport/third_party/nrappkit/src/event \
- -I$(topsrcdir)/xpcom/base/ \
- -I$(DEPTH)/dom/bindings/ \
- $(NULL)
-
-ifneq (,$(filter Darwin DragonFly FreeBSD NetBSD OpenBSD,$(OS_TARGET)))
-LOCAL_INCLUDES +=  -I$(topsrcdir)/media/mtransport/third_party/nrappkit/src/port/darwin/include
-ifneq (,$(filter DragonFly FreeBSD NetBSD OpenBSD,$(OS_TARGET)))
-LOCAL_INCLUDES +=  -I$(topsrcdir)/media/mtransport/third_party/nrappkit/src/port/generic/include
-endif
-endif
-
-ifeq ($(OS_TARGET), Linux)
-LOCAL_INCLUDES +=  -I$(topsrcdir)/media/mtransport/third_party/nrappkit/src/port/linux/include
-endif
-
-ifeq ($(OS_TARGET), Android)
-LOCAL_INCLUDES +=  -I$(topsrcdir)/media/mtransport/third_party/nrappkit/src/port/android/include
-endif
-
 ifndef ZLIB_IN_MOZGLUE
 LIBS += $(MOZ_ZLIB_LIBS)
 endif

@@ -17,20 +17,7 @@ ifdef MOZ_SCTP
 LIBS += $(DEPTH)/netwerk/sctp/src/$(LIB_PREFIX)nksctp_s.$(LIB_SUFFIX)
 endif
 
-ifneq (,$(filter Darwin DragonFly FreeBSD NetBSD OpenBSD,$(OS_TARGET)))
-LOCAL_INCLUDES +=  -I$(topsrcdir)/media/mtransport/third_party/nrappkit/src/port/darwin/include
-ifneq (,$(filter DragonFly FreeBSD NetBSD OpenBSD,$(OS_TARGET)))
-LOCAL_INCLUDES +=  -I$(topsrcdir)/media/mtransport/third_party/nrappkit/src/port/generic/include
-endif
-endif
-
-ifeq ($(OS_TARGET), Linux)
-LOCAL_INCLUDES +=  -I$(topsrcdir)/media/mtransport/third_party/nrappkit/src/port/linux/include
-endif
-
 ifeq ($(OS_TARGET), Android)
-LOCAL_INCLUDES +=  -I$(topsrcdir)/media/mtransport/third_party/nrappkit/src/port/android/include
-
 LIBS += \
   $(STLPORT_LDFLAGS) \
   $(STLPORT_LIBS) \

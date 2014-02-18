@@ -28,8 +28,28 @@ FAIL_ON_WARNINGS = True
 for var in ('HAVE_STRDUP', 'NR_SOCKET_IS_VOID_PTR', 'SCTP_DEBUG', 'INET'):
     DEFINES[var] = True
 
-if CONFIG['OS_TARGET'] != 'Android':
+if CONFIG['OS_TARGET'] == 'Android':
+    LOCAL_INCLUDES += [
+        '/media/mtransport/third_party/nrappkit/src/port/android/include',
+    ]
+else:
     DEFINES['INET6'] = True
+
+if CONFIG['OS_TARGET'] == 'Linux':
+    LOCAL_INCLUDES += [
+        '/media/mtransport/third_party/nrappkit/src/port/linux/include',
+    ]
+
+if CONFIG['OS_TARGET'] == 'Darwin':
+    LOCAL_INCLUDES += [
+        '/media/mtransport/third_party/nrappkit/src/port/darwin/include',
+    ]
+
+if CONFIG['OS_TARGET'] in ('DragonFly', 'FreeBSD', 'NetBSD', 'OpenBSD'):
+    LOCAL_INCLUDES += [
+        '/media/mtransport/third_party/nrappkit/src/port/darwin/include',
+        '/media/mtransport/third_party/nrappkit/src/port/generic/include',
+    ]
 
 # SCTP DEFINES
 if CONFIG['OS_TARGET'] == 'WINNT':
