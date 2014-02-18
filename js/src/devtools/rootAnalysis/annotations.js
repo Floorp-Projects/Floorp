@@ -225,9 +225,10 @@ function isRootedPointerTypeName(name)
 
 function isSuppressConstructor(name)
 {
-    return /::AutoSuppressGC/.test(name)
-        || /::AutoEnterAnalysis/.test(name)
-        || /::AutoAssertNoGC/.test(name);
+    return name.indexOf("::AutoSuppressGC") != -1
+        || name.indexOf("::AutoEnterAnalysis") != -1
+        || name.indexOf("::AutoAssertNoGC") != -1
+        || name.indexOf("::AutoIgnoreRootingHazards") != -1;
 }
 
 // nsISupports subclasses' methods may be scriptable (or overridden
