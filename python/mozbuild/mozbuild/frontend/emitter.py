@@ -242,6 +242,9 @@ class TreeMetadataEmitter(LoggingMixin):
             'RESFILE',
             'DEFFILE',
             'SDK_LIBRARY',
+            'CFLAGS',
+            'CXXFLAGS',
+            'LDFLAGS',
         ]
         for v in varlist:
             if v in sandbox and sandbox[v]:
