@@ -31,8 +31,8 @@
 
 #ifdef JS_ARM_SIMULATOR
 
-#include "jit/IonTypes.h"
 #include "jit/arm/Architecture-arm.h"
+#include "jit/IonTypes.h"
 
 namespace js {
 namespace jit {
