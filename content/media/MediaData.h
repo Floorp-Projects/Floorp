@@ -102,6 +102,7 @@ public:
 
 namespace layers {
 class GraphicBufferLocked;
+class PlanarYCbCrImage;
 }
 
 class VideoInfo;
@@ -113,6 +114,7 @@ public:
   typedef gfx::IntSize IntSize;
   typedef layers::ImageContainer ImageContainer;
   typedef layers::Image Image;
+  typedef layers::PlanarYCbCrImage PlanarYCbCrImage;
 
   // YCbCr data obtained from decoding the video. The index's are:
   //   0 = Y
@@ -201,6 +203,14 @@ public:
   // duration field on a VideoData.
   static VideoData* ShallowCopyUpdateDuration(VideoData* aOther,
                                               int64_t aDuration);
+
+  // Initialize PlanarYCbCrImage. Only When aCopyData is true,
+  // video data is copied to PlanarYCbCrImage.
+  static void SetVideoDataToImage(PlanarYCbCrImage* aVideoImage,
+                                  VideoInfo& aInfo,                  
+                                  const YCbCrBuffer &aBuffer,
+                                  const IntRect& aPicture,
+                                  bool aCopyData);
 
   // Constructs a duplicate VideoData object. This intrinsically tells the
   // player that it does not need to update the displayed frame when this
