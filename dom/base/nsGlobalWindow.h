@@ -832,7 +832,9 @@ public:
                      const mozilla::dom::Sequence<JS::Value>& aArguments,
                      mozilla::ErrorResult& aError);
   int32_t SetTimeout(JSContext* aCx, const nsAString& aHandler,
-                     int32_t aTimeout, mozilla::ErrorResult& aError);
+                     int32_t aTimeout,
+                     const mozilla::dom::Sequence<JS::Value>& /* unused */,
+                     mozilla::ErrorResult& aError);
   void ClearTimeout(int32_t aHandle, mozilla::ErrorResult& aError);
   int32_t SetInterval(JSContext* aCx, mozilla::dom::Function& aFunction,
                       const mozilla::dom::Optional<int32_t>& aTimeout,
@@ -840,6 +842,7 @@ public:
                       mozilla::ErrorResult& aError);
   int32_t SetInterval(JSContext* aCx, const nsAString& aHandler,
                       const mozilla::dom::Optional<int32_t>& aTimeout,
+                      const mozilla::dom::Sequence<JS::Value>& /* unused */,
                       mozilla::ErrorResult& aError);
   void ClearInterval(int32_t aHandle, mozilla::ErrorResult& aError);
   void Atob(const nsAString& aAsciiBase64String, nsAString& aBinaryData,
