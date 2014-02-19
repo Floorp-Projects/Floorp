@@ -12,7 +12,3 @@ endif
 ifdef MOZ_ENABLE_DBUS
 CXXFLAGS += $(MOZ_DBUS_CFLAGS)
 endif
-
-ifneq ($(A11Y_LOG),0)
-  DEFINES += -DA11Y_LOG
-endif
