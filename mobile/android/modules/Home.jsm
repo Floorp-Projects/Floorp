@@ -228,6 +228,12 @@ let HomePanels = (function () {
       REFRESH: "refresh"
     }),
 
+    // Valid item types for a panel view.
+    Item: Object.freeze({
+      ARTICLE: "article",
+      IMAGE: "image"
+    }),
+
     // Valid item handlers for a panel view.
     ItemHandler: Object.freeze({
       BROWSER: "browser",
@@ -255,6 +261,18 @@ let HomePanels = (function () {
       for (let view of panel.views) {
         if (!_valueExists(this.View, view.type)) {
           throw "Home.panels: Invalid view type: panel.id = " + panel.id + ", view.type = " + view.type;
+        }
+
+        if (!view.itemType) {
+          if (view.type == this.View.LIST) {
+            // Use ARTICLE item type by default in LIST views
+            view.itemType = this.Item.ARTICLE;
+          } else if (view.type == this.View.GRID) {
+            // Use IMAGE item type by default in GRID views
+            view.itemType = this.Item.IMAGE;
+          }
+        } else if (!_valueExists(this.Item, view.itemType)) {
+          throw "Home.panels: Invalid item type: panel.id = " + panel.id + ", view.itemType = " + view.itemType;
         }
 
         if (!view.itemHandler) {

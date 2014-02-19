@@ -293,7 +293,7 @@
             if (aShouldDismiss)
               ContextUI.dismissTabs();
 
-            if (!InputSourceHelper.isPrecise && this.textLength) {
+            if (!InputSourceHelper.isPrecise) {
               let inputRectangle = this.inputField.getBoundingClientRect();
               SelectionHelperUI.attachEditSession(ChromeSelectionHandler,
                   inputRectangle.left, inputRectangle.top, this);
