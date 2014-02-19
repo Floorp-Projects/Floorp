@@ -683,6 +683,33 @@ VARIABLES = {
     'SPHINX_PYTHON_PACKAGE_DIRS': (StrictOrderingOnAppendList, list,
         """Directories containing Python packages that Sphinx documents.
         """, None),
+
+    'CFLAGS': (list, list,
+        """Flags passed to the C compiler for all of the C source files
+           declared in this directory.
+
+           Note that the ordering of flags matter here, these flags will be
+           added to the compiler's command line in the same order as they
+           appear in the moz.build file.
+        """, 'binaries'),
+
+    'CXXFLAGS': (list, list,
+        """Flags passed to the C++ compiler for all of the C++ source files
+           declared in this directory.
+
+           Note that the ordering of flags matter here, these flags will be
+           added to the compiler's command line in the same order as they
+           appear in the moz.build file.
+        """, 'binaries'),
+
+    'LDFLAGS': (list, list,
+        """Flags passed to the linker when linking all of the libraries and
+           executables declared in this directory.
+
+           Note that the ordering of flags matter here, these flags will be
+           added to the linker's command line in the same order as they
+           appear in the moz.build file.
+        """, 'libs'),
 }
 
 # The set of functions exposed to the sandbox.
