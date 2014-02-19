@@ -109,12 +109,15 @@ SharedPlanarYCbCrImage::SetData(const PlanarYCbCrData& aData)
   }
 
   MOZ_ASSERT(mTextureClient->AsTextureClientYCbCr());
-
+  if (!mTextureClient->Lock(OPEN_WRITE_ONLY)) {
+    MOZ_ASSERT(false, "Failed to lock the texture.");
+    return;
+  }
+  TextureClientAutoUnlock unlock(mTextureClient);
   if (!mTextureClient->AsTextureClientYCbCr()->UpdateYCbCr(aData)) {
     MOZ_ASSERT(false, "Failed to copy YCbCr data into the TextureClient");
     return;
   }
-
   // do not set mBuffer like in PlanarYCbCrImage because the later
   // will try to manage this memory without knowing it belongs to a
   // shmem.
