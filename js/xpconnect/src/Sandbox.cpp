@@ -392,8 +392,8 @@ CloneNonReflectorsRead(JSContext *cx, JSStructuredCloneReader *reader, uint32_t 
 
             if (!JS_WrapObject(cx, &reflector))
                 return nullptr;
-            MOZ_ASSERT(WrapperFactory::IsXrayWrapper(reflector) ||
-                       IsReflector(reflector));
+            JS_ASSERT(WrapperFactory::IsXrayWrapper(reflector) ||
+                      IsReflector(reflector));
 
             return reflector;
         }
