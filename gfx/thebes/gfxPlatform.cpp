@@ -104,7 +104,9 @@ static qcms_transform *gCMSRGBATransform = nullptr;
 
 static bool gCMSInitialized = false;
 static eCMSMode gCMSMode = eCMSMode_Off;
-static int gCMSIntent = -2;
+
+static bool gCMSIntentInitialized = false;
+static int gCMSIntent = QCMS_INTENT_DEFAULT;
 
 static void ShutdownCMS();
 static void MigratePrefs();
@@ -141,11 +143,9 @@ NS_IMPL_ISUPPORTS2(SRGBOverrideObserver, nsIObserver, nsISupportsWeakReference)
 
 #define BIDI_NUMERAL_PREF "bidi.numeral"
 
-#define GFX_PREF_CMS_RENDERING_INTENT "gfx.color_management.rendering_intent"
 #define GFX_PREF_CMS_DISPLAY_PROFILE "gfx.color_management.display_profile"
 #define GFX_PREF_CMS_ENABLED_OBSOLETE "gfx.color_management.enabled"
 #define GFX_PREF_CMS_FORCE_SRGB "gfx.color_management.force_srgb"
-#define GFX_PREF_CMS_ENABLEV4 "gfx.color_management.enablev4"
 #define GFX_PREF_CMS_MODE "gfx.color_management.mode"
 
 NS_IMETHODIMP
@@ -1621,17 +1621,14 @@ gfxPlatform::GetCMSMode()
 {
     if (gCMSInitialized == false) {
         gCMSInitialized = true;
-        nsresult rv;
 
-        int32_t mode;
-        rv = Preferences::GetInt(GFX_PREF_CMS_MODE, &mode);
-        if (NS_SUCCEEDED(rv) && (mode >= 0) && (mode < eCMSMode_AllCount)) {
+        int32_t mode = gfxPrefs::CMSMode();
+        if (mode >= 0 && mode < eCMSMode_AllCount) {
             gCMSMode = static_cast<eCMSMode>(mode);
         }
 
-        bool enableV4;
-        rv = Preferences::GetBool(GFX_PREF_CMS_ENABLEV4, &enableV4);
-        if (NS_SUCCEEDED(rv) && enableV4) {
+        bool enableV4 = gfxPrefs::CMSEnableV4();
+        if (enableV4) {
             qcms_enable_iccv4();
         }
     }
@@ -1641,23 +1638,22 @@ gfxPlatform::GetCMSMode()
 int
 gfxPlatform::GetRenderingIntent()
 {
-    if (gCMSIntent == -2) {
+    if (!gCMSIntentInitialized) {
+        gCMSIntentInitialized = true;
+
+        // gfxPrefs.h is using 0 as the default for the rendering
+        // intent preference, based on that being the value for
+        // QCMS_INTENT_DEFAULT.  Assert here to catch if that ever
+        // changes and we can then figure out what to do about it.
+        MOZ_ASSERT(QCMS_INTENT_DEFAULT == 0);
 
         /* Try to query the pref system for a rendering intent. */
-        int32_t pIntent;
-        if (NS_SUCCEEDED(Preferences::GetInt(GFX_PREF_CMS_RENDERING_INTENT, &pIntent))) {
-            /* If the pref is within range, use it as an override. */
-            if ((pIntent >= QCMS_INTENT_MIN) && (pIntent <= QCMS_INTENT_MAX)) {
-                gCMSIntent = pIntent;
-            }
+        int32_t pIntent = gfxPrefs::CMSRenderingIntent();
+        if ((pIntent >= QCMS_INTENT_MIN) && (pIntent <= QCMS_INTENT_MAX)) {
+            gCMSIntent = pIntent;
+        } else {
             /* If the pref is out of range, use embedded profile. */
-            else {
-                gCMSIntent = -1;
-            }
-        }
-        /* If we didn't get a valid intent from prefs, use the default. */
-        else {
-            gCMSIntent = QCMS_INTENT_DEFAULT;
+            gCMSIntent = -1;
         }
     }
     return gCMSIntent;
