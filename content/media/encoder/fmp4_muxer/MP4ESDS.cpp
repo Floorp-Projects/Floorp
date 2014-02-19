@@ -13,22 +13,6 @@ namespace mozilla {
 nsresult
 MP4AudioSampleEntry::Generate(uint32_t* aBoxSize)
 {
-  sound_version = 0;
-  // step reserved2
-  sample_size = 16;
-  channels = mMeta.mAudMeta->Channels;
-  compressionId = 0;
-  packet_size = 0;
-  timeScale = mMeta.mAudMeta->SampleRate << 16;
-
-  size += sizeof(sound_version) +
-          sizeof(reserved2) +
-          sizeof(sample_size) +
-          sizeof(channels) +
-          sizeof(packet_size) +
-          sizeof(compressionId) +
-          sizeof(timeScale);
-
   uint32_t box_size;
   nsresult rv = es->Generate(&box_size);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -42,33 +26,19 @@ nsresult
 MP4AudioSampleEntry::Write()
 {
   BoxSizeChecker checker(mControl, size);
-  SampleEntryBox::Write();
-  mControl->Write(sound_version);
-  mControl->Write(reserved2, sizeof(reserved2));
-  mControl->Write(channels);
-  mControl->Write(sample_size);
-  mControl->Write(compressionId);
-  mControl->Write(packet_size);
-  mControl->Write(timeScale);
-
-  nsresult rv = es->Write();
+  nsresult rv;
+  rv = AudioSampleEntry::Write();
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = es->Write();
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
 
 MP4AudioSampleEntry::MP4AudioSampleEntry(ISOControl* aControl)
-  : SampleEntryBox(NS_LITERAL_CSTRING("mp4a"), Audio_Track, aControl)
-  , sound_version(0)
-  , channels(2)
-  , sample_size(16)
-  , compressionId(0)
-  , packet_size(0)
-  , timeScale(0)
+  : AudioSampleEntry(NS_LITERAL_CSTRING("mp4a"), aControl)
 {
   es = new ESDBox(aControl);
-  mMeta.Init(mControl);
-  memset(reserved2, 0 , sizeof(reserved2));
   MOZ_COUNT_CTOR(MP4AudioSampleEntry);
 }
 
