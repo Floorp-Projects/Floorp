@@ -30,7 +30,22 @@ using namespace js::jit;
 
 using mozilla::IsNaN;
 
-static const unsigned MODULE_FUN_SLOT = 0;
+static bool
+CloneModule(JSContext *cx, MutableHandle<AsmJSModuleObject*> moduleObj)
+{
+    ScopedJSDeletePtr<AsmJSModule> module;
+    if (!moduleObj->module().clone(cx, &module))
+        return false;
+
+    module->staticallyLink(cx);
+
+    AsmJSModuleObject *newModuleObj = AsmJSModuleObject::create(cx, &module);
+    if (!newModuleObj)
+        return false;
+
+    moduleObj.set(newModuleObj);
+    return true;
+}
 
 static bool
 LinkFail(JSContext *cx, const char *str)
@@ -211,12 +226,7 @@ ValidateConstant(JSContext *cx, AsmJSModule::Global &global, HandleValue globalV
 static bool
 DynamicallyLinkModule(JSContext *cx, CallArgs args, AsmJSModule &module)
 {
-    if (module.isLinked())
-        return LinkFail(cx, "As a temporary limitation, modules cannot be linked more than "
-                            "once. This limitation should be removed in a future release. To "
-                            "work around this, compile a second module (e.g., using the "
-                            "Function constructor).");
-    module.setIsLinked();
+    module.setIsDynamicallyLinked();
 
     RootedValue globalVal(cx);
     if (args.length() > 0)
@@ -625,9 +635,9 @@ SendModuleToAttachedProfiler(JSContext *cx, AsmJSModule &module)
 
 
 static JSObject *
-CreateExportObject(JSContext *cx, HandleObject moduleObj)
+CreateExportObject(JSContext *cx, Handle<AsmJSModuleObject*> moduleObj)
 {
-    AsmJSModule &module = moduleObj->as<AsmJSModuleObject>().module();
+    AsmJSModule &module = moduleObj->module();
 
     if (module.numExportedFunctions() == 1) {
         const AsmJSModule::ExportedFunction &func = module.exportedFunction(0);
@@ -657,6 +667,8 @@ CreateExportObject(JSContext *cx, HandleObject moduleObj)
     return obj;
 }
 
+static const unsigned MODULE_FUN_SLOT = 0;
+
 // Implements the semantics of an asm.js module function that has been successfully validated.
 static bool
 LinkAsmJS(JSContext *cx, unsigned argc, JS::Value *vp)
@@ -666,8 +678,17 @@ LinkAsmJS(JSContext *cx, unsigned argc, JS::Value *vp)
     // The LinkAsmJS builtin (created by NewAsmJSModuleFunction) is an extended
     // function and stores its module in an extended slot.
     RootedFunction fun(cx, &args.callee().as<JSFunction>());
-    RootedObject moduleObj(cx,  &fun->getExtendedSlot(MODULE_FUN_SLOT).toObject());
-    AsmJSModule &module = moduleObj->as<AsmJSModuleObject>().module();
+    Rooted<AsmJSModuleObject*> moduleObj(cx,
+        &fun->getExtendedSlot(MODULE_FUN_SLOT).toObject().as<AsmJSModuleObject>());
+
+    // When a module is linked, it is dynamically specialized to the given
+    // arguments (buffer, ffis). Thus, if the module is linked again (it is just
+    // a function so it can be called multiple times), we need to clone a new
+    // module.
+    if (moduleObj->module().isDynamicallyLinked() && !CloneModule(cx, &moduleObj))
+        return false;
+
+    AsmJSModule &module = moduleObj->module();
 
     // Link the module by performing the link-time validation checks in the
     // asm.js spec and then patching the generated module to associate it with
