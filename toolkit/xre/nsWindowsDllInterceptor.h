@@ -559,7 +559,7 @@ protected:
       // Jump directly to the original target of the jump instead of jumping to the
       // original function.
       // Adjust jump target displacement to jump location in the trampoline.
-      *((intptr_t*)(tramp+pJmp32+1)) += origBytes + pJmp32 - tramp;
+      *((intptr_t*)(tramp+pJmp32+1)) += origBytes - tramp;
     } else {
       tramp[nBytes] = 0xE9; // jmp
       *((intptr_t*)(tramp+nBytes+1)) = (intptr_t)trampDest - (intptr_t)(tramp+nBytes+5); // target displacement
