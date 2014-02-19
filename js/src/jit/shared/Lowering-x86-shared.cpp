@@ -160,24 +160,8 @@ LIRGeneratorX86Shared::lowerDivI(MDiv *div)
         }
     }
 
-    // Optimize x/x. This is quaint, but it also protects the LDivI code below.
-    // Since LDivI requires lhs to be in %eax, and since the register allocator
-    // can't put a virtual register in two physical registers at the same time,
-    // this puts rhs in %eax too, and since rhs isn't marked usedAtStart, it
-    // would conflict with the %eax output register. (rhs could be marked
-    // usedAtStart but for the fact that LDivI clobbers %edx early and rhs could
-    // happen to be in %edx).
-    if (div->lhs() == div->rhs()) {
-        if (!div->canBeDivideByZero())
-            return define(new(alloc()) LInteger(1), div);
-
-        LDivSelfI *lir = new(alloc()) LDivSelfI(useRegisterAtStart(div->lhs()));
-        if (div->fallible() && !assignSnapshot(lir, Bailout_BaselineInfo))
-            return false;
-        return define(lir, div);
-    }
-
-    LDivI *lir = new(alloc()) LDivI(useFixed(div->lhs(), eax), useRegister(div->rhs()), tempFixed(edx));
+    LDivI *lir = new(alloc()) LDivI(useRegister(div->lhs()), useRegister(div->rhs()),
+                                    tempFixed(edx));
     if (div->fallible() && !assignSnapshot(lir, Bailout_BaselineInfo))
         return false;
     return defineFixed(lir, div, LAllocation(AnyRegister(eax)));
@@ -200,20 +184,7 @@ LIRGeneratorX86Shared::lowerModI(MMod *mod)
         }
     }
 
-    // Optimize x%x. The comments in lowerDivI apply here as well, except
-    // that we return 0 for all cases except when x is 0 and we're not
-    // truncated.
-    if (mod->rhs() == mod->lhs()) {
-        if (mod->isTruncated())
-            return define(new(alloc()) LInteger(0), mod);
-
-        LModSelfI *lir = new(alloc()) LModSelfI(useRegisterAtStart(mod->lhs()));
-        if (mod->fallible() && !assignSnapshot(lir, Bailout_BaselineInfo))
-            return false;
-        return define(lir, mod);
-    }
-
-    LModI *lir = new(alloc()) LModI(useFixedAtStart(mod->lhs(), eax),
+    LModI *lir = new(alloc()) LModI(useRegister(mod->lhs()),
                                     useRegister(mod->rhs()),
                                     tempFixed(eax));
     if (mod->fallible() && !assignSnapshot(lir, Bailout_BaselineInfo))
@@ -237,18 +208,7 @@ LIRGeneratorX86Shared::visitAsmJSNeg(MAsmJSNeg *ins)
 bool
 LIRGeneratorX86Shared::lowerUDiv(MDiv *div)
 {
-    // Optimize x/x. The comments in lowerDivI apply here as well.
-    if (div->lhs() == div->rhs()) {
-        if (!div->canBeDivideByZero())
-            return define(new(alloc()) LInteger(1), div);
-
-        LDivSelfI *lir = new(alloc()) LDivSelfI(useRegisterAtStart(div->lhs()));
-        if (div->fallible() && !assignSnapshot(lir, Bailout_BaselineInfo))
-            return false;
-        return define(lir, div);
-    }
-
-    LUDivOrMod *lir = new(alloc()) LUDivOrMod(useFixedAtStart(div->lhs(), eax),
+    LUDivOrMod *lir = new(alloc()) LUDivOrMod(useRegister(div->lhs()),
                                               useRegister(div->rhs()),
                                               tempFixed(edx));
     if (div->fallible() && !assignSnapshot(lir, Bailout_BaselineInfo))
@@ -259,18 +219,7 @@ LIRGeneratorX86Shared::lowerUDiv(MDiv *div)
 bool
 LIRGeneratorX86Shared::lowerUMod(MMod *mod)
 {
-    // Optimize x%x. The comments in lowerModI apply here as well.
-    if (mod->lhs() == mod->rhs()) {
-        if (mod->isTruncated() || (mod->isUnsigned() && !mod->canBeDivideByZero()))
-            return define(new(alloc()) LInteger(0), mod);
-
-        LModSelfI *lir = new(alloc()) LModSelfI(useRegisterAtStart(mod->lhs()));
-        if (mod->fallible() && !assignSnapshot(lir, Bailout_BaselineInfo))
-            return false;
-        return define(lir, mod);
-    }
-
-    LUDivOrMod *lir = new(alloc()) LUDivOrMod(useFixedAtStart(mod->lhs(), eax),
+    LUDivOrMod *lir = new(alloc()) LUDivOrMod(useRegister(mod->lhs()),
                                               useRegister(mod->rhs()),
                                               tempFixed(eax));
     if (mod->fallible() && !assignSnapshot(lir, Bailout_BaselineInfo))
