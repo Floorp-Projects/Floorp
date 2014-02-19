@@ -10,7 +10,9 @@
 Function RegisterCEH
 !ifdef MOZ_METRO
   ${If} ${AtLeastWin8}
-    ${CleanupMetroBrowserHandlerValues} ${DELEGATE_EXECUTE_HANDLER_ID}
+    ${CleanupMetroBrowserHandlerValues} ${DELEGATE_EXECUTE_HANDLER_ID} \
+                                        "FirefoxURL" \
+                                        "FirefoxHTML"
     ${AddMetroBrowserHandlerValues} ${DELEGATE_EXECUTE_HANDLER_ID} \
                                     "$INSTDIR\CommandExecuteHandler.exe" \
                                     $AppUserModelID \
