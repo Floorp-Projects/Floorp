@@ -203,6 +203,11 @@ using namespace mozilla;
 //
 // MOZ_CC_LOG_SHUTDOWN: If defined, log cycle collector heaps at shutdown.
 //
+// MOZ_CC_LOG_THREAD: If set to "main", only automatically log main thread
+// CCs. If set to "worker", only automatically log worker CCs. If set to "all",
+// log either. The default value is "all". This must be used with either
+// MOZ_CC_LOG_ALL or MOZ_CC_LOG_SHUTDOWN for it to do anything.
+//
 // MOZ_CC_ALL_TRACES_AT_SHUTDOWN: If defined, any cycle collector
 // logging done at shutdown will be WantAllTraces, which disables
 // various cycle collector optimizations to give a fuller picture of
@@ -230,17 +235,27 @@ struct nsCycleCollectorParams
     bool mLogAll;
     bool mLogShutdown;
     bool mAllTracesAtShutdown;
+    bool mLogThisThread;
 
     nsCycleCollectorParams() :
         mLogAll      (PR_GetEnv("MOZ_CC_LOG_ALL") != nullptr),
         mLogShutdown (PR_GetEnv("MOZ_CC_LOG_SHUTDOWN") != nullptr),
-        mAllTracesAtShutdown (PR_GetEnv("MOZ_CC_ALL_TRACES_AT_SHUTDOWN") != nullptr)
+        mAllTracesAtShutdown (PR_GetEnv("MOZ_CC_ALL_TRACES_AT_SHUTDOWN") != nullptr),
+        mLogThisThread(true)
     {
+        const char* logThreadEnv = PR_GetEnv("MOZ_CC_LOG_THREAD");
+        if (logThreadEnv && !!strcmp(logThreadEnv, "all")) {
+            if (NS_IsMainThread()) {
+                mLogThisThread = !strcmp(logThreadEnv, "main");
+            } else {
+                mLogThisThread = !strcmp(logThreadEnv, "worker");
+            }
+        }
     }
 
     bool LogThisCC(bool aIsShutdown)
     {
-        return mLogAll || (aIsShutdown && mLogShutdown);
+        return (mLogAll || (aIsShutdown && mLogShutdown)) && mLogThisThread;
     }
 };
 
