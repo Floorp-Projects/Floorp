@@ -2171,6 +2171,7 @@ abstract public class BrowserApp extends GeckoApp
         }
 
         bookmark.setEnabled(!AboutPages.isAboutReader(tab.getURL()));
+        bookmark.setVisible(!GeckoProfile.get(this).inGuestMode());
         bookmark.setCheckable(true);
         bookmark.setChecked(tab.isBookmark());
         bookmark.setIcon(tab.isBookmark() ? R.drawable.ic_menu_bookmark_remove : R.drawable.ic_menu_bookmark_add);
