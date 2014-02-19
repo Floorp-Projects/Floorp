@@ -138,7 +138,9 @@ IdToString(JSContext *cx, jsid id)
 inline
 AtomHasher::Lookup::Lookup(const JSAtom *atom)
   : chars(atom->chars()), length(atom->length()), atom(atom)
-{}
+{
+    hash = mozilla::HashString(chars, length);
+}
 
 inline bool
 AtomHasher::match(const AtomStateEntry &entry, const Lookup &lookup)
@@ -176,7 +178,7 @@ ClassName(JSProtoKey key, JSAtomState &atomState)
 inline Handle<PropertyName*>
 ClassName(JSProtoKey key, JSRuntime *rt)
 {
-    return ClassName(key, rt->atomState);
+    return ClassName(key, *rt->commonNames);
 }
 
 inline Handle<PropertyName*>
