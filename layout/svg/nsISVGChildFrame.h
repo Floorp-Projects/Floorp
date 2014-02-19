@@ -58,18 +58,18 @@ public:
   // so the element's full transform needs to be applied; but we don't want to
   // apply transforms from outside the actual glyph element, so we need to know
   // how far up the ancestor chain to go.
-  NS_IMETHOD PaintSVG(nsRenderingContext* aContext,
-                      const nsIntRect *aDirtyRect,
-                      nsIFrame* aTransformRoot = nullptr) = 0;
+  virtual nsresult PaintSVG(nsRenderingContext* aContext,
+                            const nsIntRect *aDirtyRect,
+                            nsIFrame* aTransformRoot = nullptr) = 0;
 
   // Check if this frame or children contain the given point,
   // specified in app units relative to the origin of the outer
   // svg frame (origin ill-defined in the case of borders - bug
   // 290770).  See bug 290852 for foreignObject complications.
-  NS_IMETHOD_(nsIFrame*) GetFrameForPoint(const nsPoint &aPoint)=0;
+  virtual nsIFrame* GetFrameForPoint(const nsPoint &aPoint)=0;
 
   // Get bounds in our nsSVGOuterSVGFrame's coordinates space (in app units)
-  NS_IMETHOD_(nsRect) GetCoveredRegion()=0;
+  virtual nsRect GetCoveredRegion()=0;
 
   // Called on SVG child frames (except NS_FRAME_IS_NONDISPLAY frames)
   // to update and then invalidate their cached bounds. This method is not
@@ -141,7 +141,7 @@ public:
                                       uint32_t aFlags) = 0;
 
   // Are we a container frame?
-  NS_IMETHOD_(bool) IsDisplayContainer()=0;
+  virtual bool IsDisplayContainer()=0;
 };
 
 #endif // __NS_ISVGCHILDFRAME_H__
