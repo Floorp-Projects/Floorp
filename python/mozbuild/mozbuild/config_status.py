@@ -16,7 +16,6 @@ from optparse import OptionParser
 
 from mach.logging import LoggingManager
 from mozbuild.backend.configenvironment import ConfigEnvironment
-from mozbuild.backend.android_eclipse import AndroidEclipseBackend
 from mozbuild.backend.recursivemake import RecursiveMakeBackend
 from mozbuild.base import MachCommandConditions
 from mozbuild.frontend.emitter import TreeMetadataEmitter
@@ -38,6 +37,19 @@ to generate Eclipse project files.
 PLEASE BE AWARE THAT ECLIPSE SUPPORT IS EXPERIMENTAL. You should
 verify any changes using |mach build|.
 =============
+'''.strip()
+
+VISUAL_STUDIO_ADVERTISEMENT = '''
+===============================
+Visual Studio Support Available
+
+You are building Firefox on Windows. Please help us test the experimental
+Visual Studio project files (yes, IntelliSense works) by running the
+following:
+
+   mach build-backend --backend=VisualStudio
+
+===============================
 '''.strip()
 
 
@@ -83,7 +95,7 @@ def config_status(topobjdir='.', topsrcdir='.',
     parser.add_option('-d', '--diff', action='store_true',
                       help='print diffs of changed files.')
     parser.add_option('-b', '--backend',
-                      choices=['RecursiveMake', 'AndroidEclipse'],
+                      choices=['RecursiveMake', 'AndroidEclipse', 'VisualStudio'],
                       default='RecursiveMake',
                       help='what backend to build (default: RecursiveMake).')
     options, args = parser.parse_args()
@@ -103,9 +115,13 @@ def config_status(topobjdir='.', topsrcdir='.',
     # Make an appropriate backend instance, defaulting to RecursiveMakeBackend.
     backend_cls = RecursiveMakeBackend
     if options.backend == 'AndroidEclipse':
+        from mozbuild.backend.android_eclipse import AndroidEclipseBackend
         if not MachCommandConditions.is_android(env):
             raise Exception('The Android Eclipse backend is not available with this configuration.')
         backend_cls = AndroidEclipseBackend
+    elif options.backend == 'VisualStudio':
+        from mozbuild.backend.visualstudio import VisualStudioBackend
+        backend_cls = VisualStudioBackend
 
     the_backend = backend_cls(env)
 
@@ -132,6 +148,10 @@ def config_status(topobjdir='.', topsrcdir='.',
     if options.diff:
         for path, diff in sorted(summary.file_diffs.items()):
             print(diff)
+
+    # Advertise Visual Studio if appropriate.
+    if os.name == 'nt' and options.backend == 'RecursiveMake':
+        print(VISUAL_STUDIO_ADVERTISEMENT)
 
     # Advertise Eclipse if it is appropriate.
     if MachCommandConditions.is_android(env):
