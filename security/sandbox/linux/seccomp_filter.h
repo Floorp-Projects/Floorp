@@ -248,6 +248,7 @@
   /* See bug 906996 for removing unlink(). */ \
   SECCOMP_WHITELIST_ARCH_TOREMOVE \
   ALLOW_SYSCALL(open), \
+  ALLOW_SYSCALL(readlink), /* Workaround for bug 964455 */ \
   ALLOW_SYSCALL(prctl), \
   ALLOW_SYSCALL(access), \
   ALLOW_SYSCALL(unlink), \
