@@ -549,6 +549,7 @@ public:
   static const KTableValue kOutlineColorKTable[];
   static const KTableValue kOverflowKTable[];
   static const KTableValue kOverflowSubKTable[];
+  static const KTableValue kOverflowClipBoxKTable[];
   static const KTableValue kPageBreakKTable[];
   static const KTableValue kPageBreakInsideKTable[];
   static const KTableValue kPageMarksKTable[];
