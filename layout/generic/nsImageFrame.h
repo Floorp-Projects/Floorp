@@ -70,47 +70,48 @@ public:
   NS_DECL_QUERYFRAME_TARGET(nsImageFrame)
   NS_DECL_QUERYFRAME
 
-  virtual void DestroyFrom(nsIFrame* aDestructRoot);
+  virtual void DestroyFrom(nsIFrame* aDestructRoot) MOZ_OVERRIDE;
   virtual void Init(nsIContent*      aContent,
                     nsIFrame*        aParent,
                     nsIFrame*        aPrevInFlow) MOZ_OVERRIDE;
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) MOZ_OVERRIDE;
-  virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext);
-  virtual nscoord GetPrefWidth(nsRenderingContext *aRenderingContext);
-  virtual mozilla::IntrinsicSize GetIntrinsicSize();
-  virtual nsSize GetIntrinsicRatio();
+  virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
+  virtual nscoord GetPrefWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
+  virtual mozilla::IntrinsicSize GetIntrinsicSize() MOZ_OVERRIDE;
+  virtual nsSize GetIntrinsicRatio() MOZ_OVERRIDE;
   virtual nsresult Reflow(nsPresContext*          aPresContext,
                           nsHTMLReflowMetrics&     aDesiredSize,
                           const nsHTMLReflowState& aReflowState,
-                          nsReflowStatus&          aStatus);
+                          nsReflowStatus&          aStatus) MOZ_OVERRIDE;
   
   virtual nsresult  GetContentForEvent(mozilla::WidgetEvent* aEvent,
-                                       nsIContent** aContent);
+                                       nsIContent** aContent) MOZ_OVERRIDE;
   virtual nsresult HandleEvent(nsPresContext* aPresContext,
                                mozilla::WidgetGUIEvent* aEvent,
-                               nsEventStatus* aEventStatus);
+                               nsEventStatus* aEventStatus) MOZ_OVERRIDE;
   virtual nsresult GetCursor(const nsPoint& aPoint,
-                             nsIFrame::Cursor& aCursor);
+                             nsIFrame::Cursor& aCursor) MOZ_OVERRIDE;
   virtual nsresult AttributeChanged(int32_t aNameSpaceID,
                                     nsIAtom* aAttribute,
-                                    int32_t aModType);
+                                    int32_t aModType) MOZ_OVERRIDE;
 
 #ifdef ACCESSIBILITY
   virtual mozilla::a11y::AccType AccessibleType() MOZ_OVERRIDE;
 #endif
 
-  virtual nsIAtom* GetType() const;
+  virtual nsIAtom* GetType() const MOZ_OVERRIDE;
 
-  virtual bool IsFrameOfType(uint32_t aFlags) const
+  virtual bool IsFrameOfType(uint32_t aFlags) const MOZ_OVERRIDE
   {
     return ImageFrameSuper::IsFrameOfType(aFlags & ~(nsIFrame::eReplaced));
   }
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const;
-  void List(FILE* out = stderr, const char* aPrefix = "", uint32_t aFlags = 0) const;
+  virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;
+  void List(FILE* out = stderr, const char* aPrefix = "", 
+            uint32_t aFlags = 0) const MOZ_OVERRIDE;
 #endif
 
   virtual int GetSkipSides(const nsHTMLReflowState* aReflowState = nullptr) const MOZ_OVERRIDE;
@@ -163,7 +164,7 @@ public:
   nsImageMap* GetExistingImageMap() const { return mImageMap; }
 
   virtual void AddInlineMinWidth(nsRenderingContext *aRenderingContext,
-                                 InlineMinWidthData *aData);
+                                 InlineMinWidthData *aData) MOZ_OVERRIDE;
 
   void DisconnectMap();
 
