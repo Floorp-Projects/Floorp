@@ -340,6 +340,18 @@ class TestRecursiveMakeBackend(BackendTester):
             'USE_STATIC_LIBS': [
                 'USE_STATIC_LIBS := 1',
             ],
+            'CFLAGS': [
+                'CFLAGS += -fno-exceptions',
+                'CFLAGS += -w',
+            ],
+            'CXXFLAGS': [
+                'CXXFLAGS += -fcxx-exceptions',
+                'CXXFLAGS += -include foo.h',
+            ],
+            'LDFLAGS': [
+                'LDFLAGS += -framework Foo',
+                'LDFLAGS += -x',
+            ]
         }
 
         for var, val in expected.items():

@@ -2636,12 +2636,16 @@ WifiWorker.prototype = {
     const MAX_PRIORITY = 9999;
     const message = "WifiManager:associate:Return";
     let network = msg.data;
+
+    let privnet = network;
+    let dontConnect = privnet.dontConnect;
+    delete privnet.dontConnect;
+
     if (!WifiManager.enabled) {
       this._sendMessage(message, false, "Wifi is disabled", msg);
       return;
     }
 
-    let privnet = network;
     let self = this;
     function networkReady() {
       // saveConfig now before we disable most of the other networks.
@@ -2660,10 +2664,15 @@ WifiWorker.prototype = {
         });
       }
 
-      if (self._highestPriority >= MAX_PRIORITY)
-        self._reprioritizeNetworks(selectAndConnect);
-      else
-        WifiManager.saveConfig(selectAndConnect);
+      var selectAndConnectOrReturn = dontConnect ?
+        function() {
+          self._sendMessage(message, true, "Wifi has been recorded", msg);
+        } : selectAndConnect;
+      if (self._highestPriority >= MAX_PRIORITY) {
+        self._reprioritizeNetworks(selectAndConnectOrReturn);
+      } else {
+        WifiManager.saveConfig(selectAndConnectOrReturn);
+      }
     }
 
     let ssid = privnet.ssid;
