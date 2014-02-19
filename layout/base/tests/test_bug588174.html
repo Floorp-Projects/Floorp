@@ -22,31 +22,40 @@ SimpleTest.waitForExplicitFinish();
 
 var startNow = Date.now();
 var start = window.mozAnimationStartTime;
-var firstListenerTime;
-var secondListenerTime;
+var firstListenerArg;
+var secondListenerArg;
+var thirdListenerTime;
 
-function secondListener(time) {
-  secondListenerTime = time;
+// callback arg is wallclock from mozRequestAnimationFrame
+function thirdListener(t) {
+  thirdListenerTime = t;
 
   // They really shouldn't be more than 100ms apart, but we can get weird
   // effects on slow machines.  5 minutes is our test timeout, though.
   ok(Math.abs(startNow - start) <= 5 * 60 * 1000, "Bogus animation start time");
-  ok(firstListenerTime >= start, "First listener should fire after start");
-  // FIXME: The timer filtering code makes the refresh driver call back in 0ms
-  // sometimes!
-  ok(secondListenerTime >= firstListenerTime,
+
+  ok(secondListenerArg >= firstListenerArg, // callback args from consecutive unprefixed requestAnimationFrame
      "Second listener should fire after first listener");
+
+  ok(thirdListenerTime >= start, "Third listener should fire after start");
+
   SimpleTest.finish();
 }
-                            
-function firstListener(time) {
-  firstListenerTime = time;
-  mozRequestAnimationFrame(secondListener);
+
+// callback arg is from requestAnimationFrame and comparable to performance.now()
+function secondListener(t) {
+  secondListenerArg = t;
+  mozRequestAnimationFrame(thirdListener);
 }
-                            
+
+function firstListener(t) {
+  firstListenerArg = t;
+  requestAnimationFrame(secondListener);
+}
+
 addLoadEvent(function() {
     setTimeout(function() {
-      mozRequestAnimationFrame(firstListener);
+      requestAnimationFrame(firstListener);
     }, 100);
   });
 
