@@ -356,7 +356,7 @@ nsXBLPrototypeBinding::AttributeChanged(nsIAtom* aAttribute,
       else {
         bool attrPresent = true;
         nsAutoString value;
-        // Check to see if the src attribute is xbl:text.  If so, then we need to obtain the 
+        // Check to see if the src attribute is xbl:text.  If so, then we need to obtain the
         // children of the real element and get the text nodes' values.
         if (aAttribute == nsGkAtoms::text && aNameSpaceID == kNameSpaceID_XBL) {
           nsContentUtils::GetNodeTextContent(aChangedElement, false, value);
@@ -366,7 +366,7 @@ nsXBLPrototypeBinding::AttributeChanged(nsIAtom* aAttribute,
           stripVal.StripWhitespace();
           if (stripVal.IsEmpty()) 
             attrPresent = false;
-        }    
+        }
         else {
           attrPresent = aChangedElement->GetAttr(aNameSpaceID, aAttribute, value);
         }
@@ -447,7 +447,7 @@ nsXBLPrototypeBinding::GetImmediateChild(nsIAtom* aTag)
 
   return nullptr;
 }
- 
+
 nsresult
 nsXBLPrototypeBinding::InitClass(const nsCString& aClassName,
                                  JSContext * aContext,
@@ -592,7 +592,7 @@ nsXBLPrototypeBinding::GetRuleProcessor()
   if (mResources) {
     return mResources->mRuleProcessor;
   }
-  
+
   return nullptr;
 }
 
@@ -1572,7 +1572,7 @@ nsXBLPrototypeBinding::ReadNamespace(nsIObjectInputStream* aStream,
     nsAutoString namesp;
     rv = aStream->ReadString(namesp);
     NS_ENSURE_SUCCESS(rv, rv);
-  
+
     nsContentUtils::NameSpaceManager()->RegisterNameSpace(namesp, aNameSpaceID);
   }
   else {
@@ -1600,7 +1600,7 @@ nsXBLPrototypeBinding::WriteNamespace(nsIObjectOutputStream* aStream,
   else {
     rv = aStream->Write8(XBLBinding_Serialize_CustomNamespace);
     NS_ENSURE_SUCCESS(rv, rv);
-  
+
     nsAutoString namesp;
     nsContentUtils::NameSpaceManager()->GetNameSpaceURI(aNameSpaceID, namesp);
     aStream->WriteWStringZ(namesp.get());
@@ -1654,7 +1654,7 @@ nsXBLPrototypeBinding::ResolveBaseBinding()
   bool hasDisplay = !display.IsEmpty();
 
   nsAutoString value(extends);
-       
+
   // Now slice 'em up to see what we've got.
   nsAutoString prefix;
   int32_t offset;
