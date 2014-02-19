@@ -11,6 +11,7 @@
 #include "nsITimer.h"
 #include "nsCOMPtr.h"
 #include "mozilla/SHA1.h"
+#include "mozilla/TimeStamp.h"
 #include "nsTArray.h"
 #include "nsString.h"
 #include "nsTHashtable.h"
@@ -19,6 +20,8 @@
 //#define DEBUG_HANDLES 1
 
 class nsIFile;
+class nsITimer;
+class nsIDirectoryEnumerator;
 
 namespace mozilla {
 namespace net {
@@ -29,6 +32,7 @@ class CacheFileHandlesEntry;
 
 const char kEntriesDir[] = "entries";
 const char kDoomedDir[]  = "doomed";
+const char kTrashDir[]   = "trash";
 
 
 class CacheFileHandle : public nsISupports
@@ -303,13 +307,21 @@ private:
   nsresult EvictIfOverLimitInternal();
   nsresult OverLimitEvictionInternal();
 
+  nsresult TrashDirectory(nsIFile *aFile);
+  static void OnTrashTimer(nsITimer *aTimer, void *aClosure);
+  nsresult StartRemovingTrash();
+  nsresult RemoveTrashInternal();
+  nsresult FindTrashDirToRemove();
+
   nsresult CreateFile(CacheFileHandle *aHandle);
   static void HashToStr(const SHA1Sum::Hash *aHash, nsACString &_retval);
   static nsresult StrToHash(const nsACString &aHash, SHA1Sum::Hash *_retval);
   nsresult GetFile(const SHA1Sum::Hash *aHash, nsIFile **_retval);
   nsresult GetSpecialFile(const nsACString &aKey, nsIFile **_retval);
   nsresult GetDoomedFile(nsIFile **_retval);
-  nsresult CheckAndCreateDir(nsIFile *aFile, const char *aDir);
+  nsresult IsEmptyDirectory(nsIFile *aFile, bool *_retval);
+  nsresult CheckAndCreateDir(nsIFile *aFile, const char *aDir,
+                             bool aEnsureEmptyDir);
   nsresult CreateCacheTree();
   nsresult OpenNSPRHandle(CacheFileHandle *aHandle, bool aCreate = false);
   void     NSPRHandleUsed(CacheFileHandle *aHandle);
@@ -319,6 +331,7 @@ private:
   nsresult ShutdownMetadataWriteSchedulingInternal();
 
   static CacheFileIOManager           *gInstance;
+  TimeStamp                            mStartTime;
   bool                                 mShuttingDown;
   nsRefPtr<CacheIOThread>              mIOThread;
   nsCOMPtr<nsIFile>                    mCacheDirectory;
@@ -329,6 +342,11 @@ private:
   nsTArray<nsRefPtr<CacheFile> >       mScheduledMetadataWrites;
   nsCOMPtr<nsITimer>                   mMetadataWritesTimer;
   bool                                 mOverLimitEvicting;
+  bool                                 mRemovingTrashDirs;
+  nsCOMPtr<nsITimer>                   mTrashTimer;
+  nsCOMPtr<nsIFile>                    mTrashDir;
+  nsCOMPtr<nsIDirectoryEnumerator>     mTrashDirEnumerator;
+  nsTArray<nsCString>                  mFailedTrashDirs;
 };
 
 } // net
