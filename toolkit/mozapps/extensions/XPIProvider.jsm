@@ -2084,17 +2084,23 @@ var XPIProvider = {
       try {
         AddonManagerPrivate.recordTimestamp("XPI_bootstrap_addons_begin");
         for (let id in this.bootstrappedAddons) {
-          let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
-          file.persistentDescriptor = this.bootstrappedAddons[id].descriptor;
-          let reason = BOOTSTRAP_REASONS.APP_STARTUP;
-          // Eventually set INSTALLED reason when a bootstrap addon
-          // is dropped in profile folder and automatically installed
-          if (AddonManager.getStartupChanges(AddonManager.STARTUP_CHANGE_INSTALLED)
-                          .indexOf(id) !== -1)
-            reason = BOOTSTRAP_REASONS.ADDON_INSTALL;
-          this.callBootstrapMethod(id, this.bootstrappedAddons[id].version,
-                                   this.bootstrappedAddons[id].type, file,
-                                   "startup", reason);
+          try {
+            let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+            file.persistentDescriptor = this.bootstrappedAddons[id].descriptor;
+            let reason = BOOTSTRAP_REASONS.APP_STARTUP;
+            // Eventually set INSTALLED reason when a bootstrap addon
+            // is dropped in profile folder and automatically installed
+            if (AddonManager.getStartupChanges(AddonManager.STARTUP_CHANGE_INSTALLED)
+                            .indexOf(id) !== -1)
+              reason = BOOTSTRAP_REASONS.ADDON_INSTALL;
+            this.callBootstrapMethod(id, this.bootstrappedAddons[id].version,
+                                     this.bootstrappedAddons[id].type, file,
+                                     "startup", reason);
+          }
+          catch (e) {
+            ERROR("Failed to load bootstrap addon " + id + " from " +
+                  this.bootstrappedAddons[id].descriptor, e);
+          }
         }
         AddonManagerPrivate.recordTimestamp("XPI_bootstrap_addons_end");
       }
@@ -2161,8 +2167,8 @@ var XPIProvider = {
     // add-ons
     if (Prefs.getBoolPref(PREF_PENDING_OPERATIONS, false)) {
       XPIDatabase.updateActiveAddons();
-      XPIDatabase.writeAddonsList();
-      Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS, false);
+      Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS,
+                                 !XPIDatabase.writeAddonsList());
     }
 
     this.installs = null;
@@ -2244,8 +2250,8 @@ var XPIProvider = {
     }
 
     // Ensure any changes to the add-ons list are flushed to disk
-    XPIDatabase.writeAddonsList();
-    Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS, false);
+    Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS,
+                               !XPIDatabase.writeAddonsList());
   },
 
   /**
@@ -2420,7 +2426,7 @@ var XPIProvider = {
               targetDir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
             }
             catch (e) {
-              ERROR("Failed to create staging directory for add-on " + id, e);
+              ERROR("Failed to create staging directory for add-on " + addon.id, e);
               continue;
             }
 
@@ -2428,7 +2434,7 @@ var XPIProvider = {
               extractFiles(stagedXPI, targetDir);
             }
             catch (e) {
-              ERROR("Failed to extract staged XPI for add-on " + id + " in " +
+              ERROR("Failed to extract staged XPI for add-on " + addon.id + " in " +
                     aLocation.name, e);
             }
           }
@@ -2437,7 +2443,7 @@ var XPIProvider = {
               stagedXPI.moveTo(stagingDir, addon.id + ".xpi");
             }
             catch (e) {
-              ERROR("Failed to move staged XPI for add-on " + id + " in " +
+              ERROR("Failed to move staged XPI for add-on " + addon.id + " in " +
                     aLocation.name, e);
             }
           }
@@ -2455,8 +2461,14 @@ var XPIProvider = {
         }
       }
 
-      if (!stagingDir || !stagingDir.exists() || !stagingDir.isDirectory())
+      try {
+        if (!stagingDir || !stagingDir.exists() || !stagingDir.isDirectory())
+          return;
+      }
+      catch (e) {
+        WARN("Failed to find staging directory", e);
         return;
+      }
 
       let seenFiles = [];
       // Use a snapshot of the directory contents to avoid possible issues with
@@ -3587,8 +3599,8 @@ var XPIProvider = {
       if (extensionListChanged || hasPendingChanges) {
         LOG("Updating database with changes to installed add-ons");
         XPIDatabase.updateActiveAddons();
-        XPIDatabase.writeAddonsList();
-        Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS, false);
+        Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS,
+                                   !XPIDatabase.writeAddonsList());
         Services.prefs.setCharPref(PREF_BOOTSTRAP_ADDONS,
                                    JSON.stringify(this.bootstrappedAddons));
         return true;

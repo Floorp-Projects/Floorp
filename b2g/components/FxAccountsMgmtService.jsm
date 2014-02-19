@@ -129,6 +129,7 @@ this.FxAccountsMgmtService = {
         break;
       case "signIn":
       case "signUp":
+      case "refreshAuthentication":
         FxAccountsManager[data.method](data.accountId, data.password).then(
           user => {
             self._onFullfill(msg.id, user);

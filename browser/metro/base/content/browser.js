@@ -1458,7 +1458,7 @@ Tab.prototype = {
     browser.id = "browser-" + this._id;
     this._chromeTab.linkedBrowser = browser;
 
-    browser.setAttribute("type", "content");
+    browser.setAttribute("type", "content-targetable");
 
     let useRemote = Services.appinfo.browserTabsRemote;
     let useLocal = Util.isLocalScheme(aURI);
@@ -1532,7 +1532,7 @@ Tab.prototype = {
     } else {
       notification.classList.remove("active-tab-notificationbox");
       browser.messageManager.sendAsyncMessage("Browser:Blur", { });
-      browser.setAttribute("type", "content");
+      browser.setAttribute("type", "content-targetable");
       browser.active = false;
     }
   },

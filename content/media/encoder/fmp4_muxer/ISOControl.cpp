@@ -131,8 +131,9 @@ FragmentBuffer::GetFirstFragmentSampleSize()
   return size;
 }
 
-ISOControl::ISOControl()
-  : mAudioFragmentBuffer(nullptr)
+ISOControl::ISOControl(uint32_t aMuxingType)
+  : mMuxingType(aMuxingType)
+  , mAudioFragmentBuffer(nullptr)
   , mVideoFragmentBuffer(nullptr)
   , mFragNum(0)
   , mOutputSize(0)

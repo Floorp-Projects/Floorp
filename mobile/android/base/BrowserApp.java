@@ -13,6 +13,8 @@ import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
 import org.mozilla.gecko.favicons.LoadFaviconTask;
 import org.mozilla.gecko.favicons.decoders.IconDirectoryEntry;
+import org.mozilla.gecko.fxa.activities.FxAccountGetStartedActivity;
+import org.mozilla.gecko.fxa.FirefoxAccounts;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.gfx.GeckoLayerClient;
 import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
@@ -28,6 +30,7 @@ import org.mozilla.gecko.home.SearchEngine;
 import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.prompts.Prompt;
+import org.mozilla.gecko.sync.setup.SyncAccounts;
 import org.mozilla.gecko.toolbar.AutocompleteHandler;
 import org.mozilla.gecko.toolbar.BrowserToolbar;
 import org.mozilla.gecko.util.Clipboard;
@@ -545,6 +548,8 @@ abstract public class BrowserApp extends GeckoApp
         registerEventListener("Menu:Add");
         registerEventListener("Menu:Remove");
         registerEventListener("Menu:Update");
+        registerEventListener("Accounts:Create");
+        registerEventListener("Accounts:Exist");
 
         Distribution.init(this);
         JavaAddonManager.getInstance().init(getApplicationContext());
@@ -862,6 +867,8 @@ abstract public class BrowserApp extends GeckoApp
         unregisterEventListener("Menu:Add");
         unregisterEventListener("Menu:Remove");
         unregisterEventListener("Menu:Update");
+        unregisterEventListener("Accounts:Create");
+        unregisterEventListener("Accounts:Exist");
 
         if (AppConstants.MOZ_ANDROID_BEAM && Build.VERSION.SDK_INT >= 14) {
             NfcAdapter nfc = NfcAdapter.getDefaultAdapter(this);
@@ -1246,6 +1253,30 @@ abstract public class BrowserApp extends GeckoApp
                 bringToFrontIntent.setClassName(AppConstants.ANDROID_PACKAGE_NAME, AppConstants.BROWSER_INTENT_CLASS);
                 bringToFrontIntent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
                 startActivity(bringToFrontIntent);
+            } else if (event.equals("Accounts:Create")) {
+                // Do exactly the same thing as if you tapped 'Sync'
+                // in Settings.
+                final Intent intent = new Intent(getContext(), FxAccountGetStartedActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                getContext().startActivity(intent);
+            } else if (event.equals("Accounts:Exist")) {
+                final String kind = message.getString("kind");
+                final JSONObject response = new JSONObject();
+
+                if ("any".equals(kind)) {
+                    response.put("exists", SyncAccounts.syncAccountsExist(getContext()) ||
+                                           FirefoxAccounts.firefoxAccountsExist(getContext()));
+                    EventDispatcher.sendResponse(message, response);
+                } else if ("fxa".equals(kind)) {
+                    response.put("exists", FirefoxAccounts.firefoxAccountsExist(getContext()));
+                    EventDispatcher.sendResponse(message, response);
+                } else if ("sync11".equals(kind)) {
+                    response.put("exists", SyncAccounts.syncAccountsExist(getContext()));
+                    EventDispatcher.sendResponse(message, response);
+                } else {
+                    response.put("error", "Unknown kind");
+                    EventDispatcher.sendError(message, response);
+                }
             } else {
                 super.handleMessage(event, message);
             }
@@ -1402,7 +1433,6 @@ abstract public class BrowserApp extends GeckoApp
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        mToast.onSaveInstanceState(outState);
         outState.putBoolean(STATE_DYNAMIC_TOOLBAR_ENABLED, mDynamicToolbarEnabled);
         outState.putInt(STATE_ABOUT_HOME_TOP_PADDING, mHomePagerContainer.getPaddingTop());
     }
@@ -1897,7 +1927,7 @@ abstract public class BrowserApp extends GeckoApp
      */
     private void addAddonMenuItemToMenu(final Menu menu, final MenuItemInfo info) {
         info.added = true;
-
+        
         final Menu destination;
         if (info.parent == 0) {
             destination = menu;
@@ -2061,11 +2091,8 @@ abstract public class BrowserApp extends GeckoApp
 
     @Override
     public void openOptionsMenu() {
-        // Disable menu access in edge cases only accessible to hardware menu buttons.
-        if ((!hasTabsSideBar() && areTabsShown()) ||
-                mBrowserToolbar.isEditing()) {
+        if (!hasTabsSideBar() && areTabsShown())
             return;
-        }
 
         // Scroll custom menu to the top
         if (mMenuPanel != null)
@@ -2264,7 +2291,7 @@ abstract public class BrowserApp extends GeckoApp
                     item.setIcon(R.drawable.ic_menu_bookmark_add);
                 } else {
                     tab.addBookmark();
-                    mToast.show(false,
+                    getButtonToast().show(false,
                         getResources().getString(R.string.bookmark_added),
                         getResources().getString(R.string.bookmark_options),
                         null,
@@ -2550,7 +2577,7 @@ abstract public class BrowserApp extends GeckoApp
     @Override
     public void onNewTabs(String[] urls) {
         final EnumSet<OnUrlOpenListener.Flags> flags = EnumSet.of(OnUrlOpenListener.Flags.ALLOW_SWITCH_TO_TAB);
-
+ 
         for (String url : urls) {
             if (!maybeSwitchToTab(url, flags)) {
                 openUrlAndStopEditing(url, true);
