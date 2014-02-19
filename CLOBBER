@@ -22,4 +22,4 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Recent Android build system changes from bug 961339 and bug 946083 seem to be needs-clobbery.
+Skia update from Bug 910754 needs a CLOBBER build
