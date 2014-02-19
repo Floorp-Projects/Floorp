@@ -75,7 +75,7 @@ let observer = {
     // Gather information about the current code path.
     let stack = new Error().stack;
     let path = stack.split("\n").slice(1).map(line => {
-      return line.replace(/:\d+$/, "");
+      return line.replace(/:\d+:\d+$/, "");
     }).join("|");
     let pathWithLineNumbers = (new Error().stack).split("\n").slice(1).join("|");
 

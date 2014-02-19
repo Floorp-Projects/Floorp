@@ -26,11 +26,11 @@ interface HTMLCanvasElement : HTMLElement {
 
   [Throws]
   DOMString toDataURL(optional DOMString type = "",
-                      optional any encoderOptions);
+                      any encoderOptions);
   [Throws]
   void toBlob(FileCallback _callback,
               optional DOMString type = "",
-              optional any encoderOptions);
+              any encoderOptions);
 };
 
 // Mozilla specific bits

@@ -35,34 +35,46 @@ let FxAccountsUIGlue = {
 
   _signInFlowCalled: false,
 
+  _refreshAuthCalled: false,
+
+  _activeSession: null,
+
   _reset: function() {
     this._reject = false;
     this._error = 'error';
     this._signInFlowCalled = false;
+    this._refreshAuthCalled = false;
   },
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIFxAccountsUIGlue]),
 
-  getUserPermission: function() {},
-
-  signInFlow: function() {
-    this._signInFlowCalled = true;
+  _promise: function() {
     let deferred = Promise.defer();
 
     if (this._reject) {
       deferred.reject(this._error);
     } else {
-      FxAccountsManager._activeSession = {
+      FxAccountsManager._activeSession = this._activeSession || {
         email: "user@domain.org",
         verified: false,
         sessionToken: "1234"
       };
       FxAccountsManager._fxAccounts
                        .setSignedInUser(FxAccountsManager._activeSession);
-      deferred.resolve();
+      deferred.resolve(FxAccountsManager._activeSession);
     }
 
     return deferred.promise;
+  },
+
+  signInFlow: function() {
+    this._signInFlowCalled = true;
+    return this._promise();
+  },
+
+  refreshAuthentication: function() {
+    this._refreshAuthCalled = true;
+    return this._promise();
   }
 };
 
@@ -224,7 +236,7 @@ function run_test() {
 }
 
 add_test(function test_initial_state() {
-  do_print("= Test 0 | Initial state =");
+  do_print("= Initial state =");
   do_check_neq(FxAccountsManager, undefined);
   do_check_null(FxAccountsManager._activeSession);
   do_check_null(FxAccountsManager._user);
@@ -232,7 +244,7 @@ add_test(function test_initial_state() {
 });
 
 add_test(function(test_getAccount_no_session) {
-  do_print("= Test 1 | getAccount no session =");
+  do_print("= getAccount no session =");
   FxAccountsManager.getAccount().then(
     result => {
       do_check_null(result);
@@ -249,7 +261,7 @@ add_test(function(test_getAccount_no_session) {
 });
 
 add_test(function(test_getAssertion_no_audience) {
-  do_print("= Test 2 | getAssertion no audience =");
+  do_print("= getAssertion no audience =");
   FxAccountsManager.getAssertion().then(
     () => {
       do_throw("Unexpected success");
@@ -262,7 +274,7 @@ add_test(function(test_getAssertion_no_audience) {
 });
 
 add_test(function(test_getAssertion_no_session_ui_error) {
-  do_print("= Test 3 | getAssertion no session, UI error =");
+  do_print("= getAssertion no session, UI error =");
   FxAccountsUIGlue._reject = true;
   FxAccountsManager.getAssertion("audience").then(
     () => {
@@ -278,7 +290,7 @@ add_test(function(test_getAssertion_no_session_ui_error) {
 });
 
 add_test(function(test_getAssertion_no_session_ui_success) {
-  do_print("= Test 4 | getAssertion no session, UI success =");
+  do_print("= getAssertion no session, UI success =");
   FxAccountsManager.getAssertion("audience").then(
     () => {
       do_throw("Unexpected success");
@@ -293,7 +305,7 @@ add_test(function(test_getAssertion_no_session_ui_success) {
 });
 
 add_test(function(test_getAssertion_active_session_unverified_account) {
-  do_print("= Test 5 | getAssertion active session, unverified account =");
+  do_print("= getAssertion active session, unverified account =");
   FxAccountsManager.getAssertion("audience").then(
     result => {
       do_throw("Unexpected success");
@@ -307,7 +319,7 @@ add_test(function(test_getAssertion_active_session_unverified_account) {
 });
 
 add_test(function(test_getAssertion_active_session_verified_account) {
-  do_print("= Test 6 | getAssertion active session, verified account =");
+  do_print("= getAssertion active session, verified account =");
   FxAccountsManager._fxAccounts._signedInUser.verified = true;
   FxAccountsManager._activeSession.verified = true;
   FxAccountsManager.getAssertion("audience").then(
@@ -323,8 +335,77 @@ add_test(function(test_getAssertion_active_session_verified_account) {
   );
 });
 
+add_test(function(test_getAssertion_refreshAuth) {
+  do_print("= getAssertion refreshAuth =");
+  let gracePeriod = 1200;
+  FxAccountsUIGlue._activeSession = {
+    email: "user@domain.org",
+    verified: true,
+    sessionToken: "1234"
+  };
+  FxAccountsManager._fxAccounts._signedInUser.verified = true;
+  FxAccountsManager._activeSession.verified = true;
+  FxAccountsManager._activeSession.authAt =
+    (Date.now() / 1000) - gracePeriod;
+  FxAccountsManager.getAssertion("audience", {
+    "refreshAuthentication": gracePeriod
+  }).then(
+    result => {
+      do_check_false(FxAccountsUIGlue._signInFlowCalled);
+      do_check_true(FxAccountsUIGlue._refreshAuthCalled);
+      do_check_eq(result, "assertion");
+      FxAccountsManager._fxAccounts._reset();
+      FxAccountsUIGlue._reset();
+      run_next_test();
+    },
+    error => {
+      do_throw("Unexpected error: " + error);
+    }
+  );
+});
+
+add_test(function(test_getAssertion_refreshAuth_NaN) {
+  do_print("= getAssertion refreshAuth NaN=");
+  let gracePeriod = "NaN";
+  FxAccountsManager.getAssertion("audience", {
+    "refreshAuthentication": gracePeriod
+  }).then(
+    result => {
+      do_throw("Unexpected success");
+    },
+    error => {
+      do_check_false(FxAccountsUIGlue._signInFlowCalled);
+      do_check_false(FxAccountsUIGlue._refreshAuthCalled);
+      do_check_eq(error.error, ERROR_INVALID_REFRESH_AUTH_VALUE);
+      FxAccountsManager._fxAccounts._reset();
+      run_next_test();
+    }
+  );
+});
+
+add_test(function(test_getAssertion_refresh_auth_no_refresh) {
+  do_print("= getAssertion refreshAuth no refresh =");
+  FxAccountsManager._fxAccounts._signedInUser.verified = true;
+  FxAccountsManager._activeSession.verified = true;
+  FxAccountsManager._activeSession.authAt =
+    (Date.now() / 1000) + 10000;
+  FxAccountsManager.getAssertion("audience", {
+    "refreshAuthentication": 1
+  }).then(
+    result => {
+      do_check_false(FxAccountsUIGlue._signInFlowCalled);
+      do_check_eq(result, "assertion");
+      FxAccountsManager._fxAccounts._reset();
+      run_next_test();
+    },
+    error => {
+      do_throw("Unexpected error: " + error);
+    }
+  );
+});
+
 add_test(function(test_getAccount_existing_verified_session) {
-  do_print("= Test 7 | getAccount, existing verified session =");
+  do_print("= getAccount, existing verified session =");
   FxAccountsManager.getAccount().then(
     result => {
       do_check_false(FxAccountsManager._fxAccounts._getSignedInUserCalled);
@@ -339,7 +420,7 @@ add_test(function(test_getAccount_existing_verified_session) {
 });
 
 add_test(function(test_getAccount_existing_unverified_session_unverified_user) {
-  do_print("= Test 8 | getAccount, existing unverified session, unverified user =");
+  do_print("= getAccount, existing unverified session, unverified user =");
   FxAccountsManager._activeSession.verified = false;
   FxAccountsManager._fxAccounts._signedInUser.verified = false;
   FxAccountsManager.getAccount().then(
@@ -357,7 +438,7 @@ add_test(function(test_getAccount_existing_unverified_session_unverified_user) {
 });
 
 add_test(function(test_getAccount_existing_unverified_session_verified_user) {
-  do_print("= Test 8 | getAccount, existing unverified session, verified user =");
+  do_print("= getAccount, existing unverified session, verified user =");
   FxAccountsManager._activeSession.verified = false;
   FxAccountsManager._fxAccounts._signedInUser.verified = false;
   FakeFxAccountsClient._verified = true;
@@ -376,7 +457,7 @@ add_test(function(test_getAccount_existing_unverified_session_verified_user) {
 });
 
 add_test(function(test_signOut) {
-  do_print("= Test 9 | signOut =");
+  do_print("= signOut =");
   do_check_true(FxAccountsManager._activeSession != null);
   FxAccountsManager.signOut().then(
     result => {
@@ -392,7 +473,7 @@ add_test(function(test_signOut) {
 });
 
 add_test(function(test_verificationStatus_no_token_session) {
-  do_print("= Test 10 | verificationStatus, no token session =");
+  do_print("= verificationStatus, no token session =");
   do_check_null(FxAccountsManager._activeSession);
   FxAccountsManager.verificationStatus().then(
     () => {
@@ -406,7 +487,7 @@ add_test(function(test_verificationStatus_no_token_session) {
 });
 
 add_test(function(test_signUp_no_accountId) {
-  do_print("= Test 11 | signUp, no accountId=");
+  do_print("= signUp, no accountId=");
   FxAccountsManager.signUp().then(
     () => {
       do_throw("Unexpected success");
@@ -419,7 +500,7 @@ add_test(function(test_signUp_no_accountId) {
 });
 
 add_test(function(test_signIn_no_accountId) {
-  do_print("= Test 12 | signIn, no accountId=");
+  do_print("= signIn, no accountId=");
   FxAccountsManager.signIn().then(
     () => {
       do_throw("Unexpected success");
@@ -432,7 +513,7 @@ add_test(function(test_signIn_no_accountId) {
 });
 
 add_test(function(test_signUp_no_password) {
-  do_print("= Test 13 | signUp, no accountId=");
+  do_print("= signUp, no accountId=");
   FxAccountsManager.signUp("user@domain.org").then(
     () => {
       do_throw("Unexpected success");
@@ -445,7 +526,7 @@ add_test(function(test_signUp_no_password) {
 });
 
 add_test(function(test_signIn_no_accountId) {
-  do_print("= Test 14 | signIn, no accountId=");
+  do_print("= signIn, no accountId=");
   FxAccountsManager.signIn("user@domain.org").then(
     () => {
       do_throw("Unexpected success");
@@ -458,7 +539,7 @@ add_test(function(test_signIn_no_accountId) {
 });
 
 add_test(function(test_signUp) {
-  do_print("= Test 15 | signUp =");
+  do_print("= signUp =");
   FakeFxAccountsClient._verified = false;
   FxAccountsManager.signUp("user@domain.org", "password").then(
     result => {
@@ -481,7 +562,7 @@ add_test(function(test_signUp) {
 });
 
 add_test(function(test_signUp_already_signed_user) {
-  do_print("= Test 16 | signUp, already signed user =");
+  do_print("= signUp, already signed user =");
   FxAccountsManager.signUp("user@domain.org", "password").then(
     () => {
       do_throw("Unexpected success");
@@ -497,7 +578,7 @@ add_test(function(test_signUp_already_signed_user) {
 });
 
 add_test(function(test_signIn_already_signed_user) {
-  do_print("= Test 17 | signIn, already signed user =");
+  do_print("= signIn, already signed user =");
   FxAccountsManager.signIn("user@domain.org", "password").then(
     () => {
       do_throw("Unexpected success");
@@ -512,7 +593,7 @@ add_test(function(test_signIn_already_signed_user) {
 });
 
 add_test(function(test_verificationStatus_unverified_session_unverified_user) {
-  do_print("= Test 18 | verificationStatus unverified session and user =");
+  do_print("= verificationStatus unverified session and user =");
   FakeFxAccountsClient._verified = false;
   FxAccountsManager.verificationStatus().then(
     user => {
@@ -528,7 +609,7 @@ add_test(function(test_verificationStatus_unverified_session_unverified_user) {
 });
 
 add_test(function(test_verificationStatus_unverified_session_verified_user) {
-  do_print("= Test 19 | verificationStatus unverified session, verified user =");
+  do_print("= verificationStatus unverified session, verified user =");
   FakeFxAccountsClient._verified = true;
   FxAccountsManager.verificationStatus().then(
     user => {
@@ -544,7 +625,7 @@ add_test(function(test_verificationStatus_unverified_session_verified_user) {
 });
 
 add_test(function(test_queryAccount_no_exists) {
-  do_print("= Test 20 | queryAccount, no exists =");
+  do_print("= queryAccount, no exists =");
   FxAccountsManager.queryAccount("user@domain.org").then(
     result => {
       do_check_false(result.registered);
@@ -557,7 +638,7 @@ add_test(function(test_queryAccount_no_exists) {
 });
 
 add_test(function(test_queryAccount_exists) {
-  do_print("= Test 21 | queryAccount, exists =");
+  do_print("= queryAccount, exists =");
   FakeFxAccountsClient._accountExists = true;
   FxAccountsManager.queryAccount("user@domain.org").then(
     result => {
@@ -571,7 +652,7 @@ add_test(function(test_queryAccount_exists) {
 });
 
 add_test(function(test_queryAccount_no_accountId) {
-  do_print("= Test 22 | queryAccount, no accountId =");
+  do_print("= queryAccount, no accountId =");
   FxAccountsManager.queryAccount().then(
     () => {
       do_throw("Unexpected success");
@@ -584,7 +665,7 @@ add_test(function(test_queryAccount_no_accountId) {
 });
 
 add_test(function() {
-  do_print("= Test 23 | fxaccounts:onlogout notification =");
+  do_print("= fxaccounts:onlogout notification =");
   do_check_true(FxAccountsManager._activeSession != null);
   Services.obs.notifyObservers(null, ONLOGOUT_NOTIFICATION, null);
   do_execute_soon(function() {

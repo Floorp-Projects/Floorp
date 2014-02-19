@@ -8,13 +8,16 @@ import re
 
 
 def get_dm(marionette=None,**kwargs):
+    dm_type = os.environ.get('DM_TRANS', 'adb')
     if marionette and marionette.emulator:
         adb_path = marionette.emulator.b2g.adb_path
         return mozdevice.DeviceManagerADB(adbPath=adb_path,
                                           deviceSerial='emulator-%d' % marionette.emulator.port,
                                           **kwargs)
+    elif marionette and marionette.device_serial and dm_type == 'adb':
+        return mozdevice.DeviceManagerADB(deviceSerial=marionette.device_serial,
+                                          **kwargs)
     else:
-        dm_type = os.environ.get('DM_TRANS', 'adb')
         if dm_type == 'adb':
             return mozdevice.DeviceManagerADB(**kwargs)
         elif dm_type == 'sut':

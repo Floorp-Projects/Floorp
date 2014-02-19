@@ -9481,141 +9481,144 @@
 > provender/M
 39564a45391
 > quinoa
-40036a45864
+39873a45701,45702
+> rasterization/M
+> rasterize/SGDR
+40036a45866
 > recency
-40140a45969
+40140a45971
 > recurse/DGSV
-40141a45971
+40141a45973
 > recuse/DGS
-40208a46039
+40208a46041
 > refactor/SMDG
-40244d46074
+40244d46076
 < reflexion/SM
-40659d46488
+40659d46490
 < resizing
-40829c46658
+40829c46660
 < reverie/M
 ---
 > reverie/MS
-41415a47245
+41415a47247
 > sabre/MS
-41914c47744
+41914c47746
 < schnaps's
 ---
 > schnaps/M
-41949c47779
+41949c47781
 < schrod's
 ---
 > schrod/SM
-41998a47829
+41998a47831
 > scot-free
-42883,42885c48714
+42883,42885c48716
 < shit's
 < shit/S!
 < shite/S!
 ---
 > shit/MS!
-42887,42888c48716,48717
+42887,42888c48718,48719
 < shithead/S!
 < shitload/!
 ---
 > shithead/MS!
 > shitload/MS!
-42891c48720
+42891c48722
 < shitty/RT!
 ---
 > shitty/TR!
-42976a48806
+42976a48808
 > should've
-43008c48838
+43008c48840
 < showtime
 ---
 > showtime/MS
-43328c49158
+43328c49160
 < size/MGBDRS
 ---
 > size/AMGBDRS
-43724,43726c49554
+43724,43726c49556
 < smoulder's
 < smouldered
 < smoulders
 ---
 > smoulder/GSMD
-44062c49890
+44062c49892
 < sonofabitch
 ---
 > sonofabitch/!
-44346a50175
+44346a50177
 > spelled
-44348a50178
+44348a50180
 > spelt
-44371a50202
+44371a50204
 > spick/S!
-44383c50214
+44383c50216
 < spik/S
 ---
 > spik/S!
-46106a51938
+46106a51940
 > syllabi
-46160c51992
+46160c51994
 < synch/GMD
 ---
 > synch/GMDS
-46167d51998
+46167d52000
 < synchs
-46203,46204c52034,52035
+46203,46204c52036,52037
 < sysadmin/S
 < sysop/S
 ---
 > sysadmin/MS
 > sysop/MS
-46752a52584
+46752a52586
 > terabit/MS
-46753a52586,52587
+46753a52588,52589
 > terahertz/M
 > terapixel/MS
-46817a52652
+46817a52654
 > testcase/MS
-46831a52667
+46831a52669
 > testsuite/MS
-46925a52762
+46925a52764
 > theremin/MS
-47455c53292
+47455c53294
 < toolbar
 ---
 > toolbar/MS
-47755a53593
+47755a53595
 > transfect/DSMG
-47774a53613,53614
+47774a53615,53616
 > transgenderism
 > transgene/MS
-47951c53791
+47951c53793
 < triage/M
 ---
 > triage/MG
-48869a54710
+48869a54712
 > unlikeable
-49211c55052
+49211c55054
 < vagina/M
 ---
 > vagina/MS
-49368,49369c55209
+49368,49369c55211
 < velour's
 < velours's
 ---
 > velour/MS
-49478a55319
+49478a55321
 > vertices
-50148a55990
+50148a55992
 > weaponize/DSG
-50260,50261d56101
+50260,50261d56103
 < werwolf/M
 < werwolves
-50728c56568
+50728c56570
 < women
 ---
 > women/M
-50794c56634
+50794c56636
 < wop/S!
 ---
 > wop/MS!

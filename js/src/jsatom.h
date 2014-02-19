@@ -89,11 +89,17 @@ struct AtomHasher
         size_t          length;
         const JSAtom    *atom; /* Optional. */
 
-        Lookup(const jschar *chars, size_t length) : chars(chars), length(length), atom(nullptr) {}
+        HashNumber hash;
+
+        Lookup(const jschar *chars, size_t length)
+          : chars(chars), length(length), atom(nullptr)
+        {
+            hash = mozilla::HashString(chars, length);
+        }
         inline Lookup(const JSAtom *atom);
     };
 
-    static HashNumber hash(const Lookup &l) { return mozilla::HashString(l.chars, l.length); }
+    static HashNumber hash(const Lookup &l) { return l.hash; }
     static inline bool match(const AtomStateEntry &entry, const Lookup &lookup);
     static void rekey(AtomStateEntry &k, const AtomStateEntry& newKey) { k = newKey; }
 };
@@ -163,34 +169,13 @@ namespace js {
 extern const char * const TypeStrings[];
 
 /*
- * Initialize atom state. Return true on success, false on failure to allocate
- * memory. The caller must zero rt->atomState before calling this function and
- * only call it after js_InitGC successfully returns.
- */
-extern bool
-InitAtoms(JSRuntime *rt);
-
-/*
- * Free and clear atom state including any interned string atoms. This
- * function must be called before js_FinishGC.
- */
-extern void
-FinishAtoms(JSRuntime *rt);
-
-/*
  * Atom tracing and garbage collection hooks.
  */
 extern void
 MarkAtoms(JSTracer *trc);
 
 extern void
-SweepAtoms(JSRuntime *rt);
-
-extern bool
-InitCommonNames(JSContext *cx);
-
-extern void
-FinishCommonNames(JSRuntime *rt);
+MarkPermanentAtoms(JSTracer *trc);
 
 /* N.B. must correspond to boolean tagging behavior. */
 enum InternBehavior

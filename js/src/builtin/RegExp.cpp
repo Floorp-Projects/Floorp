@@ -19,10 +19,10 @@ using namespace js::types;
 using mozilla::ArrayLength;
 
 bool
-js::CreateRegExpMatchResult(JSContext *cx, HandleString input_, const jschar *chars, size_t length,
-                            MatchPairs &matches, MutableHandleValue rval)
+js::CreateRegExpMatchResult(JSContext *cx, HandleString input, const MatchPairs &matches,
+                            MutableHandleValue rval)
 {
-    RootedString input(cx, input_);
+    JS_ASSERT(input);
 
     /*
      * Create the (slow) result array for a match.
@@ -33,77 +33,56 @@ js::CreateRegExpMatchResult(JSContext *cx, HandleString input_, const jschar *ch
      *  input:          input string
      *  index:          start index for the match
      */
-    if (!input) {
-        input = js_NewStringCopyN<CanGC>(cx, chars, length);
-        if (!input)
-            return false;
-    }
-
-    size_t numPairs = matches.length();
-    JS_ASSERT(numPairs > 0);
-
-    AutoValueVector elements(cx);
-    if (!elements.reserve(numPairs))
-        return false;
-
-    /* Accumulate a Value for each pair, in a rooted vector. */
-    for (size_t i = 0; i < numPairs; ++i) {
-        const MatchPair &pair = matches[i];
-
-        if (pair.isUndefined()) {
-            JS_ASSERT(i != 0); /* Since we had a match, first pair must be present. */
-            elements.infallibleAppend(UndefinedHandleValue);
-        } else {
-            JSLinearString *str = js_NewDependentString(cx, input, pair.start, pair.length());
-            if (!str)
-                return false;
-            elements.infallibleAppend(StringValue(str));
-        }
-    }
 
     /* Get the templateObject that defines the shape and type of the output object */
     JSObject *templateObject = cx->compartment()->regExps.getOrCreateMatchResultTemplateObject(cx);
     if (!templateObject)
         return false;
 
-    /* Copy the rooted vector into the array object. */
-    RootedObject arr(cx, NewDenseCopiedArrayWithTemplate(cx, elements.length(), elements.begin(),
-                                                         templateObject));
+    size_t numPairs = matches.length();
+    JS_ASSERT(numPairs > 0);
+
+    RootedObject arr(cx, NewDenseAllocatedArrayWithTemplate(cx, numPairs, templateObject));
     if (!arr)
         return false;
 
+    /* Store a Value for each pair. */
+    for (size_t i = 0; i < numPairs; i++) {
+        const MatchPair &pair = matches[i];
+
+        if (pair.isUndefined()) {
+            JS_ASSERT(i != 0); /* Since we had a match, first pair must be present. */
+            arr->setDenseInitializedLength(i + 1);
+            arr->initDenseElement(i, UndefinedValue());
+        } else {
+            JSLinearString *str = js_NewDependentString(cx, input, pair.start, pair.length());
+            if (!str)
+                return false;
+            arr->setDenseInitializedLength(i + 1);
+            arr->initDenseElement(i, StringValue(str));
+        }
+    }
+
     /* Set the |index| property. (TemplateObject positions it in slot 0) */
-    RootedValue index(cx, Int32Value(matches[0].start));
-    arr->nativeSetSlot(0, index);
+    arr->nativeSetSlot(0, Int32Value(matches[0].start));
 
     /* Set the |input| property. (TemplateObject positions it in slot 1) */
-    RootedValue inputVal(cx, StringValue(input));
-    arr->nativeSetSlot(1, inputVal);
+    arr->nativeSetSlot(1, StringValue(input));
 
 #ifdef DEBUG
     RootedValue test(cx);
     RootedId id(cx, NameToId(cx->names().index));
     if (!baseops::GetProperty(cx, arr, id, &test))
         return false;
-    JS_ASSERT(test == index);
+    JS_ASSERT(test == arr->nativeGetSlot(0));
     id = NameToId(cx->names().input);
     if (!baseops::GetProperty(cx, arr, id, &test))
         return false;
-    JS_ASSERT(test == inputVal);
+    JS_ASSERT(test == arr->nativeGetSlot(1));
 #endif
 
     rval.setObject(*arr);
     return true;
-}
-
-bool
-js::CreateRegExpMatchResult(JSContext *cx, HandleString string, MatchPairs &matches,
-                            MutableHandleValue rval)
-{
-    Rooted<JSLinearString*> input(cx, string->ensureLinear(cx));
-    if (!input)
-        return false;
-    return CreateRegExpMatchResult(cx, input, input->chars(), input->length(), matches, rval);
 }
 
 static RegExpRunStatus
@@ -133,7 +112,7 @@ ExecuteRegExpImpl(JSContext *cx, RegExpStatics *res, RegExpShared &re,
 /* Legacy ExecuteRegExp behavior is baked into the JSAPI. */
 bool
 js::ExecuteRegExpLegacy(JSContext *cx, RegExpStatics *res, RegExpObject &reobj,
-                        Handle<JSLinearString*> input, const jschar *chars, size_t length,
+                        Handle<JSLinearString*> input_, const jschar *chars, size_t length,
                         size_t *lastIndex, bool test, MutableHandleValue rval)
 {
     RegExpGuard shared(cx);
@@ -144,7 +123,7 @@ js::ExecuteRegExpLegacy(JSContext *cx, RegExpStatics *res, RegExpObject &reobj,
     MatchConduit conduit(&matches);
 
     RegExpRunStatus status =
-        ExecuteRegExpImpl(cx, res, *shared, input, chars, length, lastIndex, conduit);
+        ExecuteRegExpImpl(cx, res, *shared, input_, chars, length, lastIndex, conduit);
 
     if (status == RegExpRunStatus_Error)
         return false;
@@ -161,7 +140,14 @@ js::ExecuteRegExpLegacy(JSContext *cx, RegExpStatics *res, RegExpObject &reobj,
         return true;
     }
 
-    return CreateRegExpMatchResult(cx, input, chars, length, matches, rval);
+    RootedString input(cx, input_);
+    if (!input) {
+        input = js_NewStringCopyN<CanGC>(cx, chars, length);
+        if (!input)
+            return false;
+    }
+
+    return CreateRegExpMatchResult(cx, input, matches, rval);
 }
 
 /* Note: returns the original if no escaping need be performed. */

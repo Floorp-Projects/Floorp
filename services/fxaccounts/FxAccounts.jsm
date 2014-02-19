@@ -173,6 +173,8 @@ FxAccountsInternal.prototype = {
    *          kA: An encryption key from the FxA server
    *          kB: An encryption key derived from the user's FxA password
    *          verified: email verification status
+   *          authAt: The time (seconds since epoch) that this record was
+   *                  authenticated
    *        }
    *        or null if no user is signed in.
    */
@@ -203,6 +205,8 @@ FxAccountsInternal.prototype = {
    *          sessionToken: Session for the FxA server
    *          keyFetchToken: an unused keyFetchToken
    *          verified: true/false
+   *          authAt: The time (seconds since epoch) that this record was
+   *                  authenticated
    *        }
    * @return Promise
    *         The promise resolves to null when the data is saved
