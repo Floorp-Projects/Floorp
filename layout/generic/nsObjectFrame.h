@@ -56,45 +56,46 @@ public:
   virtual void Init(nsIContent* aContent,
                     nsIFrame* aParent,
                     nsIFrame* aPrevInFlow) MOZ_OVERRIDE;
-  virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext);
-  virtual nscoord GetPrefWidth(nsRenderingContext *aRenderingContext);
+  virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
+  virtual nscoord GetPrefWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
   virtual nsresult Reflow(nsPresContext* aPresContext,
                           nsHTMLReflowMetrics& aDesiredSize,
                           const nsHTMLReflowState& aReflowState,
-                          nsReflowStatus& aStatus);
+                          nsReflowStatus& aStatus) MOZ_OVERRIDE;
   virtual nsresult DidReflow(nsPresContext* aPresContext,
                              const nsHTMLReflowState* aReflowState,
-                             nsDidReflowStatus aStatus);
+                             nsDidReflowStatus aStatus) MOZ_OVERRIDE;
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) MOZ_OVERRIDE;
 
   virtual nsresult  HandleEvent(nsPresContext* aPresContext,
                                 mozilla::WidgetGUIEvent* aEvent,
-                                nsEventStatus* aEventStatus);
+                                nsEventStatus* aEventStatus) MOZ_OVERRIDE;
 
-  virtual nsIAtom* GetType() const;
+  virtual nsIAtom* GetType() const MOZ_OVERRIDE;
 
-  virtual bool IsFrameOfType(uint32_t aFlags) const
+  virtual bool IsFrameOfType(uint32_t aFlags) const MOZ_OVERRIDE
   {
     return nsObjectFrameSuper::IsFrameOfType(aFlags & ~(nsIFrame::eReplaced));
   }
 
-  virtual bool NeedsView() { return true; }
+  virtual bool NeedsView() MOZ_OVERRIDE { return true; }
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const;
+  virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;
 #endif
 
-  virtual void DestroyFrom(nsIFrame* aDestructRoot);
+  virtual void DestroyFrom(nsIFrame* aDestructRoot) MOZ_OVERRIDE;
 
-  virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext);
+  virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext) MOZ_OVERRIDE;
 
   NS_METHOD GetPluginInstance(nsNPAPIPluginInstance** aPluginInstance) MOZ_OVERRIDE;
 
   virtual void SetIsDocumentActive(bool aIsActive) MOZ_OVERRIDE;
 
-  virtual nsresult GetCursor(const nsPoint& aPoint, nsIFrame::Cursor& aCursor);
+  virtual nsresult GetCursor(const nsPoint& aPoint, 
+                             nsIFrame::Cursor& aCursor) MOZ_OVERRIDE;
 
   // APIs used by nsRootPresContext to set up the widget position/size/clip
   // region.
@@ -213,7 +214,8 @@ protected:
                       const nsHTMLReflowState& aReflowState,
                       nsHTMLReflowMetrics& aDesiredSize);
 
-  bool IsFocusable(int32_t *aTabIndex = nullptr, bool aWithMouse = false);
+  bool IsFocusable(int32_t *aTabIndex = nullptr, 
+                   bool aWithMouse = false) MOZ_OVERRIDE;
 
   // check attributes and optionally CSS to see if we should display anything
   bool IsHidden(bool aCheckVisibilityStyle = true) const;
