@@ -595,6 +595,11 @@ JSScript *
 CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, HandleScript script,
             NewObjectKind newKind = GenericObject);
 
+template<XDRMode mode>
+bool
+XDRLazyScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enclosingScript,
+              HandleFunction fun, MutableHandle<LazyScript *> lazy);
+
 /*
  * Code any constant value.
  */
@@ -1240,6 +1245,7 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
     JSObject *sourceObject() const {
         return sourceObject_;
     }
+    js::ScriptSourceObject &scriptSourceUnwrap() const;
     js::ScriptSource *scriptSource() const;
     JSPrincipals *originPrincipals() const { return scriptSource()->originPrincipals(); }
     const char *filename() const { return scriptSource()->filename(); }
@@ -1607,22 +1613,29 @@ class LazyScript : public gc::BarrieredCell<LazyScript>
     uint32_t padding;
 #endif
 
-    // Assorted bits that should really be in ScriptSourceObject.
-    uint32_t version_ : 8;
+    struct PackedView {
+        // Assorted bits that should really be in ScriptSourceObject.
+        uint32_t version : 8;
 
-    uint32_t numFreeVariables_ : 24;
-    uint32_t numInnerFunctions_ : 23;
+        uint32_t numFreeVariables : 24;
+        uint32_t numInnerFunctions : 23;
 
-    uint32_t generatorKindBits_:2;
+        uint32_t generatorKindBits : 2;
 
-    // N.B. These are booleans but need to be uint32_t to pack correctly on MSVC.
-    uint32_t strict_ : 1;
-    uint32_t bindingsAccessedDynamically_ : 1;
-    uint32_t hasDebuggerStatement_ : 1;
-    uint32_t directlyInsideEval_:1;
-    uint32_t usesArgumentsAndApply_:1;
-    uint32_t hasBeenCloned_:1;
-    uint32_t treatAsRunOnce_:1;
+        // N.B. These are booleans but need to be uint32_t to pack correctly on MSVC.
+        uint32_t strict : 1;
+        uint32_t bindingsAccessedDynamically : 1;
+        uint32_t hasDebuggerStatement : 1;
+        uint32_t directlyInsideEval : 1;
+        uint32_t usesArgumentsAndApply : 1;
+        uint32_t hasBeenCloned : 1;
+        uint32_t treatAsRunOnce : 1;
+    };
+
+    union {
+        PackedView p_;
+        uint64_t packedFields_;
+    };
 
     // Source location for the script.
     uint32_t begin_;
@@ -1630,15 +1643,33 @@ class LazyScript : public gc::BarrieredCell<LazyScript>
     uint32_t lineno_;
     uint32_t column_;
 
-    LazyScript(JSFunction *fun, void *table,
-               uint32_t numFreeVariables, uint32_t numInnerFunctions, JSVersion version,
+    LazyScript(JSFunction *fun, void *table, uint64_t packedFields,
                uint32_t begin, uint32_t end, uint32_t lineno, uint32_t column);
 
+    // Create a LazyScript without initializing the freeVariables and the
+    // innerFunctions. To be GC-safe, the caller must initialize both vectors
+    // with valid atoms and functions.
+    static LazyScript *CreateRaw(ExclusiveContext *cx, HandleFunction fun,
+                                 uint64_t packedData, uint32_t begin, uint32_t end,
+                                 uint32_t lineno, uint32_t column);
+
   public:
+    // Create a LazyScript without initializing the freeVariables and the
+    // innerFunctions. To be GC-safe, the caller must initialize both vectors
+    // with valid atoms and functions.
+    static LazyScript *CreateRaw(ExclusiveContext *cx, HandleFunction fun,
+                                 uint32_t numFreeVariables, uint32_t numInnerFunctions,
+                                 JSVersion version, uint32_t begin, uint32_t end,
+                                 uint32_t lineno, uint32_t column);
+
+    // Create a LazyScript and initialize the freeVariables and the
+    // innerFunctions with dummy values to be replaced in a later initialization
+    // phase.
     static LazyScript *Create(ExclusiveContext *cx, HandleFunction fun,
-                              uint32_t numFreeVariables, uint32_t numInnerFunctions,
-                              JSVersion version, uint32_t begin, uint32_t end,
+                              uint64_t packedData, uint32_t begin, uint32_t end,
                               uint32_t lineno, uint32_t column);
+
+    void initRuntimeFields(uint64_t packedFields);
 
     inline JSFunction *functionDelazifying(JSContext *cx) const;
     JSFunction *functionNonDelazifying() const {
@@ -1663,26 +1694,26 @@ class LazyScript : public gc::BarrieredCell<LazyScript>
     }
     JSVersion version() const {
         JS_STATIC_ASSERT(JSVERSION_UNKNOWN == -1);
-        return (version_ == JS_BIT(8) - 1) ? JSVERSION_UNKNOWN : JSVersion(version_);
+        return (p_.version == JS_BIT(8) - 1) ? JSVERSION_UNKNOWN : JSVersion(p_.version);
     }
 
     void setParent(JSObject *enclosingScope, ScriptSourceObject *sourceObject);
 
     uint32_t numFreeVariables() const {
-        return numFreeVariables_;
+        return p_.numFreeVariables;
     }
     HeapPtrAtom *freeVariables() {
         return (HeapPtrAtom *)table_;
     }
 
     uint32_t numInnerFunctions() const {
-        return numInnerFunctions_;
+        return p_.numInnerFunctions;
     }
     HeapPtrFunction *innerFunctions() {
         return (HeapPtrFunction *)&freeVariables()[numFreeVariables()];
     }
 
-    GeneratorKind generatorKind() const { return GeneratorKindFromBits(generatorKindBits_); }
+    GeneratorKind generatorKind() const { return GeneratorKindFromBits(p_.generatorKindBits); }
 
     bool isGenerator() const { return generatorKind() != NotGenerator; }
 
@@ -1696,56 +1727,56 @@ class LazyScript : public gc::BarrieredCell<LazyScript>
         JS_ASSERT(!isGenerator());
         // Legacy generators cannot currently be lazy.
         JS_ASSERT(kind != LegacyGenerator);
-        generatorKindBits_ = GeneratorKindAsBits(kind);
+        p_.generatorKindBits = GeneratorKindAsBits(kind);
     }
 
     bool strict() const {
-        return strict_;
+        return p_.strict;
     }
     void setStrict() {
-        strict_ = true;
+        p_.strict = true;
     }
 
     bool bindingsAccessedDynamically() const {
-        return bindingsAccessedDynamically_;
+        return p_.bindingsAccessedDynamically;
     }
     void setBindingsAccessedDynamically() {
-        bindingsAccessedDynamically_ = true;
+        p_.bindingsAccessedDynamically = true;
     }
 
     bool hasDebuggerStatement() const {
-        return hasDebuggerStatement_;
+        return p_.hasDebuggerStatement;
     }
     void setHasDebuggerStatement() {
-        hasDebuggerStatement_ = true;
+        p_.hasDebuggerStatement = true;
     }
 
     bool directlyInsideEval() const {
-        return directlyInsideEval_;
+        return p_.directlyInsideEval;
     }
     void setDirectlyInsideEval() {
-        directlyInsideEval_ = true;
+        p_.directlyInsideEval = true;
     }
 
     bool usesArgumentsAndApply() const {
-        return usesArgumentsAndApply_;
+        return p_.usesArgumentsAndApply;
     }
     void setUsesArgumentsAndApply() {
-        usesArgumentsAndApply_ = true;
+        p_.usesArgumentsAndApply = true;
     }
 
     bool hasBeenCloned() const {
-        return hasBeenCloned_;
+        return p_.hasBeenCloned;
     }
     void setHasBeenCloned() {
-        hasBeenCloned_ = true;
+        p_.hasBeenCloned = true;
     }
 
     bool treatAsRunOnce() const {
-        return treatAsRunOnce_;
+        return p_.treatAsRunOnce;
     }
     void setTreatAsRunOnce() {
-        treatAsRunOnce_ = true;
+        p_.treatAsRunOnce = true;
     }
 
     ScriptSource *source() const {
@@ -1774,6 +1805,10 @@ class LazyScript : public gc::BarrieredCell<LazyScript>
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf)
     {
         return mallocSizeOf(table_);
+    }
+
+    uint64_t packedFields() const {
+        return packedFields_;
     }
 };
 
