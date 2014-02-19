@@ -24,7 +24,6 @@ MOZBASE_PACKAGES = \
   moznetwork \
   mozsystemmonitor \
   moztest \
-  mozversion \
   $(NULL)
 
 MOZBASE_EXTRAS = \
