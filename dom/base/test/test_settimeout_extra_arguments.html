@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test for setTimeout with a string argument and more than 2 arguments</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<div id="log"></div>
+<script>
+  t1 = async_test("setTimeout with more than 2 arguments, first argument a string, should work");
+  t2 = async_test("setInterval with more than 2 arguments, first argument a string, should work");
+  setTimeout("t1.done()", 0, {});
+  var interval = setInterval("clearInterval(interval); t2.done()", 0, {});
+</script>
