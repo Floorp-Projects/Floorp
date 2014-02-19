@@ -9,6 +9,7 @@ run mozbase tests from a manifest,
 by default https://github.com/mozilla/mozbase/blob/master/test-manifest.ini
 """
 
+import copy
 import imp
 import manifestparser
 import mozinfo
@@ -18,6 +19,7 @@ import sys
 import unittest
 
 from moztest.results import TestResultCollection
+
 
 here = os.path.dirname(os.path.abspath(__file__))
 
@@ -43,6 +45,9 @@ def main(args=sys.argv[1:]):
     # parse command line options
     usage = '%prog [options] manifest.ini <manifest.ini> <...>'
     parser = optparse.OptionParser(usage=usage, description=__doc__)
+    parser.add_option('-b', "--binary",
+                  dest="binary", help="Binary path",
+                  metavar=None, default=None)
     parser.add_option('--list', dest='list_tests',
                       action='store_true', default=False,
                       help="list paths of tests to be run")
@@ -60,6 +65,10 @@ def main(args=sys.argv[1:]):
             missing.append(manifest)
     assert not missing, 'manifest(s) not found: %s' % ', '.join(missing)
     manifest = manifestparser.TestManifest(manifests=manifests)
+
+    if options.binary:
+        # A specified binary should override the environment variable
+        os.environ['BROWSER_PATH'] = options.binary
 
     # gather the tests
     tests = manifest.active_tests(disabled=False, **mozinfo.info)

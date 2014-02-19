@@ -4,13 +4,14 @@
 
 from setuptools import setup
 
-PACKAGE_VERSION = '0.10'
+PACKAGE_NAME = 'mozcrash'
+PACKAGE_VERSION = '0.11'
 
 # dependencies
-deps = ['mozfile >= 0.12',
+deps = ['mozfile >= 1.0',
         'mozlog']
 
-setup(name='mozcrash',
+setup(name=PACKAGE_NAME,
       version=PACKAGE_VERSION,
       description="Library for printing stack traces from minidumps left behind by crashed processes",
       long_description="see http://mozbase.readthedocs.org/",

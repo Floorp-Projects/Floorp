@@ -146,6 +146,14 @@ public:
 
   static void Init();
 
+#ifdef DEBUG
+  /**
+   * Unlink all known ghost windows, to enable investigating what caused them
+   * to become ghost windows in the first place.
+   */
+  static void UnlinkGhostWindows();
+#endif
+
 private:
   /**
    * nsGhostWindowReporter generates the "ghost-windows" report, which counts
