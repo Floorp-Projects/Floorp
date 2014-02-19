@@ -1,18 +1,29 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at http://mozilla.org/MPL/2.0/.
+
 import ConfigParser
 import os
 import posixpath
 import re
 import shutil
 import signal
+from StringIO import StringIO
 import subprocess
 import tempfile
 import time
 
-from runner import Runner
 from mozdevice import DMError
+import mozfile
 import mozlog
 
-__all__ = ['RemoteRunner', 'B2GRunner', 'remote_runners']
+from .base import Runner
+
+
+__all__ = ['B2GRunner',
+           'RemoteRunner',
+           'remote_runners']
+
 
 class RemoteRunner(Runner):
 
@@ -25,8 +36,8 @@ class RemoteRunner(Runner):
                        restore=True,
                        **kwargs):
 
-        super(RemoteRunner, self).__init__(profile, clean_profile=clean_profile,
-                                           process_class=process_class, env=env, **kwargs)
+        Runner.__init__(self, profile, clean_profile=clean_profile,
+                        process_class=process_class, env=env, **kwargs)
         self.log = mozlog.getLogger('RemoteRunner')
 
         self.dm = devicemanager
@@ -55,9 +66,9 @@ class RemoteRunner(Runner):
             local_dump_dir = tempfile.mkdtemp()
             self.dm.getDirectory(remote_dump_dir, local_dump_dir)
 
-            crashed = super(RemoteRunner, self).check_for_crashes(local_dump_dir, \
-                                                                  test_name=last_test)
-            shutil.rmtree(local_dump_dir)
+            crashed = Runner.check_for_crashes(self, local_dump_dir, \
+                                               test_name=last_test)
+            mozfile.remove(local_dump_dir)
             self.dm.removeDir(remote_dump_dir)
 
         return crashed
@@ -66,12 +77,14 @@ class RemoteRunner(Runner):
         if not self.restore:
             return
 
-        super(RemoteRunner, self).cleanup()
+        Runner.cleanup(self)
 
+        self.dm.remount()
+        # Restore the original profiles.ini
         for backup_file in self.backup_files:
-            # Restore the original profiles.ini
-            self.dm.shellCheckOutput(['dd', 'if=%s.orig' % backup_file, 'of=%s' % backup_file])
-            self.dm.removeFile("%s.orig" % backup_file)
+            if self.dm.fileExists('%s.orig' % backup_file):
+                self.dm.shellCheckOutput(['dd', 'if=%s.orig' % backup_file, 'of=%s' % backup_file])
+                self.dm.removeFile("%s.orig" % backup_file)
 
         # Delete any bundled extensions
         extension_dir = posixpath.join(self.remote_profile, 'extensions', 'staged')
@@ -84,12 +97,13 @@ class RemoteRunner(Runner):
         # Remove the test profile
         self.dm.removeDir(self.remote_profile)
 
+
 class B2GRunner(RemoteRunner):
 
     def __init__(self, profile, devicemanager, marionette, context_chrome=True,
                  test_script=None, test_script_args=None, **kwargs):
 
-        super(B2GRunner, self).__init__(profile, devicemanager, **kwargs)
+        RemoteRunner.__init__(self, profile, devicemanager, **kwargs)
         self.log = mozlog.getLogger('B2GRunner')
 
         tmpfd, processLog = tempfile.mkstemp(suffix='pidlog')
@@ -99,6 +113,10 @@ class B2GRunner(RemoteRunner):
                      'MOZ_CRASHREPORTER_NO_REPORT': '1',
                      'MOZ_HIDE_RESULTS_TABLE': '1',
                      'MOZ_PROCESS_LOG': processLog,
+                     'NSPR_LOG_MODULES': 'signaling:5,mtransport:3',
+                     'R_LOG_LEVEL': '5',
+                     'R_LOG_DESTINATION': 'stderr',
+                     'R_LOG_VERBOSE': '1',
                      'NO_EM_RESTART': '1', }
         self.env.update(tmp_env)
         self.last_test = "automation"
@@ -205,7 +223,10 @@ class B2GRunner(RemoteRunner):
 
     def _reboot_device(self):
         serial, status = self._get_device_status()
-        self.dm.shellCheckOutput(['/system/bin/reboot'])
+
+        buf = StringIO()
+        self.dm.shell('/system/bin/reboot', buf)
+        buf.close()
 
         # The reboot command can return while adb still thinks the device is
         # connected, so wait a little bit for it to disconnect from adb.
@@ -220,8 +241,8 @@ class B2GRunner(RemoteRunner):
                 # device hasn't come back online in 2 minutes, something's wrong
                 raise Exception("Device %s (status: %s) not back online after reboot" % (serial, rstatus))
             time.sleep(5)
-            rserial, rstatus = self.getDeviceStatus(serial)
-        self.log.info('device:', serial, 'status:', rstatus)
+            rserial, rstatus = self._get_device_status(serial)
+        self.log.info('device: %s, status: %s' % (serial, rstatus))
 
     def _get_device_status(self, serial=None):
         # If we know the device serial number, we look for that,
@@ -246,7 +267,7 @@ class B2GRunner(RemoteRunner):
         active = False
         time_out = 0
         while not active and time_out < 40:
-            proc = subprocess.Popen([self.dm._adbPath, 'shell', '/system/bin/netcfg'])
+            proc = subprocess.Popen([self.dm._adbPath, 'shell', '/system/bin/netcfg'], stdout=subprocess.PIPE)
             proc.stdout.readline() # ignore first line
             line = proc.stdout.readline()
             while line != "":
@@ -259,9 +280,8 @@ class B2GRunner(RemoteRunner):
         return active
 
     def _setup_remote_profile(self):
-        """
-        Copy profile and update the remote profiles ini file to point to the new profile
-        """
+        """Copy profile and update the remote profiles.ini to point to the new profile"""
+        self.dm.remount()
 
         # copy the profile to the device.
         if self.dm.dirExists(self.remote_profile):
@@ -277,10 +297,10 @@ class B2GRunner(RemoteRunner):
         if os.path.isdir(extension_dir):
             # Copy the extensions to the B2G bundles dir.
             # need to write to read-only dir
-            subprocess.Popen([self.dm._adbPath, 'remount']).communicate()
             for filename in os.listdir(extension_dir):
-                self.dm.shellCheckOutput(['rm', '-rf',
-                                          os.path.join(self.bundles_dir, filename)])
+                fpath = os.path.join(self.bundles_dir, filename)
+                if self.dm.fileExists(fpath):
+                    self.dm.shellCheckOutput(['rm', '-rf', fpath])
             try:
                 self.dm.pushDir(extension_dir, self.bundles_dir)
             except DMError:
@@ -312,15 +332,19 @@ class B2GRunner(RemoteRunner):
         self.dm.pushFile(os.path.join(self.profile.profile, "user.js"), self.user_js)
 
     def cleanup(self):
-        super(B2GRunner, self).cleanup()
+        RemoteRunner.cleanup(self)
         if getattr(self.marionette, 'instance', False):
             self.marionette.instance.close()
         del self.marionette
 
+
 class ProfileConfigParser(ConfigParser.RawConfigParser):
-    """Subclass of RawConfigParser that outputs .ini files in the exact
-       format expected for profiles.ini, which is slightly different
-       than the default format.
+    """Class to create profiles.ini config files
+
+    Subclass of RawConfigParser that outputs .ini files in the exact
+    format expected for profiles.ini, which is slightly different
+    than the default format.
+
     """
 
     def optionxform(self, optionstr):
