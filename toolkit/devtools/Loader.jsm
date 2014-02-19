@@ -67,6 +67,7 @@ BuiltinProvider.prototype = {
         "devtools/touch-events": "resource://gre/modules/devtools/touch-events",
         "devtools/client": "resource://gre/modules/devtools/client",
         "devtools/pretty-fast": "resource://gre/modules/devtools/pretty-fast.js",
+        "devtools/async-utils": "resource://gre/modules/devtools/async-utils",
 
         "acorn": "resource://gre/modules/devtools/acorn",
         "acorn/util/walk": "resource://gre/modules/devtools/acorn/walk.js",
@@ -114,6 +115,7 @@ SrcdirProvider.prototype = {
     let touchEventsURI = this.fileURI(OS.Path.join(toolkitDir, "touch-events"));
     let clientURI = this.fileURI(OS.Path.join(toolkitDir, "client"));
     let prettyFastURI = this.fileURI(OS.Path.join(toolkitDir), "pretty-fast.js");
+    let asyncUtilsURI = this.fileURI(OS.Path.join(toolkitDir), "async-utils.js");
     let acornURI = this.fileURI(OS.Path.join(toolkitDir, "acorn"));
     let acornWalkURI = OS.Path.join(acornURI, "walk.js");
     this.loader = new loader.Loader({
@@ -134,6 +136,7 @@ SrcdirProvider.prototype = {
         "devtools/touch-events": touchEventsURI,
         "devtools/client": clientURI,
         "devtools/pretty-fast": prettyFastURI,
+        "devtools/async-utils": asyncUtilsURI,
 
         "acorn": acornURI,
         "acorn/util/walk": acornWalkURI
