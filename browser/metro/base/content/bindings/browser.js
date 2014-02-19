@@ -8,6 +8,9 @@ let Ci = Components.interfaces;
 let Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/FormData.jsm");
+Cu.import("resource://gre/modules/ScrollPosition.jsm");
+Cu.import("resource://gre/modules/Timer.jsm", this);
 
 let WebProgressListener = {
   _lastLocation: null,
@@ -441,6 +444,11 @@ WebNavigation.init();
 
 
 let DOMEvents =  {
+  _timeout: null,
+  _sessionEvents: new Set(),
+  _sessionEventMap: {"SessionStore:collectFormdata" : FormData.collect,
+                     "SessionStore:collectScrollPosition" : ScrollPosition.collect},
+
   init: function() {
     addEventListener("DOMContentLoaded", this, false);
     addEventListener("DOMTitleChanged", this, false);
@@ -451,6 +459,22 @@ let DOMEvents =  {
     addEventListener("DOMPopupBlocked", this, false);
     addEventListener("pageshow", this, false);
     addEventListener("pagehide", this, false);
+
+    addEventListener("input", this, true);
+    addEventListener("change", this, true);
+    addEventListener("scroll", this, true);
+    addMessageListener("SessionStore:restoreSessionTabData", this);
+  },
+
+  receiveMessage: function(message) {
+    switch (message.name) {
+      case "SessionStore:restoreSessionTabData":
+        if (message.json.formdata)
+          FormData.restore(content, message.json.formdata);
+        if (message.json.scroll)
+          ScrollPosition.restore(content, message.json.scroll.scroll);
+        break;
+    }
   },
 
   handleEvent: function(aEvent) {
@@ -547,6 +571,31 @@ let DOMEvents =  {
           }
         }
         break;
+      case "input":
+      case "change":
+        this._sessionEvents.add("SessionStore:collectFormdata");
+        this._sendUpdates();
+        break;
+      case "scroll":
+        this._sessionEvents.add("SessionStore:collectScrollPosition");
+        this._sendUpdates();
+        break;
+    }
+  },
+
+  _sendUpdates: function() {
+    if (!this._timeout) {
+      // Wait a little before sending the message to batch multiple changes.
+      this._timeout = setTimeout(function() {
+        for (let eventType of this._sessionEvents) {
+          sendAsyncMessage(eventType, {
+            data: this._sessionEventMap[eventType](content)
+          });
+        }
+        this._sessionEvents.clear();
+        clearTimeout(this._timeout);
+        this._timeout = null;
+      }.bind(this), 1000);
     }
   }
 };
