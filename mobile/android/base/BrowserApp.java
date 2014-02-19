@@ -13,6 +13,8 @@ import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
 import org.mozilla.gecko.favicons.LoadFaviconTask;
 import org.mozilla.gecko.favicons.decoders.IconDirectoryEntry;
+import org.mozilla.gecko.fxa.activities.FxAccountGetStartedActivity;
+import org.mozilla.gecko.fxa.FirefoxAccounts;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.gfx.GeckoLayerClient;
 import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
@@ -26,6 +28,7 @@ import org.mozilla.gecko.home.SearchEngine;
 import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.prompts.Prompt;
+import org.mozilla.gecko.sync.setup.SyncAccounts;
 import org.mozilla.gecko.toolbar.AutocompleteHandler;
 import org.mozilla.gecko.toolbar.BrowserToolbar;
 import org.mozilla.gecko.util.Clipboard;
@@ -536,6 +539,8 @@ abstract public class BrowserApp extends GeckoApp
         registerEventListener("Telemetry:Gather");
         registerEventListener("Settings:Show");
         registerEventListener("Updater:Launch");
+        registerEventListener("Accounts:Create");
+        registerEventListener("Accounts:Exist");
 
         Distribution.init(this);
         JavaAddonManager.getInstance().init(getApplicationContext());
@@ -850,6 +855,8 @@ abstract public class BrowserApp extends GeckoApp
         unregisterEventListener("Telemetry:Gather");
         unregisterEventListener("Settings:Show");
         unregisterEventListener("Updater:Launch");
+        unregisterEventListener("Accounts:Create");
+        unregisterEventListener("Accounts:Exist");
 
         if (AppConstants.MOZ_ANDROID_BEAM && Build.VERSION.SDK_INT >= 14) {
             NfcAdapter nfc = NfcAdapter.getDefaultAdapter(this);
@@ -1228,12 +1235,42 @@ abstract public class BrowserApp extends GeckoApp
                 bringToFrontIntent.setClassName(AppConstants.ANDROID_PACKAGE_NAME, AppConstants.BROWSER_INTENT_CLASS);
                 bringToFrontIntent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
                 startActivity(bringToFrontIntent);
+            } else if (event.equals("Accounts:Create")) {
+                // Do exactly the same thing as if you tapped 'Sync'
+                // in Settings.
+                final Intent intent = new Intent(getContext(), FxAccountGetStartedActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                getContext().startActivity(intent);
+            } else if (event.equals("Accounts:Exist")) {
+                final String kind = message.getString("kind");
+                final JSONObject response = new JSONObject();
+
+                if ("any".equals(kind)) {
+                    response.put("exists", SyncAccounts.syncAccountsExist(getContext()) ||
+                                           FirefoxAccounts.firefoxAccountsExist(getContext()));
+                } else if ("fxa".equals(kind)) {
+                    response.put("exists", FirefoxAccounts.firefoxAccountsExist(getContext()));
+                } else if ("sync11".equals(kind)) {
+                    response.put("exists", SyncAccounts.syncAccountsExist(getContext()));
+                } else {
+                    response.put("error", "Unknown kind");
+                }
+                mCurrentResponse = response.toString();
             } else {
                 super.handleMessage(event, message);
             }
         } catch (Exception e) {
             Log.e(LOGTAG, "Exception handling message \"" + event + "\":", e);
         }
+    }
+
+    private String mCurrentResponse;
+
+    @Override
+    public String getResponse(JSONObject origMessage) {
+        String res = mCurrentResponse;
+        mCurrentResponse = "";
+        return res;
     }
 
     @Override
