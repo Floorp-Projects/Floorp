@@ -532,11 +532,14 @@
           this.evictNode(node);
           this._isModifying = false;
           this._updateMigratedSet();
-          // We will now have moved stuff around; kick off an aftercustomization event
+          // We will now have moved stuff around; kick off some events
           // so add-ons know we've just moved their stuff:
-          if (window.gCustomizeMode) {
-            window.gCustomizeMode.dispatchToolboxEvent("aftercustomization");
-          }
+          // XXXgijs: only in this window. It's hard to know for sure what's the right
+          // thing to do here - typically insertItem is used on each window, so
+          // this seems to make the most sense, even if some of the effects of
+          // evictNode might affect multiple windows.
+          CustomizableUI.dispatchToolboxEvent("customizationchange", {}, window);
+          CustomizableUI.dispatchToolboxEvent("aftercustomization", {}, window);
           return node;
         ]]></body>
       </method>
