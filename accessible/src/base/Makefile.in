@@ -7,7 +7,3 @@ include $(topsrcdir)/config/rules.mk
 ifdef MOZ_ENABLE_GTK
 CXXFLAGS        += $(MOZ_CAIRO_CFLAGS)
 endif
-
-ifneq ($(A11Y_LOG),0)
-  DEFINES += -DA11Y_LOG
-endif
