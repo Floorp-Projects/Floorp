@@ -8,6 +8,9 @@ const Cr = Components.results;
 
 Cu.import("resource://testing-common/httpd.js");
 
+// XXX until bug 937114 is fixed
+Cu.importGlobalProperties(['atob']);
+
 // The following boilerplate makes sure that XPCom calls
 // that use the profile directory work.
 
@@ -66,6 +69,29 @@ function partial(fn) {
 
 function uuid() {
   return uuidGenerator.generateUUID().toString();
+}
+
+function base64UrlDecode(s) {
+  s = s.replace(/-/g, '+');
+  s = s.replace(/_/g, '/');
+
+  // Replace padding if it was stripped by the sender.
+  // See http://tools.ietf.org/html/rfc4648#section-4
+  switch (s.length % 4) {
+    case 0:
+      break; // No pad chars in this case
+    case 2:
+      s += "==";
+      break; // Two pad chars
+    case 3:
+      s += "=";
+      break; // One pad char
+    default:
+      throw new InputException("Illegal base64url string!");
+  }
+
+  // With correct padding restored, apply the standard base64 decoder
+  return atob(s);
 }
 
 // create a mock "doc" object, which the Identity Service
@@ -187,8 +213,8 @@ function setup_provisioning(identity, afterSetupCallback, doneProvisioningCallba
         doneProvisioningCallback(err);
     },
     sandbox: {
-	// Emulate the free() method on the iframe sandbox
-	free: function() {}
+  // Emulate the free() method on the iframe sandbox
+  free: function() {}
     }
   };
 
