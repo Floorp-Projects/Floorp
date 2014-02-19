@@ -2,16 +2,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import datetime
-import json
-import socket
-import threading
-import time
-import unittest
-
-import mozfile
-
 import mozlog
+import mozfile
+import unittest
+import socket
+import time
+import threading
+import json
 
 class ListHandler(mozlog.Handler):
     """Mock handler appends messages to a list for later inspection."""
@@ -46,20 +43,6 @@ class TestLogging(unittest.TestCase):
         self.assertRaises(ValueError, mozlog.getLogger,
                           'file.logger', handler=ListHandler())
 
-    def test_timestamps(self):
-        """Verifies that timestamps are included when asked for."""
-        log_name = 'test'
-        handler = ListHandler()
-        handler.setFormatter(mozlog.MozFormatter())
-        log = mozlog.getLogger(log_name, handler=handler)
-        log.info('no timestamp')
-        self.assertTrue(handler.messages[-1].startswith('%s ' % log_name))
-        handler.setFormatter(mozlog.MozFormatter(include_timestamp=True))
-        log.info('timestamp')
-        # Just verify that this raises no exceptions.
-        datetime.datetime.strptime(handler.messages[-1][:23],
-                                   '%Y-%m-%d %H:%M:%S,%f')
-
 class TestStructuredLogging(unittest.TestCase):
     """Tests structured output in mozlog."""
 
@@ -89,76 +72,39 @@ class TestStructuredLogging(unittest.TestCase):
     def test_structured_output(self):
         self.logger.log_structured('test_message',
                                    {'_level': mozlog.INFO,
-                                    '_message': 'message one'})
+                                    'message': 'message one'})
         self.logger.log_structured('test_message',
                                    {'_level': mozlog.INFO,
-                                    '_message': 'message two'})
-        self.logger.log_structured('error_message',
-                                   {'_level': mozlog.ERROR,
-                                    'diagnostic': 'unexpected error'})
+                                    'message': 'message two'})
 
         message_one_expected = {'_namespace': 'test.Logger',
                                 '_level': 'INFO',
-                                '_message': 'message one',
+                                'message': 'message one',
                                 'action': 'test_message'}
         message_two_expected = {'_namespace': 'test.Logger',
                                 '_level': 'INFO',
-                                '_message': 'message two',
+                                'message': 'message two',
                                 'action': 'test_message'}
-        message_three_expected = {'_namespace': 'test.Logger',
-                                  '_level': 'ERROR',
-                                  'diagnostic': 'unexpected error',
-                                  'action': 'error_message'}
 
         message_one_actual = json.loads(self.handler.messages[0])
         message_two_actual = json.loads(self.handler.messages[1])
-        message_three_actual = json.loads(self.handler.messages[2])
 
         self.check_messages(message_one_expected, message_one_actual)
         self.check_messages(message_two_expected, message_two_actual)
-        self.check_messages(message_three_expected, message_three_actual)
-
-    def test_unstructured_conversion(self):
-        """ Tests that logging to a logger with a structured formatter
-        via the traditional logging interface works as expected. """
-        self.logger.info('%s %s %d', 'Message', 'number', 1)
-        self.logger.error('Message number 2')
-        self.logger.debug('Message with %s', 'some extras',
-                          extra={'params': {'action': 'mozlog_test_output',
-                                            'is_failure': False}})
-        message_one_expected = {'_namespace': 'test.Logger',
-                                '_level': 'INFO',
-                                '_message': 'Message number 1'}
-        message_two_expected = {'_namespace': 'test.Logger',
-                                '_level': 'ERROR',
-                                '_message': 'Message number 2'}
-        message_three_expected = {'_namespace': 'test.Logger',
-                                  '_level': 'DEBUG',
-                                  '_message': 'Message with some extras',
-                                  'action': 'mozlog_test_output',
-                                  'is_failure': False}
-
-        message_one_actual = json.loads(self.handler.messages[0])
-        message_two_actual = json.loads(self.handler.messages[1])
-        message_three_actual = json.loads(self.handler.messages[2])
-
-        self.check_messages(message_one_expected, message_one_actual)
-        self.check_messages(message_two_expected, message_two_actual)
-        self.check_messages(message_three_expected, message_three_actual)
 
     def message_callback(self):
         if len(self.handler.messages) == 3:
             message_one_expected = {'_namespace': 'test.Logger',
                                     '_level': 'DEBUG',
-                                    '_message': 'socket message one',
+                                    'message': 'socket message one',
                                     'action': 'test_message'}
             message_two_expected = {'_namespace': 'test.Logger',
                                     '_level': 'DEBUG',
-                                    '_message': 'socket message two',
+                                    'message': 'socket message two',
                                     'action': 'test_message'}
             message_three_expected = {'_namespace': 'test.Logger',
                                       '_level': 'DEBUG',
-                                      '_message': 'socket message three',
+                                      'message': 'socket message three',
                                       'action': 'test_message'}
 
             message_one_actual = json.loads(self.handler.messages[0])
@@ -178,16 +124,21 @@ class TestStructuredLogging(unittest.TestCase):
                                                   message_callback=self.message_callback,
                                                   timeout=0.5)
 
-        message_string_one = json.dumps({'_message': 'socket message one',
+        # The namespace fields of these messages will be overwritten.
+        message_string_one = json.dumps({'message': 'socket message one',
                                          'action': 'test_message',
-                                         '_level': 'DEBUG'})
-        message_string_two = json.dumps({'_message': 'socket message two',
-                                         'action': 'test_message',
-                                         '_level': 'DEBUG'})
+                                         '_level': 'DEBUG',
+                                         '_namespace': 'foo.logger'})
 
-        message_string_three = json.dumps({'_message': 'socket message three',
+        message_string_two = json.dumps({'message': 'socket message two',
+                                         'action': 'test_message',
+                                         '_level': 'DEBUG',
+                                         '_namespace': 'foo.logger'})
+
+        message_string_three = json.dumps({'message': 'socket message three',
                                            'action': 'test_message',
-                                           '_level': 'DEBUG'})
+                                           '_level': 'DEBUG',
+                                           '_namespace': 'foo.logger'})
 
         message_string = message_string_one + '\n' + \
                          message_string_two + '\n' + \
@@ -214,46 +165,6 @@ class TestStructuredLogging(unittest.TestCase):
         sock.sendall(message_string[128:])
 
         server_thread.join()
-
-class Loggable(mozlog.LoggingMixin):
-    """Trivial class inheriting from LoggingMixin"""
-    pass
-
-class TestLoggingMixin(unittest.TestCase):
-    """Tests basic use of LoggingMixin"""
-
-    def test_mixin(self):
-        loggable = Loggable()
-        self.assertTrue(not hasattr(loggable, "_logger"))
-        loggable.log(mozlog.INFO, "This will instantiate the logger")
-        self.assertTrue(hasattr(loggable, "_logger"))
-        self.assertEqual(loggable._logger.name, "test_logger.Loggable")
-
-        self.assertRaises(ValueError, loggable.set_logger,
-                          "not a logger")
-
-        logger = mozlog.MozLogger('test.mixin')
-        handler = ListHandler()
-        logger.addHandler(handler)
-        loggable.set_logger(logger)
-        self.assertTrue(isinstance(loggable._logger.handlers[0],
-                                   ListHandler))
-        self.assertEqual(loggable._logger.name, "test.mixin")
-
-        loggable.log(mozlog.WARN, 'message for "log" method')
-        loggable.info('message for "info" method')
-        loggable.error('message for "error" method')
-        loggable.log_structured('test_message',
-                                params={'_message': 'message for ' + \
-                                        '"log_structured" method'})
-
-        expected_messages = ['message for "log" method',
-                             'message for "info" method',
-                             'message for "error" method',
-                             'message for "log_structured" method']
-
-        actual_messages = loggable._logger.handlers[0].messages
-        self.assertEqual(expected_messages, actual_messages)
 
 if __name__ == '__main__':
     unittest.main()
