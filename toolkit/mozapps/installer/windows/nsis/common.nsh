@@ -7695,47 +7695,65 @@
 !ifdef MOZ_METRO
 ; Removes the CEH registration if it's set to our installation directory.
 ; If it's set to some other installation directory, then it should be removed
-; by that installation. 
+; by that installation.
 !macro RemoveDEHRegistrationIfMatchingCall un
+
   Function ${un}RemoveDEHRegistrationIfMatchingCall
-    ; Move the old $R0 on the stack and set it to DEH ID
-    Exch $R0
-    ; Backup the old values of R8 and R7 on the stack
-    Push $R8
-    Push $R7
+    ; Retrieve DEH ID from the stack into $R9
+    Exch $R9
+    Exch 1
+
+    ; Retrieve Protocol Activation ID from stack into $R8
+    Exch $R8
+    Exch 2
+
+    ; Retrieve File Activation ID from stack into $R7
+    Exch $R7
+
+    ; Backup the old values of R6 and R5 on the stack
+    Push $R6
+    Push $R5
 
     ; Conditionally remove the DEH as long as we are the default (HKCU)
-    ReadRegStr $R8 HKCU "Software\Classes\CLSID\$R0\LocalServer32" ""
-    ${${un}GetLongPath} "$INSTDIR" $R7
-    StrCmp "$R8" "" next +1
-    IfFileExists "$R8" +1 clearHKCU
-    ${${un}GetParent} "$R8" $R8
-    ${${un}GetLongPath} "$R8" $R8
-    StrCmp "$R7" "$R8" clearHKCU next
+    ReadRegStr $R6 HKCU "Software\Classes\CLSID\$R9\LocalServer32" ""
+    ${${un}GetLongPath} "$INSTDIR" $R5
+    StrCmp "$R6" "" next +1
+    IfFileExists "$R6" +1 clearHKCU
+    ${${un}GetParent} "$R6" $R6
+    ${${un}GetLongPath} "$R6" $R6
+    StrCmp "$R5" "$R6" clearHKCU next
     clearHKCU:
-    DeleteRegKey HKCU "Software\Classes\CLSID\$R0"
+    DeleteRegKey HKCU "Software\Classes\CLSID\$R9"
+    DeleteRegValue HKCU "Software\Classes\$R8\shell\open\command" "DelegateExecute"
+    DeleteRegValue HKCU "Software\Classes\$R7\shell\open\command" "DelegateExecute"
     next:
 
     ; Conditionally remove the DEH as long as we are the default (HKLM)
-    ReadRegStr $R8 HKLM "Software\Classes\CLSID\$R0\LocalServer32" ""
-    ${${un}GetLongPath} "$INSTDIR" $R7
-    StrCmp "$R8" "" done +1
-    IfFileExists "$R8" +1 clearHKLM
-    ${${un}GetParent} "$R8" $R8
-    ${${un}GetLongPath} "$R8" $R8
-    StrCmp "$R7" "$R8" clearHKLM done
+    ReadRegStr $R6 HKLM "Software\Classes\CLSID\$R9\LocalServer32" ""
+    ${${un}GetLongPath} "$INSTDIR" $R5
+    StrCmp "$R6" "" done +1
+    IfFileExists "$R6" +1 clearHKLM
+    ${${un}GetParent} "$R6" $R6
+    ${${un}GetLongPath} "$R6" $R6
+    StrCmp "$R5" "$R6" clearHKLM done
     clearHKLM:
-    DeleteRegKey HKLM "Software\Classes\CLSID\$R0"
+    DeleteRegKey HKLM "Software\Classes\CLSID\$R9"
+    DeleteRegValue HKLM "Software\Classes\$R8\shell\open\command" "DelegateExecute"
+    DeleteRegValue HKLM "Software\Classes\$R7\shell\open\command" "DelegateExecute"
     done:
 
     ; Always remove the AppUserModelID keys for this installation
     DeleteRegKey HKCU "Software\Classes\$AppUserModelID"
     DeleteRegKey HKLM "Software\Classes\$AppUserModelID"
 
-    ; Restore the stack back to its original state
-    Pop $R7
-    Pop $R8
-    Pop $R0
+    ; Restore the registers back to their original state
+    Pop $R5
+    Pop $R6
+    Exch $R7
+    Exch 2
+    Exch $R8
+    Exch 1
+    Exch $R9
   FunctionEnd
 !macroend
 
@@ -7747,7 +7765,11 @@
   !insertmacro RemoveDEHRegistrationIfMatchingCall "un."
 !macroend
 
-!macro CleanupMetroBrowserHandlerValues un DELEGATE_EXECUTE_HANDLER_ID
+!macro CleanupMetroBrowserHandlerValues un DELEGATE_EXECUTE_HANDLER_ID \
+                                           PROTOCOL_ACTIVATION_ID \
+                                           FILE_ACTIVATION_ID
+  Push ${FILE_ACTIVATION_ID}
+  Push ${PROTOCOL_ACTIVATION_ID}
   Push ${DELEGATE_EXECUTE_HANDLER_ID}
   Call ${un}RemoveDEHRegistrationIfMatchingCall
 !macroend

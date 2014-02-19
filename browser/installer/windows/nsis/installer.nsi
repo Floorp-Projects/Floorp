@@ -378,7 +378,9 @@ Section "-Application" APP_IDX
       WriteRegDWORD HKCU "$0" "IconsVisible" 0
     ${EndIf}
 !ifdef MOZ_METRO
-    ${CleanupMetroBrowserHandlerValues} ${DELEGATE_EXECUTE_HANDLER_ID}
+    ${CleanupMetroBrowserHandlerValues} ${DELEGATE_EXECUTE_HANDLER_ID} \
+                                        "FirefoxURL" \
+                                        "FirefoxHTML"
     ${AddMetroBrowserHandlerValues} ${DELEGATE_EXECUTE_HANDLER_ID} \
                                     "$INSTDIR\CommandExecuteHandler.exe" \
                                     $AppUserModelID \
