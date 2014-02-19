@@ -76,6 +76,10 @@ if CONFIG['OS_ARCH'] == 'Linux':
     UNIFIED_SOURCES += [
         'ProcessUtils_linux.cpp',
     ]
+elif CONFIG['OS_ARCH'] in ('DragonFly', 'FreeBSD', 'NetBSD', 'OpenBSD'):
+    UNIFIED_SOURCES += [
+        'ProcessUtils_bsd.cpp'
+    ]
 else:
     UNIFIED_SOURCES += [
         'ProcessUtils_none.cpp',

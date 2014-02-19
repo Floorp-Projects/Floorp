@@ -32,18 +32,20 @@
 using namespace js;
 using namespace jit;
 using namespace frontend;
+using mozilla::PodCopy;
 using mozilla::PodEqual;
 using mozilla::Compression::LZ4;
 
 void
 AsmJSModule::initHeap(Handle<ArrayBufferObject*> heap, JSContext *cx)
 {
-    JS_ASSERT(linked_);
+    JS_ASSERT(IsValidAsmJSHeapLength(heap->byteLength()));
+    JS_ASSERT(dynamicallyLinked_);
     JS_ASSERT(!maybeHeap_);
+
     maybeHeap_ = heap;
     heapDatum() = heap->dataPointer();
 
-    JS_ASSERT(IsValidAsmJSHeapLength(heap->byteLength()));
 #if defined(JS_CODEGEN_X86)
     uint8_t *heapOffset = heap->dataPointer();
     void *heapLength = (void*)heap->byteLength();
@@ -297,19 +299,48 @@ AddressOf(AsmJSImmKind kind, ExclusiveContext *cx)
 }
 
 void
-AsmJSModule::staticallyLink(const AsmJSStaticLinkData &linkData, ExclusiveContext *cx)
+AsmJSModule::restoreToInitialState(ArrayBufferObject *maybePrevBuffer, ExclusiveContext *cx)
 {
-    // Process AsmJSStaticLinkData:
+#ifdef DEBUG
+    // Put the absolute links back to -1 so patchDataWithValueCheck assertions
+    // in staticallyLink are valid.
+    for (size_t i = 0; i < staticLinkData_.absoluteLinks.length(); i++) {
+        AbsoluteLink link = staticLinkData_.absoluteLinks[i];
+        Assembler::patchDataWithValueCheck(code_ + link.patchAt.offset(),
+                                           PatchedImmPtr((void*)-1),
+                                           PatchedImmPtr(AddressOf(link.target, cx)));
+    }
+#endif
 
-    operationCallbackExit_ = code_ + linkData.operationCallbackExitOffset;
+    if (maybePrevBuffer) {
+#if defined(JS_CODEGEN_X86)
+        // Subtract out the base-pointer added by AsmJSModule::initHeap.
+        uint8_t *ptrBase = maybePrevBuffer->dataPointer();
+        for (unsigned i = 0; i < heapAccesses_.length(); i++) {
+            const jit::AsmJSHeapAccess &access = heapAccesses_[i];
+            void *addr = access.patchOffsetAt(code_);
+            uint8_t *ptr = reinterpret_cast<uint8_t*>(JSC::X86Assembler::getPointer(addr));
+            JS_ASSERT(ptr >= ptrBase);
+            JSC::X86Assembler::setPointer(addr, (void *)(ptr - ptrBase));
+        }
+#endif
+    }
+}
 
-    for (size_t i = 0; i < linkData.relativeLinks.length(); i++) {
-        AsmJSStaticLinkData::RelativeLink link = linkData.relativeLinks[i];
+void
+AsmJSModule::staticallyLink(ExclusiveContext *cx)
+{
+    // Process staticLinkData_
+
+    operationCallbackExit_ = code_ + staticLinkData_.operationCallbackExitOffset;
+
+    for (size_t i = 0; i < staticLinkData_.relativeLinks.length(); i++) {
+        RelativeLink link = staticLinkData_.relativeLinks[i];
         *(void **)(code_ + link.patchAtOffset) = code_ + link.targetOffset;
     }
 
-    for (size_t i = 0; i < linkData.absoluteLinks.length(); i++) {
-        AsmJSStaticLinkData::AbsoluteLink link = linkData.absoluteLinks[i];
+    for (size_t i = 0; i < staticLinkData_.absoluteLinks.length(); i++) {
+        AbsoluteLink link = staticLinkData_.absoluteLinks[i];
         Assembler::patchDataWithValueCheck(code_ + link.patchAt.offset(),
                                            PatchedImmPtr(AddressOf(link.target, cx)),
                                            PatchedImmPtr((void*)-1));
@@ -329,7 +360,7 @@ AsmJSModule::AsmJSModule(ScriptSource *scriptSource, uint32_t charsBegin)
     bufferArgumentName_(nullptr),
     code_(nullptr),
     operationCallbackExit_(nullptr),
-    linked_(false),
+    dynamicallyLinked_(false),
     loadedFromCache_(false),
     charsBegin_(charsBegin),
     scriptSource_(scriptSource)
@@ -384,7 +415,8 @@ AsmJSModule::addSizeOfMisc(mozilla::MallocSizeOf mallocSizeOf, size_t *asmJSModu
                         profiledFunctions_.sizeOfExcludingThis(mallocSizeOf) +
                         perfProfiledBlocksFunctions_.sizeOfExcludingThis(mallocSizeOf) +
 #endif
-                        functionCounts_.sizeOfExcludingThis(mallocSizeOf);
+                        functionCounts_.sizeOfExcludingThis(mallocSizeOf) +
+                        staticLinkData_.sizeOfExcludingThis(mallocSizeOf);
 }
 
 static void
@@ -551,6 +583,20 @@ DeserializeVector(ExclusiveContext *cx, const uint8_t *cursor, js::Vector<T, 0, 
     return cursor;
 }
 
+template <class T>
+bool
+CloneVector(ExclusiveContext *cx, const Vector<T, 0, SystemAllocPolicy> &in,
+            Vector<T, 0, SystemAllocPolicy> *out)
+{
+    if (!out->resize(in.length()))
+        return false;
+    for (size_t i = 0; i < in.length(); i++) {
+        if (!in[i].clone(cx, &(*out)[i]))
+            return false;
+    }
+    return true;
+}
+
 template <class T, class AllocPolicy, class ThisVector>
 size_t
 SerializedPodVectorSize(const mozilla::VectorBase<T, 0, AllocPolicy, ThisVector> &vec)
@@ -581,6 +627,17 @@ DeserializePodVector(ExclusiveContext *cx, const uint8_t *cursor,
     return cursor;
 }
 
+template <class T>
+bool
+ClonePodVector(ExclusiveContext *cx, const Vector<T, 0, SystemAllocPolicy> &in,
+               Vector<T, 0, SystemAllocPolicy> *out)
+{
+    if (!out->resize(in.length()))
+        return false;
+    PodCopy(out->begin(), in.begin(), in.length());
+    return true;
+}
+
 uint8_t *
 AsmJSModule::Global::serialize(uint8_t *cursor) const
 {
@@ -604,6 +661,13 @@ AsmJSModule::Global::deserialize(ExclusiveContext *cx, const uint8_t *cursor)
     return cursor;
 }
 
+bool
+AsmJSModule::Global::clone(ExclusiveContext *cx, Global *out) const
+{
+    *out = *this;
+    return true;
+}
+
 uint8_t *
 AsmJSModule::Exit::serialize(uint8_t *cursor) const
 {
@@ -622,6 +686,13 @@ AsmJSModule::Exit::deserialize(ExclusiveContext *cx, const uint8_t *cursor)
 {
     cursor = ReadBytes(cursor, this, sizeof(*this));
     return cursor;
+}
+
+bool
+AsmJSModule::Exit::clone(ExclusiveContext *cx, Exit *out) const
+{
+    *out = *this;
+    return true;
 }
 
 uint8_t *
@@ -654,6 +725,60 @@ AsmJSModule::ExportedFunction::deserialize(ExclusiveContext *cx, const uint8_t *
     return cursor;
 }
 
+bool
+AsmJSModule::ExportedFunction::clone(ExclusiveContext *cx, ExportedFunction *out) const
+{
+    out->name_ = name_;
+    out->maybeFieldName_ = maybeFieldName_;
+
+    if (!ClonePodVector(cx, argCoercions_, &out->argCoercions_))
+        return false;
+
+    out->pod = pod;
+    return true;
+}
+
+size_t
+AsmJSModule::StaticLinkData::serializedSize() const
+{
+    return sizeof(uint32_t) +
+           SerializedPodVectorSize(relativeLinks) +
+           SerializedPodVectorSize(absoluteLinks);
+}
+
+uint8_t *
+AsmJSModule::StaticLinkData::serialize(uint8_t *cursor) const
+{
+    cursor = WriteScalar<uint32_t>(cursor, operationCallbackExitOffset);
+    cursor = SerializePodVector(cursor, relativeLinks);
+    cursor = SerializePodVector(cursor, absoluteLinks);
+    return cursor;
+}
+
+const uint8_t *
+AsmJSModule::StaticLinkData::deserialize(ExclusiveContext *cx, const uint8_t *cursor)
+{
+    (cursor = ReadScalar<uint32_t>(cursor, &operationCallbackExitOffset)) &&
+    (cursor = DeserializePodVector(cx, cursor, &relativeLinks)) &&
+    (cursor = DeserializePodVector(cx, cursor, &absoluteLinks));
+    return cursor;
+}
+
+bool
+AsmJSModule::StaticLinkData::clone(ExclusiveContext *cx, StaticLinkData *out) const
+{
+    out->operationCallbackExitOffset = operationCallbackExitOffset;
+    return ClonePodVector(cx, relativeLinks, &out->relativeLinks) &&
+           ClonePodVector(cx, absoluteLinks, &out->absoluteLinks);
+}
+
+size_t
+AsmJSModule::StaticLinkData::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
+{
+    return relativeLinks.sizeOfExcludingThis(mallocSizeOf) +
+           absoluteLinks.sizeOfExcludingThis(mallocSizeOf);
+}
+
 size_t
 AsmJSModule::serializedSize() const
 {
@@ -665,7 +790,8 @@ AsmJSModule::serializedSize() const
            SerializedVectorSize(globals_) +
            SerializedVectorSize(exits_) +
            SerializedVectorSize(exports_) +
-           SerializedPodVectorSize(heapAccesses_);
+           SerializedPodVectorSize(heapAccesses_) +
+           staticLinkData_.serializedSize();
 }
 
 uint8_t *
@@ -680,6 +806,7 @@ AsmJSModule::serialize(uint8_t *cursor) const
     cursor = SerializeVector(cursor, exits_);
     cursor = SerializeVector(cursor, exports_);
     cursor = SerializePodVector(cursor, heapAccesses_);
+    cursor = staticLinkData_.serialize(cursor);
     return cursor;
 }
 
@@ -699,36 +826,49 @@ AsmJSModule::deserialize(ExclusiveContext *cx, const uint8_t *cursor)
     (cursor = DeserializeVector(cx, cursor, &globals_)) &&
     (cursor = DeserializeVector(cx, cursor, &exits_)) &&
     (cursor = DeserializeVector(cx, cursor, &exports_)) &&
-    (cursor = DeserializePodVector(cx, cursor, &heapAccesses_));
+    (cursor = DeserializePodVector(cx, cursor, &heapAccesses_)) &&
+    (cursor = staticLinkData_.deserialize(cx, cursor));
 
     loadedFromCache_ = true;
     return cursor;
 }
 
-size_t
-AsmJSStaticLinkData::serializedSize() const
+bool
+AsmJSModule::clone(ExclusiveContext *cx, ScopedJSDeletePtr<AsmJSModule> *moduleOut) const
 {
-    return sizeof(uint32_t) +
-           SerializedPodVectorSize(relativeLinks) +
-           SerializedPodVectorSize(absoluteLinks);
-}
+    *moduleOut = cx->new_<AsmJSModule>(scriptSource_, charsBegin_);
+    if (!*moduleOut)
+        return false;
 
-uint8_t *
-AsmJSStaticLinkData::serialize(uint8_t *cursor) const
-{
-    cursor = WriteScalar<uint32_t>(cursor, operationCallbackExitOffset);
-    cursor = SerializePodVector(cursor, relativeLinks);
-    cursor = SerializePodVector(cursor, absoluteLinks);
-    return cursor;
-}
+    AsmJSModule &out = **moduleOut;
 
-const uint8_t *
-AsmJSStaticLinkData::deserialize(ExclusiveContext *cx, const uint8_t *cursor)
-{
-    (cursor = ReadScalar<uint32_t>(cursor, &operationCallbackExitOffset)) &&
-    (cursor = DeserializePodVector(cx, cursor, &relativeLinks)) &&
-    (cursor = DeserializePodVector(cx, cursor, &absoluteLinks));
-    return cursor;
+    // Mirror the order of serialize/deserialize in cloning:
+
+    out.pod = pod;
+
+    out.code_ = AllocateExecutableMemory(cx, pod.totalBytes_);
+    if (!out.code_)
+        return false;
+
+    memcpy(out.code_, code_, pod.codeBytes_);
+
+    out.globalArgumentName_ = globalArgumentName_;
+    out.importArgumentName_ = importArgumentName_;
+    out.bufferArgumentName_ = bufferArgumentName_;
+
+    if (!CloneVector(cx, globals_, &out.globals_) ||
+        !CloneVector(cx, exits_, &out.exits_) ||
+        !CloneVector(cx, exports_, &out.exports_) ||
+        !ClonePodVector(cx, heapAccesses_, &out.heapAccesses_) ||
+        !staticLinkData_.clone(cx, &out.staticLinkData_))
+    {
+        return false;
+    }
+
+    out.loadedFromCache_ = loadedFromCache_;
+
+    out.restoreToInitialState(maybeHeap_, cx);
+    return true;
 }
 
 static bool
@@ -990,7 +1130,6 @@ struct ScopedCacheEntryOpenedForWrite
 bool
 js::StoreAsmJSModuleInCache(AsmJSParser &parser,
                             const AsmJSModule &module,
-                            const AsmJSStaticLinkData &linkData,
                             ExclusiveContext *cx)
 {
     MachineId machineId;
@@ -1003,8 +1142,7 @@ js::StoreAsmJSModuleInCache(AsmJSParser &parser,
 
     size_t serializedSize = machineId.serializedSize() +
                             moduleChars.serializedSize() +
-                            module.serializedSize() +
-                            linkData.serializedSize();
+                            module.serializedSize();
 
     JS::OpenAsmJSCacheEntryForWriteOp open = cx->asmJSCacheOps().openEntryForWrite;
     if (!open)
@@ -1021,7 +1159,6 @@ js::StoreAsmJSModuleInCache(AsmJSParser &parser,
     cursor = machineId.serialize(cursor);
     cursor = moduleChars.serialize(cursor);
     cursor = module.serialize(cursor);
-    cursor = linkData.serialize(cursor);
 
     JS_ASSERT(cursor == entry.memory + serializedSize);
     return true;
@@ -1089,17 +1226,12 @@ js::LookupAsmJSModuleInCache(ExclusiveContext *cx,
     if (!cursor)
         return false;
 
-    AsmJSStaticLinkData linkData(cx);
-    cursor = linkData.deserialize(cx, cursor);
-    if (!cursor)
-        return false;
-
     bool atEnd = cursor == entry.memory + entry.serializedSize;
     MOZ_ASSERT(atEnd, "Corrupt cache file");
     if (!atEnd)
         return true;
 
-    module->staticallyLink(linkData, cx);
+    module->staticallyLink(cx);
 
     parser.tokenStream.advance(module->charsEnd());
 
