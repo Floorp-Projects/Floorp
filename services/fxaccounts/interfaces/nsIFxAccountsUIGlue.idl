@@ -4,9 +4,12 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(5805ac8b-7cbe-4fbd-97ad-d3ae8cd29f79)]
+[scriptable, uuid(ab8d0700-9577-11e3-a5e2-0800200c9a66)]
 interface nsIFxAccountsUIGlue : nsISupports
 {
   // Returns a Promise.
   jsval signInFlow();
+
+  // Returns a Promise.
+  jsval refreshAuthentication(in DOMString accountId);
 };
