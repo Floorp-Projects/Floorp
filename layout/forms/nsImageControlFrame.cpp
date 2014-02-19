@@ -22,7 +22,7 @@ IntPointDtorFunc(void *aObject, nsIAtom *aPropertyName,
 }
 
 
-#define nsImageControlFrameSuper nsImageFrame
+typedef nsImageFrame nsImageControlFrameSuper;
 class nsImageControlFrame : public nsImageControlFrameSuper,
                             public nsIFormControlFrame
 {
