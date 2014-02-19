@@ -20,6 +20,9 @@ fuzzy-if(/^Windows\x20NT\x205\.1/.test(http.oscpu),64,4) fuzzy-if(cocoaWidget,63
 # disabled
 == number-disabled.html number-disabled-ref.html
 
+# auto width:
+== number-auto-width-1.html number-auto-width-1-ref.html
+
 # min-height/max-height tests:
 skip-if(B2G) == number-min-height-1.html number-min-height-1-ref.html
 skip-if(B2G) == number-min-height-2.html number-min-height-2-ref.html
