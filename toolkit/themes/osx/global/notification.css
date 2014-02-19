@@ -90,6 +90,15 @@ notification[type="critical"] {
   max-width: 24em;
 }
 
+.popup-notification-learnmore-link {
+  margin-top: 1em !important;
+  -moz-margin-start: 0 !important; /* override default label margin to match description margin */
+}
+
+.popup-notification-learnmore-link:not([href]) {
+  display: none;
+}
+
 .popup-notification-button-container {
   margin-top: 17px;
 }
