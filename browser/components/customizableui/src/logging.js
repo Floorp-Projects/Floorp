@@ -23,3 +23,9 @@ function ERROR(...args) {
   args.unshift(gModuleName);
   console.error.apply(console, args);
 }
+
+function INFO(...args) {
+  args.unshift(gModuleName);
+  console.info.apply(console, args);
+}
+

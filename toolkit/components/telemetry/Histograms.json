@@ -3293,6 +3293,30 @@
     "extended_statistics_ok": true,
     "description": "Widget: Time it takes for the message before a UI message (ms)"
   },
+  "FX_SESSION_RESTORE_COLLECT_ALL_WINDOWS_DATA_MS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 10,
+    "extended_statistics_ok": true,
+    "description": "Session restore: Time to collect all window data (ms)"
+  },
+  "FX_SESSION_RESTORE_COLLECT_SINGLE_WINDOW_DATA_MS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 10,
+    "extended_statistics_ok": true,
+    "description": "Session restore: Time to collect the data of a single window (ms)"
+  },
+  "FX_SESSION_RESTORE_COLLECT_COOKIES_MS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 10,
+    "extended_statistics_ok": true,
+    "description": "Session restore: Time to collect cookies (ms)"
+  },
   "FX_SESSION_RESTORE_COLLECT_DATA_MS": {
     "expires_in_version": "never",
     "kind": "exponential",
