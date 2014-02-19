@@ -60,7 +60,6 @@ var testProcessCount = 0;
 function isChannelSilent(channel) {
   for (var i = 0; i < channel.length; ++i) {
     if (channel[i] != 0.0) {
-      dump("input at " + i + "\n");
       return false;
     }
   }
