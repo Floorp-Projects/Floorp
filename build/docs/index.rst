@@ -23,6 +23,7 @@ Important Concepts
    preprocessor
    jar-manifests
    visualstudio
+   androideclipse
 
 mozbuild
 ========

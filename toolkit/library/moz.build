@@ -20,8 +20,6 @@ if CONFIG['OS_ARCH'] == 'WINNT':
 	    '/xpcom/base',
 	]
 
-DEFINES['MOZILLA_INTERNAL_API'] = True
-
 # component libraries
 additional_defines = (
     'MOZ_AUTH_EXTENSION',

@@ -806,6 +806,16 @@ input[type=range][orient=vertical] {
 }
 
 /**
+ * Ideally we'd also require :-moz-focusring here, but that doesn't currently
+ * work. Instead we only use the -moz-focus-outer border style if
+ * NS_EVENT_STATE_FOCUSRING is set (the check is in
+ * nsRangeFrame::BuildDisplayList).
+ */
+input[type=range]::-moz-focus-outer {
+  border: 1px dotted black;
+}
+
+/**
  * Layout handles positioning of this pseudo-element specially (so that content
  * authors can concentrate on styling the thumb without worrying about the
  * logic to position it). Specifically the 'margin', 'top' and 'left'
