@@ -49,13 +49,13 @@ function runTest() {
   // Note that this is the process corresponding to the /inner/ iframe.  The
   // outer iframe runs in-process (because it has remote=false).
   var childID = null;
-  expectOnlyOneProcessCreated().then(function(chid) {
-    childID = chid;
-    return Promise.all(
-      [expectPriorityChange(childID, 'FOREGROUND'),
-       expectMozbrowserEvent(iframe, 'loadend')]
-    );
-  }).then(function() {
+  Promise.all(
+    [expectOnlyOneProcessCreated().then(function(child) {
+       childID = child;
+       return expectPriorityChange(childID, 'FOREGROUND');
+     }),
+     expectMozbrowserEvent(iframe, 'loadend')]
+  ).then(function() {
     // Send the outer iframe into the background.  This should change the
     // priority of the inner frame's process to BACKGROUND.
     var p = expectPriorityChange(childID, 'BACKGROUND');
