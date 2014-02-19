@@ -6,6 +6,8 @@
 applications across platforms.
 
 """
+import mozinfo
+import mozfile
 from optparse import OptionParser
 import os
 import shutil
@@ -14,15 +16,6 @@ import sys
 import tarfile
 import time
 import zipfile
-
-import mozfile
-import mozinfo
-
-try:
-    import pefile
-    has_pefile = True
-except ImportError:
-    has_pefile = False
 
 if mozinfo.isMac:
     from plistlib import readPlist
@@ -58,8 +51,10 @@ def get_binary(path, app_name):
     """Find the binary in the specified path, and return its path. If binary is
     not found throw an InvalidBinary exception.
 
-    :param path: Path within to search for the binary
-    :param app_name: Application binary without file extension to look for
+    Arguments:
+    path -- the path within to search for the binary
+    app_name -- application binary without file extension to look for
+
     """
     binary = None
 
@@ -88,7 +83,7 @@ def get_binary(path, app_name):
     if not binary:
         # The expected binary has not been found. Make sure we clean the
         # install folder to remove any traces
-        mozfile.remove(path)
+        shutil.rmtree(path)
 
         raise InvalidBinary('"%s" does not contain a valid binary.' % path)
 
@@ -99,15 +94,18 @@ def install(src, dest):
     """Install a zip, exe, tar.gz, tar.bz2 or dmg file, and return the path of
     the installation folder.
 
-    :param src: Path to the install file
-    :param dest: Path to install to (to ensure we do not overwrite any existent
-                 files the folder should not exist yet)
+    Arguments:
+    src  -- the path to the install file
+    dest -- the path to install to (to ensure we do not overwrite any existent
+                                    files the folder should not exist yet)
+
     """
     src = os.path.realpath(src)
     dest = os.path.realpath(dest)
 
     if not is_installer(src):
-        raise InvalidSource(src + ' is not valid installer file.')
+        raise InvalidSource(src + ' is not a recognized file type ' +
+                                  '(zip, exe, tar.gz, tar.bz2 or dmg)')
 
     if not os.path.exists(dest):
         os.makedirs(dest)
@@ -143,10 +141,9 @@ def is_installer(src):
     Mac:     dmg
     Windows: zip, exe
 
-    On Windows pefile will be used to determine if the executable is the
-    right type, if it is installed on the system.
+    Arguments:
+    src -- the path to the install file
 
-    :param src: Path to the install file.
     """
     src = os.path.realpath(src)
 
@@ -158,31 +155,15 @@ def is_installer(src):
     elif mozinfo.isMac:
         return src.lower().endswith('.dmg')
     elif mozinfo.isWin:
-        if zipfile.is_zipfile(src):
-            return True
-
-        if os.access(src, os.X_OK) and src.lower().endswith('.exe'):
-            if has_pefile:
-                # try to determine if binary is actually a gecko installer
-                pe_data = pefile.PE(src)
-                data = {}
-                for info in getattr(pe_data, 'FileInfo', []):
-                    if info.Key == 'StringFileInfo':
-                        for string in info.StringTable:
-                            data.update(string.entries)
-                return 'BuildID' not in data
-            else:
-                # pefile not available, just assume a proper binary was passed in
-                return True
-
-        return False
+        return src.lower().endswith('.exe') or zipfile.is_zipfile(src)
 
 
 def uninstall(install_folder):
     """Uninstalls the application in the specified path. If it has been
     installed via an installer on Windows, use the uninstaller first.
 
-    :param install_folder: Path of the installation folder
+    Arguments:
+    install_folder -- the path of the installation folder
 
     """
     install_folder = os.path.realpath(install_folder)
@@ -225,13 +206,14 @@ def uninstall(install_folder):
 
     # Ensure that we remove any trace of the installation. Even the uninstaller
     # on Windows leaves files behind we have to explicitely remove.
-    mozfile.remove(install_folder)
+    mozfile.rmtree(install_folder)
 
 
 def _install_dmg(src, dest):
     """Extract a dmg file into the destination folder and return the
     application folder.
 
+    Arguments:
     src -- DMG image which has to be extracted
     dest -- the path to extract to
 
