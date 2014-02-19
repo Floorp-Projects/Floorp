@@ -5,12 +5,16 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from contextlib import contextmanager
+import errno
 import os
 import shutil
+import stat
 import tarfile
 import tempfile
+import time
 import urlparse
 import urllib2
+import warnings
 import zipfile
 
 __all__ = ['extract_tarball',
@@ -18,6 +22,7 @@ __all__ = ['extract_tarball',
            'extract',
            'is_url',
            'load',
+           'remove',
            'rmtree',
            'tree',
            'NamedTemporaryFile',
@@ -110,55 +115,98 @@ def extract(src, dest=None):
     return top_level_files
 
 
-### utilities for directory trees
+### utilities for removal of files and directories
 
 def rmtree(dir):
-    """Removes the specified directory tree
+    """Deprecated wrapper method to remove a directory tree.
+
+    Ensure to update your code to use mozfile.remove() directly
+
+    :param dir: directory to be removed
+    """
+
+    warnings.warn("mozfile.rmtree() is deprecated in favor of mozfile.remove()",
+                  PendingDeprecationWarning, stacklevel=2)
+    return remove(dir)
+
+
+def remove(path):
+    """Removes the specified file, link, or directory tree
 
     This is a replacement for shutil.rmtree that works better under
-    windows."""
-    # (Thanks to Bear at the OSAF for the code.)
-    if not os.path.exists(dir):
-        return
-    if os.path.islink(dir):
-        os.remove(dir)
-        return
+    windows.
 
-    # Verify the directory is read/write/execute for the current user
-    os.chmod(dir, 0700)
+    :param path: path to be removed
+    """
 
-    # os.listdir below only returns a list of unicode filenames
-    # if the parameter is unicode.
-    # If a non-unicode-named dir contains a unicode filename,
-    # that filename will get garbled.
-    # So force dir to be unicode.
-    if not isinstance(dir, unicode):
-        try:
-            dir = unicode(dir, "utf-8")
-        except UnicodeDecodeError:
-            if os.environ.get('DEBUG') == '1':
-                print("rmtree: decoding from UTF-8 failed for directory: %s" %s)
+    def _call_with_windows_retry(func, args=(), retry_max=5, retry_delay=0.5):
+        """
+        It's possible to see spurious errors on Windows due to various things
+        keeping a handle to the directory open (explorer, virus scanners, etc)
+        So we try a few times if it fails with a known error.
+        """
+        retry_count = 0
+        while True:
+            try:
+                func(*args)
+            except OSError, e:
+                # The file or directory to be removed doesn't exist anymore
+                if e.errno == errno.ENOENT:
+                    break
 
-    for name in os.listdir(dir):
-        full_name = os.path.join(dir, name)
-        # on Windows, if we don't have write permission we can't remove
-        # the file/directory either, so turn that on
-        if os.name == 'nt':
-            if not os.access(full_name, os.W_OK):
-                # I think this is now redundant, but I don't have an NT
-                # machine to test on, so I'm going to leave it in place
-                # -warner
-                os.chmod(full_name, 0600)
+                # Error codes are defined in:
+                # http://docs.python.org/2/library/errno.html#module-errno
+                if e.errno not in [errno.EACCES, errno.ENOTEMPTY]:
+                    raise
 
-        if os.path.islink(full_name):
-            os.remove(full_name)
-        elif os.path.isdir(full_name):
-            rmtree(full_name)
+                if retry_count == retry_max:
+                    raise
+
+                retry_count += 1
+
+                print '%s() failed for "%s". Reason: %s (%s). Retrying...' % \
+                        (func.__name__, args, e.strerror, e.errno)
+                time.sleep(retry_delay)
+            else:
+                # If no exception has been thrown it should be done
+                break
+
+    def _update_permissions(path):
+        """Sets specified pemissions depending on filetype"""
+        if os.path.islink(path):
+            # Path is a symlink which we don't have to modify
+            # because it should already have all the needed permissions
+            return
+
+        stats = os.stat(path)
+
+        if os.path.isfile(path):
+            mode = stats.st_mode | stat.S_IWUSR
+        elif os.path.isdir(path):
+            mode = stats.st_mode | stat.S_IWUSR | stat.S_IXUSR
         else:
-            if os.path.isfile(full_name):
-                os.chmod(full_name, 0700)
-            os.remove(full_name)
-    os.rmdir(dir)
+            # Not supported type
+            return
+
+        _call_with_windows_retry(os.chmod, (path, mode))
+
+    if not os.path.exists(path):
+        return
+
+    if os.path.isfile(path) or os.path.islink(path):
+        # Verify the file or link is read/write for the current user
+        _update_permissions(path)
+        _call_with_windows_retry(os.remove, (path,))
+
+    elif os.path.isdir(path):
+        # Verify the directory is read/write/execute for the current user
+        _update_permissions(path)
+
+        # We're ensuring that every nested item has writable permission.
+        for root, dirs, files in os.walk(path):
+            for entry in dirs + files:
+                _update_permissions(os.path.join(root, entry))
+        _call_with_windows_retry(shutil.rmtree, (path,))
 
 
 def depth(directory):
@@ -172,6 +220,7 @@ def depth(directory):
         if not remainder:
             break
     return level
+
 
 # ASCII delimeters
 ascii_delimeters = {

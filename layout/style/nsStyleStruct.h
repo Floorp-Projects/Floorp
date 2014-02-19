@@ -1801,10 +1801,12 @@ struct nsStyleDisplay {
   uint8_t mClipFlags;           // [reset] see nsStyleConsts.h
   uint8_t mOrient;              // [reset] see nsStyleConsts.h
   uint8_t mMixBlendMode;        // [reset] see nsStyleConsts.h
-  uint8_t mWillChangeBitField;  // [reset] see nsStyleConsts.h. Stores a bitfield
-                                // representation of the property that
-                                // are frequently queried. This should match
-                                // mWillChange
+  uint8_t mWillChangeBitField;  // [reset] see nsStyleConsts.h. Stores a
+                                // bitfield representation of the properties
+                                // that are frequently queried. This should
+                                // match mWillChange. Also tracks if any of the
+                                // properties in the will-change list require
+                                // a stacking context.
   nsAutoTArray<nsString, 1> mWillChange;
 
   uint8_t mTouchAction;         // [reset] see nsStyleConsts.h
