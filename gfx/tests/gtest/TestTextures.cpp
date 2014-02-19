@@ -219,7 +219,7 @@ TEST(Layers, TextureSerialization) {
     RefPtr<TextureClient> client
       = new MemoryTextureClient(nullptr,
                                 mozilla::gfx::ImageFormatToSurfaceFormat(surface->Format()),
-                                gfx::BackendType::NONE,
+                                gfx::BackendType::CAIRO,
                                 TEXTURE_DEALLOCATE_CLIENT);
 
     TestTextureClientSurface(client, surface);
@@ -256,7 +256,7 @@ TEST(Layers, TextureYCbCrSerialization) {
   RefPtr<TextureClient> client
     = new MemoryTextureClient(nullptr,
                               mozilla::gfx::SurfaceFormat::YUV,
-                              gfx::BackendType::NONE,
+                              gfx::BackendType::CAIRO,
                               TEXTURE_DEALLOCATE_CLIENT);
 
   TestTextureClientYCbCr(client, clientData);
