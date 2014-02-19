@@ -9,9 +9,6 @@ endif
 # Build MMX code either with VC or with gcc-on-x86
 ifdef _MSC_VER
 ifeq (86,$(findstring 86,$(OS_TEST)))
-ifneq (64,$(findstring 64,$(OS_TEST)))
-USE_MMX=1
-endif
 USE_SSE2=1
 MMX_CFLAGS=
 ifneq (,$(filter 1400 1500, $(_MSC_VER)))
@@ -23,18 +20,13 @@ else
 SSE2_CFLAGS=
 endif
 endif
-ifeq (arm,$(findstring arm,$(OS_TEST)))
-USE_ARM_SIMD_MSVC=1
-endif
 endif
 
 ifdef GNU_CC
 ifeq (ppc,$(findstring ppc,$(OS_TEST)))
-USE_VMX=1
 VMX_CFLAGS=-maltivec
 endif
 ifeq (86,$(findstring 86,$(OS_TEST)))
-USE_MMX=1
 MMX_CFLAGS=-mmmx -Winline
 ifeq (64,$(findstring 64,$(OS_TEST)))
 USE_SSE2=1
@@ -53,42 +45,12 @@ ifeq (arm,$(findstring arm,$(OS_TEST)))
 # This may be fixable if clang's ARM/iOS assembler improves into a
 # viable solution in the future.
 ifneq (Darwin,$(OS_ARCH))
-ifdef HAVE_ARM_SIMD
-USE_ARM_SIMD_GCC=1
-endif
 ifdef HAVE_ARM_NEON
-USE_ARM_NEON_GCC=1
-endif
-endif
-endif
-
-endif
-
-
-ifdef USE_MMX
-CSRCS += pixman-mmx.c
-DEFINES += -DUSE_MMX
-endif
-
-ifdef USE_SSE2
-CSRCS += pixman-sse2.c
-DEFINES += -DUSE_SSE -DUSE_SSE2
-endif
-
-ifdef USE_VMX
-CSRCS += pixman-vmx.c
-DEFINES += -DUSE_VMX
-endif
-
-ifdef USE_ARM_SIMD_GCC
-CSRCS += pixman-arm-simd.c
-DEFINES += -DUSE_ARM_SIMD
-endif
-
-ifdef USE_ARM_NEON_GCC
-CSRCS += pixman-arm-neon.c
-DEFINES += -DUSE_ARM_NEON
 ARM_NEON_CFLAGS = -mfpu=neon
+endif
+endif
+endif
+
 endif
 
 include $(topsrcdir)/config/rules.mk

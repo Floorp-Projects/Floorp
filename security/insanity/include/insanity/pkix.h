@@ -23,12 +23,55 @@
 
 namespace insanity { namespace pkix {
 
+// ----------------------------------------------------------------------------
+// ERROR RANKING
+//
+// BuildCertChain prioritizes certain checks ahead of others so that when a
+// certificate chain has multiple errors, the "most serious" error is
+// returned. In practice, this ranking of seriousness is tied directly to how
+// Firefox's certificate error override mechanism.
+//
+// The ranking is:
+//
+//    1. Active distrust (SEC_ERROR_UNTRUSTED_CERT).
+//    2. Problems with issuer-independent properties other than
+//       notBefore/notAfter.
+//    3. For CA certificates: Expiration.
+//    4. Unknown issuer (SEC_ERROR_UNKNOWN_ISSUER).
+//    5. For end-entity certificates: Expiration.
+//    6. Revocation.
+//
+// In particular, if BuildCertChain returns SEC_ERROR_UNKNOWN_ISSUER then the
+// caller can call CERT_CheckCertValidTimes to determine if the certificate is
+// ALSO expired.
+//
+// It would be better if revocation were prioritized above expiration and
+// unknown issuer. However, it is impossible to do revocation checking without
+// knowing the issuer, since the issuer information is needed to validate the
+// revocation information. Also, generally revocation checking only works
+// during the validity period of the certificate.
+//
+// In general, when path building fails, BuildCertChain will return
+// SEC_ERROR_UNKNOWN_ISSUER. However, if all attempted paths resulted in the
+// same error (which is trivially true when there is only one potential path),
+// more specific errors will be returned.
+//
+// ----------------------------------------------------------------------------
+// Meaning of specific error codes
+//
+// SEC_ERROR_UNTRUSTED_CERT means that the end-entity certificate was actively
+//                          distrusted.
+// SEC_ERROR_UNTRUSTED_ISSUER means that path building failed because of active
+//                            distrust.
+// TODO(bug 968451): Document more of these.
+
 SECStatus BuildCertChain(TrustDomain& trustDomain,
                          CERTCertificate* cert,
                          PRTime time,
                          EndEntityOrCA endEntityOrCA,
             /*optional*/ KeyUsages requiredKeyUsagesIfPresent,
             /*optional*/ SECOidTag requiredEKUIfPresent,
+            /*optional*/ const SECItem* stapledOCSPResponse,
                  /*out*/ ScopedCERTCertList& results);
 
 // Verify the given signed data using the public key of the given certificate.
@@ -36,6 +79,17 @@ SECStatus BuildCertChain(TrustDomain& trustDomain,
 SECStatus VerifySignedData(const CERTSignedData* sd,
                            const CERTCertificate* cert,
                            void* pkcs11PinArg);
+
+// The return value, if non-null, is owned by the arena and MUST NOT be freed.
+SECItem* CreateEncodedOCSPRequest(PLArenaPool* arena,
+                                  const CERTCertificate* cert,
+                                  const CERTCertificate* issuerCert);
+
+SECStatus VerifyEncodedOCSPResponse(TrustDomain& trustDomain,
+                                    const CERTCertificate* cert,
+                                    CERTCertificate* issuerCert,
+                                    PRTime time,
+                                    const SECItem* encodedResponse);
 
 } } // namespace insanity::pkix
 
