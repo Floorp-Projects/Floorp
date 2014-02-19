@@ -213,6 +213,16 @@ var CastingApps = {
     }.bind(this));
   },
 
+  closeExternal: function() {
+    if (!this.session) {
+      return;
+    }
+
+    this.session.remoteMedia.shutdown();
+    this.session.app.stop();
+    delete this.session;
+  },
+
   // RemoteMedia callback API methods
   onRemoteMediaStart: function(aRemoteMedia) {
     if (!this.session) {
@@ -234,9 +244,7 @@ var CastingApps = {
 
     let status = aRemoteMedia.status;
     if (status == "completed") {
-      aRemoteMedia.shutdown();
-      this.session.app.stop();
-      delete this.session;
+      this.closeExternal();
     }
   }
 };
