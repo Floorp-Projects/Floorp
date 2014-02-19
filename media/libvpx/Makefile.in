@@ -51,9 +51,10 @@ GARBAGE += vp8_asm_enc_offsets.$(OBJ_SUFFIX) vp8_asm_enc_offsets.asm
 else
 
 # We can extract the asm offsets directly from generated assembly using inline
-# asm. This is the preferred method.
+# asm. This is the preferred method. However we need to strip out CFLAGS that
+# cause LTO because then the resulting .S file is useless.
 
-vpx_scale_asm_offsets.s: CFLAGS += -DINLINE_ASM
+vpx_scale_asm_offsets.s: CFLAGS := -DINLINE_ASM
 
 OFFSET_PATTERN := '^[a-zA-Z0-9_]* EQU'
 
@@ -70,7 +71,7 @@ vpx_scale_asm_offsets.asm: vpx_scale_asm_offsets.s
 
 GARBAGE += vpx_scale_asm_offsets.s vpx_scale_asm_offsets.asm
 
-vp8_asm_enc_offsets.s: CFLAGS += -DINLINE_ASM
+vp8_asm_enc_offsets.s: CFLAGS := -DINLINE_ASM
 
 vp8_asm_enc_offsets.s: $(srcdir)/vp8/encoder/vp8_asm_enc_offsets.c
 	$(REPORT_BUILD)
