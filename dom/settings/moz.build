@@ -9,9 +9,13 @@ TEST_DIRS += ['tests']
 EXTRA_COMPONENTS += [
     'SettingsManager.js',
     'SettingsManager.manifest',
-    'SettingsService.js',
-    'SettingsService.manifest',
 ]
+
+if CONFIG['MOZ_B2G']:
+    EXTRA_COMPONENTS += [
+        'SettingsService.js',
+        'SettingsService.manifest',
+    ]
 
 EXTRA_JS_MODULES += [
     'SettingsChangeNotifier.jsm',
