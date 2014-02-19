@@ -4,8 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-include('../shared.mozbuild')
-
 EXPORTS += [
     'AccEvent.h',
     'nsAccessibilityService.h'
@@ -53,7 +51,7 @@ UNIFIED_SOURCES += [
     'TreeWalker.cpp',
 ]
 
-if a11y_log:
+if CONFIG['A11Y_LOG']:
     UNIFIED_SOURCES += [
         'Logging.cpp',
     ]

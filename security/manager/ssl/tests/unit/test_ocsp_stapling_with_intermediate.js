@@ -33,11 +33,23 @@ function run_test() {
 
   add_tls_server_setup("OCSPStaplingServer");
 
-  add_ocsp_test("ocsp-stapling-with-intermediate.example.com", Cr.NS_OK);
-  add_test(function() { ocspResponder.stop(run_next_test); });
+  add_tests_in_mode(true);
+  add_tests_in_mode(false);
+
+  add_test(function () { ocspResponder.stop(run_next_test); });
   add_test(function() {
     do_check_eq(gOCSPRequestCount, 0);
     run_next_test();
   });
   run_next_test();
+}
+
+function add_tests_in_mode(useInsanity) {
+  add_test(function () {
+    Services.prefs.setBoolPref("security.use_insanity_verification",
+                               useInsanity);
+    run_next_test();
+  });
+
+  add_ocsp_test("ocsp-stapling-with-intermediate.example.com", Cr.NS_OK);
 }
