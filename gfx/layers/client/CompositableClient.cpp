@@ -296,7 +296,8 @@ CompositableClient::CreateTextureClientForDrawing(SurfaceFormat aFormat,
 
 #ifdef MOZ_WIDGET_GONK
   if (!DisableGralloc(aFormat)) {
-    result = new GrallocTextureClientOGL(this, aFormat, aTextureFlags);
+    result = new GrallocTextureClientOGL(this, aFormat, aMoz2DBackend,
+                                         aTextureFlags);
   }
 #endif
 
