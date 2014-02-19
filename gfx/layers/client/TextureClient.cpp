@@ -538,7 +538,7 @@ BufferTextureClient::GetAsDrawTarget()
   }
 
   MOZ_ASSERT(mUsingFallbackDrawTarget == false);
-  mDrawTarget = serializer.GetAsDrawTarget();
+  mDrawTarget = serializer.GetAsDrawTarget(gfxPlatform::GetPlatform()->GetContentBackend());
   if (mDrawTarget) {
     return mDrawTarget;
   }
