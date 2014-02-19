@@ -96,8 +96,13 @@ if CONFIG['MOZ_B2G_RIL']:
     ]
 
 if CONFIG['MOZ_NFC']:
+    SOURCES += [
+        'NfcMessageHandler.cpp',
+        'NfcService.cpp',
+    ]
     XPIDL_SOURCES += [
         'nsINfcContentHelper.idl',
+        'nsINfcService.idl',
     ]
     EXTRA_COMPONENTS += [
         'Nfc.js',
