@@ -8807,18 +8807,14 @@ nsGlobalWindow::ShowModalDialog(const nsAString& aUrl, nsIVariant* aArgument,
 
 JS::Value
 nsGlobalWindow::ShowModalDialog(JSContext* aCx, const nsAString& aUrl,
-                                const Optional<JS::Handle<JS::Value> >& aArgument,
+                                JS::Handle<JS::Value> aArgument,
                                 const nsAString& aOptions,
                                 ErrorResult& aError)
 {
   nsCOMPtr<nsIVariant> args;
-  if (aArgument.WasPassed()) {
-    aError = nsContentUtils::XPConnect()->JSToVariant(aCx,
-                                                      aArgument.Value(),
-                                                      getter_AddRefs(args));
-  } else {
-    args = CreateVoidVariant();
-  }
+  aError = nsContentUtils::XPConnect()->JSToVariant(aCx,
+                                                    aArgument,
+                                                    getter_AddRefs(args));
 
   nsCOMPtr<nsIVariant> retVal = ShowModalDialog(aUrl, args, aOptions, aError);
   if (aError.Failed()) {

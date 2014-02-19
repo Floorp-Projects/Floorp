@@ -487,7 +487,7 @@ void
 HTMLCanvasElement::ToBlob(JSContext* aCx,
                           FileCallback& aCallback,
                           const nsAString& aType,
-                          const Optional<JS::Handle<JS::Value> >& aParams,
+                          JS::Handle<JS::Value> aParams,
                           ErrorResult& aRv)
 {
   // do a trust check if this is a write-only canvas
@@ -502,13 +502,9 @@ HTMLCanvasElement::ToBlob(JSContext* aCx,
     return;
   }
 
-  JS::Value encoderOptions = aParams.WasPassed()
-                             ? aParams.Value()
-                             : JS::UndefinedValue();
-
   nsAutoString params;
   bool usingCustomParseOptions;
-  aRv = ParseParams(aCx, type, encoderOptions, params, &usingCustomParseOptions);
+  aRv = ParseParams(aCx, type, aParams, params, &usingCustomParseOptions);
   if (aRv.Failed()) {
     return;
   }

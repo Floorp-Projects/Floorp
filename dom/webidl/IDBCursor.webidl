@@ -32,7 +32,7 @@ interface IDBCursor {
     void       advance ([EnforceRange] unsigned long count);
 
     [Throws]
-    void       continue (optional any key);
+    void       continue (any key);
 
     [Throws]
     IDBRequest delete ();
