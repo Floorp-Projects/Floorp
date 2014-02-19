@@ -70,7 +70,7 @@ public:
   Trace(JSContext* aCx);
 
   void
-  Dir(JSContext* aCx, const Optional<JS::Handle<JS::Value>>& aValue);
+  Dir(JSContext* aCx, JS::Handle<JS::Value> aValue);
 
   void
   Group(JSContext* aCx, const Sequence<JS::Value>& aData);
@@ -82,10 +82,10 @@ public:
   GroupEnd(JSContext* aCx, const Sequence<JS::Value>& aData);
 
   void
-  Time(JSContext* aCx, const Optional<JS::Handle<JS::Value>>& aTimer);
+  Time(JSContext* aCx, JS::Handle<JS::Value> aTimer);
 
   void
-  TimeEnd(JSContext* aCx, const Optional<JS::Handle<JS::Value>>& aTimer);
+  TimeEnd(JSContext* aCx, JS::Handle<JS::Value> aTimer);
 
   void
   Profile(JSContext* aCx, const Sequence<JS::Value>& aData);

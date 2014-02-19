@@ -291,6 +291,16 @@ GrallocBufferActor::Create(const gfx::IntSize& aSize,
     return actor;
   }
 
+  // If the requested size is too big (i.e. exceeds the commonly used max GL texture size)
+  // then we risk OOMing the parent process. It's better to just deny the allocation and
+  // kill the child process, which is what the following code does.
+  // TODO: actually use GL_MAX_TEXTURE_SIZE instead of hardcoding 4096
+  if (aSize.width > 4096 || aSize.height > 4096) {
+    printf_stderr("GrallocBufferActor::Create -- requested gralloc buffer is too big. Killing child instead.");
+    delete actor;
+    return nullptr;
+  }
+
   sp<GraphicBuffer> buffer(new GraphicBuffer(aSize.width, aSize.height, format, usage));
   if (buffer->initCheck() != OK)
     return actor;

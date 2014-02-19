@@ -197,8 +197,7 @@ public:
   Advance(uint32_t aCount, ErrorResult& aRv);
 
   void
-  Continue(JSContext* aCx, const Optional<JS::Handle<JS::Value> >& aKey,
-           ErrorResult& aRv);
+  Continue(JSContext* aCx, JS::Handle<JS::Value> aKey, ErrorResult& aRv);
 
   already_AddRefed<IDBRequest>
   Delete(JSContext* aCx, ErrorResult& aRv);

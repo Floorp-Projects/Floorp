@@ -672,6 +672,12 @@ struct JSRuntime : public JS::shadow::Runtime,
     js::PerThreadData mainThread;
 
     /*
+     * If non-null, another runtime guaranteed to outlive this one and whose
+     * permanent data may be used by this one where possible.
+     */
+    JSRuntime *parentRuntime;
+
+    /*
      * If true, we've been asked to call the operation callback as soon as
      * possible.
      */
@@ -1478,18 +1484,33 @@ struct JSRuntime : public JS::shadow::Runtime,
     void setTrustedPrincipals(const JSPrincipals *p) { trustedPrincipals_ = p; }
     const JSPrincipals *trustedPrincipals() const { return trustedPrincipals_; }
 
-    // Set of all currently-living atoms, and the compartment in which they
-    // reside. The atoms compartment is additionally used to hold runtime
-    // wide Ion code stubs. These may be modified by threads with an
-    // ExclusiveContext and require a lock.
   private:
-    js::AtomSet atoms_;
-    JSCompartment *atomsCompartment_;
     bool beingDestroyed_;
   public:
+    bool isBeingDestroyed() const {
+        return beingDestroyed_;
+    }
+
+  private:
+    // Set of all atoms other than those in permanentAtoms and staticStrings.
+    // This may be modified by threads with an ExclusiveContext and requires
+    // a lock.
+    js::AtomSet *atoms_;
+
+    // Compartment and associated zone containing all atoms in the runtime,
+    // as well as runtime wide IonCode stubs. The contents of this compartment
+    // may be modified by threads with an ExclusiveContext and requires a lock.
+    JSCompartment *atomsCompartment_;
+
+  public:
+    bool initializeAtoms(JSContext *cx);
+    void finishAtoms();
+
+    void sweepAtoms();
+
     js::AtomSet &atoms() {
         JS_ASSERT(currentThreadHasExclusiveAccess());
-        return atoms_;
+        return *atoms_;
     }
     JSCompartment *atomsCompartment() {
         JS_ASSERT(currentThreadHasExclusiveAccess());
@@ -1500,27 +1521,26 @@ struct JSRuntime : public JS::shadow::Runtime,
         return comp == atomsCompartment_;
     }
 
-    bool isBeingDestroyed() const {
-        return beingDestroyed_;
-    }
-
     // The atoms compartment is the only one in its zone.
     inline bool isAtomsZone(JS::Zone *zone);
 
     bool activeGCInAtomsZone();
 
-    union {
-        /*
-         * Cached pointers to various interned property names, initialized in
-         * order from first to last via the other union arm.
-         */
-        JSAtomState atomState;
+    // Permanent atoms are fixed during initialization of the runtime and are
+    // not modified or collected until the runtime is destroyed. These may be
+    // shared with another, longer living runtime through |parentRuntime| and
+    // can be freely accessed with no locking necessary.
 
-        js::FixedHeapPtr<js::PropertyName> firstCachedName;
-    };
+    // Permanent atoms pre-allocated for general use.
+    js::StaticStrings *staticStrings;
 
-    /* Tables of strings that are pre-allocated in the atomsCompartment. */
-    js::StaticStrings   staticStrings;
+    // Cached pointers to various permanent property names.
+    JSAtomState *commonNames;
+
+    // All permanent atoms in the runtime, other than those in staticStrings.
+    js::AtomSet *permanentAtoms;
+
+    bool transformToPermanentAtoms();
 
     const JSWrapObjectCallbacks            *wrapObjectCallbacks;
     js::PreserveWrapperCallback            preserveWrapperCallback;
@@ -1598,7 +1618,7 @@ struct JSRuntime : public JS::shadow::Runtime,
         ionReturnOverride_ = v;
     }
 
-    JSRuntime(JSUseHelperThreads useHelperThreads);
+    JSRuntime(JSRuntime *parentRuntime, JSUseHelperThreads useHelperThreads);
     ~JSRuntime();
 
     bool init(uint32_t maxbytes);

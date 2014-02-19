@@ -76,7 +76,7 @@ function test1a() {
   ok(notification, "Test 1a, Should have a click-to-play notification");
   notification.reshow();
 
-  is(notification.options.centerActions.size, 2,
+  is(notification.options.pluginData.size, 2,
      "Test 1a, Should have two types of plugin in the notification");
 
   let pluginItem = null;

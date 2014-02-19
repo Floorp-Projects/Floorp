@@ -1197,7 +1197,7 @@ NormalizePropertyDescriptor(JSContext *cx, MutableHandleValue vp, bool complete 
         RootedId id(cx, props[i]);
         if (JSID_IS_ATOM(id)) {
             JSAtom *atom = JSID_TO_ATOM(id);
-            const JSAtomState &atomState = cx->runtime()->atomState;
+            const JSAtomState &atomState = cx->names();
             if (atom == atomState.value || atom == atomState.writable ||
                 atom == atomState.get || atom == atomState.set ||
                 atom == atomState.enumerable || atom == atomState.configurable)

@@ -459,7 +459,7 @@ StringFromCharCode(JSContext *cx, int32_t code)
     jschar c = jschar(code);
 
     if (StaticStrings::hasUnit(c))
-        return cx->runtime()->staticStrings.getUnit(c);
+        return cx->staticStrings().getUnit(c);
 
     return js_NewStringCopyN<CanGC>(cx, &c, 1);
 }
@@ -1040,6 +1040,12 @@ AssertValidObjectPtr(JSContext *cx, JSObject *obj)
 void
 AssertValidStringPtr(JSContext *cx, JSString *str)
 {
+    // We can't closely inspect strings from another runtime.
+    if (str->runtimeFromAnyThread() != cx->runtime()) {
+        JS_ASSERT(str->isPermanentAtom());
+        return;
+    }
+
     if (str->isAtom())
         JS_ASSERT(cx->runtime()->isAtomsZone(str->tenuredZone()));
     else

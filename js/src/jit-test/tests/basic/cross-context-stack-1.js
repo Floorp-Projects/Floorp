@@ -7,11 +7,11 @@ function f() {
 }
 f();
 assertEq(stack,
-    "h@@evaluate:2\n" +
-    "@@evaluate:4\n");
+    "h@@evaluate:2:1\n" +
+    "@@evaluate:4:2\n");
 
 function k() {
     evaluate("stack = Error().stack", {newContext: true});
 }
 k();
-assertEq(stack, "@@evaluate:1\n");
+assertEq(stack, "@@evaluate:1:1\n");

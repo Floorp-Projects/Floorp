@@ -148,14 +148,25 @@ let DownloadsAPI = {
     }
 
     debug("message: " + aMessage.name);
-    // Removing 'Downloads:' and turning first letter to lower case to
-    // build the function name from the message name.
-    let c = aMessage.name[10].toLowerCase();
-    let methodName = c + aMessage.name.substring(11);
-    if (this[methodName] && typeof this[methodName] === "function") {
-      this[methodName](aMessage.data, aMessage.target);
-    } else {
-      debug("Unimplemented method:  " + methodName);
+
+    switch (aMessage.name) {
+    case "Downloads:GetList":
+      this.getList(aMessage.data, aMessage.target);
+      break;
+    case "Downloads:ClearAllDone":
+      this.clearAllDone(aMessage.data, aMessage.target);
+      break;
+    case "Downloads:Remove":
+      this.remove(aMessage.data, aMessage.target);
+      break;
+    case "Downloads:Pause":
+      this.pause(aMessage.data, aMessage.target);
+      break;
+    case "Downloads:Resume":
+      this.resume(aMessage.data, aMessage.target);
+      break;
+    default:
+      debug("Invalid message: " + aMessage.name);
     }
   },
 

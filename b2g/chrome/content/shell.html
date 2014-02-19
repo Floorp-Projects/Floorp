@@ -9,10 +9,10 @@
 #ifdef ANDROID
       sizemode="fullscreen"
 #endif
-      style="background: black; overflow: hidden; width:100%; height:100%; padding: 0px !important"
-      onunload="shell.stop();">
+      >
 
 <head>
+  <link rel="stylesheet" href="shell.css" type="text/css" media="all" />
   <script type="application/javascript;version=1.8"
           src="chrome://b2g/content/settings.js"> </script>
   <script type="application/javascript;version=1.8"
@@ -30,7 +30,7 @@
           src="chrome://b2g/content/runapp.js"> </script>
 #endif
 </head>
-  <body id="container" style="margin: 0px; width:100%; height:100%;">
+  <body id="container">
 #ifdef MOZ_WIDGET_COCOA
     <!--
      If the document is empty at startup, we don't display the window

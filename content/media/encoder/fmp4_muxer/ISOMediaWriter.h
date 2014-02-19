@@ -20,6 +20,25 @@ class ISOMediaWriterRunnable;
 class ISOMediaWriter : public ContainerWriter
 {
 public:
+  // Generate an fragmented MP4 stream, ISO/IEC 14496-12.
+  // Brand names in 'ftyp' box are 'isom' and 'mp42'.
+  const static uint32_t TYPE_FRAG_MP4 = 1 << 0;
+
+  // Generate an fragmented 3GP stream, 3GPP TS 26.244,
+  // '5.4.3 Basic profile'.
+  // Brand names in 'ftyp' box are '3gp9' and 'isom'.
+  const static uint32_t TYPE_FRAG_3GP = 1 << 1;
+
+  // aType is the combination of CREATE_AUDIO_TRACK and CREATE_VIDEO_TRACK.
+  // It is a hint to muxer that the output streaming contains audio, video
+  // or both.
+  //
+  // aHint is one of the value in TYPE_XXXXXXXX. It is a hint to muxer what kind
+  // of ISO format should be generated.
+  ISOMediaWriter(uint32_t aType, uint32_t aHint = TYPE_FRAG_MP4);
+  ~ISOMediaWriter();
+
+  // ContainerWriter methods
   nsresult WriteEncodedTrack(const EncodedFrameContainer &aData,
                              uint32_t aFlags = 0) MOZ_OVERRIDE;
 
@@ -27,9 +46,6 @@ public:
                             uint32_t aFlags = 0) MOZ_OVERRIDE;
 
   nsresult SetMetadata(TrackMetadataBase* aMetadata) MOZ_OVERRIDE;
-
-  ISOMediaWriter(uint32_t aType);
-  ~ISOMediaWriter();
 
 protected:
   /**

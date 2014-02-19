@@ -137,13 +137,16 @@ var parseStack = iced(function parseStack(stack) {
     if (line) {
       let atIndex = line.indexOf("@");
       let columnIndex = line.lastIndexOf(":");
-      let fileName = sourceURI(line.slice(atIndex + 1, columnIndex));
-      let lineNumber = parseInt(line.slice(columnIndex + 1));
+      let lineIndex = line.lastIndexOf(":", columnIndex - 1);
+      let fileName = sourceURI(line.slice(atIndex + 1, lineIndex));
+      let lineNumber = parseInt(line.slice(lineIndex + 1, columnIndex));
+      let columnNumber = parseInt(line.slice(columnIndex + 1));
       let name = line.slice(0, atIndex).split("(").shift();
       frames.unshift({
         fileName: fileName,
         name: name,
-        lineNumber: lineNumber
+        lineNumber: lineNumber,
+        columnNumber: columnNumber
       });
     }
     return frames;
@@ -155,7 +158,8 @@ var serializeStack = iced(function serializeStack(frames) {
   return frames.reduce(function(stack, frame) {
     return frame.name + "@" +
            frame.fileName + ":" +
-           frame.lineNumber + "\n" +
+           frame.lineNumber + ":" +
+           frame.columnNumber + "\n" +
            stack;
   }, "");
 })
