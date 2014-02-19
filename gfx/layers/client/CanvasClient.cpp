@@ -65,7 +65,9 @@ CanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
                                                 : gfxContentType::COLOR_ALPHA;
     gfxImageFormat format
       = gfxPlatform::GetPlatform()->OptimalFormatForContent(contentType);
-    mBuffer = CreateBufferTextureClient(gfx::ImageFormatToSurfaceFormat(format));
+    mBuffer = CreateBufferTextureClient(gfx::ImageFormatToSurfaceFormat(format),
+                                        TEXTURE_FLAGS_DEFAULT,
+                                        gfxPlatform::GetPlatform()->GetPreferredCanvasBackend());
     MOZ_ASSERT(mBuffer->AsTextureClientSurface());
     mBuffer->AsTextureClientSurface()->AllocateForSurface(aSize);
 
@@ -100,10 +102,12 @@ CanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
 }
 
 TemporaryRef<BufferTextureClient>
-CanvasClient2D::CreateBufferTextureClient(gfx::SurfaceFormat aFormat, TextureFlags aFlags)
+CanvasClient2D::CreateBufferTextureClient(gfx::SurfaceFormat aFormat, TextureFlags aFlags,
+                                          gfx::BackendType aMoz2DBackend)
 {
   return CompositableClient::CreateBufferTextureClient(aFormat,
-                                                       mTextureInfo.mTextureFlags | aFlags);
+                                                       mTextureInfo.mTextureFlags | aFlags,
+                                                       aMoz2DBackend);
 }
 
 CanvasClientSurfaceStream::CanvasClientSurfaceStream(CompositableForwarder* aLayerForwarder,
