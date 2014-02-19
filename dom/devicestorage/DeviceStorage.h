@@ -99,6 +99,7 @@ public:
 
   void GetDiskFreeSpace(int64_t* aSoFar);
   void GetStatus(nsAString& aStatus);
+  void GetStorageStatus(nsAString& aStatus);
   void DoFormat(nsAString& aStatus);
   static void GetRootDirectoryForType(const nsAString& aStorageType,
                                       const nsAString& aStorageName,
@@ -244,6 +245,7 @@ public:
   already_AddRefed<DOMRequest> UsedSpace(ErrorResult& aRv);
   already_AddRefed<DOMRequest> Available(ErrorResult& aRv);
   already_AddRefed<DOMRequest> Format(ErrorResult& aRv);
+  already_AddRefed<DOMRequest> StorageStatus(ErrorResult& aRv);
 
   bool Default();
 
