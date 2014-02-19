@@ -1,0 +1,126 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<!--
+Tests for Firefox Accounts signin with invalid email case
+https://bugzilla.mozilla.org/show_bug.cgi?id=963835
+-->
+<head>
+  <title>Test for Firefox Accounts (Bug 963835)</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=963835">Mozilla Bug 963835</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  Test for correction of invalid email case in Fx Accounts signIn
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript;version=1.8">
+
+SimpleTest.waitForExplicitFinish();
+
+Components.utils.import("resource://gre/modules/Promise.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/FxAccounts.jsm");
+Components.utils.import("resource://gre/modules/FxAccountsClient.jsm");
+Components.utils.import("resource://services-common/hawk.js");
+
+const TEST_SERVER =
+  "http://mochi.test:8888/chrome/services/fxaccounts/tests/mochitest/file_invalidEmailCase.sjs?path=";
+
+let MockStorage = function() {
+  this.data = null;
+};
+MockStorage.prototype = Object.freeze({
+  set: function (contents) {
+    this.data = contents;
+    return Promise.resolve(null);
+  },
+  get: function () {
+    return Promise.resolve(this.data);
+  },
+});
+
+function MockFxAccounts() {
+  return new FxAccounts({
+    _now_is: new Date(),
+
+    now: function() {
+      return this._now_is;
+    },
+
+    signedInUserStorage: new MockStorage(),
+
+    fxAccountsClient: new FxAccountsClient(TEST_SERVER),
+  });
+}
+
+let wrongEmail = "greta.garbo@gmail.com";
+let rightEmail = "Greta.Garbo@gmail.COM";
+let password = "123456";
+
+function runTest() {
+  is(Services.prefs.getCharPref("identity.fxaccounts.auth.uri"), TEST_SERVER,
+     "Pref for auth.uri should be set to test server");
+
+  let fxa = new MockFxAccounts();
+  let client = fxa.internal.fxAccountsClient;
+
+  ok(true, !!fxa, "Couldn't mock fxa");
+  ok(true, !!client, "Couldn't mock fxa client");
+  is(client.host, TEST_SERVER, "Should be using the test auth server uri");
+
+  // First try to sign in using the email with the wrong capitalization.  The
+  // FxAccountsClient will receive a 400 from the server with the corrected email.
+  // It will automatically try to sign in again.  We expect this to succeed.
+  client.signIn(wrongEmail, password).then(
+    user => {
+
+      // Now store the signed-in user state.  This will include the correct
+      // email capitalization.
+      fxa.setSignedInUser(user).then(
+        () => {
+
+          // Confirm that the correct email got stored.
+          fxa.getSignedInUser().then(
+            data => {
+              is(data.email, rightEmail);
+              SimpleTest.finish();
+            },
+            getUserError => {
+              ok(false, JSON.stringify(getUserError));
+            }
+          );
+        },
+        setSignedInUserError => {
+          ok(false, JSON.stringify(setSignedInUserError));
+        }
+      );
+    },
+    signInError => {
+      ok(false, JSON.stringify(signInError));
+    }
+  );
+};
+
+SpecialPowers.pushPrefEnv({"set": [
+    ["dom.identity.enabled", true],                // navigator.mozId
+    ["identity.fxaccounts.enabled", true],         // fx accounts
+    ["identity.fxaccounts.auth.uri", TEST_SERVER], // our sjs server
+    ["toolkit.identity.debug", true],              // verbose identity logging
+    ["browser.dom.window.dump.enabled", true],
+  ]},
+  function () { runTest(); }
+);
+
+</script>
+</pre>
+</body>
+</html>
+
