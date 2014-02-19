@@ -83,33 +83,84 @@ nsNumberControlFrame::Reflow(nsPresContext* aPresContext,
     nsFormControlFrame::RegUnRegAccessKey(this, true);
   }
 
-  nsHTMLReflowMetrics wrappersDesiredSize(aReflowState.GetWritingMode());
+  // The width of our content box, which is the available width
+  // for our anonymous content:
+  const nscoord contentBoxWidth = aReflowState.ComputedWidth();
+  nscoord contentBoxHeight = aReflowState.ComputedHeight();
+
   nsIFrame* outerWrapperFrame = mOuterWrapper->GetPrimaryFrame();
-  if (outerWrapperFrame) { // display:none?
+
+  if (!outerWrapperFrame) { // display:none?
+    if (contentBoxHeight == NS_INTRINSICSIZE) {
+      contentBoxHeight = 0;
+    }
+  } else {
     NS_ASSERTION(outerWrapperFrame == mFrames.FirstChild(), "huh?");
-    nsresult rv =
-      ReflowAnonymousContent(aPresContext, wrappersDesiredSize,
-                             aReflowState, outerWrapperFrame);
+
+    nsHTMLReflowMetrics wrappersDesiredSize(aReflowState.GetWritingMode());
+
+    nsHTMLReflowState wrapperReflowState(aPresContext, aReflowState,
+                                         outerWrapperFrame,
+                                         nsSize(contentBoxWidth,
+                                                NS_UNCONSTRAINEDSIZE));
+
+    // offsets of wrapper frame
+    nscoord xoffset = aReflowState.ComputedPhysicalBorderPadding().left +
+                        wrapperReflowState.ComputedPhysicalMargin().left;
+    nscoord yoffset = aReflowState.ComputedPhysicalBorderPadding().top +
+                        wrapperReflowState.ComputedPhysicalMargin().top;
+
+    nsReflowStatus childStatus;
+    nsresult rv = ReflowChild(outerWrapperFrame, aPresContext,
+                              wrappersDesiredSize, wrapperReflowState,
+                              xoffset, yoffset, 0, childStatus);
     NS_ENSURE_SUCCESS(rv, rv);
-    ConsiderChildOverflow(aDesiredSize.mOverflowAreas, outerWrapperFrame);
+    MOZ_ASSERT(NS_FRAME_IS_FULLY_COMPLETE(childStatus),
+               "We gave our child unconstrained height, so it should be complete");
+
+    nscoord wrappersMarginBoxHeight = wrappersDesiredSize.Height() +
+      wrapperReflowState.ComputedPhysicalMargin().TopBottom();
+
+    if (contentBoxHeight == NS_INTRINSICSIZE) {
+      // We are intrinsically sized -- we should shrinkwrap the outer wrapper's
+      // height:
+      contentBoxHeight = wrappersMarginBoxHeight;
+
+      // Make sure we obey min/max-height in the case when we're doing intrinsic
+      // sizing (we get it for free when we have a non-intrinsic
+      // aReflowState.ComputedHeight()).  Note that we do this before
+      // adjusting for borderpadding, since mComputedMaxHeight and
+      // mComputedMinHeight are content heights.
+      contentBoxHeight =
+        NS_CSS_MINMAX(contentBoxHeight,
+                      aReflowState.ComputedMinHeight(),
+                      aReflowState.ComputedMaxHeight());
+    }
+
+    // Center child vertically
+    nscoord extraSpace = contentBoxHeight - wrappersMarginBoxHeight;
+    yoffset += std::max(0, extraSpace / 2);
+
+    // Place the child
+    rv = FinishReflowChild(outerWrapperFrame, aPresContext,
+                           wrappersDesiredSize, &wrapperReflowState,
+                           xoffset, yoffset, 0);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    aDesiredSize.SetTopAscent(wrappersDesiredSize.TopAscent() +
+                              outerWrapperFrame->GetPosition().y);
   }
 
-  nscoord computedHeight = aReflowState.ComputedHeight();
-  if (computedHeight == NS_AUTOHEIGHT) {
-    computedHeight =
-      outerWrapperFrame ? outerWrapperFrame->GetSize().height : 0;
-  }
-  aDesiredSize.Width() = aReflowState.ComputedWidth() +
+  aDesiredSize.Width() = contentBoxWidth +
                          aReflowState.ComputedPhysicalBorderPadding().LeftRight();
-  aDesiredSize.Height() = computedHeight +
+  aDesiredSize.Height() = contentBoxHeight +
                           aReflowState.ComputedPhysicalBorderPadding().TopBottom();
 
-  if (outerWrapperFrame) {
-    aDesiredSize.SetTopAscent(wrappersDesiredSize.TopAscent() +
-                            outerWrapperFrame->GetPosition().y);
-  }
-
   aDesiredSize.SetOverflowAreasToDesiredBounds();
+
+  if (outerWrapperFrame) {
+    ConsiderChildOverflow(aDesiredSize.mOverflowAreas, outerWrapperFrame);
+  }
 
   FinishAndStoreOverflow(&aDesiredSize);
 
@@ -118,41 +169,6 @@ nsNumberControlFrame::Reflow(nsPresContext* aPresContext,
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
 
   return NS_OK;
-}
-
-nsresult
-nsNumberControlFrame::
-  ReflowAnonymousContent(nsPresContext* aPresContext,
-                         nsHTMLReflowMetrics& aWrappersDesiredSize,
-                         const nsHTMLReflowState& aParentReflowState,
-                         nsIFrame* aOuterWrapperFrame)
-{
-  MOZ_ASSERT(aOuterWrapperFrame);
-
-  // The width of our content box, which is the available width
-  // for our anonymous content:
-  nscoord inputFrameContentBoxWidth = aParentReflowState.ComputedWidth();
-
-  nsHTMLReflowState wrapperReflowState(aPresContext, aParentReflowState,
-                                       aOuterWrapperFrame,
-                                       nsSize(inputFrameContentBoxWidth,
-                                              NS_UNCONSTRAINEDSIZE));
-
-  nscoord xoffset = aParentReflowState.ComputedPhysicalBorderPadding().left +
-                      wrapperReflowState.ComputedPhysicalMargin().left;
-  nscoord yoffset = aParentReflowState.ComputedPhysicalBorderPadding().top +
-                      wrapperReflowState.ComputedPhysicalMargin().top;
-
-  nsReflowStatus childStatus;
-  nsresult rv = ReflowChild(aOuterWrapperFrame, aPresContext,
-                            aWrappersDesiredSize, wrapperReflowState,
-                            xoffset, yoffset, 0, childStatus);
-  NS_ENSURE_SUCCESS(rv, rv);
-  MOZ_ASSERT(NS_FRAME_IS_FULLY_COMPLETE(childStatus),
-             "We gave our child unconstrained height, so it should be complete");
-  return FinishReflowChild(aOuterWrapperFrame, aPresContext,
-                           aWrappersDesiredSize, &wrapperReflowState,
-                           xoffset, yoffset, 0);
 }
 
 void

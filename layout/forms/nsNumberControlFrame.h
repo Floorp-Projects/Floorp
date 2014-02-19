@@ -159,11 +159,6 @@ private:
                                 nsCSSPseudoElements::Type aPseudoType,
                                 nsStyleContext* aParentContext);
 
-  nsresult ReflowAnonymousContent(nsPresContext* aPresContext,
-                                  nsHTMLReflowMetrics& aWrappersDesiredSize,
-                                  const nsHTMLReflowState& aReflowState,
-                                  nsIFrame* aOuterWrapperFrame);
-
   class SyncDisabledStateEvent;
   friend class SyncDisabledStateEvent;
   class SyncDisabledStateEvent : public nsRunnable
