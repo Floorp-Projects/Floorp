@@ -1422,6 +1422,12 @@ const KTableValue nsCSSProps::kOverflowKTable[] = {
   eCSSKeyword_UNKNOWN,-1
 };
 
+const KTableValue nsCSSProps::kOverflowClipBoxKTable[] = {
+  eCSSKeyword_padding_box, NS_STYLE_OVERFLOW_CLIP_BOX_PADDING_BOX,
+  eCSSKeyword_content_box, NS_STYLE_OVERFLOW_CLIP_BOX_CONTENT_BOX,
+  eCSSKeyword_UNKNOWN,-1
+};
+
 const KTableValue nsCSSProps::kOverflowSubKTable[] = {
   eCSSKeyword_auto, NS_STYLE_OVERFLOW_AUTO,
   eCSSKeyword_visible, NS_STYLE_OVERFLOW_VISIBLE,

@@ -398,6 +398,7 @@ private:
   mozilla::dom::CSSValue* DoGetOverflow();
   mozilla::dom::CSSValue* DoGetOverflowX();
   mozilla::dom::CSSValue* DoGetOverflowY();
+  mozilla::dom::CSSValue* DoGetOverflowClipBox();
   mozilla::dom::CSSValue* DoGetResize();
   mozilla::dom::CSSValue* DoGetPageBreakAfter();
   mozilla::dom::CSSValue* DoGetPageBreakBefore();
