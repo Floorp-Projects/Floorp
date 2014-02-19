@@ -204,6 +204,29 @@ function test_assertion_lifetime() {
   );
 }
 
+function test_audience_encoding_bug972582() {
+  let audience = "i-like-pie.com";
+
+  jwcrypto.generateKeyPair(
+    "DS160",
+    function(err, kp) {
+      do_check_null(err);
+      jwcrypto.generateAssertion("fake-cert", kp, audience,
+        function(err, backedAssertion) {
+          do_check_null(err);
+
+          let [cert, assertion] = backedAssertion.split("~");
+          let components = extractComponents(assertion);
+          do_check_eq(components.payload.aud, audience);
+
+          do_test_finished();
+          run_next_test();
+        }
+      );
+    }
+  );
+}
+
 // End of tests
 // Helper function follow
 
@@ -221,8 +244,8 @@ function extractComponents(signedObject) {
   let payloadSegment = parts[1];
   let cryptoSegment = parts[2];
 
-  let header = JSON.parse(CryptoService.base64UrlDecode(headerSegment));
-  let payload = JSON.parse(CryptoService.base64UrlDecode(payloadSegment));
+  let header = JSON.parse(base64UrlDecode(headerSegment));
+  let payload = JSON.parse(base64UrlDecode(payloadSegment));
 
   // Ensure well-formed header
   do_check_eq(Object.keys(header).length, 1);
@@ -246,6 +269,7 @@ let TESTS = [
   test_get_assertion,
   test_get_assertion_with_offset,
   test_assertion_lifetime,
+  test_audience_encoding_bug972582,
 ];
 
 TESTS = TESTS.concat([test_rsa, test_dsa]);
