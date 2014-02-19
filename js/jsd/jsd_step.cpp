@@ -72,7 +72,7 @@ _interpreterTrace(JSDContext* jsdc, JSContext *cx, JSAbstractFramePtr frame,
             puts("<unavailable>");
     }
     printf("\n");
-    MOZ_ASSERT(indent >= 0);
+    JS_ASSERT(indent >= 0);
 }
 #endif
 
