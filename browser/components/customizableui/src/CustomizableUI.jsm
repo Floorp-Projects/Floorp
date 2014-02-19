@@ -1755,6 +1755,24 @@ let CustomizableUIInternal = {
     }
   },
 
+  _dispatchToolboxEventToWindow: function(aEventType, aDetails, aWindow) {
+    let evt = new aWindow.CustomEvent(aEventType, {
+      bubbles: true,
+      cancelable: true,
+      detail: aDetails
+    });
+    aWindow.gNavToolbox.dispatchEvent(evt);
+  },
+
+  dispatchToolboxEvent: function(aEventType, aDetails={}, aWindow=null) {
+    if (aWindow) {
+      return this._dispatchToolboxEventToWindow(aEventType, aDetails, aWindow);
+    }
+    for (let [win, ] of gBuildWindows) {
+      this._dispatchToolboxEventToWindow(aEventType, aDetails, win);
+    }
+  },
+
   createWidget: function(aProperties) {
     let widget = this.normalizeWidget(aProperties, CustomizableUI.SOURCE_EXTERNAL);
     //XXXunf This should probably throw.
@@ -3055,6 +3073,19 @@ this.CustomizableUI = {
   notifyEndCustomizing: function(aWindow) {
     CustomizableUIInternal.notifyListeners("onCustomizeEnd", aWindow);
   },
+
+  /**
+   * Notify toolbox(es) of a particular event. If you don't pass aWindow,
+   * all toolboxes will be notified. For use from Customize Mode only,
+   * do not use otherwise.
+   * @param aEvent the name of the event to send.
+   * @param aDetails optional, the details of the event.
+   * @param aWindow optional, the window in which to send the event.
+   */
+  dispatchToolboxEvent: function(aEvent, aDetails={}, aWindow=null) {
+    CustomizableUIInternal.dispatchToolboxEvent(aEvent, aDetails, aWindow);
+  },
+
   /**
    * Check whether an area is overflowable.
    *
