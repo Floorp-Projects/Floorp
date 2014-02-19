@@ -469,6 +469,58 @@ public final class HomeConfig {
         };
     }
 
+    public static enum ItemType implements Parcelable {
+        ARTICLE("article"),
+        IMAGE("image");
+
+        private final String mId;
+
+        ItemType(String id) {
+            mId = id;
+        }
+
+        public static ItemType fromId(String id) {
+            if (id == null) {
+                throw new IllegalArgumentException("Could not convert null String to ItemType");
+            }
+
+            for (ItemType itemType : ItemType.values()) {
+                if (TextUtils.equals(itemType.mId, id.toLowerCase())) {
+                    return itemType;
+                }
+            }
+
+            throw new IllegalArgumentException("Could not convert String id to ItemType");
+        }
+
+        @Override
+        public String toString() {
+            return mId;
+        }
+
+        @Override
+        public int describeContents() {
+            return 0;
+        }
+
+        @Override
+        public void writeToParcel(Parcel dest, int flags) {
+            dest.writeInt(ordinal());
+        }
+
+        public static final Creator<ItemType> CREATOR = new Creator<ItemType>() {
+            @Override
+            public ItemType createFromParcel(final Parcel source) {
+                return ItemType.values()[source.readInt()];
+            }
+
+            @Override
+            public ItemType[] newArray(final int size) {
+                return new ItemType[size];
+            }
+        };
+    }
+
     public static enum ItemHandler implements Parcelable {
         BROWSER("browser"),
         INTENT("intent");
@@ -524,15 +576,18 @@ public final class HomeConfig {
     public static class ViewConfig implements Parcelable {
         private final ViewType mType;
         private final String mDatasetId;
+        private final ItemType mItemType;
         private final ItemHandler mItemHandler;
 
         private static final String JSON_KEY_TYPE = "type";
         private static final String JSON_KEY_DATASET = "dataset";
+        private static final String JSON_KEY_ITEM_TYPE = "itemType";
         private static final String JSON_KEY_ITEM_HANDLER = "itemHandler";
 
         public ViewConfig(JSONObject json) throws JSONException, IllegalArgumentException {
             mType = ViewType.fromId(json.getString(JSON_KEY_TYPE));
             mDatasetId = json.getString(JSON_KEY_DATASET);
+            mItemType = ItemType.fromId(json.getString(JSON_KEY_ITEM_TYPE));
             mItemHandler = ItemHandler.fromId(json.getString(JSON_KEY_ITEM_HANDLER));
 
             validate();
@@ -542,6 +597,7 @@ public final class HomeConfig {
         public ViewConfig(Parcel in) {
             mType = (ViewType) in.readParcelable(getClass().getClassLoader());
             mDatasetId = in.readString();
+            mItemType = (ItemType) in.readParcelable(getClass().getClassLoader());
             mItemHandler = (ItemHandler) in.readParcelable(getClass().getClassLoader());
 
             validate();
@@ -550,14 +606,16 @@ public final class HomeConfig {
         public ViewConfig(ViewConfig viewConfig) {
             mType = viewConfig.mType;
             mDatasetId = viewConfig.mDatasetId;
+            mItemType = viewConfig.mItemType;
             mItemHandler = viewConfig.mItemHandler;
 
             validate();
         }
 
-        public ViewConfig(ViewType type, String datasetId, ItemHandler itemHandler) {
+        public ViewConfig(ViewType type, String datasetId, ItemType itemType, ItemHandler itemHandler) {
             mType = type;
             mDatasetId = datasetId;
+            mItemType = itemType;
             mItemHandler = itemHandler;
 
             validate();
@@ -570,6 +628,10 @@ public final class HomeConfig {
 
             if (TextUtils.isEmpty(mDatasetId)) {
                 throw new IllegalArgumentException("Can't create ViewConfig with empty dataset ID");
+            }
+
+            if (mItemType == null) {
+                throw new IllegalArgumentException("Can't create ViewConfig with null item type");
             }
 
             if (mItemHandler == null) {
@@ -585,6 +647,10 @@ public final class HomeConfig {
             return mDatasetId;
         }
 
+        public ItemType getItemType() {
+            return mItemType;
+        }
+
         public ItemHandler getItemHandler() {
             return mItemHandler;
         }
@@ -594,6 +660,7 @@ public final class HomeConfig {
 
             json.put(JSON_KEY_TYPE, mType.toString());
             json.put(JSON_KEY_DATASET, mDatasetId);
+            json.put(JSON_KEY_ITEM_TYPE, mItemType.toString());
             json.put(JSON_KEY_ITEM_HANDLER, mItemHandler.toString());
 
             return json;
@@ -608,6 +675,7 @@ public final class HomeConfig {
         public void writeToParcel(Parcel dest, int flags) {
             dest.writeParcelable(mType, 0);
             dest.writeString(mDatasetId);
+            dest.writeParcelable(mItemType, 0);
             dest.writeParcelable(mItemHandler, 0);
         }
 
