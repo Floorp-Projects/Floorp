@@ -39,9 +39,9 @@ _testAtoms(JSDContext*jsdc)
 static int
 _atom_smasher(JSHashEntry *he, int i, void *arg)
 {
-    MOZ_ASSERT(he);
-    MOZ_ASSERT(he->value);
-    MOZ_ASSERT(((JSDAtom*)(he->value))->str);
+    JS_ASSERT(he);
+    JS_ASSERT(he->value);
+    JS_ASSERT(((JSDAtom*)(he->value))->str);
 
     free(((JSDAtom*)(he->value))->str);
     free(he->value);
@@ -93,7 +93,7 @@ jsd_AddAtom(JSDContext* jsdc, const char* str)
 
     if(!str)
     {
-        MOZ_ASSERT(0);
+        JS_ASSERT(0);
         return nullptr;
     }
 

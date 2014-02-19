@@ -76,8 +76,8 @@ class SpecialId
     SpecialId(JSObject &obj)
       : bits_(uintptr_t(&obj) | TYPE_OBJECT)
     {
-        MOZ_ASSERT(&obj != nullptr);
-        MOZ_ASSERT((uintptr_t(&obj) & TYPE_MASK) == 0);
+        JS_ASSERT(&obj != nullptr);
+        JS_ASSERT((uintptr_t(&obj) & TYPE_MASK) == 0);
     }
 
     bool isObject() const {
@@ -85,7 +85,7 @@ class SpecialId
     }
 
     JSObject *toObject() const {
-        MOZ_ASSERT(isObject());
+        JS_ASSERT(isObject());
         return reinterpret_cast<JSObject *>(bits_ & ~TYPE_MASK);
     }
 
@@ -93,7 +93,7 @@ class SpecialId
 
     static SpecialId empty() {
         SpecialId sid(TYPE_OBJECT);
-        MOZ_ASSERT(sid.isEmpty());
+        JS_ASSERT(sid.isEmpty());
         return sid;
     }
 
@@ -105,7 +105,7 @@ class SpecialId
 
     static SpecialId voidId() {
         SpecialId sid(TYPE_VOID);
-        MOZ_ASSERT(sid.isVoid());
+        JS_ASSERT(sid.isVoid());
         return sid;
     }
 
@@ -119,9 +119,9 @@ SPECIALID_TO_JSID(const SpecialId &sid)
 {
     jsid id;
     JSID_BITS(id) = sid.bits_;
-    MOZ_ASSERT_IF(sid.isObject(), JSID_IS_OBJECT(id) && JSID_TO_OBJECT(id) == sid.toObject());
-    MOZ_ASSERT_IF(sid.isVoid(), JSID_IS_VOID(id));
-    MOZ_ASSERT_IF(sid.isEmpty(), JSID_IS_EMPTY(id));
+    JS_ASSERT_IF(sid.isObject(), JSID_IS_OBJECT(id) && JSID_TO_OBJECT(id) == sid.toObject());
+    JS_ASSERT_IF(sid.isVoid(), JSID_IS_VOID(id));
+    JS_ASSERT_IF(sid.isEmpty(), JSID_IS_EMPTY(id));
     return id;
 }
 
@@ -134,12 +134,12 @@ JSID_IS_SPECIAL(jsid id)
 static MOZ_ALWAYS_INLINE SpecialId
 JSID_TO_SPECIALID(jsid id)
 {
-    MOZ_ASSERT(JSID_IS_SPECIAL(id));
+    JS_ASSERT(JSID_IS_SPECIAL(id));
     if (JSID_IS_OBJECT(id))
         return SpecialId(*JSID_TO_OBJECT(id));
     if (JSID_IS_EMPTY(id))
         return SpecialId::empty();
-    MOZ_ASSERT(JSID_IS_VOID(id));
+    JS_ASSERT(JSID_IS_VOID(id));
     return SpecialId::voidId();
 }
 
