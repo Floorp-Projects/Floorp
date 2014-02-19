@@ -818,9 +818,13 @@ ContainerLayer::RepositionChild(Layer* aChild, Layer* aAfter)
   }
   if (prev) {
     prev->SetNextSibling(next);
+  } else {
+    mFirstChild = next;
   }
   if (next) {
     next->SetPrevSibling(prev);
+  } else {
+    mLastChild = prev;
   }
   if (!aAfter) {
     aChild->SetPrevSibling(nullptr);
