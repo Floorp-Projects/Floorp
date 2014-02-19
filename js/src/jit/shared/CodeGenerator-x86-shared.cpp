@@ -788,13 +788,19 @@ CodeGeneratorX86Shared::visitReturnZero(ReturnZero *ool)
 bool
 CodeGeneratorX86Shared::visitUDivOrMod(LUDivOrMod *ins)
 {
-    JS_ASSERT(ToRegister(ins->lhs()) == eax);
+    Register lhs = ToRegister(ins->lhs());
     Register rhs = ToRegister(ins->rhs());
     Register output = ToRegister(ins->output());
 
+    JS_ASSERT_IF(lhs != rhs, rhs != eax);
+    JS_ASSERT(rhs != edx);
     JS_ASSERT_IF(output == eax, ToRegister(ins->remainder()) == edx);
 
     ReturnZero *ool = nullptr;
+
+    // Put the lhs in eax.
+    if (lhs != eax)
+        masm.mov(lhs, eax);
 
     // Prevent divide by zero.
     if (ins->canBeDivideByZero()) {
@@ -809,6 +815,7 @@ CodeGeneratorX86Shared::visitUDivOrMod(LUDivOrMod *ins)
         }
     }
 
+    // Zero extend the lhs into edx to make (edx:eax), since udiv is 64-bit.
     masm.mov(ImmWord(0), edx);
     masm.udiv(rhs);
 
@@ -893,28 +900,6 @@ CodeGeneratorX86Shared::visitDivPowTwoI(LDivPowTwoI *ins)
 }
 
 bool
-CodeGeneratorX86Shared::visitDivSelfI(LDivSelfI *ins)
-{
-    Register op = ToRegister(ins->op());
-    Register output = ToRegister(ins->output());
-    MDiv *mir = ins->mir();
-
-    // If we can't divide by zero, lowering should have just used a constant one.
-    JS_ASSERT(mir->canBeDivideByZero());
-
-    masm.testl(op, op);
-    if (mir->isTruncated()) {
-        masm.emitSet(Assembler::NonZero, output);
-    } else {
-       if (!bailoutIf(Assembler::Zero, ins->snapshot()))
-           return false;
-        masm.mov(ImmWord(1), output);
-    }
-
-    return true;
-}
-
-bool
 CodeGeneratorX86Shared::visitDivI(LDivI *ins)
 {
     Register remainder = ToRegister(ins->remainder());
@@ -924,12 +909,18 @@ CodeGeneratorX86Shared::visitDivI(LDivI *ins)
 
     MDiv *mir = ins->mir();
 
+    JS_ASSERT_IF(lhs != rhs, rhs != eax);
+    JS_ASSERT(rhs != edx);
     JS_ASSERT(remainder == edx);
-    JS_ASSERT(lhs == eax);
     JS_ASSERT(output == eax);
 
     Label done;
     ReturnZero *ool = nullptr;
+
+    // Put the lhs in eax, for either the negative overflow case or the regular
+    // divide case.
+    if (lhs != eax)
+        masm.mov(lhs, eax);
 
     // Handle divide by zero.
     if (mir->canBeDivideByZero()) {
@@ -975,7 +966,9 @@ CodeGeneratorX86Shared::visitDivI(LDivI *ins)
         masm.bind(&nonzero);
     }
 
-    // Sign extend eax into edx to make (edx:eax), since idiv is 64-bit.
+    // Sign extend the lhs into edx to make (edx:eax), since idiv is 64-bit.
+    if (lhs != eax)
+        masm.mov(lhs, eax);
     masm.cdq();
     masm.idiv(rhs);
 
@@ -993,39 +986,6 @@ CodeGeneratorX86Shared::visitDivI(LDivI *ins)
             return false;
         masm.bind(ool->rejoin());
     }
-
-    return true;
-}
-
-bool
-CodeGeneratorX86Shared::visitModSelfI(LModSelfI *ins)
-{
-    Register op = ToRegister(ins->op());
-    Register output = ToRegister(ins->output());
-    MMod *mir = ins->mir();
-
-    // If we're not fallible, lowering should have just used a constant zero.
-    JS_ASSERT(mir->fallible());
-    JS_ASSERT(mir->canBeDivideByZero() || (!mir->isUnsigned() && mir->canBeNegativeDividend()));
-
-    masm.testl(op, op);
-
-    // For a negative operand, we need to return negative zero. We can't
-    // represent that as an int32, so bail if that happens.
-    if (!mir->isUnsigned() && mir->canBeNegativeDividend()) {
-        if (!bailoutIf(Assembler::Signed, ins->snapshot()))
-             return false;
-    }
-
-    // For a zero operand, we need to return NaN. We can't
-    // represent that as an int32, so bail if that happens.
-    if (mir->canBeDivideByZero()) {
-        if (!bailoutIf(Assembler::Zero, ins->snapshot()))
-            return false;
-    }
-
-    // For any other value, return 0.
-    masm.mov(ImmWord(0), output);
 
     return true;
 }
@@ -1114,13 +1074,18 @@ CodeGeneratorX86Shared::visitModI(LModI *ins)
     Register rhs = ToRegister(ins->rhs());
 
     // Required to use idiv.
-    JS_ASSERT(lhs == eax);
+    JS_ASSERT_IF(lhs != rhs, rhs != eax);
+    JS_ASSERT(rhs != edx);
     JS_ASSERT(remainder == edx);
     JS_ASSERT(ToRegister(ins->getTemp(0)) == eax);
 
     Label done;
     ReturnZero *ool = nullptr;
     ModOverflowCheck *overflow = nullptr;
+
+    // Set up eax in preparation for doing a div.
+    if (lhs != eax)
+        masm.mov(lhs, eax);
 
     // Prevent divide by zero.
     if (ins->mir()->canBeDivideByZero()) {
