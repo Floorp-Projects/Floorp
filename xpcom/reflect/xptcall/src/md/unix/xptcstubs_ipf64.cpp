@@ -17,7 +17,7 @@
 
 /* Implement shared vtbl methods. */
 
-extern "C" nsresult ATTRIBUTE_USED
+extern "C" nsresult
 PrepareAndDispatch(nsXPTCStubBase* self, uint32_t methodIndex,
   uint64_t* intargs, uint64_t* floatargs, uint64_t* restargs)
 {
