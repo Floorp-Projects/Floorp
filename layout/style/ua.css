@@ -103,7 +103,6 @@
   position: static !important;
   unicode-bidi: inherit;
   text-overflow: inherit;
-  overflow-clip-box: inherit;
 }
 
 *|*::-moz-anonymous-block, *|*::-moz-anonymous-positioned-block {
@@ -116,7 +115,6 @@
   opacity: inherit;
   text-decoration: inherit;
   -moz-box-ordinal-group: inherit !important;
-  overflow-clip-box: inherit;
 }
 
 *|*::-moz-xul-anonymous-block {
@@ -125,7 +123,6 @@
   float: none ! important;
   -moz-box-ordinal-group: inherit !important;
   text-overflow: inherit;
-  overflow-clip-box: inherit;
 }
 
 *|*::-moz-scrolled-content, *|*::-moz-scrolled-canvas,
@@ -154,7 +151,6 @@
      frame tree. */
   position: static !important;
   float: none !important;
-  overflow-clip-box: inherit;
 }
 
 *|*::-moz-viewport, *|*::-moz-viewport-scroll, *|*::-moz-canvas, *|*::-moz-scrolled-canvas {

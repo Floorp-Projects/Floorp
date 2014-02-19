@@ -1609,20 +1609,11 @@ ApplyOverflowClipping(nsDisplayListBuilder* aBuilder,
   if (!nsFrame::ShouldApplyOverflowClipping(aFrame, aDisp)) {
     return;
   }
-  nsRect clipRect;
-  bool haveRadii = false;
+  nsRect rect = aFrame->GetPaddingRectRelativeToSelf() +
+      aBuilder->ToReferenceFrame(aFrame);
   nscoord radii[8];
-  if (aFrame->StyleDisplay()->mOverflowClipBox ==
-        NS_STYLE_OVERFLOW_CLIP_BOX_PADDING_BOX) {
-    clipRect = aFrame->GetPaddingRectRelativeToSelf() +
-      aBuilder->ToReferenceFrame(aFrame);
-    haveRadii = aFrame->GetPaddingBoxBorderRadii(radii);
-  } else {
-    clipRect = aFrame->GetContentRectRelativeToSelf() +
-      aBuilder->ToReferenceFrame(aFrame);
-    // XXX border-radius
-  }
-  aClipState.ClipContainingBlockDescendantsExtra(clipRect, haveRadii ? radii : nullptr);
+  bool haveRadii = aFrame->GetPaddingBoxBorderRadii(radii);
+  aClipState.ClipContainingBlockDescendantsExtra(rect, haveRadii ? radii : nullptr);
 }
 
 #ifdef DEBUG
