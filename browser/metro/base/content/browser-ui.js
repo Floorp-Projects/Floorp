@@ -262,7 +262,6 @@ var BrowserUI = {
   },
 
   showContent: function showContent(aURI) {
-    this.updateStartURIAttributes(aURI);
     ContextUI.dismissTabs();
     ContextUI.dismissContextAppbar();
     FlyoutPanelsUI.hide();
