@@ -20,6 +20,8 @@ let OBJECT_PREVIEW_MAX_ITEMS = 10;
  * as after a refresh).
  */
 function BreakpointStore() {
+  this._size = 0;
+
   // If we have a whole-line breakpoint set at LINE in URL, then
   //
   //   this._wholeLineBreakpoints[URL][LINE]
@@ -44,6 +46,8 @@ function BreakpointStore() {
 }
 
 BreakpointStore.prototype = {
+  _size: null,
+  get size() { return this._size; },
 
   /**
    * Add a breakpoint to the breakpoint store.
@@ -75,6 +79,8 @@ BreakpointStore.prototype = {
       }
       this._wholeLineBreakpoints[url][line] = aBreakpoint;
     }
+
+    this._size++;
   },
 
   /**
@@ -91,23 +97,29 @@ BreakpointStore.prototype = {
     if (column != null) {
       if (this._breakpoints[url]) {
         if (this._breakpoints[url][line]) {
-          delete this._breakpoints[url][line][column];
+          if (this._breakpoints[url][line][column]) {
+            delete this._breakpoints[url][line][column];
+            this._size--;
 
-          // If this was the last breakpoint on this line, delete the line from
-          // `this._breakpoints[url]` as well. Otherwise `_iterLines` will yield
-          // this line even though we no longer have breakpoints on
-          // it. Furthermore, we use Object.keys() instead of just checking
-          // `this._breakpoints[url].length` directly, because deleting
-          // properties from sparse arrays doesn't update the `length` property
-          // like adding them does.
-          if (Object.keys(this._breakpoints[url][line]).length === 0) {
-            delete this._breakpoints[url][line];
+            // If this was the last breakpoint on this line, delete the line from
+            // `this._breakpoints[url]` as well. Otherwise `_iterLines` will yield
+            // this line even though we no longer have breakpoints on
+            // it. Furthermore, we use Object.keys() instead of just checking
+            // `this._breakpoints[url].length` directly, because deleting
+            // properties from sparse arrays doesn't update the `length` property
+            // like adding them does.
+            if (Object.keys(this._breakpoints[url][line]).length === 0) {
+              delete this._breakpoints[url][line];
+            }
           }
         }
       }
     } else {
       if (this._wholeLineBreakpoints[url]) {
-        delete this._wholeLineBreakpoints[url][line];
+        if (this._wholeLineBreakpoints[url][line]) {
+          delete this._wholeLineBreakpoints[url][line];
+          this._size--;
+        }
       }
     }
   },
@@ -175,7 +187,7 @@ BreakpointStore.prototype = {
    *          - line (optional; requires the url property)
    *          - column (optional; requires the line property)
    */
-  findBreakpoints: function (aSearchParams={}) {
+  findBreakpoints: function* (aSearchParams={}) {
     if (aSearchParams.column != null) {
       dbg_assert(aSearchParams.line != null);
     }
@@ -199,7 +211,7 @@ BreakpointStore.prototype = {
     }
   },
 
-  _iterUrls: function (aUrl) {
+  _iterUrls: function* (aUrl) {
     if (aUrl) {
       if (this._breakpoints[aUrl] || this._wholeLineBreakpoints[aUrl]) {
         yield aUrl;
@@ -217,7 +229,7 @@ BreakpointStore.prototype = {
     }
   },
 
-  _iterLines: function (aUrl, aLine) {
+  _iterLines: function* (aUrl, aLine) {
     if (aLine != null) {
       if ((this._wholeLineBreakpoints[aUrl]
            && this._wholeLineBreakpoints[aUrl][aLine])
@@ -245,7 +257,7 @@ BreakpointStore.prototype = {
     }
   },
 
-  _iterColumns: function (aUrl, aLine, aColumn) {
+  _iterColumns: function* (aUrl, aLine, aColumn) {
     if (!this._breakpoints[aUrl] || !this._breakpoints[aUrl][aLine]) {
       return;
     }
@@ -2220,6 +2232,10 @@ ThreadActor.prototype = {
    * Restore any pre-existing breakpoints to the scripts that we have access to.
    */
   _restoreBreakpoints: function () {
+    if (this.breakpointStore.size === 0) {
+      return;
+    }
+
     for (let s of this.dbg.findScripts()) {
       this._addScript(s);
     }
@@ -4822,7 +4838,7 @@ ThreadSources.prototype = {
     return base.spec;
   },
 
-  iter: function () {
+  iter: function* () {
     for (let url in this._sourceActors) {
       yield this._sourceActors[url];
     }
