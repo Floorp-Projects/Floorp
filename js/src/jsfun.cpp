@@ -359,7 +359,8 @@ js::XDRInterpretedFunction(XDRState<mode> *xdr, HandleObject enclosingScope, Han
     enum FirstWordFlag {
         HasAtom             = 0x1,
         IsStarGenerator     = 0x2,
-        IsLazy              = 0x4
+        IsLazy              = 0x4,
+        HasSingletonType    = 0x8
     };
 
     /* NB: Keep this in sync with CloneFunctionAndScript. */
@@ -402,6 +403,9 @@ js::XDRInterpretedFunction(XDRState<mode> *xdr, HandleObject enclosingScope, Han
             // Encode the script.
             script = fun->nonLazyScript();
         }
+
+        if (fun->hasSingletonType())
+            firstword |= HasSingletonType;
 
         atom = fun->displayAtom();
         flagsword = (fun->nargs() << 16) | fun->flags();
@@ -451,8 +455,8 @@ js::XDRInterpretedFunction(XDRState<mode> *xdr, HandleObject enclosingScope, Han
             JS_ASSERT(fun->nargs() == script->bindings.numArgs());
         }
 
-
-        if (!JSFunction::setTypeForScriptedFunction(cx, fun))
+        bool singleton = firstword & HasSingletonType;
+        if (!JSFunction::setTypeForScriptedFunction(cx, fun, singleton))
             return false;
         objp.set(fun);
     }
