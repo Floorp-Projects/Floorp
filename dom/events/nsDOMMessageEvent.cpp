@@ -130,9 +130,7 @@ nsDOMMessageEvent::Constructor(const mozilla::dom::GlobalObject& aGlobal,
   bool trusted = event->Init(t);
   event->SetTrusted(trusted);
 
-  if (aParam.mData.WasPassed()) {
-    event->mData = aParam.mData.Value();
-  }
+  event->mData = aParam.mData;
 
   mozilla::HoldJSObjects(event.get());
 

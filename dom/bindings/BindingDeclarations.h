@@ -241,32 +241,14 @@ public:
   }
 };
 
-// A specialization of Optional for JS::Value to make sure that when someone
-// calls Construct() on it we will pre-initialized the JS::Value to
-// JS::UndefinedValue() so it can be traced safely.
+// A specialization of Optional for JS::Value to make sure no one ever uses it.
 template<>
-class Optional<JS::Value> : public Optional_base<JS::Value, JS::Value>
+class Optional<JS::Value>
 {
-public:
-  Optional() :
-    Optional_base<JS::Value, JS::Value>()
-  {}
+private:
+  Optional() MOZ_DELETE;
 
-  explicit Optional(JS::Value aValue) :
-    Optional_base<JS::Value, JS::Value>(aValue)
-  {}
-
-  // Don't allow us to have an uninitialized JS::Value
-  void Construct()
-  {
-    Optional_base<JS::Value, JS::Value>::Construct(JS::UndefinedValue());
-  }
-
-  template <class T1>
-  void Construct(const T1& t1)
-  {
-    Optional_base<JS::Value, JS::Value>::Construct(t1);
-  }
+  explicit Optional(JS::Value aValue) MOZ_DELETE;
 };
 
 // A specialization of Optional for NonNull that lets us get a T& from Value()

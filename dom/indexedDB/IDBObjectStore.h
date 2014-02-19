@@ -304,7 +304,7 @@ public:
 
   already_AddRefed<IDBRequest>
   Put(JSContext* aCx, JS::Handle<JS::Value> aValue,
-      const Optional<JS::Handle<JS::Value> >& aKey, ErrorResult& aRv)
+      JS::Handle<JS::Value> aKey, ErrorResult& aRv)
   {
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
     return AddOrPut(aCx, aValue, aKey, true, aRv);
@@ -312,7 +312,7 @@ public:
 
   already_AddRefed<IDBRequest>
   Add(JSContext* aCx, JS::Handle<JS::Value> aValue,
-      const Optional<JS::Handle<JS::Value> >& aKey, ErrorResult& aRv)
+      JS::Handle<JS::Value> aKey, ErrorResult& aRv)
   {
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
     return AddOrPut(aCx, aValue, aKey, false, aRv);
@@ -328,7 +328,7 @@ public:
   Clear(ErrorResult& aRv);
 
   already_AddRefed<IDBRequest>
-  OpenCursor(JSContext* aCx, const Optional<JS::Handle<JS::Value> >& aRange,
+  OpenCursor(JSContext* aCx, JS::Handle<JS::Value> aRange,
              IDBCursorDirection aDirection, ErrorResult& aRv);
 
   already_AddRefed<IDBIndex>
@@ -347,19 +347,19 @@ public:
   DeleteIndex(const nsAString& aIndexName, ErrorResult& aRv);
 
   already_AddRefed<IDBRequest>
-  Count(JSContext* aCx, const Optional<JS::Handle<JS::Value> >& aKey,
+  Count(JSContext* aCx, JS::Handle<JS::Value> aKey,
         ErrorResult& aRv);
 
   already_AddRefed<IDBRequest>
-  GetAll(JSContext* aCx, const Optional<JS::Handle<JS::Value> >& aKey,
+  GetAll(JSContext* aCx, JS::Handle<JS::Value> aKey,
          const Optional<uint32_t>& aLimit, ErrorResult& aRv);
 
   already_AddRefed<IDBRequest>
-  GetAllKeys(JSContext* aCx, const Optional<JS::Handle<JS::Value>>& aKey,
+  GetAllKeys(JSContext* aCx, JS::Handle<JS::Value> aKey,
              const Optional<uint32_t>& aLimit, ErrorResult& aRv);
 
   already_AddRefed<IDBRequest>
-  OpenKeyCursor(JSContext* aCx, const Optional<JS::Handle<JS::Value>>& aRange,
+  OpenKeyCursor(JSContext* aCx, JS::Handle<JS::Value> aRange,
                 IDBCursorDirection aDirection, ErrorResult& aRv);
 
 protected:
@@ -375,7 +375,7 @@ protected:
 
   already_AddRefed<IDBRequest>
   AddOrPut(JSContext* aCx, JS::Handle<JS::Value> aValue,
-           const Optional<JS::Handle<JS::Value> >& aKey, bool aOverwrite,
+           JS::Handle<JS::Value> aKey, bool aOverwrite,
            ErrorResult& aRv);
 
   already_AddRefed<IDBIndex>

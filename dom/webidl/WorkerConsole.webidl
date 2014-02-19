@@ -12,12 +12,12 @@ interface WorkerConsole {
   void _exception(any... data);
   void debug(any... data);
   void trace();
-  void dir(optional any data);
+  void dir(any data);
   void group(any... data);
   void groupCollapsed(any... data);
   void groupEnd(any... data);
-  void time(optional any time);
-  void timeEnd(optional any time);
+  void time(any time);
+  void timeEnd(any time);
   void profile(any... data);
   void profileEnd(any... data);
   void assert(boolean condition, any... data);

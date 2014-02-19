@@ -100,7 +100,8 @@ class CycleCollectedJSRuntime
   friend class JSZoneParticipant;
   friend class IncrementalFinalizeRunnable;
 protected:
-  CycleCollectedJSRuntime(uint32_t aMaxbytes,
+  CycleCollectedJSRuntime(JSRuntime* aParentRuntime,
+                          uint32_t aMaxbytes,
                           JSUseHelperThreads aUseHelperThreads);
   virtual ~CycleCollectedJSRuntime();
 

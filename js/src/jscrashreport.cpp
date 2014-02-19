@@ -216,31 +216,39 @@ Ring::copyBytes(void *data, size_t size)
 } /* namespace crash */
 } /* namespace js */
 
+#ifdef JS_CRASH_DIAGNOSTICS
 static bool gInitialized;
 
 static Stack gGCStack(JS_CRASH_STACK_GC);
 static Stack gErrorStack(JS_CRASH_STACK_ERROR);
 static Ring gRingBuffer(JS_CRASH_RING);
+#endif
 
 void
 js::crash::SnapshotGCStack()
 {
+#ifdef JS_CRASH_DIAGNOSTICS
     if (gInitialized)
         gGCStack.snapshot();
+#endif
 }
 
 void
 js::crash::SnapshotErrorStack()
 {
+#ifdef JS_CRASH_DIAGNOSTICS
     if (gInitialized)
         gErrorStack.snapshot();
+#endif
 }
 
 void
 js::crash::SaveCrashData(uint64_t tag, void *ptr, size_t size)
 {
+#ifdef JS_CRASH_DIAGNOSTICS
     if (gInitialized)
         gRingBuffer.push(tag, ptr, size);
+#endif
 }
 
 JS_PUBLIC_API(void)

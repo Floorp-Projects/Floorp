@@ -70,13 +70,10 @@ extern ArrayObject *
 NewDenseCopiedArray(JSContext *cx, uint32_t length, const Value *values, JSObject *proto = nullptr,
                     NewObjectKind newKind = GenericObject);
 
-/*
- * Create a dense array based on templateObject from the given array values,
- * which must be rooted.
- */
+/* Create a dense array based on templateObject with the given length. */
 extern ArrayObject *
-NewDenseCopiedArrayWithTemplate(JSContext *cx, uint32_t length, const Value *values,
-                                JSObject *templateObject);
+NewDenseAllocatedArrayWithTemplate(JSContext *cx, uint32_t length, JSObject *templateObject);
+
 /*
  * Determines whether a write to the given element on |obj| should fail because
  * |obj| is an Array with a non-writable length, and writing that element would

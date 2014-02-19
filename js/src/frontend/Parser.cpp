@@ -2069,9 +2069,9 @@ Parser<SyntaxParseHandler>::finishFunctionDefinition(Node pn, FunctionBox *funbo
     size_t numInnerFunctions = pc->innerFunctions.length();
 
     RootedFunction fun(context, funbox->function());
-    LazyScript *lazy = LazyScript::Create(context, fun, numFreeVariables, numInnerFunctions, versionNumber(),
-                                          funbox->bufStart, funbox->bufEnd,
-                                          funbox->startLine, funbox->startColumn);
+    LazyScript *lazy = LazyScript::CreateRaw(context, fun, numFreeVariables, numInnerFunctions,
+                                             versionNumber(), funbox->bufStart, funbox->bufEnd,
+                                             funbox->startLine, funbox->startColumn);
     if (!lazy)
         return false;
 

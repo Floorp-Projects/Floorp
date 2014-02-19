@@ -193,6 +193,9 @@ NewContext(JSRuntime *rt);
 static void
 DestroyContext(JSContext *cx, bool withGC);
 
+static JSObject *
+NewGlobalObject(JSContext *cx, JS::CompartmentOptions &options);
+
 static const JSErrorFormatString *
 my_GetErrorMessage(void *userRef, const char *locale, const unsigned errorNumber);
 
@@ -2605,6 +2608,103 @@ EvalInFrame(JSContext *cx, unsigned argc, jsval *vp)
     return ok;
 }
 
+struct WorkerInput
+{
+    JSRuntime *runtime;
+    jschar *chars;
+    size_t length;
+
+    WorkerInput(JSRuntime *runtime, jschar *chars, size_t length)
+      : runtime(runtime), chars(chars), length(length)
+    {}
+
+    ~WorkerInput() {
+        js_free(chars);
+    }
+};
+
+static void
+WorkerMain(void *arg)
+{
+    WorkerInput *input = (WorkerInput *) arg;
+
+    JSRuntime *rt = JS_NewRuntime(8L * 1024L * 1024L,
+                                  JS_USE_HELPER_THREADS,
+                                  input->runtime);
+    if (!rt) {
+        js_delete(input);
+        return;
+    }
+
+    JSContext *cx = NewContext(rt);
+    if (!cx) {
+        JS_DestroyRuntime(rt);
+        js_delete(input);
+        return;
+    }
+
+    do {
+        JSAutoRequest ar(cx);
+
+        JS::CompartmentOptions compartmentOptions;
+        compartmentOptions.setVersion(JSVERSION_LATEST);
+        RootedObject global(cx, NewGlobalObject(cx, compartmentOptions));
+        if (!global)
+            break;
+
+        JSAutoCompartment ac(cx, global);
+
+        JS::CompileOptions options(cx);
+        options.setFileAndLine("<string>", 1)
+               .setCompileAndGo(true);
+
+        JSScript *script = JS::Compile(cx, global, options,
+                                       input->chars, input->length);
+        if (!script)
+            break;
+        RootedValue result(cx);
+        JS_ExecuteScript(cx, global, script, result.address());
+    } while (0);
+
+    DestroyContext(cx, false);
+    JS_DestroyRuntime(rt);
+
+    js_delete(input);
+}
+
+Vector<PRThread *, 0, SystemAllocPolicy> workerThreads;
+
+static bool
+EvalInWorker(JSContext *cx, unsigned argc, jsval *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (argc < 1 || !args[0].isString()) {
+        JS_ReportError(cx, "Invalid arguments to evalInWorker");
+        return false;
+    }
+
+    if (!args[0].toString()->ensureLinear(cx))
+        return false;
+
+    JSLinearString *str = &args[0].toString()->asLinear();
+
+    jschar *chars = (jschar *) js_malloc(str->length() * sizeof(jschar));
+    if (!chars)
+        return false;
+    PodCopy(chars, str->chars(), str->length());
+
+    WorkerInput *input = js_new<WorkerInput>(cx->runtime(), chars, str->length());
+    if (!input)
+        return false;
+
+    PRThread *thread = PR_CreateThread(PR_USER_THREAD, WorkerMain, input,
+                                       PR_PRIORITY_NORMAL, PR_LOCAL_THREAD, PR_JOINABLE_THREAD, 0);
+    if (!thread || !workerThreads.append(thread))
+        return false;
+
+    return true;
+}
+
 static bool
 ShapeOf(JSContext *cx, unsigned argc, JS::Value *vp)
 {
@@ -3812,9 +3912,6 @@ WrapWithProto(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
-static JSObject *
-NewGlobalObject(JSContext *cx, JS::CompartmentOptions &options);
-
 static bool
 NewGlobal(JSContext *cx, unsigned argc, jsval *vp)
 {
@@ -4171,6 +4268,10 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "evalInFrame(n,str,save)",
 "  Evaluate 'str' in the nth up frame.\n"
 "  If 'save' (default false), save the frame chain."),
+
+    JS_FN_HELP("evalInWorker", EvalInWorker, 1, 0,
+"evalInWorker(str)",
+"  Evaluate 'str' in a separate thread with its own runtime.\n"),
 
     JS_FN_HELP("shapeOf", ShapeOf, 1, 0,
 "shapeOf(obj)",
@@ -5951,6 +6052,9 @@ main(int argc, char **argv, char **envp)
     DestroyContext(cx, true);
 
     KillWatchdog();
+
+    for (size_t i = 0; i < workerThreads.length(); i++)
+        PR_JoinThread(workerThreads[i]);
 
     JS_DestroyRuntime(rt);
     JS_ShutDown();

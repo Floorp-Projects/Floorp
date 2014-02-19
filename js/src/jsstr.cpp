@@ -393,7 +393,7 @@ js::str_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
 
     int32_t slot = JSID_TO_INT(id);
     if ((size_t)slot < str->length()) {
-        JSString *str1 = cx->runtime()->staticStrings.getUnitStringForElement(cx, str, size_t(slot));
+        JSString *str1 = cx->staticStrings().getUnitStringForElement(cx, str, size_t(slot));
         if (!str1)
             return false;
         RootedValue value(cx, StringValue(str1));
@@ -864,7 +864,7 @@ js_str_charAt(JSContext *cx, unsigned argc, Value *vp)
         i = size_t(d);
     }
 
-    str = cx->runtime()->staticStrings.getUnitStringForElement(cx, str, i);
+    str = cx->staticStrings().getUnitStringForElement(cx, str, i);
     if (!str)
         return false;
     args.rval().setString(str);
@@ -1863,7 +1863,7 @@ DoMatchLocal(JSContext *cx, CallArgs args, RegExpStatics *res, Handle<JSLinearSt
     res->updateFromMatchPairs(cx, input, matches);
 
     RootedValue rval(cx);
-    if (!CreateRegExpMatchResult(cx, input, chars, charsLen, matches, &rval))
+    if (!CreateRegExpMatchResult(cx, input, matches, &rval))
         return false;
 
     args.rval().set(rval);
@@ -3241,7 +3241,7 @@ CharSplitHelper(JSContext *cx, Handle<JSLinearString*> str, uint32_t limit)
     if (strLength == 0)
         return NewDenseEmptyArray(cx);
 
-    js::StaticStrings &staticStrings = cx->runtime()->staticStrings;
+    js::StaticStrings &staticStrings = cx->staticStrings();
     uint32_t resultlen = (limit < strLength ? limit : strLength);
 
     AutoValueVector splits(cx);
@@ -3546,7 +3546,7 @@ str_slice(JSContext *cx, unsigned argc, Value *vp)
                 str = cx->runtime()->emptyString;
             } else {
                 str = (length == 1)
-                      ? cx->runtime()->staticStrings.getUnitStringForElement(cx, str, begin)
+                      ? cx->staticStrings().getUnitStringForElement(cx, str, begin)
                       : js_NewDependentString(cx, str, begin, length);
                 if (!str)
                     return false;
@@ -3864,7 +3864,7 @@ js::str_fromCharCode(JSContext *cx, unsigned argc, Value *vp)
         if (!ToUint16(cx, args[0], &code))
             return false;
         if (StaticStrings::hasUnit(code)) {
-            args.rval().setString(cx->runtime()->staticStrings.getUnit(code));
+            args.rval().setString(cx->staticStrings().getUnit(code));
             return true;
         }
         args[0].setInt32(code);
@@ -3990,7 +3990,7 @@ js_NewDependentString(JSContext *cx, JSString *baseArg, size_t start, size_t len
 
     const jschar *chars = base->chars() + start;
 
-    if (JSLinearString *staticStr = cx->runtime()->staticStrings.lookup(chars, length))
+    if (JSLinearString *staticStr = cx->staticStrings().lookup(chars, length))
         return staticStr;
 
     return JSDependentString::new_(cx, base, chars, length);

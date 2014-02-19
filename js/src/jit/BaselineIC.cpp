@@ -4440,7 +4440,7 @@ ICGetElem_String::Compiler::generateStubCode(MacroAssembler &masm)
                   &failure);
 
     // Load static string.
-    masm.movePtr(ImmPtr(&cx->runtime()->staticStrings.unitStaticTable), str);
+    masm.movePtr(ImmPtr(&cx->staticStrings().unitStaticTable), str);
     masm.loadPtr(BaseIndex(str, scratchReg, ScalePointer), str);
 
     // Return.
@@ -9387,7 +9387,7 @@ DoTypeOfFallback(JSContext *cx, BaselineFrame *frame, ICTypeOf_Fallback *stub, H
 {
     FallbackICSpew(cx, stub, "TypeOf");
     JSType type = js::TypeOfValue(val);
-    RootedString string(cx, TypeName(type, cx->runtime()->atomState));
+    RootedString string(cx, TypeName(type, cx->names()));
 
     res.setString(string);
 
