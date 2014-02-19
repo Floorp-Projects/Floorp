@@ -35,12 +35,15 @@ class GrallocTextureClientOGL : public BufferTextureClient
 public:
   GrallocTextureClientOGL(GrallocBufferActor* aActor,
                           gfx::IntSize aSize,
+                          gfx::BackendType aMoz2DMackend,
                           TextureFlags aFlags = TEXTURE_FLAGS_DEFAULT);
   GrallocTextureClientOGL(CompositableClient* aCompositable,
                           gfx::SurfaceFormat aFormat,
+                          gfx::BackendType aMoz2DMackend,
                           TextureFlags aFlags = TEXTURE_FLAGS_DEFAULT);
   GrallocTextureClientOGL(ISurfaceAllocator* aAllocator,
                           gfx::SurfaceFormat aFormat,
+                          gfx::BackendType aMoz2DMackend,
                           TextureFlags aFlags = TEXTURE_FLAGS_DEFAULT);
 
   ~GrallocTextureClientOGL();
