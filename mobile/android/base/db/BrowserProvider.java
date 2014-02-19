@@ -702,6 +702,8 @@ public class BrowserProvider extends TransactionalProvider<BrowserDatabaseHelper
             // extend it to look like
             //
             // SELECT COALESCE((SELECT ...), 0) | COALESCE(...) | ...
+
+            final boolean includeDeleted = shouldShowDeleted(uri);
             final String query = "SELECT COALESCE(SUM(flag), 0) AS flags " +
                 "FROM ( SELECT DISTINCT CASE" +
                 " WHEN " + Bookmarks.PARENT + " = " + Bookmarks.FIXED_READING_LIST_ID +
@@ -712,7 +714,9 @@ public class BrowserProvider extends TransactionalProvider<BrowserDatabaseHelper
 
                 " ELSE " + Bookmarks.FLAG_BOOKMARK +
                 " END flag " +
-                "FROM " + TABLE_BOOKMARKS + " WHERE " + Bookmarks.URL + " = ? " +
+                "FROM " + TABLE_BOOKMARKS + " WHERE " +
+                Bookmarks.URL + " = ? " +
+                (includeDeleted ? "" : ("AND " + Bookmarks.IS_DELETED + " = 0")) +
                 ")";
 
             return db.rawQuery(query, selectionArgs);
