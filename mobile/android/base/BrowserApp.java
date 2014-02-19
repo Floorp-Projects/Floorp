@@ -1433,7 +1433,6 @@ abstract public class BrowserApp extends GeckoApp
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        mToast.onSaveInstanceState(outState);
         outState.putBoolean(STATE_DYNAMIC_TOOLBAR_ENABLED, mDynamicToolbarEnabled);
         outState.putInt(STATE_ABOUT_HOME_TOP_PADDING, mHomePagerContainer.getPaddingTop());
     }
@@ -2292,7 +2291,7 @@ abstract public class BrowserApp extends GeckoApp
                     item.setIcon(R.drawable.ic_menu_bookmark_add);
                 } else {
                     tab.addBookmark();
-                    mToast.show(false,
+                    getButtonToast().show(false,
                         getResources().getString(R.string.bookmark_added),
                         getResources().getString(R.string.bookmark_options),
                         null,
