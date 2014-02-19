@@ -13941,16 +13941,14 @@ ICCContactHelperObject.prototype = {
    * @param onerror       Callback to be called when error.
    */
   addICCContact: function(appType, contactType, contact, pin2, onsuccess, onerror) {
-    let ICCContactHelper = this.context.ICCContactHelper;
-
-    let foundFreeCb = function foundFreeCb(pbrIndex, recordId) {
+    let foundFreeCb = (function foundFreeCb(pbrIndex, recordId) {
       contact.pbrIndex = pbrIndex;
       contact.recordId = recordId;
-      ICCContactHelper.updateICCContact(appType, contactType, contact, pin2, onsuccess, onerror);
-    };
+      this.updateICCContact(appType, contactType, contact, pin2, onsuccess, onerror);
+    }).bind(this);
 
     // Find free record first.
-    ICCContactHelper.findFreeICCContact(appType, contactType, foundFreeCb, onerror);
+    this.findFreeICCContact(appType, contactType, foundFreeCb, onerror);
   },
 
   /**
@@ -14061,7 +14059,6 @@ ICCContactHelperObject.prototype = {
    * @param onerror     Callback to be called when error.
    */
   readSupportedPBRFields: function(pbr, contacts, onsuccess, onerror) {
-    let ICCContactHelper = this.context.ICCContactHelper;
     let fieldIndex = 0;
     (function readField() {
       let field = USIM_PBR_FIELDS[fieldIndex];
@@ -14073,8 +14070,8 @@ ICCContactHelperObject.prototype = {
         return;
       }
 
-      ICCContactHelper.readPhonebookField(pbr, contacts, field, readField, onerror);
-    })();
+      this.readPhonebookField(pbr, contacts, field, readField.bind(this), onerror);
+    }).call(this);
   },
 
   /**
@@ -14094,7 +14091,6 @@ ICCContactHelperObject.prototype = {
       return;
     }
 
-    let ICCContactHelper = this.context.ICCContactHelper;
     (function doReadContactField(n) {
       if (n >= contacts.length) {
         // All contact's fields are read.
@@ -14105,9 +14101,9 @@ ICCContactHelperObject.prototype = {
       }
 
       // get n-th contact's field.
-      ICCContactHelper.readContactField(
-        pbr, contacts[n], field, doReadContactField.bind(this, n + 1), onerror);
-    })(0);
+      this.readContactField(pbr, contacts[n], field,
+                            doReadContactField.bind(this, n + 1), onerror);
+    }).call(this, 0);
   },
 
   /**
@@ -14258,7 +14254,6 @@ ICCContactHelperObject.prototype = {
    * @param onerror     Callback to be called when error.
    */
   updateSupportedPBRFields: function(pbr, contact, onsuccess, onerror) {
-    let ICCContactHelper = this.context.ICCContactHelper;
     let fieldIndex = 0;
     (function updateField() {
       let field = USIM_PBR_FIELDS[fieldIndex];
@@ -14272,12 +14267,12 @@ ICCContactHelperObject.prototype = {
 
       // Check if PBR has this field.
       if (!pbr[field]) {
-        updateField();
+        updateField.call(this);
         return;
       }
 
-      ICCContactHelper.updateContactField(pbr, contact, field, updateField, onerror);
-    })();
+      this.updateContactField(pbr, contact, field, updateField.bind(this), onerror);
+    }).call(this);
   },
 
   /**
