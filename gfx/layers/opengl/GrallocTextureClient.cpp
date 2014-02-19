@@ -93,9 +93,8 @@ GrallocTextureClientOGL::DropTextureData()
 
 GrallocTextureClientOGL::GrallocTextureClientOGL(GrallocBufferActor* aActor,
                                                  gfx::IntSize aSize,
-                                                 gfx::BackendType aMoz2DBackend,
                                                  TextureFlags aFlags)
-: BufferTextureClient(nullptr, gfx::SurfaceFormat::UNKNOWN, aMoz2DBackend, aFlags)
+: BufferTextureClient(nullptr, gfx::SurfaceFormat::UNKNOWN, aFlags)
 , mAllocator(nullptr)
 , mMappedBuffer(nullptr)
 {
@@ -105,9 +104,8 @@ GrallocTextureClientOGL::GrallocTextureClientOGL(GrallocBufferActor* aActor,
 
 GrallocTextureClientOGL::GrallocTextureClientOGL(CompositableClient* aCompositable,
                                                  gfx::SurfaceFormat aFormat,
-                                                 gfx::BackendType aMoz2DBackend,
                                                  TextureFlags aFlags)
-: BufferTextureClient(aCompositable, aFormat, aMoz2DBackend, aFlags)
+: BufferTextureClient(aCompositable, aFormat, aFlags)
 , mAllocator(nullptr)
 , mMappedBuffer(nullptr)
 {
@@ -116,9 +114,8 @@ GrallocTextureClientOGL::GrallocTextureClientOGL(CompositableClient* aCompositab
 
 GrallocTextureClientOGL::GrallocTextureClientOGL(ISurfaceAllocator* aAllocator,
                                                  gfx::SurfaceFormat aFormat,
-                                                 gfx::BackendType aMoz2DBackend,
                                                  TextureFlags aFlags)
-: BufferTextureClient(nullptr, aFormat, aMoz2DBackend, aFlags)
+: BufferTextureClient(nullptr, aFormat, aFlags)
 , mAllocator(aAllocator)
 , mMappedBuffer(nullptr)
 {

@@ -128,12 +128,13 @@ ImageDataSerializerBase::GetAsThebesSurface()
 }
 
 TemporaryRef<DrawTarget>
-ImageDataSerializerBase::GetAsDrawTarget(gfx::BackendType aBackend)
+ImageDataSerializerBase::GetAsDrawTarget()
 {
   MOZ_ASSERT(IsValid());
-  return gfx::Factory::CreateDrawTargetForData(aBackend,
-                                               GetData(), GetSize(),
-                                               GetStride(), GetFormat());
+  return gfxPlatform::GetPlatform()->CreateDrawTargetForData(GetData(),
+                                                             GetSize(),
+                                                             GetStride(),
+                                                             GetFormat());
 }
 
 TemporaryRef<gfx::DataSourceSurface>

@@ -90,8 +90,7 @@ public:
 
   virtual TemporaryRef<BufferTextureClient>
   CreateBufferTextureClient(gfx::SurfaceFormat aFormat,
-                            TextureFlags aFlags = TEXTURE_FLAGS_DEFAULT,
-                            gfx::BackendType aMoz2DBackend = gfx::BackendType::NONE) MOZ_OVERRIDE;
+                            TextureFlags aFlags = TEXTURE_FLAGS_DEFAULT) MOZ_OVERRIDE;
 
   virtual void OnDetach() MOZ_OVERRIDE
   {

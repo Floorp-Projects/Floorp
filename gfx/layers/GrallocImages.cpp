@@ -396,7 +396,7 @@ GrallocImage::GetTextureClient(CompositableClient* aClient)
       flags |= TEXTURE_RB_SWAPPED;
     }
     GrallocBufferActor* actor = static_cast<GrallocBufferActor*>(desc.bufferChild());
-    mTextureClient = new GrallocTextureClientOGL(actor, mSize, gfx::BackendType::NONE, flags);
+    mTextureClient = new GrallocTextureClientOGL(actor, mSize, flags);
     mTextureClient->SetGraphicBufferLocked(mGraphicBufferLocked);
   }
   return mTextureClient;

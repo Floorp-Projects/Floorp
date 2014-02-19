@@ -365,9 +365,8 @@ ShmemTextureClient::GetBufferSize() const
 
 ShmemTextureClient::ShmemTextureClient(CompositableClient* aCompositable,
                                        gfx::SurfaceFormat aFormat,
-                                       gfx::BackendType aBackend,
                                        TextureFlags aFlags)
-  : BufferTextureClient(aCompositable, aFormat, aBackend, aFlags)
+  : BufferTextureClient(aCompositable, aFormat, aFlags)
   , mAllocated(false)
 {
   MOZ_COUNT_CTOR(ShmemTextureClient);
@@ -412,9 +411,8 @@ MemoryTextureClient::Allocate(uint32_t aSize)
 
 MemoryTextureClient::MemoryTextureClient(CompositableClient* aCompositable,
                                          gfx::SurfaceFormat aFormat,
-                                         gfx::BackendType aBackend,
                                          TextureFlags aFlags)
-  : BufferTextureClient(aCompositable, aFormat, aBackend, aFlags)
+  : BufferTextureClient(aCompositable, aFormat, aFlags)
   , mBuffer(nullptr)
   , mBufSize(0)
 {
@@ -434,12 +432,10 @@ MemoryTextureClient::~MemoryTextureClient()
 
 BufferTextureClient::BufferTextureClient(CompositableClient* aCompositable,
                                          gfx::SurfaceFormat aFormat,
-                                         gfx::BackendType aBackend,
                                          TextureFlags aFlags)
   : TextureClient(aFlags)
   , mCompositable(aCompositable)
   , mFormat(aFormat)
-  , mBackend(aBackend)
   , mUsingFallbackDrawTarget(false)
   , mLocked(false)
 {}
@@ -542,15 +538,15 @@ BufferTextureClient::GetAsDrawTarget()
   }
 
   MOZ_ASSERT(mUsingFallbackDrawTarget == false);
-  mDrawTarget = serializer.GetAsDrawTarget(mBackend);
+  mDrawTarget = serializer.GetAsDrawTarget();
   if (mDrawTarget) {
     return mDrawTarget;
   }
 
   // fallback path, probably because the Moz2D backend can't create a
   // DrawTarget around raw memory. This is going to be slow :(
-  mDrawTarget = gfx::Factory::CreateDrawTarget(mBackend, serializer.GetSize(),
-                                               serializer.GetFormat());
+  mDrawTarget = gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(
+    serializer.GetSize(), serializer.GetFormat());
   if (!mDrawTarget) {
     return nullptr;
   }

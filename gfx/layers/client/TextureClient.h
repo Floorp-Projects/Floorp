@@ -341,7 +341,7 @@ class BufferTextureClient : public TextureClient
 {
 public:
   BufferTextureClient(CompositableClient* aCompositable, gfx::SurfaceFormat aFormat,
-                      gfx::BackendType aBackend, TextureFlags aFlags);
+                      TextureFlags aFlags);
 
   virtual ~BufferTextureClient();
 
@@ -401,7 +401,6 @@ protected:
   CompositableClient* mCompositable;
   gfx::SurfaceFormat mFormat;
   gfx::IntSize mSize;
-  gfx::BackendType mBackend;
   OpenMode mOpenMode;
   bool mUsingFallbackDrawTarget;
   bool mLocked;
@@ -415,7 +414,7 @@ class ShmemTextureClient : public BufferTextureClient
 {
 public:
   ShmemTextureClient(CompositableClient* aCompositable, gfx::SurfaceFormat aFormat,
-                     gfx::BackendType aBackend, TextureFlags aFlags);
+                     TextureFlags aFlags);
 
   ~ShmemTextureClient();
 
@@ -450,7 +449,7 @@ class MemoryTextureClient : public BufferTextureClient
 {
 public:
   MemoryTextureClient(CompositableClient* aCompositable, gfx::SurfaceFormat aFormat,
-                      gfx::BackendType aBackend, TextureFlags aFlags);
+                      TextureFlags aFlags);
 
   ~MemoryTextureClient();
 
