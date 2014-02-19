@@ -58,10 +58,4 @@ public:
 #undef STUB_ENTRY
 #undef SENTINEL_ENTRY
 
-#if defined(__clang__) || defined(__GNUCC__)
-#define ATTRIBUTE_USED __attribute__ ((__used__))
-#else
-#define ATTRIBUTE_USED
-#endif
-
 #endif /* xptcprivate_h___ */

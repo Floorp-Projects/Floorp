@@ -24,7 +24,7 @@
 static nsresult PrepareAndDispatch(nsXPTCStubBase* self, uint32_t methodIndex, uint32_t* args) asm("_PrepareAndDispatch")
 DONT_DROP_OR_WARN;
 
-static nsresult ATTRIBUTE_USED
+static nsresult
 PrepareAndDispatch(nsXPTCStubBase* self, uint32_t methodIndex, uint32_t* args)
 {
 #define PARAM_BUFFER_COUNT     16

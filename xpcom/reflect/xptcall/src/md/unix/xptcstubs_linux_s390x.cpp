@@ -9,7 +9,7 @@
 #include "xptcprivate.h"
 #include "xptiprivate.h"
 
-static nsresult ATTRIBUTE_USED
+static nsresult
 PrepareAndDispatch(nsXPTCStubBase* self, uint32_t methodIndex, 
                    uint64_t* a_gpr, uint64_t *a_fpr, uint64_t *a_ov)
 {

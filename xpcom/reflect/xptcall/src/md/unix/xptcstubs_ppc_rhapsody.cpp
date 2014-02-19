@@ -35,7 +35,7 @@
  * http://developer.apple.com/documentation/DeveloperTools/Conceptual/
  *  MachORuntime/PowerPCConventions/chapter_3_section_1.html */
 
-extern "C" nsresult ATTRIBUTE_USED
+extern "C" nsresult
 PrepareAndDispatch(
   nsXPTCStubBase *self,
   uint32_t        methodIndex,

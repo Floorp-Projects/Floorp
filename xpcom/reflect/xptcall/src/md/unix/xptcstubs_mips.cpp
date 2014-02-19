@@ -15,7 +15,7 @@
  * Args contains a0-3 and then the stack.
  * Because a0 is 'this', we want to skip it
  */
-extern "C" nsresult ATTRIBUTE_USED
+extern "C" nsresult
 PrepareAndDispatch(nsXPTCStubBase* self, uint32_t methodIndex, uint32_t* args)
 {
     args++; // always skip over a0
