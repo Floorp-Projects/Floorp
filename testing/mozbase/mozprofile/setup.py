@@ -5,17 +5,15 @@
 import sys
 from setuptools import setup
 
-PACKAGE_NAME = 'mozprofile'
-PACKAGE_VERSION = '0.20'
+PACKAGE_VERSION = '0.16'
 
 # we only support python 2 right now
 assert sys.version_info[0] == 2
 
-deps = ['ManifestDestiny >= 0.5.4',
-        'mozfile >= 1.0',
-        'mozlog']
+deps = ["ManifestDestiny >= 0.5.4",
+        "mozfile >= 0.12"]
 
-setup(name=PACKAGE_NAME,
+setup(name='mozprofile',
       version=PACKAGE_VERSION,
       description="Library to create and modify Mozilla application profiles",
       long_description="see http://mozbase.readthedocs.org/",
@@ -36,7 +34,7 @@ setup(name=PACKAGE_NAME,
       include_package_data=True,
       zip_safe=False,
       install_requires=deps,
-      tests_require=['mozhttpd'],
+      tests_require=['mozhttpd', 'mozfile'],
       entry_points="""
       # -*- Entry points: -*-
       [console_scripts]

@@ -283,24 +283,6 @@ class DeviceManager(object):
         """
 
     @abstractmethod
-    def moveTree(self, source, destination):
-         """
-         Does a move of the file or directory on the device.
-
-        :param source: Path to the original file or directory
-        :param destination: Path to the destination file or directory
-         """
-
-    @abstractmethod
-    def copyTree(self, source, destination):
-         """
-         Does a copy of the file or directory on the device.
-
-        :param source: Path to the original file or directory
-        :param destination: Path to the destination file or directory
-         """
-
-    @abstractmethod
     def chmodDir(self, remoteDirname, mask="777"):
         """
         Recursively changes file permissions in a directory.
@@ -368,7 +350,7 @@ class DeviceManager(object):
         """
         Executes shell command on device and returns exit code.
 
-        :param cmd: Commandline list to execute
+        :param cmd: Command string to execute
         :param outputfile: File to store output
         :param env: Environment to pass to exec command
         :param cwd: Directory to execute command from
@@ -380,7 +362,6 @@ class DeviceManager(object):
         """
         Executes shell command on device and returns output as a string.
 
-        :param cmd: Commandline list to execute
         :param env: Environment to pass to exec command
         :param cwd: Directory to execute command from
         :param timeout: specified in seconds, defaults to 'default_timeout'
@@ -448,15 +429,13 @@ class DeviceManager(object):
         """
 
     @abstractmethod
-    def reboot(self, wait=False, ipAddr=None):
+    def reboot(self, ipAddr=None, port=30000):
         """
         Reboots the device.
 
-        :param wait: block on device to come back up before returning
-        :param ipAddr: if specified, try to make the device connect to this
-                       specific IP address after rebooting (only works with
-                       SUT; if None, we try to determine a reasonable address
-                       ourselves)
+        Some implementations may optionally support waiting for a TCP callback from
+        the device once it has restarted before returning, but this is not
+        guaranteed.
         """
 
     @abstractmethod
@@ -487,21 +466,21 @@ class DeviceManager(object):
         """
 
     @abstractmethod
-    def updateApp(self, appBundlePath, processName=None, destPath=None,
-                  wait=False, ipAddr=None):
+    def updateApp(self, appBundlePath, processName=None, destPath=None, ipAddr=None, port=30000):
         """
-        Updates the application on the device and reboots.
+        Updates the application on the device.
 
         :param appBundlePath: path to the application bundle on the device
         :param processName: used to end the process if the applicaiton is
                             currently running (optional)
         :param destPath: Destination directory to where the application should
                          be installed (optional)
-        :param wait: block on device to come back up before returning
-        :param ipAddr: if specified, try to make the device connect to this
-                       specific IP address after rebooting (only works with
-                       SUT; if None and wait is True, we try to determine a
-                       reasonable address ourselves)
+        :param ipAddr: IP address to await a callback ping to let us know that
+                       the device has updated properly (defaults to current
+                       IP)
+        :param port: port to await a callback ping to let us know that the
+                     device has updated properly defaults to 30000, and counts
+                     up from there if it finds a conflict
         """
 
     @staticmethod
