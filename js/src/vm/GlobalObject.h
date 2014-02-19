@@ -821,7 +821,7 @@ template<JSNative ctor, size_t atomOffset, unsigned length>
 JSObject *
 GenericCreateConstructor(JSContext *cx, JSProtoKey key)
 {
-    JSAtom *atom = AtomStateOffsetToName(cx->runtime()->atomState, atomOffset);
+    JSAtom *atom = AtomStateOffsetToName(cx->names(), atomOffset);
     return cx->global()->createConstructor(cx, ctor, atom, length);
 }
 

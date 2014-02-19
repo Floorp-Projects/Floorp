@@ -9,9 +9,3 @@ pp_mochitest_browser_files := \
 pp_mochitest_browser_files_PATH := $(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)
 PP_TARGETS += pp_mochitest_browser_files
 endif # ENABLE_TESTS
-
-ifdef MOZ_SERVICES_HEALTHREPORT
-MOCHITEST_BROWSER_FILES += \
-  browser_healthreport.js \
-  $(NULL)
-endif

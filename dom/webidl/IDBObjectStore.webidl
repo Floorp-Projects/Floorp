@@ -25,10 +25,10 @@ interface IDBObjectStore {
     readonly    attribute boolean        autoIncrement;
 
     [Throws]
-    IDBRequest put (any value, optional any key);
+    IDBRequest put (any value, any key);
 
     [Throws]
-    IDBRequest add (any value, optional any key);
+    IDBRequest add (any value, any key);
 
     [Throws]
     IDBRequest delete (any key);
@@ -40,7 +40,7 @@ interface IDBObjectStore {
     IDBRequest clear ();
 
     [Throws]
-    IDBRequest openCursor (optional any range, optional IDBCursorDirection direction = "next");
+    IDBRequest openCursor (any range, optional IDBCursorDirection direction = "next");
 
     // Bug 899972
     // IDBIndex   createIndex (DOMString name, (DOMString or sequence<DOMString>) keyPath, optional IDBIndexParameters optionalParameters);
@@ -58,20 +58,20 @@ interface IDBObjectStore {
     void       deleteIndex (DOMString indexName);
 
     [Throws]
-    IDBRequest count (optional any key);
+    IDBRequest count (any key);
 };
 
 partial interface IDBObjectStore {
     // Success fires IDBTransactionEvent, result == array of values for given keys
     [Throws]
-    IDBRequest mozGetAll (optional any key, optional unsigned long limit);
+    IDBRequest mozGetAll (any key, optional unsigned long limit);
 
     [Pref="dom.indexedDB.experimental", Throws]
-    IDBRequest getAll (optional any key, optional unsigned long limit);
+    IDBRequest getAll (any key, optional unsigned long limit);
 
     [Pref="dom.indexedDB.experimental", Throws]
-    IDBRequest getAllKeys (optional any key, optional unsigned long limit);
+    IDBRequest getAllKeys (any key, optional unsigned long limit);
 
     [Pref="dom.indexedDB.experimental", Throws]
-    IDBRequest openKeyCursor (optional any range, optional IDBCursorDirection direction = "next");
+    IDBRequest openKeyCursor (any range, optional IDBCursorDirection direction = "next");
 };

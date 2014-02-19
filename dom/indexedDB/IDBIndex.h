@@ -194,11 +194,11 @@ public:
   }
 
   already_AddRefed<IDBRequest>
-  OpenCursor(JSContext* aCx, const Optional<JS::Handle<JS::Value> >& aRange,
+  OpenCursor(JSContext* aCx, JS::Handle<JS::Value> aRange,
              IDBCursorDirection aDirection, ErrorResult& aRv);
 
   already_AddRefed<IDBRequest>
-  OpenKeyCursor(JSContext* aCx, const Optional<JS::Handle<JS::Value> >& aRange,
+  OpenKeyCursor(JSContext* aCx, JS::Handle<JS::Value> aRange,
                 IDBCursorDirection aDirection, ErrorResult& aRv);
 
   already_AddRefed<IDBRequest>
@@ -208,7 +208,7 @@ public:
   GetKey(JSContext* aCx, JS::Handle<JS::Value> aKey, ErrorResult& aRv);
 
   already_AddRefed<IDBRequest>
-  Count(JSContext* aCx, const Optional<JS::Handle<JS::Value> >& aKey,
+  Count(JSContext* aCx, JS::Handle<JS::Value> aKey,
          ErrorResult& aRv);
 
   void
@@ -219,11 +219,11 @@ public:
   }
 
   already_AddRefed<IDBRequest>
-  GetAll(JSContext* aCx, const Optional<JS::Handle<JS::Value> >& aKey,
+  GetAll(JSContext* aCx, JS::Handle<JS::Value> aKey,
          const Optional<uint32_t>& aLimit, ErrorResult& aRv);
 
   already_AddRefed<IDBRequest>
-  GetAllKeys(JSContext* aCx, const Optional<JS::Handle<JS::Value> >& aKey,
+  GetAllKeys(JSContext* aCx, JS::Handle<JS::Value> aKey,
              const Optional<uint32_t>& aLimit, ErrorResult& aRv);
 
 private:
