@@ -696,6 +696,7 @@ public abstract class GeckoApp
         }
     }
 
+    @Override
     public String getResponse(JSONObject origMessage) {
         String res = mCurrentResponse;
         mCurrentResponse = "";
