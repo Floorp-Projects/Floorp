@@ -1863,7 +1863,7 @@ DoMatchLocal(JSContext *cx, CallArgs args, RegExpStatics *res, Handle<JSLinearSt
     res->updateFromMatchPairs(cx, input, matches);
 
     RootedValue rval(cx);
-    if (!CreateRegExpMatchResult(cx, input, chars, charsLen, matches, &rval))
+    if (!CreateRegExpMatchResult(cx, input, matches, &rval))
         return false;
 
     args.rval().set(rval);
