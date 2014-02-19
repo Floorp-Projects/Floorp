@@ -325,6 +325,8 @@ class RegExpCompartment
      */
     ReadBarriered<JSObject> matchResultTemplateObject_;
 
+    JSObject *createMatchResultTemplateObject(JSContext *cx);
+
   public:
     RegExpCompartment(JSRuntime *rt);
     ~RegExpCompartment();
@@ -339,7 +341,11 @@ class RegExpCompartment
     bool get(JSContext *cx, HandleAtom source, JSString *maybeOpt, RegExpGuard *g);
 
     /* Get or create template object used to base the result of .exec() on. */
-    JSObject *getOrCreateMatchResultTemplateObject(JSContext *cx);
+    JSObject *getOrCreateMatchResultTemplateObject(JSContext *cx) {
+        if (matchResultTemplateObject_)
+            return matchResultTemplateObject_;
+        return createMatchResultTemplateObject(cx);
+    }
 
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf);
 };
