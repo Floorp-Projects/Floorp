@@ -20,7 +20,7 @@ bool BrowserTabsRemote();
  *                    stable/frozen, please contact Benjamin Smedberg.
  */
 
-[scriptable, uuid(33bd1630-611e-11e3-949a-0800200c9a66)]
+[scriptable, uuid(ef6df588-f0bf-4e38-949e-9de838c228ea)]
 interface nsIXULRuntime : nsISupports
 {
   /**
@@ -110,4 +110,24 @@ interface nsIXULRuntime : nsISupports
    * on the previous run. Can be passed directly to CrashSubmit.submit.
    */
   readonly attribute DOMString lastRunCrashID;
+
+  /**
+   * True if this is a RELEASE_BUILD.
+   */
+  readonly attribute boolean isReleaseBuild;
+
+  /**
+   * True if this build uses official branding (MOZ_OFFICIAL_BRANDING).
+   */
+  readonly attribute boolean isOfficialBranding;
+
+  /**
+   * The default update channel (MOZ_UPDATE_CHANNEL).
+   */
+  readonly attribute AUTF8String defaultUpdateChannel;
+
+  /**
+   * The distribution ID for this build (MOZ_DISTRIBUTION_ID).
+   */
+  readonly attribute AUTF8String distributionID;
 };
