@@ -176,6 +176,9 @@ class TestEmitterBasic(unittest.TestCase):
             RESFILE='bar.res',
             DEFFILE='baz.def',
             USE_STATIC_LIBS=True,
+            CFLAGS=['-fno-exceptions', '-w'],
+            CXXFLAGS=['-fcxx-exceptions', '-include foo.h'],
+            LDFLAGS=['-framework Foo', '-x'],
         )
 
         variables = objs[0].variables
