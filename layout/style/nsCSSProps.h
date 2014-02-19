@@ -191,6 +191,10 @@ static_assert((CSS_PROPERTY_PARSE_PROPERTY_MASK &
 // flushed.
 #define CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH     (1<<20)
 
+// This property is always enabled in UA sheets.  This is meant to be used
+// together with a pref that enables the property for non-UA sheets.
+#define CSS_PROPERTY_ALWAYS_ENABLED_IN_UA_SHEETS  (1<<21)
+
 /**
  * Types of animatable values.
  */
@@ -251,6 +255,7 @@ public:
   // Given a property string, return the enum value
   enum EnabledState {
     eEnabled,
+    eEnabledInUASheets,
     eAny
   };
   // Looks up the property with name aProperty and returns its corresponding
@@ -434,6 +439,13 @@ public:
                       aProperty < eCSSProperty_COUNT_with_aliases,
                       "out of range");
     return gPropertyEnabled[aProperty];
+  }
+
+  static bool IsEnabled(nsCSSProperty aProperty, EnabledState aEnabled) {
+    return IsEnabled(aProperty) ||
+      (aEnabled == eEnabledInUASheets &&
+       PropHasFlags(aProperty, CSS_PROPERTY_ALWAYS_ENABLED_IN_UA_SHEETS)) ||
+      aEnabled == eAny;
   }
 
 public:
