@@ -179,8 +179,7 @@ CompositableClient::CreateDeprecatedTextureClient(DeprecatedTextureClientType aD
 
 TemporaryRef<BufferTextureClient>
 CompositableClient::CreateBufferTextureClient(SurfaceFormat aFormat,
-                                              TextureFlags aTextureFlags,
-                                              gfx::BackendType aMoz2DBackend)
+                                              TextureFlags aTextureFlags)
 {
 // XXX - Once bug 908196 is fixed, we can use gralloc textures here which will
 // improve performances of videos using SharedPlanarYCbCrImage on b2g.
@@ -193,14 +192,10 @@ CompositableClient::CreateBufferTextureClient(SurfaceFormat aFormat,
 //  }
 //#endif
   if (gfxPlatform::GetPlatform()->PreferMemoryOverShmem()) {
-    RefPtr<BufferTextureClient> result = new MemoryTextureClient(this, aFormat,
-                                                                 aMoz2DBackend,
-                                                                 aTextureFlags);
+    RefPtr<BufferTextureClient> result = new MemoryTextureClient(this, aFormat, aTextureFlags);
     return result.forget();
   }
-  RefPtr<BufferTextureClient> result = new ShmemTextureClient(this, aFormat,
-                                                              aMoz2DBackend,
-                                                              aTextureFlags);
+  RefPtr<BufferTextureClient> result = new ShmemTextureClient(this, aFormat, aTextureFlags);
   return result.forget();
 }
 
@@ -239,26 +234,17 @@ DisableGralloc(SurfaceFormat aFormat)
 
 TemporaryRef<TextureClient>
 CompositableClient::CreateTextureClientForDrawing(SurfaceFormat aFormat,
-                                                  TextureFlags aTextureFlags,
-                                                  gfx::BackendType aMoz2DBackend)
+                                                  TextureFlags aTextureFlags)
 {
-  if (aMoz2DBackend == gfx::BackendType::NONE) {
-    aMoz2DBackend = gfxPlatform::GetPlatform()->GetContentBackend();
-  }
-
   RefPtr<TextureClient> result;
 
 #ifdef XP_WIN
   LayersBackend parentBackend = GetForwarder()->GetCompositorBackendType();
-  if (parentBackend == LayersBackend::LAYERS_D3D11 &&
-      (aMoz2DBackend == gfx::BackendType::DIRECT2D ||
-        aMoz2DBackend == gfx::BackendType::DIRECT2D1_1) &&
-      gfxWindowsPlatform::GetPlatform()->GetD2DDevice() &&
+  if (parentBackend == LayersBackend::LAYERS_D3D11 && gfxWindowsPlatform::GetPlatform()->GetD2DDevice() &&
       !(aTextureFlags & TEXTURE_ALLOC_FALLBACK)) {
     result = new TextureClientD3D11(aFormat, aTextureFlags);
   }
   if (parentBackend == LayersBackend::LAYERS_D3D9 &&
-      aMoz2DBackend == gfx::BackendType::CAIRO &&
       !GetForwarder()->ForwardsToDifferentProcess() &&
       !(aTextureFlags & TEXTURE_ALLOC_FALLBACK)) {
     if (!gfxWindowsPlatform::GetPlatform()->GetD3D9Device()) {
@@ -275,7 +261,6 @@ CompositableClient::CreateTextureClientForDrawing(SurfaceFormat aFormat,
     gfxPlatform::GetPlatform()->ScreenReferenceSurface()->GetType();
 
   if (parentBackend == LayersBackend::LAYERS_BASIC &&
-      aMoz2DBackend == gfx::BackendType::CAIRO &&
       type == gfxSurfaceType::Xlib &&
       !(aTextureFlags & TEXTURE_ALLOC_FALLBACK))
   {
@@ -283,7 +268,6 @@ CompositableClient::CreateTextureClientForDrawing(SurfaceFormat aFormat,
   }
 #ifdef GL_PROVIDER_GLX
   if (parentBackend == LayersBackend::LAYERS_OPENGL &&
-      aMoz2DBackend == gfx::BackendType::CAIRO &&
       type == gfxSurfaceType::Xlib &&
       !(aTextureFlags & TEXTURE_ALLOC_FALLBACK) &&
       aFormat != SurfaceFormat::A8 &&
@@ -296,14 +280,13 @@ CompositableClient::CreateTextureClientForDrawing(SurfaceFormat aFormat,
 
 #ifdef MOZ_WIDGET_GONK
   if (!DisableGralloc(aFormat)) {
-    result = new GrallocTextureClientOGL(this, aFormat, aMoz2DBackend,
-                                         aTextureFlags);
+    result = new GrallocTextureClientOGL(this, aFormat, aTextureFlags);
   }
 #endif
 
   // Can't do any better than a buffer texture client.
   if (!result) {
-    result = CreateBufferTextureClient(aFormat, aTextureFlags, aMoz2DBackend);
+    result = CreateBufferTextureClient(aFormat, aTextureFlags);
   }
 
   MOZ_ASSERT(!result || result->AsTextureClientDrawTarget(),
