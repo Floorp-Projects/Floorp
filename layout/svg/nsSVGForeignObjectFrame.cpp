@@ -191,7 +191,7 @@ nsSVGForeignObjectFrame::IsSVGTransformed(Matrix *aOwnTransform,
   return foundTransform;
 }
 
-NS_IMETHODIMP
+nsresult
 nsSVGForeignObjectFrame::PaintSVG(nsRenderingContext *aContext,
                                   const nsIntRect *aDirtyRect,
                                   nsIFrame* aTransformRoot)
@@ -280,7 +280,7 @@ nsSVGForeignObjectFrame::PaintSVG(nsRenderingContext *aContext,
   return rv;
 }
 
-NS_IMETHODIMP_(nsIFrame*)
+nsIFrame*
 nsSVGForeignObjectFrame::GetFrameForPoint(const nsPoint &aPoint)
 {
   NS_ASSERTION(!NS_SVGDisplayListHitTestingEnabled() ||
@@ -323,7 +323,7 @@ nsSVGForeignObjectFrame::GetFrameForPoint(const nsPoint &aPoint)
   return nullptr;
 }
 
-NS_IMETHODIMP_(nsRect)
+nsRect
 nsSVGForeignObjectFrame::GetCoveredRegion()
 {
   float x, y, w, h;

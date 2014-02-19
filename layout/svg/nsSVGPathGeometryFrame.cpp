@@ -197,7 +197,7 @@ nsSVGPathGeometryFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 //----------------------------------------------------------------------
 // nsISVGChildFrame methods
 
-NS_IMETHODIMP
+nsresult
 nsSVGPathGeometryFrame::PaintSVG(nsRenderingContext *aContext,
                                  const nsIntRect *aDirtyRect,
                                  nsIFrame* aTransformRoot)
@@ -231,7 +231,7 @@ nsSVGPathGeometryFrame::PaintSVG(nsRenderingContext *aContext,
   return NS_OK;
 }
 
-NS_IMETHODIMP_(nsIFrame*)
+nsIFrame*
 nsSVGPathGeometryFrame::GetFrameForPoint(const nsPoint &aPoint)
 {
   gfxMatrix canvasTM = GetCanvasTM(FOR_HIT_TESTING);
@@ -287,7 +287,7 @@ nsSVGPathGeometryFrame::GetFrameForPoint(const nsPoint &aPoint)
   return nullptr;
 }
 
-NS_IMETHODIMP_(nsRect)
+nsRect
 nsSVGPathGeometryFrame::GetCoveredRegion()
 {
   return nsSVGUtils::TransformFrameRectToOuterSVG(
