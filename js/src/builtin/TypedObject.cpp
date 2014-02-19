@@ -2120,7 +2120,7 @@ TypedDatum::constructSized(JSContext *cx, unsigned int argc, Value *vp)
     //   new TypeObj(data)
 
     // Zero argument constructor:
-    if (argc == 0) {
+    if (args.length() == 0) {
         int32_t length = LengthForType(*callee);
         Rooted<TypedDatum*> obj(cx, createZeroed(cx, callee, length));
         if (!obj)
@@ -2135,7 +2135,7 @@ TypedDatum::constructSized(JSContext *cx, unsigned int argc, Value *vp)
         buffer = &args[0].toObject().as<ArrayBufferObject>();
 
         int32_t offset;
-        if (argc >= 2 && !args[1].isUndefined()) {
+        if (args.length() >= 2 && !args[1].isUndefined()) {
             if (!args[1].isInt32()) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage,
                                      nullptr, JSMSG_TYPEDOBJECT_BAD_ARGS);
@@ -2147,7 +2147,7 @@ TypedDatum::constructSized(JSContext *cx, unsigned int argc, Value *vp)
             offset = 0;
         }
 
-        if (argc >= 3 && !args[2].isUndefined()) {
+        if (args.length() >= 3 && !args[2].isUndefined()) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage,
                                  nullptr, JSMSG_TYPEDOBJECT_BAD_ARGS);
             return false;
@@ -2212,7 +2212,7 @@ TypedDatum::constructUnsized(JSContext *cx, unsigned int argc, Value *vp)
     // [1] Explicit lengths only available for unsized arrays.
 
     // Zero argument constructor:
-    if (argc == 0) {
+    if (args.length() == 0) {
         Rooted<TypedDatum*> obj(cx, createZeroed(cx, callee, 0));
         if (!obj)
             return false;
@@ -2236,7 +2236,7 @@ TypedDatum::constructUnsized(JSContext *cx, unsigned int argc, Value *vp)
         buffer = &args[0].toObject().as<ArrayBufferObject>();
 
         int32_t offset;
-        if (argc >= 2 && !args[1].isUndefined()) {
+        if (args.length() >= 2 && !args[1].isUndefined()) {
             if (!args[1].isInt32()) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage,
                                      nullptr, JSMSG_TYPEDOBJECT_BAD_ARGS);
@@ -2259,7 +2259,7 @@ TypedDatum::constructUnsized(JSContext *cx, unsigned int argc, Value *vp)
         int32_t maximumLength = bytesRemaining / elemSize;
 
         int32_t length;
-        if (argc >= 3 && !args[2].isUndefined()) {
+        if (args.length() >= 3 && !args[2].isUndefined()) {
             if (!args[2].isInt32()) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage,
                                      nullptr, JSMSG_TYPEDOBJECT_BAD_ARGS);
@@ -2400,7 +2400,7 @@ bool
 js::NewTypedHandle(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    JS_ASSERT(argc == 1);
+    JS_ASSERT(args.length() == 1);
     JS_ASSERT(args[0].isObject() && args[0].toObject().is<SizedTypeDescr>());
 
     Rooted<SizedTypeDescr*> descr(cx, &args[0].toObject().as<SizedTypeDescr>());
@@ -2417,7 +2417,7 @@ bool
 js::NewDerivedTypedDatum(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    JS_ASSERT(argc == 3);
+    JS_ASSERT(args.length() == 3);
     JS_ASSERT(args[0].isObject() && args[0].toObject().is<SizedTypeDescr>());
     JS_ASSERT(args[1].isObject() && args[1].toObject().is<TypedDatum>());
     JS_ASSERT(args[2].isInt32());
@@ -2439,7 +2439,7 @@ bool
 js::AttachHandle(ThreadSafeContext *, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    JS_ASSERT(argc == 3);
+    JS_ASSERT(args.length() == 3);
     JS_ASSERT(args[0].isObject() && args[0].toObject().is<TypedHandle>());
     JS_ASSERT(args[1].isObject() && args[1].toObject().is<TypedDatum>());
     JS_ASSERT(args[2].isInt32());
@@ -2458,7 +2458,7 @@ bool
 js::ObjectIsTypeDescr(ThreadSafeContext *, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    JS_ASSERT(argc == 1);
+    JS_ASSERT(args.length() == 1);
     JS_ASSERT(args[0].isObject());
     args.rval().setBoolean(args[0].toObject().is<TypeDescr>());
     return true;
@@ -2471,7 +2471,7 @@ bool
 js::ObjectIsTypedHandle(ThreadSafeContext *, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    JS_ASSERT(argc == 1);
+    JS_ASSERT(args.length() == 1);
     JS_ASSERT(args[0].isObject());
     args.rval().setBoolean(args[0].toObject().is<TypedHandle>());
     return true;
@@ -2484,7 +2484,7 @@ bool
 js::ObjectIsTypedObject(ThreadSafeContext *, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    JS_ASSERT(argc == 1);
+    JS_ASSERT(args.length() == 1);
     JS_ASSERT(args[0].isObject());
     args.rval().setBoolean(args[0].toObject().is<TypedObject>());
     return true;
@@ -2509,7 +2509,7 @@ bool
 js::ClampToUint8(ThreadSafeContext *, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    JS_ASSERT(argc == 1);
+    JS_ASSERT(args.length() == 1);
     JS_ASSERT(args[0].isNumber());
     args.rval().setNumber(ClampDoubleToUint8(args[0].toNumber()));
     return true;
