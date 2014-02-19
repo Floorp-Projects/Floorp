@@ -12,6 +12,7 @@
     "content/xul":"tests that use xul",
     "layout/xul" : "",
     "dom/apps":"bug 972927, nearly perma-fail",
+    "dom/datastore":"bug 974270, frequent failures",
     "dom/tests/mochitest/general/test_focusrings.xul":"",
     "layout/base/tests/test_bug465448.xul":"",
 
