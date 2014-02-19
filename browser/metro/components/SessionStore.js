@@ -355,8 +355,19 @@ SessionStore.prototype = {
   handleEvent: function ss_handleEvent(aEvent) {
     let window = aEvent.currentTarget.ownerDocument.defaultView;
     switch (aEvent.type) {
+      case "load":
+        browser = aEvent.currentTarget;
+        if (aEvent.target == browser.contentDocument && browser.__SS_tabFormData) {
+          browser.messageManager.sendAsyncMessage("SessionStore:restoreSessionTabData", {
+            formdata: browser.__SS_tabFormData.formdata,
+            scroll: browser.__SS_tabFormData.scroll
+          });
+        }
+        break;
       case "TabOpen":
         this.updateTabTelemetryVars(window);
+        let browser = aEvent.originalTarget.linkedBrowser;
+        browser.addEventListener("load", this, true);
       case "TabClose": {
         let browser = aEvent.originalTarget.linkedBrowser;
         if (aEvent.type == "TabOpen") {
@@ -380,8 +391,19 @@ SessionStore.prototype = {
   },
 
   receiveMessage: function ss_receiveMessage(aMessage) {
-    let window = aMessage.target.ownerDocument.defaultView;
-    this.onTabLoad(window, aMessage.target, aMessage);
+    let browser = aMessage.target;
+    switch (aMessage.name) {
+      case "SessionStore:collectFormdata":
+        browser.__SS_data.formdata = aMessage.json.data;
+        break;
+      case "SessionStore:collectScrollPosition":
+        browser.__SS_data.scroll = aMessage.json.data;
+        break;
+      default:
+        let window = aMessage.target.ownerDocument.defaultView;
+        this.onTabLoad(window, aMessage.target, aMessage);
+        break;
+    }
   },
 
   onWindowOpen: function ss_onWindowOpen(aWindow) {
@@ -455,6 +477,8 @@ SessionStore.prototype = {
   onTabAdd: function ss_onTabAdd(aWindow, aBrowser, aNoNotification) {
     aBrowser.messageManager.addMessageListener("pageshow", this);
     aBrowser.messageManager.addMessageListener("Content:SessionHistory", this);
+    aBrowser.messageManager.addMessageListener("SessionStore:collectFormdata", this);
+    aBrowser.messageManager.addMessageListener("SessionStore:collectScrollPosition", this);
 
     if (!aNoNotification)
       this.saveStateDelayed();
@@ -464,6 +488,8 @@ SessionStore.prototype = {
   onTabRemove: function ss_onTabRemove(aWindow, aBrowser, aNoNotification) {
     aBrowser.messageManager.removeMessageListener("pageshow", this);
     aBrowser.messageManager.removeMessageListener("Content:SessionHistory", this);
+    aBrowser.messageManager.removeMessageListener("SessionStore:collectFormdata", this);
+    aBrowser.messageManager.removeMessageListener("SessionStore:collectScrollPosition", this);
 
     // If this browser is being restored, skip any session save activity
     if (aBrowser.__SS_restore)
@@ -912,6 +938,7 @@ SessionStore.prototype = {
             tab.chromeTab.updateTitle(tabData.entries[tabData.index - 1].title);
           }
 
+          tab.browser.__SS_tabFormData = tabData
           tab.browser.__SS_extdata = tabData.extData;
         }
 
