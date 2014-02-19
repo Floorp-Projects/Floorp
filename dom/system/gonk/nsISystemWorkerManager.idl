@@ -7,13 +7,10 @@
 /**
  * Information about networks that is exposed to network manager API consumers.
  */
-[scriptable, builtinclass, uuid(a9ea96a0-407d-11e3-aa6e-0800200c9a66)]
+[scriptable, builtinclass, uuid(4984b669-0ee0-4809-ae96-3358a325a6b0)]
 interface nsISystemWorkerManager : nsISupports
 {
   [implicit_jscontext]
   void registerRilWorker(in unsigned long aClientId,
                          in jsval aWorker);
-
-  [implicit_jscontext]
-  void registerNfcWorker(in jsval aWorker);
 };
