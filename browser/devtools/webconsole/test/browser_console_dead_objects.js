@@ -18,9 +18,14 @@ function test()
 {
   let hud = null;
 
+  registerCleanupFunction(() => {
+    Services.prefs.clearUserPref("devtools.chrome.enabled");
+  });
+
   Task.spawn(runner).then(finishTest);
 
   function* runner() {
+    Services.prefs.setBoolPref("devtools.chrome.enabled", true);
     let {tab} = yield loadTab(TEST_URI);
 
     info("open the browser console");
