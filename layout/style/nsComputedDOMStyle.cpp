@@ -3753,16 +3753,6 @@ nsComputedDOMStyle::DoGetOverflowY()
 }
 
 CSSValue*
-nsComputedDOMStyle::DoGetOverflowClipBox()
-{
-  nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
-  val->SetIdent(
-    nsCSSProps::ValueToKeywordEnum(StyleDisplay()->mOverflowClipBox,
-                                   nsCSSProps::kOverflowClipBoxKTable));
-  return val;
-}
-
-CSSValue*
 nsComputedDOMStyle::DoGetResize()
 {
   nsROCSSPrimitiveValue *val = new nsROCSSPrimitiveValue;

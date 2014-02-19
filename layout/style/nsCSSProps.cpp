@@ -392,7 +392,7 @@ nsCSSProps::LookupProperty(const nsACString& aProperty,
   if (eCSSAliasCount != 0 && res >= eCSSProperty_COUNT) {
     static_assert(eCSSProperty_UNKNOWN < eCSSProperty_COUNT,
                   "assuming eCSSProperty_UNKNOWN doesn't hit this code");
-    if (IsEnabled(res, aEnabled)) {
+    if (IsEnabled(res) || aEnabled == eAny) {
       res = gAliases[res - eCSSProperty_COUNT];
       NS_ABORT_IF_FALSE(0 <= res && res < eCSSProperty_COUNT,
                         "aliases must not point to other aliases");
@@ -400,7 +400,7 @@ nsCSSProps::LookupProperty(const nsACString& aProperty,
       res = eCSSProperty_UNKNOWN;
     }
   }
-  if (res != eCSSProperty_UNKNOWN && !IsEnabled(res, aEnabled)) {
+  if (res != eCSSProperty_UNKNOWN && aEnabled == eEnabled && !IsEnabled(res)) {
     res = eCSSProperty_UNKNOWN;
   }
   return res;
@@ -424,7 +424,7 @@ nsCSSProps::LookupProperty(const nsAString& aProperty, EnabledState aEnabled)
   if (eCSSAliasCount != 0 && res >= eCSSProperty_COUNT) {
     static_assert(eCSSProperty_UNKNOWN < eCSSProperty_COUNT,
                   "assuming eCSSProperty_UNKNOWN doesn't hit this code");
-    if (IsEnabled(res, aEnabled)) {
+    if (IsEnabled(res) || aEnabled == eAny) {
       res = gAliases[res - eCSSProperty_COUNT];
       NS_ABORT_IF_FALSE(0 <= res && res < eCSSProperty_COUNT,
                         "aliases must not point to other aliases");
@@ -432,7 +432,7 @@ nsCSSProps::LookupProperty(const nsAString& aProperty, EnabledState aEnabled)
       res = eCSSProperty_UNKNOWN;
     }
   }
-  if (res != eCSSProperty_UNKNOWN && !IsEnabled(res, aEnabled)) {
+  if (res != eCSSProperty_UNKNOWN && aEnabled == eEnabled && !IsEnabled(res)) {
     res = eCSSProperty_UNKNOWN;
   }
   return res;
@@ -1419,12 +1419,6 @@ const KTableValue nsCSSProps::kOverflowKTable[] = {
   eCSSKeyword__moz_scrollbars_horizontal, NS_STYLE_OVERFLOW_SCROLLBARS_HORIZONTAL,
   eCSSKeyword__moz_scrollbars_vertical, NS_STYLE_OVERFLOW_SCROLLBARS_VERTICAL,
   eCSSKeyword__moz_hidden_unscrollable, NS_STYLE_OVERFLOW_CLIP,
-  eCSSKeyword_UNKNOWN,-1
-};
-
-const KTableValue nsCSSProps::kOverflowClipBoxKTable[] = {
-  eCSSKeyword_padding_box, NS_STYLE_OVERFLOW_CLIP_BOX_PADDING_BOX,
-  eCSSKeyword_content_box, NS_STYLE_OVERFLOW_CLIP_BOX_CONTENT_BOX,
   eCSSKeyword_UNKNOWN,-1
 };
 
