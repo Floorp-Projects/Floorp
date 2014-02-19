@@ -195,7 +195,7 @@ var CastingApps = {
       }
 
       app.stop(function() {
-        app.start("", function() {
+        app.start(function() {
           app.remoteMedia(function(aRemoteMedia) {
             this.session = {
               service: aService,
