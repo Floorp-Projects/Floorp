@@ -1033,11 +1033,14 @@ function runTests() {
 function spyOnMethod(aObj, aMethod) {
   let origFunc = aObj[aMethod];
   let spy = function() {
-    spy.calledWith = Array.slice(arguments);
+    let callArguments = Array.slice(arguments);
     spy.callCount++;
+    spy.calledWith = callArguments;
+    spy.argsForCall.push(callArguments);
     return (spy.returnValue = origFunc.apply(aObj, arguments));
   };
   spy.callCount = 0;
+  spy.argsForCall = [];
   spy.restore = function() {
     return (aObj[aMethod] = origFunc);
   };

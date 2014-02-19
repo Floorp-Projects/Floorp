@@ -26,7 +26,7 @@
 #endif
 
 // Heartbeat timer duration used while waiting for an incoming request.
-#define HEARTBEAT_MSEC 1000
+#define HEARTBEAT_MSEC 250
 // Total number of heartbeats we wait before giving up and shutting down.
 #define REQUEST_WAIT_TIMEOUT 30
 // Pulled from desktop browser's shell

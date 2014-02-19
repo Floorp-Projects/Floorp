@@ -136,7 +136,7 @@ class ISOControl {
 friend class Box;
 
 public:
-  ISOControl();
+  ISOControl(uint32_t aMuxingType);
   ~ISOControl();
 
   nsresult GenerateFtyp();
@@ -188,6 +188,8 @@ public:
   nsresult SetFragment(FragmentBuffer* aFragment);
   FragmentBuffer* GetFragment(uint32_t aType);
 
+  uint32_t GetMuxingType() { return mMuxingType; }
+
   nsresult SetMetadata(TrackMetadataBase* aTrackMeta);
   nsresult GetAudioMetadata(nsRefPtr<AACTrackMetadata>& aAudMeta);
   nsresult GetVideoMetadata(nsRefPtr<AVCTrackMetadata>& aVidMeta);
@@ -203,8 +205,12 @@ private:
   uint32_t GetBufPos();
   nsresult FlushBuf();
 
+  // One of value in TYPE_XXX, defined in ISOMediaWriter.
+  uint32_t mMuxingType;
+
   // Audio and video fragments are owned by ISOMediaWriter.
-  // They don't need to worry about pointer going stale.
+  // They don't need to worry about pointer going stale because ISOMediaWriter's
+  // lifetime is longer than ISOControl.
   FragmentBuffer* mAudioFragmentBuffer;
   FragmentBuffer* mVideoFragmentBuffer;
 

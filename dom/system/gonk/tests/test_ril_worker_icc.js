@@ -674,7 +674,7 @@ add_test(function test_icc_get_card_lock_state_fdn() {
     this.readInt32();
 
     // String Array Length.
-    do_check_eq(this.readInt32(), worker.RILQUIRKS_V5_LEGACY ? 3 : 4);
+    do_check_eq(this.readInt32(), ril.v5Legacy ? 3 : 4);
 
     // Facility.
     do_check_eq(this.readString(), ICC_CB_FACILITY_FDN);
@@ -687,7 +687,7 @@ add_test(function test_icc_get_card_lock_state_fdn() {
                                     ICC_SERVICE_CLASS_DATA  |
                                     ICC_SERVICE_CLASS_FAX).toString());
 
-    if (!worker.RILQUIRKS_V5_LEGACY) {
+    if (!ril.v5Legacy) {
       // AID. Ignore because it's from modem.
       this.readInt32();
     }
@@ -1120,7 +1120,7 @@ add_test(function test_update_email() {
       // pin2.
       do_check_eq(this.readString(), null);
 
-      if (!worker.RILQUIRKS_V5_LEGACY) {
+      if (!ril.v5Legacy) {
         // AID. Ignore because it's from modem.
         this.readInt32();
       }
@@ -1266,7 +1266,7 @@ add_test(function test_update_anr() {
       // pin2.
       do_check_eq(this.readString(), null);
 
-      if (!worker.RILQUIRKS_V5_LEGACY) {
+      if (!ril.v5Legacy) {
         // AID. Ignore because it's from modem.
         this.readInt32();
       }
@@ -1403,7 +1403,7 @@ add_test(function test_update_iap() {
       // pin2.
       do_check_eq(this.readString(), null);
 
-      if (!worker.RILQUIRKS_V5_LEGACY) {
+      if (!ril.v5Legacy) {
         // AID. Ignore because it's from modem.
         this.readInt32();
       }
@@ -1479,7 +1479,7 @@ add_test(function test_update_adn_like() {
       do_check_eq(this.readString(), "1111");
     }
 
-    if (!worker.RILQUIRKS_V5_LEGACY) {
+    if (!ril.v5Legacy) {
       // AID. Ignore because it's from modem.
       this.readInt32();
     }
@@ -2227,10 +2227,10 @@ add_test(function test_icc_permanent_blocked() {
 add_test(function test_set_icc_card_lock_facility_lock() {
   let worker = newUint8Worker();
   let context = worker.ContextPool._contexts[0];
-  worker.RILQUIRKS_V5_LEGACY = false;
   let aid = "123456789";
   let ril = context.RIL;
   ril.aid = aid;
+  ril.v5Legacy = false;
   let buf = context.Buf;
 
   let GECKO_CARDLOCK_TO_FACILITIY_LOCK = {};
@@ -2728,7 +2728,7 @@ add_test(function test_update_mwis() {
       // pin2.
       do_check_eq(this.readString(), null);
 
-      if (!worker.RILQUIRKS_V5_LEGACY) {
+      if (!ril.v5Legacy) {
         // AID. Ignore because it's from modem.
         this.readInt32();
       }
