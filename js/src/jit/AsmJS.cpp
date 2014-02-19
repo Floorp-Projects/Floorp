@@ -1581,7 +1581,7 @@ class MOZ_STACK_CLASS ModuleCompiler
 #endif
     }
 
-    bool extractModule(ScopedJSDeletePtr<AsmJSModule> *module, AsmJSStaticLinkData *linkData)
+    bool finish(ScopedJSDeletePtr<AsmJSModule> *module)
     {
         module_->initCharsEnd(parser_.tokenStream.currentToken().pos.end);
 
@@ -1630,13 +1630,7 @@ class MOZ_STACK_CLASS ModuleCompiler
         }
 #endif
 
-        // Some link information does not need to be permanently stored in the
-        // AsmJSModule since it is not needed after staticallyLink (which
-        // occurs during compilation and on cache deserialization). This link
-        // information is collected into AsmJSStaticLinkData which can then be
-        // serialized/deserialized alongside the AsmJSModule.
-
-        linkData->operationCallbackExitOffset = masm_.actualOffset(operationCallbackLabel_.offset());
+        module_->setOperationCallbackOffset(masm_.actualOffset(operationCallbackLabel_.offset()));
 
         // CodeLabels produced during codegen
         for (size_t i = 0; i < masm_.numCodeLabels(); i++) {
@@ -1648,10 +1642,10 @@ class MOZ_STACK_CLASS ModuleCompiler
             // instruction.
             while (labelOffset != LabelBase::INVALID_OFFSET) {
                 size_t patchAtOffset = masm_.labelOffsetToPatchOffset(labelOffset);
-                AsmJSStaticLinkData::RelativeLink link;
+                AsmJSModule::RelativeLink link;
                 link.patchAtOffset = patchAtOffset;
                 link.targetOffset = targetOffset;
-                if (!linkData->relativeLinks.append(link))
+                if (!module_->addRelativeLink(link))
                     return false;
                 labelOffset = *(uintptr_t *)(module_->codeBase() + patchAtOffset);
             }
@@ -1662,10 +1656,10 @@ class MOZ_STACK_CLASS ModuleCompiler
             FuncPtrTable &table = funcPtrTables_[tableIndex];
             unsigned tableBaseOffset = module_->offsetOfGlobalData() + table.globalDataOffset();
             for (unsigned elemIndex = 0; elemIndex < table.numElems(); elemIndex++) {
-                AsmJSStaticLinkData::RelativeLink link;
+                AsmJSModule::RelativeLink link;
                 link.patchAtOffset = tableBaseOffset + elemIndex * sizeof(uint8_t*);
                 link.targetOffset = masm_.actualOffset(table.elem(elemIndex).code()->offset());
-                if (!linkData->relativeLinks.append(link))
+                if (!module_->addRelativeLink(link))
                     return false;
             }
         }
@@ -1676,10 +1670,10 @@ class MOZ_STACK_CLASS ModuleCompiler
         // code section so we can just use an RelativeLink.
         for (unsigned i = 0; i < globalAccesses_.length(); i++) {
             AsmJSGlobalAccess a = globalAccesses_[i];
-            AsmJSStaticLinkData::RelativeLink link;
+            AsmJSModule::RelativeLink link;
             link.patchAtOffset = masm_.labelOffsetToPatchOffset(a.patchAt.offset());
             link.targetOffset = module_->offsetOfGlobalData() + a.globalDataOffset;
-            if (!linkData->relativeLinks.append(link))
+            if (!module_->addRelativeLink(link))
                 return false;
         }
 #endif
@@ -1697,10 +1691,10 @@ class MOZ_STACK_CLASS ModuleCompiler
         // Absolute links
         for (size_t i = 0; i < masm_.numAsmJSAbsoluteLinks(); i++) {
             AsmJSAbsoluteLink src = masm_.asmJSAbsoluteLink(i);
-            AsmJSStaticLinkData::AbsoluteLink link;
+            AsmJSModule::AbsoluteLink link;
             link.patchAt = masm_.actualOffset(src.patchAt.offset());
             link.target = src.target;
-            if (!linkData->absoluteLinks.append(link))
+            if (!module_->addAbsoluteLink(link))
                 return false;
         }
 
@@ -6790,8 +6784,7 @@ GenerateStubs(ModuleCompiler &m)
 
 static bool
 FinishModule(ModuleCompiler &m,
-             ScopedJSDeletePtr<AsmJSModule> *module,
-             AsmJSStaticLinkData *linkData)
+             ScopedJSDeletePtr<AsmJSModule> *module)
 {
     LifoAlloc lifo(LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
     TempAllocator alloc(&lifo);
@@ -6802,7 +6795,7 @@ FinishModule(ModuleCompiler &m,
     if (!GenerateStubs(m))
         return false;
 
-    return m.extractModule(module, linkData);
+    return m.finish(module);
 }
 
 static bool
@@ -6858,12 +6851,11 @@ CheckModule(ExclusiveContext *cx, AsmJSParser &parser, ParseNode *stmtList,
         return m.fail(nullptr, "top-level export (return) must be the last statement");
 
     ScopedJSDeletePtr<AsmJSModule> module;
-    AsmJSStaticLinkData linkData(cx);
-    if (!FinishModule(m, &module, &linkData))
+    if (!FinishModule(m, &module))
         return false;
 
-    bool storedInCache = StoreAsmJSModuleInCache(parser, *module, linkData, cx);
-    module->staticallyLink(linkData, cx);
+    bool storedInCache = StoreAsmJSModuleInCache(parser, *module, cx);
+    module->staticallyLink(cx);
 
     m.buildCompilationTimeReport(storedInCache, compilationTimeReport);
     *moduleOut = module.forget();
