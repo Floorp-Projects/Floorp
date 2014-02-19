@@ -392,7 +392,7 @@ nsCSSProps::LookupProperty(const nsACString& aProperty,
   if (eCSSAliasCount != 0 && res >= eCSSProperty_COUNT) {
     static_assert(eCSSProperty_UNKNOWN < eCSSProperty_COUNT,
                   "assuming eCSSProperty_UNKNOWN doesn't hit this code");
-    if (IsEnabled(res) || aEnabled == eAny) {
+    if (IsEnabled(res, aEnabled)) {
       res = gAliases[res - eCSSProperty_COUNT];
       NS_ABORT_IF_FALSE(0 <= res && res < eCSSProperty_COUNT,
                         "aliases must not point to other aliases");
@@ -400,7 +400,7 @@ nsCSSProps::LookupProperty(const nsACString& aProperty,
       res = eCSSProperty_UNKNOWN;
     }
   }
-  if (res != eCSSProperty_UNKNOWN && aEnabled == eEnabled && !IsEnabled(res)) {
+  if (res != eCSSProperty_UNKNOWN && !IsEnabled(res, aEnabled)) {
     res = eCSSProperty_UNKNOWN;
   }
   return res;
@@ -424,7 +424,7 @@ nsCSSProps::LookupProperty(const nsAString& aProperty, EnabledState aEnabled)
   if (eCSSAliasCount != 0 && res >= eCSSProperty_COUNT) {
     static_assert(eCSSProperty_UNKNOWN < eCSSProperty_COUNT,
                   "assuming eCSSProperty_UNKNOWN doesn't hit this code");
-    if (IsEnabled(res) || aEnabled == eAny) {
+    if (IsEnabled(res, aEnabled)) {
       res = gAliases[res - eCSSProperty_COUNT];
       NS_ABORT_IF_FALSE(0 <= res && res < eCSSProperty_COUNT,
                         "aliases must not point to other aliases");
@@ -432,7 +432,7 @@ nsCSSProps::LookupProperty(const nsAString& aProperty, EnabledState aEnabled)
       res = eCSSProperty_UNKNOWN;
     }
   }
-  if (res != eCSSProperty_UNKNOWN && aEnabled == eEnabled && !IsEnabled(res)) {
+  if (res != eCSSProperty_UNKNOWN && !IsEnabled(res, aEnabled)) {
     res = eCSSProperty_UNKNOWN;
   }
   return res;
