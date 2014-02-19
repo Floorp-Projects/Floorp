@@ -2,12 +2,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from setuptools import setup, find_packages
+from setuptools import setup
 
 PACKAGE_VERSION = '0.3'
 
 # dependencies
 deps = ['mozinfo']
+try:
+    import json
+except ImportError:
+    deps.append('simplejson')
 
 setup(name='moztest',
       version=PACKAGE_VERSION,
@@ -19,7 +23,7 @@ setup(name='moztest',
       author_email='tools@lists.mozilla.org',
       url='https://wiki.mozilla.org/Auto-tools/Projects/Mozbase',
       license='MPL',
-      packages=find_packages(),
+      packages=['moztest'],
       include_package_data=True,
       zip_safe=False,
       install_requires=deps,
