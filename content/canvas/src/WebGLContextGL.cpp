@@ -3224,16 +3224,20 @@ WebGLContext::CompileShader(WebGLShader *shader)
 #else
         if (!ShCompile(compiler, &s, 1, compileOptions)) {
 #endif
-            size_t len = 0;
-            ShGetInfo(compiler, SH_INFO_LOG_LENGTH, &len);
+            size_t lenWithNull = 0;
+            ShGetInfo(compiler, SH_INFO_LOG_LENGTH, &lenWithNull);
 
-            if (len) {
-                nsAutoCString info;
-                info.SetLength(len);
-                ShGetInfoLog(compiler, info.BeginWriting());
-                shader->SetTranslationFailure(info);
-            } else {
+            if (!lenWithNull) {
+                // Error in ShGetInfo.
                 shader->SetTranslationFailure(NS_LITERAL_CSTRING("Internal error: failed to get shader info log"));
+            } else {
+                size_t len = lenWithNull - 1;
+
+                nsAutoCString info;
+                info.SetLength(len); // Allocates len+1, for the null-term.
+                ShGetInfoLog(compiler, info.BeginWriting());
+
+                shader->SetTranslationFailure(info);
             }
             ShDestruct(compiler);
             shader->SetCompileStatus(false);
