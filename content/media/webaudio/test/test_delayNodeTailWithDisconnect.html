@@ -45,14 +45,12 @@ function onSourceOutput(e) {
 }
 
 function disconnectSources() {
-  dump("disconnecting\n")
   for (var i = 0; i < sourceCount; ++i) {
     sources[i].disconnect();
   }
 
   SpecialPowers.forceGC();
   SpecialPowers.forceCC();
-  dump("forced GC\n");
 }
 
 function startTest() {
