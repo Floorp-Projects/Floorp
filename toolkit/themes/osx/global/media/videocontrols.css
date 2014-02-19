@@ -320,6 +320,14 @@ html|table {
     background-image: url(chrome://global/skin/media/playButton@2x.png);
     background-size: 28px 28px;
   }
+  .volumeBackground {
+    background-image: url(chrome://global/skin/media/volume-empty@2x.png);
+    background-size: 32px 16px;
+  }
+  .volumeForeground {
+    background-image: url(chrome://global/skin/media/volume-full@2x.png);
+    background-size: 32px 16px;
+  }
   .muteButton {
     background-image: url(chrome://global/skin/media/muteButton@2x.png);
     background-size: 33px 28px;

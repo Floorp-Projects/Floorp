@@ -123,10 +123,6 @@ public class BookmarksPanel extends HomeFragment {
         });
         mList.setAdapter(mListAdapter);
 
-        // Invalidate the cached value that keeps track of whether or
-        // not desktop bookmarks (or reading list items) exist.
-        BrowserDB.invalidateCachedState();
-
         // Create callbacks before the initial loader is started.
         mLoaderCallbacks = new CursorLoaderCallbacks();
         loadIfVisible();
@@ -205,6 +201,14 @@ public class BookmarksPanel extends HomeFragment {
         @Override
         public Cursor loadCursor() {
             return BrowserDB.getBookmarksInFolder(getContext().getContentResolver(), mFolderInfo.id);
+        }
+
+        @Override
+        public void onContentChanged() {
+            // Invalidate the cached value that keeps track of whether or
+            // not desktop bookmarks exist.
+            BrowserDB.invalidateCachedState();
+            super.onContentChanged();
         }
 
         public FolderInfo getFolderInfo() {
