@@ -54,7 +54,7 @@ private:
   nsImageFrame *mFrame;
 };
 
-#define ImageFrameSuper nsSplittableFrame
+typedef nsSplittableFrame ImageFrameSuper;
 
 class nsImageFrame : public ImageFrameSuper,
                      public nsIReflowCallback {
