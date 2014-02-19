@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# Install our generator
+cp dump_mozbuild.py trunk/third_party/externals/gyp/pylib/gyp/generator
+
+# pushd trunk
+# for OS in win linux mac; do
+#     GYP_GENERATORS=dump_mozbuild ./gyp_skia -D OS=$OS -D arm_neon=0 gyp/effects.gyp
+# done
+# popd
+
+./generate_mozbuild.py
+

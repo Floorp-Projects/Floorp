@@ -313,6 +313,31 @@ struct GLContextSymbols
     typedef void (GLAPIENTRY * PFNGLRENDERBUFFERSTORAGE) (GLenum target, GLenum internalFormat, GLsizei width, GLsizei height);
     PFNGLRENDERBUFFERSTORAGE fRenderbufferStorage;
 
+        // These functions are only used by Skia/GL in desktop mode.
+        // Other parts of Gecko should avoid using these
+        typedef void (GLAPIENTRY * PFNGLCLIENTACTIVETEXTURE) (GLenum texture);
+        PFNGLCLIENTACTIVETEXTURE fClientActiveTexture;
+        typedef void (GLAPIENTRY * PFNDISABLECLIENTSTATE) (GLenum capability);
+        PFNDISABLECLIENTSTATE fDisableClientState;
+        typedef void (GLAPIENTRY * PFNENABLECLIENTSTATE) (GLenum capability);
+        PFNENABLECLIENTSTATE fEnableClientState;
+        typedef void (GLAPIENTRY * PFNLOADIDENTITY) (void);
+        PFNLOADIDENTITY fLoadIdentity;
+        typedef void (GLAPIENTRY * PFNLOADMATRIXD) (const GLdouble* matrix);
+        PFNLOADMATRIXD fLoadMatrixd;
+        typedef void (GLAPIENTRY * PFNLOADMATRIXF) (const GLfloat* matrix);
+        PFNLOADMATRIXF fLoadMatrixf;
+        typedef void (GLAPIENTRY * PFNMATRIXMODE) (GLenum mode);
+        PFNMATRIXMODE fMatrixMode;
+        typedef void (GLAPIENTRY * PFNTEXGENI) (GLenum coord, GLenum pname, GLint param);
+        PFNTEXGENI fTexGeni;
+        typedef void (GLAPIENTRY * PFNTEXGENF) (GLenum coord, GLenum pname, GLfloat param);
+        PFNTEXGENF fTexGenf;
+        typedef void (GLAPIENTRY * PFNTEXGENFV) (GLenum coord, GLenum pname, const GLfloat* param);
+        PFNTEXGENFV fTexGenfv;
+        typedef void (GLAPIENTRY * PFNVERTEXPOINTER) (GLint size, GLenum type, GLsizei stride, const GLvoid* pointer);
+        PFNVERTEXPOINTER fVertexPointer;
+
     typedef void (GLAPIENTRY * PFNGLBLITFRAMEBUFFER) (GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter);
     PFNGLBLITFRAMEBUFFER fBlitFramebuffer;
     typedef void (GLAPIENTRY * PFNGLRENDERBUFFERSTORAGEMULTISAMPLE) (GLenum target, GLsizei samples, GLenum internalFormat, GLsizei width, GLsizei height);
