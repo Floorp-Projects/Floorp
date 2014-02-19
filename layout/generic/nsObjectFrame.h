@@ -34,7 +34,7 @@ class LayerManager;
 }
 }
 
-#define nsObjectFrameSuper nsFrame
+typedef nsFrame nsObjectFrameSuper;
 
 class nsObjectFrame : public nsObjectFrameSuper,
                       public nsIObjectFrame,
