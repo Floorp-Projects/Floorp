@@ -250,6 +250,39 @@ gTests.push({
   }
 });
 
+gTests.push({
+  desc: "Bug 972428 - grippers not appearing under the URL field when adding " +
+        "text.",
+  run: function() {
+    let inputField = document.getElementById("urlbar-edit").inputField;
+    let inputFieldRectangle = inputField.getBoundingClientRect();
+
+    let chromeHandlerSpy = spyOnMethod(ChromeSelectionHandler, "msgHandler");
+
+    // Reset URL to empty string
+    inputField.value = "";
+    inputField.blur();
+
+    // Activate URL input
+    sendTap(window, inputFieldRectangle.left + 50, inputFieldRectangle.top + 5);
+
+    // Wait until ChromeSelectionHandler tries to attach selection
+    yield waitForCondition(() => chromeHandlerSpy.argsForCall.some(
+        (args) => args[0] == "Browser:SelectionAttach"));
+
+    ok(!SelectHelperUI.isSelectionUIVisible && !SelectHelperUI.isCaretUIVisible,
+        "Neither CaretUI nor SelectionUI is visible on empty input.");
+
+    inputField.value = "Test text";
+
+    sendTap(window, inputFieldRectangle.left + 10, inputFieldRectangle.top + 5);
+
+    yield waitForCondition(() => SelectionHelperUI.isCaretUIVisible);
+
+    chromeHandlerSpy.restore();
+  }
+});
+
 function test() {
   if (!isLandscapeMode()) {
     todo(false, "browser_selection_tests need landscape mode to run.");

@@ -10,7 +10,7 @@ const Cu = Components.utils;
 const Ci = Components.interfaces;
 
 Cu.import("resource://gre/modules/Timer.jsm");
-Cu.import("resource:///modules/sessionstore/XPathGenerator.jsm");
+Cu.import("resource://gre/modules/XPathGenerator.jsm");
 
 /**
  * Returns whether the given URL very likely has input
