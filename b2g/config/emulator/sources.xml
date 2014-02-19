@@ -15,8 +15,8 @@
   <project name="gaia.git" path="gaia" remote="mozillaorg" revision="6e71ab4da1b08586ea0c758edb7aa199ee34cd2f"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="78b908b493bfe0b477e3d4f6edec8c46a2c0d096"/>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="827214fcf38d6569aeb5c6d6f31cb296d1f09272"/>
-  <project name="platform_hardware_ril" path="hardware/ril" remote="b2g" revision="eda08beb3ba9a159843c70ffde0f9660ec351eb9"/>
-  <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="87aa8679560ce09f6445621d6f370d9de722cdba"/>
+  <project name="platform_hardware_ril" path="hardware/ril" remote="b2g" revision="d11f524d00cacf5ba0dfbf25e4aa2158b1c3a036"/>
+  <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="022eadd5917615ff00c47eaaafa792b45e9c8a28"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="3d5c964015967ca8c86abe6dbbebee3cb82b1609"/>
   <project name="apitrace" path="external/apitrace" remote="apitrace" revision="a314508e397c8f1814228d36259ea8708034444e"/>
   <!-- Stock Android things -->

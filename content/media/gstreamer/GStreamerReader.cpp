@@ -226,6 +226,15 @@ void GStreamerReader::PlayBinSourceSetup(GstAppSrc* aSource)
   gst_app_src_set_callbacks(mSource, &mSrcCallbacks, (gpointer) this, nullptr);
   MediaResource* resource = mDecoder->GetResource();
 
+  /* do a short read to trigger a network request so that GetLength() below
+   * returns something meaningful and not -1
+   */
+  char buf[512];
+  unsigned int size = 0;
+  resource->Read(buf, sizeof(buf), &size);
+  resource->Seek(SEEK_SET, 0);
+
+  /* now we should have a length */
   int64_t resourceLength = resource->GetLength();
   gst_app_src_set_size(mSource, resourceLength);
   if (resource->IsDataCachedToEndOfResource(0) ||
@@ -371,27 +380,6 @@ nsresult GStreamerReader::ReadMetadata(MediaInfo* aInfo,
   if (NS_FAILED(ret))
     /* we couldn't get this to play */
     return ret;
-
-  /* FIXME: workaround for a bug in matroskademux. This seek makes matroskademux
-   * parse the index */
-  LOG(PR_LOG_DEBUG, ("doing matroskademux seek hack"));
-  if (gst_element_seek_simple(mPlayBin, GST_FORMAT_TIME,
-        GST_SEEK_FLAG_FLUSH, 0)) {
-    /* after a seek we need to wait again for ASYNC_DONE */
-    message = gst_bus_timed_pop_filtered(mBus, 5 * GST_SECOND,
-       (GstMessageType)(GST_MESSAGE_ASYNC_DONE | GST_MESSAGE_ERROR));
-    if (message == NULL || GST_MESSAGE_TYPE(message) != GST_MESSAGE_ASYNC_DONE) {
-      LOG(PR_LOG_DEBUG, ("matroskademux seek hack failed: %p", message));
-      gst_element_set_state(mPlayBin, GST_STATE_NULL);
-      if (message) {
-        gst_message_unref(message);
-      }
-      return NS_ERROR_FAILURE;
-    }
-    LOG(PR_LOG_DEBUG, ("matroskademux seek hack completed"));
-  } else {
-    LOG(PR_LOG_DEBUG, ("matroskademux seek hack failed (non fatal)"));
-  }
 
   bool isMP3 = mDecoder->GetResource()->GetContentType().EqualsASCII(AUDIO_MP3);
   if (isMP3) {

@@ -655,10 +655,9 @@ RegExpCompartment::~RegExpCompartment()
 }
 
 JSObject *
-RegExpCompartment::getOrCreateMatchResultTemplateObject(JSContext *cx)
+RegExpCompartment::createMatchResultTemplateObject(JSContext *cx)
 {
-    if (matchResultTemplateObject_)
-        return matchResultTemplateObject_;
+    JS_ASSERT(!matchResultTemplateObject_);
 
     /* Create template array object */
     RootedObject templateObject(cx, NewDenseUnallocatedArray(cx, 0, nullptr, TenuredObject));

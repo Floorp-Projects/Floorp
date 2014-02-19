@@ -8807,18 +8807,14 @@ nsGlobalWindow::ShowModalDialog(const nsAString& aUrl, nsIVariant* aArgument,
 
 JS::Value
 nsGlobalWindow::ShowModalDialog(JSContext* aCx, const nsAString& aUrl,
-                                const Optional<JS::Handle<JS::Value> >& aArgument,
+                                JS::Handle<JS::Value> aArgument,
                                 const nsAString& aOptions,
                                 ErrorResult& aError)
 {
   nsCOMPtr<nsIVariant> args;
-  if (aArgument.WasPassed()) {
-    aError = nsContentUtils::XPConnect()->JSToVariant(aCx,
-                                                      aArgument.Value(),
-                                                      getter_AddRefs(args));
-  } else {
-    args = CreateVoidVariant();
-  }
+  aError = nsContentUtils::XPConnect()->JSToVariant(aCx,
+                                                    aArgument,
+                                                    getter_AddRefs(args));
 
   nsCOMPtr<nsIVariant> retVal = ShowModalDialog(aUrl, args, aOptions, aError);
   if (aError.Failed()) {
@@ -11430,7 +11426,9 @@ nsGlobalWindow::SetTimeout(JSContext* aCx, Function& aFunction,
 
 int32_t
 nsGlobalWindow::SetTimeout(JSContext* aCx, const nsAString& aHandler,
-                           int32_t aTimeout, ErrorResult& aError)
+                           int32_t aTimeout,
+                           const Sequence<JS::Value>& /* unused */,
+                           ErrorResult& aError)
 {
   return SetTimeoutOrInterval(aCx, aHandler, aTimeout, false, aError);
 }
@@ -11464,6 +11462,7 @@ nsGlobalWindow::SetInterval(JSContext* aCx, Function& aFunction,
 int32_t
 nsGlobalWindow::SetInterval(JSContext* aCx, const nsAString& aHandler,
                             const Optional<int32_t>& aTimeout,
+                            const Sequence<JS::Value>& /* unused */,
                             ErrorResult& aError)
 {
   int32_t timeout;

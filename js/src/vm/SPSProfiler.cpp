@@ -25,14 +25,21 @@ SPSProfiler::SPSProfiler(JSRuntime *rt)
     size_(nullptr),
     max_(0),
     slowAssertions(false),
-    enabled_(false)
+    enabled_(false),
+    lock_(nullptr)
 {
     JS_ASSERT(rt != nullptr);
+}
+
+bool
+SPSProfiler::init()
+{
 #ifdef JS_THREADSAFE
     lock_ = PR_NewLock();
     if (lock_ == nullptr)
-        MOZ_CRASH("Couldn't allocate lock!");
+        return false;
 #endif
+    return true;
 }
 
 SPSProfiler::~SPSProfiler()
@@ -42,7 +49,8 @@ SPSProfiler::~SPSProfiler()
             js_free(const_cast<char *>(e.front().value()));
     }
 #ifdef JS_THREADSAFE
-    PR_DestroyLock(lock_);
+    if (lock_)
+        PR_DestroyLock(lock_);
 #endif
 }
 

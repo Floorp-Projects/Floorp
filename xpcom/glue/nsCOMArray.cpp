@@ -262,7 +262,8 @@ nsCOMArray_base::SetCount(int32_t aNewCount)
     int32_t count = mArray.Length();
     if (count > aNewCount)
         RemoveObjectsAt(aNewCount, mArray.Length() - aNewCount);
-    return mArray.SetLength(aNewCount);
+    mArray.SetLength(aNewCount);
+    return true;
 }
 
 size_t

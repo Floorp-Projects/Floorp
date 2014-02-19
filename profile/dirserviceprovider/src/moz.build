@@ -4,13 +4,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-include('objs.mozbuild')
+UNIFIED_SOURCES += ['nsProfileDirServiceProvider.cpp']
+if CONFIG['MOZ_PROFILELOCKING']:
+    UNIFIED_SOURCES += ['nsProfileLock.cpp']
 
-UNIFIED_SOURCES += modules_profiledirservice_src_csrcs
+LIBRARY_NAME = 'profdirserviceprovidersa_s'
 
-LIBRARY_NAME = 'profdirserviceprovider_s'
-
-# we don't want the shared lib
 FORCE_STATIC_LIB = True
 
-DEFINES['MOZILLA_INTERNAL_API'] = True
+DEFINES['XPCOM_GLUE'] = 1

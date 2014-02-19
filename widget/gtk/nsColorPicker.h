@@ -25,6 +25,8 @@ public:
 private:
   ~nsColorPicker() {};
 
+  static void OnColorChanged(GtkColorSelection* colorselection,
+                             gpointer user_data);
   static void OnResponse(GtkWidget* dialog, gint response_id,
                          gpointer user_data);
   static void OnDestroy(GtkWidget* dialog, gpointer user_data);
@@ -35,14 +37,17 @@ private:
   static GdkColor convertToGdkColor(nscolor color);
   static nsString ToHexString(int n);
 
+  static GtkColorSelection* WidgetGetColorSelection(GtkWidget* widget);
+
   void Done(GtkWidget* dialog, gint response_id);
-  void ReadValueFromColorChooser(GtkWidget* color_chooser);
+  void Update(GtkColorSelection* colorselection);
+  void ReadValueFromColorSelection(GtkColorSelection* colorselection);
 
   nsCOMPtr<nsIWidget> mParentWidget;
   nsCOMPtr<nsIColorPickerShownCallback> mCallback;
   nsString mTitle;
   nsString mColor;
-  GdkColor mDefaultColor;
+  nsString mInitialColor;
 };
 
 #endif // nsColorPicker_h__

@@ -496,9 +496,22 @@ protected:
 
 /**
  * 14496-12 8.5.2 'Sample Description Box'
- * This is the base class for VisualSampleEntry and MP4AudioSampleEntry.
+ * This is the base class for VisualSampleEntry and AudioSampleEntry.
  *
  * This class is for inherited only, it shouldn't be instanced directly.
+ *
+ * The inhertied tree of a codec box should be:
+ *
+ *                                            +--> AVCSampleEntry
+ *                  +--> VisualSampleEntryBox +
+ *                  |                         +--> ...
+ *   SampleEntryBox +
+ *                  |                         +--> MP4AudioSampleEntry
+ *                  +--> AudioSampleEntryBox  +
+ *                                            +--> AMRSampleEntry
+ *                                            +
+ *                                            +--> ...
+ *
  */
 class SampleEntryBox : public Box {
 public:
@@ -506,9 +519,8 @@ public:
   uint8_t reserved[6];
   uint16_t data_reference_index;
 
-  // SampleEntryBox methods
-  SampleEntryBox(const nsACString& aFormat, uint32_t aTrackType,
-                 ISOControl* aControl);
+  // sampleentrybox methods
+  SampleEntryBox(const nsACString& aFormat, ISOControl* aControl);
 
   // MuxerOperation methods
   nsresult Write() MOZ_OVERRIDE;
@@ -516,7 +528,6 @@ public:
 protected:
   SampleEntryBox() MOZ_DELETE;
 
-  uint32_t mTrackType;
   MetaHelper mMeta;
 };
 
@@ -538,6 +549,58 @@ public:
 
 protected:
   uint32_t mTrackType;
+};
+
+// 14496-12 8.5.2.2
+// The base class for audio codec box.
+// This class is for inherited only, it shouldn't be instanced directly.
+class AudioSampleEntry : public SampleEntryBox {
+public:
+  // ISO BMFF members
+  uint16_t sound_version;
+  uint8_t reserved2[6];
+  uint16_t channels;
+  uint16_t sample_size;
+  uint16_t compressionId;
+  uint16_t packet_size;
+  uint32_t timeScale;  // (sample rate of media) <<16
+
+  // MuxerOperation methods
+  nsresult Write() MOZ_OVERRIDE;
+
+  ~AudioSampleEntry();
+
+protected:
+  AudioSampleEntry(const nsACString& aFormat, ISOControl* aControl);
+};
+
+// 14496-12 8.5.2.2
+// The base class for video codec box.
+// This class is for inherited only, it shouldn't be instanced directly.
+class VisualSampleEntry : public SampleEntryBox {
+public:
+  // ISO BMFF members
+  uint8_t reserved[16];
+  uint16_t width;
+  uint16_t height;
+
+  uint32_t horizresolution; // 72 dpi
+  uint32_t vertresolution;  // 72 dpi
+  uint32_t reserved2;
+  uint16_t frame_count;     // 1, defined in 14496-12 8.5.2.2
+
+  uint8_t compressorName[32];
+  uint16_t depth;       // 0x0018, defined in 14496-12 8.5.2.2;
+  uint16_t pre_defined; // -1, defined in 14496-12 8.5.2.2;
+
+  // MuxerOperation methods
+  nsresult Write() MOZ_OVERRIDE;
+
+  // VisualSampleEntry methods
+  ~VisualSampleEntry();
+
+protected:
+  VisualSampleEntry(const nsACString& aFormat, ISOControl* aControl);
 };
 
 // 14496-12 8.7.3.2 'Sample Size Box'
