@@ -121,7 +121,7 @@ interface ScheduledGCCallback : nsISupports
 /**
 * interface of Components.utils
 */
-[scriptable, uuid(f4b12240-02aa-47e5-99d5-43cd50fbd4b7)]
+[scriptable, uuid(0b81b4f2-cad7-4602-a5cb-b99c9d514196)]
 interface nsIXPCComponents_Utils : nsISupports
 {
 
@@ -278,6 +278,12 @@ interface nsIXPCComponents_Utils : nsISupports
      * when no JS is running. Call the provided function once this has occured.
      */
     void schedulePreciseShrinkingGC(in ScheduledGCCallback callback);
+
+    /*
+     * In a debug build, unlink any ghost windows. This is only for debugging
+     * leaks, and can cause bad things to happen if called.
+     */
+    void unlinkGhostWindows();
 
     /**
      * Return the keys in a weak map.  This operation is
