@@ -260,6 +260,10 @@ PopupNotifications.prototype = {
    *                     A string. URL of the image to be displayed in the popup.
    *                     Normally specified in CSS using list-style-image and the
    *                     .popup-notification-icon[popupid=...] selector.
+   *        learnMoreURL:
+   *                     A string URL. Setting this property will make the
+   *                     prompt display a "Learn More" link that, when clicked,
+   *                     opens the URL in a new tab.
    * @returns the Notification object corresponding to the added notification.
    */
   show: function PopupNotifications_show(browser, id, message, anchorID,
@@ -547,6 +551,11 @@ PopupNotifications.prototype = {
 
       if (n.options.popupIconURL)
         popupnotification.setAttribute("icon", n.options.popupIconURL);
+      if (n.options.learnMoreURL)
+        popupnotification.setAttribute("learnmoreurl", n.options.learnMoreURL);
+      else
+        popupnotification.removeAttribute("learnmoreurl");
+
       popupnotification.notification = n;
 
       if (n.secondaryActions) {
