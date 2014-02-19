@@ -23,7 +23,7 @@ using namespace insanity::pkix;
 using namespace mozilla::psm;
 
 #ifdef PR_LOGGING
-static PRLogModuleInfo* gCertVerifierLog = nullptr;
+PRLogModuleInfo* gCertVerifierLog = nullptr;
 #endif
 
 namespace mozilla { namespace psm {
@@ -194,21 +194,22 @@ static SECStatus
 BuildCertChainForOneKeyUsage(TrustDomain& trustDomain, CERTCertificate* cert,
                              PRTime time, KeyUsages ku1, KeyUsages ku2,
                              KeyUsages ku3, SECOidTag eku,
+                             const SECItem* stapledOCSPResponse,
                              ScopedCERTCertList& builtChain)
 {
   PR_ASSERT(ku1);
   PR_ASSERT(ku2);
 
   SECStatus rv = BuildCertChain(trustDomain, cert, time, MustBeEndEntity,
-                                ku1, eku, builtChain);
+                                ku1, eku, stapledOCSPResponse, builtChain);
   if (rv != SECSuccess && ku2 &&
       PR_GetError() == SEC_ERROR_INADEQUATE_KEY_USAGE) {
     rv = BuildCertChain(trustDomain, cert, time, MustBeEndEntity,
-                        ku2, eku, builtChain);
+                        ku2, eku, stapledOCSPResponse, builtChain);
     if (rv != SECSuccess && ku3 &&
         PR_GetError() == SEC_ERROR_INADEQUATE_KEY_USAGE) {
       rv = BuildCertChain(trustDomain, cert, time, MustBeEndEntity,
-                          ku3, eku, builtChain);
+                          ku3, eku, stapledOCSPResponse, builtChain);
       if (rv != SECSuccess) {
         PR_SetError(SEC_ERROR_INADEQUATE_KEY_USAGE, 0);
       }
@@ -220,11 +221,11 @@ BuildCertChainForOneKeyUsage(TrustDomain& trustDomain, CERTCertificate* cert,
 SECStatus
 CertVerifier::InsanityVerifyCert(
                    CERTCertificate* cert,
-      /*optional*/ const SECItem* /*TODO: stapledOCSPResponse*/,
                    const SECCertificateUsage usage,
                    const PRTime time,
                    void* pinArg,
                    const Flags flags,
+      /*optional*/ const SECItem* stapledOCSPResponse,
   /*optional out*/ insanity::pkix::ScopedCERTCertList* validationChain)
 {
   PR_LOG(gCertVerifierLog, PR_LOG_DEBUG, ("Top of InsanityVerifyCert\n"));
@@ -248,7 +249,7 @@ CertVerifier::InsanityVerifyCert(
       rv = BuildCertChain(trustDomain, cert, time, MustBeEndEntity,
                           KU_DIGITAL_SIGNATURE,
                           SEC_OID_EXT_KEY_USAGE_CLIENT_AUTH,
-                          builtChain);
+                          stapledOCSPResponse, builtChain);
       break;
     }
 
@@ -263,7 +264,7 @@ CertVerifier::InsanityVerifyCert(
                                         KU_KEY_ENCIPHERMENT, // RSA
                                         KU_KEY_AGREEMENT, // ECDH/DH
                                         SEC_OID_EXT_KEY_USAGE_SERVER_AUTH,
-                                        builtChain);
+                                        stapledOCSPResponse, builtChain);
       break;
     }
 
@@ -273,7 +274,7 @@ CertVerifier::InsanityVerifyCert(
       rv = BuildCertChain(trustDomain, cert, time, MustBeCA,
                           KU_KEY_CERT_SIGN,
                           SEC_OID_EXT_KEY_USAGE_SERVER_AUTH,
-                          builtChain);
+                          stapledOCSPResponse, builtChain);
       break;
     }
 
@@ -283,7 +284,7 @@ CertVerifier::InsanityVerifyCert(
       rv = BuildCertChain(trustDomain, cert, time, MustBeEndEntity,
                           KU_DIGITAL_SIGNATURE,
                           SEC_OID_EXT_KEY_USAGE_EMAIL_PROTECT,
-                          builtChain);
+                          stapledOCSPResponse, builtChain);
       break;
     }
 
@@ -298,7 +299,7 @@ CertVerifier::InsanityVerifyCert(
                                         KU_KEY_AGREEMENT, // ECDH/DH
                                         0,
                                         SEC_OID_EXT_KEY_USAGE_EMAIL_PROTECT,
-                                        builtChain);
+                                        stapledOCSPResponse, builtChain);
       break;
     }
 
@@ -309,7 +310,7 @@ CertVerifier::InsanityVerifyCert(
       rv = BuildCertChain(trustDomain, cert, time, MustBeEndEntity,
                           KU_DIGITAL_SIGNATURE,
                           SEC_OID_EXT_KEY_USAGE_CODE_SIGN,
-                          builtChain);
+                          stapledOCSPResponse, builtChain);
       break;
     }
 
@@ -335,18 +336,18 @@ CertVerifier::InsanityVerifyCert(
       NSSCertDBTrustDomain sslTrust(trustSSL,
                                     mOCSPDownloadEnabled, mOCSPStrict, pinArg);
       rv = BuildCertChain(sslTrust, cert, time, endEntityOrCA,
-                          keyUsage, eku, builtChain);
+                          keyUsage, eku, stapledOCSPResponse, builtChain);
       if (rv == SECFailure && PR_GetError() == SEC_ERROR_UNKNOWN_ISSUER) {
         NSSCertDBTrustDomain emailTrust(trustEmail, mOCSPDownloadEnabled,
                                         mOCSPStrict, pinArg);
         rv = BuildCertChain(emailTrust, cert, time, endEntityOrCA, keyUsage,
-                            eku, builtChain);
+                            eku, stapledOCSPResponse, builtChain);
         if (rv == SECFailure && SEC_ERROR_UNKNOWN_ISSUER) {
           NSSCertDBTrustDomain objectSigningTrust(trustObjectSigning,
                                                   mOCSPDownloadEnabled,
                                                   mOCSPStrict, pinArg);
           rv = BuildCertChain(objectSigningTrust, cert, time, endEntityOrCA,
-                              keyUsage, eku, builtChain);
+                              keyUsage, eku, stapledOCSPResponse, builtChain);
         }
       }
 
@@ -600,8 +601,8 @@ CertVerifier::VerifyCert(CERTCertificate* cert,
   }
 
   if (mImplementation == insanity) {
-    return InsanityVerifyCert(cert, stapledOCSPResponse, usage, time,
-                              pinArg, flags, validationChain);
+    return InsanityVerifyCert(cert, usage, time, pinArg, flags,
+                              stapledOCSPResponse, validationChain);
   }
 
   if (mImplementation == classic) {

@@ -6,8 +6,8 @@
     <property name="objdir" value="@IDE_OBJDIR@"/>
     <property name="project_name" value="@IDE_PROJECT_NAME@"/>
 
-    // This file can get large (!), but for a short time we want to
-    // log as much information for debugging build loops as possible.
+    <!-- This file can get large (!), but for a short time we want to
+         log as much information for debugging build loops as possible. -->
     <record name="${topobjdir}/android_eclipse/build.log" append="yes" />
 
     <target name="build_needed" >

@@ -3304,10 +3304,6 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   }
 }
 
-#geolocation-learnmore-link {
-  -moz-margin-start: 0; /* override default label margin to match description margin */
-}
-
 .indexedDB-notification-icon,
 #indexedDB-notification-icon {
   list-style-image: url(chrome://global/skin/icons/question-16.png);
@@ -3599,10 +3595,6 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   margin: 0px;
 }
 
-
-#mixed-content-blocked-helplink {
-  margin: 0px;
-}
 
 .popup-notification-icon[popupid="webRTC-sharingDevices"],
 .popup-notification-icon[popupid="webRTC-shareDevices"] {
@@ -3970,8 +3962,7 @@ toolbar[mode="icons"] > *|* > .toolbarbutton-badge[badge]:not([badge=""]):-moz-l
   }
 }
 
-#social-undoactivation-button,
-#servicesInstall-learnmore-link {
+#social-undoactivation-button {
   -moz-margin-start: 0; /* override default label margin to match description margin */
 }
 
