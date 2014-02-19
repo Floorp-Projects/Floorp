@@ -24,7 +24,6 @@
 #include "mozilla/ArrayUtils.h"
 #include "nsThreadUtils.h" // For NS_IsMainThread.
 
-USING_WORKERS_NAMESPACE
 using namespace mozilla::ipc;
 
 namespace {
@@ -35,141 +34,32 @@ const char* NFC_SOCKET_NAME = "/dev/socket/nfcd";
 // desktop development.
 const uint32_t NFC_TEST_PORT = 6400;
 
-nsRefPtr<mozilla::ipc::NfcConsumer> sNfcConsumer;
-
-class ConnectWorkerToNFC : public WorkerTask
-{
-public:
-    ConnectWorkerToNFC()
-    { }
-
-    virtual bool RunTask(JSContext* aCx);
-};
-
 class SendNfcSocketDataTask : public nsRunnable
 {
 public:
-    SendNfcSocketDataTask(UnixSocketRawData* aRawData)
-        : mRawData(aRawData)
+    SendNfcSocketDataTask(NfcConsumer* aConsumer, UnixSocketRawData* aRawData)
+        : mConsumer(aConsumer), mRawData(aRawData)
     { }
 
     NS_IMETHOD Run()
     {
         MOZ_ASSERT(NS_IsMainThread());
 
-        if (!sNfcConsumer ||
-            sNfcConsumer->GetConnectionStatus() != SOCKET_CONNECTED) {
+        if (!mConsumer ||
+            mConsumer->GetConnectionStatus() != SOCKET_CONNECTED) {
             // Probably shuting down.
             delete mRawData;
             return NS_OK;
         }
 
-        sNfcConsumer->SendSocketData(mRawData);
+        mConsumer->SendSocketData(mRawData);
         return NS_OK;
     }
 
 private:
+    NfcConsumer* mConsumer;
     UnixSocketRawData* mRawData;
 };
-
-bool
-PostToNFC(JSContext* aCx,
-          unsigned aArgc,
-          JS::Value* aVp)
-{
-    JS::CallArgs args = JS::CallArgsFromVp(aArgc, aVp);
-    NS_ASSERTION(!NS_IsMainThread(), "Expecting to be on the worker thread");
-
-    if (args.length() != 1) {
-        JS_ReportError(aCx, "Expecting one argument with the NFC message");
-        return false;
-    }
-
-    JS::Value v = args[0];
-
-    JSAutoByteString abs;
-    void* data;
-    size_t size;
-    if (v.isString()) {
-        JS::Rooted<JSString*> str(aCx, v.toString());
-        if (!abs.encodeUtf8(aCx, str)) {
-            return false;
-        }
-
-        data = abs.ptr();
-        size = abs.length();
-    } else if (!v.isPrimitive()) {
-        JSObject* obj = v.toObjectOrNull();
-        if (!JS_IsTypedArrayObject(obj)) {
-            JS_ReportError(aCx, "Object passed in wasn't a typed array");
-            return false;
-        }
-
-        uint32_t type = JS_GetArrayBufferViewType(obj);
-        if (type != js::Scalar::Int8 &&
-            type != js::Scalar::Uint8 &&
-            type != js::Scalar::Uint8Clamped) {
-            JS_ReportError(aCx, "Typed array data is not octets");
-            return false;
-        }
-
-        size = JS_GetTypedArrayByteLength(obj);
-        data = JS_GetArrayBufferViewData(obj);
-    } else {
-        JS_ReportError(aCx,
-                       "Incorrect argument. Expecting a string or a typed array");
-        return false;
-    }
-
-    UnixSocketRawData* raw = new UnixSocketRawData(data, size);
-
-    nsRefPtr<SendNfcSocketDataTask> task =
-        new SendNfcSocketDataTask(raw);
-    NS_DispatchToMainThread(task);
-    return true;
-}
-
-bool
-ConnectWorkerToNFC::RunTask(JSContext* aCx)
-{
-    // Set up the postNFCMessage on the function for worker -> NFC thread
-    // communication.
-    NS_ASSERTION(!NS_IsMainThread(), "Expecting to be on the worker thread");
-    NS_ASSERTION(!JS_IsRunning(aCx), "Are we being called somehow?");
-    JS::Rooted<JSObject*> workerGlobal(aCx, JS::CurrentGlobalOrNull(aCx));
-
-    return !!JS_DefineFunction(aCx, workerGlobal,
-                               "postNfcMessage", PostToNFC, 1, 0);
-}
-
-class DispatchNFCEvent : public WorkerTask
-{
-public:
-    DispatchNFCEvent(UnixSocketRawData* aMessage)
-        : mMessage(aMessage)
-    { }
-
-    virtual bool RunTask(JSContext* aCx);
-
-private:
-    nsAutoPtr<UnixSocketRawData> mMessage;
-};
-
-bool
-DispatchNFCEvent::RunTask(JSContext* aCx)
-{
-    JS::Rooted<JSObject*> obj(aCx, JS::CurrentGlobalOrNull(aCx));
-
-    JSObject* array = JS_NewUint8Array(aCx, mMessage->mSize);
-    if (!array) {
-        return false;
-    }
-    JS::Rooted<JS::Value> arrayVal(aCx, JS::ObjectValue(*array));
-
-    memcpy(JS_GetArrayBufferViewData(array), mMessage->mData, mMessage->mSize);
-    JS::Rooted<JS::Value> rval(aCx);
-    return JS_CallFunctionName(aCx, obj, "onNfcMessage", JS::HandleValueArray(arrayVal), &rval);
-}
 
 class NfcConnector : public mozilla::ipc::UnixSocketConnector
 {
@@ -279,8 +169,8 @@ NfcConnector::GetSocketAddr(const sockaddr_any& aAddr,
 namespace mozilla {
 namespace ipc {
 
-NfcConsumer::NfcConsumer(WorkerCrossThreadDispatcher* aDispatcher)
-    : mDispatcher(aDispatcher)
+NfcConsumer::NfcConsumer(NfcSocketListener* aListener)
+    : mListener(aListener)
     , mShutdown(false)
 {
     mAddress = NFC_SOCKET_NAME;
@@ -288,44 +178,34 @@ NfcConsumer::NfcConsumer(WorkerCrossThreadDispatcher* aDispatcher)
     ConnectSocket(new NfcConnector(), mAddress.get());
 }
 
-nsresult
-NfcConsumer::Register(WorkerCrossThreadDispatcher* aDispatcher)
-{
-    MOZ_ASSERT(NS_IsMainThread());
-
-    if (sNfcConsumer) {
-        return NS_ERROR_FAILURE;
-    }
-
-    nsRefPtr<ConnectWorkerToNFC> connection = new ConnectWorkerToNFC();
-    if (!aDispatcher->PostTask(connection)) {
-        return NS_ERROR_UNEXPECTED;
-    }
-
-    // Now that we're set up, connect ourselves to the NFC thread.
-    sNfcConsumer = new NfcConsumer(aDispatcher);
-    return NS_OK;
-}
-
 void
 NfcConsumer::Shutdown()
 {
     MOZ_ASSERT(NS_IsMainThread());
 
-    if (sNfcConsumer) {
-        sNfcConsumer->mShutdown = true;
-        sNfcConsumer->CloseSocket();
-        sNfcConsumer = nullptr;
-    }
+    mShutdown = true;
+    CloseSocket();
+}
+
+bool
+NfcConsumer::PostToNfcDaemon(const uint8_t* aData, size_t aSize)
+{
+    MOZ_ASSERT(!NS_IsMainThread());
+
+    UnixSocketRawData* raw = new UnixSocketRawData(aData, aSize);
+    nsRefPtr<SendNfcSocketDataTask> task = new SendNfcSocketDataTask(this, raw);
+    NS_DispatchToMainThread(task);
+    return true;
 }
 
 void
-NfcConsumer::ReceiveSocketData(nsAutoPtr<UnixSocketRawData>& aMessage)
+NfcConsumer::ReceiveSocketData(nsAutoPtr<UnixSocketRawData>& aData)
 {
     MOZ_ASSERT(NS_IsMainThread());
 
-    nsRefPtr<DispatchNFCEvent> dre(new DispatchNFCEvent(aMessage.forget()));
-    mDispatcher->PostTask(dre);
+    if (mListener) {
+        mListener->ReceiveSocketData(aData);
+    }
 }
 
 void
