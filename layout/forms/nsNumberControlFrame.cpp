@@ -60,6 +60,42 @@ nsNumberControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
   nsContainerFrame::DestroyFrom(aDestructRoot);
 }
 
+nscoord
+nsNumberControlFrame::GetMinWidth(nsRenderingContext* aRenderingContext)
+{
+  nscoord result;
+  DISPLAY_MIN_WIDTH(this, result);
+
+  nsIFrame* kid = mFrames.FirstChild();
+  if (kid) { // display:none?
+    result = nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
+                                                  kid,
+                                                  nsLayoutUtils::MIN_WIDTH);
+  } else {
+    result = 0;
+  }
+
+  return result;
+}
+
+nscoord
+nsNumberControlFrame::GetPrefWidth(nsRenderingContext* aRenderingContext)
+{
+  nscoord result;
+  DISPLAY_PREF_WIDTH(this, result);
+
+  nsIFrame* kid = mFrames.FirstChild();
+  if (kid) { // display:none?
+    result = nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
+                                                  kid,
+                                                  nsLayoutUtils::PREF_WIDTH);
+  } else {
+    result = 0;
+  }
+
+  return result;
+}
+
 NS_IMETHODIMP
 nsNumberControlFrame::Reflow(nsPresContext* aPresContext,
                              nsHTMLReflowMetrics& aDesiredSize,
