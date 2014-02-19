@@ -31,7 +31,7 @@
 // The parameters are mapped into an array of type 'nsXPTCMiniVariant'
 // and then the method gets called.
 
-extern "C" nsresult ATTRIBUTE_USED
+extern "C" nsresult
 PrepareAndDispatch(nsXPTCStubBase* self,
                    uint32_t methodIndex,
                    uint32_t* args,
