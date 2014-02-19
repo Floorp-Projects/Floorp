@@ -104,7 +104,7 @@ js::ScopeCoordinateName(ScopeCoordinateNameCache &cache, JSScript *script, jsbyt
 
     /* Beware nameless destructuring formal. */
     if (!JSID_IS_ATOM(id))
-        return script->runtimeFromAnyThread()->atomState.empty;
+        return script->runtimeFromAnyThread()->commonNames->empty;
     return JSID_TO_ATOM(id)->asPropertyName();
 }
 

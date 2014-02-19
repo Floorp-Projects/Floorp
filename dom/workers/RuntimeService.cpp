@@ -843,11 +843,13 @@ class WorkerJSRuntime : public mozilla::CycleCollectedJSRuntime
 public:
   // The heap size passed here doesn't matter, we will change it later in the
   // call to JS_SetGCParameter inside CreateJSContextForWorker.
-  WorkerJSRuntime(WorkerPrivate* aWorkerPrivate)
-  : CycleCollectedJSRuntime(WORKER_DEFAULT_RUNTIME_HEAPSIZE,
-                            JS_NO_HELPER_THREADS),
+  WorkerJSRuntime(JSRuntime* aParentRuntime, WorkerPrivate* aWorkerPrivate)
+    : CycleCollectedJSRuntime(aParentRuntime,
+                              WORKER_DEFAULT_RUNTIME_HEAPSIZE,
+                              JS_NO_HELPER_THREADS),
     mWorkerPrivate(aWorkerPrivate)
-  { }
+  {
+  }
 
   ~WorkerJSRuntime()
   {
@@ -912,6 +914,7 @@ class WorkerThreadPrimaryRunnable MOZ_FINAL : public nsRunnable
 {
   WorkerPrivate* mWorkerPrivate;
   nsRefPtr<RuntimeService::WorkerThread> mThread;
+  JSRuntime* mParentRuntime;
 
   class FinishedRunnable MOZ_FINAL : public nsRunnable
   {
@@ -935,8 +938,9 @@ class WorkerThreadPrimaryRunnable MOZ_FINAL : public nsRunnable
 
 public:
   WorkerThreadPrimaryRunnable(WorkerPrivate* aWorkerPrivate,
-                              RuntimeService::WorkerThread* aThread)
-  : mWorkerPrivate(aWorkerPrivate), mThread(aThread)
+                              RuntimeService::WorkerThread* aThread,
+                              JSRuntime* aParentRuntime)
+  : mWorkerPrivate(aWorkerPrivate), mThread(aThread), mParentRuntime(aParentRuntime)
   {
     MOZ_ASSERT(aWorkerPrivate);
     MOZ_ASSERT(aThread);
@@ -1529,7 +1533,7 @@ RuntimeService::ScheduleWorker(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
   }
 
   nsCOMPtr<nsIRunnable> runnable =
-    new WorkerThreadPrimaryRunnable(aWorkerPrivate, thread);
+    new WorkerThreadPrimaryRunnable(aWorkerPrivate, thread, JS_GetParentRuntime(aCx));
   if (NS_FAILED(thread->Dispatch(runnable, NS_DISPATCH_NORMAL))) {
     UnregisterWorker(aCx, aWorkerPrivate);
     JS_ReportError(aCx, "Could not dispatch to thread!");
@@ -2535,7 +2539,7 @@ WorkerThreadPrimaryRunnable::Run()
   {
     nsCycleCollector_startup();
 
-    WorkerJSRuntime runtime(mWorkerPrivate);
+    WorkerJSRuntime runtime(mParentRuntime, mWorkerPrivate);
     JSRuntime* rt = runtime.Runtime();
 
     JSContext* cx = CreateJSContextForWorker(mWorkerPrivate, rt);

@@ -582,6 +582,10 @@ AssertMarkedOrAllocated(const EdgeValue &edge)
     if (!edge.thing || IsMarkedOrAllocated(static_cast<Cell *>(edge.thing)))
         return;
 
+    // Permanent atoms aren't marked during graph traversal.
+    if (edge.kind == JSTRACE_STRING && static_cast<JSString *>(edge.thing)->isPermanentAtom())
+        return;
+
     char msgbuf[1024];
     const char *label = edge.label ? edge.label : "<unknown>";
 
