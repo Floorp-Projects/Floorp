@@ -11391,7 +11391,9 @@ nsGlobalWindow::SetTimeout(JSContext* aCx, Function& aFunction,
 
 int32_t
 nsGlobalWindow::SetTimeout(JSContext* aCx, const nsAString& aHandler,
-                           int32_t aTimeout, ErrorResult& aError)
+                           int32_t aTimeout,
+                           const Sequence<JS::Value>& /* unused */,
+                           ErrorResult& aError)
 {
   return SetTimeoutOrInterval(aCx, aHandler, aTimeout, false, aError);
 }
@@ -11425,6 +11427,7 @@ nsGlobalWindow::SetInterval(JSContext* aCx, Function& aFunction,
 int32_t
 nsGlobalWindow::SetInterval(JSContext* aCx, const nsAString& aHandler,
                             const Optional<int32_t>& aTimeout,
+                            const Sequence<JS::Value>& /* unused */,
                             ErrorResult& aError)
 {
   int32_t timeout;
