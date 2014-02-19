@@ -2278,7 +2278,6 @@ nsStyleDisplay::nsStyleDisplay()
   mBreakAfter = false;
   mOverflowX = NS_STYLE_OVERFLOW_VISIBLE;
   mOverflowY = NS_STYLE_OVERFLOW_VISIBLE;
-  mOverflowClipBox = NS_STYLE_OVERFLOW_CLIP_BOX_PADDING_BOX;
   mResize = NS_STYLE_RESIZE_NONE;
   mClipFlags = NS_STYLE_CLIP_AUTO;
   mClip.SetRect(0,0,0,0);
@@ -2335,7 +2334,6 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
   , mBreakAfter(aSource.mBreakAfter)
   , mOverflowX(aSource.mOverflowX)
   , mOverflowY(aSource.mOverflowY)
-  , mOverflowClipBox(aSource.mOverflowClipBox)
   , mResize(aSource.mResize)
   , mClipFlags(aSource.mClipFlags)
   , mOrient(aSource.mOrient)
@@ -2414,7 +2412,6 @@ nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
       || mBreakAfter != aOther.mBreakAfter
       || mAppearance != aOther.mAppearance
       || mOrient != aOther.mOrient
-      || mOverflowClipBox != aOther.mOverflowClipBox
       || mClipFlags != aOther.mClipFlags || !mClip.IsEqualInterior(aOther.mClip))
     NS_UpdateHint(hint, NS_CombineHint(nsChangeHint_AllReflowHints,
                                        nsChangeHint_RepaintFrame));
