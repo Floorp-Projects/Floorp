@@ -64,10 +64,10 @@ random-if(!cocoaWidget||OSX==10.6||OSX==10.7) != text-emoji.html text-emoji-notr
 # azure quartz uses CGDrawLinearGradient instead of DrawShading
 # so we have less control over degenerate behaviour as tested by this
 # test
-fuzzy-if(azureSkiaGL,256,601) fails-if(azureQuartz) == linear-gradient-1a.html linear-gradient-1-ref.html
+fails-if(azureSkia||azureSkiaGL||azureQuartz) == linear-gradient-1a.html linear-gradient-1-ref.html
 
 # this passes with cairo on 10.7 and 10.8 but not with azure for reasons unknown
-fails-if(!(Android&&AndroidVersion>=15)&&(azureSkiaGL||OSX==10.6||(azureQuartz&&(OSX==10.7||OSX==10.8)))) == linear-gradient-1b.html linear-gradient-1-ref.html
+fails-if(!(Android&&AndroidVersion>=15)&&(OSX==10.6||(azureQuartz&&(OSX==10.7||OSX==10.8)))||azureSkiaGL||azureSkia) == linear-gradient-1b.html linear-gradient-1-ref.html
 
 == zero-dimensions.html zero-dimensions-ref.html
 
