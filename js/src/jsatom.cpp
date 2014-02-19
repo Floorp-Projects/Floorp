@@ -104,37 +104,9 @@ const char js_void_str[]            = "void";
 const char js_while_str[]           = "while";
 const char js_with_str[]            = "with";
 
-/*
- * For a browser build from 2007-08-09 after the browser starts up there are
- * just 55 double atoms, but over 15000 string atoms. Not to penalize more
- * economical embeddings allocating too much memory initially we initialize
- * atomized strings with just 1K entries.
- */
-#define JS_STRING_HASH_COUNT   1024
-
-bool
-js::InitAtoms(JSRuntime *rt)
-{
-    AutoLockForExclusiveAccess lock(rt);
-    return rt->atoms().init(JS_STRING_HASH_COUNT);
-}
-
-void
-js::FinishAtoms(JSRuntime *rt)
-{
-    AtomSet &atoms = rt->atoms();
-    if (!atoms.initialized()) {
-        /*
-         * We are called with uninitialized state when JS_NewRuntime fails and
-         * calls JS_DestroyRuntime on a partially initialized runtime.
-         */
-        return;
-    }
-
-    FreeOp fop(rt, false);
-    for (AtomSet::Range r = atoms.all(); !r.empty(); r.popFront())
-        r.front().asPtr()->finalize(&fop);
-}
+// Use a low initial capacity for atom hash tables to avoid penalizing runtimes
+// which create a small number of atoms.
+static const uint32_t JS_STRING_HASH_COUNT = 64;
 
 struct CommonNameInfo
 {
@@ -143,8 +115,28 @@ struct CommonNameInfo
 };
 
 bool
-js::InitCommonNames(JSContext *cx)
+JSRuntime::initializeAtoms(JSContext *cx)
 {
+    atoms_ = cx->new_<AtomSet>();
+    if (!atoms_ || !atoms_->init(JS_STRING_HASH_COUNT))
+        return false;
+
+    if (parentRuntime) {
+        staticStrings = parentRuntime->staticStrings;
+        commonNames = parentRuntime->commonNames;
+        emptyString = parentRuntime->emptyString;
+        permanentAtoms = parentRuntime->permanentAtoms;
+        return true;
+    }
+
+    permanentAtoms = cx->new_<AtomSet>();
+    if (!permanentAtoms || !permanentAtoms->init(JS_STRING_HASH_COUNT))
+        return false;
+
+    staticStrings = cx->new_<StaticStrings>();
+    if (!staticStrings || !staticStrings->init(cx))
+        return false;
+
     static const CommonNameInfo cachedNames[] = {
 #define COMMON_NAME_INFO(idpart, id, text) { js_##idpart##_str, sizeof(text) - 1 },
         FOR_EACH_COMMON_PROPERTYNAME(COMMON_NAME_INFO)
@@ -154,26 +146,45 @@ js::InitCommonNames(JSContext *cx)
 #undef COMMON_NAME_INFO
     };
 
-    FixedHeapPtr<PropertyName> *names = &cx->runtime()->firstCachedName;
+    commonNames = cx->new_<JSAtomState>();
+    if (!commonNames)
+        return false;
+
+    FixedHeapPtr<PropertyName> *names = reinterpret_cast<FixedHeapPtr<PropertyName> *>(commonNames);
     for (size_t i = 0; i < ArrayLength(cachedNames); i++, names++) {
         JSAtom *atom = Atomize(cx, cachedNames[i].str, cachedNames[i].length, InternAtom);
         if (!atom)
             return false;
         names->init(atom->asPropertyName());
     }
-    JS_ASSERT(uintptr_t(names) == uintptr_t(&cx->runtime()->atomState + 1));
+    JS_ASSERT(uintptr_t(names) == uintptr_t(commonNames + 1));
 
-    cx->runtime()->emptyString = cx->names().empty;
+    emptyString = commonNames->empty;
     return true;
 }
 
 void
-js::FinishCommonNames(JSRuntime *rt)
+JSRuntime::finishAtoms()
 {
-    rt->emptyString = nullptr;
-#ifdef DEBUG
-    memset(&rt->atomState, JS_FREE_PATTERN, sizeof(JSAtomState));
-#endif
+    if (atoms_)
+        js_delete(atoms_);
+
+    if (!parentRuntime) {
+        if (staticStrings)
+            js_delete(staticStrings);
+
+        if (commonNames)
+            js_delete(commonNames);
+
+        if (permanentAtoms)
+            js_delete(permanentAtoms);
+    }
+
+    atoms_ = nullptr;
+    staticStrings = nullptr;
+    commonNames = nullptr;
+    permanentAtoms = nullptr;
+    emptyString = nullptr;
 }
 
 void
@@ -194,19 +205,68 @@ js::MarkAtoms(JSTracer *trc)
 }
 
 void
-js::SweepAtoms(JSRuntime *rt)
+js::MarkPermanentAtoms(JSTracer *trc)
 {
-    for (AtomSet::Enum e(rt->atoms()); !e.empty(); e.popFront()) {
+    JSRuntime *rt = trc->runtime;
+
+    // Permanent atoms only need to be marked in the runtime which owns them.
+    if (rt->parentRuntime)
+        return;
+
+    // Static strings are not included in the permanent atoms table.
+    if (rt->staticStrings)
+        rt->staticStrings->trace(trc);
+
+    if (rt->permanentAtoms) {
+        for (AtomSet::Enum e(*rt->permanentAtoms); !e.empty(); e.popFront()) {
+            const AtomStateEntry &entry = e.front();
+
+            JSAtom *atom = entry.asPtr();
+            MarkPermanentAtom(trc, atom, "permanent_table");
+        }
+    }
+}
+
+void
+JSRuntime::sweepAtoms()
+{
+    if (!atoms_)
+        return;
+
+    for (AtomSet::Enum e(*atoms_); !e.empty(); e.popFront()) {
         AtomStateEntry entry = e.front();
         JSAtom *atom = entry.asPtr();
         bool isDying = IsStringAboutToBeFinalized(&atom);
 
         /* Pinned or interned key cannot be finalized. */
-        JS_ASSERT_IF(rt->hasContexts() && entry.isTagged(), !isDying);
+        JS_ASSERT_IF(hasContexts() && entry.isTagged(), !isDying);
 
         if (isDying)
             e.removeFront();
     }
+}
+
+bool
+JSRuntime::transformToPermanentAtoms()
+{
+    JS_ASSERT(!parentRuntime);
+
+    // All static strings were created as permanent atoms, now move the contents
+    // of the atoms table into permanentAtoms and mark each as permanent.
+
+    JS_ASSERT(permanentAtoms && permanentAtoms->empty());
+
+    AtomSet *temp = atoms_;
+    atoms_ = permanentAtoms;
+    permanentAtoms = temp;
+
+    for (AtomSet::Enum e(*permanentAtoms); !e.empty(); e.popFront()) {
+        AtomStateEntry entry = e.front();
+        JSAtom *atom = entry.asPtr();
+        atom->morphIntoPermanentAtom();
+    }
+
+    return true;
 }
 
 bool
@@ -216,9 +276,16 @@ AtomIsInterned(JSContext *cx, JSAtom *atom)
     if (StaticStrings::isStatic(atom))
         return true;
 
+    AtomHasher::Lookup lookup(atom);
+
+    /* Likewise, permanent strings are considered to be interned. */
+    AtomSet::Ptr p = cx->permanentAtoms().readonlyThreadsafeLookup(lookup);
+    if (p)
+        return true;
+
     AutoLockForExclusiveAccess lock(cx);
 
-    AtomSet::Ptr p = cx->runtime()->atoms().lookup(atom);
+    p = cx->runtime()->atoms().lookup(lookup);
     if (!p)
         return false;
 
@@ -241,6 +308,14 @@ AtomizeAndTakeOwnership(ExclusiveContext *cx, jschar *tbchars, size_t length, In
         return s;
     }
 
+    AtomHasher::Lookup lookup(tbchars, length);
+
+    AtomSet::Ptr pp = cx->permanentAtoms().readonlyThreadsafeLookup(lookup);
+    if (pp) {
+        js_free(tbchars);
+        return pp->asPtr();
+    }
+
     AutoLockForExclusiveAccess lock(cx);
 
     /*
@@ -250,7 +325,7 @@ AtomizeAndTakeOwnership(ExclusiveContext *cx, jschar *tbchars, size_t length, In
      * GC will potentially free some table entries.
      */
     AtomSet& atoms = cx->atoms();
-    AtomSet::AddPtr p = atoms.lookupForAdd(AtomHasher::Lookup(tbchars, length));
+    AtomSet::AddPtr p = atoms.lookupForAdd(lookup);
     SkipRoot skipHash(cx, &p); /* Prevent the hash from being poisoned. */
     if (p) {
         JSAtom *atom = p->asPtr();
@@ -270,8 +345,7 @@ AtomizeAndTakeOwnership(ExclusiveContext *cx, jschar *tbchars, size_t length, In
 
     JSAtom *atom = flat->morphAtomizedStringIntoAtom();
 
-    if (!atoms.relookupOrAdd(p, AtomHasher::Lookup(tbchars, length),
-                             AtomStateEntry(atom, bool(ib)))) {
+    if (!atoms.relookupOrAdd(p, lookup, AtomStateEntry(atom, bool(ib)))) {
         js_ReportOutOfMemory(cx); /* SystemAllocPolicy does not report OOM. */
         return nullptr;
     }
@@ -287,6 +361,12 @@ AtomizeAndCopyChars(ExclusiveContext *cx, const jschar *tbchars, size_t length, 
     if (JSAtom *s = cx->staticStrings().lookup(tbchars, length))
          return s;
 
+    AtomHasher::Lookup lookup(tbchars, length);
+
+    AtomSet::Ptr pp = cx->permanentAtoms().readonlyThreadsafeLookup(lookup);
+    if (pp)
+        return pp->asPtr();
+
     /*
      * If a GC occurs at js_NewStringCopy then |p| will still have the correct
      * hash, allowing us to avoid rehashing it. Even though the hash is
@@ -297,7 +377,7 @@ AtomizeAndCopyChars(ExclusiveContext *cx, const jschar *tbchars, size_t length, 
     AutoLockForExclusiveAccess lock(cx);
 
     AtomSet& atoms = cx->atoms();
-    AtomSet::AddPtr p = atoms.lookupForAdd(AtomHasher::Lookup(tbchars, length));
+    AtomSet::AddPtr p = atoms.lookupForAdd(lookup);
     SkipRoot skipHash(cx, &p); /* Prevent the hash from being poisoned. */
     if (p) {
         JSAtom *atom = p->asPtr();
@@ -315,8 +395,7 @@ AtomizeAndCopyChars(ExclusiveContext *cx, const jschar *tbchars, size_t length, 
 
     JSAtom *atom = flat->morphAtomizedStringIntoAtom();
 
-    if (!atoms.relookupOrAdd(p, AtomHasher::Lookup(tbchars, length),
-                             AtomStateEntry(atom, bool(ib)))) {
+    if (!atoms.relookupOrAdd(p, lookup, AtomStateEntry(atom, bool(ib)))) {
         js_ReportOutOfMemory(cx); /* SystemAllocPolicy does not report OOM. */
         return nullptr;
     }
@@ -334,9 +413,16 @@ js::AtomizeString(ExclusiveContext *cx, JSString *str,
         if (ib != InternAtom || js::StaticStrings::isStatic(&atom))
             return &atom;
 
+        AtomHasher::Lookup lookup(&atom);
+
+        /* Likewise, permanent atoms are always interned. */
+        AtomSet::Ptr p = cx->permanentAtoms().readonlyThreadsafeLookup(lookup);
+        if (p)
+            return &atom;
+
         AutoLockForExclusiveAccess lock(cx);
 
-        AtomSet::Ptr p = cx->atoms().lookup(AtomHasher::Lookup(&atom));
+        p = cx->atoms().lookup(lookup);
         JS_ASSERT(p); /* Non-static atom must exist in atom state set. */
         JS_ASSERT(p->asPtr() == &atom);
         JS_ASSERT(ib == InternAtom);
