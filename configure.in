@@ -8698,6 +8698,21 @@ if test "$ACCESSIBILITY" -a "$MOZ_ENABLE_GTK" ; then
     AC_DEFINE_UNQUOTED(ATK_REV_VERSION, $ATK_REV_VERSION)
 fi
 
+if test "$MOZ_DEBUG"; then
+    A11Y_LOG=1
+fi
+case "$MOZ_UPDATE_CHANNEL" in
+aurora|beta|release|esr)
+    ;;
+*)
+    A11Y_LOG=1
+    ;;
+esac
+AC_SUBST(A11Y_LOG)
+if test -n "$A11Y_LOG"; then
+    AC_DEFINE(A11Y_LOG)
+fi
+
 AC_SUBST(MOZILLA_VERSION)
 
 AC_SUBST(ac_configure_args)
