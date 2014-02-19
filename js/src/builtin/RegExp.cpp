@@ -39,38 +39,34 @@ js::CreateRegExpMatchResult(JSContext *cx, HandleString input_, const jschar *ch
             return false;
     }
 
-    size_t numPairs = matches.length();
-    JS_ASSERT(numPairs > 0);
-
-    AutoValueVector elements(cx);
-    if (!elements.reserve(numPairs))
-        return false;
-
-    /* Accumulate a Value for each pair, in a rooted vector. */
-    for (size_t i = 0; i < numPairs; ++i) {
-        const MatchPair &pair = matches[i];
-
-        if (pair.isUndefined()) {
-            JS_ASSERT(i != 0); /* Since we had a match, first pair must be present. */
-            elements.infallibleAppend(UndefinedHandleValue);
-        } else {
-            JSLinearString *str = js_NewDependentString(cx, input, pair.start, pair.length());
-            if (!str)
-                return false;
-            elements.infallibleAppend(StringValue(str));
-        }
-    }
-
     /* Get the templateObject that defines the shape and type of the output object */
     JSObject *templateObject = cx->compartment()->regExps.getOrCreateMatchResultTemplateObject(cx);
     if (!templateObject)
         return false;
 
-    /* Copy the rooted vector into the array object. */
-    RootedObject arr(cx, NewDenseCopiedArrayWithTemplate(cx, elements.length(), elements.begin(),
-                                                         templateObject));
+    size_t numPairs = matches.length();
+    JS_ASSERT(numPairs > 0);
+
+    RootedObject arr(cx, NewDenseAllocatedArrayWithTemplate(cx, numPairs, templateObject));
     if (!arr)
         return false;
+
+    /* Store a Value for each pair. */
+    for (size_t i = 0; i < numPairs; i++) {
+        const MatchPair &pair = matches[i];
+
+        if (pair.isUndefined()) {
+            JS_ASSERT(i != 0); /* Since we had a match, first pair must be present. */
+            arr->setDenseInitializedLength(i + 1);
+            arr->initDenseElement(i, UndefinedValue());
+        } else {
+            JSLinearString *str = js_NewDependentString(cx, input, pair.start, pair.length());
+            if (!str)
+                return false;
+            arr->setDenseInitializedLength(i + 1);
+            arr->initDenseElement(i, StringValue(str));
+        }
+    }
 
     /* Set the |index| property. (TemplateObject positions it in slot 0) */
     RootedValue index(cx, Int32Value(matches[0].start));
