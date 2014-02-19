@@ -85,10 +85,10 @@ Window implements WindowEventHandlers;
 [NoInterfaceObject]
 interface WindowTimers {
   [Throws] long setTimeout(Function handler, optional long timeout = 0, any... arguments);
-  [Throws] long setTimeout(DOMString handler, optional long timeout = 0);
+  [Throws] long setTimeout(DOMString handler, optional long timeout = 0, any... unused);
   [Throws] void clearTimeout(long handle);
   [Throws] long setInterval(Function handler, optional long timeout, any... arguments);
-  [Throws] long setInterval(DOMString handler, optional long timeout);
+  [Throws] long setInterval(DOMString handler, optional long timeout, any... unused);
   [Throws] void clearInterval(long handle);
 };
 Window implements WindowTimers;
