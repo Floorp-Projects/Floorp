@@ -3102,14 +3102,22 @@ JSTerm.prototype = {
                                                    autocompleteOptions);
 
     let doc = this.hud.document;
+    let inputContainer = doc.querySelector(".jsterm-input-container");
     this.completeNode = doc.querySelector(".jsterm-complete-node");
     this.inputNode = doc.querySelector(".jsterm-input-node");
-    this.inputNode.addEventListener("keypress", this._keyPress, false);
-    this.inputNode.addEventListener("input", this._inputEventHandler, false);
-    this.inputNode.addEventListener("keyup", this._inputEventHandler, false);
-    this.inputNode.addEventListener("focus", this._focusEventHandler, false);
-    this.hud.window.addEventListener("blur", this._blurEventHandler, false);
 
+    if (this.hud.owner._browserConsole &&
+        !Services.prefs.getBoolPref("devtools.chrome.enabled")) {
+      inputContainer.style.display = "none";
+    }
+    else {
+      this.inputNode.addEventListener("keypress", this._keyPress, false);
+      this.inputNode.addEventListener("input", this._inputEventHandler, false);
+      this.inputNode.addEventListener("keyup", this._inputEventHandler, false);
+      this.inputNode.addEventListener("focus", this._focusEventHandler, false);
+    }
+
+    this.hud.window.addEventListener("blur", this._blurEventHandler, false);
     this.lastInputValue && this.setInputValue(this.lastInputValue);
   },
 
@@ -3534,7 +3542,9 @@ JSTerm.prototype = {
       return view._consoleLastObjectActor != aActor;
     });
 
-    if (aOptions.objectActor) {
+    if (aOptions.objectActor &&
+        (!this.hud.owner._browserConsole ||
+         Services.prefs.getBoolPref("devtools.chrome.enabled"))) {
       // Make sure eval works in the correct context.
       view.eval = this._variablesViewEvaluate.bind(this, aOptions);
       view.switch = this._variablesViewSwitch.bind(this, aOptions);
