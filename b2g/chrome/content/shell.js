@@ -315,6 +315,7 @@ var shell = {
     window.addEventListener('mozfullscreenchange', this);
     window.addEventListener('MozAfterPaint', this);
     window.addEventListener('sizemodechange', this);
+    window.addEventListener('unload', this);
     this.contentBrowser.addEventListener('mozbrowserloadstart', this, true);
 
     CustomEventManager.init();
@@ -338,6 +339,7 @@ var shell = {
   },
 
   stop: function shell_stop() {
+    window.removeEventListener('unload', this);
     window.removeEventListener('keydown', this, true);
     window.removeEventListener('keypress', this, true);
     window.removeEventListener('keyup', this, true);
@@ -536,6 +538,9 @@ var shell = {
         this.sendChromeEvent({
           type: 'system-first-paint'
         });
+        break;
+      case 'unload':
+        this.stop();
         break;
     }
   },

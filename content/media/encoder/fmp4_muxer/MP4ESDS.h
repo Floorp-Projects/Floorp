@@ -68,16 +68,9 @@ public:
 
 // 14496-14 5.6 'Sample Description Boxes'
 // Box type: 'mp4a'
-class MP4AudioSampleEntry : public SampleEntryBox {
+class MP4AudioSampleEntry : public AudioSampleEntry {
 public:
   // ISO BMFF members
-  uint16_t sound_version;
-  uint8_t reserved2[6];
-  uint16_t channels;
-  uint16_t sample_size;
-  uint16_t compressionId;
-  uint16_t packet_size;
-  uint32_t timeScale;
   nsRefPtr<ESDBox> es;
 
   // MuxerOperation methods
@@ -87,10 +80,6 @@ public:
   // MP4AudioSampleEntry methods
   MP4AudioSampleEntry(ISOControl* aControl);
   ~MP4AudioSampleEntry();
-
-protected:
-  uint32_t mTrackType;
-  MetaHelper mMeta;
 };
 
 }
