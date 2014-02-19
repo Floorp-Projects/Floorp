@@ -84,15 +84,22 @@ public:
   CreateDeprecatedTextureClient(DeprecatedTextureClientType aDeprecatedTextureClientType,
                                 gfxContentType aContentType = gfxContentType::SENTINEL);
 
+  // Creates a TextureClient that can be mapped in memory and access through a
+  // raw pointer.
+  // Generally it is best to use CreateTextureClientForDrawing and draw into
+  // the texture through Moz2D.
   virtual TemporaryRef<BufferTextureClient>
   CreateBufferTextureClient(gfx::SurfaceFormat aFormat,
-                            TextureFlags aFlags = TEXTURE_FLAGS_DEFAULT);
+                            TextureFlags aFlags = TEXTURE_FLAGS_DEFAULT,
+                            gfx::BackendType aMoz2DBackend = gfx::BackendType::NONE);
 
   // If we return a non-null TextureClient, then AsTextureClientDrawTarget will
   // always be non-null.
+  // If aBackend is NONE, default to the content backend type.
   TemporaryRef<TextureClient>
   CreateTextureClientForDrawing(gfx::SurfaceFormat aFormat,
-                                TextureFlags aTextureFlags);
+                                TextureFlags aTextureFlags,
+                                gfx::BackendType aMoz2DBackend = gfx::BackendType::NONE);
 
   virtual void SetDescriptorFromReply(TextureIdentifier aTextureId,
                                       const SurfaceDescriptor& aDescriptor)

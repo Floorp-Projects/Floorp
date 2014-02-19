@@ -311,9 +311,11 @@ ImageClientSingle::AddTextureClient(TextureClient* aTexture)
 }
 
 TemporaryRef<BufferTextureClient>
-ImageClientSingle::CreateBufferTextureClient(gfx::SurfaceFormat aFormat, TextureFlags aFlags)
+ImageClientSingle::CreateBufferTextureClient(gfx::SurfaceFormat aFormat, TextureFlags aFlags,
+                                             gfx::BackendType aMoz2DBackend)
 {
-  return CompositableClient::CreateBufferTextureClient(aFormat, mTextureFlags | aFlags);
+  return CompositableClient::CreateBufferTextureClient(aFormat, mTextureFlags | aFlags,
+                                                        aMoz2DBackend);
 }
 
 void
