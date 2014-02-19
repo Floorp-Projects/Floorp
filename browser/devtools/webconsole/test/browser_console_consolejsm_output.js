@@ -91,7 +91,7 @@ function test()
         },
         {
           name: "console.dir output",
-          consoleDir: "XULDocument {",
+          consoleDir: /XULDocument .+ chrome:\/\/.+\/browser\.xul/,
         },
         {
           name: "console.time output",

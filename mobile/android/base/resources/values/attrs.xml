@@ -41,9 +41,6 @@
         <!-- Style for the PanelGridView -->
         <attr name="panelGridViewStyle" format="reference" />
 
-        <!-- Default style for the PanelGridItemView -->
-        <attr name="panelGridItemViewStyle" format="reference" />
-
         <!-- Default style for the TopSitesGridView -->
         <attr name="topSitesGridViewStyle" format="reference" />
 

@@ -29,13 +29,13 @@ public class PanelGridView extends GridView
     private static final String LOGTAG = "GeckoPanelGridView";
 
     private final ViewConfig mViewConfig;
-    private final PanelGridViewAdapter mAdapter;
+    private final PanelViewAdapter mAdapter;
     protected OnUrlOpenListener mUrlOpenListener;
 
     public PanelGridView(Context context, ViewConfig viewConfig) {
         super(context, null, R.attr.panelGridViewStyle);
         mViewConfig = viewConfig;
-        mAdapter = new PanelGridViewAdapter(context);
+        mAdapter = new PanelViewAdapter(context, viewConfig.getItemType());
         setAdapter(mAdapter);
         setOnItemClickListener(new PanelGridItemClickListener());
     }
@@ -54,24 +54,6 @@ public class PanelGridView extends GridView
     @Override
     public void setOnUrlOpenListener(OnUrlOpenListener listener) {
         mUrlOpenListener = listener;
-    }
-
-    private class PanelGridViewAdapter extends CursorAdapter {
-
-        public PanelGridViewAdapter(Context context) {
-            super(context, null, 0);
-        }
-
-        @Override
-        public void bindView(View bindView, Context context, Cursor cursor) {
-            final PanelGridItemView item = (PanelGridItemView) bindView;
-            item.updateFromCursor(cursor);
-        }
-
-        @Override
-        public View newView(Context context, Cursor cursor, ViewGroup parent) {
-            return new PanelGridItemView(context);
-        }
     }
 
     private class PanelGridItemClickListener implements AdapterView.OnItemClickListener {
