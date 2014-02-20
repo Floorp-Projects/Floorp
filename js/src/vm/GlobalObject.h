@@ -26,6 +26,9 @@ js_InitFunctionClass(JSContext *cx, js::HandleObject obj);
 extern JSObject *
 js_InitTypedArrayClasses(JSContext *cx, js::HandleObject obj);
 
+extern JSObject *
+js_InitSharedArrayBufferClass(JSContext *cx, js::HandleObject obj);
+
 namespace js {
 
 class Debugger;
@@ -262,6 +265,9 @@ class GlobalObject : public JSObject
     bool arrayBufferClassInitialized() const {
         return classIsInitialized(JSProto_ArrayBuffer);
     }
+    bool sharedArrayBufferClassInitialized() const {
+        return classIsInitialized(JSProto_SharedArrayBuffer);
+    }
     bool errorClassesInitialized() const {
         return classIsInitialized(JSProto_Error);
     }
@@ -386,6 +392,12 @@ class GlobalObject : public JSObject
         if (!ensureConstructor(cx, global, JSProto_ArrayBuffer))
             return nullptr;
         return &global->getPrototype(JSProto_ArrayBuffer).toObject();
+    }
+
+    JSObject *getOrCreateSharedArrayBufferPrototype(JSContext *cx, Handle<GlobalObject*> global) {
+        if (!ensureConstructor(cx, global, JSProto_SharedArrayBuffer))
+            return nullptr;
+        return &global->getPrototype(JSProto_SharedArrayBuffer).toObject();
     }
 
     static JSObject *getOrCreateCustomErrorPrototype(JSContext *cx,
