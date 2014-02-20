@@ -452,6 +452,7 @@ def apply_patches():
     # Patch to permit vpx users to specify their own <stdint.h> types.
     os.system("patch -p3 < stdint.patch")
     os.system("patch -p3 < unified.patch")
+    os.system("patch -p3 < mingw.patch")
 
 def update_readme(commit):
     with open('README_MOZILLA') as f:
