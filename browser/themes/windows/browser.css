@@ -973,7 +973,6 @@ html|*.urlbar-input:-moz-lwtheme::-moz-placeholder,
 
 .urlbar-input-box {
   -moz-margin-start: 0;
-  min-width: 4em;
 }
 
 #urlbar-icons {
