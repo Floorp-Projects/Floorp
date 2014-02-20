@@ -2040,5 +2040,12 @@ TabParent::GetUseAsyncPanZoom(bool* useAsyncPanZoom)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+TabParent::SetIsDocShellActive(bool isActive)
+{
+  SendSetIsDocShellActive(isActive);
+  return NS_OK;
+}
+
 } // namespace tabs
 } // namespace mozilla
