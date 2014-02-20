@@ -55,6 +55,9 @@ SandboxBroker::LaunchApp(const wchar_t *aPath,
                          sandbox::USER_RESTRICTED_SAME_ACCESS);
   mPolicy->SetDelayedIntegrityLevel(sandbox::INTEGRITY_LEVEL_UNTRUSTED);
 
+  // Set an alternate Desktop within a new window station
+  mPolicy->SetAlternateDesktop(false);
+
   // Ceate the sandboxed process
   PROCESS_INFORMATION targetInfo;
   sandbox::ResultCode result;
