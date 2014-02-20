@@ -1119,7 +1119,7 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
 
         // We cannot load or save the bytecode if we have no object where the
         // bytecode cache is stored.
-        if (loadBytecode || saveBytecode || assertEqBytecode) {
+        if (loadBytecode || saveBytecode) {
             if (!cacheEntry) {
                 JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr, JSSMSG_INVALID_ARGS,
                                      "evaluate");
