@@ -138,6 +138,7 @@ public class HomeBanner extends LinearLayout
                 public void run() {
                     mTextView.setText(text);
                     setVisibility(VISIBLE);
+                    GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("HomeBanner:Shown", (String) getTag()));
 
                     // Animate the banner if it is currently active.
                     if (mActive) {
