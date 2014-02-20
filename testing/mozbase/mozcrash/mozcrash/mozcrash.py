@@ -85,6 +85,8 @@ def check_for_crashes(dump_directory, symbols_path,
             zfile.close()
 
         for d in dumps:
+            extra = os.path.splitext(d)[0] + '.extra'
+
             stackwalk_output = []
             stackwalk_output.append("Crash dump filename: " + d)
             top_frame = None
@@ -140,13 +142,18 @@ def check_for_crashes(dump_directory, symbols_path,
                         os.makedirs(dump_save_path)
                     except OSError:
                         pass
+
                 shutil.move(d, dump_save_path)
-                log.info("Saved dump as %s", os.path.join(dump_save_path,
-                                                          os.path.basename(d)))
+                log.info("Saved minidump as %s",
+                         os.path.join(dump_save_path, os.path.basename(d)))
+
+                if os.path.isfile(extra):
+                    shutil.move(extra, dump_save_path)
+                    log.info("Saved app info as %s",
+                             os.path.join(dump_save_path, os.path.basename(extra)))
             else:
                 mozfile.remove(d)
-            extra = os.path.splitext(d)[0] + ".extra"
-            mozfile.remove(extra)
+                mozfile.remove(extra)
     finally:
         if remove_symbols:
             mozfile.remove(symbols_path)
