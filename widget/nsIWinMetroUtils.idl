@@ -12,7 +12,7 @@
  * implementation of this interface for non-Windows systems, for testing and
  * development purposes only.
  */
-[scriptable, uuid(b6cbef4a-eec1-470b-8e74-9f4120f678c6)]
+[scriptable, uuid(dde6eee6-ad11-475b-b7d7-bee8e46e5756)]
 interface nsIWinMetroUtils : nsISupports
 {
   /**
@@ -40,6 +40,11 @@ interface nsIWinMetroUtils : nsISupports
    */
   attribute boolean updatePending;
 
+  /*
+   * Determine if metro firefox is running in the foreground.
+   */
+  readonly attribute boolean foreground;
+
    /**
     * Show the settings flyout
     */
@@ -53,8 +58,13 @@ interface nsIWinMetroUtils : nsISupports
 
   /**
    * Displays a native Windows 8 toast.
+   *
+   * @param aAppId  Application ID for current application.
+   *                If using Metro mode, it can be null string.
    */
-   void showNativeToast(in AString aTitle, in AString aMessage, in AString anImage, in AString aCookie);
+   void showNativeToast(in AString aTitle, in AString aMessage,
+                        in AString anImage, in AString aCookie,
+                        [optional] in AString aAppId);
 
   /**
    * Secondary tiles are a Windows 8 specific feature for pinning new tiles
