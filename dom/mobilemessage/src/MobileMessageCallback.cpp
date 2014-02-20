@@ -109,6 +109,9 @@ MobileMessageCallback::NotifyError(int32_t aError, bool aAsync)
     case nsIMobileMessageCallback::NON_ACTIVE_SIM_CARD_ERROR:
       errorStr = NS_LITERAL_STRING("NonActiveSimCardError");
       break;
+    case nsIMobileMessageCallback::STORAGE_FULL_ERROR:
+      errorStr = NS_LITERAL_STRING("StorageFullError");
+      break;
     default: // SUCCESS_NO_ERROR is handled above.
       MOZ_CRASH("Should never get here!");
   }
