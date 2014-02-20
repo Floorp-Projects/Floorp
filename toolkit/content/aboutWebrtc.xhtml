@@ -15,24 +15,6 @@
   <script>
 
 
-function getCandPairLogs(id) {
-  try {
-    var wg = new WebrtcGlobalInformation();
-    wg.getCandPairLogs(id, displayLogs, console.log);
-  } catch (e) {
-    console.log("Exception while creating WebrtcGlobalInformation" + e.toString());
-  }
-}
-
-function getAllLogs() {
-  try {
-    var wg = new WebrtcGlobalInformation();
-    wg.getLogs('', displayLogs, console.log);
-  } catch(e) {
-    console.log("Exception while creating WebrtcGlobalInformation" + e.toString());
-  }
-}
-
 function displayLogs(logs) {
   var logsDiv = document.getElementById('logs');
   while (logsDiv.lastChild) {
@@ -46,17 +28,13 @@ function displayLogs(logs) {
   });
 }
 
-function buildCandPairTableRow(candPair, stats) {
+function buildCandPairTableRow(candPair, localCand, remoteCand) {
   var row = document.createElement('tr');
   row.onclick = function() {
-    getCandPairLogs(candPair.id);
+    WebrtcGlobalInformation.getLogging("CAND-PAIR(" + row.id, displayLogs);
   }
 
-  if (stats.has(candPair.localCandidateId)) {
-    // TODO: Might have collisions; we either need to be able to supply
-    // desired type to get(), or do the ugly business of putting the type
-    // in the id as well as the type field.
-    var localCand = stats.get(candPair.localCandidateId);
+  if (localCand) {
     row.appendChild(document.createElement('td'))
        .appendChild(document.createTextNode(localCand.ipAddress + ':' +
                                             localCand.portNumber + '/' +
@@ -66,11 +44,7 @@ function buildCandPairTableRow(candPair, stats) {
        .appendChild(document.createTextNode(candPair.localCandidateId));
   }
 
-  if (stats.has(candPair.remoteCandidateId)) {
-    // TODO: Might have collisions; we either need to be able to supply
-    // desired type to get(), or do the ugly business of putting the type
-    // in the id as well as the type field.
-    var remoteCand = stats.get(candPair.remoteCandidateId);
+  if (remoteCand) {
     row.appendChild(document.createElement('td'))
        .appendChild(document.createTextNode(remoteCand.ipAddress + ':' +
                                             remoteCand.portNumber + '/' +
@@ -92,7 +66,7 @@ function buildCandPairTableRow(candPair, stats) {
   return row;
 }
 
-function buildCandTableRow(cand, stats) {
+function buildCandTableRow(cand) {
   var row = document.createElement('tr');
 
   row.appendChild(document.createElement('td'))
@@ -168,94 +142,163 @@ function dumpStat(stat, label) {
   return div;
 }
 
-function buildPcDiv(stats, pcDivId) {
+function buildPcDiv(stats, pcDivHeading) {
   var newPcDiv = document.createElement('div');
 
   var heading = document.createElement('h3');
-  heading.appendChild(document.createTextNode(pcDivId));
+  heading.appendChild(document.createTextNode(pcDivHeading));
   newPcDiv.appendChild(heading);
 
-  var subDivs = {};
+  // First, ICE stats
+  var iceHeading = document.createElement('h4');
+  iceHeading.appendChild(document.createTextNode("ICE statistics"));
+  newPcDiv.appendChild(iceHeading);
 
-  stats.forEach(function(stat) {
-    if (!stat.componentId) {
-      if (!stat.isRemote) {
-        newPcDiv.appendChild(document.createElement('h4'))
-                .appendChild(document.createTextNode(stat.id));
-        if (stat.remoteId) {
-          newPcDiv.appendChild(dumpStat(stat, "Local: "));
-          newPcDiv.appendChild(dumpStat(stats.get(stat.remoteId), "Remote: "));
-        } else {
-          newPcDiv.appendChild(dumpStat(stat, ""));
-        }
-      }
-      return;
-    }
+  var iceTablesByComponent = {};
 
-    if (!subDivs[stat.componentId]) {
-      subDivs[stat.componentId] = {
-        candPairTable: buildEmptyCandPairTable(),
-        localCandTable: buildEmptyCandTable(true),
-        remoteCandTable: buildEmptyCandTable(false)
+  function getIceTables(componentId) {
+    if (!iceTablesByComponent[componentId]) {
+      iceTablesByComponent[componentId] = {
+        candidatePairTable: buildEmptyCandPairTable(),
+        localCandidateTable: buildEmptyCandTable(true),
+        remoteCandidateTable: buildEmptyCandTable(false)
       };
     }
+    return iceTablesByComponent[componentId];
+  }
 
-    var subDiv = subDivs[stat.componentId];
+  // Candidates
+  var candidateMap = {}; // Used later to speed up recording of candidate pairs
 
-    if (stat.type == 'candidatepair') {
-      subDiv.candPairTable.appendChild(buildCandPairTableRow(stat, stats));
-    } else if (stat.type == 'localcandidate') {
-      subDiv.localCandTable.appendChild(buildCandTableRow(stat, stats));
-    } else if (stat.type == 'remotecandidate') {
-      subDiv.remoteCandTable.appendChild(buildCandTableRow(stat, stats));
-    }
-  });
+  if (stats.iceCandidateStats) {
+    stats.iceCandidateStats.forEach(function(cand) {
+        var tables = getIceTables(cand.componentId);
 
-  for (var cid in subDivs) {
-    if (subDivs.hasOwnProperty(cid)) {
-      var subDiv = subDivs[cid];
+        candidateMap[cand.id] = cand;
+
+        if (cand.type == "localcandidate") {
+          tables.localCandidateTable.appendChild(buildCandTableRow(cand));
+        } else {
+          tables.remoteCandidateTable.appendChild(buildCandTableRow(cand));
+        }
+    });
+  }
+
+  // Candidate pairs
+  if (stats.iceCandidatePairStats) {
+    stats.iceCandidatePairStats.forEach(function(candPair) {
+      var candPairTable =
+        getIceTables(candPair.componentId).candidatePairTable;
+      candPairTable.appendChild(
+          buildCandPairTableRow(candPair,
+                                candidateMap[candPair.localCandidateId],
+                                candidateMap[candPair.remoteCandidateId]));
+    });
+  }
+
+  // Now that tables are completely built, put them on the page.
+  for (var cid in iceTablesByComponent) {
+    if (iceTablesByComponent.hasOwnProperty(cid)) {
+      var tables = iceTablesByComponent[cid];
       newPcDiv.appendChild(document.createElement('h4'))
               .appendChild(document.createTextNode(cid));
-      newPcDiv.appendChild(subDiv.candPairTable);
-      newPcDiv.appendChild(subDiv.localCandTable);
-      newPcDiv.appendChild(subDiv.remoteCandTable);
+      newPcDiv.appendChild(tables.candidatePairTable);
+      newPcDiv.appendChild(tables.localCandidateTable);
+      newPcDiv.appendChild(tables.remoteCandidateTable);
     }
+  }
+
+  // end of ICE stats
+
+  // Now, RTP stats
+  var rtpHeading = document.createElement('h4');
+  rtpHeading.appendChild(document.createTextNode("RTP statistics"));
+  newPcDiv.appendChild(rtpHeading);
+
+  // Build map from id -> remote RTP stats (ie; stats obtained from RTCP
+  // from the other end). This allows us to pair up local/remote stats for
+  // the same stream more easily.
+  var remoteRtpStatsMap = {};
+
+  var addRemoteStatToMap = function (rtpStat) {
+    if (rtpStat.isRemote) {
+      remoteRtpStatsMap[rtpStat.id] = rtpStat;
+    }
+  }
+
+  if (stats.inboundRTPStreamStats) {
+    stats.inboundRTPStreamStats.forEach(addRemoteStatToMap);
+  }
+
+  if (stats.outboundRTPStreamStats) {
+    stats.outboundRTPStreamStats.forEach(addRemoteStatToMap);
+  }
+
+  var addRtpStatPairToDocument = function (rtpStat) {
+    if (!rtpStat.isRemote) {
+      newPcDiv.appendChild(document.createElement('h5'))
+              .appendChild(document.createTextNode(rtpStat.id));
+      newPcDiv.appendChild(dumpStat(rtpStat, "Local: "));
+
+      // Might not be receiving RTCP, so we have no idea what the
+      // statistics look like from the perspective of the other end.
+      if (rtpStat.remoteId) {
+        var remoteRtpStat = remoteRtpStatsMap[rtpStat.remoteId];
+        newPcDiv.appendChild(dumpStat(remoteRtpStat, "Remote: "));
+      }
+    }
+  }
+
+  if (stats.outboundRTPStreamStats) {
+    stats.outboundRTPStreamStats.forEach(addRtpStatPairToDocument);
+  }
+
+  if (stats.inboundRTPStreamStats) {
+    stats.inboundRTPStreamStats.forEach(addRtpStatPairToDocument);
   }
 
   return newPcDiv;
 }
 
-function displayStats(obj) {
+function displayStats(globalReport) {
   console.log("Got stats callback.");
-  var pcid = obj.mozPcid;
-  var pcDivId = 'PeerConnection:' + pcid;
+  globalReport.reports.forEach(function (report) {
+    var pcDivHeading = 'PeerConnection:' + report.pcid;
 
-  var pcDiv = document.getElementById(pcDivId);
-  var newPcDiv = buildPcDiv(obj, pcDivId);
-  newPcDiv.id = pcDivId;
+    var pcDiv = document.getElementById(pcDivHeading);
+    var newPcDiv = buildPcDiv(report, pcDivHeading);
+    newPcDiv.id = pcDivHeading;
 
-  if (!pcDiv) {
-    document.getElementById('stats').appendChild(newPcDiv);
-  } else {
-    document.getElementById('stats').replaceChild(newPcDiv, pcDiv);
-  }
-}
+    if (!pcDiv) {
+      document.getElementById('stats').appendChild(newPcDiv);
+    } else {
+      document.getElementById('stats').replaceChild(newPcDiv, pcDiv);
+    }
+  });
 
-function refreshStats() {
-  try {
-    var wg = new WebrtcGlobalInformation();
-    wg.getAllStats(displayStats, console.log);
-  } catch(e) {
-    console.log("Exception while creating WebrtcGlobalInformation:" + e.toString());
-  }
+  globalReport.errors.forEach(function (error) {
+    var pcDivHeading = 'PeerConnection:' + error.pcid;
+
+    var pcDiv = document.getElementById(pcDivHeading);
+    var newPcDiv = buildPcDiv(error, pcDivHeading);
+    newPcDiv.id = pcDivHeading;
+
+    if (pcDiv) {
+      document.getElementById('stats').replaceChild(newPcDiv, pcDiv);
+    } else {
+      document.getElementById('stats').appendChild(newPcDiv);
+    }
+  });
 }
 
   </script>
 
-  <body id="body" onload="refreshStats()">
+  <body id="body" onload="WebrtcGlobalInformation.getAllStats(displayStats)">
     <div id="stats">
     </div>
-    <button onclick="getAllLogs()">Show/refresh logging</button>
+    <button onclick="WebrtcGlobalInformation.getLogging('', displayLogs)">
+      Show/refresh logging
+    </button>
     <div id="logs">
     </div>
   </body>

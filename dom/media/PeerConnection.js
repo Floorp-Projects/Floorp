@@ -14,7 +14,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "PeerConnectionIdp",
   "resource://gre/modules/media/PeerConnectionIdp.jsm");
 
 const PC_CONTRACT = "@mozilla.org/dom/peerconnection;1";
-const WEBRTC_GLOBAL_CONTRACT = "@mozilla.org/dom/webrtcglobalinformation1";
 const PC_OBS_CONTRACT = "@mozilla.org/dom/peerconnectionobserver;1";
 const PC_ICE_CONTRACT = "@mozilla.org/dom/rtcicecandidate;1";
 const PC_SESSION_CONTRACT = "@mozilla.org/dom/rtcsessiondescription;1";
@@ -23,7 +22,6 @@ const PC_STATS_CONTRACT = "@mozilla.org/dom/rtcstatsreport;1";
 const PC_IDENTITY_CONTRACT = "@mozilla.org/dom/rtcidentityassertion;1";
 
 const PC_CID = Components.ID("{00e0e20d-1494-4776-8e0e-0f0acbea3c79}");
-const WEBRTC_GLOBAL_CID = Components.ID("{f6063d11-f467-49ad-9765-e7923050dc08}");
 const PC_OBS_CID = Components.ID("{d1748d4c-7f6a-4dc5-add6-d55b7678537e}");
 const PC_ICE_CID = Components.ID("{02b9970c-433d-4cc2-923d-f7028ac66073}");
 const PC_SESSION_CID = Components.ID("{1775081b-b62d-4954-8ffe-a067bbf508a7}");
@@ -124,71 +122,8 @@ GlobalPCList.prototype = {
     }
   },
 
-  getStatsForEachPC: function(callback, errorCallback) {
-    function getStatsFromPC(pcref) {
-      try {
-        pcref.get().getStatsInternal(null, callback, errorCallback);
-      } catch (e) {
-        errorCallback("Some error getting stats from PC: " + e.toString());
-      }
-    }
-
-    for (let winId in this._list) {
-      if (this._list.hasOwnProperty(winId)) {
-        this.removeNullRefs(winId);
-        if (this._list[winId]) {
-          this._list[winId].forEach(getStatsFromPC);
-        }
-      }
-    }
-  },
-
-  // TODO(bcampen@mozilla.com): Handle this with a global object in c++
-  // (Bug 958221)
-  getLoggingFromFirstPC: function(pattern, callback, errorCallback) {
-    for (let winId in this._list) {
-      this.removeNullRefs(winId);
-      if (this._list[winId]) {
-        // We expect removeNullRefs to not leave us with an empty array here
-        let pcref = this._list[winId][0];
-        pcref.get().getLogging(pattern, callback, errorCallback);
-        return;
-      }
-    }
-  },
 };
 let _globalPCList = new GlobalPCList();
-
-function WebrtcGlobalInformation() {
-}
-WebrtcGlobalInformation.prototype = {
-  classDescription: "WebrtcGlobalInformation",
-  classID: WEBRTC_GLOBAL_CID,
-  contractID: WEBRTC_GLOBAL_CONTRACT,
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports]),
-
-  getAllStats: function(successCallback, failureCallback) {
-    // TODO(bcampen@mozilla.com): Move the work of fanout into c++, and
-    // only callback once. (Bug 958221)
-    if (_globalPCList) {
-      _globalPCList.getStatsForEachPC(successCallback, failureCallback);
-    } else {
-      failureCallback("No global PeerConnection list");
-    }
-  },
-
-  getLogs: function(pattern, callback, errorCallback) {
-    if (_globalPCList) {
-      _globalPCList.getLoggingFromFirstPC(pattern, callback, errorCallback);
-    } else {
-      errorCallback("No global PeerConnection list");
-    }
-  },
-
-  getCandPairLogs: function(candPairId, callback, errorCallback) {
-    this.getLogs('CAND-PAIR(' + candPairId + ')', callback, errorCallback);
-  },
-};
 
 function RTCIceCandidate() {
   this.candidate = this.sdpMid = this.sdpMLineIndex = null;
@@ -325,8 +260,6 @@ function RTCPeerConnection() {
   this._onCreateAnswerFailure = null;
   this._onGetStatsSuccess = null;
   this._onGetStatsFailure = null;
-  this._onGetLoggingSuccess = null;
-  this._onGetLoggingFailure = null;
 
   this._pendingType = null;
   this._localType = null;
@@ -922,39 +855,16 @@ RTCPeerConnection.prototype = {
   getStats: function(selector, onSuccess, onError) {
     this._queueOrRun({
       func: this._getStats,
-      args: [selector, onSuccess, onError, false],
+      args: [selector, onSuccess, onError],
       wait: true
     });
   },
 
-  getStatsInternal: function(selector, onSuccess, onError) {
-    this._queueOrRun({
-      func: this._getStats,
-      args: [selector, onSuccess, onError, true],
-      wait: true
-    });
-  },
-
-  _getStats: function(selector, onSuccess, onError, internal) {
+  _getStats: function(selector, onSuccess, onError) {
     this._onGetStatsSuccess = onSuccess;
     this._onGetStatsFailure = onError;
 
-    this._impl.getStats(selector, internal);
-  },
-
-  getLogging: function(pattern, onSuccess, onError) {
-    this._queueOrRun({
-      func: this._getLogging,
-      args: [pattern, onSuccess, onError],
-      wait: true
-    });
-  },
-
-  _getLogging: function(pattern, onSuccess, onError) {
-    this._onGetLoggingSuccess = onSuccess;
-    this._onGetLoggingFailure = onError;
-
-    this._impl.getLogging(pattern);
+    this._impl.getStats(selector);
   },
 
   createDataChannel: function(label, dict) {
@@ -1306,16 +1216,6 @@ PeerConnectionObserver.prototype = {
     this._dompc._executeNext();
   },
 
-  onGetLoggingSuccess: function(logs) {
-    this.callCB(this._dompc._onGetLoggingSuccess, logs);
-    this._dompc._executeNext();
-  },
-
-  onGetLoggingError: function(code, message) {
-    this.callCB(this._dompc._onGetLoggingFailure, new RTCError(code, message));
-    this._dompc._executeNext();
-  },
-
   onAddStream: function(stream) {
     this.dispatchEvent(new this._dompc._win.MediaStreamEvent("addstream",
                                                              { stream: stream }));
@@ -1356,6 +1256,5 @@ this.NSGetFactory = XPCOMUtils.generateNSGetFactory(
    RTCPeerConnection,
    RTCStatsReport,
    RTCIdentityAssertion,
-   PeerConnectionObserver,
-   WebrtcGlobalInformation]
+   PeerConnectionObserver]
 );
