@@ -56,7 +56,7 @@ public:
 
   virtual void CleanupResources() MOZ_OVERRIDE;
 
-  virtual void SetCompositableHost(CompositableHost* aHost) MOZ_OVERRIDE;
+  virtual bool SetCompositableHost(CompositableHost* aHost) MOZ_OVERRIDE;
 
   virtual LayerComposite* AsLayerComposite() MOZ_OVERRIDE { return this; }
 
@@ -73,8 +73,6 @@ public:
     mValidRegion = aRegion;
     Mutated();
   }
-
-  MOZ_LAYER_DECL_NAME("ThebesLayerComposite", TYPE_SHADOW)
 
 protected:
 

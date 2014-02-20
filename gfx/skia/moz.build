@@ -709,7 +709,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gonk'):
         'trunk/src/ports/SkTLS_pthread.cpp',
         'trunk/src/utils/android/ashmem.cpp',
         'trunk/src/utils/SkThreadUtils_pthread.cpp',
-        'trunk/src/utils/SkThreadUtils_pthread_other.cpp',
     ]
     DEFINES['SK_FONTHOST_CAIRO_STANDALONE'] = 0
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
@@ -723,7 +722,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
         'trunk/src/utils/mac/SkCreateCGImageRef.cpp',
         'trunk/src/utils/mac/SkStream_mac.cpp',
         'trunk/src/utils/SkThreadUtils_pthread.cpp',
-        'trunk/src/utils/SkThreadUtils_pthread_mach.cpp',
     ]
 if CONFIG['MOZ_WIDGET_GTK']:
     SOURCES += [
@@ -735,7 +733,6 @@ if CONFIG['MOZ_WIDGET_GTK']:
         'trunk/src/ports/SkTime_Unix.cpp',
         'trunk/src/ports/SkTLS_pthread.cpp',
         'trunk/src/utils/SkThreadUtils_pthread.cpp',
-        'trunk/src/utils/SkThreadUtils_pthread_linux.cpp',
     ]
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     SOURCES += [

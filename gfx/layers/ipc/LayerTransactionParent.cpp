@@ -268,7 +268,8 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       MOZ_LAYERS_LOG(("[ParentSide] SetLayerAttributes"));
 
       const OpSetLayerAttributes& osla = edit.get_OpSetLayerAttributes();
-      Layer* layer = AsLayerComposite(osla)->AsLayer();
+      ShadowLayerParent* layerParent = AsLayerComposite(osla);
+      Layer* layer = layerParent->AsLayer();
       const LayerAttributes& attrs = osla.attrs();
 
       const CommonLayerAttributes& common = attrs.common();
@@ -306,8 +307,10 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       case Specific::TThebesLayerAttributes: {
         MOZ_LAYERS_LOG(("[ParentSide]   thebes layer"));
 
-        ThebesLayerComposite* thebesLayer =
-          static_cast<ThebesLayerComposite*>(layer);
+        ThebesLayerComposite* thebesLayer = layerParent->AsThebesLayerComposite();
+        if (!thebesLayer) {
+          return false;
+        }
         const ThebesLayerAttributes& attrs =
           specific.get_ThebesLayerAttributes();
 
@@ -318,8 +321,10 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       case Specific::TContainerLayerAttributes: {
         MOZ_LAYERS_LOG(("[ParentSide]   container layer"));
 
-        ContainerLayer* containerLayer =
-          static_cast<ContainerLayer*>(layer);
+        ContainerLayerComposite* containerLayer = layerParent->AsContainerLayerComposite();
+        if (!containerLayer) {
+          return false;
+        }
         const ContainerLayerAttributes& attrs =
           specific.get_ContainerLayerAttributes();
         containerLayer->SetFrameMetrics(attrs.metrics());
@@ -327,35 +332,45 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
         containerLayer->SetInheritedScale(attrs.inheritedXScale(), attrs.inheritedYScale());
         break;
       }
-      case Specific::TColorLayerAttributes:
+      case Specific::TColorLayerAttributes: {
         MOZ_LAYERS_LOG(("[ParentSide]   color layer"));
 
-        static_cast<ColorLayer*>(layer)->SetColor(
-          specific.get_ColorLayerAttributes().color().value());
-        static_cast<ColorLayer*>(layer)->SetBounds(
-          specific.get_ColorLayerAttributes().bounds());
+        ColorLayerComposite* colorLayer = layerParent->AsColorLayerComposite();
+        if (!colorLayer) {
+          return false;
+        }
+        colorLayer->SetColor(specific.get_ColorLayerAttributes().color().value());
+        colorLayer->SetBounds(specific.get_ColorLayerAttributes().bounds());
         break;
-
-      case Specific::TCanvasLayerAttributes:
+      }
+      case Specific::TCanvasLayerAttributes: {
         MOZ_LAYERS_LOG(("[ParentSide]   canvas layer"));
 
-        static_cast<CanvasLayer*>(layer)->SetFilter(
-          specific.get_CanvasLayerAttributes().filter());
-        static_cast<CanvasLayerComposite*>(layer)->SetBounds(
-          specific.get_CanvasLayerAttributes().bounds());
+        CanvasLayerComposite* canvasLayer = layerParent->AsCanvasLayerComposite();
+        if (!canvasLayer) {
+          return false;
+        }
+        canvasLayer->SetFilter(specific.get_CanvasLayerAttributes().filter());
+        canvasLayer->SetBounds(specific.get_CanvasLayerAttributes().bounds());
         break;
-
-      case Specific::TRefLayerAttributes:
+      }
+      case Specific::TRefLayerAttributes: {
         MOZ_LAYERS_LOG(("[ParentSide]   ref layer"));
 
-        static_cast<RefLayer*>(layer)->SetReferentId(
-          specific.get_RefLayerAttributes().id());
+        RefLayerComposite* refLayer = layerParent->AsRefLayerComposite();
+        if (!refLayer) {
+          return false;
+        }
+        refLayer->SetReferentId(specific.get_RefLayerAttributes().id());
         break;
-
+      }
       case Specific::TImageLayerAttributes: {
         MOZ_LAYERS_LOG(("[ParentSide]   image layer"));
 
-        ImageLayer* imageLayer = static_cast<ImageLayer*>(layer);
+        ImageLayerComposite* imageLayer = layerParent->AsImageLayerComposite();
+        if (!imageLayer) {
+          return false;
+        }
         const ImageLayerAttributes& attrs = specific.get_ImageLayerAttributes();
         imageLayer->SetFilter(attrs.filter());
         imageLayer->SetScaleToSize(attrs.scaleToSize(), attrs.scaleMode());
@@ -382,7 +397,7 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       MOZ_LAYERS_LOG(("[ParentSide] InsertAfter"));
 
       const OpInsertAfter& oia = edit.get_OpInsertAfter();
-      ShadowContainer(oia)->AsContainer()->InsertAfter(
+      ShadowContainer(oia)->AsContainerLayerComposite()->InsertAfter(
         ShadowChild(oia)->AsLayer(), ShadowAfter(oia)->AsLayer());
       break;
     }
@@ -390,7 +405,7 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       MOZ_LAYERS_LOG(("[ParentSide] AppendChild"));
 
       const OpAppendChild& oac = edit.get_OpAppendChild();
-      ShadowContainer(oac)->AsContainer()->InsertAfter(
+      ShadowContainer(oac)->AsContainerLayerComposite()->InsertAfter(
         ShadowChild(oac)->AsLayer(), nullptr);
       break;
     }
@@ -399,14 +414,14 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
 
       const OpRemoveChild& orc = edit.get_OpRemoveChild();
       Layer* childLayer = ShadowChild(orc)->AsLayer();
-      ShadowContainer(orc)->AsContainer()->RemoveChild(childLayer);
+      ShadowContainer(orc)->AsContainerLayerComposite()->RemoveChild(childLayer);
       break;
     }
     case Edit::TOpRepositionChild: {
       MOZ_LAYERS_LOG(("[ParentSide] RepositionChild"));
 
       const OpRepositionChild& orc = edit.get_OpRepositionChild();
-      ShadowContainer(orc)->AsContainer()->RepositionChild(
+      ShadowContainer(orc)->AsContainerLayerComposite()->RepositionChild(
         ShadowChild(orc)->AsLayer(), ShadowAfter(orc)->AsLayer());
       break;
     }
@@ -414,7 +429,7 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       MOZ_LAYERS_LOG(("[ParentSide] RaiseToTopChild"));
 
       const OpRaiseToTopChild& rtc = edit.get_OpRaiseToTopChild();
-      ShadowContainer(rtc)->AsContainer()->RepositionChild(
+      ShadowContainer(rtc)->AsContainerLayerComposite()->RepositionChild(
         ShadowChild(rtc)->AsLayer(), nullptr);
       break;
     }
@@ -536,7 +551,10 @@ LayerTransactionParent::Attach(ShadowLayerParent* aLayerParent,
 
   CompositableHost* compositable = aCompositable->GetCompositableHost();
   MOZ_ASSERT(compositable);
-  layer->SetCompositableHost(compositable);
+  if (!layer->SetCompositableHost(compositable)) {
+    // not all layer types accept a compositable, see bug 967824
+    return;
+  }
   compositable->Attach(aLayerParent->AsLayer(),
                        compositor,
                        aIsAsyncVideo

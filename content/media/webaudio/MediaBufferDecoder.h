@@ -10,11 +10,12 @@
 #include "nsWrapperCache.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
-#include "nsIThreadPool.h"
+#include "SharedThreadPool.h"
 #include "nsString.h"
 #include "nsTArray.h"
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/RefPtr.h"
 
 namespace mozilla {
 
@@ -82,8 +83,6 @@ public:
   bool SyncDecodeMedia(const char* aContentType, uint8_t* aBuffer,
                        uint32_t aLength, WebAudioDecodeJob& aDecodeJob);
 
-  void Shutdown();
-
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
   {
     return 0;
@@ -93,7 +92,7 @@ private:
   bool EnsureThreadPoolInitialized();
 
 private:
-  nsCOMPtr<nsIThreadPool> mThreadPool;
+  RefPtr<SharedThreadPool> mThreadPool;
 };
 
 }
