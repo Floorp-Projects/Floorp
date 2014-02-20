@@ -25,7 +25,7 @@ interface nsIRilMobileMessageDatabaseRecordCallback : nsISupports
   void notify(in nsresult aRv, in jsval aMessageRecord, in nsISupports aDomMessage);
 };
 
-[scriptable, uuid(a92eba51-e619-4f70-98c5-175a33590582)]
+[scriptable, uuid(596ef782-9f7a-11e3-8508-ff3a7d599531)]
 interface nsIRilMobileMessageDatabaseService : nsIMobileMessageDatabaseService
 {
   /**
@@ -119,4 +119,11 @@ interface nsIRilMobileMessageDatabaseService : nsIMobileMessageDatabaseService
    */
   void getMessageRecordByTransactionId(in DOMString aTransactionId,
                                        in nsIRilMobileMessageDatabaseRecordCallback aCallback);
+
+  /**
+   * |aCrError| nsresult: the NS_ERROR defined in Components.results.
+   *
+   * @returns the error code defined in nsIMobileMessageCallback
+   */
+  jsval translateCrErrorToMessageCallbackError(in nsresult aCrError);
 };

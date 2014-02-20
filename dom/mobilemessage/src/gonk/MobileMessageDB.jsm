@@ -94,6 +94,13 @@ MobileMessageDB.prototype = {
   lastMessageId: 0,
 
   /**
+   * An optional hook to check if device storage is full.
+   *
+   * @return true if full.
+   */
+  isDiskFull: null,
+
+  /**
    * Prepare the database. This may include opening the database and upgrading
    * it to the latest schema version.
    *
@@ -238,7 +245,8 @@ MobileMessageDB.prototype = {
             break;
           default:
             event.target.transaction.abort();
-            callback("Old database version: " + event.oldVersion, null);
+            if (DEBUG) debug("unexpected db version: " + event.oldVersion);
+            callback(Cr.NS_ERROR_FAILURE, null);
             break;
         }
       }
@@ -247,10 +255,12 @@ MobileMessageDB.prototype = {
     };
     request.onerror = function(event) {
       //TODO look at event.target.Code and change error constant accordingly
-      callback("Error opening database!", null);
+      if (DEBUG) debug("Error opening database!");
+      callback(Cr.NS_ERROR_FAILURE, null);
     };
     request.onblocked = function(event) {
-      callback("Opening database request is blocked.", null);
+      if (DEBUG) debug("Opening database request is blocked.");
+      callback(Cr.NS_ERROR_FAILURE, null);
     };
   },
 
@@ -270,7 +280,13 @@ MobileMessageDB.prototype = {
       storeNames = [MESSAGE_STORE_NAME];
     }
     if (DEBUG) debug("Opening transaction for object stores: " + storeNames);
+    let self = this;
     this.ensureDB(function(error, db) {
+      if (!error &&
+          txn_type === READ_WRITE &&
+          self.isDiskFull && self.isDiskFull()) {
+        error = Cr.NS_ERROR_FILE_NO_DEVICE_SPACE;
+      }
       if (error) {
         if (DEBUG) debug("Could not open database: " + error);
         callback(error);
@@ -1645,8 +1661,7 @@ MobileMessageDB.prototype = {
       };
 
       if (aError) {
-        // TODO bug 832140 check event.target.errorCode
-        notifyResult(Cr.NS_ERROR_FAILURE, null);
+        notifyResult(aError, null);
         return;
       }
 
@@ -1678,8 +1693,7 @@ MobileMessageDB.prototype = {
       };
 
       if (error) {
-        // TODO bug 832140 check event.target.errorCode
-        notifyResult(Cr.NS_ERROR_FAILURE, null);
+        notifyResult(error, null);
         return;
       }
 
@@ -2323,7 +2337,7 @@ MobileMessageDB.prototype = {
     this.newTxn(READ_ONLY, function(error, txn, messageStore) {
       if (error) {
         if (DEBUG) debug(error);
-        aCallback.notify(Ci.nsIMobileMessageCallback.INTERNAL_ERROR, null, null);
+        aCallback.notify(error, null, null);
         return;
       }
       let request = messageStore.index("transactionId").get(aTransactionId);
@@ -2333,13 +2347,12 @@ MobileMessageDB.prototype = {
         let messageRecord = request.result;
         if (!messageRecord) {
           if (DEBUG) debug("Transaction ID " + aTransactionId + " not found");
-          aCallback.notify(Ci.nsIMobileMessageCallback.NOT_FOUND_ERROR, null, null);
+          aCallback.notify(Cr.NS_ERROR_FILE_NOT_FOUND, null, null);
           return;
         }
         // In this case, we don't need a dom message. Just pass null to the
         // third argument.
-        aCallback.notify(Ci.nsIMobileMessageCallback.SUCCESS_NO_ERROR,
-                         messageRecord, null);
+        aCallback.notify(Cr.NS_OK, messageRecord, null);
       };
 
       txn.onerror = function onerror(event) {
@@ -2348,7 +2361,7 @@ MobileMessageDB.prototype = {
             debug("Caught error on transaction", event.target.errorCode);
           }
         }
-        aCallback.notify(Ci.nsIMobileMessageCallback.INTERNAL_ERROR, null, null);
+        aCallback.notify(Cr.NS_ERROR_FAILURE, null, null);
       };
     });
   },
@@ -2359,7 +2372,7 @@ MobileMessageDB.prototype = {
     this.newTxn(READ_ONLY, function(error, txn, messageStore) {
       if (error) {
         if (DEBUG) debug(error);
-        aCallback.notify(Ci.nsIMobileMessageCallback.INTERNAL_ERROR, null, null);
+        aCallback.notify(error, null, null);
         return;
       }
       let request = messageStore.mozGetAll(aMessageId);
@@ -2368,13 +2381,13 @@ MobileMessageDB.prototype = {
         if (DEBUG) debug("Transaction " + txn + " completed.");
         if (request.result.length > 1) {
           if (DEBUG) debug("Got too many results for id " + aMessageId);
-          aCallback.notify(Ci.nsIMobileMessageCallback.UNKNOWN_ERROR, null, null);
+          aCallback.notify(Cr.NS_ERROR_UNEXPECTED, null, null);
           return;
         }
         let messageRecord = request.result[0];
         if (!messageRecord) {
           if (DEBUG) debug("Message ID " + aMessageId + " not found");
-          aCallback.notify(Ci.nsIMobileMessageCallback.NOT_FOUND_ERROR, null, null);
+          aCallback.notify(Cr.NS_ERROR_FILE_NOT_FOUND, null, null);
           return;
         }
         if (messageRecord.id != aMessageId) {
@@ -2382,12 +2395,11 @@ MobileMessageDB.prototype = {
             debug("Requested message ID (" + aMessageId + ") is " +
                   "different from the one we got");
           }
-          aCallback.notify(Ci.nsIMobileMessageCallback.UNKNOWN_ERROR, null, null);
+          aCallback.notify(Cr.NS_ERROR_UNEXPECTED, null, null);
           return;
         }
         let domMessage = self.createDomMessageFromRecord(messageRecord);
-        aCallback.notify(Ci.nsIMobileMessageCallback.SUCCESS_NO_ERROR,
-                         messageRecord, domMessage);
+        aCallback.notify(Cr.NS_OK, messageRecord, domMessage);
       };
 
       txn.onerror = function onerror(event) {
@@ -2396,9 +2408,24 @@ MobileMessageDB.prototype = {
             debug("Caught error on transaction", event.target.errorCode);
           }
         }
-        aCallback.notify(Ci.nsIMobileMessageCallback.INTERNAL_ERROR, null, null);
+        aCallback.notify(Cr.NS_ERROR_FAILURE, null, null);
       };
     });
+  },
+
+  translateCrErrorToMessageCallbackError: function(aCrError) {
+    switch(aCrError) {
+      case Cr.NS_OK:
+        return Ci.nsIMobileMessageCallback.SUCCESS_NO_ERROR;
+      case Cr.NS_ERROR_UNEXPECTED:
+        return Ci.nsIMobileMessageCallback.UNKNOWN_ERROR;
+      case Cr.NS_ERROR_FILE_NOT_FOUND:
+        return Ci.nsIMobileMessageCallback.NOT_FOUND_ERROR;
+      case Cr.NS_ERROR_FILE_NO_DEVICE_SPACE:
+        return Ci.nsIMobileMessageCallback.STORAGE_FULL_ERROR;
+      default:
+        return Ci.nsIMobileMessageCallback.INTERNAL_ERROR;
+    }
   },
 
   /**
@@ -2407,13 +2434,15 @@ MobileMessageDB.prototype = {
 
   getMessage: function(aMessageId, aRequest) {
     if (DEBUG) debug("Retrieving message with ID " + aMessageId);
+    let self = this;
     let notifyCallback = {
       notify: function(aRv, aMessageRecord, aDomMessage) {
-        if (Ci.nsIMobileMessageCallback.SUCCESS_NO_ERROR == aRv) {
+        if (Cr.NS_OK == aRv) {
           aRequest.notifyMessageGot(aDomMessage);
           return;
         }
-        aRequest.notifyGetMessageFailed(aRv, null);
+        aRequest.notifyGetMessageFailed(
+          self.translateCrErrorToMessageCallbackError(aRv), null);
       }
     };
     this.getMessageRecordById(aMessageId, notifyCallback);
@@ -2426,7 +2455,8 @@ MobileMessageDB.prototype = {
     this.newTxn(READ_WRITE, function(error, txn, stores) {
       if (error) {
         if (DEBUG) debug("deleteMessage: failed to open transaction");
-        aRequest.notifyDeleteMessageFailed(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
+        aRequest.notifyDeleteMessageFailed(
+          self.translateCrErrorToMessageCallbackError(error));
         return;
       }
       txn.onerror = function onerror(event) {
@@ -2502,10 +2532,12 @@ MobileMessageDB.prototype = {
 
   markMessageRead: function(messageId, value, aSendReadReport, aRequest) {
     if (DEBUG) debug("Setting message " + messageId + " read to " + value);
+    let self = this;
     this.newTxn(READ_WRITE, function(error, txn, stores) {
       if (error) {
         if (DEBUG) debug(error);
-        aRequest.notifyMarkMessageReadFailed(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
+        aRequest.notifyMarkMessageReadFailed(
+          self.translateCrErrorToMessageCallbackError(error));
         return;
       }
 
@@ -2597,7 +2629,6 @@ MobileMessageDB.prototype = {
     this.newTxn(READ_ONLY, function(error, txn, threadStore) {
       let collector = cursor.collector;
       if (error) {
-        if (DEBUG) debug(error);
         collector.collect(null, COLLECT_ID_ERROR, COLLECT_TIMESTAMP_UNUSED);
         return;
       }
