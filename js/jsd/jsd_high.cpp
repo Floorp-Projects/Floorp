@@ -34,9 +34,9 @@ JSDStaticLock* _jsd_global_lock = nullptr;
 #ifdef DEBUG
 void JSD_ASSERT_VALID_CONTEXT(JSDContext* jsdc)
 {
-    JS_ASSERT(jsdc->inited);
-    JS_ASSERT(jsdc->jsrt);
-    JS_ASSERT(jsdc->glob);
+    MOZ_ASSERT(jsdc->inited);
+    MOZ_ASSERT(jsdc->jsrt);
+    MOZ_ASSERT(jsdc->glob);
 }
 #endif
 
@@ -209,8 +209,8 @@ jsd_DebuggerOnForUser(JSRuntime*         jsrt,
 JSDContext*
 jsd_DebuggerOn(void)
 {
-    JS_ASSERT(_jsrt);
-    JS_ASSERT(_validateUserCallbacks(&_callbacks));
+    MOZ_ASSERT(_jsrt);
+    MOZ_ASSERT(_validateUserCallbacks(&_callbacks));
     return jsd_DebuggerOnForUser(_jsrt, &_callbacks, _user, nullptr);
 }
 
@@ -337,7 +337,7 @@ jsd_DebugErrorHook(JSContext *cx, const char *message,
     
     if( ! jsdc )
     {
-        JS_ASSERT(0);
+        MOZ_ASSERT(0);
         return true;
     }
     if( JSD_IS_DANGEROUS_THREAD(jsdc) )
@@ -380,7 +380,7 @@ jsd_DebugErrorHook(JSContext *cx, const char *message,
                 JS_ClearPendingException(cx);
             return false;
         default:
-            JS_ASSERT(0);
+            MOZ_ASSERT(0);
             break;
     }
     return true;

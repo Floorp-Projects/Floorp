@@ -21,7 +21,11 @@
   <g id="e">
     <!-- empty container should not affect parent's bbox -->
     <g/>
-    <!-- nor should an empty text element -->
+    <!-- neither should a path, -->
+    <path/>
+    <!-- a polygon -->
+    <polygon/>
+    <!-- or an empty text element -->
     <text x="185" y="25"/>
     <circle cx="100" cy="100" r="5"/>
     <g/>

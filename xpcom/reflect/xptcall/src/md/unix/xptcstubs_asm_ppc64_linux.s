@@ -20,6 +20,11 @@
         .section ".text"
         .align 2
         .globl SharedStub
+        # Make the symbol hidden so that the branch from the stub does
+        # not go via a PLT.  This is not only better for performance,
+        # but may be necessary to avoid linker errors since there is
+        # no place to restore the TOC register in a sibling call.
+        .hidden SharedStub
         .section ".opd","aw"
         .align 3
 

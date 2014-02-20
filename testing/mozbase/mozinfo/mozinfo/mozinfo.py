@@ -44,9 +44,9 @@ if system in ["Microsoft", "Windows"]:
         processor = os.environ.get("PROCESSOR_ARCHITEW6432", processor)
     else:
         processor = os.environ.get('PROCESSOR_ARCHITECTURE', processor)
-        system = os.environ.get("OS", system).replace('_', ' ')
-        service_pack = os.sys.getwindowsversion()[4]
-        info['service_pack'] = service_pack
+    system = os.environ.get("OS", system).replace('_', ' ')
+    service_pack = os.sys.getwindowsversion()[4]
+    info['service_pack'] = service_pack
 elif system == "Linux":
     if hasattr(platform, "linux_distribution"):
         (distro, version, codename) = platform.linux_distribution()

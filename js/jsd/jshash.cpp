@@ -176,7 +176,7 @@ Resize(JSHashTable *ht, uint32_t newshift)
     JSHashEntry **oldbuckets, *he, *next, **hep;
     size_t nold = NBUCKETS(ht);
 
-    JS_ASSERT(newshift < JS_HASH_BITS);
+    MOZ_ASSERT(newshift < JS_HASH_BITS);
 
     nb = (size_t)1 << (JS_HASH_BITS - newshift);
 
@@ -198,7 +198,7 @@ Resize(JSHashTable *ht, uint32_t newshift)
 
     for (i = 0; nentries != 0; i++) {
         for (he = oldbuckets[i]; he; he = next) {
-            JS_ASSERT(nentries != 0);
+            MOZ_ASSERT(nentries != 0);
             --nentries;
             next = he->next;
             hep = BUCKET_HEAD(ht, he->keyHash);
@@ -339,7 +339,7 @@ JS_HashTableEnumerateEntries(JSHashTable *ht, JSHashEnumerator f, void *arg)
     for (bucket = ht->buckets; n != nlimit; ++bucket) {
         hep = bucket;
         while ((he = *hep) != nullptr) {
-            JS_ASSERT(n < nlimit);
+            MOZ_ASSERT(n < nlimit);
             rv = f(he, n, arg);
             n++;
             if (rv & HT_ENUMERATE_REMOVE) {
@@ -358,7 +358,7 @@ JS_HashTableEnumerateEntries(JSHashTable *ht, JSHashEnumerator f, void *arg)
 out:
     /* Shrink table if removal of entries made it underloaded */
     if (ht->nentries != nlimit) {
-        JS_ASSERT(ht->nentries < nlimit);
+        MOZ_ASSERT(ht->nentries < nlimit);
         nbuckets = NBUCKETS(ht);
         if (MINBUCKETS < nbuckets && ht->nentries < UNDERLOADED(nbuckets)) {
             newlog2 = CeilingLog2Size(ht->nentries);
@@ -366,7 +366,7 @@ out:
                 newlog2 = MINBUCKETSLOG2;
 
             /*  Check that we really shrink the table. */
-            JS_ASSERT(JS_HASH_BITS - ht->shift > newlog2);
+            MOZ_ASSERT(JS_HASH_BITS - ht->shift > newlog2);
             Resize(ht, JS_HASH_BITS - newlog2);
         }
     }

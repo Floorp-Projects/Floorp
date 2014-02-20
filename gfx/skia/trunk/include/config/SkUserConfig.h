@@ -202,3 +202,5 @@
 #    define SK_MUTEX_PLATFORM_H "skia/SkMutex_pthread.h"
 #  endif
 #endif
+
+#define SK_ALLOW_STATIC_GLOBAL_INITIALIZERS 0
