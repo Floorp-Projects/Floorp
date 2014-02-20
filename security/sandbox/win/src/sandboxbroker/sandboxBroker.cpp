@@ -23,10 +23,10 @@ SandboxBroker::SandboxBroker()
         sBrokerService = nullptr;
       }
     }
-
-    // We'll start to increase the restrictions over time.
-    mPolicy = sBrokerService->CreatePolicy();
   }
+
+  // We'll start to increase the restrictions over time.
+  mPolicy = sBrokerService->CreatePolicy();
 }
 
 bool
