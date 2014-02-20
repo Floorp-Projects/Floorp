@@ -25,7 +25,13 @@ extern PRLogModuleInfo* GetMediaManagerLog();
 /**
  * Webrtc video source.
  */
+#ifndef MOZ_B2G_CAMERA
 NS_IMPL_ISUPPORTS1(MediaEngineWebRTCVideoSource, nsIRunnable)
+#else
+NS_IMPL_QUERY_INTERFACE1(MediaEngineWebRTCVideoSource, nsIRunnable)
+NS_IMPL_ADDREF_INHERITED(MediaEngineWebRTCVideoSource, CameraControlListener)
+NS_IMPL_RELEASE_INHERITED(MediaEngineWebRTCVideoSource, CameraControlListener)
+#endif
 
 // ViEExternalRenderer Callback.
 #ifndef MOZ_B2G_CAMERA
@@ -494,15 +500,21 @@ void
 MediaEngineWebRTCVideoSource::AllocImpl() {
   MOZ_ASSERT(NS_IsMainThread());
 
-  mCameraControl = ICameraControl::Create(mCaptureIndex, nullptr);
-  mCameraControl->AddListener(this);
+  mCameraControl = ICameraControl::Create(mCaptureIndex);
+  if (mCameraControl) {
+    mState = kAllocated;
+    // Add this as a listener for CameraControl events. We don't need
+    // to explicitly remove this--destroying the CameraControl object
+    // in DeallocImpl() will do that for us.
+    mCameraControl->AddListener(this);
+  }
+  mCallbackMonitor.Notify();
 }
 
 void
 MediaEngineWebRTCVideoSource::DeallocImpl() {
   MOZ_ASSERT(NS_IsMainThread());
 
-  mCameraControl->ReleaseHardware();
   mCameraControl = nullptr;
 }
 
@@ -514,7 +526,7 @@ MediaEngineWebRTCVideoSource::StartImpl(webrtc::CaptureCapability aCapability) {
   config.mMode = ICameraControl::kPictureMode;
   config.mPreviewSize.width = aCapability.width;
   config.mPreviewSize.height = aCapability.height;
-  mCameraControl->SetConfiguration(config);
+  mCameraControl->Start(&config);
   mCameraControl->Set(CAMERA_PARAM_PICTURESIZE, config.mPreviewSize);
 }
 
@@ -522,7 +534,7 @@ void
 MediaEngineWebRTCVideoSource::StopImpl() {
   MOZ_ASSERT(NS_IsMainThread());
 
-  mCameraControl->StopPreview();
+  mCameraControl->Stop();
 }
 
 void
@@ -535,25 +547,23 @@ void
 MediaEngineWebRTCVideoSource::OnHardwareStateChange(HardwareState aState)
 {
   ReentrantMonitorAutoEnter sync(mCallbackMonitor);
-  if (aState == CameraControlListener::kHardwareOpen) {
-    mState = kAllocated;
+  if (aState == CameraControlListener::kHardwareClosed) {
+    // When the first CameraControl listener is added, it gets pushed
+    // the current state of the camera--normally 'closed'. We only
+    // pay attention to that state if we've progressed out of the
+    // allocated state.
+    if (mState != kAllocated) {
+      mState = kReleased;
+      mCallbackMonitor.Notify();
+    }
   } else {
-    mState = kReleased;
-    mCameraControl->RemoveListener(this);
+    mState = kStarted;
+    mCallbackMonitor.Notify();
   }
-  mCallbackMonitor.Notify();
 }
 
 void
-MediaEngineWebRTCVideoSource::OnConfigurationChange(const CameraListenerConfiguration& aConfiguration)
-{
-  ReentrantMonitorAutoEnter sync(mCallbackMonitor);
-  mState = kStarted;
-  mCallbackMonitor.Notify();
-}
-
-void
-MediaEngineWebRTCVideoSource::OnError(CameraErrorContext aContext, const nsACString& aError)
+MediaEngineWebRTCVideoSource::OnError(CameraErrorContext aContext, CameraError aError)
 {
   ReentrantMonitorAutoEnter sync(mCallbackMonitor);
   mCallbackMonitor.Notify();
