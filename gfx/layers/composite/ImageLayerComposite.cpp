@@ -47,10 +47,11 @@ ImageLayerComposite::~ImageLayerComposite()
   CleanupResources();
 }
 
-void
+bool
 ImageLayerComposite::SetCompositableHost(CompositableHost* aHost)
 {
   mImageHost = aHost;
+  return true;
 }
 
 void

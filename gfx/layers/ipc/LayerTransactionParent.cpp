@@ -536,7 +536,10 @@ LayerTransactionParent::Attach(ShadowLayerParent* aLayerParent,
 
   CompositableHost* compositable = aCompositable->GetCompositableHost();
   MOZ_ASSERT(compositable);
-  layer->SetCompositableHost(compositable);
+  if (!layer->SetCompositableHost(compositable)) {
+    // not all layer types accept a compositable, see bug 967824
+    return;
+  }
   compositable->Attach(aLayerParent->AsLayer(),
                        compositor,
                        aIsAsyncVideo
