@@ -237,11 +237,6 @@ struct nsCycleCollectorParams
         mAllTracesAtShutdown (PR_GetEnv("MOZ_CC_ALL_TRACES_AT_SHUTDOWN") != nullptr)
     {
     }
-
-    bool LogThisCC(bool aIsShutdown)
-    {
-        return mLogAll || (aIsShutdown && mLogShutdown);
-    }
 };
 
 #ifdef COLLECT_TIME_DEBUG
@@ -3311,12 +3306,14 @@ nsCycleCollector::BeginCollection(ccType aCCType,
     MOZ_ASSERT(!mListener, "Forgot to clear a previous listener?");
     mListener = aManualListener;
     aManualListener = nullptr;
-    if (!mListener && mParams.LogThisCC(isShutdown)) {
-        nsRefPtr<nsCycleCollectorLogger> logger = new nsCycleCollectorLogger();
-        if (isShutdown && mParams.mAllTracesAtShutdown) {
-            logger->SetAllTraces();
+    if (!mListener) {
+        if (mParams.mLogAll || (isShutdown && mParams.mLogShutdown)) {
+            nsRefPtr<nsCycleCollectorLogger> logger = new nsCycleCollectorLogger();
+            if (isShutdown && mParams.mAllTracesAtShutdown) {
+                logger->SetAllTraces();
+            }
+            mListener = logger.forget();
         }
-        mListener = logger.forget();
     }
 
     bool forceGC = isShutdown;
