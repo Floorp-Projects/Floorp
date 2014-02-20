@@ -60,11 +60,19 @@ const TELEMETRY_COLLECT_CHECKPOINT = "HEALTHREPORT_POST_COLLECT_CHECKPOINT_MS";
  *
  * Instances are not meant to be created outside of a HealthReporter instance.
  *
- * Please note that remote IDs are treated as a queue. When a new remote ID is
- * added, it goes at the back of the queue. When we look for the current ID, we
- * pop the ID at the front of the queue. This helps ensure that all IDs on the
- * server are eventually deleted. This should eventually become irrelevant once
- * the server supports multiple ID deletion.
+ * There are two types of IDs associated with clients.
+ *
+ * Since the beginning of FHR, there has existed a per-upload ID: a UUID is
+ * generated at upload time and associated with the state before upload starts.
+ * That same upload includes a request to delete all other upload IDs known by
+ * the client.
+ *
+ * Per-upload IDs had the unintended side-effect of creating "orphaned"
+ * records/upload IDs on the server. So, a stable client identifer has been
+ * introduced. This client identifier is generated when it's missing and sent
+ * as part of every upload.
+ *
+ * There is a high chance we may remove upload IDs in the future.
  */
 function HealthReporterState(reporter) {
   this._reporter = reporter;
@@ -89,6 +97,20 @@ function HealthReporterState(reporter) {
 }
 
 HealthReporterState.prototype = Object.freeze({
+  /**
+   * Persistent string identifier associated with this client.
+   */
+  get clientID() {
+    return this._s.clientID;
+  },
+
+  /**
+   * The version associated with the client ID.
+   */
+  get clientIDVersion() {
+    return this._s.clientIDVersion;
+  },
+
   get lastPingDate() {
     return new Date(this._s.lastPingTime);
   },
@@ -117,9 +139,19 @@ HealthReporterState.prototype = Object.freeze({
 
       let resetObjectState = function () {
         this._s = {
+          // The payload version. This is bumped whenever there is a
+          // backwards-incompatible change.
           v: 1,
+          // The persistent client identifier.
+          clientID: CommonUtils.generateUUID(),
+          // Denotes the mechanism used to generate the client identifier.
+          // 1: Random UUID.
+          clientIDVersion: 1,
+          // Upload IDs that might be on the server.
           remoteIDs: [],
+          // When we last performed an uploaded.
           lastPingTime: 0,
+          // Tracks whether we removed an outdated payload.
           removedOutdatedLastpayload: false,
         };
       }.bind(this);
@@ -152,6 +184,23 @@ HealthReporterState.prototype = Object.freeze({
         resetObjectState();
         // We explicitly don't save here in the hopes an application re-upgrade
         // comes along and fixes us.
+      }
+
+      let regen = false;
+      if (!this._s.clientID) {
+        this._log.warn("No client ID stored. Generating random ID.");
+        regen = true;
+      }
+
+      if (typeof(this._s.clientID) != "string") {
+        this._log.warn("Client ID is not a string. Regenerating.");
+        regen = true;
+      }
+
+      if (regen) {
+        this._s.clientID = CommonUtils.generateUUID();
+        this._s.clientIDVersion = 1;
+        yield this.save();
       }
 
       // Always look for preferences. This ensures that downgrades followed
@@ -212,6 +261,24 @@ HealthReporterState.prototype = Object.freeze({
     this._log.info("Recording last ping time and deleted remote document.");
     this._s.lastPingTime = date.getTime();
     return this.removeRemoteIDs(ids);
+  },
+
+  /**
+   * Reset the client ID to something else.
+   *
+   * This fails if remote IDs are stored because changing the client ID
+   * while there is remote data will create orphaned records.
+   */
+  resetClientID: function () {
+    if (this.remoteIDs.length) {
+      throw new Error("Cannot reset client ID while remote IDs are stored.");
+    }
+
+    this._log.warn("Resetting client ID.");
+    this._s.clientID = CommonUtils.generateUUID();
+    this._s.clientIDVersion = 1;
+
+    return this.save();
   },
 
   _migratePrefs: function () {
@@ -897,6 +964,8 @@ AbstractHealthReporter.prototype = Object.freeze({
 
     let o = {
       version: 2,
+      clientID: this._state.clientID,
+      clientIDVersion: this._state.clientIDVersion,
       thisPingDate: pingDateString,
       geckoAppInfo: this.obtainAppInfo(this._log),
       data: {last: {}, days: {}},
@@ -1457,9 +1526,23 @@ this.HealthReporter.prototype = Object.freeze({
     this._log.warn("Deleting remote data.");
     let client = new BagheeraClient(this.serverURI);
 
-    return client.deleteDocument(this.serverNamespace, this.lastSubmitID)
-                 .then(this._onBagheeraResult.bind(this, request, true, this._now()),
-                       this._onSubmitDataRequestFailure.bind(this));
+    return Task.spawn(function* doDelete() {
+      try {
+        let result = yield client.deleteDocument(this.serverNamespace,
+                                                 this.lastSubmitID);
+        yield this._onBagheeraResult(request, true, this._now(), result);
+      } catch (ex) {
+        this._log.error("Error processing request to delete data: " +
+                        CommonUtils.exceptionStr(error));
+      } finally {
+        // If we don't have any remote documents left, nuke the ID.
+        // This is done for privacy reasons. Why preserve the ID if we
+        // don't need to?
+        if (!this.haveRemoteData()) {
+          yield this._state.resetClientID();
+        }
+      }
+    }.bind(this));
   },
 });
 
