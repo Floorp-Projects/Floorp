@@ -20,6 +20,8 @@ PLATFORMS= [
   'x86-darwin9-gcc',
   'x86_64-darwin9-gcc',
   'armv7-android-gcc',
+  'x86-win32-gcc',
+  'x86_64-win64-gcc',
 ]
 
 
