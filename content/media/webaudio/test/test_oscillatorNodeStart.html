@@ -17,6 +17,8 @@ addLoadEvent(function() {
   var sp = context.createScriptProcessor();
 
   osc.connect(sp);
+  // Work around bug 916387.
+  sp.connect(context.destination);
 
   sp.onaudioprocess = function (e) {
     var input = e.inputBuffer.getChannelData(0);
@@ -27,27 +29,9 @@ addLoadEvent(function() {
       }
     }
     sp.onaudioprocess = null;
-    dump("audioprocess received\n");
     ok(isSilent, "OscillatorNode should be silent before calling start.");
     SimpleTest.finish();
   }
-
-  // Debug Logging for bug 966322
-
-  var bs = context.createBufferSource();
-  bs.buffer = context.createBuffer(1, 1, context.sampleRate);
-  bs.start();
-  bs.onended = function() {
-    dump("Graph started running\n");
-  }
-
-  var bs = context.createBufferSource();
-  bs.buffer = context.createBuffer(1, 1, context.sampleRate);
-  bs.start(sp.bufferSize / context.sampleRate);
-  bs.onended = function() {
-    dump("Graph ran for long enough to finish first ScriptProcessorBlock\n");
-  }
-
 });
 
 </script>
