@@ -150,6 +150,16 @@ nsTableRowFrame::Init(nsIContent*      aContent,
   }
 }
 
+void
+nsTableRowFrame::DestroyFrom(nsIFrame* aDestructRoot)
+{
+  if (GetStateBits() & NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN) {
+    nsTableFrame::UnregisterPositionedTablePart(this, aDestructRoot);
+  }
+
+  nsContainerFrame::DestroyFrom(aDestructRoot);
+}
+
 /* virtual */ void
 nsTableRowFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 {
