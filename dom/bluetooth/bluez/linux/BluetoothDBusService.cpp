@@ -40,7 +40,6 @@
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
 #include "mozilla/Hal.h"
 #include "mozilla/ipc/UnixSocket.h"
-#include "mozilla/ipc/DBusThread.h"
 #include "mozilla/ipc/DBusUtils.h"
 #include "mozilla/ipc/RawDBusConnection.h"
 #include "mozilla/Mutex.h"
@@ -275,6 +274,9 @@ static const char* sBluetoothDBusSignals[] =
   "type='signal',interface='org.bluez.Control'"
 };
 
+// The DBus connection to the BlueZ daemon
+static RawDBusConnection* sDBusConnection;
+
 // Only A2DP and HID are authorized.
 static nsTArray<BluetoothServiceClass> sAuthorizedServiceClass;
 
@@ -304,6 +306,19 @@ static nsTArray<nsRefPtr<BluetoothProfileController> > sControllerArray;
 
 typedef void (*UnpackFunc)(DBusMessage*, DBusError*, BluetoothValue&, nsAString&);
 typedef bool (*FilterFunc)(const BluetoothValue&);
+
+static void
+DispatchToDBusThread(Task* task)
+{
+  XRE_GetIOMessageLoop()->PostTask(FROM_HERE, task);
+}
+
+static RawDBusConnection*
+GetDBusConnection()
+{
+  NS_ENSURE_TRUE(sDBusConnection, nullptr);
+  return sDBusConnection;
+}
 
 BluetoothDBusService::BluetoothDBusService()
 {
@@ -1840,6 +1855,24 @@ BluetoothDBusService::IsReady()
   return true;
 }
 
+class WatchDBusConnectionTask : public Task
+{
+public:
+  WatchDBusConnectionTask(RawDBusConnection* aConnection)
+  : mConnection(aConnection)
+  {
+    MOZ_ASSERT(mConnection);
+  }
+
+  void Run()
+  {
+    mConnection->Watch();
+  }
+
+private:
+  RawDBusConnection* mConnection;
+};
+
 nsresult
 BluetoothDBusService::StartInternal()
 {
@@ -1853,13 +1886,19 @@ BluetoothDBusService::StartInternal()
   }
 #endif
 
-  if (!StartDBus()) {
-    BT_WARNING("Cannot start DBus thread!");
+  NS_ENSURE_TRUE(!sDBusConnection, NS_OK);
+
+  RawDBusConnection* connection = new RawDBusConnection();
+  nsresult rv = connection->EstablishDBusConnection();
+  if (NS_FAILED(rv)) {
+    BT_WARNING("Failed to establish connection to BlueZ daemon");
     return NS_ERROR_FAILURE;
   }
 
-  RawDBusConnection* connection = GetDBusConnection();
-  MOZ_ASSERT(connection);
+  XRE_GetIOMessageLoop()->PostTask(FROM_HERE,
+    new WatchDBusConnectionTask(connection));
+
+  sDBusConnection = connection;
 
   DBusError err;
   dbus_error_init(&err);
@@ -1917,6 +1956,28 @@ UnrefDBusMessages(const nsAString& key, DBusMessage* value, void* arg)
   return PL_DHASH_NEXT;
 }
 
+class DeleteDBusConnectionTask : public Task
+{
+public:
+  DeleteDBusConnectionTask(RawDBusConnection* aConnection)
+  : mConnection(aConnection)
+  {
+    MOZ_ASSERT(mConnection);
+  }
+
+  void Run()
+  {
+    MOZ_ASSERT(!NS_IsMainThread());
+
+    // This command closes the DBus connection and all instances of
+    // DBusWatch will be removed and free'd.
+    delete mConnection;
+  }
+
+private:
+  RawDBusConnection* mConnection;
+};
+
 nsresult
 BluetoothDBusService::StopInternal()
 {
@@ -1972,7 +2033,10 @@ BluetoothDBusService::StopInternal()
   sAuthorizedServiceClass.Clear();
   sControllerArray.Clear();
 
-  StopDBus();
+  sDBusConnection = nullptr;
+
+  XRE_GetIOMessageLoop()->PostTask(FROM_HERE,
+    new DeleteDBusConnectionTask(connection));
 
 #ifdef MOZ_WIDGET_GONK
   MOZ_ASSERT(sBluedroid.IsEnabled());
