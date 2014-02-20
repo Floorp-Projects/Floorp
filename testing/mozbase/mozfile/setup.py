@@ -4,9 +4,10 @@
 
 from setuptools import setup
 
-PACKAGE_VERSION = '0.12'
+PACKAGE_NAME = 'mozfile'
+PACKAGE_VERSION = '1.1'
 
-setup(name='mozfile',
+setup(name=PACKAGE_NAME,
       version=PACKAGE_VERSION,
       description="Library of file utilities for use in Mozilla testing",
       long_description="see http://mozbase.readthedocs.org/",

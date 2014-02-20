@@ -62,71 +62,13 @@ function run_test() {
 
   gHttpServ = new HttpServer();
   gHttpServ.registerDirectory("/", do_get_cwd());
-
-  function createVerdict(aShouldBlock) {
-    // We can't programmatically create a protocol buffer here, so just
-    // hardcode some already serialized ones.
-    blob = String.fromCharCode(parseInt(0x08, 16));
-    if (aShouldBlock) {
-      // A safe_browsing::ClientDownloadRequest with a DANGEROUS verdict
-      blob += String.fromCharCode(parseInt(0x01, 16));
-    } else {
-      // A safe_browsing::ClientDownloadRequest with a SAFE verdict
-      blob += String.fromCharCode(parseInt(0x00, 16));
-    }
-    return blob;
-  }
-
   gHttpServ.registerPathHandler("/download", function(request, response) {
-    response.setHeader("Content-Type", "application/octet-stream", false);
-    let buf = NetUtil.readInputStreamToString(
-      request.bodyInputStream,
-      request.bodyInputStream.available());
-    do_print("Request length: " + buf.length);
-    // A garbage response. By default this produces NS_CANNOT_CONVERT_DATA as
-    // the callback status.
-    let blob = "this is not a serialized protocol buffer";
-    // We can't actually parse the protocol buffer here, so just switch on the
-    // length instead of inspecting the contents.
-    if (buf.length == 35) {
-      // evil.com
-      blob = createVerdict(true);
-    } else if (buf.length == 38) {
-      // mozilla.com
-      blob = createVerdict(false);
-    }
-    response.bodyOutputStream.write(blob, blob.length);
+    do_throw("This test should never make a remote lookup");
   });
-
   gHttpServ.start(4444);
 
   run_next_test();
 }
-
-/*
-// Uncomment when remote lookups are enabled (bug 933432)
-add_test(function test_shouldBlock() {
-  gAppRep.queryReputation({
-    sourceURI: createURI("http://evil.com"),
-    fileSize: 12,
-  }, function onComplete(aShouldBlock, aStatus) {
-    do_check_true(aShouldBlock);
-    do_check_eq(Cr.NS_OK, aStatus);
-    run_next_test();
-  });
-});
-
-add_test(function test_shouldNotBlock() {
-  gAppRep.queryReputation({
-    sourceURI: createURI("http://mozilla.com"),
-    fileSize: 12,
-  }, function onComplete(aShouldBlock, aStatus) {
-    do_check_eq(Cr.NS_OK, aStatus);
-    do_check_false(aShouldBlock);
-    run_next_test();
-  });
-});
-*/
 
 add_test(function test_nullSourceURI() {
   gAppRep.queryReputation({
@@ -163,23 +105,6 @@ add_test(function test_disabled() {
     run_next_test();
   });
 });
-
-/*
-// Uncomment when remote lookups are enabled (bug 933432)
-add_test(function test_garbage() {
-  Services.prefs.setCharPref("browser.safebrowsing.appRepURL",
-                             "http://localhost:4444/download");
-  gAppRep.queryReputation({
-    sourceURI: createURI("http://whitelisted.com"),
-    fileSize: 12,
-  }, function onComplete(aShouldBlock, aStatus) {
-    // We should be getting the garbage response.
-    do_check_eq(Cr.NS_ERROR_CANNOT_CONVERT_DATA, aStatus);
-    do_check_false(aShouldBlock);
-    run_next_test();
-  });
-});
-*/
 
 // Set up the local whitelist.
 add_test(function test_local_list() {

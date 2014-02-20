@@ -172,7 +172,7 @@ SmsFilter::SetNumbers(JSContext* aCx, JS::Handle<JS::Value> aNumbers)
   }
 
   uint32_t size;
-  JS_ALWAYS_TRUE(JS_GetArrayLength(aCx, obj, &size));
+  MOZ_ALWAYS_TRUE(JS_GetArrayLength(aCx, obj, &size));
 
   nsTArray<nsString> numbers;
 

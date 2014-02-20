@@ -55,7 +55,7 @@ JSID_IS_STRING(jsid id)
 static MOZ_ALWAYS_INLINE JSString *
 JSID_TO_STRING(jsid id)
 {
-    JS_ASSERT(JSID_IS_STRING(id));
+    MOZ_ASSERT(JSID_IS_STRING(id));
     return (JSString *)JSID_BITS(id);
 }
 
@@ -74,7 +74,7 @@ JSID_IS_INT(jsid id)
 static MOZ_ALWAYS_INLINE int32_t
 JSID_TO_INT(jsid id)
 {
-    JS_ASSERT(JSID_IS_INT(id));
+    MOZ_ASSERT(JSID_IS_INT(id));
     return ((uint32_t)JSID_BITS(id)) >> 1;
 }
 
@@ -91,7 +91,7 @@ static MOZ_ALWAYS_INLINE jsid
 INT_TO_JSID(int32_t i)
 {
     jsid id;
-    JS_ASSERT(INT_FITS_IN_JSID(i));
+    MOZ_ASSERT(INT_FITS_IN_JSID(i));
     JSID_BITS(id) = ((i << 1) | JSID_TYPE_INT);
     return id;
 }
@@ -106,7 +106,7 @@ JSID_IS_OBJECT(jsid id)
 static MOZ_ALWAYS_INLINE JSObject *
 JSID_TO_OBJECT(jsid id)
 {
-    JS_ASSERT(JSID_IS_OBJECT(id));
+    MOZ_ASSERT(JSID_IS_OBJECT(id));
     return (JSObject *)(JSID_BITS(id) & ~(size_t)JSID_TYPE_MASK);
 }
 
@@ -114,8 +114,8 @@ static MOZ_ALWAYS_INLINE jsid
 OBJECT_TO_JSID(JSObject *obj)
 {
     jsid id;
-    JS_ASSERT(obj != nullptr);
-    JS_ASSERT(((size_t)obj & JSID_TYPE_MASK) == 0);
+    MOZ_ASSERT(obj != nullptr);
+    MOZ_ASSERT(((size_t)obj & JSID_TYPE_MASK) == 0);
     JSID_BITS(id) = ((size_t)obj | JSID_TYPE_OBJECT);
     return id;
 }
@@ -135,7 +135,7 @@ JSID_TO_GCTHING(jsid id)
 static MOZ_ALWAYS_INLINE bool
 JSID_IS_VOID(const jsid id)
 {
-    JS_ASSERT_IF(((size_t)JSID_BITS(id) & JSID_TYPE_MASK) == JSID_TYPE_VOID,
+    MOZ_ASSERT_IF(((size_t)JSID_BITS(id) & JSID_TYPE_MASK) == JSID_TYPE_VOID,
                  JSID_BITS(id) == JSID_TYPE_VOID);
     return ((size_t)JSID_BITS(id) == JSID_TYPE_VOID);
 }

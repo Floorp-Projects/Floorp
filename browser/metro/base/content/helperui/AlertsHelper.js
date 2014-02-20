@@ -13,6 +13,10 @@ var AlertsHelper = {
     }
     this._listener = aListener;
 
+    if (Services.metro.foreground) {
+      // Firefox is in the foreground, no need for a notification.
+      return;
+    }
     Services.metro.showNativeToast(aTitle, aText, aImageURL, aCookie);
   },
 
