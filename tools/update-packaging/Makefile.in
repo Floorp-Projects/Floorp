@@ -63,8 +63,8 @@ endif
 	  $(srcdir)/make_full_update.sh \
 	  '$(STAGE_DIR)/$(PKG_UPDATE_BASENAME).complete.mar' \
 	  '$(PACKAGE_DIR)'
-ifdef MOZ_SIGN_PACKAGE_CMD
-	$(MOZ_SIGN_PACKAGE_CMD) '$(STAGE_DIR)/$(PKG_UPDATE_BASENAME).complete.mar'
+ifdef MOZ_SIGN_CMD
+	$(MOZ_SIGN_CMD) -f mar '$(STAGE_DIR)/$(PKG_UPDATE_BASENAME).complete.mar'
 endif
 
 partial-patch:: $(dir-stage)
@@ -74,6 +74,6 @@ partial-patch:: $(dir-stage)
 	  '$(STAGE_DIR)/$(PKG_UPDATE_BASENAME).partial.$(SRC_BUILD_ID)-$(DST_BUILD_ID).mar' \
 	  '$(SRC_BUILD)' \
 	  '$(DST_BUILD)'
-ifdef MOZ_SIGN_PACKAGE_CMD
-	$(MOZ_SIGN_PACKAGE_CMD) '$(STAGE_DIR)/$(PKG_UPDATE_BASENAME).partial.$(SRC_BUILD_ID)-$(DST_BUILD_ID).mar'
+ifdef MOZ_SIGN_CMD
+	$(MOZ_SIGN_CMD) -f mar '$(STAGE_DIR)/$(PKG_UPDATE_BASENAME).partial.$(SRC_BUILD_ID)-$(DST_BUILD_ID).mar'
 endif
