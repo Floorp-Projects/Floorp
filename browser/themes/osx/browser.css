@@ -1730,7 +1730,6 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
 .urlbar-input-box {
   -moz-margin-start: 0;
   padding: 3px 0 2px;
-  min-width: 4em;
 }
 
 .urlbar-history-dropmarker {

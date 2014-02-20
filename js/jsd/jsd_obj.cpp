@@ -55,9 +55,9 @@ _traceObj(JSDContext* jsdc, JSDObject* jsdobj, int which)
 #ifdef DEBUG
 void JSD_ASSERT_VALID_OBJECT(JSDObject* jsdobj)
 {
-    JS_ASSERT(jsdobj);
-    JS_ASSERT(!JS_CLIST_IS_EMPTY(&jsdobj->links));
-    JS_ASSERT(jsdobj->obj);
+    MOZ_ASSERT(jsdobj);
+    MOZ_ASSERT(!JS_CLIST_IS_EMPTY(&jsdobj->links));
+    MOZ_ASSERT(jsdobj->obj);
 }
 #endif
 
@@ -65,7 +65,7 @@ void JSD_ASSERT_VALID_OBJECT(JSDObject* jsdobj)
 static void
 _destroyJSDObject(JSDContext* jsdc, JSDObject* jsdobj)
 {
-    JS_ASSERT(JSD_OBJECTS_LOCKED(jsdc));
+    MOZ_ASSERT(JSD_OBJECTS_LOCKED(jsdc));
 
     JS_REMOVE_LINK(&jsdobj->links);
     JS_HashTableRemove(jsdc->objectsTable, jsdobj->obj);
@@ -156,7 +156,7 @@ jsd_IterateObjects(JSDContext* jsdc, JSDObject** iterp)
 {
     JSDObject *jsdobj = *iterp;
 
-    JS_ASSERT(JSD_OBJECTS_LOCKED(jsdc));
+    MOZ_ASSERT(JSD_OBJECTS_LOCKED(jsdc));
 
     if( !jsdobj )
         jsdobj = (JSDObject *)jsdc->objectsList.next;

@@ -114,13 +114,13 @@ class SystemReporter MOZ_FINAL : public nsIMemoryReporter
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
-#define REPORT_WITH_CLEANUP(_path, _amount, _desc, _cleanup)                  \
+#define REPORT_WITH_CLEANUP(_path, _units, _amount, _desc, _cleanup)          \
   do {                                                                        \
     size_t amount = _amount;  /* evaluate _amount only once */                \
     if (amount > 0) {                                                         \
       nsresult rv;                                                            \
       rv = aHandleReport->Callback(NS_LITERAL_CSTRING("System"), _path,       \
-                                   KIND_NONHEAP, UNITS_BYTES, amount, _desc,  \
+                                   KIND_NONHEAP, _units, amount, _desc,       \
                                    aData);                                    \
       if (NS_WARN_IF(NS_FAILED(rv))) {                                        \
         _cleanup;                                                             \
@@ -130,7 +130,7 @@ public:
   } while (0)
 
 #define REPORT(_path, _amount, _desc) \
-    REPORT_WITH_CLEANUP(_path, _amount, _desc, (void)0)
+    REPORT_WITH_CLEANUP(_path, UNITS_BYTES, _amount, _desc, (void)0)
 
   NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
                             nsISupports* aData)
@@ -160,6 +160,11 @@ public:
 
     // Report reserved memory not included in memTotal.
     rv = CollectPmemReports(aHandleReport, aData);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Report zram usage statistics.
+    rv = CollectZramReports(aHandleReport, aData);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     return rv;
   }
@@ -592,7 +597,7 @@ private:
                                  "offset=0x%" PRIx64 ")", name, pid, mapStart);
             nsPrintfCString desc("Physical memory reserved for the \"%s\" pool "
                                  "and allocated to a buffer.", name);
-            REPORT_WITH_CLEANUP(path, mapLen, desc,
+            REPORT_WITH_CLEANUP(path, UNITS_BYTES, mapLen, desc,
                                 (fclose(regionsFile), closedir(d)));
             freeSize -= mapLen;
           }
@@ -604,8 +609,116 @@ private:
       nsPrintfCString desc("Physical memory reserved for the \"%s\" pool and "
                            "unavailable to the rest of the system, but not "
                            "currently allocated.", name);
-      REPORT_WITH_CLEANUP(path, freeSize, desc, closedir(d));
+      REPORT_WITH_CLEANUP(path, UNITS_BYTES, freeSize, desc, closedir(d));
     }
+    closedir(d);
+    return NS_OK;
+  }
+
+  uint64_t
+  ReadSizeFromFile(const char* aFilename)
+  {
+      FILE* sizeFile = fopen(aFilename, "r");
+      if (NS_WARN_IF(!sizeFile)) {
+        return 0;
+      }
+
+      uint64_t size = 0;
+      fscanf(sizeFile, "%" SCNu64, &size);
+      fclose(sizeFile);
+
+      return size;
+  }
+
+  nsresult
+  CollectZramReports(nsIHandleReportCallback* aHandleReport,
+                     nsISupports* aData)
+  {
+    // zram usage stats files can be found under:
+    //  /sys/block/zram<id>
+    //  |--> disksize        - Maximum amount of uncompressed data that can be
+    //                         stored on the disk (bytes)
+    //  |--> orig_data_size  - Uncompressed size of data in the disk (bytes)
+    //  |--> compr_data_size - Compressed size of the data in the disk (bytes)
+    //  |--> num_reads       - Number of attempted reads to the disk (count)
+    //  |--> num_writes      - Number of attempted writes to the disk (count)
+    //
+    // Each file contains a single integer value in decimal form.
+
+    DIR* d = opendir("/sys/block");
+    if (!d) {
+      if (NS_WARN_IF(errno != ENOENT)) {
+        return NS_ERROR_FAILURE;
+      }
+
+      return NS_OK;
+    }
+
+    struct dirent* ent;
+    while ((ent = readdir(d))) {
+      const char* name = ent->d_name;
+
+      // Skip non-zram entries.
+      if (strncmp("zram", name, 4) != 0) {
+        continue;
+      }
+
+      // Report disk size statistics.
+      nsPrintfCString diskSizeFile("/sys/block/%s/disksize", name);
+      nsPrintfCString origSizeFile("/sys/block/%s/orig_data_size", name);
+
+      uint64_t diskSize = ReadSizeFromFile(diskSizeFile.get());
+      uint64_t origSize = ReadSizeFromFile(origSizeFile.get());
+      uint64_t unusedSize = diskSize - origSize;
+
+      nsPrintfCString diskUsedPath("zram-disksize/%s/used", name);
+      nsPrintfCString diskUsedDesc(
+                           "The uncompressed size of data stored in \"%s.\" "
+                           "This excludes zero-filled pages since "
+                           "no memory is allocated for them.", name);
+      REPORT_WITH_CLEANUP(diskUsedPath, UNITS_BYTES, origSize,
+                          diskUsedDesc, closedir(d));
+
+      nsPrintfCString diskUnusedPath("zram-disksize/%s/unused", name);
+      nsPrintfCString diskUnusedDesc(
+                           "The amount of uncompressed data that can still be "
+                           "be stored in \"%s\"", name);
+      REPORT_WITH_CLEANUP(diskUnusedPath, UNITS_BYTES, unusedSize,
+                          diskUnusedDesc, closedir(d));
+
+      // Report disk accesses.
+      nsPrintfCString readsFile("/sys/block/%s/num_reads", name);
+      nsPrintfCString writesFile("/sys/block/%s/num_writes", name);
+
+      uint64_t reads = ReadSizeFromFile(readsFile.get());
+      uint64_t writes = ReadSizeFromFile(writesFile.get());
+
+      nsPrintfCString readsDesc(
+                           "The number of reads (failed or successful) done on "
+                           "\"%s\"", name);
+      nsPrintfCString readsPath("zram-accesses/%s/reads", name);
+      REPORT_WITH_CLEANUP(readsPath, UNITS_COUNT_CUMULATIVE, reads,
+                          readsDesc, closedir(d));
+
+      nsPrintfCString writesDesc(
+                           "The number of writes (failed or successful) done "
+                           "on \"%s\"", name);
+      nsPrintfCString writesPath("zram-accesses/%s/writes", name);
+      REPORT_WITH_CLEANUP(writesPath, UNITS_COUNT_CUMULATIVE, writes,
+                          writesDesc, closedir(d));
+
+      // Report compressed data size.
+      nsPrintfCString comprSizeFile("/sys/block/%s/compr_data_size", name);
+      uint64_t comprSize = ReadSizeFromFile(comprSizeFile.get());
+
+      nsPrintfCString comprSizeDesc(
+                           "The compressed size of data stored in \"%s\"",
+                            name);
+      nsPrintfCString comprSizePath("zram-compr-data-size/%s", name);
+      REPORT_WITH_CLEANUP(comprSizePath, UNITS_BYTES, comprSize,
+                          comprSizeDesc, closedir(d));
+    }
+
     closedir(d);
     return NS_OK;
   }
