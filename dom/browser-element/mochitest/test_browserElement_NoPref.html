@@ -41,7 +41,7 @@ function runTest() {
   iframe.src = browserElementTestHelpers.emptyPage1;
 }
 
-addEventListener('load', function() { SimpleTest.executeSoon(runTest); });
+addEventListener('testready', runTest);
 
 </script>
 

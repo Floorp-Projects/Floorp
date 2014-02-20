@@ -201,7 +201,7 @@ nsDOMCameraControl::nsDOMCameraControl(uint32_t aCameraId,
   config.mPreviewSize.height = aInitialConfig.mPreviewSize.mHeight;
   config.mRecorderProfile = aInitialConfig.mRecorderProfile;
 
-  mCameraControl = ICameraControl::Create(aCameraId, &config);
+  mCameraControl = ICameraControl::Create(aCameraId);
   mCurrentConfiguration = initialConfig.forget();
 
   // Attach our DOM-facing media stream to our viewfinder stream.
@@ -214,6 +214,13 @@ nsDOMCameraControl::nsDOMCameraControl(uint32_t aCameraId,
   // Register a listener for camera events.
   mListener = new DOMCameraControlListener(this, mInput);
   mCameraControl->AddListener(mListener);
+
+  // Start the camera...
+  nsresult rv = mCameraControl->Start(&config);
+  if (NS_FAILED(rv)) {
+    mListener->OnError(DOMCameraControlListener::kInStartCamera,
+                       DOMCameraControlListener::kErrorApiFailed);
+  }
 }
 
 nsDOMCameraControl::~nsDOMCameraControl()
@@ -911,7 +918,7 @@ nsDOMCameraControl::ReleaseHardware(const Optional<OwningNonNull<CameraReleaseCa
     mReleaseOnErrorCb = &aOnError.Value();
   }
 
-  aRv = mCameraControl->ReleaseHardware();
+  aRv = mCameraControl->Stop();
 }
 
 void
@@ -1157,9 +1164,14 @@ nsDOMCameraControl::OnError(CameraControlListener::CameraErrorContext aContext, 
 
   nsCOMPtr<CameraErrorCallback>* errorCb;
   switch (aContext) {
-    case CameraControlListener::kInGetCamera:
+    case CameraControlListener::kInStartCamera:
       mGetCameraOnSuccessCb = nullptr;
       errorCb = &mGetCameraOnErrorCb;
+      break;
+
+    case CameraControlListener::kInStopCamera:
+      mReleaseOnSuccessCb = nullptr;
+      errorCb = &mReleaseOnErrorCb;
       break;
 
     case CameraControlListener::kInSetConfiguration:
@@ -1180,11 +1192,6 @@ nsDOMCameraControl::OnError(CameraControlListener::CameraErrorContext aContext, 
     case CameraControlListener::kInStartRecording:
       mStartRecordingOnSuccessCb = nullptr;
       errorCb = &mStartRecordingOnErrorCb;
-      break;
-
-    case CameraControlListener::kInReleaseHardware:
-      mReleaseOnSuccessCb = nullptr;
-      errorCb = &mReleaseOnErrorCb;
       break;
 
     case CameraControlListener::kInStopRecording:

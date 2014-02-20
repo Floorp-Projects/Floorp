@@ -1075,8 +1075,8 @@ var WifiManager = (function() {
   manager.getConfiguredNetworks = function(callback) {
     wifiCommand.listNetworks(function (reply) {
       var networks = Object.create(null);
-      var lines = reply.split("\n");
-      if (lines.length === 1) {
+      var lines = reply ? reply.split("\n") : 0;
+      if (lines.length <= 1) {
         // We need to make sure we call the callback even if there are no
         // configured networks.
         callback(networks);
