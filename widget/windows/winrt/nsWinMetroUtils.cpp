@@ -200,13 +200,8 @@ nsWinMetroUtils::LaunchInDesktop(const nsAString &aPath, const nsAString &aArgum
 NS_IMETHODIMP
 nsWinMetroUtils::ShowNativeToast(const nsAString &aTitle,
   const nsAString &aMessage, const nsAString &anImage,
-  const nsAString &aCookie)
+  const nsAString &aCookie, const nsAString& aAppId)
 {
-  // Firefox is in the foreground, no need for a notification.
-  if (::GetActiveWindow() == ::GetForegroundWindow()) {
-    return NS_OK;
-  }
-
   ToastNotificationHandler* notification_handler =
       new ToastNotificationHandler;
 
@@ -215,9 +210,10 @@ nsWinMetroUtils::ShowNativeToast(const nsAString &aTitle,
 
   if (anImage.Length() > 0) {
     HSTRING imagePath = HStringReference(anImage.BeginReading()).Get();
-    notification_handler->DisplayNotification(title, msg, imagePath, aCookie);
+    notification_handler->DisplayNotification(title, msg, imagePath, aCookie,
+                                              aAppId);
   } else {
-    notification_handler->DisplayTextNotification(title, msg, aCookie);
+    notification_handler->DisplayTextNotification(title, msg, aCookie, aAppId);
   }
 
   return NS_OK;
@@ -330,6 +326,13 @@ NS_IMETHODIMP
 nsWinMetroUtils::SetUpdatePending(bool aUpdatePending)
 {
   sUpdatePending = aUpdatePending;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWinMetroUtils::GetForeground(bool* aForeground)
+{
+  *aForeground = (::GetActiveWindow() == ::GetForegroundWindow());
   return NS_OK;
 }
 
