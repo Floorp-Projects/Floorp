@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 Mozilla Foundation
+ * Copyright (C) 2012-2014 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -115,18 +115,8 @@ ICameraControl::GetListOfCameras(nsTArray<nsString>& aList)
 
 // implementation-specific camera factory
 already_AddRefed<ICameraControl>
-ICameraControl::Create(uint32_t aCameraId, const Configuration* aInitialConfig)
+ICameraControl::Create(uint32_t aCameraId)
 {
-  if (aInitialConfig) {
-    DOM_CAMERA_LOGI("Creating camera %d control, initial mode '%s'\n",
-      aCameraId, aInitialConfig->mMode == kVideoMode ? "video" : "picture");
-  } else {
-    DOM_CAMERA_LOGI("Creating camera %d control, no intial configuration\n", aCameraId);
-  }
-
   nsRefPtr<nsGonkCameraControl> control = new nsGonkCameraControl(aCameraId);
-  nsresult rv = control->Init(aInitialConfig);
-  NS_ENSURE_SUCCESS(rv, nullptr);
-
   return control.forget();
 }

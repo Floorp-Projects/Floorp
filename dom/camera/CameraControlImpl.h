@@ -36,6 +36,9 @@ public:
   virtual void AddListener(CameraControlListener* aListener) MOZ_OVERRIDE;
   virtual void RemoveListener(CameraControlListener* aListener) MOZ_OVERRIDE;
 
+  virtual nsresult Start(const Configuration* aConfig = nullptr) MOZ_OVERRIDE;
+  virtual nsresult Stop() MOZ_OVERRIDE;
+
   virtual nsresult SetConfiguration(const Configuration& aConfig) MOZ_OVERRIDE;
   virtual nsresult StartPreview() MOZ_OVERRIDE;
   virtual nsresult StopPreview() MOZ_OVERRIDE;
@@ -44,7 +47,6 @@ public:
   virtual nsresult StartRecording(DeviceStorageFileDescriptor* aFileDescriptor,
                                   const StartRecordingOptions* aOptions) MOZ_OVERRIDE;
   virtual nsresult StopRecording() MOZ_OVERRIDE;
-  virtual nsresult ReleaseHardware() MOZ_OVERRIDE;
 
   already_AddRefed<RecorderProfileManager> GetRecorderProfileManager();
   uint32_t GetCameraId() { return mCameraId; }
@@ -63,7 +65,7 @@ protected:
 
   bool OnNewPreviewFrame(layers::Image* aImage, uint32_t aWidth, uint32_t aHeight);
   void OnRecorderStateChange(CameraControlListener::RecorderState aState,
-                             int32_t aStatus, int32_t aTrackNumber);
+                             int32_t aStatus = -1, int32_t aTrackNumber = -1);
   void OnPreviewStateChange(CameraControlListener::PreviewState aState);
   void OnHardwareStateChange(CameraControlListener::HardwareState aState);
   void OnConfigurationChange();
@@ -90,6 +92,8 @@ protected:
   class ControlMessage;
   class ListenerMessage;
 
+  virtual nsresult StartImpl(const Configuration* aConfig = nullptr) = 0;
+  virtual nsresult StopImpl() = 0;
   virtual nsresult SetConfigurationImpl(const Configuration& aConfig) = 0;
   virtual nsresult StartPreviewImpl() = 0;
   virtual nsresult StopPreviewImpl() = 0;
@@ -100,7 +104,6 @@ protected:
   virtual nsresult StopRecordingImpl() = 0;
   virtual nsresult PushParametersImpl() = 0;
   virtual nsresult PullParametersImpl() = 0;
-  virtual nsresult ReleaseHardwareImpl() = 0;
   virtual already_AddRefed<RecorderProfileManager> GetRecorderProfileManagerImpl() = 0;
 
   void OnShutterInternal();

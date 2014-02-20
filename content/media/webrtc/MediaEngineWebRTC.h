@@ -162,9 +162,8 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   void OnHardwareStateChange(HardwareState aState);
-  void OnConfigurationChange(const CameraListenerConfiguration& aConfiguration);
   bool OnNewPreviewFrame(layers::Image* aImage, uint32_t aWidth, uint32_t aHeight);
-  void OnError(CameraErrorContext aContext, const nsACString& aError);
+  void OnError(CameraErrorContext aContext, CameraError aError);
   void OnTakePictureComplete(uint8_t* aData, uint32_t aLength, const nsAString& aMimeType);
 
   void AllocImpl();
