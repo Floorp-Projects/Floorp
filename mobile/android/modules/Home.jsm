@@ -64,6 +64,10 @@ let HomeBanner = {
         this._handleGet();
         break;
 
+      case "HomeBanner:Shown":
+        this._handleShown(data);
+        break;
+
       case "HomeBanner:Click":
         this._handleClick(data);
         break;
@@ -87,7 +91,10 @@ let HomeBanner = {
       text: message.text,
       iconURI: message.iconURI
     });
+  },
 
+  _handleShown: function(id) {
+    let message = this._messages[id];
     if (message.onshown)
       message.onshown();
   },
@@ -120,6 +127,7 @@ let HomeBanner = {
     // observers to listen for requests from the Java UI.
     if (Object.keys(this._messages).length == 1) {
       Services.obs.addObserver(this, "HomeBanner:Get", false);
+      Services.obs.addObserver(this, "HomeBanner:Shown", false);
       Services.obs.addObserver(this, "HomeBanner:Click", false);
       Services.obs.addObserver(this, "HomeBanner:Dismiss", false);
 
@@ -146,6 +154,7 @@ let HomeBanner = {
     // If there are no more messages, remove the observers.
     if (Object.keys(this._messages).length == 0) {
       Services.obs.removeObserver(this, "HomeBanner:Get");
+      Services.obs.removeObserver(this, "HomeBanner:Shown");
       Services.obs.removeObserver(this, "HomeBanner:Click");
       Services.obs.removeObserver(this, "HomeBanner:Dismiss");
     }
