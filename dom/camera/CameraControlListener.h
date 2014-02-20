@@ -17,7 +17,15 @@ namespace layers {
 class CameraControlListener
 {
 public:
-  virtual ~CameraControlListener() { }
+  CameraControlListener()
+  {
+    MOZ_COUNT_CTOR(CameraControlListener);
+  }
+
+  virtual ~CameraControlListener()
+  {
+    MOZ_COUNT_DTOR(CameraControlListener);
+  }
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CameraControlListener);
 
@@ -71,13 +79,13 @@ public:
 
   enum CameraErrorContext
   {
-    kInGetCamera,
+    kInStartCamera,
+    kInStopCamera,
     kInAutoFocus,
     kInTakePicture,
     kInStartRecording,
     kInStopRecording,
     kInSetConfiguration,
-    kInReleaseHardware,
     kInStartPreview,
     kInStopPreview,
     kInUnspecified

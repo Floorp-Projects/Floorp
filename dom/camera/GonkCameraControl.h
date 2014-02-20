@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012-2013 Mozilla Foundation
+ * Copyright (C) 2012-2014 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,8 +47,6 @@ class nsGonkCameraControl : public CameraControlImpl
 {
 public:
   nsGonkCameraControl(uint32_t aCameraId);
-  nsresult Init(const Configuration* aInitialConfig);
-  nsresult InitImpl();
 
   void OnAutoFocusComplete(bool aSuccess);
   void OnTakePictureComplete(uint8_t* aData, uint32_t aLength);
@@ -92,6 +90,10 @@ protected:
   virtual void BeginBatchParameterSet() MOZ_OVERRIDE;
   virtual void EndBatchParameterSet() MOZ_OVERRIDE;
 
+  virtual nsresult StartImpl(const Configuration* aInitialConfig = nullptr) MOZ_OVERRIDE;
+  virtual nsresult StopImpl() MOZ_OVERRIDE;
+  nsresult Initialize();
+
   virtual nsresult SetConfigurationImpl(const Configuration& aConfig) MOZ_OVERRIDE;
   nsresult SetConfigurationInternal(const Configuration& aConfig);
   nsresult SetPictureConfiguration(const Configuration& aConfig);
@@ -108,13 +110,13 @@ protected:
   virtual nsresult StopRecordingImpl() MOZ_OVERRIDE;
   virtual nsresult PushParametersImpl() MOZ_OVERRIDE;
   virtual nsresult PullParametersImpl() MOZ_OVERRIDE;
-  virtual nsresult ReleaseHardwareImpl() MOZ_OVERRIDE;
   virtual already_AddRefed<RecorderProfileManager> GetRecorderProfileManagerImpl() MOZ_OVERRIDE;
   already_AddRefed<GonkRecorderProfileManager> GetGonkRecorderProfileManager();
 
   nsresult SetupRecording(int aFd, int aRotation, int64_t aMaxFileSizeBytes, int64_t aMaxVideoLengthMs);
   nsresult SetupVideoMode(const nsAString& aProfile);
   nsresult SetPreviewSize(const Size& aSize);
+  nsresult PausePreview();
 
   friend class SetPictureSize;
   friend class SetThumbnailSize;
