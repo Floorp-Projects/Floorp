@@ -34,3 +34,24 @@
 .widget-overflow-list .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
   padding: 0 6px;
 }
+
+%ifdef WINDOWS_AERO
+/* Win8 and beyond. */
+@media not all and (-moz-os-version: windows-vista) {
+  @media not all and (-moz-os-version: windows-win7) {
+    panelview .toolbarbutton-1,
+    .subviewbutton,
+    .widget-overflow-list .toolbarbutton-1,
+    .panelUI-grid .toolbarbutton-1 > .toolbarbutton-menubutton-button,
+    #edit-controls@inAnyPanel@ > toolbarbutton,
+    #zoom-controls@inAnyPanel@ > toolbarbutton {
+      border-radius: 0;
+    }
+
+    #edit-controls@inAnyPanel@,
+    #zoom-controls@inAnyPanel@ {
+      border-radius: 0;
+    }
+  }
+}
+%endif
