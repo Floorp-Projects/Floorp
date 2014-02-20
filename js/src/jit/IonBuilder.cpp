@@ -7946,6 +7946,9 @@ IonBuilder::jsop_rest()
         MStoreElement *store = MStoreElement::New(alloc(), elements, index, arg,
                                                   /* needsHoleCheck = */ false);
         current->add(store);
+
+        if (NeedsPostBarrier(info(), arg))
+            current->add(MPostWriteBarrier::New(alloc(), array, arg));
     }
 
     // The array's length is incorrectly 0 now, from the template object
