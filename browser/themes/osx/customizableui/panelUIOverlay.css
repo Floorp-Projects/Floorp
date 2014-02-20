@@ -75,3 +75,8 @@
 .widget-overflow-list .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
   -moz-margin-start: 4px;
 }
+
+.PanelUI-subView menuseparator,
+.cui-widget-panelview menuseparator {
+  padding: 0 !important;
+}

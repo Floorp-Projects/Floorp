@@ -49,6 +49,10 @@
   -moz-box-flex: 1;
 }
 
+.subviewbutton:not(:-moz-any([image],[targetURI],.cui-withicon)) > .toolbarbutton-text {
+  -moz-margin-start: 0;
+}
+
 .panel-subview-body {
   overflow-y: auto;
   overflow-x: hidden;
@@ -57,6 +61,7 @@
 
 #PanelUI-popup .panel-subview-body {
   margin: -4px;
+  padding: 2px 4px;
 }
 
 .panel-subview-header,
@@ -143,7 +148,6 @@
 panelview:not([mainview]) .toolbarbutton-text,
 .cui-widget-panel toolbarbutton > .toolbarbutton-text {
   text-align: start;
-  -moz-padding-start: 8px;
   display: -moz-box;
 }
 
@@ -323,6 +327,7 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   border: 0;
   border-left: 1px solid hsla(210,4%,10%,.14);
   margin: 7px 0 7px;
+  -moz-appearance: none;
 }
 
 #PanelUI-footer-inner:hover > toolbarseparator {
@@ -538,12 +543,6 @@ panelview .toolbarbutton-1,
   margin-right: 4px;
 }
 
-.PanelUI-subView menuseparator,
-.PanelUI-subView toolbarseparator {
-  -moz-margin-start: -5px;
-  -moz-margin-end: -4px;
-}
-
 panelview .toolbarbutton-1,
 .widget-overflow-list .toolbarbutton-1 {
   margin-top: 6px;
@@ -608,12 +607,31 @@ panelview .toolbarbutton-1@buttonStateActive@,
   margin-bottom: 0;
 }
 
-panelview toolbarseparator,
-#BMB_bookmarksPopup > menuseparator {
+.PanelUI-subView menuseparator,
+.PanelUI-subView toolbarseparator,
+.cui-widget-panelview menuseparator {
   -moz-appearance: none;
   min-height: 0;
-  border-top: 1px solid ThreeDShadow;
-  margin: 5px 0;
+  border-top: 1px solid hsla(210,4%,10%,.15);
+  margin: 2px 0;
+  padding: 0;
+}
+
+.PanelUI-subView menuseparator,
+.PanelUI-subView toolbarseparator {
+  -moz-margin-start: -5px;
+  -moz-margin-end: -4px;
+}
+
+.PanelUI-subView menuseparator.small-separator,
+.PanelUI-subView toolbarseparator.small-separator {
+  margin-left: 5px;
+  margin-right: 5px;
+}
+
+.cui-widget-panelview menuseparator.small-separator {
+  margin-left: 10px;
+  margin-right: 10px;
 }
 
 .subviewbutton > .menu-accel-container {
@@ -810,36 +828,20 @@ toolbarpaletteitem[place="palette"] > #search-container {
   box-shadow: 0 0 0 1px hsla(0,0%,100%,.2);
 }
 
-#PanelUI-developerItems > toolbarbutton[checked="true"],
-#PanelUI-bookmarks > toolbarbutton[checked="true"],
-#PanelUI-history > toolbarbutton[checked="true"],
-.PanelUI-characterEncodingView-list > toolbarbutton[current] {
+.PanelUI-subView toolbarbutton[checked="true"] {
   -moz-padding-start: 4px;
 }
 
-#PanelUI-developerItems > toolbarbutton[checked="true"] > .toolbarbutton-text,
-#PanelUI-bookmarks > toolbarbutton[checked="true"] > .toolbarbutton-text,
-#PanelUI-history > toolbarbutton[checked="true"] > .toolbarbutton-text,
-.PanelUI-characterEncodingView-list > toolbarbutton[current] > .toolbarbutton-text,
-.cui-widget-panel .PanelUI-characterEncodingView-list > toolbarbutton[current] > .toolbarbutton-text {
+.PanelUI-subView toolbarbutton[checked="true"] > .toolbarbutton-text {
   -moz-padding-start: 0px;
 }
 
-#BMB_bookmarksPopup > menuitem[checked="true"]::before,
-#PanelUI-bookmarks > toolbarbutton[checked="true"]::before,
-#PanelUI-history > toolbarbutton[checked="true"]::before,
-#PanelUI-developerItems > toolbarbutton[checked="true"]::before,
-.PanelUI-characterEncodingView-list > toolbarbutton[current]::before {
+.PanelUI-subView menuitem[checked="true"]::before,
+.PanelUI-subView toolbarbutton[checked="true"]::before {
   content: "✓";
   display: -moz-box;
   width: 12px;
-}
-
-#PanelUI-bookmarks > toolbarbutton[checked="true"]::before,
-#PanelUI-history > toolbarbutton[checked="true"]::before,
-#PanelUI-developerItems > toolbarbutton[checked="true"]::before,
-.PanelUI-characterEncodingView-list > toolbarbutton[current]::before {
-  -moz-margin-end: -2px;
+  margin: 0 2px;
 }
 
 #BMB_bookmarksPopup > menuitem[checked="true"] > .menu-iconic-left {

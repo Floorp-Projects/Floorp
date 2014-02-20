@@ -16,3 +16,10 @@
 .widget-overflow-list .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
   -moz-margin-start: 0;
 }
+
+.PanelUI-subView toolbarseparator,
+.PanelUI-subView menuseparator,
+.cui-widget-panelview menuseparator,
+#PanelUI-footer-inner > toolbarseparator {
+  -moz-appearance: none !important;
+}

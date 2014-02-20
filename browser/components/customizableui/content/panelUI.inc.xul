@@ -112,13 +112,13 @@
         <toolbarseparator/>
         <toolbarbutton id="panelMenu_bookmarksToolbar"
                        label="&personalbarCmd.label;"
-                       class="subviewbutton"
+                       class="subviewbutton cui-withicon"
                        oncommand="PlacesCommandHook.showPlacesOrganizer('BookmarksToolbar'); PanelUI.hide();"/>
         <toolbarbutton id="panelMenu_unsortedBookmarks"
                        label="&unsortedBookmarksCmd.label;"
-                       class="subviewbutton"
+                       class="subviewbutton cui-withicon"
                        oncommand="PlacesCommandHook.showPlacesOrganizer('UnfiledBookmarks'); PanelUI.hide();"/>
-        <toolbarseparator/>
+        <toolbarseparator class="small-separator"/>
         <toolbaritem id="panelMenu_bookmarksMenu"
                      flex="1"
                      orient="vertical"
