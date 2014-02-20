@@ -444,6 +444,7 @@ public:
   ~BufferTextureHost();
 
   virtual uint8_t* GetBuffer() = 0;
+  virtual size_t GetBufferSize() = 0;
 
   virtual void Updated(const nsIntRegion* aRegion = nullptr) MOZ_OVERRIDE;
 
@@ -506,6 +507,8 @@ public:
 
   virtual uint8_t* GetBuffer() MOZ_OVERRIDE;
 
+  virtual size_t GetBufferSize() MOZ_OVERRIDE;
+
   virtual const char *Name() MOZ_OVERRIDE { return "ShmemTextureHost"; }
 
   virtual void OnShutdown() MOZ_OVERRIDE;
@@ -535,6 +538,8 @@ public:
   virtual void ForgetSharedData() MOZ_OVERRIDE;
 
   virtual uint8_t* GetBuffer() MOZ_OVERRIDE;
+
+  virtual size_t GetBufferSize() MOZ_OVERRIDE;
 
   virtual const char *Name() MOZ_OVERRIDE { return "MemoryTextureHost"; }
 
