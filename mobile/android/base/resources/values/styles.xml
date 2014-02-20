@@ -109,22 +109,22 @@
         <item name="android:ellipsize">middle</item>
     </style>
 
-    <style name="Widget.TwoLineRow" />
+    <style name="Widget.TwoLinePageRow" />
 
-    <style name="Widget.TwoLineRow.Title">
+    <style name="Widget.TwoLinePageRow.Title">
         <item name="android:textAppearance">@style/TextAppearance.Widget.Home.ItemTitle</item>
         <item name="android:singleLine">true</item>
         <item name="android:ellipsize">none</item>
     </style>
 
-    <style name="Widget.TwoLineRow.Description">
+    <style name="Widget.TwoLinePageRow.Url">
         <item name="android:textAppearance">@style/TextAppearance.Widget.Home.ItemDescription</item>
         <item name="android:includeFontPadding">false</item>
         <item name="android:singleLine">true</item>
         <item name="android:ellipsize">middle</item>
     </style>
 
-    <style name="Widget.BookmarkFolderView" parent="Widget.TwoLineRow.Title">
+    <style name="Widget.BookmarkFolderView" parent="Widget.TwoLinePageRow.Title">
         <item name="android:paddingLeft">10dip</item>
         <item name="android:drawablePadding">10dip</item>
         <item name="android:drawableLeft">@drawable/bookmark_folder</item>
@@ -170,7 +170,7 @@
         <item name="android:drawSelectorOnTop">true</item>
     </style>
 
-    <style name="Widget.BookmarkItemView" parent="Widget.TwoLineRow"/>
+    <style name="Widget.BookmarkItemView" parent="Widget.TwoLinePageRow"/>
 
     <style name="Widget.BookmarksListView" parent="Widget.HomeListView"/>
 
