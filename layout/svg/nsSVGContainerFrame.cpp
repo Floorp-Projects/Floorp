@@ -146,6 +146,7 @@ nsSVGDisplayContainerFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                              const nsRect&           aDirtyRect,
                                              const nsDisplayListSet& aLists)
 {
+  // mContent could be a XUL element so check for an SVG element before casting
   if (mContent->IsSVG() &&
       !static_cast<const nsSVGElement*>(mContent)->HasValidDimensions()) {
     return;
@@ -233,6 +234,7 @@ nsSVGDisplayContainerFrame::IsSVGTransformed(gfx::Matrix *aOwnTransform,
                        HasChildrenOnlyTransform(aFromParentTransform);
   }
 
+  // mContent could be a XUL element so check for an SVG element before casting
   if (mContent->IsSVG()) {
     nsSVGElement *content = static_cast<nsSVGElement*>(mContent);
     nsSVGAnimatedTransformList* transformList =
@@ -252,7 +254,7 @@ nsSVGDisplayContainerFrame::IsSVGTransformed(gfx::Matrix *aOwnTransform,
 //----------------------------------------------------------------------
 // nsISVGChildFrame methods
 
-NS_IMETHODIMP
+nsresult
 nsSVGDisplayContainerFrame::PaintSVG(nsRenderingContext* aContext,
                                      const nsIntRect *aDirtyRect,
                                      nsIFrame* aTransformRoot)
@@ -275,7 +277,7 @@ nsSVGDisplayContainerFrame::PaintSVG(nsRenderingContext* aContext,
   return NS_OK;
 }
 
-NS_IMETHODIMP_(nsIFrame*)
+nsIFrame*
 nsSVGDisplayContainerFrame::GetFrameForPoint(const nsPoint &aPoint)
 {
   NS_ASSERTION(!NS_SVGDisplayListHitTestingEnabled() ||
@@ -285,7 +287,7 @@ nsSVGDisplayContainerFrame::GetFrameForPoint(const nsPoint &aPoint)
   return nsSVGUtils::HitTestChildren(this, aPoint);
 }
 
-NS_IMETHODIMP_(nsRect)
+nsRect
 nsSVGDisplayContainerFrame::GetCoveredRegion()
 {
   return nsSVGUtils::GetCoveredRegion(mFrames);
@@ -399,10 +401,13 @@ nsSVGDisplayContainerFrame::GetBBoxContribution(
 
   nsIFrame* kid = mFrames.FirstChild();
   while (kid) {
+    nsIContent *content = kid->GetContent();
     nsISVGChildFrame* svgKid = do_QueryFrame(kid);
-    if (svgKid) {
+    // content could be a XUL element so check for an SVG element before casting
+    if (svgKid && (!content->IsSVG() ||
+                   static_cast<const nsSVGElement*>(content)->HasValidDimensions())) {
+
       gfxMatrix transform = gfx::ThebesMatrix(aToBBoxUserspace);
-      nsIContent *content = kid->GetContent();
       if (content->IsSVG()) {
         transform = static_cast<nsSVGElement*>(content)->
                       PrependLocalTransformsTo(transform);

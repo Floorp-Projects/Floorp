@@ -302,11 +302,11 @@ struct WorkerStructuredCloneCallbacks
   {
     // See if object is a nsIDOMFile pointer.
     if (aTag == DOMWORKER_SCTAG_FILE) {
-      JS_ASSERT(!aData);
+      MOZ_ASSERT(!aData);
 
       nsIDOMFile* file;
       if (JS_ReadBytes(aReader, &file, sizeof(file))) {
-        JS_ASSERT(file);
+        MOZ_ASSERT(file);
 
 #ifdef DEBUG
         {
@@ -327,11 +327,11 @@ struct WorkerStructuredCloneCallbacks
     }
     // See if object is a nsIDOMBlob pointer.
     else if (aTag == DOMWORKER_SCTAG_BLOB) {
-      JS_ASSERT(!aData);
+      MOZ_ASSERT(!aData);
 
       nsIDOMBlob* blob;
       if (JS_ReadBytes(aReader, &blob, sizeof(blob))) {
-        JS_ASSERT(blob);
+        MOZ_ASSERT(blob);
 
 #ifdef DEBUG
         {
@@ -352,7 +352,7 @@ struct WorkerStructuredCloneCallbacks
     }
     // See if the object is an ImageData.
     else if (aTag == SCTAG_DOM_IMAGEDATA) {
-      JS_ASSERT(!aData);
+      MOZ_ASSERT(!aData);
 
       // Read the information out of the stream.
       uint32_t width, height;
@@ -459,11 +459,11 @@ struct MainThreadWorkerStructuredCloneCallbacks
 
     // See if object is a nsIDOMFile pointer.
     if (aTag == DOMWORKER_SCTAG_FILE) {
-      JS_ASSERT(!aData);
+      MOZ_ASSERT(!aData);
 
       nsIDOMFile* file;
       if (JS_ReadBytes(aReader, &file, sizeof(file))) {
-        JS_ASSERT(file);
+        MOZ_ASSERT(file);
 
 #ifdef DEBUG
         {
@@ -493,11 +493,11 @@ struct MainThreadWorkerStructuredCloneCallbacks
     }
     // See if object is a nsIDOMBlob pointer.
     else if (aTag == DOMWORKER_SCTAG_BLOB) {
-      JS_ASSERT(!aData);
+      MOZ_ASSERT(!aData);
 
       nsIDOMBlob* blob;
       if (JS_ReadBytes(aReader, &blob, sizeof(blob))) {
-        JS_ASSERT(blob);
+        MOZ_ASSERT(blob);
 
 #ifdef DEBUG
         {

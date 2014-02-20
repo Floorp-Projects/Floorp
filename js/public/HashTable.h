@@ -531,7 +531,7 @@ struct PointerHasher
 {
     typedef Key Lookup;
     static HashNumber hash(const Lookup &l) {
-        JS_ASSERT(!JS::IsPoisonedPtr(l));
+        MOZ_ASSERT(!JS::IsPoisonedPtr(l));
         size_t word = reinterpret_cast<size_t>(l) >> zeroBits;
         JS_STATIC_ASSERT(sizeof(HashNumber) == 4);
 #if JS_BITS_PER_WORD == 32
@@ -542,8 +542,8 @@ struct PointerHasher
 #endif
     }
     static bool match(const Key &k, const Lookup &l) {
-        JS_ASSERT(!JS::IsPoisonedPtr(k));
-        JS_ASSERT(!JS::IsPoisonedPtr(l));
+        MOZ_ASSERT(!JS::IsPoisonedPtr(k));
+        MOZ_ASSERT(!JS::IsPoisonedPtr(l));
         return k == l;
     }
     static void rekey(Key &k, const Key& newKey) {
@@ -701,7 +701,7 @@ class HashTableEntry
     }
 
     void destroy() {
-        JS_ASSERT(isLive());
+        MOZ_ASSERT(isLive());
         mem.addr()->~T();
     }
 
@@ -710,16 +710,16 @@ class HashTableEntry
         mozilla::Swap(mem, other->mem);
     }
 
-    T &get() { JS_ASSERT(isLive()); return *mem.addr(); }
+    T &get() { MOZ_ASSERT(isLive()); return *mem.addr(); }
 
     bool isFree() const    { return keyHash == sFreeKey; }
-    void clearLive()       { JS_ASSERT(isLive()); keyHash = sFreeKey; mem.addr()->~T(); }
+    void clearLive()       { MOZ_ASSERT(isLive()); keyHash = sFreeKey; mem.addr()->~T(); }
     void clear()           { if (isLive()) mem.addr()->~T(); keyHash = sFreeKey; }
     bool isRemoved() const { return keyHash == sRemovedKey; }
-    void removeLive()      { JS_ASSERT(isLive()); keyHash = sRemovedKey; mem.addr()->~T(); }
+    void removeLive()      { MOZ_ASSERT(isLive()); keyHash = sRemovedKey; mem.addr()->~T(); }
     bool isLive() const    { return isLiveHash(keyHash); }
-    void setCollision()               { JS_ASSERT(isLive()); keyHash |= sCollisionBit; }
-    void setCollision(HashNumber bit) { JS_ASSERT(isLive()); keyHash |= bit; }
+    void setCollision()               { MOZ_ASSERT(isLive()); keyHash |= sCollisionBit; }
+    void setCollision(HashNumber bit) { MOZ_ASSERT(isLive()); keyHash |= bit; }
     void unsetCollision()             { keyHash &= ~sCollisionBit; }
     bool hasCollision() const         { return keyHash & sCollisionBit; }
     bool matchHash(HashNumber hn)     { return (keyHash & ~sCollisionBit) == hn; }
@@ -728,10 +728,10 @@ class HashTableEntry
     template <class U>
     void setLive(HashNumber hn, U &&u)
     {
-        JS_ASSERT(!isLive());
+        MOZ_ASSERT(!isLive());
         keyHash = hn;
         new(mem.addr()) T(mozilla::Forward<U>(u));
-        JS_ASSERT(isLive());
+        MOZ_ASSERT(isLive());
     }
 };
 
@@ -779,7 +779,7 @@ class HashTable : private AllocPolicy
         }
 
         bool found() const {
-            JS_ASSERT(generation == table_->generation());
+            MOZ_ASSERT(generation == table_->generation());
             return entry_->isLive();
         }
 
@@ -788,22 +788,22 @@ class HashTable : private AllocPolicy
         }
 
         bool operator==(const Ptr &rhs) const {
-            JS_ASSERT(found() && rhs.found());
+            MOZ_ASSERT(found() && rhs.found());
             return entry_ == rhs.entry_;
         }
 
         bool operator!=(const Ptr &rhs) const {
-            JS_ASSERT(generation == table_->generation());
+            MOZ_ASSERT(generation == table_->generation());
             return !(*this == rhs);
         }
 
         T &operator*() const {
-            JS_ASSERT(generation == table_->generation());
+            MOZ_ASSERT(generation == table_->generation());
             return entry_->get();
         }
 
         T *operator->() const {
-            JS_ASSERT(generation == table_->generation());
+            MOZ_ASSERT(generation == table_->generation());
             return &entry_->get();
         }
     };
@@ -868,23 +868,23 @@ class HashTable : private AllocPolicy
         {}
 
         bool empty() const {
-            JS_ASSERT(generation == table_->generation());
-            JS_ASSERT(mutationCount == table_->mutationCount);
+            MOZ_ASSERT(generation == table_->generation());
+            MOZ_ASSERT(mutationCount == table_->mutationCount);
             return cur == end;
         }
 
         T &front() const {
-            JS_ASSERT(validEntry);
-            JS_ASSERT(!empty());
-            JS_ASSERT(generation == table_->generation());
-            JS_ASSERT(mutationCount == table_->mutationCount);
+            MOZ_ASSERT(validEntry);
+            MOZ_ASSERT(!empty());
+            MOZ_ASSERT(generation == table_->generation());
+            MOZ_ASSERT(mutationCount == table_->mutationCount);
             return cur->get();
         }
 
         void popFront() {
-            JS_ASSERT(!empty());
-            JS_ASSERT(generation == table_->generation());
-            JS_ASSERT(mutationCount == table_->mutationCount);
+            MOZ_ASSERT(!empty());
+            MOZ_ASSERT(generation == table_->generation());
+            MOZ_ASSERT(mutationCount == table_->mutationCount);
             while (++cur < end && !cur->isLive())
                 continue;
 #ifdef DEBUG
@@ -1078,7 +1078,7 @@ class HashTable : private AllocPolicy
 
     MOZ_WARN_UNUSED_RESULT bool init(uint32_t length)
     {
-        JS_ASSERT(!initialized());
+        MOZ_ASSERT(!initialized());
 
         // Reject all lengths whose initial computed capacity would exceed
         // sMaxCapacity.  Round that maximum length down to the nearest power
@@ -1188,10 +1188,10 @@ class HashTable : private AllocPolicy
 
     Entry &lookup(const Lookup &l, HashNumber keyHash, unsigned collisionBit) const
     {
-        JS_ASSERT(isLiveHash(keyHash));
-        JS_ASSERT(!(keyHash & sCollisionBit));
-        JS_ASSERT(collisionBit == 0 || collisionBit == sCollisionBit);
-        JS_ASSERT(table);
+        MOZ_ASSERT(isLiveHash(keyHash));
+        MOZ_ASSERT(!(keyHash & sCollisionBit));
+        MOZ_ASSERT(collisionBit == 0 || collisionBit == sCollisionBit);
+        MOZ_ASSERT(table);
         METER(stats.searches++);
 
         // Compute the primary hash address.
@@ -1248,8 +1248,8 @@ class HashTable : private AllocPolicy
     // from entries, which allows more flexible Lookup/Key types.
     Entry &findFreeEntry(HashNumber keyHash)
     {
-        JS_ASSERT(!(keyHash & sCollisionBit));
-        JS_ASSERT(table);
+        MOZ_ASSERT(!(keyHash & sCollisionBit));
+        MOZ_ASSERT(table);
         METER(stats.searches++);
 
         // We assume 'keyHash' has already been distributed.
@@ -1268,7 +1268,7 @@ class HashTable : private AllocPolicy
         DoubleHash dh = hash2(keyHash);
 
         while(true) {
-            JS_ASSERT(!entry->isRemoved());
+            MOZ_ASSERT(!entry->isRemoved());
             entry->setCollision();
 
             METER(stats.steps++);
@@ -1349,7 +1349,7 @@ class HashTable : private AllocPolicy
 
     void remove(Entry &e)
     {
-        JS_ASSERT(table);
+        MOZ_ASSERT(table);
         METER(stats.removes++);
 
         if (e.hasCollision()) {
@@ -1448,7 +1448,7 @@ class HashTable : private AllocPolicy
 
     void finish()
     {
-        JS_ASSERT(!entered);
+        MOZ_ASSERT(!entered);
 
         if (!table)
             return;
@@ -1463,31 +1463,31 @@ class HashTable : private AllocPolicy
 
     Range all() const
     {
-        JS_ASSERT(table);
+        MOZ_ASSERT(table);
         return Range(*this, table, table + capacity());
     }
 
     bool empty() const
     {
-        JS_ASSERT(table);
+        MOZ_ASSERT(table);
         return !entryCount;
     }
 
     uint32_t count() const
     {
-        JS_ASSERT(table);
+        MOZ_ASSERT(table);
         return entryCount;
     }
 
     uint32_t capacity() const
     {
-        JS_ASSERT(table);
+        MOZ_ASSERT(table);
         return JS_BIT(sHashBits - hashShift);
     }
 
     uint32_t generation() const
     {
-        JS_ASSERT(table);
+        MOZ_ASSERT(table);
         return gen;
     }
 
@@ -1527,9 +1527,9 @@ class HashTable : private AllocPolicy
     bool add(AddPtr &p, U &&u)
     {
         mozilla::ReentrancyGuard g(*this);
-        JS_ASSERT(table);
-        JS_ASSERT(!p.found());
-        JS_ASSERT(!(p.keyHash & sCollisionBit));
+        MOZ_ASSERT(table);
+        MOZ_ASSERT(!p.found());
+        MOZ_ASSERT(!(p.keyHash & sCollisionBit));
 
         // Changing an entry from removed to live does not affect whether we
         // are overloaded and can be handled separately.
@@ -1561,7 +1561,7 @@ class HashTable : private AllocPolicy
     template <class U>
     void putNewInfallible(const Lookup &l, U &&u)
     {
-        JS_ASSERT(table);
+        MOZ_ASSERT(table);
 
         HashNumber keyHash = prepareHash(l);
         Entry *entry = &findFreeEntry(keyHash);
@@ -1600,7 +1600,7 @@ class HashTable : private AllocPolicy
 #endif
         {
             mozilla::ReentrancyGuard g(*this);
-            JS_ASSERT(prepareHash(l) == p.keyHash); // l has not been destroyed
+            MOZ_ASSERT(prepareHash(l) == p.keyHash); // l has not been destroyed
             p.entry_ = &lookup(l, p.keyHash, sCollisionBit);
         }
         return p.found() || add(p, mozilla::Forward<U>(u));
@@ -1608,18 +1608,18 @@ class HashTable : private AllocPolicy
 
     void remove(Ptr p)
     {
-        JS_ASSERT(table);
+        MOZ_ASSERT(table);
         mozilla::ReentrancyGuard g(*this);
-        JS_ASSERT(p.found());
+        MOZ_ASSERT(p.found());
         remove(*p.entry_);
         checkUnderloaded();
     }
 
     void rekeyWithoutRehash(Ptr p, const Lookup &l, const Key &k)
     {
-        JS_ASSERT(table);
+        MOZ_ASSERT(table);
         mozilla::ReentrancyGuard g(*this);
-        JS_ASSERT(p.found());
+        MOZ_ASSERT(p.found());
         typename HashTableEntry<T>::NonConstT t(mozilla::Move(*p));
         HashPolicy::setKey(t, const_cast<Key &>(k));
         remove(*p.entry_);
