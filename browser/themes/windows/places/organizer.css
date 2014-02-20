@@ -17,6 +17,15 @@
   list-style-image: url("chrome://browser/skin/Toolbar.png");
 }
 
+%ifndef WINDOWS_AERO
+@media (-moz-windows-theme: luna-silver) {
+  #back-button,
+  #forward-button {
+    list-style-image: url("chrome://browser/skin/Toolbar-lunaSilver.png");
+  }
+}
+%endif
+
 #back-button {
   -moz-image-region: rect(0, 54px, 18px, 36px);
 }
