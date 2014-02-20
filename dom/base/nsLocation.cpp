@@ -546,6 +546,7 @@ nsLocation::GetOrigin(nsAString& aOrigin)
   nsCOMPtr<nsIURI> uri;
   nsresult rv = GetURI(getter_AddRefs(uri), true);
   NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(uri, NS_OK);
 
   nsAutoString origin;
   rv = nsContentUtils::GetUTFOrigin(uri, origin);
