@@ -13,9 +13,13 @@ let output = null;
 let menu = null;
 
 function test() {
+  let originalNetPref = Services.prefs.getBoolPref("devtools.webconsole.filter.networkinfo");
   registerCleanupFunction(() => {
+    Services.prefs.setBoolPref("devtools.webconsole.filter.networkinfo", originalNetPref);
     HUD = output = menu = null;
   });
+
+  Services.prefs.setBoolPref("devtools.webconsole.filter.networkinfo", true);
 
   addTab(TEST_URI);
   browser.addEventListener("load", function onLoad() {
