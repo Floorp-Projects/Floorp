@@ -422,11 +422,11 @@ UploadImageDataToTexture(GLContext* gl,
         paintRegion = aDstRegion;
     }
 
-    GLenum format;
-    GLenum internalFormat;
-    GLenum type;
+    GLenum format = 0;
+    GLenum internalFormat = 0;
+    GLenum type = 0;
     int32_t pixelSize = BytesPerPixel(aFormat);
-    SurfaceFormat surfaceFormat;
+    SurfaceFormat surfaceFormat = gfx::SurfaceFormat::UNKNOWN;
 
     MOZ_ASSERT(gl->GetPreferredARGB32Format() == LOCAL_GL_BGRA ||
                gl->GetPreferredARGB32Format() == LOCAL_GL_RGBA);
@@ -470,9 +470,6 @@ UploadImageDataToTexture(GLContext* gl,
             break;
         default:
             NS_ASSERTION(false, "Unhandled image surface format!");
-            format = 0;
-            type = 0;
-            surfaceFormat = SurfaceFormat::UNKNOWN;
     }
 
     nsIntRegionRectIterator iter(paintRegion);
