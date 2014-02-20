@@ -2303,6 +2303,16 @@ TabChild::RecvSetUpdateHitRegion(const bool& aEnabled)
     return true;
 }
 
+bool
+TabChild::RecvSetIsDocShellActive(const bool& aIsActive)
+{
+    nsCOMPtr<nsIDocShell> docShell = do_GetInterface(mWebNav);
+    if (docShell) {
+      docShell->SetIsActive(aIsActive);
+    }
+    return true;
+}
+
 PRenderFrameChild*
 TabChild::AllocPRenderFrameChild()
 {

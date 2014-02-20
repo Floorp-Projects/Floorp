@@ -150,6 +150,21 @@
                 onget="return document.getElementById(this.getAttribute('autocompletepopup'))"
                 readonly="true"/>
 
+      <property name="docShellIsActive">
+        <getter>
+          <![CDATA[
+            throw new Error("not supported");
+          ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+            let {frameLoader} = this.QueryInterface(Ci.nsIFrameLoaderOwner);
+            frameLoader.tabParent.setIsDocShellActive(val);
+            return val;
+          ]]>
+        </setter>
+      </property>
+
       <constructor>
         <![CDATA[
           let jsm = "resource://gre/modules/RemoteWebNavigation.jsm";
