@@ -7,7 +7,7 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
-<video id="viewfinder" |width = "200" height = "200| autoplay></video>
+<video id="viewfinder" width="200" height="200" autoplay></video>
 <img src="#" alt="This image is going to load" id="testimage"/>
 <script class="testbody" type="text/javascript;version=1.7">
 
@@ -30,9 +30,6 @@ var config = {
 
 function onError(e) {
   ok(false, "Error" + JSON.stringify(e));
-  Camera.cameraObj.release();
-  Camera.cameraObj = null;
-  Camera.viewfinder.mozSrcObject = null;
 }
 
 var capabilities = [ 'previewSizes', 'pictureSizes', 'fileFormats', 'maxFocusAreas', 'minExposureCompensation',
@@ -105,10 +102,6 @@ var Camera = {
       Camera._testsCompleted++;
       if(Camera._testsCompleted == Camera._tests.length) {
         ok(true, "test finishing");
-        Camera.cameraObj.release(function() {
-          Camera.cameraObj = null;
-        }, onError);
-        Camera.viewfinder.mozSrcObject = null;
         SimpleTest.finish();
       } else {
         Camera.runTests();
@@ -195,6 +188,8 @@ SimpleTest.waitForExplicitFinish();
 
 window.addEventListener('beforeunload', function() {
   Camera.viewfinder.mozSrcObject = null;
+  Camera.cameraObj.release();
+  Camera.cameraObj = null;
 });
 
 Camera.setUp();
