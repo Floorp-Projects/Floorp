@@ -1584,7 +1584,7 @@ MacroAssembler::convertValueToInt(ValueOperand value, MDefinition *maybeInput,
     Label done, isInt32, isBool, isDouble, isNull, isString;
 
     branchEqualTypeIfNeeded(MIRType_Int32, maybeInput, tag, &isInt32);
-    if (conversion == IntConversion_Any)
+    if (conversion == IntConversion_Any || conversion == IntConversion_NumbersOrBoolsOnly)
         branchEqualTypeIfNeeded(MIRType_Boolean, maybeInput, tag, &isBool);
     branchEqualTypeIfNeeded(MIRType_Double, maybeInput, tag, &isDouble);
 
