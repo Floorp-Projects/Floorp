@@ -49,10 +49,11 @@ ThebesLayerComposite::~ThebesLayerComposite()
   CleanupResources();
 }
 
-void
+bool
 ThebesLayerComposite::SetCompositableHost(CompositableHost* aHost)
 {
   mBuffer = static_cast<ContentHost*>(aHost);
+  return true;
 }
 
 void

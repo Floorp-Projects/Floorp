@@ -330,6 +330,21 @@ class TestEmitterBasic(unittest.TestCase):
         paths = sorted([k[len(o.directory)+1:] for k in o.installs.keys()])
         self.assertEqual(paths, ["foo.txt", "support-disabled-tests.ini"])
 
+    def test_test_manifest_absolute_support_files(self):
+        """Support files starting with '/' are placed relative to the install root"""
+        reader = self.reader('test-manifest-absolute-support')
+
+        objs = self.read_topsrcdir(reader)
+        self.assertEqual(len(objs), 1)
+        o = objs[0]
+        self.assertEqual(len(o.installs), 2)
+        expected = [
+            mozpath.normpath(mozpath.join(o.install_prefix, "../.well-known/foo.txt")),
+            mozpath.join(o.install_prefix, "absolute-support.ini"),
+        ]
+        paths = sorted([v[0] for v in o.installs.values()])
+        self.assertEqual(paths, expected)
+
     def test_test_manifest_keys_extracted(self):
         """Ensure all metadata from test manifests is extracted."""
         reader = self.reader('test-manifest-keys-extracted')

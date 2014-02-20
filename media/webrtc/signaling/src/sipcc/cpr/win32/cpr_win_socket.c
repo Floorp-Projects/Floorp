@@ -825,22 +825,20 @@ cprSecSockIsConnected (cpr_socket_t sock)
 #endif;
 }
 
-#ifdef CPR_USE_SOCKETPAIR
-/*
- * This is really only used in the UNIX domain and not recommended
- * for use.  The API is provided only for consistency to the POSIX
- * definitions.
+/**
+ * cprSocketPair
+ *
+ * @todo The socketpair() call is not supported on win32.
  */
 cpr_status_e
 cprSocketPair (uint32_t domain,
                uint32_t type,
                uint32_t protocol,
-               int socket_vector[2])
+               cpr_socket_t sockets[2])
 {
-    return ((socketpair(domain, type, protocol, socket_vector) != 0) ?
-            CPR_FAILURE : CPR_SUCCESS);
+    WSASetLastError(WSAEOPNOTSUPP);
+    return CPR_FAILURE;
 }
-#endif
 
 
 /* int

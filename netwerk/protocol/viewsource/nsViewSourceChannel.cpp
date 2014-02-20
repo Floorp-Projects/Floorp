@@ -511,7 +511,15 @@ nsViewSourceChannel::GetBaseURI(nsIURI** aBaseURI)
       return isc->GetBaseURI(aBaseURI);
     }
   }
-  *aBaseURI = nullptr;
+  *aBaseURI = mBaseURI;
+  NS_IF_ADDREF(*aBaseURI);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsViewSourceChannel::SetBaseURI(nsIURI* aBaseURI)
+{
+  mBaseURI = aBaseURI;
   return NS_OK;
 }
 

@@ -115,7 +115,12 @@ function wrapPrivileged(obj) {
       var invocant = unwrapIfWrapped(this);
       var unwrappedArgs = Array.prototype.slice.call(arguments).map(unwrapIfWrapped);
 
-      return wrapPrivileged(doApply(obj, invocant, unwrappedArgs));
+      try {
+        return wrapPrivileged(doApply(obj, invocant, unwrappedArgs));
+      } catch (e) {
+        // Wrap exceptions and re-throw them.
+        throw wrapIfUnwrapped(e);
+      }
     };
     var constructTrap = function() {
       // The arguments may or may not be wrappers. Unwrap them if necessary.
@@ -129,7 +134,12 @@ function wrapPrivileged(obj) {
       // underlying constructor just be passing along its return value in our
       // constructor.
       var FakeConstructor = function() {
-        return doApply(obj, this, unwrappedArgs);
+        try {
+          return doApply(obj, this, unwrappedArgs);
+        } catch (e) {
+          // Wrap exceptions and re-throw them.
+          throw wrapIfUnwrapped(e);
+        }
       };
       FakeConstructor.prototype = obj.prototype;
 

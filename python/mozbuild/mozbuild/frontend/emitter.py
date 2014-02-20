@@ -387,14 +387,14 @@ class TreeMetadataEmitter(LoggingMixin):
         # harness can yet deal with test filtering. Once all harnesses can do
         # this, this feature can be dropped.
         test_manifests = dict(
-            A11Y=('a11y', 'testing/mochitest/a11y', True),
-            BROWSER_CHROME=('browser-chrome', 'testing/mochitest/browser', True),
-            METRO_CHROME=('metro-chrome', 'testing/mochitest/metro', True),
-            MOCHITEST=('mochitest', 'testing/mochitest/tests', True),
-            MOCHITEST_CHROME=('chrome', 'testing/mochitest/chrome', True),
-            MOCHITEST_WEBAPPRT_CHROME=('webapprt-chrome', 'testing/mochitest/webapprtChrome', True),
-            WEBRTC_SIGNALLING_TEST=('steeplechase', 'steeplechase', True),
-            XPCSHELL_TESTS=('xpcshell', 'xpcshell', False),
+            A11Y=('a11y', 'testing/mochitest', 'a11y', True),
+            BROWSER_CHROME=('browser-chrome', 'testing/mochitest', 'browser', True),
+            METRO_CHROME=('metro-chrome', 'testing/mochitest', 'metro', True),
+            MOCHITEST=('mochitest', 'testing/mochitest', 'tests', True),
+            MOCHITEST_CHROME=('chrome', 'testing/mochitest', 'chrome', True),
+            MOCHITEST_WEBAPPRT_CHROME=('webapprt-chrome', 'testing/mochitest', 'webapprtChrome', True),
+            WEBRTC_SIGNALLING_TEST=('steeplechase', 'steeplechase', '.', True),
+            XPCSHELL_TESTS=('xpcshell', 'xpcshell', '.', False),
         )
 
         for prefix, info in test_manifests.items():
@@ -442,13 +442,14 @@ class TreeMetadataEmitter(LoggingMixin):
         return sub
 
     def _process_test_manifest(self, sandbox, info, manifest_path):
-        flavor, install_prefix, filter_inactive = info
+        flavor, install_root, install_subdir, filter_inactive = info
 
         manifest_path = mozpath.normpath(manifest_path)
         path = mozpath.normpath(mozpath.join(sandbox['SRCDIR'], manifest_path))
         manifest_dir = mozpath.dirname(path)
         manifest_reldir = mozpath.dirname(mozpath.relpath(path,
             sandbox['TOPSRCDIR']))
+        install_prefix = mozpath.join(install_root, install_subdir)
 
         try:
             m = manifestparser.TestManifest(manifests=[path], strict=True)
@@ -490,6 +491,13 @@ class TreeMetadataEmitter(LoggingMixin):
                         if '*' in pattern and thing == 'support-files':
                             obj.pattern_installs.append(
                                 (manifest_dir, pattern, out_dir))
+                        # "absolute" paths identify files that are to be
+                        # placed in the install_root directory (no globs)
+                        elif pattern[0] == '/':
+                            full = mozpath.normpath(mozpath.join(manifest_dir,
+                                mozpath.basename(pattern)))
+                            obj.installs[full] = (mozpath.join(install_root,
+                                pattern[1:]), False)
                         else:
                             full = mozpath.normpath(mozpath.join(manifest_dir,
                                 pattern))

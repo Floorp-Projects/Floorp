@@ -309,9 +309,11 @@ public:
 
   virtual void RenderLayer(const nsIntRect& aClipRect) = 0;
 
-  virtual void SetCompositableHost(CompositableHost* aHost)
+  virtual bool SetCompositableHost(CompositableHost*)
   {
-    MOZ_ASSERT(false, "called SetCompositableHost for a layer without a compositable host");
+    // We must handle this gracefully, see bug 967824
+    NS_WARNING("called SetCompositableHost for a layer type not accepting a compositable");
+    return false;
   }
   virtual CompositableHost* GetCompositableHost() = 0;
 

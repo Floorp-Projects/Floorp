@@ -39,7 +39,7 @@ public:
 
   virtual void Disconnect() MOZ_OVERRIDE;
 
-  virtual void SetCompositableHost(CompositableHost* aHost) MOZ_OVERRIDE;
+  virtual bool SetCompositableHost(CompositableHost* aHost) MOZ_OVERRIDE;
 
   virtual Layer* GetLayer() MOZ_OVERRIDE;
 
