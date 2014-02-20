@@ -25,7 +25,7 @@
                 gecko:fadeWidth="30dp"/>
 
         <TextView android:id="@+id/url"
-                  style="@style/Widget.TwoLinePageRow.Description"
+                  style="@style/Widget.TwoLinePageRow.Url"
                   android:layout_width="fill_parent"
                   android:layout_height="wrap_content"
                   android:drawablePadding="5dp"
