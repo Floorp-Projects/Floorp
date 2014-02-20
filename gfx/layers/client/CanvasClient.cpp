@@ -116,7 +116,18 @@ void
 CanvasClientSurfaceStream::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
 {
   GLScreenBuffer* screen = aLayer->mGLContext->Screen();
-  SurfaceStream* stream = screen->Stream();
+  SurfaceStream* stream = nullptr;
+
+  if (aLayer->mStream) {
+    stream = aLayer->mStream;
+
+    // Copy our current surface to the current producer surface in our stream, then
+    // call SwapProducer to make a new buffer ready.
+    stream->CopySurfaceToProducer(aLayer->mTextureSurface, aLayer->mFactory);
+    stream->SwapProducer(aLayer->mFactory, gfx::IntSize(aSize.width, aSize.height));
+  } else {
+    stream = screen->Stream();
+  }
 
   bool isCrossProcess = !(XRE_GetProcessType() == GeckoProcessType_Default);
   bool bufferCreated = false;
@@ -255,7 +266,15 @@ DeprecatedCanvasClientSurfaceStream::Update(gfx::IntSize aSize, ClientCanvasLaye
   mDeprecatedTextureClient->EnsureAllocated(aSize, gfxContentType::COLOR);
 
   GLScreenBuffer* screen = aLayer->mGLContext->Screen();
-  SurfaceStream* stream = screen->Stream();
+  SurfaceStream* stream = nullptr;
+
+  if (aLayer->mStream) {
+    stream = aLayer->mStream;
+    stream->CopySurfaceToProducer(aLayer->mTextureSurface, aLayer->mFactory);
+    stream->SwapProducer(aLayer->mFactory, gfx::IntSize(aSize.width, aSize.height));
+  } else {
+    stream = screen->Stream();
+  }
 
   bool isCrossProcess = !(XRE_GetProcessType() == GeckoProcessType_Default);
   if (isCrossProcess) {

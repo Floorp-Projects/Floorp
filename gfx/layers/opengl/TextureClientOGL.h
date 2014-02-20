@@ -97,8 +97,9 @@ public:
   virtual gfx::IntSize GetSize() const { return gfx::IntSize(); }
 
 protected:
-  gfx::SurfaceStream* mStream;
   bool mIsLocked;
+  RefPtr<gfx::SurfaceStream> mStream;
+  RefPtr<gl::GLContext> mGL;
 };
 
 } // namespace

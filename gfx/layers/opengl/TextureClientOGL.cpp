@@ -86,7 +86,6 @@ SharedTextureClientOGL::IsAllocated() const
 
 StreamTextureClientOGL::StreamTextureClientOGL(TextureFlags aFlags)
   : TextureClient(aFlags)
-  , mStream(0)
   , mIsLocked(false)
 {
 }
@@ -131,6 +130,7 @@ StreamTextureClientOGL::InitWith(gfx::SurfaceStream* aStream)
 {
   MOZ_ASSERT(!IsAllocated());
   mStream = aStream;
+  mGL = mStream->GLContext();
 }
 
 bool
