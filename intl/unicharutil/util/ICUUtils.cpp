@@ -16,6 +16,11 @@
 
 using namespace mozilla;
 
+/**
+ * This pref just controls whether we format the number with grouping separator
+ * characters when the internal value is set or updated. It does not stop the
+ * user from typing in a number and using grouping separators.
+ */
 static bool gLocaleNumberGroupingEnabled;
 static const char LOCALE_NUMBER_GROUPING_PREF_STR[] = "dom.forms.number.grouping";
 
@@ -28,7 +33,7 @@ LocaleNumberGroupingIsEnabled()
     /* check and register ourselves with the pref */
     Preferences::AddBoolVarCache(&gLocaleNumberGroupingEnabled,
                                  LOCALE_NUMBER_GROUPING_PREF_STR,
-                                 true);
+                                 false);
     sInitialized = true;
   }
 
