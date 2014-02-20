@@ -150,6 +150,9 @@ IsTypedArrayConstructor(HandleValue v, uint32_t type);
 bool
 IsTypedArrayBuffer(HandleValue v);
 
+ArrayBufferObject &
+AsTypedArrayBuffer(HandleValue v);
+
 static inline unsigned
 TypedArrayShift(ArrayBufferView::ViewType viewType)
 {
