@@ -728,22 +728,26 @@ PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
   char temp[128];
 
 #ifdef MOZILLA_INTERNAL_API
-  nsIDOMLocation* location = nullptr;
-  mWindow->GetLocation(&location);
-  MOZ_ASSERT(location);
-  nsString locationAStr;
-  location->ToString(locationAStr);
-  location->Release();
+  nsAutoCString locationCStr;
+  nsIDOMLocation* location;
+  res = mWindow->GetLocation(&location);
 
-  nsCString locationCStr;
-  CopyUTF16toUTF8(locationAStr, locationCStr);
-  MOZ_ASSERT(mWindow);
-  PR_snprintf(temp,
-              sizeof(temp),
-              "%llu (id=%u url=%s)",
-              (unsigned long long)timestamp,
-              (unsigned)mWindow->WindowID(),
-              locationCStr.get() ? locationCStr.get() : "NULL");
+  if (location && NS_SUCCEEDED(res)) {
+    nsAutoString locationAStr;
+    location->ToString(locationAStr);
+    location->Release();
+
+    CopyUTF16toUTF8(locationAStr, locationCStr);
+  }
+
+  PR_snprintf(
+      temp,
+      sizeof(temp),
+      "%llu (id=%llu url=%s)",
+      static_cast<unsigned long long>(timestamp),
+      static_cast<unsigned long long>(mWindow ? mWindow->WindowID() : 0),
+      locationCStr.get() ? locationCStr.get() : "NULL");
+
 #else
   PR_snprintf(temp, sizeof(temp), "%llu", (unsigned long long)timestamp);
 #endif // MOZILLA_INTERNAL_API
