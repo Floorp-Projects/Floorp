@@ -1,5 +1,6 @@
 load(libdir + 'bytecode-cache.js');
 var test = "";
+var checkAfter;
 
 // code a function which has both used and unused inner functions.
 test = (function () {
@@ -100,3 +101,36 @@ test = (function () {
   return f.toSource() + "; f();";
 })();
 evalWithCache(test, { assertEqBytecode: true });
+
+// Ensure that decoded functions can be relazified.
+test = "function f() { }; f();"
+     + "assertEq(isLazyFunction(f), false);"
+     + "var expect = isRelazifiableFunction(f);";
+checkAfter = function (ctx) {
+  gc(ctx.global.f); // relazify f, if possible.
+  evaluate("assertEq(isLazyFunction(f), expect);", ctx);
+};
+evalWithCache(test, {
+  assertEqBytecode: true,  // Check that we re-encode the same thing.
+  assertEqResult: true,    // The function should remain relazifiable, if it was
+                           // during the first run.
+  checkAfter: checkAfter   // Check that relazifying the restored function works
+                           // if the original was relazifiable.
+});
+
+// Ensure that decoded functions can be relazified, even if they have free
+// variables.
+test = "function f() { return isRelazifiableFunction(f) }; var expect = f();"
+     + "assertEq(isLazyFunction(f), false);"
+     + "expect";
+checkAfter = function (ctx) {
+  gc(ctx.global.f); // relazify f, if possible.
+  evaluate("assertEq(isLazyFunction(f), expect);", ctx);
+};
+evalWithCache(test, {
+  assertEqBytecode: true,  // Check that we re-encode the same thing.
+  assertEqResult: true,    // The function should remain relazifiable, if it was
+                           // during the first run.
+  checkAfter: checkAfter   // Check that relazifying the restored function works
+                           // if the original was relazifiable.
+});
