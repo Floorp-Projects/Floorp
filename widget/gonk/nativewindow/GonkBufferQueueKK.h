@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2012 The Android Open Source Project
+ * Copyright (C) 2013 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,18 +15,16 @@
  * limitations under the License.
  */
 
-#ifndef ANDROID_GUI_BUFFERQUEUE_H
-#define ANDROID_GUI_BUFFERQUEUE_H
+#ifndef NATIVEWINDOW_GONKBUFFERQUEUE_KK_H
+#define NATIVEWINDOW_GONKBUFFERQUEUE_KK_H
 
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 
-#include <binder/IBinder.h>
-
 #include <gui/IConsumerListener.h>
 #include <gui/IGraphicBufferAlloc.h>
 #include <gui/IGraphicBufferProducer.h>
-#include <gui/IGraphicBufferConsumer.h>
+#include "IGonkGraphicBufferConsumer.h"
 
 #include <ui/Fence.h>
 #include <ui/GraphicBuffer.h>
@@ -34,12 +33,16 @@
 #include <utils/Vector.h>
 #include <utils/threads.h>
 
+#include "mozilla/layers/LayersSurfaces.h"
+
 namespace android {
 // ----------------------------------------------------------------------------
 
-class BufferQueue : public BnGraphicBufferProducer,
-                    public BnGraphicBufferConsumer,
+class GonkBufferQueue : public BnGraphicBufferProducer,
+                    public BnGonkGraphicBufferConsumer,
                     private IBinder::DeathRecipient {
+    typedef mozilla::layers::SurfaceDescriptor SurfaceDescriptor;
+
 public:
     enum { MIN_UNDEQUEUED_BUFFERS = 2 };
     enum { NUM_BUFFER_SLOTS = 32 };
@@ -59,9 +62,9 @@ public:
     // consumer object so long as it exists.
     //
     // This class exists to avoid having a circular reference between the
-    // BufferQueue object and the consumer object.  The reason this can't be a weak
-    // reference in the BufferQueue class is because we're planning to expose the
-    // consumer side of a BufferQueue as a binder interface, which doesn't support
+    // GonkBufferQueue object and the consumer object.  The reason this can't be a weak
+    // reference in the GonkBufferQueue class is because we're planning to expose the
+    // consumer side of a GonkBufferQueue as a binder interface, which doesn't support
     // weak references.
     class ProxyConsumerListener : public BnConsumerListener {
     public:
@@ -79,8 +82,9 @@ public:
     // BufferQueue manages a pool of gralloc memory slots to be used by
     // producers and consumers. allocator is used to allocate all the
     // needed gralloc buffers.
-    BufferQueue(const sp<IGraphicBufferAlloc>& allocator = NULL);
-    virtual ~BufferQueue();
+    GonkBufferQueue(bool allowSynchronousMode = true,
+            const sp<IGraphicBufferAlloc>& allocator = NULL);
+    virtual ~GonkBufferQueue();
 
     /*
      * IBinder::DeathRecipient interface
@@ -98,7 +102,7 @@ public:
 
     // setBufferCount updates the number of available buffer slots.  If this
     // method succeeds, buffer slots will be both unallocated and owned by
-    // the BufferQueue object (i.e. they are not owned by the producer or
+    // the GonkBufferQueue object (i.e. they are not owned by the producer or
     // consumer).
     //
     // This will fail if the producer has dequeued any buffers, or if
@@ -160,7 +164,7 @@ public:
     virtual status_t dequeueBuffer(int *buf, sp<Fence>* fence, bool async,
             uint32_t width, uint32_t height, uint32_t format, uint32_t usage);
 
-    // queueBuffer returns a filled buffer to the BufferQueue.
+    // queueBuffer returns a filled buffer to the GonkBufferQueue.
     //
     // Additional data is provided in the QueueBufferInput struct.  Notably,
     // a timestamp must be provided for the buffer. The timestamp is in
@@ -178,32 +182,32 @@ public:
     virtual status_t queueBuffer(int buf,
             const QueueBufferInput& input, QueueBufferOutput* output);
 
-    // cancelBuffer returns a dequeued buffer to the BufferQueue, but doesn't
+    // cancelBuffer returns a dequeued buffer to the GonkBufferQueue, but doesn't
     // queue it for use by the consumer.
     //
     // The buffer will not be overwritten until the fence signals.  The fence
     // will usually be the one obtained from dequeueBuffer.
     virtual void cancelBuffer(int buf, const sp<Fence>& fence);
 
-    // connect attempts to connect a producer API to the BufferQueue.  This
+    // connect attempts to connect a producer API to the GonkBufferQueue.  This
     // must be called before any other IGraphicBufferProducer methods are
     // called except for getAllocator.  A consumer must already be connected.
     //
     // This method will fail if connect was previously called on the
-    // BufferQueue and no corresponding disconnect call was made (i.e. if
+    // GonkBufferQueue and no corresponding disconnect call was made (i.e. if
     // it's still connected to a producer).
     //
     // APIs are enumerated in window.h (e.g. NATIVE_WINDOW_API_CPU).
     virtual status_t connect(const sp<IBinder>& token,
             int api, bool producerControlledByApp, QueueBufferOutput* output);
 
-    // disconnect attempts to disconnect a producer API from the BufferQueue.
+    // disconnect attempts to disconnect a producer API from the GonkBufferQueue.
     // Calling this method will cause any subsequent calls to other
     // IGraphicBufferProducer methods to fail except for getAllocator and connect.
     // Successfully calling connect after this will allow the other methods to
     // succeed again.
     //
-    // This method will fail if the the BufferQueue is not currently
+    // This method will fail if the the GonkBufferQueue is not currently
     // connected to the specified producer API.
     virtual status_t disconnect(int api);
 
@@ -212,7 +216,7 @@ public:
      */
 
     // acquireBuffer attempts to acquire ownership of the next pending buffer in
-    // the BufferQueue.  If no buffer is pending then it returns -EINVAL.  If a
+    // the GonkBufferQueue.  If no buffer is pending then it returns -EINVAL.  If a
     // buffer is successfully acquired, the information about the buffer is
     // returned in BufferItem.  If the buffer returned had previously been
     // acquired then the BufferItem::mGraphicBuffer field of buffer is set to
@@ -227,7 +231,7 @@ public:
     virtual status_t acquireBuffer(BufferItem *buffer, nsecs_t presentWhen);
 
     // releaseBuffer releases a buffer slot from the consumer back to the
-    // BufferQueue.  This may be done while the buffer's contents are still
+    // GonkBufferQueue.  This may be done while the buffer's contents are still
     // being accessed.  The fence will signal when the buffer is no longer
     // in use. frameNumber is used to indentify the exact buffer returned.
     //
@@ -239,27 +243,27 @@ public:
     // Note that the dependencies on EGL will be removed once we switch to using
     // the Android HW Sync HAL.
     virtual status_t releaseBuffer(int buf, uint64_t frameNumber,
-            EGLDisplay display, EGLSyncKHR fence,
-            const sp<Fence>& releaseFence);
+                    EGLDisplay display, EGLSyncKHR fence,
+                    const sp<Fence>& releaseFence);
 
-    // consumerConnect connects a consumer to the BufferQueue.  Only one
+    // consumerConnect connects a consumer to the GonkBufferQueue.  Only one
     // consumer may be connected, and when that consumer disconnects the
-    // BufferQueue is placed into the "abandoned" state, causing most
-    // interactions with the BufferQueue by the producer to fail.
+    // GonkBufferQueue is placed into the "abandoned" state, causing most
+    // interactions with the GonkBufferQueue by the producer to fail.
     // controlledByApp indicates whether the consumer is controlled by
     // the application.
     //
     // consumer may not be NULL.
     virtual status_t consumerConnect(const sp<IConsumerListener>& consumer, bool controlledByApp);
 
-    // consumerDisconnect disconnects a consumer from the BufferQueue. All
-    // buffers will be freed and the BufferQueue is placed in the "abandoned"
-    // state, causing most interactions with the BufferQueue by the producer to
+    // consumerDisconnect disconnects a consumer from the GonkBufferQueue. All
+    // buffers will be freed and the GonkBufferQueue is placed in the "abandoned"
+    // state, causing most interactions with the GonkBufferQueue by the producer to
     // fail.
     virtual status_t consumerDisconnect();
 
     // getReleasedBuffers sets the value pointed to by slotMask to a bit mask
-    // indicating which buffer slots have been released by the BufferQueue
+    // indicating which buffer slots have been released by the GonkBufferQueue
     // but have not yet been released by the consumer.
     //
     // This should be called from the onBuffersReleased() callback.
@@ -287,13 +291,13 @@ public:
 
     // setMaxAcquiredBufferCount sets the maximum number of buffers that can
     // be acquired by the consumer at one time (default 1).  This call will
-    // fail if a producer is connected to the BufferQueue.
+    // fail if a producer is connected to the GonkBufferQueue.
     virtual status_t setMaxAcquiredBufferCount(int maxAcquiredBuffers);
 
     // setConsumerName sets the name used in logging
     virtual void setConsumerName(const String8& name);
 
-    // setDefaultBufferFormat allows the BufferQueue to create
+    // setDefaultBufferFormat allows the GonkBufferQueue to create
     // GraphicBuffers of a defaultFormat if no format is specified
     // in dequeueBuffer.  Formats are enumerated in graphics.h; the
     // initial default is HAL_PIXEL_FORMAT_RGBA_8888.
@@ -312,15 +316,22 @@ public:
     // dump our state in a String
     virtual void dump(String8& result, const char* prefix) const;
 
+    int getGeneration();
+    SurfaceDescriptor *getSurfaceDescriptorFromBuffer(ANativeWindowBuffer* buffer);
 
 private:
+    // releaseBufferFreeListUnlocked releases the resources in the freeList;
+    // this must be called with mMutex unlocked.
+    void releaseBufferFreeListUnlocked(nsTArray<SurfaceDescriptor>& freeList);
+
     // freeBufferLocked frees the GraphicBuffer and sync resources for the
     // given slot.
-    void freeBufferLocked(int index);
+    //void freeBufferLocked(int index);
 
     // freeAllBuffersLocked frees the GraphicBuffer and sync resources for
     // all slots.
-    void freeAllBuffersLocked();
+    //void freeAllBuffersLocked();
+    void freeAllBuffersLocked(nsTArray<SurfaceDescriptor>& freeList);
 
     // setDefaultMaxBufferCountLocked sets the maximum number of buffer slots
     // that will be used if the producer does not override the buffer slot
@@ -334,7 +345,7 @@ private:
     int getMinUndequeuedBufferCount(bool async) const;
 
     // getMinBufferCountLocked returns the minimum number of buffers allowed
-    // given the current BufferQueue state.
+    // given the current GonkBufferQueue state.
     // The async parameter tells whether we're in asynchronous mode.
     int getMinMaxBufferCountLocked(bool async) const;
 
@@ -375,6 +386,9 @@ private:
         // mEglDisplay is the EGLDisplay used to create EGLSyncKHR objects.
         EGLDisplay mEglDisplay;
 
+        // mSurfaceDescriptor is the token to remotely allocated GraphicBuffer.
+        SurfaceDescriptor mSurfaceDescriptor;
+
         // BufferState represents the different states in which a buffer slot
         // can be.  All slots are initially FREE.
         enum BufferState {
@@ -383,7 +397,7 @@ private:
             // a finite time, so the buffer must not be modified until the
             // associated fence is signaled.
             //
-            // The slot is "owned" by BufferQueue.  It transitions to DEQUEUED
+            // The slot is "owned" by GonkBufferQueue.  It transitions to DEQUEUED
             // when dequeueBuffer is called.
             FREE = 0,
 
@@ -402,7 +416,7 @@ private:
             // the contents must not be accessed until the associated fence
             // is signaled.
             //
-            // The slot is "owned" by BufferQueue.  It can transition to
+            // The slot is "owned" by GonkBufferQueue.  It can transition to
             // ACQUIRED (via acquireBuffer) or to FREE (if another buffer is
             // queued in asynchronous mode).
             QUEUED = 2,
@@ -475,7 +489,7 @@ private:
     // mMaxAcquiredBufferCount is the number of buffers that the consumer may
     // acquire at one time.  It defaults to 1 and can be changed by the
     // consumer via the setMaxAcquiredBufferCount method, but this may only be
-    // done when no producer is connected to the BufferQueue.
+    // done when no producer is connected to the GonkBufferQueue.
     //
     // This value is used to derive the value returned for the
     // MIN_UNDEQUEUED_BUFFERS query by the producer.
@@ -517,7 +531,7 @@ private:
     bool mUseAsyncBuffer;
 
     // mConnectedApi indicates the producer API that is currently connected
-    // to this BufferQueue.  It defaults to NO_CONNECTED_API (= 0), and gets
+    // to this GonkBufferQueue.  It defaults to NO_CONNECTED_API (= 0), and gets
     // updated by the connect and disconnect methods.
     int mConnectedApi;
 
@@ -528,20 +542,20 @@ private:
     typedef Vector<BufferItem> Fifo;
     Fifo mQueue;
 
-    // mAbandoned indicates that the BufferQueue will no longer be used to
+    // mAbandoned indicates that the GonkBufferQueue will no longer be used to
     // consume image buffers pushed to it using the IGraphicBufferProducer
     // interface.  It is initialized to false, and set to true in the
-    // consumerDisconnect method.  A BufferQueue that has been abandoned will
+    // consumerDisconnect method.  A GonkBufferQueue that has been abandoned will
     // return the NO_INIT error from all IGraphicBufferProducer methods
     // capable of returning an error.
     bool mAbandoned;
 
-    // mConsumerName is a string used to identify the BufferQueue in log
+    // mConsumerName is a string used to identify the GonkBufferQueue in log
     // messages.  It is set by the setConsumerName method.
     String8 mConsumerName;
 
     // mMutex is the mutex used to prevent concurrent access to the member
-    // variables of BufferQueue objects. It must be locked whenever the
+    // variables of GonkBufferQueue objects. It must be locked whenever the
     // member variables are accessed.
     mutable Mutex mMutex;
 
@@ -566,6 +580,9 @@ private:
 
     // mConnectedProducerToken is used to set a binder death notification on the producer
     sp<IBinder> mConnectedProducerToken;
+
+    // mGeneration is the current generation of buffer slots
+    uint32_t mGeneration;
 };
 
 // ----------------------------------------------------------------------------
