@@ -533,6 +533,10 @@ ArrayBufferObject::prepareForAsmJS(JSContext *cx, Handle<ArrayBufferObject*> buf
     if (buffer->isAsmJSArrayBuffer())
         return true;
 
+    // SharedArrayBuffers are already created with AsmJS support in mind.
+    if (buffer->isSharedArrayBuffer())
+        return true;
+
     // Get the entire reserved region (with all pages inaccessible).
     void *p;
 # ifdef XP_WIN
@@ -598,6 +602,9 @@ ArrayBufferObject::prepareForAsmJS(JSContext *cx, Handle<ArrayBufferObject*> buf
     if (buffer->isAsmJSArrayBuffer())
         return true;
 
+    if (buffer->isSharedArrayBuffer())
+        return true;
+
     if (!ensureNonInline(cx, buffer))
         return false;
 
@@ -616,6 +623,7 @@ ArrayBufferObject::releaseAsmJSArrayBuffer(FreeOp *fop, JSObject *obj)
 bool
 ArrayBufferObject::neuterAsmJSArrayBuffer(JSContext *cx, ArrayBufferObject &buffer)
 {
+    JS_ASSERT(!buffer.isSharedArrayBuffer());
 #ifdef JS_ION
     AsmJSActivation *act = cx->mainThread().asmJSActivationStackFromOwnerThread();
     for (; act; act = act->prev()) {

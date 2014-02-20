@@ -2768,7 +2768,18 @@ js::IsTypedArrayConstructor(HandleValue v, uint32_t type)
 bool
 js::IsTypedArrayBuffer(HandleValue v)
 {
-    return v.isObject() && v.toObject().is<ArrayBufferObject>();
+    return v.isObject() &&
+           (v.toObject().is<ArrayBufferObject>() ||
+            v.toObject().is<SharedArrayBufferObject>());
+}
+
+ArrayBufferObject &
+js::AsTypedArrayBuffer(HandleValue v)
+{
+    JS_ASSERT(IsTypedArrayBuffer(v));
+    if (v.toObject().is<ArrayBufferObject>())
+        return v.toObject().as<ArrayBufferObject>();
+    return v.toObject().as<SharedArrayBufferObject>();
 }
 
 /* JS Friend API */
