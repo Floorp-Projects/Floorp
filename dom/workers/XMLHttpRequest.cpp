@@ -1554,6 +1554,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(XMLHttpRequest,
                                                 nsXHREventTarget)
   tmp->ReleaseProxy(XHRIsGoingAway);
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mUpload)
+  tmp->mStateData.mResponse.setUndefined();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(XMLHttpRequest,
