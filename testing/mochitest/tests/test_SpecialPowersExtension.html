@@ -141,6 +141,24 @@ function starttest(){
   var returnsNull = function() { return null; }
   is(SpecialPowers.wrap(returnsNull)(), null, "Should be able to handle functions that return null.");
 
+  // Check a function that throws.
+  var thrower = function() { throw new Error('hah'); }
+  try {
+    SpecialPowers.wrap(thrower)();
+    ok(false, "Should have thrown");
+  } catch (e) {
+    ok(SpecialPowers.isWrapper(e), "Exceptions should be wrapped for call");
+    is(e.message, 'hah', "Correct message");
+  }
+  try {
+    var ctor = SpecialPowers.wrap(thrower);
+    new ctor();
+    ok(false, "Should have thrown");
+  } catch (e) {
+    ok(SpecialPowers.isWrapper(e), "Exceptions should be wrapped for construct");
+    is(e.message, 'hah', "Correct message");
+  }
+
   // Play around with a JS object to check the non-xray path.
   var noxray_proto = {a: 3, b: 12};
   var noxray = {a: 5, c: 32};
