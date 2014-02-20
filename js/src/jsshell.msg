@@ -24,3 +24,6 @@ MSG_DEF(JSSMSG_INVALID_ARGS,            12, 1, JSEXN_NONE, "{0}: invalid argumen
 MSG_DEF(JSSMSG_BAD_ALIGNMENT,           13, 0, JSEXN_NONE, "serialized data must be 8-byte-aligned")
 MSG_DEF(JSSMSG_BAD_ENV_VAR,             14, 1, JSEXN_NONE, "unable to read getenv({0})")
 MSG_DEF(JSSMSG_NESTED_FAIL,             15, 0, JSEXN_NONE, "error executing nested JS shell")
+MSG_DEF(JSSMSG_CACHE_EQ_SIZE_FAILED,    16, 2, JSEXN_NONE, "cache does not have the same size: got {0}, expected {1}")
+MSG_DEF(JSSMSG_CACHE_EQ_CONTENT_FAILED, 17, 0, JSEXN_NONE, "cache does not have the same content.")
+MSG_DEF(JSSMSG_CACHE_SINGLETON_FAILED,  18, 0, JSEXN_NONE, "compartment cannot save singleton anymore.")
