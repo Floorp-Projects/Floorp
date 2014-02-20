@@ -395,7 +395,7 @@ add_task(function test_signCertificate() {
 
       // Second attempt, trigger error
       response.setStatusLine(request.httpVersion, 400, "Bad request");
-      response.bodyOutputStream.write(errorMessage, errorMessage.length);
+      return response.bodyOutputStream.write(errorMessage, errorMessage.length);
     },
   });
 
@@ -479,6 +479,59 @@ add_task(function test_accountExists() {
   } catch(unexpectedError) {
     do_check_eq(unexpectedError.code, 500);
   }
+
+  yield deferredStop(server);
+});
+
+add_task(function test_email_case() {
+  let canonicalEmail = "greta.garbo@gmail.com";
+  let clientEmail = "Greta.Garbo@gmail.COM";
+  let attempts = 0;
+
+  function writeResp(response, msg) {
+    if (typeof msg === "object") {
+      msg = JSON.stringify(msg);
+    }
+    response.bodyOutputStream.write(msg, msg.length);
+  }
+
+  let server = httpd_setup(
+    {
+      "/account/login": function(request, response) {
+        response.setHeader("Content-Type", "application/json; charset=utf-8");
+        attempts += 1;
+        if (attempts > 2) {
+          response.setStatusLine(request.httpVersion, 429, "Sorry, you had your chance");
+          return writeResp(response, "");
+        }
+
+        let body = CommonUtils.readBytesFromInputStream(request.bodyInputStream);
+        let jsonBody = JSON.parse(body);
+        let email = jsonBody.email;
+
+        // If the client has the wrong case on the email, we return a 400, with
+        // the capitalization of the email as saved in the accounts database.
+        if (email == canonicalEmail) {
+          response.setStatusLine(request.httpVersion, 200, "Yay");
+          return writeResp(response, {areWeHappy: "yes"});
+        }
+
+        response.setStatusLine(request.httpVersion, 400, "Incorrect email case");
+        return writeResp(response, {
+          code: 400,
+          errno: 120,
+          error: "Incorrect email case",
+          email: canonicalEmail
+        });
+      },
+    }
+  );
+
+  let client = new FxAccountsClient(server.baseURI);
+
+  let result = yield client.signIn(clientEmail, "123456");
+  do_check_eq(result.areWeHappy, "yes");
+  do_check_eq(attempts, 2);
 
   yield deferredStop(server);
 });
