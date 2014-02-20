@@ -39,8 +39,20 @@ class TestMarionetteException(marionette_test.MarionetteTestCase):
     def test_str(self):
         exc = errors.MarionetteException(
             message=message, status=status, cause=cause, stacktrace=stacktrace)
-        s = str(exc)
-        self.assertIn(message, s)
-        self.assertIn(", caused by %r" % cause[0], s)
-        self.assertIn("\nstacktrace:\n\tfirst\n\tsecond\n", s)
-        self.assertIn("MarionetteException:", s)
+        r = str(exc)
+        self.assertIn(message, r)
+        self.assertIn(", caused by %r" % cause[0], r)
+        self.assertIn("\nstacktrace:\n\tfirst\n\tsecond\n", r)
+        self.assertIn("MarionetteException:", r)
+
+    def test_cause_string(self):
+        exc = errors.MarionetteException(cause="foo")
+        self.assertEqual(exc.cause, "foo")
+        r = str(exc)
+        self.assertIn(", caused by foo", r)
+
+    def test_cause_tuple(self):
+        exc = errors.MarionetteException(cause=cause)
+        self.assertEqual(exc.cause, cause)
+        r = str(exc)
+        self.assertIn(", caused by %r" % cause[0], r)
