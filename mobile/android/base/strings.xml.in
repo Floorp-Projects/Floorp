@@ -105,7 +105,7 @@
   <string name="pref_category_search_restore_defaults">&pref_category_search_restore_defaults;</string>
   <string name="pref_search_restore_defaults">&pref_search_restore_defaults;</string>
   <string name="pref_search_restore_defaults_summary">&pref_search_restore_defaults_summary;</string>
-  <string name="pref_search_tip">&pref_search_tip;</string>
+  <string name="pref_search_hint">&pref_search_hint;</string>
 
   <string name="pref_category_devtools">&pref_category_devtools;</string>
   <string name="pref_developer_remotedebugging">&pref_developer_remotedebugging;</string>
