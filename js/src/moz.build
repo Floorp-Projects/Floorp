@@ -181,6 +181,7 @@ UNIFIED_SOURCES += [
     'vm/ScopeObject.cpp',
     'vm/SelfHosting.cpp',
     'vm/Shape.cpp',
+    'vm/SharedArrayObject.cpp',
     'vm/SPSProfiler.cpp',
     'vm/Stack.cpp',
     'vm/String.cpp',
