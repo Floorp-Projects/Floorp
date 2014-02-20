@@ -706,6 +706,33 @@ cprSocket (uint32_t domain,
  */
 
 
+/**
+ * cprSocketPair
+ *
+ * @brief The cprSocketPair() function is a wrapper for the "socketpair" API.
+ *
+ * The cprSocketPair() function creates a pair of connected, anonymous
+ * sockets of the given type.  The parameters are as for cprSocket(),
+ * but domains other than AF_LOCAL (== AF_UNIX) may not be implemented.
+ *
+ * @param[in] domain    The communications domain.
+ * @param[in] type      The type of socket to be created.
+ * @param[in] protocol  The protocol to be used with the socket.
+ * @param[out] sockets  If successful, the two sockets created.
+ *
+ * @return    On successful completion, CPR_SUCCESS; otherwise, CPR_FAILURE
+ *            is returned and cpr_errno is set to indicate the error.
+ */
+cpr_status_e
+cprSocketPair (uint32_t domain,
+               uint32_t type,
+               uint32_t protocol,
+               cpr_socket_t sockets[2])
+{
+    return ((socketpair(domain, type, protocol, sockets) != 0)
+            ? CPR_FAILURE : CPR_SUCCESS);
+}
+
 
 /* cpr_inet_pton
  *	Convert from presentation format (which usually means ASCII printable)

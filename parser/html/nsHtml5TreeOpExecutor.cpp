@@ -932,21 +932,15 @@ nsHtml5TreeOpExecutor::GetViewSourceBaseURI()
 {
   if (!mViewSourceBaseURI) {
 
-    // We query the channel for the baseURI of srcdoc view-source loads as it
-    // cannot be otherwise determined.  If any step in this process fails, fall
-    // back to the standard method.
+    // We query the channel for the baseURI because in certain situations it
+    // cannot otherwise be determined. If this process fails, fall back to the
+    // standard method.
     nsCOMPtr<nsIViewSourceChannel> vsc;
     vsc = do_QueryInterface(mDocument->GetChannel());
     if (vsc) {
-      bool isSrcdocChannel;
-      // Note that the channel is a srcdoc channel, but mDocument is not a
-      // srcdoc document.
-      nsresult rv = vsc->GetIsSrcdocChannel(&isSrcdocChannel);
-      if (NS_SUCCEEDED(rv) && isSrcdocChannel) {
-        rv =  vsc->GetBaseURI(getter_AddRefs(mViewSourceBaseURI));
-        if (NS_SUCCEEDED(rv) && mViewSourceBaseURI) {
-          return mViewSourceBaseURI;
-        }
+      nsresult rv =  vsc->GetBaseURI(getter_AddRefs(mViewSourceBaseURI));
+      if (NS_SUCCEEDED(rv) && mViewSourceBaseURI) {
+        return mViewSourceBaseURI;
       }
     }
 
