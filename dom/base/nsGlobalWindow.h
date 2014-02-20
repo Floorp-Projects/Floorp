@@ -604,6 +604,12 @@ public:
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsGlobalWindow,
                                                                    nsIDOMEventTarget)
 
+#ifdef DEBUG
+  // Call Unlink on this window. This may cause bad things to happen, so use
+  // with caution.
+  void RiskyUnlink();
+#endif
+
   virtual NS_HIDDEN_(JSObject*)
     GetCachedXBLPrototypeHandler(nsXBLPrototypeHandler* aKey);
 
