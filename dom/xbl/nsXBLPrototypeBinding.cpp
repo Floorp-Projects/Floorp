@@ -100,7 +100,6 @@ nsXBLPrototypeBinding::nsXBLPrototypeBinding()
   mKeyHandlersRegistered(false),
   mChromeOnlyContent(false),
   mResources(nullptr),
-  mAttributeTable(nullptr),
   mBaseNameSpaceID(kNameSpaceID_None)
 {
   MOZ_COUNT_CTOR(nsXBLPrototypeBinding);
@@ -181,7 +180,6 @@ nsXBLPrototypeBinding::Initialize()
 nsXBLPrototypeBinding::~nsXBLPrototypeBinding(void)
 {
   delete mResources;
-  delete mAttributeTable;
   delete mImplementation;
   MOZ_COUNT_DTOR(nsXBLPrototypeBinding);
 }
@@ -325,14 +323,12 @@ nsXBLPrototypeBinding::AttributeChanged(nsIAtom* aAttribute,
 {
   if (!mAttributeTable)
     return;
-  nsPRUint32Key nskey(aNameSpaceID);
-  nsObjectHashtable *attributesNS = static_cast<nsObjectHashtable*>(mAttributeTable->Get(&nskey));
+
+  InnerAttributeTable *attributesNS = mAttributeTable->Get(aNameSpaceID);
   if (!attributesNS)
     return;
 
-  nsISupportsKey key(aAttribute);
-  nsXBLAttributeEntry* xblAttr = static_cast<nsXBLAttributeEntry*>
-                                            (attributesNS->Get(&key));
+  nsXBLAttributeEntry* xblAttr = attributesNS->Get(aAttribute);
   if (!xblAttr)
     return;
 
@@ -500,12 +496,12 @@ struct nsXBLAttrChangeData
 };
 
 // XXXbz this duplicates lots of AttributeChanged
-bool SetAttrs(nsHashKey* aKey, void* aData, void* aClosure)
+static PLDHashOperator
+SetAttrs(nsISupports* aKey, nsXBLAttributeEntry* aEntry, void* aClosure)
 {
-  nsXBLAttributeEntry* entry = static_cast<nsXBLAttributeEntry*>(aData);
   nsXBLAttrChangeData* changeData = static_cast<nsXBLAttrChangeData*>(aClosure);
 
-  nsIAtom* src = entry->GetSrcAttribute();
+  nsIAtom* src = aEntry->GetSrcAttribute();
   int32_t srcNs = changeData->mSrcNamespace;
   nsAutoString value;
   bool attrPresent = true;
@@ -529,7 +525,7 @@ bool SetAttrs(nsHashKey* aKey, void* aData, void* aClosure)
     nsIContent* content =
       changeData->mProto->GetImmediateChild(nsGkAtoms::content);
 
-    nsXBLAttributeEntry* curr = entry;
+    nsXBLAttributeEntry* curr = aEntry;
     while (curr) {
       nsIAtom* dst = curr->GetDstAttribute();
       int32_t dstNs = curr->GetDstNameSpace();
@@ -560,21 +556,20 @@ bool SetAttrs(nsHashKey* aKey, void* aData, void* aClosure)
     }
   }
 
-  return true;
+  return PL_DHASH_NEXT;
 }
 
-bool SetAttrsNS(nsHashKey* aKey, void* aData, void* aClosure)
+static PLDHashOperator
+SetAttrsNS(const uint32_t &aNamespace,
+           nsXBLPrototypeBinding::InnerAttributeTable* aXBLAttributes,
+           void* aClosure)
 {
-  if (aData && aClosure) {
-    nsPRUint32Key * key = static_cast<nsPRUint32Key*>(aKey);
-    nsObjectHashtable* xblAttributes =
-      static_cast<nsObjectHashtable*>(aData);
-    nsXBLAttrChangeData * changeData = static_cast<nsXBLAttrChangeData *>
-                                                  (aClosure);
-    changeData->mSrcNamespace = key->GetValue();
-    xblAttributes->Enumerate(SetAttrs, (void*)changeData);
+  if (aXBLAttributes && aClosure) {
+    nsXBLAttrChangeData* changeData = static_cast<nsXBLAttrChangeData*>(aClosure);
+    changeData->mSrcNamespace = aNamespace;
+    aXBLAttributes->EnumerateRead(SetAttrs, aClosure);
   }
-  return true;
+  return PL_DHASH_NEXT;
 }
 
 void
@@ -582,7 +577,7 @@ nsXBLPrototypeBinding::SetInitialAttributes(nsIContent* aBoundElement, nsIConten
 {
   if (mAttributeTable) {
     nsXBLAttrChangeData data(this, aBoundElement, aAnonymousContent);
-    mAttributeTable->Enumerate(SetAttrsNS, (void*)&data);
+    mAttributeTable->EnumerateRead(SetAttrsNS, &data);
   }
 }
 
@@ -616,27 +611,11 @@ nsXBLPrototypeBinding::GetStyleSheets()
   return nullptr;
 }
 
-static bool
-DeleteAttributeEntry(nsHashKey* aKey, void* aData, void* aClosure)
-{
-  delete static_cast<nsXBLAttributeEntry*>(aData);
-  return true;
-}
-
-static bool
-DeleteAttributeTable(nsHashKey* aKey, void* aData, void* aClosure)
-{
-  delete static_cast<nsObjectHashtable*>(aData);
-  return true;
-}
-
 void
 nsXBLPrototypeBinding::EnsureAttributeTable()
 {
   if (!mAttributeTable) {
-    mAttributeTable = new nsObjectHashtable(nullptr, nullptr,
-                                            DeleteAttributeTable,
-                                            nullptr, 4);
+    mAttributeTable = new nsClassHashtable<nsUint32HashKey, InnerAttributeTable>(4);
   }
 }
 
@@ -645,24 +624,18 @@ nsXBLPrototypeBinding::AddToAttributeTable(int32_t aSourceNamespaceID, nsIAtom* 
                                            int32_t aDestNamespaceID, nsIAtom* aDestTag,
                                            nsIContent* aContent)
 {
-    nsPRUint32Key nskey(aSourceNamespaceID);
-    nsObjectHashtable* attributesNS =
-      static_cast<nsObjectHashtable*>(mAttributeTable->Get(&nskey));
+    InnerAttributeTable* attributesNS = mAttributeTable->Get(aSourceNamespaceID);
     if (!attributesNS) {
-      attributesNS = new nsObjectHashtable(nullptr, nullptr,
-                                           DeleteAttributeEntry,
-                                           nullptr, 4);
-      mAttributeTable->Put(&nskey, attributesNS);
+      attributesNS = new InnerAttributeTable(4);
+      mAttributeTable->Put(aSourceNamespaceID, attributesNS);
     }
 
     nsXBLAttributeEntry* xblAttr =
       new nsXBLAttributeEntry(aSourceTag, aDestTag, aDestNamespaceID, aContent);
 
-    nsISupportsKey key(aSourceTag);
-    nsXBLAttributeEntry* entry = static_cast<nsXBLAttributeEntry*>
-                                            (attributesNS->Get(&key));
+    nsXBLAttributeEntry* entry = attributesNS->Get(aSourceTag);
     if (!entry) {
-      attributesNS->Put(&key, xblAttr);
+      attributesNS->Put(aSourceTag, xblAttr);
     } else {
       while (entry->GetNext())
         entry = entry->GetNext();
@@ -1421,44 +1394,41 @@ struct WriteAttributeData
   { }
 };
 
-static
-bool
-WriteAttribute(nsHashKey *aKey, void *aData, void* aClosure)
+static PLDHashOperator
+WriteAttribute(nsISupports* aKey, nsXBLAttributeEntry* aEntry, void* aClosure)
 {
   WriteAttributeData* data = static_cast<WriteAttributeData *>(aClosure);
   nsIObjectOutputStream* stream = data->stream;
   const int32_t srcNamespace = data->srcNamespace;
 
-  nsXBLAttributeEntry* entry = static_cast<nsXBLAttributeEntry *>(aData);
   do {
-    if (entry->GetElement() == data->content) {
+    if (aEntry->GetElement() == data->content) {
       data->binding->WriteNamespace(stream, srcNamespace);
-      stream->WriteWStringZ(nsDependentAtomString(entry->GetSrcAttribute()).get());
-      data->binding->WriteNamespace(stream, entry->GetDstNameSpace());
-      stream->WriteWStringZ(nsDependentAtomString(entry->GetDstAttribute()).get());
+      stream->WriteWStringZ(nsDependentAtomString(aEntry->GetSrcAttribute()).get());
+      data->binding->WriteNamespace(stream, aEntry->GetDstNameSpace());
+      stream->WriteWStringZ(nsDependentAtomString(aEntry->GetDstAttribute()).get());
     }
 
-    entry = entry->GetNext();
-  } while (entry);
+    aEntry = aEntry->GetNext();
+  } while (aEntry);
 
-  return kHashEnumerateNext;
+  return PL_DHASH_NEXT;
 }
 
 // WriteAttributeNS is the callback to enumerate over the attribute
 // forwarding entries. Since these are stored in a hash of hashes,
 // we need to iterate over the inner hashes, calling WriteAttribute
 // to do the actual work.
-static
-bool
-WriteAttributeNS(nsHashKey *aKey, void *aData, void* aClosure)
+static PLDHashOperator
+WriteAttributeNS(const uint32_t &aNamespace,
+                 nsXBLPrototypeBinding::InnerAttributeTable* aXBLAttributes,
+                 void* aClosure)
 {
   WriteAttributeData* data = static_cast<WriteAttributeData *>(aClosure);
-  data->srcNamespace = static_cast<nsPRUint32Key *>(aKey)->GetValue();
+  data->srcNamespace = aNamespace;
+  aXBLAttributes->EnumerateRead(WriteAttribute, data);
 
-  nsObjectHashtable* attributes = static_cast<nsObjectHashtable*>(aData);
-  attributes->Enumerate(WriteAttribute, data);
-
-  return kHashEnumerateNext;
+  return PL_DHASH_NEXT;
 }
 
 nsresult
@@ -1542,7 +1512,7 @@ nsXBLPrototypeBinding::WriteContentNode(nsIObjectOutputStream* aStream,
   // Write out the attribute fowarding information
   if (mAttributeTable) {
     WriteAttributeData data(this, aStream, aNode);
-    mAttributeTable->Enumerate(WriteAttributeNS, &data);
+    mAttributeTable->EnumerateRead(WriteAttributeNS, &data);
   }
   rv = aStream->Write8(XBLBinding_Serialize_NoMoreAttributes);
   NS_ENSURE_SUCCESS(rv, rv);
