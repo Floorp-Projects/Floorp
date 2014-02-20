@@ -56,7 +56,7 @@ public:
 
   virtual void CleanupResources() MOZ_OVERRIDE;
 
-  virtual void SetCompositableHost(CompositableHost* aHost) MOZ_OVERRIDE;
+  virtual bool SetCompositableHost(CompositableHost* aHost) MOZ_OVERRIDE;
 
   virtual LayerComposite* AsLayerComposite() MOZ_OVERRIDE { return this; }
 
