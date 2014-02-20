@@ -358,6 +358,8 @@ class MetroFirefoxProfile(Profile):
     preferences = {# Don't automatically update the application for desktop and metro build
                    'app.update.enabled' : False,
                    'app.update.metro.enabled' : False,
+                   # Dismiss first run content overlay
+                   'browser.firstrun-content.dismissed' : True,
                    # Don't restore the last open set of tabs if the browser has crashed
                    'browser.sessionstore.resume_from_crash': False,
                    # Don't check for the default web browser during startup
