@@ -47,7 +47,7 @@ public:
   bool ShiftKey();
   bool AltKey();
   bool MetaKey();
-  uint16_t Button();
+  int16_t Button();
   uint16_t Buttons();
   already_AddRefed<mozilla::dom::EventTarget> GetRelatedTarget();
   void InitMouseEvent(const nsAString & aType, bool aCanBubble, bool aCancelable,
@@ -108,7 +108,7 @@ protected:
                           int32_t aScreenY,
                           int32_t aClientX,
                           int32_t aClientY,
-                          uint16_t aButton,
+                          int16_t aButton,
                           nsIDOMEventTarget *aRelatedTarget,
                           const nsAString& aModifiersList);
 };

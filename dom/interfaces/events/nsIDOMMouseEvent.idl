@@ -13,7 +13,7 @@
  * http://www.w3.org/TR/DOM-Level-2-Events/
  */
 
-[scriptable, builtinclass, uuid(afb2e57b-2822-4969-b2a9-0cada6859534)]
+[scriptable, builtinclass, uuid(df068636-9a5b-11e3-b71f-2c27d728e7f9)]
 interface nsIDOMMouseEvent : nsIDOMUIEvent
 {
   readonly attribute long               screenX;
@@ -30,7 +30,7 @@ interface nsIDOMMouseEvent : nsIDOMUIEvent
   readonly attribute boolean            altKey;
   readonly attribute boolean            metaKey;
 
-  readonly attribute unsigned short     button;
+  readonly attribute short              button;
   readonly attribute unsigned short     buttons;
   readonly attribute nsIDOMEventTarget  relatedTarget;
 
