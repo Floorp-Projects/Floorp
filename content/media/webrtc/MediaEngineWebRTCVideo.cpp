@@ -9,6 +9,10 @@
 #include "nsMemory.h"
 #include "mtransport/runnable_utils.h"
 
+#ifdef MOZ_B2G_CAMERA
+#include "GrallocImages.h"
+#include "libyuv.h"
+#endif
 namespace mozilla {
 
 using namespace mozilla::gfx;
@@ -528,6 +532,8 @@ MediaEngineWebRTCVideoSource::StartImpl(webrtc::CaptureCapability aCapability) {
   config.mPreviewSize.height = aCapability.height;
   mCameraControl->Start(&config);
   mCameraControl->Set(CAMERA_PARAM_PICTURESIZE, config.mPreviewSize);
+  mCameraControl->Get(CAMERA_PARAM_SENSORANGLE, mSensorAngle);
+  MOZ_ASSERT(mSensorAngle >= 0 && mSensorAngle < 360);
 }
 
 void
@@ -580,17 +586,81 @@ MediaEngineWebRTCVideoSource::OnTakePictureComplete(uint8_t* aData, uint32_t aLe
   mCallbackMonitor.Notify();
 }
 
+void
+MediaEngineWebRTCVideoSource::RotateImage(layers::Image* aImage) {
+  layers::GrallocImage *nativeImage = static_cast<layers::GrallocImage*>(aImage);
+  layers::SurfaceDescriptor handle = nativeImage->GetSurfaceDescriptor();
+  layers::SurfaceDescriptorGralloc grallocHandle = handle.get_SurfaceDescriptorGralloc();
+  android::sp<android::GraphicBuffer> graphicBuffer = layers::GrallocBufferActor::GetFrom(grallocHandle);
+  void *pMem = nullptr;
+  uint32_t size = mWidth * mHeight * 3 / 2;
+
+  graphicBuffer->lock(android::GraphicBuffer::USAGE_SW_READ_MASK, &pMem);
+
+  uint8_t* srcPtr = static_cast<uint8_t*>(pMem);
+  // Create a video frame and append it to the track.
+  nsRefPtr<layers::Image> image = mImageContainer->CreateImage(ImageFormat::PLANAR_YCBCR);
+  layers::PlanarYCbCrImage* videoImage = static_cast<layers::PlanarYCbCrImage*>(image.get());
+
+  uint32_t dstWidth = mWidth;
+  uint32_t dstHeight = mHeight;
+
+  if (mSensorAngle == 90 || mSensorAngle == 270) {
+    dstWidth = mHeight;
+    dstHeight = mWidth;
+  }
+
+  uint32_t half_width = dstWidth / 2;
+  uint8_t* dstPtr = videoImage->AllocateAndGetNewBuffer(size);
+  libyuv::ConvertToI420(srcPtr, size,
+                        dstPtr, dstWidth,
+                        dstPtr + (dstWidth * dstHeight), half_width,
+                        dstPtr + (dstWidth * dstHeight * 5 / 4), half_width,
+                        0, 0,
+                        mWidth, mHeight,
+                        mWidth, mHeight,
+                        static_cast<libyuv::RotationMode>(mSensorAngle),
+                        libyuv::FOURCC_NV21);
+  graphicBuffer->unlock();
+
+  const uint8_t lumaBpp = 8;
+  const uint8_t chromaBpp = 4;
+
+  layers::PlanarYCbCrData data;
+  data.mYChannel = dstPtr;
+  data.mYSize = IntSize(dstWidth, dstHeight);
+  data.mYStride = dstWidth * lumaBpp / 8;
+  data.mCbCrStride = dstWidth * chromaBpp / 8;
+  data.mCbChannel = dstPtr + dstHeight * data.mYStride;
+  data.mCrChannel = data.mCbChannel +( dstHeight * data.mCbCrStride / 2);
+  data.mCbCrSize = IntSize(dstWidth / 2, dstHeight / 2);
+  data.mPicX = 0;
+  data.mPicY = 0;
+  data.mPicSize = IntSize(dstWidth, dstHeight);
+  data.mStereoMode = StereoMode::MONO;
+
+  videoImage->SetDataNoCopy(data);
+
+  // implicitly releases last image
+  mImage = image.forget();
+}
+
 bool
 MediaEngineWebRTCVideoSource::OnNewPreviewFrame(layers::Image* aImage, uint32_t aWidth, uint32_t aHeight) {
   MonitorAutoLock enter(mMonitor);
   if (mState == kStopped) {
     return false;
   }
-  mImage = aImage;
   if (mWidth != static_cast<int>(aWidth) || mHeight != static_cast<int>(aHeight)) {
     mWidth = aWidth;
     mHeight = aHeight;
     LOG(("Video FrameSizeChange: %ux%u", mWidth, mHeight));
+  }
+
+  if (mSensorAngle == 0) {
+    mImage = aImage;
+  } else {
+    RotateImage(aImage);
   }
   return true; // return true because we're accepting the frame
 }
