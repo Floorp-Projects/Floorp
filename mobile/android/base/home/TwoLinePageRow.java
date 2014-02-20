@@ -21,16 +21,21 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.text.TextUtils;
 import android.util.AttributeSet;
+import android.view.Gravity;
+import android.view.LayoutInflater;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import java.lang.ref.WeakReference;
 
-public class TwoLinePageRow extends TwoLineRow
+public class TwoLinePageRow extends LinearLayout
                             implements Tabs.OnTabsChangedListener {
 
     private static final int NO_ICON = 0;
 
-    private final TextView mDescription;
+    private final TextView mTitle;
+    private final TextView mUrl;
+
     private int mSwitchToTabIconId;
     private int mPageTypeIconId;
 
@@ -77,11 +82,15 @@ public class TwoLinePageRow extends TwoLineRow
     public TwoLinePageRow(Context context, AttributeSet attrs) {
         super(context, attrs);
 
-        mShowIcons = true;
+        setGravity(Gravity.CENTER_VERTICAL);
 
-        mDescription = (TextView) findViewById(R.id.description);
+        LayoutInflater.from(context).inflate(R.layout.two_line_page_row, this);
+        mTitle = (TextView) findViewById(R.id.title);
+        mUrl = (TextView) findViewById(R.id.url);
+
         mSwitchToTabIconId = NO_ICON;
         mPageTypeIconId = NO_ICON;
+        mShowIcons = true;
 
         mFavicon = (FaviconView) findViewById(R.id.icon);
         mFaviconListener = new UpdateViewFaviconLoadedListener(mFavicon);
@@ -115,13 +124,25 @@ public class TwoLinePageRow extends TwoLineRow
         }
     }
 
+    private void setTitle(String text) {
+        mTitle.setText(text);
+    }
+
+    private void setUrl(String text) {
+        mUrl.setText(text);
+    }
+
+    private void setUrl(int stringId) {
+        mUrl.setText(stringId);
+    }
+
     private void setSwitchToTabIcon(int iconId) {
         if (mSwitchToTabIconId == iconId) {
             return;
         }
 
         mSwitchToTabIconId = iconId;
-        mDescription.setCompoundDrawablesWithIntrinsicBounds(mSwitchToTabIconId, 0, mPageTypeIconId, 0);
+        mUrl.setCompoundDrawablesWithIntrinsicBounds(mSwitchToTabIconId, 0, mPageTypeIconId, 0);
     }
 
     private void setPageTypeIcon(int iconId) {
@@ -130,7 +151,7 @@ public class TwoLinePageRow extends TwoLineRow
         }
 
         mPageTypeIconId = iconId;
-        mDescription.setCompoundDrawablesWithIntrinsicBounds(mSwitchToTabIconId, 0, mPageTypeIconId, 0);
+        mUrl.setCompoundDrawablesWithIntrinsicBounds(mSwitchToTabIconId, 0, mPageTypeIconId, 0);
     }
 
     /**
@@ -151,10 +172,10 @@ public class TwoLinePageRow extends TwoLineRow
         boolean isPrivate = Tabs.getInstance().getSelectedTab().isPrivate();
         Tab tab = Tabs.getInstance().getFirstTabForUrl(mPageUrl, isPrivate);
         if (!mShowIcons || tab == null) {
-            setDescription(mPageUrl);
+            setUrl(mPageUrl);
             setSwitchToTabIcon(NO_ICON);
         } else {
-            setDescription(R.string.switch_to_tab);
+            setUrl(R.string.switch_to_tab);
             setSwitchToTabIcon(R.drawable.ic_url_bar_tab);
         }
     }
@@ -163,7 +184,6 @@ public class TwoLinePageRow extends TwoLineRow
         mShowIcons = showIcons;
     }
 
-    @Override
     public void updateFromCursor(Cursor cursor) {
         if (cursor == null) {
             return;
