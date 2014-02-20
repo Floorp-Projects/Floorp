@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2010 The Android Open Source Project
+ * Copyright (C) 2013 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +15,7 @@
  * limitations under the License.
  */
 
-#define LOG_TAG "Surface"
+#define LOG_TAG "GonkNativeWindowClient"
 #define ATRACE_TAG ATRACE_TAG_GRAPHICS
 //#define LOG_NDEBUG 0
 
@@ -27,16 +28,11 @@
 
 #include <ui/Fence.h>
 
-#include <gui/ISurfaceComposer.h>
-#include <gui/SurfaceComposerClient.h>
-#include <gui/GLConsumer.h>
-#include <gui/Surface.h>
-
-#include <private/gui/ComposerService.h>
+#include "GonkNativeWindowClientKK.h"
 
 namespace android {
 
-Surface::Surface(
+GonkNativeWindowClient::GonkNativeWindowClient(
         const sp<IGraphicBufferProducer>& bufferProducer,
         bool controlledByApp)
     : mGraphicBufferProducer(bufferProducer)
@@ -76,42 +72,42 @@ Surface::Surface(
     mSwapIntervalZero = false;
 }
 
-Surface::~Surface() {
+GonkNativeWindowClient::~GonkNativeWindowClient() {
     if (mConnectedToCpu) {
-        Surface::disconnect(NATIVE_WINDOW_API_CPU);
+        GonkNativeWindowClient::disconnect(NATIVE_WINDOW_API_CPU);
     }
 }
 
-sp<IGraphicBufferProducer> Surface::getIGraphicBufferProducer() const {
+sp<IGraphicBufferProducer> GonkNativeWindowClient::getIGraphicBufferProducer() const {
     return mGraphicBufferProducer;
 }
 
-int Surface::hook_setSwapInterval(ANativeWindow* window, int interval) {
-    Surface* c = getSelf(window);
+int GonkNativeWindowClient::hook_setSwapInterval(ANativeWindow* window, int interval) {
+    GonkNativeWindowClient* c = getSelf(window);
     return c->setSwapInterval(interval);
 }
 
-int Surface::hook_dequeueBuffer(ANativeWindow* window,
+int GonkNativeWindowClient::hook_dequeueBuffer(ANativeWindow* window,
         ANativeWindowBuffer** buffer, int* fenceFd) {
-    Surface* c = getSelf(window);
+    GonkNativeWindowClient* c = getSelf(window);
     return c->dequeueBuffer(buffer, fenceFd);
 }
 
-int Surface::hook_cancelBuffer(ANativeWindow* window,
+int GonkNativeWindowClient::hook_cancelBuffer(ANativeWindow* window,
         ANativeWindowBuffer* buffer, int fenceFd) {
-    Surface* c = getSelf(window);
+    GonkNativeWindowClient* c = getSelf(window);
     return c->cancelBuffer(buffer, fenceFd);
 }
 
-int Surface::hook_queueBuffer(ANativeWindow* window,
+int GonkNativeWindowClient::hook_queueBuffer(ANativeWindow* window,
         ANativeWindowBuffer* buffer, int fenceFd) {
-    Surface* c = getSelf(window);
+    GonkNativeWindowClient* c = getSelf(window);
     return c->queueBuffer(buffer, fenceFd);
 }
 
-int Surface::hook_dequeueBuffer_DEPRECATED(ANativeWindow* window,
+int GonkNativeWindowClient::hook_dequeueBuffer_DEPRECATED(ANativeWindow* window,
         ANativeWindowBuffer** buffer) {
-    Surface* c = getSelf(window);
+    GonkNativeWindowClient* c = getSelf(window);
     ANativeWindowBuffer* buf;
     int fenceFd = -1;
     int result = c->dequeueBuffer(&buf, &fenceFd);
@@ -127,38 +123,38 @@ int Surface::hook_dequeueBuffer_DEPRECATED(ANativeWindow* window,
     return result;
 }
 
-int Surface::hook_cancelBuffer_DEPRECATED(ANativeWindow* window,
+int GonkNativeWindowClient::hook_cancelBuffer_DEPRECATED(ANativeWindow* window,
         ANativeWindowBuffer* buffer) {
-    Surface* c = getSelf(window);
+    GonkNativeWindowClient* c = getSelf(window);
     return c->cancelBuffer(buffer, -1);
 }
 
-int Surface::hook_lockBuffer_DEPRECATED(ANativeWindow* window,
+int GonkNativeWindowClient::hook_lockBuffer_DEPRECATED(ANativeWindow* window,
         ANativeWindowBuffer* buffer) {
-    Surface* c = getSelf(window);
+    GonkNativeWindowClient* c = getSelf(window);
     return c->lockBuffer_DEPRECATED(buffer);
 }
 
-int Surface::hook_queueBuffer_DEPRECATED(ANativeWindow* window,
+int GonkNativeWindowClient::hook_queueBuffer_DEPRECATED(ANativeWindow* window,
         ANativeWindowBuffer* buffer) {
-    Surface* c = getSelf(window);
+    GonkNativeWindowClient* c = getSelf(window);
     return c->queueBuffer(buffer, -1);
 }
 
-int Surface::hook_query(const ANativeWindow* window,
+int GonkNativeWindowClient::hook_query(const ANativeWindow* window,
                                 int what, int* value) {
-    const Surface* c = getSelf(window);
+    const GonkNativeWindowClient* c = getSelf(window);
     return c->query(what, value);
 }
 
-int Surface::hook_perform(ANativeWindow* window, int operation, ...) {
+int GonkNativeWindowClient::hook_perform(ANativeWindow* window, int operation, ...) {
     va_list args;
     va_start(args, operation);
-    Surface* c = getSelf(window);
+    GonkNativeWindowClient* c = getSelf(window);
     return c->perform(operation, args);
 }
 
-int Surface::setSwapInterval(int interval) {
+int GonkNativeWindowClient::setSwapInterval(int interval) {
     ATRACE_CALL();
     // EGL specification states:
     //  interval is silently clamped to minimum and maximum implementation
@@ -170,14 +166,12 @@ int Surface::setSwapInterval(int interval) {
     if (interval > maxSwapInterval)
         interval = maxSwapInterval;
 
-    mSwapIntervalZero = (interval == 0);
-
     return NO_ERROR;
 }
 
-int Surface::dequeueBuffer(android_native_buffer_t** buffer, int* fenceFd) {
+int GonkNativeWindowClient::dequeueBuffer(android_native_buffer_t** buffer, int* fenceFd) {
     ATRACE_CALL();
-    ALOGV("Surface::dequeueBuffer");
+    ALOGV("GonkNativeWindowClient::dequeueBuffer");
     Mutex::Autolock lock(mMutex);
     int buf = -1;
     int reqW = mReqWidth ? mReqWidth : mUserWidth;
@@ -224,10 +218,10 @@ int Surface::dequeueBuffer(android_native_buffer_t** buffer, int* fenceFd) {
     return OK;
 }
 
-int Surface::cancelBuffer(android_native_buffer_t* buffer,
+int GonkNativeWindowClient::cancelBuffer(android_native_buffer_t* buffer,
         int fenceFd) {
     ATRACE_CALL();
-    ALOGV("Surface::cancelBuffer");
+    ALOGV("GonkNativeWindowClient::cancelBuffer");
     Mutex::Autolock lock(mMutex);
     int i = getSlotFromBufferLocked(buffer);
     if (i < 0) {
@@ -238,7 +232,7 @@ int Surface::cancelBuffer(android_native_buffer_t* buffer,
     return OK;
 }
 
-int Surface::getSlotFromBufferLocked(
+int GonkNativeWindowClient::getSlotFromBufferLocked(
         android_native_buffer_t* buffer) const {
     bool dumpedState = false;
     for (int i = 0; i < NUM_BUFFER_SLOTS; i++) {
@@ -251,23 +245,23 @@ int Surface::getSlotFromBufferLocked(
     return BAD_VALUE;
 }
 
-int Surface::lockBuffer_DEPRECATED(android_native_buffer_t* buffer) {
-    ALOGV("Surface::lockBuffer");
+int GonkNativeWindowClient::lockBuffer_DEPRECATED(android_native_buffer_t* buffer) {
+    ALOGV("GonkNativeWindowClient::lockBuffer");
     Mutex::Autolock lock(mMutex);
     return OK;
 }
 
-int Surface::queueBuffer(android_native_buffer_t* buffer, int fenceFd) {
+int GonkNativeWindowClient::queueBuffer(android_native_buffer_t* buffer, int fenceFd) {
     ATRACE_CALL();
-    ALOGV("Surface::queueBuffer");
+    ALOGV("GonkNativeWindowClient::queueBuffer");
     Mutex::Autolock lock(mMutex);
     int64_t timestamp;
     bool isAutoTimestamp = false;
     if (mTimestamp == NATIVE_WINDOW_TIMESTAMP_AUTO) {
         timestamp = systemTime(SYSTEM_TIME_MONOTONIC);
         isAutoTimestamp = true;
-        ALOGV("Surface::queueBuffer making up timestamp: %.2f ms",
-            timestamp / 1000000.f);
+        ALOGV("GonkNativeWindowClient::queueBuffer making up timestamp: %.2f ms",
+             timestamp / 1000000.f);
     } else {
         timestamp = mTimestamp;
     }
@@ -298,9 +292,9 @@ int Surface::queueBuffer(android_native_buffer_t* buffer, int fenceFd) {
     return err;
 }
 
-int Surface::query(int what, int* value) const {
+int GonkNativeWindowClient::query(int what, int* value) const {
     ATRACE_CALL();
-    ALOGV("Surface::query");
+    ALOGV("GonkNativeWindowClient::query");
     { // scope for the lock
         Mutex::Autolock lock(mMutex);
         switch (what) {
@@ -311,13 +305,13 @@ int Surface::query(int what, int* value) const {
                 }
                 break;
             case NATIVE_WINDOW_QUEUES_TO_WINDOW_COMPOSER: {
-                sp<ISurfaceComposer> composer(
-                        ComposerService::getComposerService());
-                if (composer->authenticateSurfaceTexture(mGraphicBufferProducer)) {
-                    *value = 1;
-                } else {
+                //sp<ISurfaceComposer> composer(
+                //        ComposerService::getComposerService());
+                //if (composer->authenticateSurfaceTexture(mGraphicBufferProducer)) {
+                //    *value = 1;
+                //} else {
                     *value = 0;
-                }
+                //}
                 return NO_ERROR;
             }
             case NATIVE_WINDOW_CONCRETE_TYPE:
@@ -349,7 +343,7 @@ int Surface::query(int what, int* value) const {
     return mGraphicBufferProducer->query(what, value);
 }
 
-int Surface::perform(int operation, va_list args)
+int GonkNativeWindowClient::perform(int operation, va_list args)
 {
     int res = NO_ERROR;
     switch (operation) {
@@ -408,32 +402,32 @@ int Surface::perform(int operation, va_list args)
     return res;
 }
 
-int Surface::dispatchConnect(va_list args) {
+int GonkNativeWindowClient::dispatchConnect(va_list args) {
     int api = va_arg(args, int);
     return connect(api);
 }
 
-int Surface::dispatchDisconnect(va_list args) {
+int GonkNativeWindowClient::dispatchDisconnect(va_list args) {
     int api = va_arg(args, int);
     return disconnect(api);
 }
 
-int Surface::dispatchSetUsage(va_list args) {
+int GonkNativeWindowClient::dispatchSetUsage(va_list args) {
     int usage = va_arg(args, int);
     return setUsage(usage);
 }
 
-int Surface::dispatchSetCrop(va_list args) {
+int GonkNativeWindowClient::dispatchSetCrop(va_list args) {
     android_native_rect_t const* rect = va_arg(args, android_native_rect_t*);
     return setCrop(reinterpret_cast<Rect const*>(rect));
 }
 
-int Surface::dispatchSetBufferCount(va_list args) {
+int GonkNativeWindowClient::dispatchSetBufferCount(va_list args) {
     size_t bufferCount = va_arg(args, size_t);
     return setBufferCount(bufferCount);
 }
 
-int Surface::dispatchSetBuffersGeometry(va_list args) {
+int GonkNativeWindowClient::dispatchSetBuffersGeometry(va_list args) {
     int w = va_arg(args, int);
     int h = va_arg(args, int);
     int f = va_arg(args, int);
@@ -444,56 +438,56 @@ int Surface::dispatchSetBuffersGeometry(va_list args) {
     return setBuffersFormat(f);
 }
 
-int Surface::dispatchSetBuffersDimensions(va_list args) {
+int GonkNativeWindowClient::dispatchSetBuffersDimensions(va_list args) {
     int w = va_arg(args, int);
     int h = va_arg(args, int);
     return setBuffersDimensions(w, h);
 }
 
-int Surface::dispatchSetBuffersUserDimensions(va_list args) {
+int GonkNativeWindowClient::dispatchSetBuffersUserDimensions(va_list args) {
     int w = va_arg(args, int);
     int h = va_arg(args, int);
     return setBuffersUserDimensions(w, h);
 }
 
-int Surface::dispatchSetBuffersFormat(va_list args) {
+int GonkNativeWindowClient::dispatchSetBuffersFormat(va_list args) {
     int f = va_arg(args, int);
     return setBuffersFormat(f);
 }
 
-int Surface::dispatchSetScalingMode(va_list args) {
+int GonkNativeWindowClient::dispatchSetScalingMode(va_list args) {
     int m = va_arg(args, int);
     return setScalingMode(m);
 }
 
-int Surface::dispatchSetBuffersTransform(va_list args) {
+int GonkNativeWindowClient::dispatchSetBuffersTransform(va_list args) {
     int transform = va_arg(args, int);
     return setBuffersTransform(transform);
 }
 
-int Surface::dispatchSetBuffersTimestamp(va_list args) {
+int GonkNativeWindowClient::dispatchSetBuffersTimestamp(va_list args) {
     int64_t timestamp = va_arg(args, int64_t);
     return setBuffersTimestamp(timestamp);
 }
 
-int Surface::dispatchLock(va_list args) {
+int GonkNativeWindowClient::dispatchLock(va_list args) {
     ANativeWindow_Buffer* outBuffer = va_arg(args, ANativeWindow_Buffer*);
     ARect* inOutDirtyBounds = va_arg(args, ARect*);
     return lock(outBuffer, inOutDirtyBounds);
 }
 
-int Surface::dispatchUnlockAndPost(va_list args) {
+int GonkNativeWindowClient::dispatchUnlockAndPost(va_list args) {
     return unlockAndPost();
 }
 
 
-int Surface::connect(int api) {
+int GonkNativeWindowClient::connect(int api) {
     ATRACE_CALL();
-    ALOGV("Surface::connect");
+    ALOGV("GonkNativeWindowClient::connect");
     static sp<BBinder> sLife = new BBinder();
     Mutex::Autolock lock(mMutex);
     IGraphicBufferProducer::QueueBufferOutput output;
-    int err = mGraphicBufferProducer->connect(sLife, api, mProducerControlledByApp, &output);
+    int err = mGraphicBufferProducer->connect(sLife, api, true, &output);
     if (err == NO_ERROR) {
         uint32_t numPendingBuffers = 0;
         output.deflate(&mDefaultWidth, &mDefaultHeight, &mTransformHint,
@@ -507,9 +501,9 @@ int Surface::connect(int api) {
 }
 
 
-int Surface::disconnect(int api) {
+int GonkNativeWindowClient::disconnect(int api) {
     ATRACE_CALL();
-    ALOGV("Surface::disconnect");
+    ALOGV("GonkNativeWindowClient::disconnect");
     Mutex::Autolock lock(mMutex);
     freeAllBuffers();
     int err = mGraphicBufferProducer->disconnect(api);
@@ -528,15 +522,15 @@ int Surface::disconnect(int api) {
     return err;
 }
 
-int Surface::setUsage(uint32_t reqUsage)
+int GonkNativeWindowClient::setUsage(uint32_t reqUsage)
 {
-    ALOGV("Surface::setUsage");
+    ALOGV("GonkNativeWindowClient::setUsage");
     Mutex::Autolock lock(mMutex);
     mReqUsage = reqUsage;
     return OK;
 }
 
-int Surface::setCrop(Rect const* rect)
+int GonkNativeWindowClient::setCrop(Rect const* rect)
 {
     ATRACE_CALL();
 
@@ -547,7 +541,7 @@ int Surface::setCrop(Rect const* rect)
         realRect = *rect;
     }
 
-    ALOGV("Surface::setCrop rect=[%d %d %d %d]",
+    ALOGV("GonkNativeWindowClient::setCrop rect=[%d %d %d %d]",
             realRect.left, realRect.top, realRect.right, realRect.bottom);
 
     Mutex::Autolock lock(mMutex);
@@ -555,10 +549,10 @@ int Surface::setCrop(Rect const* rect)
     return NO_ERROR;
 }
 
-int Surface::setBufferCount(int bufferCount)
+int GonkNativeWindowClient::setBufferCount(int bufferCount)
 {
     ATRACE_CALL();
-    ALOGV("Surface::setBufferCount");
+    ALOGV("GonkNativeWindowClient::setBufferCount");
     Mutex::Autolock lock(mMutex);
 
     status_t err = mGraphicBufferProducer->setBufferCount(bufferCount);
@@ -572,10 +566,10 @@ int Surface::setBufferCount(int bufferCount)
     return err;
 }
 
-int Surface::setBuffersDimensions(int w, int h)
+int GonkNativeWindowClient::setBuffersDimensions(int w, int h)
 {
     ATRACE_CALL();
-    ALOGV("Surface::setBuffersDimensions");
+    ALOGV("GonkNativeWindowClient::setBuffersDimensions");
 
     if (w<0 || h<0)
         return BAD_VALUE;
@@ -589,10 +583,10 @@ int Surface::setBuffersDimensions(int w, int h)
     return NO_ERROR;
 }
 
-int Surface::setBuffersUserDimensions(int w, int h)
+int GonkNativeWindowClient::setBuffersUserDimensions(int w, int h)
 {
     ATRACE_CALL();
-    ALOGV("Surface::setBuffersUserDimensions");
+    ALOGV("GonkNativeWindowClient::setBuffersUserDimensions");
 
     if (w<0 || h<0)
         return BAD_VALUE;
@@ -606,9 +600,9 @@ int Surface::setBuffersUserDimensions(int w, int h)
     return NO_ERROR;
 }
 
-int Surface::setBuffersFormat(int format)
+int GonkNativeWindowClient::setBuffersFormat(int format)
 {
-    ALOGV("Surface::setBuffersFormat");
+    ALOGV("GonkNativeWindowClient::setBuffersFormat");
 
     if (format<0)
         return BAD_VALUE;
@@ -618,10 +612,10 @@ int Surface::setBuffersFormat(int format)
     return NO_ERROR;
 }
 
-int Surface::setScalingMode(int mode)
+int GonkNativeWindowClient::setScalingMode(int mode)
 {
     ATRACE_CALL();
-    ALOGV("Surface::setScalingMode(%d)", mode);
+    ALOGV("GonkNativeWindowClient::setScalingMode(%d)", mode);
 
     switch (mode) {
         case NATIVE_WINDOW_SCALING_MODE_FREEZE:
@@ -638,24 +632,24 @@ int Surface::setScalingMode(int mode)
     return NO_ERROR;
 }
 
-int Surface::setBuffersTransform(int transform)
+int GonkNativeWindowClient::setBuffersTransform(int transform)
 {
     ATRACE_CALL();
-    ALOGV("Surface::setBuffersTransform");
+    ALOGV("GonkNativeWindowClient::setBuffersTransform");
     Mutex::Autolock lock(mMutex);
     mTransform = transform;
     return NO_ERROR;
 }
 
-int Surface::setBuffersTimestamp(int64_t timestamp)
+int GonkNativeWindowClient::setBuffersTimestamp(int64_t timestamp)
 {
-    ALOGV("Surface::setBuffersTimestamp");
+    ALOGV("GonkNativeWindowClient::setBuffersTimestamp");
     Mutex::Autolock lock(mMutex);
     mTimestamp = timestamp;
     return NO_ERROR;
 }
 
-void Surface::freeAllBuffers() {
+void GonkNativeWindowClient::freeAllBuffers() {
     for (int i = 0; i < NUM_BUFFER_SLOTS; i++) {
         mSlots[i].buffer = 0;
     }
@@ -664,179 +658,17 @@ void Surface::freeAllBuffers() {
 // ----------------------------------------------------------------------
 // the lock/unlock APIs must be used from the same thread
 
-static status_t copyBlt(
-        const sp<GraphicBuffer>& dst,
-        const sp<GraphicBuffer>& src,
-        const Region& reg)
-{
-    // src and dst with, height and format must be identical. no verification
-    // is done here.
-    status_t err;
-    uint8_t const * src_bits = NULL;
-    err = src->lock(GRALLOC_USAGE_SW_READ_OFTEN, reg.bounds(), (void**)&src_bits);
-    ALOGE_IF(err, "error locking src buffer %s", strerror(-err));
-
-    uint8_t* dst_bits = NULL;
-    err = dst->lock(GRALLOC_USAGE_SW_WRITE_OFTEN, reg.bounds(), (void**)&dst_bits);
-    ALOGE_IF(err, "error locking dst buffer %s", strerror(-err));
-
-    Region::const_iterator head(reg.begin());
-    Region::const_iterator tail(reg.end());
-    if (head != tail && src_bits && dst_bits) {
-        const size_t bpp = bytesPerPixel(src->format);
-        const size_t dbpr = dst->stride * bpp;
-        const size_t sbpr = src->stride * bpp;
-
-        while (head != tail) {
-            const Rect& r(*head++);
-            ssize_t h = r.height();
-            if (h <= 0) continue;
-            size_t size = r.width() * bpp;
-            uint8_t const * s = src_bits + (r.left + src->stride * r.top) * bpp;
-            uint8_t       * d = dst_bits + (r.left + dst->stride * r.top) * bpp;
-            if (dbpr==sbpr && size==sbpr) {
-                size *= h;
-                h = 1;
-            }
-            do {
-                memcpy(d, s, size);
-                d += dbpr;
-                s += sbpr;
-            } while (--h > 0);
-        }
-    }
-
-    if (src_bits)
-        src->unlock();
-
-    if (dst_bits)
-        dst->unlock();
-
-    return err;
-}
-
 // ----------------------------------------------------------------------------
 
-status_t Surface::lock(
+status_t GonkNativeWindowClient::lock(
         ANativeWindow_Buffer* outBuffer, ARect* inOutDirtyBounds)
 {
-    if (mLockedBuffer != 0) {
-        ALOGE("Surface::lock failed, already locked");
-        return INVALID_OPERATION;
-    }
-
-    if (!mConnectedToCpu) {
-        int err = Surface::connect(NATIVE_WINDOW_API_CPU);
-        if (err) {
-            return err;
-        }
-        // we're intending to do software rendering from this point
-        setUsage(GRALLOC_USAGE_SW_READ_OFTEN | GRALLOC_USAGE_SW_WRITE_OFTEN);
-    }
-
-    ANativeWindowBuffer* out;
-    int fenceFd = -1;
-    status_t err = dequeueBuffer(&out, &fenceFd);
-    ALOGE_IF(err, "dequeueBuffer failed (%s)", strerror(-err));
-    if (err == NO_ERROR) {
-        sp<GraphicBuffer> backBuffer(GraphicBuffer::getSelf(out));
-        sp<Fence> fence(new Fence(fenceFd));
-
-        err = fence->waitForever("Surface::lock");
-        if (err != OK) {
-            ALOGE("Fence::wait failed (%s)", strerror(-err));
-            cancelBuffer(out, fenceFd);
-            return err;
-        }
-
-        const Rect bounds(backBuffer->width, backBuffer->height);
-
-        Region newDirtyRegion;
-        if (inOutDirtyBounds) {
-            newDirtyRegion.set(static_cast<Rect const&>(*inOutDirtyBounds));
-            newDirtyRegion.andSelf(bounds);
-        } else {
-            newDirtyRegion.set(bounds);
-        }
-
-        // figure out if we can copy the frontbuffer back
-        const sp<GraphicBuffer>& frontBuffer(mPostedBuffer);
-        const bool canCopyBack = (frontBuffer != 0 &&
-                backBuffer->width  == frontBuffer->width &&
-                backBuffer->height == frontBuffer->height &&
-                backBuffer->format == frontBuffer->format);
-
-        if (canCopyBack) {
-            // copy the area that is invalid and not repainted this round
-            const Region copyback(mDirtyRegion.subtract(newDirtyRegion));
-            if (!copyback.isEmpty())
-                copyBlt(backBuffer, frontBuffer, copyback);
-        } else {
-            // if we can't copy-back anything, modify the user's dirty
-            // region to make sure they redraw the whole buffer
-            newDirtyRegion.set(bounds);
-            mDirtyRegion.clear();
-            Mutex::Autolock lock(mMutex);
-            for (size_t i=0 ; i<NUM_BUFFER_SLOTS ; i++) {
-                mSlots[i].dirtyRegion.clear();
-            }
-        }
-
-
-        { // scope for the lock
-            Mutex::Autolock lock(mMutex);
-            int backBufferSlot(getSlotFromBufferLocked(backBuffer.get()));
-            if (backBufferSlot >= 0) {
-                Region& dirtyRegion(mSlots[backBufferSlot].dirtyRegion);
-                mDirtyRegion.subtract(dirtyRegion);
-                dirtyRegion = newDirtyRegion;
-            }
-        }
-
-        mDirtyRegion.orSelf(newDirtyRegion);
-        if (inOutDirtyBounds) {
-            *inOutDirtyBounds = newDirtyRegion.getBounds();
-        }
-
-        void* vaddr;
-        status_t res = backBuffer->lock(
-                GRALLOC_USAGE_SW_READ_OFTEN | GRALLOC_USAGE_SW_WRITE_OFTEN,
-                newDirtyRegion.bounds(), &vaddr);
-
-        ALOGW_IF(res, "failed locking buffer (handle = %p)",
-                backBuffer->handle);
-
-        if (res != 0) {
-            err = INVALID_OPERATION;
-        } else {
-            mLockedBuffer = backBuffer;
-            outBuffer->width  = backBuffer->width;
-            outBuffer->height = backBuffer->height;
-            outBuffer->stride = backBuffer->stride;
-            outBuffer->format = backBuffer->format;
-            outBuffer->bits   = vaddr;
-        }
-    }
-    return err;
+    return INVALID_OPERATION;
 }
 
-status_t Surface::unlockAndPost()
+status_t GonkNativeWindowClient::unlockAndPost()
 {
-    if (mLockedBuffer == 0) {
-        ALOGE("Surface::unlockAndPost failed, no locked buffer");
-        return INVALID_OPERATION;
-    }
-
-    status_t err = mLockedBuffer->unlock();
-    ALOGE_IF(err, "failed unlocking buffer (%p)", mLockedBuffer->handle);
-
-    err = queueBuffer(mLockedBuffer.get(), -1);
-    ALOGE_IF(err, "queueBuffer (handle=%p) failed (%s)",
-            mLockedBuffer->handle, strerror(-err));
-
-    mPostedBuffer = mLockedBuffer;
-    mLockedBuffer = 0;
-    return err;
+    return INVALID_OPERATION;
 }
 
 }; // namespace android
