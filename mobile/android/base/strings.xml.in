@@ -10,6 +10,7 @@
 #includesubst @SYNCSTRINGSPATH@
 
 <!-- C-style format strings. -->
+<!ENTITY formatI "&#037;I">
 <!ENTITY formatS "&#037;s">
 <!ENTITY formatS1 "&#037;1&#036;s">
 <!ENTITY formatS2 "&#037;2&#036;s">
@@ -289,7 +290,7 @@
   <string name="home_most_recent_title">&home_most_recent_title;</string>
   <string name="home_most_recent_empty">&home_most_recent_empty;</string>
   <string name="home_reading_list_empty">&home_reading_list_empty;</string>
-  <string name="home_reading_list_hint">&home_reading_list_hint;</string>
+  <string name="home_reading_list_hint">&home_reading_list_hint2;</string>
   <string name="home_reading_list_hint_accessible">&home_reading_list_hint_accessible;</string>
   <string name="pin_site_dialog_hint">&pin_site_dialog_hint;</string>
 
