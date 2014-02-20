@@ -1418,7 +1418,7 @@ TypedObject::attach(ArrayBufferObject &buffer, int32_t offset)
     JS_ASSERT(offset + size() <= buffer.byteLength());
 
     buffer.addView(this);
-    setPrivate(buffer.dataPointer() + offset);
+    InitArrayBufferViewDataPointer(this, &buffer, offset);
     setReservedSlot(JS_TYPEDOBJ_SLOT_BYTEOFFSET, Int32Value(offset));
     setReservedSlot(JS_TYPEDOBJ_SLOT_OWNER, ObjectValue(buffer));
 }
