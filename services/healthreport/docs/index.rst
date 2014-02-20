@@ -24,6 +24,7 @@ are very specific to what the Firefox Health Report feature requires.
 
    architecture
    dataformat
+   identifiers
 
 Legal and Privacy Concerns
 ==========================

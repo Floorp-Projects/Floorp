@@ -387,6 +387,21 @@ thisPingDate
 version
     Integer version of this payload format. Currently only 1 is defined.
 
+clientID
+    An identifier that identifies the client that is submitting data.
+
+    This property may not be present in older clients.
+
+    See :ref:`healthreport_identifiers` for more info on identifiers.
+
+clientIDVersion
+    Integer version associated with the generation semantics for the
+    ``clientID``.
+
+    If the value is ``1``, ``clientID`` is a randomly-generated UUID.
+
+    This property may not be present in older clients.
+
 data
     Object holding data constituting health report.
 
