@@ -1247,17 +1247,13 @@ Parser<ParseHandler>::newFunction(GenericParseContext *pc, HandleAtom atom,
     while (pc->parent)
         pc = pc->parent;
 
-    RootedObject parent(context);
-    if (!pc->sc->isFunctionBox() && options().compileAndGo)
-        parent = pc->sc->asGlobalSharedContext()->scopeChain();
-
     RootedFunction fun(context);
     JSFunction::Flags flags = (kind == Expression)
                               ? JSFunction::INTERPRETED_LAMBDA
                               : (kind == Arrow)
                                 ? JSFunction::INTERPRETED_LAMBDA_ARROW
                                 : JSFunction::INTERPRETED;
-    fun = NewFunctionWithProto(context, NullPtr(), nullptr, 0, flags, parent, atom, proto,
+    fun = NewFunctionWithProto(context, NullPtr(), nullptr, 0, flags, NullPtr(), atom, proto,
                                JSFunction::FinalizeKind, MaybeSingletonObject);
     if (!fun)
         return nullptr;
