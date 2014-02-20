@@ -353,6 +353,42 @@ IsProxy(JSContext *cx, unsigned argc, Value *vp)
 }
 
 static bool
+IsLazyFunction(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (argc != 1) {
+        JS_ReportError(cx, "The function takes exactly one argument.");
+        return false;
+    }
+    if (!args[0].isObject() || !args[0].toObject().is<JSFunction>()) {
+        JS_ReportError(cx, "The first argument should be a function.");
+        return true;
+    }
+    args.rval().setBoolean(args[0].toObject().as<JSFunction>().isInterpretedLazy());
+    return true;
+}
+
+static bool
+IsRelazifiableFunction(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (argc != 1) {
+        JS_ReportError(cx, "The function takes exactly one argument.");
+        return false;
+    }
+    if (!args[0].isObject() ||
+        !args[0].toObject().is<JSFunction>())
+    {
+        JS_ReportError(cx, "The first argument should be a function.");
+        return true;
+    }
+
+    JSFunction *fun = &args[0].toObject().as<JSFunction>();
+    args.rval().setBoolean(fun->hasScript() && fun->nonLazyScript()->isRelazifiable());
+    return true;
+}
+
+static bool
 InternalConst(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -1596,6 +1632,14 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 "isAsmJSFunction(fn)",
 "  Returns whether the given value is a nested function in an asm.js module that has been\n"
 "  both compile- and link-time validated."),
+
+    JS_FN_HELP("isLazyFunction", IsLazyFunction, 1, 0,
+"isLazyFunction(fun)",
+"  True if fun is a lazy JSFunction."),
+
+    JS_FN_HELP("isRelazifiableFunction", IsRelazifiableFunction, 1, 0,
+"isRelazifiableFunction(fun)",
+"  Ture if fun is a JSFunction with a relazifiable JSScript."),
 
     JS_FN_HELP("inParallelSection", testingFunc_inParallelSection, 0, 0,
 "inParallelSection()",
