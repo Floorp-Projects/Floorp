@@ -35,9 +35,6 @@
         <!-- Default style for the TopSitesGridItemView -->
         <attr name="topSitesGridItemViewStyle" format="reference" />
 
-        <!-- Default style for the HomeGridView -->
-        <attr name="homeGridViewStyle" format="reference" />
-
         <!-- Style for the PanelGridView -->
         <attr name="panelGridViewStyle" format="reference" />
 
