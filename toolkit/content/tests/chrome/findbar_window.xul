@@ -30,6 +30,9 @@
     var gFindBar = null;
     var gBrowser;
 
+    var gClipboard = Cc["@mozilla.org/widget/clipboard;1"].getService(Ci.nsIClipboard);
+    var gHasFindClipboard = gClipboard.supportsFindClipboard();
+
     var gStatusText;
     var gXULBrowserWindow = {
       QueryInterface: function(aIID) {
@@ -97,7 +100,8 @@
       testFindbarSelection();
       testDrop();
       testQuickFindLink();
-      testStatusText();
+      if (gHasFindClipboard)
+        testStatusText();
       testQuickFindClose();
     }
 
@@ -107,8 +111,11 @@
         ok(!gFindBar.hidden, "testFindbarSelection: failed to open findbar: " + aTestName);
         ok(document.commandDispatcher.focusedElement == gFindBar._findField.inputField,
            "testFindbarSelection: find field is not focused: " + aTestName);
-        ok(gFindBar._findField.value == aExpSelection,
-           "Incorrect selection in testFindbarSelection: "  + aTestName + ". Selection: " + gFindBar._findField.value);
+        if (!gHasFindClipboard) {
+          ok(gFindBar._findField.value == aExpSelection,
+             "Incorrect selection in testFindbarSelection: "  + aTestName +
+             ". Selection: " + gFindBar._findField.value);
+        }
 
         // Clear the value, close the findbar
         gFindBar._findField.value = "";
@@ -188,6 +195,7 @@
       enterStringIntoFindField(searchStr);
       ok(gBrowser.contentWindow.getSelection().toString().toLowerCase() == searchStr,
          "testNormalFind: failed to find '" + searchStr + "'");
+      testClipboardSearchString(gBrowser.contentWindow.getSelection().toString());
 
       if (!matchCaseCheckbox.hidden) {
         matchCaseCheckbox.click();
@@ -246,6 +254,7 @@
 
       ok(gBrowser.contentWindow.getSelection().toString().toLowerCase() == searchStr,
          "testNormalFindWithComposition: text should be found after committing composition");
+      testClipboardSearchString(gBrowser.contentWindow.getSelection().toString());
 
       if (clicked) {
         matchCaseCheckbox.click();
@@ -305,6 +314,7 @@
       enterStringIntoFindField(searchStr);
       ok(gBrowser.contentWindow.getSelection() == searchStr,
           "testQuickFindLink: failed to find sample link");
+      testClipboardSearchString(searchStr);
     }
 
     // See bug 963925 for more details on this test.
@@ -321,7 +331,7 @@
       let a = gFindBar._findField.value;
       let b = gFindBar._browser.finder._fastFind.searchString;
       let c = gFindBar._browser.finder.searchString;
-      ok(a == b && b == c, "testFindWithHighlight: " + a + ", " + b + ", " + c + ".");
+      ok(a == b && b == c, "testFindWithHighlight 1: " + a + ", " + b + ", " + c + ".");
 
       let oldGetInitialSelection = gFindBar._getInitialSelection;
       let searchStr = "t";
@@ -332,22 +342,24 @@
       a = gFindBar._findField.value;
       b = gFindBar._browser.finder._fastFind.searchString;
       c = gFindBar._browser.finder.searchString;
-      ok(a == searchStr && b == c, "testFindWithHighlight: " + a + ", " + b + ", " + c + ".");
+      ok(a == searchStr && b == c, "testFindWithHighlight 2: " + a + ", " + b + ", " + c + ".");
 
       let highlightButton = gFindBar.getElement("highlight");
       highlightButton.click();
-      ok(highlightButton.checked, "testFindWithHighlight: Highlight All should be checked.");
+      ok(highlightButton.checked, "testFindWithHighlight 3: Highlight All should be checked.");
 
-      a = gFindBar._findField.value;
-      b = gFindBar._browser.finder._fastFind.searchString;
-      c = gFindBar._browser.finder.searchString;
-      ok(a == searchStr && b == c, "testFindWithHighlight: " + a + ", " + b + ", " + c + ".");
+      if (!gHasFindClipboard) {
+        a = gFindBar._findField.value;
+        b = gFindBar._browser.finder._fastFind.searchString;
+        c = gFindBar._browser.finder.searchString;
+        ok(a == searchStr && b == c, "testFindWithHighlight 4: " + a + ", " + b + ", " + c + ".");
+      }
 
       gFindBar.onFindAgainCommand();
       a = gFindBar._findField.value;
       b = gFindBar._browser.finder._fastFind.searchString;
       c = gFindBar._browser.finder.searchString;
-      ok(a == b && b == c, "testFindWithHighlight: " + a + ", " + b + ", " + c + ".");
+      ok(a == b && b == c, "testFindWithHighlight 5: " + a + ", " + b + ", " + c + ".");
 
       highlightButton.click();
       ok(!highlightButton.checked, "testFindWithHighlight: Highlight All should be unchecked.");
@@ -368,6 +380,19 @@
       enterStringIntoFindField(SEARCH_TEXT);
       ok(gBrowser.contentWindow.getSelection() == SEARCH_TEXT,
          "testQuickFindText: failed to find '" + SEARCH_TEXT + "'");
+      testClipboardSearchString(SEARCH_TEXT);
+    }
+
+    function testClipboardSearchString(aExpected) {
+      if (!gHasFindClipboard)
+        return;
+
+      if (!aExpected)
+        aExpected = "";
+      var searchStr = gFindBar.browser.finder.clipboardSearchString;
+      ok(searchStr.toLowerCase() == aExpected.toLowerCase(),
+        "testClipboardSearchString: search string not set to '" + aExpected +
+        "', instead found '" + searchStr + "'");
     }
   ]]></script>
 
