@@ -494,7 +494,7 @@ BufferTextureHost::Upload(nsIntRegion *aRegion)
     NS_WARNING("BufferTextureHost: unsupported format!");
     return false;
   } else if (mFormat == gfx::SurfaceFormat::YUV) {
-    YCbCrImageDataDeserializer yuvDeserializer(GetBuffer());
+    YCbCrImageDataDeserializer yuvDeserializer(GetBuffer(), GetBufferSize());
     MOZ_ASSERT(yuvDeserializer.IsValid());
 
     if (!mCompositor->SupportsEffect(EFFECT_YCBCR)) {
@@ -585,7 +585,7 @@ BufferTextureHost::GetAsSurface()
     NS_WARNING("BufferTextureHost: unsupported format!");
     return nullptr;
   } else if (mFormat == gfx::SurfaceFormat::YUV) {
-    YCbCrImageDataDeserializer yuvDeserializer(GetBuffer());
+    YCbCrImageDataDeserializer yuvDeserializer(GetBuffer(), GetBufferSize());
     if (!yuvDeserializer.IsValid()) {
       return nullptr;
     }
