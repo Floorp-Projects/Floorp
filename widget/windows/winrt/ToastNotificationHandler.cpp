@@ -22,7 +22,8 @@ void
 ToastNotificationHandler::DisplayNotification(HSTRING title,
                                               HSTRING msg,
                                               HSTRING imagePath,
-                                              const nsAString& aCookie)
+                                              const nsAString& aCookie,
+                                              const nsAString& aAppId)
 {
   mCookie = aCookie;
 
@@ -50,13 +51,14 @@ ToastNotificationHandler::DisplayNotification(HSTRING title,
   SetNodeValueString(msg, msgTextNodeRoot.Get(), toastXml.Get());
   SetNodeValueString(imagePath, srcAttribute.Get(), toastXml.Get());
 
-  CreateWindowsNotificationFromXml(toastXml.Get());
+  CreateWindowsNotificationFromXml(toastXml.Get(), aAppId);
 }
 
 void
 ToastNotificationHandler::DisplayTextNotification(HSTRING title,
                                                   HSTRING msg,
-                                                  const nsAString& aCookie)
+                                                  const nsAString& aCookie,
+                                                  const nsAString& aAppId)
 {
   mCookie = aCookie;
 
@@ -75,7 +77,7 @@ ToastNotificationHandler::DisplayTextNotification(HSTRING title,
   SetNodeValueString(title, titleTextNodeRoot.Get(), toastXml.Get());
   SetNodeValueString(msg, msgTextNodeRoot.Get(), toastXml.Get());
 
-  CreateWindowsNotificationFromXml(toastXml.Get());
+  CreateWindowsNotificationFromXml(toastXml.Get(), aAppId);
 }
 
 ComPtr<IXmlDocument>
@@ -91,7 +93,8 @@ ToastNotificationHandler::InitializeXmlForTemplate(ToastTemplateType templateTyp
 }
 
 void
-ToastNotificationHandler::CreateWindowsNotificationFromXml(IXmlDocument *toastXml)
+ToastNotificationHandler::CreateWindowsNotificationFromXml(IXmlDocument *toastXml,
+                                                           const nsAString& aAppId)
 {
   ComPtr<IToastNotification> notification;
   ComPtr<IToastNotificationFactory> factory;
@@ -107,7 +110,14 @@ ToastNotificationHandler::CreateWindowsNotificationFromXml(IXmlDocument *toastXm
     &ToastNotificationHandler::OnDismiss).Get(), &dismissedToken));
 
   ComPtr<IToastNotifier> notifier;
-  mToastNotificationManagerStatics->CreateToastNotifier(&notifier);
+  if (aAppId.IsEmpty()) {
+    AssertHRESULT(mToastNotificationManagerStatics->CreateToastNotifier(
+                    &notifier));
+  } else {
+    AssertHRESULT(mToastNotificationManagerStatics->CreateToastNotifierWithId(
+                    HStringReference(PromiseFlatString(aAppId).get()).Get(),
+                    &notifier));
+  }
   notifier->Show(notification.Get());
 
   MetroUtils::FireObserver("metro_native_toast_shown", mCookie.get());
