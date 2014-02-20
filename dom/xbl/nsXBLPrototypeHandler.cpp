@@ -644,7 +644,7 @@ nsXBLPrototypeHandler::MouseEventMatched(nsIDOMMouseEvent* aMouseEvent)
   if (mDetail == -1 && mMisc == 0 && (mKeyMask & cAllModifiers) == 0)
     return true; // No filters set up. It's generic.
 
-  uint16_t button;
+  int16_t button;
   aMouseEvent->GetButton(&button);
   if (mDetail != -1 && (button != mDetail))
     return false;
