@@ -76,9 +76,6 @@
 #ifdef USE_SKIA
 #include "mozilla/Hal.h"
 #include "skia/SkGraphics.h"
-
-#include "SkiaGLGlue.h"
-
 #endif
 
 #include "mozilla/Preferences.h"
@@ -234,8 +231,6 @@ MemoryPressureObserver::Observe(nsISupports *aSubject,
 {
     NS_ASSERTION(strcmp(aTopic, "memory-pressure") == 0, "unexpected event topic");
     Factory::PurgeAllCaches();
-
-    gfxPlatform::GetPlatform()->PurgeSkiaCache();
     return NS_OK;
 }
 
@@ -302,8 +297,6 @@ gfxPlatform::gfxPlatform()
 #else
     mLayersUseDeprecated = false;
 #endif
-
-    mSkiaGlue = nullptr;
 
     Preferences::AddBoolVarCache(&mDrawLayerBorders,
                                  "layers.draw-borders",
@@ -488,6 +481,10 @@ gfxPlatform::Init()
                                           false);
 
     CreateCMSOutputProfile();
+
+#ifdef USE_SKIA
+    gPlatform->InitializeSkiaCaches();
+#endif
 
     // Listen to memory pressure event so we can purge DrawTarget caches
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
@@ -895,67 +892,36 @@ gfxPlatform::UseAcceleratedSkiaCanvas()
          mPreferredCanvasBackend == BackendType::SKIA;
 }
 
-static void
-InitializeSkiaCacheLimits(GrContext* context)
+void
+gfxPlatform::InitializeSkiaCaches()
 {
-  bool usingDynamicCache = Preferences::GetBool("gfx.canvas.skiagl.dynamic-cache", false);
+#ifdef USE_SKIA_GPU
+  if (UseAcceleratedSkiaCanvas()) {
+    bool usingDynamicCache = Preferences::GetBool("gfx.canvas.skiagl.dynamic-cache", false);
 
-  int cacheItemLimit = Preferences::GetInt("gfx.canvas.skiagl.cache-items", 256);
-  int cacheSizeLimit = Preferences::GetInt("gfx.canvas.skiagl.cache-size", 96);
+    int cacheItemLimit = Preferences::GetInt("gfx.canvas.skiagl.cache-items", 256);
+    int cacheSizeLimit = Preferences::GetInt("gfx.canvas.skiagl.cache-size", 96);
 
-  // Prefs are in megabytes, but we want the sizes in bytes
-  cacheSizeLimit *= 1024*1024;
+    // Prefs are in megabytes, but we want the sizes in bytes
+    cacheSizeLimit *= 1024*1024;
 
-  if (usingDynamicCache) {
-    uint32_t totalMemory = mozilla::hal::GetTotalSystemMemory();
+    if (usingDynamicCache) {
+      uint32_t totalMemory = mozilla::hal::GetTotalSystemMemory();
 
-    if (totalMemory <= 256*1024*1024) {
-      // We need a very minimal cache on 256 meg devices
-      cacheSizeLimit = 2*1024*1024;
-    } else if (totalMemory > 0) {
-      cacheSizeLimit = totalMemory / 16;
+      if (totalMemory <= 256*1024*1024) {
+        // We need a very minimal cache on 256 meg devices
+        cacheSizeLimit = 2*1024*1024;
+      } else if (totalMemory > 0) {
+        cacheSizeLimit = totalMemory / 16;
+      }
     }
-  }
 
 #ifdef DEBUG
-  printf_stderr("Determined SkiaGL cache limits: Size %i, Items: %i\n", cacheSizeLimit, cacheItemLimit);
+    printf_stderr("Determined SkiaGL cache limits: Size %i, Items: %i\n", cacheSizeLimit, cacheItemLimit);
 #endif
 
-  context->setTextureCacheLimits(cacheItemLimit, cacheSizeLimit);
-}
-
-mozilla::gl::SkiaGLGlue*
-gfxPlatform::GetSkiaGLGlue()
-{
-#ifdef USE_SKIA_GPU
-  if (!mSkiaGlue) {
-    /* Dummy context. We always draw into a FBO.
-     *
-     * FIXME: This should be stored in TLS or something, since there needs to be one for each thread using it. As it
-     * stands, this only works on the main thread.
-     */
-    mozilla::gfx::SurfaceCaps caps = mozilla::gfx::SurfaceCaps::ForRGBA();
-    nsRefPtr<mozilla::gl::GLContext> glContext = mozilla::gl::GLContextProvider::CreateOffscreen(gfxIntSize(16, 16), caps);
-    if (!glContext) {
-      printf_stderr("Failed to create GLContext for SkiaGL!\n");
-      return nullptr;
-    }
-    mSkiaGlue = new mozilla::gl::SkiaGLGlue(glContext);
-    InitializeSkiaCacheLimits(mSkiaGlue->GetGrContext());
+    Factory::SetGlobalSkiaCacheLimits(cacheItemLimit, cacheSizeLimit);
   }
-#endif
-
-  return mSkiaGlue;
-}
-
-void
-gfxPlatform::PurgeSkiaCache()
-{
-#ifdef USE_SKIA_GPU
-  if (!mSkiaGlue)
-      return;
-
-  mSkiaGlue->GetGrContext()->freeGpuResources();
 #endif
 }
 

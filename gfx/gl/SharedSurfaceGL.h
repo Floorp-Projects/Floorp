@@ -6,7 +6,6 @@
 #ifndef SHARED_SURFACE_GL_H_
 #define SHARED_SURFACE_GL_H_
 
-#include "ScopedGLHelpers.h"
 #include "SharedSurface.h"
 #include "SurfaceFactory.h"
 #include "SurfaceTypes.h"
@@ -136,8 +135,6 @@ public:
 
 protected:
     const GLuint mTex;
-    GLuint mFB;
-
     RefPtr<gfx::DataSourceSurface> mData;
 
     SharedSurface_Basic(GLContext* gl,
@@ -195,8 +192,7 @@ public:
                                            GLContext* consGL,
                                            const GLFormats& formats,
                                            const gfx::IntSize& size,
-                                           bool hasAlpha,
-                                           GLuint texture = 0);
+                                           bool hasAlpha);
 
     static SharedSurface_GLTexture* Cast(SharedSurface* surf) {
         MOZ_ASSERT(surf->Type() == SharedSurfaceType::GLTextureShare);
@@ -207,7 +203,6 @@ public:
 protected:
     GLContext* mConsGL;
     const GLuint mTex;
-    const bool mOwnsTex;
     GLsync mSync;
     mutable Mutex mMutex;
 
@@ -215,8 +210,7 @@ protected:
                             GLContext* consGL,
                             const gfx::IntSize& size,
                             bool hasAlpha,
-                            GLuint tex,
-                            bool ownsTex)
+                            GLuint tex)
         : SharedSurface_GL(SharedSurfaceType::GLTextureShare,
                            AttachmentType::GLTexture,
                            prodGL,
@@ -224,7 +218,6 @@ protected:
                            hasAlpha)
         , mConsGL(consGL)
         , mTex(tex)
-        , mOwnsTex(ownsTex)
         , mSync(0)
         , mMutex("SharedSurface_GLTexture mutex")
     {
