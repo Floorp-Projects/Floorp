@@ -121,7 +121,6 @@ nsNSSSocketInfo::nsNSSSocketInfo(SharedSSLState& aState, uint32_t providerFlags)
     mSharedState(aState),
     mForSTARTTLS(false),
     mHandshakePending(true),
-    mHasCleartextPhase(false),
     mRememberClientAuthCertificate(false),
     mPreliminaryHandshakeDone(false),
     mNPNCompleted(false),
@@ -195,18 +194,6 @@ nsNSSSocketInfo::SetRememberClientAuthCertificate(bool aRemember)
 {
   mRememberClientAuthCertificate = aRemember;
   return NS_OK;
-}
-
-void
-nsNSSSocketInfo::SetHasCleartextPhase(bool aHasCleartextPhase)
-{
-  mHasCleartextPhase = aHasCleartextPhase;
-}
-
-bool
-nsNSSSocketInfo::GetHasCleartextPhase()
-{
-  return mHasCleartextPhase;
 }
 
 NS_IMETHODIMP
@@ -407,18 +394,16 @@ nsNSSSocketInfo::JoinConnection(const nsACString& npnProtocol,
   return NS_OK;
 }
 
-nsresult
-nsNSSSocketInfo::GetForSTARTTLS(bool* aForSTARTTLS)
+bool
+nsNSSSocketInfo::GetForSTARTTLS()
 {
-  *aForSTARTTLS = mForSTARTTLS;
-  return NS_OK;
+  return mForSTARTTLS;
 }
 
-nsresult
+void
 nsNSSSocketInfo::SetForSTARTTLS(bool aForSTARTTLS)
 {
   mForSTARTTLS = aForSTARTTLS;
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1005,7 +990,7 @@ retryDueToTLSIntolerance(PRErrorCode err, nsNSSSocketInfo* socketInfo)
     conditional:
       if ((err == PR_CONNECT_RESET_ERROR &&
            range.max <= SSL_LIBRARY_VERSION_TLS_1_0) ||
-          socketInfo->GetHasCleartextPhase()) {
+          socketInfo->GetForSTARTTLS()) {
         return false;
       }
       break;
@@ -2301,7 +2286,6 @@ nsSSLIOLayerSetOptions(PRFileDesc* fd, bool forSTARTTLS,
     if (SECSuccess != SSL_OptionSet(fd, SSL_SECURITY, false)) {
       return NS_ERROR_FAILURE;
     }
-    infoObject->SetHasCleartextPhase(true);
   }
 
   // Let's see if we're trying to connect to a site we know is
