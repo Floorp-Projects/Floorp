@@ -41,10 +41,12 @@ class TestCapabilities(marionette_test.MarionetteTestCase):
 
     def test_mandates_capabilities(self):
         self.assertIn("browserName", self.caps)
+        self.assertIn("browserVersion", self.caps)
         self.assertIn("platformName", self.caps)
         self.assertIn("platformVersion", self.caps)
 
         self.assertEqual(self.caps["browserName"], self.appinfo["name"])
+        self.assertEqual(self.caps["browserVersion"], self.appinfo["version"])
         self.assertEqual(self.caps["platformName"], self.appinfo["OS"].upper())
         self.assertEqual(self.caps["platformVersion"],
                          self.appinfo["platformVersion"])
