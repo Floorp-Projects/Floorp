@@ -24,6 +24,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "jwcrypto",
 
 // All properties exposed by the public FxAccounts API.
 let publicProperties = [
+  "getAccountsClient",
   "getAccountsSignInURI",
   "getAccountsURI",
   "getAssertion",
@@ -120,6 +121,10 @@ FxAccountsInternal.prototype = {
    */
   now: function() {
     return this.fxAccountsClient.now();
+  },
+
+  getAccountsClient: function() {
+    return this.fxAccountsClient;
   },
 
   /**
