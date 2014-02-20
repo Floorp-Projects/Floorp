@@ -34,19 +34,21 @@ addLoadEvent(function() {
 
   // Debug Logging for bug 966322
 
-  dump("Load event ran\n");
-
   var bs = context.createBufferSource();
   bs.buffer = context.createBuffer(1, 1, context.sampleRate);
   bs.start();
   bs.onended = function() {
-    dump("Graph is running\n");
+    dump("Graph started running\n");
+  }
+
+  var bs = context.createBufferSource();
+  bs.buffer = context.createBuffer(1, 1, context.sampleRate);
+  bs.start(sp.bufferSize / context.sampleRate);
+  bs.onended = function() {
+    dump("Graph ran for long enough to finish first ScriptProcessorBlock\n");
   }
 
 });
-
-// Debug Logging for bug 966322
-dump("script ran\n");
 
 </script>
 </pre>
