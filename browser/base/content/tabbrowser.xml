@@ -2492,6 +2492,15 @@
             if (this.tabs.length == 1)
               return null;
 
+            let event = new CustomEvent("TabBecomingWindow", {
+              bubbles: true,
+              cancelable: true
+            });
+            aTab.dispatchEvent(event);
+            if (event.defaultPrevented) {
+              return null;
+            }
+
             var options = "chrome,dialog=no,all";
             for (var name in aOptions)
               options += "," + name + "=" + aOptions[name];

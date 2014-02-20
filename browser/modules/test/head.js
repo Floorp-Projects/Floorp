@@ -78,7 +78,7 @@ function is_element_hidden(element, msg) {
 }
 
 function loadUITourTestPage(callback, host = "https://example.com/") {
-   if (gTestTab)
+  if (gTestTab)
     gBrowser.removeTab(gTestTab);
 
   let url = getRootDirectory(gTestPath) + "uitour.html";
