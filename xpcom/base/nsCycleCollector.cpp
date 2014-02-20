@@ -199,20 +199,20 @@ using namespace mozilla;
 
 // Cycle collector environment variables
 //
-// XPCOM_CC_LOG_ALL: If defined, always log cycle collector heaps.
+// MOZ_CC_LOG_ALL: If defined, always log cycle collector heaps.
 //
-// XPCOM_CC_LOG_SHUTDOWN: If defined, log cycle collector heaps at shutdown.
+// MOZ_CC_LOG_SHUTDOWN: If defined, log cycle collector heaps at shutdown.
 //
-// XPCOM_CC_ALL_TRACES_AT_SHUTDOWN: If defined, any cycle collector
+// MOZ_CC_ALL_TRACES_AT_SHUTDOWN: If defined, any cycle collector
 // logging done at shutdown will be WantAllTraces, which disables
 // various cycle collector optimizations to give a fuller picture of
 // the heap.
 //
-// XPCOM_CC_RUN_DURING_SHUTDOWN: In non-DEBUG or builds, if this is set,
+// MOZ_CC_RUN_DURING_SHUTDOWN: In non-DEBUG or builds, if this is set,
 // run cycle collections at shutdown.
 //
 // MOZ_CC_LOG_DIRECTORY: The directory in which logs are placed (such as
-// logs from XPCOM_CC_LOG_ALL and XPCOM_CC_LOG_SHUTDOWN, or other uses
+// logs from MOZ_CC_LOG_ALL and MOZ_CC_LOG_SHUTDOWN, or other uses
 // of nsICycleCollectorListener)
 
 MOZ_NEVER_INLINE void
@@ -232,9 +232,9 @@ struct nsCycleCollectorParams
     bool mAllTracesAtShutdown;
 
     nsCycleCollectorParams() :
-        mLogAll      (PR_GetEnv("XPCOM_CC_LOG_ALL") != nullptr),
-        mLogShutdown (PR_GetEnv("XPCOM_CC_LOG_SHUTDOWN") != nullptr),
-        mAllTracesAtShutdown (PR_GetEnv("XPCOM_CC_ALL_TRACES_AT_SHUTDOWN") != nullptr)
+        mLogAll      (PR_GetEnv("MOZ_CC_LOG_ALL") != nullptr),
+        mLogShutdown (PR_GetEnv("MOZ_CC_LOG_SHUTDOWN") != nullptr),
+        mAllTracesAtShutdown (PR_GetEnv("MOZ_CC_ALL_TRACES_AT_SHUTDOWN") != nullptr)
     {
     }
 };
@@ -3373,7 +3373,7 @@ nsCycleCollector::Shutdown()
     FreeSnowWhite(true);
 
 #ifndef DEBUG
-    if (PR_GetEnv("XPCOM_CC_RUN_DURING_SHUTDOWN"))
+    if (PR_GetEnv("MOZ_CC_RUN_DURING_SHUTDOWN"))
 #endif
     {
         ShutdownCollect();
