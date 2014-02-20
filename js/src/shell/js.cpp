@@ -896,6 +896,90 @@ class AutoNewContext
     }
 };
 
+static const uint32_t CacheEntry_SOURCE = 0;
+static const uint32_t CacheEntry_BYTECODE = 1;
+
+static const JSClass CacheEntry_class = {
+    "CacheEntryObject", JSCLASS_HAS_RESERVED_SLOTS(2),
+    JS_PropertyStub,       /* addProperty */
+    JS_DeletePropertyStub, /* delProperty */
+    JS_PropertyStub,       /* getProperty */
+    JS_StrictPropertyStub, /* setProperty */
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub,
+    nullptr,               /* finalize */
+    nullptr,               /* call */
+    nullptr,               /* hasInstance */
+    nullptr,               /* construct */
+    nullptr,               /* trace */
+    JSCLASS_NO_INTERNAL_MEMBERS
+};
+
+static bool
+CacheEntry(JSContext* cx, unsigned argc, JS::Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (args.length() != 1 || !args[0].isString()) {
+        JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr, JSSMSG_INVALID_ARGS, "CacheEntry");
+        return false;
+    }
+
+    RootedObject obj(cx, JS_NewObject(cx, &CacheEntry_class, JS::NullPtr(), JS::NullPtr()));
+    if (!obj)
+        return false;
+
+    SetReservedSlot(obj, CacheEntry_SOURCE, args[0]);
+    SetReservedSlot(obj, CacheEntry_BYTECODE, UndefinedValue());
+    args.rval().setObject(*obj);
+    return true;
+}
+
+static bool
+CacheEntry_isCacheEntry(JSObject *cache)
+{
+    return JS_GetClass(cache) == &CacheEntry_class;
+}
+
+static JSString *
+CacheEntry_getSource(HandleObject cache)
+{
+    JS_ASSERT(CacheEntry_isCacheEntry(cache));
+    Value v = JS_GetReservedSlot(cache, CacheEntry_SOURCE);
+    if (!v.isString())
+        return nullptr;
+
+    return v.toString();
+}
+
+static uint8_t *
+CacheEntry_getBytecode(HandleObject cache, uint32_t *length)
+{
+    JS_ASSERT(CacheEntry_isCacheEntry(cache));
+    Value v = JS_GetReservedSlot(cache, CacheEntry_BYTECODE);
+    if (!v.isObject() || !v.toObject().is<ArrayBufferObject>())
+        return nullptr;
+
+    ArrayBufferObject *arrayBuffer = &v.toObject().as<ArrayBufferObject>();
+    *length = arrayBuffer->byteLength();
+    return arrayBuffer->dataPointer();
+}
+
+static bool
+CacheEntry_setBytecode(JSContext *cx, HandleObject cache, uint8_t *buffer, uint32_t length)
+{
+    JS_ASSERT(CacheEntry_isCacheEntry(cache));
+    Rooted<ArrayBufferObject*> arrayBuffer(cx, ArrayBufferObject::create(cx, length, buffer));
+
+    if (!arrayBuffer || !ArrayBufferObject::ensureNonInline(cx, arrayBuffer))
+        return false;
+
+    memcpy(arrayBuffer->dataPointer(), buffer, length);
+    SetReservedSlot(cache, CacheEntry_BYTECODE, OBJECT_TO_JSVAL(arrayBuffer));
+    return true;
+}
+
 class AutoSaveFrameChain
 {
     JSContext *cx_;
@@ -931,7 +1015,17 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
                              "evaluate");
         return false;
     }
-    if (!args[0].isString() || (args.length() == 2 && args[1].isPrimitive())) {
+
+    RootedString code(cx, nullptr);
+    RootedObject cacheEntry(cx, nullptr);
+    if (args[0].isString()) {
+        code = args[0].toString();
+    } else if (args[0].isObject() && CacheEntry_isCacheEntry(&args[0].toObject())) {
+        cacheEntry = &args[0].toObject();
+        code = CacheEntry_getSource(cacheEntry);
+    }
+
+    if (!code || (args.length() == 2 && args[1].isPrimitive())) {
         JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr, JSSMSG_INVALID_ARGS, "evaluate");
         return false;
     }
@@ -944,6 +1038,9 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
     RootedObject global(cx, nullptr);
     bool catchTermination = false;
     bool saveFrameChain = false;
+    bool loadBytecode = false;
+    bool saveBytecode = false;
+    bool assertEqBytecode = false;
     RootedObject callerGlobal(cx, cx->global());
 
     options.setFileAndLine("@evaluate", 1);
@@ -1004,9 +1101,32 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
             return false;
         if (!v.isUndefined())
             saveFrameChain = ToBoolean(v);
-    }
 
-    RootedString code(cx, args[0].toString());
+        if (!JS_GetProperty(cx, opts, "loadBytecode", &v))
+            return false;
+        if (!v.isUndefined())
+            loadBytecode = ToBoolean(v);
+
+        if (!JS_GetProperty(cx, opts, "saveBytecode", &v))
+            return false;
+        if (!v.isUndefined())
+            saveBytecode = ToBoolean(v);
+
+        if (!JS_GetProperty(cx, opts, "assertEqBytecode", &v))
+            return false;
+        if (!v.isUndefined())
+            assertEqBytecode = ToBoolean(v);
+
+        // We cannot load or save the bytecode if we have no object where the
+        // bytecode cache is stored.
+        if (loadBytecode || saveBytecode || assertEqBytecode) {
+            if (!cacheEntry) {
+                JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr, JSSMSG_INVALID_ARGS,
+                                     "evaluate");
+                return false;
+            }
+        }
+    }
 
     size_t codeLength;
     const jschar *codeChars = JS_GetStringCharsAndLength(cx, code, &codeLength);
@@ -1018,6 +1138,17 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
         if (!ancx.enter(cx))
             return false;
         cx = ancx.get();
+    }
+
+    uint32_t loadLength = 0;
+    uint8_t *loadBuffer = nullptr;
+    uint32_t saveLength = 0;
+    ScopedJSFreePtr<uint8_t> saveBuffer;
+
+    if (loadBytecode) {
+        loadBuffer = CacheEntry_getBytecode(cacheEntry, &loadLength);
+        if (!loadBuffer)
+            return false;
     }
 
     {
@@ -1034,8 +1165,22 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
         {
             JS::AutoSaveContextOptions asco(cx);
             JS::ContextOptionsRef(cx).setNoScriptRval(options.noScriptRval);
+            if (saveBytecode) {
+                if (!JS::CompartmentOptionsRef(cx).getSingletonsAsTemplates()) {
+                    JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr,
+                                         JSSMSG_CACHE_SINGLETON_FAILED);
+                    return false;
+                }
+                JS::CompartmentOptionsRef(cx).cloneSingletonsOverride().set(true);
+            }
 
-            script = JS::Compile(cx, global, options, codeChars, codeLength);
+            if (loadBytecode) {
+                script = JS_DecodeScript(cx, loadBuffer, loadLength, options.principals(),
+                                         options.originPrincipals());
+            } else {
+                script = JS::Compile(cx, global, options, codeChars, codeLength);
+            }
+
             if (!script)
                 return false;
         }
@@ -1065,6 +1210,29 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
             }
             return false;
         }
+
+        if (saveBytecode) {
+            saveBuffer = reinterpret_cast<uint8_t *>(JS_EncodeScript(cx, script, &saveLength));
+            if (!saveBuffer)
+                return false;
+        }
+    }
+
+    if (saveBytecode) {
+        // If we are both loading and saving, we assert that we are going to
+        // replace the current bytecode by the same stream of bytes.
+        if (loadBytecode && assertEqBytecode) {
+            if (saveLength != loadLength) {
+                JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr, JSSMSG_CACHE_EQ_SIZE_FAILED,
+                                     loadLength, saveLength);
+            } else if (!mozilla::PodEqual(loadBuffer, saveBuffer.get(), loadLength)) {
+                JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr,
+                                     JSSMSG_CACHE_EQ_CONTENT_FAILED);
+            }
+        }
+
+        if (!CacheEntry_setBytecode(cx, cacheEntry, saveBuffer, saveLength))
+            return false;
     }
 
     return JS_WrapValue(cx, args.rval());
@@ -4138,7 +4306,17 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "         via a //#sourceMappingURL comment).\n"
 "      sourcePolicy: if present, the value converted to a string must be either\n"
 "         'NO_SOURCE', 'LAZY_SOURCE', or 'SAVE_SOURCE'; use the given source\n"
-"         retention policy for this compilation.\n"),
+"         retention policy for this compilation.\n"
+"      loadBytecode: if true, and if the source is a CacheEntryObject,\n"
+"         the bytecode would be loaded and decoded from the cache entry instead\n"
+"         of being parsed, then it would be executed as usual.\n"
+"      saveBytecode: if true, and if the source is a CacheEntryObject,\n"
+"         the bytecode would be encoded and saved into the cache entry after\n"
+"         the script execution.\n"
+"      assertEqBytecode: if true, and if both loadBytecode and saveBytecode are \n"
+"         true, then the loaded bytecode and the encoded bytecode are compared.\n"
+"         and an assertion is raised if they differ.\n"
+),
 
     JS_FN_HELP("run", Run, 1, 0,
 "run('foo.js')",
@@ -4413,6 +4591,13 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("setCachingEnabled", SetCachingEnabled, 1, 0,
 "setCachingEnabled(b)",
 "  Enable or disable JS caching."),
+
+    JS_FN_HELP("cacheEntry", CacheEntry, 1, 0,
+"cacheEntry(code)",
+"  Return a new opaque object which emulates a cache entry of a script.  This\n"
+"  object encapsulates the code and its cached content. The cache entry is filled\n"
+"  and read by the \"evaluate\" function by using it in place of the source, and\n"
+"  by setting \"saveBytecode\" and \"loadBytecode\" options."),
 
     JS_FS_HELP_END
 };
