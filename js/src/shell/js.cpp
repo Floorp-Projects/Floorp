@@ -2608,6 +2608,7 @@ EvalInFrame(JSContext *cx, unsigned argc, jsval *vp)
     return ok;
 }
 
+#ifdef JS_THREADSAFE
 struct WorkerInput
 {
     JSRuntime *runtime;
@@ -2704,6 +2705,7 @@ EvalInWorker(JSContext *cx, unsigned argc, jsval *vp)
 
     return true;
 }
+#endif
 
 static bool
 ShapeOf(JSContext *cx, unsigned argc, JS::Value *vp)
@@ -4269,9 +4271,11 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "  Evaluate 'str' in the nth up frame.\n"
 "  If 'save' (default false), save the frame chain."),
 
+#ifdef JS_THREADSAFE
     JS_FN_HELP("evalInWorker", EvalInWorker, 1, 0,
 "evalInWorker(str)",
 "  Evaluate 'str' in a separate thread with its own runtime.\n"),
+#endif
 
     JS_FN_HELP("shapeOf", ShapeOf, 1, 0,
 "shapeOf(obj)",
@@ -4286,14 +4290,14 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("arrayInfo", js_ArrayInfo, 1, 0,
 "arrayInfo(a1, a2, ...)",
 "  Report statistics about arrays."),
-
 #endif
+
 #ifdef JS_THREADSAFE
     JS_FN_HELP("sleep", Sleep_fn, 1, 0,
 "sleep(dt)",
 "  Sleep for dt seconds."),
-
 #endif
+
     JS_FN_HELP("snarf", Snarf, 1, 0,
 "snarf(filename, [\"binary\"])",
 "  Read filename into returned string. Filename is relative to the current\n"
@@ -6053,8 +6057,10 @@ main(int argc, char **argv, char **envp)
 
     KillWatchdog();
 
+#ifdef JS_THREADSAFE
     for (size_t i = 0; i < workerThreads.length(); i++)
         PR_JoinThread(workerThreads[i]);
+#endif
 
     JS_DestroyRuntime(rt);
     JS_ShutDown();
