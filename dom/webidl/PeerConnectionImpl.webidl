@@ -36,13 +36,7 @@ interface PeerConnectionImpl  {
   /* Stats call, calls either |onGetStatsSuccess| or |onGetStatsError| on our
      observer. (see the |PeerConnectionObserver| interface) */
   [Throws]
-  void getStats(MediaStreamTrack? selector, boolean internalStats);
-
-  /* Scrapes the RLogRingbuffer, and calls either |onGetLoggingSuccess|
-     or |onGetLoggingError| on our observer.
-     (see the |PeerConnectionObserver| interface) */
-  [Throws]
-  void getLogging(DOMString pattern);
+  void getStats(MediaStreamTrack? selector);
 
   /* Adds the stream created by GetUserMedia */
   [Throws]

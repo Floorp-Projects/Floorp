@@ -469,6 +469,7 @@ if CONFIG['MOZ_WEBRTC']:
         'PeerConnectionImplEnums.webidl',
         'PeerConnectionObserver.webidl',
         'PeerConnectionObserverEnums.webidl',
+        'WebrtcGlobalInformation.webidl',
     ]
 
 if CONFIG['MOZ_WEBSPEECH']:
