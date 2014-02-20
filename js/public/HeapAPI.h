@@ -86,13 +86,13 @@ struct Zone
     }
 
     JSTracer *barrierTracer() {
-        JS_ASSERT(needsBarrier_);
-        JS_ASSERT(js::CurrentThreadCanAccessRuntime(runtime_));
+        MOZ_ASSERT(needsBarrier_);
+        MOZ_ASSERT(js::CurrentThreadCanAccessRuntime(runtime_));
         return barrierTracer_;
     }
 
     JSRuntime *runtimeFromMainThread() const {
-        JS_ASSERT(js::CurrentThreadCanAccessRuntime(runtime_));
+        MOZ_ASSERT(js::CurrentThreadCanAccessRuntime(runtime_));
         return runtime_;
     }
 
@@ -116,7 +116,7 @@ namespace gc {
 static MOZ_ALWAYS_INLINE uintptr_t *
 GetGCThingMarkBitmap(const void *thing)
 {
-    JS_ASSERT(thing);
+    MOZ_ASSERT(thing);
     uintptr_t addr = uintptr_t(thing);
     addr &= ~js::gc::ChunkMask;
     addr |= js::gc::ChunkMarkBitmapOffset;
@@ -126,7 +126,7 @@ GetGCThingMarkBitmap(const void *thing)
 static MOZ_ALWAYS_INLINE JS::shadow::Runtime *
 GetGCThingRuntime(const void *thing)
 {
-    JS_ASSERT(thing);
+    MOZ_ASSERT(thing);
     uintptr_t addr = uintptr_t(thing);
     addr &= ~js::gc::ChunkMask;
     addr |= js::gc::ChunkRuntimeOffset;
@@ -139,7 +139,7 @@ GetGCThingMarkWordAndMask(const void *thing, uint32_t color,
 {
     uintptr_t addr = uintptr_t(thing);
     size_t bit = (addr & js::gc::ChunkMask) / js::gc::CellSize + color;
-    JS_ASSERT(bit < js::gc::ChunkMarkBitmapBits);
+    MOZ_ASSERT(bit < js::gc::ChunkMarkBitmapBits);
     uintptr_t *bitmap = GetGCThingMarkBitmap(thing);
     const uintptr_t nbits = sizeof(*bitmap) * CHAR_BIT;
     *maskp = uintptr_t(1) << (bit % nbits);
@@ -173,7 +173,7 @@ namespace JS {
 static MOZ_ALWAYS_INLINE Zone *
 GetGCThingZone(void *thing)
 {
-    JS_ASSERT(thing);
+    MOZ_ASSERT(thing);
     return js::gc::GetGCThingArena(thing)->zone;
 }
 

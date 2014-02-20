@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=940424
+-->
+<head>
+  <title>Bug 940424 - Test camera hardware init failure handling</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="camera_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=940424">Mozilla Bug 940424</a>
+  <video id="viewfinder" width="200" height="200" autoplay></video>
+  <img src="#" alt="This image is going to load" id="testimage"/>
+
+<script class="testbody" type="text/javascript;version=1.7">
+
+var whichCamera = navigator.mozCameras.getListOfCameras()[0];
+var initialConfig = {
+  mode: 'picture',
+  recorderProfile: 'cif',
+  previewSize: {
+    width: 352,
+    height: 288
+  }
+};
+
+function end() {
+  CameraTest.end();
+}
+
+CameraTest.begin("hardware", function(test) {
+  test.set("init-failure", function(type) {
+    function onSuccess(camera, config) {
+      ok(false, "onSuccess called incorrectly");
+      camera.release();
+      test.done(end);
+    }
+    function onError(error) {
+      ok(true, "onError called correctly on init failure");
+      test.done(end);
+    }
+    info("Running test: " + type);
+    navigator.mozCameras.getCamera(whichCamera, initialConfig, onSuccess, onError);
+  });
+});
+
+</script>
+</body>
+
+</html>

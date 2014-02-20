@@ -235,12 +235,33 @@ CameraControlImpl::OnError(CameraControlListener::CameraErrorContext aContext,
   RwLockAutoEnterRead lock(mListenerLock);
 
 #ifdef PR_LOGGING
-  const char* error[] = { "camera-service-failed", "unknown" };
-  if (static_cast<unsigned int>(aError) < sizeof(error) / sizeof(error[0])) {
-    DOM_CAMERA_LOGW("CameraControlImpl::OnError : aContext=%u, msg='%s'\n",
-      aContext, error[aError]);
+  const char* error[] = {
+    "api-failed",
+    "init-failed",
+    "invalid-configuration",
+    "service-failed",
+    "set-picture-size-failred",
+    "set-thumbnail-size-failed",
+    "unknown"
+  };
+  const char* context[] = {
+    "StartCamera",
+    "StopCamera",
+    "AutoFocus",
+    "TakePicture",
+    "StartRecording",
+    "StopRecording",
+    "SetConfiguration",
+    "StartPreview",
+    "StopPreview",
+    "Unspecified"
+  };
+  if (static_cast<unsigned int>(aError) < sizeof(error) / sizeof(error[0]) &&
+    static_cast<unsigned int>(aContext) < sizeof(context) / sizeof(context[0])) {
+    DOM_CAMERA_LOGW("CameraControlImpl::OnError : aContext='%s' (%u), aError='%s' (%u)\n",
+      context[aContext], aContext, error[aError], aError);
   } else {
-    DOM_CAMERA_LOGE("CameraControlImpl::OnError : aContext=%u, unknown error=%d\n",
+    DOM_CAMERA_LOGE("CameraControlImpl::OnError : aContext=%u, aError=%d\n",
       aContext, aError);
   }
 #endif
@@ -292,6 +313,42 @@ protected:
   nsRefPtr<CameraControlImpl> mCameraControl;
   CameraControlListener::CameraErrorContext mContext;
 };
+
+nsresult
+CameraControlImpl::Start(const Configuration* aConfig)
+{
+  class Message : public ControlMessage
+  {
+  public:
+    Message(CameraControlImpl* aCameraControl,
+            CameraControlListener::CameraErrorContext aContext,
+            const Configuration* aConfig)
+      : ControlMessage(aCameraControl, aContext)
+      , mHaveInitialConfig(false)
+    {
+      if (aConfig) {
+        mConfig = *aConfig;
+        mHaveInitialConfig = true;
+      }
+    }
+
+    nsresult
+    RunImpl() MOZ_OVERRIDE
+    {
+      if (mHaveInitialConfig) {
+        return mCameraControl->StartImpl(&mConfig);
+      }
+      return mCameraControl->StartImpl();
+    }
+
+  protected:
+    bool mHaveInitialConfig;
+    Configuration mConfig;
+  };
+
+  return mCameraThread->Dispatch(
+    new Message(this, CameraControlListener::kInStartCamera, aConfig), NS_DISPATCH_NORMAL);
+}
 
 nsresult
 CameraControlImpl::SetConfiguration(const Configuration& aConfig)
@@ -475,7 +532,7 @@ CameraControlImpl::StopPreview()
 }
 
 nsresult
-CameraControlImpl::ReleaseHardware()
+CameraControlImpl::Stop()
 {
   class Message : public ControlMessage
   {
@@ -488,12 +545,12 @@ CameraControlImpl::ReleaseHardware()
     nsresult
     RunImpl() MOZ_OVERRIDE
     {
-      return mCameraControl->ReleaseHardwareImpl();
+      return mCameraControl->StopImpl();
     }
   };
 
   return mCameraThread->Dispatch(
-    new Message(this, CameraControlListener::kInReleaseHardware), NS_DISPATCH_NORMAL);
+    new Message(this, CameraControlListener::kInStopCamera), NS_DISPATCH_NORMAL);
 }
 
 class CameraControlImpl::ListenerMessage : public CameraControlImpl::ControlMessage
@@ -515,6 +572,7 @@ CameraControlImpl::AddListenerImpl(already_AddRefed<CameraControlListener> aList
   RwLockAutoEnterWrite lock(mListenerLock);
 
   CameraControlListener* l = *mListeners.AppendElement() = aListener;
+  DOM_CAMERA_LOGI("Added camera control listener %p\n", l);
 
   // Update the newly-added listener's state
   l->OnConfigurationChange(mCurrentConfiguration);
@@ -551,6 +609,7 @@ CameraControlImpl::RemoveListenerImpl(CameraControlListener* aListener)
 
   nsRefPtr<CameraControlListener> l(aListener);
   mListeners.RemoveElement(l);
+  DOM_CAMERA_LOGI("Removed camera control listener %p\n", l.get());
   // XXXmikeh - do we want to notify the listener that it has been removed?
 }
 

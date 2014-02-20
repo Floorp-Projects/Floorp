@@ -388,7 +388,7 @@ class JS_PUBLIC_API(ObjectPtr)
     ObjectPtr(JSObject *obj) : value(obj) {}
 
     /* Always call finalize before the destructor. */
-    ~ObjectPtr() { JS_ASSERT(!value); }
+    ~ObjectPtr() { MOZ_ASSERT(!value); }
 
     void finalize(JSRuntime *rt) {
         if (IsIncrementalBarrierNeeded(rt))
@@ -435,7 +435,7 @@ UnmarkGrayGCThingRecursively(void *thing, JSGCTraceKind kind);
 static MOZ_ALWAYS_INLINE void
 ExposeGCThingToActiveJS(void *thing, JSGCTraceKind kind)
 {
-    JS_ASSERT(kind != JSTRACE_SHAPE);
+    MOZ_ASSERT(kind != JSTRACE_SHAPE);
 
     shadow::Runtime *rt = js::gc::GetGCThingRuntime(thing);
 #ifdef JSGC_GENERATIONAL

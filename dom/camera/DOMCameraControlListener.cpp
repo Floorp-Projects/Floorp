@@ -13,14 +13,33 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
+DOMCameraControlListener::DOMCameraControlListener(nsDOMCameraControl* aDOMCameraControl,
+                                                   CameraPreviewMediaStream* aStream)
+  : mDOMCameraControl(new nsMainThreadPtrHolder<nsDOMCameraControl>(aDOMCameraControl))
+  , mStream(aStream)
+{
+  DOM_CAMERA_LOGT("%s:%d : this=%p, camera=%p, stream=%p\n",
+    __func__, __LINE__, this, aDOMCameraControl, aStream);
+}
+
+DOMCameraControlListener::~DOMCameraControlListener()
+{
+  DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
+}
+
 // Boilerplate callback runnable
 class DOMCameraControlListener::DOMCallback : public nsRunnable
 {
 public:
   DOMCallback(nsMainThreadPtrHandle<nsDOMCameraControl> aDOMCameraControl)
     : mDOMCameraControl(aDOMCameraControl)
-  { }
-  virtual ~DOMCallback() { }
+  {
+    MOZ_COUNT_CTOR(DOMCameraControlListener::DOMCallback);
+  }
+  virtual ~DOMCallback()
+  {
+    MOZ_COUNT_DTOR(DOMCameraControlListener::DOMCallback);
+  }
 
   virtual void RunCallback(nsDOMCameraControl* aDOMCameraControl) = 0;
 
@@ -178,7 +197,8 @@ DOMCameraControlListener::OnConfigurationChange(const CameraListenerConfiguratio
           break;
 
         default:
-          MOZ_ASSUME_UNREACHABLE("Unanticipated camera mode!");
+          DOM_CAMERA_LOGI("Camera mode still unspecified, nothing to do\n");
+          return;
       }
 
       // Map CameraControl parameters to their DOM-facing equivalents
@@ -298,7 +318,7 @@ DOMCameraControlListener::OnError(CameraErrorContext aContext, CameraError aErro
       , mError(aError)
     { }
 
-    void
+    virtual void
     RunCallback(nsDOMCameraControl* aDOMCameraControl) MOZ_OVERRIDE
     {
       nsString error;
