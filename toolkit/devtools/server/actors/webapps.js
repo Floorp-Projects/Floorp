@@ -275,6 +275,12 @@ WebappsActor.prototype = {
       // Move manifest.webapp to the destination directory.
       // The destination directory for this app.
       let installDir = DOMApplicationRegistry._getAppDir(aId);
+      try {
+        installDir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+      } catch (ex if ex.result == Cr.NS_ERROR_FILE_ALREADY_EXISTS) {
+        // Ignore the exception if the directory already exists.
+      }
+
       if (aManifest) {
         let manFile = OS.Path.join(installDir.path, "manifest.webapp");
         return DOMApplicationRegistry._writeFile(manFile, JSON.stringify(aManifest)).then(() => {
@@ -394,6 +400,12 @@ WebappsActor.prototype = {
           // we can move application.zip to the destination directory, and
           // extract manifest.webapp there.
           let installDir = DOMApplicationRegistry._getAppDir(id);
+          try {
+            installDir.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+          } catch (ex if ex.result == Cr.NS_ERROR_FILE_ALREADY_EXISTS) {
+            // Ignore the exception if the directory already exists.
+          }
+
           let manFile = installDir.clone();
           manFile.append("manifest.webapp");
           zipReader.extract("manifest.webapp", manFile);
