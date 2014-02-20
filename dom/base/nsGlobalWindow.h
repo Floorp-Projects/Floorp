@@ -1385,6 +1385,10 @@ protected:
   // should be displayed.
   bool                   mFocusByKeyOccurred : 1;
 
+  // Ensure that a call to ResumeTimeouts() after FreeInnerObjects() does nothing.
+  // This member is only used by inner windows.
+  bool                   mInnerObjectsFreed : 1;
+
   // Indicates whether this window wants gamepad input events
   bool                   mHasGamepad : 1;
 #ifdef MOZ_GAMEPAD
