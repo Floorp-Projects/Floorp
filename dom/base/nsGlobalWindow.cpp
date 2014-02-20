@@ -1806,14 +1806,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCrypto)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-#ifdef DEBUG
-void
-nsGlobalWindow::RiskyUnlink()
-{
-  NS_CYCLE_COLLECTION_INNERNAME.Unlink(this);
-}
-#endif
-
 struct TraceData
 {
   const TraceCallbacks& callbacks;
