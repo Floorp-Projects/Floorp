@@ -25,9 +25,9 @@ class ToastNotificationHandler {
     ToastNotificationHandler() {};
     ~ToastNotificationHandler() {};
 
-    void DisplayNotification(HSTRING title, HSTRING msg, HSTRING imagePath,
+    bool DisplayNotification(HSTRING title, HSTRING msg, HSTRING imagePath,
                              const nsAString& aCookie, const nsAString& aAppId);
-    void DisplayTextNotification(HSTRING title, HSTRING msg,
+    bool DisplayTextNotification(HSTRING title, HSTRING msg,
                                  const nsAString& aCookie,
                                  const nsAString& aAppId);
     HRESULT OnActivate(IToastNotification *notification, IInspectable *inspectable);
@@ -38,7 +38,7 @@ class ToastNotificationHandler {
     nsString mCookie;
     ComPtr<IToastNotificationManagerStatics> mToastNotificationManagerStatics;
 
-    void CreateWindowsNotificationFromXml(IXmlDocument *toastXml,
+    bool CreateWindowsNotificationFromXml(IXmlDocument *toastXml,
                                           const nsAString& aAppId);
     ComPtr<IXmlDocument> InitializeXmlForTemplate(ToastTemplateType templateType);
 };
