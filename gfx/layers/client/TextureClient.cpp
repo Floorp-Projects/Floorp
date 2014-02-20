@@ -450,7 +450,7 @@ BufferTextureClient::UpdateSurface(gfxASurface* aSurface)
   MOZ_ASSERT(!IsImmutable());
   MOZ_ASSERT(IsValid());
 
-  ImageDataSerializer serializer(GetBuffer());
+  ImageDataSerializer serializer(GetBuffer(), GetBufferSize());
   if (!serializer.IsValid()) {
     return false;
   }
@@ -488,7 +488,7 @@ BufferTextureClient::GetAsSurface()
 {
   MOZ_ASSERT(IsValid());
 
-  ImageDataSerializer serializer(GetBuffer());
+  ImageDataSerializer serializer(GetBuffer(), GetBufferSize());
   if (!serializer.IsValid()) {
     return nullptr;
   }
@@ -515,7 +515,7 @@ BufferTextureClient::AllocateForSurface(gfx::IntSize aSize, TextureAllocationFla
     memset(GetBuffer(), 0, bufSize);
   }
 
-  ImageDataSerializer serializer(GetBuffer());
+  ImageDataSerializer serializer(GetBuffer(), GetBufferSize());
   serializer.InitializeBufferInfo(aSize, mFormat);
   mSize = aSize;
   return true;
@@ -532,7 +532,7 @@ BufferTextureClient::GetAsDrawTarget()
     return mDrawTarget;
   }
 
-  ImageDataSerializer serializer(GetBuffer());
+  ImageDataSerializer serializer(GetBuffer(), GetBufferSize());
   if (!serializer.IsValid()) {
     return nullptr;
   }
@@ -589,7 +589,7 @@ BufferTextureClient::Unlock()
     // memory.
     RefPtr<SourceSurface> snapshot = mDrawTarget->Snapshot();
     RefPtr<DataSourceSurface> surface = snapshot->GetDataSurface();
-    ImageDataSerializer serializer(GetBuffer());
+    ImageDataSerializer serializer(GetBuffer(), GetBufferSize());
     if (!serializer.IsValid() || serializer.GetSize() != surface->GetSize()) {
       NS_WARNING("Could not write the data back into the texture.");
       mDrawTarget = nullptr;
