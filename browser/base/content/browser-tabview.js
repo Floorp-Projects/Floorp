@@ -421,18 +421,16 @@ let TabView = {
   _addToolbarButton: function TabView__addToolbarButton() {
     let buttonId = "tabview-button";
 
-    if (document.getElementById(buttonId))
+    if (CustomizableUI.getPlacementOfWidget(buttonId))
       return;
 
-    let toolbar = document.getElementById("TabsToolbar");
-    let currentSet = toolbar.currentSet.split(",");
-    let alltabsPos = currentSet.indexOf("alltabs-button");
-    if (-1 == alltabsPos)
-      return;
-
-    let allTabsBtn = document.getElementById("alltabs-button");
-    let nextItem = allTabsBtn.nextSibling;
-    toolbar.insertItem(buttonId, nextItem);
+    let allTabsBtnPlacement = CustomizableUI.getPlacementOfWidget("alltabs-button");
+    // allTabsBtnPlacement can never be null because the button isn't removable
+    let desiredPosition = allTabsBtnPlacement.position + 1;
+    CustomizableUI.addWidgetToArea(buttonId, "TabsToolbar", desiredPosition);
+    // NB: this is for backwards compatibility, and should be removed by
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=976041
+    document.persist("TabsToolbar", "currentset");
   },
 
   // ----------
