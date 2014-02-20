@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012-2013 Mozilla Foundation
+ * Copyright (C) 2012-2014 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,12 +15,14 @@
  */
 
 #include "GonkCameraHwMgr.h"
+#include "TestGonkCameraHardware.h"
 
 #include <binder/IPCThreadState.h>
 #include <sys/system_properties.h>
 
 #include "base/basictypes.h"
 #include "nsDebug.h"
+#include "mozilla/Preferences.h"
 #include "GonkCameraControl.h"
 #include "GonkNativeWindow.h"
 #include "CameraCommon.h"
@@ -35,11 +37,9 @@ GonkCameraHardware::GonkCameraHardware(mozilla::nsGonkCameraControl* aTarget, ui
   , mNumFrames(0)
   , mCamera(aCamera)
   , mTarget(aTarget)
-  , mInitialized(false)
   , mSensorOrientation(0)
 {
   DOM_CAMERA_LOGT("%s:%d : this=%p (aTarget=%p)\n", __func__, __LINE__, (void*)this, (void*)aTarget);
-  Init();
 }
 
 void
@@ -127,7 +127,7 @@ GonkCameraHardware::postDataTimestamp(nsecs_t aTimestamp, int32_t aMsgType, cons
   }
 }
 
-void
+nsresult
 GonkCameraHardware::Init()
 {
   DOM_CAMERA_LOGT("%s: this=%p\n", __func__, (void* )this);
@@ -136,7 +136,7 @@ GonkCameraHardware::Init()
   int rv = Camera::getCameraInfo(mCameraId, &info);
   if (rv != 0) {
     DOM_CAMERA_LOGE("%s: failed to get CameraInfo mCameraId %d\n", __func__, mCameraId);
-    return;
+    return NS_ERROR_FAILURE;
    }
 
   mRawSensorOrientation = info.orientation;
@@ -168,7 +168,8 @@ GonkCameraHardware::Init()
 #else
   mCamera->setPreviewTexture(mNativeWindow);
 #endif
-  mInitialized = true;
+
+  return NS_OK;
 }
 
 sp<GonkCameraHardware>
@@ -180,18 +181,33 @@ GonkCameraHardware::Connect(mozilla::nsGonkCameraControl* aTarget, uint32_t aCam
   sp<Camera> camera = Camera::connect(aCameraId);
 #endif
 
-
   if (camera.get() == nullptr) {
     return nullptr;
   }
-  sp<GonkCameraHardware> cameraHardware = new GonkCameraHardware(aTarget, aCameraId, camera);
+
+  const nsAdoptingCString& test =
+    mozilla::Preferences::GetCString("camera.control.test.enabled");
+  sp<GonkCameraHardware> cameraHardware;
+  if (test.EqualsASCII("hardware")) {
+    NS_WARNING("Using test Gonk hardware layer");
+    cameraHardware = new TestGonkCameraHardware(aTarget, aCameraId, camera);
+  } else {
+    cameraHardware = new GonkCameraHardware(aTarget, aCameraId, camera);
+  }
+
+  nsresult rv = cameraHardware->Init();
+  if (NS_FAILED(rv)) {
+    DOM_CAMERA_LOGE("Failed to initialize camera hardware (0x%X)\n", rv);
+    return nullptr;
+  }
+
   return cameraHardware;
- }
+}
 
 void
 GonkCameraHardware::Close()
 {
-  DOM_CAMERA_LOGT( "%s:%d : this=%p\n", __func__, __LINE__, (void*)this );
+  DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, (void*)this);
 
   mClosing = true;
   mCamera->stopPreview();
@@ -208,7 +224,7 @@ GonkCameraHardware::Close()
 
 GonkCameraHardware::~GonkCameraHardware()
 {
-  DOM_CAMERA_LOGT( "%s:%d : this=%p\n", __func__, __LINE__, (void*)this );
+  DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, (void*)this);
   mCamera.clear();
   mNativeWindow.clear();
 
@@ -308,7 +324,7 @@ void
 GonkCameraHardware::StopPreview()
 {
   DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
-  return mCamera->stopPreview();
+  mCamera->stopPreview();
 }
 
 int
