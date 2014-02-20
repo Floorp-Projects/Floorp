@@ -75,9 +75,9 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'SharedSurfaceANGLE.cpp',
     ]
 if CONFIG['MOZ_ENABLE_SKIA_GPU']:
-    EXPORTS += ['GLContextSkia.h']
+    EXPORTS += ['SkiaGLGlue.h']
     UNIFIED_SOURCES += [
-        'GLContextSkia.cpp',
+        'SkiaGLGlue.cpp',
     ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
