@@ -703,7 +703,7 @@ nsObjectLoadingContent::UnbindFromTree(bool aDeep, bool aNullParent)
   nsIDocument* ownerDoc = thisContent->OwnerDoc();
   ownerDoc->RemovePlugin(this);
 
-  if (mType == eType_Plugin && mInstanceOwner) {
+  if (mType == eType_Plugin && (mInstanceOwner || mInstantiating)) {
     // we'll let the plugin continue to run at least until we get back to
     // the event loop. If we get back to the event loop and the node
     // has still not been added back to the document then we tear down the
@@ -744,7 +744,7 @@ nsObjectLoadingContent::~nsObjectLoadingContent()
     NS_NOTREACHED("Should not be tearing down frame loaders at this point");
     mFrameLoader->Destroy();
   }
-  if (mInstanceOwner) {
+  if (mInstanceOwner || mInstantiating) {
     // This is especially bad as delayed stop will try to hold on to this
     // object...
     NS_NOTREACHED("Should not be tearing down a plugin at this point!");
@@ -909,7 +909,7 @@ nsObjectLoadingContent::NotifyOwnerDocumentActivityChanged()
 
   // If we have a plugin we want to queue an event to stop it unless we are
   // moved into an active document before returning to the event loop.
-  if (mInstanceOwner)
+  if (mInstanceOwner || mInstantiating)
     QueueCheckPluginStopEvent();
 }
 
@@ -1073,8 +1073,10 @@ nsObjectLoadingContent::HasNewFrame(nsIObjectFrame* aFrame)
     // Lost our frame. If we aren't going to be getting a new frame, e.g. we've
     // become display:none, we'll want to stop the plugin. Queue a
     // CheckPluginStopEvent
-    if (mInstanceOwner) {
-      mInstanceOwner->SetFrame(nullptr);
+    if (mInstanceOwner || mInstantiating) {
+      if (mInstanceOwner) {
+        mInstanceOwner->SetFrame(nullptr);
+      }
       QueueCheckPluginStopEvent();
     }
     return NS_OK;
@@ -2825,6 +2827,10 @@ nsObjectLoadingContent::StopPluginInstance()
   // Clear any pending events
   mPendingInstantiateEvent = nullptr;
   mPendingCheckPluginStopEvent = nullptr;
+
+  // If we're currently instantiating, clearing this will cause
+  // InstantiatePluginInstance's re-entrance check to destroy the created plugin
+  mInstantiating = false;
 
   if (!mInstanceOwner) {
     return NS_OK;
