@@ -836,3 +836,45 @@ nsWindowMemoryReporter::GhostWindowsReporter::DistinguishedAmount()
   return ghostWindows.Count();
 }
 
+#ifdef DEBUG
+static PLDHashOperator
+UnlinkGhostWindowsEnumerator(nsUint64HashKey* aIDHashKey, void *)
+{
+  nsGlobalWindow::WindowByIdTable* windowsById =
+    nsGlobalWindow::GetWindowsTable();
+  if (!windowsById) {
+    return PL_DHASH_NEXT;
+  }
+
+  nsRefPtr<nsGlobalWindow> window = windowsById->Get(aIDHashKey->GetKey());
+  if (window) {
+    window->RiskyUnlink();
+  }
+
+  return PL_DHASH_NEXT;
+}
+
+/* static */ void
+nsWindowMemoryReporter::UnlinkGhostWindows()
+{
+  if (!sWindowReporter) {
+    return;
+  }
+
+  nsGlobalWindow::WindowByIdTable* windowsById =
+    nsGlobalWindow::GetWindowsTable();
+  if (!windowsById) {
+    return;
+  }
+
+  // Hold on to every window in memory so that window objects can't be
+  // destroyed while we're calling the UnlinkGhostWindows callback.
+  WindowArray windows;
+  windowsById->Enumerate(GetWindows, &windows);
+
+  // Get the IDs of all the "ghost" windows, and unlink them all.
+  nsTHashtable<nsUint64HashKey> ghostWindows;
+  sWindowReporter->CheckForGhostWindows(&ghostWindows);
+  ghostWindows.EnumerateEntries(UnlinkGhostWindowsEnumerator, nullptr);
+}
+#endif
