@@ -33,6 +33,7 @@ const PanelUI = {
     };
   },
 
+  _initialized: false,
   init: function() {
     for (let [k, v] of Iterator(this.kElements)) {
       // Need to do fresh let-bindings per iteration
@@ -46,6 +47,7 @@ const PanelUI = {
 
     this.menuButton.addEventListener("mousedown", this);
     this.menuButton.addEventListener("keypress", this);
+    this._initialized = true;
   },
 
   _eventListenersAdded: false,
@@ -201,6 +203,18 @@ const PanelUI = {
       return this._readyPromise;
     }
     this._readyPromise = Task.spawn(function() {
+      if (!this._initialized) {
+        let delayedStartupDeferred = Promise.defer();
+        let delayedStartupObserver = (aSubject, aTopic, aData) => {
+          if (aSubject == window) {
+            Services.obs.removeObserver(delayedStartupObserver, "browser-delayed-startup-finished");
+            delayedStartupDeferred.resolve();
+          }
+        };
+        Services.obs.addObserver(delayedStartupObserver, "browser-delayed-startup-finished", false);
+        yield delayedStartupDeferred.promise;
+      }
+
       this.contents.setAttributeNS("http://www.w3.org/XML/1998/namespace", "lang",
                                    getLocale());
       if (!this._scrollWidth) {
