@@ -484,6 +484,11 @@ child:
      */
     SetUpdateHitRegion(bool aEnabled);
 
+    /**
+     * Tell the child to update its docShell's active state.
+     */
+    SetIsDocShellActive(bool aIsActive);
+
 /*
  * FIXME: write protocol!
 
