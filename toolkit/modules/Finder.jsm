@@ -12,6 +12,16 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Geometry.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
+XPCOMUtils.defineLazyServiceGetter(this, "TextToSubURIService",
+                                         "@mozilla.org/intl/texttosuburi;1",
+                                         "nsITextToSubURI");
+XPCOMUtils.defineLazyServiceGetter(this, "Clipboard",
+                                         "@mozilla.org/widget/clipboard;1",
+                                         "nsIClipboard");
+XPCOMUtils.defineLazyServiceGetter(this, "ClipboardHelper",
+                                         "@mozilla.org/widget/clipboardhelper;1",
+                                         "nsIClipboardHelper");
+
 function Finder(docShell) {
   this._fastFind = Cc["@mozilla.org/typeaheadfind;1"].createInstance(Ci.nsITypeAheadFind);
   this._fastFind.init(docShell);
@@ -37,8 +47,10 @@ Finder.prototype = {
   },
 
   _notify: function (aSearchString, aResult, aFindBackwards, aDrawOutline, aStoreResult = true) {
-    if (aStoreResult)
+    if (aStoreResult) {
       this._searchString = aSearchString;
+      this.clipboardSearchString = aSearchString
+    }
     this._outlineLink(aDrawOutline);
 
     let foundLink = this._fastFind.foundLink;
@@ -49,12 +61,7 @@ Finder.prototype = {
       if (ownerDoc)
         docCharset = ownerDoc.characterSet;
 
-      if (!this._textToSubURIService) {
-        this._textToSubURIService = Cc["@mozilla.org/intl/texttosuburi;1"]
-                                      .getService(Ci.nsITextToSubURI);
-      }
-
-      linkURL = this._textToSubURIService.unEscapeURIForUI(docCharset, foundLink.href);
+      linkURL = TextToSubURIService.unEscapeURIForUI(docCharset, foundLink.href);
     }
 
     let data = {
@@ -72,7 +79,46 @@ Finder.prototype = {
   },
 
   get searchString() {
+    if (!this._searchString && this._fastFind.searchString)
+      this._searchString = this._fastFind.searchString;
     return this._searchString;
+  },
+
+  get clipboardSearchString() {
+    let searchString = "";
+    if (!Clipboard.supportsFindClipboard())
+      return searchString;
+
+    try {
+      let trans = Cc["@mozilla.org/widget/transferable;1"]
+                    .createInstance(Ci.nsITransferable);
+      trans.init(this._getWindow()
+                     .QueryInterface(Ci.nsIInterfaceRequestor)
+                     .getInterface(Ci.nsIWebNavigation)
+                     .QueryInterface(Ci.nsILoadContext));
+      trans.addDataFlavor("text/unicode");
+
+      Clipboard.getData(trans, Ci.nsIClipboard.kFindClipboard);
+
+      let data = {};
+      let dataLen = {};
+      trans.getTransferData("text/unicode", data, dataLen);
+      if (data.value) {
+        data = data.value.QueryInterface(Ci.nsISupportsString);
+        searchString = data.toString();
+      }
+    } catch (ex) {}
+
+    return searchString;
+  },
+
+  set clipboardSearchString(aSearchString) {
+    if (!aSearchString || !Clipboard.supportsFindClipboard())
+      return;
+
+    ClipboardHelper.copyStringToClipboard(aSearchString,
+                                          Ci.nsIClipboard.kFindClipboard,
+                                          this._getWindow().document);
   },
 
   set caseSensitive(aSensitive) {
@@ -105,6 +151,25 @@ Finder.prototype = {
     let result = this._fastFind.findAgain(aFindBackwards, aLinksOnly);
     let searchString = this._fastFind.searchString;
     this._notify(searchString, result, aFindBackwards, aDrawOutline);
+  },
+
+  /**
+   * Forcibly set the search string of the find clipboard to the currently
+   * selected text in the window, on supported platforms (i.e. OSX).
+   */
+  setSearchStringToSelection: function() {
+    // Find the selected text.
+    let selection = this._getWindow().getSelection();
+    // Don't go for empty selections.
+    if (!selection.rangeCount)
+      return null;
+    let searchString = (selection.toString() || "").trim();
+    // Empty strings are rather useless to search for.
+    if (!searchString.length)
+      return null;
+
+    this.clipboardSearchString = searchString;
+    return searchString;
   },
 
   highlight: function (aHighlight, aWord) {
