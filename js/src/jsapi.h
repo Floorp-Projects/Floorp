@@ -2788,12 +2788,6 @@ extern JS_PUBLIC_API(bool)
 JS_DefineOwnProperty(JSContext *cx, JSObject *obj, jsid id, jsval descriptor, bool *bp);
 
 extern JS_PUBLIC_API(bool)
-JS_DefinePropertyWithTinyId(JSContext *cx, JSObject *obj, const char *name,
-                            int8_t tinyid, jsval value,
-                            JSPropertyOp getter, JSStrictPropertyOp setter,
-                            unsigned attrs);
-
-extern JS_PUBLIC_API(bool)
 JS_AlreadyHasOwnProperty(JSContext *cx, JS::HandleObject obj, const char *name,
                          bool *foundp);
 
@@ -3025,13 +3019,6 @@ JS_DefineUCProperty(JSContext *cx, JSObject *obj,
                     const jschar *name, size_t namelen, jsval value,
                     JSPropertyOp getter, JSStrictPropertyOp setter,
                     unsigned attrs);
-
-extern JS_PUBLIC_API(bool)
-JS_DefineUCPropertyWithTinyId(JSContext *cx, JSObject *obj,
-                              const jschar *name, size_t namelen,
-                              int8_t tinyid, jsval value,
-                              JSPropertyOp getter, JSStrictPropertyOp setter,
-                              unsigned attrs);
 
 extern JS_PUBLIC_API(bool)
 JS_AlreadyHasOwnUCProperty(JSContext *cx, JS::HandleObject obj, const jschar *name,
