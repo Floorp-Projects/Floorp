@@ -2555,7 +2555,7 @@ JS_GetConstructor(JSContext *cx, JS::Handle<JSObject*> proto);
  * and true with *idp containing the unique id on success.
  */
 extern JS_PUBLIC_API(bool)
-JS_GetObjectId(JSContext *cx, JSObject *obj, jsid *idp);
+JS_GetObjectId(JSContext *cx, JS::HandleObject obj, JS::MutableHandleId idp);
 
 namespace JS {
 
