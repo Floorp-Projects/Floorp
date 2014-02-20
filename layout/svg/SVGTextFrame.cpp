@@ -3539,7 +3539,7 @@ ShouldPaintCaret(const TextRenderedRun& aThisRun, nsCaret* aCaret)
   return false;
 }
 
-NS_IMETHODIMP
+nsresult
 SVGTextFrame::PaintSVG(nsRenderingContext* aContext,
                        const nsIntRect *aDirtyRect,
                        nsIFrame* aTransformRoot)
@@ -3674,7 +3674,7 @@ SVGTextFrame::PaintSVG(nsRenderingContext* aContext,
   return NS_OK;
 }
 
-NS_IMETHODIMP_(nsIFrame*)
+nsIFrame*
 SVGTextFrame::GetFrameForPoint(const nsPoint& aPoint)
 {
   NS_ASSERTION(GetFirstPrincipalChild(), "must have a child frame");
@@ -3718,7 +3718,7 @@ SVGTextFrame::GetFrameForPoint(const nsPoint& aPoint)
   return hit;
 }
 
-NS_IMETHODIMP_(nsRect)
+nsRect
 SVGTextFrame::GetCoveredRegion()
 {
   return nsSVGUtils::TransformFrameRectToOuterSVG(

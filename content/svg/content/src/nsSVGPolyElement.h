@@ -38,6 +38,9 @@ public:
     return nsGkAtoms::points;
   }
 
+  // nsSVGElement methods:
+  virtual bool HasValidDimensions() const MOZ_OVERRIDE;
+
   // nsSVGPathGeometryElement methods:
   virtual bool AttributeDefinesGeometry(const nsIAtom *aName) MOZ_OVERRIDE;
   virtual bool IsMarkable() MOZ_OVERRIDE { return true; }

@@ -11,7 +11,7 @@ here = os.path.dirname(os.path.abspath(__file__))
 class ProcTestWait(proctest.ProcTest):
     """ Class to test process waits and timeouts """
 
-    def test_process_normal_finish(self):
+    def test_normal_finish(self):
         """Process is started, runs to completion while we wait for it"""
 
         p = processhandler.ProcessHandler([self.python, self.proclaunch, "process_normal_finish_python.ini"],
@@ -25,7 +25,7 @@ class ProcTestWait(proctest.ProcTest):
                               p.proc.returncode,
                               p.didTimeout)
 
-    def test_process_wait(self):
+    def test_wait(self):
         """Process is started runs to completion while we wait indefinitely"""
 
         p = processhandler.ProcessHandler([self.python, self.proclaunch,
@@ -41,7 +41,7 @@ class ProcTestWait(proctest.ProcTest):
                               p.didTimeout)
 
 
-    def test_process_timeout(self):
+    def test_timeout(self):
         """ Process is started, runs but we time out waiting on it
             to complete
         """
@@ -63,7 +63,7 @@ class ProcTestWait(proctest.ProcTest):
                               False,
                               ['returncode', 'didtimeout'])
 
-    def test_process_waittimeout(self):
+    def test_waittimeout(self):
         """
         Process is started, then wait is called and times out.
         Process is still running and didn't timeout
@@ -83,7 +83,7 @@ class ProcTestWait(proctest.ProcTest):
                               True,
                               ())
 
-    def test_process_waitnotimeout(self):
+    def test_waitnotimeout(self):
         """ Process is started, runs to completion before our wait times out
         """
         p = processhandler.ProcessHandler([self.python, self.proclaunch,
@@ -97,6 +97,27 @@ class ProcTestWait(proctest.ProcTest):
                               output,
                               p.proc.returncode,
                               p.didTimeout)
+
+    def test_wait_twice_after_kill(self):
+        """Bug 968718: Process is started and stopped. wait() twice afterward."""
+        p = processhandler.ProcessHandler([self.python, self.proclaunch,
+                                          "process_waittimeout_python.ini"],
+                                          cwd=here)
+        p.run()
+        p.kill()
+        returncode1 = p.wait()
+        returncode2 = p.wait()
+
+        detected, output = proctest.check_for_process(self.proclaunch)
+        self.determine_status(detected,
+                              output,
+                              returncode2,
+                              p.didTimeout)
+
+        self.assertLess(returncode2, 0,
+                        'Negative returncode expected, got "%s"' % returncode2)
+        self.assertEqual(returncode1, returncode2,
+                         'Expected both returncodes of wait() to be equal')
 
 if __name__ == '__main__':
     unittest.main()

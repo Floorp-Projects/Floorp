@@ -15,28 +15,27 @@ class CameraPreviewMediaStream;
 
 class DOMCameraControlListener : public CameraControlListener
 {
+public:
+  DOMCameraControlListener(nsDOMCameraControl* aDOMCameraControl, CameraPreviewMediaStream* aStream);
+
+  virtual void OnAutoFocusComplete(bool aAutoFocusSucceeded) MOZ_OVERRIDE;
+  virtual void OnTakePictureComplete(uint8_t* aData, uint32_t aLength, const nsAString& aMimeType) MOZ_OVERRIDE;
+
+  virtual void OnHardwareStateChange(HardwareState aState) MOZ_OVERRIDE;
+  virtual void OnPreviewStateChange(PreviewState aState) MOZ_OVERRIDE;
+  virtual void OnRecorderStateChange(RecorderState aState, int32_t aStatus, int32_t aTrackNum) MOZ_OVERRIDE;
+  virtual void OnConfigurationChange(const CameraListenerConfiguration& aConfiguration) MOZ_OVERRIDE;
+  virtual void OnShutter() MOZ_OVERRIDE;
+  virtual bool OnNewPreviewFrame(layers::Image* aImage, uint32_t aWidth, uint32_t aHeight) MOZ_OVERRIDE;
+  virtual void OnError(CameraErrorContext aContext, CameraError aError) MOZ_OVERRIDE;
+
 protected:
+  virtual ~DOMCameraControlListener();
+
   nsMainThreadPtrHandle<nsDOMCameraControl> mDOMCameraControl;
   CameraPreviewMediaStream* mStream;
 
   class DOMCallback;
-
-public:
-  DOMCameraControlListener(nsDOMCameraControl* aDOMCameraControl, CameraPreviewMediaStream* aStream)
-    : mDOMCameraControl(new nsMainThreadPtrHolder<nsDOMCameraControl>(aDOMCameraControl))
-    , mStream(aStream)
-  { }
-
-  void OnAutoFocusComplete(bool aAutoFocusSucceeded);
-  void OnTakePictureComplete(uint8_t* aData, uint32_t aLength, const nsAString& aMimeType);
-
-  void OnHardwareStateChange(HardwareState aState);
-  void OnPreviewStateChange(PreviewState aState);
-  void OnRecorderStateChange(RecorderState aState, int32_t aStatus, int32_t aTrackNum);
-  void OnConfigurationChange(const CameraListenerConfiguration& aConfiguration);
-  void OnShutter();
-  bool OnNewPreviewFrame(layers::Image* aImage, uint32_t aWidth, uint32_t aHeight);
-  void OnError(CameraErrorContext aContext, CameraError aError);
 
 private:
   DOMCameraControlListener(const DOMCameraControlListener&) MOZ_DELETE;

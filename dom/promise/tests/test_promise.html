@@ -573,6 +573,14 @@ function promiseStrictHandlers() {
   });
 }
 
+function promiseStrictExecutorThisArg() {
+  var promise = new Promise(function(resolve, reject) {
+    "use strict";
+    ok(this === undefined, "thisArg should be undefined.");
+    runTest();
+  });
+}
+
 function promiseResolveArray() {
   var p = Promise.resolve([1,2,3]);
   ok(p instanceof Promise, "Should return a Promise.");
@@ -636,6 +644,7 @@ var tests = [ promiseResolve, promiseReject,
               promiseThenableRejectThenResolve,
               promiseWithThenReplaced,
               promiseStrictHandlers,
+              promiseStrictExecutorThisArg,
               promiseResolveArray,
               promiseResolveThenable,
               promiseResolvePromise,
