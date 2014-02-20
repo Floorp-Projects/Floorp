@@ -17,8 +17,13 @@ let requestCallback = null;
 function test()
 {
   const PREF = "devtools.webconsole.persistlog";
+  let original = Services.prefs.getBoolPref("devtools.webconsole.filter.networkinfo");
+  Services.prefs.setBoolPref("devtools.webconsole.filter.networkinfo", true);
   Services.prefs.setBoolPref(PREF, true);
-  registerCleanupFunction(() => Services.prefs.clearUserPref(PREF));
+  registerCleanupFunction(() => {
+    Services.prefs.setBoolPref("devtools.webconsole.filter.networkinfo", original);
+    Services.prefs.clearUserPref(PREF);
+  });
 
   addTab("data:text/html;charset=utf-8,Web Console network logging tests");
 
