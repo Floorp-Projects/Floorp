@@ -6,6 +6,11 @@
 // navigate to that destination (bug 975707).
 
 function test() {
+  let originalNetPref = Services.prefs.getBoolPref("devtools.webconsole.filter.networkinfo");
+  registerCleanupFunction(() => {
+    Services.prefs.setBoolPref("devtools.webconsole.filter.networkinfo", originalNetPref);
+  });
+  Services.prefs.setBoolPref("devtools.webconsole.filter.networkinfo", true);
   Task.spawn(runner).then(finishTest);
 
   function* runner() {
