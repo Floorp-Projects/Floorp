@@ -35,8 +35,8 @@ public:
   NS_DECL_NSISSLSOCKETCONTROL
   NS_DECL_NSICLIENTAUTHUSERDECISION
 
-  nsresult SetForSTARTTLS(bool aForSTARTTLS);
-  nsresult GetForSTARTTLS(bool* aForSTARTTLS);
+  void SetForSTARTTLS(bool aForSTARTTLS);
+  bool GetForSTARTTLS();
 
   nsresult GetFileDescPtr(PRFileDesc** aFilePtr);
   nsresult SetFileDescPtr(PRFileDesc* aFilePtr);
@@ -45,9 +45,6 @@ public:
   void SetHandshakeNotPending() { mHandshakePending = false; }
 
   void GetPreviousCert(nsIX509Cert** _result);
-
-  void SetHasCleartextPhase(bool aHasCleartextPhase);
-  bool GetHasCleartextPhase();
 
   void SetTLSVersionRange(SSLVersionRange range) { mTLSVersionRange = range; }
   SSLVersionRange GetTLSVersionRange() const { return mTLSVersionRange; };
@@ -121,7 +118,6 @@ private:
   bool mForSTARTTLS;
   SSLVersionRange mTLSVersionRange;
   bool mHandshakePending;
-  bool mHasCleartextPhase;
   bool mRememberClientAuthCertificate;
   bool mPreliminaryHandshakeDone; // after false start items are complete
 
