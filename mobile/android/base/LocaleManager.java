@@ -235,11 +235,11 @@ public class LocaleManager {
 
         // Note that we don't tell Gecko about this. We notify Gecko when the
         // locale is set, not when we update Java.
-        updateLocale(localeCode);
+        final String resultant = updateLocale(localeCode);
 
         final long t2 = android.os.SystemClock.uptimeMillis();
         Log.i(LOG_TAG, "Locale read and update took: " + (t2 - t1) + "ms.");
-        return localeCode;
+        return resultant;
     }
 
     /**
