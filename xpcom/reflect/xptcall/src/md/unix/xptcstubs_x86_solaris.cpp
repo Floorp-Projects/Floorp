@@ -9,7 +9,7 @@
 #include "xptcprivate.h"
 #include "xptiprivate.h"
 
-nsresult
+nsresult ATTRIBUTE_USED
 PrepareAndDispatch(nsXPTCStubBase* self, uint32_t methodIndex, uint32_t* args)
 {
 #define PARAM_BUFFER_COUNT     16

@@ -160,7 +160,9 @@ RPWatchContext.prototype = {
   },
 
   doError: function RPWatchContext_onerror(aMessage) {
-    log("doError: " + aMessage);
+    log("doError: " + this.id + ": " + aMessage);
+    let message = new IDDOMMessage({id: this.id, message: aMessage});
+    this._mm.sendAsyncMessage("Identity:RP:Watch:OnError", message);
   }
 };
 
