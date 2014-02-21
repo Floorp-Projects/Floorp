@@ -26,7 +26,7 @@ MockFXAManager.prototype = {
 let originalManager = FirefoxAccounts.fxAccountsManager;
 FirefoxAccounts.fxAccountsManager = new MockFXAManager();
 do_register_cleanup(() => {
-  print("restoring fxaccountsmanager");
+  log("restoring fxaccountsmanager");
   FirefoxAccounts.fxAccountsManager = originalManager;
 });
 
@@ -111,6 +111,48 @@ function test_logout() {
   FirefoxAccounts.RP.watch(mockedRP);
 }
 
+function test_error() {
+  do_test_pending();
+
+  let received = [];
+
+  // Mock the fxAccountsManager so that getAssertion rejects its promise and
+  // triggers our onerror handler.  (This is the method that's used internally
+  // by FirefoxAccounts.RP.request().)
+  let originalManager = FirefoxAccounts.fxAccountsManager;
+  FirefoxAccounts.RP.fxAccountsManager = {
+    getAssertion: function(audience) {
+      return Promise.reject("barf!");
+    }
+  };
+
+  let mockedRP = mock_fxa_rp(null, TEST_URL, function(method, message) {
+    // We will receive "ready" as a result of watch(), and "logout"
+    // as a result of logout()
+    received.push([method, message]);
+
+    if (received.length == 2) {
+      do_check_eq(received[0][0], "ready");
+
+      do_check_eq(received[1][0], "error");
+      do_check_eq(received[1][1], "barf!");
+
+      // Put things back the way they were
+      FirefoxAccounts.fxAccountsManager = originalManager;
+
+      do_test_finished();
+      run_next_test();
+    }
+
+    if (method == "ready") {
+      FirefoxAccounts.RP.request(mockedRP.id);
+    }
+  });
+
+  // First, call watch()
+  FirefoxAccounts.RP.watch(mockedRP);
+}
+
 function test_child_process_shutdown() {
   do_test_pending();
   let rpCount = FirefoxAccounts.RP._rpFlows.size;
@@ -158,6 +200,7 @@ let TESTS = [
   test_watch,
   test_request,
   test_logout,
+  test_error,
   test_child_process_shutdown,
 ];
 

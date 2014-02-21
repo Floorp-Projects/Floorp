@@ -28,7 +28,7 @@ const uint32_t FPR_COUNT            = 8;
 // The parameters are mapped into an array of type 'nsXPTCMiniVariant'
 // and then the method gets called.
 
-extern "C" nsresult
+extern "C" nsresult ATTRIBUTE_USED
 PrepareAndDispatch(nsXPTCStubBase * self, uint32_t methodIndex,
                    uint64_t * args, uint64_t * gpregs, double *fpregs)
 {

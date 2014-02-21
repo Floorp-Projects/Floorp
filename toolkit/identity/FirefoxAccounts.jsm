@@ -133,6 +133,7 @@ FxAccountsService.prototype = {
       },
       error => {
         log.error("get assertion failed: " + JSON.stringify(error));
+        this.doError(aRPId, error);
       }
     );
   },

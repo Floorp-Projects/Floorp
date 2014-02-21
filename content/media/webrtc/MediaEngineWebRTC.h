@@ -92,6 +92,7 @@ public:
   MediaEngineWebRTCVideoSource(int aIndex)
     : mCameraControl(nullptr)
     , mCallbackMonitor("WebRTCCamera.CallbackMonitor")
+    , mSensorAngle(0)
     , mCaptureIndex(aIndex)
     , mMonitor("WebRTCCamera.Monitor")
     , mWidth(0)
@@ -171,6 +172,7 @@ public:
   void StartImpl(webrtc::CaptureCapability aCapability);
   void StopImpl();
   void SnapshotImpl();
+  void RotateImage(layers::Image* aImage);
 #endif
 
   // This runnable is for creating a temporary file on the main thread.
@@ -205,6 +207,7 @@ private:
   nsRefPtr<ICameraControl> mCameraControl;
   mozilla::ReentrantMonitor mCallbackMonitor; // Monitor for camera callback handling
   nsRefPtr<nsIDOMFile> mLastCapture;
+  int mSensorAngle;
 #else
   webrtc::VideoEngine* mVideoEngine; // Weak reference, don't free.
   webrtc::ViEBase* mViEBase;
