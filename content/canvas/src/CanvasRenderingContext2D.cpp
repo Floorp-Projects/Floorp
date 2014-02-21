@@ -2355,12 +2355,36 @@ CanvasRenderingContext2D::MeasureText(const nsAString& rawText,
   return new TextMetrics(width);
 }
 
-void CanvasRenderingContext2D::AddHitRegion(const HitRegionOptions& )
-{}
+void
+CanvasRenderingContext2D::AddHitRegion(const HitRegionOptions& options, ErrorResult& error)
+{
+  // remove old hit region first
+  RemoveHitRegion(options.mId);
 
-void CanvasRenderingContext2D::RemoveHitRegion(const nsAString&)
-{}
+  // for now, we require a fallback element
+  if (options.mControl == NULL) {
+    error.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return;
+  }
 
+  // check if the control is a descendant of our canvas
+  HTMLCanvasElement* canvas = GetCanvas();
+  if (!canvas || !nsContentUtils::ContentIsDescendantOf(options.mControl, canvas)) {
+    error.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return;
+  }
+
+  // finally, add the region to the list if it has an ID
+  if (options.mId.Length() != 0) {
+    mHitRegionsOptions.PutEntry(options.mId)->mElement = options.mControl;
+  }
+}
+
+void
+CanvasRenderingContext2D::RemoveHitRegion(const nsAString& id)
+{
+  mHitRegionsOptions.RemoveEntry(id);
+}
 
 /**
  * Used for nsBidiPresUtils::ProcessText
