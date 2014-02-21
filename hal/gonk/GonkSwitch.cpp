@@ -54,6 +54,7 @@ namespace hal_impl {
 class SwitchHandler : public RefCounted<SwitchHandler>
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(SwitchHandler)
   SwitchHandler(const char* aDevPath, SwitchDevice aDevice)
     : mDevPath(aDevPath),
       mState(SWITCH_STATE_UNKNOWN),
@@ -233,6 +234,7 @@ class SwitchEventObserver : public IUeventObserver,
                             public RefCounted<SwitchEventObserver>
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(SwitchEventObserver)
   SwitchEventObserver() : mEnableCount(0)
   {
     Init();

@@ -5,7 +5,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(0354d96d-3fd3-4365-a0a2-6c807ec1ce95)]
+[scriptable, uuid(0e56f04d-cda4-4a55-ab83-e5e29ddd370e)]
 interface nsIPluginTag : nsISupports
 {
   // enabledState is stored as one of the following as an integer in prefs,
@@ -28,6 +28,8 @@ interface nsIPluginTag : nsISupports
   readonly attribute boolean disabled;
   readonly attribute boolean clicktoplay;
            attribute unsigned long enabledState;
+
+  readonly attribute PRTime lastModifiedTime;
 
   void getMimeTypes([optional] out unsigned long aCount,
                     [retval, array, size_is(aCount)] out wstring aResults);

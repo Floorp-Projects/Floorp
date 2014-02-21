@@ -166,6 +166,7 @@ private:
 class AutoMounter : public RefCounted<AutoMounter>
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(AutoMounter)
 
   typedef nsTArray<RefPtr<Volume> > VolumeArray;
 
@@ -632,6 +633,7 @@ class UsbCableObserver : public SwitchObserver,
                          public RefCounted<UsbCableObserver>
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(UsbCableObserver)
   UsbCableObserver()
   {
     RegisterSwitchObserver(SWITCH_USB, this);

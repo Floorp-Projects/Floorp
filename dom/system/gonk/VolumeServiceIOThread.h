@@ -23,6 +23,7 @@ class VolumeServiceIOThread : public VolumeManager::StateObserver,
                               public RefCounted<VolumeServiceIOThread>
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(VolumeServiceIOThread)
   VolumeServiceIOThread(nsVolumeService* aVolumeService);
   ~VolumeServiceIOThread();
 

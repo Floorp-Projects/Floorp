@@ -1,0 +1,38 @@
+<!doctype html>
+<html class="reftest-wait">
+  <head>
+    <title>menclose actuarial</title>
+    <meta charset="utf-8"/>
+    <script type="text/javascript">
+      function doTest()
+      {
+        var box = document.getElementById("box").getBoundingClientRect();
+        document.getElementById("path").setAttribute("d",
+          "M" + (box.left + "," + box.top) +
+          "L" + ((box.width+box.left) + "," + box.top) +
+          "L" + ((box.width+box.left) + "," + box.bottom ));
+        document.documentElement.removeAttribute("class");
+      }
+      window.addEventListener("MozReftestInvalidate",doTest, false);
+    </script>
+  </head>
+  <body>
+
+    <div style="position: absolute; left: 20px; top: 20px;">
+      <math>
+        <mphantom>
+          <menclose id="box" notation="actuarial">
+            <mspace width="200px" height="100px"></mspace>
+          </menclose>
+        </mphantom>
+      </math>
+    </div>
+
+    <div style="position: absolute; left: 0px; top: 0px;">
+      <svg width="500px" height="500px">
+        <path id="path" style="fill: none; stroke-width: 3px; stroke: green; stroke-linecap: round; shape-rendering: crispEdges;"></path>
+      </svg>
+    </div>
+    
+  </body>
+</html>

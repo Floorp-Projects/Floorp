@@ -1,0 +1,35 @@
+<!doctype html>
+<html class="reftest-wait">
+  <head>
+    <title>menclose verticalstrike</title>
+    <meta charset="utf-8"/>
+    <script type="text/javascript">
+      function doTest()
+      {
+        var box = document.getElementById("box").getBoundingClientRect();
+        document.getElementById("path").setAttribute("d",
+        "M" + ((box.right + box.left)/2 + "," + box.top) + " " +
+        "l" + (0 + "," + box.height));
+        document.documentElement.removeAttribute("class");
+      }
+      window.addEventListener("MozReftestInvalidate",doTest, false);
+    </script>
+  </head>
+  <body>
+
+    <div style="position: absolute; left: 20px; top: 20px;">
+      <math>
+        <menclose id="box" notation="verticalstrike">
+          <mspace width="200px" height="100px"></mspace>
+        </menclose>
+      </math>
+    </div>
+
+    <div style="position: absolute; left: 0px; top: 0px;">
+      <svg width="500px" height="500px">
+        <path id="path" style="fill: none; stroke-width: 3px; stroke: green; stroke-linecap: round; shape-rendering: crispEdges;"></path>
+      </svg>
+    </div>
+    
+  </body>
+</html>

@@ -77,6 +77,7 @@ class VolumeManager : public MessageLoopForIO::LineWatcher,
                       public RefCounted<VolumeManager>
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(VolumeManager)
 
   typedef nsTArray<RefPtr<Volume> > VolumeArray;
 
