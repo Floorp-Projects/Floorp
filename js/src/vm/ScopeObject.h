@@ -490,10 +490,9 @@ class StaticBlockObject : public BlockObject
         setSlotValue(i, PrivateValue(def));
     }
 
-    frontend::Definition *maybeDefinitionParseNode(unsigned i) {
+    frontend::Definition *definitionParseNode(unsigned i) {
         Value v = slotValue(i);
-        return v.isUndefined() ? nullptr
-                               : reinterpret_cast<frontend::Definition *>(v.toPrivate());
+        return reinterpret_cast<frontend::Definition *>(v.toPrivate());
     }
 
     /*
