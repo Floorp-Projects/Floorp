@@ -483,12 +483,12 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     }
 
     public final void verifyHomePagerHidden() {
-        final View homePagerView = mSolo.getView(R.id.home_pager);
+        final View homePagerContainer = mSolo.getView(R.id.home_pager_container);
 
         boolean rc = waitForCondition(new Condition() {
             @Override
             public boolean isSatisfied() {
-                return homePagerView.getVisibility() != View.VISIBLE;
+                return homePagerContainer.getVisibility() != View.VISIBLE;
             }
         }, MAX_WAIT_HOME_PAGER_HIDDEN_MS);
 
