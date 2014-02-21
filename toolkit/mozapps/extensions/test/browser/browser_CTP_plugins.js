@@ -35,7 +35,8 @@ function test() {
   waitForExplicitFinish();
   Services.prefs.setBoolPref("plugins.click_to_play", true);
   Services.prefs.setBoolPref("extensions.blocklist.suppressUI", true);
-  setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY);
+  let pluginTag = getTestPluginTag();
+  pluginTag.enabledState = Ci.nsIPluginTag.STATE_CLICKTOPLAY;
   open_manager("addons://list/plugin", part1);
 }
 
@@ -218,6 +219,8 @@ function part13() {
 function end_test() {
   Services.prefs.clearUserPref("plugins.click_to_play");
   Services.prefs.clearUserPref("extensions.blocklist.suppressUI");
+  let pluginTag = getTestPluginTag();
+  pluginTag.enabledState = Ci.nsIPluginTag.STATE_ENABLED;
   resetBlocklist();
   close_manager(gManagerWindow, function() {
     finish();
