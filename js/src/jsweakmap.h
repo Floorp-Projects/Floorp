@@ -85,8 +85,7 @@ class WeakMapBase {
     // Trace all delayed weak map bindings. Used by the cycle collector.
     static void traceAllMappings(WeakMapTracer *tracer);
 
-    bool isInList() { return next != WeakMapNotInList; }
-    void check() { JS_ASSERT(!isInList()); }
+    void check() { JS_ASSERT(next == WeakMapNotInList); }
 
     // Remove everything from the weak map list for a compartment.
     static void resetCompartmentWeakMapList(JSCompartment *c);
