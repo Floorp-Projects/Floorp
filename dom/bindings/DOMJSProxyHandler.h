@@ -21,8 +21,7 @@ namespace dom {
 class DOMClass;
 
 enum {
-  JSPROXYSLOT_EXPANDO = 0,
-  JSPROXYSLOT_XRAY_EXPANDO
+  JSPROXYSLOT_EXPANDO = 0
 };
 
 template<typename T> struct Prefable;
