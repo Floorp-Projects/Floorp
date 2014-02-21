@@ -179,6 +179,7 @@ enum SurfaceInitMode
 class Compositor : public RefCounted<Compositor>
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(Compositor)
   Compositor(PCompositorParent* aParent = nullptr)
     : mCompositorID(0)
     , mDiagnosticTypes(DIAGNOSTIC_NONE)

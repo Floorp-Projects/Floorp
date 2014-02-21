@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <QApplication>
+#include <QGuiApplication>
 #include <QMimeData>
 #include <QString>
 #include <QStringList>
@@ -90,7 +90,7 @@ nsClipboard::SetNativeClipboardData( nsITransferable *aTransferable,
         return NS_ERROR_FAILURE;
     }
 
-    QClipboard *cb = QApplication::clipboard();
+    QClipboard *cb = QGuiApplication::clipboard();
     QMimeData *mimeData = new QMimeData;
 
     uint32_t flavorCount = 0;
@@ -125,7 +125,7 @@ nsClipboard::SetNativeClipboardData( nsITransferable *aTransferable,
 
                 nsAutoString utf16string;
                 wideString->GetData(utf16string);
-                QString str = QString::fromUtf16(utf16string.get());
+                QString str = QString::fromUtf16((const ushort*)utf16string.get());
 
                 // Add text to the mimeData
                 mimeData->setText(str);
@@ -142,7 +142,7 @@ nsClipboard::SetNativeClipboardData( nsITransferable *aTransferable,
 
                 nsAutoString utf16string;
                 wideString->GetData(utf16string);
-                QString str = QString::fromUtf16(utf16string.get());
+                QString str = QString::fromUtf16((const ushort*)utf16string.get());
 
                 // Add html to the mimeData
                 mimeData->setHtml(str);
@@ -253,7 +253,7 @@ nsClipboard::GetNativeClipboardData(nsITransferable *aTransferable,
         return NS_ERROR_FAILURE;
     }
 
-    QClipboard *cb = QApplication::clipboard();
+    QClipboard *cb = QGuiApplication::clipboard();
     const QMimeData *mimeData = cb->mimeData(clipboardMode);
 
     // Walk through flavors and see which flavor matches the one being pasted
@@ -405,7 +405,7 @@ nsClipboard::HasDataMatchingFlavors(const char** aFlavorList, uint32_t aLength,
         return NS_OK;
 
     // Which kind of data in the clipboard
-    QClipboard *cb = QApplication::clipboard();
+    QClipboard *cb = QGuiApplication::clipboard();
     const QMimeData *mimeData = cb->mimeData();
     const char *flavor=nullptr;
     QStringList formats = mimeData->formats();
@@ -544,7 +544,7 @@ nsClipboard::SupportsSelectionClipboard(bool *_retval)
 {
     NS_ENSURE_ARG_POINTER(_retval);
 
-    QClipboard *cb = QApplication::clipboard();
+    QClipboard *cb = QGuiApplication::clipboard();
     if (cb->supportsSelection())
     {
         *_retval = true; // we support the selection clipboard 

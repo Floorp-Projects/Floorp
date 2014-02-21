@@ -62,6 +62,7 @@ CGContextType GetContextType(CGContextRef ref);
 
 class MacIOSurface : public mozilla::RefCounted<MacIOSurface> {
 public:
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(MacIOSurface)
   typedef mozilla::gfx::SourceSurface SourceSurface;
 
   static mozilla::TemporaryRef<MacIOSurface> CreateIOSurface(int aWidth, int aHeight,

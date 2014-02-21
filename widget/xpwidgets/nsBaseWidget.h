@@ -409,6 +409,9 @@ protected:
   bool              mUseLayersAcceleration;
   bool              mForceLayersAcceleration;
   bool              mTemporarilyUseBasicLayerManager;
+  // Windows with out-of-process tabs always require OMTC. This flag designates
+  // such windows.
+  bool              mRequireOffMainThreadCompositing;
   bool              mUseAttachedEvents;
   bool              mContextInitialized;
   nsIntRect         mBounds;

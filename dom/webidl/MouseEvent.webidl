@@ -19,7 +19,7 @@ interface MouseEvent : UIEvent {
   readonly attribute boolean        shiftKey;
   readonly attribute boolean        altKey;
   readonly attribute boolean        metaKey;
-  readonly attribute unsigned short button;
+  readonly attribute short          button;
   readonly attribute unsigned short buttons;
   readonly attribute EventTarget?   relatedTarget;
   // Deprecated in DOM Level 3:
@@ -37,7 +37,7 @@ interface MouseEvent : UIEvent {
                                                    boolean altKeyArg, 
                                                    boolean shiftKeyArg, 
                                                    boolean metaKeyArg, 
-                                                   unsigned short buttonArg,
+                                                   short buttonArg,
                                                    EventTarget? relatedTargetArg);
   // Introduced in DOM Level 3:
   boolean                           getModifierState(DOMString keyArg);
@@ -69,7 +69,7 @@ dictionary MouseEventInit {
   boolean        shiftKey      = false;
   boolean        altKey        = false;
   boolean        metaKey       = false;
-  unsigned short button        = 0;
+  short          button        = 0;
   // Note: "buttons" was not previously initializable through initMouseEvent!
   unsigned short buttons       = 0;
   EventTarget?   relatedTarget = null;
@@ -109,7 +109,7 @@ partial interface MouseEvent
                                        boolean altKeyArg,
                                        boolean shiftKeyArg,
                                        boolean metaKeyArg,
-                                       unsigned short buttonArg,
+                                       short buttonArg,
                                        EventTarget? relatedTargetArg,
                                        float pressure,
                                        unsigned short inputSourceArg);

@@ -7,79 +7,65 @@
 #ifndef MOZQWIDGET_H
 #define MOZQWIDGET_H
 
-#include "moziqwidget.h"
 #include "nsIWidget.h"
 
-class MozQWidget : public IMozQWidget
+#include <QtGui/QWindow>
+
+QT_BEGIN_NAMESPACE
+class QPainter;
+class QExposeEvent;
+class QResizeEvent;
+QT_END_NAMESPACE
+
+namespace mozilla {
+namespace widget {
+
+class nsWindow;
+
+class MozQWidget : public QWindow
 {
     Q_OBJECT
 public:
-    MozQWidget(nsWindow* aReceiver, QGraphicsItem *aParent);
-
+    explicit MozQWidget(nsWindow* aReceiver, QWindow* aParent = 0);
     ~MozQWidget();
 
-    /**
-     * Mozilla helper.
-     */
-    virtual void setModal(bool);
-    virtual void SetCursor(nsCursor aCursor);
-    virtual void dropReceiver() { mReceiver = 0x0; };
+    virtual void render(QPainter* painter);
+
     virtual nsWindow* getReceiver() { return mReceiver; };
-
-    virtual void activate();
-    virtual void deactivate();
-
-    /**
-     * VirtualKeyboardIntegration
-     */
-    static void requestVKB(int aTimeout = 0, QObject* aWidget = 0);
-    static void hideVKB();
-    virtual bool isVKBOpen();
-
-    virtual void NotifyVKB(const QRect& rect);
-    virtual void SwitchToForeground();
-    virtual void SwitchToBackground();
+    virtual void dropReceiver() { mReceiver = nullptr; };
+    virtual void SetCursor(nsCursor aCursor);
 
 public Q_SLOTS:
-    static void showVKB();
-
-#ifdef MOZ_ENABLE_QTMOBILITY
-    void orientationChanged();
-#endif
+    void renderLater();
+    void renderNow();
 
 protected:
-    virtual void contextMenuEvent(QGraphicsSceneContextMenuEvent* aEvent);
-    virtual void dragEnterEvent(QGraphicsSceneDragDropEvent* aEvent);
-    virtual void dragLeaveEvent(QGraphicsSceneDragDropEvent* aEvent);
-    virtual void dragMoveEvent(QGraphicsSceneDragDropEvent* aEvent);
-    virtual void dropEvent(QGraphicsSceneDragDropEvent* aEvent);
-    virtual void focusInEvent(QFocusEvent* aEvent);
-    virtual void focusOutEvent(QFocusEvent* aEvent);
-    virtual void hoverEnterEvent(QGraphicsSceneHoverEvent* aEvent);
-    virtual void hoverLeaveEvent(QGraphicsSceneHoverEvent* aEvent);
-    virtual void hoverMoveEvent(QGraphicsSceneHoverEvent* aEvent);
-    virtual void keyPressEvent(QKeyEvent* aEvent);
-    virtual void keyReleaseEvent(QKeyEvent* aEvent);
-    virtual void mouseDoubleClickEvent(QGraphicsSceneMouseEvent* aEvent);
-    virtual void mouseMoveEvent(QGraphicsSceneMouseEvent* aEvent);
-    virtual void mousePressEvent(QGraphicsSceneMouseEvent* aEvent);
-    virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent* aEvent);
-    virtual void inputMethodEvent(QInputMethodEvent* aEvent);
-
-    virtual void wheelEvent(QGraphicsSceneWheelEvent* aEvent);
-    virtual void paint(QPainter* aPainter, const QStyleOptionGraphicsItem* aOption, QWidget* aWidget = 0);
-    virtual void resizeEvent(QGraphicsSceneResizeEvent* aEvent);
-    virtual void closeEvent(QCloseEvent* aEvent);
-    virtual void hideEvent(QHideEvent* aEvent);
-    virtual void showEvent(QShowEvent* aEvent);
-    virtual bool event(QEvent* aEvent);
-    virtual QVariant inputMethodQuery(Qt::InputMethodQuery aQuery) const;
-
-    void SetCursor(const QPixmap& aPixmap, int, int);
+    virtual bool event(QEvent* event);
+    virtual void exposeEvent(QExposeEvent* event);
+    virtual void focusInEvent(QFocusEvent* event);
+    virtual void focusOutEvent(QFocusEvent* event);
+    virtual void hideEvent(QHideEvent* event);
+    virtual void keyPressEvent(QKeyEvent* event);
+    virtual void keyReleaseEvent(QKeyEvent* event);
+    virtual void mouseDoubleClickEvent(QMouseEvent* event);
+    virtual void mouseMoveEvent(QMouseEvent* event);
+    virtual void mousePressEvent(QMouseEvent* event);
+    virtual void mouseReleaseEvent(QMouseEvent* event);
+    virtual void moveEvent(QMoveEvent* event);
+    virtual void resizeEvent(QResizeEvent* event);
+    virtual void showEvent(QShowEvent* event);
+    virtual void tabletEvent(QTabletEvent* event);
+    virtual void touchEvent(QTouchEvent* event);
+    virtual void wheelEvent(QWheelEvent* event);
 
 private:
-    void sendPressReleaseKeyEvent(int key, const QChar* letter = 0, bool autorep = false, ushort count = 1);
-    nsWindow *mReceiver;
+    nsWindow* mReceiver;
+    bool mUpdatePending;
+    nsWindowType mWindowType;
 };
 
-#endif
+} // namespace widget
+} // namespace mozilla
+
+#endif // MOZQWIDGET_H
+

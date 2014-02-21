@@ -4514,6 +4514,7 @@ DebuggerGenericEval(JSContext *cx, const char *fullMethodName, const Value &code
     }
 
     /* Set options from object if provided. */
+    JSAutoByteString url_bytes;
     char *url = nullptr;
     unsigned lineNumber = 1;
 
@@ -4527,7 +4528,9 @@ DebuggerGenericEval(JSContext *cx, const char *fullMethodName, const Value &code
             RootedString url_str(cx, ToString<CanGC>(cx, v));
             if (!url_str)
                 return false;
-            url = JS_EncodeString(cx, url_str);
+            url = url_bytes.encodeLatin1(cx, url_str);
+            if (!url)
+                return false;
         }
 
         if (!JS_GetProperty(cx, opts, "lineNumber", &v))
@@ -4594,8 +4597,6 @@ DebuggerGenericEval(JSContext *cx, const char *fullMethodName, const Value &code
     bool ok = EvaluateInEnv(cx, env, thisv, frame,
                             ConstTwoByteChars(flat->chars(), flat->length()),
                             flat->length(), url ? url : "debugger eval code", lineNumber, &rval);
-    if (url)
-        JS_free(cx, url);
     return dbg->receiveCompletionValue(ac, ok, rval, vp);
 }
 
