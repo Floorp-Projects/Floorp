@@ -2864,6 +2864,12 @@ nsIPresShell::RestyleForAnimation(Element* aElement, nsRestyleHint aHint)
 }
 
 void
+nsIPresShell::SetForwardingContainer(const WeakPtr<nsDocShell> &aContainer)
+{
+  mForwardingContainer = aContainer;
+}
+
+void
 PresShell::ClearFrameRefs(nsIFrame* aFrame)
 {
   mPresContext->EventStateManager()->ClearFrameRefs(aFrame);
