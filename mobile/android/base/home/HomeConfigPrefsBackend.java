@@ -29,11 +29,13 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Locale;
 
 class HomeConfigPrefsBackend implements HomeConfigBackend {
     private static final String LOGTAG = "GeckoHomeConfigBackend";
 
     private static final String PREFS_CONFIG_KEY = "home_panels";
+    private static final String PREFS_LOCALE_KEY = "home_locale";
 
     private final Context mContext;
     private PrefsListener mPrefsListener;
@@ -136,7 +138,33 @@ class HomeConfigPrefsBackend implements HomeConfigBackend {
 
         final String jsonString = jsonPanelConfigs.toString();
         editor.putString(PREFS_CONFIG_KEY, jsonString);
+        editor.putString(PREFS_LOCALE_KEY, Locale.getDefault().toString());
         editor.commit();
+    }
+
+    @Override
+    public String getLocale() {
+        final SharedPreferences prefs = getSharedPreferences();
+
+        String locale = prefs.getString(PREFS_LOCALE_KEY, null);
+        if (locale == null) {
+            // Initialize config with the current locale
+            final String currentLocale = Locale.getDefault().toString();
+
+            final SharedPreferences.Editor editor = prefs.edit();
+            editor.putString(PREFS_LOCALE_KEY, currentLocale);
+            editor.commit();
+
+            // If the user has saved HomeConfig before, return null this
+            // one time to trigger a refresh and ensure we use the
+            // correct locale for the saved state. For more context,
+            // see HomeConfigInvalidator.onLocaleReady().
+            if (!prefs.contains(PREFS_CONFIG_KEY)) {
+                locale = currentLocale;
+            }
+        }
+
+        return locale;
     }
 
     @Override

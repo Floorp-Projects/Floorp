@@ -17,6 +17,7 @@ import static org.mozilla.gecko.home.HomeConfig.createBuiltinPanelConfig;
 
 import android.content.Context;
 import android.os.Handler;
+import android.text.TextUtils;
 import android.util.Log;
 
 import org.json.JSONException;
@@ -79,8 +80,16 @@ public class HomeConfigInvalidator implements GeckoEventListener {
         GeckoAppShell.getEventDispatcher().registerEventListener(EVENT_HOMEPANELS_UPDATE, this);
     }
 
-    public void refreshAll() {
-        handlePanelUpdate(null);
+    public void onLocaleReady(final String locale) {
+        ThreadUtils.getBackgroundHandler().post(new Runnable() {
+            @Override
+            public void run() {
+                final String configLocale = mHomeConfig.getLocale();
+                if (configLocale == null || !configLocale.equals(locale)) {
+                    handlePanelUpdate(null);
+                }
+            }
+        });
     }
 
     @Override
@@ -128,7 +137,8 @@ public class HomeConfigInvalidator implements GeckoEventListener {
     }
 
     /**
-     * Schedules a panel update in HomeConfig. Runs in the gecko thread.
+     * Schedules a panel update in HomeConfig. Runs in the gecko or
+     * background thread.
      *
      * @param panelConfig the target PanelConfig instance or NULL to refresh
      *                    all HomeConfig entries.
