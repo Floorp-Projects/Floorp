@@ -1,6 +1,7 @@
 <!DOCTYPE html>
-<html><head>
-<meta charset="utf-8">
+<html>
+<head>
+<meta charset="utf-8"/>
 <!--
 Tests for the OpenGL ES 2.0 HTML Canvas context
 
@@ -28,79 +29,88 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
 
 -->
-<link rel="stylesheet" type="text/css" href="../unit.css" />
-<script type="application/x-javascript" src="../unit.js"></script>
-<script type="application/x-javascript" src="../util.js"></script>
-<script type="application/x-javascript">
+<link rel="stylesheet" type="text/css" href="../../../resources/js-test-style.css" />
+<script src="../../../resources/js-test-pre.js"></script>
+<script src="../../resources/webgl-test.js"></script>
+<script src="../../resources/webgl-test-utils.js"></script>
+</head>
+<body>
+<div id="description"></div>
+<canvas id="canvas" width="16" height="16" style="width: 50px; height: 50px; border: 1px solid black;"></canvas>
+<div id="console"></div>
 
-Tests.startUnit = function () {
-    var canvas = document.getElementById('gl');
-    var gl = wrapGLContext(canvas.getContext(GL_CONTEXT_ID));
-    return [gl];
-}
+<script>
+var wtu = WebGLTestUtils;
 
-Tests.setup = function(gl) {
+description("Test bad arguments to texImage2D");
+
+var canvas = document.getElementById('canvas');
+var gl = wtu.create3DContext(canvas);
+
+function setup(gl) {
     var tex = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, tex);
-    return [gl]
+    return tex;
 }
 
-Tests.teardown = function(gl,tex) {
+function teardown(gl, tex) {
     gl.bindTexture(gl.TEXTURE_2D, null);
     gl.deleteTexture(tex);
 }
 
-Tests.testTexImage2D = function(gl) {
-    var data = new Uint8Array(4);
-    assertGLError(gl, gl.INVALID_OPERATION, "not enough data", function(){
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 2,1,0,gl.RGBA,gl.UNSIGNED_BYTE, data);
-    });
-    assertGLError(gl, gl.INVALID_OPERATION, "not enough data", function(){
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1,2,0,gl.RGBA,gl.UNSIGNED_BYTE, data);
-    });
-    assertGLError(gl, gl.INVALID_ENUM, "bad target", function(){
-        gl.texImage2D(gl.FLOAT, 0, gl.RGBA, 1,1,0,gl.RGBA,gl.UNSIGNED_BYTE, null);
-    });
-    assertGLError(gl, gl.INVALID_ENUM, "bad internal format/format", function(){
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.FLOAT, 1,1,0,gl.FLOAT,gl.UNSIGNED_BYTE, null);
-    });
-    assertGLError(gl, gl.INVALID_VALUE, "border > 0", function(){
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1,1,48,gl.RGBA,gl.UNSIGNED_BYTE, null);
-    });
-    // The spec says zero size is OK. If you disagree please list the section
-    // in the spec that details this issue.
-    assertOk("zero size", function(){
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 0,0,0,gl.RGBA,gl.UNSIGNED_BYTE, null);
-    });
-    assertGLError(gl, gl.INVALID_VALUE, "negative width", function(){
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, -1,1,0,gl.RGBA,gl.UNSIGNED_BYTE, null);
-    });
-    assertGLError(gl, gl.INVALID_VALUE, "negative height", function(){
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1,-1,0,gl.RGBA,gl.UNSIGNED_BYTE, null);
-    });
-    assertGLError(gl, gl.INVALID_ENUM, "bad format", function(){
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1,1,0,gl.FLOAT,gl.UNSIGNED_BYTE, null);
-    });
-    assertGLError(gl, gl.INVALID_ENUM, "bad type", function(){
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1,1,0,gl.RGBA,gl.TEXTURE_2D, null);
-    });
-    assertGLError(gl, gl.INVALID_OPERATION, "not enough data", function(){
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1,1,0,gl.RGBA,gl.UNSIGNED_BYTE, new Uint8Array(3));
-    });
-    assertGLError(gl, gl.INVALID_OPERATION, "format and type incompatible",function(){
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1,1,0,gl.RGBA,gl.UNSIGNED_SHORT_5_6_5, null);
-    });
-    assertGLError(gl, gl.INVALID_OPERATION, "format and type incompatible",function(){
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, 1,1,0,gl.RGB,gl.UNSIGNED_SHORT_4_4_4_4, null);
-    });
+function testrunner(gl, expected, desc, fn) {
+   var tex = setup(gl);
+   fn();
+   glErrorShouldBe(gl, expected, desc);
+   teardown(gl, tex);
 }
 
+ var data = new Uint8Array(4);
+ testrunner(gl, gl.INVALID_OPERATION, "not enough data", function(){
+     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 2,1,0,gl.RGBA,gl.UNSIGNED_BYTE, data);
+ });
+ testrunner(gl, gl.INVALID_OPERATION, "not enough data", function(){
+     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1,2,0,gl.RGBA,gl.UNSIGNED_BYTE, data);
+ });
+ testrunner(gl, gl.INVALID_ENUM, "bad target", function(){
+     gl.texImage2D(gl.FLOAT, 0, gl.RGBA, 1,1,0,gl.RGBA,gl.UNSIGNED_BYTE, null);
+ });
+ testrunner(gl, gl.INVALID_ENUM, "bad internal format/format", function(){
+     gl.texImage2D(gl.TEXTURE_2D, 0, gl.FLOAT, 1,1,0,gl.FLOAT,gl.UNSIGNED_BYTE, null);
+ });
+ testrunner(gl, gl.INVALID_VALUE, "border > 0", function(){
+     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1,1,48,gl.RGBA,gl.UNSIGNED_BYTE, null);
+ });
+ // The spec says zero size is OK. If you disagree please list the section
+ // in the spec that details this issue.
+ testrunner(gl, gl.NO_ERROR, "zero size", function(){
+     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 0,0,0,gl.RGBA,gl.UNSIGNED_BYTE, null);
+ });
+ testrunner(gl, gl.INVALID_VALUE, "negative width", function(){
+     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, -1,1,0,gl.RGBA,gl.UNSIGNED_BYTE, null);
+ });
+ testrunner(gl, gl.INVALID_VALUE, "negative height", function(){
+     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1,-1,0,gl.RGBA,gl.UNSIGNED_BYTE, null);
+ });
+ testrunner(gl, gl.INVALID_ENUM, "bad format", function(){
+     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1,1,0,gl.FLOAT,gl.UNSIGNED_BYTE, null);
+ });
+ testrunner(gl, gl.INVALID_ENUM, "bad type", function(){
+     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1,1,0,gl.RGBA,gl.TEXTURE_2D, null);
+ });
+ testrunner(gl, gl.INVALID_OPERATION, "not enough data", function(){
+     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1,1,0,gl.RGBA,gl.UNSIGNED_BYTE, new Uint8Array(3));
+ });
+ testrunner(gl, gl.INVALID_OPERATION, "format and type incompatible",function(){
+     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1,1,0,gl.RGBA,gl.UNSIGNED_SHORT_5_6_5, null);
+ });
+ testrunner(gl, gl.INVALID_OPERATION, "format and type incompatible",function(){
+     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, 1,1,0,gl.RGB,gl.UNSIGNED_SHORT_4_4_4_4, null);
+ });
 
-Tests.endUnit = function(gl) {
-}
-
+debug("");
+var successfullyParsed = true;
 </script>
-<style>canvas{ position:absolute; }</style>
-</head><body>
-<canvas id="gl" width="16" height="16"></canvas>
-</body></html>
+<script>finishTest();</script>
+</body>
+</html>
