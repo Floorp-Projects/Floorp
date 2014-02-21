@@ -19,7 +19,7 @@
 
   <binding id="urlbar" extends="chrome://global/content/bindings/autocomplete.xml#autocomplete">
 
-    <content sizetopopup="pref">
+    <content>
       <xul:hbox anonid="textbox-container"
                 class="autocomplete-textbox-container urlbar-textbox-container"
                 flex="1" xbl:inherits="focused">
