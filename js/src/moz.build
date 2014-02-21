@@ -88,6 +88,7 @@ EXPORTS.js += [
     '../public/Utility.h',
     '../public/Value.h',
     '../public/Vector.h',
+    '../public/WeakMapPtr.h',
 ]
 
 UNIFIED_SOURCES += [
@@ -189,6 +190,7 @@ UNIFIED_SOURCES += [
     'vm/TypedArrayObject.cpp',
     'vm/Unicode.cpp',
     'vm/Value.cpp',
+    'vm/WeakMapPtr.cpp',
     'vm/Xdr.cpp',
     'yarr/PageBlock.cpp',
     'yarr/YarrCanonicalizeUCS2.cpp',
