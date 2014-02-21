@@ -2154,11 +2154,15 @@ let CustomizableUIInternal = {
     Services.prefs.setCharPref(kPrefCustomizationState, uiCustomizationState);
     Services.prefs.setBoolPref(kPrefDrawInTitlebar, drawInTitlebar);
     this.loadSavedState();
-    for (let areaId of Object.keys(gSavedState.placements)) {
-      let placements = gSavedState.placements[areaId];
-      gPlacements.set(areaId, placements);
+    // If the user just customizes toolbar/titlebar visibility, gSavedState will be null
+    // and we don't need to do anything else here:
+    if (gSavedState) {
+      for (let areaId of Object.keys(gSavedState.placements)) {
+        let placements = gSavedState.placements[areaId];
+        gPlacements.set(areaId, placements);
+      }
+      this._rebuildRegisteredAreas();
     }
-    this._rebuildRegisteredAreas();
   },
 
   _clearPreviousUIState: function() {
