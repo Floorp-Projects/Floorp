@@ -741,8 +741,7 @@ StaticBlockObject::addVar(ExclusiveContext *cx, Handle<StaticBlockObject*> block
         cx, block, id,
         /* getter = */ nullptr, /* setter = */ nullptr,
         slot, JSPROP_ENUMERATE | JSPROP_PERMANENT,
-        Shape::HAS_SHORTID, index, spp,
-        /* allowDictionary = */ false);
+        0, 0, spp, /* allowDictionary = */ false);
 }
 
 const Class BlockObject::class_ = {
@@ -829,10 +828,8 @@ js::XDRStaticBlockObject(XDRState<mode> *xdr, HandleObject enclosingScope,
         if (!shapes.growBy(count))
             return false;
 
-        for (Shape::Range<NoGC> r(obj->lastProperty()); !r.empty(); r.popFront()) {
-            Shape *shape = &r.front();
-            shapes[shape->shortid()] = shape;
-        }
+        for (Shape::Range<NoGC> r(obj->lastProperty()); !r.empty(); r.popFront())
+            shapes[obj->shapeToIndex(r.front())] = &r.front();
 
         /*
          * XDR the block object's properties. We know that there are 'count'
@@ -844,7 +841,7 @@ js::XDRStaticBlockObject(XDRState<mode> *xdr, HandleObject enclosingScope,
         for (unsigned i = 0; i < count; i++) {
             shape = shapes[i];
             JS_ASSERT(shape->hasDefaultGetter());
-            JS_ASSERT(unsigned(shape->shortid()) == i);
+            JS_ASSERT(obj->shapeToIndex(*shape) == i);
 
             propid = shape->propid();
             JS_ASSERT(JSID_IS_ATOM(propid) || JSID_IS_INT(propid));
@@ -886,12 +883,13 @@ CloneStaticBlockObject(JSContext *cx, HandleObject enclosingScope, Handle<Static
     AutoShapeVector shapes(cx);
     if (!shapes.growBy(srcBlock->slotCount()))
         return nullptr;
+
     for (Shape::Range<NoGC> r(srcBlock->lastProperty()); !r.empty(); r.popFront())
-        shapes[r.front().shortid()] = &r.front();
+        shapes[srcBlock->shapeToIndex(r.front())] = &r.front();
 
     for (Shape **p = shapes.begin(); p != shapes.end(); ++p) {
         RootedId id(cx, (*p)->propid());
-        unsigned i = (*p)->shortid();
+        unsigned i = srcBlock->shapeToIndex(**p);
 
         bool redeclared;
         if (!StaticBlockObject::addVar(cx, clone, id, i, &redeclared)) {
@@ -1259,7 +1257,7 @@ class DebugScopeProxy : public BaseProxyHandler
             if (!shape)
                 return false;
 
-            unsigned i = shape->shortid();
+            unsigned i = block->shapeToIndex(*shape);
             if (block->staticBlock().isAliased(i))
                 return false;
 
