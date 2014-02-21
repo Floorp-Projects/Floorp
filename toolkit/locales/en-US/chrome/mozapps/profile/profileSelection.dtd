@@ -27,5 +27,5 @@
 <!ENTITY            offlineState.label    "Work offline">
 <!ENTITY            offlineState.accesskey "o">
 
-<!ENTITY            autoSelect.label       "Don't ask at startup">
-<!ENTITY            autoSelect.accesskey   "s">
+<!ENTITY            useSelected.label       "Use the selected profile without asking at startup">
+<!ENTITY            useSelected.accesskey   "s">

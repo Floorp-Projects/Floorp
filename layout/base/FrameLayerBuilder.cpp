@@ -237,11 +237,13 @@ public:
     mAnimatedGeometryRoot(nullptr), mReferenceFrame(nullptr),
     mLayer(nullptr),
     mIsSolidColorInVisibleRegion(false),
+    mSingleItemFixedToViewport(false),
     mNeedComponentAlpha(false),
     mForceTransparentSurface(false),
     mImage(nullptr),
     mCommonClipCount(-1),
-    mAllDrawingAbove(false) {}
+    mAllDrawingAbove(false)
+  {}
   /**
    * Record that an item has been added to the ThebesLayer, so we
    * need to update our regions.
@@ -384,6 +386,11 @@ public:
    * True if every pixel in mVisibleRegion will have color mSolidColor.
    */
   bool mIsSolidColorInVisibleRegion;
+  /**
+   * True if the layer contains exactly one item that returned true for
+   * ShouldFixToViewport.
+   */
+  bool mSingleItemFixedToViewport;
   /**
    * True if there is any text visible in the layer that's over
    * transparent pixels in the layer.
@@ -607,10 +614,13 @@ protected:
    * has a displayport. Updates *aVisibleRegion to be the intersection of
    * aDrawRegion and the displayport, and updates *aIsSolidColorInVisibleRegion
    * (if non-null) to false if the visible region grows.
+   * aDisplayItemFixedToViewport is true if the layer contains a single display
+   * item which returned true for ShouldFixToViewport.
    * This can return the actual viewport frame for layers whose display items
    * are directly on the viewport (e.g. background-attachment:fixed backgrounds).
    */
   const nsIFrame* FindFixedPosFrameForLayerData(const nsIFrame* aAnimatedGeometryRoot,
+                                                bool aDisplayItemFixedToViewport,
                                                 const nsIntRegion& aDrawRegion,
                                                 nsIntRegion* aVisibleRegion,
                                                 bool* aIsSolidColorInVisibleRegion = nullptr);
@@ -641,11 +651,15 @@ protected:
    * @param aOpaqueRect if non-null, a region of the display item that is opaque
    * @param aSolidColor if non-null, indicates that every pixel in aVisibleRect
    * will be painted with aSolidColor by the item
+   * @param aShouldFixToViewport if true, aAnimatedGeometryRoot is the viewport
+   * and we will be adding fixed-pos metadata for this layer because the
+   * display item returned true from ShouldFixToViewport.
    */
   ThebesLayerData* FindThebesLayerFor(nsDisplayItem* aItem,
                                       const nsIntRect& aVisibleRect,
                                       const nsIFrame* aAnimatedGeometryRoot,
-                                      const nsPoint& aTopLeft);
+                                      const nsPoint& aTopLeft,
+                                      bool aShouldFixToViewport);
   ThebesLayerData* GetTopThebesLayerData()
   {
     return mThebesLayerDataStack.IsEmpty() ? nullptr
@@ -1662,6 +1676,7 @@ ThebesLayerData::CanOptimizeImageLayer(nsDisplayListBuilder* aBuilder)
 
 const nsIFrame*
 ContainerState::FindFixedPosFrameForLayerData(const nsIFrame* aAnimatedGeometryRoot,
+                                              bool aDisplayItemFixedToViewport,
                                               const nsIntRegion& aDrawRegion,
                                               nsIntRegion* aVisibleRegion,
                                               bool* aIsSolidColorInVisibleRegion)
@@ -1676,7 +1691,7 @@ ContainerState::FindFixedPosFrameForLayerData(const nsIFrame* aAnimatedGeometryR
   const nsIFrame* result = nullptr;
   nsRect displayPort;
 
-  if (viewport == aAnimatedGeometryRoot &&
+  if (viewport == aAnimatedGeometryRoot && aDisplayItemFixedToViewport &&
       nsLayoutUtils::ViewportHasDisplayPort(presContext, &displayPort)) {
     // Probably a background-attachment:fixed item
     result = viewport;
@@ -1791,6 +1806,7 @@ ContainerState::PopThebesLayerData()
 
   const nsIFrame* fixedPosFrameForLayerData =
     FindFixedPosFrameForLayerData(data->mAnimatedGeometryRoot,
+                                  data->mSingleItemFixedToViewport,
                                   data->mDrawRegion,
                                   &data->mVisibleRegion,
                                   &data->mIsSolidColorInVisibleRegion);
@@ -2071,7 +2087,7 @@ ThebesLayerData::Accumulate(ContainerState* aState,
     mDrawRegion.Or(mDrawRegion, aDrawRect);
     mDrawRegion.SimplifyOutward(4);
   }
-  
+
   bool snap;
   nsRegion opaque = aItem->GetOpaqueRegion(aState->mBuilder, &snap);
   if (!opaque.IsEmpty()) {
@@ -2123,14 +2139,21 @@ ThebesLayerData*
 ContainerState::FindThebesLayerFor(nsDisplayItem* aItem,
                                    const nsIntRect& aVisibleRect,
                                    const nsIFrame* aActiveScrolledRoot,
-                                   const nsPoint& aTopLeft)
+                                   const nsPoint& aTopLeft,
+                                   bool aShouldFixToViewport)
 {
   int32_t i;
   int32_t lowestUsableLayerWithScrolledRoot = -1;
   int32_t topmostLayerWithScrolledRoot = -1;
   for (i = mThebesLayerDataStack.Length() - 1; i >= 0; --i) {
     ThebesLayerData* data = mThebesLayerDataStack[i];
-    if (data->IsBelow(aVisibleRect)) {
+    // ThebesLayers for items returning true from ShouldFixToViewport should
+    // not be added to (or have content moved below them),
+    // since they will receive special treatment for async scrolling.
+    // If the item is going to be fixed to the viewport, don't let it combine
+    // with any existing layer.
+    if (data->IsBelow(aVisibleRect) || data->mSingleItemFixedToViewport ||
+        aShouldFixToViewport) {
       ++i;
       break;
     }
@@ -2170,6 +2193,7 @@ ContainerState::FindThebesLayerFor(nsDisplayItem* aItem,
     thebesLayerData->mLayer = layer;
     thebesLayerData->mAnimatedGeometryRoot = aActiveScrolledRoot;
     thebesLayerData->mReferenceFrame = aItem->ReferenceFrame();
+    thebesLayerData->mSingleItemFixedToViewport = aShouldFixToViewport;
 
     NS_ASSERTION(!mNewChildLayers.Contains(layer), "Layer already in list???");
     *mNewChildLayers.AppendElement() = layer.forget();
@@ -2350,6 +2374,8 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
         topLeft = animatedGeometryRoot->GetOffsetToCrossDoc(mContainerReferenceFrame);
       }
     }
+    bool shouldFixToViewport = !animatedGeometryRoot->GetParent() &&
+      item->ShouldFixToViewport(mBuilder);
 
     if (maxLayers != -1 && layerCount >= maxLayers) {
       forceInactive = true;
@@ -2403,8 +2429,9 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
                    "Should never have created a dedicated Thebes layer!");
 
       nsIntRegion visibleRegion(itemVisibleRect);
-      const nsIFrame* fixedPosFrame = FindFixedPosFrameForLayerData(animatedGeometryRoot,
-        nsIntRegion(itemDrawRect), &visibleRegion);
+      const nsIFrame* fixedPosFrame =
+        FindFixedPosFrameForLayerData(animatedGeometryRoot, shouldFixToViewport,
+                                      nsIntRegion(itemDrawRect), &visibleRegion);
       if (fixedPosFrame) {
         itemVisibleRect = visibleRegion.GetBounds();
       }
@@ -2487,7 +2514,8 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
                                          dummy);
     } else {
       ThebesLayerData* data =
-        FindThebesLayerFor(item, itemVisibleRect, animatedGeometryRoot, topLeft);
+        FindThebesLayerFor(item, itemVisibleRect, animatedGeometryRoot, topLeft,
+                           shouldFixToViewport);
 
       if (itemType == nsDisplayItem::TYPE_LAYER_EVENT_REGIONS) {
         nsDisplayLayerEventRegions* eventRegions =
