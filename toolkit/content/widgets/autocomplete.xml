@@ -22,7 +22,7 @@
       <stylesheet src="chrome://global/skin/autocomplete.css"/>
     </resources>
 
-    <content sizetopopup="pref">
+    <content>
       <xul:hbox class="autocomplete-textbox-container" flex="1" xbl:inherits="focused">
         <children includes="image|deck|stack|box">
           <xul:image class="autocomplete-icon" allowevents="true"/>
