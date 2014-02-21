@@ -83,7 +83,7 @@ def build_dict(config, env=os.environ):
     d['tests_enabled'] = substs.get('ENABLE_TESTS') == "1"
     d['bin_suffix'] = substs.get('BIN_SUFFIX', '')
 
-    d['ogg'] = bool(substs.get('MOZ_OGG'))
+    d['ogg'] = True
     d['webm'] = bool(substs.get('MOZ_WEBM'))
     d['wave'] = bool(substs.get('MOZ_WAVE'))
 

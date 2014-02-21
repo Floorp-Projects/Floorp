@@ -137,13 +137,9 @@ nsresult HTMLVideoElement::SetAcceptHeader(nsIHttpChannel* aChannel)
 #ifdef MOZ_WEBM
       "video/webm,"
 #endif
-#ifdef MOZ_OGG
       "video/ogg,"
-#endif
       "video/*;q=0.9,"
-#ifdef MOZ_OGG
       "application/ogg;q=0.7,"
-#endif
       "audio/*;q=0.6,*/*;q=0.5");
 
   return aChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),

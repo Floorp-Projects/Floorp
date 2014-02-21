@@ -208,9 +208,7 @@ pref("media.fragmented-mp4.use-blank-decoder", false);
 #ifdef MOZ_RAW
 pref("media.raw.enabled", true);
 #endif
-#ifdef MOZ_OGG
 pref("media.ogg.enabled", true);
-#endif
 #ifdef MOZ_OPUS
 pref("media.opus.enabled", true);
 #endif
