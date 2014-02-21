@@ -409,10 +409,11 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
         return false;
       }
       ContainerLayerComposite* container = ShadowContainer(oia)->AsContainerLayerComposite();
-      if (!container) {
+      if (!container ||
+          !container->InsertAfter(child, ShadowAfter(oia)->AsLayer()))
+      {
         return false;
       }
-      container->InsertAfter(child, ShadowAfter(oia)->AsLayer());
       break;
     }
     case Edit::TOpAppendChild: {
@@ -424,10 +425,11 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
         return false;
       }
       ContainerLayerComposite* container = ShadowContainer(oac)->AsContainerLayerComposite();
-      if (!container) {
+      if (!container ||
+          !container->InsertAfter(child, nullptr))
+      {
         return false;
       }
-      container->InsertAfter(child, nullptr);
       break;
     }
     case Edit::TOpRemoveChild: {
