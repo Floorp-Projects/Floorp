@@ -770,6 +770,7 @@ class ObjectElements
     friend class ObjectImpl;
     friend class ArrayObject;
     friend class ArrayBufferObject;
+    friend class ArrayBufferViewObject;
     friend class TypedArrayObject;
     friend class Nursery;
 
