@@ -178,7 +178,9 @@ TelephonyListener::CallStateChanged(uint32_t aServiceId,
                                     bool aIsActive,
                                     bool aIsOutgoing,
                                     bool aIsEmergency,
-                                    bool aIsConference)
+                                    bool aIsConference,
+                                    bool aIsSwitchable,
+                                    bool aIsMergeable)
 {
   BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
   NS_ENSURE_TRUE(hfp, NS_ERROR_FAILURE);
@@ -196,7 +198,9 @@ TelephonyListener::EnumerateCallState(uint32_t aServiceId,
                                       bool aIsActive,
                                       bool aIsOutgoing,
                                       bool aIsEmergency,
-                                      bool aIsConference)
+                                      bool aIsConference,
+                                      bool aIsSwitchable,
+                                      bool aIsMergeable)
 {
   BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
   NS_ENSURE_TRUE(hfp, NS_ERROR_FAILURE);
