@@ -3752,6 +3752,7 @@ class MPow
     static MPow *New(TempAllocator &alloc, MDefinition *input, MDefinition *power,
                      MIRType powerType)
     {
+        JS_ASSERT(powerType == MIRType_Double || powerType == MIRType_Int32);
         return new(alloc) MPow(input, power, powerType);
     }
 
