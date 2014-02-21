@@ -28,7 +28,7 @@ holder_set(JSContext *cx, JS::HandleObject holder, JS::HandleId id, bool strict,
 
 namespace XrayUtils {
 
-extern const JSClass HolderClass;
+bool IsXPCWNHolderClass(const JSClass *clasp);
 
 bool CloneExpandoChain(JSContext *cx, JSObject *src, JSObject *dst);
 

@@ -37,18 +37,6 @@ using js::CheckedUnwrap;
 
 namespace xpc {
 
-static const uint32_t JSSLOT_RESOLVING = 0;
-
-namespace XrayUtils {
-
-const JSClass HolderClass = {
-    "NativePropertyHolder",
-    JSCLASS_HAS_RESERVED_SLOTS(2),
-    JS_PropertyStub,        JS_DeletePropertyStub, holder_get,      holder_set,
-    JS_EnumerateStub,       JS_ResolveStub,  JS_ConvertStub
-};
-}
-
 using namespace XrayUtils;
 
 XrayType
@@ -65,6 +53,7 @@ GetXrayType(JSObject *obj)
     return NotXray;
 }
 
+const uint32_t JSSLOT_RESOLVING = 0;
 ResolvingId::ResolvingId(JSContext *cx, HandleObject wrapper, HandleId id)
   : mId(id),
     mHolder(cx, getHolderObject(wrapper)),
@@ -231,7 +220,14 @@ public:
 
     virtual JSObject* createHolder(JSContext *cx, JSObject *wrapper);
 
+    static const JSClass HolderClass;
     static XPCWrappedNativeXrayTraits singleton;
+};
+
+const JSClass XPCWrappedNativeXrayTraits::HolderClass = {
+    "NativePropertyHolder", JSCLASS_HAS_RESERVED_SLOTS(2),
+    JS_PropertyStub, JS_DeletePropertyStub, holder_get, holder_set,
+    JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub
 };
 
 class DOMXrayTraits : public XrayTraits
@@ -534,6 +530,17 @@ XPCWrappedNativeXrayTraits::isResolving(JSContext *cx, JSObject *holder,
         return false;
     return cur->isResolving(id);
 }
+
+namespace XrayUtils {
+
+bool
+IsXPCWNHolderClass(const JSClass *clasp)
+{
+  return clasp == &XPCWrappedNativeXrayTraits::HolderClass;
+}
+
+}
+
 
 // Some DOM objects have shared properties that don't have an explicit
 // getter/setter and rely on the class getter/setter. We install a
