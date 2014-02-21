@@ -4,15 +4,11 @@
   <title>Test for plugin freezing and thawing</title>
   <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="head_plain.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
 <div id="content" style="display: none">
 </div>
-<script type="text/javascript">
-setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
-</script>
 <embed id='e1' type='application/x-test'></embed>
 <script>
 var e1 = document.getElementById('e1');
