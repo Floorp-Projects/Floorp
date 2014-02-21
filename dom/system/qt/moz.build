@@ -18,7 +18,7 @@ if CONFIG['MOZ_ENABLE_QT5GEOPOSITION']:
 
 if CONFIG['MOZ_ENABLE_QT5FEEDBACK']:
     SOURCES += [
-        'nsHapticFeedback.cpp',
+        'QtHapticFeedback.cpp',
     ]
 
 FAIL_ON_WARNINGS = True
