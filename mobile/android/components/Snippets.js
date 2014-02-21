@@ -29,6 +29,9 @@ const SNIPPETS_GEO_LAST_UPDATE_PREF = "browser.snippets.geoLastUpdate";
 // Pref where we'll cache the user's country.
 const SNIPPETS_COUNTRY_CODE_PREF = "browser.snippets.countryCode";
 
+// Pref where we store an array IDs of snippets that should not be shown again
+const SNIPPETS_REMOVED_IDS_PREF = "browser.snippets.removedIds";
+
 // How frequently we update the user's country code from the server (30 days).
 const SNIPPETS_GEO_UPDATE_INTERVAL_MS = 86400000*30;
 
@@ -168,6 +171,17 @@ function updateBanner(response) {
   gMessageIds = [];
 
   let messages = JSON.parse(response);
+
+  try {
+    let removedSnippetIds = JSON.parse(Services.prefs.getCharPref(SNIPPETS_REMOVED_IDS_PREF));
+    messages = messages.filter(function(message) {
+      // Only include the snippet if it has not been previously removed.
+      return removedSnippetIds.indexOf(message.id) === -1;
+    });
+  } catch (e) {
+    // If the pref doesn't exist, there aren't any snippets to filter out.
+  }
+
   messages.forEach(function(message) {
     // Don't add this message to the banner if it's not supposed to be shown in this country.
     if ("target_geo" in message && message.target_geo != gCountryCode) {
@@ -180,6 +194,11 @@ function updateBanner(response) {
         let parentId = gChromeWin.BrowserApp.selectedTab.id;
         gChromeWin.BrowserApp.addTab(message.url, { parentId: parentId });
       },
+      ondismiss: function() {
+        // Remove this snippet from the banner, and store its id so we'll never show it again.
+        Home.banner.remove(id);
+        removeSnippet(message.id);
+      },
       onshown: function() {
         // 10% of the time, record the snippet id and a timestamp
         if (Math.random() < .1) {
@@ -190,6 +209,23 @@ function updateBanner(response) {
     // Keep track of the message we added so that we can remove it later.
     gMessageIds.push(id);
   });
+}
+
+/**
+ * Appends snippet id to the end of `snippets-removed.txt`
+ *
+ * @param snippetId unique id for snippet, sent from snippets server
+ */
+function removeSnippet(snippetId) {
+  let removedSnippetIds;
+  try {
+    removedSnippetIds = JSON.parse(Services.prefs.getCharPref(SNIPPETS_REMOVED_IDS_PREF));
+  } catch (e) {
+    removedSnippetIds = [];
+  }
+
+  removedSnippetIds.push(snippetId);
+  Services.prefs.setCharPref(SNIPPETS_REMOVED_IDS_PREF, JSON.stringify(removedSnippetIds));
 }
 
 /**
