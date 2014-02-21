@@ -321,7 +321,7 @@ let HomePanels = (function () {
       delete _panels[id];
 
       sendMessageToJava({
-        type: "HomePanels:Remove",
+        type: "HomePanels:Uninstall",
         panel: _panelToJSON(panel)
       });
     }
