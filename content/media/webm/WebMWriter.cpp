@@ -43,6 +43,7 @@ WebMWriter::SetMetadata(TrackMetadataBase* aMetadata)
     VP8Metadata* meta = static_cast<VP8Metadata*>(aMetadata);
     MOZ_ASSERT(meta, "Cannot find vp8 encoder metadata");
     mEbmlComposer->SetVideoConfig(meta->mWidth, meta->mHeight,
+                                  meta->mDisplayWidth, meta->mDisplayHeight,
                                   meta->mEncodedFrameRate);
     mMetadataRequiredFlag = mMetadataRequiredFlag & ~ContainerWriter::CREATE_VIDEO_TRACK;
   }

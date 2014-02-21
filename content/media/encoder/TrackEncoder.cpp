@@ -163,7 +163,10 @@ VideoTrackEncoder::NotifyQueuedTrackChanges(MediaStreamGraph* aGraph,
       VideoChunk chunk = *iter;
       if (!chunk.IsNull()) {
         gfx::IntSize imgsize = chunk.mFrame.GetImage()->GetSize();
-        nsresult rv = Init(imgsize.width, imgsize.height, aTrackRate);
+        gfxIntSize intrinsicSize = chunk.mFrame.GetIntrinsicSize();
+        nsresult rv = Init(imgsize.width, imgsize.height,
+                           intrinsicSize.width, intrinsicSize.height,
+                           aTrackRate);
         if (NS_FAILED(rv)) {
           LOG("[VideoTrackEncoder]: Fail to initialize the encoder!");
           NotifyCancel();
@@ -214,7 +217,8 @@ VideoTrackEncoder::NotifyEndOfStream()
   // If source video track is muted till the end of encoding, initialize the
   // encoder with default frame width, frame height, and track rate.
   if (!mCanceled && !mInitialized) {
-    Init(DEFAULT_FRAME_WIDTH, DEFAULT_FRAME_HEIGHT, DEFAULT_TRACK_RATE);
+    Init(DEFAULT_FRAME_WIDTH, DEFAULT_FRAME_HEIGHT,
+         DEFAULT_FRAME_WIDTH, DEFAULT_FRAME_HEIGHT, DEFAULT_TRACK_RATE);
   }
 
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);

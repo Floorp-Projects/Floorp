@@ -21,6 +21,7 @@ void writeSegmentInformation(EbmlGlobal *ebml, EbmlLoc *startInfo, unsigned long
 // this function is a helper only, it assumes a lot of defaults
 void writeVideoTrack(EbmlGlobal *ebml, unsigned int trackNumber, int flagLacing,
                      const char *codecId, unsigned int pixelWidth, unsigned int pixelHeight,
+                     unsigned int displayWidth, unsigned int displayHeight,
                      double frameRate);
 void writeAudioTrack(EbmlGlobal *glob, unsigned int trackNumber, int flagLacing,
                      const char *codecId, double samplingFrequency, unsigned int channels,
