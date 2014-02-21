@@ -721,19 +721,27 @@ ContainerLayer::ContainerLayer(LayerManager* aManager, void* aImplData)
 
 ContainerLayer::~ContainerLayer() {}
 
-void
+bool
 ContainerLayer::InsertAfter(Layer* aChild, Layer* aAfter)
 {
-  NS_ASSERTION(aChild->Manager() == Manager(),
-               "Child has wrong manager");
-  NS_ASSERTION(!aChild->GetParent(),
-               "aChild already in the tree");
-  NS_ASSERTION(!aChild->GetNextSibling() && !aChild->GetPrevSibling(),
-               "aChild already has siblings?");
-  NS_ASSERTION(!aAfter ||
-               (aAfter->Manager() == Manager() &&
-                aAfter->GetParent() == this),
-               "aAfter is not our child");
+  if(aChild->Manager() != Manager()) {
+    NS_ERROR("Child has wrong manager");
+    return false;
+  }
+  if(aChild->GetParent()) {
+    NS_ERROR("aChild already in the tree");
+    return false;
+  }
+  if (aChild->GetNextSibling() || aChild->GetPrevSibling()) {
+    NS_ERROR("aChild already has siblings?");
+    return false;
+  }
+  if (aAfter && (aAfter->Manager() != Manager() ||
+                 aAfter->GetParent() != this))
+  {
+    NS_ERROR("aAfter is not our child");
+    return false;
+  }
 
   aChild->SetParent(this);
   if (aAfter == mLastChild) {
@@ -747,7 +755,7 @@ ContainerLayer::InsertAfter(Layer* aChild, Layer* aAfter)
     mFirstChild = aChild;
     NS_ADDREF(aChild);
     DidInsertChild(aChild);
-    return;
+    return true;
   }
 
   Layer* next = aAfter->GetNextSibling();
@@ -759,6 +767,7 @@ ContainerLayer::InsertAfter(Layer* aChild, Layer* aAfter)
   aAfter->SetNextSibling(aChild);
   NS_ADDREF(aChild);
   DidInsertChild(aChild);
+  return true;
 }
 
 void
