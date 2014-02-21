@@ -2,20 +2,18 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#filter substitution
-
-#expand <menu id="__ID_PREFIX__charsetMenu"
+<menu id="charsetMenu"
     label="&charsetMenu.label;"
 #ifndef OMIT_ACCESSKEYS
     accesskey="&charsetMenu.accesskey;"
 #endif
-    oncommand="MultiplexHandler(event)"
+    oncommand="BrowserSetForcedCharacterSet(event.target.getAttribute('charset'));"
 #ifdef OMIT_ACCESSKEYS
-#expand    onpopupshowing="CharsetMenu.build(event.target, '__ID_PREFIX__', false);"
+    onpopupshowing="CharsetMenu.build(event.target, false);"
 #else
-#expand    onpopupshowing="CharsetMenu.build(event.target, '__ID_PREFIX__');"
+    onpopupshowing="CharsetMenu.build(event.target);"
 #endif
-    onpopupshown="UpdateMenus(event);">
+    onpopupshown="UpdateCurrentCharset(this);">
   <menupopup>
   </menupopup>
 </menu>
