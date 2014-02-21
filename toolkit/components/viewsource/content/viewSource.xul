@@ -201,10 +201,11 @@
           <menu id="charsetMenu"
                 label="&charsetMenu.label;"
                 accesskey="&charsetMenu.accesskey;"
-                oncommand="BrowserSetCharacterSet(event);"
+                oncommand="MultiplexHandler(event);"
                 onpopupshowing="CharsetMenu.build(event.target);"
-                onpopupshown="CharsetMenu.update(event, content.document.characterSet);">
-            <menupopup/>
+                onpopupshown="UpdateMenus();">
+            <menupopup>
+            </menupopup>
           </menu>
           <menuseparator/>
           <menuitem id="menu_wrapLongLines" type="checkbox" command="cmd_wrapLongLines"
