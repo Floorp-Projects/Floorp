@@ -14,7 +14,7 @@ XPCOMUtils.defineLazyGetter(this, "gBundle", function() {
 });
 
 const kAutoDetectors = [
-  ["off", "off"],
+  ["off", ""],
   ["ja", "ja_parallel_state_machine"],
   ["ru", "ruprob"],
   ["uk", "ukprob"]
@@ -89,46 +89,71 @@ const kPinned = [
 
 kPinned.forEach(x => kEncodings.delete(x));
 
+function CharsetComparator(a, b) {
+  // Normal sorting sorts the part in parenthesis in an order that
+  // happens to make the less frequently-used items first.
+  let titleA = a.label.replace(/\(.*/, "") + b.value;
+  let titleB = b.label.replace(/\(.*/, "") + a.value;
+  // Secondarily reverse sort by encoding name to sort "windows" or
+  // "shift_jis" first.
+  return titleA.localeCompare(titleB) || b.value.localeCompare(a.value);
+}
+
+function SetDetector(event) {
+  let str = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
+  str.data = event.target.getAttribute("detector");
+  Services.prefs.setComplexValue("intl.charset.detector", Ci.nsISupportsString, str);
+}
+
+function UpdateDetectorMenu(event) {
+  event.stopPropagation();
+  let detector = Services.prefs.getComplexValue("intl.charset.detector", Ci.nsIPrefLocalizedString);
+  let menuitem = this.getElementsByAttribute("detector", detector).item(0);
+  if (menuitem) {
+    menuitem.setAttribute("checked", "true");
+  }
+}
 
 let gDetectorInfoCache, gCharsetInfoCache, gPinnedInfoCache;
 
 let CharsetMenu = {
-  build: function(parent, idPrefix="", showAccessKeys=true) {
+  build: function(parent, showAccessKeys=true, showDetector=true) {
     function createDOMNode(doc, nodeInfo) {
       let node = doc.createElement("menuitem");
       node.setAttribute("type", "radio");
-      node.setAttribute("name", nodeInfo.name);
+      node.setAttribute("name", nodeInfo.name + "Group");
+      node.setAttribute(nodeInfo.name, nodeInfo.value);
       node.setAttribute("label", nodeInfo.label);
       if (showAccessKeys && nodeInfo.accesskey) {
         node.setAttribute("accesskey", nodeInfo.accesskey);
       }
-      if (idPrefix) {
-        node.id = idPrefix + nodeInfo.id;
-      } else {
-        node.id = nodeInfo.id;
-      }
       return node;
     }
 
-    if (parent.childElementCount > 0) {
+    if (parent.hasChildNodes()) {
       // Detector menu or charset menu already built
       return;
     }
+    this._ensureDataReady();
     let doc = parent.ownerDocument;
 
-    let menuNode = doc.createElement("menu");
-    menuNode.setAttribute("label", gBundle.GetStringFromName("charsetMenuAutodet"));
-    if (showAccessKeys) {
-      menuNode.setAttribute("accesskey", gBundle.GetStringFromName("charsetMenuAutodet.key"));
+    if (showDetector) {
+      let menuNode = doc.createElement("menu");
+      menuNode.setAttribute("label", gBundle.GetStringFromName("charsetMenuAutodet"));
+      if (showAccessKeys) {
+        menuNode.setAttribute("accesskey", gBundle.GetStringFromName("charsetMenuAutodet.key"));
+      }
+      parent.appendChild(menuNode);
+
+      let menuPopupNode = doc.createElement("menupopup");
+      menuNode.appendChild(menuPopupNode);
+      menuPopupNode.addEventListener("command", SetDetector);
+      menuPopupNode.addEventListener("popupshown", UpdateDetectorMenu);
+
+      gDetectorInfoCache.forEach(detectorInfo => menuPopupNode.appendChild(createDOMNode(doc, detectorInfo)));
+      parent.appendChild(doc.createElement("menuseparator"));
     }
-    parent.appendChild(menuNode);
 
-    let menuPopupNode = doc.createElement("menupopup");
-    menuNode.appendChild(menuPopupNode);
-
-    this._ensureDataReady();
-    gDetectorInfoCache.forEach(detectorInfo => menuPopupNode.appendChild(createDOMNode(doc, detectorInfo)));
-    parent.appendChild(doc.createElement("menuseparator"));
     gPinnedInfoCache.forEach(charsetInfo => parent.appendChild(createDOMNode(doc, charsetInfo)));
     parent.appendChild(doc.createElement("menuseparator"));
     gCharsetInfoCache.forEach(charsetInfo => parent.appendChild(createDOMNode(doc, charsetInfo)));
@@ -147,58 +172,30 @@ let CharsetMenu = {
     if (!gDetectorInfoCache) {
       gDetectorInfoCache = this.getDetectorInfo();
       gPinnedInfoCache = this.getCharsetInfo(kPinned, false);
-      gCharsetInfoCache = this.getCharsetInfo([...kEncodings]);
+      gCharsetInfoCache = this.getCharsetInfo(kEncodings);
     }
   },
 
   getDetectorInfo: function() {
     return kAutoDetectors.map(([detectorName, nodeId]) => ({
-      id: "chardet." + nodeId,
       label: this._getDetectorLabel(detectorName),
       accesskey: this._getDetectorAccesskey(detectorName),
-      name: "detectorGroup",
+      name: "detector",
+      value: nodeId
     }));
   },
 
   getCharsetInfo: function(charsets, sort=true) {
-    let list = charsets.map(charset => ({
-      id: "charset." + charset,
+    let list = [{
       label: this._getCharsetLabel(charset),
       accesskey: this._getCharsetAccessKey(charset),
-      name: "charsetGroup",
-    }));
+      name: "charset",
+      value: charset
+    } for (charset of charsets)];
 
-    if (!sort) {
-      return list;
+    if (sort) {
+      list.sort(CharsetComparator);
     }
-
-    list.sort(function (a, b) {
-      let titleA = a.label;
-      let titleB = b.label;
-      // Normal sorting sorts the part in parenthesis in an order that
-      // happens to make the less frequently-used items first.
-      let index;
-      if ((index = titleA.indexOf("(")) > -1) {
-        titleA = titleA.substring(0, index);
-      }
-      if ((index = titleB.indexOf("(")) > -1) {
-        titleA = titleB.substring(0, index);
-      }
-      let comp = titleA.localeCompare(titleB);
-      if (comp) {
-        return comp;
-      }
-      // secondarily reverse sort by encoding name to sort "windows" or
-      // "shift_jis" first. This works regardless of localization, because
-      // the ids aren't localized.
-      if (a.id < b.id) {
-        return 1;
-      }
-      if (b.id < a.id) {
-        return -1;
-      }
-      return 0;
-    });
     return list;
   },
 
@@ -234,6 +231,30 @@ let CharsetMenu = {
       return gBundle.GetStringFromName(charset + ".key");
     } catch (ex) {}
     return "";
+  },
+
+  /**
+   * For substantially similar encodings, treat two encodings as the same
+   * for the purpose of the check mark.
+   */
+  foldCharset: function(charset) {
+    switch (charset) {
+      case "ISO-8859-8-I":
+        return "windows-1255";
+
+      case "gb18030":
+        return "gbk";
+
+      default:
+        return charset;
+    }
+  },
+
+  update: function(event, charset) {
+    let menuitem = event.target.getElementsByAttribute("charset", this.foldCharset(charset)).item(0);
+    if (menuitem) {
+      menuitem.setAttribute("checked", "true");
+    }
   },
 };
 
