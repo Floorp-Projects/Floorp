@@ -10,7 +10,7 @@ Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://services-common/utils.js");
-Cu.import("resource://services-common/hawk.js");
+Cu.import("resource://services-common/hawkclient.js");
 Cu.import("resource://services-crypto/utils.js");
 Cu.import("resource://gre/modules/FxAccountsCommon.js");
 Cu.import("resource://gre/modules/Credentials.jsm");
