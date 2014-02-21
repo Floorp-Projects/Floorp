@@ -2355,6 +2355,18 @@ CanvasRenderingContext2D::MeasureText(const nsAString& rawText,
   return new TextMetrics(width);
 }
 
+// Callback function, for freeing hit regions bounds values stored in property table
+static void
+ReleaseBBoxPropertyValue(void*    aObject,       /* unused */
+                            nsIAtom* aPropertyName, /* unused */
+                            void*    aPropertyValue,
+                            void*    aData          /* unused */)
+{
+  nsRect* valPtr =
+    static_cast<nsRect*>(aPropertyValue);
+  delete valPtr;
+}
+
 void
 CanvasRenderingContext2D::AddHitRegion(const HitRegionOptions& options, ErrorResult& error)
 {
@@ -2373,6 +2385,18 @@ CanvasRenderingContext2D::AddHitRegion(const HitRegionOptions& options, ErrorRes
     error.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
     return;
   }
+
+  // check if the path is valid
+  EnsureUserSpacePath(CanvasWindingRule::Nonzero);
+  if(!mPath) {
+    error.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return;
+  }
+
+  // get the bounds of the current path. They are relative to the canvas
+  mgfx::Rect bounds(mPath->GetBounds(mTarget->GetTransform()));
+  nsRect* nsBounds = new nsRect(bounds.x, bounds.y, bounds.width, bounds.height);
+  options.mControl->SetProperty(nsGkAtoms::hitregion, nsBounds, ReleaseBBoxPropertyValue, true);
 
   // finally, add the region to the list if it has an ID
   if (options.mId.Length() != 0) {
