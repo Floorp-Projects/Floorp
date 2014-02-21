@@ -74,6 +74,9 @@ private:
   // Muted frame, we only create it once.
   nsTArray<uint8_t> mMuteFrame;
 
+  // I420 frame, convert the 4:4:4, 4:2:2 to I420.
+  nsTArray<uint8_t> mI420Frame;
+
   /**
    * A local segment queue which takes the raw data out from mRawSegment in the
    * call of GetEncodedTrack(). Since we implement the fixed FPS encoding
