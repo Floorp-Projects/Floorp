@@ -1,0 +1,131 @@
+<html>
+<head>
+<meta charset="utf-8" />
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+<script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+</head>
+<body>
+  <script class="testbody" type="application/javascript">
+"use strict";
+var Cu = SpecialPowers.Cu;
+var rtcid = Cu.import("resource://gre/modules/media/IdpProxy.jsm");
+var IdpProxy = rtcid.IdpProxy;
+var request = {
+  type: "SIGN",
+  message: "foo"
+};
+
+function test_domain_sandbox(done) {
+  var diabolical = {
+    toString : function() {
+      return "example.com/path";
+    }
+  };
+  var domains = [ "ex/foo", "user@ex", "user:pass@ex", "ex#foo", "ex?foo",
+                  "", 12, null, diabolical, true ];
+  domains.forEach(function(domain) {
+    try {
+      var idp = new IdpProxy(domain);
+      ok(false, "IdpProxy didn't catch bad domain: " + domain);
+    } catch (e) {
+      var str = (typeof domain === "string") ? domain : typeof domain;
+      ok(true, "Evil domain '" + str + "' raises exception");
+    }
+  });
+  done();
+}
+
+function test_protocol_sandbox(done) {
+  var protos = [ "../evil/proto", "..%2Fevil%2Fproto",
+                 "\\evil", "%5cevil", 12, true, {} ];
+  protos.forEach(function(proto) {
+    try {
+      var idp = new IdpProxy("example.com", proto);
+      ok(false, "IdpProxy didn't catch bad protocol: " + proto);
+    } catch (e) {
+      var str = (typeof proto === "string") ? proto : typeof proto;
+      ok(true, "Evil protocol '" + proto + "' raises exception");
+    }
+  });
+  done();
+}
+
+function handleFailure(done) {
+  return function failure(error) {
+    ok(false, "IdP error" + error);
+    done();
+  };
+}
+
+function test_success_response(done) {
+  var idp;
+  var failure = handleFailure(done);
+  var timeout = setTimeout(failure, 5000);;
+
+  function handleResponse(response) {
+    is(SpecialPowers.wrap(response).type, "SUCCESS", "IdP responds with SUCCESS");
+    idp.close();
+    clearTimeout(timeout);
+    done();
+  }
+
+  idp = new IdpProxy("example.com", "idp.html");
+  idp.start(failure);
+  idp.send(request, handleResponse);
+}
+
+function test_error_response(done) {
+  var idp;
+  var failure = handleFailure(done);
+  var timeout = setTimeout(failure, 5000);;
+
+  function handleResponse(response) {
+    is(SpecialPowers.wrap(response).type, "ERROR", "IdP should produce ERROR");
+    idp.close();
+    clearTimeout(timeout);
+    done();
+  }
+
+  idp = new IdpProxy("example.com", "idp.html#error");
+  idp.start(failure);
+  idp.send(request, handleResponse);
+}
+
+function test_delayed_response(done) {
+  var idp;
+  var failure = handleFailure(done);
+  var timeout = setTimeout(failure, 5000);;
+
+  function handleResponse(response) {
+    is(SpecialPowers.wrap(response).type, "SUCCESS",
+       "IdP should handle delayed response");
+    idp.close();
+    clearTimeout(timeout);
+    done();
+  }
+
+  idp = new IdpProxy("example.com", "idp.html#delay100");
+  idp.start(failure);
+  idp.send(request, handleResponse);
+}
+
+var TESTS = [ test_domain_sandbox, test_protocol_sandbox,
+              test_success_response, test_error_response,
+              test_delayed_response ];
+
+function run_next_test() {
+  if (TESTS.length) {
+    var test = TESTS.shift();
+    test(run_next_test);
+  } else {
+    SimpleTest.finish();
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({
+  "set" : [ [ "dom.messageChannel.enabled", true ] ]
+}, run_next_test);
+</script>
+  </body>
+</html>
