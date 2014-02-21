@@ -2152,10 +2152,6 @@ RadioInterface.prototype = {
                                                       message.callIndex,
                                                       message.notification);
         break;
-      case "conferenceError":
-        gTelephonyProvider.notifyConferenceError(message.errorName,
-                                                 message.errorMsg);
-        break;
       case "datacallerror":
         connHandler.handleDataCallError(message);
         break;
@@ -4179,9 +4175,13 @@ RadioInterface.prototype = {
   },
 
   sendWorkerMessage: function(rilMessageType, message, callback) {
-    this.workerMessenger.send(rilMessageType, message, function(response) {
-      return callback.handleResponse(response);
-    });
+    if (callback) {
+      this.workerMessenger.send(rilMessageType, message, function(response) {
+        return callback.handleResponse(response);
+      });
+    } else {
+      this.workerMessenger.send(rilMessageType, message);
+    }
   }
 };
 
