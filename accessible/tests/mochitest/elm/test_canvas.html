@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Accessible boundaries for hit regions</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../layout.js"></script>
+
+  <script type="application/javascript">
+  SpecialPowers.setBoolPref("canvas.hitregions.enabled", true);
+
+    function doTest()
+    {
+      var canv = document.getElementById("c");
+      var context = canv.getContext('2d');
+      var element = document.getElementById("showA");
+      context.beginPath();
+      context.rect(10, 10, 150, 100);
+      context.addHitRegion({control: element});
+      var input = getAccessible("showA");
+      var input = getAccessible("showA");
+      var [cnvX, cnvY, cnvWidth, cnvHeight] = getBoundsForDOMElm(canv);
+      var [accX, accY, accWidth, accHeight] = getBounds(input);
+      is(accX, cnvX + 10, "accX should be 10 and not " + accX);
+      is(accY, cnvY + 10, "accY should be 10 and not " + accY);
+      is(accWidth, 150, "accWidth should be 150 and not " + accWidth);
+      is(accHeight, 100, "accHeight should be 100 and not " + accHeight);
+
+      SpecialPowers.setBoolPref("canvas.hitregions.enabled", false);
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <canvas id="c">
+    <input id="showA" type="checkbox"><label for="showA"> Show As </label>
+  </canvas>
+
+</body>
+</html>
