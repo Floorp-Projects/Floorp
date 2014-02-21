@@ -4399,6 +4399,19 @@ AC_SUBST(MOZ_STARTUP_NOTIFICATION_CFLAGS)
 AC_SUBST(MOZ_STARTUP_NOTIFICATION_LIBS)
 
 dnl ========================================================
+dnl Disable printing
+dnl ========================================================
+MOZ_ARG_DISABLE_BOOL(printing,
+[  --disable-printing      Disable printing support],
+    NS_PRINTING=,
+    NS_PRINTING=1)
+
+if test "$NS_PRINTING"; then
+    AC_DEFINE(NS_PRINTING)
+    AC_DEFINE(NS_PRINT_PREVIEW)
+fi
+
+dnl ========================================================
 dnl = QT support
 dnl ========================================================
 if test "$MOZ_ENABLE_QT"
@@ -4418,19 +4431,20 @@ then
         case $QT_VERSION in
         5.*)
             AC_MSG_RESULT("Using qt5: $QT_VERSION")
-            PKG_CHECK_MODULES(MOZ_QT, Qt5Gui Qt5Network Qt5Core Qt5OpenGL Qt5Widgets Qt5PrintSupport, ,
+            PKG_CHECK_MODULES(MOZ_QT, Qt5Gui Qt5Network Qt5Core Qt5Quick, ,
             [
               AC_MSG_ERROR([$MOZ_QT_PKG_ERRORS Need qtbase development packages, (On Ubuntu, you might try installing the packages qtbase5-dev libqt5opengl5-dev.)])
             ])
             QT5INCDIR=`pkg-config --variable=includedir Qt5Gui`
             MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QT5INCDIR/QtGui/$QT_VERSION/QtGui"
-            ;;
-        4.*)
-            AC_MSG_RESULT("Using qt4: $QT_VERSION")
-            PKG_CHECK_MODULES(MOZ_QT, QtGui QtNetwork QtCore QtOpenGL, ,
-            [
-              AC_MSG_ERROR([$MOZ_QT_PKG_ERRORS Need qt4 development package, (On Ubuntu, you might try installing the packages libqt4-dev libqt4-opengl-dev.)])
-            ])
+            if test "$NS_PRINTING"; then
+                PKG_CHECK_MODULES(MOZ_QT_WIDGETS, Qt5PrintSupport, ,
+                [
+                  AC_MSG_ERROR([$MOZ_QT_PKG_ERRORS Need qtbase widgets development package])
+                ])
+                MOZ_QT_LIBS="$MOZ_QT_LIBS $MOZ_QT_WIDGETS_LIBS"
+                MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS $MOZ_QT_WIDGETS_CFLAGS"
+            fi
             ;;
         *)
             AC_MSG_ERROR([* * * Unsupported Qt Version: $QT_VERSION])
@@ -4447,20 +4461,15 @@ then
         MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtNetwork"
         MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtXml"
         MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtDeclarative"
-
         case $QT_VERSION in
         5.*)
             AC_MSG_RESULT("Using qt5: $QT_VERSION")
-            MOZ_QT_LIBS="-L$QTDIR/lib/ -lQt5Gui -lQt5Network -lQt5Core -lQt5Xml -lQt5OpenGL"
+            MOZ_QT_LIBS="$MOZ_QT_LIBS -L$QTDIR/lib/ -lQt5Gui -lQt5Network -lQt5Core -lQt5Xml"
             MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtGui/$QT_VERSION/QtGui"
-            MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtWidgets"
-            MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtPrintSupport"
-            MOZ_QT_LIBS="$MOZ_QT_LIBS -lQt5Widgets -lQt5PrintSupport"
-            ;;
-        4.*)
-            AC_MSG_RESULT("Using qt4: $QT_VERSION")
-            MOZ_QT_LIBS="-L$QTDIR/lib/ -lQtGui -lQtNetwork -lQtCore -lQtXml -lQtOpenGL"
-            MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/Qt"
+            if test "$NS_PRINTING"; then
+                MOZ_QT_LIBS="$MOZ_QT_LIBS -lQt5Widgets -lQt5PrintSupport"
+                MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtPrintSupport"
+            fi
             ;;
         *)
             AC_MSG_ERROR([* * * Unsupported Qt Version: $QT_VERSION])
@@ -4471,12 +4480,10 @@ then
         HOST_RCC="$QTDIR/bin/rcc"
     fi
     if test -z "$HOST_MOC"; then
-        AC_MSG_ERROR([No acceptable moc preprocessor found. Qt SDK is not installed or --with-qt is
-incorrect])
+        AC_MSG_ERROR([No acceptable moc preprocessor found. Qt SDK is not installed or --with-qt is incorrect])
     fi
     if test -z "$HOST_RCC"; then
-        AC_MSG_ERROR([No acceptable rcc preprocessor found. Qt SDK is not installed or --with-qt is
-incorrect])
+        AC_MSG_ERROR([No acceptable rcc preprocessor found. Qt SDK is not installed or --with-qt is incorrect])
     fi
 
     MOC=$HOST_MOC
@@ -4523,6 +4530,30 @@ incorrect])
           MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS -I$QTDIR/include/QtLocation"
           MOZ_QT_LIBS="$MOZ_QT_LIBS -lQtSensors -lQtFeedback -lQtLocation"
        ])
+    fi
+
+    MOZ_ENABLE_QT5FEEDBACK=
+    PKG_CHECK_MODULES(_QT5FEEDBACK, Qt0Feedback,
+                      MOZ_ENABLE_QT5FEEDBACK=1,
+                      MOZ_ENABLE_QT5FEEDBACK=)
+    if test "$MOZ_ENABLE_QT5FEEDBACK"; then
+       MOZ_ENABLE_QT5FEEDBACK=1
+       MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS $_QT5FEEDBACK_CFLAGS"
+       MOZ_QT_LIBS="$MOZ_QT_LIBS $_QT5FEEDBACK_LIBS"
+       AC_DEFINE(MOZ_ENABLE_QT5FEEDBACK)
+       AC_SUBST(MOZ_ENABLE_QT5FEEDBACK)
+    fi
+
+    MOZ_ENABLE_QT5GEOPOSITION=
+    PKG_CHECK_MODULES(_QT5GEOPOSITION, Qt5Positioning,
+                      MOZ_ENABLE_QT5GEOPOSITION=1,
+                      MOZ_ENABLE_QT5GEOPOSITION=)
+    if test "$MOZ_ENABLE_QT5GEOPOSITION"; then
+       MOZ_ENABLE_QT5GEOPOSITION=1
+       MOZ_QT_CFLAGS="$MOZ_QT_CFLAGS $_QT5GEOPOSITION_CFLAGS"
+       MOZ_QT_LIBS="$MOZ_QT_LIBS $_QT5GEOPOSITION_LIBS"
+       AC_DEFINE(MOZ_ENABLE_QT5GEOPOSITION)
+       AC_SUBST(MOZ_ENABLE_QT5GEOPOSITION)
     fi
 
     if test "$MOZ_ENABLE_CONTENTACTION"; then
@@ -4958,19 +4989,6 @@ dnl backend
 dnl ========================================================
 if test "${MOZ_WIDGET_TOOLKIT}" = "linuxgl" -a "$ACCESSIBILITY" != "1"; then
     AC_MSG_ERROR(["Accessibility is required for the linuxgl widget backend"])
-fi
-
-dnl ========================================================
-dnl Disable printing
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(printing,
-[  --disable-printing      Disable printing support],
-    NS_PRINTING=,
-    NS_PRINTING=1)
-
-if test "$NS_PRINTING"; then
-    AC_DEFINE(NS_PRINTING)
-    AC_DEFINE(NS_PRINT_PREVIEW)
 fi
 
 dnl Turn off webrtc for OS's we don't handle yet, but allow 

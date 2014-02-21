@@ -505,14 +505,16 @@ def run_remote_reftests(parser, options, args):
     marionette = Marionette.getMarionetteOrExit(**kwargs)
     auto.marionette = marionette
 
-    # create the DeviceManager
-    kwargs = {'adbPath': options.adbPath,
-              'deviceRoot': options.remoteTestRoot}
-    if options.deviceIP:
-        kwargs.update({'host': options.deviceIP,
-                       'port': options.devicePort})
-
-    dm = DeviceManagerADB(**kwargs)
+    if options.emulator:
+        dm = marionette.emulator.dm
+    else:
+        # create the DeviceManager
+        kwargs = {'adbPath': options.adbPath,
+                  'deviceRoot': options.remoteTestRoot}
+        if options.deviceIP:
+            kwargs.update({'host': options.deviceIP,
+                           'port': options.devicePort})
+        dm = DeviagerADB(**kwargs)
     auto.setDeviceManager(dm)
 
     options = parser.verifyRemoteOptions(options)

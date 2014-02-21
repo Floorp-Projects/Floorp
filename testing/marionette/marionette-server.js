@@ -555,6 +555,7 @@ MarionetteServerConnection.prototype = {
     let caps = {
       // Mandated capabilities
       "browserName": appName,
+      "browserVersion": Services.appinfo.version,
       "platformName": platformName,
       "platformVersion": Services.appinfo.platformVersion,
 
@@ -2490,6 +2491,7 @@ MarionetteServerConnection.prototype.requestTypes = {
   "setTestName": MarionetteServerConnection.prototype.setTestName,
   "takeScreenshot": MarionetteServerConnection.prototype.takeScreenshot,
   "screenShot": MarionetteServerConnection.prototype.takeScreenshot,  // deprecated
+  "screenshot": MarionetteServerConnection.prototype.takeScreenshot,  // Selenium 2 compat
   "addCookie": MarionetteServerConnection.prototype.addCookie,
   "getCookies": MarionetteServerConnection.prototype.getCookies,
   "getAllCookies": MarionetteServerConnection.prototype.getCookies,  // deprecated

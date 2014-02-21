@@ -92,27 +92,25 @@ js::intrinsic_ThrowError(JSContext *cx, unsigned argc, Value *vp)
     JS_ASSERT(efs->argCount == args.length() - 1);
 #endif
 
-    char *errorArgs[3] = {nullptr, nullptr, nullptr};
+    JSAutoByteString errorArgs[3];
     for (unsigned i = 1; i < 4 && i < args.length(); i++) {
         RootedValue val(cx, args[i]);
         if (val.isInt32()) {
             JSString *str = ToString<CanGC>(cx, val);
             if (!str)
                 return false;
-            errorArgs[i - 1] = JS_EncodeString(cx, str);
+            errorArgs[i - 1].encodeLatin1(cx, str);
         } else if (val.isString()) {
-            errorArgs[i - 1] = JS_EncodeString(cx, ToString<CanGC>(cx, val));
+            errorArgs[i - 1].encodeLatin1(cx, val.toString());
         } else {
-            errorArgs[i - 1] = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, val, NullPtr());
+            errorArgs[i - 1].initBytes(DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, val, NullPtr()));
         }
         if (!errorArgs[i - 1])
             return false;
     }
 
     JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, errorNumber,
-                         errorArgs[0], errorArgs[1], errorArgs[2]);
-    for (unsigned i = 0; i < 3; i++)
-        js_free(errorArgs[i]);
+                         errorArgs[0].ptr(), errorArgs[1].ptr(), errorArgs[2].ptr());
     return false;
 }
 

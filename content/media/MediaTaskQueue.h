@@ -25,6 +25,7 @@ class SharedThreadPool;
 // to make this threadsafe for objects that aren't already threadsafe.
 class MediaTaskQueue : public AtomicRefCounted<MediaTaskQueue> {
 public:
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(MediaTaskQueue)
   MediaTaskQueue(TemporaryRef<SharedThreadPool> aPool);
   ~MediaTaskQueue();
 

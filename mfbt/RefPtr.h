@@ -42,6 +42,10 @@ template<typename T> OutParamRef<T> byRef(RefPtr<T>&);
  * state is represented in DEBUG builds by refcount==0xffffdead.  This
  * state distinguishes use-before-ref (refcount==0) from
  * use-after-destroy (refcount==0xffffdead).
+ *
+ * Note that when deriving from RefCounted or AtomicRefCounted, you
+ * should add MOZ_DECLARE_REFCOUNTED_TYPENAME(ClassName) to the public
+ * section of your class, where ClassName is the name of your class.
  */
 namespace detail {
 #ifdef DEBUG
@@ -95,6 +99,9 @@ class RefCounted
   private:
     mutable typename Conditional<Atomicity == AtomicRefCount, Atomic<int>, int>::Type refCnt;
 };
+
+#define MOZ_DECLARE_REFCOUNTED_TYPENAME(T) \
+  const char* typeName() const { return #T; }
 
 }
 
@@ -301,6 +308,7 @@ using namespace mozilla;
 
 struct Foo : public RefCounted<Foo>
 {
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(Foo)
   Foo() : dead(false) { }
   ~Foo() {
     MOZ_ASSERT(!dead);
