@@ -805,25 +805,33 @@ ContainerLayer::RemoveChild(Layer *aChild)
 }
 
 
-void
+bool
 ContainerLayer::RepositionChild(Layer* aChild, Layer* aAfter)
 {
-  NS_ASSERTION(aChild->Manager() == Manager(),
-               "Child has wrong manager");
-  NS_ASSERTION(aChild->GetParent() == this,
-               "aChild not our child");
-  NS_ASSERTION(!aAfter ||
-               (aAfter->Manager() == Manager() &&
-                aAfter->GetParent() == this),
-               "aAfter is not our child");
-  NS_ASSERTION(aChild != aAfter,
-               "aChild cannot be the same as aAfter");
+  if (aChild->Manager() != Manager()) {
+    NS_ERROR("Child has wrong manager");
+    return false;
+  }
+  if (aChild->GetParent() != this) {
+    NS_ERROR("aChild not our child");
+    return false;
+  }
+  if (aAfter && (aAfter->Manager() != Manager() ||
+                 aAfter->GetParent() != this))
+  {
+    NS_ERROR("aAfter is not our child");
+    return false;
+  }
+  if (aChild == aAfter) {
+    NS_ERROR("aChild cannot be the same as aAfter");
+    return false;
+  }
 
   Layer* prev = aChild->GetPrevSibling();
   Layer* next = aChild->GetNextSibling();
   if (prev == aAfter) {
     // aChild is already in the correct position, nothing to do.
-    return;
+    return true;
   }
   if (prev) {
     prev->SetNextSibling(next);
@@ -842,7 +850,7 @@ ContainerLayer::RepositionChild(Layer* aChild, Layer* aAfter)
       mFirstChild->SetPrevSibling(aChild);
     }
     mFirstChild = aChild;
-    return;
+    return true;
   }
 
   Layer* afterNext = aAfter->GetNextSibling();
@@ -854,6 +862,7 @@ ContainerLayer::RepositionChild(Layer* aChild, Layer* aAfter)
   aAfter->SetNextSibling(aChild);
   aChild->SetPrevSibling(aAfter);
   aChild->SetNextSibling(afterNext);
+  return true;
 }
 
 void

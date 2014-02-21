@@ -122,14 +122,19 @@ public:
     return true;
   }
 
-  virtual void RepositionChild(Layer* aChild, Layer* aAfter) MOZ_OVERRIDE
+  virtual bool RepositionChild(Layer* aChild, Layer* aAfter) MOZ_OVERRIDE
   {
-    NS_ASSERTION(ClientManager()->InConstruction(),
-                 "Can only set properties in construction phase");
+    if (!ClientManager()->InConstruction()) {
+      NS_ERROR("Can only set properties in construction phase");
+      return false;
+    }
+    if (!ContainerLayer::RepositionChild(aChild, aAfter)) {
+      return false;
+    }
     ClientManager()->AsShadowForwarder()->RepositionChild(ClientManager()->Hold(this),
                                                           ClientManager()->Hold(aChild),
                                                           aAfter ? ClientManager()->Hold(aAfter) : nullptr);
-    ContainerLayer::RepositionChild(aChild, aAfter);
+    return true;
   }
 
   virtual Layer* AsLayer() { return this; }
