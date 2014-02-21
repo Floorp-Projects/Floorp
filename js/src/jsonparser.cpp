@@ -594,10 +594,8 @@ JSONParser::createFinishedObject(PropertyVector &properties)
     for (size_t i = 0; i < properties.length(); i++) {
         propid = properties[i].id;
         value = properties[i].value;
-        if (!DefineNativeProperty(cx, obj, propid, value,
-                                  JS_PropertyStub, JS_StrictPropertyStub, JSPROP_ENUMERATE,
-                                  0, 0))
-        {
+        if (!DefineNativeProperty(cx, obj, propid, value, JS_PropertyStub, JS_StrictPropertyStub,
+                                  JSPROP_ENUMERATE, 0)) {
             return nullptr;
         }
     }
