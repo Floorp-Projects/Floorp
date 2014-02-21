@@ -62,8 +62,8 @@
       <!-- Bug 257777 -->
       <checkbox id="offlineState" label="&offlineState.label;" accesskey="&offlineState.accesskey;"/> 
 
-      <checkbox id="autoSelectLastProfile" label="&autoSelect.label;"
-                accesskey="&autoSelect.accesskey;"/> 
+      <checkbox id="autoSelectLastProfile" label="&useSelected.label;"
+                accesskey="&useSelected.accesskey;"/> 
     </vbox>
 
   </hbox>
