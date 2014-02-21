@@ -205,18 +205,20 @@ TypeRepresentationHasher::hashUnsizedArray(UnsizedArrayTypeRepresentation *key)
 ///////////////////////////////////////////////////////////////////////////
 // Constructors
 
-TypeRepresentation::TypeRepresentation(TypeDescr::Kind kind, bool opaque)
+TypeRepresentation::TypeRepresentation(TypeDescr::Kind kind,
+                                       size_t align,
+                                       bool opaque)
   : kind_(kind),
-    opaque_(opaque)
+    opaque_(opaque),
+    alignment_(align)
 {}
 
 SizedTypeRepresentation::SizedTypeRepresentation(SizedTypeDescr::Kind kind,
                                                  bool opaque,
                                                  size_t size,
                                                  size_t align)
-  : TypeRepresentation(kind, opaque),
-    size_(size),
-    alignment_(align)
+  : TypeRepresentation(kind, align, opaque),
+    size_(size)
 {}
 
 ScalarTypeRepresentation::ScalarTypeRepresentation(ScalarTypeDescr::Type type)
@@ -269,7 +271,8 @@ SizedArrayTypeRepresentation::SizedArrayTypeRepresentation(SizedTypeRepresentati
 }
 
 UnsizedArrayTypeRepresentation::UnsizedArrayTypeRepresentation(SizedTypeRepresentation *element)
-  : TypeRepresentation(TypeDescr::UnsizedArray, element->opaque()),
+  : TypeRepresentation(TypeDescr::UnsizedArray, element->alignment(),
+                       element->opaque()),
     element_(element)
 {
 }
