@@ -1292,7 +1292,7 @@ BrowserGlue.prototype = {
   },
 
   _migrateUI: function BG__migrateUI() {
-    const UI_VERSION = 19;
+    const UI_VERSION = 20;
     const BROWSER_DOCURL = "chrome://browser/content/browser.xul#";
     let currentUIVersion = 0;
     try {
@@ -1552,6 +1552,15 @@ BrowserGlue.prototype = {
         // If the encoding detector pref value is not reachable from the UI,
         // reset to default (varies by localization).
         Services.prefs.clearUserPref("intl.charset.detector");
+      }
+    }
+
+    if (currentUIVersion < 20) {
+      // Remove persisted collapsed state from TabsToolbar.
+      let resource = this._rdf.GetResource("collapsed");
+      let toolbar = this._rdf.GetResource(BROWSER_DOCURL + "TabsToolbar");
+      if (this._getPersist(toolbar, resource)) {
+        this._setPersist(toolbar, resource);
       }
     }
 
