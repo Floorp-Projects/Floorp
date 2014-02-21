@@ -944,6 +944,8 @@ protected:
 
     // -------------------------------------------------------------------------
     // Validation functions (implemented in WebGLContextValidate.cpp)
+    GLenum BaseTexFormat(GLenum internalFormat) const;
+
     bool InitAndValidateGL();
     bool ValidateBlendEquationEnum(GLenum cap, const char *info);
     bool ValidateBlendFuncDstEnum(GLenum mode, const char *info);
@@ -953,8 +955,7 @@ protected:
     bool ValidateComparisonEnum(GLenum target, const char *info);
     bool ValidateStencilOpEnum(GLenum action, const char *info);
     bool ValidateFaceEnum(GLenum face, const char *info);
-    bool ValidateTexFormatAndType(GLenum format, GLenum type, int jsArrayType,
-                                      uint32_t *texelSize, const char *info);
+    bool ValidateTexInputData(GLenum type, int jsArrayType, WebGLTexImageFunc func);
     bool ValidateDrawModeEnum(GLenum mode, const char *info);
     bool ValidateAttribIndex(GLuint index, const char *info);
     bool ValidateStencilParamsForDrawCall();
@@ -962,10 +963,34 @@ protected:
     bool ValidateGLSLVariableName(const nsAString& name, const char *info);
     bool ValidateGLSLCharacter(char16_t c);
     bool ValidateGLSLString(const nsAString& string, const char *info);
-    bool ValidateTexImage2DFormat(GLenum format, const char* info);
-    bool ValidateTexImage2DTarget(GLenum target, GLsizei width, GLsizei height, const char* info);
-    bool ValidateCompressedTextureSize(GLenum target, GLint level, GLenum format, GLsizei width, GLsizei height, uint32_t byteLength, const char* info);
-    bool ValidateLevelWidthHeightForTarget(GLenum target, GLint level, GLsizei width, GLsizei height, const char* info);
+
+    bool ValidateTexImage(GLuint dims, GLenum target,
+                          GLint level, GLint internalFormat,
+                          GLint xoffset, GLint yoffset, GLint zoffset,
+                          GLint width, GLint height, GLint depth,
+                          GLint border, GLenum format, GLenum type,
+                          WebGLTexImageFunc func);
+    bool ValidateTexImageTarget(GLuint dims, GLenum target, WebGLTexImageFunc func);
+    bool ValidateTexImageFormat(GLenum format, WebGLTexImageFunc func);
+    bool ValidateTexImageType(GLenum type, WebGLTexImageFunc func);
+    bool ValidateTexImageFormatAndType(GLenum format, GLenum type, WebGLTexImageFunc func);
+    bool ValidateTexImageSize(GLenum target, GLint level,
+                              GLint width, GLint height, GLint depth,
+                              WebGLTexImageFunc func);
+    bool ValidateTexSubImageSize(GLint x, GLint y, GLint z,
+                                 GLsizei width, GLsizei height, GLsizei depth,
+                                 GLsizei baseWidth, GLsizei baseHeight, GLsizei baseDepth,
+                                 WebGLTexImageFunc func);
+
+    bool ValidateCompTexImageSize(GLenum target, GLint level, GLenum format,
+                                  GLint xoffset, GLint yoffset,
+                                  GLsizei width, GLsizei height,
+                                  GLsizei levelWidth, GLsizei levelHeight,
+                                  WebGLTexImageFunc func);
+    bool ValidateCompTexImageDataSize(GLint level, GLenum format,
+                                      GLsizei width, GLsizei height,
+                                      uint32_t byteLength, WebGLTexImageFunc func);
+
 
     static uint32_t GetBitsPerTexel(GLenum format, GLenum type);
 
@@ -1052,7 +1077,11 @@ private:
 
 protected:
     int32_t MaxTextureSizeForTarget(GLenum target) const {
-        return target == LOCAL_GL_TEXTURE_2D ? mGLMaxTextureSize : mGLMaxCubeMapTextureSize;
+        MOZ_ASSERT(target == LOCAL_GL_TEXTURE_2D ||
+                   (target >= LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X &&
+                    target <= LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z),
+                   "Invalid target enum");
+        return (target == LOCAL_GL_TEXTURE_2D) ? mGLMaxTextureSize : mGLMaxCubeMapTextureSize;
     }
 
     /** like glBufferData but if the call may change the buffer size, checks any GL error generated
