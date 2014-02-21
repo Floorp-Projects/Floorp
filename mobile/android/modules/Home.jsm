@@ -210,6 +210,12 @@ let HomePanels = (function () {
     return false;
   };
 
+  let _assertPanelExists = function(id) {
+    if (!(id in _panels)) {
+      throw "Home.panels: Panel doesn't exist: id = " + id;
+    }
+  };
+
   return Object.freeze({
     // Valid layouts for a panel.
     Layout: Object.freeze({
@@ -220,12 +226,6 @@ let HomePanels = (function () {
     View: Object.freeze({
       LIST: "list",
       GRID: "grid"
-    }),
-
-    // Valid actions for a panel.
-    Action: Object.freeze({
-      INSTALL: "install",
-      REFRESH: "refresh"
     }),
 
     // Valid item types for a panel view.
@@ -240,18 +240,16 @@ let HomePanels = (function () {
       INTENT: "intent"
     }),
 
-    add: function(options) {
+    register: function(options) {
       let panel = new Panel(options);
-      if (!panel.id || !panel.title) {
-        throw "Home.panels: Can't create a home panel without an id and title!";
+
+      // Bail if the panel already exists
+      if (panel.id in _panels) {
+        throw "Home.panels: Panel already exists: id = " + panel.id;
       }
 
-      let action = options.action;
-
-      // Bail if the panel already exists, except when we're refreshing
-      // an existing panel instance.
-      if (panel.id in _panels && action != this.Action.REFRESH) {
-        throw "Home.panels: Panel already exists: id = " + panel.id;
+      if (!panel.id || !panel.title) {
+        throw "Home.panels: Can't create a home panel without an id and title!";
       }
 
       if (!_valueExists(this.Layout, panel.layout)) {
@@ -288,40 +286,38 @@ let HomePanels = (function () {
       }
 
       _panels[panel.id] = panel;
-
-      if (action) {
-        let messageType;
-
-        switch(action) {
-          case this.Action.INSTALL:
-            messageType = "HomePanels:Install";
-            break;
-
-          case this.Action.REFRESH:
-            messageType = "HomePanels:Refresh";
-            break;
-
-          default:
-            throw "Home.panels: Invalid action for panel: panel.id = " + panel.id + ", action = " + action;
-        }
-
-        sendMessageToJava({
-          type: messageType,
-          panel: _panelToJSON(panel)
-        });
-      }
     },
 
-    remove: function(id) {
-      if (!(id in _panels)) {
-        throw "Home.panels: Panel doesn't exist: id = " + id;
-      }
+    unregister: function(id) {
+      _assertPanelExists(id);
 
       delete _panels[id];
+    },
+
+    install: function(id) {
+      _assertPanelExists(id);
+
+      sendMessageToJava({
+        type: "HomePanels:Install",
+        panel: _panelToJSON(_panels[id])
+      });
+    },
+
+    uninstall: function(id) {
+      _assertPanelExists(id);
 
       sendMessageToJava({
         type: "HomePanels:Uninstall",
         id: id
+      });
+    },
+
+    update: function(id) {
+      _assertPanelExists(id);
+
+      sendMessageToJava({
+        type: "HomePanels:Update",
+        panel: _panelToJSON(_panels[id])
       });
     }
   });
