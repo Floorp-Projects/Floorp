@@ -37,7 +37,6 @@
 #include "js/Utility.h"
 #include "js/Value.h"
 #include "js/Vector.h"
-#include "js/WeakMapPtr.h"
 #include "jsapi-tests/tests.h"
 
 /*
