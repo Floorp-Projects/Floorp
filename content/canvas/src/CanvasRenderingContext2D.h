@@ -186,7 +186,7 @@ public:
   TextMetrics*
     MeasureText(const nsAString& rawText, mozilla::ErrorResult& error);
 
-  void AddHitRegion(const HitRegionOptions& options);
+  void AddHitRegion(const HitRegionOptions& options, mozilla::ErrorResult& error);
   void RemoveHitRegion(const nsAString& id);
 
   void DrawImage(const HTMLImageOrCanvasOrVideoElement& image,
@@ -683,6 +683,26 @@ protected:
     */
   uint32_t mInvalidateCount;
   static const uint32_t kCanvasMaxInvalidateCount = 100;
+
+  /**
+    * State information for hit regions
+    */
+
+  struct RegionInfo : public nsStringHashKey
+  {
+    RegionInfo(const nsAString& aKey) :
+      nsStringHashKey(&aKey)
+    {
+    }
+    RegionInfo(const nsAString *aKey) :
+      nsStringHashKey(aKey)
+    {
+    }
+
+    nsRefPtr<Element> mElement;
+  };
+
+  nsTHashtable<RegionInfo> mHitRegionsOptions;
 
   /**
     * Returns true if a shadow should be drawn along with a

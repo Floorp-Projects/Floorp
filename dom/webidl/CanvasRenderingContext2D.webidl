@@ -116,7 +116,7 @@ interface CanvasRenderingContext2D {
   void drawImage((HTMLImageElement or HTMLCanvasElement or HTMLVideoElement) image, double sx, double sy, double sw, double sh, double dx, double dy, double dw, double dh);
 
   // hit regions
-  [Pref="canvas.hitregions.enabled"] void addHitRegion(optional HitRegionOptions options);
+  [Pref="canvas.hitregions.enabled", Throws] void addHitRegion(optional HitRegionOptions options);
   [Pref="canvas.hitregions.enabled"] void removeHitRegion(DOMString id);
 
   // pixel manipulation
