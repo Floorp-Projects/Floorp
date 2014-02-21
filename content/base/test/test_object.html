@@ -4,7 +4,6 @@
     <title>Plugin instantiation</title>
     <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
     <script type="application/javascript" src="/tests/SimpleTest/SpecialPowers.js"></script>
-    <script type="application/javascript" src="head_plain.js"></script>
     <meta charset="utf-8">
   <body onload="onLoad()">
     <script class="testbody" type="text/javascript;version=1.8">
@@ -12,7 +11,14 @@
       "use strict";
       SimpleTest.waitForExplicitFinish();
 
-      setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
+      var pluginHost = SpecialPowers.Cc["@mozilla.org/plugin/host;1"]
+                        .getService(SpecialPowers.Ci.nsIPluginHost);
+      var pluginTags = pluginHost.getPluginTags();
+      for (var tag of pluginTags) {
+        if (tag.name == "Test Plug-in") {
+          tag.enabledState = SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED;;
+        }
+      }
 
       // This can go away once embed also is on WebIDL
       let OBJLC = SpecialPowers.Ci.nsIObjectLoadingContent;
