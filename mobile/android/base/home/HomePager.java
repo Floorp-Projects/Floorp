@@ -49,9 +49,6 @@ public class HomePager extends ViewPager {
 
     private String mInitialPanelId;
 
-    // Whether or not we need to restart the loader when we show the HomePager.
-    private boolean mRestartLoader;
-
     // Cached original ViewPager background.
     private final Drawable mOriginalBackground;
 
@@ -166,35 +163,6 @@ public class HomePager extends ViewPager {
     }
 
     /**
-     * Invalidates the current configuration, redisplaying the HomePager if necessary.
-     */
-    public void invalidate(LoaderManager lm, FragmentManager fm) {
-        // We need to restart the loader to load the new strings.
-        mRestartLoader = true;
-
-        // If the HomePager is currently visible, redisplay it with the new strings.
-        if (isVisible()) {
-            redisplay(lm, fm);
-        }
-    }
-
-    private void redisplay(LoaderManager lm, FragmentManager fm) {
-        final HomeAdapter adapter = (HomeAdapter) getAdapter();
-
-        // If mInitialPanelId is non-null, this means the HomePager hasn't
-        // finished loading its config yet. Simply re-show() with the
-        // current target panel.
-        final String currentPanelId;
-        if (mInitialPanelId != null) {
-            currentPanelId = mInitialPanelId;
-        } else {
-            currentPanelId = adapter.getPanelIdAtPosition(getCurrentItem());
-        }
-
-        show(lm, fm, currentPanelId, null);
-    }
-
-    /**
      * Loads and initializes the pager.
      *
      * @param fm FragmentManager for the adapter
@@ -217,13 +185,8 @@ public class HomePager extends ViewPager {
         // list of panels in place.
         mTabStrip.setVisibility(View.INVISIBLE);
 
-        // Load list of panels from configuration. Restart the loader if necessary.
-        if (mRestartLoader) {
-            lm.restartLoader(LOADER_ID_CONFIG, null, mConfigLoaderCallbacks);
-            mRestartLoader = false;
-        } else {
-            lm.initLoader(LOADER_ID_CONFIG, null, mConfigLoaderCallbacks);
-        }
+        // Load list of panels from configuration
+        lm.initLoader(LOADER_ID_CONFIG, null, mConfigLoaderCallbacks);
 
         if (shouldAnimate) {
             animator.addPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener() {
