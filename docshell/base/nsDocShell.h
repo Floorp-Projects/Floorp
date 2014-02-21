@@ -143,6 +143,7 @@ class nsDocShell : public nsDocLoader,
     friend class nsDSURIContentListener;
 
 public:
+    MOZ_DECLARE_REFCOUNTED_TYPENAME(nsDocShell)
     // Object Management
     nsDocShell();
 

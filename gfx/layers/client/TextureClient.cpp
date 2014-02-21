@@ -55,6 +55,7 @@ class TextureChild : public PTextureChild
                    , public AtomicRefCounted<TextureChild>
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(TextureChild)
   TextureChild()
   : mForwarder(nullptr)
   , mTextureData(nullptr)

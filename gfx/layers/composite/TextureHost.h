@@ -81,6 +81,7 @@ public:
 class TextureSource : public RefCounted<TextureSource>
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(TextureSource)
   TextureSource();
   virtual ~TextureSource();
 
