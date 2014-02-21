@@ -143,6 +143,17 @@ add_task(function test_collect() {
         "application/x-second-test"
       ],
     },
+    "Java Test Plug-in":
+    {
+      "version": "1.0.0.0",
+      "description": "Dummy Java plug-in for testing purposes.",
+      "blocklisted": false,
+      "disabled": false,
+      "clicktoplay": false,
+      "mimeTypes":[
+        "application/x-java-test"
+      ],
+    },
   };
 
   let pluginTags = Cc["@mozilla.org/plugin/host;1"]
@@ -196,10 +207,11 @@ add_task(function test_collect() {
   json = data.singular.get("plugins")[1];
   value = JSON.parse(json);
   do_check_eq(typeof(value), "object");
-  do_check_eq(Object.keys(value).length, 2);
+  do_check_eq(Object.keys(value).length, pluginTags.length);
 
   do_check_true(testPlugins["Test Plug-in"].id in value);
   do_check_true(testPlugins["Second Test Plug-in"].id in value);
+  do_check_true(testPlugins["Java Test Plug-in"].id in value);
 
   for (let id in value) {
     let item = value[id];
@@ -219,7 +231,7 @@ add_task(function test_collect() {
   serializer = plugins.serializer(plugins.SERIALIZE_JSON);
   serialized = serializer.singular(data.singular);
   do_check_eq(typeof(serialized), "object");
-  do_check_eq(Object.keys(serialized).length, 3); // Our entries, plus _v.
+  do_check_eq(Object.keys(serialized).length, pluginTags.length+1); // Our entries, plus _v.
   for (let name in testPlugins) {
     do_check_true(testPlugins[name].id in serialized);
   }
@@ -236,7 +248,7 @@ add_task(function test_collect() {
   value = data.days.getDay(now);
   do_check_eq(value.size, 4);
   do_check_eq(value.get("extension"), 1);
-  do_check_eq(value.get("plugin"), 2);
+  do_check_eq(value.get("plugin"), pluginTags.length);
   do_check_eq(value.get("theme"), 1);
   do_check_eq(value.get("service"), 1);
 
