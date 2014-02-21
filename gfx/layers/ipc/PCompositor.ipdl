@@ -18,6 +18,7 @@ using mozilla::layers::FrameMetrics::ViewID from "FrameMetrics.h";
 using mozilla::layers::LayersBackend from "mozilla/layers/LayersTypes.h";
 using mozilla::CrossProcessMutexHandle from "mozilla/ipc/CrossProcessMutex.h";
 using mozilla::ipc::SharedMemoryBasic::Handle from "mozilla/ipc/SharedMemoryBasic.h";
+using class mozilla::TimeStamp from "mozilla/TimeStamp.h";
 
 namespace mozilla {
 namespace layers {
@@ -76,6 +77,12 @@ parent:
 
   sync StopFrameTimeRecording(uint32_t startIndex)
     returns (float[] intervals);
+
+  // Enter test mode, set the sample time to sampleTime, and resample animations.
+  // sampleTime must not be null.
+  sync SetTestSampleTime(TimeStamp sampleTime);
+  // Leave test mode and resume normal compositing
+  sync LeaveTestMode();
 
   // layersBackendHints is an ordered list of preffered backends where
   // layersBackendHints[0] is the best backend. If any hints are LayersBackend::LAYERS_NONE

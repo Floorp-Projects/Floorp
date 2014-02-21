@@ -43,10 +43,11 @@ class Version(mozlog.LoggingMixin):
             config_file = os.path.join(config_path, '%s.ini' % filename)
             if os.path.exists(config_file):
                 config.read(config_file)
-                for key in ('BuildID', 'Name', 'Version', 'SourceRepository',
-                            'SourceStamp'):
-                    name_map = {'SourceRepository': 'repository',
-                                'SourceStamp': 'changeset'}
+                name_map = {'CodeName': 'code_name',
+                            'SourceRepository': 'repository',
+                            'SourceStamp': 'changeset'}
+                for key in ('BuildID', 'Name', 'CodeName', 'Version',
+                            'SourceRepository', 'SourceStamp'):
                     name = name_map.get(key, key).lower()
                     self._info['%s_%s' % (filename, name)] = config.has_option(
                         section, key) and config.get(section, key) or None
