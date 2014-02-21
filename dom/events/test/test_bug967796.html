@@ -134,6 +134,25 @@ function runTests() {
   sendPointerEvent("pointermove", outside);
   is(pointerleavecount, 7, "Unexpected pointerleave event count!");
 
+  // pointerdown must produce pointerenter event
+  expectedRelatedEnter = outside;
+  expectedRelatedLeave = iframe;
+  // Move pointer inside the iframe.
+  synthesizePointer(iframe.contentDocument.body, r.width / 2, r.height / 4, {type: "pointerdown"},
+                    iframe.contentWindow);
+  synthesizePointer(iframe.contentDocument.body, r.width / 2, r.height - (r.height / 4), {type: "pointerdown"},
+                    iframe.contentWindow);
+  is(pointerentercount, 10, "Unexpected pointerenter event count!");
+
+  // pointerdown + pointermove must produce single pointerenter event
+  expectedRelatedEnter = outside;
+  expectedRelatedLeave = iframe;
+  synthesizePointer(iframe.contentDocument.body, r.width / 2, r.height / 4, {type: "pointerdown"},
+                    iframe.contentWindow);
+  synthesizePointer(iframe.contentDocument.body, r.width / 2 + 1, r.height / 4 + 1, {type: "pointermove"},
+                    iframe.contentWindow);
+  is(pointerentercount, 11, "Unexpected pointerenter event count!");
+
   SpecialPowers.clearUserPref("dom.w3c_pointer_events.enabled");      // Disable Pointer Events
 
   SimpleTest.finish();

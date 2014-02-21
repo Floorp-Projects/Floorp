@@ -154,11 +154,14 @@ class Runner(object):
         if getattr(self, 'profile', False):
             self.profile.reset()
 
-    def check_for_crashes(self, dump_directory=None, test_name=None):
+    def check_for_crashes(self, dump_directory=None, dump_save_path=None,
+                          test_name=None, quiet=False):
         """Check for a possible crash and output stack trace
 
         :param dump_directory: Directory to search for minidump files
+        :param dump_save_path: Directory to save the minidump files to
         :param test_name: Name to use in the crash output
+        :param quiet: If `True` don't print the PROCESS-CRASH message to stdout
 
         """
         if not dump_directory:
@@ -168,7 +171,9 @@ class Runner(object):
         try:
             crashed = mozcrash.check_for_crashes(dump_directory,
                                                  self.symbols_path,
-                                                 test_name=test_name)
+                                                 dump_save_path=dump_save_path,
+                                                 test_name=test_name,
+                                                 quiet=quiet)
         except:
             traceback.print_exc()
 

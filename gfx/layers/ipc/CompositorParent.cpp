@@ -373,6 +373,28 @@ CompositorParent::RecvStopFrameTimeRecording(const uint32_t& aStartIndex,
   return true;
 }
 
+bool
+CompositorParent::RecvSetTestSampleTime(const TimeStamp& aTime)
+{
+  if (aTime.IsNull()) {
+    return false;
+  }
+
+  mIsTesting = true;
+  mTestTime = aTime;
+  if (mCompositionManager) {
+    mCompositionManager->TransformShadowTree(aTime);
+  }
+  return true;
+}
+
+bool
+CompositorParent::RecvLeaveTestMode()
+{
+  mIsTesting = false;
+  return true;
+}
+
 void
 CompositorParent::ActorDestroy(ActorDestroyReason why)
 {
@@ -863,21 +885,6 @@ CompositorParent* CompositorParent::RemoveCompositor(uint64_t id)
   return retval;
 }
 
-/* static */ void
-CompositorParent::SetTimeAndSampleAnimations(TimeStamp aTime, bool aIsTesting)
-{
-  if (!sCompositorMap) {
-    return;
-  }
-  for (CompositorMap::iterator it = sCompositorMap->begin(); it != sCompositorMap->end(); ++it) {
-    it->second->mIsTesting = aIsTesting;
-    it->second->mTestTime = aTime;
-    if (it->second->mCompositionManager) {
-      it->second->mCompositionManager->TransformShadowTree(aTime);
-    }
-  }
-}
-
 bool
 CompositorParent::RecvNotifyChildCreated(const uint64_t& child)
 {
@@ -1013,6 +1020,8 @@ public:
   virtual bool RecvNotifyRegionInvalidated(const nsIntRegion& aRegion) { return true; }
   virtual bool RecvStartFrameTimeRecording(const int32_t& aBufferSize, uint32_t* aOutStartIndex) MOZ_OVERRIDE { return true; }
   virtual bool RecvStopFrameTimeRecording(const uint32_t& aStartIndex, InfallibleTArray<float>* intervals) MOZ_OVERRIDE  { return true; }
+  virtual bool RecvSetTestSampleTime(const TimeStamp& aTime) MOZ_OVERRIDE { return true; }
+  virtual bool RecvLeaveTestMode() MOZ_OVERRIDE { return true; }
 
   virtual PLayerTransactionParent*
     AllocPLayerTransactionParent(const nsTArray<LayersBackend>& aBackendHints,
