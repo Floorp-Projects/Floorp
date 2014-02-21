@@ -88,7 +88,7 @@ class TestAPZCContainerLayer : public ContainerLayer {
   bool RemoveChild(Layer* aChild) { return true; }
   bool InsertAfter(Layer* aChild, Layer* aAfter) { return true; }
   void ComputeEffectiveTransforms(const Matrix4x4& aTransformToSurface) {}
-  void RepositionChild(Layer* aChild, Layer* aAfter) {}
+  bool RepositionChild(Layer* aChild, Layer* aAfter) { return true; }
 };
 
 class TestAsyncPanZoomController : public AsyncPanZoomController {
