@@ -28,7 +28,7 @@
 #include "cutils/properties.h"
 #include "gfx2DGlue.h"
 
-#if ANDROID_VERSION >= 18
+#if ANDROID_VERSION >= 17
 #include "libdisplay/FramebufferSurface.h"
 #ifndef HWC_BLIT
 #define HWC_BLIT (HWC_FRAMEBUFFER_TARGET + 1)
@@ -92,7 +92,7 @@ HwcComposer2D::Init(hwc_display_t dpy, hwc_surface_t sur)
     mozilla::Framebuffer::GetSize(&screenSize);
     mScreenRect  = nsIntRect(nsIntPoint(0, 0), screenSize);
 
-#if ANDROID_VERSION >= 18
+#if ANDROID_VERSION >= 17
     int supported = 0;
     if (mHwc->query(mHwc, HwcUtils::HWC_COLOR_FILL, &supported) == NO_ERROR) {
         mColorFill = supported ? true : false;
@@ -303,12 +303,14 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
     if ((opacity == 0xFF) && (aLayer->GetContentFlags() & Layer::CONTENT_OPAQUE)) {
         hwcLayer.blending = HWC_BLENDING_NONE;
     }
-#if ANDROID_VERSION >= 18
+#if ANDROID_VERSION >= 17
     hwcLayer.compositionType = HWC_FRAMEBUFFER;
 
     hwcLayer.acquireFenceFd = -1;
     hwcLayer.releaseFenceFd = -1;
+#if ANDROID_VERSION >= 18
     hwcLayer.planeAlpha = opacity;
+#endif
 #else
     hwcLayer.compositionType = HwcUtils::HWC_USE_COPYBIT;
 #endif
@@ -472,7 +474,7 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
 }
 
 
-#if ANDROID_VERSION >= 18
+#if ANDROID_VERSION >= 17
 bool
 HwcComposer2D::TryHwComposition()
 {
@@ -628,8 +630,9 @@ HwcComposer2D::Prepare(buffer_handle_t fbHandle, int fence)
     mList->hwLayers[idx].visibleRegionScreen.rects = &mList->hwLayers[idx].displayFrame;
     mList->hwLayers[idx].acquireFenceFd = fence;
     mList->hwLayers[idx].releaseFenceFd = -1;
+#if ANDROID_VERSION >= 18
     mList->hwLayers[idx].planeAlpha = 0xFF;
-
+#endif
     if (mPrepared) {
         LOGE("Multiple hwc prepare calls!");
     }
