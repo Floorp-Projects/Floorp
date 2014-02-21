@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "gfxImageSurface.h"
-#include "gfxPlatform.h"
 #include "nsCocoaUtils.h"
 #include "nsChildView.h"
 #include "nsMenuBarX.h"
@@ -18,18 +17,12 @@
 #include "nsMenuUtilsX.h"
 #include "nsToolkit.h"
 #include "nsCRT.h"
-#include "mozilla/gfx/2D.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/TextEvents.h"
 
 using namespace mozilla;
 using namespace mozilla::widget;
-
-using mozilla::gfx::DataSourceSurface;
-using mozilla::gfx::IntSize;
-using mozilla::gfx::SurfaceFormat;
-using mozilla::gfx::SourceSurface;
 
 static float
 MenuBarScreenHeight()
@@ -265,46 +258,29 @@ void nsCocoaUtils::CleanUpAfterNativeAppModalDialog()
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-void data_ss_release_callback(void *aDataSourceSurface,
-                              const void *data,
-                              size_t size)
+nsresult nsCocoaUtils::CreateCGImageFromSurface(gfxImageSurface *aFrame, CGImageRef *aResult)
 {
-  if (aDataSourceSurface) {
-    static_cast<DataSourceSurface*>(aDataSourceSurface)->Release();
-  }
-}
 
-nsresult nsCocoaUtils::CreateCGImageFromSurface(SourceSurface* aSurface,
-                                                CGImageRef* aResult)
-{
-  RefPtr<DataSourceSurface> dataSurface = aSurface->GetDataSurface();
-
-  MOZ_ASSERT(dataSurface->GetFormat() ==  SurfaceFormat::B8G8R8A8,
-             "We assume B8G8R8A8 when calling CGImageCreate");
-
-  int32_t width = dataSurface->GetSize().width;
-  int32_t height = dataSurface->GetSize().height;
-  if (height < 1 || width < 1) {
+  int32_t width = aFrame->Width();
+  int32_t stride = aFrame->Stride();
+  int32_t height = aFrame->Height();
+  if ((stride % 4 != 0) || (height < 1) || (width < 1)) {
     return NS_ERROR_FAILURE;
   }
-
-  DataSourceSurface::MappedSurface map;
-  dataSurface->Map(DataSourceSurface::MapType::READ, &map);
-  NS_ENSURE_TRUE(map.mData, NS_ERROR_FAILURE);
 
   // Create a CGImageRef with the bits from the image, taking into account
   // the alpha ordering and endianness of the machine so we don't have to
   // touch the bits ourselves.
-  CGDataProviderRef dataProvider = ::CGDataProviderCreateWithData(dataSurface.forget().drop(),
-                                                                  map.mData,
-                                                                  map.mStride * height,
-                                                                  data_ss_release_callback);
+  CGDataProviderRef dataProvider = ::CGDataProviderCreateWithData(NULL,
+                                                                  aFrame->Data(),
+                                                                  stride * height,
+                                                                  NULL);
   CGColorSpaceRef colorSpace = ::CGColorSpaceCreateWithName(kCGColorSpaceGenericRGB);
   *aResult = ::CGImageCreate(width,
                              height,
                              8,
                              32,
-                             map.mStride,
+                             stride,
                              colorSpace,
                              kCGBitmapByteOrder32Host | kCGImageAlphaPremultipliedFirst,
                              dataProvider,
@@ -372,7 +348,7 @@ nsresult nsCocoaUtils::CreateNSImageFromCGImage(CGImageRef aInputImage, NSImage 
 
 nsresult nsCocoaUtils::CreateNSImageFromImageContainer(imgIContainer *aImage, uint32_t aWhichFrame, NSImage **aResult, CGFloat scaleFactor)
 {
-  RefPtr<SourceSurface> surface;
+  nsRefPtr<gfxImageSurface> frame;
   int32_t width = 0, height = 0;
   aImage->GetWidth(&width);
   aImage->GetHeight(&height);
@@ -382,8 +358,7 @@ nsresult nsCocoaUtils::CreateNSImageFromImageContainer(imgIContainer *aImage, ui
     int scaledWidth = (int)ceilf(width * scaleFactor);
     int scaledHeight = (int)ceilf(height * scaleFactor);
 
-    nsRefPtr<gfxImageSurface> frame =
-      new gfxImageSurface(gfxIntSize(scaledWidth, scaledHeight), gfxImageFormat::ARGB32);
+    frame = new gfxImageSurface(gfxIntSize(scaledWidth, scaledHeight), gfxImageFormat::ARGB32);
     NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
     nsRefPtr<gfxContext> context = new gfxContext(frame);
@@ -394,27 +369,19 @@ nsresult nsCocoaUtils::CreateNSImageFromImageContainer(imgIContainer *aImage, ui
       nsIntRect(0, 0, width, height),
       nsIntSize(scaledWidth, scaledHeight),
       nullptr, aWhichFrame, imgIContainer::FLAG_SYNC_DECODE);
-
-    surface =
-      gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(nullptr, frame);
-  } else {
-    nsRefPtr<gfxASurface> thebesSurface =
-      aImage->GetFrame(aWhichFrame, imgIContainer::FLAG_SYNC_DECODE);
-    NS_ENSURE_TRUE(thebesSurface, NS_ERROR_FAILURE);
-
-    nsRefPtr<gfxImageSurface> thebesImageSurface =
-      thebesSurface->GetAsReadableARGB32ImageSurface();
-    NS_ENSURE_TRUE(thebesImageSurface, NS_ERROR_FAILURE);
-
-    surface =
-      gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(nullptr,
-                                                             thebesImageSurface);
   }
 
-  NS_ENSURE_TRUE(surface, NS_ERROR_FAILURE);
+  else {
+    nsRefPtr<gfxASurface> surface =
+      aImage->GetFrame(aWhichFrame, imgIContainer::FLAG_SYNC_DECODE);
+    NS_ENSURE_TRUE(surface, NS_ERROR_FAILURE);
+
+    frame = surface->GetAsReadableARGB32ImageSurface();
+    NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
+  }
 
   CGImageRef imageRef = NULL;
-  nsresult rv = nsCocoaUtils::CreateCGImageFromSurface(surface, &imageRef);
+  nsresult rv = nsCocoaUtils::CreateCGImageFromSurface(frame, &imageRef);
   if (NS_FAILED(rv) || !imageRef) {
     return NS_ERROR_FAILURE;
   }
