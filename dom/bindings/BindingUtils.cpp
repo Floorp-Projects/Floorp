@@ -1511,39 +1511,6 @@ AppendNamedPropertyIds(JSContext* cx, JS::Handle<JSObject*> proxy,
   return true;
 }
 
-JSObject*
-GetXrayExpandoChain(JSObject* obj)
-{
-  const js::Class* clasp = js::GetObjectClass(obj);
-  JS::Value v;
-  if (IsNonProxyDOMClass(clasp) || IsDOMIfaceAndProtoClass(clasp)) {
-    v = js::GetReservedSlot(obj, DOM_XRAY_EXPANDO_SLOT);
-  } else if (clasp->isProxy()) {
-    MOZ_ASSERT(js::GetProxyHandler(obj)->family() == ProxyFamily());
-    v = js::GetProxyExtra(obj, JSPROXYSLOT_XRAY_EXPANDO);
-  } else {
-    MOZ_ASSERT(JS_IsNativeFunction(obj, Constructor));
-    v = js::GetFunctionNativeReserved(obj, CONSTRUCTOR_XRAY_EXPANDO_SLOT);
-  }
-  return v.isUndefined() ? nullptr : &v.toObject();
-}
-
-void
-SetXrayExpandoChain(JSObject* obj, JSObject* chain)
-{
-  JS::Value v = chain ? JS::ObjectValue(*chain) : JSVAL_VOID;
-  const js::Class* clasp = js::GetObjectClass(obj);
-  if (IsNonProxyDOMClass(clasp) || IsDOMIfaceAndProtoClass(clasp)) {
-    js::SetReservedSlot(obj, DOM_XRAY_EXPANDO_SLOT, v);
-  } else if (clasp->isProxy()) {
-    MOZ_ASSERT(js::GetProxyHandler(obj)->family() == ProxyFamily());
-    js::SetProxyExtra(obj, JSPROXYSLOT_XRAY_EXPANDO, v);
-  } else {
-    MOZ_ASSERT(JS_IsNativeFunction(obj, Constructor));
-    js::SetFunctionNativeReserved(obj, CONSTRUCTOR_XRAY_EXPANDO_SLOT, v);
-  }
-}
-
 bool
 DictionaryBase::ParseJSON(JSContext* aCx,
                           const nsAString& aJSON,
@@ -1755,7 +1722,6 @@ ReparentWrapper(JSContext* aCx, JS::Handle<JSObject*> aObjArg)
 
     // Expandos from other compartments are attached to the target JS object.
     // Copy them over, and let the old ones die a natural death.
-    SetXrayExpandoChain(newobj, nullptr);
     if (!xpc::XrayUtils::CloneExpandoChain(aCx, newobj, aObj)) {
       return NS_ERROR_FAILURE;
     }
