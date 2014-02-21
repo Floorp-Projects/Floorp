@@ -1731,11 +1731,15 @@ struct JSRuntime : public JS::shadow::Runtime,
     js::AutoEnterPolicy *enteredPolicy;
 #endif
 
+    /* See comment for JS::SetLargeAllocationFailureCallback in jsapi.h. */
+    JS::LargeAllocationFailureCallback largeAllocationFailureCallback;
+    /* See comment for JS::SetOutOfMemoryCallback in jsapi.h. */
+    JS::OutOfMemoryCallback oomCallback;
+
     /*
      * These variations of malloc/calloc/realloc will call the
      * large-allocation-failure callback on OOM and retry the allocation.
      */
-    JS::LargeAllocationFailureCallback largeAllocationFailureCallback;
 
     static const unsigned LARGE_ALLOCATION = 25 * 1024 * 1024;
 
