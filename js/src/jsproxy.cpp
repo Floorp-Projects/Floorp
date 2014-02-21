@@ -2543,28 +2543,25 @@ Proxy::set(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id
     AutoEnterPolicy policy(cx, handler, proxy, id, BaseProxyHandler::SET, true);
     if (!policy.allowed())
         return policy.returnValue();
-    if (handler->hasPrototype()) {
-        // If we're using a prototype, we still want to use the proxy trap unless
-        // we have a non-own property with a setter.
-        bool hasOwn;
-        if (!handler->hasOwn(cx, proxy, id, &hasOwn))
-            return false;
-        if (!hasOwn) {
-            RootedObject proto(cx);
-            // Proxies might still use the normal prototype mechanism, rather than
-            // a hook, so query the engine proper
-            if (!JSObject::getProto(cx, proxy, &proto))
-                return false;
-            if (proto) {
-                Rooted<PropertyDescriptor> desc(cx);
-                if (!JS_GetPropertyDescriptorById(cx, proto, id, 0, &desc))
-                    return false;
-                if (desc.object() && desc.setter())
-                    return JSObject::setGeneric(cx, proto, receiver, id, vp, strict);
-            }
-        }
-    }
-    return handler->set(cx, proxy, receiver, id, strict, vp);
+
+    // If the proxy doesn't require that we consult its prototype for the
+    // non-own cases, we can sink to the |set| trap.
+    if (!handler->hasPrototype())
+        return handler->set(cx, proxy, receiver, id, strict, vp);
+
+    // If we have an existing (own or non-own) property with a setter, we want
+    // to invoke that.
+    Rooted<PropertyDescriptor> desc(cx);
+    if (!Proxy::getPropertyDescriptor(cx, proxy, id, &desc, JSRESOLVE_ASSIGNING))
+        return false;
+    if (desc.object() && desc.setter() && desc.setter() != JS_StrictPropertyStub)
+        return CallSetter(cx, receiver, id, desc.setter(), desc.attributes(), desc.shortid(), strict, vp);
+
+    // Ok. Either there was no pre-existing property, or it was a value prop
+    // that we're going to shadow. Make a property descriptor and define it.
+    Rooted<PropertyDescriptor> newDesc(cx);
+    newDesc.value().set(vp);
+    return handler->defineProperty(cx, receiver, id, &newDesc);
 }
 
 bool
