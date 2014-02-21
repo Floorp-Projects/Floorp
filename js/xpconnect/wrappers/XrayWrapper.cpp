@@ -193,6 +193,10 @@ private:
 class XPCWrappedNativeXrayTraits : public XrayTraits
 {
 public:
+    enum {
+        HasPrototype = 0
+    };
+
     static const XrayType Type = XrayForWrappedNative;
 
     virtual bool resolveNativeProperty(JSContext *cx, HandleObject wrapper,
@@ -233,6 +237,10 @@ public:
 class DOMXrayTraits : public XrayTraits
 {
 public:
+    enum {
+        HasPrototype = 0
+    };
+
     static const XrayType Type = XrayForDOMObject;
 
     virtual bool resolveNativeProperty(JSContext *cx, HandleObject wrapper,
@@ -1239,6 +1247,7 @@ template <typename Base, typename Traits>
 XrayWrapper<Base, Traits>::XrayWrapper(unsigned flags)
   : Base(flags | WrapperFactory::IS_XRAY_WRAPPER_FLAG)
 {
+    Base::setHasPrototype(Traits::HasPrototype);
 }
 
 template <typename Base, typename Traits>
@@ -1863,24 +1872,17 @@ XrayWrapper<Base, Traits>::getPrototypeOf(JSContext *cx, JS::HandleObject wrappe
     RootedObject target(cx, Traits::getTargetObject(wrapper));
     RootedObject expando(cx, Traits::singleton.getExpandoObject(cx, target, wrapper));
 
-    // We want to keep the Xray's prototype distinct from that of content, but only
-    // if there's been a set. If there's not an expando, or the expando slot is |undefined|,
-    // hand back content's proto, appropriately wrapped.
-    //
-    // NB: Our baseclass's getPrototypeOf() will appropriately wrap its return value, so there is
-    // no need for us to.
-
-    if (!expando)
-        return Base::getPrototypeOf(cx, wrapper, protop);
+    // We want to keep the Xray's prototype distinct from that of content, but
+    // only if there's been a set. If there's not an expando, or the expando
+    // slot is |undefined|, hand back the default proto, appropriately wrapped.
 
     RootedValue v(cx);
-    {
+    if (expando) {
         JSAutoCompartment ac(cx, expando);
         v = JS_GetReservedSlot(expando, JSSLOT_EXPANDO_PROTOTYPE);
     }
-
     if (v.isUndefined())
-        return Base::getPrototypeOf(cx, wrapper, protop);
+        return getPrototypeOfHelper(cx, wrapper, target, protop);
 
     protop.set(v.toObjectOrNull());
     return JS_WrapObject(cx, protop);
