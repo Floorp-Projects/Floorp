@@ -2051,7 +2051,7 @@ AnalyzePoppedThis(JSContext *cx, types::TypeObject *type,
 
         DebugOnly<unsigned> slotSpan = baseobj->slotSpan();
         if (!DefineNativeProperty(cx, baseobj, id, UndefinedHandleValue, nullptr, nullptr,
-                                  JSPROP_ENUMERATE, 0, 0))
+                                  JSPROP_ENUMERATE, 0))
         {
             return false;
         }
