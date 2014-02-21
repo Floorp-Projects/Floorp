@@ -39,7 +39,7 @@ public class HomeConfigInvalidator implements GeckoEventListener {
 
     private static final String EVENT_HOMEPANELS_INSTALL = "HomePanels:Install";
     private static final String EVENT_HOMEPANELS_UNINSTALL = "HomePanels:Uninstall";
-    private static final String EVENT_HOMEPANELS_REFRESH = "HomePanels:Refresh";
+    private static final String EVENT_HOMEPANELS_UPDATE = "HomePanels:Update";
 
     private static final String JSON_KEY_PANEL = "panel";
     private static final String JSON_KEY_PANEL_ID = "id";
@@ -47,7 +47,7 @@ public class HomeConfigInvalidator implements GeckoEventListener {
     private enum ChangeType {
         UNINSTALL,
         INSTALL,
-        REFRESH
+        UPDATE
     }
 
     private static class ConfigChange {
@@ -76,11 +76,11 @@ public class HomeConfigInvalidator implements GeckoEventListener {
 
         GeckoAppShell.getEventDispatcher().registerEventListener(EVENT_HOMEPANELS_INSTALL, this);
         GeckoAppShell.getEventDispatcher().registerEventListener(EVENT_HOMEPANELS_UNINSTALL, this);
-        GeckoAppShell.getEventDispatcher().registerEventListener(EVENT_HOMEPANELS_REFRESH, this);
+        GeckoAppShell.getEventDispatcher().registerEventListener(EVENT_HOMEPANELS_UPDATE, this);
     }
 
     public void refreshAll() {
-        handlePanelRefresh(null);
+        handlePanelUpdate(null);
     }
 
     @Override
@@ -93,9 +93,9 @@ public class HomeConfigInvalidator implements GeckoEventListener {
                 Log.d(LOGTAG, EVENT_HOMEPANELS_UNINSTALL);
                 final String panelId = message.getString(JSON_KEY_PANEL_ID);
                 handlePanelUninstall(panelId);
-            } else if (event.equals(EVENT_HOMEPANELS_REFRESH)) {
-                Log.d(LOGTAG, EVENT_HOMEPANELS_REFRESH);
-                handlePanelRefresh(createPanelConfigFromMessage(message));
+            } else if (event.equals(EVENT_HOMEPANELS_UPDATE)) {
+                Log.d(LOGTAG, EVENT_HOMEPANELS_UPDATE);
+                handlePanelUpdate(createPanelConfigFromMessage(message));
             }
         } catch (Exception e) {
             Log.e(LOGTAG, "Failed to handle event " + event, e);
@@ -128,14 +128,14 @@ public class HomeConfigInvalidator implements GeckoEventListener {
     }
 
     /**
-     * Schedules a panel refresh in HomeConfig. Runs in the gecko thread.
+     * Schedules a panel update in HomeConfig. Runs in the gecko thread.
      *
      * @param panelConfig the target PanelConfig instance or NULL to refresh
      *                    all HomeConfig entries.
      */
-    private void handlePanelRefresh(PanelConfig panelConfig) {
-        mPendingChanges.offer(new ConfigChange(ChangeType.REFRESH, panelConfig));
-        Log.d(LOGTAG, "handlePanelRefresh: " + mPendingChanges.size());
+    private void handlePanelUpdate(PanelConfig panelConfig) {
+        mPendingChanges.offer(new ConfigChange(ChangeType.UPDATE, panelConfig));
+        Log.d(LOGTAG, "handlePanelUpdate: " + mPendingChanges.size());
 
         scheduleInvalidation();
     }
@@ -206,11 +206,11 @@ public class HomeConfigInvalidator implements GeckoEventListener {
                     break;
                 }
 
-                case REFRESH: {
+                case UPDATE: {
                     final PanelConfig panelConfig = (PanelConfig) pendingChange.target;
                     if (panelConfig != null) {
                         if (!replacePanelConfig(panelConfigs, panelConfig)) {
-                            Log.w(LOGTAG, "Tried to refresh non-existing panel " + panelConfig.getId());
+                            Log.w(LOGTAG, "Tried to update non-existing panel " + panelConfig.getId());
                         }
                     } else {
                         shouldRefreshAll = true;
