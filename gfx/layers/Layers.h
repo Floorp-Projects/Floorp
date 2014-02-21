@@ -1561,7 +1561,7 @@ public:
    * If aAfter is non-null, it must be a child of this container and
    * we insert after that layer. If it's null we insert at the start.
    */
-  virtual void InsertAfter(Layer* aChild, Layer* aAfter);
+  virtual bool InsertAfter(Layer* aChild, Layer* aAfter);
   /**
    * CONSTRUCTION PHASE ONLY
    * Remove aChild from the child list of this container. aChild must
@@ -1962,8 +1962,8 @@ class RefLayer : public ContainerLayer {
   friend class LayerManager;
 
 private:
-  virtual void InsertAfter(Layer* aChild, Layer* aAfter)
-  { MOZ_CRASH(); }
+  virtual bool InsertAfter(Layer* aChild, Layer* aAfter) MOZ_OVERRIDE
+  { MOZ_CRASH(); return false; }
 
   virtual void RemoveChild(Layer* aChild)
   { MOZ_CRASH(); }

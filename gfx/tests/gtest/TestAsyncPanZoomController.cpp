@@ -86,7 +86,7 @@ class TestAPZCContainerLayer : public ContainerLayer {
       : ContainerLayer(nullptr, nullptr)
     {}
   void RemoveChild(Layer* aChild) {}
-  void InsertAfter(Layer* aChild, Layer* aAfter) {}
+  bool InsertAfter(Layer* aChild, Layer* aAfter) { return true; }
   void ComputeEffectiveTransforms(const Matrix4x4& aTransformToSurface) {}
   void RepositionChild(Layer* aChild, Layer* aAfter) {}
 };

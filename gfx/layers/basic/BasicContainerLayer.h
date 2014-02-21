@@ -34,11 +34,13 @@ public:
                  "Can only set properties in construction phase");
     ContainerLayer::SetVisibleRegion(aRegion);
   }
-  virtual void InsertAfter(Layer* aChild, Layer* aAfter)
+  virtual bool InsertAfter(Layer* aChild, Layer* aAfter)
   {
-    NS_ASSERTION(BasicManager()->InConstruction(),
-                 "Can only set properties in construction phase");
-    ContainerLayer::InsertAfter(aChild, aAfter);
+    if (!BasicManager()->InConstruction()) {
+      NS_ERROR("Can only set properties in construction phase");
+      return false;
+    }
+    return ContainerLayer::InsertAfter(aChild, aAfter);
   }
 
   virtual void RemoveChild(Layer* aChild)
