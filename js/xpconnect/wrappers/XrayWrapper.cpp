@@ -169,8 +169,13 @@ public:
     JSObject* ensureHolder(JSContext *cx, HandleObject wrapper);
     virtual JSObject* createHolder(JSContext *cx, JSObject *wrapper) = 0;
 
-    virtual JSObject* getExpandoChain(JSObject *obj) = 0;
-    virtual void setExpandoChain(JSObject *obj, JSObject *chain) = 0;
+    JSObject* getExpandoChain(JSObject *obj) {
+      return GetObjectScope(obj)->GetExpandoChain(obj);
+    }
+
+    bool setExpandoChain(JSContext *cx, HandleObject obj, HandleObject chain) {
+      return GetObjectScope(obj)->SetExpandoChain(cx, obj, chain);
+    }
     bool cloneExpandoChain(JSContext *cx, HandleObject dst, HandleObject src);
 
 private:
@@ -221,12 +226,6 @@ public:
     typedef ResolvingId ResolvingIdImpl;
 
     virtual JSObject* createHolder(JSContext *cx, JSObject *wrapper);
-    virtual JSObject* getExpandoChain(JSObject *obj) {
-        return GetWNExpandoChain(obj);
-    }
-    virtual void setExpandoChain(JSObject *obj, JSObject *chain) {
-        SetWNExpandoChain(obj, chain);
-    }
 
     static XPCWrappedNativeXrayTraits singleton;
 };
@@ -262,13 +261,6 @@ public:
     virtual void preserveWrapper(JSObject *target);
 
     virtual JSObject* createHolder(JSContext *cx, JSObject *wrapper);
-
-    virtual JSObject* getExpandoChain(JSObject *obj) {
-        return mozilla::dom::GetXrayExpandoChain(obj);
-    }
-    virtual void setExpandoChain(JSObject *obj, JSObject *chain) {
-        mozilla::dom::SetXrayExpandoChain(obj, chain);
-    }
 
     static DOMXrayTraits singleton;
 };
@@ -440,7 +432,7 @@ XrayTraits::attachExpandoObject(JSContext *cx, HandleObject target,
 
     // Insert it at the front of the chain.
     JS_SetReservedSlot(expandoObject, JSSLOT_EXPANDO_NEXT, OBJECT_TO_JSVAL(chain));
-    setExpandoChain(target, expandoObject);
+    setExpandoChain(cx, target, expandoObject);
 
     return expandoObject;
 }
