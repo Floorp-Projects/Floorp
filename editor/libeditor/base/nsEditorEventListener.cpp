@@ -587,7 +587,7 @@ nsEditorEventListener::MouseClick(nsIDOMEvent* aMouseEvent)
   // IME to commit before we change the cursor position
   mEditor->ForceCompositionEnd();
 
-  uint16_t button = (uint16_t)-1;
+  int16_t button = -1;
   mouseEvent->GetButton(&button);
   // middle-mouse click (paste);
   if (button == 1)

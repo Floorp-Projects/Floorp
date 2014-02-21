@@ -226,7 +226,7 @@ if os_linux:
             'src/base/message_pump_qt.cc',
         ]
         GENERATED_SOURCES += [
-            'src/base/moc_message_pump_qt.cc',
+            'moc_message_pump_qt.cc',
         ]
     if not CONFIG['MOZ_NATIVE_LIBEVENT']:
         if CONFIG['OS_TARGET'] != 'Android':
@@ -263,7 +263,7 @@ if os_bsd:
             'src/base/message_pump_qt.cc',
         ]
         GENERATED_SOURCES += [
-            'src/base/moc_message_pump_qt.cc',
+            'moc_message_pump_qt.cc',
         ]
     if not CONFIG['MOZ_NATIVE_LIBEVENT']:
         SOURCES += [

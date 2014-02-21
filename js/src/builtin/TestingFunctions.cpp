@@ -1236,7 +1236,7 @@ class CloneBufferObject : public JSObject {
     }
 
     uint64_t *data() const {
-        return static_cast<uint64_t*>(getReservedSlot(0).toPrivate());
+        return static_cast<uint64_t*>(getReservedSlot(DATA_SLOT).toPrivate());
     }
 
     void setData(uint64_t *aData) {

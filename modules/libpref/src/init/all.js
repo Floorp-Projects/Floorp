@@ -4131,6 +4131,9 @@ pref("memory.free_dirty_pages", false);
 pref("memory.system_memory_reporter", false);
 #endif
 
+// Don't dump memory reports on OOM, by default.
+pref("memory.dump_reports_on_oom", false);
+
 // Number of stack frames to capture in createObjectURL for about:memory.
 pref("memory.blob_report.stack_frames", 0);
 

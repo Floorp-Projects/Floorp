@@ -9,7 +9,6 @@
 #include "nsClassHashtable.h"
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
-#include "nsHashtable.h"
 #include "nsICSSLoaderObserver.h"
 #include "nsInterfaceHashtable.h"
 #include "nsWeakReference.h"
@@ -22,8 +21,9 @@
 class nsIAtom;
 class nsIContent;
 class nsIDocument;
-class nsXBLProtoImplField;
+class nsXBLAttributeEntry;
 class nsXBLBinding;
+class nsXBLProtoImplField;
 
 // *********************************************************************/
 // The XBLPrototypeBinding class
@@ -245,6 +245,9 @@ public:
                              nsIContent* aTemplChild);
 
   bool ChromeOnlyContent() { return mChromeOnlyContent; }
+
+  typedef nsClassHashtable<nsISupportsHashKey, nsXBLAttributeEntry> InnerAttributeTable;
+
 protected:
   // Ensure that mAttributeTable has been created.
   void EnsureAttributeTable();
@@ -278,9 +281,10 @@ protected:
 
   nsXBLDocumentInfo* mXBLDocInfoWeak; // A pointer back to our doc info.  Weak, since it owns us.
 
-  nsObjectHashtable* mAttributeTable; // A table for attribute containers. Namespace IDs are used as
-                                      // keys in the table. Containers are nsObjectHashtables.
-                                      // This table is used to efficiently handle attribute changes.
+  // A table for attribute containers. Namespace IDs are used as
+  // keys in the table. Containers are InnerAttributeTables.
+  // This table is used to efficiently handle attribute changes.
+  nsAutoPtr<nsClassHashtable<nsUint32HashKey, InnerAttributeTable>> mAttributeTable;
 
   class IIDHashKey : public PLDHashEntryHdr
   {

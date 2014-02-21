@@ -602,7 +602,7 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
   if (!mouseEvent)
     return NS_OK;
 
-  uint16_t button = 0;
+  int16_t button = 0;
   mouseEvent->GetButton(&button);
 
   // only if left button

@@ -4103,6 +4103,7 @@ nsEventStateManager::DispatchMouseOrPointerEvent(WidgetMouseEvent* aMouseEvent,
   }
   event->refPoint = aMouseEvent->refPoint;
   event->modifiers = aMouseEvent->modifiers;
+  event->button = aMouseEvent->button;
   event->buttons = aMouseEvent->buttons;
   event->pluginEvent = aMouseEvent->pluginEvent;
   event->relatedTarget = aRelatedContent;

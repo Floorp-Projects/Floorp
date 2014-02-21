@@ -834,7 +834,9 @@ ParseCompileOptions(JSContext *cx, CompileOptions &options, HandleObject opts,
         JSString *s = ToString(cx, v);
         if (!s)
             return false;
-        char *policy = JS_EncodeStringToUTF8(cx, s);
+
+        JSAutoByteString bytes;
+        char *policy = bytes.encodeUtf8(cx, s);
         if (!policy)
             return false;
         if (strcmp(policy, "NO_SOURCE") == 0) {

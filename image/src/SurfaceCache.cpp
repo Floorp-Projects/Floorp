@@ -112,6 +112,7 @@ private:
 class CachedSurface : public RefCounted<CachedSurface>
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(CachedSurface)
   CachedSurface(DrawTarget*       aTarget,
                 const IntSize     aTargetSize,
                 const Cost        aCost,
@@ -157,6 +158,7 @@ private:
 class ImageSurfaceCache : public RefCounted<ImageSurfaceCache>
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(ImageSurfaceCache)
   typedef nsRefPtrHashtable<nsGenericHashKey<SurfaceKey>, CachedSurface> SurfaceTable;
 
   bool IsEmpty() const { return mSurfaces.Count() == 0; }

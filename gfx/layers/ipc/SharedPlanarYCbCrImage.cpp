@@ -125,7 +125,7 @@ SharedPlanarYCbCrImage::SetData(const PlanarYCbCrData& aData)
                                                                mData.mCbCrSize);
   mSize = mData.mPicSize;
 
-  YCbCrImageDataSerializer serializer(mTextureClient->GetBuffer());
+  YCbCrImageDataSerializer serializer(mTextureClient->GetBuffer(), mTextureClient->GetBufferSize());
   mData.mYChannel = serializer.GetYData();
   mData.mCbChannel = serializer.GetCbData();
   mData.mCrChannel = serializer.GetCrData();
@@ -148,7 +148,7 @@ SharedPlanarYCbCrImage::AllocateAndGetNewBuffer(uint32_t aSize)
   // update buffer size
   mBufferSize = size;
 
-  YCbCrImageDataSerializer serializer(mTextureClient->GetBuffer());
+  YCbCrImageDataSerializer serializer(mTextureClient->GetBuffer(), mTextureClient->GetBufferSize());
   return serializer.GetData();
 }
 
@@ -163,7 +163,7 @@ SharedPlanarYCbCrImage::SetDataNoCopy(const Data &aData)
    * with AllocateAndGetNewBuffer(), that we subtract from the Y, Cb, Cr
    * channels to compute 0-based offsets to pass to InitializeBufferInfo.
    */
-  YCbCrImageDataSerializer serializer(mTextureClient->GetBuffer());
+  YCbCrImageDataSerializer serializer(mTextureClient->GetBuffer(), mTextureClient->GetBufferSize());
   uint8_t *base = serializer.GetData();
   uint32_t yOffset = aData.mYChannel - base;
   uint32_t cbOffset = aData.mCbChannel - base;
@@ -207,7 +207,7 @@ SharedPlanarYCbCrImage::Allocate(PlanarYCbCrData& aData)
     return false;
   }
 
-  YCbCrImageDataSerializer serializer(mTextureClient->GetBuffer());
+  YCbCrImageDataSerializer serializer(mTextureClient->GetBuffer(), mTextureClient->GetBufferSize());
   serializer.InitializeBufferInfo(aData.mYSize,
                                   aData.mCbCrSize,
                                   aData.mStereoMode);
@@ -258,7 +258,7 @@ DeprecatedSharedPlanarYCbCrImage::SetData(const PlanarYCbCrData& aData)
                                                                mData.mCbCrSize);
   mSize = mData.mPicSize;
 
-  YCbCrImageDataSerializer serializer(mShmem.get<uint8_t>());
+  YCbCrImageDataSerializer serializer(mShmem.get<uint8_t>(), mShmem.Size<uint8_t>());
   MOZ_ASSERT(aData.mCbSkip == aData.mCrSkip);
   if (!serializer.CopyData(aData.mYChannel, aData.mCbChannel, aData.mCrChannel,
                            aData.mYSize, aData.mYStride,
@@ -287,7 +287,7 @@ DeprecatedSharedPlanarYCbCrImage::AllocateAndGetNewBuffer(uint32_t aSize)
   // update buffer size
   mBufferSize = size;
 
-  YCbCrImageDataSerializer serializer(mShmem.get<uint8_t>());
+  YCbCrImageDataSerializer serializer(mShmem.get<uint8_t>(), mShmem.Size<uint8_t>());
   return serializer.GetData();
 }
 
@@ -296,7 +296,7 @@ DeprecatedSharedPlanarYCbCrImage::SetDataNoCopy(const Data &aData)
 {
   mData = aData;
   mSize = aData.mPicSize;
-  YCbCrImageDataSerializer serializer(mShmem.get<uint8_t>());
+  YCbCrImageDataSerializer serializer(mShmem.get<uint8_t>(), mShmem.Size<uint8_t>());
   serializer.InitializeBufferInfo(aData.mYSize,
                                   aData.mCbCrSize,
                                   aData.mStereoMode);
@@ -327,7 +327,7 @@ DeprecatedSharedPlanarYCbCrImage::Allocate(PlanarYCbCrData& aData)
     return false;
   }
 
-  YCbCrImageDataSerializer serializer(mShmem.get<uint8_t>());
+  YCbCrImageDataSerializer serializer(mShmem.get<uint8_t>(), mShmem.Size<uint8_t>());
   serializer.InitializeBufferInfo(aData.mYSize,
                                   aData.mCbCrSize,
                                   aData.mStereoMode);

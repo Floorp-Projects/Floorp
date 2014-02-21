@@ -2788,12 +2788,6 @@ extern JS_PUBLIC_API(bool)
 JS_DefineOwnProperty(JSContext *cx, JSObject *obj, jsid id, jsval descriptor, bool *bp);
 
 extern JS_PUBLIC_API(bool)
-JS_DefinePropertyWithTinyId(JSContext *cx, JSObject *obj, const char *name,
-                            int8_t tinyid, jsval value,
-                            JSPropertyOp getter, JSStrictPropertyOp setter,
-                            unsigned attrs);
-
-extern JS_PUBLIC_API(bool)
 JS_AlreadyHasOwnProperty(JSContext *cx, JS::HandleObject obj, const char *name,
                          bool *foundp);
 
@@ -3025,13 +3019,6 @@ JS_DefineUCProperty(JSContext *cx, JSObject *obj,
                     const jschar *name, size_t namelen, jsval value,
                     JSPropertyOp getter, JSStrictPropertyOp setter,
                     unsigned attrs);
-
-extern JS_PUBLIC_API(bool)
-JS_DefineUCPropertyWithTinyId(JSContext *cx, JSObject *obj,
-                              const jschar *name, size_t namelen,
-                              int8_t tinyid, jsval value,
-                              JSPropertyOp getter, JSStrictPropertyOp setter,
-                              unsigned attrs);
 
 extern JS_PUBLIC_API(bool)
 JS_AlreadyHasOwnUCProperty(JSContext *cx, JS::HandleObject obj, const jschar *name,
@@ -4916,7 +4903,8 @@ class MOZ_STACK_CLASS JS_PUBLIC_API(ForOfIterator) {
  * If a large allocation fails, the JS engine may call the large-allocation-
  * failure callback, if set, to allow the embedding to flush caches, possibly
  * perform shrinking GCs, etc. to make some room so that the allocation will
- * succeed if retried.
+ * succeed if retried. After the callback returns, the JS engine will try to
+ * allocate again and may be succesful.
  */
 
 typedef void
@@ -4924,6 +4912,23 @@ typedef void
 
 extern JS_PUBLIC_API(void)
 SetLargeAllocationFailureCallback(JSRuntime *rt, LargeAllocationFailureCallback afc);
+
+/*
+ * Unlike the error reporter, which is only called if the exception for an OOM
+ * bubbles up and is not caught, the OutOfMemoryCallback is called immediately
+ * at the OOM site to allow the embedding to capture the current state of heap
+ * allocation before anything is freed. If the large-allocation-failure callback
+ * is called at all (not all allocation sites call the large-allocation-failure
+ * callback on failure), it is called before the out-of-memory callback; the
+ * out-of-memory callback is only called if the allocation still fails after the
+ * large-allocation-failure callback has returned.
+ */
+
+typedef void
+(* OutOfMemoryCallback)(JSContext *cx);
+
+extern JS_PUBLIC_API(void)
+SetOutOfMemoryCallback(JSRuntime *rt, OutOfMemoryCallback cb);
 
 } /* namespace JS */
 

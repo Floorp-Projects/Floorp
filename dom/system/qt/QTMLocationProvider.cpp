@@ -12,6 +12,9 @@ NS_IMPL_ISUPPORTS1(QTMLocationProvider, nsIGeolocationProvider)
 
 QTMLocationProvider::QTMLocationProvider()
 {
+    if (QMetaType::type("QGeoPositionInfo") == QMetaType::UnknownType) {
+        qRegisterMetaType<QGeoPositionInfo>("QGeoPositionInfo");
+    }
     mLocation = QGeoPositionInfoSource::createDefaultSource(this);
     if (mLocation)
         connect(mLocation, SIGNAL(positionUpdated(QGeoPositionInfo)), this, SLOT(positionUpdated(QGeoPositionInfo)));
@@ -57,6 +60,9 @@ QTMLocationProvider::Startup()
     if (!mLocation)
         return NS_ERROR_NOT_IMPLEMENTED;
 
+    // Not all versions of qt5positioning set default prefered method
+    // thus this workaround initializing QGeoPositionSource explicitly
+    SetHighAccuracy(false);
     mLocation->startUpdates();
 
     return NS_OK;
@@ -83,7 +89,13 @@ QTMLocationProvider::Shutdown()
 }
 
 NS_IMETHODIMP
-QTMLocationProvider::SetHighAccuracy(bool)
+QTMLocationProvider::SetHighAccuracy(bool aHigh)
 {
-  return NS_OK;
+    if (!mLocation)
+        return NS_ERROR_NOT_IMPLEMENTED;
+
+    mLocation->setPreferredPositioningMethods(aHigh ?
+                                              QGeoPositionInfoSource::SatellitePositioningMethods :
+                                              QGeoPositionInfoSource::AllPositioningMethods);
+    return NS_OK;
 }

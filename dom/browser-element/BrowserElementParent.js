@@ -65,8 +65,8 @@ BrowserElementParentFactory.prototype = {
     // alive for as long as its frame element lives.
     this._bepMap = new WeakMap();
 
-    Services.obs.addObserver(this, 'remote-browser-frame-pending', /* ownsWeak = */ true);
-    Services.obs.addObserver(this, 'in-process-browser-or-app-frame-shown', /* ownsWeak = */ true);
+    Services.obs.addObserver(this, 'remote-browser-pending', /* ownsWeak = */ true);
+    Services.obs.addObserver(this, 'inprocess-browser-shown', /* ownsWeak = */ true);
   },
 
   _browserFramesPrefEnabled: function() {
@@ -79,6 +79,10 @@ BrowserElementParentFactory.prototype = {
   },
 
   _observeInProcessBrowserFrameShown: function(frameLoader) {
+    // Ignore notifications that aren't from a BrowserOrApp
+    if (!frameLoader.QueryInterface(Ci.nsIFrameLoader).ownerIsBrowserOrAppFrame) {
+      return;
+    }
     debug("In-process browser frame shown " + frameLoader);
     this._createBrowserElementParent(frameLoader,
                                      /* hasRemoteFrame = */ false,
@@ -86,6 +90,10 @@ BrowserElementParentFactory.prototype = {
   },
 
   _observeRemoteBrowserFramePending: function(frameLoader) {
+    // Ignore notifications that aren't from a BrowserOrApp
+    if (!frameLoader.QueryInterface(Ci.nsIFrameLoader).ownerIsBrowserOrAppFrame) {
+      return;
+    }
     debug("Remote browser frame shown " + frameLoader);
     this._createBrowserElementParent(frameLoader,
                                      /* hasRemoteFrame = */ true,
@@ -108,10 +116,10 @@ BrowserElementParentFactory.prototype = {
         this._init();
       }
       break;
-    case 'remote-browser-frame-pending':
+    case 'remote-browser-pending':
       this._observeRemoteBrowserFramePending(subject);
       break;
-    case 'in-process-browser-or-app-frame-shown':
+    case 'inprocess-browser-shown':
       this._observeInProcessBrowserFrameShown(subject);
       break;
     }
