@@ -110,13 +110,6 @@
         findbar.browser.finder.enableSelection();
       ]]></handler>
 
-#ifdef XP_MACOSX
-      <handler event="focus"><![CDATA[
-        let findbar = this.findbar;
-        findbar._onFindFieldFocus();
-      ]]></handler>
-#endif
-
       <handler event="compositionstart"><![CDATA[
         // Don't close the find toolbar while IME is composing.
         let findbar = this.findbar;
@@ -1052,17 +1045,8 @@
             userWantsPrefill =
               prefsvc.getBoolPref("accessibility.typeaheadfind.prefillwithselection");
 
-          let initialString = null;
-          if (this.prefillWithSelection && userWantsPrefill)
-            initialString = this._getInitialSelection();
-#ifdef XP_MACOSX
-          if (!initialString) {
-            let clipboardSearchString = this.browser.finder.clipboardSearchString;
-            if (clipboardSearchString)
-              initialString = clipboardSearchString;
-          }
-#endif
-
+          let initialString = (this.prefillWithSelection && userWantsPrefill) ?
+                              this._getInitialSelection() : null;
           if (initialString)
             this._findField.value = initialString;
 
@@ -1118,32 +1102,6 @@
         ]]></body>
       </method>
 
-#ifdef XP_MACOSX
-      <!--
-        - Fetches the currently selected text and sets that as the text to search
-        - next. This is a MacOS specific feature.
-      -->
-      <method name="onFindSelectionCommand">
-        <body><![CDATA[
-          let searchString = this.browser.finder.setSearchStringToSelection();
-          if (searchString)
-            this._findField.value = searchString;
-        ]]></body>
-      </method>
-
-      <method name="_onFindFieldFocus">
-        <body><![CDATA[
-          let clipboardSearchString = this._browser.finder.clipboardSearchString;
-          if (clipboardSearchString && this._findField.value != clipboardSearchString) {
-            this._findField.value = clipboardSearchString;
-            // Changing the search string makes the previous status invalid, so
-            // we better clear it here.
-            this._updateStatusUI();
-          }
-        ]]></body>
-      </method>
-#endif
-
       <!--
         - This handles all the result changes for both
         - type-ahead-find and highlighting.
@@ -1161,8 +1119,6 @@
       <method name="onFindResult">
         <parameter name="aData"/>
         <body><![CDATA[
-          if (this._findField.value != this.browser.finder.searchString)
-            this._findField.value = this.browser.finder.searchString;
           this._updateStatusUI(aData.result, aData.findBackwards);
           this._updateStatusUIBar(aData.linkURL);
 
