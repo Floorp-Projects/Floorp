@@ -38,13 +38,13 @@ public class HomeConfigInvalidator implements GeckoEventListener {
     private static final int PANEL_INFO_TIMEOUT_MSEC = 1000;
 
     private static final String EVENT_HOMEPANELS_INSTALL = "HomePanels:Install";
-    private static final String EVENT_HOMEPANELS_REMOVE = "HomePanels:Remove";
+    private static final String EVENT_HOMEPANELS_UNINSTALL = "HomePanels:Uninstall";
     private static final String EVENT_HOMEPANELS_REFRESH = "HomePanels:Refresh";
 
     private static final String JSON_KEY_PANEL = "panel";
 
     private enum ChangeType {
-        REMOVE,
+        UNINSTALL,
         INSTALL,
         REFRESH
     }
@@ -74,7 +74,7 @@ public class HomeConfigInvalidator implements GeckoEventListener {
         mHomeConfig = HomeConfig.getDefault(context);
 
         GeckoAppShell.getEventDispatcher().registerEventListener(EVENT_HOMEPANELS_INSTALL, this);
-        GeckoAppShell.getEventDispatcher().registerEventListener(EVENT_HOMEPANELS_REMOVE, this);
+        GeckoAppShell.getEventDispatcher().registerEventListener(EVENT_HOMEPANELS_UNINSTALL, this);
         GeckoAppShell.getEventDispatcher().registerEventListener(EVENT_HOMEPANELS_REFRESH, this);
     }
 
@@ -91,9 +91,9 @@ public class HomeConfigInvalidator implements GeckoEventListener {
             if (event.equals(EVENT_HOMEPANELS_INSTALL)) {
                 Log.d(LOGTAG, EVENT_HOMEPANELS_INSTALL);
                 handlePanelInstall(panelConfig);
-            } else if (event.equals(EVENT_HOMEPANELS_REMOVE)) {
-                Log.d(LOGTAG, EVENT_HOMEPANELS_REMOVE);
-                handlePanelRemove(panelConfig);
+            } else if (event.equals(EVENT_HOMEPANELS_UNINSTALL)) {
+                Log.d(LOGTAG, EVENT_HOMEPANELS_UNINSTALL);
+                handlePanelUninstall(panelConfig);
             } else if (event.equals(EVENT_HOMEPANELS_REFRESH)) {
                 Log.d(LOGTAG, EVENT_HOMEPANELS_REFRESH);
                 handlePanelRefresh(panelConfig);
@@ -116,9 +116,9 @@ public class HomeConfigInvalidator implements GeckoEventListener {
     /**
      * Runs in the gecko thread.
      */
-    private void handlePanelRemove(PanelConfig panelConfig) {
-        mPendingChanges.offer(new ConfigChange(ChangeType.REMOVE, panelConfig));
-        Log.d(LOGTAG, "handlePanelRemove: " + mPendingChanges.size());
+    private void handlePanelUninstall(PanelConfig panelConfig) {
+        mPendingChanges.offer(new ConfigChange(ChangeType.UNINSTALL, panelConfig));
+        Log.d(LOGTAG, "handlePanelUninstall: " + mPendingChanges.size());
 
         scheduleInvalidation();
     }
@@ -175,7 +175,7 @@ public class HomeConfigInvalidator implements GeckoEventListener {
             final PanelConfig panelConfig = pendingChange.target;
 
             switch (pendingChange.type) {
-                case REMOVE:
+                case UNINSTALL:
                     if (panelConfigs.remove(panelConfig)) {
                         Log.d(LOGTAG, "executePendingChanges: removed panel " + panelConfig.getId());
                     }
