@@ -1,0 +1,29 @@
+<!doctype html>
+<html class="reftest-wait">
+  <head>
+    <title>menclose inner and outer circle</title>
+    <meta charset="utf-8"/>
+    <script type="text/javascript">
+      function doTest()
+      {
+        var box1 = document.getElementById("outer").getBoundingClientRect();
+        var box2 = document.getElementById("inner").getBoundingClientRect();
+        var epsilon = 0.1;
+        if ((box1.width >= ((Math.sqrt(2) - epsilon)*box2.width)) && (box1.height >= ((Math.sqrt(2) - epsilon)*box2.height))) {
+            document.body.innerHTML = "Pass";
+        }
+        document.documentElement.removeAttribute("class");
+      }
+      window.addEventListener("MozReftestInvalidate",doTest, false);
+    </script>
+  </head>
+  <body>
+    <div style="position: absolute; left: 20px; top: 20px;">
+      <math>
+        <menclose id="outer" notation="circle">
+          <mspace id="inner" width="200px" height="100px"></mspace>
+        </menclose>
+      </math>
+    </div>
+  </body>
+</html>

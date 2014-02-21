@@ -62,7 +62,7 @@ GetStatePrefNameForPlugin(nsPluginTag* aTag)
 
 /* nsPluginTag */
 
-nsPluginTag::nsPluginTag(nsPluginInfo* aPluginInfo)
+nsPluginTag::nsPluginTag(nsPluginInfo* aPluginInfo, int64_t aLastModifiedTime)
   : mName(aPluginInfo->fName),
     mDescription(aPluginInfo->fDescription),
     mLibrary(nullptr),
@@ -71,7 +71,7 @@ nsPluginTag::nsPluginTag(nsPluginInfo* aPluginInfo)
     mFileName(aPluginInfo->fFileName),
     mFullPath(aPluginInfo->fFullPath),
     mVersion(aPluginInfo->fVersion),
-    mLastModifiedTime(0),
+    mLastModifiedTime(aLastModifiedTime),
     mNiceFileName(),
     mCachedBlocklistState(nsIBlocklistService::STATE_NOT_BLOCKED),
     mCachedBlocklistStateValid(false)
@@ -565,4 +565,12 @@ void
 nsPluginTag::InvalidateBlocklistState()
 {
   mCachedBlocklistStateValid = false;
+}
+
+nsresult
+nsPluginTag::GetLastModifiedTime(PRTime* aLastModifiedTime)
+{
+  MOZ_ASSERT(aLastModifiedTime);
+  *aLastModifiedTime = mLastModifiedTime;
+  return NS_OK;
 }

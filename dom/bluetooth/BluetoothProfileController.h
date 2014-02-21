@@ -59,6 +59,7 @@ typedef void (*BluetoothProfileControllerCallback)();
 class BluetoothProfileController : public RefCounted<BluetoothProfileController>
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(BluetoothProfileController)
   /**
    * @param aConnect:       If it's a connect request, the value should be set
    *                        to true. For disconnect request, set it to false.
