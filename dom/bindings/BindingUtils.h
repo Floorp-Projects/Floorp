@@ -1955,14 +1955,12 @@ extern NativePropertyHooks sWorkerNativePropertyHooks;
 // the real JSNative in the mNative member of a JSNativeHolder in the
 // CONSTRUCTOR_NATIVE_HOLDER_RESERVED_SLOT slot of the JSFunction object for a
 // specific interface object. We also store the NativeProperties in the
-// JSNativeHolder. The CONSTRUCTOR_XRAY_EXPANDO_SLOT is used to store the
-// expando chain of the Xray for the interface object.
+// JSNativeHolder.
 // Note that some interface objects are not yet a JSFunction but a normal
 // JSObject with a DOMJSClass, those do not use these slots.
 
 enum {
-  CONSTRUCTOR_NATIVE_HOLDER_RESERVED_SLOT = 0,
-  CONSTRUCTOR_XRAY_EXPANDO_SLOT
+  CONSTRUCTOR_NATIVE_HOLDER_RESERVED_SLOT = 0
 };
 
 bool
@@ -2006,11 +2004,6 @@ inline void
 MustInheritFromNonRefcountedDOMObject(NonRefcountedDOMObject*)
 {
 }
-
-// Set the chain of expando objects for various consumers of the given object.
-// For Paris Bindings only. See the relevant infrastructure in XrayWrapper.cpp.
-JSObject* GetXrayExpandoChain(JSObject *obj);
-void SetXrayExpandoChain(JSObject *obj, JSObject *chain);
 
 /**
  * This creates a JSString containing the value that the toString function for
