@@ -33,7 +33,7 @@ import java.util.List;
 class HomeConfigPrefsBackend implements HomeConfigBackend {
     private static final String LOGTAG = "GeckoHomeConfigBackend";
 
-    private static final String PREFS_KEY = "home_panels";
+    private static final String PREFS_CONFIG_KEY = "home_panels";
 
     private final Context mContext;
     private PrefsListener mPrefsListener;
@@ -104,7 +104,7 @@ class HomeConfigPrefsBackend implements HomeConfigBackend {
     @Override
     public List<PanelConfig> load() {
         final SharedPreferences prefs = getSharedPreferences();
-        final String jsonString = prefs.getString(PREFS_KEY, null);
+        final String jsonString = prefs.getString(PREFS_CONFIG_KEY, null);
 
         final List<PanelConfig> panelConfigs;
         if (TextUtils.isEmpty(jsonString)) {
@@ -135,7 +135,7 @@ class HomeConfigPrefsBackend implements HomeConfigBackend {
         final SharedPreferences.Editor editor = prefs.edit();
 
         final String jsonString = jsonPanelConfigs.toString();
-        editor.putString(PREFS_KEY, jsonString);
+        editor.putString(PREFS_CONFIG_KEY, jsonString);
         editor.commit();
     }
 
@@ -159,7 +159,7 @@ class HomeConfigPrefsBackend implements HomeConfigBackend {
     private class PrefsListener implements OnSharedPreferenceChangeListener {
         @Override
         public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-            if (TextUtils.equals(key, PREFS_KEY)) {
+            if (TextUtils.equals(key, PREFS_CONFIG_KEY)) {
                 mChangeListener.onChange();
             }
         }
