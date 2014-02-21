@@ -14,20 +14,15 @@
 // globals and non-globals.
 #define DOM_OBJECT_SLOT 0
 
-// We use slot 1 for holding the expando object. This is not safe for globals
-// until bug 760095 is fixed, so that bug blocks converting Window to new
-// bindings.
-#define DOM_XRAY_EXPANDO_SLOT 1
-
 // We use slot 2 for holding either a JS::ObjectValue which points to the cached
 // SOW or JS::UndefinedValue if this class doesn't need SOWs. This is not safe
 // for globals until bug 760095 is fixed, so that bug blocks converting Window
 // to new bindings.
-#define DOM_OBJECT_SLOT_SOW 2
+#define DOM_OBJECT_SLOT_SOW 1
 
 // The total number of slots non-proxy DOM objects use by default.
 // Specific objects may have more for storing cached values.
-#define DOM_INSTANCE_RESERVED_SLOTS 3
+#define DOM_INSTANCE_RESERVED_SLOTS 2
 
 // NOTE: This is baked into the Ion JIT as 0 in codegen for LGetDOMProperty and
 // LSetDOMProperty. Those constants need to be changed accordingly if this value
@@ -36,15 +31,11 @@
 
 // Interface objects store a number of reserved slots equal to
 // DOM_INTERFACE_SLOTS_BASE + number of named constructors.
-#define DOM_INTERFACE_SLOTS_BASE (DOM_XRAY_EXPANDO_SLOT + 1)
+#define DOM_INTERFACE_SLOTS_BASE 0
 
 // Interface prototype objects store a number of reserved slots equal to
 // DOM_INTERFACE_PROTO_SLOTS_BASE or DOM_INTERFACE_PROTO_SLOTS_BASE + 1 if a
 // slot for the unforgeable holder is needed.
-#define DOM_INTERFACE_PROTO_SLOTS_BASE (DOM_XRAY_EXPANDO_SLOT + 1)
-
-static_assert(DOM_PROTO_INSTANCE_CLASS_SLOT != DOM_XRAY_EXPANDO_SLOT,
-              "Interface prototype object use both of these, so they must "
-              "not be the same slot.");
+#define DOM_INTERFACE_PROTO_SLOTS_BASE (DOM_PROTO_INSTANCE_CLASS_SLOT + 1)
 
 #endif /* mozilla_dom_DOMSlots_h */
