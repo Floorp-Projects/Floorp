@@ -182,7 +182,7 @@ function testCompletion(hud) {
        return item.label != "prop1";
      }), "autocomplete results do contain prop1");
 
-  // Test if 'foo1Obj.prop1.' gives 'prop11'
+  // Test if 'foo2Obj.prop1.' gives 'prop11'
   input.value = "foo2Obj.prop1.";
   input.setSelectionRange(14, 14);
   jsterm.complete(jsterm.COMPLETE_HINT_ONLY, testNext);
@@ -193,7 +193,7 @@ function testCompletion(hud) {
        return item.label != "prop11";
      }), "autocomplete results do contain prop11");
 
-  // Test if 'foo1Obj.prop1.prop11.' gives suggestions for a string i.e. 'length'
+  // Test if 'foo2Obj.prop1.prop11.' gives suggestions for a string i.e. 'length'
   input.value = "foo2Obj.prop1.prop11.";
   input.setSelectionRange(21, 21);
   jsterm.complete(jsterm.COMPLETE_HINT_ONLY, testNext);
@@ -203,6 +203,15 @@ function testCompletion(hud) {
   ok(!newItems.every(function(item) {
        return item.label != "length";
      }), "autocomplete results do contain length");
+
+  // Test if 'foo1Obj[0].' throws no errors.
+  input.value = "foo2Obj[0].";
+  input.setSelectionRange(11, 11);
+  jsterm.complete(jsterm.COMPLETE_HINT_ONLY, testNext);
+  yield undefined;
+
+  newItems = popup.getItems();
+  is(newItems.length, 0, "no items for foo2Obj[0]");
 
   testDriver = null;
   executeSoon(finishTest);
