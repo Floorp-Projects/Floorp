@@ -33,15 +33,14 @@ if CONFIG['MOZ_WEBM_ENCODER']:
 if CONFIG['MOZ_VPX'] and not CONFIG['MOZ_NATIVE_LIBVPX']:
     external_dirs += ['media/libvpx']
 
-if CONFIG['MOZ_OGG']:
-    external_dirs += ['media/libogg', 'media/libtheora']
-
 if not CONFIG['MOZ_NATIVE_PNG']:
     external_dirs += ['media/libpng']
 
 external_dirs += [
     'media/kiss_fft',
     'media/libcubeb',
+    'media/libogg',
+    'media/libtheora',
     'media/libspeex_resampler',
     'media/libsoundtouch',
 ]
