@@ -48,6 +48,7 @@ enum LayerState {
 
 class RefCountedRegion : public RefCounted<RefCountedRegion> {
 public:
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(RefCountedRegion)
   RefCountedRegion() : mIsInfinite(false) {}
   nsRegion mRegion;
   bool mIsInfinite;
