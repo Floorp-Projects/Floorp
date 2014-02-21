@@ -1,0 +1,34 @@
+<!doctype html>
+<html class="reftest-wait">
+<head>
+	<meta charset="utf-8"/>
+	<title>menclose roundedbox</title>
+
+	<script type="text/javascript">
+      function doTest()
+      {
+        var box = document.getElementById("roundedbox").getBoundingClientRect();
+        r = document.getElementById("box");
+        r.style.left = (box.left - 6) + "px";
+        r.style.top = (box.top - 6) + "px";
+        r.style.width = (box.width - 6) + "px";
+        r.style.height = (box.height - 6) + "px";
+        document.documentElement.removeAttribute("class");
+      }
+      window.addEventListener("MozReftestInvalidate",doTest, false);
+    </script>
+</head>
+<body>
+	<div style="position: absolute; left: 20px; top: 20px;">
+      <math>
+          <menclose id="roundedbox" notation="roundedbox">
+            <mspace width="200px" height="100px"></mspace>
+          </menclose>
+      </math>
+    </div>
+
+    <div id="box" style="position: absolute; border:10px solid #000; border-radius:10px 10px 10px 10px;" >
+    </div>
+    
+</body>
+</html>

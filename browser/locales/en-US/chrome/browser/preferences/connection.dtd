@@ -45,5 +45,5 @@
 <!ENTITY  shareproxy.label              "Use this proxy server for all protocols">
 <!ENTITY  shareproxy.accesskey          "s">
 <!ENTITY  autologinproxy.label          "Do not prompt for authentication if password is saved">
-<!ENTITY  autologinproxy.accesskey      "a">
+<!ENTITY  autologinproxy.accesskey      "v">
 <!ENTITY  autologinproxy.tooltip        "This option silently authenticates you to proxies when you have saved credentials for them. You will be prompted if authentication fails.">

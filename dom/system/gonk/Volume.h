@@ -27,6 +27,7 @@ namespace system {
 class Volume : public RefCounted<Volume>
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(Volume)
   Volume(const nsCSubstring& aVolumeName);
 
   typedef long STATE; // States are now defined in nsIVolume.idl

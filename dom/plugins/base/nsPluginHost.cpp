@@ -1776,13 +1776,12 @@ nsresult nsPluginHost::ScanPluginsDirectory(nsIFile *pluginsDir,
         continue;
       }
 
-      pluginTag = new nsPluginTag(&info);
+      pluginTag = new nsPluginTag(&info, fileModTime);
       pluginFile.FreePluginInfo(info);
       if (!pluginTag)
         return NS_ERROR_OUT_OF_MEMORY;
 
       pluginTag->mLibrary = library;
-      pluginTag->mLastModifiedTime = fileModTime;
       uint32_t state = pluginTag->GetBlocklistState();
 
       // If the blocklist says it is risky and we have never seen this
