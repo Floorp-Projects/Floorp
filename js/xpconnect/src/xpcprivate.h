@@ -90,6 +90,7 @@
 
 #include "xpcpublic.h"
 #include "js/Tracer.h"
+#include "js/WeakMapPtr.h"
 #include "pldhash.h"
 #include "nscore.h"
 #include "nsXPCOM.h"
@@ -1036,6 +1037,12 @@ public:
         return nsJSPrincipals::get(JS_GetCompartmentPrincipals(c));
     }
 
+    JSObject*
+    GetExpandoChain(JSObject *target);
+
+    bool
+    SetExpandoChain(JSContext *cx, JS::HandleObject target, JS::HandleObject chain);
+
     void RemoveWrappedNativeProtos();
 
     static void
@@ -1049,6 +1056,8 @@ public:
         mGlobalJSObject.trace(trc, "XPCWrappedNativeScope::mGlobalJSObject");
         if (mXBLScope)
             mXBLScope.trace(trc, "XPCWrappedNativeScope::mXBLScope");
+        if (mXrayExpandos.initialized())
+            mXrayExpandos.trace(trc);
     }
 
     static void
@@ -1167,6 +1176,8 @@ private:
     XPCContext*                      mContext;
 
     nsAutoPtr<DOMExpandoSet> mDOMExpandoSet;
+
+    JS::WeakMapPtr<JSObject*, JSObject*> mXrayExpandos;
 
     bool mIsXBLScope;
 
