@@ -8,6 +8,7 @@
 SimpleTest.waitForExplicitFinish();
 const Cc = SpecialPowers.Cc;
 const Cr = SpecialPowers.Cr;
+SpecialPowers.setBoolPref("canvas.hitregions.enabled", true);
 
 function IsD2DEnabled() {
     var enabled = false;
@@ -21577,6 +21578,46 @@ function test_linedash() {
 }
 </script>
 
+<p>Canvas test: hit regions</p>
+<canvas id="c688" width="150" height="50">
+  <a id="c688_a"></a>
+</canvas>
+<a id="c688_b"></a>
+
+<script type="text/javascript">
+
+function test_hitregions() {
+  var c = document.getElementById("c688");
+  var d = document.getElementById("c688_a");
+  var e = document.getElementById("c688_b");
+
+  var ctx = c.getContext("2d");
+  var _thrown_outer = false;
+  try {
+    ctx.rect(10,10,100,100);
+    ctx.addHitRegion({control: d});
+    ctx.addHitRegion({control: e});
+    ctx.addHitRegion({id: "a", control: d});
+    ctx.addHitRegion({id: "a", control: d});
+    
+    ctx.removeHitRegion("a");
+    ctx.removeHitRegion("a");
+    ctx.removeHitRegion("b");
+  } catch (e) {
+      _thrown_outer = true;
+  }
+  ok(!_thrown_outer, ctx.canvas.id + ' should not throw exception');
+
+  var _thrown = undefined; try {
+    ctx.beginPath();
+    ctx.addHitRegion({control: d});
+  } catch (ex) { _thrown = ex };
+
+  ok(_thrown && _thrown.name == "NotSupportedError", "should throw NotSupportedError");
+
+}
+</script>
+
 <script>
 
 function asyncTestsDone() {
@@ -24874,6 +24915,12 @@ function runTests() {
   ok(false, "unexpected exception thrown in: test_linedash");
  }
  try {
+  test_hitregions();
+ } catch(e) {
+  throw e;
+  ok(false, "unexpected exception thrown in: test_linedash");
+ }
+ try {
   // run this test last since it replaces the getContext method
   test_type_replace();
  } catch (e) {
@@ -24893,6 +24940,7 @@ function runTests() {
  }
  
  setTimeout(asyncTestsDone, 500);
+ SpecialPowers.setBoolPref("canvas.hitregions.enabled", false);
 }
 
 addLoadEvent(runTests);
