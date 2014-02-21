@@ -37,11 +37,14 @@
 #include "imgRequestProxy.h"
 #include "nsMenuItemX.h"
 #include "gfxImageSurface.h"
+#include "gfxPlatform.h"
 #include "imgIContainer.h"
 #include "nsCocoaUtils.h"
 #include "nsContentUtils.h"
 
+using mozilla::gfx::SourceSurface;
 using mozilla::RefPtr;
+
 static const uint32_t kIconWidth = 16;
 static const uint32_t kIconHeight = 16;
 static const uint32_t kIconBitsPerComponent = 8;
@@ -385,18 +388,20 @@ nsMenuItemIconX::OnStopFrame(imgIRequest*    aRequest)
     mImageRegionRect.SetRect(0, 0, origWidth, origHeight);
   }
   
-  nsRefPtr<gfxASurface> surface =
+  nsRefPtr<gfxASurface> thebesSurface =
     imageContainer->GetFrame(imgIContainer::FRAME_CURRENT,
                              imgIContainer::FLAG_NONE);
-  if (!surface) {
+  if (!thebesSurface) {
     [mNativeMenuItem setImage:nil];
     return NS_ERROR_FAILURE;
   }
-  nsRefPtr<gfxImageSurface> frame(surface->GetAsReadableARGB32ImageSurface());
-  NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
+  RefPtr<SourceSurface> surface =
+    gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(nullptr,
+                                                           thebesSurface);
+  NS_ENSURE_TRUE(surface, NS_ERROR_FAILURE);
 
   CGImageRef origImage = NULL;
-  nsresult rv = nsCocoaUtils::CreateCGImageFromSurface(frame, &origImage);
+  nsresult rv = nsCocoaUtils::CreateCGImageFromSurface(surface, &origImage);
   if (NS_FAILED(rv) || !origImage) {
     [mNativeMenuItem setImage:nil];
     return NS_ERROR_FAILURE;
