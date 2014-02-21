@@ -1,6 +1,6 @@
 function check_ogg(v, enabled) {
   function check(type, expected) {
-    is(v.canPlayType(type), enabled ? expected : "no", type);
+    is(v.canPlayType(type), enabled ? expected : "", type);
   }
 
   // Ogg types
