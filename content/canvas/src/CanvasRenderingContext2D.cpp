@@ -2407,6 +2407,12 @@ CanvasRenderingContext2D::AddHitRegion(const HitRegionOptions& options, ErrorRes
 void
 CanvasRenderingContext2D::RemoveHitRegion(const nsAString& id)
 {
+  RegionInfo* info = mHitRegionsOptions.GetEntry(id);
+  if (!info) {
+    return;
+  }
+
+  info->mElement->UnsetProperty(nsGkAtoms::hitregion);
   mHitRegionsOptions.RemoveEntry(id);
 }
 
