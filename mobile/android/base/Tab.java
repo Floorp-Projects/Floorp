@@ -8,6 +8,9 @@ package org.mozilla.gecko;
 import org.mozilla.gecko.SiteIdentity.SecurityMode;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserDB;
+import org.mozilla.gecko.favicons.Favicons;
+import org.mozilla.gecko.favicons.LoadFaviconTask;
+import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
 import org.mozilla.gecko.gfx.Layer;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -451,22 +454,6 @@ public class Tab {
                 BrowserDB.removeBookmarksWithURL(getContentResolver(), url);
             }
         });
-    }
-
-    public void addToReadingList() {
-        if (!mReaderEnabled)
-            return;
-
-        JSONObject json = new JSONObject();
-        try {
-            json.put("tabID", String.valueOf(getId()));
-        } catch (JSONException e) {
-            Log.e(LOGTAG, "JSON error - failing to add to reading list", e);
-            return;
-        }
-
-        GeckoEvent e = GeckoEvent.createBroadcastEvent("Reader:Add", json.toString());
-        GeckoAppShell.sendEventToGecko(e);
     }
 
     public void toggleReaderMode() {
