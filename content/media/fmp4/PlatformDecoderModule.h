@@ -144,6 +144,7 @@ public:
 // for decoding.
 class MediaDataDecoder : public AtomicRefCounted<MediaDataDecoder> {
 public:
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(MediaDataDecoder)
   virtual ~MediaDataDecoder() {};
 
   // Initialize the decoder. The decoder should be ready to decode after
