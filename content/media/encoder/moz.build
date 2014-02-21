@@ -35,6 +35,7 @@ if CONFIG['MOZ_WEBM_ENCODER']:
     UNIFIED_SOURCES += ['VorbisTrackEncoder.cpp',
                         'VP8TrackEncoder.cpp',
     ]
+    LOCAL_INCLUDES += ['/media/libyuv/include']
 
 FAIL_ON_WARNINGS = True
 
