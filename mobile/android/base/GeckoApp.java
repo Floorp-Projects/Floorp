@@ -425,8 +425,12 @@ public abstract class GeckoApp
 
     @Override
     public boolean onPreparePanel(int featureId, View view, Menu menu) {
-        if (Build.VERSION.SDK_INT >= 11 && featureId == Window.FEATURE_OPTIONS_PANEL)
+        if (Build.VERSION.SDK_INT >= 11 && featureId == Window.FEATURE_OPTIONS_PANEL) {
+            if (menu instanceof GeckoMenu) {
+                ((GeckoMenu) menu).refresh();
+            }
             return onPrepareOptionsMenu(menu);
+        }
 
         return super.onPreparePanel(featureId, view, menu);
     }
