@@ -125,6 +125,7 @@ public:
 
   // URLSearchParamsObserver
   void URLSearchParamsUpdated() MOZ_OVERRIDE;
+  void URLSearchParamsNeedsUpdates() MOZ_OVERRIDE;
 
 private:
   nsIURI* GetURI() const
@@ -135,8 +136,6 @@ private:
   void CreateSearchParamsIfNeeded();
 
   void SetSearchInternal(const nsAString& aSearch);
-
-  void UpdateURLSearchParams();
 
   static void CreateObjectURLInternal(const GlobalObject& aGlobal,
                                       nsISupports* aObject,
