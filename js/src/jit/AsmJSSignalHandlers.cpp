@@ -1031,10 +1031,10 @@ js::TriggerOperationCallbackForAsmJSCode(JSRuntime *rt)
 
 #if defined(XP_WIN)
     DWORD oldProtect;
-    if (!VirtualProtect(module.codeBase(), module.functionBytes(), PAGE_READWRITE, &oldProtect))
+    if (!VirtualProtect(module.codeBase(), module.functionBytes(), PAGE_NOACCESS, &oldProtect))
         MOZ_CRASH();
 #else  // assume Unix
-    if (mprotect(module.codeBase(), module.functionBytes(), PROT_READ|PROT_WRITE))
+    if (mprotect(module.codeBase(), module.functionBytes(), PROT_NONE))
         MOZ_CRASH();
 #endif
 }
