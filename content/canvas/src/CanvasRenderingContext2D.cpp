@@ -2355,6 +2355,13 @@ CanvasRenderingContext2D::MeasureText(const nsAString& rawText,
   return new TextMetrics(width);
 }
 
+void CanvasRenderingContext2D::AddHitRegion(const HitRegionOptions& )
+{}
+
+void CanvasRenderingContext2D::RemoveHitRegion(const nsAString&)
+{}
+
+
 /**
  * Used for nsBidiPresUtils::ProcessText
  */
