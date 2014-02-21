@@ -29,6 +29,7 @@ struct NetdCommand
 class NetdConsumer : public mozilla::RefCounted<NetdConsumer>
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(NetdConsumer)
   virtual ~NetdConsumer() { }
   virtual void MessageReceived(NetdCommand* aMessage) = 0;
 };
@@ -42,6 +43,7 @@ class NetdClient : public MessageLoopForIO::LineWatcher,
                    public RefCounted<NetdClient>
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(NetdClient)
   typedef std::queue<NetdCommand*> NetdCommandQueue;
 
   NetdClient();
