@@ -720,7 +720,7 @@ StaticBlockObject::create(ExclusiveContext *cx)
 StaticBlockObject::addVar(ExclusiveContext *cx, Handle<StaticBlockObject*> block, HandleId id,
                           unsigned index, bool *redeclared)
 {
-    JS_ASSERT(JSID_IS_ATOM(id) || (JSID_IS_INT(id) && JSID_TO_INT(id) == (int)index));
+    JS_ASSERT(JSID_IS_ATOM(id));
     JS_ASSERT(index < VAR_INDEX_LIMIT);
 
     *redeclared = false;
