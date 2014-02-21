@@ -123,9 +123,9 @@ Link::URLSearchParamsUpdated()
 }
 
 void
-Link::UpdateURLSearchParams()
+Link::URLSearchParamsNeedsUpdates()
 {
-  NS_NOTREACHED("Unexpected call to Link::UpdateURLSearchParams");
+  NS_NOTREACHED("Unexpected call to Link::URLSearchParamsNeedsUpdates");
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(URLSearchParams)
@@ -159,20 +159,19 @@ URLSearchParams::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 }
 
 void
-URLSearchParams::ParseInput(const nsACString& aInput,
-                            URLSearchParamsObserver* aObserver)
+URLSearchParams::ParseInput(const nsACString& aInput)
 {
   NS_NOTREACHED("Unexpected call to URLSearchParams::ParseInput");
 }
 
 void
-URLSearchParams::AddObserver(URLSearchParamsObserver* aObserver)
+URLSearchParams::CopyFromURLSearchParams(URLSearchParams& aSearchParams)
 {
-  NS_NOTREACHED("Unexpected call to URLSearchParams::SetObserver");
+  NS_NOTREACHED("Unexpected call to URLSearchParams::CopyFromURLSearchParams");
 }
 
 void
-URLSearchParams::RemoveObserver(URLSearchParamsObserver* aObserver)
+URLSearchParams::SetObserver(URLSearchParamsObserver* aObserver)
 {
   NS_NOTREACHED("Unexpected call to URLSearchParams::SetObserver");
 }
@@ -233,10 +232,17 @@ URLSearchParams::DeleteAll()
 }
 
 void
-URLSearchParams::NotifyObservers(URLSearchParamsObserver* aExceptObserver)
+URLSearchParams::NotifyObserver()
 {
-  NS_NOTREACHED("Unexpected call to URLSearchParams::NotifyObservers");
+  NS_NOTREACHED("Unexpected call to URLSearchParams::NotifyObserver");
 }
+
+void
+URLSearchParams::Invalidate()
+{
+  NS_NOTREACHED("Unexpected call to URLSearchParams::Invalidate");
+}
+
 
 } // namespace dom
 } // namespace mozilla
