@@ -42,6 +42,7 @@ public class HomeConfigInvalidator implements GeckoEventListener {
     private static final String EVENT_HOMEPANELS_REFRESH = "HomePanels:Refresh";
 
     private static final String JSON_KEY_PANEL = "panel";
+    private static final String JSON_KEY_PANEL_ID = "id";
 
     private enum ChangeType {
         UNINSTALL,
@@ -51,9 +52,9 @@ public class HomeConfigInvalidator implements GeckoEventListener {
 
     private static class ConfigChange {
         private final ChangeType type;
-        private final PanelConfig target;
+        private final Object target;
 
-        public ConfigChange(ChangeType type, PanelConfig target) {
+        public ConfigChange(ChangeType type, Object target) {
             this.type = type;
             this.target = target;
         }
@@ -85,22 +86,25 @@ public class HomeConfigInvalidator implements GeckoEventListener {
     @Override
     public void handleMessage(String event, JSONObject message) {
         try {
-            final JSONObject json = message.getJSONObject(JSON_KEY_PANEL);
-            final PanelConfig panelConfig = new PanelConfig(json);
-
             if (event.equals(EVENT_HOMEPANELS_INSTALL)) {
                 Log.d(LOGTAG, EVENT_HOMEPANELS_INSTALL);
-                handlePanelInstall(panelConfig);
+                handlePanelInstall(createPanelConfigFromMessage(message));
             } else if (event.equals(EVENT_HOMEPANELS_UNINSTALL)) {
                 Log.d(LOGTAG, EVENT_HOMEPANELS_UNINSTALL);
-                handlePanelUninstall(panelConfig);
+                final String panelId = message.getString(JSON_KEY_PANEL_ID);
+                handlePanelUninstall(panelId);
             } else if (event.equals(EVENT_HOMEPANELS_REFRESH)) {
                 Log.d(LOGTAG, EVENT_HOMEPANELS_REFRESH);
-                handlePanelRefresh(panelConfig);
+                handlePanelRefresh(createPanelConfigFromMessage(message));
             }
         } catch (Exception e) {
             Log.e(LOGTAG, "Failed to handle event " + event, e);
         }
+    }
+
+    private PanelConfig createPanelConfigFromMessage(JSONObject message) throws JSONException {
+        final JSONObject json = message.getJSONObject(JSON_KEY_PANEL);
+        return new PanelConfig(json);
     }
 
     /**
@@ -116,8 +120,8 @@ public class HomeConfigInvalidator implements GeckoEventListener {
     /**
      * Runs in the gecko thread.
      */
-    private void handlePanelUninstall(PanelConfig panelConfig) {
-        mPendingChanges.offer(new ConfigChange(ChangeType.UNINSTALL, panelConfig));
+    private void handlePanelUninstall(String panelId) {
+        mPendingChanges.offer(new ConfigChange(ChangeType.UNINSTALL, panelId));
         Log.d(LOGTAG, "handlePanelUninstall: " + mPendingChanges.size());
 
         scheduleInvalidation();
@@ -164,6 +168,16 @@ public class HomeConfigInvalidator implements GeckoEventListener {
         return false;
     }
 
+    private PanelConfig findPanelConfigWithId(List<PanelConfig> panelConfigs, String panelId) {
+        for (PanelConfig panelConfig : panelConfigs) {
+            if (panelConfig.getId().equals(panelId)) {
+                return panelConfig;
+            }
+        }
+
+        return null;
+    }
+
     /**
      * Runs in the background thread.
      */
@@ -172,23 +186,28 @@ public class HomeConfigInvalidator implements GeckoEventListener {
 
         while (!mPendingChanges.isEmpty()) {
             final ConfigChange pendingChange = mPendingChanges.poll();
-            final PanelConfig panelConfig = pendingChange.target;
 
             switch (pendingChange.type) {
-                case UNINSTALL:
-                    if (panelConfigs.remove(panelConfig)) {
+                case UNINSTALL: {
+                    final String panelId = (String) pendingChange.target;
+                    final PanelConfig panelConfig = findPanelConfigWithId(panelConfigs, panelId);
+                    if (panelConfig != null && panelConfigs.remove(panelConfig)) {
                         Log.d(LOGTAG, "executePendingChanges: removed panel " + panelConfig.getId());
                     }
                     break;
+                }
 
-                case INSTALL:
+                case INSTALL: {
+                    final PanelConfig panelConfig = (PanelConfig) pendingChange.target;
                     if (!replacePanelConfig(panelConfigs, panelConfig)) {
                         panelConfigs.add(panelConfig);
                         Log.d(LOGTAG, "executePendingChanges: added panel " + panelConfig.getId());
                     }
                     break;
+                }
 
-                case REFRESH:
+                case REFRESH: {
+                    final PanelConfig panelConfig = (PanelConfig) pendingChange.target;
                     if (panelConfig != null) {
                         if (!replacePanelConfig(panelConfigs, panelConfig)) {
                             Log.w(LOGTAG, "Tried to refresh non-existing panel " + panelConfig.getId());
@@ -197,6 +216,7 @@ public class HomeConfigInvalidator implements GeckoEventListener {
                         shouldRefreshAll = true;
                     }
                     break;
+                }
             }
         }
 

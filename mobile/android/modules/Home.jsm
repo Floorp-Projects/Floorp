@@ -317,12 +317,11 @@ let HomePanels = (function () {
         throw "Home.panels: Panel doesn't exist: id = " + id;
       }
 
-      let panel = _panels[id];
       delete _panels[id];
 
       sendMessageToJava({
         type: "HomePanels:Uninstall",
-        panel: _panelToJSON(panel)
+        id: id
       });
     }
   });
