@@ -26,12 +26,6 @@
 
 class nsIWidget;
 
-namespace mozilla {
-namespace gfx {
-class SourceSurface;
-}
-}
-
 // Used to retain a Cocoa object for the remainder of a method's execution.
 class nsAutoRetainCocoaObject {
 public:
@@ -108,9 +102,7 @@ struct KeyBindingsCommand
 
 class nsCocoaUtils
 {
-  typedef mozilla::gfx::SourceSurface SourceSurface;
-
-public:
+  public:
 
   // Get the backing scale factor from an object that supports this selector
   // (NSView/Window/Screen, on 10.7 or later), returning 1.0 if not supported
@@ -234,8 +226,7 @@ public:
       @param aResult the resulting CGImageRef
       @return NS_OK if the conversion worked, NS_ERROR_FAILURE otherwise
    */
-  static nsresult CreateCGImageFromSurface(SourceSurface* aSurface,
-                                           CGImageRef* aResult);
+  static nsresult CreateCGImageFromSurface(gfxImageSurface *aFrame, CGImageRef *aResult);
   
   /** Creates a Cocoa <code>NSImage</code> from a <code>CGImageRef</code>.
       Copies the pixel data from the <code>CGImageRef</code> into a new <code>NSImage</code>.
