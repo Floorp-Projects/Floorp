@@ -25,6 +25,7 @@ class PannerNode : public AudioNode,
                    public SupportsWeakPtr<PannerNode>
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(PannerNode)
   explicit PannerNode(AudioContext* aContext);
   virtual ~PannerNode();
 

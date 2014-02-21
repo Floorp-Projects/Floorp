@@ -14,6 +14,10 @@
  * the WeakPtrs to it and allows the WeakReference to live beyond the lifetime
  * of 'Foo'.
  *
+ * Note that when deriving from SupportsWeakPtr you should add
+ * MOZ_DECLARE_REFCOUNTED_TYPENAME(ClassName) to the public section of your
+ * class, where ClassName is the name of your class.
+ *
  * The overhead of WeakPtr is that accesses to 'Foo' becomes an additional
  * dereference, and an additional heap allocated pointer sized object shared
  * between all of the WeakPtrs.
@@ -24,6 +28,7 @@
  *   class C : public SupportsWeakPtr<C>
  *   {
  *    public:
+ *      MOZ_DECLARE_REFCOUNTED_TYPENAME(C)
  *      int num;
  *      void act();
  *   };

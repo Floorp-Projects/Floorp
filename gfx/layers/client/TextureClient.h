@@ -510,6 +510,7 @@ struct TextureClientAutoUnlock
 class DeprecatedTextureClient : public RefCounted<DeprecatedTextureClient>
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(DeprecatedTextureClient)
   typedef gl::SharedTextureHandle SharedTextureHandle;
   typedef gl::GLContext GLContext;
   typedef gl::TextureImage TextureImage;
