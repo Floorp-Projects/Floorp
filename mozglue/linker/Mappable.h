@@ -22,6 +22,7 @@
 class Mappable: public mozilla::RefCounted<Mappable>
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(Mappable)
   virtual ~Mappable() { }
 
   virtual MemoryRange mmap(const void *addr, size_t length, int prot, int flags,

@@ -871,6 +871,7 @@ static GtkSelectionData* CopyRetrievedData(GtkSelectionData *aData)
 
 class RetrievalContext : public RefCounted<RetrievalContext> {
 public:
+    MOZ_DECLARE_REFCOUNTED_TYPENAME(RetrievalContext)
     enum State { INITIAL, COMPLETED, TIMED_OUT };
 
     RetrievalContext() : mState(INITIAL), mData(nullptr) {}

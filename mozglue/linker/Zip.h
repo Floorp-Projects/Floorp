@@ -29,6 +29,7 @@ class ZipCollection;
 class Zip: public mozilla::AtomicRefCounted<Zip>
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(Zip)
   /**
    * Create a Zip instance for the given file name. Returns nullptr in case
    * of failure.

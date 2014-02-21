@@ -298,6 +298,7 @@ class BatteryObserver : public IUeventObserver,
                         public RefCounted<BatteryObserver>
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(BatteryObserver)
   BatteryObserver()
     :mUpdater(new BatteryUpdater())
   {
