@@ -10,6 +10,7 @@
 #includesubst @SYNCSTRINGSPATH@
 
 <!-- C-style format strings. -->
+<!ENTITY formatI "&#037;I">
 <!ENTITY formatS "&#037;s">
 <!ENTITY formatS1 "&#037;1&#036;s">
 <!ENTITY formatS2 "&#037;2&#036;s">
@@ -104,7 +105,7 @@
   <string name="pref_category_search_restore_defaults">&pref_category_search_restore_defaults;</string>
   <string name="pref_search_restore_defaults">&pref_search_restore_defaults;</string>
   <string name="pref_search_restore_defaults_summary">&pref_search_restore_defaults_summary;</string>
-  <string name="pref_search_tip">&pref_search_tip;</string>
+  <string name="pref_search_hint">&pref_search_hint;</string>
 
   <string name="pref_category_devtools">&pref_category_devtools;</string>
   <string name="pref_developer_remotedebugging">&pref_developer_remotedebugging;</string>
@@ -222,12 +223,14 @@
   <string name="tabs_normal">&tabs_normal;</string>
   <string name="tabs_private">&tabs_private;</string>
   <string name="tabs_synced">&tabs_synced;</string>
+  <string name="save">&save;</string>
 
   <string name="site_settings_title">&site_settings_title3;</string>
   <string name="site_settings_cancel">&site_settings_cancel;</string>
   <string name="site_settings_clear">&site_settings_clear;</string>
   <string name="site_settings_no_settings">&site_settings_no_settings;</string>
 
+  <string name="reading_list_add">&reading_list_add;</string>
   <string name="reading_list_added">&reading_list_added;</string>
   <string name="reading_list_removed">&reading_list_removed;</string>
   <string name="reading_list_failed">&reading_list_failed;</string>
@@ -289,7 +292,7 @@
   <string name="home_most_recent_title">&home_most_recent_title;</string>
   <string name="home_most_recent_empty">&home_most_recent_empty;</string>
   <string name="home_reading_list_empty">&home_reading_list_empty;</string>
-  <string name="home_reading_list_hint">&home_reading_list_hint;</string>
+  <string name="home_reading_list_hint">&home_reading_list_hint2;</string>
   <string name="home_reading_list_hint_accessible">&home_reading_list_hint_accessible;</string>
   <string name="pin_site_dialog_hint">&pin_site_dialog_hint;</string>
 
