@@ -167,7 +167,6 @@ EmptyDesc(PPropertyDescriptor *desc)
 {
     desc->objId() = 0;
     desc->attrs() = 0;
-    desc->shortid() = 0;
     desc->value() = void_t();
     desc->getter() = 0;
     desc->setter() = 0;

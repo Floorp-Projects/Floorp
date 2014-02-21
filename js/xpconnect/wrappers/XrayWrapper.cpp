@@ -765,7 +765,6 @@ XPCWrappedNativeXrayTraits::resolveNativeProperty(JSContext *cx, HandleObject wr
     desc.setAttributes(JSPROP_ENUMERATE);
     desc.setGetter(nullptr);
     desc.setSetter(nullptr);
-    desc.setShortId(0);
     desc.value().set(JSVAL_VOID);
 
     RootedValue fval(cx, JSVAL_VOID);
@@ -1461,7 +1460,6 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, HandleObject wra
         desc.setAttributes(JSPROP_ENUMERATE|JSPROP_SHARED);
         desc.setGetter(wrappedJSObject_getter);
         desc.setSetter(nullptr);
-        desc.setShortId(0);
         desc.value().set(JSVAL_VOID);
         return true;
     }
@@ -1537,7 +1535,6 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, HandleObject wra
         desc.setAttributes(0);
         desc.setGetter(nullptr);
         desc.setSetter(nullptr);
-        desc.setShortId(0);
         desc.value().setObject(*JS_GetFunctionObject(toString));
     }
 

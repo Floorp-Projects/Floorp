@@ -149,10 +149,6 @@ BaseProxyHandler::get(JSContext *cx, HandleObject proxy, HandleObject receiver,
     else
         vp.setUndefined();
 
-    if (desc.hasShortId()) {
-        RootedId id(cx, INT_TO_JSID(desc.shortid()));
-        return CallJSPropertyOp(cx, desc.getter(), receiver, id, vp);
-    }
     return CallJSPropertyOp(cx, desc.getter(), receiver, id, vp);
 }
 
@@ -176,7 +172,7 @@ BaseProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject receiver,
             if (!desc.hasSetterObject())
                 desc.setSetter(JS_StrictPropertyStub);
         } else if (desc.hasSetterObject() || desc.setter() != JS_StrictPropertyStub) {
-            if (!CallSetter(cx, receiver, id, desc.setter(), desc.attributes(), desc.shortid(), strict, vp))
+            if (!CallSetter(cx, receiver, id, desc.setter(), desc.attributes(), strict, vp))
                 return false;
             if (!proxy->is<ProxyObject>() || proxy->as<ProxyObject>().handler() != this)
                 return true;
@@ -203,7 +199,7 @@ BaseProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject receiver,
             if (!desc.hasSetterObject())
                 desc.setSetter(JS_StrictPropertyStub);
         } else if (desc.hasSetterObject() || desc.setter() != JS_StrictPropertyStub) {
-            if (!CallSetter(cx, receiver, id, desc.setter(), desc.attributes(), desc.shortid(), strict, vp))
+            if (!CallSetter(cx, receiver, id, desc.setter(), desc.attributes(), strict, vp))
                 return false;
             if (!proxy->is<ProxyObject>() || proxy->as<ProxyObject>().handler() != this)
                 return true;
@@ -222,7 +218,6 @@ BaseProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject receiver,
     desc.object().set(receiver);
     desc.value().set(vp.get());
     desc.setAttributes(JSPROP_ENUMERATE);
-    desc.setShortId(0);
     desc.setGetter(nullptr);
     desc.setSetter(nullptr); // Pick up the class getter/setter.
     return defineProperty(cx, receiver, id, &desc);
@@ -708,11 +703,9 @@ ParsePropertyDescriptorObject(JSContext *cx, HandleObject obj, const Value &v,
         d->complete();
     desc.object().set(obj);
     desc.value().set(d->hasValue() ? d->value() : UndefinedValue());
-    JS_ASSERT(!(d->attributes() & JSPROP_SHORTID));
     desc.setAttributes(d->attributes());
     desc.setGetter(d->getter());
     desc.setSetter(d->setter());
-    desc.setShortId(0);
     return true;
 }
 
@@ -2849,10 +2842,9 @@ js::proxy_DefineGeneric(JSContext *cx, HandleObject obj, HandleId id, HandleValu
     Rooted<PropertyDescriptor> desc(cx);
     desc.object().set(obj);
     desc.value().set(value);
-    desc.setAttributes(attrs & (~JSPROP_SHORTID));
+    desc.setAttributes(attrs);
     desc.setGetter(getter);
     desc.setSetter(setter);
-    desc.setShortId(0);
     return Proxy::defineProperty(cx, obj, id, &desc);
 }
 
@@ -2965,7 +2957,7 @@ js::proxy_SetGenericAttributes(JSContext *cx, HandleObject obj, HandleId id, uns
     Rooted<PropertyDescriptor> desc(cx);
     if (!Proxy::getOwnPropertyDescriptor(cx, obj, id, &desc, JSRESOLVE_ASSIGNING))
         return false;
-    desc.setAttributes(*attrsp & (~JSPROP_SHORTID));
+    desc.setAttributes(*attrsp);
     return Proxy::defineProperty(cx, obj, id, &desc);
 }
 

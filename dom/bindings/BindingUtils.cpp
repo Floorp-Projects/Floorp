@@ -1133,7 +1133,6 @@ ResolvePrototypeOrConstructor(JSContext* cx, JS::Handle<JSObject*> wrapper,
       return false;
     }
     desc.object().set(wrapper);
-    desc.setShortId(0);
     desc.setAttributes(attrs);
     desc.setGetter(JS_PropertyStub);
     desc.setSetter(JS_StrictPropertyStub);
@@ -1588,7 +1587,6 @@ NativeToString(JSContext* cx, JS::Handle<JSObject*> wrapper,
   JS::Rooted<JSPropertyDescriptor> toStringDesc(cx);
   toStringDesc.object().set(nullptr);
   toStringDesc.setAttributes(0);
-  toStringDesc.setShortId(0);
   toStringDesc.setGetter(nullptr);
   toStringDesc.setSetter(nullptr);
   toStringDesc.value().set(JS::UndefinedValue());
