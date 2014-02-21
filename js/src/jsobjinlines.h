@@ -917,6 +917,17 @@ NewBuiltinClassInstance(ExclusiveContext *cx, const Class *clasp, NewObjectKind 
     return NewBuiltinClassInstance(cx, clasp, allocKind, newKind);
 }
 
+template<typename T>
+inline T *
+NewBuiltinClassInstance(ExclusiveContext *cx, NewObjectKind newKind = GenericObject)
+{
+    JSObject *obj = NewBuiltinClassInstance(cx, &T::class_, newKind);
+    if (!obj)
+        return nullptr;
+
+    return &obj->as<T>();
+}
+
 // Used to optimize calls to (new Object())
 bool
 NewObjectScriptedCall(JSContext *cx, MutableHandleObject obj);
