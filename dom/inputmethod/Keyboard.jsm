@@ -52,8 +52,8 @@ this.Keyboard = {
   },
 
   init: function keyboardInit() {
-    Services.obs.addObserver(this, 'in-process-browser-or-app-frame-shown', false);
-    Services.obs.addObserver(this, 'remote-browser-frame-shown', false);
+    Services.obs.addObserver(this, 'inprocess-browser-shown', false);
+    Services.obs.addObserver(this, 'remote-browser-shown', false);
     Services.obs.addObserver(this, 'oop-frameloader-crashed', false);
 
     for (let name of this._messageNames)
@@ -71,6 +71,10 @@ this.Keyboard = {
         this.sendToKeyboard('Keyboard:FocusChange', { 'type': 'blur' });
       }
     } else {
+      // Ignore notifications that aren't from a BrowserOrApp
+      if (!frameLoader.ownerIsBrowserOrAppFrame) {
+        return;
+      }
       this.initFormsFrameScript(mm);
     }
   },

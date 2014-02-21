@@ -106,7 +106,7 @@ nsXULPopupListener::HandleEvent(nsIDOMEvent* aEvent)
        (eventType.EqualsLiteral("contextmenu") && mIsContext)))
     return NS_OK;
 
-  uint16_t button;
+  int16_t button;
 
   nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aEvent);
   if (!mouseEvent) {

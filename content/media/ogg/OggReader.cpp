@@ -1090,8 +1090,8 @@ nsresult OggReader::GetSeekRanges(nsTArray<SeekRange>& aRanges)
     if (startTime != -1 &&
         ((endTime = RangeEndTime(endOffset)) != -1))
     {
-      NS_ASSERTION(startTime < endTime,
-                   "Start time must be before end time");
+      NS_WARN_IF_FALSE(startTime < endTime,
+                       "Start time must be before end time");
       aRanges.AppendElement(SeekRange(startOffset,
                                       endOffset,
                                       startTime,

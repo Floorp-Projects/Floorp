@@ -756,6 +756,9 @@ pref("memory.free_dirty_pages", true);
 // Enable the Linux-specific, system-wide memory reporter.
 pref("memory.system_memory_reporter", true);
 
+// Don't dump memory reports on OOM, by default.
+pref("memory.dump_reports_on_oom", false);
+
 pref("layout.imagevisibility.enabled", true);
 pref("layout.imagevisibility.numscrollportwidths", 1);
 pref("layout.imagevisibility.numscrollportheights", 1);

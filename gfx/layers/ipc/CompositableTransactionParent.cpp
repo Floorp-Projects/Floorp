@@ -98,7 +98,13 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
       MOZ_LAYERS_LOG(("[ParentSide] Created double buffer"));
       const OpDestroyThebesBuffer& op = aEdit.get_OpDestroyThebesBuffer();
       CompositableParent* compositableParent = static_cast<CompositableParent*>(op.compositableParent());
-      DeprecatedContentHostBase* content = static_cast<DeprecatedContentHostBase*>(compositableParent->GetCompositableHost());
+      CompositableHost* compositableHost = compositableParent->GetCompositableHost();
+      if (compositableHost->GetType() != COMPOSITABLE_CONTENT_SINGLE &&
+          compositableHost->GetType() != COMPOSITABLE_CONTENT_DOUBLE)
+      {
+        return false;
+      }
+      DeprecatedContentHostBase* content = static_cast<DeprecatedContentHostBase*>(compositableHost);
       content->DestroyTextures();
 
       break;
@@ -162,8 +168,11 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
       CompositableParent* compositableParent = static_cast<CompositableParent*>(op.compositableParent());
       CompositableHost* compositable =
         compositableParent->GetCompositableHost();
-      ThebesLayerComposite* thebes =
-        static_cast<ThebesLayerComposite*>(compositable->GetLayer());
+      Layer* layer = compositable->GetLayer();
+      if (!layer || layer->GetType() != Layer::TYPE_THEBES) {
+        return false;
+      }
+      ThebesLayerComposite* thebes = static_cast<ThebesLayerComposite*>(layer);
 
       const ThebesBufferData& bufferData = op.bufferData();
 

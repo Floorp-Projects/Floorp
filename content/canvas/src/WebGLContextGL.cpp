@@ -389,9 +389,17 @@ WebGLContext::CopyTexSubImage2D_base(GLenum target,
     GLsizei framebufferWidth = framebufferRect ? framebufferRect->Width() : 0;
     GLsizei framebufferHeight = framebufferRect ? framebufferRect->Height() : 0;
 
-    const char *info = sub ? "copyTexSubImage2D" : "copyTexImage2D";
+    const char* info = sub ? "copyTexSubImage2D" : "copyTexImage2D";
+    WebGLTexImageFunc func = sub ? WebGLTexImageFunc::CopyTexSubImage : WebGLTexImageFunc::CopyTexImage;
 
-    if (!ValidateLevelWidthHeightForTarget(target, level, width, height, info)) {
+    // TODO: This changes with color_buffer_float. Reassess when the
+    // patch lands.
+    if (!ValidateTexImage(2, target, level, internalformat,
+                          xoffset, yoffset, 0,
+                          width, height, 0,
+                          0, internalformat, LOCAL_GL_UNSIGNED_BYTE,
+                          func))
+    {
         return;
     }
 
@@ -415,9 +423,10 @@ WebGLContext::CopyTexSubImage2D_base(GLenum target,
 
         // first, compute the size of the buffer we should allocate to initialize the texture as black
 
-        uint32_t texelSize = 0;
-        if (!ValidateTexFormatAndType(internalformat, LOCAL_GL_UNSIGNED_BYTE, -1, &texelSize, info))
+        if (!ValidateTexInputData(LOCAL_GL_UNSIGNED_BYTE, -1, func))
             return;
+
+        uint32_t texelSize = GetBitsPerTexel(internalformat, LOCAL_GL_UNSIGNED_BYTE) / 8;
 
         CheckedUint32 checked_neededByteLength =
             GetImageSize(height, width, texelSize, mPixelStoreUnpackAlignment);
@@ -432,7 +441,7 @@ WebGLContext::CopyTexSubImage2D_base(GLenum target,
         // We need some zero pages, because GL doesn't guarantee the
         // contents of a texture allocated with nullptr data.
         // Hopefully calloc will just mmap zero pages here.
-        void *tempZeroData = calloc(1, bytesNeeded);
+        void* tempZeroData = calloc(1, bytesNeeded);
         if (!tempZeroData)
             return ErrorOutOfMemory("%s: could not allocate %d bytes (for zero fill)", info, bytesNeeded);
 
@@ -486,76 +495,34 @@ WebGLContext::CopyTexImage2D(GLenum target,
     if (IsContextLost())
         return;
 
-    switch (target) {
-        case LOCAL_GL_TEXTURE_2D:
-        case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X:
-        case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_X:
-        case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_Y:
-        case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Y:
-        case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
-        case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
-            break;
-        default:
-            return ErrorInvalidEnumInfo("copyTexImage2D: target", target);
+    // copyTexImage2D only generates textures with type = UNSIGNED_BYTE
+    const WebGLTexImageFunc func = WebGLTexImageFunc::CopyTexImage;
+    GLenum type = LOCAL_GL_UNSIGNED_BYTE;
+
+    if (!ValidateTexImage(2, target, level, internalformat,
+                          0, 0, 0,
+                          width, height, 0,
+                          border, internalformat, type,
+                          func))
+    {
+        return;
     }
 
-
-    switch (internalformat) {
-        case LOCAL_GL_RGB:
-        case LOCAL_GL_LUMINANCE:
-        case LOCAL_GL_RGBA:
-        case LOCAL_GL_ALPHA:
-        case LOCAL_GL_LUMINANCE_ALPHA:
-            break;
-        default:
-            return ErrorInvalidEnumInfo("copyTexImage2D: internal format", internalformat);
-    }
-
-    if (border != 0)
-        return ErrorInvalidValue("copyTexImage2D: border must be 0");
-
-    if (width < 0 || height < 0)
-        return ErrorInvalidValue("copyTexImage2D: width and height may not be negative");
-
-    if (level < 0)
-        return ErrorInvalidValue("copyTexImage2D: level may not be negative");
-
-    GLsizei maxTextureSize = MaxTextureSizeForTarget(target);
-    if (!(maxTextureSize >> level))
-        return ErrorInvalidValue("copyTexImage2D: 2^level exceeds maximum texture size");
-
-    if (level >= 1) {
-        if (!(is_pot_assuming_nonnegative(width) &&
-              is_pot_assuming_nonnegative(height)))
-            return ErrorInvalidValue("copyTexImage2D: with level > 0, width and height must be powers of two");
-    }
-
-    if (internalformat == LOCAL_GL_DEPTH_COMPONENT ||
-        internalformat == LOCAL_GL_DEPTH_STENCIL)
-        return ErrorInvalidOperation("copyTexImage2D: a base internal format of DEPTH_COMPONENT or DEPTH_STENCIL isn't supported");
-
-    WebGLTexture *tex = activeBoundTextureForTarget(target);
-    if (!tex)
-        return ErrorInvalidOperation("copyTexImage2D: no texture bound to this target");
-    
-    if (mBoundFramebuffer)
-        if (!mBoundFramebuffer->CheckAndInitializeAttachments())
-            return ErrorInvalidFramebufferOperation("copyTexImage2D: incomplete framebuffer");
+    if (mBoundFramebuffer && !mBoundFramebuffer->CheckAndInitializeAttachments())
+        return ErrorInvalidFramebufferOperation("copyTexImage2D: incomplete framebuffer");
 
     bool texFormatRequiresAlpha = internalformat == LOCAL_GL_RGBA ||
-                                    internalformat == LOCAL_GL_ALPHA ||
-                                    internalformat == LOCAL_GL_LUMINANCE_ALPHA;
+                                  internalformat == LOCAL_GL_ALPHA ||
+                                  internalformat == LOCAL_GL_LUMINANCE_ALPHA;
     bool fboFormatHasAlpha = mBoundFramebuffer ? mBoundFramebuffer->ColorAttachment(0).HasAlpha()
                                                : bool(gl->GetPixelFormat().alpha > 0);
     if (texFormatRequiresAlpha && !fboFormatHasAlpha)
         return ErrorInvalidOperation("copyTexImage2D: texture format requires an alpha channel "
                                      "but the framebuffer doesn't have one");
 
-    // copyTexImage2D only generates textures with type = UNSIGNED_BYTE
-    GLenum type = LOCAL_GL_UNSIGNED_BYTE;
-
     // check if the memory size of this texture may change with this call
     bool sizeMayChange = true;
+    WebGLTexture* tex = activeBoundTextureForTarget(target);
     if (tex->HasImageInfoAt(target, level)) {
         const WebGLTexture::ImageInfo& imageInfo = tex->ImageInfoAt(target, level);
 
@@ -565,17 +532,18 @@ WebGLContext::CopyTexImage2D(GLenum target,
                         type != imageInfo.Type();
     }
 
-    if (sizeMayChange) {
+    if (sizeMayChange)
         UpdateWebGLErrorAndClearGLError();
-        CopyTexSubImage2D_base(target, level, internalformat, 0, 0, x, y, width, height, false);
+
+    CopyTexSubImage2D_base(target, level, internalformat, 0, 0, x, y, width, height, false);
+
+    if (sizeMayChange) {
         GLenum error = LOCAL_GL_NO_ERROR;
         UpdateWebGLErrorAndClearGLError(&error);
         if (error) {
             GenerateWarning("copyTexImage2D generated error %s", ErrorName(error));
             return;
         }
-    } else {
-        CopyTexSubImage2D_base(target, level, internalformat, 0, 0, x, y, width, height, false);
     }
 
     tex->SetImageInfo(target, level, width, height, internalformat, type,
@@ -3356,37 +3324,28 @@ WebGLContext::CompressedTexImage2D(GLenum target, GLint level, GLenum internalfo
                                    GLsizei width, GLsizei height, GLint border,
                                    const ArrayBufferView& view)
 {
-    if (IsContextLost()) {
+    if (IsContextLost())
         return;
-    }
 
-    if (!ValidateTexImage2DTarget(target, width, height, "compressedTexImage2D")) {
-        return;
-    }
+    const WebGLTexImageFunc func = WebGLTexImageFunc::CompTexImage;
 
-    WebGLTexture *tex = activeBoundTextureForTarget(target);
-    if (!tex) {
-        ErrorInvalidOperation("compressedTexImage2D: no texture is bound to this target");
-        return;
-    }
-
-    if (!mCompressedTextureFormats.Contains(internalformat)) {
-        ErrorInvalidEnum("compressedTexImage2D: compressed texture format 0x%x is not supported", internalformat);
-        return;
-    }
-
-    if (border) {
-        ErrorInvalidValue("compressedTexImage2D: border is not 0");
+    if (!ValidateTexImage(2, target, level, internalformat,
+                          0, 0, 0, width, height, 0,
+                          border, internalformat, LOCAL_GL_UNSIGNED_BYTE,
+                          func))
+    {
         return;
     }
 
     uint32_t byteLength = view.Length();
-    if (!ValidateCompressedTextureSize(target, level, internalformat, width, height, byteLength, "compressedTexImage2D")) {
+    if (!ValidateCompTexImageDataSize(target, internalformat, width, height, byteLength, func)) {
         return;
     }
 
     MakeContextCurrent();
     gl->fCompressedTexImage2D(target, level, internalformat, width, height, border, byteLength, view.Data());
+    WebGLTexture* tex = activeBoundTextureForTarget(target);
+    MOZ_ASSERT(tex);
     tex->SetImageInfo(target, level, width, height, internalformat, LOCAL_GL_UNSIGNED_BYTE,
                       WebGLImageDataStatus::InitializedImageData);
 
@@ -3398,102 +3357,43 @@ WebGLContext::CompressedTexSubImage2D(GLenum target, GLint level, GLint xoffset,
                                       GLint yoffset, GLsizei width, GLsizei height,
                                       GLenum format, const ArrayBufferView& view)
 {
-    if (IsContextLost()) {
+    if (IsContextLost())
         return;
-    }
 
-    switch (target) {
-        case LOCAL_GL_TEXTURE_2D:
-        case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X:
-        case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_X:
-        case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_Y:
-        case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Y:
-        case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
-        case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
-            break;
-        default:
-            return ErrorInvalidEnumInfo("texSubImage2D: target", target);
+    const WebGLTexImageFunc func = WebGLTexImageFunc::CompTexSubImage;
+
+    if (!ValidateTexImage(2, target,
+                          level, format,
+                          xoffset, yoffset, 0,
+                          width, height, 0,
+                          0, format, LOCAL_GL_UNSIGNED_BYTE,
+                          func))
+    {
+        return;
     }
 
     WebGLTexture *tex = activeBoundTextureForTarget(target);
-    if (!tex) {
-        ErrorInvalidOperation("compressedTexSubImage2D: no texture is bound to this target");
-        return;
-    }
+    MOZ_ASSERT(tex);
+    WebGLTexture::ImageInfo& levelInfo = tex->ImageInfoAt(target, level);
 
-    if (!mCompressedTextureFormats.Contains(format)) {
-        ErrorInvalidEnum("compressedTexSubImage2D: compressed texture format 0x%x is not supported", format);
-        return;
-    }
-
-    if (!ValidateLevelWidthHeightForTarget(target, level, width, height, "compressedTexSubImage2D")) {
+    if (!ValidateCompTexImageSize(target, level, format,
+                                  xoffset, yoffset,
+                                  width, height,
+                                  levelInfo.Width(), levelInfo.Height(),
+                                  func))
+    {
         return;
     }
 
     uint32_t byteLength = view.Length();
-    if (!ValidateCompressedTextureSize(target, level, format, width, height, byteLength, "compressedTexSubImage2D")) {
+    if (!ValidateCompTexImageDataSize(target, format, width, height, byteLength, func))
         return;
-    }
 
-    if (!tex->HasImageInfoAt(target, level)) {
-        ErrorInvalidOperation("compressedTexSubImage2D: no texture image previously defined for this level and face");
-        return;
-    }
-
-    const WebGLTexture::ImageInfo &imageInfo = tex->ImageInfoAt(target, level);
-
-    if (!CanvasUtils::CheckSaneSubrectSize(xoffset, yoffset, width, height, imageInfo.Width(), imageInfo.Height())) {
-        ErrorInvalidValue("compressedTexSubImage2D: subtexture rectangle out of bounds");
-        return;
-    }
-
-    switch (format) {
-        case LOCAL_GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
-        case LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
-        case LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:
-        case LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:
-        {
-            if (xoffset < 0 || xoffset % 4 != 0) {
-                ErrorInvalidOperation("compressedTexSubImage2D: xoffset is not a multiple of 4");
-                return;
-            }
-            if (yoffset < 0 || yoffset % 4 != 0) {
-                ErrorInvalidOperation("compressedTexSubImage2D: yoffset is not a multiple of 4");
-                return;
-            }
-            if (width % 4 != 0 && width != imageInfo.Width()) {
-                ErrorInvalidOperation("compressedTexSubImage2D: width is not a multiple of 4 or equal to texture width");
-                return;
-            }
-            if (height % 4 != 0 && height != imageInfo.Height()) {
-                ErrorInvalidOperation("compressedTexSubImage2D: height is not a multiple of 4 or equal to texture height");
-                return;
-            }
-            break;
-        }
-        case LOCAL_GL_COMPRESSED_RGB_PVRTC_4BPPV1:
-        case LOCAL_GL_COMPRESSED_RGB_PVRTC_2BPPV1:
-        case LOCAL_GL_COMPRESSED_RGBA_PVRTC_4BPPV1:
-        case LOCAL_GL_COMPRESSED_RGBA_PVRTC_2BPPV1:
-        {
-            if (xoffset || yoffset ||
-                width != imageInfo.Width() ||
-                height != imageInfo.Height())
-            {
-                ErrorInvalidValue("compressedTexSubImage2D: the update rectangle doesn't match the existing image");
-                return;
-            }
-        }
-    }
-
-    if (imageInfo.HasUninitializedImageData()) {
+    if (levelInfo.HasUninitializedImageData())
         tex->DoDeferredImageInitialization(target, level);
-    }
 
     MakeContextCurrent();
     gl->fCompressedTexSubImage2D(target, level, xoffset, yoffset, width, height, format, byteLength, view.Data());
-
-    return;
 }
 
 JS::Value
@@ -3733,48 +3633,28 @@ WebGLContext::TexImage2D_base(GLenum target, GLint level, GLenum internalformat,
                               int jsArrayType, // a TypedArray format enum, or -1 if not relevant
                               WebGLTexelFormat srcFormat, bool srcPremultiplied)
 {
-    if (!ValidateTexImage2DTarget(target, width, height, "texImage2D")) {
+    const WebGLTexImageFunc func = WebGLTexImageFunc::TexImage;
+
+    if (!ValidateTexImage(2, target, level, internalformat,
+                          0, 0, 0,
+                          width, height, 0,
+                          border, format, type, func))
+    {
         return;
     }
-
-    if (!ValidateTexImage2DFormat(format, "texImage2D: format"))
-        return;
-
-    if (format != internalformat)
-        return ErrorInvalidOperation("texImage2D: format does not match internalformat");
-
-    if (!ValidateLevelWidthHeightForTarget(target, level, width, height, "texImage2D")) {
-        return;
-    }
-
-    if (level >= 1) {
-        if (!(is_pot_assuming_nonnegative(width) &&
-              is_pot_assuming_nonnegative(height)))
-            return ErrorInvalidValue("texImage2D: with level > 0, width and height must be powers of two");
-    }
-
-    if (border != 0)
-        return ErrorInvalidValue("texImage2D: border must be 0");
 
     const bool isDepthTexture = format == LOCAL_GL_DEPTH_COMPONENT ||
                                 format == LOCAL_GL_DEPTH_STENCIL;
 
     if (isDepthTexture) {
-        if (IsExtensionEnabled(WEBGL_depth_texture)) {
-            if (target != LOCAL_GL_TEXTURE_2D || data != nullptr || level != 0)
-                return ErrorInvalidOperation("texImage2D: "
-                                             "with format of DEPTH_COMPONENT or DEPTH_STENCIL, "
-                                             "target must be TEXTURE_2D, "
-                                             "data must be nullptr, "
-                                             "level must be zero"); // Haiku by unknown Zen master
-        } else {
-            return ErrorInvalidEnum("texImage2D: attempt to create a depth texture "
-                                    "without having enabled the WEBGL_depth_texture extension.");
-        }
+        if (data != nullptr || level != 0)
+            return ErrorInvalidOperation("texImage2D: "
+                                         "with format of DEPTH_COMPONENT or DEPTH_STENCIL, "
+                                         "data must be nullptr, "
+                                         "level must be zero");
     }
 
-    uint32_t dstTexelSize = 0;
-    if (!ValidateTexFormatAndType(format, type, jsArrayType, &dstTexelSize, "texImage2D"))
+    if (!ValidateTexInputData(type, jsArrayType, func))
         return;
 
     WebGLTexelFormat dstFormat = GetWebGLTexelFormat(format, type);
@@ -3834,6 +3714,7 @@ WebGLContext::TexImage2D_base(GLenum target, GLint level, GLenum internalformat,
     if (byteLength) {
         size_t srcStride = srcStrideOrZero ? srcStrideOrZero : checked_alignedRowSize.value();
 
+        uint32_t dstTexelSize = GetBitsPerTexel(format, type) / 8;
         size_t dstPlainRowSize = dstTexelSize * width;
         size_t unpackAlignment = mPixelStoreUnpackAlignment;
         size_t dstStride = ((dstPlainRowSize + unpackAlignment-1) / unpackAlignment) * unpackAlignment;
@@ -3926,36 +3807,17 @@ WebGLContext::TexSubImage2D_base(GLenum target, GLint level,
                                  int jsArrayType,
                                  WebGLTexelFormat srcFormat, bool srcPremultiplied)
 {
-    switch (target) {
-        case LOCAL_GL_TEXTURE_2D:
-        case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X:
-        case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_X:
-        case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_Y:
-        case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Y:
-        case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
-        case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
-            break;
-        default:
-            return ErrorInvalidEnumInfo("texSubImage2D: target", target);
-    }
+    const WebGLTexImageFunc func = WebGLTexImageFunc::TexSubImage;
 
-    if (!ValidateLevelWidthHeightForTarget(target, level, width, height, "texSubImage2D")) {
+    if (!ValidateTexImage(2, target, level, format,
+                          xoffset, yoffset, 0,
+                          width, height, 0,
+                          0, format, type, func))
+    {
         return;
     }
 
-    if (level >= 1) {
-        if (!(is_pot_assuming_nonnegative(width) &&
-              is_pot_assuming_nonnegative(height)))
-            return ErrorInvalidValue("texSubImage2D: with level > 0, width and height must be powers of two");
-    }
-
-    if (IsExtensionEnabled(WEBGL_depth_texture) &&
-        (format == LOCAL_GL_DEPTH_COMPONENT || format == LOCAL_GL_DEPTH_STENCIL)) {
-        return ErrorInvalidOperation("texSubImage2D: format");
-    }
-
-    uint32_t dstTexelSize = 0;
-    if (!ValidateTexFormatAndType(format, type, jsArrayType, &dstTexelSize, "texSubImage2D"))
+    if (!ValidateTexInputData(type, jsArrayType, func))
         return;
 
     WebGLTexelFormat dstFormat = GetWebGLTexelFormat(format, type);
@@ -3983,38 +3845,24 @@ WebGLContext::TexSubImage2D_base(GLenum target, GLint level,
         return ErrorInvalidOperation("texSubImage2D: not enough data for operation (need %d, have %d)", bytesNeeded, byteLength);
 
     WebGLTexture *tex = activeBoundTextureForTarget(target);
-
-    if (!tex)
-        return ErrorInvalidOperation("texSubImage2D: no texture is bound to this target");
-
-    if (!tex->HasImageInfoAt(target, level))
-        return ErrorInvalidOperation("texSubImage2D: no texture image previously defined for this level and face");
-
     const WebGLTexture::ImageInfo &imageInfo = tex->ImageInfoAt(target, level);
-    if (!CanvasUtils::CheckSaneSubrectSize(xoffset, yoffset, width, height, imageInfo.Width(), imageInfo.Height()))
-        return ErrorInvalidValue("texSubImage2D: subtexture rectangle out of bounds");
 
-    // Require the format and type in texSubImage2D to match that of the existing texture as created by texImage2D
-    if (imageInfo.InternalFormat() != format || imageInfo.Type() != type)
-        return ErrorInvalidOperation("texSubImage2D: format or type doesn't match the existing texture");
-
-    if (imageInfo.HasUninitializedImageData()) {
+    if (imageInfo.HasUninitializedImageData())
         tex->DoDeferredImageInitialization(target, level);
-    }
 
     MakeContextCurrent();
 
     size_t srcStride = srcStrideOrZero ? srcStrideOrZero : checked_alignedRowSize.value();
 
+    uint32_t dstTexelSize = GetBitsPerTexel(format, type) / 8;
     size_t dstPlainRowSize = dstTexelSize * width;
     // There are checks above to ensure that this won't overflow.
     size_t dstStride = RoundedToNextMultipleOf(dstPlainRowSize, mPixelStoreUnpackAlignment).value();
 
     // convert type for half float if not on GLES2
     GLenum realType = type;
-    if (realType == LOCAL_GL_HALF_FLOAT_OES && !gl->IsGLES2()) {
+    if (realType == LOCAL_GL_HALF_FLOAT_OES && !gl->IsGLES2())
         realType = LOCAL_GL_HALF_FLOAT;
-    }
 
     if (actualSrcFormat == dstFormat &&
         srcPremultiplied == mPixelStorePremultiplyAlpha &&

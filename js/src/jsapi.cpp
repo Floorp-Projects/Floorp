@@ -3113,16 +3113,6 @@ JS_DefineProperty(JSContext *cx, JSObject *objArg, const char *name, jsval value
                           SetterWrapper(setter), attrs, 0, 0);
 }
 
-JS_PUBLIC_API(bool)
-JS_DefinePropertyWithTinyId(JSContext *cx, JSObject *objArg, const char *name, int8_t tinyid,
-                            jsval valueArg, PropertyOp getter, JSStrictPropertyOp setter, unsigned attrs)
-{
-    RootedObject obj(cx, objArg);
-    RootedValue value(cx, valueArg);
-    return DefineProperty(cx, obj, name, value, GetterWrapper(getter),
-                          SetterWrapper(setter), attrs, Shape::HAS_SHORTID, tinyid);
-}
-
 static bool
 DefineUCProperty(JSContext *cx, HandleObject obj, const jschar *name, size_t namelen,
                  const Value &value_, PropertyOp getter, StrictPropertyOp setter, unsigned attrs,
@@ -3145,17 +3135,6 @@ JS_DefineUCProperty(JSContext *cx, JSObject *objArg, const jschar *name, size_t 
     RootedObject obj(cx, objArg);
     RootedValue value(cx, valueArg);
     return DefineUCProperty(cx, obj, name, namelen, value, getter, setter, attrs, 0, 0);
-}
-
-JS_PUBLIC_API(bool)
-JS_DefineUCPropertyWithTinyId(JSContext *cx, JSObject *objArg, const jschar *name, size_t namelen,
-                              int8_t tinyid, jsval valueArg,
-                              JSPropertyOp getter, JSStrictPropertyOp setter, unsigned attrs)
-{
-    RootedObject obj(cx, objArg);
-    RootedValue value(cx, valueArg);
-    return DefineUCProperty(cx, obj, name, namelen, value, getter, setter, attrs,
-                            Shape::HAS_SHORTID, tinyid);
 }
 
 JS_PUBLIC_API(bool)
@@ -6311,3 +6290,10 @@ JS::SetLargeAllocationFailureCallback(JSRuntime *rt, JS::LargeAllocationFailureC
 {
     rt->largeAllocationFailureCallback = lafc;
 }
+
+JS_PUBLIC_API(void)
+JS::SetOutOfMemoryCallback(JSRuntime *rt, OutOfMemoryCallback cb)
+{
+    rt->oomCallback = cb;
+}
+

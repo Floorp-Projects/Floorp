@@ -134,6 +134,15 @@ MOZ_BEGIN_ENUM_CLASS(WebGLTexelFormat, int)
     RGBA32F // OES_texture_float
 MOZ_END_ENUM_CLASS(WebGLTexelFormat)
 
+MOZ_BEGIN_ENUM_CLASS(WebGLTexImageFunc, int)
+    TexImage,
+    TexSubImage,
+    CopyTexImage,
+    CopyTexSubImage,
+    CompTexImage,
+    CompTexSubImage,
+MOZ_END_ENUM_CLASS(WebGLTexImageFunc)
+
 } // namespace mozilla
 
 #endif

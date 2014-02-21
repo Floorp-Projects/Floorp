@@ -56,7 +56,6 @@
 #include <QtGui/QPixmap>
 #include <QtGui/QBrush>
 #include <QtGui/QPen>
-#include <QWidget>
 #include <QtCore/QVarLengthArray>
 
 #include <sys/time.h>
@@ -589,8 +588,6 @@ _cairo_qt_surface_acquire_dest_image (void *abstract_surface,
             qimg = new QImage(((QImage*) pd)->copy());
         } else if (pd->devType() == QInternal::Pixmap) {
             qimg = new QImage(((QPixmap*) pd)->toImage());
-        } else if (pd->devType() == QInternal::Widget) {
-            qimg = new QImage(QPixmap::grabWindow(((QWidget*)pd)->winId()).toImage());
         }
     }
 

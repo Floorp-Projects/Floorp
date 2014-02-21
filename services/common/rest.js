@@ -782,6 +782,16 @@ HAWKAuthenticatedRESTRequest.prototype = {
 
     this.setHeader("Content-Type", contentType);
 
+    try {
+      let acceptLanguage = Services.prefs.getComplexValue(
+          "intl.accept_languages", Ci.nsIPrefLocalizedString).data;
+      if (acceptLanguage) {
+        this.setHeader("Accept-Language", acceptLanguage);
+      }
+    } catch (err) {
+      this._log.error("Error reading intl.accept_languages pref: " + CommonUtils.exceptionStr(err));
+    }
+
     return RESTRequest.prototype.dispatch.call(
       this, method, data, onComplete, onProgress
     );
