@@ -896,7 +896,8 @@ DeprecatedTextureHostYCbCrD3D11::UpdateImpl(const SurfaceDescriptor& aImage,
 {
   MOZ_ASSERT(aImage.type() == SurfaceDescriptor::TYCbCrImage);
 
-  YCbCrImageDataDeserializer yuvDeserializer(aImage.get_YCbCrImage().data().get<uint8_t>());
+  YCbCrImageDataDeserializer yuvDeserializer(aImage.get_YCbCrImage().data().get<uint8_t>(),
+                                             aImage.get_YCbCrImage().data().Size<uint8_t>());
 
   gfx::IntSize gfxCbCrSize = yuvDeserializer.GetCbCrSize();
 

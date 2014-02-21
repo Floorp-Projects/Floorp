@@ -604,6 +604,12 @@ public:
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsGlobalWindow,
                                                                    nsIDOMEventTarget)
 
+#ifdef DEBUG
+  // Call Unlink on this window. This may cause bad things to happen, so use
+  // with caution.
+  void RiskyUnlink();
+#endif
+
   virtual NS_HIDDEN_(JSObject*)
     GetCachedXBLPrototypeHandler(nsXBLPrototypeHandler* aKey);
 
@@ -1406,6 +1412,10 @@ protected:
   // true if tab navigation has occurred for this window. Focus rings
   // should be displayed.
   bool                   mFocusByKeyOccurred : 1;
+
+  // Ensure that a call to ResumeTimeouts() after FreeInnerObjects() does nothing.
+  // This member is only used by inner windows.
+  bool                   mInnerObjectsFreed : 1;
 
   // Indicates whether this window wants gamepad input events
   bool                   mHasGamepad : 1;

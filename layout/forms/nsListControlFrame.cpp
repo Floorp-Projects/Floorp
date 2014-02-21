@@ -1506,7 +1506,7 @@ nsListControlFrame::IsLeftButton(nsIDOMEvent* aMouseEvent)
   // only allow selection with the left button
   nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aMouseEvent);
   if (mouseEvent) {
-    uint16_t whichButton;
+    int16_t whichButton;
     if (NS_SUCCEEDED(mouseEvent->GetButton(&whichButton))) {
       return whichButton != 0?false:true;
     }

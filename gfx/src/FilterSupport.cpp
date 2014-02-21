@@ -233,6 +233,7 @@ namespace FilterWrappers {
 class FilterCachedColorModels : public RefCounted<FilterCachedColorModels>
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(FilterCachedColorModels)
   // aFilter can be null. In that case, ForColorModel will return a non-null
   // completely transparent filter for all color models.
   FilterCachedColorModels(DrawTarget* aDT,

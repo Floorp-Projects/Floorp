@@ -48,6 +48,7 @@ class imgRequestProxy : public imgIRequest,
                         public mozilla::SupportsWeakPtr<imgRequestProxy>
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(imgRequestProxy)
   typedef mozilla::image::ImageURL ImageURL;
   NS_DECL_ISUPPORTS
   NS_DECL_IMGIREQUEST

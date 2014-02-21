@@ -52,8 +52,18 @@ ThebesLayerComposite::~ThebesLayerComposite()
 bool
 ThebesLayerComposite::SetCompositableHost(CompositableHost* aHost)
 {
-  mBuffer = static_cast<ContentHost*>(aHost);
-  return true;
+  switch (aHost->GetType()) {
+    case BUFFER_CONTENT:
+    case BUFFER_CONTENT_DIRECT:
+    case BUFFER_CONTENT_INC:
+    case BUFFER_TILED:
+    case COMPOSITABLE_CONTENT_SINGLE:
+    case COMPOSITABLE_CONTENT_DOUBLE:
+      mBuffer = static_cast<ContentHost*>(aHost);
+      return true;
+    default:
+      return false;
+  }
 }
 
 void

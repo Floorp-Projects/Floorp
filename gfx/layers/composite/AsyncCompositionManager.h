@@ -66,6 +66,7 @@ class AsyncCompositionManager MOZ_FINAL : public RefCounted<AsyncCompositionMana
 {
   friend class AutoResolveRefLayers;
 public:
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(AsyncCompositionManager)
   AsyncCompositionManager(LayerManagerComposite* aManager)
     : mLayerManager(aManager)
     , mIsFirstPaint(false)

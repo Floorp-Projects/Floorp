@@ -266,6 +266,7 @@ void nsBaseWidget::BaseCreate(nsIWidget *aParent,
     mBorderStyle = aInitData->mBorderStyle;
     mPopupLevel = aInitData->mPopupLevel;
     mPopupType = aInitData->mPopupHint;
+    mRequireOffMainThreadCompositing = aInitData->mRequireOffMainThreadCompositing;
   }
 
   if (aParent) {
@@ -837,7 +838,7 @@ bool
 nsBaseWidget::ComputeShouldAccelerate(bool aDefault)
 {
 #if defined(XP_WIN) || defined(ANDROID) || \
-    defined(MOZ_GL_PROVIDER) || defined(XP_MACOSX)
+    defined(MOZ_GL_PROVIDER) || defined(XP_MACOSX) || defined(MOZ_WIDGET_QT)
   bool accelerateByDefault = true;
 #else
   bool accelerateByDefault = false;
@@ -942,8 +943,7 @@ CheckForBasicBackends(nsTArray<LayersBackend>& aHints)
 {
   for (size_t i = 0; i < aHints.Length(); ++i) {
     if (aHints[i] == LayersBackend::LAYERS_BASIC &&
-        !Preferences::GetBool("layers.offmainthreadcomposition.force-basic", false) &&
-        !BrowserTabsRemote()) {
+        !Preferences::GetBool("layers.offmainthreadcomposition.force-basic", false)) {
       // basic compositor is not stable enough for regular use
       aHints[i] = LayersBackend::LAYERS_NONE;
     }
@@ -976,7 +976,9 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
   nsTArray<LayersBackend> backendHints;
   GetPreferredCompositorBackends(backendHints);
 
-  CheckForBasicBackends(backendHints);
+  if (!mRequireOffMainThreadCompositing) {
+    CheckForBasicBackends(backendHints);
+  }
 
   bool success = false;
   if (!backendHints.IsEmpty()) {
