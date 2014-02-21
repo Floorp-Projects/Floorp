@@ -1777,7 +1777,7 @@ XrayWrapper<Base, Traits>::get(JSContext *cx, HandleObject wrapper,
     // Skip our Base if it isn't already ProxyHandler.
     // NB: None of the functions we call are prepared for the receiver not
     // being the wrapper, so ignore the receiver here.
-    return js::BaseProxyHandler::get(cx, wrapper, wrapper, id, vp);
+    return js::BaseProxyHandler::get(cx, wrapper, Traits::HasPrototype ? receiver : wrapper, id, vp);
 }
 
 template <typename Base, typename Traits>
@@ -1789,7 +1789,7 @@ XrayWrapper<Base, Traits>::set(JSContext *cx, HandleObject wrapper,
     // Skip our Base if it isn't already BaseProxyHandler.
     // NB: None of the functions we call are prepared for the receiver not
     // being the wrapper, so ignore the receiver here.
-    return js::BaseProxyHandler::set(cx, wrapper, wrapper, id, strict, vp);
+    return js::BaseProxyHandler::set(cx, wrapper, Traits::HasPrototype ? receiver : wrapper, id, strict, vp);
 }
 
 template <typename Base, typename Traits>
