@@ -1,0 +1,18 @@
+<!doctype html>
+<html class="reftest-wait">
+	<head>
+	    <title>menclose updiagonalarrow</title>
+	    <script type="text/javascript">
+	        function doTest() {
+	            document.getElementById('testMenclose').setAttribute("notation","updiagonalarrow");
+	            document.documentElement.removeAttribute("class");
+	        }
+	        window.addEventListener("MozReftestInvalidate",doTest, false);
+	    </script>
+	</head>
+	<body>
+	    <p>
+	       <math><menclose id="testMenclose"><mspace width="100px" height="50px"></menclose></math>
+        </p>
+	</body>
+</html>
