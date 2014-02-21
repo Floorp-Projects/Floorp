@@ -441,10 +441,11 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
         return false;
       }
       ContainerLayerComposite* container = ShadowContainer(orc)->AsContainerLayerComposite();
-      if (!container) {
+      if (!container ||
+          !container->RemoveChild(childLayer))
+      {
         return false;
       }
-      container->RemoveChild(childLayer);
       break;
     }
     case Edit::TOpRepositionChild: {
