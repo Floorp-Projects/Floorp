@@ -27,6 +27,7 @@ enum AllowOfflineRendererEnum { ALLOW_OFFLINE_RENDERER, DISALLOW_OFFLINE_RENDERE
 
 class nsCARenderer : public mozilla::RefCounted<nsCARenderer> {
 public:
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(nsCARenderer)
   nsCARenderer() : mCARenderer(nullptr), mWrapperCALayer(nullptr), mFBOTexture(0),
                    mOpenGLContext(nullptr), mCGImage(nullptr), mCGData(nullptr),
                    mIOSurface(nullptr), mFBO(0), mIOTexture(0),
