@@ -2381,9 +2381,9 @@ CanvasRenderingContext2D::AddHitRegion(const HitRegionOptions& options, ErrorRes
 
   // check if the control is a descendant of our canvas
   HTMLCanvasElement* canvas = GetCanvas();
+  bool isDescendant = true;
   if (!canvas || !nsContentUtils::ContentIsDescendantOf(options.mControl, canvas)) {
-    error.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-    return;
+    isDescendant = false;
   }
 
   // check if the path is valid
@@ -2395,10 +2395,19 @@ CanvasRenderingContext2D::AddHitRegion(const HitRegionOptions& options, ErrorRes
 
   // get the bounds of the current path. They are relative to the canvas
   mgfx::Rect bounds(mPath->GetBounds(mTarget->GetTransform()));
-  gfxRect rect(bounds.x, bounds.y, bounds.width, bounds.height);
-  nsRect* nsBounds = new nsRect();
-  *nsBounds = nsLayoutUtils::RoundGfxRectToAppRect(rect, AppUnitsPerCSSPixel());
-  options.mControl->SetProperty(nsGkAtoms::hitregion, nsBounds, ReleaseBBoxPropertyValue, true);
+  if ((bounds.width == 0) || (bounds.height == 0) || !bounds.IsFinite()) {
+    // The specified region has no pixels.
+    error.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return;
+  }
+
+  if (isDescendant) {
+    nsRect* nsBounds = new nsRect();
+    gfxRect rect(bounds.x, bounds.y, bounds.width, bounds.height);
+    *nsBounds = nsLayoutUtils::RoundGfxRectToAppRect(rect, AppUnitsPerCSSPixel());
+    options.mControl->SetProperty(nsGkAtoms::hitregion, nsBounds,
+                                  ReleaseBBoxPropertyValue, true);
+  }
 
   // finally, add the region to the list if it has an ID
   if (options.mId.Length() != 0) {
