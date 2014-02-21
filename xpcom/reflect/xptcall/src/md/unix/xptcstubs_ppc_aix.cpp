@@ -16,7 +16,7 @@
         The args pointer has been set to the start of the parameters BEYOND the ones
         arriving in registers
 */
-extern "C" nsresult
+extern "C" nsresult ATTRIBUTE_USED
 PrepareAndDispatch(nsXPTCStubBase* self, uint32_t methodIndex, uint32_t* args, uint32_t *gprData, double *fprData)
 {
     typedef struct {
