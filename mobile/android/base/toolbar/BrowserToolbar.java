@@ -11,6 +11,7 @@ import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.LightweightTheme;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.ReaderModeUtils;
 import org.mozilla.gecko.SiteIdentity.SecurityMode;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
@@ -30,7 +31,6 @@ import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.widget.GeckoImageButton;
 import org.mozilla.gecko.widget.GeckoImageView;
 import org.mozilla.gecko.widget.GeckoRelativeLayout;
-
 import org.json.JSONObject;
 
 import android.content.Context;
@@ -1345,10 +1345,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
                 tab.toggleReaderMode();
             }
         } else if (event.equals("Reader:LongClick")) {
-            Tab tab = Tabs.getInstance().getSelectedTab();
-            if (tab != null) {
-                tab.addToReadingList();
-            }
+            ReaderModeUtils.addToReadingList(Tabs.getInstance().getSelectedTab());
         }
     }
 
