@@ -1,3 +1,6 @@
+// FIXME bug 975456
+quit();
+
 if (!this.hasOwnProperty("TypedObject"))
   quit();
 
