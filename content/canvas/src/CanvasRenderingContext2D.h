@@ -186,6 +186,9 @@ public:
   TextMetrics*
     MeasureText(const nsAString& rawText, mozilla::ErrorResult& error);
 
+  void AddHitRegion(const HitRegionOptions& options);
+  void RemoveHitRegion(const nsAString& id);
+
   void DrawImage(const HTMLImageOrCanvasOrVideoElement& image,
                  double dx, double dy, mozilla::ErrorResult& error)
   {
