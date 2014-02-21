@@ -294,6 +294,12 @@ public class HomePager extends ViewPager {
         return super.dispatchTouchEvent(event);
     }
 
+    public void onToolbarFocusChange(boolean hasFocus) {
+        // We should only make the banner active if the toolbar is not focused and we are on the default page
+        final boolean active = !hasFocus && getCurrentItem() == mDefaultPageIndex;
+        mHomeBanner.setActive(active);
+    }
+
     private void updateUiFromPanelConfigs(List<PanelConfig> panelConfigs) {
         // We only care about the adapter if HomePager is currently
         // loaded, which means it's visible in the activity.
