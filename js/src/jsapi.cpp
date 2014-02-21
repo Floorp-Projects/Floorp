@@ -6290,3 +6290,10 @@ JS::SetLargeAllocationFailureCallback(JSRuntime *rt, JS::LargeAllocationFailureC
 {
     rt->largeAllocationFailureCallback = lafc;
 }
+
+JS_PUBLIC_API(void)
+JS::SetOutOfMemoryCallback(JSRuntime *rt, OutOfMemoryCallback cb)
+{
+    rt->oomCallback = cb;
+}
+

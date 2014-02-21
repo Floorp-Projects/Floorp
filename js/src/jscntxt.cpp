@@ -370,9 +370,12 @@ js_ReportOutOfMemory(ThreadSafeContext *cxArg)
 
     if (!cxArg->isJSContext())
         return;
-    JSContext *cx = cxArg->asJSContext();
 
+    JSContext *cx = cxArg->asJSContext();
     cx->runtime()->hadOutOfMemory = true;
+
+    if (JS::OutOfMemoryCallback oomCallback = cx->runtime()->oomCallback)
+        oomCallback(cx);
 
     if (JS_IsRunning(cx)) {
         cx->setPendingException(StringValue(cx->names().outOfMemory));
