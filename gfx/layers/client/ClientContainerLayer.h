@@ -107,13 +107,19 @@ public:
     return true;
   }
 
-  virtual void RemoveChild(Layer* aChild) MOZ_OVERRIDE
-  { 
-    NS_ASSERTION(ClientManager()->InConstruction(),
-                 "Can only set properties in construction phase");
-    ClientManager()->AsShadowForwarder()->RemoveChild(ClientManager()->Hold(this),
-                                                      ClientManager()->Hold(aChild));
-    ContainerLayer::RemoveChild(aChild);
+  virtual bool RemoveChild(Layer* aChild) MOZ_OVERRIDE
+  {
+    if (!ClientManager()->InConstruction()) {
+      NS_ERROR("Can only set properties in construction phase");
+      return false;
+    }
+    // hold on to aChild before we remove it!
+    ShadowableLayer *heldChild = ClientManager()->Hold(aChild);
+    if (!ContainerLayer::RemoveChild(aChild)) {
+      return false;
+    }
+    ClientManager()->AsShadowForwarder()->RemoveChild(ClientManager()->Hold(this), heldChild);
+    return true;
   }
 
   virtual void RepositionChild(Layer* aChild, Layer* aAfter) MOZ_OVERRIDE
