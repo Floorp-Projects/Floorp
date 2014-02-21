@@ -43,11 +43,13 @@ public:
     return ContainerLayer::InsertAfter(aChild, aAfter);
   }
 
-  virtual void RemoveChild(Layer* aChild)
+  virtual bool RemoveChild(Layer* aChild)
   { 
-    NS_ASSERTION(BasicManager()->InConstruction(),
-                 "Can only set properties in construction phase");
-    ContainerLayer::RemoveChild(aChild);
+    if (!BasicManager()->InConstruction()) {
+      NS_ERROR("Can only set properties in construction phase");
+      return false;
+    }
+    return ContainerLayer::RemoveChild(aChild);
   }
 
   virtual void RepositionChild(Layer* aChild, Layer* aAfter)
