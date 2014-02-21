@@ -21,7 +21,8 @@ using mozilla::dom::telephony::kOutgoingPlaceholderCallIndex;
 already_AddRefed<TelephonyCall>
 TelephonyCall::Create(Telephony* aTelephony, uint32_t aServiceId,
                       const nsAString& aNumber, uint16_t aCallState,
-                      uint32_t aCallIndex, bool aEmergency, bool aIsConference)
+                      uint32_t aCallIndex, bool aEmergency, bool aIsConference,
+                      bool aSwitchable, bool aMergeable)
 {
   NS_ASSERTION(aTelephony, "Null pointer!");
   NS_ASSERTION(!aNumber.IsEmpty(), "Empty number!");
@@ -36,6 +37,8 @@ TelephonyCall::Create(Telephony* aTelephony, uint32_t aServiceId,
   call->mError = nullptr;
   call->mEmergency = aEmergency;
   call->mGroup = aIsConference ? aTelephony->ConferenceGroup() : nullptr;
+  call->mSwitchable = aSwitchable;
+  call->mMergeable = aMergeable;
 
   call->ChangeStateInternal(aCallState, false);
 
@@ -255,6 +258,11 @@ TelephonyCall::Hold(ErrorResult& aRv)
     return;
   }
 
+  if (!mSwitchable) {
+    NS_WARNING("Hold a non-switchable call ignored!");
+    return;
+  }
+
   nsresult rv = mTelephony->Provider()->HoldCall(mServiceId, mCallIndex);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
@@ -281,6 +289,11 @@ TelephonyCall::Resume(ErrorResult& aRv)
 
   if (mGroup) {
     NS_WARNING("Resume a call in conference ignored!");
+    return;
+  }
+
+  if (!mSwitchable) {
+    NS_WARNING("Resume a non-switchable call ignored!");
     return;
   }
 
