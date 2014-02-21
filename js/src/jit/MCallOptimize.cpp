@@ -842,6 +842,8 @@ IonBuilder::inlineMathPow(CallInfo &callInfo)
 
     // Use MPow for other powers
     if (!output) {
+        if (powerType == MIRType_Float32)
+            powerType = MIRType_Double;
         MPow *pow = MPow::New(alloc(), base, power, powerType);
         current->add(pow);
         output = pow;
