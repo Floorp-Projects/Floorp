@@ -770,13 +770,17 @@ ContainerLayer::InsertAfter(Layer* aChild, Layer* aAfter)
   return true;
 }
 
-void
+bool
 ContainerLayer::RemoveChild(Layer *aChild)
 {
-  NS_ASSERTION(aChild->Manager() == Manager(),
-               "Child has wrong manager");
-  NS_ASSERTION(aChild->GetParent() == this,
-               "aChild not our child");
+  if (aChild->Manager() != Manager()) {
+    NS_ERROR("Child has wrong manager");
+    return false;
+  }
+  if (aChild->GetParent() != this) {
+    NS_ERROR("aChild not our child");
+    return false;
+  }
 
   Layer* prev = aChild->GetPrevSibling();
   Layer* next = aChild->GetNextSibling();
@@ -797,6 +801,7 @@ ContainerLayer::RemoveChild(Layer *aChild)
 
   this->DidRemoveChild(aChild);
   NS_RELEASE(aChild);
+  return true;
 }
 
 

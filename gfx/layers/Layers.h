@@ -1567,7 +1567,7 @@ public:
    * Remove aChild from the child list of this container. aChild must
    * be a child of this container.
    */
-  virtual void RemoveChild(Layer* aChild);
+  virtual bool RemoveChild(Layer* aChild);
   /**
    * CONSTRUCTION PHASE ONLY
    * Reposition aChild from the child list of this container. aChild must
@@ -1965,8 +1965,8 @@ private:
   virtual bool InsertAfter(Layer* aChild, Layer* aAfter) MOZ_OVERRIDE
   { MOZ_CRASH(); return false; }
 
-  virtual void RemoveChild(Layer* aChild)
-  { MOZ_CRASH(); }
+  virtual bool RemoveChild(Layer* aChild)
+  { MOZ_CRASH(); return false; }
 
   virtual void RepositionChild(Layer* aChild, Layer* aAfter)
   { MOZ_CRASH(); }
