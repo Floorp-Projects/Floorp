@@ -48,12 +48,22 @@ public class HomeConfigInvalidator implements GeckoEventListener {
     private enum ChangeType {
         UNINSTALL,
         INSTALL,
-        UPDATE
+        UPDATE,
+        REFRESH
+    }
+
+    private enum InvalidationMode {
+        DELAYED,
+        IMMEDIATE
     }
 
     private static class ConfigChange {
         private final ChangeType type;
         private final Object target;
+
+        public ConfigChange(ChangeType type) {
+            this(type, null);
+        }
 
         public ConfigChange(ChangeType type, Object target) {
             this.type = type;
@@ -86,7 +96,7 @@ public class HomeConfigInvalidator implements GeckoEventListener {
             public void run() {
                 final String configLocale = mHomeConfig.getLocale();
                 if (configLocale == null || !configLocale.equals(locale)) {
-                    handlePanelUpdate(null);
+                    handleLocaleChange();
                 }
             }
         });
@@ -123,7 +133,7 @@ public class HomeConfigInvalidator implements GeckoEventListener {
         mPendingChanges.offer(new ConfigChange(ChangeType.INSTALL, panelConfig));
         Log.d(LOGTAG, "handlePanelInstall: " + mPendingChanges.size());
 
-        scheduleInvalidation();
+        scheduleInvalidation(InvalidationMode.DELAYED);
     }
 
     /**
@@ -133,33 +143,44 @@ public class HomeConfigInvalidator implements GeckoEventListener {
         mPendingChanges.offer(new ConfigChange(ChangeType.UNINSTALL, panelId));
         Log.d(LOGTAG, "handlePanelUninstall: " + mPendingChanges.size());
 
-        scheduleInvalidation();
+        scheduleInvalidation(InvalidationMode.DELAYED);
     }
 
     /**
-     * Schedules a panel update in HomeConfig. Runs in the gecko or
-     * background thread.
-     *
-     * @param panelConfig the target PanelConfig instance or NULL to refresh
-     *                    all HomeConfig entries.
+     * Runs in the gecko thread.
      */
     private void handlePanelUpdate(PanelConfig panelConfig) {
         mPendingChanges.offer(new ConfigChange(ChangeType.UPDATE, panelConfig));
         Log.d(LOGTAG, "handlePanelUpdate: " + mPendingChanges.size());
 
-        scheduleInvalidation();
+        scheduleInvalidation(InvalidationMode.DELAYED);
+    }
+
+    /**
+     * Runs in the background thread.
+     */
+    private void handleLocaleChange() {
+        mPendingChanges.offer(new ConfigChange(ChangeType.REFRESH));
+        Log.d(LOGTAG, "handleLocaleChange: " + mPendingChanges.size());
+
+        scheduleInvalidation(InvalidationMode.IMMEDIATE);
     }
 
     /**
      * Runs in the gecko or main thread.
      */
-    private void scheduleInvalidation() {
+    private void scheduleInvalidation(InvalidationMode mode) {
         final Handler handler = ThreadUtils.getBackgroundHandler();
 
         handler.removeCallbacks(mInvalidationRunnable);
-        handler.postDelayed(mInvalidationRunnable, INVALIDATION_DELAY_MSEC);
 
-        Log.d(LOGTAG, "scheduleInvalidation: scheduled new invalidation");
+        if (mode == InvalidationMode.IMMEDIATE) {
+            handler.post(mInvalidationRunnable);
+        } else {
+            handler.postDelayed(mInvalidationRunnable, INVALIDATION_DELAY_MSEC);
+        }
+
+        Log.d(LOGTAG, "scheduleInvalidation: scheduled new invalidation: " + mode);
     }
 
     /**
@@ -192,7 +213,7 @@ public class HomeConfigInvalidator implements GeckoEventListener {
      * Runs in the background thread.
      */
     private List<PanelConfig> executePendingChanges(List<PanelConfig> panelConfigs) {
-        boolean shouldRefreshAll = false;
+        boolean shouldRefresh = false;
 
         while (!mPendingChanges.isEmpty()) {
             final ConfigChange pendingChange = mPendingChanges.poll();
@@ -218,19 +239,19 @@ public class HomeConfigInvalidator implements GeckoEventListener {
 
                 case UPDATE: {
                     final PanelConfig panelConfig = (PanelConfig) pendingChange.target;
-                    if (panelConfig != null) {
-                        if (!replacePanelConfig(panelConfigs, panelConfig)) {
-                            Log.w(LOGTAG, "Tried to update non-existing panel " + panelConfig.getId());
-                        }
-                    } else {
-                        shouldRefreshAll = true;
+                    if (!replacePanelConfig(panelConfigs, panelConfig)) {
+                        Log.w(LOGTAG, "Tried to update non-existing panel " + panelConfig.getId());
                     }
                     break;
+                }
+
+                case REFRESH: {
+                    shouldRefresh = true;
                 }
             }
         }
 
-        if (shouldRefreshAll) {
+        if (shouldRefresh) {
             return executeRefresh(panelConfigs);
         } else {
             return panelConfigs;
