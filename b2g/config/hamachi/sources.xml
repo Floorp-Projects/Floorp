@@ -11,7 +11,7 @@
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
   <project name="fake-dalvik" path="dalvik" remote="b2g" revision="ca1f327d5acc198bb4be62fa51db2c039032c9ce"/>
-  <project name="gaia.git" path="gaia" remote="mozillaorg" revision="9e1e65c72d8e5fb4dd216b9f8a00f23ea45d9871"/>
+  <project name="gaia.git" path="gaia" remote="mozillaorg" revision="043b24fbe6f79bc3c0785717a8143eb27833f721"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="78b908b493bfe0b477e3d4f6edec8c46a2c0d096"/>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="827214fcf38d6569aeb5c6d6f31cb296d1f09272"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="84f2f2fce22605e17d511ff1767e54770067b5b5"/>
