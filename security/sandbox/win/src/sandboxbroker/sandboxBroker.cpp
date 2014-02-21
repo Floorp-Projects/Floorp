@@ -23,10 +23,10 @@ SandboxBroker::SandboxBroker()
         sBrokerService = nullptr;
       }
     }
-
-    // We'll start to increase the restrictions over time.
-    mPolicy = sBrokerService->CreatePolicy();
   }
+
+  // We'll start to increase the restrictions over time.
+  mPolicy = sBrokerService->CreatePolicy();
 }
 
 bool
@@ -54,6 +54,9 @@ SandboxBroker::LaunchApp(const wchar_t *aPath,
   mPolicy->SetTokenLevel(sandbox::USER_RESTRICTED_SAME_ACCESS,
                          sandbox::USER_RESTRICTED_SAME_ACCESS);
   mPolicy->SetDelayedIntegrityLevel(sandbox::INTEGRITY_LEVEL_UNTRUSTED);
+
+  // Set an alternate Desktop within a new window station
+  mPolicy->SetAlternateDesktop(false);
 
   // Ceate the sandboxed process
   PROCESS_INFORMATION targetInfo;

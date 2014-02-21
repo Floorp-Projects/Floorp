@@ -39,7 +39,7 @@ static const int kFrameDurationMs  = 20;
 
 // The supported sampling rate of input signal (Hz),
 // must be one of the following. Will resampled to 48kHz otherwise.
-static const int kOpusSupportedInputSamplingRates[5] =
+static const int kOpusSupportedInputSamplingRates[] =
                    {8000, 12000, 16000, 24000, 48000};
 
 namespace {
@@ -70,10 +70,10 @@ SerializeOpusIdHeader(uint8_t aChannelCount, uint16_t aPreskip,
                       uint32_t aInputSampleRate, nsTArray<uint8_t>* aOutput)
 {
   // The magic signature, null terminator has to be stripped off from strings.
-  static const uint8_t magic[9] = "OpusHead";
-  memcpy(aOutput->AppendElements(sizeof(magic) - 1), magic, sizeof(magic) - 1);
+  static const uint8_t magic[] = "OpusHead";
+  aOutput->AppendElements(magic, sizeof(magic) - 1);
 
-  // The version, must always be 1 (8 bits, unsigned).
+  // The version must always be 1 (8 bits, unsigned).
   aOutput->AppendElement(1);
 
   // Number of output channels (8 bits, unsigned).
@@ -101,8 +101,8 @@ SerializeOpusCommentHeader(const nsCString& aVendor,
                            nsTArray<uint8_t>* aOutput)
 {
   // The magic signature, null terminator has to be stripped off.
-  static const uint8_t magic[9] = "OpusTags";
-  memcpy(aOutput->AppendElements(sizeof(magic) - 1), magic, sizeof(magic) - 1);
+  static const uint8_t magic[] = "OpusTags";
+  aOutput->AppendElements(magic, sizeof(magic) - 1);
 
   // The vendor; Should append in the following order:
   // vendor string length (32 bits, unsigned, little endian)
@@ -162,7 +162,7 @@ OpusTrackEncoder::Init(int aChannels, int aSamplingRate)
   // 48000. If this constraint is not satisfied, we resample the input to 48kHz.
   nsTArray<int> supportedSamplingRates;
   supportedSamplingRates.AppendElements(kOpusSupportedInputSamplingRates,
-                         MOZ_ARRAY_LENGTH(kOpusSupportedInputSamplingRates));
+                         ArrayLength(kOpusSupportedInputSamplingRates));
   if (!supportedSamplingRates.Contains(aSamplingRate)) {
     int error;
     mResampler = speex_resampler_init(mChannels,

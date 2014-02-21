@@ -173,6 +173,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitSetArrayLength(MSetArrayLength *ins);
     bool visitTypedArrayLength(MTypedArrayLength *ins);
     bool visitTypedArrayElements(MTypedArrayElements *ins);
+    bool visitNeuterCheck(MNeuterCheck *lir);
     bool visitTypedObjectElements(MTypedObjectElements *ins);
     bool visitInitializedLength(MInitializedLength *ins);
     bool visitSetInitializedLength(MSetInitializedLength *ins);
