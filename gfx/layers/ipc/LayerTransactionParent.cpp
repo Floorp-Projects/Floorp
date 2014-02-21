@@ -457,10 +457,11 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
         return false;
       }
       ContainerLayerComposite* container = ShadowContainer(orc)->AsContainerLayerComposite();
-      if (!container) {
+      if (!container ||
+          !container->RepositionChild(child, ShadowAfter(orc)->AsLayer()))
+      {
         return false;
       }
-      container->RepositionChild(child, ShadowAfter(orc)->AsLayer());
       break;
     }
     case Edit::TOpRaiseToTopChild: {
@@ -472,10 +473,11 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
         return false;
       }
       ContainerLayerComposite* container = ShadowContainer(rtc)->AsContainerLayerComposite();
-      if (!container) {
+      if (!container ||
+          !container->RepositionChild(child, nullptr))
+      {
         return false;
       }
-      container->RepositionChild(child, nullptr);
       break;
     }
     case Edit::TCompositableOperation: {
