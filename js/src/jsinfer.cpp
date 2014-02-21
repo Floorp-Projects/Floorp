@@ -2603,7 +2603,12 @@ TypeCompartment::fixObjectType(ExclusiveContext *cx, JSObject *obj)
      */
     JS_ASSERT(obj->is<JSObject>());
 
-    if (obj->slotSpan() == 0 || obj->inDictionaryMode() || !obj->hasEmptyElements())
+    /*
+     * Exclude some objects we can't readily associate common types for based on their
+     * shape. Objects with metadata are excluded so that the metadata does not need to
+     * be included in the table lookup (the metadata object might be in the nursery).
+     */
+    if (obj->slotSpan() == 0 || obj->inDictionaryMode() || !obj->hasEmptyElements() || obj->getMetadata())
         return;
 
     Vector<IdValuePair> properties(cx);
