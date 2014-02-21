@@ -90,7 +90,7 @@
   <project name="platform/system/netd" path="system/netd" revision="2e226e6e636ca0a8cc4c51093e46f4baba1ffcce"/>
   <project name="platform/system/vold" path="system/vold" revision="8ac5eef8ea3a456b96d52ce2091bf6d814782d8c"/>
   <!-- hamachi specific things -->
-  <project name="quic/lf/b2g/build" path="device/qcom/b2g_common" revision="9b2d2215ee4b3413addf6222fb4ee520b2858472"/>
+  <project name="quic/lf/b2g/build" path="device/qcom/b2g_common" revision="43829d56fab6ad16883f1ac9f55ffb9aa5863543"/>
   <project name="quic/lf/b2g/external/jsmin" path="external/jsmin" revision="cec896f0affaa0226c02605ad28d42df1bc0e393"/>
   <project name="device/qcom/common" path="device/qcom/common" revision="d13aaf080177b7c48f243d51827db5c7a7873cd0"/>
   <project name="platform/vendor/qcom/msm7627a" path="device/qcom/msm7627a" revision="f06bcacc6f13cec895dc5d4c2385c076396194ec"/>
