@@ -859,10 +859,6 @@ XPCWrappedNative::FinishInit()
 {
     AutoJSContext cx;
 
-    // For all WNs, we want to make sure that the expando chain slot starts out
-    // as null.
-    JS_SetReservedSlot(mFlatJSObject, WN_XRAYEXPANDOCHAIN_SLOT, JSVAL_NULL);
-
     // This reference will be released when mFlatJSObject is finalized.
     // Since this reference will push the refcount to 2 it will also root
     // mFlatJSObject;
@@ -1186,7 +1182,6 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCWrappedNativeScope* aOldScope,
 
             // Expandos from other compartments are attached to the target JS object.
             // Copy them over, and let the old ones die a natural death.
-            SetWNExpandoChain(newobj, nullptr);
             if (!XrayUtils::CloneExpandoChain(cx, newobj, flat))
                 return NS_ERROR_FAILURE;
 
