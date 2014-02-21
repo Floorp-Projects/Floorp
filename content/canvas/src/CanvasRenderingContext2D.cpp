@@ -2395,7 +2395,9 @@ CanvasRenderingContext2D::AddHitRegion(const HitRegionOptions& options, ErrorRes
 
   // get the bounds of the current path. They are relative to the canvas
   mgfx::Rect bounds(mPath->GetBounds(mTarget->GetTransform()));
-  nsRect* nsBounds = new nsRect(bounds.x, bounds.y, bounds.width, bounds.height);
+  gfxRect rect(bounds.x, bounds.y, bounds.width, bounds.height);
+  nsRect* nsBounds = new nsRect();
+  *nsBounds = nsLayoutUtils::RoundGfxRectToAppRect(rect, AppUnitsPerCSSPixel());
   options.mControl->SetProperty(nsGkAtoms::hitregion, nsBounds, ReleaseBBoxPropertyValue, true);
 
   // finally, add the region to the list if it has an ID
