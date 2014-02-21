@@ -202,11 +202,11 @@ public class TabsTray extends TwoWayView
         // Updates the selected position in the list so that it will be scrolled to the right place.
         private void updateSelectedPosition() {
             int selected = getPositionForTab(Tabs.getInstance().getSelectedTab());
+            updateSelectedStyle(selected);
+
             if (selected != -1) {
                 TabsTray.this.setSelection(selected);
             }
-
-            updateSelectedStyle(selected);
         }
 
         /**
