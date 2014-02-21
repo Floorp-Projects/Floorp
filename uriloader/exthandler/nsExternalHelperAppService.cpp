@@ -432,14 +432,12 @@ static nsDefaultMimeTypeEntry defaultMimeEntries [] =
   { "application/xhtml+xml", "xhtml" },
   { "application/xhtml+xml", "xht" },
   { TEXT_PLAIN, "txt" },
-#ifdef MOZ_OGG
   { VIDEO_OGG, "ogv" },
   { VIDEO_OGG, "ogg" },
   { APPLICATION_OGG, "ogg" },
   { AUDIO_OGG, "oga" },
 #ifdef MOZ_OPUS
   { AUDIO_OGG, "opus" },
-#endif
 #endif
 #ifdef MOZ_WEBM
   { VIDEO_WEBM, "webm" },
