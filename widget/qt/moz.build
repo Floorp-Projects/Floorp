@@ -4,56 +4,32 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += ['faststartupqt']
-
-EXPORTS += [
-    'nsQtKeyUtils.h',
-]
-
 GENERATED_SOURCES += [
-    'moc_moziqwidget.cpp',
     'moc_mozqwidget.cpp',
     'moc_nsAppShell.cpp',
 ]
 
 SOURCES += [
-    'mozqglwidgetwrapper.cpp',
     'mozqwidget.cpp',
-    'mozSwipeGesture.cpp',
     'nsAppShell.cpp',
     'nsBidiKeyboard.cpp',
     'nsClipboard.cpp',
-    'nsDeviceContextSpecQt.cpp',
-    'nsDragService.cpp',
-    'nsFilePicker.cpp',
     'nsIdleServiceQt.cpp',
     'nsLookAndFeel.cpp',
-    'nsNativeThemeQt.cpp',
-    'nsPrintDialogQt.cpp',
-    'nsPrintOptionsQt.cpp',
-    'nsPrintSettingsQt.cpp',
     'nsQtKeyUtils.cpp',
     'nsScreenManagerQt.cpp',
     'nsScreenQt.cpp',
-    'nsSound.cpp',
     'nsWidgetFactory.cpp',
     'nsWindow.cpp',
 ]
 
-if CONFIG['MOZ_ENABLE_CONTENTMANAGER']:
-    SOURCES += [
-        'nsMFilePicker.cpp',
-    ]
-    GENERATED_SOURCES += [
-        'moc_nsMFilePicker.cpp',
-    ]
 
-if CONFIG[' MOZ_ENABLE_QTMOBILITY']:
+if CONFIG['NS_PRINTING']:
     SOURCES += [
-        'mozqorientationsensorfilter.cpp',
-    ]
-    GENERATED_SOURCES += [
-        'moc_mozqorientationsensorfilter.cpp',
+        'nsDeviceContextSpecQt.cpp',
+        'nsPrintDialogQt.cpp',
+        'nsPrintOptionsQt.cpp',
+        'nsPrintSettingsQt.cpp',
     ]
 
 LIBRARY_NAME = 'widget_qt'
@@ -64,8 +40,6 @@ FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
     '../shared',
-    '/widget/qt/faststartupqt',
-    '/widget/shared',
     '/widget/xpwidgets',
 ]
 

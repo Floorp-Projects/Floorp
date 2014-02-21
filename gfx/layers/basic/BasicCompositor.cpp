@@ -180,7 +180,8 @@ public:
 
   bool ConvertImageToRGB(const SurfaceDescriptor& aImage)
   {
-    YCbCrImageDataDeserializer deserializer(aImage.get_YCbCrImage().data().get<uint8_t>());
+    YCbCrImageDataDeserializer deserializer(aImage.get_YCbCrImage().data().get<uint8_t>(),
+                                            aImage.get_YCbCrImage().data().Size<uint8_t>());
     PlanarYCbCrData data;
     DeserializerToPlanarYCbCrImageData(deserializer, data);
 

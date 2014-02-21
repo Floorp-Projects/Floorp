@@ -442,7 +442,8 @@ DeprecatedTextureHostYCbCrD3D9::UpdateImpl(const SurfaceDescriptor& aImage,
     return;
   }
 
-  YCbCrImageDataDeserializer yuvDeserializer(aImage.get_YCbCrImage().data().get<uint8_t>());
+  YCbCrImageDataDeserializer yuvDeserializer(aImage.get_YCbCrImage().data().get<uint8_t>(),
+                                             aImage.get_YCbCrImage().data().Size<uint8_t>());
 
   mSize = yuvDeserializer.GetYSize();
   IntSize cbCrSize = yuvDeserializer.GetCbCrSize();

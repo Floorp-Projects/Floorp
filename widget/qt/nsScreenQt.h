@@ -8,14 +8,6 @@
 
 #include "nsBaseScreen.h"
 
-#ifdef MOZ_ENABLE_QMSYSTEM2
-namespace MeeGo
-{
-    class QmDisplayState;
-}
-#endif
-
-
 //------------------------------------------------------------------------
 
 class nsScreenQt : public nsBaseScreen
@@ -29,12 +21,6 @@ public:
   NS_IMETHOD GetPixelDepth(int32_t* aPixelDepth);
   NS_IMETHOD GetColorDepth(int32_t* aColorDepth);
 
-#ifdef MOZ_ENABLE_QMSYSTEM2
-protected:
-  virtual void ApplyMinimumBrightness(uint32_t aType) MOZ_OVERRIDE;
-private:
-  MeeGo::QmDisplayState* mDisplayState;
-#endif
 private:
   int mScreen;
 };

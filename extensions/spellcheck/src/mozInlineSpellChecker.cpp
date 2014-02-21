@@ -1947,7 +1947,7 @@ nsresult mozInlineSpellChecker::MouseClick(nsIDOMEvent *aMouseEvent)
 
   // ignore any errors from HandleNavigationEvent as we don't want to prevent 
   // anyone else from seeing this event.
-  uint16_t button;
+  int16_t button;
   mouseEvent->GetButton(&button);
   HandleNavigationEvent(button != 0);
   return NS_OK;

@@ -6,8 +6,8 @@
 
 toolkit = CONFIG['MOZ_WIDGET_TOOLKIT']
 
-if toolkit in ('qt', 'gtk2', 'gtk3'):
-    DIRS += ['unix']
+if toolkit in ('qt'):
+    DIRS += ['qt']
 elif toolkit == 'windows':
     DIRS += ['windows']
 elif toolkit == 'cocoa':

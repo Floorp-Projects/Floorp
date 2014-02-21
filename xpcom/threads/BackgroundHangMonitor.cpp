@@ -62,6 +62,7 @@ private:
   void RunMonitorThread();
 
 public:
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(BackgroundHangManager)
   static StaticRefPtr<BackgroundHangManager> sInstance;
 
   // Lock for access to members of this class
@@ -111,6 +112,7 @@ private:
   const PRThread* mThreadID;
 
 public:
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(BackgroundHangThread)
   static BackgroundHangThread* FindThread();
 
   static void Startup()

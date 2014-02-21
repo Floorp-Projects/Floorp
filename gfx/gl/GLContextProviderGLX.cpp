@@ -8,8 +8,7 @@
 #include <gdk/gdkx.h>
 #define GET_NATIVE_WINDOW(aWidget) GDK_WINDOW_XID((GdkWindow *) aWidget->GetNativeData(NS_NATIVE_WINDOW))
 #elif defined(MOZ_WIDGET_QT)
-#include <QWidget>
-#define GET_NATIVE_WINDOW(aWidget) static_cast<QWidget*>(aWidget->GetNativeData(NS_NATIVE_SHELLWIDGET))->winId()
+#define GET_NATIVE_WINDOW(aWidget) (Window)(aWidget->GetNativeData(NS_NATIVE_SHAREABLE_WINDOW))
 #endif
 
 #include <X11/Xlib.h>

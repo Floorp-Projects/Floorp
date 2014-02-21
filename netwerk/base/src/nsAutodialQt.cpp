@@ -28,7 +28,7 @@ nsAutodial::Init()
 nsresult
 nsAutodial::DialDefault(const char16_t* hostName)
 {
-  if (nsQtNetworkManager::get()->openConnection(QString::fromUtf16(hostName))) {
+  if (nsQtNetworkManager::get()->openConnection(QString::fromUtf16((const ushort*)hostName))) {
     return NS_OK;
   }
 

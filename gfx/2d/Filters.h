@@ -466,6 +466,7 @@ enum UnpremultiplyInputs
 class FilterNode : public RefCounted<FilterNode>
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(FilterMode)
   virtual ~FilterNode() {}
 
   virtual FilterBackend GetBackendType() = 0;

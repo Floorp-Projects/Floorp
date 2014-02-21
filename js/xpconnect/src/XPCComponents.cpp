@@ -2857,6 +2857,18 @@ nsXPCComponents_Utils::SchedulePreciseShrinkingGC(ScheduledGCCallback* aCallback
     return NS_DispatchToMainThread(event);
 }
 
+/* void unlinkGhostWindows(); */
+NS_IMETHODIMP
+nsXPCComponents_Utils::UnlinkGhostWindows()
+{
+#ifdef DEBUG
+    nsWindowMemoryReporter::UnlinkGhostWindows();
+    return NS_OK;
+#else
+    return NS_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
 /* [implicit_jscontext] jsval nondeterministicGetWeakMapKeys(in jsval aMap); */
 NS_IMETHODIMP
 nsXPCComponents_Utils::NondeterministicGetWeakMapKeys(HandleValue aMap,
