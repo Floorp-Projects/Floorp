@@ -103,11 +103,6 @@ public:
   // We will keep these in an alphabetical order to make it easier to see if
   // a method accessing a pref already exists. Just add yours in the list.
 
-  DECL_GFX_PREFS(Live, "gfx.color_management.enablev4",         CMSEnableV4, bool, false);
-  DECL_GFX_PREFS(Live, "gfx.color_management.mode",             CMSMode, int32_t,-1);
-  // The zero default here should match QCMS_INTENT_DEFAULT from qcms.h
-  DECL_GFX_PREFS(Live, "gfx.color_management.rendering_intent", CMSRenderingIntent, int32_t, 0);
-
 public:
   // Manage the singleton:
   static gfxPrefs& One()

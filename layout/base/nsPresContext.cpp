@@ -300,9 +300,6 @@ nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
   mUserFontSet = nullptr;
   mUserFontSetDirty = true;
 
-  // We need to initialize gfxPlatform if it hasn't been already.
-  gfxPlatform::GetPlatform();
-
   // if text perf logging enabled, init stats struct
   PRLogModuleInfo *log = gfxPlatform::GetLog(eGfxLog_textperf);
   if (log && PR_LOG_TEST(log, PR_LOG_WARNING)) {
