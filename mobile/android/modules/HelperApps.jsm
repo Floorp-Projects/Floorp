@@ -42,9 +42,11 @@ var HelperApps =  {
 
   get defaultHtmlHandlers() {
     delete this.defaultHtmlHandlers;
-    let handlers = this.getAppsForUri(Services.io.newURI("http://www.example.com/index.html", null, null));
-
     this.defaultHtmlHandlers = {};
+    let handlers = this.getAppsForUri(Services.io.newURI("http://www.example.com/index.html", null, null), {
+      filterHtml: false
+    });
+
     handlers.forEach(function(app) {
       this.defaultHtmlHandlers[app.name] = app;
     }, this);
