@@ -327,7 +327,6 @@ JavaScriptShared::fromDescriptor(JSContext *cx, Handle<JSPropertyDescriptor> des
                                  PPropertyDescriptor *out)
 {
     out->attrs() = desc.attributes();
-    out->shortid() = desc.shortid();
     if (!toVariant(cx, desc.value(), &out->value()))
         return false;
 
@@ -384,7 +383,6 @@ JavaScriptShared::toDescriptor(JSContext *cx, const PPropertyDescriptor &in,
                                MutableHandle<JSPropertyDescriptor> out)
 {
     out.setAttributes(in.attrs());
-    out.setShortId(in.shortid());
     if (!toValue(cx, in.value(), out.value()))
         return false;
     Rooted<JSObject*> obj(cx);

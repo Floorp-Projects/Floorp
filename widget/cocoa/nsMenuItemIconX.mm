@@ -41,6 +41,7 @@
 #include "nsCocoaUtils.h"
 #include "nsContentUtils.h"
 
+using mozilla::RefPtr;
 static const uint32_t kIconWidth = 16;
 static const uint32_t kIconHeight = 16;
 static const uint32_t kIconBitsPerComponent = 8;

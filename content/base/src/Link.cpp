@@ -217,7 +217,9 @@ void
 Link::SetSearch(const nsAString& aSearch)
 {
   SetSearchInternal(aSearch);
-  UpdateURLSearchParams();
+  if (mSearchParams) {
+    mSearchParams->Invalidate();
+  }
 }
 
 void
@@ -485,7 +487,9 @@ Link::ResetLinkState(bool aNotify, bool aHasHref)
 
   // If we've cached the URI, reset always invalidates it.
   mCachedURI = nullptr;
-  UpdateURLSearchParams();
+  if (mSearchParams) {
+    mSearchParams->Invalidate();
+  }
 
   // Update our state back to the default.
   mLinkState = defaultState;
@@ -585,12 +589,15 @@ Link::SetSearchParams(URLSearchParams* aSearchParams)
     return;
   }
 
-  if (mSearchParams) {
-    mSearchParams->RemoveObserver(this);
-  }
+  if (!aSearchParams->HasURLAssociated()) {
+    MOZ_ASSERT(aSearchParams->IsValid());
 
-  mSearchParams = aSearchParams;
-  mSearchParams->AddObserver(this);
+    mSearchParams = aSearchParams;
+    mSearchParams->SetObserver(this);
+  } else {
+    CreateSearchParamsIfNeeded();
+    mSearchParams->CopyFromURLSearchParams(*aSearchParams);
+  }
 
   nsAutoString search;
   mSearchParams->Serialize(search);
@@ -600,7 +607,7 @@ Link::SetSearchParams(URLSearchParams* aSearchParams)
 void
 Link::URLSearchParamsUpdated()
 {
-  MOZ_ASSERT(mSearchParams);
+  MOZ_ASSERT(mSearchParams && mSearchParams->IsValid());
 
   nsString search;
   mSearchParams->Serialize(search);
@@ -608,11 +615,9 @@ Link::URLSearchParamsUpdated()
 }
 
 void
-Link::UpdateURLSearchParams()
+Link::URLSearchParamsNeedsUpdates()
 {
-  if (!mSearchParams) {
-    return;
-  }
+  MOZ_ASSERT(mSearchParams);
 
   nsAutoCString search;
   nsCOMPtr<nsIURI> uri(GetURI());
@@ -624,7 +629,7 @@ Link::UpdateURLSearchParams()
     }
   }
 
-  mSearchParams->ParseInput(search, this);
+  mSearchParams->ParseInput(search);
 }
 
 void
@@ -632,8 +637,8 @@ Link::CreateSearchParamsIfNeeded()
 {
   if (!mSearchParams) {
     mSearchParams = new URLSearchParams();
-    mSearchParams->AddObserver(this);
-    UpdateURLSearchParams();
+    mSearchParams->SetObserver(this);
+    mSearchParams->Invalidate();
   }
 }
 

@@ -334,13 +334,10 @@ Shape::dump(JSContext *cx, FILE *fp) const
         int first = 1;
         fputs("(", fp);
 #define DUMP_FLAG(name, display) if (flags & name) fputs(&(" " #display)[first], fp), first = 0
-        DUMP_FLAG(HAS_SHORTID, has_shortid);
         DUMP_FLAG(IN_DICTIONARY, in_dictionary);
 #undef  DUMP_FLAG
         fputs(") ", fp);
     }
-
-    fprintf(fp, "shortid %d\n", maybeShortid());
 }
 
 void

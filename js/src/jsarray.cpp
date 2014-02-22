@@ -775,8 +775,7 @@ js::WouldDefinePastNonwritableLength(ThreadSafeContext *cx,
 }
 
 static bool
-array_addProperty(JSContext *cx, HandleObject obj, HandleId id,
-                  MutableHandleValue vp)
+array_addProperty(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp)
 {
     Rooted<ArrayObject*> arr(cx, &obj->as<ArrayObject>());
 
@@ -860,7 +859,7 @@ AddLengthProperty(ExclusiveContext *cx, HandleObject obj)
     JS_ASSERT(!obj->nativeLookup(cx, lengthId));
 
     return JSObject::addProperty(cx, obj, lengthId, array_length_getter, array_length_setter,
-                                 SHAPE_INVALID_SLOT, JSPROP_PERMANENT | JSPROP_SHARED, 0, 0,
+                                 SHAPE_INVALID_SLOT, JSPROP_PERMANENT | JSPROP_SHARED, 0,
                                  /* allowDictionary = */ false);
 }
 
