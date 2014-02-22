@@ -818,7 +818,7 @@ pref("browser.snippets.statsUrl", "https://snippets-stats.mozilla.org/mobile");
 
 // These prefs require a restart to take effect.
 pref("browser.snippets.enabled", true);
-pref("browser.snippets.syncPromo.enabled", false);
+pref("browser.snippets.syncPromo.enabled", true);
 
 #ifdef MOZ_ANDROID_SYNTHAPKS
 // The URL of the APK factory from which we obtain APKs for webapps.
