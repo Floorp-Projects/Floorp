@@ -697,16 +697,22 @@ ICStubCompiler::guardProfilingEnabled(MacroAssembler &masm, Register scratch, La
 
 #ifdef JSGC_GENERATIONAL
 inline bool
-ICStubCompiler::emitPostWriteBarrierSlot(MacroAssembler &masm, Register obj, Register scratch,
-                                         GeneralRegisterSet saveRegs)
+ICStubCompiler::emitPostWriteBarrierSlot(MacroAssembler &masm, Register obj, ValueOperand val,
+                                         Register scratch, GeneralRegisterSet saveRegs)
 {
     Nursery &nursery = cx->runtime()->gcNursery;
 
     Label skipBarrier;
+    masm.branchTestObject(Assembler::NotEqual, val, &skipBarrier);
+
     Label isTenured;
     masm.branchPtr(Assembler::Below, obj, ImmWord(nursery.start()), &isTenured);
     masm.branchPtr(Assembler::Below, obj, ImmWord(nursery.heapEnd()), &skipBarrier);
     masm.bind(&isTenured);
+
+    Register valReg = masm.extractObject(val, scratch);
+    masm.branchPtr(Assembler::Below, valReg, ImmWord(nursery.start()), &skipBarrier);
+    masm.branchPtr(Assembler::AboveOrEqual, valReg, ImmWord(nursery.heapEnd()), &skipBarrier);
 
     // void PostWriteBarrier(JSRuntime *rt, JSObject *obj);
 #ifdef JS_CODEGEN_ARM
@@ -5215,17 +5221,13 @@ ICSetElem_Dense::Compiler::generateStubCode(MacroAssembler &masm)
     EmitPreBarrier(masm, element, MIRType_Value);
     masm.storeValue(tmpVal, element);
     regs.add(key);
-    regs.add(tmpVal);
 #ifdef JSGC_GENERATIONAL
-    Label skipBarrier;
-    masm.branchTestObject(Assembler::NotEqual, tmpVal, &skipBarrier);
     {
         Register r = regs.takeAny();
         GeneralRegisterSet saveRegs;
-        emitPostWriteBarrierSlot(masm, obj, r, saveRegs);
+        emitPostWriteBarrierSlot(masm, obj, tmpVal, r, saveRegs);
         regs.add(r);
     }
-    masm.bind(&skipBarrier);
 #endif
     EmitReturnFromIC(masm);
 
@@ -5402,17 +5404,13 @@ ICSetElemDenseAddCompiler::generateStubCode(MacroAssembler &masm)
     masm.loadValue(valueAddr, tmpVal);
     masm.storeValue(tmpVal, element);
     regs.add(key);
-    regs.add(tmpVal);
 #ifdef JSGC_GENERATIONAL
-    Label skipBarrier;
-    masm.branchTestObject(Assembler::NotEqual, tmpVal, &skipBarrier);
     {
         Register r = regs.takeAny();
         GeneralRegisterSet saveRegs;
-        emitPostWriteBarrierSlot(masm, obj, r, saveRegs);
+        emitPostWriteBarrierSlot(masm, obj, tmpVal, r, saveRegs);
         regs.add(r);
     }
-    masm.bind(&skipBarrier);
 #endif
     EmitReturnFromIC(masm);
 
@@ -7397,16 +7395,13 @@ ICSetProp_Native::Compiler::generateStubCode(MacroAssembler &masm)
     if (holderReg != objReg)
         regs.add(holderReg);
 #ifdef JSGC_GENERATIONAL
-    Label skipBarrier;
-    masm.branchTestObject(Assembler::NotEqual, R1, &skipBarrier);
     {
         Register scr = regs.takeAny();
         GeneralRegisterSet saveRegs;
         saveRegs.add(R1);
-        emitPostWriteBarrierSlot(masm, objReg, scr, saveRegs);
+        emitPostWriteBarrierSlot(masm, objReg, R1, scr, saveRegs);
         regs.add(scr);
     }
-    masm.bind(&skipBarrier);
 #endif
 
     // The RHS has to be in R0.
@@ -7522,15 +7517,12 @@ ICSetPropNativeAddCompiler::generateStubCode(MacroAssembler &masm)
         regs.add(holderReg);
 
 #ifdef JSGC_GENERATIONAL
-    Label skipBarrier;
-    masm.branchTestObject(Assembler::NotEqual, R1, &skipBarrier);
     {
         Register scr = regs.takeAny();
         GeneralRegisterSet saveRegs;
         saveRegs.add(R1);
-        emitPostWriteBarrierSlot(masm, objReg, scr, saveRegs);
+        emitPostWriteBarrierSlot(masm, objReg, R1, scr, saveRegs);
     }
-    masm.bind(&skipBarrier);
 #endif
 
     // The RHS has to be in R0.
