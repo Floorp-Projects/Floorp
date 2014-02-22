@@ -1329,13 +1329,6 @@ js_GetClassPrototype(js::ExclusiveContext *cx, JSProtoKey key,
                      js::MutableHandleObject objp);
 
 /*
- * Determine if the given object is a prototype for a standard class. If so,
- * return the associated JSProtoKey. If not, return JSProto_Null.
- */
-extern JSProtoKey
-js_IdentifyClassPrototype(JSObject *obj);
-
-/*
  * Property-lookup-based access to interface and prototype objects for classes.
  * If the class is built-in (and has a non-null JSProtoKey), these forward to
  * js_GetClass{Object,Prototype}.
