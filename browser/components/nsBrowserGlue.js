@@ -83,7 +83,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "BrowserUITelemetry",
                                   "resource:///modules/BrowserUITelemetry.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "AsyncShutdown",
-                                  "resource:///modules/AsyncShutdown.jsm");
+                                  "resource://gre/modules/AsyncShutdown.jsm");
 
 const PREF_PLUGINS_NOTIFYUSER = "plugins.update.notifyUser";
 const PREF_PLUGINS_UPDATEURL  = "plugins.update.url";
