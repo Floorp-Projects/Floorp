@@ -54,6 +54,9 @@ public class HomeBanner extends LinearLayout
     // switches back to the default page.
     private boolean mUserSwipedDown = false;
 
+    private final TextView mTextView;
+    private final ImageView mIconView;
+
     public HomeBanner(Context context) {
         this(context, null);
     }
@@ -62,6 +65,9 @@ public class HomeBanner extends LinearLayout
         super(context, attrs);
 
         LayoutInflater.from(context).inflate(R.layout.home_banner, this);
+
+        mTextView = (TextView) findViewById(R.id.text);
+        mIconView = (ImageView) findViewById(R.id.icon);
     }
 
     @Override
@@ -115,13 +121,12 @@ public class HomeBanner extends LinearLayout
 
             // Display styled text from an HTML string.
             final Spanned text = Html.fromHtml(message.getString("text"));
-            final TextView textView = (TextView) findViewById(R.id.text);
 
             // Update the banner message on the UI thread.
             ThreadUtils.postToUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    textView.setText(text);
+                    mTextView.setText(text);
                     setVisibility(VISIBLE);
                     animateUp();
                 }
@@ -132,28 +137,20 @@ public class HomeBanner extends LinearLayout
         }
 
         final String iconURI = message.optString("iconURI");
-        final ImageView iconView = (ImageView) findViewById(R.id.icon);
-
-        if (TextUtils.isEmpty(iconURI)) {
-            // Hide the image view if we don't have an icon to show.
-            iconView.setVisibility(View.GONE);
-            return;
-        }
 
         BitmapUtils.getDrawable(getContext(), iconURI, new BitmapUtils.BitmapLoader() {
             @Override
             public void onBitmapFound(final Drawable d) {
-                // Bail if getDrawable doesn't find anything.
-                if (d == null) {
-                    iconView.setVisibility(View.GONE);
-                    return;
-                }
-
                 // Update the banner icon on the UI thread.
                 ThreadUtils.postToUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        iconView.setImageDrawable(d);
+                        // Hide the image view if we don't have an icon to show.
+                        if (d == null) {
+                            mIconView.setVisibility(View.GONE);
+                        } else {
+                            mIconView.setImageDrawable(d);
+                        }
                     }
                 });
             }
@@ -177,8 +174,7 @@ public class HomeBanner extends LinearLayout
     private void animateUp() {
         // Check to make sure that message has been received and the banner has been enabled.
         // Necessary to avoid race conditions between show() and handleMessage() calls.
-        TextView textView = (TextView) findViewById(R.id.text);
-        if (!mEnabled || TextUtils.isEmpty(textView.getText()) || mUserSwipedDown) {
+        if (!mEnabled || TextUtils.isEmpty(mTextView.getText()) || mUserSwipedDown) {
             return;
         }
 
