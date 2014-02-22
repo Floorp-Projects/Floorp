@@ -40,8 +40,8 @@ class ProcessHandlerMixin(object):
     :param ignore_children: causes system to ignore child processes when True, defaults to False (which tracks child processes).
     :param kill_on_timeout: when True, the process will be killed when a timeout is reached. When False, the caller is responsible for killing the process. Failure to do so could cause a call to wait() to hang indefinitely. (Defaults to True.)
     :param processOutputLine: function or list of functions to be called for each line of output produced by the process (defaults to None).
-    :param onTimeout: function to be called when the process times out.
-    :param onFinish: function to be called when the process terminates normally without timing out.
+    :param onTimeout: function or list of functions to be called when the process times out.
+    :param onFinish: function or list of functions to be called when the process terminates normally without timing out.
     :param kwargs: additional keyword args to pass directly into Popen.
 
     NOTE: Child processes will be tracked by default.  If for any reason
@@ -613,7 +613,11 @@ falling back to not using job objects for managing child processes"""
         if callable(processOutputLine):
             processOutputLine = [processOutputLine]
         self.processOutputLineHandlers = list(processOutputLine)
+        if callable(onTimeout):
+            onTimeout = [onTimeout]
         self.onTimeoutHandlers = list(onTimeout)
+        if callable(onFinish):
+            onFinish = [onFinish]
         self.onFinishHandlers = list(onFinish)
 
         # It is common for people to pass in the entire array with the cmd and

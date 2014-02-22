@@ -67,7 +67,6 @@ struct PPropertyDescriptor
 {
     uint64_t    objId;
     uint32_t    attrs;
-    uint32_t    shortid;
     JSVariant   value;
 
     // How to interpret these values depends on whether JSPROP_GETTER/SETTER

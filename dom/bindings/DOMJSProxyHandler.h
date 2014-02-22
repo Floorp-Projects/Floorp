@@ -21,8 +21,7 @@ namespace dom {
 class DOMClass;
 
 enum {
-  JSPROXYSLOT_EXPANDO = 0,
-  JSPROXYSLOT_XRAY_EXPANDO
+  JSPROXYSLOT_EXPANDO = 0
 };
 
 template<typename T> struct Prefable;
@@ -146,7 +145,6 @@ FillPropertyDescriptor(JS::MutableHandle<JSPropertyDescriptor> desc, JSObject* o
   desc.setAttributes((readonly ? JSPROP_READONLY : 0) | JSPROP_ENUMERATE);
   desc.setGetter(nullptr);
   desc.setSetter(nullptr);
-  desc.setShortId(0);
 }
 
 inline void
@@ -166,7 +164,6 @@ FillPropertyDescriptor(JS::MutableHandle<JSPropertyDescriptor> desc,
   desc.setAttributes(attributes);
   desc.setGetter(nullptr);
   desc.setSetter(nullptr);
-  desc.setShortId(0);
 }
 
 } // namespace dom

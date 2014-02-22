@@ -143,7 +143,7 @@ Bindings::initWithTemporaryStorage(ExclusiveContext *cx, InternalBindingsHandle 
         unsigned attrs = JSPROP_PERMANENT |
                          JSPROP_ENUMERATE |
                          (bi->kind() == CONSTANT ? JSPROP_READONLY : 0);
-        StackShape child(base, NameToId(bi->name()), slot, attrs, 0, 0);
+        StackShape child(base, NameToId(bi->name()), slot, attrs, 0);
 
         shape = cx->compartment()->propertyTree.getChild(cx, shape, child);
         if (!shape)

@@ -139,8 +139,8 @@ public:
                                  CSSToScreenScale& aZoom,
                                  bool aDrawingCritical);
 
-#ifdef DEBUG
   bool InConstruction() { return mPhase == PHASE_CONSTRUCTION; }
+#ifdef DEBUG
   bool InDrawing() { return mPhase == PHASE_DRAWING; }
   bool InForward() { return mPhase == PHASE_FORWARD; }
 #endif

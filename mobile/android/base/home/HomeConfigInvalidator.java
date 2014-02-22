@@ -17,6 +17,7 @@ import static org.mozilla.gecko.home.HomeConfig.createBuiltinPanelConfig;
 
 import android.content.Context;
 import android.os.Handler;
+import android.text.TextUtils;
 import android.util.Log;
 
 import org.json.JSONException;
@@ -38,22 +39,33 @@ public class HomeConfigInvalidator implements GeckoEventListener {
     private static final int PANEL_INFO_TIMEOUT_MSEC = 1000;
 
     private static final String EVENT_HOMEPANELS_INSTALL = "HomePanels:Install";
-    private static final String EVENT_HOMEPANELS_REMOVE = "HomePanels:Remove";
-    private static final String EVENT_HOMEPANELS_REFRESH = "HomePanels:Refresh";
+    private static final String EVENT_HOMEPANELS_UNINSTALL = "HomePanels:Uninstall";
+    private static final String EVENT_HOMEPANELS_UPDATE = "HomePanels:Update";
 
     private static final String JSON_KEY_PANEL = "panel";
+    private static final String JSON_KEY_PANEL_ID = "id";
 
     private enum ChangeType {
-        REMOVE,
+        UNINSTALL,
         INSTALL,
+        UPDATE,
         REFRESH
+    }
+
+    private enum InvalidationMode {
+        DELAYED,
+        IMMEDIATE
     }
 
     private static class ConfigChange {
         private final ChangeType type;
-        private final PanelConfig target;
+        private final Object target;
 
-        public ConfigChange(ChangeType type, PanelConfig target) {
+        public ConfigChange(ChangeType type) {
+            this(type, null);
+        }
+
+        public ConfigChange(ChangeType type, Object target) {
             this.type = type;
             this.target = target;
         }
@@ -74,33 +86,44 @@ public class HomeConfigInvalidator implements GeckoEventListener {
         mHomeConfig = HomeConfig.getDefault(context);
 
         GeckoAppShell.getEventDispatcher().registerEventListener(EVENT_HOMEPANELS_INSTALL, this);
-        GeckoAppShell.getEventDispatcher().registerEventListener(EVENT_HOMEPANELS_REMOVE, this);
-        GeckoAppShell.getEventDispatcher().registerEventListener(EVENT_HOMEPANELS_REFRESH, this);
+        GeckoAppShell.getEventDispatcher().registerEventListener(EVENT_HOMEPANELS_UNINSTALL, this);
+        GeckoAppShell.getEventDispatcher().registerEventListener(EVENT_HOMEPANELS_UPDATE, this);
     }
 
-    public void refreshAll() {
-        handlePanelRefresh(null);
+    public void onLocaleReady(final String locale) {
+        ThreadUtils.getBackgroundHandler().post(new Runnable() {
+            @Override
+            public void run() {
+                final String configLocale = mHomeConfig.getLocale();
+                if (configLocale == null || !configLocale.equals(locale)) {
+                    handleLocaleChange();
+                }
+            }
+        });
     }
 
     @Override
     public void handleMessage(String event, JSONObject message) {
         try {
-            final JSONObject json = message.getJSONObject(JSON_KEY_PANEL);
-            final PanelConfig panelConfig = new PanelConfig(json);
-
             if (event.equals(EVENT_HOMEPANELS_INSTALL)) {
                 Log.d(LOGTAG, EVENT_HOMEPANELS_INSTALL);
-                handlePanelInstall(panelConfig);
-            } else if (event.equals(EVENT_HOMEPANELS_REMOVE)) {
-                Log.d(LOGTAG, EVENT_HOMEPANELS_REMOVE);
-                handlePanelRemove(panelConfig);
-            } else if (event.equals(EVENT_HOMEPANELS_REFRESH)) {
-                Log.d(LOGTAG, EVENT_HOMEPANELS_REFRESH);
-                handlePanelRefresh(panelConfig);
+                handlePanelInstall(createPanelConfigFromMessage(message));
+            } else if (event.equals(EVENT_HOMEPANELS_UNINSTALL)) {
+                Log.d(LOGTAG, EVENT_HOMEPANELS_UNINSTALL);
+                final String panelId = message.getString(JSON_KEY_PANEL_ID);
+                handlePanelUninstall(panelId);
+            } else if (event.equals(EVENT_HOMEPANELS_UPDATE)) {
+                Log.d(LOGTAG, EVENT_HOMEPANELS_UPDATE);
+                handlePanelUpdate(createPanelConfigFromMessage(message));
             }
         } catch (Exception e) {
             Log.e(LOGTAG, "Failed to handle event " + event, e);
         }
+    }
+
+    private PanelConfig createPanelConfigFromMessage(JSONObject message) throws JSONException {
+        final JSONObject json = message.getJSONObject(JSON_KEY_PANEL);
+        return new PanelConfig(json);
     }
 
     /**
@@ -110,42 +133,54 @@ public class HomeConfigInvalidator implements GeckoEventListener {
         mPendingChanges.offer(new ConfigChange(ChangeType.INSTALL, panelConfig));
         Log.d(LOGTAG, "handlePanelInstall: " + mPendingChanges.size());
 
-        scheduleInvalidation();
+        scheduleInvalidation(InvalidationMode.DELAYED);
     }
 
     /**
      * Runs in the gecko thread.
      */
-    private void handlePanelRemove(PanelConfig panelConfig) {
-        mPendingChanges.offer(new ConfigChange(ChangeType.REMOVE, panelConfig));
-        Log.d(LOGTAG, "handlePanelRemove: " + mPendingChanges.size());
+    private void handlePanelUninstall(String panelId) {
+        mPendingChanges.offer(new ConfigChange(ChangeType.UNINSTALL, panelId));
+        Log.d(LOGTAG, "handlePanelUninstall: " + mPendingChanges.size());
 
-        scheduleInvalidation();
+        scheduleInvalidation(InvalidationMode.DELAYED);
     }
 
     /**
-     * Schedules a panel refresh in HomeConfig. Runs in the gecko thread.
-     *
-     * @param panelConfig the target PanelConfig instance or NULL to refresh
-     *                    all HomeConfig entries.
+     * Runs in the gecko thread.
      */
-    private void handlePanelRefresh(PanelConfig panelConfig) {
-        mPendingChanges.offer(new ConfigChange(ChangeType.REFRESH, panelConfig));
-        Log.d(LOGTAG, "handlePanelRefresh: " + mPendingChanges.size());
+    private void handlePanelUpdate(PanelConfig panelConfig) {
+        mPendingChanges.offer(new ConfigChange(ChangeType.UPDATE, panelConfig));
+        Log.d(LOGTAG, "handlePanelUpdate: " + mPendingChanges.size());
 
-        scheduleInvalidation();
+        scheduleInvalidation(InvalidationMode.DELAYED);
+    }
+
+    /**
+     * Runs in the background thread.
+     */
+    private void handleLocaleChange() {
+        mPendingChanges.offer(new ConfigChange(ChangeType.REFRESH));
+        Log.d(LOGTAG, "handleLocaleChange: " + mPendingChanges.size());
+
+        scheduleInvalidation(InvalidationMode.IMMEDIATE);
     }
 
     /**
      * Runs in the gecko or main thread.
      */
-    private void scheduleInvalidation() {
+    private void scheduleInvalidation(InvalidationMode mode) {
         final Handler handler = ThreadUtils.getBackgroundHandler();
 
         handler.removeCallbacks(mInvalidationRunnable);
-        handler.postDelayed(mInvalidationRunnable, INVALIDATION_DELAY_MSEC);
 
-        Log.d(LOGTAG, "scheduleInvalidation: scheduled new invalidation");
+        if (mode == InvalidationMode.IMMEDIATE) {
+            handler.post(mInvalidationRunnable);
+        } else {
+            handler.postDelayed(mInvalidationRunnable, INVALIDATION_DELAY_MSEC);
+        }
+
+        Log.d(LOGTAG, "scheduleInvalidation: scheduled new invalidation: " + mode);
     }
 
     /**
@@ -164,43 +199,59 @@ public class HomeConfigInvalidator implements GeckoEventListener {
         return false;
     }
 
+    private PanelConfig findPanelConfigWithId(List<PanelConfig> panelConfigs, String panelId) {
+        for (PanelConfig panelConfig : panelConfigs) {
+            if (panelConfig.getId().equals(panelId)) {
+                return panelConfig;
+            }
+        }
+
+        return null;
+    }
+
     /**
      * Runs in the background thread.
      */
     private List<PanelConfig> executePendingChanges(List<PanelConfig> panelConfigs) {
-        boolean shouldRefreshAll = false;
+        boolean shouldRefresh = false;
 
         while (!mPendingChanges.isEmpty()) {
             final ConfigChange pendingChange = mPendingChanges.poll();
-            final PanelConfig panelConfig = pendingChange.target;
 
             switch (pendingChange.type) {
-                case REMOVE:
-                    if (panelConfigs.remove(panelConfig)) {
+                case UNINSTALL: {
+                    final String panelId = (String) pendingChange.target;
+                    final PanelConfig panelConfig = findPanelConfigWithId(panelConfigs, panelId);
+                    if (panelConfig != null && panelConfigs.remove(panelConfig)) {
                         Log.d(LOGTAG, "executePendingChanges: removed panel " + panelConfig.getId());
                     }
                     break;
+                }
 
-                case INSTALL:
+                case INSTALL: {
+                    final PanelConfig panelConfig = (PanelConfig) pendingChange.target;
                     if (!replacePanelConfig(panelConfigs, panelConfig)) {
                         panelConfigs.add(panelConfig);
                         Log.d(LOGTAG, "executePendingChanges: added panel " + panelConfig.getId());
                     }
                     break;
+                }
 
-                case REFRESH:
-                    if (panelConfig != null) {
-                        if (!replacePanelConfig(panelConfigs, panelConfig)) {
-                            Log.w(LOGTAG, "Tried to refresh non-existing panel " + panelConfig.getId());
-                        }
-                    } else {
-                        shouldRefreshAll = true;
+                case UPDATE: {
+                    final PanelConfig panelConfig = (PanelConfig) pendingChange.target;
+                    if (!replacePanelConfig(panelConfigs, panelConfig)) {
+                        Log.w(LOGTAG, "Tried to update non-existing panel " + panelConfig.getId());
                     }
                     break;
+                }
+
+                case REFRESH: {
+                    shouldRefresh = true;
+                }
             }
         }
 
-        if (shouldRefreshAll) {
+        if (shouldRefresh) {
             return executeRefresh(panelConfigs);
         } else {
             return panelConfigs;

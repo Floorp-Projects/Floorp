@@ -2901,7 +2901,6 @@ CopyProperty(JSContext *cx, HandleObject obj, HandleObject referent, HandleId id
 {
     RootedShape shape(cx);
     Rooted<PropertyDescriptor> desc(cx);
-    unsigned propFlags = 0;
     RootedObject obj2(cx);
 
     objp.set(nullptr);
@@ -2924,8 +2923,6 @@ CopyProperty(JSContext *cx, HandleObject obj, HandleObject referent, HandleId id
         desc.setSetter(shape->setter());
         if (!desc.setter() && !desc.hasSetterObject())
             desc.setSetter(JS_StrictPropertyStub);
-        desc.setShortId(shape->shortid());
-        propFlags = shape->getFlags();
     } else if (referent->is<ProxyObject>()) {
         if (!Proxy::getOwnPropertyDescriptor(cx, referent, id, &desc, 0))
             return false;
@@ -2946,12 +2943,11 @@ CopyProperty(JSContext *cx, HandleObject obj, HandleObject referent, HandleId id
         desc.attributesRef() &= JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT;
         desc.setGetter(JS_PropertyStub);
         desc.setSetter(JS_StrictPropertyStub);
-        desc.setShortId(0);
     }
 
     objp.set(obj);
     return DefineNativeProperty(cx, obj, id, desc.value(), desc.getter(), desc.setter(),
-                                desc.attributes(), propFlags, desc.shortid());
+                                desc.attributes(), 0);
 }
 
 static bool

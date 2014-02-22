@@ -833,12 +833,13 @@ ToDisassemblySource(JSContext *cx, HandleValue v, JSAutoByteString *bytes)
     if (!JSVAL_IS_PRIMITIVE(v)) {
         JSObject *obj = JSVAL_TO_OBJECT(v);
         if (obj->is<BlockObject>()) {
+            Rooted<BlockObject*> block(cx, &obj->as<BlockObject>());
             char *source = JS_sprintf_append(nullptr, "depth %d {",
-                                             obj->as<BlockObject>().stackDepth());
+                                             block->stackDepth());
             if (!source)
                 return false;
 
-            Shape::Range<CanGC> r(cx, obj->lastProperty());
+            Shape::Range<CanGC> r(cx, block->lastProperty());
 
             while (!r.empty()) {
                 Rooted<Shape*> shape(cx, &r.front());
@@ -852,7 +853,8 @@ ToDisassemblySource(JSContext *cx, HandleValue v, JSAutoByteString *bytes)
 
                 r.popFront();
                 source = JS_sprintf_append(source, "%s: %d%s",
-                                           bytes.ptr(), shape->shortid(),
+                                           bytes.ptr(),
+                                           block->shapeToIndex(*shape),
                                            !r.empty() ? ", " : "");
                 if (!source)
                     return false;
@@ -1649,10 +1651,10 @@ ExpressionDecompiler::findLetVar(jsbytecode *pc, uint32_t depth)
         StaticBlockObject &block = chain->as<StaticBlockObject>();
         uint32_t blockDepth = block.stackDepth();
         uint32_t blockCount = block.slotCount();
-        if (uint32_t(depth - blockDepth) < uint32_t(blockCount)) {
+        if (depth - blockDepth < blockCount) {
             for (Shape::Range<NoGC> r(block.lastProperty()); !r.empty(); r.popFront()) {
                 const Shape &shape = r.front();
-                if (shape.shortid() == int(depth - blockDepth))
+                if (block.shapeToIndex(shape) == depth - blockDepth)
                     return JSID_TO_ATOM(shape.propid());
             }
         }

@@ -53,7 +53,6 @@ class GenericRefCounted : public GenericRefCountedBase
 
   public:
     virtual void AddRef() {
-      MOZ_ASSERT(refCnt >= 0);
       ++refCnt;
     }
 
@@ -67,14 +66,14 @@ class GenericRefCounted : public GenericRefCountedBase
       }
     }
 
-    int refCount() const { return refCnt; }
+    MozRefCountType refCount() const { return refCnt; }
     bool hasOneRef() const {
       MOZ_ASSERT(refCnt > 0);
       return refCnt == 1;
     }
 
   private:
-    typename Conditional<Atomicity == AtomicRefCount, Atomic<int>, int>::Type refCnt;
+    typename Conditional<Atomicity == AtomicRefCount, Atomic<MozRefCountType>, MozRefCountType>::Type refCnt;
 };
 
 } // namespace detail
