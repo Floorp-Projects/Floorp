@@ -41,15 +41,36 @@ public final class BitmapUtils {
         public void onBitmapFound(Drawable d);
     }
 
+    private static void runOnBitmapFoundOnUiThread(final BitmapLoader loader, final Drawable d) {
+        if (ThreadUtils.isOnUiThread()) {
+            loader.onBitmapFound(d);
+            return;
+        }
+
+        ThreadUtils.postToUiThread(new Runnable() {
+            @Override
+            public void run() {
+                loader.onBitmapFound(d);
+            }
+        });
+    }
+
+    /**
+     * Attempts to find a drawable associated with a given string, using its URI scheme to determine
+     * how to load the drawable. The BitmapLoader's `onBitmapFound` method is always called, and
+     * will be called with `null` if no drawable is found.
+     *
+     * The BitmapLoader `onBitmapFound` method always runs on the UI thread.
+     */
     public static void getDrawable(final Context context, final String data, final BitmapLoader loader) {
         if (TextUtils.isEmpty(data)) {
-            loader.onBitmapFound(null);
+            runOnBitmapFoundOnUiThread(loader, null);
             return;
         }
 
         if (data.startsWith("data")) {
             BitmapDrawable d = new BitmapDrawable(context.getResources(), getBitmapFromDataURI(data));
-            loader.onBitmapFound(d);
+            runOnBitmapFoundOnUiThread(loader, d);
             return;
         }
 
@@ -95,7 +116,7 @@ public final class BitmapUtils {
 
             try {
                 Drawable d = context.getPackageManager().getApplicationIcon(resource);
-                loader.onBitmapFound(d);
+                runOnBitmapFoundOnUiThread(loader, d);
             } catch(Exception ex) { }
 
             return;
@@ -106,11 +127,11 @@ public final class BitmapUtils {
             int id = getResource(imageUri, R.drawable.ic_status_logo);
             Drawable d = context.getResources().getDrawable(id);
 
-            loader.onBitmapFound(d);
+            runOnBitmapFoundOnUiThread(loader, d);
             return;
         }
 
-        loader.onBitmapFound(null);
+        runOnBitmapFoundOnUiThread(loader, null);
     }
 
     public static Bitmap decodeByteArray(byte[] bytes) {
