@@ -18,7 +18,7 @@
 // from any thread after that first call.
 
 // To register a preference, you need to add a line in this file using
-// the DECL_GFX_PREFS macro.
+// the DECL_GFX_PREF macro.
 //
 // Update argument controls whether we read the preference value and save it
 // or connect with a callback.  See UpdatePolicy enum below.
@@ -28,7 +28,7 @@
 // Default is the default value for the preference.
 //
 // For example this line in the .h:
-//   DECL_GFX_PREFS(Once,"layers.dump",LayersDump,bool,false);
+//   DECL_GFX_PREF(Once,"layers.dump",LayersDump,bool,false);
 // means that you can call
 //   bool var = gfxPrefs::LayersDump();
 // from any thread, but that you will only get the preference value of
@@ -36,7 +36,7 @@
 // was not set, the default would be false.
 //
 // In another example, this line in the .h:
-//   DECL_GFX_PREFS(Live,"gl.msaa-level",MSAALevel,uint32_t,2);
+//   DECL_GFX_PREF(Live,"gl.msaa-level",MSAALevel,uint32_t,2);
 // means that every time you call
 //   uint32_t var = gfxPrefs::MSAALevel();
 // from any thread, you will get the most up to date preference value of
@@ -51,7 +51,7 @@
 // values changing mid execution, and if you're using those preferences
 // in any setup and initialization, you may need to do extra work.
 
-#define DECL_GFX_PREFS(Update, Pref, Name, Type, Default)                     \
+#define DECL_GFX_PREF(Update, Pref, Name, Type, Default)                     \
 public:                                                                       \
 static Type Name() { MOZ_ASSERT(Exists()); return One().mPref##Name.mValue; } \
 private:                                                                      \
@@ -99,14 +99,18 @@ private:
   };
 
 public:
-  // This is where DECL_GFX_PREFS for each of the preferences should go.
+  // This is where DECL_GFX_PREF for each of the preferences should go.
   // We will keep these in an alphabetical order to make it easier to see if
   // a method accessing a pref already exists. Just add yours in the list.
+
+  DECL_GFX_PREF(Once, "gfx.work-around-driver-bugs",           WorkAroundDriverBugs, bool, true);
+
+  DECL_GFX_PREF(Live, "gl.msaa-level",                         MSAALevel, uint32_t, 2);
 
 public:
   // Manage the singleton:
   static gfxPrefs& One()
-  { 
+  {
     if (!sInstance) {
       sInstance = new gfxPrefs;
     }
@@ -133,6 +137,6 @@ private:
   gfxPrefs& operator=(const gfxPrefs&) MOZ_DELETE;
 };
 
-#undef DECL_GFX_PREFS /* Don't need it outside of this file */
+#undef DECL_GFX_PREF /* Don't need it outside of this file */
 
 #endif /* GFX_PREFS_H */

@@ -455,8 +455,6 @@ gfxPlatform::Init()
     gPlatform->mOrientationSyncPrefsObserver = new OrientationSyncPrefsObserver();
     Preferences::AddStrongObserver(gPlatform->mOrientationSyncPrefsObserver, "layers.orientation.sync.timeout");
 
-    gPlatform->mWorkAroundDriverBugs = Preferences::GetBool("gfx.work-around-driver-bugs", true);
-
     mozilla::Preferences::AddBoolVarCache(&gPlatform->mWidgetUpdateFlashing,
                                           "nglayout.debug.widget_update_flashing");
 
