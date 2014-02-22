@@ -640,7 +640,7 @@ GlobalWorkerThreadState::finishParseTask(JSContext *maybecx, JSRuntime *rt, void
         if (!proto.isObject())
             continue;
 
-        JSProtoKey key = js_IdentifyClassPrototype(proto.toObject());
+        JSProtoKey key = JS::IdentifyStandardPrototype(proto.toObject());
         if (key == JSProto_Null)
             continue;
 
