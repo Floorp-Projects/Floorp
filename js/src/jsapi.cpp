@@ -1352,13 +1352,6 @@ JS_GetClassPrototype(JSContext *cx, JSProtoKey key, MutableHandleObject objp)
     return js_GetClassPrototype(cx, key, objp);
 }
 
-JS_PUBLIC_API(JSProtoKey)
-JS_IdentifyClassPrototype(JSObject *obj)
-{
-    JS_ASSERT(!obj->is<CrossCompartmentWrapperObject>());
-    return js_IdentifyClassPrototype(obj);
-}
-
 extern JS_PUBLIC_API(JSProtoKey)
 JS_IdToProtoKey(JSContext *cx, HandleId id)
 {
