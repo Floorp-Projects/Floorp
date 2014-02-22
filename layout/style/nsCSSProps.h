@@ -545,6 +545,7 @@ public:
   static const int32_t kOutlineColorKTable[];
   static const int32_t kOverflowKTable[];
   static const int32_t kOverflowSubKTable[];
+  static const int32_t kOverflowClipBoxKTable[];
   static const int32_t kPageBreakKTable[];
   static const int32_t kPageBreakInsideKTable[];
   static const int32_t kPageMarksKTable[];
