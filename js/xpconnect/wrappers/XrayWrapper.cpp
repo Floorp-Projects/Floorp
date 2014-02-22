@@ -884,6 +884,25 @@ XrayTraits::resolveOwnProperty(JSContext *cx, Wrapper &jsWrapper,
         desc.object().set(wrapper);
         return true;
     }
+
+    // Handle .wrappedJSObject for subsuming callers. This should move once we
+    // sort out own-ness for the holder.
+    if (id == GetRTIdByIndex(cx, XPCJSRuntime::IDX_WRAPPED_JSOBJECT) &&
+        AccessCheck::wrapperSubsumes(wrapper))
+    {
+        if (!JS_AlreadyHasOwnPropertyById(cx, holder, id, &found))
+            return false;
+        if (!found && !JS_DefinePropertyById(cx, holder, id, UndefinedValue(),
+                                             wrappedJSObject_getter, nullptr,
+                                             JSPROP_ENUMERATE | JSPROP_SHARED)) {
+            return false;
+        }
+        if (!JS_GetPropertyDescriptorById(cx, holder, id, 0, desc))
+            return false;
+        desc.object().set(wrapper);
+        return true;
+    }
+
     return true;
 }
 
@@ -1457,20 +1476,6 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, HandleObject wra
 
     if (!holder)
         return false;
-
-    // Only chrome wrappers and same-origin xrays (used by jetpack sandboxes)
-    // get .wrappedJSObject. We can check this by determining if the compartment
-    // of the wrapper subsumes that of the wrappee.
-    XPCJSRuntime* rt = nsXPConnect::GetRuntimeInstance();
-    if (AccessCheck::wrapperSubsumes(wrapper) &&
-        id == rt->GetStringID(XPCJSRuntime::IDX_WRAPPED_JSOBJECT)) {
-        desc.object().set(wrapper);
-        desc.setAttributes(JSPROP_ENUMERATE|JSPROP_SHARED);
-        desc.setGetter(wrappedJSObject_getter);
-        desc.setSetter(nullptr);
-        desc.value().set(JSVAL_VOID);
-        return true;
-    }
 
     // Ordering is important here.
     //
