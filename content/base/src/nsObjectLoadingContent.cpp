@@ -241,6 +241,16 @@ public:
     MOZ_ASSERT(aTarget);
   }
 
+  nsSimplePluginEvent(nsIContent* aTarget,
+                      nsIDocument* aDocument,
+                      const nsAString& aEvent)
+    : mTarget(aTarget)
+    , mDocument(aDocument)
+    , mEvent(aEvent)
+  {
+    MOZ_ASSERT(aTarget && aDocument);
+  }
+
   ~nsSimplePluginEvent() {}
 
   NS_IMETHOD Run();
@@ -772,7 +782,7 @@ nsObjectLoadingContent::InstantiatePluginInstance(bool aIsLoading)
   nsCOMPtr<nsIContent> thisContent =
     do_QueryInterface(static_cast<nsIImageLoadingContent *>(this));
 
-  nsIDocument* doc = thisContent->GetCurrentDoc();
+  nsCOMPtr<nsIDocument> doc = thisContent->GetCurrentDoc();
   if (!doc || !InActiveDocument(thisContent)) {
     NS_ERROR("Shouldn't be calling "
              "InstantiatePluginInstance without an active document");
@@ -894,8 +904,10 @@ nsObjectLoadingContent::InstantiatePluginInstance(bool aIsLoading)
     }
   }
 
-  nsCOMPtr<nsIRunnable> ev = new nsSimplePluginEvent(thisContent,
-    NS_LITERAL_STRING("PluginInstantiated"));
+  nsCOMPtr<nsIRunnable> ev = \
+    new nsSimplePluginEvent(thisContent,
+                            doc,
+                            NS_LITERAL_STRING("PluginInstantiated"));
   NS_DispatchToCurrentThread(ev);
 
   return NS_OK;
