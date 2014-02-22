@@ -302,6 +302,9 @@ XPCWrappedNativeScope::~XPCWrappedNativeScope()
     // XXX might not want to do this at xpconnect shutdown time???
     mComponents = nullptr;
 
+    if (mXrayExpandos.initialized())
+        mXrayExpandos.destroy();
+
     JSRuntime *rt = XPCJSRuntime::Get()->Runtime();
     mXBLScope.finalize(rt);
     mGlobalJSObject.finalize(rt);
@@ -597,6 +600,27 @@ XPCWrappedNativeScope::RemoveWrappedNativeProtos()
 {
     mWrappedNativeProtoMap->Enumerate(WNProtoRemover,
                                       GetRuntime()->GetDetachedWrappedNativeProtoMap());
+}
+
+JSObject *
+XPCWrappedNativeScope::GetExpandoChain(JSObject *target)
+{
+    MOZ_ASSERT(GetObjectScope(target) == this);
+    if (!mXrayExpandos.initialized())
+        return nullptr;
+    return mXrayExpandos.lookup(target);
+}
+
+bool
+XPCWrappedNativeScope::SetExpandoChain(JSContext *cx, HandleObject target,
+                                       HandleObject chain)
+{
+    MOZ_ASSERT(GetObjectScope(target) == this);
+    MOZ_ASSERT(js::IsObjectInContextCompartment(target, cx));
+    MOZ_ASSERT_IF(chain, GetObjectScope(chain) == this);
+    if (!mXrayExpandos.initialized() && !mXrayExpandos.init(cx))
+        return false;
+    return mXrayExpandos.put(target, chain);
 }
 
 /***************************************************************************/

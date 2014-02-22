@@ -691,23 +691,19 @@ AllLocalsAliased(StaticBlockObject &obj)
 static bool
 ComputeAliasedSlots(ExclusiveContext *cx, BytecodeEmitter *bce, Handle<StaticBlockObject *> blockObj)
 {
+    if (blockObj->slotCount() == 0)
+        return true;
+
     uint32_t depthPlusFixed = blockObj->stackDepth();
     if (!AdjustBlockSlot(cx, bce, &depthPlusFixed))
         return false;
 
     for (unsigned i = 0; i < blockObj->slotCount(); i++) {
-        Definition *dn = blockObj->maybeDefinitionParseNode(i);
-
-        /* Beware the empty destructuring dummy. */
-        if (!dn) {
-            blockObj->setAliased(i, bce->sc->allLocalsAliased());
-            continue;
-        }
+        Definition *dn = blockObj->definitionParseNode(i);
 
         JS_ASSERT(dn->isDefn());
         if (!dn->pn_cookie.set(bce->parser->tokenStream, dn->pn_cookie.level(),
-                               dn->frameSlot() + depthPlusFixed))
-        {
+                               dn->frameSlot() + depthPlusFixed)) {
             return false;
         }
 
@@ -3416,7 +3412,6 @@ EmitVariables(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, VarEmit
                 goto do_name;
             }
 
-            ptrdiff_t stackDepthBefore = bce->stackDepth;
             JSOp op = JSOP_POP;
             if (pn->pn_count == 1) {
                 /*
@@ -3445,14 +3440,6 @@ EmitVariables(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, VarEmit
                     return false;
 
                 if (!EmitDestructuringOps(cx, bce, pn3, isLet))
-                    return false;
-            }
-            ptrdiff_t stackDepthAfter = bce->stackDepth;
-
-            /* Give let ([] = x) a slot (see CheckDestructuring). */
-            JS_ASSERT(stackDepthBefore <= stackDepthAfter);
-            if (isLet && stackDepthBefore == stackDepthAfter) {
-                if (Emit1(cx, bce, JSOP_UNDEFINED) < 0)
                     return false;
             }
 

@@ -1561,13 +1561,13 @@ public:
    * If aAfter is non-null, it must be a child of this container and
    * we insert after that layer. If it's null we insert at the start.
    */
-  virtual void InsertAfter(Layer* aChild, Layer* aAfter);
+  virtual bool InsertAfter(Layer* aChild, Layer* aAfter);
   /**
    * CONSTRUCTION PHASE ONLY
    * Remove aChild from the child list of this container. aChild must
    * be a child of this container.
    */
-  virtual void RemoveChild(Layer* aChild);
+  virtual bool RemoveChild(Layer* aChild);
   /**
    * CONSTRUCTION PHASE ONLY
    * Reposition aChild from the child list of this container. aChild must
@@ -1575,7 +1575,7 @@ public:
    * If aAfter is non-null, it must be a child of this container and we
    * reposition after that layer. If it's null, we reposition at the start.
    */
-  virtual void RepositionChild(Layer* aChild, Layer* aAfter);
+  virtual bool RepositionChild(Layer* aChild, Layer* aAfter);
 
   /**
    * CONSTRUCTION PHASE ONLY
@@ -1962,14 +1962,14 @@ class RefLayer : public ContainerLayer {
   friend class LayerManager;
 
 private:
-  virtual void InsertAfter(Layer* aChild, Layer* aAfter)
-  { MOZ_CRASH(); }
+  virtual bool InsertAfter(Layer* aChild, Layer* aAfter) MOZ_OVERRIDE
+  { MOZ_CRASH(); return false; }
 
-  virtual void RemoveChild(Layer* aChild)
-  { MOZ_CRASH(); }
+  virtual bool RemoveChild(Layer* aChild)
+  { MOZ_CRASH(); return false; }
 
-  virtual void RepositionChild(Layer* aChild, Layer* aAfter)
-  { MOZ_CRASH(); }
+  virtual bool RepositionChild(Layer* aChild, Layer* aAfter)
+  { MOZ_CRASH(); return false; }
 
   using ContainerLayer::SetFrameMetrics;
 

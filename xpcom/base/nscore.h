@@ -29,6 +29,8 @@
 #  include "mozilla/NullPtr.h"
 #endif
 
+#include "mozilla/RefCountType.h"
+
 /* Core XPCOM declarations. */
 
 /*----------------------------------------------------------------------*/
@@ -297,19 +299,7 @@
  */
 #include "nsError.h"
 
-/**
- * Reference count values
- *
- * This is the return type for AddRef() and Release() in nsISupports.
- * IUnknown of COM returns an unsigned long from equivalent functions.
- * The following ifdef exists to maintain binary compatibility with
- * IUnknown.
- */
-#ifdef XP_WIN
-typedef unsigned long nsrefcnt;
-#else
-typedef uint32_t nsrefcnt;
-#endif
+typedef MozRefCountType nsrefcnt;
 
 /*
  * Use these macros to do 64bit safe pointer conversions.

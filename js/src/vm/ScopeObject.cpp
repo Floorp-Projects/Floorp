@@ -325,8 +325,7 @@ DeclEnvObject::createTemplateObject(JSContext *cx, HandleFunction fun, gc::Initi
     const Class *clasp = obj->getClass();
     unsigned attrs = JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY;
     if (!JSObject::putProperty<SequentialExecution>(cx, obj, id, clasp->getProperty,
-                                                    clasp->setProperty, lambdaSlot(), attrs, 0, 0))
-    {
+                                                    clasp->setProperty, lambdaSlot(), attrs, 0)) {
         return nullptr;
     }
 
@@ -720,7 +719,7 @@ StaticBlockObject::create(ExclusiveContext *cx)
 StaticBlockObject::addVar(ExclusiveContext *cx, Handle<StaticBlockObject*> block, HandleId id,
                           unsigned index, bool *redeclared)
 {
-    JS_ASSERT(JSID_IS_ATOM(id) || (JSID_IS_INT(id) && JSID_TO_INT(id) == (int)index));
+    JS_ASSERT(JSID_IS_ATOM(id));
     JS_ASSERT(index < VAR_INDEX_LIMIT);
 
     *redeclared = false;
@@ -737,12 +736,14 @@ StaticBlockObject::addVar(ExclusiveContext *cx, Handle<StaticBlockObject*> block
      * block's shape later.
      */
     uint32_t slot = JSSLOT_FREE(&BlockObject::class_) + index;
-    return JSObject::addPropertyInternal<SequentialExecution>(
-        cx, block, id,
-        /* getter = */ nullptr, /* setter = */ nullptr,
-        slot, JSPROP_ENUMERATE | JSPROP_PERMANENT,
-        Shape::HAS_SHORTID, index, spp,
-        /* allowDictionary = */ false);
+    return JSObject::addPropertyInternal<SequentialExecution>(cx, block, id,
+                                                              /* getter = */ nullptr,
+                                                              /* setter = */ nullptr,
+                                                              slot,
+                                                              JSPROP_ENUMERATE | JSPROP_PERMANENT,
+                                                              /* attrs = */ 0,
+                                                              spp,
+                                                              /* allowDictionary = */ false);
 }
 
 const Class BlockObject::class_ = {
@@ -829,10 +830,8 @@ js::XDRStaticBlockObject(XDRState<mode> *xdr, HandleObject enclosingScope,
         if (!shapes.growBy(count))
             return false;
 
-        for (Shape::Range<NoGC> r(obj->lastProperty()); !r.empty(); r.popFront()) {
-            Shape *shape = &r.front();
-            shapes[shape->shortid()] = shape;
-        }
+        for (Shape::Range<NoGC> r(obj->lastProperty()); !r.empty(); r.popFront())
+            shapes[obj->shapeToIndex(r.front())] = &r.front();
 
         /*
          * XDR the block object's properties. We know that there are 'count'
@@ -844,7 +843,7 @@ js::XDRStaticBlockObject(XDRState<mode> *xdr, HandleObject enclosingScope,
         for (unsigned i = 0; i < count; i++) {
             shape = shapes[i];
             JS_ASSERT(shape->hasDefaultGetter());
-            JS_ASSERT(unsigned(shape->shortid()) == i);
+            JS_ASSERT(obj->shapeToIndex(*shape) == i);
 
             propid = shape->propid();
             JS_ASSERT(JSID_IS_ATOM(propid) || JSID_IS_INT(propid));
@@ -886,12 +885,13 @@ CloneStaticBlockObject(JSContext *cx, HandleObject enclosingScope, Handle<Static
     AutoShapeVector shapes(cx);
     if (!shapes.growBy(srcBlock->slotCount()))
         return nullptr;
+
     for (Shape::Range<NoGC> r(srcBlock->lastProperty()); !r.empty(); r.popFront())
-        shapes[r.front().shortid()] = &r.front();
+        shapes[srcBlock->shapeToIndex(r.front())] = &r.front();
 
     for (Shape **p = shapes.begin(); p != shapes.end(); ++p) {
         RootedId id(cx, (*p)->propid());
-        unsigned i = (*p)->shortid();
+        unsigned i = srcBlock->shapeToIndex(**p);
 
         bool redeclared;
         if (!StaticBlockObject::addVar(cx, clone, id, i, &redeclared)) {
@@ -1259,7 +1259,7 @@ class DebugScopeProxy : public BaseProxyHandler
             if (!shape)
                 return false;
 
-            unsigned i = shape->shortid();
+            unsigned i = block->shapeToIndex(*shape);
             if (block->staticBlock().isAliased(i))
                 return false;
 
@@ -1381,7 +1381,6 @@ class DebugScopeProxy : public BaseProxyHandler
             desc.object().set(debugScope);
             desc.setAttributes(JSPROP_READONLY | JSPROP_ENUMERATE | JSPROP_PERMANENT);
             desc.value().setObject(*maybeArgsObj);
-            desc.setShortId(0);
             desc.setGetter(nullptr);
             desc.setSetter(nullptr);
             return true;
@@ -1392,7 +1391,6 @@ class DebugScopeProxy : public BaseProxyHandler
             desc.object().set(debugScope);
             desc.setAttributes(JSPROP_READONLY | JSPROP_ENUMERATE | JSPROP_PERMANENT);
             desc.value().set(v);
-            desc.setShortId(0);
             desc.setGetter(nullptr);
             desc.setSetter(nullptr);
             return true;

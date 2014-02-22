@@ -2816,10 +2816,8 @@ LexicalLookup(ContextT *ct, HandleAtom atom, int *slotp, typename ContextT::Stmt
         StaticBlockObject &blockObj = stmt->staticBlock();
         Shape *shape = blockObj.nativeLookup(ct->sc->context, id);
         if (shape) {
-            JS_ASSERT(shape->hasShortID());
-
             if (slotp)
-                *slotp = blockObj.stackDepth() + shape->shortid();
+                *slotp = blockObj.stackDepth() + blockObj.shapeToIndex(*shape);
             return stmt;
         }
     }
@@ -3066,7 +3064,6 @@ Parser<FullParseHandler>::checkDestructuring(BindData<FullParseHandler> *data,
 
     Rooted<StaticBlockObject *> blockObj(context);
     blockObj = data && data->binder == bindLet ? data->let.blockObj.get() : nullptr;
-    uint32_t blockCountBefore = blockObj ? blockObj->slotCount() : 0;
 
     if (left->isKind(PNK_ARRAY)) {
         for (ParseNode *pn = left->pn_head; pn; pn = pn->pn_next) {
@@ -3119,38 +3116,6 @@ Parser<FullParseHandler>::checkDestructuring(BindData<FullParseHandler> *data,
             if (!ok)
                 return false;
         }
-    }
-
-    /*
-     * The catch/finally handler implementation in the interpreter assumes
-     * that any operation that introduces a new scope (like a "let" or "with"
-     * block) increases the stack depth. This way, it is possible to restore
-     * the scope chain based on stack depth of the handler alone. "let" with
-     * an empty destructuring pattern like in
-     *
-     *   let [] = 1;
-     *
-     * would violate this assumption as the there would be no let locals to
-     * store on the stack.
-     *
-     * Furthermore, the decompiler needs an abstract stack location to store
-     * the decompilation of each let block/expr initializer. E.g., given:
-     *
-     *   let (x = 1, [[]] = b, y = 3, {a:[]} = c) { ... }
-     *
-     * four slots are needed.
-     *
-     * To satisfy both constraints, we push a dummy slot (and add a
-     * corresponding dummy property to the block object) for each initializer
-     * that doesn't introduce at least one binding.
-     */
-    if (toplevel && blockObj && blockCountBefore == blockObj->slotCount()) {
-        bool redeclared;
-        RootedId id(context, INT_TO_JSID(blockCountBefore));
-        if (!StaticBlockObject::addVar(context, blockObj, id, blockCountBefore, &redeclared))
-            return false;
-        JS_ASSERT(!redeclared);
-        JS_ASSERT(blockObj->slotCount() == blockCountBefore + 1);
     }
 
     return true;
