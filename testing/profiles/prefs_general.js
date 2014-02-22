@@ -162,3 +162,4 @@ user_pref("browser.webapps.testing", true);
 
 // Disable android snippets
 user_pref("browser.snippets.enabled", false);
+user_pref("browser.snippets.syncPromo.enabled", false);
