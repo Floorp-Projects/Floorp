@@ -293,7 +293,7 @@
                 accesskey="&keywordfield.accesskey;"
                 oncommand="AddKeywordForSearchField();"/>
       <menuitem id="context-searchselect"
-                oncommand="BrowserSearch.loadSearchFromContext(this.searchTerms);"/>
+                oncommand="BrowserSearch.loadSearchFromContext(getBrowserSelection());"/>
       <menuitem id="context-shareselect"
                 label="&shareSelectCmd.label;"
                 accesskey="&shareSelectCmd.accesskey;"
