@@ -28,6 +28,14 @@
                 height: 300px;
                 background: black;
             }
+            #cover2 { /* corresponds to the bottom padding inside the textarea */
+                position: absolute;
+                left: 0px;
+                bottom: 0px;
+                width: 100%;
+                height: 50px;
+                background: white;
+            }
         </style>
     </head>
     <body>
@@ -36,7 +44,7 @@
         for (var i = 0; i < 1000; ++i) {
           ss.push(i);
         }
-        document.write("<div id='t'>" + ss.join(" ") + "</div>");
+        document.write("<div id='t'><div id=cover2></div>" + ss.join(" ") + "</div>");
         </script>
         <div id="cover"></div>
     </body>
