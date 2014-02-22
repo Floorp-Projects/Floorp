@@ -21,6 +21,7 @@ class X11TextureSourceOGL
 {
 public:
   X11TextureSourceOGL(CompositorOGL* aCompositor, gfxXlibSurface* aSurface);
+  ~X11TextureSourceOGL();
 
   virtual X11TextureSourceOGL* AsSourceOGL() MOZ_OVERRIDE { return this; }
 
@@ -35,7 +36,7 @@ public:
      return LOCAL_GL_CLAMP_TO_EDGE;
   }
 
-  virtual void DeallocateDeviceData() MOZ_OVERRIDE { }
+  virtual void DeallocateDeviceData() MOZ_OVERRIDE;
 
   virtual void SetCompositor(Compositor* aCompositor) MOZ_OVERRIDE;
 
@@ -44,8 +45,9 @@ public:
 
 protected:
   CompositorOGL* mCompositor;
-  RefPtr<gfxXlibSurface> mSurface;
+  nsRefPtr<gfxXlibSurface> mSurface;
   RefPtr<gfx::SourceSurface> mSourceSurface;
+  GLuint mTexture;
 };
 
 } // namespace layers
