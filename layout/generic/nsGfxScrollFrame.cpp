@@ -8,6 +8,7 @@
 #include "nsGfxScrollFrame.h"
 
 #include "base/compiler_specific.h"
+#include "DisplayItemClip.h"
 #include "nsCOMPtr.h"
 #include "nsPresContext.h"
 #include "nsView.h"
@@ -401,9 +402,8 @@ nsHTMLScrollFrame::ReflowScrolledFrame(ScrollReflowState* aState,
 {
   // these could be NS_UNCONSTRAINEDSIZE ... std::min arithmetic should
   // be OK
-  nscoord paddingLR = aState->mReflowState.ComputedPhysicalPadding().LeftRight();
-
-  nscoord availWidth = aState->mReflowState.ComputedWidth() + paddingLR;
+  const nsMargin& padding = aState->mReflowState.ComputedPhysicalPadding();
+  nscoord availWidth = aState->mReflowState.ComputedWidth() + padding.LeftRight();
 
   nscoord computedHeight = aState->mReflowState.ComputedHeight();
   nscoord computedMinHeight = aState->mReflowState.ComputedMinHeight();
@@ -417,11 +417,13 @@ nsHTMLScrollFrame::ReflowScrolledFrame(ScrollReflowState* aState,
     nsSize hScrollbarPrefSize;
     GetScrollbarMetrics(aState->mBoxState, mHelper.mHScrollbarBox,
                         nullptr, &hScrollbarPrefSize, false);
-    if (computedHeight != NS_UNCONSTRAINEDSIZE)
+    if (computedHeight != NS_UNCONSTRAINEDSIZE) {
       computedHeight = std::max(0, computedHeight - hScrollbarPrefSize.height);
+    }
     computedMinHeight = std::max(0, computedMinHeight - hScrollbarPrefSize.height);
-    if (computedMaxHeight != NS_UNCONSTRAINEDSIZE)
+    if (computedMaxHeight != NS_UNCONSTRAINEDSIZE) {
       computedMaxHeight = std::max(0, computedMaxHeight - hScrollbarPrefSize.height);
+    }
   }
 
   if (aAssumeVScroll) {
@@ -439,7 +441,7 @@ nsHTMLScrollFrame::ReflowScrolledFrame(ScrollReflowState* aState,
                                    nsSize(availWidth, NS_UNCONSTRAINEDSIZE),
                                    -1, -1, nsHTMLReflowState::CALLER_WILL_INIT);
   kidReflowState.Init(presContext, -1, -1, nullptr,
-                      &aState->mReflowState.ComputedPhysicalPadding());
+                      &padding);
   kidReflowState.mFlags.mAssumingHScrollbar = aAssumeHScroll;
   kidReflowState.mFlags.mAssumingVScrollbar = aAssumeVScroll;
   kidReflowState.SetComputedHeight(computedHeight);
@@ -478,6 +480,18 @@ nsHTMLScrollFrame::ReflowScrolledFrame(ScrollReflowState* aState,
   // check HasOverflowRect() because it could be set even though the
   // overflow area doesn't include the frame bounds.
   aMetrics->UnionOverflowAreasWithDesiredBounds();
+
+  if (MOZ_UNLIKELY(StyleDisplay()->mOverflowClipBox ==
+                     NS_STYLE_OVERFLOW_CLIP_BOX_CONTENT_BOX)) {
+    nsOverflowAreas childOverflow;
+    nsLayoutUtils::UnionChildOverflow(mHelper.mScrolledFrame, childOverflow);
+    nsRect childScrollableOverflow = childOverflow.ScrollableOverflow();
+    childScrollableOverflow.Inflate(padding);
+    nsRect contentArea = nsRect(0, 0, availWidth, computedHeight);
+    if (!contentArea.Contains(childScrollableOverflow)) {
+      aMetrics->mOverflowAreas.ScrollableOverflow() = childScrollableOverflow;
+    }
+  }
 
   aState->mContentsOverflowAreas = aMetrics->mOverflowAreas;
   aState->mReflowedContentsWithHScrollbar = aAssumeHScroll;
@@ -2270,10 +2284,74 @@ static bool IsFocused(nsIContent* aContent)
   return aContent ? nsContentUtils::IsFocusedContent(aContent) : false;
 }
 
+static bool
+ShouldBeClippedByFrame(nsIFrame* aClipFrame, nsIFrame* aClippedFrame)
+{
+  return nsLayoutUtils::IsProperAncestorFrame(aClipFrame, aClippedFrame);
+}
+
+static void
+ClipItemsExceptCaret(nsDisplayList* aList, nsDisplayListBuilder* aBuilder,
+                     nsIFrame* aClipFrame, const DisplayItemClip& aClip)
+{
+  nsDisplayItem* i = aList->GetBottom();
+  for (; i; i = i->GetAbove()) {
+    if (!::ShouldBeClippedByFrame(aClipFrame, i->Frame())) {
+      continue;
+    }
+
+    bool unused;
+    nsRect bounds = i->GetBounds(aBuilder, &unused);
+    bool isAffectedByClip = aClip.IsRectAffectedByClip(bounds);
+    if (isAffectedByClip && nsDisplayItem::TYPE_CARET == i->GetType()) {
+      // Don't clip the caret if it overflows vertically only, and by half
+      // its height at most.  This is to avoid clipping it when the line-height
+      // is small.
+      auto half = bounds.height / 2;
+      bounds.y += half;
+      bounds.height -= half;
+      isAffectedByClip = aClip.IsRectAffectedByClip(bounds);
+      if (isAffectedByClip) {
+        // Don't clip the caret if it's just outside on the right side.
+        nsRect rightSide(bounds.x - 1, bounds.y, 1, bounds.height);
+        isAffectedByClip = aClip.IsRectAffectedByClip(rightSide);
+        // Also, avoid clipping it in a zero-height line box (heuristic only).
+        if (isAffectedByClip) {
+          isAffectedByClip = i->Frame()->GetRect().height != 0;
+        }
+      }
+    }
+    if (isAffectedByClip) {
+      DisplayItemClip newClip;
+      newClip.IntersectWith(i->GetClip());
+      newClip.IntersectWith(aClip);
+      i->SetClip(aBuilder, newClip);
+    }
+    nsDisplayList* children = i->GetSameCoordinateSystemChildren();
+    if (children) {
+      ClipItemsExceptCaret(children, aBuilder, aClipFrame, aClip);
+    }
+  }
+}
+
+static void
+ClipListsExceptCaret(nsDisplayListCollection* aLists,
+                     nsDisplayListBuilder* aBuilder,
+                     nsIFrame* aClipFrame,
+                     const DisplayItemClip& aClip)
+{
+  ::ClipItemsExceptCaret(aLists->BorderBackground(), aBuilder, aClipFrame, aClip);
+  ::ClipItemsExceptCaret(aLists->BlockBorderBackgrounds(), aBuilder, aClipFrame, aClip);
+  ::ClipItemsExceptCaret(aLists->Floats(), aBuilder, aClipFrame, aClip);
+  ::ClipItemsExceptCaret(aLists->PositionedDescendants(), aBuilder, aClipFrame, aClip);
+  ::ClipItemsExceptCaret(aLists->Outlines(), aBuilder, aClipFrame, aClip);
+  ::ClipItemsExceptCaret(aLists->Content(), aBuilder, aClipFrame, aClip);
+}
+
 void
 ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                        const nsRect&           aDirtyRect,
-                                        const nsDisplayListSet& aLists)
+                                    const nsRect&           aDirtyRect,
+                                    const nsDisplayListSet& aLists)
 {
   if (aBuilder->IsForImageVisibility()) {
     mLastUpdateImagesPos = GetScrollPosition();
@@ -2328,13 +2406,12 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // Overflow clipping can never clip frames outside our subtree, so there
   // is no need to worry about whether we are a moving frame that might clip
   // non-moving frames.
-  nsRect dirtyRect;
   // Not all our descendants will be clipped by overflow clipping, but all
   // the ones that aren't clipped will be out of flow frames that have already
   // had dirty rects saved for them by their parent frames calling
   // MarkOutOfFlowChildrenForDisplayList, so it's safe to restrict our
   // dirty rect here.
-  dirtyRect.IntersectRect(aDirtyRect, mScrollPort);
+  nsRect dirtyRect = aDirtyRect.Intersect(mScrollPort);
 
   // Override the dirty rectangle if the displayport has been set.
   nsRect displayPort;
@@ -2394,6 +2471,25 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     }
 
     mOuter->BuildDisplayListForChild(aBuilder, mScrolledFrame, dirtyRect, scrolledContent);
+  }
+
+  if (MOZ_UNLIKELY(mOuter->StyleDisplay()->mOverflowClipBox ==
+                     NS_STYLE_OVERFLOW_CLIP_BOX_CONTENT_BOX)) {
+    // We only clip if there is *scrollable* overflow, to avoid clipping
+    // *visual* overflow unnecessarily.
+    nsRect clipRect = mScrollPort + aBuilder->ToReferenceFrame(mOuter);
+    nsRect so = mScrolledFrame->GetScrollableOverflowRect();
+    if (clipRect.width != so.width || clipRect.height != so.height ||
+        so.x < 0 || so.y < 0) {
+      // The 'scrolledContent' items are clipped to the padding-box at this point.
+      // Now clip them again to the content-box, except the nsDisplayCaret item
+      // which we allow to overflow the content-box in various situations --
+      // see ::ClipItemsExceptCaret.
+      clipRect.Deflate(mOuter->GetUsedPadding());
+      DisplayItemClip clip;
+      clip.SetTo(clipRect);
+      ::ClipListsExceptCaret(&scrolledContent, aBuilder, mScrolledFrame, clip);
+    }
   }
 
   // Since making new layers is expensive, only use nsDisplayScrollLayer
