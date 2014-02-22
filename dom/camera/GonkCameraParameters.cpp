@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Mozilla Foundation
+ * Copyright (C) 2013-2014 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -150,6 +150,10 @@ GonkCameraParameters::Initialize()
     return rv;
   }
   rv = GetImpl(CAMERA_PARAM_SUPPORTED_EXPOSURECOMPENSATIONSTEP, mExposureCompensationStep);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  rv = GetListAsArray(CAMERA_PARAM_SUPPORTED_ZOOMRATIOS, mZoomRatios);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -401,16 +405,53 @@ GonkCameraParameters::GetTranslated(uint32_t aKey, int64_t& aValue)
 nsresult
 GonkCameraParameters::SetTranslated(uint32_t aKey, const double& aValue)
 {
-  if (aKey == CAMERA_PARAM_EXPOSURECOMPENSATION) {
-    /**
-     * Convert from real value to a Gonk index, round
-     * to the nearest step; index is 1-based.
-     */
-    int index =
-      (aValue - mExposureCompensationMin + mExposureCompensationStep / 2) /
-      mExposureCompensationStep + 1;
-    DOM_CAMERA_LOGI("Exposure compensation = %f --> index = %d\n", aValue, index);
-    return SetImpl(CAMERA_PARAM_EXPOSURECOMPENSATION, index);
+  int index;
+  int value;
+
+  switch (aKey) {
+    case CAMERA_PARAM_EXPOSURECOMPENSATION:
+      /**
+       * Convert from real value to a Gonk index, round
+       * to the nearest step; index is 1-based.
+       */
+      index =
+        (aValue - mExposureCompensationMin + mExposureCompensationStep / 2) /
+        mExposureCompensationStep + 1;
+      DOM_CAMERA_LOGI("Exposure compensation = %f --> index = %d\n", aValue, index);
+      return SetImpl(CAMERA_PARAM_EXPOSURECOMPENSATION, index);
+
+    case CAMERA_PARAM_ZOOM:
+      {
+        /**
+         * Convert from a real zoom multipler (e.g. 2.5x) to
+         * the index of the nearest supported value.
+         */
+        value = aValue * 100.0;
+
+        // mZoomRatios is sorted, so we can binary search it
+        unsigned int bottom = 0;
+        unsigned int top = mZoomRatios.Length() - 1;
+        unsigned int middle;
+
+        while (bottom != top) {
+          middle = (top + bottom) / 2;
+          if (value == mZoomRatios[middle]) {
+            // exact match
+            break;
+          }
+          if (value > mZoomRatios[middle] && value < mZoomRatios[middle + 1]) {
+            // the specified zoom value lies in this interval
+            break;
+          }
+          if (value > mZoomRatios[middle]) {
+            bottom = middle + 1;
+          } else {
+            top = middle - 1;
+          }
+        }
+        index = middle;
+      }
+      return SetImpl(CAMERA_PARAM_ZOOM, index);
   }
 
   return SetImpl(aKey, aValue);
@@ -427,9 +468,9 @@ GonkCameraParameters::GetTranslated(uint32_t aKey, double& aValue)
 
   switch (aKey) {
     case CAMERA_PARAM_ZOOM:
-      rv = GetImpl(CAMERA_PARAM_ZOOM, val);
+      rv = GetImpl(CAMERA_PARAM_ZOOM, index);
       if (NS_SUCCEEDED(rv)) {
-        val /= 100.0;
+        val = mZoomRatios[index] / 100.0;
       } else {
         // return 1x when zooming is not supported
         val = 1.0;
@@ -557,6 +598,16 @@ ParseItem(const char* aStart, const char* aEnd, double* aItem)
   return NS_ERROR_FAILURE;
 }
 
+nsresult
+ParseItem(const char* aStart, const char* aEnd, int* aItem)
+{
+  if (sscanf(aStart, "%d", aItem) == 1) {
+    return NS_OK;
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
 template<class T> nsresult
 GonkCameraParameters::GetListAsArray(uint32_t aKey, nsTArray<T>& aArray)
 {
@@ -609,6 +660,14 @@ GonkCameraParameters::GetTranslated(uint32_t aKey, nsTArray<nsString>& aValues)
 nsresult
 GonkCameraParameters::GetTranslated(uint32_t aKey, nsTArray<double>& aValues)
 {
+  if (aKey == CAMERA_PARAM_SUPPORTED_ZOOMRATIOS) {
+    aValues.Clear();
+    for (int i = 0; i < mZoomRatios.Length(); ++i) {
+      *aValues.AppendElement() = mZoomRatios[i] / 100.0;
+    }
+    return NS_OK;
+  }
+
   return GetListAsArray(aKey, aValues);
 }
 
