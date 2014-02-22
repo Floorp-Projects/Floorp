@@ -183,7 +183,6 @@ public abstract class GeckoApp
     protected MenuPanel mMenuPanel;
     protected Menu mMenu;
     protected GeckoProfile mProfile;
-    public static int mOrientation;
     protected boolean mIsRestoringActivity;
 
     private ContactService mContactService;
@@ -425,8 +424,12 @@ public abstract class GeckoApp
 
     @Override
     public boolean onPreparePanel(int featureId, View view, Menu menu) {
-        if (Build.VERSION.SDK_INT >= 11 && featureId == Window.FEATURE_OPTIONS_PANEL)
+        if (Build.VERSION.SDK_INT >= 11 && featureId == Window.FEATURE_OPTIONS_PANEL) {
+            if (menu instanceof GeckoMenu) {
+                ((GeckoMenu) menu).refresh();
+            }
             return onPrepareOptionsMenu(menu);
+        }
 
         return super.onPreparePanel(featureId, view, menu);
     }
@@ -937,7 +940,7 @@ public abstract class GeckoApp
 
         mFullScreenPluginView = null;
 
-        GeckoScreenOrientationListener.getInstance().unlockScreenOrientation();
+        GeckoScreenOrientation.getInstance().unlock();
         setFullScreen(false);
     }
 
@@ -1248,7 +1251,7 @@ public abstract class GeckoApp
 
         super.onCreate(savedInstanceState);
 
-        mOrientation = getResources().getConfiguration().orientation;
+        GeckoScreenOrientation.getInstance().update(getResources().getConfiguration().orientation);
 
         setContentView(getLayout());
 
@@ -1920,6 +1923,10 @@ public abstract class GeckoApp
         return uri;
     }
 
+    protected int getOrientation() {
+        return GeckoScreenOrientation.getInstance().getAndroidOrientation();
+    }
+
     @Override
     public void onResume()
     {
@@ -1928,13 +1935,9 @@ public abstract class GeckoApp
         super.onResume();
 
         int newOrientation = getResources().getConfiguration().orientation;
-
-        if (mOrientation != newOrientation) {
-            mOrientation = newOrientation;
+        if (GeckoScreenOrientation.getInstance().update(newOrientation)) {
             refreshChrome();
         }
-
-        GeckoScreenOrientationListener.getInstance().start();
 
         // User may have enabled/disabled accessibility.
         GeckoAccessibility.updateAccessibilitySettings(this);
@@ -2010,8 +2013,6 @@ public abstract class GeckoApp
                 GeckoPreferences.broadcastHealthReportPrune(context);
             }
         });
-
-        GeckoScreenOrientationListener.getInstance().stop();
 
         if (mAppStateListeners != null) {
             for(GeckoAppShell.AppStateListener listener: mAppStateListeners) {
@@ -2151,14 +2152,16 @@ public abstract class GeckoApp
     public void onConfigurationChanged(Configuration newConfig) {
         Log.d(LOGTAG, "onConfigurationChanged: " + newConfig.locale);
         LocaleManager.correctLocale(getResources(), newConfig);
-        super.onConfigurationChanged(newConfig);
 
-        if (mOrientation != newConfig.orientation) {
-            mOrientation = newConfig.orientation;
+        // onConfigurationChanged is not called for 180 degree orientation changes,
+        // we will miss such rotations and the screen orientation will not be
+        // updated.
+        if (GeckoScreenOrientation.getInstance().update(newConfig.orientation)) {
             if (mFormAssistPopup != null)
                 mFormAssistPopup.hide();
             refreshChrome();
         }
+        super.onConfigurationChanged(newConfig);
     }
 
     public String getContentProcessName() {
