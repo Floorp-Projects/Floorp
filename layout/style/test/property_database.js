@@ -4915,6 +4915,17 @@ if (SpecialPowers.getBoolPref("layout.css.will-change.enabled")) {
 	};
 }
 
+if (SpecialPowers.getBoolPref("layout.css.overflow-clip-box.enabled")) {
+	gCSSProperties["overflow-clip-box"] = {
+		domProp: "overflowClipBox",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "padding-box" ],
+		other_values: [ "content-box" ],
+		invalid_values: [ "none", "auto", "border-box", "0" ]
+	};
+}
+
 if (SpecialPowers.getBoolPref("layout.css.unset-value.enabled")) {
   gCSSProperties["animation-direction"].invalid_values.push("normal, unset");
   gCSSProperties["animation-name"].invalid_values.push("bounce, unset", "unset, bounce");
