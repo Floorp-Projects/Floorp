@@ -141,18 +141,12 @@ public class HomeBanner extends LinearLayout
         BitmapUtils.getDrawable(getContext(), iconURI, new BitmapUtils.BitmapLoader() {
             @Override
             public void onBitmapFound(final Drawable d) {
-                // Update the banner icon on the UI thread.
-                ThreadUtils.postToUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        // Hide the image view if we don't have an icon to show.
-                        if (d == null) {
-                            mIconView.setVisibility(View.GONE);
-                        } else {
-                            mIconView.setImageDrawable(d);
-                        }
-                    }
-                });
+                // Hide the image view if we don't have an icon to show.
+                if (d == null) {
+                    mIconView.setVisibility(View.GONE);
+                } else {
+                    mIconView.setImageDrawable(d);
+                }
             }
         });
     }
