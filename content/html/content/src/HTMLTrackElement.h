@@ -21,16 +21,6 @@
 namespace mozilla {
 namespace dom {
 
-// Map html attribute string values to TextTrackKind enums.
-static MOZ_CONSTEXPR nsAttrValue::EnumTable kKindTable[] = {
-  { "subtitles", static_cast<int16_t>(TextTrackKind::Subtitles) },
-  { "captions", static_cast<int16_t>(TextTrackKind::Captions) },
-  { "descriptions", static_cast<int16_t>(TextTrackKind::Descriptions) },
-  { "chapters", static_cast<int16_t>(TextTrackKind::Chapters) },
-  { "metadata", static_cast<int16_t>(TextTrackKind::Metadata) },
-  { 0 }
-};
-
 class WebVTTListener;
 
 class HTMLTrackElement MOZ_FINAL : public nsGenericHTMLElement
