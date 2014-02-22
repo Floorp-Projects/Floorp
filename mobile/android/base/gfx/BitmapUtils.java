@@ -69,7 +69,7 @@ public final class BitmapUtils {
         }
 
         if (data.startsWith("data")) {
-            BitmapDrawable d = new BitmapDrawable(context.getResources(), getBitmapFromDataURI(data));
+            final BitmapDrawable d = new BitmapDrawable(context.getResources(), getBitmapFromDataURI(data));
             runOnBitmapFoundOnUiThread(loader, d);
             return;
         }
@@ -88,8 +88,8 @@ public final class BitmapUtils {
                             return GeckoJarReader.getBitmapDrawable(context.getResources(), Uri.decode(data));
                         }
 
-                        URL url = new URL(data);
-                        InputStream is = (InputStream) url.getContent();
+                        final URL url = new URL(data);
+                        final InputStream is = (InputStream) url.getContent();
                         try {
                             return Drawable.createFromStream(is, "src");
                         } finally {
@@ -109,23 +109,23 @@ public final class BitmapUtils {
             return;
         }
 
-        if(data.startsWith("-moz-icon://")) {
-            Uri imageUri = Uri.parse(data);
-            String resource = imageUri.getSchemeSpecificPart();
-            resource = resource.substring(resource.lastIndexOf('/') + 1);
+        if (data.startsWith("-moz-icon://")) {
+            final Uri imageUri = Uri.parse(data);
+            final String ssp = imageUri.getSchemeSpecificPart();
+            final String resource = ssp.substring(ssp.lastIndexOf('/') + 1);
 
             try {
-                Drawable d = context.getPackageManager().getApplicationIcon(resource);
+                final Drawable d = context.getPackageManager().getApplicationIcon(resource);
                 runOnBitmapFoundOnUiThread(loader, d);
             } catch(Exception ex) { }
 
             return;
         }
 
-        if(data.startsWith("drawable://")) {
-            Uri imageUri = Uri.parse(data);
-            int id = getResource(imageUri, R.drawable.ic_status_logo);
-            Drawable d = context.getResources().getDrawable(id);
+        if (data.startsWith("drawable://")) {
+            final Uri imageUri = Uri.parse(data);
+            final int id = getResource(imageUri, R.drawable.ic_status_logo);
+            final Drawable d = context.getResources().getDrawable(id);
 
             runOnBitmapFoundOnUiThread(loader, d);
             return;
