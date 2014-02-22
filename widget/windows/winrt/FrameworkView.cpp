@@ -39,6 +39,8 @@ namespace winrt {
 // statics
 bool FrameworkView::sKeyboardIsVisible = false;
 Rect FrameworkView::sKeyboardRect;
+HSTRING FrameworkView::sActivationURI = NULL;
+ApplicationExecutionState FrameworkView::sPreviousExecutionState;
 nsTArray<nsString>* sSettingsArray;
 
 FrameworkView::FrameworkView(MetroApp* aMetroApp) :
@@ -113,6 +115,7 @@ FrameworkView::Run()
   // Gecko is completely shut down at this point.
   WinUtils::Log("Exiting FrameworkView::Run()");
 
+  WindowsDeleteString(sActivationURI);
   return S_OK;
 }
 
@@ -391,18 +394,12 @@ FrameworkView::OnActivated(ICoreApplicationView* aApplicationView,
     return S_OK;
   }
 
-  aArgs->get_PreviousExecutionState(&mPreviousExecutionState);
-  bool startup = mPreviousExecutionState == ApplicationExecutionState::ApplicationExecutionState_Terminated ||
-                 mPreviousExecutionState == ApplicationExecutionState::ApplicationExecutionState_ClosedByUser ||
-                 mPreviousExecutionState == ApplicationExecutionState::ApplicationExecutionState_NotRunning;
+  aArgs->get_PreviousExecutionState(&sPreviousExecutionState);
+  bool startup = sPreviousExecutionState == ApplicationExecutionState::ApplicationExecutionState_Terminated ||
+                 sPreviousExecutionState == ApplicationExecutionState::ApplicationExecutionState_ClosedByUser ||
+                 sPreviousExecutionState == ApplicationExecutionState::ApplicationExecutionState_NotRunning;
   ProcessActivationArgs(aArgs, startup);
   return S_OK;
-}
-
-int
-FrameworkView::GetPreviousExecutionState()
-{
-  return mPreviousExecutionState;
 }
 
 HRESULT

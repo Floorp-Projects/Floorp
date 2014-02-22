@@ -80,17 +80,22 @@ public:
   HRESULT ActivateView();
 
   // Public apis for MetroWidget
-  int GetPreviousExecutionState();
   float GetDPI() { return mDPI; }
   ICoreWindow* GetCoreWindow() { return mWindow.Get(); }
   void SetWidget(MetroWidget* aWidget);
   MetroWidget* GetWidget() { return mWidget.Get(); }
   void GetBounds(nsIntRect &aRect);
-  void GetActivationURI(nsAString &aActivationURI) { aActivationURI = mActivationURI; }
   void SetCursor(ABI::Windows::UI::Core::CoreCursorType aCursorType, DWORD aCustomId = 0);
   void ClearCursor();
   bool IsEnabled() const;
   bool IsVisible() const;
+
+  // Activation apis for nsIWinMetroUtils
+  static int GetPreviousExecutionState() { return sPreviousExecutionState; }
+  static void GetActivationURI(nsAString &aActivationURI) {
+    unsigned int length;
+    aActivationURI = WindowsGetStringRawBuffer(sActivationURI, &length);
+  }
 
   // Soft keyboard info for nsIWinMetroUtils
   static bool IsKeyboardVisible() { return sKeyboardIsVisible; }
@@ -175,11 +180,9 @@ private:
   EventRegistrationToken mPrintManager;
 
 private:
-  ABI::Windows::ApplicationModel::Activation::ApplicationExecutionState mPreviousExecutionState;
   nsIntRect mWindowBounds; // in device-pixel coordinates
   float mDPI;
   bool mShuttingDown;
-  nsAutoString mActivationURI;
   nsAutoString mActivationCommandLine;
   Microsoft::WRL::ComPtr<IInspectable> mAutomationProvider;
   //Microsoft::WRL::ComPtr<ID2D1PrintControl> mD2DPrintControl;
@@ -190,10 +193,13 @@ private:
   Microsoft::WRL::ComPtr<ICoreWindow> mWindow;
   Microsoft::WRL::ComPtr<MetroWidget> mWidget;
   Microsoft::WRL::ComPtr<MetroInput> mMetroInput;
-  static bool sKeyboardIsVisible;
-  static Rect sKeyboardRect;
   bool mWinVisible;
   bool mWinActiveState;
+
+  static bool sKeyboardIsVisible;
+  static Rect sKeyboardRect;
+  static HSTRING sActivationURI;
+  static ABI::Windows::ApplicationModel::Activation::ApplicationExecutionState sPreviousExecutionState;
 };
 
 } } }
