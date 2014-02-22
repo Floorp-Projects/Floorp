@@ -142,6 +142,11 @@ if (navigator.appVersion.indexOf("Android") == -1 &&
   SpecialPowers.Services.appinfo.name != "B2G") {
   tests.push([ 'bug512295-1.html' , 'bug512295-1-ref.html' ]);
   tests.push([ 'bug512295-2.html' , 'bug512295-2-ref.html' ]);
+  tests.push(function() {SpecialPowers.setBoolPref("layout.css.overflow-clip-box.enabled", true);});
+  tests.push([ 'bug966992-1.html' , 'bug966992-1-ref.html' ]);
+  tests.push([ 'bug966992-2.html' , 'bug966992-2-ref.html' ]);
+  tests.push([ 'bug966992-3.html' , 'bug966992-3-ref.html' ]);
+  tests.push(function() {SpecialPowers.setBoolPref("layout.css.overflow-clip-box.enabled", false);});
 } else {
   is(SpecialPowers.getIntPref("layout.spellcheckDefault"), 0, "Spellcheck should be turned off for this platrom or this if..else check removed");
 }
