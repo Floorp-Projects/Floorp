@@ -9,6 +9,7 @@
 #include "nsIScriptContext.h"
 
 #include "mozilla/ContentEvents.h"
+#include "mozilla/dom/ErrorEventBinding.h"
 #include "mozilla/dom/IDBOpenDBRequestBinding.h"
 #include "mozilla/dom/UnionTypes.h"
 #include "nsComponentManagerUtils.h"
@@ -42,6 +43,7 @@ uint64_t gNextRequestSerialNumber = 1;
 
 USING_INDEXEDDB_NAMESPACE
 using mozilla::dom::OwningIDBObjectStoreOrIDBIndexOrIDBCursor;
+using mozilla::dom::ErrorEventInit;
 using namespace mozilla;
 
 IDBRequest::IDBRequest(IDBDatabase* aDatabase)
@@ -300,10 +302,10 @@ IDBRequest::CaptureCaller()
 }
 
 void
-IDBRequest::FillScriptErrorEvent(InternalScriptErrorEvent* aEvent) const
+IDBRequest::FillScriptErrorEvent(ErrorEventInit& aEventInit) const
 {
-  aEvent->lineNr = mLineNo;
-  aEvent->fileName = mFilename.get();
+  aEventInit.mLineno = mLineNo;
+  aEventInit.mFilename = mFilename;
 }
 
 mozilla::dom::IDBRequestReadyState

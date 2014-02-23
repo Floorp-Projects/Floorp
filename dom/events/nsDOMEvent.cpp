@@ -764,15 +764,6 @@ nsDOMEvent::GetEventPopupControlState(WidgetEvent* aEvent)
       }
     }
     break;
-  case NS_SCRIPT_ERROR_EVENT :
-    switch(aEvent->message) {
-    case NS_LOAD_ERROR :
-      // Any error event will allow popups, if enabled in the pref.
-      if (::PopupAllowedForEvent("error"))
-        abuse = openControlled;
-      break;
-    }
-    break;
   case NS_FORM_EVENT :
     // For these following events only allow popups if they're
     // triggered while handling user input. See
