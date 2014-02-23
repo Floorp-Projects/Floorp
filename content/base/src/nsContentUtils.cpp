@@ -65,6 +65,7 @@
 #include "nsCycleCollector.h"
 #include "nsDataHashtable.h"
 #include "nsDocShellCID.h"
+#include "nsDocument.h"
 #include "nsDOMCID.h"
 #include "nsDOMDataTransfer.h"
 #include "nsDOMJSUtils.h"
@@ -2423,6 +2424,39 @@ nsContentUtils::NewURIWithDocumentCharset(nsIURI** aResult,
 }
 
 // static
+bool
+nsContentUtils::IsCustomElementName(nsIAtom* aName)
+{
+  // The custom element name identifies a custom element and is a sequence of
+  // alphanumeric ASCII characters that must match the NCName production and
+  // contain a U+002D HYPHEN-MINUS character.
+  nsDependentAtomString str(aName);
+  const char16_t* colon;
+  if (NS_FAILED(nsContentUtils::CheckQName(str, false, &colon)) || colon ||
+      str.FindChar('-') == -1) {
+    return false;
+  }
+
+  // The custom element name must not be one of the following values:
+  //  annotation-xml
+  //  color-profile
+  //  font-face
+  //  font-face-src
+  //  font-face-uri
+  //  font-face-format
+  //  font-face-name
+  //  missing-glyph
+  return aName != nsGkAtoms::annotation_xml_ &&
+         aName != nsGkAtoms::colorProfile &&
+         aName != nsGkAtoms::font_face &&
+         aName != nsGkAtoms::font_face_src &&
+         aName != nsGkAtoms::font_face_uri &&
+         aName != nsGkAtoms::font_face_format &&
+         aName != nsGkAtoms::font_face_name &&
+         aName != nsGkAtoms::missingGlyph;
+}
+
+// static
 nsresult
 nsContentUtils::CheckQName(const nsAString& aQualifiedName,
                            bool aNamespaceAware,
@@ -4757,6 +4791,7 @@ nsContentUtils::LeaveMicroTask()
   MOZ_ASSERT(NS_IsMainThread());
   if (--sMicroTaskLevel == 0) {
     nsDOMMutationObserver::HandleMutations();
+    nsDocument::ProcessBaseElementQueue();
   }
 }
 

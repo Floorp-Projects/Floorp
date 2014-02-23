@@ -144,6 +144,8 @@ public:
     NS_FORWARD_NSIDOMNODE_TO_NSINODE
 
     // nsIDOMDocument interface
+    using nsDocument::CreateElement;
+    using nsDocument::CreateElementNS;
     NS_FORWARD_NSIDOMDOCUMENT(XMLDocument::)
     // And explicitly import the things from nsDocument that we just shadowed
     using nsDocument::GetImplementation;
