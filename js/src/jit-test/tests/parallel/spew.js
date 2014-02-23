@@ -1,6 +1,8 @@
 load(libdir + "parallelarray-helpers.js");
 
-var spew = getSelfHostedValue("ParallelSpew");
+try {
+    var spew = getSelfHostedValue("ParallelSpew");
+} catch (e) {}
 if (getBuildConfiguration().parallelJS && spew) {
   assertParallelExecSucceeds(
     function (m) { Array.buildPar(minItemsTestingThreshold,
