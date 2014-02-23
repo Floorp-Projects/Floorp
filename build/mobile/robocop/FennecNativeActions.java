@@ -4,7 +4,12 @@
 
 package org.mozilla.gecko;
 
-import org.mozilla.gecko.GeckoAppShell;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
+
+import org.json.JSONObject;
+import org.mozilla.gecko.FennecNativeDriver.LogLevel;
 import org.mozilla.gecko.gfx.GeckoLayerClient;
 import org.mozilla.gecko.gfx.GeckoLayerClient.DrawListener;
 import org.mozilla.gecko.mozglue.GeckoLoader;
@@ -13,24 +18,12 @@ import org.mozilla.gecko.util.GeckoEventListener;
 
 import android.app.Activity;
 import android.app.Instrumentation;
-import android.content.Context;
 import android.database.Cursor;
 import android.os.SystemClock;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.KeyEvent;
-import android.view.MotionEvent;
-import android.view.View;
-import android.view.ViewConfiguration;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
-import java.util.ArrayList;
-import org.json.JSONObject;
 
 import com.jayway.android.robotium.solo.Solo;
-
-import static org.mozilla.gecko.FennecNativeDriver.LogLevel;
 
 public class FennecNativeActions implements Actions {
     private static final String LOGTAG = "FennecNativeActions";

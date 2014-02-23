@@ -13,7 +13,7 @@ const PREF_MIN_PLATFORM_COMPAT        = "extensions.minCompatiblePlatformVersion
 Components.utils.import("resource://gre/modules/Promise.jsm");
 
 let repo = {};
-let ARContext = Components.utils.import("resource://gre/modules/AddonRepository.jsm", repo);
+let ARContext = Components.utils.import("resource://gre/modules/addons/AddonRepository.jsm", repo);
 info("ARContext: " + Object.keys(ARContext).join(", "));
 
 // Mock out the XMLHttpRequest factory for AddonRepository so

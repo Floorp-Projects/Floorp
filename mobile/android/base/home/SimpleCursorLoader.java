@@ -20,13 +20,8 @@
 package org.mozilla.gecko.home;
 
 import android.content.Context;
-import android.database.ContentObserver;
 import android.database.Cursor;
 import android.support.v4.content.AsyncTaskLoader;
-
-import java.io.FileDescriptor;
-import java.io.PrintWriter;
-import java.util.Arrays;
 
 abstract class SimpleCursorLoader extends AsyncTaskLoader<Cursor> {
     final ForceLoadContentObserver mObserver;
