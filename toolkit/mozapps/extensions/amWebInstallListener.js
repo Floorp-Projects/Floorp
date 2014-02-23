@@ -14,10 +14,11 @@
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
+const Cu = Components.utils;
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-Components.utils.import("resource://gre/modules/AddonManager.jsm");
-Components.utils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/AddonManager.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 const URI_XPINSTALL_DIALOG = "chrome://mozapps/content/xpinstall/xpinstallConfirm.xul";
 
@@ -29,14 +30,12 @@ const READY_STATES = [
   AddonManager.STATE_CANCELLED
 ];
 
-["LOG", "WARN", "ERROR"].forEach(function(aName) {
-  this.__defineGetter__(aName, function logFuncGetter() {
-    Components.utils.import("resource://gre/modules/addons/AddonLogging.jsm");
+Cu.import("resource://gre/modules/Log.jsm");
+const LOGGER_ID = "addons.weblistener";
 
-    LogManager.getLogger("addons.weblistener", this);
-    return this[aName];
-  });
-}, this);
+// Create a new logger for use by the Addons Web Listener
+// (Requires AddonManager.jsm)
+let logger = Log.repository.getLogger(LOGGER_ID);
 
 function notifyObservers(aTopic, aWindow, aUri, aInstalls) {
   let info = {
@@ -129,7 +128,7 @@ Installer.prototype = {
         // Just ignore cancelled downloads
         break;
       default:
-        WARN("Download of " + install.sourceURI.spec + " in unexpected state " +
+        logger.warn("Download of " + install.sourceURI.spec + " in unexpected state " +
              install.state);
       }
     }
