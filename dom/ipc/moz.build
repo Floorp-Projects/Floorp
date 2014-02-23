@@ -40,7 +40,6 @@ EXPORTS.mozilla += [
 
 UNIFIED_SOURCES += [
     'AppProcessChecker.cpp',
-    'ColorPickerParent.cpp',
     'ContentChild.cpp',
     'ContentParent.cpp',
     'ContentProcess.cpp',
@@ -69,7 +68,6 @@ IPDL_SOURCES += [
     'PBlob.ipdl',
     'PBlobStream.ipdl',
     'PBrowser.ipdl',
-    'PColorPicker.ipdl',
     'PContent.ipdl',
     'PContentDialog.ipdl',
     'PContentPermission.ipdlh',
