@@ -5,16 +5,12 @@
 
 package org.mozilla.gecko.webapp;
 
+import java.util.ArrayList;
+
 import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.content.SharedPreferences.Editor;
-
-import java.util.ArrayList;
-
-import android.util.Log;
 
 public class Allocator {
 

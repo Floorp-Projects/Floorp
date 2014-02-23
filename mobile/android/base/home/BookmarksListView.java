@@ -5,6 +5,8 @@
 
 package org.mozilla.gecko.home;
 
+import java.util.EnumSet;
+
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
@@ -15,13 +17,9 @@ import android.database.Cursor;
 import android.util.AttributeSet;
 import android.view.KeyEvent;
 import android.view.View;
-import android.view.ViewConfiguration;
 import android.widget.AdapterView;
 import android.widget.HeaderViewListAdapter;
 import android.widget.ListAdapter;
-import android.widget.ListView;
-
-import java.util.EnumSet;
 
 /**
  * A ListView of bookmarks.

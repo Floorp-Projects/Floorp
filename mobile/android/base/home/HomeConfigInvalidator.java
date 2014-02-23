@@ -5,23 +5,7 @@
 
 package org.mozilla.gecko.home;
 
-import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.home.HomeConfig.PanelConfig;
-import org.mozilla.gecko.home.HomeConfig.PanelType;
-import org.mozilla.gecko.home.PanelManager.PanelInfo;
-import org.mozilla.gecko.home.PanelManager.RequestCallback;
-import org.mozilla.gecko.util.GeckoEventListener;
-import org.mozilla.gecko.util.ThreadUtils;
-
 import static org.mozilla.gecko.home.HomeConfig.createBuiltinPanelConfig;
-
-import android.content.Context;
-import android.os.Handler;
-import android.text.TextUtils;
-import android.util.Log;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -29,6 +13,19 @@ import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.home.HomeConfig.PanelConfig;
+import org.mozilla.gecko.home.PanelManager.PanelInfo;
+import org.mozilla.gecko.home.PanelManager.RequestCallback;
+import org.mozilla.gecko.util.GeckoEventListener;
+import org.mozilla.gecko.util.ThreadUtils;
+
+import android.content.Context;
+import android.os.Handler;
+import android.util.Log;
 
 public class HomeConfigInvalidator implements GeckoEventListener {
     public static final String LOGTAG = "HomeConfigInvalidator";

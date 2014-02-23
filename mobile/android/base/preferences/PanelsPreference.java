@@ -4,15 +4,14 @@
 
 package org.mozilla.gecko.preferences;
 
+import org.mozilla.gecko.R;
+
 import android.content.Context;
 import android.content.res.Resources;
-import android.preference.Preference;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-
-import org.mozilla.gecko.R;
 
 public class PanelsPreference extends CustomListPreference {
     protected String LOGTAG = "PanelsPreference";

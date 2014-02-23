@@ -64,7 +64,7 @@ Cu.import("resource://gre/modules/AsyncShutdown.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/Promise.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "AddonRepository",
-                                  "resource://gre/modules/AddonRepository.jsm");
+                                  "resource://gre/modules/addons/AddonRepository.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "CertUtils", function certUtilsLazyGetter() {
   let certUtils = {};
@@ -79,13 +79,13 @@ const CATEGORY_PROVIDER_MODULE = "addon-provider-module";
 
 // A list of providers to load by default
 const DEFAULT_PROVIDERS = [
-  "resource://gre/modules/XPIProvider.jsm",
+  "resource://gre/modules/addons/XPIProvider.jsm",
   "resource://gre/modules/LightweightThemeManager.jsm"
 ];
 
 ["LOG", "WARN", "ERROR"].forEach(function(aName) {
   this.__defineGetter__(aName, function logFuncGetter() {
-    Components.utils.import("resource://gre/modules/AddonLogging.jsm");
+    Components.utils.import("resource://gre/modules/addons/AddonLogging.jsm");
 
     LogManager.getLogger("addons.manager", this);
     return this[aName];
@@ -1072,7 +1072,7 @@ var AddonManagerInternal = {
       }, url);
 
       pendingUpdates++;
-      Components.utils.import("resource://gre/modules/AddonUpdateChecker.jsm");
+      Components.utils.import("resource://gre/modules/addons/AddonUpdateChecker.jsm");
       AddonUpdateChecker.checkForUpdates(hotfixID, null, url, {
         onUpdateCheckComplete: function BUC_onUpdateCheckComplete(aUpdates) {
           let update = AddonUpdateChecker.getNewestCompatibleUpdate(aUpdates);
