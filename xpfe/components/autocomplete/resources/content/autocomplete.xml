@@ -10,14 +10,14 @@
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
           xmlns:xbl="http://www.mozilla.org/xbl">
 
-  <binding id="autocomplete" role="xulcombobox"
+  <binding id="autocomplete" role="xul:combobox"
            extends="chrome://global/content/bindings/textbox.xml#textbox">
     <resources>
       <stylesheet src="chrome://global/content/autocomplete.css"/>
       <stylesheet src="chrome://global/skin/autocomplete.css"/>
     </resources>
 
-    <content sizetopopup="pref">
+    <content>
       <children includes="menupopup"/>
 
       <xul:hbox class="autocomplete-textbox-container" flex="1" align="center">
@@ -1628,6 +1628,9 @@
           var textbox = document.getBindingParent(this);
           var kids = textbox.getElementsByClassName("autocomplete-history-popup");
           if (kids.item(0) && textbox.getAttribute("open") != "true") { // Open history popup
+            var w = textbox.boxObject.width;
+            if (w != kids[0].boxObject.width)
+              kids[0].width = w;
             kids[0].showPopup(textbox, -1, -1, "popup", "bottomleft", "topleft");
             textbox.setAttribute("open", "true");
           }
