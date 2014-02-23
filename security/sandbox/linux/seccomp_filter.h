@@ -125,6 +125,8 @@
   ALLOW_SYSCALL(sendto), \
   ALLOW_SYSCALL(recvfrom), \
   ALLOW_SYSCALL(getdents64), \
+  ALLOW_SYSCALL(sched_yield), \
+  ALLOW_SYSCALL(sched_getscheduler), \
   ALLOW_SYSCALL(sched_setscheduler),
 
 #else
