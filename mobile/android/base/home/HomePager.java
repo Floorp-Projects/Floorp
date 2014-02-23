@@ -5,33 +5,29 @@
 
 package org.mozilla.gecko.home;
 
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.List;
+
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.home.HomeAdapter.OnAddPanelListener;
 import org.mozilla.gecko.home.HomeConfig.PanelConfig;
-import org.mozilla.gecko.home.HomeConfig.PanelType;
-import org.mozilla.gecko.util.HardwareUtils;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.Loader;
 import android.support.v4.view.ViewPager;
-import android.view.ViewGroup.LayoutParams;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
-import android.view.ViewGroup;
 import android.view.View;
-
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.List;
+import android.view.ViewGroup;
 
 public class HomePager extends ViewPager {
 
