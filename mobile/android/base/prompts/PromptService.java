@@ -5,19 +5,15 @@
 
 package org.mozilla.gecko.prompts;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.GeckoEvent;
-import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.GeckoEventListener;
-
-import org.json.JSONObject;
-import org.json.JSONException;
+import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.Context;
 import android.util.Log;
-
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class PromptService implements GeckoEventListener {
     private static final String LOGTAG = "GeckoPromptService";

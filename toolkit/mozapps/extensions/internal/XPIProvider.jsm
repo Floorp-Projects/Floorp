@@ -16,7 +16,7 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/AddonManager.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "AddonRepository",
-                                  "resource://gre/modules/AddonRepository.jsm");
+                                  "resource://gre/modules/addons/AddonRepository.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ChromeManifestParser",
                                   "resource://gre/modules/ChromeManifestParser.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeManager",
@@ -195,7 +195,7 @@ var gIDTest = /^(\{[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\
 ["LOG", "WARN", "ERROR"].forEach(function(aName) {
   Object.defineProperty(this, aName, {
     get: function logFuncGetter() {
-      Components.utils.import("resource://gre/modules/AddonLogging.jsm");
+      Components.utils.import("resource://gre/modules/addons/AddonLogging.jsm");
 
       LogManager.getLogger("addons.xpi", this);
       return this[aName];
@@ -213,7 +213,7 @@ function loadLazyObjects() {
   let scope = {};
   scope.AddonInternal = AddonInternal;
   scope.XPIProvider = XPIProvider;
-  Services.scriptloader.loadSubScript("resource://gre/modules/XPIProviderUtils.js",
+  Services.scriptloader.loadSubScript("resource://gre/modules/addons/XPIProviderUtils.js",
                                       scope);
 
   for (let name of LAZY_OBJECTS) {
@@ -4232,7 +4232,7 @@ var XPIProvider = {
       // sandbox with the latest JS version set explicitly.
       if (aType == "dictionary") {
         this.bootstrapScopes[aId].__SCRIPT_URI_SPEC__ =
-            "resource://gre/modules/SpellCheckDictionaryBootstrap.js"
+            "resource://gre/modules/addons/SpellCheckDictionaryBootstrap.js"
       } else {
         this.bootstrapScopes[aId].__SCRIPT_URI_SPEC__ = uri;
       }
@@ -5913,7 +5913,7 @@ function UpdateChecker(aAddon, aListener, aReason, aAppVersion, aPlatformVersion
   if (!aListener || !aReason)
     throw Cr.NS_ERROR_INVALID_ARG;
 
-  Components.utils.import("resource://gre/modules/AddonUpdateChecker.jsm");
+  Components.utils.import("resource://gre/modules/addons/AddonUpdateChecker.jsm");
 
   this.addon = aAddon;
   aAddon._updateCheck = this;

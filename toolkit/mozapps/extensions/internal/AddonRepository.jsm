@@ -22,7 +22,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "OS",
 XPCOMUtils.defineLazyModuleGetter(this, "DeferredSave",
                                   "resource://gre/modules/DeferredSave.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "AddonRepository_SQLiteMigrator",
-                                  "resource://gre/modules/AddonRepository_SQLiteMigrator.jsm");
+                                  "resource://gre/modules/addons/AddonRepository_SQLiteMigrator.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/Promise.jsm");
 
@@ -63,7 +63,7 @@ const TOOLKIT_ID     = "toolkit@mozilla.org";
 
 ["LOG", "WARN", "ERROR"].forEach(function(aName) {
   this.__defineGetter__(aName, function logFuncGetter() {
-    Components.utils.import("resource://gre/modules/AddonLogging.jsm");
+    Components.utils.import("resource://gre/modules/addons/AddonLogging.jsm");
 
     LogManager.getLogger("addons.repository", this);
     return this[aName];
