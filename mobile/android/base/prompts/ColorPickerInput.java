@@ -5,18 +5,14 @@
 
 package org.mozilla.gecko.prompts;
 
+import org.json.JSONObject;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.widget.BasicColorPicker;
 
-import org.json.JSONObject;
-
 import android.content.Context;
 import android.graphics.Color;
-import android.view.View;
 import android.view.LayoutInflater;
-import android.widget.Button;
-import android.widget.LinearLayout;
-import android.widget.LinearLayout.LayoutParams;
+import android.view.View;
 
 public class ColorPickerInput extends PromptInput {
     public static final String INPUT_TYPE = "color";
