@@ -5,6 +5,8 @@
 
 package org.mozilla.gecko.db;
 
+import java.util.List;
+
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserContract.ExpirePriority;
 import org.mozilla.gecko.favicons.decoders.LoadFaviconResult;
@@ -14,11 +16,8 @@ import android.content.ContentResolver;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.database.CursorWrapper;
-import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.util.SparseArray;
-
-import java.util.List;
 
 public class BrowserDB {
     private static boolean sAreContentProvidersEnabled = true;
