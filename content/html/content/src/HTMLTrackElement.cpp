@@ -61,6 +61,16 @@ NS_NewHTMLTrackElement(already_AddRefed<nsINodeInfo> aNodeInfo,
 namespace mozilla {
 namespace dom {
 
+// Map html attribute string values to TextTrackKind enums.
+static MOZ_CONSTEXPR nsAttrValue::EnumTable kKindTable[] = {
+  { "subtitles", static_cast<int16_t>(TextTrackKind::Subtitles) },
+  { "captions", static_cast<int16_t>(TextTrackKind::Captions) },
+  { "descriptions", static_cast<int16_t>(TextTrackKind::Descriptions) },
+  { "chapters", static_cast<int16_t>(TextTrackKind::Chapters) },
+  { "metadata", static_cast<int16_t>(TextTrackKind::Metadata) },
+  { 0 }
+};
+
 // The default value for kKindTable is "subtitles"
 static MOZ_CONSTEXPR const char* kKindTableDefaultString = kKindTable->tag;
 

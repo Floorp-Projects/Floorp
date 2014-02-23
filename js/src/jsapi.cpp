@@ -1352,13 +1352,6 @@ JS_GetClassPrototype(JSContext *cx, JSProtoKey key, MutableHandleObject objp)
     return js_GetClassPrototype(cx, key, objp);
 }
 
-JS_PUBLIC_API(JSProtoKey)
-JS_IdentifyClassPrototype(JSObject *obj)
-{
-    JS_ASSERT(!obj->is<CrossCompartmentWrapperObject>());
-    return js_IdentifyClassPrototype(obj);
-}
-
 extern JS_PUBLIC_API(JSProtoKey)
 JS_IdToProtoKey(JSContext *cx, HandleId id)
 {
@@ -2419,11 +2412,20 @@ JS_GetConstructor(JSContext *cx, HandleObject proto)
 }
 
 JS_PUBLIC_API(bool)
-JS_GetObjectId(JSContext *cx, JSObject *obj, jsid *idp)
+JS_GetObjectId(JSContext *cx, HandleObject obj, MutableHandleId idp)
 {
     AssertHeapIsIdle(cx);
     assertSameCompartment(cx, obj);
-    *idp = OBJECT_TO_JSID(obj);
+
+#ifdef JSGC_GENERATIONAL
+    // Ensure that the object is tenured before returning it.
+    if (IsInsideNursery(cx->runtime(), obj)) {
+        MinorGC(cx, JS::gcreason::EVICT_NURSERY);
+        MOZ_ASSERT(!IsInsideNursery(cx->runtime(), obj));
+    }
+#endif
+
+    idp.set(OBJECT_TO_JSID(obj));
     return true;
 }
 

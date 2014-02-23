@@ -27,7 +27,6 @@ namespace widget {
 namespace winrt {
 extern ComPtr<MetroApp> sMetroApp;
 extern nsTArray<nsString>* sSettingsArray;
-extern ComPtr<FrameworkView> sFrameworkView;
 } } }
 
 namespace mozilla {
@@ -64,7 +63,7 @@ nsWinMetroUtils::PinTileAsync(const nsAString &aTileID,
                               const nsAString &aTileImage,
                               const nsAString &aSmallTileImage)
 {
-  if (XRE_GetWindowsEnvironment() == WindowsEnvironmentType_Desktop) {
+  if (XRE_GetWindowsEnvironment() != WindowsEnvironmentType_Metro) {
     NS_WARNING("PinTileAsync can't be called on the desktop.");
     return NS_ERROR_FAILURE;
   }
@@ -117,7 +116,7 @@ nsWinMetroUtils::PinTileAsync(const nsAString &aTileID,
 NS_IMETHODIMP
 nsWinMetroUtils::UnpinTileAsync(const nsAString &aTileID)
 {
-  if (XRE_GetWindowsEnvironment() == WindowsEnvironmentType_Desktop) {
+  if (XRE_GetWindowsEnvironment() != WindowsEnvironmentType_Metro) {
     NS_WARNING("UnpinTileAsync can't be called on the desktop.");
     return NS_ERROR_FAILURE;
   }
@@ -151,7 +150,7 @@ nsWinMetroUtils::UnpinTileAsync(const nsAString &aTileID)
 NS_IMETHODIMP
 nsWinMetroUtils::IsTilePinned(const nsAString &aTileID, bool *aIsPinned)
 {
-  if (XRE_GetWindowsEnvironment() == WindowsEnvironmentType_Desktop) {
+  if (XRE_GetWindowsEnvironment() != WindowsEnvironmentType_Metro) {
     NS_WARNING("IsTilePinned can't be called on the desktop.");
     return NS_ERROR_FAILURE;
   }
@@ -230,7 +229,7 @@ nsWinMetroUtils::ShowNativeToast(const nsAString &aTitle,
 NS_IMETHODIMP
 nsWinMetroUtils::ShowSettingsFlyout()
 {
-  if (XRE_GetWindowsEnvironment() == WindowsEnvironmentType_Desktop) {
+  if (XRE_GetWindowsEnvironment() != WindowsEnvironmentType_Metro) {
     NS_WARNING("Settings flyout can't be shown on the desktop.");
     return NS_ERROR_FAILURE;
   }
@@ -250,57 +249,55 @@ nsWinMetroUtils::GetImmersive(bool *aImersive)
 NS_IMETHODIMP
 nsWinMetroUtils::GetActivationURI(nsAString &aActivationURI)
 {
-  if (!sFrameworkView) {
-    NS_WARNING("GetActivationURI used before view is created!");
-    return NS_OK;
+  if (XRE_GetWindowsEnvironment() != WindowsEnvironmentType_Metro) {
+    return NS_ERROR_FAILURE;
   }
-  sFrameworkView->GetActivationURI(aActivationURI);
+  FrameworkView::GetActivationURI(aActivationURI);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsWinMetroUtils::GetPreviousExecutionState(int32_t *out)
 {
-  if (!sFrameworkView) {
-    NS_WARNING("GetPreviousExecutionState used before view is created!");
-    return NS_OK;
+  if (XRE_GetWindowsEnvironment() != WindowsEnvironmentType_Metro) {
+    return NS_ERROR_FAILURE;
   }
-  *out = sFrameworkView->GetPreviousExecutionState();
+  *out = FrameworkView::GetPreviousExecutionState();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsWinMetroUtils::GetKeyboardVisible(bool *aImersive)
 {
-  *aImersive = mozilla::widget::winrt::FrameworkView::IsKeyboardVisible();
+  *aImersive = FrameworkView::IsKeyboardVisible();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsWinMetroUtils::GetKeyboardX(uint32_t *aX)
 {
-  *aX = (uint32_t)floor(mozilla::widget::winrt::FrameworkView::KeyboardVisibleRect().X);
+  *aX = static_cast<uint32_t>(floor(FrameworkView::KeyboardVisibleRect().X));
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsWinMetroUtils::GetKeyboardY(uint32_t *aY)
 {
-  *aY = (uint32_t)floor(mozilla::widget::winrt::FrameworkView::KeyboardVisibleRect().Y);
+  *aY = static_cast<uint32_t>(floor(FrameworkView::KeyboardVisibleRect().Y));
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsWinMetroUtils::GetKeyboardWidth(uint32_t *aWidth)
 {
-  *aWidth = (uint32_t)ceil(mozilla::widget::winrt::FrameworkView::KeyboardVisibleRect().Width);
+  *aWidth = static_cast<uint32_t>(ceil(FrameworkView::KeyboardVisibleRect().Width));
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsWinMetroUtils::GetKeyboardHeight(uint32_t *aHeight)
 {
-  *aHeight = (uint32_t)ceil(mozilla::widget::winrt::FrameworkView::KeyboardVisibleRect().Height);
+  *aHeight = static_cast<uint32_t>(ceil(FrameworkView::KeyboardVisibleRect().Height));
   return NS_OK;
 }
 

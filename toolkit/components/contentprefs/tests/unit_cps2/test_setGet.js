@@ -170,4 +170,26 @@ let tests = [
 
     yield;
   },
+
+  function get_nameOnly() {
+    yield set("a.com", "foo", 1);
+    yield set("a.com", "bar", 2);
+    yield set("b.com", "foo", 3);
+    yield setGlobal("foo", 4);
+
+    yield getOKEx("getByName", ["foo", undefined], [
+      {"domain": "a.com", "name": "foo", "value": 1},
+      {"domain": "b.com", "name": "foo", "value": 3},
+      {"domain": null, "name": "foo", "value": 4}
+    ]);
+
+    let context = { usePrivateBrowsing: true };
+    yield set("b.com", "foo", 5, context);
+
+    yield getOKEx("getByName", ["foo", context], [
+      {"domain": "a.com", "name": "foo", "value": 1},
+      {"domain": null, "name": "foo", "value": 4},
+      {"domain": "b.com", "name": "foo", "value": 5}
+    ]);
+  }
 ];

@@ -18,7 +18,7 @@ const LIST_UPDATED_TOPIC     = "plugins-list-updated";
 
 for (let name of ["LOG", "WARN", "ERROR"]) {
   this.__defineGetter__(name, function() {
-    Components.utils.import("resource://gre/modules/AddonLogging.jsm");
+    Components.utils.import("resource://gre/modules/addons/AddonLogging.jsm");
 
     LogManager.getLogger("addons.plugins", this);
     return this[name];

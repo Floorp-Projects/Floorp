@@ -18,7 +18,7 @@ const PREF_GETADDONS_BYIDS_PERFORMANCE   = "extensions.getAddons.getWithPerforma
 // Forcibly end the test if it runs longer than 15 minutes
 const TIMEOUT_MS = 900000;
 
-Components.utils.import("resource://gre/modules/AddonRepository.jsm");
+Components.utils.import("resource://gre/modules/addons/AddonRepository.jsm");
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/FileUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
@@ -445,13 +445,13 @@ function shutdownManager() {
 
   // Force the XPIProvider provider to reload to better
   // simulate real-world usage.
-  let XPIscope = Components.utils.import("resource://gre/modules/XPIProvider.jsm");
+  let XPIscope = Components.utils.import("resource://gre/modules/addons/XPIProvider.jsm");
   // This would be cleaner if I could get it as the rejection reason from
   // the AddonManagerInternal.shutdown() promise
   gXPISaveError = XPIscope.XPIProvider._shutdownError;
   do_print("gXPISaveError set to: " + gXPISaveError);
   AddonManagerPrivate.unregisterProvider(XPIscope.XPIProvider);
-  Components.utils.unload("resource://gre/modules/XPIProvider.jsm");
+  Components.utils.unload("resource://gre/modules/addons/XPIProvider.jsm");
 }
 
 function loadAddonsList() {

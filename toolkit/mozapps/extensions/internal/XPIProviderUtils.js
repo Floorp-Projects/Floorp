@@ -14,7 +14,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/AddonManager.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "AddonRepository",
-                                  "resource://gre/modules/AddonRepository.jsm");
+                                  "resource://gre/modules/addons/AddonRepository.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
                                   "resource://gre/modules/FileUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DeferredSave",
@@ -27,7 +27,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "OS",
 ["LOG", "WARN", "ERROR"].forEach(function(aName) {
   Object.defineProperty(this, aName, {
     get: function logFuncGetter () {
-      Cu.import("resource://gre/modules/AddonLogging.jsm");
+      Cu.import("resource://gre/modules/addons/AddonLogging.jsm");
 
       LogManager.getLogger("addons.xpi-utils", this);
       return this[aName];

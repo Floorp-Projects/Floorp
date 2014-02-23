@@ -3,8 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # This makefile just builds support for reading archives.
-CFLAGS += -DMAR_NSS
-
 include $(topsrcdir)/config/rules.mk
 
 # The intermediate (.ii/.s) files for host and target can have the same name...
