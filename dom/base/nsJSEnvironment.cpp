@@ -52,8 +52,6 @@
 #include "nsGlobalWindow.h"
 #include "nsScriptNameSpaceManager.h"
 #include "StructuredCloneTags.h"
-#include "mozilla/AutoRestore.h"
-#include "mozilla/dom/ErrorEvent.h"
 #include "mozilla/dom/ImageData.h"
 #include "mozilla/dom/ImageDataBinding.h"
 #include "nsAXPCNativeCallContext.h"
@@ -314,7 +312,7 @@ private:
 // XXXmarkh - This function is mis-placed!
 bool
 NS_HandleScriptError(nsIScriptGlobalObject *aScriptGlobal,
-                     const ErrorEventInit &aErrorEventInit,
+                     InternalScriptErrorEvent *aErrorEvent,
                      nsEventStatus *aStatus)
 {
   bool called = false;
@@ -327,17 +325,11 @@ NS_HandleScriptError(nsIScriptGlobalObject *aScriptGlobal,
     static int32_t errorDepth; // Recursion prevention
     ++errorDepth;
 
-    if (errorDepth < 2) {
+    if (presContext && errorDepth < 2) {
       // Dispatch() must be synchronous for the recursion block
       // (errorDepth) to work.
-      nsRefPtr<ErrorEvent> event =
-        ErrorEvent::Constructor(static_cast<nsGlobalWindow*>(win.get()),
-                                NS_LITERAL_STRING("error"),
-                                aErrorEventInit);
-      event->SetTrusted(true);
-
-      nsEventDispatcher::DispatchDOMEvent(win, nullptr, event, presContext,
-                                          aStatus);
+      nsEventDispatcher::Dispatch(win, presContext, aErrorEvent, nullptr,
+                                  aStatus);
       called = true;
     }
     --errorDepth;
@@ -452,47 +444,44 @@ public:
       if (docShell &&
           !JSREPORT_IS_WARNING(mFlags) &&
           !sHandlingScriptError) {
-        AutoRestore<bool> recursionGuard(sHandlingScriptError);
-        sHandlingScriptError = true;
+        sHandlingScriptError = true; // Recursion prevention
 
         nsRefPtr<nsPresContext> presContext;
         docShell->GetPresContext(getter_AddRefs(presContext));
 
-        ErrorEventInit init;
-        init.mCancelable = true;
-        init.mFilename = mFileName;
-        init.mBubbles = true;
+        if (presContext) {
+          InternalScriptErrorEvent errorevent(true, NS_LOAD_ERROR);
 
-        nsCOMPtr<nsIScriptObjectPrincipal> sop(do_QueryInterface(win));
-        NS_ENSURE_STATE(sop);
-        nsIPrincipal* p = sop->GetPrincipal();
-        NS_ENSURE_STATE(p);
+          errorevent.fileName = mFileName.get();
 
-        bool sameOrigin = !mOriginPrincipal;
+          nsCOMPtr<nsIScriptObjectPrincipal> sop(do_QueryInterface(win));
+          NS_ENSURE_STATE(sop);
+          nsIPrincipal* p = sop->GetPrincipal();
+          NS_ENSURE_STATE(p);
 
-        if (p && !sameOrigin) {
-          if (NS_FAILED(p->Subsumes(mOriginPrincipal, &sameOrigin))) {
-            sameOrigin = false;
+          bool sameOrigin = !mOriginPrincipal;
+
+          if (p && !sameOrigin) {
+            if (NS_FAILED(p->Subsumes(mOriginPrincipal, &sameOrigin))) {
+              sameOrigin = false;
+            }
           }
+
+          NS_NAMED_LITERAL_STRING(xoriginMsg, "Script error.");
+          if (sameOrigin) {
+            errorevent.errorMsg = mErrorMsg.get();
+            errorevent.lineNr = mLineNumber;
+          } else {
+            NS_WARNING("Not same origin error!");
+            errorevent.errorMsg = xoriginMsg.get();
+            errorevent.lineNr = 0;
+          }
+
+          nsEventDispatcher::Dispatch(win, presContext, &errorevent, nullptr,
+                                      &status);
         }
 
-        NS_NAMED_LITERAL_STRING(xoriginMsg, "Script error.");
-        if (sameOrigin) {
-          init.mMessage = mErrorMsg;
-          init.mLineno = mLineNumber;
-        } else {
-          NS_WARNING("Not same origin error!");
-          init.mMessage = xoriginMsg;
-          init.mLineno = 0;
-        }
-
-        nsRefPtr<ErrorEvent> event =
-          ErrorEvent::Constructor(static_cast<nsGlobalWindow*>(win.get()),
-                                  NS_LITERAL_STRING("error"), init);
-        event->SetTrusted(true);
-
-        nsEventDispatcher::DispatchDOMEvent(win, nullptr, event, presContext,
-                                            &status);
+        sHandlingScriptError = false;
       }
     }
 

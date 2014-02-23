@@ -11992,17 +11992,9 @@ class CGEventClass(CGBindingImplClass):
               "parentType": self.parentType
             })
 
-        className = descriptor.nativeType.split('::')[-1]
-        asConcreteTypeMethod = ClassMethod("As%s" % className,
-                                           "%s*" % className,
-                                           [],
-                                           virtual=True,
-                                           body="return this;",
-                                           breakAfterReturnDecl=" ")
-
-        CGClass.__init__(self, className,
+        CGClass.__init__(self, descriptor.nativeType.split('::')[-1],
                          bases=[ClassBase(self.parentType)],
-                         methods=[asConcreteTypeMethod]+self.methodDecls,
+                         methods=self.methodDecls,
                          members=members,
                          extradeclarations=baseDeclarations)
 
