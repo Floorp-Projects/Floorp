@@ -5,14 +5,19 @@
 
 package org.mozilla.gecko.toolbar;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.EnumSet;
+import java.util.List;
+
+import org.json.JSONObject;
 import org.mozilla.gecko.BrowserApp;
-import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.LightweightTheme;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.ReaderModeUtils;
-import org.mozilla.gecko.SiteIdentity.SecurityMode;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.animation.PropertyAnimator;
@@ -24,18 +29,15 @@ import org.mozilla.gecko.toolbar.ToolbarDisplayLayout.OnStopListener;
 import org.mozilla.gecko.toolbar.ToolbarDisplayLayout.OnTitleChangeListener;
 import org.mozilla.gecko.toolbar.ToolbarDisplayLayout.UpdateFlags;
 import org.mozilla.gecko.util.Clipboard;
+import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.MenuUtils;
-import org.mozilla.gecko.util.ThreadUtils;
-import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.widget.GeckoImageButton;
 import org.mozilla.gecko.widget.GeckoImageView;
 import org.mozilla.gecko.widget.GeckoRelativeLayout;
-import org.json.JSONObject;
 
 import android.content.Context;
 import android.content.res.Resources;
-import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.StateListDrawable;
 import android.os.Build;
@@ -48,7 +50,6 @@ import android.view.LayoutInflater;
 import android.view.MenuInflater;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup.MarginLayoutParams;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.Interpolator;
 import android.view.inputmethod.InputMethodManager;
@@ -57,11 +58,6 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
-
-import java.util.Arrays;
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.List;
 
 /**
 * {@code BrowserToolbar} is single entry point for users of the toolbar
