@@ -14,6 +14,7 @@
 #include "mozIApplication.h"
 #include "mozilla/BrowserElementParent.h"
 #include "mozilla/docshell/OfflineCacheUpdateParent.h"
+#include "mozilla/dom/PColorPickerParent.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/PContentPermissionRequestParent.h"
 #include "mozilla/Hal.h"
@@ -1623,6 +1624,20 @@ TabParent::GetAuthPrompt(uint32_t aPromptReason, const nsIID& iid,
   // of the dialogs works as it should when using tabs.
   return wwatch->GetPrompt(window, iid,
                            reinterpret_cast<void**>(aResult));
+}
+
+PColorPickerParent*
+TabParent::AllocPColorPickerParent(const nsString& aTitle,
+                                   const nsString& aInitialColor)
+{
+  return new ColorPickerParent(aTitle, aInitialColor);
+}
+
+bool
+TabParent::DeallocPColorPickerParent(PColorPickerParent* actor)
+{
+  delete actor;
+  return true;
 }
 
 PContentDialogParent*
