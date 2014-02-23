@@ -49,7 +49,6 @@ enum nsEventStructType
   NS_TOUCH_EVENT,                    // WidgetTouchEvent
 
   // ContentEvents.h
-  NS_SCRIPT_ERROR_EVENT,             // InternalScriptErrorEvent
   NS_SCROLLPORT_EVENT,               // InternalScrollPortEvent
   NS_SCROLLAREA_EVENT,               // InternalScrollAreaEvent
   NS_FORM_EVENT,                     // InternalFormEvent

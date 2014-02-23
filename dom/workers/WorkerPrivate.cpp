@@ -1186,16 +1186,16 @@ public:
     // they show up in the error console.
     if (!JSREPORT_IS_WARNING(aFlags)) {
       // First fire an ErrorEvent at the worker.
-      if (aTarget) {
-        ErrorEventInit init;
-        init.mMessage = aMessage;
-        init.mFilename = aFilename;
-        init.mLineno = aLineNumber;
-        init.mCancelable = true;
+      ErrorEventInit init;
+      init.mMessage = aMessage;
+      init.mFilename = aFilename;
+      init.mLineno = aLineNumber;
+      init.mCancelable = true;
+      init.mBubbles = true;
 
+      if (aTarget) {
         nsRefPtr<ErrorEvent> event =
           ErrorEvent::Constructor(aTarget, NS_LITERAL_STRING("error"), init);
-
         event->SetTrusted(true);
 
         nsEventStatus status = nsEventStatus_eIgnore;
@@ -1219,30 +1219,22 @@ public:
           WorkerGlobalScope* globalTarget = aWorkerPrivate->GlobalScope();
           MOZ_ASSERT(target == globalTarget->GetWrapperPreserveColor());
 
-          // Icky, we have to fire an InternalScriptErrorEvent...
-          MOZ_ASSERT(!NS_IsMainThread());
-          InternalScriptErrorEvent event(true, NS_USER_DEFINED_EVENT);
-          event.lineNr = aLineNumber;
-          event.errorMsg = aMessage.get();
-          event.fileName = aFilename.get();
-          event.typeString = NS_LITERAL_STRING("error");
+          nsRefPtr<ErrorEvent> event =
+            ErrorEvent::Constructor(aTarget, NS_LITERAL_STRING("error"), init);
+          event->SetTrusted(true);
 
           nsIDOMEventTarget* target = static_cast<nsIDOMEventTarget*>(globalTarget);
-          if (NS_FAILED(nsEventDispatcher::Dispatch(target, nullptr, &event,
-                                                    nullptr, &status))) {
+          if (NS_FAILED(nsEventDispatcher::DispatchDOMEvent(target, nullptr,
+                                                            event, nullptr,
+                                                            &status))) {
             NS_WARNING("Failed to dispatch worker thread error event!");
             status = nsEventStatus_eIgnore;
           }
         }
         else if ((sgo = nsJSUtils::GetStaticScriptGlobal(target))) {
-          // Icky, we have to fire an InternalScriptErrorEvent...
           MOZ_ASSERT(NS_IsMainThread());
-          InternalScriptErrorEvent event(true, NS_LOAD_ERROR);
-          event.lineNr = aLineNumber;
-          event.errorMsg = aMessage.get();
-          event.fileName = aFilename.get();
 
-          if (NS_FAILED(sgo->HandleScriptError(&event, &status))) {
+          if (NS_FAILED(sgo->HandleScriptError(init, &status))) {
             NS_WARNING("Failed to dispatch main thread error event!");
             status = nsEventStatus_eIgnore;
           }
@@ -3193,13 +3185,15 @@ WorkerPrivateParent<Derived>::BroadcastErrorToSharedWorkers(
     MOZ_ASSERT(sgo);
 
     MOZ_ASSERT(NS_IsMainThread());
-    InternalScriptErrorEvent event(true, NS_LOAD_ERROR);
-    event.lineNr = aLineNumber;
-    event.errorMsg = aMessage.BeginReading();
-    event.fileName = aFilename.BeginReading();
+    ErrorEventInit init;
+    init.mLineno = aLineNumber;
+    init.mFilename = aFilename;
+    init.mMessage = aMessage;
+    init.mCancelable = true;
+    init.mBubbles = true;
 
     nsEventStatus status = nsEventStatus_eIgnore;
-    rv = sgo->HandleScriptError(&event, &status);
+    rv = sgo->HandleScriptError(init, &status);
     if (NS_FAILED(rv)) {
       Throw(cx, rv);
       JS_ReportPendingException(cx);
