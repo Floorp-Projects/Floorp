@@ -1630,15 +1630,30 @@ nsNSSCertificateDB::AddCert(const nsACString & aCertDER, const char *aTrust,
   return AddCertFromBase64(base64.get(), aTrust, aName);
 }
 
+NS_IMETHODIMP
+nsNSSCertificateDB::SetCertTrustFromString(nsIX509Cert3* cert,
+                                           const char* trustString)
+{
+  CERTCertTrust trust;
+
+  // need to calculate the trust bits from the aTrust string.
+  SECStatus srv = CERT_DecodeTrustString(&trust,
+                                         const_cast<char *>(trustString));
+  if (srv != SECSuccess) {
+    return MapSECStatus(SECFailure);
+  }
+  insanity::pkix::ScopedCERTCertificate nssCert(cert->GetCert());
+  srv = CERT_ChangeCertTrust(CERT_GetDefaultCertDB(), nssCert.get(), &trust);
+  return MapSECStatus(srv);
+}
+
 NS_IMETHODIMP 
 nsNSSCertificateDB::GetCerts(nsIX509CertList **_retval)
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  
+  }  
 
   nsCOMPtr<nsIInterfaceRequestor> ctx = new PipUIContext();
   nsCOMPtr<nsIX509CertList> nssCertList;

@@ -303,7 +303,6 @@ MapCertErrorToProbeValue(PRErrorCode errorCode)
     case SEC_ERROR_UNTRUSTED_ISSUER:                   return  4;
     case SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE:         return  5;
     case SEC_ERROR_UNTRUSTED_CERT:                     return  6;
-    case SEC_ERROR_INADEQUATE_KEY_USAGE:               return  7;
     case SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED:  return  8;
     case SSL_ERROR_BAD_CERT_DOMAIN:                    return  9;
     case SEC_ERROR_EXPIRED_CERTIFICATE:                return 10;
@@ -311,6 +310,79 @@ MapCertErrorToProbeValue(PRErrorCode errorCode)
   NS_WARNING("Unknown certificate error code. Does MapCertErrorToProbeValue "
              "handle everything in PRErrorCodeToOverrideType?");
   return 0;
+}
+
+SECStatus
+InsanityDetermineCertOverrideErrors(CERTCertificate* cert,
+                                    const char* hostName, PRTime now,
+                                    PRErrorCode defaultErrorCodeToReport,
+                                    /*out*/ uint32_t& collectedErrors,
+                                    /*out*/ PRErrorCode& errorCodeTrust,
+                                    /*out*/ PRErrorCode& errorCodeMismatch,
+                                    /*out*/ PRErrorCode& errorCodeExpired)
+{
+  MOZ_ASSERT(cert);
+  MOZ_ASSERT(hostName);
+  MOZ_ASSERT(collectedErrors == 0);
+  MOZ_ASSERT(errorCodeTrust == 0);
+  MOZ_ASSERT(errorCodeMismatch == 0);
+  MOZ_ASSERT(errorCodeExpired == 0);
+
+  // Assumes the error prioritization described in insanity::pkix's
+  // BuildForward function. Also assumes that CERT_VerifyCertName was only
+  // called if CertVerifier::VerifyCert succeeded.
+  switch (defaultErrorCodeToReport) {
+    case SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED:
+    case SEC_ERROR_UNKNOWN_ISSUER:
+    {
+      collectedErrors = nsICertOverrideService::ERROR_UNTRUSTED;
+      errorCodeTrust = defaultErrorCodeToReport;
+
+      SECCertTimeValidity validity = CERT_CheckCertValidTimes(cert, now, false);
+      if (validity == secCertTimeUndetermined) {
+        PR_SetError(defaultErrorCodeToReport, 0);
+        return SECFailure;
+      }
+      if (validity != secCertTimeValid) {
+        collectedErrors |= nsICertOverrideService::ERROR_TIME;
+        errorCodeExpired = SEC_ERROR_EXPIRED_CERTIFICATE;
+      }
+      break;
+    }
+
+    case SEC_ERROR_EXPIRED_CERTIFICATE:
+      collectedErrors = nsICertOverrideService::ERROR_TIME;
+      errorCodeExpired = SEC_ERROR_EXPIRED_CERTIFICATE;
+      break;
+
+    case SSL_ERROR_BAD_CERT_DOMAIN:
+      collectedErrors = nsICertOverrideService::ERROR_MISMATCH;
+      errorCodeMismatch = SSL_ERROR_BAD_CERT_DOMAIN;
+      break;
+
+    case 0:
+      NS_ERROR("No error code set during certificate validation failure.");
+      PR_SetError(PR_INVALID_STATE_ERROR, 0);
+      return SECFailure;
+
+    default:
+      PR_SetError(defaultErrorCodeToReport, 0);
+      return SECFailure;
+  }
+
+  if (defaultErrorCodeToReport != SSL_ERROR_BAD_CERT_DOMAIN) {
+    if (CERT_VerifyCertName(cert, hostName) != SECSuccess) {
+      if (PR_GetError() != SSL_ERROR_BAD_CERT_DOMAIN) {
+        PR_SetError(defaultErrorCodeToReport, 0);
+        return SECFailure;
+      }
+
+      collectedErrors |= nsICertOverrideService::ERROR_MISMATCH;
+      errorCodeMismatch = SSL_ERROR_BAD_CERT_DOMAIN;
+    }
+  }
+
+  return SECSuccess;
 }
 
 SSLServerCertVerificationResult*
@@ -494,7 +566,6 @@ PRErrorCodeToOverrideType(PRErrorCode errorCode)
     case SEC_ERROR_UNTRUSTED_ISSUER:
     case SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE:
     case SEC_ERROR_UNTRUSTED_CERT:
-    case SEC_ERROR_INADEQUATE_KEY_USAGE:
     case SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED:
       // We group all these errors as "cert not trusted"
       return nsICertOverrideService::ERROR_UNTRUSTED;
@@ -505,6 +576,100 @@ PRErrorCodeToOverrideType(PRErrorCode errorCode)
     default:
       return 0;
   }
+}
+
+SECStatus
+NSSDetermineCertOverrideErrors(CertVerifier& certVerifier,
+                               CERTCertificate* cert,
+                               const SECItem* stapledOCSPResponse,
+                               TransportSecurityInfo* infoObject,
+                               PRTime now,
+                               PRErrorCode defaultErrorCodeToReport,
+                               /*out*/ uint32_t& collectedErrors,
+                               /*out*/ PRErrorCode& errorCodeTrust,
+                               /*out*/ PRErrorCode& errorCodeMismatch,
+                               /*out*/ PRErrorCode& errorCodeExpired)
+{
+  MOZ_ASSERT(cert);
+  MOZ_ASSERT(infoObject);
+  MOZ_ASSERT(defaultErrorCodeToReport != 0);
+  MOZ_ASSERT(collectedErrors == 0);
+  MOZ_ASSERT(errorCodeTrust == 0);
+  MOZ_ASSERT(errorCodeMismatch == 0);
+  MOZ_ASSERT(errorCodeExpired == 0);
+
+  if (defaultErrorCodeToReport == 0) {
+    NS_ERROR("No error code set during certificate validation failure.");
+    PR_SetError(PR_INVALID_STATE_ERROR, 0);
+    return SECFailure;
+  }
+
+  // We only allow overrides for certain errors. Return early if the error
+  // is not one of them. This is to avoid doing revocation fetching in the
+  // case of OCSP stapling and probably for other reasons.
+  if (PRErrorCodeToOverrideType(defaultErrorCodeToReport) == 0) {
+    PR_SetError(defaultErrorCodeToReport, 0);
+    return SECFailure;
+  }
+
+  PLArenaPool* log_arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+  PLArenaPoolCleanerFalseParam log_arena_cleaner(log_arena);
+  if (!log_arena) {
+    NS_ERROR("PORT_NewArena failed");
+    return SECFailure; // PORT_NewArena set error code
+  }
+
+  CERTVerifyLog* verify_log = PORT_ArenaZNew(log_arena, CERTVerifyLog);
+  if (!verify_log) {
+    NS_ERROR("PORT_ArenaZNew failed");
+    return SECFailure; // PORT_ArenaZNew set error code
+  }
+  CERTVerifyLogContentsCleaner verify_log_cleaner(verify_log);
+  verify_log->arena = log_arena;
+
+  // We ignore the result code of the cert verification (i.e. VerifyCert's rv)
+  // Either it is a failure, which is expected, and we'll process the
+  //                         verify log below.
+  // Or it is a success, then a domain mismatch is the only
+  //                     possible failure.
+  // XXX TODO: convert to VerifySSLServerCert
+  // XXX TODO: get rid of error log
+  certVerifier.VerifyCert(cert, stapledOCSPResponse, certificateUsageSSLServer,
+                          now, infoObject, 0, nullptr, nullptr, verify_log);
+
+  // Check the name field against the desired hostname.
+  if (CERT_VerifyCertName(cert, infoObject->GetHostNameRaw()) != SECSuccess) {
+    collectedErrors |= nsICertOverrideService::ERROR_MISMATCH;
+    errorCodeMismatch = SSL_ERROR_BAD_CERT_DOMAIN;
+  }
+
+  CERTVerifyLogNode* i_node;
+  for (i_node = verify_log->head; i_node; i_node = i_node->next) {
+    uint32_t overrideType = PRErrorCodeToOverrideType(i_node->error);
+    // If this isn't an overridable error, set the error and return.
+    if (overrideType == 0) {
+      PR_SetError(i_node->error, 0);
+      return SECFailure;
+    }
+    collectedErrors |= overrideType;
+    if (overrideType == nsICertOverrideService::ERROR_UNTRUSTED) {
+      if (errorCodeTrust == 0) {
+        errorCodeTrust = i_node->error;
+      }
+    } else if (overrideType == nsICertOverrideService::ERROR_MISMATCH) {
+      if (errorCodeMismatch == 0) {
+        errorCodeMismatch = i_node->error;
+      }
+    } else if (overrideType == nsICertOverrideService::ERROR_TIME) {
+      if (errorCodeExpired == 0) {
+        errorCodeExpired = i_node->error;
+      }
+    } else {
+      MOZ_CRASH("unexpected return value from PRErrorCodeToOverrideType");
+    }
+  }
+
+  return SECSuccess;
 }
 
 // Returns null with the error code (PR_GetError()) set if it does not create
@@ -522,17 +687,41 @@ CreateCertErrorRunnable(CertVerifier& certVerifier,
   MOZ_ASSERT(infoObject);
   MOZ_ASSERT(cert);
 
-  // We only allow overrides for certain errors. Return early if the error
-  // is not one of them. This is to avoid doing revocation fetching in the
-  // case of OCSP stapling and probably for other reasons.
-  if (PRErrorCodeToOverrideType(defaultErrorCodeToReport) == 0) {
-    PR_SetError(defaultErrorCodeToReport, 0);
-    return nullptr;
-  }
+  uint32_t collected_errors = 0;
+  PRErrorCode errorCodeTrust = 0;
+  PRErrorCode errorCodeMismatch = 0;
+  PRErrorCode errorCodeExpired = 0;
 
-  if (defaultErrorCodeToReport == 0) {
-    NS_ERROR("No error code set during certificate validation failure.");
-    PR_SetError(PR_INVALID_STATE_ERROR, 0);
+  SECStatus rv;
+  switch (certVerifier.mImplementation) {
+    case CertVerifier::classic:
+#ifndef NSS_NO_LIBPKIX
+    case CertVerifier::libpkix:
+#endif
+      rv = NSSDetermineCertOverrideErrors(certVerifier, cert, stapledOCSPResponse,
+                                          infoObject, now,
+                                          defaultErrorCodeToReport,
+                                          collected_errors, errorCodeTrust,
+                                          errorCodeMismatch, errorCodeExpired);
+      break;
+
+    case CertVerifier::insanity:
+      rv = InsanityDetermineCertOverrideErrors(cert,
+                                               infoObject->GetHostNameRaw(),
+                                               now, defaultErrorCodeToReport,
+                                               collected_errors,
+                                               errorCodeTrust,
+                                               errorCodeMismatch,
+                                               errorCodeExpired);
+      break;
+
+    default:
+      MOZ_CRASH("unexpected CertVerifier implementation");
+      PR_SetError(defaultErrorCodeToReport, 0);
+      return nullptr;
+
+  }
+  if (rv != SECSuccess) {
     return nullptr;
   }
 
@@ -543,70 +732,7 @@ CreateCertErrorRunnable(CertVerifier& certVerifier,
     return nullptr;
   }
 
-  PLArenaPool* log_arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-  PLArenaPoolCleanerFalseParam log_arena_cleaner(log_arena);
-  if (!log_arena) {
-    NS_ERROR("PORT_NewArena failed");
-    return nullptr; // PORT_NewArena set error code
-  }
-
-  CERTVerifyLog* verify_log = PORT_ArenaZNew(log_arena, CERTVerifyLog);
-  if (!verify_log) {
-    NS_ERROR("PORT_ArenaZNew failed");
-    return nullptr; // PORT_ArenaZNew set error code
-  }
-  CERTVerifyLogContentsCleaner verify_log_cleaner(verify_log);
-  verify_log->arena = log_arena;
-
-
-  // We ignore the result code of the cert verification (i.e. VerifyCert's rv)
-  // Either it is a failure, which is expected, and we'll process the
-  //                         verify log below.
-  // Or it is a success, then a domain mismatch is the only
-  //                     possible failure.
-  // XXX TODO: convert to VerifySSLServerCert
-  // XXX TODO: get rid of error log
-  certVerifier.VerifyCert(cert, stapledOCSPResponse,
-                          certificateUsageSSLServer, now,
-                          infoObject, 0, nullptr, nullptr, verify_log);
-
-  PRErrorCode errorCodeMismatch = 0;
-  PRErrorCode errorCodeTrust = 0;
-  PRErrorCode errorCodeExpired = 0;
-
-  uint32_t collected_errors = 0;
-
-  // Check the name field against the desired hostname.
-  if (CERT_VerifyCertName(cert, infoObject->GetHostNameRaw()) != SECSuccess) {
-    collected_errors |= nsICertOverrideService::ERROR_MISMATCH;
-    errorCodeMismatch = SSL_ERROR_BAD_CERT_DOMAIN;
-  }
-
-  CERTVerifyLogNode* i_node;
-  for (i_node = verify_log->head; i_node; i_node = i_node->next)
-  {
-    uint32_t overrideType = PRErrorCodeToOverrideType(i_node->error);
-    // If this isn't an overridable error, set the error and return.
-    if (overrideType == 0) {
-      PR_SetError(i_node->error, 0);
-      return nullptr;
-    }
-    collected_errors |= overrideType;
-    if (overrideType == nsICertOverrideService::ERROR_UNTRUSTED) {
-      errorCodeTrust = (errorCodeTrust == 0 ? i_node->error : errorCodeTrust);
-    } else if (overrideType == nsICertOverrideService::ERROR_MISMATCH) {
-      errorCodeMismatch = (errorCodeMismatch == 0 ? i_node->error
-                                                  : errorCodeMismatch);
-    } else if (overrideType == nsICertOverrideService::ERROR_TIME) {
-      errorCodeExpired = (errorCodeExpired == 0 ? i_node->error
-                                                : errorCodeExpired);
-    } else {
-      MOZ_CRASH("unexpected return value from PRErrorCodeToOverrideType");
-    }
-  }
-
-  if (!collected_errors)
-  {
+  if (!collected_errors) {
     // This will happen when CERT_*Verify* only returned error(s) that are
     // not on our whitelist of overridable certificate errors.
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("[%p] !collected_errors: %d\n",
