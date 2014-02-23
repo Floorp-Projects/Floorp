@@ -4,6 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+DIRS += ['internal']
 TEST_DIRS += ['test']
 
 XPIDL_SOURCES += [
@@ -27,30 +28,17 @@ EXTRA_PP_COMPONENTS += [
 ]
 
 EXTRA_JS_MODULES += [
-    'AddonLogging.jsm',
-    'AddonRepository.jsm',
-    'AddonRepository_SQLiteMigrator.jsm',
-    'AddonUpdateChecker.jsm',
     'ChromeManifestParser.jsm',
     'DeferredSave.jsm',
-    'LightweightThemeImageOptimizer.jsm',
     'LightweightThemeManager.jsm',
-    'PluginProvider.jsm',
-    'SpellCheckDictionaryBootstrap.js',
 ]
 
 EXTRA_PP_JS_MODULES += [
-    'AddonManager.jsm',
-    'XPIProvider.jsm',
-    'XPIProviderUtils.js',
+    'AddonManager.jsm'
 ]
 
 if CONFIG['MOZ_UPDATE_CHANNEL'] not in ('aurora', 'beta', 'release', 'esr'):
     DEFINES['MOZ_COMPATIBILITY_NIGHTLY'] = 1
-
-# This is used in multiple places, so is defined here to avoid it getting
-# out of sync.
-DEFINES['MOZ_EXTENSIONS_DB_SCHEMA'] = 16
 
 # Additional debugging info is exposed in debug builds
 if CONFIG['MOZ_EM_DEBUG']:

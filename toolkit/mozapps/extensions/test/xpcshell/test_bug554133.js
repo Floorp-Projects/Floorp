@@ -5,7 +5,7 @@
 // This verifies that if the AMO response provides total_results,
 // searchSucceeded is called with the correct number of total results
 
-Components.utils.import("resource://gre/modules/AddonRepository.jsm");
+Components.utils.import("resource://gre/modules/addons/AddonRepository.jsm");
 
 const PREF_GETADDONS_GETSEARCHRESULTS = "extensions.getAddons.search.url";
 

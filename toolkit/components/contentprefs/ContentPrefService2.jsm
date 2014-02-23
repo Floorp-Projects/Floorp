@@ -40,6 +40,61 @@ function ContentPrefService2(cps) {
 
 ContentPrefService2.prototype = {
 
+  getByName: function CPS2_getByName(name, context, callback) {
+    checkNameArg(name);
+    checkCallbackArg(callback, true);
+
+    // Some prefs may be in both the database and the private browsing store.
+    // Notify the caller of such prefs only once, using the values from private
+    // browsing.
+    let pbPrefs = new ContentPrefStore();
+    if (context && context.usePrivateBrowsing) {
+      for (let [sgroup, sname, val] in this._pbStore) {
+        if (sname == name) {
+          pbPrefs.set(sgroup, sname, val);
+        }
+      }
+    }
+
+    let stmt1 = this._stmt(
+      "SELECT groups.name AS grp, prefs.value AS value",
+      "FROM prefs",
+      "JOIN settings ON settings.id = prefs.settingID",
+      "JOIN groups ON groups.id = prefs.groupID",
+      "WHERE settings.name = :name"
+    );
+    stmt1.params.name = name;
+
+    let stmt2 = this._stmt(
+      "SELECT NULL AS grp, prefs.value AS value",
+      "FROM prefs",
+      "JOIN settings ON settings.id = prefs.settingID",
+      "WHERE settings.name = :name AND prefs.groupID ISNULL"
+    );
+    stmt2.params.name = name;
+
+    this._execStmts([stmt1, stmt2], {
+      onRow: function onRow(row) {
+        let grp = row.getResultByName("grp");
+        let val = row.getResultByName("value");
+        this._cache.set(grp, name, val);
+        if (!pbPrefs.has(grp, name))
+          cbHandleResult(callback, new ContentPref(grp, name, val));
+      },
+      onDone: function onDone(reason, ok, gotRow) {
+        if (ok) {
+          for (let [pbGroup, pbName, pbVal] in pbPrefs) {
+            cbHandleResult(callback, new ContentPref(pbGroup, pbName, pbVal));
+          }
+        }
+        cbHandleCompletion(callback, reason);
+      },
+      onError: function onError(nsresult) {
+        cbHandleError(callback, nsresult);
+      }
+    });
+  },
+
   getByDomainAndName: function CPS2_getByDomainAndName(group, name, context,
                                                        callback) {
     checkGroupArg(group);

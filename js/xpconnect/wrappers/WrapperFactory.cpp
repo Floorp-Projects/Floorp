@@ -174,7 +174,7 @@ WrapperFactory::PrepareForWrapping(JSContext *cx, HandleObject scope,
         JSProtoKey key = JSProto_Null;
         {
             JSAutoCompartment ac(cx, obj);
-            key = JS_IdentifyClassPrototype(obj);
+            key = IdentifyStandardPrototype(obj);
         }
         if (key != JSProto_Null) {
             RootedObject homeProto(cx);
@@ -374,7 +374,7 @@ WrapperFactory::Rewrap(JSContext *cx, HandleObject existing, HandleObject obj,
                GetProxyHandler(obj) == &XrayWaiver ||
                js::GetObjectClass(obj)->ext.innerObject,
                "wrapped object passed to rewrap");
-    MOZ_ASSERT(JS_GetClass(obj) != &XrayUtils::HolderClass, "trying to wrap a holder");
+    MOZ_ASSERT(!XrayUtils::IsXPCWNHolderClass(JS_GetClass(obj)), "trying to wrap a holder");
     MOZ_ASSERT(!js::IsInnerObject(obj));
     // We sometimes end up here after nsContentUtils has been shut down but before
     // XPConnect has been shut down, so check the context stack the roundabout way.

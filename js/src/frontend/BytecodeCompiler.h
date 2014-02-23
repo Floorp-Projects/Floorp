@@ -39,6 +39,9 @@ CompileStarGeneratorBody(JSContext *cx, MutableHandleFunction fun,
                          const ReadOnlyCompileOptions &options,
                          const AutoNameVector &formals, const jschar *chars, size_t length);
 
+ScriptSourceObject *
+CreateScriptSourceObject(ExclusiveContext *cx, const ReadOnlyCompileOptions &options);
+
 /*
  * This should be called while still on the main thread if compilation will
  * occur on a worker thread.

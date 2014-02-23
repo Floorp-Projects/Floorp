@@ -112,13 +112,14 @@ let SessionHistoryInternal = {
     // valid entries, make sure we at least include the current page.
     if (data.entries.length == 0) {
       let uri = webNavigation.currentURI.spec;
+      let body = webNavigation.document.body;
       // We landed here because the history is inaccessible or there are no
       // history entries. In that case we should at least record the docShell's
       // current URL as a single history entry. If the URL is not about:blank
       // or it's a blank tab that was modified (like a custom newtab page),
       // record it. For about:blank we explicitly want an empty array without
       // an 'index' property to denote that there are no history entries.
-      if (uri != "about:blank" || webNavigation.document.body.hasChildNodes()) {
+      if (uri != "about:blank" || (body && body.hasChildNodes())) {
         data.entries.push({ url: uri });
         data.index = 1;
       }
