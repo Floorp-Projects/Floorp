@@ -4,87 +4,168 @@
 https://bugzilla.mozilla.org/show_bug.cgi?id=783129
 -->
 <head>
-  <title>Test for document.register using custom prototype</title>
+  <title>Test for document.registerElement using custom prototype</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=783129">Bug 783129</a>
+<div>
+<x-unresolved id="unresolved"></x-unresolved>
+</div>
 
 <script>
-var gElementUpgraded = false;
-var gElementReplaced = false;
 
-function elementUpgrade() {
-  gElementUpgraded = true;
-
-  // Check for prototype on upgraded element.
-  var documentElement = document.getElementById("grabme");
-  ok(documentElement.hello, "Upgraded element should inherit 'hello' method from prototype.");
-  documentElement.hello();
-
-  var customChild = document.getElementById("kid");
-  ok(customChild, "Upgrade should preserve children.");
-  ok(customChild.parentNode == documentElement, "Parent should be updated to new custom element.");
-
-  // Try creating new element and checking for prototype.
-  var constructedElement = document.createElement("x-hello");
-  ok(constructedElement.hello, "Created element should inherit 'hello' method from prototype.");
-  constructedElement.hello();
+function testRegisterExtend(tag, extend, proto, expectException) {
+  try {
+    document.registerElement(tag, { prototype: proto, extends: extend });
+    ok(!expectException, "Registered " + tag + " extending " + extend + " containing " + proto + " in proto chain.");
+  } catch (ex) {
+    ok(expectException, "Did not register " + tag + " extending " + extend + " containing " + proto + " in proto chain.");
+  }
 }
 
-function elementReplace(e) {
-  gElementReplaced = true;
-
-  ok(e.upgrade != e.target, "Upgraded element should be different from the target.");
-  ok(e.upgrade.firstElementChild.id == "kid", "Upgrade element should have a child.");
-  ok(e.target.firstElementChild.id == "kid", "Replacement element should have a child.");
+function testRegisterSimple(tag, proto, expectException) {
+  try {
+    document.registerElement(tag, { prototype: proto });
+    ok(!expectException, "Registered " + tag + " containing " + proto + " in proto chain.");
+  } catch (ex) {
+    ok(expectException, "Did not register " + tag + " containing " + proto + " in proto chain.");
+  }
 }
 
 function startTest() {
-  // Create a prototype that inheits from HTMLElement.
-  var customProto = {};
-  customProto.__proto__ = HTMLElement.prototype;
-  customProto.hello = function() {
-    ok(true, "Custom element should use provided prototype.");
-  };
+  // Test registering some simple prototypes.
+  testRegisterSimple("x-html-obj-elem", Object.create(HTMLElement.prototype), false);
+  testRegisterSimple("x-html-obj-p", Object.create(HTMLParagraphElement.prototype), false);
 
-  var oldElem = document.getElementById("grabme");
-  oldElem.addEventListener("elementreplace", elementReplace);
+  // If prototype is an interface prototype object for any interface object,
+  // registration will throw.
+  testRegisterSimple("x-html-elem", HTMLElement.prototype, true);
+  testRegisterSimple("x-html-select", HTMLSelectElement.prototype, true);
+  testRegisterSimple("some-elem", HTMLElement.prototype, true);
+  testRegisterSimple("x-html-p", HTMLParagraphElement.prototype, true);
+  testRegisterSimple("x-html-span", HTMLSpanElement.prototype, true);
+  testRegisterSimple("x-svg-proto", SVGElement.prototype, true);
 
-  document.addEventListener("elementupgrade", elementUpgrade);
-  var elementConstructor = document.register("x-hello", { prototype: customProto });
+  // Make sure the prototype on unresolved elements is HTMLElement not HTMLUnknownElement.
+  var unresolved = document.getElementById("unresolved");
+  is(unresolved.__proto__, HTMLElement.prototype, "Unresolved custom elements should have HTMLElement as prototype.");
 
-  // Try creating new element and checking for prototype.
-  var constructedElement = new elementConstructor();
-  ok(constructedElement.hello, "Created element should inherit 'hello' method from prototype.");
-  constructedElement.hello();
+  var anotherUnresolved = document.createElement("maybe-custom-element");
+  is(anotherUnresolved.__proto__, HTMLElement.prototype, "Unresolved custom elements should have HTMLElement as prototype.");
 
-  ok(!oldElem.hello, "Element obtained prior to registration should not have inherited prototype.");
+  // Registering without a prototype should automatically create one inheriting from HTMLElement.
+  testRegisterSimple("x-elem-no-proto", null, false);
+  var simpleElem = document.createElement("x-elem-no-proto");
+  is(simpleElem.__proto__.__proto__, HTMLElement.prototype, "Default prototype should inherit from HTMLElement");
 
-  ok(gElementUpgraded && gElementReplaced, "Upgrade and replace events should have been fired.");
+  var simpleProto = Object.create(HTMLElement.prototype);
+  testRegisterSimple("x-elem-simple-proto", simpleProto, false);
+  var simpleProtoElem = document.createElement("x-elem-simple-proto");
+  is(simpleProtoElem.__proto__, simpleProto, "Custom element should use registered prototype.");
+  var anotherSimpleElem = document.createElementNS("http://www.w3.org/1999/xhtml", "x-elem-simple-proto");
+  is(anotherSimpleElem.__proto__, simpleProto, "Custom element should use registered prototype.");
 
-  // Check that custom elements registered without a prototype inherit from HTMLElement.
-  document.register("x-bye");
-  var byeElement = document.createElement("x-bye");
-  ok(byeElement.__proto__.__proto__, HTMLElement.prototype, "Element registered without prototype should inherit from HTMLElement.");
+  // Test registering some invalid prototypes.
+  testRegisterSimple("x-invalid-number", 42, true);
+  testRegisterSimple("x-invalid-boolean", false, true);
+  testRegisterSimple("x-invalid-float", 1.0, true);
+  // Can not register with a prototype that inherits from SVGElement
+  // without extending an existing element type.
+  testRegisterSimple("x-html-obj-svg", Object.create(SVGElement.prototype), true);
+  // A prototype with a non-configurable "constructor" property must throw.
+  var nonConfigProto = Object.create(HTMLElement.prototype,
+    { constructor: { configurable: false, value: function() {} } });
+  testRegisterSimple("x-non-config-proto", nonConfigProto, true);
 
-  // Check that element registration with a prototype that does not inherit from HTMLElement results in exception.
-  try {
-    document.register("x-foo", { "prototype": {} });
-    ok(false, "Prototype that does not inherit from HTMLElement should throw exception");
-  } catch (ex) {
-    ok(true, "Prototype that does not inherit from HTMLElement should throw exception");
-  }
+  // Test invalid custom element names.
+  testRegisterSimple("invalid", Object.create(HTMLElement.prototype), true);
+  testRegisterSimple("annotation-xml", Object.create(HTMLElement.prototype), true);
+  testRegisterSimple("color-profile", Object.create(HTMLElement.prototype), true);
+  testRegisterSimple("font-face", Object.create(HTMLElement.prototype), true);
+  testRegisterSimple("font-face-src", Object.create(HTMLElement.prototype), true);
+  testRegisterSimple("font-face-uri", Object.create(HTMLElement.prototype), true);
+  testRegisterSimple("font-face-format", Object.create(HTMLElement.prototype), true);
+  testRegisterSimple("font-face-name", Object.create(HTMLElement.prototype), true);
+  testRegisterSimple("missing-glyph", Object.create(HTMLElement.prototype), true);
 
-  SimpleTest.finish();
+  // Test registering elements that extend from an existing element.
+  testRegisterExtend("x-extend-span", "span", Object.create(HTMLElement.prototype), false);
+  testRegisterExtend("x-extend-span-caps", "SPAN", Object.create(HTMLElement.prototype), false);
+
+  // Test registering elements that extend from a non-existing element.
+  testRegisterExtend("x-extend-span-nonexist", "nonexisting", Object.create(HTMLElement.prototype), true);
+  testRegisterExtend("x-extend-svg-nonexist", "nonexisting", Object.create(SVGElement.prototype), true);
+
+  // Test registration with duplicate type.
+  testRegisterSimple("x-dupe-me", Object.create(HTMLElement.prototype), false);
+  testRegisterSimple("x-dupe-me", Object.create(HTMLElement.prototype), true);
+  testRegisterSimple("X-DUPE-ME", Object.create(HTMLElement.prototype), true);
+  testRegisterSimple("x-dupe-me", null, true);
+  testRegisterExtend("x-dupe-me", "span", Object.create(HTMLElement.prototype), true);
+  testRegisterExtend("x-dupe-me", "shape", Object.create(SVGElement.prototype), true);
+
+  testRegisterExtend("x-svg-dupe-me", "circle", Object.create(SVGElement.prototype), false);
+  testRegisterSimple("x-svg-dupe-me", Object.create(HTMLElement.prototype), true);
+  testRegisterSimple("X-SVG-DUPE-ME", Object.create(HTMLElement.prototype), true);
+  testRegisterSimple("x-svg-dupe-me", null, true);
+  testRegisterExtend("x-svg-dupe-me", "span", Object.create(HTMLElement.prototype), true);
+  testRegisterExtend("x-svg-dupe-me", "shape", Object.create(SVGElement.prototype), true);
+
+  // document.createElement with extended type.
+  var extendedProto = Object.create(HTMLButtonElement.prototype);
+  var buttonConstructor = document.registerElement("x-extended-button", { prototype: extendedProto, extends: "button" });
+  var extendedButton = document.createElement("button", "x-extended-button");
+  is(extendedButton.tagName, "BUTTON", "Created element should have local name of BUTTON");
+  is(extendedButton.__proto__, extendedProto, "Created element should have the prototype of the extended type.");
+  is(extendedButton.getAttribute("is"), "x-extended-button", "The |is| attribute of the created element should be the extended type.");
+
+  // document.createElementNS with different namespace than definition.
+  var svgButton = document.createElementNS("http://www.w3.org/2000/svg", "button", "x-extended-button");
+  isnot(svgButton.__proto__, extendedProto, "Definition for element is in html namespace, registration should not apply for SVG elements.");
+
+  // document.createElement with non-existant extended type.
+  var normalButton = document.createElement("button", "x-non-existant");
+  is(normalButton.__proto__, HTMLButtonElement.prototype, "When the extended type doesn't exist, prototype should not change.");
+
+  // document.createElement with exteneded type that does not match with local name of element.
+  var normalDiv = document.createElement("div", "x-extended-button");
+  is(normalDiv.__proto__, HTMLDivElement.prototype, "Prototype should not change when local name of extended type defintion does not match.");
+
+  // Custom element constructor.
+  var constructedButton = new buttonConstructor();
+  is(constructedButton.tagName, "BUTTON", "Created element should have local name of BUTTON");
+  is(constructedButton.__proto__, extendedProto, "Created element should have the prototype of the extended type.");
+  is(constructedButton.getAttribute("is"), "x-extended-button", "The |is| attribute of the created element should be the extended type.");
+
+  // document.createElementNS with extended type.
+  var svgExtendedProto = Object.create(SVGTextElement.prototype);
+  var svgConstructor = document.registerElement("x-extended-text", { prototype: svgExtendedProto, extends: "text"});
+  var extendedText = document.createElementNS("http://www.w3.org/2000/svg", "text", "x-extended-text");
+  is(extendedText.tagName, "text", "Created element should have a local name of |text|.");
+  is(extendedText.__proto__, svgExtendedProto, "Created element have the registered prototype.");
+  is(extendedText.getAttribute("is"), "x-extended-text", "The |is| attribute of the created element should be the extended type.");
+
+  // document.createElement with different namespace than definition for extended element.
+  var htmlText = document.createElement("text", "x-extended-text");
+  isnot(htmlText.__proto__, svgExtendedProto, "Definition for element in SVG namespace should not apply to HTML elements.");
+
+  // Custom element constructor for a SVG element.
+  var constructedText = new svgConstructor();
+  is(constructedText.tagName, "text", "Created element should have a local name of |text|.");
+  is(constructedText.__proto__, svgExtendedProto, "Created element have the registered prototype.");
+  is(constructedText.getAttribute("is"), "x-extended-text", "The |is| attribute of the created element should be the extended type.");
+
+  // Try creating an element with a custom element name, but not in the html namespace.
+  var htmlNamespaceProto = Object.create(HTMLElement.prototype);
+  document.registerElement("x-in-html-namespace", { prototype: htmlNamespaceProto });
+  var wrongNamespaceElem = document.createElementNS("http://www.w3.org/2000/svg", "x-in-html-namespace");
+  isnot(wrongNamespaceElem.__proto__, htmlNamespaceProto, "Definition for element in html namespace should not apply to SVG elements.");
 }
 
-SimpleTest.waitForExplicitFinish();
-</script>
+startTest();
 
-</head>
-<body onload="startTest()">
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=783129">Bug 783129</a>
-<x-hello id="grabme">
-<div id="kid"></div>
-</x-hello>
+</script>
 </body>
 </html>

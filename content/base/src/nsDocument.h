@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 et tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -99,6 +100,8 @@ class nsISecurityConsoleMessage;
 namespace mozilla {
 namespace dom {
 class UndoManager;
+class LifecycleCallbacks;
+class CallbackFunction;
 }
 }
 
@@ -236,6 +239,153 @@ private:
   nsAutoPtr<nsTHashtable<ChangeCallbackEntry> > mChangeCallbacks;
   nsRefPtr<Element> mImageElement;
 };
+
+namespace mozilla {
+namespace dom {
+
+class CustomElementHashKey : public PLDHashEntryHdr
+{
+public:
+  typedef CustomElementHashKey *KeyType;
+  typedef const CustomElementHashKey *KeyTypePointer;
+
+  CustomElementHashKey(int32_t aNamespaceID, nsIAtom *aAtom)
+    : mNamespaceID(aNamespaceID),
+      mAtom(aAtom)
+  {}
+  CustomElementHashKey(const CustomElementHashKey *aKey)
+    : mNamespaceID(aKey->mNamespaceID),
+      mAtom(aKey->mAtom)
+  {}
+  ~CustomElementHashKey()
+  {}
+
+  KeyType GetKey() const { return const_cast<KeyType>(this); }
+  bool KeyEquals(const KeyTypePointer aKey) const
+  {
+    MOZ_ASSERT(mNamespaceID != kNameSpaceID_None,
+               "This equals method is not transitive, nor symmetric. "
+               "A key with a namespace of kNamespaceID_None should "
+               "not be stored in a hashtable.");
+    return (kNameSpaceID_None == aKey->mNamespaceID ||
+            mNamespaceID == aKey->mNamespaceID) &&
+           aKey->mAtom == mAtom;
+  }
+
+  static KeyTypePointer KeyToPointer(KeyType aKey) { return aKey; }
+  static PLDHashNumber HashKey(const KeyTypePointer aKey)
+  {
+    return aKey->mAtom->hash();
+  }
+  enum { ALLOW_MEMMOVE = true };
+
+private:
+  int32_t mNamespaceID;
+  nsCOMPtr<nsIAtom> mAtom;
+};
+
+struct LifecycleCallbackArgs
+{
+  nsString name;
+  nsString oldValue;
+  nsString newValue;
+};
+
+struct CustomElementData;
+
+class CustomElementCallback
+{
+public:
+  CustomElementCallback(Element* aThisObject,
+                        nsIDocument::ElementCallbackType aCallbackType,
+                        mozilla::dom::CallbackFunction* aCallback,
+                        CustomElementData* aOwnerData);
+  void Traverse(nsCycleCollectionTraversalCallback& aCb) const;
+  void Call();
+  void SetArgs(LifecycleCallbackArgs& aArgs)
+  {
+    MOZ_ASSERT(mType == nsIDocument::eAttributeChanged,
+               "Arguments are only used by attribute changed callback.");
+    mArgs = aArgs;
+  }
+
+private:
+  // The this value to use for invocation of the callback.
+  nsRefPtr<mozilla::dom::Element> mThisObject;
+  nsRefPtr<mozilla::dom::CallbackFunction> mCallback;
+  // The type of callback (eCreated, eEnteredView, etc.)
+  nsIDocument::ElementCallbackType mType;
+  // Arguments to be passed to the callback,
+  // used by the attribute changed callback.
+  LifecycleCallbackArgs mArgs;
+  // CustomElementData that contains this callback in the
+  // callback queue.
+  CustomElementData* mOwnerData;
+};
+
+// Each custom element has an associated callback queue and an element is
+// being created flag.
+struct CustomElementData
+{
+  CustomElementData(nsIAtom* aType);
+  // Objects in this array are transient and empty after each microtask
+  // checkpoint.
+  nsTArray<nsAutoPtr<CustomElementCallback>> mCallbackQueue;
+  // Custom element type, for <button is="x-button"> or <x-button>
+  // this would be x-button.
+  nsCOMPtr<nsIAtom> mType;
+  // The callback that is next to be processed upon calling RunCallbackQueue.
+  int32_t mCurrentCallback;
+  // Element is being created flag as described in the custom elements spec.
+  bool mElementIsBeingCreated;
+  // Flag to determine if the created callback has been invoked, thus it
+  // determines if other callbacks can be enqueued.
+  bool mCreatedCallbackInvoked;
+  // The microtask level associated with the callbacks in the callback queue,
+  // it is used to determine if a new queue needs to be pushed onto the
+  // processing stack.
+  int32_t mAssociatedMicroTask;
+
+  // Empties the callback queue.
+  void RunCallbackQueue();
+};
+
+// The required information for a custom element as defined in:
+// https://dvcs.w3.org/hg/webcomponents/raw-file/tip/spec/custom/index.html
+struct CustomElementDefinition
+{
+  CustomElementDefinition(JSObject* aPrototype,
+                          nsIAtom* aType,
+                          nsIAtom* aLocalName,
+                          mozilla::dom::LifecycleCallbacks* aCallbacks,
+                          uint32_t aNamespaceID,
+                          uint32_t aDocOrder);
+
+  // The prototype to use for new custom elements of this type.
+  JS::Heap<JSObject *> mPrototype;
+
+  // The type (name) for this custom element.
+  nsCOMPtr<nsIAtom> mType;
+
+  // The localname to (e.g. <button is=type> -- this would be button).
+  nsCOMPtr<nsIAtom> mLocalName;
+
+  // The lifecycle callbacks to call for this custom element.
+  nsAutoPtr<mozilla::dom::LifecycleCallbacks> mCallbacks;
+
+  // Whether we're currently calling the created callback for a custom element
+  // of this type.
+  bool mElementIsBeingCreated;
+
+  // Element namespace.
+  int32_t mNamespaceID;
+
+  // The document custom element order.
+  uint32_t mDocOrder;
+};
+
+} // namespace dom
+} // namespace mozilla
 
 class nsDocHeaderData
 {
@@ -996,25 +1146,57 @@ public:
 
   virtual nsIDOMNode* AsDOMNode() MOZ_OVERRIDE { return this; }
 
-  void GetCustomPrototype(const nsAString& aElementName, JS::MutableHandle<JSObject*> prototype)
+  virtual void EnqueueLifecycleCallback(nsIDocument::ElementCallbackType aType,
+                                        Element* aCustomElement,
+                                        mozilla::dom::LifecycleCallbackArgs* aArgs = nullptr,
+                                        mozilla::dom::CustomElementDefinition* aDefinition = nullptr) MOZ_OVERRIDE;
+
+  static void ProcessTopElementQueue(bool aIsBaseQueue = false);
+
+  void GetCustomPrototype(int32_t aNamespaceID,
+                          nsIAtom* aAtom,
+                          JS::MutableHandle<JSObject*> prototype)
   {
-    mCustomPrototypes.Get(aElementName, prototype.address());
+    if (!mRegistry) {
+      prototype.set(nullptr);
+      return;
+    }
+
+    mozilla::dom::CustomElementHashKey key(aNamespaceID, aAtom);
+    mozilla::dom::CustomElementDefinition* definition;
+    if (mRegistry->mCustomDefinitions.Get(&key, &definition)) {
+      prototype.set(definition->mPrototype);
+    } else {
+      prototype.set(nullptr);
+    }
   }
 
   static bool RegisterEnabled();
+
+  virtual nsresult RegisterUnresolvedElement(mozilla::dom::Element* aElement,
+                                             nsIAtom* aTypeName = nullptr) MOZ_OVERRIDE;
 
   // WebIDL bits
   virtual mozilla::dom::DOMImplementation*
     GetImplementation(mozilla::ErrorResult& rv) MOZ_OVERRIDE;
   virtual JSObject*
-  Register(JSContext* aCx, const nsAString& aName,
-           const mozilla::dom::ElementRegistrationOptions& aOptions,
-           mozilla::ErrorResult& rv) MOZ_OVERRIDE;
+    RegisterElement(JSContext* aCx, const nsAString& aName,
+                    const mozilla::dom::ElementRegistrationOptions& aOptions,
+                    mozilla::ErrorResult& rv) MOZ_OVERRIDE;
   virtual nsIDOMStyleSheetList* StyleSheets() MOZ_OVERRIDE;
   virtual void SetSelectedStyleSheetSet(const nsAString& aSheetSet) MOZ_OVERRIDE;
   virtual void GetLastStyleSheetSet(nsString& aSheetSet) MOZ_OVERRIDE;
   virtual nsIDOMDOMStringList* StyleSheetSets() MOZ_OVERRIDE;
   virtual void EnableStyleSheetsForSet(const nsAString& aSheetSet) MOZ_OVERRIDE;
+  using nsIDocument::CreateElement;
+  using nsIDocument::CreateElementNS;
+  virtual already_AddRefed<Element> CreateElement(const nsAString& aTagName,
+                                                  const nsAString& aTypeExtension,
+                                                  mozilla::ErrorResult& rv) MOZ_OVERRIDE;
+  virtual already_AddRefed<Element> CreateElementNS(const nsAString& aNamespaceURI,
+                                                    const nsAString& aQualifiedName,
+                                                    const nsAString& aTypeExtension,
+                                                    mozilla::ErrorResult& rv) MOZ_OVERRIDE;
 
 protected:
   friend class nsNodeUtils;
@@ -1175,9 +1357,59 @@ protected:
   // non-null when this document is in fullscreen mode.
   nsWeakPtr mFullscreenRoot;
 
-  // Hashtable for custom element prototypes in web components.
-  // Custom prototypes are in the document's compartment.
-  nsJSThingHashtable<nsStringHashKey, JSObject*> mCustomPrototypes;
+private:
+  struct Registry
+  {
+    NS_INLINE_DECL_REFCOUNTING(Registry)
+
+    typedef nsClassHashtable<mozilla::dom::CustomElementHashKey,
+                             mozilla::dom::CustomElementDefinition>
+      DefinitionMap;
+    typedef nsClassHashtable<mozilla::dom::CustomElementHashKey,
+                             nsTArray<nsRefPtr<mozilla::dom::Element>>>
+      CandidateMap;
+
+    // Hashtable for custom element definitions in web components.
+    // Custom prototypes are in the document's compartment.
+    DefinitionMap mCustomDefinitions;
+
+    // The "upgrade candidates map" from the web components spec. Maps from a
+    // namespace id and local name to a list of elements to upgrade if that
+    // element is registered as a custom element.
+    CandidateMap mCandidatesMap;
+
+    void Clear()
+    {
+      mCustomDefinitions.Clear();
+      mCandidatesMap.Clear();
+    }
+  };
+
+  // Array representing the processing stack in the custom elements
+  // specification. The processing stack is conceptually a stack of
+  // element queues. Each queue is represented by a sequence of
+  // CustomElementData in this array, separated by nullptr that
+  // represent the boundaries of the items in the stack. The first
+  // queue in the stack is the base element queue.
+  static mozilla::Maybe<nsTArray<mozilla::dom::CustomElementData*>> sProcessingStack;
+
+  // Flag to prevent re-entrance into base element queue as described in the
+  // custom elements speicification.
+  static bool sProcessingBaseElementQueue;
+
+  static bool CustomElementConstructor(JSContext* aCx, unsigned aArgc, JS::Value* aVp);
+
+public:
+  static void ProcessBaseElementQueue();
+
+  // Modify the prototype and "is" attribute of newly created custom elements.
+  virtual void SwizzleCustomElement(Element* aElement,
+                                    const nsAString& aTypeExtension,
+                                    uint32_t aNamespaceID,
+                                    mozilla::ErrorResult& rv);
+
+  // The "registry" from the web components spec.
+  nsRefPtr<Registry> mRegistry;
 
   nsRefPtr<nsEventListenerManager> mListenerManager;
   nsCOMPtr<nsIDOMStyleSheetList> mDOMStyleSheets;
