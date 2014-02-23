@@ -5,8 +5,15 @@
 
 package org.mozilla.gecko.gfx;
 
-import org.mozilla.gecko.util.ThreadUtils;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.Field;
+import java.net.MalformedURLException;
+import java.net.URL;
+
+import org.mozilla.gecko.R;
 import org.mozilla.gecko.util.GeckoJarReader;
+import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UiAsyncTask;
 
 import android.content.Context;
@@ -15,22 +22,12 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.drawable.Drawable;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
-import android.os.AsyncTask;
+import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
-import android.text.TextUtils;
-
-import org.mozilla.gecko.R;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.Field;
-import java.lang.NoSuchFieldException;
-import java.net.MalformedURLException;
-import java.net.URL;
 
 public final class BitmapUtils {
     private static final String LOGTAG = "GeckoBitmapUtils";
