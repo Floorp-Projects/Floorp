@@ -21,9 +21,10 @@
 // JS_IdToValue must be used instead.
 
 #include "mozilla/NullPtr.h"
- 
+
 #include "jstypes.h"
 
+#include "js/HeapAPI.h"
 #include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
 #include "js/Utility.h"
@@ -116,6 +117,7 @@ OBJECT_TO_JSID(JSObject *obj)
     jsid id;
     MOZ_ASSERT(obj != nullptr);
     MOZ_ASSERT(((size_t)obj & JSID_TYPE_MASK) == 0);
+    JS_ASSERT(!js::gc::IsInsideNursery(js::gc::GetGCThingRuntime(obj), obj));
     JSID_BITS(id) = ((size_t)obj | JSID_TYPE_OBJECT);
     return id;
 }

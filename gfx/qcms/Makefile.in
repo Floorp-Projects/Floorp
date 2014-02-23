@@ -41,8 +41,6 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-CFLAGS          += -DMOZ_QCMS
-
 # Disable spammy "missing initializer" GCC warning
 ifdef GNU_CC
 CFLAGS += -Wno-missing-field-initializers

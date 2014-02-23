@@ -49,7 +49,6 @@ class JSFunction : public JSObject
         // 0x0800 is available
         INTERPRETED_LAZY = 0x1000,  /* function is interpreted but doesn't have a script yet */
         ARROW            = 0x2000,  /* ES6 '(args) => body' syntax */
-        SH_WRAPPABLE     = 0x4000,  /* self-hosted function is wrappable, doesn't need to be cloned */
 
         /* Derived Flags values for convenience: */
         NATIVE_FUN = 0,
@@ -127,10 +126,6 @@ class JSFunction : public JSObject
     bool isSelfHostedBuiltin()      const { return flags() & SELF_HOSTED; }
     bool isSelfHostedConstructor()  const { return flags() & SELF_HOSTED_CTOR; }
     bool hasRest()                  const { return flags() & HAS_REST; }
-    bool isWrappable()              const {
-        JS_ASSERT_IF(flags() & SH_WRAPPABLE, isSelfHostedBuiltin());
-        return flags() & SH_WRAPPABLE;
-    }
 
     bool isInterpretedLazy()        const {
         return flags() & INTERPRETED_LAZY;
@@ -205,12 +200,6 @@ class JSFunction : public JSObject
     void setIsSelfHostedConstructor() {
         JS_ASSERT(!isSelfHostedConstructor());
         flags_ |= SELF_HOSTED_CTOR;
-    }
-
-    void makeWrappable() {
-        JS_ASSERT(isSelfHostedBuiltin());
-        JS_ASSERT(!isWrappable());
-        flags_ |= SH_WRAPPABLE;
     }
 
     void setIsFunctionPrototype() {
