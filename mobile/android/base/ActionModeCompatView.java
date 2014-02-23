@@ -6,28 +6,20 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.animation.AnimationUtils;
 import org.mozilla.gecko.menu.GeckoMenu;
-import org.mozilla.gecko.menu.MenuPopup;
-import org.mozilla.gecko.menu.MenuPanel;
-import org.mozilla.gecko.menu.MenuItemActionBar;
 import org.mozilla.gecko.widget.GeckoPopupMenu;
 
-import android.view.animation.Animation;
-import android.view.animation.TranslateAnimation;
-import android.view.animation.ScaleAnimation;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.MenuInflater;
-import android.view.ViewGroup;
+import android.content.Context;
+import android.util.AttributeSet;
 import android.view.LayoutInflater;
-import android.widget.LinearLayout;
+import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
-import android.content.Context;
-import android.widget.TextView;
-import android.widget.ImageButton;
+import android.view.animation.Animation;
+import android.view.animation.ScaleAnimation;
+import android.view.animation.TranslateAnimation;
 import android.widget.Button;
-import android.widget.PopupWindow;
-import android.util.AttributeSet;
+import android.widget.ImageButton;
+import android.widget.LinearLayout;
 
 class ActionModeCompatView extends LinearLayout implements GeckoMenu.ActionItemBarPresenter {
     private final String LOGTAG = "GeckoActionModeCompatPresenter";
