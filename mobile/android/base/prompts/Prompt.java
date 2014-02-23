@@ -5,16 +5,13 @@
 
 package org.mozilla.gecko.prompts;
 
-import org.mozilla.gecko.GeckoEvent;
-import org.mozilla.gecko.util.ThreadUtils;
-import org.mozilla.gecko.widget.DateTimePicker;
-import org.mozilla.gecko.prompts.ColorPickerInput;
-import org.mozilla.gecko.R;
-import org.mozilla.gecko.GeckoAppShell;
-
 import org.json.JSONArray;
-import org.json.JSONObject;
 import org.json.JSONException;
+import org.json.JSONObject;
+import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoEvent;
+import org.mozilla.gecko.R;
+import org.mozilla.gecko.util.ThreadUtils;
 
 import android.app.AlertDialog;
 import android.content.Context;
@@ -25,35 +22,19 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.text.Html;
-import android.text.InputType;
 import android.text.TextUtils;
-import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewGroup.LayoutParams;
-import android.view.inputmethod.InputMethodManager;
-import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
-import android.widget.CheckBox;
 import android.widget.CheckedTextView;
-import android.widget.DatePicker;
-import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ScrollView;
-import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.TimePicker;
-
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
-import java.util.concurrent.TimeUnit;
 
 public class Prompt implements OnClickListener, OnCancelListener, OnItemClickListener {
     private static final String LOGTAG = "GeckoPromptService";
