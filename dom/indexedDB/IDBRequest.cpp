@@ -9,7 +9,6 @@
 #include "nsIScriptContext.h"
 
 #include "mozilla/ContentEvents.h"
-#include "mozilla/dom/ErrorEventBinding.h"
 #include "mozilla/dom/IDBOpenDBRequestBinding.h"
 #include "mozilla/dom/UnionTypes.h"
 #include "nsComponentManagerUtils.h"
@@ -301,10 +300,10 @@ IDBRequest::CaptureCaller()
 }
 
 void
-IDBRequest::FillScriptErrorEvent(ErrorEventInit& aEventInit) const
+IDBRequest::FillScriptErrorEvent(InternalScriptErrorEvent* aEvent) const
 {
-  aEventInit.mLineno = mLineNo;
-  aEventInit.mFilename = mFilename;
+  aEvent->lineNr = mLineNo;
+  aEvent->fileName = mFilename.get();
 }
 
 mozilla::dom::IDBRequestReadyState

@@ -19,7 +19,6 @@
 #include "nsDOMJSUtils.h"
 #include "mozilla/ContentEvents.h"
 #include "mozilla/Likely.h"
-#include "mozilla/dom/ErrorEvent.h"
 #include "mozilla/dom/UnionTypes.h"
 #include "nsDOMEvent.h"
 
@@ -168,16 +167,19 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
     Optional<uint32_t> columnNumber;
 
     NS_ENSURE_TRUE(aEvent, NS_ERROR_UNEXPECTED);
-    ErrorEvent* scriptEvent = aEvent->InternalDOMEvent()->AsErrorEvent();
-    if (scriptEvent) {
-      scriptEvent->GetMessage(errorMsg);
+    InternalScriptErrorEvent* scriptEvent =
+      aEvent->GetInternalNSEvent()->AsScriptErrorEvent();
+    if (scriptEvent &&
+        (scriptEvent->message == NS_LOAD_ERROR ||
+         scriptEvent->typeString.EqualsLiteral("error"))) {
+      errorMsg = scriptEvent->errorMsg;
       msgOrEvent.SetAsString().SetData(errorMsg.Data(), errorMsg.Length());
 
-      scriptEvent->GetFilename(file);
+      file = scriptEvent->fileName;
       fileName = &file;
 
       lineNumber.Construct();
-      lineNumber.Value() = scriptEvent->Lineno();
+      lineNumber.Value() = scriptEvent->lineNr;
     } else {
       msgOrEvent.SetAsEvent() = aEvent->InternalDOMEvent();
     }
