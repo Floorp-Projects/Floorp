@@ -5,7 +5,6 @@
 
 package org.mozilla.gecko.home;
 
-import org.mozilla.gecko.R;
 import org.mozilla.gecko.home.HomeConfig.ItemType;
 
 import android.content.Context;

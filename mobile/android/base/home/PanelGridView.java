@@ -5,6 +5,8 @@
 
 package org.mozilla.gecko.home;
 
+import java.util.EnumSet;
+
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserContract.HomeItems;
 import org.mozilla.gecko.home.HomeConfig.ItemHandler;
@@ -15,14 +17,9 @@ import org.mozilla.gecko.home.PanelLayout.PanelView;
 
 import android.content.Context;
 import android.database.Cursor;
-import android.support.v4.widget.CursorAdapter;
-import android.util.Log;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.GridView;
-
-import java.util.EnumSet;
 
 public class PanelGridView extends GridView
                            implements DatasetBacked, PanelView {

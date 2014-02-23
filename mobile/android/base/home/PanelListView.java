@@ -5,24 +5,20 @@
 
 package org.mozilla.gecko.home;
 
-import org.mozilla.gecko.R;
+import java.util.EnumSet;
+
+import org.mozilla.gecko.db.BrowserContract.HomeItems;
 import org.mozilla.gecko.home.HomeConfig.ItemHandler;
 import org.mozilla.gecko.home.HomeConfig.ViewConfig;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import org.mozilla.gecko.home.PanelLayout.DatasetBacked;
 import org.mozilla.gecko.home.PanelLayout.PanelView;
-import org.mozilla.gecko.db.BrowserContract.HomeItems;
 
 import android.content.Context;
 import android.database.Cursor;
-import android.support.v4.widget.CursorAdapter;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
-
-import java.util.EnumSet;
 
 public class PanelListView extends HomeListView
                            implements DatasetBacked, PanelView {
