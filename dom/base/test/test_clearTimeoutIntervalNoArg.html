@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test for clearTimeout/clearInterval with no arguments not throwing</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<div id="log"></div>
+<script>
+test(function() {
+  clearTimeout();
+}, "clearTimeout with no args should not throw ");
+test(function() {
+  clearInterval();
+}, "clearInterval with no args should not throw ");
+</script>
