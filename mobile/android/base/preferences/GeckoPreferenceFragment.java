@@ -7,20 +7,17 @@ package org.mozilla.gecko.preferences;
 
 import java.lang.reflect.Field;
 
-import org.mozilla.gecko.R;
 import org.mozilla.gecko.PrefsHelper;
+import org.mozilla.gecko.R;
 
 import android.app.Activity;
-import android.preference.Preference;
+import android.os.Bundle;
 import android.preference.PreferenceActivity;
-import android.preference.PreferenceCategory;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceScreen;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.ViewConfiguration;
 
 /* A simple implementation of PreferenceFragment for large screen devices

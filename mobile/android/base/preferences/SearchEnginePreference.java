@@ -4,6 +4,14 @@
 
 package org.mozilla.gecko.preferences;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.mozilla.gecko.R;
+import org.mozilla.gecko.favicons.Favicons;
+import org.mozilla.gecko.favicons.decoders.FaviconDecoder;
+import org.mozilla.gecko.util.ThreadUtils;
+import org.mozilla.gecko.widget.FaviconView;
+
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.res.Resources;
@@ -13,18 +21,6 @@ import android.text.SpannableString;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
-
-import java.util.Iterator;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import org.mozilla.gecko.favicons.decoders.FaviconDecoder;
-import org.mozilla.gecko.favicons.decoders.LoadFaviconResult;
-import org.mozilla.gecko.favicons.Favicons;
-import org.mozilla.gecko.R;
-import org.mozilla.gecko.util.ThreadUtils;
-import org.mozilla.gecko.widget.FaviconView;
 
 /**
  * Represents an element in the list of search engines on the preferences menu.
