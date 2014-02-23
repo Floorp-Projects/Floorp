@@ -75,6 +75,8 @@
 #include "ipc/nsGUIEventIPC.h"
 #include "mozilla/gfx/Matrix.h"
 
+#include "nsColorPickerProxy.h"
+
 #ifdef DEBUG
 #include "PCOMContentPermissionRequestChild.h"
 #endif /* DEBUG */
@@ -2091,6 +2093,21 @@ TabChild::RecvPDocumentRendererConstructor(PDocumentRendererChild* actor,
         return true; // silently ignore
 
     return PDocumentRendererChild::Send__delete__(actor, renderSize, data);
+}
+
+PColorPickerChild*
+TabChild::AllocPColorPickerChild(const nsString&, const nsString&)
+{
+  NS_RUNTIMEABORT("unused");
+  return nullptr;
+}
+
+bool
+TabChild::DeallocPColorPickerChild(PColorPickerChild* aColorPicker)
+{
+  nsColorPickerProxy* picker = static_cast<nsColorPickerProxy*>(aColorPicker);
+  NS_RELEASE(picker);
+  return true;
 }
 
 PContentDialogChild*
