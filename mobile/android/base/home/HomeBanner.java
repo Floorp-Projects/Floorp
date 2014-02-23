@@ -5,19 +5,17 @@
 
 package org.mozilla.gecko.home;
 
-import org.mozilla.gecko.animation.PropertyAnimator;
-import org.mozilla.gecko.animation.PropertyAnimator.Property;
-import org.mozilla.gecko.animation.PropertyAnimator.PropertyAnimationListener;
-import org.mozilla.gecko.animation.ViewHelper;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.animation.PropertyAnimator;
+import org.mozilla.gecko.animation.PropertyAnimator.Property;
+import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
