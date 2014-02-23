@@ -100,6 +100,7 @@ static bool PrepareVisibleRegion(const nsIntRegion& aVisible,
  *        The origin is the top-left corner of the screen
  * @param aBufferRect Input. The layer's buffer bounds
  *        The origin is the top-left corner of the layer
+ * @param aYFlipped Input. true if the buffer is rendered as Y flipped
  * @param aSurceCrop Output. Area of the source to consider,
  *        the origin is the top-left corner of the buffer
  * @param aVisibleRegionScreen Output. Visible region in screen space.
@@ -109,6 +110,7 @@ static bool PrepareVisibleRegion(const nsIntRegion& aVisible,
  */
 static bool PrepareLayerRects(nsIntRect aVisible, const gfxMatrix& aTransform,
                               nsIntRect aClip, nsIntRect aBufferRect,
+                              bool aYFlipped,
                               hwc_rect_t* aSourceCrop,
                               hwc_rect_t* aVisibleRegionScreen);
 
