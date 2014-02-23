@@ -5,24 +5,19 @@
 
 package org.mozilla.gecko.home;
 
+import org.mozilla.gecko.R;
+
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
-import android.graphics.Rect;
-import android.support.v4.view.ViewPager;
 import android.util.AttributeSet;
-import android.view.accessibility.AccessibilityEvent;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewParent;
 import android.view.ViewTreeObserver;
+import android.view.accessibility.AccessibilityEvent;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.util.Log;
-
-import org.mozilla.gecko.home.HomePager;
-import org.mozilla.gecko.R;
 
 public class TabMenuStrip extends LinearLayout
                           implements HomePager.Decor,
