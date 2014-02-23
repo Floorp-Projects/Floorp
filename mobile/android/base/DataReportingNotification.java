@@ -6,8 +6,6 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.preferences.GeckoPreferences;
-import org.mozilla.gecko.preferences.GeckoPreferenceFragment;
-import org.mozilla.gecko.util.ThreadUtils;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -17,14 +15,10 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Typeface;
 import android.os.Build;
-import android.os.Bundle;
-import android.preference.PreferenceActivity;
 import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.NotificationCompat.Builder;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.style.StyleSpan;
-import android.util.Log;
 
 public class DataReportingNotification {
 
