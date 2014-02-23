@@ -278,6 +278,11 @@ public:
                                                   const bool& flushLayout,
                                                   const nsIntSize& renderSize) MOZ_OVERRIDE;
 
+    virtual PColorPickerChild*
+    AllocPColorPickerChild(const nsString& title, const nsString& initialColor) MOZ_OVERRIDE;
+    virtual bool DeallocPColorPickerChild(PColorPickerChild* actor) MOZ_OVERRIDE;
+
+
     virtual PContentDialogChild* AllocPContentDialogChild(const uint32_t&,
                                                           const nsCString&,
                                                           const nsCString&,
@@ -285,6 +290,7 @@ public:
                                                           const InfallibleTArray<nsString>&)
                                                           MOZ_OVERRIDE;
     virtual bool DeallocPContentDialogChild(PContentDialogChild* aDialog) MOZ_OVERRIDE;
+
     static void ParamsToArrays(nsIDialogParamBlock* aParams,
                                InfallibleTArray<int>& aIntParams,
                                InfallibleTArray<nsString>& aStringParams);
