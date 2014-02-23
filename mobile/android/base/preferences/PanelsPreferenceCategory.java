@@ -4,14 +4,6 @@
 
 package org.mozilla.gecko.preferences;
 
-import android.content.Context;
-import android.os.Bundle;
-import android.preference.Preference;
-import android.preference.PreferenceCategory;
-import android.text.TextUtils;
-import android.util.AttributeSet;
-import android.util.Log;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,6 +11,10 @@ import org.mozilla.gecko.home.HomeConfig;
 import org.mozilla.gecko.home.HomeConfig.PanelConfig;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UiAsyncTask;
+
+import android.content.Context;
+import android.text.TextUtils;
+import android.util.AttributeSet;
 
 public class PanelsPreferenceCategory extends CustomListCategory {
     public static final String LOGTAG = "PanelsPrefCategory";

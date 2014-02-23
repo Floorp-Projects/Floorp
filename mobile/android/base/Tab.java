@@ -5,34 +5,28 @@
 
 package org.mozilla.gecko;
 
-import org.mozilla.gecko.SiteIdentity.SecurityMode;
-import org.mozilla.gecko.db.BrowserContract.Bookmarks;
-import org.mozilla.gecko.db.BrowserDB;
-import org.mozilla.gecko.favicons.Favicons;
-import org.mozilla.gecko.favicons.LoadFaviconTask;
-import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
-import org.mozilla.gecko.gfx.Layer;
-import org.mozilla.gecko.util.ThreadUtils;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.mozilla.gecko.db.BrowserContract.Bookmarks;
+import org.mozilla.gecko.db.BrowserDB;
+import org.mozilla.gecko.gfx.Layer;
+import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.ContentResolver;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class Tab {
     private static final String LOGTAG = "GeckoTab";

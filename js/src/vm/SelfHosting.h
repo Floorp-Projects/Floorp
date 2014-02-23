@@ -14,19 +14,14 @@ class JSAtom;
 namespace js {
 
 /*
- * When wrapping objects for use by self-hosted code, we skip all checks and
- * always create an OpaqueWrapper that allows nothing.
- * When wrapping functions from the self-hosting compartment for use in other
- * compartments, we create an OpaqueWrapperWithCall that only allows calls,
- * nothing else.
- */
-extern const JSWrapObjectCallbacks SelfHostingWrapObjectCallbacks;
-
-/*
  * Check whether the given JSFunction is a self-hosted function whose
  * self-hosted name is the given name.
  */
 bool IsSelfHostedFunctionWithName(JSFunction *fun, JSAtom *name);
+
+/* Get the compile options used when compiling self hosted code. */
+void
+FillSelfHostingCompileOptions(JS::CompileOptions &options);
 
 } /* namespace js */
 

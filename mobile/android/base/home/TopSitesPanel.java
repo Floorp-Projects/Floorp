@@ -5,19 +5,21 @@
 
 package org.mozilla.gecko.home;
 
-import org.mozilla.gecko.favicons.Favicons;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tabs;
-import org.mozilla.gecko.animation.PropertyAnimator;
-import org.mozilla.gecko.animation.PropertyAnimator.Property;
-import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserContract.Thumbnails;
 import org.mozilla.gecko.db.BrowserDB;
-import org.mozilla.gecko.db.BrowserDB.URLColumns;
 import org.mozilla.gecko.db.BrowserDB.TopSitesCursorWrapper;
+import org.mozilla.gecko.db.BrowserDB.URLColumns;
+import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
-import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import org.mozilla.gecko.home.PinSiteDialog.OnSiteSelectedListener;
@@ -46,18 +48,11 @@ import android.view.ContextMenu.ContextMenuInfo;
 import android.view.LayoutInflater;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
-
-import java.util.EnumSet;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Fragment that displays frecency search results in a ListView.

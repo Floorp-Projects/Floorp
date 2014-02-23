@@ -5,26 +5,26 @@
 
 package org.mozilla.gecko.preferences;
 
-import org.mozilla.gecko.R;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.json.JSONObject;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.DataReportingNotification;
 import org.mozilla.gecko.GeckoActivityStatus;
 import org.mozilla.gecko.GeckoApp;
-import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.PrefsHelper;
+import org.mozilla.gecko.R;
 import org.mozilla.gecko.background.announcements.AnnouncementsConstants;
 import org.mozilla.gecko.background.common.GlobalConstants;
 import org.mozilla.gecko.background.healthreport.HealthReportConstants;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.Fragment;
@@ -58,11 +58,7 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class GeckoPreferences
     extends PreferenceActivity

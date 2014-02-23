@@ -8,7 +8,6 @@ package org.mozilla.gecko.home;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
 
-import android.app.Activity;
 import android.content.Context;
 import android.database.Cursor;
 import android.os.Bundle;

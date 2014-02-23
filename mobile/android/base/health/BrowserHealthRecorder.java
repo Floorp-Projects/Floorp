@@ -5,46 +5,40 @@
 
 package org.mozilla.gecko.health;
 
-import java.util.ArrayList;
-
-import android.content.Context;
-import android.content.ContentProviderClient;
-import android.content.SharedPreferences;
-import android.util.Log;
-
-import org.mozilla.gecko.AppConstants;
-import org.mozilla.gecko.Distribution;
-import org.mozilla.gecko.Distribution.DistributionDescriptor;
-import org.mozilla.gecko.GeckoApp;
-import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.GeckoEvent;
-
-import org.mozilla.gecko.background.healthreport.EnvironmentBuilder;
-import org.mozilla.gecko.background.healthreport.HealthReportDatabaseStorage;
-import org.mozilla.gecko.background.healthreport.HealthReportStorage.Field;
-import org.mozilla.gecko.background.healthreport.HealthReportStorage.MeasurementFields;
-import org.mozilla.gecko.background.healthreport.HealthReportStorage.MeasurementFields.FieldSpec;
-import org.mozilla.gecko.background.healthreport.ProfileInformationCache;
-
-import org.mozilla.gecko.EventDispatcher;
-import org.mozilla.gecko.util.GeckoEventListener;
-import org.mozilla.gecko.util.ThreadUtils;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
-import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.Distribution;
+import org.mozilla.gecko.Distribution.DistributionDescriptor;
+import org.mozilla.gecko.EventDispatcher;
+import org.mozilla.gecko.GeckoApp;
+import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoEvent;
+import org.mozilla.gecko.background.healthreport.EnvironmentBuilder;
+import org.mozilla.gecko.background.healthreport.HealthReportDatabaseStorage;
+import org.mozilla.gecko.background.healthreport.HealthReportStorage.Field;
+import org.mozilla.gecko.background.healthreport.HealthReportStorage.MeasurementFields;
+import org.mozilla.gecko.background.healthreport.ProfileInformationCache;
+import org.mozilla.gecko.util.GeckoEventListener;
+import org.mozilla.gecko.util.ThreadUtils;
+
+import android.content.ContentProviderClient;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.util.Log;
 
 /**
  * BrowserHealthRecorder is the browser's interface to the Firefox Health

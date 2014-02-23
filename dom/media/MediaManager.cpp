@@ -1,5 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -242,10 +240,8 @@ public:
   {
     NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
 
-    nsCOMPtr<nsIGetUserMediaDevicesSuccessCallback> success;
-    nsCOMPtr<nsIDOMGetUserMediaErrorCallback> error;
-    success.swap(mSuccess);
-    error.swap(mError);
+    nsCOMPtr<nsIGetUserMediaDevicesSuccessCallback> success(mSuccess);
+    nsCOMPtr<nsIDOMGetUserMediaErrorCallback> error(mError);
 
     // Only run if window is still on our active list.
     if (!mManager->IsWindowStillActive(mWindowID)) {
@@ -282,8 +278,8 @@ public:
   }
 
 private:
-  nsCOMPtr<nsIGetUserMediaDevicesSuccessCallback> mSuccess;
-  nsCOMPtr<nsIDOMGetUserMediaErrorCallback> mError;
+  already_AddRefed<nsIGetUserMediaDevicesSuccessCallback> mSuccess;
+  already_AddRefed<nsIDOMGetUserMediaErrorCallback> mError;
   nsAutoPtr<nsTArray<nsCOMPtr<nsIMediaDevice> > > mDevices;
   uint64_t mWindowID;
   nsRefPtr<MediaManager> mManager;
@@ -1091,16 +1087,15 @@ public:
       final->MoveElementsFrom(*s);
     }
     NS_DispatchToMainThread(new DeviceSuccessCallbackRunnable(mWindowId,
-                                                              mSuccess.forget(),
-                                                              mError.forget(),
+                                                              mSuccess, mError,
                                                               final.forget()));
     return NS_OK;
   }
 
 private:
   MediaStreamConstraintsInternal mConstraints;
-  nsCOMPtr<nsIGetUserMediaDevicesSuccessCallback> mSuccess;
-  nsCOMPtr<nsIDOMGetUserMediaErrorCallback> mError;
+  already_AddRefed<nsIGetUserMediaDevicesSuccessCallback> mSuccess;
+  already_AddRefed<nsIDOMGetUserMediaErrorCallback> mError;
   nsRefPtr<MediaManager> mManager;
   uint64_t mWindowId;
   const nsString mCallId;

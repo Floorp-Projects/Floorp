@@ -4,17 +4,15 @@
 
 package org.mozilla.gecko.preferences;
 
+import org.mozilla.gecko.R;
+
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.res.Resources;
 import android.preference.Preference;
-import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
-
-import org.mozilla.gecko.R;
-import org.mozilla.gecko.util.ThreadUtils;
 
 /**
  * Represents an element in a <code>CustomListCategory</code> preference menu.
