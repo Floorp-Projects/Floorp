@@ -5,17 +5,15 @@
 
 package org.mozilla.gecko.gfx;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.util.FloatUtils;
 
-import org.json.JSONArray;
-
 import android.util.Log;
 import android.view.View;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * This class represents the physics for one axis of movement (i.e. either
