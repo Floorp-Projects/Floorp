@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test for error events being ErrorEvent</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<div id="log"></div>
+<script>
+  var errorEvent;
+  var file;
+  var line;
+  var msg;
+  window.addEventListener("error", function errorListener(e) {
+    window.removeEventListener("error", errorListener);
+    errorEvent = e;
+  });
+  var oldOnerror = window.onerror;
+  window.onerror = function(message, filename, lineno) {
+    window.onerror = oldOnerror;
+    file = filename;
+    line = lineno;
+    msg = message;
+  }
+  throw new Error("hello");
+</script>
+<script>
+  generate_tests(assert_equals, [
+    [ "Event filename", errorEvent.filename, location.href ],
+    [ "Callback filename", file, location.href ],
+    [ "Event line number", errorEvent.lineno, 23 ],
+    [ "Callback line number", line, 23 ],
+    [ "Event message", errorEvent.message, "Error: hello" ],
+    [ "Callback message", msg, "Error: hello" ]
+  ]);
+</script>
+<script>
+  var workerLocation = location.protocol + "//" + location.host +
+    location.pathname.replace("test_error_events.html", "error_event_worker.js");
+  var eventFileTest = async_test("Worker event filename");
+  var eventLineTest = async_test("Worker event line number");
+  var eventMessageTest = async_test("Worker event message");
+  var callbackFileTest = async_test("Worker callback filename");
+  var callbackLineTest = async_test("Worker callback line number");
+  var callbackMessageTest = async_test("Worker callback message");
+  var w = new Worker("error_event_worker.js");
+  w.addEventListener("message", function(msg) {
+    if (msg.data.type == "event") {
+      eventFileTest.step(function() { assert_equals(msg.data.filename, workerLocation); });
+      eventFileTest.done();
+      eventLineTest.step(function() { assert_equals(msg.data.lineno, 15); });
+      eventLineTest.done();
+      eventMessageTest.step(function() { assert_equals(msg.data.message, "Error: workerhello"); });
+      eventMessageTest.done();
+    } else {
+      callbackFileTest.step(function() { assert_equals(msg.data.filename, workerLocation); });
+      callbackFileTest.done();
+      callbackLineTest.step(function() { assert_equals(msg.data.lineno, 15); });
+      callbackLineTest.done();
+      callbackMessageTest.step(function() { assert_equals(msg.data.message, "Error: workerhello"); });
+      callbackMessageTest.done();
+    }
+  });
+</script>

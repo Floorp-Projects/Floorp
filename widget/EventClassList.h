@@ -41,7 +41,6 @@ NS_EVENT_CLASS(Widget, SimpleGestureEvent)
 NS_EVENT_CLASS(Widget, TouchEvent)
 
 // ContentEvents.h
-NS_EVENT_CLASS(Internal, ScriptErrorEvent)
 NS_EVENT_CLASS(Internal, ScrollPortEvent)
 NS_EVENT_CLASS(Internal, ScrollAreaEvent)
 NS_EVENT_CLASS(Internal, FormEvent)
