@@ -10,7 +10,6 @@ this.EXPORTED_SYMBOLS = [
   "RESTRequest",
   "RESTResponse",
   "TokenAuthenticatedRESTRequest",
-  "HAWKAuthenticatedRESTRequest",
 ];
 
 #endif
@@ -725,75 +724,3 @@ TokenAuthenticatedRESTRequest.prototype = {
   },
 };
 
-/**
- * Single-use HAWK-authenticated HTTP requests to RESTish resources.
- *
- * @param uri
- *        (String) URI for the RESTRequest constructor
- *
- * @param credentials
- *        (Object) Optional credentials for computing HAWK authentication
- *        header.
- *
- * @param payloadObj
- *        (Object) Optional object to be converted to JSON payload
- *
- * @param extra
- *        (Object) Optional extra params for HAWK header computation.
- *        Valid properties are:
- *
- *          now:                 <current time in milliseconds>,
- *          localtimeOffsetMsec: <local clock offset vs server>
- *
- * extra.localtimeOffsetMsec is the value in milliseconds that must be added to
- * the local clock to make it agree with the server's clock.  For instance, if
- * the local clock is two minutes ahead of the server, the time offset in
- * milliseconds will be -120000.
- */
-this.HAWKAuthenticatedRESTRequest =
- function HawkAuthenticatedRESTRequest(uri, credentials, extra={}) {
-  RESTRequest.call(this, uri);
-
-  this.credentials = credentials;
-  this.now = extra.now || Date.now();
-  this.localtimeOffsetMsec = extra.localtimeOffsetMsec || 0;
-  this._log.trace("local time, offset: " + this.now + ", " + (this.localtimeOffsetMsec));
-};
-HAWKAuthenticatedRESTRequest.prototype = {
-  __proto__: RESTRequest.prototype,
-
-  dispatch: function dispatch(method, data, onComplete, onProgress) {
-    let contentType = "text/plain";
-    if (method == "POST" || method == "PUT") {
-      contentType = "application/json";
-    }
-    if (this.credentials) {
-      let options = {
-        now: this.now,
-        localtimeOffsetMsec: this.localtimeOffsetMsec,
-        credentials: this.credentials,
-        payload: data && JSON.stringify(data) || "",
-        contentType: contentType,
-      };
-      let header = CryptoUtils.computeHAWK(this.uri, method, options);
-      this.setHeader("Authorization", header.field);
-      this._log.trace("hawk auth header: " + header.field);
-    }
-
-    this.setHeader("Content-Type", contentType);
-
-    try {
-      let acceptLanguage = Services.prefs.getComplexValue(
-          "intl.accept_languages", Ci.nsIPrefLocalizedString).data;
-      if (acceptLanguage) {
-        this.setHeader("Accept-Language", acceptLanguage);
-      }
-    } catch (err) {
-      this._log.error("Error reading intl.accept_languages pref: " + CommonUtils.exceptionStr(err));
-    }
-
-    return RESTRequest.prototype.dispatch.call(
-      this, method, data, onComplete, onProgress
-    );
-  }
-};
