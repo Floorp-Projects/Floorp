@@ -141,7 +141,7 @@ TrackRunBox::fillSampleTable()
     if (flags.to_ulong() & flags_sample_flags_present) {
       sample_info_table[i].sample_flags =
         set_sample_flags(
-          (frames.ElementAt(i)->GetFrameType() == EncodedFrame::I_FRAME));
+          (frames.ElementAt(i)->GetFrameType() == EncodedFrame::AVC_I_FRAME));
       table_size += sizeof(uint32_t);
     }
 
