@@ -253,6 +253,7 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
             js_free(source);
             return nullptr;
         }
+        ScriptSourceHolder ssHolder(ss);
         ss->setSource(source, sourceLen);
         CompileOptions options(cx);
         options.setNoScriptRval(true)
