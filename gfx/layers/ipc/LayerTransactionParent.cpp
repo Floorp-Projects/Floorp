@@ -204,9 +204,6 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
     return true;
   }
 
-  // Clear fence handles used in previsou transaction.
-  ClearPrevFenceHandles();
-
   EditReplyVector replyv;
 
   {

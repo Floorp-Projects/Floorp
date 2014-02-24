@@ -38,7 +38,6 @@ class GraphicBuffer;
 namespace mozilla {
 namespace layers {
 
-class TextureHost;
 
 typedef uint32_t TextureFlags;
 
@@ -89,20 +88,18 @@ enum LayerRenderStateFlags {
 struct LayerRenderState {
   LayerRenderState()
 #ifdef MOZ_WIDGET_GONK
-    : mSurface(nullptr), mFlags(0), mHasOwnOffset(false), mTexture(nullptr)
+    : mSurface(nullptr), mFlags(0), mHasOwnOffset(false)
 #endif
   {}
 
 #ifdef MOZ_WIDGET_GONK
   LayerRenderState(android::GraphicBuffer* aSurface,
                    const nsIntSize& aSize,
-                   uint32_t aFlags,
-                   TextureHost* aTexture)
+                   uint32_t aFlags)
     : mSurface(aSurface)
     , mSize(aSize)
     , mFlags(aFlags)
     , mHasOwnOffset(false)
-    , mTexture(aTexture)
   {}
 
   bool YFlipped() const
@@ -126,7 +123,6 @@ struct LayerRenderState {
   android::sp<android::GraphicBuffer> mSurface;
   // size of mSurface 
   nsIntSize mSize;
-  TextureHost* mTexture;
 #endif
   // see LayerRenderStateFlags
   uint32_t mFlags;
