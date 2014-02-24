@@ -48,13 +48,17 @@ public:
     mFrameType(UNKNOWN)
   {}
   enum FrameType {
-    I_FRAME,      // intraframe
-    P_FRAME,      // predicted frame
-    B_FRAME,      // bidirectionally predicted frame
-    AUDIO_FRAME,  // audio frame
-    AAC_CSD,      // AAC codec specific data
-    AVC_CSD,      // AVC codec specific data
-    UNKNOWN       // FrameType not set
+    VP8_I_FRAME,      // VP8 intraframe
+    VP8_P_FRAME,      // VP8 predicted frame
+    OPUS_AUDIO_FRAME, // Opus audio frame
+    VORBIS_AUDIO_FRAME,
+    AVC_I_FRAME,
+    AVC_P_FRAME,
+    AVC_B_FRAME,
+    AVC_CSD,          // AVC codec specific data
+    AAC_AUDIO_FRAME,
+    AAC_CSD,          // AAC codec specific data
+    UNKNOWN           // FrameType not set
   };
   nsresult SwapInFrameData(nsTArray<uint8_t>& aData)
   {

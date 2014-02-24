@@ -686,7 +686,7 @@ XPCOMUtils.defineLazyGetter(this, "gRadioEnabledController", function() {
     },
 
     _createTimer: function() {
-      if (_timer) {
+      if (!_timer) {
         _timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
       }
       _timer.initWithCallback(this._executeRequest.bind(this),
