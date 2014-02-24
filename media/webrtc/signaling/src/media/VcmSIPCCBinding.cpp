@@ -12,7 +12,6 @@
 #include "MediaConduitErrors.h"
 #include "MediaConduitInterface.h"
 #include "MediaPipeline.h"
-#include "MediaPipelineFilter.h"
 #include "VcmSIPCCBinding.h"
 #include "csf_common.h"
 #include "PeerConnectionImpl.h"
@@ -1502,12 +1501,7 @@ static int vcmRxStartICE_m(cc_mcapid_t mcap_id,
         const char *fingerprint,
         vcm_mediaAttrs_t *attrs)
 {
-  CSFLogDebug( logTag, "%s(%s) track = %d, stream = %d, level = %d",
-              __FUNCTION__,
-              peerconnection,
-              pc_track_id,
-              pc_stream_id,
-              level);
+  CSFLogDebug( logTag, "%s(%s)", __FUNCTION__, peerconnection);
 
   // Find the PC.
   sipcc::PeerConnectionWrapper pc(peerconnection);
@@ -1543,66 +1537,12 @@ static int vcmRxStartICE_m(cc_mcapid_t mcap_id,
   }
 
   mozilla::RefPtr<TransportFlow> rtcp_flow = nullptr;
-  if (!attrs->rtcp_mux) {
+  if(!attrs->rtcp_mux) {
     rtcp_flow = vcmCreateTransportFlow(pc.impl(), level, true, setup_type,
                                        fingerprint_alg, fingerprint);
     if (!rtcp_flow) {
       CSFLogError( logTag, "Could not create RTCP flow");
       return VCM_ERROR;
-    }
-  }
-
-  // If we're offering bundle, a given MediaPipeline could receive traffic on
-  // two different network flows depending on whether the answerer accepts,
-  // before any answer comes in. We need to be prepared for both cases.
-  nsAutoPtr<mozilla::MediaPipelineFilter> filter;
-  RefPtr<TransportFlow> bundle_rtp_flow;
-  RefPtr<TransportFlow> bundle_rtcp_flow;
-  if (attrs->bundle_level) {
-    filter = new MediaPipelineFilter;
-    // Record our correlator, if present in our offer.
-    filter->SetCorrelator(attrs->bundle_stream_correlator);
-
-    // Record our own ssrcs (these are _not_ those of the remote end; that
-    // is handled in vcmTxStart)
-    for (int s = 0; s < attrs->num_ssrcs; ++s) {
-      filter->AddLocalSSRC(attrs->ssrcs[s]);
-    }
-
-    // Record the unique payload types
-    for (int p = 0; p < attrs->num_unique_payload_types; ++p) {
-      filter->AddUniquePT(attrs->unique_payload_types[p]);
-    }
-
-    // Do not pass additional TransportFlows if the pipeline will use the same
-    // flow regardless of whether bundle happens or not.
-    if (attrs->bundle_level != (unsigned int)level) {
-      // This might end up creating it, or might reuse it.
-      mozilla::RefPtr<TransportFlow> bundle_rtp_flow =
-        vcmCreateTransportFlow(pc.impl(),
-                               attrs->bundle_level,
-                               false,
-                               setup_type,
-                               fingerprint_alg,
-                               fingerprint);
-
-      if (!bundle_rtp_flow) {
-        CSFLogError( logTag, "Could not create bundle RTP flow");
-        return VCM_ERROR;
-      }
-
-      if (!attrs->rtcp_mux) {
-        bundle_rtcp_flow = vcmCreateTransportFlow(pc.impl(),
-                                                  attrs->bundle_level,
-                                                  true,
-                                                  setup_type,
-                                                  fingerprint_alg,
-                                                  fingerprint);
-        if (!bundle_rtcp_flow) {
-          CSFLogError( logTag, "Could not create bundle RTCP flow");
-          return VCM_ERROR;
-        }
-      }
     }
   }
 
@@ -1640,6 +1580,7 @@ static int vcmRxStartICE_m(cc_mcapid_t mcap_id,
     if (conduit->ConfigureRecvMediaCodecs(configs))
       return VCM_ERROR;
 
+
     // Now we have all the pieces, create the pipeline
     mozilla::RefPtr<mozilla::MediaPipeline> pipeline =
       new mozilla::MediaPipelineReceiveAudio(
@@ -1649,12 +1590,7 @@ static int vcmRxStartICE_m(cc_mcapid_t mcap_id,
         stream->GetMediaStream()->GetStream(),
         pc_track_id,
         level,
-        conduit,
-        rtp_flow,
-        rtcp_flow,
-        bundle_rtp_flow,
-        bundle_rtcp_flow,
-        filter);
+        conduit, rtp_flow, rtcp_flow);
 
     nsresult res = pipeline->Init();
     if (NS_FAILED(res)) {
@@ -1706,12 +1642,7 @@ static int vcmRxStartICE_m(cc_mcapid_t mcap_id,
             stream->GetMediaStream()->GetStream(),
             pc_track_id,
             level,
-            conduit,
-            rtp_flow,
-            rtcp_flow,
-            bundle_rtp_flow,
-            bundle_rtcp_flow,
-            filter);
+            conduit, rtp_flow, rtcp_flow);
 
     nsresult res = pipeline->Init();
     if (NS_FAILED(res)) {
@@ -2251,12 +2182,7 @@ static int vcmTxStartICE_m(cc_mcapid_t mcap_id,
         const char *fingerprint,
         vcm_mediaAttrs_t *attrs)
 {
-  CSFLogDebug( logTag, "%s(%s) track = %d, stream = %d, level = %d",
-              __FUNCTION__,
-              peerconnection,
-              pc_track_id,
-              pc_stream_id,
-              level);
+  CSFLogDebug( logTag, "%s(%s)", __FUNCTION__, peerconnection);
 
   // Find the PC and get the stream
   sipcc::PeerConnectionWrapper pc(peerconnection);
@@ -2281,22 +2207,6 @@ static int vcmTxStartICE_m(cc_mcapid_t mcap_id,
       return VCM_ERROR;
     }
   }
-
-  // This tells the receive MediaPipeline (if there is one) whether we are
-  // doing bundle, and if so, updates the filter. This does not affect the
-  // transmit MediaPipeline (created above) at all.
-  if (attrs->bundle_level) {
-    nsAutoPtr<mozilla::MediaPipelineFilter> filter (new MediaPipelineFilter);
-    for (int s = 0; s < attrs->num_ssrcs; ++s) {
-      filter->AddRemoteSSRC(attrs->ssrcs[s]);
-    }
-    pc.impl()->media()->SetUsingBundle_m(level, true);
-    pc.impl()->media()->UpdateFilterFromRemoteDescription_m(level, filter);
-  } else {
-    // This will also clear the filter.
-    pc.impl()->media()->SetUsingBundle_m(level, false);
-  }
-
 
   if (CC_IS_AUDIO(mcap_id)) {
     mozilla::AudioCodecConfig *config_raw;
