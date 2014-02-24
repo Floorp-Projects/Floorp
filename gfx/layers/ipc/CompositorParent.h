@@ -297,6 +297,8 @@ private:
    */
   bool CanComposite();
 
+  void DidComposite();
+
   nsRefPtr<LayerManagerComposite> mLayerManager;
   nsRefPtr<Compositor> mCompositor;
   RefPtr<AsyncCompositionManager> mCompositionManager;
