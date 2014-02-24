@@ -237,46 +237,6 @@ finish:
   return NS_OK;
 }
 
-#if 0
-// nsPKCS12Blob::LoadCerts
-//
-// Given an array of certificate nicknames, load the corresponding
-// certificates into a local array.
-nsresult
-nsPKCS12Blob::LoadCerts(const char16_t **certNames, int numCerts)
-{
-  nsresult rv;
-  char namecpy[256];
-  /* Create the local array if needed */
-  if (!mCertArray) {
-    rv = NS_NewISupportsArray(getter_AddRefs(mCertArray));
-    if (NS_FAILED(rv)) {
-      if (!handleError())
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-  /* Add the certs */
-  for (int i=0; i<numCerts; i++) {
-    strcpy(namecpy, NS_ConvertUTF16toUTF8(certNames[i]));
-    CERTCertificate *nssCert = PK11_FindCertFromNickname(namecpy, nullptr);
-    if (!nssCert) {
-      if (!handleError())
-        return NS_ERROR_FAILURE;
-      else continue; /* user may request to keep going */
-    }
-    nsCOMPtr<nsIX509Cert> cert = nsNSSCertificate::Create(nssCert);
-    CERT_DestroyCertificate(nssCert);
-    if (!cert) {
-      if (!handleError())
-        return NS_ERROR_OUT_OF_MEMORY;
-    } else {
-      mCertArray->AppendElement(cert);
-    }
-  }
-  return NS_OK;
-}
-#endif
-
 static bool
 isExtractable(SECKEYPrivateKey *privKey)
 {
@@ -344,18 +304,7 @@ nsPKCS12Blob::ExportToFile(nsIFile *file,
   // add password integrity
   srv = SEC_PKCS12AddPasswordIntegrity(ecx, &unicodePw, SEC_OID_SHA1);
   if (srv) goto finish;
-#if 0
-  // count the number of certs to export
-  nrv = mCertArray->Count(&numCerts);
-  if (NS_FAILED(nrv)) goto finish;
-  // loop over the certs
   for (i=0; i<numCerts; i++) {
-    nsCOMPtr<nsIX509Cert> cert;
-    nrv = mCertArray->GetElementAt(i, getter_AddRefs(cert));
-    if (NS_FAILED(nrv)) goto finish;
-#endif
-  for (i=0; i<numCerts; i++) {
-//    nsNSSCertificate *cert = reinterpret_cast<nsNSSCertificate *>(certs[i]);
     nsNSSCertificate *cert = (nsNSSCertificate *)certs[i];
     // get it as a CERTCertificate XXX
     insanity::pkix::ScopedCERTCertificate nssCert(cert->GetCert());
@@ -802,15 +751,6 @@ nsPKCS12Blob::handleError(int myerr)
       /* ask to keep going?  what happens if one collision but others ok? */
       // The following errors cannot be "handled", notify the user (via an alert)
       // that the operation failed.
-#if 0
-      // XXX a boy can dream...
-      //     but the PKCS12 lib never throws this error
-      //     but then again, how would it?  anyway, convey the info below
-    case SEC_ERROR_PKCS12_PRIVACY_PASSWORD_INCORRECT:
-      msgID = "PKCS12PasswordInvalid";
-      break;
-#endif
-
     case SEC_ERROR_BAD_PASSWORD: msgID = "PK11BadPassword"; break;
 
     case SEC_ERROR_BAD_DER:

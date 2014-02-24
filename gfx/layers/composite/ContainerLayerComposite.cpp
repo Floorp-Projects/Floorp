@@ -55,12 +55,16 @@ static nsIntRect
 GetOpaqueRect(Layer* aLayer)
 {
   nsIntRect result;
+  gfx::Matrix matrix;
+  bool is2D = aLayer->GetBaseTransform().Is2D(&matrix);
+
   // Just bail if there's anything difficult to handle.
-  if (!aLayer->GetEffectiveTransform().IsIdentity() ||
-      aLayer->GetEffectiveOpacity() != 1.0f ||
-      aLayer->GetMaskLayer()) {
+  if (!is2D || aLayer->GetMaskLayer() ||
+    aLayer->GetEffectiveOpacity() != 1.0f ||
+    matrix.HasNonIntegerTranslation()) {
     return result;
   }
+
   if (aLayer->GetContentFlags() & Layer::CONTENT_OPAQUE) {
     result = aLayer->GetEffectiveVisibleRegion().GetLargestRectangle();
   } else {
@@ -72,10 +76,16 @@ GetOpaqueRect(Layer* aLayer)
       result = GetOpaqueRect(refLayer->GetFirstChild());
     }
   }
+
+  // Translate our opaque region to cover the child
+  gfx::Point point = matrix.GetTranslation();
+  result.MoveBy(static_cast<int>(point.x), static_cast<int>(point.y));
+
   const nsIntRect* clipRect = aLayer->GetEffectiveClipRect();
   if (clipRect) {
     result.IntersectRect(result, *clipRect);
   }
+
   return result;
 }
 
