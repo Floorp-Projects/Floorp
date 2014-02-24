@@ -561,15 +561,6 @@ NS_GetDebug(nsIDebug* *result)
 
 
 XPCOM_API(nsresult)
-NS_GetTraceRefcnt(nsITraceRefcnt* *result)
-{
-    if (!xpcomFunctions.getTraceRefcnt)
-        return NS_ERROR_NOT_INITIALIZED;
-    return xpcomFunctions.getTraceRefcnt(result);
-}
-
-
-XPCOM_API(nsresult)
 NS_StringContainerInit(nsStringContainer &aStr)
 {
     if (!xpcomFunctions.stringContainerInit)
