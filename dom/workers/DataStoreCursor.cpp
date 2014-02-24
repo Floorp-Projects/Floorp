@@ -57,6 +57,7 @@ class DataStoreCursorGetStoreRunnable MOZ_FINAL : public DataStoreCursorRunnable
 {
   WorkerDataStore* mWorkerStore;
   ErrorResult& mRv;
+  nsRefPtr<DataStoreChangeEventProxy> mEventProxy;
 
 public:
   DataStoreCursorGetStoreRunnable(WorkerPrivate* aWorkerPrivate,
@@ -69,6 +70,9 @@ public:
   {
     MOZ_ASSERT(aWorkerPrivate);
     aWorkerPrivate->AssertIsOnWorkerThread();
+
+    // When we're on the worker thread, prepare an DataStoreChangeEventProxy.
+    mEventProxy = new DataStoreChangeEventProxy(aWorkerPrivate, mWorkerStore);
   }
 
 protected:
@@ -77,8 +81,19 @@ protected:
   {
     AssertIsOnMainThread();
 
-    // Point WorkerDataStore to DataStore.
     nsRefPtr<DataStore> store = mBackingCursor->GetStore(mRv);
+
+    // Add |mEventProxy| as an event listner to DataStore;
+    if (NS_FAILED(store->AddEventListener(NS_LITERAL_STRING("change"),
+                                          mEventProxy,
+                                          false,
+                                          false,
+                                          2))) {
+      NS_WARNING("Failed to add event listener!");
+      return false;
+    }
+
+    // Point WorkerDataStore to DataStore.
     nsMainThreadPtrHandle<DataStore> backingStore =
       new nsMainThreadPtrHolder<DataStore>(store);
     mWorkerStore->SetBackingDataStore(backingStore);

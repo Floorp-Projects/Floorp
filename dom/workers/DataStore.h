@@ -8,6 +8,8 @@
 #include "mozilla/DOMEventTargetHelper.h"
 #include "nsProxyRelease.h"
 
+#include "WorkerFeature.h"
+
 namespace mozilla {
 
 class ErrorResult;
@@ -22,6 +24,7 @@ class OwningStringOrUnsignedLong;
 
 namespace workers {
 
+class DataStoreChangeEventProxy;
 class WorkerDataStoreCursor;
 class WorkerGlobalScope;
 
@@ -88,11 +91,46 @@ public:
   void SetBackingDataStore(
     const nsMainThreadPtrHandle<DataStore>& aBackingStore);
 
+  void SetDataStoreChangeEventProxy(DataStoreChangeEventProxy* aEventProxy);
+
 protected:
   virtual ~WorkerDataStore() {}
 
 private:
   nsMainThreadPtrHandle<DataStore> mBackingStore;
+  nsRefPtr<DataStoreChangeEventProxy> mEventProxy;
+};
+
+class DataStoreChangeEventProxy MOZ_FINAL : public nsIDOMEventListener
+                                          , public WorkerFeature
+{
+public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSIDOMEVENTLISTENER
+
+  DataStoreChangeEventProxy(WorkerPrivate* aWorkerPrivate,
+                            WorkerDataStore* aWorkerStore);
+
+  WorkerPrivate* GetWorkerPrivate() const;
+
+  WorkerDataStore* GetWorkerStore() const;
+
+protected:
+  // WorkerFeature implementation.
+
+  bool Notify(JSContext* aCx, Status aStatus) MOZ_OVERRIDE;
+
+private:
+  ~DataStoreChangeEventProxy() {};
+
+  WorkerPrivate* mWorkerPrivate;
+
+  nsRefPtr<WorkerDataStore> mWorkerStore;
+
+  bool mCleanedUp; // To specify if the worker has been cancelled.
+
+  // Ensure the worker and the main thread won't race to access |mCleanedUp|.
+  Mutex mCleanUpLock;
 };
 
 } //namespace workers

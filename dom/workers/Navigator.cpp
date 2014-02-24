@@ -49,6 +49,47 @@ WorkerNavigator::WrapObject(JSContext* aCx)
   return WorkerNavigatorBinding_workers::Wrap(aCx, this);
 }
 
+// A WorkerMainThreadRunnable to synchronously add DataStoreChangeEventProxy on
+// the main thread. We need this because we have to access |mBackingStore| on
+// the main thread.
+class DataStoreAddEventListenerRunnable : public WorkerMainThreadRunnable
+{
+  nsMainThreadPtrHandle<DataStore> mBackingStore;
+  DataStoreChangeEventProxy* mEventProxy;
+
+protected:
+  virtual bool
+  MainThreadRun() MOZ_OVERRIDE
+  {
+    AssertIsOnMainThread();
+
+    // Add |mEventProxy| as an event listner to DataStore.
+    if (NS_FAILED(mBackingStore->AddEventListener(NS_LITERAL_STRING("change"),
+                                                  mEventProxy,
+                                                  false,
+                                                  false,
+                                                  2))) {
+      MOZ_ASSERT(false, "failed to add event listener!");
+      return false;
+    }
+
+    return true;
+  }
+
+public:
+  DataStoreAddEventListenerRunnable(
+    WorkerPrivate* aWorkerPrivate,
+    const nsMainThreadPtrHandle<DataStore>& aBackingStore,
+    DataStoreChangeEventProxy* aEventProxy)
+    : WorkerMainThreadRunnable(aWorkerPrivate)
+    , mBackingStore(aBackingStore)
+    , mEventProxy(aEventProxy)
+  {
+    MOZ_ASSERT(aWorkerPrivate);
+    aWorkerPrivate->AssertIsOnWorkerThread();
+  }
+};
+
 #define WORKER_DATA_STORES_TAG JS_SCTAG_USER_MIN
 
 static JSObject*
@@ -76,10 +117,22 @@ GetDataStoresStructuredCloneCallbacksRead(JSContext* aCx,
     return nullptr;
   }
 
-  // Point WorkerDataStore to DataStore.
   nsRefPtr<WorkerDataStore> workerStore =
     new WorkerDataStore(workerPrivate->GlobalScope());
   nsMainThreadPtrHandle<DataStore> backingStore = dataStoreholder;
+
+  // When we're on the worker thread, prepare a DataStoreChangeEventProxy.
+  nsRefPtr<DataStoreChangeEventProxy> eventProxy =
+    new DataStoreChangeEventProxy(workerPrivate, workerStore);
+
+  // Add the DataStoreChangeEventProxy as an event listener on the main thread.
+  nsRefPtr<DataStoreAddEventListenerRunnable> runnable =
+    new DataStoreAddEventListenerRunnable(workerPrivate,
+                                          backingStore,
+                                          eventProxy);
+  runnable->Dispatch(aCx);
+
+  // Point WorkerDataStore to DataStore.
   workerStore->SetBackingDataStore(backingStore);
 
   JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
