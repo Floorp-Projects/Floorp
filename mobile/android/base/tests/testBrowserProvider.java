@@ -71,13 +71,13 @@ public class testBrowserProvider extends ContentProviderTest {
         c = mProvider.query(appendUriParam(BrowserContract.History.CONTENT_URI, BrowserContract.PARAM_SHOW_DELETED, "1"), null, null, null, null);
         assertCountIsAndClose(c, 0, "All history entries were deleted");
 
-        mProvider.delete(appendUriParam(BrowserContract.Favicons.CONTENT_URI, BrowserContract.PARAM_IS_SYNC, "1"), null, null);
+        mProvider.delete(BrowserContract.Favicons.CONTENT_URI, null, null);
         c = mProvider.query(appendUriParam(BrowserContract.Favicons.CONTENT_URI,
                                            BrowserContract.PARAM_SHOW_DELETED, "1"),
                                            null, null, null, null);
         assertCountIsAndClose(c, 0, "All favicons were deleted");
 
-        mProvider.delete(appendUriParam(BrowserContract.Thumbnails.CONTENT_URI, BrowserContract.PARAM_IS_SYNC, "1"), null, null);
+        mProvider.delete(BrowserContract.Thumbnails.CONTENT_URI, null, null);
         c = mProvider.query(appendUriParam(BrowserContract.Thumbnails.CONTENT_URI,
                                            BrowserContract.PARAM_SHOW_DELETED, "1"),
                                            null, null, null, null);
