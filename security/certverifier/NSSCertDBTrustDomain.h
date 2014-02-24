@@ -57,6 +57,7 @@ public:
                 /*out*/ insanity::pkix::ScopedCERTCertList& results);
 
   virtual SECStatus GetCertTrust(insanity::pkix::EndEntityOrCA endEntityOrCA,
+                                 SECOidTag policy,
                                  const CERTCertificate* candidateCert,
                          /*out*/ TrustLevel* trustLevel);
 
