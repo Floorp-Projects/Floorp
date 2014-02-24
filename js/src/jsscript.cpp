@@ -678,6 +678,8 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
             ScriptSource *ss = cx->new_<ScriptSource>(xdr->originPrincipals());
             if (!ss)
                 return false;
+            ScriptSourceHolder ssHolder(ss);
+
             /*
              * We use this CompileOptions only to initialize the
              * ScriptSourceObject. Most CompileOptions fields aren't used by
