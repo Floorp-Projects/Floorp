@@ -50,7 +50,7 @@ OggWriter::WriteEncodedTrack(const EncodedFrameContainer& aData,
                              uint32_t aFlags)
 {
   for (uint32_t i = 0; i < aData.GetEncodedFrames().Length(); i++) {
-    if (aData.GetEncodedFrames()[i]->GetFrameType() != EncodedFrame::AUDIO_FRAME) {
+    if (aData.GetEncodedFrames()[i]->GetFrameType() != EncodedFrame::OPUS_AUDIO_FRAME) {
       LOG("[OggWriter] wrong encoded data type!");
       return NS_ERROR_FAILURE;
     }

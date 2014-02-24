@@ -86,7 +86,7 @@ EbmlComposer::WriteSimpleBlock(EncodedFrame* aFrame)
   EbmlGlobal ebml;
   ebml.offset = 0;
 
-  if (aFrame->GetFrameType() == EncodedFrame::FrameType::I_FRAME && mClusterHeaderIndex > 0) {
+  if (aFrame->GetFrameType() == EncodedFrame::FrameType::VP8_I_FRAME && mClusterHeaderIndex > 0) {
     FinishCluster();
   }
 
@@ -94,21 +94,21 @@ EbmlComposer::WriteSimpleBlock(EncodedFrame* aFrame)
   mClusterBuffs.LastElement().SetLength(aFrame->GetFrameData().Length() + DEFAULT_HEADER_SIZE);
   ebml.buf = mClusterBuffs.LastElement().Elements();
 
-  if (aFrame->GetFrameType() == EncodedFrame::FrameType::I_FRAME) {
+  if (aFrame->GetFrameType() == EncodedFrame::FrameType::VP8_I_FRAME) {
     EbmlLoc ebmlLoc;
     Ebml_StartSubElement(&ebml, &ebmlLoc, Cluster);
     mClusterHeaderIndex = mClusterBuffs.Length() - 1; // current cluster header array index
     mClusterLengthLoc = ebmlLoc.offset;
-    if (aFrame->GetFrameType() != EncodedFrame::FrameType::AUDIO_FRAME) {
+    if (aFrame->GetFrameType() != EncodedFrame::FrameType::VORBIS_AUDIO_FRAME) {
       mClusterTimecode = aFrame->GetTimeStamp() / PR_USEC_PER_MSEC;
     }
     Ebml_SerializeUnsigned(&ebml, Timecode, mClusterTimecode);
   }
 
-  if (aFrame->GetFrameType() != EncodedFrame::FrameType::AUDIO_FRAME) {
+  if (aFrame->GetFrameType() != EncodedFrame::FrameType::VORBIS_AUDIO_FRAME) {
     short timeCode = aFrame->GetTimeStamp() / PR_USEC_PER_MSEC - mClusterTimecode;
     writeSimpleBlock(&ebml, 0x1, timeCode, aFrame->GetFrameType() ==
-                     EncodedFrame::FrameType::I_FRAME,
+                     EncodedFrame::FrameType::VP8_I_FRAME,
                      0, 0, (unsigned char*)aFrame->GetFrameData().Elements(),
                      aFrame->GetFrameData().Length());
   } else {

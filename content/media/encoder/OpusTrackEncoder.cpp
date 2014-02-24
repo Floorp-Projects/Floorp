@@ -327,7 +327,7 @@ OpusTrackEncoder::GetEncodedTrack(EncodedFrameContainer& aData)
   }
 
   nsRefPtr<EncodedFrame> audiodata = new EncodedFrame();
-  audiodata->SetFrameType(EncodedFrame::AUDIO_FRAME);
+  audiodata->SetFrameType(EncodedFrame::OPUS_AUDIO_FRAME);
   int framesInPCM = frameCopied;
   if (mResampler) {
     nsAutoTArray<AudioDataValue, 9600> resamplingDest;

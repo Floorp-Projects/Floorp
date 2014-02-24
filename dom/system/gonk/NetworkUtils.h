@@ -268,6 +268,8 @@ private:
   bool removeHostRoute(NetworkParams& aOptions);
   bool removeHostRoutes(NetworkParams& aOptions);
   bool removeNetworkRoute(NetworkParams& aOptions);
+  bool addSecondaryRoute(NetworkParams& aOptions);
+  bool removeSecondaryRoute(NetworkParams& aOptions);
   bool getNetworkInterfaceStats(NetworkParams& aOptions);
   bool setNetworkInterfaceAlarm(NetworkParams& aOptions);
   bool enableNetworkInterfaceAlarm(NetworkParams& aOptions);
