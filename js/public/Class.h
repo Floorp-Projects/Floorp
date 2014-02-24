@@ -408,15 +408,6 @@ typedef void
     JSNative            construct;                                            \
     JSTraceOp           trace
 
-/*
- * The helper struct to measure the size of JS_CLASS_MEMBERS to know how much
- * we have to pad js::Class to match the size of JSClass.
- */
-struct ClassSizeMeasurement
-{
-    JS_CLASS_MEMBERS(FinalizeOp);
-};
-
 // Callback for the creation of constructor and prototype objects.
 typedef JSObject *(*ClassObjectCreationOp)(JSContext *cx, JSProtoKey key);
 
@@ -508,7 +499,7 @@ typedef void (*JSClassInternal)();
 struct JSClass {
     JS_CLASS_MEMBERS(JSFinalizeOp);
 
-    void                *reserved[42];
+    void                *reserved[36];
 };
 
 #define JSCLASS_HAS_PRIVATE             (1<<0)  // objects have private slot
@@ -597,9 +588,6 @@ struct Class
     ClassSpec          spec;
     ClassExtension      ext;
     ObjectOps           ops;
-    uint8_t             pad[sizeof(JSClass) - sizeof(ClassSizeMeasurement) -
-                            sizeof(ClassSpec) -
-                            sizeof(ClassExtension) - sizeof(ObjectOps)];
 
     /* Class is not native and its map is not a scope. */
     static const uint32_t NON_NATIVE = JSCLASS_INTERNAL_FLAG2;
