@@ -24,6 +24,23 @@
 namespace insanity { namespace pkix {
 
 // ----------------------------------------------------------------------------
+// LIMITED SUPPORT FOR CERTIFICATE POLICIES
+//
+// If SEC_OID_X509_ANY_POLICY is passed as the value of the requiredPolicy
+// parameter then all policy validation will be skipped. Otherwise, path
+// building and validation will be done for the given policy.
+//
+// In RFC 5280 terms:
+//
+//    * user-initial-policy-set = { requiredPolicy }.
+//    * initial-explicit-policy = true
+//    * initial-any-policy-inhibit = true
+//
+// Because we force explicit policy and because we prohibit policy mapping, we
+// do not bother processing the policy mapping, policy constraint, or inhibit
+// anyPolicy extensions.
+//
+// ----------------------------------------------------------------------------
 // ERROR RANKING
 //
 // BuildCertChain prioritizes certain checks ahead of others so that when a
@@ -71,6 +88,7 @@ SECStatus BuildCertChain(TrustDomain& trustDomain,
                          EndEntityOrCA endEntityOrCA,
             /*optional*/ KeyUsages requiredKeyUsagesIfPresent,
             /*optional*/ SECOidTag requiredEKUIfPresent,
+            /*optional*/ SECOidTag requiredPolicy,
             /*optional*/ const SECItem* stapledOCSPResponse,
                  /*out*/ ScopedCERTCertList& results);
 
