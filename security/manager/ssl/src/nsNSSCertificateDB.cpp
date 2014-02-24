@@ -93,14 +93,6 @@ nsNSSCertificateDB::FindCertByNickname(nsISupports *aToken,
   NS_ConvertUTF16toUTF8 aUtf8Nickname(nickname);
   asciiname = const_cast<char*>(aUtf8Nickname.get());
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Getting \"%s\"\n", asciiname));
-#if 0
-  // what it should be, but for now...
-  if (aToken) {
-    cert = PK11_FindCertFromNickname(asciiname, nullptr);
-  } else {
-    cert = CERT_FindCertByNickname(CERT_GetDefaultCertDB(), asciiname);
-  }
-#endif
   cert = PK11_FindCertFromNickname(asciiname, nullptr);
   if (!cert) {
     cert = CERT_FindCertByNickname(CERT_GetDefaultCertDB(), asciiname);
@@ -187,16 +179,7 @@ nsNSSCertificateDB::FindCertNicknames(nsISupports *aToken,
    * obtain the cert list from NSS
    */
   insanity::pkix::ScopedCERTCertList certList;
-  PK11CertListType pk11type;
-#if 0
-  // this would seem right, but it didn't work...
-  // oh, I know why - bonks out on internal slot certs
-  if (aType == nsIX509Cert::USER_CERT)
-    pk11type = PK11CertListUser;
-  else 
-#endif
-    pk11type = PK11CertListUnique;
-  certList = PK11_ListCerts(pk11type, nullptr);
+  certList = PK11_ListCerts(PK11CertListUnique, nullptr);
   if (!certList)
     goto cleanup;
   /*
