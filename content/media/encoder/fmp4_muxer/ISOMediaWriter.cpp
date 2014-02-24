@@ -98,12 +98,12 @@ ISOMediaWriter::WriteEncodedTrack(const EncodedFrameContainer& aData,
   for (uint32_t i = 0; i < len; i++) {
     nsRefPtr<EncodedFrame> frame(aData.GetEncodedFrames()[i]);
     EncodedFrame::FrameType type = frame->GetFrameType();
-    if (type == EncodedFrame::AUDIO_FRAME ||
+    if (type == EncodedFrame::AAC_AUDIO_FRAME ||
         type == EncodedFrame::AAC_CSD) {
       frag = mAudioFragmentBuffer;
-    } else if (type == EncodedFrame::I_FRAME ||
-               type == EncodedFrame::P_FRAME ||
-               type == EncodedFrame::B_FRAME ||
+    } else if (type == EncodedFrame::AVC_I_FRAME ||
+               type == EncodedFrame::AVC_P_FRAME ||
+               type == EncodedFrame::AVC_B_FRAME ||
                type == EncodedFrame::AVC_CSD) {
       frag = mVideoFragmentBuffer;
     } else {

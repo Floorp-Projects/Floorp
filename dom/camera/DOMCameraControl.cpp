@@ -124,7 +124,7 @@ StartRecordingHelper::HandleEvent(nsIDOMEvent* aEvent)
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS0(mozilla::StartRecordingHelper)
+NS_IMPL_ISUPPORTS1(mozilla::StartRecordingHelper, nsIDOMEventListener)
 
 nsDOMCameraControl::DOMCameraConfiguration::DOMCameraConfiguration()
   : CameraConfiguration()
@@ -621,7 +621,7 @@ nsDOMCameraControl::SensorAngle()
 {
   MOZ_ASSERT(mCameraControl);
 
-  int32_t angle;
+  int32_t angle = 0;
   mCameraControl->Get(CAMERA_PARAM_SENSORANGLE, angle);
   return angle;
 }
@@ -1160,6 +1160,8 @@ nsDOMCameraControl::OnTakePictureComplete(nsIDOMBlob* aPicture)
 void
 nsDOMCameraControl::OnError(CameraControlListener::CameraErrorContext aContext, const nsAString& aError)
 {
+  DOM_CAMERA_LOGI("DOM OnError context=%d, error='%s'\n", aContext,
+    NS_LossyConvertUTF16toASCII(aError).get());
   MOZ_ASSERT(NS_IsMainThread());
 
   nsCOMPtr<CameraErrorCallback>* errorCb;
@@ -1195,19 +1197,31 @@ nsDOMCameraControl::OnError(CameraControlListener::CameraErrorContext aContext, 
       break;
 
     case CameraControlListener::kInStopRecording:
-      NS_WARNING("Failed to stop recording (which shouldn't happen)!");
-      MOZ_CRASH();
-      break;
+      // This method doesn't have any callbacks, so all we can do is log the
+      // failure. This only happens after the hardware has been released.
+      NS_WARNING("Failed to stop recording");
+      return;
 
     case CameraControlListener::kInStartPreview:
-      NS_WARNING("Failed to (re)start preview!");
-      MOZ_CRASH();
-      break;
+      // This method doesn't have any callbacks, so all we can do is log the
+      // failure. This only happens after the hardware has been released.
+      NS_WARNING("Failed to (re)start preview");
+      return;
 
     case CameraControlListener::kInUnspecified:
       if (aError.EqualsASCII("ErrorServiceFailed")) {
         // If the camera service fails, we will get preview-stopped and
-        //  hardware-closed events, so nothing to do here.
+        // hardware-closed events, so nothing to do here.
+        NS_WARNING("Camera service failed");
+        return;
+      }
+      if (aError.EqualsASCII("ErrorSetPictureSizeFailed") ||
+          aError.EqualsASCII("ErrorSetThumbnailSizeFailed")) {
+        // We currently don't handle attribute setter failure. Practically,
+        // this only ever happens if a setter is called after the hardware
+        // has gone away before an asynchronous set gets to happen, so we
+        // swallow these.
+        NS_WARNING("Failed to set either picture or thumbnail size");
         return;
       }
       // fallthrough
@@ -1220,7 +1234,7 @@ nsDOMCameraControl::OnError(CameraControlListener::CameraErrorContext aContext, 
   MOZ_ASSERT(errorCb);
 
   if (!*errorCb) {
-    DOM_CAMERA_LOGW("DOM No error handler for error '%s' at %d\n",
+    DOM_CAMERA_LOGW("DOM No error handler for error '%s' in context=%d\n",
       NS_LossyConvertUTF16toASCII(aError).get(), aContext);
     return;
   }

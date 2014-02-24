@@ -907,6 +907,10 @@ void NetworkUtils::ExecuteCommand(NetworkParams aOptions)
     removeHostRoute(aOptions);
   } else if (aOptions.mCmd.EqualsLiteral("removeHostRoutes")) {
     removeHostRoutes(aOptions);
+  } else if (aOptions.mCmd.EqualsLiteral("addSecondaryRoute")) {
+    addSecondaryRoute(aOptions);
+  } else if (aOptions.mCmd.EqualsLiteral("removeSecondaryRoute")) {
+    removeSecondaryRoute(aOptions);
   } else if (aOptions.mCmd.EqualsLiteral("getNetworkInterfaceStats")) {
     getNetworkInterfaceStats(aOptions);
   } else if (aOptions.mCmd.EqualsLiteral("setNetworkInterfaceAlarm")) {
@@ -1130,6 +1134,34 @@ bool NetworkUtils::removeNetworkRoute(NetworkParams& aOptions)
 
   mNetUtils->do_ifc_remove_default_route(GET_CHAR(mIfname));
   mNetUtils->do_ifc_remove_route(GET_CHAR(mIfname), dst, prefixLength, gateway);
+  return true;
+}
+
+bool NetworkUtils::addSecondaryRoute(NetworkParams& aOptions)
+{
+  char command[MAX_COMMAND_SIZE];
+  snprintf(command, MAX_COMMAND_SIZE - 1,
+           "interface route add %s secondary %s %s %s",
+           GET_CHAR(mIfname),
+           GET_CHAR(mIp),
+           GET_CHAR(mPrefix),
+           GET_CHAR(mGateway));
+
+  doCommand(command, nullptr, nullptr);
+  return true;
+}
+
+bool NetworkUtils::removeSecondaryRoute(NetworkParams& aOptions)
+{
+  char command[MAX_COMMAND_SIZE];
+  snprintf(command, MAX_COMMAND_SIZE - 1,
+           "interface route remove %s secondary %s %s %s",
+           GET_CHAR(mIfname),
+           GET_CHAR(mIp),
+           GET_CHAR(mPrefix),
+           GET_CHAR(mGateway));
+
+  doCommand(command, nullptr, nullptr);
   return true;
 }
 

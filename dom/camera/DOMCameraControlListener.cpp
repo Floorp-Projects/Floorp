@@ -328,6 +328,14 @@ DOMCameraControlListener::OnError(CameraErrorContext aContext, CameraError aErro
           error = NS_LITERAL_STRING("ErrorServiceFailed");
           break;
 
+        case kErrorSetPictureSizeFailed:
+          error = NS_LITERAL_STRING("ErrorSetPictureSizeFailed");
+          break;
+
+        case kErrorSetThumbnailSizeFailed:
+          error = NS_LITERAL_STRING("ErrorSetThumbnailSizeFailed");
+          break;
+
         case kErrorApiFailed:
           // XXXmikeh legacy error placeholder
           error = NS_LITERAL_STRING("FAILURE");
