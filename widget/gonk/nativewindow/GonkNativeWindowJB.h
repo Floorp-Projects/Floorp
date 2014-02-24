@@ -116,7 +116,7 @@ class GonkNativeWindow: public GonkConsumerBase
 
     // Return the buffer to the queue and mark it as FREE. After that
     // the buffer is useable again for the decoder.
-    bool returnBuffer(uint32_t index, uint32_t generation);
+    bool returnBuffer(uint32_t index, uint32_t generation, const sp<Fence>& fence);
 
     SurfaceDescriptor* getSurfaceDescriptorFromBuffer(ANativeWindowBuffer* buffer);
 
@@ -157,22 +157,7 @@ public:
 protected:
     // Unlock either returns the buffer to the native window or
     // destroys the buffer if the window is already released.
-    virtual void Unlock() MOZ_OVERRIDE
-    {
-        if (mLocked) {
-            // The window might have been destroyed. The buffer is no longer
-            // valid at that point.
-            sp<GonkNativeWindow> window = mNativeWindow.promote();
-            if (window.get() && window->returnBuffer(mIndex, mGeneration)) {
-                mLocked = false;
-            } else {
-                // If the window doesn't exist any more, release the buffer
-                // directly.
-                ImageBridgeChild *ibc = ImageBridgeChild::GetSingleton();
-                ibc->DeallocSurfaceDescriptorGralloc(mSurfaceDescriptor);
-            } 
-        }
-    }
+    virtual void Unlock() MOZ_OVERRIDE;
 
 protected:
     wp<GonkNativeWindow> mNativeWindow;

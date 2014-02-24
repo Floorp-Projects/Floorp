@@ -332,7 +332,8 @@ GrallocTextureHostOGL::GetRenderState()
     }
     return LayerRenderState(mTextureSource->mGraphicBuffer.get(),
                             gfx::ThebesIntSize(mSize),
-                            flags);
+                            flags,
+                            this);
   }
 
   return LayerRenderState();
@@ -378,6 +379,11 @@ GrallocTextureHostOGL::SetCompositableBackendSpecificData(CompositableBackendSpe
   mCompositableBackendData = aBackendData;
   if (mTextureSource) {
     mTextureSource->SetCompositableBackendSpecificData(aBackendData);
+  }
+  // Register this object to CompositableBackendSpecificData
+  // as current TextureHost.
+  if (aBackendData) {
+    aBackendData->SetCurrentReleaseFenceTexture(this);
   }
 }
 

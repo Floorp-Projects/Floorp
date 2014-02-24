@@ -10,6 +10,7 @@
 #include "GonkNativeWindow.h"
 #include "GonkNativeWindowClient.h"
 #include "GrallocImages.h"
+#include "mozilla/layers/FenceUtils.h"
 #include "MP3FrameParser.h"
 #include "MPAPI.h"
 #include "MediaResource.h"
@@ -83,6 +84,7 @@ class OmxDecoder : public OMXCodecProxy::EventListener {
   typedef mozilla::MP3FrameParser MP3FrameParser;
   typedef mozilla::MediaResource MediaResource;
   typedef mozilla::AbstractMediaDecoder AbstractMediaDecoder;
+  typedef mozilla::layers::FenceHandle FenceHandle;
 
   enum {
     kPreferSoftwareCodecs = 1,
@@ -122,11 +124,26 @@ class OmxDecoder : public OMXCodecProxy::EventListener {
   MediaBuffer *mVideoBuffer;
   MediaBuffer *mAudioBuffer;
 
+  struct BufferItem {
+    BufferItem()
+     : mMediaBuffer(nullptr)
+    {
+    }
+    BufferItem(MediaBuffer* aMediaBuffer, const FenceHandle& aReleaseFenceHandle)
+     : mMediaBuffer(aMediaBuffer)
+     , mReleaseFenceHandle(aReleaseFenceHandle) {
+    }
+
+    MediaBuffer* mMediaBuffer;
+    // a fence will signal when the current buffer is no longer being read.
+    FenceHandle mReleaseFenceHandle;
+  };
+
   // Hold video's MediaBuffers that are released during video seeking.
   // The holded MediaBuffers are released soon after seek completion.
   // OMXCodec does not accept MediaBuffer during seeking. If MediaBuffer is
   //  returned to OMXCodec during seeking, OMXCodec calls assert.
-  Vector<MediaBuffer *> mPendingVideoBuffers;
+  Vector<BufferItem> mPendingVideoBuffers;
   // The lock protects mPendingVideoBuffers.
   Mutex mPendingVideoBuffersLock;
 
@@ -235,7 +252,7 @@ public:
   void Pause();
 
   // Post kNotifyPostReleaseVideoBuffer message to OmxDecoder via ALooper.
-  void PostReleaseVideoBuffer(MediaBuffer *aBuffer);
+  void PostReleaseVideoBuffer(MediaBuffer *aBuffer, const FenceHandle& aReleaseFenceHandle);
   // Receive a message from AHandlerReflector.
   // Called on ALooper thread.
   void onMessageReceived(const sp<AMessage> &msg);

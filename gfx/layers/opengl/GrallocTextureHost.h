@@ -71,6 +71,9 @@ protected:
 };
 
 class GrallocTextureHostOGL : public TextureHost
+#if MOZ_WIDGET_GONK && ANDROID_VERSION >= 18
+                            , public TextureHostOGL
+#endif
 {
   friend class GrallocBufferActor;
 public:
@@ -103,6 +106,13 @@ public:
   {
     return mTextureSource;
   }
+
+#if MOZ_WIDGET_GONK && ANDROID_VERSION >= 18
+  virtual TextureHostOGL* AsHostOGL() MOZ_OVERRIDE
+  {
+    return this;
+  }
+#endif
 
   virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() MOZ_OVERRIDE;
 
