@@ -712,9 +712,6 @@
                        hidden="true"
                        tooltiptext="&pageReportIcon.tooltip;"
                        onclick="gPopupBlockerObserver.onReportButtonClick(event);"/>
-                <image id="star-button"
-                       class="urlbar-icon"
-                       onclick="if (event.button === 0) BookmarkingUI.onCommand(event);"/>
               </hbox>
               <toolbarbutton id="urlbar-go-button"
                              class="chromeclass-toolbar-additional"
