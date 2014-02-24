@@ -31,8 +31,9 @@ public:
   virtual bool PeekOffsetNoAmount(bool aForward, int32_t* aOffset) MOZ_OVERRIDE;
   virtual bool PeekOffsetCharacter(bool aForward, int32_t* aOffset,
                                      bool aRespectClusters = true) MOZ_OVERRIDE;
-  virtual bool PeekOffsetWord(bool aForward, bool aWordSelectEatSpace, bool aIsKeyboardSelect,
-                                int32_t* aOffset, PeekWordState* aState) MOZ_OVERRIDE;
+  virtual bool PeekOffsetWord(bool aForward, bool aWordSelectEatSpace,
+                              bool aIsKeyboardSelect, int32_t* aOffset,
+                              PeekWordState* aState) MOZ_OVERRIDE;
 
   virtual nsresult Reflow(nsPresContext* aPresContext,
                           nsHTMLReflowMetrics& aDesiredSize,

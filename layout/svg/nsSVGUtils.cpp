@@ -438,7 +438,8 @@ class SVGPaintCallback : public nsSVGFilterPaintCallback
 {
 public:
   virtual void Paint(nsRenderingContext *aContext, nsIFrame *aTarget,
-                     const nsIntRect* aDirtyRect, nsIFrame* aTransformRoot) MOZ_OVERRIDE
+                     const nsIntRect* aDirtyRect,
+                     nsIFrame* aTransformRoot) MOZ_OVERRIDE
   {
     nsISVGChildFrame *svgChildFrame = do_QueryFrame(aTarget);
     NS_ASSERTION(svgChildFrame, "Expected SVG frame here");
