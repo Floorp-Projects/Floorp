@@ -43,7 +43,7 @@ CheckUsesAreFloat32Consumers(MInstruction *ins)
 {
     bool allConsumerUses = true;
     for (MUseDefIterator use(ins); allConsumerUses && use; use++)
-        allConsumerUses &= use.def()->canConsumeFloat32();
+        allConsumerUses &= use.def()->canConsumeFloat32(use.use());
     return allConsumerUses;
 }
 

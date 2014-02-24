@@ -754,7 +754,7 @@ TypeAnalyzer::markPhiConsumers()
             bool canConsumeFloat32 = true;
             for (MUseDefIterator use(*phi); canConsumeFloat32 && use; use++) {
                 MDefinition *usedef = use.def();
-                canConsumeFloat32 &= usedef->isPhi() || usedef->canConsumeFloat32();
+                canConsumeFloat32 &= usedef->isPhi() || usedef->canConsumeFloat32(use.use());
             }
             phi->setCanConsumeFloat32(canConsumeFloat32);
             if (canConsumeFloat32 && !addPhiToWorklist(*phi))
@@ -767,12 +767,12 @@ TypeAnalyzer::markPhiConsumers()
             return false;
 
         MPhi *phi = popPhi();
-        JS_ASSERT(phi->canConsumeFloat32());
+        JS_ASSERT(phi->canConsumeFloat32(nullptr /* unused */));
 
         bool validConsumer = true;
         for (MUseDefIterator use(phi); use; use++) {
             MDefinition *def = use.def();
-            if (def->isPhi() && !def->canConsumeFloat32()) {
+            if (def->isPhi() && !def->canConsumeFloat32(use.use())) {
                 validConsumer = false;
                 break;
             }
@@ -785,7 +785,7 @@ TypeAnalyzer::markPhiConsumers()
         phi->setCanConsumeFloat32(false);
         for (size_t i = 0, e = phi->numOperands(); i < e; ++i) {
             MDefinition *input = phi->getOperand(i);
-            if (input->isPhi() && !input->isInWorklist() && input->canConsumeFloat32())
+            if (input->isPhi() && !input->isInWorklist() && input->canConsumeFloat32(nullptr /* unused */))
             {
                 if (!addPhiToWorklist(input->toPhi()))
                     return false;
@@ -933,7 +933,7 @@ TypeAnalyzer::checkFloatCoherency()
 
             for (MUseDefIterator use(*def); use; use++) {
                 MDefinition *consumer = use.def();
-                JS_ASSERT(consumer->isConsistentFloat32Use());
+                JS_ASSERT(consumer->isConsistentFloat32Use(use.use()));
             }
         }
     }
