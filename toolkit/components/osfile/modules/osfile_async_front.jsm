@@ -107,7 +107,7 @@ function lazyPathGetter(constProp, dirKey) {
     }
 
     return path;
-  }
+  };
 }
 
 for (let [constProp, dirKey] of [
@@ -156,16 +156,17 @@ let Scheduler = {
   queue: Promise.resolve(),
 
   /**
-   * The latest message sent and still waiting for a reply. This
-   * field is stored only in DEBUG builds, to avoid hoarding memory in
-   * release builds.
+   * The latest message sent and still waiting for a reply. In DEBUG
+   * builds, the entire message is stored, which may be memory-consuming.
+   * In non-DEBUG builds, only the method name is stored.
    */
   latestSent: undefined,
 
   /**
    * The latest reply received, or null if we are waiting for a reply.
-   * This field is stored only in DEBUG builds, to avoid hoarding
-   * memory in release builds.
+   * In DEBUG builds, the entire response is stored, which may be
+   * memory-consuming.  In non-DEBUG builds, only exceptions and
+   * method names are stored.
    */
   latestReceived: undefined,
 
@@ -241,18 +242,22 @@ let Scheduler = {
       options = methodArgs[methodArgs.length - 1];
     }
     return this.push(() => Task.spawn(function*() {
+      Scheduler.latestReceived = null;
       if (OS.Constants.Sys.DEBUG) {
         // Update possibly memory-expensive debugging information
-        Scheduler.latestReceived = null;
-        Scheduler.latestSent = [method, ...args];
+        Scheduler.latestSent = [Date.now(), method, ...args];
+      } else {
+        Scheduler.latestSent = [Date.now(), method];
       }
       let data;
       let reply;
+      let isError = false;
       try {
         data = yield worker.post(method, ...args);
         reply = data;
       } catch (error if error instanceof PromiseWorker.WorkerError) {
         reply = error;
+        isError = true;
         throw EXCEPTION_CONSTRUCTORS[error.data.exn || "OSError"](error.data);
       } catch (error if error instanceof ErrorEvent) {
         reply = error;
@@ -260,12 +265,17 @@ let Scheduler = {
         if (message == "uncaught exception: [object StopIteration]") {
           throw StopIteration;
         }
+        isError = true;
         throw new Error(message, error.filename, error.lineno);
       } finally {
+        Scheduler.latestSent = Scheduler.latestSent.slice(0, 2);
         if (OS.Constants.Sys.DEBUG) {
           // Update possibly memory-expensive debugging information
-          Scheduler.latestSent = null;
-          Scheduler.latestReceived = reply;
+          Scheduler.latestReceived = [Date.now(), reply];
+        } else if (isError) {
+          Scheduler.latestReceived = [Date.now(), reply.message, reply.fileName, reply.lineNumber];
+        } else {
+          Scheduler.latestReceived = [Date.now()];
         }
         if (firstLaunch) {
           Scheduler._updateTelemetry();
@@ -1299,17 +1309,35 @@ this.OS.Path = Path;
 AsyncShutdown.profileBeforeChange.addBlocker(
   "OS.File: flush I/O queued before profile-before-change",
   // Wait until the latest currently enqueued promise is satisfied/rejected
-  (() => Scheduler.queue),
+  function() {
+    let DEBUG = false;
+    try {
+      DEBUG = Services.prefs.getBoolPref("toolkit.osfile.debug.failshutdown");
+    } catch (ex) {
+      // Ignore
+    }
+    if (DEBUG) {
+      // Return a promise that will never be satisfied
+      return Promise.defer().promise;
+    } else {
+      return Scheduler.queue;
+    }
+  },
   function getDetails() {
     let result = {
       launched: Scheduler.launched,
       shutdown: Scheduler.shutdown,
+      worker: !!worker,
       pendingReset: !!Scheduler.resetTimer,
+      latestSent: Scheduler.latestSent,
+      latestReceived: Scheduler.latestReceived
     };
-    if (OS.Constants.Sys.DEBUG) {
-      result.latestSent = Scheduler.latestSent;
-      result.latestReceived - Scheduler.latestReceived;
-    };
+    // Convert dates to strings for better readability
+    for (let key of ["latestSent", "latestReceived"]) {
+      if (result[key] && typeof result[key][0] == "number") {
+        result[key][0] = Date(result[key][0]);
+      }
+    }
     return result;
   }
 );
