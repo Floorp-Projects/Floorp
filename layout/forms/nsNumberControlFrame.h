@@ -6,6 +6,7 @@
 #ifndef nsNumberControlFrame_h__
 #define nsNumberControlFrame_h__
 
+#include "mozilla/Attributes.h"
 #include "nsContainerFrame.h"
 #include "nsIFormControlFrame.h"
 #include "nsIAnonymousContentCreator.h"
@@ -43,7 +44,7 @@ public:
   NS_DECL_FRAMEARENA_HELPERS
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot) MOZ_OVERRIDE;
-  virtual void ContentStatesChanged(nsEventStates aStates);
+  virtual void ContentStatesChanged(nsEventStates aStates) MOZ_OVERRIDE;
   virtual bool IsLeaf() const MOZ_OVERRIDE { return true; }
 
 #ifdef ACCESSIBILITY

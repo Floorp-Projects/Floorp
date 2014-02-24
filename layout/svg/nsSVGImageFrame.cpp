@@ -60,8 +60,8 @@ public:
   virtual nsresult PaintSVG(nsRenderingContext *aContext,
                             const nsIntRect *aDirtyRect,
                             nsIFrame* aTransformRoot) MOZ_OVERRIDE;
-  virtual nsIFrame* GetFrameForPoint(const nsPoint &aPoint);
-  virtual void ReflowSVG();
+  virtual nsIFrame* GetFrameForPoint(const nsPoint &aPoint) MOZ_OVERRIDE;
+  virtual void ReflowSVG() MOZ_OVERRIDE;
 
   // nsSVGPathGeometryFrame methods:
   virtual uint16_t GetHitTestFlags() MOZ_OVERRIDE;
@@ -69,21 +69,21 @@ public:
   // nsIFrame interface:
   virtual nsresult  AttributeChanged(int32_t         aNameSpaceID,
                                      nsIAtom*        aAttribute,
-                                     int32_t         aModType);
+                                     int32_t         aModType) MOZ_OVERRIDE;
   virtual void Init(nsIContent*      aContent,
                     nsIFrame*        aParent,
                     nsIFrame*        aPrevInFlow) MOZ_OVERRIDE;
-  virtual void DestroyFrom(nsIFrame* aDestructRoot);
+  virtual void DestroyFrom(nsIFrame* aDestructRoot) MOZ_OVERRIDE;
 
   /**
    * Get the "type" of the frame
    *
    * @see nsGkAtoms::svgImageFrame
    */
-  virtual nsIAtom* GetType() const;
+  virtual nsIAtom* GetType() const MOZ_OVERRIDE;
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const
+  virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE
   {
     return MakeFrameName(NS_LITERAL_STRING("SVGImage"), aResult);
   }

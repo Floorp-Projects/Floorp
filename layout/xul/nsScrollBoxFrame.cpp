@@ -22,23 +22,23 @@ public:
   friend nsIFrame* NS_NewAutoRepeatBoxFrame(nsIPresShell* aPresShell,
                                             nsStyleContext* aContext);
 
-  virtual void DestroyFrom(nsIFrame* aDestructRoot);
+  virtual void DestroyFrom(nsIFrame* aDestructRoot) MOZ_OVERRIDE;
 
   virtual nsresult AttributeChanged(int32_t aNameSpaceID,
                                     nsIAtom* aAttribute,
-                                    int32_t aModType);
+                                    int32_t aModType) MOZ_OVERRIDE;
 
   virtual nsresult HandleEvent(nsPresContext* aPresContext,
                                WidgetGUIEvent* aEvent,
-                               nsEventStatus* aEventStatus);
+                               nsEventStatus* aEventStatus) MOZ_OVERRIDE;
 
   NS_IMETHOD HandlePress(nsPresContext* aPresContext,
                          WidgetGUIEvent* aEvent,
-                         nsEventStatus* aEventStatus);
+                         nsEventStatus* aEventStatus) MOZ_OVERRIDE;
 
   NS_IMETHOD HandleRelease(nsPresContext* aPresContext,
                            WidgetGUIEvent* aEvent,
-                           nsEventStatus* aEventStatus);
+                           nsEventStatus* aEventStatus) MOZ_OVERRIDE;
 
 protected:
   nsAutoRepeatBoxFrame(nsIPresShell* aPresShell, nsStyleContext* aContext):

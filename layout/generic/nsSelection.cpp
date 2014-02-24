@@ -200,7 +200,7 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD Notify(nsITimer *timer)
+  NS_IMETHOD Notify(nsITimer *timer) MOZ_OVERRIDE
   {
     if (mSelection && mPresContext)
     {
