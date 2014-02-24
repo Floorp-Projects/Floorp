@@ -24,18 +24,12 @@ XPCOMUtils.defineLazyModuleGetter(this, "Promise",
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
                                   "resource://gre/modules/osfile.jsm");
 
-["LOG", "WARN", "ERROR"].forEach(function(aName) {
-  Object.defineProperty(this, aName, {
-    get: function logFuncGetter () {
-      Cu.import("resource://gre/modules/addons/AddonLogging.jsm");
+Cu.import("resource://gre/modules/Log.jsm");
+const LOGGER_ID = "addons.xpi-utils";
 
-      LogManager.getLogger("addons.xpi-utils", this);
-      return this[aName];
-    },
-    configurable: true
-  });
-}, this);
-
+// Create a new logger for use by the Addons XPI Provider Utils
+// (Requires AddonManager.jsm)
+let logger = Log.repository.getLogger(LOGGER_ID);
 
 const KEY_PROFILEDIR                  = "ProfD";
 const FILE_DATABASE                   = "extensions.sqlite";
@@ -152,7 +146,7 @@ function makeSafe(aCallback) {
       aCallback(...aArgs);
     }
     catch(ex) {
-      WARN("XPI Database callback failed", ex);
+      logger.warn("XPI Database callback failed", ex);
     }
   }
 }
@@ -195,7 +189,7 @@ function asyncMap(aObjects, aMethod, aCallback) {
       });
     }
     catch (e) {
-      WARN("Async map function failed", e);
+      logger.warn("Async map function failed", e);
       asyncMap_gotValue(aIndex, undefined);
     }
   });
@@ -227,7 +221,7 @@ function resultRows(aStatement) {
  *         An error message
  */
 function logSQLError(aError, aErrorString) {
-  ERROR("SQL error " + aError + ": " + aErrorString);
+  logger.error("SQL error " + aError + ": " + aErrorString);
 }
 
 /**
@@ -442,7 +436,7 @@ this.XPIDatabase = {
         count => {
           // Update the XPIDB schema version preference the first time we successfully
           // save the database.
-          LOG("XPI Database saved, setting schema version preference to " + DB_SCHEMA);
+          logger.debug("XPI Database saved, setting schema version preference to " + DB_SCHEMA);
           Services.prefs.setIntPref(PREF_DB_SCHEMA, DB_SCHEMA);
           // Reading the DB worked once, so we don't need the load error
           this._loadError = null;
@@ -450,7 +444,7 @@ this.XPIDatabase = {
         error => {
           // Need to try setting the schema version again later
           this._schemaVersionSet = false;
-          WARN("Failed to save XPI database", error);
+          logger.warn("Failed to save XPI database", error);
           // this._deferredSave.lastError has the most recent error so we don't
           // need this any more
           this._loadError = null;
@@ -502,10 +496,10 @@ this.XPIDatabase = {
       connection = Services.storage.openUnsharedDatabase(dbfile);
     }
     catch (e) {
-      WARN("Failed to open sqlite database " + dbfile.path + " for upgrade", e);
+      logger.warn("Failed to open sqlite database " + dbfile.path + " for upgrade", e);
       return null;
     }
-    LOG("Migrating data from sqlite");
+    logger.debug("Migrating data from sqlite");
     let migrateData = this.getMigrateDataFromDatabase(connection);
     connection.close();
     return migrateData;
@@ -535,7 +529,7 @@ this.XPIDatabase = {
     let data = "";
     try {
       let readTimer = AddonManagerPrivate.simpleTimer("XPIDB_syncRead_MS");
-      LOG("Opening XPI database " + this.jsonFile.path);
+      logger.debug("Opening XPI database " + this.jsonFile.path);
       fstream = Components.classes["@mozilla.org/network/file-input-stream;1"].
               createInstance(Components.interfaces.nsIFileInputStream);
       fstream.init(this.jsonFile, -1, 0, 0);
@@ -555,7 +549,7 @@ this.XPIDatabase = {
         this.parseDB(data, aRebuildOnError);
       }
       catch(e) {
-        ERROR("Failed to load XPI JSON data from profile", e);
+        logger.error("Failed to load XPI JSON data from profile", e);
         let rebuildTimer = AddonManagerPrivate.simpleTimer("XPIDB_rebuildReadFailed_MS");
         this.rebuildDatabase(aRebuildOnError);
         rebuildTimer.done();
@@ -601,7 +595,7 @@ this.XPIDatabase = {
       if (!("schemaVersion" in inputAddons) || !("addons" in inputAddons)) {
         parseTimer.done();
         // Content of JSON file is bad, need to rebuild from scratch
-        ERROR("bad JSON file contents");
+        logger.error("bad JSON file contents");
         AddonManagerPrivate.recordSimpleMeasure("XPIDB_startupError", "badJSON");
         let rebuildTimer = AddonManagerPrivate.simpleTimer("XPIDB_rebuildBadJSON_MS");
         this.rebuildDatabase(aRebuildOnError);
@@ -614,7 +608,7 @@ this.XPIDatabase = {
         // don't know about (bug 902956)
         AddonManagerPrivate.recordSimpleMeasure("XPIDB_startupError",
                                                 "schemaMismatch-" + inputAddons.schemaVersion);
-        LOG("JSON schema mismatch: expected " + DB_SCHEMA +
+        logger.debug("JSON schema mismatch: expected " + DB_SCHEMA +
             ", actual " + inputAddons.schemaVersion);
         // When we rev the schema of the JSON database, we need to make sure we
         // force the DB to save so that the DB_SCHEMA value in the JSON file and
@@ -629,7 +623,7 @@ this.XPIDatabase = {
       };
       parseTimer.done();
       this.addonDB = addonDB;
-      LOG("Successfully read XPI database");
+      logger.debug("Successfully read XPI database");
       this.initialized = true;
     }
     catch(e) {
@@ -637,11 +631,11 @@ this.XPIDatabase = {
       // parser, the xpcshell test harness fails the test for us: bug 870828
       parseTimer.done();
       if (e.name == "SyntaxError") {
-        ERROR("Syntax error parsing saved XPI JSON data");
+        logger.error("Syntax error parsing saved XPI JSON data");
         AddonManagerPrivate.recordSimpleMeasure("XPIDB_startupError", "syntax");
       }
       else {
-        ERROR("Failed to load XPI JSON data from profile", e);
+        logger.error("Failed to load XPI JSON data from profile", e);
         AddonManagerPrivate.recordSimpleMeasure("XPIDB_startupError", "other");
       }
       let rebuildTimer = AddonManagerPrivate.simpleTimer("XPIDB_rebuildReadFailed_MS");
@@ -659,7 +653,7 @@ this.XPIDatabase = {
       let schemaVersion = Services.prefs.getIntPref(PREF_DB_SCHEMA);
       if (schemaVersion <= LAST_SQLITE_DB_SCHEMA) {
         // we should have an older SQLITE database
-        LOG("Attempting to upgrade from SQLITE database");
+        logger.debug("Attempting to upgrade from SQLITE database");
         this.migrateData = this.getMigrateDataFromSQLITE();
       }
       else {
@@ -684,7 +678,7 @@ this.XPIDatabase = {
    */
   rebuildUnreadableDB: function(aError, aRebuildOnError) {
     let rebuildTimer = AddonManagerPrivate.simpleTimer("XPIDB_rebuildUnreadableDB_MS");
-    WARN("Extensions database " + this.jsonFile.path +
+    logger.warn("Extensions database " + this.jsonFile.path +
         " exists but is not readable; rebuilding", aError);
     // Remember the error message until we try and write at least once, so
     // we know at shutdown time that there was a problem
@@ -708,21 +702,21 @@ this.XPIDatabase = {
       return this._dbPromise;
     }
 
-    LOG("Starting async load of XPI database " + this.jsonFile.path);
+    logger.debug("Starting async load of XPI database " + this.jsonFile.path);
     AddonManagerPrivate.recordSimpleMeasure("XPIDB_async_load", XPIProvider.runPhase);
     let readOptions = {
       outExecutionDuration: 0
     };
     return this._dbPromise = OS.File.read(this.jsonFile.path, null, readOptions).then(
       byteArray => {
-        LOG("Async JSON file read took " + readOptions.outExecutionDuration + " MS");
+        logger.debug("Async JSON file read took " + readOptions.outExecutionDuration + " MS");
         AddonManagerPrivate.recordSimpleMeasure("XPIDB_asyncRead_MS",
           readOptions.outExecutionDuration);
         if (this._addonDB) {
-          LOG("Synchronous load completed while waiting for async load");
+          logger.debug("Synchronous load completed while waiting for async load");
           return this.addonDB;
         }
-        LOG("Finished async read of XPI database, parsing...");
+        logger.debug("Finished async read of XPI database, parsing...");
         let decodeTimer = AddonManagerPrivate.simpleTimer("XPIDB_decode_MS");
         let decoder = new TextDecoder();
         let data = decoder.decode(byteArray);
@@ -733,7 +727,7 @@ this.XPIDatabase = {
     .then(null,
       error => {
         if (this._addonDB) {
-          LOG("Synchronous load completed while waiting for async load");
+          logger.debug("Synchronous load completed while waiting for async load");
           return this.addonDB;
         }
         if (error.becauseNoSuchFile) {
@@ -762,7 +756,7 @@ this.XPIDatabase = {
 
     if (XPIProvider.installStates && XPIProvider.installStates.length == 0) {
       // No extensions installed, so we're done
-      LOG("Rebuilding XPI database with no extensions");
+      logger.debug("Rebuilding XPI database with no extensions");
       return;
     }
 
@@ -772,12 +766,12 @@ this.XPIDatabase = {
       this.activeBundles = this.getActiveBundles();
 
     if (aRebuildOnError) {
-      WARN("Rebuilding add-ons database from installed extensions.");
+      logger.warn("Rebuilding add-ons database from installed extensions.");
       try {
         XPIProvider.processFileChanges(XPIProvider.installStates, {}, false);
       }
       catch (e) {
-        ERROR("Failed to rebuild XPI database from installed extensions", e);
+        logger.error("Failed to rebuild XPI database from installed extensions", e);
       }
       // Make sure to update the active add-ons and add-ons list on shutdown
       Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS, true);
@@ -814,7 +808,7 @@ this.XPIDatabase = {
         bundles.push(parser.getString("ExtensionDirs", keys.getNext()));
     }
     catch (e) {
-      WARN("Failed to parse extensions.ini", e);
+      logger.warn("Failed to parse extensions.ini", e);
       return null;
     }
 
@@ -838,7 +832,7 @@ this.XPIDatabase = {
     if (!rdffile.exists())
       return null;
 
-    LOG("Migrating data from " + FILE_OLD_DATABASE);
+    logger.debug("Migrating data from " + FILE_OLD_DATABASE);
     let migrateData = {};
 
     try {
@@ -890,7 +884,7 @@ this.XPIDatabase = {
       }
     }
     catch (e) {
-      WARN("Error reading " + FILE_OLD_DATABASE, e);
+      logger.warn("Error reading " + FILE_OLD_DATABASE, e);
       migrateData = null;
     }
 
@@ -930,7 +924,7 @@ this.XPIDatabase = {
       }
 
       if (reqCount < REQUIRED.length) {
-        ERROR("Unable to read anything useful from the database");
+        logger.error("Unable to read anything useful from the database");
         return null;
       }
       stmt.finalize();
@@ -975,7 +969,7 @@ this.XPIDatabase = {
     }
     catch (e) {
       // An error here means the schema is too different to read
-      ERROR("Error migrating data", e);
+      logger.error("Error migrating data", e);
       return null;
     }
     finally {
@@ -995,7 +989,7 @@ this.XPIDatabase = {
    *                          all cleanup is done
    */
   shutdown: function XPIDB_shutdown() {
-    LOG("shutdown");
+    logger.debug("shutdown");
     if (this.initialized) {
       // If our last database I/O had an error, try one last time to save.
       if (this.lastError)
@@ -1016,7 +1010,7 @@ this.XPIDatabase = {
       // are finished cleaning up
       let flushPromise = this.flush();
       flushPromise.then(null, error => {
-          ERROR("Flush of XPI database failed", error);
+          logger.error("Flush of XPI database failed", error);
           AddonManagerPrivate.recordSimpleMeasure("XPIDB_shutdownFlush_failed", 1);
           // If our last attempt to read or write the DB failed, force a new
           // extensions.ini to be written to disk on the next startup
@@ -1073,7 +1067,7 @@ this.XPIDatabase = {
       })
     .then(null,
         error => {
-          ERROR("getAddonList failed", e);
+          logger.error("getAddonList failed", e);
           makeSafe(aCallback)([]);
         });
   },
@@ -1093,7 +1087,7 @@ this.XPIDatabase = {
       })
     .then(null,
         error => {
-          ERROR("getAddon failed", e);
+          logger.error("getAddon failed", e);
           makeSafe(aCallback)(null);
         });
   },
@@ -1167,7 +1161,7 @@ this.XPIDatabase = {
       // jank-tastic! Must synchronously load DB if the theme switches from
       // an XPI theme to a lightweight theme before the DB has loaded,
       // because we're called from sync XPIProvider.addonChanged
-      WARN("Synchronous load of XPI database due to getAddonsByType(" + aType + ")");
+      logger.warn("Synchronous load of XPI database due to getAddonsByType(" + aType + ")");
       AddonManagerPrivate.recordSimpleMeasure("XPIDB_lateOpen_byType", XPIProvider.runPhase);
       this.syncLoadDB(true);
     }
@@ -1184,7 +1178,7 @@ this.XPIDatabase = {
   getVisibleAddonForInternalName: function XPIDB_getVisibleAddonForInternalName(aInternalName) {
     if (!this.addonDB) {
       // This may be called when the DB hasn't otherwise been loaded
-      WARN("Synchronous load of XPI database due to getVisibleAddonForInternalName");
+      logger.warn("Synchronous load of XPI database due to getVisibleAddonForInternalName");
       AddonManagerPrivate.recordSimpleMeasure("XPIDB_lateOpen_forInternalName",
           XPIProvider.runPhase);
       this.syncLoadDB(true);
@@ -1321,10 +1315,10 @@ this.XPIDatabase = {
    *         A callback to pass the DBAddonInternal to
    */
   makeAddonVisible: function XPIDB_makeAddonVisible(aAddon) {
-    LOG("Make addon " + aAddon._key + " visible");
+    logger.debug("Make addon " + aAddon._key + " visible");
     for (let [, otherAddon] of this.addonDB) {
       if ((otherAddon.id == aAddon.id) && (otherAddon._key != aAddon._key)) {
-        LOG("Hide addon " + otherAddon._key);
+        logger.debug("Hide addon " + otherAddon._key);
         otherAddon.visible = false;
       }
     }
@@ -1378,7 +1372,7 @@ this.XPIDatabase = {
    *         The DBAddonInternal to update
    */
   updateAddonActive: function XPIDB_updateAddonActive(aAddon, aActive) {
-    LOG("Updating active state for add-on " + aAddon.id + " to " + aActive);
+    logger.debug("Updating active state for add-on " + aAddon.id + " to " + aActive);
 
     aAddon.active = aActive;
     this.saveChanges();
@@ -1389,13 +1383,13 @@ this.XPIDatabase = {
    */
   updateActiveAddons: function XPIDB_updateActiveAddons() {
     if (!this.addonDB) {
-      WARN("updateActiveAddons called when DB isn't loaded");
+      logger.warn("updateActiveAddons called when DB isn't loaded");
       // force the DB to load
       AddonManagerPrivate.recordSimpleMeasure("XPIDB_lateOpen_updateActive",
           XPIProvider.runPhase);
       this.syncLoadDB(true);
     }
-    LOG("Updating add-on states");
+    logger.debug("Updating add-on states");
     for (let [, addon] of this.addonDB) {
       let newActive = (addon.visible && !addon.userDisabled &&
                       !addon.softDisabled && !addon.appDisabled &&
@@ -1472,7 +1466,7 @@ this.XPIDatabase = {
     }
 
     if (fullCount > 0) {
-      LOG("Writing add-ons list");
+      logger.debug("Writing add-ons list");
 
       try {
         let addonsListTmp = FileUtils.getFile(KEY_PROFILEDIR, [FILE_XPI_ADDONS_LIST + ".tmp"],
@@ -1485,19 +1479,19 @@ this.XPIDatabase = {
         Services.prefs.setCharPref(PREF_EM_ENABLED_ADDONS, enabledAddons.join(","));
       }
       catch (e) {
-        ERROR("Failed to write add-ons list to " + addonsListTmp.parent + "/" +
+        logger.error("Failed to write add-ons list to " + addonsListTmp.parent + "/" +
               FILE_XPI_ADDONS_LIST, e);
         return false;
       }
     }
     else {
       if (addonsList.exists()) {
-        LOG("Deleting add-ons list");
+        logger.debug("Deleting add-ons list");
         try {
           addonsList.remove(false);
         }
         catch (e) {
-          ERROR("Failed to remove " + addonsList.path, e);
+          logger.error("Failed to remove " + addonsList.path, e);
           return false;
         }
       }
