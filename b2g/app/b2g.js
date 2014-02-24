@@ -872,6 +872,10 @@ pref("identity.fxaccounts.auth.uri", "https://api-accounts.dev.lcip.org/v1");
 pref("apz.asyncscroll.throttle", 40);
 pref("apz.pan_repaint_interval", 40);
 
+// Maximum fling velocity in px/ms.  Slower devices may need to reduce this
+// to avoid checkerboarding.  Note, float value must be set as a string.
+pref("apz.max_velocity_pixels_per_ms", "6.0");
+
 // This preference allows FirefoxOS apps (and content, I think) to force
 // the use of software (instead of hardware accelerated) 2D canvases by
 // creating a context like this:
