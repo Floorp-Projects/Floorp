@@ -462,9 +462,9 @@
        if( splitPath.components[splitPath.components.length - 1].length === 0 ) {
          splitPath.components.pop();
        }
-       // One component and an absolute path implies a directory root.
+       // One component consisting of a drive letter implies a directory root.
        if (ctypes.winLastError == Const.ERROR_ACCESS_DENIED &&
-           splitPath.absolute &&
+           splitPath.winDrive &&
            splitPath.components.length === 1 ) {
          return;
        }
