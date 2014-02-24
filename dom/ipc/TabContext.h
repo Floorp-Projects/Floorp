@@ -143,6 +143,11 @@ protected:
   bool SetTabContextForBrowserFrame(mozIApplication* aBrowserFrameOwnerApp,
                                     ScrollingBehavior aRequestedBehavior);
 
+  /**
+   * Set this TabContext to be a normal non-browser non-app frame.
+   */
+  bool SetTabContextForNormalFrame(ScrollingBehavior aRequestedBehavior);
+
 private:
   /**
    * Has this TabContext been initialized?  If so, mutator methods will fail.
@@ -211,6 +216,11 @@ public:
   {
     return TabContext::SetTabContextForBrowserFrame(aBrowserFrameOwnerApp,
                                                     aRequestedBehavior);
+  }
+
+  bool SetTabContextForNormalFrame(ScrollingBehavior aRequestedBehavior)
+  {
+    return TabContext::SetTabContextForNormalFrame(aRequestedBehavior);
   }
 };
 
