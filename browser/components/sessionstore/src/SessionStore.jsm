@@ -1712,6 +1712,10 @@ let SessionStoreInternal = {
   },
 
   setWindowValue: function ssi_setWindowValue(aWindow, aKey, aStringValue) {
+    if (typeof aStringValue != "string") {
+      throw new TypeError("setWindowValue only accepts string values");
+    }
+
     if (!("__SSi" in aWindow)) {
       throw Components.Exception("Window is not tracked", Cr.NS_ERROR_INVALID_ARG);
     }
@@ -1742,6 +1746,10 @@ let SessionStoreInternal = {
   },
 
   setTabValue: function ssi_setTabValue(aTab, aKey, aStringValue) {
+    if (typeof aStringValue != "string") {
+      throw new TypeError("setTabValue only accepts string values");
+    }
+
     // If the tab hasn't been restored, then set the data there, otherwise we
     // could lose newly added data.
     let saveTo;
@@ -1783,6 +1791,10 @@ let SessionStoreInternal = {
   },
 
   setGlobalValue: function ssi_setGlobalValue(aKey, aStringValue) {
+    if (typeof aStringValue != "string") {
+      throw new TypeError("setGlobalValue only accepts string values");
+    }
+
     this._globalState.set(aKey, aStringValue);
     this.saveStateDelayed();
   },
