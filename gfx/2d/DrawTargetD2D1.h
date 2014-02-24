@@ -35,6 +35,7 @@ const int32_t kLayerCacheSize1 = 5;
 class DrawTargetD2D1 : public DrawTarget
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DrawTargetD2D1)
   DrawTargetD2D1();
   virtual ~DrawTargetD2D1();
 

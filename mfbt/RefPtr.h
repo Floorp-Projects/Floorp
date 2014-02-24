@@ -104,6 +104,9 @@ class RefCounted
 #define MOZ_DECLARE_REFCOUNTED_TYPENAME(T) \
   const char* typeName() const { return #T; }
 
+#define MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(T) \
+  virtual const char* typeName() const { return #T; }
+
 }
 
 template<typename T>
