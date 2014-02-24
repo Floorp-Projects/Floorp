@@ -20,6 +20,7 @@
 #include "mozilla/Preferences.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsDisplayList.h"
+#include "nsFilterInstance.h"
 #include "nsFrameList.h"
 #include "nsGkAtoms.h"
 #include "nsIContent.h"
@@ -35,7 +36,6 @@
 #include "nsSVGClipPathFrame.h"
 #include "nsSVGContainerFrame.h"
 #include "nsSVGEffects.h"
-#include "nsSVGFilterInstance.h"
 #include "nsSVGFilterPaintCallback.h"
 #include "nsSVGForeignObjectFrame.h"
 #include "gfxSVGGlyphs.h"
@@ -164,7 +164,7 @@ nsSVGUtils::GetPostFilterVisualOverflowRect(nsIFrame *aFrame,
     return aPreFilterRect;
   }
 
-  return nsSVGFilterInstance::GetPostFilterBounds(aFrame, nullptr, &aPreFilterRect);
+  return nsFilterInstance::GetPostFilterBounds(aFrame, nullptr, &aPreFilterRect);
 }
 
 bool
@@ -621,8 +621,8 @@ nsSVGUtils::PaintFrameWithEffects(nsRenderingContext *aContext,
       dirtyRect = &tmpDirtyRect;
     }
     SVGPaintCallback paintCallback;
-    nsSVGFilterInstance::PaintFilteredFrame(aContext, aFrame, &paintCallback,
-                                            dirtyRect, aTransformRoot);
+    nsFilterInstance::PaintFilteredFrame(aContext, aFrame, &paintCallback,
+                                         dirtyRect, aTransformRoot);
   } else {
     svgChildFrame->PaintSVG(aContext, aDirtyRect, aTransformRoot);
   }
