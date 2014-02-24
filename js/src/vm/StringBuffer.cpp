@@ -92,7 +92,7 @@ js::ValueToStringBufferSlow(JSContext *cx, const Value &arg, StringBuffer &sb)
     if (v.isNumber())
         return NumberValueToStringBuffer(cx, v, sb);
     if (v.isBoolean())
-        return BooleanToStringBuffer(cx, v.toBoolean(), sb);
+        return BooleanToStringBuffer(v.toBoolean(), sb);
     if (v.isNull())
         return sb.append(cx->names().null);
     JS_ASSERT(v.isUndefined());
