@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PBlob;
+include protocol PColorPicker;
 include protocol PContent;
 include protocol PContentDialog;
 include protocol PDocumentRenderer;
@@ -57,6 +58,7 @@ intr protocol PBrowser
 {
     manager PContent;
 
+    manages PColorPicker;
     manages PContentDialog;
     manages PDocumentRenderer;
     manages PContentPermissionRequest;
@@ -220,6 +222,12 @@ parent:
      */
     ShowTooltip(uint32_t x, uint32_t y, nsString tooltip);
     HideTooltip();
+
+    /**
+     * Create an asynchronous color picker on the parent side,
+     * but don't open it yet.
+     */
+    PColorPicker(nsString title, nsString initialColor);
 
     /**
      * Initiates an asynchronous request for permission for the

@@ -103,6 +103,14 @@ SVGElementFactory::Shutdown()
   }
 }
 
+bool
+SVGElementFactory::Exists(nsIAtom *aTag)
+{
+  MOZ_ASSERT(sTagAtomTable, "no lookup table, needs SVGElementFactory::Init");
+  void* tag = PL_HashTableLookupConst(sTagAtomTable, aTag);
+  return tag != nullptr;
+}
+
 nsresult
 NS_NewSVGElement(Element** aResult, already_AddRefed<nsINodeInfo> aNodeInfo,
                  FromParser aFromParser)

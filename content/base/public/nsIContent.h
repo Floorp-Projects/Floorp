@@ -23,6 +23,7 @@ class nsXBLBinding;
 namespace mozilla {
 namespace dom {
 class ShadowRoot;
+struct CustomElementData;
 } // namespace dom
 namespace widget {
 struct IMEState;
@@ -675,6 +676,22 @@ public:
    * @return the flattened tree parent
    */
   nsIContent *GetFlattenedTreeParent() const;
+
+  /**
+   * Gets the custom element data used by web components custom element.
+   * Custom element data is created at the first attempt to enqueue a callback.
+   *
+   * @return The custom element data or null if none.
+   */
+  virtual mozilla::dom::CustomElementData *GetCustomElementData() const = 0;
+
+  /**
+   * Sets the custom element data, ownership of the
+   * callback data is taken by this content.
+   *
+   * @param aCallbackData The custom element data.
+   */
+  virtual void SetCustomElementData(mozilla::dom::CustomElementData* aData) = 0;
 
   /**
    * API to check if this is a link that's traversed in response to user input

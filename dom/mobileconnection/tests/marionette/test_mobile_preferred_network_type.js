@@ -2,15 +2,57 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 MARIONETTE_TIMEOUT = 60000;
+MARIONETTE_HEAD_JS = "mobile_header.js";
 
-SpecialPowers.addPermission("mobileconnection", true, document);
+function doSetAndVerifyPreferredNetworkType(preferredNetworkType, callback) {
+  log("setPreferredNetworkType to '" + preferredNetworkType + "'.");
+  let setRequest = mobileConnection.setPreferredNetworkType(preferredNetworkType);
+  ok(setRequest instanceof DOMRequest,
+     "setRequest instanceof " + setRequest.constructor);
 
-let connection = navigator.mozMobileConnections[0];
-ok(connection instanceof MozMobileConnection,
-   "connection is instanceof " + connection.constructor);
+  setRequest.onsuccess = function() {
+    log("Verify preferred network.");
+    let getRequest = mobileConnection.getPreferredNetworkType();
+    ok(getRequest instanceof DOMRequest,
+       "getRequest instanceof " + getRequest.constructor);
 
-function testSupportedNetworkTypes() {
-  let supportedNetworkTypes = connection.supportedNetworkTypes;
+    getRequest.onsuccess = function() {
+      is(getRequest.result, preferredNetworkType, "Check preferred network type.");
+      callback();
+    };
+
+    getRequest.onerror = function() {
+      ok(false, "getPreferredNetworkType got error: " + getRequest.error.name);
+      callback();
+    };
+  };
+
+  setRequest.onerror = function() {
+    ok(false, "setPreferredNetwork got error: " + setRequest.error.name);
+    callback();
+  };
+}
+
+function doFailToSetPreferredNetworkType(preferredNetworkType, expectedError, callback) {
+  log("setPreferredNetworkType to '" + preferredNetworkType + "'.");
+  let request = mobileConnection.setPreferredNetworkType(preferredNetworkType);
+  ok(request instanceof DOMRequest,
+     "request instanceof " + request.constructor);
+
+  request.onsuccess = function() {
+    ok(false, "Should not success");
+    callback();
+  };
+
+  request.onerror = function() {
+    is(request.error.name, expectedError, "Check error message.");
+    callback();
+  };
+}
+
+/* Test supportedNetworkTypes */
+taskHelper.push(function testSupportedNetworkTypes() {
+  let supportedNetworkTypes = mobileConnection.supportedNetworkTypes;
 
   ok(Array.isArray(supportedNetworkTypes), "supportedNetworkTypes should be an array");
   ok(supportedNetworkTypes.indexOf("gsm") >= 0, "Should support 'gsm'");
@@ -18,136 +60,72 @@ function testSupportedNetworkTypes() {
   ok(supportedNetworkTypes.indexOf("cdma") >= 0, "Should support 'cdma'");
   ok(supportedNetworkTypes.indexOf("evdo") >= 0, "Should support 'evdo'");
 
-  runNextTest();
-}
+  taskHelper.runNext();
+});
 
-function setPreferredNetworkType(type, callback) {
-  log("setPreferredNetworkType: " + type);
+/* Test switching to supported preferred types */
+taskHelper.push(function testPreferredNetworkTypes() {
+  let supportedTypes = [
+    'gsm',
+    'wcdma',
+    'wcdma/gsm-auto',
+    'cdma/evdo',
+    'evdo',
+    'cdma',
+    'wcdma/gsm/cdma/evdo',
+    // Restore to default
+    'wcdma/gsm'
+  ];
 
-  let request = connection.setPreferredNetworkType(type);
-  ok(request instanceof DOMRequest,
-     "request instanceof " + request.constructor);
+  // Run all test data.
+  (function do_call() {
+    let type = supportedTypes.shift();
+    if (!type) {
+      taskHelper.runNext();
+      return;
+    }
+    doSetAndVerifyPreferredNetworkType(type, do_call);
+  })();
+});
 
-  request.onsuccess = function onsuccess() {
-    ok(true, "request success");
-    callback();
-  }
-  request.onerror = function onerror() {
-    ok(false, request.error);
-    callback();
-  }
-}
+/* Test switching to unsupported preferred types */
+taskHelper.push(function testUnsupportedPreferredNetworkTypes() {
+  // Currently emulator doesn't support lte network
+  let unsupportedTypes = [
+    'lte/cdma/evdo',
+    'lte/wcdma/gsm',
+    'lte/wcdma/gsm/cdma/evdo',
+    'lte'
+  ];
 
-function getPreferredNetworkType(callback) {
-  log("getPreferredNetworkType");
+  // Run all test data.
+  (function do_call() {
+    let type = unsupportedTypes.shift();
+    if (!type) {
+      taskHelper.runNext();
+      return;
+    }
+    doFailToSetPreferredNetworkType(type, "ModeNotSupported", do_call);
+  })();
+});
 
-  let request = connection.getPreferredNetworkType();
-  ok(request instanceof DOMRequest,
-     "request instanceof " + request.constructor);
+/* Test switching to invalid preferred types */
+taskHelper.push(function testInvalidPreferredNetworkTypes() {
+  let invalidTypes = [
+    ' ',
+    'AnInvalidType'
+  ];
 
-  request.onsuccess = function onsuccess() {
-    ok(true, "request success");
-    log("getPreferredNetworkType: " + request.result);
-    callback(request.result);
-  }
-  request.onerror = function onerror() {
-    ok(false, request.error);
-    callback();
-  }
-}
+  // Run all test data.
+  (function do_call() {
+    let type = invalidTypes.shift();
+    if (!type) {
+      taskHelper.runNext();
+      return;
+    }
+    doFailToSetPreferredNetworkType(type, "InvalidParameter", do_call);
+  })();
+});
 
-function failToSetPreferredNetworkType(type, expectedError, callback) {
-  log("failToSetPreferredNetworkType: " + type + ", expected error: "
-    + expectedError);
-
-  let request = connection.setPreferredNetworkType(type);
-  ok(request instanceof DOMRequest,
-     "request instanceof " + request.constructor);
-
-  request.onsuccess = function onsuccess() {
-    ok(false, "request should not succeed");
-    callback();
-  }
-  request.onerror = function onerror() {
-    ok(true, "request error");
-    is(request.error.name, expectedError);
-    callback();
-  }
-}
-
-function setAndVerifyNetworkType(type) {
-  setPreferredNetworkType(type, function() {
-    getPreferredNetworkType(function(result) {
-      is(result, type);
-      testPreferredNetworkTypes();
-    });
-  });
-}
-
-function testPreferredNetworkTypes() {
-  let networkType = supportedTypes.shift();
-  if (!networkType) {
-    runNextTest();
-    return;
-  }
-  setAndVerifyNetworkType(networkType);
-}
-
-function failToSetAndVerifyNetworkType(type, expectedError, previousType) {
-  failToSetPreferredNetworkType(type, expectedError, function() {
-    getPreferredNetworkType(function(result) {
-      // should return the previous selected type.
-      is(result, previousType);
-      testInvalidNetworkTypes();
-    });
-  });
-}
-
-function testInvalidNetworkTypes() {
-  let networkType = invalidTypes.shift();
-  if (!networkType) {
-    runNextTest();
-    return;
-  }
-  failToSetAndVerifyNetworkType(networkType, "InvalidParameter",
-                                "wcdma/gsm");
-}
-
-let supportedTypes = [
-  'gsm',
-  'wcdma',
-  'wcdma/gsm-auto',
-  'cdma/evdo',
-  'evdo',
-  'cdma',
-  'wcdma/gsm/cdma/evdo',
-  'wcdma/gsm' // restore to default
-];
-
-let invalidTypes = [
-  ' ',
-  'AnInvalidType'
-];
-
-let tests = [
-  testSupportedNetworkTypes,
-  testPreferredNetworkTypes,
-  testInvalidNetworkTypes
-];
-
-function runNextTest() {
-  let test = tests.shift();
-  if (!test) {
-    cleanUp();
-    return;
-  }
-
-  test();
-}
-
-function cleanUp() {
-  SpecialPowers.removePermission("mobileconnection", document);
-  finish();
-}
-
-runNextTest();
+// Start test
+taskHelper.runNext();
