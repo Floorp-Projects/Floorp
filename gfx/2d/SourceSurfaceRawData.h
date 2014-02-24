@@ -15,6 +15,7 @@ namespace gfx {
 class SourceSurfaceRawData : public DataSourceSurface
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DataSourceSurfaceRawData)
   SourceSurfaceRawData() {}
   ~SourceSurfaceRawData() { if(mOwnData) delete [] mRawData; }
 
@@ -42,6 +43,7 @@ private:
 class SourceSurfaceAlignedRawData : public DataSourceSurface
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DataSourceSurfaceAlignedRawData)
   SourceSurfaceAlignedRawData() {}
 
   virtual uint8_t *GetData() { return mArray; }

@@ -43,6 +43,7 @@ struct PrivateD3D10DataD2D
 class DrawTargetD2D : public DrawTarget
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DrawTargetD2D)
   DrawTargetD2D();
   virtual ~DrawTargetD2D();
 
