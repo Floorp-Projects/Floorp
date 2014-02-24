@@ -83,14 +83,70 @@ const DEFAULT_PROVIDERS = [
   "resource://gre/modules/LightweightThemeManager.jsm"
 ];
 
-["LOG", "WARN", "ERROR"].forEach(function(aName) {
-  this.__defineGetter__(aName, function logFuncGetter() {
-    Components.utils.import("resource://gre/modules/addons/AddonLogging.jsm");
+Cu.import("resource://gre/modules/Log.jsm");
+// Configure a logger at the parent 'addons' level to format
+// messages for all the modules under addons.*
+const PARENT_LOGGER_ID = "addons";
+let parentLogger = Log.repository.getLogger(PARENT_LOGGER_ID);
+parentLogger.level = Log.Level.Warn;
+let formatter = new Log.BasicFormatter();
+// Set parent logger (and its children) to append to
+// the Javascript section of the Browser Console
+parentLogger.addAppender(new Log.ConsoleAppender(formatter));
+// Set parent logger (and its children) to
+// also append to standard out
+parentLogger.addAppender(new Log.DumpAppender(formatter));
 
-    LogManager.getLogger("addons.manager", this);
-    return this[aName];
-  });
-}, this);
+// Create a new logger (child of 'addons' logger)
+// for use by the Addons Manager
+const LOGGER_ID = "addons.manager";
+let logger = Log.repository.getLogger(LOGGER_ID);
+
+// Provide the ability to enable/disable logging
+// messages at runtime.
+// If the "extensions.logging.enabled" preference is
+// missing or 'false', messages at the WARNING and higher
+// severity should be logged to the JS console and standard error.
+// If "extensions.logging.enabled" is set to 'true', messages
+// at DEBUG and higher should go to JS console and standard error.
+const PREF_LOGGING_ENABLED = "extensions.logging.enabled";
+const NS_PREFBRANCH_PREFCHANGE_TOPIC_ID = "nsPref:changed";
+
+/**
+ * Preference listener which listens for a change in the
+ * "extensions.logging.enabled" preference and changes the logging level of the
+ * parent 'addons' level logger accordingly.
+ */
+var PrefObserver = {
+    init: function PrefObserver_init() {
+      Services.prefs.addObserver(PREF_LOGGING_ENABLED, this, false);
+      Services.obs.addObserver(this, "xpcom-shutdown", false);
+      this.observe(null, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID, PREF_LOGGING_ENABLED);
+    },
+
+    observe: function PrefObserver_observe(aSubject, aTopic, aData) {
+      if (aTopic == "xpcom-shutdown") {
+        Services.prefs.removeObserver(PREF_LOGGING_ENABLED, this);
+        Services.obs.removeObserver(this, "xpcom-shutdown");
+      }
+      else if (aTopic == NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) {
+        let debugLogEnabled = false;
+        try {
+          debugLogEnabled = Services.prefs.getBoolPref(PREF_LOGGING_ENABLED);
+        }
+        catch (e) {
+        }
+        if (debugLogEnabled) {
+          parentLogger.level = Log.Level.Debug;
+        }
+        else {
+          parentLogger.level = Log.Level.Warn;
+        }
+      }
+    }
+};
+
+PrefObserver.init();
 
 /**
  * Calls a callback method consuming any thrown exception. Any parameters after
@@ -104,7 +160,7 @@ function safeCall(aCallback, ...aArgs) {
     aCallback.apply(null, aArgs);
   }
   catch (e) {
-    WARN("Exception calling callback", e);
+    logger.warn("Exception calling callback", e);
   }
 }
 
@@ -130,7 +186,7 @@ function callProvider(aProvider, aMethod, aDefault, ...aArgs) {
     return aProvider[aMethod].apply(aProvider, aArgs);
   }
   catch (e) {
-    ERROR("Exception calling provider " + aMethod, e);
+    logger.error("Exception calling provider " + aMethod, e);
     return aDefault;
   }
 }
@@ -496,7 +552,7 @@ var AddonManagerInternal = {
       catch (e) { }
 
       if (appChanged !== false) {
-        LOG("Application has been upgraded");
+        logger.debug("Application has been upgraded");
         Services.prefs.setCharPref(PREF_EM_LAST_APP_VERSION,
                                    Services.appinfo.version);
         Services.prefs.setCharPref(PREF_EM_LAST_PLATFORM_VERSION,
@@ -558,7 +614,7 @@ var AddonManagerInternal = {
           }
           catch (e) {
             AddonManagerPrivate.recordException("AMI", "provider " + url + " load failed", e);
-            ERROR("Exception loading default provider \"" + url + "\"", e);
+            logger.error("Exception loading default provider \"" + url + "\"", e);
           }
         });
       }
@@ -576,7 +632,7 @@ var AddonManagerInternal = {
         }
         catch (e) {
           AddonManagerPrivate.recordException("AMI", "provider " + url + " load failed", e);
-          ERROR("Exception loading provider " + entry + " from category \"" +
+          logger.error("Exception loading provider " + entry + " from category \"" +
                 url + "\"", e);
         }
       }
@@ -601,7 +657,7 @@ var AddonManagerInternal = {
       this.recordTimestamp("AMI_startup_end");
     }
     catch (e) {
-      ERROR("startup failed", e);
+      logger.error("startup failed", e);
       AddonManagerPrivate.recordException("AMI", "startup failed", e);
     }
   },
@@ -629,7 +685,7 @@ var AddonManagerInternal = {
       aTypes.forEach(function(aType) {
         if (!(aType.id in this.types)) {
           if (!VALID_TYPES_REGEXP.test(aType.id)) {
-            WARN("Ignoring invalid type " + aType.id);
+            logger.warn("Ignoring invalid type " + aType.id);
             return;
           }
 
@@ -716,7 +772,7 @@ var AddonManagerInternal = {
           provider[aMethod].apply(provider, aArgs);
       }
       catch (e) {
-        ERROR("Exception calling provider " + aMethod, e);
+        logger.error("Exception calling provider " + aMethod, e);
       }
     }
   },
@@ -751,12 +807,12 @@ var AddonManagerInternal = {
           // Log and swallow the errors from methods that do return promises.
           nextPromise = nextPromise.then(
               null,
-              e => ERROR("Exception calling provider " + aMethod, e));
+              e => logger.error("Exception calling provider " + aMethod, e));
           allProviders.push(nextPromise);
         }
       }
       catch (e) {
-        ERROR("Exception calling provider " + aMethod, e);
+        logger.error("Exception calling provider " + aMethod, e);
       }
     }
     // Because we use promise.then to catch and log all errors above, Promise.all()
@@ -771,7 +827,7 @@ var AddonManagerInternal = {
    *                       have finished shutting down
    */
   shutdown: function AMI_shutdown() {
-    LOG("shutdown");
+    logger.debug("shutdown");
     // Clean up listeners
     Services.prefs.removeObserver(PREF_EM_CHECK_COMPATIBILITY, this);
     Services.prefs.removeObserver(PREF_EM_STRICT_COMPATIBILITY, this);
@@ -786,15 +842,15 @@ var AddonManagerInternal = {
     if (gStarted) {
       shuttingDown = this.callProvidersAsync("shutdown")
         .then(null,
-              err => ERROR("Failure during async provider shutdown", err))
+              err => logger.error("Failure during async provider shutdown", err))
         .then(() => AddonRepository.shutdown());
     }
     else {
       shuttingDown = AddonRepository.shutdown();
     }
 
-    shuttingDown.then(val => LOG("Async provider shutdown done"),
-                      err => ERROR("Failure during AddonRepository shutdown", err))
+      shuttingDown.then(val => logger.debug("Async provider shutdown done"),
+                        err => logger.error("Failure during AddonRepository shutdown", err))
       .then(() => {
         this.managerListeners.splice(0, this.managerListeners.length);
         this.installListeners.splice(0, this.installListeners.length);
@@ -1088,7 +1144,7 @@ var AddonManagerInternal = {
             return;
           }
 
-          LOG("Downloading hotfix version " + update.version);
+          logger.debug("Downloading hotfix version " + update.version);
           AddonManager.getInstallForURL(update.updateURL,
                                        function BUC_getInstallForURL(aInstall) {
             aInstall.addListener({
@@ -1107,7 +1163,7 @@ var AddonManagerInternal = {
                                          CertUtils.readCertPrefs(PREF_EM_HOTFIX_CERTS));
                 }
                 catch (e) {
-                  WARN("The hotfix add-on was not signed by the expected " +
+                  logger.warn("The hotfix add-on was not signed by the expected " +
                        "certificate and so will not be installed.");
                   aInstall.cancel();
                 }
@@ -1224,7 +1280,7 @@ var AddonManagerInternal = {
           listener[aMethod].apply(listener, aArgs);
       }
       catch (e) {
-        WARN("AddonManagerListener threw exception when calling " + aMethod, e);
+        logger.warn("AddonManagerListener threw exception when calling " + aMethod, e);
       }
     }
   },
@@ -1268,7 +1324,7 @@ var AddonManagerInternal = {
         }
       }
       catch (e) {
-        WARN("InstallListener threw exception when calling " + aMethod, e);
+        logger.warn("InstallListener threw exception when calling " + aMethod, e);
       }
     }
     return result;
@@ -1297,7 +1353,7 @@ var AddonManagerInternal = {
           listener[aMethod].apply(listener, aArgs);
       }
       catch (e) {
-        WARN("AddonListener threw exception when calling " + aMethod, e);
+        logger.warn("AddonListener threw exception when calling " + aMethod, e);
       }
     }
   },
@@ -1676,7 +1732,7 @@ var AddonManagerInternal = {
                                  Cr.NS_ERROR_INVALID_ARG);
 
     if (!("@mozilla.org/addons/web-install-listener;1" in Cc)) {
-      WARN("No web installer available, cancelling all installs");
+      logger.warn("No web installer available, cancelling all installs");
       aInstalls.forEach(function(aInstall) {
         aInstall.cancel();
       });
@@ -1710,7 +1766,7 @@ var AddonManagerInternal = {
       // In the event that the weblistener throws during instantiation or when
       // calling onWebInstallBlocked or onWebInstallRequested all of the
       // installs should get cancelled.
-      WARN("Failure calling web installer", e);
+      logger.warn("Failure calling web installer", e);
       aInstalls.forEach(function(aInstall) {
         aInstall.cancel();
       });
