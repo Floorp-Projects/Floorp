@@ -26,7 +26,6 @@ import android.widget.ListView;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -634,18 +633,6 @@ public class GeckoMenu extends ListView
                 mWeightSum -= params.weight;
                 removeView(actionItem);
             }
-        }
-    }
-
-    public void refresh() {
-        for (Iterator<GeckoMenuItem> i = mPrimaryActionItems.keySet().iterator(); i.hasNext();) {
-            GeckoMenuItem item = i.next();
-            item.refreshIfChanged();
-        }
-
-        for (Iterator<GeckoMenuItem> i = mSecondaryActionItems.keySet().iterator(); i.hasNext();) {
-            GeckoMenuItem item = i.next();
-            item.refreshIfChanged();
         }
     }
 
