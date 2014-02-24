@@ -527,6 +527,12 @@ public:
   static bool CheckForBOM(const unsigned char* aBuffer, uint32_t aLength,
                           nsACString& aCharset);
 
+  /**
+   * Returns true if |aName| is a valid name to be registered via
+   * document.registerElement.
+   */
+  static bool IsCustomElementName(nsIAtom* aName);
+
   static nsresult CheckQName(const nsAString& aQualifiedName,
                              bool aNamespaceAware = true,
                              const char16_t** aColon = nullptr);
