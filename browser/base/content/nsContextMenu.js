@@ -849,7 +849,7 @@ nsContextMenu.prototype = {
     // decision of disabling MCB on a page for it's child tabs.
     var persistDisableMCBInChildTab = false;
 
-    if (this.browser.docShell.mixedContentChannel) {
+    if (this.browser.docShell && this.browser.docShell.mixedContentChannel) {
       const sm = Services.scriptSecurityManager;
       try {
         var targetURI = this.linkURI;
