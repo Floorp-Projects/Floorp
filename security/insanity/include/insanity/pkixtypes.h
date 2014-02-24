@@ -48,7 +48,7 @@ public:
 
   enum TrustLevel {
     TrustAnchor = 1,        // certificate is a trusted root CA certificate or
-                            // equivalent
+                            // equivalent *for the given policy*.
     ActivelyDistrusted = 2, // certificate is known to be bad
     InheritsTrust = 3       // certificate must chain to a trust anchor
   };
@@ -56,7 +56,17 @@ public:
   // Determine the level of trust in the given certificate for the given role.
   // This will be called for every certificate encountered during path
   // building.
+  //
+  // When policy == SEC_OID_X509_ANY_POLICY, then no policy-related checking
+  // should be done. When policy != SEC_OID_X509_ANY_POLICY, then GetCertTrust
+  // MUST NOT return with *trustLevel == TrustAnchor unless the given cert is
+  // considered a trust anchor *for that policy*. In particular, if the user
+  // has marked an intermediate certificate as trusted, but that intermediate
+  // isn't in the list of EV roots, then GetCertTrust must result in
+  // *trustLevel == InheritsTrust instead of *trustLevel == TrustAnchor
+  // (assuming the candidate cert is not actively distrusted).
   virtual SECStatus GetCertTrust(EndEntityOrCA endEntityOrCA,
+                                 SECOidTag policy,
                                  const CERTCertificate* candidateCert,
                          /*out*/ TrustLevel* trustLevel) = 0;
 
