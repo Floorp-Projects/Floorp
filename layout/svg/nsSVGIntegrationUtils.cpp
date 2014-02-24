@@ -58,7 +58,7 @@ public:
                  "We want the first continuation here");
   }
 
-  virtual void AddBox(nsIFrame* aFrame) {
+  virtual void AddBox(nsIFrame* aFrame) MOZ_OVERRIDE {
     nsRect overflow = (aFrame == mCurrentFrame) ?
       mCurrentFrameOverflowArea : GetPreEffectsVisualOverflowRect(aFrame);
     mResult.UnionRect(mResult, overflow + aFrame->GetOffsetTo(mFirstContinuation));
@@ -384,7 +384,7 @@ public:
       mOffset(aOffset) {}
 
   virtual void Paint(nsRenderingContext *aContext, nsIFrame *aTarget,
-                     const nsIntRect* aDirtyRect, nsIFrame* aTransformRoot)
+                     const nsIntRect* aDirtyRect, nsIFrame* aTransformRoot) MOZ_OVERRIDE
   {
     BasicLayerManager* basic = static_cast<BasicLayerManager*>(mLayerManager);
     basic->SetTarget(aContext->ThebesContext());
@@ -595,7 +595,7 @@ public:
   virtual bool operator()(gfxContext* aContext,
                             const gfxRect& aFillRect,
                             const GraphicsFilter& aFilter,
-                            const gfxMatrix& aTransform);
+                            const gfxMatrix& aTransform) MOZ_OVERRIDE;
 private:
   nsIFrame* mFrame;
   nsSize mPaintServerSize;

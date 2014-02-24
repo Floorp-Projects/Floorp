@@ -2562,7 +2562,7 @@ struct BoxToRect : public nsLayoutUtils::BoxCallback {
             uint32_t aFlags)
     : mRelativeTo(aRelativeTo), mCallback(aCallback), mFlags(aFlags) {}
 
-  virtual void AddBox(nsIFrame* aFrame) {
+  virtual void AddBox(nsIFrame* aFrame) MOZ_OVERRIDE {
     nsRect r;
     nsIFrame* outer = nsSVGUtils::GetOuterSVGFrameAndCoveredRegion(aFrame, &r);
     if (!outer) {

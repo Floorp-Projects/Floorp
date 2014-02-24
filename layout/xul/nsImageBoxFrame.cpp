@@ -61,7 +61,7 @@ public:
   nsImageBoxFrameEvent(nsIContent *content, uint32_t message)
     : mContent(content), mMessage(message) {}
 
-  NS_IMETHOD Run();
+  NS_IMETHOD Run() MOZ_OVERRIDE;
 
 private:
   nsCOMPtr<nsIContent> mContent;

@@ -4654,7 +4654,7 @@ class nsOverflowChecker : public nsRunnable
 {
 public:
   nsOverflowChecker(nsTreeBodyFrame* aFrame) : mFrame(aFrame) {}
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() MOZ_OVERRIDE
   {
     if (mFrame.IsAlive()) {
       nsTreeBodyFrame* tree = static_cast<nsTreeBodyFrame*>(mFrame.GetFrame());
