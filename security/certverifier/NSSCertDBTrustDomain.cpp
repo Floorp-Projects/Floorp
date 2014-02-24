@@ -72,13 +72,20 @@ NSSCertDBTrustDomain::FindPotentialIssuers(
 
 SECStatus
 NSSCertDBTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
+                                   SECOidTag policy,
                                    const CERTCertificate* candidateCert,
                                    /*out*/ TrustLevel* trustLevel)
 {
-  PORT_Assert(candidateCert);
-  PORT_Assert(trustLevel);
+  PR_ASSERT(candidateCert);
+  PR_ASSERT(trustLevel);
   if (!candidateCert || !trustLevel) {
-    PORT_SetError(SEC_ERROR_INVALID_ARGS);
+    PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
+    return SECFailure;
+  }
+
+  // We don't support validating for a policy yet.
+  if (policy != SEC_OID_X509_ANY_POLICY) {
+    PR_SetError(SEC_ERROR_POLICY_VALIDATION_FAILED, 0);
     return SECFailure;
   }
 
