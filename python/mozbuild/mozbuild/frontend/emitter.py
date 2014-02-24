@@ -245,6 +245,7 @@ class TreeMetadataEmitter(LoggingMixin):
             'CFLAGS',
             'CXXFLAGS',
             'LDFLAGS',
+            'WIN32_EXE_LDFLAGS',
         ]
         for v in varlist:
             if v in sandbox and sandbox[v]:
