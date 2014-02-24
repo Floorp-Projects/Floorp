@@ -30,6 +30,7 @@ Result CheckIssuerIndependentProperties(
           EndEntityOrCA endEntityOrCA,
           KeyUsages requiredKeyUsagesIfPresent,
           SECOidTag requiredEKUIfPresent,
+          SECOidTag requiredPolicy,
           unsigned int subCACount,
           /*optional out*/ TrustDomain::TrustLevel* trustLevel = nullptr);
 
