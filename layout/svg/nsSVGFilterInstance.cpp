@@ -12,6 +12,7 @@
 #include "nsISVGChildFrame.h"
 #include "nsRenderingContext.h"
 #include "mozilla/dom/SVGFilterElement.h"
+#include "nsReferencedElement.h"
 #include "nsSVGFilterFrame.h"
 #include "nsSVGFilterPaintCallback.h"
 #include "nsSVGUtils.h"
@@ -24,15 +25,14 @@ using namespace mozilla::dom;
 using namespace mozilla::gfx;
 
 nsresult
-nsSVGFilterInstance::PaintFilteredFrame(nsSVGFilterFrame* aFilterFrame,
-                                        nsRenderingContext *aContext,
+nsSVGFilterInstance::PaintFilteredFrame(nsRenderingContext *aContext,
                                         nsIFrame *aFilteredFrame,
                                         nsSVGFilterPaintCallback *aPaintCallback,
                                         const nsRect *aDirtyArea,
                                         nsIFrame* aTransformRoot)
 {
-  nsSVGFilterInstance instance(aFilteredFrame, aFilterFrame, aPaintCallback,
-                               aDirtyArea, nullptr, nullptr, nullptr,
+  nsSVGFilterInstance instance(aFilteredFrame, aPaintCallback, aDirtyArea,
+                               nullptr, nullptr, nullptr,
                                aTransformRoot);
   if (!instance.IsInitialized()) {
     return NS_OK;
@@ -41,15 +41,14 @@ nsSVGFilterInstance::PaintFilteredFrame(nsSVGFilterFrame* aFilterFrame,
 }
 
 nsRect
-nsSVGFilterInstance::GetPostFilterDirtyArea(nsSVGFilterFrame* aFilterFrame,
-                                            nsIFrame *aFilteredFrame,
+nsSVGFilterInstance::GetPostFilterDirtyArea(nsIFrame *aFilteredFrame,
                                             const nsRect& aPreFilterDirtyRect)
 {
   if (aPreFilterDirtyRect.IsEmpty()) {
     return nsRect();
   }
 
-  nsSVGFilterInstance instance(aFilteredFrame, aFilterFrame, nullptr, nullptr,
+  nsSVGFilterInstance instance(aFilteredFrame, nullptr, nullptr,
                                &aPreFilterDirtyRect);
   if (!instance.IsInitialized()) {
     return nsRect();
@@ -66,12 +65,10 @@ nsSVGFilterInstance::GetPostFilterDirtyArea(nsSVGFilterFrame* aFilterFrame,
 }
 
 nsRect
-nsSVGFilterInstance::GetPreFilterNeededArea(nsSVGFilterFrame* aFilterFrame,
-                                            nsIFrame *aFilteredFrame,
+nsSVGFilterInstance::GetPreFilterNeededArea(nsIFrame *aFilteredFrame,
                                             const nsRect& aPostFilterDirtyRect)
 {
-  nsSVGFilterInstance instance(aFilteredFrame, aFilterFrame, nullptr,
-                               &aPostFilterDirtyRect);
+  nsSVGFilterInstance instance(aFilteredFrame, nullptr, &aPostFilterDirtyRect);
   if (!instance.IsInitialized()) {
     return nsRect();
   }
@@ -86,8 +83,7 @@ nsSVGFilterInstance::GetPreFilterNeededArea(nsSVGFilterFrame* aFilterFrame,
 }
 
 nsRect
-nsSVGFilterInstance::GetPostFilterBounds(nsSVGFilterFrame* aFilterFrame,
-                                         nsIFrame *aFilteredFrame,
+nsSVGFilterInstance::GetPostFilterBounds(nsIFrame *aFilteredFrame,
                                          const gfxRect *aOverrideBBox,
                                          const nsRect *aPreFilterBounds)
 {
@@ -95,7 +91,7 @@ nsSVGFilterInstance::GetPostFilterBounds(nsSVGFilterFrame* aFilterFrame,
              !(aFilteredFrame->GetStateBits() & NS_FRAME_IS_NONDISPLAY),
              "Non-display SVG do not maintain visual overflow rects");
 
-  nsSVGFilterInstance instance(aFilteredFrame, aFilterFrame, nullptr, nullptr,
+  nsSVGFilterInstance instance(aFilteredFrame, nullptr, nullptr,
                                aPreFilterBounds, aPreFilterBounds,
                                aOverrideBBox);
   if (!instance.IsInitialized()) {
@@ -110,7 +106,6 @@ nsSVGFilterInstance::GetPostFilterBounds(nsSVGFilterFrame* aFilterFrame,
 }
 
 nsSVGFilterInstance::nsSVGFilterInstance(nsIFrame *aTargetFrame,
-                                         nsSVGFilterFrame *aFilterFrame,
                                          nsSVGFilterPaintCallback *aPaintCallback,
                                          const nsRect *aPostFilterDirtyRect,
                                          const nsRect *aPreFilterDirtyRect,
@@ -118,14 +113,26 @@ nsSVGFilterInstance::nsSVGFilterInstance(nsIFrame *aTargetFrame,
                                          const gfxRect *aOverrideBBox,
                                          nsIFrame* aTransformRoot) :
   mTargetFrame(aTargetFrame),
+  mFilters(aTargetFrame->StyleSVGReset()->mFilters),
   mPaintCallback(aPaintCallback),
   mTransformRoot(aTransformRoot),
   mInitialized(false) {
 
-  mFilterElement =  aFilterFrame->GetFilterContent();
+  // Get the filter frame.
+  mFilterFrame = GetFilterFrame();
+  if (!mFilterFrame) {
+    return;
+  }
+
+  // Get the filter element.
+  mFilterElement = mFilterFrame->GetFilterContent();
+  if (!mFilterElement) {
+    NS_NOTREACHED("filter frame should have a related element");
+    return;
+  }
 
   mPrimitiveUnits =
-    aFilterFrame->GetEnumValue(SVGFilterElement::PRIMITIVEUNITS);
+    mFilterFrame->GetEnumValue(SVGFilterElement::PRIMITIVEUNITS);
 
   mTargetBBox = aOverrideBBox ?
     *aOverrideBBox : nsSVGUtils::GetBBox(mTargetFrame);
@@ -147,12 +154,12 @@ nsSVGFilterInstance::nsSVGFilterInstance(nsIFrame *aTargetFrame,
                     "XYWH size incorrect");
   memcpy(XYWH, mFilterElement->mLengthAttributes, 
     sizeof(mFilterElement->mLengthAttributes));
-  XYWH[0] = *aFilterFrame->GetLengthValue(SVGFilterElement::ATTR_X);
-  XYWH[1] = *aFilterFrame->GetLengthValue(SVGFilterElement::ATTR_Y);
-  XYWH[2] = *aFilterFrame->GetLengthValue(SVGFilterElement::ATTR_WIDTH);
-  XYWH[3] = *aFilterFrame->GetLengthValue(SVGFilterElement::ATTR_HEIGHT);
+  XYWH[0] = *mFilterFrame->GetLengthValue(SVGFilterElement::ATTR_X);
+  XYWH[1] = *mFilterFrame->GetLengthValue(SVGFilterElement::ATTR_Y);
+  XYWH[2] = *mFilterFrame->GetLengthValue(SVGFilterElement::ATTR_WIDTH);
+  XYWH[3] = *mFilterFrame->GetLengthValue(SVGFilterElement::ATTR_HEIGHT);
   uint16_t filterUnits =
-    aFilterFrame->GetEnumValue(SVGFilterElement::FILTERUNITS);
+    mFilterFrame->GetEnumValue(SVGFilterElement::FILTERUNITS);
   // The filter region in user space, in user units:
   mFilterRegion = nsSVGUtils::GetRelativeRect(filterUnits,
     XYWH, mTargetBBox, mTargetFrame);
@@ -171,7 +178,7 @@ nsSVGFilterInstance::nsSVGFilterInstance(nsIFrame *aTargetFrame,
 
   gfxIntSize filterRes;
   const nsSVGIntegerPair* filterResAttrs =
-    aFilterFrame->GetIntegerPairValue(SVGFilterElement::FILTERRES);
+    mFilterFrame->GetIntegerPairValue(SVGFilterElement::FILTERRES);
   if (filterResAttrs->IsExplicitlySet()) {
     int32_t filterResX = filterResAttrs->GetAnimValue(nsSVGIntegerPair::eFirst);
     int32_t filterResY = filterResAttrs->GetAnimValue(nsSVGIntegerPair::eSecond);
@@ -248,6 +255,57 @@ nsSVGFilterInstance::nsSVGFilterInstance(nsIFrame *aTargetFrame,
   }
 
   mInitialized = true;
+}
+
+nsSVGFilterFrame*
+nsSVGFilterInstance::GetFilterFrame()
+{
+  if (mFilters.Length() <= 0) {
+    // There are no filters.
+    return nullptr;
+  }
+
+  // For now, use the first filter in the chain. Later, nsSVGFilterInstance will
+  // receive the exact filter that it should use, instead of choosing one from a
+  // chain of filters.
+  const nsStyleFilter& filter = mFilters[0];
+  if (filter.GetType() != NS_STYLE_FILTER_URL) {
+    // The filter is not an SVG reference filter.
+    return nullptr;
+  }
+
+  nsIURI* url = filter.GetURL();
+  if (!url) {
+    NS_NOTREACHED("an nsStyleFilter of type URL should have a non-null URL");
+    return nullptr;
+  }
+
+  // Get the target element to use as a point of reference for looking up the
+  // filter element.
+  nsIContent* targetElement = mTargetFrame->GetContent();
+  if (!targetElement) {
+    // There is no element associated with the target frame.
+    return nullptr;
+  }
+
+  // Look up the filter element by URL.
+  nsReferencedElement filterElement;
+  bool watch = false;
+  filterElement.Reset(targetElement, url, watch);
+  Element* element = filterElement.get();
+  if (!element) {
+    // The URL points to no element.
+    return nullptr;
+  }
+
+  // Get the frame of the filter element.
+  nsIFrame* frame = element->GetPrimaryFrame();
+  if (frame->GetType() != nsGkAtoms::svgFilterFrame) {
+    // The URL points to an element that's not an SVG filter element.
+    return nullptr;
+  }
+
+  return static_cast<nsSVGFilterFrame*>(frame);
 }
 
 float

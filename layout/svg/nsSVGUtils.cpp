@@ -35,7 +35,6 @@
 #include "nsSVGClipPathFrame.h"
 #include "nsSVGContainerFrame.h"
 #include "nsSVGEffects.h"
-#include "nsSVGFilterFrame.h"
 #include "nsSVGFilterInstance.h"
 #include "nsSVGFilterPaintCallback.h"
 #include "nsSVGForeignObjectFrame.h"
@@ -160,13 +159,12 @@ nsSVGUtils::GetPostFilterVisualOverflowRect(nsIFrame *aFrame,
   NS_ABORT_IF_FALSE(aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT,
                     "Called on invalid frame type");
 
-  nsSVGFilterFrame *filterFrame = nsSVGEffects::GetFilterFrame(aFrame);
-  if (!filterFrame) {
+  nsSVGFilterProperty *property = nsSVGEffects::GetFilterProperty(aFrame);
+  if (!property || !property->ReferencesValidResources()) {
     return aPreFilterRect;
   }
 
-  return nsSVGFilterInstance::GetPostFilterBounds(filterFrame, aFrame, nullptr,
-                                                  &aPreFilterRect);
+  return nsSVGFilterInstance::GetPostFilterBounds(aFrame, nullptr, &aPreFilterRect);
 }
 
 bool
@@ -499,8 +497,7 @@ nsSVGUtils::PaintFrameWithEffects(nsRenderingContext *aContext,
   nsSVGEffects::EffectProperties effectProperties =
     nsSVGEffects::GetEffectProperties(aFrame);
 
-  bool isOK = true;
-  nsSVGFilterFrame *filterFrame = effectProperties.GetFilterFrame(&isOK);
+  bool isOK = effectProperties.HasNoFilterOrHasValidFilter();
 
   if (aDirtyRect &&
       !(aFrame->GetStateBits() & NS_FRAME_IS_NONDISPLAY)) {
@@ -601,7 +598,7 @@ nsSVGUtils::PaintFrameWithEffects(nsRenderingContext *aContext,
   }
 
   /* Paint the child */
-  if (filterFrame) {
+  if (effectProperties.HasValidFilter()) {
     nsRect* dirtyRect = nullptr;
     nsRect tmpDirtyRect;
     if (aDirtyRect) {
@@ -624,9 +621,8 @@ nsSVGUtils::PaintFrameWithEffects(nsRenderingContext *aContext,
       dirtyRect = &tmpDirtyRect;
     }
     SVGPaintCallback paintCallback;
-    nsSVGFilterInstance::PaintFilteredFrame(filterFrame, aContext, aFrame,
-                                            &paintCallback, dirtyRect,
-                                            aTransformRoot);
+    nsSVGFilterInstance::PaintFilteredFrame(aContext, aFrame, &paintCallback,
+                                            dirtyRect, aTransformRoot);
   } else {
     svgChildFrame->PaintSVG(aContext, aDirtyRect, aTransformRoot);
   }
