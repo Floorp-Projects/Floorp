@@ -953,6 +953,5 @@ CreateFileHelper::GetSuccessResult(JSContext* aCx,
     IDBFileHandle::Create(mDatabase, mName, mType, mFileInfo.forget());
   IDB_ENSURE_TRUE(fileHandle, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-  return WrapNative(aCx, NS_ISUPPORTS_CAST(nsIDOMFileHandle*, fileHandle),
-                    aVal);
+  return WrapNative(aCx, NS_ISUPPORTS_CAST(EventTarget*, fileHandle), aVal);
 }
