@@ -784,6 +784,7 @@ js::FillSelfHostingCompileOptions(CompileOptions &options)
      * is supported, for which bytecode is emitted that invokes |fun| with
      * |receiver| as the this-object and ...args as the arguments.
      */
+    options.setIntroductionType("self-hosted");
     options.setFileAndLine("self-hosted", 1);
     options.setSelfHostingMode(true);
     options.setCanLazilyParse(false);
