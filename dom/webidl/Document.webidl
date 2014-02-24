@@ -240,7 +240,15 @@ partial interface Document {
 //http://dvcs.w3.org/hg/webcomponents/raw-file/tip/spec/custom/index.html#dfn-document-register
 partial interface Document {
     [Throws, Pref="dom.webcomponents.enabled"]
-    object register(DOMString name, optional ElementRegistrationOptions options);
+    object registerElement(DOMString name, optional ElementRegistrationOptions options);
+};
+
+//http://dvcs.w3.org/hg/webcomponents/raw-file/tip/spec/custom/index.html#dfn-document-register
+partial interface Document {
+    [NewObject, Throws]
+    Element createElement(DOMString localName, DOMString typeExtension);
+    [NewObject, Throws]
+    Element createElementNS(DOMString? namespace, DOMString qualifiedName, DOMString typeExtension);
 };
 
 // http://dvcs.w3.org/hg/webperf/raw-file/tip/specs/PageVisibility/Overview.html#sec-document-interface

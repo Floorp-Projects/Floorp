@@ -96,6 +96,7 @@ namespace dom {
 class Attr;
 class CDATASection;
 class Comment;
+struct CustomElementDefinition;
 class DocumentFragment;
 class DocumentType;
 class DOMImplementation;
@@ -104,6 +105,7 @@ struct ElementRegistrationOptions;
 class EventTarget;
 class FrameRequestCallback;
 class HTMLBodyElement;
+struct LifecycleCallbackArgs;
 class Link;
 class GlobalObject;
 class NodeFilter;
@@ -122,8 +124,8 @@ typedef CallbackObjectHolder<NodeFilter, nsIDOMNodeFilter> NodeFilterHolder;
 } // namespace mozilla
 
 #define NS_IDOCUMENT_IID \
-{ 0x56a350f4, 0xc286, 0x440c, \
-  { 0x85, 0xb1, 0xb6, 0x55, 0x77, 0xeb, 0x63, 0xfd } }
+{ 0x595492bc, 0xa26d, 0x46a9, \
+  { 0xa9, 0x35, 0x0c, 0x40, 0xdd, 0xc2, 0x77, 0x51 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -1986,10 +1988,36 @@ public:
   {
     return GetRootElement();
   }
+
+  enum ElementCallbackType {
+    eCreated,
+    eEnteredView,
+    eLeftView,
+    eAttributeChanged
+  };
+
+  /**
+   * Registers an unresolved custom element that is a candidate for
+   * upgrade when the definition is registered via registerElement.
+   * |aTypeName| is the name of the custom element type, if it is not
+   * provided, then element name is used. |aTypeName| should be provided
+   * when registering a custom element that extends an existing
+   * element. e.g. <button is="x-button">.
+   */
+  virtual nsresult RegisterUnresolvedElement(Element* aElement,
+                                             nsIAtom* aTypeName = nullptr) = 0;
+  virtual void EnqueueLifecycleCallback(ElementCallbackType aType,
+                                        Element* aCustomElement,
+                                        mozilla::dom::LifecycleCallbackArgs* aArgs = nullptr,
+                                        mozilla::dom::CustomElementDefinition* aDefinition = nullptr) = 0;
+  virtual void SwizzleCustomElement(Element* aElement,
+                                    const nsAString& aTypeExtension,
+                                    uint32_t aNamespaceID,
+                                    mozilla::ErrorResult& rv) = 0;
   virtual JSObject*
-  Register(JSContext* aCx, const nsAString& aName,
-           const mozilla::dom::ElementRegistrationOptions& aOptions,
-           mozilla::ErrorResult& rv) = 0;
+    RegisterElement(JSContext* aCx, const nsAString& aName,
+                    const mozilla::dom::ElementRegistrationOptions& aOptions,
+                    mozilla::ErrorResult& rv) = 0;
   already_AddRefed<nsContentList>
   GetElementsByTagName(const nsAString& aTagName)
   {
@@ -2007,6 +2035,13 @@ public:
   already_AddRefed<Element> CreateElementNS(const nsAString& aNamespaceURI,
                                             const nsAString& aQualifiedName,
                                             mozilla::ErrorResult& rv);
+  virtual already_AddRefed<Element> CreateElement(const nsAString& aTagName,
+                                                  const nsAString& aTypeExtension,
+                                                  mozilla::ErrorResult& rv) = 0;
+  virtual already_AddRefed<Element> CreateElementNS(const nsAString& aNamespaceURI,
+                                                    const nsAString& aQualifiedName,
+                                                    const nsAString& aTypeExtension,
+                                                    mozilla::ErrorResult& rv) = 0;
   already_AddRefed<mozilla::dom::DocumentFragment>
     CreateDocumentFragment() const;
   already_AddRefed<nsTextNode> CreateTextNode(const nsAString& aData) const;
