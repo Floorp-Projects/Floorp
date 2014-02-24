@@ -17,8 +17,18 @@ using base::TimeDelta;
 
 ConditionVariable::ConditionVariable(Lock* user_lock)
     : user_mutex_(user_lock->lock_impl()->os_lock()) {
-  int rv = pthread_cond_init(&condition_, NULL);
-  DCHECK(rv == 0);
+  int rv = 0;
+#if !defined(OS_MACOSX) && !defined(OS_ANDROID)
+  pthread_condattr_t attrs;
+  rv = pthread_condattr_init(&attrs);
+  DCHECK_EQ(0, rv);
+  pthread_condattr_setclock(&attrs, CLOCK_MONOTONIC);
+  rv = pthread_cond_init(&condition_, &attrs);
+  pthread_condattr_destroy(&attrs);
+#else
+  rv = pthread_cond_init(&condition_, NULL);
+#endif
+  DCHECK_EQ(0, rv);
 }
 
 ConditionVariable::~ConditionVariable() {
@@ -34,19 +44,36 @@ void ConditionVariable::Wait() {
 void ConditionVariable::TimedWait(const TimeDelta& max_time) {
   int64_t usecs = max_time.InMicroseconds();
 
+  struct timespec relative_time;
+  relative_time.tv_sec = usecs / Time::kMicrosecondsPerSecond;
+  relative_time.tv_nsec =
+      (usecs % Time::kMicrosecondsPerSecond) * Time::kNanosecondsPerMicrosecond;
+
+#if defined(OS_MACOSX)
+  int rv = pthread_cond_timedwait_relative_np(
+      &condition_, user_mutex_, &relative_time);
+#else
   // The timeout argument to pthread_cond_timedwait is in absolute time.
-  struct timeval now;
-  gettimeofday(&now, NULL);
+  struct timespec now;
+  clock_gettime(CLOCK_MONOTONIC, &now);
 
-  struct timespec abstime;
-  abstime.tv_sec = now.tv_sec + (usecs / Time::kMicrosecondsPerSecond);
-  abstime.tv_nsec = (now.tv_usec + (usecs % Time::kMicrosecondsPerSecond)) *
-                    Time::kNanosecondsPerMicrosecond;
-  abstime.tv_sec += abstime.tv_nsec / Time::kNanosecondsPerSecond;
-  abstime.tv_nsec %= Time::kNanosecondsPerSecond;
-  DCHECK(abstime.tv_sec >= now.tv_sec);  // Overflow paranoia
+  struct timespec absolute_time;
+  absolute_time.tv_sec = now.tv_sec;
+  absolute_time.tv_nsec = now.tv_nsec;
+  absolute_time.tv_sec += relative_time.tv_sec;
+  absolute_time.tv_nsec += relative_time.tv_nsec;
+  absolute_time.tv_sec += absolute_time.tv_nsec / Time::kNanosecondsPerSecond;
+  absolute_time.tv_nsec %= Time::kNanosecondsPerSecond;
+  DCHECK_GE(absolute_time.tv_sec, now.tv_sec);  // Overflow paranoia
 
-  int rv = pthread_cond_timedwait(&condition_, user_mutex_, &abstime);
+#if defined(OS_ANDROID)
+  int rv = pthread_cond_timedwait_monotonic_np(
+      &condition_, user_mutex_, &absolute_time);
+#else
+  int rv = pthread_cond_timedwait(&condition_, user_mutex_, &absolute_time);
+#endif  // OS_ANDROID
+#endif  // OS_MACOSX
+
   DCHECK(rv == 0 || rv == ETIMEDOUT);
 }
 
