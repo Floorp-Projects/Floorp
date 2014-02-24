@@ -1233,12 +1233,7 @@ CSSValue*
 nsComputedDOMStyle::DoGetPerspective()
 {
     nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
-    if (StyleDisplay()->mChildPerspective.GetUnit() == eStyleUnit_Coord &&
-        StyleDisplay()->mChildPerspective.GetCoordValue() == 0.0) {
-        val->SetIdent(eCSSKeyword_none);
-    } else {
-        SetValueToCoord(val, StyleDisplay()->mChildPerspective, false);
-    }
+    SetValueToCoord(val, StyleDisplay()->mChildPerspective, false);
     return val;
 }
 
