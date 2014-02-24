@@ -170,6 +170,7 @@ frontend::CreateScriptSourceObject(ExclusiveContext *cx, const ReadOnlyCompileOp
     ScriptSource *ss = cx->new_<ScriptSource>(options.originPrincipals());
     if (!ss)
         return nullptr;
+    ScriptSourceHolder ssHolder(ss);
 
     if (options.hasIntroductionInfo) {
         const char *filename = options.filename() ? options.filename() : "<unknown>";
