@@ -487,15 +487,25 @@ RilObject.prototype = {
         this.enterICCPUK2(options);
         break;
       case GECKO_CARDLOCK_NCK:
-      case GECKO_CARDLOCK_CCK: // Fall through.
-      case GECKO_CARDLOCK_SPCK: {
+      case GECKO_CARDLOCK_NCK1:
+      case GECKO_CARDLOCK_NCK2:
+      case GECKO_CARDLOCK_HNCK:
+      case GECKO_CARDLOCK_CCK:
+      case GECKO_CARDLOCK_SPCK:
+      case GECKO_CARDLOCK_RCCK: // Fall through.
+      case GECKO_CARDLOCK_RSPCK: {
         let type = GECKO_PERSO_LOCK_TO_CARD_PERSO_LOCK[options.lockType];
         this.enterDepersonalization(type, options.pin, options);
         break;
       }
       case GECKO_CARDLOCK_NCK_PUK:
-      case GECKO_CARDLOCK_CCK_PUK: // Fall through.
-      case GECKO_CARDLOCK_SPCK_PUK: {
+      case GECKO_CARDLOCK_NCK1_PUK:
+      case GECKO_CARDLOCK_NCK2_PUK:
+      case GECKO_CARDLOCK_HNCK_PUK:
+      case GECKO_CARDLOCK_CCK_PUK:
+      case GECKO_CARDLOCK_SPCK_PUK:
+      case GECKO_CARDLOCK_RCCK_PUK: // Fall through.
+      case GECKO_CARDLOCK_RSPCK_PUK: {
         let type = GECKO_PERSO_LOCK_TO_CARD_PERSO_LOCK[options.lockType];
         this.enterDepersonalization(type, options.puk, options);
         break;

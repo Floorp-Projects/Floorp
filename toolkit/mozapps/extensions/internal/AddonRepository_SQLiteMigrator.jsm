@@ -6,10 +6,11 @@
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
+const Cu = Components.utils;
 
-Components.utils.import("resource://gre/modules/Services.jsm");
-Components.utils.import("resource://gre/modules/AddonManager.jsm");
-Components.utils.import("resource://gre/modules/FileUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/AddonManager.jsm");
+Cu.import("resource://gre/modules/FileUtils.jsm");
 
 const KEY_PROFILEDIR  = "ProfD";
 const FILE_DATABASE   = "addons.sqlite";
@@ -24,16 +25,12 @@ const PROP_SINGLE = ["id", "type", "name", "version", "creator", "description",
                      "dailyUsers", "sourceURI", "repositoryStatus", "size",
                      "updateDate"];
 
+Cu.import("resource://gre/modules/Log.jsm");
+const LOGGER_ID = "addons.repository.sqlmigrator";
 
-["LOG", "WARN", "ERROR"].forEach(function(aName) {
-  this.__defineGetter__(aName, function logFuncGetter() {
-    Components.utils.import("resource://gre/modules/addons/AddonLogging.jsm");
-
-    LogManager.getLogger("addons.repository.sqlmigrator", this);
-    return this[aName];
-  });
-}, this);
-
+// Create a new logger for use by the Addons Repository SQL Migrator
+// (Requires AddonManager.jsm)
+let logger = Log.repository.getLogger(LOGGER_ID);
 
 this.EXPORTED_SYMBOLS = ["AddonRepository_SQLiteMigrator"];
 
@@ -59,12 +56,12 @@ this.AddonRepository_SQLiteMigrator = {
       return false;
     }
 
-    LOG("Importing addon repository from previous " + FILE_DATABASE + " storage.");
+    logger.debug("Importing addon repository from previous " + FILE_DATABASE + " storage.");
 
     this._retrieveStoredData((results) => {
       this._closeConnection();
       let resultArray = [addon for ([,addon] of Iterator(results))];
-      LOG(resultArray.length + " addons imported.")
+      logger.debug(resultArray.length + " addons imported.")
       aCallback(resultArray);
     });
 
@@ -100,13 +97,13 @@ this.AddonRepository_SQLiteMigrator = {
           return false;
 
         case 1:
-          LOG("Upgrading database schema to version 2");
+          logger.debug("Upgrading database schema to version 2");
           this.connection.executeSimpleSQL("ALTER TABLE screenshot ADD COLUMN width INTEGER");
           this.connection.executeSimpleSQL("ALTER TABLE screenshot ADD COLUMN height INTEGER");
           this.connection.executeSimpleSQL("ALTER TABLE screenshot ADD COLUMN thumbnailWidth INTEGER");
           this.connection.executeSimpleSQL("ALTER TABLE screenshot ADD COLUMN thumbnailHeight INTEGER");
         case 2:
-          LOG("Upgrading database schema to version 3");
+          logger.debug("Upgrading database schema to version 3");
           this.connection.createTable("compatibility_override",
                                       "addon_internal_id INTEGER, " +
                                       "num INTEGER, " +
@@ -118,7 +115,7 @@ this.AddonRepository_SQLiteMigrator = {
                                       "appMaxVersion TEXT, " +
                                       "PRIMARY KEY (addon_internal_id, num)");
         case 3:
-          LOG("Upgrading database schema to version 4");
+          logger.debug("Upgrading database schema to version 4");
           this.connection.createTable("icon",
                                       "addon_internal_id INTEGER, " +
                                       "size INTEGER, " +
@@ -134,7 +131,7 @@ this.AddonRepository_SQLiteMigrator = {
       }
       this.connection.commitTransaction();
     } catch (e) {
-      ERROR("Failed to open " + FILE_DATABASE + ". Data import will not happen.", e);
+      logger.error("Failed to open " + FILE_DATABASE + ". Data import will not happen.", e);
       this.logSQLError(this.connection.lastError, this.connection.lastErrorString);
       this.connection.rollbackTransaction();
       return false;
@@ -180,7 +177,7 @@ this.AddonRepository_SQLiteMigrator = {
 
         handleCompletion: function getAllAddons_handleCompletion(aReason) {
           if (aReason != Ci.mozIStorageStatementCallback.REASON_FINISHED) {
-            ERROR("Error retrieving add-ons from database. Returning empty results");
+            logger.error("Error retrieving add-ons from database. Returning empty results");
             aCallback({});
             return;
           }
@@ -198,7 +195,7 @@ this.AddonRepository_SQLiteMigrator = {
           while ((row = aResults.getNextRow())) {
             let addon_internal_id = row.getResultByName("addon_internal_id");
             if (!(addon_internal_id in addons)) {
-              WARN("Found a developer not linked to an add-on in database");
+              logger.warn("Found a developer not linked to an add-on in database");
               continue;
             }
 
@@ -214,7 +211,7 @@ this.AddonRepository_SQLiteMigrator = {
 
         handleCompletion: function getAllDevelopers_handleCompletion(aReason) {
           if (aReason != Ci.mozIStorageStatementCallback.REASON_FINISHED) {
-            ERROR("Error retrieving developers from database. Returning empty results");
+            logger.error("Error retrieving developers from database. Returning empty results");
             aCallback({});
             return;
           }
@@ -232,7 +229,7 @@ this.AddonRepository_SQLiteMigrator = {
           while ((row = aResults.getNextRow())) {
             let addon_internal_id = row.getResultByName("addon_internal_id");
             if (!(addon_internal_id in addons)) {
-              WARN("Found a screenshot not linked to an add-on in database");
+              logger.warn("Found a screenshot not linked to an add-on in database");
               continue;
             }
 
@@ -247,7 +244,7 @@ this.AddonRepository_SQLiteMigrator = {
 
         handleCompletion: function getAllScreenshots_handleCompletion(aReason) {
           if (aReason != Ci.mozIStorageStatementCallback.REASON_FINISHED) {
-            ERROR("Error retrieving screenshots from database. Returning empty results");
+            logger.error("Error retrieving screenshots from database. Returning empty results");
             aCallback({});
             return;
           }
@@ -264,7 +261,7 @@ this.AddonRepository_SQLiteMigrator = {
           while ((row = aResults.getNextRow())) {
             let addon_internal_id = row.getResultByName("addon_internal_id");
             if (!(addon_internal_id in addons)) {
-              WARN("Found a compatibility override not linked to an add-on in database");
+              logger.warn("Found a compatibility override not linked to an add-on in database");
               continue;
             }
 
@@ -279,7 +276,7 @@ this.AddonRepository_SQLiteMigrator = {
 
         handleCompletion: function getAllCompatOverrides_handleCompletion(aReason) {
           if (aReason != Ci.mozIStorageStatementCallback.REASON_FINISHED) {
-            ERROR("Error retrieving compatibility overrides from database. Returning empty results");
+            logger.error("Error retrieving compatibility overrides from database. Returning empty results");
             aCallback({});
             return;
           }
@@ -296,7 +293,7 @@ this.AddonRepository_SQLiteMigrator = {
           while ((row = aResults.getNextRow())) {
             let addon_internal_id = row.getResultByName("addon_internal_id");
             if (!(addon_internal_id in addons)) {
-              WARN("Found an icon not linked to an add-on in database");
+              logger.warn("Found an icon not linked to an add-on in database");
               continue;
             }
 
@@ -312,7 +309,7 @@ this.AddonRepository_SQLiteMigrator = {
 
         handleCompletion: function getAllIcons_handleCompletion(aReason) {
           if (aReason != Ci.mozIStorageStatementCallback.REASON_FINISHED) {
-            ERROR("Error retrieving icons from database. Returning empty results");
+            logger.error("Error retrieving icons from database. Returning empty results");
             aCallback({});
             return;
           }
@@ -349,7 +346,7 @@ this.AddonRepository_SQLiteMigrator = {
     try {
       return this.asyncStatementsCache[aKey] = this.connection.createAsyncStatement(sql);
     } catch (e) {
-      ERROR("Error creating statement " + aKey + " (" + sql + ")");
+      logger.error("Error creating statement " + aKey + " (" + sql + ")");
       throw Components.Exception("Error creating statement " + aKey + " (" + sql + "): " + e,
                                  e.result);
     }
@@ -478,7 +475,7 @@ this.AddonRepository_SQLiteMigrator = {
    *         An error message
    */
   logSQLError: function AD_logSQLError(aError, aErrorString) {
-    ERROR("SQL error " + aError + ": " + aErrorString);
+    logger.error("SQL error " + aError + ": " + aErrorString);
   },
 
   /**
@@ -488,7 +485,7 @@ this.AddonRepository_SQLiteMigrator = {
    *         A mozIStorageError to log
    */
   asyncErrorLogger: function AD_asyncErrorLogger(aError) {
-    ERROR("Async SQL error " + aError.result + ": " + aError.message);
+    logger.error("Async SQL error " + aError.result + ": " + aError.message);
   },
 
   /**
