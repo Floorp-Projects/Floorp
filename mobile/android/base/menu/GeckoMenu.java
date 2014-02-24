@@ -734,11 +734,8 @@ public class GeckoMenu extends ListView
 
         @Override
         public boolean areAllItemsEnabled() {
-            for (GeckoMenuItem item : mItems) {
-                 if (!item.isEnabled())
-                     return false;
-            }
-
+            // Setting this to true is a workaround to fix disappearing
+            // dividers in the menu (bug 963249).
             return true;
         }
 
