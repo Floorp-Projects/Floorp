@@ -50,6 +50,7 @@
 #endif
 #include "GeckoProfiler.h"
 #include "mozilla/ipc/ProtocolTypes.h"
+#include "mozilla/unused.h"
 
 using namespace base;
 using namespace mozilla;
@@ -659,6 +660,8 @@ CompositorParent::CompositeToTarget(DrawTarget* aTarget)
   mLayerManager->SetDebugOverlayWantsNextFrame(false);
   mLayerManager->EndEmptyTransaction();
 
+  DidComposite();
+
   if (mLayerManager->DebugOverlayWantsNextFrame()) {
     ScheduleComposition();
   }
@@ -677,6 +680,21 @@ CompositorParent::CompositeToTarget(DrawTarget* aTarget)
   }
 
   profiler_tracing("Paint", "Composite", TRACING_INTERVAL_END);
+}
+
+void
+CompositorParent::DidComposite()
+{
+  unused << SendDidComposite(0);
+
+  for (LayerTreeMap::iterator it = sIndirectLayerTrees.begin();
+       it != sIndirectLayerTrees.end(); it++)
+  {
+    LayerTreeState* lts = &it->second;
+    if (lts->mParent == this && lts->mCrossProcessParent) {
+      unused << lts->mCrossProcessParent->SendDidComposite(it->first);
+    }
+  }
 }
 
 void
