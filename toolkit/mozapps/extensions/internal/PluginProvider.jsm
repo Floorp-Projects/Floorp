@@ -6,24 +6,23 @@
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
+const Cu = Components.utils;
 
 this.EXPORTED_SYMBOLS = [];
 
-Components.utils.import("resource://gre/modules/AddonManager.jsm");
-Components.utils.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/AddonManager.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 const URI_EXTENSION_STRINGS  = "chrome://mozapps/locale/extensions/extensions.properties";
 const STRING_TYPE_NAME       = "type.%ID%.name";
 const LIST_UPDATED_TOPIC     = "plugins-list-updated";
 
-for (let name of ["LOG", "WARN", "ERROR"]) {
-  this.__defineGetter__(name, function() {
-    Components.utils.import("resource://gre/modules/addons/AddonLogging.jsm");
+Cu.import("resource://gre/modules/Log.jsm");
+const LOGGER_ID = "addons.plugins";
 
-    LogManager.getLogger("addons.plugins", this);
-    return this[name];
-  });
-}
+// Create a new logger for use by the Addons Plugin Provider
+// (Requires AddonManager.jsm)
+let logger = Log.repository.getLogger(LOGGER_ID);
 
 function getIDHashForString(aStr) {
   // return the two-digit hexadecimal code for a byte
