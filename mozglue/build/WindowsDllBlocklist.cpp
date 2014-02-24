@@ -614,8 +614,7 @@ DllBlocklist_Initialize()
 
   ReentrancySentinel::InitializeStatics();
 
-  // Use a shared hook since other software may also hook this API (bug 951827)
-  bool ok = NtDllIntercept.AddSharedHook("LdrLoadDll", reinterpret_cast<intptr_t>(patched_LdrLoadDll), (void**) &stub_LdrLoadDll);
+  bool ok = NtDllIntercept.AddHook("LdrLoadDll", reinterpret_cast<intptr_t>(patched_LdrLoadDll), (void**) &stub_LdrLoadDll);
 
   if (!ok) {
     sBlocklistInitFailed = true;
