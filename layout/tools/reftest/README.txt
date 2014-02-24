@@ -400,8 +400,8 @@ reference identical in as many aspects as possible.  For example:
     <div style="color:green"><table><tr><td>green
     </td></tr></table></div>
 
-Asynchronous Tests
-==================
+Asynchronous Tests: class="reftest-wait"
+========================================
 
 Normally reftest takes a snapshot of the given markup's rendering right
 after the load event fires for content. If your test needs to postpone
@@ -421,8 +421,8 @@ Note that in layout tests it is often enough to trigger layout using
 When possible, you should use this technique instead of making your
 test async.
 
-Invalidation Tests
-==================
+Invalidation Tests: MozReftestInvalidate Event
+==============================================
 
 When a test (or reference) uses reftest-wait, reftest tracks invalidation
 via MozAfterPaint and updates the test image in the same way that
@@ -442,16 +442,23 @@ function doTest() {
 }
 document.addEventListener("MozReftestInvalidate", doTest, false);
 
-Painting Tests
-==============
+Painting Tests: class="reftest-no-paint"
+========================================
 
 If an element shouldn't be painted, set the class "reftest-no-paint" on it
 when doing an invalidation test. Causing a repaint in your
 MozReftestInvalidate handler (for example, by changing the body's background
 colour) will accurately test whether the element is painted.
 
-Zoom Tests
-==========
+Snapshot The Whole Window: class="reftest-snapshot-all"
+=======================================================
+
+In a reftest-wait test, to disable testing of invalidation and force the final
+snapshot to be taken of the whole window, set the "reftest-snapshot-all"
+class on the root element.
+
+Zoom Tests: reftest-zoom="<float>"
+==================================
 
 When the root element of a test has a "reftest-zoom" attribute, that zoom
 factor is applied when rendering the test. The reftest document will be
@@ -461,8 +468,30 @@ therefore, choose zoom factors that do not require rounding when we calculate
 the number of appunits per device pixel; i.e. the zoom factor should divide 60,
 so 60/zoom is an integer.
 
-Printing Tests
-==============
+Setting Viewport Size: reftest-viewport-w/h="<int>"
+===================================================
+
+If either of the "reftest-viewport-w" and "reftest-viewport-h" attributes on
+the root element are non-zero, sets the CSS viewport to the given size in
+CSS pixels. This does not affect the size of the snapshot that is taken.
+
+Setting Async Scroll Mode: reftest-async-scroll attribute
+=========================================================
+
+If the "reftest-async-scroll" attribute is set on the root element, we try to
+enable async scrolling for the document. This is unsupported in many
+configurations.
+
+Setting Displayport Dimensions: reftest-displayport-x/y/w/h="<int>"
+===================================================================
+
+If any of the "reftest-displayport-x", "reftest-displayport-y",
+"reftest-displayport-w" and "reftest-displayport-h" attributes on the root
+element are nonzero, sets the displayport dimensions to the given bounds in
+CSS pixels. This does not affect the size of the snapshot that is taken.
+
+Printing Tests: class="reftest-print"
+=====================================
 
 Now that the patch for bug 374050 has landed
 (https://bugzilla.mozilla.org/show_bug.cgi?id=374050), it is possible to
@@ -490,8 +519,8 @@ particular, scripting and frames are likely to cause problems; it is untested,
 though.  That said, it should be sufficient for testing layout issues related
 to pagination.
 
-Plugin and IPC Process Crash Tests
-==================================
+Plugin and IPC Process Crash Tests: class="reftest-expect-process-crash"
+========================================================================
 
 If you are running a test that causes an out-of-process plugin or IPC process
 under Electrolysis to crash as part of a reftest, this will cause process
@@ -508,3 +537,12 @@ IPC process crash, have the test include "reftest-expect-process-crash" as
 one of the root element's classes by the time the test has finished.  This will
 cause any minidump files that are generated while running the test to be removed
 and they won't cause any error messages in the test run output.
+
+Skip Forcing A Content Process Layer-Tree Update: reftest-no-sync-layers attribute
+==================================================================================
+
+Normally when an multi-process reftest test ends, we force the content process
+to push a layer-tree update to the compositor before taking the snapshot.
+Setting the "reftest-no-sync-layers" attribute on the root element skips this
+step, enabling testing that layer-tree updates are being correctly generated.
+However the test must manually wait for a MozAfterPaint event before ending.
