@@ -176,7 +176,6 @@ void CompositableDataGonkOGL::SetCompositor(Compositor* aCompositor)
 
 void CompositableDataGonkOGL::ClearData()
 {
-  CompositableBackendSpecificData::ClearData();
   DeleteTextureIfPresent();
 }
 
@@ -200,41 +199,6 @@ CompositableDataGonkOGL::DeleteTextureIfPresent()
     mTexture = 0;
   }
 }
-
-#if MOZ_WIDGET_GONK && ANDROID_VERSION >= 18
-bool
-TextureHostOGL::SetReleaseFence(const android::sp<android::Fence>& aReleaseFence)
-{
-  if (!aReleaseFence.get() || !aReleaseFence->isValid()) {
-    return false;
-  }
-
-  if (!mReleaseFence.get()) {
-    mReleaseFence = aReleaseFence;
-  } else {
-    android::sp<android::Fence> mergedFence = android::Fence::merge(
-                  android::String8::format("TextureHostOGL"),
-                  mReleaseFence, aReleaseFence);
-    if (!mergedFence.get()) {
-      // synchronization is broken, the best we can do is hope fences
-      // signal in order so the new fence will act like a union.
-      // This error handling is same as android::ConsumerBase does.
-      mReleaseFence = aReleaseFence;
-      return false;
-    }
-    mReleaseFence = mergedFence;
-  }
-  return true;
-}
-
-android::sp<android::Fence>
-TextureHostOGL::GetAndResetReleaseFence()
-{
-  android::sp<android::Fence> fence = mReleaseFence;
-  mReleaseFence = android::Fence::NO_FENCE;
-  return fence;
-}
-#endif
 
 bool
 TextureImageTextureSourceOGL::Update(gfx::DataSourceSurface* aSurface,
@@ -1191,8 +1155,7 @@ GrallocDeprecatedTextureHostOGL::GetRenderState()
 
     return LayerRenderState(mGraphicBuffer.get(),
                             bufferSize,
-                            flags,
-                            nullptr);
+                            flags);
   }
 
   return LayerRenderState();

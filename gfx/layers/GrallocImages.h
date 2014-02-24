@@ -8,12 +8,11 @@
 
 #ifdef MOZ_WIDGET_GONK
 
+#include "mozilla/layers/AtomicRefCountedWithFinalize.h"
+#include "mozilla/layers/LayersSurfaces.h"
+#include "mozilla/gfx/Point.h"
 #include "ImageLayers.h"
 #include "ImageContainer.h"
-#include "mozilla/gfx/Point.h"
-#include "mozilla/layers/AtomicRefCountedWithFinalize.h"
-#include "mozilla/layers/FenceUtils.h"
-#include "mozilla/layers/LayersSurfaces.h"
 
 #include <ui/GraphicBuffer.h>
 
@@ -47,16 +46,6 @@ public:
     return mSurfaceDescriptor;
   }
 
-  void SetReleaseFenceHandle(const FenceHandle& aReleaseFenceHandle)
-  {
-    mReleaseFenceHandle = aReleaseFenceHandle;
-  }
-
-  const FenceHandle& GetReleaseFenceHandle() const
-  {
-    return mReleaseFenceHandle;
-  }
-
 protected:
   virtual void Unlock() {}
 
@@ -76,7 +65,6 @@ private:
 
 protected:
   SurfaceDescriptor mSurfaceDescriptor;
-  FenceHandle mReleaseFenceHandle;
 };
 
 /**

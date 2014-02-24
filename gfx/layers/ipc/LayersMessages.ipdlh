@@ -39,7 +39,6 @@ using mozilla::layers::ScaleMode from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::EventRegions from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::DiagnosticTypes from "mozilla/layers/CompositorTypes.h";
 using struct mozilla::layers::FrameMetrics from "FrameMetrics.h";
-using struct mozilla::layers::FenceHandle from "mozilla/layers/FenceUtils.h";
 
 namespace mozilla {
 namespace layers {
@@ -397,19 +396,11 @@ struct OpTextureSwap {
   SurfaceDescriptor image;
 };
 
-struct ReturnReleaseFence {
-  PCompositable compositable;
-  PTexture texture;
-  FenceHandle fence;
-};
-
 // Unit of a "changeset reply".  This is a weird abstraction, probably
 // only to be used for buffer swapping.
 union EditReply {
   OpContentBufferSwap;
   OpTextureSwap;
-
-  ReturnReleaseFence;
 };
 
 } // namespace
