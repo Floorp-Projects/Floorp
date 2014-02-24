@@ -182,47 +182,61 @@ function setupPrintMode() {
    docShell.contentViewer.setPageMode(true, ps);
 }
 
-function setupDisplayport(contentRootElement) {
+function attrOrDefault(element, attr, def) {
+    return element.hasAttribute(attr) ? element.getAttribute(attr) : def;
+}
+
+function setupViewport(contentRootElement) {
     if (!contentRootElement) {
         return;
     }
 
-    function attrOrDefault(attr, def) {
-        return contentRootElement.hasAttribute(attr) ?
-            contentRootElement.getAttribute(attr) : def;
-    }
-
-    var vw = attrOrDefault("reftest-viewport-w", 0);
-    var vh = attrOrDefault("reftest-viewport-h", 0);
+    var vw = attrOrDefault(contentRootElement, "reftest-viewport-w", 0);
+    var vh = attrOrDefault(contentRootElement, "reftest-viewport-h", 0);
     if (vw !== 0 || vh !== 0) {
         LogInfo("Setting viewport to <w="+ vw +", h="+ vh +">");
         windowUtils().setCSSViewport(vw, vh);
-    }
-
-    // XXX support displayPortX/Y when needed
-    var dpw = attrOrDefault("reftest-displayport-w", 0);
-    var dph = attrOrDefault("reftest-displayport-h", 0);
-    var dpx = attrOrDefault("reftest-displayport-x", 0);
-    var dpy = attrOrDefault("reftest-displayport-y", 0);
-    var elementID = attrOrDefault("reftest-displayport-element", null);
-    if (dpw !== 0 || dph !== 0) {
-        var element = elementID ? content.document.getElementById(elementID) : null;
-        LogInfo("Setting displayport to <x="+ dpx +", y="+ dpy +", w="+ dpw +", h="+ dph +">" +
-                (element ? (" on element with id " + elementID) : " on document element"));
-        windowUtils().setDisplayPortForElement(dpx, dpy, dpw, dph,
-            element ? element : content.document.documentElement);
-    }
-    var asyncScroll = attrOrDefault("reftest-async-scroll", false);
-    if (asyncScroll) {
-      SendEnableAsyncScroll();
     }
 
     // XXX support resolution when needed
 
     // XXX support viewconfig when needed
 }
+ 
+function setupDisplayport(contentRootElement) {
+    if (!contentRootElement) {
+        return;
+    }
 
-function resetDisplayport() {
+    function setupDisplayportForElement(element) {
+        var dpw = attrOrDefault(element, "reftest-displayport-w", 0);
+        var dph = attrOrDefault(element, "reftest-displayport-h", 0);
+        var dpx = attrOrDefault(element, "reftest-displayport-x", 0);
+        var dpy = attrOrDefault(element, "reftest-displayport-y", 0);
+        if (dpw !== 0 || dph !== 0 || dpx != 0 || dpy != 0) {
+            LogInfo("Setting displayport to <x="+ dpx +", y="+ dpy +", w="+ dpw +", h="+ dph +">");
+            windowUtils().setDisplayPortForElement(dpx, dpy, dpw, dph, element);
+        }
+    }
+
+    function setupDisplayportForElementSubtree(element) {
+        setupDisplayportForElement(element);
+        for (var c = element.firstChild; c; c = c.nextSibling) {
+            if (c.nodeType == c.ELEMENT_NODE) {
+                setupDisplayportForElementSubtree(c);
+            }
+        }
+    }
+
+    if (contentRootElement.hasAttribute("reftest-async-scroll")) {
+        SendEnableAsyncScroll();
+        setupDisplayportForElementSubtree(contentRootElement);
+    } else {
+        setupDisplayportForElement(contentRootElement);
+    }
+}
+
+function resetDisplayportAndViewport() {
     // XXX currently the displayport configuration lives on the
     // presshell and so is "reset" on nav when we get a new presshell.
 }
@@ -537,6 +551,7 @@ function OnDocumentLoad(event)
     var contentRootElement = currentDoc ? currentDoc.documentElement : null;
     currentDoc = null;
     setupZoom(contentRootElement);
+    setupViewport(contentRootElement);
     setupDisplayport(contentRootElement);
     var inPrintMode = false;
 
@@ -773,7 +788,7 @@ function RecvLoadScriptTest(uri, timeout)
 function RecvResetRenderingState()
 {
     resetZoom();
-    resetDisplayport();
+    resetDisplayportAndViewport();
 }
 
 function SendAssertionCount(numAssertions)

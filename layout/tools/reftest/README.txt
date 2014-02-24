@@ -490,6 +490,10 @@ If any of the "reftest-displayport-x", "reftest-displayport-y",
 element are nonzero, sets the displayport dimensions to the given bounds in
 CSS pixels. This does not affect the size of the snapshot that is taken.
 
+When the "reftest-async-scroll" attribute is set on the root element, *all*
+elements in the document are checked for "reftest-displayport-x/y/w/h" and have
+displayports set on them when those attributes are present.
+
 Printing Tests: class="reftest-print"
 =====================================
 
