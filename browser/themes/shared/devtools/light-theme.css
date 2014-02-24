@@ -314,4 +314,8 @@ div.CodeMirror span.eval-text {
   -moz-border-end: 1px solid #aaa;
 }
 
+.devtools-responsive-container > .devtools-side-splitter {
+  border-top: 1px solid #aaa;
+}
+
 %include toolbars.inc.css
