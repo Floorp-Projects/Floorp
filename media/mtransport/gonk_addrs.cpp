@@ -18,6 +18,7 @@ extern "C" {
 #include "nsCOMPtr.h"
 #include "nsThreadUtils.h"
 #include "nsServiceManagerUtils.h"
+#include "mozilla/SyncRunnable.h"
 
 namespace {
 struct NetworkInterface {
@@ -104,12 +105,11 @@ nr_stun_get_addrs(nr_local_addr aAddrs[], int aMaxAddrs,
 
   // Get network interface list.
   std::vector<NetworkInterface> interfaces;
-  if (NS_FAILED(NS_DispatchToMainThread(
-                    mozilla::WrapRunnableNMRet(&GetInterfaces, &interfaces, &rv),
-                    NS_DISPATCH_SYNC))) {
-    return R_FAILED;
-  }
-
+  nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
+  mozilla::SyncRunnable::DispatchToThread(
+    mainThread.get(),
+    mozilla::WrapRunnableNMRet(&GetInterfaces, &interfaces, &rv),
+    false);
   if (NS_FAILED(rv)) {
     return R_FAILED;
   }
