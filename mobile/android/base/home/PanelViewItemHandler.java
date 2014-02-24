@@ -6,26 +6,26 @@
 package org.mozilla.gecko.home;
 
 import org.mozilla.gecko.db.BrowserContract.HomeItems;
-import org.mozilla.gecko.home.HomeConfig.ItemHandler;
 import org.mozilla.gecko.home.HomeConfig.ViewConfig;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import org.mozilla.gecko.home.PanelLayout.FilterManager;
+import org.mozilla.gecko.home.PanelLayout.OnItemOpenListener;
 
 import android.database.Cursor;
 
 import java.util.EnumSet;
 
-class PanelViewUrlHandler {
+class PanelViewItemHandler {
     private final ViewConfig mViewConfig;
-    private OnUrlOpenListener mUrlOpenListener;
+    private OnItemOpenListener mItemOpenListener;
     private FilterManager mFilterManager;
 
-    public PanelViewUrlHandler(ViewConfig viewConfig) {
+    public PanelViewItemHandler(ViewConfig viewConfig) {
         mViewConfig = viewConfig;
     }
 
-    public void setOnUrlOpenListener(OnUrlOpenListener listener) {
-        mUrlOpenListener = listener;
+    public void setOnItemOpenListener(OnItemOpenListener listener) {
+        mItemOpenListener = listener;
     }
 
     public void setFilterManager(FilterManager manager) {
@@ -37,7 +37,7 @@ class PanelViewUrlHandler {
      * {@code FilterManager}. Otherwise, prepare the url to be opened by the
      * {@code OnUrlOpenListener}.
      */
-    public void openUrlAtPosition(Cursor cursor, int position) {
+    public void openItemAtPosition(Cursor cursor, int position) {
         if (mFilterManager != null && mFilterManager.canGoBack()) {
             if (position == 0) {
                 mFilterManager.goBack();
@@ -54,13 +54,11 @@ class PanelViewUrlHandler {
         int urlIndex = cursor.getColumnIndexOrThrow(HomeItems.URL);
         final String url = cursor.getString(urlIndex);
 
-        EnumSet<OnUrlOpenListener.Flags> flags = EnumSet.noneOf(OnUrlOpenListener.Flags.class);
-        if (mViewConfig.getItemHandler() == ItemHandler.INTENT) {
-            flags.add(OnUrlOpenListener.Flags.OPEN_WITH_INTENT);
-        }
+        int titleIndex = cursor.getColumnIndexOrThrow(HomeItems.TITLE);
+        final String title = cursor.getString(titleIndex);
 
-        if (mUrlOpenListener != null) {
-            mUrlOpenListener.onUrlOpen(url, flags);
+        if (mItemOpenListener != null) {
+            mItemOpenListener.onItemOpen(url, title);
         }
     }
 }
