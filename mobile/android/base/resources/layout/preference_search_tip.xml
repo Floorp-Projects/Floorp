@@ -9,24 +9,18 @@
               android:layout_height="fill_parent"
               android:paddingRight="?android:attr/scrollbarSize">
 
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="right"
-        android:layout_marginLeft="15dip"
-        android:layout_marginRight="6dip"
-        android:layout_marginTop="5dip"
-        android:layout_marginBottom="6dip"
-        android:paddingRight="6dip"
-        android:layout_weight="1">
-
-        <TextView android:layout_height="wrap_content"
-                  android:layout_width="wrap_content"
-                  android:paddingTop="8dp"
-                  android:paddingBottom="8dp"
-                  android:text="@string/pref_search_tip"/>
-
-    </RelativeLayout>
+    <TextView android:id="@+id/label_search_hint"
+              android:layout_height="wrap_content"
+              android:layout_width="wrap_content"
+              android:text="@string/pref_search_hint"
+              android:layout_marginTop="5dip"
+              android:layout_marginBottom="6dip"
+              android:layout_marginLeft="15dip"
+              android:layout_marginRight="6dip"
+              android:paddingTop="8dp"
+              android:paddingBottom="8dp"
+              android:paddingRight="6dip"
+              android:layout_weight="1"/>
 
     <ImageView android:layout_height="wrap_content"
                android:layout_width="wrap_content"

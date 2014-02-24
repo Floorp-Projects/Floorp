@@ -25,7 +25,8 @@
 
     <PreferenceCategory android:title="@string/pref_category_add_search_providers">
 
-        <Preference android:layout="@layout/preference_search_tip"
+        <org.mozilla.gecko.preferences.ModifiableHintPreference
+                    android:layout="@layout/preference_search_tip"
                     android:enabled="false"
                     android:selectable="false"/>
 
