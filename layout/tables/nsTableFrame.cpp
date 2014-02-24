@@ -1062,7 +1062,7 @@ public:
                                          const nsDisplayItemGeometry* aGeometry,
                                          nsRegion *aInvalidRegion) MOZ_OVERRIDE;
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsRenderingContext* aCtx);
+                     nsRenderingContext* aCtx) MOZ_OVERRIDE;
   NS_DISPLAY_DECL_NAME("TableBorderBackground", TYPE_TABLE_BORDER_BACKGROUND)
 };
 
@@ -4523,7 +4523,7 @@ public:
   nsDelayedCalcBCBorders(nsIFrame* aFrame) :
     mFrame(aFrame) {}
 
-  NS_IMETHOD Run() {
+  NS_IMETHOD Run() MOZ_OVERRIDE {
     if (mFrame) {
       nsTableFrame* tableFrame = static_cast <nsTableFrame*>(mFrame.GetFrame());
       if (tableFrame->NeedToCalcBCBorders()) {

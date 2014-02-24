@@ -27,22 +27,22 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD SetShowFrameBorders(bool aEnable);
+  NS_IMETHOD SetShowFrameBorders(bool aEnable) MOZ_OVERRIDE;
 
-  NS_IMETHOD GetShowFrameBorders(bool* aResult);
+  NS_IMETHOD GetShowFrameBorders(bool* aResult) MOZ_OVERRIDE;
 
-  NS_IMETHOD SetShowEventTargetFrameBorder(bool aEnable);
+  NS_IMETHOD SetShowEventTargetFrameBorder(bool aEnable) MOZ_OVERRIDE;
 
-  NS_IMETHOD GetShowEventTargetFrameBorder(bool* aResult);
+  NS_IMETHOD GetShowEventTargetFrameBorder(bool* aResult) MOZ_OVERRIDE;
 
   NS_IMETHOD GetContentSize(nsIDocument* aDocument,
-                            int32_t* aSizeInBytesResult);
+                            int32_t* aSizeInBytesResult) MOZ_OVERRIDE;
 
   NS_IMETHOD GetFrameSize(nsIPresShell* aPresentation,
-                          int32_t* aSizeInBytesResult);
+                          int32_t* aSizeInBytesResult) MOZ_OVERRIDE;
 
   NS_IMETHOD GetStyleSize(nsIPresShell* aPresentation,
-                          int32_t* aSizeInBytesResult);
+                          int32_t* aSizeInBytesResult) MOZ_OVERRIDE;
 
 };
 

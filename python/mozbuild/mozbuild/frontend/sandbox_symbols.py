@@ -710,6 +710,17 @@ VARIABLES = {
            added to the linker's command line in the same order as they
            appear in the moz.build file.
         """, 'libs'),
+
+    'WIN32_EXE_LDFLAGS': (list, list,
+        """Flags passed to the linker when linking a Windows .exe executable
+           declared in this directory.
+
+           Note that the ordering of flags matter here, these flags will be
+           added to the linker's command line in the same order as they
+           appear in the moz.build file.
+
+           This variable only has an effect on Windows.
+        """, 'libs'),
 }
 
 # The set of functions exposed to the sandbox.

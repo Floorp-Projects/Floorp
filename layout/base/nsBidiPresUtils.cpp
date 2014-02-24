@@ -2031,20 +2031,20 @@ public:
 
   virtual void SetText(const char16_t* aText,
                        int32_t          aLength,
-                       nsBidiDirection  aDirection)
+                       nsBidiDirection  aDirection) MOZ_OVERRIDE
   {
     mTextRunConstructionContext->SetTextRunRTL(aDirection==NSBIDI_RTL);
     mText = aText;
     mLength = aLength;
   }
 
-  virtual nscoord GetWidth()
+  virtual nscoord GetWidth() MOZ_OVERRIDE
   {
     return mTextRunConstructionContext->GetWidth(mText, mLength);
   }
 
   virtual void DrawText(nscoord aXOffset,
-                        nscoord)
+                        nscoord) MOZ_OVERRIDE
   {
     mCtx->FontMetrics()->DrawString(mText, mLength, mPt.x + aXOffset, mPt.y,
                                     mCtx, mTextRunConstructionContext);

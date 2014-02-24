@@ -167,16 +167,17 @@ public:
     MOZ_COUNT_DTOR(nsDisplayTextOverflowMarker);
   }
 #endif
-  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) {
+  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
+                           bool* aSnap) MOZ_OVERRIDE {
     *aSnap = false;
     nsRect shadowRect =
       nsLayoutUtils::GetTextShadowRectsUnion(mRect, mFrame);
     return mRect.Union(shadowRect);
   }
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsRenderingContext* aCtx);
+                     nsRenderingContext* aCtx) MOZ_OVERRIDE;
 
-  virtual uint32_t GetPerFrameKey() { 
+  virtual uint32_t GetPerFrameKey() MOZ_OVERRIDE { 
     return (mIndex << nsDisplayItem::TYPE_BITS) | nsDisplayItem::GetPerFrameKey(); 
   }
   void PaintTextToContext(nsRenderingContext* aCtx,

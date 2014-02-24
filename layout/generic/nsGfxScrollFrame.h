@@ -536,7 +536,7 @@ public:
   virtual nsIFrame* GetScrolledFrame() const MOZ_OVERRIDE {
     return mHelper.GetScrolledFrame();
   }
-  virtual mozilla::ScrollbarStyles GetScrollbarStyles() const {
+  virtual mozilla::ScrollbarStyles GetScrollbarStyles() const MOZ_OVERRIDE {
     return mHelper.GetScrollbarStylesFromFrame();
   }
   virtual uint32_t GetScrollbarVisibility() const MOZ_OVERRIDE {
@@ -843,7 +843,7 @@ public:
   virtual nsIFrame* GetScrolledFrame() const MOZ_OVERRIDE {
     return mHelper.GetScrolledFrame();
   }
-  virtual mozilla::ScrollbarStyles GetScrollbarStyles() const {
+  virtual mozilla::ScrollbarStyles GetScrollbarStyles() const MOZ_OVERRIDE {
     return mHelper.GetScrollbarStylesFromFrame();
   }
   virtual uint32_t GetScrollbarVisibility() const MOZ_OVERRIDE {

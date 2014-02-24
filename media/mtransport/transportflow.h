@@ -96,6 +96,8 @@ class TransportFlow : public sigslot::has_slots<> {
   sigslot::signal3<TransportFlow*, const unsigned char *, size_t>
     SignalPacketReceived;
 
+  bool Contains(TransportLayer *layer) const;
+
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(TransportFlow)
 
  private:

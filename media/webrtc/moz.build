@@ -64,6 +64,7 @@ if CONFIG['MOZ_WEBRTC_SIGNALING']:
         'signaling/src/media/CSFVideoControlWrapper.cpp',
         'signaling/src/media/VcmSIPCCBinding.cpp',
         'signaling/src/mediapipeline/MediaPipeline.cpp',
+        'signaling/src/mediapipeline/MediaPipelineFilter.cpp',
         'signaling/src/mediapipeline/SrtpFlow.cpp',
         'signaling/src/peerconnection/MediaStreamList.cpp',
         'signaling/src/peerconnection/PeerConnectionCtx.cpp',
