@@ -7,6 +7,7 @@
 
 #include "mozilla/dom/DataStore.h"
 #include "mozilla/dom/DataStoreCursor.h"
+#include "mozilla/dom/DataStoreChangeEvent.h"
 #include "mozilla/dom/DataStoreBinding.h"
 #include "mozilla/dom/DataStoreImplBinding.h"
 
@@ -707,6 +708,182 @@ WorkerDataStore::SetBackingDataStore(
   mBackingStore = aBackingStore;
 }
 
-// TODO How to handle the event? Will fix this in my later patch.
+void
+WorkerDataStore::SetDataStoreChangeEventProxy(
+  DataStoreChangeEventProxy* aEventProxy)
+{
+  mEventProxy = aEventProxy;
+}
+
+// A WorkerRunnable to dispatch the DataStoreChangeEvent on the worker thread.
+class DispatchDataStoreChangeEventRunnable : public WorkerRunnable
+{
+public:
+  DispatchDataStoreChangeEventRunnable(
+    DataStoreChangeEventProxy* aDataStoreChangeEventProxy,
+    DataStoreChangeEvent* aEvent)
+    : WorkerRunnable(aDataStoreChangeEventProxy->GetWorkerPrivate(),
+                     WorkerThreadUnchangedBusyCount)
+    , mDataStoreChangeEventProxy(aDataStoreChangeEventProxy)
+  {
+    AssertIsOnMainThread();
+    MOZ_ASSERT(mDataStoreChangeEventProxy);
+
+    aEvent->GetRevisionId(mRevisionId);
+    aEvent->GetId(mId);
+    aEvent->GetOperation(mOperation);
+    aEvent->GetOwner(mOwner);
+  }
+
+  virtual bool
+  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(aWorkerPrivate);
+    aWorkerPrivate->AssertIsOnWorkerThread();
+    MOZ_ASSERT(aWorkerPrivate == mWorkerPrivate);
+
+    MOZ_ASSERT(mDataStoreChangeEventProxy);
+
+    nsRefPtr<WorkerDataStore> workerStore =
+      mDataStoreChangeEventProxy->GetWorkerStore();
+
+    DataStoreChangeEventInit eventInit;
+    eventInit.mBubbles = false;
+    eventInit.mCancelable = false;
+    eventInit.mRevisionId = mRevisionId;
+
+    // TODO Bug 981984: OwningStringOrUnsignedLong union value cannot be set if
+    // the type is not matched.
+    //
+    // This is a work-around to clean up the OwningStringOrUnsignedLong value
+    // initialized by DataStoreChangeEventInit, which will always set |mId| to
+    // a UnsignedLong type by default (see DataStoreChangeEvent.webidl). This
+    // will fail the later assignment when the type of value we want to assign
+    // is actually String.
+    // eventInit.mId.~OwningStringOrUnsignedLong();
+    eventInit.mId = mId;
+
+    eventInit.mOperation = mOperation;
+    eventInit.mOwner = mOwner;
+
+    nsRefPtr<DataStoreChangeEvent> event =
+      DataStoreChangeEvent::Constructor(workerStore,
+                                        NS_LITERAL_STRING("change"),
+                                        eventInit);
+
+    workerStore->DispatchDOMEvent(nullptr, event, nullptr, nullptr);
+    return true;
+  }
+
+protected:
+  ~DispatchDataStoreChangeEventRunnable()
+  {}
+
+private:
+  nsRefPtr<DataStoreChangeEventProxy> mDataStoreChangeEventProxy;
+
+  nsString mRevisionId;
+  Nullable<OwningStringOrUnsignedLong> mId;
+  nsString mOperation;
+  nsString mOwner;
+};
+
+DataStoreChangeEventProxy::DataStoreChangeEventProxy(
+  WorkerPrivate* aWorkerPrivate,
+  WorkerDataStore* aWorkerStore)
+  : mWorkerPrivate(aWorkerPrivate)
+  , mWorkerStore(aWorkerStore)
+  , mCleanedUp(false)
+  , mCleanUpLock("cleanUpLock")
+{
+  MOZ_ASSERT(mWorkerPrivate);
+  mWorkerPrivate->AssertIsOnWorkerThread();
+  MOZ_ASSERT(mWorkerStore);
+
+  // Let the WorkerDataStore keep the DataStoreChangeEventProxy alive to catch
+  // the coming events until the WorkerDataStore is released.
+  mWorkerStore->SetDataStoreChangeEventProxy(this);
+
+  // We do this to make sure the worker thread won't shut down before the event
+  // is dispatched to the WorkerStore on the worker thread.
+  if (!mWorkerPrivate->AddFeature(mWorkerPrivate->GetJSContext(), this)) {
+    MOZ_ASSERT(false, "cannot add the worker feature!");
+    return;
+  }
+}
+
+WorkerPrivate*
+DataStoreChangeEventProxy::GetWorkerPrivate() const
+{
+  // It's ok to race on |mCleanedUp|, because it will never cause us to fire
+  // the assertion when we should not.
+  MOZ_ASSERT(!mCleanedUp);
+
+  return mWorkerPrivate;
+}
+
+WorkerDataStore*
+DataStoreChangeEventProxy::GetWorkerStore() const
+{
+  return mWorkerStore;
+}
+
+// nsIDOMEventListener implementation.
+
+NS_IMPL_ISUPPORTS(DataStoreChangeEventProxy, nsIDOMEventListener)
+
+NS_IMETHODIMP
+DataStoreChangeEventProxy::HandleEvent(nsIDOMEvent* aEvent)
+{
+  AssertIsOnMainThread();
+
+  MutexAutoLock lock(mCleanUpLock);
+  // If the worker thread's been cancelled we don't need to dispatch the event.
+  if (mCleanedUp) {
+    return NS_OK;
+  }
+
+  nsRefPtr<DataStoreChangeEvent> event =
+    static_cast<DataStoreChangeEvent*>(aEvent);
+
+  nsRefPtr<DispatchDataStoreChangeEventRunnable> runnable =
+    new DispatchDataStoreChangeEventRunnable(this, event);
+
+  {
+    AutoSafeJSContext cx;
+    JSAutoRequest ar(cx);
+    runnable->Dispatch(cx);
+  }
+
+  return NS_OK;
+}
+
+// WorkerFeature implementation.
+
+bool
+DataStoreChangeEventProxy::Notify(JSContext* aCx, Status aStatus)
+{
+  MutexAutoLock lock(mCleanUpLock);
+
+  // |mWorkerPrivate| might not be safe to use anymore if we have already
+  // cleaned up and RemoveFeature(), so we need to check |mCleanedUp| first.
+  if (mCleanedUp) {
+    return true;
+  }
+
+  MOZ_ASSERT(mWorkerPrivate);
+  mWorkerPrivate->AssertIsOnWorkerThread();
+  MOZ_ASSERT(mWorkerPrivate->GetJSContext() == aCx);
+
+  // Release the WorkerStore and remove the DataStoreChangeEventProxy from the
+  // features of the worker thread since the worker thread has been cancelled.
+  if (aStatus >= Canceling) {
+    mWorkerStore = nullptr;
+    mWorkerPrivate->RemoveFeature(aCx, this);
+    mCleanedUp = true;
+  }
+
+  return true;
+}
 
 END_WORKERS_NAMESPACE
