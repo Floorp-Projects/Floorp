@@ -2088,7 +2088,7 @@ nsNSSCertificate::CreateTBSCertificateASN1Struct(nsIASN1Sequence **retSequence,
   if (mCert->extensions) {
     SECOidTag ev_oid_tag = SEC_OID_UNKNOWN;
 
-#ifndef NSS_NO_LIBPKIX
+#ifndef MOZ_NO_EV_CERTS
     bool validEV;
     rv = hasValidEVOidTag(ev_oid_tag, validEV);
     if (NS_FAILED(rv))

@@ -95,7 +95,7 @@ nsSSLStatus::GetIsExtendedValidation(bool* aIsEV)
   NS_ENSURE_ARG_POINTER(aIsEV);
   *aIsEV = false;
 
-#ifdef NSS_NO_LIBPKIX
+#ifdef MOZ_NO_EV_CERTS
   return NS_OK;
 #else
   nsCOMPtr<nsIX509Cert> cert = mServerCert;

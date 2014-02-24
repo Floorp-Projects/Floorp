@@ -14,7 +14,7 @@ UNIFIED_SOURCES += [
     'NSSCertDBTrustDomain.cpp',
 ]
 
-if not CONFIG['NSS_NO_LIBPKIX']:
+if not CONFIG['NSS_NO_EV_CERTS']:
     UNIFIED_SOURCES += [
         'ExtendedValidation.cpp',
     ]
