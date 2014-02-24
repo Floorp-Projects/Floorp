@@ -124,6 +124,13 @@ Http2Stream::ReadSegments(nsAHttpSegmentReader *reader,
     return NS_ERROR_ABORT;
   }
 
+  // avoid runt chunks if possible by anticipating
+  // full data frames
+  if (count > (mChunkSize + 8)) {
+    uint32_t numchunks = count / (mChunkSize + 8);
+    count = numchunks * (mChunkSize + 8);
+  }
+
   switch (mUpstreamState) {
   case GENERATING_HEADERS:
   case GENERATING_BODY:
@@ -687,10 +694,10 @@ Http2Stream::TransmitFrame(const char *buf,
   // the socket write function. It will accept all of the inline and stream
   // data because of the above 'commitment' even if it has to buffer
 
-  rv = mSegmentReader->OnReadSegment(reinterpret_cast<char*>(mTxInlineFrame.get()),
-                                     mTxInlineFrameUsed,
-                                     &transmittedCount);
-  LOG3(("Http2Stream::TransmitFrame for inline session=%p "
+  rv = mSession->BufferOutput(reinterpret_cast<char*>(mTxInlineFrame.get()),
+                              mTxInlineFrameUsed,
+                              &transmittedCount);
+  LOG3(("Http2Stream::TransmitFrame for inline BufferOutput session=%p "
         "stream=%p result %x len=%d",
         mSession, this, rv, transmittedCount));
 
@@ -716,8 +723,15 @@ Http2Stream::TransmitFrame(const char *buf,
       return NS_ERROR_UNEXPECTED;
     }
 
-    rv = mSegmentReader->OnReadSegment(buf, mTxStreamFrameSize,
-                                       &transmittedCount);
+    // If there is already data buffered, just add to that to form
+    // a single TLS Application Data Record - otherwise skip the memcpy
+    if (mSession->AmountOfOutputBuffered()) {
+      rv = mSession->BufferOutput(buf, mTxStreamFrameSize,
+                                  &transmittedCount);
+    } else {
+      rv = mSession->OnReadSegment(buf, mTxStreamFrameSize,
+                                   &transmittedCount);
+    }
 
     LOG3(("Http2Stream::TransmitFrame for regular session=%p "
           "stream=%p result %x len=%d",
@@ -737,6 +751,8 @@ Http2Stream::TransmitFrame(const char *buf,
 
     *countUsed += mTxStreamFrameSize;
   }
+
+  mSession->FlushOutputQueue();
 
   // calling this will trigger waiting_for if mRequestBodyLenRemaining is 0
   UpdateTransportSendEvents(mTxInlineFrameUsed + mTxStreamFrameSize);
