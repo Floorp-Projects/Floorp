@@ -97,12 +97,12 @@ ShadowAfter(const OpInsertAfter& op)
 }
 
 static ShadowLayerParent*
-ShadowContainer(const OpAppendChild& op)
+ShadowContainer(const OpPrependChild& op)
 {
   return cast(op.containerParent());
 }
 static ShadowLayerParent*
-ShadowChild(const OpAppendChild& op)
+ShadowChild(const OpPrependChild& op)
 {
   return cast(op.childLayerParent());
 }
@@ -416,10 +416,10 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       }
       break;
     }
-    case Edit::TOpAppendChild: {
-      MOZ_LAYERS_LOG(("[ParentSide] AppendChild"));
+    case Edit::TOpPrependChild: {
+      MOZ_LAYERS_LOG(("[ParentSide] PrependChild"));
 
-      const OpAppendChild& oac = edit.get_OpAppendChild();
+      const OpPrependChild& oac = edit.get_OpPrependChild();
       Layer* child = ShadowChild(oac)->AsLayer();
       if (!child) {
         return false;
