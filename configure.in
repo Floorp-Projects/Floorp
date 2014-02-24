@@ -6364,6 +6364,14 @@ fi
 AC_SUBST(MOZ_DISABLE_CRYPTOLEGACY)
 
 dnl ========================================================
+dnl = Disable EV certificate verification
+dnl ========================================================
+if test -n "$MOZ_NO_EV_CERTS"; then
+    AC_DEFINE(MOZ_NO_EV_CERTS)
+fi
+AC_SUBST(MOZ_NO_EV_CERTS)
+
+dnl ========================================================
 dnl = Disable libpkix
 dnl ========================================================
 if test -n "$NSS_NO_LIBPKIX"; then
