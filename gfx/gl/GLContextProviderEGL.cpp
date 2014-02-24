@@ -657,6 +657,11 @@ CreateConfig(EGLConfig* aConfig)
         if (depth == 16) {
             return CreateConfig(aConfig, 24);
         }
+        // Bug 970096
+        // Some devices that have 24 bit screens only support 16 bit OpenGL?
+        if (depth == 24) {
+            return CreateConfig(aConfig, 16);
+        }
 #endif
         return false;
     } else {
