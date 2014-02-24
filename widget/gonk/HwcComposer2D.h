@@ -23,9 +23,6 @@
 #include <list>
 
 #include <hardware/hwcomposer.h>
-#if ANDROID_VERSION >= 18
-#include <ui/Fence.h>
-#endif
 
 namespace mozilla {
 
@@ -86,10 +83,8 @@ private:
     //Holds all the dynamically allocated RectVectors needed
     //to render the current frame
     std::list<RectVector>   mVisibleRegions;
-#if ANDROID_VERSION >= 18
-    android::sp<android::Fence> mPrevRetireFence;
-    android::sp<android::Fence> mPrevDisplayFence;
-#endif
+    nsTArray<int>           mPrevReleaseFds;
+    int                     mPrevRetireFence;
     nsTArray<layers::LayerComposite*> mHwcLayerMap;
     bool                    mPrepared;
 };

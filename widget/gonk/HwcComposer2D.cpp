@@ -19,13 +19,11 @@
 
 #include "libdisplay/GonkDisplay.h"
 #include "Framebuffer.h"
-#include "GLContext.h"                  // for GLContext
 #include "HwcUtils.h"
 #include "HwcComposer2D.h"
 #include "mozilla/layers/LayerManagerComposite.h"
 #include "mozilla/layers/PLayerTransaction.h"
 #include "mozilla/layers/ShadowLayerUtilsGralloc.h"
-#include "mozilla/layers/TextureHostOGL.h"  // for TextureHostOGL
 #include "mozilla/StaticPtr.h"
 #include "cutils/properties.h"
 #include "gfx2DGlue.h"
@@ -69,10 +67,7 @@ HwcComposer2D::HwcComposer2D()
     , mHwc(nullptr)
     , mColorFill(false)
     , mRBSwapSupport(false)
-#if ANDROID_VERSION >= 18
-    , mPrevRetireFence(Fence::NO_FENCE)
-    , mPrevDisplayFence(Fence::NO_FENCE)
-#endif
+    , mPrevRetireFence(-1)
     , mPrepared(false)
 {
 }
@@ -654,29 +649,36 @@ HwcComposer2D::Commit()
 
     int err = mHwc->set(mHwc, HWC_NUM_DISPLAY_TYPES, displays);
 
-    mPrevDisplayFence = mPrevRetireFence;
-    mPrevRetireFence = Fence::NO_FENCE;
+    // To avoid tearing, workaround for missing releaseFenceFd
+    // waits in Gecko layers, see Bug 925444.
+    if (!mPrevReleaseFds.IsEmpty()) {
+        // Wait for previous retire Fence to signal.
+        // Denotes contents on display have been replaced.
+        // For buffer-sync, framework should not over-write
+        // prev buffers until we close prev releaseFenceFds
+        sp<Fence> fence = new Fence(mPrevRetireFence);
+        if (fence->wait(1000) == -ETIME) {
+            LOGE("Wait timed-out for retireFenceFd %d", mPrevRetireFence);
+        }
+        for (int i = 0; i < mPrevReleaseFds.Length(); i++) {
+            close(mPrevReleaseFds[i]);
+        }
+        close(mPrevRetireFence);
+        mPrevReleaseFds.Clear();
+    }
 
     for (uint32_t j=0; j < (mList->numHwLayers - 1); j++) {
         if (mList->hwLayers[j].releaseFenceFd >= 0) {
-            int fd = mList->hwLayers[j].releaseFenceFd;
-            mList->hwLayers[j].releaseFenceFd = -1;
-            sp<Fence> fence = new Fence(fd);
-
-            LayerRenderState state = mHwcLayerMap[j]->GetLayer()->GetRenderState();
-            if (!state.mTexture) {
-                continue;
-            }
-            TextureHostOGL* texture = state.mTexture->AsHostOGL();
-            if (!texture) {
-                continue;
-            }
-            texture->SetReleaseFence(fence);
-       }
-   }
+            mPrevReleaseFds.AppendElement(mList->hwLayers[j].releaseFenceFd);
+        }
+    }
 
     if (mList->retireFenceFd >= 0) {
-        mPrevRetireFence = new Fence(mList->retireFenceFd);
+        if (!mPrevReleaseFds.IsEmpty()) {
+            mPrevRetireFence = mList->retireFenceFd;
+        } else { // GPU Composition
+            close(mList->retireFenceFd);
+        }
     }
 
     mPrepared = false;

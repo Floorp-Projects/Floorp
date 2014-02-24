@@ -105,7 +105,8 @@ status_t GonkNativeWindow::setDefaultBufferFormat(uint32_t defaultFormat) {
 }
 
 already_AddRefed<GraphicBufferLocked>
-GonkNativeWindow::getCurrentBuffer() {
+GonkNativeWindow::getCurrentBuffer()
+{
     Mutex::Autolock _l(mMutex);
     GonkBufferQueue::BufferItem item;
 
@@ -122,20 +123,17 @@ GonkNativeWindow::getCurrentBuffer() {
 }
 
 bool
-GonkNativeWindow::returnBuffer(uint32_t index, uint32_t generation, const sp<Fence>& fence) {
-    BI_LOGD("GonkNativeWindow::returnBuffer: slot=%d (generation=%d)", index, generation);
+GonkNativeWindow::returnBuffer(uint32_t aIndex, uint32_t aGeneration) {
+    BI_LOGD("GonkNativeWindow::returnBuffer: slot=%d (generation=%d)", aIndex, aGeneration);
     Mutex::Autolock lock(mMutex);
 
-    if (generation != mBufferQueue->getGeneration()) {
+    if (aGeneration != mBufferQueue->getGeneration()) {
         BI_LOGD("returnBuffer: buffer is from generation %d (current is %d)",
-          generation, mBufferQueue->getGeneration());
+          aGeneration, mBufferQueue->getGeneration());
         return false;
     }
 
-    status_t err;
-    err = addReleaseFenceLocked(index, fence);
-
-    err = releaseBufferLocked(index);
+    status_t err = releaseBufferLocked(aIndex);
     if (err != NO_ERROR) {
         return false;
     }
@@ -143,7 +141,8 @@ GonkNativeWindow::returnBuffer(uint32_t index, uint32_t generation, const sp<Fen
 }
 
 mozilla::layers::SurfaceDescriptor *
-GonkNativeWindow::getSurfaceDescriptorFromBuffer(ANativeWindowBuffer* buffer) {
+GonkNativeWindow::getSurfaceDescriptorFromBuffer(ANativeWindowBuffer* buffer)
+{
     Mutex::Autolock lock(mMutex);
     return mBufferQueue->getSurfaceDescriptorFromBuffer(buffer);
 }
@@ -159,24 +158,6 @@ void GonkNativeWindow::onFrameAvailable() {
 
     if (mNewFrameCallback) {
       mNewFrameCallback->OnNewFrame();
-    }
-}
-
-void CameraGraphicBuffer::Unlock() {
-    if (mLocked) {
-        android::sp<android::Fence> fence;
-        fence = mReleaseFenceHandle.IsValid() ? mReleaseFenceHandle.mFence : Fence::NO_FENCE;
-        // The window might have been destroyed. The buffer is no longer
-        // valid at that point.
-        sp<GonkNativeWindow> window = mNativeWindow.promote();
-        if (window.get() && window->returnBuffer(mIndex, mGeneration, fence)) {
-            mLocked = false;
-        } else {
-            // If the window doesn't exist any more, release the buffer
-            // directly.
-            ImageBridgeChild *ibc = ImageBridgeChild::GetSingleton();
-            ibc->DeallocSurfaceDescriptorGralloc(mSurfaceDescriptor);
-        }
     }
 }
 

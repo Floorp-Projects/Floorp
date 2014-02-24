@@ -16,8 +16,6 @@
 namespace mozilla {
 namespace layers {
 
-class CompositableHost;
-
 typedef std::vector<mozilla::layers::EditReply> EditReplyVector;
 
 // Since PCompositble has two potential manager protocols, we can't just call
@@ -39,14 +37,6 @@ protected:
    * thread (ImageBridge for instance).
    */
   virtual bool IsAsync() const { return false; }
-
-  void ReturnTextureDataIfNecessary(CompositableHost* aCompositable,
-                                    EditReplyVector& replyv,
-                                    PCompositableParent* aParent);
-  void ClearPrevFenceHandles();
-
-protected:
-  std::vector<FenceHandle> mPrevFenceHandles;
 };
 
 } // namespace
