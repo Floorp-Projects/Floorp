@@ -116,8 +116,8 @@ function testBOMCharset(test)
   var outText;
   try {
     var decoder = 'fatal' in test ?
-      TextDecoder(test.encoding, {fatal: test.fatal}) :
-      TextDecoder(test.encoding);
+      new TextDecoder(test.encoding, {fatal: test.fatal}) :
+      new TextDecoder(test.encoding);
     outText = decoder.decode(new Uint8Array(test.data));
   } catch (e) {
     assert_equals(e.name, test.error, test.msg);

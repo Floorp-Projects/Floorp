@@ -134,7 +134,7 @@ function testSingleString(test)
   var outText;
   try {
     var stream = test.stream ? {stream: true} : null;
-    outText = TextEncoder(test.encoding).encode(test.input, stream);
+    outText = (new TextEncoder(test.encoding)).encode(test.input, stream);
   } catch (e) {
     assert_equals(e.name, test.error, test.msg);
     return;
@@ -237,7 +237,7 @@ function testArrayOfStrings(test)
 {
   var encoder;
   try {
-    encoder = TextEncoder(test.encoding);
+    encoder = new TextEncoder(test.encoding);
   } catch (e) {
     assert_equals(e.name, test.error, test.msg);
     return;
@@ -270,7 +270,7 @@ function testEncoderGetEncoding()
 
   for (var le of labelEncodings) {
     for (var label of le.labels) {
-      var encoder = TextEncoder(label);
+      var encoder = new TextEncoder(label);
       assert_equals(encoder.encoding, le.encoding, label + " label encoding test.");
     }
   }

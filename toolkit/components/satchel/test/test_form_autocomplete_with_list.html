@@ -330,7 +330,7 @@ function runTest() {
       // down and push enter. Value should be the on from the new suggestion.
       doKey("down");
       var datalist = document.getElementById('suggest');
-      var added = Option("Foo");
+      var added = new Option("Foo");
       datalist.insertBefore(added, datalist.children[1]);
 
       SimpleTest.executeSoon(function() {
