@@ -1325,7 +1325,7 @@ AuthCertificateHook(void* arg, PRFileDesc* fd, PRBool checkSig, PRBool isServer)
   return SECFailure;
 }
 
-#ifndef NSS_NO_LIBPKIX
+#ifndef MOZ_NO_EV_CERTS
 class InitializeIdentityInfo : public CryptoTask
 {
   virtual nsresult CalculateResult() MOZ_OVERRIDE
@@ -1341,7 +1341,7 @@ class InitializeIdentityInfo : public CryptoTask
 
 void EnsureServerVerificationInitialized()
 {
-#ifndef NSS_NO_LIBPKIX
+#ifndef MOZ_NO_EV_CERTS
   // Should only be called from socket transport thread due to the static
   // variable and the reference to gCertVerificationThreadPool
 
