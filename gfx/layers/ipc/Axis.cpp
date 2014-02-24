@@ -47,12 +47,19 @@ static float gFlingStoppedThreshold = 0.01f;
  */
 static uint32_t gMaxVelocityQueueSize = 5;
 
+/**
+ * Maximum velocity in pixels per millisecond.  Velocity will be capped at this
+ * value if a faster fling occurs.  Negative values indicate unlimited velocity.
+ */
+static float gMaxVelocity = -1.0f;
+
 static void ReadAxisPrefs()
 {
   Preferences::AddFloatVarCache(&gMaxEventAcceleration, "apz.max_event_acceleration", gMaxEventAcceleration);
   Preferences::AddFloatVarCache(&gFlingFriction, "apz.fling_friction", gFlingFriction);
   Preferences::AddFloatVarCache(&gFlingStoppedThreshold, "apz.fling_stopped_threshold", gFlingStoppedThreshold);
   Preferences::AddUintVarCache(&gMaxVelocityQueueSize, "apz.max_velocity_queue_size", gMaxVelocityQueueSize);
+  Preferences::AddFloatVarCache(&gMaxVelocity, "apz.max_velocity_pixels_per_ms", gMaxVelocity);
 }
 
 class ReadAxisPref MOZ_FINAL : public nsRunnable {
@@ -90,6 +97,9 @@ Axis::Axis(AsyncPanZoomController* aAsyncPanZoomController)
 
 void Axis::UpdateWithTouchAtDevicePoint(int32_t aPos, const TimeDuration& aTimeDelta) {
   float newVelocity = mAxisLocked ? 0 : (mPos - aPos) / aTimeDelta.ToMilliseconds();
+  if (gMaxVelocity > 0.0f) {
+    newVelocity = std::min(newVelocity, gMaxVelocity);
+  }
 
   mVelocity = newVelocity;
   mPos = aPos;
