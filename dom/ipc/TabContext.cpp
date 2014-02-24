@@ -209,6 +209,16 @@ TabContext::SetTabContextForBrowserFrame(mozIApplication* aBrowserFrameOwnerApp,
   return true;
 }
 
+bool
+TabContext::SetTabContextForNormalFrame(ScrollingBehavior aRequestedBehavior)
+{
+  NS_ENSURE_FALSE(mInitialized, false);
+
+  mInitialized = true;
+  mScrollingBehavior = aRequestedBehavior;
+  return true;
+}
+
 IPCTabContext
 TabContext::AsIPCTabContext() const
 {
