@@ -82,9 +82,6 @@ public:
   // target of DataStore, so that it can know where to fire the events.
   void SetDataStoreImpl(DataStoreImpl& aStore, ErrorResult& aRv);
 
-protected:
-  virtual ~DataStore() {}
-
 private:
   nsRefPtr<DataStoreImpl> mStore;
 };
