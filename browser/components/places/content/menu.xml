@@ -578,6 +578,22 @@
       ]]></handler>
       <handler event="popupshown" phase="target"><![CDATA[
         this.setAttribute("panelopen", "true");
+        //XXXgijs: this is sadfaces, reading styles right after we dirty layout, but
+        //I don't know of a way around it.
+        let container = document.getAnonymousElementByAttribute(this, "anonid", "container");
+        let cs = getComputedStyle(container);
+        let transitionProp = cs.transitionProperty;
+        let transitionTime = parseFloat(cs.transitionDuration);
+        if ((transitionProp.indexOf("transform") > -1 || transitionProp == "all") &&
+            transitionTime > 0) {
+          this.style.pointerEvents = 'none';
+        }
+      ]]></handler>
+      <handler event="transitionend"><![CDATA[
+        if (event.originalTarget.getAttribute("anonid") == "container" &&
+            event.propertyName == "transform") {
+          this.style.removeProperty("pointer-events");
+        }
       ]]></handler>
       <handler event="popuphidden" phase="target"><![CDATA[
         this.removeAttribute("panelopen");
