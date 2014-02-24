@@ -13,6 +13,7 @@
 #include "nsCycleCollectionParticipant.h"
 
 class nsXBLPrototypeBinding;
+class nsObjectHashtable;
 class nsXBLDocGlobalObject;
 
 class nsXBLDocumentInfo : public nsSupportsWeakReference
@@ -40,7 +41,7 @@ public:
   nsresult WritePrototypeBindings();
 
   void SetFirstPrototypeBinding(nsXBLPrototypeBinding* aBinding);
-
+  
   void FlushSkinStylesheets();
 
   bool IsChrome() { return mIsChrome; }
@@ -59,8 +60,7 @@ private:
   bool mScriptAccess;
   bool mIsChrome;
   // the binding table owns each nsXBLPrototypeBinding
-  nsAutoPtr<nsClassHashtable<nsCStringHashKey, nsXBLPrototypeBinding>> mBindingTable;
-
+  nsObjectHashtable* mBindingTable;
   // non-owning pointer to the first binding in the table
   nsXBLPrototypeBinding* mFirstBinding;
 
