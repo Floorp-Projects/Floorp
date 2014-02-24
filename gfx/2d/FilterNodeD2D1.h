@@ -17,6 +17,7 @@ namespace gfx {
 class FilterNodeD2D1 : public FilterNode
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeD2D1)
   static TemporaryRef<FilterNode> Create(DrawTarget* aDT, ID2D1DeviceContext *aDC, FilterType aType);
 
   FilterNodeD2D1(DrawTarget* aDT, ID2D1Effect *aEffect, FilterType aType)
@@ -65,6 +66,7 @@ protected:
 class FilterNodeConvolveD2D1 : public FilterNodeD2D1
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeConvolveD2D1)
   FilterNodeConvolveD2D1(DrawTarget *aDT, ID2D1DeviceContext *aDC);
 
   virtual void SetInput(uint32_t aIndex, SourceSurface *aSurface);
@@ -95,6 +97,7 @@ private:
 class FilterNodeComponentTransferD2D1 : public FilterNodeD2D1
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeComponentTransferD2D1)
   FilterNodeComponentTransferD2D1(DrawTarget *aDT, ID2D1DeviceContext *aDC, ID2D1Effect *aEffect, FilterType aType);
 
 protected:
