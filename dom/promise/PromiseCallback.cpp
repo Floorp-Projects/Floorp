@@ -338,12 +338,12 @@ NativePromiseCallback::Call(JSContext* aCx,
                             JS::Handle<JS::Value> aValue)
 {
   if (mState == Promise::Resolved) {
-    mHandler->ResolvedCallback(aValue);
+    mHandler->ResolvedCallback(aCx, aValue);
     return;
   }
 
   if (mState == Promise::Rejected) {
-    mHandler->RejectedCallback(aValue);
+    mHandler->RejectedCallback(aCx, aValue);
     return;
   }
 
