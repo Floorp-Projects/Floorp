@@ -1410,10 +1410,12 @@ Navigator::GetBattery(ErrorResult& aRv)
   return mBatteryManager;
 }
 
-already_AddRefed<Promise>
-Navigator::GetDataStores(const nsAString& aName, ErrorResult& aRv)
+/* static */ already_AddRefed<Promise>
+Navigator::GetDataStores(nsPIDOMWindow* aWindow,
+                         const nsAString& aName,
+                         ErrorResult& aRv)
 {
-  if (!mWindow || !mWindow->GetDocShell()) {
+  if (!aWindow || !aWindow->GetDocShell()) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
   }
@@ -1426,10 +1428,16 @@ Navigator::GetDataStores(const nsAString& aName, ErrorResult& aRv)
   }
 
   nsCOMPtr<nsISupports> promise;
-  aRv = service->GetDataStores(mWindow, aName, getter_AddRefs(promise));
+  aRv = service->GetDataStores(aWindow, aName, getter_AddRefs(promise));
 
   nsRefPtr<Promise> p = static_cast<Promise*>(promise.get());
   return p.forget();
+}
+
+already_AddRefed<Promise>
+Navigator::GetDataStores(const nsAString& aName, ErrorResult& aRv)
+{
+  return GetDataStores(mWindow, aName, aRv);
 }
 
 PowerManager*
