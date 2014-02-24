@@ -137,7 +137,7 @@ OmxVideoTrackEncoder::GetEncodedTrack(EncodedFrameContainer& aData)
       videoData->SetFrameType(EncodedFrame::AVC_CSD);
     } else {
       videoData->SetFrameType((outFlags & OMXCodecWrapper::BUFFER_SYNC_FRAME) ?
-                              EncodedFrame::I_FRAME : EncodedFrame::P_FRAME);
+                              EncodedFrame::AVC_I_FRAME : EncodedFrame::AVC_P_FRAME);
     }
     rv = videoData->SwapInFrameData(buffer);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -217,7 +217,7 @@ OmxAudioTrackEncoder::AppendEncodedFrames(EncodedFrameContainer& aContainer)
 
     nsRefPtr<EncodedFrame> audiodata = new EncodedFrame();
     audiodata->SetFrameType(isCSD ?
-      EncodedFrame::AAC_CSD : EncodedFrame::AUDIO_FRAME);
+      EncodedFrame::AAC_CSD : EncodedFrame::AAC_AUDIO_FRAME);
     audiodata->SetTimeStamp(outTimeUs);
     rv = audiodata->SwapInFrameData(frameData);
     NS_ENSURE_SUCCESS(rv, rv);
