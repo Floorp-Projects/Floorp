@@ -67,7 +67,7 @@
         <html:div class="meta-section-title narrow-title" onclick="StartUI.onNarrowTitleClick('start-bookmarks')">
           &narrowBookmarksHeader.label;
         </html:div>
-        <richgrid id="start-bookmarks-grid" observes="bcast_windowState" set-name="bookmarks" seltype="multiple" fade="true" flex="1" minSlots="2">
+        <richgrid id="start-bookmarks-grid" observes="bcast_windowState" set-name="bookmarks" seltype="multiple" fade="true" flex="1" minSlots="3">
           <richgriditem/>
           <richgriditem/>
         </richgrid>
