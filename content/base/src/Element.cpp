@@ -361,6 +361,22 @@ Element::WrapObject(JSContext *aCx, JS::Handle<JSObject*> aScope)
     return nullptr;
   }
 
+  // Custom element prototype swizzling.
+  CustomElementData* data = GetCustomElementData();
+  if (obj && data) {
+    // If this is a registered custom element then fix the prototype.
+    JSAutoCompartment ac(aCx, obj);
+    nsDocument* document = static_cast<nsDocument*>(OwnerDoc());
+    JS::Rooted<JSObject*> prototype(aCx);
+    document->GetCustomPrototype(NodeInfo()->NamespaceID(), data->mType, &prototype);
+    if (prototype) {
+      if (!JS_WrapObject(aCx, &prototype) || !JS_SetPrototype(aCx, obj, prototype)) {
+        dom::Throw(aCx, NS_ERROR_FAILURE);
+        return nullptr;
+      }
+    }
+  }
+
   nsIDocument* doc;
   if (HasFlag(NODE_FORCE_XBL_BINDINGS)) {
     doc = OwnerDoc();
@@ -1141,6 +1157,11 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     // Being added to a document.
     SetInDocument();
 
+    if (GetCustomElementData()) {
+      // Enqueue an enteredView callback for the custom element.
+      aDocument->EnqueueLifecycleCallback(nsIDocument::eEnteredView, this);
+    }
+
     // Unset this flag since we now really are in a document.
     UnsetFlags(NODE_FORCE_XBL_BINDINGS |
                // And clear the lazy frame construction bits.
@@ -1298,6 +1319,11 @@ Element::UnbindFromTree(bool aDeep, bool aNullParent)
     }
 
     document->ClearBoxObjectFor(this);
+
+    if (GetCustomElementData()) {
+      // Enqueue a leftView callback for the custom element.
+      document->EnqueueLifecycleCallback(nsIDocument::eLeftView, this);
+    }
   }
 
   // Ensure that CSS transitions don't continue on an element at a
@@ -1665,8 +1691,10 @@ Element::MaybeCheckSameAttrVal(int32_t aNamespaceID,
     nsAttrInfo info(GetAttrInfo(aNamespaceID, aName));
     if (info.mValue) {
       // Check whether the old value is the same as the new one.  Note that we
-      // only need to actually _get_ the old value if we have listeners.
-      if (*aHasListeners) {
+      // only need to actually _get_ the old value if we have listeners or
+      // if the element is a custom element (because it may have an
+      // attribute changed callback).
+      if (*aHasListeners || GetCustomElementData()) {
         // Need to store the old value.
         //
         // If the current attribute value contains a pointer to some other data
@@ -1852,6 +1880,20 @@ Element::SetAttrAndNotify(int32_t aNamespaceID,
 
   UpdateState(aNotify);
 
+  nsIDocument* ownerDoc = OwnerDoc();
+  if (ownerDoc && GetCustomElementData()) {
+    nsCOMPtr<nsIAtom> oldValueAtom = aOldValue.GetAsAtom();
+    nsCOMPtr<nsIAtom> newValueAtom = aValueForAfterSetAttr.GetAsAtom();
+    LifecycleCallbackArgs args = {
+      nsDependentAtomString(aName),
+      aModType == nsIDOMMutationEvent::ADDITION ?
+        NullString() : nsDependentAtomString(oldValueAtom),
+      nsDependentAtomString(newValueAtom)
+    };
+
+    ownerDoc->EnqueueLifecycleCallback(nsIDocument::eAttributeChanged, this, &args);
+  }
+
   if (aCallAfterSetAttr) {
     rv = AfterSetAttr(aNamespaceID, aName, &aValueForAfterSetAttr, aNotify);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -2034,6 +2076,18 @@ Element::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aName,
   }
 
   UpdateState(aNotify);
+
+  nsIDocument* ownerDoc = OwnerDoc();
+  if (ownerDoc && GetCustomElementData()) {
+    nsCOMPtr<nsIAtom> oldValueAtom = oldValue.GetAsAtom();
+    LifecycleCallbackArgs args = {
+      nsDependentAtomString(aName),
+      nsDependentAtomString(oldValueAtom),
+      NullString()
+    };
+
+    ownerDoc->EnqueueLifecycleCallback(nsIDocument::eAttributeChanged, this, &args);
+  }
 
   if (aNotify) {
     nsNodeUtils::AttributeChanged(this, aNameSpaceID, aName,

@@ -24,7 +24,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=783129
   SimpleTest.waitForExplicitFinish();
 
   function startTests() {
-    var c = $("fooframe").contentDocument.register("x-foo");
+    var c = $("fooframe").contentDocument.registerElement("x-foo");
     var elem = new c();
     is(elem.tagName, "X-FOO", "Constructor should create an x-foo element.");
 

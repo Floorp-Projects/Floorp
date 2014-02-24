@@ -29,11 +29,15 @@ interface MozIcc : EventTarget
   /**
    * Indicates the state of the device's ICC.
    *
-   * Possible values: 'illegal', 'unknown', 'pinRequired',
-   * 'pukRequired', 'personalizationInProgress', 'networkLocked',
-   * 'corporateLocked', 'serviceProviderLocked', 'networkPukRequired',
-   * 'corporatePukRequired', 'serviceProviderPukRequired',
-   * 'personalizationReady', 'ready', 'permanentBlocked'.
+   * Possible values: 'illegal', 'unknown', 'pinRequired', 'pukRequired',
+   * 'personalizationInProgress', 'networkLocked', 'network1Locked',
+   * 'network2Locked', 'hrpdNetworkLocked', 'corporateLocked',
+   * 'serviceProviderLocked', 'ruimCorporateLocked', 'ruimServiceProviderLocked',
+   * 'networkPukRequired', 'network1PukRequired', 'network2PukRequired',
+   * 'hrpdNetworkPukRequired', 'corporatePukRequired',
+   * 'serviceProviderPukRequired', 'ruimCorporatePukRequired',
+   * 'ruimServiceProviderPukRequired', 'personalizationReady', 'ready',
+   * 'permanentBlocked'.
    *
    * Once the ICC becomes undetectable, cardstatechange event will be notified.
    * Also, the attribute is set to null and this MozIcc object becomes invalid.
@@ -159,32 +163,92 @@ interface MozIcc : EventTarget
    *   unlockCardLock({lockType: "nck",
    *                   pin: "..."});
    *
-   * (4) Corporate depersonalization. Unlocking the corporate control key (CCK).
+   * (4) Network type 1 depersonalization. Unlocking the network type 1 control
+   *     key (NCK1).
+   *
+   *   unlockCardLock({lockType: "nck1",
+   *                   pin: "..."});
+   *
+   * (5) Network type 2 depersonalization. Unlocking the network type 2 control
+   *     key (NCK2).
+   *
+   *   unlockCardLock({lockType: "nck2",
+   *                   pin: "..."});
+   *
+   * (6) HRPD network depersonalization. Unlocking the HRPD network control key
+   *     (HNCK).
+   *
+   *   unlockCardLock({lockType: "hnck",
+   *                   pin: "..."});
+   *
+   * (7) Corporate depersonalization. Unlocking the corporate control key (CCK).
    *
    *   unlockCardLock({lockType: "cck",
    *                   pin: "..."});
    *
-   * (5) Service Provider depersonalization. Unlocking the service provider
+   * (8) Service provider depersonalization. Unlocking the service provider
    *     control key (SPCK).
    *
    *   unlockCardLock({lockType: "spck",
    *                   pin: "..."});
    *
-   * (6) Network PUK depersonalization. Unlocking the network control key (NCK).
+   * (9) RUIM corporate depersonalization. Unlocking the RUIM corporate control
+   *     key (RCCK).
+   *
+   *   unlockCardLock({lockType: "rcck",
+   *                   pin: "..."});
+   *
+   * (10) RUIM service provider depersonalization. Unlocking the RUIM service
+   *      provider control key (RSPCK).
+   *
+   *   unlockCardLock({lockType: "rspck",
+   *                   pin: "..."});
+   *
+   * (11) Network PUK depersonalization. Unlocking the network control key (NCK).
    *
    *   unlockCardLock({lockType: "nckPuk",
    *                   puk: "..."});
    *
-   * (7) Corporate PUK depersonalization. Unlocking the corporate control key
-   *     (CCK).
+   * (12) Network type 1 PUK depersonalization. Unlocking the network type 1
+   *      control key (NCK1).
+   *
+   *   unlockCardLock({lockType: "nck1Puk",
+   *                   pin: "..."});
+   *
+   * (13) Network type 2 PUK depersonalization. Unlocking the Network type 2
+   *      control key (NCK2).
+   *
+   *   unlockCardLock({lockType: "nck2Puk",
+   *                   pin: "..."});
+   *
+   * (14) HRPD network PUK depersonalization. Unlocking the HRPD network control
+   *      key (HNCK).
+   *
+   *   unlockCardLock({lockType: "hnckPuk",
+   *                   pin: "..."});
+   *
+   * (15) Corporate PUK depersonalization. Unlocking the corporate control key
+   *      (CCK).
    *
    *   unlockCardLock({lockType: "cckPuk",
    *                   puk: "..."});
    *
-   * (8) Service Provider PUK depersonalization. Unlocking the service provider
-   *     control key (SPCK).
+   * (16) Service provider PUK depersonalization. Unlocking the service provider
+   *      control key (SPCK).
    *
    *   unlockCardLock({lockType: "spckPuk",
+   *                   puk: "..."});
+   *
+   * (17) RUIM corporate PUK depersonalization. Unlocking the RUIM corporate
+   *      control key (RCCK).
+   *
+   *   unlockCardLock({lockType: "rcckPuk",
+   *                   puk: "..."});
+   *
+   * (18) RUIM service provider PUK depersonalization. Unlocking the service
+   *      provider control key (SPCK).
+   *
+   *   unlockCardLock({lockType: "rspckPuk",
    *                   puk: "..."});
    *
    * @return a DOMRequest.

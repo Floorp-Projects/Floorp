@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=783129
+-->
+<head>
+  <title>Test for document.registerElement lifecycle callback</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+<script>
+var p = Object.create(HTMLElement.prototype);
+
+var createdCallbackCallCount = 0;
+
+// By the time the base element queue is processed via the microtask,
+// both x-hello elements should be in the document.
+p.createdCallback = function() {
+  var one = document.getElementById("one");
+  var two = document.getElementById("two");
+  isnot(one, null, "First x-hello element should be in the tree.");
+  isnot(two, null, "Second x-hello element should be in the tree.");
+  createdCallbackCallCount++;
+  if (createdCallbackCallCount == 2) {
+    SimpleTest.finish();
+  }
+
+  if (createdCallbackCallCount > 2) {
+    ok(false, "Created callback called too much.");
+  }
+};
+
+p.attributeChangedCallback = function(name, oldValue, newValue) {
+  ok(false, "Attribute changed callback should not be called because callbacks should not be queued until created callback invoked.");
+};
+
+document.registerElement("x-hello", { prototype: p });
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=783129">Bug 783129</a>
+<x-hello id="one"></x-hello>
+<x-hello id="two"></x-hello>
+<script>
+</script>
+</body>
+</html>
