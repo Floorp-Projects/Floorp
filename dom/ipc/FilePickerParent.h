@@ -7,7 +7,11 @@
 #ifndef mozilla_dom_FilePickerParent_h
 #define mozilla_dom_FilePickerParent_h
 
+#include "nsIDOMFile.h"
+#include "nsIEventTarget.h"
 #include "nsIFilePicker.h"
+#include "nsCOMArray.h"
+#include "nsThreadUtils.h"
 #include "mozilla/dom/PFilePickerParent.h"
 
 namespace mozilla {
@@ -25,6 +29,7 @@ class FilePickerParent : public PFilePickerParent
   virtual ~FilePickerParent();
 
   void Done(int16_t aResult);
+  void SendFiles(const nsCOMArray<nsIDOMFile>& aDomfiles);
 
   virtual bool RecvOpen(const int16_t& aSelectedType,
                         const bool& aAddToRecentDocs,
@@ -55,11 +60,26 @@ class FilePickerParent : public PFilePickerParent
  private:
   bool CreateFilePicker();
 
+  class FileSizeAndDateRunnable : public nsRunnable
+  {
+    FilePickerParent* mFilePickerParent;
+    nsCOMArray<nsIDOMFile> mDomfiles;
+    nsCOMPtr<nsIEventTarget> mEventTarget;
+
+  public:
+    FileSizeAndDateRunnable(FilePickerParent *aFPParent, nsCOMArray<nsIDOMFile>& aDomfiles);
+    bool Dispatch();
+    NS_IMETHOD Run();
+    void Destroy();
+  };
+
+  nsRefPtr<FileSizeAndDateRunnable> mRunnable;
   nsRefPtr<FilePickerShownCallback> mCallback;
   nsCOMPtr<nsIFilePicker> mFilePicker;
 
   nsString mTitle;
   int16_t mMode;
+  int16_t mResult;
 };
 
 } // namespace dom

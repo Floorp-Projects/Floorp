@@ -43,6 +43,10 @@ public:
     NS_IMETHODIMP GetFile(nsIFile** aFile);
     NS_IMETHODIMP GetFileURL(nsIURI** aFileURL);
     NS_IMETHODIMP GetFiles(nsISimpleEnumerator** aFiles);
+
+    NS_IMETHODIMP GetDomfile(nsIDOMFile** aFile);
+    NS_IMETHODIMP GetDomfiles(nsISimpleEnumerator** aFiles);
+
     NS_IMETHODIMP Show(int16_t* aReturn);
     NS_IMETHODIMP Open(nsIFilePickerShownCallback* aCallback);
 
@@ -54,7 +58,7 @@ private:
     ~nsFilePickerProxy();
     void InitNative(nsIWidget*, const nsAString&);
 
-    nsCOMArray<nsIFile> mFiles;
+    nsCOMArray<nsIDOMFile> mDomfiles;
     nsCOMPtr<nsIFilePickerShownCallback> mCallback;
 
     int16_t   mSelectedType;
