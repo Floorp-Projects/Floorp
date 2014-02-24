@@ -1340,11 +1340,11 @@ NS_FormatCodeAddressDetails(void *aPC, const nsCodeAddressDetails *aDetails,
   if (!aDetails->library[0]) {
     snprintf(aBuffer, aBufferSize, "UNKNOWN %p\n", aPC);
   } else if (!aDetails->function[0]) {
-    snprintf(aBuffer, aBufferSize, "UNKNOWN [%s +0x%08" PRIxPTR "]\n",
+    snprintf(aBuffer, aBufferSize, "UNKNOWN [%s +0x%08" PRIXPTR "]\n",
                                    aDetails->library, aDetails->loffset);
   } else {
-    snprintf(aBuffer, aBufferSize, "%s+0x%08" PRIxPTR
-                                   " [%s +0x%08" PRIxPTR "]\n",
+    snprintf(aBuffer, aBufferSize, "%s+0x%08" PRIXPTR
+                                   " [%s +0x%08" PRIXPTR "]\n",
                                    aDetails->function, aDetails->foffset,
                                    aDetails->library, aDetails->loffset);
   }
