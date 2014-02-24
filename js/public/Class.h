@@ -388,7 +388,7 @@ typedef JSObject *
 typedef void
 (* FinalizeOp)(FreeOp *fop, JSObject *obj);
 
-#define JS_CLASS_MEMBERS                                                      \
+#define JS_CLASS_MEMBERS(FinalizeOpType)                                      \
     const char          *name;                                                \
     uint32_t            flags;                                                \
                                                                               \
@@ -402,7 +402,7 @@ typedef void
     JSConvertOp         convert;                                              \
                                                                               \
     /* Optional members (may be null). */                                     \
-    FinalizeOp          finalize;                                             \
+    FinalizeOpType      finalize;                                             \
     JSNative            call;                                                 \
     JSHasInstanceOp     hasInstance;                                          \
     JSNative            construct;                                            \
@@ -414,7 +414,7 @@ typedef void
  */
 struct ClassSizeMeasurement
 {
-    JS_CLASS_MEMBERS;
+    JS_CLASS_MEMBERS(FinalizeOp);
 };
 
 // Callback for the creation of constructor and prototype objects.
@@ -506,24 +506,7 @@ struct ObjectOps
 typedef void (*JSClassInternal)();
 
 struct JSClass {
-    const char          *name;
-    uint32_t            flags;
-
-    // Mandatory function pointer members.
-    JSPropertyOp        addProperty;
-    JSDeletePropertyOp  delProperty;
-    JSPropertyOp        getProperty;
-    JSStrictPropertyOp  setProperty;
-    JSEnumerateOp       enumerate;
-    JSResolveOp         resolve;
-    JSConvertOp         convert;
-
-    // Optional members (may be null).
-    JSFinalizeOp        finalize;
-    JSNative            call;
-    JSHasInstanceOp     hasInstance;
-    JSNative            construct;
-    JSTraceOp           trace;
+    JS_CLASS_MEMBERS(JSFinalizeOp);
 
     void                *reserved[42];
 };
@@ -610,7 +593,7 @@ namespace js {
 
 struct Class
 {
-    JS_CLASS_MEMBERS;
+    JS_CLASS_MEMBERS(FinalizeOp);
     ClassSpec          spec;
     ClassExtension      ext;
     ObjectOps           ops;
