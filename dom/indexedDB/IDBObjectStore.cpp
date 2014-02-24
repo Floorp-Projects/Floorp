@@ -780,19 +780,11 @@ public:
     nsRefPtr<IDBFileHandle> fileHandle = IDBFileHandle::Create(aDatabase,
       aData.name, aData.type, fileInfo.forget());
 
-    JS::Rooted<JS::Value> wrappedFileHandle(aCx);
     JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
-    nsresult rv =
-      nsContentUtils::WrapNative(aCx, global,
-                                 static_cast<nsIDOMFileHandle*>(fileHandle),
-                                 &NS_GET_IID(nsIDOMFileHandle),
-                                 &wrappedFileHandle);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("Failed to wrap native!");
+    if (!global) {
       return nullptr;
     }
-
-    return JSVAL_TO_OBJECT(wrappedFileHandle);
+    return fileHandle->WrapObject(aCx, global);
   }
 
   static JSObject* CreateAndWrapBlobOrFile(JSContext* aCx,

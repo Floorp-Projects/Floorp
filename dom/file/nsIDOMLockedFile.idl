@@ -7,12 +7,11 @@
 #include "nsISupports.idl"
 
 interface nsIDOMEventListener;
-interface nsIDOMFileHandle;
 
 [scriptable, builtinclass, uuid(a09cdc35-6b1e-42ce-95bb-f8f10a354202)]
 interface nsIDOMLockedFile : nsISupports
 {
-  readonly attribute nsIDOMFileHandle fileHandle;
+  readonly attribute nsISupports /* FileHandle */ fileHandle;
 
   // "readonly" or "readwrite"
   readonly attribute DOMString mode;
