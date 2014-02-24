@@ -65,8 +65,7 @@ public:
    *   frame space (i.e. relative to its origin, the top-left corner of its
    *   border box).
    */
-  static nsresult PaintFilteredFrame(nsSVGFilterFrame* aFilterFrame,
-                                     nsRenderingContext *aContext,
+  static nsresult PaintFilteredFrame(nsRenderingContext *aContext,
                                      nsIFrame *aFilteredFrame,
                                      nsSVGFilterPaintCallback *aPaintCallback,
                                      const nsRect* aDirtyArea,
@@ -78,8 +77,7 @@ public:
    * @param aPreFilterDirtyRect The pre-filter area of aFilteredFrame that has
    *   changed, relative to aFilteredFrame, in app units.
    */
-  static nsRect GetPostFilterDirtyArea(nsSVGFilterFrame* aFilterFrame,
-                                       nsIFrame *aFilteredFrame,
+  static nsRect GetPostFilterDirtyArea(nsIFrame *aFilteredFrame,
                                        const nsRect& aPreFilterDirtyRect);
 
   /**
@@ -88,8 +86,7 @@ public:
    * @param aPostFilterDirtyRect The post-filter area that is dirty, relative
    *   to aFilteredFrame, in app units.
    */
-  static nsRect GetPreFilterNeededArea(nsSVGFilterFrame* aFilterFrame,
-                                       nsIFrame *aFilteredFrame,
+  static nsRect GetPreFilterNeededArea(nsIFrame *aFilteredFrame,
                                        const nsRect& aPostFilterDirtyRect);
 
   /**
@@ -100,14 +97,13 @@ public:
    * @param aPreFilterBounds The pre-filter visual overflow rect of
    *   aFilteredFrame, if non-null.
    */
-  static nsRect GetPostFilterBounds(nsSVGFilterFrame* aFilterFrame,
-                                    nsIFrame *aFilteredFrame,
+  static nsRect GetPostFilterBounds(nsIFrame *aFilteredFrame,
                                     const gfxRect *aOverrideBBox = nullptr,
                                     const nsRect *aPreFilterBounds = nullptr);
 
   /**
    * @param aTargetFrame The frame of the filtered element under consideration.
-   * @param aFilterFrame The frame of the SVG filter element.
+   * @param aFilters The CSS and SVG filter chain from the style system.
    * @param aPaintCallback [optional] The callback that Render() should use to
    *   paint. Only required if you will call Render().
    * @param aPostFilterDirtyRect [optional] The bounds of the post-filter area
@@ -123,7 +119,6 @@ public:
    * @param aTransformRoot [optional] The transform root frame for painting.
    */
   nsSVGFilterInstance(nsIFrame *aTargetFrame,
-                      nsSVGFilterFrame *aFilterFrame,
                       nsSVGFilterPaintCallback *aPaintCallback,
                       const nsRect *aPostFilterDirtyRect = nullptr,
                       const nsRect *aPreFilterDirtyRect = nullptr,
@@ -274,6 +269,11 @@ private:
                             DrawTarget* aTargetDT);
 
   /**
+   * Finds the filter frame associated with this SVG filter.
+   */
+  nsSVGFilterFrame* GetFilterFrame();
+
+  /**
    * Build the list of FilterPrimitiveDescriptions that describes the filter's
    * filter primitives and their connections. This populates
    * mPrimitiveDescriptions and mInputImages.
@@ -329,12 +329,22 @@ private:
    */
   nsIFrame*               mTargetFrame;
 
+  /**
+   * The CSS and SVG filter chain from the style system.
+   */
+  const nsTArray<nsStyleFilter> mFilters;
+
   nsSVGFilterPaintCallback* mPaintCallback;
 
   /**
    * The filter element referenced by mTargetFrame's element.
    */
   const mozilla::dom::SVGFilterElement* mFilterElement;
+
+  /**
+   * The frame for the SVG filter element.
+   */
+  nsSVGFilterFrame* mFilterFrame;
 
   /**
    * The SVG bbox of the element that is being filtered, in user space.
