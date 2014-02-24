@@ -6,15 +6,11 @@
 #define nsTraceRefcntImpl_h___
 
 #include <stdio.h> // for FILE
-#include "nsITraceRefcnt.h"
+#include "nscore.h"
 
-class nsTraceRefcntImpl : public nsITraceRefcnt
+class nsTraceRefcntImpl
 {
 public:
-  nsTraceRefcntImpl() {}
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSITRACEREFCNT
-
   static void Startup();
   static void Shutdown();
 
@@ -39,8 +35,6 @@ public:
    * activity that occurs because of static constructors or destructors.
    */
   static void SetActivityIsLegal(bool aLegal);
-
-  static NS_METHOD Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
 };
 
 #define NS_TRACE_REFCNT_CONTRACTID "@mozilla.org/xpcom/trace-refcnt;1"
