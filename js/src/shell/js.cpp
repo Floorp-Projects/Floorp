@@ -6203,8 +6203,9 @@ main(int argc, char **argv, char **envp)
 
     JS_SetGCParameter(rt, JSGC_MAX_BYTES, 0xffffffff);
 #ifdef JSGC_GENERATIONAL
+    Maybe<JS::AutoDisableGenerationalGC> noggc;
     if (op.getBoolOption("no-ggc"))
-        JS::DisableGenerationalGC(rt);
+        noggc.construct(rt);
 #endif
 
     size_t availMem = op.getIntOption("available-memory");
