@@ -12,7 +12,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=837324
     }
 
     function start() {
-      var o0 = mozRTCPeerConnection();
+      var o0 = new mozRTCPeerConnection();
       var o1 = new mozRTCIceCandidate({"candidate":"0 -65535 IP 0 stun.sipgate.net 3227326073 type ::ffff:192.0.2.128 host 2302600701","sdpMid":"video 3907077665 RTP/SAVPF 5000","sdpMLineIndex":7});
       try {o0.addIceCandidate(o1);} catch(e) {} // bug 842075 - remove try when fixed
 
