@@ -494,6 +494,14 @@ When the "reftest-async-scroll" attribute is set on the root element, *all*
 elements in the document are checked for "reftest-displayport-x/y/w/h" and have
 displayports set on them when those attributes are present.
 
+Testing Async Scrolling: reftest-async-scroll-x/y="<int>"
+=========================================================
+
+When the "reftest-async-scroll" attribute is set on the root element, for any
+element where either the "reftest-async-scroll-x" or "reftest-async-scroll-y
+attributes are nonzero, at the end of the test take the snapshot with the given
+offset (in CSS pixels) added to the async scroll offset.
+
 Printing Tests: class="reftest-print"
 =====================================
 
