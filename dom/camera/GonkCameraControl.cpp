@@ -455,6 +455,7 @@ nsresult
 nsGonkCameraControl::Set(uint32_t aKey, int aValue)
 {
   if (aKey == CAMERA_PARAM_PICTURE_ROTATION) {
+    RETURN_IF_NO_CAMERA_HW();
     aValue = RationalizeRotation(aValue + mCameraHw->GetSensorOrientation());
   }
   return SetAndPush(aKey, aValue);
@@ -464,9 +465,7 @@ nsresult
 nsGonkCameraControl::Get(uint32_t aKey, int& aRet)
 {
   if (aKey == CAMERA_PARAM_SENSORANGLE) {
-    if (!mCameraHw.get()) {
-      return NS_ERROR_NOT_AVAILABLE;
-    }
+    RETURN_IF_NO_CAMERA_HW();
     aRet = mCameraHw->GetSensorOrientation();
     return NS_OK;
   }
@@ -603,7 +602,7 @@ nsGonkCameraControl::SetThumbnailSizeImpl(const Size& aSize)
   }
 
   Size size = supportedSizes[smallestDeltaIndex];
-  DOM_CAMERA_LOGI("camera-param set picture-size = %ux%u (requested %ux%u)\n",
+  DOM_CAMERA_LOGI("camera-param set thumbnail-size = %ux%u (requested %ux%u)\n",
     size.width, size.height, aSize.width, aSize.height);
   if (size.width > INT32_MAX || size.height > INT32_MAX) {
     DOM_CAMERA_LOGE("Supported thumbnail size is too big, no change\n");
@@ -1037,27 +1036,13 @@ nsGonkCameraControl::SetPreviewSize(const Size& aSize)
     }
   }
 
-  {
-    ICameraControlParameterSetAutoEnter set(this);
-
-    // Some camera drivers will ignore our preview size if it's larger
-    // that the currently set video recording size, so we need to set
-    // both here just in case.
-    rv = SetAndPush(CAMERA_PARAM_PREVIEWSIZE, best);
-    if (NS_FAILED(rv)) {
-      DOM_CAMERA_LOGE("Failed to set picture mode preview size (0x%x)\n", rv);
-      return rv;
-    }
-
-    rv = SetAndPush(CAMERA_PARAM_VIDEOSIZE, best);
-    if (NS_FAILED(rv)) {
-      DOM_CAMERA_LOGE("Failed to bump up picture mode video size (0x%x)\n", rv);
-      return rv;
-    }
-  }
-
+  // Some camera drivers will ignore our preview size if it's larger
+  // that the currently set video recording size, so we need to set
+  // both here just in case.
+  mParams.Set(CAMERA_PARAM_PREVIEWSIZE, best);
+  mParams.Set(CAMERA_PARAM_VIDEOSIZE, best);
   mCurrentConfiguration.mPreviewSize = best;
-  return NS_OK;
+  return PushParameters();
 }
 
 nsresult

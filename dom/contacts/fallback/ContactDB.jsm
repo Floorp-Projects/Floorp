@@ -794,6 +794,21 @@ ContactDB.prototype = {
       fail("No migration steps for the new version!");
     }
 
+    this.cpuLock = Cc["@mozilla.org/power/powermanagerservice;1"]
+                     .getService(Ci.nsIPowerManagerService)
+                     .newWakeLock("cpu");
+
+    function unlockCPU() {
+      if (outer.cpuLock) {
+        if (DEBUG) debug("unlocking cpu wakelock");
+        outer.cpuLock.unlock();
+        outer.cpuLock = null;
+      }
+    }
+
+    aTransaction.addEventListener("complete", unlockCPU);
+    aTransaction.addEventListener("abort", unlockCPU);
+
     next();
   },
 
