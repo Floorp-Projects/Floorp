@@ -134,8 +134,12 @@ var gPluginHandler = {
       return false;
     }
 
+    let contentWindow = plugin.ownerDocument.defaultView.top;
+    let cwu = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                           .getInterface(Ci.nsIDOMWindowUtils);
+
     for (let [x, y] of points) {
-      let el = plugin.ownerDocument.elementFromPoint(x, y);
+      let el = cwu.elementFromPoint(x, y, true, true);
       if (el !== plugin) {
         return false;
       }
