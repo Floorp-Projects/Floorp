@@ -41,7 +41,7 @@
         var iframe = document.createElement("iframe");
         iframe.setAttribute("mozbrowser", "true");
         iframe.setAttribute("ignoreuserfocus", "true");
-        iframe.setAttribute("height", "500px");
+        iframe.setAttribute("height", "300px");
         iframe.setAttribute("src", "file_ignoreuserfocus.html");
 
         iframe.addEventListener('load', function (e) {
@@ -102,7 +102,6 @@
 
             // Test the case when iframe contains <area> and .focus()
             // is called and explicit focus using mouse
-            witness.focus();
 
             // Wait for paint to setup frame for area. Currently the area frame
             // map is reset for each paint. If we are in the middle of a paint
@@ -126,7 +125,12 @@
 
               SimpleTest.finish();
             });
+            witness.focus();
+            // force reflow
+            var reflow = iframe.offsetLeft;
           });
+          // force reflow
+          var reflow = iframe.offsetLeft;
         });
 
         document.body.appendChild(witness);

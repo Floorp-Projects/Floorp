@@ -55,6 +55,7 @@
 #include "private/pprio.h"
 #include "PermissionMessageUtils.h"
 #include "StructuredCloneUtils.h"
+#include "ColorPickerParent.h"
 #include "JavaScriptParent.h"
 #include "FilePickerParent.h"
 #include "TabChild.h"
@@ -1623,6 +1624,20 @@ TabParent::GetAuthPrompt(uint32_t aPromptReason, const nsIID& iid,
   // of the dialogs works as it should when using tabs.
   return wwatch->GetPrompt(window, iid,
                            reinterpret_cast<void**>(aResult));
+}
+
+PColorPickerParent*
+TabParent::AllocPColorPickerParent(const nsString& aTitle,
+                                   const nsString& aInitialColor)
+{
+  return new ColorPickerParent(aTitle, aInitialColor);
+}
+
+bool
+TabParent::DeallocPColorPickerParent(PColorPickerParent* actor)
+{
+  delete actor;
+  return true;
 }
 
 PContentDialogParent*

@@ -187,6 +187,11 @@ public:
                                            const ZoomConstraints& aConstraints) MOZ_OVERRIDE;
     virtual bool RecvContentReceivedTouch(const ScrollableLayerGuid& aGuid,
                                           const bool& aPreventDefault) MOZ_OVERRIDE;
+
+    virtual PColorPickerParent*
+    AllocPColorPickerParent(const nsString& aTitle, const nsString& aInitialColor) MOZ_OVERRIDE;
+    virtual bool DeallocPColorPickerParent(PColorPickerParent* aColorPicker) MOZ_OVERRIDE;
+
     virtual PContentDialogParent*
     AllocPContentDialogParent(const uint32_t& aType,
                               const nsCString& aName,

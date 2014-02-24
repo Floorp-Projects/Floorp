@@ -4,46 +4,399 @@
 https://bugzilla.mozilla.org/show_bug.cgi?id=783129
 -->
 <head>
-  <title>Test for document.register lifecycle callback</title>
+  <title>Test for document.registerElement lifecycle callback</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
 <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
-
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=783129">Bug 783129</a>
+<div id="container">
+  <x-hello id="hello"></x-hello>
+  <button id="extbutton" is="x-button"></button>
+</div>
 <script>
 
-var gLifecycleCallbackCalled = false;
+var container = document.getElementById("container");
 
-var lifecycleCallbacks = {
-  created: function() {
-    is(this.getAttribute("id"), "grabme", "|this| value should be the upgrade element");
-    gLifecycleCallbackCalled = true;
-  }
-};
+// Tests callbacks after registering element type that is already in the document.
+// create element in document -> register -> remove from document
+function testRegisterUnresolved() {
+  var helloElem = document.getElementById("hello");
 
-function startTest() {
-  var HtmlProto = function() {};
-  HtmlProto.prototype = HTMLElement.prototype;
+  var createdCallbackCalled = false;
+  var enteredViewCallbackCalled = false;
+  var leftViewCallbackCalled = false;
 
-  // Create a prototype that inheits from HTMLElement.
-  var customProto = new HtmlProto();
-  customProto.hello = function() {
-    ok(true, "Custom element should use provided prototype.");
+  var p = Object.create(HTMLElement.prototype);
+  p.createdCallback = function() {
+    is(helloElem.__proto__, p, "Prototype should be adjusted just prior to invoking the created callback.");
+    is(createdCallbackCalled, false, "Created callback should only be called once in this tests.");
+    is(this, helloElem, "The 'this' value should be the custom element.");
+    createdCallbackCalled = true;
   };
 
-  var elementConstructor = document.register("x-hello", { prototype: customProto, lifecycle: lifecycleCallbacks });
+  p.enteredViewCallback = function() {
+    is(createdCallbackCalled, true, "Created callback should be called before enteredView");
+    is(enteredViewCallbackCalled, false, "enteredView callback should only be called once in this test.");
+    is(this, helloElem, "The 'this' value should be the custom element.");
+    enteredViewCallbackCalled = true;
+  };
 
-  ok(gLifecycleCallbackCalled, "Lifecycle callback should be called.");
+  p.leftViewCallback = function() {
+    is(enteredViewCallbackCalled, true, "enteredView callback should be called before leftView");
+    is(leftViewCallbackCalled, false, "leftView callback should only be called once in this test.");
+    leftViewCallbackCalled = true;
+    is(this, helloElem, "The 'this' value should be the custom element.");
+    runNextTest();
+  };
 
-  SimpleTest.finish();
+  p.attributeChangedCallback = function(name, oldValue, newValue) {
+    ok(false, "attributeChanged callback should never be called in this test.");
+  };
+
+  document.registerElement("x-hello", { prototype: p });
+  is(createdCallbackCalled, true, "created callback should be called when control returns to script from user agent code");
+
+  // Remove element from document to trigger leftView callback.
+  container.removeChild(helloElem);
+}
+
+// Tests callbacks after registering an extended element type that is already in the document.
+// create element in document -> register -> remove from document
+function testRegisterUnresolvedExtended() {
+  var buttonElem = document.getElementById("extbutton");
+
+  var createdCallbackCalled = false;
+  var enteredViewCallbackCalled = false;
+  var leftViewCallbackCalled = false;
+
+  var p = Object.create(HTMLButtonElement.prototype);
+  p.createdCallback = function() {
+    is(buttonElem.__proto__, p, "Prototype should be adjusted just prior to invoking the created callback.");
+    is(createdCallbackCalled, false, "Created callback should only be called once in this tests.");
+    is(this, buttonElem, "The 'this' value should be the custom element.");
+    createdCallbackCalled = true;
+  };
+
+  p.enteredViewCallback = function() {
+    is(createdCallbackCalled, true, "Created callback should be called before enteredView");
+    is(enteredViewCallbackCalled, false, "enteredView callback should only be called once in this test.");
+    is(this, buttonElem, "The 'this' value should be the custom element.");
+    enteredViewCallbackCalled = true;
+  };
+
+  p.leftViewCallback = function() {
+    is(enteredViewCallbackCalled, true, "enteredView callback should be called before leftView");
+    is(leftViewCallbackCalled, false, "leftView callback should only be called once in this test.");
+    leftViewCallbackCalled = true;
+    is(this, buttonElem, "The 'this' value should be the custom element.");
+    runNextTest();
+  };
+
+  p.attributeChangedCallback = function(name, oldValue, newValue) {
+    ok(false, "attributeChanged callback should never be called in this test.");
+  };
+
+  document.registerElement("x-button", { prototype: p, extends: "button" });
+  is(createdCallbackCalled, true, "created callback should be called when control returns to script from user agent code");
+
+  // Remove element from document to trigger leftView callback.
+  container.removeChild(buttonElem);
+}
+
+function testInnerHTML() {
+  var createdCallbackCalled = false;
+
+  var p = Object.create(HTMLElement.prototype);
+  p.createdCallback = function() {
+    is(createdCallbackCalled, false, "created callback should only be called once in this test.");
+    createdCallbackCalled = true;
+  };
+
+  document.registerElement("x-inner-html", { prototype: p });
+  var div = document.createElement(div);
+  div.innerHTML = '<x-inner-html></x-inner-html>';
+  is(createdCallbackCalled, true, "created callback should be called after setting innerHTML.");
+  runNextTest();
+}
+
+function testInnerHTMLExtended() {
+  var createdCallbackCalled = false;
+
+  var p = Object.create(HTMLButtonElement.prototype);
+  p.createdCallback = function() {
+    is(createdCallbackCalled, false, "created callback should only be called once in this test.");
+    createdCallbackCalled = true;
+  };
+
+  document.registerElement("x-inner-html-extended", { prototype: p, extends: "button" });
+  var div = document.createElement(div);
+  div.innerHTML = '<button is="x-inner-html-extended"></button>';
+  is(createdCallbackCalled, true, "created callback should be called after setting innerHTML.");
+  runNextTest();
+}
+
+function testInnerHTMLUpgrade() {
+  var createdCallbackCalled = false;
+
+  var div = document.createElement(div);
+  div.innerHTML = '<x-inner-html-upgrade></x-inner-html-upgrade>';
+
+  var p = Object.create(HTMLElement.prototype);
+  p.createdCallback = function() {
+    is(createdCallbackCalled, false, "created callback should only be called once in this test.");
+    createdCallbackCalled = true;
+  };
+
+  document.registerElement("x-inner-html-upgrade", { prototype: p });
+  is(createdCallbackCalled, true, "created callback should be called after registering.");
+  runNextTest();
+}
+
+function testInnerHTMLExtendedUpgrade() {
+  var createdCallbackCalled = false;
+
+  var div = document.createElement(div);
+  div.innerHTML = '<button is="x-inner-html-extended-upgrade"></button>';
+
+  var p = Object.create(HTMLButtonElement.prototype);
+  p.createdCallback = function() {
+    is(createdCallbackCalled, false, "created callback should only be called once in this test.");
+    createdCallbackCalled = true;
+  };
+
+  document.registerElement("x-inner-html-extended-upgrade", { prototype: p, extends: "button" });
+  is(createdCallbackCalled, true, "created callback should be called after registering.");
+  runNextTest();
+}
+
+// Test callback when creating element after registering an element type.
+// register -> create element -> insert into document -> remove from document
+function testRegisterResolved() {
+  var createdCallbackCalled = false;
+  var enteredViewCallbackCalled = false;
+  var leftViewCallbackCalled = false;
+
+  var createdCallbackThis;
+
+  var p = Object.create(HTMLElement.prototype);
+  p.createdCallback = function() {
+    is(createdCallbackCalled, false, "Created callback should only be called once in this test.");
+    createdCallbackThis = this;
+    createdCallbackCalled = true;
+  };
+
+  p.enteredViewCallback = function() {
+    is(createdCallbackCalled, true, "created callback should be called before enteredView callback.");
+    is(enteredViewCallbackCalled, false, "enteredView callback should only be called on in this test.");
+    is(this, createdElement, "The 'this' value should be the custom element.");
+    enteredViewCallbackCalled = true;
+  };
+
+  p.leftViewCallback = function() {
+    is(enteredViewCallbackCalled, true, "enteredView callback should be called before leftView");
+    is(leftViewCallbackCalled, false, "leftView callback should only be called once in this test.");
+    is(this, createdElement, "The 'this' value should be the custom element.");
+    leftViewCallbackCalled = true;
+    runNextTest();
+  };
+
+  p.attributeChangedCallback = function() {
+    ok(false, "attributeChanged callback should never be called in this test.");
+  };
+
+  document.registerElement("x-resolved", { prototype: p });
+  is(createdCallbackCalled, false, "Created callback should not be called when custom element instance has not been created.");
+
+  var createdElement = document.createElement("x-resolved");
+  is(createdCallbackThis, createdElement, "The 'this' value in the created callback should be the custom element.");
+  is(createdElement.__proto__, p, "Prototype of custom element should be the registered prototype.");
+
+  // Insert element into document to trigger enteredView callback.
+  container.appendChild(createdElement);
+
+  // Remove element from document to trigger leftView callback.
+  container.removeChild(createdElement);
+}
+
+// Callbacks should always be the same ones when registered.
+function testChangingCallback() {
+  var p = Object.create(HTMLElement.prototype);
+  var callbackCalled = false;
+  p.attributeChangedCallback = function(name, oldValue, newValue) {
+    is(callbackCalled, false, "Callback should only be called once in this test.");
+    callbackCalled = true;
+    runNextTest();
+  };
+
+  document.registerElement("x-test-callback", { prototype: p });
+
+  p.attributeChangedCallback = function(name, oldValue, newValue) {
+    ok(false, "Only callbacks at registration should be called.");
+  };
+
+  var elem = document.createElement("x-test-callback");
+  elem.setAttribute("foo", "bar");
+}
+
+function testAttributeChanged() {
+  var createdCallbackCalled = false;
+
+  var createdElement;
+  var createdCallbackThis;
+
+  var p = Object.create(HTMLElement.prototype);
+  p.createdCallback = function() {
+    is(createdCallbackCalled, false, "Created callback should only be called once in this test.");
+    createdCallbackThis = this;
+    createdCallbackCalled = true;
+  };
+
+  // Sequence of callback arguments that we expect from attribute changed callback
+  // after changing attributes values in a specific order.
+  var expectedCallbackArguments = [
+    // [oldValue, newValue]
+    [null, "newvalue"], // Setting the attribute value to "newvalue"
+    ["newvalue", "nextvalue"], // Changing the attribute value from "newvalue" to "nextvalue"
+    ["nextvalue", ""], // Changing the attribute value from "nextvalue" to empty string
+    ["", null], // Removing the attribute.
+  ];
+
+  p.attributeChangedCallback = function(name, oldValue, newValue) {
+    is(createdCallbackCalled, true, "created callback should be called before attribute changed.");
+    is(this, createdElement, "The 'this' value should be the custom element.");
+    ok(expectedCallbackArguments.length > 0, "Attribute changed callback should not be called more than expected.");
+
+    is(name, "changeme", "name arugment in attribute changed callback should be the name of the changed attribute.");
+
+    var expectedArgs = expectedCallbackArguments.shift();
+    is(oldValue, expectedArgs[0], "The old value argument should match the expected value.");
+    is(newValue, expectedArgs[1], "The new value argument should match the expected value.");
+
+    if (expectedCallbackArguments.length === 0) {
+      // Done with the attribute changed callback test.
+      runNextTest();
+    }
+  };
+
+  document.registerElement("x-attrchange", { prototype: p });
+
+  var createdElement = document.createElement("x-attrchange");
+  is(createdCallbackThis, createdElement, "The 'this' value in the created callback should be the custom element.");
+  createdElement.setAttribute("changeme", "newvalue");
+  createdElement.setAttribute("changeme", "nextvalue");
+  createdElement.setAttribute("changeme", "");
+  createdElement.removeAttribute("changeme");
+}
+
+function testAttributeChangedExtended() {
+  var p = Object.create(HTMLButtonElement.prototype);
+  var callbackCalled = false;
+  p.attributeChangedCallback = function(name, oldValue, newValue) {
+    is(callbackCalled, false, "Callback should only be called once in this test.");
+    callbackCalled = true;
+    runNextTest();
+  };
+
+  document.registerElement("x-extended-attribute-change", { prototype: p, extends: "button" });
+
+  var elem = document.createElement("button", "x-extended-attribute-change");
+  elem.setAttribute("foo", "bar");
+}
+
+// Creates a custom element that is an upgrade candidate (no registration)
+// and mutate the element in ways that would call callbacks for registered
+// elements.
+function testUpgradeCandidate() {
+  var createdElement = document.createElement("x-upgrade-candidate");
+  container.appendChild(createdElement);
+  createdElement.setAttribute("foo", "bar");
+  container.removeChild(createdElement);
+  ok(true, "Nothing bad should happen when trying to mutating upgrade candidates.");
+  runNextTest();
+}
+
+function testNotInDocEnterLeave() {
+  var p = Object.create(HTMLElement.prototype);
+
+  p.enteredView = function() {
+    ok(false, "enteredView should not be called when not entering the document.");
+  };
+
+  p.leftView = function() {
+    ok(false, "leaveView should not be called when not leaving the document.");
+  };
+
+  var createdElement = document.createElement("x-destined-for-fragment");
+
+  document.registerElement("x-destined-for-fragment", { prototype: p });
+
+  var fragment = new DocumentFragment();
+  fragment.appendChild(createdElement);
+  fragment.removeChild(createdElement);
+
+  var divNotInDoc = document.createElement("div");
+  divNotInDoc.appendChild(createdElement);
+  divNotInDoc.removeChild(createdElement);
+
+  runNextTest();
+}
+
+function testEnterLeaveView() {
+  var enteredViewCallbackCalled = false;
+  var leftViewCallbackCalled = false;
+
+  var p = Object.create(HTMLElement.prototype);
+  p.enteredViewCallback = function() {
+    is(enteredViewCallbackCalled, false, "enteredView callback should only be called on in this test.");
+    enteredViewCallbackCalled = true;
+  };
+
+  p.leftViewCallback = function() {
+    is(enteredViewCallbackCalled, true, "enteredView callback should be called before leftView");
+    is(leftViewCallbackCalled, false, "leftView callback should only be called once in this test.");
+    leftViewCallbackCalled = true;
+    runNextTest();
+  };
+
+  var div = document.createElement("div");
+  document.registerElement("x-element-in-div", { prototype: p });
+  var customElement = document.createElement("x-element-in-div");
+  div.appendChild(customElement);
+  is(enteredViewCallbackCalled, false, "Appending a custom element to a node that is not in the document should not call the enteredView callback.");
+
+  container.appendChild(div);
+  container.removeChild(div);
+}
+
+var testFunctions = [
+  testRegisterUnresolved,
+  testRegisterUnresolvedExtended,
+  testInnerHTML,
+  testInnerHTMLExtended,
+  testInnerHTMLUpgrade,
+  testInnerHTMLExtendedUpgrade,
+  testRegisterResolved,
+  testAttributeChanged,
+  testAttributeChangedExtended,
+  testUpgradeCandidate,
+  testChangingCallback,
+  testNotInDocEnterLeave,
+  testEnterLeaveView,
+  SimpleTest.finish
+];
+
+function runNextTest() {
+  if (testFunctions.length > 0) {
+    var nextTestFunction = testFunctions.shift();
+    nextTestFunction();
+  }
 }
 
 SimpleTest.waitForExplicitFinish();
-</script>
 
-</head>
-<body onload="startTest()">
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=783129">Bug 783129</a>
-<x-hello id="grabme">
-<div id="kid"></div>
-</x-hello>
+runNextTest();
+
+</script>
 </body>
 </html>
