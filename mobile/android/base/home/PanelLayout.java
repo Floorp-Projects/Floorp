@@ -5,7 +5,9 @@
 
 package org.mozilla.gecko.home;
 
+import org.mozilla.gecko.R;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
+import org.mozilla.gecko.home.HomeConfig.ItemHandler;
 import org.mozilla.gecko.home.HomeConfig.PanelConfig;
 import org.mozilla.gecko.home.HomeConfig.ViewConfig;
 import org.mozilla.gecko.util.StringUtils;
@@ -64,6 +66,7 @@ abstract class PanelLayout extends FrameLayout {
     private static final String LOGTAG = "GeckoPanelLayout";
 
     protected final Map<View, ViewState> mViewStateMap;
+    private final PanelConfig mPanelConfig;
     private final DatasetHandler mDatasetHandler;
     private final OnUrlOpenListener mUrlOpenListener;
 
@@ -140,11 +143,12 @@ abstract class PanelLayout extends FrameLayout {
     }
 
     public interface PanelView {
-        public void setOnUrlOpenListener(OnUrlOpenListener listener);
+        public void setOnItemOpenListener(OnItemOpenListener listener);
+        public void setOnKeyListener(OnKeyListener listener);
     }
 
     public interface FilterManager {
-        public String getPreviousFilter();
+        public FilterDetail getPreviousFilter();
         public boolean canGoBack();
         public void goBack();
     }
@@ -152,6 +156,7 @@ abstract class PanelLayout extends FrameLayout {
     public PanelLayout(Context context, PanelConfig panelConfig, DatasetHandler datasetHandler, OnUrlOpenListener urlOpenListener) {
         super(context);
         mViewStateMap = new WeakHashMap<View, ViewState>();
+        mPanelConfig = panelConfig;
         mDatasetHandler = datasetHandler;
         mUrlOpenListener = urlOpenListener;
     }
@@ -220,8 +225,9 @@ abstract class PanelLayout extends FrameLayout {
         // TODO: Push initial filter here onto ViewState
         mViewStateMap.put(view, state);
 
-        ((PanelView) view).setOnUrlOpenListener(new PanelUrlOpenListener(state));
-        view.setOnKeyListener(new PanelKeyListener(state));
+        PanelView panelView = (PanelView) view;
+        panelView.setOnItemOpenListener(new PanelOnItemOpenListener(state));
+        panelView.setOnKeyListener(new PanelKeyListener(state));
 
         if (view instanceof DatasetBacked) {
             DatasetBacked datasetBacked = (DatasetBacked) view;
@@ -277,9 +283,9 @@ abstract class PanelLayout extends FrameLayout {
      * Represents a 'live' instance of a panel view associated with
      * the {@code PanelLayout}. Is responsible for tracking the history stack of filters.
      */
-    protected static class ViewState {
+    protected class ViewState {
         private final ViewConfig mViewConfig;
-        private LinkedList<String> mFilterStack;
+        private LinkedList<FilterDetail> mFilterStack;
 
         public ViewState(ViewConfig viewConfig) {
             mViewConfig = viewConfig;
@@ -289,10 +295,14 @@ abstract class PanelLayout extends FrameLayout {
             return mViewConfig.getDatasetId();
         }
 
+        public ItemHandler getItemHandler() {
+            return mViewConfig.getItemHandler();
+        }
+
         /**
          * Get the current filter that this view is displaying, or null if none.
          */
-        public String getCurrentFilter() {
+        public FilterDetail getCurrentFilter() {
             if (mFilterStack == null) {
                 return null;
             } else {
@@ -303,7 +313,7 @@ abstract class PanelLayout extends FrameLayout {
         /**
          * Get the previous filter that this view was displaying, or null if none.
          */
-        public String getPreviousFilter() {
+        public FilterDetail getPreviousFilter() {
             if (!canPopFilter()) {
                 return null;
             }
@@ -314,13 +324,13 @@ abstract class PanelLayout extends FrameLayout {
         /**
          * Adds a filter to the history stack for this view.
          */
-        public void pushFilter(String filter) {
+        public void pushFilter(FilterDetail filter) {
             if (mFilterStack == null) {
-                mFilterStack = new LinkedList<String>();
+                mFilterStack = new LinkedList<FilterDetail>();
 
                 // Initialize with a null filter.
                 // TODO: use initial filter from ViewConfig
-                mFilterStack.push(null);
+                mFilterStack.push(new FilterDetail(null, mPanelConfig.getTitle()));
             }
 
             mFilterStack.push(filter);
@@ -345,12 +355,25 @@ abstract class PanelLayout extends FrameLayout {
         }
     }
 
+    static class FilterDetail {
+        final String filter;
+        final String title;
+
+        public FilterDetail(String filter, String title) {
+            this.filter = filter;
+            this.title = title;
+        }
+    }
+
     /**
      * Pushes filter to {@code ViewState}'s stack and makes request for new filter value.
      */
-    private void pushFilterOnView(ViewState viewState, String filter) {
-        viewState.pushFilter(filter);
-        mDatasetHandler.requestDataset(new DatasetRequest(viewState.getDatasetId(), filter));
+    private void pushFilterOnView(ViewState viewState, FilterDetail filterDetail) {
+        viewState.pushFilter(filterDetail);
+
+        final String filter = filterDetail.filter;
+        final String datasetId = viewState.getDatasetId();
+        mDatasetHandler.requestDataset(new DatasetRequest(datasetId, filter));
     }
 
     /**
@@ -360,30 +383,39 @@ abstract class PanelLayout extends FrameLayout {
      */
     private boolean popFilterOnView(ViewState viewState) {
         if (viewState.popFilter()) {
-            final String filter = viewState.getCurrentFilter();
-            mDatasetHandler.requestDataset(new DatasetRequest(viewState.getDatasetId(), filter));
+            final FilterDetail current = viewState.getCurrentFilter();
+
+            final String filter = (current == null ? null : current.filter);
+            final String datasetId = viewState.getDatasetId();
+            mDatasetHandler.requestDataset(new DatasetRequest(datasetId, filter));
             return true;
         } else {
             return false;
         }
     }
 
-    /**
-     * Custom listener so that we can intercept any filter URLs and make a new dataset request
-     * rather than forwarding them to the default listener.
-     */
-    private class PanelUrlOpenListener implements OnUrlOpenListener {
+    public interface OnItemOpenListener {
+        public void onItemOpen(String url, String title);
+    }
+
+    private class PanelOnItemOpenListener implements OnItemOpenListener {
         private ViewState mViewState;
 
-        public PanelUrlOpenListener(ViewState viewState) {
+        public PanelOnItemOpenListener(ViewState viewState) {
             mViewState = viewState;
         }
 
         @Override
-        public void onUrlOpen(String url, EnumSet<Flags> flags) {
+        public void onItemOpen(String url, String title) {
             if (StringUtils.isFilterUrl(url)) {
-                pushFilterOnView(mViewState, StringUtils.getFilterFromUrl(url));
+                FilterDetail filterDetail = new FilterDetail(StringUtils.getFilterFromUrl(url), title);
+                pushFilterOnView(mViewState, filterDetail);
             } else {
+                EnumSet<OnUrlOpenListener.Flags> flags = EnumSet.noneOf(OnUrlOpenListener.Flags.class);
+                if (mViewState.getItemHandler() == ItemHandler.INTENT) {
+                    flags.add(OnUrlOpenListener.Flags.OPEN_WITH_INTENT);
+                }
+
                 mUrlOpenListener.onUrlOpen(url, flags);
             }
         }
@@ -414,7 +446,7 @@ abstract class PanelLayout extends FrameLayout {
         }
 
         @Override
-        public String getPreviousFilter() {
+        public FilterDetail getPreviousFilter() {
             return mViewState.getPreviousFilter();
         }
 
