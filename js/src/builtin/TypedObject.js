@@ -303,7 +303,8 @@ TypedObjectPointer.prototype.moveToFieldIndex = function(index) {
          "bad field descr");
   assert(TO_INT32(fieldOffset) === fieldOffset,
          "bad field offset");
-  assert(fieldOffset >= 0 && fieldOffset < DESCR_SIZE(this.descr),
+  assert(fieldOffset >= 0 &&
+         (fieldOffset + DESCR_SIZE(fieldDescr)) <= DESCR_SIZE(this.descr),
          "out of bounds field offset");
 
   this.descr = fieldDescr;
