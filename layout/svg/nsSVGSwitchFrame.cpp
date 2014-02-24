@@ -38,10 +38,10 @@ public:
    *
    * @see nsGkAtoms::svgSwitchFrame
    */
-  virtual nsIAtom* GetType() const;
+  virtual nsIAtom* GetType() const MOZ_OVERRIDE;
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const
+  virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE
   {
     return MakeFrameName(NS_LITERAL_STRING("SVGSwitch"), aResult);
   }
@@ -55,11 +55,11 @@ public:
   virtual nsresult PaintSVG(nsRenderingContext* aContext,
                             const nsIntRect *aDirtyRect,
                             nsIFrame* aTransformRoot) MOZ_OVERRIDE;
-  nsIFrame* GetFrameForPoint(const nsPoint &aPoint);
-  nsRect GetCoveredRegion();
-  virtual void ReflowSVG();
+  nsIFrame* GetFrameForPoint(const nsPoint &aPoint) MOZ_OVERRIDE;
+  nsRect GetCoveredRegion() MOZ_OVERRIDE;
+  virtual void ReflowSVG() MOZ_OVERRIDE;
   virtual SVGBBox GetBBoxContribution(const Matrix &aToBBoxUserspace,
-                                      uint32_t aFlags);
+                                      uint32_t aFlags) MOZ_OVERRIDE;
 
 private:
   nsIFrame *GetActiveChildFrame();

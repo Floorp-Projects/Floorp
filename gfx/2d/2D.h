@@ -164,7 +164,7 @@ struct DrawSurfaceOptions {
 class GradientStops : public RefCounted<GradientStops>
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_TYPENAME(GradientStops)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(GradientStops)
   virtual ~GradientStops() {}
 
   virtual BackendType GetBackendType() const = 0;
@@ -317,7 +317,7 @@ public:
 class SourceSurface : public RefCounted<SourceSurface>
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_TYPENAME(SourceSurface)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SourceSurface)
   virtual ~SourceSurface() {}
 
   virtual SurfaceType GetType() const = 0;
@@ -341,6 +341,7 @@ public:
 class DataSourceSurface : public SourceSurface
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DataSourceSurface)
   DataSourceSurface()
     : mIsMapped(false)
   {
@@ -398,7 +399,7 @@ public:
 class PathSink : public RefCounted<PathSink>
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_TYPENAME(PathSink)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(PathSink)
   virtual ~PathSink() {}
 
   /* Move the current point in the path, any figure currently being drawn will
@@ -437,7 +438,7 @@ class FlattenedPath;
 class Path : public RefCounted<Path>
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_TYPENAME(Path)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(Path)
   virtual ~Path();
   
   virtual BackendType GetBackendType() const = 0;
@@ -506,6 +507,7 @@ protected:
 class PathBuilder : public PathSink
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(PathBuilder)
   /* Finish writing to the path and return a Path object that can be used for
    * drawing. Future use of the builder results in a crash!
    */
@@ -537,7 +539,7 @@ struct GlyphBuffer
 class ScaledFont : public RefCounted<ScaledFont>
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_TYPENAME(ScaledFont)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(ScaledFont)
   virtual ~ScaledFont() {}
 
   typedef void (*FontFileDataOutput)(const uint8_t *aData, uint32_t aLength, uint32_t aIndex, Float aGlyphSize, void *aBaton);
@@ -596,7 +598,7 @@ struct FontOptions
 class GlyphRenderingOptions : public RefCounted<GlyphRenderingOptions>
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_TYPENAME(GlyphRenderingOptions)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(GlyphRenderingOptions)
   virtual ~GlyphRenderingOptions() {}
 
   virtual FontType GetType() const = 0;
@@ -613,7 +615,7 @@ protected:
 class DrawTarget : public RefCounted<DrawTarget>
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_TYPENAME(DrawTarget)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DrawTarget)
   DrawTarget() : mTransformDirty(false), mPermitSubpixelAA(false) {}
   virtual ~DrawTarget() {}
 
@@ -996,7 +998,7 @@ protected:
 class DrawEventRecorder : public RefCounted<DrawEventRecorder>
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_TYPENAME(DrawEventRecorder)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DrawEventRecorder)
   virtual ~DrawEventRecorder() { }
 };
 

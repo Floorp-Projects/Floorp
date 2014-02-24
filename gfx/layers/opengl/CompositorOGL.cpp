@@ -824,8 +824,15 @@ CompositorOGL::GetShaderConfigFor(Effect *aEffect, MaskType aMask) const
     config.SetYCbCr(true);
     break;
   case EFFECT_COMPONENT_ALPHA:
+  {
     config.SetComponentAlpha(true);
+    EffectComponentAlpha* effectComponentAlpha =
+      static_cast<EffectComponentAlpha*>(aEffect);
+    gfx::SurfaceFormat format = effectComponentAlpha->mOnWhite->GetFormat();
+    config.SetRBSwap(format == gfx::SurfaceFormat::B8G8R8A8 ||
+                     format == gfx::SurfaceFormat::B8G8R8X8);
     break;
+  }
   case EFFECT_RENDER_TARGET:
     config.SetTextureTarget(mFBOTextureTarget);
     break;
