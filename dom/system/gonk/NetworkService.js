@@ -365,6 +365,30 @@ NetworkService.prototype = {
     this.controlMessage(options, function() {});
   },
 
+  addSecondaryRoute: function(ifname, route) {
+    if(DEBUG) debug("Going to add route to secondary table on " + ifname);
+    let options = {
+      cmd: "addSecondaryRoute",
+      ifname: ifname,
+      ip: route.ip,
+      prefix: route.prefix,
+      gateway: route.gateway
+    };
+    this.controlMessage(options, function() {});
+  },
+
+  removeSecondaryRoute: function(ifname, route) {
+    if(DEBUG) debug("Going to remove route from secondary table on " + ifname);
+    let options = {
+      cmd: "removeSecondaryRoute",
+      ifname: ifname,
+      ip: route.ip,
+      prefix: route.prefix,
+      gateway: route.gateway
+    };
+    this.controlMessage(options, function() {});
+  },
+
   setNetworkProxy: function(network) {
     try {
       if (!network.httpProxyHost || network.httpProxyHost === "") {
