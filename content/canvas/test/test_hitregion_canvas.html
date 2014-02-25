@@ -1,0 +1,70 @@
+<!DOCTYPE HTML>
+<title>Canvas Tests</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<body>
+<script>
+
+SimpleTest.waitForExplicitFinish();
+const Cc = SpecialPowers.Cc;
+const Cr = SpecialPowers.Cr;
+SpecialPowers.setBoolPref("canvas.hitregions.enabled", true);
+
+</script>
+
+<p>Canvas test: hit regions</p>
+<canvas id="c1" width="150" height="50">
+  <a id="c1_a"></a>
+</canvas>
+<a id="c1_b"></a>
+
+<script type="text/javascript">
+
+function test_hitregions() {
+  var c = document.getElementById("c1");
+  var d = document.getElementById("c1_a");
+  var e = document.getElementById("c1_b");
+
+  var ctx = c.getContext("2d");
+  var _thrown_outer = false;
+  try {
+    ctx.rect(10,10,100,100);
+    ctx.addHitRegion({control: d});
+    ctx.addHitRegion({control: e});
+    ctx.addHitRegion({id: "a", control: d});
+    ctx.addHitRegion({id: "a", control: d});
+    
+    ctx.removeHitRegion("a");
+    ctx.removeHitRegion("a");
+    ctx.removeHitRegion("b");
+  } catch (e) {
+      _thrown_outer = true;
+  }
+  ok(!_thrown_outer, ctx.canvas.id + ' should not throw exception');
+
+  var _thrown = undefined; try {
+    ctx.beginPath();
+    ctx.addHitRegion({control: d});
+  } catch (ex) { _thrown = ex };
+
+  ok(_thrown && _thrown.name == "NotSupportedError", "should throw NotSupportedError");
+
+}
+</script>
+
+<script>
+ 
+function runTests() {
+ try {
+  test_hitregions();
+ } catch(e) {
+  throw e;
+  ok(false, "unexpected exception thrown in: test_hitregions");
+ }
+ SimpleTest.finish();
+ SpecialPowers.setBoolPref("canvas.hitregions.enabled", false);
+}
+
+addLoadEvent(runTests);
+
+</script>
