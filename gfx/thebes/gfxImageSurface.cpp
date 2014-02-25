@@ -317,6 +317,18 @@ gfxImageSurface::CopyTo(SourceSurface *aSurface) {
     return true;
 }
 
+TemporaryRef<DataSourceSurface>
+gfxImageSurface::CopyToB8G8R8A8DataSourceSurface()
+{
+  RefPtr<DataSourceSurface> dataSurface =
+    Factory::CreateDataSourceSurface(IntSize(GetSize().width, GetSize().height),
+                                     SurfaceFormat::B8G8R8A8);
+  if (dataSurface) {
+    CopyTo(dataSurface);
+  }
+  return dataSurface.forget();
+}
+
 already_AddRefed<gfxSubimageSurface>
 gfxImageSurface::GetSubimage(const gfxRect& aRect)
 {
