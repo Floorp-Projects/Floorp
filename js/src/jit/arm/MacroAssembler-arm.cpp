@@ -6,6 +6,7 @@
 
 #include "jit/arm/MacroAssembler-arm.h"
 
+#include "mozilla/Casting.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MathAlgorithms.h"
 
@@ -18,6 +19,7 @@ using namespace js;
 using namespace jit;
 
 using mozilla::Abs;
+using mozilla::BitwiseCast;
 
 bool
 isValueDTRDCandidate(ValueOperand &val)
@@ -1459,31 +1461,16 @@ MacroAssemblerARM::ma_vsqrt_f32(FloatRegister src, FloatRegister dest, Condition
     as_vsqrt(VFPRegister(dest).singleOverlay(), VFPRegister(src).singleOverlay(), cc);
 }
 
-union DoublePun
-{
-    struct
-    {
-#if defined(IS_LITTLE_ENDIAN)
-        uint32_t lo, hi;
-#else
-        uint32_t hi, lo;
-#endif
-    } s;
-    double d;
-};
-
 static inline uint32_t
-DoubleHighWord(const double& value)
+DoubleHighWord(const double value)
 {
-    const DoublePun *dpun = reinterpret_cast<const DoublePun *>(&value);
-    return dpun->s.hi;
+    return static_cast<uint32_t>(BitwiseCast<uint64_t>(value) >> 32);
 }
 
 static inline uint32_t
-DoubleLowWord(const double& value)
+DoubleLowWord(const double value)
 {
-    const DoublePun *dpun = reinterpret_cast<const DoublePun *>(&value);
-    return dpun->s.lo;
+    return BitwiseCast<uint64_t>(value) & uint32_t(0xffffffff);
 }
 
 void
@@ -1511,9 +1498,9 @@ MacroAssemblerARM::ma_vimm(double value, FloatRegister dest, Condition cc)
 }
 
 static inline uint32_t
-Float32Word(const float& value)
+Float32Word(const float value)
 {
-    return *reinterpret_cast<const uint32_t*>(&value);
+    return BitwiseCast<uint32_t>(value);
 }
 
 void
