@@ -1899,8 +1899,29 @@ public class testBrowserProvider extends ContentProviderTest {
             dumpCursor(cursor, 18, "records");
         }
 
+        private static void dumpColumn(Cursor cursor, int column, int columnWidth) {
+            switch (cursor.getType(column)) {
+            case Cursor.FIELD_TYPE_BLOB:
+                System.out.print(fixedWidth(columnWidth, "<blob>"));
+                break;
+            case Cursor.FIELD_TYPE_INTEGER:
+                System.out.print(fixedWidth(columnWidth, Integer.toString(cursor.getInt(column), 10)));
+                break;
+            case Cursor.FIELD_TYPE_NULL:
+                System.out.print(fixedWidth(columnWidth, "<null>"));
+                break;
+            default:
+                // These don't apply to us.
+                System.out.print(fixedWidth(columnWidth, "<other>"));
+                break;
+            }
+
+            System.out.print(" | ");
+        }
+
         protected static void dumpCursor(Cursor cursor, int columnWidth,
                                          String tags) {
+            System.out.println("Dumped cursor:");
             int originalPosition = cursor.getPosition();
             try {
                 String[] columnNames = cursor.getColumnNames();
@@ -1923,9 +1944,7 @@ public class testBrowserProvider extends ContentProviderTest {
                 cursor.moveToFirst();
                 while (!cursor.isAfterLast()) {
                     for (int i = 0; i < columnCount; ++i) {
-                        System.out.print(fixedWidth(columnWidth,
-                                                    cursor.getString(i)) +
-                                         " | ");
+                        dumpColumn(cursor, i, columnWidth);
                     }
                     System.out.println("");
                     cursor.moveToNext();
