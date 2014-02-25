@@ -27,20 +27,24 @@ public class PanelGridView extends GridView
 
     private final ViewConfig mViewConfig;
     private final PanelViewAdapter mAdapter;
-    protected OnUrlOpenListener mUrlOpenListener;
+    private PanelViewUrlHandler mUrlHandler;
 
     public PanelGridView(Context context, ViewConfig viewConfig) {
         super(context, null, R.attr.panelGridViewStyle);
+
         mViewConfig = viewConfig;
+        mUrlHandler = new PanelViewUrlHandler(viewConfig);
+
         mAdapter = new PanelViewAdapter(context, viewConfig.getItemType());
         setAdapter(mAdapter);
+
         setOnItemClickListener(new PanelGridItemClickListener());
     }
 
     @Override
     public void onDetachedFromWindow() {
         super.onDetachedFromWindow();
-        mUrlOpenListener = null;
+        mUrlHandler.setOnUrlOpenListener(null);
     }
 
     @Override
@@ -50,26 +54,13 @@ public class PanelGridView extends GridView
 
     @Override
     public void setOnUrlOpenListener(OnUrlOpenListener listener) {
-        mUrlOpenListener = listener;
+        mUrlHandler.setOnUrlOpenListener(listener);
     }
 
     private class PanelGridItemClickListener implements AdapterView.OnItemClickListener {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-            Cursor cursor = mAdapter.getCursor();
-            if (cursor == null || !cursor.moveToPosition(position)) {
-                throw new IllegalStateException("Couldn't move cursor to position " + position);
-            }
-
-            int urlIndex = cursor.getColumnIndexOrThrow(HomeItems.URL);
-            final String url = cursor.getString(urlIndex);
-
-            EnumSet<OnUrlOpenListener.Flags> flags = EnumSet.noneOf(OnUrlOpenListener.Flags.class);
-            if (mViewConfig.getItemHandler() == ItemHandler.INTENT) {
-                flags.add(OnUrlOpenListener.Flags.OPEN_WITH_INTENT);
-            }
-
-            mUrlOpenListener.onUrlOpen(url, flags);
+            mUrlHandler.openUrlAtPosition(mAdapter.getCursor(), position);
         }
     }
 }
