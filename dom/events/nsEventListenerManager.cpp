@@ -869,7 +869,8 @@ nsEventListenerManager::CompileEventHandlerInternal(nsListenerStruct *aListenerS
 
     JSAutoCompartment ac(cx, context->GetWindowProxy());
     JS::CompileOptions options(cx);
-    options.setFileAndLine(url.get(), lineNo)
+    options.setIntroductionType("eventHandler")
+           .setFileAndLine(url.get(), lineNo)
            .setVersion(SCRIPTVERSION_DEFAULT);
 
     JS::Rooted<JS::Value> targetVal(cx);

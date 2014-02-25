@@ -153,41 +153,6 @@ class nsObjectHashtable : public nsHashtable {
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsSupportsHashtable: an nsHashtable where the elements are nsISupports*
-
-class nsSupportsHashtable
-  : private nsHashtable
-{
-  public:
-    nsSupportsHashtable(uint32_t aSize = 16, bool threadSafe = false)
-      : nsHashtable(aSize, threadSafe) {}
-    ~nsSupportsHashtable();
-
-    int32_t Count(void) {
-        return nsHashtable::Count();
-    }
-    bool Exists(nsHashKey *aKey) {
-        return nsHashtable::Exists (aKey);
-    }
-    bool Put(nsHashKey *aKey,
-               nsISupports *aData,
-               nsISupports **value = nullptr);
-    nsISupports* Get(nsHashKey *aKey);
-    bool Remove(nsHashKey *aKey, nsISupports **value = nullptr);
-    nsHashtable *Clone();
-    void Enumerate(nsHashtableEnumFunc aEnumFunc, void* aClosure = nullptr) {
-        nsHashtable::Enumerate(aEnumFunc, aClosure);
-    }
-    void Reset();
-
-  private:
-    static bool ReleaseElement(nsHashKey *, void *, void *);
-    static PLDHashOperator EnumerateCopy(PLDHashTable*,
-                                         PLDHashEntryHdr* hdr,
-                                         uint32_t i, void *arg);
-};
-
-////////////////////////////////////////////////////////////////////////////////
 // nsISupportsKey: Where keys are nsISupports objects that get refcounted.
 
 class nsISupportsKey : public nsHashKey {

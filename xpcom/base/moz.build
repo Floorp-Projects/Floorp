@@ -23,7 +23,6 @@ XPIDL_SOURCES += [
     'nsIProgrammingLanguage.idl',
     'nsISecurityConsoleMessage.idl',
     'nsISupports.idl',
-    'nsITraceRefcnt.idl',
     'nsIUUIDGenerator.idl',
     'nsIVersionComparator.idl',
     'nsIVisualEventTracer.idl',

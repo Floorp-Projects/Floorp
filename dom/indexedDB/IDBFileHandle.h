@@ -18,32 +18,37 @@ class IDBDatabase;
 
 class IDBFileHandle : public file::FileHandle
 {
+  typedef mozilla::dom::file::LockedFile LockedFile;
+
 public:
-  virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
-
-  NS_IMETHOD_(int64_t)
-  GetFileId()
-  {
-    return mFileInfo->Id();
-  }
-
-  NS_IMETHOD_(FileInfo*)
-  GetFileInfo()
-  {
-    return mFileInfo;
-  }
-
   static already_AddRefed<IDBFileHandle>
   Create(IDBDatabase* aDatabase, const nsAString& aName,
          const nsAString& aType, already_AddRefed<FileInfo> aFileInfo);
 
+
+  virtual int64_t
+  GetFileId() MOZ_OVERRIDE
+  {
+    return mFileInfo->Id();
+  }
+
+  virtual FileInfo*
+  GetFileInfo() MOZ_OVERRIDE
+  {
+    return mFileInfo;
+  }
+
   virtual already_AddRefed<nsISupports>
-  CreateStream(nsIFile* aFile, bool aReadOnly);
+  CreateStream(nsIFile* aFile, bool aReadOnly) MOZ_OVERRIDE;
 
   virtual already_AddRefed<nsIDOMFile>
-  CreateFileObject(file::LockedFile* aLockedFile, uint32_t aFileSize);
+  CreateFileObject(LockedFile* aLockedFile, uint32_t aFileSize) MOZ_OVERRIDE;
 
+  // nsWrapperCache
+  virtual JSObject*
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
+
+  // WebIDL
   IDBDatabase*
   Database();
 
@@ -51,7 +56,8 @@ private:
   IDBFileHandle(IDBDatabase* aOwner);
 
   ~IDBFileHandle()
-  { }
+  {
+  }
 
   nsRefPtr<FileInfo> mFileInfo;
 };

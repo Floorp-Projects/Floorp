@@ -2596,6 +2596,18 @@ SpdySession31::ConnectPushedStream(SpdyStream31 *stream)
   ForceRecv();
 }
 
+nsresult
+SpdySession31::BufferOutput(const char *buf,
+                            uint32_t count,
+                            uint32_t *countRead)
+{
+  nsAHttpSegmentReader *old = mSegmentReader;
+  mSegmentReader = nullptr;
+  nsresult rv = OnReadSegment(buf, count, countRead);
+  mSegmentReader = old;
+  return rv;
+}
+
 //-----------------------------------------------------------------------------
 // Modified methods of nsAHttpConnection
 //-----------------------------------------------------------------------------

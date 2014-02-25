@@ -104,7 +104,6 @@
 #include "nsISupportsPriority.h"
 #include "nsIThreadManager.h"
 #include "nsITimer.h"
-#include "nsITraceRefcnt.h"
 #include "nsIUUIDGenerator.h"
 #include "nsIUnicharInputStream.h"
 #include "nsIUnicharOutputStream.h"

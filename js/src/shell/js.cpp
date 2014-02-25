@@ -392,7 +392,8 @@ RunFile(JSContext *cx, Handle<JSObject*> obj, const char *filename, FILE *file, 
         JS::ContextOptionsRef(cx).setNoScriptRval(true);
 
         CompileOptions options(cx);
-        options.setUTF8(true)
+        options.setIntroductionType("js shell file")
+               .setUTF8(true)
                .setFileAndLine(filename, 1)
                .setCompileAndGo(true);
 
@@ -422,7 +423,8 @@ EvalAndPrint(JSContext *cx, Handle<JSObject*> global, const char *bytes, size_t 
 {
     // Eval.
     JS::CompileOptions options(cx);
-    options.setUTF8(true)
+    options.setIntroductionType("js shell interactive")
+           .setUTF8(true)
            .setCompileAndGo(true)
            .setFileAndLine("typein", lineno);
     RootedScript script(cx);
@@ -747,7 +749,10 @@ LoadScript(JSContext *cx, unsigned argc, jsval *vp, bool scriptRelative)
             return false;
         errno = 0;
         CompileOptions opts(cx);
-        opts.setUTF8(true).setCompileAndGo(true).setNoScriptRval(true);
+        opts.setIntroductionType("js shell load")
+            .setUTF8(true)
+            .setCompileAndGo(true)
+            .setNoScriptRval(true);
         if ((compileOnly && !Compile(cx, thisobj, opts, filename.ptr())) ||
             !Evaluate(cx, thisobj, opts, filename.ptr(), nullptr))
         {
@@ -1045,7 +1050,8 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
     bool assertEqBytecode = false;
     RootedObject callerGlobal(cx, cx->global());
 
-    options.setFileAndLine("@evaluate", 1);
+    options.setIntroductionType("js shell evaluate")
+           .setFileAndLine("@evaluate", 1);
 
     global = JS_GetGlobalForObject(cx, &args.callee());
     if (!global)
@@ -1363,7 +1369,8 @@ Run(JSContext *cx, unsigned argc, jsval *vp)
         JS::ContextOptionsRef(cx).setNoScriptRval(true);
 
         JS::CompileOptions options(cx);
-        options.setFileAndLine(filename.ptr(), 1)
+        options.setIntroductionType("js shell run")
+               .setFileAndLine(filename.ptr(), 1)
                .setCompileAndGo(true);
         script = JS_CompileUCScript(cx, thisobj, ucbuf, buflen, options);
         if (!script)
@@ -2202,7 +2209,8 @@ DisassFile(JSContext *cx, unsigned argc, jsval *vp)
         JS::ContextOptionsRef(cx).setNoScriptRval(true);
 
         CompileOptions options(cx);
-        options.setUTF8(true)
+        options.setIntroductionType("js shell disFile")
+               .setUTF8(true)
                .setFileAndLine(filename.ptr(), 1)
                .setCompileAndGo(true);
 
@@ -3382,7 +3390,8 @@ Compile(JSContext *cx, unsigned argc, jsval *vp)
     JS::AutoSaveContextOptions asco(cx);
     JS::ContextOptionsRef(cx).setNoScriptRval(true);
     JS::CompileOptions options(cx);
-    options.setFileAndLine("<string>", 1)
+    options.setIntroductionType("js shell compile")
+           .setFileAndLine("<string>", 1)
            .setCompileAndGo(true);
     bool ok = JS_CompileUCScript(cx, global, JS_GetStringCharsZ(cx, scriptContents),
                                  JS_GetStringLength(scriptContents), options);
@@ -3410,7 +3419,8 @@ Parse(JSContext *cx, unsigned argc, jsval *vp)
 
     JSString *scriptContents = args[0].toString();
     CompileOptions options(cx);
-    options.setFileAndLine("<string>", 1)
+    options.setIntroductionType("js shell parse")
+           .setFileAndLine("<string>", 1)
            .setCompileAndGo(false);
     Parser<FullParseHandler> parser(cx, &cx->tempLifoAlloc(), options,
                                     JS_GetStringCharsZ(cx, scriptContents),
@@ -3448,7 +3458,8 @@ SyntaxParse(JSContext *cx, unsigned argc, jsval *vp)
 
     JSString *scriptContents = args[0].toString();
     CompileOptions options(cx);
-    options.setFileAndLine("<string>", 1)
+    options.setIntroductionType("js shell syntaxParse")
+           .setFileAndLine("<string>", 1)
            .setCompileAndGo(false);
 
     const jschar *chars = JS_GetStringCharsZ(cx, scriptContents);
@@ -3578,7 +3589,8 @@ OffThreadCompileScript(JSContext *cx, unsigned argc, jsval *vp)
 
     JSAutoByteString fileNameBytes;
     CompileOptions options(cx);
-    options.setFileAndLine("<string>", 1);
+    options.setIntroductionType("js shell offThreadCompileScript")
+           .setFileAndLine("<string>", 1);
 
     if (args.length() >= 2) {
         if (args[1].isPrimitive()) {

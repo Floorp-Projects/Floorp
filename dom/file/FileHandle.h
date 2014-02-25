@@ -9,7 +9,6 @@
 
 #include "FileCommon.h"
 
-#include "nsIDOMFileHandle.h"
 #include "nsIFile.h"
 #include "nsIFileStorage.h"
 
@@ -19,12 +18,16 @@
 #include "mozilla/dom/FileModeBinding.h"
 
 class nsIDOMFile;
+class nsIDOMLockedFile;
 class nsIFileStorage;
 class nsPIDOMWindow;
 
 namespace mozilla {
 namespace dom {
 class DOMRequest;
+namespace indexedDB {
+class FileInfo;
+} // namespace indexedDB
 } // namespace dom
 } // namespace mozilla
 
@@ -36,13 +39,12 @@ class FinishHelper;
 class FileHelper;
 
 /**
- * Must be subclassed. The subclass must implement CreateStream and
- * CreateFileObject. Basically, every file storage implementation provides its
- * own FileHandle implementation (for example IDBFileHandle provides IndexedDB
- * specific implementation).
+ * This class provides a default FileHandle implementation, but it can be also
+ * subclassed. The subclass can override implementation of GetFileId,
+ * GetFileInfo, CreateStream and CreateFileObject.
+ * (for example IDBFileHandle provides IndexedDB specific implementation).
  */
-class FileHandle : public nsDOMEventTargetHelper,
-                   public nsIDOMFileHandle
+class FileHandle : public nsDOMEventTargetHelper
 {
   friend class FileService;
   friend class LockedFile;
@@ -51,29 +53,12 @@ class FileHandle : public nsDOMEventTargetHelper,
 
 public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIDOMFILEHANDLE
-
-  nsPIDOMWindow* GetParentObject() const
-  {
-    return GetOwner();
-  }
-  virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
-
-  void GetName(nsString& aName) const
-  {
-    aName = mName;
-  }
-  void GetType(nsString& aType) const
-  {
-    aType = mType;
-  }
-  already_AddRefed<nsIDOMLockedFile> Open(FileMode aMode, ErrorResult& aError);
-  already_AddRefed<DOMRequest> GetFile(ErrorResult& aError);
-  IMPL_EVENT_HANDLER(abort)
-  IMPL_EVENT_HANDLER(error)
-
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(FileHandle, nsDOMEventTargetHelper)
+
+  static already_AddRefed<FileHandle>
+  Create(nsPIDOMWindow* aWindow,
+         nsIFileStorage* aFileStorage,
+         nsIFile* aFile);
 
   const nsAString&
   Name() const
@@ -87,11 +72,55 @@ public:
     return mType;
   }
 
+  virtual int64_t
+  GetFileId()
+  {
+    return -1;
+  }
+
+  virtual mozilla::dom::indexedDB::FileInfo*
+  GetFileInfo()
+  {
+    return nullptr;
+  }
+
   virtual already_AddRefed<nsISupports>
-  CreateStream(nsIFile* aFile, bool aReadOnly) = 0;
+  CreateStream(nsIFile* aFile, bool aReadOnly);
 
   virtual already_AddRefed<nsIDOMFile>
-  CreateFileObject(LockedFile* aLockedFile, uint32_t aFileSize) = 0;
+  CreateFileObject(LockedFile* aLockedFile, uint32_t aFileSize);
+
+  // nsWrapperCache
+  virtual JSObject*
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
+
+  // WebIDL
+  nsPIDOMWindow*
+  GetParentObject() const
+  {
+    return GetOwner();
+  }
+
+  void
+  GetName(nsString& aName) const
+  {
+    aName = mName;
+  }
+
+  void
+  GetType(nsString& aType) const
+  {
+    aType = mType;
+  }
+
+  already_AddRefed<nsIDOMLockedFile>
+  Open(FileMode aMode, ErrorResult& aError);
+
+  already_AddRefed<DOMRequest>
+  GetFile(ErrorResult& aError);
+
+  IMPL_EVENT_HANDLER(abort)
+  IMPL_EVENT_HANDLER(error)
 
 protected:
   FileHandle(nsPIDOMWindow* aWindow)
@@ -105,7 +134,8 @@ protected:
   }
 
   ~FileHandle()
-  { }
+  {
+  }
 
   nsCOMPtr<nsIFileStorage> mFileStorage;
 

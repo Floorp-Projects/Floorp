@@ -7,7 +7,6 @@
 TEST_DIRS += ['test']
 
 XPIDL_SOURCES += [
-    'nsIDOMFileHandle.idl',
     'nsIDOMLockedFile.idl',
 ]
 
@@ -23,7 +22,6 @@ EXPORTS.mozilla.dom.file += [
     'ArchiveRequest.h',
     'ArchiveZipEvent.h',
     'ArchiveZipFile.h',
-    'DOMFileHandle.h',
     'DOMFileRequest.h',
     'File.h',
     'FileCommon.h',
@@ -40,7 +38,6 @@ UNIFIED_SOURCES += [
     'ArchiveZipEvent.cpp',
     'ArchiveZipFile.cpp',
     'AsyncHelper.cpp',
-    'DOMFileHandle.cpp',
     'DOMFileRequest.cpp',
     'File.cpp',
     'FileHandle.cpp',

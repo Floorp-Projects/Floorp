@@ -396,8 +396,17 @@ ArrayBufferObject::changeContents(JSContext *cx, ObjectElements *newHeader)
     // Update all views.
     uintptr_t newDataPointer = uintptr_t(newHeader->elements());
     for (ArrayBufferViewObject *view = viewListHead; view; view = view->nextView()) {
-        uintptr_t newDataPtr = uintptr_t(view->getPrivate()) - oldDataPointer + newDataPointer;
-        view->setPrivate(reinterpret_cast<uint8_t*>(newDataPtr));
+        // Watch out for NULL data pointers in views. This either
+        // means that the view is not fully initialized (in which case
+        // it'll be initialized later with the correct pointer) or
+        // that the view has been neutered. In that case, the buffer
+        // is "en route" to being neutered but the isNeuteredBuffer()
+        // flag may not yet be set.
+        uint8_t *viewDataPointer = static_cast<uint8_t*>(view->getPrivate());
+        if (viewDataPointer) {
+            viewDataPointer += newDataPointer - oldDataPointer;
+            view->setPrivate(viewDataPointer);
+        }
 
         // Notify compiled jit code that the base pointer has moved.
         MarkObjectStateChange(cx, view);
@@ -1200,8 +1209,13 @@ ArrayBufferViewObject::trace(JSTracer *trc, JSObject *obj)
      * initialization, bufSlot may still be JSVAL_VOID. */
     if (bufSlot.isObject()) {
         ArrayBufferObject &buf = bufSlot.toObject().as<ArrayBufferObject>();
-        int32_t offset = obj->getReservedSlot(BYTEOFFSET_SLOT).toInt32();
-        obj->initPrivate(buf.dataPointer() + offset);
+        if (buf.getElementsHeader()->isNeuteredBuffer()) {
+            // When a view is neutered, it is set to NULL
+            JS_ASSERT(obj->getPrivate() == nullptr);
+        } else {
+            int32_t offset = obj->getReservedSlot(BYTEOFFSET_SLOT).toInt32();
+            obj->initPrivate(buf.dataPointer() + offset);
+        }
     }
 
     /* Update NEXT_VIEW_SLOT, if the view moved. */

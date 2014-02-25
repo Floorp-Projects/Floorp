@@ -98,9 +98,10 @@ public:
     bool EnsureInitialized();
 
     GLXPixmap CreatePixmap(gfxASurface* aSurface);
-    void DestroyPixmap(GLXPixmap aPixmap);
-    void BindTexImage(GLXPixmap aPixmap);
-    void ReleaseTexImage(GLXPixmap aPixmap);
+    void DestroyPixmap(Display* aDisplay, GLXPixmap aPixmap);
+    void BindTexImage(Display* aDisplay, GLXPixmap aPixmap);
+    void ReleaseTexImage(Display* aDisplay, GLXPixmap aPixmap);
+    void UpdateTexImage(Display* aDisplay, GLXPixmap aPixmap);
 
     bool UseTextureFromPixmap() { return mUseTextureFromPixmap; }
     bool HasRobustness() { return mHasRobustness; }

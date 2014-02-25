@@ -173,11 +173,12 @@ ExecuteSequentially(JSContext *cx, HandleValue funVal)
 {
     FastInvokeGuard fig(cx, funVal);
     InvokeArgs &args = fig.args();
-    if (!args.init(1))
+    if (!args.init(2))
         return false;
     args.setCallee(funVal);
     args.setThis(UndefinedValue());
-    args[0].setBoolean(!!cx->runtime()->forkJoinWarmup);
+    args[0].setInt32(0); // always worker 0 in seq
+    args[1].setBoolean(!!cx->runtime()->forkJoinWarmup);
     return fig.invoke(cx);
 }
 
@@ -1520,9 +1521,10 @@ ForkJoinShared::executePortion(PerThreadData *perThread, uint32_t workerId)
         cx.bailoutRecord->setCause(ParallelBailoutMainScriptNotPresent);
         setAbortFlagAndTriggerOperationCallback(false);
     } else {
-        ParallelIonInvoke<2> fii(cx_->runtime(), fun_, 1);
+        ParallelIonInvoke<2> fii(cx_->runtime(), fun_, 2);
 
-        fii.args[0] = BooleanValue(false);
+        fii.args[0] = Int32Value(workerId);
+        fii.args[1] = BooleanValue(false);
 
         bool ok = fii.invoke(perThread);
         JS_ASSERT(ok == !cx.bailoutRecord->topScript);

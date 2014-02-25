@@ -746,6 +746,8 @@ CertVerifier::VerifySSLServerCert(CERTCertificate* peerCert,
     return SECFailure;
   }
 
+  // CreateCertErrorRunnable assumes that CERT_VerifyCertName is only called
+  // if VerifyCert succeeded.
   ScopedCERTCertList validationChain;
   SECStatus rv = VerifyCert(peerCert, stapledOCSPResponse,
                             certificateUsageSSLServer, time,

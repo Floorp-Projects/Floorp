@@ -42,7 +42,7 @@ test(function() {
   assert_true("initEvent" in ev)
 })
 test(function() {
-  var ev = Event("test")
+  var ev = new Event("test")
   assert_equals(ev.type, "test")
   assert_equals(ev.target, null)
   assert_equals(ev.currentTarget, null)

@@ -335,6 +335,8 @@ fi
 
 MOZ_TOOL_VARIABLES
 
+MOZ_CHECK_COMPILER_WRAPPER
+
 if test -n "$GNU_CC" -a -z "$CLANG_CC" ; then
     if test "$GCC_MAJOR_VERSION" -eq 4 -a "$GCC_MINOR_VERSION" -lt 4 ||
        test "$GCC_MAJOR_VERSION" -lt 4; then
@@ -3466,7 +3468,6 @@ if test -n "$JS_OOM_DO_BACKTRACES"; then
 fi
 
 MOZ_CHECK_CCACHE
-MOZ_CHECK_COMPILER_WRAPPER
 
 dnl ========================================================
 dnl = Enable static checking using gcc-dehydra
