@@ -1,0 +1,24 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Inner frame performing a basic sendBeacon from within an iframe</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+</head>
+<body>
+<script type="text/javascript">
+
+function sendBeacon()
+{
+    var frame = window.parent.document.getElementById("frame");
+    var data = window.parent.beaconConvert(frame.getAttribute("data"));
+
+    var result = navigator.sendBeacon("http://mochi.test:8888/tests/dom/tests/mochitest/beacon/beacon-handler.sjs", data);
+    window.parent.beaconSent(result);
+}
+
+window.addEventListener("load", function() { setTimeout(sendBeacon, 0); }, false);
+
+</script>
+</body>
+</html>
+

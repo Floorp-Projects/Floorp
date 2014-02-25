@@ -11,6 +11,7 @@
  * http://www.w3.org/TR/vibration/#vibration-interface
  * http://www.w3.org/2012/sysapps/runtime/#extension-to-the-navigator-interface-1
  * https://dvcs.w3.org/hg/gamepad/raw-file/default/gamepad.html#navigator-interface-extension
+ * http://www.w3.org/TR/beacon/#sec-beacon-method
  *
  * © Copyright 2004-2011 Apple Computer, Inc., Mozilla Foundation, and
  * Opera Software ASA. You are granted a license to use, reproduce
@@ -347,3 +348,9 @@ partial interface Navigator {
                               optional unsigned long long innerWindowID = 0);
 };
 #endif // MOZ_MEDIA_NAVIGATOR
+
+partial interface Navigator {
+  [Throws, Pref="beacon.enabled"]
+  boolean sendBeacon(DOMString url,
+                     optional (ArrayBufferView or Blob or DOMString or FormData)? data = null);
+};

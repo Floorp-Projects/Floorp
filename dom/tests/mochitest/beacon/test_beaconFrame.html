@@ -1,0 +1,118 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=936340
+-->
+<head>
+  <title>Test for beacon</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=936340">Mozilla Bug 936340</a>
+<p id="display"></p>
+
+<div id="content">
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+// not enabled by default yet.
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({'set': [["beacon.enabled", true]]}, runNextTest);
+
+function getBeaconServerStatus(callback) {
+    var request = new XMLHttpRequest();
+    request.open("GET", "http://mochi.test:8888/tests/dom/tests/mochitest/beacon/beacon-handler.sjs?getLastBeacon", true);
+    request.onload = function() {
+        if (request.readyState === request.DONE) {
+            callback(request.responseText);
+        }
+    };
+    request.send(null);
+}
+
+function createIframeWithData(data, mimetype, convert) {
+    beaconConvert = convert;
+
+    var frame = document.createElement("IFRAME");
+    frame.setAttribute("src", "beacon-frame.html");
+    frame.id = "frame";
+    frame.setAttribute("data", data.toString());
+    frame.setAttribute("mimetype", mimetype);
+    var c = document.getElementById("content");
+    c.appendChild(frame);
+}
+
+function beaconSent(result) {
+    // This function gets called from beacon-frame.html in the inner frame
+    // Check that the beacon was actually sent
+    ok(result, "Beacon was not sent")
+    
+    // remove the frame.
+    var frame = document.getElementById("frame");
+    var data = frame.getAttribute("data");
+    var mimetype = frame.getAttribute("mimetype");
+
+    var c = document.getElementById("content");
+    c.removeChild(frame);
+
+    getBeaconServerStatus( function(response) {
+      console.log(response);
+        var result = JSON.parse(response);
+        
+        is(result.data, data, "Beacon status should match expected.  is: " + result.data + " should be: " + data);
+        is(result.mimetype, mimetype, "Beacon mimetype should match expected.  is: " + result.mimetype + " should be: " + mimetype);
+
+        runNextTest();
+    });
+}
+
+function runNextTest() {
+    var test = tests.shift();
+    setTimeout(test, 0);
+}
+
+var beaconConvert = function() {};
+
+function stringToArrayBuffer(input) {
+
+    var buffer = new ArrayBuffer(input.length * 2);
+    var array = new Uint16Array(buffer);
+
+    // dumbly copy over the bytes
+    for (var i = 0, len = input.length; i < len; i++) {
+        array[i] = input.charCodeAt(i);
+    }
+    return array;
+}
+
+function stringToBlob(input) {
+    var blob = new Blob([input], {type : 'text/html'});
+    return blob;
+}
+
+function stringToFormData(input) {
+    var formdata = new FormData();
+    formdata.append(input, new Blob(['hi']));
+    return formdata;
+}
+
+function identity(data) {
+    return data;
+}
+
+var tests = [
+    function() { createIframeWithData("hi!", "text/plain;charset=UTF-8", identity); },
+    function() { createIframeWithData("123", "application/octet-stream", stringToArrayBuffer); },
+    function() { createIframeWithData("abc", "text/html", stringToBlob); },
+    function() { createIframeWithData("qwerty", "multipart/form-data", stringToFormData); },
+    function() { SimpleTest.finish(); },
+];
+
+</script>
+</pre>
+</body>
+</html>
+
