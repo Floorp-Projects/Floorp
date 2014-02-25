@@ -1841,29 +1841,6 @@ CodeGenerator::visitPostWriteBarrierV(LPostWriteBarrierV *lir)
 }
 
 bool
-CodeGenerator::visitPostWriteBarrierAllSlots(LPostWriteBarrierAllSlots *lir)
-{
-#ifdef JSGC_GENERATIONAL
-    OutOfLineCallPostWriteBarrier *ool = new(alloc()) OutOfLineCallPostWriteBarrier(lir, lir->object());
-    if (!addOutOfLineCode(ool))
-        return false;
-
-    const Nursery &nursery = GetIonContext()->runtime->gcNursery();
-
-    if (lir->object()->isConstant()) {
-        JS_ASSERT(!nursery.isInside(&lir->object()->toConstant()->toObject()));
-        return true;
-    }
-
-    Register objreg = ToRegister(lir->object());
-    masm.branchPtr(Assembler::Below, objreg, ImmWord(nursery.start()), ool->entry());
-    masm.branchPtr(Assembler::AboveOrEqual, objreg, ImmWord(nursery.heapEnd()), ool->entry());
-    masm.bind(ool->rejoin());
-#endif
-    return true;
-}
-
-bool
 CodeGenerator::visitCallNative(LCallNative *call)
 {
     JSFunction *target = call->getSingleTarget();
