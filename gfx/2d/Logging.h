@@ -12,7 +12,6 @@
 
 #include "nsDebug.h"
 #include "Point.h"
-#include "BaseRect.h"
 #include "Matrix.h"
 
 #ifdef WIN32
@@ -97,14 +96,13 @@ public:
   Log &operator <<(unsigned long aLong) { mMessage << aLong; return *this; }
   Log &operator <<(Float aFloat) { mMessage << aFloat; return *this; }
   Log &operator <<(double aDouble) { mMessage << aDouble; return *this; }
-  template <typename T, typename Sub>
-  Log &operator <<(const BasePoint<T, Sub>& aPoint)
+  Log &operator <<(const Point &aPoint)
     { mMessage << "Point(" << aPoint.x << "," << aPoint.y << ")"; return *this; }
-  template <typename T, typename Sub>
-  Log &operator <<(const BaseSize<T, Sub>& aSize)
+  Log &operator <<(const Size &aSize)
     { mMessage << "Size(" << aSize.width << "," << aSize.height << ")"; return *this; }
-  template <typename T, typename Sub, typename Point, typename SizeT, typename Margin>
-  Log &operator <<(const BaseRect<T, Sub, Point, SizeT, Margin>& aRect)
+  Log &operator <<(const IntSize &aSize)
+    { mMessage << "IntSize(" << aSize.width << "," << aSize.height << ")"; return *this; }
+  Log &operator <<(const Rect &aRect)
     { mMessage << "Rect(" << aRect.x << "," << aRect.y << "," << aRect.width << "," << aRect.height << ")"; return *this; }
   Log &operator<<(const Matrix& aMatrix)
     { mMessage << "Matrix(" << aMatrix._11 << " " << aMatrix._12 << " ; " << aMatrix._21 << " " << aMatrix._22 << " ; " << aMatrix._31 << " " << aMatrix._32 << ")"; return *this; }
