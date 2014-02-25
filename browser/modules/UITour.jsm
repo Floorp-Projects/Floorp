@@ -927,12 +927,6 @@ this.UITour = {
   recreatePopup: function(aPanel) {
     // After changing popup attributes that relate to how the native widget is created
     // (e.g. @noautohide) we need to re-create the frame/widget for it to take effect.
-    if (aPanel.hidden) {
-      // If the panel is already hidden, we don't need to recreate it but flush
-      // in case someone just hid it.
-      aPanel.clientWidth; // flush
-      return;
-    }
     aPanel.hidden = true;
     aPanel.clientWidth; // flush
     aPanel.hidden = false;
