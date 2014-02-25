@@ -16,8 +16,9 @@ public class PromptListItem {
     public final boolean inGroup;
     public final boolean disabled;
     public final int id;
-    public boolean isParent;
+    public boolean selected;
 
+    public boolean isParent;
     public Drawable icon;
 
     PromptListItem(JSONObject aObject) {
@@ -27,6 +28,7 @@ public class PromptListItem {
         disabled = aObject.optBoolean("disabled");
         id = aObject.optInt("id");
         isParent = aObject.optBoolean("isParent");
+        selected = aObject.optBoolean("selected");
     }
 
     public PromptListItem(String aLabel) {
@@ -35,7 +37,6 @@ public class PromptListItem {
         inGroup = false;
         disabled = false;
         id = 0;
-        isParent = false;
     }
 
     static PromptListItem[] getArray(JSONArray items) {
