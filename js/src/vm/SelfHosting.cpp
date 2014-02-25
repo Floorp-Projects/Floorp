@@ -692,6 +692,9 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FNINFO("AttachTypedObject",
               JSNativeThreadSafeWrapper<js::AttachTypedObject>,
               &js::AttachTypedObjectJitInfo, 5, 0),
+    JS_FNINFO("SetTypedObjectOffset",
+              JSNativeThreadSafeWrapper<js::SetTypedObjectOffset>,
+              &js::SetTypedObjectOffsetJitInfo, 2, 0),
     JS_FNINFO("ObjectIsTypeDescr",
               JSNativeThreadSafeWrapper<js::ObjectIsTypeDescr>,
               &js::ObjectIsTypeDescrJitInfo, 5, 0),
@@ -781,6 +784,7 @@ js::FillSelfHostingCompileOptions(CompileOptions &options)
      * is supported, for which bytecode is emitted that invokes |fun| with
      * |receiver| as the this-object and ...args as the arguments.
      */
+    options.setIntroductionType("self-hosted");
     options.setFileAndLine("self-hosted", 1);
     options.setSelfHostingMode(true);
     options.setCanLazilyParse(false);

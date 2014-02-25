@@ -33,7 +33,7 @@ interface nsIOpenSignedAppFileCallback : nsISupports
  * This represents a service to access and manipulate 
  * X.509 certificates stored in a database.
  */
-[scriptable, uuid(398dfa21-f29d-4530-bb42-136c6e7d9486)]
+[scriptable, uuid(7446a5b1-84ca-491f-a2fe-0bc60a71ffa5)]
 interface nsIX509CertDB : nsISupports {
 
   /**
@@ -196,6 +196,14 @@ interface nsIX509CertDB : nsISupports {
   void setCertTrust(in nsIX509Cert cert,
                     in unsigned long type,
                     in unsigned long trust);
+
+  /**
+   * @param cert        The certificate for which to modify trust.
+   * @param trustString decoded by CERT_DecodeTrustString. 3 comma separated
+   *                    characters, indicating SSL, Email, and Obj signing
+   *                    trust.
+   */
+  void setCertTrustFromString(in nsIX509Cert3 cert, in string trustString);
 
   /**
    *  Query whether a certificate is trusted for a particular use.

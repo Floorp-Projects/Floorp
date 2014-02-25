@@ -35,6 +35,15 @@ TextComposition::TextComposition(nsPresContext* aPresContext,
 {
 }
 
+void
+TextComposition::Destroy()
+{
+  mPresContext = nullptr;
+  mNode = nullptr;
+  // TODO: If the editor is still alive and this is held by it, we should tell
+  //       this being destroyed for cleaning up the stuff.
+}
+
 bool
 TextComposition::MatchesNativeContext(nsIWidget* aWidget) const
 {
@@ -52,6 +61,10 @@ TextComposition::DispatchEvent(WidgetGUIEvent* aEvent,
 
   nsEventDispatcher::Dispatch(mNode, mPresContext,
                               aEvent, nullptr, aStatus, aCallBack);
+
+  if (!mPresContext) {
+    return;
+  }
 
   // Emulate editor behavior of text event handler if no editor handles
   // composition/text events.

@@ -9,6 +9,7 @@
 
 #include "mozilla/layers/TextureClient.h"
 #include "ISurfaceAllocator.h" // For IsSurfaceDescriptorValid
+#include "mozilla/layers/FenceUtils.h" // for FenceHandle
 #include "mozilla/layers/ShadowLayerUtilsGralloc.h"
 #include <ui/GraphicBuffer.h>
 
@@ -58,6 +59,13 @@ public:
   virtual bool UpdateSurface(gfxASurface* aSurface) MOZ_OVERRIDE;
 
   virtual TextureClientData* DropTextureData() MOZ_OVERRIDE;
+
+  virtual void SetReleaseFenceHandle(FenceHandle aReleaseFenceHandle) MOZ_OVERRIDE;
+
+  const FenceHandle& GetReleaseFenceHandle() const
+  {
+    return mReleaseFenceHandle;
+  }
 
   void InitWith(GrallocBufferActor* aActor, gfx::IntSize aSize);
 

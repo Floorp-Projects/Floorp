@@ -5589,7 +5589,7 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
 
   SetCoord(*aRuleData->ValueForPerspective(), 
            display->mChildPerspective, parentDisplay->mChildPerspective,
-           SETCOORD_LAH | SETCOORD_INITIAL_ZERO | SETCOORD_NONE |
+           SETCOORD_LAH | SETCOORD_INITIAL_NONE | SETCOORD_NONE |
              SETCOORD_UNSET_INITIAL,
            aContext, mPresContext, canStoreInRuleTree);
 

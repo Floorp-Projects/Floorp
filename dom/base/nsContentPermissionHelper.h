@@ -35,12 +35,15 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSICONTENTPERMISSIONTYPE
 
-  ContentPermissionType(const nsACString& aType, const nsACString& aAccess);
+  ContentPermissionType(const nsACString& aType,
+                        const nsACString& aAccess,
+                        const nsTArray<nsString>& aOptions);
   virtual ~ContentPermissionType();
 
 protected:
   nsCString mType;
   nsCString mAccess;
+  nsTArray<nsString> mOptions;
 };
 
 uint32_t ConvertPermissionRequestToArray(nsTArray<PermissionRequest>& aSrcArray,
@@ -48,6 +51,7 @@ uint32_t ConvertPermissionRequestToArray(nsTArray<PermissionRequest>& aSrcArray,
 
 nsresult CreatePermissionArray(const nsACString& aType,
                                const nsACString& aAccess,
+                               const nsTArray<nsString>& aOptions,
                                nsIArray** aTypesArray);
 
 PContentPermissionRequestParent*

@@ -2596,6 +2596,18 @@ Http2Session::ConnectPushedStream(Http2Stream *stream)
 }
 
 nsresult
+Http2Session::BufferOutput(const char *buf,
+                           uint32_t count,
+                           uint32_t *countRead)
+{
+  nsAHttpSegmentReader *old = mSegmentReader;
+  mSegmentReader = nullptr;
+  nsresult rv = OnReadSegment(buf, count, countRead);
+  mSegmentReader = old;
+  return rv;
+}
+
+nsresult
 Http2Session::ConfirmTLSProfile()
 {
   if (mTLSProfileConfirmed)

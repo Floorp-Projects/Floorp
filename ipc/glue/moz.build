@@ -5,11 +5,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS += [
+    'nsIIPCBackgroundChildCreateCallback.h',
     'nsIIPCSerializableInputStream.h',
     'nsIIPCSerializableURI.h',
 ]
 
 EXPORTS.mozilla.ipc += [
+    'BackgroundChild.h',
+    'BackgroundParent.h',
     'BrowserProcessSubThread.h',
     'CrossProcessMutex.h',
     'FileDescriptor.h',
@@ -90,6 +93,7 @@ EXPORTS.ipc += [
 ]
 
 UNIFIED_SOURCES += [
+    'BackgroundImpl.cpp',
     'BrowserProcessSubThread.cpp',
     'FileDescriptor.cpp',
     'FileDescriptorUtils.cpp',
@@ -108,12 +112,20 @@ UNIFIED_SOURCES += [
 # GeckoChildProcessHost.cpp cannot be built in unified mode because it uses plarena.h.
 # URIUtils.cpp cannot be built in unified mode because of name clashes on strdup.
 SOURCES += [
+    'BackgroundChildImpl.cpp',
+    'BackgroundParentImpl.cpp',
     'GeckoChildProcessHost.cpp',
     'URIUtils.cpp',
 ]
 
+LOCAL_INCLUDES += [
+    '/xpcom/build',
+]
+
 IPDL_SOURCES = [
     'InputStreamParams.ipdlh',
+    'PBackground.ipdl',
+    'PBackgroundTest.ipdl',
     'ProtocolTypes.ipdlh',
     'URIParams.ipdlh',
 ]

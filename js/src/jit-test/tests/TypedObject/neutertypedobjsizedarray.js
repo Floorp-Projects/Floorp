@@ -1,6 +1,3 @@
-// FIXME bug 975456
-quit();
-
 // Test the case where we neuter an instance of a fixed-sized array.
 // This is a bit of a tricky case because we cannot (necessarily) fold
 // the neuter check into the bounds check, as we obtain the bounds

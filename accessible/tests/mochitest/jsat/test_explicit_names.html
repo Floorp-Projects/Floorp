@@ -36,6 +36,11 @@
         accOrElmOrID: "heading1",
         expected: ["heading level 1", "Test heading", "This is the heading."]
       }, {
+        accOrElmOrID: "heading1",
+        oldAccOrElmOrID: null,
+        expected: [null /* parent doc title */, document.title,
+		   "heading level 1", "Test heading", "This is the heading."]
+      }, {
         accOrElmOrID: "heading2",
         expected: ["heading level 1", "This is the heading."]
       }, {

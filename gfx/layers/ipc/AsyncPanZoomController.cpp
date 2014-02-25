@@ -450,7 +450,7 @@ AsyncPanZoomController::AsyncPanZoomController(uint64_t aLayersId,
      mX(MOZ_THIS_IN_INITIALIZER_LIST()),
      mY(MOZ_THIS_IN_INITIALIZER_LIST()),
      mPanDirRestricted(false),
-     mZoomConstraints(false, MIN_ZOOM, MAX_ZOOM),
+     mZoomConstraints(false, false, MIN_ZOOM, MAX_ZOOM),
      mLastSampleTime(GetFrameTime()),
      mState(NOTHING),
      mLastAsyncScrollTime(GetFrameTime()),
@@ -957,9 +957,9 @@ nsEventStatus AsyncPanZoomController::OnLongPressUp(const TapGestureInput& aEven
 nsEventStatus AsyncPanZoomController::OnSingleTapUp(const TapGestureInput& aEvent) {
   APZC_LOG("%p got a single-tap-up in state %d\n", this, mState);
   nsRefPtr<GeckoContentController> controller = GetGeckoContentController();
-  // If mZoomConstraints.mAllowZoom is true we wait for a call to OnSingleTapConfirmed before
+  // If mZoomConstraints.mAllowDoubleTapZoom is true we wait for a call to OnSingleTapConfirmed before
   // sending event to content
-  if (controller && !AllowZoom()) {
+  if (controller && !AllowDoubleTapZoom()) {
     int32_t modifiers = WidgetModifiersToDOMModifiers(aEvent.modifiers);
     CSSIntPoint geckoScreenPoint;
     if (ConvertToGecko(aEvent.mPoint, &geckoScreenPoint)) {
@@ -1000,7 +1000,7 @@ nsEventStatus AsyncPanZoomController::OnDoubleTap(const TapGestureInput& aEvent)
   APZC_LOG("%p got a double-tap in state %d\n", this, mState);
   nsRefPtr<GeckoContentController> controller = GetGeckoContentController();
   if (controller) {
-    if (AllowZoom()) {
+    if (AllowDoubleTapZoom()) {
       int32_t modifiers = WidgetModifiersToDOMModifiers(aEvent.modifiers);
       CSSIntPoint geckoScreenPoint;
       if (ConvertToGecko(aEvent.mPoint, &geckoScreenPoint)) {
@@ -1961,6 +1961,11 @@ bool AsyncPanZoomController::AllowZoom() {
       && !(mFrameMetrics.GetDisableScrollingX() || mFrameMetrics.GetDisableScrollingY());
 }
 
+bool AsyncPanZoomController::AllowDoubleTapZoom() {
+  ReentrantMonitorAutoEnter lock(mMonitor);
+  return mZoomConstraints.mAllowDoubleTapZoom && AllowZoom();
+}
+
 void AsyncPanZoomController::SetContentResponseTimer() {
   if (!mContentResponseTimeoutTask) {
     mContentResponseTimeoutTask =
@@ -1976,14 +1981,15 @@ void AsyncPanZoomController::TimeoutContentResponse() {
 }
 
 void AsyncPanZoomController::UpdateZoomConstraints(const ZoomConstraints& aConstraints) {
-  APZC_LOG("%p updating zoom constraints to %d %f %f\n", this, aConstraints.mAllowZoom,
-    aConstraints.mMinZoom.scale, aConstraints.mMaxZoom.scale);
+  APZC_LOG("%p updating zoom constraints to %d %d %f %f\n", this, aConstraints.mAllowZoom,
+    aConstraints.mAllowDoubleTapZoom, aConstraints.mMinZoom.scale, aConstraints.mMaxZoom.scale);
   if (IsFloatNaN(aConstraints.mMinZoom.scale) || IsFloatNaN(aConstraints.mMaxZoom.scale)) {
     NS_WARNING("APZC received zoom constraints with NaN values; dropping...\n");
     return;
   }
   // inf float values and other bad cases should be sanitized by the code below.
   mZoomConstraints.mAllowZoom = aConstraints.mAllowZoom;
+  mZoomConstraints.mAllowDoubleTapZoom = aConstraints.mAllowDoubleTapZoom;
   mZoomConstraints.mMinZoom = (MIN_ZOOM > aConstraints.mMinZoom ? MIN_ZOOM : aConstraints.mMinZoom);
   mZoomConstraints.mMaxZoom = (MAX_ZOOM > aConstraints.mMaxZoom ? aConstraints.mMaxZoom : MAX_ZOOM);
   if (mZoomConstraints.mMaxZoom < mZoomConstraints.mMinZoom) {

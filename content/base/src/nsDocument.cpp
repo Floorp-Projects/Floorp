@@ -7453,11 +7453,15 @@ nsIDocument::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv)
 nsViewportInfo
 nsDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
 {
+  // In cases where the width of the CSS viewport is less than or equal to the width
+  // of the display (i.e. width <= device-width) then we disable double-tap-to-zoom
+  // behaviour. See bug 941995 for details.
+
   switch (mViewportType) {
   case DisplayWidthHeight:
     return nsViewportInfo(aDisplaySize);
   case DisplayWidthHeightNoZoom:
-    return nsViewportInfo(aDisplaySize, /* allowZoom */ false);
+    return nsViewportInfo(aDisplaySize, /*allowZoom*/ false, /*allowDoubleTapZoom*/ false);
   case Unknown:
   {
     nsAutoString viewport;
@@ -7477,7 +7481,7 @@ nsDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
           {
             // We're making an assumption that the docType can't change here
             mViewportType = DisplayWidthHeight;
-            return nsViewportInfo(aDisplaySize);
+            return nsViewportInfo(aDisplaySize, /*allowZoom*/true, /*allowDoubleTapZoom*/false);
           }
         }
       }
@@ -7486,7 +7490,7 @@ nsDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
       GetHeaderData(nsGkAtoms::handheldFriendly, handheldFriendly);
       if (handheldFriendly.EqualsLiteral("true")) {
         mViewportType = DisplayWidthHeight;
-        return nsViewportInfo(aDisplaySize);
+        return nsViewportInfo(aDisplaySize, /*allowZoom*/true, /*allowDoubleTapZoom*/false);
       }
 
       // Bug 940036. This is bad. When FirefoxOS was built, apps installed
@@ -7509,7 +7513,7 @@ nsDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
                                           "ImplicitMetaViewportTagFallback");
         }
         mViewportType = DisplayWidthHeightNoZoom;
-        return nsViewportInfo(aDisplaySize, /* allowZoom */ false);
+        return nsViewportInfo(aDisplaySize, /*allowZoom*/false, /*allowDoubleTapZoom*/false);
       }
     }
 
@@ -7583,6 +7587,7 @@ nsDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
         (userScalable.EqualsLiteral("false"))) {
       mAllowZoom = false;
     }
+    mAllowDoubleTapZoom = mAllowZoom;
 
     mScaleStrEmpty = scaleStr.IsEmpty();
     mWidthStrEmpty = widthStr.IsEmpty();
@@ -7649,7 +7654,7 @@ nsDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
     }
 
     return nsViewportInfo(scaleFloat, scaleMinFloat, scaleMaxFloat, size,
-                          mAutoSize, mAllowZoom);
+                          mAutoSize, mAllowZoom, mAllowDoubleTapZoom);
   }
 }
 
@@ -11318,7 +11323,7 @@ public:
     }
 
     if (doc->mIsApprovedForFullscreen || doc->mAllowRelocking) {
-      Allow();
+      Allow(JS::UndefinedHandleValue);
       return NS_OK;
     }
 
@@ -11363,8 +11368,10 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsPointerLockPermissionRequest,
 NS_IMETHODIMP
 nsPointerLockPermissionRequest::GetTypes(nsIArray** aTypes)
 {
+  nsTArray<nsString> emptyOptions;
   return CreatePermissionArray(NS_LITERAL_CSTRING("pointerLock"),
                                NS_LITERAL_CSTRING("unused"),
+                               emptyOptions,
                                aTypes);
 }
 
@@ -11409,8 +11416,10 @@ nsPointerLockPermissionRequest::Cancel()
 }
 
 NS_IMETHODIMP
-nsPointerLockPermissionRequest::Allow()
+nsPointerLockPermissionRequest::Allow(JS::HandleValue aChoices)
 {
+  MOZ_ASSERT(aChoices.isUndefined());
+
   nsCOMPtr<Element> e = do_QueryReferent(mElement);
   nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocument);
   nsDocument* d = static_cast<nsDocument*>(doc.get());

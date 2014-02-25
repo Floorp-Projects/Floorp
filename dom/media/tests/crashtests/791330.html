@@ -12,7 +12,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=791330
     }
 
     function runTest() {
-      var pc = mozRTCPeerConnection();
+      var pc = new mozRTCPeerConnection();
       pc.close();
 
       navigator.mozGetUserMedia({audio: true, fake: true}, function (stream) {

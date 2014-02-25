@@ -590,7 +590,7 @@ exports["test XMLHttpRequest"] = createProxyTest("", function (helper) {
     'new ' + function ContentScriptScope() {
       // XMLHttpRequest doesn't support XMLHttpRequest.apply,
       // that may break our proxy code
-      assert(window.XMLHttpRequest(), "we are able to instantiate XMLHttpRequest object");
+      assert(new window.XMLHttpRequest(), "we are able to instantiate XMLHttpRequest object");
       done();
     }
   );

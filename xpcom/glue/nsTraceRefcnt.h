@@ -57,39 +57,4 @@ do {                                                              \
 
 #endif /* NS_BUILD_REFCNT_LOGGING */
 
-#ifdef __cplusplus
-
-class nsTraceRefcnt {
-public:
-  inline static void LogAddRef(void* aPtr, nsrefcnt aNewRefCnt,
-                               const char* aTypeName, uint32_t aInstanceSize) {
-    NS_LogAddRef(aPtr, aNewRefCnt, aTypeName, aInstanceSize);
-  }
-
-  inline static void LogRelease(void* aPtr, nsrefcnt aNewRefCnt,
-                                const char* aTypeName) {
-    NS_LogRelease(aPtr, aNewRefCnt, aTypeName);
-  }
-
-  inline static void LogCtor(void* aPtr, const char* aTypeName,
-                             uint32_t aInstanceSize) {
-    NS_LogCtor(aPtr, aTypeName, aInstanceSize);
-  }
-
-  inline static void LogDtor(void* aPtr, const char* aTypeName,
-                             uint32_t aInstanceSize) {
-    NS_LogDtor(aPtr, aTypeName, aInstanceSize);
-  }
-
-  inline static void LogAddCOMPtr(void *aCOMPtr, nsISupports *aObject) {
-    NS_LogCOMPtrAddRef(aCOMPtr, aObject);
-  }
-
-  inline static void LogReleaseCOMPtr(void *aCOMPtr, nsISupports *aObject) {
-    NS_LogCOMPtrRelease(aCOMPtr, aObject);
-  }
-};
-
-#endif /* defined(__cplusplus) */
-
 #endif /* nsTraceRefcnt_h___ */

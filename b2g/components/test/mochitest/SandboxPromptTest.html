@@ -2,14 +2,55 @@
 <body>
 <script>
 
-// invoke audio-capture permission prompt
-navigator.mozGetUserMedia({audio: true}, function () {}, function () {});
+var actions = [
+  {
+    permissions: ["video-capture"],
+    action: function() {
+      // invoke video-capture permission prompt
+      navigator.mozGetUserMedia({video: true}, function () {}, function () {});
+    }
+  },
+  {
+    permissions: ["audio-capture", "video-capture"],
+    action: function() {
+      // invoke audio-capture + video-capture permission prompt
+      navigator.mozGetUserMedia({audio: true, video: true}, function () {}, function () {});
+    }
+  },
+  {
+    permissions: ["audio-capture"],
+    action: function() {
+      // invoke audio-capture permission prompt
+      navigator.mozGetUserMedia({audio: true}, function () {}, function () {});
+    }
+  },
+  {
+    permissions: ["geolocation"],
+    action: function() {
+      // invoke geolocation permission prompt
+      navigator.geolocation.getCurrentPosition(function (pos) {});
+    }
+  },
+  {
+    permissions: ["desktop-notification"],
+    action: function() {
+      // invoke desktop-notification prompt
+      Notification.requestPermission(function (perm) {});
+    }
+  },
+];
 
-// invoke geolocation permission prompt
-navigator.geolocation.getCurrentPosition(function (pos) {});
-
-// invoke desktop-notification prompt
-Notification.requestPermission(function (perm) {});
+// The requested permissions are specified in query string.
+var permissions = JSON.parse(decodeURIComponent(window.location.search.substring(1)));
+for (var i = 0; i < actions.length; i++) {
+  if(permissions.length === actions[i].permissions.length &&
+     permissions.every(function(permission) {
+                         return actions[i].permissions.indexOf(permission) >= 0;
+                       })) {
+    actions[i].action();
+    break;
+  }
+}
 
 </script>
 </body>

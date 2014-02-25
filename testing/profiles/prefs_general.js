@@ -154,6 +154,9 @@ user_pref("browser.download.panel.shown", true);
 // Disable first-tun tab
 user_pref("browser.firstrun.count", 0);
 
+// Tell the PBackground infrastructure to run a test at startup.
+user_pref("pbackground.testing", true);
+
 // Enable webapps testing mode, which bypasses native installation.
 user_pref("browser.webapps.testing", true);
 

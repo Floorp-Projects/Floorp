@@ -250,8 +250,8 @@ let CharsetMenu = {
     }
   },
 
-  update: function(event, charset) {
-    let menuitem = event.target.getElementsByAttribute("charset", this.foldCharset(charset)).item(0);
+  update: function(parent, charset) {
+    let menuitem = parent.getElementsByAttribute("charset", this.foldCharset(charset)).item(0);
     if (menuitem) {
       menuitem.setAttribute("checked", "true");
     }

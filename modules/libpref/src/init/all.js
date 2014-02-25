@@ -992,7 +992,7 @@ pref("network.http.spdy.enabled.v3", true);
 pref("network.http.spdy.enabled.v3-1", true);
 pref("network.http.spdy.enabled.http2draft", false);
 pref("network.http.spdy.enforce-tls-profile", true);
-pref("network.http.spdy.chunk-size", 4096);
+pref("network.http.spdy.chunk-size", 16000);
 pref("network.http.spdy.timeout", 180);
 pref("network.http.spdy.coalesce-hostnames", true);
 pref("network.http.spdy.persistent-settings", false);
