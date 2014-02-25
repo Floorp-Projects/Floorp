@@ -1446,7 +1446,7 @@ struct ExpressionDecompiler
     bool init();
     bool decompilePCForStackOperand(jsbytecode *pc, int i);
     bool decompilePC(jsbytecode *pc);
-    JSAtom *getFixed(uint32_t slot, jsbytecode *pc);
+    JSAtom *getLocal(uint32_t local, jsbytecode *pc);
     JSAtom *getArg(unsigned slot);
     JSAtom *loadAtom(jsbytecode *pc);
     bool quote(JSString *s, uint32_t quote);
@@ -1513,7 +1513,7 @@ ExpressionDecompiler::decompilePC(jsbytecode *pc)
       case JSOP_GETLOCAL:
       case JSOP_CALLLOCAL: {
         uint32_t i = GET_LOCALNO(pc);
-        if (JSAtom *atom = getFixed(i, pc))
+        if (JSAtom *atom = getLocal(i, pc))
             return write(atom);
         return write("(intermediate value)");
       }
@@ -1649,11 +1649,12 @@ ExpressionDecompiler::getArg(unsigned slot)
 }
 
 JSAtom *
-ExpressionDecompiler::getFixed(uint32_t slot, jsbytecode *pc)
+ExpressionDecompiler::getLocal(uint32_t local, jsbytecode *pc)
 {
-    if (slot < script->nfixedvars()) {
+    JS_ASSERT(local < script->nfixed());
+    if (local < script->nfixedvars()) {
         JS_ASSERT(fun);
-        slot += fun->nargs();
+        uint32_t slot = local + fun->nargs();
         JS_ASSERT(slot < script->bindings.count());
         return (*localNames)[slot].name();
     }
@@ -1663,14 +1664,14 @@ ExpressionDecompiler::getFixed(uint32_t slot, jsbytecode *pc)
         if (!chain->is<StaticBlockObject>())
             continue;
         StaticBlockObject &block = chain->as<StaticBlockObject>();
-        if (slot < block.localOffset())
+        if (local < block.localOffset())
             continue;
-        slot -= block.localOffset();
-        if (slot >= block.slotCount())
+        local -= block.localOffset();
+        if (local >= block.numVariables())
             return nullptr;
         for (Shape::Range<NoGC> r(block.lastProperty()); !r.empty(); r.popFront()) {
             const Shape &shape = r.front();
-            if (block.shapeToIndex(shape) == slot)
+            if (block.shapeToIndex(shape) == local)
                 return JSID_TO_ATOM(shape.propid());
         }
         break;

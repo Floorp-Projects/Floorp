@@ -259,7 +259,7 @@ class CompileInfo
                     continue;
                 StaticBlockObject &blockObj = staticScope->as<StaticBlockObject>();
                 if (blockObj.localOffset() < local) {
-                    if (local - blockObj.localOffset() < blockObj.slotCount())
+                    if (local - blockObj.localOffset() < blockObj.numVariables())
                         return blockObj.isAliased(local - blockObj.localOffset());
                     return false;
                 }
