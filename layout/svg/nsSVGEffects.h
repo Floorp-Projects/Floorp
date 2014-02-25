@@ -207,11 +207,6 @@ public:
   bool IsInObserverLists() const;
   void Invalidate();
 
-  /**
-   * @return the filter frame, or null if there is no filter frame
-   */
-  nsSVGFilterFrame *GetFilterFrame();
-
   // nsISupports
   NS_DECL_ISUPPORTS
 
@@ -374,20 +369,13 @@ public:
      * Otherwise *aOK is untouched.
      */
     nsSVGMaskFrame *GetMaskFrame(bool *aOK);
-    /**
-     * @return the filter frame, or null if there is no filter frame
-     * @param aOK if a filter was specified but the designated element
-     * does not exist or is an element of the wrong type, *aOK is set
-     * to false. Otherwise *aOK is untouched.
-     */
-    nsSVGFilterFrame *GetFilterFrame(bool *aOK) {
-      if (!mFilter)
-        return nullptr;
-      nsSVGFilterFrame *filter = mFilter->GetFilterFrame();
-      if (!filter) {
-        *aOK = false;
-      }
-      return filter;
+
+    bool HasValidFilter() {
+      return mFilter && mFilter->ReferencesValidResources();
+    }
+
+    bool HasNoFilterOrHasValidFilter() {
+      return !mFilter || mFilter->ReferencesValidResources();
     }
   };
 
@@ -415,10 +403,6 @@ public:
    * @param aFrame should be the first continuation
    */
   static nsSVGFilterProperty *GetFilterProperty(nsIFrame *aFrame);
-  static nsSVGFilterFrame *GetFilterFrame(nsIFrame *aFrame) {
-    nsSVGFilterProperty *prop = GetFilterProperty(aFrame);
-    return prop ? prop->GetFilterFrame() : nullptr;
-  }
 
   /**
    * @param aFrame must be a first-continuation.

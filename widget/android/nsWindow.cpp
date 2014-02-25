@@ -1708,12 +1708,9 @@ nsWindow::OnKeyEvent(AndroidGeckoEvent *ae)
         msg = NS_KEY_UP;
         break;
     case AKEY_EVENT_ACTION_MULTIPLE:
-        {
-            WidgetTextEvent event(true, NS_TEXT_TEXT, this);
-            event.theText.Assign(ae->Characters());
-            DispatchEvent(&event);
-        }
-        return;
+        // Keys with multiple action are handled in Java,
+        // and we should never see one here
+        MOZ_CRASH("Cannot handle key with multiple action");
     default:
         ALOG("Unknown key action event!");
         return;
@@ -1911,6 +1908,12 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
                 DispatchEvent(&event);
             }
             {
+                WidgetCompositionEvent event(true, NS_COMPOSITION_UPDATE, this);
+                InitEvent(event, nullptr);
+                event.data = ae->Characters();
+                DispatchEvent(&event);
+            }
+            {
                 WidgetTextEvent event(true, NS_TEXT_TEXT, this);
                 InitEvent(event, nullptr);
                 event.theText = ae->Characters();
@@ -2032,17 +2035,13 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
                 InitEvent(event, nullptr);
                 DispatchEvent(&event);
             }
-
-            if (mIMEComposing &&
-                event.theText != mIMEComposingText) {
+            {
                 WidgetCompositionEvent compositionUpdate(true,
                                                          NS_COMPOSITION_UPDATE,
                                                          this);
                 InitEvent(compositionUpdate, nullptr);
                 compositionUpdate.data = event.theText;
                 DispatchEvent(&compositionUpdate);
-                if (Destroyed())
-                    return;
             }
 
 #ifdef DEBUG_ANDROID_IME
@@ -2125,6 +2124,11 @@ nsWindow::NotifyIME(const IMENotification& aIMENotification)
             // Cancel composition on Gecko side
             if (mIMEComposing) {
                 nsRefPtr<nsWindow> kungFuDeathGrip(this);
+
+                WidgetCompositionEvent updateEvent(true, NS_COMPOSITION_UPDATE,
+                                                   this);
+                InitEvent(updateEvent, nullptr);
+                DispatchEvent(&updateEvent);
 
                 WidgetTextEvent textEvent(true, NS_TEXT_TEXT, this);
                 InitEvent(textEvent, nullptr);

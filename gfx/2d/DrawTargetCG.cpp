@@ -351,6 +351,7 @@ static CGColorRef ColorToCGColor(CGColorSpaceRef aColorSpace, const Color& aColo
 class GradientStopsCG : public GradientStops
 {
   public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(GradientStopsCG)
   //XXX: The skia backend uses a vector and passes in aNumStops. It should do better
   GradientStopsCG(GradientStop* aStops, uint32_t aNumStops, ExtendMode aExtendMode)
   {

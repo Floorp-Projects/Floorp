@@ -179,6 +179,7 @@ class TestEmitterBasic(unittest.TestCase):
             CFLAGS=['-fno-exceptions', '-w'],
             CXXFLAGS=['-fcxx-exceptions', '-include foo.h'],
             LDFLAGS=['-framework Foo', '-x'],
+            WIN32_EXE_LDFLAGS=['-subsystem:console'],
         )
 
         variables = objs[0].variables
