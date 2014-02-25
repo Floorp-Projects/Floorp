@@ -21,6 +21,5 @@ if test -z "$bucket"; then
 else
     mk_add_options "export SCCACHE_BUCKET=$bucket"
     mk_add_options "export SCCACHE_NAMESERVER=169.254.169.253"
-    export CC="python2.7 $topsrcdir/sccache/sccache.py $CC"
-    export CXX="python2.7 $topsrcdir/sccache/sccache.py $CXX"
+    ac_add_options "--with-compiler-wrapper=python2.7 $topsrcdir/sccache/sccache.py"
 fi
