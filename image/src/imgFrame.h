@@ -9,6 +9,7 @@
 
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/VolatileBuffer.h"
 #include "nsRect.h"
 #include "nsPoint.h"
 #include "nsSize.h"
@@ -23,6 +24,21 @@
 #include "nsAutoPtr.h"
 #include "imgIContainer.h"
 #include "gfxColor.h"
+
+/*
+ * This creates a gfxImageSurface which will unlock the buffer on destruction
+ */
+
+class LockedImageSurface
+{
+public:
+  static gfxImageSurface *
+  CreateSurface(mozilla::VolatileBuffer *vbuf,
+                const gfxIntSize& size,
+                gfxImageFormat format);
+  static mozilla::TemporaryRef<mozilla::VolatileBuffer>
+  AllocateBuffer(const gfxIntSize& size, gfxImageFormat format);
+};
 
 class imgFrame
 {
@@ -72,14 +88,16 @@ public:
   nsresult UnlockImageData();
   void ApplyDirtToSurfaces();
 
-  nsresult GetSurface(gfxASurface **aSurface) const
+  void SetDiscardable();
+
+  nsresult GetSurface(gfxASurface **aSurface)
   {
     *aSurface = ThebesSurface();
     NS_IF_ADDREF(*aSurface);
     return NS_OK;
   }
 
-  nsresult GetPattern(gfxPattern **aPattern) const
+  nsresult GetPattern(gfxPattern **aPattern)
   {
     if (mSinglePixel)
       *aPattern = new gfxPattern(mSinglePixelColor);
@@ -89,7 +107,12 @@ public:
     return NS_OK;
   }
 
-  gfxASurface* ThebesSurface() const
+  bool IsSinglePixel()
+  {
+    return mSinglePixel;
+  }
+
+  gfxASurface* ThebesSurface()
   {
     if (mOptSurface)
       return mOptSurface;
@@ -100,7 +123,32 @@ public:
     if (mQuartzSurface)
       return mQuartzSurface;
 #endif
-    return mImageSurface;
+    if (mImageSurface)
+      return mImageSurface;
+    if (mVBuf) {
+      mozilla::VolatileBufferPtr<uint8_t> ref(mVBuf);
+      if (ref.WasBufferPurged())
+        return nullptr;
+
+      gfxImageSurface *sur =
+        LockedImageSurface::CreateSurface(mVBuf, mSize, mFormat);
+#if defined(XP_MACOSX)
+      // Manually addref and release to make sure the cairo surface isn't lost
+      NS_ADDREF(sur);
+      gfxQuartzImageSurface *quartzSur = new gfxQuartzImageSurface(sur);
+      // quartzSur does not hold on to the gfxImageSurface
+      NS_RELEASE(sur);
+      return quartzSur;
+#else
+      return sur;
+#endif
+    }
+    // We can return null here if we're single pixel optimized
+    // or a paletted image. However, one has to check for paletted
+    // image data first before attempting to get a surface, so
+    // this is only valid for single pixel optimized images
+    MOZ_ASSERT(mSinglePixel, "No image surface and not a single pixel!");
+    return nullptr;
   }
 
   size_t SizeOfExcludingThisWithComputedFallbackIfHeap(
@@ -167,6 +215,8 @@ private: // data
   /** Indicates how many readers currently have locked this frame */
   int32_t mLockCount;
 
+  mozilla::RefPtr<mozilla::VolatileBuffer> mVBuf;
+
   gfxImageFormat mFormat;
   uint8_t      mPaletteDepth;
   int8_t       mBlendMethod;
@@ -174,6 +224,7 @@ private: // data
   bool mFormatChanged;
   bool mCompositingFailed;
   bool mNonPremult;
+  bool mDiscardable;
 
   /** Have we called DiscardTracker::InformAllocation()? */
   bool mInformedDiscardTracker;
