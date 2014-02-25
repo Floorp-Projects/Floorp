@@ -597,6 +597,7 @@ class AndroidEclipseProjectData(object):
         'included_projects',
         'referenced_projects',
         '_classpathentries',
+        'filtered_resources',
     )
 
     def __init__(self, name):
@@ -611,6 +612,7 @@ class AndroidEclipseProjectData(object):
         self.included_projects = []
         self.referenced_projects = []
         self._classpathentries = []
+        self.filtered_resources = []
 
     def add_classpathentry(self, path, srcdir, dstdir, exclude_patterns=[], ignore_warnings=False):
         cpe = ClassPathEntry()
