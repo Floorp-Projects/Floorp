@@ -43,7 +43,7 @@ ac_add_options --enable-warnings-as-errors
 export MOZ_PACKAGE_JSSHELL=1
 
 # Use ccache
-ac_add_options --with-ccache=/usr/bin/ccache
+. "$topsrcdir/build/mozconfig.cache"
 
 HOST_CC="/tools/gcc-4.7.2-0moz1/bin/gcc"
 HOST_CXX="/tools/gcc-4.7.2-0moz1/bin/g++"
