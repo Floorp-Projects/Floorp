@@ -538,7 +538,7 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
         HasLazyScript
     };
 
-    uint32_t length, lineno, column, nslots;
+    uint32_t length, lineno, column, nslots, staticLevel;
     uint32_t natoms, nsrcnotes, i;
     uint32_t nconsts, nobjects, nregexps, ntrynotes, nblockscopes;
     uint32_t prologLength, version;
@@ -577,8 +577,8 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
         version = script->getVersion();
         lineno = script->lineno();
         column = script->column();
-        nslots = (uint32_t)script->nslots();
-        nslots = (uint32_t)((script->staticLevel() << 16) | script->nslots());
+        nslots = script->nslots();
+        staticLevel = script->staticLevel();
         natoms = script->natoms();
 
         nsrcnotes = script->numNotes();
@@ -769,8 +769,10 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
     if (!xdr->codeUint32(&script->sourceEnd_))
         return false;
 
-    if (!xdr->codeUint32(&lineno) || !xdr->codeUint32(&column) ||
-        !xdr->codeUint32(&nslots))
+    if (!xdr->codeUint32(&lineno) ||
+        !xdr->codeUint32(&column) ||
+        !xdr->codeUint32(&nslots) ||
+        !xdr->codeUint32(&staticLevel))
     {
         return false;
     }
@@ -778,8 +780,8 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
     if (mode == XDR_DECODE) {
         script->lineno_ = lineno;
         script->column_ = column;
-        script->nslots_ = uint16_t(nslots);
-        script->staticLevel_ = uint16_t(nslots >> 16);
+        script->nslots_ = nslots;
+        script->staticLevel_ = staticLevel;
     }
 
     jsbytecode *code = script->code();
