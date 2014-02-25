@@ -21,7 +21,6 @@ import android.view.View.OnClickListener;
 
 public class GeckoActionProvider extends ActionProvider {
     private static int MAX_HISTORY_SIZE = 2;
-    private long mLastChanged = 0;
 
     /**
      * A listener to know when a target was selected.
@@ -78,14 +77,6 @@ public class GeckoActionProvider extends ActionProvider {
 
     public View getView() {
         return onCreateActionView();
-    }
-
-    public boolean hasChanged() {
-        ActivityChooserModel dataModel = ActivityChooserModel.get(mContext, mHistoryFileName);
-        long lastChanged = dataModel.getLastChanged();
-        boolean ret = lastChanged != mLastChanged;
-        mLastChanged = lastChanged;
-        return ret;
     }
 
     @Override

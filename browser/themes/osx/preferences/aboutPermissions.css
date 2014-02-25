@@ -107,6 +107,12 @@
 .pref-icon[type="fullscreen"] {
   list-style-image: url(chrome://global/skin/icons/question-64.png);
 }
+.pref-icon[type="camera"] {
+  list-style-image: url(chrome://global/skin/icons/question-64.png);
+}
+.pref-icon[type="microphone"] {
+  list-style-image: url(chrome://global/skin/icons/question-64.png);
+}
 
 @media (min-resolution: 2dppx) {
   .pref-icon[type="geo"] {

@@ -2,24 +2,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-@media (-moz-windows-compositor) {
+@media (-moz-windows-glass) {
   /* The following rules are for the downloads indicator when in its normal,
      non-downloading, non-paused state (ie, it's just showing the downloads
      button icon). */
-  :-moz-any(#toolbar-menubar, #TabsToolbar) #downloads-button:not([attention]) > #downloads-indicator-anchor > #downloads-indicator-icon:not(:-moz-lwtheme),
+  #toolbar-menubar #downloads-button:not([attention]) > #downloads-indicator-anchor > #downloads-indicator-icon:not(:-moz-lwtheme),
 
   /* The following rules are for the downloads indicator when in its paused
      or undetermined progress state. We use :not([counter]) as a shortcut for
      :-moz-any([progress], [paused]). */
 
-  /* This is the case where the downloads indicator has been moved next to the menubar as well as
-     the case where the downloads indicator is in the tabstrip toolbar. */
-  #toolbar-menubar #downloads-button:not([counter]) > #downloads-indicator-anchor > #downloads-indicator-progress-area > #downloads-indicator-counter,
-  #TabsToolbar #downloads-button:not(:-moz-lwtheme):not([counter]) > #downloads-indicator-anchor > #downloads-indicator-progress-area > #downloads-indicator-counter {
+  /* This is the case where the downloads indicator has been moved next to the menubar. */
+  #toolbar-menubar #downloads-button:not([counter]) > #downloads-indicator-anchor > #downloads-indicator-progress-area > #downloads-indicator-counter {
     background-image: -moz-image-rect(url("chrome://browser/skin/Toolbar-inverted.png"), 0, 198, 18, 180);
   }
 
-  :-moz-any(#toolbar-menubar, #TabsToolbar) #downloads-indicator-counter:not(:-moz-lwtheme) {
+  #toolbar-menubar #downloads-indicator-counter:not(:-moz-lwtheme) {
     color: white;
     text-shadow: 0 0 1px rgba(0,0,0,.7),
                  0 1px 1.5px rgba(0,0,0,.5);

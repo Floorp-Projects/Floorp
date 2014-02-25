@@ -47,7 +47,8 @@ class TestAndroidEclipseBackend(BackendTester):
                   '.externalToolBuilders',
                   '.project',
                   '.settings',
-                  'build.xml',
+                  'pre_build.xml',
+                  'post_build.xml',
                   'gen',
                   'lint.xml',
                   'project.properties']:

@@ -1,0 +1,33 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEFINES['ANDROID_PACKAGE_NAME'] = CONFIG['ANDROID_PACKAGE_NAME']
+
+jar = add_java_jar('browser-junit3')
+jar.sources += [
+    'src/harness/BrowserInstrumentationTestRunner.java',
+    'src/harness/BrowserTestListener.java',
+    'src/tests/BrowserTestCase.java',
+    'src/tests/TestJarReader.java',
+]
+jar.generated_sources = [] # None yet -- try to keep it this way.
+jar.javac_flags += ['-Xlint:all,-unchecked']
+
+# Android Eclipse project.
+main = add_android_eclipse_project('BrowserInstrumentationTests', OBJDIR + '/AndroidManifest.xml')
+# The package name doesn't really matter, but it looks nicest if the
+# generated classes (org.mozilla.gecko.browser.tests.{BuildConfig,R})
+# are in the same hierarchy as the rest of the source files.
+main.package_name = 'org.mozilla.gecko.browser.tests'
+main.res = 'res'
+main.recursive_make_targets += [
+    OBJDIR + '/AndroidManifest.xml',
+]
+main.recursive_make_targets += [OBJDIR + '/generated/' + f for f in jar.generated_sources]
+main.referenced_projects += ['Fennec']
+
+main.add_classpathentry('src', SRCDIR + '/src',
+    dstdir='src/org/mozilla/gecko/browser')

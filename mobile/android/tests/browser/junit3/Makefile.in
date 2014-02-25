@@ -1,0 +1,32 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+ANDROID_APK_NAME := browser-junit3-debug
+
+ANDROID_EXTRA_JARS += \
+	browser-junit3.jar \
+  $(NULL)
+
+PP_TARGETS += manifest
+manifest := AndroidManifest.xml.in
+manifest_FLAGS += \
+  -DANDROID_BROWSER_TARGET_PACKAGE_NAME='$(ANDROID_PACKAGE_NAME)' \
+  -DANDROID_BROWSER_TEST_PACKAGE_NAME='org.mozilla.gecko.browser.tests' \
+  -DANDROID_BROWSER_APP_DISPLAYNAME='$(MOZ_APP_DISPLAYNAME) Browser Tests' \
+  -DMOZ_ANDROID_SHARED_ID='$(ANDROID_PACKAGE_NAME).sharedID' \
+  $(NULL)
+ANDROID_MANIFEST_FILE := $(CURDIR)/AndroidManifest.xml
+
+include $(topsrcdir)/config/rules.mk
+
+tools:: $(ANDROID_APK_NAME).apk
+
+# The test APK needs to know the contents of the target APK while not
+# being linked against them.  This is a best effort to avoid getting
+# out of sync with base's build config.
+JARS_DIR := $(DEPTH)/mobile/android/base
+JAVA_BOOTCLASSPATH := $(JAVA_BOOTCLASSPATH):$(subst $(NULL) ,:,$(wildcard $(JARS_DIR)/*.jar))
+# We also want to re-compile classes.dex when the associated base
+# content changes.
+classes.dex: $(wildcard $(JARS_DIR)/*.jar)

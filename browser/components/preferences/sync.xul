@@ -297,13 +297,14 @@
               </richlistbox>
             </vbox>
           </groupbox>
-          <vbox>
+          <hbox align="center">
             <label value="&syncDeviceName.label;"
                    accesskey="&syncDeviceName.accesskey;"
                    control="syncComputerName"/>
             <textbox id="fxaSyncComputerName"
+                     flex="1"
                      onchange="gSyncUtils.changeName(this)"/>
-          </vbox>
+          </hbox>
           <hbox id="tosPP" pack="center">
             <label class="text-link"
                    onclick="event.stopPropagation();gSyncUtils.openToS();"
