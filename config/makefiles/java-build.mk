@@ -19,6 +19,7 @@ ifdef ANDROID_APK_NAME #{
 android_res_dirs := $(addprefix $(srcdir)/,$(or $(ANDROID_RES_DIRS),res))
 _ANDROID_RES_FLAG := $(addprefix -S ,$(android_res_dirs))
 _ANDROID_ASSETS_FLAG := $(addprefix -A ,$(ANDROID_ASSETS_DIR))
+android_manifest := $(or $(ANDROID_MANIFEST_FILE),AndroidManifest.xml)
 
 GENERATED_DIRS += classes
 
@@ -41,7 +42,7 @@ $(ANDROID_APK_NAME).ap_: .aapt.deps
 # resource files one subdirectory below the parent resource directory.
 android_res_files := $(wildcard $(addsuffix /*,$(wildcard $(addsuffix /*,$(android_res_dirs)))))
 
-.aapt.deps: AndroidManifest.xml $(android_res_files) $(wildcard $(ANDROID_ASSETS_DIR))
+.aapt.deps: $(android_manifest) $(android_res_files) $(wildcard $(ANDROID_ASSETS_DIR))
 	$(AAPT) package -f -M $< -I $(ANDROID_SDK)/android.jar $(_ANDROID_RES_FLAG) $(_ANDROID_ASSETS_FLAG) \
 		-J ${@D} \
 		-F $(ANDROID_APK_NAME).ap_
