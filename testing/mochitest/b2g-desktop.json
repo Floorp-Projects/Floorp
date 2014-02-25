@@ -14,6 +14,11 @@
     "layout/xul" : "",
     "dom/plugins": "tests that use plugins",
     "dom/tests/mochitest/general/test_focusrings.xul":"",
+    "dom/tests/mochitest/beacon/test_beacon.html":"",
+    "dom/tests/mochitest/beacon/test_beaconContentPolicy.html":"",
+    "dom/tests/mochitest/beacon/test_beaconCookies.html":"",
+    "dom/tests/mochitest/beacon/test_beaconFrame.html":"",
+    "dom/tests/mochitest/beacon/test_beaconPreflight.html":"",
     "layout/base/tests/test_bug465448.xul":"",
     "layout/forms/test/test_bug287446.html": "bug 947789",
 
