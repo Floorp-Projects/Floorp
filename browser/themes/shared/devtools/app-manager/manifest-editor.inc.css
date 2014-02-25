@@ -54,9 +54,11 @@
 .manifest-editor .variables-view-delete,
 .manifest-editor .variables-view-delete:hover,
 .manifest-editor .variables-view-delete:active,
+.manifest-editor .variable-or-property:focus .variables-view-delete,
 .manifest-editor .variables-view-add-property,
 .manifest-editor .variables-view-add-property:hover,
-.manifest-editor .variables-view-add-property:active {
+.manifest-editor .variables-view-add-property:active,
+.manifest-editor .variable-or-property:focus .variables-view-add-property {
   list-style-image: none;
   -moz-image-region: initial;
 }
