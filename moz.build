@@ -40,16 +40,15 @@ if not CONFIG['LIBXUL_SDK']:
 if not CONFIG['JS_STANDALONE']:
     add_tier_dir('precompile', 'xpcom/xpidl')
 
-    if CONFIG['COMPILE_ENVIRONMENT'] and not CONFIG['LIBXUL_SDK']:
-        if not CONFIG['MOZ_NATIVE_NSPR']:
-            add_tier_dir('nspr', 'config/nspr')
+if CONFIG['COMPILE_ENVIRONMENT'] and not CONFIG['LIBXUL_SDK']:
+    if CONFIG['MOZ_BUILD_NSPR']:
+        add_tier_dir('nspr', 'config/nspr')
 
+    if not CONFIG['JS_STANDALONE']:
         add_tier_dir('external', 'config/external')
-
         if not CONFIG['MOZ_NATIVE_NSS']:
              add_tier_dir('nss', 'security/build')
 
-if CONFIG['COMPILE_ENVIRONMENT'] and not CONFIG['LIBXUL_SDK']:
     if CONFIG['BUILD_CTYPES'] and not CONFIG['MOZ_NATIVE_FFI']:
         add_tier_dir('js', ['js/src/ctypes/libffi'], static=True)
     add_tier_dir('js', ['intl/icu'], static=True)
