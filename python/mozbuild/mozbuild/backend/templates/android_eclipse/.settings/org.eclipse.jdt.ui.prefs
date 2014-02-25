@@ -1,0 +1,4 @@
+#filter substitution
+eclipse.preferences.version=1
+formatter_profile=_Fennec
+formatter_settings_version=12
