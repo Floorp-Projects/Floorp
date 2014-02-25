@@ -691,10 +691,10 @@ CustomizeMode.prototype = {
       wrapper.setAttribute("id", "wrapper-" + aNode.getAttribute("id"));
     }
 
-    if (aNode.hasAttribute("title")) {
-      wrapper.setAttribute("title", aNode.getAttribute("title"));
-    } else if (aNode.hasAttribute("label")) {
+    if (aNode.hasAttribute("label")) {
       wrapper.setAttribute("title", aNode.getAttribute("label"));
+    } else if (aNode.hasAttribute("title")) {
+      wrapper.setAttribute("title", aNode.getAttribute("title"));
     }
 
     if (aNode.hasAttribute("flex")) {
