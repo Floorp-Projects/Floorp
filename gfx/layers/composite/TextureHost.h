@@ -43,6 +43,7 @@ class CompositableHost;
 class CompositableBackendSpecificData;
 class SurfaceDescriptor;
 class ISurfaceAllocator;
+class TextureHostOGL;
 class TextureSourceOGL;
 class TextureSourceD3D9;
 class TextureSourceD3D11;
@@ -273,7 +274,6 @@ class TextureHost
   void Finalize();
 
   friend class AtomicRefCountedWithFinalize<TextureHost>;
-
 public:
   TextureHost(TextureFlags aFlags);
 
@@ -396,6 +396,14 @@ public:
   static TextureHost* AsTextureHost(PTextureParent* actor);
 
   /**
+   * Return a pointer to the IPDLActor.
+   *
+   * This is to be used with IPDL messages only. Do not store the returned
+   * pointer.
+   */
+  PTextureParent* GetIPDLActor();
+
+  /**
    * Specific to B2G's Composer2D
    * XXX - more doc here
    */
@@ -418,9 +426,17 @@ public:
   virtual const char *Name() { return "TextureHost"; }
   virtual void PrintInfo(nsACString& aTo, const char* aPrefix);
 
+  /**
+   * Cast to a TextureHost for each backend.
+   */
+  virtual TextureHostOGL* AsHostOGL() { return nullptr; }
+
 protected:
+  PTextureParent* mActor;
   TextureFlags mFlags;
   RefPtr<CompositableBackendSpecificData> mCompositableBackendData;
+
+  friend class TextureParent;
 };
 
 /**
