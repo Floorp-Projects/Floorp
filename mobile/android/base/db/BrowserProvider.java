@@ -876,21 +876,19 @@ public class BrowserProvider extends TransactionalProvider<BrowserDatabaseHelper
         return cursor;
     }
 
-    int getUrlCount(SQLiteDatabase db, String table, String url) {
-        Cursor c = db.query(table, new String[] { "COUNT(*)" },
-                URLColumns.URL + " = ?", new String[] { url }, null, null,
-                null);
-
-        int count = 0;
-
+    private static int getUrlCount(SQLiteDatabase db, String table, String url) {
+        final Cursor c = db.query(table, new String[] { "COUNT(*)" },
+                                  URLColumns.URL + " = ?", new String[] { url },
+                                  null, null, null);
         try {
-            if (c.moveToFirst())
-                count = c.getInt(0);
+            if (c.moveToFirst()) {
+                return c.getInt(0);
+            }
         } finally {
             c.close();
         }
 
-        return count;
+        return 0;
     }
 
     /**
@@ -899,19 +897,20 @@ public class BrowserProvider extends TransactionalProvider<BrowserDatabaseHelper
      * @see #updateBookmarkPositionsInTransaction(SQLiteDatabase, String[], int, int)
      */
     int updateBookmarkPositions(Uri uri, String[] guids) {
-        if (guids == null)
+        if (guids == null) {
             return 0;
+        }
 
         int guidsCount = guids.length;
-        if (guidsCount == 0)
+        if (guidsCount == 0) {
             return 0;
+        }
 
-        final SQLiteDatabase db = getWritableDatabase(uri);
         int offset = 0;
         int updated = 0;
 
+        final SQLiteDatabase db = getWritableDatabase(uri);
         db.beginTransaction();
-
         while (offset < guidsCount) {
             try {
                 updated += updateBookmarkPositionsInTransaction(db, guids, offset,
@@ -969,6 +968,7 @@ public class BrowserProvider extends TransactionalProvider<BrowserDatabaseHelper
             b.append(" WHEN ? THEN " + i);
         }
 
+        // TODO: use computeSQLInClause
         b.append(" END WHERE " + Bookmarks.GUID + " IN (");
         i = 1;
         while (i++ < processCount) {
@@ -1044,7 +1044,6 @@ public class BrowserProvider extends TransactionalProvider<BrowserDatabaseHelper
             String[] selectionArgs) {
         trace("Updating bookmarks on URI: " + uri);
 
-        final SQLiteDatabase db = getWritableDatabase(uri);
         int updated = 0;
 
         final String[] bookmarksProjection = new String[] {
@@ -1054,39 +1053,29 @@ public class BrowserProvider extends TransactionalProvider<BrowserDatabaseHelper
 
         trace("Quering bookmarks to update on URI: " + uri);
 
-        Cursor cursor = db.query(TABLE_BOOKMARKS, bookmarksProjection,
-                selection, selectionArgs, null, null, null);
+        final SQLiteDatabase db = getWritableDatabase(uri);
+        final Cursor cursor = db.query(TABLE_BOOKMARKS, bookmarksProjection,
+                                       selection, selectionArgs, null, null, null);
 
         try {
-            if (!values.containsKey(Bookmarks.DATE_MODIFIED))
+            if (!values.containsKey(Bookmarks.DATE_MODIFIED)) {
                 values.put(Bookmarks.DATE_MODIFIED, System.currentTimeMillis());
-
-            boolean updatingUrl = values.containsKey(Bookmarks.URL);
-            String url = null;
-
-            if (updatingUrl)
-                url = values.getAsString(Bookmarks.URL);
-
+            }
             while (cursor.moveToNext()) {
                 long id = cursor.getLong(0);
-
                 trace("Updating bookmark with ID: " + id);
-
                 updated += db.update(TABLE_BOOKMARKS, values, "_id = ?",
-                        new String[] { Long.toString(id) });
+                                     new String[] { Long.toString(id) });
             }
         } finally {
-            if (cursor != null)
-                cursor.close();
+            cursor.close();
         }
 
         return updated;
     }
 
     long insertHistory(Uri uri, ContentValues values) {
-        final SQLiteDatabase db = getWritableDatabase(uri);
-
-        long now = System.currentTimeMillis();
+        final long now = System.currentTimeMillis();
         values.put(History.DATE_CREATED, now);
         values.put(History.DATE_MODIFIED, now);
 
@@ -1098,20 +1087,24 @@ public class BrowserProvider extends TransactionalProvider<BrowserDatabaseHelper
         String url = values.getAsString(History.URL);
 
         debug("Inserting history in database with URL: " + url);
+        final SQLiteDatabase db = getWritableDatabase(uri);
         return db.insertOrThrow(TABLE_HISTORY, History.VISITS, values);
     }
 
     int updateOrInsertHistory(Uri uri, ContentValues values, String selection,
             String[] selectionArgs) {
-        int updated = updateHistory(uri, values, selection, selectionArgs);
-        if (updated > 0)
+        final int updated = updateHistory(uri, values, selection, selectionArgs);
+        if (updated > 0) {
             return updated;
+        }
 
         // Insert a new entry if necessary
-        if (!values.containsKey(History.VISITS))
+        if (!values.containsKey(History.VISITS)) {
             values.put(History.VISITS, 1);
-        if (!values.containsKey(History.TITLE))
+        }
+        if (!values.containsKey(History.TITLE)) {
             values.put(History.TITLE, values.getAsString(History.URL));
+        }
 
         if (0 <= insertHistory(uri, values)) {
             return 1;
@@ -1124,7 +1117,6 @@ public class BrowserProvider extends TransactionalProvider<BrowserDatabaseHelper
             String[] selectionArgs) {
         trace("Updating history on URI: " + uri);
 
-        final SQLiteDatabase db = getWritableDatabase(uri);
         int updated = 0;
 
         final String[] historyProjection = new String[] {
@@ -1133,19 +1125,14 @@ public class BrowserProvider extends TransactionalProvider<BrowserDatabaseHelper
             History.VISITS // 2
         };
 
-        Cursor cursor = db.query(TABLE_HISTORY, historyProjection, selection,
-                selectionArgs, null, null, null);
+        final SQLiteDatabase db = getWritableDatabase(uri);
+        final Cursor cursor = db.query(TABLE_HISTORY, historyProjection, selection,
+                                       selectionArgs, null, null, null);
 
         try {
             if (!values.containsKey(Bookmarks.DATE_MODIFIED)) {
                 values.put(Bookmarks.DATE_MODIFIED,  System.currentTimeMillis());
             }
-
-            boolean updatingUrl = values.containsKey(History.URL);
-            String url = null;
-
-            if (updatingUrl)
-                url = values.getAsString(History.URL);
 
             while (cursor.moveToNext()) {
                 long id = cursor.getLong(0);
@@ -1161,11 +1148,10 @@ public class BrowserProvider extends TransactionalProvider<BrowserDatabaseHelper
                 }
 
                 updated += db.update(TABLE_HISTORY, values, "_id = ?",
-                        new String[] { Long.toString(id) });
+                                     new String[] { Long.toString(id) });
             }
         } finally {
-            if (cursor != null)
-                cursor.close();
+            cursor.close();
         }
 
         return updated;
@@ -1239,8 +1225,6 @@ public class BrowserProvider extends TransactionalProvider<BrowserDatabaseHelper
         String faviconUrl = values.getAsString(Favicons.URL);
         String pageUrl = null;
         int updated = 0;
-        final SQLiteDatabase db = getWritableDatabase(uri);
-        Cursor cursor = null;
         Long faviconId = null;
         long now = System.currentTimeMillis();
 
@@ -1256,27 +1240,28 @@ public class BrowserProvider extends TransactionalProvider<BrowserDatabaseHelper
 
         values.put(Favicons.DATE_MODIFIED, now);
 
+        final SQLiteDatabase db = getWritableDatabase(uri);
+
         // If there's no favicon URL given and we're inserting if needed, skip
         // the update and only do an insert (otherwise all rows would be
-        // updated)
+        // updated).
         if (!(insertIfNeeded && (faviconUrl == null))) {
             updated = db.update(TABLE_FAVICONS, values, selection, selectionArgs);
         }
 
         if (updated > 0) {
             if ((faviconUrl != null) && (pageUrl != null)) {
+                final Cursor cursor = db.query(TABLE_FAVICONS,
+                                               new String[] { Favicons._ID },
+                                               Favicons.URL + " = ?",
+                                               new String[] { faviconUrl },
+                                               null, null, null);
                 try {
-                    cursor = db.query(TABLE_FAVICONS,
-                                      new String[] { Favicons._ID },
-                                      Favicons.URL + " = ?",
-                                      new String[] { faviconUrl },
-                                      null, null, null);
                     if (cursor.moveToFirst()) {
                         faviconId = cursor.getLong(cursor.getColumnIndexOrThrow(Favicons._ID));
                     }
                 } finally {
-                    if (cursor != null)
-                        cursor.close();
+                    cursor.close();
                 }
             }
         } else if (insertIfNeeded) {
@@ -1338,6 +1323,12 @@ public class BrowserProvider extends TransactionalProvider<BrowserDatabaseHelper
         return updated;
     }
 
+    /**
+     * This method does not create a new transaction. Its first operation is
+     * guaranteed to be a write, which in the case of a new enclosing
+     * transaction will guarantee that a read does not need to be upgraded to
+     * a write.
+     */
     int deleteHistory(Uri uri, String selection, String[] selectionArgs) {
         debug("Deleting history entry for URI: " + uri);
 
@@ -1360,8 +1351,20 @@ public class BrowserProvider extends TransactionalProvider<BrowserDatabaseHelper
         values.put(History.VISITS, 0);
         values.put(History.DATE_MODIFIED, System.currentTimeMillis());
 
-        cleanupSomeDeletedRecords(uri, History.CONTENT_URI, TABLE_HISTORY);
-        return db.update(TABLE_HISTORY, values, selection, selectionArgs);
+        // Doing this UPDATE (or the DELETE above) first ensures that the
+        // first operation within a new enclosing transaction is a write.
+        // The cleanup call below will do a SELECT first, and thus would
+        // require the transaction to be upgraded from a reader to a writer.
+        // In some cases that upgrade can fail (SQLITE_BUSY), so we avoid
+        // it if we can.
+        final int updated = db.update(TABLE_HISTORY, values, selection, selectionArgs);
+        try {
+            cleanupSomeDeletedRecords(uri, History.CONTENT_URI, TABLE_HISTORY);
+        } catch (Exception e) {
+            // We don't care.
+            Log.e(LOGTAG, "Unable to clean up deleted history records: ", e);
+        }
+        return updated;
     }
 
     int deleteBookmarks(Uri uri, String selection, String[] selectionArgs) {
@@ -1378,8 +1381,18 @@ public class BrowserProvider extends TransactionalProvider<BrowserDatabaseHelper
         ContentValues values = new ContentValues();
         values.put(Bookmarks.IS_DELETED, 1);
 
-        cleanupSomeDeletedRecords(uri, Bookmarks.CONTENT_URI, TABLE_BOOKMARKS);
-        return updateBookmarks(uri, values, selection, selectionArgs);
+        // Doing this UPDATE (or the DELETE above) first ensures that the
+        // first operation within this transaction is a write.
+        // The cleanup call below will do a SELECT first, and thus would
+        // require the transaction to be upgraded from a reader to a writer.
+        final int updated = updateBookmarks(uri, values, selection, selectionArgs);
+        try {
+            cleanupSomeDeletedRecords(uri, Bookmarks.CONTENT_URI, TABLE_BOOKMARKS);
+        } catch (Exception e) {
+            // We don't care.
+            Log.e(LOGTAG, "Unable to clean up deleted bookmark records: ", e);
+        }
+        return updated;
     }
 
     int deleteFavicons(Uri uri, String selection, String[] selectionArgs) {
