@@ -455,20 +455,12 @@ GetBloatEntry(const char* aTypeName, uint32_t aInstanceSize)
 static int DumpSerialNumbers(PLHashEntry* aHashEntry, int aIndex, void* aClosure)
 {
   serialNumberRecord* record = reinterpret_cast<serialNumberRecord *>(aHashEntry->value);
-#ifdef HAVE_CPP_DYNAMIC_CAST_TO_VOID_PTR
   fprintf((FILE*) aClosure, "%" PRIdPTR
                             " @%p (%d references; %d from COMPtrs)\n",
                             record->serialNumber,
                             NS_INT32_TO_PTR(aHashEntry->key),
                             record->refCount,
                             record->COMPtrCount);
-#else
-  fprintf((FILE*) aClosure, "%" PRIdPTR
-                            " @%p (%d references)\n",
-                            record->serialNumber,
-                            NS_INT32_TO_PTR(aHashEntry->key),
-                            record->refCount);
-#endif
   return HT_ENUMERATE_NEXT;
 }
 
@@ -598,7 +590,7 @@ static int32_t* GetRefCount(void* aPtr)
   }
 }
 
-#if defined(NS_IMPL_REFCNT_LOGGING) && defined(HAVE_CPP_DYNAMIC_CAST_TO_VOID_PTR)
+#if defined(NS_IMPL_REFCNT_LOGGING)
 static int32_t* GetCOMPtrCount(void* aPtr)
 {
   PLHashEntry** hep = PL_HashTableRawLookup(gSerialNumbers, PLHashNumber(NS_PTR_TO_INT32(aPtr)), aPtr);
@@ -733,7 +725,6 @@ static void InitTraceLog(void)
 
   const char* classes = getenv("XPCOM_MEM_LOG_CLASSES");
 
-#ifdef HAVE_CPP_DYNAMIC_CAST_TO_VOID_PTR
   if (classes) {
     (void)InitLog("XPCOM_MEM_COMPTR_LOG", "nsCOMPtr", &gCOMPtrLog);
   } else {
@@ -741,12 +732,6 @@ static void InitTraceLog(void)
       fprintf(stdout, "### XPCOM_MEM_COMPTR_LOG defined -- but XPCOM_MEM_LOG_CLASSES is not defined\n");
     }
   }
-#else
-  const char* comptr_log = getenv("XPCOM_MEM_COMPTR_LOG");
-  if (comptr_log) {
-    fprintf(stdout, "### XPCOM_MEM_COMPTR_LOG defined -- but it will not work without dynamic_cast\n");
-  }
-#endif
 
   if (classes) {
     // if XPCOM_MEM_LOG_CLASSES was set to some value, the value is interpreted
@@ -1173,7 +1158,7 @@ NS_LogDtor(void* aPtr, const char* aType, uint32_t aInstanceSize)
 EXPORT_XPCOM_API(void)
 NS_LogCOMPtrAddRef(void* aCOMPtr, nsISupports* aObject)
 {
-#if defined(NS_IMPL_REFCNT_LOGGING) && defined(HAVE_CPP_DYNAMIC_CAST_TO_VOID_PTR)
+#if defined(NS_IMPL_REFCNT_LOGGING)
   // Get the most-derived object.
   void *object = dynamic_cast<void *>(aObject);
 
@@ -1214,7 +1199,7 @@ NS_LogCOMPtrAddRef(void* aCOMPtr, nsISupports* aObject)
 EXPORT_XPCOM_API(void)
 NS_LogCOMPtrRelease(void* aCOMPtr, nsISupports* aObject)
 {
-#if defined(NS_IMPL_REFCNT_LOGGING) && defined(HAVE_CPP_DYNAMIC_CAST_TO_VOID_PTR)
+#if defined(NS_IMPL_REFCNT_LOGGING)
   // Get the most-derived object.
   void *object = dynamic_cast<void *>(aObject);
 
