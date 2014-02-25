@@ -91,19 +91,9 @@ class Log
 public:
   Log(LogOptions aOptions = LogOptions(0)) : mOptions(aOptions) {}
   ~Log() {
-    Flush();
-  }
-
-  void Flush() {
-    if (!(int(mOptions) & int(LogOptions::NoNewline))) {
+    if (!(int(mOptions) & int(LogOptions::NoNewline)))
       mMessage << '\n';
-    }
-    std::string str = mMessage.str();
-    if (!str.empty()) {
-      WriteLog(str);
-    }
-    mMessage.str("");
-    mMessage.clear();
+    WriteLog(mMessage.str());
   }
 
   Log &operator <<(char aChar) { mMessage << aChar; return *this; }
@@ -152,72 +142,6 @@ typedef Log<LOG_WARNING> WarningLog;
 #else
 #define gfxWarning if (1) ; else NoLog
 #endif
-
-const int INDENT_PER_LEVEL = 2;
-
-class TreeLog
-{
-public:
-  TreeLog(const std::string& aPrefix = "")
-        : mLog(LogOptions::NoNewline),
-          mPrefix(aPrefix),
-          mDepth(0),
-          mStartOfLine(true) {}
-
-  template <typename T>
-  TreeLog& operator<<(const T& aObject) {
-    if (mStartOfLine) {
-      mLog << '[' << mPrefix << "] " << std::string(mDepth * INDENT_PER_LEVEL, ' ');
-      mStartOfLine = false;
-    }
-    mLog << aObject;
-    if (EndsInNewline(aObject)) {
-      // Don't indent right here as the user may change the indent
-      // between now and the first output to the next line.
-      mLog.Flush();
-      mStartOfLine = true;
-    }
-    return *this;
-  }
-
-  void IncreaseIndent() { ++mDepth; }
-  void DecreaseIndent() { --mDepth; }
-private:
-  Log<LOG_DEBUG> mLog;
-  std::string mPrefix;
-  uint32_t mDepth;
-  bool mStartOfLine;
-
-  template <typename T>
-  static bool EndsInNewline(const T& aObject) {
-    return false;
-  }
-
-  static bool EndsInNewline(const std::string& aString) {
-    return !aString.empty() && aString[aString.length() - 1] == '\n';
-  }
-
-  static bool EndsInNewline(char aChar) {
-    return aChar == '\n';
-  }
-
-  static bool EndsInNewline(const char* aString) {
-    return EndsInNewline(std::string(aString));
-  }
-};
-
-class TreeAutoIndent
-{
-public:
-  TreeAutoIndent(TreeLog& aTreeLog) : mTreeLog(aTreeLog) {
-    mTreeLog.IncreaseIndent();
-  }
-  ~TreeAutoIndent() {
-    mTreeLog.DecreaseIndent();
-  }
-private:
-  TreeLog& mTreeLog;
-};
 
 }
 }
