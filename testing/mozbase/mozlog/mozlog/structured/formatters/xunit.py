@@ -16,9 +16,18 @@ def format_test_id(test_id):
 
 
 class XUnitFormatter(base.BaseFormatter):
-    """The data model here isn't a great match. This implementation creates
-    one <testcase> element for each subtest and one more, with no @name
-    for each test"""
+    """Formatter that produces XUnit-style XML output.
+
+    The tree is created in-memory so this formatter may be problematic
+    with very large log files.
+
+    Note that the data model isn't a perfect match. In
+    particular XUnit assumes that each test has a unittest-style
+    class name and function name, which isn't the case for us. The
+    implementation currently replaces path names with something that
+    looks like class names, but this doesn't work for test types that
+    actually produce class names, or for test types that have multiple
+    components in their test id (e.g. reftests)."""
 
     def __init__(self):
         self.tree = ElementTree.ElementTree()
