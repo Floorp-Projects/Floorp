@@ -683,7 +683,7 @@ nsDocumentViewer::InitPresentationStuff(bool aDoInitialReflow)
   mViewManager->SetWindowDimensions(width, height);
   mPresContext->SetTextZoom(mTextZoom);
   mPresContext->SetFullZoom(mPageZoom);
-  mPresContext->SetMinFontSize(mMinFontSize);
+  mPresContext->SetBaseMinFontSize(mMinFontSize);
 
   p2a = mPresContext->AppUnitsPerDevPixel();  // zoom may have changed it
   width = p2a * mBounds.width;
@@ -2805,7 +2805,7 @@ SetExtResourceMinFontSize(nsIDocument* aDocument, void* aClosure)
   if (shell) {
     nsPresContext* ctxt = shell->GetPresContext();
     if (ctxt) {
-      ctxt->SetMinFontSize(NS_PTR_TO_INT32(aClosure));
+      ctxt->SetBaseMinFontSize(NS_PTR_TO_INT32(aClosure));
     }
   }
 
@@ -2897,7 +2897,7 @@ nsDocumentViewer::SetMinFontSize(int32_t aMinFontSize)
   // Now change our own min font
   nsPresContext* pc = GetPresContext();
   if (pc && aMinFontSize != mPresContext->MinFontSize(nullptr)) {
-    pc->SetMinFontSize(aMinFontSize);
+    pc->SetBaseMinFontSize(aMinFontSize);
   }
 
   // And do the external resources
@@ -2912,7 +2912,7 @@ nsDocumentViewer::GetMinFontSize(int32_t* aMinFontSize)
 {
   NS_ENSURE_ARG_POINTER(aMinFontSize);
   nsPresContext* pc = GetPresContext();
-  *aMinFontSize = pc ? pc->MinFontSize(nullptr) : 0;
+  *aMinFontSize = pc ? pc->BaseMinFontSize() : 0;
   return NS_OK;
 }
 
