@@ -272,53 +272,66 @@ public class BrowserProvider extends TransactionalProvider<BrowserDatabaseHelper
         }
     }
 
+    /*
+     * This utility is replicated from RepoUtils, which is managed by android-sync.
+     */
+    private static String computeSQLInClause(int items, String field) {
+        final StringBuilder builder = new StringBuilder(field);
+        builder.append(" IN (");
+        int i = 0;
+        for (; i < items - 1; ++i) {
+            builder.append("?, ");
+        }
+        if (i < items) {
+            builder.append("?");
+        }
+        builder.append(")");
+        return builder.toString();
+    }
+
+    /**
+     * Clean up some deleted records from the specified table.
+     *
+     * If called in an existing transaction, it is the caller's responsibility
+     * to ensure that the transaction is already upgraded to a writer, because
+     * this method issues a read followed by a write, and thus is potentially
+     * vulnerable to an unhandled SQLITE_BUSY failure during the upgrade.
+     *
+     * If not called in an existing transaction, no new explicit transaction
+     * will be begun.
+     */
     private void cleanupSomeDeletedRecords(Uri fromUri, Uri targetUri, String tableName) {
         Log.d(LOGTAG, "Cleaning up deleted records from " + tableName);
 
-        // we cleanup records marked as deleted that are older than a
+        // We clean up records marked as deleted that are older than a
         // predefined max age. It's important not be too greedy here and
         // remove only a few old deleted records at a time.
 
-        // The PARAM_SHOW_DELETED argument is necessary to return the records
-        // that were marked as deleted. We use PARAM_IS_SYNC here to ensure
-        // that we'll be actually deleting records instead of flagging them.
-        Uri.Builder uriBuilder = targetUri.buildUpon()
-                .appendQueryParameter(BrowserContract.PARAM_LIMIT, String.valueOf(DELETED_RECORDS_PURGE_LIMIT))
-                .appendQueryParameter(BrowserContract.PARAM_SHOW_DELETED, "1")
-                .appendQueryParameter(BrowserContract.PARAM_IS_SYNC, "1");
+        // Android SQLite doesn't have LIMIT on DELETE. Instead, query for the
+        // IDs of matching rows, then delete them in one go.
+        final long now = System.currentTimeMillis();
+        final String selection = SyncColumns.IS_DELETED + " = 1 AND " +
+                                 SyncColumns.DATE_MODIFIED + " <= " +
+                                 (now - MAX_AGE_OF_DELETED_RECORDS);
 
-        String profile = fromUri.getQueryParameter(BrowserContract.PARAM_PROFILE);
-        if (!TextUtils.isEmpty(profile))
-            uriBuilder = uriBuilder.appendQueryParameter(BrowserContract.PARAM_PROFILE, profile);
-
-        if (isTest(fromUri))
-            uriBuilder = uriBuilder.appendQueryParameter(BrowserContract.PARAM_IS_TEST, "1");
-
-        Uri uriWithArgs = uriBuilder.build();
-
-        Cursor cursor = null;
-
+        final String profile = fromUri.getQueryParameter(BrowserContract.PARAM_PROFILE);
+        final SQLiteDatabase db = getWritableDatabaseForProfile(profile, isTest(fromUri));
+        final String[] ids;
+        final String limit = Long.toString(DELETED_RECORDS_PURGE_LIMIT, 10);
+        final Cursor cursor = db.query(tableName, new String[] { CommonColumns._ID }, selection, null, null, null, null, limit);
         try {
-            long now = System.currentTimeMillis();
-            String selection = SyncColumns.IS_DELETED + " = 1 AND " +
-                    SyncColumns.DATE_MODIFIED + " <= " + (now - MAX_AGE_OF_DELETED_RECORDS);
-
-            cursor = query(uriWithArgs,
-                           new String[] { CommonColumns._ID },
-                           selection,
-                           null,
-                           null);
-
+            ids = new String[cursor.getCount()];
+            int i = 0;
             while (cursor.moveToNext()) {
-                Uri uriWithId = ContentUris.withAppendedId(uriWithArgs, cursor.getLong(0));
-                delete(uriWithId, null, null);
-
-                debug("Removed old deleted item with URI: " + uriWithId);
+                ids[i++] = Long.toString(cursor.getLong(0), 10);
             }
         } finally {
-            if (cursor != null)
-                cursor.close();
+            cursor.close();
         }
+
+        final String inClause = computeSQLInClause(ids.length,
+                                                   CommonColumns._ID);
+        db.delete(tableName, inClause, ids);
     }
 
     /**
