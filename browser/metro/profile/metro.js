@@ -573,7 +573,12 @@ pref("pdfjs.previousHandler.alwaysAskBeforeHandling", false);
 #endif
 
 #ifdef NIGHTLY_BUILD
+// Shumay is currently experimental.  Toggle this pref to enable Shumway for
+// testing and development.
 pref("shumway.disabled", true);
+// When Shumway is enabled, use it all the time, not only when Flash is set to
+// click-to-play (because Metro doesn't even load the native Flash plugin).
+pref("shumway.ignoreCTP", true);
 #endif
 
 // The maximum amount of decoded image data we'll willingly keep around (we
