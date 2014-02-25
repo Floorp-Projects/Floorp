@@ -1,0 +1,26 @@
+#filter substitution
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="@ANDROID_BROWSER_TEST_PACKAGE_NAME@"
+    sharedUserId="@MOZ_ANDROID_SHARED_ID@"
+    android:versionCode="1"
+    android:versionName="1.0" >
+
+    <uses-sdk android:minSdkVersion="8"
+              android:targetSdkVersion="16" />
+
+    <uses-permission android:name="@ANDROID_BROWSER_TARGET_PACKAGE_NAME@.permissions.BROWSER_PROVIDER"/>
+    <uses-permission android:name="@ANDROID_BROWSER_TARGET_PACKAGE_NAME@.permissions.FORMHISTORY_PROVIDER"/>
+    <uses-permission android:name="@ANDROID_BROWSER_TARGET_PACKAGE_NAME@.permissions.PASSWORD_PROVIDER"/>
+
+    <application
+        android:icon="@drawable/icon"
+        android:label="@ANDROID_BROWSER_APP_DISPLAYNAME@">
+        <uses-library android:name="android.test.runner" />
+    </application>
+
+    <instrumentation
+        android:label="@string/app_name"
+        android:name="org.mozilla.browser.harness.BrowserInstrumentationTestRunner"
+        android:targetPackage="@ANDROID_BROWSER_TARGET_PACKAGE_NAME@" />
+</manifest>

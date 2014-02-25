@@ -40,10 +40,11 @@
       * to open a file, use function |OS.File.open|.
       *
       * @param fd A OS-specific file descriptor.
+      * @param {string} path File path of the file handle, used for error-reporting.
       * @constructor
       */
-     let File = function File(fd) {
-       exports.OS.Shared.AbstractFile.call(this, fd);
+     let File = function File(fd, path) {
+       exports.OS.Shared.AbstractFile.call(this, fd, path);
        this._closeResult = null;
      };
      File.prototype = Object.create(exports.OS.Shared.AbstractFile.prototype);
@@ -70,7 +71,7 @@
            fd.forget();
          }
          if (result == -1) {
-           this._closeResult = new File.Error("close");
+           this._closeResult = new File.Error("close", ctypes.errno, this._path);
          }
        }
        if (this._closeResult) {
@@ -103,7 +104,8 @@
           OS.Constants.libc.POSIX_FADV_SEQUENTIAL);
        }
        return throw_on_negative("read",
-         UnixFile.read(this.fd, buffer, nbytes)
+         UnixFile.read(this.fd, buffer, nbytes),
+         this._path
        );
      };
 
@@ -122,7 +124,8 @@
       */
      File.prototype._write = function _write(buffer, nbytes, options = {}) {
        return throw_on_negative("write",
-         UnixFile.write(this.fd, buffer, nbytes)
+         UnixFile.write(this.fd, buffer, nbytes),
+         this._path
        );
      };
 
@@ -154,7 +157,8 @@
          whence = Const.SEEK_SET;
        }
        return throw_on_negative("setPosition",
-         UnixFile.lseek(this.fd, pos, whence)
+         UnixFile.lseek(this.fd, pos, whence),
+         this._path
        );
      };
 
@@ -164,8 +168,9 @@
       * @return File.Info The information on |this| file.
       */
      File.prototype.stat = function stat() {
-       throw_on_negative("stat", UnixFile.fstat(this.fd, gStatDataPtr));
-         return new File.Info(gStatData);
+       throw_on_negative("stat", UnixFile.fstat(this.fd, gStatDataPtr),
+                         this._path);
+       return new File.Info(gStatData, this._path);
      };
 
      /**
@@ -192,7 +197,8 @@
        gTimevals[1].tv_sec = (modificationDate / 1000) | 0;
        gTimevals[1].tv_usec = 0;
        throw_on_negative("setDates",
-                         UnixFile.futimes(this.fd, gTimevalsPtr));
+                         UnixFile.futimes(this.fd, gTimevalsPtr),
+                         this._path);
      };
 
      /**
@@ -207,7 +213,7 @@
       * @throws {OS.File.Error} In case of I/O error.
       */
      File.prototype.flush = function flush() {
-       throw_on_negative("flush", UnixFile.fsync(this.fd));
+       throw_on_negative("flush", UnixFile.fsync(this.fd), this._path);
      };
 
      // The default unix mode for opening (0600)
@@ -293,7 +299,7 @@
            flags |= Const.O_APPEND;
          }
        }
-       return error_or_file(UnixFile.open(path, flags, omode));
+       return error_or_file(UnixFile.open(path, flags, omode), path);
      };
 
      /**
@@ -328,7 +334,7 @@
              ctypes.errno == Const.ENOENT) {
            return;
          }
-         throw new File.Error("remove");
+         throw new File.Error("remove", ctypes.errno, path);
        }
      };
 
@@ -347,7 +353,7 @@
              ctypes.errno == Const.ENOENT) {
            return;
          }
-         throw new File.Error("removeEmptyDir");
+         throw new File.Error("removeEmptyDir", ctypes.errno, path);
        }
      };
 
@@ -399,7 +405,7 @@
              (ctypes.errno == Const.EEXIST || ctypes.errno == Const.EISDIR)) {
            return;
          }
-         throw new File.Error("makeDir");
+         throw new File.Error("makeDir", ctypes.errno, path);
        }
      };
 
@@ -466,7 +472,8 @@
            flags |= Const.COPYFILE_EXCL;
          }
          throw_on_negative("copy",
-           UnixFile.copyfile(sourcePath, destPath, null, flags)
+           UnixFile.copyfile(sourcePath, destPath, null, flags),
+           sourcePath
          );
        };
      } else {
@@ -644,10 +651,10 @@
          if (fd != -1) {
            fd.dispose();
            // The file exists and we have access
-           throw new File.Error("move", Const.EEXIST);
+           throw new File.Error("move", Const.EEXIST, sourcePath);
          } else if (ctypes.errno == Const.EACCESS) {
            // The file exists and we don't have access
-           throw new File.Error("move", Const.EEXIST);
+           throw new File.Error("move", Const.EEXIST, sourcePath);
          }
        }
 
@@ -661,7 +668,7 @@
        // that prevents us from crossing devices, throw the
        // error.
        if (ctypes.errno != Const.EXDEV || options.noCopy) {
-         throw new File.Error("move");
+         throw new File.Error("move", ctypes.errno, sourcePath);
        }
 
        // Otherwise, copy and remove.
@@ -689,7 +696,7 @@
        if (this._dir == null) {
          let error = ctypes.errno;
          if (error != Const.ENOENT) {
-           throw new File.Error("DirectoryIterator", error);
+           throw new File.Error("DirectoryIterator", error, path);
          }
          this._exists = false;
          this._closed = true;
@@ -712,7 +719,7 @@
       */
      File.DirectoryIterator.prototype.next = function next() {
        if (!this._exists) {
-         throw File.Error.noSuchFile("DirectoryIterator.prototype.next");
+         throw File.Error.noSuchFile("DirectoryIterator.prototype.next", this._path);
        }
        if (this._closed) {
          throw StopIteration;
@@ -730,7 +737,7 @@
          if (!("d_type" in contents)) {
            // |dirent| doesn't have d_type on some platforms (e.g. Solaris).
            let path = Path.join(this._path, name);
-           throw_on_negative("lstat", UnixFile.lstat(path, gStatDataPtr));
+           throw_on_negative("lstat", UnixFile.lstat(path, gStatDataPtr), this._path);
            isDir = (gStatData.st_mode & Const.S_IFMT) == Const.S_IFDIR;
            isSymLink = (gStatData.st_mode & Const.S_IFMT) == Const.S_IFLNK;
          } else {
@@ -768,8 +775,8 @@
       * Return directory as |File|
       */
      File.DirectoryIterator.prototype.unixAsFile = function unixAsFile() {
-       if (!this._dir) throw File.Error.closed();
-       return error_or_file(UnixFile.dirfd(this._dir));
+       if (!this._dir) throw File.Error.closed("unixAsFile", this._path);
+       return error_or_file(UnixFile.dirfd(this._dir), this._path);
      };
 
      /**
@@ -810,7 +817,7 @@
      let gTimevals = new Type.timevals.implementation();
      let gTimevalsPtr = gTimevals.address();
      let MODE_MASK = 4095 /*= 07777*/;
-     File.Info = function Info(stat) {
+     File.Info = function Info(stat, path) {
        let isDir = (stat.st_mode & Const.S_IFMT) == Const.S_IFDIR;
        let isSymLink = (stat.st_mode & Const.S_IFMT) == Const.S_IFLNK;
        let size = Type.off_t.importFromC(stat.st_size);
@@ -823,8 +830,8 @@
        let unixGroup = Type.gid_t.importFromC(stat.st_gid);
        let unixMode = Type.mode_t.importFromC(stat.st_mode & MODE_MASK);
 
-       SysAll.AbstractInfo.call(this, isDir, isSymLink, size, lastAccessDate,
-           lastModificationDate, unixLastStatusChangeDate,
+       SysAll.AbstractInfo.call(this, path, isDir, isSymLink, size,
+           lastAccessDate, lastModificationDate, unixLastStatusChangeDate,
            unixOwner, unixGroup, unixMode);
 
        // Some platforms (e.g. MacOS X, some BSDs) store a file creation date
@@ -885,11 +892,11 @@
       */
      File.stat = function stat(path, options = {}) {
        if (options.unixNoFollowingLinks) {
-         throw_on_negative("stat", UnixFile.lstat(path, gStatDataPtr));
+         throw_on_negative("stat", UnixFile.lstat(path, gStatDataPtr), path);
        } else {
-         throw_on_negative("stat", UnixFile.stat(path, gStatDataPtr));
+         throw_on_negative("stat", UnixFile.stat(path, gStatDataPtr), path);
        }
-       return new File.Info(gStatData);
+       return new File.Info(gStatData, path);
      };
 
      /**
@@ -916,7 +923,8 @@
        gTimevals[1].tv_sec = (modificationDate / 1000) | 0;
        gTimevals[1].tv_usec = 0;
        throw_on_negative("setDates",
-                         UnixFile.utimes(path, gTimevalsPtr));
+                         UnixFile.utimes(path, gTimevalsPtr),
+                         path);
      };
 
      File.read = exports.OS.Shared.AbstractFile.read;
@@ -930,7 +938,7 @@
      File.getCurrentDirectory = function getCurrentDirectory() {
        let path = UnixFile.get_current_dir_name?UnixFile.get_current_dir_name():
          UnixFile.getwd_auto(null);
-       throw_on_null("getCurrentDirectory",path);
+       throw_on_null("getCurrentDirectory", path);
        return path.readString();
      };
 
@@ -939,7 +947,8 @@
       */
      File.setCurrentDirectory = function setCurrentDirectory(path) {
        throw_on_negative("setCurrentDirectory",
-         UnixFile.chdir(path)
+         UnixFile.chdir(path),
+         path
        );
      };
 
@@ -960,33 +969,48 @@
 
      /**
       * Turn the result of |open| into an Error or a File
+      * @param {number} maybe The result of the |open| operation that may
+      * represent either an error or a success. If -1, this function raises
+      * an error holding ctypes.errno, otherwise it returns the opened file.
+      * @param {string=} path The path of the file.
       */
-     function error_or_file(maybe) {
+     function error_or_file(maybe, path) {
        if (maybe == -1) {
-         throw new File.Error("open");
+         throw new File.Error("open", ctypes.errno, path);
        }
-       return new File(maybe);
+       return new File(maybe, path);
      }
 
      /**
       * Utility function to sort errors represented as "-1" from successes.
       *
+      * @param {string=} operation The name of the operation. If unspecified,
+      * the name of the caller function.
       * @param {number} result The result of the operation that may
       * represent either an error or a success. If -1, this function raises
       * an error holding ctypes.errno, otherwise it returns |result|.
-      * @param {string=} operation The name of the operation. If unspecified,
-      * the name of the caller function.
+      * @param {string=} path The path of the file.
       */
-     function throw_on_negative(operation, result) {
+     function throw_on_negative(operation, result, path) {
        if (result < 0) {
-         throw new File.Error(operation);
+         throw new File.Error(operation, ctypes.errno, path);
        }
        return result;
      }
 
-     function throw_on_null(operation, result) {
+     /**
+      * Utility function to sort errors represented as |null| from successes.
+      *
+      * @param {string=} operation The name of the operation. If unspecified,
+      * the name of the caller function.
+      * @param {pointer} result The result of the operation that may
+      * represent either an error or a success. If |null|, this function raises
+      * an error holding ctypes.errno, otherwise it returns |result|.
+      * @param {string=} path The path of the file.
+      */
+     function throw_on_null(operation, result, path) {
        if (result == null || (result.isNull && result.isNull())) {
-         throw new File.Error(operation);
+         throw new File.Error(operation, ctypes.errno, path);
        }
        return result;
      }

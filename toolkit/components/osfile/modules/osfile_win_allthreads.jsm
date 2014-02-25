@@ -79,14 +79,17 @@ libc.declareLazy(Scope, "FormatMessage",
  * @param {number=} lastError The OS-specific constant detailing the
  * reason of the error. If unspecified, this is fetched from the system
  * status.
+ * @param {string=} path The file path that manipulated. If unspecified,
+ * assign the empty string.
  *
  * @constructor
  * @extends {OS.Shared.Error}
  */
-let OSError = function OSError(operation, lastError) {
-  operation = operation || "unknown operation";
-  SharedAll.OSError.call(this, operation);
-  this.winLastError = lastError || ctypes.winLastError;
+let OSError = function OSError(operation = "unknown operation",
+                               lastError = ctypes.winLastError, path = "") {
+  operation = operation;
+  SharedAll.OSError.call(this, operation, path);
+  this.winLastError = lastError;
 };
 OSError.prototype = Object.create(SharedAll.OSError.prototype);
 OSError.prototype.toString = function toString() {
@@ -107,7 +110,8 @@ OSError.prototype.toString = function toString() {
       " while fetching system error message";
   }
   return "Win error " + this.winLastError + " during operation "
-    + this.operation + " (" + buf.readString() + ")";
+    + this.operation + (this.path? " on file " + this.path : "") +
+    " (" + buf.readString() + ")";
 };
 
 /**
@@ -165,7 +169,8 @@ Object.defineProperty(OSError.prototype, "becauseAccessDenied", {
 OSError.toMsg = function toMsg(error) {
   return {
     operation: error.operation,
-    winLastError: error.winLastError
+    winLastError: error.winLastError,
+    path: error.path
   };
 };
 
@@ -173,7 +178,7 @@ OSError.toMsg = function toMsg(error) {
  * Deserialize a message back to an instance of OSError
  */
 OSError.fromMsg = function fromMsg(msg) {
-  return new OSError(msg.operation, msg.winLastError);
+  return new OSError(msg.operation, msg.winLastError, msg.path);
 };
 exports.Error = OSError;
 
@@ -182,8 +187,10 @@ exports.Error = OSError;
  *
  * @constructor
  */
-let AbstractInfo = function AbstractInfo(isDir, isSymLink, size, winBirthDate,
+let AbstractInfo = function AbstractInfo(path, isDir, isSymLink, size,
+                                         winBirthDate,
                                          lastAccessDate, lastWriteDate) {
+  this._path = path;
   this._isDir = isDir;
   this._isSymLink = isSymLink;
   this._size = size;
@@ -193,6 +200,14 @@ let AbstractInfo = function AbstractInfo(isDir, isSymLink, size, winBirthDate,
 };
 
 AbstractInfo.prototype = {
+  /**
+   * The path of the file, used for error-reporting.
+   *
+   * @type {string}
+   */
+  get path() {
+    return this._path;
+  },
   /**
    * |true| if this file is a directory, |false| otherwise
    */
@@ -341,16 +356,16 @@ Type.path = Type.wstring.withName("[in] path");
 Type.out_path = Type.out_wstring.withName("[out] path");
 
 // Special constructors that need to be defined on all threads
-OSError.closed = function closed(operation) {
-  return new OSError(operation, Const.ERROR_INVALID_HANDLE);
+OSError.closed = function closed(operation, path) {
+  return new OSError(operation, Const.ERROR_INVALID_HANDLE, path);
 };
 
-OSError.exists = function exists(operation) {
-  return new OSError(operation, Const.ERROR_FILE_EXISTS);
+OSError.exists = function exists(operation, path) {
+  return new OSError(operation, Const.ERROR_FILE_EXISTS, path);
 };
 
-OSError.noSuchFile = function noSuchFile(operation) {
-  return new OSError(operation, Const.ERROR_FILE_NOT_FOUND);
+OSError.noSuchFile = function noSuchFile(operation, path) {
+  return new OSError(operation, Const.ERROR_FILE_NOT_FOUND, path);
 };
 
 let EXPORTED_SYMBOLS = [

@@ -4243,7 +4243,7 @@ function onViewToolbarsPopupShowing(aEvent, aInsertPoint) {
 
   if (toolbarItem && toolbarItem.localName == "toolbarpaletteitem") {
     toolbarItem = toolbarItem.firstChild;
-  } else {
+  } else if (toolbarItem && toolbarItem.localName != "toolbar") {
     while (toolbarItem && toolbarItem.parentNode) {
       let parent = toolbarItem.parentNode;
       if ((parent.classList && parent.classList.contains("customization-target")) ||
@@ -4253,6 +4253,8 @@ function onViewToolbarsPopupShowing(aEvent, aInsertPoint) {
         break;
       toolbarItem = parent;
     }
+  } else {
+    toolbarItem = null;
   }
 
   // Right-clicking on an empty part of the tabstrip will exit

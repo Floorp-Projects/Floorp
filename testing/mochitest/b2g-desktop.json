@@ -221,6 +221,7 @@
 
     "content/base/test/test_CrossSiteXHR_origin.html":"https not working, bug 907770",
     "content/base/test/test_plugin_freezing.html":"",
+    "content/base/test/test_XHR_timeout.html":"flaky on B2G, bug 960743",
     "content/base/test/test_bug466409.html":"",
     "content/base/test/test_bug482935.html":"",
     "content/base/test/test_bug498433.html":"",

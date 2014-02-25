@@ -222,17 +222,6 @@ public class GeckoMenuItem implements MenuItem {
         return this;
     }
 
-    public void refreshIfChanged() {
-        if (mActionProvider == null)
-            return;
-
-        if (mActionProvider instanceof GeckoActionProvider) {
-            if (((GeckoActionProvider) mActionProvider).hasChanged()) {
-                mShowAsActionChangedListener.onShowAsActionChanged(GeckoMenuItem.this);
-            }
-        }
-    }
-
     @Override
     public MenuItem setActionView(int resId) {
         return this;
