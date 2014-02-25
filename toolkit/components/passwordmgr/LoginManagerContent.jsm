@@ -94,7 +94,11 @@ var LoginManagerContent = {
         return this.__formFillService;
     },
 
-
+    /*
+     * onFormPassword
+     *
+     * Called when an <input type="password"> element is added to the page
+     */
     onFormPassword: function (event) {
       if (!event.isTrusted)
           return;
@@ -145,7 +149,7 @@ var LoginManagerContent = {
 
       let autofillForm = gAutofillForms && !PrivateBrowsingUtils.isWindowPrivate(doc.defaultView);
 
-      this._fillForm(form, autofillForm, false, false, null);
+      this._fillForm(form, autofillForm, false, false, false, null);
     },
 
 
@@ -192,7 +196,7 @@ var LoginManagerContent = {
             if (!Services.logins.isLoggedIn)
                 return;
 
-            this._fillForm(acForm, true, true, true, null);
+            this._fillForm(acForm, true, true, true, true, null);
         } else {
             // Ignore the event, it's for some input we don't care about.
         }
@@ -544,13 +548,17 @@ var LoginManagerContent = {
      * an array of logins if not given any, otherwise it will use the logins
      * passed in. The logins are returned so they can be reused for
      * optimization. Success of action is also returned in format
-     * [success, foundLogins]. autofillForm denotes if we should fill the form
-     * in automatically, ignoreAutocomplete denotes if we should ignore
-     * autocomplete=off attributes, and foundLogins is an array of nsILoginInfo
-     * for optimization
+     * [success, foundLogins].
+     *
+     * - autofillForm denotes if we should fill the form in automatically
+     * - ignoreAutocomplete denotes if we should ignore autocomplete=off
+     *     attributes
+     * - userTriggered is an indication of whether this filling was triggered by
+     *     the user
+     * - foundLogins is an array of nsILoginInfo for optimization
      */
     _fillForm : function (form, autofillForm, ignoreAutocomplete,
-                          clobberPassword, foundLogins) {
+                          clobberPassword, userTriggered, foundLogins) {
         // Heuristically determine what the user/pass fields are
         // We do this before checking to see if logins are stored,
         // so that the user isn't prompted for a master password
@@ -652,7 +660,16 @@ var LoginManagerContent = {
             let matchingLogins = logins.filter(function(l)
                                      l.username.toLowerCase() == username);
             if (matchingLogins.length) {
-                selectedLogin = matchingLogins[0];
+                // If there are multiple, and one matches case, use it
+                for (let l of matchingLogins) {
+                    if (l.username == usernameField.value) {
+                        selectedLogin = l;
+                    }
+                }
+                // Otherwise just use the first
+                if (!selectedLogin) {
+                  selectedLogin = matchingLogins[0];
+                }
             } else {
                 didntFillReason = "existingUsername";
                 log("Password not filled. None of the stored logins match the username already present.");
@@ -680,9 +697,24 @@ var LoginManagerContent = {
         var didFillForm = false;
         if (selectedLogin && autofillForm && !isFormDisabled) {
             // Fill the form
-            // Don't modify the username field if it's disabled or readOnly so we preserve its case.
-            if (usernameField && !(usernameField.disabled || usernameField.readOnly))
-                usernameField.value = selectedLogin.username;
+
+            if (usernameField) {
+                // Don't modify the username field if it's disabled or readOnly so we preserve its case.
+                let disabledOrReadOnly = usernameField.disabled || usernameField.readOnly;
+
+                // Don't replace the username if it differs only in case, and the user triggered
+                // this autocomplete. We assume that if it was user-triggered the entered text
+                // is desired.
+                dump("field value: " + usernameField.value + "\n");
+                dump("selectedLogin value: " + selectedLogin.username + "\n");
+                let userEnteredDifferentCase = userTriggered &&
+                      (usernameField.value != selectedLogin.username &&
+                       usernameField.value.toLowerCase() == selectedLogin.username.toLowerCase());
+    
+                if (!disabledOrReadOnly && !userEnteredDifferentCase) {
+                    usernameField.value = selectedLogin.username;
+                }
+            }
             passwordField.value = selectedLogin.password;
             didFillForm = true;
         } else if (selectedLogin && !autofillForm) {
