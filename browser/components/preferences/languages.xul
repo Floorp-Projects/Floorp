@@ -47,8 +47,7 @@
       <stringbundle id="bundleAccepted"     src="resource://gre/res/language.properties"/>
     </stringbundleset>
 
-    <description>&languages.customize.prefLangDescript;</description>
-    <label>&languages.customize.active.label;</label>
+    <description>&languages.customize.description;</description>
     <grid flex="1">
       <columns>
         <column flex="1"/>
