@@ -115,8 +115,9 @@ Http2MultiplexListener.prototype.onStopRequest = function(request, ctx, status) 
 };
 
 // Does the appropriate checks for header gatewaying
-var Http2HeaderListener = function(value) {
-  this.value = value
+var Http2HeaderListener = function(name, callback) {
+  this.name = name;
+  this.callback = callback;
 };
 
 Http2HeaderListener.prototype = new Http2CheckListener();
@@ -125,7 +126,9 @@ Http2HeaderListener.prototype.value = "";
 Http2HeaderListener.prototype.onDataAvailable = function(request, ctx, stream, off, cnt) {
   this.onDataAvailableFired = true;
   this.isHttp2Connection = checkIsHttp2(request);
-  do_check_eq(request.getResponseHeader("X-Received-Test-Header"), this.value);
+  var hvalue = request.getResponseHeader(this.name);
+  do_check_neq(hvalue, "");
+  this.callback(hvalue);
   read_stream(stream, cnt);
 };
 
@@ -235,8 +238,29 @@ function test_http2_multiplex() {
 function test_http2_header() {
   var chan = makeChan("https://localhost:6944/header");
   var hvalue = "Headers are fun";
-  var listener = new Http2HeaderListener(hvalue);
   chan.setRequestHeader("X-Test-Header", hvalue, false);
+  var listener = new Http2HeaderListener("X-Received-Test-Header", function(received_hvalue) {
+    do_check_eq(received_hvalue, hvalue);
+  });
+  chan.asyncOpen(listener, null);
+}
+
+// Test to make sure cookies are split into separate fields before compression
+function test_http2_cookie_crumbling() {
+  var chan = makeChan("https://localhost:6944/cookie_crumbling");
+  var cookiesSent = ['a=b', 'c=d', 'e=f'].sort();
+  chan.setRequestHeader("Cookie", cookiesSent.join('; '), false);
+  var listener = new Http2HeaderListener("X-Received-Header-Pairs", function(pairsReceived) {
+    var cookiesReceived = JSON.parse(pairsReceived).filter(function(pair) {
+      return pair[0] == 'cookie';
+    }).map(function(pair) {
+      return pair[1];
+    }).sort();
+    do_check_eq(cookiesReceived.length, cookiesSent.length);
+    cookiesReceived.forEach(function(cookieReceived, index) {
+      do_check_eq(cookiesSent[index], cookieReceived)
+    });
+  });
   chan.asyncOpen(listener, null);
 }
 
@@ -316,6 +340,7 @@ var tests = [ test_http2_post_big
             , test_http2_push4
             , test_http2_xhr
             , test_http2_header
+            , test_http2_cookie_crumbling
             , test_http2_multiplex
             , test_http2_big
             , test_http2_post

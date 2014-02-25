@@ -223,20 +223,22 @@ nsXBLDocGlobalObject::GetPrincipal()
 
 /* Implementation file */
 
-static PLDHashOperator
-TraverseProtos(const nsACString &aKey, nsXBLPrototypeBinding *aProto, void* aClosure)
+static bool
+TraverseProtos(nsHashKey *aKey, void *aData, void* aClosure)
 {
-  nsCycleCollectionTraversalCallback *cb =
+  nsCycleCollectionTraversalCallback *cb = 
     static_cast<nsCycleCollectionTraversalCallback*>(aClosure);
-  aProto->Traverse(*cb);
-  return PL_DHASH_NEXT;
+  nsXBLPrototypeBinding *proto = static_cast<nsXBLPrototypeBinding*>(aData);
+  proto->Traverse(*cb);
+  return kHashEnumerateNext;
 }
 
-static PLDHashOperator
-UnlinkProtoJSObjects(const nsACString &aKey, nsXBLPrototypeBinding *aProto, void* aClosure)
+static bool
+UnlinkProtoJSObjects(nsHashKey *aKey, void *aData, void* aClosure)
 {
-  aProto->UnlinkJSObjects();
-  return PL_DHASH_NEXT;
+  nsXBLPrototypeBinding *proto = static_cast<nsXBLPrototypeBinding*>(aData);
+  proto->UnlinkJSObjects();
+  return kHashEnumerateNext;
 }
 
 struct ProtoTracer
@@ -245,19 +247,20 @@ struct ProtoTracer
   void *mClosure;
 };
 
-static PLDHashOperator
-TraceProtos(const nsACString &aKey, nsXBLPrototypeBinding *aProto, void* aClosure)
+static bool
+TraceProtos(nsHashKey *aKey, void *aData, void* aClosure)
 {
   ProtoTracer* closure = static_cast<ProtoTracer*>(aClosure);
-  aProto->Trace(closure->mCallbacks, closure->mClosure);
-  return PL_DHASH_NEXT;
+  nsXBLPrototypeBinding *proto = static_cast<nsXBLPrototypeBinding*>(aData);
+  proto->Trace(closure->mCallbacks, closure->mClosure);
+  return kHashEnumerateNext;
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsXBLDocumentInfo)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXBLDocumentInfo)
   if (tmp->mBindingTable) {
-    tmp->mBindingTable->EnumerateRead(UnlinkProtoJSObjects, nullptr);
+    tmp->mBindingTable->Enumerate(UnlinkProtoJSObjects, nullptr);
   }
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mGlobalObject)
@@ -270,7 +273,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXBLDocumentInfo)
   }
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocument)
   if (tmp->mBindingTable) {
-    tmp->mBindingTable->EnumerateRead(TraverseProtos, &cb);
+    tmp->mBindingTable->Enumerate(TraverseProtos, &cb);
   }
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGlobalObject)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
@@ -278,7 +281,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsXBLDocumentInfo)
   if (tmp->mBindingTable) {
     ProtoTracer closure = { aCallbacks, aClosure };
-    tmp->mBindingTable->EnumerateRead(TraceProtos, &closure);
+    tmp->mBindingTable->Enumerate(TraceProtos, &closure);
   }
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
@@ -288,11 +291,12 @@ UnmarkXBLJSObject(void* aP, const char* aName, void* aClosure)
   JS::ExposeObjectToActiveJS(static_cast<JSObject*>(aP));
 }
 
-static PLDHashOperator
-UnmarkProtos(const nsACString &aKey, nsXBLPrototypeBinding *aProto, void* aClosure)
+static bool
+UnmarkProtos(nsHashKey* aKey, void* aData, void* aClosure)
 {
-  aProto->Trace(TraceCallbackFunc(UnmarkXBLJSObject), nullptr);
-  return PL_DHASH_NEXT;
+  nsXBLPrototypeBinding* proto = static_cast<nsXBLPrototypeBinding*>(aData);
+  proto->Trace(TraceCallbackFunc(UnmarkXBLJSObject), nullptr);
+  return kHashEnumerateNext;
 }
 
 void
@@ -303,7 +307,7 @@ nsXBLDocumentInfo::MarkInCCGeneration(uint32_t aGeneration)
   }
   // Unmark any JS we hold
   if (mBindingTable) {
-    mBindingTable->EnumerateRead(UnmarkProtos, nullptr);
+    mBindingTable->Enumerate(UnmarkProtos, nullptr);
   }
   if (mGlobalObject) {
     mGlobalObject->UnmarkCompilationGlobal();
@@ -322,6 +326,7 @@ nsXBLDocumentInfo::nsXBLDocumentInfo(nsIDocument* aDocument)
   : mDocument(aDocument),
     mScriptAccess(true),
     mIsChrome(false),
+    mBindingTable(nullptr),
     mFirstBinding(nullptr)
 {
   nsIURI* uri = aDocument->GetDocumentURI();
@@ -362,7 +367,11 @@ nsXBLDocumentInfo::~nsXBLDocumentInfo()
   if (mGlobalObject) {
     mGlobalObject->ClearGlobalObjectOwner(); // just in case
   }
-  mozilla::DropJSObjects(this);
+  if (mBindingTable) {
+    delete mBindingTable;
+    mBindingTable = nullptr;
+    mozilla::DropJSObjects(this);
+  }
 }
 
 nsXBLPrototypeBinding*
@@ -376,19 +385,32 @@ nsXBLDocumentInfo::GetPrototypeBinding(const nsACString& aRef)
     return mFirstBinding;
   }
 
-  return mBindingTable->Get(aRef);
+  const nsPromiseFlatCString& flat = PromiseFlatCString(aRef);
+  nsCStringKey key(flat.get());
+  return static_cast<nsXBLPrototypeBinding*>(mBindingTable->Get(&key));
+}
+
+static bool
+DeletePrototypeBinding(nsHashKey* aKey, void* aData, void* aClosure)
+{
+  nsXBLPrototypeBinding* binding = static_cast<nsXBLPrototypeBinding*>(aData);
+  delete binding;
+  return true;
 }
 
 nsresult
 nsXBLDocumentInfo::SetPrototypeBinding(const nsACString& aRef, nsXBLPrototypeBinding* aBinding)
 {
   if (!mBindingTable) {
-    mBindingTable = new nsClassHashtable<nsCStringHashKey, nsXBLPrototypeBinding>();
+    mBindingTable = new nsObjectHashtable(nullptr, nullptr, DeletePrototypeBinding, nullptr);
+
     mozilla::HoldJSObjects(this);
   }
 
-  NS_ENSURE_STATE(!mBindingTable->Get(aRef));
-  mBindingTable->Put(aRef, aBinding);
+  const nsPromiseFlatCString& flat = PromiseFlatCString(aRef);
+  nsCStringKey key(flat.get());
+  NS_ENSURE_STATE(!mBindingTable->Get(&key));
+  mBindingTable->Put(&key, aBinding);
 
   return NS_OK;
 }
@@ -397,18 +419,22 @@ void
 nsXBLDocumentInfo::RemovePrototypeBinding(const nsACString& aRef)
 {
   if (mBindingTable) {
-    mBindingTable->Remove(aRef);
+    // Use a flat string to avoid making a copy.
+    const nsPromiseFlatCString& flat = PromiseFlatCString(aRef);
+    nsCStringKey key(flat);
+    mBindingTable->Remove(&key);
   }
 }
 
 // Callback to enumerate over the bindings from this document and write them
 // out to the cache.
-static PLDHashOperator
-WriteBinding(const nsACString &aKey, nsXBLPrototypeBinding *aProto, void* aClosure)
+bool
+WriteBinding(nsHashKey *aKey, void *aData, void* aClosure)
 {
-  aProto->Write((nsIObjectOutputStream*)aClosure);
+  nsXBLPrototypeBinding* binding = static_cast<nsXBLPrototypeBinding *>(aData);
+  binding->Write((nsIObjectOutputStream*)aClosure);
 
-  return PL_DHASH_NEXT;
+  return kHashEnumerateNext;
 }
 
 // static
@@ -504,9 +530,8 @@ nsXBLDocumentInfo::WritePrototypeBindings()
   rv = stream->Write32(XBLBinding_Serialize_Version);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (mBindingTable) {
-    mBindingTable->EnumerateRead(WriteBinding, stream);
-  }
+  if (mBindingTable)
+    mBindingTable->Enumerate(WriteBinding, stream);
 
   // write a end marker at the end
   rv = stream->Write8(XBLBinding_Serialize_NoMoreBindings);
@@ -529,19 +554,18 @@ nsXBLDocumentInfo::SetFirstPrototypeBinding(nsXBLPrototypeBinding* aBinding)
   mFirstBinding = aBinding;
 }
 
-static PLDHashOperator
-FlushScopedSkinSheets(const nsACString &aKey, nsXBLPrototypeBinding *aProto, void* aClosure)
+bool FlushScopedSkinSheets(nsHashKey* aKey, void* aData, void* aClosure)
 {
-  aProto->FlushSkinSheets();
-  return PL_DHASH_NEXT;
+  nsXBLPrototypeBinding* proto = (nsXBLPrototypeBinding*)aData;
+  proto->FlushSkinSheets();
+  return true;
 }
 
 void
 nsXBLDocumentInfo::FlushSkinStylesheets()
 {
-  if (mBindingTable) {
-    mBindingTable->EnumerateRead(FlushScopedSkinSheets, nullptr);
-  }
+  if (mBindingTable)
+    mBindingTable->Enumerate(FlushScopedSkinSheets);
 }
 
 JSObject*

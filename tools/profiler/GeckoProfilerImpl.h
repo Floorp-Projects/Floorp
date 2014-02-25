@@ -332,7 +332,7 @@ public:
       mHandle = mozilla_sampler_call_enter(mDest, this, true, line);
       va_end(args);
     } else {
-      mHandle = mozilla_sampler_call_enter(aDefault, nullptr, false, line);
+      mHandle = mozilla_sampler_call_enter(aDefault, this, false, line);
     }
   }
   ~SamplerStackFramePrintfRAII() {

@@ -35,23 +35,23 @@ public:
   // nsIFrame:
   virtual nsresult  AttributeChanged(int32_t         aNameSpaceID,
                                      nsIAtom*        aAttribute,
-                                     int32_t         aModType);
+                                     int32_t         aModType) MOZ_OVERRIDE;
 
   /**
    * Get the "type" of the frame
    *
    * @see nsGkAtoms::svgAFrame
    */
-  virtual nsIAtom* GetType() const;
+  virtual nsIAtom* GetType() const MOZ_OVERRIDE;
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const
+  virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE
   {
     return MakeFrameName(NS_LITERAL_STRING("SVGA"), aResult);
   }
 #endif
   // nsISVGChildFrame interface:
-  virtual void NotifySVGChanged(uint32_t aFlags);
+  virtual void NotifySVGChanged(uint32_t aFlags) MOZ_OVERRIDE;
   
   // nsSVGContainerFrame methods:
   virtual gfxMatrix GetCanvasTM(uint32_t aFor,
