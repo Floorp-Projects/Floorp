@@ -134,6 +134,7 @@ speex_resampler_reset_mem
 speex_resampler_strerror
 cubeb_destroy
 cubeb_init
+cubeb_get_backend_id
 cubeb_get_max_channel_count
 cubeb_get_min_latency
 cubeb_get_preferred_sample_rate

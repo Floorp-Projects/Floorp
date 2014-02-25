@@ -1,0 +1,26 @@
+# -*- Mode: makefile; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- #
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+ifeq ($(OS_ARCH),WINNT)
+  # On windows, the WASAPI backend needs the resampler we have in
+  # /media/libspeex_resampler, so we can't get away with just linking cubeb's .o
+  LIBS = $(call EXPAND_LIBNAME_PATH,gkmedias,$(DEPTH)/layout/media) \
+         $(NULL)
+else
+  # Otherwise, we can just grab all the compiled .o and compile against that,
+  # linking the appriopriate libraries.
+  LIBS = $(call EXPAND_LIBNAME_PATH,cubeb,$(DEPTH)/media/libcubeb/src)
+  ifeq ($(OS_TARGET),Darwin)
+    LIBS += -framework AudioUnit -framework CoreAudio
+  else
+    ifeq ($(OS_TARGET), OpenBSD)
+      LIBS += -lsndio
+    else
+      LIBS += $(MOZ_ALSA_LIBS) \
+              $(MOZ_PULSEAUDIO_LIBS)
+    endif
+  endif
+  LIBS += $(NULL)
+endif
