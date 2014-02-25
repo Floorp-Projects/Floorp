@@ -16,7 +16,6 @@
 #include "mozilla/MouseEvents.h"
 #include "mozilla/mozalloc.h"           // for operator new
 #include "mozilla/TouchEvents.h"
-#include "mozilla/Preferences.h"        // for Preferences
 #include "nsDebug.h"                    // for NS_WARNING
 #include "nsPoint.h"                    // for nsIntPoint
 #include "nsThreadUtils.h"              // for NS_IsMainThread
@@ -31,16 +30,12 @@ namespace layers {
 
 float APZCTreeManager::sDPI = 160.0;
 
-// Pref that enables printing of the APZC tree for debugging.
-static bool gPrintApzcTree = false;
-
 APZCTreeManager::APZCTreeManager()
     : mTreeLock("APZCTreeLock"),
       mTouchCount(0)
 {
   MOZ_ASSERT(NS_IsMainThread());
   AsyncPanZoomController::InitializeGlobalState();
-  Preferences::AddBoolVarCache(&gPrintApzcTree, "apz.printtree", gPrintApzcTree);
 }
 
 APZCTreeManager::~APZCTreeManager()
