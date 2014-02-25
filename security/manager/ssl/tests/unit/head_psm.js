@@ -73,6 +73,20 @@ function addCertFromFile(certdb, filename, trustString) {
   certdb.addCert(der, trustString, null);
 }
 
+function constructCertFromFile(filename) {
+  let certFile = do_get_file(filename, false);
+  let certDER = readFile(certFile);
+  let certdb = Cc["@mozilla.org/security/x509certdb;1"]
+                  .getService(Ci.nsIX509CertDB);
+  return certdb.constructX509(certDER, certDER.length);
+}
+
+function setCertTrust(cert, trustString) {
+  let certdb = Cc["@mozilla.org/security/x509certdb;1"]
+                  .getService(Ci.nsIX509CertDB);
+  certdb.setCertTrustFromString(cert, trustString);
+}
+
 function getXPCOMStatusFromNSS(statusNSS) {
   let nssErrorsService = Cc["@mozilla.org/nss_errors_service;1"]
                            .getService(Ci.nsINSSErrorsService);

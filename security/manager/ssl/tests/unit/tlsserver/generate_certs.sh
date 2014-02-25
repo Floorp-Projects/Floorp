@@ -99,7 +99,7 @@ function make_EE {
   SUBJECT="${2}"
   CA="${3}"
   SUBJECT_ALT_NAME="${4}"
-  EXTRA_ARGS="${5}"
+  EXTRA_ARGS="${5} ${6}"
 
   echo -e "$CERT_RESPONSES" | $RUN_MOZILLA $CERTUTIL -d $OUTPUT_DIR -S \
                                                      -n $NICKNAME \
@@ -136,7 +136,12 @@ $RUN_MOZILLA $CERTUTIL -d $OUTPUT_DIR -D -n deletedINT
 make_INT expiredINT 'CN=Expired Test Intermediate' testCA "-w -400"
 make_EE expiredissuer 'CN=Test End-entity with expired issuer' expiredINT "expiredissuer.example.com"
 NSS_ALLOW_WEAK_SIGNATURE_ALG=1 make_EE md5signature 'CN=Test End-entity with MD5 signature' testCA "md5signature.example.com" "-Z MD5"
-make_EE inadequatekeyusage 'CN=Test End-entity with inadequate key usage' testCA "inadequatekeyusage.example.com" "--keyUsage crlSigning"
 make_EE untrustedissuer 'CN=Test End-entity with untrusted issuer' otherCA "untrustedissuer.example.com"
+
+make_EE mismatch-expired 'CN=Mismatch-Expired Test End-entity' testCA "doesntmatch.example.com" "-w -400"
+make_EE mismatch-untrusted 'CN=Mismatch-Untrusted Test End-entity' otherCA "doesntmatch.example.com"
+make_EE untrusted-expired 'CN=Untrusted-Expired Test End-entity' otherCA "untrusted-expired.example.com" "-w -400"
+make_EE mismatch-untrusted-expired 'CN=Mismatch-Untrusted-Expired Test End-entity' otherCA "doesntmatch.example.com" "-w -400"
+NSS_ALLOW_WEAK_SIGNATURE_ALG=1 make_EE md5signature-expired 'CN=Test MD5Signature-Expired End-entity' testCA "md5signature-expired.example.com" "-Z MD5" "-w -400"
 
 cleanup

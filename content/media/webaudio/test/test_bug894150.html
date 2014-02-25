@@ -8,7 +8,7 @@
 <body>
 <script>
 
-var ac = AudioContext();
+var ac = new AudioContext();
 ac.createPanner();
 var listener = ac.listener;
 SpecialPowers.forceGC();

@@ -24,7 +24,10 @@ function test_constructor(dom_proto, shouldthrow) {
     } catch (e) {
         threw = true;
     }
-    is(threw, shouldthrow, "Calling |" + dom_proto + "()| should" + (shouldthrow ? " " : " not ") + "throw");
+    if (shouldthrow)
+      ok(threw, "Calling |" + dom_proto + "()| should throw");
+    else
+      todo(threw, "Calling |" + dom_proto + "()| should throw");
 
     threw = false;
     try {

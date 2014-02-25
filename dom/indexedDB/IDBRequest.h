@@ -25,6 +25,7 @@ class nsPIDOMWindow;
 namespace mozilla {
 namespace dom {
 class OwningIDBObjectStoreOrIDBIndexOrIDBCursor;
+class ErrorEventInit;
 }
 }
 
@@ -101,7 +102,7 @@ public:
 
   void CaptureCaller();
 
-  void FillScriptErrorEvent(mozilla::InternalScriptErrorEvent* aEvent) const;
+  void FillScriptErrorEvent(ErrorEventInit& aEventInit) const;
 
   bool
   IsPending() const

@@ -58,7 +58,6 @@ UNIFIED_SOURCES += [
     'nsDOMDataTransfer.cpp',
     'nsDOMDeviceMotionEvent.cpp',
     'nsDOMDragEvent.cpp',
-    'nsDOMEvent.cpp',
     'nsDOMEventTargetHelper.cpp',
     'nsDOMFocusEvent.cpp',
     'nsDOMKeyboardEvent.cpp',
@@ -67,16 +66,12 @@ UNIFIED_SOURCES += [
     'nsDOMMouseScrollEvent.cpp',
     'nsDOMMutationEvent.cpp',
     'nsDOMNotifyAudioAvailableEvent.cpp',
-    'nsDOMNotifyPaintEvent.cpp',
-    'nsDOMScrollAreaEvent.cpp',
     'nsDOMSimpleGestureEvent.cpp',
     'nsDOMTextEvent.cpp',
     'nsDOMTouchEvent.cpp',
     'nsDOMTransitionEvent.cpp',
-    'nsDOMUIEvent.cpp',
     'nsDOMXULCommandEvent.cpp',
     'nsEventDispatcher.cpp',
-    'nsEventListenerManager.cpp',
     'nsEventListenerService.cpp',
     'nsIMEStateManager.cpp',
     'nsJSEventListener.cpp',
@@ -87,8 +82,24 @@ UNIFIED_SOURCES += [
     'Touch.cpp',
 ]
 
-# nsEventStateManager.cpp should be built separately because of Mac OS X headers.
 SOURCES += [
+    # nsDOMEvent.cpp should be built separately because it includes
+    # ipc/IPCMessageUtils.h, which on Windows includes windows.h.
+    'nsDOMEvent.cpp',
+    # nsDOMEvent.cpp should be built separately because it includes
+    # ipc/IPCMessageUtils.h, which on Windows includes windows.h.
+    'nsDOMNotifyPaintEvent.cpp',
+    # nsDOMEvent.cpp should be built separately because it includes
+    # ipc/IPCMessageUtils.h, which on Windows includes windows.h.
+    'nsDOMScrollAreaEvent.cpp',
+    # nsDOMEvent.cpp should be built separately because it includes
+    # ipc/IPCMessageUtils.h, which on Windows includes windows.h.
+    'nsDOMUIEvent.cpp',
+    # nsDOMEvent.cpp should be built separately because it includes
+    # mozilla/HalSensor.h, which includes ipc/IPCMessageUtils.h, which
+    # on Windows includes windows.h.
+    'nsEventListenerManager.cpp',
+    # nsEventStateManager.cpp should be built separately because of Mac OS X headers.
     'nsEventStateManager.cpp',
 ]
 

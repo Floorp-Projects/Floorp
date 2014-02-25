@@ -2289,7 +2289,7 @@ nsStyleDisplay::nsStyleDisplay()
   mTransformOrigin[2].SetCoordValue(0);
   mPerspectiveOrigin[0].SetPercentValue(0.5f);
   mPerspectiveOrigin[1].SetPercentValue(0.5f);
-  mChildPerspective.SetCoordValue(0);
+  mChildPerspective.SetNoneValue();
   mBackfaceVisibility = NS_STYLE_BACKFACE_VISIBILITY_VISIBLE;
   mTransformStyle = NS_STYLE_TRANSFORM_STYLE_FLAT;
   mOrient = NS_STYLE_ORIENT_AUTO;

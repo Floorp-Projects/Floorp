@@ -107,16 +107,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=741267
         ok(false, "'XMLHttpRequest' shouldn't throw in a sandbox");
       }
       try {
-        var xhr = Components.utils.evalInSandbox("XMLHttpRequest()", sandbox);
+        var xhr = Components.utils.evalInSandbox("new XMLHttpRequest()", sandbox);
         is("" + xhr, "[object XrayWrapper " + XMLHttpRequest() + "]", "'XMLHttpRequest()' in a sandbox should create an XMLHttpRequest object");
       } catch (e) {
-        ok(false, "'XMLHttpRequest()' shouldn't throw in a sandbox");
+        ok(false, "'new XMLHttpRequest()' shouldn't throw in a sandbox (1)");
       }
       try {
-        var xhr = Components.utils.evalInSandbox("XMLHttpRequest.prototype.toString = function () { return 'Failed'; }; XMLHttpRequest();", sandbox);
+        var xhr = Components.utils.evalInSandbox("XMLHttpRequest.prototype.toString = function () { return 'Failed'; }; new XMLHttpRequest();", sandbox);
         is(xhr.toString(), "[object XrayWrapper " + XMLHttpRequest() + "]", "XMLHttpRequest.prototype.toString in the sandbox should not override the native toString behaviour");
       } catch (e) {
-        ok(false, "'new XMLHttpRequest()' shouldn't throw in a sandbox");
+        ok(false, "'new XMLHttpRequest()' shouldn't throw in a sandbox (2)");
       }
 
       try {

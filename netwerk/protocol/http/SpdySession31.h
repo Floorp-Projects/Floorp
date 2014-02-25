@@ -173,6 +173,9 @@ public:
 
   // an overload of nsAHttpSegementReader
   virtual nsresult CommitToSegmentSize(uint32_t size, bool forceCommitment);
+  nsresult BufferOutput(const char *, uint32_t, uint32_t *);
+  void     FlushOutputQueue();
+  uint32_t AmountOfOutputBuffered() { return mOutputQueueUsed - mOutputQueueSent; }
 
   uint32_t GetServerInitialStreamWindow() { return mServerInitialStreamWindow; }
 
@@ -217,7 +220,6 @@ private:
   void        RemoveStreamFromQueues(SpdyStream31 *);
 
   void        SetWriteCallbacks();
-  void        FlushOutputQueue();
   void        RealignOutputQueue();
 
   bool        RoomForMoreConcurrent();

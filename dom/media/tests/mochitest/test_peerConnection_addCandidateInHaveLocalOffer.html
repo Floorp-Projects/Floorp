@@ -26,7 +26,7 @@
       "PC_LOCAL_ADD_CANDIDATE",
       function (test) {
         test.pcLocal.addIceCandidateAndFail(
-          mozRTCIceCandidate(
+          new mozRTCIceCandidate(
             {candidate:"1 1 UDP 2130706431 192.168.2.1 50005 typ host",
              sdpMLineIndex: 1}),
           function(err) {

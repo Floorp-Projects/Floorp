@@ -10,12 +10,14 @@ import org.json.JSONObject;
 
 public final class ZoomConstraints {
     private final boolean mAllowZoom;
+    private final boolean mAllowDoubleTapZoom;
     private final float mDefaultZoom;
     private final float mMinZoom;
     private final float mMaxZoom;
 
     public ZoomConstraints(boolean allowZoom) {
         mAllowZoom = allowZoom;
+        mAllowDoubleTapZoom = allowZoom;
         mDefaultZoom = 0.0f;
         mMinZoom = 0.0f;
         mMaxZoom = 0.0f;
@@ -23,6 +25,7 @@ public final class ZoomConstraints {
 
     ZoomConstraints(JSONObject message) throws JSONException {
         mAllowZoom = message.getBoolean("allowZoom");
+        mAllowDoubleTapZoom = message.getBoolean("allowDoubleTapZoom");
         mDefaultZoom = (float)message.getDouble("defaultZoom");
         mMinZoom = (float)message.getDouble("minZoom");
         mMaxZoom = (float)message.getDouble("maxZoom");
@@ -30,6 +33,10 @@ public final class ZoomConstraints {
 
     public final boolean getAllowZoom() {
         return mAllowZoom;
+    }
+
+    public final boolean getAllowDoubleTapZoom() {
+        return mAllowDoubleTapZoom;
     }
 
     public final float getDefaultZoom() {

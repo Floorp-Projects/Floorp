@@ -1004,6 +1004,31 @@ TreatAsOpaque(nsDisplayItem* aItem, nsDisplayListBuilder* aBuilder)
   return opaqueClipped;
 }
 
+/* Checks if aPotentialScrollItem is a scroll layer item and aPotentialScrollbarItem
+ * is an overlay scrollbar item for the same scroll frame.
+ */
+static bool
+IsScrollLayerItemAndOverlayScrollbarForScrollFrame(
+  nsDisplayItem* aPotentialScrollItem, nsDisplayItem* aPotentialScrollbarItem)
+{
+  if (aPotentialScrollItem->GetType() == nsDisplayItem::TYPE_SCROLL_LAYER &&
+      aPotentialScrollbarItem &&
+      aPotentialScrollbarItem->GetType() == nsDisplayItem::TYPE_OWN_LAYER &&
+      LookAndFeel::GetInt(LookAndFeel::eIntID_UseOverlayScrollbars)) {
+    nsDisplayScrollLayer* scrollItem =
+      static_cast<nsDisplayScrollLayer*>(aPotentialScrollItem);
+    nsDisplayOwnLayer* layerItem =
+      static_cast<nsDisplayOwnLayer*>(aPotentialScrollbarItem);
+    if ((layerItem->GetFlags() &
+         (nsDisplayOwnLayer::VERTICAL_SCROLLBAR |
+          nsDisplayOwnLayer::HORIZONTAL_SCROLLBAR)) &&
+        layerItem->Frame()->GetParent() == scrollItem->GetScrollFrame()) {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool
 nsDisplayList::ComputeVisibilityForSublist(nsDisplayListBuilder* aBuilder,
                                            nsRegion* aVisibleRegion,
@@ -1033,6 +1058,17 @@ nsDisplayList::ComputeVisibilityForSublist(nsDisplayListBuilder* aBuilder,
       if (belowItem && item->TryMerge(aBuilder, belowItem)) {
         belowItem->~nsDisplayItem();
         elements.ReplaceElementsAt(i - 1, 1, item);
+        continue;
+      }
+
+      // If an overlay scrollbar item is between a scroll layer item and the
+      // other scroll layer items that we need to merge with just move the
+      // scrollbar item up, that way it will be on top of the scrolled content
+      // and we can try to merge all the scroll layer items.
+      if (IsScrollLayerItemAndOverlayScrollbarForScrollFrame(item, belowItem)) {
+        elements[i] = belowItem;
+        elements[i-1] = item;
+        i++;
         continue;
       }
 

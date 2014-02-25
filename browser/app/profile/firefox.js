@@ -1387,5 +1387,5 @@ pref("ui.key.menuAccessKeyFocuses", true);
 #endif
 
 
-// Temporarily turn the new http cache v2 on for Desktop Firefox only
-pref("browser.cache.use_new_backend_temp", true);
+// Delete HTTP cache v2 data of users that didn't opt-in manually
+pref("browser.cache.auto_delete_cache_version", 1);
