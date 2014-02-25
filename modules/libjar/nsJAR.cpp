@@ -1110,8 +1110,8 @@ nsZipReaderCache::GetZip(nsIFile* zipFile, nsIZipReader* *result)
 
   uri.Insert(NS_LITERAL_CSTRING("file:"), 0);
 
-  nsJAR* zip;
-  mZips.Get(uri, &zip);
+  nsRefPtr<nsJAR> zip;
+  mZips.Get(uri, getter_AddRefs(zip));
   if (zip) {
 #ifdef ZIP_CACHE_HIT_RATE
     mZipCacheHits++;
@@ -1119,19 +1119,17 @@ nsZipReaderCache::GetZip(nsIFile* zipFile, nsIZipReader* *result)
     zip->ClearReleaseTime();
   } else {
     zip = new nsJAR();
-    NS_ADDREF(zip);
     zip->SetZipReaderCache(this);
 
     rv = zip->Open(zipFile);
     if (NS_FAILED(rv)) {
-      NS_RELEASE(zip);
       return rv;
     }
 
     MOZ_ASSERT(!mZips.Contains(uri));
     mZips.Put(uri, zip);
   }
-  *result = zip;
+  zip.forget(result);
   return rv;
 }
 
@@ -1157,8 +1155,8 @@ nsZipReaderCache::GetInnerZip(nsIFile* zipFile, const nsACString &entry,
   uri.AppendLiteral("!/");
   uri.Append(entry);
 
-  nsJAR* zip;
-  mZips.Get(uri, &zip);
+  nsRefPtr<nsJAR> zip;
+  mZips.Get(uri, getter_AddRefs(zip));
   if (zip) {
 #ifdef ZIP_CACHE_HIT_RATE
     mZipCacheHits++;
@@ -1166,19 +1164,17 @@ nsZipReaderCache::GetInnerZip(nsIFile* zipFile, const nsACString &entry,
     zip->ClearReleaseTime();
   } else {
     zip = new nsJAR();
-    NS_ADDREF(zip);
     zip->SetZipReaderCache(this);
 
     rv = zip->OpenInner(outerZipReader, entry);
     if (NS_FAILED(rv)) {
-      NS_RELEASE(zip);
       return rv;
     }
 
     MOZ_ASSERT(!mZips.Contains(uri));
     mZips.Put(uri, zip);
   }
-  *result = zip;
+  zip.forget(result);
   return rv;
 }
 
@@ -1322,8 +1318,9 @@ nsZipReaderCache::Observe(nsISupports *aSubject,
     uri.Insert(NS_LITERAL_CSTRING("file:"), 0);
 
     MutexAutoLock lock(mLock);
-    nsJAR* zip;
-    mZips.Get(uri, &zip);
+
+    nsRefPtr<nsJAR> zip;
+    mZips.Get(uri, getter_AddRefs(zip));
     if (!zip)
       return NS_OK;
 
@@ -1334,7 +1331,6 @@ nsZipReaderCache::Observe(nsISupports *aSubject,
     zip->SetZipReaderCache(nullptr);
 
     mZips.Remove(uri);
-    NS_RELEASE(zip);
   }
   return NS_OK;
 }
