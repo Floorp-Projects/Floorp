@@ -117,6 +117,7 @@ nsIMEStateManager::OnDestroyPresContext(nsPresContext* aPresContext)
       sTextCompositions->IndexOf(aPresContext);
     if (i != TextCompositionArray::NoIndex) {
       // there should be only one composition per presContext object.
+      sTextCompositions->ElementAt(i)->Destroy();
       sTextCompositions->RemoveElementAt(i);
       MOZ_ASSERT(sTextCompositions->IndexOf(aPresContext) ==
                    TextCompositionArray::NoIndex);
@@ -579,6 +580,7 @@ nsIMEStateManager::DispatchCompositionEvent(nsINode* aEventTargetNode,
     TextCompositionArray::index_type i =
       sTextCompositions->IndexOf(GUIEvent->widget);
     if (i != TextCompositionArray::NoIndex) {
+      sTextCompositions->ElementAt(i)->Destroy();
       sTextCompositions->RemoveElementAt(i);
     }
   }
