@@ -260,7 +260,7 @@ public:
 #undef ERROR_EVENT
 #undef FORWARDED_EVENT
 #undef EVENT
-  void GetClassName(nsString& aClassName)
+  void GetClassName(mozilla::dom::DOMString& aClassName)
   {
     GetAttr(kNameSpaceID_None, nsGkAtoms::_class, aClassName);
   }
