@@ -1,0 +1,29 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<style>
+.reftest {
+  width: 100px;
+  height: 100px;
+}
+
+.parent {
+  background-color: rgb(255, 255, 0);
+  background-blend-mode: screen;
+}
+
+.child {
+  background-image: url(as-image/green100x100.png);
+  background-blend-mode: difference;
+}
+
+</style>
+<body>
+  <div class="reftest parent">
+    <div class="reftest child"></div>
+  </div>
+</body>
+</html>
