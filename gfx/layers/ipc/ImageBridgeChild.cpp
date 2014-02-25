@@ -987,5 +987,10 @@ void ImageBridgeChild::RemoveTexture(TextureClient* aTexture)
   }
 }
 
+bool ImageBridgeChild::IsSameProcess() const
+{
+  return OtherProcess() == ipc::kInvalidProcessHandle;
+}
+
 } // layers
 } // mozilla
