@@ -12,6 +12,9 @@
 #ifdef MOZ_B2G_CAMERA
 #include "GrallocImages.h"
 #include "libyuv.h"
+#include "mozilla/Hal.h"
+#include "ScreenOrientation.h"
+using namespace mozilla::dom;
 #endif
 namespace mozilla {
 
@@ -137,7 +140,7 @@ MediaEngineWebRTCVideoSource::NotifyPull(MediaStreamGraph* aGraph,
   nsRefPtr<layers::Image> image = mImage;
   TrackTicks target = TimeToTicksRoundUp(USECS_PER_S, aDesiredTime);
   TrackTicks delta = target - aLastEndTime;
-  LOGFRAME(("NotifyPull, desired = %ld, target = %ld, delta = %ld %s", (int64_t) aDesiredTime, 
+  LOGFRAME(("NotifyPull, desired = %ld, target = %ld, delta = %ld %s", (int64_t) aDesiredTime,
             (int64_t) target, (int64_t) delta, image ? "" : "<null>"));
 
   // Bug 846188 We may want to limit incoming frames to the requested frame rate
@@ -512,6 +515,7 @@ MediaEngineWebRTCVideoSource::AllocImpl() {
     // in DeallocImpl() will do that for us.
     mCameraControl->AddListener(this);
   }
+
   mCallbackMonitor.Notify();
 }
 
@@ -520,6 +524,54 @@ MediaEngineWebRTCVideoSource::DeallocImpl() {
   MOZ_ASSERT(NS_IsMainThread());
 
   mCameraControl = nullptr;
+}
+
+// The same algorithm from bug 840244
+static int
+GetRotateAmount(ScreenOrientation aScreen, int aCameraMountAngle, bool aBackCamera) {
+  int screenAngle = 0;
+  switch (aScreen) {
+    case eScreenOrientation_PortraitPrimary:
+      screenAngle = 0;
+      break;
+    case eScreenOrientation_PortraitSecondary:
+      screenAngle = 180;
+      break;
+   case eScreenOrientation_LandscapePrimary:
+      screenAngle = 90;
+      break;
+   case eScreenOrientation_LandscapeSecondary:
+      screenAngle = 270;
+      break;
+   default:
+      MOZ_ASSERT(false);
+      break;
+  }
+
+  int result;
+
+  if (aBackCamera) {
+    //back camera
+    result = (aCameraMountAngle - screenAngle + 360) % 360;
+  } else {
+    //front camera
+    result = (aCameraMountAngle + screenAngle) % 360;
+  }
+  return result;
+}
+
+// undefine to remove on-the-fly rotation support
+// #define DYNAMIC_GUM_ROTATION
+
+void
+MediaEngineWebRTCVideoSource::Notify(const hal::ScreenConfiguration& aConfiguration) {
+#ifdef DYNAMIC_GUM_ROTATION
+  MonitorAutoLock enter(mMonitor);
+  mRotation = GetRotateAmount(aConfiguration.orientation(), mCameraAngle, mBackCamera);
+
+  LOG(("*** New orientation: %d (Camera %d Back %d MountAngle: %d)",
+       mRotation, mCaptureIndex, mBackCamera, mCameraAngle));
+#endif
 }
 
 void
@@ -532,14 +584,15 @@ MediaEngineWebRTCVideoSource::StartImpl(webrtc::CaptureCapability aCapability) {
   config.mPreviewSize.height = aCapability.height;
   mCameraControl->Start(&config);
   mCameraControl->Set(CAMERA_PARAM_PICTURESIZE, config.mPreviewSize);
-  mCameraControl->Get(CAMERA_PARAM_SENSORANGLE, mSensorAngle);
-  MOZ_ASSERT(mSensorAngle >= 0 && mSensorAngle < 360);
+
+  hal::RegisterScreenConfigurationObserver(this);
 }
 
 void
 MediaEngineWebRTCVideoSource::StopImpl() {
   MOZ_ASSERT(NS_IsMainThread());
 
+  hal::UnregisterScreenConfigurationObserver(this);
   mCameraControl->Stop();
 }
 
@@ -563,6 +616,21 @@ MediaEngineWebRTCVideoSource::OnHardwareStateChange(HardwareState aState)
       mCallbackMonitor.Notify();
     }
   } else {
+    mCameraControl->Get(CAMERA_PARAM_SENSORANGLE, mCameraAngle);
+    MOZ_ASSERT(mCameraAngle == 0 || mCameraAngle == 90 || mCameraAngle == 180 ||
+               mCameraAngle == 270);
+    hal::ScreenConfiguration aConfig;
+    hal::GetCurrentScreenConfiguration(&aConfig);
+
+    nsCString deviceName;
+    ICameraControl::GetCameraName(mCaptureIndex, deviceName);
+    if (deviceName.EqualsASCII("back")) {
+      mBackCamera = true;
+    }
+
+    mRotation = GetRotateAmount(aConfig.orientation(), mCameraAngle, mBackCamera);
+    LOG(("*** Initial orientation: %d (Camera %d Back %d MountAngle: %d)",
+         mRotation, mCaptureIndex, mBackCamera, mCameraAngle));
     mState = kStarted;
     mCallbackMonitor.Notify();
   }
@@ -587,13 +655,13 @@ MediaEngineWebRTCVideoSource::OnTakePictureComplete(uint8_t* aData, uint32_t aLe
 }
 
 void
-MediaEngineWebRTCVideoSource::RotateImage(layers::Image* aImage) {
+MediaEngineWebRTCVideoSource::RotateImage(layers::Image* aImage, uint32_t aWidth, uint32_t aHeight) {
   layers::GrallocImage *nativeImage = static_cast<layers::GrallocImage*>(aImage);
   layers::SurfaceDescriptor handle = nativeImage->GetSurfaceDescriptor();
   layers::SurfaceDescriptorGralloc grallocHandle = handle.get_SurfaceDescriptorGralloc();
   android::sp<android::GraphicBuffer> graphicBuffer = layers::GrallocBufferActor::GetFrom(grallocHandle);
   void *pMem = nullptr;
-  uint32_t size = mWidth * mHeight * 3 / 2;
+  uint32_t size = aWidth * aHeight * 3 / 2;
 
   graphicBuffer->lock(android::GraphicBuffer::USAGE_SW_READ_MASK, &pMem);
 
@@ -602,12 +670,15 @@ MediaEngineWebRTCVideoSource::RotateImage(layers::Image* aImage) {
   nsRefPtr<layers::Image> image = mImageContainer->CreateImage(ImageFormat::PLANAR_YCBCR);
   layers::PlanarYCbCrImage* videoImage = static_cast<layers::PlanarYCbCrImage*>(image.get());
 
-  uint32_t dstWidth = mWidth;
-  uint32_t dstHeight = mHeight;
+  uint32_t dstWidth;
+  uint32_t dstHeight;
 
-  if (mSensorAngle == 90 || mSensorAngle == 270) {
-    dstWidth = mHeight;
-    dstHeight = mWidth;
+  if (mRotation == 90 || mRotation == 270) {
+    dstWidth = aHeight;
+    dstHeight = aWidth;
+  } else {
+    dstWidth = aWidth;
+    dstHeight = aHeight;
   }
 
   uint32_t half_width = dstWidth / 2;
@@ -617,9 +688,9 @@ MediaEngineWebRTCVideoSource::RotateImage(layers::Image* aImage) {
                         dstPtr + (dstWidth * dstHeight), half_width,
                         dstPtr + (dstWidth * dstHeight * 5 / 4), half_width,
                         0, 0,
-                        mWidth, mHeight,
-                        mWidth, mHeight,
-                        static_cast<libyuv::RotationMode>(mSensorAngle),
+                        aWidth, aHeight,
+                        aWidth, aHeight,
+                        static_cast<libyuv::RotationMode>(mRotation),
                         libyuv::FOURCC_NV21);
   graphicBuffer->unlock();
 
@@ -651,17 +722,19 @@ MediaEngineWebRTCVideoSource::OnNewPreviewFrame(layers::Image* aImage, uint32_t 
   if (mState == kStopped) {
     return false;
   }
+  // Bug XXX we'd prefer to avoid converting if mRotation == 0, but that causes problems in UpdateImage()
+  RotateImage(aImage, aWidth, aHeight);
+  if (mRotation != 0 && mRotation != 180) {
+    uint32_t temp = aWidth;
+    aWidth = aHeight;
+    aHeight = temp;
+  }
   if (mWidth != static_cast<int>(aWidth) || mHeight != static_cast<int>(aHeight)) {
     mWidth = aWidth;
     mHeight = aHeight;
     LOG(("Video FrameSizeChange: %ux%u", mWidth, mHeight));
   }
 
-  if (mSensorAngle == 0) {
-    mImage = aImage;
-  } else {
-    RotateImage(aImage);
-  }
   return true; // return true because we're accepting the frame
 }
 #endif
