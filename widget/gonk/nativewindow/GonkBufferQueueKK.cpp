@@ -273,8 +273,6 @@ status_t GonkBufferQueue::dequeueBuffer(int *outBuf, sp<Fence>* outFence, bool a
     }
 
     status_t returnFlags(OK);
-    EGLDisplay dpy = EGL_NO_DISPLAY;
-    EGLSyncKHR eglFence = EGL_NO_SYNC_KHR;
     int buf = INVALID_BUFFER_SLOT;
     uint32_t generation;
     SurfaceDescriptor descOld;
@@ -417,9 +415,7 @@ status_t GonkBufferQueue::dequeueBuffer(int *outBuf, sp<Fence>* outFence, bool a
             mSlots[buf].mAcquireCalled = false;
             mSlots[buf].mGraphicBuffer = NULL;
             mSlots[buf].mRequestBufferCalled = false;
-            mSlots[buf].mEglFence = EGL_NO_SYNC_KHR;
             mSlots[buf].mFence = Fence::NO_FENCE;
-            mSlots[buf].mEglDisplay = EGL_NO_DISPLAY;
             descOld = mSlots[buf].mSurfaceDescriptor;
             mSlots[buf].mSurfaceDescriptor = SurfaceDescriptor();
 
@@ -432,10 +428,7 @@ status_t GonkBufferQueue::dequeueBuffer(int *outBuf, sp<Fence>* outFence, bool a
                     "buf=%d, w=%d, h=%d, format=%d",
                     buf, buffer->width, buffer->height, buffer->format);
         }
-
-        dpy = mSlots[buf].mEglDisplay;
         *outFence = mSlots[buf].mFence;
-        mSlots[buf].mEglFence = EGL_NO_SYNC_KHR;
         mSlots[buf].mFence = Fence::NO_FENCE;
     }  // end lock scope
 
@@ -1044,9 +1037,7 @@ status_t GonkBufferQueue::acquireBuffer(BufferItem *buffer, nsecs_t expectedPres
     return NO_ERROR;
 }
 
-status_t GonkBufferQueue::releaseBuffer(
-        int buf, uint64_t frameNumber, EGLDisplay display,
-        EGLSyncKHR eglFence, const sp<Fence>& fence) {
+status_t GonkBufferQueue::releaseBuffer(int buf, uint64_t frameNumber, const sp<Fence>& fence) {
     ATRACE_CALL();
 
     if (buf == INVALID_BUFFER_SLOT || fence == NULL) {
@@ -1077,8 +1068,6 @@ status_t GonkBufferQueue::releaseBuffer(
 
     // The buffer can now only be released if its in the acquired state
     if (mSlots[buf].mBufferState == BufferSlot::ACQUIRED) {
-        mSlots[buf].mEglDisplay = display;
-        mSlots[buf].mEglFence = eglFence;
         mSlots[buf].mFence = fence;
         mSlots[buf].mBufferState = BufferSlot::FREE;
     } else if (mSlots[buf].mNeedsCleanupOnRelease) {

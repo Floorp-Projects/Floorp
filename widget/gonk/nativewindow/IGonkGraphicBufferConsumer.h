@@ -130,9 +130,7 @@ public:
     //
     // Note that the dependencies on EGL will be removed once we switch to using
     // the Android HW Sync HAL.
-    virtual status_t releaseBuffer(int buf, uint64_t frameNumber,
-            EGLDisplay display, EGLSyncKHR fence,
-            const sp<Fence>& releaseFence) = 0;
+    virtual status_t releaseBuffer(int buf, uint64_t frameNumber, const sp<Fence>& releaseFence) = 0;
 
     // consumerConnect connects a consumer to the BufferQueue.  Only one
     // consumer may be connected, and when that consumer disconnects the

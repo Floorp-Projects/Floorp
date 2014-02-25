@@ -21,9 +21,6 @@
 
 #define EGL_EGLEXT_PROTOTYPES
 
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
-
 #include <hardware/hardware.h>
 
 #include <gui/IGraphicBufferAlloc.h>
@@ -58,7 +55,7 @@ GonkConsumerBase::GonkConsumerBase(const sp<GonkBufferQueue>& bufferQueue, bool 
     // dropping to 0 at the end of the ctor.  Since all we need is a wp<...>
     // that's what we create.
     wp<ConsumerListener> listener = static_cast<ConsumerListener*>(this);
-    sp<IConsumerListener> proxy = new BufferQueue::ProxyConsumerListener(listener);
+    sp<IConsumerListener> proxy = new GonkBufferQueue::ProxyConsumerListener(listener);
 
     status_t err = mConsumer->consumerConnect(proxy, controlledByApp);
     if (err != NO_ERROR) {
@@ -230,9 +227,7 @@ status_t GonkConsumerBase::addReleaseFenceLocked(int slot,
     return OK;
 }
 
-status_t GonkConsumerBase::releaseBufferLocked(
-        int slot, const sp<GraphicBuffer> graphicBuffer,
-        EGLDisplay display, EGLSyncKHR eglFence) {
+status_t GonkConsumerBase::releaseBufferLocked(int slot, const sp<GraphicBuffer> graphicBuffer) {
     // If consumer no longer tracks this graphicBuffer (we received a new
     // buffer on the same slot), the buffer producer is definitely no longer
     // tracking it.
@@ -242,8 +237,7 @@ status_t GonkConsumerBase::releaseBufferLocked(
 
     CB_LOGV("releaseBufferLocked: slot=%d/%llu",
             slot, mSlots[slot].mFrameNumber);
-    status_t err = mConsumer->releaseBuffer(slot, mSlots[slot].mFrameNumber,
-            display, eglFence, mSlots[slot].mFence);
+    status_t err = mConsumer->releaseBuffer(slot, mSlots[slot].mFrameNumber, mSlots[slot].mFence);
     if (err == GonkBufferQueue::STALE_BUFFER_SLOT) {
         freeBufferLocked(slot);
     }
@@ -255,7 +249,7 @@ status_t GonkConsumerBase::releaseBufferLocked(
 
 bool GonkConsumerBase::stillTracking(int slot,
         const sp<GraphicBuffer> graphicBuffer) {
-    if (slot < 0 || slot >= BufferQueue::NUM_BUFFER_SLOTS) {
+    if (slot < 0 || slot >= GonkBufferQueue::NUM_BUFFER_SLOTS) {
         return false;
     }
     return (mSlots[slot].mGraphicBuffer != NULL &&

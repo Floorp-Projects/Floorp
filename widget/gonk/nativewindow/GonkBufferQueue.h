@@ -13,10 +13,8 @@
  * limitations under the License.
  */
 
-#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >=  19
-# include "GonkNativeWindowClientKK.h"
-#elif defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >=  17
-# include "GonkNativeWindowClientJB.h"
-#elif defined(MOZ_WIDGET_GONK) && ANDROID_VERSION == 15
-# include "GonkNativeWindowClientICS.h"
+#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 19
+# include "GonkBufferQueueKK.h"
+#elif defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
+# include "GonkBufferQueueJB.h"
 #endif

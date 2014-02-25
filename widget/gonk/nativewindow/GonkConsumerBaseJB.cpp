@@ -27,7 +27,7 @@
 #include <utils/Log.h>
 #include <utils/String8.h>
 
-#include "GonkConsumerBase.h"
+#include "GonkConsumerBaseJB.h"
 
 // Macros for including the GonkConsumerBase name in log messages
 #define CB_LOGV(...) __android_log_print(ANDROID_LOG_VERBOSE, LOG_TAG, __VA_ARGS__)
