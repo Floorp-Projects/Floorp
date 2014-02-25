@@ -35,7 +35,10 @@ NetworkInterfaceListService.prototype = {
                         LIST_NOT_INCLUDE_SUPL_INTERFACES) != 0,
           excludeMms: (aConditions &
                        Ci.nsINetworkInterfaceListService.
-                       LIST_NOT_INCLUDE_MMS_INTERFACES) != 0
+                       LIST_NOT_INCLUDE_MMS_INTERFACES) != 0,
+          excludeIms: (aConditions &
+                       Ci.nsINetworkInterfaceListService.
+                       LIST_NOT_INCLUDE_IMS_INTERFACES) != 0
         }
       )[0]);
   }

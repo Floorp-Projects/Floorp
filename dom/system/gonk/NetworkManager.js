@@ -192,9 +192,7 @@ NetworkManager.prototype = {
           case Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED:
 #ifdef MOZ_B2G_RIL
             // Add host route for data calls
-            if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE ||
-                network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS ||
-                network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_SUPL) {
+            if (this.isNetworkTypeMobile(network.type)) {
               gNetworkService.removeHostRoutes(network.name);
               gNetworkService.addHostRoute(network);
             }
@@ -223,9 +221,7 @@ NetworkManager.prototype = {
           case Ci.nsINetworkInterface.NETWORK_STATE_DISCONNECTED:
 #ifdef MOZ_B2G_RIL
             // Remove host route for data calls
-            if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE ||
-                network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS ||
-                network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_SUPL) {
+            if (this.isNetworkTypeMobile(network.type)) {
               gNetworkService.removeHostRoute(network);
             }
             // Remove extra host route. For example, mms proxy or mmsc.
@@ -292,15 +288,17 @@ NetworkManager.prototype = {
     switch (aMsg.name) {
       case "NetworkInterfaceList:ListInterface": {
 #ifdef MOZ_B2G_RIL
-        let excludeMms = aMsg.json.exculdeMms;
-        let excludeSupl = aMsg.json.exculdeSupl;
+        let excludeMms = aMsg.json.excludeMms;
+        let excludeSupl = aMsg.json.excludeSupl;
+        let excludeIms = aMsg.json.excludeIms;
 #endif
         let interfaces = [];
 
         for each (let i in this.networkInterfaces) {
 #ifdef MOZ_B2G_RIL
           if ((i.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS && excludeMms) ||
-              (i.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_SUPL && excludeSupl)) {
+              (i.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_SUPL && excludeSupl) ||
+              (i.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_IMS && excludeIms)) {
             continue;
           }
 #endif
@@ -337,9 +335,7 @@ NetworkManager.prototype = {
     this.networkInterfaces[network.name] = network;
 #ifdef MOZ_B2G_RIL
     // Add host route for data calls
-    if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE ||
-        network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS ||
-        network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_SUPL) {
+    if (this.isNetworkTypeMobile(network.type)) {
       gNetworkService.addHostRoute(network);
     }
 #endif
@@ -363,9 +359,7 @@ NetworkManager.prototype = {
     delete this.networkInterfaces[network.name];
 #ifdef MOZ_B2G_RIL
     // Remove host route for data calls
-    if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE ||
-        network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS ||
-        network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_SUPL) {
+    if (this.isNetworkTypeMobile(network.type)) {
       gNetworkService.removeHostRoute(network);
     }
 #endif
@@ -399,8 +393,7 @@ NetworkManager.prototype = {
 
   overrideActive: function(network) {
 #ifdef MOZ_B2G_RIL
-    if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS ||
-        network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_SUPL) {
+    if (this.isNetworkTypeSecondaryMobile(network.type)) {
       throw "Invalid network type";
     }
 #endif
@@ -409,6 +402,17 @@ NetworkManager.prototype = {
   },
 
 #ifdef MOZ_B2G_RIL
+  isNetworkTypeSecondaryMobile: function(type) {
+    return (type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS ||
+            type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_SUPL ||
+            type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_IMS);
+  },
+
+  isNetworkTypeMobile: function(type) {
+    return (type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE ||
+            this.isNetworkTypeSecondaryMobile(type));
+  },
+
   setExtraHostRoute: function(network) {
     if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS) {
       if (!(network instanceof Ci.nsIRilNetworkInterface)) {
@@ -508,14 +512,12 @@ NetworkManager.prototype = {
       // If default data APN is not connected, we still set default route
       // and DNS on seconary APN.
       if (defaultDataNetwork &&
-          (this.active.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS ||
-           this.active.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_SUPL) &&
+          this.isNetworkTypeSecondaryMobile(this.active.type) &&
           this.active.type != this.preferredNetworkType) {
         this.active = defaultDataNetwork;
       }
       // Don't set default route on secondary APN
-      if (this.active.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS ||
-          this.active.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_SUPL) {
+      if (this.isNetworkTypeSecondaryMobile(this.active.type)) {
         gNetworkService.setDNS(this.active);
       } else {
 #endif // MOZ_B2G_RIL
