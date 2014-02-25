@@ -35,13 +35,13 @@ public:
                     nsIFrame*   aPrevInFlow) MOZ_OVERRIDE;
 #endif
 
-  virtual bool IsFrameOfType(uint32_t aFlags) const
+  virtual bool IsFrameOfType(uint32_t aFlags) const MOZ_OVERRIDE
   {
     return SVGFELeafFrameBase::IsFrameOfType(aFlags & ~(nsIFrame::eSVG));
   }
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const
+  virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE
   {
     return MakeFrameName(NS_LITERAL_STRING("SVGFELeaf"), aResult);
   }
@@ -52,13 +52,13 @@ public:
    *
    * @see nsGkAtoms::svgFELeafFrame
    */
-  virtual nsIAtom* GetType() const;
+  virtual nsIAtom* GetType() const MOZ_OVERRIDE;
 
   virtual nsresult AttributeChanged(int32_t  aNameSpaceID,
                                     nsIAtom* aAttribute,
-                                    int32_t  aModType);
+                                    int32_t  aModType) MOZ_OVERRIDE;
 
-  virtual bool UpdateOverflow() {
+  virtual bool UpdateOverflow() MOZ_OVERRIDE {
     // We don't maintain a visual overflow rect
     return false;
   }

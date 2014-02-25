@@ -1204,13 +1204,13 @@ ComputeImplicitThis(JSContext *cx, HandleObject obj, MutableHandleValue vp)
 }
 
 static MOZ_ALWAYS_INLINE bool
-AddOperation(JSContext *cx, MutableHandleValue lhs, MutableHandleValue rhs, Value *res)
+AddOperation(JSContext *cx, MutableHandleValue lhs, MutableHandleValue rhs, MutableHandleValue res)
 {
     if (lhs.isInt32() && rhs.isInt32()) {
         int32_t l = lhs.toInt32(), r = rhs.toInt32();
         int32_t t;
         if (MOZ_LIKELY(SafeAdd(l, r, &t))) {
-            res->setInt32(t);
+            res.setInt32(t);
             return true;
         }
     }
@@ -1247,55 +1247,55 @@ AddOperation(JSContext *cx, MutableHandleValue lhs, MutableHandleValue rhs, Valu
             if (!str)
                 return false;
         }
-        res->setString(str);
+        res.setString(str);
     } else {
         double l, r;
         if (!ToNumber(cx, lhs, &l) || !ToNumber(cx, rhs, &r))
             return false;
-        res->setNumber(l + r);
+        res.setNumber(l + r);
     }
 
     return true;
 }
 
 static MOZ_ALWAYS_INLINE bool
-SubOperation(JSContext *cx, HandleValue lhs, HandleValue rhs, Value *res)
+SubOperation(JSContext *cx, HandleValue lhs, HandleValue rhs, MutableHandleValue res)
 {
     double d1, d2;
     if (!ToNumber(cx, lhs, &d1) || !ToNumber(cx, rhs, &d2))
         return false;
-    res->setNumber(d1 - d2);
+    res.setNumber(d1 - d2);
     return true;
 }
 
 static MOZ_ALWAYS_INLINE bool
-MulOperation(JSContext *cx, HandleValue lhs, HandleValue rhs, Value *res)
+MulOperation(JSContext *cx, HandleValue lhs, HandleValue rhs, MutableHandleValue res)
 {
     double d1, d2;
     if (!ToNumber(cx, lhs, &d1) || !ToNumber(cx, rhs, &d2))
         return false;
-    res->setNumber(d1 * d2);
+    res.setNumber(d1 * d2);
     return true;
 }
 
 static MOZ_ALWAYS_INLINE bool
-DivOperation(JSContext *cx, HandleValue lhs, HandleValue rhs, Value *res)
+DivOperation(JSContext *cx, HandleValue lhs, HandleValue rhs, MutableHandleValue res)
 {
     double d1, d2;
     if (!ToNumber(cx, lhs, &d1) || !ToNumber(cx, rhs, &d2))
         return false;
-    res->setNumber(NumberDiv(d1, d2));
+    res.setNumber(NumberDiv(d1, d2));
     return true;
 }
 
 static MOZ_ALWAYS_INLINE bool
-ModOperation(JSContext *cx, HandleValue lhs, HandleValue rhs, Value *res)
+ModOperation(JSContext *cx, HandleValue lhs, HandleValue rhs, MutableHandleValue res)
 {
     int32_t l, r;
     if (lhs.isInt32() && rhs.isInt32() &&
         (l = lhs.toInt32()) >= 0 && (r = rhs.toInt32()) > 0) {
         int32_t mod = l % r;
-        res->setInt32(mod);
+        res.setInt32(mod);
         return true;
     }
 
@@ -1303,7 +1303,7 @@ ModOperation(JSContext *cx, HandleValue lhs, HandleValue rhs, Value *res)
     if (!ToNumber(cx, lhs, &d1) || !ToNumber(cx, rhs, &d2))
         return false;
 
-    res->setNumber(NumberMod(d1, d2));
+    res.setNumber(NumberMod(d1, d2));
     return true;
 }
 
@@ -2199,7 +2199,8 @@ CASE(JSOP_URSH)
 {
     HandleValue lval = REGS.stackHandleAt(-2);
     HandleValue rval = REGS.stackHandleAt(-1);
-    if (!UrshOperation(cx, lval, rval, &REGS.sp[-2]))
+    MutableHandleValue res = REGS.stackHandleAt(-2);
+    if (!UrshOperation(cx, lval, rval, res))
         goto error;
     REGS.sp--;
 }
@@ -2209,7 +2210,8 @@ CASE(JSOP_ADD)
 {
     MutableHandleValue lval = REGS.stackHandleAt(-2);
     MutableHandleValue rval = REGS.stackHandleAt(-1);
-    if (!AddOperation(cx, lval, rval, &REGS.sp[-2]))
+    MutableHandleValue res = REGS.stackHandleAt(-2);
+    if (!AddOperation(cx, lval, rval, res))
         goto error;
     REGS.sp--;
 }
@@ -2220,7 +2222,8 @@ CASE(JSOP_SUB)
     RootedValue &lval = rootValue0, &rval = rootValue1;
     lval = REGS.sp[-2];
     rval = REGS.sp[-1];
-    if (!SubOperation(cx, lval, rval, &REGS.sp[-2]))
+    MutableHandleValue res = REGS.stackHandleAt(-2);
+    if (!SubOperation(cx, lval, rval, res))
         goto error;
     REGS.sp--;
 }
@@ -2231,7 +2234,8 @@ CASE(JSOP_MUL)
     RootedValue &lval = rootValue0, &rval = rootValue1;
     lval = REGS.sp[-2];
     rval = REGS.sp[-1];
-    if (!MulOperation(cx, lval, rval, &REGS.sp[-2]))
+    MutableHandleValue res = REGS.stackHandleAt(-2);
+    if (!MulOperation(cx, lval, rval, res))
         goto error;
     REGS.sp--;
 }
@@ -2242,7 +2246,8 @@ CASE(JSOP_DIV)
     RootedValue &lval = rootValue0, &rval = rootValue1;
     lval = REGS.sp[-2];
     rval = REGS.sp[-1];
-    if (!DivOperation(cx, lval, rval, &REGS.sp[-2]))
+    MutableHandleValue res = REGS.stackHandleAt(-2);
+    if (!DivOperation(cx, lval, rval, res))
         goto error;
     REGS.sp--;
 }
@@ -2253,7 +2258,8 @@ CASE(JSOP_MOD)
     RootedValue &lval = rootValue0, &rval = rootValue1;
     lval = REGS.sp[-2];
     rval = REGS.sp[-1];
-    if (!ModOperation(cx, lval, rval, &REGS.sp[-2]))
+    MutableHandleValue res = REGS.stackHandleAt(-2);
+    if (!ModOperation(cx, lval, rval, res))
         goto error;
     REGS.sp--;
 }
@@ -3826,37 +3832,37 @@ js::InitElementArray(JSContext *cx, jsbytecode *pc, HandleObject obj, uint32_t i
 }
 
 bool
-js::AddValues(JSContext *cx, MutableHandleValue lhs, MutableHandleValue rhs, Value *res)
+js::AddValues(JSContext *cx, MutableHandleValue lhs, MutableHandleValue rhs, MutableHandleValue res)
 {
     return AddOperation(cx, lhs, rhs, res);
 }
 
 bool
-js::SubValues(JSContext *cx, MutableHandleValue lhs, MutableHandleValue rhs, Value *res)
+js::SubValues(JSContext *cx, MutableHandleValue lhs, MutableHandleValue rhs, MutableHandleValue res)
 {
     return SubOperation(cx, lhs, rhs, res);
 }
 
 bool
-js::MulValues(JSContext *cx, MutableHandleValue lhs, MutableHandleValue rhs, Value *res)
+js::MulValues(JSContext *cx, MutableHandleValue lhs, MutableHandleValue rhs, MutableHandleValue res)
 {
     return MulOperation(cx, lhs, rhs, res);
 }
 
 bool
-js::DivValues(JSContext *cx, MutableHandleValue lhs, MutableHandleValue rhs, Value *res)
+js::DivValues(JSContext *cx, MutableHandleValue lhs, MutableHandleValue rhs, MutableHandleValue res)
 {
     return DivOperation(cx, lhs, rhs, res);
 }
 
 bool
-js::ModValues(JSContext *cx, MutableHandleValue lhs, MutableHandleValue rhs, Value *res)
+js::ModValues(JSContext *cx, MutableHandleValue lhs, MutableHandleValue rhs, MutableHandleValue res)
 {
     return ModOperation(cx, lhs, rhs, res);
 }
 
 bool
-js::UrshValues(JSContext *cx, MutableHandleValue lhs, MutableHandleValue rhs, Value *res)
+js::UrshValues(JSContext *cx, MutableHandleValue lhs, MutableHandleValue rhs, MutableHandleValue res)
 {
     return UrshOperation(cx, lhs, rhs, res);
 }

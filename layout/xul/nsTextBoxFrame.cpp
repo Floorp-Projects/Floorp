@@ -166,7 +166,7 @@ public:
     {
     }
 
-    virtual bool ReflowFinished()
+    virtual bool ReflowFinished() MOZ_OVERRIDE
     {
         bool shouldFlush = false;
         nsTextBoxFrame* frame =
@@ -178,7 +178,7 @@ public:
         return shouldFlush;
     }
 
-    virtual void ReflowCallbackCanceled()
+    virtual void ReflowCallbackCanceled() MOZ_OVERRIDE
     {
         delete this;
     }
@@ -293,13 +293,16 @@ public:
 #endif
 
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsRenderingContext* aCtx);
-  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap);
+                     nsRenderingContext* aCtx) MOZ_OVERRIDE;
+  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
+                           bool* aSnap) MOZ_OVERRIDE;
   NS_DISPLAY_DECL_NAME("XULTextBox", TYPE_XUL_TEXT_BOX)
 
-  virtual nsRect GetComponentAlphaBounds(nsDisplayListBuilder* aBuilder);
+  virtual nsRect GetComponentAlphaBounds(nsDisplayListBuilder* aBuilder) MOZ_OVERRIDE;
 
-  virtual void DisableComponentAlpha() { mDisableSubpixelAA = true; }
+  virtual void DisableComponentAlpha() MOZ_OVERRIDE {
+    mDisableSubpixelAA = true;
+  }
 
   void PaintTextToContext(nsRenderingContext* aCtx,
                           nsPoint aOffset,
