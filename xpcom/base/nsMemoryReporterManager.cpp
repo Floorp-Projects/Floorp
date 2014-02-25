@@ -1558,21 +1558,16 @@ namespace {
  * When this sequence finishes, we invoke the callback function passed to the
  * runnable's constructor.
  */
-class MinimizeMemoryUsageRunnable : public nsCancelableRunnable
+class MinimizeMemoryUsageRunnable : public nsRunnable
 {
 public:
   MinimizeMemoryUsageRunnable(nsIRunnable* aCallback)
     : mCallback(aCallback)
     , mRemainingIters(sNumIters)
-    , mCanceled(false)
   {}
 
   NS_IMETHOD Run()
   {
-    if (mCanceled) {
-      return NS_OK;
-    }
-
     nsCOMPtr<nsIObserverService> os = services::GetObserverService();
     if (!os) {
       return NS_ERROR_FAILURE;
@@ -1595,17 +1590,6 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD Cancel()
-  {
-    if (mCanceled) {
-      return NS_ERROR_UNEXPECTED;
-    }
-
-    mCanceled = true;
-
-    return NS_OK;
-  }
-
 private:
   // Send sNumIters heap-minimize notifications, spinning the event
   // loop after each notification (see bug 610166 comment 12 for an
@@ -1614,22 +1598,15 @@ private:
 
   nsCOMPtr<nsIRunnable> mCallback;
   uint32_t mRemainingIters;
-  bool mCanceled;
 };
 
 } // anonymous namespace
 
 NS_IMETHODIMP
-nsMemoryReporterManager::MinimizeMemoryUsage(nsIRunnable* aCallback,
-                                             nsICancelableRunnable** aResult)
+nsMemoryReporterManager::MinimizeMemoryUsage(nsIRunnable* aCallback)
 {
-  if (NS_WARN_IF(!aResult)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  nsRefPtr<nsICancelableRunnable> runnable =
+  nsRefPtr<MinimizeMemoryUsageRunnable> runnable =
     new MinimizeMemoryUsageRunnable(aCallback);
-  NS_ADDREF(*aResult = runnable);
 
   return NS_DispatchToMainThread(runnable);
 }
