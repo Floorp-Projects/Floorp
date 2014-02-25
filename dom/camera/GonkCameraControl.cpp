@@ -596,9 +596,12 @@ nsGonkCameraControl::SetThumbnailSizeImpl(const Size& aSize)
   }
 
   if (smallestDeltaIndex == UINT32_MAX) {
-    DOM_CAMERA_LOGW("Unable to find a thumbnail size close to %ux%u\n",
+    DOM_CAMERA_LOGW("Unable to find a thumbnail size close to %ux%u, disabling thumbnail\n",
       aSize.width, aSize.height);
-    return NS_ERROR_INVALID_ARG;
+    // If we are unable to find a thumbnail size with a suitable aspect ratio,
+    // just disable the thumbnail altogether.
+    Size size = { 0, 0 };
+    return SetAndPush(CAMERA_PARAM_THUMBNAILSIZE, size);
   }
 
   Size size = supportedSizes[smallestDeltaIndex];
