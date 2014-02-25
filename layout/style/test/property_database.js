@@ -4900,7 +4900,7 @@ if (SpecialPowers.getBoolPref("layout.css.background-blend-mode.enabled")) {
 		initial_values: [ "normal" ],
 		other_values: [ "multiply", "screen", "overlay", "darken", "lighten", "color-dodge", "color-burn",
 			"hard-light", "soft-light", "difference", "exclusion", "hue", "saturation", "color", "luminosity" ],
-		invalid_values: []
+		invalid_values: ["none", "10px", "multiply multiply"]
 	};
 }
 
