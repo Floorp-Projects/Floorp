@@ -19,7 +19,10 @@
 #include "nsString.h"
 #include "nsIFile.h"
 #include "nsStringEnumerator.h"
+#include "nsHashKeys.h"
 #include "nsHashtable.h"
+#include "nsRefPtrHashtable.h"
+#include "nsTHashtable.h"
 #include "nsIZipReader.h"
 #include "nsZipArchive.h"
 #include "nsICertificatePrincipal.h"
@@ -189,10 +192,13 @@ public:
 
   nsresult ReleaseZip(nsJAR* reader);
 
+  typedef nsRefPtrHashtable<nsCStringHashKey, nsJAR> ZipsHashtable;
+
 protected:
+
   mozilla::Mutex        mLock;
-  int32_t               mCacheSize;
-  nsSupportsHashtable   mZips;
+  uint32_t              mCacheSize;
+  ZipsHashtable         mZips;
 
 #ifdef ZIP_CACHE_HIT_RATE
   uint32_t              mZipCacheLookups;
