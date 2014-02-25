@@ -128,7 +128,7 @@ class MediaPipeline : public sigslot::has_slots<> {
   // packet is meant for us. We want to get out of this indeterminate state
   // ASAP, which is what this function can be used for.
   void SetUsingBundle_s(bool decision);
-  void UpdateFilterFromRemoteDescription_s(
+  MediaPipelineFilter* UpdateFilterFromRemoteDescription_s(
       nsAutoPtr<MediaPipelineFilter> filter);
 
   virtual Direction direction() const { return direction_; }

@@ -2282,21 +2282,6 @@ static int vcmTxStartICE_m(cc_mcapid_t mcap_id,
     }
   }
 
-  // This tells the receive MediaPipeline (if there is one) whether we are
-  // doing bundle, and if so, updates the filter. This does not affect the
-  // transmit MediaPipeline (created above) at all.
-  if (attrs->bundle_level) {
-    nsAutoPtr<mozilla::MediaPipelineFilter> filter (new MediaPipelineFilter);
-    for (int s = 0; s < attrs->num_ssrcs; ++s) {
-      filter->AddRemoteSSRC(attrs->ssrcs[s]);
-    }
-    pc.impl()->media()->SetUsingBundle_m(level, true);
-    pc.impl()->media()->UpdateFilterFromRemoteDescription_m(level, filter);
-  } else {
-    // This will also clear the filter.
-    pc.impl()->media()->SetUsingBundle_m(level, false);
-  }
-
 
   if (CC_IS_AUDIO(mcap_id)) {
     mozilla::AudioCodecConfig *config_raw;
@@ -2403,6 +2388,21 @@ static int vcmTxStartICE_m(cc_mcapid_t mcap_id,
   } else {
     CSFLogError(logTag, "%s: mcap_id unrecognized", __FUNCTION__);
     return VCM_ERROR;
+  }
+
+  // This tells the receive MediaPipeline (if there is one) whether we are
+  // doing bundle, and if so, updates the filter. Once the filter is finalized,
+  // it is then copied to the transmit pipeline so it can filter RTCP.
+  if (attrs->bundle_level) {
+    nsAutoPtr<mozilla::MediaPipelineFilter> filter (new MediaPipelineFilter);
+    for (int s = 0; s < attrs->num_ssrcs; ++s) {
+      filter->AddRemoteSSRC(attrs->ssrcs[s]);
+    }
+    pc.impl()->media()->SetUsingBundle_m(level, true);
+    pc.impl()->media()->UpdateFilterFromRemoteDescription_m(level, filter);
+  } else {
+    // This will also clear the filter.
+    pc.impl()->media()->SetUsingBundle_m(level, false);
   }
 
   CSFLogDebug( logTag, "%s success", __FUNCTION__);
