@@ -35,6 +35,41 @@ add_task(function() {
   yield hiddenPromise;
 });
 
+// Right-click on an empty bit of extra toolbar should
+// show a context menu with moving options disabled,
+// and a toggle option for the extra toolbar
+add_task(function() {
+  let contextMenu = document.getElementById("toolbar-context-menu");
+  let shownPromise = contextMenuShown(contextMenu);
+  let toolbar = createToolbarWithPlacements("880164_empty_toolbar", []);
+  toolbar.setAttribute("context", "toolbar-context-menu");
+  toolbar.setAttribute("toolbarname", "Fancy Toolbar for Context Menu");
+  EventUtils.synthesizeMouseAtCenter(toolbar, {type: "contextmenu", button: 2 });
+  yield shownPromise;
+
+  let expectedEntries = [
+    [".customize-context-moveToPanel", false],
+    [".customize-context-removeFromToolbar", false],
+    ["---"]
+  ];
+  if (!isOSX) {
+    expectedEntries.push(["#toggle_toolbar-menubar", true]);
+  }
+  expectedEntries.push(
+    ["#toggle_PersonalToolbar", true],
+    ["#toggle_880164_empty_toolbar", true],
+    ["---"],
+    [".viewCustomizeToolbar", true]
+  );
+  checkContextMenu(contextMenu, expectedEntries);
+
+  let hiddenPromise = contextMenuHidden(contextMenu);
+  contextMenu.hidePopup();
+  yield hiddenPromise;
+  removeCustomToolbars();
+});
+
+
 // Right-click on the urlbar-container should
 // show a context menu with disabled options to move it.
 add_task(function() {
