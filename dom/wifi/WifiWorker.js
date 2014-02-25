@@ -296,7 +296,9 @@ var WifiManager = (function() {
         if (ok)
           debugEnabled = wanted;
       });
-      p2pManager.setDebug(DEBUG);
+      if (p2pSupported && p2pManager) {
+        p2pManager.setDebug(DEBUG);
+      }
     }
   }
 
