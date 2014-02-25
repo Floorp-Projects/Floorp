@@ -22,11 +22,7 @@ db = tempfile.mkdtemp()
 CA_basic_constraints = "basicConstraints = critical, CA:TRUE\n"
 EE_basic_constraints = "basicConstraints = CA:FALSE\n"
 
-CA_full_ku = ("keyUsage = digitalSignature, nonRepudiation, keyEncipherment, " +
-              "dataEncipherment, keyAgreement, keyCertSign, cRLSign\n")
-
-CA_eku = ("extendedKeyUsage = critical, serverAuth, clientAuth, " +
-          "emailProtection, codeSigning, 1.3.6.1.5.5.7.3.9\n")
+CA_full_ku = ("keyUsage = keyCertSign, cRLSign\n")
 
 authority_key_ident = "authorityKeyIdentifier = keyid, issuer\n"
 subject_key_ident = "subjectKeyIdentifier = hash\n"
@@ -211,7 +207,7 @@ def self_sign_csr(db_dir, dst_dir, csr_name, key_file, serial_num, ext_text,
 
 def generate_certs():
     key_type = 'rsa'
-    ca_ext = CA_basic_constraints + CA_full_ku + subject_key_ident + CA_eku;
+    ca_ext = CA_basic_constraints + CA_full_ku + subject_key_ident;
     ee_ext_text = (EE_basic_constraints + authority_key_ident)
     [ca_key, ca_cert] = CertUtils.generate_cert_generic(db,
                                                         srcdir,

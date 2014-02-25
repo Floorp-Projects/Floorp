@@ -50,8 +50,9 @@ function check_fail_ca(x) {
   return check_cert_err_generic(x, SEC_ERROR_CERT_NOT_IN_NAME_SPACE, certificateUsageSSLCA);
 }
 
+function run_test_in_mode(useInsanity) {
+  Services.prefs.setBoolPref("security.use_insanity_verification", useInsanity);
 
-function test_certs_all() {
   // Note that CN is only looked at when there is NO subjectAltName!
 
   // Testing with a unconstrained root, and intermediate constrained to PERMIT
@@ -258,12 +259,21 @@ function test_certs_all() {
   check_ok(certFromFile('cn-www.foo.com_o-bar_c-us-alt-foo.com-int-ca-nc-perm-foo.com.der'));
   check_fail(certFromFile('cn-www.foo.org_o-bar_c-us-alt-foo.org-int-ca-nc-perm-foo.com.der'));
   check_fail(certFromFile('cn-www.foo.com_o-bar_c-us-alt-foo.com-a.a.us-b.a.us-int-ca-nc-perm-foo.com.der'));
+
+  // We don't enforce dNSName name constraints on CN unless we're validating
+  // for the server EKU. libpkix gets this wrong but insanity::pkix and classic
+  // NSS get it right.
+  {
+    let cert = certFromFile('cn-www.foo.org-int-nc-perm-foo.com-ca-nc.der');
+    check_cert_err_generic(cert, SEC_ERROR_CERT_NOT_IN_NAME_SPACE, certificateUsageSSLServer);
+    check_cert_err_generic(cert, 0, certificateUsageSSLClient);
+  }
 }
 
 function run_test() {
   load_cert("ca-nc-perm-foo.com", "CTu,CTu,CTu");
   load_cert("ca-nc", "CTu,CTu,CTu");
 
-  test_certs_all();
+  run_test_in_mode(true);
+  run_test_in_mode(false);
 }
-
