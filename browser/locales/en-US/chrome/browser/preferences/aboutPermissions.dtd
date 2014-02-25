@@ -42,3 +42,5 @@
 <!ENTITY popup.label                     "Open Pop-up Windows">
 
 <!ENTITY fullscreen.label                "Fullscreen">
+<!ENTITY camera.label                    "Use the Camera">
+<!ENTITY microphone.label                "Use the Microphone">
