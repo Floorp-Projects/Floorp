@@ -948,7 +948,7 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
           }
 
           default: {
-            MOZ_ASSUME_UNREACHABLE("Unknown class kind.");
+            MOZ_ASSERT(false, "Unknown class kind.");
             return false;
           }
         }
