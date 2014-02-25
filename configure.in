@@ -3189,30 +3189,6 @@ if test "$ac_cv_cpp_ambiguity_resolving_using" = yes ; then
    AC_DEFINE(HAVE_CPP_AMBIGUITY_RESOLVING_USING)
 fi
 
-dnl See if a dynamic_cast to void* gives the most derived object.
-AC_CACHE_CHECK(for C++ dynamic_cast to void*,
-               ac_cv_cpp_dynamic_cast_void_ptr,
-               [AC_TRY_RUN([class X { int i; public: virtual ~X() { } };
-                            class Y { int j; public: virtual ~Y() { } };
-                            class Z : public X, public Y { int k; };
-
-                            int main() {
-                                 Z mdo;
-                                 X *subx = (X*)&mdo;
-                                 Y *suby = (Y*)&mdo;
-                                 return !((((void*)&mdo != (void*)subx) &&
-                                           ((void*)&mdo == dynamic_cast<void*>(subx))) ||
-                                          (((void*)&mdo != (void*)suby) &&
-                                           ((void*)&mdo == dynamic_cast<void*>(suby))));
-                            }],
-                           ac_cv_cpp_dynamic_cast_void_ptr=yes,
-                           ac_cv_cpp_dynamic_cast_void_ptr=no,
-                           ac_cv_cpp_dynamic_cast_void_ptr=no)])
-if test "$ac_cv_cpp_dynamic_cast_void_ptr" = yes ; then
-   AC_DEFINE(HAVE_CPP_DYNAMIC_CAST_TO_VOID_PTR)
-fi
-
-
 dnl note that this one is reversed - if the test fails, then
 dnl we require implementations of unused virtual methods. Which
 dnl really blows because it means we'll have useless vtable
@@ -8742,7 +8718,6 @@ dnl The following defines are used by xpcom
 _NON_GLOBAL_ACDEFINES="$_NON_GLOBAL_ACDEFINES
 CPP_THROW_NEW
 HAVE_CPP_AMBIGUITY_RESOLVING_USING
-HAVE_CPP_DYNAMIC_CAST_TO_VOID_PTR
 HAVE_CPP_PARTIAL_SPECIALIZATION
 HAVE_CPP_TROUBLE_COMPARING_TO_ZERO
 NEED_CPP_UNUSED_IMPLEMENTATIONS
