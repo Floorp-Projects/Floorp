@@ -351,7 +351,10 @@ class TestRecursiveMakeBackend(BackendTester):
             'LDFLAGS': [
                 'LDFLAGS += -framework Foo',
                 'LDFLAGS += -x',
-            ]
+            ],
+            'WIN32_EXE_LDFLAGS': [
+                'WIN32_EXE_LDFLAGS += -subsystem:console',
+            ],
         }
 
         for var, val in expected.items():

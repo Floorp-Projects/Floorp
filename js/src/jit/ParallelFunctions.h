@@ -63,7 +63,7 @@ bool BitAndPar(ForkJoinContext *cx, HandleValue lhs, HandleValue rhs, int32_t *o
 bool BitLshPar(ForkJoinContext *cx, HandleValue lhs, HandleValue rhs, int32_t *out);
 bool BitRshPar(ForkJoinContext *cx, HandleValue lhs, HandleValue rhs, int32_t *out);
 
-bool UrshValuesPar(ForkJoinContext *cx, HandleValue lhs, HandleValue rhs, Value *out);
+bool UrshValuesPar(ForkJoinContext *cx, HandleValue lhs, HandleValue rhs, MutableHandleValue out);
 
 // Make a new rest parameter in parallel.
 JSObject *InitRestParameterPar(ForkJoinContext *cx, uint32_t length, Value *rest,

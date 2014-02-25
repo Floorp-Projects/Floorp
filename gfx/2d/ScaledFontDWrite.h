@@ -17,6 +17,7 @@ namespace gfx {
 class ScaledFontDWrite MOZ_FINAL : public ScaledFontBase
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(ScaledFontDwrite)
   ScaledFontDWrite(IDWriteFontFace *aFont, Float aSize)
     : mFontFace(aFont)
     , ScaledFontBase(aSize)
@@ -48,6 +49,7 @@ public:
 class GlyphRenderingOptionsDWrite : public GlyphRenderingOptions
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(GlyphRenderingOptionsDWrite)
   GlyphRenderingOptionsDWrite(IDWriteRenderingParams *aParams)
     : mParams(aParams)
   {

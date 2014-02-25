@@ -21,12 +21,6 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-ifdef _MSC_VER
-# Always enter a Windows program through wmain, whether or not we're
-# a console application.
-WIN32_EXE_LDFLAGS += -ENTRY:wmainCRTStartup
-endif
-
 ifdef MOZ_VTUNE
 CXXFLAGS += -IC:/Program\ Files/Intel/VTune/Analyzer/Include
 LIBS += C:/Program\ Files/Intel/VTune/Analyzer/Lib/VtuneApi.lib
