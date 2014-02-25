@@ -2,18 +2,19 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-ANDROID_APK_NAME := background-debug
+ANDROID_APK_NAME := background-junit3-debug
 
 PP_TARGETS        += manifest
 manifest          := $(srcdir)/AndroidManifest.xml.in
 manifest_TARGET   := AndroidManifest.xml
 manifest_FLAGS    += \
   -DANDROID_BACKGROUND_TARGET_PACKAGE_NAME='$(ANDROID_PACKAGE_NAME)' \
-  -DANDROID_BACKGROUND_TEST_PACKAGE_NAME='org.mozilla.background.test' \
+  -DANDROID_BACKGROUND_TEST_PACKAGE_NAME='org.mozilla.gecko.background.tests' \
   -DANDROID_BACKGROUND_APP_DISPLAYNAME='$(MOZ_APP_DISPLAYNAME) Background Tests' \
   -DMOZ_ANDROID_SHARED_ID='$(ANDROID_PACKAGE_NAME).sharedID' \
   -DMOZ_ANDROID_SHARED_ACCOUNT_TYPE='$(ANDROID_PACKAGE_NAME)_sync' \
   $(NULL)
+ANDROID_MANIFEST_FILE := $(CURDIR)/AndroidManifest.xml
 
 GARBAGE += AndroidManifest.xml
 

@@ -4,7 +4,7 @@
 #filter emptyLines
 
 # LOCALIZATION NOTE: The 'en-US' strings in the URLs will be replaced with
-# your locale code, and link to your translated pages as soon as they're 
+# your locale code, and link to your translated pages as soon as they're
 # live.
 
 #define bookmarks_title Bookmarks
@@ -36,5 +36,10 @@
 # LOCALIZATION NOTE (firefox_about):
 # link title for https://www.mozilla.org/en-US/about/
 #define firefox_about About Us
+
+# LOCALIZATION NOTE (firefox_feedback):
+# link title for browser feedback page
+# currently used by Metro only: https://input.mozilla.org/feedback/metrofirefox
+#define firefox_feedback Give Feedback
 
 #unfilter emptyLines

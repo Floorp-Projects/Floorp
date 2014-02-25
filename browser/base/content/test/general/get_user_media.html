@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"></head>
+<body>
+<div id="message"></div>
+<script>
+function message(m) {
+  document.getElementById("message").innerHTML = m;
+  window.parent.postMessage(m, "*");
+}
+
+var gStream;
+
+function requestDevice(aAudio, aVideo) {
+  window.navigator.mozGetUserMedia({video: aVideo, audio: aAudio, fake: true},
+                                   function(stream) {
+    gStream = stream;
+    message("ok");
+  }, function(err) { message("error: " + err); });
+}
+message("pending");
+
+function closeStream() {
+  if (!gStream)
+    return;
+  gStream.stop();
+  gStream = null;
+  message("closed");
+}
+</script>
+</body>
+</html>

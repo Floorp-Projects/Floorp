@@ -1,0 +1,79 @@
+#filter substitution
+<?xml version="1.0" encoding="UTF-8"?>
+<project>
+    <property name="topsrcdir" value="@IDE_TOPSRCDIR@"/>
+    <property name="topobjdir" value="@IDE_TOPOBJDIR@"/>
+    <property name="objdir" value="@IDE_OBJDIR@"/>
+    <property name="project_name" value="@IDE_PROJECT_NAME@"/>
+
+    <!-- This file can get large (!), but for a short time we want to
+         log as much information for debugging build loops as possible. -->
+    <record name="${topobjdir}/android_eclipse/build.log" append="yes" />
+
+    <target name="build_needed" >
+
+        <script language="javascript" >
+<![CDATA[
+  importClass(java.io.File);
+
+  var build_files = project.getProperty("build_files").split(" ");
+  var after = [];
+
+  var echo = project.createTask("echo");
+  var info = Packages.org.apache.tools.ant.taskdefs.Echo.EchoLevel();
+  info.setValue("info");
+  echo.setLevel(info);
+
+  // Timestamp.
+  echo.addText(project.getProperty("project_name") + " build type " + project.getProperty("build_type") + " started at: " + new Date());
+  echo.addText(project.getProperty("line.separator"));
+
+  var build_needed = false;
+
+  // Skip leading DUMMY.
+  for (var i = 1; i < build_files.length; i++) {
+    build_file = build_files[i];
+    build_file_needed = true;
+
+    if ((new File(build_file)).isDirectory()) {
+      build_file_needed = false;
+    }
+    var rel = build_file.split(project.getBaseDir(), 2)[1];
+    if (rel && (rel.startsWith("/bin/") || rel.startsWith("/gen/") || rel.endsWith(".class"))) {
+      build_file_needed = false;
+    }
+    if (build_file_needed) {
+      echo.addText("1 ");
+    } else {
+      echo.addText("0 ");
+    }
+    echo.addText(build_file);
+    echo.addText(project.getProperty("line.separator"));
+    build_needed |= build_file_needed;
+  }
+
+  echo.addText(project.getProperty("project_name") + " build type " + project.getProperty("build_type") + " checked at: " + new Date());
+  if (build_needed) {
+    echo.addText(" requires updating");
+  } else {
+    echo.addText(" does not require updating");
+  }
+  echo.addText(project.getProperty("line.separator"));
+
+  echo.perform();
+
+  // The if below checks for the property being defined, not its value.
+  if (build_needed) {
+    project.setProperty("build_needed", build_needed);
+  }
+]]>
+        </script>
+    </target>
+
+    <target name="pre_build" depends="build_needed" if="build_needed">
+        <exec executable="${topsrcdir}/mach" dir="${topobjdir}" failonerror="true">
+            <arg value="build"/>
+            <arg value="${objdir}/ANDROID_ECLIPSE_PROJECT_${project_name}"/>
+        </exec>
+    </target>
+</project>

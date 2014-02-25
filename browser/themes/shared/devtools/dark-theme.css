@@ -315,6 +315,10 @@ div.CodeMirror span.eval-text {
   -moz-border-end: 1px solid black;
 }
 
+.devtools-responsive-container > .devtools-side-splitter {
+  border-top: 1px solid black;
+}
+
 .devtools-textinput,
 .devtools-searchinput {
   background-color: rgba(24, 29, 32, 1);
