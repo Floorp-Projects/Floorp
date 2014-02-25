@@ -9,5 +9,6 @@ DEFINES = {
 DEFINES['BAZ'] = '"abcd"'
 DEFINES.update({
     'BAR': 7,
-    'VALUE': value
+    'VALUE': value,
+    'QUX': False,
 })

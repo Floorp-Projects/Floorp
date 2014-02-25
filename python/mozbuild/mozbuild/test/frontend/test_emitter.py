@@ -532,6 +532,7 @@ class TestEmitterBasic(unittest.TestCase):
             'BAZ': '"abcd"',
             'FOO': True,
             'VALUE': 'xyz',
+            'QUX': False,
         }
 
         self.assertEqual(defines, expected)
