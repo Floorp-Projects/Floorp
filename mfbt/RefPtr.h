@@ -50,7 +50,7 @@ template<typename T> OutParamRef<T> byRef(RefPtr<T>&);
  */
 namespace detail {
 #ifdef DEBUG
-static const MozRefCountType DEAD = 0xffffdead;
+const MozRefCountType DEAD = 0xffffdead;
 #endif
 
 // This is used WeakPtr.h as well as this file.

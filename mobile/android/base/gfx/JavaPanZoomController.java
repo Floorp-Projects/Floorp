@@ -1354,10 +1354,11 @@ class JavaPanZoomController
 
     @Override
     public boolean onSingleTapUp(MotionEvent motionEvent) {
-        // When zooming is enabled, we wait to see if there's a double-tap.
+        // When double-tapping is allowed, we have to wait to see if this is
+        // going to be a double-tap.
         // However, if mMediumPress is true then we know there will be no
         // double-tap so we treat this as a click.
-        if (mMediumPress || !mTarget.getZoomConstraints().getAllowZoom()) {
+        if (mMediumPress || !mTarget.getZoomConstraints().getAllowDoubleTapZoom()) {
             sendPointToGecko("Gesture:SingleTap", motionEvent);
         }
         // return false because we still want to get the ACTION_UP event that triggers this
@@ -1367,7 +1368,7 @@ class JavaPanZoomController
     @Override
     public boolean onSingleTapConfirmed(MotionEvent motionEvent) {
         // When zooming is disabled, we handle this in onSingleTapUp.
-        if (mTarget.getZoomConstraints().getAllowZoom()) {
+        if (mTarget.getZoomConstraints().getAllowDoubleTapZoom()) {
             sendPointToGecko("Gesture:SingleTap", motionEvent);
         }
         return true;
@@ -1375,7 +1376,7 @@ class JavaPanZoomController
 
     @Override
     public boolean onDoubleTap(MotionEvent motionEvent) {
-        if (mTarget.getZoomConstraints().getAllowZoom()) {
+        if (mTarget.getZoomConstraints().getAllowDoubleTapZoom()) {
             sendPointToGecko("Gesture:DoubleTap", motionEvent);
         }
         return true;

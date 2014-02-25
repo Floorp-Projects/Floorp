@@ -1732,7 +1732,7 @@ var gCSSProperties = {
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
 		other_values: [ "1000px", "500.2px" ],
-		invalid_values: [ "pants", "200", "0", "-100px", "-27.2em" ]
+		invalid_values: [ "pants", "200", "0", "-100px", "-27.2em", "0px" ]
 	},
 	"backface-visibility": {
 		domProp: "backfaceVisibility",

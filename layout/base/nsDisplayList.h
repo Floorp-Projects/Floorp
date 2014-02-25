@@ -2688,6 +2688,7 @@ public:
     // Don't allow merging, each sublist must have its own layer
     return false;
   }
+  uint32_t GetFlags() { return mFlags; }
   NS_DISPLAY_DECL_NAME("OwnLayer", TYPE_OWN_LAYER)
 private:
   uint32_t mFlags;

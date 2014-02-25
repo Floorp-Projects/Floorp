@@ -697,6 +697,15 @@ bool AttachTypedObject(ThreadSafeContext *cx, unsigned argc, Value *vp);
 extern const JSJitInfo AttachTypedObjectJitInfo;
 
 /*
+ * Usage: SetTypedObjectOffset(typedObj, offset)
+ *
+ * Changes the offset for `typedObj` within its buffer to `offset`.
+ * `typedObj` must already be attached.
+ */
+bool SetTypedObjectOffset(ThreadSafeContext *cx, unsigned argc, Value *vp);
+extern const JSJitInfo SetTypedObjectOffsetJitInfo;
+
+/*
  * Usage: ObjectIsTypeDescr(obj)
  *
  * True if `obj` is a type object.
