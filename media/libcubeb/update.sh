@@ -18,6 +18,12 @@ cp $1/src/android/sles_definitions.h src/android
 cp $1/LICENSE .
 cp $1/README .
 cp $1/AUTHORS .
+cp $1/test/common.h tests/common.h
+cp $1/test/test_audio.c tests/test_audio.cpp
+cp $1/test/test_tone.c tests/test_tone.cpp
+cp $1/test/test_sanity.c tests/test_sanity.cpp
+cp $1/test/test_latency.c tests/test_latency.cpp
+
 if [ -d $1/.git ]; then
   rev=$(cd $1 && git rev-parse --verify HEAD)
   dirty=$(cd $1 && git diff-index --name-only HEAD)
