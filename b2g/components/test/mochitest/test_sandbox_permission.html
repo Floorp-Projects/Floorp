@@ -11,57 +11,82 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=951997
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=951997">Permission prompt web content test</a>
-<script type="application/javascript">
+<script type="application/javascript;version=1.8">
 
 "use strict";
 
 const APP_URL = "SandboxPromptTest.html";
 
+var iframe;
 var gUrl = SimpleTest.getTestFileURL("permission_handler_chrome.js");
 var gScript = SpecialPowers.loadChromeScript(gUrl);
 var gResult = [
   {
-    type: "audio-capture",
-    prompt: false
+    "video-capture": ["back"],
   },
   {
-    type: "geolocation",
-    prompt: false
+    "audio-capture": [""],
+    "video-capture": ["back"],
   },
   {
-    type: "desktop-notification",
-    prompt: false
+    "audio-capture": [""],
+  },
+  {
+    "geolocation": [],
+  },
+  {
+    "desktop-notification": [],
   }
 ];
 
-// Create a sanbox iframe.
-function loadBrowser() {
-  var iframe = document.createElement("iframe");
-  SpecialPowers.wrap(iframe).mozbrowser = true;
-  iframe.src = APP_URL;
-  document.body.appendChild(iframe);
-}
-
-// send test counts to chrome script.
-gScript.sendAsyncMessage("test.counts", gResult.length);
-
-gScript.addMessageListener("permission.granted", function (aName) {
-  gResult.forEach(function(aType, aIndex) {
-    if (aType.type == aName) {
-      aType.prompt = true;
-    }
-  });
-
-  if(gResult.every(function(aType) { return aType.prompt; })) {
-    ok(true, "Get all permission prompts");
+function runNext() {
+  if (gResult.length > 0) {
+    // Put the requested permission in query string
+    let requestedPermission = JSON.stringify(Object.keys(gResult[0]));
+    info('request permissions for ' + requestedPermission);
+    iframe.src = APP_URL + '?' + encodeURIComponent(requestedPermission);
+  } else {
+    info('test finished, teardown');
+    gScript.sendAsyncMessage("teardown", "");
     gScript.destroy();
     SimpleTest.finish();
-  }});
+  }
+}
+
+// Create a sanbox iframe.
+function loadBrowser() {
+  iframe = document.createElement("iframe");
+  SpecialPowers.wrap(iframe).mozbrowser = true;
+  iframe.src = 'about:blank';
+  document.body.appendChild(iframe);
+
+  iframe.addEventListener("load", function onLoad() {
+    iframe.removeEventListener("load", onLoad);
+    runNext();
+  });
+}
+
+gScript.addMessageListener("permission-request", function (permissions) {
+  let expectedValue = gResult.shift();
+  let permissionTypes = Object.keys(permissions);
+
+  is(permissionTypes.length, Object.keys(expectedValue).length, "expected number of permissions");
+
+  for (let type of permissionTypes) {
+    ok(expectedValue.hasOwnProperty(type), "expected permission type");
+    for (let i in permissions[type]) {
+      is(permissions[type][i], expectedValue[type][i], "expected permission option");
+    }
+  }
+  runNext();
+});
 
 // Add permissions to this app. We use ALLOW_ACTION here. The ContentPermissionPrompt
 // should prompt for permission, not allow it without prompt.
 SpecialPowers.pushPrefEnv({"set": [["media.navigator.permission.disabled", false]]},
   function() {
+    SpecialPowers.addPermission('video-capture',
+      SpecialPowers.Ci.nsIPermissionManager.ALLOW_ACTION, document);
     SpecialPowers.addPermission('audio-capture',
       SpecialPowers.Ci.nsIPermissionManager.ALLOW_ACTION, document);
     SpecialPowers.addPermission('geolocation',
