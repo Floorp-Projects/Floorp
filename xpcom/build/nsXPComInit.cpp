@@ -129,6 +129,8 @@ extern nsresult nsStringInputStreamConstructor(nsISupports *, REFNSIID, void **)
 #include "mozilla/VisualEventTracer.h"
 #endif
 
+#include "ogg/ogg.h"
+
 #include "GeckoProfiler.h"
 
 #include "jsapi.h"
@@ -395,6 +397,78 @@ NS_IMPL_ISUPPORTS1(ICUReporter, nsIMemoryReporter)
 
 /* static */ Atomic<size_t> ICUReporter::sAmount;
 
+class OggReporter MOZ_FINAL : public nsIMemoryReporter
+{
+public:
+    NS_DECL_ISUPPORTS
+
+    OggReporter()
+    {
+#ifdef DEBUG
+        // There must be only one instance of this class, due to |sAmount|
+        // being static.
+        static bool hasRun = false;
+        MOZ_ASSERT(!hasRun);
+        hasRun = true;
+#endif
+        sAmount = 0;
+    }
+
+    static void* Alloc(size_t size)
+    {
+        void* p = malloc(size);
+        sAmount += MallocSizeOfOnAlloc(p);
+        return p;
+    }
+
+    static void* Realloc(void* p, size_t size)
+    {
+        sAmount -= MallocSizeOfOnFree(p);
+        void *pnew = realloc(p, size);
+        if (pnew) {
+            sAmount += MallocSizeOfOnAlloc(pnew);
+        } else {
+            // realloc failed;  undo the decrement from above
+            sAmount += MallocSizeOfOnAlloc(p);
+        }
+        return pnew;
+    }
+
+    static void* Calloc(size_t nmemb, size_t size)
+    {
+        void* p = calloc(nmemb, size);
+        sAmount += MallocSizeOfOnAlloc(p);
+        return p;
+    }
+
+    static void Free(void* p)
+    {
+        sAmount -= MallocSizeOfOnFree(p);
+        free(p);
+    }
+
+private:
+    // |sAmount| can be (implicitly) accessed by multiple threads, so it
+    // must be thread-safe.
+    static Atomic<size_t> sAmount;
+
+    MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf)
+    MOZ_DEFINE_MALLOC_SIZE_OF_ON_ALLOC(MallocSizeOfOnAlloc)
+    MOZ_DEFINE_MALLOC_SIZE_OF_ON_FREE(MallocSizeOfOnFree)
+
+    NS_IMETHODIMP
+    CollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData)
+    {
+        return MOZ_COLLECT_REPORT(
+            "explicit/media/libogg", KIND_HEAP, UNITS_BYTES, sAmount,
+            "Memory allocated through libogg for Ogg, Theora, and related media files.");
+    }
+};
+
+NS_IMPL_ISUPPORTS1(OggReporter, nsIMemoryReporter)
+
+/* static */ Atomic<size_t> OggReporter::sAmount;
+
 EXPORT_XPCOM_API(nsresult)
 NS_InitXPCOM2(nsIServiceManager* *result,
               nsIFile* binDirectory,
@@ -548,6 +622,12 @@ NS_InitXPCOM2(nsIServiceManager* *result,
     // this oddness.
     mozilla::SetICUMemoryFunctions();
 
+    // Do the same for libogg.
+    ogg_set_mem_functions(OggReporter::Alloc,
+                          OggReporter::Calloc,
+                          OggReporter::Realloc,
+                          OggReporter::Free);
+
     // Initialize the JS engine.
     if (!JS_Init()) {
         NS_RUNTIMEABORT("JS_Init failed");
@@ -596,8 +676,9 @@ NS_InitXPCOM2(nsIServiceManager* *result,
     }
 
     // The memory reporter manager is up and running -- register a reporter for
-    // ICU's memory usage.
+    // ICU's and libogg's memory usage.
     RegisterStrongMemoryReporter(new ICUReporter());
+    RegisterStrongMemoryReporter(new OggReporter());
 
     mozilla::Telemetry::Init();
 
