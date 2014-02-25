@@ -19,6 +19,7 @@ class DrawTargetSkia;
 class SourceSurfaceSkia : public DataSourceSurface
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DataSourceSurfaceSkia)
   SourceSurfaceSkia();
   ~SourceSurfaceSkia();
 

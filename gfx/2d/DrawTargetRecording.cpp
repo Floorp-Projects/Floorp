@@ -17,6 +17,7 @@ namespace gfx {
 class SourceSurfaceRecording : public SourceSurface
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SourceSurfaceRecording)
   SourceSurfaceRecording(SourceSurface *aFinalSurface, DrawEventRecorderPrivate *aRecorder)
     : mFinalSurface(aFinalSurface), mRecorder(aRecorder)
   {
@@ -39,6 +40,7 @@ public:
 class GradientStopsRecording : public GradientStops
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(GradientStopsRecording)
   GradientStopsRecording(GradientStops *aFinalGradientStops, DrawEventRecorderPrivate *aRecorder)
     : mFinalGradientStops(aFinalGradientStops), mRecorder(aRecorder)
   {
@@ -78,6 +80,7 @@ GetGradientStops(GradientStops *aStops)
 class FilterNodeRecording : public FilterNode
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeRecording)
   using FilterNode::SetAttribute;
 
   FilterNodeRecording(FilterNode *aFinalFilterNode, DrawEventRecorderPrivate *aRecorder)

@@ -29,3 +29,8 @@ if CONFIG['MOZ_CONTENT_SANDBOX'] and CONFIG['OS_ARCH'] == 'WINNT':
         '/security/sandbox',
         '/security/sandbox/chromium',
     ]
+
+if CONFIG['_MSC_VER']:
+    # Always enter a Windows program through wmain, whether or not we're
+    # a console application.
+    WIN32_EXE_LDFLAGS += ['-ENTRY:wmainCRTStartup']

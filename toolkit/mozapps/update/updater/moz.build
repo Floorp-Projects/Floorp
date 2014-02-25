@@ -64,9 +64,11 @@ LOCAL_INCLUDES += [
     '/xpcom/glue',
 ]
 
-
 DELAYLOAD_DLLS += [
     'crypt32.dll',
     'userenv.dll',
     'wsock32.dll',
 ]
+
+if CONFIG['_MSC_VER']:
+    WIN32_EXE_LDFLAGS += ['-ENTRY:wmainCRTStartup']

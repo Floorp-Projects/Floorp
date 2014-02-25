@@ -10,13 +10,12 @@
 #include "gfxDrawable.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsDisplayList.h"
+#include "nsFilterInstance.h"
 #include "nsLayoutUtils.h"
 #include "nsRenderingContext.h"
 #include "nsSVGClipPathFrame.h"
 #include "nsSVGEffects.h"
 #include "nsSVGElement.h"
-#include "nsSVGFilterFrame.h"
-#include "nsSVGFilterInstance.h"
 #include "nsSVGFilterPaintCallback.h"
 #include "nsSVGMaskFrame.h"
 #include "nsSVGPaintServerFrame.h"
@@ -58,7 +57,7 @@ public:
                  "We want the first continuation here");
   }
 
-  virtual void AddBox(nsIFrame* aFrame) {
+  virtual void AddBox(nsIFrame* aFrame) MOZ_OVERRIDE {
     nsRect overflow = (aFrame == mCurrentFrame) ?
       mCurrentFrameOverflowArea : GetPreEffectsVisualOverflowRect(aFrame);
     mResult.UnionRect(mResult, overflow + aFrame->GetOffsetTo(mFirstContinuation));
@@ -258,10 +257,9 @@ nsRect
     nsLayoutUtils::FirstContinuationOrIBSplitSibling(aFrame);
   nsSVGEffects::EffectProperties effectProperties =
     nsSVGEffects::GetEffectProperties(firstFrame);
-  nsSVGFilterFrame *filterFrame = effectProperties.mFilter ?
-    effectProperties.mFilter->GetFilterFrame() : nullptr;
-  if (!filterFrame)
+  if (!effectProperties.HasValidFilter()) {
     return aPreEffectsOverflowRect;
+  }
 
   // Create an override bbox - see comment above:
   nsPoint firstFrameToUserSpace = GetOffsetToUserSpace(firstFrame);
@@ -277,7 +275,7 @@ nsRect
   overrideBBox.RoundOut();
 
   nsRect overflowRect =
-    nsSVGFilterInstance::GetPostFilterBounds(filterFrame, firstFrame, &overrideBBox);
+    nsFilterInstance::GetPostFilterBounds(firstFrame, &overrideBBox);
 
   // Return overflowRect relative to aFrame, rather than "user space":
   return overflowRect - (aFrame->GetOffsetTo(firstFrame) + firstFrameToUserSpace);
@@ -296,11 +294,6 @@ nsSVGIntegrationUtils::AdjustInvalidAreaForSVGEffects(nsIFrame* aFrame,
   // already have been set up during reflow/ComputeFrameEffectsRect
   nsIFrame* firstFrame =
     nsLayoutUtils::FirstContinuationOrIBSplitSibling(aFrame);
-  nsSVGEffects::EffectProperties effectProperties =
-    nsSVGEffects::GetEffectProperties(firstFrame);
-  if (!effectProperties.mFilter)
-    return aInvalidRect;
-
   nsSVGFilterProperty *prop = nsSVGEffects::GetFilterProperty(firstFrame);
   if (!prop || !prop->IsInObserverLists()) {
     return aInvalidRect;
@@ -308,8 +301,7 @@ nsSVGIntegrationUtils::AdjustInvalidAreaForSVGEffects(nsIFrame* aFrame,
 
   int32_t appUnitsPerDevPixel = aFrame->PresContext()->AppUnitsPerDevPixel();
 
-  nsSVGFilterFrame* filterFrame = prop->GetFilterFrame();
-  if (!filterFrame) {
+  if (!prop || !prop->ReferencesValidResources()) {
     // The frame is either not there or not currently available,
     // perhaps because we're in the middle of tearing stuff down.
     // Be conservative, return our visual overflow rect relative
@@ -328,8 +320,8 @@ nsSVGIntegrationUtils::AdjustInvalidAreaForSVGEffects(nsIFrame* aFrame,
 
   // Adjust the dirty area for effects, and shift it back to being relative to
   // the reference frame.
-  nsRect result = nsSVGFilterInstance::GetPostFilterDirtyArea(filterFrame,
-    firstFrame, preEffectsRect) - toUserSpace;
+  nsRect result = nsFilterInstance::GetPostFilterDirtyArea(firstFrame,
+    preEffectsRect) - toUserSpace;
   // Return the result, in pixels relative to the reference frame.
   return result.ToOutsidePixels(appUnitsPerDevPixel);
 }
@@ -342,10 +334,10 @@ nsSVGIntegrationUtils::GetRequiredSourceForInvalidArea(nsIFrame* aFrame,
   // already have been set up during reflow/ComputeFrameEffectsRect
   nsIFrame* firstFrame =
     nsLayoutUtils::FirstContinuationOrIBSplitSibling(aFrame);
-  nsSVGFilterFrame* filterFrame =
-    nsSVGEffects::GetFilterFrame(firstFrame);
-  if (!filterFrame)
+  nsSVGFilterProperty *prop = nsSVGEffects::GetFilterProperty(firstFrame);
+  if (!prop || !prop->ReferencesValidResources()) {
     return aDirtyRect;
+  }
   
   // Convert aDirtyRect into "user space" in app units:
   nsPoint toUserSpace =
@@ -353,8 +345,8 @@ nsSVGIntegrationUtils::GetRequiredSourceForInvalidArea(nsIFrame* aFrame,
   nsRect postEffectsRect = aDirtyRect + toUserSpace;
 
   // Return ther result, relative to aFrame, not in user space:
-  return nsSVGFilterInstance::GetPreFilterNeededArea(filterFrame, firstFrame,
-    postEffectsRect) - toUserSpace;
+  return nsFilterInstance::GetPreFilterNeededArea(firstFrame, postEffectsRect)
+    - toUserSpace;
 }
 
 bool
@@ -384,7 +376,8 @@ public:
       mOffset(aOffset) {}
 
   virtual void Paint(nsRenderingContext *aContext, nsIFrame *aTarget,
-                     const nsIntRect* aDirtyRect, nsIFrame* aTransformRoot)
+                     const nsIntRect* aDirtyRect,
+                     nsIFrame* aTransformRoot) MOZ_OVERRIDE
   {
     BasicLayerManager* basic = static_cast<BasicLayerManager*>(mLayerManager);
     basic->SetTarget(aContext->ThebesContext());
@@ -455,9 +448,8 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(nsRenderingContext* aCtx,
   nsSVGEffects::EffectProperties effectProperties =
     nsSVGEffects::GetEffectProperties(firstFrame);
 
-  bool isOK = true;
+  bool isOK = effectProperties.HasNoFilterOrHasValidFilter();
   nsSVGClipPathFrame *clipPathFrame = effectProperties.GetClipPathFrame(&isOK);
-  nsSVGFilterFrame *filterFrame = effectProperties.GetFilterFrame(&isOK);
   nsSVGMaskFrame *maskFrame = effectProperties.GetMaskFrame(&isOK);
   if (!isOK) {
     return; // Some resource is missing. We shouldn't paint anything.
@@ -514,12 +506,11 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(nsRenderingContext* aCtx,
   }
 
   /* Paint the child */
-  if (filterFrame) {
+  if (effectProperties.HasValidFilter()) {
     RegularFramePaintCallback callback(aBuilder, aLayerManager,
                                        offsetWithoutSVGGeomFramePos);
     nsRect dirtyRect = aDirtyRect - offset;
-    nsSVGFilterInstance::PaintFilteredFrame(filterFrame, aCtx, aFrame,
-                                            &callback, &dirtyRect);
+    nsFilterInstance::PaintFilteredFrame(aCtx, aFrame, &callback, &dirtyRect);
   } else {
     gfx->SetMatrix(matrixAutoSaveRestore.Matrix());
     aLayerManager->EndTransaction(FrameLayerBuilder::DrawThebesLayer, aBuilder);
@@ -595,7 +586,7 @@ public:
   virtual bool operator()(gfxContext* aContext,
                             const gfxRect& aFillRect,
                             const GraphicsFilter& aFilter,
-                            const gfxMatrix& aTransform);
+                            const gfxMatrix& aTransform) MOZ_OVERRIDE;
 private:
   nsIFrame* mFrame;
   nsSize mPaintServerSize;

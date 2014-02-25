@@ -39,10 +39,6 @@ public:
   nsresult ImportFromFile(nsIFile *file);
 
   // PKCS#12 Export
-#if 0
-  //nsresult LoadCerts(const char16_t **certNames, int numCerts);
-  nsresult LoadCerts(nsIX509Cert **certs, int numCerts);
-#endif
   nsresult ExportToFile(nsIFile *file, nsIX509Cert **certs, int numCerts);
 
 private:

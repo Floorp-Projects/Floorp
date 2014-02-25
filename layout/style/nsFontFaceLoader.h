@@ -9,6 +9,7 @@
 #ifndef nsFontFaceLoader_h_
 #define nsFontFaceLoader_h_
 
+#include "mozilla/Attributes.h"
 #include "nsCOMPtr.h"
 #include "nsIStreamLoader.h"
 #include "nsIChannel.h"
@@ -36,7 +37,7 @@ public:
   // returns whether load process successfully started or not
   nsresult StartLoad(gfxMixedFontFamily* aFamily,
                      gfxProxyFontEntry* aFontToLoad,
-                     const gfxFontFaceSrc* aFontFaceSrc);
+                     const gfxFontFaceSrc* aFontFaceSrc) MOZ_OVERRIDE;
 
   // Called by nsFontFaceLoader when the loader has completed normally.
   // It's removed from the mLoaders set.
@@ -48,7 +49,7 @@ public:
 
   virtual void ReplaceFontEntry(gfxMixedFontFamily* aFamily,
                                 gfxProxyFontEntry* aProxy,
-                                gfxFontEntry* aFontEntry);
+                                gfxFontEntry* aFontEntry) MOZ_OVERRIDE;
 
   nsCSSFontFaceRule* FindRuleForEntry(gfxFontEntry* aFontEntry);
 
@@ -70,16 +71,16 @@ protected:
                               gfxProxyFontEntry* aProxy,
                               const char* aMessage,
                               uint32_t aFlags = nsIScriptError::errorFlag,
-                              nsresult aStatus = NS_OK);
+                              nsresult aStatus = NS_OK) MOZ_OVERRIDE;
 
   virtual nsresult CheckFontLoad(const gfxFontFaceSrc* aFontFaceSrc,
                                  nsIPrincipal** aPrincipal,
-                                 bool* aBypassCache);
+                                 bool* aBypassCache) MOZ_OVERRIDE;
 
   virtual nsresult SyncLoadFontData(gfxProxyFontEntry* aFontToLoad,
                                     const gfxFontFaceSrc* aFontFaceSrc,
                                     uint8_t*& aBuffer,
-                                    uint32_t& aBufferLength);
+                                    uint32_t& aBufferLength) MOZ_OVERRIDE;
 
   virtual bool GetPrivateBrowsing() MOZ_OVERRIDE;
 
