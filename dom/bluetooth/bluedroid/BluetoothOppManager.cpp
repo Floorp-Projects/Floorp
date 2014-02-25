@@ -1464,7 +1464,7 @@ BluetoothOppManager::OnSocketDisconnect(BluetoothSocket* aSocket)
     // Do nothing when a listening server socket is closed.
     return;
   }
-  BT_LOGR("[%s]", (mIsServer) ? "client" : "server");
+  BT_LOGR("[%s]", (mIsServer) ? "server" : "client");
 
   /**
    * It is valid for a bluetooth device which is transfering file via OPP
