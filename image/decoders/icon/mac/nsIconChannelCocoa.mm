@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
 #include "nsIconChannel.h"
+#include "mozilla/Endian.h"
 #include "nsIIconURI.h"
 #include "nsIServiceManager.h"
 #include "nsIInterfaceRequestor.h"
@@ -18,7 +18,6 @@
 #include "nsNetUtil.h"
 #include "nsIMIMEService.h"
 #include "nsCExternalHandlerService.h"
-#include "plstr.h"
 #include "nsILocalFileMac.h"
 #include "nsIFileURL.h"
 #include "nsTArray.h"
@@ -295,7 +294,7 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, bool nonBlocki
     // write data out to our buffer
     // non-cairo uses native image format, but the A channel is ignored.
     // cairo uses ARGB (highest to lowest bits)
-#if defined(IS_LITTLE_ENDIAN)
+#if MOZ_LITTLE_ENDIAN
     *iconBufferPtr++ = b;
     *iconBufferPtr++ = g;
     *iconBufferPtr++ = r;
