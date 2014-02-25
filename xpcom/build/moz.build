@@ -91,3 +91,8 @@ LOCAL_INCLUDES += [
     '/chrome/src',
     '/docshell/base',
 ]
+
+if CONFIG['MOZ_VPX']:
+    LOCAL_INCLUDES += [
+        '/media/libvpx',
+    ]
