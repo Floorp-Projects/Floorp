@@ -68,8 +68,10 @@ TextureHost::CreateIPDLActor(ISurfaceAllocator* aAllocator,
     return nullptr;
   }
   TextureParent* actor = new TextureParent(aAllocator);
-  DebugOnly<bool> status = actor->Init(aSharedData, aFlags);
-  MOZ_ASSERT(status);
+  if (!actor->Init(aSharedData, aFlags)) {
+    delete actor;
+    return nullptr;
+  }
   return actor;
 }
 
