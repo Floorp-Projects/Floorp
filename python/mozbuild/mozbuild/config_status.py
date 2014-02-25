@@ -20,6 +20,7 @@ from mozbuild.backend.recursivemake import RecursiveMakeBackend
 from mozbuild.base import MachCommandConditions
 from mozbuild.frontend.emitter import TreeMetadataEmitter
 from mozbuild.frontend.reader import BuildReader
+from mozbuild.mozinfo import write_mozinfo
 
 
 log_manager = LoggingManager()
@@ -105,6 +106,11 @@ def config_status(topobjdir='.', topsrcdir='.',
 
     env = ConfigEnvironment(topsrcdir, topobjdir, defines=defines,
             non_global_defines=non_global_defines, substs=substs, source=source)
+
+    # mozinfo.json only needs written if configure changes and configure always
+    # passes this environment variable.
+    if 'WRITE_MOZINFO' in os.environ:
+        write_mozinfo(os.path.join(topobjdir, 'mozinfo.json'), env, os.environ)
 
     # Make an appropriate backend instance, defaulting to RecursiveMakeBackend.
     backend_cls = RecursiveMakeBackend

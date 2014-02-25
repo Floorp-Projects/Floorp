@@ -98,9 +98,8 @@ def write_mozinfo(file, config, env=os.environ):
     and what keys are produced.
     """
     build_conf = build_dict(config, env)
-    args = {'indent': 2, 'sort_keys': True}
     if isinstance(file, basestring):
         with open(file, "w") as f:
-            json.dump(build_conf, f, **args)
+            json.dump(build_conf, f)
     else:
-        json.dump(build_conf, file, **args)
+        json.dump(build_conf, file)

@@ -68,18 +68,6 @@ CONFIGS = DefaultOnReadDict({
             ('MOZ_APP_NAME', 'my_app'),
         ],
     },
-    'mozinfo': {
-        'defines': [],
-        'non_global_defines': [],
-        'substs': [
-            ('WRITE_MOZINFO', '1'),
-
-            # Some variables required for mozinfo generation.
-            ('TARGET_CPU', 'dummy'),
-            ('OS_TARGET', 'dummy'),
-            ('MOZ_WIDGET_TOOLKIT', 'dummy'),
-        ],
-    },
 }, global_default={
     'defines': [],
     'non_global_defines': [],
@@ -110,12 +98,9 @@ class BackendTester(unittest.TestCase):
 
         return env, emitter.emit(reader.read_topsrcdir())
 
-    def _consume(self, name, cls, env=None, write_mozinfo=False):
+    def _consume(self, name, cls, env=None):
         env, objs = self._emit(name, env=env)
         backend = cls(env)
-        # Don't write mozinfo.json by default since it requires certain
-        # environment variables.
-        backend._write_mozinfo = write_mozinfo
         backend.consume(objs)
 
         return env
