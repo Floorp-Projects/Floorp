@@ -10,7 +10,6 @@
 #include <sstream>
 #include <stdio.h>
 
-#include "nsDebug.h"
 #include "Point.h"
 #include "Matrix.h"
 
@@ -58,13 +57,13 @@ static inline void OutputMessage(const std::string &aString, int aLevel) {
   if (aLevel >= sGfxLogLevel) {
     ::OutputDebugStringA(aString.c_str());
   }
-#elif defined(PR_LOGGING) && !(defined(MOZ_WIDGET_GONK) || defined(MOZ_WIDGET_ANDROID))
+#elif defined(PR_LOGGING)
   if (PR_LOG_TEST(GetGFX2DLog(), PRLogLevelForLevel(aLevel))) {
     PR_LogPrint(aString.c_str());
   }
 #else
   if (aLevel >= sGfxLogLevel) {
-    printf_stderr("%s", aString.c_str());
+    printf("%s", aString.c_str());
   }
 #endif
 }
