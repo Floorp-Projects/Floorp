@@ -203,7 +203,7 @@
                 accesskey="&charsetMenu.accesskey;"
                 oncommand="BrowserSetCharacterSet(event);"
                 onpopupshowing="CharsetMenu.build(event.target);"
-                onpopupshown="CharsetMenu.update(event, content.document.characterSet);">
+                onpopupshown="CharsetMenu.update(event.target, content.document.characterSet);">
             <menupopup/>
           </menu>
           <menuseparator/>
