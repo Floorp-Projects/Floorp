@@ -86,7 +86,6 @@ public:
   Log() {}
   ~Log() { mMessage << '\n'; WriteLog(mMessage.str()); }
 
-  Log &operator <<(char aChar) { mMessage << aChar; return *this; }
   Log &operator <<(const std::string &aLogText) { mMessage << aLogText; return *this; }
   Log &operator <<(const char aStr[]) { mMessage << static_cast<const char*>(aStr); return *this; }
   Log &operator <<(bool aBool) { mMessage << (aBool ? "true" : "false"); return *this; }
