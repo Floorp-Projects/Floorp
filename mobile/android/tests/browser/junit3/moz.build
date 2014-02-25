@@ -15,3 +15,19 @@ jar.sources += [
 ]
 jar.generated_sources = [] # None yet -- try to keep it this way.
 jar.javac_flags += ['-Xlint:all,-unchecked']
+
+# Android Eclipse project.
+main = add_android_eclipse_project('BrowserInstrumentationTests', OBJDIR + '/AndroidManifest.xml')
+# The package name doesn't really matter, but it looks nicest if the
+# generated classes (org.mozilla.gecko.browser.tests.{BuildConfig,R})
+# are in the same hierarchy as the rest of the source files.
+main.package_name = 'org.mozilla.gecko.browser.tests'
+main.res = 'res'
+main.recursive_make_targets += [
+    OBJDIR + '/AndroidManifest.xml',
+]
+main.recursive_make_targets += [OBJDIR + '/generated/' + f for f in jar.generated_sources]
+main.referenced_projects += ['Fennec']
+
+main.add_classpathentry('src', SRCDIR + '/src',
+    dstdir='src/org/mozilla/gecko/browser')
