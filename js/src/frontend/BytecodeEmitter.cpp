@@ -689,7 +689,7 @@ EnclosingStaticScope(BytecodeEmitter *bce)
 static bool
 AllLocalsAliased(StaticBlockObject &obj)
 {
-    for (unsigned i = 0; i < obj.slotCount(); i++)
+    for (unsigned i = 0; i < obj.numVariables(); i++)
         if (!obj.isAliased(i))
             return false;
     return true;
@@ -699,15 +699,13 @@ AllLocalsAliased(StaticBlockObject &obj)
 static bool
 ComputeAliasedSlots(ExclusiveContext *cx, BytecodeEmitter *bce, Handle<StaticBlockObject *> blockObj)
 {
-    if (blockObj->slotCount() == 0)
-        return true;
-
-    for (unsigned i = 0; i < blockObj->slotCount(); i++) {
+    for (unsigned i = 0; i < blockObj->numVariables(); i++) {
         Definition *dn = blockObj->definitionParseNode(i);
 
         JS_ASSERT(dn->isDefn());
         if (!dn->pn_cookie.set(bce->parser->tokenStream, dn->pn_cookie.level(),
-                               blockObj->varToLocalIndex(dn->frameSlot()))) {
+                               blockObj->blockIndexToLocalIndex(dn->frameSlot())))
+        {
             return false;
         }
 
@@ -745,13 +743,13 @@ ComputeLocalOffset(ExclusiveContext *cx, BytecodeEmitter *bce, Handle<StaticBloc
         for (; outer; outer = outer->enclosingNestedScope()) {
             if (outer->is<StaticBlockObject>()) {
                 StaticBlockObject &outerBlock = outer->as<StaticBlockObject>();
-                localOffset = outerBlock.localOffset() + outerBlock.slotCount();
+                localOffset = outerBlock.localOffset() + outerBlock.numVariables();
                 break;
             }
         }
     }
 
-    JS_ASSERT(localOffset + blockObj->slotCount()
+    JS_ASSERT(localOffset + blockObj->numVariables()
               <= nfixedvars + bce->script->bindings.numBlockScoped());
 
     blockObj->setLocalOffset(localOffset);
@@ -2438,7 +2436,7 @@ static bool
 InitializeBlockScopedLocalsFromStack(ExclusiveContext *cx, BytecodeEmitter *bce,
                                      Handle<StaticBlockObject *> blockObj)
 {
-    for (unsigned i = blockObj->slotCount(); i > 0; --i) {
+    for (unsigned i = blockObj->numVariables(); i > 0; --i) {
         if (blockObj->isAliased(i - 1)) {
             ScopeCoordinate sc;
             sc.setHops(0);
@@ -2446,7 +2444,8 @@ InitializeBlockScopedLocalsFromStack(ExclusiveContext *cx, BytecodeEmitter *bce,
             if (!EmitAliasedVarOp(cx, JSOP_SETALIASEDVAR, sc, bce))
                 return false;
         } else {
-            if (!EmitUnaliasedVarOp(cx, JSOP_SETLOCAL, blockObj->varToLocalIndex(i - 1), bce))
+            unsigned local = blockObj->blockIndexToLocalIndex(i - 1);
+            if (!EmitUnaliasedVarOp(cx, JSOP_SETLOCAL, local, bce))
                 return false;
         }
         if (Emit1(cx, bce, JSOP_POP) < 0)
@@ -2461,7 +2460,7 @@ EnterBlockScope(ExclusiveContext *cx, BytecodeEmitter *bce, StmtInfoBCE *stmtInf
 {
     // Initial values for block-scoped locals.
     Rooted<StaticBlockObject *> blockObj(cx, &objbox->object->as<StaticBlockObject>());
-    if (!PushUndefinedValues(cx, bce, blockObj->slotCount() - alreadyPushed))
+    if (!PushUndefinedValues(cx, bce, blockObj->numVariables() - alreadyPushed))
         return false;
 
     if (!EnterNestedScope(cx, bce, stmtInfo, objbox, STMT_BLOCK))

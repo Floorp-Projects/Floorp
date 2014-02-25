@@ -2689,7 +2689,7 @@ Parser<FullParseHandler>::bindLet(BindData<FullParseHandler> *data,
     ExclusiveContext *cx = parser->context;
 
     Rooted<StaticBlockObject *> blockObj(cx, data->let.blockObj);
-    unsigned index = blockObj->slotCount();
+    unsigned index = blockObj->numVariables();
     if (index >= StaticBlockObject::LOCAL_INDEX_LIMIT) {
         parser->report(ParseError, false, pn, data->let.overflow);
         return false;
@@ -2787,7 +2787,7 @@ AccumulateBlockScopeDepth(ParseContext<ParseHandler> *pc)
     StmtInfoPC *outer = pc->topStmt->down;
 
     if (pc->topStmt->isBlockScope)
-        innerDepth += pc->topStmt->staticScope->template as<StaticBlockObject>().slotCount();
+        innerDepth += pc->topStmt->staticScope->template as<StaticBlockObject>().numVariables();
 
     if (outer) {
         if (outer->innerBlockScopeDepth < innerDepth)

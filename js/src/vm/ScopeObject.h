@@ -406,7 +406,8 @@ class BlockObject : public NestedScopeObject
     }
 
     /* Return the number of variables associated with this block. */
-    uint32_t slotCount() const {
+    uint32_t numVariables() const {
+        // TODO: propertyCount() is O(n), use O(1) lastProperty()->slot() instead
         return propertyCount();
     }
 
@@ -434,12 +435,12 @@ class StaticBlockObject : public BlockObject
     }
 
     /*
-     * Return the index (in the range [0, slotCount()) corresponding to the
+     * Return the index (in the range [0, numVariables()) corresponding to the
      * given shape of a block object.
      */
     uint32_t shapeToIndex(const Shape &shape) {
         uint32_t slot = shape.slot();
-        JS_ASSERT(slot - RESERVED_SLOTS < slotCount());
+        JS_ASSERT(slot - RESERVED_SLOTS < numVariables());
         return slot - RESERVED_SLOTS;
     }
 
@@ -454,19 +455,19 @@ class StaticBlockObject : public BlockObject
     }
 
     // Return the local corresponding to the 'var'th binding where 'var' is in the
-    // range [0, slotCount()).
-    uint32_t varToLocalIndex(uint32_t var) {
-        JS_ASSERT(var < slotCount());
-        return getReservedSlot(LOCAL_OFFSET_SLOT).toPrivateUint32() + var;
+    // range [0, numVariables()).
+    uint32_t blockIndexToLocalIndex(uint32_t index) {
+        JS_ASSERT(index < numVariables());
+        return getReservedSlot(LOCAL_OFFSET_SLOT).toPrivateUint32() + index;
     }
 
     // Return the slot corresponding to local variable 'local', where 'local' is
-    // in the range [localOffset(), localOffset() + slotCount()).  The result is
-    // in the range [RESERVED_SLOTS, RESERVED_SLOTS + slotCount()).
+    // in the range [localOffset(), localOffset() + numVariables()).  The result is
+    // in the range [RESERVED_SLOTS, RESERVED_SLOTS + numVariables()).
     uint32_t localIndexToSlot(uint32_t local) {
         JS_ASSERT(local >= localOffset());
         local -= localOffset();
-        JS_ASSERT(local < slotCount());
+        JS_ASSERT(local < numVariables());
         return RESERVED_SLOTS + local;
     }
 
