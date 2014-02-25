@@ -170,6 +170,10 @@ function Panel(options) {
     this.views = options.views;
 }
 
+// We need this function to have access to the HomePanels
+// private members without leaking it outside Home.jsm.
+let handlePanelsGet;
+
 let HomePanels = (function () {
   // Holds the current set of registered panels that can be
   // installed, updated, uninstalled, or unregistered. This
@@ -186,7 +190,7 @@ let HomePanels = (function () {
     };
   };
 
-  let _handleGet = function(data) {
+  handlePanelsGet = function(data) {
     let requestId = data.requestId;
     let ids = data.ids || null;
 
@@ -339,7 +343,7 @@ this.Home = Object.freeze({
   observe: function(subject, topic, data) {
     switch(topic) {
       case "HomePanels:Get":
-        HomePanels._handleGet(JSON.parse(data));
+        handlePanelsGet(JSON.parse(data));
         break;
     }
   }
