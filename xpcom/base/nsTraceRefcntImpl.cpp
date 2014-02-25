@@ -124,6 +124,13 @@ struct nsTraceRefcntStats {
   double mRefsOutstandingSquared;
   double mObjsOutstandingTotal;
   double mObjsOutstandingSquared;
+  void dump(FILE* out) {
+    fprintf(out, "mAddRefs: %" PRIu64 ", ", mAddRefs);
+    fprintf(out, "mReleases: %" PRIu64 ", ", mReleases);
+    fprintf(out, "mCreates: %" PRIu64 ", ", mCreates);
+    fprintf(out, "mDestroys: %" PRIu64 ", ", mDestroys);
+    fprintf(out, "\n");
+  }
 };
 
   // I hope to turn this on for everybody once we hit it a little less.
@@ -368,6 +375,7 @@ public:
         stats->mCreates != 0 ||
         meanObjs != 0 ||
         stddevObjs != 0) {
+      stats->dump(out);
       fprintf(out, "%4d %-40.40s %8d %8" PRIu64 " %8" PRIu64 " %8" PRIu64 " (%8.2f +/- %8.2f) %8" PRIu64 " %8" PRIu64 " (%8.2f +/- %8.2f)\n",
               i+1, mClassName,
               (int32_t)mClassSize,
