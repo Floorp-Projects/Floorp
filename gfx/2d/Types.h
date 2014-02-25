@@ -246,7 +246,7 @@ struct GradientStop
 }
 }
 
-#if defined(XP_WIN) && defined(GKMEDIAS_SHARED_LIBRARY)
+#if defined(XP_WIN) && defined(MOZ_GFX)
 #ifdef GFX2D_INTERNAL
 #define GFX2D_API __declspec(dllexport)
 #else
