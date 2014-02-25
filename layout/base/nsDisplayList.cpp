@@ -592,17 +592,6 @@ static void AdjustForScrollBars(ScreenIntRect& aToAdjust, nsIScrollableFrame* aS
   }
 }
 
-static bool gPrintApzcTree = false;
-
-static bool GetApzcTreePrintPref() {
-  static bool initialized = false;
-  if (!initialized) {
-    Preferences::AddBoolVarCache(&gPrintApzcTree, "apz.printtree", gPrintApzcTree);
-    initialized = true;
-  }
-  return gPrintApzcTree;
-}
-
 static void RecordFrameMetrics(nsIFrame* aForFrame,
                                nsIFrame* aScrollFrame,
                                const nsIFrame* aReferenceFrame,
@@ -742,14 +731,6 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
   // this adjustment was already made to the widget bounds.
   if (!useWidgetBounds) {
     AdjustForScrollBars(metrics.mCompositionBounds, scrollableFrame);
-  }
-
-  if (GetApzcTreePrintPref()) {
-    if (nsIContent* content = frameForCompositionBoundsCalculation->GetContent()) {
-      nsAutoString contentDescription;
-      content->Describe(contentDescription);
-      metrics.SetContentDescription(NS_LossyConvertUTF16toASCII(contentDescription).get());
-    }
   }
 
   metrics.mPresShellId = presShell->GetPresShellId();
