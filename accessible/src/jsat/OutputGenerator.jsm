@@ -14,6 +14,7 @@ const INCLUDE_NAME = 0x02;
 const INCLUDE_VALUE = 0x04;
 const INCLUDE_CUSTOM = 0x08;
 const NAME_FROM_SUBTREE_RULE = 0x10;
+const IGNORE_EXPLICIT_NAME = 0x20;
 
 const OUTPUT_DESC_FIRST = 0;
 const OUTPUT_DESC_LAST = 1;
@@ -67,7 +68,8 @@ this.OutputGenerator = {
       // NAME_FROM_SUBTREE_RULE.
       return (((nameRule & INCLUDE_VALUE) && aAccessible.value) ||
               ((nameRule & NAME_FROM_SUBTREE_RULE) &&
-               Utils.getAttributes(aAccessible)['explicit-name'] === 'true'));
+               (Utils.getAttributes(aAccessible)['explicit-name'] === 'true' &&
+               !(nameRule & IGNORE_EXPLICIT_NAME))));
     };
 
     let contextStart = this._getContextStart(aContext);
@@ -157,8 +159,8 @@ this.OutputGenerator = {
 
   _addName: function _addName(aOutput, aAccessible, aFlags) {
     let name;
-    if (Utils.getAttributes(aAccessible)['explicit-name'] === 'true' ||
-      (aFlags & INCLUDE_NAME)) {
+    if ((Utils.getAttributes(aAccessible)['explicit-name'] === 'true' &&
+         !(aFlags & IGNORE_EXPLICIT_NAME)) || (aFlags & INCLUDE_NAME)) {
       name = aAccessible.name;
     }
 
@@ -319,7 +321,9 @@ this.OutputGenerator = {
     'option': INCLUDE_DESC,
     'listbox': INCLUDE_DESC,
     'definitionlist': INCLUDE_DESC | INCLUDE_NAME,
-    'dialog': INCLUDE_DESC | INCLUDE_NAME },
+    'dialog': INCLUDE_DESC | INCLUDE_NAME,
+    'chrome window': IGNORE_EXPLICIT_NAME,
+    'app root': IGNORE_EXPLICIT_NAME },
 
   objectOutputFunctions: {
     _generateBaseOutput: function _generateBaseOutput(aAccessible, aRoleStr, aState, aFlags) {

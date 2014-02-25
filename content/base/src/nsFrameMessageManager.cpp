@@ -1743,11 +1743,11 @@ public:
       return false;
     }
     if (aIsSync) {
-      return cc->SendSyncMessage(nsString(aMessage), data, cpows, aPrincipal,
-                                 aJSONRetVal);
+      return cc->SendSyncMessage(PromiseFlatString(aMessage), data, cpows,
+                                 aPrincipal, aJSONRetVal);
     }
-    return cc->CallRpcMessage(nsString(aMessage), data, cpows, aPrincipal,
-                              aJSONRetVal);
+    return cc->CallRpcMessage(PromiseFlatString(aMessage), data, cpows,
+                              aPrincipal, aJSONRetVal);
   }
 
   virtual bool DoSendAsyncMessage(JSContext* aCx,
@@ -1769,7 +1769,8 @@ public:
     if (!cc->GetCPOWManager()->Wrap(aCx, aCpows, &cpows)) {
       return false;
     }
-    return cc->SendAsyncMessage(nsString(aMessage), data, cpows, aPrincipal);
+    return cc->SendAsyncMessage(PromiseFlatString(aMessage), data, cpows,
+                                aPrincipal);
   }
 
 };

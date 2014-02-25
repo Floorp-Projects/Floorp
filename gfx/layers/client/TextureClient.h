@@ -17,10 +17,12 @@
 #include "mozilla/gfx/2D.h"             // for DrawTarget
 #include "mozilla/gfx/Point.h"          // for IntSize
 #include "mozilla/gfx/Types.h"          // for SurfaceFormat
+#include "mozilla/layers/FenceUtils.h"  // for FenceHandle
 #include "mozilla/ipc/Shmem.h"          // for Shmem
 #include "mozilla/layers/AtomicRefCountedWithFinalize.h"
 #include "mozilla/layers/CompositorTypes.h"  // for TextureFlags, etc
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor
+#include "mozilla/layers/PTextureChild.h" // for PTextureChild
 #include "mozilla/mozalloc.h"           // for operator delete
 #include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsCOMPtr.h"                   // for already_AddRefed
@@ -230,6 +232,11 @@ public:
   static PTextureChild* CreateIPDLActor();
   static bool DestroyIPDLActor(PTextureChild* actor);
 
+  /**
+   * Get the TextureClient corresponding to the actor passed in parameter.
+   */
+  static TextureClient* AsTextureClient(PTextureChild* actor);
+
   virtual bool IsAllocated() const = 0;
 
   virtual bool ToSurfaceDescriptor(SurfaceDescriptor& aDescriptor) = 0;
@@ -287,6 +294,13 @@ public:
    */
   void ForceRemove();
 
+  virtual void SetReleaseFenceHandle(FenceHandle aReleaseFenceHandle) {}
+
+  const FenceHandle& GetReleaseFenceHandle() const
+  {
+    return mReleaseFenceHandle;
+  }
+
 private:
   /**
    * Called once, just before the destructor.
@@ -325,6 +339,7 @@ protected:
   TextureFlags mFlags;
   bool mShared;
   bool mValid;
+  FenceHandle mReleaseFenceHandle;
 
   friend class TextureChild;
 };

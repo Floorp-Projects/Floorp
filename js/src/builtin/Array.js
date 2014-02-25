@@ -570,116 +570,6 @@ function ArrayKeys() {
  *   http://wiki.ecmascript.org/doku.php?id=strawman:data_parallelism
  */
 
-/* The mode asserts options object. */
-#define TRY_PARALLEL(MODE) \
-  ((!MODE || MODE.mode !== "seq"))
-#define ASSERT_SEQUENTIAL_IS_OK(MODE) \
-  do { if (MODE) AssertSequentialIsOK(MODE) } while(false)
-
-/* Safe versions of ARRAY.push(ELEMENT) */
-#define ARRAY_PUSH(ARRAY, ELEMENT) \
-  callFunction(std_Array_push, ARRAY, ELEMENT);
-#define ARRAY_SLICE(ARRAY, ELEMENT) \
-  callFunction(std_Array_slice, ARRAY, ELEMENT);
-
-/**
- * The ParallelSpew intrinsic is only defined in debug mode, so define a dummy
- * if debug is not on.
- */
-#ifndef DEBUG
-#define ParallelSpew(args)
-#endif
-
-#define MAX_SLICE_SHIFT 6
-#define MAX_SLICE_SIZE 64
-#define MAX_SLICES_PER_WORKER 8
-
-/**
- * Determine the number and size of slices.
- */
-function ComputeSlicesInfo(length) {
-  var count = length >>> MAX_SLICE_SHIFT;
-  var numWorkers = ForkJoinNumWorkers();
-  if (count < numWorkers)
-    count = numWorkers;
-  else if (count >= numWorkers * MAX_SLICES_PER_WORKER)
-    count = numWorkers * MAX_SLICES_PER_WORKER;
-
-  // Round the slice size to be a power of 2.
-  var shift = std_Math_max(std_Math_log2(length / count) | 0, 1);
-
-  // Recompute count with the rounded size.
-  count = length >>> shift;
-  if (count << shift !== length)
-    count += 1;
-
-  return { shift: shift, statuses: new Uint8Array(count), lastSequentialId: 0 };
-}
-
-/**
- * Macros to help compute the start and end indices of slices based on id. Use
- * with the object returned by ComputeSliceInfo.
- */
-#define SLICE_START(info, id) \
-    (id << info.shift)
-#define SLICE_END(info, start, length) \
-    std_Math_min(start + (1 << info.shift), length)
-#define SLICE_COUNT(info) \
-    info.statuses.length
-
-/**
- * ForkJoinGetSlice acts as identity when we are not in a parallel section, so
- * pass in the next sequential value when we are in sequential mode. The
- * reason for this odd API is because intrinsics *need* to be called during
- * ForkJoin's warmup to fill the TI info.
- */
-#define GET_SLICE(info, id) \
-    ((id = ForkJoinGetSlice(InParallelSection() ? -1 : NextSequentialSliceId(info, -1))) >= 0)
-
-#define SLICE_STATUS_DONE 1
-
-/**
- * Macro to mark a slice as completed in the info object.
- */
-#define MARK_SLICE_DONE(info, id) \
-    UnsafePutElements(info.statuses, id, SLICE_STATUS_DONE)
-
-/**
- * Reset the status array of the slices info object.
- */
-function SlicesInfoClearStatuses(info) {
-  var statuses = info.statuses;
-  var length = statuses.length;
-  for (var i = 0; i < length; i++)
-    UnsafePutElements(statuses, i, 0);
-  info.lastSequentialId = 0;
-}
-
-/**
- * Compute the slice such that all slices before it (but not including it) are
- * completed.
- */
-function NextSequentialSliceId(info, doneMarker) {
-  var statuses = info.statuses;
-  var length = statuses.length;
-  for (var i = info.lastSequentialId; i < length; i++) {
-    if (statuses[i] === SLICE_STATUS_DONE)
-      continue;
-    info.lastSequentialId = i;
-    return i;
-  }
-  return doneMarker == undefined ? length : doneMarker;
-}
-
-/**
- * Determinism-preserving bounds function.
- */
-function ShrinkLeftmost(info) {
-  return function () {
-    return [NextSequentialSliceId(info), SLICE_COUNT(info)]
-  };
-}
-
 /**
  * Creates a new array by applying |func(e, i, self)| for each element |e|
  * with index |i|.
@@ -715,7 +605,7 @@ function ArrayMapPar(func, mode) {
     UnsafePutElements(buffer, i, func(self[i], i, self));
   return buffer;
 
-  function mapThread(warmup) {
+  function mapThread(_, warmup) {
     var sliceId;
     while (GET_SLICE(slicesInfo, sliceId)) {
       var indexStart = SLICE_START(slicesInfo, sliceId);
@@ -770,7 +660,7 @@ function ArrayReducePar(func, mode) {
     accumulator = func(accumulator, self[i]);
   return accumulator;
 
-  function reduceThread(warmup) {
+  function reduceThread(_, warmup) {
     var sliceId;
     while (GET_SLICE(slicesInfo, sliceId)) {
       var indexStart = SLICE_START(slicesInfo, sliceId);
@@ -867,7 +757,7 @@ function ArrayScanPar(func, mode) {
    *
    * Read on in phase2 to see what we do next!
    */
-  function phase1(warmup) {
+  function phase1(_, warmup) {
     var sliceId;
     while (GET_SLICE(slicesInfo, sliceId)) {
       var indexStart = SLICE_START(slicesInfo, sliceId);
@@ -919,7 +809,7 @@ function ArrayScanPar(func, mode) {
    * result is [(A+B+C)+D, (A+B+C)+(D+E), (A+B+C)+(D+E+F)]. Again I
    * am using parentheses to clarify how these results were reduced.
    */
-  function phase2(warmup) {
+  function phase2(_, warmup) {
     var sliceId;
     while (GET_SLICE(slicesInfo, sliceId)) {
       var indexPos = SLICE_START(slicesInfo, sliceId);
@@ -1087,7 +977,7 @@ function ArrayFilterPar(func, mode) {
    * time. When we finish a chunk, we record our current count and
    * the next chunk sliceId, lest we should bail.
    */
-  function findSurvivorsThread(warmup) {
+  function findSurvivorsThread(_, warmup) {
     var sliceId;
     while (GET_SLICE(slicesInfo, sliceId)) {
       var count = 0;
@@ -1112,7 +1002,7 @@ function ArrayFilterPar(func, mode) {
     }
   }
 
-  function copySurvivorsThread(warmup) {
+  function copySurvivorsThread(_, warmup) {
     var sliceId;
     while (GET_SLICE(slicesInfo, sliceId)) {
       // Copies the survivors from this slice into the correct position.
@@ -1214,7 +1104,7 @@ function ArrayStaticBuildPar(length, func, mode) {
     UnsafePutElements(buffer, i, func(i));
   return buffer;
 
-  function constructThread(warmup) {
+  function constructThread(_, warmup) {
     var sliceId;
     while (GET_SLICE(slicesInfo, sliceId)) {
       var indexStart = SLICE_START(slicesInfo, sliceId);

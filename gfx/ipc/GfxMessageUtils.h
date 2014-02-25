@@ -733,6 +733,7 @@ struct ParamTraits<mozilla::layers::ZoomConstraints>
   static void Write(Message* aMsg, const paramType& aParam)
   {
     WriteParam(aMsg, aParam.mAllowZoom);
+    WriteParam(aMsg, aParam.mAllowDoubleTapZoom);
     WriteParam(aMsg, aParam.mMinZoom);
     WriteParam(aMsg, aParam.mMaxZoom);
   }
@@ -740,6 +741,7 @@ struct ParamTraits<mozilla::layers::ZoomConstraints>
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
     return (ReadParam(aMsg, aIter, &aResult->mAllowZoom) &&
+            ReadParam(aMsg, aIter, &aResult->mAllowDoubleTapZoom) &&
             ReadParam(aMsg, aIter, &aResult->mMinZoom) &&
             ReadParam(aMsg, aIter, &aResult->mMaxZoom));
   }

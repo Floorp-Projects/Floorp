@@ -292,6 +292,7 @@ APZController::GetRootZoomConstraints(ZoomConstraints* aOutConstraints)
     // Until we support the meta-viewport tag properly allow zooming
     // from 1/4 to 4x by default.
     aOutConstraints->mAllowZoom = true;
+    aOutConstraints->mAllowDoubleTapZoom = false;
     aOutConstraints->mMinZoom = CSSToScreenScale(0.25f);
     aOutConstraints->mMaxZoom = CSSToScreenScale(4.0f);
     return true;
