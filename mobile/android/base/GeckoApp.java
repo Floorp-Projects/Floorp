@@ -416,12 +416,8 @@ public abstract class GeckoApp
 
     @Override
     public boolean onPreparePanel(int featureId, View view, Menu menu) {
-        if (Build.VERSION.SDK_INT >= 11 && featureId == Window.FEATURE_OPTIONS_PANEL) {
-            if (menu instanceof GeckoMenu) {
-                ((GeckoMenu) menu).refresh();
-            }
+        if (Build.VERSION.SDK_INT >= 11 && featureId == Window.FEATURE_OPTIONS_PANEL)
             return onPrepareOptionsMenu(menu);
-        }
 
         return super.onPreparePanel(featureId, view, menu);
     }
@@ -686,6 +682,36 @@ public abstract class GeckoApp
                 GeckoAppShell.openUriExternal(message.optString("url"),
                     message.optString("mime"), message.optString("packageName"),
                     message.optString("className"), message.optString("action"), message.optString("title"));
+            } else if (event.equals("Intent:OpenForResult")) {
+                Intent intent = GeckoAppShell.getOpenURIIntent(this,
+                                                               message.optString("url"),
+                                                               message.optString("mime"),
+                                                               message.optString("action"),
+                                                               message.optString("title"));
+                intent.setClassName(message.optString("packageName"), message.optString("className"));
+
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+
+                final JSONObject originalMessage = message;
+                ActivityHandlerHelper.startIntentForActivity(this,
+                                                             intent,
+                        new ActivityResultHandler() {
+                            @Override
+                            public void onActivityResult (int resultCode, Intent data) {
+                                JSONObject response = new JSONObject();
+
+                                try {
+                                    if (data != null) {
+                                        response.put("extras", bundleToJSON(data.getExtras()));
+                                    }
+                                    response.put("resultCode", resultCode);
+                                } catch (JSONException e) {
+                                    Log.w(LOGTAG, "Error building JSON response.", e);
+                                }
+
+                                EventDispatcher.sendResponse(originalMessage, response);
+                            }
+                        });
             } else if (event.equals("Locale:Set")) {
                 setLocale(message.getString("locale"));
             } else if (event.equals("NativeApp:IsDebuggable")) {
@@ -844,6 +870,23 @@ public abstract class GeckoApp
                 });
             }
         });
+    }
+
+    private JSONObject bundleToJSON(Bundle bundle) {
+        JSONObject json = new JSONObject();
+        if (bundle == null) {
+            return json;
+        }
+
+        for (String key : bundle.keySet()) {
+            try {
+                json.put(key, bundle.get(key));
+            } catch (JSONException e) {
+                Log.w(LOGTAG, "Error building JSON response.", e);
+            }
+        }
+
+        return json;
     }
 
     private void addFullScreenPluginView(View view) {
@@ -1537,6 +1580,7 @@ public abstract class GeckoApp
         registerEventListener("PrivateBrowsing:Data");
         registerEventListener("Contact:Add");
         registerEventListener("Intent:Open");
+        registerEventListener("Intent:OpenForResult");
         registerEventListener("Intent:GetHandlers");
         registerEventListener("Locale:Set");
         registerEventListener("NativeApp:IsDebuggable");

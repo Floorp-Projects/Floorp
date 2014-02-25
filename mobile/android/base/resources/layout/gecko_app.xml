@@ -28,7 +28,8 @@
 
             <FrameLayout android:id="@+id/home_pager_container"
                          android:layout_width="fill_parent"
-                         android:layout_height="fill_parent">
+                         android:layout_height="fill_parent"
+                         android:visibility="gone">
 
                 <ViewStub android:id="@+id/home_pager_stub"
                           android:layout="@layout/home_pager"

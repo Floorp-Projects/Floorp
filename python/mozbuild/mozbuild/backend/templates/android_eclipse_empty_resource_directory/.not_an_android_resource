@@ -1,0 +1,5 @@
+This file is named such that it is ignored by Android aapt. The file
+itself ensures that the AndroidEclipse build backend can create an
+empty res/ directory for projects explicitly specifying that it has no
+resource directory.  This is necessary because the Android Eclipse
+plugin requires that each project have a res/ directory.

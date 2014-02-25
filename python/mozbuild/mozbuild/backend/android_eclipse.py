@@ -122,6 +122,12 @@ class AndroidEclipseBackend(CommonBackend):
 
         if project.res:
             manifest.add_symlink(mozpath.join(srcdir, project.res), 'res')
+        else:
+            # Eclipse expects a res directory no matter what, so we
+            # make an empty directory if the project doesn't specify.
+            res = os.path.abspath(mozpath.join(os.path.dirname(__file__),
+                'templates', 'android_eclipse_empty_resource_directory'))
+            manifest.add_pattern_copy(res, '.**', 'res')
 
         if project.assets:
             manifest.add_symlink(mozpath.join(srcdir, project.assets), 'assets')

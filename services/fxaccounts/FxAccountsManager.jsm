@@ -21,9 +21,6 @@ Cu.import("resource://gre/modules/FxAccounts.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/FxAccountsCommon.js");
 
-XPCOMUtils.defineLazyModuleGetter(this, "FxAccountsClient",
-  "resource://gre/modules/FxAccountsClient.jsm");
-
 this.FxAccountsManager = {
 
   init: function() {
@@ -83,10 +80,13 @@ this.FxAccountsManager = {
     return this._error(error ? error : ERROR_SERVER_ERROR, aServerResponse);
   },
 
-  // As we do with _fxAccounts, we don't really need this factory, but this way
-  // we allow tests to mock FxAccountsClient.
-  _createFxAccountsClient: function() {
-    return new FxAccountsClient();
+  // As with _fxAccounts, we don't really need this method, but this way we
+  // allow tests to mock FxAccountsClient.  By default, we want to return the
+  // client used by the fxAccounts object because deep down they should have
+  // access to the same hawk request object which will enable them to share
+  // local clock skeq data.
+  _getFxAccountsClient: function() {
+    return this._fxAccounts.getAccountsClient();
   },
 
   _signInSignUp: function(aMethod, aAccountId, aPassword) {
@@ -109,7 +109,7 @@ this.FxAccountsManager = {
       });
     }
 
-    let client = this._createFxAccountsClient();
+    let client = this._getFxAccountsClient();
     return this._fxAccounts.getSignedInUser().then(
       user => {
         if (user) {
@@ -128,9 +128,11 @@ this.FxAccountsManager = {
           });
         }
 
-        // Save the credentials of the signed in user.
-        user.email = aAccountId;
-        return this._fxAccounts.setSignedInUser(user, false).then(
+        // If the user object includes an email field, it may differ in
+        // capitalization from what we sent down.  This is the server's
+        // canonical capitalization and should be used instead.
+        user.email = user.email || aAccountId;
+        return this._fxAccounts.setSignedInUser(user).then(
           () => {
             this._activeSession = user;
             log.debug("User signed in: " + JSON.stringify(this._user) +
@@ -171,7 +173,7 @@ this.FxAccountsManager = {
           return Promise.resolve();
         }
         // Otherwise, we try to remove the remote session.
-        let client = this._createFxAccountsClient();
+        let client = this._getFxAccountsClient();
         return client.signOut(sessionToken).then(
           result => {
             let error = this._getError(result);
@@ -293,7 +295,7 @@ this.FxAccountsManager = {
       return this._error(ERROR_INVALID_ACCOUNTID);
     }
 
-    let client = this._createFxAccountsClient();
+    let client = this._getFxAccountsClient();
     return client.accountExists(aAccountId).then(
       result => {
         log.debug("Account " + result ? "" : "does not" + " exists");
@@ -327,7 +329,7 @@ this.FxAccountsManager = {
       return this._error(ERROR_OFFLINE);
     }
 
-    let client = this._createFxAccountsClient();
+    let client = this._getFxAccountsClient();
     return client.recoveryEmailStatus(this._activeSession.sessionToken).then(
       data => {
         let error = this._getError(data);

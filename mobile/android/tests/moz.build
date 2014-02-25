@@ -6,4 +6,5 @@
 
 TEST_DIRS += [
     'background',
+    'browser',
 ]

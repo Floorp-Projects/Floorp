@@ -140,7 +140,8 @@ FxAccountsManager._fxAccounts = {
 };
 
 // Save original FxAccountsClient factory from FxAccountsManager.
-const kFxAccountsClient = FxAccountsManager._createFxAccountsClient;
+const kFxAccountsClient = FxAccountsManager._getFxAccountsClient;
+
 // and change it for a fake client factory.
 let FakeFxAccountsClient = {
   _reject: false,
@@ -201,9 +202,11 @@ let FakeFxAccountsClient = {
     return deferred.promise;
   }
 };
-FxAccountsManager._createFxAccountsClient = function() {
+
+FxAccountsManager._getFxAccountsClient = function() {
   return FakeFxAccountsClient;
-}
+};
+
 
 // === Global cleanup ===
 
@@ -225,7 +228,7 @@ do_register_cleanup(function() {
   FxAccountsManager._fxAccounts = kFxAccounts;
 
   // Restore the FxAccountsClient getter from FxAccountsManager.
-  FxAccountsManager._createFxAccountsClient = kFxAccountsClient;
+  FxAccountsManager._getFxAccountsClient = kFxAccountsClient;
 });
 
 

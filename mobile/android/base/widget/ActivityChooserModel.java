@@ -319,8 +319,6 @@ public class ActivityChooserModel extends DataSetObservable {
      */
     private boolean mReloadActivities = false;
 
-    private long mLastChanged = 0;
-
     /**
      * Policy for controlling how the model handles chosen activities.
      */
@@ -747,7 +745,6 @@ public class ActivityChooserModel extends DataSetObservable {
                 ResolveInfo resolveInfo = resolveInfos.get(i);
                 mActivities.add(new ActivityResolveInfo(resolveInfo));
             }
-            mLastChanged = System.currentTimeMillis();
             return true;
         }
         return false;
@@ -1223,11 +1220,7 @@ public class ActivityChooserModel extends DataSetObservable {
             }
 
             mReloadActivities = true;
-            mLastChanged = System.currentTimeMillis();
         }
     }
-
-    public long getLastChanged() {
-        return mLastChanged;
-    }
 }
+
