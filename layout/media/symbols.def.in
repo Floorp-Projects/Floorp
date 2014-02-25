@@ -376,6 +376,7 @@ _moz_cairo_mask_surface
 _moz_cairo_matrix_init
 _moz_cairo_matrix_init_identity
 _moz_cairo_matrix_init_scale
+_moz_cairo_matrix_init_translate
 _moz_cairo_matrix_invert
 _moz_cairo_matrix_multiply
 _moz_cairo_matrix_rotate
@@ -414,6 +415,7 @@ _moz_cairo_pattern_status
 _moz_cairo_pdf_surface_create_for_stream
 _moz_cairo_pop_group
 _moz_cairo_pop_group_to_source
+_moz_cairo_push_group
 _moz_cairo_push_group_with_content
 _moz_cairo_rectangle
 _moz_cairo_rectangle_list_destroy
