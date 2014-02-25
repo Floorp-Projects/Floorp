@@ -44,7 +44,6 @@ if CONFIG['MOZ_B2G_BT']:
         elif CONFIG['MOZ_B2G_BT_BLUEDROID']:
             SOURCES += [
                 'bluedroid/BluetoothA2dpManager.cpp',
-                'bluedroid/BluetoothHfpManager.cpp',
                 'bluedroid/BluetoothOppManager.cpp',
                 'bluedroid/BluetoothServiceBluedroid.cpp',
                 'bluedroid/BluetoothSocket.cpp',
@@ -53,6 +52,22 @@ if CONFIG['MOZ_B2G_BT']:
             LOCAL_INCLUDES += [
                 'bluedroid',
             ]
+
+            if CONFIG['MOZ_B2G_RIL']:
+                SOURCES += [
+                    'bluedroid/hfp/BluetoothHfpManager.cpp',
+                ]
+                LOCAL_INCLUDES += [
+                    'bluedroid/hfp',
+                ]
+            else:
+                SOURCES += [
+                    'bluedroid/hfp-fallback/BluetoothHfpManager.cpp',
+                ]
+                LOCAL_INCLUDES += [
+                    'bluedroid/hfp-fallback',
+                ]
+
             DEFINES['MOZ_B2G_BT_BLUEDROID'] = True
     elif CONFIG['MOZ_ENABLE_DBUS']:
         SOURCES += [
