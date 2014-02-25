@@ -5939,10 +5939,7 @@ class CGAbstractStaticBindingMethod(CGAbstractStaticMethod):
 
     def definition_body(self):
         unwrap = CGGeneric("""JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
-JS::Rooted<JSObject*> obj(cx, args.computeThis(cx).toObjectOrNull());
-if (!obj) {
-  return false;
-}""")
+JS::Rooted<JSObject*> obj(cx, &args.callee());""")
         return CGList([ CGIndenter(unwrap),
                         self.generate_code() ], "\n\n").define()
 
