@@ -20,6 +20,8 @@ import android.widget.CheckedTextView;
 import android.widget.TextView;
 import android.widget.ListView;
 
+import java.util.ArrayList;
+
 public class PromptListAdapter extends ArrayAdapter<PromptListItem> {
     private static final int VIEW_TYPE_ITEM = 0;
     private static final int VIEW_TYPE_GROUP = 1;
@@ -37,8 +39,6 @@ public class PromptListAdapter extends ArrayAdapter<PromptListItem> {
     private static int mMinRowSize;
     private static int mIconTextPadding;
     private static boolean mInitialized = false;
-
-    private boolean[] mSelected;
 
     PromptListAdapter(Context context, int textViewResourceId, PromptListItem[] objects) {
         super(context, textViewResourceId, objects);
@@ -89,15 +89,8 @@ public class PromptListAdapter extends ArrayAdapter<PromptListItem> {
     }
 
     public void toggleSelected(int position) {
-        mSelected[position] = !mSelected[position];
-    }
-
-    public void setSelected(boolean[] selected) {
-        mSelected = selected;
-    }
-
-    public boolean[] getSelected() {
-        return mSelected;
+        PromptListItem item = getItem(position);
+        item.selected = !item.selected;
     }
 
     private void maybeUpdateIcon(PromptListItem item, TextView t) {
@@ -133,14 +126,39 @@ public class PromptListAdapter extends ArrayAdapter<PromptListItem> {
     private void maybeUpdateCheckedState(ListView list, int position, PromptListItem item, ViewHolder viewHolder) {
         viewHolder.textView.setEnabled(!item.disabled && !item.isGroup);
         viewHolder.textView.setClickable(item.isGroup || item.disabled);
+        if (viewHolder.textView instanceof CheckedTextView) {
+            // Apparently just using ct.setChecked(true) doesn't work, so this
+            // is stolen from the android source code as a way to set the checked
+            // state of these items
+            list.setItemChecked(position, item.selected);
+        }
+    }
 
-        if (mSelected == null) {
-            return;
+    boolean isSelected(int position){
+        return getItem(position).selected;
+    }
+
+    ArrayList<Integer> getSelected() {
+        int length = getCount();
+
+        ArrayList<Integer> selected = new ArrayList<Integer>();
+        for (int i = 0; i< length; i++) {
+            if (isSelected(i)) {
+                selected.add(i);
+            }
         }
 
-        if (list != null) {
-            list.setItemChecked(position, mSelected[position]);
+        return selected;
+    }
+
+    int getSelectedIndex() {
+        int length = getCount();
+        for (int i = 0; i< length; i++) {
+            if (isSelected(i)) {
+                return i;
+            }
         }
+        return -1;
     }
 
     @Override
