@@ -12,8 +12,7 @@ main = add_android_eclipse_project('BackgroundInstrumentationTests', OBJDIR + '/
 main.package_name = 'org.mozilla.gecko.background.tests'
 main.res = SRCDIR + '/res'
 main.recursive_make_targets += [
-    OBJDIR + '/AndroidManifest.xml',
-    TOPOBJDIR + '/mobile/android/base/tests/TestConstants.java']
+    OBJDIR + '/AndroidManifest.xml']
 main.referenced_projects += ['Fennec']
 
 main.add_classpathentry('src', SRCDIR + '/src',
