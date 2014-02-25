@@ -27,6 +27,7 @@ public:
 
   void GetFloatFrequencyData(const Float32Array& aArray);
   void GetByteFrequencyData(const Uint8Array& aArray);
+  void GetFloatTimeDomainData(const Float32Array& aArray);
   void GetByteTimeDomainData(const Uint8Array& aArray);
   uint32_t FftSize() const
   {
