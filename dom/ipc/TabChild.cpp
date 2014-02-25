@@ -2603,12 +2603,12 @@ TabChild::DoSendBlockingMessage(JSContext* aCx,
     }
   }
   if (aIsSync) {
-    return SendSyncMessage(nsString(aMessage), data, cpows, aPrincipal,
-                           aJSONRetVal);
+    return SendSyncMessage(PromiseFlatString(aMessage), data, cpows,
+                           aPrincipal, aJSONRetVal);
   }
 
-  return CallRpcMessage(nsString(aMessage), data, cpows, aPrincipal,
-                        aJSONRetVal);
+  return CallRpcMessage(PromiseFlatString(aMessage), data, cpows,
+                        aPrincipal, aJSONRetVal);
 }
 
 bool
@@ -2629,7 +2629,7 @@ TabChild::DoSendAsyncMessage(JSContext* aCx,
       return false;
     }
   }
-  return SendAsyncMessage(nsString(aMessage), data, cpows,
+  return SendAsyncMessage(PromiseFlatString(aMessage), data, cpows,
                           aPrincipal);
 }
 
