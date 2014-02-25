@@ -11,7 +11,7 @@ main.package_name = 'org.mozilla.roboexample.test'
 main.res = SRCDIR + '/res'
 main.recursive_make_targets += [
     OBJDIR + '/AndroidManifest.xml',
-    TOPOBJDIR + '/mobile/android/base/tests/TestConstants.java']
+    '../../../mobile/android/base/tests/TestConstants.java']
 main.extra_jars += [SRCDIR + '/robotium-solo-4.3.1.jar']
 main.assets = TOPSRCDIR + '/mobile/android/base/tests/assets'
 main.referenced_projects += ['Fennec']

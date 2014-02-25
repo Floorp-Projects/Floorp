@@ -225,7 +225,7 @@ let CustomizableUIInternal = {
         "alltabs-button",
         "tabs-closebutton",
       ],
-      defaultCollapsed: false,
+      defaultCollapsed: null,
     }, true);
     this.registerArea(CustomizableUI.AREA_BOOKMARKS, {
       legacy: true,
@@ -2127,7 +2127,9 @@ let CustomizableUIInternal = {
         if (area.get("type") == CustomizableUI.TYPE_TOOLBAR) {
           let defaultCollapsed = area.get("defaultCollapsed");
           let win = areaNode.ownerDocument.defaultView;
-          win.setToolbarVisibility(areaNode, !defaultCollapsed);
+          if (defaultCollapsed !== null) {
+            win.setToolbarVisibility(areaNode, !defaultCollapsed);
+          }
         }
       }
     }
@@ -2151,11 +2153,15 @@ let CustomizableUIInternal = {
     Services.prefs.setCharPref(kPrefCustomizationState, uiCustomizationState);
     Services.prefs.setBoolPref(kPrefDrawInTitlebar, drawInTitlebar);
     this.loadSavedState();
-    for (let areaId of Object.keys(gSavedState.placements)) {
-      let placements = gSavedState.placements[areaId];
-      gPlacements.set(areaId, placements);
+    // If the user just customizes toolbar/titlebar visibility, gSavedState will be null
+    // and we don't need to do anything else here:
+    if (gSavedState) {
+      for (let areaId of Object.keys(gSavedState.placements)) {
+        let placements = gSavedState.placements[areaId];
+        gPlacements.set(areaId, placements);
+      }
+      this._rebuildRegisteredAreas();
     }
-    this._rebuildRegisteredAreas();
   },
 
   _clearPreviousUIState: function() {
@@ -2286,7 +2292,7 @@ let CustomizableUIInternal = {
           let attribute = container.getAttribute("type") == "menubar" ? "autohide" : "collapsed";
           let collapsed = container.getAttribute(attribute) == "true";
           let defaultCollapsed = props.get("defaultCollapsed");
-          if (collapsed != defaultCollapsed) {
+          if (defaultCollapsed !== null && collapsed != defaultCollapsed) {
             LOG("Found " + areaId + " had non-default toolbar visibility (expected " + defaultCollapsed + ", was " + collapsed + ")");
             return false;
           }
@@ -2494,7 +2500,9 @@ this.CustomizableUI = {
    *                - defaultPlacements: an array of widget IDs making up the
    *                                     default contents of the area
    *                - defaultCollapsed: (INTERNAL ONLY) applies if the type is TYPE_TOOLBAR, specifies
-   *                                    if toolbar is collapsed by default (default to true)
+   *                                    if toolbar is collapsed by default (default to true).
+   *                                    Specify null to ensure that reset/inDefaultArea don't care
+   *                                    about a toolbar's collapsed state
    */
   registerArea: function(aName, aProperties) {
     CustomizableUIInternal.registerArea(aName, aProperties);
@@ -2877,7 +2885,8 @@ this.CustomizableUI = {
    * Check if a toolbar is collapsed by default.
    *
    * @param aArea the ID of the area whose default-collapsed state you want to know.
-   * @return `true` or `false` depending on the area, null if the area is unknown.
+   * @return `true` or `false` depending on the area, null if the area is unknown,
+   *         or its collapsed state cannot normally be controlled by the user
    */
   isToolbarDefaultCollapsed: function(aArea) {
     let area = gAreas.get(aArea);

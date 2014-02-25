@@ -68,7 +68,6 @@ function openInspector() {
 function getContainerForRawNode(markupView, rawNode) {
   let front = markupView.walker.frontForRawNode(rawNode);
   let container = markupView.getContainer(front);
-  ok(container, "A markup-container object was found");
   return container;
 }
 
@@ -239,4 +238,27 @@ function redoChange(inspector) {
   let mutated = inspector.once("markupmutation");
   inspector.markup.undo.redo();
   return mutated;
+}
+
+/**
+ * Get the selector-search input box from the inspector panel
+ * @return {DOMNode}
+ */
+function getSelectorSearchBox(inspector) {
+  return inspector.panelWin.document.getElementById("inspector-searchbox");
+}
+
+/**
+ * Using the inspector panel's selector search box, search for a given selector.
+ * The selector input string will be entered in the input field and the <ENTER>
+ * keypress will be simulated.
+ * This function won't wait for any events and is not async. It's up to callers
+ * to subscribe to events and react accordingly.
+ */
+function searchUsingSelectorSearch(selector, inspector) {
+  info("Entering \"" + selector + "\" into the selector-search input field");
+  let field = getSelectorSearchBox(inspector);
+  field.focus();
+  field.value = selector;
+  EventUtils.sendKey("return", inspector.panelWin);
 }

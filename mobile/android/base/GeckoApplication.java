@@ -69,7 +69,6 @@ public class GeckoApplication extends Application {
         GeckoBatteryManager.getInstance().start();
         GeckoNetworkManager.getInstance().init(getApplicationContext());
         MemoryMonitor.getInstance().init(getApplicationContext());
-        HomeConfigInvalidator.getInstance().init(getApplicationContext());
 
         mInited = true;
     }
@@ -116,6 +115,7 @@ public class GeckoApplication extends Application {
         Clipboard.init(getApplicationContext());
         FilePicker.init(getApplicationContext());
         GeckoLoader.loadMozGlue();
+        HomeConfigInvalidator.getInstance().init(getApplicationContext());
         super.onCreate();
     }
 

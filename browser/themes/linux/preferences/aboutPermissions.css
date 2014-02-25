@@ -97,6 +97,12 @@
 .pref-icon[type="fullscreen"] {
   list-style-image: url(chrome://global/skin/icons/question-64.png);
 }
+.pref-icon[type="camera"] {
+  list-style-image: url(chrome://global/skin/icons/question-64.png);
+}
+.pref-icon[type="microphone"] {
+  list-style-image: url(chrome://global/skin/icons/question-64.png);
+}
 
 .pref-title {
   font-size: 125%;
