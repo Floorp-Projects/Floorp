@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-#ifndef NATIVEWINDOW_GONKBUFFERQUEUE_H
-#define NATIVEWINDOW_GONKBUFFERQUEUE_H
+#ifndef NATIVEWINDOW_GONKBUFFERQUEUE_JB_H
+#define NATIVEWINDOW_GONKBUFFERQUEUE_JB_H
 
 #include <gui/IGraphicBufferAlloc.h>
 #if ANDROID_VERSION == 17

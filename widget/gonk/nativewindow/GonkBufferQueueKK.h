@@ -18,9 +18,6 @@
 #ifndef NATIVEWINDOW_GONKBUFFERQUEUE_KK_H
 #define NATIVEWINDOW_GONKBUFFERQUEUE_KK_H
 
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
-
 #include <gui/IConsumerListener.h>
 #include <gui/IGraphicBufferAlloc.h>
 #include <gui/IGraphicBufferProducer.h>
@@ -243,7 +240,6 @@ public:
     // Note that the dependencies on EGL will be removed once we switch to using
     // the Android HW Sync HAL.
     virtual status_t releaseBuffer(int buf, uint64_t frameNumber,
-                    EGLDisplay display, EGLSyncKHR fence,
                     const sp<Fence>& releaseFence);
 
     // consumerConnect connects a consumer to the GonkBufferQueue.  Only one
@@ -370,11 +366,10 @@ private:
     struct BufferSlot {
 
         BufferSlot()
-        : mEglDisplay(EGL_NO_DISPLAY),
+        : mSurfaceDescriptor(SurfaceDescriptor()),
           mBufferState(BufferSlot::FREE),
           mRequestBufferCalled(false),
           mFrameNumber(0),
-          mEglFence(EGL_NO_SYNC_KHR),
           mAcquireCalled(false),
           mNeedsCleanupOnRelease(false) {
         }
@@ -382,9 +377,6 @@ private:
         // mGraphicBuffer points to the buffer allocated for this slot or is NULL
         // if no buffer has been allocated.
         sp<GraphicBuffer> mGraphicBuffer;
-
-        // mEglDisplay is the EGLDisplay used to create EGLSyncKHR objects.
-        EGLDisplay mEglDisplay;
 
         // mSurfaceDescriptor is the token to remotely allocated GraphicBuffer.
         SurfaceDescriptor mSurfaceDescriptor;
@@ -442,13 +434,6 @@ private:
         // is used to dequeue buffers in LRU order (useful because buffers
         // may be released before their release fence is signaled).
         uint64_t mFrameNumber;
-
-        // mEglFence is the EGL sync object that must signal before the buffer
-        // associated with this buffer slot may be dequeued. It is initialized
-        // to EGL_NO_SYNC_KHR when the buffer is created and may be set to a
-        // new sync object in releaseBuffer.  (This is deprecated in favor of
-        // mFence, below.)
-        EGLSyncKHR mEglFence;
 
         // mFence is a fence which will signal when work initiated by the
         // previous owner of the buffer is finished. When the buffer is FREE,
