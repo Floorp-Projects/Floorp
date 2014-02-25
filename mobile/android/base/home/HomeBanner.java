@@ -19,6 +19,7 @@ import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.text.Html;
 import android.text.Spanned;
 import android.text.TextUtils;
@@ -105,11 +106,22 @@ public class HomeBanner extends LinearLayout
         super.onDetachedFromWindow();
 
         GeckoAppShell.getEventDispatcher().unregisterEventListener("HomeBanner:Data", this);
-     }
+    }
 
-     public void setScrollingPages(boolean scrollingPages) {
-         mScrollingPages = scrollingPages;
-     }
+    @Override
+    public void setVisibility(int visibility) {
+        // On pre-Honeycomb devices, setting the visibility to GONE won't actually
+        // hide the view unless we clear animations first.
+        if (Build.VERSION.SDK_INT < 11 && visibility == View.GONE) {
+            clearAnimation();
+        }
+
+        super.setVisibility(visibility);
+    }
+
+    public void setScrollingPages(boolean scrollingPages) {
+        mScrollingPages = scrollingPages;
+    }
 
     @Override
     public void handleMessage(String event, JSONObject message) {
