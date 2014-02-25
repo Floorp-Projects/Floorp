@@ -32,6 +32,9 @@
 #include "OGLShaderProgram.h"           // for ShaderProgramType, etc
 #ifdef MOZ_WIDGET_GONK
 #include <ui/GraphicBuffer.h>
+#if ANDROID_VERSION >= 18
+#include <ui/Fence.h>
+#endif
 #endif
 
 class gfxImageSurface;
@@ -115,6 +118,29 @@ public:
   virtual gfx::Matrix4x4 GetTextureTransform() { return gfx::Matrix4x4(); }
 
   virtual TextureImageDeprecatedTextureHostOGL* AsTextureImageDeprecatedTextureHost() { return nullptr; }
+};
+
+/**
+ * TextureHostOGL provides the necessary API for platform specific composition.
+ */
+class TextureHostOGL
+{
+public:
+#if MOZ_WIDGET_GONK && ANDROID_VERSION >= 18
+
+  /**
+   * Store a fence that will signal when the current buffer is no longer being read.
+   * Similar to android's GLConsumer::setReleaseFence()
+   */
+  virtual bool SetReleaseFence(const android::sp<android::Fence>& aReleaseFence);
+
+  /**
+   * Return a releaseFence's Fence and clear a reference to the Fence.
+   */
+  virtual android::sp<android::Fence> GetAndResetReleaseFence();
+protected:
+  android::sp<android::Fence> mReleaseFence;
+#endif
 };
 
 /**

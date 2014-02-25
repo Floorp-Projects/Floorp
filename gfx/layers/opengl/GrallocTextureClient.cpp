@@ -196,6 +196,16 @@ GrallocTextureClientOGL::UpdateSurface(gfxASurface* aSurface)
   return true;
 }
 
+void
+GrallocTextureClientOGL::SetReleaseFenceHandle(FenceHandle aReleaseFenceHandle)
+{
+  if (mBufferLocked) {
+    mBufferLocked->SetReleaseFenceHandle(aReleaseFenceHandle);
+  } else {
+    mReleaseFenceHandle = aReleaseFenceHandle;
+  }
+}
+
 bool
 GrallocTextureClientOGL::Lock(OpenMode aMode)
 {
@@ -207,6 +217,15 @@ GrallocTextureClientOGL::Lock(OpenMode aMode)
   if (mMappedBuffer) {
     return true;
   }
+
+#if MOZ_WIDGET_GONK && ANDROID_VERSION >= 18
+  if (mReleaseFenceHandle.IsValid()) {
+    android::sp<Fence> fence = mReleaseFenceHandle.mFence;
+    fence->waitForever("GrallocTextureClientOGL::Lock");
+    mReleaseFenceHandle = FenceHandle();
+  }
+#endif
+
   uint32_t usage = 0;
   if (aMode & OPEN_READ) {
     usage |= GRALLOC_USAGE_SW_READ_OFTEN;
