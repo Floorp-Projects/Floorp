@@ -15,6 +15,7 @@
 #include "gfx2DGlue.h"
 #include <algorithm>
 
+using namespace mozilla;
 using namespace mozilla::gfx;
 
 gfxImageSurface::gfxImageSurface()
