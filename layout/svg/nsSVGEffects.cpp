@@ -266,14 +266,6 @@ nsSVGFilterProperty::Invalidate()
   }
 }
 
-nsSVGFilterFrame *
-nsSVGFilterProperty::GetFilterFrame()
-{
-  // Eventually, callers will ask nsSVGFilterProperty for an nsStyleFilter
-  // chain, not a single nsSVGFilterFrame, and this function will go away.
-  return mReferences.Length() > 0 ? mReferences[0]->GetFilterFrame() : nullptr;
-}
-
 NS_IMPL_ISUPPORTS_INHERITED1(nsSVGFilterReference,
                              nsSVGIDRenderingObserver,
                              nsISVGFilterReference);

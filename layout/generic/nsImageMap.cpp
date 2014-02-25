@@ -266,9 +266,9 @@ class DefaultArea : public Area {
 public:
   DefaultArea(nsIContent* aArea);
 
-  virtual bool IsInside(nscoord x, nscoord y) const;
-  virtual void Draw(nsIFrame* aFrame, nsRenderingContext& aRC);
-  virtual void GetRect(nsIFrame* aFrame, nsRect& aRect);
+  virtual bool IsInside(nscoord x, nscoord y) const MOZ_OVERRIDE;
+  virtual void Draw(nsIFrame* aFrame, nsRenderingContext& aRC) MOZ_OVERRIDE;
+  virtual void GetRect(nsIFrame* aFrame, nsRect& aRect) MOZ_OVERRIDE;
 };
 
 DefaultArea::DefaultArea(nsIContent* aArea)
@@ -311,10 +311,10 @@ class RectArea : public Area {
 public:
   RectArea(nsIContent* aArea);
 
-  virtual void ParseCoords(const nsAString& aSpec);
-  virtual bool IsInside(nscoord x, nscoord y) const;
-  virtual void Draw(nsIFrame* aFrame, nsRenderingContext& aRC);
-  virtual void GetRect(nsIFrame* aFrame, nsRect& aRect);
+  virtual void ParseCoords(const nsAString& aSpec) MOZ_OVERRIDE;
+  virtual bool IsInside(nscoord x, nscoord y) const MOZ_OVERRIDE;
+  virtual void Draw(nsIFrame* aFrame, nsRenderingContext& aRC) MOZ_OVERRIDE;
+  virtual void GetRect(nsIFrame* aFrame, nsRect& aRect) MOZ_OVERRIDE;
 };
 
 RectArea::RectArea(nsIContent* aArea)
@@ -413,10 +413,10 @@ class PolyArea : public Area {
 public:
   PolyArea(nsIContent* aArea);
 
-  virtual void ParseCoords(const nsAString& aSpec);
-  virtual bool IsInside(nscoord x, nscoord y) const;
-  virtual void Draw(nsIFrame* aFrame, nsRenderingContext& aRC);
-  virtual void GetRect(nsIFrame* aFrame, nsRect& aRect);
+  virtual void ParseCoords(const nsAString& aSpec) MOZ_OVERRIDE;
+  virtual bool IsInside(nscoord x, nscoord y) const MOZ_OVERRIDE;
+  virtual void Draw(nsIFrame* aFrame, nsRenderingContext& aRC) MOZ_OVERRIDE;
+  virtual void GetRect(nsIFrame* aFrame, nsRect& aRect) MOZ_OVERRIDE;
 };
 
 PolyArea::PolyArea(nsIContent* aArea)
@@ -553,10 +553,10 @@ class CircleArea : public Area {
 public:
   CircleArea(nsIContent* aArea);
 
-  virtual void ParseCoords(const nsAString& aSpec);
-  virtual bool IsInside(nscoord x, nscoord y) const;
-  virtual void Draw(nsIFrame* aFrame, nsRenderingContext& aRC);
-  virtual void GetRect(nsIFrame* aFrame, nsRect& aRect);
+  virtual void ParseCoords(const nsAString& aSpec) MOZ_OVERRIDE;
+  virtual bool IsInside(nscoord x, nscoord y) const MOZ_OVERRIDE;
+  virtual void Draw(nsIFrame* aFrame, nsRenderingContext& aRC) MOZ_OVERRIDE;
+  virtual void GetRect(nsIFrame* aFrame, nsRect& aRect) MOZ_OVERRIDE;
 };
 
 CircleArea::CircleArea(nsIContent* aArea)

@@ -470,12 +470,12 @@ class MDefinition : public MNode
     // specialization algorithm).
     virtual bool isFloat32Commutative() const { return false; }
     virtual bool canProduceFloat32() const { return false; }
-    virtual bool canConsumeFloat32() const { return false; }
+    virtual bool canConsumeFloat32(MUse *use) const { return false; }
     virtual void trySpecializeFloat32(TempAllocator &alloc) {}
 #ifdef DEBUG
     // Used during the pass that checks that Float32 flow into valid MDefinitions
-    virtual bool isConsistentFloat32Use() const {
-        return type() == MIRType_Float32 || canConsumeFloat32();
+    virtual bool isConsistentFloat32Use(MUse *use) const {
+        return type() == MIRType_Float32 || canConsumeFloat32(use);
     }
 #endif
 
@@ -1329,7 +1329,7 @@ class MTest
         return operandMightEmulateUndefined_;
     }
 #ifdef DEBUG
-    bool isConsistentFloat32Use() const {
+    bool isConsistentFloat32Use(MUse *use) const {
         return true;
     }
 #endif
@@ -2060,7 +2060,7 @@ class MAssertFloat32 : public MUnaryInstruction
         return new(alloc) MAssertFloat32(value, mustBeFloat32);
     }
 
-    bool canConsumeFloat32() const { return true; }
+    bool canConsumeFloat32(MUse *use) const { return true; }
 
     bool mustBeFloat32() const { return mustBeFloat32_; }
 };
@@ -2336,7 +2336,8 @@ class MCompare
     bool isOperandTruncated(size_t index) const;
 
 # ifdef DEBUG
-    bool isConsistentFloat32Use() const {
+    bool isConsistentFloat32Use(MUse *use) const {
+        // Both sides of the compare can be Float32
         return compareType_ == Compare_Float32;
     }
 # endif
@@ -2902,7 +2903,7 @@ class MToDouble
     bool isOperandTruncated(size_t index) const;
 
 #ifdef DEBUG
-    bool isConsistentFloat32Use() const { return true; }
+    bool isConsistentFloat32Use(MUse *use) const { return true; }
 #endif
 };
 
@@ -2961,7 +2962,7 @@ class MToFloat32
 
     void computeRange(TempAllocator &alloc);
 
-    bool canConsumeFloat32() const { return true; }
+    bool canConsumeFloat32(MUse *use) const { return true; }
     bool canProduceFloat32() const { return true; }
 };
 
@@ -3077,7 +3078,7 @@ class MToInt32
     void computeRange(TempAllocator &alloc);
 
 #ifdef DEBUG
-    bool isConsistentFloat32Use() const { return true; }
+    bool isConsistentFloat32Use(MUse *use) const { return true; }
 #endif
 };
 
@@ -3113,7 +3114,7 @@ class MTruncateToInt32 : public MUnaryInstruction
     void computeRange(TempAllocator &alloc);
     bool isOperandTruncated(size_t index) const;
 # ifdef DEBUG
-    bool isConsistentFloat32Use() const {
+    bool isConsistentFloat32Use(MUse *use) const {
         return true;
     }
 #endif
@@ -4574,7 +4575,7 @@ class MPhi MOZ_FINAL : public MDefinition, public InlineForwardListNode<MPhi>
         canProduceFloat32_ = can;
     }
 
-    bool canConsumeFloat32() const {
+    bool canConsumeFloat32(MUse *use) const {
         return canConsumeFloat32_;
     }
 
@@ -5666,7 +5667,7 @@ class MNot
     void trySpecializeFloat32(TempAllocator &alloc);
     bool isFloat32Commutative() const { return true; }
 #ifdef DEBUG
-    bool isConsistentFloat32Use() const {
+    bool isConsistentFloat32Use(MUse *use) const {
         return true;
     }
 #endif
@@ -6358,7 +6359,9 @@ class MStoreTypedArrayElement
     }
     bool isOperandTruncated(size_t index) const;
 
-    bool canConsumeFloat32() const { return arrayType_ == ScalarTypeDescr::TYPE_FLOAT32; }
+    bool canConsumeFloat32(MUse *use) const {
+        return use->index() == 2 && arrayType_ == ScalarTypeDescr::TYPE_FLOAT32;
+    }
 };
 
 class MStoreTypedArrayElementHole
@@ -6424,7 +6427,9 @@ class MStoreTypedArrayElementHole
     }
     bool isOperandTruncated(size_t index) const;
 
-    bool canConsumeFloat32() const { return arrayType_ == ScalarTypeDescr::TYPE_FLOAT32; }
+    bool canConsumeFloat32(MUse *use) const {
+        return use->index() == 3 && arrayType_ == ScalarTypeDescr::TYPE_FLOAT32;
+    }
 };
 
 // Store a value infallibly to a statically known typed array.
@@ -6469,7 +6474,9 @@ class MStoreTypedArrayElementStatic :
     }
     bool isOperandTruncated(size_t index) const;
 
-    bool canConsumeFloat32() const { return typedArray_->type() == ScalarTypeDescr::TYPE_FLOAT32; }
+    bool canConsumeFloat32(MUse *use) const {
+        return use->index() == 1 && typedArray_->type() == ScalarTypeDescr::TYPE_FLOAT32;
+    }
 };
 
 // Compute an "effective address", i.e., a compound computation of the form:
@@ -7857,7 +7864,7 @@ class MSetElementCache
         return this;
     }
 
-    bool canConsumeFloat32() const { return true; }
+    bool canConsumeFloat32(MUse *use) const { return use->index() == 2; }
 };
 
 class MCallGetProperty
@@ -8243,7 +8250,7 @@ class MFloor
     }
     void trySpecializeFloat32(TempAllocator &alloc);
 #ifdef DEBUG
-    bool isConsistentFloat32Use() const {
+    bool isConsistentFloat32Use(MUse *use) const {
         return true;
     }
 #endif
@@ -8888,10 +8895,10 @@ class MPostWriteBarrier
         return getOperand(1);
     }
 #ifdef DEBUG
-    bool isConsistentFloat32Use() const {
+    bool isConsistentFloat32Use(MUse *use) const {
         // During lowering, values that neither have object nor value MIR type
         // are ignored, thus Float32 can show up at this point without any issue.
-        return true;
+        return use->index() == 1;
     }
 #endif
 };

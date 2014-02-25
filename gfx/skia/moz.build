@@ -744,7 +744,6 @@ if CONFIG['MOZ_WIDGET_QT']:
         'trunk/src/ports/SkTime_Unix.cpp',
         'trunk/src/ports/SkTLS_pthread.cpp',
         'trunk/src/utils/SkThreadUtils_pthread.cpp',
-        'trunk/src/utils/SkThreadUtils_pthread_linux.cpp',
     ]
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     SOURCES += [

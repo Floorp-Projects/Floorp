@@ -448,7 +448,7 @@ class MOZ_STACK_CLASS nsPresShellEventCB : public nsDispatchingCallback
 public:
   nsPresShellEventCB(PresShell* aPresShell) : mPresShell(aPresShell) {}
 
-  virtual void HandleEvent(nsEventChainPostVisitor& aVisitor)
+  virtual void HandleEvent(nsEventChainPostVisitor& aVisitor) MOZ_OVERRIDE
   {
     if (aVisitor.mPresContext && aVisitor.mEvent->eventStructType != NS_EVENT) {
       if (aVisitor.mEvent->message == NS_MOUSE_BUTTON_DOWN ||
@@ -501,7 +501,7 @@ public:
 
   // Fires the "before-first-paint" event so that interested parties (right now, the
   // mobile browser) are aware of it.
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() MOZ_OVERRIDE
   {
     nsCOMPtr<nsIObserverService> observerService =
       mozilla::services::GetObserverService();

@@ -541,7 +541,7 @@ jit::BitRshPar(ForkJoinContext *cx, HandleValue lhs, HandleValue rhs, int32_t *o
 
 bool
 jit::UrshValuesPar(ForkJoinContext *cx, HandleValue lhs, HandleValue rhs,
-                   Value *out)
+                   MutableHandleValue out)
 {
     uint32_t left;
     int32_t right;
@@ -550,7 +550,7 @@ jit::UrshValuesPar(ForkJoinContext *cx, HandleValue lhs, HandleValue rhs,
     if (!NonObjectToUint32(cx, lhs, &left) || !NonObjectToInt32(cx, rhs, &right))
         return false;
     left >>= right & 31;
-    out->setNumber(uint32_t(left));
+    out.setNumber(uint32_t(left));
     return true;
 }
 
