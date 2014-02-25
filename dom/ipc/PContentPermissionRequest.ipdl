@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PBrowser;
+include PContentPermission;
 
 namespace mozilla {
 namespace dom {
@@ -15,7 +16,7 @@ parent:
   prompt();
 
 child:
-  __delete__(bool allow);
+  __delete__(bool allow, PermissionChoice[] choices);
 };
 
 
