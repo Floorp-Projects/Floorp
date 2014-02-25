@@ -81,6 +81,9 @@ VideoData* MediaDecoderReader::DecodeToFirstVideoData()
     bool keyframeSkip = false;
     eof = !DecodeVideoFrame(keyframeSkip, 0);
   }
+  if (eof) {
+    VideoQueue().Finish();
+  }
   VideoData* d = nullptr;
   return (d = VideoQueue().PeekFront()) ? d : nullptr;
 }
@@ -96,6 +99,9 @@ AudioData* MediaDecoderReader::DecodeToFirstAudioData()
       }
     }
     eof = !DecodeAudioData();
+  }
+  if (eof) {
+    AudioQueue().Finish();
   }
   AudioData* d = nullptr;
   return (d = AudioQueue().PeekFront()) ? d : nullptr;
@@ -155,11 +161,12 @@ nsresult MediaDecoderReader::DecodeToTarget(int64_t aTarget)
           }
         }
       }
-      if (VideoQueue().GetSize() == 0) {
+      if (eof) {
         // Hit end of file, we want to display the last frame of the video.
         if (video) {
           VideoQueue().PushFront(video.forget());
         }
+        VideoQueue().Finish();
         break;
       }
       video = VideoQueue().PeekFront();
@@ -198,8 +205,10 @@ nsresult MediaDecoderReader::DecodeToTarget(int64_t aTarget)
         }
       }
       const AudioData* audio = AudioQueue().PeekFront();
-      if (!audio)
+      if (!audio || eof) {
+        AudioQueue().Finish();
         break;
+      }
       CheckedInt64 startFrame = UsecsToFrames(audio->mTime, mInfo.mAudio.mRate);
       CheckedInt64 targetFrame = UsecsToFrames(aTarget, mInfo.mAudio.mRate);
       if (!startFrame.isValid() || !targetFrame.isValid()) {
