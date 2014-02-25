@@ -194,10 +194,10 @@ public:
                    nsIAtom* aAttribute,
                    int32_t  aModType) MOZ_OVERRIDE;
 
-  virtual uint8_t GetVerticalAlign() const;
+  virtual uint8_t GetVerticalAlign() const MOZ_OVERRIDE;
   virtual nsresult ProcessBorders(nsTableFrame* aFrame,
                                   nsDisplayListBuilder* aBuilder,
-                                  const nsDisplayListSet& aLists);
+                                  const nsDisplayListSet& aLists) MOZ_OVERRIDE;
 
   virtual int32_t GetRowSpan() MOZ_OVERRIDE;
   virtual int32_t GetColSpan() MOZ_OVERRIDE;
@@ -246,7 +246,7 @@ public:
       ~(nsIFrame::eMathML | nsIFrame::eExcludesIgnorableWhitespace));
   }
 
-  virtual const nsStyleText* StyleTextForLineLayout();
+  virtual const nsStyleText* StyleTextForLineLayout() MOZ_OVERRIDE;
   virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext) MOZ_OVERRIDE;
 
 protected:

@@ -17,6 +17,7 @@ class PathCG;
 class PathBuilderCG : public PathBuilder
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(PathBuilderCG)
   // absorbs a reference of aPath
   PathBuilderCG(CGMutablePathRef aPath, FillRule aFillRule)
     : mFillRule(aFillRule)
@@ -61,6 +62,7 @@ private:
 class PathCG : public Path
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(PathCG)
   PathCG(CGMutablePathRef aPath, FillRule aFillRule)
     : mPath(aPath)
     , mFillRule(aFillRule)

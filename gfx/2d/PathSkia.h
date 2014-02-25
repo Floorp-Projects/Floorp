@@ -17,6 +17,7 @@ class PathSkia;
 class PathBuilderSkia : public PathBuilder
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(PathBuilderSkia)
   PathBuilderSkia(const Matrix& aTransform, const SkPath& aPath, FillRule aFillRule);
   PathBuilderSkia(FillRule aFillRule);
 
@@ -46,6 +47,7 @@ private:
 class PathSkia : public Path
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(PathSkia)
   PathSkia(SkPath& aPath, FillRule aFillRule)
     : mFillRule(aFillRule)
   {

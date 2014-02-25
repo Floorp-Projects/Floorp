@@ -38,6 +38,7 @@ class FilterNodeSoftware : public FilterNode,
                            public FilterInvalidationListener
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeSoftware)
   virtual ~FilterNodeSoftware();
 
   // Factory method, intended to be called from DrawTarget*::CreateFilter.
@@ -217,6 +218,7 @@ protected:
 class FilterNodeTransformSoftware : public FilterNodeSoftware
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeTransformSoftware)
   FilterNodeTransformSoftware();
   virtual const char* GetName() MOZ_OVERRIDE { return "Transform"; }
   using FilterNodeSoftware::SetAttribute;
@@ -238,6 +240,7 @@ private:
 class FilterNodeBlendSoftware : public FilterNodeSoftware
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeBlendSoftware)
   FilterNodeBlendSoftware();
   virtual const char* GetName() MOZ_OVERRIDE { return "Blend"; }
   using FilterNodeSoftware::SetAttribute;
@@ -256,6 +259,7 @@ private:
 class FilterNodeMorphologySoftware : public FilterNodeSoftware
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeMorphologySoftware)
   FilterNodeMorphologySoftware();
   virtual const char* GetName() MOZ_OVERRIDE { return "Morphology"; }
   using FilterNodeSoftware::SetAttribute;
@@ -276,6 +280,7 @@ private:
 class FilterNodeColorMatrixSoftware : public FilterNodeSoftware
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeColorMatrixSoftware)
   virtual const char* GetName() MOZ_OVERRIDE { return "ColorMatrix"; }
   using FilterNodeSoftware::SetAttribute;
   virtual void SetAttribute(uint32_t aIndex, const Matrix5x4 &aMatrix) MOZ_OVERRIDE;
@@ -295,6 +300,7 @@ private:
 class FilterNodeFloodSoftware : public FilterNodeSoftware
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeFloodSoftware)
   virtual const char* GetName() MOZ_OVERRIDE { return "Flood"; }
   using FilterNodeSoftware::SetAttribute;
   virtual void SetAttribute(uint32_t aIndex, const Color &aColor) MOZ_OVERRIDE;
@@ -311,6 +317,7 @@ private:
 class FilterNodeTileSoftware : public FilterNodeSoftware
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeTileSoftware)
   virtual const char* GetName() MOZ_OVERRIDE { return "Tile"; }
   using FilterNodeSoftware::SetAttribute;
   virtual void SetAttribute(uint32_t aIndex, const IntRect &aSourceRect) MOZ_OVERRIDE;
@@ -331,6 +338,7 @@ private:
 class FilterNodeComponentTransferSoftware : public FilterNodeSoftware
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeComponentTransferSoftware)
   FilterNodeComponentTransferSoftware();
 
   using FilterNodeSoftware::SetAttribute;
@@ -354,6 +362,7 @@ protected:
 class FilterNodeTableTransferSoftware : public FilterNodeComponentTransferSoftware
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeTableTransferSoftware)
   virtual const char* GetName() MOZ_OVERRIDE { return "TableTransfer"; }
   using FilterNodeComponentTransferSoftware::SetAttribute;
   virtual void SetAttribute(uint32_t aIndex, const Float* aFloat, uint32_t aSize) MOZ_OVERRIDE;
@@ -373,6 +382,7 @@ private:
 class FilterNodeDiscreteTransferSoftware : public FilterNodeComponentTransferSoftware
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeDiscreteTransferSoftware)
   virtual const char* GetName() MOZ_OVERRIDE { return "DiscreteTransfer"; }
   using FilterNodeComponentTransferSoftware::SetAttribute;
   virtual void SetAttribute(uint32_t aIndex, const Float* aFloat, uint32_t aSize) MOZ_OVERRIDE;
@@ -392,6 +402,7 @@ private:
 class FilterNodeLinearTransferSoftware : public FilterNodeComponentTransferSoftware
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeLinearTransformSoftware)
   FilterNodeLinearTransferSoftware();
   virtual const char* GetName() MOZ_OVERRIDE { return "LinearTransfer"; }
   using FilterNodeComponentTransferSoftware::SetAttribute;
@@ -416,6 +427,7 @@ private:
 class FilterNodeGammaTransferSoftware : public FilterNodeComponentTransferSoftware
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeGammaTransferSoftware)
   FilterNodeGammaTransferSoftware();
   virtual const char* GetName() MOZ_OVERRIDE { return "GammaTransfer"; }
   using FilterNodeComponentTransferSoftware::SetAttribute;
@@ -444,6 +456,7 @@ private:
 class FilterNodeConvolveMatrixSoftware : public FilterNodeSoftware
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeConvolveMatrixSoftware)
   FilterNodeConvolveMatrixSoftware();
   virtual const char* GetName() MOZ_OVERRIDE { return "ConvolveMatrix"; }
   using FilterNodeSoftware::SetAttribute;
@@ -485,6 +498,7 @@ private:
 class FilterNodeDisplacementMapSoftware : public FilterNodeSoftware
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeDisplacementMapSoftware)
   FilterNodeDisplacementMapSoftware();
   virtual const char* GetName() MOZ_OVERRIDE { return "DisplacementMap"; }
   using FilterNodeSoftware::SetAttribute;
@@ -508,6 +522,7 @@ private:
 class FilterNodeTurbulenceSoftware : public FilterNodeSoftware
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeTurbulenceSoftware)
   FilterNodeTurbulenceSoftware();
   virtual const char* GetName() MOZ_OVERRIDE { return "Turbulence"; }
   using FilterNodeSoftware::SetAttribute;
@@ -533,6 +548,7 @@ private:
 class FilterNodeArithmeticCombineSoftware : public FilterNodeSoftware
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeArithmeticCombineSoftware)
   FilterNodeArithmeticCombineSoftware();
   virtual const char* GetName() MOZ_OVERRIDE { return "ArithmeticCombine"; }
   using FilterNodeSoftware::SetAttribute;
@@ -554,6 +570,7 @@ private:
 class FilterNodeCompositeSoftware : public FilterNodeSoftware
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeCompositeSoftware)
   FilterNodeCompositeSoftware();
   virtual const char* GetName() MOZ_OVERRIDE { return "Composite"; }
   using FilterNodeSoftware::SetAttribute;
@@ -573,6 +590,8 @@ private:
 // FilterNodeDirectionalBlurSoftware.
 class FilterNodeBlurXYSoftware : public FilterNodeSoftware
 {
+public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeBlurXYSoftware)
 protected:
   virtual TemporaryRef<DataSourceSurface> Render(const IntRect& aRect) MOZ_OVERRIDE;
   virtual IntRect GetOutputRectInRect(const IntRect& aRect) MOZ_OVERRIDE;
@@ -587,6 +606,7 @@ protected:
 class FilterNodeGaussianBlurSoftware : public FilterNodeBlurXYSoftware
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeGaussianBlurSoftware)
   FilterNodeGaussianBlurSoftware();
   virtual const char* GetName() MOZ_OVERRIDE { return "GaussianBlur"; }
   using FilterNodeSoftware::SetAttribute;
@@ -602,6 +622,7 @@ private:
 class FilterNodeDirectionalBlurSoftware : public FilterNodeBlurXYSoftware
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeDirectionalBlurSoftware)
   FilterNodeDirectionalBlurSoftware();
   virtual const char* GetName() MOZ_OVERRIDE { return "DirectionalBlur"; }
   using FilterNodeSoftware::SetAttribute;
@@ -619,6 +640,7 @@ private:
 class FilterNodeCropSoftware : public FilterNodeSoftware
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeCropSoftware)
   virtual const char* GetName() MOZ_OVERRIDE { return "Crop"; }
   using FilterNodeSoftware::SetAttribute;
   virtual void SetAttribute(uint32_t aIndex, const Rect &aSourceRect) MOZ_OVERRIDE;
@@ -636,6 +658,7 @@ private:
 class FilterNodePremultiplySoftware : public FilterNodeSoftware
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodePremultiplySoftware)
   virtual const char* GetName() MOZ_OVERRIDE { return "Premultiply"; }
 protected:
   virtual TemporaryRef<DataSourceSurface> Render(const IntRect& aRect) MOZ_OVERRIDE;
@@ -647,6 +670,7 @@ protected:
 class FilterNodeUnpremultiplySoftware : public FilterNodeSoftware
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeUnpremultiplySoftware)
   virtual const char* GetName() MOZ_OVERRIDE { return "Unpremultiply"; }
 protected:
   virtual TemporaryRef<DataSourceSurface> Render(const IntRect& aRect) MOZ_OVERRIDE;
@@ -659,6 +683,7 @@ template<typename LightType, typename LightingType>
 class FilterNodeLightingSoftware : public FilterNodeSoftware
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeLightingSoftware)
   FilterNodeLightingSoftware();
   virtual const char* GetName() MOZ_OVERRIDE { return "Lighting"; }
   using FilterNodeSoftware::SetAttribute;

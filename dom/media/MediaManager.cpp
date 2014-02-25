@@ -1770,17 +1770,33 @@ WindowsHashToArrayFunc (const uint64_t& aId,
                         StreamListeners* aData,
                         void *userArg)
 {
-    nsISupportsArray *array =
-        static_cast<nsISupportsArray *>(userArg);
-    nsPIDOMWindow *window = static_cast<nsPIDOMWindow*>
-      (nsGlobalWindow::GetInnerWindowWithId(aId));
-    (void) aData;
+  nsISupportsArray *array =
+    static_cast<nsISupportsArray *>(userArg);
+  nsPIDOMWindow *window = static_cast<nsPIDOMWindow*>
+    (nsGlobalWindow::GetInnerWindowWithId(aId));
 
-    MOZ_ASSERT(window);
-    if (window) {
-      array->AppendElement(window);
+  MOZ_ASSERT(window);
+  if (window) {
+    // mActiveWindows contains both windows that have requested device
+    // access and windows that are currently capturing media. We want
+    // to return only the latter. See bug 975177.
+    bool capturing = false;
+    if (aData) {
+      uint32_t length = aData->Length();
+      for (uint32_t i = 0; i < length; ++i) {
+        nsRefPtr<GetUserMediaCallbackMediaStreamListener> listener =
+          aData->ElementAt(i);
+        if (listener->CapturingVideo() || listener->CapturingAudio()) {
+          capturing = true;
+          break;
+        }
+      }
     }
-    return PL_DHASH_NEXT;
+
+    if (capturing)
+      array->AppendElement(window);
+  }
+  return PL_DHASH_NEXT;
 }
 
 

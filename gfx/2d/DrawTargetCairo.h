@@ -20,6 +20,7 @@ class SourceSurfaceCairo;
 class GradientStopsCairo : public GradientStops
 {
   public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(GradientStopsCairo)
     GradientStopsCairo(GradientStop* aStops, uint32_t aNumStops,
                        ExtendMode aExtendMode)
      : mExtendMode(aExtendMode)
@@ -51,6 +52,7 @@ class GradientStopsCairo : public GradientStops
 class DrawTargetCairo : public DrawTarget
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DrawTargetCairo)
   friend class BorrowedCairoContext;
 
   DrawTargetCairo();
