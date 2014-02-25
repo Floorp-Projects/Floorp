@@ -495,7 +495,6 @@ branding.res = TOPSRCDIR + '/' + CONFIG['MOZ_BRANDING_DIRECTORY'] + '/res'
 
 main = add_android_eclipse_project('Fennec', OBJDIR + '/AndroidManifest.xml')
 main.package_name = 'org.mozilla.gecko'
-main.res = SRCDIR + '/resources'
 
 main.recursive_make_targets += ['.aapt.deps'] # Captures dependencies on Android manifest and all resources.
 main.recursive_make_targets += [OBJDIR + '/generated/' + f for f in mgjar.generated_sources]
@@ -506,6 +505,7 @@ main.referenced_projects += [generated.name, branding.name]
 main.extra_jars += [CONFIG['ANDROID_COMPAT_LIB']]
 main.assets = TOPOBJDIR + '/dist/fennec/assets'
 main.libs = TOPOBJDIR + '/dist/fennec/lib'
+main.res = None
 
 cpe = main.add_classpathentry('src', SRCDIR,
     dstdir='src/org/mozilla/gecko',
@@ -518,3 +518,22 @@ main.add_classpathentry('generated', OBJDIR + '/generated',
 main.add_classpathentry('thirdparty', TOPSRCDIR + '/mobile/android/thirdparty',
     dstdir='thirdparty',
     ignore_warnings=True)
+
+resources = add_android_eclipse_library_project('FennecResources')
+resources.package_name = 'org.mozilla.fennec.resources'
+resources.res = SRCDIR + '/resources'
+resources.included_projects += ['../' + generated.name, '../' + branding.name]
+resources.referenced_projects += [generated.name, branding.name]
+
+main.included_projects += ['../' + resources.name]
+main.referenced_projects += [resources.name]
+
+if CONFIG['MOZ_CRASHREPORTER']:
+    crashreporter = add_android_eclipse_library_project('FennecCrashReporterResources')
+    crashreporter.package_name = 'org.mozilla.fennec.crashreporterresources'
+    crashreporter.res = SRCDIR + '/crashreporter/res'
+    crashreporter.included_projects += ['../' + resources.name]
+    crashreporter.referenced_projects += [resources.name]
+
+    main.included_projects += ['../' + crashreporter.name]
+    main.referenced_projects += [crashreporter.name]
