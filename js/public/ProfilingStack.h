@@ -78,6 +78,10 @@ class ProfileEntry
     // a pc into a script's code. To signify a nullptr pc, use a -1 index. This
     // is checked against in pc() and setPC() to set/get the right pc.
     static const int32_t NullPCIndex = -1;
+
+    // This bit is added to the stack address to indicate that copying the
+    // frame label is not necessary when taking a sample of the pseudostack.
+    static const uintptr_t NoCopyBit = 1;
 };
 
 JS_FRIEND_API(void)

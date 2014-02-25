@@ -23,6 +23,7 @@ struct FlatPathOp
 class FlattenedPath : public PathSink
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FlattenedPath)
   FlattenedPath() : mCachedLength(0)
                   , mCalculatedLength(false)
   {

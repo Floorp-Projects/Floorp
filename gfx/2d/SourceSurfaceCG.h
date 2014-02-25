@@ -26,6 +26,7 @@ class DrawTargetCG;
 class SourceSurfaceCG : public SourceSurface
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SourceSurfaceCG)
   SourceSurfaceCG() {}
   SourceSurfaceCG(CGImageRef aImage) : mImage(aImage) {}
   ~SourceSurfaceCG();
@@ -54,6 +55,7 @@ private:
 class DataSourceSurfaceCG : public DataSourceSurface
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DataSourceSurfaceCG)
   DataSourceSurfaceCG() {}
   DataSourceSurfaceCG(CGImageRef aImage);
   ~DataSourceSurfaceCG();
@@ -88,6 +90,7 @@ private:
 class SourceSurfaceCGContext : public DataSourceSurface
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DataSourceSurfaceCGContext)
   virtual void DrawTargetWillChange() = 0;
   virtual CGImageRef GetImage() = 0;
 };
@@ -95,6 +98,7 @@ public:
 class SourceSurfaceCGBitmapContext : public SourceSurfaceCGContext
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DataSourceSurfaceCGBitmapContext)
   SourceSurfaceCGBitmapContext(DrawTargetCG *);
   ~SourceSurfaceCGBitmapContext();
 
@@ -150,6 +154,7 @@ private:
 class SourceSurfaceCGIOSurfaceContext : public SourceSurfaceCGContext
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DataSourceSurfaceCGIOSurfaceContext)
   SourceSurfaceCGIOSurfaceContext(DrawTargetCG *);
   ~SourceSurfaceCGIOSurfaceContext();
 

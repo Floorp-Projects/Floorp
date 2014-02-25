@@ -17,6 +17,7 @@ class DualPattern;
 class SourceSurfaceDual : public SourceSurface
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SourceSurfaceDual)
   SourceSurfaceDual(DrawTarget *aDTA, DrawTarget *aDTB)
     : mA(aDTA->Snapshot())
     , mB(aDTB->Snapshot())

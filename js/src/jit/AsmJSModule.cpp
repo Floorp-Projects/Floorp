@@ -833,9 +833,40 @@ AsmJSModule::deserialize(ExclusiveContext *cx, const uint8_t *cursor)
     return cursor;
 }
 
-bool
-AsmJSModule::clone(ExclusiveContext *cx, ScopedJSDeletePtr<AsmJSModule> *moduleOut) const
+// When a module is cloned, we memcpy its executable code. If, right before or
+// during the clone, another thread calls AsmJSModule::protectCode() then the
+// executable code will become inaccessible. In theory, we could take away only
+// PROT_EXEC, but this seems to break emulators.
+class AutoUnprotectCodeForClone
 {
+    JSRuntime *rt_;
+    JSRuntime::AutoLockForOperationCallback lock_;
+    const AsmJSModule &module_;
+    const bool protectedBefore_;
+
+  public:
+    AutoUnprotectCodeForClone(JSContext *cx, const AsmJSModule &module)
+      : rt_(cx->runtime()),
+        lock_(rt_),
+        module_(module),
+        protectedBefore_(module_.codeIsProtected(rt_))
+    {
+        if (protectedBefore_)
+            module_.unprotectCode(rt_);
+    }
+
+    ~AutoUnprotectCodeForClone()
+    {
+        if (protectedBefore_)
+            module_.protectCode(rt_);
+    }
+};
+
+bool
+AsmJSModule::clone(JSContext *cx, ScopedJSDeletePtr<AsmJSModule> *moduleOut) const
+{
+    AutoUnprotectCodeForClone cloneGuard(cx, *this);
+
     *moduleOut = cx->new_<AsmJSModule>(scriptSource_, charsBegin_);
     if (!*moduleOut)
         return false;
@@ -869,6 +900,48 @@ AsmJSModule::clone(ExclusiveContext *cx, ScopedJSDeletePtr<AsmJSModule> *moduleO
 
     out.restoreToInitialState(maybeHeap_, cx);
     return true;
+}
+
+void
+AsmJSModule::protectCode(JSRuntime *rt) const
+{
+    JS_ASSERT(rt->currentThreadOwnsOperationCallbackLock());
+
+    // Technically, we should be able to only take away the execute permissions,
+    // however this seems to break our emulators which don't always check
+    // execute permissions while executing code.
+#if defined(XP_WIN)
+    DWORD oldProtect;
+    if (!VirtualProtect(codeBase(), functionBytes(), PAGE_NOACCESS, &oldProtect))
+        MOZ_CRASH();
+#else  // assume Unix
+    if (mprotect(codeBase(), functionBytes(), PROT_NONE))
+        MOZ_CRASH();
+#endif
+
+    codeIsProtected_ = true;
+}
+
+void
+AsmJSModule::unprotectCode(JSRuntime *rt) const
+{
+#if defined(XP_WIN)
+    DWORD oldProtect;
+    if (!VirtualProtect(codeBase(), functionBytes(), PAGE_EXECUTE_READWRITE, &oldProtect))
+        MOZ_CRASH();
+#else  // assume Unix
+    if (mprotect(codeBase(), functionBytes(), PROT_READ | PROT_WRITE | PROT_EXEC))
+        MOZ_CRASH();
+#endif
+
+    codeIsProtected_ = false;
+}
+
+bool
+AsmJSModule::codeIsProtected(JSRuntime *rt) const
+{
+    JS_ASSERT(rt->currentThreadOwnsOperationCallbackLock());
+    return codeIsProtected_;
 }
 
 static bool

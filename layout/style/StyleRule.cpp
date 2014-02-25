@@ -970,19 +970,19 @@ public:
   DOMCSSDeclarationImpl(css::StyleRule *aRule);
   virtual ~DOMCSSDeclarationImpl(void);
 
-  NS_IMETHOD GetParentRule(nsIDOMCSSRule **aParent);
+  NS_IMETHOD GetParentRule(nsIDOMCSSRule **aParent) MOZ_OVERRIDE;
   void DropReference(void);
-  virtual css::Declaration* GetCSSDeclaration(bool aAllocate);
-  virtual nsresult SetCSSDeclaration(css::Declaration* aDecl);
-  virtual void GetCSSParsingEnvironment(CSSParsingEnvironment& aCSSParseEnv);
-  virtual nsIDocument* DocToUpdate();
+  virtual css::Declaration* GetCSSDeclaration(bool aAllocate) MOZ_OVERRIDE;
+  virtual nsresult SetCSSDeclaration(css::Declaration* aDecl) MOZ_OVERRIDE;
+  virtual void GetCSSParsingEnvironment(CSSParsingEnvironment& aCSSParseEnv) MOZ_OVERRIDE;
+  virtual nsIDocument* DocToUpdate() MOZ_OVERRIDE;
 
   // Override |AddRef| and |Release| for being a member of
   // |DOMCSSStyleRule|.  Also, we need to forward QI for cycle
   // collection things to DOMCSSStyleRule.
   NS_DECL_ISUPPORTS_INHERITED
 
-  virtual nsINode *GetParentObject()
+  virtual nsINode *GetParentObject() MOZ_OVERRIDE
   {
     return mRule ? mRule->GetDocument() : nullptr;
   }

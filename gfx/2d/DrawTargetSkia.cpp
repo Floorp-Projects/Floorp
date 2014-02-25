@@ -36,6 +36,7 @@ namespace gfx {
 class GradientStopsSkia : public GradientStops
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(GradientStopsSkia)
   GradientStopsSkia(const std::vector<GradientStop>& aStops, uint32_t aNumStops, ExtendMode aExtendMode)
     : mCount(aNumStops)
     , mExtendMode(aExtendMode)
