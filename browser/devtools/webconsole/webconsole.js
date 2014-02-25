@@ -537,12 +537,12 @@ WebConsoleFrame.prototype = {
     }
 
     let saveBodies = doc.getElementById("saveBodies");
-    saveBodies.addEventListener("click", reverseSaveBodiesPref);
+    saveBodies.addEventListener("command", reverseSaveBodiesPref);
     saveBodies.disabled = !this.getFilterState("networkinfo") &&
                           !this.getFilterState("network");
 
     let saveBodiesContextMenu = doc.getElementById("saveBodiesContextMenu");
-    saveBodiesContextMenu.addEventListener("click", reverseSaveBodiesPref);
+    saveBodiesContextMenu.addEventListener("command", reverseSaveBodiesPref);
     saveBodiesContextMenu.disabled = !this.getFilterState("networkinfo") &&
                                      !this.getFilterState("network");
 
