@@ -1688,7 +1688,15 @@ CustomizeMode.prototype = {
     let dragY = aEvent.clientY - this._dragOffset.y;
 
     // Ensure this is within the container
-    let bounds = expectedParent.getBoundingClientRect();
+    let boundsContainer = expectedParent;
+    // NB: because the panel UI itself is inside a scrolling container, we need
+    // to use the parent bounds (otherwise, if the panel UI is scrolled down,
+    // the numbers we get are in window coordinates which leads to various kinds
+    // of weirdness)
+    if (boundsContainer == this.panelUIContents) {
+      boundsContainer = boundsContainer.parentNode;
+    }
+    let bounds = boundsContainer.getBoundingClientRect();
     dragX = Math.min(bounds.right, Math.max(dragX, bounds.left));
     dragY = Math.min(bounds.bottom, Math.max(dragY, bounds.top));
 
@@ -1700,6 +1708,16 @@ CustomizeMode.prototype = {
       }
     } else {
       let positionManager = DragPositionManager.getManagerForArea(aAreaElement);
+      // Make it relative to the container:
+      dragX -= bounds.left;
+      // NB: but if we're in the panel UI, we need to use the actual panel
+      // contents instead of the scrolling container to determine our origin
+      // offset against:
+      if (expectedParent == this.panelUIContents) {
+        dragY -= this.panelUIContents.getBoundingClientRect().top;
+      } else {
+        dragY -= bounds.top;
+      }
       // Find the closest node:
       targetNode = positionManager.find(aAreaElement, dragX, dragY, aDraggedItemId);
     }
