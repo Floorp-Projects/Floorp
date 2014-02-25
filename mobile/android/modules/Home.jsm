@@ -210,7 +210,10 @@ let HomePanels = (function () {
       throw "Home.panels: Can't create a home panel without an id and title!";
     }
 
-    if (!_valueExists(Layout, panel.layout)) {
+    if (!panel.layout) {
+      // Use FRAME layout by default
+      panel.layout = Layout.FRAME;
+    } else if (!_valueExists(Layout, panel.layout)) {
       throw "Home.panels: Invalid layout for panel: panel.id = " + panel.id + ", panel.layout =" + panel.layout;
     }
 
