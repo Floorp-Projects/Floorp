@@ -19,6 +19,6 @@ dnl More recent versions of autoconf are essentially doing this.
 define([ac_cv_func_], [ac_cv_func2_])dnl
 define([_AC_CHECK_FUNC],defn([AC_CHECK_FUNC]))dnl
 define([AC_CHECK_FUNC], [dnl
-patsubst(_AC_CHECK_FUNC($@), [#include.*], [#define $1 innocuous_$1
+patsubst(_AC_CHECK_FUNC($@), [#include.*$], [#define $1 innocuous_$1
 \&
 #undef $1])])dnl
