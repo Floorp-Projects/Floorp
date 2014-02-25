@@ -412,21 +412,59 @@ PeerConnectionMedia::SetUsingBundle_m(int level, bool decision)
   return false;
 }
 
+static void
+UpdateFilterFromRemoteDescription_s(
+  RefPtr<mozilla::MediaPipeline> receive,
+  RefPtr<mozilla::MediaPipeline> transmit,
+  nsAutoPtr<mozilla::MediaPipelineFilter> filter) {
+
+  // Update filter, and make a copy of the final version.
+  mozilla::MediaPipelineFilter *finalFilter(
+    receive->UpdateFilterFromRemoteDescription_s(filter));
+
+  if (finalFilter) {
+    filter = new mozilla::MediaPipelineFilter(*finalFilter);
+  }
+
+  // Set same filter on transmit pipeline too.
+  transmit->UpdateFilterFromRemoteDescription_s(filter);
+}
+
 bool
 PeerConnectionMedia::UpdateFilterFromRemoteDescription_m(
     int level,
     nsAutoPtr<mozilla::MediaPipelineFilter> filter)
 {
   ASSERT_ON_THREAD(mMainThread);
-  for (size_t i = 0; i < mRemoteSourceStreams.Length(); ++i) {
-    if (mRemoteSourceStreams[i]->UpdateFilterFromRemoteDescription_m(level,
-                                                                     filter)) {
-      // Found the MediaPipeline for |level|
-      return true;
-    }
+
+  RefPtr<mozilla::MediaPipeline> receive;
+  for (size_t i = 0; !receive && i < mRemoteSourceStreams.Length(); ++i) {
+    receive = mRemoteSourceStreams[i]->GetPipelineByLevel_m(level);
   }
-  CSFLogWarn(logTag, "Could not locate level %d to update filter",
-                     static_cast<int>(level));
+
+  RefPtr<mozilla::MediaPipeline> transmit;
+  for (size_t i = 0; !transmit && i < mLocalSourceStreams.Length(); ++i) {
+    transmit = mLocalSourceStreams[i]->GetPipelineByLevel_m(level);
+  }
+
+  if (receive && transmit) {
+    // GetPipelineByLevel_m will return nullptr if shutdown is in progress;
+    // since shutdown is initiated in main, and involves a dispatch to STS
+    // before the pipelines are released, our dispatch to STS will complete
+    // before any release can happen due to a shutdown that hasn't started yet.
+    RUN_ON_THREAD(GetSTSThread(),
+                  WrapRunnableNM(
+                      &UpdateFilterFromRemoteDescription_s,
+                      receive,
+                      transmit,
+                      filter
+                  ),
+                  NS_DISPATCH_NORMAL);
+    return true;
+  } else {
+    CSFLogWarn(logTag, "Could not locate level %d to update filter",
+        static_cast<int>(level));
+  }
   return false;
 }
 
@@ -537,54 +575,27 @@ RemoteSourceStreamInfo::StorePipeline(int aTrack,
   mTypes[aTrack] = aIsVideo;
 }
 
-RefPtr<MediaPipeline> RemoteSourceStreamInfo::GetPipelineByLevel_m(int level) {
+RefPtr<MediaPipeline> SourceStreamInfo::GetPipelineByLevel_m(int level) {
   ASSERT_ON_THREAD(mParent->GetMainThread());
-  for (auto p = mPipelines.begin(); p != mPipelines.end(); ++p) {
-    if (p->second->level() == level) {
-      return p->second;
+
+  // Refuse to hand out references if we're tearing down.
+  // (Since teardown involves a dispatch to and from STS before MediaPipelines
+  // are released, it is safe to start other dispatches to and from STS with a
+  // RefPtr<MediaPipeline>, since that reference won't be the last one
+  // standing)
+  if (mMediaStream) {
+    for (auto p = mPipelines.begin(); p != mPipelines.end(); ++p) {
+      if (p->second->level() == level) {
+        return p->second;
+      }
     }
   }
+
   return nullptr;
-}
-
-bool RemoteSourceStreamInfo::UpdateFilterFromRemoteDescription_m(
-    int aLevel,
-    nsAutoPtr<mozilla::MediaPipelineFilter> aFilter) {
-  ASSERT_ON_THREAD(mParent->GetMainThread());
-
-  if (!mMediaStream) {
-    // Guard against dispatching once we've started teardown, since we don't
-    // want the RefPtr<MediaPipeline> being the last one standing on the call
-    // to MediaPipeline::UpdateFilterFromRemoteDescription_s; it is not safe
-    // to delete a MediaPipeline anywhere other than the main thread.
-    return false;
-  }
-
-  RefPtr<MediaPipeline> pipeline(GetPipelineByLevel_m(aLevel));
-
-  if (pipeline) {
-    RUN_ON_THREAD(mParent->GetSTSThread(),
-                  WrapRunnable(
-                      pipeline,
-                      &MediaPipeline::UpdateFilterFromRemoteDescription_s,
-                      aFilter
-                  ),
-                  NS_DISPATCH_NORMAL);
-    return true;
-  }
-  return false;
 }
 
 bool RemoteSourceStreamInfo::SetUsingBundle_m(int aLevel, bool decision) {
   ASSERT_ON_THREAD(mParent->GetMainThread());
-
-  if (!mMediaStream) {
-    // Guard against dispatching once we've started teardown, since we don't
-    // want the RefPtr<MediaPipeline> being the last one standing on the call
-    // to MediaPipeline::SetUsingBundle_s; it is not safe
-    // to delete a MediaPipeline anywhere other than the main thread.
-    return false;
-  }
 
   RefPtr<MediaPipeline> pipeline(GetPipelineByLevel_m(aLevel));
 
