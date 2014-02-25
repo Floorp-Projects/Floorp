@@ -82,10 +82,8 @@ nsRefPtrHashtable<KeyClass,RefPtr>::Get
 {
   typename base_type::EntryType* ent = this->GetEntry(aKey);
 
-  if (ent)
-  {
-    if (pRefPtr)
-    {
+  if (ent) {
+    if (pRefPtr) {
       *pRefPtr = ent->mData;
 
       NS_IF_ADDREF(*pRefPtr);
@@ -96,8 +94,9 @@ nsRefPtrHashtable<KeyClass,RefPtr>::Get
 
   // if the key doesn't exist, set *pRefPtr to null
   // so that it is a valid XPCOM getter
-  if (pRefPtr)
+  if (pRefPtr) {
     *pRefPtr = nullptr;
+  }
 
   return false;
 }
@@ -109,17 +108,19 @@ nsRefPtrHashtable<KeyClass,RefPtr>::GetWeak
 {
   typename base_type::EntryType* ent = this->GetEntry(aKey);
 
-  if (ent)
-  {
-    if (aFound)
+  if (ent) {
+    if (aFound) {
       *aFound = true;
+    }
 
     return ent->mData;
   }
 
   // Key does not exist, return nullptr and set aFound to false
-  if (aFound)
+  if (aFound) {
     *aFound = false;
+  }
+
   return nullptr;
 }
 
