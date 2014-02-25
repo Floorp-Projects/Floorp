@@ -69,16 +69,6 @@
 //#define NSCAP_FEATURE_TEST_NONNULL_QUERY_SUCCEEDS
 #endif
 
-  /*
-    |...TEST_DONTQUERY_CASES| and |...DEBUG_PTR_TYPES| introduce some code that is 
-    problematic on a select few of our platforms, e.g., QNX.  Therefore, I'm providing
-    a mechanism by which these features can be explicitly disabled from the command-line.
-  */
-
-#ifdef NSCAP_DISABLE_TEST_DONTQUERY_CASES
-  #undef NSCAP_FEATURE_TEST_DONTQUERY_CASES
-#endif
-
 #ifdef __GNUC__
   // Our use of nsCOMPtr_base::mRawPtr violates the C++ standard's aliasing
   // rules. Mark it with the may_alias attribute so that gcc 3.3 and higher

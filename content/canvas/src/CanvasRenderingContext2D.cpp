@@ -615,6 +615,14 @@ CanvasRenderingContext2D::ParseColor(const nsAString& aString,
   return true;
 }
 
+PLDHashOperator
+CanvasRenderingContext2D::RemoveHitRegionProperty(RegionInfo* aEntry, void*)
+{
+  aEntry->mElement->DeleteProperty(nsGkAtoms::hitregion);
+  return PL_DHASH_NEXT;
+}
+
+
 nsresult
 CanvasRenderingContext2D::Reset()
 {
@@ -629,6 +637,10 @@ CanvasRenderingContext2D::Reset()
   }
 
   mTarget = nullptr;
+
+  // reset hit regions
+  mHitRegionsOptions.EnumerateEntries(RemoveHitRegionProperty, nullptr);
+  mHitRegionsOptions.Clear();
 
   // Since the target changes the backing texture will change, and this will
   // no longer be valid.
@@ -2353,6 +2365,79 @@ CanvasRenderingContext2D::MeasureText(const nsAString& rawText,
   }
 
   return new TextMetrics(width);
+}
+
+// Callback function, for freeing hit regions bounds values stored in property table
+static void
+ReleaseBBoxPropertyValue(void*    aObject,       /* unused */
+                            nsIAtom* aPropertyName, /* unused */
+                            void*    aPropertyValue,
+                            void*    aData          /* unused */)
+{
+  nsRect* valPtr =
+    static_cast<nsRect*>(aPropertyValue);
+  delete valPtr;
+}
+
+void
+CanvasRenderingContext2D::AddHitRegion(const HitRegionOptions& options, ErrorResult& error)
+{
+  // remove old hit region first
+  RemoveHitRegion(options.mId);
+
+  // for now, we require a fallback element
+  if (options.mControl == NULL) {
+    error.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return;
+  }
+
+  // check if the control is a descendant of our canvas
+  HTMLCanvasElement* canvas = GetCanvas();
+  bool isDescendant = true;
+  if (!canvas || !nsContentUtils::ContentIsDescendantOf(options.mControl, canvas)) {
+    isDescendant = false;
+  }
+
+  // check if the path is valid
+  EnsureUserSpacePath(CanvasWindingRule::Nonzero);
+  if(!mPath) {
+    error.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return;
+  }
+
+  // get the bounds of the current path. They are relative to the canvas
+  mgfx::Rect bounds(mPath->GetBounds(mTarget->GetTransform()));
+  if ((bounds.width == 0) || (bounds.height == 0) || !bounds.IsFinite()) {
+    // The specified region has no pixels.
+    error.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return;
+  }
+
+  if (isDescendant) {
+    nsRect* nsBounds = new nsRect();
+    gfxRect rect(bounds.x, bounds.y, bounds.width, bounds.height);
+    *nsBounds = nsLayoutUtils::RoundGfxRectToAppRect(rect, AppUnitsPerCSSPixel());
+    options.mControl->DeleteProperty(nsGkAtoms::hitregion);
+    options.mControl->SetProperty(nsGkAtoms::hitregion, nsBounds,
+                                  ReleaseBBoxPropertyValue);
+  }
+
+  // finally, add the region to the list if it has an ID
+  if (options.mId.Length() != 0) {
+    mHitRegionsOptions.PutEntry(options.mId)->mElement = options.mControl;
+  }
+}
+
+void
+CanvasRenderingContext2D::RemoveHitRegion(const nsAString& id)
+{
+  RegionInfo* info = mHitRegionsOptions.GetEntry(id);
+  if (!info) {
+    return;
+  }
+
+  info->mElement->DeleteProperty(nsGkAtoms::hitregion);
+  mHitRegionsOptions.RemoveEntry(id);
 }
 
 /**
