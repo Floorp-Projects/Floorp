@@ -6,14 +6,12 @@
 
 #include "imgITools.h"
 
-class gfxImageSurface;
-
 #define NS_IMGTOOLS_CID \
-{ /* 4c2383a4-931c-484d-8c4a-973590f66e3f */         \
-     0x4c2383a4,                                     \
-     0x931c,                                         \
-     0x484d,                                         \
-    {0x8c, 0x4a, 0x97, 0x35, 0x90, 0xf6, 0x6e, 0x3f} \
+{ /* 3d8fa16d-c9e1-4b50-bdef-2c7ae249967a */         \
+     0x3d8fa16d,                                     \
+     0xc9e1,                                         \
+     0x4b50,                                         \
+    {0xbd, 0xef, 0x2c, 0x7a, 0xe2, 0x49, 0x96, 0x7a} \
 }
 
 class imgTools : public imgITools
@@ -24,13 +22,4 @@ public:
 
   imgTools();
   virtual ~imgTools();
-
-private:
-  NS_IMETHODIMP EncodeImageData(gfxImageSurface *aSurface,
-                                const nsACString& aMimeType,
-                                const nsAString& aOutputOptions,
-                                nsIInputStream **aStream);
-
-  NS_IMETHODIMP GetFirstImageFrame(imgIContainer *aContainer,
-                                   gfxImageSurface **aSurface);
 };
