@@ -70,7 +70,7 @@
         </script>
     </target>
 
-    <target name="compile" depends="build_needed" if="build_needed">
+    <target name="pre_build" depends="build_needed" if="build_needed">
         <exec executable="${topsrcdir}/mach" dir="${topobjdir}" failonerror="true">
             <arg value="build"/>
             <arg value="${objdir}/ANDROID_ECLIPSE_PROJECT_${project_name}"/>
