@@ -16,8 +16,6 @@ BEGIN_BLUETOOTH_NAMESPACE
 class BluetoothHidManager : public BluetoothProfileManagerBase
 {
 public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIOBSERVER
   BT_DECL_PROFILE_MGR_BASE
   virtual void GetName(nsACString& aName)
   {
