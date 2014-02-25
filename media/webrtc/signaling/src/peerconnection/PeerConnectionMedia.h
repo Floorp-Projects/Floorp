@@ -190,6 +190,7 @@ public:
   // It allows visibility into the pipelines and flows.
   const std::map<mozilla::TrackID, mozilla::RefPtr<mozilla::MediaPipeline>>&
   GetPipelines() const { return mPipelines; }
+  mozilla::RefPtr<mozilla::MediaPipeline> GetPipelineByLevel_m(int level);
 
 protected:
   std::map<mozilla::TrackID, mozilla::RefPtr<mozilla::MediaPipeline>> mPipelines;
@@ -244,9 +245,6 @@ class RemoteSourceStreamInfo : public SourceStreamInfo {
   void StorePipeline(int aTrack, bool aIsVideo,
                      mozilla::RefPtr<mozilla::MediaPipeline> aPipeline);
 
-  bool UpdateFilterFromRemoteDescription_m(
-      int aLevel,
-      nsAutoPtr<mozilla::MediaPipelineFilter> aFilter);
   bool SetUsingBundle_m(int aLevel, bool decision);
 
   void DetachTransport_s();
@@ -257,7 +255,6 @@ class RemoteSourceStreamInfo : public SourceStreamInfo {
 public:
   DOMMediaStream::TrackTypeHints mTrackTypeHints;
  private:
-  mozilla::RefPtr<mozilla::MediaPipeline> GetPipelineByLevel_m(int level);
   std::map<int, bool> mTypes;
 };
 
