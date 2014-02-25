@@ -82,7 +82,7 @@ class nsAsyncProgressMeterInit MOZ_FINAL : public nsIReflowCallback
 public:
   nsAsyncProgressMeterInit(nsIFrame* aFrame) : mWeakFrame(aFrame) {}
 
-  virtual bool ReflowFinished()
+  virtual bool ReflowFinished() MOZ_OVERRIDE
   {
     bool shouldFlush = false;
     nsIFrame* frame = mWeakFrame.GetFrame();
@@ -95,7 +95,7 @@ public:
     return shouldFlush;
   }
 
-  virtual void ReflowCallbackCanceled()
+  virtual void ReflowCallbackCanceled() MOZ_OVERRIDE
   {
     delete this;
   }

@@ -17,6 +17,7 @@ namespace gfx {
 class ScaledFontMac : public ScaledFontBase
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(ScaledFontMac)
   ScaledFontMac(CGFontRef aFont, Float aSize);
   virtual ~ScaledFontMac();
 

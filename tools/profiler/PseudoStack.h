@@ -93,10 +93,10 @@ public:
     // Last bit 1 = Don't copy, Last bit 0 = Copy.
     if (copy) {
       setStackAddress(reinterpret_cast<void*>(
-                        reinterpret_cast<uintptr_t>(sparg) & ~0x1));
+                        reinterpret_cast<uintptr_t>(sparg) & ~NoCopyBit));
     } else {
       setStackAddress(reinterpret_cast<void*>(
-                        reinterpret_cast<uintptr_t>(sparg) | 0x1));
+                        reinterpret_cast<uintptr_t>(sparg) | NoCopyBit));
     }
   }
 };

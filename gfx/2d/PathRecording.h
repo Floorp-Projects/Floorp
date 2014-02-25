@@ -37,6 +37,7 @@ class DrawEventRecorderPrivate;
 class PathBuilderRecording : public PathBuilder
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(PathBuilderRecording)
   PathBuilderRecording(PathBuilder *aBuilder, FillRule aFillRule)
     : mPathBuilder(aBuilder), mFillRule(aFillRule)
   {
@@ -82,6 +83,7 @@ private:
 class PathRecording : public Path
 {
 public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(PathRecording)
   PathRecording(Path *aPath, const std::vector<PathOp> aOps, FillRule aFillRule)
     : mPath(aPath), mPathOps(aOps), mFillRule(aFillRule)
   {

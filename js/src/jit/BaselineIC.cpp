@@ -2481,23 +2481,23 @@ DoBinaryArithFallback(JSContext *cx, BaselineFrame *frame, ICBinaryArith_Fallbac
     switch(op) {
       case JSOP_ADD:
         // Do an add.
-        if (!AddValues(cx, &lhsCopy, &rhsCopy, ret.address()))
+        if (!AddValues(cx, &lhsCopy, &rhsCopy, ret))
             return false;
         break;
       case JSOP_SUB:
-        if (!SubValues(cx, &lhsCopy, &rhsCopy, ret.address()))
+        if (!SubValues(cx, &lhsCopy, &rhsCopy, ret))
             return false;
         break;
       case JSOP_MUL:
-        if (!MulValues(cx, &lhsCopy, &rhsCopy, ret.address()))
+        if (!MulValues(cx, &lhsCopy, &rhsCopy, ret))
             return false;
         break;
       case JSOP_DIV:
-        if (!DivValues(cx, &lhsCopy, &rhsCopy, ret.address()))
+        if (!DivValues(cx, &lhsCopy, &rhsCopy, ret))
             return false;
         break;
       case JSOP_MOD:
-        if (!ModValues(cx, &lhsCopy, &rhsCopy, ret.address()))
+        if (!ModValues(cx, &lhsCopy, &rhsCopy, ret))
             return false;
         break;
       case JSOP_BITOR: {
@@ -2536,7 +2536,7 @@ DoBinaryArithFallback(JSContext *cx, BaselineFrame *frame, ICBinaryArith_Fallbac
         break;
       }
       case JSOP_URSH: {
-        if (!UrshOperation(cx, lhs, rhs, ret.address()))
+        if (!UrshOperation(cx, lhs, rhs, ret))
             return false;
         break;
       }

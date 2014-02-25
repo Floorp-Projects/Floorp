@@ -76,7 +76,7 @@ public:
   {
   }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() MOZ_OVERRIDE
   {
     nsAutoString domEventToFire;
 
@@ -123,7 +123,7 @@ public:
   {
   }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() MOZ_OVERRIDE
   {
     nsMenuFrame* frame = static_cast<nsMenuFrame*>(mFrame.GetFrame());
     NS_ENSURE_STATE(frame);
@@ -220,7 +220,7 @@ public:
   {
   }
 
-  virtual bool ReflowFinished()
+  virtual bool ReflowFinished() MOZ_OVERRIDE
   {
     bool shouldFlush = false;
     nsMenuFrame* menu = do_QueryFrame(mWeakFrame.GetFrame());
@@ -232,7 +232,7 @@ public:
     return shouldFlush;
   }
 
-  virtual void ReflowCallbackCanceled()
+  virtual void ReflowCallbackCanceled() MOZ_OVERRIDE
   {
     delete this;
   }

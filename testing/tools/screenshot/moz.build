@@ -15,3 +15,5 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'win32-screenshot.cpp',
     ]
     USE_STATIC_LIBS = True
+    if CONFIG['GNU_CC']:
+        WIN32_EXE_FLAGS += ['-municode']

@@ -4893,17 +4893,16 @@ nsDisplaySVGEffects::BuildLayer(nsDisplayListBuilder* aBuilder,
   nsSVGEffects::EffectProperties effectProperties =
     nsSVGEffects::GetEffectProperties(firstFrame);
 
-  bool isOK = true;
+  bool isOK = effectProperties.HasNoFilterOrHasValidFilter();
   effectProperties.GetClipPathFrame(&isOK);
   effectProperties.GetMaskFrame(&isOK);
-  bool hasFilter = effectProperties.GetFilterFrame(&isOK) != nullptr;
 
   if (!isOK) {
     return nullptr;
   }
 
   ContainerLayerParameters newContainerParameters = aContainerParameters;
-  if (hasFilter) {
+  if (effectProperties.HasValidFilter()) {
     newContainerParameters.mDisableSubpixelAntialiasingInDescendants = true;
   }
 
@@ -4972,7 +4971,7 @@ nsDisplaySVGEffects::PrintEffects(nsACString& aTo)
     aTo += nsPrintfCString("clip(%s)", clipPathFrame->IsTrivial() ? "trivial" : "non-trivial");
     first = false;
   }
-  if (effectProperties.GetFilterFrame(&isOK)) {
+  if (effectProperties.HasValidFilter()) {
     if (!first) {
       aTo += ", ";
     }
