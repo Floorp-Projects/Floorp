@@ -646,6 +646,10 @@ case "$target" in
             esac
         fi
 
+        # strsafe.h on mingw uses macros for function deprecation that pollutes namespace
+        # causing problems with local implementations with the same name.
+        AC_DEFINE(STRSAFE_NO_DEPRECATE)
+
         MOZ_WINSDK_MAXVER=0x06020000
     fi # !GNU_CC
 
