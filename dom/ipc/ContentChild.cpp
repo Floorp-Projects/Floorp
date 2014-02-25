@@ -1742,7 +1742,7 @@ ContentChild::RecvNuwaFork()
     // at the same time then we risk deadlock. Spinning the event loop here
     // guarantees the ordering is safe for PBackground.
     while (!BackgroundChild::GetForCurrentThread()) {
-        if (NS_WARN_IF(NS_FAILED(NS_ProcessNextEvent()))) {
+        if (NS_WARN_IF(!NS_ProcessNextEvent())) {
             return false;
         }
     }
