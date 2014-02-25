@@ -230,6 +230,7 @@ cairo-xlib.h
 cairo-xlib-xrender.h
 cairo-directfb.h
 cairo-qpainter.h
+cairo-qt.h
 #endif
 dfiff.h
 exception
