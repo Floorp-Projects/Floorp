@@ -113,6 +113,48 @@
         </vbox>
       </hbox>
 
+      <!-- Camera -->
+      <hbox id="camera-pref-item"
+            class="pref-item" align="top">
+        <image class="pref-icon" type="camera"/>
+        <vbox>
+          <label class="pref-title" value="&camera.label;"/>
+          <hbox align="center">
+            <menulist id="camera-menulist"
+                      class="pref-menulist"
+                      type="camera"
+                      oncommand="AboutPermissions.onPermissionCommand(event);">
+              <menupopup>
+                <menuitem id="camera-0" value="0" label="&permission.alwaysAsk;"/>
+                <menuitem id="camera-1" value="1" label="&permission.allow;"/>
+                <menuitem id="camera-2" value="2" label="&permission.block;"/>
+              </menupopup>
+            </menulist>
+          </hbox>
+        </vbox>
+      </hbox>
+
+      <!-- Microphone -->
+      <hbox id="microphone-pref-item"
+            class="pref-item" align="top">
+        <image class="pref-icon" type="microphone"/>
+        <vbox>
+          <label class="pref-title" value="&microphone.label;"/>
+          <hbox align="center">
+            <menulist id="microphone-menulist"
+                      class="pref-menulist"
+                      type="microphone"
+                      oncommand="AboutPermissions.onPermissionCommand(event);">
+              <menupopup>
+                <menuitem id="microphone-0" value="0" label="&permission.alwaysAsk;"/>
+                <menuitem id="microphone-1" value="1" label="&permission.allow;"/>
+                <menuitem id="microphone-2" value="2" label="&permission.block;"/>
+              </menupopup>
+            </menulist>
+          </hbox>
+        </vbox>
+      </hbox>
+
       <!-- Cookies -->
       <hbox id="cookie-pref-item"
             class="pref-item" align="top">
