@@ -9,7 +9,7 @@ interface nsIWifiTetheringCallback;
 /**
  * Information about networks that is exposed to network manager API consumers.
  */
-[scriptable, uuid(6ff0c978-24e6-4560-b470-143eca6e39b7)]
+[scriptable, uuid(4d738144-ac69-48ef-b97e-49cc627fae67)]
 interface nsINetworkInterface : nsISupports
 {
   const long NETWORK_STATE_UNKNOWN = -1;
@@ -32,6 +32,7 @@ interface nsINetworkInterface : nsISupports
   const long NETWORK_TYPE_MOBILE_MMS  = 2;
   const long NETWORK_TYPE_MOBILE_SUPL = 3;
   const long NETWORK_TYPE_WIFI_P2P    = 4;
+  const long NETWORK_TYPE_MOBILE_IMS  = 5;
 
   /**
    * Network type. One of the NETWORK_TYPE_* constants.
