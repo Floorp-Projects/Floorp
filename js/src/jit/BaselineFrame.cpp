@@ -70,7 +70,7 @@ BaselineFrame::trace(JSTracer *trc, IonFrameIterator &frameIterator)
 
         if (staticScope) {
             StaticBlockObject &blockObj = staticScope->as<StaticBlockObject>();
-            nlivefixed = blockObj.localOffset() + blockObj.slotCount();
+            nlivefixed = blockObj.localOffset() + blockObj.numVariables();
         }
     }
 

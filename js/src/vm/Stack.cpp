@@ -398,7 +398,7 @@ StackFrame::markValues(JSTracer *trc, Value *sp, jsbytecode *pc)
 
     if (staticScope) {
         StaticBlockObject &blockObj = staticScope->as<StaticBlockObject>();
-        nlivefixed = blockObj.localOffset() + blockObj.slotCount();
+        nlivefixed = blockObj.localOffset() + blockObj.numVariables();
     } else {
         nlivefixed = script()->nfixedvars();
     }
