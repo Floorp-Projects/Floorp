@@ -185,10 +185,11 @@ class Defines(SandboxDerived):
     def get_defines(self):
         for define, value in self.defines.iteritems():
             if value is True:
-                defstr = define
+                yield('-D%s' % define)
+            elif value is False:
+                yield('-U%s' % define)
             else:
-                defstr = '%s=%s' % (define, shell_quote(value))
-            yield('-D%s' % defstr)
+                yield('-D%s=%s' % (define, shell_quote(value)))
 
 class Exports(SandboxDerived):
     """Sandbox container object for EXPORTS, which is a HierarchicalStringList.
