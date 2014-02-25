@@ -41,6 +41,7 @@ import org.mozilla.gecko.home.SearchEngine;
 import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.prompts.Prompt;
+import org.mozilla.gecko.prompts.PromptListItem;
 import org.mozilla.gecko.sync.setup.SyncAccounts;
 import org.mozilla.gecko.toolbar.AutocompleteHandler;
 import org.mozilla.gecko.toolbar.BrowserToolbar;
@@ -91,6 +92,7 @@ import android.view.ViewTreeObserver;
 import android.view.Window;
 import android.view.animation.Interpolator;
 import android.widget.RelativeLayout;
+import android.widget.ListView;
 import android.widget.Toast;
 import android.widget.ViewFlipper;
 
@@ -503,6 +505,15 @@ abstract public class BrowserApp extends GeckoApp
         mBrowserToolbar.setOnFilterListener(new BrowserToolbar.OnFilterListener() {
             public void onFilter(String searchText, AutocompleteHandler handler) {
                 filterEditingMode(searchText, handler);
+            }
+        });
+
+        mBrowserToolbar.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (isHomePagerVisible()) {
+                    mHomePager.onToolbarFocusChange(hasFocus);
+                }
             }
         });
 
@@ -2414,7 +2425,7 @@ abstract public class BrowserApp extends GeckoApp
             msgString = R.string.exit_guest_session_text;
         }
 
-        ps.show(res.getString(titleString), res.getString(msgString), null, false);
+        ps.show(res.getString(titleString), res.getString(msgString), null, ListView.CHOICE_MODE_NONE);
     }
 
     public void subscribeToFeeds(Tab tab) {

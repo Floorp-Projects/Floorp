@@ -239,6 +239,7 @@ gbjar.sources += [
     'home/PanelListView.java',
     'home/PanelManager.java',
     'home/PanelViewAdapter.java',
+    'home/PanelViewUrlHandler.java',
     'home/PinSiteDialog.java',
     'home/ReadingListPanel.java',
     'home/SearchEngine.java',
@@ -298,6 +299,8 @@ gbjar.sources += [
     'prompts/IconGridInput.java',
     'prompts/Prompt.java',
     'prompts/PromptInput.java',
+    'prompts/PromptListAdapter.java',
+    'prompts/PromptListItem.java',
     'prompts/PromptService.java',
     'ReaderModeUtils.java',
     'ReferrerReceiver.java',
@@ -485,17 +488,16 @@ if '-march=armv7' in CONFIG['OS_CFLAGS']:
 else:
     DEFINES['MOZ_MIN_CPU_VERSION'] = 5
 
-generated = add_android_eclipse_library_project('FennecGeneratedResources')
-generated.package_name = 'org.mozilla.fennec.generatedresources'
+generated = add_android_eclipse_library_project('FennecResourcesGenerated')
+generated.package_name = 'org.mozilla.fennec.resources.generated'
 generated.res = OBJDIR + '/res'
 
-branding = add_android_eclipse_library_project('FennecBrandingResources')
-branding.package_name = 'org.mozilla.fennec.brandingresources'
+branding = add_android_eclipse_library_project('FennecResourcesBranding')
+branding.package_name = 'org.mozilla.fennec.resources.branding'
 branding.res = TOPSRCDIR + '/' + CONFIG['MOZ_BRANDING_DIRECTORY'] + '/res'
 
 main = add_android_eclipse_project('Fennec', OBJDIR + '/AndroidManifest.xml')
 main.package_name = 'org.mozilla.gecko'
-main.res = SRCDIR + '/resources'
 
 main.recursive_make_targets += ['.aapt.deps'] # Captures dependencies on Android manifest and all resources.
 main.recursive_make_targets += [OBJDIR + '/generated/' + f for f in mgjar.generated_sources]
@@ -506,6 +508,7 @@ main.referenced_projects += [generated.name, branding.name]
 main.extra_jars += [CONFIG['ANDROID_COMPAT_LIB']]
 main.assets = TOPOBJDIR + '/dist/fennec/assets'
 main.libs = TOPOBJDIR + '/dist/fennec/lib'
+main.res = None
 
 cpe = main.add_classpathentry('src', SRCDIR,
     dstdir='src/org/mozilla/gecko',
@@ -518,3 +521,22 @@ main.add_classpathentry('generated', OBJDIR + '/generated',
 main.add_classpathentry('thirdparty', TOPSRCDIR + '/mobile/android/thirdparty',
     dstdir='thirdparty',
     ignore_warnings=True)
+
+resources = add_android_eclipse_library_project('FennecResources')
+resources.package_name = 'org.mozilla.fennec.resources'
+resources.res = SRCDIR + '/resources'
+resources.included_projects += ['../' + generated.name, '../' + branding.name]
+resources.referenced_projects += [generated.name, branding.name]
+
+main.included_projects += ['../' + resources.name]
+main.referenced_projects += [resources.name]
+
+if CONFIG['MOZ_CRASHREPORTER']:
+    crashreporter = add_android_eclipse_library_project('FennecResourcesCrashReporter')
+    crashreporter.package_name = 'org.mozilla.fennec.resources.crashreporter'
+    crashreporter.res = SRCDIR + '/crashreporter/res'
+    crashreporter.included_projects += ['../' + resources.name]
+    crashreporter.referenced_projects += [resources.name]
+
+    main.included_projects += ['../' + crashreporter.name]
+    main.referenced_projects += [crashreporter.name]

@@ -166,6 +166,9 @@ MarkupView.prototype = {
 
   _onMouseLeave: function() {
     this._hideBoxModel();
+    if (this._hoveredNode) {
+      this._containers.get(this._hoveredNode).hovered = false;
+    }
     this._hoveredNode = null;
   },
 

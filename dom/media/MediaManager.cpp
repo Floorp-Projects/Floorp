@@ -14,6 +14,7 @@
 #include "nsIEventTarget.h"
 #include "nsIUUIDGenerator.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsIPermissionManager.h"
 #include "nsIPopupWindowManager.h"
 #include "nsISupportsArray.h"
 #include "nsIDocShell.h"
@@ -32,8 +33,6 @@
 #include "nsJSUtils.h"
 #include "nsDOMFile.h"
 #include "nsGlobalWindow.h"
-
-#include "mozilla/Preferences.h"
 
 /* Using WebRTC backend on Desktops (Mac, Windows, Linux), otherwise default */
 #include "MediaEngineDefault.h"
@@ -908,6 +907,13 @@ public:
   }
 
   nsresult
+  SetContraints(const MediaStreamConstraintsInternal& aConstraints)
+  {
+    mConstraints = aConstraints;
+    return NS_OK;
+  }
+
+  nsresult
   SetAudioDevice(MediaDevice* aAudioDevice)
   {
     mAudioDevice = aAudioDevice;
@@ -1075,7 +1081,11 @@ public:
   {
     NS_ASSERTION(!NS_IsMainThread(), "Don't call on main thread");
 
-    MediaEngine *backend = mManager->GetBackend(mWindowId);
+    nsRefPtr<MediaEngine> backend;
+    if (mConstraints.mFake)
+      backend = new MediaEngineDefault();
+    else
+      backend = mManager->GetBackend(mWindowId);
 
     ScopedDeletePtr<SourceSet> final (GetSources(backend, mConstraints.mVideom,
                                           &MediaEngine::EnumerateVideoDevices,
@@ -1415,14 +1425,59 @@ MediaManager::GetUserMedia(JSContext* aCx, bool aPrivileged,
   }
 #endif
   // XXX No full support for picture in Desktop yet (needs proper UI)
-  if (aPrivileged || c.mFake) {
+  if (aPrivileged ||
+      (c.mFake && !Preferences::GetBool("media.navigator.permission.fake"))) {
     runnable->Arm();
     mMediaThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
   } else {
+    // Check if this site has persistent permissions.
+    nsresult rv;
+    nsCOMPtr<nsIPermissionManager> permManager =
+      do_GetService(NS_PERMISSIONMANAGER_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    uint32_t audioPerm = nsIPermissionManager::UNKNOWN_ACTION;
+    if (c.mAudio) {
+      rv = permManager->TestExactPermissionFromPrincipal(
+        aWindow->GetExtantDoc()->NodePrincipal(), "microphone", &audioPerm);
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (audioPerm == nsIPermissionManager::PROMPT_ACTION) {
+        audioPerm = nsIPermissionManager::UNKNOWN_ACTION;
+      }
+    }
+
+    uint32_t videoPerm = nsIPermissionManager::UNKNOWN_ACTION;
+    if (c.mVideo) {
+      rv = permManager->TestExactPermissionFromPrincipal(
+        aWindow->GetExtantDoc()->NodePrincipal(), "camera", &videoPerm);
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (videoPerm == nsIPermissionManager::PROMPT_ACTION) {
+        videoPerm = nsIPermissionManager::UNKNOWN_ACTION;
+      }
+    }
+
+    if ((!c.mAudio || audioPerm) && (!c.mVideo || videoPerm)) {
+      // All permissions we were about to request already have a saved value.
+      if (c.mAudio && audioPerm == nsIPermissionManager::DENY_ACTION) {
+        c.mAudio = false;
+        runnable->SetContraints(c);
+      }
+      if (c.mVideo && videoPerm == nsIPermissionManager::DENY_ACTION) {
+        c.mVideo = false;
+        runnable->SetContraints(c);
+      }
+
+      runnable->Arm();
+      if (!c.mAudio && !c.mVideo) {
+        return runnable->Denied(NS_LITERAL_STRING("PERMISSION_DENIED"));
+      }
+
+      return mMediaThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
+    }
+
     // Ask for user permission, and dispatch runnable (or not) when a response
     // is received via an observer notification. Each call is paired with its
     // runnable by a GUID.
-    nsresult rv;
     nsCOMPtr<nsIUUIDGenerator> uuidgen =
       do_GetService("@mozilla.org/uuid-generator;1", &rv);
     NS_ENSURE_SUCCESS(rv, rv);

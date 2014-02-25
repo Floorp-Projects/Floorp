@@ -27,8 +27,9 @@ function App(data) {
 }
 
 App.prototype = {
-  launch: function(uri) {
-    HelperApps._launchApp(this, uri);
+  // callback will be null if a result is not requested
+  launch: function(uri, callback) {
+    HelperApps._launchApp(this, uri, callback);
     return false;
   }
 }
@@ -166,13 +167,24 @@ var HelperApps =  {
     };
   },
 
-  _launchApp: function launchApp(app, uri) {
-    let msg = this._getMessage("Intent:Open", uri, {
-      packageName: app.packageName,
-      className: app.activityName
-    });
+  _launchApp: function launchApp(app, uri, callback) {
+    if (callback) {
+        let msg = this._getMessage("Intent:OpenForResult", uri, {
+            packageName: app.packageName,
+            className: app.activityName
+        });
 
-    sendMessageToJava(msg);
+        sendMessageToJava(msg, function(data) {
+            callback(JSON.parse(data));
+        });
+    } else {
+        let msg = this._getMessage("Intent:Open", uri, {
+            packageName: app.packageName,
+            className: app.activityName
+        });
+
+        sendMessageToJava(msg);
+    }
   },
 
   _sendMessageSync: function(msg) {
