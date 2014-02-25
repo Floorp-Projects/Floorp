@@ -7,6 +7,7 @@
 #include <unistd.h>
 
 #include "mozilla/DebugOnly.h"
+#include "mozilla/Endian.h"
 #include <algorithm>
 
 #ifdef MOZ_ENABLE_GNOMEUI
@@ -101,7 +102,7 @@ moz_gdk_pixbuf_to_channel(GdkPixbuf* aPixbuf, nsIURI *aURI,
       uint8_t b = *(in++);
       uint8_t a = *(in++);
 #define DO_PREMULTIPLY(c_) uint8_t(uint16_t(c_) * uint16_t(a) / uint16_t(255))
-#ifdef IS_LITTLE_ENDIAN
+#if MOZ_LITTLE_ENDIAN
       *(out++) = DO_PREMULTIPLY(b);
       *(out++) = DO_PREMULTIPLY(g);
       *(out++) = DO_PREMULTIPLY(r);

@@ -8,6 +8,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include "mozilla/Endian.h"
+
 #include "nsMimeTypes.h"
 #include "nsIMIMEService.h"
 
@@ -15,7 +17,6 @@
 
 #include "nsNetUtil.h"
 #include "nsIURL.h"
-#include "prlink.h"
 
 #include "nsIconChannel.h"
 #include "nsGtkQtIconsConverter.h"
@@ -57,7 +58,7 @@ moz_qicon_to_channel(QImage *image, nsIURI *aURI,
       uint8_t b = *(in++);
       uint8_t a = *(in++);
 #define DO_PREMULTIPLY(c_) uint8_t(uint16_t(c_) * uint16_t(a) / uint16_t(255))
-#ifdef IS_LITTLE_ENDIAN
+#if MOZ_LITTLE_ENDIAN
       *(out++) = DO_PREMULTIPLY(b);
       *(out++) = DO_PREMULTIPLY(g);
       *(out++) = DO_PREMULTIPLY(r);
