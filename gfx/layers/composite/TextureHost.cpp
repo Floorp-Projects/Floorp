@@ -61,9 +61,17 @@ TextureHost::CreateIPDLActor(ISurfaceAllocator* aAllocator,
                              const SurfaceDescriptor& aSharedData,
                              TextureFlags aFlags)
 {
+  if (aSharedData.type() == SurfaceDescriptor::TSurfaceDescriptorMemory &&
+      !aAllocator->IsSameProcess())
+  {
+    NS_ERROR("A client process is trying to peek at our address space using a MemoryTexture!");
+    return nullptr;
+  }
   TextureParent* actor = new TextureParent(aAllocator);
-  DebugOnly<bool> status = actor->Init(aSharedData, aFlags);
-  MOZ_ASSERT(status);
+  if (!actor->Init(aSharedData, aFlags)) {
+    delete actor;
+    return nullptr;
+  }
   return actor;
 }
 

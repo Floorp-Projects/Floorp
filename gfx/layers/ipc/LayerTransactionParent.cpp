@@ -710,5 +710,10 @@ LayerTransactionParent::DeallocPTextureParent(PTextureParent* actor)
   return TextureHost::DestroyIPDLActor(actor);
 }
 
+bool LayerTransactionParent::IsSameProcess() const
+{
+  return OtherProcess() == ipc::kInvalidProcessHandle;
+}
+
 } // namespace layers
 } // namespace mozilla
