@@ -21,6 +21,12 @@ class BaseHandler(object):
 
 
 class LogLevelFilter(object):
+    """Handler that filters out messages with action:log and a level
+    lower than some specified level.
+
+    :param inner: Handler to use for messages that pass this filter
+    :param level: Minimum log level to process
+    """
     def __init__(self, inner, level):
         self.inner = inner
         self.level = log_levels[level.upper()]
@@ -32,6 +38,12 @@ class LogLevelFilter(object):
 
 
 class StreamHandler(BaseHandler):
+    """Handler for writing to a file-like object
+
+    :param stream: File-like object to write log messages to
+    :param formatter: formatter to convert messages to string format
+    """
+
     _lock = Lock()
 
     def __init__(self,  stream, formatter):
@@ -40,6 +52,9 @@ class StreamHandler(BaseHandler):
         BaseHandler.__init__(self, formatter)
 
     def __call__(self, data):
+        """Write a log message.
+
+        :param data: Structured log message dictionary."""
         formatted = self.formatter(data)
         if not formatted:
             return
