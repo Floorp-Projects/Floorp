@@ -354,9 +354,9 @@ ExportFunction(JSContext *cx, unsigned argc, jsval *vp)
 static bool
 GetFilenameAndLineNumber(JSContext *cx, nsACString &filename, unsigned &lineno)
 {
-    JS::RootedScript script(cx);
-    if (JS_DescribeScriptedCaller(cx, &script, &lineno)) {
-        if (const char *cfilename = JS_GetScriptFilename(cx, script)) {
+    JS::AutoFilename scriptFilename;
+    if (JS::DescribeScriptedCaller(cx, &scriptFilename, &lineno)) {
+        if (const char *cfilename = scriptFilename.get()) {
             filename.Assign(nsDependentCString(cfilename));
             return true;
         }
