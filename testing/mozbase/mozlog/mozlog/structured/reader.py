@@ -4,9 +4,11 @@
 import json
 
 def read(log_f, raise_on_error=False):
-    """Return a generator that will return the entries in a structured log file
+    """Return a generator that will return the entries in a structured log file.
+    Note that the caller must not close the file whilst the generator is still
+    in use.
 
-    :param log_f: file-like object containing the log enteries, one per line
+    :param log_f: file-like object containing the raw log entries, one per line
     :param raise_on_error: boolean indicating whether ValueError should be raised
                            for lines that cannot be decoded."""
     for line in log_f:

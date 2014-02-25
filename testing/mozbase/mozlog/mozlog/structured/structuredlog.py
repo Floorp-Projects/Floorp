@@ -62,19 +62,20 @@ log_levels = dict((k.upper(), v) for v, k in
 class StructuredLogger(object):
     _lock = Lock()
     _handlers = defaultdict(list)
+    """Create a structured logger with the given name
+
+    :param name: The name of the logger.
+    """
 
     def __init__(self, name):
-        """
-        Create a structured logger with the given name
-
-        :param name: The name of the logger.
-        """
         self.name = name
 
     def add_handler(self, handler):
+        """Add a handler to the current logger"""
         self._handlers[self.name].append(handler)
 
     def remove_handler(self, handler):
+        """Remove a handler from the current logger"""
         for i, candidate_handler in enumerate(self._handlers[self.name][:]):
             if candidate_handler == handler:
                 del self._handlers[self.name][i]
@@ -82,7 +83,7 @@ class StructuredLogger(object):
 
     @property
     def handlers(self):
-        """Get a list of handlers that will be called when a
+        """A list of handlers that will be called when a
         message is logged from this logger"""
         return self._handlers[self.name]
 
@@ -104,8 +105,7 @@ class StructuredLogger(object):
         return all_data
 
     def suite_start(self, tests):
-        """
-        Log a suite_start message
+        """Log a suite_start message
 
         :param tests: List of test identifiers that will be run in the suite.
         """
@@ -116,8 +116,7 @@ class StructuredLogger(object):
         self._log_data("suite_end")
 
     def test_start(self, test):
-        """
-        "Log a test_start message
+        """Log a test_start message
 
         :param test: Identifier of the test that will run.
         """
@@ -188,12 +187,14 @@ class StructuredLogger(object):
 
 
 def _log_func(level_name):
-    def log(self, message, params=None):
-        if params is None:
-            params = {}
+    def log(self, message):
         data = {"level": level_name, "message": message}
-        data.update(params)
         self._log_data("log", data)
+    log.__doc__ = """Log a message with level %s
+
+:param message: The string message to log
+""" % level_name
+    log.__name__ = str(level_name).lower()
     return log
 
 
@@ -203,13 +204,16 @@ for level_name in log_levels:
 
 
 class StructuredLogFileLike(object):
-    """
-    Wrapper for file like objects to redirect output to logger
-    instead.
+    """Wrapper for file-like objects to redirect writes to logger
+    instead. Each call to `write` becomes a single log entry of type `log`.
 
     When using this it is important that the callees i.e. the logging
     handlers do not themselves try to write to the wrapped file as this
     will cause infinite recursion.
+
+    :param logger: `StructuredLogger` to which to redirect the file write operations.
+    :param level: log level to use for each write.
+    :param prefix: String prefix to prepend to each log entry.
     """
     def __init__(self, logger, level="info", prefix=None):
         self.logger = logger
