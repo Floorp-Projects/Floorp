@@ -623,6 +623,12 @@ ShadowLayerForwarder::IPCOpen() const
   return mShadowManager->IPCOpen();
 }
 
+bool
+ShadowLayerForwarder::IsSameProcess() const
+{
+  return mShadowManager->OtherProcess() == kInvalidProcessHandle;
+}
+
 /*static*/ already_AddRefed<gfxASurface>
 ShadowLayerForwarder::OpenDescriptor(OpenMode aMode,
                                      const SurfaceDescriptor& aSurface)

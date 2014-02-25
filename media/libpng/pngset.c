@@ -1,7 +1,7 @@
 
 /* pngset.c - storage of image information into info struct
  *
- * Last changed in libpng 1.6.3 [July 18, 2013]
+ * Last changed in libpng 1.6.8 [December 19, 2013]
  * Copyright (c) 1998-2013 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
@@ -532,7 +532,7 @@ png_set_PLTE(png_structrp png_ptr, png_inforp info_ptr,
 #        endif
       ))
    {
-      png_chunk_error(png_ptr, "Invalid palette");
+      png_error(png_ptr, "Invalid palette");
       return;
    }
 

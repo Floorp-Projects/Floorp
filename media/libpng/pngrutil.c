@@ -1,7 +1,7 @@
 
 /* pngrutil.c - utilities to read a PNG file
  *
- * Last changed in libpng 1.6.7 [November 14, 2013]
+ * Last changed in libpng 1.6.8 [December 19, 2013]
  * Copyright (c) 1998-2013 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
@@ -278,6 +278,10 @@ png_crc_error(png_structrp png_ptr)
       return (0);
 }
 
+#if defined(PNG_READ_iCCP_SUPPORTED) || defined(PNG_READ_iTXt_SUPPORTED) ||\
+    defined(PNG_READ_pCAL_SUPPORTED) || defined(PNG_READ_sCAL_SUPPORTED) ||\
+    defined(PNG_READ_sPLT_SUPPORTED) || defined(PNG_READ_tEXt_SUPPORTED) ||\
+    defined(PNG_READ_zTXt_SUPPORTED) || defined(PNG_SEQUENTIAL_READ_SUPPORTED)
 /* Manage the read buffer; this simply reallocates the buffer if it is not small
  * enough (or if it is not allocated).  The routine returns a pointer to the
  * buffer; if an error occurs and 'warn' is set the routine returns NULL, else
@@ -325,6 +329,7 @@ png_read_buffer(png_structrp png_ptr, png_alloc_size_t new_size, int warn)
 
    return buffer;
 }
+#endif /* PNG_READ_iCCP|iTXt|pCAL|sCAL|sPLT|tEXt|zTXt|SEQUENTIAL_READ */
 
 /* png_inflate_claim: claim the zstream for some nefarious purpose that involves
  * decompression.  Returns Z_OK on success, else a zlib error code.  It checks
@@ -4049,7 +4054,6 @@ png_read_filter_row_paeth_multibyte_pixel(png_row_infop row_info, png_bytep row,
       if (pb < pa) pa = pb, a = b;
       if (pc < pa) a = c;
 
-      c = b;
       a += *row;
       *row++ = (png_byte)a;
    }
