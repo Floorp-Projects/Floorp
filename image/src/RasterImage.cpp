@@ -922,8 +922,24 @@ RasterImage::GetFrame(uint32_t aWhichFrame,
   nsIntRect framerect = frame->GetRect();
   if (framerect.x == 0 && framerect.y == 0 &&
       framerect.width == mSize.width &&
-      framerect.height == mSize.height)
+      framerect.height == mSize.height) {
     frame->GetSurface(getter_AddRefs(framesurf));
+    if (!framesurf && !frame->IsSinglePixel()) {
+      // No reason to be optimized away here - the OS threw out the data
+      if (!(aFlags & FLAG_SYNC_DECODE))
+        return nullptr;
+
+      // Unconditionally call ForceDiscard() here because GetSurface can only
+      // return null when we can forcibly discard and redecode. There are two
+      // other cases where GetSurface() can return null - when it is a single
+      // pixel image, which we check before getting here, or when this is an
+      // indexed image, in which case we shouldn't be in this function at all.
+      // The only remaining possibility is that SetDiscardable() was called on
+      // this imgFrame, which implies the image can be redecoded.
+      ForceDiscard();
+      return GetFrame(aWhichFrame, aFlags);
+    }
+  }
 
   // The image doesn't have a surface because it's been optimized away. Create
   // one.
@@ -947,7 +963,15 @@ RasterImage::GetCurrentImage()
   }
 
   nsRefPtr<gfxASurface> imageSurface = GetFrame(FRAME_CURRENT, FLAG_NONE);
-  NS_ENSURE_TRUE(imageSurface, nullptr);
+  if (!imageSurface) {
+    // The OS threw out some or all of our buffer. Start decoding again.
+    // GetFrame will only return null in the case that the image was
+    // discarded. We already checked that the image is decoded, so other
+    // error paths are not possible.
+    ForceDiscard();
+    RequestDecodeCore(ASYNCHRONOUS);
+    return nullptr;
+  }
 
   if (!mImageContainer) {
     mImageContainer = LayerManager::CreateImageContainer();
@@ -981,6 +1005,10 @@ RasterImage::GetImageContainer(LayerManager* aManager, ImageContainer **_retval)
     mStatusTracker->OnUnlockedDraw();
   }
 
+  if (!mImageContainer) {
+    mImageContainer = mImageContainerCache;
+  }
+
   if (mImageContainer) {
     *_retval = mImageContainer;
     NS_ADDREF(*_retval);
@@ -995,6 +1023,13 @@ RasterImage::GetImageContainer(LayerManager* aManager, ImageContainer **_retval)
 
   *_retval = mImageContainer;
   NS_ADDREF(*_retval);
+  // We only need to be careful about holding on to the image when it is
+  // discardable by the OS.
+  if (CanForciblyDiscardAndRedecode()) {
+    mImageContainerCache = mImageContainer->asWeakPtr();
+    mImageContainer = nullptr;
+  }
+
   return NS_OK;
 }
 
@@ -1392,6 +1427,12 @@ RasterImage::DecodingComplete()
   // We don't optimize the frame for multipart images because we reuse
   // the frame.
   if ((GetNumFrames() == 1) && !mMultipart) {
+    // CanForciblyDiscard is used instead of CanForciblyDiscardAndRedecode
+    // because we know decoding is complete at this point and this is not
+    // an animation
+    if (DiscardingEnabled() && CanForciblyDiscard()) {
+      mFrameBlender.RawGetFrame(0)->SetDiscardable();
+    }
     rv = mFrameBlender.RawGetFrame(0)->Optimize();
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -2093,13 +2134,6 @@ RasterImage::ShutdownDecoder(eShutdownIntent aIntent)
   // Figure out what kind of decode we were doing before we get rid of our decoder
   bool wasSizeDecode = mDecoder->IsSizeDecode();
 
-  // Unlock the last frame (if we have any). Our invariant is that, while we
-  // have a decoder open, the last frame is always locked.
-  if (GetNumFrames() > 0) {
-    imgFrame *curframe = mFrameBlender.RawGetFrame(GetNumFrames() - 1);
-    curframe->UnlockImageData();
-  }
-
   // Finalize the decoder
   // null out mDecoder, _then_ check for errors on the close (otherwise the
   // error routine might re-invoke ShutdownDecoder)
@@ -2111,6 +2145,13 @@ RasterImage::ShutdownDecoder(eShutdownIntent aIntent)
   decoder->Finish(aIntent);
   mInDecoder = false;
   mFinishing = false;
+
+  // Unlock the last frame (if we have any). Our invariant is that, while we
+  // have a decoder open, the last frame is always locked.
+  if (GetNumFrames() > 0) {
+    imgFrame *curframe = mFrameBlender.RawGetFrame(GetNumFrames() - 1);
+    curframe->UnlockImageData();
+  }
 
   // Kill off our decode request, if it's pending.  (If not, this call is
   // harmless.)
@@ -2675,6 +2716,17 @@ RasterImage::Draw(gfxContext *aContext,
   imgFrame* frame = GetDrawableImgFrame(frameIndex);
   if (!frame) {
     return NS_OK; // Getting the frame (above) touches the image and kicks off decoding
+  }
+
+  nsRefPtr<gfxASurface> surf;
+  if (!frame->IsSinglePixel()) {
+    frame->GetSurface(getter_AddRefs(surf));
+    if (!surf) {
+      // The OS threw out some or all of our buffer. Start decoding again.
+      ForceDiscard();
+      WantDecodedFrames();
+      return NS_OK;
+    }
   }
 
   DrawWithPreDownscaleIfNeeded(frame, aContext, aFilter, aUserSpaceToImageSpace, aFill, aSubimage, aFlags);
