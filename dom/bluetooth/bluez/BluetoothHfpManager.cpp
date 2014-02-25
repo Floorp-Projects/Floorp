@@ -26,9 +26,10 @@
 
 #ifdef MOZ_B2G_RIL
 #include "nsIDOMIccInfo.h"
-#include "nsIDOMMobileConnection.h"
 #include "nsIIccProvider.h"
+#include "nsIMobileConnectionInfo.h"
 #include "nsIMobileConnectionProvider.h"
+#include "nsIMobileNetworkInfo.h"
 #include "nsITelephonyProvider.h"
 #include "nsRadioInterfaceLayer.h"
 #endif
@@ -609,7 +610,7 @@ BluetoothHfpManager::HandleVoiceConnectionChanged(uint32_t aClientId)
     do_GetService(NS_RILCONTENTHELPER_CONTRACTID);
   NS_ENSURE_TRUE_VOID(connection);
 
-  nsCOMPtr<nsIDOMMozMobileConnectionInfo> voiceInfo;
+  nsCOMPtr<nsIMobileConnectionInfo> voiceInfo;
   connection->GetVoiceConnectionInfo(aClientId, getter_AddRefs(voiceInfo));
   NS_ENSURE_TRUE_VOID(voiceInfo);
 
@@ -652,7 +653,7 @@ BluetoothHfpManager::HandleVoiceConnectionChanged(uint32_t aClientId)
     mNetworkSelectionMode = 0;
   }
 
-  nsCOMPtr<nsIDOMMozMobileNetworkInfo> network;
+  nsCOMPtr<nsIMobileNetworkInfo> network;
   voiceInfo->GetNetwork(getter_AddRefs(network));
   NS_ENSURE_TRUE_VOID(network);
   network->GetLongName(mOperatorName);
