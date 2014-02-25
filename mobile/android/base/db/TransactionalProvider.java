@@ -109,6 +109,10 @@ public abstract class TransactionalProvider<T extends SQLiteOpenHelper> extends 
         return mDatabases.getDatabaseHelperForProfile(profile, isTest(uri)).getWritableDatabase();
     }
 
+    protected SQLiteDatabase getWritableDatabaseForProfile(String profile, boolean isTest) {
+        return mDatabases.getDatabaseHelperForProfile(profile, isTest).getWritableDatabase();
+    }
+
     @Override
     public boolean onCreate() {
         synchronized (this) {
