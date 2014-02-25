@@ -6,7 +6,6 @@
 
 #include "nsISupports.idl"
 
-interface nsICancelableRunnable;
 interface nsIDOMWindow;
 interface nsIRunnable;
 interface nsISimpleEnumerator;
@@ -179,7 +178,7 @@ interface nsIFinishReportingCallback : nsISupports
   void callback(in nsISupports data);
 };
 
-[scriptable, builtinclass, uuid(e4e4ca56-13e0-46f1-b3c5-62d2c09fc98e)]
+[scriptable, builtinclass, uuid(12e08b1b-6590-4f78-996b-d9062c17e856)]
 interface nsIMemoryReporterManager : nsISupports
 {
   /*
@@ -350,9 +349,9 @@ interface nsIMemoryReporterManager : nsISupports
   /*
    * Run a series of GC/CC's in an attempt to minimize the application's memory
    * usage.  When we're finished, we invoke the given runnable if it's not
-   * null.  Returns a reference to the runnable used for carrying out the task.
+   * null.
    */
-  nsICancelableRunnable minimizeMemoryUsage(in nsIRunnable callback);
+  void minimizeMemoryUsage(in nsIRunnable callback);
 
   /*
    * Measure the memory that is known to be owned by this tab, split up into
