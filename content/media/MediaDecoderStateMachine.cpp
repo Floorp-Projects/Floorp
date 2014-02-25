@@ -1799,17 +1799,19 @@ void MediaDecoderStateMachine::DecodeSeek()
     }
     if (NS_SUCCEEDED(res)) {
       AudioData* audio = HasAudio() ? mReader->AudioQueue().PeekFront() : nullptr;
-      NS_ASSERTION(!audio || (audio->mTime <= seekTime &&
-                              seekTime <= audio->mTime + audio->mDuration),
-                    "Seek target should lie inside the first audio block after seek");
+      MOZ_ASSERT(!audio ||
+                 (audio->mTime <= seekTime &&
+                  seekTime <= audio->mTime + audio->mDuration) ||
+                 mReader->AudioQueue().IsFinished(),
+                 "Seek target should lie inside the first audio block after seek");
       int64_t startTime = (audio && audio->mTime < seekTime) ? audio->mTime : seekTime;
       mAudioStartTime = startTime;
       mPlayDuration = startTime - mStartTime;
       if (HasVideo()) {
         VideoData* video = mReader->VideoQueue().PeekFront();
         if (video) {
-          NS_ASSERTION((video->mTime <= seekTime && seekTime <= video->GetEndTime()) ||
-                        mReader->VideoQueue().IsFinished(),
+          MOZ_ASSERT((video->mTime <= seekTime && seekTime <= video->GetEndTime()) ||
+                     mReader->VideoQueue().IsFinished(),
             "Seek target should lie inside the first frame after seek, unless it's the last frame.");
           {
             ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
