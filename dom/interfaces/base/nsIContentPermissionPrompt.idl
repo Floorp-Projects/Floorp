@@ -12,7 +12,7 @@ interface nsIArray;
 /**
  *  Interface provides the request type and its access.
  */
-[scriptable, uuid(384b6cc4-a66b-4bea-98e0-eb10562a9ba4)]
+[scriptable, uuid(ef4db3b8-ca9c-4b1d-8f81-fd88ec32af13)]
 interface nsIContentPermissionType : nsISupports {
   /**
    *  The type of the permission request, such as
@@ -25,6 +25,11 @@ interface nsIContentPermissionType : nsISupports {
    *  "read".
    */
   readonly attribute ACString access;
+
+  /**
+   * The array of available options.
+   */
+  readonly attribute nsIArray options; // ["choice1", "choice2"]
 };
 
 /**
@@ -59,7 +64,7 @@ interface nsIContentPermissionRequest : nsISupports {
    */
 
   void cancel();
-  void allow();
+  void allow([optional] in jsval choices); // {"type1": "choice1", "type2": "choiceA"}
 };
 
 /**
