@@ -18,8 +18,6 @@
 #ifndef NATIVEWINDOW_GONKCONSUMERBASE_KK_H
 #define NATIVEWINDOW_GONKCONSUMERBASE_KK_H
 
-#include <gui/BufferQueue.h>
-
 #include <ui/GraphicBuffer.h>
 
 #include <utils/String8.h>
@@ -166,9 +164,7 @@ protected:
     // must take place when a buffer is released back to the GonkBufferQueue.  If
     // it is overridden the derived class's implementation must call
     // GonkConsumerBase::releaseBufferLocked.
-    virtual status_t releaseBufferLocked(int slot,
-            const sp<GraphicBuffer> graphicBuffer,
-            EGLDisplay display, EGLSyncKHR eglFence);
+    virtual status_t releaseBufferLocked(int slot, const sp<GraphicBuffer> graphicBuffer);
 
     // returns true iff the slot still has the graphicBuffer in it.
     bool stillTracking(int slot, const sp<GraphicBuffer> graphicBuffer);

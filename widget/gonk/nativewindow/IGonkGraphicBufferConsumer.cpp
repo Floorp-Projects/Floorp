@@ -16,10 +16,6 @@
 
 #define EGL_EGLEXT_PROTOTYPES
 
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
-
-
 #include <stdint.h>
 #include <sys/types.h>
 
@@ -223,7 +219,6 @@ public:
     }
 
     virtual status_t releaseBuffer(int buf, uint64_t frameNumber,
-            EGLDisplay display, EGLSyncKHR fence,
             const sp<Fence>& releaseFence) {
         Parcel data, reply;
         data.writeInterfaceToken(IGonkGraphicBufferConsumer::getInterfaceDescriptor());
@@ -388,8 +383,7 @@ status_t BnGonkGraphicBufferConsumer::onTransact(
             sp<Fence> releaseFence = new Fence();
             status_t err = data.read(*releaseFence);
             if (err) return err;
-            status_t result = releaseBuffer(buf, frameNumber,
-                    EGL_NO_DISPLAY, EGL_NO_SYNC_KHR, releaseFence);
+            status_t result = releaseBuffer(buf, frameNumber, releaseFence);
             reply->writeInt32(result);
             return NO_ERROR;
         } break;

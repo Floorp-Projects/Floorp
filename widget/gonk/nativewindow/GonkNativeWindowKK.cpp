@@ -94,8 +94,7 @@ status_t GonkNativeWindow::releaseBuffer(const BufferItem &item,
 
     err = addReleaseFenceLocked(item.mBuf, item.mGraphicBuffer, releaseFence);
 
-    err = releaseBufferLocked(item.mBuf, item.mGraphicBuffer, EGL_NO_DISPLAY,
-            EGL_NO_SYNC_KHR);
+    err = releaseBufferLocked(item.mBuf, item.mGraphicBuffer);
     if (err != OK) {
         BI_LOGE("Failed to release buffer: %s (%d)",
                 strerror(-err), err);
@@ -143,7 +142,7 @@ GonkNativeWindow::returnBuffer(uint32_t aIndex, uint32_t aGeneration) {
           aGeneration, mConsumer->getGeneration());
         return false;
     }
-    status_t err = releaseBufferLocked(aIndex, mSlots[aIndex].mGraphicBuffer, EGL_NO_DISPLAY, EGL_NO_SYNC_KHR);
+    status_t err = releaseBufferLocked(aIndex, mSlots[aIndex].mGraphicBuffer);
 
     if (err != NO_ERROR) {
         return false;
