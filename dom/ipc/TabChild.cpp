@@ -551,10 +551,12 @@ TabChild::HandlePossibleViewportChange()
   nsViewportInfo viewportInfo = nsContentUtils::GetViewportInfo(document, mInnerSize);
   uint32_t presShellId;
   ViewID viewId;
-  if (APZCCallbackHelper::GetScrollIdentifiers(document->GetDocumentElement(),
-                                               &presShellId, &viewId)) {
+  bool scrollIdentifiersValid = APZCCallbackHelper::GetScrollIdentifiers(
+        document->GetDocumentElement(), &presShellId, &viewId);
+  if (scrollIdentifiersValid) {
     ZoomConstraints constraints(
       viewportInfo.IsZoomAllowed(),
+      viewportInfo.IsDoubleTapZoomAllowed(),
       viewportInfo.GetMinZoom(),
       viewportInfo.GetMaxZoom());
     SendUpdateZoomConstraints(presShellId,
@@ -562,7 +564,6 @@ TabChild::HandlePossibleViewportChange()
                               /* isRoot = */ true,
                               constraints);
   }
-
 
   float screenW = mInnerSize.width;
   float screenH = mInnerSize.height;
@@ -666,6 +667,25 @@ TabChild::HandlePossibleViewportChange()
   // Force a repaint with these metrics. This, among other things, sets the
   // displayport, so we start with async painting.
   ProcessUpdateFrame(metrics);
+
+  if (viewportInfo.IsZoomAllowed() && scrollIdentifiersValid) {
+    // If the CSS viewport is narrower than the screen (i.e. width <= device-width)
+    // then we disable double-tap-to-zoom behaviour.
+    bool allowDoubleTapZoom = (viewport.width > screenW / metrics.mDevPixelsPerCSSPixel.scale);
+    if (allowDoubleTapZoom != viewportInfo.IsDoubleTapZoomAllowed()) {
+      viewportInfo.SetAllowDoubleTapZoom(allowDoubleTapZoom);
+
+      ZoomConstraints constraints(
+        viewportInfo.IsZoomAllowed(),
+        viewportInfo.IsDoubleTapZoomAllowed(),
+        viewportInfo.GetMinZoom(),
+        viewportInfo.GetMaxZoom());
+      SendUpdateZoomConstraints(presShellId,
+                                viewId,
+                                /* isRoot = */ true,
+                                constraints);
+    }
+  }
 }
 
 nsresult
