@@ -22,7 +22,6 @@
 #include "mozilla/layers/LayerTransactionChild.h"
 #include "nsAString.h"
 #include "nsIWidget.h"                  // for nsIWidget
-#include "nsIWidgetListener.h"
 #include "nsTArray.h"                   // for AutoInfallibleTArray
 #include "nsXULAppAPI.h"                // for XRE_GetProcessType, etc
 #ifdef MOZ_WIDGET_ANDROID
@@ -262,16 +261,6 @@ ClientLayerManager::Composite()
 {
   if (CompositorChild* remoteRenderer = GetRemoteRenderer()) {
     remoteRenderer->SendForceComposite();
-  }
-}
-
-void
-ClientLayerManager::DidComposite()
-{
-  MOZ_ASSERT(mWidget);
-  nsIWidgetListener *listener = mWidget->GetWidgetListener();
-  if (listener) {
-    listener->DidCompositeWindow();
   }
 }
 
