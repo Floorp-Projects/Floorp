@@ -517,7 +517,7 @@ PuppetWidget::NotifyIMEOfUpdateComposition()
 nsIMEUpdatePreference
 PuppetWidget::GetIMEUpdatePreference()
 {
-#ifdef MOZ_CROSS_PROESS_IME
+#ifdef MOZ_CROSS_PROCESS_IME
   // e10s requires IME information cache into TabParent
   return nsIMEUpdatePreference(mIMEPreferenceOfParent.mWantUpdates |
                                nsIMEUpdatePreference::NOTIFY_SELECTION_CHANGE |
