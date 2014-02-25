@@ -963,7 +963,7 @@ TransferZoomLevels(nsIDocument* aFromDoc,
     return;
 
   toCtxt->SetFullZoom(fromCtxt->GetFullZoom());
-  toCtxt->SetMinFontSize(fromCtxt->MinFontSize(nullptr));
+  toCtxt->SetBaseMinFontSize(fromCtxt->BaseMinFontSize());
   toCtxt->SetTextZoom(fromCtxt->TextZoom());
 }
 
