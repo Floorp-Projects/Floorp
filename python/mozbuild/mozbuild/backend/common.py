@@ -25,7 +25,7 @@ from ..frontend.data import (
     XPIDLFile,
     WebIDLFile,
 )
-from ..mozinfo import write_mozinfo
+
 from ..util import DefaultOnReadDict
 
 
@@ -172,8 +172,6 @@ class CommonBackend(BuildBackend):
         self._webidls = WebIDLCollection()
         self._configs = set()
 
-        self._write_mozinfo = True # For testing
-
     def consume_object(self, obj):
         self._configs.add(obj.config)
 
@@ -238,13 +236,6 @@ class CommonBackend(BuildBackend):
 
         for config in self._configs:
             self.backend_input_files.add(config.source)
-
-        # Write out a JSON file used by test harnesses, other parts of
-        # automation.
-        if self._write_mozinfo and 'JS_STANDALONE' not in self.environment.substs:
-            path = mozpath.join(self.environment.topobjdir, 'mozinfo.json')
-            with self._write_file(path) as fh:
-                write_mozinfo(fh, self.environment, os.environ)
 
         # Write out a machine-readable file describing every test.
         path = mozpath.join(self.environment.topobjdir, 'all-tests.json')

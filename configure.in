@@ -9074,9 +9074,11 @@ ac_configure_args="$_SUBDIR_CONFIG_ARGS"
 
 fi # COMPILE_ENVIRONMENT && !LIBXUL_SDK_DIR
 
+export WRITE_MOZINFO=1
 dnl we need to run config.status after js/src subconfigure because we're
 dnl traversing its moz.build and we need its config.status for that.
 dnl However, writing our own config.status needs to happen before
 dnl subconfigures because the setup surrounding subconfigures alters
 dnl many AC_SUBSTed variables.
 MOZ_RUN_CONFIG_STATUS()
+unset WRITE_MOZINFO
