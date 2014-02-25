@@ -49,6 +49,18 @@ public:
    * @return The entry, or nullptr if not found. Do not release this pointer!
    */
   RefPtr* GetWeak(KeyType aKey, bool* aFound = nullptr) const;
+
+  // Overload Remove, rather than overriding it.
+  using base_type::Remove;
+
+  /**
+   * Remove the data for the associated key, swapping the current value into
+   * pData, thereby avoiding calls to AddRef and Release.
+   * @param aKey the key to remove from the hashtable
+   * @param pData This is an XPCOM getter, so pData is already_addrefed.
+   *   If the key doesn't exist, pData will be set to nullptr. Must be non-null.
+   */
+  bool Remove(KeyType aKey, UserDataType* pData);
 };
 
 template <typename K, typename T>
@@ -122,6 +134,26 @@ nsRefPtrHashtable<KeyClass,RefPtr>::GetWeak
   }
 
   return nullptr;
+}
+
+template<class KeyClass, class RefPtr>
+bool
+nsRefPtrHashtable<KeyClass,RefPtr>::Remove(KeyType aKey,
+                                           UserDataType* pRefPtr)
+{
+  MOZ_ASSERT(pRefPtr);
+  typename base_type::EntryType* ent = this->GetEntry(aKey);
+
+  if (ent) {
+    ent->mData.forget(pRefPtr);
+    this->Remove(aKey);
+    return true;
+  }
+
+  // If the key doesn't exist, set *pRefPtr to null
+  // so that it is a valid XPCOM getter.
+  *pRefPtr = nullptr;
+  return false;
 }
 
 #endif // nsRefPtrHashtable_h__
