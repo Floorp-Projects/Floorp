@@ -381,6 +381,8 @@ public:
   virtual PTextureChild* CreateTexture(const SurfaceDescriptor& aSharedData,
                                        TextureFlags aFlags) MOZ_OVERRIDE;
 
+  virtual bool IsSameProcess() const MOZ_OVERRIDE;
+
 protected:
   ImageBridgeChild();
   bool DispatchAllocShmemInternal(size_t aSize,

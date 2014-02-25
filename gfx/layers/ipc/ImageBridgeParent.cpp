@@ -235,5 +235,10 @@ ImageBridgeParent::CloneToplevel(const InfallibleTArray<ProtocolFdMapping>& aFds
   return nullptr;
 }
 
+bool ImageBridgeParent::IsSameProcess() const
+{
+  return OtherProcess() == ipc::kInvalidProcessHandle;
+}
+
 } // layers
 } // mozilla

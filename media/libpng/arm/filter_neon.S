@@ -3,7 +3,7 @@
  *
  * Copyright (c) 2013 Glenn Randers-Pehrson
  * Written by Mans Rullgard, 2011.
- * Last changed in libpng 1.6.7 [November 14, 2013]
+ * Last changed in libpng 1.6.8 [December 19, 2013]
  *
  * This code is released under the libpng license.
  * For conditions of distribution and use, see the disclaimer
@@ -17,7 +17,8 @@
 #define MOZ_PNG_HAVE_ARM_NEON
 
 /* This is required to get the symbol renames, which are #defines, and also
- * includes the definition (or not) of PNG_ARM_NEON_OPT.
+ * includes the definition (or not) of PNG_ARM_NEON_OPT and
+ * PNG_ARM_NEON_IMPLEMENTATION.
  */
 #define PNG_VERSION_INFO_ONLY
 #include "../pngpriv.h"

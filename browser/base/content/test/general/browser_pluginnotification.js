@@ -60,6 +60,7 @@ function test() {
   registerCleanupFunction(function() {
     clearAllPluginPermissions();
     Services.prefs.clearUserPref("extensions.blocklist.suppressUI");
+    Services.prefs.clearUserPref("plugins.hideMissingPluginsNotification");
   });
   Services.prefs.setBoolPref("extensions.blocklist.suppressUI", true);
 
@@ -70,7 +71,7 @@ function test() {
   gBrowser.selectedTab = newTab;
   gTestBrowser = gBrowser.selectedBrowser;
   gTestBrowser.addEventListener("load", pageLoad, true);
-  prepareTest(runAfterPluginBindingAttached(test1), gTestRoot + "plugin_unknown.html");
+  prepareTest(runAfterPluginBindingAttached(test1a), gTestRoot + "plugin_unknown.html");
 }
 
 function finishTest() {
@@ -109,19 +110,29 @@ function runAfterPluginBindingAttached(func) {
 }
 
 // Tests a page with an unknown plugin in it.
-function test1() {
-  ok(PopupNotifications.getNotification("plugins-not-found", gTestBrowser), "Test 1, Should have displayed the missing plugin notification");
-  ok(gTestBrowser.missingPlugins, "Test 1, Should be a missing plugin list");
-  ok(gTestBrowser.missingPlugins.has("application/x-unknown"), "Test 1, Should know about application/x-unknown");
-  ok(!gTestBrowser.missingPlugins.has("application/x-test"), "Test 1, Should not know about application/x-test");
+function test1a() {
+  ok(PopupNotifications.getNotification("plugins-not-found", gTestBrowser), "Test 1a, Should have displayed the missing plugin notification");
+  ok(gTestBrowser.missingPlugins, "Test 1a, Should be a missing plugin list");
+  ok(gTestBrowser.missingPlugins.has("application/x-unknown"), "Test 1a, Should know about application/x-unknown");
+  ok(!gTestBrowser.missingPlugins.has("application/x-test"), "Test 1a, Should not know about application/x-test");
 
   var pluginNode = gTestBrowser.contentDocument.getElementById("unknown");
-  ok(pluginNode, "Test 1, Found plugin in page");
+  ok(pluginNode, "Test 1a, Found plugin in page");
   var objLoadingContent = pluginNode.QueryInterface(Ci.nsIObjectLoadingContent);
-  is(objLoadingContent.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_UNSUPPORTED, "Test 1, plugin fallback type should be PLUGIN_UNSUPPORTED");
+  is(objLoadingContent.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_UNSUPPORTED, "Test 1a, plugin fallback type should be PLUGIN_UNSUPPORTED");
+
+  Services.prefs.setBoolPref("plugins.hideMissingPluginsNotification", true);
+  prepareTest(runAfterPluginBindingAttached(test1b), gTestRoot + "plugin_unknown.html");
+}
+
+
+function test1b() {
+  ok(!PopupNotifications.getNotification("plugins-not-found", gTestBrowser), "Test 1b, Should not have displayed the missing plugin notification");
+  ok(!gTestBrowser.missingPlugins, "Test 1b, Should not be a missing plugin list");
+  Services.prefs.clearUserPref("plugins.hideMissingPluginsNotification");
 
   var plugin = getTestPlugin();
-  ok(plugin, "Should have a test plugin");
+  ok(plugin, "Test 1b, Should have a test plugin");
   plugin.enabledState = Ci.nsIPluginTag.STATE_ENABLED;
   prepareTest(runAfterPluginBindingAttached(test2), gTestRoot + "plugin_test.html");
 }

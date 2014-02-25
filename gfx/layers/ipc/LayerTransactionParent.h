@@ -75,6 +75,7 @@ public:
     PLayerTransactionParent::DeallocShmem(aShmem);
   }
 
+  virtual bool IsSameProcess() const MOZ_OVERRIDE;
 
 protected:
   virtual bool RecvUpdate(const EditArray& cset,

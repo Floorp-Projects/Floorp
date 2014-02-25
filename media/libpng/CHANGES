@@ -4712,6 +4712,93 @@ Version 1.6.7rc02 [November 7, 2013]
     checking macros take an unsigned char argument, not a signed char.
 
 Version 1.6.7 [November 14, 2013]
+  No changes.
+
+Version 1.6.8beta01 [November 24, 2013]
+  Moved prototype for png_handle_unknown() in pngpriv.h outside of
+    the #ifdef PNG_SET_UNKNOWN_CHUNKS_SUPPORTED/#endif block.
+  Added "-Wall" to CFLAGS in contrib/pngminim/*/makefile
+  Conditionally compile some unused functions reported by -Wall in
+    pngminim.
+  Fixed 'minimal' builds. Various obviously useful minimal configurations
+    don't build because of missing contrib/libtests test programs and
+    overly complex dependencies in scripts/pnglibconf.dfa. This change
+    adds contrib/conftest/*.dfa files that can be used in automatic build
+    scripts to ensure that these configurations continue to build.
+  Enabled WRITE_INVERT and WRITE_PACK in contrib/pngminim/encoder.
+  Fixed pngvalid 'fail' function declaration on the Intel C Compiler.
+    This reverts to the previous 'static' implementation and works round
+    the 'unused static function' warning by using PNG_UNUSED().
+
+Version 1.6.8beta02 [November 30, 2013]
+  Removed or marked PNG_UNUSED some harmless "dead assignments" reported
+    by clang scan-build.
+  Changed tabs to 3 spaces in png_debug macros and changed '"%s"m'
+    to '"%s" m' to improve portability among compilers.
+  Changed png_free_default() to free() in pngtest.c
+
+Version 1.6.8rc01 [December 12, 2013]
+  Tidied up pngfix inits and fixed pngtest no-write builds.
+
+Version 1.6.8rc02 [December 14, 2013]
+  Handle zero-length PLTE chunk or NULL palette with png_error()
+    instead of png_chunk_report(), which by default issues a warning
+    rather than an error, leading to later reading from a NULL pointer
+    (png_ptr->palette) in png_do_expand_palette(). This is CVE-2013-6954
+    and VU#650142.  Libpng-1.6.1 through 1.6.7 are vulnerable.
+    Libpng-1.6.0 and earlier do not have this bug.
+
+Version 1.6.8 [December 19, 2013]
+  No changes.
+
+Version 1.6.9beta01 [December 26, 2013]
+  Bookkeeping: Moved functions around (no changes). Moved transform
+    function definitions before the place where they are called so that
+    they can be masde static. Move the intrapixel functions and the
+    grayscale palette builder out of the png?tran.c files. The latter
+    isn't a transform function and is no longer used internally, and the
+    former MNG specific functions are better placed in pngread/pngwrite.c
+  Made transform implementation functions static. This makes the internal
+    functions called by png_do_{read|write}_transformations static. On an
+    x86-64 DLL build (Gentoo Linux) this reduces the size of the text
+    segment of the DLL by 1208 bytes, about 0.6%. It also simplifies
+    maintenance by removing the declarations from pngpriv.h and allowing
+    easier changes to the internal interfaces.
+  Rebuilt configure scripts with automake-1.14.1 and autoconf-2.69
+    in the tar distributions.
+
+Version 1.6.9beta02 [January 1, 2014]
+  Added checks for libpng 1.5 to pngvalid.c.  This supports the use of
+    this version of pngvalid in libpng 1.5
+  Merged with pngvalid.c from libpng-1.7 changes to create a single
+    pngvalid.c
+  Removed #error macro from contrib/tools/pngfix.c (Thomas Klausner).
+  Merged pngrio.c, pngtrans.c, pngwio.c, and pngerror.c with libpng-1.7.0
+  Merged libpng-1.7.0 changes to make no-interlace configurations work
+    with test programs.
+  Revised pngvalid.c to support libpng 1.5, which does not support the
+    PNG_MAXIMUM_INFLATE_WINDOW option, so #define it out when appropriate in
+    pngvalid.c
+  Allow unversioned links created on install to be disabled in configure.
+    In configure builds 'make install' changes/adds links like png.h
+    and libpng.a to point to the newly installed, versioned, files (e.g.
+    libpng17/png.h and libpng17.a). Three new configure options and some
+    rearrangement of Makefile.am allow creation of these links to be disabled.
+
+Version 1.6.9beta03 [January 10, 2014]
+  Removed potentially misleading warning from png_check_IHDR().
+
+Version 1.6.9beta04 [January 20, 2014]
+  Updated scripts/makefile.* to use CPPFLAGS (Cosmin).
+  Added clang attribute support (Cosmin).
+
+Version 1.6.9rc01 [January 28, 2014]
+  No changes.
+
+Version 1.6.9rc02 [January 30, 2014]
+  Quiet an uninitialized memory warning from VC2013 in png_get_png().
+
+Version 1.6.9 [February 6, 2014]
 
 Send comments/corrections/commendations to png-mng-implement at lists.sf.net
 (subscription required; visit

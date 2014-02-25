@@ -1285,7 +1285,7 @@ nsMathMLChar::StretchInternal(nsPresContext*           aPresContext,
   uint32_t len = uint32_t(mData.Length());
   nsAutoPtr<gfxTextRun> textRun;
   textRun = fm->GetThebesFontGroup()->
-    MakeTextRun(mData.get(), len, aThebesContext,
+    MakeTextRun(static_cast<const char16_t*>(mData.get()), len, aThebesContext,
                 aPresContext->AppUnitsPerDevPixel(), 0);
   aDesiredStretchSize = MeasureTextRun(aThebesContext, textRun);
   mGlyphs[0] = textRun;
