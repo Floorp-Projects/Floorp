@@ -1,0 +1,20 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBackground;
+
+namespace mozilla {
+namespace ipc {
+
+// This is a very simple testing protocol that is only used during mochitests.
+protocol PBackgroundTest
+{
+  manager PBackground;
+
+child:
+  __delete__(nsCString testArg);
+};
+
+} // namespace ipc
+} // namespace mozilla

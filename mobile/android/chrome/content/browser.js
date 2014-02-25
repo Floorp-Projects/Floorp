@@ -4041,6 +4041,7 @@ Tab.prototype = {
   updateViewportMetadata: function updateViewportMetadata(aMetadata, aInitialLoad) {
     if (Services.prefs.getBoolPref("browser.ui.zoom.force-user-scalable")) {
       aMetadata.allowZoom = true;
+      aMetadata.allowDoubleTapZoom = true;
       aMetadata.minZoom = aMetadata.maxZoom = NaN;
     }
 
@@ -4056,8 +4057,9 @@ Tab.prototype = {
     aMetadata.isRTL = this.browser.contentDocument.documentElement.dir == "rtl";
 
     ViewportHandler.setMetadataForDocument(this.browser.contentDocument, aMetadata);
-    this.updateViewportSize(gScreenWidth, aInitialLoad);
     this.sendViewportMetadata();
+
+    this.updateViewportSize(gScreenWidth, aInitialLoad);
   },
 
   /** Update viewport when the metadata or the window size changes. */
@@ -4182,6 +4184,17 @@ Tab.prototype = {
 
     this.sendViewportUpdate();
 
+    if (metadata.allowZoom && !Services.prefs.getBoolPref("browser.ui.zoom.force-user-scalable")) {
+      // If the CSS viewport is narrower than the screen (i.e. width <= device-width)
+      // then we disable double-tap-to-zoom behaviour.
+      var oldAllowDoubleTapZoom = metadata.allowDoubleTapZoom;
+      var newAllowDoubleTapZoom = (viewportW > screenW / window.devicePixelRatio);
+      if (oldAllowDoubleTapZoom !== newAllowDoubleTapZoom) {
+        metadata.allowDoubleTapZoom = newAllowDoubleTapZoom;
+        this.sendViewportMetadata();
+      }
+    }
+
     // Store the page size that was used to calculate the viewport so that we
     // can verify it's changed when we consider remeasuring in updateViewportForPageSize
     let viewport = this.getViewport();
@@ -4196,6 +4209,7 @@ Tab.prototype = {
     sendMessageToJava({
       type: "Tab:ViewportMetadata",
       allowZoom: metadata.allowZoom,
+      allowDoubleTapZoom: metadata.allowDoubleTapZoom,
       defaultZoom: metadata.defaultZoom || window.devicePixelRatio,
       minZoom: metadata.minZoom || 0,
       maxZoom: metadata.maxZoom || 0,
@@ -5878,6 +5892,11 @@ var ViewportHandler = {
     let allowZoomStr = windowUtils.getDocumentMetadata("viewport-user-scalable");
     let allowZoom = !/^(0|no|false)$/.test(allowZoomStr) && (minScale != maxScale);
 
+    // Double-tap should always be disabled if allowZoom is disabled. So we initialize
+    // allowDoubleTapZoom to the same value as allowZoom and have additional conditions to
+    // disable it in updateViewportSize.
+    let allowDoubleTapZoom = allowZoom;
+
     let autoSize = true;
 
     if (isNaN(scale) && isNaN(minScale) && isNaN(maxScale) && allowZoomStr == "" && widthStr == "" && heightStr == "") {
@@ -5887,7 +5906,8 @@ var ViewportHandler = {
         return new ViewportMetadata({
           defaultZoom: 1,
           autoSize: true,
-          allowZoom: true
+          allowZoom: true,
+          allowDoubleTapZoom: false
         });
       }
 
@@ -5896,7 +5916,8 @@ var ViewportHandler = {
         return new ViewportMetadata({
           defaultZoom: 1,
           autoSize: true,
-          allowZoom: true
+          allowZoom: true,
+          allowDoubleTapZoom: false
         });
       }
 
@@ -5928,6 +5949,7 @@ var ViewportHandler = {
       height: height,
       autoSize: autoSize,
       allowZoom: allowZoom,
+      allowDoubleTapZoom: allowDoubleTapZoom,
       isSpecified: hasMetaViewport,
       isRTL: isRTL
     });
@@ -5971,6 +5993,7 @@ var ViewportHandler = {
  *   maxZoom (float): The maximum zoom level.
  *   autoSize (boolean): Resize the CSS viewport when the window resizes.
  *   allowZoom (boolean): Let the user zoom in or out.
+ *   allowDoubleTapZoom (boolean): Allow double-tap to zoom in.
  *   isSpecified (boolean): Whether the page viewport is specified or not.
  */
 function ViewportMetadata(aMetadata = {}) {
@@ -5981,6 +6004,7 @@ function ViewportMetadata(aMetadata = {}) {
   this.maxZoom = ("maxZoom" in aMetadata) ? aMetadata.maxZoom : 0;
   this.autoSize = ("autoSize" in aMetadata) ? aMetadata.autoSize : false;
   this.allowZoom = ("allowZoom" in aMetadata) ? aMetadata.allowZoom : true;
+  this.allowDoubleTapZoom = ("allowDoubleTapZoom" in aMetadata) ? aMetadata.allowDoubleTapZoom : true;
   this.isSpecified = ("isSpecified" in aMetadata) ? aMetadata.isSpecified : false;
   this.isRTL = ("isRTL" in aMetadata) ? aMetadata.isRTL : false;
   Object.seal(this);
@@ -5994,6 +6018,7 @@ ViewportMetadata.prototype = {
   maxZoom: null,
   autoSize: null,
   allowZoom: null,
+  allowDoubleTapZoom: null,
   isSpecified: null,
   isRTL: null,
 };

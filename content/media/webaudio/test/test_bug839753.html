@@ -9,7 +9,7 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-AudioContext().destination.expando = null;
+(new AudioContext()).destination.expando = null;
 ok(true, "The test should not trigger wrapper cache assertions");
 
 </script>

@@ -89,7 +89,7 @@ gfxXlibSurface::~gfxXlibSurface()
 {
 #if defined(GL_PROVIDER_GLX)
     if (mGLXPixmap) {
-        gl::sGLXLibrary.DestroyPixmap(mGLXPixmap);
+        gl::sGLXLibrary.DestroyPixmap(mDisplay, mGLXPixmap);
     }
 #endif
     // gfxASurface's destructor calls RecordMemoryFreed().
@@ -278,7 +278,7 @@ gfxXlibSurface::Finish()
 {
 #if defined(GL_PROVIDER_GLX)
     if (mGLXPixmap) {
-        gl::sGLXLibrary.DestroyPixmap(mGLXPixmap);
+        gl::sGLXLibrary.DestroyPixmap(mDisplay, mGLXPixmap);
         mGLXPixmap = None;
     }
 #endif

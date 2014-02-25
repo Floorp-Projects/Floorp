@@ -27,6 +27,7 @@ class nsPresContext;
 namespace mozilla {
 namespace dom {
 class EventTarget;
+class ErrorEvent;
 }
 }
 
@@ -88,6 +89,11 @@ public:
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
   {
     return mozilla::dom::EventBinding::Wrap(aCx, aScope, this);
+  }
+
+  virtual mozilla::dom::ErrorEvent* AsErrorEvent()
+  {
+    return nullptr;
   }
 
   // nsIDOMEvent Interface

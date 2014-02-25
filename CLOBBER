@@ -22,6 +22,4 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-CLOBBER to test mozfile changes which previously broke mozbuild's ability to clobber (bug 949600).
-
-Safe to ignore - last clobber was 'Skia update from Bug 910754 needs a CLOBBER build' at Feb 18 15:19:59 2014 PST
+Update CLOBBER for bug 939672 moves file location and requires clobber build.

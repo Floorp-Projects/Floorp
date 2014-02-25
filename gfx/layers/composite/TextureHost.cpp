@@ -89,6 +89,12 @@ TextureHost::AsTextureHost(PTextureParent* actor)
   return actor? static_cast<TextureParent*>(actor)->mTextureHost : nullptr;
 }
 
+PTextureParent*
+TextureHost::GetIPDLActor()
+{
+  return mActor;
+}
+
 // implemented in TextureOGL.cpp
 TemporaryRef<DeprecatedTextureHost> CreateDeprecatedTextureHostOGL(SurfaceDescriptorType aDescriptorType,
                                                            uint32_t aDeprecatedTextureHostFlags,
@@ -242,7 +248,8 @@ TextureHost::SetCompositableBackendSpecificData(CompositableBackendSpecificData*
 
 
 TextureHost::TextureHost(TextureFlags aFlags)
-    : mFlags(aFlags)
+    : mActor(nullptr)
+    , mFlags(aFlags)
 {}
 
 TextureHost::~TextureHost()
@@ -723,6 +730,7 @@ TextureParent::Init(const SurfaceDescriptor& aSharedData,
   mTextureHost = TextureHost::Create(aSharedData,
                                      mAllocator,
                                      aFlags);
+  mTextureHost->mActor = this;
   return !!mTextureHost;
 }
 
@@ -760,6 +768,8 @@ TextureParent::ActorDestroy(ActorDestroyReason why)
   if (mTextureHost->GetFlags() & TEXTURE_DEALLOCATE_CLIENT) {
     mTextureHost->ForgetSharedData();
   }
+
+  mTextureHost->mActor = nullptr;
   mTextureHost = nullptr;
 }
 

@@ -248,11 +248,12 @@ GlobalObject::initFunctionAndObjectClasses(JSContext *cx)
         if (!source)
             return nullptr;
         ScriptSource *ss =
-            cx->new_<ScriptSource>(/* originPrincipals = */ (JSPrincipals*)nullptr);
+            cx->new_<ScriptSource>();
         if (!ss) {
             js_free(source);
             return nullptr;
         }
+        ScriptSourceHolder ssHolder(ss);
         ss->setSource(source, sourceLen);
         CompileOptions options(cx);
         options.setNoScriptRval(true)

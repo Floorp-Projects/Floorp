@@ -358,7 +358,7 @@ function testDecoderGetEncoding()
   for (var le of labelEncodings) {
     for (var label of le.labels) {
       try {
-        var decoder = TextDecoder(label);
+        var decoder = new TextDecoder(label);
       } catch (e) {
         assert_true(!!le.error, label + " shoud not throw " + e.name);
         assert_equals(e.name, le.error, label + " label encoding unsupported test.");
@@ -374,7 +374,7 @@ function testCharset(test)
 {
   try {
     var fatal = test.fatal ? {fatal: test.fatal} : null;
-    var decoder = TextDecoder(test.encoding, fatal);
+    var decoder = new TextDecoder(test.encoding, fatal);
   } catch (e) {
     assert_equals(e.name, test.error, test.msg + " error thrown from the constructor.");
     return;
@@ -438,7 +438,7 @@ function testInvalid2022JP()
   inputs.forEach(function(input) {
     try {
       // decode() should never throw unless {fatal: true} is specified
-      new TextDecoder("iso-2022-jp").decode(new Uint8Array(input));
+      (new TextDecoder("iso-2022-jp")).decode(new Uint8Array(input));
     } catch (e) {
       if (e.name !== "EncodingError") {
         throw e;

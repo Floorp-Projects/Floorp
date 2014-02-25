@@ -8,6 +8,12 @@ namespace dom {
 struct PermissionRequest {
   nsCString type;
   nsCString access;
+  nsString[] options;
+};
+
+struct PermissionChoice {
+  nsCString type;
+  nsString choice;
 };
 
 } // namespace dom

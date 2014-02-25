@@ -17,6 +17,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/CondVar.h"
 #include "mozilla/ContentEvents.h"
+#include "mozilla/dom/ErrorEventBinding.h"
 #include "mozilla/dom/quota/OriginOrPatternString.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/dom/quota/Utilities.h"
@@ -340,19 +341,18 @@ IndexedDatabaseManager::FireWindowOnError(nsPIDOMWindow* aOwner,
     error->GetName(errorName);
   }
 
-  mozilla::InternalScriptErrorEvent event(true, NS_LOAD_ERROR);
-  request->FillScriptErrorEvent(&event);
-  NS_ABORT_IF_FALSE(event.fileName,
-                    "FillScriptErrorEvent should give us a non-null string "
-                    "for our error's fileName");
+  ErrorEventInit init;
+  request->FillScriptErrorEvent(init);
 
-  event.errorMsg = errorName.get();
+  init.mMessage = errorName;
+  init.mCancelable = true;
+  init.mBubbles = true;
 
   nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(aOwner));
   NS_ASSERTION(sgo, "How can this happen?!");
 
   nsEventStatus status = nsEventStatus_eIgnore;
-  if (NS_FAILED(sgo->HandleScriptError(&event, &status))) {
+  if (NS_FAILED(sgo->HandleScriptError(init, &status))) {
     NS_WARNING("Failed to dispatch script error event");
     status = nsEventStatus_eIgnore;
   }
@@ -368,8 +368,8 @@ IndexedDatabaseManager::FireWindowOnError(nsPIDOMWindow* aOwner,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (NS_FAILED(scriptError->InitWithWindowID(errorName,
-                                              nsDependentString(event.fileName),
-                                              EmptyString(), event.lineNr,
+                                              init.mFilename,
+                                              EmptyString(), init.mLineno,
                                               0, 0,
                                               "IndexedDB",
                                               aOwner->WindowID()))) {
