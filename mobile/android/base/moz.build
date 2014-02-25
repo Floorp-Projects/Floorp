@@ -485,12 +485,12 @@ if '-march=armv7' in CONFIG['OS_CFLAGS']:
 else:
     DEFINES['MOZ_MIN_CPU_VERSION'] = 5
 
-generated = add_android_eclipse_library_project('FennecGeneratedResources')
-generated.package_name = 'org.mozilla.fennec.generatedresources'
+generated = add_android_eclipse_library_project('FennecResourcesGenerated')
+generated.package_name = 'org.mozilla.fennec.resources.generated'
 generated.res = OBJDIR + '/res'
 
-branding = add_android_eclipse_library_project('FennecBrandingResources')
-branding.package_name = 'org.mozilla.fennec.brandingresources'
+branding = add_android_eclipse_library_project('FennecResourcesBranding')
+branding.package_name = 'org.mozilla.fennec.resources.branding'
 branding.res = TOPSRCDIR + '/' + CONFIG['MOZ_BRANDING_DIRECTORY'] + '/res'
 
 main = add_android_eclipse_project('Fennec', OBJDIR + '/AndroidManifest.xml')
@@ -529,8 +529,8 @@ main.included_projects += ['../' + resources.name]
 main.referenced_projects += [resources.name]
 
 if CONFIG['MOZ_CRASHREPORTER']:
-    crashreporter = add_android_eclipse_library_project('FennecCrashReporterResources')
-    crashreporter.package_name = 'org.mozilla.fennec.crashreporterresources'
+    crashreporter = add_android_eclipse_library_project('FennecResourcesCrashReporter')
+    crashreporter.package_name = 'org.mozilla.fennec.resources.crashreporter'
     crashreporter.res = SRCDIR + '/crashreporter/res'
     crashreporter.included_projects += ['../' + resources.name]
     crashreporter.referenced_projects += [resources.name]
