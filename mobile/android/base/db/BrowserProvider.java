@@ -364,6 +364,158 @@ public class BrowserProvider extends ContentProvider {
         }
     }
 
+    /**
+     * Return true if OS version and database parallelism support indicates
+     * that this provider should bundle writes into transactions.
+     */
+    @SuppressWarnings("static-method")
+    protected boolean shouldUseTransactions() {
+        return Build.VERSION.SDK_INT >= 11;
+    }
+
+    /**
+     * Track whether we're in a batch operation.
+     *
+     * When we're in a batch operation, individual write steps won't even try
+     * to start a transaction... and neither will they attempt to finish one.
+     *
+     * Set this to <code>Boolean.TRUE</code> when you're entering a batch --
+     * a section of code in which {@link ContentProvider} methods will be
+     * called, but nested transactions should not be started. Callers are
+     * responsible for beginning and ending the enclosing transaction, and
+     * for setting this to <code>Boolean.FALSE</code> when done.
+     *
+     * This is a ThreadLocal separate from `db.inTransaction` because batched
+     * operations start transactions independent of individual ContentProvider
+     * operations. This doesn't work well with the entire concept of this
+     * abstract class -- that is, automatically beginning and ending transactions
+     * for each insert/delete/update operation -- and doing so without
+     * causing arbitrary nesting requires external tracking.
+     *
+     * Note that beginWrite takes a DB argument, but we don't differentiate
+     * between databases in this tracking flag. If your ContentProvider manages
+     * multiple database transactions within the same thread, you'll need to
+     * amend this scheme -- but then, you're already doing some serious wizardry,
+     * so rock on.
+     */
+    final ThreadLocal<Boolean> isInBatchOperation = new ThreadLocal<Boolean>();
+
+    private boolean isInBatch() {
+        final Boolean isInBatch = isInBatchOperation.get();
+        if (isInBatch == null) {
+            return false;
+        }
+        return isInBatch.booleanValue();
+    }
+
+    /**
+     * If we're not currently in a transaction, and we should be, start one.
+     */
+    protected void beginWrite(final SQLiteDatabase db) {
+        if (isInBatch()) {
+            trace("Not bothering with an intermediate write transaction: inside batch operation.");
+            return;
+        }
+
+        if (shouldUseTransactions() && !db.inTransaction()) {
+            trace("beginWrite: beginning transaction.");
+            db.beginTransaction();
+        }
+    }
+
+    /**
+     * If we're not in a batch, but we are in a write transaction, mark it as
+     * successful.
+     */
+    protected void markWriteSuccessful(final SQLiteDatabase db) {
+        if (isInBatch()) {
+            trace("Not marking write successful: inside batch operation.");
+            return;
+        }
+
+        if (shouldUseTransactions() && db.inTransaction()) {
+            trace("Marking write transaction successful.");
+            db.setTransactionSuccessful();
+        }
+    }
+
+    /**
+     * If we're not in a batch, but we are in a write transaction,
+     * end it.
+     *
+     * @see TransactionalProvider#markWriteSuccessful(SQLiteDatabase)
+     */
+    protected void endWrite(final SQLiteDatabase db) {
+        if (isInBatch()) {
+            trace("Not ending write: inside batch operation.");
+            return;
+        }
+
+        if (shouldUseTransactions() && db.inTransaction()) {
+            trace("endWrite: ending transaction.");
+            db.endTransaction();
+        }
+    }
+
+    protected void beginBatch(final SQLiteDatabase db) {
+        trace("Beginning batch.");
+        isInBatchOperation.set(Boolean.TRUE);
+        db.beginTransaction();
+    }
+
+    protected void markBatchSuccessful(final SQLiteDatabase db) {
+        if (isInBatch()) {
+            trace("Marking batch successful.");
+            db.setTransactionSuccessful();
+            return;
+        }
+        Log.w(LOGTAG, "Unexpectedly asked to mark batch successful, but not in batch!");
+        throw new IllegalStateException("Not in batch.");
+    }
+
+    protected void endBatch(final SQLiteDatabase db) {
+        trace("Ending batch.");
+        db.endTransaction();
+        isInBatchOperation.set(Boolean.FALSE);
+    }
+
+    /*
+     * This utility is replicated from RepoUtils, which is managed by android-sync.
+     */
+    private static String computeSQLInClause(int items, String field) {
+        final StringBuilder builder = new StringBuilder(field);
+        builder.append(" IN (");
+        int i = 0;
+        for (; i < items - 1; ++i) {
+            builder.append("?, ");
+        }
+        if (i < items) {
+            builder.append("?");
+        }
+        builder.append(")");
+        return builder.toString();
+    }
+
+    /**
+     * Turn a single-column cursor of longs into a single SQL "IN" clause.
+     * We can do this without using selection arguments because Long isn't
+     * vulnerable to injection.
+     */
+    private static String computeSQLInClauseFromLongs(final Cursor cursor, String field) {
+        final StringBuilder builder = new StringBuilder(field);
+        builder.append(" IN (");
+        final int commaLimit = cursor.getCount() - 1;
+        int i = 0;
+        while (cursor.moveToNext()) {
+            builder.append(cursor.getLong(0));
+            if (i++ < commaLimit) {
+                builder.append(", ");
+            }
+        }
+        builder.append(")");
+        return builder.toString();
+    }
+
     final class BrowserDatabaseHelper extends SQLiteOpenHelper {
         public BrowserDatabaseHelper(Context context, String databasePath) {
             super(context, databasePath, null, DATABASE_VERSION);
@@ -1220,7 +1372,12 @@ public class BrowserProvider extends ContentProvider {
             }
             iconValues.put(Favicons.DATA, data);
 
-            insertFavicon(db, iconValues);
+            try {
+              insertFavicon(db, iconValues);
+              markWriteSuccessful(db);
+            } finally {
+              endWrite(db);
+            }
         }
 
         private Bitmap getDefaultFaviconFromPath(String name) {
@@ -1976,53 +2133,53 @@ public class BrowserProvider extends ContentProvider {
         return mDatabases.getDatabaseHelperForProfile(profile, isTest(uri)).getWritableDatabase();
     }
 
+    protected SQLiteDatabase getWritableDatabaseForProfile(String profile, boolean isTest) {
+        return mDatabases.getDatabaseHelperForProfile(profile, isTest).getWritableDatabase();
+    }
+
+    /**
+     * Clean up some deleted records from the specified table.
+     *
+     * If called in an existing transaction, it is the caller's responsibility
+     * to ensure that the transaction is already upgraded to a writer, because
+     * this method issues a read followed by a write, and thus is potentially
+     * vulnerable to an unhandled SQLITE_BUSY failure during the upgrade.
+     *
+     * If not called in an existing transaction, no new explicit transaction
+     * will be begun.
+     */
     private void cleanupSomeDeletedRecords(Uri fromUri, Uri targetUri, String tableName) {
         Log.d(LOGTAG, "Cleaning up deleted records from " + tableName);
 
-        // we cleanup records marked as deleted that are older than a
+        // We clean up records marked as deleted that are older than a
         // predefined max age. It's important not be too greedy here and
         // remove only a few old deleted records at a time.
 
-        // The PARAM_SHOW_DELETED argument is necessary to return the records
-        // that were marked as deleted. We use PARAM_IS_SYNC here to ensure
-        // that we'll be actually deleting records instead of flagging them.
-        Uri.Builder uriBuilder = targetUri.buildUpon()
-                .appendQueryParameter(BrowserContract.PARAM_LIMIT, String.valueOf(DELETED_RECORDS_PURGE_LIMIT))
-                .appendQueryParameter(BrowserContract.PARAM_SHOW_DELETED, "1")
-                .appendQueryParameter(BrowserContract.PARAM_IS_SYNC, "1");
+        // Android SQLite doesn't have LIMIT on DELETE. Instead, query for the
+        // IDs of matching rows, then delete them in one go.
+        final long now = System.currentTimeMillis();
+        final String selection = SyncColumns.IS_DELETED + " = 1 AND " +
+                                 SyncColumns.DATE_MODIFIED + " <= " +
+                                 (now - MAX_AGE_OF_DELETED_RECORDS);
 
-        String profile = fromUri.getQueryParameter(BrowserContract.PARAM_PROFILE);
-        if (!TextUtils.isEmpty(profile))
-            uriBuilder = uriBuilder.appendQueryParameter(BrowserContract.PARAM_PROFILE, profile);
-
-        if (isTest(fromUri))
-            uriBuilder = uriBuilder.appendQueryParameter(BrowserContract.PARAM_IS_TEST, "1");
-
-        Uri uriWithArgs = uriBuilder.build();
-
-        Cursor cursor = null;
-
+        final String profile = fromUri.getQueryParameter(BrowserContract.PARAM_PROFILE);
+        final SQLiteDatabase db = getWritableDatabaseForProfile(profile, isTest(fromUri));
+        final String[] ids;
+        final String limit = Long.toString(DELETED_RECORDS_PURGE_LIMIT, 10);
+        final Cursor cursor = db.query(tableName, new String[] { CommonColumns._ID }, selection, null, null, null, null, limit);
         try {
-            long now = System.currentTimeMillis();
-            String selection = SyncColumns.IS_DELETED + " = 1 AND " +
-                    SyncColumns.DATE_MODIFIED + " <= " + (now - MAX_AGE_OF_DELETED_RECORDS);
-
-            cursor = query(uriWithArgs,
-                           new String[] { CommonColumns._ID },
-                           selection,
-                           null,
-                           null);
-
+            ids = new String[cursor.getCount()];
+            int i = 0;
             while (cursor.moveToNext()) {
-                Uri uriWithId = ContentUris.withAppendedId(uriWithArgs, cursor.getLong(0));
-                delete(uriWithId, null, null);
-
-                debug("Removed old deleted item with URI: " + uriWithId);
+                ids[i++] = Long.toString(cursor.getLong(0), 10);
             }
         } finally {
-            if (cursor != null)
-                cursor.close();
+            cursor.close();
         }
+
+        final String inClause = computeSQLInClause(ids.length,
+                                                   CommonColumns._ID);
+        db.delete(tableName, inClause, ids);
     }
 
     /**
@@ -2032,8 +2189,6 @@ public class BrowserProvider extends ContentProvider {
      * Provide <code>keepAfter</code> less than or equal to zero to skip that check.
      *
      * Items will be removed according to an approximate frecency calculation.
-     *
-     * Call this method within a transaction.
      */
     private void expireHistory(final SQLiteDatabase db, final int retain, final long keepAfter) {
         Log.d(LOGTAG, "Expiring history.");
@@ -2062,6 +2217,8 @@ public class BrowserProvider extends ContentProvider {
                   "ORDER BY " + sortOrder + " LIMIT " + toRemove + ")";
         }
         trace("Deleting using query: " + sql);
+
+        beginWrite(db);
         db.execSQL(sql);
     }
 
@@ -2163,27 +2320,21 @@ public class BrowserProvider extends ContentProvider {
 
     @Override
     public int delete(Uri uri, String selection, String[] selectionArgs) {
-        trace("Calling delete on URI: " + uri);
+        trace("Calling delete on URI: " + uri + ", " + selection + ", " + selectionArgs);
 
         final SQLiteDatabase db = getWritableDatabase(uri);
         int deleted = 0;
 
-        if (Build.VERSION.SDK_INT >= 11) {
-            trace("Beginning delete transaction: " + uri);
-            db.beginTransaction();
-            try {
-                deleted = deleteInTransaction(db, uri, selection, selectionArgs);
-                db.setTransactionSuccessful();
-                trace("Successful delete transaction: " + uri);
-            } finally {
-                db.endTransaction();
-            }
-        } else {
+        try {
             deleted = deleteInTransaction(db, uri, selection, selectionArgs);
+            markWriteSuccessful(db);
+        } finally {
+            endWrite(db);
         }
 
-        if (deleted > 0)
+        if (deleted > 0) {
             getContext().getContentResolver().notifyChange(uri, null);
+        }
 
         return deleted;
     }
@@ -2219,6 +2370,7 @@ public class BrowserProvider extends ContentProvider {
                 // fall through
             case HISTORY: {
                 trace("Deleting history: " + uri);
+                beginWrite(db);
                 deleted = deleteHistory(uri, selection, selectionArgs);
                 deleteUnusedImages(uri);
                 break;
@@ -2261,6 +2413,7 @@ public class BrowserProvider extends ContentProvider {
                 // fall through
             case THUMBNAILS: {
                 trace("Deleting thumbnails: " + uri);
+                beginWrite(db);
                 deleted = deleteThumbnails(uri, selection, selectionArgs);
                 break;
             }
@@ -2281,27 +2434,16 @@ public class BrowserProvider extends ContentProvider {
         final SQLiteDatabase db = getWritableDatabase(uri);
         Uri result = null;
         try {
-            if (Build.VERSION.SDK_INT >= 11) {
-                trace("Beginning insert transaction: " + uri);
-                db.beginTransaction();
-                try {
-                    result = insertInTransaction(uri, values);
-                    db.setTransactionSuccessful();
-                    trace("Successful insert transaction: " + uri);
-                } finally {
-                    db.endTransaction();
-                }
-            } else {
-                result = insertInTransaction(uri, values);
-            }
-        } catch (SQLException sqle) {
-            Log.e(LOGTAG, "exception in DB operation", sqle);
-        } catch (UnsupportedOperationException uoe) {
-            Log.e(LOGTAG, "don't know how to perform that insert", uoe);
+            result = insertInTransaction(uri, values);
+            markWriteSuccessful(db);
+            debug("Successful insert transaction: " + uri);
+        } finally {
+            endWrite(db);
         }
 
-        if (result != null)
+        if (result != null) {
             getContext().getContentResolver().notifyChange(uri, null);
+        }
 
         return result;
     }
@@ -2352,23 +2494,17 @@ public class BrowserProvider extends ContentProvider {
     @Override
     public int update(Uri uri, ContentValues values, String selection,
             String[] selectionArgs) {
-        trace("Calling update on URI: " + uri);
+        trace("Calling update on URI: " + uri + ", " + selection + ", " + selectionArgs);
 
         final SQLiteDatabase db = getWritableDatabase(uri);
         int updated = 0;
 
-        if (Build.VERSION.SDK_INT >= 11) {
-            trace("Beginning update transaction: " + uri);
-            db.beginTransaction();
-            try {
-                updated = updateInTransaction(uri, values, selection, selectionArgs);
-                db.setTransactionSuccessful();
-                trace("Successful update transaction: " + uri);
-            } finally {
-                db.endTransaction();
-            }
-        } else {
-            updated = updateInTransaction(uri, values, selection, selectionArgs);
+        try {
+            updated = updateInTransaction(uri, values, selection,
+                                          selectionArgs);
+            markWriteSuccessful(db);
+        } finally {
+            endWrite(db);
         }
 
         if (updated > 0)
@@ -2385,6 +2521,7 @@ public class BrowserProvider extends ContentProvider {
         int match = URI_MATCHER.match(uri);
         int updated = 0;
 
+        final SQLiteDatabase db = getWritableDatabase(uri);
         switch (match) {
             // We provide a dedicated (hacky) API for callers to bulk-update the positions of
             // folder children by passing an array of GUID strings as `selectionArgs`.
@@ -2397,13 +2534,16 @@ public class BrowserProvider extends ContentProvider {
             // `values` and `selection` are ignored.
             case BOOKMARKS_POSITIONS: {
                 debug("Update on BOOKMARKS_POSITIONS: " + uri);
+
+                // This already starts and finishes its own transaction.
                 updated = updateBookmarkPositions(uri, selectionArgs);
                 break;
             }
 
             case BOOKMARKS_PARENT: {
                 debug("Update on BOOKMARKS_PARENT: " + uri);
-                updated = updateBookmarkParents(uri, values, selection, selectionArgs);
+                beginWrite(db);
+                updated = updateBookmarkParents(db, values, selection, selectionArgs);
                 break;
             }
 
@@ -2416,10 +2556,11 @@ public class BrowserProvider extends ContentProvider {
                 // fall through
             case BOOKMARKS: {
                 debug("Updating bookmark: " + uri);
-                if (shouldUpdateOrInsert(uri))
+                if (shouldUpdateOrInsert(uri)) {
                     updated = updateOrInsertBookmark(uri, values, selection, selectionArgs);
-                else
+                } else {
                     updated = updateBookmarks(uri, values, selection, selectionArgs);
+                }
                 break;
             }
 
@@ -2432,10 +2573,11 @@ public class BrowserProvider extends ContentProvider {
                 // fall through
             case HISTORY: {
                 debug("Updating history: " + uri);
-                if (shouldUpdateOrInsert(uri))
+                if (shouldUpdateOrInsert(uri)) {
                     updated = updateOrInsertHistory(uri, values, selection, selectionArgs);
-                else
+                } else {
                     updated = updateHistory(uri, values, selection, selectionArgs);
+                }
                 break;
             }
 
@@ -2451,10 +2593,11 @@ public class BrowserProvider extends ContentProvider {
                     faviconSelectionArgs = new String[] { url };
                 }
 
-                if (shouldUpdateOrInsert(uri))
+                if (shouldUpdateOrInsert(uri)) {
                     updated = updateOrInsertFavicon(uri, values, faviconSelection, faviconSelectionArgs);
-                else
+                } else {
                     updated = updateExistingFavicon(uri, values, faviconSelection, faviconSelectionArgs);
+                }
 
                 break;
             }
@@ -2465,15 +2608,15 @@ public class BrowserProvider extends ContentProvider {
                 String url = values.getAsString(Thumbnails.URL);
 
                 // if no URL is provided, update all of the entries
-                if (TextUtils.isEmpty(values.getAsString(Thumbnails.URL)))
+                if (TextUtils.isEmpty(values.getAsString(Thumbnails.URL))) {
                     updated = updateExistingThumbnail(uri, values, null, null);
-                else if (shouldUpdateOrInsert(uri))
+                } else if (shouldUpdateOrInsert(uri)) {
                     updated = updateOrInsertThumbnail(uri, values, Thumbnails.URL + " = ?",
                                                       new String[] { url });
-                else
+                } else {
                     updated = updateExistingThumbnail(uri, values, Thumbnails.URL + " = ?",
                                                       new String[] { url });
-
+                }
                 break;
             }
 
@@ -2482,7 +2625,6 @@ public class BrowserProvider extends ContentProvider {
         }
 
         debug("Updated " + updated + " rows for URI: " + uri);
-
         return updated;
     }
 
@@ -2664,6 +2806,8 @@ public class BrowserProvider extends ContentProvider {
     /**
      * Update the positions of bookmarks in batches.
      *
+     * Begins and ends its own transactions.
+     *
      * @see #updateBookmarkPositionsInTransaction(SQLiteDatabase, String[], int, int)
      */
     int updateBookmarkPositions(Uri uri, String[] guids) {
@@ -2681,6 +2825,7 @@ public class BrowserProvider extends ContentProvider {
 
         final SQLiteDatabase db = getWritableDatabase(uri);
         db.beginTransaction();
+
         while (offset < guidsCount) {
             try {
                 updated += updateBookmarkPositionsInTransaction(db, guids, offset,
@@ -2711,8 +2856,8 @@ public class BrowserProvider extends ContentProvider {
      * Construct and execute an update expression that will modify the positions
      * of records in-place.
      */
-    int updateBookmarkPositionsInTransaction(final SQLiteDatabase db, final String[] guids,
-                                             final int offset, final int max) {
+    private static int updateBookmarkPositionsInTransaction(final SQLiteDatabase db, final String[] guids,
+                                                            final int offset, final int max) {
         int guidsCount = guids.length;
         int processCount = Math.min(max, guidsCount - offset);
 
@@ -2755,13 +2900,13 @@ public class BrowserProvider extends ContentProvider {
      * Construct an update expression that will modify the parents of any records
      * that match.
      */
-    int updateBookmarkParents(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
+    private int updateBookmarkParents(SQLiteDatabase db, ContentValues values, String selection, String[] selectionArgs) {
         trace("Updating bookmark parents of " + selection + " (" + selectionArgs[0] + ")");
         String where = Bookmarks._ID + " IN (" +
                        " SELECT DISTINCT " + Bookmarks.PARENT +
                        " FROM " + TABLE_BOOKMARKS +
                        " WHERE " + selection + " )";
-        return getWritableDatabase(uri).update(TABLE_BOOKMARKS, values, where, selectionArgs);
+        return db.update(TABLE_BOOKMARKS, values, where, selectionArgs);
     }
 
     long insertBookmark(Uri uri, ContentValues values) {
@@ -2787,10 +2932,10 @@ public class BrowserProvider extends ContentProvider {
         }
 
         String url = values.getAsString(Bookmarks.URL);
-        Integer type = values.getAsInteger(Bookmarks.TYPE);
 
         debug("Inserting bookmark in database with URL: " + url);
         final SQLiteDatabase db = getWritableDatabase(uri);
+        beginWrite(db);
         return db.insertOrThrow(TABLE_BOOKMARKS, Bookmarks.TITLE, values);
     }
 
@@ -2798,9 +2943,11 @@ public class BrowserProvider extends ContentProvider {
     int updateOrInsertBookmark(Uri uri, ContentValues values, String selection,
             String[] selectionArgs) {
         int updated = updateBookmarks(uri, values, selection, selectionArgs);
-        if (updated > 0)
+        if (updated > 0) {
             return updated;
+        }
 
+        // Transaction already begun by updateBookmarks.
         if (0 <= insertBookmark(uri, values)) {
             // We 'updated' one row.
             return 1;
@@ -2814,34 +2961,31 @@ public class BrowserProvider extends ContentProvider {
             String[] selectionArgs) {
         trace("Updating bookmarks on URI: " + uri);
 
-        int updated = 0;
-
         final String[] bookmarksProjection = new String[] {
                 Bookmarks._ID, // 0
-                Bookmarks.URL, // 1
         };
 
-        trace("Quering bookmarks to update on URI: " + uri);
+        if (!values.containsKey(Bookmarks.DATE_MODIFIED)) {
+            values.put(Bookmarks.DATE_MODIFIED, System.currentTimeMillis());
+        }
 
+        trace("Querying bookmarks to update on URI: " + uri);
         final SQLiteDatabase db = getWritableDatabase(uri);
+
+        // Compute matching IDs.
         final Cursor cursor = db.query(TABLE_BOOKMARKS, bookmarksProjection,
                                        selection, selectionArgs, null, null, null);
 
+        // Now that we're done reading, open a transaction.
+        final String inClause;
         try {
-            if (!values.containsKey(Bookmarks.DATE_MODIFIED)) {
-                values.put(Bookmarks.DATE_MODIFIED, System.currentTimeMillis());
-            }
-            while (cursor.moveToNext()) {
-                long id = cursor.getLong(0);
-                trace("Updating bookmark with ID: " + id);
-                updated += db.update(TABLE_BOOKMARKS, values, "_id = ?",
-                                     new String[] { Long.toString(id) });
-            }
+            inClause = computeSQLInClauseFromLongs(cursor, Bookmarks._ID);
         } finally {
             cursor.close();
         }
 
-        return updated;
+        beginWrite(db);
+        return db.update(TABLE_BOOKMARKS, values, inClause, null);
     }
 
     long insertHistory(Uri uri, ContentValues values) {
@@ -2858,6 +3002,7 @@ public class BrowserProvider extends ContentProvider {
 
         debug("Inserting history in database with URL: " + url);
         final SQLiteDatabase db = getWritableDatabase(uri);
+        beginWrite(db);
         return db.insertOrThrow(TABLE_HISTORY, History.VISITS, values);
     }
 
@@ -2947,7 +3092,6 @@ public class BrowserProvider extends ContentProvider {
     long insertFavicon(SQLiteDatabase db, ContentValues values) {
         String faviconUrl = values.getAsString(Favicons.URL);
         String pageUrl = null;
-        long faviconId;
 
         trace("Inserting favicon for URL: " + faviconUrl);
 
@@ -2964,15 +3108,16 @@ public class BrowserProvider extends ContentProvider {
             values.put(Favicons.URL, org.mozilla.gecko.favicons.Favicons.guessDefaultFaviconURL(pageUrl));
         }
 
-        long now = System.currentTimeMillis();
+        final long now = System.currentTimeMillis();
         values.put(Favicons.DATE_CREATED, now);
         values.put(Favicons.DATE_MODIFIED, now);
-        faviconId = db.insertOrThrow(TABLE_FAVICONS, null, values);
+
+        beginWrite(db);
+        final long faviconId = db.insertOrThrow(TABLE_FAVICONS, null, values);
 
         if (pageUrl != null) {
             updateFaviconIdsForUrl(db, pageUrl, faviconId);
         }
-
         return faviconId;
     }
 
@@ -3032,10 +3177,14 @@ public class BrowserProvider extends ContentProvider {
                     cursor.close();
                 }
             }
+            if (pageUrl != null) {
+                beginWrite(db);
+            }
         } else if (insertIfNeeded) {
             values.put(Favicons.DATE_CREATED, now);
 
             trace("No update, inserting favicon for URL: " + faviconUrl);
+            beginWrite(db);
             faviconId = db.insert(TABLE_FAVICONS, null, values);
             updated = 1;
         }
@@ -3047,40 +3196,40 @@ public class BrowserProvider extends ContentProvider {
         return updated;
     }
 
-    long insertThumbnail(Uri uri, ContentValues values) {
-        String url = values.getAsString(Thumbnails.URL);
-        final SQLiteDatabase db = getWritableDatabase(uri);
+    private long insertThumbnail(Uri uri, ContentValues values) {
+        final String url = values.getAsString(Thumbnails.URL);
 
         trace("Inserting thumbnail for URL: " + url);
 
         stripEmptyByteArray(values, Thumbnails.DATA);
 
+        final SQLiteDatabase db = getWritableDatabase(uri);
+        beginWrite(db);
         return db.insertOrThrow(TABLE_THUMBNAILS, null, values);
     }
 
-    int updateOrInsertThumbnail(Uri uri, ContentValues values, String selection,
+    private int updateOrInsertThumbnail(Uri uri, ContentValues values, String selection,
             String[] selectionArgs) {
         return updateThumbnail(uri, values, selection, selectionArgs,
                 true /* insert if needed */);
     }
 
-    int updateExistingThumbnail(Uri uri, ContentValues values, String selection,
+    private int updateExistingThumbnail(Uri uri, ContentValues values, String selection,
             String[] selectionArgs) {
         return updateThumbnail(uri, values, selection, selectionArgs,
                 false /* only update, no insert */);
     }
 
-    int updateThumbnail(Uri uri, ContentValues values, String selection,
+    private int updateThumbnail(Uri uri, ContentValues values, String selection,
             String[] selectionArgs, boolean insertIfNeeded) {
-        String url = values.getAsString(Thumbnails.URL);
-        int updated = 0;
-        final SQLiteDatabase db = getWritableDatabase(uri);
-
+        final String url = values.getAsString(Thumbnails.URL);
         stripEmptyByteArray(values, Thumbnails.DATA);
 
         trace("Updating thumbnail for URL: " + url);
 
-        updated = db.update(TABLE_THUMBNAILS, values, selection, selectionArgs);
+        final SQLiteDatabase db = getWritableDatabase(uri);
+        beginWrite(db);
+        int updated = db.update(TABLE_THUMBNAILS, values, selection, selectionArgs);
 
         if (updated == 0 && insertIfNeeded) {
             trace("No update, inserting thumbnail for URL: " + url);
@@ -3118,6 +3267,7 @@ public class BrowserProvider extends ContentProvider {
         final SQLiteDatabase db = getWritableDatabase(uri);
 
         if (isCallerSync(uri)) {
+            beginWrite(db);
             return db.delete(TABLE_HISTORY, selection, selectionArgs);
         }
 
@@ -3226,29 +3376,36 @@ public class BrowserProvider extends ContentProvider {
         throws OperationApplicationException {
         final int numOperations = operations.size();
         final ContentProviderResult[] results = new ContentProviderResult[numOperations];
-        boolean failures = false;
-        SQLiteDatabase db = null;
 
-        if (numOperations >= 1) {
-            // We only have 1 database for all Uri's that we can get
-            db = getWritableDatabase(operations.get(0).getUri());
-        } else {
+        if (numOperations < 1) {
+            debug("applyBatch: no operations; returning immediately.");
             // The original Android implementation returns a zero-length
-            // array in this case, we do the same.
+            // array in this case. We do the same.
             return results;
         }
 
+        boolean failures = false;
+
+        // We only have 1 database for all Uris that we can get.
+        SQLiteDatabase db = getWritableDatabase(operations.get(0).getUri());
+
         // Note that the apply() call may cause us to generate
-        // additional transactions for the invidual operations.
+        // additional transactions for the individual operations.
         // But Android's wrapper for SQLite supports nested transactions,
         // so this will do the right thing.
-        db.beginTransaction();
+        //
+        // Note further that in some circumstances this can result in
+        // exceptions: if this transaction is first involved in reading,
+        // and then (naturally) tries to perform writes, SQLITE_BUSY can
+        // be raised. See Bug 947939 and friends.
+        beginBatch(db);
 
         for (int i = 0; i < numOperations; i++) {
             try {
-                results[i] = operations.get(i).apply(this, results, i);
+                final ContentProviderOperation operation = operations.get(i);
+                results[i] = operation.apply(this, results, i);
             } catch (SQLException e) {
-                Log.w(LOGTAG, "SQLite Exception during applyBatch: ", e);
+                Log.w(LOGTAG, "SQLite Exception during applyBatch.", e);
                 // The Android API makes it implementation-defined whether
                 // the failure of a single operation makes all others abort
                 // or not. For our use cases, best-effort operation makes
@@ -3281,8 +3438,8 @@ public class BrowserProvider extends ContentProvider {
         }
 
         trace("Flushing DB applyBatch...");
-        db.setTransactionSuccessful();
-        db.endTransaction();
+        markBatchSuccessful(db);
+        endBatch(db);
 
         if (failures) {
             throw new OperationApplicationException();
@@ -3301,7 +3458,8 @@ public class BrowserProvider extends ContentProvider {
 
         final SQLiteDatabase db = getWritableDatabase(uri);
 
-        db.beginTransaction();
+        debug("bulkInsert: explicitly starting transaction.");
+        beginBatch(db);
 
         try {
             for (int i = 0; i < numValues; i++) {
@@ -3309,9 +3467,10 @@ public class BrowserProvider extends ContentProvider {
                 successes++;
             }
             trace("Flushing DB bulkinsert...");
-            db.setTransactionSuccessful();
+            markBatchSuccessful(db);
         } finally {
-            db.endTransaction();
+            debug("bulkInsert: explicitly ending transaction.");
+            endBatch(db);
         }
 
         if (successes > 0)
