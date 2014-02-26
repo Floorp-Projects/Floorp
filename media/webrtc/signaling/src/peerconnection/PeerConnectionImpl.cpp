@@ -2023,6 +2023,12 @@ static void ToRTCIceCandidateStats(
     cand.mIpAddress.Construct(
         NS_ConvertASCIItoUTF16(c->cand_addr.host.c_str()));
     cand.mPortNumber.Construct(c->cand_addr.port);
+    cand.mTransport.Construct(
+        NS_ConvertASCIItoUTF16(c->cand_addr.transport.c_str()));
+    if (candidateType == RTCStatsType::Localcandidate) {
+      cand.mMozLocalTransport.Construct(
+          NS_ConvertASCIItoUTF16(c->local_addr.transport.c_str()));
+    }
     report->mIceCandidateStats.Value().AppendElement(cand);
   }
 }
