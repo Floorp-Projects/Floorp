@@ -4,6 +4,8 @@
 
 this.EXPORTED_SYMBOLS = ["TelemetryTimestamps"];
 
+const Cu = Components.utils;
+
 /**
  * This module's purpose is to collect timestamps for important
  * application-specific events.
