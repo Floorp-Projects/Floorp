@@ -28,7 +28,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=780847
   <select class="target" id="t3_5" hidden></select>
   <textarea class="target" id="t3_6" hidden></textarea>
   <div role="button" class="target" id="t3_7" hidden></div>
-  <img class="target" id="t3_8" hidden></img>
+  <div role="key" class="target" id="t3_8" hidden></div>
+  <img class="target" id="t3_9" hidden></img>
 
   <div class="target" style="transform:translate(-80px,0);" id="t4" onmousedown="x=1" hidden></div>
 
@@ -151,9 +152,9 @@ function test3() {
   setShowing("t2", false);
 
   // Now check that certain elements are click radius targets and others are not
-  for (var i = 1; i <= 8; ++i) {
+  for (var i = 1; i <= 9; ++i) {
     var id = "t3_" + i;
-    var shouldHit = i <= 7;
+    var shouldHit = i <= 8;
     setShowing(id, true);
     testMouseClick(id, 100 + 11*mm, 10, shouldHit ? id : "body",
                    "<" + document.getElementById(id).tagName + "> element");
