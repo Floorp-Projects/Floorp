@@ -119,6 +119,7 @@
   width: @tabCurveWidth@;
 }
 
+.tabbrowser-tab:not([selected=true]),
 .tabbrowser-tab:-moz-lwtheme {
   color: inherit;
 }
