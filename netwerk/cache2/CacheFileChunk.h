@@ -94,13 +94,17 @@ public:
   NS_IMETHOD OnEOFSet(CacheFileHandle *aHandle, nsresult aResult);
   NS_IMETHOD OnFileRenamed(CacheFileHandle *aHandle, nsresult aResult);
 
-  bool   IsReady();
-  bool   IsDirty();
+  bool   IsReady() const;
+  bool   IsDirty() const;
 
-  char *       BufForWriting();
-  const char * BufForReading();
+  char *       BufForWriting() const;
+  const char * BufForReading() const;
   void         EnsureBufSize(uint32_t aBufSize);
-  uint32_t     MemorySize() { return mRWBufSize + mBufSize; }
+  uint32_t     MemorySize() const { return mRWBufSize + mBufSize; }
+
+  // Memory reporting
+  size_t SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
 private:
   friend class CacheFileInputStream;

@@ -108,6 +108,10 @@ public:
   NS_IMETHOD OnEOFSet(CacheFileHandle *aHandle, nsresult aResult);
   NS_IMETHOD OnFileRenamed(CacheFileHandle *aHandle, nsresult aResult);
 
+  // Memory reporting
+  size_t SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
+
 private:
   virtual ~CacheFileMetadata();
 
