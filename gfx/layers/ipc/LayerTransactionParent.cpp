@@ -397,7 +397,11 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       MOZ_LAYERS_LOG(("[ParentSide] SetRoot"));
 
       Layer* newRoot = AsLayerComposite(edit.get_OpSetRoot())->AsLayer();
+      if (!newRoot) {
+        return false;
+      }
       if (newRoot->GetParent()) {
+        // newRoot is not a root!
         return false;
       }
       mRoot = newRoot;
