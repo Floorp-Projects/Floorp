@@ -1,0 +1,154 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="utf8">
+  <title>Test for the cd() function</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript;version=1.8" src="common.js"></script>
+  <!-- Any copyright is dedicated to the Public Domain.
+     - http://creativecommons.org/publicdomain/zero/1.0/ -->
+</head>
+<body>
+<p>Test for the cd() function</p>
+
+<script class="testbody" type="text/javascript;version=1.8">
+SimpleTest.waitForExplicitFinish();
+
+let gState;
+
+function startTest()
+{
+  removeEventListener("load", startTest);
+
+  attachConsole([], onAttach, true);
+}
+
+function onAttach(aState, aResponse)
+{
+  top.foobarObject = Object.create(null);
+  top.foobarObject.bug609872 = "parent";
+
+  window.foobarObject = Object.create(null);
+  window.foobarObject.bug609872 = "child";
+
+  gState = aState;
+
+  let tests = [doCheckParent, doCdIframe, doCheckIframe, doCdParent,
+      doCheckParent2];
+  runTests(tests, testEnd);
+}
+
+function doCheckParent()
+{
+  info("check parent window");
+  gState.client.evaluateJS("window.foobarObject.bug609872",
+      onFooObjectFromParent);
+}
+
+function onFooObjectFromParent(aResponse)
+{
+  checkObject(aResponse, {
+    from: gState.actor,
+    input: "window.foobarObject.bug609872",
+    result: "parent",
+  });
+
+  ok(!aResponse.exception, "no eval exception");
+  ok(!aResponse.helperResult, "no helper result");
+
+  nextTest();
+}
+
+function doCdIframe()
+{
+  info("test cd('iframe')");
+  gState.client.evaluateJS("cd('iframe')", onCdIframe);
+}
+
+function onCdIframe(aResponse)
+{
+  checkObject(aResponse, {
+    from: gState.actor,
+    input: "cd('iframe')",
+    result: { type: "undefined" },
+    helperResult: { type: "cd" },
+  });
+
+  ok(!aResponse.exception, "no eval exception");
+
+  nextTest();
+}
+
+function doCheckIframe()
+{
+  info("check foobarObject from the iframe");
+  gState.client.evaluateJS("window.foobarObject.bug609872",
+                           onFooObjectFromIframe);
+}
+
+function onFooObjectFromIframe(aResponse)
+{
+  checkObject(aResponse, {
+    from: gState.actor,
+    input: "window.foobarObject.bug609872",
+    result: "child",
+  });
+
+  ok(!aResponse.exception, "no js eval exception");
+  ok(!aResponse.helperResult, "no helper result");
+
+  nextTest();
+}
+
+function doCdParent()
+{
+  info("test cd() back to parent");
+  gState.client.evaluateJS("cd()", onCdParent);
+}
+
+function onCdParent(aResponse)
+{
+  checkObject(aResponse, {
+    from: gState.actor,
+    input: "cd()",
+    result: { type: "undefined" },
+    helperResult: { type: "cd" },
+  });
+
+  ok(!aResponse.exception, "no eval exception");
+
+  nextTest();
+}
+
+function doCheckParent2()
+{
+  gState.client.evaluateJS("window.foobarObject.bug609872",
+                           onFooObjectFromParent2);
+}
+
+function onFooObjectFromParent2(aResponse)
+{
+  checkObject(aResponse, {
+    from: gState.actor,
+    input: "window.foobarObject.bug609872",
+    result: "parent",
+  });
+
+  ok(!aResponse.exception, "no eval exception");
+  ok(!aResponse.helperResult, "no helper result");
+
+  nextTest();
+}
+
+function testEnd()
+{
+  closeDebugger(gState, function() {
+    gState = null;
+    SimpleTest.finish();
+  });
+}
+
+addEventListener("load", startTest);
+</script>
+</body>
+</html>
