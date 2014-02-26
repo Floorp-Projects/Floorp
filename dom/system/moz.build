@@ -38,13 +38,10 @@ UNIFIED_SOURCES += [
     'OSFileConstants.cpp',
 ]
 
-# On Systems that have build in geolocation providers,
-# we really do not need these.
-if CONFIG['OS_TARGET'] != 'Android' or CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-    EXTRA_COMPONENTS += [
-        'NetworkGeolocationProvider.js',
-        'NetworkGeolocationProvider.manifest',
-    ]
+EXTRA_COMPONENTS += [
+    'NetworkGeolocationProvider.js',
+    'NetworkGeolocationProvider.manifest',
+]
 
 FAIL_ON_WARNINGS = True
 
