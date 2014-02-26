@@ -263,6 +263,36 @@ function runTests() {
   };
   sendTouchEvent(cwu, "touchmove", getTouchEventForTarget(d1, cwu, 2), 0);
 
+  // Test for cancel trigger pointerOut (Touch Pointer must be at d1 now)
+  pointerCancelTriggered = 0;
+  var pointerOutTriggeredForCancelEvent = 0;
+  var pointerLeaveTriggeredForCancelEvent = 0;
+  d1.onpointerout = function(e) {
+    if (pointerOutTriggeredForCancelEvent == 0) {
+      is(e.pointerId, 3, "Wrong Pointer type, should be id from Touch event");
+      is(e.pointerType, "touch", "Wrong Pointer type, should be touch type");
+    } else {
+      is(e.pointerId, 0, "Wrong Pointer type, should be id from mouse event");
+      is(e.pointerType, "mouse", "Wrong Pointer type, should be mouse type");
+    }
+    pointerOutTriggeredForCancelEvent = 1;
+ };
+ d1.onpointerleave = function(e) {
+    is(pointerOutTriggeredForCancelEvent, 1, "Pointer Out must be dispatched bedore Pointer leave");
+    if (pointerLeaveTriggeredForCancelEvent == 0) {
+      is(e.pointerId, 3, "Wrong Pointer type, should be id from Touch event");
+      is(e.pointerType, "touch", "Wrong Pointer type, should be touch type");
+    } else {
+      is(e.pointerId, 0, "Wrong Pointer type, should be id from mouse event");
+      is(e.pointerType, "mouse", "Wrong Pointer type, should be mouse type");
+    }
+    pointerLeaveTriggeredForCancelEvent = 1;
+  }
+
+  sendTouchEvent(cwu, "touchcancel", getTouchEventForTarget(d1, cwu, 3), 0);
+  is(pointerOutTriggeredForCancelEvent, 1, "Pointer Out not dispatched on PointerCancel");
+  is(pointerLeaveTriggeredForCancelEvent, 1, "Pointer Leave not dispatched on PointerCancel");
+
   finishTest();
 }
 
