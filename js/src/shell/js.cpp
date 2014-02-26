@@ -316,10 +316,9 @@ ShellOperationCallback(JSContext *cx)
     if (!gTimedOut)
         return true;
 
-    JS_ClearPendingException(cx);
-
     bool result;
     if (!gTimeoutFunc.isNull()) {
+        JS::AutoSaveExceptionState savedExc(cx);
         JSAutoCompartment ac(cx, &gTimeoutFunc.toObject());
         RootedValue rval(cx);
         HandleValue timeoutFunc = HandleValue::fromMarkedLocation(&gTimeoutFunc);
