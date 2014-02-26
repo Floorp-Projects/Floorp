@@ -21,7 +21,7 @@ interface nsIRilNetworkInterface : nsINetworkInterface
   readonly attribute long      mmsPort;  // -1 if not set.
 };
 
-[scriptable, uuid(1e602d20-d066-4399-8997-daf36b3158ef)]
+[scriptable, uuid(83dd3394-5de0-4485-a0b9-c1ed537507a3)]
 interface nsIRILDataCallInfo : nsISupports
 {
   /**
@@ -33,7 +33,7 @@ interface nsIRILDataCallInfo : nsISupports
   readonly attribute AString apn;
   readonly attribute AString ifname;
   readonly attribute AString ip;
-  readonly attribute AString netmask;
+  readonly attribute unsigned long prefixLength;
   readonly attribute AString broadcast;
   readonly attribute AString gw;
   readonly attribute jsval dns;
