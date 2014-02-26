@@ -25,15 +25,17 @@ const EXPECTED_REFLOWS = [
   "ssi_getWindowDimension@resource:///modules/sessionstore/SessionStore.jsm",
 ];
 
-if (Services.appinfo.OS == "Darwin") {
-  // TabsInTitlebar._update causes a reflow on OS X trying to do calculations
+if (Services.appinfo.OS == "WINNT" || Services.appinfo.OS == "Darwin") {
+  // TabsInTitlebar._update causes a reflow on OS X and Windows trying to do calculations
   // since layout info is already dirty. This doesn't seem to happen before
-  // MozAfterPaint on other platforms.
+  // MozAfterPaint on Linux.
   EXPECTED_REFLOWS.push("rect@chrome://browser/content/browser.js|" +
                           "TabsInTitlebar._update@chrome://browser/content/browser.js|" +
                           "updateAppearance@chrome://browser/content/browser.js|" +
                           "handleEvent@chrome://browser/content/tabbrowser.xml|");
+}
 
+if (Services.appinfo.OS == "Darwin") {
   // _onOverflow causes a reflow getting widths.
   EXPECTED_REFLOWS.push("OverflowableToolbar.prototype._onOverflow@resource:///modules/CustomizableUI.jsm|" +
                         "OverflowableToolbar.prototype.init@resource:///modules/CustomizableUI.jsm|" +
