@@ -43,6 +43,16 @@ this.Utils = Object.freeze({
            (prevChar == "." || prevChar == "/");
   },
 
+  shallowCopy: function (obj) {
+    let retval = {};
+
+    for (let key of Object.keys(obj)) {
+      retval[key] = obj[key];
+    }
+
+    return retval;
+  },
+
   swapMapEntries: function (map, key, otherKey) {
     // Make sure that one or the other of these has an entry in the map,
     // and let it be |key|.
