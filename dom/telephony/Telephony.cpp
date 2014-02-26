@@ -6,7 +6,6 @@
 
 #include "Telephony.h"
 #include "mozilla/dom/TelephonyBinding.h"
-#include "mozilla/dom/Promise.h"
 
 #include "nsIURI.h"
 #include "nsPIDOMWindow.h"
@@ -62,38 +61,6 @@ public:
   }
 };
 
-class Telephony::Callback : public nsITelephonyCallback
-{
-  nsRefPtr<Telephony> mTelephony;
-  nsRefPtr<Promise> mPromise;
-  uint32_t mServiceId;
-  nsString mNumber;
-
-public:
-  NS_DECL_ISUPPORTS
-
-  Callback(Telephony* aTelephony, Promise* aPromise, uint32_t aServiceId, const nsAString& aNumber)
-    : mTelephony(aTelephony), mPromise(aPromise), mServiceId(aServiceId), mNumber(aNumber)
-  {
-    MOZ_ASSERT(mTelephony);
-  }
-
-  NS_IMETHODIMP
-  NotifyDialError(const nsAString& aError) {
-    mPromise->MaybeReject(aError);
-    return NS_OK;
-  }
-
-  NS_IMETHODIMP
-  NotifyDialSuccess() {
-    nsRefPtr<TelephonyCall> call =
-      mTelephony->CreateNewDialingCall(mServiceId, mNumber);
-
-    mPromise->MaybeResolve(call);
-    return NS_OK;
-  }
-};
-
 class Telephony::EnumerationAck : public nsRunnable
 {
   nsRefPtr<Telephony> mTelephony;
@@ -113,7 +80,8 @@ public:
 };
 
 Telephony::Telephony(nsPIDOMWindow* aOwner)
-  : nsDOMEventTargetHelper(aOwner), mActiveCall(nullptr), mEnumerated(false)
+  : nsDOMEventTargetHelper(aOwner),
+    mActiveCall(nullptr), mEnumerated(false)
 {
   if (!gTelephonyList) {
     gTelephonyList = new TelephonyList();
@@ -267,37 +235,40 @@ Telephony::MatchActiveCall(TelephonyCall* aCall)
           mActiveCall->ServiceId() == aCall->ServiceId());
 }
 
-already_AddRefed<Promise>
+already_AddRefed<TelephonyCall>
 Telephony::DialInternal(uint32_t aServiceId, const nsAString& aNumber,
-                        bool aIsEmergency)
+                        bool aIsEmergency, ErrorResult& aRv)
 {
-  nsCOMPtr<nsPIDOMWindow> window = GetOwner();
-  if (!window) {
-    return nullptr;
-  }
-
-  nsRefPtr<Promise> promise = new Promise(window);
-
   if (!IsValidNumber(aNumber) || !IsValidServiceId(aServiceId)) {
-    promise->MaybeReject(NS_LITERAL_STRING("InvalidAccessError"));
-    return promise.forget();
+    aRv.Throw(NS_ERROR_INVALID_ARG);
+    return nullptr;
   }
 
   // We only support one outgoing call at a time.
   if (HasDialingCall()) {
-    promise->MaybeReject(NS_LITERAL_STRING("InvalidStateError"));
-    return promise.forget();
+    NS_WARNING("Only permitted to dial one call at a time!");
+    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+    return nullptr;
   }
 
-  nsCOMPtr<nsITelephonyCallback> callback =
-    new Callback(this, promise, aServiceId, aNumber);
-  nsresult rv = mProvider->Dial(aServiceId, aNumber, aIsEmergency, callback);
+  nsresult rv = mProvider->Dial(aServiceId, aNumber, aIsEmergency);
   if (NS_FAILED(rv)) {
-    promise->MaybeReject(NS_LITERAL_STRING("InvalidStateError"));
-    return promise.forget();
+    aRv.Throw(rv);
+    return nullptr;
   }
 
-  return promise.forget();
+  nsRefPtr<TelephonyCall> call = CreateNewDialingCall(aServiceId, aNumber);
+
+  // Notify other telephony objects that we just dialed.
+  for (uint32_t i = 0; i < gTelephonyList->Length(); i++) {
+    Telephony*& telephony = gTelephonyList->ElementAt(i);
+    if (telephony != this) {
+      nsRefPtr<Telephony> kungFuDeathGrip = telephony;
+      telephony->NoteDialedCallFromOtherInstance(aServiceId, aNumber);
+    }
+  }
+
+  return call.forget();
 }
 
 already_AddRefed<TelephonyCall>
@@ -311,6 +282,14 @@ Telephony::CreateNewDialingCall(uint32_t aServiceId, const nsAString& aNumber)
   NS_ASSERTION(mCalls.Contains(call), "Should have auto-added new call!");
 
   return call.forget();
+}
+
+void
+Telephony::NoteDialedCallFromOtherInstance(uint32_t aServiceId,
+                                           const nsAString& aNumber)
+{
+  // We don't need to hang on to this call object, it is held alive by mCalls.
+  nsRefPtr<TelephonyCall> call = CreateNewDialingCall(aServiceId, aNumber);
 }
 
 nsresult
@@ -403,25 +382,26 @@ NS_IMPL_ADDREF_INHERITED(Telephony, nsDOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(Telephony, nsDOMEventTargetHelper)
 
 NS_IMPL_ISUPPORTS1(Telephony::Listener, nsITelephonyListener)
-NS_IMPL_ISUPPORTS1(Telephony::Callback, nsITelephonyCallback)
 
 // Telephony WebIDL
 
-already_AddRefed<Promise>
-Telephony::Dial(const nsAString& aNumber, const Optional<uint32_t>& aServiceId)
+already_AddRefed<TelephonyCall>
+Telephony::Dial(const nsAString& aNumber, const Optional<uint32_t>& aServiceId,
+                ErrorResult& aRv)
 {
   uint32_t serviceId = ProvidedOrDefaultServiceId(aServiceId);
-  nsRefPtr<Promise> promise = DialInternal(serviceId, aNumber, false);
-  return promise.forget();
+  nsRefPtr<TelephonyCall> call = DialInternal(serviceId, aNumber, false, aRv);
+  return call.forget();
 }
 
-already_AddRefed<Promise>
+already_AddRefed<TelephonyCall>
 Telephony::DialEmergency(const nsAString& aNumber,
-                         const Optional<uint32_t>& aServiceId)
+                         const Optional<uint32_t>& aServiceId,
+                         ErrorResult& aRv)
 {
   uint32_t serviceId = ProvidedOrDefaultServiceId(aServiceId);
-  nsRefPtr<Promise> promise = DialInternal(serviceId, aNumber, true);
-  return promise.forget();
+  nsRefPtr<TelephonyCall> call = DialInternal(serviceId, aNumber, true, aRv);
+  return call.forget();
 }
 
 void
@@ -664,7 +644,7 @@ Telephony::SupplementaryServiceNotification(uint32_t aServiceId,
                                             uint16_t aNotification)
 {
   nsRefPtr<TelephonyCall> associatedCall;
-  if (!mCalls.IsEmpty()) {
+  if (!mCalls.IsEmpty() && aCallIndex != -1) {
     associatedCall = GetCall(aServiceId, aCallIndex);
   }
 
@@ -695,7 +675,11 @@ Telephony::NotifyError(uint32_t aServiceId,
     return NS_ERROR_UNEXPECTED;
   }
 
-  nsRefPtr<TelephonyCall> callToNotify = GetCall(aServiceId, aCallIndex);
+  nsRefPtr<TelephonyCall> callToNotify;
+
+  callToNotify = (aCallIndex == -1) ? GetOutgoingCall()
+                                    : GetCall(aServiceId, aCallIndex);
+
   if (!callToNotify) {
     NS_ERROR("Don't call me with a bad call index!");
     return NS_ERROR_UNEXPECTED;

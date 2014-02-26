@@ -33,25 +33,15 @@ TelephonyParent::ActorDestroy(ActorDestroyReason why)
 }
 
 bool
-TelephonyParent::RecvPTelephonyRequestConstructor(PTelephonyRequestParent* aActor,
-                                                  const IPCTelephonyRequest& aRequest)
+TelephonyParent::RecvPTelephonyRequestConstructor(PTelephonyRequestParent* aActor)
 {
   TelephonyRequestParent* actor = static_cast<TelephonyRequestParent*>(aActor);
 
-  switch (aRequest.type()) {
-    case IPCTelephonyRequest::TEnumerateCallsRequest:
-      return actor->DoRequest(aRequest.get_EnumerateCallsRequest());
-    case IPCTelephonyRequest::TDialRequest:
-      return actor->DoRequest(aRequest.get_DialRequest());
-    default:
-      MOZ_CRASH("Unknown type!");
-  }
-
-  return false;
+  return actor->DoRequest();
 }
 
 PTelephonyRequestParent*
-TelephonyParent::AllocPTelephonyRequestParent(const IPCTelephonyRequest& aRequest)
+TelephonyParent::AllocPTelephonyRequestParent()
 {
   TelephonyRequestParent* actor = new TelephonyRequestParent();
   // Add an extra ref for IPDL. Will be released in
@@ -98,6 +88,19 @@ TelephonyParent::RecvUnregisterListener()
   NS_ENSURE_TRUE(provider, true);
 
   mRegistered = !NS_SUCCEEDED(provider->UnregisterListener(this));
+  return true;
+}
+
+bool
+TelephonyParent::RecvDialCall(const uint32_t& aClientId,
+                              const nsString& aNumber,
+                              const bool& aIsEmergency)
+{
+  nsCOMPtr<nsITelephonyProvider> provider =
+    do_GetService(TELEPHONY_PROVIDER_CONTRACTID);
+  NS_ENSURE_TRUE(provider, true);
+
+  provider->Dial(aClientId, aNumber, aIsEmergency);
   return true;
 }
 
@@ -369,9 +372,7 @@ TelephonyParent::SupplementaryServiceNotification(uint32_t aClientId,
  * TelephonyRequestParent
  ******************************************************************************/
 
-NS_IMPL_ISUPPORTS2(TelephonyRequestParent,
-                   nsITelephonyListener,
-                   nsITelephonyCallback)
+NS_IMPL_ISUPPORTS1(TelephonyRequestParent, nsITelephonyListener)
 
 TelephonyRequestParent::TelephonyRequestParent()
   : mActorDestroyed(false)
@@ -388,7 +389,7 @@ TelephonyRequestParent::ActorDestroy(ActorDestroyReason why)
 }
 
 bool
-TelephonyRequestParent::DoRequest(const EnumerateCallsRequest& aRequest)
+TelephonyRequestParent::DoRequest()
 {
   nsresult rv = NS_ERROR_FAILURE;
 
@@ -400,21 +401,6 @@ TelephonyRequestParent::DoRequest(const EnumerateCallsRequest& aRequest)
 
   if (NS_FAILED(rv)) {
     return NS_SUCCEEDED(EnumerateCallStateComplete());
-  }
-
-  return true;
-}
-
-bool
-TelephonyRequestParent::DoRequest(const DialRequest& aRequest)
-{
-  nsCOMPtr<nsITelephonyProvider> provider =
-    do_GetService(TELEPHONY_PROVIDER_CONTRACTID);
-  if (provider) {
-    provider->Dial(aRequest.clientId(), aRequest.number(),
-                   aRequest.isEmergency(), this);
-  } else {
-    return NS_SUCCEEDED(NotifyDialError(NS_LITERAL_STRING("InvalidStateError")));
   }
 
   return true;
@@ -446,7 +432,7 @@ TelephonyRequestParent::EnumerateCallStateComplete()
 {
   NS_ENSURE_TRUE(!mActorDestroyed, NS_ERROR_FAILURE);
 
-  return Send__delete__(this, EnumerateCallsResponse()) ? NS_OK : NS_ERROR_FAILURE;
+  return Send__delete__(this) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -495,24 +481,4 @@ TelephonyRequestParent::SupplementaryServiceNotification(uint32_t aClientId,
                                                          uint16_t aNotification)
 {
   MOZ_CRASH("Not a TelephonyParent!");
-}
-
-// nsITelephonyCallback
-
-NS_IMETHODIMP
-TelephonyRequestParent::NotifyDialError(const nsAString& aError)
-{
-  NS_ENSURE_TRUE(!mActorDestroyed, NS_ERROR_FAILURE);
-
-  return (SendNotifyDialError(nsString(aError)) &&
-          Send__delete__(this, DialResponse())) ? NS_OK : NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-TelephonyRequestParent::NotifyDialSuccess()
-{
-  NS_ENSURE_TRUE(!mActorDestroyed, NS_ERROR_FAILURE);
-
-  return (SendNotifyDialSuccess() &&
-          Send__delete__(this, DialResponse())) ? NS_OK : NS_ERROR_FAILURE;
 }
