@@ -671,7 +671,7 @@ public class Tab {
         }, 500);
     }
 
-    void handleLoaded() {
+    void handleContentLoaded() {
         setLoadProgress(LOAD_PROGRESS_LOADED);
     }
 
