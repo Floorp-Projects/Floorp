@@ -94,6 +94,15 @@ public:
   bool IsComposing() const { return mIsComposing; }
 
   /**
+   * Returns true while editor is handling an event which is modifying the
+   * composition string.
+   */
+  bool IsEditorHandlingEvent() const
+  {
+    return mIsEditorHandlingEvent;
+  }
+
+  /**
    * StartHandlingComposition() and EndHandlingComposition() are called by
    * editor when it holds a TextComposition instance and release it.
    */
@@ -160,6 +169,10 @@ private:
 
   // See the comment for IsComposing().
   bool mIsComposing;
+
+  // mIsEditorHandlingEvent is true while editor is modifying the composition
+  // string.
+  bool mIsEditorHandlingEvent;
 
   // Hide the default constructor and copy constructor.
   TextComposition() {}
