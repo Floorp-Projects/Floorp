@@ -4,16 +4,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "DOMWheelEvent.h"
+#include "mozilla/dom/WheelEvent.h"
 #include "mozilla/MouseEvents.h"
 #include "prtime.h"
 
 namespace mozilla {
 namespace dom {
 
-DOMWheelEvent::DOMWheelEvent(EventTarget* aOwner,
-                             nsPresContext* aPresContext,
-                             WidgetWheelEvent* aWheelEvent)
+WheelEvent::WheelEvent(EventTarget* aOwner,
+                       nsPresContext* aPresContext,
+                       WidgetWheelEvent* aWheelEvent)
   : nsDOMMouseEvent(aOwner, aPresContext,
                     aWheelEvent ? aWheelEvent :
                                   new WidgetWheelEvent(false, 0, nullptr))
@@ -28,30 +28,30 @@ DOMWheelEvent::DOMWheelEvent(EventTarget* aOwner,
   }
 }
 
-NS_IMPL_ADDREF_INHERITED(DOMWheelEvent, nsDOMMouseEvent)
-NS_IMPL_RELEASE_INHERITED(DOMWheelEvent, nsDOMMouseEvent)
+NS_IMPL_ADDREF_INHERITED(WheelEvent, nsDOMMouseEvent)
+NS_IMPL_RELEASE_INHERITED(WheelEvent, nsDOMMouseEvent)
 
-NS_INTERFACE_MAP_BEGIN(DOMWheelEvent)
+NS_INTERFACE_MAP_BEGIN(WheelEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMWheelEvent)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMMouseEvent)
 
 NS_IMETHODIMP
-DOMWheelEvent::InitWheelEvent(const nsAString & aType,
-                              bool aCanBubble,
-                              bool aCancelable,
-                              nsIDOMWindow *aView,
-                              int32_t aDetail,
-                              int32_t aScreenX,
-                              int32_t aScreenY,
-                              int32_t aClientX,
-                              int32_t aClientY, 
-                              uint16_t aButton,
-                              nsIDOMEventTarget *aRelatedTarget,
-                              const nsAString& aModifiersList,
-                              double aDeltaX,
-                              double aDeltaY,
-                              double aDeltaZ,
-                              uint32_t aDeltaMode)
+WheelEvent::InitWheelEvent(const nsAString& aType,
+                           bool aCanBubble,
+                           bool aCancelable,
+                           nsIDOMWindow* aView,
+                           int32_t aDetail,
+                           int32_t aScreenX,
+                           int32_t aScreenY,
+                           int32_t aClientX,
+                           int32_t aClientY, 
+                           uint16_t aButton,
+                           nsIDOMEventTarget* aRelatedTarget,
+                           const nsAString& aModifiersList,
+                           double aDeltaX,
+                           double aDeltaY,
+                           double aDeltaZ,
+                           uint32_t aDeltaMode)
 {
   nsresult rv =
     nsDOMMouseEvent::InitMouseEvent(aType, aCanBubble, aCancelable, aView,
@@ -70,13 +70,13 @@ DOMWheelEvent::InitWheelEvent(const nsAString & aType,
 }
 
 double
-DOMWheelEvent::DeltaX()
+WheelEvent::DeltaX()
 {
   return mEvent->AsWheelEvent()->deltaX;
 }
 
 NS_IMETHODIMP
-DOMWheelEvent::GetDeltaX(double* aDeltaX)
+WheelEvent::GetDeltaX(double* aDeltaX)
 {
   NS_ENSURE_ARG_POINTER(aDeltaX);
 
@@ -85,13 +85,13 @@ DOMWheelEvent::GetDeltaX(double* aDeltaX)
 }
 
 double
-DOMWheelEvent::DeltaY()
+WheelEvent::DeltaY()
 {
   return mEvent->AsWheelEvent()->deltaY;
 }
 
 NS_IMETHODIMP
-DOMWheelEvent::GetDeltaY(double* aDeltaY)
+WheelEvent::GetDeltaY(double* aDeltaY)
 {
   NS_ENSURE_ARG_POINTER(aDeltaY);
 
@@ -100,13 +100,13 @@ DOMWheelEvent::GetDeltaY(double* aDeltaY)
 }
 
 double
-DOMWheelEvent::DeltaZ()
+WheelEvent::DeltaZ()
 {
   return mEvent->AsWheelEvent()->deltaZ;
 }
 
 NS_IMETHODIMP
-DOMWheelEvent::GetDeltaZ(double* aDeltaZ)
+WheelEvent::GetDeltaZ(double* aDeltaZ)
 {
   NS_ENSURE_ARG_POINTER(aDeltaZ);
 
@@ -115,13 +115,13 @@ DOMWheelEvent::GetDeltaZ(double* aDeltaZ)
 }
 
 uint32_t
-DOMWheelEvent::DeltaMode()
+WheelEvent::DeltaMode()
 {
   return mEvent->AsWheelEvent()->deltaMode;
 }
 
 NS_IMETHODIMP
-DOMWheelEvent::GetDeltaMode(uint32_t* aDeltaMode)
+WheelEvent::GetDeltaMode(uint32_t* aDeltaMode)
 {
   NS_ENSURE_ARG_POINTER(aDeltaMode);
 
@@ -156,14 +156,14 @@ GetModifierList(bool aCtrl, bool aShift, bool aAlt, bool aMeta,
   }
 }
 
-already_AddRefed<DOMWheelEvent>
-DOMWheelEvent::Constructor(const GlobalObject& aGlobal,
-                           const nsAString& aType,
-                           const WheelEventInit& aParam,
-                           mozilla::ErrorResult& aRv)
+already_AddRefed<WheelEvent>
+WheelEvent::Constructor(const GlobalObject& aGlobal,
+                        const nsAString& aType,
+                        const WheelEventInit& aParam,
+                        ErrorResult& aRv)
 {
   nsCOMPtr<EventTarget> t = do_QueryInterface(aGlobal.GetAsSupports());
-  nsRefPtr<DOMWheelEvent> e = new DOMWheelEvent(t, nullptr, nullptr);
+  nsRefPtr<WheelEvent> e = new WheelEvent(t, nullptr, nullptr);
   bool trusted = e->Init(t);
   nsAutoString modifierList;
   GetModifierList(aParam.mCtrlKey, aParam.mShiftKey,
@@ -185,12 +185,14 @@ DOMWheelEvent::Constructor(const GlobalObject& aGlobal,
 } // namespace mozilla
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
-nsresult NS_NewDOMWheelEvent(nsIDOMEvent** aInstancePtrResult,
-                             mozilla::dom::EventTarget* aOwner,
-                             nsPresContext* aPresContext,
-                             WidgetWheelEvent* aEvent)
+nsresult
+NS_NewDOMWheelEvent(nsIDOMEvent** aInstancePtrResult,
+                    EventTarget* aOwner,
+                    nsPresContext* aPresContext,
+                    WidgetWheelEvent* aEvent)
 {
-  dom::DOMWheelEvent* it = new dom::DOMWheelEvent(aOwner, aPresContext, aEvent);
+  WheelEvent* it = new WheelEvent(aOwner, aPresContext, aEvent);
   return CallQueryInterface(it, aInstancePtrResult);
 }

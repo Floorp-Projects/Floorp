@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_DOMWheelEvent_h__
-#define mozilla_dom_DOMWheelEvent_h__
+#ifndef mozilla_dom_WheelEvent_h_
+#define mozilla_dom_WheelEvent_h_
 
 #include "nsIDOMWheelEvent.h"
 #include "nsDOMMouseEvent.h"
@@ -15,13 +15,13 @@
 namespace mozilla {
 namespace dom {
 
-class DOMWheelEvent : public nsDOMMouseEvent,
-                      public nsIDOMWheelEvent
+class WheelEvent : public nsDOMMouseEvent,
+                   public nsIDOMWheelEvent
 {
 public:
-  DOMWheelEvent(mozilla::dom::EventTarget* aOwner,
-                nsPresContext* aPresContext,
-                WidgetWheelEvent* aWheelEvent);
+  WheelEvent(EventTarget* aOwner,
+             nsPresContext* aPresContext,
+             WidgetWheelEvent* aWheelEvent);
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -32,15 +32,15 @@ public:
   NS_FORWARD_TO_NSDOMMOUSEEVENT
 
   static
-  already_AddRefed<DOMWheelEvent> Constructor(const GlobalObject& aGlobal,
-                                              const nsAString& aType,
-                                              const WheelEventInit& aParam,
-                                              mozilla::ErrorResult& aRv);
+  already_AddRefed<WheelEvent> Constructor(const GlobalObject& aGlobal,
+                                           const nsAString& aType,
+                                           const WheelEventInit& aParam,
+                                           ErrorResult& aRv);
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
   {
-    return mozilla::dom::WheelEventBinding::Wrap(aCx, aScope, this);
+    return WheelEventBinding::Wrap(aCx, aScope, this);
   }
 
   double DeltaX();
@@ -52,4 +52,4 @@ public:
 } // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_dom_DOMWheelEvent_h__
+#endif // mozilla_dom_WheelEvent_h_
