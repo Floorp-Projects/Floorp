@@ -62,10 +62,6 @@
 #include "nsCocoaFeatures.h"
 #endif
 
-#if defined(MOZ_WIDGET_GONK)
-#include "nsINetworkManager.h"
-#endif
-
 //-----------------------------------------------------------------------------
 #include "mozilla/net/HttpChannelChild.h"
 
@@ -201,18 +197,11 @@ nsHttpHandler::nsHttpHandler()
     , mRequestTokenBucketMinParallelism(6)
     , mRequestTokenBucketHz(100)
     , mRequestTokenBucketBurst(32)
-    , mCriticalRequestPrioritization(true)
     , mTCPKeepaliveShortLivedEnabled(false)
     , mTCPKeepaliveShortLivedTimeS(60)
     , mTCPKeepaliveShortLivedIdleTimeS(10)
     , mTCPKeepaliveLongLivedEnabled(false)
     , mTCPKeepaliveLongLivedIdleTimeS(600)
-    , mEthernetBytesRead(0)
-    , mEthernetBytesWritten(0)
-    , mCellBytesRead(0)
-    , mCellBytesWritten(0)
-    , mNetworkTypeKnown(false)
-    , mNetworkTypeWasEthernet(true)
 {
 #if defined(PR_LOGGING)
     gHttpLog = PR_NewLogModule("nsHttp");
@@ -1584,14 +1573,13 @@ nsHttpHandler::SetAcceptEncodings(const char *aAcceptEncodings)
 // nsHttpHandler::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS7(nsHttpHandler,
+NS_IMPL_ISUPPORTS6(nsHttpHandler,
                    nsIHttpProtocolHandler,
                    nsIProxiedProtocolHandler,
                    nsIProtocolHandler,
                    nsIObserver,
                    nsISupportsWeakReference,
-                   nsISpeculativeConnect,
-                   nsIHttpDataUsage)
+                   nsISpeculativeConnect)
 
 //-----------------------------------------------------------------------------
 // nsHttpHandler::nsIProtocolHandler
@@ -1915,248 +1903,45 @@ nsHttpHandler::SpeculativeConnect(nsIURI *aURI,
     return SpeculativeConnect(ci, aCallbacks);
 }
 
-// nsIHttpDataUsage
-
-NS_IMETHODIMP
-nsHttpHandler::GetEthernetBytesRead(uint64_t *aEthernetBytesRead)
-{
-    MOZ_ASSERT(NS_IsMainThread());
-    *aEthernetBytesRead = mEthernetBytesRead;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpHandler::GetEthernetBytesWritten(uint64_t *aEthernetBytesWritten)
-{
-    MOZ_ASSERT(NS_IsMainThread());
-    *aEthernetBytesWritten = mEthernetBytesWritten;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpHandler::GetCellBytesRead(uint64_t *aCellBytesRead)
-{
-    MOZ_ASSERT(NS_IsMainThread());
-    *aCellBytesRead = mCellBytesRead;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpHandler::GetCellBytesWritten(uint64_t *aCellBytesWritten)
-{
-    MOZ_ASSERT(NS_IsMainThread());
-    *aCellBytesWritten = mCellBytesWritten;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpHandler::ResetHttpDataUsage()
-{
-    MOZ_ASSERT(NS_IsMainThread());
-    mEthernetBytesRead = mEthernetBytesWritten = 0;
-    mCellBytesRead = mCellBytesWritten = 0;
-    return NS_OK;
-}
-
-class DataUsageEvent : public nsRunnable
-{
-public:
-    explicit DataUsageEvent(nsIInterfaceRequestor *cb,
-                            uint64_t bytesRead,
-                            uint64_t bytesWritten)
-        : mCB(cb), mRead(bytesRead), mWritten(bytesWritten) { }
-    
-  NS_IMETHOD Run() MOZ_OVERRIDE
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-    if (gHttpHandler)
-        gHttpHandler->UpdateDataUsage(mCB, mRead, mWritten);
-    return NS_OK;
-  }
-
-private:
-  ~DataUsageEvent() { }
-  nsCOMPtr<nsIInterfaceRequestor> mCB;
-  uint64_t mRead;
-  uint64_t mWritten;
-};
-
-void
-nsHttpHandler::UpdateDataUsage(nsIInterfaceRequestor *cb,
-                               uint64_t bytesRead, uint64_t bytesWritten)
-{
-    if (!IsTelemetryEnabled())
-        return;
-
-    if (!NS_IsMainThread()) {
-        nsRefPtr<nsIRunnable> event = new DataUsageEvent(cb, bytesRead, bytesWritten);
-        NS_DispatchToMainThread(event);
-        return;
-    }
-    
-    bool isEthernet = true;
-
-    if (NS_FAILED(GetNetworkEthernetInfo(cb, &isEthernet))) {
-        // without a window it is hard for android to determine the network type
-        // so on failures we will just use the last value
-        if (!mNetworkTypeKnown)
-            return;
-        isEthernet = mNetworkTypeWasEthernet;
-    }
-
-    if (isEthernet) {
-        mEthernetBytesRead += bytesRead;
-        mEthernetBytesWritten += bytesWritten;
-    } else {
-        mCellBytesRead += bytesRead;
-        mCellBytesWritten += bytesWritten;
-    }
-}
-
-nsresult
-nsHttpHandler::GetNetworkEthernetInfo(nsIInterfaceRequestor *cb,
-                                      bool *aEthernet)
-{
-    NS_ENSURE_ARG_POINTER(aEthernet);
-
-    nsresult rv = GetNetworkEthernetInfoInner(cb, aEthernet);
-    if (NS_SUCCEEDED(rv)) {
-        mNetworkTypeKnown = true;
-        mNetworkTypeWasEthernet = *aEthernet;
-    }
-    return rv;
-}
-
-// aEthernet and aGateway are required out parameters
-// on b2g and desktop gateway cannot be determined yet and
-// this function returns ERROR_NOT_IMPLEMENTED.
-nsresult
-nsHttpHandler::GetNetworkInfo(nsIInterfaceRequestor *cb,
-                              bool *aEthernet,
-                              uint32_t *aGateway)
-{
-    NS_ENSURE_ARG_POINTER(aEthernet);
-    NS_ENSURE_ARG_POINTER(aGateway);
-
-    nsresult rv = GetNetworkInfoInner(cb, aEthernet, aGateway);
-    if (NS_SUCCEEDED(rv)) {
-        mNetworkTypeKnown = true;
-        mNetworkTypeWasEthernet = *aEthernet;
-    }
-    return rv;
-}
-
-nsresult
-nsHttpHandler::GetNetworkInfoInner(nsIInterfaceRequestor *cb,
-                                   bool *aEthernet,
-                                   uint32_t *aGateway)
-{
-    NS_ENSURE_ARG_POINTER(aEthernet);
-    NS_ENSURE_ARG_POINTER(aGateway);
-
-    *aGateway = 0;
-    *aEthernet = true;
-    
-#if defined(MOZ_WIDGET_GONK)
-    // b2g only allows you to ask for ethernet or not right now.
-    return NS_ERROR_NOT_IMPLEMENTED;
-#endif
-
-#if defined(ANDROID)
-    if (!cb)
-        return NS_ERROR_FAILURE;
-
-    nsCOMPtr<nsIDOMWindow> domWindow;
-    cb->GetInterface(NS_GET_IID(nsIDOMWindow), getter_AddRefs(domWindow));
-    if (!domWindow)
-        return NS_ERROR_FAILURE;
-
-    nsCOMPtr<nsIDOMNavigator> domNavigator;
-    domWindow->GetNavigator(getter_AddRefs(domNavigator));
-    nsCOMPtr<nsIMozNavigatorNetwork> networkNavigator =
-        do_QueryInterface(domNavigator);
-    if (!networkNavigator)
-        return NS_ERROR_FAILURE;
-
-    nsCOMPtr<nsISupports> mozConnection;
-    networkNavigator->GetMozConnection(getter_AddRefs(mozConnection));
-    nsCOMPtr<nsINetworkProperties> networkProperties =
-        do_QueryInterface(mozConnection);
-    if (!networkProperties)
-        return NS_ERROR_FAILURE;
-
-    nsresult rv;
-    rv = networkProperties->GetDhcpGateway(aGateway);
-    if (NS_FAILED(rv))
-        return rv;
-
-    return networkProperties->GetIsWifi(aEthernet);
-#endif
-
-    // desktop does not currently know about the gateway
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-nsresult
-nsHttpHandler::GetNetworkEthernetInfoInner(nsIInterfaceRequestor *cb,
-                                           bool *aEthernet)
-{
-    *aEthernet = true;
-    
-#if defined(MOZ_WIDGET_GONK)
-    int32_t networkType;
-    nsCOMPtr<nsINetworkManager> networkManager = 
-        do_GetService("@mozilla.org/network/manager;1");
-    if (!networkManager)
-        return NS_ERROR_FAILURE;
-    if (NS_FAILED(networkManager->GetPreferredNetworkType(&networkType)))
-        return NS_ERROR_FAILURE;
-    *aEthernet = networkType == nsINetworkInterface::NETWORK_TYPE_WIFI;
-    return NS_OK;
-#endif
-
-#if defined(ANDROID)
-    if (!cb)
-        return NS_ERROR_FAILURE;
-
-    nsCOMPtr<nsIDOMWindow> domWindow;
-    cb->GetInterface(NS_GET_IID(nsIDOMWindow), getter_AddRefs(domWindow));
-    if (!domWindow)
-        return NS_ERROR_FAILURE;
-
-    nsCOMPtr<nsIDOMNavigator> domNavigator;
-    domWindow->GetNavigator(getter_AddRefs(domNavigator));
-    nsCOMPtr<nsIMozNavigatorNetwork> networkNavigator =
-        do_QueryInterface(domNavigator);
-    if (!networkNavigator)
-        return NS_ERROR_FAILURE;
-
-    nsCOMPtr<nsISupports> mozConnection;
-    networkNavigator->GetMozConnection(getter_AddRefs(mozConnection));
-    nsCOMPtr<nsINetworkProperties> networkProperties =
-        do_QueryInterface(mozConnection);
-    if (!networkProperties)
-        return NS_ERROR_FAILURE;
-
-    return networkProperties->GetIsWifi(aEthernet);
-#endif
-
-    // desktop assumes never on cell data
-    *aEthernet = true;
-    return NS_OK;
-}
-
 void
 nsHttpHandler::TickleWifi(nsIInterfaceRequestor *cb)
 {
     if (!cb || !mWifiTickler)
         return;
 
+    // If B2G requires a similar mechanism nsINetworkManager, currently only avail
+    // on B2G, contains the necessary information on wifi and gateway
+
+    nsCOMPtr<nsIDOMWindow> domWindow;
+    cb->GetInterface(NS_GET_IID(nsIDOMWindow), getter_AddRefs(domWindow));
+    if (!domWindow)
+        return;
+
+    nsCOMPtr<nsIDOMNavigator> domNavigator;
+    domWindow->GetNavigator(getter_AddRefs(domNavigator));
+    nsCOMPtr<nsIMozNavigatorNetwork> networkNavigator =
+        do_QueryInterface(domNavigator);
+    if (!networkNavigator)
+        return;
+
+    nsCOMPtr<nsISupports> mozConnection;
+    networkNavigator->GetMozConnection(getter_AddRefs(mozConnection));
+    nsCOMPtr<nsINetworkProperties> networkProperties =
+        do_QueryInterface(mozConnection);
+    if (!networkProperties)
+        return;
+
     uint32_t gwAddress;
     bool isWifi;
+    nsresult rv;
 
-    nsresult rv = GetNetworkInfo(cb, &isWifi, &gwAddress);
-    if (NS_FAILED(rv) || !gwAddress || !isWifi)
+    rv = networkProperties->GetDhcpGateway(&gwAddress);
+    if (NS_SUCCEEDED(rv))
+        rv = networkProperties->GetIsWifi(&isWifi);
+    if (NS_FAILED(rv))
+        return;
+
+    if (!gwAddress || !isWifi)
         return;
 
     mWifiTickler->SetIPV4Address(gwAddress);
