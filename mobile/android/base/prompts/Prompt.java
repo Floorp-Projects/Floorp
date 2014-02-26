@@ -38,8 +38,7 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 
-public class Prompt implements OnClickListener, OnCancelListener, OnItemClickListener,
-                               PromptInput.OnChangeListener {
+public class Prompt implements OnClickListener, OnCancelListener, OnItemClickListener {
     private static final String LOGTAG = "GeckoPromptService";
 
     private String[] mButtons;
