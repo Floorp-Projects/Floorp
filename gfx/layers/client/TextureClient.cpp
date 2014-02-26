@@ -108,7 +108,7 @@ private:
     Release();
   }
 
-  CompositableForwarder* mForwarder;
+  RefPtr<CompositableForwarder> mForwarder;
   TextureClientData* mTextureData;
   TextureClient* mTextureClient;
   bool mIPCOpen;
