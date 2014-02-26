@@ -16,7 +16,7 @@ MOCHITEST_FILES = \
 		browserElementTestHelpers.js \
 		test_browserElement_NoAttr.html \
 		test_browserElement_NoPref.html \
-		test_browserElement_NoWhitelist.html \
+		test_browserElement_NoPermission.html \
 		browserElement_LoadEvents.js \
 		file_browserElement_LoadEvents.html \
 		test_browserElement_inproc_LoadEvents.html \
