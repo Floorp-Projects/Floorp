@@ -19,6 +19,8 @@ import android.view.SubMenu;
 import android.view.View;
 import android.view.View.OnClickListener;
 
+import java.util.ArrayList;
+
 public class GeckoActionProvider extends ActionProvider {
     private static int MAX_HISTORY_SIZE = 2;
 
@@ -123,6 +125,20 @@ public class GeckoActionProvider extends ActionProvider {
 
     public void setOnTargetSelectedListener(OnTargetSelectedListener listener) {
         mOnTargetListener = listener;
+    }
+
+    public ArrayList<ResolveInfo> getSortedActivites() {
+        ArrayList<ResolveInfo> infos = new ArrayList<ResolveInfo>();
+
+        ActivityChooserModel dataModel = ActivityChooserModel.get(mContext, mHistoryFileName);
+        PackageManager packageManager = mContext.getPackageManager();
+
+        // Populate the sub-menu with a sub set of the activities.
+        final int count = dataModel.getActivityCount();
+        for (int i = 0; i < count; i++) {
+            infos.add(dataModel.getActivity(i));
+        }
+        return infos;
     }
 
     /**

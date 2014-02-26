@@ -85,7 +85,7 @@ class neq_op_token(object):
 class not_op_token(object):
     "!"
     def nud(self, parser):
-        return not parser.expression()
+        return not parser.expression(100)
 
 class and_op_token(object):
     "&&"
