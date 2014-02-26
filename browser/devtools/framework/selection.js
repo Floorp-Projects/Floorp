@@ -7,7 +7,7 @@
 "use strict";
 
 const {Cu, Ci} = require("chrome");
-let EventEmitter = require("devtools/shared/event-emitter");
+let EventEmitter = require("devtools/toolkit/event-emitter");
 
 /**
  * API

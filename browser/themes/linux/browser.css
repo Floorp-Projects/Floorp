@@ -2031,17 +2031,10 @@ chatbox {
   border-left: 3px solid transparent;
 }
 
-#main-window[customizing] #navigator-toolbox::after {
-  margin-left: 2em;
-  margin-right: 2em;
-}
-
 /* End customization mode */
 
 
-#main-window[privatebrowsingmode=temporary] #TabsToolbar::before {
-  display: -moz-box;
-  content: "";
+#main-window[privatebrowsingmode=temporary] #private-browsing-indicator {
   background: url("chrome://browser/skin/privatebrowsing-mask.png") center no-repeat;
   width: 40px;
 }

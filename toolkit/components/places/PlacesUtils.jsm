@@ -1953,7 +1953,7 @@ TransactionItemCache.prototype = {
   get index()
     this._index != null ? this._index : PlacesUtils.bookmarks.DEFAULT_INDEX,
   set annotations(v)
-    this._annotations = Array.isArray(v) ? JSON.parse(JSON.stringify(v)) : null,
+    this._annotations = Array.isArray(v) ? Cu.cloneInto(v, {}) : null,
   get annotations()
     this._annotations || null,
   set tags(v)

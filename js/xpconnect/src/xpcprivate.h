@@ -2938,8 +2938,7 @@ public:
      * @param cx The JSContext, this can be null, we don't do anything then
      */
     AutoScriptEvaluate(JSContext * cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-         : mJSContext(cx), mState(0), mErrorReporterSet(false),
-           mEvaluated(false) {
+         : mJSContext(cx), mErrorReporterSet(false), mEvaluated(false) {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }
 
@@ -2958,7 +2957,7 @@ public:
     ~AutoScriptEvaluate();
 private:
     JSContext* mJSContext;
-    JSExceptionState* mState;
+    mozilla::Maybe<JS::AutoSaveExceptionState> mState;
     bool mErrorReporterSet;
     bool mEvaluated;
     mozilla::Maybe<JSAutoCompartment> mAutoCompartment;

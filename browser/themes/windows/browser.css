@@ -785,6 +785,15 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
 #home-button.bookmark-item {
   list-style-image: url("chrome://browser/skin/Toolbar.png");
 }
+
+%ifndef WINDOWS_AERO
+@media (-moz-windows-theme: luna-silver) {
+  #home-button.bookmark-item {
+    list-style-image: url("chrome://browser/skin/Toolbar-lunaSilver.png");
+  }
+}
+%endif
+
 #home-button.bookmark-item:-moz-lwtheme-brighttext {
   list-style-image: url("chrome://browser/skin/Toolbar-inverted.png");
 }
@@ -2500,11 +2509,6 @@ chatbox {
   border-left: 1px solid @toolbarShadowColor@;
   border-right: 1px solid @toolbarShadowColor@;
   background-clip: padding-box;
-}
-
-#main-window[customizing] #navigator-toolbox::after {
-  margin-left: 2em;
-  margin-right: 2em;
 }
 
 /* End customization mode */

@@ -22,7 +22,8 @@ var parentRunner = null;
 // In normal test runs, the window that has a TestRunner in its parent is
 // the primary window.  In single test runs, if there is no parent and there
 // is no opener then it is the primary window.
-var isPrimaryTestWindow = !!parent.TestRunner || (parent == window && !opener);
+var isSingleTestRun = (parent == window && !opener)
+var isPrimaryTestWindow = !!parent.TestRunner || isSingleTestRun;
 
 // Finds the TestRunner for this test run and the SpecialPowers object (in
 // case it is not defined) from a parent/opener window.
@@ -312,6 +313,21 @@ SimpleTest._getCurrentTestURL = function() {
            "unknown test url";
 };
 
+SimpleTest._forceLogMessageOutput = false;
+
+/**
+ * Force all test messages to be displayed.  Only applies for the current test.
+ */
+SimpleTest.requestCompleteLog = function() {
+    if (SimpleTest._forceLogMessageOutput)
+        return;
+
+    SimpleTest._forceLogMessageOutput = true;
+    SimpleTest.registerCleanupFunction(function() {
+        SimpleTest._forceLogMessageOutput = false;
+    });
+};
+
 SimpleTest._logResult = (function () {
     var numCoalescedMessages = 1;
     var coalesceThreshold = 100;
@@ -320,14 +336,21 @@ SimpleTest._logResult = (function () {
         var isError = !test.result == !test.todo;
         var outputCoalescedMessage = numCoalescedMessages == coalesceThreshold;
 
+        var runningSingleTest = ((parentRunner &&
+                                  parentRunner._urls.length == 1)
+                                 || isSingleTestRun);
         // We want to eliminate mundane TEST-PASS/TEST-KNOWN-FAIL output,
         // since some tests produce tens of thousands of
         // TEST-PASS/TEST-KNOWN-FAIL messages.  But we always want to log
         // errors and informative messages.  We also want to output messages
         // every so often to let the user know the test is still running.
+        // If they user is only running a single test, it is likely that they
+        // want to see all the test messages.
         var shouldLog = (isError ||
                          passString == "TEST-INFO" ||
-                         outputCoalescedMessage);
+                         outputCoalescedMessage ||
+                         runningSingleTest ||
+                         SimpleTest._forceLogMessageOutput);
 
         if (!shouldLog) {
             ++numCoalescedMessages;
