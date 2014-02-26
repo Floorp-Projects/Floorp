@@ -2180,6 +2180,9 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
   const nsStylePosition* pos = child->StylePosition();
   bool isVisuallyAtomic = child->HasOpacity()
     || child->IsTransformed()
+    // strictly speaking, 'perspective' doesn't require visual atomicity,
+    // but the spec says it acts like the rest of these
+    || disp->mChildPerspective.GetUnit() == eStyleUnit_Coord
     || disp->mMixBlendMode != NS_STYLE_BLEND_NORMAL
     || nsSVGIntegrationUtils::UsingEffectsForFrame(child);
 
