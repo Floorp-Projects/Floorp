@@ -626,7 +626,7 @@
              overflowtarget="widget-overflow-list"
              context="toolbar-context-menu">
 
-      <hbox id="nav-bar-customization-target" class="customization-target" flex="1">
+      <hbox id="nav-bar-customization-target" flex="1">
         <toolbaritem id="urlbar-container" flex="400" persist="width"
                      forwarddisabled="true" title="&locationItem.title;" removable="false"
                      cui-areatype="toolbar"
