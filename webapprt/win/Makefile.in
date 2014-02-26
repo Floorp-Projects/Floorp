@@ -31,14 +31,6 @@ DEFINES += -DAPP_VERSION=$(APP_VERSION)
 OS_LIBS += $(call EXPAND_LIBNAME,shell32)
 
 RCINCLUDE = webapprt.rc
-ifndef GNU_CC
-RCFLAGS += -I$(srcdir)
-else
-RCFLAGS += --include-dir $(srcdir)
-endif
-ifdef DEBUG
-RCFLAGS += -DDEBUG
-endif
 
 # Uninstaller
 ifdef LOCALE_MERGEDIR

@@ -9357,6 +9357,39 @@ class MHaveSameClass
     }
 };
 
+class MHasClass
+    : public MUnaryInstruction,
+      public SingleObjectPolicy
+{
+    const Class *class_;
+
+    MHasClass(MDefinition *object, const Class *clasp)
+      : MUnaryInstruction(object)
+      , class_(clasp)
+    {
+        JS_ASSERT(object->type() == MIRType_Object);
+        setResultType(MIRType_Boolean);
+        setMovable();
+    }
+
+  public:
+    INSTRUCTION_HEADER(HasClass);
+
+    static MHasClass *New(TempAllocator &alloc, MDefinition *obj, const Class *clasp) {
+        return new(alloc) MHasClass(obj, clasp);
+    }
+
+    MDefinition *object() const {
+        return getOperand(0);
+    }
+    const Class *getClass() const {
+        return class_;
+    }
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+};
+
 // Increase the usecount of the provided script upon execution and test if
 // the usecount surpasses the threshold. Upon hit it will recompile the
 // outermost script (i.e. not the inlined script).
