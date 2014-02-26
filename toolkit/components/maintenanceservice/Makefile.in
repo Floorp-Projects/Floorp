@@ -19,11 +19,6 @@ endif
 RCINCLUDE = maintenanceservice.rc
 
 OS_LIBS += $(call EXPAND_LIBNAME,comctl32 ws2_32 shell32)
-ifndef GNU_CC
-RCFLAGS += -I$(srcdir)
-else
-RCFLAGS += --include-dir $(srcdir)
-endif
 
 ifndef MOZ_WINCONSOLE
 ifdef MOZ_DEBUG
