@@ -11,7 +11,7 @@
 #include "mozilla/ipc/ProtocolUtils.h"
 
 #include "nsDebug.h"
-#include "nsTraceRefcnt.h"
+#include "nsISupportsImpl.h"
 #include "nsXULAppAPI.h"
 
 using namespace mozilla;

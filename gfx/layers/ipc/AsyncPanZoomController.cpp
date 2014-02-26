@@ -49,14 +49,13 @@
 #include "nsCOMPtr.h"                   // for already_AddRefed
 #include "nsDebug.h"                    // for NS_WARNING
 #include "nsIDOMWindowUtils.h"          // for nsIDOMWindowUtils
-#include "nsISupportsImpl.h"
+#include "nsISupportsImpl.h"            // for MOZ_COUNT_CTOR, etc
 #include "nsMathUtils.h"                // for NS_hypot
 #include "nsPoint.h"                    // for nsIntPoint
 #include "nsStyleConsts.h"
 #include "nsStyleStruct.h"              // for nsTimingFunction
 #include "nsTArray.h"                   // for nsTArray, nsTArray_Impl, etc
 #include "nsThreadUtils.h"              // for NS_IsMainThread
-#include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc
 #include "SharedMemoryBasic.h"          // for SharedMemoryBasic
 
 // #define APZC_ENABLE_RENDERTRACE

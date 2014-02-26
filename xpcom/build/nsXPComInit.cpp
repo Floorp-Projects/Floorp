@@ -74,7 +74,7 @@ extern nsresult nsStringInputStreamConstructor(nsISupports *, REFNSIID, void **)
 
 #include "nsAtomService.h"
 #include "nsAtomTable.h"
-#include "nsTraceRefcnt.h"
+#include "nsISupportsImpl.h"
 
 #include "nsHashPropertyBag.h"
 

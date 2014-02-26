@@ -9,7 +9,7 @@
 #include "Layers.h"                     // for ColorLayer, etc
 #include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
 #include "mozilla/layers/LayerManagerComposite.h"  // for LayerComposite, etc
-#include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc
+#include "nsISupportsImpl.h"            // for MOZ_COUNT_CTOR, etc
 
 struct nsIntPoint;
 struct nsIntRect;

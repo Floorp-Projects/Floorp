@@ -11,9 +11,9 @@
 #include "mozilla/dom/EventTarget.h"
 #include "nsCOMPtr.h"
 #include "nsIAtom.h"
+#include "nsISupportsImpl.h"
 #include "nsIWidget.h"
 #include "nsString.h"
-#include "nsTraceRefcnt.h"
 #include "Units.h"
 
 /******************************************************************************

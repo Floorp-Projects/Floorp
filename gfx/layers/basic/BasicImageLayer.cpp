@@ -23,7 +23,6 @@
 #include "nsISupportsImpl.h"            // for gfxPattern::Release, etc
 #include "nsRect.h"                     // for nsIntRect
 #include "nsRegion.h"                   // for nsIntRegion
-#include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc
 #include "mozilla/gfx/Point.h"          // for IntSize
 
 using namespace mozilla::gfx;

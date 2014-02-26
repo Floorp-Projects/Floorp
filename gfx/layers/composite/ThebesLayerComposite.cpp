@@ -20,12 +20,12 @@
 #include "mozilla/mozalloc.h"           // for operator delete
 #include "nsAString.h"
 #include "nsAutoPtr.h"                  // for nsRefPtr
+#include "nsISupportsImpl.h"            // for MOZ_COUNT_CTOR, etc
 #include "nsMathUtils.h"                // for NS_lround
 #include "nsPoint.h"                    // for nsIntPoint
 #include "nsRect.h"                     // for nsIntRect
 #include "nsSize.h"                     // for nsIntSize
 #include "nsString.h"                   // for nsAutoCString
-#include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc
 #include "GeckoProfiler.h"
 
 namespace mozilla {
