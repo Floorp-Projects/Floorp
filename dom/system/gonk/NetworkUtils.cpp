@@ -205,6 +205,11 @@ CommandFunc NetworkUtils::sNetworkInterfaceSetAlarmChain[] = {
   NetworkUtils::networkInterfaceAlarmSuccess
 };
 
+CommandFunc NetworkUtils::sSetDnsChain[] = {
+  NetworkUtils::setDefaultInterface,
+  NetworkUtils::setInterfaceDns
+};
+
 /**
  * Helper function to get the bit length from given mask.
  */
@@ -738,6 +743,26 @@ void NetworkUtils::disableNat(CommandChain* aChain,
   doCommand(command, aChain, aCallback);
 }
 
+void NetworkUtils::setDefaultInterface(CommandChain* aChain,
+                                       CommandCallback aCallback,
+                                       NetworkResultOptions& aResult)
+{
+  char command[MAX_COMMAND_SIZE];
+  snprintf(command, MAX_COMMAND_SIZE - 1, "resolver setdefaultif %s", GET_CHAR(mIfname));
+
+  doCommand(command, aChain, aCallback);
+}
+
+void NetworkUtils::setInterfaceDns(CommandChain* aChain,
+                                   CommandCallback aCallback,
+                                   NetworkResultOptions& aResult)
+{
+  char command[MAX_COMMAND_SIZE];
+  snprintf(command, MAX_COMMAND_SIZE - 1, "resolver setifdns %s %s %s %s", GET_CHAR(mIfname), GET_CHAR(mDomain), GET_CHAR(mDns1_str), GET_CHAR(mDns2_str));
+
+  doCommand(command, aChain, aCallback);
+}
+
 #undef GET_CHAR
 #undef GET_FIELD
 
@@ -866,6 +891,11 @@ void NetworkUtils::wifiOperationModeSuccess(CommandChain* aChain,
                                             NetworkResultOptions& aResult)
 {
   postMessage(aChain->getParams(), aResult);
+}
+
+void NetworkUtils::setDnsFail(NetworkParams& aOptions, NetworkResultOptions& aResult)
+{
+  postMessage(aOptions, aResult);
 }
 
 #undef ASSIGN_FIELD
@@ -1053,6 +1083,11 @@ bool NetworkUtils::setDNS(NetworkParams& aOptions)
   char num[PROPERTY_VALUE_MAX];
   snprintf(num, PROPERTY_VALUE_MAX - 1, "%d", atoi(dnschange) + 1);
   property_set("net.dnschange", num);
+
+  // DNS needs to be set through netd since JellyBean (4.3).
+  if (SDK_VERSION >= 18) {
+    RUN_CHAIN(aOptions, sSetDnsChain, setDnsFail)
+  }
 
   return true;
 }

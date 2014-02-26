@@ -130,11 +130,13 @@ parent:
      *  offset       Starting offset of the change
      *  end          Ending offset of the range deleted
      *  newEnd       New ending offset after insertion
+     *  causedByComposition true if the change is caused by composition
      *
      *  for insertion, offset == end
      *  for deletion, offset == newEnd
      */
-    NotifyIMETextChange(uint32_t offset, uint32_t end, uint32_t newEnd);
+    NotifyIMETextChange(uint32_t offset, uint32_t end, uint32_t newEnd,
+                        bool causedByComposition);
 
     /**
      * Notifies chrome that there is a IME compostion rect updated
@@ -152,8 +154,10 @@ parent:
      *  seqno        Current seqno value on the content side
      *  anchor       Offset where the selection started
      *  focus        Offset where the caret is
+     *  causedByComposition true if the change is caused by composition
      */
-    NotifyIMESelection(uint32_t seqno, uint32_t anchor, uint32_t focus);
+    NotifyIMESelection(uint32_t seqno, uint32_t anchor, uint32_t focus,
+                       bool causedByComposition);
 
     /**
      * Notifies chrome to refresh its text cache 
