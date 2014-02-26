@@ -7,15 +7,13 @@
 PARALLEL_DIRS += [
   'encoder',
   'mediasource',
+  'ogg',
   'webaudio',
   'webvtt'
 ]
 
 if CONFIG['MOZ_RAW']:
     PARALLEL_DIRS += ['raw']
-
-if CONFIG['MOZ_OGG']:
-    PARALLEL_DIRS += ['ogg']
 
 if CONFIG['MOZ_WAVE']:
     PARALLEL_DIRS += ['wave']

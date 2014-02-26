@@ -12,7 +12,7 @@ if CONFIG['MOZ_WEBRTC']:
         '/media/webrtc/trunk',
     ]
 
-TEST_DIRS += ['tests/mochitest', 'tests/ipc']
+TEST_DIRS += ['tests/mochitest', 'tests/ipc', 'tests/identity']
 
 XPIDL_SOURCES += [
     'nsIDOMMediaStream.idl',
@@ -38,6 +38,13 @@ UNIFIED_SOURCES += [
 EXTRA_COMPONENTS += [
     'PeerConnection.js',
     'PeerConnection.manifest',
+]
+
+JS_MODULES_PATH = 'modules/media'
+
+EXTRA_JS_MODULES += [
+    'IdpProxy.jsm',
+    'PeerConnectionIdp.jsm',
 ]
 
 if CONFIG['MOZ_B2G']:

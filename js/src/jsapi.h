@@ -4704,17 +4704,41 @@ JS_CharsToId(JSContext* cx, JS::TwoByteChars chars, JS::MutableHandleId);
 extern JS_PUBLIC_API(bool)
 JS_IsIdentifier(JSContext *cx, JS::HandleString str, bool *isIdentifier);
 
+namespace JS {
+
 /*
- * Return the current script and line number of the most currently running
+ * AutoFilename encapsulates a pointer to a C-string and keeps the C-string
+ * alive for as long as the associated AutoFilename object is alive.
+ */
+class MOZ_STACK_CLASS JS_PUBLIC_API(AutoFilename)
+{
+    void *scriptSource_;
+
+    AutoFilename(const AutoFilename &) MOZ_DELETE;
+    void operator=(const AutoFilename &) MOZ_DELETE;
+
+  public:
+    AutoFilename() : scriptSource_(nullptr) {}
+    ~AutoFilename() { reset(nullptr); }
+
+    const char *get() const;
+
+    void reset(void *newScriptSource);
+};
+
+/*
+ * Return the current filename and line number of the most currently running
  * frame. Returns true if a scripted frame was found, false otherwise.
  *
  * If a the embedding has hidden the scripted caller for the topmost activation
  * record, this will also return false.
  */
 extern JS_PUBLIC_API(bool)
-JS_DescribeScriptedCaller(JSContext *cx, JS::MutableHandleScript script, unsigned *lineno);
+DescribeScriptedCaller(JSContext *cx, AutoFilename *filename = nullptr,
+                       unsigned *lineno = nullptr);
 
-namespace JS {
+extern JS_PUBLIC_API(JSObject *)
+GetScriptedCallerGlobal(JSContext *cx);
 
 /*
  * Informs the JS engine that the scripted caller should be hidden. This can be

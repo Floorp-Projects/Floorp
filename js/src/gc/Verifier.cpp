@@ -368,6 +368,8 @@ typedef HashMap<void *, VerifyNode *, DefaultHasher<void *>, SystemAllocPolicy> 
  */
 struct VerifyPreTracer : JSTracer
 {
+    JS::AutoDisableGenerationalGC noggc;
+
     /* The gcNumber when the verification began. */
     uint64_t number;
 
@@ -381,13 +383,10 @@ struct VerifyPreTracer : JSTracer
     char *term;
     NodeMap nodemap;
 
-    VerifyPreTracer(JSRuntime *rt) : root(nullptr) {
-        JS::DisableGenerationalGC(rt);
-    }
+    VerifyPreTracer(JSRuntime *rt) : noggc(rt), root(nullptr) {}
 
     ~VerifyPreTracer() {
         js_free(root);
-        JS::EnableGenerationalGC(runtime);
     }
 };
 
