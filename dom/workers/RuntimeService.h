@@ -174,16 +174,19 @@ public:
   }
 
   static void
-  SetDefaultJSContextOptions(const JS::ContextOptions& aContentOptions,
-                             const JS::ContextOptions& aChromeOptions)
+  SetDefaultRuntimeAndContextOptions(
+                                    const JS::RuntimeOptions& aRuntimeOptions,
+                                    const JS::ContextOptions& aContentCxOptions,
+                                    const JS::ContextOptions& aChromeCxOptions)
   {
     AssertIsOnMainThread();
-    sDefaultJSSettings.content.contextOptions = aContentOptions;
-    sDefaultJSSettings.chrome.contextOptions = aChromeOptions;
+    sDefaultJSSettings.runtimeOptions = aRuntimeOptions;
+    sDefaultJSSettings.content.contextOptions = aContentCxOptions;
+    sDefaultJSSettings.chrome.contextOptions = aChromeCxOptions;
   }
 
   void
-  UpdateAllWorkerJSContextOptions();
+  UpdateAllWorkerRuntimeAndContextOptions();
 
   void
   UpdateAllWorkerPreference(WorkerPreference aPref, bool aValue);
