@@ -334,7 +334,6 @@ child:
 
     NotifyProcessPriorityChanged(ProcessPriority priority);
     MinimizeMemoryUsage();
-    CancelMinimizeMemoryUsage();
 
     /**
      * Used to manage nsIStyleSheetService across processes.

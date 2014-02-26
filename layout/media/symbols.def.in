@@ -140,7 +140,6 @@ cubeb_stream_init
 cubeb_stream_start
 cubeb_stream_stop
 cubeb_stream_get_latency
-#ifdef MOZ_OGG
 th_comment_clear
 th_comment_init
 th_decode_alloc
@@ -154,7 +153,6 @@ th_info_init
 th_packet_isheader
 th_packet_iskeyframe
 th_setup_free
-#endif
 #ifdef MOZ_OPUS
 opus_decoder_create
 opus_decoder_destroy
@@ -378,6 +376,7 @@ _moz_cairo_mask_surface
 _moz_cairo_matrix_init
 _moz_cairo_matrix_init_identity
 _moz_cairo_matrix_init_scale
+_moz_cairo_matrix_init_translate
 _moz_cairo_matrix_invert
 _moz_cairo_matrix_multiply
 _moz_cairo_matrix_rotate
@@ -416,6 +415,7 @@ _moz_cairo_pattern_status
 _moz_cairo_pdf_surface_create_for_stream
 _moz_cairo_pop_group
 _moz_cairo_pop_group_to_source
+_moz_cairo_push_group
 _moz_cairo_push_group_with_content
 _moz_cairo_rectangle
 _moz_cairo_rectangle_list_destroy

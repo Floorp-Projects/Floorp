@@ -136,16 +136,10 @@ var PluginHelper = {
   },
 
   getPluginMimeType: function (plugin) {
-    var tagMimetype;
-    if (plugin instanceof HTMLAppletElement) {
-      tagMimetype = "application/x-java-vm";
-    } else {
-      tagMimetype = plugin.QueryInterface(Components.interfaces.nsIObjectLoadingContent)
-                          .actualType;
+    var tagMimetype = plugin.actualType;
 
-      if (tagMimetype == "") {
-        tagMimetype = plugin.type;
-      }
+    if (tagMimetype == "") {
+      tagMimetype = plugin.type;
     }
 
     return tagMimetype;

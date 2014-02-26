@@ -1,0 +1,88 @@
+<!doctype html>
+<html>
+<head>
+  <title>Test for Bug 738396</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+</head>
+<body>
+  <script type="text/javascript">
+    setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED,
+                              "Java Test Plug-in");
+
+    SpecialPowers.pushPrefEnv({ "set": [
+                                ['plugin.java.mime', 'application/x-java-test']
+                              ] }, loadFrame);
+    SimpleTest.waitForExplicitFinish();
+
+    function loadFrame() {
+      var iframe = document.createElement("iframe");
+      iframe.src = "./file_bug738396.html";
+      iframe.addEventListener("load", function() {
+        runTest(iframe.contentDocument);
+      });
+      document.body.appendChild(iframe);
+    }
+
+    function runTest(doc) {
+      // Check that the canonicalized version of the codebase 'good' was passed
+      // to the plugin in all cases
+      var a = doc.createElement('a');
+      a.href = "good";
+      var goodCodebase = a.href;
+      var codebasevis = doc.getElementById("codebasevis")
+        .querySelectorAll("applet, object, embed");
+      for (var elem of codebasevis) {
+        var codebase = null;
+        try {
+          codebase = elem.getJavaCodebase();
+        } catch (e) {}
+        is(codebase, goodCodebase,
+           "Check that the test plugin sees the proper codebase");
+      }
+      // Check that none of the applets in blockedcodebase were allowed to spawn
+      var blockedcodebase = doc.getElementById("blockedcodebase")
+        .querySelectorAll("applet, object, embed");
+      for (var elem of blockedcodebase) {
+        var spawned = false;
+        try {
+          elem.getObjectValue();
+          spawned = true;
+        } catch (e) {}
+        ok(!spawned, "Plugin should not be allowed to spawn");
+      }
+
+      // With no codebase, the codebase should resolve to "."
+      a.href = ".";
+      goodCodebase = a.href;
+      var nocodebase = doc.getElementById("nocodebase")
+        .querySelectorAll("applet, object, embed");
+      for (var elem of nocodebase) {
+        var codebase = null;
+        try {
+          codebase = elem.getJavaCodebase();
+        } catch (e) {}
+        is(codebase, goodCodebase, "Codebase should resolve to '.'");
+      }
+
+      // With empty codebase, the codebase should resolve to "/"
+      a.href = "/";
+      goodCodebase = a.href;
+      var nocodebase = doc.getElementById("emptycodebase")
+        .querySelectorAll("applet, object, embed");
+      for (var elem of nocodebase) {
+        var codebase = null;
+        try {
+          codebase = elem.getJavaCodebase();
+        } catch (e) {}
+        is(codebase, goodCodebase, "Codebase should resolve to '/'");
+      }
+
+      SimpleTest.finish();
+    }
+</script>
+</body>
+</html>

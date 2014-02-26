@@ -20,7 +20,7 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
-  expect = "TypeError: undefined has no properties";
+  expect = "TypeError: a is undefined";
   try
   {
     (let (a=undefined) a).b = 3;

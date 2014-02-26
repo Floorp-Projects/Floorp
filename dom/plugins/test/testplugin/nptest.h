@@ -152,6 +152,7 @@ typedef struct InstanceData {
   NPAsyncSurface *backBuffer;
   int32_t mouseUpEventCount;
   int32_t bugMode;
+  std::string javaCodebase;
 } InstanceData;
 
 void notifyDidPaint(InstanceData* instanceData);

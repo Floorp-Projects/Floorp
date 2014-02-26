@@ -257,12 +257,6 @@ frontend::CompileScript(ExclusiveContext *cx, LifoAlloc *alloc, HandleObject sco
     if (!script)
         return nullptr;
 
-    // Global/eval script bindings are always empty (all names are added to the
-    // scope dynamically via JSOP_DEFFUN/VAR).
-    InternalHandle<Bindings*> bindings(script, &script->bindings);
-    if (!Bindings::initWithTemporaryStorage(cx, bindings, 0, 0, nullptr))
-        return nullptr;
-
     // We can specialize a bit for the given scope chain if that scope chain is the global object.
     JSObject *globalScope =
         scopeChain && scopeChain == &scopeChain->global() ? (JSObject*) scopeChain : nullptr;
@@ -282,7 +276,8 @@ frontend::CompileScript(ExclusiveContext *cx, LifoAlloc *alloc, HandleObject sco
     Maybe<ParseContext<FullParseHandler> > pc;
 
     pc.construct(&parser, (GenericParseContext *) nullptr, (ParseNode *) nullptr, &globalsc,
-                 (Directives *) nullptr, staticLevel, /* bodyid = */ 0);
+                 (Directives *) nullptr, staticLevel, /* bodyid = */ 0,
+                 /* blockScopeDepth = */ 0);
     if (!pc.ref().init(parser.tokenStream))
         return nullptr;
 
@@ -349,10 +344,12 @@ frontend::CompileScript(ExclusiveContext *cx, LifoAlloc *alloc, HandleObject sco
 
                 pc.destroy();
                 pc.construct(&parser, (GenericParseContext *) nullptr, (ParseNode *) nullptr,
-                             &globalsc, (Directives *) nullptr, staticLevel, /* bodyid = */ 0);
+                             &globalsc, (Directives *) nullptr, staticLevel, /* bodyid = */ 0,
+                             script->bindings.numBlockScoped());
                 if (!pc.ref().init(parser.tokenStream))
                     return nullptr;
                 JS_ASSERT(parser.pc == pc.addr());
+
                 pn = parser.statement();
             }
             if (!pn) {
@@ -360,6 +357,11 @@ frontend::CompileScript(ExclusiveContext *cx, LifoAlloc *alloc, HandleObject sco
                 return nullptr;
             }
         }
+
+        // Accumulate the maximum block scope depth, so that EmitTree can assert
+        // when emitting JSOP_GETLOCAL that the local is indeed within the fixed
+        // part of the stack frame.
+        script->bindings.updateNumBlockScoped(pc.ref().blockScopeDepth);
 
         if (canHaveDirectives) {
             if (!parser.maybeParseDirective(/* stmtList = */ nullptr, pn, &canHaveDirectives))
@@ -401,6 +403,15 @@ frontend::CompileScript(ExclusiveContext *cx, LifoAlloc *alloc, HandleObject sco
      * do have to emit that here.
      */
     if (Emit1(cx, &bce, JSOP_RETRVAL) < 0)
+        return nullptr;
+
+    // Global/eval script bindings are always empty (all names are added to the
+    // scope dynamically via JSOP_DEFFUN/VAR).  They may have block-scoped
+    // locals, however, which are allocated to the fixed part of the stack
+    // frame.
+    InternalHandle<Bindings*> bindings(script, &script->bindings);
+    if (!Bindings::initWithTemporaryStorage(cx, bindings, 0, 0, nullptr,
+                                            pc.ref().blockScopeDepth))
         return nullptr;
 
     if (!JSScript::fullyInitFromEmitter(cx, script, &bce))

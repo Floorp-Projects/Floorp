@@ -9,13 +9,15 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/TypeTraits.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/dom/PromiseBinding.h"
 #include "nsWrapperCache.h"
 #include "nsAutoPtr.h"
-#include "nsPIDOMWindow.h"
 #include "js/TypeDecls.h"
+
+class nsIGlobalObject;
 
 namespace mozilla {
 namespace dom {
@@ -38,23 +40,40 @@ class Promise MOZ_FINAL : public nsISupports,
   friend class WorkerPromiseTask;
   friend class WrapperPromiseCallback;
 
+  ~Promise();
+
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Promise)
 
-  Promise(nsPIDOMWindow* aWindow);
-  ~Promise();
+  Promise(nsIGlobalObject* aGlobal);
+
+  typedef void (Promise::*MaybeFunc)(JSContext* aCx,
+                                     JS::Handle<JS::Value> aValue);
 
   void MaybeResolve(JSContext* aCx,
                     JS::Handle<JS::Value> aValue);
   void MaybeReject(JSContext* aCx,
                    JS::Handle<JS::Value> aValue);
 
+  // Helpers for using Promise from C++.
+  // Most DOM objects are handled already.  To add a new type T, such as ints,
+  // or dictionaries, add an ArgumentToJSVal overload below.
+  template <typename T>
+  void MaybeResolve(T& aArg) {
+    MaybeSomething(aArg, &Promise::MaybeResolve);
+  }
+
+  template <typename T>
+  void MaybeReject(T& aArg) {
+    MaybeSomething(aArg, &Promise::MaybeReject);
+  }
+
   // WebIDL
 
-  nsPIDOMWindow* GetParentObject() const
+  nsIGlobalObject* GetParentObject() const
   {
-    return mWindow;
+    return mGlobal;
   }
 
   virtual JSObject*
@@ -69,7 +88,7 @@ public:
           JS::Handle<JS::Value> aValue, ErrorResult& aRv);
 
   static already_AddRefed<Promise>
-  Resolve(nsPIDOMWindow* aWindow, JSContext* aCx,
+  Resolve(nsIGlobalObject* aGlobal, JSContext* aCx,
           JS::Handle<JS::Value> aValue, ErrorResult& aRv);
 
   static already_AddRefed<Promise>
@@ -77,7 +96,7 @@ public:
          JS::Handle<JS::Value> aValue, ErrorResult& aRv);
 
   static already_AddRefed<Promise>
-  Reject(nsPIDOMWindow* aWindow, JSContext* aCx,
+  Reject(nsIGlobalObject* aGlobal, JSContext* aCx,
          JS::Handle<JS::Value> aValue, ErrorResult& aRv);
 
   already_AddRefed<Promise>
@@ -154,6 +173,64 @@ private:
                       JS::Handle<JS::Value> aValue,
                       PromiseTaskSync aSync = AsyncTask);
 
+  // Helper methods for using Promises from C++
+  JSObject* GetOrCreateWrapper(JSContext* aCx);
+
+  // If ArgumentToJSValue returns false, it must set an exception on the
+  // JSContext.
+
+  // Accept strings.
+  bool
+  ArgumentToJSValue(const nsAString& aArgument,
+                    JSContext* aCx,
+                    JSObject* aScope,
+                    JS::MutableHandle<JS::Value> aValue);
+
+  // Accept objects that inherit from nsWrapperCache and nsISupports (e.g. most
+  // DOM objects).
+  template <class T>
+  typename EnableIf<IsBaseOf<nsWrapperCache, T>::value &&
+                    IsBaseOf<nsISupports, T>::value, bool>::Type
+  ArgumentToJSValue(T& aArgument,
+                    JSContext* aCx,
+                    JSObject* aScope,
+                    JS::MutableHandle<JS::Value> aValue)
+  {
+    JS::Rooted<JSObject*> scope(aCx, aScope);
+
+    return WrapNewBindingObject(aCx, scope, aArgument, aValue);
+  }
+
+  template <template <typename> class SmartPtr, typename T>
+  bool
+  ArgumentToJSValue(const SmartPtr<T>& aArgument,
+                    JSContext* aCx,
+                    JSObject* aScope,
+                    JS::MutableHandle<JS::Value> aValue)
+  {
+    return ArgumentToJSValue(*aArgument.get(), aCx, aScope, aValue);
+  }
+
+  template <typename T>
+  void MaybeSomething(T& aArgument, MaybeFunc aFunc) {
+    ThreadsafeAutoJSContext cx;
+
+    JSObject* wrapper = GetOrCreateWrapper(cx);
+    if (!wrapper) {
+      HandleException(cx);
+      return;
+    }
+
+    JSAutoCompartment ac(cx, wrapper);
+    JS::Rooted<JS::Value> val(cx);
+    if (!ArgumentToJSValue(aArgument, cx, wrapper, &val)) {
+      HandleException(cx);
+      return;
+    }
+
+    (this->*aFunc)(cx, val);
+  }
+
   // Static methods for the PromiseInit functions.
   static bool
   JSCallback(JSContext *aCx, unsigned aArgc, JS::Value *aVp);
@@ -175,7 +252,7 @@ private:
 
   void HandleException(JSContext* aCx);
 
-  nsRefPtr<nsPIDOMWindow> mWindow;
+  nsRefPtr<nsIGlobalObject> mGlobal;
 
   nsTArray<nsRefPtr<PromiseCallback> > mResolveCallbacks;
   nsTArray<nsRefPtr<PromiseCallback> > mRejectCallbacks;

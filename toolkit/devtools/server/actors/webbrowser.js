@@ -1045,6 +1045,8 @@ BrowserAddonActor.prototype = {
 function DebuggerProgressListener(aBrowserTabActor) {
   this._tabActor = aBrowserTabActor;
   this._tabActor._tabbrowser.addProgressListener(this);
+  let EventEmitter = devtools.require("devtools/shared/event-emitter");
+  EventEmitter.decorate(this);
 }
 
 DebuggerProgressListener.prototype = {
@@ -1072,28 +1074,32 @@ DebuggerProgressListener.prototype = {
         this._tabActor._pendingNavigation = aRequest;
       }
 
-      this._tabActor.threadActor.disableAllBreakpoints();
-      this._tabActor.conn.send({
+      let packet = {
         from: this._tabActor.actorID,
         type: "tabNavigated",
         url: aRequest.URI.spec,
         nativeConsoleAPI: true,
         state: "start"
-      });
+      };
+      this._tabActor.threadActor.disableAllBreakpoints();
+      this._tabActor.conn.send(packet);
+      this.emit("will-navigate", packet);
     } else if (isStop) {
       if (this._tabActor.threadActor.state == "running") {
         this._tabActor.threadActor.dbg.enabled = true;
       }
 
       let window = this._tabActor.window;
-      this._tabActor.conn.send({
+      let packet = {
         from: this._tabActor.actorID,
         type: "tabNavigated",
         url: this._tabActor.url,
         title: this._tabActor.title,
         nativeConsoleAPI: this._tabActor.hasNativeConsoleAPI(window),
         state: "stop"
-      });
+      };
+      this._tabActor.conn.send(packet);
+      this.emit("navigate", packet);
     }
   }, "DebuggerProgressListener.prototype.onStateChange"),
 

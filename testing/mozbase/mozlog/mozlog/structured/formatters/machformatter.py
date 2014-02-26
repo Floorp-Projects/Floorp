@@ -93,6 +93,16 @@ class BaseMachFormatter(base.BaseFormatter):
 
 
 class MachFormatter(BaseMachFormatter):
+    """Formatter designed for producing human-redable output
+    when tests are running. This is principally intended for integration with
+    the ``mach`` command dispatch framework.
+
+    :param start_time: time.time() at which the testrun started
+    :param write_interval: bool indicating whether to include the interval since the
+                           last message
+    :param write_times: bool indicating whether to include the time since the testrun
+                        started.
+    """
     def __call__(self, data):
         s = BaseMachFormatter.__call__(self, data)
         if s is not None:
@@ -100,6 +110,17 @@ class MachFormatter(BaseMachFormatter):
 
 
 class MachTerminalFormatter(BaseMachFormatter):
+    """Formatter designed to produce coloured output in a terminal when tests are
+    running. This is principally intended for integration with
+    the ``mach`` command dispatch framework.
+
+    :param start_time: time.time() at which the testrun started
+    :param write_interval: bool indicating whether to include the interval since the
+                           last message
+    :param write_times: bool indicating whether to include the time since the testrun
+                        started.
+    :param terminal: Terminal object from mach.
+    """
     def __init__(self, start_time=None, write_interval=False, write_times=True,
                  terminal=None):
         self.terminal = terminal
