@@ -13,7 +13,6 @@ XPIDL_SOURCES += [
     'nsIHttpChannelAuthProvider.idl',
     'nsIHttpChannelChild.idl',
     'nsIHttpChannelInternal.idl',
-    'nsIHttpDataUsage.idl',
     'nsIHttpEventSink.idl',
     'nsIHttpHeaderVisitor.idl',
     'nsIHttpProtocolHandler.idl',
@@ -92,11 +91,6 @@ IPDL_SOURCES += [
 EXTRA_JS_MODULES += [
     'UserAgentOverrides.jsm',
     'UserAgentUpdates.jsm',
-]
-
-EXTRA_COMPONENTS += [
-    'HttpDataUsage.js',
-    'HttpDataUsage.manifest',
 ]
 
 FAIL_ON_WARNINGS = True
