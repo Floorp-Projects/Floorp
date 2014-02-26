@@ -4275,6 +4275,18 @@ js::HasOwnProperty<NoGC>(JSContext *cx, LookupGenericOp lookup,
                          JSObject *obj, jsid id,
                          FakeMutableHandle<JSObject*> objp, FakeMutableHandle<Shape*> propp);
 
+bool
+js::HasOwnProperty(JSContext *cx, HandleObject obj, HandleId id, bool *resultp)
+{
+    RootedObject pobj(cx);
+    RootedShape shape(cx);
+    if (!HasOwnProperty<CanGC>(cx, obj->getOps()->lookupGeneric, obj, id, &pobj, &shape))
+        return false;
+    *resultp = (shape != nullptr);
+    return true;
+}
+
+
 template <AllowGC allowGC>
 static MOZ_ALWAYS_INLINE bool
 NativeGetInline(JSContext *cx,

@@ -1286,6 +1286,9 @@ DenseRangeRef::mark(JSTracer *trc)
 }
 #endif
 
+bool
+HasOwnProperty(JSContext *cx, HandleObject obj, HandleId id, bool *resultp);
+
 template <AllowGC allowGC>
 extern bool
 HasOwnProperty(JSContext *cx, LookupGenericOp lookup,
