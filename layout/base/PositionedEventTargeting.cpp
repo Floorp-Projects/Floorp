@@ -201,8 +201,10 @@ IsElementClickable(nsIFrame* aFrame, nsIAtom* stopAt = nullptr)
         return true;
       }
     }
-    if (content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::role,
-                             nsGkAtoms::button, eIgnoreCase)) {
+    static nsIContent::AttrValuesArray clickableRoles[] =
+      { &nsGkAtoms::button, &nsGkAtoms::key, nullptr };
+    if (content->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::role,
+                                 clickableRoles, eIgnoreCase) >= 0) {
       return true;
     }
     if (content->IsEditable()) {

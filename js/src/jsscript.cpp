@@ -923,8 +923,11 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
                 if (ssi.done() || ssi.type() == StaticScopeIter<NoGC>::FUNCTION) {
                     JS_ASSERT(ssi.done() == !fun);
                     funEnclosingScopeIndex = UINT32_MAX;
-                } else {
+                } else if (ssi.type() == StaticScopeIter<NoGC>::BLOCK) {
                     funEnclosingScopeIndex = FindScopeObjectIndex(script, ssi.block());
+                    JS_ASSERT(funEnclosingScopeIndex < i);
+                } else {
+                    funEnclosingScopeIndex = FindScopeObjectIndex(script, ssi.staticWith());
                     JS_ASSERT(funEnclosingScopeIndex < i);
                 }
             }
@@ -2799,10 +2802,12 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
                     RootedObject staticScope(cx, innerFun->nonLazyScript()->enclosingStaticScope());
                     StaticScopeIter<CanGC> ssi(cx, staticScope);
                     RootedObject enclosingScope(cx);
-                    if (!ssi.done() && ssi.type() == StaticScopeIter<CanGC>::BLOCK)
+                    if (ssi.done() || ssi.type() == StaticScopeIter<CanGC>::FUNCTION)
+                        enclosingScope = fun;
+                    else if (ssi.type() == StaticScopeIter<CanGC>::BLOCK)
                         enclosingScope = objects[FindScopeObjectIndex(src, ssi.block())];
                     else
-                        enclosingScope = fun;
+                        enclosingScope = objects[FindScopeObjectIndex(src, ssi.staticWith())];
 
                     clone = CloneFunctionAndScript(cx, enclosingScope, innerFun);
                 }

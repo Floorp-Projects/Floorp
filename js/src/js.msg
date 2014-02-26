@@ -435,3 +435,4 @@ MSG_DEF(JSMSG_INVALID_PROTOTYPE,        380, 0, JSEXN_TYPEERR, "prototype field 
 MSG_DEF(JSMSG_TYPEDOBJECT_HANDLE_TO_UNSIZED, 381, 0, JSEXN_TYPEERR, "cannot create a handle to an unsized type")
 MSG_DEF(JSMSG_SETPROTOTYPEOF_FAIL,      382, 1, JSEXN_TYPEERR, "[[SetPrototypeOf]] failed on {0}")
 MSG_DEF(JSMSG_INVALID_ARG_TYPE,         383, 3, JSEXN_TYPEERR, "Invalid type: {0} can't be a{1} {2}")
+MSG_DEF(JSMSG_TERMINATED,               384, 1, JSEXN_ERR, "Script terminated by timeout at:\n{0}")

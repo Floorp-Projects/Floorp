@@ -237,6 +237,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitFunctionBoundary(MFunctionBoundary *ins);
     bool visitIsCallable(MIsCallable *ins);
     bool visitHaveSameClass(MHaveSameClass *ins);
+    bool visitHasClass(MHasClass *ins);
     bool visitAsmJSLoadGlobalVar(MAsmJSLoadGlobalVar *ins);
     bool visitAsmJSStoreGlobalVar(MAsmJSStoreGlobalVar *ins);
     bool visitAsmJSLoadFFIFunc(MAsmJSLoadFFIFunc *ins);
