@@ -104,7 +104,6 @@ public class TabInput extends PromptInput implements AdapterView.OnItemClickList
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         ThreadUtils.assertOnUiThread();
         mPosition = position;
-        notifyListeners(Integer.toString(position));
     }
 
 }
