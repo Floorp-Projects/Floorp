@@ -25,7 +25,7 @@ protected:
   ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
 
   virtual PTelephonyRequestChild*
-  AllocPTelephonyRequestChild(const IPCTelephonyRequest& aRequest) MOZ_OVERRIDE;
+  AllocPTelephonyRequestChild() MOZ_OVERRIDE;
 
   virtual bool
   DeallocPTelephonyRequestChild(PTelephonyRequestChild* aActor) MOZ_OVERRIDE;
@@ -61,8 +61,7 @@ private:
 class TelephonyRequestChild : public PTelephonyRequestChild
 {
 public:
-  TelephonyRequestChild(nsITelephonyListener* aListener,
-                        nsITelephonyCallback* aCallback);
+  TelephonyRequestChild(nsITelephonyListener* aListener);
 
 protected:
   virtual ~TelephonyRequestChild() {}
@@ -71,21 +70,14 @@ protected:
   ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
 
   virtual bool
-  Recv__delete__(const IPCTelephonyResponse& aResponse) MOZ_OVERRIDE;
+  Recv__delete__() MOZ_OVERRIDE;
 
   virtual bool
   RecvNotifyEnumerateCallState(const uint32_t& aClientId,
                                const IPCCallStateData& aData) MOZ_OVERRIDE;
 
-  virtual bool
-  RecvNotifyDialError(const nsString& aError) MOZ_OVERRIDE;
-
-  virtual bool
-  RecvNotifyDialSuccess() MOZ_OVERRIDE;
-
 private:
   nsCOMPtr<nsITelephonyListener> mListener;
-  nsCOMPtr<nsITelephonyCallback> mCallback;
 };
 
 END_TELEPHONY_NAMESPACE

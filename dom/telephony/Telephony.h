@@ -8,7 +8,6 @@
 #define mozilla_dom_telephony_telephony_h__
 
 #include "mozilla/dom/BindingDeclarations.h"
-#include "mozilla/dom/Promise.h"
 #include "mozilla/dom/telephony/TelephonyCommon.h"
 
 #include "nsITelephonyProvider.h"
@@ -34,9 +33,6 @@ class Telephony MOZ_FINAL : public nsDOMEventTargetHelper
    * also bug 775997 comment #51.
    */
   class Listener;
-
-  class Callback;
-  friend class Callback;
 
   class EnumerationAck;
   friend class EnumerationAck;
@@ -70,11 +66,13 @@ public:
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
   // WebIDL
-  already_AddRefed<Promise>
-  Dial(const nsAString& aNumber, const Optional<uint32_t>& aServiceId);
+  already_AddRefed<TelephonyCall>
+  Dial(const nsAString& aNumber, const Optional<uint32_t>& aServiceId,
+       ErrorResult& aRv);
 
-  already_AddRefed<Promise>
-  DialEmergency(const nsAString& aNumber, const Optional<uint32_t>& aServiceId);
+  already_AddRefed<TelephonyCall>
+  DialEmergency(const nsAString& aNumber, const Optional<uint32_t>& aServiceId,
+                ErrorResult& aRv);
 
   void
   StartTone(const nsAString& aDTMFChar, const Optional<uint32_t>& aServiceId,
@@ -172,11 +170,16 @@ private:
   bool
   MatchActiveCall(TelephonyCall* aCall);
 
-  already_AddRefed<Promise>
-  DialInternal(uint32_t aServiceId, const nsAString& aNumber, bool isEmergency);
+  already_AddRefed<TelephonyCall>
+  DialInternal(uint32_t aServiceId, const nsAString& aNumber,
+               bool isEmergency, ErrorResult& aRv);
 
   already_AddRefed<TelephonyCall>
   CreateNewDialingCall(uint32_t aServiceId, const nsAString& aNumber);
+
+  void
+  NoteDialedCallFromOtherInstance(uint32_t aServiceId,
+                                  const nsAString& aNumber);
 
   nsresult
   NotifyCallsChanged(TelephonyCall* aCall);

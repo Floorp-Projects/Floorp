@@ -49,19 +49,18 @@ function dial(number) {
   log("Make an outgoing call: " + number);
 
   let deferred = Promise.defer();
+  let call = telephony.dial(number);
 
-  telephony.dial(number).then(call => {
-    ok(call);
-    is(call.number, number);
-    is(call.state, "dialing");
+  ok(call);
+  is(call.number, number);
+  is(call.state, "dialing");
 
-    call.onalerting = function onalerting(event) {
-      call.onalerting = null;
-      log("Received 'onalerting' call event.");
-      checkEventCallState(event, call, "alerting");
-      deferred.resolve(call);
-    };
-  });
+  call.onalerting = function onalerting(event) {
+    call.onalerting = null;
+    log("Received 'onalerting' call event.");
+    checkEventCallState(event, call, "alerting");
+    deferred.resolve(call);
+  };
 
   return deferred.promise;
 }
