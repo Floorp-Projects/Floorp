@@ -426,7 +426,6 @@ CallAsmJS(JSContext *cx, unsigned argc, Value *vp)
         // Eagerly push an IonContext+JitActivation so that the optimized
         // asm.js-to-Ion FFI call path (which we want to be very fast) can
         // avoid doing so.
-        jit::IonContext ictx(cx, nullptr);
         JitActivation jitActivation(cx, /* firstFrameIsConstructing = */ false, /* active */ false);
 
         // Call the per-exported-function trampoline created by GenerateEntry.
