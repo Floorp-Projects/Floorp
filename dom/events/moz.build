@@ -36,25 +36,31 @@ EXPORTS.mozilla += [
 ]
 
 EXPORTS.mozilla.dom += [
+    'AnimationEvent.h',
+    'BeforeUnloadEvent.h',
+    'ClipboardEvent.h',
+    'CommandEvent.h',
+    'CompositionEvent.h',
+    'DataContainerEvent.h',
     'EventTarget.h',
     'PointerEvent.h',
     'Touch.h',
+    'WheelEvent.h',
 ]
 
 if CONFIG['MOZ_WEBSPEECH']:
     EXPORTS.mozilla.dom += ['SpeechRecognitionError.h']
 
 UNIFIED_SOURCES += [
-    'DOMWheelEvent.cpp',
+    'AnimationEvent.cpp',
+    'BeforeUnloadEvent.cpp',
+    'ClipboardEvent.cpp',
+    'CommandEvent.cpp',
+    'CompositionEvent.cpp',
+    'DataContainerEvent.cpp',
     'EventTarget.cpp',
     'nsAsyncDOMEvent.cpp',
     'nsContentEventHandler.cpp',
-    'nsDOMAnimationEvent.cpp',
-    'nsDOMBeforeUnloadEvent.cpp',
-    'nsDOMClipboardEvent.cpp',
-    'nsDOMCommandEvent.cpp',
-    'nsDOMCompositionEvent.cpp',
-    'nsDOMDataContainerEvent.cpp',
     'nsDOMDataTransfer.cpp',
     'nsDOMDeviceMotionEvent.cpp',
     'nsDOMDragEvent.cpp',
@@ -80,6 +86,7 @@ UNIFIED_SOURCES += [
     'PointerEvent.cpp',
     'TextComposition.cpp',
     'Touch.cpp',
+    'WheelEvent.cpp',
 ]
 
 SOURCES += [

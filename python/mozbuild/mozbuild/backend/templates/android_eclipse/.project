@@ -49,4 +49,5 @@
 		<nature>com.android.ide.eclipse.adt.AndroidNature</nature>
 		<nature>org.eclipse.jdt.core.javanature</nature>
 	</natures>
+@IDE_PROJECT_FILTERED_RESOURCES@
 </projectDescription>

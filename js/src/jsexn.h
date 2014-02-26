@@ -17,8 +17,11 @@
 namespace js {
 class ErrorObject;
 
-extern JSErrorReport *
+JSErrorReport *
 CopyErrorReport(JSContext *cx, JSErrorReport *report);
+
+JSString *
+ComputeStackString(JSContext *cx);
 }
 
 /*

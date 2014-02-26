@@ -71,7 +71,6 @@ public:
 private:
 
   void ReadAndPushData(guint aLength);
-  int64_t QueryDuration();
   nsRefPtr<layers::PlanarYCbCrImage> GetImageFromBuffer(GstBuffer* aBuffer);
   void CopyIntoImageBuffer(GstBuffer *aBuffer, GstBuffer** aOutBuffer, nsRefPtr<layers::PlanarYCbCrImage> &image);
   GstCaps* BuildAudioSinkCaps();

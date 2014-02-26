@@ -7,7 +7,7 @@
 const {Cu} = require("chrome");
 
 let promise = require("sdk/core/promise");
-let EventEmitter = require("devtools/shared/event-emitter");
+let EventEmitter = require("devtools/toolkit/event-emitter");
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource:///modules/devtools/DOMHelpers.jsm");

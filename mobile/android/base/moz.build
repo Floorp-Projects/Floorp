@@ -502,6 +502,14 @@ branding.res = TOPSRCDIR + '/' + CONFIG['MOZ_BRANDING_DIRECTORY'] + '/res'
 main = add_android_eclipse_project('Fennec', OBJDIR + '/AndroidManifest.xml')
 main.package_name = 'org.mozilla.gecko'
 
+# These values were extracted from an existing Eclipse project.  Use
+# Project > Resource > Resource Filters and inspect the resulting
+# .project file to modify this list.
+main.filtered_resources += [
+    '1.0-projectRelativePath-matches-false-false-*org/mozilla/gecko/resources/**',
+    '1.0-projectRelativePath-matches-false-false-*org/mozilla/gecko/tests/**',
+]
+
 main.recursive_make_targets += ['.aapt.deps'] # Captures dependencies on Android manifest and all resources.
 main.recursive_make_targets += [OBJDIR + '/generated/' + f for f in mgjar.generated_sources]
 main.recursive_make_targets += [OBJDIR + '/generated/' + f for f in gbjar.generated_sources]

@@ -8,7 +8,7 @@
 
 const {Cc, Ci, Cu} = require("chrome");
 const {setTimeout, clearTimeout} = require('sdk/timers');
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("devtools/toolkit/event-emitter");
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/devtools/dbg-client.jsm");

@@ -5643,6 +5643,22 @@ class LHaveSameClass : public LInstructionHelper<1, 2, 1>
     }
 };
 
+class LHasClass : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(HasClass);
+    LHasClass(const LAllocation &lhs) {
+        setOperand(0, lhs);
+    }
+
+    const LAllocation *lhs() {
+        return getOperand(0);
+    }
+    MHasClass *mir() const {
+        return mir_->toHasClass();
+    }
+};
+
 class LAsmJSLoadHeap : public LInstructionHelper<1, 1, 0>
 {
   public:

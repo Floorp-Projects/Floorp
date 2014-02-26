@@ -5107,7 +5107,7 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
                animIterationCount.unit == eCSSUnit_Unset) {
       animation->SetIterationCount(1.0f);
     } else if (animIterationCount.list) {
-      switch(animIterationCount.list->mValue.GetUnit()) {
+      switch (animIterationCount.list->mValue.GetUnit()) {
         case eCSSUnit_Enumerated:
           NS_ABORT_IF_FALSE(animIterationCount.list->mValue.GetIntValue() ==
                               NS_STYLE_ANIMATION_ITERATION_COUNT_INFINITE,
@@ -8373,7 +8373,7 @@ nsRuleNode::ComputeSVGResetData(void* aStartStruct,
     case eCSSUnit_ListDep: {
       svgReset->mFilters.Clear();
       const nsCSSValueList* cur = filterValue->GetListValue();
-      while(cur) {
+      while (cur) {
         nsStyleFilter styleFilter;
         if (!SetStyleFilterToCSSValue(&styleFilter, cur->mValue, aContext,
                                       mPresContext, canStoreInRuleTree)) {

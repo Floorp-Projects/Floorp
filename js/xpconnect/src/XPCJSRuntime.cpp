@@ -3070,11 +3070,11 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     // ASan requires more stack space due to red-zones, so give it double the
     // default (2MB on 32-bit, 4MB on 64-bit). ASAN stack frame measurements
     // were not taken at the time of this writing, so we hazard a guess that
-    // ASAN builds have roughly twice the stack overhead as normal builds.
+    // ASAN builds have roughly thrice the stack overhead as normal builds.
     // On normal builds, the largest stack frame size we might encounter is
-    // 8.2k, so let's use a buffer of 8.2 * 2 * 10 = 164k.
+    // 8.2k, so let's use a buffer of 8.2 * 3 * 10 = 246k.
     const size_t kStackQuota =  2 * kDefaultStackQuota;
-    const size_t kTrustedScriptBuffer = 164 * 1024;
+    const size_t kTrustedScriptBuffer = 246 * 1024;
 #elif defined(XP_WIN)
     // 1MB is the default stack size on Windows, so the default 1MB stack quota
     // we'd get on win32 is slightly too large. Use 900k instead. And since

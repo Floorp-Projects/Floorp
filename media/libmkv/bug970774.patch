@@ -1,0 +1,64 @@
+diff --git a/media/libmkv/WebMElement.c b/media/libmkv/WebMElement.c
+--- a/media/libmkv/WebMElement.c
++++ b/media/libmkv/WebMElement.c
+@@ -52,32 +52,39 @@ static UInt64 generateTrackID(unsigned i
+   r = r << 32;
+   r +=  rand();
+ //  UInt64 rval = t ^ r;
+   return t ^ r;
+ }
+ 
+ void writeVideoTrack(EbmlGlobal *glob, unsigned int trackNumber, int flagLacing,
+                      const char *codecId, unsigned int pixelWidth, unsigned int pixelHeight,
++                     unsigned int displayWidth, unsigned int displayHeight,
+                      double frameRate) {
+   EbmlLoc start;
+   UInt64 trackID;
+   Ebml_StartSubElement(glob, &start, TrackEntry);
+   Ebml_SerializeUnsigned(glob, TrackNumber, trackNumber);
+   trackID = generateTrackID(trackNumber);
+   Ebml_SerializeUnsigned(glob, TrackUID, trackID);
+   Ebml_SerializeString(glob, CodecName, "VP8");  // TODO shouldn't be fixed
+ 
+   Ebml_SerializeUnsigned(glob, TrackType, 1); // video is always 1
+   Ebml_SerializeString(glob, CodecID, codecId);
+   {
+     EbmlLoc videoStart;
+     Ebml_StartSubElement(glob, &videoStart, Video);
+     Ebml_SerializeUnsigned(glob, PixelWidth, pixelWidth);
+     Ebml_SerializeUnsigned(glob, PixelHeight, pixelHeight);
++    if (pixelWidth != displayWidth) {
++      Ebml_SerializeUnsigned(glob, DisplayWidth, displayWidth);
++    }
++    if (pixelHeight != displayHeight) {
++      Ebml_SerializeUnsigned(glob, DisplayHeight, displayHeight);
++    }
+     Ebml_SerializeFloat(glob, FrameRate, frameRate);
+     Ebml_EndSubElement(glob, &videoStart); // Video
+   }
+   Ebml_EndSubElement(glob, &start); // Track Entry
+ }
+ void writeAudioTrack(EbmlGlobal *glob, unsigned int trackNumber, int flagLacing,
+                      const char *codecId, double samplingFrequency, unsigned int channels,
+                      unsigned char *private, unsigned long privateSize) {
+diff --git a/media/libmkv/WebMElement.h b/media/libmkv/WebMElement.h
+--- a/media/libmkv/WebMElement.h
++++ b/media/libmkv/WebMElement.h
+@@ -16,16 +16,17 @@ extern "C" {
+ #include "EbmlWriter.h"
+ 
+ // these are helper functions
+ void writeHeader(EbmlGlobal *ebml);
+ void writeSegmentInformation(EbmlGlobal *ebml, EbmlLoc *startInfo, unsigned long timeCodeScale, double duration);
+ // this function is a helper only, it assumes a lot of defaults
+ void writeVideoTrack(EbmlGlobal *ebml, unsigned int trackNumber, int flagLacing,
+                      const char *codecId, unsigned int pixelWidth, unsigned int pixelHeight,
++                     unsigned int displayWidth, unsigned int displayHeight,
+                      double frameRate);
+ void writeAudioTrack(EbmlGlobal *glob, unsigned int trackNumber, int flagLacing,
+                      const char *codecId, double samplingFrequency, unsigned int channels,
+                      unsigned char *private_, unsigned long privateSize);
+ 
+ void writeSimpleBlock(EbmlGlobal *ebml, unsigned char trackNumber, short timeCode,
+                       int isKeyframe, unsigned char lacingFlag, int discardable,
+                       unsigned char *data, unsigned long dataLength);
