@@ -683,8 +683,12 @@ template<typename LightType, typename LightingType>
 class FilterNodeLightingSoftware : public FilterNodeSoftware
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeLightingSoftware)
-  FilterNodeLightingSoftware();
+#if defined(MOZILLA_INTERNAL_API) && (defined(DEBUG) || defined(FORCE_BUILD_REFCNT_LOGGING))
+  // Helpers for refcounted
+  virtual const char* typeName() const MOZ_OVERRIDE { return mTypeName; }
+  virtual size_t typeSize() const MOZ_OVERRIDE { return sizeof(*this); }
+#endif
+  explicit FilterNodeLightingSoftware(const char* aTypeName);
   virtual const char* GetName() MOZ_OVERRIDE { return "Lighting"; }
   using FilterNodeSoftware::SetAttribute;
   virtual void SetAttribute(uint32_t aIndex, Float) MOZ_OVERRIDE;
@@ -709,6 +713,9 @@ private:
   Float mSurfaceScale;
   Size mKernelUnitLength;
   Color mColor;
+#if defined(MOZILLA_INTERNAL_API) && (defined(DEBUG) || defined(FORCE_BUILD_REFCNT_LOGGING))
+  const char* mTypeName;
+#endif
 };
 
 }

@@ -33,3 +33,6 @@ if CONFIG['OS_ARCH'] == 'WINNT':
 
 if CONFIG['_MSC_VER']:
     WIN32_EXE_LDFLAGS += ['-ENTRY:wmainCRTStartup']
+
+if CONFIG['OS_ARCH'] == 'WINNT':
+    DEFINES['MOZ_XULRUNNER'] = True

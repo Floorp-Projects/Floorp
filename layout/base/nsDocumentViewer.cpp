@@ -2225,6 +2225,11 @@ nsDocumentViewer::CreateStyleSet(nsIDocument* aDocument,
     }
   }
 
+  sheet = nsLayoutStylesheetCache::NumberControlSheet();
+  if (sheet) {
+    styleSet->PrependStyleSheet(nsStyleSet::eAgentSheet, sheet);
+  }
+
   sheet = nsLayoutStylesheetCache::FormsSheet();
   if (sheet) {
     styleSet->PrependStyleSheet(nsStyleSet::eAgentSheet, sheet);
