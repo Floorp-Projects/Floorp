@@ -127,6 +127,7 @@ speex_resampler_get_output_stride
 speex_resampler_get_input_latency
 speex_resampler_get_output_latency
 speex_resampler_skip_zeros
+speex_resampler_set_skip_frac_num
 speex_resampler_reset_mem
 speex_resampler_strerror
 cubeb_destroy
