@@ -3,25 +3,28 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsDOMDataContainerEvent_h___
-#define nsDOMDataContainerEvent_h___
+#ifndef mozilla_dom_DataContainerEvent_h_
+#define mozilla_dom_DataContainerEvent_h_
 
 #include "nsIDOMDataContainerEvent.h"
 #include "nsDOMEvent.h"
 #include "nsInterfaceHashtable.h"
 #include "mozilla/dom/DataContainerEventBinding.h"
 
-class nsDOMDataContainerEvent : public nsDOMEvent,
-                                public nsIDOMDataContainerEvent
+namespace mozilla {
+namespace dom {
+
+class DataContainerEvent : public nsDOMEvent,
+                           public nsIDOMDataContainerEvent
 {
 public:
-  nsDOMDataContainerEvent(mozilla::dom::EventTarget* aOwner,
-                          nsPresContext* aPresContext,
-                          mozilla::WidgetEvent* aEvent);
+  DataContainerEvent(EventTarget* aOwner,
+                     nsPresContext* aPresContext,
+                     WidgetEvent* aEvent);
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsDOMDataContainerEvent, nsDOMEvent)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DataContainerEvent, nsDOMEvent)
 
   NS_FORWARD_TO_NSDOMEVENT
 
@@ -30,7 +33,7 @@ public:
   virtual JSObject*
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
   {
-    return mozilla::dom::DataContainerEventBinding::Wrap(aCx, aScope, this);
+    return DataContainerEventBinding::Wrap(aCx, aScope, this);
   }
 
   already_AddRefed<nsIVariant> GetData(const nsAString& aKey)
@@ -41,14 +44,16 @@ public:
   }
 
   void SetData(JSContext* aCx, const nsAString& aKey,
-               JS::Handle<JS::Value> aVal, mozilla::ErrorResult& aRv);
+               JS::Handle<JS::Value> aVal, ErrorResult& aRv);
 
 private:
   static PLDHashOperator
-    TraverseEntry(const nsAString& aKey, nsIVariant *aDataItem, void* aUserArg);
+    TraverseEntry(const nsAString& aKey, nsIVariant* aDataItem, void* aUserArg);
 
   nsInterfaceHashtable<nsStringHashKey, nsIVariant> mData;
 };
 
-#endif
+} // namespace dom
+} // namespace mozilla
 
+#endif // mozilla_dom_DataContainerEvent_h_
