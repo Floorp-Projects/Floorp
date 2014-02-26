@@ -28,13 +28,11 @@ static const size_t MAX_READ_SIZE = 1 << 16;
 #undef CHROMIUM_LOG
 #if defined(MOZ_WIDGET_GONK)
 #include <android/log.h>
-#define CHROMIUM_LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "GonkDBus", args);
+#define CHROMIUM_LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "I/O", args);
 #else
-#define BTDEBUG true
-#define CHROMIUM_LOG(args...) if (BTDEBUG) printf(args);
+#define IODEBUG true
+#define CHROMIUM_LOG(args...) if (IODEBUG) printf(args);
 #endif
-
-static const int SOCKET_RETRY_TIME_MS = 1000;
 
 namespace mozilla {
 namespace ipc {
@@ -92,15 +90,6 @@ public:
     RemoveWatchers(READ_WATCHER|WRITE_WATCHER);
 
     mShuttingDownOnIOThread = true;
-  }
-
-  void SetUpIO()
-  {
-    MOZ_ASSERT(IsOpen());
-    AddWatchers(READ_WATCHER, true);
-    if (!mOutgoingQ.IsEmpty()) {
-      AddWatchers(WRITE_WATCHER, false);
-    }
   }
 
   void SetDelayedConnectTask(CancelableTask* aTask)
@@ -561,7 +550,10 @@ UnixSocketImpl::OnAccepted(int aFd)
     new OnSocketEventTask(this, OnSocketEventTask::CONNECT_SUCCESS);
   NS_DispatchToMainThread(t);
 
-  SetUpIO();
+  AddWatchers(READ_WATCHER, true);
+  if (!mOutgoingQ.IsEmpty()) {
+    AddWatchers(WRITE_WATCHER, false);
+  }
 }
 
 void
@@ -586,7 +578,10 @@ UnixSocketImpl::OnConnected()
     new OnSocketEventTask(this, OnSocketEventTask::CONNECT_SUCCESS);
   NS_DispatchToMainThread(t);
 
-  SetUpIO();
+  AddWatchers(READ_WATCHER, true);
+  if (!mOutgoingQ.IsEmpty()) {
+    AddWatchers(WRITE_WATCHER, false);
+  }
 }
 
 void
@@ -601,7 +596,7 @@ UnixSocketImpl::OnListening()
     return;
   }
 
-  SetUpIO();
+  AddWatchers(READ_WATCHER, true);
 }
 
 void
