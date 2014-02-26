@@ -50,9 +50,8 @@ class nsTextStateManager MOZ_FINAL : public nsISelectionListener,
 {
 public:
   nsTextStateManager()
-    : mObserving(nsIMEUpdatePreference::NOTIFY_NOTHING)
-    {
-    }
+  {
+  }
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISELECTIONLISTENER
@@ -70,7 +69,7 @@ public:
   bool     IsManaging(nsPresContext* aPresContext, nsIContent* aContent);
   bool     KeepAliveDuringDeactive() const
   {
-    return !!(mObserving & nsIMEUpdatePreference::NOTIFY_DURING_DEACTIVE);
+    return mUpdatePreference.WantDuringDeactive();
   }
 
   nsCOMPtr<nsIWidget>            mWidget;
@@ -82,7 +81,7 @@ private:
   void NotifyContentAdded(nsINode* aContainer, int32_t aStart, int32_t aEnd);
   void ObserveEditableNode();
 
-  nsIMEUpdatePreference::Notifications mObserving;
+  nsIMEUpdatePreference mUpdatePreference;
   uint32_t mPreAttrChangeLength;
 };
 
@@ -761,8 +760,8 @@ nsTextStateManager::ObserveEditableNode()
   MOZ_ASSERT(mSel);
   MOZ_ASSERT(mRootContent);
 
-  mObserving = mWidget->GetIMEUpdatePreference().mWantUpdates;
-  if (mObserving & nsIMEUpdatePreference::NOTIFY_SELECTION_CHANGE) {
+  mUpdatePreference = mWidget->GetIMEUpdatePreference();
+  if (mUpdatePreference.WantSelectionChange()) {
     // add selection change listener
     nsCOMPtr<nsISelectionPrivate> selPrivate(do_QueryInterface(mSel));
     NS_ENSURE_TRUE_VOID(selPrivate);
@@ -770,7 +769,7 @@ nsTextStateManager::ObserveEditableNode()
     NS_ENSURE_SUCCESS_VOID(rv);
   }
 
-  if (mObserving & nsIMEUpdatePreference::NOTIFY_TEXT_CHANGE) {
+  if (mUpdatePreference.WantTextChange()) {
     // add text change observer
     mRootContent->AddMutationObserver(this);
   }
@@ -791,18 +790,18 @@ nsTextStateManager::Destroy(void)
   }
   // Even if there are some pending notification, it'll never notify the widget.
   mWidget = nullptr;
-  if ((mObserving & nsIMEUpdatePreference::NOTIFY_SELECTION_CHANGE) && mSel) {
+  if (mUpdatePreference.WantSelectionChange() && mSel) {
     nsCOMPtr<nsISelectionPrivate> selPrivate(do_QueryInterface(mSel));
     if (selPrivate)
       selPrivate->RemoveSelectionListener(this);
   }
   mSel = nullptr;
-  if ((mObserving & nsIMEUpdatePreference::NOTIFY_TEXT_CHANGE) && mRootContent) {
+  if (mUpdatePreference.WantTextChange() && mRootContent) {
     mRootContent->RemoveMutationObserver(this);
   }
   mRootContent = nullptr;
   mEditableNode = nullptr;
-  mObserving = false;
+  mUpdatePreference.mWantUpdates = nsIMEUpdatePreference::NOTIFY_NOTHING;
 }
 
 bool
