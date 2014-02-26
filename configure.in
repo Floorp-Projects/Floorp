@@ -4050,6 +4050,16 @@ fi
 AC_DEFINE_UNQUOTED(MOZ_UPDATE_CHANNEL, $MOZ_UPDATE_CHANNEL)
 AC_SUBST(MOZ_UPDATE_CHANNEL)
 
+# Allow to specify a Mozilla API key file that contains the secret key to be
+# used for various Mozilla API requests.
+MOZ_ARG_WITH_STRING(mozilla-api-keyfile,
+[  --with-mozilla-api-keyfile=file   Use the secret key contained in the given keyfile for Mozilla API requests],
+  MOZ_MOZILLA_API_KEY=`cat $withval`)
+if test -z "$MOZ_MOZILLA_API_KEY"; then
+    MOZ_MOZILLA_API_KEY=no-mozilla-api-key
+fi
+AC_SUBST(MOZ_MOZILLA_API_KEY)
+
 # Allow to specify a Google API key file that contains the secret key to be
 # used for various Google API requests.
 MOZ_ARG_WITH_STRING(google-api-keyfile,
