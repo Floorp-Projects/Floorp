@@ -8,7 +8,7 @@
   margin: 0 2em 2em;
 }
 
-#main-window:-moz-any([customize-entering],[customize-entered]) #navigator-toolbox > toolbar {
+#main-window:-moz-any([customize-entering],[customize-entered]) #navigator-toolbox {
   margin-left: 2em;
   margin-right: 2em;
 }
@@ -17,17 +17,50 @@
   pointer-events: none;
 }
 
-#nav-bar[customize-entered] > #nav-bar-customization-target {
-  margin: 1px 3px;
-}
-
-#nav-bar[customize-entered] > #nav-bar-customization-target,
+#main-window[customize-entered] .customization-target:not(#PanelUI-contents)::before,
 #PanelUI-contents > .panel-customization-placeholder {
+  -moz-outline-radius: 2.5px;
   outline: 1px dashed transparent;
 }
 
-#main-window[customizing-movingItem] #nav-bar-customization-target,
-#main-window[customizing-movingItem] .panel-customization-placeholder {
+#main-window[customize-entered] .customization-target:not(#PanelUI-contents)::before {
+  /* Prevent jumping of tabs when switching a window between inactive and active (bug 853415). */
+  -moz-box-ordinal-group: 0;
+  content: "";
+  display: -moz-box;
+  height: 100%;
+  left: 0;
+  outline-offset: -2px;
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  width: 100%;
+}
+
+/* Shift the TabsToolbar outline up 2px since the #nav-bar is shifted up by 1px and the
+   #TabsToolbar::after is a pixel higher to draw the bottom border of the tabstrip so this makes the
+   offset from the bottom effectively the same as other targets (-2px). */
+#main-window[customize-entered] #TabsToolbar.customization-target::before {
+  top: -2px;
+}
+
+/* The parents of the outline pseudo-elements need to be positioned so that the outline is positioned relative to it. */
+#main-window[customize-entered] .customization-target:not(#PanelUI-contents):hover,
+#main-window[customize-entered] .customization-target[customizing-dragovertarget]:not(#PanelUI-contents),
+#main-window[customize-entered] #nav-bar-customization-target.customization-target {
+  position: relative;
+}
+
+/* Most target outlines are shown on hover and drag over but the panel menu uses
+   placeholders instead. */
+#main-window[customize-entered] .customization-target:not(#PanelUI-contents):hover::before,
+#main-window[customize-entered] .customization-target[customizing-dragovertarget]:not(#PanelUI-contents)::before,
+/* nav-bar and panel outlines are always shown */
+#main-window[customize-entered] #nav-bar-customization-target.customization-target::before {
+  outline-color: rgb(102,102,102);
+}
+
+#main-window[customize-entered] .panel-customization-placeholder {
   outline-color: #bbb;
 }
 
@@ -36,7 +69,7 @@
   outline-offset: -5px;
 }
 
-#main-window[customize-entered] .customization-target {
+#main-window[customize-entered] .customization-target:not(#PanelUI-contents) {
   min-width: 100px;
   padding-left: 10px;
   padding-right: 10px;

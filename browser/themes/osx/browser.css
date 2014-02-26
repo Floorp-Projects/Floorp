@@ -2577,7 +2577,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 @media (min-resolution: 2dppx) {
   /* image preloading hack from shared/tabs.inc.css */
-  #TabsToolbar::before {
+  #tabbrowser-tabs::before {
     background-image:
       url(chrome://browser/skin/tabbrowser/tab-background-end@2x.png),
       url(chrome://browser/skin/tabbrowser/tab-background-middle@2x.png),
@@ -4174,11 +4174,6 @@ window > chatbox {
   #customization-titlebar-visibility-button > .button-box > .button-icon {
     width: 24px;
   }
-}
-
-#main-window[customizing] #navigator-toolbox::after {
-  margin-left: 2em;
-  margin-right: 2em;
 }
 
 /* End customization mode */

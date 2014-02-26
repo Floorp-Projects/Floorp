@@ -14,7 +14,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=710231
 
 <!--
   Test that an iframe with the |mozbrowser| attribute does not emit
-  mozbrowserX events when this page is not in the whitelist.
+  mozbrowserX events when this page does not have the "browser" permission.
 -->
 
 <script type="application/javascript;version=1.7">
@@ -23,9 +23,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=710231
 SimpleTest.waitForExplicitFinish();
 
 function runTest() {
-  browserElementTestHelpers.setEnabledPref(true);
-  browserElementTestHelpers.addPermissionForUrl('http://foobar.com');
-
   var iframe = document.createElement('iframe');
   SpecialPowers.wrap(iframe).mozbrowser = true;
   document.body.appendChild(iframe);
@@ -42,6 +39,8 @@ function runTest() {
   iframe.src = browserElementTestHelpers.emptyPage1;
 }
 
+browserElementTestHelpers.setEnabledPref(true);
+SpecialPowers.removePermission("browser", document);
 addEventListener('testready', runTest);
 
 </script>
