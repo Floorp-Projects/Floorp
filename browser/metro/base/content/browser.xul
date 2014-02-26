@@ -1120,6 +1120,9 @@ Desktop browser's sync prefs.
       <setting pref="signon.rememberSignons"
                title="&optionsHeader.privacy.passwords.label;"
                type="bool"/>
+      <setting pref="browser.display.overlaynavbuttons"
+               title="&optionsHeader.displayOverlayButtons.label;"
+               type="bool"/>
       <settings id="prefs-reporting"
                 label="&optionsHeader.reporting.title;">
         <setting pref="app.crashreporter.autosubmit"
