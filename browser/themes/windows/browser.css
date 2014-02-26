@@ -2509,9 +2509,7 @@ chatbox {
 
 /* End customization mode */
 
-#main-window[privatebrowsingmode=temporary] #TabsToolbar::after {
-  content: "";
-  display: -moz-box;
+#main-window[privatebrowsingmode=temporary] #private-browsing-indicator {
   width: 40px;
   background: url("chrome://browser/skin/privatebrowsing-indicator.png") no-repeat center center;
 }
