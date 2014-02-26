@@ -3,15 +3,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsDOMCommandEvent.h"
-#include "prtime.h"
+#include "mozilla/dom/CommandEvent.h"
 #include "mozilla/MiscEvents.h"
+#include "prtime.h"
 
-using namespace mozilla;
+namespace mozilla {
+namespace dom {
 
-nsDOMCommandEvent::nsDOMCommandEvent(mozilla::dom::EventTarget* aOwner,
-                                     nsPresContext* aPresContext,
-                                     WidgetCommandEvent* aEvent)
+CommandEvent::CommandEvent(EventTarget* aOwner,
+                           nsPresContext* aPresContext,
+                           WidgetCommandEvent* aEvent)
   : nsDOMEvent(aOwner, aPresContext, aEvent ? aEvent :
                new WidgetCommandEvent(false, nullptr, nullptr, nullptr))
 {
@@ -23,15 +24,15 @@ nsDOMCommandEvent::nsDOMCommandEvent(mozilla::dom::EventTarget* aOwner,
   }
 }
 
-NS_INTERFACE_MAP_BEGIN(nsDOMCommandEvent)
+NS_INTERFACE_MAP_BEGIN(CommandEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCommandEvent)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
 
-NS_IMPL_ADDREF_INHERITED(nsDOMCommandEvent, nsDOMEvent)
-NS_IMPL_RELEASE_INHERITED(nsDOMCommandEvent, nsDOMEvent)
+NS_IMPL_ADDREF_INHERITED(CommandEvent, nsDOMEvent)
+NS_IMPL_RELEASE_INHERITED(CommandEvent, nsDOMEvent)
 
 NS_IMETHODIMP
-nsDOMCommandEvent::GetCommand(nsAString& aCommand)
+CommandEvent::GetCommand(nsAString& aCommand)
 {
   nsIAtom* command = mEvent->AsCommandEvent()->command;
   if (command) {
@@ -43,10 +44,10 @@ nsDOMCommandEvent::GetCommand(nsAString& aCommand)
 }
 
 NS_IMETHODIMP
-nsDOMCommandEvent::InitCommandEvent(const nsAString& aTypeArg,
-                                    bool aCanBubbleArg,
-                                    bool aCancelableArg,
-                                    const nsAString& aCommand)
+CommandEvent::InitCommandEvent(const nsAString& aTypeArg,
+                               bool aCanBubbleArg,
+                               bool aCancelableArg,
+                               const nsAString& aCommand)
 {
   nsresult rv = nsDOMEvent::InitEvent(aTypeArg, aCanBubbleArg, aCancelableArg);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -55,12 +56,18 @@ nsDOMCommandEvent::InitCommandEvent(const nsAString& aTypeArg,
   return NS_OK;
 }
 
-nsresult NS_NewDOMCommandEvent(nsIDOMEvent** aInstancePtrResult,
-                               mozilla::dom::EventTarget* aOwner,
-                               nsPresContext* aPresContext,
-                               WidgetCommandEvent* aEvent)
-{
-  nsDOMCommandEvent* it = new nsDOMCommandEvent(aOwner, aPresContext, aEvent);
+} // namespace dom
+} // namespace mozilla
 
+using namespace mozilla;
+using namespace mozilla::dom;
+
+nsresult
+NS_NewDOMCommandEvent(nsIDOMEvent** aInstancePtrResult,
+                      EventTarget* aOwner,
+                      nsPresContext* aPresContext,
+                      WidgetCommandEvent* aEvent)
+{
+  CommandEvent* it = new CommandEvent(aOwner, aPresContext, aEvent);
   return CallQueryInterface(it, aInstancePtrResult);
 }
