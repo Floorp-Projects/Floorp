@@ -1079,7 +1079,7 @@ LinearScanAllocator::findBestBlockedRegister(CodePosition *nextUsed)
         LAllocation *alloc = i->getAllocation();
         if (alloc->isRegister(needFloat)) {
             AnyRegister reg = alloc->toRegister();
-            if (i->start().ins() == current->start().ins()) {
+            if (i->start() == current->start()) {
                 nextUsePos[reg.code()] = CodePosition::MIN;
                 IonSpew(IonSpew_RegAlloc, "   Disqualifying %s due to recency", reg.name());
             } else if (nextUsePos[reg.code()] != CodePosition::MIN) {
