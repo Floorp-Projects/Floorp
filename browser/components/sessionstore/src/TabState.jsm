@@ -20,6 +20,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "TabStateCache",
   "resource:///modules/sessionstore/TabStateCache.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TabAttributes",
   "resource:///modules/sessionstore/TabAttributes.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Utils",
+  "resource:///modules/sessionstore/Utils.jsm");
 
 /**
  * Module that contains tab state collection methods.
@@ -151,7 +153,7 @@ let TabStateInternal = {
       // Use the data to be restored when the tab hasn't been
       // completely loaded. We clone the data, since we're updating it
       // here and the caller may update it further.
-      tabData = JSON.parse(JSON.stringify(browser.__SS_data));
+      tabData = Utils.shallowCopy(browser.__SS_data);
       if (tab.pinned)
         tabData.pinned = true;
       else
