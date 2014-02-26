@@ -2132,35 +2132,30 @@ Element::GetAttrCount() const
   return mAttrsAndChildren.AttrCount();
 }
 
-void
-Element::DescribeAttribute(uint32_t index, nsAString& aOutDescription) const
-{
-  // name
-  mAttrsAndChildren.AttrNameAt(index)->GetQualifiedName(aOutDescription);
-
-  // value
-  aOutDescription.AppendLiteral("=\"");
-  nsAutoString value;
-  mAttrsAndChildren.AttrAt(index)->ToString(value);
-  for (int i = value.Length(); i >= 0; --i) {
-    if (value[i] == char16_t('"'))
-      value.Insert(char16_t('\\'), uint32_t(i));
-  }
-  aOutDescription.Append(value);
-  aOutDescription.AppendLiteral("\"");
-}
-
 #ifdef DEBUG
 void
 Element::ListAttributes(FILE* out) const
 {
   uint32_t index, count = mAttrsAndChildren.AttrCount();
   for (index = 0; index < count; index++) {
-    nsAutoString attributeDescription;
-    DescribeAttribute(index, attributeDescription);
+    nsAutoString buffer;
+
+    // name
+    mAttrsAndChildren.AttrNameAt(index)->GetQualifiedName(buffer);
+
+    // value
+    buffer.AppendLiteral("=\"");
+    nsAutoString value;
+    mAttrsAndChildren.AttrAt(index)->ToString(value);
+    for (int i = value.Length(); i >= 0; --i) {
+      if (value[i] == char16_t('"'))
+        value.Insert(char16_t('\\'), uint32_t(i));
+    }
+    buffer.Append(value);
+    buffer.AppendLiteral("\"");
 
     fputs(" ", out);
-    fputs(NS_LossyConvertUTF16toASCII(attributeDescription).get(), out);
+    fputs(NS_LossyConvertUTF16toASCII(buffer).get(), out);
   }
 }
 
@@ -2283,21 +2278,6 @@ Element::DumpContent(FILE* out, int32_t aIndent,
   if(aIndent) fputs("\n", out);
 }
 #endif
-
-void
-Element::Describe(nsAString& aOutDescription) const
-{
-  aOutDescription.Append(mNodeInfo->QualifiedName());
-  aOutDescription.AppendPrintf("@%p", (void *)this);
-
-  uint32_t index, count = mAttrsAndChildren.AttrCount();
-  for (index = 0; index < count; index++) {
-    aOutDescription.Append(' ');
-    nsAutoString attributeDescription;
-    DescribeAttribute(index, attributeDescription);
-    aOutDescription.Append(attributeDescription);
-  }
-}
 
 bool
 Element::CheckHandleEventForLinksPrecondition(nsEventChainVisitor& aVisitor,

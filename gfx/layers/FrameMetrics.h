@@ -7,12 +7,10 @@
 #define GFX_FRAMEMETRICS_H
 
 #include <stdint.h>                     // for uint32_t, uint64_t
-#include <string>                       // for std::string
 #include "Units.h"                      // for CSSRect, CSSPixel, etc
 #include "mozilla/gfx/BasePoint.h"      // for BasePoint
 #include "mozilla/gfx/Rect.h"           // for RoundedIn
 #include "mozilla/gfx/ScaleFactor.h"    // for ScaleFactor
-#include "mozilla/gfx/Logging.h"        // for Log
 
 namespace IPC {
 template <typename T> struct ParamTraits;
@@ -72,8 +70,6 @@ public:
 
   bool operator==(const FrameMetrics& aOther) const
   {
-    // mContentDescription is not compared on purpose as it's only used
-    // for debugging.
     return mCompositionBounds.IsEqualEdges(aOther.mCompositionBounds) &&
            mDisplayPort.IsEqualEdges(aOther.mDisplayPort) &&
            mCriticalDisplayPort.IsEqualEdges(aOther.mCriticalDisplayPort) &&
@@ -340,16 +336,6 @@ public:
     return mScrollGeneration;
   }
 
-  const std::string& GetContentDescription() const
-  {
-    return mContentDescription;
-  }
-
-  void SetContentDescription(const std::string& aContentDescription)
-  {
-    mContentDescription = aContentDescription;
-  }
-
 private:
   // New fields from now on should be made private and old fields should
   // be refactored to be private.
@@ -364,10 +350,6 @@ private:
   bool mUpdateScrollOffset;
   // The scroll generation counter used to acknowledge the scroll offset update.
   uint32_t mScrollGeneration;
-
-  // A description of the content element corresponding to this frame.
-  // This is empty unless the apz.printtree pref is turned on.
-  std::string mContentDescription;
 };
 
 /**
@@ -425,11 +407,6 @@ struct ScrollableLayerGuid {
     return !(*this == other);
   }
 };
-
-template <int LogLevel>
-gfx::Log<LogLevel>& operator<<(gfx::Log<LogLevel>& log, const ScrollableLayerGuid& aGuid) {
-  return log << '(' << aGuid.mLayersId << ',' << aGuid.mPresShellId << ',' << aGuid.mScrollId << ')';
-}
 
 struct ZoomConstraints {
   bool mAllowZoom;
