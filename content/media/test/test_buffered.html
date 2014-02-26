@@ -23,7 +23,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=462957
 
 var manager = new MediaTestManager;
 
-function ended(e) {
+function testBuffered(e) {
   var v = e.target;
   
   // The whole media should be buffered...
@@ -65,31 +65,54 @@ function ended(e) {
   }
   is(caught, true, v._name + ": Should throw INDEX_SIZE_ERR on over end bounds range");
 
+	manager.finished(v._token);
   v.src = "";
-  v.parentNode.removeChild(v);
-  manager.finished(v.token);
+  v.parentNode.removeChild(v);  
+}
+
+function fetch(url, fetched_callback) {
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", url, true);
+  xhr.responseType = "blob";
+
+  var loaded = function (event) {
+    if (xhr.status == 200 || xhr.status == 206) {
+      // Request fulfilled. Note sometimes we get 206... Presumably because either
+      // httpd.js or Necko cached the result.
+      fetched_callback(window.URL.createObjectURL(xhr.response));
+    } else {
+      ok(false, "Fetch failed headers=" + xhr.getAllResponseHeaders());
+    }
+  };
+
+  xhr.addEventListener("load", loaded, false);
+  xhr.send();
 }
 
 function startTest(test, token) {
-  var v = document.createElement('video');
-  v.preload = "metadata";
-  v.token = token;
+  // Fetch the media resource using XHR so we can be sure the entire
+  // resource is loaded before we test buffered ranges. This ensures
+  // we have deterministic behaviour.
+  var onfetched = function(uri) {
+    var v = document.createElement('video');
+    v.preload = "metadata";
+    v._token = token;
+    v.src = uri;
+    v._name = test.name;
+    v._test = test;
+    v.addEventListener("loadedmetadata", testBuffered, false);
+    document.body.appendChild(v);
+  };
+
   manager.started(token);
-
-  v.src = test.name;
-  v._name = test.name;
-  v._test = test;
-  v._finished = false;
-  v.autoplay = true;
-  v.addEventListener("ended", ended, false);
-  document.body.appendChild(v);
+  fetch(test.name, onfetched);
 }
 
+// Note: No need to set media test prefs, since we're using XHR to fetch
+// media data.
 SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv({"set": [["media.cache_size", 40000]]}, beginTest);
-function beginTest() {
-  manager.runTests(gSeekTests, startTest);
-}
+manager.runTests(gSeekTests, startTest);
+
 </script>
 </pre>
 </body>

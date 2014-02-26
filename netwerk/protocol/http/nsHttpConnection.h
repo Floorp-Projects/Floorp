@@ -206,15 +206,13 @@ private:
     // Directly Add a transaction to an active connection for SPDY
     nsresult AddTransaction(nsAHttpTransaction *, int32_t);
 
-    // used to inform nsIHttpDataUsage of transfer
-    void ReportDataUsage(bool);
-
     // Used to set TCP keepalives for fast detection of dead connections during
     // an initial period, and slower detection for long-lived connections.
     nsresult StartShortLivedTCPKeepalives();
     nsresult StartLongLivedTCPKeepalives();
     nsresult DisableTCPKeepalives();
 
+private:
     nsCOMPtr<nsISocketTransport>    mSocketTransport;
     nsCOMPtr<nsIAsyncInputStream>   mSocketIn;
     nsCOMPtr<nsIAsyncOutputStream>  mSocketOut;
@@ -246,10 +244,6 @@ private:
     int64_t                         mMaxBytesRead;       // max read in 1 activation
     int64_t                         mTotalBytesRead;     // total data read
     int64_t                         mTotalBytesWritten;  // does not include CONNECT tunnel
-
-    // for nsIHttpDataUsage
-    uint64_t                        mUnreportedBytesRead;     // subset of totalBytesRead
-    uint64_t                        mUnreportedBytesWritten;  // subset of totalBytesWritten
 
     nsRefPtr<nsIAsyncInputStream>   mInputOverflow;
 
