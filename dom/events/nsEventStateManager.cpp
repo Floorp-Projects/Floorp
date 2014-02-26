@@ -1094,6 +1094,11 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     }
     break;
   }
+  case NS_POINTER_CANCEL:
+  {
+    GenerateMouseEnterExit(mouseEvent);
+    break;
+  }
   case NS_MOUSE_EXIT:
     // If the event is not a top-level window exit, then it's not
     // really an exit --- we may have traversed widget boundaries but
@@ -4440,6 +4445,7 @@ nsEventStateManager::GenerateMouseEnterExit(WidgetMouseEvent* aMouseEvent)
     }
     break;
   case NS_POINTER_LEAVE:
+  case NS_POINTER_CANCEL:
   case NS_MOUSE_EXIT:
     {
       // This is actually the window mouse exit or pointer leave event. We're not moving
