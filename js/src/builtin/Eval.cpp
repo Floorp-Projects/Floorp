@@ -320,7 +320,7 @@ EvalKernel(JSContext *cx, const CallArgs &args, EvalType evalType, AbstractFrame
                .setNoScriptRval(false)
                .setPrincipals(principals)
                .setOriginPrincipals(originPrincipals)
-               .setIntroductionInfo(introducerFilename, "eval", lineno, pcOffset);
+               .setIntroductionInfo(introducerFilename, "eval", lineno, script, pcOffset);
         JSScript *compiled = frontend::CompileScript(cx, &cx->tempLifoAlloc(),
                                                      scopeobj, callerScript, options,
                                                      chars.get(), length, flatStr, staticLevel);
@@ -392,7 +392,7 @@ js::DirectEvalStringFromIon(JSContext *cx,
                .setNoScriptRval(false)
                .setPrincipals(principals)
                .setOriginPrincipals(originPrincipals)
-               .setIntroductionInfo(introducerFilename, "eval", lineno, pcOffset);
+               .setIntroductionInfo(introducerFilename, "eval", lineno, script, pcOffset);
         JSScript *compiled = frontend::CompileScript(cx, &cx->tempLifoAlloc(),
                                                      scopeobj, callerScript, options,
                                                      chars.get(), length, flatStr, staticLevel);
