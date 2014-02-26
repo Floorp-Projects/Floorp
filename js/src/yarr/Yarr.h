@@ -51,7 +51,7 @@ static const unsigned offsetError = (unsigned)-2;
 
 // The below limit restricts the number of "recursive" match calls in order to
 // avoid spending exponential time on complex regular expressions.
-static const unsigned matchLimit = 1000000;
+static const unsigned matchLimit = 2500000;
 
 enum JSRegExpResult {
     JSRegExpMatch = 1,
