@@ -1045,7 +1045,7 @@ BrowserAddonActor.prototype = {
 function DebuggerProgressListener(aBrowserTabActor) {
   this._tabActor = aBrowserTabActor;
   this._tabActor._tabbrowser.addProgressListener(this);
-  let EventEmitter = devtools.require("devtools/shared/event-emitter");
+  let EventEmitter = devtools.require("devtools/toolkit/event-emitter");
   EventEmitter.decorate(this);
 }
 

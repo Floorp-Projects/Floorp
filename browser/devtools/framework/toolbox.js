@@ -11,7 +11,7 @@ const MAX_ZOOM = 2;
 
 let {Cc, Ci, Cu} = require("chrome");
 let promise = require("sdk/core/promise");
-let EventEmitter = require("devtools/shared/event-emitter");
+let EventEmitter = require("devtools/toolkit/event-emitter");
 let Telemetry = require("devtools/shared/telemetry");
 let HUDService = require("devtools/webconsole/hudservice");
 

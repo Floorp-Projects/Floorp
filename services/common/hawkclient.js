@@ -31,7 +31,7 @@ const {interfaces: Ci, utils: Cu} = Components;
 Cu.import("resource://gre/modules/FxAccountsCommon.js");
 Cu.import("resource://services-common/utils.js");
 Cu.import("resource://services-crypto/utils.js");
-Cu.import("resource://services-common/rest.js");
+Cu.import("resource://services-common/hawkrequest.js");
 Cu.import("resource://gre/modules/Promise.jsm");
 
 /*
@@ -65,12 +65,18 @@ this.HawkClient.prototype = {
    *        A string describing the error
    */
   _constructError: function(restResponse, errorString) {
-    return {
+    let errorObj = {
       error: errorString,
       message: restResponse.statusText,
       code: restResponse.status,
       errno: restResponse.status
     };
+    let retryAfter = restResponse.headers["retry-after"];
+    retryAfter = retryAfter ? parseInt(retryAfter) : retryAfter;
+    if (retryAfter) {
+      errorObj.retryAfter = retryAfter;
+    }
+    return errorObj;
   },
 
   /*

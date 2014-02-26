@@ -6,7 +6,7 @@
 
 let { Cu }       = require("chrome");
 let { defer }    = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
-let EventEmitter = require("devtools/shared/event-emitter");
+let EventEmitter = require("devtools/toolkit/event-emitter");
 
 const { PROFILE_IDLE, PROFILE_COMPLETED, PROFILE_RUNNING } = require("devtools/profiler/consts");
 
