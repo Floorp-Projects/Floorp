@@ -148,7 +148,7 @@ namespace {
 
 const uint32_t kNoIndex = uint32_t(-1);
 
-const JS::ContextOptions kRequiredJSContextOptions =
+const JS::ContextOptions kRequiredContextOptions =
   JS::ContextOptions().setDontReportUncaught(true)
                       .setNoScriptRval(true);
 
@@ -300,7 +300,7 @@ GenerateSharedWorkerKey(const nsACString& aScriptSpec, const nsACString& aName,
 }
 
 void
-LoadJSContextOptions(const char* aPrefName, void* /* aClosure */)
+LoadRuntimeAndContextOptions(const char* aPrefName, void* /* aClosure */)
 {
   AssertIsOnMainThread();
 
@@ -330,51 +330,47 @@ LoadJSContextOptions(const char* aPrefName, void* /* aClosure */)
   }
 #endif
 
+  // Runtime options.
+  JS::RuntimeOptions runtimeOptions;
+  if (GetWorkerPref<bool>(NS_LITERAL_CSTRING("asmjs"))) {
+    runtimeOptions.setAsmJS(true);
+  }
+  if (GetWorkerPref<bool>(NS_LITERAL_CSTRING("typeinference"))) {
+    runtimeOptions.setTypeInference(true);
+  }
+  if (GetWorkerPref<bool>(NS_LITERAL_CSTRING("baselinejit"))) {
+    runtimeOptions.setBaseline(true);
+  }
+  if (GetWorkerPref<bool>(NS_LITERAL_CSTRING("ion"))) {
+    runtimeOptions.setIon(true);
+  }
+
   // Common options.
-  JS::ContextOptions commonOptions = kRequiredJSContextOptions;
+  JS::ContextOptions commonContextOptions = kRequiredContextOptions;
   if (GetWorkerPref<bool>(NS_LITERAL_CSTRING("strict"))) {
-    commonOptions.setExtraWarnings(true);
+    commonContextOptions.setExtraWarnings(true);
   }
   if (GetWorkerPref<bool>(NS_LITERAL_CSTRING("werror"))) {
-    commonOptions.setWerror(true);
-  }
-  if (GetWorkerPref<bool>(NS_LITERAL_CSTRING("asmjs"))) {
-    commonOptions.setAsmJS(true);
+    commonContextOptions.setWerror(true);
   }
 
   // Content options.
-  JS::ContextOptions contentOptions = commonOptions;
-  if (GetWorkerPref<bool>(NS_LITERAL_CSTRING("baselinejit.content"))) {
-    contentOptions.setBaseline(true);
-  }
-  if (GetWorkerPref<bool>(NS_LITERAL_CSTRING("ion.content"))) {
-    contentOptions.setIon(true);
-  }
-  if (GetWorkerPref<bool>(NS_LITERAL_CSTRING("typeinference.content"))) {
-    contentOptions.setTypeInference(true);
-  }
+  JS::ContextOptions contentContextOptions = commonContextOptions;
 
   // Chrome options.
-  JS::ContextOptions chromeOptions = commonOptions;
-  if (GetWorkerPref<bool>(NS_LITERAL_CSTRING("baselinejit.chrome"))) {
-    chromeOptions.setBaseline(true);
-  }
-  if (GetWorkerPref<bool>(NS_LITERAL_CSTRING("ion.chrome"))) {
-    chromeOptions.setIon(true);
-  }
-  if (GetWorkerPref<bool>(NS_LITERAL_CSTRING("typeinference.chrome"))) {
-    chromeOptions.setTypeInference(true);
-  }
+  JS::ContextOptions chromeContextOptions = commonContextOptions;
 #ifdef DEBUG
   if (GetWorkerPref<bool>(NS_LITERAL_CSTRING("strict.debug"))) {
-    chromeOptions.setExtraWarnings(true);
+    chromeContextOptions.setExtraWarnings(true);
   }
 #endif
 
-  RuntimeService::SetDefaultJSContextOptions(contentOptions, chromeOptions);
+  RuntimeService::SetDefaultRuntimeAndContextOptions(runtimeOptions,
+                                                     contentContextOptions,
+                                                     chromeContextOptions);
 
   if (rts) {
-    rts->UpdateAllWorkerJSContextOptions();
+    rts->UpdateAllWorkerRuntimeAndContextOptions();
   }
 }
 
@@ -771,6 +767,8 @@ CreateJSContextForWorker(WorkerPrivate* aWorkerPrivate, JSRuntime* aRuntime)
 
   JSSettings settings;
   aWorkerPrivate->CopyJSSettings(settings);
+
+  JS::RuntimeOptionsRef(aRuntime) = settings.runtimeOptions;
 
   JSSettings::JSGCSettingsArray& gcSettings = settings.gcSettings;
 
@@ -1615,10 +1613,11 @@ RuntimeService::Init()
 
   // Initialize JSSettings.
   if (!sDefaultJSSettings.gcSettings[0].IsSet()) {
-    sDefaultJSSettings.chrome.contextOptions = kRequiredJSContextOptions;
+    sDefaultJSSettings.runtimeOptions = JS::RuntimeOptions();
+    sDefaultJSSettings.chrome.contextOptions = kRequiredContextOptions;
     sDefaultJSSettings.chrome.maxScriptRuntime = -1;
     sDefaultJSSettings.chrome.compartmentOptions.setVersion(JSVERSION_LATEST);
-    sDefaultJSSettings.content.contextOptions = kRequiredJSContextOptions;
+    sDefaultJSSettings.content.contextOptions = kRequiredContextOptions;
     sDefaultJSSettings.content.maxScriptRuntime = MAX_SCRIPT_RUN_TIME_SEC;
 #ifdef JS_GC_ZEAL
     sDefaultJSSettings.gcZealFrequency = JS_DEFAULT_ZEAL_FREQ;
@@ -1693,13 +1692,13 @@ RuntimeService::Init()
                                   PREF_DOM_WINDOW_DUMP_ENABLED,
                                   reinterpret_cast<void *>(WORKERPREF_DUMP))) ||
 #endif
-      NS_FAILED(Preferences::RegisterCallback(LoadJSContextOptions,
+      NS_FAILED(Preferences::RegisterCallback(LoadRuntimeAndContextOptions,
                                               PREF_JS_OPTIONS_PREFIX,
                                               nullptr)) ||
       NS_FAILED(Preferences::RegisterCallbackAndCall(
-                                                    LoadJSContextOptions,
-                                                    PREF_WORKERS_OPTIONS_PREFIX,
-                                                    nullptr)) ||
+                                                   LoadRuntimeAndContextOptions,
+                                                   PREF_WORKERS_OPTIONS_PREFIX,
+                                                   nullptr)) ||
       NS_FAILED(Preferences::RegisterCallbackAndCall(
                                                  JSVersionChanged,
                                                  PREF_WORKERS_LATEST_JS_VERSION,
@@ -1846,10 +1845,10 @@ RuntimeService::Cleanup()
     if (NS_FAILED(Preferences::UnregisterCallback(JSVersionChanged,
                                                   PREF_WORKERS_LATEST_JS_VERSION,
                                                   nullptr)) ||
-        NS_FAILED(Preferences::UnregisterCallback(LoadJSContextOptions,
+        NS_FAILED(Preferences::UnregisterCallback(LoadRuntimeAndContextOptions,
                                                   PREF_JS_OPTIONS_PREFIX,
                                                   nullptr)) ||
-        NS_FAILED(Preferences::UnregisterCallback(LoadJSContextOptions,
+        NS_FAILED(Preferences::UnregisterCallback(LoadRuntimeAndContextOptions,
                                                   PREF_WORKERS_OPTIONS_PREFIX,
                                                   nullptr)) ||
 #if DUMP_CONTROLLED_BY_PREF
@@ -2231,9 +2230,10 @@ RuntimeService::NoteIdleThread(WorkerThread* aThread)
 }
 
 void
-RuntimeService::UpdateAllWorkerJSContextOptions()
+RuntimeService::UpdateAllWorkerRuntimeAndContextOptions()
 {
-  BROADCAST_ALL_WORKERS(UpdateJSContextOptions,
+  BROADCAST_ALL_WORKERS(UpdateRuntimeAndContextOptions,
+                        sDefaultJSSettings.runtimeOptions,
                         sDefaultJSSettings.content.contextOptions,
                         sDefaultJSSettings.chrome.contextOptions);
 }
