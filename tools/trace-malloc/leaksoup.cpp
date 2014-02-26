@@ -143,8 +143,8 @@ int main(int argc, char **argv)
             for (ADLog::Pointer p = e->address,
                             p_end = e->address + e->datasize;
                  p != p_end; ++p) {
-                PLHashEntry *e = PL_HashTableAdd(memory_map, p, cur_node);
-                if (!e) {
+                PLHashEntry *he = PL_HashTableAdd(memory_map, p, cur_node);
+                if (!he) {
                     fprintf(stderr, "%s: Out of memory.\n", argv[0]);
                     return 1;
                 }
