@@ -163,10 +163,17 @@ GonkCameraHardware::Init()
   mNativeWindow = new GonkNativeWindow();
   mNativeWindow->setNewFrameCallback(this);
   mCamera->setListener(this);
-#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
+
+#if defined(MOZ_WIDGET_GONK)
+
+#if ANDROID_VERSION >= 19
+  mCamera->setPreviewTarget(mNativeWindow->getBufferQueue());
+#elif (ANDROID_VERSION == 17) || (ANDROID_VERSION == 18)
   mCamera->setPreviewTexture(mNativeWindow->getBufferQueue());
 #else
   mCamera->setPreviewTexture(mNativeWindow);
+#endif
+
 #endif
 
   return NS_OK;

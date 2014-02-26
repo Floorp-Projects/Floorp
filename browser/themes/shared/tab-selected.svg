@@ -35,7 +35,8 @@
       }
 
 %ifdef WINDOWS_AERO
-      @media (-moz-windows-default-theme) {
+      @media (-moz-windows-default-theme) and (-moz-os-version: windows-vista),
+             (-moz-windows-default-theme) and (-moz-os-version: windows-win7) {
         #tab-background-fill {
           background-color: @customToolbarColor@;
         }

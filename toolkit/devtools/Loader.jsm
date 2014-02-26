@@ -58,6 +58,7 @@ BuiltinProvider.prototype = {
         "": "resource://gre/modules/commonjs/",
         "main": "resource:///modules/devtools/main.js",
         "devtools": "resource:///modules/devtools",
+        "devtools/toolkit": "resource://gre/modules/devtools",
         "devtools/server": "resource://gre/modules/devtools/server",
         "devtools/toolkit/webconsole": "resource://gre/modules/devtools/toolkit/webconsole",
         "devtools/app-actor-front": "resource://gre/modules/devtools/app-actor-front.js",
@@ -106,6 +107,7 @@ SrcdirProvider.prototype = {
     let toolkitDir = OS.Path.join(srcdir, "toolkit", "devtools");
     let mainURI = this.fileURI(OS.Path.join(devtoolsDir, "main.js"));
     let devtoolsURI = this.fileURI(devtoolsDir);
+    let toolkitURI = this.fileURI(toolkitDir);
     let serverURI = this.fileURI(OS.Path.join(toolkitDir, "server"));
     let webconsoleURI = this.fileURI(OS.Path.join(toolkitDir, "webconsole"));
     let appActorURI = this.fileURI(OS.Path.join(toolkitDir, "apps", "app-actor-front.js"));
@@ -127,6 +129,7 @@ SrcdirProvider.prototype = {
         "": "resource://gre/modules/commonjs/",
         "main": mainURI,
         "devtools": devtoolsURI,
+        "devtools/toolkit": toolkitURI,
         "devtools/server": serverURI,
         "devtools/toolkit/webconsole": webconsoleURI,
         "devtools/app-actor-front": appActorURI,

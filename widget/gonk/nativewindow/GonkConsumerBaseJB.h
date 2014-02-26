@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-#ifndef NATIVEWINDOW_GONKCONSUMERBASE_H
-#define NATIVEWINDOW_GONKCONSUMERBASE_H
+#ifndef NATIVEWINDOW_GONKCONSUMERBASE_JB_H
+#define NATIVEWINDOW_GONKCONSUMERBASE_JB_H
 
 #include <ui/GraphicBuffer.h>
 
@@ -24,7 +24,7 @@
 #include <utils/Vector.h>
 #include <utils/threads.h>
 
-#include "GonkBufferQueue.h"
+#include "GonkBufferQueueJB.h"
 
 namespace android {
 // ----------------------------------------------------------------------------

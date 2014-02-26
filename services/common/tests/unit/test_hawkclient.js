@@ -4,7 +4,7 @@
 "use strict";
 
 Cu.import("resource://gre/modules/Promise.jsm");
-Cu.import("resource://services-common/hawk.js");
+Cu.import("resource://services-common/hawkclient.js");
 
 const SECOND_MS = 1000;
 const MINUTE_MS = SECOND_MS * 60;

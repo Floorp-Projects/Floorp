@@ -2,7 +2,7 @@
     "config_version": 2,
     "tooltool_manifest": "releng-emulator-ics.tt",
     "mock_target": "mozilla-centos6-x86_64",
-    "mock_packages": ["ccache", "make", "bison", "flex", "gcc", "g++", "mpfr", "zlib-devel", "ncurses-devel", "zip", "autoconf213", "glibc-static", "perl-Digest-SHA", "wget", "alsa-lib", "atk", "cairo", "dbus-glib", "fontconfig", "freetype", "glib2", "gtk2", "libXRender", "libXt", "pango", "mozilla-python27-mercurial", "openssh-clients", "nss-devel", "glibc-devel.i686", "libstdc++.i686", "zlib-devel.i686", "ncurses-devel.i686", "libX11-devel.i686", "mesa-libGL-devel.i686", "mesa-libGL-devel", "libX11-devel", "git"],
+    "mock_packages": ["ccache", "make", "bison", "flex", "gcc", "g++", "mpfr", "zlib-devel", "ncurses-devel", "zip", "autoconf213", "glibc-static", "perl-Digest-SHA", "wget", "alsa-lib", "atk", "cairo", "dbus-glib", "fontconfig", "freetype", "glib2", "gtk2", "libXRender", "libXt", "pango", "mozilla-python27-mercurial", "openssh-clients", "nss-devel", "glibc-devel.i686", "libstdc++.i686", "zlib-devel.i686", "ncurses-devel.i686", "libX11-devel.i686", "mesa-libGL-devel.i686", "mesa-libGL-devel", "libX11-devel", "git", "libxml2"],
     "mock_files": [["/home/cltbld/.ssh", "/home/mock_mozilla/.ssh"]],
     "build_targets": ["droid", "package-emulator", "package-tests"],
     "upload_files": [

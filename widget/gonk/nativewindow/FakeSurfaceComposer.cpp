@@ -59,6 +59,12 @@ sp<IBinder> FakeSurfaceComposer::createDisplay(const String8& displayName,
     return nullptr;
 }
 
+#if ANDROID_VERSION >= 19
+void FakeSurfaceComposer::destroyDisplay(const sp<IBinder>& display)
+{
+}
+#endif
+
 sp<IBinder> FakeSurfaceComposer::getBuiltInDisplay(int32_t id) {
     return nullptr;
 }
@@ -90,6 +96,15 @@ status_t FakeSurfaceComposer::captureScreen(const sp<IBinder>& display,
         bool isCpuConsumer) {
     return INVALID_OPERATION;
 }
+
+#if ANDROID_VERSION >= 19
+status_t FakeSurfaceComposer::captureScreen(const sp<IBinder>& display,
+    const sp<IGraphicBufferProducer>& producer,
+    uint32_t reqWidth, uint32_t reqHeight,
+    uint32_t minLayerZ, uint32_t maxLayerZ) {
+    return INVALID_OPERATION;
+}
+#endif
 
 void FakeSurfaceComposer::blank(const sp<IBinder>& display) {
 }

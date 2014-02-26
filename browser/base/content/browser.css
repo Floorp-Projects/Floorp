@@ -389,7 +389,22 @@ panel[noactions] > richlistbox > richlistitem[type~="action"] > .ac-url-box > .a
 }
 
 #identity-icon-labels {
-  max-width: 12vw;
+  max-width: 18em;
+}
+@media (max-width: 700px) {
+  #identity-icon-labels {
+    max-width: 70px;
+  }
+}
+@media (max-width: 600px) {
+  #identity-icon-labels {
+    max-width: 60px;
+  }
+}
+@media (max-width: 500px) {
+  #identity-icon-labels {
+    max-width: 50px;
+  }
 }
 
 #identity-icon-country-label {
