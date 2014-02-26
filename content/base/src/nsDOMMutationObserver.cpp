@@ -52,11 +52,11 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMMutationRecord)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDOMMutationRecord)
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_6(nsDOMMutationRecord,
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_7(nsDOMMutationRecord,
                                         mTarget,
                                         mPreviousSibling, mNextSibling,
                                         mAddedNodes, mRemovedNodes,
-                                        mOwner)
+                                        mNext, mOwner)
 
 // Observer
 
@@ -339,7 +339,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMMutationObserver)
     tmp->mReceivers[i]->Disconnect(false);
   }
   tmp->mReceivers.Clear();
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPendingMutations)
+  tmp->ClearPendingRecords();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCallback)
   // No need to handle mTransientReceivers
   NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -348,7 +348,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMMutationObserver)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOwner)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mReceivers)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPendingMutations)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFirstPendingMutation)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCallback)
   // No need to handle mTransientReceivers
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
@@ -514,7 +514,7 @@ nsDOMMutationObserver::Disconnect()
   }
   mReceivers.Clear();
   mCurrentMutations.Clear();
-  mPendingMutations.Clear();
+  ClearPendingRecords();
 }
 
 void
@@ -522,7 +522,16 @@ nsDOMMutationObserver::TakeRecords(
                          nsTArray<nsRefPtr<nsDOMMutationRecord> >& aRetVal)
 {
   aRetVal.Clear();
-  mPendingMutations.SwapElements(aRetVal);
+  aRetVal.SetCapacity(mPendingMutationCount);
+  nsRefPtr<nsDOMMutationRecord> current;
+  current.swap(mFirstPendingMutation);
+  for (uint32_t i = 0; i < mPendingMutationCount; ++i) {
+    nsRefPtr<nsDOMMutationRecord> next;
+    current->mNext.swap(next);
+    *aRetVal.AppendElement() = current.forget();
+    current.swap(next);
+  }
+  ClearPendingRecords();
 }
 
 void
@@ -583,21 +592,28 @@ nsDOMMutationObserver::HandleMutation()
   mTransientReceivers.Clear();
 
   nsPIDOMWindow* outer = mOwner->GetOuterWindow();
-  if (!mPendingMutations.Length() || !outer ||
+  if (!mPendingMutationCount || !outer ||
       outer->GetCurrentInnerWindow() != mOwner) {
-    mPendingMutations.Clear();
+    ClearPendingRecords();
     return;
   }
 
-  nsTArray<nsRefPtr<nsDOMMutationRecord> > mutationsArray;
-  TakeRecords(mutationsArray);
   mozilla::dom::Sequence<mozilla::dom::OwningNonNull<nsDOMMutationRecord> >
     mutations;
-  uint32_t len = mutationsArray.Length();
-  NS_ENSURE_TRUE_VOID(mutations.SetCapacity(len));
-  for (uint32_t i = 0; i < len; ++i) {
-    *mutations.AppendElement() = mutationsArray[i].forget();
+  if (mutations.SetCapacity(mPendingMutationCount)) {
+    // We can't use TakeRecords easily here, because it deals with a
+    // different type of array, and we want to optimize out any extra copying.
+    nsRefPtr<nsDOMMutationRecord> current;
+    current.swap(mFirstPendingMutation);
+    for (uint32_t i = 0; i < mPendingMutationCount; ++i) {
+      nsRefPtr<nsDOMMutationRecord> next;
+      current->mNext.swap(next);
+      *mutations.AppendElement() = current.forget();
+      current.swap(next);
+    }
   }
+  ClearPendingRecords();
+
   mozilla::ErrorResult rv;
   mCallback->Call(this, mutations, *this, rv);
 }
@@ -673,9 +689,9 @@ nsDOMMutationObserver::CurrentRecord(const nsAString& aType)
 
   uint32_t last = sMutationLevel - 1;
   if (!mCurrentMutations[last]) {
-    nsDOMMutationRecord* r = new nsDOMMutationRecord(aType, GetParentObject());
+    nsRefPtr<nsDOMMutationRecord> r = new nsDOMMutationRecord(aType, GetParentObject());
     mCurrentMutations[last] = r;
-    mPendingMutations.AppendElement(r);
+    AppendMutationRecord(r.forget());
     ScheduleForRun();
   }
 
@@ -814,15 +830,15 @@ nsAutoMutationBatch::Done()
       for (uint32_t i = 0; i < mAddedNodes.Length(); ++i) {
         addedList->AppendElement(mAddedNodes[i]);
       }
-      nsDOMMutationRecord* m =
+      nsRefPtr<nsDOMMutationRecord> m =
         new nsDOMMutationRecord(NS_LITERAL_STRING("childList"),
                                 ob->GetParentObject());
-      ob->mPendingMutations.AppendElement(m);
       m->mTarget = mBatchTarget;
       m->mRemovedNodes = removedList;
       m->mAddedNodes = addedList;
       m->mPreviousSibling = mPrevSibling;
       m->mNextSibling = mNextSibling;
+      ob->AppendMutationRecord(m.forget());
     }
     // Always schedule the observer so that transient receivers are
     // removed correctly.
