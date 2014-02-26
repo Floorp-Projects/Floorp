@@ -261,6 +261,11 @@ toolbarpaletteitem > #personal-bookmarks > #PlacesToolbar,
   display: none;
 }
 
+#PlacesToolbarDropIndicatorHolder {
+  position: absolute;
+  top: 25%;
+}
+
 toolbarpaletteitem > #personal-bookmarks > #bookmarks-toolbar-placeholder,
 #personal-bookmarks[cui-areatype="menu-panel"] > #bookmarks-toolbar-placeholder,
 #personal-bookmarks[cui-areatype="toolbar"].overflowedItem > #bookmarks-toolbar-placeholder {
