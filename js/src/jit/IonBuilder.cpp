@@ -3032,13 +3032,12 @@ IonBuilder::filterTypesAtTest(MTest *test)
         return true;
 
     // Only do this optimization if the typeset does contains null or undefined.
-    if (!((removeUndefined && subject->resultTypeSet()->hasType(types::Type::UndefinedType())) ||
-        (removeNull && subject->resultTypeSet()->hasType(types::Type::NullType()))))
+    if ((!(removeUndefined && subject->resultTypeSet()->hasType(types::Type::UndefinedType())) &&
+         !(removeNull && subject->resultTypeSet()->hasType(types::Type::NullType()))))
     {
         return true;
     }
 
-    //printf("%d: replacing\n", script()->lineno());
     // Find all values on the stack that correspond to the subject
     // and replace it with a MIR with filtered TypeSet information.
     // Create the replacement MIR lazily upon first occurence.
