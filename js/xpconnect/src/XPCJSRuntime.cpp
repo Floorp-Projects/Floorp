@@ -46,6 +46,7 @@
 #include "nsAboutProtocolUtils.h"
 
 #include "GeckoProfiler.h"
+#include "nsIXULRuntime.h"
 #include "nsJSPrincipals.h"
 
 #ifdef MOZ_CRASHREPORTER
@@ -1498,6 +1499,45 @@ void XPCJSRuntime::SystemIsBeingShutDown()
             Enumerate(DetachedWrappedNativeProtoShutdownMarker, nullptr);
 }
 
+#define JS_OPTIONS_DOT_STR "javascript.options."
+
+static void
+ReloadPrefsCallback(const char *pref, void *data)
+{
+    XPCJSRuntime *runtime = reinterpret_cast<XPCJSRuntime *>(data);
+    JSRuntime *rt = runtime->Runtime();
+
+    bool safeMode = false;
+    nsCOMPtr<nsIXULRuntime> xr = do_GetService("@mozilla.org/xre/runtime;1");
+    if (xr) {
+        xr->GetInSafeMode(&safeMode);
+    }
+
+    bool useBaseline = Preferences::GetBool(JS_OPTIONS_DOT_STR "baselinejit") && !safeMode;
+    bool useTypeInference = Preferences::GetBool(JS_OPTIONS_DOT_STR "typeinference") && !safeMode;
+    bool useIon = Preferences::GetBool(JS_OPTIONS_DOT_STR "ion") && !safeMode;
+    bool useAsmJS = Preferences::GetBool(JS_OPTIONS_DOT_STR "asmjs") && !safeMode;
+
+    bool parallelParsing = Preferences::GetBool(JS_OPTIONS_DOT_STR "parallel_parsing");
+    bool parallelIonCompilation = Preferences::GetBool(JS_OPTIONS_DOT_STR
+                                                       "ion.parallel_compilation");
+    bool useBaselineEager = Preferences::GetBool(JS_OPTIONS_DOT_STR
+                                                 "baselinejit.unsafe_eager_compilation");
+    bool useIonEager = Preferences::GetBool(JS_OPTIONS_DOT_STR "ion.unsafe_eager_compilation");
+
+    JS::RuntimeOptionsRef(rt).setBaseline(useBaseline)
+                             .setTypeInference(useTypeInference)
+                             .setIon(useIon)
+                           .  setAsmJS(useAsmJS);
+
+    JS_SetParallelParsingEnabled(rt, parallelParsing);
+    JS_SetParallelIonCompilationEnabled(rt, parallelIonCompilation);
+    JS_SetGlobalJitCompilerOption(rt, JSJITCOMPILER_BASELINE_USECOUNT_TRIGGER,
+                                  useBaselineEager ? 0 : -1);
+    JS_SetGlobalJitCompilerOption(rt, JSJITCOMPILER_ION_USECOUNT_TRIGGER,
+                                  useIonEager ? 0 : -1);
+}
+
 XPCJSRuntime::~XPCJSRuntime()
 {
     // This destructor runs before ~CycleCollectedJSRuntime, which does the
@@ -1583,6 +1623,8 @@ XPCJSRuntime::~XPCJSRuntime()
         MOZ_ASSERT(mScratchStrings[i].empty(), "Short lived string still in use");
     }
 #endif
+
+    Preferences::UnregisterCallback(ReloadPrefsCallback, JS_OPTIONS_DOT_STR, this);
 }
 
 static void
@@ -3161,6 +3203,10 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     if (!JS_GetGlobalDebugHooks(runtime)->debuggerHandler)
         xpc_InstallJSDebuggerKeywordHandler(runtime);
 #endif
+
+    // Watch for the JS boolean options.
+    ReloadPrefsCallback(nullptr, this);
+    Preferences::RegisterCallback(ReloadPrefsCallback, JS_OPTIONS_DOT_STR, this);
 }
 
 // static
