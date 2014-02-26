@@ -4,21 +4,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsDOMCompositionEvent_h__
-#define nsDOMCompositionEvent_h__
+#ifndef mozilla_dom_CompositionEvent_h_
+#define mozilla_dom_CompositionEvent_h_
 
 #include "nsDOMUIEvent.h"
 #include "nsIDOMCompositionEvent.h"
 #include "mozilla/dom/CompositionEventBinding.h"
 #include "mozilla/EventForwards.h"
 
-class nsDOMCompositionEvent : public nsDOMUIEvent,
-                              public nsIDOMCompositionEvent
+namespace mozilla {
+namespace dom {
+
+class CompositionEvent : public nsDOMUIEvent,
+                         public nsIDOMCompositionEvent
 {
 public:
-  nsDOMCompositionEvent(mozilla::dom::EventTarget* aOwner,
-                        nsPresContext* aPresContext,
-                        mozilla::WidgetCompositionEvent* aEvent);
+  CompositionEvent(EventTarget* aOwner,
+                   nsPresContext* aPresContext,
+                   WidgetCompositionEvent* aEvent);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_FORWARD_TO_NSDOMUIEVENT
@@ -27,17 +30,16 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
   {
-    return mozilla::dom::CompositionEventBinding::Wrap(aCx, aScope, this);
+    return CompositionEventBinding::Wrap(aCx, aScope, this);
   }
 
-  void
-  InitCompositionEvent(const nsAString& aType,
-                       bool aCanBubble,
-                       bool aCancelable,
-                       nsIDOMWindow* aView,
-                       const nsAString& aData,
-                       const nsAString& aLocale,
-                       mozilla::ErrorResult& aRv)
+  void InitCompositionEvent(const nsAString& aType,
+                            bool aCanBubble,
+                            bool aCancelable,
+                            nsIDOMWindow* aView,
+                            const nsAString& aData,
+                            const nsAString& aLocale,
+                            ErrorResult& aRv)
   {
     aRv = InitCompositionEvent(aType, aCanBubble, aCancelable, aView,
                                aData, aLocale);
@@ -48,4 +50,7 @@ protected:
   nsString mLocale;
 };
 
-#endif // nsDOMCompositionEvent_h__
+} // namespace dom
+} // namespace mozilla
+
+#endif // mozilla_dom_CompositionEvent_h_
