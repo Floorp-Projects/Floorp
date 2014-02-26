@@ -1307,6 +1307,13 @@ if test "$GNU_CC"; then
         if test -z "$MOZ_NO_WLZDEFS"; then
             # Don't allow undefined symbols in libraries
             DSO_LDOPTS="$DSO_LDOPTS -Wl,-z,defs"
+
+            # BSDs need `environ' exposed for posix_spawn (bug 753046)
+            case "$OS_TARGET" in
+            DragonFly|FreeBSD|NetBSD|OpenBSD)
+                DSO_LDOPTS="$DSO_LDOPTS -Wl,--warn-unresolved-symbols"
+                ;;
+            esac
         fi
     fi
     WARNINGS_AS_ERRORS='-Werror'
