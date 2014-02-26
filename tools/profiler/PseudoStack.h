@@ -111,7 +111,8 @@ class ProfilerMarker {
   friend class ProfilerLinkedList<ProfilerMarker>;
 public:
   ProfilerMarker(const char* aMarkerName,
-         ProfilerMarkerPayload* aPayload = nullptr);
+         ProfilerMarkerPayload* aPayload = nullptr,
+         float aTime = 0);
 
   ~ProfilerMarker();
 
@@ -128,10 +129,13 @@ public:
     return mGenID + 2 <= aGenID;
   }
 
+  float GetTime();
+
 private:
   char* mMarkerName;
   ProfilerMarkerPayload* mPayload;
   ProfilerMarker* mNext;
+  float mTime;
   int mGenID;
 };
 
@@ -320,9 +324,9 @@ public:
     return mPendingUWTBuffers.getLinkedUWTBuffers();
   }
 
-  void addMarker(const char *aMarkerStr, ProfilerMarkerPayload *aPayload)
+  void addMarker(const char *aMarkerStr, ProfilerMarkerPayload *aPayload, float aTime)
   {
-    ProfilerMarker* marker = new ProfilerMarker(aMarkerStr, aPayload);
+    ProfilerMarker* marker = new ProfilerMarker(aMarkerStr, aPayload, aTime);
     mPendingMarkers.addMarker(marker);
   }
 

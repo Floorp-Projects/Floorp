@@ -149,13 +149,15 @@ public:
                                     uint32_t* aSeqno) MOZ_OVERRIDE;
     virtual bool RecvNotifyIMETextChange(const uint32_t& aStart,
                                          const uint32_t& aEnd,
-                                         const uint32_t& aNewEnd) MOZ_OVERRIDE;
+                                         const uint32_t& aNewEnd,
+                                         const bool& aCausedByComposition) MOZ_OVERRIDE;
     virtual bool RecvNotifyIMESelectedCompositionRect(const uint32_t& aOffset,
                                                       const nsIntRect& aRect,
                                                       const nsIntRect& aCaretRect) MOZ_OVERRIDE;
     virtual bool RecvNotifyIMESelection(const uint32_t& aSeqno,
                                         const uint32_t& aAnchor,
-                                        const uint32_t& aFocus) MOZ_OVERRIDE;
+                                        const uint32_t& aFocus,
+                                        const bool& aCausedByComposition) MOZ_OVERRIDE;
     virtual bool RecvNotifyIMETextHint(const nsString& aText) MOZ_OVERRIDE;
     virtual bool RecvEndIMEComposition(const bool& aCancel,
                                        nsString* aComposition) MOZ_OVERRIDE;

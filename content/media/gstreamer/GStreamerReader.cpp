@@ -789,7 +789,11 @@ nsresult GStreamerReader::GetBuffered(dom::TimeRanges* aBuffered,
     /* fast path for local or completely cached files */
     gint64 duration = 0;
 
-    duration = QueryDuration();
+    {
+      ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+      duration = mDecoder->GetMediaDuration();
+    }
+
     double end = (double) duration / GST_MSECOND;
     LOG(PR_LOG_DEBUG, "complete range [0, %f] for [0, %li]",
           end, resource->GetLength());
@@ -888,38 +892,6 @@ void GStreamerReader::ReadAndPushData(guint aLength)
    * it will disturb the GStreamer state machine.
    */
   MOZ_ASSERT(offset1 + bytesRead == offset2);
-}
-
-int64_t GStreamerReader::QueryDuration()
-{
-  gint64 duration = 0;
-  GstFormat format = GST_FORMAT_TIME;
-
-#if GST_VERSION_MAJOR >= 1
-  if (gst_element_query_duration(GST_ELEMENT(mPlayBin),
-      format, &duration)) {
-#else
-  if (gst_element_query_duration(GST_ELEMENT(mPlayBin),
-      &format, &duration)) {
-#endif
-    if (format == GST_FORMAT_TIME) {
-      LOG(PR_LOG_DEBUG, "pipeline duration %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (duration));
-      duration = GST_TIME_AS_USECONDS (duration);
-    }
-  }
-
-  {
-    ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-    int64_t media_duration = mDecoder->GetMediaDuration();
-    if (media_duration != -1 && media_duration > duration) {
-      // We decoded more than the reported duration (which could be estimated)
-      LOG(PR_LOG_DEBUG, "decoded duration > estimated duration");
-      duration = media_duration;
-    }
-  }
-
-  return duration;
 }
 
 void GStreamerReader::NeedDataCb(GstAppSrc* aSrc,

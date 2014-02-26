@@ -77,6 +77,7 @@ interface HTMLElement : Element {
 
   // Mozilla specific stuff
   // FIXME Bug 810677 Move className from HTMLElement to Element
+  [Pure]
            attribute DOMString className;
 
            attribute EventHandler oncopy;
