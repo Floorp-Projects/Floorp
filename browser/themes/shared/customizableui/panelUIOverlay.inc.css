@@ -141,6 +141,7 @@
 }
 
 #PanelUI-contents,
+#BMB_bookmarksPopup,
 .panel-mainview:not([panelid="PanelUI-popup"]) {
   max-width: @menuPanelWidth@;
 }
