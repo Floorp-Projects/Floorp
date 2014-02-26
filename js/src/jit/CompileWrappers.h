@@ -34,8 +34,8 @@ class CompileRuntime
     // &mainThread.ionTop
     const void *addressOfIonTop();
 
-    // rt->mainThread.ionStackLimit;
-    const void *addressOfIonStackLimit();
+    // rt->mainThread.jitStackLimit;
+    const void *addressOfJitStackLimit();
 
     // &mainThread.ionJSContext
     const void *addressOfJSContext();
