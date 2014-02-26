@@ -4185,11 +4185,6 @@ window > chatbox {
   }
 }
 
-#main-window[customizing] #navigator-toolbox::after {
-  margin-left: 2em;
-  margin-right: 2em;
-}
-
 /* End customization mode */
 
 #main-window[privatebrowsingmode=temporary] {

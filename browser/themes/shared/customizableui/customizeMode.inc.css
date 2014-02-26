@@ -8,7 +8,7 @@
   margin: 0 2em 2em;
 }
 
-#main-window:-moz-any([customize-entering],[customize-entered]) #navigator-toolbox > toolbar {
+#main-window:-moz-any([customize-entering],[customize-entered]) #navigator-toolbox {
   margin-left: 2em;
   margin-right: 2em;
 }
