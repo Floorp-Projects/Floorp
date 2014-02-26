@@ -29,7 +29,7 @@
 
 #include "nsMemoryImpl.h"
 #include "nsDebugImpl.h"
-#include "nsTraceRefcntImpl.h"
+#include "nsTraceRefcnt.h"
 #include "nsErrorService.h"
 
 #include "nsSupportsArray.h"
