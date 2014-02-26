@@ -1591,10 +1591,6 @@ toolbarbutton[type="socialmark"] > .toolbarbutton-icon {
   -moz-image-region: rect(0, 64px, 16px, 48px) !important;
 }
 
-#main-window[tabsintitlebar]:not([inFullscreen]) .tabbrowser-tab:not([selected]):not(:-moz-lwtheme) {
-  color: CaptionText;
-}
-
 /* tabbrowser-tab focus ring */
 .tabbrowser-tab:focus > .tab-stack > .tab-content > .tab-label {
   outline: 1px dotted;

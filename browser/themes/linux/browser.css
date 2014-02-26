@@ -1567,10 +1567,6 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   -moz-binding: url("chrome://browser/content/customizableui/toolbar.xml#toolbar-drag");
 }
 
-#TabsToolbar:not(:-moz-lwtheme) > #tabbrowser-tabs > .tabbrowser-tab:not([selected]) {
-  color: -moz-menubartext;
-}
-
 .tabbrowser-tab:focus > .tab-stack > .tab-content > .tab-label {
   outline: 1px dotted;
 }
