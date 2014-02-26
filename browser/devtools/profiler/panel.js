@@ -16,7 +16,7 @@ const {
 
 const { TextEncoder } = Cu.import("resource://gre/modules/commonjs/toolkit/loader.js", {});
 
-var EventEmitter = require("devtools/shared/event-emitter");
+var EventEmitter = require("devtools/toolkit/event-emitter");
 var Cleopatra    = require("devtools/profiler/cleopatra");
 var Sidebar      = require("devtools/profiler/sidebar");
 var ProfilerController = require("devtools/profiler/controller");

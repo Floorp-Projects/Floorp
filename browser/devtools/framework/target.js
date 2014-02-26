@@ -7,7 +7,7 @@
 const {Cc, Ci, Cu} = require("chrome");
 
 var promise = require("sdk/core/promise");
-var EventEmitter = require("devtools/shared/event-emitter");
+var EventEmitter = require("devtools/toolkit/event-emitter");
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DebuggerServer",
@@ -352,6 +352,8 @@ TabTarget.prototype = {
    * Setup listeners for remote debugging, updating existing ones as necessary.
    */
   _setupRemoteListeners: function TabTarget__setupRemoteListeners() {
+    this.client.addListener("closed", this.destroy);
+
     this._onTabDetached = (aType, aPacket) => {
       // We have to filter message to ensure that this detach is for this tab
       if (aPacket.from == this._form.actor) {
@@ -384,6 +386,7 @@ TabTarget.prototype = {
    * Teardown listeners for remote debugging.
    */
   _teardownRemoteListeners: function TabTarget__teardownRemoteListeners() {
+    this.client.removeListener("closed", this.destroy);
     this.client.removeListener("tabNavigated", this._onTabNavigated);
     this.client.removeListener("tabDetached", this._onTabDetached);
   },

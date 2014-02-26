@@ -4915,7 +4915,6 @@ document.addEventListener('DOMContentLoaded', function webViewerLoad(evt) {
 
   var file = window.location.href.split('#')[0];
 
-
   document.getElementById('openFile').setAttribute('hidden', 'true');
   document.getElementById('secondaryOpenFile').setAttribute('hidden', 'true');
 

@@ -722,15 +722,21 @@ toolbarpaletteitem[place="palette"] > #search-container {
   padding: .5em;
   margin: 0;
   -moz-box-flex: 1;
-  /* reduce the width with 2px for each button to compensate for two separators
-     of 3px. */
-  min-width: calc(@menuPanelButtonWidth@ - 2px);
-  max-width: calc(@menuPanelButtonWidth@ - 2px);
+  min-width: calc(@menuPanelButtonWidth@);
+  max-width: calc(@menuPanelButtonWidth@);
   /* We'd prefer to use height: auto here but it leads to layout bugs in the panel. Cope:
      1.2em for line height + 2 * .5em padding + margin on the label (2 * 2px) */
   height: calc(2.2em + 4px);
   max-height: none;
   -moz-box-orient: horizontal;
+}
+
+#edit-controls@inAnyPanel@ > #copy-button,
+#zoom-controls@inAnyPanel@ > #zoom-reset-button {
+  /* reduce the width with 2px for this button to compensate for two separators
+     of 1px. */
+  min-width: calc(@menuPanelButtonWidth@ - 2px);
+  max-width: calc(@menuPanelButtonWidth@ - 2px);
 }
 
 #edit-controls@inAnyPanel@ > toolbarbutton[disabled] > .toolbarbutton-icon,
@@ -762,8 +768,7 @@ toolbarpaletteitem[place="palette"] > #search-container {
   border-bottom-left-radius: 0;
 }
 
-#edit-controls > separator,
-#zoom-controls > separator {
+.toolbaritem-combined-buttons > separator {
   -moz-appearance: none;
   width: 3px;
   -moz-box-align: stretch;
@@ -773,6 +778,19 @@ toolbarpaletteitem[place="palette"] > #search-container {
   background-size: 1px, 1px, 1px;
   background-position: 0 0, 1px 0, 2px 0;
   background-repeat: no-repeat;
+}
+
+.toolbaritem-combined-buttons@inAnyPanel@ > separator {
+  margin: .5em 0;
+  width: 1px;
+  background: hsla(210,4%,10%,.15);
+  transition-property: margin;
+  transition-duration: 10ms;
+  transition-timing-function: ease;
+}
+
+.toolbaritem-combined-buttons@inAnyPanel@:hover > separator {
+  margin: 0;
 }
 
 #widget-overflow > .panel-arrowcontainer > .panel-arrowcontent {

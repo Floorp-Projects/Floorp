@@ -20,8 +20,8 @@ if (typeof PDFJS === 'undefined') {
   (typeof window !== 'undefined' ? window : this).PDFJS = {};
 }
 
-PDFJS.version = '0.8.990';
-PDFJS.build = '54f6291';
+PDFJS.version = '0.8.1041';
+PDFJS.build = '2188bcb';
 
 (function pdfjsWrapper() {
   // Use strict in our context only - users might not want it
@@ -3309,7 +3309,7 @@ var LinkAnnotation = (function LinkAnnotationClosure() {
         if (isName(url)) {
           // Some bad PDFs do not put parentheses around relative URLs.
           url = '/' + url.name;
-        } else {
+        } else if (url) {
           url = addDefaultProtocolToUrl(url);
         }
         // TODO: pdf spec mentions urls can be relative to a Base
@@ -3349,7 +3349,7 @@ var LinkAnnotation = (function LinkAnnotationClosure() {
 
   // Lets URLs beginning with 'www.' default to using the 'http://' protocol.
   function addDefaultProtocolToUrl(url) {
-    if (url.indexOf('www.') === 0) {
+    if (url && url.indexOf('www.') === 0) {
       return ('http://' + url);
     }
     return url;
@@ -3877,6 +3877,9 @@ var ChunkedStreamManager = (function ChunkedStreamManagerClosure() {
 
 
 
+// The maximum number of bytes fetched per range request
+var RANGE_CHUNK_SIZE = 65536;
+
 // TODO(mack): Make use of PDFJS.Util.inherit() when it becomes available
 var BasePdfManager = (function BasePdfManagerClosure() {
   function BasePdfManager() {
@@ -3990,9 +3993,6 @@ var LocalPdfManager = (function LocalPdfManagerClosure() {
 })();
 
 var NetworkPdfManager = (function NetworkPdfManagerClosure() {
-
-  var CHUNK_SIZE = 65536;
-
   function NetworkPdfManager(args, msgHandler) {
 
     this.msgHandler = msgHandler;
@@ -4005,7 +4005,7 @@ var NetworkPdfManager = (function NetworkPdfManagerClosure() {
       disableAutoFetch: args.disableAutoFetch,
       initialData: args.initialData
     };
-    this.streamManager = new ChunkedStreamManager(args.length, CHUNK_SIZE,
+    this.streamManager = new ChunkedStreamManager(args.length, RANGE_CHUNK_SIZE,
                                                   args.url, params);
 
     this.pdfModel = new PDFDocument(this, this.streamManager.getStream(),
@@ -31953,47 +31953,85 @@ var Lexer = (function LexerClosure() {
     nextChar: function Lexer_nextChar() {
       return (this.currentChar = this.stream.getByte());
     },
+    peekChar: function Lexer_peekChar() {
+      return this.stream.peekBytes(1)[0];
+    },
     getNumber: function Lexer_getNumber() {
-      var floating = false;
       var ch = this.currentChar;
-      var allDigits = ch >= 0x30 && ch <= 0x39;
-      var strBuf = this.strBuf;
-      strBuf.length = 0;
-      strBuf.push(String.fromCharCode(ch));
+      var eNotation = false;
+      var divideBy = 0; // different from 0 if it's a floating point value
+
+      var sign = 1;
+
+
+      if (ch === 0x2D) { // '-'
+        sign = -1;
+        ch = this.nextChar();
+      } else if (ch === 0x2B) { // '+'
+        ch = this.nextChar();
+      }
+      if (ch === 0x2E) { // '.'
+        divideBy = 10;
+        ch = this.nextChar();
+      }
+
+      if (ch < 0x30 || ch > 0x39) { // '0' - '9'
+        error('Invalid number: ' + String.fromCharCode(ch));
+        return 0;
+      }
+
+      var baseValue = ch - 0x30; // '0'
+      var powerValue = 0;
+      var powerValueSign = 1;
+
       while ((ch = this.nextChar()) >= 0) {
-        if (ch >= 0x30 && ch <= 0x39) { // '0'-'9'
-          strBuf.push(String.fromCharCode(ch));
-        } else if (ch === 0x2E && !floating) { // '.'
-          strBuf.push('.');
-          floating = true;
-          allDigits = false;
+        if (0x30 <= ch && ch <= 0x39) { // '0' - '9'
+          var currentDigit = ch - 0x30; // '0'
+          if (eNotation) { // We are after an 'e' or 'E'
+            powerValue = powerValue * 10 + currentDigit;
+          } else {
+            if (divideBy !== 0) { // We are after a point
+              divideBy *= 10;
+            }
+            baseValue = baseValue * 10 + currentDigit;
+          }
+        } else if (ch === 0x2E) { // '.'
+          if (divideBy === 0) {
+            divideBy = 1;
+          } else {
+            // A number can have only one '.'
+            break;
+          }
         } else if (ch === 0x2D) { // '-'
           // ignore minus signs in the middle of numbers to match
           // Adobe's behavior
           warn('Badly formated number');
-          allDigits = false;
         } else if (ch === 0x45 || ch === 0x65) { // 'E', 'e'
-          floating = true;
-          allDigits = false;
+          // 'E' can be either a scientific notation or the beginning of a new
+          // operator
+          var hasE = true;
+          ch = this.peekChar();
+          if (ch === 0x2B || ch === 0x2D) { // '+', '-'
+            powerValueSign = (ch === 0x2D) ? -1 : 1;
+            this.nextChar(); // Consume the sign character
+          } else if (ch < 0x30 || ch > 0x39) { // '0' - '9'
+            // The 'E' must be the beginning of a new operator
+            break;
+          }
+          eNotation = true;
         } else {
           // the last character doesn't belong to us
           break;
         }
       }
-      var value;
-      if (allDigits) {
-        value = 0;
-        var charCodeOfZero = 48;    // '0'
-        for (var i = 0, ii = strBuf.length; i < ii; i++) {
-          value = value * 10 + (strBuf[i].charCodeAt(0) - charCodeOfZero);
-        }
-      } else {
-        value = parseFloat(strBuf.join(''));
-        if (isNaN(value)) {
-          error('Invalid floating point number: ' + value);
-        }
+
+      if (divideBy !== 0) {
+        baseValue /= divideBy;
       }
-      return value;
+      if (eNotation) {
+        baseValue *= Math.pow(10, powerValueSign * powerValue);
+      }
+      return sign * baseValue;
     },
     getString: function Lexer_getString() {
       var numParen = 1;
@@ -34948,6 +34986,13 @@ var WorkerMessageHandler = PDFJS.WorkerMessageHandler = {
           if (!isInt(length)) {
             return;
           }
+          source.length = length;
+          if (length <= 2 * RANGE_CHUNK_SIZE) {
+            // The file size is smaller than the size of two chunks, so it does
+            // not make any sense to abort the request and retry with a range
+            // request.
+            return;
+          }
 
           // NOTE: by cancelling the full request, and then issuing range
           // requests, there will be an issue for sites where you can only
@@ -34955,7 +35000,6 @@ var WorkerMessageHandler = PDFJS.WorkerMessageHandler = {
           // server should not be returning that it can support range requests.
           networkManager.abortRequest(fullRequestXhrId);
 
-          source.length = length;
           try {
             pdfManager = new NetworkPdfManager(source, handler);
             pdfManagerPromise.resolve(pdfManager);
@@ -35159,8 +35203,8 @@ var WorkerMessageHandler = PDFJS.WorkerMessageHandler = {
         // Pre compile the pdf page and fetch the fonts/images.
         page.getOperatorList(handler).then(function(operatorList) {
 
-          info('page=%d - getOperatorList: time=%dms, len=%d', pageNum,
-              Date.now() - start, operatorList.fnArray.length);
+          info('page=' + pageNum + ' - getOperatorList: time=' +
+               (Date.now() - start) + 'ms, len=' + operatorList.fnArray.length);
 
         }, function(e) {
 
@@ -35201,8 +35245,8 @@ var WorkerMessageHandler = PDFJS.WorkerMessageHandler = {
         var start = Date.now();
         page.extractTextContent().then(function(textContent) {
           deferred.resolve(textContent);
-          info('text indexing: page=%d - time=%dms', pageNum,
-              Date.now() - start);
+          info('text indexing: page=' + pageNum + ' - time=' +
+               (Date.now() - start) + 'ms');
         }, function (e) {
           // Skip errored pages
           deferred.reject(e);
@@ -35224,8 +35268,43 @@ var WorkerMessageHandler = PDFJS.WorkerMessageHandler = {
 
 var consoleTimer = {};
 
+var workerConsole = {
+  log: function log() {
+    var args = Array.prototype.slice.call(arguments);
+    globalScope.postMessage({
+      action: 'console_log',
+      data: args
+    });
+  },
+
+  error: function error() {
+    var args = Array.prototype.slice.call(arguments);
+    globalScope.postMessage({
+      action: 'console_error',
+      data: args
+    });
+    throw 'pdf.js execution error';
+  },
+
+  time: function time(name) {
+    consoleTimer[name] = Date.now();
+  },
+
+  timeEnd: function timeEnd(name) {
+    var time = consoleTimer[name];
+    if (!time) {
+      error('Unknown timer name ' + name);
+    }
+    this.log('Timer:', name, Date.now() - time);
+  }
+};
+
+
 // Worker thread?
 if (typeof window === 'undefined') {
+  if (!('console' in globalScope)) {
+    globalScope.console = workerConsole;
+  }
 
   // Listen for unsupported features so we can pass them on to the main thread.
   PDFJS.UnsupportedManager.listen(function (msg) {
@@ -36914,18 +36993,18 @@ var JpxImage = (function JpxImageClosure() {
       }
       return ll;
     };
-    Transform.prototype.expand = function expand(buffer, bufferPadding, step) {
+    Transform.prototype.extend = function extend(buffer, offset, size) {
         // Section F.3.7 extending... using max extension of 4
-        var i1 = bufferPadding - 1, j1 = bufferPadding + 1;
-        var i2 = bufferPadding + step - 2, j2 = bufferPadding + step;
+        var i1 = offset - 1, j1 = offset + 1;
+        var i2 = offset + size - 2, j2 = offset + size;
         buffer[i1--] = buffer[j1++];
         buffer[j2++] = buffer[i2--];
         buffer[i1--] = buffer[j1++];
         buffer[j2++] = buffer[i2--];
         buffer[i1--] = buffer[j1++];
         buffer[j2++] = buffer[i2--];
-        buffer[i1--] = buffer[j1++];
-        buffer[j2++] = buffer[i2--];
+        buffer[i1] = buffer[j1];
+        buffer[j2] = buffer[i2];
     };
     Transform.prototype.iterate = function Transform_iterate(ll, hl, lh, hh,
                                                             u0, v0) {
@@ -36938,32 +37017,35 @@ var JpxImage = (function JpxImageClosure() {
       var width = llWidth + hlWidth;
       var height = llHeight + lhHeight;
       var items = new Float32Array(width * height);
-      for (var i = 0, ii = llHeight; i < ii; i++) {
+      var i, j, k, l;
+
+      for (i = 0; i < llHeight; i++) {
         var k = i * llWidth, l = i * 2 * width;
-        for (var j = 0, jj = llWidth; j < jj; j++, k++, l += 2)
+        for (var j = 0; j < llWidth; j++, k++, l += 2) {
           items[l] = llItems[k];
+        }
       }
-      for (var i = 0, ii = hlHeight; i < ii; i++) {
-        var k = i * hlWidth, l = i * 2 * width + 1;
-        for (var j = 0, jj = hlWidth; j < jj; j++, k++, l += 2)
+      for (i = 0; i < hlHeight; i++) {
+        k = i * hlWidth, l = i * 2 * width + 1;
+        for (j = 0; j < hlWidth; j++, k++, l += 2) {
           items[l] = hlItems[k];
+        }
       }
-      for (var i = 0, ii = lhHeight; i < ii; i++) {
-        var k = i * lhWidth, l = (i * 2 + 1) * width;
-        for (var j = 0, jj = lhWidth; j < jj; j++, k++, l += 2)
+      for (i = 0; i < lhHeight; i++) {
+        k = i * lhWidth, l = (i * 2 + 1) * width;
+        for (j = 0; j < lhWidth; j++, k++, l += 2) {
           items[l] = lhItems[k];
+        }
       }
-      for (var i = 0, ii = hhHeight; i < ii; i++) {
-        var k = i * hhWidth, l = (i * 2 + 1) * width + 1;
-        for (var j = 0, jj = hhWidth; j < jj; j++, k++, l += 2)
+      for (i = 0; i < hhHeight; i++) {
+        k = i * hhWidth, l = (i * 2 + 1) * width + 1;
+        for (j = 0; j < hhWidth; j++, k++, l += 2) {
           items[l] = hhItems[k];
+        }
       }
 
       var bufferPadding = 4;
-      var bufferLength = new Float32Array(Math.max(width, height) +
-        2 * bufferPadding);
-      var buffer = new Float32Array(bufferLength);
-      var bufferOut = new Float32Array(bufferLength);
+      var rowBuffer = new Float32Array(width + 2 * bufferPadding);
 
       // Section F.3.4 HOR_SR
       for (var v = 0; v < height; v++) {
@@ -36974,20 +37056,27 @@ var JpxImage = (function JpxImageClosure() {
           }
           continue;
         }
-
-        var k = v * width;
-        var l = bufferPadding;
-        for (var u = 0; u < width; u++, k++, l++)
-          buffer[l] = items[k];
-
-        this.expand(buffer, bufferPadding, width);
-        this.filter(buffer, bufferPadding, width, u0, bufferOut);
-
         k = v * width;
-        l = bufferPadding;
-        for (var u = 0; u < width; u++, k++, l++)
-          items[k] = bufferOut[l];
+        rowBuffer.set(items.subarray(k, k + width), bufferPadding);
+
+        this.extend(rowBuffer, bufferPadding, width);
+        this.filter(rowBuffer, bufferPadding, width, u0, rowBuffer);
+
+        items.set(rowBuffer.subarray(bufferPadding, bufferPadding + width), k);
       }
+
+      // Accesses to the items array can take long, because it may not fit into
+      // CPU cache and has to be fetched from main memory. Since subsequent
+      // accesses to the items array are not local when reading columns, we
+      // have a cache miss every time. To reduce cache misses, get up to
+      // 'numBuffers' items at a time and store them into the individual
+      // buffers. The colBuffers should be small enough to fit into CPU cache.
+      var numBuffers = 16;
+      var colBuffers = [];
+      for (i = 0; i < numBuffers; i++) {
+        colBuffers.push(new Float32Array(height + 2 * bufferPadding));
+      }
+      var b, currentBuffer = 0, ll = bufferPadding + height;
 
       // Section F.3.5 VER_SR
       for (var u = 0; u < width; u++) {
@@ -36999,19 +37088,33 @@ var JpxImage = (function JpxImageClosure() {
           continue;
         }
 
-        var k = u;
-        var l = bufferPadding;
-        for (var v = 0; v < height; v++, k += width, l++)
-          buffer[l] = items[k];
+        // if we ran out of buffers, copy several image columns at once
+        if (currentBuffer === 0) {
+          numBuffers = Math.min(width - u, numBuffers);
+          for (k = u, l = bufferPadding; l < ll; k += width, l++) {
+            for (b = 0; b < numBuffers; b++) {
+              colBuffers[b][l] = items[k + b];
+            }
+          }
+          currentBuffer = numBuffers;
+        }
 
-        this.expand(buffer, bufferPadding, height);
-        this.filter(buffer, bufferPadding, height, v0, bufferOut);
+        currentBuffer--;
+        var buffer = colBuffers[currentBuffer];
+        this.extend(buffer, bufferPadding, height);
+        this.filter(buffer, bufferPadding, height, v0, buffer);
 
-        k = u;
-        l = bufferPadding;
-        for (var v = 0; v < height; v++, k += width, l++)
-          items[k] = bufferOut[l];
+        // If this is last buffer in this group of buffers, flush all buffers.
+        if (currentBuffer === 0) {
+          k = u - numBuffers + 1;
+          for (l = bufferPadding; l < ll; k += width, l++) {
+            for (b = 0; b < numBuffers; b++) {
+              items[k + b] = colBuffers[b][l];
+            }
+          }
+        }
       }
+
       return {
         width: width,
         height: height,
@@ -39413,17 +39516,16 @@ var JpegImage = (function jpegImage() {
     var blocksPerLine = component.blocksPerLine;
     var blocksPerColumn = component.blocksPerColumn;
     var samplesPerLine = blocksPerLine << 3;
-    var R = new Int32Array(64), r = new Uint8Array(64);
+    var R = new Int32Array(64);
 
     // A port of poppler's IDCT method which in turn is taken from:
     //   Christoph Loeffler, Adriaan Ligtenberg, George S. Moschytz,
     //   "Practical Fast 1-D DCT Algorithms with 11 Multiplications",
     //   IEEE Intl. Conf. on Acoustics, Speech & Signal Processing, 1989,
     //   988-991.
-    function quantizeAndInverse(zz, dataOut, dataIn) {
+    function quantizeAndInverse(zz, p) {
       var qt = component.quantizationTable;
       var v0, v1, v2, v3, v4, v5, v6, v7, t;
-      var p = dataIn;
       var i;
 
       // dequant
@@ -39507,7 +39609,7 @@ var JpegImage = (function jpegImage() {
         if (p[1*8 + col] == 0 && p[2*8 + col] == 0 && p[3*8 + col] == 0 &&
             p[4*8 + col] == 0 && p[5*8 + col] == 0 && p[6*8 + col] == 0 &&
             p[7*8 + col] == 0) {
-          t = (dctSqrt2 * dataIn[i+0] + 8192) >> 14;
+          t = (dctSqrt2 * p[i+0] + 8192) >> 14;
           p[0*8 + col] = t;
           p[1*8 + col] = t;
           p[2*8 + col] = t;
@@ -39570,8 +39672,7 @@ var JpegImage = (function jpegImage() {
 
       // convert to 8-bit integers
       for (i = 0; i < 64; ++i) {
-        var sample = 128 + ((p[i] + 8) >> 4);
-        dataOut[i] = sample < 0 ? 0 : sample > 0xFF ? 0xFF : sample;
+        p[i] = clampTo8bit((p[i] + 2056) >> 4);
       }
     }
 
@@ -39581,13 +39682,13 @@ var JpegImage = (function jpegImage() {
       for (i = 0; i < 8; i++)
         lines.push(new Uint8Array(samplesPerLine));
       for (var blockCol = 0; blockCol < blocksPerLine; blockCol++) {
-        quantizeAndInverse(component.blocks[blockRow][blockCol], r, R);
+        quantizeAndInverse(component.blocks[blockRow][blockCol], R);
 
         var offset = 0, sample = blockCol << 3;
         for (j = 0; j < 8; j++) {
           var line = lines[scanLine + j];
           for (i = 0; i < 8; i++)
-            line[sample + i] = r[offset++];
+            line[sample + i] = R[offset++];
         }
       }
     }
@@ -39648,7 +39749,7 @@ var JpegImage = (function jpegImage() {
             for (var i = 0; i < blocksPerColumnForMcu; i++) {
               var row = [];
               for (var j = 0; j < blocksPerLineForMcu; j++)
-                row.push(new Int32Array(64));
+                row.push(new Int16Array(64));
               blocks.push(row);
             }
             component.blocksPerLine = blocksPerLine;
@@ -39852,41 +39953,35 @@ var JpegImage = (function jpegImage() {
     getData: function getData(width, height) {
       var scaleX = this.width / width, scaleY = this.height / height;
 
-      var component1, component2, component3, component4;
-      var component1Line, component2Line, component3Line, component4Line;
-      var x, y;
+      var component, componentLine, componentScaleX, componentScaleY;
+      var x, y, i;
       var offset = 0;
       var Y, Cb, Cr, K, C, M, Ye, R, G, B;
       var colorTransform;
-      var dataLength = width * height * this.components.length;
+      var numComponents = this.components.length;
+      var dataLength = width * height * numComponents;
       var data = new Uint8Array(dataLength);
-      switch (this.components.length) {
-        case 1:
-          component1 = this.components[0];
-          for (y = 0; y < height; y++) {
-            component1Line = component1.lines[0 | (y * component1.scaleY * scaleY)];
-            for (x = 0; x < width; x++) {
-              Y = component1Line[0 | (x * component1.scaleX * scaleX)];
 
-              data[offset++] = Y;
-            }
+      // First construct image data ...
+      for (i = 0; i < numComponents; i++) {
+        component = this.components[i];
+        componentScaleX = component.scaleX * scaleX;
+        componentScaleY = component.scaleY * scaleY;
+        offset = i;
+        for (y = 0; y < height; y++) {
+          componentLine = component.lines[0 | (y * componentScaleY)];
+          for (x = 0; x < width; x++) {
+            data[offset] = componentLine[0 | (x * componentScaleX)];
+            offset += numComponents;
           }
-          break;
-        case 2:
-          // PDF might compress two component data in custom colorspace
-          component1 = this.components[0];
-          component2 = this.components[1];
-          for (y = 0; y < height; y++) {
-            component1Line = component1.lines[0 | (y * component1.scaleY * scaleY)];
-            component2Line = component2.lines[0 | (y * component2.scaleY * scaleY)];
-            for (x = 0; x < width; x++) {
-              Y = component1Line[0 | (x * component1.scaleX * scaleX)];
-              data[offset++] = Y;
-              Y = component2Line[0 | (x * component2.scaleX * scaleX)];
-              data[offset++] = Y;
-            }
-          }
-          break;
+        }
+      }
+
+      // ... then transform colors, if necessary
+      switch (numComponents) {
+        case 1: case 2: break;
+        // no color conversion for one or two compoenents
+
         case 3:
           // The default transform for three components is true
           colorTransform = true;
@@ -39896,31 +39991,19 @@ var JpegImage = (function jpegImage() {
           else if (typeof this.colorTransform !== 'undefined')
             colorTransform = !!this.colorTransform;
 
-          component1 = this.components[0];
-          component2 = this.components[1];
-          component3 = this.components[2];
-          for (y = 0; y < height; y++) {
-            component1Line = component1.lines[0 | (y * component1.scaleY * scaleY)];
-            component2Line = component2.lines[0 | (y * component2.scaleY * scaleY)];
-            component3Line = component3.lines[0 | (y * component3.scaleY * scaleY)];
-            for (x = 0; x < width; x++) {
-              if (!colorTransform) {
-                R = component1Line[0 | (x * component1.scaleX * scaleX)];
-                G = component2Line[0 | (x * component2.scaleX * scaleX)];
-                B = component3Line[0 | (x * component3.scaleX * scaleX)];
-              } else {
-                Y = component1Line[0 | (x * component1.scaleX * scaleX)];
-                Cb = component2Line[0 | (x * component2.scaleX * scaleX)];
-                Cr = component3Line[0 | (x * component3.scaleX * scaleX)];
+          if (colorTransform) {
+            for (i = 0; i < dataLength; i += numComponents) {
+              Y  = data[i    ];
+              Cb = data[i + 1];
+              Cr = data[i + 2];
 
-                R = clampTo8bit(Y + 1.402 * (Cr - 128));
-                G = clampTo8bit(Y - 0.3441363 * (Cb - 128) - 0.71413636 * (Cr - 128));
-                B = clampTo8bit(Y + 1.772 * (Cb - 128));
-              }
+              R = clampTo8bit(Y + 1.402 * (Cr - 128));
+              G = clampTo8bit(Y - 0.3441363 * (Cb - 128) - 0.71413636 * (Cr - 128));
+              B = clampTo8bit(Y + 1.772 * (Cb - 128));
 
-              data[offset++] = R;
-              data[offset++] = G;
-              data[offset++] = B;
+              data[i    ] = R;
+              data[i + 1] = G;
+              data[i + 2] = B;
             }
           }
           break;
@@ -39933,35 +40016,20 @@ var JpegImage = (function jpegImage() {
           else if (typeof this.colorTransform !== 'undefined')
             colorTransform = !!this.colorTransform;
 
-          component1 = this.components[0];
-          component2 = this.components[1];
-          component3 = this.components[2];
-          component4 = this.components[3];
-          for (y = 0; y < height; y++) {
-            component1Line = component1.lines[0 | (y * component1.scaleY * scaleY)];
-            component2Line = component2.lines[0 | (y * component2.scaleY * scaleY)];
-            component3Line = component3.lines[0 | (y * component3.scaleY * scaleY)];
-            component4Line = component4.lines[0 | (y * component4.scaleY * scaleY)];
-            for (x = 0; x < width; x++) {
-              if (!colorTransform) {
-                C = component1Line[0 | (x * component1.scaleX * scaleX)];
-                M = component2Line[0 | (x * component2.scaleX * scaleX)];
-                Ye = component3Line[0 | (x * component3.scaleX * scaleX)];
-                K = component4Line[0 | (x * component4.scaleX * scaleX)];
-              } else {
-                Y = component1Line[0 | (x * component1.scaleX * scaleX)];
-                Cb = component2Line[0 | (x * component2.scaleX * scaleX)];
-                Cr = component3Line[0 | (x * component3.scaleX * scaleX)];
-                K = component4Line[0 | (x * component4.scaleX * scaleX)];
+          if (colorTransform) {
+            for (i = 0; i < dataLength; i += numComponents) {
+              Y  = data[i];
+              Cb = data[i + 1];
+              Cr = data[i + 2];
 
-                C = 255 - clampTo8bit(Y + 1.402 * (Cr - 128));
-                M = 255 - clampTo8bit(Y - 0.3441363 * (Cb - 128) - 0.71413636 * (Cr - 128));
-                Ye = 255 - clampTo8bit(Y + 1.772 * (Cb - 128));
-              }
-              data[offset++] = C;
-              data[offset++] = M;
-              data[offset++] = Ye;
-              data[offset++] = K;
+              C = 255 - clampTo8bit(Y + 1.402 * (Cr - 128));
+              M = 255 - clampTo8bit(Y - 0.3441363 * (Cb - 128) - 0.71413636 * (Cr - 128));
+              Ye = 255 - clampTo8bit(Y + 1.772 * (Cb - 128));
+
+              data[i    ] = C;
+              data[i + 1] = M;
+              data[i + 2] = Ye;
+              // K is unchanged
             }
           }
           break;
@@ -39972,54 +40040,49 @@ var JpegImage = (function jpegImage() {
     },
     copyToImageData: function copyToImageData(imageData) {
       var width = imageData.width, height = imageData.height;
+      var imageDataBytes = width * height * 4;
       var imageDataArray = imageData.data;
       var data = this.getData(width, height);
-      var i = 0, j = 0, x, y;
+      var i = 0, j = 0;
       var Y, K, C, M, R, G, B;
       switch (this.components.length) {
         case 1:
-          for (y = 0; y < height; y++) {
-            for (x = 0; x < width; x++) {
-              Y = data[i++];
+          while (j < imageDataBytes) {
+            Y = data[i++];
 
-              imageDataArray[j++] = Y;
-              imageDataArray[j++] = Y;
-              imageDataArray[j++] = Y;
-              imageDataArray[j++] = 255;
-            }
+            imageDataArray[j++] = Y;
+            imageDataArray[j++] = Y;
+            imageDataArray[j++] = Y;
+            imageDataArray[j++] = 255;
           }
           break;
         case 3:
-          for (y = 0; y < height; y++) {
-            for (x = 0; x < width; x++) {
-              R = data[i++];
-              G = data[i++];
-              B = data[i++];
+          while (j < imageDataBytes) {
+            R = data[i++];
+            G = data[i++];
+            B = data[i++];
 
-              imageDataArray[j++] = R;
-              imageDataArray[j++] = G;
-              imageDataArray[j++] = B;
-              imageDataArray[j++] = 255;
-            }
+            imageDataArray[j++] = R;
+            imageDataArray[j++] = G;
+            imageDataArray[j++] = B;
+            imageDataArray[j++] = 255;
           }
           break;
         case 4:
-          for (y = 0; y < height; y++) {
-            for (x = 0; x < width; x++) {
-              C = data[i++];
-              M = data[i++];
-              Y = data[i++];
-              K = data[i++];
+          while (j < imageDataBytes) {
+            C = data[i++];
+            M = data[i++];
+            Y = data[i++];
+            K = data[i++];
 
-              R = 255 - clampTo8bit(C * (1 - K / 255) + K);
-              G = 255 - clampTo8bit(M * (1 - K / 255) + K);
-              B = 255 - clampTo8bit(Y * (1 - K / 255) + K);
+            R = 255 - clampTo8bit(C * (1 - K / 255) + K);
+            G = 255 - clampTo8bit(M * (1 - K / 255) + K);
+            B = 255 - clampTo8bit(Y * (1 - K / 255) + K);
 
-              imageDataArray[j++] = R;
-              imageDataArray[j++] = G;
-              imageDataArray[j++] = B;
-              imageDataArray[j++] = 255;
-            }
+            imageDataArray[j++] = R;
+            imageDataArray[j++] = G;
+            imageDataArray[j++] = B;
+            imageDataArray[j++] = 255;
           }
           break;
         default:

@@ -16,7 +16,7 @@ let Utils = (function() {
   const {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
   const {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
   const {require} = devtools;
-  const EventEmitter = require("devtools/shared/event-emitter");
+  const EventEmitter = require("devtools/toolkit/event-emitter");
 
 
   function _createSetEventForwarder(key, finalStore) {

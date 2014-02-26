@@ -20,8 +20,8 @@ if (typeof PDFJS === 'undefined') {
   (typeof window !== 'undefined' ? window : this).PDFJS = {};
 }
 
-PDFJS.version = '0.8.990';
-PDFJS.build = '54f6291';
+PDFJS.version = '0.8.1041';
+PDFJS.build = '2188bcb';
 
 (function pdfjsWrapper() {
   // Use strict in our context only - users might not want it
@@ -3309,7 +3309,7 @@ var LinkAnnotation = (function LinkAnnotationClosure() {
         if (isName(url)) {
           // Some bad PDFs do not put parentheses around relative URLs.
           url = '/' + url.name;
-        } else {
+        } else if (url) {
           url = addDefaultProtocolToUrl(url);
         }
         // TODO: pdf spec mentions urls can be relative to a Base
@@ -3349,7 +3349,7 @@ var LinkAnnotation = (function LinkAnnotationClosure() {
 
   // Lets URLs beginning with 'www.' default to using the 'http://' protocol.
   function addDefaultProtocolToUrl(url) {
-    if (url.indexOf('www.') === 0) {
+    if (url && url.indexOf('www.') === 0) {
       return ('http://' + url);
     }
     return url;
@@ -4086,6 +4086,7 @@ var WorkerTransport = (function WorkerTransportClosure() {
 
       messageHandler.on('GetDoc', function transportDoc(data) {
         var pdfInfo = data.pdfInfo;
+        this.numPages = data.pdfInfo.numPages;
         var pdfDocument = new PDFDocumentProxy(pdfInfo, this);
         this.pdfDocument = pdfDocument;
         this.workerReadyPromise.resolve(pdfDocument);
@@ -4290,6 +4291,13 @@ var WorkerTransport = (function WorkerTransportClosure() {
     },
 
     getPage: function WorkerTransport_getPage(pageNumber, promise) {
+      if (pageNumber <= 0 || pageNumber > this.numPages ||
+          (pageNumber|0) !== pageNumber) {
+        var pagePromise = new PDFJS.LegacyPromise();
+        pagePromise.reject(new Error('Invalid page request'));
+        return pagePromise;
+      }
+
       var pageIndex = pageNumber - 1;
       if (pageIndex in this.pagePromises)
         return this.pagePromises[pageIndex];
