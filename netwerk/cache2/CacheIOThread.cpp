@@ -14,19 +14,25 @@
 namespace mozilla {
 namespace net {
 
+CacheIOThread* CacheIOThread::sSelf = nullptr;
+
 NS_IMPL_ISUPPORTS1(CacheIOThread, nsIThreadObserver)
 
 CacheIOThread::CacheIOThread()
 : mMonitor("CacheIOThread")
 , mThread(nullptr)
 , mLowestLevelWaiting(LAST_LEVEL)
+, mCurrentlyExecutingLevel(0)
 , mHasXPCOMEvents(false)
+, mRerunCurrentEvent(false)
 , mShutdown(false)
 {
+  sSelf = this;
 }
 
 CacheIOThread::~CacheIOThread()
 {
+  sSelf = nullptr;
 #ifdef DEBUG
   for (uint32_t level = 0; level < LAST_LEVEL; ++level) {
     MOZ_ASSERT(!mEventQueue[level].Length());
@@ -66,6 +72,27 @@ nsresult CacheIOThread::Dispatch(nsIRunnable* aRunnable, uint32_t aLevel)
 bool CacheIOThread::IsCurrentThread()
 {
   return mThread == PR_GetCurrentThread();
+}
+
+bool CacheIOThread::YieldInternal()
+{
+  if (!IsCurrentThread()) {
+    NS_WARNING("Trying to yield to priority events on non-cache2 I/O thread? "
+               "You probably do something wrong.");
+    return false;
+  }
+
+  if (mCurrentlyExecutingLevel == XPCOM_LEVEL) {
+    // Doesn't make any sense, since this handler is the one
+    // that would be executed as the next one.
+    return false;
+  }
+
+  if (!EventsPending(mCurrentlyExecutingLevel))
+    return false;
+
+  mRerunCurrentEvent = true;
+  return true;
 }
 
 nsresult CacheIOThread::Shutdown()
@@ -137,6 +164,8 @@ loopStart:
           "net::cache::io::level(xpcom)");
 
         mHasXPCOMEvents = false;
+        mCurrentlyExecutingLevel = XPCOM_LEVEL;
+
         MonitorAutoUnlock unlock(mMonitor);
 
         bool processedEvent;
@@ -204,6 +233,8 @@ void CacheIOThread::LoopOneLevel(uint32_t aLevel)
   events.SwapElements(mEventQueue[aLevel]);
   uint32_t length = events.Length();
 
+  mCurrentlyExecutingLevel = aLevel;
+
   bool returnEvents = false;
   uint32_t index;
   {
@@ -217,7 +248,19 @@ void CacheIOThread::LoopOneLevel(uint32_t aLevel)
         break;
       }
 
+      // Drop any previous flagging, only an event on the current level may set
+      // this flag.
+      mRerunCurrentEvent = false;
+
       events[index]->Run();
+
+      if (mRerunCurrentEvent) {
+        // The event handler yields to higher priority events and wants to rerun.
+        returnEvents = true;
+        break;
+      }
+
+      // Release outside the lock.
       events[index] = nullptr;
     }
   }
