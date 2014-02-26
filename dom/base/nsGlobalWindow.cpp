@@ -1568,7 +1568,7 @@ nsGlobalWindow::FreeInnerObjects()
     mDocBaseURI = mDoc->GetDocBaseURI();
 
     while (mDoc->EventHandlingSuppressed()) {
-      mDoc->UnsuppressEventHandlingAndFireEvents(false);
+      mDoc->UnsuppressEventHandlingAndFireEvents(nsIDocument::eEvents, false);
     }
   }
 
@@ -8282,7 +8282,7 @@ nsGlobalWindow::EnterModalState()
 
     mSuspendedDoc = topDoc;
     if (mSuspendedDoc) {
-      mSuspendedDoc->SuppressEventHandling();
+      mSuspendedDoc->SuppressEventHandling(nsIDocument::eEvents);
     }
   }
   topWin->mModalStateDepth++;
@@ -8379,7 +8379,8 @@ nsGlobalWindow::LeaveModalState()
 
     if (mSuspendedDoc) {
       nsCOMPtr<nsIDocument> currentDoc = topWin->GetExtantDoc();
-      mSuspendedDoc->UnsuppressEventHandlingAndFireEvents(currentDoc == mSuspendedDoc);
+      mSuspendedDoc->UnsuppressEventHandlingAndFireEvents(nsIDocument::eEvents,
+                                                          currentDoc == mSuspendedDoc);
       mSuspendedDoc = nullptr;
     }
   }

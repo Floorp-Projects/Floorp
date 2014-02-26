@@ -2872,7 +2872,7 @@ nsXMLHttpRequest::Send(nsIVariant* aVariant, const Nullable<RequestBody>& aBody)
             (suspendedWindow = suspendedWindow->GetCurrentInnerWindow())) {
           suspendedDoc = suspendedWindow->GetExtantDoc();
           if (suspendedDoc) {
-            suspendedDoc->SuppressEventHandling();
+            suspendedDoc->SuppressEventHandling(nsIDocument::eEvents);
           }
           suspendedWindow->SuspendTimeouts(1, false);
           resumeTimeoutRunnable = new nsResumeTimeoutsEvent(suspendedWindow);
@@ -2896,7 +2896,8 @@ nsXMLHttpRequest::Send(nsIVariant* aVariant, const Nullable<RequestBody>& aBody)
     }
 
     if (suspendedDoc) {
-      suspendedDoc->UnsuppressEventHandlingAndFireEvents(true);
+      suspendedDoc->UnsuppressEventHandlingAndFireEvents(nsIDocument::eEvents,
+                                                         true);
     }
 
     if (resumeTimeoutRunnable) {
