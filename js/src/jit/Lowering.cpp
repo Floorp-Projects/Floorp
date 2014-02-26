@@ -3331,6 +3331,14 @@ LIRGenerator::visitHaveSameClass(MHaveSameClass *ins)
 }
 
 bool
+LIRGenerator::visitHasClass(MHasClass *ins)
+{
+    JS_ASSERT(ins->object()->type() == MIRType_Object);
+    JS_ASSERT(ins->type() == MIRType_Boolean);
+    return define(new(alloc()) LHasClass(useRegister(ins->object())), ins);
+}
+
+bool
 LIRGenerator::visitAsmJSLoadGlobalVar(MAsmJSLoadGlobalVar *ins)
 {
     return define(new(alloc()) LAsmJSLoadGlobalVar, ins);

@@ -298,6 +298,7 @@ class ParallelSafetyVisitor : public MInstructionVisitor
     SAFE_OP(TypeObjectDispatch)
     SAFE_OP(IsCallable)
     SAFE_OP(HaveSameClass)
+    SAFE_OP(HasClass)
     UNSAFE_OP(EffectiveAddress)
     UNSAFE_OP(AsmJSUnsignedToDouble)
     UNSAFE_OP(AsmJSUnsignedToFloat32)
