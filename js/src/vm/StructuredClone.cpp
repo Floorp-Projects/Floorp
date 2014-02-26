@@ -1033,14 +1033,11 @@ JSStructuredCloneWriter::write(const Value &v)
                  * The cost of re-checking could be avoided by using
                  * NativeIterators.
                  */
-                RootedObject obj2(context());
-                RootedShape prop(context());
-                if (!HasOwnProperty<CanGC>(context(), obj->getOps()->lookupGeneric, obj, id,
-                                           &obj2, &prop)) {
+                bool found;
+                if (!HasOwnProperty(context(), obj, id, &found))
                     return false;
-                }
 
-                if (prop) {
+                if (found) {
                     RootedValue val(context());
                     if (!writeId(id) ||
                         !JSObject::getGeneric(context(), obj, obj, id, &val) ||
