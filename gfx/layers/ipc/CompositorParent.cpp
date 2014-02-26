@@ -38,11 +38,11 @@
 #include "mozilla/mozalloc.h"           // for operator new, etc
 #include "nsCOMPtr.h"                   // for already_AddRefed
 #include "nsDebug.h"                    // for NS_ABORT_IF_FALSE, etc
+#include "nsISupportsImpl.h"            // for MOZ_COUNT_CTOR, etc
 #include "nsIWidget.h"                  // for nsIWidget
 #include "nsRect.h"                     // for nsIntRect
 #include "nsTArray.h"                   // for nsTArray
 #include "nsThreadUtils.h"              // for NS_IsMainThread
-#include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc
 #include "nsXULAppAPI.h"                // for XRE_GetIOMessageLoop
 #ifdef XP_WIN
 #include "mozilla/layers/CompositorD3D11.h"

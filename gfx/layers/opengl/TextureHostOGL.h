@@ -28,7 +28,6 @@
 #include "nsCOMPtr.h"                   // for already_AddRefed
 #include "nsDebug.h"                    // for NS_WARNING
 #include "nsISupportsImpl.h"            // for TextureImage::Release, etc
-#include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc
 #include "OGLShaderProgram.h"           // for ShaderProgramType, etc
 #ifdef MOZ_WIDGET_GONK
 #include <ui/GraphicBuffer.h>

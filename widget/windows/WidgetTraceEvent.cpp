@@ -17,12 +17,12 @@
 #include "nsIAppShellService.h"
 #include "nsIBaseWindow.h"
 #include "nsIDocShell.h"
+#include "nsISupportsImpl.h"
 #include "nsIWidget.h"
 #include "nsIXULWindow.h"
 #include "nsAutoPtr.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
-#include "nsTraceRefcnt.h"
 #include "nsWindowDefs.h"
 
 namespace {

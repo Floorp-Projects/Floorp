@@ -89,7 +89,7 @@
     The following three macros (|NSCAP_ADDREF|, |NSCAP_RELEASE|, and |NSCAP_LOG_ASSIGNMENT|)
       allow external clients the ability to add logging or other interesting debug facilities.
       In fact, if you want |nsCOMPtr| to participate in the standard logging facility, you
-      provide (e.g., in "nsTraceRefcnt.h") suitable definitions
+      provide (e.g., in "nsISupportsImpl.h") suitable definitions
 
         #define NSCAP_ADDREF(this, ptr)         NS_ADDREF(ptr)
         #define NSCAP_RELEASE(this, ptr)        NS_RELEASE(ptr)
