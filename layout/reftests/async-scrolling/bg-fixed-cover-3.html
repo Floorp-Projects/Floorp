@@ -1,0 +1,16 @@
+<!DOCTYPE HTML>
+<html reftest-async-scroll
+      reftest-displayport-x="0" reftest-displayport-y="0"
+      reftest-displayport-w="800" reftest-displayport-h="2000"
+      reftest-async-scroll-x="0" reftest-async-scroll-y="300">
+<body style="overflow:hidden; height:3000px;
+             background-image:url(repeatable-diagonal-gradient.png), url(repeatable-diagonal-gradient.png);
+             background-attachment:fixed, scroll;
+             background-repeat:no-repeat;
+             background-position:0 300px;">
+  <!-- Test that scrolling content above background-attachment:fixed content but not
+       intersecting it doesn't get moved down to a layer below the
+       background-attachment:fixed content -->
+  <div style="position:absolute; background:black; left:0; top:600px; width:500px; height:200px;"></div>
+</body>
+</html>

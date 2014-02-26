@@ -1,0 +1,12 @@
+<!DOCTYPE HTML>
+<html reftest-async-scroll
+      reftest-displayport-x="0" reftest-displayport-y="0"
+      reftest-displayport-w="800" reftest-displayport-h="2000"
+      reftest-async-scroll-x="0" reftest-async-scroll-y="400">
+<body style="overflow:hidden; height:3000px">
+  <!-- Test that scrolling content covered by position-fixed content
+       gets rendered properly -->
+  <div style="position:absolute; background:black; top:300px; left:0; width:500px; height:200px; z-index:1"></div>
+  <div style="position:fixed; background:blue; top:200px; left:0; width:500px; height:400px; z-index:2"></div>
+</body>
+</html>
