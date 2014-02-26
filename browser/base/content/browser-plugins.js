@@ -33,14 +33,9 @@ var gPluginHandler = {
     let fallbackType = null;
     let blocklistState = null;
 
-    if (pluginElement instanceof HTMLAppletElement) {
-      tagMimetype = "application/x-java-vm";
-    } else {
-      tagMimetype = pluginElement.actualType;
-
-      if (tagMimetype == "") {
-        tagMimetype = pluginElement.type;
-      }
+    tagMimetype = pluginElement.actualType;
+    if (tagMimetype == "") {
+      tagMimetype = pluginElement.type;
     }
 
     if (gPluginHandler.isKnownPlugin(pluginElement)) {
@@ -389,6 +384,14 @@ var gPluginHandler = {
       }
     }
 
+    let closeIcon = this.getPluginUI(plugin, "closeIcon");
+    if (closeIcon) {
+      closeIcon.addEventListener("click", function(aEvent) {
+        if (aEvent.button == 0 && aEvent.isTrusted)
+          gPluginHandler.hideClickToPlayOverlay(plugin);
+      }, true);
+    }
+
     if (shouldShowNotification) {
       this._showClickToPlayNotification(browser, plugin, false);
     }
@@ -595,11 +598,6 @@ var gPluginHandler = {
 
     if (overlay) {
       overlay.addEventListener("click", gPluginHandler._overlayClickListener, true);
-      let closeIcon = this.getPluginUI(aPlugin, "closeIcon");
-      closeIcon.addEventListener("click", function(aEvent) {
-        if (aEvent.button == 0 && aEvent.isTrusted)
-          gPluginHandler.hideClickToPlayOverlay(aPlugin);
-      }, true);
     }
   },
 

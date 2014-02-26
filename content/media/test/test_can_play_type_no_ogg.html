@@ -21,10 +21,17 @@ a Bug 469247</a>
 
 <pre id="test">
 <script src="can_play_type_ogg.js"></script>
+<script>
 
-check_ogg(document.getElementById('v'), false);
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({"set": [["media.ogg.enabled", false]]},
+  function() {
+    check_ogg(document.getElementById('v'), false);
+    mediaTestCleanup();
+    SimpleTest.finish();
+  }
+);
 
-mediaTestCleanup();
 </script>
 </pre>
 </body>

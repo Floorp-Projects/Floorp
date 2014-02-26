@@ -178,6 +178,8 @@ const sdp_attrarray_t sdp_attr[SDP_MAX_ATTR_TYPES] =
       sdp_parse_attr_connection, sdp_build_attr_connection},
     {"extmap", sizeof("extmap"),
       sdp_parse_attr_extmap, sdp_build_attr_extmap},
+    {"identity", sizeof("identity"),
+      sdp_parse_attr_simple_string, sdp_build_attr_simple_string},
 };
 /* Note: These *must* be in the same order as the enum types. */
 const sdp_namearray_t sdp_media[SDP_MAX_MEDIA_TYPES] =
@@ -803,7 +805,7 @@ sdp_t *sdp_init_description (const char *peerconnection, void *config_p)
 
     sdp_p = (sdp_t *)SDP_MALLOC(sizeof(sdp_t));
     if (sdp_p == NULL) {
-	return (NULL);
+        return (NULL);
     }
 
     sstrncpy(sdp_p->peerconnection, peerconnection, sizeof(sdp_p->peerconnection));
@@ -995,9 +997,9 @@ sdp_result_e sdp_parse (sdp_t *sdp_p, char **bufp, u16 len)
      * we find a parsing error.
      */
     while (!end_found) {
-	/* If the last char of this line goes beyond the end of the buffer,
-	 * we don't parse it.
-	 */
+        /* If the last char of this line goes beyond the end of the buffer,
+         * we don't parse it.
+         */
         ptr = next_ptr;
         line_end = sdp_findchar(ptr, "\n");
         if (line_end >= (*bufp + len)) {
@@ -1010,8 +1012,8 @@ sdp_result_e sdp_parse (sdp_t *sdp_p, char **bufp, u16 len)
 
         /* Print the line if we're tracing. */
         if ((parse_done == FALSE) &&
-	  (sdp_p->debug_flag[SDP_DEBUG_TRACE])) {
-	    SDP_PRINT("%s ", sdp_p->debug_str);
+          (sdp_p->debug_flag[SDP_DEBUG_TRACE])) {
+            SDP_PRINT("%s ", sdp_p->debug_str);
 
             SDP_PRINT("%*s", (int)(line_end - ptr), ptr);
 
@@ -1241,9 +1243,9 @@ sdp_result_e sdp_free_description (sdp_t *sdp_p)
      */
     time_p = sdp_p->timespec_p;
     while (time_p != NULL) {
-	next_time_p = time_p->next_p;
-	SDP_FREE(time_p);
-	time_p = next_time_p;
+        next_time_p = time_p->next_p;
+        SDP_FREE(time_p);
+        time_p = next_time_p;
     }
 
     bw_p = &(sdp_p->bw);
@@ -1257,23 +1259,23 @@ sdp_result_e sdp_free_description (sdp_t *sdp_p)
     /* Free any session attr structures */
     attr_p = sdp_p->sess_attrs_p;
     while (attr_p != NULL) {
-	next_attr_p = attr_p->next_p;
-	sdp_free_attr(attr_p);
-	attr_p = next_attr_p;
+        next_attr_p = attr_p->next_p;
+        sdp_free_attr(attr_p);
+        attr_p = next_attr_p;
     }
 
     /* Free any mca structures */
     mca_p = sdp_p->mca_p;
     while (mca_p != NULL) {
-	next_mca_p = mca_p->next_p;
+        next_mca_p = mca_p->next_p;
 
-	/* Free any media attr structures */
-	attr_p = mca_p->media_attrs_p;
-	while (attr_p != NULL) {
-	    next_attr_p = attr_p->next_p;
-	    sdp_free_attr(attr_p);
-	    attr_p = next_attr_p;
-	}
+        /* Free any media attr structures */
+        attr_p = mca_p->media_attrs_p;
+        while (attr_p != NULL) {
+            next_attr_p = attr_p->next_p;
+            sdp_free_attr(attr_p);
+            attr_p = next_attr_p;
+        }
 
         /* Free the media profiles struct if allocated. */
         if (mca_p->media_profiles_p != NULL) {
@@ -1288,8 +1290,8 @@ sdp_result_e sdp_free_description (sdp_t *sdp_p)
             bw_data_p = bw_p->bw_data_list;
         }
 
-	SDP_FREE(mca_p);
-	mca_p = next_mca_p;
+        SDP_FREE(mca_p);
+        mca_p = next_mca_p;
     }
 
     SDP_FREE(sdp_p);

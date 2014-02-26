@@ -208,9 +208,7 @@ pref("media.fragmented-mp4.use-blank-decoder", false);
 #ifdef MOZ_RAW
 pref("media.raw.enabled", true);
 #endif
-#ifdef MOZ_OGG
 pref("media.ogg.enabled", true);
-#endif
 #ifdef MOZ_OPUS
 pref("media.opus.enabled", true);
 #endif
@@ -249,6 +247,12 @@ pref("media.navigator.permission.disabled", false);
 pref("media.peerconnection.default_iceservers", "[{\"url\": \"stun:stun.services.mozilla.com\"}]");
 pref("media.peerconnection.trickle_ice", true);
 pref("media.peerconnection.use_document_iceservers", true);
+// Do not enable identity before ensuring that the UX cannot be spoofed
+// see Bug 884573 for details
+// Do not enable identity before fixing domain comparison: see Bug 958741
+// Do not enable identity before fixing origin spoofing: see Bug 968335
+pref("media.peerconnection.identity.enabled", false);
+pref("media.peerconnection.identity.timeout", 5000);
 // These values (aec, agc, and noice) are from media/webrtc/trunk/webrtc/common_types.h
 // kXxxUnchanged = 0, kXxxDefault = 1, and higher values are specific to each 
 // setting (for Xxx = Ec, Agc, or Ns).  Defaults are all set to kXxxDefault here.
@@ -1905,6 +1909,11 @@ pref("plugins.enumerable_names", "Java,Nexus Personal,QuickTime,Shockwave");
 
 // The default value for nsIPluginTag.enabledState (STATE_ENABLED = 2)
 pref("plugin.default.state", 2);
+
+// The MIME type that should bind to legacy java-specific invocations like
+// <applet> and <object data="java:foo">. Setting this to a non-java MIME type
+// is undefined behavior.
+pref("plugin.java.mime", "application/x-java-vm");
 
 // How long in minutes we will allow a plugin to work after the user has chosen
 // to allow it "now"
