@@ -1,0 +1,97 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=969786
+
+Debugger.Source.prototype.introductionScript and .introductionOffset should
+behave when 'eval' is called with no scripted frames active at all.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Debugger.Source.prototype.introductionScript with no caller</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script>
+
+Components.utils.import("resource://gre/modules/jsdebugger.jsm");
+addDebuggerToGlobal(this);
+
+window.onload = function () {
+  SimpleTest.waitForExplicitFinish();
+
+  var dbg, iframeDO, doc, script2DO;
+
+  // Create an iframe to debug.
+  var iframe = document.createElement("iframe");
+  iframe.src = "data:text/html,<div>Hi!</div>";
+  iframe.onload = onLoadHandler;
+  document.body.appendChild(iframe);
+
+  function onLoadHandler() {
+    // Now that the iframe's window has been created, we can add
+    // it as a debuggee.
+    dbg = new Debugger;
+    iframeDO = dbg.addDebuggee(iframe.contentWindow);
+
+    doc = iframe.contentWindow.document;
+    var script = doc.createElement('script');
+    script.text = "setTimeout(eval.bind(null, 'debugger;'), 0);";
+    dbg.onDebuggerStatement = timerHandler;
+    doc.body.appendChild(script);
+  }
+
+  function timerHandler(frame) {
+    // The top stack frame's source should have an undefined
+    // introduction script and introduction offset.
+    var source = frame.script.source;
+    ok(source.introductionScript === undefined,
+       "setTimeout eval introductionScript is undefined");
+    ok(source.introductionOffset === undefined,
+       "setTimeout eval introductionOffset is undefined");
+
+    // Check that the above isn't just some quirk of iframes, or the
+    // browser milieu destroying information: an eval script should indeed
+    // have proper introduction information.
+    var script2 = doc.createElement('script');
+    script2.text = "eval('debugger;');";
+    script2DO = iframeDO.makeDebuggeeValue(script2);
+    dbg.onDebuggerStatement = evalHandler;
+    doc.body.appendChild(script2);
+  }
+
+  function evalHandler(frame) {
+    // The top stack frame's source should be introduced by the script that
+    // called eval.
+    var source = frame.script.source;
+    var frame2 = frame.older;
+
+    ok(source.introductionType === 'eval',
+       "top frame's source was introduced by 'eval'");
+    ok(source.introductionScript === frame2.script,
+       "eval frame's introduction script is the older frame's script");
+    ok(source.introductionOffset === frame2.offset,
+       "eval frame's introduction offset is current offset in older frame");
+    ok(source.introductionScript.source.element === script2DO,
+       "eval frame's introducer belongs to script2 element");
+
+    // The frame that called eval, in turn, should have no introduction
+    // information. (In the future, we certainly could point at the call
+    // that inserted the script element into the document; if that happens,
+    // we can update this test.)
+    ok(frame2.script.source.introductionType === undefined,
+       "older frame has no introduction type");
+    ok(frame2.script.source.introductionScript === undefined,
+       "older frame has no introduction script");
+    ok(frame2.script.source.introductionOffset === undefined,
+       "older frame has no introduction offset");
+
+    SimpleTest.finish();
+  }
+}
+</script>
+</pre>
+</body>
+</html>
