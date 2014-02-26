@@ -4862,9 +4862,8 @@ const nodeToShortcutMap = {
   "tabview-button": "key_tabview",
 };
 const gDynamicTooltipCache = new Map();
-function UpdateDynamicShortcutTooltipText(popupTriggerNode) {
-  let label = document.getElementById("dynamic-shortcut-tooltip-label");
-  let nodeId = popupTriggerNode.id;
+function UpdateDynamicShortcutTooltipText(aTooltip) {
+  let nodeId = aTooltip.triggerNode.id;
   if (!gDynamicTooltipCache.has(nodeId) && nodeId in nodeToTooltipMap) {
     let strId = nodeToTooltipMap[nodeId];
     let args = [];
@@ -4877,8 +4876,7 @@ function UpdateDynamicShortcutTooltipText(popupTriggerNode) {
     }
     gDynamicTooltipCache.set(nodeId, gNavigatorBundle.getFormattedString(strId, args));
   }
-  let desiredLabel = gDynamicTooltipCache.get(nodeId);
-  label.setAttribute("value", desiredLabel);
+  aTooltip.setAttribute("label", gDynamicTooltipCache.get(nodeId));
 }
 
 /**
