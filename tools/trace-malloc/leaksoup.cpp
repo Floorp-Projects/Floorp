@@ -92,6 +92,11 @@ static void print_escaped(FILE *aStream, const char* aData)
     fputs(buf, aStream);
 }
 
+static const char *allocation_format =
+  (sizeof(ADLog::Pointer) == 4) ? "0x%08zX" :
+  (sizeof(ADLog::Pointer) == 8) ? "0x%016zX" :
+  "UNEXPECTED sizeof(void*)";
+
 int main(int argc, char **argv)
 {
     if (argc != 2) {
@@ -352,17 +357,21 @@ int main(int argc, char **argv)
                     AllocationNode *target = (AllocationNode*)
                         PL_HashTableLookup(memory_map, *(void**)(e->data + d));
                     if (target) {
-                        printf("        <a href=\"#o%d\">0x%08X</a> &lt;%s&gt;",
-                               target - nodes,
-                               *(unsigned int*)(e->data + d),
+                        printf("        <a href=\"#o%d\">",
+                               target - nodes);
+                        printf(allocation_format,
+                               *(size_t*)(e->data + d));
+                        printf("</a> &lt;%s&gt;",
                                target->entry->type);
                         if (target->index != n->index) {
                             printf(", component %d", target->index);
                         }
                         printf("\n");
                     } else {
-                        printf("        0x%08X\n",
-                               *(unsigned int*)(e->data + d));
+                        printf("        ");
+                        printf(allocation_format,
+                               *(size_t*)(e->data + d));
+                        printf("\n");
                     }
                 }
 
