@@ -283,6 +283,7 @@ NetworkService.prototype = {
     let options = {
       cmd: "setDNS",
       ifname: networkInterface.name,
+      domain: "mozilla." + networkInterface.name + ".doman",
       dns1_str: networkInterface.dns1,
       dns2_str: networkInterface.dns2
     };
@@ -296,6 +297,7 @@ NetworkService.prototype = {
       ifname: network.name,
       oldIfname: (oldInterface && oldInterface !== network) ? oldInterface.name : null,
       gateway_str: network.gateway,
+      domain: "mozilla." + network.name + ".doman",
       dns1_str: network.dns1,
       dns2_str: network.dns2
     };
