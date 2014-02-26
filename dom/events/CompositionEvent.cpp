@@ -4,15 +4,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsDOMCompositionEvent.h"
-#include "prtime.h"
+#include "mozilla/dom/CompositionEvent.h"
 #include "mozilla/TextEvents.h"
+#include "prtime.h"
 
-using namespace mozilla;
+namespace mozilla {
+namespace dom {
 
-nsDOMCompositionEvent::nsDOMCompositionEvent(mozilla::dom::EventTarget* aOwner,
-                                             nsPresContext* aPresContext,
-                                             WidgetCompositionEvent* aEvent)
+CompositionEvent::CompositionEvent(EventTarget* aOwner,
+                                   nsPresContext* aPresContext,
+                                   WidgetCompositionEvent* aEvent)
   : nsDOMUIEvent(aOwner, aPresContext, aEvent ? aEvent :
                  new WidgetCompositionEvent(false, 0, nullptr))
 {
@@ -35,34 +36,34 @@ nsDOMCompositionEvent::nsDOMCompositionEvent(mozilla::dom::EventTarget* aOwner,
   // TODO: Native event should have locale information.
 }
 
-NS_IMPL_ADDREF_INHERITED(nsDOMCompositionEvent, nsDOMUIEvent)
-NS_IMPL_RELEASE_INHERITED(nsDOMCompositionEvent, nsDOMUIEvent)
+NS_IMPL_ADDREF_INHERITED(CompositionEvent, nsDOMUIEvent)
+NS_IMPL_RELEASE_INHERITED(CompositionEvent, nsDOMUIEvent)
 
-NS_INTERFACE_MAP_BEGIN(nsDOMCompositionEvent)
+NS_INTERFACE_MAP_BEGIN(CompositionEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCompositionEvent)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMUIEvent)
 
 NS_IMETHODIMP
-nsDOMCompositionEvent::GetData(nsAString& aData)
+CompositionEvent::GetData(nsAString& aData)
 {
   aData = mData;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMCompositionEvent::GetLocale(nsAString& aLocale)
+CompositionEvent::GetLocale(nsAString& aLocale)
 {
   aLocale = mLocale;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMCompositionEvent::InitCompositionEvent(const nsAString& aType,
-                                            bool aCanBubble,
-                                            bool aCancelable,
-                                            nsIDOMWindow* aView,
-                                            const nsAString& aData,
-                                            const nsAString& aLocale)
+CompositionEvent::InitCompositionEvent(const nsAString& aType,
+                                       bool aCanBubble,
+                                       bool aCancelable,
+                                       nsIDOMWindow* aView,
+                                       const nsAString& aData,
+                                       const nsAString& aLocale)
 {
   nsresult rv =
     nsDOMUIEvent::InitUIEvent(aType, aCanBubble, aCancelable, aView, 0);
@@ -73,13 +74,18 @@ nsDOMCompositionEvent::InitCompositionEvent(const nsAString& aType,
   return NS_OK;
 }
 
+} // namespace dom
+} // namespace mozilla
+
+using namespace mozilla;
+using namespace mozilla::dom;
+
 nsresult
 NS_NewDOMCompositionEvent(nsIDOMEvent** aInstancePtrResult,
-                          mozilla::dom::EventTarget* aOwner,
+                          EventTarget* aOwner,
                           nsPresContext* aPresContext,
                           WidgetCompositionEvent* aEvent)
 {
-  nsDOMCompositionEvent* event =
-    new nsDOMCompositionEvent(aOwner, aPresContext, aEvent);
+  CompositionEvent* event = new CompositionEvent(aOwner, aPresContext, aEvent);
   return CallQueryInterface(event, aInstancePtrResult);
 }
