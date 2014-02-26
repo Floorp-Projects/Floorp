@@ -8,6 +8,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
+#include "mozilla/MouseEvents.h"
 #include "nsWrapperCache.h"
 #include "nsAutoPtr.h"
 #include "Units.h"
@@ -21,6 +22,7 @@ class EventTarget;
 
 class Touch MOZ_FINAL : public nsISupports
                       , public nsWrapperCache
+                      , public WidgetPointerHelper
 {
 public:
   static bool PrefEnabled(JSContext* aCx, JSObject* aGlobal);
