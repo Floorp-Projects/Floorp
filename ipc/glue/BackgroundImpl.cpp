@@ -4,7 +4,6 @@
 
 #include "base/process_util.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/Atomics.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Services.h"
@@ -142,7 +141,7 @@ private:
 
   // This exists so that that [Assert]IsOnBackgroundThread() can continue to
   // work during shutdown.
-  static Atomic<PRThread*> sBackgroundPRThread;
+  static PRThread* sBackgroundPRThread;
 
   // This is only modified on the main thread. It is null if the thread does not
   // exist or is shutting down.
@@ -798,7 +797,7 @@ nsTArray<ParentImpl*>* ParentImpl::sLiveActorsForBackgroundThread;
 
 StaticRefPtr<nsITimer> ParentImpl::sShutdownTimer;
 
-Atomic<PRThread*> ParentImpl::sBackgroundPRThread = nullptr;
+PRThread* ParentImpl::sBackgroundPRThread = nullptr;
 
 MessageLoop* ParentImpl::sBackgroundThreadMessageLoop = nullptr;
 
@@ -1250,17 +1249,17 @@ ParentImpl::RequestMessageLoopRunnable::Run()
 
 #ifdef DEBUG
   {
+    PRThread* currentPRThread = PR_GetCurrentThread();
+    MOZ_ASSERT(currentPRThread);
+    MOZ_ASSERT_IF(sBackgroundPRThread, currentPRThread != sBackgroundPRThread);
+
     bool correctThread;
     MOZ_ASSERT(NS_SUCCEEDED(mTargetThread->IsOnCurrentThread(&correctThread)));
     MOZ_ASSERT(correctThread);
   }
 #endif
 
-  DebugOnly<PRThread*> oldBackgroundThread =
-    sBackgroundPRThread.exchange(PR_GetCurrentThread());
-
-  MOZ_ASSERT_IF(oldBackgroundThread,
-                PR_GetCurrentThread() != oldBackgroundThread);
+  sBackgroundPRThread = PR_GetCurrentThread();
 
   MOZ_ASSERT(!mMessageLoop);
 
@@ -1282,11 +1281,7 @@ NS_IMETHODIMP
 ParentImpl::ShutdownBackgroundThreadRunnable::Run()
 {
   AssertIsInMainProcess();
-
-  // It is possible that another background thread was created while this thread
-  // was shutting down. In that case we can't assert anything about
-  // sBackgroundPRThread and we should not modify it here.
-  sBackgroundPRThread.compareExchange(PR_GetCurrentThread(), nullptr);
+  AssertIsOnBackgroundThread();
 
   profiler_unregister_thread();
 
