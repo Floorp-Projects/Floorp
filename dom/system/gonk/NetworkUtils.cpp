@@ -211,17 +211,15 @@ CommandFunc NetworkUtils::sSetDnsChain[] = {
 };
 
 /**
- * Helper function to get the bit length from given mask.
+ * Helper function to get the mask from given prefix length.
  */
-static uint32_t getMaskLength(const uint32_t mask)
+static uint32_t makeMask(const uint32_t prefixLength)
 {
-  uint32_t netmask = ntohl(mask);
-  uint32_t len = 0;
-  while (netmask & 0x80000000) {
-    len++;
-    netmask = netmask << 1;
+  uint32_t mask = 0;
+  for (uint32_t i = 0; i < prefixLength; ++i) {
+    mask |= (0x80000000 >> i);
   }
-  return len;
+  return ntohl(mask);
 }
 
 /**
@@ -918,6 +916,7 @@ NetworkUtils::~NetworkUtils()
 }
 
 #define GET_CHAR(prop) NS_ConvertUTF16toUTF8(aOptions.prop).get()
+#define GET_FIELD(prop) aOptions.prop
 
 void NetworkUtils::ExecuteCommand(NetworkParams aOptions)
 {
@@ -1158,9 +1157,9 @@ bool NetworkUtils::removeHostRoutes(NetworkParams& aOptions)
 bool NetworkUtils::removeNetworkRoute(NetworkParams& aOptions)
 {
   uint32_t ip = inet_addr(GET_CHAR(mIp));
-  uint32_t netmask = inet_addr(GET_CHAR(mNetmask));
+  uint32_t prefixLength = GET_FIELD(mPrefixLength);
+  uint32_t netmask = makeMask(prefixLength);
   uint32_t subnet = ip & netmask;
-  uint32_t prefixLength = getMaskLength(netmask);
   const char* gateway = "0.0.0.0";
   struct in_addr addr;
   addr.s_addr = subnet;
@@ -1474,3 +1473,4 @@ void NetworkUtils::dumpParams(NetworkParams& aOptions, const char* aType)
 }
 
 #undef GET_CHAR
+#undef GET_FIELD
