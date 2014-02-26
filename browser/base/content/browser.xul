@@ -540,6 +540,11 @@
              defaultset="tabbrowser-tabs,new-tab-button,alltabs-button,tabs-closebutton"
              collapsed="true">
 
+#ifdef XP_LINUX
+      <hbox id="private-browsing-indicator"
+            skipintoolbarset="true"/>
+#endif
+
       <tabs id="tabbrowser-tabs"
             class="tabbrowser-tabs"
             tabbrowser="content"
