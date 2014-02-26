@@ -2101,7 +2101,6 @@ InitLayersAccelerationPrefs()
     sPrefLayersAccelerationDisabled = Preferences::GetBool("layers.acceleration.disabled", false);
     sPrefLayersPreferOpenGL = Preferences::GetBool("layers.prefer-opengl", false);
     sPrefLayersPreferD3D9 = Preferences::GetBool("layers.prefer-d3d9", false);
-    sPrefLayersDrawFPS = Preferences::GetBool("layers.acceleration.draw-fps", false);
     sPrefLayersDump = Preferences::GetBool("layers.dump", false);
     sPrefLayersScrollGraph = Preferences::GetBool("layers.scroll-graph", false);
     sPrefLayersEnableTiles = Preferences::GetBool("layers.enable-tiles", false);
@@ -2110,6 +2109,8 @@ InitLayersAccelerationPrefs()
     sBufferRotationEnabled = Preferences::GetBool("layers.bufferrotation.enabled", true);
     sComponentAlphaEnabled = Preferences::GetBool("layers.componentalpha.enabled", true);
     sPrefBrowserTabsRemoteAutostart = Preferences::GetBool("browser.tabs.remote.autostart", false);
+
+    Preferences::AddBoolVarCache(&sPrefLayersDrawFPS, "layers.acceleration.draw-fps", false);
 
 #ifdef XP_WIN
     if (sPrefLayersAccelerationForceEnabled) {
