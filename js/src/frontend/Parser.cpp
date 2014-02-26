@@ -6429,8 +6429,10 @@ template <typename ParseHandler>
 bool
 Parser<ParseHandler>::argumentList(Node listNode, bool *isSpread)
 {
-    if (tokenStream.matchToken(TOK_RP, TokenStream::Operand))
+    if (tokenStream.matchToken(TOK_RP, TokenStream::Operand)) {
+        handler.setEndPosition(listNode, pos().end);
         return true;
+    }
 
     uint32_t startYieldOffset = pc->lastYieldOffset;
     bool arg0 = true;
@@ -6483,6 +6485,7 @@ Parser<ParseHandler>::argumentList(Node listNode, bool *isSpread)
         report(ParseError, false, null(), JSMSG_PAREN_AFTER_ARGS);
         return false;
     }
+    handler.setEndPosition(listNode, pos().end);
     return true;
 }
 

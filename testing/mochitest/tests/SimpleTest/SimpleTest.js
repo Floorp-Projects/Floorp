@@ -313,6 +313,21 @@ SimpleTest._getCurrentTestURL = function() {
            "unknown test url";
 };
 
+SimpleTest._forceLogMessageOutput = false;
+
+/**
+ * Force all test messages to be displayed.  Only applies for the current test.
+ */
+SimpleTest.requestCompleteLog = function() {
+    if (SimpleTest._forceLogMessageOutput)
+        return;
+
+    SimpleTest._forceLogMessageOutput = true;
+    SimpleTest.registerCleanupFunction(function() {
+        SimpleTest._forceLogMessageOutput = false;
+    });
+};
+
 SimpleTest._logResult = (function () {
     var numCoalescedMessages = 1;
     var coalesceThreshold = 100;
@@ -334,7 +349,8 @@ SimpleTest._logResult = (function () {
         var shouldLog = (isError ||
                          passString == "TEST-INFO" ||
                          outputCoalescedMessage ||
-                         runningSingleTest);
+                         runningSingleTest ||
+                         SimpleTest._forceLogMessageOutput);
 
         if (!shouldLog) {
             ++numCoalescedMessages;

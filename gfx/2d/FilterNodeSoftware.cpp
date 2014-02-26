@@ -534,22 +534,22 @@ FilterNodeSoftware::Create(FilterType aType)
       filter = new FilterNodeUnpremultiplySoftware();
       break;
     case FilterType::POINT_DIFFUSE:
-      filter = new FilterNodeLightingSoftware<PointLightSoftware, DiffuseLightingSoftware>();
+      filter = new FilterNodeLightingSoftware<PointLightSoftware, DiffuseLightingSoftware>("FilterNodeLightingSoftware<PointLight, DiffuseLighting>");
       break;
     case FilterType::POINT_SPECULAR:
-      filter = new FilterNodeLightingSoftware<PointLightSoftware, SpecularLightingSoftware>();
+      filter = new FilterNodeLightingSoftware<PointLightSoftware, SpecularLightingSoftware>("FilterNodeLightingSoftware<PointLight, SpecularLighting>");
       break;
     case FilterType::SPOT_DIFFUSE:
-      filter = new FilterNodeLightingSoftware<SpotLightSoftware, DiffuseLightingSoftware>();
+      filter = new FilterNodeLightingSoftware<SpotLightSoftware, DiffuseLightingSoftware>("FilterNodeLightingSoftware<SpotLight, DiffuseLighting>");
       break;
     case FilterType::SPOT_SPECULAR:
-      filter = new FilterNodeLightingSoftware<SpotLightSoftware, SpecularLightingSoftware>();
+      filter = new FilterNodeLightingSoftware<SpotLightSoftware, SpecularLightingSoftware>("FilterNodeLightingSoftware<SpotLight, SpecularLighting>");
       break;
     case FilterType::DISTANT_DIFFUSE:
-      filter = new FilterNodeLightingSoftware<DistantLightSoftware, DiffuseLightingSoftware>();
+      filter = new FilterNodeLightingSoftware<DistantLightSoftware, DiffuseLightingSoftware>("FilterNodeLightingSoftware<DistantLight, DiffuseLighting>");
       break;
     case FilterType::DISTANT_SPECULAR:
-      filter = new FilterNodeLightingSoftware<DistantLightSoftware, SpecularLightingSoftware>();
+      filter = new FilterNodeLightingSoftware<DistantLightSoftware, SpecularLightingSoftware>("FilterNodeLightingSoftware<DistantLight, SpecularLighting>");
       break;
   }
   return filter;
@@ -3059,8 +3059,11 @@ static inline Point3D Normalized(const Point3D &vec) {
 }
 
 template<typename LightType, typename LightingType>
-FilterNodeLightingSoftware<LightType, LightingType>::FilterNodeLightingSoftware()
+FilterNodeLightingSoftware<LightType, LightingType>::FilterNodeLightingSoftware(const char* aTypeName)
  : mSurfaceScale(0)
+#if defined(MOZILLA_INTERNAL_API) && (defined(DEBUG) || defined(FORCE_BUILD_REFCNT_LOGGING))
+ , mTypeName(aTypeName)
+#endif
 {}
 
 template<typename LightType, typename LightingType>

@@ -619,6 +619,22 @@ intrinsic_InParallelSectionPar(ForkJoinContext *cx, unsigned argc, Value *vp)
 JS_JITINFO_NATIVE_PARALLEL(intrinsic_InParallelSection_jitInfo,
                            intrinsic_InParallelSectionPar);
 
+/* These wrappers are needed in order to recognize the function
+ * pointers within the JIT, and the raw js:: functions can't be used
+ * directly because they take a ThreadSafeContext* argument.
+ */
+bool
+js::intrinsic_ObjectIsTransparentTypedObject(JSContext *cx, unsigned argc, Value *vp)
+{
+    return js::ObjectIsTransparentTypedObject(cx, argc, vp);
+}
+
+bool
+js::intrinsic_ObjectIsOpaqueTypedObject(JSContext *cx, unsigned argc, Value *vp)
+{
+    return js::ObjectIsOpaqueTypedObject(cx, argc, vp);
+}
+
 /**
  * Returns the default locale as a well-formed, but not necessarily canonicalized,
  * BCP-47 language tag.
@@ -699,13 +715,13 @@ static const JSFunctionSpec intrinsic_functions[] = {
               JSNativeThreadSafeWrapper<js::ObjectIsTypeDescr>,
               &js::ObjectIsTypeDescrJitInfo, 5, 0),
     JS_FNINFO("ObjectIsTransparentTypedObject",
-              JSNativeThreadSafeWrapper<js::ObjectIsTransparentTypedObject>,
+              intrinsic_ObjectIsTransparentTypedObject,
               &js::ObjectIsTransparentTypedObjectJitInfo, 5, 0),
     JS_FNINFO("TypedObjectIsAttached",
               JSNativeThreadSafeWrapper<js::TypedObjectIsAttached>,
               &js::TypedObjectIsAttachedJitInfo, 1, 0),
     JS_FNINFO("ObjectIsOpaqueTypedObject",
-              JSNativeThreadSafeWrapper<js::ObjectIsOpaqueTypedObject>,
+              intrinsic_ObjectIsOpaqueTypedObject,
               &js::ObjectIsOpaqueTypedObjectJitInfo, 5, 0),
     JS_FNINFO("ClampToUint8",
               JSNativeThreadSafeWrapper<js::ClampToUint8>,

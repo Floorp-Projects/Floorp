@@ -10,6 +10,7 @@ toolkit.jar:
    res/plaintext.css     (plaintext.css)
    res/viewsource.css    (viewsource.css)
 *  res/forms.css    (forms.css)
+   res/number-control.css    (number-control.css)
    res/arrow.gif    (arrow.gif)
    res/arrowd.gif   (arrowd.gif)
 
