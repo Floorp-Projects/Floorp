@@ -603,7 +603,8 @@ nsDocumentViewer::SyncParentSubDocMap()
       if (parent_doc) {
         if (mDocument &&
             parent_doc->GetSubDocumentFor(content) != mDocument) {
-          mDocument->SuppressEventHandling(parent_doc->EventHandlingSuppressed());
+          mDocument->SuppressEventHandling(nsIDocument::eEvents,
+                                           parent_doc->EventHandlingSuppressed());
         }
         return parent_doc->SetSubDocumentFor(content->AsElement(), mDocument);
       }
