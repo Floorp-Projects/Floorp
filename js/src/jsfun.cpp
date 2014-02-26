@@ -1532,7 +1532,7 @@ FunctionConstructor(JSContext *cx, unsigned argc, Value *vp, GeneratorKind gener
            .setFileAndLine(filename, 1)
            .setNoScriptRval(false)
            .setCompileAndGo(true)
-           .setIntroductionInfo(introducerFilename, introductionType, lineno, pcOffset);
+           .setIntroductionInfo(introducerFilename, introductionType, lineno, script, pcOffset);
 
     unsigned n = args.length() ? args.length() - 1 : 0;
     if (n > 0) {
