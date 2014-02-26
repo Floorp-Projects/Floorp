@@ -659,7 +659,6 @@ class FastInvokeGuard
 #ifdef JS_ION
     // Constructing an IonContext is pretty expensive due to the TLS access,
     // so only do this if we have to.
-    mozilla::Maybe<jit::IonContext> ictx_;
     bool useIon_;
 #endif
 
@@ -696,8 +695,6 @@ class FastInvokeGuard
                 if (!script_)
                     return false;
             }
-            if (ictx_.empty())
-                ictx_.construct(cx, (js::jit::TempAllocator *)nullptr);
             JS_ASSERT(fun_->nonLazyScript() == script_);
 
             jit::MethodStatus status = jit::CanEnterUsingFastInvoke(cx, script_, args_.length());

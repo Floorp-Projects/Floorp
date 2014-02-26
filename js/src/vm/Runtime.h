@@ -1770,6 +1770,19 @@ struct JSRuntime : public JS::shadow::Runtime,
 
 namespace js {
 
+// When entering JIT code, the calling JSContext* is stored into the thread's
+// PerThreadData. This function retrieves the JSContext with the pre-condition
+// that the caller is JIT code or C++ called directly from JIT code. This
+// function should not be called from arbitrary locations since the JSContext
+// may be the wrong one.
+static inline JSContext *
+GetJSContextFromJitCode()
+{
+    JSContext *cx = TlsPerThreadData.get()->ionJSContext;
+    JS_ASSERT(cx);
+    return cx;
+}
+
 /*
  * Flags accompany script version data so that a) dynamically created scripts
  * can inherit their caller's compile-time properties and b) scripts can be
