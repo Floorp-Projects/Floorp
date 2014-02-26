@@ -202,8 +202,8 @@ struct SuppressErrorsGuard
     }
 };
 
-static JSString *
-ComputeStackString(JSContext *cx)
+JSString *
+js::ComputeStackString(JSContext *cx)
 {
     StringBuffer sb(cx);
 
