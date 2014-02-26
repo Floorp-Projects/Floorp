@@ -1810,6 +1810,17 @@ HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
   // convey the new redirection limit
   httpChannel->SetRedirectionLimit(mRedirectionLimit - 1);
 
+  // convey the Accept header value
+  {
+    nsAutoCString oldAcceptValue;
+    nsresult hasHeader = mRequestHead.GetHeader(nsHttp::Accept, oldAcceptValue);
+    if (NS_SUCCEEDED(hasHeader)) {
+      httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Accept"),
+                                    oldAcceptValue,
+                                    false);
+    }
+  }
+
   nsCOMPtr<nsIHttpChannelInternal> httpInternal = do_QueryInterface(newChannel);
   if (httpInternal) {
     // convey the mForceAllowThirdPartyCookie flag
