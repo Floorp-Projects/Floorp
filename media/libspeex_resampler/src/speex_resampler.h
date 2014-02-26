@@ -74,6 +74,7 @@
 #define speex_resampler_get_input_latency CAT_PREFIX(RANDOM_PREFIX,_resampler_get_input_latency)
 #define speex_resampler_get_output_latency CAT_PREFIX(RANDOM_PREFIX,_resampler_get_output_latency)
 #define speex_resampler_skip_zeros CAT_PREFIX(RANDOM_PREFIX,_resampler_skip_zeros)
+#define speex_resampler_set_skip_frac_num CAT_PREFIX(RANDOM_PREFIX,_resampler_set_skip_frac_num)
 #define speex_resampler_reset_mem CAT_PREFIX(RANDOM_PREFIX,_resampler_reset_mem)
 #define speex_resampler_strerror CAT_PREFIX(RANDOM_PREFIX,_resampler_strerror)
 
@@ -325,6 +326,22 @@ int speex_resampler_get_output_latency(SpeexResamplerState *st);
  * @param st Resampler state
  */
 int speex_resampler_skip_zeros(SpeexResamplerState *st);
+
+/** Set the numerator in a fraction determining the advance through input
+ * samples before writing any output samples. The denominator of the fraction
+ * is the value returned from speex_resampler_get_ratio() in ratio_den. This
+ * is only useful before starting to use a newly created or reset resampler.
+ * If the first input sample is interpreted as the signal at time
+ * input_latency*in_rate, then the first output sample represents the signal
+ * at the time frac_num/ratio_num*out_rate.
+ * This is intended for careful alignment of output sample points wrt input
+ * sample points. Large values are not an efficient offset into the in buffer.
+ * @param st Resampler state
+ * @param skip_frac_num Numerator of the offset fraction,
+ *                      between 0 and ratio_den-1.
+ */
+int speex_resampler_set_skip_frac_num(SpeexResamplerState *st,
+                                      spx_uint32_t skip_frac_num);
 
 /** Reset a resampler so a new (unrelated) stream can be processed.
  * @param st Resampler state
