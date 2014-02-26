@@ -74,9 +74,22 @@ else:
 
 if CONFIG['OS_TARGET'] == 'Darwin':
     DEFINES['__APPLE_USE_RFC_2292'] = 1
+    DEFINES['__APPLE__'] = False
 
 if CONFIG['OS_TARGET'] in ('Linux', 'Android'):
     # to make sure that in6_pktinfo gets defined on all distros
     DEFINES['_GNU_SOURCE'] = True
+
+if CONFIG['OS_TARGET'] == 'FreeBSD':
+    DEFINES['__FreeBSD__'] = False
+
+if CONFIG['OS_TARGET'] == 'NetBSD':
+    DEFINES['__NetBSD__'] = False
+
+if CONFIG['OS_TARGET'] == 'OpenBSD':
+    DEFINES['__OpenBSD__'] = False
+
+if CONFIG['OS_TARGET'] == 'DragonFly':
+    DEFINES['__DragonFly__'] = False
 
 NO_PGO = True # Don't PGO
