@@ -7,7 +7,7 @@
 
 const { Cc, Ci, Cu, Cr } = require("chrome");
 const promise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("devtools/toolkit/event-emitter");
 const { WebGLFront } = require("devtools/server/actors/webgl");
 
 function ShaderEditorPanel(iframeWindow, toolbox) {

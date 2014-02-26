@@ -9,7 +9,7 @@ const {Cc, Ci, Cu} = require("chrome");
 loader.lazyImporter(this, "devtools", "resource://gre/modules/devtools/Loader.jsm");
 loader.lazyImporter(this, "promise", "resource://gre/modules/Promise.jsm", "Promise");
 loader.lazyGetter(this, "HUDService", () => require("devtools/webconsole/hudservice"));
-loader.lazyGetter(this, "EventEmitter", () => require("devtools/shared/event-emitter"));
+loader.lazyGetter(this, "EventEmitter", () => require("devtools/toolkit/event-emitter"));
 loader.lazyImporter(this, "gDevTools", "resource:///modules/devtools/gDevTools.jsm");
 
 /**

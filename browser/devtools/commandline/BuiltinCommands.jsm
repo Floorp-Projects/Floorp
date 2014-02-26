@@ -17,7 +17,7 @@ let promise = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js").P
 Cu.import("resource://gre/modules/osfile.jsm");
 
 Cu.import("resource://gre/modules/devtools/gcli.jsm");
-Cu.import("resource:///modules/devtools/shared/event-emitter.js");
+Cu.import("resource://gre/modules/devtools/event-emitter.js");
 
 let devtools = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools;
 let Telemetry = devtools.require("devtools/shared/telemetry");

@@ -21,7 +21,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
-Cu.import("resource:///modules/devtools/shared/event-emitter.js");
+Cu.import("resource://gre/modules/devtools/event-emitter.js");
 Cu.import("resource:///modules/devtools/StyleEditorUtil.jsm");
 
 const LOAD_ERROR = "error-load";

@@ -5,7 +5,7 @@
 "use strict";
 
 let { Cu } = require("chrome");
-let EventEmitter = require("devtools/shared/event-emitter");
+let EventEmitter = require("devtools/toolkit/event-emitter");
 
 Cu.import("resource:///modules/devtools/SideMenuWidget.jsm");
 Cu.import("resource:///modules/devtools/ViewHelpers.jsm");

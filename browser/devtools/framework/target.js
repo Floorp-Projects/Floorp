@@ -7,7 +7,7 @@
 const {Cc, Ci, Cu} = require("chrome");
 
 var promise = require("sdk/core/promise");
-var EventEmitter = require("devtools/shared/event-emitter");
+var EventEmitter = require("devtools/toolkit/event-emitter");
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DebuggerServer",
