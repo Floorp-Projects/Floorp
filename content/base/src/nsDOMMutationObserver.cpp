@@ -113,16 +113,15 @@ nsMutationReceiver::AttributeWillChange(nsIDocument* aDocument,
   }
 
   nsDOMMutationRecord* m =
-    Observer()->CurrentRecord(NS_LITERAL_STRING("attributes"));
+    Observer()->CurrentRecord(nsGkAtoms::attributes);
 
   NS_ASSERTION(!m->mTarget || m->mTarget == aElement,
                "Wrong target!");
-  NS_ASSERTION(m->mAttrName.IsVoid() ||
-               m->mAttrName.Equals(nsDependentAtomString(aAttribute)),
+  NS_ASSERTION(!m->mAttrName || m->mAttrName == aAttribute,
                "Wrong attribute!");
   if (!m->mTarget) {
     m->mTarget = aElement;
-    m->mAttrName = nsAtomString(aAttribute);
+    m->mAttrName = aAttribute;
     if (aNameSpaceID == kNameSpaceID_None) {
       m->mAttrNamespace.SetIsVoid(true);
     } else {
@@ -150,7 +149,7 @@ nsMutationReceiver::CharacterDataWillChange(nsIDocument *aDocument,
   }
   
   nsDOMMutationRecord* m =
-    Observer()->CurrentRecord(NS_LITERAL_STRING("characterData"));
+    Observer()->CurrentRecord(nsGkAtoms::characterData);
  
   NS_ASSERTION(!m->mTarget || m->mTarget == aContent,
                "Wrong target!");
@@ -183,7 +182,7 @@ nsMutationReceiver::ContentAppended(nsIDocument* aDocument,
   }
 
   nsDOMMutationRecord* m =
-    Observer()->CurrentRecord(NS_LITERAL_STRING("childList"));
+    Observer()->CurrentRecord(nsGkAtoms::childList);
   NS_ASSERTION(!m->mTarget || m->mTarget == parent,
                "Wrong target!");
   if (m->mTarget) {
@@ -221,7 +220,7 @@ nsMutationReceiver::ContentInserted(nsIDocument* aDocument,
   }
 
   nsDOMMutationRecord* m =
-    Observer()->CurrentRecord(NS_LITERAL_STRING("childList"));
+    Observer()->CurrentRecord(nsGkAtoms::childList);
   if (m->mTarget) {
     // Already handled case.
     return;  
@@ -293,7 +292,7 @@ nsMutationReceiver::ContentRemoved(nsIDocument* aDocument,
 
   if (ChildList() && (Subtree() || parent == Target())) {
     nsDOMMutationRecord* m =
-      Observer()->CurrentRecord(NS_LITERAL_STRING("childList"));
+      Observer()->CurrentRecord(nsGkAtoms::childList);
     if (m->mTarget) {
       // Already handled case.
       return;
@@ -680,7 +679,7 @@ nsDOMMutationObserver::HandleMutationsInternal()
 }
 
 nsDOMMutationRecord*
-nsDOMMutationObserver::CurrentRecord(const nsAString& aType)
+nsDOMMutationObserver::CurrentRecord(nsIAtom* aType)
 {
   NS_ASSERTION(sMutationLevel > 0, "Unexpected mutation level!");
 
@@ -696,7 +695,7 @@ nsDOMMutationObserver::CurrentRecord(const nsAString& aType)
     ScheduleForRun();
   }
 
-  NS_ASSERTION(mCurrentMutations[last]->mType.Equals(aType),
+  NS_ASSERTION(mCurrentMutations[last]->mType == aType,
                "Unexpected MutationRecord type!");
 
   return mCurrentMutations[last];
@@ -832,7 +831,7 @@ nsAutoMutationBatch::Done()
         addedList->AppendElement(mAddedNodes[i]);
       }
       nsRefPtr<nsDOMMutationRecord> m =
-        new nsDOMMutationRecord(NS_LITERAL_STRING("childList"),
+        new nsDOMMutationRecord(nsGkAtoms::childList,
                                 ob->GetParentObject());
       m->mTarget = mBatchTarget;
       m->mRemovedNodes = removedList;
