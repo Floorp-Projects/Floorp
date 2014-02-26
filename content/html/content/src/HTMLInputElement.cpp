@@ -2140,7 +2140,15 @@ HTMLInputElement::GetValueIfStepped(int32_t aStep,
     return NS_OK;
   }
 
-  if (GetValidityState(VALIDITY_STATE_STEP_MISMATCH) &&
+  // If the current value isn't aligned on a step, then shift the value to the
+  // nearest step that will cause the addition of aStep steps (further below)
+  // to |value| to hit the required value.
+  // (Instead of using GetValidityState(VALIDITY_STATE_STEP_MISMATCH) we have
+  // to check HasStepMismatch and pass true as its aUseZeroIfValueNaN argument
+  // since we need to treat the value "" as zero for stepping purposes even
+  // though we don't suffer from a step mismatch when our value is the empty
+  // string.)
+  if (HasStepMismatch(true) &&
       value != minimum && value != maximum) {
     if (aStep > 0) {
       value -= NS_floorModulo(value - GetStepBase(), step);
@@ -3641,12 +3649,20 @@ HTMLInputElement::StepNumberControlForUserEvent(int32_t aDirection)
     // want to wipe out what they typed if they try to increment/decrement the
     // value. Better is to highlight the value as being invalid so that they
     // can correct what they typed.
-    // We pass 'true' for UpdateValidityUIBits' aIsFocused argument regardless
-    // because we need the UI to update _now_ or the user will wonder why the
-    // step behavior isn't functioning.
-    UpdateValidityUIBits(true);
-    UpdateState(true);
-    return;
+    // We only do this if there actually is a value typed in by/displayed to
+    // the user. (IsValid() can return false if the 'required' attribute is
+    // set and the value is the empty string.)
+    nsNumberControlFrame* numberControlFrame =
+      do_QueryFrame(GetPrimaryFrame());
+    if (numberControlFrame &&
+        !numberControlFrame->AnonTextControlIsEmpty()) {
+      // We pass 'true' for UpdateValidityUIBits' aIsFocused argument
+      // regardless because we need the UI to update _now_ or the user will
+      // wonder why the step behavior isn't functioning.
+      UpdateValidityUIBits(true);
+      UpdateState(true);
+      return;
+    }
   }
 
   Decimal newValue = Decimal::nan(); // unchanged if value will not change
@@ -6433,7 +6449,7 @@ HTMLInputElement::IsRangeUnderflow() const
 }
 
 bool
-HTMLInputElement::HasStepMismatch() const
+HTMLInputElement::HasStepMismatch(bool aUseZeroIfValueNaN) const
 {
   if (!DoesStepApply()) {
     return false;
@@ -6441,8 +6457,12 @@ HTMLInputElement::HasStepMismatch() const
 
   Decimal value = GetValueAsDecimal();
   if (value.isNaN()) {
-    // The element can't suffer from step mismatch if it's value isn't a number.
-    return false;
+    if (aUseZeroIfValueNaN) {
+      value = 0;
+    } else {
+      // The element can't suffer from step mismatch if it's value isn't a number.
+      return false;
+    }
   }
 
   Decimal step = GetStep();
