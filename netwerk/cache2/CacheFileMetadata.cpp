@@ -861,5 +861,27 @@ CacheFileMetadata::ParseKey(const nsACString &aKey)
   return NS_OK;
 }
 
+// Memory reporting
+
+size_t
+CacheFileMetadata::SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
+{
+  size_t n = 0;
+  // mHandle reported via CacheFileIOManager.
+  n += mKey.SizeOfExcludingThisIfUnshared(mallocSizeOf);
+  n += mallocSizeOf(mHashArray);
+  n += mallocSizeOf(mBuf);
+  n += mallocSizeOf(mWriteBuf);
+  // mListener is usually the owning CacheFile.
+
+  return n;
+}
+
+size_t
+CacheFileMetadata::SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
+{
+  return mallocSizeOf(this) + SizeOfExcludingThis(mallocSizeOf);
+}
+
 } // net
 } // mozilla

@@ -45,6 +45,10 @@ public:
   nsresult Shutdown();
   already_AddRefed<nsIEventTarget> Target();
 
+  // Memory reporting
+  size_t SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
+
 private:
   static void ThreadFunc(void* aClosure);
   void ThreadFunc();

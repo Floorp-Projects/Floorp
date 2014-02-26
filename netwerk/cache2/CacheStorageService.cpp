@@ -6,6 +6,7 @@
 #include "CacheStorageService.h"
 #include "CacheFileIOManager.h"
 #include "CacheObserver.h"
+#include "CacheIndex.h"
 
 #include "nsICacheStorageVisitor.h"
 #include "nsIObserverService.h"
@@ -68,7 +69,7 @@ CacheMemoryConsumer::DoMemoryReport(uint32_t aCurrentSize)
     CacheStorageService::Self()->OnMemoryConsumptionChange(this, aCurrentSize);
 }
 
-NS_IMPL_ISUPPORTS1(CacheStorageService, nsICacheStorageService)
+NS_IMPL_ISUPPORTS2(CacheStorageService, nsICacheStorageService, nsIMemoryReporter)
 
 CacheStorageService* CacheStorageService::sSelf = nullptr;
 
@@ -84,6 +85,8 @@ CacheStorageService::CacheStorageService()
 
   sSelf = this;
   sGlobalEntryTables = new GlobalEntryTables();
+
+  RegisterStrongMemoryReporter(this);
 }
 
 CacheStorageService::~CacheStorageService()
@@ -584,7 +587,7 @@ void CacheFilesDeletor::Callback()
 
   nsCOMPtr<nsIObserverService> obsSvc = mozilla::services::GetObserverService();
   if (obsSvc) {
-    obsSvc->NotifyObservers(CacheStorageService::Self(),
+    obsSvc->NotifyObservers(CacheStorageService::SelfISupports(),
                             "cacheservice:empty-cache",
                             nullptr);
   }
@@ -973,7 +976,7 @@ CacheStorageService::RecordMemoryOnlyEntry(CacheEntry* aEntry,
       return;
     }
 
-    entries = new CacheEntryTable();
+    entries = new CacheEntryTable(CacheEntryTable::MEMORY_ONLY);
     sGlobalEntryTables->Put(memoryStorageID, entries);
     LOG(("  new memory-only storage table for %s", memoryStorageID.get()));
   }
@@ -1191,7 +1194,7 @@ CacheStorageService::AddStorageEntry(nsCSubstring const& aContextKey,
     // Ensure storage table
     CacheEntryTable* entries;
     if (!sGlobalEntryTables->Get(aContextKey, &entries)) {
-      entries = new CacheEntryTable();
+      entries = new CacheEntryTable(CacheEntryTable::ALL_ENTRIES);
       sGlobalEntryTables->Put(aContextKey, entries);
       LOG(("  new storage entries table for context %s", aContextKey.BeginReading()));
     }
@@ -1469,6 +1472,136 @@ CacheStorageService::CacheFileDoomed(nsILoadContextInfo* aLoadContextInfo,
   return NS_OK;
 }
 
+// nsIMemoryReporter
+
+size_t
+CacheStorageService::SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
+{
+  CacheStorageService::Self()->Lock().AssertCurrentThreadOwns();
+
+  size_t n = 0;
+  // The elemets are referenced by sGlobalEntryTables and are reported from there
+  n += mFrecencyArray.SizeOfExcludingThis(mallocSizeOf);
+  // The elemets are referenced by sGlobalEntryTables and are reported from there
+  n += mExpirationArray.SizeOfExcludingThis(mallocSizeOf);
+  // Entries reported manually in CacheStorageService::CollectReports callback
+  if (sGlobalEntryTables) {
+    n += sGlobalEntryTables->SizeOfIncludingThis(nullptr, mallocSizeOf);
+  }
+
+  return n;
+}
+
+size_t
+CacheStorageService::SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
+{
+  return mallocSizeOf(this) + SizeOfExcludingThis(mallocSizeOf);
+}
+
+namespace { // anon
+
+class ReportStorageMemoryData
+{
+public:
+  nsIMemoryReporterCallback *mHandleReport;
+  nsISupports *mData;
+};
+
+size_t CollectEntryMemory(nsACString const & aKey,
+                          nsRefPtr<mozilla::net::CacheEntry> const & aEntry,
+                          mozilla::MallocSizeOf mallocSizeOf,
+                          void * aClosure)
+{
+  CacheStorageService::Self()->Lock().AssertCurrentThreadOwns();
+
+  CacheEntryTable* aTable = static_cast<CacheEntryTable*>(aClosure);
+
+  size_t n = 0;
+  n += aKey.SizeOfExcludingThisIfUnshared(mallocSizeOf);
+
+  // Bypass memory-only entries, those will be reported when iterating
+  // the memory only table. Memory-only entries are stored in both ALL_ENTRIES
+  // and MEMORY_ONLY hashtables.
+  if (aTable->Type() == CacheEntryTable::MEMORY_ONLY || aEntry->UsingDisk())
+    n += aEntry->SizeOfIncludingThis(mallocSizeOf);
+
+  return n;
+}
+
+PLDHashOperator ReportStorageMemory(const nsACString& aKey,
+                                    CacheEntryTable* aTable,
+                                    void* aClosure)
+{
+  CacheStorageService::Self()->Lock().AssertCurrentThreadOwns();
+
+  size_t size = aTable->SizeOfIncludingThis(&CollectEntryMemory,
+                                            CacheStorageService::MallocSizeOf,
+                                            aTable);
+
+  ReportStorageMemoryData& data = *static_cast<ReportStorageMemoryData*>(aClosure);
+  data.mHandleReport->Callback(
+    EmptyCString(),
+    nsPrintfCString("explicit/network/cache2/%s-storage(%s)",
+      aTable->Type() == CacheEntryTable::MEMORY_ONLY ? "memory" : "disk",
+      aKey.BeginReading()),
+    nsIMemoryReporter::KIND_HEAP,
+    nsIMemoryReporter::UNITS_BYTES,
+    size,
+    NS_LITERAL_CSTRING("Memory used by the cache storage."),
+    data.mData);
+
+  return PL_DHASH_NEXT;
+}
+
+} // anon
+
+NS_IMETHODIMP
+CacheStorageService::CollectReports(nsIMemoryReporterCallback* aHandleReport, nsISupports* aData)
+{
+  nsresult rv;
+
+  rv = MOZ_COLLECT_REPORT(
+    "explicit/network/cache2/io", KIND_HEAP, UNITS_BYTES,
+    CacheFileIOManager::SizeOfIncludingThis(MallocSizeOf),
+    "Memory used by the cache IO manager.");
+  if (NS_WARN_IF(NS_FAILED(rv)))
+    return rv;
+
+  rv = MOZ_COLLECT_REPORT(
+    "explicit/network/cache2/index", KIND_HEAP, UNITS_BYTES,
+    CacheIndex::SizeOfIncludingThis(MallocSizeOf),
+    "Memory used by the cache index.");
+  if (NS_WARN_IF(NS_FAILED(rv)))
+    return rv;
+
+  MutexAutoLock lock(mLock);
+
+  // Report the service instance, this doesn't report entries, done lower
+  rv = MOZ_COLLECT_REPORT(
+    "explicit/network/cache2/service", KIND_HEAP, UNITS_BYTES,
+    SizeOfIncludingThis(MallocSizeOf),
+    "Memory used by the cache storage service.");
+  if (NS_WARN_IF(NS_FAILED(rv)))
+    return rv;
+
+  // Report all entries, each storage separately (by the context key)
+  //
+  // References are:
+  // sGlobalEntryTables to N CacheEntryTable
+  // CacheEntryTable to N CacheEntry
+  // CacheEntry to 1 CacheFile
+  // CacheFile to
+  //   N CacheFileChunk (keeping the actual data)
+  //   1 CacheFileMetadata (keeping http headers etc.)
+  //   1 CacheFileOutputStream
+  //   N CacheFileInputStream
+  ReportStorageMemoryData data;
+  data.mHandleReport = aHandleReport;
+  data.mData = aData;
+  sGlobalEntryTables->EnumerateRead(&ReportStorageMemory, &data);
+
+  return NS_OK;
+}
 
 } // net
 } // mozilla
