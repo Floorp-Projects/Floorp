@@ -39,13 +39,13 @@ EXPORTS.mozilla.dom += [
     'EventTarget.h',
     'PointerEvent.h',
     'Touch.h',
+    'WheelEvent.h',
 ]
 
 if CONFIG['MOZ_WEBSPEECH']:
     EXPORTS.mozilla.dom += ['SpeechRecognitionError.h']
 
 UNIFIED_SOURCES += [
-    'DOMWheelEvent.cpp',
     'EventTarget.cpp',
     'nsAsyncDOMEvent.cpp',
     'nsContentEventHandler.cpp',
@@ -80,6 +80,7 @@ UNIFIED_SOURCES += [
     'PointerEvent.cpp',
     'TextComposition.cpp',
     'Touch.cpp',
+    'WheelEvent.cpp',
 ]
 
 SOURCES += [
