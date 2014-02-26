@@ -117,30 +117,22 @@ TelephonyIPCProvider::UnregisterListener(nsITelephonyListener *aListener)
   return NS_OK;
 }
 
-nsresult
-TelephonyIPCProvider::SendRequest(nsITelephonyListener *aListener,
-                                  nsITelephonyCallback *aCallback,
-                                  const IPCTelephonyRequest& aRequest)
+NS_IMETHODIMP
+TelephonyIPCProvider::EnumerateCalls(nsITelephonyListener *aListener)
 {
   // Life time of newly allocated TelephonyRequestChild instance is managed by
   // IPDL itself.
-  TelephonyRequestChild* actor = new TelephonyRequestChild(aListener, aCallback);
-  mPTelephonyChild->SendPTelephonyRequestConstructor(actor, aRequest);
+  TelephonyRequestChild* actor = new TelephonyRequestChild(aListener);
+  mPTelephonyChild->SendPTelephonyRequestConstructor(actor);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TelephonyIPCProvider::EnumerateCalls(nsITelephonyListener *aListener)
-{
-  return SendRequest(aListener, nullptr, EnumerateCallsRequest());
-}
-
-NS_IMETHODIMP
 TelephonyIPCProvider::Dial(uint32_t aClientId, const nsAString& aNumber,
-                           bool aIsEmergency, nsITelephonyCallback *aCallback)
+                           bool aIsEmergency)
 {
-  return SendRequest(nullptr, aCallback,
-                     DialRequest(aClientId, nsString(aNumber), aIsEmergency));
+  mPTelephonyChild->SendDialCall(aClientId, nsString(aNumber), aIsEmergency);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
