@@ -423,7 +423,7 @@ bool
 DefineWebIDLBindingPropertiesOnXPCObject(JSContext* cx,
                                          JS::Handle<JSObject*> obj,
                                          const NativeProperties* properties,
-                                         bool defineUnforgeableAttributes);
+                                         bool defineOnlyUnforgeableAttributes);
 
 #ifdef _MSC_VER
 #define HAS_MEMBER_CHECK(_name)                                           \
