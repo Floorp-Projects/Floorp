@@ -257,7 +257,6 @@ nsJAR::GetEntry(const nsACString &aEntryName, nsIZipEntry* *result)
   NS_ENSURE_TRUE(zipItem, NS_ERROR_FILE_TARGET_DOES_NOT_EXIST);
 
   nsJARItem* jarItem = new nsJARItem(zipItem);
-  NS_ENSURE_TRUE(jarItem, NS_ERROR_OUT_OF_MEMORY);
 
   NS_ADDREF(*result = jarItem);
   return NS_OK;
@@ -280,10 +279,6 @@ nsJAR::FindEntries(const nsACString &aPattern, nsIUTF8StringEnumerator **result)
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsIUTF8StringEnumerator *zipEnum = new nsJAREnumerator(find);
-  if (!zipEnum) {
-    delete find;
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
 
   NS_ADDREF(*result = zipEnum);
   return NS_OK;
@@ -311,7 +306,6 @@ nsJAR::GetInputStreamWithSpec(const nsACString& aJarDirSpec,
   }
   nsJARInputStream* jis = new nsJARInputStream();
   // addref now so we can call InitFile/InitDirectory()
-  NS_ENSURE_TRUE(jis, NS_ERROR_OUT_OF_MEMORY);
   NS_ADDREF(*result = jis);
 
   nsresult rv = NS_OK;
@@ -617,9 +611,9 @@ nsJAR::ParseOneFile(const char* filebuf, int16_t aFileType)
 
   nsJARManifestItem* curItemMF = nullptr;
   bool foundName = false;
-  if (aFileType == JAR_MF)
-    if (!(curItemMF = new nsJARManifestItem()))
-      return NS_ERROR_OUT_OF_MEMORY;
+  if (aFileType == JAR_MF) {
+    curItemMF = new nsJARManifestItem();
+  }
 
   nsAutoCString curItemName;
   nsAutoCString storedSectionDigest;
@@ -672,8 +666,7 @@ nsJAR::ParseOneFile(const char* filebuf, int16_t aFileType)
           break;
 
         sectionStart = nextLineStart;
-        if (!(curItemMF = new nsJARManifestItem()))
-          return NS_ERROR_OUT_OF_MEMORY;
+        curItemMF = new nsJARManifestItem();
       } // (aFileType == JAR_MF)
       else
         //-- file type is SF, compare digest with calculated

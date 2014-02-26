@@ -3,9 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
-#ifndef nsJAR_h__
-#define nsJAR_h__
+#ifndef nsJAR_h_
+#define nsJAR_h_
 
 #include "nscore.h"
 #include "prio.h"
@@ -128,7 +127,7 @@ class nsJAR : public nsIZipReader
 /**
  * nsJARItem
  *
- * An individual JAR entry. A set of nsJARItems macthing a
+ * An individual JAR entry. A set of nsJARItems matching a
  * supplied pattern are returned in a nsJAREnumerator.
  */
 class nsJARItem : public nsIZipEntry
@@ -213,4 +212,4 @@ protected:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#endif /* nsJAR_h__ */
+#endif /* nsJAR_h_ */
