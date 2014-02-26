@@ -16,11 +16,11 @@
 #include "mozilla/Mutex.h"
 #include "nsIComponentManager.h"
 #include "nsCOMPtr.h"
+#include "nsClassHashtable.h"
 #include "nsString.h"
 #include "nsIFile.h"
 #include "nsStringEnumerator.h"
 #include "nsHashKeys.h"
-#include "nsHashtable.h"
 #include "nsRefPtrHashtable.h"
 #include "nsTHashtable.h"
 #include "nsIZipReader.h"
@@ -95,11 +95,13 @@ class nsJAR : public nsIZipReader
     }
 
   protected:
+    typedef nsClassHashtable<nsCStringHashKey, nsJARManifestItem> ManifestDataHashtable;
+
     //-- Private data members
     nsCOMPtr<nsIFile>        mZipFile;        // The zip/jar file on disk
     nsCString                mOuterZipEntry;  // The entry in the zip this zip is reading from
     nsRefPtr<nsZipArchive>   mZip;            // The underlying zip archive
-    nsObjectHashtable        mManifestData;   // Stores metadata for each entry
+    ManifestDataHashtable    mManifestData;   // Stores metadata for each entry
     bool                     mParsedManifest; // True if manifest has been parsed
     nsCOMPtr<nsICertificatePrincipal> mPrincipal; // The entity which signed this file
     int16_t                  mGlobalStatus;   // Global signature verification status
