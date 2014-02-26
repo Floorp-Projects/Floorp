@@ -46,9 +46,7 @@ SourceBufferResource::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
   ReentrantMonitorAutoEnter mon(mMonitor);
   bool blockingRead = !!aBytes;
 
-  while (blockingRead &&
-         !mEnded &&
-         mOffset + aCount > static_cast<uint64_t>(GetLength())) {
+  while (blockingRead && !mEnded && mOffset + aCount > GetLength()) {
     LOG(PR_LOG_DEBUG, ("%p SBR::Read waiting for data", this));
     mon.Wait();
   }
@@ -67,7 +65,7 @@ SourceBufferResource::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
     return NS_OK;
   }
 
-  mInputBuffer.CopyData(mOffset, count, aBuffer);
+  memcpy(aBuffer, &mInputBuffer[mOffset], count);
   *aBytes = count;
   mOffset += count;
   return NS_OK;
@@ -126,26 +124,11 @@ SourceBufferResource::ReadFromCache(char* aBuffer, int64_t aOffset, uint32_t aCo
   return Read(aBuffer, aCount, nullptr);
 }
 
-bool
-SourceBufferResource::EvictData(uint32_t aThreshold)
-{
-  return mInputBuffer.Evict(mOffset, aThreshold);
-}
-
-void
-SourceBufferResource::EvictBefore(uint64_t aOffset)
-{
-  // If aOffset is past the current playback offset we don't evict.
-  if (aOffset < mOffset) {
-    mInputBuffer.Evict(aOffset, 0);
-  }
-}
-
 void
 SourceBufferResource::AppendData(const uint8_t* aData, uint32_t aLength)
 {
   ReentrantMonitorAutoEnter mon(mMonitor);
-  mInputBuffer.PushBack(new ResourceItem(aData, aLength));
+  mInputBuffer.AppendElements(aData, aLength);
   mon.NotifyAll();
 }
 
