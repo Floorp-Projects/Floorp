@@ -32,10 +32,9 @@ class nsDOMMutationRecord : public nsISupports,
                             public nsWrapperCache
 {
 public:
-  nsDOMMutationRecord(const nsAString& aType, nsISupports* aOwner)
+  nsDOMMutationRecord(nsIAtom* aType, nsISupports* aOwner)
   : mType(aType), mOwner(aOwner)
   {
-    mAttrName.SetIsVoid(PR_TRUE);
     mAttrNamespace.SetIsVoid(PR_TRUE);
     mPrevValue.SetIsVoid(PR_TRUE);
     SetIsDOMBinding();
@@ -56,9 +55,9 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsDOMMutationRecord)
 
-  void GetType(nsString& aRetVal) const
+  void GetType(mozilla::dom::DOMString& aRetVal) const
   {
-    aRetVal = mType;
+    aRetVal.SetOwnedAtom(mType, mozilla::dom::DOMString::eNullNotExpected);
   }
 
   nsINode* GetTarget() const
@@ -80,24 +79,24 @@ public:
     return mNextSibling;
   }
 
-  void GetAttributeName(nsString& aRetVal) const
+  void GetAttributeName(mozilla::dom::DOMString& aRetVal) const
   {
-    aRetVal = mAttrName;
+    aRetVal.SetOwnedAtom(mAttrName, mozilla::dom::DOMString::eTreatNullAsNull);
   }
 
-  void GetAttributeNamespace(nsString& aRetVal) const
+  void GetAttributeNamespace(mozilla::dom::DOMString& aRetVal) const
   {
-    aRetVal = mAttrNamespace;
+    aRetVal.SetOwnedString(mAttrNamespace);
   }
 
-  void GetOldValue(nsString& aRetVal) const
+  void GetOldValue(mozilla::dom::DOMString& aRetVal) const
   {
-    aRetVal = mPrevValue;
+    aRetVal.SetOwnedString(mPrevValue);
   }
 
   nsCOMPtr<nsINode>             mTarget;
-  nsString                      mType;
-  nsString                      mAttrName;
+  nsCOMPtr<nsIAtom>             mType;
+  nsCOMPtr<nsIAtom>             mAttrName;
   nsString                      mAttrNamespace;
   nsString                      mPrevValue;
   nsRefPtr<nsSimpleContentList> mAddedNodes;
@@ -433,7 +432,7 @@ protected:
   void ScheduleForRun();
   void RescheduleForRun();
 
-  nsDOMMutationRecord* CurrentRecord(const nsAString& aType);
+  nsDOMMutationRecord* CurrentRecord(nsIAtom* aType);
   bool HasCurrentRecord(const nsAString& aType);
 
   bool Suppressed()
