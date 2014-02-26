@@ -1,0 +1,14 @@
+<!DOCTYPE HTML>
+<html reftest-async-scroll
+      reftest-displayport-x="0" reftest-displayport-y="0"
+      reftest-displayport-w="800" reftest-displayport-h="2000"
+      reftest-async-scroll-x="0" reftest-async-scroll-y="50">
+<body style="overflow:hidden; height:3000px">
+  <!-- test that a fixed-pos element whose contents are interleaved in z-order
+       with non-scrolling content works correctly with async scrolling -->
+  <div style="position:absolute; top:25px; left:0; width:100px; height:200px; background:yellow; z-index:1"></div>
+  <div style="position:fixed; background:blue; top:0; left:0; width:200px; height:100px">
+    <div style="position:absolute; background:cyan; top:40px; left:0; width:50px; height:300px;"></div>
+  </div>
+</body>
+</html>

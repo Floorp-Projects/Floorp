@@ -1,0 +1,15 @@
+<!DOCTYPE HTML>
+<html reftest-async-scroll
+      reftest-displayport-x="0" reftest-displayport-y="0"
+      reftest-displayport-w="800" reftest-displayport-h="2000"
+      reftest-async-scroll-x="0" reftest-async-scroll-y="400">
+<body style="overflow:hidden; height:3000px;
+             background-image:url(repeatable-diagonal-gradient.png);
+             background-attachment:fixed;
+             background-repeat:no-repeat;
+             background-position:0 300px;">
+  <!-- Test that background-attachment:fixed content covered by scrolling content gets rendered
+       properly -->
+  <div style="position:absolute; background:black; top:200px; left:0; width:500px; height:600px;"></div>
+</body>
+</html>
