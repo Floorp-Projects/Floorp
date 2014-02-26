@@ -881,6 +881,18 @@ JS_StringToVersion(const char *string)
     return JSVERSION_UNKNOWN;
 }
 
+JS_PUBLIC_API(JS::RuntimeOptions &)
+JS::RuntimeOptionsRef(JSRuntime *rt)
+{
+    return rt->options();
+}
+
+JS_PUBLIC_API(JS::RuntimeOptions &)
+JS::RuntimeOptionsRef(JSContext *cx)
+{
+    return cx->runtime()->options();
+}
+
 JS_PUBLIC_API(JS::ContextOptions &)
 JS::ContextOptionsRef(JSContext *cx)
 {
@@ -2451,36 +2463,6 @@ class AutoHoldZone
 };
 
 } /* anonymous namespace */
-
-bool
-JS::CompartmentOptions::baseline(JSContext *cx) const
-{
-    return baselineOverride_.get(cx->options().baseline());
-}
-
-bool
-JS::CompartmentOptions::typeInference(const ExclusiveContext *cx) const
-{
-    /* Unlike the other options that can be overriden on a per compartment
-     * basis, the default value for the typeInference option is stored on the
-     * compartment's type zone, rather than the current JSContext. Type zones
-     * copy this default value over from the current JSContext when they are
-     * created.
-     */
-    return typeInferenceOverride_.get(cx->compartment()->zone()->types.inferenceEnabled);
-}
-
-bool
-JS::CompartmentOptions::ion(JSContext *cx) const
-{
-    return ionOverride_.get(cx->options().ion());
-}
-
-bool
-JS::CompartmentOptions::asmJS(JSContext *cx) const
-{
-    return asmJSOverride_.get(cx->options().asmJS());
-}
 
 bool
 JS::CompartmentOptions::cloneSingletons(JSContext *cx) const
@@ -4462,7 +4444,7 @@ JS::CompileOptions::CompileOptions(JSContext *cx, JSVersion version)
     strictOption = cx->options().strictMode();
     extraWarningsOption = cx->options().extraWarnings();
     werrorOption = cx->options().werror();
-    asmJSOption = cx->options().asmJS();
+    asmJSOption = cx->runtime()->options().asmJS();
 }
 
 bool
@@ -5960,23 +5942,23 @@ JS_ScheduleGC(JSContext *cx, uint32_t count)
 #endif
 
 JS_PUBLIC_API(void)
-JS_SetParallelParsingEnabled(JSContext *cx, bool enabled)
+JS_SetParallelParsingEnabled(JSRuntime *rt, bool enabled)
 {
 #ifdef JS_ION
-    cx->runtime()->setParallelParsingEnabled(enabled);
+    rt->setParallelParsingEnabled(enabled);
 #endif
 }
 
 JS_PUBLIC_API(void)
-JS_SetParallelIonCompilationEnabled(JSContext *cx, bool enabled)
+JS_SetParallelIonCompilationEnabled(JSRuntime *rt, bool enabled)
 {
 #ifdef JS_ION
-    cx->runtime()->setParallelIonCompilationEnabled(enabled);
+    rt->setParallelIonCompilationEnabled(enabled);
 #endif
 }
 
 JS_PUBLIC_API(void)
-JS_SetGlobalJitCompilerOption(JSContext *cx, JSJitCompilerOption opt, uint32_t value)
+JS_SetGlobalJitCompilerOption(JSRuntime *rt, JSJitCompilerOption opt, uint32_t value)
 {
 #ifdef JS_ION
 
@@ -5999,19 +5981,19 @@ JS_SetGlobalJitCompilerOption(JSContext *cx, JSJitCompilerOption opt, uint32_t v
         break;
       case JSJITCOMPILER_ION_ENABLE:
         if (value == 1) {
-            JS::ContextOptionsRef(cx).setIon(true);
+            JS::RuntimeOptionsRef(rt).setIon(true);
             IonSpew(js::jit::IonSpew_Scripts, "Enable ion");
         } else if (value == 0) {
-            JS::ContextOptionsRef(cx).setIon(false);
+            JS::RuntimeOptionsRef(rt).setIon(false);
             IonSpew(js::jit::IonSpew_Scripts, "Disable ion");
         }
         break;
       case JSJITCOMPILER_BASELINE_ENABLE:
         if (value == 1) {
-            JS::ContextOptionsRef(cx).setBaseline(true);
+            JS::RuntimeOptionsRef(rt).setBaseline(true);
             IonSpew(js::jit::IonSpew_BaselineScripts, "Enable baseline");
         } else if (value == 0) {
-            JS::ContextOptionsRef(cx).setBaseline(false);
+            JS::RuntimeOptionsRef(rt).setBaseline(false);
             IonSpew(js::jit::IonSpew_BaselineScripts, "Disable baseline");
         }
         break;
@@ -6022,7 +6004,7 @@ JS_SetGlobalJitCompilerOption(JSContext *cx, JSJitCompilerOption opt, uint32_t v
 }
 
 JS_PUBLIC_API(int)
-JS_GetGlobalJitCompilerOption(JSContext *cx, JSJitCompilerOption opt)
+JS_GetGlobalJitCompilerOption(JSRuntime *rt, JSJitCompilerOption opt)
 {
 #ifdef JS_ION
     switch (opt) {
@@ -6031,9 +6013,9 @@ JS_GetGlobalJitCompilerOption(JSContext *cx, JSJitCompilerOption opt)
       case JSJITCOMPILER_ION_USECOUNT_TRIGGER:
         return jit::js_JitOptions.forcedDefaultIonUsesBeforeCompile;
       case JSJITCOMPILER_ION_ENABLE:
-        return JS::ContextOptionsRef(cx).ion();
+        return JS::RuntimeOptionsRef(rt).ion();
       case JSJITCOMPILER_BASELINE_ENABLE:
-        return JS::ContextOptionsRef(cx).baseline();
+        return JS::RuntimeOptionsRef(rt).baseline();
       default:
         break;
     }
