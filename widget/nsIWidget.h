@@ -221,21 +221,37 @@ struct nsIMEUpdatePreference {
 
   typedef uint8_t Notifications;
 
-  enum
+  enum MOZ_ENUM_TYPE(Notifications)
   {
-    NOTIFY_NOTHING           = 0x00,
-    NOTIFY_SELECTION_CHANGE  = 0x01,
-    NOTIFY_TEXT_CHANGE       = 0x02,
-    NOTIFY_DURING_DEACTIVE   = 0x80
+    NOTIFY_NOTHING                       = 0,
+    NOTIFY_SELECTION_CHANGE              = 1 << 0,
+    NOTIFY_TEXT_CHANGE                   = 1 << 1,
+    // Following values indicate when widget needs or doesn't need notification.
+    NOTIFY_CHANGES_CAUSED_BY_COMPOSITION = 1 << 6,
+    // NOTE: NOTIFY_DURING_DEACTIVE isn't supported in environments where two
+    //       or more compositions are possible.  E.g., Mac and Linux (GTK).
+    NOTIFY_DURING_DEACTIVE               = 1 << 7,
+    // Changes are notified in following conditions if the instance is
+    // just constructed.  If some platforms don't need change notifications
+    // in some of following conditions, the platform should remove following
+    // flags before returing the instance from nsIWidget::GetUpdatePreference().
+    DEFAULT_CONDITIONS_OF_NOTIFYING_CHANGES =
+      NOTIFY_CHANGES_CAUSED_BY_COMPOSITION
   };
 
   nsIMEUpdatePreference()
-    : mWantUpdates(NOTIFY_NOTHING)
+    : mWantUpdates(DEFAULT_CONDITIONS_OF_NOTIFYING_CHANGES)
   {
   }
+
   nsIMEUpdatePreference(Notifications aWantUpdates)
-    : mWantUpdates(aWantUpdates)
+    : mWantUpdates(aWantUpdates | DEFAULT_CONDITIONS_OF_NOTIFYING_CHANGES)
   {
+  }
+
+  void DontNotifyChangesCausedByComposition()
+  {
+    mWantUpdates &= ~DEFAULT_CONDITIONS_OF_NOTIFYING_CHANGES;
   }
 
   bool WantSelectionChange() const
@@ -246,6 +262,17 @@ struct nsIMEUpdatePreference {
   bool WantTextChange() const
   {
     return !!(mWantUpdates & NOTIFY_TEXT_CHANGE);
+  }
+
+  bool WantChanges() const
+  {
+    return WantSelectionChange() || WantTextChange();
+  }
+
+  bool WantChangesCausedByComposition() const
+  {
+    return WantChanges() &&
+             !!(mWantUpdates & NOTIFY_CHANGES_CAUSED_BY_COMPOSITION);
   }
 
   bool WantDuringDeactive() const
@@ -479,10 +506,14 @@ struct IMENotification
     : mMessage(aMessage)
   {
     switch (aMessage) {
+      case NOTIFY_IME_OF_SELECTION_CHANGE:
+        mSelectionChangeData.mCausedByComposition = false;
+        break;
       case NOTIFY_IME_OF_TEXT_CHANGE:
         mTextChangeData.mStartOffset = 0;
         mTextChangeData.mOldEndOffset = 0;
         mTextChangeData.mNewEndOffset = 0;
+        mTextChangeData.mCausedByComposition = false;
         break;
       default:
         break;
@@ -493,12 +524,20 @@ struct IMENotification
 
   union
   {
+    // NOTIFY_IME_OF_SELECTION_CHANGE specific data
+    struct
+    {
+      bool mCausedByComposition;
+    } mSelectionChangeData;
+
     // NOTIFY_IME_OF_TEXT_CHANGE specific data
     struct
     {
       uint32_t mStartOffset;
       uint32_t mOldEndOffset;
       uint32_t mNewEndOffset;
+
+      bool mCausedByComposition;
 
       uint32_t OldLength() const { return mOldEndOffset - mStartOffset; }
       uint32_t NewLength() const { return mNewEndOffset - mStartOffset; }
@@ -514,6 +553,18 @@ struct IMENotification
       }
     } mTextChangeData;
   };
+
+  bool IsCausedByComposition() const
+  {
+    switch (mMessage) {
+      case NOTIFY_IME_OF_SELECTION_CHANGE:
+        return mSelectionChangeData.mCausedByComposition;
+      case NOTIFY_IME_OF_TEXT_CHANGE:
+        return mTextChangeData.mCausedByComposition;
+      default:
+        return false;
+    }
+  }
 
 private:
   IMENotification();
