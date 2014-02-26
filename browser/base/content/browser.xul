@@ -476,9 +476,7 @@
     </hbox>
 
     <tooltip id="dynamic-shortcut-tooltip"
-             onpopupshowing="UpdateDynamicShortcutTooltipText(this.triggerNode)">
-      <label id="dynamic-shortcut-tooltip-label"/>
-    </tooltip>
+             onpopupshowing="UpdateDynamicShortcutTooltipText(this);"/>
   </popupset>
 
 #ifdef CAN_DRAW_IN_TITLEBAR
