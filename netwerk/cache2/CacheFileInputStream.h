@@ -35,6 +35,9 @@ public:
                               CacheFileChunk *aChunk);
   NS_IMETHOD OnChunkUpdated(CacheFileChunk *aChunk);
 
+  // Memory reporting
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
+
 private:
   virtual ~CacheFileInputStream();
 
