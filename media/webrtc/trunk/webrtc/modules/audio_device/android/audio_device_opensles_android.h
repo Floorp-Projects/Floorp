@@ -155,7 +155,9 @@ class AudioDeviceAndroidOpenSLES : public AudioDeviceGeneric {
   virtual int32_t GetLoudspeakerStatus(bool& enable) const;
 
  private:
+#ifdef WEBRTC_ANDROID_OPENSLES_OUTPUT
   OpenSlesOutput output_;
+#endif
   OpenSlesInput input_;
 };
 

@@ -121,7 +121,7 @@ class OpenSlesInput {
     // Keep as few OpenSL buffers as possible to avoid wasting memory. 2 is
     // minimum for playout. Keep 2 for recording as well.
     kNumOpenSlBuffers = 2,
-    kNum10MsToBuffer = 4,
+    kNum10MsToBuffer = 8,
   };
 
   int InitSampleRate();
