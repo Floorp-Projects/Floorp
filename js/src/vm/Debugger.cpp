@@ -3921,12 +3921,32 @@ DebuggerSource_getElementProperty(JSContext *cx, unsigned argc, Value *vp)
 }
 
 static bool
+DebuggerSource_getIntroductionScript(JSContext *cx, unsigned argc, Value *vp)
+{
+    THIS_DEBUGSOURCE_REFERENT(cx, argc, vp, "(get introductionScript)", args, obj, sourceObject);
+
+    RootedScript script(cx, sourceObject->introductionScript());
+    if (script) {
+        RootedObject scriptDO(cx, Debugger::fromChildJSObject(obj)->wrapScript(cx, script));
+        if (!scriptDO)
+            return false;
+        args.rval().setObject(*scriptDO);
+    } else {
+        args.rval().setUndefined();
+    }
+    return true;
+}
+
+static bool
 DebuggerSource_getIntroductionOffset(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_DEBUGSOURCE_REFERENT(cx, argc, vp, "(get introductionOffset)", args, obj, sourceObject);
 
+    // Regardless of what's recorded in the ScriptSourceObject and
+    // ScriptSource, only hand out the introduction offset if we also have
+    // the script within which it applies.
     ScriptSource *ss = sourceObject->source();
-    if (ss->hasIntroductionOffset())
+    if (ss->hasIntroductionOffset() && sourceObject->introductionScript())
         args.rval().setInt32(ss->introductionOffset());
     else
         args.rval().setUndefined();
@@ -3936,7 +3956,7 @@ DebuggerSource_getIntroductionOffset(JSContext *cx, unsigned argc, Value *vp)
 static bool
 DebuggerSource_getIntroductionType(JSContext *cx, unsigned argc, Value *vp)
 {
-    THIS_DEBUGSOURCE_REFERENT(cx, argc, vp, "(get introductionOffset)", args, obj, sourceObject);
+    THIS_DEBUGSOURCE_REFERENT(cx, argc, vp, "(get introductionType)", args, obj, sourceObject);
 
     ScriptSource *ss = sourceObject->source();
     if (ss->hasIntroductionType()) {
@@ -3955,6 +3975,7 @@ static const JSPropertySpec DebuggerSource_properties[] = {
     JS_PSG("url", DebuggerSource_getUrl, 0),
     JS_PSG("element", DebuggerSource_getElement, 0),
     JS_PSG("displayURL", DebuggerSource_getDisplayURL, 0),
+    JS_PSG("introductionScript", DebuggerSource_getIntroductionScript, 0),
     JS_PSG("introductionOffset", DebuggerSource_getIntroductionOffset, 0),
     JS_PSG("introductionType", DebuggerSource_getIntroductionType, 0),
     JS_PSG("elementAttributeName", DebuggerSource_getElementProperty, 0),
