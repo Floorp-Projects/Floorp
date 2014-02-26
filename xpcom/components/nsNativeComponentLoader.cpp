@@ -29,7 +29,7 @@
 #include "ManifestParser.h" // for LogMessage
 #include "nsCRTGlue.h"
 #include "nsThreadUtils.h"
-#include "nsTraceRefcntImpl.h"
+#include "nsTraceRefcnt.h"
 
 #include "nsIFile.h"
 #include "mozilla/WindowsDllBlocklist.h"
@@ -220,7 +220,7 @@ nsNativeModuleLoader::UnloaderFunc(nsIHashable* aHashedFile,
     }
 
 #ifdef NS_BUILD_REFCNT_LOGGING
-    nsTraceRefcntImpl::SetActivityIsLegal(false);
+    nsTraceRefcnt::SetActivityIsLegal(false);
 #endif
 
 #if 0
@@ -231,7 +231,7 @@ nsNativeModuleLoader::UnloaderFunc(nsIHashable* aHashedFile,
 #endif
 
 #ifdef NS_BUILD_REFCNT_LOGGING
-    nsTraceRefcntImpl::SetActivityIsLegal(true);
+    nsTraceRefcnt::SetActivityIsLegal(true);
 #endif
 
     return PL_DHASH_REMOVE;

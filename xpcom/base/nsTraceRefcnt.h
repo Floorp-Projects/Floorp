@@ -2,13 +2,13 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#ifndef nsTraceRefcntImpl_h___
-#define nsTraceRefcntImpl_h___
+#ifndef nsTraceRefcnt_h___
+#define nsTraceRefcnt_h___
 
 #include <stdio.h> // for FILE
 #include "nscore.h"
 
-class nsTraceRefcntImpl
+class nsTraceRefcnt
 {
 public:
   static void Startup();
