@@ -1051,7 +1051,7 @@ TabParent::RecvNotifyIMEFocus(const bool& aFocus,
 {
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget) {
-    aPreference->mWantUpdates = nsIMEUpdatePreference::NOTIFY_NOTHING;
+    *aPreference = nsIMEUpdatePreference();
     return true;
   }
 
@@ -1073,19 +1073,27 @@ TabParent::RecvNotifyIMEFocus(const bool& aFocus,
 bool
 TabParent::RecvNotifyIMETextChange(const uint32_t& aStart,
                                    const uint32_t& aEnd,
-                                   const uint32_t& aNewEnd)
+                                   const uint32_t& aNewEnd,
+                                   const bool& aCausedByComposition)
 {
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget)
     return true;
 
-  NS_ASSERTION(widget->GetIMEUpdatePreference().WantTextChange(),
+#ifdef DEBUG
+  nsIMEUpdatePreference updatePreference = widget->GetIMEUpdatePreference();
+  NS_ASSERTION(updatePreference.WantTextChange(),
                "Don't call Send/RecvNotifyIMETextChange without NOTIFY_TEXT_CHANGE");
+  MOZ_ASSERT(!aCausedByComposition ||
+               updatePreference.WantChangesCausedByComposition(),
+    "The widget doesn't want text change notification caused by composition");
+#endif
 
   IMENotification notification(NOTIFY_IME_OF_TEXT_CHANGE);
   notification.mTextChangeData.mStartOffset = aStart;
   notification.mTextChangeData.mOldEndOffset = aEnd;
   notification.mTextChangeData.mNewEndOffset = aNewEnd;
+  notification.mTextChangeData.mCausedByComposition = aCausedByComposition;
   widget->NotifyIME(notification);
   return true;
 }
@@ -1111,7 +1119,8 @@ TabParent::RecvNotifyIMESelectedCompositionRect(const uint32_t& aOffset,
 bool
 TabParent::RecvNotifyIMESelection(const uint32_t& aSeqno,
                                   const uint32_t& aAnchor,
-                                  const uint32_t& aFocus)
+                                  const uint32_t& aFocus,
+                                  const bool& aCausedByComposition)
 {
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget)
@@ -1120,8 +1129,15 @@ TabParent::RecvNotifyIMESelection(const uint32_t& aSeqno,
   if (aSeqno == mIMESeqno) {
     mIMESelectionAnchor = aAnchor;
     mIMESelectionFocus = aFocus;
-    if (widget->GetIMEUpdatePreference().WantSelectionChange()) {
-      widget->NotifyIME(IMENotification(NOTIFY_IME_OF_SELECTION_CHANGE));
+    const nsIMEUpdatePreference updatePreference =
+      widget->GetIMEUpdatePreference();
+    if (updatePreference.WantSelectionChange() &&
+        (updatePreference.WantChangesCausedByComposition() ||
+         !aCausedByComposition)) {
+      IMENotification notification(NOTIFY_IME_OF_SELECTION_CHANGE);
+      notification.mSelectionChangeData.mCausedByComposition =
+        aCausedByComposition;
+      widget->NotifyIME(notification);
     }
   }
   return true;

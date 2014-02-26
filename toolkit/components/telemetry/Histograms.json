@@ -1140,38 +1140,6 @@
     "kind": "boolean",
     "description": "Whether a HTTP base page load was over SSL or not."
   },
-  "HTTPDATA_DAILY_ETHERNET_IN": {
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": "10000",
-    "n_buckets": 200,
-    "extended_statistics_ok": true,
-    "description": "MB of http ethernet data recvd in one day"
-  },
-  "HTTPDATA_DAILY_ETHERNET_OUT": {
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": "10000",
-    "n_buckets": 200,
-    "extended_statistics_ok": true,
-    "description": "MB of http ethernet data sent in one day"
-  },
-  "HTTPDATA_DAILY_CELL_IN": {
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": "10000",
-    "n_buckets": 200,
-    "extended_statistics_ok": true,
-    "description": "MB of http cell data recvd in one day"
-  },
-  "HTTPDATA_DAILY_CELL_OUT": {
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": "10000",
-    "n_buckets": 200,
-    "extended_statistics_ok": true,
-    "description": "MB of http cell data sent in one day"
-  },
   "SSL_HANDSHAKE_VERSION": {
     "expires_in_version": "never",
     "kind": "enumerated",

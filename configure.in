@@ -120,14 +120,14 @@ if test "$_conflict_files"; then
     echo "*         $file"
   done
   cat 1>&2 <<-EOF
-	*   This indicates that you previously built in the source tree.
-	*   A source tree build can confuse the separate objdir build.
-	*
-	*   To clean up the source tree:
-	*     1. cd $_topsrcdir
-	*     2. gmake distclean
-	***
-	EOF
+  *   This indicates that you previously built in the source tree.
+  *   A source tree build can confuse the separate objdir build.
+  *
+  *   To clean up the source tree:
+  *     1. cd $_topsrcdir
+  *     2. gmake distclean
+  ***
+EOF
   exit 1
   break
 fi
@@ -473,7 +473,7 @@ case "$target" in
         else
             AC_MSG_ERROR([This version ($CC_VERSION) of the MSVC compiler is unsupported. See https://developer.mozilla.org/en/Windows_Build_Prerequisites.])
         fi
-	AC_SUBST(MSVS_VERSION)
+        AC_SUBST(MSVS_VERSION)
 
         AC_DEFINE(HAVE_SEH_EXCEPTIONS)
 
@@ -672,7 +672,7 @@ case "$target" in
         AC_MSG_RESULT("no")
         AC_MSG_ERROR([You are targeting Windows version 0x$MOZ_WINSDK_TARGETVER, but your SDK only supports up to version $MOZ_WINSDK_MAXVER. Install and use an updated SDK, or target a lower version using --with-windows-version. Alternatively, try running the Windows SDK Configuration Tool and selecting a newer SDK. See https://developer.mozilla.org/En/Windows_SDK_versions for more details on fixing this.])
     fi
-    
+
     AC_DEFINE_UNQUOTED(MOZ_WINSDK_TARGETVER,0x$MOZ_WINSDK_TARGETVER)
     # Definitions matching sdkddkver.h
     AC_DEFINE_UNQUOTED(MOZ_NTDDI_WIN7, 0x06010000)
@@ -1513,9 +1513,9 @@ if test "$GNU_CC"; then
    [_SAVE_LDFLAGS=$LDFLAGS; _SAVE_LIBS=$LIBS
     ac_cv_mkshlib_force_and_unforce="no"
     exec 3<&0 <<LOOP_INPUT
-	force="-Wl,--whole-archive";   unforce="-Wl,--no-whole-archive"
-	force="-Wl,-z -Wl,allextract"; unforce="-Wl,-z -Wl,defaultextract"
-	force="-Wl,-all";              unforce="-Wl,-none"
+  force="-Wl,--whole-archive";   unforce="-Wl,--no-whole-archive"
+  force="-Wl,-z -Wl,allextract"; unforce="-Wl,-z -Wl,defaultextract"
+  force="-Wl,-all";              unforce="-Wl,-none"
 LOOP_INPUT
     while read line
     do
@@ -1941,11 +1941,11 @@ ia64*-hpux*)
 *-hpux*)
     DLL_SUFFIX=".sl"
     if test ! "$GNU_CC"; then
-    	DSO_LDOPTS='-b -Wl,+s'
-    	DSO_CFLAGS=""
-    	DSO_PIC_CFLAGS="+Z"
-    	MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_LDOPTS) -L$(LIBXUL_DIST)/bin -o $@'
-    	MKCSHLIB='$(LD) -b +s -L$(LIBXUL_DIST)/bin -o $@'
+        DSO_LDOPTS='-b -Wl,+s'
+        DSO_CFLAGS=""
+        DSO_PIC_CFLAGS="+Z"
+        MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_LDOPTS) -L$(LIBXUL_DIST)/bin -o $@'
+        MKCSHLIB='$(LD) -b +s -L$(LIBXUL_DIST)/bin -o $@'
         CXXFLAGS="$CXXFLAGS -Wc,-ansi_for_scope,on"
     else
         DSO_LDOPTS='-b -E +s'
@@ -1997,8 +1997,8 @@ ia64*-hpux*)
 
     case "${target_cpu}" in
     alpha*)
-    	CFLAGS="$CFLAGS -mieee"
-    	CXXFLAGS="$CXXFLAGS -mieee"
+        CFLAGS="$CFLAGS -mieee"
+        CXXFLAGS="$CXXFLAGS -mieee"
     ;;
     esac
 
@@ -2201,8 +2201,8 @@ ia64*-hpux*)
             LDFLAGS="$LDFLAGS -SAFESEH"
         fi
 
-    	AC_DEFINE(_X86_)
-	;;
+        AC_DEFINE(_X86_)
+        ;;
     x86_64-*)
         if test -n "$_WIN32_MSVC"; then
             DSO_LDOPTS="$DSO_LDOPTS -MACHINE:X64"
@@ -2210,8 +2210,8 @@ ia64*-hpux*)
         AC_DEFINE(_AMD64_)
         ;;
     *)
-    	AC_DEFINE(_CPU_ARCH_NOT_DEFINED)
-	;;
+        AC_DEFINE(_CPU_ARCH_NOT_DEFINED)
+        ;;
     esac
     ;;
 
@@ -2223,17 +2223,17 @@ ia64*-hpux*)
         DLL_SUFFIX=".so"
         DSO_PIC_CFLAGS='-fPIC -DPIC'
         DSO_LDOPTS='-shared'
-	BIN_FLAGS='-Wl,--export-dynamic'
+        BIN_FLAGS='-Wl,--export-dynamic'
     else
-    	DSO_PIC_CFLAGS='-fPIC -DPIC'
-    	DLL_SUFFIX=".so.1.0"
-    	DSO_LDOPTS='-shared'
+        DSO_PIC_CFLAGS='-fPIC -DPIC'
+        DLL_SUFFIX=".so.1.0"
+        DSO_LDOPTS='-shared'
     fi
     # This will fail on a.out systems prior to 1.5.1_ALPHA.
     MKSHLIB_FORCE_ALL='-Wl,--whole-archive'
     MKSHLIB_UNFORCE_ALL='-Wl,--no-whole-archive'
     if test "$LIBRUNPATH"; then
-	DSO_LDOPTS="-Wl,-R$LIBRUNPATH $DSO_LDOPTS"
+        DSO_LDOPTS="-Wl,-R$LIBRUNPATH $DSO_LDOPTS"
     fi
     MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -Wl,-soname,$(notdir $@) -o $@'
     MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -Wl,-soname,$(notdir $@)) -o $@'
@@ -2250,7 +2250,7 @@ ia64*-hpux*)
     DSO_PIC_CFLAGS='-fPIC'
     DSO_LDOPTS='-shared -fPIC'
     if test "$LIBRUNPATH"; then
-	DSO_LDOPTS="-R$LIBRUNPATH $DSO_LDOPTS"
+        DSO_LDOPTS="-R$LIBRUNPATH $DSO_LDOPTS"
     fi
     ;;
 
@@ -2709,10 +2709,10 @@ AC_SUBST(HAVE_DTRACE)
 
 case $target in
 *-aix4.3*|*-aix5*)
-	;;
+    ;;
 *)
-	MOZ_CHECK_HEADERS(sys/cdefs.h)
-	;;
+    MOZ_CHECK_HEADERS(sys/cdefs.h)
+    ;;
 esac
 
 MOZ_LINUX_PERF_EVENT
@@ -2721,10 +2721,10 @@ dnl Checks for libraries.
 dnl ========================================================
 case $target in
 *-hpux11.*)
-	;;
+    ;;
 *)
-	AC_CHECK_LIB(c_r, gethostbyname_r)
-	;;
+    AC_CHECK_LIB(c_r, gethostbyname_r)
+    ;;
 esac
 
 dnl We don't want to link with libdl even if it's present on OS X, since
@@ -2752,11 +2752,11 @@ if test ! "$GNU_CXX"; then
 
     case $target in
     *-aix*)
-	AC_CHECK_LIB(C_r, demangle)
-	;;
+        AC_CHECK_LIB(C_r, demangle)
+        ;;
      *)
-	AC_CHECK_LIB(C, demangle)
-	;;
+        AC_CHECK_LIB(C, demangle)
+        ;;
      esac
 fi
 
@@ -2774,20 +2774,20 @@ if test "$no_x" = "yes"; then
     AC_DEFINE(NO_X11)
 else
     AC_DEFINE_UNQUOTED(FUNCPROTO,15)
-	XLIBS="-lX11 $XLIBS"
-	_SAVE_LDFLAGS="$LDFLAGS"
-	LDFLAGS="$XLDFLAGS $LDFLAGS"
-	AC_CHECK_LIB(X11, XDrawLines, [X11_LIBS="-lX11"],
-		[MISSING_X="$MISSING_X -lX11"], $XLIBS)
-	AC_CHECK_LIB(Xext, XextAddDisplay, [XEXT_LIBS="-lXext"],
-		[MISSING_X="$MISSING_X -lXext"], $XLIBS)
+    XLIBS="-lX11 $XLIBS"
+    _SAVE_LDFLAGS="$LDFLAGS"
+    LDFLAGS="$XLDFLAGS $LDFLAGS"
+    AC_CHECK_LIB(X11, XDrawLines, [X11_LIBS="-lX11"],
+        [MISSING_X="$MISSING_X -lX11"], $XLIBS)
+    AC_CHECK_LIB(Xext, XextAddDisplay, [XEXT_LIBS="-lXext"],
+        [MISSING_X="$MISSING_X -lXext"], $XLIBS)
 
-	AC_CHECK_LIB(Xt, XtFree, [ XT_LIBS="-lXt"], [
+    AC_CHECK_LIB(Xt, XtFree, [ XT_LIBS="-lXt"], [
         unset ac_cv_lib_Xt_XtFree
-	    AC_CHECK_LIB(ICE, IceFlush, [XT_LIBS="-lICE $XT_LIBS"],, $XT_LIBS $XLIBS)
-	    AC_CHECK_LIB(SM, SmcCloseConnection, [XT_LIBS="-lSM $XT_LIBS"],, $XT_LIBS $XLIBS)
+        AC_CHECK_LIB(ICE, IceFlush, [XT_LIBS="-lICE $XT_LIBS"],, $XT_LIBS $XLIBS)
+        AC_CHECK_LIB(SM, SmcCloseConnection, [XT_LIBS="-lSM $XT_LIBS"],, $XT_LIBS $XLIBS)
         AC_CHECK_LIB(Xt, XtFree, [ XT_LIBS="-lXt $XT_LIBS"],
-		    [MISSING_X="$MISSING_X -lXt"], $X_PRE_LIBS $XT_LIBS $XLIBS)
+            [MISSING_X="$MISSING_X -lXt"], $X_PRE_LIBS $XT_LIBS $XLIBS)
         ])
 
     # AIX needs the motif library linked before libXt to prevent
@@ -2812,7 +2812,7 @@ else
             [XSS_LIBS="-lXss $XEXT_LIBS $XLIBS"
              AC_DEFINE(HAVE_LIBXSS)],, $XEXT_LIBS $XLIBS))
 
-	LDFLAGS="$_SAVE_LDFLAGS"
+    LDFLAGS="$_SAVE_LDFLAGS"
 fi # $no_x
 
 AC_SUBST(XCFLAGS)
@@ -2863,89 +2863,89 @@ dnl Do the platform specific pthread hackery
 dnl ========================================================
 if test "$MOZ_USE_PTHREADS"x != x
 then
-	dnl
-	dnl See if -pthread is supported.
-	dnl
-	rm -f conftest*
-	ac_cv_have_dash_pthread=no
-	AC_MSG_CHECKING(whether ${CC-cc} accepts -pthread)
-	echo 'int main() { return 0; }' | cat > conftest.c
-	${CC-cc} -pthread -o conftest conftest.c > conftest.out 2>&1
-	if test $? -eq 0; then
-		if test -z "`egrep -i '(unrecognize|unknown)' conftest.out | grep pthread`" -a -z "`egrep -i '(error|incorrect)' conftest.out`" ; then
-			ac_cv_have_dash_pthread=yes
-	        case "$target_os" in
-	        freebsd*)
+    dnl
+    dnl See if -pthread is supported.
+    dnl
+    rm -f conftest*
+    ac_cv_have_dash_pthread=no
+    AC_MSG_CHECKING(whether ${CC-cc} accepts -pthread)
+    echo 'int main() { return 0; }' | cat > conftest.c
+    ${CC-cc} -pthread -o conftest conftest.c > conftest.out 2>&1
+    if test $? -eq 0; then
+        if test -z "`egrep -i '(unrecognize|unknown)' conftest.out | grep pthread`" -a -z "`egrep -i '(error|incorrect)' conftest.out`" ; then
+            ac_cv_have_dash_pthread=yes
+            case "$target_os" in
+            freebsd*)
 # Freebsd doesn't use -pthread for compiles, it uses them for linking
                 ;;
-	        *)
-			    CFLAGS="$CFLAGS -pthread"
-			    CXXFLAGS="$CXXFLAGS -pthread"
+            *)
+                CFLAGS="$CFLAGS -pthread"
+                CXXFLAGS="$CXXFLAGS -pthread"
                 ;;
-	        esac
-		fi
-	fi
-	rm -f conftest*
+            esac
+        fi
+    fi
+    rm -f conftest*
     AC_MSG_RESULT($ac_cv_have_dash_pthread)
 
-	dnl
-	dnl See if -pthreads is supported.
-	dnl
+    dnl
+    dnl See if -pthreads is supported.
+    dnl
     ac_cv_have_dash_pthreads=no
     if test "$ac_cv_have_dash_pthread" = "no"; then
-	    AC_MSG_CHECKING(whether ${CC-cc} accepts -pthreads)
-    	echo 'int main() { return 0; }' | cat > conftest.c
-	    ${CC-cc} -pthreads -o conftest conftest.c > conftest.out 2>&1
-    	if test $? -eq 0; then
-	    	if test -z "`egrep -i '(unrecognize|unknown)' conftest.out | grep pthreads`" -a -z "`egrep -i '(error|incorrect)' conftest.out`" ; then
-			    ac_cv_have_dash_pthreads=yes
-			    CFLAGS="$CFLAGS -pthreads"
-			    CXXFLAGS="$CXXFLAGS -pthreads"
-		    fi
-	    fi
-	    rm -f conftest*
-    	AC_MSG_RESULT($ac_cv_have_dash_pthreads)
+        AC_MSG_CHECKING(whether ${CC-cc} accepts -pthreads)
+        echo 'int main() { return 0; }' | cat > conftest.c
+        ${CC-cc} -pthreads -o conftest conftest.c > conftest.out 2>&1
+        if test $? -eq 0; then
+            if test -z "`egrep -i '(unrecognize|unknown)' conftest.out | grep pthreads`" -a -z "`egrep -i '(error|incorrect)' conftest.out`" ; then
+                ac_cv_have_dash_pthreads=yes
+                CFLAGS="$CFLAGS -pthreads"
+                CXXFLAGS="$CXXFLAGS -pthreads"
+            fi
+        fi
+        rm -f conftest*
+        AC_MSG_RESULT($ac_cv_have_dash_pthreads)
     fi
 
-	case "$target" in
-	    *-*-freebsd*)
-			AC_DEFINE(_REENTRANT)
-			AC_DEFINE(_THREAD_SAFE)
-			dnl -pthread links in -lpthread, so don't specify it explicitly.
-			if test "$ac_cv_have_dash_pthread" = "yes"; then
-				_PTHREAD_LDFLAGS="-pthread"
-			fi
-			;;
-
-	    *-*-openbsd*|*-*-bsdi*)
-			AC_DEFINE(_REENTRANT)
-			AC_DEFINE(_THREAD_SAFE)
-			dnl -pthread links in -lc_r, so don't specify it explicitly.
-			if test "$ac_cv_have_dash_pthread" = "yes"; then
+    case "$target" in
+        *-*-freebsd*)
+            AC_DEFINE(_REENTRANT)
+            AC_DEFINE(_THREAD_SAFE)
+            dnl -pthread links in -lpthread, so don't specify it explicitly.
+            if test "$ac_cv_have_dash_pthread" = "yes"; then
                 _PTHREAD_LDFLAGS="-pthread"
-			fi
-			;;
+            fi
+            ;;
 
-	    *-*-linux*|*-*-kfreebsd*-gnu|*-*-gnu*)
-			AC_DEFINE(_REENTRANT)
-			;;
+        *-*-openbsd*|*-*-bsdi*)
+            AC_DEFINE(_REENTRANT)
+            AC_DEFINE(_THREAD_SAFE)
+            dnl -pthread links in -lc_r, so don't specify it explicitly.
+            if test "$ac_cv_have_dash_pthread" = "yes"; then
+                _PTHREAD_LDFLAGS="-pthread"
+            fi
+            ;;
 
-	    *-aix4.3*|*-aix5*)
-			AC_DEFINE(_REENTRANT)
-			;;
+        *-*-linux*|*-*-kfreebsd*-gnu|*-*-gnu*)
+            AC_DEFINE(_REENTRANT)
+            ;;
 
-	    *-hpux11.*)
-			AC_DEFINE(_REENTRANT)
-			;;
+        *-aix4.3*|*-aix5*)
+            AC_DEFINE(_REENTRANT)
+            ;;
 
-	    *-*-solaris*)
-			AC_DEFINE(_REENTRANT)
-			if test "$SOLARIS_SUNPRO_CC"; then
-				CFLAGS="$CFLAGS -mt"
-				CXXFLAGS="$CXXFLAGS -mt"
-			fi
-			;;
-	esac
+        *-hpux11.*)
+            AC_DEFINE(_REENTRANT)
+            ;;
+
+        *-*-solaris*)
+            AC_DEFINE(_REENTRANT)
+            if test "$SOLARIS_SUNPRO_CC"; then
+                CFLAGS="$CFLAGS -mt"
+                CXXFLAGS="$CXXFLAGS -mt"
+            fi
+            ;;
+    esac
     LDFLAGS="${_PTHREAD_LDFLAGS} ${LDFLAGS}"
     AC_SUBST(MOZ_USE_PTHREADS)
 fi
@@ -3389,11 +3389,11 @@ dnl features go here.
 
 dnl check for LC_MESSAGES
 AC_CACHE_CHECK(for LC_MESSAGES,
-		ac_cv_i18n_lc_messages,
-		[AC_TRY_COMPILE([#include <locale.h>],
-				[int category = LC_MESSAGES;],
-				ac_cv_i18n_lc_messages=yes,
-				ac_cv_i18n_lc_messages=no)])
+               ac_cv_i18n_lc_messages,
+               [AC_TRY_COMPILE([#include <locale.h>],
+                               [int category = LC_MESSAGES;],
+                               ac_cv_i18n_lc_messages=yes,
+                               ac_cv_i18n_lc_messages=no)])
 if test "$ac_cv_i18n_lc_messages" = yes; then
    AC_DEFINE(HAVE_I18N_LC_MESSAGES)
 fi
@@ -3721,7 +3721,7 @@ if test -z "$BZ2_DIR" -o "$BZ2_DIR" = no; then
     MOZ_NATIVE_BZ2=
 else
     AC_CHECK_LIB(bz2, BZ2_bzread, [MOZ_NATIVE_BZ2=1 MOZ_BZ2_LIBS="-lbz2"],
-	[MOZ_NATIVE_BZ2= MOZ_BZ2_CFLAGS= MOZ_BZ2_LIBS=])
+    [MOZ_NATIVE_BZ2= MOZ_BZ2_CFLAGS= MOZ_BZ2_LIBS=])
 fi
 CFLAGS=$_SAVE_CFLAGS
 LDFLAGS=$_SAVE_LDFLAGS
@@ -4161,8 +4161,8 @@ MOZ_ARG_HEADER(Toolkit Options)
     dnl ========================================================
     dnl = Select the default toolkit
     dnl ========================================================
-	MOZ_ARG_ENABLE_STRING(default-toolkit,
-	[  --enable-default-toolkit=TK
+    MOZ_ARG_ENABLE_STRING(default-toolkit,
+    [  --enable-default-toolkit=TK
                           Select default toolkit
                           Platform specific defaults:
                             Mac OS X - cairo-cocoa
@@ -4996,7 +4996,7 @@ if test "${MOZ_WIDGET_TOOLKIT}" = "linuxgl" -a "$ACCESSIBILITY" != "1"; then
     AC_MSG_ERROR(["Accessibility is required for the linuxgl widget backend"])
 fi
 
-dnl Turn off webrtc for OS's we don't handle yet, but allow 
+dnl Turn off webrtc for OS's we don't handle yet, but allow
 dnl --enable-webrtc to override.  Can disable for everything in
 dnl the master list above.
 if test -n "$MOZ_WEBRTC"; then
@@ -5296,11 +5296,11 @@ if test -n "$MOZ_VPX"; then
         dnl Check to see if we have a system libvpx package.
         PKG_CHECK_MODULES(MOZ_LIBVPX, vpx >= 1.3.0)
 
-        MOZ_CHECK_HEADER([vpx/vpx_decoder.h], [], 
+        MOZ_CHECK_HEADER([vpx/vpx_decoder.h], [],
          [AC_MSG_ERROR([Couldn't find vpx/vpx_decoder.h which is required for build with system libvpx. Use --without-system-libvpx to build with in-tree libvpx.])])
 
         _SAVE_LIBS=$LIBS
-        AC_CHECK_LIB(vpx, vpx_codec_dec_init_ver, [], 
+        AC_CHECK_LIB(vpx, vpx_codec_dec_init_ver, [],
          [AC_MSG_ERROR([--with-system-libvpx requested but symbol vpx_codec_dec_init_ver not found])])
         LIBS=$_SAVE_LIBS
     fi
@@ -5730,7 +5730,7 @@ if test -n "$MOZ_ANGLE_RENDERER" -a -z "$CROSS_COMPILE"; then
 
   if test -n "$MOZ_DIRECTX_SDK_PATH" &&
      test -f "$MOZ_DIRECTX_SDK_PATH"/include/d3dx9.h &&
-	 test -f "$MOZ_DIRECTX_SDK_PATH"/lib/$MOZ_DIRECTX_SDK_CPU_SUFFIX/dxguid.lib ; then
+     test -f "$MOZ_DIRECTX_SDK_PATH"/lib/$MOZ_DIRECTX_SDK_CPU_SUFFIX/dxguid.lib ; then
     AC_MSG_RESULT([Found DirectX SDK via registry, using $MOZ_DIRECTX_SDK_PATH])
   else
     AC_MSG_ERROR([Couldn't find the DirectX SDK, needed for WebGL. Either install it (June 2010 version or newer), or reconfigure with --disable-webgl.])
@@ -5740,7 +5740,7 @@ if test -n "$MOZ_ANGLE_RENDERER" -a -z "$CROSS_COMPILE"; then
   MOZ_D3DX9_VERSION=`dumpbin //headers "$MOZ_DIRECTX_SDK_PATH"/lib/$MOZ_DIRECTX_SDK_CPU_SUFFIX/d3dx9.lib | egrep d3dx9_[[0-9]][[0-9]]\.dll | head -n1 | sed 's/.*\([[0-9]][[0-9]]\).*/\\1/g'`
 
   if test -z "$MOZ_D3DX9_VERSION" ; then
-  	AC_MSG_ERROR([Couldn't determine the D3DX9 version, needed for WebGL. Either reinstall the DirectX SDK (June 2010 version or newer), or reconfigure with --disable-webgl.])
+      AC_MSG_ERROR([Couldn't determine the D3DX9 version, needed for WebGL. Either reinstall the DirectX SDK (June 2010 version or newer), or reconfigure with --disable-webgl.])
   fi
 
   MOZ_D3DCOMPILER_CAB=`find "$MOZ_DIRECTX_SDK_PATH"/Redist -name *D3DCompiler_${MOZ_D3DX9_VERSION}_${MOZ_DIRECTX_SDK_CPU_SUFFIX}.cab | head -n1`
@@ -6574,7 +6574,7 @@ dnl ========================================================
 dnl = Enable code optimization. ON by default.
 dnl ========================================================
 if test -z "$MOZ_OPTIMIZE_FLAGS"; then
-	MOZ_OPTIMIZE_FLAGS="-O"
+    MOZ_OPTIMIZE_FLAGS="-O"
 fi
 
 MOZ_ARG_ENABLE_STRING(optimize,
@@ -7982,7 +7982,7 @@ AC_SUBST(MOZ_CAIRO_OSLIBS)
 AC_SUBST(MOZ_TREE_PIXMAN)
 
 dnl ========================================================
-dnl Skia 
+dnl Skia
 dnl ========================================================
 if test "$MOZ_ENABLE_SKIA"; then
   AC_DEFINE(MOZ_ENABLE_SKIA)
@@ -8458,21 +8458,21 @@ AC_SUBST(MAKENSISU)
 
 dnl Echo the CFLAGS to remove extra whitespace.
 CFLAGS=`echo \
-	$_WARNINGS_CFLAGS \
-	$CFLAGS`
+    $_WARNINGS_CFLAGS \
+    $CFLAGS`
 
 CXXFLAGS=`echo \
-	$_WARNINGS_CXXFLAGS \
-	$CXXFLAGS`
+    $_WARNINGS_CXXFLAGS \
+    $CXXFLAGS`
 
 COMPILE_CFLAGS=`echo \
     $_DEFINES_CFLAGS \
-	$_DEPEND_CFLAGS \
+    $_DEPEND_CFLAGS \
     $COMPILE_CFLAGS`
 
 COMPILE_CXXFLAGS=`echo \
     $_DEFINES_CXXFLAGS \
-	$_DEPEND_CFLAGS \
+    $_DEPEND_CFLAGS \
     $COMPILE_CXXFLAGS`
 
 HOST_CFLAGS=`echo \

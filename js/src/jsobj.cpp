@@ -1310,31 +1310,39 @@ NewObjectCache::fillProto(EntryIndex entry, const Class *clasp, js::TaggedProto 
 
 JSObject *
 js::NewObjectWithGivenProto(ExclusiveContext *cxArg, const js::Class *clasp,
-                            js::TaggedProto proto_, JSObject *parent_,
+                            js::TaggedProto protoArg, JSObject *parentArg,
                             gc::AllocKind allocKind, NewObjectKind newKind)
 {
-    Rooted<TaggedProto> proto(cxArg, proto_);
-    RootedObject parent(cxArg, parent_);
-
     if (CanBeFinalizedInBackground(allocKind, clasp))
         allocKind = GetBackgroundAllocKind(allocKind);
 
     NewObjectCache::EntryIndex entry = -1;
     if (JSContext *cx = cxArg->maybeJSContext()) {
         NewObjectCache &cache = cx->runtime()->newObjectCache;
-        if (proto.isObject() &&
+        if (protoArg.isObject() &&
             newKind == GenericObject &&
             !cx->compartment()->hasObjectMetadataCallback() &&
-            (!parent || parent == proto.toObject()->getParent()) &&
-            !proto.toObject()->is<GlobalObject>())
+            (!parentArg || parentArg == protoArg.toObject()->getParent()) &&
+            !protoArg.toObject()->is<GlobalObject>())
         {
-            if (cache.lookupProto(clasp, proto.toObject(), allocKind, &entry)) {
-                JSObject *obj = cache.newObjectFromHit(cx, entry, GetInitialHeap(newKind, clasp));
-                if (obj)
+            if (cache.lookupProto(clasp, protoArg.toObject(), allocKind, &entry)) {
+                JSObject *obj = cache.newObjectFromHit<NoGC>(cx, entry, GetInitialHeap(newKind, clasp));
+                if (obj) {
                     return obj;
+                } else {
+                    Rooted<TaggedProto> proto(cxArg, protoArg);
+                    RootedObject parent(cxArg, parentArg);
+                    obj = cache.newObjectFromHit<CanGC>(cx, entry, GetInitialHeap(newKind, clasp));
+                    JS_ASSERT(!obj);
+                    parentArg = parent;
+                    protoArg = proto;
+                }
             }
         }
     }
+
+    Rooted<TaggedProto> proto(cxArg, protoArg);
+    RootedObject parent(cxArg, parentArg);
 
     types::TypeObject *type = cxArg->getNewType(clasp, proto, nullptr);
     if (!type)
@@ -1393,9 +1401,17 @@ js::NewObjectWithClassProtoCommon(ExclusiveContext *cxArg,
             !cx->compartment()->hasObjectMetadataCallback())
         {
             if (cache.lookupGlobal(clasp, &parentArg->as<GlobalObject>(), allocKind, &entry)) {
-                JSObject *obj = cache.newObjectFromHit(cx, entry, GetInitialHeap(newKind, clasp));
-                if (obj)
+                JSObject *obj = cache.newObjectFromHit<NoGC>(cx, entry, GetInitialHeap(newKind, clasp));
+                if (obj) {
                     return obj;
+                } else {
+                    RootedObject parent(cxArg, parentArg);
+                    RootedObject proto(cxArg, protoArg);
+                    obj = cache.newObjectFromHit<CanGC>(cx, entry, GetInitialHeap(newKind, clasp));
+                    JS_ASSERT(!obj);
+                    protoArg = proto;
+                    parentArg = parent;
+                }
             }
         }
     }
@@ -1445,9 +1461,13 @@ js::NewObjectWithType(JSContext *cx, HandleTypeObject type, JSObject *parent, gc
         !cx->compartment()->hasObjectMetadataCallback())
     {
         if (cache.lookupType(type, allocKind, &entry)) {
-            JSObject *obj = cache.newObjectFromHit(cx, entry, GetInitialHeap(newKind, type->clasp()));
-            if (obj)
+            JSObject *obj = cache.newObjectFromHit<NoGC>(cx, entry, GetInitialHeap(newKind, type->clasp()));
+            if (obj) {
                 return obj;
+            } else {
+                obj = cache.newObjectFromHit<CanGC>(cx, entry, GetInitialHeap(newKind, type->clasp()));
+                parent = type->proto().toObject()->getParent();
+            }
         }
     }
 
@@ -3601,7 +3621,7 @@ CallAddPropertyHookDense(typename ExecutionModeTraits<mode>::ExclusiveContextTyp
 {
     /* Inline addProperty for array objects. */
     if (obj->is<ArrayObject>()) {
-        Rooted<ArrayObject*> arr(cxArg, &obj->as<ArrayObject>());
+        ArrayObject *arr = &obj->as<ArrayObject>();
         uint32_t length = arr->length();
         if (index >= length) {
             if (mode == ParallelExecution) {
@@ -3610,7 +3630,7 @@ CallAddPropertyHookDense(typename ExecutionModeTraits<mode>::ExclusiveContextTyp
                     return false;
                 arr->setLengthInt32(index + 1);
             } else {
-                ArrayObject::setLength(cxArg->asExclusiveContext(), arr, index + 1);
+                arr->setLength(cxArg->asExclusiveContext(), index + 1);
             }
         }
         return true;
