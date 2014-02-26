@@ -11,28 +11,31 @@ let calls;
 function dial() {
   log("Make an emergency call.");
 
-  outgoing = telephony.dialEmergency(number);
-  ok(outgoing);
-  is(outgoing.number, number);
-  is(outgoing.state, "dialing");
+  telephony.dialEmergency(number).then(call => {
+    outgoing = call;
+    ok(outgoing);
+    is(outgoing.number, number);
+    is(outgoing.state, "dialing");
 
-  is(outgoing, telephony.active);
-  //ok(telephony.calls === calls); // bug 717414
-  is(telephony.calls.length, 1);
-  is(telephony.calls[0], outgoing);
+    is(outgoing, telephony.active);
+    //ok(telephony.calls === calls); // bug 717414
+    is(telephony.calls.length, 1);
+    is(telephony.calls[0], outgoing);
 
-  outgoing.onalerting = function onalerting(event) {
-    log("Received 'onalerting' call event.");
-    is(outgoing, event.call);
-    is(outgoing.state, "alerting");
+    outgoing.onalerting = function onalerting(event) {
+      log("Received 'onalerting' call event.");
+      is(outgoing, event.call);
+      is(outgoing.state, "alerting");
+      is(outgoing.emergency, true);
 
-    emulator.run("gsm list", function(result) {
-      log("Call list is now: " + result);
-      is(result[0], "outbound to  " + number + "        : ringing");
-      is(result[1], "OK");
-      answer();
-    });
-  };
+      emulator.run("gsm list", function(result) {
+        log("Call list is now: " + result);
+        is(result[0], "outbound to  " + number + "        : ringing");
+        is(result[1], "OK");
+        answer();
+      });
+    };
+  });
 }
 
 function answer() {

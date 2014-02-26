@@ -109,29 +109,31 @@ function holdCall(){
 function dial() {
   log("Making an outgoing call (while have one call already held).");
 
-  outgoingCall = telephony.dial(outNumber);
-  ok(outgoingCall);
-  is(outgoingCall.number, outNumber);
-  is(outgoingCall.state, "dialing");
+  telephony.dial(outNumber).then(call => {
+    outgoingCall = call;
+    ok(outgoingCall);
+    is(outgoingCall.number, outNumber);
+    is(outgoingCall.state, "dialing");
 
-  is(outgoingCall, telephony.active);
-  is(telephony.calls.length, 2);
-  is(telephony.calls[0], incomingCall);
-  is(telephony.calls[1], outgoingCall);
+    is(outgoingCall, telephony.active);
+    is(telephony.calls.length, 2);
+    is(telephony.calls[0], incomingCall);
+    is(telephony.calls[1], outgoingCall);
 
-  outgoingCall.onalerting = function onalerting(event) {
-    log("Received 'onalerting' call event.");
-    is(outgoingCall, event.call);
-    is(outgoingCall.state, "alerting");
+    outgoingCall.onalerting = function onalerting(event) {
+      log("Received 'onalerting' call event.");
+      is(outgoingCall, event.call);
+      is(outgoingCall.state, "alerting");
 
-    emulator.run("gsm list", function(result) {
-      log("Call list is now: " + result);
-      is(result[0], "inbound from " + inNumber + " : held");
-      is(result[1], "outbound to  " + outNumber + " : ringing");
-      is(result[2], "OK");
-      answerOutgoing();
-    });
-  };
+      emulator.run("gsm list", function(result) {
+        log("Call list is now: " + result);
+        is(result[0], "inbound from " + inNumber + " : held");
+        is(result[1], "outbound to  " + outNumber + " : ringing");
+        is(result[2], "OK");
+        answerOutgoing();
+      });
+    };
+  });
 }
 
 // Have the outgoing call answered
