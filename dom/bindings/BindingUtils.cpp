@@ -1822,12 +1822,12 @@ GlobalObject::GlobalObject(JSContext* aCx, JSObject* aObject)
 nsISupports*
 GlobalObject::GetAsSupports() const
 {
-  if (!NS_IsMainThread()) {
-    return nullptr;
-  }
-
   if (mGlobalObject) {
     return mGlobalObject;
+  }
+
+  if (!NS_IsMainThread()) {
+    return UnwrapDOMObjectToISupports(mGlobalJSObject);
   }
 
   JS::Rooted<JS::Value> val(mCx, JS::ObjectValue(*mGlobalJSObject));

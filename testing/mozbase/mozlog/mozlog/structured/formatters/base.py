@@ -6,6 +6,21 @@ import json
 
 
 class BaseFormatter(object):
+    """Base class for implementing non-trivial formatters.
+
+    Subclasses are expected to provide a method for each action type they
+    wish to handle, each taking a single argument for the test data.
+    For example a trivial subclass that just produces the id of each test as
+    it starts might be::
+
+      class StartIdFormatter(BaseFormatter);
+          def test_start(data):
+              #For simplicity in the example pretend the id is always a string
+              return data["test"]
+    """
+    def __init__(self):
+        pass
+
     def __call__(self, data):
         if hasattr(self, data["action"]):
             handler = getattr(self, data["action"])

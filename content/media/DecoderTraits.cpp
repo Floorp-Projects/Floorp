@@ -13,10 +13,8 @@
 #include "MediaPluginHost.h"
 #endif
 
-#ifdef MOZ_OGG
 #include "OggDecoder.h"
 #include "OggReader.h"
-#endif
 #ifdef MOZ_WAVE
 #include "WaveDecoder.h"
 #include "WaveReader.h"
@@ -102,7 +100,6 @@ IsRawType(const nsACString& aType)
 }
 #endif
 
-#ifdef MOZ_OGG
 // See http://www.rfc-editor.org/rfc/rfc5334.txt for the definitions
 // of Ogg media types and codec types
 static const char* const gOggTypes[4] = {
@@ -134,7 +131,6 @@ IsOggType(const nsACString& aType)
 
   return CodecListContains(gOggTypes, aType);
 }
-#endif
 
 #ifdef MOZ_WAVE
 // See http://www.rfc-editor.org/rfc/rfc2361.txt for the definitions
@@ -203,10 +199,8 @@ IsGStreamerSupportedType(const nsACString& aMimeType)
   if (IsWebMType(aMimeType) && !Preferences::GetBool("media.prefer-gstreamer", false))
     return false;
 #endif
-#ifdef MOZ_OGG
   if (IsOggType(aMimeType) && !Preferences::GetBool("media.prefer-gstreamer", false))
     return false;
-#endif
 
   return GStreamerDecoder::CanHandleMediaType(aMimeType, nullptr);
 }
@@ -376,12 +370,10 @@ DecoderTraits::CanHandleMediaType(const char* aMIMEType,
     result = CANPLAY_MAYBE;
   }
 #endif
-#ifdef MOZ_OGG
   if (IsOggType(nsDependentCString(aMIMEType))) {
     codecList = MediaDecoder::IsOpusEnabled() ? gOggCodecsWithOpus : gOggCodecs;
     result = CANPLAY_MAYBE;
   }
-#endif
 #ifdef MOZ_WAVE
   if (IsWaveType(nsDependentCString(aMIMEType))) {
     codecList = gWaveCodecs;
@@ -480,12 +472,10 @@ InstantiateDecoder(const nsACString& aType, MediaDecoderOwner* aOwner)
     return decoder.forget();
   }
 #endif
-#ifdef MOZ_OGG
   if (IsOggType(aType)) {
     decoder = new OggDecoder();
     return decoder.forget();
   }
-#endif
 #ifdef MOZ_WAVE
   if (IsWaveType(aType)) {
     decoder = new WaveDecoder();
@@ -590,11 +580,9 @@ MediaDecoderReader* DecoderTraits::CreateReader(const nsACString& aType, Abstrac
     decoderReader = new RawReader(aDecoder);
   } else
 #endif
-#ifdef MOZ_OGG
   if (IsOggType(aType)) {
     decoderReader = new OggReader(aDecoder);
   } else
-#endif
 #ifdef MOZ_WAVE
   if (IsWaveType(aType)) {
     decoderReader = new WaveReader(aDecoder);
@@ -647,9 +635,7 @@ MediaDecoderReader* DecoderTraits::CreateReader(const nsACString& aType, Abstrac
 bool DecoderTraits::IsSupportedInVideoDocument(const nsACString& aType)
 {
   return
-#ifdef MOZ_OGG
     IsOggType(aType) ||
-#endif
 #ifdef MOZ_OMX_DECODER
     // We support amr inside WebApps on firefoxOS but not in general web content.
     // Ensure we dont create a VideoDocument when accessing amr URLs directly.

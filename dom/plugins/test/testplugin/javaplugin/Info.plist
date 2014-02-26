@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>English</string>
+	<key>CFBundleExecutable</key>
+	<string>libnptestjava.dylib</string>
+	<key>CFBundleIdentifier</key>
+	<string>org.mozilla.JavaTestPlugin</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundlePackageType</key>
+	<string>BRPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>1.0.0.0</string>
+	<key>CFBundleSignature</key>
+	<string>JAVATEST</string>
+	<key>CFBundleVersion</key>
+	<string>1.0.0.0</string>
+	<key>WebPluginName</key>
+	<string>Java Test Plug-in</string>
+	<key>WebPluginDescription</key>
+	<string>Dummy Java plug-in for testing purposes.</string>
+	<key>WebPluginMIMETypes</key>
+	<dict>
+		<key>application/x-java-test</key>
+		<dict>
+			<key>WebPluginExtensions</key>
+			<array>
+				<string>tstjava</string>
+			</array>
+			<key>WebPluginTypeDescription</key>
+			<string>Dummy java type</string>
+		</dict>
+	</dict>
+</dict>
+</plist>

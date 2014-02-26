@@ -23,8 +23,6 @@ if CONFIG['NS_PRINTING']:
 
 TEST_TOOL_DIRS += [
     'tools/reftest',
-    'reftests/fonts',
-    'reftests/fonts/mplus',
 ]
 
 DIRS += ['build', 'media']
@@ -32,3 +30,7 @@ DIRS += ['build', 'media']
 if CONFIG['MOZ_DEBUG']:
     TEST_DIRS += ['tools/layout-debug']
 
+MOCHITEST_MANIFESTS += [
+    'reftests/fonts/mochitest.ini',
+    'reftests/fonts/mplus/mochitest.ini',
+]

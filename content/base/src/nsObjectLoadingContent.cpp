@@ -92,6 +92,8 @@
 
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
+static const char *kPrefJavaMIME = "plugin.java.mime";
+
 using namespace mozilla;
 using namespace mozilla::dom;
 
@@ -902,6 +904,8 @@ nsObjectLoadingContent::InstantiatePluginInstance(bool aIsLoading)
 void
 nsObjectLoadingContent::NotifyOwnerDocumentActivityChanged()
 {
+  // XXX(johns): We cannot touch plugins or run arbitrary script from this call,
+  //             as nsDocument is in a non-reentrant state.
 
   // If we have a plugin we want to queue an event to stop it unless we are
   // moved into an active document before returning to the event loop.
@@ -1410,8 +1414,12 @@ nsObjectLoadingContent::UpdateObjectParameters(bool aJavaURI)
   ///
   /// Initial MIME Type
   ///
+
   if (aJavaURI || thisContent->NodeInfo()->Equals(nsGkAtoms::applet)) {
-    newMime.AssignLiteral("application/x-java-vm");
+    nsAdoptingCString javaMIME = Preferences::GetCString(kPrefJavaMIME);
+    newMime = javaMIME;
+    NS_ASSERTION(nsPluginHost::IsJavaMIMEType(newMime.get()),
+                 "plugin.mime.java should be recognized by IsJavaMIMEType");
     isJava = true;
   } else {
     nsAutoString rawTypeAttr;
@@ -1432,9 +1440,12 @@ nsObjectLoadingContent::UpdateObjectParameters(bool aJavaURI)
     thisContent->GetAttr(kNameSpaceID_None, nsGkAtoms::classid, classIDAttr);
     if (!classIDAttr.IsEmpty()) {
       // Our classid support is limited to 'java:' ids
+      nsAdoptingCString javaMIME = Preferences::GetCString(kPrefJavaMIME);
+      NS_ASSERTION(nsPluginHost::IsJavaMIMEType(javaMIME.get()),
+                   "plugin.mime.java should be recognized by IsJavaMIMEType");
       if (StringBeginsWith(classIDAttr, NS_LITERAL_STRING("java:")) &&
-          PluginExistsForType("application/x-java-vm")) {
-        newMime.Assign("application/x-java-vm");
+          PluginExistsForType(javaMIME)) {
+        newMime = javaMIME;
         isJava = true;
       } else {
         // XXX(johns): Our de-facto behavior since forever was to refuse to load
