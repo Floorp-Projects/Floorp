@@ -5,6 +5,7 @@ _("Make sure the form store follows the Store api and correctly accesses the bac
 Cu.import("resource://services-sync/engines/forms.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
+Cu.import("resource://gre/modules/Services.jsm");
 
 function run_test() {
   let baseuri = "http://fake/uri/";
@@ -128,5 +129,23 @@ function run_test() {
 
   for (let id in store.getAllIDs()) {
     do_throw("Shouldn't get any ids!");
+  }
+
+  _("Ensure we work if formfill is disabled.");
+  Services.prefs.setBoolPref("browser.formfill.enable", false);
+  try {
+    // a search
+    for (let id in store.getAllIDs()) {
+      do_throw("Shouldn't get any ids!");
+    }
+    // an update.
+    applyEnsureNoFailures([{
+      id: Utils.makeGUID(),
+      name: "some",
+      value: "entry"
+    }]);
+  } finally {
+    Services.prefs.clearUserPref("browser.formfill.enable");
+    store.wipe();
   }
 }
