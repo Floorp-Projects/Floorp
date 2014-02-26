@@ -1305,7 +1305,7 @@ namespace jit {
 class JitActivation : public Activation
 {
     uint8_t *prevIonTop_;
-    JSContext *prevIonJSContext_;
+    JSContext *prevJitJSContext_;
     bool firstFrameIsConstructing_;
     bool active_;
 

@@ -34,15 +34,15 @@ CompileRuntime::addressOfIonTop()
 }
 
 const void *
-CompileRuntime::addressOfIonStackLimit()
+CompileRuntime::addressOfJitStackLimit()
 {
-    return &runtime()->mainThread.ionStackLimit;
+    return &runtime()->mainThread.jitStackLimit;
 }
 
 const void *
 CompileRuntime::addressOfJSContext()
 {
-    return &runtime()->mainThread.ionJSContext;
+    return &runtime()->mainThread.jitJSContext;
 }
 
 const void *

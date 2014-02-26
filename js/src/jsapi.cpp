@@ -2143,7 +2143,7 @@ js::RecomputeStackLimit(JSRuntime *rt, StackKind kind)
 #endif
 
     // If there's no pending interrupt request set on the runtime's main thread's
-    // ionStackLimit, then update it so that it reflects the new nativeStacklimit.
+    // jitStackLimit, then update it so that it reflects the new nativeStacklimit.
     //
     // Note that, for now, we use the untrusted limit for ion. This is fine,
     // because it's the most conservative limit, and if we hit it, we'll bail
@@ -2151,10 +2151,10 @@ js::RecomputeStackLimit(JSRuntime *rt, StackKind kind)
 #ifdef JS_ION
     if (kind == StackForUntrustedScript) {
         JSRuntime::AutoLockForOperationCallback lock(rt);
-        if (rt->mainThread.ionStackLimit != uintptr_t(-1)) {
-            rt->mainThread.ionStackLimit = rt->mainThread.nativeStackLimit[kind];
+        if (rt->mainThread.jitStackLimit != uintptr_t(-1)) {
+            rt->mainThread.jitStackLimit = rt->mainThread.nativeStackLimit[kind];
 #ifdef JS_ARM_SIMULATOR
-            rt->mainThread.ionStackLimit = jit::Simulator::StackLimit();
+            rt->mainThread.jitStackLimit = jit::Simulator::StackLimit();
 #endif
         }
     }
