@@ -8099,12 +8099,7 @@ dnl option to disable necko's wifi scanner
 dnl
 
 case "$OS_TARGET" in
-  Android)
-    if test -n "$gonkdir"; then
-      NECKO_WIFI=1
-    fi
-    ;;
-  Darwin|SunOS|WINNT)
+  Android|Darwin|SunOS|WINNT)
     NECKO_WIFI=1
     ;;
   Linux)
