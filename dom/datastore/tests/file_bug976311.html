@@ -1,0 +1,88 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for DataStore - bug 976311 app1</title>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+  <script type="application/javascript;version=1.7">
+
+  var gStores = [];
+  var expectedWhere;
+
+  function is(a, b, msg) {
+    ok(a === b, msg);
+  }
+
+  function ok(a, msg) {
+    alert((a ? 'OK' : 'KO')+ ' ' + msg)
+  }
+
+  function cbError() {
+    alert('KO error');
+  }
+
+  function finish() {
+    alert('DONE');
+  }
+
+  function checkEvent(id) {
+    is(expectedWhere, id, "Message on the correct DS: " + id + " " + expectedWhere);
+    runTest();
+  }
+
+  function testGetDataStores() {
+    navigator.getDataStores('foo').then(function(stores) {
+      is(stores.length, 2, "getDataStores('foo') returns 1 element");
+
+      is(stores[0].name, 'foo', 'The dataStore.name is foo');
+      is(stores[0].readOnly, false, 'The dataStore foo is not in readonly');
+      stores[0].onchange = function(evt) { checkEvent(0); }
+      gStores.push(stores[0]);
+
+      is(stores[1].name, 'foo', 'The dataStore.name is foo');
+      is(stores[1].readOnly, false, 'The dataStore foo is not in readonly');
+      stores[1].onchange = function(evt) { checkEvent(1); }
+      gStores.push(stores[1]);
+
+      runTest();
+    }, cbError);
+  }
+
+  function testStoreAdd(where, value) {
+    expectedWhere = where;
+    dump("ADD TO: " + gStores[where].owner + "\n");
+    gStores[where].add({ a: value });
+  }
+
+  var tests = [
+    // Test for GetDataStore
+    testGetDataStores,
+
+    function() { testStoreAdd(0, 1); },
+    function() { testStoreAdd(1, 2); },
+    function() { testStoreAdd(0, 3); },
+    function() { testStoreAdd(1, 4); }
+  ];
+
+  function runTest() {
+    if (!tests.length) {
+      finish();
+      return;
+    }
+
+    var test = tests.shift();
+    test();
+  }
+
+  runTest();
+  </script>
+</pre>
+</body>
+</html>
+
