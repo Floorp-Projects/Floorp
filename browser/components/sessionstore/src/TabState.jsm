@@ -444,7 +444,7 @@ let TabStateInternal = {
       // Use the data to be restored when the tab hasn't been
       // completely loaded. We clone the data, since we're updating it
       // here and the caller may update it further.
-      tabData = JSON.parse(JSON.stringify(browser.__SS_data));
+      tabData = Utils.shallowCopy(browser.__SS_data);
       if (tab.pinned)
         tabData.pinned = true;
       else
