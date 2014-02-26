@@ -22,12 +22,6 @@ ifeq ($(OS_ARCH),WINNT)
 LIBS += $(call EXPAND_LIBNAME_PATH,verifymar,$(DEPTH)/modules/libmar/verify)
 RCINCLUDE = updater.rc
 OS_LIBS += $(call EXPAND_LIBNAME,comctl32 ws2_32 shell32 shlwapi)
-ifndef GNU_CC
-RCFLAGS += -I$(srcdir)
-else
-RCFLAGS += --include-dir $(srcdir)
-endif
-
 endif
 
 ifdef MOZ_WIDGET_GTK
@@ -79,11 +73,3 @@ EXTRA_LIBS += $(call EXPAND_LIBNAME,advapi32)
 endif
 
 CXXFLAGS += $(MOZ_BZ2_CFLAGS)
-
-ifneq (,$(filter beta release esr,$(MOZ_UPDATE_CHANNEL)))
-RCFLAGS += -DMAR_SIGNING_RELEASE_BETA=1
-else
-ifneq (,$(filter nightly aurora nightly-elm nightly-profiling nightly-oak,$(MOZ_UPDATE_CHANNEL)))
-RCFLAGS += -DMAR_SIGNING_AURORA_NIGHTLY=1
-endif
-endif
