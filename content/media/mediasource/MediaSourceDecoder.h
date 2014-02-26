@@ -42,7 +42,6 @@ public:
   virtual MediaDecoderStateMachine* CreateStateMachine() MOZ_OVERRIDE;
   virtual nsresult Load(nsIStreamListener**, MediaDecoder*) MOZ_OVERRIDE;
   virtual nsresult GetSeekable(dom::TimeRanges* aSeekable) MOZ_OVERRIDE;
-  virtual double GetDuration() MOZ_OVERRIDE;
 
   void AttachMediaSource(dom::MediaSource* aMediaSource);
   void DetachMediaSource();
