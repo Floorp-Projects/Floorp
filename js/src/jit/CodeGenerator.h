@@ -280,6 +280,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitCallGetIntrinsicValue(LCallGetIntrinsicValue *lir);
     bool visitIsCallable(LIsCallable *lir);
     bool visitHaveSameClass(LHaveSameClass *lir);
+    bool visitHasClass(LHasClass *lir);
     bool visitAsmJSCall(LAsmJSCall *lir);
     bool visitAsmJSParameter(LAsmJSParameter *lir);
     bool visitAsmJSReturn(LAsmJSReturn *ret);

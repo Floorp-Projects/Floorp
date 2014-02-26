@@ -41,7 +41,8 @@ void EbmlComposer::GenerateHeader()
           // Video
           if (mWidth > 0 && mHeight > 0) {
             writeVideoTrack(&ebml, 0x1, 0, "V_VP8",
-                            mWidth, mHeight, mFrameRate);
+                            mWidth, mHeight,
+                            mDisplayWidth, mDisplayHeight, mFrameRate);
           }
           // Audio
           if (mCodecPrivateData.Length() > 0) {
@@ -123,13 +124,18 @@ EbmlComposer::WriteSimpleBlock(EncodedFrame* aFrame)
 
 void
 EbmlComposer::SetVideoConfig(uint32_t aWidth, uint32_t aHeight,
+                             uint32_t aDisplayWidth, uint32_t aDisplayHeight,
                              float aFrameRate)
 {
   MOZ_ASSERT(aWidth > 0, "Width should > 0");
   MOZ_ASSERT(aHeight > 0, "Height should > 0");
+  MOZ_ASSERT(aDisplayWidth > 0, "DisplayWidth should > 0");
+  MOZ_ASSERT(aDisplayHeight > 0, "DisplayHeight should > 0");
   MOZ_ASSERT(aFrameRate > 0, "FrameRate should > 0");
   mWidth = aWidth;
   mHeight = aHeight;
+  mDisplayWidth = aDisplayWidth;
+  mDisplayHeight = aDisplayHeight;
   mFrameRate = aFrameRate;
 }
 

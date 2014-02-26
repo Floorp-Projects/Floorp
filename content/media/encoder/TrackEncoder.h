@@ -222,6 +222,8 @@ public:
     : TrackEncoder()
     , mFrameWidth(0)
     , mFrameHeight(0)
+    , mDisplayWidth(0)
+    , mDisplayHeight(0)
     , mTrackRate(0)
     , mTotalFrameDuration(0)
   {}
@@ -244,7 +246,8 @@ protected:
    * mReentrantMonitor will be notified after it has successfully initialized,
    * and this method is called on the MediaStramGraph thread.
    */
-  virtual nsresult Init(int aWidth, int aHeight, TrackRate aTrackRate) = 0;
+  virtual nsresult Init(int aWidth, int aHeight, int aDisplayWidth,
+                        int aDisplayHeight, TrackRate aTrackRate) = 0;
 
   /**
    * Appends source video frames to mRawSegment. We only append the source chunk
@@ -274,6 +277,16 @@ protected:
    * The height of source video frame, ceiled if the source height is odd.
    */
   int mFrameHeight;
+
+  /**
+   * The display width of source video frame.
+   */
+  int mDisplayWidth;
+
+  /**
+   * The display height of source video frame.
+   */
+  int mDisplayHeight;
 
   /**
    * The track rate of source video.

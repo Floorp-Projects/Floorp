@@ -29,6 +29,8 @@ class VP8Metadata : public TrackMetadataBase
 public:
   int32_t mWidth;
   int32_t mHeight;
+  int32_t mDisplayWidth;
+  int32_t mDisplayHeight;
   int32_t mEncodedFrameRate;
   MetadataKind GetKind() const MOZ_OVERRIDE { return METADATA_VP8; }
 };

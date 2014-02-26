@@ -61,11 +61,6 @@ RCINCLUDE = splash.rc
 # Note the manifest file exists in the tree, so we use the explicit filename
 # here.
 EXTRA_DEPS += firefox.exe.manifest
-ifndef GNU_CC
-RCFLAGS += -DMOZ_PHOENIX -I$(srcdir)
-else
-RCFLAGS += -DMOZ_PHOENIX --include-dir $(srcdir)
-endif
 endif
 
 PROGRAMS_DEST = $(DIST)/bin

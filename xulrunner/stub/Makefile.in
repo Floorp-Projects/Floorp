@@ -20,11 +20,6 @@ endif
 
 ifeq ($(OS_ARCH),WINNT)
 RCINCLUDE = xulrunner-stub.rc
-ifndef GNU_CC
-RCFLAGS += -DMOZ_XULRUNNER -I$(srcdir)
-else
-RCFLAGS += -DMOZ_XULRUNNER --include-dir $(srcdir)
-endif
 endif
 
 ifndef MOZ_WINCONSOLE

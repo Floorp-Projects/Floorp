@@ -183,6 +183,12 @@ ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig)
   vs << "  gl_Position = finalPosition;" << endl;
   vs << "}" << endl;
 
+  if (aConfig.mFeatures & ENABLE_TEXTURE_RECT) {
+    fs << "#extension GL_ARB_texture_rectangle : require" << endl;
+  }
+  if (aConfig.mFeatures & ENABLE_TEXTURE_EXTERNAL) {
+    fs << "#extension GL_OES_EGL_image_external : require" << endl;
+  }
   fs << "#ifdef GL_ES" << endl;
   fs << "precision mediump float;" << endl;
   fs << "#define COLOR_PRECISION lowp" << endl;
@@ -213,14 +219,12 @@ ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig)
   const char *texture2D = "texture2D";
 
   if (aConfig.mFeatures & ENABLE_TEXTURE_RECT) {
-    fs << "#extension GL_ARB_texture_rectangle : require" << endl;
     fs << "uniform vec2 uTexCoordMultiplier;" << endl;
     sampler2D = "sampler2DRect";
     texture2D = "texture2DRect";
   }
 
   if (aConfig.mFeatures & ENABLE_TEXTURE_EXTERNAL) {
-    fs << "#extension GL_OES_EGL_image_external : require" << endl;
     sampler2D = "samplerExternalOES";
   }
 
