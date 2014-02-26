@@ -939,7 +939,7 @@
               tooltip="bhTooltip"
               popupsinherittooltip="true">
           <hbox flex="1">
-            <hbox align="center">
+            <hbox id="PlacesToolbarDropIndicatorHolder" align="center">
               <image id="PlacesToolbarDropIndicator"
                      mousethrough="always"
                      collapsed="true"/>
