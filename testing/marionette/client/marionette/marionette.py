@@ -585,7 +585,7 @@ class Marionette(object):
         return False
 
     def _send_message(self, command, response_key="ok", **kwargs):
-        if not self.session and command not in ("newSession", "getStatus"):
+        if not self.session and command != "newSession":
             raise MarionetteException("Please start a session")
 
         message = {"name": command}
@@ -701,9 +701,6 @@ class Marionette(object):
         :param relative_url: The url of a static file, relative to Marionette's www directory.
         '''
         return "%s%s" % (self.baseurl, relative_url)
-
-    def status(self):
-        return self._send_message('getStatus', 'value')
 
     def start_session(self, desired_capabilities=None):
         """Create a new Marionette session.

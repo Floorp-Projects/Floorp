@@ -1036,6 +1036,8 @@ public:
                                    bool aIsFirstPaint,
                                    bool aScheduleComposite) MOZ_OVERRIDE;
 
+  virtual AsyncCompositionManager* GetCompositionManager(LayerTransactionParent* aParent) MOZ_OVERRIDE;
+
 private:
   void DeferredDestroy();
 
@@ -1183,6 +1185,13 @@ CrossProcessCompositorParent::ShadowLayersUpdated(
   UpdateIndirectTree(id, shadowRoot, aTargetConfig);
 
   sIndirectLayerTrees[id].mParent->NotifyShadowTreeTransaction(id, aIsFirstPaint, aScheduleComposite);
+}
+
+AsyncCompositionManager*
+CrossProcessCompositorParent::GetCompositionManager(LayerTransactionParent* aLayerTree)
+{
+  uint64_t id = aLayerTree->GetId();
+  return sIndirectLayerTrees[id].mParent->GetCompositionManager(aLayerTree);
 }
 
 void
