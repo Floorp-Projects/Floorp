@@ -46,7 +46,7 @@ this.TelemetryTimestamps = {
    * to attach to the telemetry submission.
    */
   get: function TT_get() {
-    // Return a copy of the object by passing it through JSON.
-    return JSON.parse(JSON.stringify(timeStamps));
+    // Return a copy of the object.
+    return Cu.cloneInto(timeStamps, {});
   }
 };
