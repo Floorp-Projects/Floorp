@@ -265,15 +265,15 @@ NetworkService.prototype = {
   },
 
   resetRoutingTable: function(network) {
-    if (!network.ip || !network.netmask) {
-      if(DEBUG) debug("Either ip or netmask is null. Cannot reset routing table.");
+    if (!network.ip || !network.prefixLength) {
+      if(DEBUG) debug("Either ip or prefixLength is null. Cannot reset routing table.");
       return;
     }
     let options = {
       cmd: "removeNetworkRoute",
       ifname: network.name,
       ip: network.ip,
-      netmask: network.netmask
+      prefixLength: network.prefixLength
     };
     this.controlMessage(options, function() {});
   },

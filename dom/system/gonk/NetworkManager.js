@@ -309,7 +309,7 @@ NetworkManager.prototype = {
             type: i.type,
             name: i.name,
             ip: i.ip,
-            netmask: i.netmask,
+            prefixLength: i.prefixLength,
             broadcast: i.broadcast,
             gateway: i.gateway,
             dns1: i.dns1,
@@ -396,9 +396,6 @@ NetworkManager.prototype = {
 
   active: null,
   _overriddenActive: null,
-
-  // Clone network info so we can still get information when network is disconnected
-  _activeInfo: null,
 
   overrideActive: function(network) {
 #ifdef MOZ_B2G_RIL
@@ -487,7 +484,6 @@ NetworkManager.prototype = {
 
     // Find a suitable network interface to activate.
     this.active = null;
-    this._activeInfo = Object.create(null);
 #ifdef MOZ_B2G_RIL
     let defaultDataNetwork;
 #endif
@@ -501,7 +497,6 @@ NetworkManager.prototype = {
       }
 #endif
       this.active = network;
-      this._activeInfo = {name:network.name, ip:network.ip, netmask:network.netmask};
       if (network.type == this.preferredNetworkType) {
         debug("Found our preferred type of network: " + network.name);
         break;
