@@ -113,7 +113,8 @@ already_AddRefed<nsIEventTarget> CacheIOThread::Target()
 {
   nsCOMPtr<nsIEventTarget> target;
 
-  if (mThread)
+  target = mXPCOMThread;
+  if (!target && mThread)
   {
     MonitorAutoLock lock(mMonitor);
     if (!mXPCOMThread)
