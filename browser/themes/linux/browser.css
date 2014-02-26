@@ -2032,11 +2032,6 @@ chatbox {
   border-left: 3px solid transparent;
 }
 
-#main-window[customizing] #navigator-toolbox::after {
-  margin-left: 2em;
-  margin-right: 2em;
-}
-
 /* End customization mode */
 
 
