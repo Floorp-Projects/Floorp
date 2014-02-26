@@ -102,6 +102,53 @@ add_task(function test_500_error() {
   yield deferredStop(server);
 });
 
+add_task(function test_backoffError() {
+  let method = "GET";
+  let server = httpd_setup({
+    "/retryDelay": function(request, response) {
+      response.setHeader("Retry-After", "30");
+      response.setStatusLine(request.httpVersion, 429, "Client has sent too many requests");
+      let message = "<h1>Ooops!</h1>";
+      response.bodyOutputStream.write(message, message.length);
+    },
+    "/duringDelayIShouldNotBeCalled": function(request, response) {
+      response.setStatusLine(request.httpVersion, 200, "OK");
+      let jsonMessage = "{\"working\": \"yes\"}";
+      response.bodyOutputStream.write(jsonMessage, jsonMessage.length);
+    },
+  });
+
+  let client = new FxAccountsClient(server.baseURI);
+
+  // Retry-After header sets client.backoffError
+  do_check_eq(client.backoffError, null);
+  try {
+    yield client._request("/retryDelay", method);
+  } catch (e) {
+    do_check_eq(429, e.code);
+    do_check_eq(30, e.retryAfter);
+    do_check_neq(typeof(client.fxaBackoffTimer), "undefined");
+    do_check_neq(client.backoffError, null);
+  }
+  // While delay is in effect, client short-circuits any requests
+  // and re-rejects with previous error.
+  try {
+    yield client._request("/duringDelayIShouldNotBeCalled", method);
+    throw new Error("I should not be reached");
+  } catch (e) {
+    do_check_eq(e.retryAfter, 30);
+    do_check_eq(e.message, "Client has sent too many requests");
+    do_check_neq(client.backoffError, null);
+  }
+  // Once timer fires, client nulls error out and HTTP calls work again.
+  client._clearBackoff();
+  let result = yield client._request("/duringDelayIShouldNotBeCalled", method);
+  do_check_eq(client.backoffError, null);
+  do_check_eq(result.working, "yes");
+
+  yield deferredStop(server);
+});
+
 add_task(function test_signUp() {
   let creationMessage = JSON.stringify({
     uid: "uid",

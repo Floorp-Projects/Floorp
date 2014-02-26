@@ -45,6 +45,11 @@ public:
     // Instantiate MediaResourceManagerService and register to service manager.
     // If service manager is not present, wait until service manager becomes present.
     static  void instantiate();
+#if ANDROID_VERSION >= 19
+    virtual void destroyDisplay(const sp<android::IBinder>& display);
+    virtual status_t captureScreen(const sp<IBinder>& display, const sp<IGraphicBufferProducer>& producer,
+            uint32_t reqWidth, uint32_t reqHeight, uint32_t minLayerZ, uint32_t maxLayerZ);
+#endif
 
 private:
     FakeSurfaceComposer();

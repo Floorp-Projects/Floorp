@@ -15,14 +15,23 @@
 # limitations under the License.
 
 EXPORTS += [
+    'GonkBufferQueue.h',
     'GonkNativeWindow.h',
     'GonkNativeWindowClient.h',
 ]
 
-if CONFIG['ANDROID_VERSION'] in ('17', '18'):
+if CONFIG['ANDROID_VERSION'] == '19':
     EXPORTS += [
-        'GonkBufferQueue.h',
-        'GonkConsumerBase.h',
+        'GonkBufferQueueKK.h',
+        'GonkConsumerBaseKK.h',
+        'GonkNativeWindowClientKK.h',
+        'GonkNativeWindowKK.h',
+        'IGonkGraphicBufferConsumer.h',
+    ]
+elif CONFIG['ANDROID_VERSION'] in ('17', '18'):
+    EXPORTS += [
+        'GonkBufferQueueJB.h',
+        'GonkConsumerBaseJB.h',
         'GonkNativeWindowClientJB.h',
         'GonkNativeWindowJB.h',
     ]
@@ -33,10 +42,18 @@ elif CONFIG['ANDROID_VERSION'] == '15':
     ]
 
 if CONFIG['MOZ_B2G_CAMERA'] or CONFIG['MOZ_OMX_DECODER']:
-    if CONFIG['ANDROID_VERSION'] in ('17', '18'):
+    if CONFIG['ANDROID_VERSION'] == '19':
         SOURCES += [
-            'GonkBufferQueue.cpp',
-            'GonkConsumerBase.cpp',
+            'GonkBufferQueueKK.cpp',
+            'GonkConsumerBaseKK.cpp',
+            'GonkNativeWindowClientKK.cpp',
+            'GonkNativeWindowKK.cpp',
+            'IGonkGraphicBufferConsumer.cpp',
+        ]
+    elif CONFIG['ANDROID_VERSION'] in ('17', '18'):
+        SOURCES += [
+            'GonkBufferQueueJB.cpp',
+            'GonkConsumerBaseJB.cpp',
             'GonkNativeWindowClientJB.cpp',
             'GonkNativeWindowJB.cpp',
         ]

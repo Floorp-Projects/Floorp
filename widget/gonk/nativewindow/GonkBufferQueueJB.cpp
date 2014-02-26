@@ -26,7 +26,7 @@
 
 #include "mozilla/layers/ImageBridgeChild.h"
 
-#include "GonkBufferQueue.h"
+#include "GonkBufferQueueJB.h"
 
 // Macros for including the GonkBufferQueue name in log messages
 #define ST_LOGV(...) __android_log_print(ANDROID_LOG_VERBOSE, LOG_TAG, __VA_ARGS__)

@@ -20,7 +20,7 @@ if (isJSM) {
 
 const { L10N_BUNDLE } = require("devtools/profiler/consts");
 
-var EventEmitter = require("devtools/shared/event-emitter");
+var EventEmitter = require("devtools/toolkit/event-emitter");
 
 Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
 Cu.import("resource://gre/modules/devtools/Console.jsm");

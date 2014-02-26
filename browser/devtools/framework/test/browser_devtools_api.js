@@ -7,7 +7,7 @@ const Cu = Components.utils;
 const toolId = "test-tool";
 
 let tempScope = {};
-Cu.import("resource:///modules/devtools/shared/event-emitter.js", tempScope);
+Cu.import("resource://gre/modules/devtools/event-emitter.js", tempScope);
 let EventEmitter = tempScope.EventEmitter;
 
 function test() {
