@@ -102,7 +102,7 @@ public:
                                    const TargetConfig& aTargetConfig,
                                    bool aIsFirstPaint,
                                    bool aScheduleComposite) MOZ_OVERRIDE;
-  virtual AsyncCompositionManager* GetCompositionManager() MOZ_OVERRIDE { return mCompositionManager; }
+  virtual AsyncCompositionManager* GetCompositionManager(LayerTransactionParent* aLayerTree) MOZ_OVERRIDE { return mCompositionManager; }
   /**
    * This forces the is-first-paint flag to true. This is intended to
    * be called by the widget code when it loses its viewport information

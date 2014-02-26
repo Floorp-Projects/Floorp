@@ -559,9 +559,6 @@
 @BINPATH@/components/PeerConnection.manifest
 #endif
 
-@BINPATH@/components/HttpDataUsage.manifest
-@BINPATH@/components/HttpDataUsage.js
-
 @BINPATH@/chrome/marionette@JAREXT@
 @BINPATH@/chrome/marionette.manifest
 @BINPATH@/components/MarionetteComponents.manifest

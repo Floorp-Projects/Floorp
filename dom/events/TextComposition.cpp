@@ -26,12 +26,15 @@ namespace mozilla {
 
 TextComposition::TextComposition(nsPresContext* aPresContext,
                                  nsINode* aNode,
-                                 WidgetGUIEvent* aEvent) :
-  mPresContext(aPresContext), mNode(aNode),
-  mNativeContext(aEvent->widget->GetInputContext().mNativeIMEContext),
-  mCompositionStartOffset(0), mCompositionTargetOffset(0),
-  mIsSynthesizedForTests(aEvent->mFlags.mIsSynthesizedForTests),
-  mIsComposing(false)
+                                 WidgetGUIEvent* aEvent)
+  : mPresContext(aPresContext)
+  , mNode(aNode)
+  , mNativeContext(aEvent->widget->GetInputContext().mNativeIMEContext)
+  , mCompositionStartOffset(0)
+  , mCompositionTargetOffset(0)
+  , mIsSynthesizedForTests(aEvent->mFlags.mIsSynthesizedForTests)
+  , mIsComposing(false)
+  , mIsEditorHandlingEvent(false)
 {
 }
 
@@ -158,6 +161,7 @@ void
 TextComposition::EditorWillHandleTextEvent(const WidgetTextEvent* aTextEvent)
 {
   mIsComposing = aTextEvent->IsComposing();
+  mIsEditorHandlingEvent = true;
 
   MOZ_ASSERT(mLastData == aTextEvent->theText,
     "The text of a text event must be same as previous data attribute value "
@@ -168,6 +172,7 @@ void
 TextComposition::EditorDidHandleTextEvent()
 {
   mString = mLastData;
+  mIsEditorHandlingEvent = false;
 }
 
 void

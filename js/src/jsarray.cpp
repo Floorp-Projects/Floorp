@@ -682,7 +682,7 @@ js::ArraySetLength(typename ExecutionModeTraits<mode>::ContextType cxArg,
         arr->setLengthInt32(newLen);
     } else {
         JSContext *cx = cxArg->asJSContext();
-        ArrayObject::setLength(cx, arr, newLen);
+        arr->setLength(cx, newLen);
     }
 
 
@@ -787,7 +787,7 @@ array_addProperty(JSContext *cx, HandleObject obj, HandleId id, MutableHandleVal
     if (index >= length) {
         MOZ_ASSERT(arr->lengthIsWritable(),
                    "how'd this element get added if length is non-writable?");
-        ArrayObject::setLength(cx, arr, index + 1);
+        arr->setLength(cx, index + 1);
     }
     return true;
 }
@@ -2610,7 +2610,7 @@ js::array_concat(JSContext *cx, unsigned argc, Value *vp)
         if (!narr)
             return false;
         TryReuseArrayType(aobj, narr);
-        ArrayObject::setLength(cx, narr, length);
+        narr->setLength(cx, length);
         args.rval().setObject(*narr);
         if (argc == 0)
             return true;
@@ -3048,7 +3048,7 @@ js_Array(JSContext *cx, unsigned argc, Value *vp)
 
     /* If the length calculation overflowed, make sure that is marked for the new type. */
     if (arr->length() > INT32_MAX)
-        ArrayObject::setLength(cx, arr, arr->length());
+        arr->setLength(cx, arr->length());
 
     args.rval().setObject(*arr);
     return true;
@@ -3147,16 +3147,21 @@ NewArray(ExclusiveContext *cxArg, uint32_t length,
             !cx->compartment()->hasObjectMetadataCallback() &&
             cache.lookupGlobal(&ArrayObject::class_, cx->global(), allocKind, &entry))
         {
-            RootedObject obj(cx, cache.newObjectFromHit(cx, entry,
-                                                        GetInitialHeap(newKind, &ArrayObject::class_)));
+            gc::InitialHeap heap = GetInitialHeap(newKind, &ArrayObject::class_);
+            JSObject *obj = cache.newObjectFromHit<NoGC>(cx, entry, heap);
             if (obj) {
                 /* Fixup the elements pointer and length, which may be incorrect. */
-                Rooted<ArrayObject*> arr(cx, &obj->as<ArrayObject>());
+                ArrayObject *arr = &obj->as<ArrayObject>();
                 arr->setFixedElements();
-                ArrayObject::setLength(cx, arr, length);
+                arr->setLength(cx, length);
                 if (allocateCapacity && !EnsureNewArrayElements(cx, arr, length))
                     return nullptr;
                 return arr;
+            } else {
+                RootedObject proto(cxArg, protoArg);
+                obj = cache.newObjectFromHit<CanGC>(cx, entry, heap);
+                JS_ASSERT(!obj);
+                protoArg = proto;
             }
         }
     }
