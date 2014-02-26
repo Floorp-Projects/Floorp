@@ -9,7 +9,7 @@ const promise = require("sdk/core/promise");
 const IOService = Cc["@mozilla.org/network/io-service;1"]
   .getService(Ci.nsIIOService);
 const {Spectrum} = require("devtools/shared/widgets/Spectrum");
-const EventEmitter = require("devtools/shared/event-emitter");
+const EventEmitter = require("devtools/toolkit/event-emitter");
 const {colorUtils} = require("devtools/css-color");
 const Heritage = require("sdk/core/heritage");
 const {CSSTransformPreviewer} = require("devtools/shared/widgets/CSSTransformPreviewer");

@@ -16,7 +16,7 @@ const {Services} = Cu.import("resource://gre/modules/Services.jsm");
 const {FileUtils} = Cu.import("resource://gre/modules/FileUtils.jsm");
 const {installHosted, installPackaged, getTargetForApp,
        reloadApp, launchApp, closeApp} = require("devtools/app-actor-front");
-const {EventEmitter} = Cu.import("resource:///modules/devtools/shared/event-emitter.js");
+const {EventEmitter} = Cu.import("resource://gre/modules/devtools/event-emitter.js");
 
 const promise = require("sdk/core/promise");
 

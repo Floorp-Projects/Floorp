@@ -35,7 +35,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "require",
                                   "resource://gre/modules/devtools/Require.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "EventEmitter",
-                                  "resource:///modules/devtools/shared/event-emitter.js");
+                                  "resource://gre/modules/devtools/event-emitter.js");
 
 XPCOMUtils.defineLazyGetter(this, "prefBranch", function() {
   let prefService = Cc["@mozilla.org/preferences-service;1"]
