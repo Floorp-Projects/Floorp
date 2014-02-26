@@ -14,11 +14,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=946067
   SimpleTest.waitForExplicitFinish();
 
   function doGet(prop, thisObj) {
-    return Object.getOwnPropertyDescriptor(window, prop).get.call(thisObj);
+    return (Object.getOwnPropertyDescriptor(window, prop) ||
+            Object.getOwnPropertyDescriptor(Window.prototype, prop)).get.call(thisObj);
   }
 
   function doSet(prop, thisObj, value) {
-    return Object.getOwnPropertyDescriptor(window, prop).set.call(thisObj, value);
+    return (Object.getOwnPropertyDescriptor(window, prop) ||
+            Object.getOwnPropertyDescriptor(Window.prototype, prop)).set.call(thisObj, value);
   }
 
   window.onload = function() {
