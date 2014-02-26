@@ -1080,7 +1080,7 @@ class FakeMutableHandle : public js::MutableHandleBase<T>
 
 /*
  * Types for a variable that either should or shouldn't be rooted, depending on
- * the template parameter Rooted. Used for implementing functions that can
+ * the template parameter allowGC. Used for implementing functions that can
  * operate on either rooted or unrooted data.
  *
  * The toHandle() and toMutableHandle() functions are for calling functions
