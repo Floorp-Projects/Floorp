@@ -6,7 +6,9 @@ from __future__ import unicode_literals
 
 import itertools
 import os
+import time
 import types
+import xml.dom.minidom as minidom
 import xml.etree.ElementTree as ET
 
 from mozpack.copier import FileCopier
@@ -22,6 +24,14 @@ from ..frontend.data import (
 )
 from ..makeutil import Makefile
 from ..util import ensureParentDir
+
+
+def pretty_print(element):
+    """Return a pretty-printed XML string for an Element.
+    """
+    s = ET.tostring(element, 'utf-8')
+    # minidom wraps element in a Document node; firstChild strips it.
+    return minidom.parseString(s).firstChild.toprettyxml(indent='  ')
 
 
 class AndroidEclipseBackend(CommonBackend):
@@ -114,6 +124,37 @@ class AndroidEclipseBackend(CommonBackend):
         e.set('path', name)
         return e
 
+    def _Element_for_filtered_resources(self, filtered_resources):
+        """Turn a list of filtered resource arguments like
+        ['1.0-projectRelativePath-matches-false-false-*org/mozilla/gecko/resources/**']
+        into an XML Element, like:
+        <filteredResources>
+          <filter>
+            <id>1393009101322</id>
+            <name></name>
+            <type>30</type>
+            <matcher>
+              <id>org.eclipse.ui.ide.multiFilter</id>
+              <arguments>1.0-projectRelativePath-matches-false-false-*org/mozilla/gecko/resources/**</arguments>
+            </matcher>
+          </filter>
+        </filteredResources>
+
+        The id is random; the values are magic."""
+
+        id = int(1000 * time.time())
+        filteredResources = ET.Element('filteredResources')
+        for arg in sorted(filtered_resources):
+            e = ET.SubElement(filteredResources, 'filter')
+            ET.SubElement(e, 'id').text = str(id)
+            id += 1
+            ET.SubElement(e, 'name')
+            ET.SubElement(e, 'type').text = '30' # It's magic!
+            matcher = ET.SubElement(e, 'matcher')
+            ET.SubElement(matcher, 'id').text = 'org.eclipse.ui.ide.multiFilter'
+            ET.SubElement(matcher, 'arguments').text = str(arg)
+        return filteredResources
+
     def _manifest_for_project(self, srcdir, project):
         manifest = InstallManifest()
 
@@ -192,6 +233,11 @@ class AndroidEclipseBackend(CommonBackend):
         defines['IDE_PROJECT_LIBRARY_REFERENCES'] = '\n'.join(
             'android.library.reference.%s=%s' % (i + 1, ref)
             for i, ref in enumerate(sorted(data.included_projects)))
+        if data.filtered_resources:
+            filteredResources = self._Element_for_filtered_resources(data.filtered_resources)
+            defines['IDE_PROJECT_FILTERED_RESOURCES'] = pretty_print(filteredResources).strip()
+        else:
+            defines['IDE_PROJECT_FILTERED_RESOURCES'] = ''
 
         copier = FileCopier()
         finder = FileFinder(template_directory)

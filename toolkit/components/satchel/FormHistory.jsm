@@ -773,6 +773,8 @@ function expireOldEntriesVacuum(aExpireTime, aBeginningCount) {
 }
 
 this.FormHistory = {
+  get enabled() Prefs.enabled,
+
   search : function formHistorySearch(aSelectTerms, aSearchData, aCallbacks) {
     // if no terms selected, select everything
     aSelectTerms = (aSelectTerms) ?  aSelectTerms : validFields;
