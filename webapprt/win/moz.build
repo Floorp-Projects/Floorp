@@ -11,6 +11,8 @@ SOURCES += [
 ]
 
 DEFINES['XPCOM_GLUE'] = True
+if CONFIG['DEBUG']:
+    DEFINES['DEBUG'] = True
 
 # Statically link against the CRT
 USE_STATIC_LIBS = True
