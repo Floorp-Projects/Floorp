@@ -9,7 +9,7 @@ const {Cu} = require("chrome");
 Cu.import("resource://gre/modules/Services.jsm");
 
 var promise = require("sdk/core/promise");
-var EventEmitter = require("devtools/shared/event-emitter");
+var EventEmitter = require("devtools/toolkit/event-emitter");
 var Telemetry = require("devtools/shared/telemetry");
 
 const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";

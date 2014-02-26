@@ -8,4 +8,5 @@ from xunit import XUnitFormatter
 from html import HTMLFormatter
 from machformatter import MachFormatter, MachTerminalFormatter
 
-JSONFormatter = lambda: json.dumps
+def JSONFormatter():
+    return lambda x: json.dumps(x) + "\n"
