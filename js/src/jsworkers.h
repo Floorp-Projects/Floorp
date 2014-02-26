@@ -405,6 +405,7 @@ struct ParseTask
     // at that point would create cross-compartment references. Instead we
     // hold them here, and install them after merging the compartments.
     PersistentRootedObject optionsElement;
+    PersistentRootedScript optionsIntroductionScript;
 
     // Callback invoked off the main thread when the parse finishes.
     JS::OffThreadCompileCallback callback;

@@ -177,8 +177,9 @@ ParseTask::ParseTask(ExclusiveContext *cx, JSObject *exclusiveContextGlobal, JSC
                      JS::OffThreadCompileCallback callback, void *callbackData)
   : cx(cx), options(initCx), chars(chars), length(length),
     alloc(JSRuntime::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE), scopeChain(initCx, scopeChain),
-    exclusiveContextGlobal(initCx, exclusiveContextGlobal), optionsElement(initCx), callback(callback),
-    callbackData(callbackData), script(nullptr), errors(cx), overRecursed(false)
+    exclusiveContextGlobal(initCx, exclusiveContextGlobal), optionsElement(initCx),
+    optionsIntroductionScript(initCx), callback(callback), callbackData(callbackData),
+    script(nullptr), errors(cx), overRecursed(false)
 {
 }
 
@@ -192,6 +193,8 @@ ParseTask::init(JSContext *cx, const ReadOnlyCompileOptions &options)
     // point at while it's in the compilation's temporary compartment.
     optionsElement = this->options.element();
     this->options.setElement(nullptr);
+    optionsIntroductionScript = this->options.introductionScript();
+    this->options.setIntroductionScript(nullptr);
 
     return true;
 }
@@ -211,6 +214,7 @@ ParseTask::finish()
         // was in the temporary compartment.
         ScriptSourceObject &sso = script->sourceObject()->as<ScriptSourceObject>();
         sso.initElement(optionsElement);
+        sso.initIntroductionScript(optionsIntroductionScript);
     }
 }
 
