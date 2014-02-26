@@ -74,6 +74,7 @@ public class Tab {
     public static final int STATE_SUCCESS = 2;
     public static final int STATE_ERROR = 3;
 
+    public static final int LOAD_PROGRESS_INIT = 10;
     public static final int LOAD_PROGRESS_START = 20;
     public static final int LOAD_PROGRESS_LOCATION_CHANGE = 60;
     public static final int LOAD_PROGRESS_LOADED = 80;
@@ -117,6 +118,7 @@ public class Tab {
         mPluginViews = new ArrayList<View>();
         mPluginLayers = new HashMap<Object, Layer>();
         mState = shouldShowProgress(url) ? STATE_SUCCESS : STATE_LOADING;
+        mLoadProgress = LOAD_PROGRESS_INIT;
 
         // At startup, the background is set to a color specified by LayerView
         // when the LayerView is created. Shortly after, this background color
