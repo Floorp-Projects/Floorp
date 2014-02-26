@@ -45,7 +45,6 @@ public:
                      dom::GetCameraCallback* aOnSuccess,
                      dom::CameraErrorCallback* aOnError,
                      nsPIDOMWindow* aWindow);
-  nsRefPtr<ICameraControl> GetNativeCameraControl();
 
   void Shutdown();
 

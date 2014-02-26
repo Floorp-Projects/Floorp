@@ -59,6 +59,7 @@ chrome.jar:
   content/contenthandlers/FormHelper.js        (content/contenthandlers/FormHelper.js)
   content/contenthandlers/ConsoleAPIObserver.js (content/contenthandlers/ConsoleAPIObserver.js)
   content/contenthandlers/Content.js           (content/contenthandlers/Content.js)
+  content/contenthandlers/PluginHelper.js      (content/contenthandlers/PluginHelper.js)
 
   content/library/SelectionPrototype.js        (content/library/SelectionPrototype.js)
 
