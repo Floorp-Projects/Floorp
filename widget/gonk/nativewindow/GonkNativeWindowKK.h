@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-#ifndef NATIVEWINDOW_GONKNATIVEWINDOW_JB_H
-#define NATIVEWINDOW_GONKNATIVEWINDOW_JB_H
+#ifndef NATIVEWINDOW_GONKNATIVEWINDOW_KK_H
+#define NATIVEWINDOW_GONKNATIVEWINDOW_KK_H
 
 #include <ui/GraphicBuffer.h>
 #include <utils/String8.h>
@@ -24,8 +24,9 @@
 #include <utils/threads.h>
 
 #include "CameraCommon.h"
-#include "GonkConsumerBaseJB.h"
+#include "GonkConsumerBaseKK.h"
 #include "GrallocImages.h"
+#include "IGonkGraphicBufferConsumer.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/LayersSurfaces.h"
 
@@ -56,8 +57,7 @@ class GonkNativeWindow: public GonkConsumerBase
     typedef mozilla::layers::SurfaceDescriptor SurfaceDescriptor;
   public:
     typedef GonkConsumerBase::FrameAvailableListener FrameAvailableListener;
-
-    typedef GonkBufferQueue::BufferItem BufferItem;
+    typedef IGonkGraphicBufferConsumer::BufferItem BufferItem;
 
     enum { INVALID_BUFFER_SLOT = GonkBufferQueue::INVALID_BUFFER_SLOT };
     enum { NO_BUFFER_AVAILABLE = GonkBufferQueue::NO_BUFFER_AVAILABLE };
@@ -66,7 +66,12 @@ class GonkNativeWindow: public GonkConsumerBase
     // the consumer usage flags passed to the graphics allocator. The
     // bufferCount parameter specifies how many buffers can be locked for user
     // access at the same time.
+    // controlledByApp tells whether this consumer is controlled by the
+    // application.
     GonkNativeWindow();
+    GonkNativeWindow(const sp<GonkBufferQueue>& bq, uint32_t consumerUsage,
+            int bufferCount = GonkBufferQueue::MIN_UNDEQUEUED_BUFFERS,
+            bool controlledByApp = false);
 
     virtual ~GonkNativeWindow();
 
@@ -86,21 +91,17 @@ class GonkNativeWindow: public GonkConsumerBase
     //
     // If waitForFence is true, and the acquired BufferItem has a valid fence object,
     // acquireBuffer will wait on the fence with no timeout before returning.
-#if ANDROID_VERSION >= 18
-    status_t acquireBuffer(BufferItem *item, bool waitForFence = true);
-#endif
+    status_t acquireBuffer(BufferItem *item, nsecs_t presentWhen,
+        bool waitForFence = true);
+
     // Returns an acquired buffer to the queue, allowing it to be reused. Since
     // only a fixed number of buffers may be acquired at a time, old buffers
     // must be released by calling releaseBuffer to ensure new buffers can be
     // acquired by acquireBuffer. Once a BufferItem is released, the caller must
     // not access any members of the BufferItem, and should immediately remove
     // all of its references to the BufferItem itself.
-#if ANDROID_VERSION >= 18
     status_t releaseBuffer(const BufferItem &item,
             const sp<Fence>& releaseFence = Fence::NO_FENCE);
-#endif
-
-    sp<IGraphicBufferProducer> getProducerInterface() const { return getBufferQueue(); }
 
     // setDefaultBufferSize is used to set the size of buffers returned by
     // requestBuffers when a with and height of zero is requested.
@@ -116,7 +117,7 @@ class GonkNativeWindow: public GonkConsumerBase
 
     // Return the buffer to the queue and mark it as FREE. After that
     // the buffer is useable again for the decoder.
-    bool returnBuffer(uint32_t index, uint32_t generation, const sp<Fence>& fence);
+    bool returnBuffer(uint32_t index, uint32_t generation);
 
     SurfaceDescriptor* getSurfaceDescriptorFromBuffer(ANativeWindowBuffer* buffer);
 
@@ -154,10 +155,24 @@ public:
         DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
     }
 
-protected:
     // Unlock either returns the buffer to the native window or
     // destroys the buffer if the window is already released.
-    virtual void Unlock() MOZ_OVERRIDE;
+    virtual void Unlock() MOZ_OVERRIDE
+    {
+        if (mLocked) {
+            // The window might have been destroyed. The buffer is no longer
+            // valid at that point.
+            sp<GonkNativeWindow> window = mNativeWindow.promote();
+            if (window.get() && window->returnBuffer(mIndex, mGeneration)) {
+                mLocked = false;
+            } else {
+                // If the window doesn't exist any more, release the buffer
+                // directly.
+                ImageBridgeChild *ibc = ImageBridgeChild::GetSingleton();
+                ibc->DeallocSurfaceDescriptorGralloc(mSurfaceDescriptor);
+            }
+        }
+    }
 
 protected:
     wp<GonkNativeWindow> mNativeWindow;

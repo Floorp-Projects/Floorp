@@ -20,23 +20,22 @@
 //#define LOG_NDEBUG 0
 
 #include <android/native_window.h>
-#if ANDROID_VERSION == 17
-#include <utils/Trace.h>
-#else
-#include <cutils/trace.h>
-#endif
 
 #include <binder/Parcel.h>
+
 #include <utils/Log.h>
+#include <utils/Trace.h>
+
 #include <ui/Fence.h>
 
-#include "GonkNativeWindowClientJB.h"
+#include "GonkNativeWindowClientKK.h"
 
 namespace android {
 
 GonkNativeWindowClient::GonkNativeWindowClient(
-        const sp<IGraphicBufferProducer>& bufferProducer)
-    : mBufferProducer(bufferProducer)
+        const sp<IGraphicBufferProducer>& bufferProducer,
+        bool controlledByApp)
+    : mGraphicBufferProducer(bufferProducer)
 {
     // Initialize the ANativeWindow function pointers.
     ANativeWindow::setSwapInterval  = hook_setSwapInterval;
@@ -69,6 +68,8 @@ GonkNativeWindowClient::GonkNativeWindowClient(
     mTransformHint = 0;
     mConsumerRunningBehind = false;
     mConnectedToCpu = false;
+    mProducerControlledByApp = controlledByApp;
+    mSwapIntervalZero = false;
 }
 
 GonkNativeWindowClient::~GonkNativeWindowClient() {
@@ -77,12 +78,8 @@ GonkNativeWindowClient::~GonkNativeWindowClient() {
     }
 }
 
-#if ANDROID_VERSION == 17
-sp<IGraphicBufferProducer> GonkNativeWindowClient::getISurfaceTexture() const {
-#else
 sp<IGraphicBufferProducer> GonkNativeWindowClient::getIGraphicBufferProducer() const {
-#endif
-    return mBufferProducer;
+    return mGraphicBufferProducer;
 }
 
 int GonkNativeWindowClient::hook_setSwapInterval(ANativeWindow* window, int interval) {
@@ -115,11 +112,7 @@ int GonkNativeWindowClient::hook_dequeueBuffer_DEPRECATED(ANativeWindow* window,
     int fenceFd = -1;
     int result = c->dequeueBuffer(&buf, &fenceFd);
     sp<Fence> fence(new Fence(fenceFd));
-#if ANDROID_VERSION == 17
-    int waitResult = fence->waitForever(1000, "dequeueBuffer_DEPRECATED");
-#else
     int waitResult = fence->waitForever("dequeueBuffer_DEPRECATED");
-#endif
     if (waitResult != OK) {
         ALOGE("dequeueBuffer_DEPRECATED: Fence::wait returned an error: %d",
                 waitResult);
@@ -162,10 +155,10 @@ int GonkNativeWindowClient::hook_perform(ANativeWindow* window, int operation, .
 }
 
 int GonkNativeWindowClient::setSwapInterval(int interval) {
+    ATRACE_CALL();
     // EGL specification states:
     //  interval is silently clamped to minimum and maximum implementation
     //  dependent values before being stored.
-    // Although we don't have to, we apply the same logic here.
 
     if (interval < minSwapInterval)
         interval = minSwapInterval;
@@ -173,49 +166,43 @@ int GonkNativeWindowClient::setSwapInterval(int interval) {
     if (interval > maxSwapInterval)
         interval = maxSwapInterval;
 
-    status_t res = mBufferProducer->setSynchronousMode(interval ? true : false);
-
-    return res;
+    return NO_ERROR;
 }
 
-int GonkNativeWindowClient::dequeueBuffer(android_native_buffer_t** buffer,
-        int* fenceFd) {
+int GonkNativeWindowClient::dequeueBuffer(android_native_buffer_t** buffer, int* fenceFd) {
+    ATRACE_CALL();
     ALOGV("GonkNativeWindowClient::dequeueBuffer");
     Mutex::Autolock lock(mMutex);
     int buf = -1;
     int reqW = mReqWidth ? mReqWidth : mUserWidth;
     int reqH = mReqHeight ? mReqHeight : mUserHeight;
     sp<Fence> fence;
-#if ANDROID_VERSION == 17
-    status_t result = mBufferProducer->dequeueBuffer(&buf, fence,
+    status_t result = mGraphicBufferProducer->dequeueBuffer(&buf, &fence, mSwapIntervalZero,
             reqW, reqH, mReqFormat, mReqUsage);
-#else
-    status_t result = mBufferProducer->dequeueBuffer(&buf, &fence,
-            reqW, reqH, mReqFormat, mReqUsage);
-#endif
-
     if (result < 0) {
-        ALOGV("dequeueBuffer: dequeueBuffer(%d, %d, %d, %d)"
+        ALOGV("dequeueBuffer: IGraphicBufferProducer::dequeueBuffer(%d, %d, %d, %d)"
              "failed: %d", mReqWidth, mReqHeight, mReqFormat, mReqUsage,
              result);
         return result;
     }
     sp<GraphicBuffer>& gbuf(mSlots[buf].buffer);
+
+    // this should never happen
+    ALOGE_IF(fence == NULL, "Surface::dequeueBuffer: received null Fence! buf=%d", buf);
+
     if (result & IGraphicBufferProducer::RELEASE_ALL_BUFFERS) {
         freeAllBuffers();
     }
 
     if ((result & IGraphicBufferProducer::BUFFER_NEEDS_REALLOCATION) || gbuf == 0) {
-        result = mBufferProducer->requestBuffer(buf, &gbuf);
-
+        result = mGraphicBufferProducer->requestBuffer(buf, &gbuf);
         if (result != NO_ERROR) {
-            ALOGE("dequeueBuffer: requestBuffer failed: %d",
-                    result);
+            ALOGE("dequeueBuffer: IGraphicBufferProducer::requestBuffer failed: %d", result);
             return result;
         }
     }
 
-    if (fence.get() && fence->isValid()) {
+    if (fence->isValid()) {
         *fenceFd = fence->dup();
         if (*fenceFd == -1) {
             ALOGE("dequeueBuffer: error duping fence: %d", errno);
@@ -233,6 +220,7 @@ int GonkNativeWindowClient::dequeueBuffer(android_native_buffer_t** buffer,
 
 int GonkNativeWindowClient::cancelBuffer(android_native_buffer_t* buffer,
         int fenceFd) {
+    ATRACE_CALL();
     ALOGV("GonkNativeWindowClient::cancelBuffer");
     Mutex::Autolock lock(mMutex);
     int i = getSlotFromBufferLocked(buffer);
@@ -240,7 +228,7 @@ int GonkNativeWindowClient::cancelBuffer(android_native_buffer_t* buffer,
         return i;
     }
     sp<Fence> fence(fenceFd >= 0 ? new Fence(fenceFd) : Fence::NO_FENCE);
-    mBufferProducer->cancelBuffer(i, fence);
+    mGraphicBufferProducer->cancelBuffer(i, fence);
     return OK;
 }
 
@@ -264,11 +252,14 @@ int GonkNativeWindowClient::lockBuffer_DEPRECATED(android_native_buffer_t* buffe
 }
 
 int GonkNativeWindowClient::queueBuffer(android_native_buffer_t* buffer, int fenceFd) {
+    ATRACE_CALL();
     ALOGV("GonkNativeWindowClient::queueBuffer");
     Mutex::Autolock lock(mMutex);
     int64_t timestamp;
+    bool isAutoTimestamp = false;
     if (mTimestamp == NATIVE_WINDOW_TIMESTAMP_AUTO) {
         timestamp = systemTime(SYSTEM_TIME_MONOTONIC);
+        isAutoTimestamp = true;
         ALOGV("GonkNativeWindowClient::queueBuffer making up timestamp: %.2f ms",
              timestamp / 1000000.f);
     } else {
@@ -286,10 +277,9 @@ int GonkNativeWindowClient::queueBuffer(android_native_buffer_t* buffer, int fen
 
     sp<Fence> fence(fenceFd >= 0 ? new Fence(fenceFd) : Fence::NO_FENCE);
     IGraphicBufferProducer::QueueBufferOutput output;
-
-    IGraphicBufferProducer::QueueBufferInput input(timestamp, crop, mScalingMode,
-            mTransform, fence);
-    status_t err = mBufferProducer->queueBuffer(i, input, &output);
+    IGraphicBufferProducer::QueueBufferInput input(timestamp, isAutoTimestamp,
+            crop, mScalingMode, mTransform, mSwapIntervalZero, fence);
+    status_t err = mGraphicBufferProducer->queueBuffer(i, input, &output);
     if (err != OK)  {
         ALOGE("queueBuffer: error queuing buffer to SurfaceTexture, %d", err);
     }
@@ -303,6 +293,7 @@ int GonkNativeWindowClient::queueBuffer(android_native_buffer_t* buffer, int fen
 }
 
 int GonkNativeWindowClient::query(int what, int* value) const {
+    ATRACE_CALL();
     ALOGV("GonkNativeWindowClient::query");
     { // scope for the lock
         Mutex::Autolock lock(mMutex);
@@ -316,7 +307,7 @@ int GonkNativeWindowClient::query(int what, int* value) const {
             case NATIVE_WINDOW_QUEUES_TO_WINDOW_COMPOSER: {
                 //sp<ISurfaceComposer> composer(
                 //        ComposerService::getComposerService());
-                //if (composer->authenticateSurfaceTexture(mBufferProducer)) {
+                //if (composer->authenticateSurfaceTexture(mGraphicBufferProducer)) {
                 //    *value = 1;
                 //} else {
                     *value = 0;
@@ -324,11 +315,7 @@ int GonkNativeWindowClient::query(int what, int* value) const {
                 return NO_ERROR;
             }
             case NATIVE_WINDOW_CONCRETE_TYPE:
-#if ANDROID_VERSION == 17
-                *value = NATIVE_WINDOW_SURFACE_TEXTURE_CLIENT;
-#else
                 *value = NATIVE_WINDOW_SURFACE;
-#endif
                 return NO_ERROR;
             case NATIVE_WINDOW_DEFAULT_WIDTH:
                 *value = mUserWidth ? mUserWidth : mDefaultWidth;
@@ -344,7 +331,7 @@ int GonkNativeWindowClient::query(int what, int* value) const {
                 if (!mConsumerRunningBehind) {
                     *value = 0;
                 } else {
-                    err = mBufferProducer->query(what, value);
+                    err = mGraphicBufferProducer->query(what, value);
                     if (err == NO_ERROR) {
                         mConsumerRunningBehind = *value;
                     }
@@ -353,8 +340,7 @@ int GonkNativeWindowClient::query(int what, int* value) const {
             }
         }
     }
-
-    return mBufferProducer->query(what, value);
+    return mGraphicBufferProducer->query(what, value);
 }
 
 int GonkNativeWindowClient::perform(int operation, va_list args)
@@ -496,12 +482,12 @@ int GonkNativeWindowClient::dispatchUnlockAndPost(va_list args) {
 
 
 int GonkNativeWindowClient::connect(int api) {
+    ATRACE_CALL();
     ALOGV("GonkNativeWindowClient::connect");
-
+    static sp<BBinder> sLife = new BBinder();
     Mutex::Autolock lock(mMutex);
     IGraphicBufferProducer::QueueBufferOutput output;
-
-    int err = mBufferProducer->connect(api, &output);
+    int err = mGraphicBufferProducer->connect(sLife, api, true, &output);
     if (err == NO_ERROR) {
         uint32_t numPendingBuffers = 0;
         output.deflate(&mDefaultWidth, &mDefaultHeight, &mTransformHint,
@@ -514,12 +500,13 @@ int GonkNativeWindowClient::connect(int api) {
     return err;
 }
 
+
 int GonkNativeWindowClient::disconnect(int api) {
+    ATRACE_CALL();
     ALOGV("GonkNativeWindowClient::disconnect");
     Mutex::Autolock lock(mMutex);
     freeAllBuffers();
-    int err = mBufferProducer->disconnect(api);
-
+    int err = mGraphicBufferProducer->disconnect(api);
     if (!err) {
         mReqFormat = 0;
         mReqWidth = 0;
@@ -545,6 +532,8 @@ int GonkNativeWindowClient::setUsage(uint32_t reqUsage)
 
 int GonkNativeWindowClient::setCrop(Rect const* rect)
 {
+    ATRACE_CALL();
+
     Rect realRect;
     if (rect == NULL || rect->isEmpty()) {
         realRect.clear();
@@ -562,10 +551,11 @@ int GonkNativeWindowClient::setCrop(Rect const* rect)
 
 int GonkNativeWindowClient::setBufferCount(int bufferCount)
 {
+    ATRACE_CALL();
     ALOGV("GonkNativeWindowClient::setBufferCount");
     Mutex::Autolock lock(mMutex);
 
-    status_t err = mBufferProducer->setBufferCount(bufferCount);
+    status_t err = mGraphicBufferProducer->setBufferCount(bufferCount);
     ALOGE_IF(err, "IGraphicBufferProducer::setBufferCount(%d) returned %s",
             bufferCount, strerror(-err));
 
@@ -578,6 +568,7 @@ int GonkNativeWindowClient::setBufferCount(int bufferCount)
 
 int GonkNativeWindowClient::setBuffersDimensions(int w, int h)
 {
+    ATRACE_CALL();
     ALOGV("GonkNativeWindowClient::setBuffersDimensions");
 
     if (w<0 || h<0)
@@ -594,6 +585,7 @@ int GonkNativeWindowClient::setBuffersDimensions(int w, int h)
 
 int GonkNativeWindowClient::setBuffersUserDimensions(int w, int h)
 {
+    ATRACE_CALL();
     ALOGV("GonkNativeWindowClient::setBuffersUserDimensions");
 
     if (w<0 || h<0)
@@ -622,6 +614,7 @@ int GonkNativeWindowClient::setBuffersFormat(int format)
 
 int GonkNativeWindowClient::setScalingMode(int mode)
 {
+    ATRACE_CALL();
     ALOGV("GonkNativeWindowClient::setScalingMode(%d)", mode);
 
     switch (mode) {
@@ -641,6 +634,7 @@ int GonkNativeWindowClient::setScalingMode(int mode)
 
 int GonkNativeWindowClient::setBuffersTransform(int transform)
 {
+    ATRACE_CALL();
     ALOGV("GonkNativeWindowClient::setBuffersTransform");
     Mutex::Autolock lock(mMutex);
     mTransform = transform;
