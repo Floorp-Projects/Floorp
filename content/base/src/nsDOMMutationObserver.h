@@ -104,6 +104,8 @@ public:
   nsRefPtr<nsSimpleContentList> mRemovedNodes;
   nsCOMPtr<nsINode>             mPreviousSibling;
   nsCOMPtr<nsINode>             mNextSibling;
+
+  nsRefPtr<nsDOMMutationRecord> mNext;
   nsCOMPtr<nsISupports>         mOwner;
 };
  
@@ -344,7 +346,8 @@ class nsDOMMutationObserver : public nsISupports,
 public:
   nsDOMMutationObserver(already_AddRefed<nsPIDOMWindow> aOwner,
                         mozilla::dom::MutationCallback& aCb)
-  : mOwner(aOwner), mCallback(&aCb), mWaitingForRun(false), mId(++sCount)
+  : mOwner(aOwner), mLastPendingMutation(nullptr), mPendingMutationCount(0),
+    mCallback(&aCb), mWaitingForRun(false), mId(++sCount)
   {
     SetIsDOMBinding();
   }
@@ -382,6 +385,28 @@ public:
   void GetObservingInfo(nsTArray<Nullable<MutationObservingInfo> >& aResult);
 
   mozilla::dom::MutationCallback* MutationCallback() { return mCallback; }
+
+  void AppendMutationRecord(already_AddRefed<nsDOMMutationRecord> aRecord)
+  {
+    MOZ_ASSERT(aRecord.get());
+    if (!mLastPendingMutation) {
+      MOZ_ASSERT(!mFirstPendingMutation);
+      mFirstPendingMutation = aRecord;
+      mLastPendingMutation = mFirstPendingMutation;
+    } else {
+      MOZ_ASSERT(mFirstPendingMutation);
+      mLastPendingMutation->mNext = aRecord;
+      mLastPendingMutation = mLastPendingMutation->mNext;
+    }
+    ++mPendingMutationCount;
+  }
+
+  void ClearPendingRecords()
+  {
+    mFirstPendingMutation = nullptr;
+    mLastPendingMutation = nullptr;
+    mPendingMutationCount = 0;
+  }
 
   // static methods
   static void HandleMutations()
@@ -433,7 +458,10 @@ protected:
   nsAutoTArray<nsDOMMutationRecord*, 4>              mCurrentMutations;
   // MutationRecords which will be handed to the callback at the end of
   // the microtask.
-  nsTArray<nsRefPtr<nsDOMMutationRecord> >           mPendingMutations;
+  nsRefPtr<nsDOMMutationRecord>                      mFirstPendingMutation;
+  nsDOMMutationRecord*                               mLastPendingMutation;
+  uint32_t                                           mPendingMutationCount;
+
   nsRefPtr<mozilla::dom::MutationCallback>           mCallback;
 
   bool                                               mWaitingForRun;
