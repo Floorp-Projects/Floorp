@@ -1287,7 +1287,6 @@ jit::AssertBasicGraphCoherency(MIRGraph &graph)
 
     // Assert successor and predecessor list coherency.
     uint32_t count = 0;
-    size_t compares = 0;
     for (MBasicBlockIterator block(graph.begin()); block != graph.end(); block++) {
         count++;
 
@@ -1301,8 +1300,6 @@ jit::AssertBasicGraphCoherency(MIRGraph &graph)
 
         // Assert that use chains are valid for this instruction.
         for (MDefinitionIterator iter(*block); iter; iter++) {
-            if (iter->isCompare())
-                compares++;
             for (uint32_t i = 0, e = iter->numOperands(); i < e; i++)
                 JS_ASSERT(CheckOperandImpliesUse(*iter, iter->getOperand(i)));
         }
