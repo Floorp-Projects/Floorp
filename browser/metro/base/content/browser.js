@@ -64,6 +64,7 @@ var Browser = {
       messageManager.loadFrameScript("chrome://browser/content/contenthandlers/SelectionHandler.js", true);
       messageManager.loadFrameScript("chrome://browser/content/contenthandlers/ContextMenuHandler.js", true);
       messageManager.loadFrameScript("chrome://browser/content/contenthandlers/ConsoleAPIObserver.js", true);
+      messageManager.loadFrameScript("chrome://browser/content/contenthandlers/PluginHelper.js", true);
     } catch (e) {
       // XXX whatever is calling startup needs to dump errors!
       dump("###########" + e + "\n");
