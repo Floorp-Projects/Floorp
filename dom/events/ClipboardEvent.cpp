@@ -3,16 +3,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsDOMClipboardEvent.h"
+#include "mozilla/dom/ClipboardEvent.h"
+#include "mozilla/ContentEvents.h"
 #include "nsDOMDataTransfer.h"
 #include "nsIClipboard.h"
-#include "mozilla/ContentEvents.h"
 
-using namespace mozilla;
+namespace mozilla {
+namespace dom {
 
-nsDOMClipboardEvent::nsDOMClipboardEvent(mozilla::dom::EventTarget* aOwner,
-                                         nsPresContext* aPresContext,
-                                         InternalClipboardEvent* aEvent)
+ClipboardEvent::ClipboardEvent(EventTarget* aOwner,
+                               nsPresContext* aPresContext,
+                               InternalClipboardEvent* aEvent)
   : nsDOMEvent(aOwner, aPresContext, aEvent ? aEvent :
                new InternalClipboardEvent(false, 0))
 {
@@ -24,18 +25,18 @@ nsDOMClipboardEvent::nsDOMClipboardEvent(mozilla::dom::EventTarget* aOwner,
   }
 }
 
-NS_INTERFACE_MAP_BEGIN(nsDOMClipboardEvent)
+NS_INTERFACE_MAP_BEGIN(ClipboardEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMClipboardEvent)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
 
-NS_IMPL_ADDREF_INHERITED(nsDOMClipboardEvent, nsDOMEvent)
-NS_IMPL_RELEASE_INHERITED(nsDOMClipboardEvent, nsDOMEvent)
+NS_IMPL_ADDREF_INHERITED(ClipboardEvent, nsDOMEvent)
+NS_IMPL_RELEASE_INHERITED(ClipboardEvent, nsDOMEvent)
 
 nsresult
-nsDOMClipboardEvent::InitClipboardEvent(const nsAString& aType,
-                                        bool aCanBubble,
-                                        bool aCancelable,
-                                        nsIDOMDataTransfer* aClipboardData)
+ClipboardEvent::InitClipboardEvent(const nsAString& aType,
+                                   bool aCanBubble,
+                                   bool aCancelable,
+                                   nsIDOMDataTransfer* aClipboardData)
 {
   nsresult rv = nsDOMEvent::InitEvent(aType, aCanBubble, aCancelable);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -45,15 +46,14 @@ nsDOMClipboardEvent::InitClipboardEvent(const nsAString& aType,
   return NS_OK;
 }
 
-already_AddRefed<nsDOMClipboardEvent>
-nsDOMClipboardEvent::Constructor(const mozilla::dom::GlobalObject& aGlobal,
-                                 const nsAString& aType,
-                                 const mozilla::dom::ClipboardEventInit& aParam,
-                                 mozilla::ErrorResult& aRv)
+already_AddRefed<ClipboardEvent>
+ClipboardEvent::Constructor(const GlobalObject& aGlobal,
+                            const nsAString& aType,
+                            const ClipboardEventInit& aParam,
+                            ErrorResult& aRv)
 {
-  nsCOMPtr<mozilla::dom::EventTarget> t = do_QueryInterface(aGlobal.GetAsSupports());
-  nsRefPtr<nsDOMClipboardEvent> e =
-    new nsDOMClipboardEvent(t, nullptr, nullptr);
+  nsCOMPtr<EventTarget> t = do_QueryInterface(aGlobal.GetAsSupports());
+  nsRefPtr<ClipboardEvent> e = new ClipboardEvent(t, nullptr, nullptr);
   bool trusted = e->Init(t);
 
   nsRefPtr<nsDOMDataTransfer> clipboardData;
@@ -75,14 +75,14 @@ nsDOMClipboardEvent::Constructor(const mozilla::dom::GlobalObject& aGlobal,
 }
 
 NS_IMETHODIMP
-nsDOMClipboardEvent::GetClipboardData(nsIDOMDataTransfer** aClipboardData)
+ClipboardEvent::GetClipboardData(nsIDOMDataTransfer** aClipboardData)
 {
   NS_IF_ADDREF(*aClipboardData = GetClipboardData());
   return NS_OK;
 }
 
 nsIDOMDataTransfer*
-nsDOMClipboardEvent::GetClipboardData()
+ClipboardEvent::GetClipboardData()
 {
   InternalClipboardEvent* event = mEvent->AsClipboardEvent();
 
@@ -98,12 +98,18 @@ nsDOMClipboardEvent::GetClipboardData()
   return event->clipboardData;
 }
 
-nsresult NS_NewDOMClipboardEvent(nsIDOMEvent** aInstancePtrResult,
-                                 mozilla::dom::EventTarget* aOwner,
-                                 nsPresContext* aPresContext,
-                                 InternalClipboardEvent* aEvent)
+} // namespace dom
+} // namespace mozilla
+
+using namespace mozilla;
+using namespace mozilla::dom;
+
+nsresult
+NS_NewDOMClipboardEvent(nsIDOMEvent** aInstancePtrResult,
+                        EventTarget* aOwner,
+                        nsPresContext* aPresContext,
+                        InternalClipboardEvent* aEvent)
 {
-  nsDOMClipboardEvent* it =
-    new nsDOMClipboardEvent(aOwner, aPresContext, aEvent);
+  ClipboardEvent* it = new ClipboardEvent(aOwner, aPresContext, aEvent);
   return CallQueryInterface(it, aInstancePtrResult);
 }

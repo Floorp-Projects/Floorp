@@ -38,6 +38,7 @@ EXPORTS.mozilla += [
 EXPORTS.mozilla.dom += [
     'AnimationEvent.h',
     'BeforeUnloadEvent.h',
+    'ClipboardEvent.h',
     'EventTarget.h',
     'PointerEvent.h',
     'Touch.h',
@@ -50,10 +51,10 @@ if CONFIG['MOZ_WEBSPEECH']:
 UNIFIED_SOURCES += [
     'AnimationEvent.cpp',
     'BeforeUnloadEvent.cpp',
+    'ClipboardEvent.cpp',
     'EventTarget.cpp',
     'nsAsyncDOMEvent.cpp',
     'nsContentEventHandler.cpp',
-    'nsDOMClipboardEvent.cpp',
     'nsDOMCommandEvent.cpp',
     'nsDOMCompositionEvent.cpp',
     'nsDOMDataContainerEvent.cpp',
