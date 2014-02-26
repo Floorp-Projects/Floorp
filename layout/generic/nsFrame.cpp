@@ -1058,16 +1058,14 @@ nsIFrame::HasPerspective() const
     return false;
   }
   const nsStyleDisplay* parentDisp = parentStyleContext->StyleDisplay();
-  return parentDisp->mChildPerspective.GetUnit() == eStyleUnit_Coord &&
-         parentDisp->mChildPerspective.GetCoordValue() > 0.0;
+  return parentDisp->mChildPerspective.GetUnit() == eStyleUnit_Coord;
 }
 
 bool
 nsIFrame::ChildrenHavePerspective() const
 {
   const nsStyleDisplay *disp = StyleDisplay();
-  return disp->mChildPerspective.GetUnit() == eStyleUnit_Coord &&
-         disp->mChildPerspective.GetCoordValue() > 0.0;
+  return disp->mChildPerspective.GetUnit() == eStyleUnit_Coord;
 }
 
 nsRect
