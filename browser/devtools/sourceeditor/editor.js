@@ -19,7 +19,7 @@ const XUL_NS      = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.x
 const MAX_VERTICAL_OFFSET = 3;
 
 const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
-const events  = require("devtools/shared/event-emitter");
+const events  = require("devtools/toolkit/event-emitter");
 
 Cu.import("resource://gre/modules/Services.jsm");
 const L10N = Services.strings.createBundle(L10N_BUNDLE);
