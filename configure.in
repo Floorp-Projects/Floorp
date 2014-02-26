@@ -1299,23 +1299,6 @@ if test "$GNU_CC"; then
     CFLAGS="$CFLAGS -fno-strict-aliasing"
     MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -Wl,-h,$(notdir $@) -o $@'
     MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -Wl,-h,$(notdir $@) -o $@'
-    DSO_LDOPTS='-shared'
-    if test "$GCC_USE_GNU_LD"; then
-        # Some tools like ASan use a runtime library that is only
-        # linked against executables, so we must allow undefined
-        # symbols for shared objects in some cases.
-        if test -z "$MOZ_NO_WLZDEFS"; then
-            # Don't allow undefined symbols in libraries
-            DSO_LDOPTS="$DSO_LDOPTS -Wl,-z,defs"
-
-            # BSDs need `environ' exposed for posix_spawn (bug 753046)
-            case "$OS_TARGET" in
-            DragonFly|FreeBSD|NetBSD|OpenBSD)
-                DSO_LDOPTS="$DSO_LDOPTS -Wl,--warn-unresolved-symbols"
-                ;;
-            esac
-        fi
-    fi
     WARNINGS_AS_ERRORS='-Werror'
     DSO_CFLAGS=''
     DSO_PIC_CFLAGS='-fPIC'
@@ -1350,6 +1333,14 @@ if test "$GNU_CC"; then
                   AC_MSG_RESULT([no])
                   LDFLAGS=$_SAVE_LDFLAGS)
 
+    AC_MSG_CHECKING([for --ignore-unresolved-symbol option to ld])
+    HAVE_LINKER_SUPPORT_IGNORE_UNRESOLVED=
+    _SAVE_LDFLAGS=$LDFLAGS
+    LDFLAGS="$LDFLAGS -Wl,--ignore-unresolved-symbol,environ"
+    AC_TRY_LINK(,,AC_MSG_RESULT([yes])
+                  [HAVE_LINKER_SUPPORT_IGNORE_UNRESOLVED=1],
+                  AC_MSG_RESULT([no]))
+    LDFLAGS=$_SAVE_LDFLAGS
 
     # Check for -mssse3 on $CC
     AC_MSG_CHECKING([if toolchain supports -mssse3 option])
@@ -1384,6 +1375,28 @@ if test "$GNU_CC"; then
           AC_SUBST(HAVE_X86_AVX2)
       fi
     esac
+
+    DSO_LDOPTS='-shared'
+    if test "$GCC_USE_GNU_LD"; then
+        # Some tools like ASan use a runtime library that is only
+        # linked against executables, so we must allow undefined
+        # symbols for shared objects in some cases.
+        if test -z "$MOZ_NO_WLZDEFS"; then
+            # Don't allow undefined symbols in libraries
+            DSO_LDOPTS="$DSO_LDOPTS -Wl,-z,defs"
+
+            # BSDs need `environ' exposed for posix_spawn (bug 753046)
+            case "$OS_TARGET" in
+            DragonFly|FreeBSD|NetBSD|OpenBSD)
+                if test -n "$HAVE_LINKER_SUPPORT_IGNORE_UNRESOLVED"; then
+                    DSO_LDOPTS="$DSO_LDOPTS -Wl,--ignore-unresolved-symbol,environ"
+                else
+                    DSO_LDOPTS="$DSO_LDOPTS -Wl,--warn-unresolved-symbols"
+                fi
+                ;;
+            esac
+        fi
+    fi
 
     # Turn on GNU-specific warnings:
     # -Wall - turn on a lot of warnings
