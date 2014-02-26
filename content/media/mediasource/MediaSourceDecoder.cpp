@@ -238,4 +238,10 @@ MediaSourceReader::ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags)
   return NS_OK;
 }
 
+double
+MediaSourceDecoder::GetDuration()
+{
+  return mMediaSource->Duration();
+}
+
 } // namespace mozilla

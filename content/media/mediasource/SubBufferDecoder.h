@@ -54,6 +54,10 @@ public:
     return mReader->GetBuffered(aBuffered, 0);
   }
 
+  // Given a time convert it into an approximate byte offset from the
+  // cached data. Returns -1 if no such value is computable.
+  int64_t ConvertToByteOffset(double aTime);
+
 private:
   MediaSourceDecoder* mParentDecoder;
   nsAutoPtr<MediaDecoderReader> mReader;
