@@ -194,19 +194,6 @@ private:
    */
   NS_HIDDEN_(void) StartObjectLoad(bool aNotify);
 
-  void GetTypeAttrValue(nsCString &aValue) const
-  {
-    if (mNodeInfo->Equals(nsGkAtoms::applet)) {
-      aValue.AppendLiteral("application/x-java-vm");
-    }
-    else {
-      nsAutoString type;
-      GetAttr(kNameSpaceID_None, nsGkAtoms::type, type);
-
-      CopyUTF16toUTF8(type, aValue);
-    }
-  }
-
   nsIAtom *URIAttrName() const
   {
     return mNodeInfo->Equals(nsGkAtoms::applet) ?

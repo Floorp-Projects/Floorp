@@ -6112,10 +6112,28 @@ JS_IsIdentifier(JSContext *cx, HandleString str, bool *isIdentifier)
     return true;
 }
 
-JS_PUBLIC_API(bool)
-JS_DescribeScriptedCaller(JSContext *cx, MutableHandleScript script, unsigned *lineno)
+namespace JS {
+
+void
+AutoFilename::reset(void *newScriptSource)
 {
-    script.set(nullptr);
+    if (newScriptSource)
+        reinterpret_cast<ScriptSource*>(newScriptSource)->incref();
+    if (scriptSource_)
+        reinterpret_cast<ScriptSource*>(scriptSource_)->decref();
+    scriptSource_ = newScriptSource;
+}
+
+const char *
+AutoFilename::get() const
+{
+    JS_ASSERT(scriptSource_);
+    return reinterpret_cast<ScriptSource*>(scriptSource_)->filename();
+}
+
+JS_PUBLIC_API(bool)
+DescribeScriptedCaller(JSContext *cx, AutoFilename *filename, unsigned *lineno)
+{
     if (lineno)
         *lineno = 0;
 
@@ -6123,18 +6141,39 @@ JS_DescribeScriptedCaller(JSContext *cx, MutableHandleScript script, unsigned *l
     if (i.done())
         return false;
 
-    // If the caller is hidden, the embedding wants us to return null here so
-    // that it can check its own stack.
+    // If the caller is hidden, the embedding wants us to return false here so
+    // that it can check its own stack (see HideScriptedCaller).
     if (i.activation()->scriptedCallerIsHidden())
         return false;
 
-    script.set(i.script());
+    if (filename)
+        filename->reset(i.script()->scriptSource());
     if (lineno)
         *lineno = js::PCToLineNumber(i.script(), i.pc());
     return true;
 }
 
-namespace JS {
+JS_PUBLIC_API(JSObject *)
+GetScriptedCallerGlobal(JSContext *cx)
+{
+    NonBuiltinScriptFrameIter i(cx);
+    if (i.done())
+        return nullptr;
+
+    // If the caller is hidden, the embedding wants us to return null here so
+    // that it can check its own stack (see HideScriptedCaller).
+    if (i.activation()->scriptedCallerIsHidden())
+        return nullptr;
+
+    GlobalObject *global = i.activation()->compartment()->maybeGlobal();
+
+    // Noone should be running code in the atoms compartment or running code in
+    // a compartment without any live objects, so there should definitely be a
+    // live global.
+    JS_ASSERT(global);
+
+    return global;
+}
 
 JS_PUBLIC_API(void)
 HideScriptedCaller(JSContext *cx)

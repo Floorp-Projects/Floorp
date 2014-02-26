@@ -27,6 +27,7 @@
 <!ENTITY clearPrivateData.logins                                 "Active logins">
 
 <!ENTITY optionsHeader.privacy.passwords.label                   "Remember Passwords">
+<!ENTITY optionsHeader.displayOverlayButtons.label               "Show Navigation Buttons">
 <!ENTITY doNotTrack.title                                        "Do Not Track">
 <!ENTITY doNotTrack.options.doNotTrack                           "Tell websites that I do not want to be tracked">
 <!ENTITY doNotTrack.options.doTrack                              "Tell websites that I want to be tracked">

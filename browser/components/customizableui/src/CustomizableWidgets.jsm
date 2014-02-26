@@ -191,6 +191,19 @@ const CustomizableWidgets = [{
       }
       recentlyClosedWindows.appendChild(windowsFragment);
     },
+    onCreated: function(aNode) {
+      // Middle clicking recently closed items won't close the panel - cope:
+      let onRecentlyClosedClick = function(aEvent) {
+        if (aEvent.button == 1) {
+          CustomizableUI.hidePanelForNode(this);
+        }
+      };
+      let doc = aNode.ownerDocument;
+      let recentlyClosedTabs = doc.getElementById("PanelUI-recentlyClosedTabs");
+      let recentlyClosedWindows = doc.getElementById("PanelUI-recentlyClosedWindows");
+      recentlyClosedTabs.addEventListener("click", onRecentlyClosedClick);
+      recentlyClosedWindows.addEventListener("click", onRecentlyClosedClick);
+    },
     onViewHiding: function(aEvent) {
       LOG("History view is being hidden!");
     }

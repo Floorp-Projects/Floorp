@@ -697,7 +697,10 @@ Notification::Get(const GlobalObject& aGlobal,
                   const GetNotificationOptions& aFilter,
                   ErrorResult& aRv)
 {
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.GetAsSupports());
+  nsCOMPtr<nsIGlobalObject> global =
+    do_QueryInterface(aGlobal.GetAsSupports());
+  MOZ_ASSERT(global);
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(global);
   MOZ_ASSERT(window);
   nsIDocument* doc = window->GetExtantDoc();
   if (!doc) {
@@ -719,7 +722,7 @@ Notification::Get(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  nsRefPtr<Promise> promise = new Promise(window);
+  nsRefPtr<Promise> promise = new Promise(global);
   nsCOMPtr<nsINotificationStorageCallback> callback =
     new NotificationStorageCallback(aGlobal, window, promise);
   nsString tag = aFilter.mTag.WasPassed() ?

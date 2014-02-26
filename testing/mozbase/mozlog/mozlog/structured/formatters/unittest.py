@@ -10,6 +10,8 @@ from .. import handlers
 
 
 class UnittestFormatter(base.BaseFormatter):
+    """Formatter designed to produce output in a format like that used by
+    the ``unittest`` module in the standard library."""
     def __init__(self):
         self.fails = []
         self.errors = []

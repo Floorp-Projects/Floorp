@@ -14,27 +14,12 @@
 #CPP_UNIT_TESTS = TestCSSPropertyLookup.cpp
 #LIBS += ../nsCSSKeywords.$(OBJ_SUFFIX) ../nsCSSProps.$(OBJ_SUFFIX) $(XPCOM_LIBS)
 
-VISITED_REFTEST_FILES = \
-		$(shell find $(topsrcdir)/layout/reftests/css-visited/ -name '*.html' -o -name '*.xhtml') \
-		$(topsrcdir)/layout/reftests/svg/pseudo-classes-02.svg \
-		$(topsrcdir)/layout/reftests/svg/pseudo-classes-02-ref.svg \
-		$(topsrcdir)/layout/reftests/svg/as-image/lime100x100.svg \
-		$(topsrcdir)/layout/reftests/svg/as-image/svg-image-visited-1-helper.svg \
-		$(topsrcdir)/layout/reftests/svg/as-image/svg-image-visited-2-helper.svg \
-		$(NULL)
-VISITED_REFTEST_DEST = $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)/css-visited/
-INSTALL_TARGETS += VISITED_REFTEST
-
 ifdef COMPILE_ENVIRONMENT
-MOCHITEST_FILES += \
-		test_property_database.html \
-		css_properties.js \
-		$(NULL)
-
 css_properties.js: host_ListCSSProperties$(HOST_BIN_SUFFIX) css_properties_like_longhand.js Makefile
 	$(RM) $@
 	./host_ListCSSProperties$(HOST_BIN_SUFFIX) > $@
 	cat $(srcdir)/css_properties_like_longhand.js >> $@
 
-GARBAGE += css_properties.js
+GARBAGE += css_properties.jsm
+MOCHITEST_FILES += css_properties.js
 endif

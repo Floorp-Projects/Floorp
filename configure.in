@@ -3867,7 +3867,6 @@ MOZ_FEEDS=1
 MOZ_WEBAPP_RUNTIME=
 MOZ_JSDEBUGGER=1
 MOZ_AUTH_EXTENSION=1
-MOZ_OGG=1
 MOZ_RAW=
 MOZ_VORBIS=
 MOZ_TREMOR=
@@ -5109,37 +5108,25 @@ fi
 
 AC_SUBST(MOZ_RAW)
 
-dnl ========================================================
-dnl = Disable Ogg Codecs
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(ogg,
-[  --disable-ogg           Disable support for OGG media (Theora video and Vorbis audio)],
-    MOZ_OGG=,
-    MOZ_OGG=1)
-
-if test -n "$MOZ_OGG"; then
-    AC_DEFINE(MOZ_OGG)
-
-    dnl Checks for __attribute__(aligned()) directive
-    AC_CACHE_CHECK([__attribute__ ((aligned ())) support],
-        [ac_cv_c_attribute_aligned],
-        [ac_cv_c_attribute_aligned=0
-         CFLAGS_save="${CFLAGS}"
-         CFLAGS="${CFLAGS} -Werror"
-         for ac_cv_c_attr_align_try in 64 32 16 8; do
-           echo "trying $ac_cv_c_attr_align_try"
-           AC_TRY_COMPILE([],
-                          [static char c __attribute__ ((aligned(${ac_cv_c_attr_align_try}))) = 0; return c;],
-                          [ac_cv_c_attribute_aligned="${ac_cv_c_attr_align_try}"])
-           if test "$ac_cv_c_attribute_aligned" != 0; then
-             break;
-           fi
-         done
-           CFLAGS="${CFLAGS_save}"])
-    if test "${ac_cv_c_attribute_aligned}" != "0"; then
-      AC_DEFINE_UNQUOTED([ATTRIBUTE_ALIGNED_MAX],
-                         [${ac_cv_c_attribute_aligned}],[Maximum supported data alignment])
-    fi
+dnl Checks for __attribute__(aligned()) directive need by libogg
+AC_CACHE_CHECK([__attribute__ ((aligned ())) support],
+    [ac_cv_c_attribute_aligned],
+    [ac_cv_c_attribute_aligned=0
+     CFLAGS_save="${CFLAGS}"
+     CFLAGS="${CFLAGS} -Werror"
+     for ac_cv_c_attr_align_try in 64 32 16 8; do
+       echo "trying $ac_cv_c_attr_align_try"
+       AC_TRY_COMPILE([],
+                      [static char c __attribute__ ((aligned(${ac_cv_c_attr_align_try}))) = 0; return c;],
+                      [ac_cv_c_attribute_aligned="${ac_cv_c_attr_align_try}"])
+       if test "$ac_cv_c_attribute_aligned" != 0; then
+         break;
+       fi
+     done
+       CFLAGS="${CFLAGS_save}"])
+if test "${ac_cv_c_attribute_aligned}" != "0"; then
+  AC_DEFINE_UNQUOTED([ATTRIBUTE_ALIGNED_MAX],
+                     [${ac_cv_c_attribute_aligned}],[Maximum supported data alignment])
 fi
 
 dnl ========================================================
@@ -5323,7 +5310,7 @@ AC_SUBST(MOZ_NATIVE_LIBVPX)
 AC_SUBST(MOZ_LIBVPX_CFLAGS)
 AC_SUBST(MOZ_LIBVPX_LIBS)
 
-if test "$MOZ_WEBM" -o "$MOZ_OGG"; then
+if test "$MOZ_WEBM"; then
     if test "$MOZ_SAMPLE_TYPE_FLOAT32"; then
         MOZ_VORBIS=1
     else
@@ -5429,15 +5416,6 @@ fi
 dnl ========================================================
 dnl = Handle dependent MEDIA defines
 dnl ========================================================
-
-if test -n "$MOZ_OPUS" -a -z "$MOZ_OGG"; then
-    AC_MSG_ERROR([MOZ_OPUS requires MOZ_OGG which is disabled.])
-fi
-
-if test -n "$MOZ_VORBIS" -a -z "$MOZ_OGG"; then
-    AC_MSG_ERROR([MOZ_VORBIS requires MOZ_OGG which is disabled.
-Note that you need vorbis support for WebM playback.])
-fi
 
 if test -n "$MOZ_VORBIS" -a -n "$MOZ_TREMOR"; then
     AC_MSG_ERROR([MOZ_VORBIS and MOZ_TREMOR are mutually exclusive!  The build system should not allow them both to be set, but they are.  Please file a bug at https://bugzilla.mozilla.org/])
@@ -8619,7 +8597,6 @@ AC_SUBST(MOZ_APPLEMEDIA)
 AC_SUBST(MOZ_OMX_PLUGIN)
 AC_SUBST(MOZ_VPX_ERROR_CONCEALMENT)
 AC_SUBST(MOZ_VPX)
-AC_SUBST(MOZ_OGG)
 AC_SUBST(VPX_AS)
 AC_SUBST(VPX_ASFLAGS)
 AC_SUBST(VPX_DASH_C_FLAG)

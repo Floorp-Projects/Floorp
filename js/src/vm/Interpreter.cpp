@@ -1744,14 +1744,14 @@ CASE(JSOP_POPN)
     REGS.sp -= GET_UINT16(REGS.pc);
 END_CASE(JSOP_POPN)
 
-CASE(JSOP_POPNV)
+CASE(JSOP_DUPAT)
 {
-    JS_ASSERT(GET_UINT16(REGS.pc) < REGS.stackDepth());
-    Value val = REGS.sp[-1];
-    REGS.sp -= GET_UINT16(REGS.pc);
-    REGS.sp[-1] = val;
+    JS_ASSERT(GET_UINT24(REGS.pc) < REGS.stackDepth());
+    unsigned i = GET_UINT24(REGS.pc);
+    const Value &rref = REGS.sp[-int(i + 1)];
+    PUSH_COPY(rref);
 }
-END_CASE(JSOP_POPNV)
+END_CASE(JSOP_DUPAT)
 
 CASE(JSOP_SETRVAL)
     POP_RETURN_VALUE();
@@ -3358,9 +3358,6 @@ CASE(JSOP_PUSHBLOCKSCOPE)
     StaticBlockObject &blockObj = script->getObject(REGS.pc)->as<StaticBlockObject>();
 
     JS_ASSERT(blockObj.needsClone());
-    // FIXME: "Aliased" slots don't need to be on the stack.
-    JS_ASSERT(REGS.stackDepth() >= blockObj.stackDepth() + blockObj.slotCount());
-
     // Clone block and push on scope chain.
     if (!REGS.fp()->pushBlock(cx, blockObj))
         goto error;
@@ -3376,9 +3373,6 @@ CASE(JSOP_POPBLOCKSCOPE)
     JS_ASSERT(scope && scope->is<StaticBlockObject>());
     StaticBlockObject &blockObj = scope->as<StaticBlockObject>();
     JS_ASSERT(blockObj.needsClone());
-
-    // FIXME: "Aliased" slots don't need to be on the stack.
-    JS_ASSERT(REGS.stackDepth() >= blockObj.stackDepth() + blockObj.slotCount());
 #endif
 
     // Pop block from scope chain.
