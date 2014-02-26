@@ -15,7 +15,7 @@
 #include "nsTextFragment.h"
 #include "nsServiceManagerUtils.h"
 
-nsTArray<nsRefPtr<nsDOMMutationObserver> >*
+nsAutoTArray<nsRefPtr<nsDOMMutationObserver>, 4>*
   nsDOMMutationObserver::sScheduledMutationObservers = nullptr;
 
 nsDOMMutationObserver* nsDOMMutationObserver::sCurrentObserver = nullptr;
@@ -23,7 +23,7 @@ nsDOMMutationObserver* nsDOMMutationObserver::sCurrentObserver = nullptr;
 uint32_t nsDOMMutationObserver::sMutationLevel = 0;
 uint64_t nsDOMMutationObserver::sCount = 0;
 
-nsAutoTArray<nsTArray<nsRefPtr<nsDOMMutationObserver> >, 4>*
+nsAutoTArray<nsAutoTArray<nsRefPtr<nsDOMMutationObserver>, 4>, 4>*
 nsDOMMutationObserver::sCurrentlyHandlingObservers = nullptr;
 
 nsINodeList*
@@ -431,7 +431,7 @@ void
 nsDOMMutationObserver::RescheduleForRun()
 {
   if (!sScheduledMutationObservers) {
-    sScheduledMutationObservers = new nsTArray<nsRefPtr<nsDOMMutationObserver> >;
+    sScheduledMutationObservers = new nsAutoTArray<nsRefPtr<nsDOMMutationObserver>, 4>;
   }
 
   bool didInsert = false;
@@ -649,7 +649,8 @@ nsDOMMutationObserver::HandleMutationsInternal()
   nsTArray<nsRefPtr<nsDOMMutationObserver> >* suppressedObservers = nullptr;
 
   while (sScheduledMutationObservers) {
-    nsTArray<nsRefPtr<nsDOMMutationObserver> >* observers = sScheduledMutationObservers;
+    nsAutoTArray<nsRefPtr<nsDOMMutationObserver>, 4>* observers =
+      sScheduledMutationObservers;
     sScheduledMutationObservers = nullptr;
     for (uint32_t i = 0; i < observers->Length(); ++i) {
       sCurrentObserver = static_cast<nsDOMMutationObserver*>((*observers)[i]);
@@ -745,7 +746,7 @@ nsDOMMutationObserver::AddCurrentlyHandlingObserver(nsDOMMutationObserver* aObse
 
   if (!sCurrentlyHandlingObservers) {
     sCurrentlyHandlingObservers =
-      new nsAutoTArray<nsTArray<nsRefPtr<nsDOMMutationObserver> >, 4>;
+      new nsAutoTArray<nsAutoTArray<nsRefPtr<nsDOMMutationObserver>, 4>, 4>;
   }
 
   while (sCurrentlyHandlingObservers->Length() < sMutationLevel) {

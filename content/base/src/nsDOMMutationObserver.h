@@ -469,11 +469,11 @@ protected:
   uint64_t                                           mId;
 
   static uint64_t                                    sCount;
-  static nsTArray<nsRefPtr<nsDOMMutationObserver> >* sScheduledMutationObservers;
+  static nsAutoTArray<nsRefPtr<nsDOMMutationObserver>, 4>* sScheduledMutationObservers;
   static nsDOMMutationObserver*                      sCurrentObserver;
 
   static uint32_t                                    sMutationLevel;
-  static nsAutoTArray<nsTArray<nsRefPtr<nsDOMMutationObserver> >, 4>*
+  static nsAutoTArray<nsAutoTArray<nsRefPtr<nsDOMMutationObserver>, 4>, 4>*
                                                      sCurrentlyHandlingObservers;
 };
 
