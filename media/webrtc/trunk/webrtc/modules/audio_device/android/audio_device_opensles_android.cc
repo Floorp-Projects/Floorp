@@ -16,8 +16,13 @@
 namespace webrtc {
 
 AudioDeviceAndroidOpenSLES::AudioDeviceAndroidOpenSLES(const int32_t id)
+#ifdef WEBRTC_ANDROID_OPENSLES_OUTPUT
     : output_(id),
-      input_(id, &output_) {
+      input_(id, &output_)
+#else
+    : input_(id, 0)
+#endif
+{
 }
 
 AudioDeviceAndroidOpenSLES::~AudioDeviceAndroidOpenSLES() {
@@ -29,19 +34,35 @@ int32_t AudioDeviceAndroidOpenSLES::ActiveAudioLayer(
 }
 
 int32_t AudioDeviceAndroidOpenSLES::Init() {
+#ifdef WEBRTC_ANDROID_OPENSLES_OUTPUT
   return output_.Init() | input_.Init();
+#else
+  return input_.Init();
+#endif
 }
 
 int32_t AudioDeviceAndroidOpenSLES::Terminate()  {
+#ifdef WEBRTC_ANDROID_OPENSLES_OUTPUT
   return output_.Terminate() | input_.Terminate();
+#else
+  return input_.Terminate();
+#endif
 }
 
 bool AudioDeviceAndroidOpenSLES::Initialized() const {
+#ifdef WEBRTC_ANDROID_OPENSLES_OUTPUT
   return output_.Initialized() && input_.Initialized();
+#else
+  return input_.Initialized();
+#endif
 }
 
 int16_t AudioDeviceAndroidOpenSLES::PlayoutDevices() {
+#ifdef WEBRTC_ANDROID_OPENSLES_OUTPUT
   return output_.PlayoutDevices();
+#else
+  return 0;
+#endif
 }
 
 int16_t AudioDeviceAndroidOpenSLES::RecordingDevices() {
@@ -52,7 +73,11 @@ int32_t AudioDeviceAndroidOpenSLES::PlayoutDeviceName(
     uint16_t index,
     char name[kAdmMaxDeviceNameSize],
     char guid[kAdmMaxGuidSize]) {
+#ifdef WEBRTC_ANDROID_OPENSLES_OUTPUT
   return output_.PlayoutDeviceName(index, name, guid);
+#else
+  return -1;
+#endif
 }
 
 int32_t AudioDeviceAndroidOpenSLES::RecordingDeviceName(
@@ -63,12 +88,20 @@ int32_t AudioDeviceAndroidOpenSLES::RecordingDeviceName(
 }
 
 int32_t AudioDeviceAndroidOpenSLES::SetPlayoutDevice(uint16_t index) {
+#ifdef WEBRTC_ANDROID_OPENSLES_OUTPUT
   return output_.SetPlayoutDevice(index);
+#else
+  return -1;
+#endif
 }
 
 int32_t AudioDeviceAndroidOpenSLES::SetPlayoutDevice(
     AudioDeviceModule::WindowsDeviceType device) {
+#ifdef WEBRTC_ANDROID_OPENSLES_OUTPUT
   return output_.SetPlayoutDevice(device);
+#else
+  return -1;
+#endif
 }
 
 int32_t AudioDeviceAndroidOpenSLES::SetRecordingDevice(uint16_t index) {
@@ -82,15 +115,27 @@ int32_t AudioDeviceAndroidOpenSLES::SetRecordingDevice(
 
 int32_t AudioDeviceAndroidOpenSLES::PlayoutIsAvailable(
     bool& available) {  // NOLINT
+#ifdef WEBRTC_ANDROID_OPENSLES_OUTPUT
   return output_.PlayoutIsAvailable(available);
+#else
+  return -1;
+#endif
 }
 
 int32_t AudioDeviceAndroidOpenSLES::InitPlayout() {
+#ifdef WEBRTC_ANDROID_OPENSLES_OUTPUT
   return output_.InitPlayout();
+#else
+  return -1;
+#endif
 }
 
 bool AudioDeviceAndroidOpenSLES::PlayoutIsInitialized() const {
+#ifdef WEBRTC_ANDROID_OPENSLES_OUTPUT
   return output_.PlayoutIsInitialized();
+#else
+  return false;
+#endif
 }
 
 int32_t AudioDeviceAndroidOpenSLES::RecordingIsAvailable(
@@ -107,15 +152,27 @@ bool AudioDeviceAndroidOpenSLES::RecordingIsInitialized() const {
 }
 
 int32_t AudioDeviceAndroidOpenSLES::StartPlayout() {
+#ifdef WEBRTC_ANDROID_OPENSLES_OUTPUT
   return output_.StartPlayout();
+#else
+  return -1;
+#endif
 }
 
 int32_t AudioDeviceAndroidOpenSLES::StopPlayout() {
+#ifdef WEBRTC_ANDROID_OPENSLES_OUTPUT
   return output_.StopPlayout();
+#else
+  return -1;
+#endif
 }
 
 bool AudioDeviceAndroidOpenSLES::Playing() const {
+#ifdef WEBRTC_ANDROID_OPENSLES_OUTPUT
   return output_.Playing();
+#else
+  return false;
+#endif
 }
 
 int32_t AudioDeviceAndroidOpenSLES::StartRecording() {
@@ -151,15 +208,27 @@ int32_t AudioDeviceAndroidOpenSLES::WaveOutVolume(
 
 int32_t AudioDeviceAndroidOpenSLES::SpeakerIsAvailable(
     bool& available) {  // NOLINT
+#ifdef WEBRTC_ANDROID_OPENSLES_OUTPUT
   return output_.SpeakerIsAvailable(available);
+#else
+  return -1;
+#endif
 }
 
 int32_t AudioDeviceAndroidOpenSLES::InitSpeaker() {
+#ifdef WEBRTC_ANDROID_OPENSLES_OUTPUT
   return output_.InitSpeaker();
+#else
+  return -1;
+#endif
 }
 
 bool AudioDeviceAndroidOpenSLES::SpeakerIsInitialized() const {
+#ifdef WEBRTC_ANDROID_OPENSLES_OUTPUT
   return output_.SpeakerIsInitialized();
+#else
+  return false;
+#endif
 }
 
 int32_t AudioDeviceAndroidOpenSLES::MicrophoneIsAvailable(
@@ -177,31 +246,55 @@ bool AudioDeviceAndroidOpenSLES::MicrophoneIsInitialized() const {
 
 int32_t AudioDeviceAndroidOpenSLES::SpeakerVolumeIsAvailable(
     bool& available) {  // NOLINT
+#ifdef WEBRTC_ANDROID_OPENSLES_OUTPUT
   return output_.SpeakerVolumeIsAvailable(available);
+#else
+  return -1;
+#endif
 }
 
 int32_t AudioDeviceAndroidOpenSLES::SetSpeakerVolume(uint32_t volume) {
+#ifdef WEBRTC_ANDROID_OPENSLES_OUTPUT
   return output_.SetSpeakerVolume(volume);
+#else
+  return -1;
+#endif
 }
 
 int32_t AudioDeviceAndroidOpenSLES::SpeakerVolume(
     uint32_t& volume) const {  // NOLINT
+#ifdef WEBRTC_ANDROID_OPENSLES_OUTPUT
   return output_.SpeakerVolume(volume);
+#else
+  return -1;
+#endif
 }
 
 int32_t AudioDeviceAndroidOpenSLES::MaxSpeakerVolume(
     uint32_t& maxVolume) const {  // NOLINT
+#ifdef WEBRTC_ANDROID_OPENSLES_OUTPUT
   return output_.MaxSpeakerVolume(maxVolume);
+#else
+  return -1;
+#endif
 }
 
 int32_t AudioDeviceAndroidOpenSLES::MinSpeakerVolume(
     uint32_t& minVolume) const {  // NOLINT
+#ifdef WEBRTC_ANDROID_OPENSLES_OUTPUT
   return output_.MinSpeakerVolume(minVolume);
+#else
+  return -1;
+#endif
 }
 
 int32_t AudioDeviceAndroidOpenSLES::SpeakerVolumeStepSize(
     uint16_t& stepSize) const {  // NOLINT
+#ifdef WEBRTC_ANDROID_OPENSLES_OUTPUT
   return output_.SpeakerVolumeStepSize(stepSize);
+#else
+  return -1;
+#endif
 }
 
 int32_t AudioDeviceAndroidOpenSLES::MicrophoneVolumeIsAvailable(
@@ -235,16 +328,28 @@ int32_t AudioDeviceAndroidOpenSLES::MicrophoneVolumeStepSize(
 
 int32_t AudioDeviceAndroidOpenSLES::SpeakerMuteIsAvailable(
     bool& available) {  // NOLINT
+#ifdef WEBRTC_ANDROID_OPENSLES_OUTPUT
   return output_.SpeakerMuteIsAvailable(available);
+#else
+  return -1;
+#endif
 }
 
 int32_t AudioDeviceAndroidOpenSLES::SetSpeakerMute(bool enable) {
+#ifdef WEBRTC_ANDROID_OPENSLES_OUTPUT
   return output_.SetSpeakerMute(enable);
+#else
+  return -1;
+#endif
 }
 
 int32_t AudioDeviceAndroidOpenSLES::SpeakerMute(
     bool& enabled) const {  // NOLINT
+#ifdef WEBRTC_ANDROID_OPENSLES_OUTPUT
   return output_.SpeakerMute(enabled);
+#else
+  return -1;
+#endif
 }
 
 int32_t AudioDeviceAndroidOpenSLES::MicrophoneMuteIsAvailable(
@@ -277,16 +382,28 @@ int32_t AudioDeviceAndroidOpenSLES::MicrophoneBoost(
 
 int32_t AudioDeviceAndroidOpenSLES::StereoPlayoutIsAvailable(
     bool& available) {  // NOLINT
+#ifdef WEBRTC_ANDROID_OPENSLES_OUTPUT
   return output_.StereoPlayoutIsAvailable(available);
+#else
+  return -1;
+#endif
 }
 
 int32_t AudioDeviceAndroidOpenSLES::SetStereoPlayout(bool enable) {
+#ifdef WEBRTC_ANDROID_OPENSLES_OUTPUT
   return output_.SetStereoPlayout(enable);
+#else
+  return -1;
+#endif
 }
 
 int32_t AudioDeviceAndroidOpenSLES::StereoPlayout(
     bool& enabled) const {  // NOLINT
+#ifdef WEBRTC_ANDROID_OPENSLES_OUTPUT
   return output_.StereoPlayout(enabled);
+#else
+  return -1;
+#endif
 }
 
 int32_t AudioDeviceAndroidOpenSLES::StereoRecordingIsAvailable(
@@ -306,18 +423,30 @@ int32_t AudioDeviceAndroidOpenSLES::StereoRecording(
 int32_t AudioDeviceAndroidOpenSLES::SetPlayoutBuffer(
     const AudioDeviceModule::BufferType type,
     uint16_t sizeMS) {
+#ifdef WEBRTC_ANDROID_OPENSLES_OUTPUT
   return output_.SetPlayoutBuffer(type, sizeMS);
+#else
+  return -1;
+#endif
 }
 
 int32_t AudioDeviceAndroidOpenSLES::PlayoutBuffer(
     AudioDeviceModule::BufferType& type,
     uint16_t& sizeMS) const {  // NOLINT
+#ifdef WEBRTC_ANDROID_OPENSLES_OUTPUT
   return output_.PlayoutBuffer(type, sizeMS);
+#else
+  return -1;
+#endif
 }
 
 int32_t AudioDeviceAndroidOpenSLES::PlayoutDelay(
     uint16_t& delayMS) const {  // NOLINT
+#ifdef WEBRTC_ANDROID_OPENSLES_OUTPUT
   return output_.PlayoutDelay(delayMS);
+#else
+  return -1;
+#endif
 }
 
 int32_t AudioDeviceAndroidOpenSLES::RecordingDelay(
@@ -331,11 +460,19 @@ int32_t AudioDeviceAndroidOpenSLES::CPULoad(
 }
 
 bool AudioDeviceAndroidOpenSLES::PlayoutWarning() const {
+#ifdef WEBRTC_ANDROID_OPENSLES_OUTPUT
   return output_.PlayoutWarning();
+#else
+  return false;
+#endif
 }
 
 bool AudioDeviceAndroidOpenSLES::PlayoutError() const {
+#ifdef WEBRTC_ANDROID_OPENSLES_OUTPUT
   return output_.PlayoutError();
+#else
+  return false;
+#endif
 }
 
 bool AudioDeviceAndroidOpenSLES::RecordingWarning() const {
@@ -347,11 +484,19 @@ bool AudioDeviceAndroidOpenSLES::RecordingError() const {
 }
 
 void AudioDeviceAndroidOpenSLES::ClearPlayoutWarning() {
+#ifdef WEBRTC_ANDROID_OPENSLES_OUTPUT
   return output_.ClearPlayoutWarning();
+#else
+  return;
+#endif
 }
 
 void AudioDeviceAndroidOpenSLES::ClearPlayoutError() {
+#ifdef WEBRTC_ANDROID_OPENSLES_OUTPUT
   return output_.ClearPlayoutError();
+#else
+  return;
+#endif
 }
 
 void AudioDeviceAndroidOpenSLES::ClearRecordingWarning() {
@@ -364,17 +509,27 @@ void AudioDeviceAndroidOpenSLES::ClearRecordingError() {
 
 void AudioDeviceAndroidOpenSLES::AttachAudioBuffer(
     AudioDeviceBuffer* audioBuffer) {
+#ifdef WEBRTC_ANDROID_OPENSLES_OUTPUT
   output_.AttachAudioBuffer(audioBuffer);
+#endif
   input_.AttachAudioBuffer(audioBuffer);
 }
 
 int32_t AudioDeviceAndroidOpenSLES::SetLoudspeakerStatus(bool enable) {
+#ifdef WEBRTC_ANDROID_OPENSLES_OUTPUT
   return output_.SetLoudspeakerStatus(enable);
+#else
+  return -1;
+#endif
 }
 
 int32_t AudioDeviceAndroidOpenSLES::GetLoudspeakerStatus(
     bool& enable) const {  // NOLINT
+#ifdef WEBRTC_ANDROID_OPENSLES_OUTPUT
   return output_.GetLoudspeakerStatus(enable);
+#else
+  return -1;
+#endif
 }
 
 }  // namespace webrtc
