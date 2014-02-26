@@ -9,7 +9,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
-#include "nsTraceRefcnt.h"
+#include "nsISupportsImpl.h"
 #include "nsHtml5TreeOperation.h"
 #include "nsHtml5SpeculativeLoad.h"
 #include "nsHtml5PendingNotification.h"
