@@ -63,6 +63,7 @@
 #include "nsISiteSecurityService.h"
 #include "nsCRT.h"
 #include "CacheObserver.h"
+#include "mozilla/Telemetry.h"
 
 namespace mozilla { namespace net {
 
