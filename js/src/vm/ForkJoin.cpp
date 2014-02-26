@@ -1468,7 +1468,7 @@ ForkJoinShared::executeFromWorker(uint32_t workerId, uintptr_t stackLimit)
 
     // Don't use setIonStackLimit() because that acquires the ionStackLimitLock, and the
     // lock has not been initialized in these cases.
-    thisThread.ionStackLimit = stackLimit;
+    thisThread.jitStackLimit = stackLimit;
     executePortion(&thisThread, workerId);
     TlsPerThreadData.set(nullptr);
 
