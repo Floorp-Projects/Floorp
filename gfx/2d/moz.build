@@ -21,7 +21,6 @@ EXPORTS.mozilla.gfx += [
     'DataSurfaceHelpers.h',
     'Filters.h',
     'Helpers.h',
-    'Logging.h',
     'Matrix.h',
     'PathHelpers.h',
     'Point.h',

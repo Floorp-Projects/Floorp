@@ -97,7 +97,7 @@ struct RectTyped :
         Super(float(rect.x), float(rect.y),
               float(rect.width), float(rect.height)) {}
 
-    void NudgeToIntegers()
+    GFX2D_API void NudgeToIntegers()
     {
       NudgeToInteger(&(this->x));
       NudgeToInteger(&(this->y));
