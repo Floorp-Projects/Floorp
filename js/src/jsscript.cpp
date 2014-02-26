@@ -1826,7 +1826,7 @@ ScriptSource::initFromOptions(ExclusiveContext *cx, const ReadOnlyCompileOptions
         JS_HoldPrincipals(originPrincipals_);
 
     introductionType_ = options.introductionType;
-    introductionOffset_ = options.introductionOffset;
+    setIntroductionOffset(options.introductionOffset);
 
     if (options.hasIntroductionInfo) {
         JS_ASSERT(options.introductionType != nullptr);
