@@ -25,8 +25,6 @@
 #define kIndexVersion          0x00000001
 #define kBuildIndexStartDelay  10000 // in milliseconds
 #define kUpdateIndexStartDelay 10000 // in milliseconds
-#define kBuildIndexLoopLimit   40    // in milliseconds
-#define kUpdateIndexLoopLimit  40    // in milliseconds
 
 const char kIndexName[]     = "index";
 const char kTempIndexName[] = "index.tmp";
@@ -2369,20 +2367,10 @@ CacheIndex::BuildIndex()
     }
   }
 
-  TimeStamp start;
-
   while (true) {
-    if (start.IsNull()) {
-      start = TimeStamp::NowLoRes();
-    } else {
-      static TimeDuration const kLimit = TimeDuration::FromMilliseconds(
-                                           kBuildIndexLoopLimit);
-      TimeDuration elapsed = TimeStamp::NowLoRes() - start;
-      if (elapsed >= kLimit) {
-        LOG(("CacheIndex::BuildIndex() - Breaking loop after %u ms.",
-             static_cast<uint32_t>(elapsed.ToMilliseconds())));
-        break;
-      }
+    if (CacheIOThread::YieldAndRerun()) {
+      LOG(("CacheIndex::BuildIndex() - Breaking loop for higher level events."));
+      return;
     }
 
     nsCOMPtr<nsIFile> file;
@@ -2484,16 +2472,7 @@ CacheIndex::BuildIndex()
     }
   }
 
-  nsRefPtr<CacheIOThread> ioThread = CacheFileIOManager::IOThread();
-  MOZ_ASSERT(ioThread);
-
-  rv = ioThread->Dispatch(this, CacheIOThread::BUILD_OR_UPDATE_INDEX);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("CacheIndex::BuildIndex() - Can't dispatch event");
-    LOG(("CacheIndex::BuildIndex() - Can't dispatch event" ));
-    FinishBuild(false);
-    return;
-  }
+  NS_NOTREACHED("We should never get here");
 }
 
 void
@@ -2620,20 +2599,11 @@ CacheIndex::UpdateIndex()
     }
   }
 
-  TimeStamp start;
-
   while (true) {
-    if (start.IsNull()) {
-      start = TimeStamp::NowLoRes();
-    } else {
-      static TimeDuration const kLimit = TimeDuration::FromMilliseconds(
-                                           kUpdateIndexLoopLimit);
-      TimeDuration elapsed = TimeStamp::NowLoRes() - start;
-      if (elapsed >= kLimit) {
-        LOG(("CacheIndex::UpdateIndex() - Breaking loop after %u ms.",
-             static_cast<uint32_t>(elapsed.ToMilliseconds())));
-        break;
-      }
+    if (CacheIOThread::YieldAndRerun()) {
+      LOG(("CacheIndex::UpdateIndex() - Breaking loop for higher level "
+           "events."));
+      return;
     }
 
     nsCOMPtr<nsIFile> file;
@@ -2769,16 +2739,7 @@ CacheIndex::UpdateIndex()
     }
   }
 
-  nsRefPtr<CacheIOThread> ioThread = CacheFileIOManager::IOThread();
-  MOZ_ASSERT(ioThread);
-
-  rv = ioThread->Dispatch(this, CacheIOThread::BUILD_OR_UPDATE_INDEX);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("CacheIndex::UpdateIndex() - Can't dispatch event");
-    LOG(("CacheIndex::UpdateIndex() - Can't dispatch event" ));
-    FinishUpdate(false);
-    return;
-  }
+  NS_NOTREACHED("We should never get here");
 }
 
 void
