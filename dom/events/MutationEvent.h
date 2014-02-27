@@ -3,68 +3,63 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_MutationEvent_h__
-#define mozilla_MutationEvent_h__
+#ifndef mozilla_dom_MutationEvent_h_
+#define mozilla_dom_MutationEvent_h_
 
-#include "mozilla/BasicEvents.h"
-#include "nsCOMPtr.h"
-#include "nsIAtom.h"
-#include "nsIDOMNode.h"
+#include "nsIDOMMutationEvent.h"
+#include "nsINode.h"
+#include "nsDOMEvent.h"
+#include "mozilla/dom/MutationEventBinding.h"
+#include "mozilla/EventForwards.h"
 
 namespace mozilla {
+namespace dom {
 
-class InternalMutationEvent : public WidgetEvent
+class MutationEvent : public nsDOMEvent,
+                      public nsIDOMMutationEvent
 {
 public:
-  virtual InternalMutationEvent* AsMutationEvent() MOZ_OVERRIDE { return this; }
+  MutationEvent(EventTarget* aOwner,
+                nsPresContext* aPresContext,
+                InternalMutationEvent* aEvent);
 
-  InternalMutationEvent(bool aIsTrusted, uint32_t aMessage) :
-    WidgetEvent(aIsTrusted, aMessage, NS_MUTATION_EVENT),
-    mAttrChange(0)
+  NS_DECL_ISUPPORTS_INHERITED
+
+  NS_DECL_NSIDOMMUTATIONEVENT
+
+  // Forward to base class
+  NS_FORWARD_TO_NSDOMEVENT
+
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
   {
-    mFlags.mCancelable = false;
+    return MutationEventBinding::Wrap(aCx, aScope, this);
   }
 
-  virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
+  // xpidl implementation
+  // GetPrevValue(nsAString& aPrevValue);
+  // GetNewValue(nsAString& aNewValue);
+  // GetAttrName(nsAString& aAttrName);
+
+  already_AddRefed<nsINode> GetRelatedNode();
+
+  uint16_t AttrChange();
+
+  void InitMutationEvent(const nsAString& aType,
+                         bool& aCanBubble, bool& aCancelable,
+                         nsINode* aRelatedNode,
+                         const nsAString& aPrevValue,
+                         const nsAString& aNewValue,
+                         const nsAString& aAttrName,
+                         uint16_t& aAttrChange, ErrorResult& aRv)
   {
-    MOZ_ASSERT(eventStructType == NS_MUTATION_EVENT,
-               "Duplicate() must be overridden by sub class");
-    InternalMutationEvent* result = new InternalMutationEvent(false, message);
-    result->AssignMutationEventData(*this, true);
-    result->mFlags = mFlags;
-    return result;
-  }
-
-  nsCOMPtr<nsIDOMNode> mRelatedNode;
-  nsCOMPtr<nsIAtom>    mAttrName;
-  nsCOMPtr<nsIAtom>    mPrevAttrValue;
-  nsCOMPtr<nsIAtom>    mNewAttrValue;
-  unsigned short       mAttrChange;
-
-  void AssignMutationEventData(const InternalMutationEvent& aEvent,
-                               bool aCopyTargets)
-  {
-    AssignEventData(aEvent, aCopyTargets);
-
-    mRelatedNode = aEvent.mRelatedNode;
-    mAttrName = aEvent.mAttrName;
-    mPrevAttrValue = aEvent.mPrevAttrValue;
-    mNewAttrValue = aEvent.mNewAttrValue;
-    mAttrChange = aEvent.mAttrChange;
+    aRv = InitMutationEvent(aType, aCanBubble, aCancelable,
+                            aRelatedNode ? aRelatedNode->AsDOMNode() : nullptr,
+                            aPrevValue, aNewValue, aAttrName, aAttrChange);
   }
 };
 
-// Bits are actually checked to optimize mutation event firing.
-// That's why I don't number from 0x00.  The first event should
-// always be 0x01.
-#define NS_EVENT_BITS_MUTATION_SUBTREEMODIFIED                0x01
-#define NS_EVENT_BITS_MUTATION_NODEINSERTED                   0x02
-#define NS_EVENT_BITS_MUTATION_NODEREMOVED                    0x04
-#define NS_EVENT_BITS_MUTATION_NODEREMOVEDFROMDOCUMENT        0x08
-#define NS_EVENT_BITS_MUTATION_NODEINSERTEDINTODOCUMENT       0x10
-#define NS_EVENT_BITS_MUTATION_ATTRMODIFIED                   0x20
-#define NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED          0x40
-
+} // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_MutationEvent_h__
+#endif // mozilla_dom_MutationEvent_h_

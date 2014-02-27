@@ -62,7 +62,7 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
   }
 
   float opacity = GetEffectiveOpacity();
-  CompositionOp mixBlendMode = GetEffectiveMixBlendMode();
+  CompositionOp effectiveOperator = GetEffectiveOperator(this);
 
   if (!BasicManager()->IsRetained()) {
     NS_ASSERTION(readbackUpdates.IsEmpty(), "Can't do readback for non-retained layer");
@@ -84,16 +84,14 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
 
       bool needsClipToVisibleRegion = GetClipToVisibleRegion();
       bool needsGroup = opacity != 1.0 ||
-                        GetOperator() != CompositionOp::OP_OVER ||
-                        mixBlendMode != CompositionOp::OP_OVER ||
+                        effectiveOperator != CompositionOp::OP_OVER ||
                         aMaskLayer;
       nsRefPtr<gfxContext> groupContext;
       if (needsGroup) {
         groupContext =
           BasicManager()->PushGroupForLayer(aContext, this, toDraw,
                                             &needsClipToVisibleRegion);
-        if (GetOperator() != CompositionOp::OP_OVER ||
-            mixBlendMode != CompositionOp::OP_OVER) {
+        if (effectiveOperator != CompositionOp::OP_OVER) {
           needsClipToVisibleRegion = true;
         }
       } else {
@@ -106,9 +104,7 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
         if (needsClipToVisibleRegion) {
           gfxUtils::ClipToRegion(aContext, toDraw);
         }
-        CompositionOp op =
-          mixBlendMode != CompositionOp::OP_OVER ? mixBlendMode : GetOperator();
-        AutoSetOperator setOptimizedOperator(aContext, ThebesOp(op));
+        AutoSetOperator setOptimizedOperator(aContext, ThebesOp(effectiveOperator));
         PaintWithMask(aContext, opacity, aMaskLayer);
       }
 

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>CSS Reftest Reference</title>
+		<link rel="author" title="Mirela Budăeș" href="mailto:mbudaes@adobe.com">
+		<style>
+			.parent {
+				opacity: 0.9;
+				background: yellow;/*rgb(255,255,0);*/
+				margin: 30px;
+				width: 120px;
+				height: 120px;
+				display: inline-block;
+			}
+			.blended {
+				width: 100px;
+				height: 100px;
+				background: aqua;/*rgb(0,255,255);*/
+				display: inline-block;
+				margin-top: 10px;
+				margin-left: 10px;
+			}
+			.childBlended {
+				background: lime;/*rgb(0,255,0);*/
+				width: 80px;
+				height: 80px;
+				margin-top: 10px;
+				margin-left: 10px;
+				opacity: 0.99;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="parent">
+			<div class="blended">
+				<div class="childBlended"></div>
+			</div>
+		</div>
+	</body>
+</html>

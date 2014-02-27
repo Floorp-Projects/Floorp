@@ -132,21 +132,28 @@ assertEq(asmLink(asmCompile('glob', USE_ASM + TO_FLOAT32 + "var sqrt = glob.Math
 
 // float?s
 assertEq(asmLink(asmCompile('glob', 'ffi', 'heap', USE_ASM + HEAP32 + TO_FLOAT32 + "var sqrt = glob.Math.sqrt; function f(x) { x = toF(x); f32[0] = x; return toF(sqrt(f32[0])) } return f"), this, null, heap)(64), Math.fround(8));
-assertEq(asmLink(asmCompile('glob', 'ffi', 'heap', USE_ASM + HEAP32 + TO_FLOAT32 + "var cos = glob.Math.cos; function f(x) { x = toF(x); f32[0] = x; return toF(cos(f32[0])) } return f"), this, null, heap)(3.141592653), -1);
 
-// All Math functions with arity 1 behave like cos and sin
-var cosModule = asmLink(asmCompile('glob', USE_ASM + TO_FLOAT32 + "var g = glob.Math.cos; function f(x) {x = toF(x); return toF(g(x))} return f"), this);
-for (v of [0, 3.141592653, Math.Infinity, NaN])
-    assertEq(cosModule(v), Math.fround(Math.cos(Math.fround(v))));
+// The only other Math functions that can receive float32 as arguments and that strictly commute are floor and ceil (see
+// also bug 969203).
+var floorModule = asmLink(asmCompile('glob', USE_ASM + TO_FLOAT32 + "var g = glob.Math.floor; function f(x) {x = toF(x); return toF(g(x))} return f"), this);
+for (v of [-10.5, -1.2345, -1, 0, 1, 3.141592653, 13.37, Math.Infinity, NaN])
+    assertEq(floorModule(v), Math.fround(Math.floor(Math.fround(v))));
+assertEq(asmLink(asmCompile('glob', 'ffi', 'heap', USE_ASM + HEAP32 + TO_FLOAT32 + "var floor = glob.Math.floor; function f(x) { x = toF(x); f32[0] = x; return toF(floor(f32[0])) } return f"), this, null, heap)(13.37), 13);
 
-var sinModule = asmLink(asmCompile('glob', USE_ASM + TO_FLOAT32 + "var g = glob.Math.sin; function f(x) {x = toF(x); return toF(g(x))} return f"), this);
-for (v of [0, 3.141592653, Math.Infinity, NaN])
-    assertEq(sinModule(v), Math.fround(Math.sin(Math.fround(v))));
+var ceilModule = asmLink(asmCompile('glob', USE_ASM + TO_FLOAT32 + "var g = glob.Math.ceil; function f(x) {x = toF(x); return toF(g(x))} return f"), this);
+for (v of [-10.5, -1.2345, -1, 0, 1, 3.141592653, 13.37, Math.Infinity, NaN])
+    assertEq(ceilModule(v), Math.fround(Math.ceil(Math.fround(v))));
+assertEq(asmLink(asmCompile('glob', 'ffi', 'heap', USE_ASM + HEAP32 + TO_FLOAT32 + "var ceil = glob.Math.ceil; function f(x) { x = toF(x); f32[0] = x; return toF(ceil(f32[0])) } return f"), this, null, heap)(13.37), 14);
+
+assertAsmTypeFail('glob', USE_ASM + TO_FLOAT32 + "var g = glob.Math.cos; function f(x) {x = toF(x); return toF(g(x))} return f");
+assertAsmTypeFail('glob', USE_ASM + TO_FLOAT32 + "var g = glob.Math.cos; function f(x) {x = +x; return toF(g(+x))} return f");
 
 assertAsmTypeFail('glob', USE_ASM + TO_FLOAT32 + "var g = glob.Math.cos; function f(x) {x = toF(x); return +(g(x))} return f");
 assertAsmTypeFail('glob', USE_ASM + TO_FLOAT32 + "var g = glob.Math.cos; function f(x) {x = +x; return toF(g(x))} return f");
 assertAsmTypeFail('glob', USE_ASM + TO_FLOAT32 + "var g = glob.Math.cos; function f(x) {x = x|0; return toF(g(x))} return f");
 assertAsmTypeFail('glob', USE_ASM + TO_FLOAT32 + "var g = glob.Math.cos; function f(x) {x = toF(x); return g(x) | 0} return f");
+
+assertEq(asmLink(asmCompile('glob', 'ffi', 'heap', USE_ASM + HEAP32 + TO_FLOAT32 + "var g = glob.Math.cos; function f(x) { x = toF(x); return toF(+g(+x)) } return f"), this, null, heap)(3.14159265358), -1);
 
 // Math functions with arity of two are not specialized for floats, so we shouldn't feed them with floats arguments or
 // return type

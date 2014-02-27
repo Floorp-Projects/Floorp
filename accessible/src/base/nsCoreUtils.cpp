@@ -649,38 +649,3 @@ nsCoreUtils::IsWhitespaceString(const nsSubstring& aString)
 
   return iterBegin == iterEnd;
 }
-
-
-////////////////////////////////////////////////////////////////////////////////
-// nsAccessibleDOMStringList
-////////////////////////////////////////////////////////////////////////////////
-
-NS_IMPL_ISUPPORTS1(nsAccessibleDOMStringList, nsIDOMDOMStringList)
-
-NS_IMETHODIMP
-nsAccessibleDOMStringList::Item(uint32_t aIndex, nsAString& aResult)
-{
-  if (aIndex >= mNames.Length())
-    SetDOMStringToNull(aResult);
-  else
-    aResult = mNames.ElementAt(aIndex);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAccessibleDOMStringList::GetLength(uint32_t* aLength)
-{
-  *aLength = mNames.Length();
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsAccessibleDOMStringList::Contains(const nsAString& aString, bool* aResult)
-{
-  *aResult = mNames.Contains(aString);
-
-  return NS_OK;
-}
-

@@ -14,7 +14,7 @@ function test() {
 
     yield helpers.audit(options, [{
       setup: "dbg open",
-      exec: { output: "", completed: false }
+      exec: { output: "" }
     }]);
 
     let [gTab, gDebuggee, gPanel] = yield initDebugger(gBrowser.selectedTab);
@@ -71,7 +71,6 @@ function test() {
 
       helpers.audit(options, [{
         setup: "dbg close",
-        completed: false,
         exec: { output: "" }
       }])
       .then(() => {
