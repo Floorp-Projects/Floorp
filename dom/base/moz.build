@@ -50,6 +50,7 @@ EXPORTS += [
 
 EXPORTS.mozilla.dom += [
     'BarProps.h',
+    'Console.h',
     'DOMCursor.h',
     'DOMError.h',
     'DOMException.h',
@@ -68,6 +69,7 @@ EXPORTS.mozilla.dom += [
 UNIFIED_SOURCES += [
     'BarProps.cpp',
     'CompositionStringSynthesizer.cpp',
+    'Console.cpp',
     'Crypto.cpp',
     'DOMCursor.cpp',
     'DOMError.cpp',
@@ -118,7 +120,6 @@ SOURCES += [
 ]
 
 EXTRA_COMPONENTS += [
-    'ConsoleAPI.js',
     'ConsoleAPI.manifest',
     'ConsoleAPIStorage.js',
     'SiteSpecificUserAgent.js',

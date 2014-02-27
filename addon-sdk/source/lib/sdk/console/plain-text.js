@@ -61,9 +61,6 @@ function PlainTextConsole(print) {
   });
 
   // We defined the `__exposedProps__` in our console chrome object.
-  // Although it seems redundant, because we use `createObjectIn` too, in
-  // worker.js, we are following what `ConsoleAPI` does. See:
-  // http://mxr.mozilla.org/mozilla-central/source/dom/base/ConsoleAPI.js#132
   //
   // Meanwhile we're investigating with the platform team if `__exposedProps__`
   // are needed, or are just a left-over.
