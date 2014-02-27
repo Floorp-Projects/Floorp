@@ -133,7 +133,8 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(Console)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Console)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY(nsIObserver)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsITimerCallback)
 NS_INTERFACE_MAP_END
 
 Console::Console(nsPIDOMWindow* aWindow)
@@ -150,6 +151,13 @@ Console::Console(nsPIDOMWindow* aWindow)
     mOuterID = outerWindow->WindowID();
   }
 
+  if (NS_IsMainThread()) {
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+    if (obs) {
+      obs->AddObserver(this, "inner-window-destroyed", false);
+    }
+  }
+
   SetIsDOMBinding();
   mozilla::HoldJSObjects(this);
 }
@@ -157,6 +165,42 @@ Console::Console(nsPIDOMWindow* aWindow)
 Console::~Console()
 {
   mozilla::DropJSObjects(this);
+}
+
+NS_IMETHODIMP
+Console::Observe(nsISupports* aSubject, const char* aTopic,
+                 const char16_t* aData)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (strcmp(aTopic, "inner-window-destroyed")) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsISupportsPRUint64> wrapper = do_QueryInterface(aSubject);
+  NS_ENSURE_TRUE(wrapper, NS_ERROR_FAILURE);
+
+  uint64_t innerID;
+  nsresult rv = wrapper->GetData(&innerID);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (innerID == mInnerID) {
+    nsCOMPtr<nsIObserverService> obs =
+      do_GetService("@mozilla.org/observer-service;1");
+    if (obs) {
+      obs->RemoveObserver(this, "inner-window-destroyed");
+    }
+
+    mQueuedCalls.Clear();
+    mTimerRegistry.Clear();
+
+    if (mTimer) {
+      mTimer->Cancel();
+      mTimer = nullptr;
+    }
+  }
+
+  return NS_OK;
 }
 
 JSObject*
