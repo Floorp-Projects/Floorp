@@ -26,7 +26,6 @@
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIFrame.h"
-#include "nsINameSpaceManager.h"
 #include "nsIPresShell.h"
 #include "nsISVGChildFrame.h"
 #include "nsPresContext.h"
