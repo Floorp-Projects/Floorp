@@ -339,9 +339,9 @@ NS_METHOD nsPropertiesParser::SegmentWriter(nsIUnicharInputStream* aStream,
                                             uint32_t aCount,
                                             uint32_t *aWriteCount)
 {
-  nsPropertiesParser *parser = 
+  nsPropertiesParser *parser =
     static_cast<nsPropertiesParser *>(aClosure);
-  
+
   parser->ParseBuffer(aFromSegment, aCount);
 
   *aWriteCount = aCount;
@@ -497,7 +497,7 @@ nsPersistentProperties::Load(nsIInputStream *aIn)
   // We may have an unprocessed value at this point
   // if the last line did not have a proper line ending.
   if (parser.GetState() == eParserState_Value) {
-    nsAutoString oldValue;  
+    nsAutoString oldValue;
     parser.FinishValueState(oldValue);
   }
 
@@ -681,4 +681,3 @@ nsPropertyElement::SetValue(const nsAString& aValue)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
