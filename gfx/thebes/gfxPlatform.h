@@ -508,8 +508,6 @@ public:
     static bool GetPrefLayersPreferOpenGL();
     static bool GetPrefLayersPreferD3D9();
     static bool CanUseDirect3D9();
-    static int  GetPrefLayoutFrameRate();
-    static int  GetPrefLayersCompositionFrameRate();
     static bool GetPrefLayersDump();
     static bool GetPrefLayersScrollGraph();
     static bool GetPrefLayersEnableTiles();
@@ -576,8 +574,6 @@ public:
 
     virtual void FontsPrefsChanged(const char *aPref);
 
-    void OrientationSyncPrefsObserverChanged();
-
     int32_t GetBidiNumeralOption();
 
     /**
@@ -602,8 +598,6 @@ public:
     virtual int GetScreenDepth() const;
 
     bool WidgetUpdateFlashing() const { return mWidgetUpdateFlashing; }
-
-    uint32_t GetOrientationSyncMillis() const;
 
     /**
      * Return the layer debugging options to use browser-wide.
@@ -723,7 +717,6 @@ private:
     nsTArray<uint32_t> mCJKPrefLangs;
     nsCOMPtr<nsIObserver> mSRGBOverrideObserver;
     nsCOMPtr<nsIObserver> mFontPrefsObserver;
-    nsCOMPtr<nsIObserver> mOrientationSyncPrefsObserver;
     nsCOMPtr<nsIObserver> mMemoryPressureObserver;
 
     // The preferred draw target backend to use for canvas
@@ -739,7 +732,6 @@ private:
 
     mozilla::RefPtr<mozilla::gfx::DrawEventRecorder> mRecorder;
     bool mWidgetUpdateFlashing;
-    uint32_t mOrientationSyncMillis;
     bool mLayersPreferMemoryOverShmem;
     bool mLayersUseDeprecated;
     bool mDrawLayerBorders;
