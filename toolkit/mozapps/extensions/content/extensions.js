@@ -79,6 +79,42 @@ function initialize(event) {
     return;
   }
   document.removeEventListener("load", initialize, true);
+
+  let globalCommandSet = document.getElementById("globalCommandSet");
+  globalCommandSet.addEventListener("command", function(event) {
+    gViewController.doCommand(event.target.id);
+  });
+
+  let viewCommandSet = document.getElementById("viewCommandSet");
+  viewCommandSet.addEventListener("commandupdate", function(event) {
+    gViewController.updateCommands();
+  });
+  viewCommandSet.addEventListener("command", function(event) {
+    gViewController.doCommand(event.target.id);
+  });
+
+  let detailScreenshot = document.getElementById("detail-screenshot");
+  detailScreenshot.addEventListener("load", function(event) {
+    this.removeAttribute("loading");
+  });
+  detailScreenshot.addEventListener("error", function(event) {
+    this.setAttribute("loading", "error");
+  });
+
+  let addonPage = document.getElementById("addons-page");
+  addonPage.addEventListener("dragenter", function(event) {
+    gDragDrop.onDragOver(event);
+  });
+  addonPage.addEventListener("dragover", function(event) {
+    gDragDrop.onDragOver(event);
+  });
+  addonPage.addEventListener("drop", function(event) {
+    gDragDrop.onDrop(event);
+  });
+  addonPage.addEventListener("keypress", function(event) {
+    gHeader.onKeyPress(event);
+  });
+
   gViewController.initialize();
   gCategories.initialize();
   gHeader.initialize();
@@ -676,6 +712,13 @@ var gViewController = {
       },
       doCommand: function cmd_forward_doCommand() {
         gHistory.forward();
+      }
+    },
+
+    cmd_focusSearch: {
+      isEnabled: () => true,
+      doCommand: function cmd_focusSearch_doCommand() {
+        gHeader.focusSearchBox();
       }
     },
 
@@ -1757,6 +1800,19 @@ var gHeader = {
   onKeyPress: function gHeader_onKeyPress(aEvent) {
     if (String.fromCharCode(aEvent.charCode) == "/") {
       this.focusSearchBox();
+      return;
+    }
+
+    // XXXunf Temporary until bug 371900 is fixed.
+    let key = document.getElementById("focusSearch").getAttribute("key");
+#ifdef XP_MACOSX
+    let keyModifier = aEvent.metaKey;
+#else
+    let keyModifier = aEvent.ctrlKey;
+#endif
+    if (String.fromCharCode(aEvent.charCode) == key && keyModifier) {
+      this.focusSearchBox();
+      return;
     }
   },
 
