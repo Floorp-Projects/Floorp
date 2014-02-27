@@ -24,15 +24,17 @@ using mozilla::PositiveInfinity;
 using mozilla::SpecificNaN;
 using mozilla::UnspecifiedNaN;
 
+template<typename T>
 static void
-ShouldBeIdentical(double d1, double d2)
+ShouldBeIdentical(T d1, T d2)
 {
   MOZ_ASSERT(NumbersAreIdentical(d1, d2));
   MOZ_ASSERT(NumbersAreIdentical(d2, d1));
 }
 
+template<typename T>
 static void
-ShouldNotBeIdentical(double d1, double d2)
+ShouldNotBeIdentical(T d1, T d2)
 {
   MOZ_ASSERT(!NumbersAreIdentical(d1, d2));
   MOZ_ASSERT(!NumbersAreIdentical(d2, d1));
@@ -109,7 +111,84 @@ TestDoublesAreIdentical()
 }
 
 static void
-TestExponentComponent()
+TestFloatsAreIdentical()
+{
+  ShouldBeIdentical(+0.0f, +0.0f);
+  ShouldBeIdentical(-0.0f, -0.0f);
+  ShouldNotBeIdentical(+0.0f, -0.0f);
+
+  ShouldBeIdentical(1.0f, 1.0f);
+  ShouldNotBeIdentical(-1.0f, 1.0f);
+  ShouldBeIdentical(8388607.0f, 8388607.0f);
+  ShouldNotBeIdentical(-8388607.0f, 8388607.0f);
+  ShouldBeIdentical(8388608.0f, 8388608.0f);
+  ShouldBeIdentical(8388609.0f, 8388609.0f);
+  ShouldBeIdentical(1e36f, 1e36f);
+
+  ShouldBeIdentical(PositiveInfinity<float>(), PositiveInfinity<float>());
+  ShouldBeIdentical(NegativeInfinity<float>(), NegativeInfinity<float>());
+  ShouldNotBeIdentical(PositiveInfinity<float>(), NegativeInfinity<float>());
+
+  ShouldNotBeIdentical(-0.0f, NegativeInfinity<float>());
+  ShouldNotBeIdentical(+0.0f, NegativeInfinity<float>());
+  ShouldNotBeIdentical(1e36f, NegativeInfinity<float>());
+  ShouldNotBeIdentical(3.141592654f, NegativeInfinity<float>());
+
+  ShouldBeIdentical(UnspecifiedNaN<float>(), UnspecifiedNaN<float>());
+  ShouldBeIdentical(-UnspecifiedNaN<float>(), UnspecifiedNaN<float>());
+  ShouldBeIdentical(UnspecifiedNaN<float>(), -UnspecifiedNaN<float>());
+
+  ShouldBeIdentical(SpecificNaN<float>(0, 17), SpecificNaN<float>(0, 42));
+  ShouldBeIdentical(SpecificNaN<float>(1, 17), SpecificNaN<float>(1, 42));
+  ShouldBeIdentical(SpecificNaN<float>(0, 17), SpecificNaN<float>(1, 42));
+  ShouldBeIdentical(SpecificNaN<float>(1, 17), SpecificNaN<float>(0, 42));
+
+  const uint32_t Mask = 0x7fffffUL;
+  for (unsigned i = 0; i < 23; i++) {
+    for (unsigned j = 0; j < 23; j++) {
+      for (unsigned sign = 0; i < 2; i++) {
+        ShouldBeIdentical(SpecificNaN<float>(0, 1UL << i), SpecificNaN<float>(sign, 1UL << j));
+        ShouldBeIdentical(SpecificNaN<float>(1, 1UL << i), SpecificNaN<float>(sign, 1UL << j));
+
+        ShouldBeIdentical(SpecificNaN<float>(0, Mask & ~(1UL << i)),
+                          SpecificNaN<float>(sign, Mask & ~(1UL << j)));
+        ShouldBeIdentical(SpecificNaN<float>(1, Mask & ~(1UL << i)),
+                          SpecificNaN<float>(sign, Mask & ~(1UL << j)));
+      }
+    }
+  }
+  ShouldBeIdentical(SpecificNaN<float>(0, 17), SpecificNaN<float>(0, 0x700000));
+  ShouldBeIdentical(SpecificNaN<float>(0, 17), SpecificNaN<float>(0, 0x400000));
+  ShouldBeIdentical(SpecificNaN<float>(0, 17), SpecificNaN<float>(0, 0x200000));
+  ShouldBeIdentical(SpecificNaN<float>(0, 17), SpecificNaN<float>(0, 0x100000));
+  ShouldBeIdentical(SpecificNaN<float>(0, 17), SpecificNaN<float>(0, 0x080000));
+  ShouldBeIdentical(SpecificNaN<float>(0, 17), SpecificNaN<float>(0, 0x040000));
+  ShouldBeIdentical(SpecificNaN<float>(0, 17), SpecificNaN<float>(0, 0x020000));
+  ShouldBeIdentical(SpecificNaN<float>(0, 17), SpecificNaN<float>(0, 0x010000));
+  ShouldBeIdentical(SpecificNaN<float>(0, 17), SpecificNaN<float>(0, 0x008000));
+  ShouldBeIdentical(SpecificNaN<float>(0, 17), SpecificNaN<float>(0, 0x004000));
+  ShouldBeIdentical(SpecificNaN<float>(0, 17), SpecificNaN<float>(0, 0x002000));
+  ShouldBeIdentical(SpecificNaN<float>(0, 17), SpecificNaN<float>(0, 0x001000));
+  ShouldBeIdentical(SpecificNaN<float>(1, 17), SpecificNaN<float>(0, 0x7f0fff));
+  ShouldBeIdentical(SpecificNaN<float>(1, 17), SpecificNaN<float>(0, 0x7fff0f));
+
+  ShouldNotBeIdentical(UnspecifiedNaN<float>(), +0.0f);
+  ShouldNotBeIdentical(UnspecifiedNaN<float>(), -0.0f);
+  ShouldNotBeIdentical(UnspecifiedNaN<float>(), 1.0f);
+  ShouldNotBeIdentical(UnspecifiedNaN<float>(), -1.0f);
+  ShouldNotBeIdentical(UnspecifiedNaN<float>(), PositiveInfinity<float>());
+  ShouldNotBeIdentical(UnspecifiedNaN<float>(), NegativeInfinity<float>());
+}
+
+static void
+TestAreIdentical()
+{
+  TestDoublesAreIdentical();
+  TestFloatsAreIdentical();
+}
+
+static void
+TestDoubleExponentComponent()
 {
   MOZ_ASSERT(ExponentComponent(0.0) == -int_fast16_t(FloatingPoint<double>::ExponentBias));
   MOZ_ASSERT(ExponentComponent(-0.0) == -int_fast16_t(FloatingPoint<double>::ExponentBias));
@@ -125,7 +204,30 @@ TestExponentComponent()
 }
 
 static void
-TestPredicates()
+TestFloatExponentComponent()
+{
+  MOZ_ASSERT(ExponentComponent(0.0f) == -int_fast16_t(FloatingPoint<float>::ExponentBias));
+  MOZ_ASSERT(ExponentComponent(-0.0f) == -int_fast16_t(FloatingPoint<float>::ExponentBias));
+  MOZ_ASSERT(ExponentComponent(0.125f) == -3);
+  MOZ_ASSERT(ExponentComponent(0.5f) == -1);
+  MOZ_ASSERT(ExponentComponent(1.0f) == 0);
+  MOZ_ASSERT(ExponentComponent(1.5f) == 0);
+  MOZ_ASSERT(ExponentComponent(2.0f) == 1);
+  MOZ_ASSERT(ExponentComponent(7.0f) == 2);
+  MOZ_ASSERT(ExponentComponent(PositiveInfinity<float>()) == FloatingPoint<float>::ExponentBias + 1);
+  MOZ_ASSERT(ExponentComponent(NegativeInfinity<float>()) == FloatingPoint<float>::ExponentBias + 1);
+  MOZ_ASSERT(ExponentComponent(UnspecifiedNaN<float>()) == FloatingPoint<float>::ExponentBias + 1);
+}
+
+static void
+TestExponentComponent()
+{
+  TestDoubleExponentComponent();
+  TestFloatExponentComponent();
+}
+
+static void
+TestDoublesPredicates()
 {
   MOZ_ASSERT(IsNaN(UnspecifiedNaN<double>()));
   MOZ_ASSERT(IsNaN(SpecificNaN<double>(1, 17)));;
@@ -190,6 +292,80 @@ TestPredicates()
   MOZ_ASSERT(!NumberEqualsInt32(NegativeInfinity<double>(), &i));
   MOZ_ASSERT(!NumberEqualsInt32(PositiveInfinity<double>(), &i));
   MOZ_ASSERT(!NumberEqualsInt32(UnspecifiedNaN<double>(), &i));
+}
+
+static void
+TestFloatsPredicates()
+{
+  MOZ_ASSERT(IsNaN(UnspecifiedNaN<float>()));
+  MOZ_ASSERT(IsNaN(SpecificNaN<float>(1, 17)));;
+  MOZ_ASSERT(IsNaN(SpecificNaN<float>(0, 0x7fff0fUL)));
+  MOZ_ASSERT(!IsNaN(0.0f));
+  MOZ_ASSERT(!IsNaN(-0.0f));
+  MOZ_ASSERT(!IsNaN(1.0f));
+  MOZ_ASSERT(!IsNaN(PositiveInfinity<float>()));
+  MOZ_ASSERT(!IsNaN(NegativeInfinity<float>()));
+
+  MOZ_ASSERT(IsInfinite(PositiveInfinity<float>()));
+  MOZ_ASSERT(IsInfinite(NegativeInfinity<float>()));
+  MOZ_ASSERT(!IsInfinite(UnspecifiedNaN<float>()));
+  MOZ_ASSERT(!IsInfinite(0.0f));
+  MOZ_ASSERT(!IsInfinite(-0.0f));
+  MOZ_ASSERT(!IsInfinite(1.0f));
+
+  MOZ_ASSERT(!IsFinite(PositiveInfinity<float>()));
+  MOZ_ASSERT(!IsFinite(NegativeInfinity<float>()));
+  MOZ_ASSERT(!IsFinite(UnspecifiedNaN<float>()));
+  MOZ_ASSERT(IsFinite(0.0f));
+  MOZ_ASSERT(IsFinite(-0.0f));
+  MOZ_ASSERT(IsFinite(1.0f));
+
+  MOZ_ASSERT(!IsNegative(PositiveInfinity<float>()));
+  MOZ_ASSERT(IsNegative(NegativeInfinity<float>()));
+  MOZ_ASSERT(IsNegative(-0.0f));
+  MOZ_ASSERT(!IsNegative(0.0f));
+  MOZ_ASSERT(IsNegative(-1.0f));
+  MOZ_ASSERT(!IsNegative(1.0f));
+
+  MOZ_ASSERT(!IsNegativeZero(PositiveInfinity<float>()));
+  MOZ_ASSERT(!IsNegativeZero(NegativeInfinity<float>()));
+  MOZ_ASSERT(!IsNegativeZero(SpecificNaN<float>(1, 17)));;
+  MOZ_ASSERT(!IsNegativeZero(SpecificNaN<float>(1, 0x7fff0fUL)));
+  MOZ_ASSERT(!IsNegativeZero(SpecificNaN<float>(0, 17)));;
+  MOZ_ASSERT(!IsNegativeZero(SpecificNaN<float>(0, 0x7fff0fUL)));
+  MOZ_ASSERT(!IsNegativeZero(UnspecifiedNaN<float>()));
+  MOZ_ASSERT(IsNegativeZero(-0.0f));
+  MOZ_ASSERT(!IsNegativeZero(0.0f));
+  MOZ_ASSERT(!IsNegativeZero(-1.0f));
+  MOZ_ASSERT(!IsNegativeZero(1.0f));
+
+  int32_t i;
+  const int32_t BIG = 2097151;
+  MOZ_ASSERT(NumberIsInt32(0.0f, &i)); MOZ_ASSERT(i == 0);
+  MOZ_ASSERT(!NumberIsInt32(-0.0f, &i));
+  MOZ_ASSERT(NumberEqualsInt32(0.0f, &i)); MOZ_ASSERT(i == 0);
+  MOZ_ASSERT(NumberEqualsInt32(-0.0f, &i)); MOZ_ASSERT(i == 0);
+  MOZ_ASSERT(NumberIsInt32(float(INT32_MIN), &i)); MOZ_ASSERT(i == INT32_MIN);
+  MOZ_ASSERT(NumberIsInt32(float(BIG), &i)); MOZ_ASSERT(i == BIG);
+  MOZ_ASSERT(NumberEqualsInt32(float(INT32_MIN), &i)); MOZ_ASSERT(i == INT32_MIN);
+  MOZ_ASSERT(NumberEqualsInt32(float(BIG), &i)); MOZ_ASSERT(i == BIG);
+  MOZ_ASSERT(!NumberIsInt32(0.5f, &i));
+  MOZ_ASSERT(!NumberIsInt32(float(BIG) + 0.1f, &i));
+  MOZ_ASSERT(!NumberIsInt32(NegativeInfinity<float>(), &i));
+  MOZ_ASSERT(!NumberIsInt32(PositiveInfinity<float>(), &i));
+  MOZ_ASSERT(!NumberIsInt32(UnspecifiedNaN<float>(), &i));
+  MOZ_ASSERT(!NumberEqualsInt32(0.5f, &i));
+  MOZ_ASSERT(!NumberEqualsInt32(float(BIG) + 0.1f, &i));
+  MOZ_ASSERT(!NumberEqualsInt32(NegativeInfinity<float>(), &i));
+  MOZ_ASSERT(!NumberEqualsInt32(PositiveInfinity<float>(), &i));
+  MOZ_ASSERT(!NumberEqualsInt32(UnspecifiedNaN<float>(), &i));
+}
+
+static void
+TestPredicates()
+{
+  TestFloatsPredicates();
+  TestDoublesPredicates();
 }
 
 static void
@@ -340,7 +516,7 @@ TestAreApproximatelyEqual()
 int
 main()
 {
-  TestDoublesAreIdentical();
+  TestAreIdentical();
   TestExponentComponent();
   TestPredicates();
   TestAreApproximatelyEqual();
