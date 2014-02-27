@@ -133,12 +133,6 @@ const PanelUI = {
         updateEditUIVisibility();
       }
 
-      let personalBookmarksPlacement = CustomizableUI.getPlacementOfWidget("personal-bookmarks");
-      if (personalBookmarksPlacement &&
-          personalBookmarksPlacement.area == CustomizableUI.AREA_PANEL) {
-        PlacesToolbarHelper.customizeChange();
-      }
-
       let anchor;
       if (!aEvent ||
           aEvent.type == "command") {
