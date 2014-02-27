@@ -2129,16 +2129,6 @@ Breakpoints.prototype = {
   },
 
   /**
-   * Gets all Promises for the BreakpointActor client objects that are
-   * either enabled (added to the server) or disabled (removed from the server,
-   * but for which some details are preserved).
-   */
-  get _addedOrDisabled() {
-    for (let [, value] of this._added) yield value;
-    for (let [, value] of this._disabled) yield value;
-  },
-
-  /**
    * Get a Promise for the BreakpointActor client object which is already added
    * or currently being added at the given location.
    *
@@ -2179,6 +2169,22 @@ Breakpoints.prototype = {
     return aLocation.url + ":" + aLocation.line;
   }
 };
+
+/**
+ * Gets all Promises for the BreakpointActor client objects that are
+ * either enabled (added to the server) or disabled (removed from the server,
+ * but for which some details are preserved).
+ */
+Object.defineProperty(Breakpoints.prototype, "_addedOrDisabled", {
+  get: function* () {
+    for (let [, value] of this._added) {
+      yield value;
+    }
+    for (let [, value] of this._disabled) {
+      yield value;
+    }
+  }
+});
 
 /**
  * Localization convenience methods.
