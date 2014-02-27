@@ -485,9 +485,6 @@ public:
         // platform-specific override, by default do nothing
     }
 
-    // Retrieve the resolution that a low precision buffer should render at.
-    static float GetLowPrecisionResolution();
-
     static bool OffMainThreadCompositingEnabled();
 
     /** Use gfxPlatform::GetPref* methods instead of direct calls to Preferences
@@ -495,10 +492,7 @@ public:
      * only once, and remain the same until restart.
      */
     static bool GetPrefLayersOffMainThreadCompositionEnabled();
-    static bool GetPrefLayersPreferOpenGL();
-    static bool GetPrefLayersPreferD3D9();
     static bool CanUseDirect3D9();
-    static bool GetPrefLayersEnableTiles();
 
     static bool OffMainThreadCompositionRequired();
 
