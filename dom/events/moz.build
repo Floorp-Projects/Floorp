@@ -51,6 +51,7 @@ EXPORTS.mozilla.dom += [
     'MessageEvent.h',
     'MouseScrollEvent.h',
     'PointerEvent.h',
+    'SimpleGestureEvent.h',
     'Touch.h',
     'WheelEvent.h',
 ]
@@ -79,7 +80,6 @@ UNIFIED_SOURCES += [
     'nsDOMMouseEvent.cpp',
     'nsDOMMutationEvent.cpp',
     'nsDOMNotifyAudioAvailableEvent.cpp',
-    'nsDOMSimpleGestureEvent.cpp',
     'nsDOMTextEvent.cpp',
     'nsDOMTouchEvent.cpp',
     'nsDOMTransitionEvent.cpp',
@@ -91,6 +91,7 @@ UNIFIED_SOURCES += [
     'nsPaintRequest.cpp',
     'nsPrivateTextRange.cpp',
     'PointerEvent.cpp',
+    'SimpleGestureEvent.cpp',
     'TextComposition.cpp',
     'Touch.cpp',
     'WheelEvent.cpp',
