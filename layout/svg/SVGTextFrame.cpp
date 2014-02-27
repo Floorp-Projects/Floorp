@@ -3090,6 +3090,10 @@ public:
                        nsTArray<nsIFrame*> *aOutFrames) MOZ_OVERRIDE;
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      nsRenderingContext* aCtx) MOZ_OVERRIDE;
+  virtual nsRect GetComponentAlphaBounds(nsDisplayListBuilder* aBuilder) MOZ_OVERRIDE {
+    bool snap;
+    return GetBounds(aBuilder, &snap);
+  }
 private:
   bool mDisableSubpixelAA;
 };
