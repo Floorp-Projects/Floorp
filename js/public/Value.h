@@ -862,6 +862,10 @@ GenericNaN()
   return mozilla::SpecificNaN(0, 0x8000000000000ULL);
 }
 
+/* MSVC with PGO miscompiles this function. */
+#if defined(_MSC_VER)
+# pragma optimize("g", off)
+#endif
 static inline double
 CanonicalizeNaN(double d)
 {
@@ -869,6 +873,9 @@ CanonicalizeNaN(double d)
         return GenericNaN();
     return d;
 }
+#if defined(_MSC_VER)
+# pragma optimize("", on)
+#endif
 
 /*
  * JS::Value is the interface for a single JavaScript Engine value.  A few
