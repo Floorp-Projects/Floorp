@@ -22,7 +22,7 @@
 
 #define _DEBUG 0
 
-#define WARN(args...)   __android_log_print(ANDROID_LOG_WARN,  "NetworlUtils", ## args)
+#define WARN(args...)   __android_log_print(ANDROID_LOG_WARN,  "NetworkUtils", ## args)
 #define ERROR(args...)  __android_log_print(ANDROID_LOG_ERROR,  "NetworkUtils", ## args)
 
 #if _DEBUG
@@ -65,7 +65,7 @@ static const uint32_t NETD_COMMAND_UNSOLICITED  = 600;
 static const uint32_t NETD_COMMAND_INTERFACE_CHANGE     = 600;
 static const uint32_t NETD_COMMAND_BANDWIDTH_CONTROLLER = 601;
 
-static const char* INTERFACE_DELIMIT = "\0";
+static const char* INTERFACE_DELIMIT = ",";
 static const char* USB_CONFIG_DELIMIT = ",";
 static const char* NETD_MESSAGE_DELIMIT = " ";
 
@@ -1026,7 +1026,6 @@ void NetworkUtils::onNetdMessage(NetdCommand* aCommand)
     NetworkResultOptions result;
     result.mResultCode = code;
     result.mResultReason = NS_ConvertUTF8toUTF16(buf);
-    join(gReason, INTERFACE_DELIMIT, BUF_SIZE, buf);
     (*gCurrentCommand.callback)(gCurrentCommand.chain, isError(code), result);
     gReason.Clear();
   }
