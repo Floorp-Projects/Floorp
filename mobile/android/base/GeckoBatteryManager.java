@@ -32,7 +32,7 @@ public class GeckoBatteryManager extends BroadcastReceiver {
 
     private static GeckoBatteryManager sInstance = new GeckoBatteryManager();
 
-    private IntentFilter mFilter;
+    private final IntentFilter mFilter;
     private Context mApplicationContext;
     private boolean mIsEnabled;
 
@@ -45,26 +45,30 @@ public class GeckoBatteryManager extends BroadcastReceiver {
         mFilter.addAction(Intent.ACTION_BATTERY_CHANGED);
     }
 
-    public void init(Context context) {
-        mApplicationContext = context.getApplicationContext();
-    }
+    public synchronized void start(final Context context) {
+        if (mIsEnabled) {
+            Log.w(LOGTAG, "Already started!");
+            return;
+        }
 
-    public synchronized void start() {
-        if (!mIsEnabled) {
-            // registerReceiver will return null if registering fails
-            if (mApplicationContext.registerReceiver(this, mFilter) == null) {
-                Log.e(LOGTAG, "Registering receiver failed");
-            } else {
-                mIsEnabled = true;
-            }
+        mApplicationContext = context.getApplicationContext();
+        // registerReceiver will return null if registering fails.
+        if (mApplicationContext.registerReceiver(this, mFilter) == null) {
+            Log.e(LOGTAG, "Registering receiver failed");
+        } else {
+            mIsEnabled = true;
         }
     }
 
     public synchronized void stop() {
-        if (mIsEnabled) {
-            mApplicationContext.unregisterReceiver(this);
-            mIsEnabled = false;
+        if (!mIsEnabled) {
+            Log.w(LOGTAG, "Already stopped!");
+            return;
         }
+
+        mApplicationContext.unregisterReceiver(this);
+        mApplicationContext = null;
+        mIsEnabled = false;
     }
 
     @Override
