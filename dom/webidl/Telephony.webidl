@@ -16,11 +16,11 @@ interface Telephony : EventTarget {
    * |navigator.mozMobileConnections.length|.
    */
 
-  [Throws]
-  TelephonyCall dial(DOMString number, optional unsigned long serviceId);
+  // Promise<TelephonyCall>
+  Promise dial(DOMString number, optional unsigned long serviceId);
 
-  [Throws]
-  TelephonyCall dialEmergency(DOMString number, optional unsigned long serviceId);
+  // Promise<TelephonyCall>
+  Promise dialEmergency(DOMString number, optional unsigned long serviceId);
 
   [Throws]
   void startTone(DOMString tone, optional unsigned long serviceId);
