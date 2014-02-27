@@ -4019,6 +4019,12 @@
     "kind": "boolean",
     "description": "Number of times about:newtab was shown from opening a new tab or window."
   },
+  "NEWTAB_PAGE_SITE_CLICKED": {
+    "expires_in_version": "35",
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "Track click count on about:newtab tiles per index (0-8). For non-default row or column configurations all clicks into the '9' bucket."
+  },
   "PANORAMA_INITIALIZATION_TIME_MS": {
     "expires_in_version": "never",
     "kind": "exponential",
