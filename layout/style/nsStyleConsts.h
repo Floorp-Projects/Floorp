@@ -407,6 +407,8 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #endif
 #define NS_STYLE_DISPLAY_FLEX                   29
 #define NS_STYLE_DISPLAY_INLINE_FLEX            30
+#define NS_STYLE_DISPLAY_GRID                   31
+#define NS_STYLE_DISPLAY_INLINE_GRID            32
 
 // See nsStylePosition
 #define NS_STYLE_ALIGN_CONTENT_FLEX_START       0

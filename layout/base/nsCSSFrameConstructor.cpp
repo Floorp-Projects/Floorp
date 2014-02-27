@@ -58,6 +58,7 @@
 #include "nsBoxFrame.h"
 #include "nsBoxLayout.h"
 #include "nsFlexContainerFrame.h"
+#include "nsGridContainerFrame.h"
 #include "nsImageFrame.h"
 #include "nsIObjectLoadingContent.h"
 #include "nsTArray.h"
@@ -362,7 +363,8 @@ ShouldSuppressFloatingOfDescendants(nsIFrame* aFrame)
 {
   return aFrame->IsFrameOfType(nsIFrame::eMathML) ||
     aFrame->IsBoxFrame() ||
-    aFrame->GetType() == nsGkAtoms::flexContainerFrame;
+    aFrame->GetType() == nsGkAtoms::flexContainerFrame ||
+    aFrame->GetType() == nsGkAtoms::gridContainerFrame;
 }
 
 /**
@@ -2421,6 +2423,12 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
                         contentFrame);
     newFrame = contentFrame;
     processChildren = true;
+  } else if (display->mDisplay == NS_STYLE_DISPLAY_GRID) {
+    contentFrame = NS_NewGridContainerFrame(mPresShell, styleContext);
+    InitAndRestoreFrame(state, aDocElement, mDocElementContainingBlock,
+                        contentFrame);
+    newFrame = contentFrame;
+    processChildren = true;
   } else if (display->mDisplay == NS_STYLE_DISPLAY_TABLE) {
     // We're going to call the right function ourselves, so no need to give a
     // function to this FrameConstructionData.
@@ -4362,6 +4370,10 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay* aDisplay,
       FCDATA_DECL(FCDATA_MAY_NEED_SCROLLFRAME, NS_NewFlexContainerFrame) },
     { NS_STYLE_DISPLAY_INLINE_FLEX,
       FCDATA_DECL(FCDATA_MAY_NEED_SCROLLFRAME, NS_NewFlexContainerFrame) },
+    { NS_STYLE_DISPLAY_GRID,
+      FCDATA_DECL(FCDATA_MAY_NEED_SCROLLFRAME, NS_NewGridContainerFrame) },
+    { NS_STYLE_DISPLAY_INLINE_GRID,
+      FCDATA_DECL(FCDATA_MAY_NEED_SCROLLFRAME, NS_NewGridContainerFrame) },
     { NS_STYLE_DISPLAY_TABLE,
       FULL_CTOR_FCDATA(0, &nsCSSFrameConstructor::ConstructTable) },
     { NS_STYLE_DISPLAY_INLINE_TABLE,
