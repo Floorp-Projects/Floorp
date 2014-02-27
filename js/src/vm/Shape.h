@@ -581,7 +581,7 @@ class BaseShape : public gc::BarrieredCell<BaseShape>
     };
 
   private:
-    const Class         *clasp;         /* Class of referring object. */
+    const Class         *clasp_;        /* Class of referring object. */
     HeapPtrObject       parent;         /* Parent of referring object. */
     HeapPtrObject       metadata;       /* Optional holder of metadata about
                                          * the referring object. */
@@ -618,7 +618,7 @@ class BaseShape : public gc::BarrieredCell<BaseShape>
     {
         JS_ASSERT(!(objectFlags & ~OBJECT_FLAG_MASK));
         mozilla::PodZero(this);
-        this->clasp = clasp;
+        this->clasp_ = clasp;
         this->parent = parent;
         this->metadata = metadata;
         this->flags = objectFlags;
@@ -631,7 +631,7 @@ class BaseShape : public gc::BarrieredCell<BaseShape>
     {
         JS_ASSERT(!(objectFlags & ~OBJECT_FLAG_MASK));
         mozilla::PodZero(this);
-        this->clasp = clasp;
+        this->clasp_ = clasp;
         this->parent = parent;
         this->metadata = metadata;
         this->flags = objectFlags;
@@ -654,7 +654,7 @@ class BaseShape : public gc::BarrieredCell<BaseShape>
     ~BaseShape();
 
     BaseShape &operator=(const BaseShape &other) {
-        clasp = other.clasp;
+        clasp_ = other.clasp_;
         parent = other.parent;
         metadata = other.metadata;
         flags = other.flags;
@@ -678,6 +678,8 @@ class BaseShape : public gc::BarrieredCell<BaseShape>
         compartment_ = other.compartment_;
         return *this;
     }
+
+    const Class *clasp() const { return clasp_; }
 
     bool isOwned() const { return !!(flags & OWNED_SHAPE); }
 
@@ -760,7 +762,7 @@ class BaseShape : public gc::BarrieredCell<BaseShape>
 
   private:
     static void staticAsserts() {
-        JS_STATIC_ASSERT(offsetof(BaseShape, clasp) == offsetof(js::shadow::BaseShape, clasp));
+        JS_STATIC_ASSERT(offsetof(BaseShape, clasp_) == offsetof(js::shadow::BaseShape, clasp_));
     }
 };
 
@@ -817,7 +819,7 @@ struct StackBaseShape
 
     explicit StackBaseShape(BaseShape *base)
       : flags(base->flags & BaseShape::OBJECT_FLAG_MASK),
-        clasp(base->clasp),
+        clasp(base->clasp_),
         parent(base->parent),
         metadata(base->metadata),
         rawGetter(nullptr),
@@ -856,7 +858,7 @@ inline
 BaseShape::BaseShape(const StackBaseShape &base)
 {
     mozilla::PodZero(this);
-    this->clasp = base.clasp;
+    this->clasp_ = base.clasp;
     this->parent = base.parent;
     this->metadata = base.metadata;
     this->flags = base.flags;
@@ -1030,7 +1032,7 @@ class Shape : public gc::BarrieredCell<Shape>
     };
 
     const Class *getObjectClass() const {
-        return base()->clasp;
+        return base()->clasp_;
     }
     JSObject *getObjectParent() const { return base()->parent; }
     JSObject *getObjectMetadata() const { return base()->metadata; }
@@ -1481,7 +1483,7 @@ struct StackShape
     uint32_t maybeSlot() const { return slot_; }
 
     uint32_t slotSpan() const {
-        uint32_t free = JSSLOT_FREE(base->clasp);
+        uint32_t free = JSSLOT_FREE(base->clasp_);
         return hasMissingSlot() ? free : (maybeSlot() + 1);
     }
 
