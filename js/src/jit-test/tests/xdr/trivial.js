@@ -32,3 +32,7 @@ evalWithCache(test, { assertEqBytecode: true, assertEqResult : true });
 // code a function which is not used.
 test = "function f() { return 1; }; 1;";
 evalWithCache(test, { assertEqBytecode: true, assertEqResult : true });
+
+// code a function which has an object literal.
+test = "function f() { return { x: 2 }; }; f();";
+evalWithCache(test, { assertEqBytecode: true });
