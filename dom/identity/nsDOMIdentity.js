@@ -38,6 +38,14 @@ XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
                                    "@mozilla.org/childprocessmessagemanager;1",
                                    "nsIMessageSender");
 
+
+const ERRORS = {
+  "ERROR_NOT_AUTHORIZED_FOR_FIREFOX_ACCOUNTS":
+    "Only privileged and certified apps may use Firefox Accounts",
+  "ERROR_INVALID_ASSERTION_AUDIENCE":
+    "Assertion audience may not differ from origin",
+};
+
 function nsDOMIdentity(aIdentityInternal) {
   this._identityInternal = aIdentityInternal;
 }
@@ -64,10 +72,27 @@ nsDOMIdentity.prototype = {
 
   // require native events unless syntheticEventsOk is set
   get nativeEventsRequired() {
-    if (Services.prefs.prefHasUserValue(PREF_SYNTHETIC_EVENTS_OK)) {
+    if (Services.prefs.prefHasUserValue(PREF_SYNTHETIC_EVENTS_OK) &&
+        (Services.prefs.getPrefType(PREF_SYNTHETIC_EVENTS_OK) ===
+         Ci.nsIPrefBranch.PREF_BOOL)) {
       return !Services.prefs.getBoolPref(PREF_SYNTHETIC_EVENTS_OK);
     }
     return true;
+  },
+
+  reportErrors: function(message) {
+    let onerror = function() {};
+    if (this._rpWatcher && this._rpWatcher.onerror) {
+      onerror = this._rpWatcher.onerror;
+    }
+
+    message.errors.forEach((error) => {
+      // Report an error string to content
+      Cu.reportError(ERRORS[error]);
+
+      // Report error code to RP callback, if available
+      onerror(error);
+    });
   },
 
   /**
@@ -106,7 +131,7 @@ nsDOMIdentity.prototype = {
     }
 
     // Optional callbacks
-    for (let cb of ["onready", "onlogout"]) {
+    for (let cb of ["onready", "onerror", "onlogout"]) {
       if (aOptions[cb] && typeof(aOptions[cb]) != "function") {
         throw new Error(cb + " must be a function");
       }
@@ -140,10 +165,19 @@ nsDOMIdentity.prototype = {
     this._log("loggedInUser: " + message.loggedInUser);
 
     this._rpWatcher = aOptions;
+    this._rpWatcher.audience = message.audience;
+
+    if (message.errors.length) {
+      this.reportErrors(message);
+      // We don't delete the rpWatcher object, because we don't want the
+      // broken client to be able to call watch() any more.  It's broken.
+      return;
+    }
     this._identityInternal._mm.sendAsyncMessage("Identity:RP:Watch", message);
   },
 
   request: function nsDOMIdentity_request(aOptions = {}) {
+    this._log("request: " + JSON.stringify(aOptions));
     let util = this._window.QueryInterface(Ci.nsIInterfaceRequestor)
                            .getInterface(Ci.nsIDOMWindowUtils);
 
@@ -165,6 +199,12 @@ nsDOMIdentity.prototype = {
     }
 
     let message = this.DOMIdentityMessage(aOptions);
+
+    // Report and fail hard on any errors.
+    if (message.errors.length) {
+      this.reportErrors(message);
+      return;
+    }
 
     if (aOptions) {
       // Optional string properties
@@ -204,6 +244,13 @@ nsDOMIdentity.prototype = {
 
     this._rpCalls++;
     let message = this.DOMIdentityMessage();
+
+    // Report and fail hard on any errors.
+    if (message.errors.length) {
+      this.reportErrors(message);
+      return;
+    }
+
     this._identityInternal._mm.sendAsyncMessage("Identity:RP:Logout", message);
   },
 
@@ -394,6 +441,7 @@ nsDOMIdentity.prototype = {
     this._window = aWindow;
     this._origin = aWindow.document.nodePrincipal.origin;
     this._appStatus = aWindow.document.nodePrincipal.appStatus;
+    this._appId = aWindow.document.nodePrincipal.appId;
 
     // Setup identifiers for current window.
     let util = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -547,11 +595,15 @@ nsDOMIdentity.prototype = {
   /**
    * Helper to create messages to send using a message manager.
    * Pass through user options if they are not functions.  Always
-   * overwrite id and origin.  Caller does not get to set those.
+   * overwrite id, origin, audience, and appStatus.  The caller
+   * does not get to set those.
    */
   DOMIdentityMessage: function DOMIdentityMessage(aOptions) {
     aOptions = aOptions || {};
-    let message = {};
+    let message = {
+      errors: []
+    };
+    let principal = Ci.nsIPrincipal;
 
     objectCopy(aOptions, message);
 
@@ -565,6 +617,38 @@ nsDOMIdentity.prototype = {
     // CERTIFIED.  Compare the appStatus value to the constants enumerated in
     // Ci.nsIPrincipal.APP_STATUS_*.
     message.appStatus = this._appStatus;
+
+    // Currently, we only permit certified and privileged apps to use
+    // Firefox Accounts.
+    if (this._appStatus !== principal.APP_STATUS_PRIVILEGED &&
+        this._appStatus !== principal.APP_STATUS_CERTIFIED) {
+      message.errors.push("ERROR_NOT_AUTHORIZED_FOR_FIREFOX_ACCOUNTS");
+    }
+
+    // Normally the window origin will be the audience in assertions.  On b2g,
+    // certified apps have the power to override this and declare any audience
+    // the want.  Privileged apps can also declare a different audience, as
+    // long as it is the same as the origin specified in their manifest files.
+    // All other apps are stuck with b2g origins of the form app://{guid}.
+    // Since such an origin is meaningless for the purposes of verification,
+    // they will have to jump through some hoops to sign in: Specifically, they
+    // will have to host their sign-in flows and DOM API requests in an iframe,
+    // have the iframe xhr post assertions up to their server for verification,
+    // and then post-message the results down to their app.
+    let _audience = message.origin;
+    if (message.audience && message.audience != message.origin) {
+      if (this._appStatus === principal.APP_STATUS_CERTIFIED) {
+        _audience = message.audience;
+        this._log("Certified app setting assertion audience: " + _audience);
+      } else {
+        message.errors.push("ERROR_INVALID_ASSERTION_AUDIENCE");
+      }
+    }
+
+    // Replace any audience supplied by the RP with one that has been sanitised
+    message.audience = _audience;
+
+    this._log("Generated message: " + JSON.stringify(message));
 
     return message;
   },
