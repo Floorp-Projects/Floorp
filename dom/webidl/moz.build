@@ -55,6 +55,7 @@ WEBIDL_FILES = [
     'CommandEvent.webidl',
     'Comment.webidl',
     'CompositionEvent.webidl',
+    'Console.webidl',
     'Contacts.webidl',
     'ConvolverNode.webidl',
     'Coordinates.webidl',
