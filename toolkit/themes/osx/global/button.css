@@ -64,36 +64,6 @@ button.plain {
 /* ::::: help button ::::: */
 
 button[dlgtype="help"] {
-  min-width: 1px;
-  padding: 0;
-  -moz-appearance: none;
-  -moz-box-align: start;
-  height: 24px;
-  width: 24px;
-  margin: 3px 4px;
-}
-
-button[dlgtype="help"][disabled] {
-  opacity: 0.5;
-}
-
-button[dlgtype="help"]:-moz-focusring {
-  outline: 2px solid -moz-mac-focusring;
-  outline-offset: -2px;
-  -moz-outline-radius: 10000px;
-}
-
-button[dlgtype="help"] > .button-box > .button-icon {
-  list-style-image: url("chrome://global/skin/icons/question-mark.png");
-  -moz-image-region: rect(0 24px 24px 0);
-  padding: 0;
-  margin: 0;
-}
-
-button[dlgtype="help"]:active > .button-box > .button-icon {
-  -moz-image-region: rect(0 48px 24px 24px);
-}
-
-button[dlgtype="help"] > .button-box > .button-text {
-  display: none;
+  -moz-appearance: -moz-mac-help-button;
+  width: 20px;
 }

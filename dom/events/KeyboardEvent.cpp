@@ -3,15 +3,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsDOMKeyboardEvent.h"
-#include "prtime.h"
+#include "mozilla/dom/KeyboardEvent.h"
 #include "mozilla/TextEvents.h"
+#include "prtime.h"
 
-using namespace mozilla;
+namespace mozilla {
+namespace dom {
 
-nsDOMKeyboardEvent::nsDOMKeyboardEvent(mozilla::dom::EventTarget* aOwner,
-                                       nsPresContext* aPresContext,
-                                       WidgetKeyboardEvent* aEvent)
+KeyboardEvent::KeyboardEvent(EventTarget* aOwner,
+                             nsPresContext* aPresContext,
+                             WidgetKeyboardEvent* aEvent)
   : nsDOMUIEvent(aOwner, aPresContext, aEvent ? aEvent :
                  new WidgetKeyboardEvent(false, 0, nullptr))
 {
@@ -27,21 +28,21 @@ nsDOMKeyboardEvent::nsDOMKeyboardEvent(mozilla::dom::EventTarget* aOwner,
   }
 }
 
-NS_IMPL_ADDREF_INHERITED(nsDOMKeyboardEvent, nsDOMUIEvent)
-NS_IMPL_RELEASE_INHERITED(nsDOMKeyboardEvent, nsDOMUIEvent)
+NS_IMPL_ADDREF_INHERITED(KeyboardEvent, nsDOMUIEvent)
+NS_IMPL_RELEASE_INHERITED(KeyboardEvent, nsDOMUIEvent)
 
-NS_INTERFACE_MAP_BEGIN(nsDOMKeyboardEvent)
+NS_INTERFACE_MAP_BEGIN(KeyboardEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMKeyEvent)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMUIEvent)
 
 bool
-nsDOMKeyboardEvent::AltKey()
+KeyboardEvent::AltKey()
 {
   return mEvent->AsKeyboardEvent()->IsAlt();
 }
 
 NS_IMETHODIMP
-nsDOMKeyboardEvent::GetAltKey(bool* aIsDown)
+KeyboardEvent::GetAltKey(bool* aIsDown)
 {
   NS_ENSURE_ARG_POINTER(aIsDown);
   *aIsDown = AltKey();
@@ -49,13 +50,13 @@ nsDOMKeyboardEvent::GetAltKey(bool* aIsDown)
 }
 
 bool
-nsDOMKeyboardEvent::CtrlKey()
+KeyboardEvent::CtrlKey()
 {
   return mEvent->AsKeyboardEvent()->IsControl();
 }
 
 NS_IMETHODIMP
-nsDOMKeyboardEvent::GetCtrlKey(bool* aIsDown)
+KeyboardEvent::GetCtrlKey(bool* aIsDown)
 {
   NS_ENSURE_ARG_POINTER(aIsDown);
   *aIsDown = CtrlKey();
@@ -63,13 +64,13 @@ nsDOMKeyboardEvent::GetCtrlKey(bool* aIsDown)
 }
 
 bool
-nsDOMKeyboardEvent::ShiftKey()
+KeyboardEvent::ShiftKey()
 {
   return mEvent->AsKeyboardEvent()->IsShift();
 }
 
 NS_IMETHODIMP
-nsDOMKeyboardEvent::GetShiftKey(bool* aIsDown)
+KeyboardEvent::GetShiftKey(bool* aIsDown)
 {
   NS_ENSURE_ARG_POINTER(aIsDown);
   *aIsDown = ShiftKey();
@@ -77,13 +78,13 @@ nsDOMKeyboardEvent::GetShiftKey(bool* aIsDown)
 }
 
 bool
-nsDOMKeyboardEvent::MetaKey()
+KeyboardEvent::MetaKey()
 {
   return mEvent->AsKeyboardEvent()->IsMeta();
 }
 
 NS_IMETHODIMP
-nsDOMKeyboardEvent::GetMetaKey(bool* aIsDown)
+KeyboardEvent::GetMetaKey(bool* aIsDown)
 {
   NS_ENSURE_ARG_POINTER(aIsDown);
   *aIsDown = MetaKey();
@@ -91,13 +92,13 @@ nsDOMKeyboardEvent::GetMetaKey(bool* aIsDown)
 }
 
 bool
-nsDOMKeyboardEvent::Repeat()
+KeyboardEvent::Repeat()
 {
   return mEvent->AsKeyboardEvent()->mIsRepeat;
 }
 
 NS_IMETHODIMP
-nsDOMKeyboardEvent::GetRepeat(bool* aIsRepeat)
+KeyboardEvent::GetRepeat(bool* aIsRepeat)
 {
   NS_ENSURE_ARG_POINTER(aIsRepeat);
   *aIsRepeat = Repeat();
@@ -105,8 +106,8 @@ nsDOMKeyboardEvent::GetRepeat(bool* aIsRepeat)
 }
 
 NS_IMETHODIMP
-nsDOMKeyboardEvent::GetModifierState(const nsAString& aKey,
-                                     bool* aState)
+KeyboardEvent::GetModifierState(const nsAString& aKey,
+                                bool* aState)
 {
   NS_ENSURE_ARG_POINTER(aState);
 
@@ -115,14 +116,14 @@ nsDOMKeyboardEvent::GetModifierState(const nsAString& aKey,
 }
 
 NS_IMETHODIMP
-nsDOMKeyboardEvent::GetKey(nsAString& aKeyName)
+KeyboardEvent::GetKey(nsAString& aKeyName)
 {
   mEvent->AsKeyboardEvent()->GetDOMKeyName(aKeyName);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMKeyboardEvent::GetCharCode(uint32_t* aCharCode)
+KeyboardEvent::GetCharCode(uint32_t* aCharCode)
 {
   NS_ENSURE_ARG_POINTER(aCharCode);
   *aCharCode = CharCode();
@@ -130,7 +131,7 @@ nsDOMKeyboardEvent::GetCharCode(uint32_t* aCharCode)
 }
 
 uint32_t
-nsDOMKeyboardEvent::CharCode()
+KeyboardEvent::CharCode()
 {
   switch (mEvent->message) {
   case NS_KEY_UP:
@@ -143,7 +144,7 @@ nsDOMKeyboardEvent::CharCode()
 }
 
 NS_IMETHODIMP
-nsDOMKeyboardEvent::GetKeyCode(uint32_t* aKeyCode)
+KeyboardEvent::GetKeyCode(uint32_t* aKeyCode)
 {
   NS_ENSURE_ARG_POINTER(aKeyCode);
   *aKeyCode = KeyCode();
@@ -151,7 +152,7 @@ nsDOMKeyboardEvent::GetKeyCode(uint32_t* aKeyCode)
 }
 
 uint32_t
-nsDOMKeyboardEvent::KeyCode()
+KeyboardEvent::KeyCode()
 {
   switch (mEvent->message) {
   case NS_KEY_UP:
@@ -163,7 +164,7 @@ nsDOMKeyboardEvent::KeyCode()
 }
 
 uint32_t
-nsDOMKeyboardEvent::Which()
+KeyboardEvent::Which()
 {
   switch (mEvent->message) {
     case NS_KEY_UP:
@@ -185,7 +186,7 @@ nsDOMKeyboardEvent::Which()
 }
 
 NS_IMETHODIMP
-nsDOMKeyboardEvent::GetLocation(uint32_t* aLocation)
+KeyboardEvent::GetLocation(uint32_t* aLocation)
 {
   NS_ENSURE_ARG_POINTER(aLocation);
 
@@ -194,16 +195,22 @@ nsDOMKeyboardEvent::GetLocation(uint32_t* aLocation)
 }
 
 uint32_t
-nsDOMKeyboardEvent::Location()
+KeyboardEvent::Location()
 {
   return mEvent->AsKeyboardEvent()->location;
 }
 
 NS_IMETHODIMP
-nsDOMKeyboardEvent::InitKeyEvent(const nsAString& aType, bool aCanBubble, bool aCancelable,
-                                 nsIDOMWindow* aView, bool aCtrlKey, bool aAltKey,
-                                 bool aShiftKey, bool aMetaKey,
-                                 uint32_t aKeyCode, uint32_t aCharCode)
+KeyboardEvent::InitKeyEvent(const nsAString& aType,
+                            bool aCanBubble,
+                            bool aCancelable,
+                            nsIDOMWindow* aView,
+                            bool aCtrlKey,
+                            bool aAltKey,
+                            bool aShiftKey,
+                            bool aMetaKey,
+                            uint32_t aKeyCode,
+                            uint32_t aCharCode)
 {
   nsresult rv = nsDOMUIEvent::InitUIEvent(aType, aCanBubble, aCancelable, aView, 0);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -216,11 +223,18 @@ nsDOMKeyboardEvent::InitKeyEvent(const nsAString& aType, bool aCanBubble, bool a
   return NS_OK;
 }
 
-nsresult NS_NewDOMKeyboardEvent(nsIDOMEvent** aInstancePtrResult,
-                                mozilla::dom::EventTarget* aOwner,
-                                nsPresContext* aPresContext,
-                                WidgetKeyboardEvent* aEvent)
+} // namespace dom
+} // namespace mozilla
+
+using namespace mozilla;
+using namespace mozilla::dom;
+
+nsresult
+NS_NewDOMKeyboardEvent(nsIDOMEvent** aInstancePtrResult,
+                       EventTarget* aOwner,
+                       nsPresContext* aPresContext,
+                       WidgetKeyboardEvent* aEvent)
 {
-  nsDOMKeyboardEvent* it = new nsDOMKeyboardEvent(aOwner, aPresContext, aEvent);
+  KeyboardEvent* it = new KeyboardEvent(aOwner, aPresContext, aEvent);
   return CallQueryInterface(it, aInstancePtrResult);
 }

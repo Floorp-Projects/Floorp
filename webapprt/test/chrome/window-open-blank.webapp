@@ -1,0 +1,5 @@
+{
+  "name": "Window Open Blank Test App",
+  "description": "an app for testing window.open(url, '_blank')",
+  "launch_path": "/webapprtChrome/webapprt/test/chrome/window-open-blank.html"
+}

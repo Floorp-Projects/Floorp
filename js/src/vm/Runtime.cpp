@@ -245,8 +245,8 @@ JSRuntime::JSRuntime(JSRuntime *parentRuntime, JSUseHelperThreads useHelperThrea
 #endif
     scriptAndCountsVector(nullptr),
     NaNValue(DoubleNaNValue()),
-    negativeInfinityValue(DoubleValue(NegativeInfinity())),
-    positiveInfinityValue(DoubleValue(PositiveInfinity())),
+    negativeInfinityValue(DoubleValue(NegativeInfinity<double>())),
+    positiveInfinityValue(DoubleValue(PositiveInfinity<double>())),
     emptyString(nullptr),
     debugMode(false),
     spsProfiler(thisFromCtor()),

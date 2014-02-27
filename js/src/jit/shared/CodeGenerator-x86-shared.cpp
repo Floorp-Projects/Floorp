@@ -21,12 +21,10 @@
 using namespace js;
 using namespace js::jit;
 
-using mozilla::DoubleSignificandBits;
-using mozilla::FloatSignificandBits;
+using mozilla::FloatingPoint;
 using mozilla::FloorLog2;
 using mozilla::NegativeInfinity;
 using mozilla::SpecificNaN;
-using mozilla::SpecificFloatNaN;
 
 namespace js {
 namespace jit {
@@ -512,7 +510,8 @@ CodeGeneratorX86Shared::visitAbsD(LAbsD *ins)
     FloatRegister input = ToFloatRegister(ins->input());
     JS_ASSERT(input == ToFloatRegister(ins->output()));
     // Load a value which is all ones except for the sign bit.
-    masm.loadConstantDouble(SpecificNaN(0, DoubleSignificandBits), ScratchFloatReg);
+    masm.loadConstantDouble(SpecificNaN<double>(0, FloatingPoint<double>::SignificandBits),
+                            ScratchFloatReg);
     masm.andpd(ScratchFloatReg, input);
     return true;
 }
@@ -523,7 +522,8 @@ CodeGeneratorX86Shared::visitAbsF(LAbsF *ins)
     FloatRegister input = ToFloatRegister(ins->input());
     JS_ASSERT(input == ToFloatRegister(ins->output()));
     // Same trick as visitAbsD above.
-    masm.loadConstantFloat32(SpecificFloatNaN(0, FloatSignificandBits), ScratchFloatReg);
+    masm.loadConstantFloat32(SpecificNaN<float>(0, FloatingPoint<float>::SignificandBits),
+                             ScratchFloatReg);
     masm.andps(ScratchFloatReg, input);
     return true;
 }
@@ -556,7 +556,7 @@ CodeGeneratorX86Shared::visitPowHalfD(LPowHalfD *ins)
 
     if (!ins->mir()->operandIsNeverNegativeInfinity()) {
         // Branch if not -Infinity.
-        masm.loadConstantDouble(NegativeInfinity(), ScratchFloatReg);
+        masm.loadConstantDouble(NegativeInfinity<double>(), ScratchFloatReg);
 
         Assembler::DoubleCondition cond = Assembler::DoubleNotEqualOrUnordered;
         if (ins->mir()->operandIsNeverNaN())
