@@ -27,6 +27,8 @@ interface Console {
   void profileEnd(any... data);
 
   void assert(boolean condition, any... data);
+  void count(any... data);
+
   void ___noSuchMethod__();
 };
 
@@ -44,6 +46,7 @@ dictionary ConsoleEvent {
   sequence<ConsoleStackEntry> stacktrace;
   DOMString groupName = "";
   any timer = null;
+  any counter = null;
 };
 
 // Event for profile operations
@@ -72,4 +75,13 @@ dictionary ConsoleTimerEnd {
 
 dictionary ConsoleTimerError {
   DOMString error = "maxTimersExceeded";
+};
+
+dictionary ConsoleCounter {
+  DOMString label = "";
+  unsigned long count = 0;
+};
+
+dictionary ConsoleCounterError {
+  DOMString error = "maxCountersExceeded";
 };
