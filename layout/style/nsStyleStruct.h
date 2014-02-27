@@ -1914,8 +1914,11 @@ struct nsStyleDisplay {
   bool HasTransformStyle() const {
     return mSpecifiedTransform != nullptr ||
            mTransformStyle == NS_STYLE_TRANSFORM_STYLE_PRESERVE_3D ||
-           mBackfaceVisibility == NS_STYLE_BACKFACE_VISIBILITY_HIDDEN ||
            (mWillChangeBitField & NS_STYLE_WILL_CHANGE_TRANSFORM);
+  }
+
+  bool BackfaceIsHidden() const {
+    return mBackfaceVisibility == NS_STYLE_BACKFACE_VISIBILITY_HIDDEN;
   }
 
   // These are defined in nsStyleStructInlines.h.
