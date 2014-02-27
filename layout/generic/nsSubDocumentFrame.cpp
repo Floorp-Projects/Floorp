@@ -463,19 +463,21 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // Generate a resolution and/or zoom item if needed. If one or both of those is
   // created, we don't need to create a separate nsDisplayOwnLayer.
 
-  if (constructResolutionItem) {
-    nsDisplayResolution* resolutionItem =
-      new (aBuilder) nsDisplayResolution(aBuilder, subdocRootFrame, &childItems,
-                                         nsDisplayOwnLayer::GENERATE_SUBDOC_INVALIDATIONS);
-    childItems.AppendToTop(resolutionItem);
-    needsOwnLayer = false;
-  }
   if (constructZoomItem) {
     nsDisplayZoom* zoomItem =
       new (aBuilder) nsDisplayZoom(aBuilder, subdocRootFrame, &childItems,
                                    subdocAPD, parentAPD,
                                    nsDisplayOwnLayer::GENERATE_SUBDOC_INVALIDATIONS);
     childItems.AppendToTop(zoomItem);
+    needsOwnLayer = false;
+  }
+  // Wrap the zoom item in the resolution item if we have both because we want the
+  // resolution scale applied on top of the app units per dev pixel conversion.
+  if (constructResolutionItem) {
+    nsDisplayResolution* resolutionItem =
+      new (aBuilder) nsDisplayResolution(aBuilder, subdocRootFrame, &childItems,
+                                         nsDisplayOwnLayer::GENERATE_SUBDOC_INVALIDATIONS);
+    childItems.AppendToTop(resolutionItem);
     needsOwnLayer = false;
   }
   if (needsOwnLayer) {
