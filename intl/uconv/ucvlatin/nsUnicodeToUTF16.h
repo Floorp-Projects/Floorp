@@ -7,6 +7,7 @@
 #define nsUnicodeToUTF16_h_
 
 #include "nsUCSupport.h"
+#include "mozilla/Endian.h"
 
 class nsUnicodeToUTF16BE: public nsBasicEncoder
 {
@@ -39,14 +40,10 @@ protected:
   NS_IMETHOD CopyData(char* aDest, const char16_t* aSrc, int32_t aLen  );
 };
 
-// XXX In theory, we have to check the endianness at run-time because some
-// modern RISC processors can be run at both LE and BE. 
-#ifdef IS_LITTLE_ENDIAN
+#if MOZ_LITTLE_ENDIAN
 class nsUnicodeToUTF16: public nsUnicodeToUTF16LE
-#elif defined(IS_BIG_ENDIAN)
-class nsUnicodeToUTF16: public nsUnicodeToUTF16BE
 #else
-#error "Unknown endianness"
+class nsUnicodeToUTF16: public nsUnicodeToUTF16BE
 #endif
 {
 public:
