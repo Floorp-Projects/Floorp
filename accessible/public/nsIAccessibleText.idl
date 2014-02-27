@@ -9,9 +9,11 @@
 typedef long AccessibleTextBoundary;
 
 interface nsIAccessible;
+interface nsIArray;
 interface nsIPersistentProperties;
+interface nsIAccessibleTextRange;
 
-[scriptable, uuid(1e63dd8b-173d-4a68-8ade-fd671abbe1ee)]
+[scriptable, uuid(88789f40-54c9-494a-846d-3acaaf4cf46a)]
 interface nsIAccessibleText : nsISupports
 {
   // In parameters for character offsets:
@@ -189,6 +191,34 @@ interface nsIAccessibleText : nsISupports
   void scrollSubstringToPoint(in long startIndex, in long endIndex,
                               in unsigned long coordinateType,
                               in long x, in long y);
+
+  /**
+   * Return a range that encloses this text control or otherwise the document
+   * this text accessible belongs to.
+   */
+  readonly attribute nsIAccessibleTextRange enclosingRange;
+
+  /**
+   * Return an array of disjoint ranges for selected text within the text control
+   * or otherwise the document this accessible belongs to.
+   */
+  readonly attribute nsIArray selectionRanges;
+
+  /**
+   * Return an array of disjoint ranges of visible text within the text control
+   * or otherwise the document this accessible belongs to.
+   */
+  readonly attribute nsIArray visibleRanges;
+
+  /**
+   * Return a range containing the given accessible.
+   */
+  nsIAccessibleTextRange getRangeByChild(in nsIAccessible child);
+
+  /**
+   * Return a range containing an accessible at the given point.
+   */
+  nsIAccessibleTextRange getRangeAtPoint(in long x, in long y);
 };
 
 /*

@@ -16,6 +16,8 @@
 namespace mozilla {
 namespace a11y {
 
+class TextRange;
+
 struct DOMPoint {
   DOMPoint() : node(nullptr), idx(0) { }
   DOMPoint(nsINode* aNode, int32_t aIdx) : node(aNode), idx(aIdx) { }
@@ -360,6 +362,34 @@ public:
                               int32_t aEndOffset,
                               uint32_t aCoordinateType,
                               int32_t aX, int32_t aY);
+
+  /**
+   * Return a range that encloses the text control or the document this
+   * accessible belongs to.
+   */
+  void EnclosingRange(TextRange& aRange) const;
+
+  /**
+   * Return an array of disjoint ranges for selected text within the text control
+   * or the document this accessible belongs to.
+   */
+  void SelectionRanges(nsTArray<TextRange>* aRanges) const;
+
+  /**
+   * Return an array of disjoint ranges of visible text within the text control
+   * or the document this accessible belongs to.
+   */
+  void VisibleRanges(nsTArray<TextRange>* aRanges) const;
+
+  /**
+   * Return a range containing the given accessible.
+   */
+  void RangeByChild(Accessible* aChild, TextRange& aRange) const;
+
+  /**
+   * Return a range containing an accessible at the given point.
+   */
+  void RangeAtPoint(int32_t aX, int32_t aY, TextRange& aRange) const;
 
   //////////////////////////////////////////////////////////////////////////////
   // EditableTextAccessible
