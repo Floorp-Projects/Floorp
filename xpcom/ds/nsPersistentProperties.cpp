@@ -457,15 +457,11 @@ nsPersistentProperties::~nsPersistentProperties()
     PL_DHashTableFinish(&mTable);
 }
 
-nsresult
+void
 nsPersistentProperties::Init()
 {
-  if (!PL_DHashTableInit(&mTable, &property_HashTableOps, nullptr,
-                         sizeof(PropertyTableEntry), 20)) {
-    mTable.ops = nullptr;
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  return NS_OK;
+  PL_DHashTableInit(&mTable, &property_HashTableOps, nullptr,
+                    sizeof(PropertyTableEntry), 20);
 }
 
 nsresult
@@ -478,9 +474,8 @@ nsPersistentProperties::Create(nsISupports *aOuter, REFNSIID aIID, void **aResul
     return NS_ERROR_OUT_OF_MEMORY;
 
   NS_ADDREF(props);
-  nsresult rv = props->Init();
-  if (NS_SUCCEEDED(rv))
-    rv = props->QueryInterface(aIID, aResult);
+  props->Init();
+  nsresult rv = props->QueryInterface(aIID, aResult);
 
   NS_RELEASE(props);
   return rv;

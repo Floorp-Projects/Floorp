@@ -149,8 +149,8 @@ nsresult PREF_Init()
 {
     if (!gHashTable.ops) {
         if (!PL_DHashTableInit(&gHashTable, &pref_HashTableOps, nullptr,
-                               sizeof(PrefHashEntry),
-                               PREF_HASHTABLE_INITIAL_SIZE)) {
+                               sizeof(PrefHashEntry), PREF_HASHTABLE_INITIAL_SIZE,
+                               fallible_t())) {
             gHashTable.ops = nullptr;
             return NS_ERROR_OUT_OF_MEMORY;
         }
