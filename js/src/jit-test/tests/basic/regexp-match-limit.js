@@ -3,7 +3,7 @@
 load(libdir + "asserts.js");
 
 function test() {
-    var input = Array(999999+1).join('a');
+    var input = Array(2499999+1).join('a');
     var result = /^([\w])+$/.test(input);
 }
 assertThrowsInstanceOf(test, InternalError);
