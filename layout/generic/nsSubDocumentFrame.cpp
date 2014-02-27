@@ -373,6 +373,8 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   nsRect dirty;
   bool haveDisplayPort = false;
+  bool ignoreViewportScrolling = false;
+  nsIFrame* savedIgnoreScrollFrame = nullptr;
   if (subdocRootFrame) {
     nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame();
     nsIContent* content = rootScrollFrame ? rootScrollFrame->GetContent() : nullptr;
@@ -385,6 +387,13 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       dirty = aDirtyRect + GetOffsetToCrossDoc(subdocRootFrame);
       // and convert into the appunits of the subdoc
       dirty = dirty.ConvertAppUnitsRoundOut(parentAPD, subdocAPD);
+    }
+
+    ignoreViewportScrolling =
+      rootScrollFrame && presShell->IgnoringViewportScrolling();
+    if (ignoreViewportScrolling) {
+      savedIgnoreScrollFrame = aBuilder->GetIgnoreScrollFrame();
+      aBuilder->SetIgnoreScrollFrame(rootScrollFrame);
     }
 
     aBuilder->EnterPresShell(subdocRootFrame, dirty);
@@ -479,6 +488,10 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   if (subdocRootFrame) {
     aBuilder->LeavePresShell(subdocRootFrame, dirty);
+
+    if (ignoreViewportScrolling) {
+      aBuilder->SetIgnoreScrollFrame(savedIgnoreScrollFrame);
+    }
   }
 
   if (aBuilder->IsForImageVisibility()) {
