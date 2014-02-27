@@ -137,6 +137,10 @@ private:
   ProcessArguments(JSContext* aCx, const nsTArray<JS::Heap<JS::Value>>& aData,
                    Sequence<JS::Value>& aSequence);
 
+  void
+  MakeFormatString(nsCString& aFormat, int32_t aInteger, int32_t aMantissa,
+                   char aCh);
+
   // Stringify and Concat all the JS::Value in a single string using ' ' as
   // separator.
   void

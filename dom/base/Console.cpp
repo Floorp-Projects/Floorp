@@ -619,7 +619,44 @@ Console::ProcessArguments(JSContext* aCx,
       continue;
     }
 
+    nsAutoString tmp;
+    tmp.Append('%');
+
+    int32_t integer = -1;
+    int32_t mantissa = -1;
+
+    // Let's parse %<number>.<number> for %d and %f
+    if (*start >= '0' && *start <= '9') {
+      integer = 0;
+
+      do {
+        integer = integer * 10 + *start - '0';
+        tmp.Append(*start);
+        ++start;
+      } while (*start >= '0' && *start <= '9');
+    }
+
+    if (*start == '.') {
+      tmp.Append(*start);
+      ++start;
+
+      // '.' must be followed by a number.
+      if (*start < '0' || *start > '9') {
+        output.Append(tmp);
+        continue;
+      }
+
+      mantissa = 0;
+
+      do {
+        mantissa = mantissa * 10 + *start - '0';
+        tmp.Append(*start);
+        ++start;
+      } while (*start >= '0' && *start <= '9');
+    }
+
     char ch = *start;
+    tmp.Append(ch);
     ++start;
 
     switch (ch) {
@@ -673,7 +710,9 @@ Console::ProcessArguments(JSContext* aCx,
             return;
           }
 
-          output.AppendPrintf("%d", v);
+          nsCString format;
+          MakeFormatString(format, integer, mantissa, 'd');
+          output.AppendPrintf(format.get(), v);
         }
         break;
 
@@ -686,12 +725,14 @@ Console::ProcessArguments(JSContext* aCx,
             return;
           }
 
-          output.AppendPrintf("%f", v);
+          nsCString format;
+          MakeFormatString(format, integer, mantissa, 'f');
+          output.AppendPrintf(format.get(), v);
         }
         break;
 
       default:
-        output.Append(ch);
+        output.Append(tmp);
         break;
     }
   }
@@ -710,6 +751,23 @@ Console::ProcessArguments(JSContext* aCx,
   for (; index < aData.Length(); ++index) {
     aSequence.AppendElement(aData[index]);
   }
+}
+
+void
+Console::MakeFormatString(nsCString& aFormat, int32_t aInteger,
+                          int32_t aMantissa, char aCh)
+{
+  aFormat.Append("%");
+  if (aInteger >= 0) {
+    aFormat.AppendInt(aInteger);
+  }
+
+  if (aMantissa >= 0) {
+    aFormat.Append(".");
+    aFormat.AppendInt(aMantissa);
+  }
+
+  aFormat.Append(aCh);
 }
 
 void
