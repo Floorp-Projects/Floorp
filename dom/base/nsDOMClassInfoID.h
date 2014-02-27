@@ -62,7 +62,8 @@ DOMCI_CASTABLE_INTERFACE(nsHTMLDocument, nsIDocument, 7, _extra)              \
 DOMCI_CASTABLE_INTERFACE(nsStyledElement, nsStyledElement, 8, _extra)         \
 DOMCI_CASTABLE_INTERFACE(nsSVGElement, nsIContent, 9, _extra)                 \
 /* NOTE: When removing the casts below, remove the nsDOMEventBase class */    \
-DOMCI_CASTABLE_INTERFACE(nsDOMMouseEvent, nsDOMEventBase, 10, _extra)         \
+DOMCI_CASTABLE_NODECL_INTERFACE(mozilla::dom::MouseEvent,                     \
+                                nsDOMEventBase, 10, _extra)                   \
 DOMCI_CASTABLE_INTERFACE(nsDOMUIEvent, nsDOMEventBase, 11, _extra)            \
 DOMCI_CASTABLE_INTERFACE(nsGlobalWindow, nsIDOMEventTarget, 12, _extra)
 
@@ -77,6 +78,7 @@ namespace mozilla {
 namespace dom {
 class Element;
 class EventTarget;
+class MouseEvent;
 } // namespace dom
 } // namespace mozilla
 

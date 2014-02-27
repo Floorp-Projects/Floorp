@@ -144,11 +144,11 @@ ProgressMeterAccessible<Max>::CurValue() const
 
   nsAutoString attrValue;
   if (!mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::value, attrValue))
-    return UnspecifiedNaN();
+    return UnspecifiedNaN<double>();
 
   nsresult error = NS_OK;
   value = attrValue.ToDouble(&error);
-  return NS_FAILED(error) ? UnspecifiedNaN() : value;
+  return NS_FAILED(error) ? UnspecifiedNaN<double>() : value;
 }
 
 template<int Max>

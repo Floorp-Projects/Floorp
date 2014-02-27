@@ -223,7 +223,6 @@ HTMLPropertiesCollection::EnsureFresh()
     const nsAttrValue* attr = mProperties.ElementAt(i)->GetParsedAttr(nsGkAtoms::itemprop); 
     for (uint32_t i = 0; i < attr->GetAtomCount(); i++) {
       nsDependentAtomString propName(attr->AtomAt(i));
-      // ContainsInternal must not call EnsureFresh
       bool contains = mNames->ContainsInternal(propName);
       if (!contains) {
         mNames->Add(propName);
@@ -492,49 +491,30 @@ PropertyNodeList::EnsureFresh()
 }
 
 PropertyStringList::PropertyStringList(HTMLPropertiesCollection* aCollection)
-  : nsDOMStringList()
+  : DOMStringList()
   , mCollection(aCollection)
 { }
 
-NS_IMPL_CYCLE_COLLECTION_1(PropertyStringList, mCollection)
+NS_IMPL_CYCLE_COLLECTION_INHERITED_1(PropertyStringList, DOMStringList,
+                                     mCollection)
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(PropertyStringList)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(PropertyStringList)
+NS_IMPL_ADDREF_INHERITED(PropertyStringList, DOMStringList)
+NS_IMPL_RELEASE_INHERITED(PropertyStringList, DOMStringList)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PropertyStringList)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMDOMStringList)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(DOMStringList)
-NS_INTERFACE_MAP_END
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(PropertyStringList)
+NS_INTERFACE_MAP_END_INHERITING(DOMStringList)
 
-NS_IMETHODIMP
-PropertyStringList::Item(uint32_t aIndex, nsAString& aResult)
+void
+PropertyStringList::EnsureFresh()
 {
   mCollection->EnsureFresh();
-  return nsDOMStringList::Item(aIndex, aResult);
-}
-
-NS_IMETHODIMP
-PropertyStringList::GetLength(uint32_t* aLength)
-{
-  mCollection->EnsureFresh();
-  return nsDOMStringList::GetLength(aLength);
-}
-
-NS_IMETHODIMP
-PropertyStringList::Contains(const nsAString& aString, bool* aResult)
-{
-  mCollection->EnsureFresh();
-  return nsDOMStringList::Contains(aString, aResult);
 }
 
 bool
 PropertyStringList::ContainsInternal(const nsAString& aString)
 {
   // This method should not call EnsureFresh, otherwise we may become stuck in an infinite loop.
-  bool result;
-  nsDOMStringList::Contains(aString, &result);
-  return result;
+  return mNames.Contains(aString);
 }
 
 } // namespace dom

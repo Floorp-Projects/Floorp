@@ -11,7 +11,7 @@
 #include "nsCOMPtr.h"
 #include "nsITimer.h"
 #include "nsIDOMDeviceOrientationEvent.h"
-#include "nsDOMDeviceMotionEvent.h"
+#include "mozilla/dom/DeviceMotionEvent.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/HalSensor.h"
 #include "nsDataHashtable.h"

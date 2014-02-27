@@ -49,6 +49,7 @@ class nsILoadContext;
 class nsISupports;
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 NS_IMETHODIMP nsPlaintextEditor::PrepareTransferable(nsITransferable **transferable)
 {
@@ -137,7 +138,7 @@ NS_IMETHODIMP nsPlaintextEditor::InsertTextFromTransferable(nsITransferable *aTr
   return rv;
 }
 
-nsresult nsPlaintextEditor::InsertFromDataTransfer(nsIDOMDataTransfer *aDataTransfer,
+nsresult nsPlaintextEditor::InsertFromDataTransfer(DataTransfer *aDataTransfer,
                                                    int32_t aIndex,
                                                    nsIDOMDocument *aSourceDoc,
                                                    nsIDOMNode *aDestinationNode,
@@ -166,9 +167,10 @@ nsresult nsPlaintextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
   nsCOMPtr<nsIDOMDragEvent> dragEvent(do_QueryInterface(aDropEvent));
   NS_ENSURE_TRUE(dragEvent, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIDOMDataTransfer> dataTransfer;
-  nsresult rv = dragEvent->GetDataTransfer(getter_AddRefs(dataTransfer));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIDOMDataTransfer> domDataTransfer;
+  dragEvent->GetDataTransfer(getter_AddRefs(domDataTransfer));
+  nsCOMPtr<DataTransfer> dataTransfer = do_QueryInterface(domDataTransfer);
+  NS_ENSURE_TRUE(dataTransfer, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
   NS_ASSERTION(dragSession, "No drag session");
@@ -195,7 +197,7 @@ nsresult nsPlaintextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
   NS_ENSURE_TRUE(destdomdoc, NS_ERROR_NOT_INITIALIZED);
 
   uint32_t numItems = 0;
-  rv = dataTransfer->GetMozItemCount(&numItems);
+  nsresult rv = dataTransfer->GetMozItemCount(&numItems);
   NS_ENSURE_SUCCESS(rv, rv);
   if (numItems < 1) return NS_ERROR_FAILURE;  // nothing to drop?
 

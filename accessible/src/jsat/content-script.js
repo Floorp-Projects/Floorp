@@ -116,9 +116,9 @@ function moveToPoint(aMessage) {
 }
 
 function showCurrent(aMessage) {
-  if (Logger.logLevel >= Logger.DEBUG) {
-    Logger.debug(aMessage.name, JSON.stringify(aMessage.json, null, ' '));
-  }
+  Logger.debug(() => {
+    return [aMessage.name, JSON.stringify(aMessage.json, null, ' ')];
+  });
 
   let vc = Utils.getVirtualCursor(content.document);
 
@@ -147,10 +147,10 @@ function forwardToChild(aMessage, aListener, aVCPosition) {
     return false;
   }
 
-  if (Logger.logLevel >= Logger.DEBUG) {
-    Logger.debug('forwardToChild', Logger.accessibleToString(acc),
-                 aMessage.name, JSON.stringify(aMessage.json, null, '  '));
-  }
+  Logger.debug(() => {
+    return ['forwardToChild', Logger.accessibleToString(acc),
+            aMessage.name, JSON.stringify(aMessage.json, null, '  ')];
+  });
 
   let mm = Utils.getMessageManager(acc.DOMNode);
 

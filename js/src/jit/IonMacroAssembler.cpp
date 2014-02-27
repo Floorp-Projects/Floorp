@@ -1676,7 +1676,7 @@ MacroAssembler::convertValueToInt(JSContext *cx, const Value &v, Register output
           case IntConversion_NegativeZeroCheck: {
             // -0 is checked anyways if we have a constant value.
             int i;
-            if (mozilla::DoubleIsInt32(d, &i))
+            if (mozilla::NumberIsInt32(d, &i))
                 move32(Imm32(i), output);
             else
                 jump(fail);

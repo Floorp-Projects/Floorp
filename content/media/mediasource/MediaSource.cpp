@@ -80,7 +80,7 @@ double
 MediaSource::Duration()
 {
   if (mReadyState == MediaSourceReadyState::Closed) {
-    return UnspecifiedNaN();
+    return UnspecifiedNaN<double>();
   }
   return mDuration;
 }
@@ -197,7 +197,7 @@ MediaSource::Detach()
   MOZ_ASSERT(mDecoder);
   mDecoder->DetachMediaSource();
   mDecoder = nullptr;
-  mDuration = UnspecifiedNaN();
+  mDuration = UnspecifiedNaN<double>();
   mActiveSourceBuffers->Clear();
   mSourceBuffers->Clear();
   SetReadyState(MediaSourceReadyState::Closed);
@@ -205,7 +205,7 @@ MediaSource::Detach()
 
 MediaSource::MediaSource(nsPIDOMWindow* aWindow)
   : nsDOMEventTargetHelper(aWindow)
-  , mDuration(UnspecifiedNaN())
+  , mDuration(UnspecifiedNaN<double>())
   , mDecoder(nullptr)
   , mReadyState(MediaSourceReadyState::Closed)
 {

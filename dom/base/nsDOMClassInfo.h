@@ -374,54 +374,6 @@ private:
 };
 
 
-// String array helper
-
-class nsStringArraySH : public nsGenericArraySH
-{
-protected:
-  nsStringArraySH(nsDOMClassInfoData* aData) : nsGenericArraySH(aData)
-  {
-  }
-
-  virtual ~nsStringArraySH()
-  {
-  }
-
-  virtual nsresult GetStringAt(nsISupports *aNative, int32_t aIndex,
-                               nsAString& aResult) = 0;
-
-public:
-  NS_IMETHOD GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                         JSObject *obj, jsid id, JS::Value *vp, bool *_retval) MOZ_OVERRIDE;
-};
-
-
-// StringList scriptable helper
-
-class nsStringListSH : public nsStringArraySH
-{
-protected:
-  nsStringListSH(nsDOMClassInfoData* aData) : nsStringArraySH(aData)
-  {
-  }
-
-  virtual ~nsStringListSH()
-  {
-  }
-
-  virtual nsresult GetStringAt(nsISupports *aNative, int32_t aIndex,
-                               nsAString& aResult) MOZ_OVERRIDE;
-
-public:
-  // Inherit GetProperty, Enumerate from nsStringArraySH
-  
-  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
-  {
-    return new nsStringListSH(aData);
-  }
-};
-
-
 // StyleSheetList helper
 
 class nsStyleSheetListSH : public nsArraySH
