@@ -62,7 +62,7 @@ _newJSDScript(JSDContext*  jsdc,
     if( ! jsdscript )
         return nullptr;
 
-    raw_filename = JS_GetScriptFilename(cx,script);
+    raw_filename = JS_GetScriptFilename(script);
 
     JS_HashTableAdd(jsdc->scriptsTable, (void *)script, (void *)jsdscript);
     JS_APPEND_LINK(&jsdscript->links, &jsdc->scripts);

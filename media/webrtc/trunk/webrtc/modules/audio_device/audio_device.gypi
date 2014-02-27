@@ -153,7 +153,6 @@
                     'opensl/opensles_common.h',
                     'opensl/opensles_input.cc',
                     'opensl/opensles_input.h',
-                    'opensl/opensles_output.cc',
                     'opensl/opensles_output.h',
                     'opensl/single_rw_fifo.cc',
                     'opensl/single_rw_fifo.h',
@@ -168,6 +167,14 @@
 		    'android/audio_device_jni_android.h',
                   ],
                 }],
+                ['enable_android_opensl_output==1', {
+                  'sources': [
+                    'opensl/opensles_output.cc'
+                  ],
+                  'defines': [
+                    'WEBRTC_ANDROID_OPENSLES_OUTPUT',
+                  ]},
+                ],
               ],
             }],
             ['OS=="linux"', {
