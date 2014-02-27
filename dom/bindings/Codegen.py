@@ -2630,12 +2630,13 @@ numericSuffixes = {
 def numericValue(t, v):
     if (t == IDLType.Tags.unrestricted_double or
         t == IDLType.Tags.unrestricted_float):
+        typeName = builtinNames[t]
         if v == float("inf"):
-            return "mozilla::PositiveInfinity()"
+            return "mozilla::PositiveInfinity<%s>()" % typeName
         if v == float("-inf"):
-            return "mozilla::NegativeInfinity()"
+            return "mozilla::NegativeInfinity<%s>()" % typeName
         if math.isnan(v):
-            return "mozilla::UnspecifiedNaN()"
+            return "mozilla::UnspecifiedNaN<%s>()" % typeName
     return "%s%s" % (v, numericSuffixes[t])
 
 class CastableObjectUnwrapper():
