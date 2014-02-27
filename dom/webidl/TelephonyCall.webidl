@@ -22,6 +22,13 @@ interface TelephonyCall : EventTarget {
   // available after dialing state.
   readonly attribute boolean emergency;
 
+  // Indicate whether the call state can be switched between "connected" and
+  // "held".
+  readonly attribute boolean switchable;
+
+  // Indicate whether the call can be added into TelephonyCallGroup.
+  readonly attribute boolean mergeable;
+
   readonly attribute DOMError? error;
 
   readonly attribute TelephonyCallGroup? group;

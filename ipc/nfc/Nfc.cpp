@@ -311,9 +311,11 @@ NfcConsumer::Shutdown()
 {
     MOZ_ASSERT(NS_IsMainThread());
 
-    sNfcConsumer->mShutdown = true;
-    sNfcConsumer->CloseSocket();
-    sNfcConsumer = nullptr;
+    if (sNfcConsumer) {
+        sNfcConsumer->mShutdown = true;
+        sNfcConsumer->CloseSocket();
+        sNfcConsumer = nullptr;
+    }
 }
 
 void

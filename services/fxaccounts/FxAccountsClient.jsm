@@ -15,12 +15,8 @@ Cu.import("resource://services-crypto/utils.js");
 Cu.import("resource://gre/modules/FxAccountsCommon.js");
 Cu.import("resource://gre/modules/Credentials.jsm");
 
-let _host = "https://api.accounts.firefox.com/v1"
-try {
-  _host = Services.prefs.getCharPref("identity.fxaccounts.auth.uri");
-} catch(keepDefault) {}
+const HOST = Services.prefs.getCharPref("identity.fxaccounts.auth.uri");
 
-const HOST = _host;
 this.FxAccountsClient = function(host = HOST) {
   this.host = host;
 

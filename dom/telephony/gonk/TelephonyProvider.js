@@ -32,6 +32,9 @@ const nsITelephonyProvider = Ci.nsITelephonyProvider;
 
 const CALL_WAKELOCK_TIMEOUT = 5000;
 
+// Index of the CDMA second call which isn't held in RIL but only in TelephoyProvider.
+const CDMA_SECOND_CALL_INDEX = 2;
+
 let DEBUG;
 function debug(s) {
   dump("TelephonyProvider: " + s + "\n");
@@ -112,6 +115,7 @@ ConferenceCall.prototype = {
 function TelephonyProvider() {
   this._numClients = gRadioInterfaceLayer.numRadioInterfaces;
   this._listeners = [];
+  this._currentCalls = {};
   this._updateDebugFlag();
   this.defaultServiceId = this._getDefaultServiceId();
 
@@ -119,6 +123,10 @@ function TelephonyProvider() {
   Services.prefs.addObserver(kPrefDefaultServiceId, this, false);
 
   Services.obs.addObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
+
+  for (let i = 0; i < this._numClients; ++i) {
+    this._enumerateCallsForClient(i);
+  }
 }
 TelephonyProvider.prototype = {
   classID: GONK_TELEPHONYPROVIDER_CID,
@@ -340,6 +348,29 @@ TelephonyProvider.prototype = {
     return id;
   },
 
+  _currentCalls: null,
+  _enumerateCallsForClient: function(aClientId) {
+    if (DEBUG) debug("Enumeration of calls for client " + aClientId);
+
+    this._getClient(aClientId).sendWorkerMessage("enumerateCalls", null,
+                                                 (function(response) {
+      if (!this._currentCalls[aClientId]) {
+        this._currentCalls[aClientId] = {};
+      }
+      for (let call of response.calls) {
+        call.clientId = aClientId;
+        call.state = this._convertRILCallState(call.state);
+        call.isActive = this._matchActiveSingleCall(call);
+        call.isSwitchable = true;
+        call.isMergeable = true;
+
+        this._currentCalls[aClientId][call.callIndex] = call;
+      }
+
+      return false;
+    }).bind(this));
+  },
+
   /**
    * nsITelephonyProvider interface.
    */
@@ -363,41 +394,24 @@ TelephonyProvider.prototype = {
     this._listeners.splice(index, 1);
   },
 
-  _enumerateCallsForClient: function(aClientId, aListener) {
-    if (DEBUG) debug("Enumeration of calls for client " + aClientId);
-
-    let deferred = Promise.defer();
-
-    this._getClient(aClientId).sendWorkerMessage("enumerateCalls", null,
-                                                 (function(response) {
-      for (let call of response.calls) {
-        call.clientId = aClientId;
-        call.state = this._convertRILCallState(call.state);
-        call.isActive = this._matchActiveSingleCall(call);
-
-        aListener.enumerateCallState(call.clientId, call.callIndex,
-                                     call.state, call.number,
-                                     call.isActive, call.isOutgoing,
-                                     call.isEmergency, call.isConference);
-      }
-      deferred.resolve();
-
-      return false;
-    }).bind(this));
-
-    return deferred.promise;
-  },
-
   enumerateCalls: function(aListener) {
     if (DEBUG) debug("Requesting enumeration of calls for callback");
 
-    let promise = Promise.resolve();
-    for (let i = 0; i < this._numClients; ++i) {
-      promise = promise.then(this._enumerateCallsForClient.bind(this, i, aListener));
+    for (let cid = 0; cid < this._numClients; ++cid) {
+      let calls = this._currentCalls[cid];
+      if (!calls) {
+        continue;
+      }
+      for (let i = 0, indexes = Object.keys(calls); i < indexes.length; ++i) {
+        let call = calls[indexes[i]];
+        aListener.enumerateCallState(call.clientId, call.callIndex,
+                                     call.state, call.number,
+                                     call.isActive, call.isOutgoing,
+                                     call.isEmergency, call.isConference,
+                                     call.isSwitchable, call.isMergeable);
+      }
     }
-    promise.then(function() {
-      aListener.enumerateCallStateComplete();
-    });
+    aListener.enumerateCallStateComplete();
   },
 
   isDialing: false,
@@ -425,23 +439,70 @@ TelephonyProvider.prototype = {
       return;
     }
 
+    function onCdmaDialSuccess() {
+      let indexes = Object.keys(this._currentCalls[aClientId]);
+      if (indexes.length != 1 ) {
+        aTelephonyCallback.notifyDialSuccess();
+        return;
+      }
+
+      // RIL doesn't hold the 2nd call. We create one by ourselves.
+      let childCall = {
+        callIndex: CDMA_SECOND_CALL_INDEX,
+        state: RIL.CALL_STATE_DIALING,
+        number: aNumber,
+        isOutgoing: true,
+        isEmergency: false,
+        isConference: false,
+        isSwitchable: false,
+        isMergeable: true,
+        parentId: indexes[0]
+      };
+      aTelephonyCallback.notifyDialSuccess();
+
+      // Manual update call state according to the request response.
+      this.notifyCallStateChanged(aClientId, childCall);
+
+      childCall.state = RIL.CALL_STATE_ACTIVE;
+      this.notifyCallStateChanged(aClientId, childCall);
+
+      let parentCall = this._currentCalls[aClientId][childCall.parentId];
+      parentCall.childId = CDMA_SECOND_CALL_INDEX;
+      parentCall.state = RIL.CALL_STATE_HOLDING;
+      parentCall.isSwitchable = false;
+      parentCall.isMergeable = true;
+      this.notifyCallStateChanged(aClientId, parentCall);
+    };
+
     this.isDialing = true;
     this._getClient(aClientId).sendWorkerMessage("dial", {
       number: aNumber,
       isDialEmergency: aIsEmergency
     }, (function(response) {
       this.isDialing = false;
-      if (response.success) {
-        aTelephonyCallback.notifyDialSuccess();
-      } else {
+      if (!response.success) {
         aTelephonyCallback.notifyDialError(response.errorMsg);
+        return false;
+      }
+
+      if (response.isCdma) {
+        onCdmaDialSuccess.call(this);
+      } else {
+        aTelephonyCallback.notifyDialSuccess();
       }
       return false;
     }).bind(this));
   },
 
   hangUp: function(aClientId, aCallIndex) {
-    this._getClient(aClientId).sendWorkerMessage("hangUp", { callIndex: aCallIndex });
+    let parentId = this._currentCalls[aClientId][aCallIndex].parentId;
+    if (parentId) {
+      // Should release both, child and parent, together. Since RIL holds only
+      // the parent call, we send 'parentId' to RIL.
+      this.hangUp(aClientId, parentId);
+    } else {
+      this._getClient(aClientId).sendWorkerMessage("hangUp", { callIndex: aCallIndex });
+    }
   },
 
   startTone: function(aClientId, aDtmfChar) {
@@ -461,19 +522,187 @@ TelephonyProvider.prototype = {
   },
 
   holdCall: function(aClientId, aCallIndex) {
-    this._getClient(aClientId).sendWorkerMessage("holdCall", { callIndex: aCallIndex });
+    let call = this._currentCalls[aClientId][aCallIndex];
+    if (!call || !call.isSwitchable) {
+      // TODO: Bug 975949 - [B2G] Telephony should throw exceptions when some
+      // operations aren't allowed instead of simply ignoring them.
+      return;
+    }
+
+    let parentId = this._currentCalls[aClientId][aCallIndex].parentId;
+    if (parentId) {
+      this.resumeCall(aClientId, parentId);
+      return;
+    }
+
+    function onCdmaHoldCallSuccess() {
+      let call = this._currentCalls[aClientId][aCallIndex];
+      if (!call) {
+        return;
+      }
+
+      call.state = RIL.CALL_STATE_HOLDING;
+      this.notifyCallStateChanged(aClientId, call);
+
+      if (!call.childId) {
+        return;
+      }
+
+      let childCall = this._currentCalls[aClientId][call.childId];
+      childCall.state = RIL.CALL_STATE_ACTIVE;
+      this.notifyCallStateChanged(aClientId, childCall);
+    };
+
+    this._getClient(aClientId).sendWorkerMessage("holdCall", {
+      callIndex: aCallIndex
+    },(function(response) {
+        if (!response.success) {
+          return false;
+        }
+
+        if (response.isCdma) {
+          onCdmaHoldCallSuccess.call(this);
+        }
+        return false;
+    }).bind(this));
   },
 
   resumeCall: function(aClientId, aCallIndex) {
-    this._getClient(aClientId).sendWorkerMessage("resumeCall", { callIndex: aCallIndex });
+    let call = this._currentCalls[aClientId][aCallIndex];
+    if (!call || !call.isSwitchable) {
+      // TODO: Bug 975949 - [B2G] Telephony should throw exceptions when some
+      // operations aren't allowed instead of simply ignoring them.
+      return;
+    }
+
+    let parentId = this._currentCalls[aClientId][aCallIndex].parentId;
+    if (parentId) {
+      this.holdCall(aClientId, parentId);
+      return;
+    }
+
+    function onCdmaResumeCallSuccess() {
+      let call = this._currentCalls[aClientId][aCallIndex];
+      if (!call) {
+        return;
+      }
+
+      call.state = RIL.CALL_STATE_ACTIVE;
+      this.notifyCallStateChanged(aClientId, call);
+
+      let childId = call.childId;
+      if (!childId) {
+        return;
+      }
+
+      let childCall = this._currentCalls[aClientId][childId];
+      childCall.state = RIL.CALL_STATE_HOLDING;
+      this.notifyCallStateChanged(aClientId, childCall);
+    };
+
+    this._getClient(aClientId).sendWorkerMessage("resumeCall", {
+      callIndex: aCallIndex
+    },(function(response) {
+      if (!response.success) {
+        return false;
+      }
+
+      if (response.isCdma) {
+        onCdmaResumeCallSuccess.call(this);
+      }
+      return false;
+    }).bind(this));
   },
 
   conferenceCall: function(aClientId) {
-    this._getClient(aClientId).sendWorkerMessage("conferenceCall");
+    let indexes = Object.keys(this._currentCalls[aClientId]);
+    if (indexes.length < 2) {
+      // TODO: Bug 975949 - [B2G] Telephony should throw exceptions when some
+      // operations aren't allowed instead of simply ignoring them.
+      return;
+    }
+
+    for (let i = 0; i < indexes.length; ++i) {
+      let call = this._currentCalls[aClientId][indexes[i]];
+      if (!call.isMergeable) {
+        return;
+      }
+    }
+
+    function onCdmaConferenceCallSuccess() {
+      let indexes = Object.keys(this._currentCalls[aClientId]);
+      if (indexes.length < 2) {
+        return;
+      }
+
+      for (let i = 0; i < indexes.length; ++i) {
+        let call = this._currentCalls[aClientId][indexes[i]];
+        call.state = RIL.CALL_STATE_ACTIVE;
+        call.isConference = true;
+        this.notifyCallStateChanged(aClientId, call);
+      }
+      this.notifyConferenceCallStateChanged(RIL.CALL_STATE_ACTIVE);
+    };
+
+    this._getClient(aClientId).sendWorkerMessage("conferenceCall", null,
+                                                 (function(response) {
+      if (!response.success) {
+        this._notifyAllListeners("notifyConferenceError", [response.errorName,
+                                                           response.errorMsg]);
+        return false;
+      }
+
+      if (response.isCdma) {
+        onCdmaConferenceCallSuccess.call(this);
+      }
+      return false;
+    }).bind(this));
   },
 
   separateCall: function(aClientId, aCallIndex) {
-    this._getClient(aClientId).sendWorkerMessage("separateCall", { callIndex: aCallIndex });
+    let call = this._currentCalls[aClientId][aCallIndex];
+    if (!call || !call.isConference) {
+      // TODO: Bug 975949 - [B2G] Telephony should throw exceptions when some
+      // operations aren't allowed instead of simply ignoring them.
+      return;
+    }
+
+    let parentId = call.parentId;
+    if (parentId) {
+      this.separateCall(aClientId, parentId);
+      return;
+    }
+
+    function onCdmaSeparateCallSuccess() {
+      // See 3gpp2, S.R0006-522-A v1.0. Table 4, XID 6S.
+      let call = this._currentCalls[aClientId][aCallIndex];
+      if (!call || !call.isConference) {
+        return;
+      }
+
+      let childId = call.childId;
+      if (!childId) {
+        return;
+      }
+
+      let childCall = this._currentCalls[aClientId][childId];
+      this.notifyCallDisconnected(aClientId, childCall);
+    };
+
+    this._getClient(aClientId).sendWorkerMessage("separateCall", {
+      callIndex: aCallIndex
+    }, (function(response) {
+      if (!response.success) {
+        this._notifyAllListeners("notifyConferenceError", [response.errorName,
+                                                           response.errorMsg]);
+        return false;
+      }
+
+      if (response.isCdma) {
+        onCdmaSeparateCallSuccess.call(this);
+      }
+      return false;
+    }).bind(this));
   },
 
   holdConference: function(aClientId) {
@@ -540,6 +769,31 @@ TelephonyProvider.prototype = {
     aCall.clientId = aClientId;
     this._updateCallAudioState(aCall, null);
 
+    let manualConfStateChange = false;
+    let childId = this._currentCalls[aClientId][aCall.callIndex].childId;
+    if (childId) {
+      // Child cannot live without parent.
+      let childCall = this._currentCalls[aClientId][childId];
+      this.notifyCallDisconnected(aClientId, childCall);
+    } else {
+      let parentId = this._currentCalls[aClientId][aCall.callIndex].parentId;
+      if (parentId) {
+        let parentCall = this._currentCalls[aClientId][parentId];
+        // The child is going to be released.
+        delete parentCall.childId;
+        if (parentCall.isConference) {
+          // As the child is going to be gone, the parent should be moved out
+          // of conference accordingly.
+          manualConfStateChange = true;
+          parentCall.isConference = false;
+          parentCall.isSwitchable = true;
+          parentCall.isMergeable = true;
+          aCall.isConference = false;
+          this.notifyCallStateChanged(aClientId, parentCall, true);
+        }
+      }
+    }
+
     if (!aCall.failCause ||
         aCall.failCause === RIL.GECKO_CALL_ERROR_NORMAL_CALL_CLEARING) {
       this._notifyAllListeners("callStateChanged", [aClientId,
@@ -549,11 +803,17 @@ TelephonyProvider.prototype = {
                                                     aCall.isActive,
                                                     aCall.isOutgoing,
                                                     aCall.isEmergency,
-                                                    aCall.isConference]);
-      return;
+                                                    aCall.isConference,
+                                                    aCall.isSwitchable,
+                                                    aCall.isMergeable]);
+    } else {
+      this.notifyCallError(aClientId, aCall.callIndex, aCall.failCause);
     }
+    delete this._currentCalls[aClientId][aCall.callIndex];
 
-    this.notifyCallError(aClientId, aCall.callIndex, aCall.failCause);
+    if (manualConfStateChange) {
+      this.notifyConferenceCallStateChanged(RIL.CALL_STATE_UNKNOWN);
+    }
   },
 
   /**
@@ -581,10 +841,13 @@ TelephonyProvider.prototype = {
    * Handle call state changes by updating our current state and the audio
    * system.
    */
-  notifyCallStateChanged: function(aClientId, aCall) {
+  notifyCallStateChanged: function(aClientId, aCall, aSkipStateConversion) {
     if (DEBUG) debug("handleCallStateChange: " + JSON.stringify(aCall));
 
-    aCall.state = this._convertRILCallState(aCall.state);
+    if (!aSkipStateConversion) {
+      aCall.state = this._convertRILCallState(aCall.state);
+    }
+
     if (aCall.state == nsITelephonyProvider.CALL_STATE_DIALING) {
       gSystemMessenger.broadcastMessage("telephony-new-call", {});
     }
@@ -592,14 +855,35 @@ TelephonyProvider.prototype = {
     aCall.clientId = aClientId;
     this._updateCallAudioState(aCall, null);
 
+    let call = this._currentCalls[aClientId][aCall.callIndex];
+    if (call) {
+      call.state = aCall.state;
+      call.isConference = aCall.isConference;
+      call.isEmergency = aCall.isEmergency;
+      call.isActive = aCall.isActive;
+      call.isSwitchable = aCall.isSwitchable != null ?
+                          aCall.isSwitchable : call.isSwitchable;
+      call.isMergeable = aCall.isMergeable != null ?
+                         aCall.isMergeable : call.isMergeable;
+    } else {
+      call = aCall;
+      call.isSwitchable = aCall.isSwitchable != null ?
+                          aCall.isSwitchable : true;
+      call.isMergeable = aCall.isMergeable != null ?
+                         aCall.isMergeable : true;
+      this._currentCalls[aClientId][aCall.callIndex] = call;
+    }
+
     this._notifyAllListeners("callStateChanged", [aClientId,
-                                                  aCall.callIndex,
-                                                  aCall.state,
-                                                  aCall.number,
-                                                  aCall.isActive,
-                                                  aCall.isOutgoing,
-                                                  aCall.isEmergency,
-                                                  aCall.isConference]);
+                                                  call.callIndex,
+                                                  call.state,
+                                                  call.number,
+                                                  call.isActive,
+                                                  call.isOutgoing,
+                                                  call.isEmergency,
+                                                  call.isConference,
+                                                  call.isSwitchable,
+                                                  call.isMergeable]);
   },
 
   notifyCdmaCallWaiting: function(aClientId, aNumber) {
@@ -607,6 +891,12 @@ TelephonyProvider.prototype = {
     // the sleep mode when the RIL handles the incoming call.
     this._acquireCallRingWakeLock();
 
+    let call = this._currentCalls[aClientId][CDMA_SECOND_CALL_INDEX];
+    if (call) {
+      // TODO: Bug 977503 - B2G RIL: [CDMA] update callNumber when a waiting
+      // call comes after a 3way call.
+      this.notifyCallDisconnected(aClientId, call);
+    }
     this._notifyAllListeners("notifyCdmaCallWaiting", [aClientId, aNumber]);
   },
 
@@ -624,12 +914,6 @@ TelephonyProvider.prototype = {
     this._notifyAllListeners("conferenceCallStateChanged", [aState]);
   },
 
-  notifyConferenceError: function(aName, aMessage) {
-    if (DEBUG) debug("handleConferenceError: " + aName + "." +
-                     " Error details: " + aMessage);
-    this._notifyAllListeners("notifyConferenceError", [aName, aMessage]);
-  },
-
   /**
    * nsIObserver interface.
    */
@@ -639,7 +923,7 @@ TelephonyProvider.prototype = {
       case NS_PREFBRANCH_PREFCHANGE_TOPIC_ID:
         if (aData === kPrefRilDebuggingEnabled) {
           this._updateDebugFlag();
-	} else if (aData === kPrefDefaultServiceId) {
+        } else if (aData === kPrefDefaultServiceId) {
           this.defaultServiceId = this._getDefaultServiceId();
         }
         break;

@@ -12,8 +12,10 @@
 % we don't support nested calc(): https://bugzilla.mozilla.org/show_bug.cgi?id=968761
 %define menuPanelButtonWidth (@menuPanelWidth@ / 3 - 0.1px)
 %define exitSubviewGutterWidth 38px
-%define buttonStateHover :not(:-moz-any([disabled],[open],[checked="true"],:active)):-moz-any(:hover,[_moz-menuactive])
-%define buttonStateActive :not([disabled]):-moz-any([open],[checked="true"],:hover:active,[_moz-menuactive]:active)
+%define buttonStateHover :not(:-moz-any([disabled],[open],[checked="true"],:active)):hover
+%define menuStateHover :not(:-moz-any([disabled],[checked="true"],:active))[_moz-menuactive]
+%define buttonStateActive :not([disabled]):-moz-any([open],[checked="true"],:hover:active)
+%define menuStateActive :not([disabled]):-moz-any([checked="true"],[_moz-menuactive]:active)
 
 %include ../browser.inc
 
@@ -141,6 +143,7 @@
 }
 
 #PanelUI-contents,
+#BMB_bookmarksPopup,
 .panel-mainview:not([panelid="PanelUI-popup"]) {
   max-width: @menuPanelWidth@;
 }
@@ -557,7 +560,9 @@ panelview .toolbarbutton-1,
 }
 
 panelview .toolbarbutton-1@buttonStateHover@,
-.subviewbutton@buttonStateHover@,
+toolbarbutton.subviewbutton@buttonStateHover@,
+menu.subviewbutton@menuStateHover@,
+menuitem.subviewbutton@menuStateHover@,
 .widget-overflow-list .toolbarbutton-1@buttonStateHover@,
 #edit-controls@inAnyPanel@ > toolbarbutton@buttonStateHover@,
 #zoom-controls@inAnyPanel@ > toolbarbutton@buttonStateHover@ {
@@ -571,7 +576,9 @@ panelview .toolbarbutton-1@buttonStateHover@,
 }
 
 panelview .toolbarbutton-1@buttonStateActive@,
-.subviewbutton@buttonStateActive@,
+toolbarbutton.subviewbutton@buttonStateActive@,
+menu.subviewbutton@menuStateActive@
+menuitem.subviewbutton@menuStateActive@
 .widget-overflow-list .toolbarbutton-1@buttonStateActive@,
 #edit-controls@inAnyPanel@ > toolbarbutton@buttonStateActive@,
 #zoom-controls@inAnyPanel@ > toolbarbutton@buttonStateActive@ {

@@ -13,8 +13,7 @@
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-// define(function(require, exports, module) {
-
+'use strict';
 // <INJECTED SOURCE:START>
 
 // THIS FILE IS GENERATED FROM SOURCE IN THE GCLI PROJECT
@@ -22,33 +21,36 @@
 
 var exports = {};
 
-const TEST_URI = "data:text/html;charset=utf-8,<p id='gcli-input'>gcli-testSpell.js</p>";
+var TEST_URI = "data:text/html;charset=utf-8,<p id='gcli-input'>gcli-testSpell.js</p>";
 
 function test() {
-  helpers.addTabWithToolbar(TEST_URI, function(options) {
-    return helpers.runTests(options, exports);
-  }).then(finish);
+  return Task.spawn(function() {
+    let options = yield helpers.openTab(TEST_URI);
+    yield helpers.openToolbar(options);
+    gcli.addItems(mockCommands.items);
+
+    yield helpers.runTests(options, exports);
+
+    gcli.removeItems(mockCommands.items);
+    yield helpers.closeToolbar(options);
+    yield helpers.closeTab(options);
+  }).then(finish, helpers.handleError);
 }
 
 // <INJECTED SOURCE:END>
 
-'use strict';
-
-// var assert = require('test/assert');
-var spell = require('util/spell');
+// var assert = require('../testharness/assert');
+var spell = require('gcli/util/spell');
 
 exports.testSpellerSimple = function(options) {
-  var alternatives = Object.keys(options.window);
+  var alternatives = [
+    'window', 'document', 'InstallTrigger', 'requirejs', 'require','define',
+    'console', 'location', 'constructor', 'getInterface', 'external', 'sidebar'
+  ];
 
   assert.is(spell.correct('document', alternatives), 'document');
   assert.is(spell.correct('documen', alternatives), 'document');
-
-  if (options.isJsdom) {
-    assert.log('jsdom is weird, skipping some tests');
-  }
-  else {
-    assert.is(spell.correct('ocument', alternatives), 'document');
-  }
+  assert.is(spell.correct('ocument', alternatives), 'document');
   assert.is(spell.correct('odcument', alternatives), 'document');
 
   assert.is(spell.correct('=========', alternatives), undefined);
@@ -83,5 +85,3 @@ exports.testDistancePrefix = function(options) {
   assert.is(spell.distancePrefix('fred', 'freddy'), 0, 'distancePrefix fred');
   assert.is(spell.distancePrefix('FRED', 'freddy'), 4, 'distancePrefix FRED');
 };
-
-// });

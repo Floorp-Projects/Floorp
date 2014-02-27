@@ -12,143 +12,103 @@ const BLACKBOXONE_URL = EXAMPLE_URL + "code_blackboxing_one.js";
 const BLACKBOXTWO_URL = EXAMPLE_URL + "code_blackboxing_two.js";
 const BLACKBOXTHREE_URL = EXAMPLE_URL + "code_blackboxing_three.js";
 
-let gPanel, gDebugger, gThreadClient;
-let gOptions;
-
 function test() {
-  helpers.addTabWithToolbar(TEST_URL, function(aOptions) {
-    gOptions = aOptions;
-
-    return gDevTools.showToolbox(aOptions.target, "jsdebugger")
-      .then(setupGlobals)
-      .then(waitForDebuggerSources)
-      .then(testBlackBoxSource)
-      .then(testUnBlackBoxSource)
-      .then(testBlackBoxGlob)
-      .then(testUnBlackBoxGlob)
-      .then(testBlackBoxInvert)
-      .then(testUnBlackBoxInvert)
-      .then(() => closeDebuggerAndFinish(gPanel, { noTabRemoval: true }))
-      .then(null, aError => {
-        ok(false, "Got an error: " + aError.message + "\n" + aError.stack);
-      });
-  });
+  return Task.spawn(spawnTest).then(finish, helpers.handleError);
 }
 
-function setupGlobals(aToolbox) {
-  gPanel = aToolbox.getCurrentPanel();
-  gDebugger = gPanel.panelWin;
-  gThreadClient = gDebugger.gThreadClient;
-}
+function spawnTest() {
+  let options = yield helpers.openTab(TEST_URL);
+  yield helpers.openToolbar(options);
 
-function waitForDebuggerSources() {
-  return waitForDebuggerEvents(gPanel, gDebugger.EVENTS.SOURCE_SHOWN);
-}
+  let toolbox = yield gDevTools.showToolbox(options.target, "jsdebugger");
+  let panel = toolbox.getCurrentPanel();
 
-function testBlackBoxSource() {
-  return Task.spawn(function* () {
-    yield cmd("dbg blackbox " + BLACKBOXME_URL);
+  yield waitForDebuggerEvents(panel, panel.panelWin.EVENTS.SOURCE_SHOWN);
 
-    let bbButton = yield selectSourceAndGetBlackBoxButton(gPanel, BLACKBOXME_URL);
-    ok(bbButton.checked,
-       "Should be able to black box a specific source.");
-  });
-}
+  function cmd(aTyped, aEventRepeat = 1, aOutput = "") {
+    return promise.all([
+      waitForThreadEvents(panel, "blackboxchange", aEventRepeat),
+      helpers.audit(options, [{ setup: aTyped, output: aOutput, exec: {} }])
+    ]);
+  }
 
-function testUnBlackBoxSource() {
-  return Task.spawn(function* () {
-    yield cmd("dbg unblackbox " + BLACKBOXME_URL);
+  // test Black-Box Source
+  yield cmd("dbg blackbox " + BLACKBOXME_URL);
 
-    let bbButton = yield selectSourceAndGetBlackBoxButton(gPanel, BLACKBOXME_URL);
-    ok(!bbButton.checked,
-       "Should be able to stop black boxing a specific source.");
-  });
-}
+  let bbButton = yield selectSourceAndGetBlackBoxButton(panel, BLACKBOXME_URL);
+  ok(bbButton.checked,
+     "Should be able to black box a specific source.");
 
-function testBlackBoxGlob() {
-  return Task.spawn(function* () {
-    yield cmd("dbg blackbox --glob *blackboxing_t*.js", 2,
-              [/blackboxing_three\.js/g, /blackboxing_two\.js/g]);
+  // test Un-Black-Box Source
+  yield cmd("dbg unblackbox " + BLACKBOXME_URL);
 
-    let bbButton = yield selectSourceAndGetBlackBoxButton(gPanel, BLACKBOXME_URL);
-    ok(!bbButton.checked,
-       "blackboxme should not be black boxed because it doesn't match the glob.");
-    bbButton = yield selectSourceAndGetBlackBoxButton(gPanel, BLACKBOXONE_URL);
-    ok(!bbButton.checked,
-       "blackbox_one should not be black boxed because it doesn't match the glob.");
+  let bbButton = yield selectSourceAndGetBlackBoxButton(panel, BLACKBOXME_URL);
+  ok(!bbButton.checked,
+     "Should be able to stop black boxing a specific source.");
 
-    bbButton = yield selectSourceAndGetBlackBoxButton(gPanel, BLACKBOXTWO_URL);
-    ok(bbButton.checked,
-       "blackbox_two should be black boxed because it matches the glob.");
-    bbButton = yield selectSourceAndGetBlackBoxButton(gPanel, BLACKBOXTHREE_URL);
-    ok(bbButton.checked,
-      "blackbox_three should be black boxed because it matches the glob.");
-  });
-}
+  // test Black-Box Glob
+  yield cmd("dbg blackbox --glob *blackboxing_t*.js", 2,
+            [/blackboxing_three\.js/g, /blackboxing_two\.js/g]);
 
-function testUnBlackBoxGlob() {
-  return Task.spawn(function* () {
-    yield cmd("dbg unblackbox --glob *blackboxing_t*.js", 2);
+  let bbButton = yield selectSourceAndGetBlackBoxButton(panel, BLACKBOXME_URL);
+  ok(!bbButton.checked,
+     "blackboxme should not be black boxed because it doesn't match the glob.");
+  bbButton = yield selectSourceAndGetBlackBoxButton(panel, BLACKBOXONE_URL);
+  ok(!bbButton.checked,
+     "blackbox_one should not be black boxed because it doesn't match the glob.");
 
-    let bbButton = yield selectSourceAndGetBlackBoxButton(gPanel, BLACKBOXTWO_URL);
-    ok(!bbButton.checked,
-       "blackbox_two should be un-black boxed because it matches the glob.");
-    bbButton = yield selectSourceAndGetBlackBoxButton(gPanel, BLACKBOXTHREE_URL);
-    ok(!bbButton.checked,
-      "blackbox_three should be un-black boxed because it matches the glob.");
-  });
-}
+  bbButton = yield selectSourceAndGetBlackBoxButton(panel, BLACKBOXTWO_URL);
+  ok(bbButton.checked,
+     "blackbox_two should be black boxed because it matches the glob.");
+  bbButton = yield selectSourceAndGetBlackBoxButton(panel, BLACKBOXTHREE_URL);
+  ok(bbButton.checked,
+    "blackbox_three should be black boxed because it matches the glob.");
 
-function testBlackBoxInvert() {
-  return Task.spawn(function* () {
-    yield cmd("dbg blackbox --invert --glob *blackboxing_t*.js", 3,
-              [/blackboxing_three\.js/g, /blackboxing_two\.js/g]);
+  // test Un-Black-Box Glob
+  yield cmd("dbg unblackbox --glob *blackboxing_t*.js", 2);
 
-    let bbButton = yield selectSourceAndGetBlackBoxButton(gPanel, BLACKBOXME_URL);
-    ok(bbButton.checked,
-      "blackboxme should be black boxed because it doesn't match the glob.");
-    bbButton = yield selectSourceAndGetBlackBoxButton(gPanel, BLACKBOXONE_URL);
-    ok(bbButton.checked,
-      "blackbox_one should be black boxed because it doesn't match the glob.");
-    bbButton = yield selectSourceAndGetBlackBoxButton(gPanel, TEST_URL);
-    ok(bbButton.checked,
-      "TEST_URL should be black boxed because it doesn't match the glob.");
+  let bbButton = yield selectSourceAndGetBlackBoxButton(panel, BLACKBOXTWO_URL);
+  ok(!bbButton.checked,
+     "blackbox_two should be un-black boxed because it matches the glob.");
+  bbButton = yield selectSourceAndGetBlackBoxButton(panel, BLACKBOXTHREE_URL);
+  ok(!bbButton.checked,
+    "blackbox_three should be un-black boxed because it matches the glob.");
 
-    bbButton = yield selectSourceAndGetBlackBoxButton(gPanel, BLACKBOXTWO_URL);
-    ok(!bbButton.checked,
-      "blackbox_two should not be black boxed because it matches the glob.");
-    bbButton = yield selectSourceAndGetBlackBoxButton(gPanel, BLACKBOXTHREE_URL);
-    ok(!bbButton.checked,
-      "blackbox_three should not be black boxed because it matches the glob.");
-  });
-}
+  // test Black-Box Invert
+  yield cmd("dbg blackbox --invert --glob *blackboxing_t*.js", 3,
+            [/blackboxing_three\.js/g, /blackboxing_two\.js/g]);
 
-function testUnBlackBoxInvert() {
-  return Task.spawn(function* () {
-    yield cmd("dbg unblackbox --invert --glob *blackboxing_t*.js", 3);
+  let bbButton = yield selectSourceAndGetBlackBoxButton(panel, BLACKBOXME_URL);
+  ok(bbButton.checked,
+    "blackboxme should be black boxed because it doesn't match the glob.");
+  bbButton = yield selectSourceAndGetBlackBoxButton(panel, BLACKBOXONE_URL);
+  ok(bbButton.checked,
+    "blackbox_one should be black boxed because it doesn't match the glob.");
+  bbButton = yield selectSourceAndGetBlackBoxButton(panel, TEST_URL);
+  ok(bbButton.checked,
+    "TEST_URL should be black boxed because it doesn't match the glob.");
 
-    let bbButton = yield selectSourceAndGetBlackBoxButton(gPanel, BLACKBOXME_URL);
-    ok(!bbButton.checked,
-      "blackboxme should be un-black boxed because it does not match the glob.");
-    bbButton = yield selectSourceAndGetBlackBoxButton(gPanel, BLACKBOXONE_URL);
-    ok(!bbButton.checked,
-      "blackbox_one should be un-black boxed because it does not match the glob.");
-    bbButton = yield selectSourceAndGetBlackBoxButton(gPanel, TEST_URL);
-    ok(!bbButton.checked,
-      "TEST_URL should be un-black boxed because it doesn't match the glob.");
-  });
-}
+  bbButton = yield selectSourceAndGetBlackBoxButton(panel, BLACKBOXTWO_URL);
+  ok(!bbButton.checked,
+    "blackbox_two should not be black boxed because it matches the glob.");
+  bbButton = yield selectSourceAndGetBlackBoxButton(panel, BLACKBOXTHREE_URL);
+  ok(!bbButton.checked,
+    "blackbox_three should not be black boxed because it matches the glob.");
 
-registerCleanupFunction(function() {
-  gOptions = null;
-  gPanel = null;
-  gDebugger = null;
-  gThreadClient = null;
-});
+  // test Un-Black-Box Invert
+  yield cmd("dbg unblackbox --invert --glob *blackboxing_t*.js", 3);
 
-function cmd(aTyped, aEventRepeat = 1, aOutput = "") {
-  return promise.all([
-    waitForThreadEvents(gPanel, "blackboxchange", aEventRepeat),
-    helpers.audit(gOptions, [{ setup: aTyped, output: aOutput, exec: {} }])
-  ]);
+  let bbButton = yield selectSourceAndGetBlackBoxButton(panel, BLACKBOXME_URL);
+  ok(!bbButton.checked,
+    "blackboxme should be un-black boxed because it does not match the glob.");
+  bbButton = yield selectSourceAndGetBlackBoxButton(panel, BLACKBOXONE_URL);
+  ok(!bbButton.checked,
+    "blackbox_one should be un-black boxed because it does not match the glob.");
+  bbButton = yield selectSourceAndGetBlackBoxButton(panel, TEST_URL);
+  ok(!bbButton.checked,
+    "TEST_URL should be un-black boxed because it doesn't match the glob.");
+
+  yield teardown(panel, { noTabRemoval: true });
+  yield helpers.closeToolbar(options);
+  yield helpers.closeTab(options);
 }
