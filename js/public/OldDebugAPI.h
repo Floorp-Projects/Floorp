@@ -13,6 +13,7 @@
 
 #include "mozilla/NullPtr.h"
 
+#include "jsapi.h"
 #include "jsbytecode.h"
 
 #include "js/CallArgs.h"
@@ -30,19 +31,14 @@ class ScriptFrameIter;
 extern JS_PUBLIC_API(unsigned)
 JS_PCToLineNumber(JSContext *cx, JSScript *script, jsbytecode *pc);
 
+extern JS_PUBLIC_API(const char *)
+JS_GetScriptFilename(JSScript *script);
+
 namespace JS {
 
 class FrameDescription
 {
   public:
-    FrameDescription(JSScript *script, JSFunction *fun, jsbytecode *pc)
-        : script_(script)
-        , fun_(fun)
-        , pc_(pc)
-        , linenoComputed(false)
-    {
-    }
-
     explicit FrameDescription(const js::ScriptFrameIter& iter);
 
     unsigned lineno() {
@@ -53,17 +49,26 @@ class FrameDescription
         return lineno_;
     }
 
-    Heap<JSScript*> &script() {
-        return script_;
+    const char *filename() const {
+        return JS_GetScriptFilename(script_);
     }
 
-    Heap<JSFunction*> &fun() {
-        return fun_;
+    JSFlatString *funDisplayName() const {
+        return funDisplayName_ ? JS_ASSERT_STRING_IS_FLAT(funDisplayName_) : nullptr;
+    }
+
+    // Both these locations should be traced during GC but otherwise not used;
+    // they are implementation details.
+    Heap<JSScript*> &markedLocation1() {
+        return script_;
+    }
+    Heap<JSString*> &markedLocation2() {
+        return funDisplayName_;
     }
 
   private:
     Heap<JSScript*> script_;
-    Heap<JSFunction*> fun_;
+    Heap<JSString*> funDisplayName_;
     jsbytecode *pc_;
     unsigned lineno_;
     bool linenoComputed;
@@ -296,9 +301,6 @@ extern JS_PUBLIC_API(const char *)
 JS_GetDebugClassName(JSObject *obj);
 
 /************************************************************************/
-
-extern JS_PUBLIC_API(const char *)
-JS_GetScriptFilename(JSContext *cx, JSScript *script);
 
 extern JS_PUBLIC_API(const jschar *)
 JS_GetScriptSourceMap(JSContext *cx, JSScript *script);

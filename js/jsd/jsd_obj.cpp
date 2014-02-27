@@ -97,7 +97,7 @@ jsd_Constructing(JSDContext* jsdc, JSContext *cx, JSObject *obj,
         script = frame.script();
         if( script )
         {
-            ctorURL = JS_GetScriptFilename(cx, script);
+            ctorURL = JS_GetScriptFilename(script);
             if( ctorURL )
                 jsdobj->ctorURL = jsd_AddAtom(jsdc, ctorURL);
 
