@@ -103,13 +103,15 @@ public class GeckoNetworkManager extends BroadcastReceiver {
     }
 
     private Context mApplicationContext;
-    private NetworkType  mNetworkType = NetworkType.NETWORK_NONE;
-    private IntentFilter mNetworkFilter = new IntentFilter();
+    private NetworkType mNetworkType = NetworkType.NETWORK_NONE;
+    private final IntentFilter mNetworkFilter = new IntentFilter();
+
     // Whether the manager should be listening to Network Information changes.
     private boolean mShouldBeListening = false;
+
     // Whether the manager should notify Gecko that a change in Network
     // Information happened.
-    private boolean mShouldNotify      = false;
+    private boolean mShouldNotify = false;
 
     public static GeckoNetworkManager getInstance() {
         return sInstance;
@@ -120,13 +122,14 @@ public class GeckoNetworkManager extends BroadcastReceiver {
         updateNetworkType();
     }
 
-    public void init(Context context) {
-        mApplicationContext = context.getApplicationContext();
-        mNetworkFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
-        mNetworkType = getNetworkType();
-    }
+    public void start(final Context context) {
+        // Note that this initialization clause only runs once.
+        if (mApplicationContext == null) {
+            mApplicationContext = context.getApplicationContext();
+            mNetworkFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
+            mNetworkType = getNetworkType();
+        }
 
-    public void start() {
         mShouldBeListening = true;
         updateNetworkType();
 
@@ -143,7 +146,7 @@ public class GeckoNetworkManager extends BroadcastReceiver {
         mShouldBeListening = false;
 
         if (mShouldNotify) {
-        stopListening();
+            stopListening();
         }
     }
 
