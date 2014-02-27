@@ -74,6 +74,12 @@ public class Tab {
     public static final int STATE_SUCCESS = 2;
     public static final int STATE_ERROR = 3;
 
+    public static final int LOAD_PROGRESS_INIT = 10;
+    public static final int LOAD_PROGRESS_START = 20;
+    public static final int LOAD_PROGRESS_LOCATION_CHANGE = 60;
+    public static final int LOAD_PROGRESS_LOADED = 80;
+    public static final int LOAD_PROGRESS_STOP = 100;
+
     private static final int DEFAULT_BACKGROUND_COLOR = Color.WHITE;
 
     public enum ErrorType {
@@ -112,6 +118,7 @@ public class Tab {
         mPluginViews = new ArrayList<View>();
         mPluginLayers = new HashMap<Object, Layer>();
         mState = shouldShowProgress(url) ? STATE_SUCCESS : STATE_LOADING;
+        mLoadProgress = LOAD_PROGRESS_INIT;
 
         // At startup, the background is set to a color specified by LayerView
         // when the LayerView is created. Shortly after, this background color
@@ -628,6 +635,7 @@ public class Tab {
         setHasTouchListeners(false);
         setBackgroundColor(DEFAULT_BACKGROUND_COLOR);
         setErrorType(ErrorType.NONE);
+        setLoadProgress(LOAD_PROGRESS_LOCATION_CHANGE);
 
         Tabs.getInstance().notifyListeners(this, Tabs.TabEvents.LOCATION_CHANGE, oldUrl);
     }
@@ -639,6 +647,7 @@ public class Tab {
     }
 
     void handleDocumentStart(boolean showProgress, String url) {
+        setLoadProgress(LOAD_PROGRESS_START);
         setState(showProgress ? STATE_LOADING : STATE_SUCCESS);
         updateIdentityData(null);
         setReaderEnabled(false);
@@ -649,6 +658,7 @@ public class Tab {
 
         final String oldURL = getURL();
         final Tab tab = this;
+        tab.setLoadProgress(LOAD_PROGRESS_STOP);
         ThreadUtils.getBackgroundHandler().postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -659,7 +669,11 @@ public class Tab {
                 ThumbnailHelper.getInstance().getAndProcessThumbnailFor(tab);
             }
         }, 500);
-     }
+    }
+
+    void handleContentLoaded() {
+        setLoadProgress(LOAD_PROGRESS_LOADED);
+    }
 
     protected void saveThumbnailToDB() {
         try {
