@@ -2775,7 +2775,7 @@ HTMLInputElement::SetValueInternal(const nsAString& aValue,
       if (!mParserCreating) {
         SanitizeValue(value);
       }
-      // else SanitizeValue will be called by DoneCreatingElement
+      // else DoneCreatingElement calls us again once mParserCreating is false
 
       if (aSetValueChanged) {
         SetValueChanged(true);
@@ -2800,7 +2800,10 @@ HTMLInputElement::SetValueInternal(const nsAString& aValue,
             numberControlFrame->SetValueOfAnonTextControl(value);
           }
         }
-        OnValueChanged(!mParserCreating);
+        if (!mParserCreating) {
+          OnValueChanged(true);
+        }
+        // else DoneCreatingElement calls us again once mParserCreating is false
       }
 
       // Call parent's SetAttr for color input so its control frame is notified
