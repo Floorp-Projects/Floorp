@@ -3,7 +3,6 @@
 
 const URL = "data:text/html;charset=utf8,<p>JavaScript Profiler test</p>";
 
-let gcli = Cu.import("resource://gre/modules/devtools/gcli.jsm", {}).gcli;
 let gTarget, gPanel, gOptions;
 
 function cmd(typed, expected="", waitforEvent=null) {
@@ -86,7 +85,6 @@ function testProfilerClose() {
 
   helpers.audit(gOptions, [{
     setup: "profiler close",
-    completed: false,
     exec: { output: "" }
   }]).then(function() {
     let toolbox = gDevTools.getToolbox(gOptions.target);

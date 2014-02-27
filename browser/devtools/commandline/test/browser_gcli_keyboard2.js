@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-// define(function(require, exports, module) {
-
+'use strict';
 // <INJECTED SOURCE:START>
 
 // THIS FILE IS GENERATED FROM SOURCE IN THE GCLI PROJECT
@@ -23,47 +22,25 @@
 
 var exports = {};
 
-const TEST_URI = "data:text/html;charset=utf-8,<p id='gcli-input'>gcli-testKeyboard2.js</p>";
+var TEST_URI = "data:text/html;charset=utf-8,<p id='gcli-input'>gcli-testKeyboard2.js</p>";
 
 function test() {
-  helpers.addTabWithToolbar(TEST_URI, function(options) {
-    return helpers.runTests(options, exports);
-  }).then(finish);
+  return Task.spawn(function() {
+    let options = yield helpers.openTab(TEST_URI);
+    yield helpers.openToolbar(options);
+    gcli.addItems(mockCommands.items);
+
+    yield helpers.runTests(options, exports);
+
+    gcli.removeItems(mockCommands.items);
+    yield helpers.closeToolbar(options);
+    yield helpers.closeTab(options);
+  }).then(finish, helpers.handleError);
 }
 
 // <INJECTED SOURCE:END>
 
-'use strict';
-
-// var helpers = require('gclitest/helpers');
-// var mockCommands = require('gclitest/mockCommands');
-
-exports.setup = function(options) {
-  mockCommands.setup();
-};
-
-exports.shutdown = function(options) {
-  mockCommands.shutdown();
-};
-
-// Bug 664377: Add tests for internal completion. i.e. "tsela<TAB> 1"
-
-exports.testSimple = function(options) {
-  return helpers.audit(options, [
-    {
-      setup: 'tsela<TAB>',
-      check: { input: 'tselarr ', cursor: 8 }
-    },
-    {
-      setup: 'tsn di<TAB>',
-      check: { input: 'tsn dif ', cursor: 8 }
-    },
-    {
-      setup: 'tsg a<TAB>',
-      check: { input: 'tsg aaa ', cursor: 8 }
-    }
-  ]);
-};
+// var helpers = require('./helpers');
 
 exports.testIncr = function(options) {
   return helpers.audit(options, [
@@ -157,257 +134,3 @@ exports.testIncr = function(options) {
     */
   ]);
 };
-
-exports.testDecr = function(options) {
-  return helpers.audit(options, [
-    /*
-    // See notes at top of testIncr
-    {
-      setup: 'tsu -70<DOWN>',
-      check: { input: 'tsu -5' }
-    },
-    {
-      setup: 'tsu -7<DOWN>',
-      check: { input: 'tsu -5' }
-    },
-    {
-      setup: 'tsu -6<DOWN>',
-      check: { input: 'tsu -5' }
-    },
-    */
-    {
-      setup: 'tsu -5<DOWN>',
-      check: { input: 'tsu -5' }
-    },
-    {
-      setup: 'tsu -4<DOWN>',
-      check: { input: 'tsu -5' }
-    },
-    {
-      setup: 'tsu -3<DOWN>',
-      check: { input: 'tsu -5' }
-    },
-    {
-      setup: 'tsu -2<DOWN>',
-      check: { input: 'tsu -3' }
-    },
-    {
-      setup: 'tsu -1<DOWN>',
-      check: { input: 'tsu -3' }
-    },
-    {
-      setup: 'tsu 0<DOWN>',
-      check: { input: 'tsu -3' }
-    },
-    {
-      setup: 'tsu 1<DOWN>',
-      check: { input: 'tsu 0' }
-    },
-    {
-      setup: 'tsu 2<DOWN>',
-      check: { input: 'tsu 0' }
-    },
-    {
-      setup: 'tsu 3<DOWN>',
-      check: { input: 'tsu 0' }
-    },
-    {
-      setup: 'tsu 4<DOWN>',
-      check: { input: 'tsu 3' }
-    },
-    {
-      setup: 'tsu 5<DOWN>',
-      check: { input: 'tsu 3' }
-    },
-    {
-      setup: 'tsu 6<DOWN>',
-      check: { input: 'tsu 3' }
-    },
-    {
-      setup: 'tsu 7<DOWN>',
-      check: { input: 'tsu 6' }
-    },
-    {
-      setup: 'tsu 8<DOWN>',
-      check: { input: 'tsu 6' }
-    },
-    {
-      setup: 'tsu 9<DOWN>',
-      check: { input: 'tsu 6' }
-    },
-    {
-      setup: 'tsu 10<DOWN>',
-      check: { input: 'tsu 9' }
-    }
-    /*
-    // See notes at top of testIncr
-    {
-      setup: 'tsu 100<DOWN>',
-      check: { input: 'tsu 9' }
-    }
-    */
-  ]);
-};
-
-exports.testIncrFloat = function(options) {
-  return helpers.audit(options, [
-    /*
-    // See notes at top of testIncr
-    {
-      setup: 'tsf -70<UP>',
-      check: { input: 'tsf -6.5' }
-    },
-    */
-    {
-      setup: 'tsf -6.5<UP>',
-      check: { input: 'tsf -6' }
-    },
-    {
-      setup: 'tsf -6<UP>',
-      check: { input: 'tsf -4.5' }
-    },
-    {
-      setup: 'tsf -4.5<UP>',
-      check: { input: 'tsf -3' }
-    },
-    {
-      setup: 'tsf -4<UP>',
-      check: { input: 'tsf -3' }
-    },
-    {
-      setup: 'tsf -3<UP>',
-      check: { input: 'tsf -1.5' }
-    },
-    {
-      setup: 'tsf -1.5<UP>',
-      check: { input: 'tsf 0' }
-    },
-    {
-      setup: 'tsf 0<UP>',
-      check: { input: 'tsf 1.5' }
-    },
-    {
-      setup: 'tsf 1.5<UP>',
-      check: { input: 'tsf 3' }
-    },
-    {
-      setup: 'tsf 2<UP>',
-      check: { input: 'tsf 3' }
-    },
-    {
-      setup: 'tsf 3<UP>',
-      check: { input: 'tsf 4.5' }
-    },
-    {
-      setup: 'tsf 5<UP>',
-      check: { input: 'tsf 6' }
-    }
-    /*
-    // See notes at top of testIncr
-    {
-      setup: 'tsf 100<UP>',
-      check: { input: 'tsf -6.5' }
-    }
-    */
-  ]);
-};
-
-exports.testDecrFloat = function(options) {
-  return helpers.audit(options, [
-    /*
-    // See notes at top of testIncr
-    {
-      setup: 'tsf -70<DOWN>',
-      check: { input: 'tsf 11.5' }
-    },
-    */
-    {
-      setup: 'tsf -6.5<DOWN>',
-      check: { input: 'tsf -6.5' }
-    },
-    {
-      setup: 'tsf -6<DOWN>',
-      check: { input: 'tsf -6.5' }
-    },
-    {
-      setup: 'tsf -4.5<DOWN>',
-      check: { input: 'tsf -6' }
-    },
-    {
-      setup: 'tsf -4<DOWN>',
-      check: { input: 'tsf -4.5' }
-    },
-    {
-      setup: 'tsf -3<DOWN>',
-      check: { input: 'tsf -4.5' }
-    },
-    {
-      setup: 'tsf -1.5<DOWN>',
-      check: { input: 'tsf -3' }
-    },
-    {
-      setup: 'tsf 0<DOWN>',
-      check: { input: 'tsf -1.5' }
-    },
-    {
-      setup: 'tsf 1.5<DOWN>',
-      check: { input: 'tsf 0' }
-    },
-    {
-      setup: 'tsf 2<DOWN>',
-      check: { input: 'tsf 1.5' }
-    },
-    {
-      setup: 'tsf 3<DOWN>',
-      check: { input: 'tsf 1.5' }
-    },
-    {
-      setup: 'tsf 5<DOWN>',
-      check: { input: 'tsf 4.5' }
-    }
-    /*
-    // See notes at top of testIncr
-    {
-      setup: 'tsf 100<DOWN>',
-      check: { input: 'tsf 11.5' }
-    }
-    */
-  ]);
-};
-
-exports.testIncrSelection = function(options) {
-  /*
-  // Bug 829516:  GCLI up/down navigation over selection is sometimes bizarre
-  return helpers.audit(options, [
-    {
-      setup: 'tselarr <DOWN>',
-      check: { hints: '2' },
-      exec: {}
-    },
-    {
-      setup: 'tselarr <DOWN><DOWN>',
-      check: { hints: '3' },
-      exec: {}
-    },
-    {
-      setup: 'tselarr <DOWN><DOWN><DOWN>',
-      check: { hints: '1' },
-      exec: {}
-    }
-  ]);
-  */
-};
-
-exports.testDecrSelection = function(options) {
-  /*
-  // Bug 829516:  GCLI up/down navigation over selection is sometimes bizarre
-  return helpers.audit(options, [
-    {
-      setup: 'tselarr <UP>',
-      check: { hints: '3' }
-    }
-  ]);
-  */
-};
-
-// });

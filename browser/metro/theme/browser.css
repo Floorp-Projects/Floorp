@@ -127,6 +127,12 @@
   height: @tabs_height@;
 }
 
+/* Hack for bug 965550 */
+.tabs-scrollbox > .arrowscrollbox-scrollbox > .scrollbox-innerbox {
+  -moz-padding-start: calc(2 * @tabs_scrollarrow_width@);
+  -moz-margin-start: calc(-2 * @tabs_scrollarrow_width@);
+}
+
 #tabs-container[viewstate="snapped"] {
   visibility: hidden;
 }
