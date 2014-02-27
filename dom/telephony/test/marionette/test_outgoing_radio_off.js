@@ -5,7 +5,6 @@ MARIONETTE_TIMEOUT = 60000;
 MARIONETTE_HEAD_JS = 'head.js';
 
 let connection;
-let outgoing;
 
 function receivedPending(received, pending, nextAction) {
   let index = pending.indexOf(received);
@@ -50,21 +49,13 @@ function dial(number) {
   is(telephony.calls.length, 0);
 
   log("Make an outgoing call.");
-  outgoing = telephony.dial(number);
 
-  ok(outgoing);
-  is(outgoing.number, number);
-  is(outgoing.state, "dialing");
+  telephony.dial(number).then(null, cause => {
+    log("Received promise 'reject'");
 
-  is(telephony.active, outgoing);
-  is(telephony.calls.length, 1);
-  is(telephony.calls[0], outgoing);
-
-  outgoing.onerror = function onerror(event) {
-    log("Received 'error' event.");
-    is(event.call, outgoing);
-    ok(event.call.error);
-    is(event.call.error.name, "RadioNotAvailable");
+    is(telephony.active, null);
+    is(telephony.calls.length, 0);
+    is(cause, "RadioNotAvailable");
 
     emulator.run("gsm list", function(result) {
       log("Initial call list: " + result);
@@ -72,7 +63,7 @@ function dial(number) {
 
       setRadioEnabled(true, cleanUp);
     });
-  };
+  });
 }
 
 function cleanUp() {
