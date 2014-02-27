@@ -12,7 +12,7 @@
 #include "nsIDOMElement.h"
 #include "nsDOMClassInfoID.h"
 #include "nsIContent.h"
-#include "nsINameSpaceManager.h"
+#include "nsNameSpaceManager.h"
 #include "nsGkAtoms.h"
 #include "nsAsyncDOMEvent.h"
 #include "nsEventDispatcher.h"

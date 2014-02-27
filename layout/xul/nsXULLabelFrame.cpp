@@ -7,7 +7,7 @@
 
 #include "nsXULLabelFrame.h"
 #include "nsHTMLParts.h"
-#include "nsINameSpaceManager.h"
+#include "nsNameSpaceManager.h"
 #include "nsEventStateManager.h"
 
 nsIFrame*

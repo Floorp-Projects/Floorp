@@ -17,7 +17,7 @@
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsDOMString.h"
-#include "nsINameSpaceManager.h"
+#include "nsNameSpaceManager.h"
 #include "nsContentUtils.h"
 #include "mozilla/dom/XPathEvaluatorBinding.h"
 

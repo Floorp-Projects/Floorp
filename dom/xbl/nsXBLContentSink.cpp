@@ -10,7 +10,7 @@
 #include "nsBindingManager.h"
 #include "nsIDOMNode.h"
 #include "nsGkAtoms.h"
-#include "nsINameSpaceManager.h"
+#include "nsNameSpaceManager.h"
 #include "nsIURI.h"
 #include "nsTextFragment.h"
 #ifdef MOZ_XUL
