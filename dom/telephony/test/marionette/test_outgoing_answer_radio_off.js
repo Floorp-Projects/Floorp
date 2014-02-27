@@ -30,19 +30,19 @@ function dial(number) {
   log("Make an outgoing call.");
 
   let deferred = Promise.defer();
-  let call = telephony.dial(number);
+  telephony.dial(number).then(call => {
+    ok(call);
+    is(call.number, number);
+    is(call.state, "dialing");
 
-  ok(call);
-  is(call.number, number);
-  is(call.state, "dialing");
-
-  call.onalerting = function(event) {
-    log("Received 'onalerting' call event.");
-    call.onalerting = null;
-    is(call, event.call);
-    is(call.state, "alerting");
-    deferred.resolve(call);
-  };
+    call.onalerting = function(event) {
+      log("Received 'onalerting' call event.");
+      call.onalerting = null;
+      is(call, event.call);
+      is(call.state, "alerting");
+      deferred.resolve(call);
+    };
+  });
 
   return deferred.promise;
 }
