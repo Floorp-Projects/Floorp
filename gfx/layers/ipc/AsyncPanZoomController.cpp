@@ -19,7 +19,7 @@
 #include "base/message_loop.h"          // for MessageLoop
 #include "base/task.h"                  // for NewRunnableMethod, etc
 #include "base/tracked.h"               // for FROM_HERE
-#include "gfxPlatform.h"                // for gfxPlatform::UseProgressiveTilePainting
+#include "gfxPrefs.h"                   // for gfxPrefs::UseProgressiveTilePainting
 #include "gfxTypes.h"                   // for gfxFloat
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/BasicEvents.h"        // for Modifiers, MODIFIER_*
@@ -49,14 +49,13 @@
 #include "nsCOMPtr.h"                   // for already_AddRefed
 #include "nsDebug.h"                    // for NS_WARNING
 #include "nsIDOMWindowUtils.h"          // for nsIDOMWindowUtils
-#include "nsISupportsImpl.h"
+#include "nsISupportsImpl.h"            // for MOZ_COUNT_CTOR, etc
 #include "nsMathUtils.h"                // for NS_hypot
 #include "nsPoint.h"                    // for nsIntPoint
 #include "nsStyleConsts.h"
 #include "nsStyleStruct.h"              // for nsTimingFunction
 #include "nsTArray.h"                   // for nsTArray, nsTArray_Impl, etc
 #include "nsThreadUtils.h"              // for NS_IsMainThread
-#include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc
 #include "SharedMemoryBasic.h"          // for SharedMemoryBasic
 
 // #define APZC_ENABLE_RENDERTRACE
@@ -289,11 +288,6 @@ static bool gCrossSlideEnabled = false;
 static bool gAllowCheckerboarding = true;
 
 /**
- * Pref that enables progressive tile painting
- */
-static bool gUseProgressiveTilePainting = false;
-
-/**
  * Pref that enables enlarging of the displayport along one axis when its
  * opposite's scrollable rect is within the composition bounds. That is, we
  * don't need to pad the opposite axis.
@@ -425,7 +419,6 @@ AsyncPanZoomController::InitializeGlobalState()
   Preferences::AddBoolVarCache(&gCrossSlideEnabled, "apz.cross_slide.enabled", gCrossSlideEnabled);
   Preferences::AddIntVarCache(&gAxisLockMode, "apz.axis_lock_mode", gAxisLockMode);
   Preferences::AddBoolVarCache(&gAllowCheckerboarding, "apz.allow-checkerboarding", gAllowCheckerboarding);
-  gUseProgressiveTilePainting = gfxPlatform::UseProgressiveTilePainting();
   Preferences::AddBoolVarCache(&gEnlargeDisplayPortWhenOnlyScrollable, "apz.enlarge_displayport_when_only_scrollable",
     gEnlargeDisplayPortWhenOnlyScrollable);
 
@@ -2056,7 +2049,7 @@ void AsyncPanZoomController::UpdateSharedCompositorFrameMetrics()
   FrameMetrics* frame = mSharedFrameMetricsBuffer ?
       static_cast<FrameMetrics*>(mSharedFrameMetricsBuffer->memory()) : nullptr;
 
-  if (gUseProgressiveTilePainting && frame && mSharedLock) {
+  if (frame && mSharedLock && gfxPrefs::UseProgressiveTilePainting()) {
     mSharedLock->Lock();
     *frame = mFrameMetrics;
     mSharedLock->Unlock();
@@ -2071,7 +2064,7 @@ void AsyncPanZoomController::ShareCompositorFrameMetrics() {
   // Only create the shared memory buffer if it hasn't already been created,
   // we are using progressive tile painting, and we have a
   // compositor to pass the shared memory back to the content process/thread.
-  if (!mSharedFrameMetricsBuffer && gUseProgressiveTilePainting && compositor) {
+  if (!mSharedFrameMetricsBuffer && compositor && gfxPrefs::UseProgressiveTilePainting()) {
 
     // Create shared memory and initialize it with the current FrameMetrics value
     mSharedFrameMetricsBuffer = new ipc::SharedMemoryBasic;

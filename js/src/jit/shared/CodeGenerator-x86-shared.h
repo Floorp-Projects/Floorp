@@ -122,6 +122,8 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     virtual bool visitUDivOrMod(LUDivOrMod *ins);
     virtual bool visitAsmJSPassStackArg(LAsmJSPassStackArg *ins);
 
+    bool visitForkJoinGetSlice(LForkJoinGetSlice *ins);
+
     bool visitNegI(LNegI *lir);
     bool visitNegD(LNegD *lir);
     bool visitNegF(LNegF *lir);

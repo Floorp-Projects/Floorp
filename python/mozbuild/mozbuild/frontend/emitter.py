@@ -242,14 +242,15 @@ class TreeMetadataEmitter(LoggingMixin):
             'RESFILE',
             'DEFFILE',
             'SDK_LIBRARY',
-            'CFLAGS',
-            'CXXFLAGS',
-            'LDFLAGS',
             'WIN32_EXE_LDFLAGS',
         ]
         for v in varlist:
             if v in sandbox and sandbox[v]:
                 passthru.variables[v] = sandbox[v]
+
+        for v in ['CFLAGS', 'CXXFLAGS', 'CMFLAGS', 'CMMFLAGS', 'LDFLAGS']:
+            if v in sandbox and sandbox[v]:
+                passthru.variables['MOZBUILD_' + v] = sandbox[v]
 
         # NO_VISIBILITY_FLAGS is slightly different
         if sandbox['NO_VISIBILITY_FLAGS']:

@@ -92,6 +92,11 @@ static void print_escaped(FILE *aStream, const char* aData)
     fputs(buf, aStream);
 }
 
+static const char *allocation_format =
+  (sizeof(ADLog::Pointer) == 4) ? "0x%08zX" :
+  (sizeof(ADLog::Pointer) == 8) ? "0x%016zX" :
+  "UNEXPECTED sizeof(void*)";
+
 int main(int argc, char **argv)
 {
     if (argc != 2) {
@@ -138,8 +143,8 @@ int main(int argc, char **argv)
             for (ADLog::Pointer p = e->address,
                             p_end = e->address + e->datasize;
                  p != p_end; ++p) {
-                PLHashEntry *e = PL_HashTableAdd(memory_map, p, cur_node);
-                if (!e) {
+                PLHashEntry *he = PL_HashTableAdd(memory_map, p, cur_node);
+                if (!he) {
                     fprintf(stderr, "%s: Out of memory.\n", argv[0]);
                     return 1;
                 }
@@ -296,7 +301,7 @@ int main(int argc, char **argv)
                "</style>\n"
                "</head>\n");
         printf("<body>\n\n"
-               "<p>Generated %d entries (%d in root SCCs) and %d SCCs.</p>\n\n",
+               "<p>Generated %zd entries (%d in root SCCs) and %d SCCs.</p>\n\n",
                count, num_root_nodes, num_sccs);
 
         for (size_t i = 0; i < count; ++i) {
@@ -337,32 +342,36 @@ int main(int argc, char **argv)
 
                 if (one_object_component) {
                     printf("\n\n<div id=\"c%d\">\n", component);
-                    printf("<h2 id=\"o%d\">Object %d "
+                    printf("<h2 id=\"o%td\">Object %td "
                            "(single-object component %d)</h2>\n",
                            n-nodes, n-nodes, component);
                 } else {
-                    printf("\n\n<h3 id=\"o%d\">Object %d</h3>\n",
+                    printf("\n\n<h3 id=\"o%td\">Object %td</h3>\n",
                            n-nodes, n-nodes);
                 }
                 printf("<pre>\n");
-                printf("%p &lt;%s&gt; (%d)\n",
+                printf("%p &lt;%s&gt; (%zd)\n",
                        e->address, e->type, e->datasize);
                 for (size_t d = 0; d < e->datasize;
                      d += sizeof(ADLog::Pointer)) {
                     AllocationNode *target = (AllocationNode*)
                         PL_HashTableLookup(memory_map, *(void**)(e->data + d));
                     if (target) {
-                        printf("        <a href=\"#o%d\">0x%08X</a> &lt;%s&gt;",
-                               target - nodes,
-                               *(unsigned int*)(e->data + d),
+                        printf("        <a href=\"#o%td\">",
+                               target - nodes);
+                        printf(allocation_format,
+                               *(size_t*)(e->data + d));
+                        printf("</a> &lt;%s&gt;",
                                target->entry->type);
                         if (target->index != n->index) {
                             printf(", component %d", target->index);
                         }
                         printf("\n");
                     } else {
-                        printf("        0x%08X\n",
-                               *(unsigned int*)(e->data + d));
+                        printf("        ");
+                        printf(allocation_format,
+                               *(size_t*)(e->data + d));
+                        printf("\n");
                     }
                 }
 
@@ -372,7 +381,7 @@ int main(int argc, char **argv)
                          i != i_end; ++i) {
                         AllocationNode *t = n->pointers_from[i];
                         const ADLog::Entry *te = t->entry;
-                        printf("    <a href=\"#o%d\">%s</a> (Object %d, ",
+                        printf("    <a href=\"#o%td\">%s</a> (Object %td, ",
                                t - nodes, te->type, t - nodes);
                         if (t->index != n->index) {
                             printf("component %d, ", t->index);

@@ -54,6 +54,12 @@
 #define IF_BDATA(real,imaginary) imaginary
 #endif
 
+#ifdef ENABLE_SHARED_ARRAY_BUFFER
+#define IF_SAB(real,imaginary) real
+#else
+#define IF_SAB(real,imaginary) imaginary
+#endif
+
 #define JS_FOR_PROTOTYPES(real,imaginary) \
     imaginary(Null,              0,     js_InitNullClass,          dummy) \
     real(Object,                 1,     js_InitObjectClass,        &JSObject::class_) \
@@ -91,10 +97,11 @@
     real(Map,                   33,     js_InitMapClass,           OCLASP(Map)) \
     real(Set,                   34,     js_InitSetClass,           OCLASP(Set)) \
     real(DataView,              35,     js_InitTypedArrayClasses,  OCLASP(DataView)) \
-IF_INTL(real,imaginary) (Intl,                  36,     js_InitIntlClass,          CLASP(Intl)) \
-IF_BDATA(real,imaginary)(TypedObject,           37,     js_InitTypedObjectModuleObject,   OCLASP(TypedObjectModule)) \
-    imaginary(GeneratorFunction,     38,     js_InitIteratorClasses, dummy) \
-IF_BDATA(real,imaginary)(SIMD,                  39,     js_InitSIMDClass, OCLASP(SIMD)) \
+IF_SAB(real,imaginary)(SharedArrayBuffer,       36,     js_InitSharedArrayBufferClass, &js::SharedArrayBufferObject::protoClass) \
+IF_INTL(real,imaginary) (Intl,                  37,     js_InitIntlClass,          CLASP(Intl)) \
+IF_BDATA(real,imaginary)(TypedObject,           38,     js_InitTypedObjectModuleObject,   OCLASP(TypedObjectModule)) \
+    imaginary(GeneratorFunction,     39,     js_InitIteratorClasses, dummy) \
+IF_BDATA(real,imaginary)(SIMD,                  40,     js_InitSIMDClass, OCLASP(SIMD)) \
 
 #define JS_FOR_EACH_PROTOTYPE(macro) JS_FOR_PROTOTYPES(macro,macro)
 

@@ -1683,9 +1683,9 @@ nsDOMWindowUtils::SuppressEventHandling(bool aSuppress)
   NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
 
   if (aSuppress) {
-    doc->SuppressEventHandling();
+    doc->SuppressEventHandling(nsIDocument::eEvents);
   } else {
-    doc->UnsuppressEventHandlingAndFireEvents(true);
+    doc->UnsuppressEventHandlingAndFireEvents(nsIDocument::eEvents, true);
   }
 
   return NS_OK;

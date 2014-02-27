@@ -70,8 +70,8 @@ PerThreadData::PerThreadData(JSRuntime *runtime)
   : PerThreadDataFriendFields(),
     runtime_(runtime),
     ionTop(nullptr),
-    ionJSContext(nullptr),
-    ionStackLimit(0),
+    jitJSContext(nullptr),
+    jitStackLimit(0),
     activation_(nullptr),
     asmJSActivationStack_(nullptr),
 #ifdef JS_ARM_SIMULATOR
@@ -566,13 +566,13 @@ NewObjectCache::clearNurseryObjects(JSRuntime *rt)
 }
 
 void
-JSRuntime::resetIonStackLimit()
+JSRuntime::resetJitStackLimit()
 {
     AutoLockForOperationCallback lock(this);
-    mainThread.setIonStackLimit(mainThread.nativeStackLimit[js::StackForUntrustedScript]);
+    mainThread.setJitStackLimit(mainThread.nativeStackLimit[js::StackForUntrustedScript]);
 
 #ifdef JS_ARM_SIMULATOR
-    mainThread.setIonStackLimit(js::jit::Simulator::StackLimit());
+    mainThread.setJitStackLimit(js::jit::Simulator::StackLimit());
 #endif
  }
 
@@ -646,10 +646,10 @@ JSRuntime::triggerOperationCallback(OperationCallbackTrigger trigger)
     /*
      * Invalidate ionTop to trigger its over-recursion check. Note this must be
      * set before interrupt, to avoid racing with js_InvokeOperationCallback,
-     * into a weird state where interrupt is stuck at 0 but ionStackLimit is
+     * into a weird state where interrupt is stuck at 0 but jitStackLimit is
      * MAXADDR.
      */
-    mainThread.setIonStackLimit(-1);
+    mainThread.setJitStackLimit(-1);
 
     interrupt = true;
 

@@ -395,10 +395,10 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_DISPLAY_BOX                    18
 #define NS_STYLE_DISPLAY_INLINE_BOX             19
 #ifdef MOZ_XUL
-#define NS_STYLE_DISPLAY_GRID                   20
-#define NS_STYLE_DISPLAY_INLINE_GRID            21
-#define NS_STYLE_DISPLAY_GRID_GROUP             22
-#define NS_STYLE_DISPLAY_GRID_LINE              23
+#define NS_STYLE_DISPLAY_XUL_GRID               20
+#define NS_STYLE_DISPLAY_INLINE_XUL_GRID        21
+#define NS_STYLE_DISPLAY_XUL_GRID_GROUP         22
+#define NS_STYLE_DISPLAY_XUL_GRID_LINE          23
 #define NS_STYLE_DISPLAY_STACK                  24
 #define NS_STYLE_DISPLAY_INLINE_STACK           25
 #define NS_STYLE_DISPLAY_DECK                   26
@@ -407,6 +407,8 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #endif
 #define NS_STYLE_DISPLAY_FLEX                   29
 #define NS_STYLE_DISPLAY_INLINE_FLEX            30
+#define NS_STYLE_DISPLAY_GRID                   31
+#define NS_STYLE_DISPLAY_INLINE_GRID            32
 
 // See nsStylePosition
 #define NS_STYLE_ALIGN_CONTENT_FLEX_START       0

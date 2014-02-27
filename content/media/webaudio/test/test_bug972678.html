@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test buffers do not interfere when scheduled in sequence</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="webaudio.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var OFFSETS = [0.005, 0.01, 0.02, 0.03];
+var LENGTH = 128;
+
+var gTest = {
+  length: 128 * OFFSETS.length,
+  numberOfChannels: 1,
+
+  createGraph: function(context) {
+    var gain = context.createGain();
+
+    // create a repeating sample
+    var repeatingSample = context.createBuffer(1, 2, context.sampleRate);
+    var c = repeatingSample.getChannelData(0);
+    for (var i = 0; i < repeatingSample.length; ++i) {
+      c[i] = i % 2 == 0 ? 1 : -1;
+    }
+
+    OFFSETS.forEach(function (offset, offsetIdx) {
+      // Schedule a set of nodes to repeat the sample.
+      for (var i = 0; i < LENGTH; i += repeatingSample.length) {
+        var source = context.createBufferSource();
+        source.buffer = repeatingSample;
+        source.connect(gain);
+        source.start((offsetIdx * LENGTH + i + offset) / context.sampleRate);
+      }
+
+      buffer = context.createBuffer(1, LENGTH, context.sampleRate);
+      c = buffer.getChannelData(0);
+      for (var i = 0; i < buffer.length; ++i) {
+        c[i] = i % 2 == 0 ? -1 : 1;
+      }
+
+      var source = context.createBufferSource();
+      source.buffer = buffer;
+      source.connect(gain);
+      source.start((offsetIdx * LENGTH + offset) / context.sampleRate);
+    });
+
+    return gain;
+  },
+
+  createExpectedBuffers: function(context) {
+    return context.createBuffer(1, gTest.length, context.sampleRate);
+  },
+};
+
+runTest();
+</script>
+</pre>
+</body>
+</html>

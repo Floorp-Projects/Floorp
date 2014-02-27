@@ -349,14 +349,13 @@ class ForkJoinShared : public ParallelJob, public Monitor
     /////////////////////////////////////////////////////////////////////////
     // Asynchronous Flags
     //
-    // These can be read without the lock (hence the |volatile| declaration).
-    // All fields should be *written with the lock*, however.
+    // These can be accessed without the lock and are thus atomic.
 
     // Set to true when parallel execution should abort.
-    volatile bool abort_;
+    mozilla::Atomic<bool, mozilla::ReleaseAcquire> abort_;
 
     // Set to true when a worker bails for a fatal reason.
-    volatile bool fatal_;
+    mozilla::Atomic<bool, mozilla::ReleaseAcquire> fatal_;
 
   public:
     ForkJoinShared(JSContext *cx,
@@ -372,27 +371,26 @@ class ForkJoinShared : public ParallelJob, public Monitor
     ParallelResult execute();
 
     // Invoked from parallel worker threads:
-    virtual bool executeFromWorker(uint32_t workerId, uintptr_t stackLimit) MOZ_OVERRIDE;
+    virtual bool executeFromWorker(ThreadPoolWorker *worker, uintptr_t stackLimit) MOZ_OVERRIDE;
 
     // Invoked only from the main thread:
-    virtual bool executeFromMainThread() MOZ_OVERRIDE;
+    virtual bool executeFromMainThread(ThreadPoolWorker *worker) MOZ_OVERRIDE;
 
     // Executes the user-supplied function a worker or the main thread.
-    void executePortion(PerThreadData *perThread, uint32_t workerId);
+    void executePortion(PerThreadData *perThread, ThreadPoolWorker *worker);
 
     // Moves all the per-thread arenas into the main compartment and processes
     // any pending requests for a GC. This can only safely be invoked on the
     // main thread after the workers have completed.
     void transferArenasToCompartmentAndProcessGCRequests();
 
-    // Invoked during processing by worker threads to "check in".
-    bool check(ForkJoinContext &cx);
 
     // Requests a GC, either full or specific to a zone.
     void requestGC(JS::gcreason::Reason reason);
     void requestZoneGC(JS::Zone *zone, JS::gcreason::Reason reason);
 
     // Requests that computation abort.
+    void setAbortFlagDueToInterrupt(ForkJoinContext &cx);
     void setAbortFlagAndTriggerOperationCallback(bool fatal);
 
     // Set the fatal flag for the next abort.
@@ -598,12 +596,12 @@ ForkJoinOperation::apply()
     SpewBeginOp(cx_, "ForkJoinOperation");
 
     // How many workers do we have, counting the main thread.
-    unsigned numWorkersWithMain = cx_->runtime()->threadPool.numWorkers() + 1;
+    unsigned numWorkers = cx_->runtime()->threadPool.numWorkers();
 
-    if (!bailoutRecords_.resize(numWorkersWithMain))
+    if (!bailoutRecords_.resize(numWorkers))
         return SpewEndOp(ExecutionFatal);
 
-    for (uint32_t i = 0; i < numWorkersWithMain; i++)
+    for (uint32_t i = 0; i < numWorkers; i++)
         bailoutRecords_[i].init(cx_);
 
     if (enqueueInitialScript(&status) == RedLight)
@@ -633,7 +631,7 @@ ForkJoinOperation::apply()
     }
 
     while (bailouts < MAX_BAILOUTS) {
-        for (uint32_t i = 0; i < numWorkersWithMain; i++)
+        for (uint32_t i = 0; i < numWorkers; i++)
             bailoutRecords_[i].reset(cx_);
 
         if (compileForParallelExecution(&status) == RedLight)
@@ -1371,7 +1369,7 @@ ForkJoinShared::init()
     if (!cxLock_)
         return false;
 
-    for (unsigned i = 0; i < (threadPool_->numWorkers() + 1); i++) {
+    for (unsigned i = 0; i < threadPool_->numWorkers(); i++) {
         Allocator *allocator = cx_->new_<Allocator>(cx_->zone());
         if (!allocator)
             return false;
@@ -1424,8 +1422,8 @@ ForkJoinShared::execute()
     }
 
 #ifdef DEBUG
-    Spew(SpewOps, "Completed parallel job [slices %d, threads: %d (+1), stolen: %d (work stealing:%s)]",
-         sliceTo_ - sliceFrom_,
+    Spew(SpewOps, "Completed parallel job [slices: %d, threads: %d, stolen: %d (work stealing:%s)]",
+         sliceTo_ - sliceFrom_ + 1,
          threadPool_->numWorkers(),
          threadPool_->stolenSlices(),
          threadPool_->workStealing() ? "ON" : "OFF");
@@ -1439,7 +1437,7 @@ void
 ForkJoinShared::transferArenasToCompartmentAndProcessGCRequests()
 {
     JSCompartment *comp = cx_->compartment();
-    for (unsigned i = 0; i < (threadPool_->numWorkers() + 1); i++)
+    for (unsigned i = 0; i < threadPool_->numWorkers(); i++)
         comp->adoptWorkerAllocator(allocators_[i]);
 
     if (gcRequested_) {
@@ -1453,7 +1451,7 @@ ForkJoinShared::transferArenasToCompartmentAndProcessGCRequests()
 }
 
 bool
-ForkJoinShared::executeFromWorker(uint32_t workerId, uintptr_t stackLimit)
+ForkJoinShared::executeFromWorker(ThreadPoolWorker *worker, uintptr_t stackLimit)
 {
     PerThreadData thisThread(cx_->runtime());
     if (!thisThread.init()) {
@@ -1468,22 +1466,22 @@ ForkJoinShared::executeFromWorker(uint32_t workerId, uintptr_t stackLimit)
 
     // Don't use setIonStackLimit() because that acquires the ionStackLimitLock, and the
     // lock has not been initialized in these cases.
-    thisThread.ionStackLimit = stackLimit;
-    executePortion(&thisThread, workerId);
+    thisThread.jitStackLimit = stackLimit;
+    executePortion(&thisThread, worker);
     TlsPerThreadData.set(nullptr);
 
     return !abort_;
 }
 
 bool
-ForkJoinShared::executeFromMainThread()
+ForkJoinShared::executeFromMainThread(ThreadPoolWorker *worker)
 {
-    executePortion(&cx_->mainThread(), threadPool_->numWorkers());
+    executePortion(&cx_->mainThread(), worker);
     return !abort_;
 }
 
 void
-ForkJoinShared::executePortion(PerThreadData *perThread, uint32_t workerId)
+ForkJoinShared::executePortion(PerThreadData *perThread, ThreadPoolWorker *worker)
 {
     // WARNING: This code runs ON THE PARALLEL WORKER THREAD.
     // Be careful when accessing cx_.
@@ -1493,8 +1491,8 @@ ForkJoinShared::executePortion(PerThreadData *perThread, uint32_t workerId)
     // here for maximum clarity.
     JS::AutoAssertNoGC nogc(runtime());
 
-    Allocator *allocator = allocators_[workerId];
-    ForkJoinContext cx(perThread, workerId, allocator, this, &records_[workerId]);
+    Allocator *allocator = allocators_[worker->id()];
+    ForkJoinContext cx(perThread, worker, allocator, this, &records_[worker->id()]);
     AutoSetForkJoinContext autoContext(&cx);
 
 #ifdef DEBUG
@@ -1523,7 +1521,7 @@ ForkJoinShared::executePortion(PerThreadData *perThread, uint32_t workerId)
     } else {
         ParallelIonInvoke<2> fii(cx_->runtime(), fun_, 2);
 
-        fii.args[0] = Int32Value(workerId);
+        fii.args[0] = Int32Value(worker->id());
         fii.args[1] = BooleanValue(false);
 
         bool ok = fii.invoke(perThread);
@@ -1535,33 +1533,19 @@ ForkJoinShared::executePortion(PerThreadData *perThread, uint32_t workerId)
     Spew(SpewOps, "Down");
 }
 
-bool
-ForkJoinShared::check(ForkJoinContext &cx)
+void
+ForkJoinShared::setAbortFlagDueToInterrupt(ForkJoinContext &cx)
 {
     JS_ASSERT(cx_->runtime()->interruptPar);
+    // The GC Needed flag should not be set during parallel
+    // execution.  Instead, one of the requestGC() or
+    // requestZoneGC() methods should be invoked.
+    JS_ASSERT(!cx_->runtime()->gcIsNeeded);
 
-    if (abort_)
-        return false;
-
-    // Note: We must check if the main thread has exited successfully here, as
-    // without a main thread the worker threads which are tripping on the
-    // interrupt flag would never exit.
-    if (cx.isMainThread() || !threadPool_->isMainThreadActive()) {
-        JS_ASSERT(!cx_->runtime()->gcIsNeeded);
-
-        if (cx_->runtime()->interruptPar) {
-            // The GC Needed flag should not be set during parallel
-            // execution.  Instead, one of the requestGC() or
-            // requestZoneGC() methods should be invoked.
-            JS_ASSERT(!cx_->runtime()->gcIsNeeded);
-
-            cx.bailoutRecord->setCause(ParallelBailoutInterrupt);
-            setAbortFlagAndTriggerOperationCallback(false);
-            return false;
-        }
+    if (!abort_) {
+        cx.bailoutRecord->setCause(ParallelBailoutInterrupt);
+        setAbortFlagAndTriggerOperationCallback(false);
     }
-
-    return true;
 }
 
 void
@@ -1610,15 +1594,15 @@ ForkJoinShared::requestZoneGC(JS::Zone *zone, JS::gcreason::Reason reason)
 // ForkJoinContext
 //
 
-ForkJoinContext::ForkJoinContext(PerThreadData *perThreadData, uint32_t workerId,
+ForkJoinContext::ForkJoinContext(PerThreadData *perThreadData, ThreadPoolWorker *worker,
                                  Allocator *allocator, ForkJoinShared *shared,
                                  ParallelBailoutRecord *bailoutRecord)
   : ThreadSafeContext(shared->runtime(), perThreadData, Context_ForkJoin),
-    workerId(workerId),
     bailoutRecord(bailoutRecord),
     targetRegionStart(nullptr),
     targetRegionEnd(nullptr),
-    shared(shared),
+    shared_(shared),
+    worker_(worker),
     acquiredJSContext_(false),
     nogc_(shared->runtime())
 {
@@ -1640,19 +1624,19 @@ ForkJoinContext::ForkJoinContext(PerThreadData *perThreadData, uint32_t workerId
 bool
 ForkJoinContext::isMainThread() const
 {
-    return perThreadData == &shared->runtime()->mainThread;
+    return perThreadData == &shared_->runtime()->mainThread;
 }
 
 JSRuntime *
 ForkJoinContext::runtime()
 {
-    return shared->runtime();
+    return shared_->runtime();
 }
 
 JSContext *
 ForkJoinContext::acquireJSContext()
 {
-    JSContext *cx = shared->acquireJSContext();
+    JSContext *cx = shared_->acquireJSContext();
     JS_ASSERT(!acquiredJSContext_);
     acquiredJSContext_ = true;
     return cx;
@@ -1663,7 +1647,7 @@ ForkJoinContext::releaseJSContext()
 {
     JS_ASSERT(acquiredJSContext_);
     acquiredJSContext_ = false;
-    return shared->releaseJSContext();
+    return shared_->releaseJSContext();
 }
 
 bool
@@ -1675,32 +1659,33 @@ ForkJoinContext::hasAcquiredJSContext() const
 bool
 ForkJoinContext::check()
 {
-    if (runtime()->interruptPar)
-        return shared->check(*this);
-    else
-        return true;
+    if (runtime()->interruptPar) {
+        shared_->setAbortFlagDueToInterrupt(*this);
+        return false;
+    }
+    return true;
 }
 
 void
 ForkJoinContext::requestGC(JS::gcreason::Reason reason)
 {
-    shared->requestGC(reason);
+    shared_->requestGC(reason);
     bailoutRecord->setCause(ParallelBailoutRequestedGC);
-    shared->setAbortFlagAndTriggerOperationCallback(false);
+    shared_->setAbortFlagAndTriggerOperationCallback(false);
 }
 
 void
 ForkJoinContext::requestZoneGC(JS::Zone *zone, JS::gcreason::Reason reason)
 {
-    shared->requestZoneGC(zone, reason);
+    shared_->requestZoneGC(zone, reason);
     bailoutRecord->setCause(ParallelBailoutRequestedZoneGC);
-    shared->setAbortFlagAndTriggerOperationCallback(false);
+    shared_->setAbortFlagAndTriggerOperationCallback(false);
 }
 
 bool
 ForkJoinContext::setPendingAbortFatal(ParallelBailoutCause cause)
 {
-    shared->setPendingAbortFatal();
+    shared_->setPendingAbortFatal();
     bailoutRecord->setCause(cause);
     return false;
 }
@@ -1901,8 +1886,8 @@ class ParallelSpewer
             char bufbuf[BufferSize];
             JS_snprintf(bufbuf, BufferSize, "[%%sParallel:%%0%du%%s] ",
                         NumberOfDigits(cx->maxWorkerId));
-            JS_snprintf(buf, BufferSize, bufbuf, workerColor(cx->workerId),
-                        cx->workerId, reset());
+            JS_snprintf(buf, BufferSize, bufbuf, workerColor(cx->workerId()),
+                        cx->workerId(), reset());
         } else {
             JS_snprintf(buf, BufferSize, "[Parallel:M] ");
         }

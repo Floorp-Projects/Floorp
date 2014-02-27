@@ -3342,6 +3342,12 @@ WebGLContext::CompressedTexImage2D(GLenum target, GLint level, GLenum internalfo
         return;
     }
 
+    if (!ValidateCompTexImageSize(target, level, internalformat, 0, 0,
+                                  width, height, width, height, func))
+    {
+        return;
+    }
+
     MakeContextCurrent();
     gl->fCompressedTexImage2D(target, level, internalformat, width, height, border, byteLength, view.Data());
     WebGLTexture* tex = activeBoundTextureForTarget(target);
@@ -3376,6 +3382,10 @@ WebGLContext::CompressedTexSubImage2D(GLenum target, GLint level, GLint xoffset,
     MOZ_ASSERT(tex);
     WebGLTexture::ImageInfo& levelInfo = tex->ImageInfoAt(target, level);
 
+    uint32_t byteLength = view.Length();
+    if (!ValidateCompTexImageDataSize(target, format, width, height, byteLength, func))
+        return;
+
     if (!ValidateCompTexImageSize(target, level, format,
                                   xoffset, yoffset,
                                   width, height,
@@ -3384,10 +3394,6 @@ WebGLContext::CompressedTexSubImage2D(GLenum target, GLint level, GLint xoffset,
     {
         return;
     }
-
-    uint32_t byteLength = view.Length();
-    if (!ValidateCompTexImageDataSize(target, format, width, height, byteLength, func))
-        return;
 
     if (levelInfo.HasUninitializedImageData())
         tex->DoDeferredImageInitialization(target, level);
