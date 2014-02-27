@@ -132,6 +132,22 @@ interface nsITelephonyListener : nsISupports
                              in AString message);
 };
 
+[scriptable, uuid(c095aa82-aacb-4e53-a787-56a89c3f638e)]
+interface nsITelephonyCallback : nsISupports
+{
+  /**
+   * Called when a dial request fails.
+   * @param error
+   *        Error from RIL.
+   */
+  void notifyDialError(in AString error);
+
+  /**
+   * Called when a dial request succeeds.
+   */
+  void notifyDialSuccess();
+};
+
 %{C++
 #define TELEPHONY_PROVIDER_CID \
   { 0x9cf8aa52, 0x7c1c, 0x4cde, { 0x97, 0x4e, 0xed, 0x2a, 0xa0, 0xe7, 0x35, 0xfa } }
@@ -143,7 +159,7 @@ interface nsITelephonyListener : nsISupports
  * XPCOM component (in the content process) that provides the telephony
  * information.
  */
-[scriptable, uuid(4ff3ecb7-b024-4752-9dd6-c3623c6e6b8a)]
+[scriptable, uuid(b16ca98f-994f-4ae1-8c2d-e7b18e08d1f3)]
 interface nsITelephonyProvider : nsISupports
 {
   const unsigned short CALL_STATE_UNKNOWN = 0;
@@ -181,7 +197,7 @@ interface nsITelephonyProvider : nsISupports
    * Functionality for making and managing phone calls.
    */
   void dial(in unsigned long clientId, in DOMString number,
-            in boolean isEmergency);
+            in boolean isEmergency, in nsITelephonyCallback callback);
   void hangUp(in unsigned long clientId, in unsigned long callIndex);
 
   void startTone(in unsigned long clientId, in DOMString dtmfChar);
