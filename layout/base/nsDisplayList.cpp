@@ -3491,6 +3491,20 @@ nsDisplaySubDocument::BuildLayer(nsDisplayListBuilder* aBuilder,
   return layer.forget();
 }
 
+nsRect
+nsDisplaySubDocument::GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap)
+{
+  nsIFrame* rootScrollFrame = mFrame->PresContext()->PresShell()->GetRootScrollFrame();
+  nsIContent* content = rootScrollFrame ? rootScrollFrame->GetContent() : nullptr;
+  bool usingDisplayPort = content && nsLayoutUtils::GetDisplayPort(content);
+  if ((mFlags & GENERATE_SCROLLABLE_LAYER) && usingDisplayPort) {
+    *aSnap = false;
+    return mFrame->GetRect() + aBuilder->ToReferenceFrame(mFrame);
+  }
+
+  return nsDisplayOwnLayer::GetBounds(aBuilder, aSnap);
+}
+
 bool
 nsDisplaySubDocument::ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                         nsRegion* aVisibleRegion,
@@ -3523,6 +3537,33 @@ nsDisplaySubDocument::ComputeVisibility(nsDisplayListBuilder* aBuilder,
   // definitely need all the content under it.
 
   return visible;
+}
+
+bool
+nsDisplaySubDocument::ShouldBuildLayerEvenIfInvisible(nsDisplayListBuilder* aBuilder)
+{
+  nsIFrame* rootScrollFrame = mFrame->PresContext()->PresShell()->GetRootScrollFrame();
+  nsIContent* content = rootScrollFrame ? rootScrollFrame->GetContent() : nullptr;
+  bool usingDisplayPort = content && nsLayoutUtils::GetDisplayPort(content);
+  if ((mFlags & GENERATE_SCROLLABLE_LAYER) && usingDisplayPort) {
+    return true;
+  }
+
+  return nsDisplayOwnLayer::ShouldBuildLayerEvenIfInvisible(aBuilder);
+}
+
+nsRegion
+nsDisplaySubDocument::GetOpaqueRegion(nsDisplayListBuilder* aBuilder, bool* aSnap)
+{
+  nsIFrame* rootScrollFrame = mFrame->PresContext()->PresShell()->GetRootScrollFrame();
+  nsIContent* content = rootScrollFrame ? rootScrollFrame->GetContent() : nullptr;
+  bool usingDisplayPort = content && nsLayoutUtils::GetDisplayPort(content);
+  if ((mFlags & GENERATE_SCROLLABLE_LAYER) && usingDisplayPort) {
+    *aSnap = false;
+    return nsRegion();
+  }
+
+  return nsDisplayOwnLayer::GetOpaqueRegion(aBuilder, aSnap);
 }
 
 nsDisplayResolution::nsDisplayResolution(nsDisplayListBuilder* aBuilder,
