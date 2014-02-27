@@ -14,8 +14,8 @@ namespace dom {
 DragEvent::DragEvent(EventTarget* aOwner,
                      nsPresContext* aPresContext,
                      WidgetDragEvent* aEvent)
-  : nsDOMMouseEvent(aOwner, aPresContext, aEvent ? aEvent :
-                    new WidgetDragEvent(false, 0, nullptr))
+  : MouseEvent(aOwner, aPresContext,
+               aEvent ? aEvent : new WidgetDragEvent(false, 0, nullptr))
 {
   if (aEvent) {
     mEventIsInternal = false;
@@ -28,12 +28,12 @@ DragEvent::DragEvent(EventTarget* aOwner,
   }
 }
 
-NS_IMPL_ADDREF_INHERITED(DragEvent, nsDOMMouseEvent)
-NS_IMPL_RELEASE_INHERITED(DragEvent, nsDOMMouseEvent)
+NS_IMPL_ADDREF_INHERITED(DragEvent, MouseEvent)
+NS_IMPL_RELEASE_INHERITED(DragEvent, MouseEvent)
 
 NS_INTERFACE_MAP_BEGIN(DragEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMDragEvent)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMMouseEvent)
+NS_INTERFACE_MAP_END_INHERITING(MouseEvent)
 
 void
 DragEvent::InitDragEvent(const nsAString& aType,
@@ -55,11 +55,10 @@ DragEvent::InitDragEvent(const nsAString& aType,
                          ErrorResult& aError)
 {
   aError =
-    nsDOMMouseEvent::InitMouseEvent(aType, aCanBubble, aCancelable,
-                                    aView, aDetail, aScreenX, aScreenY,
-                                    aClientX, aClientY, aCtrlKey, aAltKey,
-                                    aShiftKey, aMetaKey, aButton,
-                                    aRelatedTarget);
+    MouseEvent::InitMouseEvent(aType, aCanBubble, aCancelable,
+                               aView, aDetail, aScreenX, aScreenY,
+                               aClientX, aClientY, aCtrlKey, aAltKey,
+                               aShiftKey, aMetaKey, aButton, aRelatedTarget);
   if (aError.Failed()) {
     return;
   }
@@ -90,10 +89,11 @@ DragEvent::InitDragEvent(const nsAString& aType,
   nsCOMPtr<DataTransfer> dataTransfer = do_QueryInterface(aDataTransfer);
   NS_ENSURE_ARG(dataTransfer);
 
-  nsresult rv = nsDOMMouseEvent::InitMouseEvent(aType, aCanBubble, aCancelable,
-                  aView, aDetail, aScreenX, aScreenY, aClientX, aClientY,
-                  aCtrlKey, aAltKey, aShiftKey, aMetaKey, aButton,
-                  aRelatedTarget);
+  nsresult rv =
+    MouseEvent::InitMouseEvent(aType, aCanBubble, aCancelable, aView, aDetail,
+                               aScreenX, aScreenY, aClientX, aClientY,
+                               aCtrlKey, aAltKey, aShiftKey, aMetaKey, aButton,
+                               aRelatedTarget);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (mEventIsInternal && mEvent) {

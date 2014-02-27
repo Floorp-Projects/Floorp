@@ -7,7 +7,7 @@
 #define mozilla_dom_DragEvent_h_
 
 #include "nsIDOMDragEvent.h"
-#include "nsDOMMouseEvent.h"
+#include "mozilla/dom/MouseEvent.h"
 #include "mozilla/dom/DragEventBinding.h"
 #include "mozilla/EventForwards.h"
 
@@ -16,7 +16,7 @@ namespace dom {
 
 class DataTransfer;
 
-class DragEvent : public nsDOMMouseEvent,
+class DragEvent : public MouseEvent,
                   public nsIDOMDragEvent
 {
 public:
@@ -28,7 +28,7 @@ public:
 
   NS_DECL_NSIDOMDRAGEVENT
 
-  NS_FORWARD_TO_NSDOMMOUSEEVENT
+  NS_FORWARD_TO_MOUSEEVENT
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE

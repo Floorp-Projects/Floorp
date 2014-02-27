@@ -14,9 +14,9 @@ namespace dom {
 WheelEvent::WheelEvent(EventTarget* aOwner,
                        nsPresContext* aPresContext,
                        WidgetWheelEvent* aWheelEvent)
-  : nsDOMMouseEvent(aOwner, aPresContext,
-                    aWheelEvent ? aWheelEvent :
-                                  new WidgetWheelEvent(false, 0, nullptr))
+  : MouseEvent(aOwner, aPresContext,
+               aWheelEvent ? aWheelEvent :
+                             new WidgetWheelEvent(false, 0, nullptr))
 {
   if (aWheelEvent) {
     mEventIsInternal = false;
@@ -28,12 +28,12 @@ WheelEvent::WheelEvent(EventTarget* aOwner,
   }
 }
 
-NS_IMPL_ADDREF_INHERITED(WheelEvent, nsDOMMouseEvent)
-NS_IMPL_RELEASE_INHERITED(WheelEvent, nsDOMMouseEvent)
+NS_IMPL_ADDREF_INHERITED(WheelEvent, MouseEvent)
+NS_IMPL_RELEASE_INHERITED(WheelEvent, MouseEvent)
 
 NS_INTERFACE_MAP_BEGIN(WheelEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMWheelEvent)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMMouseEvent)
+NS_INTERFACE_MAP_END_INHERITING(MouseEvent)
 
 NS_IMETHODIMP
 WheelEvent::InitWheelEvent(const nsAString& aType,
@@ -54,10 +54,9 @@ WheelEvent::InitWheelEvent(const nsAString& aType,
                            uint32_t aDeltaMode)
 {
   nsresult rv =
-    nsDOMMouseEvent::InitMouseEvent(aType, aCanBubble, aCancelable, aView,
-                                    aDetail, aScreenX, aScreenY,
-                                    aClientX, aClientY, aButton,
-                                    aRelatedTarget, aModifiersList);
+    MouseEvent::InitMouseEvent(aType, aCanBubble, aCancelable, aView, aDetail,
+                               aScreenX, aScreenY, aClientX, aClientY, aButton,
+                               aRelatedTarget, aModifiersList);
   NS_ENSURE_SUCCESS(rv, rv);
 
   WidgetWheelEvent* wheelEvent = mEvent->AsWheelEvent();

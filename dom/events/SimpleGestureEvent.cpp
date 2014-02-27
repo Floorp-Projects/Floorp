@@ -13,9 +13,9 @@ namespace dom {
 SimpleGestureEvent::SimpleGestureEvent(EventTarget* aOwner,
                                        nsPresContext* aPresContext,
                                        WidgetSimpleGestureEvent* aEvent)
-  : nsDOMMouseEvent(aOwner, aPresContext,
-                    aEvent ? aEvent :
-                             new WidgetSimpleGestureEvent(false, 0, nullptr))
+  : MouseEvent(aOwner, aPresContext,
+               aEvent ? aEvent :
+                        new WidgetSimpleGestureEvent(false, 0, nullptr))
 {
   NS_ASSERTION(mEvent->eventStructType == NS_SIMPLE_GESTURE_EVENT, "event type mismatch");
 
@@ -30,12 +30,12 @@ SimpleGestureEvent::SimpleGestureEvent(EventTarget* aOwner,
   }
 }
 
-NS_IMPL_ADDREF_INHERITED(SimpleGestureEvent, nsDOMUIEvent)
-NS_IMPL_RELEASE_INHERITED(SimpleGestureEvent, nsDOMUIEvent)
+NS_IMPL_ADDREF_INHERITED(SimpleGestureEvent, MouseEvent)
+NS_IMPL_RELEASE_INHERITED(SimpleGestureEvent, MouseEvent)
 
 NS_INTERFACE_MAP_BEGIN(SimpleGestureEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSimpleGestureEvent)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMMouseEvent)
+NS_INTERFACE_MAP_END_INHERITING(MouseEvent)
 
 /* attribute unsigned long allowedDirections; */
 uint32_t
@@ -125,21 +125,12 @@ SimpleGestureEvent::InitSimpleGestureEvent(const nsAString& aTypeArg,
                                            double aDeltaArg,
                                            uint32_t aClickCountArg)
 {
-  nsresult rv = nsDOMMouseEvent::InitMouseEvent(aTypeArg,
-                                                aCanBubbleArg,
-                                                aCancelableArg,
-                                                aViewArg,
-                                                aDetailArg,
-                                                aScreenX, 
-                                                aScreenY,
-                                                aClientX,
-                                                aClientY,
-                                                aCtrlKeyArg,
-                                                aAltKeyArg,
-                                                aShiftKeyArg,
-                                                aMetaKeyArg,
-                                                aButton,
-                                                aRelatedTarget);
+  nsresult rv =
+    MouseEvent::InitMouseEvent(aTypeArg, aCanBubbleArg, aCancelableArg,
+                               aViewArg, aDetailArg,
+                               aScreenX, aScreenY, aClientX, aClientY,
+                               aCtrlKeyArg, aAltKeyArg, aShiftKeyArg,
+                               aMetaKeyArg, aButton, aRelatedTarget);
   NS_ENSURE_SUCCESS(rv, rv);
 
   WidgetSimpleGestureEvent* simpleGestureEvent = mEvent->AsSimpleGestureEvent();

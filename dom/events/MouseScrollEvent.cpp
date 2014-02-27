@@ -13,9 +13,8 @@ namespace dom {
 MouseScrollEvent::MouseScrollEvent(EventTarget* aOwner,
                                    nsPresContext* aPresContext,
                                    WidgetMouseScrollEvent* aEvent)
-  : nsDOMMouseEvent(aOwner, aPresContext,
-                    aEvent ? aEvent :
-                             new WidgetMouseScrollEvent(false, 0, nullptr))
+  : MouseEvent(aOwner, aPresContext,
+               aEvent ? aEvent : new WidgetMouseScrollEvent(false, 0, nullptr))
 {
   if (aEvent) {
     mEventIsInternal = false;
@@ -30,12 +29,12 @@ MouseScrollEvent::MouseScrollEvent(EventTarget* aOwner,
   mDetail = mEvent->AsMouseScrollEvent()->delta;
 }
 
-NS_IMPL_ADDREF_INHERITED(MouseScrollEvent, nsDOMMouseEvent)
-NS_IMPL_RELEASE_INHERITED(MouseScrollEvent, nsDOMMouseEvent)
+NS_IMPL_ADDREF_INHERITED(MouseScrollEvent, MouseEvent)
+NS_IMPL_RELEASE_INHERITED(MouseScrollEvent, MouseEvent)
 
 NS_INTERFACE_MAP_BEGIN(MouseScrollEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMouseScrollEvent)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMMouseEvent)
+NS_INTERFACE_MAP_END_INHERITING(MouseEvent)
 
 NS_IMETHODIMP
 MouseScrollEvent::InitMouseScrollEvent(const nsAString& aType,
@@ -55,9 +54,11 @@ MouseScrollEvent::InitMouseScrollEvent(const nsAString& aType,
                                        nsIDOMEventTarget* aRelatedTarget,
                                        int32_t aAxis)
 {
-  nsresult rv = nsDOMMouseEvent::InitMouseEvent(aType, aCanBubble, aCancelable, aView, aDetail,
-                                                aScreenX, aScreenY, aClientX, aClientY, aCtrlKey,
-                                                aAltKey, aShiftKey, aMetaKey, aButton, aRelatedTarget);
+  nsresult rv =
+    MouseEvent::InitMouseEvent(aType, aCanBubble, aCancelable, aView, aDetail,
+                               aScreenX, aScreenY, aClientX, aClientY,
+                               aCtrlKey, aAltKey, aShiftKey, aMetaKey, aButton,
+                               aRelatedTarget);
   NS_ENSURE_SUCCESS(rv, rv);
   mEvent->AsMouseScrollEvent()->isHorizontal = (aAxis == HORIZONTAL_AXIS);
   return NS_OK;
