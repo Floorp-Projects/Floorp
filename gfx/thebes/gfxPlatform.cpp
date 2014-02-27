@@ -413,9 +413,6 @@ gfxPlatform::Init()
     gPlatform->mFontPrefsObserver = new FontPrefsObserver();
     Preferences::AddStrongObservers(gPlatform->mFontPrefsObserver, kObservedPrefs);
 
-    mozilla::Preferences::AddBoolVarCache(&gPlatform->mWidgetUpdateFlashing,
-                                          "nglayout.debug.widget_update_flashing");
-
     mozilla::gl::GLContext::PlatformStartup();
 
 #ifdef MOZ_WIDGET_ANDROID
@@ -838,7 +835,7 @@ gfxPlatform::SupportsAzureContentForDrawTarget(DrawTarget* aTarget)
 bool
 gfxPlatform::UseAcceleratedSkiaCanvas()
 {
-  return Preferences::GetBool("gfx.canvas.azure.accelerated", false) &&
+  return gfxPrefs::CanvasAzureAccelerated() &&
          mPreferredCanvasBackend == BackendType::SKIA;
 }
 
@@ -1965,10 +1962,6 @@ gfxPlatform::OptimalFormatForContent(gfxContentType aContent)
  * and remember the values.  Changing these preferences during the run will
  * not have any effect until we restart.
  */
-static bool sPrefLayersOffMainThreadCompositionEnabled = false;
-static bool sPrefLayersOffMainThreadCompositionTestingEnabled = false;
-static bool sPrefLayersOffMainThreadCompositionForceEnabled = false;
-static bool sPrefLayersAccelerationDisabled = false;
 static bool sPrefLayersPreferOpenGL = false;
 static bool sPrefLayersPreferD3D9 = false;
 static bool sPrefLayersEnableTiles = false;
@@ -1989,10 +1982,6 @@ InitLayersAccelerationPrefs()
     // explicit.
     MOZ_ASSERT(NS_IsMainThread(), "can only initialize prefs on the main thread");
 
-    sPrefLayersOffMainThreadCompositionEnabled = Preferences::GetBool("layers.offmainthreadcomposition.enabled", false);
-    sPrefLayersOffMainThreadCompositionTestingEnabled = Preferences::GetBool("layers.offmainthreadcomposition.testing.enabled", false);
-    sPrefLayersOffMainThreadCompositionForceEnabled = Preferences::GetBool("layers.offmainthreadcomposition.force-enabled", false);
-    sPrefLayersAccelerationDisabled = Preferences::GetBool("layers.acceleration.disabled", false);
     sPrefLayersPreferOpenGL = Preferences::GetBool("layers.prefer-opengl", false);
     sPrefLayersPreferD3D9 = Preferences::GetBool("layers.prefer-d3d9", false);
     sPrefLayersEnableTiles = Preferences::GetBool("layers.enable-tiles", false);
@@ -2022,16 +2011,9 @@ bool
 gfxPlatform::GetPrefLayersOffMainThreadCompositionEnabled()
 {
   InitLayersAccelerationPrefs();
-  return sPrefLayersOffMainThreadCompositionEnabled ||
-         sPrefLayersOffMainThreadCompositionForceEnabled ||
-         sPrefLayersOffMainThreadCompositionTestingEnabled;
-}
-
-bool
-gfxPlatform::GetPrefLayersOffMainThreadCompositionForceEnabled()
-{
-  InitLayersAccelerationPrefs();
-  return sPrefLayersOffMainThreadCompositionForceEnabled;
+  return gfxPrefs::LayersOffMainThreadCompositionEnabled() ||
+         gfxPrefs::LayersOffMainThreadCompositionForceEnabled() ||
+         gfxPrefs::LayersOffMainThreadCompositionTestingEnabled();
 }
 
 bool gfxPlatform::OffMainThreadCompositionRequired()
