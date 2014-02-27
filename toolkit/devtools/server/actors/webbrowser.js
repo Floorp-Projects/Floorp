@@ -929,7 +929,7 @@ BrowserTabActor.prototype = {
     let isNative = false;
     try {
       let console = aWindow.wrappedJSObject.console;
-      isNative = "__mozillaConsole__" in console;
+      isNative = console instanceof aWindow.Console;
     }
     catch (ex) { }
     return isNative;
