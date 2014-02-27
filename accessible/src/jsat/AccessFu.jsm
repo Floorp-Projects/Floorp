@@ -197,8 +197,9 @@ this.AccessFu = {
   },
 
   receiveMessage: function receiveMessage(aMessage) {
-    if (Logger.logLevel >= Logger.DEBUG)
-      Logger.debug('Recieved', aMessage.name, JSON.stringify(aMessage.json));
+    Logger.debug(() => {
+      return ['Recieved', aMessage.name, JSON.stringify(aMessage.json)];
+    });
 
     switch (aMessage.name) {
       case 'AccessFu:Ready':

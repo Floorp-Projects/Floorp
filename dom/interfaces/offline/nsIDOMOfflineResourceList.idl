@@ -5,15 +5,13 @@
 
 #include "domstubs.idl"
 
-interface nsIDOMDOMStringList;
-
-[scriptable, uuid(c105fe6f-5603-40b2-b3d0-84cb51fab9f4)]
+[scriptable, uuid(6044702d-e4a9-420c-b711-558b7d6a3b9f)]
 interface nsIDOMOfflineResourceList : nsISupports
 {
   /**
    * Get the list of dynamically-managed entries.
    */
-  readonly attribute nsIDOMDOMStringList mozItems;
+  readonly attribute nsISupports mozItems;
 
   /**
    * Check that an entry exists in the list of dynamically-managed entries.

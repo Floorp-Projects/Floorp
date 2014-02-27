@@ -26,9 +26,14 @@
 #include "nsPIDOMWindow.h"
 #include "nsDOMEventTargetHelper.h"
 #include "mozilla/ErrorResult.h"
-#include "nsIDOMDOMStringList.h"
 
 class nsIDOMWindow;
+
+namespace mozilla {
+namespace dom {
+class DOMStringList;
+} // namespace dom
+} // namespace mozilla
 
 class nsDOMOfflineResourceList : public nsDOMEventTargetHelper,
                                  public nsIDOMOfflineResourceList,
@@ -88,12 +93,7 @@ public:
   IMPL_EVENT_HANDLER(updateready)
   IMPL_EVENT_HANDLER(obsolete)
 
-  already_AddRefed<nsIDOMDOMStringList> GetMozItems(ErrorResult& aRv)
-  {
-    nsCOMPtr<nsIDOMDOMStringList> items;
-    aRv = GetMozItems(getter_AddRefs(items));
-    return items.forget();
-  }
+  already_AddRefed<mozilla::dom::DOMStringList> GetMozItems(ErrorResult& aRv);
   bool MozHasItem(const nsAString& aURI, ErrorResult& aRv)
   {
     bool hasItem = false;

@@ -133,7 +133,6 @@ class MercurialConfig(object):
             except KeyError:
                 pass
 
-
     def have_qnew_currentuser_default(self):
         if 'defaults' not in self._c:
             return False
@@ -154,8 +153,6 @@ class MercurialConfig(object):
 
         d = self._c['defaults']
         if 'qnew' not in d:
-          d['qnew'] = '-U'
+            d['qnew'] = '-U'
         else:
-          d['qnew'] = '-U ' + d['qnew']
-
-
+            d['qnew'] = '-U ' + d['qnew']

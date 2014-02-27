@@ -14,6 +14,7 @@
 #include "mozilla/dom/CameraManagerBinding.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
+#include "nsPIDOMWindow.h"
 
 struct JSContext;
 class nsPIDOMWindow;
