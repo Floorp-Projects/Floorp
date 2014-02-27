@@ -87,8 +87,8 @@ this.startup = function(window) {
     if (window.document && window.document.getElementById("content")) {
       deferredWindowLoad.resolve();
     } else {
-      window.addEventListener("load", function onLoad() {
-        window.removeEventListener("load", onLoad, false);
+      window.addEventListener("DOMContentLoaded", function onLoad() {
+        window.removeEventListener("DOMContentLoaded", onLoad, false);
         deferredWindowLoad.resolve();
       });
     }
@@ -96,12 +96,8 @@ this.startup = function(window) {
     // Wait for webapps registry loading.
     yield DOMApplicationRegistry.registryStarted;
 
-    // Install/update permissions and get the appID from the webapps registry.
-    let appID = Ci.nsIScriptSecurityManager.NO_APP_ID;
     let manifestURL = WebappRT.config.app.manifestURL;
     if (manifestURL) {
-      appID = DOMApplicationRegistry.getAppLocalIdByManifestURL(manifestURL);
-
       // On firstrun, set permissions to their default values.
       // When the webapp runtime is updated, update the permissions.
       // TODO: Update the permissions when the application is updated.
@@ -129,7 +125,15 @@ this.startup = function(window) {
     let appBrowser = window.document.getElementById("content");
 
     // Set the principal to the correct appID and launch the application.
-    appBrowser.docShell.setIsApp(appID);
+    appBrowser.docShell.setIsApp(WebappRT.appID);
     appBrowser.setAttribute("src", WebappRT.launchURI);
+
+    if (WebappRT.config.app.manifest.fullscreen) {
+      appBrowser.addEventListener("load", function onLoad() {
+        appBrowser.removeEventListener("load", onLoad, true);
+        appBrowser.contentDocument.
+          documentElement.mozRequestFullScreen();
+      }, true);
+    }
   }).then(null, Cu.reportError.bind(Cu));
 }
