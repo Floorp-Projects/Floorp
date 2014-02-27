@@ -395,8 +395,7 @@ NS_IMETHODIMP
 DocAccessible::GetNameSpaceURIForID(int16_t aNameSpaceID, nsAString& aNameSpaceURI)
 {
   if (mDocumentNode) {
-    nsCOMPtr<nsINameSpaceManager> nameSpaceManager =
-        do_GetService(NS_NAMESPACEMANAGER_CONTRACTID);
+    nsNameSpaceManager* nameSpaceManager = nsNameSpaceManager::GetInstance();
     if (nameSpaceManager)
       return nameSpaceManager->GetNameSpaceURI(aNameSpaceID, aNameSpaceURI);
   }
