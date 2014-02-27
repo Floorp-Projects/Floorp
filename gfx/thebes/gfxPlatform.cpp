@@ -109,8 +109,6 @@ static int gCMSIntent = -2;
 static void ShutdownCMS();
 static void MigratePrefs();
 
-static bool sDrawFrameCounter = false;
-
 #include "mozilla/gfx/2D.h"
 using namespace mozilla::gfx;
 
@@ -249,9 +247,6 @@ static const char *gPrefLangNames[] = {
 gfxPlatform::gfxPlatform()
   : mAzureCanvasBackendCollector(MOZ_THIS_IN_INITIALIZER_LIST(),
                                  &gfxPlatform::GetAzureBackendInfo)
-  , mDrawLayerBorders(false)
-  , mDrawTileBorders(false)
-  , mDrawBigImageBorders(false)
 {
     mUseHarfBuzzScripts = UNINITIALIZED_VALUE;
     mAllowDownloadableFonts = UNINITIALIZED_VALUE;
@@ -273,16 +268,6 @@ gfxPlatform::gfxPlatform()
 #else
     mLayersUseDeprecated = false;
 #endif
-
-    Preferences::AddBoolVarCache(&mDrawLayerBorders,
-                                 "layers.draw-borders",
-                                 false);
-    Preferences::AddBoolVarCache(&mDrawTileBorders,
-                                 "layers.draw-tile-borders",
-                                 false);
-    Preferences::AddBoolVarCache(&mDrawBigImageBorders,
-                                 "layers.draw-bigimage-borders",
-                                 false);
 
     uint32_t canvasMask = BackendTypeBit(BackendType::CAIRO) | BackendTypeBit(BackendType::SKIA);
     uint32_t contentMask = BackendTypeBit(BackendType::CAIRO);
@@ -444,10 +429,6 @@ gfxPlatform::Init()
         = do_CreateInstance("@mozilla.org/gfx/init;1");
 
     Preferences::RegisterCallbackAndCall(RecordingPrefChanged, "gfx.2d.recording", nullptr);
-
-    mozilla::Preferences::AddBoolVarCache(&sDrawFrameCounter,
-                                          "layers.frame-counter",
-                                          false);
 
     CreateCMSOutputProfile();
 
@@ -1315,22 +1296,16 @@ mozilla::layers::DiagnosticTypes
 gfxPlatform::GetLayerDiagnosticTypes()
 {
   mozilla::layers::DiagnosticTypes type = DIAGNOSTIC_NONE;
-  if (mDrawLayerBorders) {
+  if (gfxPrefs::DrawLayerBorders()) {
     type |= mozilla::layers::DIAGNOSTIC_LAYER_BORDERS;
   }
-  if (mDrawTileBorders) {
+  if (gfxPrefs::DrawTileBorders()) {
     type |= mozilla::layers::DIAGNOSTIC_TILE_BORDERS;
   }
-  if (mDrawBigImageBorders) {
+  if (gfxPrefs::DrawBigImageBorders()) {
     type |= mozilla::layers::DIAGNOSTIC_BIGIMAGE_BORDERS;
   }
   return type;
-}
-
-bool
-gfxPlatform::DrawFrameCounter()
-{
-    return sDrawFrameCounter;
 }
 
 void
@@ -1527,38 +1502,6 @@ gfxPlatform::GetBackendPref(const char* aBackendPrefName, uint32_t &aBackendBitm
 
     aBackendBitmask = allowedBackends;
     return result;
-}
-
-bool
-gfxPlatform::UseProgressiveTilePainting()
-{
-    static bool sUseProgressiveTilePainting;
-    static bool sUseProgressiveTilePaintingPrefCached = false;
-
-    if (!sUseProgressiveTilePaintingPrefCached) {
-        sUseProgressiveTilePaintingPrefCached = true;
-        mozilla::Preferences::AddBoolVarCache(&sUseProgressiveTilePainting,
-                                              "layers.progressive-paint",
-                                              false);
-    }
-
-    return sUseProgressiveTilePainting;
-}
-
-bool
-gfxPlatform::UseLowPrecisionBuffer()
-{
-    static bool sUseLowPrecisionBuffer;
-    static bool sUseLowPrecisionBufferPrefCached = false;
-
-    if (!sUseLowPrecisionBufferPrefCached) {
-        sUseLowPrecisionBufferPrefCached = true;
-        mozilla::Preferences::AddBoolVarCache(&sUseLowPrecisionBuffer,
-                                              "layers.low-precision-buffer",
-                                              false);
-    }
-
-    return sUseLowPrecisionBuffer;
 }
 
 float
@@ -2028,9 +1971,6 @@ static bool sPrefLayersOffMainThreadCompositionForceEnabled = false;
 static bool sPrefLayersAccelerationDisabled = false;
 static bool sPrefLayersPreferOpenGL = false;
 static bool sPrefLayersPreferD3D9 = false;
-static bool sPrefLayersDrawFPS = false;
-static bool sPrefLayersDump = false;
-static bool sPrefLayersScrollGraph = false;
 static bool sPrefLayersEnableTiles = false;
 static bool sLayersSupportsD3D9 = false;
 static bool sBufferRotationCheckPref = true;
@@ -2055,12 +1995,8 @@ InitLayersAccelerationPrefs()
     sPrefLayersAccelerationDisabled = Preferences::GetBool("layers.acceleration.disabled", false);
     sPrefLayersPreferOpenGL = Preferences::GetBool("layers.prefer-opengl", false);
     sPrefLayersPreferD3D9 = Preferences::GetBool("layers.prefer-d3d9", false);
-    sPrefLayersDump = Preferences::GetBool("layers.dump", false);
-    sPrefLayersScrollGraph = Preferences::GetBool("layers.scroll-graph", false);
     sPrefLayersEnableTiles = Preferences::GetBool("layers.enable-tiles", false);
     sPrefBrowserTabsRemoteAutostart = Preferences::GetBool("browser.tabs.remote.autostart", false);
-
-    Preferences::AddBoolVarCache(&sPrefLayersDrawFPS, "layers.acceleration.draw-fps", false);
 
 #ifdef XP_WIN
     if (gfxPrefs::LayersAccelerationForceEnabled()) {
@@ -2125,35 +2061,12 @@ gfxPlatform::GetPrefLayersPreferD3D9()
 }
 
 bool
-gfxPlatform::GetPrefLayersDrawFPS()
-{
-  InitLayersAccelerationPrefs();
-  return sPrefLayersDrawFPS;
-}
-
-bool
 gfxPlatform::CanUseDirect3D9()
 {
   // this function is called from the compositor thread, so it is not
   // safe to init the prefs etc. from here.
   MOZ_ASSERT(sLayersAccelerationPrefsInitialized);
   return sLayersSupportsD3D9;
-}
-
-bool
-gfxPlatform::GetPrefLayersDump()
-{
-  InitLayersAccelerationPrefs();
-  return sPrefLayersDump;
-}
-
-bool
-gfxPlatform::GetPrefLayersScrollGraph()
-{
-  // this function is called from the compositor thread, so it is not
-  // safe to init the prefs etc. from here.
-  MOZ_ASSERT(sLayersAccelerationPrefsInitialized);
-  return sPrefLayersScrollGraph;
 }
 
 bool
