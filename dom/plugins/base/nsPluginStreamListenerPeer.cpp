@@ -350,9 +350,7 @@ nsresult nsPluginStreamListenerPeer::Initialize(nsIURI *aURL,
 
   mPendingRequests = 1;
 
-  mDataForwardToRequest = new nsHashtable(16, false);
-  if (!mDataForwardToRequest)
-    return NS_ERROR_FAILURE;
+  mDataForwardToRequest = new nsHashtable();
 
   return NS_OK;
 }
@@ -366,7 +364,7 @@ nsresult
 nsPluginStreamListenerPeer::SetupPluginCacheFile(nsIChannel* channel)
 {
   nsresult rv = NS_OK;
-  
+
   bool useExistingCacheFile = false;
   nsRefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();
 

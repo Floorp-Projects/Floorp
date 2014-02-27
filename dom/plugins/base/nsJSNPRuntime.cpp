@@ -1730,13 +1730,8 @@ nsNPObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, NPObject *npobj)
 
   if (!sNPObjWrappers.ops) {
     // No hash yet (or any more), initialize it.
-
-    if (!PL_DHashTableInit(&sNPObjWrappers, PL_DHashGetStubOps(), nullptr,
-                           sizeof(NPObjWrapperHashEntry), 16)) {
-      NS_ERROR("Error initializing PLDHashTable!");
-
-      return nullptr;
-    }
+    PL_DHashTableInit(&sNPObjWrappers, PL_DHashGetStubOps(), nullptr,
+                      sizeof(NPObjWrapperHashEntry), 16);
   }
 
   NPObjWrapperHashEntry *entry = static_cast<NPObjWrapperHashEntry *>
