@@ -27,7 +27,7 @@
 #include "nsIXULSortService.h"
 #include "nsTArray.h"
 #include "nsUnicharUtils.h"
-#include "nsINameSpaceManager.h"
+#include "nsNameSpaceManager.h"
 #include "nsDOMClassInfoID.h"
 #include "nsWhitespaceTokenizer.h"
 #include "nsTreeContentView.h"

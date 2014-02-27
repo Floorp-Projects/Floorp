@@ -25,9 +25,9 @@
 #include "nsIDOMXULTextboxElement.h"
 #include "nsIEditor.h"
 #include "nsIFrame.h"
-#include "nsINameSpaceManager.h"
 #include "nsITextControlFrame.h"
 #include "nsMenuPopupFrame.h"
+#include "nsNameSpaceManager.h"
 #include "mozilla/dom/Element.h"
 
 using namespace mozilla::a11y;

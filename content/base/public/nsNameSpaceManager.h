@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsINameSpaceManager_h___
-#define nsINameSpaceManager_h___
+#ifndef nsNameSpaceManager_h___
+#define nsNameSpaceManager_h___
 
 #include "nsDataHashtable.h"
 #include "nsTArray.h"
@@ -108,4 +108,4 @@ private:
   static mozilla::StaticAutoPtr<nsNameSpaceManager> sInstance;
 };
  
-#endif // nsINameSpaceManager_h___
+#endif // nsNameSpaceManager_h___
