@@ -134,30 +134,17 @@ class MercurialSetupWizard(object):
                 print('Fixed patch settings.')
                 print('')
 
+        self.prompt_native_extension(c, 'progress',
+            'Would you like to see progress bars during Mercurial operations')
+
+        self.prompt_native_extension(c, 'color',
+            'Would you like Mercurial to colorize output to your terminal')
+
+        self.prompt_native_extension(c, 'rebase',
+            'Would you like to enable the rebase extension to allow you to move'
+            ' changesets around (which can help maintain a linear history)')
+
         active = c.extensions
-
-        if 'progress' not in active:
-            if self._prompt_yn('Would you like to see progress bars during '
-                'long-running Mercurial operations'):
-                c.activate_extension('progress')
-                print('Activated progress extension.')
-                print('')
-
-        if 'color' not in active:
-            if self._prompt_yn('Would you like Mercurial to colorize output '
-                'to your terminal'):
-                c.activate_extension('color')
-                print('Activated color extension.')
-                print('')
-
-        if 'rebase' not in active:
-            if self._prompt_yn('Would you like to enable the rebase extension '
-                'to allow you to move changesets around (which can help '
-                'maintain a linear history)'):
-                c.activate_extension('rebase')
-                print('Activated rebase extension.')
-                print('')
-
         update_vcs_tools = False
         activate_bzexport = False
 
@@ -176,12 +163,8 @@ class MercurialSetupWizard(object):
             print('Activated bzexport extension.')
             print('')
 
-        if 'mq' not in active:
-            if self._prompt_yn('Would you like to activate the mq extension '
-                'to manage patches'):
-                c.activate_extension('mq')
-                print('Activated mq extension.')
-                print('')
+        self.prompt_native_extension(c, 'mq',
+            'Would you like to activate the mq extension to manage patches')
 
         active = c.extensions
 
@@ -280,6 +263,14 @@ class MercurialSetupWizard(object):
 
         print(FINISHED)
         return 0
+
+    def prompt_native_extension(self, c, name, prompt_text):
+        # Ask the user if the specified extension bundled with Mercurial should be enabled.
+        if name in c.extensions:
+            return
+        if self._prompt_yn(prompt_text):
+            c.activate_extension(name)
+            print('Activated %s extension.\n' % name)
 
     def update_mercurial_repo(self, hg, url, dest, branch, msg):
         # We always pass the host fingerprints that we "know" to be canonical
