@@ -129,9 +129,7 @@ BasicImageLayer::GetAndPaintCurrentImage(DrawTarget* aTarget,
     // The visible region can extend outside the image, so just draw
     // within the image bounds.
     SurfacePattern pat(surf, ExtendMode::CLAMP, Matrix(), ToFilter(mFilter));
-    CompositionOp mixBlendMode = GetEffectiveMixBlendMode();
-    CompositionOp op =
-    mixBlendMode != CompositionOp::OP_OVER ? mixBlendMode : GetOperator();
+    CompositionOp op = GetEffectiveOperator(this);
     DrawOptions opts(aOpacity, op);
 
     aTarget->MaskSurface(pat, aMaskSurface, Point(0, 0), opts);
@@ -171,9 +169,7 @@ BasicImageLayer::DeprecatedGetAndPaintCurrentImage(gfxContext* aContext,
   // The visible region can extend outside the image, so just draw
   // within the image bounds.
   if (aContext) {
-    CompositionOp mixBlendMode = GetEffectiveMixBlendMode();
-    CompositionOp op =
-      mixBlendMode != CompositionOp::OP_OVER ? mixBlendMode : GetOperator();
+    CompositionOp op = GetEffectiveOperator(this);
     AutoSetOperator setOptimizedOperator(aContext, ThebesOp(op));
 
     DeprecatedPaintContext(pat,
