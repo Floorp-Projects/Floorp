@@ -675,22 +675,22 @@ nsContentSink::ProcessLink(const nsSubstring& aAnchor, const nsSubstring& aHref,
     return NS_OK;
   }
   
-  bool hasPrefetch = linkTypes & PREFETCH;
+  bool hasPrefetch = linkTypes & nsStyleLinkElement::ePREFETCH;
   // prefetch href if relation is "next" or "prefetch"
-  if (hasPrefetch || (linkTypes & NEXT)) {
+  if (hasPrefetch || (linkTypes & nsStyleLinkElement::eNEXT)) {
     PrefetchHref(aHref, mDocument, hasPrefetch);
   }
 
-  if (!aHref.IsEmpty() && (linkTypes & DNS_PREFETCH)) {
+  if (!aHref.IsEmpty() && (linkTypes & nsStyleLinkElement::eDNS_PREFETCH)) {
     PrefetchDNS(aHref);
   }
 
   // is it a stylesheet link?
-  if (!(linkTypes & STYLESHEET)) {
+  if (!(linkTypes & nsStyleLinkElement::eSTYLESHEET)) {
     return NS_OK;
   }
 
-  bool isAlternate = linkTypes & ALTERNATE;
+  bool isAlternate = linkTypes & nsStyleLinkElement::eALTERNATE;
   return ProcessStyleLink(nullptr, aHref, isAlternate, aTitle, aType,
                           aMedia);
 }
