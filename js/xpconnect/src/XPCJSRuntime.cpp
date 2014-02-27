@@ -1759,6 +1759,8 @@ ReportZoneStats(const JS::ZoneStats &zStats,
     const nsAutoCString& pathPrefix = extras.pathPrefix;
     size_t gcTotal = 0, sundriesGCHeap = 0, sundriesMallocHeap = 0;
 
+    MOZ_ASSERT(!gcTotalOut == zStats.isTotals);
+
     ZCREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("gc-heap-arena-admin"),
         zStats.gcHeapArenaAdmin,
         "Bookkeeping information and alignment padding within GC arenas.");
@@ -1802,6 +1804,8 @@ ReportZoneStats(const JS::ZoneStats &zStats,
     for (size_t i = 0; i < zStats.notableStrings.length(); i++) {
         const JS::NotableStringInfo& info = zStats.notableStrings[i];
 
+        MOZ_ASSERT(!zStats.isTotals);
+
         nsDependentCString notableString(info.buffer);
 
         // Viewing about:memory generates many notable strings which contain
@@ -1810,8 +1814,7 @@ ReportZoneStats(const JS::ZoneStats &zStats,
         // there's a GC in the meantime), and so on ad infinitum.
         //
         // To avoid cluttering up about:memory like this, we stick notable
-        // strings which contain "strings/notable/string(length=" into their own
-        // bucket.
+        // strings which contain "string(length=" into their own bucket.
 #       define STRING_LENGTH "string(length="
         if (FindInReadable(NS_LITERAL_CSTRING(STRING_LENGTH), notableString)) {
             stringsNotableAboutMemoryGCHeap += info.gcHeap;
@@ -1828,48 +1831,57 @@ ReportZoneStats(const JS::ZoneStats &zStats,
         bool truncated = notableString.Length() < info.length;
 
         nsCString path = pathPrefix +
-            nsPrintfCString("strings/notable/" STRING_LENGTH "%d, copies=%d, \"%s\"%s)/",
+            nsPrintfCString("strings/" STRING_LENGTH "%d, copies=%d, \"%s\"%s)/",
                             info.length, info.numCopies, escapedString.get(),
                             truncated ? " (truncated)" : "");
 
-        REPORT_BYTES(path + NS_LITERAL_CSTRING("gc-heap"),
-            KIND_NONHEAP, info.gcHeap,
-            "A notable string, i.e. one whose copies together use a lot of "
-            "GC heap and malloc heap memory. " MAYBE_INLINE);
-        gcTotal += info.gcHeap;
+        if (info.gcHeap > 0) {
+            REPORT_GC_BYTES(path + NS_LITERAL_CSTRING("gc-heap"),
+                info.gcHeap,
+                "Strings. " MAYBE_INLINE);
+        }
 
         if (info.mallocHeap > 0) {
             REPORT_BYTES(path + NS_LITERAL_CSTRING("malloc-heap"),
                 KIND_HEAP, info.mallocHeap,
-                "Non-inline string characters of a notable string. "
-                MAYBE_OVERALLOCATED);
+                "Non-inline string characters. " MAYBE_OVERALLOCATED);
         }
     }
 
-    ZCREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("strings/non-notable/gc-heap"),
-        zStats.stringsGCHeap,
-        "Non-notable strings. " MAYBE_INLINE);
+    nsCString nonNotablePath = pathPrefix;
+    nonNotablePath += zStats.isTotals
+                    ? NS_LITERAL_CSTRING("strings/")
+                    : NS_LITERAL_CSTRING("strings/string(<non-notable strings>)/");
 
-    ZCREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("strings/non-notable/malloc-heap"),
-        zStats.stringsMallocHeap,
-        "Non-inline string characters of non-notable strings. "
-        MAYBE_OVERALLOCATED);
+    if (zStats.stringInfo.gcHeap > 0) {
+        REPORT_GC_BYTES(nonNotablePath + NS_LITERAL_CSTRING("gc-heap"),
+            zStats.stringInfo.gcHeap,
+            "Strings. " MAYBE_INLINE);
+    }
+
+    if (zStats.stringInfo.mallocHeap > 0) {
+        REPORT_BYTES(nonNotablePath + NS_LITERAL_CSTRING("malloc-heap"),
+            KIND_HEAP, zStats.stringInfo.mallocHeap,
+            "Non-inline string characters. " MAYBE_OVERALLOCATED);
+    }
 
     if (stringsNotableAboutMemoryGCHeap > 0) {
-        ZCREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("strings/notable/about-memory/gc-heap"),
+        MOZ_ASSERT(!zStats.isTotals);
+        REPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("strings/string(<about-memory>)/gc-heap"),
             stringsNotableAboutMemoryGCHeap,
-            "Notable strings that contain the characters '" STRING_LENGTH "', "
-            "which are probably from about:memory itself." MAYBE_INLINE
+            "Strings that contain the characters '" STRING_LENGTH "', which "
+            "are probably from about:memory itself." MAYBE_INLINE
             " We filter them out rather than display them, because displaying "
             "them would create even more such strings every time about:memory "
             "is refreshed.");
     }
 
     if (stringsNotableAboutMemoryMallocHeap > 0) {
-        ZCREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("strings/notable/about-memory/malloc-heap"),
-            stringsNotableAboutMemoryMallocHeap,
-            "Non-inline string characters of notable strings that contain "
-            "the characters '" STRING_LENGTH "', which are probably from "
+        MOZ_ASSERT(!zStats.isTotals);
+        REPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("strings/string(<about-memory>)/malloc-heap"),
+            KIND_HEAP, stringsNotableAboutMemoryMallocHeap,
+            "Non-inline string characters of strings that contain the "
+            "characters '" STRING_LENGTH "', which are probably from "
             "about:memory itself. " MAYBE_OVERALLOCATED
             " We filter them out rather than display them, because displaying "
             "them would create even more such strings every time about:memory "

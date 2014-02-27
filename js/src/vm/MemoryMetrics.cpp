@@ -94,7 +94,8 @@ InefficientNonFlatteningStringHashPolicy::match(const JSString *const &k, const 
 namespace JS {
 
 NotableStringInfo::NotableStringInfo()
-  : buffer(0),
+  : StringInfo(),
+    buffer(0),
     length(0)
 {
 }
@@ -103,7 +104,7 @@ NotableStringInfo::NotableStringInfo(JSString *str, const StringInfo &info)
   : StringInfo(info),
     length(str->length())
 {
-    size_t bufferSize = Min(str->length() + 1, size_t(4096));
+    size_t bufferSize = Min(str->length() + 1, size_t(MAX_SAVED_CHARS));
     buffer = js_pod_malloc<char>(bufferSize);
     if (!buffer) {
         MOZ_CRASH("oom");
@@ -119,7 +120,7 @@ NotableStringInfo::NotableStringInfo(JSString *str, const StringInfo &info)
         chars = ownedChars;
     }
 
-    // We might truncate |str| even if it's much shorter than 4096 chars, if
+    // We might truncate |str| even if it's much shorter than 1024 chars, if
     // |str| contains unicode chars.  Since this is just for a memory reporter,
     // we don't care.
     PutEscapedString(buffer, bufferSize, chars, str->length(), /* quote */ 0);
@@ -181,7 +182,8 @@ StatsZoneCallback(JSRuntime *rt, void *data, Zone *zone)
     // CollectRuntimeStats reserves enough space.
     MOZ_ALWAYS_TRUE(rtStats->zoneStatsVector.growBy(1));
     ZoneStats &zStats = rtStats->zoneStatsVector.back();
-    zStats.initStrings(rt);
+    if (!zStats.initStrings(rt))
+        MOZ_CRASH("oom");
     rtStats->initExtraZoneStats(zone, &zStats);
     rtStats->currZoneStats = &zStats;
 
@@ -280,21 +282,22 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
       case JSTRACE_STRING: {
         JSString *str = static_cast<JSString *>(thing);
 
-        size_t strCharsSize = str->sizeOfExcludingThis(rtStats->mallocSizeOf_);
+        JS::StringInfo info;
+        info.gcHeap = thingSize;
+        info.mallocHeap = str->sizeOfExcludingThis(rtStats->mallocSizeOf_);
+        info.numCopies = 1;
 
-        zStats->stringsGCHeap += thingSize;
-        zStats->stringsMallocHeap += strCharsSize;
+        zStats->stringInfo.add(info);
 
         if (granularity == FineGrained) {
-            ZoneStats::StringsHashMap::AddPtr p = zStats->strings->lookupForAdd(str);
+            ZoneStats::StringsHashMap::AddPtr p = zStats->allStrings->lookupForAdd(str);
             if (!p) {
-                JS::StringInfo info(thingSize, strCharsSize);
-                zStats->strings->add(p, str, info);
+                // Ignore failure -- we just won't record the string as notable.
+                (void)zStats->allStrings->add(p, str, info);
             } else {
-                p->value().add(thingSize, strCharsSize);
+                p->value().add(info);
             }
         }
-
         break;
       }
 
@@ -379,47 +382,48 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
     zStats->unusedGCThings -= thingSize;
 }
 
-static void
+static bool
 FindNotableStrings(ZoneStats &zStats)
 {
     using namespace JS;
 
-    // You should only run FindNotableStrings once per ZoneStats object
-    // (although it's not going to break anything if you run it more than once,
-    // unless you add to |strings| in the meantime).
+    // We should only run FindNotableStrings once per ZoneStats object.
     MOZ_ASSERT(zStats.notableStrings.empty());
 
-    for (ZoneStats::StringsHashMap::Range r = zStats.strings->all(); !r.empty(); r.popFront()) {
+    for (ZoneStats::StringsHashMap::Range r = zStats.allStrings->all(); !r.empty(); r.popFront()) {
 
         JSString *str = r.front().key();
         StringInfo &info = r.front().value();
 
-        // If this string is too small, or if we can't grow the notableStrings
-        // vector, skip this string.
-        if (info.gcHeap + info.mallocHeap < NotableStringInfo::notableSize() ||
-            !zStats.notableStrings.growBy(1))
+        if (!info.isNotable())
             continue;
+
+        if (!zStats.notableStrings.growBy(1))
+            return false;
 
         zStats.notableStrings.back() = NotableStringInfo(str, info);
 
         // We're moving this string from a non-notable to a notable bucket, so
         // subtract it out of the non-notable tallies.
-        MOZ_ASSERT(zStats.stringsGCHeap >= info.gcHeap);
-        MOZ_ASSERT(zStats.stringsMallocHeap >= info.mallocHeap);
-        zStats.stringsGCHeap -= info.gcHeap;
-        zStats.stringsMallocHeap -= info.mallocHeap;
+        zStats.stringInfo.subtract(info);
     }
+    // Delete |allStrings| now, rather than waiting for zStats's destruction,
+    // to reduce peak memory consumption during reporting.
+    js_delete(zStats.allStrings);
+    zStats.allStrings = nullptr;
+    return true;
 }
 
 bool
 ZoneStats::initStrings(JSRuntime *rt)
 {
-    strings = rt->new_<StringsHashMap>();
-    if (!strings)
+    isTotals = false;
+    allStrings = rt->new_<StringsHashMap>();
+    if (!allStrings)
         return false;
-    if (!strings->init()) {
-        js_delete(strings);
-        strings = nullptr;
+    if (!allStrings->init()) {
+        js_delete(allStrings);
+        allStrings = nullptr;
         return false;
     }
     return true;
@@ -456,41 +460,17 @@ JS::CollectRuntimeStats(JSRuntime *rt, RuntimeStats *rtStats, ObjectPrivateVisit
     ZoneStatsVector &zs = rtStats->zoneStatsVector;
     ZoneStats &zTotals = rtStats->zTotals;
 
-    // For each zone:
-    // - sum everything except its strings data into zTotals, and
-    // - find its notable strings.
-    // Also, record which zone had the biggest |strings| hashtable -- to save
-    // time and memory, we will re-use that hashtable to find the notable
-    // strings for zTotals.
-    size_t iMax = 0;
-    for (size_t i = 0; i < zs.length(); i++) {
-        zTotals.addIgnoringStrings(zs[i]);
-        FindNotableStrings(zs[i]);
-        if (zs[i].strings->count() > zs[iMax].strings->count())
-            iMax = i;
-    }
+    // We don't look for notable strings for zTotals. So we first sum all the
+    // zones' measurements to get the totals. Then we find the notable strings
+    // within each zone.
+    for (size_t i = 0; i < zs.length(); i++)
+        zTotals.addSizes(zs[i]);
 
-    // Transfer the biggest strings table to zTotals.  We can do this because:
-    // (a) we've found the notable strings for zs[IMax], and so don't need it
-    //     any more for zs, and
-    // (b) zs[iMax].strings contains a subset of the values that will end up in
-    //     zTotals.strings.
-    MOZ_ASSERT(!zTotals.strings);
-    zTotals.strings = zs[iMax].strings;
-    zs[iMax].strings = nullptr;
+    for (size_t i = 0; i < zs.length(); i++)
+        if (!FindNotableStrings(zs[i]))
+            return false;
 
-    // Add the remaining strings hashtables to zTotals, and then get the
-    // notable strings for zTotals.
-    for (size_t i = 0; i < zs.length(); i++) {
-        if (i != iMax) {
-            zTotals.addStrings(zs[i]);
-            js_delete(zs[i].strings);
-            zs[i].strings = nullptr;
-        }
-    }
-    FindNotableStrings(zTotals);
-    js_delete(zTotals.strings);
-    zTotals.strings = nullptr;
+    MOZ_ASSERT(!zTotals.allStrings);
 
     for (size_t i = 0; i < rtStats->compartmentStatsVector.length(); i++) {
         CompartmentStats &cStats = rtStats->compartmentStatsVector[i];
@@ -598,7 +578,7 @@ AddSizeOfTab(JSRuntime *rt, HandleObject obj, MallocSizeOf mallocSizeOf, ObjectP
                                        StatsCellCallback<CoarseGrained>);
 
     JS_ASSERT(rtStats.zoneStatsVector.length() == 1);
-    rtStats.zTotals.add(rtStats.zoneStatsVector[0]);
+    rtStats.zTotals.addSizes(rtStats.zoneStatsVector[0]);
 
     for (size_t i = 0; i < rtStats.compartmentStatsVector.length(); i++) {
         CompartmentStats &cStats = rtStats.compartmentStatsVector[i];

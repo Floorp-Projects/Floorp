@@ -92,6 +92,9 @@ struct InefficientNonFlatteningStringHashPolicy
 #define ZERO_SIZE(kind, gc, mSize)                      mSize(0),
 #define COPY_OTHER_SIZE(kind, gc, mSize)                mSize(other.mSize),
 #define ADD_OTHER_SIZE(kind, gc, mSize)                 mSize += other.mSize;
+#define SUB_OTHER_SIZE(kind, gc, mSize)                 MOZ_ASSERT(mSize >= other.mSize); \
+                                                        mSize -= other.mSize;
+#define ADD_SIZE_TO_N(kind, gc, mSize)                  n += mSize;
 #define ADD_SIZE_TO_N_IF_LIVE_GC_THING(kind, gc, mSize) n += (js::gc) ? mSize : 0;
 #define ADD_TO_TAB_SIZES(kind, gc, mSize)               sizes->add(JS::TabSizes::kind, mSize);
 
@@ -99,48 +102,6 @@ struct InefficientNonFlatteningStringHashPolicy
 enum {
     NotLiveGCThing = false,
     IsLiveGCThing = true
-};
-
-struct ZoneStatsPod
-{
-#define FOR_EACH_SIZE(macro) \
-    macro(Other,   NotLiveGCThing, gcHeapArenaAdmin) \
-    macro(Other,   NotLiveGCThing, unusedGCThings) \
-    macro(Other,   IsLiveGCThing,  lazyScriptsGCHeap) \
-    macro(Other,   NotLiveGCThing, lazyScriptsMallocHeap) \
-    macro(Other,   IsLiveGCThing,  jitCodesGCHeap) \
-    macro(Other,   IsLiveGCThing,  typeObjectsGCHeap) \
-    macro(Other,   NotLiveGCThing, typeObjectsMallocHeap) \
-    macro(Other,   NotLiveGCThing, typePool) \
-    macro(Strings, IsLiveGCThing,  stringsGCHeap) \
-    macro(Strings, NotLiveGCThing, stringsMallocHeap)
-
-    ZoneStatsPod()
-      : FOR_EACH_SIZE(ZERO_SIZE)
-        extra()
-    {}
-
-    void add(const ZoneStatsPod &other) {
-        FOR_EACH_SIZE(ADD_OTHER_SIZE)
-        // Do nothing with |extra|.
-    }
-
-    size_t sizeOfLiveGCThings() const {
-        size_t n = 0;
-        FOR_EACH_SIZE(ADD_SIZE_TO_N_IF_LIVE_GC_THING)
-        // Do nothing with |extra|.
-        return n;
-    }
-
-    void addToTabSizes(JS::TabSizes *sizes) const {
-        FOR_EACH_SIZE(ADD_TO_TAB_SIZES)
-        // Do nothing with |extra|.
-    }
-
-    FOR_EACH_SIZE(DECL_SIZE)
-    void *extra;    // This field can be used by embedders.
-
-#undef FOR_EACH_SIZE
 };
 
 } // namespace js
@@ -240,45 +201,57 @@ struct GCSizes
 // is not.
 struct StringInfo
 {
+#define FOR_EACH_SIZE(macro) \
+    macro(Strings, IsLiveGCThing,  gcHeap) \
+    macro(Strings, NotLiveGCThing, mallocHeap) \
+
     StringInfo()
-      : numCopies(0),
-        gcHeap(0),
-        mallocHeap(0)
+      : FOR_EACH_SIZE(ZERO_SIZE)
+        numCopies(0)
     {}
 
-    StringInfo(size_t gcSize, size_t mallocSize)
-      : numCopies(1),
-        gcHeap(gcSize),
-        mallocHeap(mallocSize)
-    {}
-
-    void add(size_t gcSize, size_t mallocSize) {
+    void add(const StringInfo &other) {
+        FOR_EACH_SIZE(ADD_OTHER_SIZE);
         numCopies++;
-        gcHeap += gcSize;
-        mallocHeap += mallocSize;
     }
 
-    void add(const StringInfo& info) {
-        numCopies += info.numCopies;
-        gcHeap += info.gcHeap;
-        mallocHeap += info.mallocHeap;
+    void subtract(const StringInfo &other) {
+        FOR_EACH_SIZE(SUB_OTHER_SIZE);
+        numCopies--;
     }
 
+    bool isNotable() const {
+        static const size_t NotabilityThreshold = 16 * 1024;
+        size_t n = 0;
+        FOR_EACH_SIZE(ADD_SIZE_TO_N)
+        return n >= NotabilityThreshold;
+    }
+
+    size_t sizeOfLiveGCThings() const {
+        size_t n = 0;
+        FOR_EACH_SIZE(ADD_SIZE_TO_N_IF_LIVE_GC_THING)
+        return n;
+    }
+
+    void addToTabSizes(TabSizes *sizes) const {
+        FOR_EACH_SIZE(ADD_TO_TAB_SIZES)
+    }
+
+    FOR_EACH_SIZE(DECL_SIZE)
     uint32_t numCopies;     // How many copies of the string have we seen?
 
-    // These are all totals across all copies of the string we've seen.
-    size_t gcHeap;
-    size_t mallocHeap;
+#undef FOR_EACH_SIZE
 };
 
-// Holds data about a notable string (one which uses more than
-// NotableStringInfo::notableSize() bytes of memory), so we can report it
-// individually.
+// Holds data about a notable string (one which, counting all duplicates, uses
+// more than a certain amount of memory) so we can report it individually.
 //
-// Essentially the only difference between this class and StringInfo is that
-// NotableStringInfo holds a copy of the string's chars.
+// The only difference between this class and StringInfo is that
+// NotableStringInfo holds a copy of some or all of the string's chars.
 struct NotableStringInfo : public StringInfo
 {
+    static const size_t MAX_SAVED_CHARS = 1024;
+
     NotableStringInfo();
     NotableStringInfo(JSString *str, const StringInfo &info);
     NotableStringInfo(NotableStringInfo &&info);
@@ -286,12 +259,6 @@ struct NotableStringInfo : public StringInfo
 
     ~NotableStringInfo() {
         js_free(buffer);
-    }
-
-    // A string needs to take up this many bytes of storage before we consider
-    // it to be "notable".
-    static size_t notableSize() {
-        return js::MemoryReportingSundriesThreshold();
     }
 
     char *buffer;
@@ -331,63 +298,89 @@ struct RuntimeSizes
 #undef FOR_EACH_SIZE
 };
 
-struct ZoneStats : js::ZoneStatsPod
+struct ZoneStats
 {
+#define FOR_EACH_SIZE(macro) \
+    macro(Other,   NotLiveGCThing, gcHeapArenaAdmin) \
+    macro(Other,   NotLiveGCThing, unusedGCThings) \
+    macro(Other,   IsLiveGCThing,  lazyScriptsGCHeap) \
+    macro(Other,   NotLiveGCThing, lazyScriptsMallocHeap) \
+    macro(Other,   IsLiveGCThing,  jitCodesGCHeap) \
+    macro(Other,   IsLiveGCThing,  typeObjectsGCHeap) \
+    macro(Other,   NotLiveGCThing, typeObjectsMallocHeap) \
+    macro(Other,   NotLiveGCThing, typePool) \
+
     ZoneStats()
-      : strings(nullptr)
+      : FOR_EACH_SIZE(ZERO_SIZE)
+        stringInfo(),
+        extra(),
+        allStrings(nullptr),
+        notableStrings(),
+        isTotals(true)
     {}
 
     ZoneStats(ZoneStats &&other)
-      : ZoneStatsPod(mozilla::Move(other)),
-        strings(other.strings),
-        notableStrings(mozilla::Move(other.notableStrings))
+      : FOR_EACH_SIZE(COPY_OTHER_SIZE)
+        stringInfo(mozilla::Move(other.stringInfo)),
+        extra(other.extra),
+        allStrings(other.allStrings),
+        notableStrings(mozilla::Move(other.notableStrings)),
+        isTotals(other.isTotals)
     {
-        other.strings = nullptr;
+        other.allStrings = nullptr;
+        MOZ_ASSERT(!other.isTotals);
+    }
+
+    ~ZoneStats() {
+        // |allStrings| is usually deleted and set to nullptr before this
+        // destructor runs. But there are failure cases due to OOMs that may
+        // prevent that, so it doesn't hurt to try again here.
+        js_delete(allStrings);
     }
 
     bool initStrings(JSRuntime *rt);
 
-    // Add |other|'s numbers to this object's numbers.  The strings data isn't
-    // touched.
-    void addIgnoringStrings(const ZoneStats &other) {
-        ZoneStatsPod::add(other);
-    }
-
-    // Add |other|'s strings data to this object's strings data.  (We don't do
-    // anything with notableStrings.)
-    void addStrings(const ZoneStats &other) {
-        for (StringsHashMap::Range r = other.strings->all(); !r.empty(); r.popFront()) {
-            StringsHashMap::AddPtr p = strings->lookupForAdd(r.front().key());
-            if (p) {
-                // We've seen this string before; add its size to our tally.
-                p->value().add(r.front().value());
-            } else {
-                // We haven't seen this string before; add it to the hashtable.
-                strings->add(p, r.front().key(), r.front().value());
-            }
-        }
+    void addSizes(const ZoneStats &other) {
+        MOZ_ASSERT(isTotals);
+        FOR_EACH_SIZE(ADD_OTHER_SIZE)
+        stringInfo.add(other.stringInfo);
     }
 
     size_t sizeOfLiveGCThings() const {
-        size_t n = ZoneStatsPod::sizeOfLiveGCThings();
-        for (size_t i = 0; i < notableStrings.length(); i++) {
-            const JS::NotableStringInfo& info = notableStrings[i];
-            n += info.gcHeap;
-        }
+        MOZ_ASSERT(isTotals);
+        size_t n = 0;
+        FOR_EACH_SIZE(ADD_SIZE_TO_N_IF_LIVE_GC_THING)
+        n += stringInfo.sizeOfLiveGCThings();
         return n;
     }
 
-    typedef js::HashMap<JSString*,
-                        StringInfo,
+    void addToTabSizes(JS::TabSizes *sizes) const {
+        MOZ_ASSERT(isTotals);
+        FOR_EACH_SIZE(ADD_TO_TAB_SIZES)
+        stringInfo.addToTabSizes(sizes);
+    }
+
+    // These string measurements are initially for all strings.  At the end,
+    // if the measurement granularity is FineGrained, we subtract the
+    // measurements of the notable script sources and move them into
+    // |notableStrings|.
+    FOR_EACH_SIZE(DECL_SIZE)
+    StringInfo stringInfo;
+    void *extra;    // This field can be used by embedders.
+
+    typedef js::HashMap<JSString*, StringInfo,
                         js::InefficientNonFlatteningStringHashPolicy,
                         js::SystemAllocPolicy> StringsHashMap;
 
-    // |strings| is only used transiently.  During the zone traversal it is
+    // |allStrings| is only used transiently.  During the zone traversal it is
     // filled with info about every string in the zone.  It's then used to fill
     // in |notableStrings| (which actually gets reported), and immediately
     // discarded afterwards.
-    StringsHashMap *strings;
+    StringsHashMap *allStrings;
     js::Vector<NotableStringInfo, 0, js::SystemAllocPolicy> notableStrings;
+    bool isTotals;
+
+#undef FOR_EACH_SIZE
 };
 
 struct CompartmentStats
@@ -564,6 +557,8 @@ AddSizeOfTab(JSRuntime *rt, JS::HandleObject obj, mozilla::MallocSizeOf mallocSi
 #undef ZERO_SIZE
 #undef COPY_OTHER_SIZE
 #undef ADD_OTHER_SIZE
+#undef SUB_OTHER_SIZE
+#undef ADD_SIZE_TO_N
 #undef ADD_SIZE_TO_N_IF_LIVE_GC_THING
 #undef ADD_TO_TAB_SIZES
 
