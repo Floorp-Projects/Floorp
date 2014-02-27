@@ -218,4 +218,13 @@ html|a.inline-link:-moz-focusring {
   margin: 0;
 }
 
+#noFxaAccount {
+  margin: 12px 4px;
+  line-height: 1.2em;
+}
+
+#noFxaAccount > label:first-child {
+  margin-bottom: 0.6em;
+}
+
 %endif
