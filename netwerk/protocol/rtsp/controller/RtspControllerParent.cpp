@@ -20,8 +20,8 @@ PRLogModuleInfo* gRtspLog;
 #define LOG(args) PR_LOG(gRtspLog, PR_LOG_DEBUG, args)
 
 #define SEND_DISCONNECT_IF_ERROR(rv)                         \
-  if (NS_FAILED(rv) && mIPCOpen && mTotalTracks > 0) {       \
-    for (int i = 0; i < mTotalTracks; i++) {                 \
+  if (NS_FAILED(rv) && mIPCOpen && mTotalTracks > 0ul) {     \
+    for (uint32_t i = 0; i < mTotalTracks; i++) {            \
       SendOnDisconnected(i, rv);                             \
     }                                                        \
   }
