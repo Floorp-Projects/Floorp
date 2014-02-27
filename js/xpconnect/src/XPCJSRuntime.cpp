@@ -1653,11 +1653,11 @@ class JSMainRuntimeTemporaryPeakReporter MOZ_FINAL : public nsIMemoryReporter
     NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
                               nsISupports* aData)
     {
-        return MOZ_COLLECT_REPORT(
-            "js-main-runtime-temporary-peak", KIND_OTHER, UNITS_BYTES,
+        return MOZ_COLLECT_REPORT("js-main-runtime-temporary-peak",
+            KIND_OTHER, UNITS_BYTES,
             JSMainRuntimeTemporaryPeakDistinguishedAmount(),
-            "The peak size of the transient storage in the main JSRuntime "
-            "(the current size of which is reported as "
+            "Peak transient data size in the main JSRuntime (the current size "
+            "of which is reported as "
             "'explicit/js-non-window/runtime/temporary').");
     }
 };
@@ -1686,24 +1686,6 @@ NS_IMPL_ISUPPORTS1(JSMainRuntimeTemporaryPeakReporter, nsIMemoryReporter)
 #define REPORT_BYTES(_path, _kind, _amount, _desc)                            \
     REPORT(_path, _kind, UNITS_BYTES, _amount, _desc);
 
-// REPORT2 and REPORT_BYTES2 are just like REPORT and REPORT_BYTES, except the
-// description is an nsCString, instead of a literal string.
-
-#define REPORT2(_path, _kind, _units, _amount, _desc)                         \
-    do {                                                                      \
-        nsresult rv;                                                          \
-        rv = cb->Callback(EmptyCString(), _path,                              \
-                          nsIMemoryReporter::_kind,                           \
-                          nsIMemoryReporter::_units,                          \
-                          _amount,                                            \
-                          _desc,                                              \
-                          closure);                                           \
-        NS_ENSURE_SUCCESS(rv, rv);                                            \
-    } while (0)
-
-#define REPORT_BYTES2(_path, _kind, _amount, _desc)                           \
-    REPORT2(_path, _kind, UNITS_BYTES, _amount, _desc);
-
 #define REPORT_GC_BYTES(_path, _amount, _desc)                                \
     do {                                                                      \
         size_t amount = _amount;  /* evaluate _amount only once */            \
@@ -1716,37 +1698,25 @@ NS_IMPL_ISUPPORTS1(JSMainRuntimeTemporaryPeakReporter, nsIMemoryReporter)
         gcTotal += amount;                                                    \
     } while (0)
 
-// Report compartment/zone bytes.  Note that _descLiteral must be a literal
-// string.
-//
-// Nb: all non-GC compartment reports are currently KIND_HEAP, and this macro
-// relies on that.
-#define ZCREPORT_BYTES(_path, _amount, _descLiteral)                          \
+// Report compartment/zone non-GC (KIND_HEAP) bytes.
+#define ZCREPORT_BYTES(_path, _amount, _desc)                                 \
     do {                                                                      \
         /* Assign _descLiteral plus "" into a char* to prove that it's */     \
         /* actually a literal. */                                             \
-        const char* unusedDesc = _descLiteral "";                             \
-        (void) unusedDesc;                                                    \
-        ZCREPORT_BYTES2(_path, _amount, NS_LITERAL_CSTRING(_descLiteral));    \
-    } while (0)
-
-// ZCREPORT_BYTES2 is identical to ZCREPORT_BYTES, except the description is a
-// nsCString instead of a literal string.
-#define ZCREPORT_BYTES2(_path, _amount, _desc)                                \
-    do {                                                                      \
         size_t amount = _amount;  /* evaluate _amount only once */            \
         if (amount >= SUNDRIES_THRESHOLD) {                                   \
             nsresult rv;                                                      \
             rv = cb->Callback(EmptyCString(), _path,                          \
                               nsIMemoryReporter::KIND_HEAP,                   \
                               nsIMemoryReporter::UNITS_BYTES, amount,         \
-                              _desc, closure);                                \
+                              NS_LITERAL_CSTRING(_desc), closure);            \
             NS_ENSURE_SUCCESS(rv, rv);                                        \
         } else {                                                              \
             sundriesMallocHeap += amount;                                     \
         }                                                                     \
     } while (0)
 
+// Report compartment/zone GC bytes.
 #define ZCREPORT_GC_BYTES(_path, _amount, _desc)                              \
     do {                                                                      \
         size_t amount = _amount;  /* evaluate _amount only once */            \
@@ -1763,6 +1733,7 @@ NS_IMPL_ISUPPORTS1(JSMainRuntimeTemporaryPeakReporter, nsIMemoryReporter)
         }                                                                     \
     } while (0)
 
+// Report runtime bytes.
 #define RREPORT_BYTES(_path, _kind, _amount, _desc)                           \
     do {                                                                      \
         size_t amount = _amount;  /* evaluate _amount only once */            \
@@ -1789,50 +1760,44 @@ ReportZoneStats(const JS::ZoneStats &zStats,
     size_t gcTotal = 0, sundriesGCHeap = 0, sundriesMallocHeap = 0;
 
     ZCREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("gc-heap-arena-admin"),
-                      zStats.gcHeapArenaAdmin,
-                      "Memory on the garbage-collected JavaScript "
-                      "heap, within arenas, that is used (a) to hold internal "
-                      "bookkeeping information, and (b) to provide padding to "
-                      "align GC things.");
+        zStats.gcHeapArenaAdmin,
+        "Bookkeeping information and alignment padding within GC arenas.");
 
     ZCREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("unused-gc-things"),
-                      zStats.unusedGCThings,
-                      "Memory on the garbage-collected JavaScript "
-                      "heap taken by empty GC thing slots within non-empty "
-                      "arenas.");
+        zStats.unusedGCThings,
+        "Empty GC thing cells within non-empty arenas.");
 
     ZCREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("lazy-scripts/gc-heap"),
-                      zStats.lazyScriptsGCHeap,
-                      "Memory on the garbage-collected JavaScript "
-                      "heap that represents scripts which haven't executed yet.");
+        zStats.lazyScriptsGCHeap,
+        "Scripts that haven't executed yet.");
 
     ZCREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("lazy-scripts/malloc-heap"),
-                   zStats.lazyScriptsMallocHeap,
-                   "Memory holding miscellaneous additional information associated with lazy "
-                   "scripts.  This memory is allocated on the malloc heap.");
+        zStats.lazyScriptsMallocHeap,
+        "Lazy script tables containing free variables or inner functions.");
 
     ZCREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("jit-codes-gc-heap"),
-                      zStats.jitCodesGCHeap,
-                      "Memory on the garbage-collected JavaScript "
-                      "heap that holds references to executable code pools "
-                      "used by the JITs.");
+        zStats.jitCodesGCHeap,
+        "References to executable code pools used by the JITs.");
 
     ZCREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("type-objects/gc-heap"),
-                      zStats.typeObjectsGCHeap,
-                      "Memory on the garbage-collected JavaScript "
-                      "heap that holds type inference information.");
+        zStats.typeObjectsGCHeap,
+        "Type inference information about objects.");
 
     ZCREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("type-objects/malloc-heap"),
-                   zStats.typeObjectsMallocHeap,
-                   "Memory holding miscellaneous additional information associated with type "
-                   "objects.");
+        zStats.typeObjectsMallocHeap,
+        "Type object addenda.");
 
     ZCREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("type-pool"),
-                   zStats.typePool,
-                   "Memory holding contents of type sets and related data.");
+        zStats.typePool,
+        "Type sets and related data.");
 
     size_t stringsNotableAboutMemoryGCHeap = 0;
     size_t stringsNotableAboutMemoryMallocHeap = 0;
+
+    #define MAYBE_INLINE \
+        "The characters may be inline or on the malloc heap."
+    #define MAYBE_OVERALLOCATED \
+        "Sometimes over-allocated to simplify string concatenation."
 
     for (size_t i = 0; i < zStats.notableStrings.length(); i++) {
         const JS::NotableStringInfo& info = zStats.notableStrings[i];
@@ -1867,82 +1832,64 @@ ReportZoneStats(const JS::ZoneStats &zStats,
                             info.length, info.numCopies, escapedString.get(),
                             truncated ? " (truncated)" : "");
 
-        REPORT_BYTES2(path + NS_LITERAL_CSTRING("gc-heap"),
-            KIND_NONHEAP,
-            info.gcHeap,
-            nsPrintfCString("Memory allocated to hold headers for copies of "
-            "the given notable string.  A string is notable if all of its copies "
-            "together use more than %d bytes total of JS GC heap and malloc heap "
-            "memory.\n\n"
-            "These headers may contain the string data itself, if the string "
-            "is short enough.  If so, the string won't have any memory reported "
-            "under 'string-chars'.",
-            JS::NotableStringInfo::notableSize()));
+        REPORT_BYTES(path + NS_LITERAL_CSTRING("gc-heap"),
+            KIND_NONHEAP, info.gcHeap,
+            "A notable string, i.e. one whose copies together use a lot of "
+            "GC heap and malloc heap memory. " MAYBE_INLINE);
         gcTotal += info.gcHeap;
 
         if (info.mallocHeap > 0) {
-            REPORT_BYTES2(path + NS_LITERAL_CSTRING("malloc-heap"),
-                KIND_HEAP,
-                info.mallocHeap,
-                nsPrintfCString("Memory allocated on the malloc heap to hold "
-                "string data for copies of the given notable string.  A string is "
-                "notable if all of its copies together use more than %d bytes "
-                "total of JS GC heap and malloc heap memory.",
-                JS::NotableStringInfo::notableSize()));
+            REPORT_BYTES(path + NS_LITERAL_CSTRING("malloc-heap"),
+                KIND_HEAP, info.mallocHeap,
+                "Non-inline string characters of a notable string. "
+                MAYBE_OVERALLOCATED);
         }
     }
 
     ZCREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("strings/non-notable/gc-heap"),
-                      zStats.stringsGCHeap,
-                      "Memory on the garbage-collected JavaScript heap that "
-                      "holds string headers. The character data for such "
-                      "strings is counted under strings/non-notable/malloc-heap.");
+        zStats.stringsGCHeap,
+        "Non-notable strings. " MAYBE_INLINE);
 
     ZCREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("strings/non-notable/malloc-heap"),
-                   zStats.stringsMallocHeap,
-                   "Memory allocated to hold characters for strings which are too long "
-                   "to fit entirely within their string headers.\n\n"
-                   "Sometimes more memory is allocated than necessary, to "
-                   "simplify string concatenation.");
+        zStats.stringsMallocHeap,
+        "Non-inline string characters of non-notable strings. "
+        MAYBE_OVERALLOCATED);
 
     if (stringsNotableAboutMemoryGCHeap > 0) {
         ZCREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("strings/notable/about-memory/gc-heap"),
-                          stringsNotableAboutMemoryGCHeap,
-                          "Memory allocated on the garbage-collected JavaScript "
-                          "heap that holds headers for notable strings which "
-                          "contain the string '" STRING_LENGTH "'.  These "
-                          "strings are likely from about:memory itself.  We "
-                          "filter them out rather than display them, because "
-                          "displaying them would create even more strings every "
-                          "time you refresh about:memory.");
+            stringsNotableAboutMemoryGCHeap,
+            "Notable strings that contain the characters '" STRING_LENGTH "', "
+            "which are probably from about:memory itself." MAYBE_INLINE
+            " We filter them out rather than display them, because displaying "
+            "them would create even more such strings every time about:memory "
+            "is refreshed.");
     }
 
     if (stringsNotableAboutMemoryMallocHeap > 0) {
-        ZCREPORT_BYTES(pathPrefix +
-                       NS_LITERAL_CSTRING("strings/notable/about-memory/malloc-heap"),
-                       stringsNotableAboutMemoryMallocHeap,
-                       "Memory allocated to hold characters of notable strings "
-                       "which contain the string '" STRING_LENGTH "'.  These "
-                       "strings are likely from about:memory itself.  We filter "
-                       "them out rather than display them, because displaying "
-                       "them would create even more strings every time you "
-                       "refresh about:memory.");
+        ZCREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("strings/notable/about-memory/malloc-heap"),
+            stringsNotableAboutMemoryMallocHeap,
+            "Non-inline string characters of notable strings that contain "
+            "the characters '" STRING_LENGTH "', which are probably from "
+            "about:memory itself. " MAYBE_OVERALLOCATED
+            " We filter them out rather than display them, because displaying "
+            "them would create even more such strings every time about:memory "
+            "is refreshed.");
     }
 
     if (sundriesGCHeap > 0) {
         // We deliberately don't use ZCREPORT_GC_BYTES here.
         REPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("sundries/gc-heap"),
-                        sundriesGCHeap,
-                        "The sum of all the 'gc-heap' measurements that are too "
-                        "small to be worth showing individually.");
+            sundriesGCHeap,
+            "The sum of all 'gc-heap' measurements that are too small to be "
+            "worth showing individually.");
     }
 
     if (sundriesMallocHeap > 0) {
         // We deliberately don't use ZCREPORT_BYTES here.
         REPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("sundries/malloc-heap"),
-                     KIND_HEAP, sundriesMallocHeap,
-                     "The sum of all the 'malloc-heap' measurements that are too "
-                     "small to be worth showing individually.");
+            KIND_HEAP, sundriesMallocHeap,
+            "The sum of all 'malloc-heap' measurements that are too small to "
+            "be worth showing individually.");
     }
 
     if (gcTotalOut)
@@ -1986,157 +1933,133 @@ ReportCompartmentStats(const JS::CompartmentStats &cStats,
     }
 
     ZCREPORT_GC_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("objects/gc-heap/ordinary"),
-                      cStats.objectsGCHeapOrdinary,
-                      "Memory on the garbage-collected JavaScript "
-                      "heap that holds ordinary (i.e. not otherwise distinguished "
-                      "my memory reporters) objects.");
+        cStats.objectsGCHeapOrdinary,
+        "Ordinary objects, i.e. not otherwise distinguished by memory "
+        "reporters.");
 
     ZCREPORT_GC_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("objects/gc-heap/function"),
-                      cStats.objectsGCHeapFunction,
-                      "Memory on the garbage-collected JavaScript "
-                      "heap that holds function objects.");
+        cStats.objectsGCHeapFunction,
+        "Function objects.");
 
     ZCREPORT_GC_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("objects/gc-heap/dense-array"),
-                      cStats.objectsGCHeapDenseArray,
-                      "Memory on the garbage-collected JavaScript "
-                      "heap that holds dense array objects.");
+        cStats.objectsGCHeapDenseArray,
+        "Dense array objects.");
 
     ZCREPORT_GC_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("objects/gc-heap/slow-array"),
-                      cStats.objectsGCHeapSlowArray,
-                      "Memory on the garbage-collected JavaScript "
-                      "heap that holds slow array objects.");
+        cStats.objectsGCHeapSlowArray,
+        "Slow array objects.");
 
     ZCREPORT_GC_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("objects/gc-heap/cross-compartment-wrapper"),
-                      cStats.objectsGCHeapCrossCompartmentWrapper,
-                      "Memory on the garbage-collected JavaScript "
-                      "heap that holds cross-compartment wrapper objects.");
+        cStats.objectsGCHeapCrossCompartmentWrapper,
+        "Cross-compartment wrapper objects.");
 
     // Note that we use cDOMPathPrefix here.  This is because we measure orphan
     // DOM nodes in the JS reporter, but we want to report them in a "dom"
     // sub-tree rather than a "js" sub-tree.
     ZCREPORT_BYTES(cDOMPathPrefix + NS_LITERAL_CSTRING("orphan-nodes"),
-                   cStats.objectsPrivate,
-                   "Memory used by orphan DOM nodes that are only reachable "
-                   "from JavaScript objects.");
+        cStats.objectsPrivate,
+        "Orphan DOM nodes, i.e. those that are only reachable from JavaScript "
+        "objects.");
 
     ZCREPORT_GC_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("shapes/gc-heap/tree/global-parented"),
-                      cStats.shapesGCHeapTreeGlobalParented,
-                      "Memory on the garbage-collected JavaScript heap that "
-                      "holds shapes that (a) are in a property tree, and (b) "
-                      "represent an object whose parent is the global object.");
+        cStats.shapesGCHeapTreeGlobalParented,
+        "Shapes that (a) are in a property tree, and (b) represent an object "
+        "whose parent is the global object.");
 
     ZCREPORT_GC_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("shapes/gc-heap/tree/non-global-parented"),
-                      cStats.shapesGCHeapTreeNonGlobalParented,
-                      "Memory on the garbage-collected JavaScript heap that "
-                      "holds shapes that (a) are in a property tree, and (b) "
-                      "represent an object whose parent is not the global object.");
+        cStats.shapesGCHeapTreeNonGlobalParented,
+        "Shapes that (a) are in a property tree, and (b) represent an object "
+        "whose parent is not the global object.");
 
     ZCREPORT_GC_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("shapes/gc-heap/dict"),
-                      cStats.shapesGCHeapDict,
-                      "Memory on the garbage-collected JavaScript "
-                      "heap that holds shapes that are in dictionary mode.");
+        cStats.shapesGCHeapDict,
+        "Shapes that are in dictionary mode.");
 
     ZCREPORT_GC_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("shapes/gc-heap/base"),
-                      cStats.shapesGCHeapBase,
-                      "Memory on the garbage-collected JavaScript "
-                      "heap that collates data common to many shapes.");
+        cStats.shapesGCHeapBase,
+        "Base shapes, which collate data common to many shapes.");
 
     ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("shapes/malloc-heap/tree-tables"),
-                   cStats.shapesMallocHeapTreeTables,
-                   "Memory allocated on the malloc heap for the property tables "
-                   "that belong to shapes that are in a property tree.");
+        cStats.shapesMallocHeapTreeTables,
+        "Property tables belonging to shapes that are in a property tree.");
 
     ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("shapes/malloc-heap/dict-tables"),
-                   cStats.shapesMallocHeapDictTables,
-                   "Memory allocated on the malloc heap for the property tables "
-                   "that belong to shapes that are in dictionary mode.");
+        cStats.shapesMallocHeapDictTables,
+        "Property tables that belong to shapes that are in dictionary mode.");
 
     ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("shapes/malloc-heap/tree-shape-kids"),
-                   cStats.shapesMallocHeapTreeShapeKids,
-                   "Memory allocated on the malloc heap for the kid hashes that "
-                   "belong to shapes that are in a property tree.");
+        cStats.shapesMallocHeapTreeShapeKids,
+        "Kid hashes that belong to shapes that are in a property tree.");
 
     ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("shapes/malloc-heap/compartment-tables"),
-                   cStats.shapesMallocHeapCompartmentTables,
-                   "Memory on the malloc heap used by compartment-wide tables storing shape "
-                   "information for use during object construction.");
+        cStats.shapesMallocHeapCompartmentTables,
+        "Compartment-wide tables storing shape information used during object "
+        "construction.");
 
     ZCREPORT_GC_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("scripts/gc-heap"),
-                      cStats.scriptsGCHeap,
-                      "Memory on the garbage-collected JavaScript "
-                      "heap that holds JSScript instances. A JSScript is "
-                      "created for each user-defined function in a script. One "
-                      "is also created for the top-level code in a script.");
+        cStats.scriptsGCHeap,
+        "JSScript instances. There is one per user-defined function in a "
+        "script, and one for the top-level code in a script.");
 
     ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("scripts/malloc-heap/data"),
-                   cStats.scriptsMallocHeapData,
-                   "Memory on the malloc heap allocated for various variable-length tables in "
-                   "JSScript.");
+        cStats.scriptsMallocHeapData,
+        "Various variable-length tables in JSScripts.");
 
     ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("baseline/data"),
-                   cStats.baselineData,
-                   "Memory used by the Baseline JIT for compilation data: "
-                   "BaselineScripts.");
+        cStats.baselineData,
+        "The Baseline JIT's compilation data (BaselineScripts).");
 
     ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("baseline/stubs/fallback"),
-                   cStats.baselineStubsFallback,
-                   "Memory used by the Baseline JIT for fallback IC stubs "
-                   "(excluding code).");
+        cStats.baselineStubsFallback,
+        "The Baseline JIT's fallback IC stubs (excluding code).");
 
     ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("baseline/stubs/optimized"),
-                   cStats.baselineStubsOptimized,
-                   "Memory used by the Baseline JIT for optimized IC stubs "
-                   "(excluding code).");
+        cStats.baselineStubsOptimized,
+        "The Baseline JIT's optimized IC stubs (excluding code).");
 
     ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("ion-data"),
-                   cStats.ionData,
-                   "Memory used by the IonMonkey JIT for compilation data: "
-                   "IonScripts.");
+        cStats.ionData,
+        "The IonMonkey JIT's compilation data (IonScripts).");
 
     ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("type-inference/type-scripts"),
-                   cStats.typeInferenceTypeScripts,
-                   "Memory used by type sets associated with scripts.");
+        cStats.typeInferenceTypeScripts,
+        "Type sets associated with scripts.");
 
     ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("type-inference/allocation-site-tables"),
-                   cStats.typeInferenceAllocationSiteTables,
-                   "Memory indexing type objects associated with allocation sites.");
+        cStats.typeInferenceAllocationSiteTables,
+        "Tables of type objects associated with allocation sites.");
 
     ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("type-inference/array-type-tables"),
-                   cStats.typeInferenceArrayTypeTables,
-                   "Memory indexing type objects associated with array literals.");
+        cStats.typeInferenceArrayTypeTables,
+        "Tables of type objects associated with array literals.");
 
     ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("type-inference/object-type-tables"),
-                   cStats.typeInferenceObjectTypeTables,
-                   "Memory indexing type objects associated with object literals.");
+        cStats.typeInferenceObjectTypeTables,
+        "Tables of type objects associated with object literals.");
 
     ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("compartment-object"),
-                   cStats.compartmentObject,
-                   "Memory used for the JSCompartment object itself.");
+        cStats.compartmentObject,
+        "The JSCompartment object itself.");
 
     ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("cross-compartment-wrapper-table"),
-                   cStats.crossCompartmentWrappersTable,
-                   "Memory used by the cross-compartment wrapper table.");
+        cStats.crossCompartmentWrappersTable,
+        "The cross-compartment wrapper table.");
 
     ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("regexp-compartment"),
-                   cStats.regexpCompartment,
-                   "Memory used by the regexp compartment.");
+        cStats.regexpCompartment,
+        "The regexp compartment.");
 
     ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("debuggees-set"),
-                   cStats.debuggeesSet,
-                   "Memory used by the debuggees set.");
+        cStats.debuggeesSet,
+        "The debuggees set.");
 
     ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("objects/malloc-heap/slots"),
-                   cStats.objectsExtra.mallocHeapSlots,
-                   "Memory allocated on the malloc heap for the non-fixed object "
-                   "slot arrays, which are used to represent object properties. "
-                   "Some objects also contain a fixed number of slots which are "
-                   "stored on the JavaScript heap; those slots "
-                   "are not counted here, but in 'objects/gc-heap/*' instead.");
+        cStats.objectsExtra.mallocHeapSlots,
+        "Non-fixed object slot arrays, which represent object properties.");
 
     ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("objects/malloc-heap/elements/non-asm.js"),
-                   cStats.objectsExtra.mallocHeapElementsNonAsmJS,
-                   "Memory allocated on the malloc heap for non-asm.js object element arrays, "
-                   "which are used to represent indexed object properties.");
+        cStats.objectsExtra.mallocHeapElementsNonAsmJS,
+        "Non-asm.js indexed elements.");
 
     // asm.js arrays are heap-allocated on some platforms and
     // non-heap-allocated on others.  We never put them under sundries,
@@ -2148,55 +2071,54 @@ ReportCompartmentStats(const JS::CompartmentStats &cStats,
     MOZ_ASSERT(mallocHeapElementsAsmJS == 0 || nonHeapElementsAsmJS == 0);
     if (mallocHeapElementsAsmJS > 0) {
         REPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("objects/malloc-heap/elements/asm.js"),
-                     KIND_HEAP, mallocHeapElementsAsmJS,
-                     "Memory allocated on the malloc heap for object element arrays used as asm.js "
-                     "array buffers.");
+            KIND_HEAP, mallocHeapElementsAsmJS,
+            "asm.js array buffer elements on the malloc heap.");
     }
     if (nonHeapElementsAsmJS > 0) {
         REPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("objects/non-heap/elements/asm.js"),
-                     KIND_NONHEAP, nonHeapElementsAsmJS,
-                     "Memory allocated for object element arrays used as asm.js array buffers. "
-                     "This memory lives outside both the malloc heap and the JS heap.");
+            KIND_NONHEAP, nonHeapElementsAsmJS,
+            "asm.js array buffer elements outside both the malloc heap and "
+            "the GC heap.");
     }
 
     REPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("objects/non-heap/code/asm.js"),
-                 KIND_NONHEAP, cStats.objectsExtra.nonHeapCodeAsmJS,
-                 "Memory allocated for AOT-compiled asm.js code.");
+        KIND_NONHEAP, cStats.objectsExtra.nonHeapCodeAsmJS,
+        "AOT-compiled asm.js code.");
 
     ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("objects/malloc-heap/asm.js-module-data"),
-                   cStats.objectsExtra.mallocHeapAsmJSModuleData,
-                   "Memory allocated for asm.js module data.");
+        cStats.objectsExtra.mallocHeapAsmJSModuleData,
+        "asm.js module data.");
 
     ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("objects/malloc-heap/arguments-data"),
-                   cStats.objectsExtra.mallocHeapArgumentsData,
-                   "Memory allocated on the malloc heap for data belonging to arguments objects.");
+        cStats.objectsExtra.mallocHeapArgumentsData,
+        "Data belonging to Arguments objects.");
 
     ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("objects/malloc-heap/regexp-statics"),
-                   cStats.objectsExtra.mallocHeapRegExpStatics,
-                   "Memory allocated for data belonging to the RegExpStatics object.");
+        cStats.objectsExtra.mallocHeapRegExpStatics,
+        "Data belonging to the RegExpStatics object.");
 
     ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("objects/malloc-heap/property-iterator-data"),
-                   cStats.objectsExtra.mallocHeapPropertyIteratorData,
-                   "Memory allocated on the malloc heap for data belonging to property iterator objects.");
+        cStats.objectsExtra.mallocHeapPropertyIteratorData,
+        "Data belonging to property iterator objects.");
 
     ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("objects/malloc-heap/ctypes-data"),
-                   cStats.objectsExtra.mallocHeapCtypesData,
-                   "Memory allocated on the malloc heap for data belonging to ctypes objects.");
+        cStats.objectsExtra.mallocHeapCtypesData,
+        "Data belonging to ctypes objects.");
 
     if (sundriesGCHeap > 0) {
         // We deliberately don't use ZCREPORT_GC_BYTES here.
         REPORT_GC_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("sundries/gc-heap"),
-                        sundriesGCHeap,
-                        "The sum of all the 'gc-heap' measurements that are too "
-                        "small to be worth showing individually.");
+            sundriesGCHeap,
+            "The sum of all 'gc-heap' measurements that are too small to be "
+            "worth showing individually.");
     }
 
     if (sundriesMallocHeap > 0) {
         // We deliberately don't use ZCREPORT_BYTES here.
         REPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("sundries/malloc-heap"),
-                     KIND_HEAP, sundriesMallocHeap,
-                     "The sum of all the 'malloc-heap' measurements that are too "
-                     "small to be worth showing individually.");
+            KIND_HEAP, sundriesMallocHeap,
+            "The sum of all 'malloc-heap' measurements that are too small to "
+            "be worth showing individually.");
     }
 
     if (gcTotalOut)
@@ -2239,111 +2161,107 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
     size_t rtTotal = 0;
 
     RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/runtime-object"),
-                  KIND_HEAP, rtStats.runtime.object,
-                  "Memory used by the JSRuntime object.");
+        KIND_HEAP, rtStats.runtime.object,
+        "The JSRuntime object.");
 
     RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/atoms-table"),
-                  KIND_HEAP, rtStats.runtime.atomsTable,
-                  "Memory used by the atoms table.");
+        KIND_HEAP, rtStats.runtime.atomsTable,
+        "The atoms table.");
 
     RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/contexts"),
-                  KIND_HEAP, rtStats.runtime.contexts,
-                  "Memory used by JSContext objects and certain structures "
-                  "hanging off them.");
+        KIND_HEAP, rtStats.runtime.contexts,
+        "JSContext objects and structures that belong to them.");
 
     RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/dtoa"),
-                  KIND_HEAP, rtStats.runtime.dtoa,
-                  "Memory used by DtoaState, which is used for converting "
-                  "strings to numbers and vice versa.");
+        KIND_HEAP, rtStats.runtime.dtoa,
+        "The DtoaState object, which is used for converting strings to "
+        "numbers and vice versa.");
 
     RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/temporary"),
-                  KIND_HEAP, rtStats.runtime.temporary,
-                  "Memory held transiently in JSRuntime and used during "
-                  "compilation.  It mostly holds parse nodes.");
+        KIND_HEAP, rtStats.runtime.temporary,
+        "Transient data (mostly parse nodes) held by the JSRuntime during "
+        "compilation.");
 
     RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/regexp-data"),
-                  KIND_NONHEAP, rtStats.runtime.regexpData,
-                  "Memory used by the regexp JIT to hold data.");
+        KIND_NONHEAP, rtStats.runtime.regexpData,
+        "Regexp JIT data.");
 
     RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/interpreter-stack"),
-                  KIND_HEAP, rtStats.runtime.interpreterStack,
-                  "Memory used for JS interpreter frames.");
+        KIND_HEAP, rtStats.runtime.interpreterStack,
+        "JS interpreter frames.");
 
     RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/math-cache"),
-                  KIND_HEAP, rtStats.runtime.mathCache,
-                  "Memory used for the math cache.");
+        KIND_HEAP, rtStats.runtime.mathCache,
+        "The math cache.");
 
     RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/source-data-cache"),
-                  KIND_HEAP, rtStats.runtime.sourceDataCache,
-                  "Memory used for the source data cache, which holds "
-                  "decompressed script source code.");
+        KIND_HEAP, rtStats.runtime.sourceDataCache,
+        "The source data cache, which holds decompressed script source code.");
 
     RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/script-data"),
-                  KIND_HEAP, rtStats.runtime.scriptData,
-                  "Memory used for the table holding script data shared in "
-                  "the runtime.");
+        KIND_HEAP, rtStats.runtime.scriptData,
+        "The table holding script data shared in the runtime.");
 
     RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/script-sources"),
-                  KIND_HEAP, rtStats.runtime.scriptSources,
-                  "Memory use for storing JavaScript source code and filenames.");
+        KIND_HEAP, rtStats.runtime.scriptSources,
+        "JavaScript source code (possibly compressed) and filenames.");
 
     RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/code/ion"),
-                  KIND_NONHEAP, rtStats.runtime.code.ion,
-                  "Memory used by the IonMonkey JIT to hold generated code.");
+        KIND_NONHEAP, rtStats.runtime.code.ion,
+        "Code generated by the IonMonkey JIT.");
 
     RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/code/baseline"),
-                  KIND_NONHEAP, rtStats.runtime.code.baseline,
-                  "Memory used by the Baseline JIT to hold generated code.");
+        KIND_NONHEAP, rtStats.runtime.code.baseline,
+        "Code generated by the Baseline JIT.");
 
     RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/code/regexp"),
-                  KIND_NONHEAP, rtStats.runtime.code.regexp,
-                  "Memory used by the regexp JIT to hold generated code.");
+        KIND_NONHEAP, rtStats.runtime.code.regexp,
+        "Code generated by the regexp JIT.");
 
     RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/code/other"),
-                  KIND_NONHEAP, rtStats.runtime.code.other,
-                  "Memory used by the JITs to hold generated code for "
-                  "wrappers and trampolines.");
+        KIND_NONHEAP, rtStats.runtime.code.other,
+        "Code generated by the JITs for wrappers and trampolines.");
 
     RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/code/unused"),
-                  KIND_NONHEAP, rtStats.runtime.code.unused,
-                  "Memory allocated by one of the JITs to hold code, "
-                  "but which is currently unused.");
+        KIND_NONHEAP, rtStats.runtime.code.unused,
+        "Memory allocated by one of the JITs to hold code, but which is "
+        "currently unused.");
 
     RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/gc/marker"),
-                  KIND_HEAP, rtStats.runtime.gc.marker,
-                  "Memory used for the GC mark stack and gray roots.");
+        KIND_HEAP, rtStats.runtime.gc.marker,
+        "The GC mark stack and gray roots.");
 
     RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/gc/nursery"),
-                  KIND_NONHEAP, rtStats.runtime.gc.nursery,
-                  "Memory used for the GC nursery.");
+        KIND_NONHEAP, rtStats.runtime.gc.nursery,
+        "The GC nursery.");
 
     RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/gc/store-buffer/vals"),
-                  KIND_HEAP, rtStats.runtime.gc.storeBufferVals,
-                  "Memory used for values in the store buffer.");
+        KIND_HEAP, rtStats.runtime.gc.storeBufferVals,
+        "Values in the store buffer.");
 
     RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/gc/store-buffer/cells"),
-                  KIND_HEAP, rtStats.runtime.gc.storeBufferCells,
-                  "Memory used for cells in the store buffer.");
+        KIND_HEAP, rtStats.runtime.gc.storeBufferCells,
+        "Cells in the store buffer.");
 
     RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/gc/store-buffer/slots"),
-                  KIND_HEAP, rtStats.runtime.gc.storeBufferSlots,
-                  "Memory used for slots in the store buffer.");
+        KIND_HEAP, rtStats.runtime.gc.storeBufferSlots,
+        "Slots in the store buffer.");
 
     RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/gc/store-buffer/whole-cells"),
-                  KIND_HEAP, rtStats.runtime.gc.storeBufferWholeCells,
-                  "Memory used for whole cells in the store buffer.");
+        KIND_HEAP, rtStats.runtime.gc.storeBufferWholeCells,
+        "Whole cells in the store buffer.");
 
     RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/gc/store-buffer/reloc-vals"),
-                  KIND_HEAP, rtStats.runtime.gc.storeBufferRelocVals,
-                  "Memory used for relocatable values in the store buffer.");
+        KIND_HEAP, rtStats.runtime.gc.storeBufferRelocVals,
+        "Relocatable values in the store buffer.");
 
     RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/gc/store-buffer/reloc-cells"),
-                  KIND_HEAP, rtStats.runtime.gc.storeBufferRelocCells,
-                  "Memory used for relocatable cells in the store buffer.");
+        KIND_HEAP, rtStats.runtime.gc.storeBufferRelocCells,
+        "Relocatable cells in the store buffer.");
 
     RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/gc/store-buffer/generics"),
-                  KIND_HEAP, rtStats.runtime.gc.storeBufferGenerics,
-                  "Memory used for generic things in the store buffer.");
+        KIND_HEAP, rtStats.runtime.gc.storeBufferGenerics,
+        "Generic things in the store buffer.");
 
     if (rtTotalOut)
         *rtTotalOut = rtTotal;
@@ -2355,28 +2273,22 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
     nsCString rtPath2(rtPath);
     rtPath2.Replace(0, strlen("explicit"), NS_LITERAL_CSTRING("decommitted"));
     REPORT_GC_BYTES(rtPath2 + NS_LITERAL_CSTRING("gc-heap/decommitted-arenas"),
-                    rtStats.gcHeapDecommittedArenas,
-                    "Memory on the garbage-collected JavaScript heap, in "
-                    "arenas in non-empty chunks, that is returned to the OS. "
-                    "This means it takes up address space but no physical "
-                    "memory or swap space.");
+        rtStats.gcHeapDecommittedArenas,
+        "GC arenas in non-empty chunks that is decommitted, i.e. it takes up "
+        "address space but no physical memory or swap space.");
 
     REPORT_GC_BYTES(rtPath + NS_LITERAL_CSTRING("gc-heap/unused-chunks"),
-                    rtStats.gcHeapUnusedChunks,
-                    "Memory on the garbage-collected JavaScript heap taken by "
-                    "empty chunks, which will soon be released unless claimed "
-                    "for new allocations.");
+        rtStats.gcHeapUnusedChunks,
+        "Empty GC chunks which will soon be released unless claimed for new "
+        "allocations.");
 
     REPORT_GC_BYTES(rtPath + NS_LITERAL_CSTRING("gc-heap/unused-arenas"),
-                    rtStats.gcHeapUnusedArenas,
-                    "Memory on the garbage-collected JavaScript heap taken by "
-                    "empty arenas within non-empty chunks.");
+        rtStats.gcHeapUnusedArenas,
+        "Empty GC arenas within non-empty chunks.");
 
     REPORT_GC_BYTES(rtPath + NS_LITERAL_CSTRING("gc-heap/chunk-admin"),
-                    rtStats.gcHeapChunkAdmin,
-                    "Memory on the garbage-collected JavaScript heap, within "
-                    "chunks, that is used to hold internal bookkeeping "
-                    "information.");
+        rtStats.gcHeapChunkAdmin,
+        "Bookkeeping information within GC chunks.");
 
     // gcTotal is the sum of everything we've reported for the GC heap.  It
     // should equal rtStats.gcHeapChunkTotal.
@@ -2439,7 +2351,7 @@ class JSMainRuntimeCompartmentsReporter MOZ_FINAL : public nsIMemoryReporter
         for (size_t i = 0; i < paths.length(); i++)
             // These ones don't need a description, hence the "".
             REPORT(nsCString(paths[i]), KIND_OTHER, UNITS_COUNT, 1,
-                   "A live compartment in the main JSRuntime.");
+                "A live compartment in the main JSRuntime.");
 
         return NS_OK;
     }
@@ -2687,76 +2599,66 @@ JSReporter::CollectReports(WindowPaths *windowPaths,
 
     // Report the sum of the runtime/ numbers.
     REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime/runtime"),
-                 KIND_OTHER, rtTotal,
-                 "The sum of all measurements under 'explicit/js-non-window/runtime/'.");
+        KIND_OTHER, rtTotal,
+        "The sum of all measurements under 'explicit/js-non-window/runtime/'.");
 
     // Report the numbers for memory outside of compartments.
 
     REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime/gc-heap/unused-chunks"),
-                 KIND_OTHER,
-                 rtStats.gcHeapUnusedChunks,
-                 "The same as 'explicit/js-non-window/gc-heap/unused-chunks'.");
+        KIND_OTHER, rtStats.gcHeapUnusedChunks,
+        "The same as 'explicit/js-non-window/gc-heap/unused-chunks'.");
 
     REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime/gc-heap/unused-arenas"),
-                 KIND_OTHER,
-                 rtStats.gcHeapUnusedArenas,
-                 "The same as 'explicit/js-non-window/gc-heap/unused-arenas'.");
+        KIND_OTHER, rtStats.gcHeapUnusedArenas,
+        "The same as 'explicit/js-non-window/gc-heap/unused-arenas'.");
 
     REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime/gc-heap/chunk-admin"),
-                 KIND_OTHER,
-                 rtStats.gcHeapChunkAdmin,
-                 "The same as 'explicit/js-non-window/gc-heap/chunk-admin'.");
+        KIND_OTHER, rtStats.gcHeapChunkAdmin,
+        "The same as 'explicit/js-non-window/gc-heap/chunk-admin'.");
 
     // Report a breakdown of the committed GC space.
 
     REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-gc-heap-committed/unused/chunks"),
-                 KIND_OTHER,
-                 rtStats.gcHeapUnusedChunks,
-                 "The same as 'explicit/js-non-window/gc-heap/unused-chunks'.");
+        KIND_OTHER, rtStats.gcHeapUnusedChunks,
+        "The same as 'explicit/js-non-window/gc-heap/unused-chunks'.");
 
     REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-gc-heap-committed/unused/arenas"),
-                 KIND_OTHER,
-                 rtStats.gcHeapUnusedArenas,
-                 "The same as 'explicit/js-non-window/gc-heap/unused-arenas'.");
+        KIND_OTHER, rtStats.gcHeapUnusedArenas,
+        "The same as 'explicit/js-non-window/gc-heap/unused-arenas'.");
 
     REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-gc-heap-committed/unused/gc-things"),
-                 KIND_OTHER,
-                 rtStats.zTotals.unusedGCThings,
-                 "The same as 'js-main-runtime/zones/unused-gc-things'.");
+        KIND_OTHER, rtStats.zTotals.unusedGCThings,
+        "The same as 'js-main-runtime/zones/unused-gc-things'.");
 
     REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-gc-heap-committed/used/chunk-admin"),
-                 KIND_OTHER,
-                 rtStats.gcHeapChunkAdmin,
-                 "The same as 'explicit/js-non-window/gc-heap/chunk-admin'.");
+        KIND_OTHER, rtStats.gcHeapChunkAdmin,
+        "The same as 'explicit/js-non-window/gc-heap/chunk-admin'.");
 
     REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-gc-heap-committed/used/arena-admin"),
-                 KIND_OTHER,
-                 rtStats.zTotals.gcHeapArenaAdmin,
-                 "The same as 'js-main-runtime/zones/gc-heap-arena-admin'.");
+        KIND_OTHER, rtStats.zTotals.gcHeapArenaAdmin,
+        "The same as 'js-main-runtime/zones/gc-heap-arena-admin'.");
 
     REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-gc-heap-committed/used/gc-things"),
-                 KIND_OTHER,
-                 rtStats.gcHeapGCThings,
-                 "Memory on the garbage-collected JavaScript heap that holds GC things such "
-                 "as objects, strings, scripts, etc.");
+        KIND_OTHER, rtStats.gcHeapGCThings,
+        "GC things: objects, strings, scripts, etc.");
 
     // Report xpconnect.
 
     REPORT_BYTES(NS_LITERAL_CSTRING("explicit/xpconnect/runtime"),
-                 KIND_HEAP, xpconnect,
-                 "Memory used by XPConnect runtime.");
+        KIND_HEAP, xpconnect,
+        "The XPConnect runtime.");
 
     REPORT_BYTES(NS_LITERAL_CSTRING("explicit/xpconnect/scopes"),
-                 KIND_HEAP, sizeInfo.mScopeAndMapSize,
-                 "Memory used by XPConnect scopes.");
+        KIND_HEAP, sizeInfo.mScopeAndMapSize,
+        "XPConnect scopes.");
 
     REPORT_BYTES(NS_LITERAL_CSTRING("explicit/xpconnect/proto-iface-cache"),
-                 KIND_HEAP, sizeInfo.mProtoAndIfaceCacheSize,
-                 "Memory used for prototype and interface binding caches.");
+        KIND_HEAP, sizeInfo.mProtoAndIfaceCacheSize,
+        "Prototype and interface binding caches.");
 
     REPORT_BYTES(NS_LITERAL_CSTRING("explicit/xpconnect/js-component-loader"),
-                 KIND_HEAP, jsComponentLoaderSize,
-                 "Memory used by XPConnect's JS component loader.");
+        KIND_HEAP, jsComponentLoaderSize,
+        "XPConnect's JS component loader.");
 
     return NS_OK;
 }
