@@ -155,7 +155,7 @@ cipher_type_test(const cipher_type_t *ct, const cipher_test_case_t *test_data) {
 				     test_case->ciphertext_length_octets));
 
     /* compare the resulting ciphertext with that in the test case */
-    if (len != test_case->ciphertext_length_octets)
+    if (len != (unsigned int)test_case->ciphertext_length_octets)
       return err_status_algo_fail;
     status = err_status_ok;
     for (i=0; i < test_case->ciphertext_length_octets; i++)
@@ -222,7 +222,7 @@ cipher_type_test(const cipher_type_t *ct, const cipher_test_case_t *test_data) {
 				     test_case->plaintext_length_octets));
 
     /* compare the resulting plaintext with that in the test case */
-    if (len != test_case->plaintext_length_octets)
+    if (len != (unsigned int)test_case->plaintext_length_octets)
       return err_status_algo_fail;
     status = err_status_ok;
     for (i=0; i < test_case->plaintext_length_octets; i++)
@@ -344,7 +344,7 @@ cipher_type_test(const cipher_type_t *ct, const cipher_test_case_t *test_data) {
 		octet_string_hex_string(buffer, length));    
 
     /* compare the resulting plaintext with the original one */
-    if (length != plaintext_len)
+    if (length != (unsigned)plaintext_len)
       return err_status_algo_fail;
     status = err_status_ok;
     for (i=0; i < plaintext_len; i++)
