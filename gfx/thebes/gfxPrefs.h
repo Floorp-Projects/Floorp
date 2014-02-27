@@ -107,6 +107,13 @@ public:
 
   DECL_GFX_PREF(Live, "gl.msaa-level",                         MSAALevel, uint32_t, 2);
 
+#ifdef XP_WIN
+  // On windows, ignore the preference value, forcing async video to false.
+  DECL_GFX_PREF(Skip, "layers.async-video.enabled",            AsyncVideoEnabled, bool, false);
+#else
+  DECL_GFX_PREF(Once, "layers.async-video.enabled",            AsyncVideoEnabled, bool, false);
+#endif
+
 public:
   // Manage the singleton:
   static gfxPrefs& One()
