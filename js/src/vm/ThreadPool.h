@@ -48,6 +48,10 @@ class ThreadPoolWorker
         CREATED, ACTIVE, TERMINATED
     } state_;
 
+    // Per-worker scheduler RNG state used for picking a random worker during
+    // work stealing.
+    uint32_t schedulerRNGState_;
+
     // The thread's main function.
     static void HelperThreadMain(void *arg);
     void helperLoop();
@@ -57,13 +61,21 @@ class ThreadPoolWorker
     bool popSliceBack(uint16_t *sliceId);
     bool stealFrom(ThreadPoolWorker *victim, uint16_t *sliceId);
 
+    // Get a worker at random from the pool using our own thread-local RNG
+    // state. This is a weak, but very fast, random function [1]. We choose
+    // [a,b,c] = 11,21,13.
+    //
+    // [1] http://www.jstatsoft.org/v08/i14/paper
   public:
-    ThreadPoolWorker(uint32_t workerId, ThreadPool *pool)
-      : workerId_(workerId),
-        pool_(pool),
-        sliceBounds_(0),
-        state_(CREATED)
-    { }
+    static const uint32_t XORSHIFT_A = 11;
+    static const uint32_t XORSHIFT_B = 21;
+    static const uint32_t XORSHIFT_C = 13;
+
+  private:
+    ThreadPoolWorker *randomWorker();
+
+  public:
+    ThreadPoolWorker(uint32_t workerId, uint32_t rngSeed, ThreadPool *pool);
 
     uint32_t id() const { return workerId_; }
     bool isMainThread() const { return id() == 0; }

@@ -33,6 +33,14 @@ DecomposeSliceBounds(uint32_t bounds, uint16_t *from, uint16_t *to)
     MOZ_ASSERT(*from <= *to);
 }
 
+ThreadPoolWorker::ThreadPoolWorker(uint32_t workerId, uint32_t rngSeed, ThreadPool *pool)
+  : workerId_(workerId),
+    pool_(pool),
+    sliceBounds_(0),
+    state_(CREATED),
+    schedulerRNGState_(rngSeed)
+{ }
+
 bool
 ThreadPoolWorker::hasWork() const
 {
@@ -99,6 +107,18 @@ ThreadPoolWorker::stealFrom(ThreadPoolWorker *victim, uint16_t *sliceId)
     pool_->stolenSlices_++;
 #endif
     return true;
+}
+
+ThreadPoolWorker *
+ThreadPoolWorker::randomWorker()
+{
+    // Perform 32-bit xorshift.
+    uint32_t x = schedulerRNGState_;
+    x ^= x << XORSHIFT_A;
+    x ^= x >> XORSHIFT_B;
+    x ^= x << XORSHIFT_C;
+    schedulerRNGState_ = x;
+    return pool_->workers_[x % pool_->numWorkers()];
 }
 
 bool
@@ -195,14 +215,10 @@ ThreadPoolWorker::getSlice(ForkJoinContext *cx, uint16_t *sliceId)
     if (!pool_->workStealing())
         return false;
 
-    ThreadPoolWorker *victim;
     do {
         if (!pool_->hasWork())
             return false;
-
-        // Add one to add the main thread into the mix.
-        victim = pool_->workers_[rand() % pool_->numWorkers()];
-    } while (!stealFrom(victim, sliceId));
+    } while (!stealFrom(randomWorker(), sliceId));
 
     return true;
 }
@@ -276,6 +292,8 @@ ThreadPool::workStealing() const
     return true;
 }
 
+extern uint64_t random_next(uint64_t *, int);
+
 bool
 ThreadPool::lazyStartWorkers(JSContext *cx)
 {
@@ -295,8 +313,10 @@ ThreadPool::lazyStartWorkers(JSContext *cx)
     // Note that numWorkers() is the number of *desired* workers,
     // but workers_.length() is the number of *successfully
     // initialized* workers.
+    uint64_t rngState = 0;
     for (uint32_t workerId = 0; workerId < numWorkers(); workerId++) {
-        ThreadPoolWorker *worker = cx->new_<ThreadPoolWorker>(workerId, this);
+        uint32_t rngSeed = uint32_t(random_next(&rngState, 32));
+        ThreadPoolWorker *worker = cx->new_<ThreadPoolWorker>(workerId, rngSeed, this);
         if (!worker || !workers_.append(worker)) {
             terminateWorkersAndReportOOM(cx);
             return false;
