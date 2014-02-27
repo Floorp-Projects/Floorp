@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=687297
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 687297</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SpecialPowers.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=687297">Mozilla Bug 687297</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+  <script class="testbody" type="text/javascript">
+    /** Test for Bug 687297 **/
+    
+    SimpleTest.waitForExplicitFinish();
+  
+    var size_a=0, size_b=0, size_c=0;
+    
+    window.report_size_a = function(s) {
+      size_a = s;
+    };
+  
+    window.report_size_b = function(s) {
+      size_b = s;
+    };
+  
+    window.report_size_c = function(s) {
+      size_c = s;
+      
+      isnot(size_a, size_b, "Font sizes are changing with global language-specific minimum font size");
+      is(size_c, size_a, "Font sizes are equal, propagating only the presentation-level base minimum font size");
+
+      SimpleTest.finish();
+    };
+  
+    SpecialPowers.pushPrefEnv(
+      {'set':[["font.minimum-size.ja", 120]]},
+      function() {
+        window.open("bug687297_a.html", '_blank');
+      }
+    );
+  
+  </script>
+</pre>
+</body>
+</html>
