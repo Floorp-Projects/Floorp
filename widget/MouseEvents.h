@@ -10,8 +10,8 @@
 
 #include "mozilla/BasicEvents.h"
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/dom/DataTransfer.h"
 #include "nsCOMPtr.h"
-#include "nsIDOMDataTransfer.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIDOMWheelEvent.h"
 
@@ -310,7 +310,7 @@ public:
   }
 
   // The dragging data.
-  nsCOMPtr<nsIDOMDataTransfer> dataTransfer;
+  nsCOMPtr<dom::DataTransfer> dataTransfer;
 
   // If this is true, user has cancelled the drag operation.
   bool userCancelled;

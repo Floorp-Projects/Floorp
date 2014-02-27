@@ -12,6 +12,7 @@
 #include "nsIPrincipal.h"
 #include "nsIDOMDataTransfer.h"
 #include "nsIDOMElement.h"
+#include "nsIDragService.h"
 #include "nsCycleCollectionParticipant.h"
 
 #include "nsAutoPtr.h"
@@ -19,12 +20,16 @@
 #include "mozilla/Attributes.h"
 
 class nsEventStateManager;
+class nsINode;
 class nsITransferable;
 class nsISupportsArray;
 class nsILoadContext;
 
 namespace mozilla {
 namespace dom {
+
+class Element;
+template<typename T> class Optional;
 
 /**
  * TransferItem is used to hold data for a particular format. Each piece of
@@ -39,13 +44,20 @@ struct TransferItem {
   nsCOMPtr<nsIVariant> mData;
 };
 
-class DataTransfer MOZ_FINAL : public nsIDOMDataTransfer
+#define NS_DATATRANSFER_IID \
+{ 0x43ee0327, 0xde5d, 0x463d, \
+  { 0x9b, 0xd0, 0xf1, 0x79, 0x09, 0x69, 0xf2, 0xfb } }
+
+class DataTransfer MOZ_FINAL : public nsIDOMDataTransfer,
+                               public nsWrapperCache
 {
 public:
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_DATATRANSFER_IID)
+
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSIDOMDATATRANSFER
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(DataTransfer, nsIDOMDataTransfer)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DataTransfer)
 
   friend class ::nsEventStateManager;
 
@@ -56,7 +68,8 @@ protected:
 
   // this constructor is used only by the Clone method to copy the fields as
   // needed to a new data transfer.
-  DataTransfer(uint32_t aEventType,
+  DataTransfer(nsISupports* aParent,
+               uint32_t aEventType,
                const uint32_t aEffectAllowed,
                bool aCursorState,
                bool aIsExternal,
@@ -64,16 +77,11 @@ protected:
                bool aIsCrossDomainSubFrameDrop,
                int32_t aClipboardType,
                nsTArray<nsTArray<TransferItem> >& aItems,
-               nsIDOMElement* aDragImage,
+               Element* aDragImage,
                uint32_t aDragImageX,
                uint32_t aDragImageY);
 
-  ~DataTransfer()
-  {
-    if (mFiles) {
-      mFiles->Disconnect();
-    }
-  }
+  ~DataTransfer();
 
   static const char sEffects[8][9];
 
@@ -90,12 +98,80 @@ public:
   // service directly. For clipboard operations, aClipboardType indicates
   // which clipboard to use, from nsIClipboard, or -1 for non-clipboard operations,
   // or if access to the system clipboard should not be allowed.
-  DataTransfer(uint32_t aEventType, bool aIsExternal, int32_t aClipboardType);
+  DataTransfer(nsISupports* aParent, uint32_t aEventType, bool aIsExternal,
+               int32_t aClipboardType);
 
-  void GetDragTarget(nsIDOMElement** aDragTarget)
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope);
+  nsISupports* GetParentObject()
   {
-    *aDragTarget = mDragTarget;
-    NS_IF_ADDREF(*aDragTarget);
+    return mParent;
+  }
+
+  void SetParentObject(nsISupports* aNewParent)
+  {
+    MOZ_ASSERT(aNewParent);
+    // Setting the parent after we've been wrapped is pointless, so
+    // make sure we aren't wrapped yet.
+    MOZ_ASSERT(!GetWrapperPreserveColor());
+    mParent = aNewParent;
+  }
+
+  static already_AddRefed<DataTransfer>
+  Constructor(const GlobalObject& aGlobal, const nsAString& aEventType,
+              bool aIsExternal, ErrorResult& aRv);
+
+  void GetDropEffect(nsString& aDropEffect)
+  {
+    aDropEffect.AssignASCII(sEffects[mDropEffect]);
+  }
+  void GetEffectAllowed(nsString& aEffectAllowed)
+  {
+    if (mEffectAllowed == nsIDragService::DRAGDROP_ACTION_UNINITIALIZED) {
+      aEffectAllowed.AssignLiteral("uninitialized");
+    } else {
+      aEffectAllowed.AssignASCII(sEffects[mEffectAllowed]);
+    }
+  }
+  void SetDragImage(Element& aElement, int32_t aX, int32_t aY,
+                    ErrorResult& aRv);
+  already_AddRefed<nsIDOMDOMStringList> Types();
+  void GetData(const nsAString& aFormat, nsAString& aData, ErrorResult& aRv);
+  void SetData(const nsAString& aFormat, const nsAString& aData,
+               ErrorResult& aRv);
+  void ClearData(const mozilla::dom::Optional<nsAString>& aFormat,
+                 mozilla::ErrorResult& aRv);
+  nsDOMFileList* GetFiles(mozilla::ErrorResult& aRv);
+  void AddElement(Element& aElement, mozilla::ErrorResult& aRv);
+  uint32_t MozItemCount()
+  {
+    return mItems.Length();
+  }
+  void GetMozCursor(nsString& aCursor)
+  {
+    if (mCursorState) {
+      aCursor.AssignLiteral("default");
+    } else {
+      aCursor.AssignLiteral("auto");
+    }
+  }
+  already_AddRefed<nsIDOMDOMStringList> MozTypesAt(uint32_t aIndex,
+                                                   mozilla::ErrorResult& aRv);
+  void MozClearDataAt(const nsAString& aFormat, uint32_t aIndex,
+                      mozilla::ErrorResult& aRv);
+  void MozSetDataAt(JSContext* aCx, const nsAString& aFormat,
+                    JS::Handle<JS::Value> aData, uint32_t aIndex,
+                    mozilla::ErrorResult& aRv);
+  JS::Value MozGetDataAt(JSContext* aCx, const nsAString& aFormat,
+                         uint32_t aIndex, mozilla::ErrorResult& aRv);
+  bool MozUserCancelled()
+  {
+    return mUserCancelled;
+  }
+  already_AddRefed<nsINode> GetMozSourceNode();
+
+  mozilla::dom::Element* GetDragTarget()
+  {
+    return mDragTarget;
   }
 
   // a readonly dataTransfer cannot have new data added or existing data removed.
@@ -127,15 +203,18 @@ public:
                                 uint32_t aIndex,
                                 nsIPrincipal* aPrincipal);
 
-protected:
-
   // returns a weak reference to the drag image
-  nsIDOMElement* GetDragImage(int32_t* aX, int32_t* aY)
+  Element* GetDragImage(int32_t* aX, int32_t* aY)
   {
     *aX = mDragImageX;
     *aY = mDragImageY;
     return mDragImage;
   }
+
+  nsresult Clone(nsISupports* aParent, uint32_t aEventType, bool aUserCancelled,
+                 bool aIsCrossDomainSubFrameDrop, DataTransfer** aResult);
+
+protected:
 
   // returns a weak reference to the current principal
   nsIPrincipal* GetCurrentPrincipal(nsresult* rv);
@@ -158,6 +237,11 @@ protected:
   // fills in the data field of aItem with the data from the drag service or
   // clipboard for a given index.
   void FillInExternalData(TransferItem& aItem, uint32_t aIndex);
+
+  void MozClearDataAtHelper(const nsAString& aFormat, uint32_t aIndex,
+                            mozilla::ErrorResult& aRv);
+
+  nsCOMPtr<nsISupports> mParent;
 
   // the event type this data transfer is for. This will correspond to an
   // event->message value.
@@ -196,14 +280,16 @@ protected:
   nsRefPtr<nsDOMFileList> mFiles;
 
   // the target of the drag. The drag and dragend events will fire at this.
-  nsCOMPtr<nsIDOMElement> mDragTarget;
+  nsCOMPtr<mozilla::dom::Element> mDragTarget;
 
   // the custom drag image and coordinates within the image. If mDragImage is
   // null, the default image is created from the drag target.
-  nsCOMPtr<nsIDOMElement> mDragImage;
+  nsCOMPtr<mozilla::dom::Element> mDragImage;
   uint32_t mDragImageX;
   uint32_t mDragImageY;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(DataTransfer, NS_DATATRANSFER_IID)
 
 } // namespace dom
 } // namespace mozilla
