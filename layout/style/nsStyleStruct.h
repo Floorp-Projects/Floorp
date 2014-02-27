@@ -1865,7 +1865,7 @@ struct nsStyleDisplay {
            NS_STYLE_DISPLAY_INLINE_TABLE == aDisplay ||
            NS_STYLE_DISPLAY_INLINE_BOX == aDisplay ||
            NS_STYLE_DISPLAY_INLINE_FLEX == aDisplay ||
-           NS_STYLE_DISPLAY_INLINE_GRID == aDisplay ||
+           NS_STYLE_DISPLAY_INLINE_XUL_GRID == aDisplay ||
            NS_STYLE_DISPLAY_INLINE_STACK == aDisplay;
   }
 
