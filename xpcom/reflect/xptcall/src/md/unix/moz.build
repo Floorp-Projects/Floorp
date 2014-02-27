@@ -99,6 +99,7 @@ if CONFIG['CPU_ARCH'] == 'arm' or CONFIG['OS_TEST'] == 'sa110':
             'xptcinvoke_arm.cpp',
             'xptcstubs_arm.cpp'
         ]
+        CXXFLAGS += ['-O2']
     elif CONFIG['OS_ARCH'] == 'NetBSD':
         SOURCES += [
             'xptcinvoke_arm_netbsd.cpp',
@@ -308,10 +309,22 @@ if CONFIG['OS_ARCH'] == 'Linux':
             'xptcinvoke_linux_s390.cpp',
             'xptcstubs_linux_s390.cpp',
         ]
+        CXXFLAGS += [
+            '-fno-strict-aliasing',
+            '-fno-inline',
+            '-fomit-frame-pointer',
+            '-mbackchain',
+        ]
     elif CONFIG['OS_TEST'] == 's390x':
         SOURCES += [
             'xptcinvoke_linux_s390x.cpp',
             'xptcstubs_linux_s390x.cpp',
+        ]
+        CXXFLAGS += [
+            '-fno-strict-aliasing',
+            '-fno-inline',
+            '-fomit-frame-pointer',
+            '-mbackchain',
         ]
 
 FINAL_LIBRARY = 'xpcom_core'
