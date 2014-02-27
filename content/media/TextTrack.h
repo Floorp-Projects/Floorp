@@ -20,6 +20,7 @@ class TextTrackList;
 class TextTrackCue;
 class TextTrackCueList;
 class TextTrackRegion;
+class HTMLTrackElement;
 
 class TextTrack MOZ_FINAL : public nsDOMEventTargetHelper
 {
@@ -99,6 +100,9 @@ public:
 
   IMPL_EVENT_HANDLER(cuechange)
 
+  HTMLTrackElement* GetTrackElement();
+  void SetTrackElement(HTMLTrackElement* aTrackElement);
+
 private:
   void UpdateActiveCueList();
 
@@ -114,6 +118,7 @@ private:
 
   nsRefPtr<TextTrackCueList> mCueList;
   nsRefPtr<TextTrackCueList> mActiveCueList;
+  nsRefPtr<HTMLTrackElement> mTrackElement;
 
   uint32_t mCuePos;
   uint16_t mReadyState;

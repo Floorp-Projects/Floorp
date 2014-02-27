@@ -16,12 +16,13 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_4(TextTrack,
+NS_IMPL_CYCLE_COLLECTION_INHERITED_5(TextTrack,
                                      nsDOMEventTargetHelper,
                                      mParent,
                                      mCueList,
                                      mActiveCueList,
-                                     mTextTrackList)
+                                     mTextTrackList,
+                                     mTrackElement)
 
 NS_IMPL_ADDREF_INHERITED(TextTrack, nsDOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(TextTrack, nsDOMEventTargetHelper)
@@ -209,6 +210,16 @@ void
 TextTrack::SetTextTrackList(TextTrackList* aTextTrackList)
 {
   mTextTrackList = aTextTrackList;
+}
+
+HTMLTrackElement*
+TextTrack::GetTrackElement() {
+  return mTrackElement;
+}
+
+void
+TextTrack::SetTrackElement(HTMLTrackElement* aTrackElement) {
+  mTrackElement = aTrackElement;
 }
 
 } // namespace dom
