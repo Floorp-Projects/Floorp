@@ -16,9 +16,9 @@
 #include "nsIDOMNode.h"
 #include "nsISelection.h"
 #include "nsISupportsBase.h"
+#include "nsISupportsImpl.h"
 #include "nsReadableUtils.h"
 #include "nsStringFwd.h"
-#include "nsTraceRefcnt.h"
 
 class nsIAtom;
 class nsIDOMDocument;

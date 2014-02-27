@@ -55,7 +55,6 @@ EXPORTS += [
     'nsThreadUtils.h',
     'nsTObserverArray.h',
     'nsTPriorityQueue.h',
-    'nsTraceRefcnt.h',
     'nsTWeakRef.h',
     'nsVersionComparator.h',
     'nsVoidArray.h',

@@ -25,7 +25,7 @@
 #include "nsNSSCertHelper.h"
 #include "nsNSSCleaner.h"
 
-#ifndef NSS_NO_LIBPKIX
+#ifndef MOZ_NO_EV_CERTS
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsISecureBrowserUI.h"
@@ -217,7 +217,7 @@ nsNSSSocketInfo::SetNotificationCallbacks(nsIInterfaceRequestor* aCallbacks)
   return NS_OK;
 }
 
-#ifndef NSS_NO_LIBPKIX
+#ifndef MOZ_NO_EV_CERTS
 static void
 getSecureBrowserUI(nsIInterfaceRequestor* callbacks,
                    nsISecureBrowserUI** result)
@@ -479,7 +479,7 @@ nsNSSSocketInfo::SetFileDescPtr(PRFileDesc* aFilePtr)
   return NS_OK;
 }
 
-#ifndef NSS_NO_LIBPKIX
+#ifndef MOZ_NO_EV_CERTS
 class PreviousCertRunnable : public SyncRunnableBase
 {
 public:
@@ -514,7 +514,7 @@ nsNSSSocketInfo::GetPreviousCert(nsIX509Cert** _result)
   NS_ASSERTION(_result, "_result parameter to GetPreviousCert is null");
   *_result = nullptr;
 
-#ifndef NSS_NO_LIBPKIX
+#ifndef MOZ_NO_EV_CERTS
   RefPtr<PreviousCertRunnable> runnable(new PreviousCertRunnable(mCallbacks));
   DebugOnly<nsresult> rv = runnable->DispatchToMainThreadAndWait();
   NS_ASSERTION(NS_SUCCEEDED(rv), "runnable->DispatchToMainThreadAndWait() failed");

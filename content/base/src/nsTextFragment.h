@@ -16,7 +16,7 @@
 
 #include "nsString.h"
 #include "nsReadableUtils.h"
-#include "nsTraceRefcnt.h"
+#include "nsISupportsImpl.h"
 
 class nsString;
 class nsCString;

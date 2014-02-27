@@ -70,7 +70,7 @@
 #include "nsIDOMXULDocument.h"
 #include "nsIDragService.h"
 #include "nsIDragSession.h"
-#include "nsDOMDataTransfer.h"
+#include "mozilla/dom/DataTransfer.h"
 #include "nsContentAreaDragDrop.h"
 #ifdef MOZ_XUL
 #include "nsTreeBodyFrame.h"
@@ -1094,6 +1094,11 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     }
     break;
   }
+  case NS_POINTER_CANCEL:
+  {
+    GenerateMouseEnterExit(mouseEvent);
+    break;
+  }
   case NS_MOUSE_EXIT:
     // If the event is not a top-level window exit, then it's not
     // really an exit --- we may have traversed widget boundaries but
@@ -2106,16 +2111,19 @@ nsEventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
         KillClickHoldTimer();
       }
 
-      nsRefPtr<nsDOMDataTransfer> dataTransfer =
-        new nsDOMDataTransfer(NS_DRAGDROP_START, false, -1);
-      if (!dataTransfer)
+      nsCOMPtr<nsISupports> container = aPresContext->GetContainerWeak();
+      nsCOMPtr<nsPIDOMWindow> window = do_GetInterface(container);
+      if (!window)
         return;
+
+      nsRefPtr<DataTransfer> dataTransfer =
+        new DataTransfer(window, NS_DRAGDROP_START, false, -1);
 
       nsCOMPtr<nsISelection> selection;
       nsCOMPtr<nsIContent> eventContent, targetContent;
       mCurrentTarget->GetContentForEvent(aEvent, getter_AddRefs(eventContent));
       if (eventContent)
-        DetermineDragTarget(aPresContext, eventContent, dataTransfer,
+        DetermineDragTarget(window, eventContent, dataTransfer,
                             getter_AddRefs(selection), getter_AddRefs(targetContent));
 
       // Stop tracking the drag gesture now. This should stop us from
@@ -2124,6 +2132,10 @@ nsEventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
 
       if (!targetContent)
         return;
+
+      // Use our targetContent, now that we've determined it, as the
+      // parent object of the DataTransfer.
+      dataTransfer->SetParentObject(targetContent);
 
       sLastDragOverFrame = nullptr;
       nsCOMPtr<nsIWidget> widget = mCurrentTarget->GetNearestWidget();
@@ -2208,18 +2220,13 @@ nsEventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
 } // GenerateDragGesture
 
 void
-nsEventStateManager::DetermineDragTarget(nsPresContext* aPresContext,
+nsEventStateManager::DetermineDragTarget(nsPIDOMWindow* aWindow,
                                          nsIContent* aSelectionTarget,
-                                         nsDOMDataTransfer* aDataTransfer,
+                                         DataTransfer* aDataTransfer,
                                          nsISelection** aSelection,
                                          nsIContent** aTargetNode)
 {
   *aTargetNode = nullptr;
-
-  nsCOMPtr<nsISupports> container = aPresContext->GetContainerWeak();
-  nsCOMPtr<nsPIDOMWindow> window = do_GetInterface(container);
-  if (!window)
-    return;
 
   // GetDragData determines if a selection, link or image in the content
   // should be dragged, and places the data associated with the drag in the
@@ -2229,7 +2236,7 @@ nsEventStateManager::DetermineDragTarget(nsPresContext* aPresContext,
   bool canDrag;
   nsCOMPtr<nsIContent> dragDataNode;
   bool wasAlt = (mGestureModifiers & MODIFIER_ALT) != 0;
-  nsresult rv = nsContentAreaDragDrop::GetDragData(window, mGestureDownContent,
+  nsresult rv = nsContentAreaDragDrop::GetDragData(aWindow, mGestureDownContent,
                                                    aSelectionTarget, wasAlt,
                                                    aDataTransfer, &canDrag, aSelection,
                                                    getter_AddRefs(dragDataNode));
@@ -2297,7 +2304,7 @@ nsEventStateManager::DetermineDragTarget(nsPresContext* aPresContext,
 bool
 nsEventStateManager::DoDefaultDragStart(nsPresContext* aPresContext,
                                         WidgetDragEvent* aDragEvent,
-                                        nsDOMDataTransfer* aDataTransfer,
+                                        DataTransfer* aDataTransfer,
                                         nsIContent* aDragTarget,
                                         nsISelection* aSelection)
 {
@@ -2330,16 +2337,12 @@ nsEventStateManager::DoDefaultDragStart(nsPresContext* aPresContext,
   // target of the mouse event. If one wasn't set in the
   // aDataTransfer during the event handler, just use the original
   // target instead.
-  nsCOMPtr<nsIDOMNode> dragTarget;
-  nsCOMPtr<nsIDOMElement> dragTargetElement;
-  aDataTransfer->GetDragTarget(getter_AddRefs(dragTargetElement));
-  dragTarget = do_QueryInterface(dragTargetElement);
+  nsCOMPtr<Element> dragTarget = aDataTransfer->GetDragTarget();
   if (!dragTarget) {
     dragTarget = do_QueryInterface(aDragTarget);
     if (!dragTarget)
       return false;
   }
-  nsCOMPtr<nsIContent> content = do_QueryInterface(dragTarget);
 
   // check which drag effect should initially be used. If the effect was not
   // set, just use all actions, otherwise Windows won't allow a drop.
@@ -2352,9 +2355,10 @@ nsEventStateManager::DoDefaultDragStart(nsPresContext* aPresContext,
 
   // get any custom drag image that was set
   int32_t imageX, imageY;
-  nsIDOMElement* dragImage = aDataTransfer->GetDragImage(&imageX, &imageY);
+  Element* dragImage = aDataTransfer->GetDragImage(&imageX, &imageY);
 
-  nsCOMPtr<nsISupportsArray> transArray = aDataTransfer->GetTransferables(dragTarget);
+  nsCOMPtr<nsISupportsArray> transArray =
+    aDataTransfer->GetTransferables(dragTarget->AsDOMNode());
   if (!transArray)
     return false;
 
@@ -2362,7 +2366,7 @@ nsEventStateManager::DoDefaultDragStart(nsPresContext* aPresContext,
   // here, but we need something to pass to the InvokeDragSession
   // methods.
   nsCOMPtr<nsIDOMEvent> domEvent;
-  NS_NewDOMDragEvent(getter_AddRefs(domEvent), content,
+  NS_NewDOMDragEvent(getter_AddRefs(domEvent), dragTarget,
                      aPresContext, aDragEvent);
 
   nsCOMPtr<nsIDOMDragEvent> domDragEvent = do_QueryInterface(domEvent);
@@ -2387,9 +2391,10 @@ nsEventStateManager::DoDefaultDragStart(nsPresContext* aPresContext,
     nsCOMPtr<nsIScriptableRegion> region;
 #ifdef MOZ_XUL
     if (dragTarget && !dragImage) {
-      if (content->NodeInfo()->Equals(nsGkAtoms::treechildren,
-                                      kNameSpaceID_XUL)) {
-        nsTreeBodyFrame* treeBody = do_QueryFrame(content->GetPrimaryFrame());
+      if (dragTarget->NodeInfo()->Equals(nsGkAtoms::treechildren,
+                                         kNameSpaceID_XUL)) {
+        nsTreeBodyFrame* treeBody =
+          do_QueryFrame(dragTarget->GetPrimaryFrame());
         if (treeBody) {
           treeBody->GetSelectionRegion(getter_AddRefs(region));
         }
@@ -2397,9 +2402,12 @@ nsEventStateManager::DoDefaultDragStart(nsPresContext* aPresContext,
     }
 #endif
 
-    dragService->InvokeDragSessionWithImage(dragTarget, transArray,
-                                            region, action, dragImage,
-                                            imageX, imageY, domDragEvent,
+    dragService->InvokeDragSessionWithImage(dragTarget->AsDOMNode(), transArray,
+                                            region, action,
+                                            dragImage ? dragImage->AsDOMNode() :
+                                                        nullptr,
+                                            imageX,
+                                            imageY, domDragEvent,
                                             aDataTransfer);
   }
 
@@ -4440,6 +4448,7 @@ nsEventStateManager::GenerateMouseEnterExit(WidgetMouseEvent* aMouseEvent)
     }
     break;
   case NS_POINTER_LEAVE:
+  case NS_POINTER_CANCEL:
   case NS_MOUSE_EXIT:
     {
       // This is actually the window mouse exit or pointer leave event. We're not moving

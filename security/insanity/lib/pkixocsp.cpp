@@ -115,7 +115,8 @@ CheckOCSPResponseSignerCert(TrustDomain& trustDomain,
   // are validating for should be passed to CheckIssuerIndependentProperties.
   rv = CheckIssuerIndependentProperties(trustDomain, cert, time,
                                         MustBeEndEntity, 0,
-                                        SEC_OID_OCSP_RESPONDER, 0);
+                                        SEC_OID_OCSP_RESPONDER,
+                                        SEC_OID_X509_ANY_POLICY, 0);
   if (rv != Success) {
     return rv;
   }

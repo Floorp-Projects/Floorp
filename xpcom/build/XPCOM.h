@@ -22,7 +22,6 @@
 #include "nsError.h"
 #include "nsDebug.h"
 #include "nsMemory.h"
-#include "nsTraceRefcnt.h"
 
 #include "nsID.h"
 

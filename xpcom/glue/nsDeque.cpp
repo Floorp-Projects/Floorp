@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsDeque.h"
-#include "nsTraceRefcnt.h"
+#include "nsISupportsImpl.h"
 #include <string.h>
 #ifdef DEBUG_rickg
 #include <stdio.h>

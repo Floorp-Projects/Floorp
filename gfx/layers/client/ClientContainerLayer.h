@@ -9,12 +9,12 @@
 #include <stdint.h>                     // for uint32_t
 #include "ClientLayerManager.h"         // for ClientLayerManager, etc
 #include "Layers.h"                     // for Layer, ContainerLayer, etc
-#include "gfxPlatform.h"                // for gfxPlatform
+#include "gfxPrefs.h"                   // for gfxPrefs
 #include "nsDebug.h"                    // for NS_ASSERTION
+#include "nsISupportsImpl.h"            // for MOZ_COUNT_CTOR, etc
 #include "nsISupportsUtils.h"           // for NS_ADDREF, NS_RELEASE
 #include "nsRegion.h"                   // for nsIntRegion
 #include "nsTArray.h"                   // for nsAutoTArray
-#include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc
 
 namespace mozilla {
 namespace layers {
@@ -58,7 +58,7 @@ public:
             GetEffectiveTransform().Is2D(&transform) &&
             !gfx::ThebesMatrix(transform).HasNonIntegerTranslation()) {
           SetSupportsComponentAlphaChildren(
-            gfxPlatform::ComponentAlphaEnabled());
+            gfxPrefs::ComponentAlphaEnabled());
         }
       }
     } else {

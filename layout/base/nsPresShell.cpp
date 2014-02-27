@@ -688,6 +688,7 @@ nsIPresShell::FrameSelection()
 
 static bool sSynthMouseMove = true;
 static uint32_t sNextPresShellId;
+static bool sPointerEventEnabled = true;
 
 PresShell::PresShell()
   : mMouseLocation(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE)
@@ -735,6 +736,12 @@ PresShell::PresShell()
     Preferences::AddBoolVarCache(&sSynthMouseMove,
                                  "layout.reflow.synthMouseMove", true);
     addedSynthMouseMove = true;
+  }
+  static bool addedPointerEventEnabled = false;
+  if (addedPointerEventEnabled) {
+    Preferences::AddBoolVarCache(&sPointerEventEnabled,
+                                 "dom.w3c_pointer_events.enabled", true);
+    addedPointerEventEnabled = true;
   }
 
   mPaintingIsFrozen = false;
@@ -6299,12 +6306,102 @@ FlushThrottledStyles(nsIDocument *aDocument, void *aData)
   return true;
 }
 
+static nsresult
+DispatchPointerFromMouseOrTouch(PresShell* aShell,
+                                nsIFrame* aFrame,
+                                WidgetGUIEvent* aEvent,
+                                bool aDontRetargetEvents,
+                                nsEventStatus* aStatus)
+{
+  uint32_t pointerMessage = 0;
+  if (aEvent->eventStructType == NS_MOUSE_EVENT) {
+    WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent();
+    // if it is not mouse then it is likely will come as touch event
+    if (!mouseEvent->convertToPointer) {
+      return NS_OK;
+    }
+    int16_t button = mouseEvent->button;
+    switch (mouseEvent->message) {
+    case NS_MOUSE_MOVE:
+      if (mouseEvent->buttons == 0) {
+        button = -1;
+      }
+      pointerMessage = NS_POINTER_MOVE;
+      break;
+    case NS_MOUSE_BUTTON_UP:
+      pointerMessage = NS_POINTER_UP;
+      break;
+    case NS_MOUSE_BUTTON_DOWN:
+      pointerMessage = NS_POINTER_DOWN;
+      break;
+    default:
+      return NS_OK;
+    }
+
+    WidgetPointerEvent event(*mouseEvent);
+    event.message = pointerMessage;
+    event.button = button;
+    event.convertToPointer = mouseEvent->convertToPointer = false;
+    aShell->HandleEvent(aFrame, &event, aDontRetargetEvents, aStatus);
+  } else if (aEvent->eventStructType == NS_TOUCH_EVENT) {
+    WidgetTouchEvent* touchEvent = aEvent->AsTouchEvent();
+    // loop over all touches and dispatch pointer events on each touch
+    // copy the event
+    switch (touchEvent->message) {
+    case NS_TOUCH_MOVE:
+      pointerMessage = NS_POINTER_MOVE;
+      break;
+    case NS_TOUCH_END:
+      pointerMessage = NS_POINTER_UP;
+      break;
+    case NS_TOUCH_START:
+      pointerMessage = NS_POINTER_DOWN;
+      break;
+    case NS_TOUCH_CANCEL:
+      pointerMessage = NS_POINTER_CANCEL;
+      break;
+    default:
+      return NS_OK;
+    }
+
+    for (uint32_t i = 0; i < touchEvent->touches.Length(); ++i) {
+      mozilla::dom::Touch* touch = touchEvent->touches[i];
+      if (!touch || !touch->convertToPointer) {
+        continue;
+      }
+
+      WidgetPointerEvent event(touchEvent->mFlags.mIsTrusted, pointerMessage, touchEvent->widget);
+      event.isPrimary = i == 0;
+      event.pointerId = touch->Identifier();
+      event.refPoint.x = touch->mRefPoint.x;
+      event.refPoint.y = touch->mRefPoint.y;
+      event.modifiers = touchEvent->modifiers;
+      event.width = touch->RadiusX();
+      event.height = touch->RadiusY();
+      event.tiltX = touch->tiltX;
+      event.tiltY = touch->tiltY;
+      event.time = touchEvent->time;
+      event.mFlags = touchEvent->mFlags;
+      event.button = WidgetMouseEvent::eLeftButton;
+      event.buttons = WidgetMouseEvent::eLeftButtonFlag;
+      event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
+      event.convertToPointer = touch->convertToPointer = false;
+      aShell->HandleEvent(aFrame, &event, aDontRetargetEvents, aStatus);
+    }
+  }
+  return NS_OK;
+}
+
 nsresult
 PresShell::HandleEvent(nsIFrame* aFrame,
                        WidgetGUIEvent* aEvent,
                        bool aDontRetargetEvents,
                        nsEventStatus* aEventStatus)
 {
+  if (sPointerEventEnabled) {
+    DispatchPointerFromMouseOrTouch(this, aFrame, aEvent, aDontRetargetEvents, aEventStatus);
+  }
+
   NS_ASSERTION(aFrame, "null frame");
 
   if (mIsDestroying ||

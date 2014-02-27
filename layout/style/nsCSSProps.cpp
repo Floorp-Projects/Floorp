@@ -978,7 +978,7 @@ const KTableValue nsCSSProps::kDirectionKTable[] = {
   eCSSKeyword_UNKNOWN,-1
 };
 
-const KTableValue nsCSSProps::kDisplayKTable[] = {
+KTableValue nsCSSProps::kDisplayKTable[] = {
   eCSSKeyword_none,               NS_STYLE_DISPLAY_NONE,
   eCSSKeyword_inline,             NS_STYLE_DISPLAY_INLINE,
   eCSSKeyword_block,              NS_STYLE_DISPLAY_BLOCK,
@@ -999,10 +999,10 @@ const KTableValue nsCSSProps::kDisplayKTable[] = {
   eCSSKeyword__moz_box,           NS_STYLE_DISPLAY_BOX,
   eCSSKeyword__moz_inline_box,    NS_STYLE_DISPLAY_INLINE_BOX,
 #ifdef MOZ_XUL
-  eCSSKeyword__moz_grid,          NS_STYLE_DISPLAY_GRID,
-  eCSSKeyword__moz_inline_grid,   NS_STYLE_DISPLAY_INLINE_GRID,
-  eCSSKeyword__moz_grid_group,    NS_STYLE_DISPLAY_GRID_GROUP,
-  eCSSKeyword__moz_grid_line,     NS_STYLE_DISPLAY_GRID_LINE,
+  eCSSKeyword__moz_grid,          NS_STYLE_DISPLAY_XUL_GRID,
+  eCSSKeyword__moz_inline_grid,   NS_STYLE_DISPLAY_INLINE_XUL_GRID,
+  eCSSKeyword__moz_grid_group,    NS_STYLE_DISPLAY_XUL_GRID_GROUP,
+  eCSSKeyword__moz_grid_line,     NS_STYLE_DISPLAY_XUL_GRID_LINE,
   eCSSKeyword__moz_stack,         NS_STYLE_DISPLAY_STACK,
   eCSSKeyword__moz_inline_stack,  NS_STYLE_DISPLAY_INLINE_STACK,
   eCSSKeyword__moz_deck,          NS_STYLE_DISPLAY_DECK,
@@ -1011,6 +1011,9 @@ const KTableValue nsCSSProps::kDisplayKTable[] = {
 #endif
   eCSSKeyword_flex,               NS_STYLE_DISPLAY_FLEX,
   eCSSKeyword_inline_flex,        NS_STYLE_DISPLAY_INLINE_FLEX,
+  // The next two entries are controlled by the layout.css.grid.enabled pref.
+  eCSSKeyword_grid,               NS_STYLE_DISPLAY_GRID,
+  eCSSKeyword_inline_grid,        NS_STYLE_DISPLAY_INLINE_GRID,
   eCSSKeyword_UNKNOWN,-1
 };
 

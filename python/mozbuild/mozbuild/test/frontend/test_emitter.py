@@ -176,9 +176,9 @@ class TestEmitterBasic(unittest.TestCase):
             RESFILE='bar.res',
             DEFFILE='baz.def',
             USE_STATIC_LIBS=True,
-            CFLAGS=['-fno-exceptions', '-w'],
-            CXXFLAGS=['-fcxx-exceptions', '-include foo.h'],
-            LDFLAGS=['-framework Foo', '-x'],
+            MOZBUILD_CFLAGS=['-fno-exceptions', '-w'],
+            MOZBUILD_CXXFLAGS=['-fcxx-exceptions', '-include foo.h'],
+            MOZBUILD_LDFLAGS=['-framework Foo', '-x'],
             WIN32_EXE_LDFLAGS=['-subsystem:console'],
         )
 

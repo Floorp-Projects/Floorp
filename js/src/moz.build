@@ -181,6 +181,7 @@ UNIFIED_SOURCES += [
     'vm/ScopeObject.cpp',
     'vm/SelfHosting.cpp',
     'vm/Shape.cpp',
+    'vm/SharedArrayObject.cpp',
     'vm/SPSProfiler.cpp',
     'vm/Stack.cpp',
     'vm/String.cpp',
@@ -427,6 +428,7 @@ if CONFIG['MOZ_ETW']:
 if CONFIG['NIGHTLY_BUILD']:
     DEFINES['ENABLE_PARALLEL_JS'] = True
     DEFINES['ENABLE_BINARYDATA'] = True
+    DEFINES['ENABLE_SHARED_ARRAY_BUFFER'] = True
 
 DEFINES['EXPORT_JS_API'] = True
 
