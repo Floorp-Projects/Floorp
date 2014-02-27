@@ -16,6 +16,7 @@
 #include "GStreamerFormatHelper.h"
 #include "VideoUtils.h"
 #include "mozilla/dom/TimeRanges.h"
+#include "mozilla/Endian.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/unused.h"
 #include "GStreamerLoader.h"
@@ -1204,13 +1205,13 @@ GstCaps* GStreamerReader::BuildAudioSinkCaps()
   GstCaps* caps = gst_caps_from_string("audio/x-raw, channels={1,2}");
   const char* format;
 #ifdef MOZ_SAMPLE_TYPE_FLOAT32
-#ifdef IS_LITTLE_ENDIAN
+#if MOZ_LITTLE_ENDIAN
   format = "F32LE";
 #else
   format = "F32BE";
 #endif
 #else /* !MOZ_SAMPLE_TYPE_FLOAT32 */
-#ifdef IS_LITTLE_ENDIAN
+#if MOZ_LITTLE_ENDIAN
   format = "S16LE";
 #else
   format = "S16BE";
