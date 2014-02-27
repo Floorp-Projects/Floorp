@@ -3817,10 +3817,16 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsFrameConstructorState& aState,
                    "Content must have a primary frame now");
       newFrame->AddStateBits(NS_FRAME_ANONYMOUSCONTENTCREATOR_CONTENT);
       aChildItems.AddChild(newFrame);
-    }
-    else {
-      // create the frame and attach it to our frame
-      ConstructFrame(aState, content, aParentFrame, aChildItems);
+    } else {
+      FrameConstructionItemList items;
+      {
+        // Skip flex item style-fixup during our AddFrameConstructionItems() call:
+        TreeMatchContext::AutoFlexItemStyleFixupSkipper
+          flexItemStyleFixupSkipper(aState.mTreeMatchContext);
+
+        AddFrameConstructionItems(aState, content, true, aParentFrame, items);
+      }
+      ConstructFramesFromItemList(aState, items, aParentFrame, aChildItems);
     }
   }
 
@@ -5055,37 +5061,6 @@ nsCSSFrameConstructor::AddPageBreakItem(nsIContent* aContent,
   aItems.AppendItem(&sPageBreakData, aContent, nsCSSAnonBoxes::pageBreak,
                     kNameSpaceID_None, nullptr, pseudoStyle.forget(), true,
                     nullptr);
-}
-
-void
-nsCSSFrameConstructor::ConstructFrame(nsFrameConstructorState& aState,
-                                      nsIContent*              aContent,
-                                      nsIFrame*                aParentFrame,
-                                      nsFrameItems&            aFrameItems)
-
-{
-  NS_PRECONDITION(aParentFrame, "no parent frame");
-  // NOTE: If we start using this code for non-anonymous content, we'll need
-  // to evaluate whether the AutoFlexItemStyleFixupSkipper (instantiated below)
-  // is appropriate for that content.
-  NS_PRECONDITION(aContent->IsRootOfNativeAnonymousSubtree(),
-                  "ConstructFrame should only be used for anonymous content");
-
-  FrameConstructionItemList items;
-  {
-    // Skip flex item style-fixup during our AddFrameConstructionItems() call:
-    TreeMatchContext::AutoFlexItemStyleFixupSkipper
-      flexItemStyleFixupSkipper(aState.mTreeMatchContext);
-
-    AddFrameConstructionItems(aState, aContent, true, aParentFrame, items);
-  }
-  items.SetTriedConstructingFrames();
-
-  for (FCItemIterator iter(items); !iter.IsDone(); iter.Next()) {
-    NS_ASSERTION(iter.item().DesiredParentType() == GetParentType(aParentFrame),
-                 "This is not going to work");
-    ConstructFramesFromItem(aState, iter, aParentFrame, aFrameItems);
-  }
 }
 
 void
@@ -8275,13 +8250,7 @@ nsCSSFrameConstructor::ReplicateFixedFrames(nsPageContentFrame* aParentFrame)
                                         ITEM_ALLOW_XBL_BASE |
                                           ITEM_ALLOW_PAGE_BREAK,
                                         nullptr, items);
-      items.SetTriedConstructingFrames();
-      for (FCItemIterator iter(items); !iter.IsDone(); iter.Next()) {
-        NS_ASSERTION(iter.item().DesiredParentType() ==
-                       GetParentType(canvasFrame),
-                     "This is not going to work");
-        ConstructFramesFromItem(state, iter, canvasFrame, fixedPlaceholders);
-      }
+      ConstructFramesFromItemList(state, items, canvasFrame, fixedPlaceholders);
     }
   }
 
@@ -8862,9 +8831,8 @@ nsCSSFrameConstructor::CreateNeededAnonFlexItems(
   FrameConstructionItemList& aItems,
   nsIFrame* aParentFrame)
 {
-  NS_ABORT_IF_FALSE(aParentFrame->GetType() == nsGkAtoms::flexContainerFrame,
-                    "Should only be called for items in a flex container frame");
-  if (aItems.IsEmpty()) {
+  if (aItems.IsEmpty() ||
+      aParentFrame->GetType() != nsGkAtoms::flexContainerFrame) {
     return;
   }
 
@@ -9187,22 +9155,13 @@ nsCSSFrameConstructor::ConstructFramesFromItemList(nsFrameConstructorState& aSta
                                                    nsIFrame* aParentFrame,
                                                    nsFrameItems& aFrameItems)
 {
-  aItems.SetTriedConstructingFrames();
-
   CreateNeededTablePseudos(aState, aItems, aParentFrame);
+  CreateNeededAnonFlexItems(aState, aItems, aParentFrame);
 
-  if (aParentFrame->GetType() == nsGkAtoms::flexContainerFrame) {
-    CreateNeededAnonFlexItems(aState, aItems, aParentFrame);
-  }
-
-#ifdef DEBUG
+  aItems.SetTriedConstructingFrames();
   for (FCItemIterator iter(aItems); !iter.IsDone(); iter.Next()) {
     NS_ASSERTION(iter.item().DesiredParentType() == GetParentType(aParentFrame),
                  "Needed pseudos didn't get created; expect bad things");
-  }
-#endif
-
-  for (FCItemIterator iter(aItems); !iter.IsDone(); iter.Next()) {
     ConstructFramesFromItem(aState, iter, aParentFrame, aFrameItems);
   }
 
