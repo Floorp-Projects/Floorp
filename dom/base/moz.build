@@ -7,6 +7,7 @@
 TEST_DIRS += ['test']
 
 XPIDL_SOURCES += [
+    'nsIConsoleAPIStorage.idl',
     'nsIDOMDOMCursor.idl',
     'nsIDOMDOMRequest.idl',
     'nsIEntropyCollector.idl',
@@ -119,12 +120,12 @@ SOURCES += [
 EXTRA_COMPONENTS += [
     'ConsoleAPI.js',
     'ConsoleAPI.manifest',
+    'ConsoleAPIStorage.js',
     'SiteSpecificUserAgent.js',
     'SiteSpecificUserAgent.manifest',
 ]
 
 EXTRA_JS_MODULES += [
-    'ConsoleAPIStorage.jsm',
     'DOMRequestHelper.jsm',
     'IndexedDBHelper.jsm',
     'ObjectWrapper.jsm',
