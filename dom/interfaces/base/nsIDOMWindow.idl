@@ -508,7 +508,7 @@ interface nsIDOMWindow : nsISupports
   /**
    * Console API
    */
-  readonly attribute nsISupports console;
+  [implicit_jscontext] attribute jsval console;
 };
 
 [scriptable, uuid(2146c906-57f7-486c-a1b4-8cdb57ef577f)]
