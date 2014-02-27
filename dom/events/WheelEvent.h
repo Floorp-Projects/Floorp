@@ -8,14 +8,14 @@
 #define mozilla_dom_WheelEvent_h_
 
 #include "nsIDOMWheelEvent.h"
-#include "nsDOMMouseEvent.h"
-#include "mozilla/EventForwards.h"
+#include "mozilla/dom/MouseEvent.h"
 #include "mozilla/dom/WheelEventBinding.h"
+#include "mozilla/EventForwards.h"
 
 namespace mozilla {
 namespace dom {
 
-class WheelEvent : public nsDOMMouseEvent,
+class WheelEvent : public MouseEvent,
                    public nsIDOMWheelEvent
 {
 public:
@@ -29,7 +29,7 @@ public:
   NS_DECL_NSIDOMWHEELEVENT
   
   // Forward to base class
-  NS_FORWARD_TO_NSDOMMOUSEEVENT
+  NS_FORWARD_TO_MOUSEEVENT
 
   static
   already_AddRefed<WheelEvent> Constructor(const GlobalObject& aGlobal,

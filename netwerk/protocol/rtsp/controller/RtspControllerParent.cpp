@@ -9,6 +9,7 @@
 #include "nsIAuthPromptProvider.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/ipc/URIUtils.h"
+#include "mozilla/unused.h"
 #include "nsNetUtil.h"
 #include "prlog.h"
 
@@ -20,9 +21,9 @@ PRLogModuleInfo* gRtspLog;
 #define LOG(args) PR_LOG(gRtspLog, PR_LOG_DEBUG, args)
 
 #define SEND_DISCONNECT_IF_ERROR(rv)                         \
-  if (NS_FAILED(rv) && mIPCOpen && mTotalTracks > 0) {       \
-    for (int i = 0; i < mTotalTracks; i++) {                 \
-      SendOnDisconnected(i, rv);                             \
+  if (NS_FAILED(rv) && mIPCOpen && mTotalTracks > 0ul) {     \
+    for (uint32_t i = 0; i < mTotalTracks; i++) {            \
+      unused << SendOnDisconnected(i, rv);                   \
     }                                                        \
   }
 
@@ -153,14 +154,15 @@ RtspControllerParent::OnMediaDataAvailable(uint8_t index,
   uint32_t int32Value;
   uint64_t int64Value;
 
+  nsresult rv = meta->GetTimeStamp(&int64Value);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+
   LOG(("RtspControllerParent:: OnMediaDataAvailable %d:%d time %lld",
        index, length, int64Value));
 
   // Serialize meta data.
   nsCString name;
   name.AssignLiteral("TIMESTAMP");
-  nsresult rv = meta->GetTimeStamp(&int64Value);
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
   InfallibleTArray<RtspMetadataParam> metaData;
   metaData.AppendElement(RtspMetadataParam(name, int64Value));
 

@@ -1361,7 +1361,7 @@ let PlacesControllerDragHelper = {
   /**
    * Extract the first accepted flavor from a list of flavors.
    * @param aFlavors
-   *        The flavors list of type nsIDOMDOMStringList.
+   *        The flavors list of type DOMStringList.
    */
   getFirstValidFlavor: function PCDH_getFirstValidFlavor(aFlavors) {
     for (let i = 0; i < aFlavors.length; i++) {

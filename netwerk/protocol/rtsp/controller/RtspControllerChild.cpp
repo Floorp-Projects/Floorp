@@ -123,7 +123,7 @@ RtspControllerChild::RecvOnConnected(
   AddMetaData(meta.forget());
 
   // Notify the listener when meta data of tracks are available.
-  if ((index + 1) == mTotalTracks) {
+  if ((static_cast<uint32_t>(index) + 1) == mTotalTracks) {
     // The controller provide |GetTrackMetaData| method for his client.
     if (mListener) {
       mListener->OnConnected(index, nullptr);

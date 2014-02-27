@@ -546,7 +546,7 @@ protected:
                                     nsIDOMNode *aDestinationNode,
                                     int32_t aDestinationOffset,
                                     bool aDoDeleteSelection);
-  nsresult InsertFromDataTransfer(nsIDOMDataTransfer *aDataTransfer,
+  nsresult InsertFromDataTransfer(mozilla::dom::DataTransfer *aDataTransfer,
                                   int32_t aIndex,
                                   nsIDOMDocument *aSourceDoc,
                                   nsIDOMNode *aDestinationNode,

@@ -39,12 +39,13 @@ ToUintWidth(double d)
                   "ResultType must be an unsigned type");
 
     uint64_t bits = mozilla::BitwiseCast<uint64_t>(d);
+    unsigned DoubleExponentShift = mozilla::FloatingPoint<double>::ExponentShift;
 
     // Extract the exponent component.  (Be careful here!  It's not technically
     // the exponent in NaN, infinities, and subnormals.)
     int_fast16_t exp =
-        int_fast16_t((bits & mozilla::DoubleExponentBits) >> mozilla::DoubleExponentShift) -
-        int_fast16_t(mozilla::DoubleExponentBias);
+        int_fast16_t((bits & mozilla::FloatingPoint<double>::ExponentBits) >> DoubleExponentShift) -
+        int_fast16_t(mozilla::FloatingPoint<double>::ExponentBias);
 
     // If the exponent's less than zero, abs(d) < 1, so the result is 0.  (This
     // also handles subnormals.)
@@ -60,7 +61,7 @@ ToUintWidth(double d)
     // 2**84 + 2**32.  Thus if ResultType is int32_t, an exponent >= 84 implies
     // floor(abs(d)) == 0 mod 2**32.)  Return 0 in all these cases.
     const size_t ResultWidth = CHAR_BIT * sizeof(ResultType);
-    if (exponent >= mozilla::DoubleExponentShift + ResultWidth)
+    if (exponent >= DoubleExponentShift + ResultWidth)
         return 0;
 
     // The significand contains the bits that will determine the final result.
@@ -68,9 +69,9 @@ ToUintWidth(double d)
     // locations in the unsigned binary representation of floor(abs(d)).
     static_assert(sizeof(ResultType) <= sizeof(uint64_t),
                   "Left-shifting below would lose upper bits");
-    ResultType result = (exponent > mozilla::DoubleExponentShift)
-                        ? ResultType(bits << (exponent - mozilla::DoubleExponentShift))
-                        : ResultType(bits >> (mozilla::DoubleExponentShift - exponent));
+    ResultType result = (exponent > DoubleExponentShift)
+                        ? ResultType(bits << (exponent - DoubleExponentShift))
+                        : ResultType(bits >> (DoubleExponentShift - exponent));
 
     // Two further complications remain.  First, |result| may contain bogus
     // sign/exponent bits.  Second, IEEE-754 numbers' significands (excluding
@@ -103,7 +104,7 @@ ToUintWidth(double d)
     }
 
     // Compute the congruent value in the signed range.
-    return (bits & mozilla::DoubleSignBit) ? ~result + 1 : result;
+    return (bits & mozilla::FloatingPoint<double>::SignBit) ? ~result + 1 : result;
 }
 
 template<typename ResultType>

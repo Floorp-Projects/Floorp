@@ -164,7 +164,7 @@ js::DateTimeInfo::DateTimeInfo()
 {
     // Set to a totally impossible TZA so that the comparison above will fail
     // and all fields will be properly initialized.
-    localTZA_ = UnspecifiedNaN();
+    localTZA_ = UnspecifiedNaN<double>();
     updateTimeZoneAdjustment();
 }
 

@@ -20,11 +20,12 @@ interface nsINetworkInterfaceList : nsISupports
   nsINetworkInterface getInterface(in long interfaceIndex);
 };
 
-[scriptable, uuid(5be50bcb-bfe9-4742-b7e6-3e9bb4835369)]
+[scriptable, uuid(e3cf9355-086e-46e3-bb3d-378bd58d578b)]
 interface nsINetworkInterfaceListService : nsISupports
 {
-  const long LIST_NOT_INCLUDE_MMS_INTERFACES = 1;
-  const long LIST_NOT_INCLUDE_SUPL_INTERFACES = 2;
+  const long LIST_NOT_INCLUDE_MMS_INTERFACES  = (1 << 0);
+  const long LIST_NOT_INCLUDE_SUPL_INTERFACES = (1 << 1);
+  const long LIST_NOT_INCLUDE_IMS_INTERFACES  = (1 << 2);
 
   /**
    * Obtain a list of network interfaces that satisfy the specified condition.

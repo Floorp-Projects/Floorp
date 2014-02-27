@@ -55,12 +55,16 @@ If you plan on uploading patches to Mozilla, there is an extension called
 bzexport that makes it easy to upload patches from the command line via the
 |hg bzexport| command. More info is available at
 https://hg.mozilla.org/hgcustom/version-control-tools/file/default/hgext/bzexport/README
+
+Would you like to activate bzexport
 '''.strip()
 
 MQEXT_INFO = '''
 The mqext extension (https://bitbucket.org/sfink/mqext) provides a number of
 useful abilities to Mercurial, including automatically committing changes to
 your mq patch queue.
+
+Would you like to activate mqext
 '''.strip()
 
 QIMPORTBZ_INFO = '''
@@ -68,6 +72,8 @@ The qimportbz extension
 (https://hg.mozilla.org/hgcustom/version-control-tools/file/default/hgext/qimportbz/README) makes it possible to
 import patches from Bugzilla using a friendly bz:// URL handler. e.g.
 |hg qimport bz://123456|.
+
+Would you like to activate qimportbz
 '''.strip()
 
 QNEWCURRENTUSER_INFO = '''
@@ -86,9 +92,12 @@ class MercurialSetupWizard(object):
     """Command-line wizard to help users configure Mercurial."""
 
     def __init__(self, state_dir):
-        self.state_dir = state_dir
-        self.ext_dir = os.path.join(state_dir, 'mercurial', 'extensions')
-        self.vcs_tools_dir = os.path.join(state_dir, 'version-control-tools')
+        # We use normpath since Mercurial expects the hgrc to use native path
+        # separators, but state_dir uses unix style paths even on Windows.
+        self.state_dir = os.path.normpath(state_dir)
+        self.ext_dir = os.path.join(self.state_dir, 'mercurial', 'extensions')
+        self.vcs_tools_dir = os.path.join(self.state_dir, 'version-control-tools')
+        self.update_vcs_tools = False
 
     def run(self, config_paths):
         try:
@@ -134,90 +143,38 @@ class MercurialSetupWizard(object):
                 print('Fixed patch settings.')
                 print('')
 
-        active = c.extensions
+        self.prompt_native_extension(c, 'progress',
+            'Would you like to see progress bars during Mercurial operations')
 
-        if 'progress' not in active:
-            if self._prompt_yn('Would you like to see progress bars during '
-                'long-running Mercurial operations'):
-                c.activate_extension('progress')
-                print('Activated progress extension.')
-                print('')
+        self.prompt_native_extension(c, 'color',
+            'Would you like Mercurial to colorize output to your terminal')
 
-        if 'color' not in active:
-            if self._prompt_yn('Would you like Mercurial to colorize output '
-                'to your terminal'):
-                c.activate_extension('color')
-                print('Activated color extension.')
-                print('')
+        self.prompt_native_extension(c, 'rebase',
+            'Would you like to enable the rebase extension to allow you to move'
+            ' changesets around (which can help maintain a linear history)')
 
-        if 'rebase' not in active:
-            if self._prompt_yn('Would you like to enable the rebase extension '
-                'to allow you to move changesets around (which can help '
-                'maintain a linear history)'):
-                c.activate_extension('rebase')
-                print('Activated rebase extension.')
-                print('')
+        self.prompt_native_extension(c, 'mq',
+            'Would you like to activate the mq extension to manage patches')
 
-        update_vcs_tools = False
-        activate_bzexport = False
+        self.prompt_external_extension(c, 'bzexport', BZEXPORT_INFO)
 
-        if 'bzexport' not in active:
-            print(BZEXPORT_INFO)
-            if self._prompt_yn('Would you like to activate bzexport'):
-                activate_bzexport = True
-                update_vcs_tools = True
-        else:
-            activate_bzexport = True
+        if 'mq' in c.extensions:
+            self.prompt_external_extension(c, 'mqext', MQEXT_INFO,
+                                           os.path.join(self.ext_dir, 'mqext'))
 
-        if activate_bzexport:
-            update_vcs_tools = True
-            c.activate_extension('bzexport',
-                os.path.join(self.vcs_tools_dir, 'hgext', 'bzexport'))
-            print('Activated bzexport extension.')
-            print('')
-
-        if 'mq' not in active:
-            if self._prompt_yn('Would you like to activate the mq extension '
-                'to manage patches'):
-                c.activate_extension('mq')
-                print('Activated mq extension.')
-                print('')
-
-        active = c.extensions
-
-        if 'mq' in active:
-            update_mqext = 'mqext' in active
-            if 'mqext' not in active:
-                print(MQEXT_INFO)
-                if self._prompt_yn('Would you like to activate mqext and '
-                    'automatically commit changes as you modify patches'):
-                    update_mqext = True
-                    c.activate_extension('mqext', os.path.join(self.ext_dir,
-                        'mqext'))
-                    c.autocommit_mq(True)
-                    print('Activated mqext extension.')
-                    print('')
-
-            if update_mqext:
+            if 'mqext' in c.extensions:
                 self.update_mercurial_repo(
-                hg,
-                'https://bitbucket.org/sfink/mqext',
-                os.path.join(self.ext_dir, 'mqext'),
-                'default',
-                'Ensuring mqext extension is up to date...')
+                    hg,
+                    'https://bitbucket.org/sfink/mqext',
+                    os.path.join(self.ext_dir, 'mqext'),
+                    'default',
+                    'Ensuring mqext extension is up to date...')
+                if self._prompt_yn('Would you like to configure mqext to '
+                    'automatically commit changes as you modify patches'):
+                    c.autocommit_mq(True)
+                    print('Configured mqext to auto-commit.\n')
 
-            activate_qimportbz = True
-            if 'qimportbz' not in active:
-                print(QIMPORTBZ_INFO)
-                if not self._prompt_yn('Would you like to activate qimportbz'):
-                    activate_qimportbz = False
-
-            if activate_qimportbz:
-                update_vcs_tools = True
-                c.activate_extension('qimportbz',
-                    os.path.join(self.vcs_tools_dir, 'hgext', 'qimportbz'))
-                print('Activated qimportbz extension.')
-                print('')
+            self.prompt_external_extension(c, 'qimportbz', QIMPORTBZ_INFO)
 
             if not c.have_qnew_currentuser_default():
                 print(QNEWCURRENTUSER_INFO)
@@ -227,7 +184,7 @@ class MercurialSetupWizard(object):
                     print('Configured qnew to set patch author by default.')
                     print('')
 
-        if update_vcs_tools:
+        if self.update_vcs_tools:
             self.update_mercurial_repo(
                 hg,
                 'https://hg.mozilla.org/hgcustom/version-control-tools',
@@ -281,6 +238,28 @@ class MercurialSetupWizard(object):
         print(FINISHED)
         return 0
 
+    def prompt_native_extension(self, c, name, prompt_text):
+        # Ask the user if the specified extension bundled with Mercurial should be enabled.
+        if name in c.extensions:
+            return
+        if self._prompt_yn(prompt_text):
+            c.activate_extension(name)
+            print('Activated %s extension.\n' % name)
+
+    def prompt_external_extension(self, c, name, prompt_text, path=None):
+        # Ask the user if the specified extension should be enabled. Defaults
+        # to treating the extension as one in version-control-tools/hgext/
+        # in a directory with the same name as the extension and thus also
+        # flagging the version-control-tools repo as needing an update.
+        if name not in c.extensions:
+            if not self._prompt_yn(prompt_text):
+                return
+            print('Activated %s extension.\n' % name)
+        if not path:
+            path = os.path.join(self.vcs_tools_dir, 'hgext', name)
+            self.update_vcs_tools = True
+        c.activate_extension(name, path)
+
     def update_mercurial_repo(self, hg, url, dest, branch, msg):
         # We always pass the host fingerprints that we "know" to be canonical
         # because the existing config may have outdated fingerprints and this
@@ -326,4 +305,4 @@ class MercurialSetupWizard(object):
             if choice in ('n', 'no'):
                 return False
 
-            print('Must reply with one of {yes, no, y, no}.')
+            print('Must reply with one of {yes, no, y, n}.')
