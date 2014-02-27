@@ -2595,6 +2595,12 @@ Element::MozRequestFullScreen()
   return;
 }
 
+void
+Element::MozRequestPointerLock()
+{
+  OwnerDoc()->RequestPointerLock(this);
+}
+
 NS_IMETHODIMP
 Element::GetInnerHTML(nsAString& aInnerHTML)
 {
