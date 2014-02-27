@@ -19,7 +19,6 @@ class nsPersistentProperties MOZ_FINAL : public nsIPersistentProperties
 {
 public:
   nsPersistentProperties();
-  void Init();
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIPROPERTIES
