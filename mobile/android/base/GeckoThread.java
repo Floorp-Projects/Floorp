@@ -34,7 +34,8 @@ public class GeckoThread extends Thread implements GeckoEventListener {
         WaitForDebugger,
         Launched,
         GeckoRunning,
-        GeckoExiting
+        GeckoExiting,
+        GeckoExited
     };
 
     private static LaunchState sLaunchState = LaunchState.Launching;
