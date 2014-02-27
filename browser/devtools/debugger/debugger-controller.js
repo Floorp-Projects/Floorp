@@ -89,7 +89,6 @@ const FRAME_TYPE = {
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
 Cu.import("resource://gre/modules/devtools/event-emitter.js");
 Cu.import("resource:///modules/devtools/SimpleListWidget.jsm");
 Cu.import("resource:///modules/devtools/BreadcrumbsWidget.jsm");
@@ -139,13 +138,6 @@ let DebuggerController = {
     this.shutdownDebugger = this.shutdownDebugger.bind(this);
     this._onTabNavigated = this._onTabNavigated.bind(this);
     this._onTabDetached = this._onTabDetached.bind(this);
-
-    // Chrome debugging lives in a different process and needs to handle
-    // debugger startup and shutdown by itself.
-    if (window._isChromeDebugger) {
-      window.addEventListener("DOMContentLoaded", this.startupDebugger, true);
-      window.addEventListener("unload", this.shutdownDebugger, true);
-    }
   },
 
   /**
@@ -159,20 +151,7 @@ let DebuggerController = {
       return this._startup;
     }
 
-    // Chrome debugging lives in a different process and needs to handle
-    // debugger startup by itself.
-    if (window._isChromeDebugger) {
-      window.removeEventListener("DOMContentLoaded", this.startupDebugger, true);
-    }
-
-    return this._startup = DebuggerView.initialize().then(() => {
-      // Chrome debugging needs to initiate the connection by itself.
-      if (window._isChromeDebugger) {
-        return this.connect();
-      } else {
-        return promise.resolve(null); // Done.
-      }
-    });
+    return this._startup = DebuggerView.initialize();
   },
 
   /**
@@ -186,12 +165,6 @@ let DebuggerController = {
       return this._shutdown;
     }
 
-    // Chrome debugging lives in a different process and needs to handle
-    // debugger shutdown by itself.
-    if (window._isChromeDebugger) {
-      window.removeEventListener("unload", this.shutdownDebugger, true);
-    }
-
     return this._shutdown = DebuggerView.destroy().then(() => {
       DebuggerView.destroy();
       this.SourceScripts.disconnect();
@@ -199,22 +172,12 @@ let DebuggerController = {
       this.ThreadState.disconnect();
       this.Tracer.disconnect();
       this.disconnect();
-
-      // Chrome debugging needs to close its parent process on shutdown.
-      if (window._isChromeDebugger) {
-        return this._quitApp();
-      } else {
-        return promise.resolve(null); // Done.
-      }
     });
   },
 
   /**
-   * Initiates remote or chrome debugging based on the current target,
-   * wiring event handlers as necessary.
-   *
-   * In case of a chrome debugger living in a different process, a socket
-   * connection pipe is opened as well.
+   * Initiates remote debugging based on the current target, wiring event
+   * handlers as necessary.
    *
    * @return object
    *         A promise that is resolved when the debugger finishes connecting.
@@ -227,43 +190,26 @@ let DebuggerController = {
     let startedDebugging = promise.defer();
     this._connection = startedDebugging.promise;
 
-    if (!window._isChromeDebugger) {
-      let target = this._target;
-      let { client, form: { chromeDebugger, traceActor }, threadActor } = target;
-      target.on("close", this._onTabDetached);
-      target.on("navigate", this._onTabNavigated);
-      target.on("will-navigate", this._onTabNavigated);
-      this.client = client;
+    let target = this._target;
+    let { client, form: { chromeDebugger, traceActor } } = target;
+    target.on("close", this._onTabDetached);
+    target.on("navigate", this._onTabNavigated);
+    target.on("will-navigate", this._onTabNavigated);
+    this.client = client;
 
-      if (target.chrome) {
-        this._startChromeDebugging(chromeDebugger, startedDebugging.resolve);
+    if (target.chrome) {
+      this._startChromeDebugging(chromeDebugger, startedDebugging.resolve);
+    } else {
+      this._startDebuggingTab(startedDebugging.resolve);
+      const startedTracing = promise.defer();
+      if (Prefs.tracerEnabled && traceActor) {
+        this._startTracingTab(traceActor, startedTracing.resolve);
       } else {
-        this._startDebuggingTab(startedDebugging.resolve);
-        const startedTracing = promise.defer();
-        if (Prefs.tracerEnabled && traceActor) {
-          this._startTracingTab(traceActor, startedTracing.resolve);
-        } else {
-          startedTracing.resolve();
-        }
-
-        return promise.all([startedDebugging.promise, startedTracing.promise]);
+        startedTracing.resolve();
       }
 
-      return startedDebugging.promise;
+      return promise.all([startedDebugging.promise, startedTracing.promise]);
     }
-
-    // Chrome debugging needs to make its own connection to the debuggee.
-    let transport = debuggerSocketConnect(
-      Prefs.chromeDebuggingHost, Prefs.chromeDebuggingPort);
-
-    let client = this.client = new DebuggerClient(transport);
-    client.addListener("tabNavigated", this._onTabNavigated);
-    client.addListener("tabDetached", this._onTabDetached);
-    client.connect(() => {
-      client.listTabs(aResponse => {
-        this._startChromeDebugging(aResponse.chromeDebugger, startedDebugging.resolve);
-      });
-    });
 
     return startedDebugging.promise;
   },
@@ -275,15 +221,6 @@ let DebuggerController = {
     // Return early if the client didn't even have a chance to instantiate.
     if (!this.client) {
       return;
-    }
-
-    // When debugging local or a remote instance, the connection is closed by
-    // the RemoteTarget. Chrome debugging needs to specifically close its own
-    // connection to the debuggee.
-    if (window._isChromeDebugger) {
-      this.client.removeListener("tabNavigated", this._onTabNavigated);
-      this.client.removeListener("tabDetached", this._onTabDetached);
-      this.client.close();
     }
 
     this._connection = null;
@@ -448,33 +385,6 @@ let DebuggerController = {
         this.activeThread.fillFrames(CALL_STACK_PAGE_SIZE);
       }
     });
-  },
-
-  /**
-   * Attempts to quit the current process if allowed.
-   *
-   * @return object
-   *         A promise that is resolved if the app will quit successfully.
-   */
-  _quitApp: function() {
-    let deferred = promise.defer();
-
-    // Quitting the app is synchronous. Give the returned promise consumers
-    // a chance to do their thing before killing the process.
-    Services.tm.currentThread.dispatch({ run: () => {
-      let quit = Cc["@mozilla.org/supports-PRBool;1"].createInstance(Ci.nsISupportsPRBool);
-      Services.obs.notifyObservers(quit, "quit-application-requested", null);
-
-      // Somebody canceled our quit request.
-      if (quit.data) {
-        deferred.reject(quit.data);
-      } else {
-        deferred.resolve(quit.data);
-        Services.startup.quit(Ci.nsIAppStartup.eForceQuit);
-      }
-    }}, 0);
-
-    return deferred.promise;
   },
 
   _startup: null,
@@ -2200,8 +2110,6 @@ let L10N = new ViewHelpers.L10N(DBG_STRINGS_URI);
  * Shortcuts for accessing various debugger preferences.
  */
 let Prefs = new ViewHelpers.Prefs("devtools", {
-  chromeDebuggingHost: ["Char", "debugger.chrome-debugging-host"],
-  chromeDebuggingPort: ["Int", "debugger.chrome-debugging-port"],
   sourcesWidth: ["Int", "debugger.ui.panes-sources-width"],
   instrumentsWidth: ["Int", "debugger.ui.panes-instruments-width"],
   panesVisibleOnStartup: ["Bool", "debugger.ui.panes-visible-on-startup"],
@@ -2215,15 +2123,6 @@ let Prefs = new ViewHelpers.Prefs("devtools", {
   autoPrettyPrint: ["Bool", "debugger.auto-pretty-print"],
   tracerEnabled: ["Bool", "debugger.tracer"],
   editorTabSize: ["Int", "editor.tabsize"]
-});
-
-/**
- * Returns true if this is a chrome debugger instance.
- * @return boolean
- */
-XPCOMUtils.defineLazyGetter(window, "_isChromeDebugger", function() {
-  // We're inside a single top level XUL window in a different process.
-  return !(window.frameElement instanceof XULElement);
 });
 
 /**
