@@ -36,6 +36,10 @@ nsIAttribute::nsIAttribute(nsDOMAttributeMap* aAttrMap,
 {
 }
 
+nsIAttribute::~nsIAttribute()
+{
+}
+
 namespace mozilla {
 namespace dom {
 
