@@ -4,18 +4,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ######################################################################
-# ARM
-######################################################################
-#
-# Linux/ARM
-#
-ifeq ($(OS_ARCH),Linux)
-ifneq (,$(filter arm% sa110,$(OS_TEST)))
-CXXFLAGS += -O2
-endif
-endif
-
-######################################################################
 # HPPA
 ######################################################################
 #
@@ -76,20 +64,6 @@ ifdef HAVE_64BIT_OS
 ASFLAGS		+= -xarch=v9
 endif
 endif
-endif
-
-######################################################################
-# S/390
-######################################################################
-#
-# Linux for S/390
-#
-ifeq ($(OS_ARCH)$(OS_TEST),Linuxs390)
-CXXFLAGS	+= -fno-strict-aliasing -fno-inline -fomit-frame-pointer -mbackchain
-endif
-
-ifeq ($(OS_ARCH)$(OS_TEST),Linuxs390x)
-CXXFLAGS	+= -fno-strict-aliasing -fno-inline -fomit-frame-pointer -mbackchain
 endif
 
 include $(topsrcdir)/config/rules.mk

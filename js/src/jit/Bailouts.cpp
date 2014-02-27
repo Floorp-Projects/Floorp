@@ -49,7 +49,7 @@ void
 IonBailoutIterator::dump() const
 {
     if (type_ == IonFrame_OptimizedJS) {
-        InlineFrameIterator frames(GetIonContext()->cx, this);
+        InlineFrameIterator frames(GetJSContextFromJitCode(), this);
         for (;;) {
             frames.dump();
             if (!frames.more())
@@ -64,8 +64,9 @@ IonBailoutIterator::dump() const
 uint32_t
 jit::Bailout(BailoutStack *sp, BaselineBailoutInfo **bailoutInfo)
 {
+    JSContext *cx = GetJSContextFromJitCode();
     JS_ASSERT(bailoutInfo);
-    JSContext *cx = GetIonContext()->cx;
+
     // We don't have an exit frame.
     cx->mainThread().ionTop = nullptr;
     JitActivationIterator jitActivations(cx->runtime());
@@ -95,7 +96,7 @@ jit::InvalidationBailout(InvalidationBailoutStack *sp, size_t *frameSizeOut,
 {
     sp->checkInvariants();
 
-    JSContext *cx = GetIonContext()->cx;
+    JSContext *cx = GetJSContextFromJitCode();
 
     // We don't have an exit frame.
     cx->mainThread().ionTop = nullptr;

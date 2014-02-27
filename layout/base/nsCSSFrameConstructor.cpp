@@ -58,6 +58,7 @@
 #include "nsBoxFrame.h"
 #include "nsBoxLayout.h"
 #include "nsFlexContainerFrame.h"
+#include "nsGridContainerFrame.h"
 #include "nsImageFrame.h"
 #include "nsIObjectLoadingContent.h"
 #include "nsTArray.h"
@@ -362,7 +363,8 @@ ShouldSuppressFloatingOfDescendants(nsIFrame* aFrame)
 {
   return aFrame->IsFrameOfType(nsIFrame::eMathML) ||
     aFrame->IsBoxFrame() ||
-    aFrame->GetType() == nsGkAtoms::flexContainerFrame;
+    aFrame->GetType() == nsGkAtoms::flexContainerFrame ||
+    aFrame->GetType() == nsGkAtoms::gridContainerFrame;
 }
 
 /**
@@ -2421,6 +2423,12 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
                         contentFrame);
     newFrame = contentFrame;
     processChildren = true;
+  } else if (display->mDisplay == NS_STYLE_DISPLAY_GRID) {
+    contentFrame = NS_NewGridContainerFrame(mPresShell, styleContext);
+    InitAndRestoreFrame(state, aDocElement, mDocElementContainingBlock,
+                        contentFrame);
+    newFrame = contentFrame;
+    processChildren = true;
   } else if (display->mDisplay == NS_STYLE_DISPLAY_TABLE) {
     // We're going to call the right function ourselves, so no need to give a
     // function to this FrameConstructionData.
@@ -3809,10 +3817,16 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsFrameConstructorState& aState,
                    "Content must have a primary frame now");
       newFrame->AddStateBits(NS_FRAME_ANONYMOUSCONTENTCREATOR_CONTENT);
       aChildItems.AddChild(newFrame);
-    }
-    else {
-      // create the frame and attach it to our frame
-      ConstructFrame(aState, content, aParentFrame, aChildItems);
+    } else {
+      FrameConstructionItemList items;
+      {
+        // Skip flex item style-fixup during our AddFrameConstructionItems() call:
+        TreeMatchContext::AutoFlexItemStyleFixupSkipper
+          flexItemStyleFixupSkipper(aState.mTreeMatchContext);
+
+        AddFrameConstructionItems(aState, content, true, aParentFrame, items);
+      }
+      ConstructFramesFromItemList(aState, items, aParentFrame, aChildItems);
     }
   }
 
@@ -3923,15 +3937,15 @@ bool IsXULDisplayType(const nsStyleDisplay* aDisplay)
 {
   return (aDisplay->mDisplay == NS_STYLE_DISPLAY_INLINE_BOX || 
 #ifdef MOZ_XUL
-          aDisplay->mDisplay == NS_STYLE_DISPLAY_INLINE_GRID || 
+          aDisplay->mDisplay == NS_STYLE_DISPLAY_INLINE_XUL_GRID || 
           aDisplay->mDisplay == NS_STYLE_DISPLAY_INLINE_STACK ||
 #endif
           aDisplay->mDisplay == NS_STYLE_DISPLAY_BOX
 #ifdef MOZ_XUL
-          || aDisplay->mDisplay == NS_STYLE_DISPLAY_GRID ||
+          || aDisplay->mDisplay == NS_STYLE_DISPLAY_XUL_GRID ||
           aDisplay->mDisplay == NS_STYLE_DISPLAY_STACK ||
-          aDisplay->mDisplay == NS_STYLE_DISPLAY_GRID_GROUP ||
-          aDisplay->mDisplay == NS_STYLE_DISPLAY_GRID_LINE ||
+          aDisplay->mDisplay == NS_STYLE_DISPLAY_XUL_GRID_GROUP ||
+          aDisplay->mDisplay == NS_STYLE_DISPLAY_XUL_GRID_LINE ||
           aDisplay->mDisplay == NS_STYLE_DISPLAY_DECK ||
           aDisplay->mDisplay == NS_STYLE_DISPLAY_POPUP ||
           aDisplay->mDisplay == NS_STYLE_DISPLAY_GROUPBOX
@@ -4114,7 +4128,7 @@ nsCSSFrameConstructor::FindXULListBoxBodyData(Element* aElement,
                                               nsStyleContext* aStyleContext)
 {
   if (aStyleContext->StyleDisplay()->mDisplay !=
-        NS_STYLE_DISPLAY_GRID_GROUP) {
+        NS_STYLE_DISPLAY_XUL_GRID_GROUP) {
     return nullptr;
   }
 
@@ -4129,7 +4143,7 @@ nsCSSFrameConstructor::FindXULListItemData(Element* aElement,
                                            nsStyleContext* aStyleContext)
 {
   if (aStyleContext->StyleDisplay()->mDisplay !=
-        NS_STYLE_DISPLAY_GRID_LINE) {
+        NS_STYLE_DISPLAY_XUL_GRID_LINE) {
     return nullptr;
   }
 
@@ -4152,11 +4166,11 @@ nsCSSFrameConstructor::FindXULDisplayData(const nsStyleDisplay* aDisplay,
     SCROLLABLE_ABSPOS_CONTAINER_XUL_INT_CREATE(NS_STYLE_DISPLAY_BOX,
                                                NS_NewBoxFrame),
 #ifdef MOZ_XUL
-    SCROLLABLE_XUL_INT_CREATE(NS_STYLE_DISPLAY_INLINE_GRID, NS_NewGridBoxFrame),
-    SCROLLABLE_XUL_INT_CREATE(NS_STYLE_DISPLAY_GRID, NS_NewGridBoxFrame),
-    SCROLLABLE_XUL_INT_CREATE(NS_STYLE_DISPLAY_GRID_GROUP,
+    SCROLLABLE_XUL_INT_CREATE(NS_STYLE_DISPLAY_INLINE_XUL_GRID, NS_NewGridBoxFrame),
+    SCROLLABLE_XUL_INT_CREATE(NS_STYLE_DISPLAY_XUL_GRID, NS_NewGridBoxFrame),
+    SCROLLABLE_XUL_INT_CREATE(NS_STYLE_DISPLAY_XUL_GRID_GROUP,
                               NS_NewGridRowGroupFrame),
-    SCROLLABLE_XUL_INT_CREATE(NS_STYLE_DISPLAY_GRID_LINE,
+    SCROLLABLE_XUL_INT_CREATE(NS_STYLE_DISPLAY_XUL_GRID_LINE,
                               NS_NewGridRowLeafFrame),
     SIMPLE_XUL_INT_CREATE(NS_STYLE_DISPLAY_DECK, NS_NewDeckFrame),
     SCROLLABLE_XUL_INT_CREATE(NS_STYLE_DISPLAY_GROUPBOX, NS_NewGroupBoxFrame),
@@ -4362,6 +4376,10 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay* aDisplay,
       FCDATA_DECL(FCDATA_MAY_NEED_SCROLLFRAME, NS_NewFlexContainerFrame) },
     { NS_STYLE_DISPLAY_INLINE_FLEX,
       FCDATA_DECL(FCDATA_MAY_NEED_SCROLLFRAME, NS_NewFlexContainerFrame) },
+    { NS_STYLE_DISPLAY_GRID,
+      FCDATA_DECL(FCDATA_MAY_NEED_SCROLLFRAME, NS_NewGridContainerFrame) },
+    { NS_STYLE_DISPLAY_INLINE_GRID,
+      FCDATA_DECL(FCDATA_MAY_NEED_SCROLLFRAME, NS_NewGridContainerFrame) },
     { NS_STYLE_DISPLAY_TABLE,
       FULL_CTOR_FCDATA(0, &nsCSSFrameConstructor::ConstructTable) },
     { NS_STYLE_DISPLAY_INLINE_TABLE,
@@ -5043,37 +5061,6 @@ nsCSSFrameConstructor::AddPageBreakItem(nsIContent* aContent,
   aItems.AppendItem(&sPageBreakData, aContent, nsCSSAnonBoxes::pageBreak,
                     kNameSpaceID_None, nullptr, pseudoStyle.forget(), true,
                     nullptr);
-}
-
-void
-nsCSSFrameConstructor::ConstructFrame(nsFrameConstructorState& aState,
-                                      nsIContent*              aContent,
-                                      nsIFrame*                aParentFrame,
-                                      nsFrameItems&            aFrameItems)
-
-{
-  NS_PRECONDITION(aParentFrame, "no parent frame");
-  // NOTE: If we start using this code for non-anonymous content, we'll need
-  // to evaluate whether the AutoFlexItemStyleFixupSkipper (instantiated below)
-  // is appropriate for that content.
-  NS_PRECONDITION(aContent->IsRootOfNativeAnonymousSubtree(),
-                  "ConstructFrame should only be used for anonymous content");
-
-  FrameConstructionItemList items;
-  {
-    // Skip flex item style-fixup during our AddFrameConstructionItems() call:
-    TreeMatchContext::AutoFlexItemStyleFixupSkipper
-      flexItemStyleFixupSkipper(aState.mTreeMatchContext);
-
-    AddFrameConstructionItems(aState, aContent, true, aParentFrame, items);
-  }
-  items.SetTriedConstructingFrames();
-
-  for (FCItemIterator iter(items); !iter.IsDone(); iter.Next()) {
-    NS_ASSERTION(iter.item().DesiredParentType() == GetParentType(aParentFrame),
-                 "This is not going to work");
-    ConstructFramesFromItem(aState, iter, aParentFrame, aFrameItems);
-  }
 }
 
 void
@@ -8263,13 +8250,7 @@ nsCSSFrameConstructor::ReplicateFixedFrames(nsPageContentFrame* aParentFrame)
                                         ITEM_ALLOW_XBL_BASE |
                                           ITEM_ALLOW_PAGE_BREAK,
                                         nullptr, items);
-      items.SetTriedConstructingFrames();
-      for (FCItemIterator iter(items); !iter.IsDone(); iter.Next()) {
-        NS_ASSERTION(iter.item().DesiredParentType() ==
-                       GetParentType(canvasFrame),
-                     "This is not going to work");
-        ConstructFramesFromItem(state, iter, canvasFrame, fixedPlaceholders);
-      }
+      ConstructFramesFromItemList(state, items, canvasFrame, fixedPlaceholders);
     }
   }
 
@@ -8850,9 +8831,8 @@ nsCSSFrameConstructor::CreateNeededAnonFlexItems(
   FrameConstructionItemList& aItems,
   nsIFrame* aParentFrame)
 {
-  NS_ABORT_IF_FALSE(aParentFrame->GetType() == nsGkAtoms::flexContainerFrame,
-                    "Should only be called for items in a flex container frame");
-  if (aItems.IsEmpty()) {
+  if (aItems.IsEmpty() ||
+      aParentFrame->GetType() != nsGkAtoms::flexContainerFrame) {
     return;
   }
 
@@ -9175,22 +9155,13 @@ nsCSSFrameConstructor::ConstructFramesFromItemList(nsFrameConstructorState& aSta
                                                    nsIFrame* aParentFrame,
                                                    nsFrameItems& aFrameItems)
 {
-  aItems.SetTriedConstructingFrames();
-
   CreateNeededTablePseudos(aState, aItems, aParentFrame);
+  CreateNeededAnonFlexItems(aState, aItems, aParentFrame);
 
-  if (aParentFrame->GetType() == nsGkAtoms::flexContainerFrame) {
-    CreateNeededAnonFlexItems(aState, aItems, aParentFrame);
-  }
-
-#ifdef DEBUG
+  aItems.SetTriedConstructingFrames();
   for (FCItemIterator iter(aItems); !iter.IsDone(); iter.Next()) {
     NS_ASSERTION(iter.item().DesiredParentType() == GetParentType(aParentFrame),
                  "Needed pseudos didn't get created; expect bad things");
-  }
-#endif
-
-  for (FCItemIterator iter(aItems); !iter.IsDone(); iter.Next()) {
     ConstructFramesFromItem(aState, iter, aParentFrame, aFrameItems);
   }
 

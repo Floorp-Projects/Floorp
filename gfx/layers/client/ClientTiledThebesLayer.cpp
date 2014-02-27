@@ -8,14 +8,15 @@
 #include "ClientLayerManager.h"         // for ClientLayerManager, etc
 #include "gfx3DMatrix.h"                // for gfx3DMatrix
 #include "gfxPlatform.h"                // for gfxPlatform
+#include "gfxPrefs.h"                   // for gfxPrefs
 #include "gfxRect.h"                    // for gfxRect
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/gfx/BaseSize.h"       // for BaseSize
 #include "mozilla/gfx/Rect.h"           // for Rect, RectTyped
 #include "mozilla/layers/LayersMessages.h"
 #include "mozilla/mozalloc.h"           // for operator delete, etc
+#include "nsISupportsImpl.h"            // for MOZ_COUNT_CTOR, etc
 #include "nsRect.h"                     // for nsIntRect
-#include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc
 
 namespace mozilla {
 namespace layers {
@@ -176,8 +177,8 @@ ClientTiledThebesLayer::RenderLayer()
   // Fast path for no progressive updates, no low-precision updates and no
   // critical display-port set, or no display-port set.
   const FrameMetrics& parentMetrics = GetParent()->GetFrameMetrics();
-  if ((!gfxPlatform::UseProgressiveTilePainting() &&
-       !gfxPlatform::UseLowPrecisionBuffer() &&
+  if ((!gfxPrefs::UseProgressiveTilePainting() &&
+       !gfxPrefs::UseLowPrecisionBuffer() &&
        parentMetrics.mCriticalDisplayPort.IsEmpty()) ||
        parentMetrics.mDisplayPort.IsEmpty()) {
     mValidRegion = mVisibleRegion;
@@ -212,7 +213,7 @@ ClientTiledThebesLayer::RenderLayer()
 
   nsIntRegion lowPrecisionInvalidRegion;
   if (!mPaintData.mLayoutCriticalDisplayPort.IsEmpty()) {
-    if (gfxPlatform::UseLowPrecisionBuffer()) {
+    if (gfxPrefs::UseLowPrecisionBuffer()) {
       // Calculate the invalid region for the low precision buffer
       lowPrecisionInvalidRegion.Sub(mVisibleRegion, mLowPrecisionValidRegion);
 
@@ -232,7 +233,7 @@ ClientTiledThebesLayer::RenderLayer()
   if (!invalidRegion.IsEmpty() && mPaintData.mLowPrecisionPaintCount == 0) {
     bool updatedBuffer = false;
     // Only draw progressively when the resolution is unchanged.
-    if (gfxPlatform::UseProgressiveTilePainting() &&
+    if (gfxPrefs::UseProgressiveTilePainting() &&
         !ClientManager()->HasShadowTarget() &&
         mContentClient->mTiledBuffer.GetFrameResolution() == mPaintData.mResolution) {
       // Store the old valid region, then clear it before painting.

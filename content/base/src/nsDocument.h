@@ -980,12 +980,21 @@ public:
 
   void SetImagesNeedAnimating(bool aAnimating) MOZ_OVERRIDE;
 
-  virtual void SuppressEventHandling(uint32_t aIncrease) MOZ_OVERRIDE;
+  virtual void SuppressEventHandling(SuppressionType aWhat,
+                                     uint32_t aIncrease) MOZ_OVERRIDE;
 
-  virtual void UnsuppressEventHandlingAndFireEvents(bool aFireEvents) MOZ_OVERRIDE;
-  
+  virtual void UnsuppressEventHandlingAndFireEvents(SuppressionType aWhat,
+                                                    bool aFireEvents) MOZ_OVERRIDE;
+
   void DecreaseEventSuppression() {
+    MOZ_ASSERT(mEventsSuppressed);
     --mEventsSuppressed;
+    MaybeRescheduleAnimationFrameNotifications();
+  }
+
+  void ResumeAnimations() {
+    MOZ_ASSERT(mAnimationsPaused);
+    --mAnimationsPaused;
     MaybeRescheduleAnimationFrameNotifications();
   }
 

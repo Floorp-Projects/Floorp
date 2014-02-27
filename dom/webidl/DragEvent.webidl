@@ -5,7 +5,6 @@
  */
 
 interface WindowProxy;
-interface DataTransfer;
 
 interface DragEvent : MouseEvent
 {

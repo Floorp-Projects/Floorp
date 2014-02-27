@@ -10,7 +10,7 @@
 #include "mozilla/ipc/Shmem.h"          // for Shmem
 #include "nsCOMPtr.h"                   // for already_AddRefed
 #include "nsDebug.h"                    // for NS_WARNING
-#include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR
+#include "nsISupportsImpl.h"            // for MOZ_COUNT_CTOR
 
 class gfxASurface;
 

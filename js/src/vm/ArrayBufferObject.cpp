@@ -35,6 +35,7 @@
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
 #include "vm/NumericConversions.h"
+#include "vm/SharedArrayObject.h"
 #include "vm/WrapperObject.h"
 
 #include "jsatominlines.h"
@@ -170,6 +171,44 @@ const JSFunctionSpec ArrayBufferObject::jsstaticfuncs[] = {
     JS_FN("isView", ArrayBufferObject::fun_isView, 1, 0),
     JS_FS_END
 };
+
+bool
+js::IsArrayBuffer(HandleValue v)
+{
+    return v.isObject() &&
+           (v.toObject().is<ArrayBufferObject>() ||
+            v.toObject().is<SharedArrayBufferObject>());
+}
+
+bool
+js::IsArrayBuffer(HandleObject obj)
+{
+    return obj->is<ArrayBufferObject>() || obj->is<SharedArrayBufferObject>();
+}
+
+bool
+js::IsArrayBuffer(JSObject *obj)
+{
+    return obj->is<ArrayBufferObject>() || obj->is<SharedArrayBufferObject>();
+}
+
+ArrayBufferObject &
+js::AsArrayBuffer(HandleObject obj)
+{
+    JS_ASSERT(IsArrayBuffer(obj));
+    if (obj->is<SharedArrayBufferObject>())
+        return obj->as<SharedArrayBufferObject>();
+    return obj->as<ArrayBufferObject>();
+}
+
+ArrayBufferObject &
+js::AsArrayBuffer(JSObject *obj)
+{
+    JS_ASSERT(IsArrayBuffer(obj));
+    if (obj->is<SharedArrayBufferObject>())
+        return obj->as<SharedArrayBufferObject>();
+    return obj->as<ArrayBufferObject>();
+}
 
 MOZ_ALWAYS_INLINE bool
 ArrayBufferObject::byteLengthGetterImpl(JSContext *cx, CallArgs args)
@@ -383,10 +422,18 @@ ArrayBufferObject::neuterViews(JSContext *cx, Handle<ArrayBufferObject*> buffer)
     return true;
 }
 
+uint8_t *
+ArrayBufferObject::dataPointer() const {
+    if (isSharedArrayBuffer())
+        return (uint8_t *)this->as<SharedArrayBufferObject>().dataPointer();
+    return (uint8_t *)elements;
+}
+
 void
 ArrayBufferObject::changeContents(JSContext *cx, ObjectElements *newHeader)
 {
     JS_ASSERT(!isAsmJSArrayBuffer());
+    JS_ASSERT(!isSharedArrayBuffer());
 
     // Grab out data before invalidating it.
     uint32_t byteLengthCopy = byteLength();
@@ -438,6 +485,8 @@ ArrayBufferObject::changeContents(JSContext *cx, ObjectElements *newHeader)
 void
 ArrayBufferObject::neuter(JSContext *cx)
 {
+    JS_ASSERT(!isSharedArrayBuffer());
+
     JS_ASSERT(cx);
     if (hasDynamicElements() && !isAsmJSArrayBuffer()) {
         ObjectElements *oldHeader = getElementsHeader();
@@ -456,6 +505,7 @@ ArrayBufferObject::neuter(JSContext *cx)
 /* static */ bool
 ArrayBufferObject::ensureNonInline(JSContext *cx, Handle<ArrayBufferObject*> buffer)
 {
+    JS_ASSERT(!buffer->isSharedArrayBuffer());
     if (buffer->hasDynamicElements())
         return true;
 
@@ -470,35 +520,21 @@ ArrayBufferObject::ensureNonInline(JSContext *cx, Handle<ArrayBufferObject*> buf
     return true;
 }
 
-#if defined(JS_ION) && defined(JS_CPU_X64)
-// To avoid dynamically checking bounds on each load/store, asm.js code relies
-// on the SIGSEGV handler in AsmJSSignalHandlers.cpp. However, this only works
-// if we can guarantee that *any* out-of-bounds access generates a fault. This
-// isn't generally true since an out-of-bounds access could land on other
-// Mozilla data. To overcome this on x64, we reserve an entire 4GB space,
-// making only the range [0, byteLength) accessible, and use a 32-bit unsigned
-// index into this space. (x86 and ARM require different tricks.)
-//
-// One complication is that we need to put an ObjectElements struct immediately
-// before the data array (as required by the general JSObject data structure).
-// Thus, we must stick a page before the elements to hold ObjectElements.
-//
-//   |<------------------------------ 4GB + 1 pages --------------------->|
-//           |<--- sizeof --->|<------------------- 4GB ----------------->|
-//
-//   | waste | ObjectElements | data array | inaccessible reserved memory |
-//                            ^            ^                              ^
-//                            |            \                             /
-//                      obj->elements       required to be page boundaries
-//
+#if defined(JS_CPU_X64)
+// Refer to comment above AsmJSMappedSize in AsmJS.h.
 JS_STATIC_ASSERT(sizeof(ObjectElements) < AsmJSPageSize);
 JS_STATIC_ASSERT(AsmJSAllocationGranularity == AsmJSPageSize);
-static const size_t AsmJSMappedSize = AsmJSPageSize + AsmJSBufferProtectedSize;
+#endif
 
+#if defined(JS_ION) && defined(JS_CPU_X64)
 bool
 ArrayBufferObject::prepareForAsmJS(JSContext *cx, Handle<ArrayBufferObject*> buffer)
 {
     if (buffer->isAsmJSArrayBuffer())
+        return true;
+
+    // SharedArrayBuffers are already created with AsmJS support in mind.
+    if (buffer->isSharedArrayBuffer())
         return true;
 
     // Get the entire reserved region (with all pages inaccessible).
@@ -566,6 +602,9 @@ ArrayBufferObject::prepareForAsmJS(JSContext *cx, Handle<ArrayBufferObject*> buf
     if (buffer->isAsmJSArrayBuffer())
         return true;
 
+    if (buffer->isSharedArrayBuffer())
+        return true;
+
     if (!ensureNonInline(cx, buffer))
         return false;
 
@@ -584,6 +623,7 @@ ArrayBufferObject::releaseAsmJSArrayBuffer(FreeOp *fop, JSObject *obj)
 bool
 ArrayBufferObject::neuterAsmJSArrayBuffer(JSContext *cx, ArrayBufferObject &buffer)
 {
+    JS_ASSERT(!buffer.isSharedArrayBuffer());
 #ifdef JS_ION
     AsmJSActivation *act = cx->mainThread().asmJSActivationStackFromOwnerThread();
     for (; act; act = act->prev()) {
@@ -659,13 +699,14 @@ ArrayBufferObject::create(JSContext *cx, uint32_t nbytes, bool clear /* = true *
         JSRuntime *rt = obj->runtimeFromMainThread();
         rt->gcNursery.notifyNewElements(obj, header);
 #endif
+        obj->initElementsHeader(obj->getElementsHeader(), nbytes);
     } else {
+        // Elements header must be initialized before dataPointer() is callable.
         obj->setFixedElements();
+        obj->initElementsHeader(obj->getElementsHeader(), nbytes);
         if (clear)
             memset(obj->dataPointer(), 0, nbytes);
     }
-
-    obj->initElementsHeader(obj->getElementsHeader(), nbytes);
 
     return obj;
 }
@@ -791,7 +832,7 @@ ArrayBufferObject::obj_trace(JSTracer *trc, JSObject *obj)
     // multiple views are collected into a linked list during collection, and
     // then swept to prune out their dead views.
 
-    ArrayBufferObject &buffer = obj->as<ArrayBufferObject>();
+    ArrayBufferObject &buffer = AsArrayBuffer(obj);
     ArrayBufferViewObject *viewsHead = GetViewList(&buffer);
     if (!viewsHead)
         return;
@@ -826,7 +867,7 @@ ArrayBufferObject::obj_trace(JSTracer *trc, JSObject *obj)
                 JS_ASSERT(obj->compartment() == firstView->compartment());
                 ArrayBufferObject **bufList = &obj->compartment()->gcLiveArrayBuffers;
                 firstView->setBufferLink(*bufList);
-                *bufList = &obj->as<ArrayBufferObject>();
+                *bufList = &AsArrayBuffer(obj);
             } else {
 #ifdef DEBUG
                 bool found = false;
@@ -1208,7 +1249,7 @@ ArrayBufferViewObject::trace(JSTracer *trc, JSObject *obj)
     /* Update obj's data slot if the array buffer moved. Note that during
      * initialization, bufSlot may still be JSVAL_VOID. */
     if (bufSlot.isObject()) {
-        ArrayBufferObject &buf = bufSlot.toObject().as<ArrayBufferObject>();
+        ArrayBufferObject &buf = AsArrayBuffer(&bufSlot.toObject());
         if (buf.getElementsHeader()->isNeuteredBuffer()) {
             // When a view is neutered, it is set to NULL
             JS_ASSERT(obj->getPrivate() == nullptr);
@@ -1257,7 +1298,7 @@ JS_FRIEND_API(uint32_t)
 JS_GetArrayBufferByteLength(JSObject *obj)
 {
     obj = CheckedUnwrap(obj);
-    return obj ? obj->as<ArrayBufferObject>().byteLength() : 0;
+    return obj ? AsArrayBuffer(obj).byteLength() : 0;
 }
 
 JS_FRIEND_API(uint8_t *)
@@ -1266,7 +1307,7 @@ JS_GetArrayBufferData(JSObject *obj)
     obj = CheckedUnwrap(obj);
     if (!obj)
         return nullptr;
-    return obj->as<ArrayBufferObject>().dataPointer();
+    return AsArrayBuffer(obj).dataPointer();
 }
 
 JS_FRIEND_API(uint8_t *)
@@ -1276,7 +1317,7 @@ JS_GetStableArrayBufferData(JSContext *cx, JSObject *obj)
     if (!obj)
         return nullptr;
 
-    Rooted<ArrayBufferObject*> buffer(cx, &obj->as<ArrayBufferObject>());
+    Rooted<ArrayBufferObject*> buffer(cx, &AsArrayBuffer(obj));
     if (!ArrayBufferObject::ensureNonInline(cx, buffer))
         return nullptr;
 
@@ -1430,11 +1471,11 @@ JS_GetObjectAsArrayBuffer(JSObject *obj, uint32_t *length, uint8_t **data)
 {
     if (!(obj = CheckedUnwrap(obj)))
         return nullptr;
-    if (!obj->is<ArrayBufferObject>())
+    if (!IsArrayBuffer(obj))
         return nullptr;
 
-    *length = obj->as<ArrayBufferObject>().byteLength();
-    *data = obj->as<ArrayBufferObject>().dataPointer();
+    *length = AsArrayBuffer(obj).byteLength();
+    *data = AsArrayBuffer(obj).dataPointer();
 
     return obj;
 }

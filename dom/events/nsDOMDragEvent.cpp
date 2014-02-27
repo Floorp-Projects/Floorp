@@ -5,13 +5,13 @@
 
 #include "nsDOMDragEvent.h"
 #include "nsContentUtils.h"
-#include "nsIDOMDataTransfer.h"
 #include "prtime.h"
 #include "mozilla/MouseEvents.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
-nsDOMDragEvent::nsDOMDragEvent(mozilla::dom::EventTarget* aOwner,
+nsDOMDragEvent::nsDOMDragEvent(EventTarget* aOwner,
                                nsPresContext* aPresContext,
                                WidgetDragEvent* aEvent)
   : nsDOMMouseEvent(aOwner, aPresContext, aEvent ? aEvent :
@@ -35,6 +35,31 @@ NS_INTERFACE_MAP_BEGIN(nsDOMDragEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMDragEvent)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMMouseEvent)
 
+void
+nsDOMDragEvent::InitDragEvent(const nsAString& aType, bool aCanBubble,
+                              bool aCancelable, nsIDOMWindow* aView,
+                              int32_t aDetail, int32_t aScreenX,
+                              int32_t aScreenY, int32_t aClientX,
+                              int32_t aClientY, bool aCtrlKey, bool aAltKey,
+                              bool aShiftKey, bool aMetaKey, uint16_t aButton,
+                              EventTarget* aRelatedTarget,
+                              DataTransfer* aDataTransfer, ErrorResult& aError)
+{
+  aError =
+    nsDOMMouseEvent::InitMouseEvent(aType, aCanBubble, aCancelable,
+                                    aView, aDetail, aScreenX, aScreenY,
+                                    aClientX, aClientY, aCtrlKey, aAltKey,
+                                    aShiftKey, aMetaKey, aButton,
+                                    aRelatedTarget);
+  if (aError.Failed()) {
+    return;
+  }
+
+  if (mEventIsInternal && mEvent) {
+    mEvent->AsDragEvent()->dataTransfer = aDataTransfer;
+  }
+}
+
 NS_IMETHODIMP
 nsDOMDragEvent::InitDragEvent(const nsAString & aType,
                               bool aCanBubble, bool aCancelable,
@@ -46,6 +71,9 @@ nsDOMDragEvent::InitDragEvent(const nsAString & aType,
                               nsIDOMEventTarget *aRelatedTarget,
                               nsIDOMDataTransfer* aDataTransfer)
 {
+  nsCOMPtr<DataTransfer> dataTransfer = do_QueryInterface(aDataTransfer);
+  NS_ENSURE_ARG(dataTransfer);
+
   nsresult rv = nsDOMMouseEvent::InitMouseEvent(aType, aCanBubble, aCancelable,
                   aView, aDetail, aScreenX, aScreenY, aClientX, aClientY,
                   aCtrlKey, aAltKey, aShiftKey, aMetaKey, aButton,
@@ -53,7 +81,7 @@ nsDOMDragEvent::InitDragEvent(const nsAString & aType,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (mEventIsInternal && mEvent) {
-    mEvent->AsDragEvent()->dataTransfer = aDataTransfer;
+    mEvent->AsDragEvent()->dataTransfer = dataTransfer;
   }
 
   return NS_OK;
@@ -66,7 +94,7 @@ nsDOMDragEvent::GetDataTransfer(nsIDOMDataTransfer** aDataTransfer)
   return NS_OK;
 }
 
-nsIDOMDataTransfer*
+DataTransfer*
 nsDOMDragEvent::GetDataTransfer()
 {
   // the dataTransfer field of the event caches the DataTransfer associated
@@ -89,7 +117,7 @@ nsDOMDragEvent::GetDataTransfer()
 }
 
 nsresult NS_NewDOMDragEvent(nsIDOMEvent** aInstancePtrResult,
-                            mozilla::dom::EventTarget* aOwner,
+                            EventTarget* aOwner,
                             nsPresContext* aPresContext,
                             WidgetDragEvent* aEvent) 
 {
