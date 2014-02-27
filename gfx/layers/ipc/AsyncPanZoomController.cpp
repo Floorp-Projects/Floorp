@@ -1976,7 +1976,7 @@ void AsyncPanZoomController::TimeoutContentResponse() {
 void AsyncPanZoomController::UpdateZoomConstraints(const ZoomConstraints& aConstraints) {
   APZC_LOG("%p updating zoom constraints to %d %d %f %f\n", this, aConstraints.mAllowZoom,
     aConstraints.mAllowDoubleTapZoom, aConstraints.mMinZoom.scale, aConstraints.mMaxZoom.scale);
-  if (IsFloatNaN(aConstraints.mMinZoom.scale) || IsFloatNaN(aConstraints.mMaxZoom.scale)) {
+  if (IsNaN(aConstraints.mMinZoom.scale) || IsNaN(aConstraints.mMaxZoom.scale)) {
     NS_WARNING("APZC received zoom constraints with NaN values; dropping...\n");
     return;
   }

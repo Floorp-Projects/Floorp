@@ -351,7 +351,8 @@ this.Logger = {
     if (aLogLevel < this.logLevel)
       return;
 
-    let message = Array.prototype.slice.call(arguments, 1).join(' ');
+    let args = Array.prototype.slice.call(arguments, 1);
+    let message = (typeof(args[0]) === 'function' ? args[0]() : args).join(' ');
     message = '[' + Utils.ScriptName + '] ' + this._LEVEL_NAMES[aLogLevel] +
       ' ' + message + '\n';
     dump(message);

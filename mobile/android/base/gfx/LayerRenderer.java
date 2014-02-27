@@ -15,6 +15,7 @@ import org.mozilla.gecko.mozglue.DirectBufferAllocator;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -135,8 +136,10 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
 
     public LayerRenderer(LayerView view) {
         mView = view;
-        mOverscrollColor = view.getContext().getResources().getColor(R.color.background_normal);
-
+        try {
+            mOverscrollColor = view.getContext().getResources().getColor(R.color.background_normal);
+        } catch (Resources.NotFoundException nfe) { mOverscrollColor = Color.BLACK; }
+        
         Bitmap scrollbarImage = view.getScrollbarImage();
         IntSize size = new IntSize(scrollbarImage.getWidth(), scrollbarImage.getHeight());
         scrollbarImage = expandCanvasToPowerOfTwo(scrollbarImage, size);

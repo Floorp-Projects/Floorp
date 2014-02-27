@@ -89,6 +89,10 @@ this.EventManager.prototype = {
   },
 
   handleEvent: function handleEvent(aEvent) {
+    Logger.debug(() => {
+      return ['DOMEvent', aEvent.type];
+    });
+
     try {
       switch (aEvent.type) {
       case 'wheel':
@@ -129,9 +133,10 @@ this.EventManager.prototype = {
   },
 
   handleAccEvent: function handleAccEvent(aEvent) {
-    if (Logger.logLevel >= Logger.DEBUG)
-      Logger.debug('A11yEvent', Logger.eventToString(aEvent),
-                   Logger.accessibleToString(aEvent.accessible));
+    Logger.debug(() => {
+      return ['A11yEvent', Logger.eventToString(aEvent),
+              Logger.accessibleToString(aEvent.accessible)];
+    });
 
     // Don't bother with non-content events in firefox.
     if (Utils.MozBuildApp == 'browser' &&

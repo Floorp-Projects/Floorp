@@ -5,7 +5,7 @@
  *
  * Portions Copyright 2013 Microsoft Open Technologies, Inc. */
 
-#include "PointerEvent.h"
+#include "mozilla/dom/PointerEvent.h"
 #include "mozilla/MouseEvents.h"
 #include "prtime.h"
 
@@ -15,9 +15,11 @@ namespace dom {
 PointerEvent::PointerEvent(EventTarget* aOwner,
                            nsPresContext* aPresContext,
                            WidgetPointerEvent* aEvent)
-  : nsDOMMouseEvent(aOwner, aPresContext, aEvent ? aEvent : new WidgetPointerEvent(false, 0, nullptr))
+  : MouseEvent(aOwner, aPresContext,
+               aEvent ? aEvent : new WidgetPointerEvent(false, 0, nullptr))
 {
-  NS_ASSERTION(mEvent->eventStructType == NS_POINTER_EVENT, "event type mismatch NS_POINTER_EVENT");
+  NS_ASSERTION(mEvent->eventStructType == NS_POINTER_EVENT,
+               "event type mismatch NS_POINTER_EVENT");
 
   WidgetMouseEvent* mouseEvent = mEvent->AsMouseEvent();
   if (aEvent) {
@@ -48,12 +50,12 @@ ConvertStringToPointerType(const nsAString& aPointerTypeArg)
 
 //static
 already_AddRefed<PointerEvent>
-PointerEvent::Constructor(const mozilla::dom::GlobalObject& aGlobal,
+PointerEvent::Constructor(const GlobalObject& aGlobal,
                           const nsAString& aType,
-                          const mozilla::dom::PointerEventInit& aParam,
-                          mozilla::ErrorResult& aRv)
+                          const PointerEventInit& aParam,
+                          ErrorResult& aRv)
 {
-  nsCOMPtr<mozilla::dom::EventTarget> t = do_QueryInterface(aGlobal.GetAsSupports());
+  nsCOMPtr<EventTarget> t = do_QueryInterface(aGlobal.GetAsSupports());
   nsRefPtr<PointerEvent> e = new PointerEvent(t, nullptr, nullptr);
   bool trusted = e->Init(t);
 
@@ -61,7 +63,8 @@ PointerEvent::Constructor(const mozilla::dom::GlobalObject& aGlobal,
                           aParam.mView, aParam.mDetail, aParam.mScreenX,
                           aParam.mScreenY, aParam.mClientX, aParam.mClientY,
                           aParam.mCtrlKey, aParam.mAltKey, aParam.mShiftKey,
-                          aParam.mMetaKey, aParam.mButton, aParam.mRelatedTarget);
+                          aParam.mMetaKey, aParam.mButton,
+                          aParam.mRelatedTarget);
   if (aRv.Failed()) {
     return nullptr;
   }
@@ -100,37 +103,44 @@ PointerEvent::GetPointerType(nsAString& aPointerType)
   }
 }
 
-int32_t PointerEvent::PointerId()
+int32_t
+PointerEvent::PointerId()
 {
   return mEvent->AsPointerEvent()->pointerId;
 }
 
-int32_t PointerEvent::Width()
+int32_t
+PointerEvent::Width()
 {
   return mEvent->AsPointerEvent()->width;
 }
 
-int32_t PointerEvent::Height()
+int32_t
+PointerEvent::Height()
 {
   return mEvent->AsPointerEvent()->height;
 }
 
-float PointerEvent::Pressure()
+float
+PointerEvent::Pressure()
 {
   return mEvent->AsPointerEvent()->pressure;
 }
 
-int32_t PointerEvent::TiltX()
+int32_t
+PointerEvent::TiltX()
 {
   return mEvent->AsPointerEvent()->tiltX;
 }
 
-int32_t PointerEvent::TiltY()
+int32_t
+PointerEvent::TiltY()
 {
   return mEvent->AsPointerEvent()->tiltY;
 }
 
-bool PointerEvent::IsPrimary()
+bool
+PointerEvent::IsPrimary()
 {
   return mEvent->AsPointerEvent()->isPrimary;
 }
@@ -139,12 +149,14 @@ bool PointerEvent::IsPrimary()
 } // namespace mozilla
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
-nsresult NS_NewDOMPointerEvent(nsIDOMEvent** aInstancePtrResult,
-                               dom::EventTarget* aOwner,
-                               nsPresContext* aPresContext,
-                               WidgetPointerEvent *aEvent)
+nsresult
+NS_NewDOMPointerEvent(nsIDOMEvent** aInstancePtrResult,
+                      EventTarget* aOwner,
+                      nsPresContext* aPresContext,
+                      WidgetPointerEvent *aEvent)
 {
-  dom::PointerEvent *it = new dom::PointerEvent(aOwner, aPresContext, aEvent);
+  PointerEvent *it = new PointerEvent(aOwner, aPresContext, aEvent);
   return CallQueryInterface(it, aInstancePtrResult);
 }

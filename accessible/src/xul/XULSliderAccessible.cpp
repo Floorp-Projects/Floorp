@@ -78,7 +78,7 @@ XULSliderAccessible::GetActionName(uint8_t aIndex, nsAString& aName)
 
   NS_ENSURE_ARG(aIndex == 0);
 
-  aName.AssignLiteral("activate"); 
+  aName.AssignLiteral("activate");
   return NS_OK;
 }
 
@@ -187,11 +187,11 @@ XULSliderAccessible::GetSliderAttr(nsIAtom* aName) const
   nsAutoString attrValue;
   nsresult rv = GetSliderAttr(aName, attrValue);
   if (NS_FAILED(rv))
-    return UnspecifiedNaN();
+    return UnspecifiedNaN<double>();
 
   nsresult error = NS_OK;
   double value = attrValue.ToDouble(&error);
-  return NS_FAILED(error) ? UnspecifiedNaN() : value;
+  return NS_FAILED(error) ? UnspecifiedNaN<double>() : value;
 }
 
 bool

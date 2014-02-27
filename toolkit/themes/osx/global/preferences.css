@@ -18,7 +18,7 @@ prefwindow[type="child"] > prefpane {
 }
 
 .prefWindow-dlgbuttons {
-  margin: 0 12px 8px;
+  margin: 0 12px 12px;
   padding-top: 0 !important;
 }
 

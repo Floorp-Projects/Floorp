@@ -958,6 +958,8 @@ DrawTargetCairo::MaskSurface(const Pattern &aSource,
   cairo_matrix_init_translate (&matrix, -aOffset.x, -aOffset.y);
   cairo_pattern_set_matrix (mask, &matrix);
 
+  cairo_set_operator(mContext, GfxOpToCairoOp(aOptions.mCompositionOp));
+
   cairo_mask(mContext, mask);
 
   cairo_surface_destroy(surf);

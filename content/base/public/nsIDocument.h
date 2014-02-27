@@ -100,6 +100,7 @@ struct CustomElementDefinition;
 class DocumentFragment;
 class DocumentType;
 class DOMImplementation;
+class DOMStringList;
 class Element;
 struct ElementRegistrationOptions;
 class EventTarget;
@@ -124,8 +125,8 @@ typedef CallbackObjectHolder<NodeFilter, nsIDOMNodeFilter> NodeFilterHolder;
 } // namespace mozilla
 
 #define NS_IDOCUMENT_IID \
-{ 0x595492bc, 0xa26d, 0x46a9, \
-  { 0xa9, 0x35, 0x0c, 0x40, 0xdd, 0xc2, 0x77, 0x51 } }
+{ 0x94629cb0, 0xfe8a, 0x4627, \
+  { 0x8e, 0x59, 0xab, 0x1a, 0xaf, 0xdc, 0x99, 0x56 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -2159,7 +2160,7 @@ public:
   virtual void SetSelectedStyleSheetSet(const nsAString& aSheetSet) = 0;
   virtual void GetLastStyleSheetSet(nsString& aSheetSet) = 0;
   void GetPreferredStyleSheetSet(nsAString& aSheetSet);
-  virtual nsIDOMDOMStringList* StyleSheetSets() = 0;
+  virtual mozilla::dom::DOMStringList* StyleSheetSets() = 0;
   virtual void EnableStyleSheetsForSet(const nsAString& aSheetSet) = 0;
   Element* ElementFromPoint(float aX, float aY);
 
