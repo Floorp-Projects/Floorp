@@ -164,32 +164,32 @@ function refuseAbs() {
 }
 test(refuseAbs);
 
-function acceptTrigo() {
+function refuseTrigo() {
     var res = Math.cos(f32[0]);
     f32[0] = res;
-    assertFloat32(res, true);
+    assertFloat32(res, false);
 
     var res = Math.sin(f32[0]);
     f32[0] = res;
-    assertFloat32(res, true);
+    assertFloat32(res, false);
 
     var res = Math.tan(f32[0]);
     f32[0] = res;
-    assertFloat32(res, true);
+    assertFloat32(res, false);
 
     var res = Math.acos(f32[0]);
     f32[0] = res;
-    assertFloat32(res, true);
+    assertFloat32(res, false);
 
     var res = Math.asin(f32[0]);
     f32[0] = res;
-    assertFloat32(res, true);
+    assertFloat32(res, false);
 
     res = Math.atan(f32[0]);
     f32[0] = res;
-    assertFloat32(res, true);
+    assertFloat32(res, false);
 }
-test(acceptTrigo);
+test(refuseTrigo);
 
 function refuseMath() {
     var res = Math.log10(f32[0]);
@@ -298,7 +298,7 @@ function phiTest(n) {
         assertFloat32(x, true);
     } else {
         if (n < -10) {
-            x = Math.fround(Math.cos(y));
+            x = Math.fround(Math.sqrt(y));
             assertFloat32(x, true);
         } else {
             x = x - 1;
@@ -323,7 +323,7 @@ function mixedPhiTest(n) {
         assertFloat32(x, false);
     } else {
         if (n < -10) {
-            x = Math.fround(Math.cos(y)); // new producer
+            x = Math.fround(Math.sqrt(y)); // new producer
             assertFloat32(x, true);
         } else {
             x = x - 1; // non consumer because of (1)
