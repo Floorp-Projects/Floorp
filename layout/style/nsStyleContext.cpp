@@ -354,7 +354,7 @@ nsStyleContext::ApplyStyleFixups(bool aSkipFlexItemStyleFixup)
     }
   }
 
-  // Adjust the "display" values of flex items (but not for raw text,
+  // Adjust the "display" values of flex and grid items (but not for raw text,
   // placeholders, or table-parts). CSS3 Flexbox section 4 says:
   //   # The computed 'display' of a flex item is determined
   //   # by applying the table in CSS 2.1 Chapter 9.7.
@@ -362,7 +362,9 @@ nsStyleContext::ApplyStyleFixups(bool aSkipFlexItemStyleFixup)
   if (!aSkipFlexItemStyleFixup && mParent) {
     const nsStyleDisplay* parentDisp = mParent->StyleDisplay();
     if ((parentDisp->mDisplay == NS_STYLE_DISPLAY_FLEX ||
-         parentDisp->mDisplay == NS_STYLE_DISPLAY_INLINE_FLEX) &&
+         parentDisp->mDisplay == NS_STYLE_DISPLAY_INLINE_FLEX ||
+         parentDisp->mDisplay == NS_STYLE_DISPLAY_GRID ||
+         parentDisp->mDisplay == NS_STYLE_DISPLAY_INLINE_GRID) &&
         GetPseudo() != nsCSSAnonBoxes::mozNonElement) {
       uint8_t displayVal = disp->mDisplay;
       // Skip table parts.
