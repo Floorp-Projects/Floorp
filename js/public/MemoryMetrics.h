@@ -112,9 +112,8 @@ struct ZoneStatsPod
     macro(Other,   IsLiveGCThing,  typeObjectsGCHeap) \
     macro(Other,   NotLiveGCThing, typeObjectsMallocHeap) \
     macro(Other,   NotLiveGCThing, typePool) \
-    macro(Strings, IsLiveGCThing,  stringsShortGCHeap) \
-    macro(Strings, IsLiveGCThing,  stringsNormalGCHeap) \
-    macro(Strings, NotLiveGCThing, stringsNormalMallocHeap)
+    macro(Strings, IsLiveGCThing,  stringsGCHeap) \
+    macro(Strings, NotLiveGCThing, stringsMallocHeap)
 
     ZoneStatsPod()
       : FOR_EACH_SIZE(ZERO_SIZE)
@@ -243,34 +242,29 @@ struct StringInfo
 {
     StringInfo()
       : numCopies(0),
-        isShort(0),
         gcHeap(0),
         mallocHeap(0)
     {}
 
-    StringInfo(bool isShort, size_t gcSize, size_t mallocSize)
+    StringInfo(size_t gcSize, size_t mallocSize)
       : numCopies(1),
-        isShort(isShort),
         gcHeap(gcSize),
         mallocHeap(mallocSize)
     {}
 
-    void add(bool isShort, size_t gcSize, size_t mallocSize) {
+    void add(size_t gcSize, size_t mallocSize) {
         numCopies++;
-        MOZ_ASSERT(isShort == this->isShort);
         gcHeap += gcSize;
         mallocHeap += mallocSize;
     }
 
     void add(const StringInfo& info) {
         numCopies += info.numCopies;
-        MOZ_ASSERT(info.isShort == isShort);
         gcHeap += info.gcHeap;
         mallocHeap += info.mallocHeap;
     }
 
-    uint32_t numCopies:31;  // How many copies of the string have we seen?
-    uint32_t isShort:1;     // Is it a short string?
+    uint32_t numCopies;     // How many copies of the string have we seen?
 
     // These are all totals across all copies of the string we've seen.
     size_t gcHeap;
