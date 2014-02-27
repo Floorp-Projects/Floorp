@@ -2656,13 +2656,17 @@ public:
   enum {
     GENERATE_SUBDOC_INVALIDATIONS = 0x01,
     VERTICAL_SCROLLBAR = 0x02,
-    HORIZONTAL_SCROLLBAR = 0x04
+    HORIZONTAL_SCROLLBAR = 0x04,
+    GENERATE_SCROLLABLE_LAYER = 0x08
   };
 
   /**
    * @param aFlags GENERATE_SUBDOC_INVALIDATIONS :
    * Add UserData to the created ContainerLayer, so that invalidations
    * for this layer are send to our nsPresContext.
+   * GENERATE_SCROLLABLE_LAYER : only valid on nsDisplaySubDocument (and
+   * subclasses), indicates this layer is to be a scrollable layer, so call
+   * RecordFrameMetrics, etc.
    * @param aScrollTarget when VERTICAL_SCROLLBAR or HORIZONTAL_SCROLLBAR
    * is set in the flags, this parameter should be the ViewID of the
    * scrollable content this scrollbar is for.
@@ -2690,9 +2694,28 @@ public:
   }
   uint32_t GetFlags() { return mFlags; }
   NS_DISPLAY_DECL_NAME("OwnLayer", TYPE_OWN_LAYER)
-private:
+protected:
   uint32_t mFlags;
   ViewID mScrollTarget;
+};
+
+/**
+ * A display item for subdocuments. This is more or less the same as nsDisplayOwnLayer,
+ * except that it always populates the FrameMetrics instance on the ContainerLayer it
+ * builds.
+ */
+class nsDisplaySubDocument : public nsDisplayOwnLayer {
+public:
+  nsDisplaySubDocument(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
+                       nsDisplayList* aList, uint32_t aFlags);
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplaySubDocument();
+#endif
+
+  virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
+                                             LayerManager* aManager,
+                                             const ContainerLayerParameters& aContainerParameters) MOZ_OVERRIDE;
+  NS_DISPLAY_DECL_NAME("SubDocument", TYPE_SUBDOCUMENT)
 };
 
 /**
@@ -2700,10 +2723,10 @@ private:
  * and ensure that it gets applied to all the right elements. This item creates
  * a container layer.
  */
-class nsDisplayResolution : public nsDisplayOwnLayer {
+class nsDisplayResolution : public nsDisplaySubDocument {
 public:
   nsDisplayResolution(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                     nsDisplayList* aList, uint32_t aFlags);
+                      nsDisplayList* aList, uint32_t aFlags);
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplayResolution();
 #endif
@@ -2867,7 +2890,7 @@ public:
  * nsDisplayZoom is used for subdocuments that have a different full zoom than
  * their parent documents. This item creates a container layer.
  */
-class nsDisplayZoom : public nsDisplayOwnLayer {
+class nsDisplayZoom : public nsDisplaySubDocument {
 public:
   /**
    * @param aFrame is the root frame of the subdocument.
