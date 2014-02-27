@@ -1097,7 +1097,6 @@ pref("devtools.errorconsole.enabled", false);
 // Developer toolbar and GCLI preferences
 pref("devtools.toolbar.enabled", true);
 pref("devtools.toolbar.visible", false);
-pref("devtools.gcli.allowSet", false);
 pref("devtools.commands.dir", "");
 
 // Enable the app manager

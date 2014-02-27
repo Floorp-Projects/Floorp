@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-// define(function(require, exports, module) {
-
+'use strict';
 // <INJECTED SOURCE:START>
 
 // THIS FILE IS GENERATED FROM SOURCE IN THE GCLI PROJECT
@@ -23,77 +22,61 @@
 
 var exports = {};
 
-const TEST_URI = "data:text/html;charset=utf-8,<p id='gcli-input'>gcli-testSplit.js</p>";
+var TEST_URI = "data:text/html;charset=utf-8,<p id='gcli-input'>gcli-testSplit.js</p>";
 
 function test() {
-  helpers.addTabWithToolbar(TEST_URI, function(options) {
-    return helpers.runTests(options, exports);
-  }).then(finish);
+  return Task.spawn(function() {
+    let options = yield helpers.openTab(TEST_URI);
+    yield helpers.openToolbar(options);
+    gcli.addItems(mockCommands.items);
+
+    yield helpers.runTests(options, exports);
+
+    gcli.removeItems(mockCommands.items);
+    yield helpers.closeToolbar(options);
+    yield helpers.closeTab(options);
+  }).then(finish, helpers.handleError);
 }
 
 // <INJECTED SOURCE:END>
 
-'use strict';
+// var assert = require('../testharness/assert');
 
-// var assert = require('test/assert');
 var cli = require('gcli/cli');
-var Requisition = require('gcli/cli').Requisition;
-var canon = require('gcli/canon');
-// var mockCommands = require('gclitest/mockCommands');
-
-exports.setup = function(options) {
-  mockCommands.setup();
-};
-
-exports.shutdown = function(options) {
-  mockCommands.shutdown();
-};
-
 
 exports.testSplitSimple = function(options) {
-  var args;
-  var requisition = new Requisition();
-
-  args = cli.tokenize('s');
-  requisition._split(args);
+  var args = cli.tokenize('s');
+  options.requisition._split(args);
   assert.is(args.length, 0);
-  assert.is(requisition.commandAssignment.arg.text, 's');
+  assert.is(options.requisition.commandAssignment.arg.text, 's');
 };
 
 exports.testFlatCommand = function(options) {
-  var args;
-  var requisition = new Requisition();
-
-  args = cli.tokenize('tsv');
-  requisition._split(args);
+  var args = cli.tokenize('tsv');
+  options.requisition._split(args);
   assert.is(args.length, 0);
-  assert.is(requisition.commandAssignment.value.name, 'tsv');
+  assert.is(options.requisition.commandAssignment.value.name, 'tsv');
 
   args = cli.tokenize('tsv a b');
-  requisition._split(args);
-  assert.is(requisition.commandAssignment.value.name, 'tsv');
+  options.requisition._split(args);
+  assert.is(options.requisition.commandAssignment.value.name, 'tsv');
   assert.is(args.length, 2);
   assert.is(args[0].text, 'a');
   assert.is(args[1].text, 'b');
 };
 
 exports.testJavascript = function(options) {
-  if (!canon.getCommand('{')) {
+  if (!options.requisition.canon.getCommand('{')) {
     assert.log('Skipping testJavascript because { is not registered');
     return;
   }
 
-  var args;
-  var requisition = new Requisition();
-
-  args = cli.tokenize('{');
-  requisition._split(args);
+  var args = cli.tokenize('{');
+  options.requisition._split(args);
   assert.is(args.length, 1);
   assert.is(args[0].text, '');
-  assert.is(requisition.commandAssignment.arg.text, '');
-  assert.is(requisition.commandAssignment.value.name, '{');
+  assert.is(options.requisition.commandAssignment.arg.text, '');
+  assert.is(options.requisition.commandAssignment.value.name, '{');
 };
 
 // BUG 663081 - add tests for sub commands
-
-// });
