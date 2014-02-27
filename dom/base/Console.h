@@ -12,6 +12,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsDataHashtable.h"
 #include "nsHashKeys.h"
+#include "nsIObserver.h"
 #include "nsITimer.h"
 #include "nsWrapperCache.h"
 
@@ -23,12 +24,15 @@ namespace dom {
 class ConsoleCallData;
 
 class Console MOZ_FINAL : public nsITimerCallback
+                        , public nsIObserver
                         , public nsWrapperCache
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Console)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(Console,
+                                                         nsITimerCallback)
   NS_DECL_NSITIMERCALLBACK
+  NS_DECL_NSIOBSERVER
 
   Console(nsPIDOMWindow* aWindow);
   ~Console();
