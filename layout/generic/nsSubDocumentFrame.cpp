@@ -374,10 +374,10 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   nsRect dirty;
   bool haveDisplayPort = false;
   if (subdocRootFrame) {
-    nsIDocument* doc = subdocRootFrame->PresContext()->Document();
-    nsIContent* root = doc ? doc->GetRootElement() : nullptr;
+    nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame();
+    nsIContent* content = rootScrollFrame ? rootScrollFrame->GetContent() : nullptr;
     nsRect displayPort;
-    if (root && nsLayoutUtils::GetDisplayPort(root, &displayPort)) {
+    if (content && nsLayoutUtils::GetDisplayPort(content, &displayPort)) {
       haveDisplayPort = true;
       dirty = displayPort;
     } else {
