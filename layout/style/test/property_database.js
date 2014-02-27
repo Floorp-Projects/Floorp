@@ -4790,6 +4790,10 @@ if (SpecialPowers.getBoolPref("layout.css.filters.enabled")) {
 	};
 }
 
+if (SpecialPowers.getBoolPref("layout.css.grid.enabled")) {
+	gCSSProperties["display"].other_values.push("grid", "inline-grid");
+}
+
 if (SpecialPowers.getBoolPref("layout.css.image-orientation.enabled")) {
 	gCSSProperties["image-orientation"] = {
 		domProp: "imageOrientation",

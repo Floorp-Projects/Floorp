@@ -13,10 +13,10 @@ var ignoreIndirectCalls = {
     "mozalloc_oom.cpp:void (* gAbortHandler)(size_t)" : true,
 
     // I don't know why these are getting truncated
-    "nsTraceRefcntImpl.cpp:void (* leakyLogAddRef)(void*": true,
-    "nsTraceRefcntImpl.cpp:void (* leakyLogAddRef)(void*, int, int)": true,
-    "nsTraceRefcntImpl.cpp:void (* leakyLogRelease)(void*": true,
-    "nsTraceRefcntImpl.cpp:void (* leakyLogRelease)(void*, int, int)": true,
+    "nsTraceRefcnt.cpp:void (* leakyLogAddRef)(void*": true,
+    "nsTraceRefcnt.cpp:void (* leakyLogAddRef)(void*, int, int)": true,
+    "nsTraceRefcnt.cpp:void (* leakyLogRelease)(void*": true,
+    "nsTraceRefcnt.cpp:void (* leakyLogRelease)(void*, int, int)": true,
 };
 
 function indirectCallCannotGC(fullCaller, fullVariable)

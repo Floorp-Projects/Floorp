@@ -83,7 +83,8 @@ private:
       void* pinArg,
       const Flags flags,
       /*optional*/ const SECItem* stapledOCSPResponse,
-      /*optional out*/ insanity::pkix::ScopedCERTCertList* validationChain);
+      /*optional out*/ insanity::pkix::ScopedCERTCertList* validationChain,
+      /*optional out*/ SECOidTag* evOidPolicy);
 };
 
 void InitCertVerifierLog();

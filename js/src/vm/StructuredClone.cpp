@@ -39,6 +39,7 @@
 #include "jsdate.h"
 #include "jswrapper.h"
 
+#include "vm/SharedArrayObject.h"
 #include "vm/TypedArrayObject.h"
 #include "vm/WrapperObject.h"
 
@@ -112,8 +113,11 @@ enum TransferableObjectType {
     // All values at least this large are owned by the clone buffer
     SCTAG_TM_FIRST_OWNED = 2,
 
+    // Data is a pointer to a SharedArrayRawBuffer.
+    SCTAG_TM_SHARED_BUFFER = 2,
+
     // Data is a pointer that can be freed
-    SCTAG_TM_ALLOC_DATA = 2,
+    SCTAG_TM_ALLOC_DATA = 3,
 };
 
 namespace js {
@@ -336,9 +340,16 @@ ReadStructuredClone(JSContext *cx, uint64_t *data, size_t nbytes, MutableHandleV
 static void
 DiscardEntry(uint32_t mapEntryDescriptor, const uint64_t *ptr)
 {
-    JS_ASSERT(mapEntryDescriptor == SCTAG_TM_ALLOC_DATA);
-    uint64_t u = LittleEndian::readUint64(ptr);
-    js_free(reinterpret_cast<void*>(u));
+    if (mapEntryDescriptor == SCTAG_TM_ALLOC_DATA) {
+        uint64_t u = LittleEndian::readUint64(ptr);
+        js_free(reinterpret_cast<void*>(u));
+    } else {
+        JS_ASSERT(mapEntryDescriptor == SCTAG_TM_SHARED_BUFFER);
+        uint64_t u = LittleEndian::readUint64(ptr);
+        SharedArrayRawBuffer *raw = reinterpret_cast<SharedArrayRawBuffer *>(u);
+        if (raw)
+            raw->dropReference();
+    }
 }
 
 static void
@@ -718,7 +729,7 @@ JSStructuredCloneWriter::parseTransferable()
             JS_ReportErrorNumber(context(), js_GetErrorMessage, nullptr, JSMSG_UNWRAP_DENIED);
             return false;
         }
-        if (!tObj->is<ArrayBufferObject>()) {
+        if (!tObj->is<ArrayBufferObject>() && !tObj->is<SharedArrayBufferObject>()) {
             reportErrorTransferable();
             return false;
         }
@@ -954,22 +965,20 @@ JSStructuredCloneWriter::writeTransferMap()
     if (!out.write(transferableObjects.length()))
         return false;
 
-    for (JS::AutoObjectVector::Range tr = transferableObjects.all();
-         !tr.empty(); tr.popFront())
-    {
+    for (JS::AutoObjectVector::Range tr = transferableObjects.all(); !tr.empty(); tr.popFront()) {
         JSObject *obj = tr.front();
 
         if (!memory.put(obj, memory.count()))
             return false;
 
         // Emit a placeholder pointer. We will steal the data and neuter the
-        // transferable later.
-        if (!out.writePair(SCTAG_TRANSFER_MAP_ENTRY, SCTAG_TM_UNFILLED) ||
-            !out.writePtr(nullptr) ||
-            !out.write(0))
-        {
+        // transferable later, in the case of ArrayBufferObject.
+        if (!out.writePair(SCTAG_TRANSFER_MAP_ENTRY, SCTAG_TM_UNFILLED))
             return false;
-        }
+        if (!out.writePtr(nullptr)) // Pointer to ArrayBuffer contents or to SharedArrayRawBuffer.
+            return false;
+        if (!out.write(0)) // |userdata|, intended to be passed to callbacks.
+            return false;
     }
 
     return true;
@@ -990,20 +999,34 @@ JSStructuredCloneWriter::transferOwnership()
     JS_ASSERT(LittleEndian::readUint64(point) == transferableObjects.length());
     point++;
 
-    for (JS::AutoObjectVector::Range tr = transferableObjects.all();
-         !tr.empty();
-         tr.popFront())
-    {
+    for (JS::AutoObjectVector::Range tr = transferableObjects.all(); !tr.empty(); tr.popFront()) {
         RootedObject obj(context(), tr.front());
-        void *content;
-        uint8_t *data;
-        if (!JS_StealArrayBufferContents(context(), obj, &content, &data))
-            return false; // Destructor will clean up the already-transferred data
 
         MOZ_ASSERT(uint32_t(LittleEndian::readUint64(point) >> 32) == SCTAG_TRANSFER_MAP_ENTRY);
-        LittleEndian::writeUint64(point++, PairToUInt64(SCTAG_TRANSFER_MAP_ENTRY, SCTAG_TM_ALLOC_DATA));
-        LittleEndian::writeUint64(point++, reinterpret_cast<uint64_t>(content));
-        LittleEndian::writeUint64(point++, 0);
+        MOZ_ASSERT(uint32_t(LittleEndian::readUint64(point)) == SCTAG_TM_UNFILLED);
+
+        if (obj->is<ArrayBufferObject>()) {
+            void *content;
+            uint8_t *data;
+            if (!JS_StealArrayBufferContents(context(), obj, &content, &data))
+                return false; // Destructor will clean up the already-transferred data
+
+            uint64_t entryTag = PairToUInt64(SCTAG_TRANSFER_MAP_ENTRY, SCTAG_TM_ALLOC_DATA);
+            LittleEndian::writeUint64(point++, entryTag);
+            LittleEndian::writeUint64(point++, reinterpret_cast<uint64_t>(content));
+            LittleEndian::writeUint64(point++, 0);
+        } else {
+            SharedArrayRawBuffer *rawbuf = obj->as<SharedArrayBufferObject>().rawBufferObject();
+
+            // Avoids a race condition where the parent thread frees the buffer
+            // before the child has accepted the transferable.
+            rawbuf->addReference();
+
+            uint64_t entryTag = PairToUInt64(SCTAG_TRANSFER_MAP_ENTRY, SCTAG_TM_SHARED_BUFFER);
+            LittleEndian::writeUint64(point++, entryTag);
+            LittleEndian::writeUint64(point++, reinterpret_cast<uint64_t>(rawbuf));
+            LittleEndian::writeUint64(point++, 0);
+        }
     }
 
     JS_ASSERT(point <= out.rawBuffer() + out.count());
@@ -1483,7 +1506,7 @@ JSStructuredCloneReader::readTransferMap()
         if (!in.readPair(&tag, &data))
             return false;
         JS_ASSERT(tag == SCTAG_TRANSFER_MAP_ENTRY);
-        JS_ASSERT(data == SCTAG_TM_ALLOC_DATA);
+        JS_ASSERT(data == SCTAG_TM_ALLOC_DATA || data == SCTAG_TM_SHARED_BUFFER);
 
         void *content;
         if (!in.readPtr(&content))
@@ -1493,7 +1516,13 @@ JSStructuredCloneReader::readTransferMap()
         if (!in.read(&userdata))
             return false;
 
-        RootedObject obj(context(), JS_NewArrayBufferWithContents(context(), content));
+        RootedObject obj(context());
+
+        if (data == SCTAG_TM_ALLOC_DATA)
+            obj = JS_NewArrayBufferWithContents(context(), content);
+        else if (data == SCTAG_TM_SHARED_BUFFER)
+            obj = SharedArrayBufferObject::New(context(), (SharedArrayRawBuffer *)content);
+
         if (!obj)
             return false;
 

@@ -485,16 +485,6 @@ public:
         // platform-specific override, by default do nothing
     }
 
-    // Break large OMTC tiled thebes layer painting into small paints.
-    static bool UseProgressiveTilePainting();
-
-    // When a critical display-port is set, render the visible area outside of
-    // it into a buffer at a lower precision. Requires tiled buffers.
-    static bool UseLowPrecisionBuffer();
-
-    // Retrieve the resolution that a low precision buffer should render at.
-    static float GetLowPrecisionResolution();
-
     static bool OffMainThreadCompositingEnabled();
 
     /** Use gfxPlatform::GetPref* methods instead of direct calls to Preferences
@@ -502,32 +492,17 @@ public:
      * only once, and remain the same until restart.
      */
     static bool GetPrefLayersOffMainThreadCompositionEnabled();
-    static bool GetPrefLayersOffMainThreadCompositionForceEnabled();
-    static bool GetPrefLayersAccelerationForceEnabled();
-    static bool GetPrefLayersAccelerationDisabled();
-    static bool GetPrefLayersPreferOpenGL();
-    static bool GetPrefLayersPreferD3D9();
     static bool CanUseDirect3D9();
-    static int  GetPrefLayoutFrameRate();
-    static int  GetPrefLayersCompositionFrameRate();
-    static bool GetPrefLayersDump();
-    static bool GetPrefLayersScrollGraph();
-    static bool GetPrefLayersEnableTiles();
-    static bool GetPrefLayersDrawFPS();
 
     static bool OffMainThreadCompositionRequired();
 
     /**
-     * Is it possible to use buffer rotation
+     * Is it possible to use buffer rotation.  Note that these
+     * check the preference, but also allow for the override to
+     * disable it using DisableBufferRotation.
      */
     static bool BufferRotationEnabled();
     static void DisableBufferRotation();
-
-    static bool ComponentAlphaEnabled();
-
-    // Async video is enabled on this platform.
-    // Must only be called from the main thread.
-    static bool AsyncVideoEnabled();
 
     /**
      * Are we going to try color management?
@@ -580,8 +555,6 @@ public:
 
     virtual void FontsPrefsChanged(const char *aPref);
 
-    void OrientationSyncPrefsObserverChanged();
-
     int32_t GetBidiNumeralOption();
 
     /**
@@ -605,16 +578,11 @@ public:
 
     virtual int GetScreenDepth() const;
 
-    bool WidgetUpdateFlashing() const { return mWidgetUpdateFlashing; }
-
-    uint32_t GetOrientationSyncMillis() const;
-
     /**
      * Return the layer debugging options to use browser-wide.
      */
     mozilla::layers::DiagnosticTypes GetLayerDiagnosticTypes();
 
-    static bool DrawFrameCounter();
     static nsIntRect FrameCounterBounds() {
       int bits = 16;
       int sizeOfBit = 3;
@@ -727,7 +695,6 @@ private:
     nsTArray<uint32_t> mCJKPrefLangs;
     nsCOMPtr<nsIObserver> mSRGBOverrideObserver;
     nsCOMPtr<nsIObserver> mFontPrefsObserver;
-    nsCOMPtr<nsIObserver> mOrientationSyncPrefsObserver;
     nsCOMPtr<nsIObserver> mMemoryPressureObserver;
 
     // The preferred draw target backend to use for canvas
@@ -742,13 +709,8 @@ private:
     mozilla::widget::GfxInfoCollector<gfxPlatform> mAzureCanvasBackendCollector;
 
     mozilla::RefPtr<mozilla::gfx::DrawEventRecorder> mRecorder;
-    bool mWidgetUpdateFlashing;
-    uint32_t mOrientationSyncMillis;
     bool mLayersPreferMemoryOverShmem;
     bool mLayersUseDeprecated;
-    bool mDrawLayerBorders;
-    bool mDrawTileBorders;
-    bool mDrawBigImageBorders;
 };
 
 #endif /* GFX_PLATFORM_H */

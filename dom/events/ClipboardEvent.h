@@ -13,6 +13,7 @@
 
 namespace mozilla {
 namespace dom {
+class DataTransfer;
 
 class ClipboardEvent : public nsDOMEvent,
                        public nsIDOMClipboardEvent
@@ -41,7 +42,12 @@ public:
               const ClipboardEventInit& aParam,
               ErrorResult& aRv);
 
-  nsIDOMDataTransfer* GetClipboardData();
+  DataTransfer* GetClipboardData();
+
+  void InitClipboardEvent(const nsAString& aType, bool aCanBubble,
+                          bool aCancelable,
+                          DataTransfer* aClipboardData,
+                          ErrorResult& aError);
 };
 
 } // namespace dom
