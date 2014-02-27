@@ -775,6 +775,7 @@ Editor.prototype = {
   setFontSize: function (size) {
     let cm = editors.get(this);
     cm.getWrapperElement().style.fontSize = parseInt(size, 10) + "px";
+    cm.refresh();
   },
 
   /**

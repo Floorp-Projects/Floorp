@@ -11,6 +11,22 @@ namespace mozilla {
 namespace dom {
 namespace telephony {
 
+struct EnumerateCallsResponse
+{
+  // empty.
+};
+
+struct DialResponse
+{
+  // empty.
+};
+
+union IPCTelephonyResponse
+{
+  EnumerateCallsResponse;
+  DialResponse;
+};
+
 protocol PTelephonyRequest
 {
   manager PTelephony;
@@ -18,11 +34,14 @@ protocol PTelephonyRequest
 child:
   NotifyEnumerateCallState(uint32_t aClientId, IPCCallStateData aData);
 
+  NotifyDialError(nsString aError);
+
+  NotifyDialSuccess();
+
   /**
-   * Sent when the asynchronous request has completed. It's currently only for
-   * request call enumeration.
+   * Sent when the asynchronous request has completed.
    */
-  __delete__();
+  __delete__(IPCTelephonyResponse aResponse);
 };
 
 } /* namespace telephony */

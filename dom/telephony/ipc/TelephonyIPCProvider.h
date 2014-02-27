@@ -13,6 +13,7 @@
 
 BEGIN_TELEPHONY_NAMESPACE
 
+struct IPCTelephonyRequest;
 class PTelephonyChild;
 
 class TelephonyIPCProvider MOZ_FINAL : public nsITelephonyProvider
@@ -34,6 +35,10 @@ private:
   nsTArray<nsCOMPtr<nsITelephonyListener> > mListeners;
   PTelephonyChild* mPTelephonyChild;
   uint32_t mDefaultServiceId;
+
+  nsresult SendRequest(nsITelephonyListener *aListener,
+                       nsITelephonyCallback *aCallback,
+                       const IPCTelephonyRequest& aRequest);
 };
 
 END_TELEPHONY_NAMESPACE
