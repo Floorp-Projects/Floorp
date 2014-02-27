@@ -400,8 +400,15 @@ TelephonyProvider.prototype = {
     });
   },
 
-  dial: function(aClientId, aNumber, aIsEmergency) {
+  isDialing: false,
+  dial: function(aClientId, aNumber, aIsEmergency, aTelephonyCallback) {
     if (DEBUG) debug("Dialing " + (aIsEmergency ? "emergency " : "") + aNumber);
+
+    if (this.isDialing) {
+      if (DEBUG) debug("Already has a dialing call. Drop.");
+      aTelephonyCallback.notifyDialError("InvalidStateError");
+      return;
+    }
 
     // we don't try to be too clever here, as the phone is probably in the
     // locked state. Let's just check if it's a number without normalizing
@@ -409,25 +416,28 @@ TelephonyProvider.prototype = {
       aNumber = gPhoneNumberUtils.normalize(aNumber);
     }
 
+    // Validate the number.
     if (!gPhoneNumberUtils.isPlainPhoneNumber(aNumber)) {
       // Note: isPlainPhoneNumber also accepts USSD and SS numbers
       if (DEBUG) debug("Number '" + aNumber + "' is not viable. Drop.");
       let errorMsg = RIL.RIL_CALL_FAILCAUSE_TO_GECKO_CALL_ERROR[RIL.CALL_FAIL_UNOBTAINABLE_NUMBER];
-      Services.tm.currentThread.dispatch(
-        this.notifyCallError.bind(this, aClientId, -1, errorMsg),
-        Ci.nsIThread.DISPATCH_NORMAL);
+      aTelephonyCallback.notifyDialError(errorMsg);
       return;
     }
 
+    this.isDialing = true;
     this._getClient(aClientId).sendWorkerMessage("dial", {
       number: aNumber,
       isDialEmergency: aIsEmergency
-    }, (function(clientId, response) {
-      if (!response.success) {
-        this.notifyCallError(clientId, -1, response.errorMsg);
+    }, (function(response) {
+      this.isDialing = false;
+      if (response.success) {
+        aTelephonyCallback.notifyDialSuccess();
+      } else {
+        aTelephonyCallback.notifyDialError(response.errorMsg);
       }
       return false;
-    }).bind(this, aClientId));
+    }).bind(this));
   },
 
   hangUp: function(aClientId, aCallIndex) {

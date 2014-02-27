@@ -117,22 +117,30 @@ TelephonyIPCProvider::UnregisterListener(nsITelephonyListener *aListener)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-TelephonyIPCProvider::EnumerateCalls(nsITelephonyListener *aListener)
+nsresult
+TelephonyIPCProvider::SendRequest(nsITelephonyListener *aListener,
+                                  nsITelephonyCallback *aCallback,
+                                  const IPCTelephonyRequest& aRequest)
 {
   // Life time of newly allocated TelephonyRequestChild instance is managed by
   // IPDL itself.
-  TelephonyRequestChild* actor = new TelephonyRequestChild(aListener);
-  mPTelephonyChild->SendPTelephonyRequestConstructor(actor);
+  TelephonyRequestChild* actor = new TelephonyRequestChild(aListener, aCallback);
+  mPTelephonyChild->SendPTelephonyRequestConstructor(actor, aRequest);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-TelephonyIPCProvider::Dial(uint32_t aClientId, const nsAString& aNumber,
-                           bool aIsEmergency)
+TelephonyIPCProvider::EnumerateCalls(nsITelephonyListener *aListener)
 {
-  mPTelephonyChild->SendDialCall(aClientId, nsString(aNumber), aIsEmergency);
-  return NS_OK;
+  return SendRequest(aListener, nullptr, EnumerateCallsRequest());
+}
+
+NS_IMETHODIMP
+TelephonyIPCProvider::Dial(uint32_t aClientId, const nsAString& aNumber,
+                           bool aIsEmergency, nsITelephonyCallback *aCallback)
+{
+  return SendRequest(nullptr, aCallback,
+                     DialRequest(aClientId, nsString(aNumber), aIsEmergency));
 }
 
 NS_IMETHODIMP
