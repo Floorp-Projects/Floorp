@@ -92,9 +92,11 @@ class MercurialSetupWizard(object):
     """Command-line wizard to help users configure Mercurial."""
 
     def __init__(self, state_dir):
-        self.state_dir = state_dir
-        self.ext_dir = os.path.join(state_dir, 'mercurial', 'extensions')
-        self.vcs_tools_dir = os.path.join(state_dir, 'version-control-tools')
+        # We use normpath since Mercurial expects the hgrc to use native path
+        # separators, but state_dir uses unix style paths even on Windows.
+        self.state_dir = os.path.normpath(state_dir)
+        self.ext_dir = os.path.join(self.state_dir, 'mercurial', 'extensions')
+        self.vcs_tools_dir = os.path.join(self.state_dir, 'version-control-tools')
         self.update_vcs_tools = False
 
     def run(self, config_paths):
