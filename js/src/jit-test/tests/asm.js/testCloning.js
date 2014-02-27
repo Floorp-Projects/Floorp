@@ -35,3 +35,10 @@ assertEq(h2(), 1);
 assertEq(h1(), 3);
 assertEq(h2(), 2);
 assertEq(h1(), 4);
+
+var code = asmCompile(USE_ASM + "return {}");
+var h1 = code();
+var h2 = code();
+assertEq(h1 === h2, false);
+assertEq(Object.keys(h1).length, 0);
+assertEq(Object.keys(h2).length, 0);
