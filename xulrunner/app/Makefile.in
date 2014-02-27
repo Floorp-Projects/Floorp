@@ -41,22 +41,6 @@ include $(topsrcdir)/config/rules.mk
 
 DEFINES += -DXULRUNNER_ICO='"$(DIST)/branding/xulrunner.ico"' -DDOCUMENT_ICO='"$(DIST)/branding/document.ico"'
 
-ifeq ($(OS_ARCH),WINNT)
-#
-# Control the default heap size.
-# This is the heap returned by GetProcessHeap().
-# As we use the CRT heap, the default size is too large and wastes VM.
-#
-# The default heap size is 1MB on Win32.
-# The heap will grow if need be.
-#
-# Set it to 256k.  See bug 127069.
-#
-ifndef GNU_CC
-LDFLAGS += /HEAP:0x40000
-endif
-endif
-
 ifdef MOZ_WIDGET_GTK
 libs::
 	$(INSTALL) $(IFLAGS1) $(DIST)/branding/default16.png $(DIST)/bin/chrome/icons/default
