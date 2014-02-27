@@ -646,7 +646,8 @@ nsCopySupport::FireClipboardEvent(int32_t aType, int32_t aClipboardType, nsIPres
   bool doDefault = true;
   nsRefPtr<DataTransfer> clipboardData;
   if (chromeShell || Preferences::GetBool("dom.event.clipboardevents.enabled", true)) {
-    clipboardData = new DataTransfer(aType, aType == NS_PASTE, aClipboardType);
+    clipboardData =
+      new DataTransfer(piWindow, aType, aType == NS_PASTE, aClipboardType);
 
     nsEventStatus status = nsEventStatus_eIgnore;
     InternalClipboardEvent evt(true, aType);

@@ -38,12 +38,27 @@ ClipboardEvent::InitClipboardEvent(const nsAString& aType,
                                    bool aCancelable,
                                    nsIDOMDataTransfer* aClipboardData)
 {
-  nsresult rv = nsDOMEvent::InitEvent(aType, aCanBubble, aCancelable);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<DataTransfer> clipboardData = do_QueryInterface(aClipboardData);
+  // Null clipboardData is OK
+
+  ErrorResult rv;
+  InitClipboardEvent(aType, aCanBubble, aCancelable, clipboardData, rv);
+
+  return rv.ErrorCode();
+}
+
+void
+ClipboardEvent::InitClipboardEvent(const nsAString& aType, bool aCanBubble,
+                                   bool aCancelable,
+                                   DataTransfer* aClipboardData,
+                                   ErrorResult& aError)
+{
+  aError = nsDOMEvent::InitEvent(aType, aCanBubble, aCancelable);
+  if (aError.Failed()) {
+    return;
+  }
 
   mEvent->AsClipboardEvent()->clipboardData = aClipboardData;
-
-  return NS_OK;
 }
 
 already_AddRefed<ClipboardEvent>
@@ -63,13 +78,13 @@ ClipboardEvent::Constructor(const GlobalObject& aGlobal,
       // Always create a clipboardData for the copy event. If this is changed to
       // support other types of events, make sure that read/write privileges are
       // checked properly within DataTransfer.
-      clipboardData = new DataTransfer(NS_COPY, false, -1);
+      clipboardData = new DataTransfer(ToSupports(e), NS_COPY, false, -1);
       clipboardData->SetData(aParam.mDataType, aParam.mData);
     }
   }
 
-  aRv = e->InitClipboardEvent(aType, aParam.mBubbles, aParam.mCancelable,
-                              clipboardData);
+  e->InitClipboardEvent(aType, aParam.mBubbles, aParam.mCancelable,
+                        clipboardData, aRv);
   e->SetTrusted(trusted);
   return e.forget();
 }
@@ -81,17 +96,20 @@ ClipboardEvent::GetClipboardData(nsIDOMDataTransfer** aClipboardData)
   return NS_OK;
 }
 
-nsIDOMDataTransfer*
+DataTransfer*
 ClipboardEvent::GetClipboardData()
 {
   InternalClipboardEvent* event = mEvent->AsClipboardEvent();
 
   if (!event->clipboardData) {
     if (mEventIsInternal) {
-      event->clipboardData = new DataTransfer(NS_COPY, false, -1);
+      event->clipboardData =
+        new DataTransfer(ToSupports(this), NS_COPY, false, -1);
     } else {
       event->clipboardData =
-        new DataTransfer(event->message, event->message == NS_PASTE, nsIClipboard::kGlobalClipboard);
+        new DataTransfer(ToSupports(this), event->message,
+                         event->message == NS_PASTE,
+                         nsIClipboard::kGlobalClipboard);
     }
   }
 

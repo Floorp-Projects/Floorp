@@ -737,7 +737,7 @@ protected:
    * aSelection - [out] set to the selection to be dragged
    * aTargetNode - [out] the draggable node, or null if there isn't one
    */
-  void DetermineDragTarget(nsPresContext* aPresContext,
+  void DetermineDragTarget(nsPIDOMWindow* aWindow,
                            nsIContent* aSelectionTarget,
                            mozilla::dom::DataTransfer* aDataTransfer,
                            nsISelection** aSelection,
