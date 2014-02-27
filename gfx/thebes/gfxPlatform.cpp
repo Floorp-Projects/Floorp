@@ -844,10 +844,9 @@ gfxPlatform::InitializeSkiaCaches()
 {
 #ifdef USE_SKIA_GPU
   if (UseAcceleratedSkiaCanvas()) {
-    bool usingDynamicCache = Preferences::GetBool("gfx.canvas.skiagl.dynamic-cache", false);
-
-    int cacheItemLimit = Preferences::GetInt("gfx.canvas.skiagl.cache-items", 256);
-    int cacheSizeLimit = Preferences::GetInt("gfx.canvas.skiagl.cache-size", 96);
+    bool usingDynamicCache = gfxPrefs::CanvasSkiaGLDynamicCache();
+    int cacheItemLimit = gfxPrefs::CanvasSkiaGLCacheItems();
+    int cacheSizeLimit = gfxPrefs::CanvasSkiaGLCacheSize();
 
     // Prefs are in megabytes, but we want the sizes in bytes
     cacheSizeLimit *= 1024*1024;
