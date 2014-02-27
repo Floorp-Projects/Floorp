@@ -8,6 +8,7 @@
 #include "nsCOMArray.h"
 #include "nsUnicharInputStream.h"
 #include "nsPrintfCString.h"
+#include "nsAutoPtr.h"
 
 #define PL_ARENA_CONST_ALIGN_MASK 3
 #include "nsPersistentProperties.h"
@@ -465,15 +466,8 @@ nsPersistentProperties::Create(nsISupports *aOuter, REFNSIID aIID, void **aResul
 {
   if (aOuter)
     return NS_ERROR_NO_AGGREGATION;
-  nsPersistentProperties* props = new nsPersistentProperties();
-  if (props == nullptr)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(props);
-  nsresult rv = props->QueryInterface(aIID, aResult);
-
-  NS_RELEASE(props);
-  return rv;
+  nsRefPtr<nsPersistentProperties> props = new nsPersistentProperties();
+  return props->QueryInterface(aIID, aResult);
 }
 
 NS_IMPL_ISUPPORTS2(nsPersistentProperties, nsIPersistentProperties, nsIProperties)
@@ -652,13 +646,8 @@ nsPropertyElement::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
   if (aOuter)
     return NS_ERROR_NO_AGGREGATION;
-  nsPropertyElement* propElem = new nsPropertyElement();
-  if (propElem == nullptr)
-    return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(propElem);
-  nsresult rv = propElem->QueryInterface(aIID, aResult);
-  NS_RELEASE(propElem);
-  return rv;
+  nsRefPtr<nsPropertyElement> propElem = new nsPropertyElement();
+  return propElem->QueryInterface(aIID, aResult);
 }
 
 NS_IMPL_ISUPPORTS1(nsPropertyElement, nsIPropertyElement)
