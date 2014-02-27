@@ -461,13 +461,18 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   }
 
   // Generate a resolution and/or zoom item if needed. If one or both of those is
-  // created, we don't need to create a separate nsDisplayOwnLayer.
+  // created, we don't need to create a separate nsDisplaySubDocument.
 
+  uint32_t flags = nsDisplayOwnLayer::GENERATE_SUBDOC_INVALIDATIONS;
+  // We also want to add nsDisplayOwnLayer::GENERATE_SCROLLABLE_LAYER to whatever
+  // layer becomes the topmost. We do this below.
   if (constructZoomItem) {
     nsDisplayZoom* zoomItem =
       new (aBuilder) nsDisplayZoom(aBuilder, subdocRootFrame, &childItems,
                                    subdocAPD, parentAPD,
-                                   nsDisplayOwnLayer::GENERATE_SUBDOC_INVALIDATIONS);
+                                   flags |
+                                    (constructResolutionItem ?
+                                      0 : nsDisplayOwnLayer::GENERATE_SCROLLABLE_LAYER));
     childItems.AppendToTop(zoomItem);
     needsOwnLayer = false;
   }
@@ -476,15 +481,15 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (constructResolutionItem) {
     nsDisplayResolution* resolutionItem =
       new (aBuilder) nsDisplayResolution(aBuilder, subdocRootFrame, &childItems,
-                                         nsDisplayOwnLayer::GENERATE_SUBDOC_INVALIDATIONS);
+        flags | nsDisplayOwnLayer::GENERATE_SCROLLABLE_LAYER);
     childItems.AppendToTop(resolutionItem);
     needsOwnLayer = false;
   }
   if (needsOwnLayer) {
     // We always want top level content documents to be in their own layer.
-    nsDisplayOwnLayer* layerItem = new (aBuilder) nsDisplayOwnLayer(
+    nsDisplaySubDocument* layerItem = new (aBuilder) nsDisplaySubDocument(
       aBuilder, subdocRootFrame ? subdocRootFrame : this,
-      &childItems, nsDisplayOwnLayer::GENERATE_SUBDOC_INVALIDATIONS);
+      &childItems, flags | nsDisplayOwnLayer::GENERATE_SCROLLABLE_LAYER);
     childItems.AppendToTop(layerItem);
   }
 
