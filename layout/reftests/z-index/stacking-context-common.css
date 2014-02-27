@@ -1,0 +1,26 @@
+.contain, .maybesc {
+  width: 100px;
+  height: 100px;
+}
+.contain, .maybesc {
+  position: relative;
+}
+.inner1, .inner3, .intruder {
+  position: absolute;
+  top: 0; left: 0; bottom: 0; right: 0;
+}
+.inner1 {
+  left: 5px; right: 30px;
+  background: rgba(0, 255, 255, 0.5); /* aqua */
+  z-index: 1;
+}
+.inner3 {
+  left: 30px; right: 5px;
+  background: rgba(255, 255, 0, 0.5); /* yellow */
+  z-index: 3;
+}
+.intruder {
+  top: 20px; bottom: 20px;
+  background: rgba(255, 0, 255, 0.5); /* fuchsia */
+  z-index: 2;
+}

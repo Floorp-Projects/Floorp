@@ -16,7 +16,7 @@
 #include "gfxFont.h"
 #include "nsIRunnable.h"
 #include "mozilla/TimeStamp.h"
-#include "nsTraceRefcnt.h"
+#include "nsISupportsImpl.h"
 
 // data retrieved for a given face
 

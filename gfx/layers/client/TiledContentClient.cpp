@@ -11,6 +11,7 @@
 #include "CompositorChild.h"            // for CompositorChild
 #include "gfxContext.h"                 // for gfxContext, etc
 #include "gfxPlatform.h"                // for gfxPlatform
+#include "gfxPrefs.h"                   // for gfxPrefs
 #include "gfxRect.h"                    // for gfxRect
 #include "mozilla/MathAlgorithms.h"     // for Abs
 #include "mozilla/gfx/Point.h"          // for IntSize
@@ -83,7 +84,8 @@ TiledContentClient::TiledContentClient(ClientTiledThebesLayer* aThebesLayer,
 {
   MOZ_COUNT_CTOR(TiledContentClient);
 
-  mLowPrecisionTiledBuffer.SetResolution(gfxPlatform::GetLowPrecisionResolution());
+  // The preference is int in "thousands", so adjust:
+  mLowPrecisionTiledBuffer.SetResolution(gfxPrefs::LowPrecisionResolution()/1000.f);
 }
 
 void

@@ -17,7 +17,6 @@
 #include "nsSelectionState.h"
 #include "nsTArray.h"
 #include "nsTextEditRules.h"
-#include "nsTraceRefcnt.h"
 #include "nscore.h"
 
 class nsHTMLEditor;

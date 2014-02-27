@@ -544,4 +544,10 @@ LIRGeneratorARM::visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic
     MOZ_ASSUME_UNREACHABLE("NYI");
 }
 
+bool
+LIRGeneratorARM::visitForkJoinGetSlice(MForkJoinGetSlice *ins)
+{
+    MOZ_ASSUME_UNREACHABLE("NYI");
+}
+
 //__aeabi_uidiv

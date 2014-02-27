@@ -8,7 +8,7 @@
 interface nsIVariant;
 interface nsIDOMFileList;
 
-[scriptable, uuid(7D73CFBF-EC30-4F8E-B6A4-BB31EB943580)]
+[scriptable, builtinclass, uuid(4ba241dd-a964-4077-bc30-515a657772e4)]
 interface nsIDOMDataTransfer : nsISupports
 {
   /**
@@ -229,14 +229,4 @@ interface nsIDOMDataTransfer : nsISupports
    * constants in nsIDragService.
    */
   [noscript] attribute unsigned long effectAllowedInt;
-
-  /**
-   * Creates a copy of the data transfer object, for the given event type and
-   * user cancelled flag. If isCrossDomainSubFrameDrop is set, then this is a
-   * cross-domain drop from a subframe where access to the data should be
-   * prevented.
-   */
-  [noscript] nsIDOMDataTransfer clone(in uint32_t aEventType,
-                                      in boolean aUserCancelled,
-                                      in boolean isCrossDomainSubFrameDrop);
 };

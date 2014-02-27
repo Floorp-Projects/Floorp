@@ -295,3 +295,16 @@ LIRGeneratorX86Shared::lowerTruncateFToInt32(MTruncateToInt32 *ins)
     LDefinition maybeTemp = Assembler::HasSSE3() ? LDefinition::BogusTemp() : tempFloat32();
     return define(new(alloc()) LTruncateFToInt32(useRegister(opd), maybeTemp), ins);
 }
+
+bool
+LIRGeneratorX86Shared::visitForkJoinGetSlice(MForkJoinGetSlice *ins)
+{
+    // We fix eax and edx for cmpxchg and div.
+    LForkJoinGetSlice *lir = new(alloc())
+        LForkJoinGetSlice(useFixed(ins->forkJoinContext(), ForkJoinGetSliceReg_cx),
+                          tempFixed(eax),
+                          tempFixed(edx),
+                          tempFixed(ForkJoinGetSliceReg_temp0),
+                          tempFixed(ForkJoinGetSliceReg_temp1));
+    return defineFixed(lir, ins, LAllocation(AnyRegister(ForkJoinGetSliceReg_output)));
+}

@@ -30,13 +30,18 @@ namespace ipc {
 class SharedMemory
 {
 public:
+  virtual ~SharedMemory()
+  {
+    MOZ_COUNT_DTOR(SharedMemory);
+    Unmapped();
+    Destroyed();
+  }
+
   enum SharedMemoryType {
     TYPE_BASIC,
     TYPE_SYSV,
     TYPE_UNKNOWN
   };
-
-  virtual ~SharedMemory() { Unmapped(); Destroyed(); }
 
   size_t Size() const { return mMappedSize; }
 

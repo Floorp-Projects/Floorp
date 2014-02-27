@@ -49,13 +49,13 @@
 #include "nsIMIMEService.h"
 #include "imgIContainer.h"
 #include "imgIRequest.h"
-#include "nsDOMDataTransfer.h"
+#include "mozilla/dom/DataTransfer.h"
 #include "nsIMIMEInfo.h"
 #include "nsRange.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLAreaElement.h"
 
-using mozilla::dom::HTMLAreaElement;
+using namespace mozilla::dom;
 
 class MOZ_STACK_CLASS DragDataProducer
 {
@@ -64,18 +64,18 @@ public:
                    nsIContent* aTarget,
                    nsIContent* aSelectionTargetNode,
                    bool aIsAltKeyPressed);
-  nsresult Produce(nsDOMDataTransfer* aDataTransfer,
+  nsresult Produce(DataTransfer* aDataTransfer,
                    bool* aCanDrag,
                    nsISelection** aSelection,
                    nsIContent** aDragNode);
 
 private:
-  void AddString(nsDOMDataTransfer* aDataTransfer,
+  void AddString(DataTransfer* aDataTransfer,
                  const nsAString& aFlavor,
                  const nsAString& aData,
                  nsIPrincipal* aPrincipal);
   nsresult AddStringsToDataTransfer(nsIContent* aDragNode,
-                                    nsDOMDataTransfer* aDataTransfer);
+                                    DataTransfer* aDataTransfer);
   static nsresult GetDraggableSelectionData(nsISelection* inSelection,
                                             nsIContent* inRealTargetNode,
                                             nsIContent **outImageOrLinkNode,
@@ -112,7 +112,7 @@ nsContentAreaDragDrop::GetDragData(nsPIDOMWindow* aWindow,
                                    nsIContent* aTarget,
                                    nsIContent* aSelectionTargetNode,
                                    bool aIsAltKeyPressed,
-                                   nsDOMDataTransfer* aDataTransfer,
+                                   DataTransfer* aDataTransfer,
                                    bool* aCanDrag,
                                    nsISelection** aSelection,
                                    nsIContent** aDragNode)
@@ -354,7 +354,7 @@ DragDataProducer::GetNodeString(nsIContent* inNode,
 }
 
 nsresult
-DragDataProducer::Produce(nsDOMDataTransfer* aDataTransfer,
+DragDataProducer::Produce(DataTransfer* aDataTransfer,
                           bool* aCanDrag,
                           nsISelection** aSelection,
                           nsIContent** aDragNode)
@@ -703,7 +703,7 @@ DragDataProducer::Produce(nsDOMDataTransfer* aDataTransfer,
 }
 
 void
-DragDataProducer::AddString(nsDOMDataTransfer* aDataTransfer,
+DragDataProducer::AddString(DataTransfer* aDataTransfer,
                             const nsAString& aFlavor,
                             const nsAString& aData,
                             nsIPrincipal* aPrincipal)
@@ -717,7 +717,7 @@ DragDataProducer::AddString(nsDOMDataTransfer* aDataTransfer,
 
 nsresult
 DragDataProducer::AddStringsToDataTransfer(nsIContent* aDragNode,
-                                           nsDOMDataTransfer* aDataTransfer)
+                                           DataTransfer* aDataTransfer)
 {
   NS_ASSERTION(aDragNode, "adding strings for null node");
 

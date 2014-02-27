@@ -34,7 +34,7 @@
 #include "nsHtml5AtomTable.h"
 #include "nsString.h"
 #include "nsIContent.h"
-#include "nsTraceRefcnt.h"
+#include "nsISupportsImpl.h"
 #include "jArray.h"
 #include "nsHtml5DocumentMode.h"
 #include "nsHtml5ArrayCopy.h"

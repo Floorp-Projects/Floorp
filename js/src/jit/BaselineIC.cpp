@@ -577,6 +577,7 @@ ICStubCompiler::getStubCode()
         return stubCode;
 
     // Compile new stubcode.
+    IonContext ictx(cx, nullptr);
     MacroAssembler masm;
 #ifdef JS_CODEGEN_ARM
     masm.setSecondScratchReg(BaselineSecondScratchReg);

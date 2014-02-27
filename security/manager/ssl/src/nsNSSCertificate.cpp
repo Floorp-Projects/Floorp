@@ -1421,7 +1421,7 @@ nsNSSCertificate::SaveSMimeProfile()
     return NS_OK;
 }
 
-#ifndef NSS_NO_LIBPKIX
+#ifndef MOZ_NO_EV_CERTS
 
 nsresult
 nsNSSCertificate::hasValidEVOidTag(SECOidTag& resultOidTag, bool& validEV)
@@ -1476,12 +1476,12 @@ nsNSSCertificate::getValidEVOidTag(SECOidTag& resultOidTag, bool& validEV)
   return rv;
 }
 
-#endif // NSS_NO_LIBPKIX
+#endif // MOZ_NO_EV_CERTS
 
 NS_IMETHODIMP
 nsNSSCertificate::GetIsExtendedValidation(bool* aIsEV)
 {
-#ifdef NSS_NO_LIBPKIX
+#ifdef MOZ_NO_EV_CERTS
   *aIsEV = false;
   return NS_OK;
 #else
@@ -1508,7 +1508,7 @@ nsNSSCertificate::GetValidEVPolicyOid(nsACString& outDottedOid)
 {
   outDottedOid.Truncate();
 
-#ifndef NSS_NO_LIBPKIX
+#ifndef MOZ_NO_EV_CERTS
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;

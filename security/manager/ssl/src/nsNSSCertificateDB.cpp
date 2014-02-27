@@ -1714,7 +1714,7 @@ nsNSSCertificateDB::VerifyCertNow(nsIX509Cert* aCert,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-#ifndef NSS_NO_LIBPKIX
+#ifndef MOZ_NO_EV_CERTS
   EnsureIdentityInfoLoaded();
 #endif
 

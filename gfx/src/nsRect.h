@@ -15,9 +15,9 @@
 #include "mozilla/Likely.h"             // for MOZ_UNLIKELY
 #include "mozilla/gfx/BaseRect.h"       // for BaseRect
 #include "nsCoord.h"                    // for nscoord, etc
+#include "nsISupportsImpl.h"            // for MOZ_COUNT_CTOR, etc
 #include "nsPoint.h"                    // for nsIntPoint, nsPoint
 #include "nsSize.h"                     // for nsIntSize, nsSize
-#include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc
 #include "nscore.h"                     // for NS_BUILD_REFCNT_LOGGING
 
 struct nsIntRect;

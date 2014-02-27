@@ -1015,7 +1015,7 @@ js_InvokeOperationCallback(JSContext *cx)
 
     // IonMonkey sets its stack limit to UINTPTR_MAX to trigger operation
     // callbacks.
-    rt->resetIonStackLimit();
+    rt->resetJitStackLimit();
 
     js::gc::GCIfNeeded(cx);
 
