@@ -217,7 +217,7 @@ WrapperPromiseCallback::Call(JS::Handle<JS::Value> aValue)
           MOZ_ASSERT(func);
           JSScript* script = JS_GetFunctionScript(cx, func);
           if (script) {
-            fileName = JS_GetScriptFilename(cx, script);
+            fileName = JS_GetScriptFilename(script);
             lineNumber = JS_GetScriptBaseLineNumber(cx, script);
           }
         }

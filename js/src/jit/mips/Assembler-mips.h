@@ -617,6 +617,21 @@ class Assembler
         FCC7
     };
 
+    enum FloatFormat {
+        SingleFloat,
+        DoubleFloat
+    };
+
+    enum JumpOrCall {
+        BranchIsJump,
+        BranchIsCall
+    };
+
+    enum FloatTestKind {
+        TestForTrue,
+        TestForFalse
+    };
+
     // :( this should be protected, but since CodeGenerator
     // wants to use it, It needs to go out here :(
 
@@ -750,10 +765,10 @@ class Assembler
     // Branch and jump instructions
     BufferOffset as_bal(BOffImm16 off);
 
-    InstImm getBranchCode(bool isCall);
+    InstImm getBranchCode(JumpOrCall jumpOrCall);
     InstImm getBranchCode(Register s, Register t, Condition c);
     InstImm getBranchCode(Register s, Condition c);
-    InstImm getBranchCode(bool testTrue, FPConditionBit fcc);
+    InstImm getBranchCode(FloatTestKind testKind, FPConditionBit fcc);
 
     BufferOffset as_j(JOffImm26 off);
     BufferOffset as_jal(JOffImm26 off);
@@ -895,24 +910,22 @@ class Assembler
     BufferOffset as_sqrtd(FloatRegister fd, FloatRegister fs);
 
     // FP compare instructions
-    BufferOffset as_cfs(FloatRegister fs, FloatRegister ft, FPConditionBit fcc = FCC0);
-    BufferOffset as_cuns(FloatRegister fs, FloatRegister ft, FPConditionBit fcc = FCC0);
-    BufferOffset as_ceqs(FloatRegister fs, FloatRegister ft, FPConditionBit fcc = FCC0);
-    BufferOffset as_cueqs(FloatRegister fs, FloatRegister ft, FPConditionBit fcc = FCC0);
-    BufferOffset as_colts(FloatRegister fs, FloatRegister ft, FPConditionBit fcc = FCC0);
-    BufferOffset as_cults(FloatRegister fs, FloatRegister ft, FPConditionBit fcc = FCC0);
-    BufferOffset as_coles(FloatRegister fs, FloatRegister ft, FPConditionBit fcc = FCC0);
-    BufferOffset as_cules(FloatRegister fs, FloatRegister ft, FPConditionBit fcc = FCC0);
-
-    BufferOffset as_cfd(FloatRegister fs, FloatRegister ft, FPConditionBit fcc = FCC0);
-    BufferOffset as_cund(FloatRegister fs, FloatRegister ft, FPConditionBit fcc = FCC0);
-    BufferOffset as_ceqd(FloatRegister fs, FloatRegister ft, FPConditionBit fcc = FCC0);
-    BufferOffset as_cueqd(FloatRegister fs, FloatRegister ft, FPConditionBit fcc = FCC0);
-    BufferOffset as_coltd(FloatRegister fs, FloatRegister ft, FPConditionBit fcc = FCC0);
-    BufferOffset as_cultd(FloatRegister fs, FloatRegister ft, FPConditionBit fcc = FCC0);
-    BufferOffset as_coled(FloatRegister fs, FloatRegister ft, FPConditionBit fcc = FCC0);
-    BufferOffset as_culed(FloatRegister fs, FloatRegister ft, FPConditionBit fcc = FCC0);
-
+    BufferOffset as_cf(FloatFormat fmt, FloatRegister fs, FloatRegister ft,
+                       FPConditionBit fcc = FCC0);
+    BufferOffset as_cun(FloatFormat fmt, FloatRegister fs, FloatRegister ft,
+                        FPConditionBit fcc = FCC0);
+    BufferOffset as_ceq(FloatFormat fmt, FloatRegister fs, FloatRegister ft,
+                        FPConditionBit fcc = FCC0);
+    BufferOffset as_cueq(FloatFormat fmt, FloatRegister fs, FloatRegister ft,
+                         FPConditionBit fcc = FCC0);
+    BufferOffset as_colt(FloatFormat fmt, FloatRegister fs, FloatRegister ft,
+                         FPConditionBit fcc = FCC0);
+    BufferOffset as_cult(FloatFormat fmt, FloatRegister fs, FloatRegister ft,
+                         FPConditionBit fcc = FCC0);
+    BufferOffset as_cole(FloatFormat fmt, FloatRegister fs, FloatRegister ft,
+                         FPConditionBit fcc = FCC0);
+    BufferOffset as_cule(FloatFormat fmt, FloatRegister fs, FloatRegister ft,
+                         FPConditionBit fcc = FCC0);
 
     // label operations
     void bind(Label *label, BufferOffset boff = BufferOffset());

@@ -555,7 +555,7 @@ JS_GetDebugClassName(JSObject *obj)
 /************************************************************************/
 
 JS_PUBLIC_API(const char *)
-JS_GetScriptFilename(JSContext *cx, JSScript *script)
+JS_GetScriptFilename(JSScript *script)
 {
     return script->filename();
 }
@@ -925,7 +925,14 @@ js_CallContextDebugHandler(JSContext *cx)
  * FrameDescription contains Heap<T> fields that should not live on the stack.
  */
 JS::FrameDescription::FrameDescription(const ScriptFrameIter& iter)
-  : script_(iter.script()), fun_(iter.maybeCallee()), pc_(iter.pc()), linenoComputed(false) {}
+  : script_(iter.script()),
+    funDisplayName_(nullptr),
+    pc_(iter.pc()),
+    linenoComputed(false)
+{
+    if (JSFunction *fun = iter.maybeCallee())
+        funDisplayName_ = fun->displayAtom();
+}
 
 JS_PUBLIC_API(JS::StackDescription *)
 JS::DescribeStack(JSContext *cx, unsigned maxFrames)
