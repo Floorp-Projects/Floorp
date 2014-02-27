@@ -7159,6 +7159,36 @@ IonBuilder::jsop_getelem_dense(MDefinition *obj, MDefinition *index)
         JS_ASSERT(knownType == JSVAL_TYPE_UNKNOWN);
     }
 
+    // If the array is being converted to doubles, but we've observed
+    // just int, substitute a type set of int+double into the observed
+    // type set. The reason for this is that, in the
+    // interpreter+baseline, such arrays may consist of mixed
+    // ints/doubles, but when we enter ion code, we will be coercing
+    // all inputs to doubles. Therefore, the type barrier checking for
+    // just int is highly likely (*almost* guaranteed) to fail sooner
+    // or later. Essentially, by eagerly coercing to double, ion is
+    // making the observed types outdated. To compensate for this, we
+    // substitute a broader observed type set consisting of both ints
+    // and doubles. There is perhaps a tradeoff here, so we limit this
+    // optimization to parallel code, where it is needed to prevent
+    // perpetual bailouts in some extreme cases. (Bug 977853)
+    //
+    // NB: we have not added a MConvertElementsToDoubles MIR, so we
+    // cannot *assume* the result is a double.
+    if (executionMode == ParallelExecution &&
+        barrier &&
+        types->getKnownTypeTag() == JSVAL_TYPE_INT32 &&
+        objTypes &&
+        objTypes->convertDoubleElements(constraints()) == types::TemporaryTypeSet::AlwaysConvertToDoubles)
+    {
+        // Note: double implies int32 as well for typesets
+        types = alloc_->lifoAlloc()->new_<types::TemporaryTypeSet>(types::Type::DoubleType());
+        if (!types)
+            return false;
+
+        barrier = false; // Don't need a barrier anymore
+    }
+
     if (knownType != JSVAL_TYPE_UNKNOWN)
         load->setResultType(MIRTypeFromValueType(knownType));
 
