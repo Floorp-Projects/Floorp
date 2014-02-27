@@ -1438,7 +1438,7 @@ StackBaseShape::hash(const StackBaseShape *base)
 StackBaseShape::match(UnownedBaseShape *key, const StackBaseShape *lookup)
 {
     return key->flags == lookup->flags
-        && key->clasp == lookup->clasp
+        && key->clasp_ == lookup->clasp
         && key->parent == lookup->parent
         && key->metadata == lookup->metadata
         && key->rawGetter == lookup->rawGetter
