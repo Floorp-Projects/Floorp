@@ -49,7 +49,8 @@ public:
     /**
      * Initialize this context from a DrawTarget.
      */
-    gfxContext(mozilla::gfx::DrawTarget *aTarget);
+    gfxContext(mozilla::gfx::DrawTarget *aTarget,
+               const mozilla::gfx::Point& aDeviceOffset = mozilla::gfx::Point());
 
     ~gfxContext();
 
