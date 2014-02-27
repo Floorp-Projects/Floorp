@@ -7,13 +7,13 @@
 #define mozilla_dom_MouseScrollEvent_h_
 
 #include "nsIDOMMouseScrollEvent.h"
-#include "nsDOMMouseEvent.h"
+#include "mozilla/dom/MouseEvent.h"
 #include "mozilla/dom/MouseScrollEventBinding.h"
 
 namespace mozilla {
 namespace dom {
 
-class MouseScrollEvent : public nsDOMMouseEvent,
+class MouseScrollEvent : public MouseEvent,
                          public nsIDOMMouseScrollEvent
 {
 public:
@@ -27,7 +27,7 @@ public:
   NS_DECL_NSIDOMMOUSESCROLLEVENT
 
   // Forward to base class
-  NS_FORWARD_TO_NSDOMMOUSEEVENT
+  NS_FORWARD_TO_MOUSEEVENT
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
