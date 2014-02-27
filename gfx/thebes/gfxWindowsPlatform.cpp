@@ -65,6 +65,7 @@
 #include "d3dkmtQueryStatistics.h"
 
 #include "SurfaceCache.h"
+#include "gfxPrefs.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;
@@ -109,29 +110,6 @@ public:
 };
 
 NS_IMPL_ISUPPORTS1(GfxD2DSurfaceReporter, nsIMemoryReporter)
-
-namespace
-{
-
-bool OncePreferenceDirect2DDisabled()
-{
-  static int preferenceValue = -1;
-  if (preferenceValue < 0) {
-    preferenceValue = Preferences::GetBool("gfx.direct2d.disabled", false);
-  }
-  return !!preferenceValue;
-}
-
-bool OncePreferenceDirect2DForceEnabled()
-{
-  static int preferenceValue = -1;
-  if (preferenceValue < 0) {
-    preferenceValue = Preferences::GetBool("gfx.direct2d.force-enabled", false);
-  }
-  return !!preferenceValue;
-}
-
-} // anonymous namespace
 
 #endif
 
@@ -399,10 +377,10 @@ gfxWindowsPlatform::UpdateRenderMode()
 
     // These will only be evaluated once, and any subsequent changes to
     // the preferences will be ignored until restart.
-    d2dDisabled = OncePreferenceDirect2DDisabled();
-    d2dForceEnabled = OncePreferenceDirect2DForceEnabled();
+    d2dDisabled = gfxPrefs::Direct2DDisabled();
+    d2dForceEnabled = gfxPrefs::Direct2DForceEnabled();
 
-    bool tryD2D = (!d2dBlocked && !GetPrefLayersPreferD3D9()) || d2dForceEnabled;
+    bool tryD2D = d2dForceEnabled || (!d2dBlocked && !gfxPrefs::LayersPreferD3D9());
 
     // Do not ever try if d2d is explicitly disabled,
     // or if we're not using DWrite fonts.

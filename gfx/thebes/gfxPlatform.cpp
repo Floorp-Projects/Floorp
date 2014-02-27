@@ -264,7 +264,7 @@ gfxPlatform::gfxPlatform()
     // XXX - When 957560 is fixed, the pref can go away entirely
     mLayersUseDeprecated =
         Preferences::GetBool("layers.use-deprecated-textures", true)
-        && !Preferences::GetBool("layers.prefer-opengl", false);
+        && !gfxPrefs::LayersPreferOpenGL();
 #else
     mLayersUseDeprecated = false;
 #endif
@@ -1501,22 +1501,6 @@ gfxPlatform::GetBackendPref(const char* aBackendPrefName, uint32_t &aBackendBitm
     return result;
 }
 
-float
-gfxPlatform::GetLowPrecisionResolution()
-{
-    static int32_t sLowPrecisionResolutionX1000 = 250;
-    static bool sLowPrecisionResolutionPrefCached = false;
-
-    if (!sLowPrecisionResolutionPrefCached) {
-        sLowPrecisionResolutionPrefCached = true;
-        mozilla::Preferences::AddIntVarCache(&sLowPrecisionResolutionX1000,
-                                             "layers.low-precision-resolution",
-                                             sLowPrecisionResolutionX1000);
-    }
-
-    return sLowPrecisionResolutionX1000/1000.f;
-}
-
 bool
 gfxPlatform::OffMainThreadCompositingEnabled()
 {
@@ -1962,9 +1946,6 @@ gfxPlatform::OptimalFormatForContent(gfxContentType aContent)
  * and remember the values.  Changing these preferences during the run will
  * not have any effect until we restart.
  */
-static bool sPrefLayersPreferOpenGL = false;
-static bool sPrefLayersPreferD3D9 = false;
-static bool sPrefLayersEnableTiles = false;
 static bool sLayersSupportsD3D9 = false;
 static bool sBufferRotationCheckPref = true;
 static bool sPrefBrowserTabsRemoteAutostart = false;
@@ -1982,9 +1963,6 @@ InitLayersAccelerationPrefs()
     // explicit.
     MOZ_ASSERT(NS_IsMainThread(), "can only initialize prefs on the main thread");
 
-    sPrefLayersPreferOpenGL = Preferences::GetBool("layers.prefer-opengl", false);
-    sPrefLayersPreferD3D9 = Preferences::GetBool("layers.prefer-d3d9", false);
-    sPrefLayersEnableTiles = Preferences::GetBool("layers.enable-tiles", false);
     sPrefBrowserTabsRemoteAutostart = Preferences::GetBool("browser.tabs.remote.autostart", false);
 
 #ifdef XP_WIN
@@ -2029,33 +2007,12 @@ bool gfxPlatform::OffMainThreadCompositionRequired()
 }
 
 bool
-gfxPlatform::GetPrefLayersPreferOpenGL()
-{
-  InitLayersAccelerationPrefs();
-  return sPrefLayersPreferOpenGL;
-}
-
-bool
-gfxPlatform::GetPrefLayersPreferD3D9()
-{
-  InitLayersAccelerationPrefs();
-  return sPrefLayersPreferD3D9;
-}
-
-bool
 gfxPlatform::CanUseDirect3D9()
 {
   // this function is called from the compositor thread, so it is not
   // safe to init the prefs etc. from here.
   MOZ_ASSERT(sLayersAccelerationPrefsInitialized);
   return sLayersSupportsD3D9;
-}
-
-bool
-gfxPlatform::GetPrefLayersEnableTiles()
-{
-  InitLayersAccelerationPrefs();
-  return sPrefLayersEnableTiles;
 }
 
 bool
