@@ -9,9 +9,9 @@
 #include <stdint.h>
 
 #include "mozilla/BasicEvents.h"
+#include "mozilla/dom/DataTransfer.h"
 #include "mozilla/dom/EventTarget.h"
 #include "nsCOMPtr.h"
-#include "nsIDOMDataTransfer.h"
 #include "nsRect.h"
 #include "nsStringGlue.h"
 
@@ -174,7 +174,7 @@ public:
     return result;
   }
 
-  nsCOMPtr<nsIDOMDataTransfer> clipboardData;
+  nsCOMPtr<dom::DataTransfer> clipboardData;
 
   void AssignClipboardEventData(const InternalClipboardEvent& aEvent,
                                 bool aCopyTargets)
