@@ -2786,7 +2786,7 @@ HTMLInputElement::SetValueInternal(const nsAString& aValue,
       if (!mParserCreating) {
         SanitizeValue(value);
       }
-      // else SanitizeValue will be called by DoneCreatingElement
+      // else DoneCreatingElement calls us again once mParserCreating is false
 
       if (aSetValueChanged) {
         SetValueChanged(true);
@@ -2811,7 +2811,10 @@ HTMLInputElement::SetValueInternal(const nsAString& aValue,
             numberControlFrame->SetValueOfAnonTextControl(value);
           }
         }
-        OnValueChanged(!mParserCreating);
+        if (!mParserCreating) {
+          OnValueChanged(true);
+        }
+        // else DoneCreatingElement calls us again once mParserCreating is false
       }
 
       if (mType == NS_FORM_INPUT_COLOR) {
