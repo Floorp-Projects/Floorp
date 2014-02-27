@@ -22,6 +22,7 @@ namespace mozilla {
 namespace dom {
 
 class ConsoleCallData;
+class ConsoleStackEntry;
 
 class Console MOZ_FINAL : public nsITimerCallback
                         , public nsIObserver
@@ -97,6 +98,9 @@ public:
   Assert(JSContext* aCx, bool aCondition, const Sequence<JS::Value>& aData);
 
   void
+  Count(JSContext* aCx, const Sequence<JS::Value>& aData);
+
+  void
   __noSuchMethod__();
 
 private:
@@ -115,7 +119,8 @@ private:
     MethodGroupEnd,
     MethodTime,
     MethodTimeEnd,
-    MethodAssert
+    MethodAssert,
+    MethodCount
   };
 
   void
@@ -169,12 +174,17 @@ private:
                 const Sequence<JS::Value>& aData,
                 ErrorResult& aRv);
 
+  JS::Value
+  IncreaseCounter(JSContext* aCx, const ConsoleStackEntry& aFrame,
+                   const nsTArray<JS::Heap<JS::Value>>& aArguments);
+
   nsCOMPtr<nsPIDOMWindow> mWindow;
   nsCOMPtr<nsITimer> mTimer;
   nsCOMPtr<nsIConsoleAPIStorage> mStorage;
 
   nsTArray<ConsoleCallData> mQueuedCalls;
   nsDataHashtable<nsStringHashKey, DOMHighResTimeStamp> mTimerRegistry;
+  nsDataHashtable<nsStringHashKey, uint32_t> mCounterRegistry;
 
   uint64_t mOuterID;
   uint64_t mInnerID;

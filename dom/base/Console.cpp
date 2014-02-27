@@ -25,6 +25,9 @@
 // The maximum allowed number of concurrent timers per page.
 #define MAX_PAGE_TIMERS 10000
 
+// The maximum allowed number of concurrent counters per page.
+#define MAX_PAGE_COUNTERS 10000
+
 // The maximum stacktrace depth when populating the stacktrace array used for
 // console.trace().
 #define DEFAULT_MAX_STACKTRACE_DEPTH 200
@@ -332,6 +335,8 @@ Console::Assert(JSContext* aCx, bool aCondition,
   }
 }
 
+METHOD(Count, "count")
+
 void
 Console::__noSuchMethod__()
 {
@@ -564,6 +569,10 @@ Console::ProcessCallData(ConsoleCallData& aData)
 
   else if (aData.mMethodName == MethodTimeEnd && !aData.mArguments.IsEmpty()) {
     event.mTimer = StopTimer(cx, aData.mArguments[0], aData.mMonotonicTimer);
+  }
+
+  else if (aData.mMethodName == MethodCount) {
+    event.mCounter = IncreaseCounter(cx, frame, aData.mArguments);
   }
 
   JS::Rooted<JS::Value> eventValue(cx);
@@ -927,6 +936,61 @@ Console::ArgumentsToValueList(const nsTArray<JS::Heap<JS::Value>>& aData,
   for (uint32_t i = 0; i < aData.Length(); ++i) {
     aSequence.AppendElement(aData[i]);
   }
+}
+
+JS::Value
+Console::IncreaseCounter(JSContext* aCx, const ConsoleStackEntry& aFrame,
+                          const nsTArray<JS::Heap<JS::Value>>& aArguments)
+{
+  ClearException ce(aCx);
+
+  nsAutoString key;
+  nsAutoString label;
+
+  if (!aArguments.IsEmpty()) {
+    JS::Rooted<JS::Value> labelValue(aCx, aArguments[0]);
+    JS::Rooted<JSString*> jsString(aCx, JS::ToString(aCx, labelValue));
+
+    nsDependentJSString string;
+    if (jsString && string.init(aCx, jsString)) {
+      label = string;
+      key = string;
+    }
+  }
+
+  if (key.IsEmpty()) {
+    key.Append(aFrame.mFilename);
+    key.Append(NS_LITERAL_STRING(":"));
+    key.AppendInt(aFrame.mLineNumber);
+  }
+
+  uint32_t count = 0;
+  if (!mCounterRegistry.Get(key, &count)) {
+    if (mCounterRegistry.Count() >= MAX_PAGE_COUNTERS) {
+      RootedDictionary<ConsoleCounterError> error(aCx);
+
+      JS::Rooted<JS::Value> value(aCx);
+      if (!error.ToObject(aCx, JS::NullPtr(), &value)) {
+        return JS::UndefinedValue();
+      }
+
+      return value;
+    }
+  }
+
+  ++count;
+  mCounterRegistry.Put(key, count);
+
+  RootedDictionary<ConsoleCounter> data(aCx);
+  data.mLabel = label;
+  data.mCount = count;
+
+  JS::Rooted<JS::Value> value(aCx);
+  if (!data.ToObject(aCx, JS::NullPtr(), &value)) {
+    return JS::UndefinedValue();
+  }
+
+  return value;
 }
 
 } // namespace dom
