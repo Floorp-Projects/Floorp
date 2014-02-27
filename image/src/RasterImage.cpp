@@ -3360,6 +3360,11 @@ RasterImage::DecodePool::DecodeSomeOfImage(RasterImage* aImg,
   if (aImg->mError)
     return NS_OK;
 
+  // If there is an error worker pending (say because the main thread has enqueued
+  // another decode request for us before processing the error worker) then bail out.
+  if (aImg->mPendingError)
+    return NS_OK;
+
   // If mDecoded or we don't have a decoder, we must have finished already (for
   // example, a synchronous decode request came while the worker was pending).
   if (!aImg->mDecoder || aImg->mDecoded)
