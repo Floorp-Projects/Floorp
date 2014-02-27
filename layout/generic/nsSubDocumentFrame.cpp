@@ -464,24 +464,30 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // created, we don't need to create a separate nsDisplaySubDocument.
 
   uint32_t flags = nsDisplayOwnLayer::GENERATE_SUBDOC_INVALIDATIONS;
-  // We also want to add nsDisplayOwnLayer::GENERATE_SCROLLABLE_LAYER to whatever
-  // layer becomes the topmost. We do this below.
+  // If ignoreViewportScrolling is true then the top most layer we create here
+  // is going to become the scrollable layer for the root scroll frame, so we
+  // want to add nsDisplayOwnLayer::GENERATE_SCROLLABLE_LAYER to whatever layer
+  // becomes the topmost. We do this below.
   if (constructZoomItem) {
+    uint32_t zoomFlags = flags;
+    if (ignoreViewportScrolling && !constructResolutionItem) {
+      zoomFlags |= nsDisplayOwnLayer::GENERATE_SCROLLABLE_LAYER;
+    }
     nsDisplayZoom* zoomItem =
       new (aBuilder) nsDisplayZoom(aBuilder, subdocRootFrame, &childItems,
-                                   subdocAPD, parentAPD,
-                                   flags |
-                                    (constructResolutionItem ?
-                                      0 : nsDisplayOwnLayer::GENERATE_SCROLLABLE_LAYER));
+                                   subdocAPD, parentAPD, zoomFlags);
     childItems.AppendToTop(zoomItem);
     needsOwnLayer = false;
   }
   // Wrap the zoom item in the resolution item if we have both because we want the
   // resolution scale applied on top of the app units per dev pixel conversion.
+  if (ignoreViewportScrolling) {
+    flags |= nsDisplayOwnLayer::GENERATE_SCROLLABLE_LAYER;
+  }
   if (constructResolutionItem) {
     nsDisplayResolution* resolutionItem =
       new (aBuilder) nsDisplayResolution(aBuilder, subdocRootFrame, &childItems,
-        flags | nsDisplayOwnLayer::GENERATE_SCROLLABLE_LAYER);
+                                         flags);
     childItems.AppendToTop(resolutionItem);
     needsOwnLayer = false;
   }
@@ -489,7 +495,7 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     // We always want top level content documents to be in their own layer.
     nsDisplaySubDocument* layerItem = new (aBuilder) nsDisplaySubDocument(
       aBuilder, subdocRootFrame ? subdocRootFrame : this,
-      &childItems, flags | nsDisplayOwnLayer::GENERATE_SCROLLABLE_LAYER);
+      &childItems, flags);
     childItems.AppendToTop(layerItem);
   }
 
