@@ -8,7 +8,7 @@
 #include "base/process_util.h"
 #include "CrossProcessMutex.h"
 #include "nsDebug.h"
-#include "nsTraceRefcnt.h"
+#include "nsISupportsImpl.h"
 
 using namespace base;
 

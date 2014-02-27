@@ -16,3 +16,7 @@ FAIL_ON_WARNINGS = True
 if CONFIG['OS_ARCH'] == 'WINNT':
     for var in ('MOZ_NO_DEBUG_RTL', 'NGPREFS'):
         DEFINES[var] = True
+    if CONFIG['GNU_CXX']:
+        LDFLAGS += ['-mconsole']
+    else:
+        LDFLAGS += ['-SUBSYSTEM:CONSOLE']

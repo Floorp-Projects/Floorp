@@ -22,11 +22,13 @@ The sourceeditor component contains imported CodeMirror tests [3].
  * Some tests were commented out because we don't use that functionality
    within Firefox (for example Ruby editing mode). Be careful when updating
    files test/codemirror.html and test/vimemacs.html; they were modified to
-   co-exist with Mozilla's testing infrastructure.
+   co-exist with Mozilla's testing infrastructure. Basically, vimemacs.html
+   is a copy of codemirror.html but only with VIM and Emacs mode tests
+   enabled.
  * In cm_comment_test.js comment out fallbackToBlock and fallbackToLine
    tests.
  * The search addon (search.js) was slightly modified to make search
-   UI localizable.
+   UI localizable (see patch below).
 
 Other than that, we don't have any Mozilla-specific patches applied to
 CodeMirror itself.
@@ -75,6 +77,38 @@ in the LICENSE file:
  * test/cm_vim_test.js
  * test/cm_emacs_test.js
  * test/cm_test.js
+
+# Localization patches
+
+diff --git a/browser/devtools/sourceeditor/codemirror/search/search.js b/browser/devtools/sourceeditor/codemirror/sea
+index 049f72f..df4d95e 100644
+--- a/browser/devtools/sourceeditor/codemirror/search/search.js
++++ b/browser/devtools/sourceeditor/codemirror/search/search.js
+@@ -58,9 +58,22 @@
+     var isRE = query.match(/^\/(.*)\/([a-z]*)$/);
+     return isRE ? new RegExp(isRE[1], isRE[2].indexOf("i") == -1 ? "" : "i") : query;
+   }
+-  var queryDialog =
+-    'Search: <input type="text" style="width: 10em"/> <span style="color: #888">(Use /re/ syntax for regexp search)<
++  var queryDialog;
+   function doSearch(cm, rev) {
++    if (!queryDialog) {
++      let doc = cm.getWrapperElement().ownerDocument;
++      let inp = doc.createElement("input");
++      let txt = doc.createTextNode(cm.l10n("findCmd.promptMessage"));
++
++      inp.type = "text";
++      inp.style.width = "10em";
++      inp.style.MozMarginStart = "1em";
++
++      queryDialog = doc.createElement("div");
++      queryDialog.appendChild(txt);
++      queryDialog.appendChild(inp);
++    }
++
+     var state = getSearchState(cm);
+     if (state.query) return findNext(cm, rev);
+     dialog(cm, queryDialog, "Search for:", cm.getSelection(), function(query) {
 
 # Footnotes
 

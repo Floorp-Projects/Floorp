@@ -10,8 +10,8 @@
 
 #include "mozilla/Assertions.h"
 #include "nsDebug.h"
+#include "nsISupportsImpl.h"
 #include "nsThreadUtils.h"
-#include "nsTraceRefcnt.h"
 
 #include "BluetoothReplyRunnable.h"
 #include "BluetoothService.h"

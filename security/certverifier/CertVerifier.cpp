@@ -194,6 +194,7 @@ static SECStatus
 BuildCertChainForOneKeyUsage(TrustDomain& trustDomain, CERTCertificate* cert,
                              PRTime time, KeyUsages ku1, KeyUsages ku2,
                              KeyUsages ku3, SECOidTag eku,
+                             SECOidTag requiredPolicy,
                              const SECItem* stapledOCSPResponse,
                              ScopedCERTCertList& builtChain)
 {
@@ -201,15 +202,18 @@ BuildCertChainForOneKeyUsage(TrustDomain& trustDomain, CERTCertificate* cert,
   PR_ASSERT(ku2);
 
   SECStatus rv = BuildCertChain(trustDomain, cert, time, MustBeEndEntity,
-                                ku1, eku, stapledOCSPResponse, builtChain);
+                                ku1, eku, requiredPolicy, stapledOCSPResponse,
+                                builtChain);
   if (rv != SECSuccess && ku2 &&
       PR_GetError() == SEC_ERROR_INADEQUATE_KEY_USAGE) {
     rv = BuildCertChain(trustDomain, cert, time, MustBeEndEntity,
-                        ku2, eku, stapledOCSPResponse, builtChain);
+                        ku2, eku, requiredPolicy, stapledOCSPResponse,
+                        builtChain);
     if (rv != SECSuccess && ku3 &&
         PR_GetError() == SEC_ERROR_INADEQUATE_KEY_USAGE) {
       rv = BuildCertChain(trustDomain, cert, time, MustBeEndEntity,
-                          ku3, eku, stapledOCSPResponse, builtChain);
+                          ku3, eku, requiredPolicy, stapledOCSPResponse,
+                          builtChain);
       if (rv != SECSuccess) {
         PR_SetError(SEC_ERROR_INADEQUATE_KEY_USAGE, 0);
       }
@@ -226,9 +230,33 @@ CertVerifier::InsanityVerifyCert(
                    void* pinArg,
                    const Flags flags,
       /*optional*/ const SECItem* stapledOCSPResponse,
-  /*optional out*/ insanity::pkix::ScopedCERTCertList* validationChain)
+  /*optional out*/ insanity::pkix::ScopedCERTCertList* validationChain,
+  /*optional out*/ SECOidTag* evOidPolicy)
 {
   PR_LOG(gCertVerifierLog, PR_LOG_DEBUG, ("Top of InsanityVerifyCert\n"));
+
+  PR_ASSERT(cert);
+  PR_ASSERT(usage == certificateUsageSSLServer || !(flags & FLAG_MUST_BE_EV));
+
+  if (validationChain) {
+    *validationChain = nullptr;
+  }
+  if (evOidPolicy) {
+    *evOidPolicy = SEC_OID_UNKNOWN;
+  }
+
+  if (!cert ||
+      (usage != certificateUsageSSLServer && (flags & FLAG_MUST_BE_EV))) {
+    PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
+    return SECFailure;
+  }
+
+  NSSCertDBTrustDomain::OCSPFetching ocspFetching
+    = !mOCSPDownloadEnabled ||
+      (flags & FLAG_LOCAL_ONLY) ? NSSCertDBTrustDomain::NeverFetchOCSP
+    : !mOCSPStrict              ? NSSCertDBTrustDomain::FetchOCSPForDVSoftFail
+                                : NSSCertDBTrustDomain::FetchOCSPForDVHardFail;
+
   SECStatus rv;
 
   // TODO(bug 970750): anyExtendedKeyUsage
@@ -244,11 +272,11 @@ CertVerifier::InsanityVerifyCert(
     case certificateUsageSSLClient: {
       // XXX: We don't really have a trust bit for SSL client authentication so
       // just use trustEmail as it is the closest alternative.
-      NSSCertDBTrustDomain trustDomain(trustEmail, mOCSPDownloadEnabled,
-                                       mOCSPStrict, pinArg);
+      NSSCertDBTrustDomain trustDomain(trustEmail, ocspFetching, pinArg);
       rv = BuildCertChain(trustDomain, cert, time, MustBeEndEntity,
                           KU_DIGITAL_SIGNATURE,
                           SEC_OID_EXT_KEY_USAGE_CLIENT_AUTH,
+                          SEC_OID_X509_ANY_POLICY,
                           stapledOCSPResponse, builtChain);
       break;
     }
@@ -257,33 +285,69 @@ CertVerifier::InsanityVerifyCert(
       // TODO: When verifying a certificate in an SSL handshake, we should
       // restrict the acceptable key usage based on the key exchange method
       // chosen by the server.
-      NSSCertDBTrustDomain trustDomain(trustSSL, mOCSPDownloadEnabled,
-                                       mOCSPStrict, pinArg);
+
+#ifndef MOZ_NO_EV_CERTS
+      // Try to validate for EV first.
+      SECOidTag evPolicy = SEC_OID_UNKNOWN;
+      rv = GetFirstEVPolicy(cert, evPolicy);
+      if (rv == SECSuccess && evPolicy != SEC_OID_UNKNOWN) {
+        NSSCertDBTrustDomain
+          trustDomain(trustSSL,
+                      ocspFetching == NSSCertDBTrustDomain::NeverFetchOCSP
+                        ? NSSCertDBTrustDomain::LocalOnlyOCSPForEV
+                        : NSSCertDBTrustDomain::FetchOCSPForEV,
+                      pinArg);
+        rv = BuildCertChainForOneKeyUsage(trustDomain, cert, time,
+                                          KU_DIGITAL_SIGNATURE, // ECDHE/DHE
+                                          KU_KEY_ENCIPHERMENT, // RSA
+                                          KU_KEY_AGREEMENT, // ECDH/DH
+                                          SEC_OID_EXT_KEY_USAGE_SERVER_AUTH,
+                                          evPolicy, stapledOCSPResponse,
+                                          builtChain);
+        if (rv == SECSuccess) {
+          if (evOidPolicy) {
+            *evOidPolicy = evPolicy;
+          }
+          break;
+        }
+        builtChain = nullptr; // clear built chain, just in case.
+      }
+#endif
+
+      if (flags & FLAG_MUST_BE_EV) {
+        PR_SetError(SEC_ERROR_POLICY_VALIDATION_FAILED, 0);
+        rv = SECFailure;
+        break;
+      }
+
+      // Now try non-EV.
+      NSSCertDBTrustDomain trustDomain(trustSSL, ocspFetching, pinArg);
       rv = BuildCertChainForOneKeyUsage(trustDomain, cert, time,
                                         KU_DIGITAL_SIGNATURE, // ECDHE/DHE
                                         KU_KEY_ENCIPHERMENT, // RSA
                                         KU_KEY_AGREEMENT, // ECDH/DH
                                         SEC_OID_EXT_KEY_USAGE_SERVER_AUTH,
+                                        SEC_OID_X509_ANY_POLICY,
                                         stapledOCSPResponse, builtChain);
       break;
     }
 
     case certificateUsageSSLCA: {
-      NSSCertDBTrustDomain trustDomain(trustSSL, mOCSPDownloadEnabled,
-                                       mOCSPStrict, pinArg);
+      NSSCertDBTrustDomain trustDomain(trustSSL, ocspFetching, pinArg);
       rv = BuildCertChain(trustDomain, cert, time, MustBeCA,
                           KU_KEY_CERT_SIGN,
                           SEC_OID_EXT_KEY_USAGE_SERVER_AUTH,
+                          SEC_OID_X509_ANY_POLICY,
                           stapledOCSPResponse, builtChain);
       break;
     }
 
     case certificateUsageEmailSigner: {
-      NSSCertDBTrustDomain trustDomain(trustEmail, mOCSPDownloadEnabled,
-                                       mOCSPStrict, pinArg);
+      NSSCertDBTrustDomain trustDomain(trustEmail, ocspFetching, pinArg);
       rv = BuildCertChain(trustDomain, cert, time, MustBeEndEntity,
                           KU_DIGITAL_SIGNATURE,
                           SEC_OID_EXT_KEY_USAGE_EMAIL_PROTECT,
+                          SEC_OID_X509_ANY_POLICY,
                           stapledOCSPResponse, builtChain);
       break;
     }
@@ -292,24 +356,24 @@ CertVerifier::InsanityVerifyCert(
       // TODO: The higher level S/MIME processing should pass in which key
       // usage it is trying to verify for, and base its algorithm choices
       // based on the result of the verification(s).
-      NSSCertDBTrustDomain trustDomain(trustEmail, mOCSPDownloadEnabled,
-                                       mOCSPStrict, pinArg);
+      NSSCertDBTrustDomain trustDomain(trustEmail, ocspFetching, pinArg);
       rv = BuildCertChainForOneKeyUsage(trustDomain, cert, time,
                                         KU_KEY_ENCIPHERMENT, // RSA
                                         KU_KEY_AGREEMENT, // ECDH/DH
                                         0,
                                         SEC_OID_EXT_KEY_USAGE_EMAIL_PROTECT,
+                                        SEC_OID_X509_ANY_POLICY,
                                         stapledOCSPResponse, builtChain);
       break;
     }
 
     case certificateUsageObjectSigner: {
-      NSSCertDBTrustDomain trustDomain(trustObjectSigning,
-                                       mOCSPDownloadEnabled, mOCSPStrict,
+      NSSCertDBTrustDomain trustDomain(trustObjectSigning, ocspFetching,
                                        pinArg);
       rv = BuildCertChain(trustDomain, cert, time, MustBeEndEntity,
                           KU_DIGITAL_SIGNATURE,
                           SEC_OID_EXT_KEY_USAGE_CODE_SIGN,
+                          SEC_OID_X509_ANY_POLICY,
                           stapledOCSPResponse, builtChain);
       break;
     }
@@ -333,21 +397,21 @@ CertVerifier::InsanityVerifyCert(
         eku = SEC_OID_OCSP_RESPONDER;
       }
 
-      NSSCertDBTrustDomain sslTrust(trustSSL,
-                                    mOCSPDownloadEnabled, mOCSPStrict, pinArg);
+      NSSCertDBTrustDomain sslTrust(trustSSL, ocspFetching, pinArg);
       rv = BuildCertChain(sslTrust, cert, time, endEntityOrCA,
-                          keyUsage, eku, stapledOCSPResponse, builtChain);
+                          keyUsage, eku, SEC_OID_X509_ANY_POLICY,
+                          stapledOCSPResponse, builtChain);
       if (rv == SECFailure && PR_GetError() == SEC_ERROR_UNKNOWN_ISSUER) {
-        NSSCertDBTrustDomain emailTrust(trustEmail, mOCSPDownloadEnabled,
-                                        mOCSPStrict, pinArg);
+        NSSCertDBTrustDomain emailTrust(trustEmail, ocspFetching, pinArg);
         rv = BuildCertChain(emailTrust, cert, time, endEntityOrCA, keyUsage,
-                            eku, stapledOCSPResponse, builtChain);
+                            eku, SEC_OID_X509_ANY_POLICY,
+                            stapledOCSPResponse, builtChain);
         if (rv == SECFailure && SEC_ERROR_UNKNOWN_ISSUER) {
           NSSCertDBTrustDomain objectSigningTrust(trustObjectSigning,
-                                                  mOCSPDownloadEnabled,
-                                                  mOCSPStrict, pinArg);
+                                                  ocspFetching, pinArg);
           rv = BuildCertChain(objectSigningTrust, cert, time, endEntityOrCA,
-                              keyUsage, eku, stapledOCSPResponse, builtChain);
+                              keyUsage, eku, SEC_OID_X509_ANY_POLICY,
+                              stapledOCSPResponse, builtChain);
         }
       }
 
@@ -377,6 +441,12 @@ CertVerifier::VerifyCert(CERTCertificate* cert,
                          /*optional out*/ SECOidTag* evOidPolicy,
                          /*optional out*/ CERTVerifyLog* verifyLog)
 {
+  if (mImplementation == insanity) {
+    return InsanityVerifyCert(cert, usage, time, pinArg, flags,
+                              stapledOCSPResponse, validationChain,
+                              evOidPolicy);
+  }
+
   if (!cert)
   {
     PR_NOT_REACHED("Invalid arguments to CertVerifier::VerifyCert");
@@ -598,11 +668,6 @@ CertVerifier::VerifyCert(CERTCertificate* cert,
     PR_SetError(PR_INVALID_STATE_ERROR, 0);
 #endif
     return SECFailure;
-  }
-
-  if (mImplementation == insanity) {
-    return InsanityVerifyCert(cert, usage, time, pinArg, flags,
-                              stapledOCSPResponse, validationChain);
   }
 
   if (mImplementation == classic) {

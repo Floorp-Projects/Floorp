@@ -18,11 +18,7 @@
       xmlns:xhtml="http://www.w3.org/1999/xhtml"
       id="addons-page" title="&addons.windowTitle;"
       role="application" windowtype="Addons:Manager"
-      disablefastfind="true"
-      ondragenter="gDragDrop.onDragOver(event)"
-      ondragover="gDragDrop.onDragOver(event)"
-      ondrop="gDragDrop.onDrop(event)"
-      onkeypress="gHeader.onKeyPress(event)">
+      disablefastfind="true">
 
   <xhtml:link rel="shortcut icon"
               href="chrome://mozapps/skin/extensions/extensionGeneric-16.png"/>
@@ -76,8 +72,8 @@
 
   <!-- global commands - these act on all addons, or affect the addons manager
        in some other way -->
-  <commandset id="globalCommandSet"
-              oncommand="gViewController.doCommand(event.target.id);">
+  <commandset id="globalCommandSet">
+    <command id="cmd_focusSearch"/>
     <command id="cmd_findAllUpdates"/>
     <command id="cmd_restartApp"/>
     <command id="cmd_goToDiscoverPane"/>
@@ -95,9 +91,7 @@
 
   <!-- view commands - these act on the selected addon -->
   <commandset id="viewCommandSet"
-              events="richlistbox-select" commandupdater="true"
-              oncommandupdate="gViewController.updateCommands();"
-              oncommand="gViewController.doCommand(event.target.id);">
+              events="richlistbox-select" commandupdater="true">
     <command id="cmd_showItemDetails"/>
     <command id="cmd_findItemUpdates"/>
     <command id="cmd_showItemPreferences"/>
@@ -116,8 +110,9 @@
   </commandset>
 
   <keyset>
+    <!-- XXXunf Disabled until bug 371900 is fixed. -->
     <key id="focusSearch" key="&search.commandkey;" modifiers="accel"
-         oncommand="gHeader.focusSearchBox();"/>
+         disabled="true"/>
   </keyset>
 
   <!-- main header -->
@@ -518,9 +513,7 @@
                   </vbox>
                   <hbox id="detail-desc-container" align="start">
                     <vbox pack="center"> <!-- Necessary to work around bug 394738 -->
-                      <image id="detail-screenshot" hidden="true"
-                             onload="this.removeAttribute('loading');"
-                             onerror="this.setAttribute('loading', 'error');"/>
+                      <image id="detail-screenshot" hidden="true"/>
                     </vbox>
                     <vbox flex="1">
                       <description id="detail-desc"/>

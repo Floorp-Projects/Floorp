@@ -1,2 +1,4 @@
 == 480053-1.html 480053-1-ref.html
 == z-index-1.html z-index-1-ref.html
+!= stacking-context-yes.html stacking-context-no.html
+== stacking-context-perspective.html stacking-context-yes.html

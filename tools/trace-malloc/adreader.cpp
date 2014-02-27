@@ -53,10 +53,10 @@ ADLog::Read(const char* aFileName)
                                sizeof(unsigned long)) * sizeof(unsigned long);
         char *data = (char*)malloc(data_mem_size);
 
-        for (unsigned long *cur_data = (unsigned long*) data,
-                       *cur_data_end = (unsigned long*) ((char*)data + data_mem_size);
+        for (size_t *cur_data = (size_t*) data,
+                *cur_data_end = (size_t*) ((char*)data + data_mem_size);
              cur_data != cur_data_end; ++cur_data) {
-            res = fscanf(in, " %lX\n", cur_data);
+            res = fscanf(in, " %zX\n", cur_data);
             if (res != 1) {
                 return false;
             }

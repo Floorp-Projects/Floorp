@@ -8,6 +8,7 @@
 
 #include <stdint.h>
 
+#include "ExtendedValidation.h"
 #include "insanity/pkix.h"
 #include "certdb.h"
 #include "nss.h"
@@ -38,12 +39,10 @@ typedef ScopedPtr<SECMODModule, SECMOD_DestroyModule> ScopedSECMODModule;
 } // unnamed namespace
 
 NSSCertDBTrustDomain::NSSCertDBTrustDomain(SECTrustType certDBTrustType,
-                                           bool ocspDownloadEnabled,
-                                           bool ocspStrict,
+                                           OCSPFetching ocspFetching,
                                            void* pinArg)
   : mCertDBTrustType(certDBTrustType)
-  , mOCSPDownloadEnabled(ocspDownloadEnabled)
-  , mOCSPStrict(ocspStrict)
+  , mOCSPFetching(ocspFetching)
   , mPinArg(pinArg)
 {
 }
@@ -72,15 +71,24 @@ NSSCertDBTrustDomain::FindPotentialIssuers(
 
 SECStatus
 NSSCertDBTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
+                                   SECOidTag policy,
                                    const CERTCertificate* candidateCert,
                                    /*out*/ TrustLevel* trustLevel)
 {
-  PORT_Assert(candidateCert);
-  PORT_Assert(trustLevel);
+  PR_ASSERT(candidateCert);
+  PR_ASSERT(trustLevel);
+
   if (!candidateCert || !trustLevel) {
-    PORT_SetError(SEC_ERROR_INVALID_ARGS);
+    PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
     return SECFailure;
   }
+
+#ifdef MOZ_NO_EV_CERTS
+  if (policy != SEC_OID_X509_ANY_POLICY) {
+    PR_SetError(SEC_ERROR_POLICY_VALIDATION_FAILED, 0);
+    return SECFailure;
+  }
+#endif
 
   // XXX: CERT_GetCertTrust seems to be abusing SECStatus as a boolean, where
   // SECSuccess means that there is a trust record and SECFailure means there
@@ -108,8 +116,16 @@ NSSCertDBTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
     // needed to consider end-entity certs to be their own trust anchors since
     // Gecko implemented nsICertOverrideService.
     if (flags & CERTDB_TRUSTED_CA) {
-      *trustLevel = TrustAnchor;
-      return SECSuccess;
+      if (policy == SEC_OID_X509_ANY_POLICY) {
+        *trustLevel = TrustAnchor;
+        return SECSuccess;
+      }
+#ifndef MOZ_NO_EV_CERTS
+      if (CertIsAuthoritativeForEVPolicy(candidateCert, policy)) {
+        *trustLevel = TrustAnchor;
+        return SECSuccess;
+      }
+#endif
     }
   }
 
@@ -164,70 +180,83 @@ NSSCertDBTrustDomain::CheckRevocation(
     }
   }
 
-  // TODO(bug 921885): We need to change this when we add EV support.
+  // TODO(bug 915932): Need to change this when we add the OCSP cache.
 
-  // TODO: when !mOCSPDownloadEnabled, we still need to handle the fallback for
-  // expired responses. But, if/when we disable OCSP fetching by default, it
-  // would be ambiguous whether !mOCSPDownloadEnabled means "I want the default"
-  // or "I really never want you to ever fetch OCSP."
-  if (mOCSPDownloadEnabled) {
-    // We don't do OCSP fetching for intermediates.
-    if (endEntityOrCA == MustBeCA) {
-      PR_ASSERT(!stapledOCSPResponse);
-      return SECSuccess;
+  // TODO: We still need to handle the fallback for expired responses. But,
+  // if/when we disable OCSP fetching by default, it would be ambiguous whether
+  // security.OCSP.enable==0 means "I want the default" or "I really never want
+  // you to ever fetch OCSP."
+
+  if ((mOCSPFetching == NeverFetchOCSP) ||
+      (endEntityOrCA == MustBeCA && (mOCSPFetching == FetchOCSPForDVHardFail ||
+                                     mOCSPFetching == FetchOCSPForDVSoftFail))) {
+    return SECSuccess;
+  }
+
+  if (mOCSPFetching == LocalOnlyOCSPForEV) {
+    PR_SetError(SEC_ERROR_OCSP_UNKNOWN_CERT, 0);
+    return SECFailure;
+  }
+
+  ScopedPtr<char, PORT_Free_string>
+    url(CERT_GetOCSPAuthorityInfoAccessLocation(cert));
+
+  if (!url) {
+    if (stapledOCSPResponse) {
+      PR_SetError(SEC_ERROR_OCSP_OLD_RESPONSE, 0);
+      return SECFailure;
     }
-
-    ScopedPtr<char, PORT_Free_string>
-      url(CERT_GetOCSPAuthorityInfoAccessLocation(cert));
+    if (mOCSPFetching == FetchOCSPForEV) {
+      PR_SetError(SEC_ERROR_OCSP_UNKNOWN_CERT, 0);
+      return SECFailure;
+    }
 
     // Nothing to do if we don't have an OCSP responder URI for the cert; just
     // assume it is good. Note that this is the confusing, but intended,
     // interpretation of "strict" revocation checking in the face of a
     // certificate that lacks an OCSP responder URI.
-    if (!url) {
-      if (stapledOCSPResponse) {
-        PR_SetError(SEC_ERROR_OCSP_OLD_RESPONSE, 0);
-        return SECFailure;
-      }
-      return SECSuccess;
-    }
+    return SECSuccess;
+  }
 
-    ScopedPLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
-    if (!arena) {
+  ScopedPLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
+  if (!arena) {
+    return SECFailure;
+  }
+
+  const SECItem* request(CreateEncodedOCSPRequest(arena.get(), cert,
+                                                  issuerCert));
+  if (!request) {
+    return SECFailure;
+  }
+
+  const SECItem* response(CERT_PostOCSPRequest(arena.get(), url.get(),
+                                               request));
+  if (!response) {
+    if (mOCSPFetching != FetchOCSPForDVSoftFail) {
+      PR_LOG(gCertVerifierLog, PR_LOG_DEBUG,
+             ("NSSCertDBTrustDomain: returning SECFailure after "
+              "CERT_PostOCSPRequest failure"));
       return SECFailure;
     }
 
-    const SECItem* request
-      = CreateEncodedOCSPRequest(arena.get(), cert, issuerCert);
-    if (!request) {
-      return SECFailure;
-    }
+    PR_LOG(gCertVerifierLog, PR_LOG_DEBUG,
+           ("NSSCertDBTrustDomain: returning SECSuccess after "
+            "CERT_PostOCSPRequest failure"));
+    return SECSuccess; // Soft fail -> success :(
+  }
 
-    const SECItem* response(CERT_PostOCSPRequest(arena.get(), url.get(),
-                                                 request));
-    if (!response) {
-      if (mOCSPStrict) {
-        return SECFailure;
-      }
-      // Soft fail -> success :(
-    } else {
-      SECStatus rv = VerifyEncodedOCSPResponse(*this, cert, issuerCert, time,
-                                               response);
-      if (rv == SECSuccess) {
-        return SECSuccess;
-      }
-      PRErrorCode error = PR_GetError();
-      switch (error) {
-        case SEC_ERROR_OCSP_UNKNOWN_CERT:
-        case SEC_ERROR_REVOKED_CERTIFICATE:
-          return SECFailure;
-        default:
-          if (mOCSPStrict) {
-            return SECFailure;
-          }
-          break; // Soft fail -> success :(
-      }
-    }
+  SECStatus rv = VerifyEncodedOCSPResponse(*this, cert, issuerCert, time,
+                                           response);
+  if (rv == SECSuccess || mOCSPFetching != FetchOCSPForDVSoftFail) {
+    PR_LOG(gCertVerifierLog, PR_LOG_DEBUG,
+      ("NSSCertDBTrustDomain: returning after VerifyEncodedOCSPResponse"));
+    return rv;
+  }
+
+  PRErrorCode error = PR_GetError();
+  if (error == SEC_ERROR_OCSP_UNKNOWN_CERT ||
+      error == SEC_ERROR_REVOKED_CERTIFICATE) {
+    return rv;
   }
 
   PR_LOG(gCertVerifierLog, PR_LOG_DEBUG,

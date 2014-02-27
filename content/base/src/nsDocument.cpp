@@ -9145,22 +9145,41 @@ nsIDocument::GetReadyState(nsAString& aReadyState) const
   }
 }
 
+namespace {
+
+struct SuppressArgs
+{
+  nsIDocument::SuppressionType mWhat;
+  uint32_t mIncrease;
+};
+
+}
+
 static bool
 SuppressEventHandlingInDocument(nsIDocument* aDocument, void* aData)
 {
-  aDocument->SuppressEventHandling(*static_cast<uint32_t*>(aData));
+  SuppressArgs* args = static_cast<SuppressArgs*>(aData);
+  aDocument->SuppressEventHandling(args->mWhat, args->mIncrease);
   return true;
 }
 
 void
-nsDocument::SuppressEventHandling(uint32_t aIncrease)
+nsDocument::SuppressEventHandling(nsIDocument::SuppressionType aWhat,
+                                  uint32_t aIncrease)
 {
-  if (mEventsSuppressed == 0 && aIncrease != 0 && mPresShell &&
-      mScriptGlobalObject) {
+  if (mEventsSuppressed == 0 && mAnimationsPaused == 0 &&
+      aIncrease != 0 && mPresShell && mScriptGlobalObject) {
     RevokeAnimationFrameNotifications();
   }
-  mEventsSuppressed += aIncrease;
-  EnumerateSubDocuments(SuppressEventHandlingInDocument, &aIncrease);
+
+  if (aWhat == eAnimationsOnly) {
+    mAnimationsPaused += aIncrease;
+  } else {
+    mEventsSuppressed += aIncrease;
+  }
+
+  SuppressArgs args = { aWhat, aIncrease };
+  EnumerateSubDocuments(SuppressEventHandlingInDocument, &args);
 }
 
 static void
@@ -9314,30 +9333,59 @@ private:
   nsTArray<nsCOMPtr<nsIDocument> > mDocuments;
 };
 
-static bool
-GetAndUnsuppressSubDocuments(nsIDocument* aDocument, void* aData)
+namespace {
+
+struct UnsuppressArgs
 {
-  uint32_t suppression = aDocument->EventHandlingSuppressed();
-  if (suppression > 0) {
-    static_cast<nsDocument*>(aDocument)->DecreaseEventSuppression();
+  UnsuppressArgs(nsIDocument::SuppressionType aWhat)
+    : mWhat(aWhat)
+  {
   }
-  nsTArray<nsCOMPtr<nsIDocument> >* docs =
-    static_cast<nsTArray<nsCOMPtr<nsIDocument> >* >(aData);
-  docs->AppendElement(aDocument);
-  aDocument->EnumerateSubDocuments(GetAndUnsuppressSubDocuments, docs);
+
+  nsIDocument::SuppressionType mWhat;
+  nsTArray<nsCOMPtr<nsIDocument>> mDocs;
+};
+
+}
+
+static bool
+GetAndUnsuppressSubDocuments(nsIDocument* aDocument,
+                             void* aData)
+{
+  UnsuppressArgs* args = static_cast<UnsuppressArgs*>(aData);
+  if (args->mWhat != nsIDocument::eAnimationsOnly &&
+      aDocument->EventHandlingSuppressed() > 0) {
+    static_cast<nsDocument*>(aDocument)->DecreaseEventSuppression();
+  } else if (args->mWhat == nsIDocument::eAnimationsOnly &&
+             aDocument->AnimationsPaused()) {
+    static_cast<nsDocument*>(aDocument)->ResumeAnimations();
+  }
+
+  if (args->mWhat != nsIDocument::eAnimationsOnly) {
+    // No need to remember documents if we only care about animation frames.
+    args->mDocs.AppendElement(aDocument);
+  }
+
+  aDocument->EnumerateSubDocuments(GetAndUnsuppressSubDocuments, aData);
   return true;
 }
 
 void
-nsDocument::UnsuppressEventHandlingAndFireEvents(bool aFireEvents)
+nsDocument::UnsuppressEventHandlingAndFireEvents(nsIDocument::SuppressionType aWhat,
+                                                 bool aFireEvents)
 {
-  nsTArray<nsCOMPtr<nsIDocument> > documents;
-  GetAndUnsuppressSubDocuments(this, &documents);
+  UnsuppressArgs args(aWhat);
+  GetAndUnsuppressSubDocuments(this, &args);
+
+  if (aWhat == nsIDocument::eAnimationsOnly) {
+    // No need to fire events if we only care about animations here.
+    return;
+  }
 
   if (aFireEvents) {
-    NS_DispatchToCurrentThread(new nsDelayedEventDispatcher(documents));
+    NS_DispatchToCurrentThread(new nsDelayedEventDispatcher(args.mDocs));
   } else {
-    FireOrClearDelayedEvents(documents, false);
+    FireOrClearDelayedEvents(args.mDocs, false);
   }
 }
 

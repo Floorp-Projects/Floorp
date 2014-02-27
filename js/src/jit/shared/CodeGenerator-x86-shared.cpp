@@ -9,7 +9,10 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MathAlgorithms.h"
 
+#include "jsmath.h"
+
 #include "jit/IonFrames.h"
+#include "jit/IonLinker.h"
 #include "jit/JitCompartment.h"
 #include "jit/RangeAnalysis.h"
 
@@ -1768,6 +1771,177 @@ CodeGeneratorX86Shared::visitNegF(LNegF *ins)
     return true;
 }
 
+bool
+CodeGeneratorX86Shared::visitForkJoinGetSlice(LForkJoinGetSlice *ins)
+{
+    MOZ_ASSERT(gen->info().executionMode() == ParallelExecution);
+    MOZ_ASSERT(ToRegister(ins->forkJoinContext()) == ForkJoinGetSliceReg_cx);
+    MOZ_ASSERT(ToRegister(ins->temp1()) == eax);
+    MOZ_ASSERT(ToRegister(ins->temp2()) == edx);
+    MOZ_ASSERT(ToRegister(ins->temp3()) == ForkJoinGetSliceReg_temp0);
+    MOZ_ASSERT(ToRegister(ins->temp4()) == ForkJoinGetSliceReg_temp1);
+    MOZ_ASSERT(ToRegister(ins->output()) == ForkJoinGetSliceReg_output);
+
+    masm.call(gen->jitRuntime()->forkJoinGetSliceStub());
+    return true;
+}
+
+JitCode *
+JitRuntime::generateForkJoinGetSliceStub(JSContext *cx)
+{
+#ifdef JS_THREADSAFE
+    MacroAssembler masm(cx);
+
+    // We need two fixed temps. We need to fix eax for cmpxchg, and edx for
+    // div.
+    Register cxReg = ForkJoinGetSliceReg_cx, worker = cxReg;
+    Register pool = ForkJoinGetSliceReg_temp0;
+    Register bounds = ForkJoinGetSliceReg_temp1;
+    Register output = ForkJoinGetSliceReg_output;
+
+    MOZ_ASSERT(worker != eax && worker != edx);
+    MOZ_ASSERT(pool != eax && pool != edx);
+    MOZ_ASSERT(bounds != eax && bounds != edx);
+    MOZ_ASSERT(output != eax && output != edx);
+
+    Label stealWork, noMoreWork, gotSlice;
+    Operand workerSliceBounds(Address(worker, ThreadPoolWorker::offsetOfSliceBounds()));
+
+    // Clobber cx to load the worker.
+    masm.push(cxReg);
+    masm.loadPtr(Address(cxReg, ForkJoinContext::offsetOfWorker()), worker);
+
+    // Load the thread pool, which is used in all cases below.
+    masm.loadThreadPool(pool);
+
+    {
+        // Try to get a slice from the current thread.
+        Label getOwnSliceLoopHead;
+        masm.bind(&getOwnSliceLoopHead);
+
+        // Load the slice bounds for the current thread.
+        masm.loadSliceBounds(worker, bounds);
+
+        // The slice bounds is a uint32 composed from two uint16s:
+        // [ from          , to           ]
+        //   ^~~~            ^~
+        //   upper 16 bits | lower 16 bits
+        masm.move32(bounds, output);
+        masm.shrl(Imm32(16), output);
+
+        // If we don't have any slices left ourselves, move on to stealing.
+        masm.branch16(Assembler::Equal, output, bounds, &stealWork);
+
+        // If we still have work, try to CAS [ from+1, to ].
+        masm.move32(bounds, edx);
+        masm.add32(Imm32(0x10000), edx);
+        masm.move32(bounds, eax);
+        masm.atomic_cmpxchg32(edx, workerSliceBounds, eax);
+        masm.j(Assembler::NonZero, &getOwnSliceLoopHead);
+
+        // If the CAS succeeded, return |from| in output.
+        masm.jump(&gotSlice);
+    }
+
+    // Try to steal work.
+    masm.bind(&stealWork);
+
+    // It's not technically correct to test whether work-stealing is turned on
+    // only during stub-generation time, but it's a DEBUG only thing.
+    if (cx->runtime()->threadPool.workStealing()) {
+        Label stealWorkLoopHead;
+        masm.bind(&stealWorkLoopHead);
+
+        // Check if we have work.
+        masm.branch32(Assembler::Equal,
+                      Address(pool, ThreadPool::offsetOfPendingSlices()),
+                      Imm32(0), &noMoreWork);
+
+        // Get an id at random. The following is an inline of
+        // the 32-bit xorshift in ThreadPoolWorker::randomWorker().
+        {
+            // Reload the current worker.
+            masm.loadPtr(Address(StackPointer, 0), cxReg);
+            masm.loadPtr(Address(cxReg, ForkJoinContext::offsetOfWorker()), worker);
+
+            // Perform the xorshift to get a random number in eax, using edx
+            // as a temp.
+            Address rngState(worker, ThreadPoolWorker::offsetOfSchedulerRNGState());
+            masm.load32(rngState, eax);
+            masm.move32(eax, edx);
+            masm.shll(Imm32(ThreadPoolWorker::XORSHIFT_A), eax);
+            masm.xor32(edx, eax);
+            masm.move32(eax, edx);
+            masm.shrl(Imm32(ThreadPoolWorker::XORSHIFT_B), eax);
+            masm.xor32(edx, eax);
+            masm.move32(eax, edx);
+            masm.shll(Imm32(ThreadPoolWorker::XORSHIFT_C), eax);
+            masm.xor32(edx, eax);
+            masm.store32(eax, rngState);
+
+            // Compute the random worker id by computing % numWorkers. Reuse
+            // output as a temp.
+            masm.move32(Imm32(0), edx);
+            masm.move32(Imm32(cx->runtime()->threadPool.numWorkers()), output);
+            masm.udiv(output);
+        }
+
+        // Load the worker from the workers array.
+        masm.loadPtr(Address(pool, ThreadPool::offsetOfWorkers()), worker);
+        masm.loadPtr(BaseIndex(worker, edx, ScalePointer), worker);
+
+        // Try to get a slice from the designated victim worker.
+        Label stealSliceFromWorkerLoopHead;
+        masm.bind(&stealSliceFromWorkerLoopHead);
+
+        // Load the slice bounds and decompose for the victim worker.
+        masm.loadSliceBounds(worker, bounds);
+        masm.move32(bounds, eax);
+        masm.shrl(Imm32(16), eax);
+
+        // If the victim worker has no more slices left, find another worker.
+        masm.branch16(Assembler::Equal, eax, bounds, &stealWorkLoopHead);
+
+        // If the victim worker still has work, try to CAS [ from, to-1 ].
+        masm.move32(bounds, output);
+        masm.sub32(Imm32(1), output);
+        masm.move32(bounds, eax);
+        masm.atomic_cmpxchg32(output, workerSliceBounds, eax);
+        masm.j(Assembler::NonZero, &stealSliceFromWorkerLoopHead);
+
+        // If the CAS succeeded, return |to-1| in output.
+#ifdef DEBUG
+        masm.atomic_inc32(Operand(Address(pool, ThreadPool::offsetOfStolenSlices())));
+#endif
+        // Copies lower 16 bits only.
+        masm.movzwl(output, output);
+    }
+
+    // If we successfully got a slice, decrement pool->pendingSlices_ and
+    // return the slice.
+    masm.bind(&gotSlice);
+    masm.atomic_dec32(Operand(Address(pool, ThreadPool::offsetOfPendingSlices())));
+    masm.pop(cxReg);
+    masm.ret();
+
+    // There's no more slices to give out, return -1.
+    masm.bind(&noMoreWork);
+    masm.move32(Imm32(-1), output);
+    masm.pop(cxReg);
+    masm.ret();
+
+    Linker linker(masm);
+    JitCode *code = linker.newCode<NoGC>(cx, JSC::OTHER_CODE);
+
+#ifdef JS_ION_PERF
+    writePerfSpewerJitCodeProfile(code, "ForkJoinGetSliceStub");
+#endif
+
+    return code;
+#else
+    return nullptr;
+#endif // JS_THREADSAFE
+}
 
 } // namespace jit
 } // namespace js

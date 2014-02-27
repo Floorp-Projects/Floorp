@@ -19,6 +19,7 @@
 #include "vm/ArrayObject.h"
 #include "vm/BooleanObject.h"
 #include "vm/NumberObject.h"
+#include "vm/SharedArrayObject.h"
 #include "vm/StringObject.h"
 #include "vm/TypedArrayObject.h"
 
@@ -304,6 +305,9 @@ GetClassForProtoKey(JSProtoKey key)
 
       case JSProto_ArrayBuffer:
         return &ArrayBufferObject::class_;
+
+      case JSProto_SharedArrayBuffer:
+        return &SharedArrayBufferObject::class_;
 
       case JSProto_DataView:
         return &DataViewObject::class_;

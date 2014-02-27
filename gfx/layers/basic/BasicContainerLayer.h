@@ -10,8 +10,8 @@
 #include "BasicLayers.h"                // for BasicLayerManager
 #include "Layers.h"                     // for Layer, ContainerLayer
 #include "nsDebug.h"                    // for NS_ASSERTION
+#include "nsISupportsImpl.h"            // for MOZ_COUNT_CTOR
 #include "nsISupportsUtils.h"           // for NS_ADDREF, NS_RELEASE
-#include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR
 struct nsIntRect;
 
 namespace mozilla {

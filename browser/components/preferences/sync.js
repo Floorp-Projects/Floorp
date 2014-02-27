@@ -85,7 +85,7 @@ let gSyncPane = {
   _init: function () {
     let topics = ["weave:service:login:error",
                   "weave:service:login:finish",
-                  "weave:service:start-over",
+                  "weave:service:start-over:finish",
                   "weave:service:setup-complete",
                   "weave:service:logout:finish",
                   FxAccountsCommon.ONVERIFIED_NOTIFICATION];

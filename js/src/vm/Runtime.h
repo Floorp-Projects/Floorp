@@ -534,10 +534,21 @@ class PerThreadData : public PerThreadDataFriendFields
      * aligned to an Ion exit frame.
      */
     uint8_t             *ionTop;
-    JSContext           *ionJSContext;
-    uintptr_t            ionStackLimit;
 
-    inline void setIonStackLimit(uintptr_t limit);
+    /*
+     * The current JSContext when entering JIT code. This field may only be used
+     * from JIT code and C++ directly called by JIT code (otherwise it may refer
+     * to the wrong JSContext).
+     */
+    JSContext           *jitJSContext;
+
+    /*
+     * The stack limit checked by JIT code. This stack limit may be temporarily
+     * set to null to force JIT code to exit (e.g., for the operation callback).
+     */
+    uintptr_t            jitStackLimit;
+
+    inline void setJitStackLimit(uintptr_t limit);
 
     /*
      * asm.js maintains a stack of AsmJSModule activations (see AsmJS.h). This
@@ -1566,9 +1577,9 @@ struct JSRuntime : public JS::shadow::Runtime,
 
     bool                jitSupportsFloatingPoint;
 
-    // Used to reset stack limit after a signaled interrupt (i.e. ionStackLimit_ = -1)
+    // Used to reset stack limit after a signaled interrupt (i.e. jitStackLimit_ = -1)
     // has been noticed by Ion/Baseline.
-    void resetIonStackLimit();
+    void resetJitStackLimit();
 
     // Cache for jit::GetPcScript().
     js::jit::PcScriptCache *ionPcScriptCache;
@@ -1770,6 +1781,19 @@ struct JSRuntime : public JS::shadow::Runtime,
 
 namespace js {
 
+// When entering JIT code, the calling JSContext* is stored into the thread's
+// PerThreadData. This function retrieves the JSContext with the pre-condition
+// that the caller is JIT code or C++ called directly from JIT code. This
+// function should not be called from arbitrary locations since the JSContext
+// may be the wrong one.
+static inline JSContext *
+GetJSContextFromJitCode()
+{
+    JSContext *cx = TlsPerThreadData.get()->jitJSContext;
+    JS_ASSERT(cx);
+    return cx;
+}
+
 /*
  * Flags accompany script version data so that a) dynamically created scripts
  * can inherit their caller's compile-time properties and b) scripts can be
@@ -1902,10 +1926,10 @@ class MOZ_STACK_CLASS AutoKeepAtoms
 };
 
 inline void
-PerThreadData::setIonStackLimit(uintptr_t limit)
+PerThreadData::setJitStackLimit(uintptr_t limit)
 {
     JS_ASSERT(runtime_->currentThreadOwnsOperationCallbackLock());
-    ionStackLimit = limit;
+    jitStackLimit = limit;
 }
 
 inline JSRuntime *

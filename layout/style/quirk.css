@@ -196,21 +196,6 @@ img[align=right] {
   margin-left: 3px;
 }
 
-
-/* Quirk: Make sure that the residual style tags' size info.
- * does not take precedence over heading tags' size. (b=77352)
- * Note: This special attribute is set only for a residual
- * style tag within a heading tag.
- */
-
-/* XXX This is a potential performance problem.  This should not be
- * using an attribute!
- */
-*[_moz-rs-heading] {
-  font-size: inherit !important;
-}
-
-
 /*
  * Quirk: Use border-box box sizing for text inputs, password inputs, and
  * textareas.  (b=184478 on why we use content-box sizing in standards mode)
@@ -223,6 +208,6 @@ input:not([type=image]), textarea {
 }
 
 /* Quirk: give form margin for compat (b=41806) */
-form{
- margin-bottom: 1em;
+form {
+  margin-bottom: 1em;
 }
