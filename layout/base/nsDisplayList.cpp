@@ -3494,9 +3494,9 @@ nsDisplaySubDocument::BuildLayer(nsDisplayListBuilder* aBuilder,
 nsRect
 nsDisplaySubDocument::GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap)
 {
-  nsIFrame* rootScrollFrame = mFrame->PresContext()->PresShell()->GetRootScrollFrame();
-  nsIContent* content = rootScrollFrame ? rootScrollFrame->GetContent() : nullptr;
-  bool usingDisplayPort = content && nsLayoutUtils::GetDisplayPort(content);
+  bool usingDisplayPort =
+    nsLayoutUtils::ViewportHasDisplayPort(mFrame->PresContext());
+
   if ((mFlags & GENERATE_SCROLLABLE_LAYER) && usingDisplayPort) {
     *aSnap = false;
     return mFrame->GetRect() + aBuilder->ToReferenceFrame(mFrame);
@@ -3510,11 +3510,9 @@ nsDisplaySubDocument::ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                         nsRegion* aVisibleRegion,
                                         const nsRect& aAllowVisibleRegionExpansion)
 {
-  nsIFrame* rootScrollFrame = mFrame->PresContext()->PresShell()->GetRootScrollFrame();
-  nsIContent* content = rootScrollFrame ? rootScrollFrame->GetContent() : nullptr;
   nsRect displayport;
-  bool usingDisplayPort = content &&
-    nsLayoutUtils::GetDisplayPort(content, &displayport);
+  bool usingDisplayPort =
+    nsLayoutUtils::ViewportHasDisplayPort(mFrame->PresContext(), &displayport);
 
   if (!(mFlags & GENERATE_SCROLLABLE_LAYER) || !usingDisplayPort) {
     return nsDisplayWrapList::ComputeVisibility(aBuilder, aVisibleRegion,
@@ -3542,9 +3540,9 @@ nsDisplaySubDocument::ComputeVisibility(nsDisplayListBuilder* aBuilder,
 bool
 nsDisplaySubDocument::ShouldBuildLayerEvenIfInvisible(nsDisplayListBuilder* aBuilder)
 {
-  nsIFrame* rootScrollFrame = mFrame->PresContext()->PresShell()->GetRootScrollFrame();
-  nsIContent* content = rootScrollFrame ? rootScrollFrame->GetContent() : nullptr;
-  bool usingDisplayPort = content && nsLayoutUtils::GetDisplayPort(content);
+  bool usingDisplayPort =
+    nsLayoutUtils::ViewportHasDisplayPort(mFrame->PresContext());
+
   if ((mFlags & GENERATE_SCROLLABLE_LAYER) && usingDisplayPort) {
     return true;
   }
@@ -3555,9 +3553,9 @@ nsDisplaySubDocument::ShouldBuildLayerEvenIfInvisible(nsDisplayListBuilder* aBui
 nsRegion
 nsDisplaySubDocument::GetOpaqueRegion(nsDisplayListBuilder* aBuilder, bool* aSnap)
 {
-  nsIFrame* rootScrollFrame = mFrame->PresContext()->PresShell()->GetRootScrollFrame();
-  nsIContent* content = rootScrollFrame ? rootScrollFrame->GetContent() : nullptr;
-  bool usingDisplayPort = content && nsLayoutUtils::GetDisplayPort(content);
+  bool usingDisplayPort =
+    nsLayoutUtils::ViewportHasDisplayPort(mFrame->PresContext());
+
   if ((mFlags & GENERATE_SCROLLABLE_LAYER) && usingDisplayPort) {
     *aSnap = false;
     return nsRegion();
