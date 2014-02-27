@@ -536,7 +536,7 @@ NS_IMETHODIMP
 Telephony::CallStateChanged(uint32_t aServiceId, uint32_t aCallIndex,
                             uint16_t aCallState, const nsAString& aNumber,
                             bool aIsActive, bool aIsOutgoing, bool aIsEmergency,
-                            bool aIsConference)
+                            bool aIsConference, bool aIsSwitchable, bool aIsMergeable)
 {
   NS_ASSERTION(aCallIndex != kOutgoingPlaceholderCallIndex,
                "This should never happen!");
@@ -559,6 +559,9 @@ Telephony::CallStateChanged(uint32_t aServiceId, uint32_t aCallIndex,
   }
 
   if (modifiedCall) {
+    modifiedCall->UpdateSwitchable(aIsSwitchable);
+    modifiedCall->UpdateMergeable(aIsMergeable);
+
     if (!aIsConference) {
       UpdateActiveCall(modifiedCall, aIsActive);
     }
@@ -599,7 +602,8 @@ Telephony::CallStateChanged(uint32_t aServiceId, uint32_t aCallIndex,
   // Didn't find this call in mCalls or mGroup. Create a new call.
   nsRefPtr<TelephonyCall> call =
       TelephonyCall::Create(this, aServiceId, aNumber, aCallState, aCallIndex,
-                            aIsEmergency, aIsConference);
+                            aIsEmergency, aIsConference, aIsSwitchable,
+                            aIsMergeable);
   NS_ASSERTION(call, "This should never fail!");
 
   NS_ASSERTION(aIsConference ? mGroup->CallsArray().Contains(call) :
@@ -638,7 +642,7 @@ NS_IMETHODIMP
 Telephony::EnumerateCallState(uint32_t aServiceId, uint32_t aCallIndex,
                               uint16_t aCallState, const nsAString& aNumber,
                               bool aIsActive, bool aIsOutgoing, bool aIsEmergency,
-                              bool aIsConference)
+                              bool aIsConference, bool aIsSwitchable, bool aIsMergeable)
 {
   nsRefPtr<TelephonyCall> call;
 
@@ -654,7 +658,8 @@ Telephony::EnumerateCallState(uint32_t aServiceId, uint32_t aCallIndex,
 
   // Didn't know anything about this call before now.
   call = TelephonyCall::Create(this, aServiceId, aNumber, aCallState,
-                               aCallIndex, aIsEmergency, aIsConference);
+                               aCallIndex, aIsEmergency, aIsConference,
+                               aIsSwitchable, aIsMergeable);
   NS_ASSERTION(call, "This should never fail!");
 
   NS_ASSERTION(aIsConference ? mGroup->CallsArray().Contains(call) :

@@ -16,10 +16,10 @@ Cu.import("resource://gre/modules/Services.jsm");
 let promise = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js").Promise;
 Cu.import("resource://gre/modules/osfile.jsm");
 
-Cu.import("resource://gre/modules/devtools/gcli.jsm");
 Cu.import("resource://gre/modules/devtools/event-emitter.js");
 
 let devtools = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools;
+let gcli = devtools.require("gcli/index");
 let Telemetry = devtools.require("devtools/shared/telemetry");
 let telemetry = new Telemetry();
 
@@ -843,10 +843,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
   gcli.addCommand({
     name: "console close",
     description: gcli.lookup("consolecloseDesc"),
-    exec: function Command_consoleClose(args, context) {
-      let gBrowser = context.environment.chromeDocument.defaultView.gBrowser;
-      let target = devtools.TargetFactory.forTab(gBrowser.selectedTab);
-      return gDevTools.closeToolbox(target);
+    exec: function(args, context) {
+      return gDevTools.closeToolbox(context.environment.target);
     }
   });
 
@@ -856,10 +854,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
   gcli.addCommand({
     name: "console open",
     description: gcli.lookup("consoleopenDesc"),
-    exec: function Command_consoleOpen(args, context) {
-      let gBrowser = context.environment.chromeDocument.defaultView.gBrowser;
-      let target = devtools.TargetFactory.forTab(gBrowser.selectedTab);
-      return gDevTools.showToolbox(target, "webconsole");
+    exec: function(args, context) {
+      return gDevTools.showToolbox(context.environment.target, "webconsole");
     }
   });
 }(this));

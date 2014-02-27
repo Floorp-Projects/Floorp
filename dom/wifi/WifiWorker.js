@@ -1521,7 +1521,7 @@ let WifiNetworkInterface = {
 
   ip: null,
 
-  netmask: null,
+  prefixLength: 0,
 
   broadcast: null,
 
@@ -1932,7 +1932,7 @@ function WifiWorker() {
         WifiNetworkInterface.state =
           Ci.nsINetworkInterface.NETWORK_STATE_DISCONNECTED;
         WifiNetworkInterface.ip = null;
-        WifiNetworkInterface.netmask = null;
+        WifiNetworkInterface.prefixLength = 0;
         WifiNetworkInterface.broadcast = null;
         WifiNetworkInterface.gateway = null;
         WifiNetworkInterface.dns1 = null;
@@ -1966,10 +1966,12 @@ function WifiWorker() {
       return;
     }
 
+    let maskLength =
+      netHelpers.getMaskLength(netHelpers.stringToIP(this.info.mask_str));
     WifiNetworkInterface.state =
       Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED;
     WifiNetworkInterface.ip = this.info.ipaddr_str;
-    WifiNetworkInterface.netmask = this.info.mask_str;
+    WifiNetworkInterface.prefixLength = maskLength;
     WifiNetworkInterface.broadcast = this.info.broadcast_str;
     WifiNetworkInterface.gateway = this.info.gateway_str;
     WifiNetworkInterface.dns1 = this.info.dns1_str;
