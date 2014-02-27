@@ -1,17 +1,24 @@
 <?xml version="1.0" ?><manifest>
   <!--original fetch url was https://android.googlesource.com/-->
+  <!--original fetch url was https://git.mozilla.org/external/aosp-->
   <remote fetch="https://git.mozilla.org/external/aosp" name="aosp"/>
+  <!--original fetch url was https://git.mozilla.org/b2g-->
   <!--original fetch url was https://git.mozilla.org/b2g-->
   <remote fetch="https://git.mozilla.org/b2g" name="b2gmozilla"/>
   <!--original fetch url was git://github.com/mozilla-b2g/-->
+  <!--original fetch url was https://git.mozilla.org/b2g-->
   <remote fetch="https://git.mozilla.org/b2g" name="b2g"/>
   <!--original fetch url was git://github.com/mozilla/-->
+  <!--original fetch url was https://git.mozilla.org/b2g-->
   <remote fetch="https://git.mozilla.org/b2g" name="mozilla"/>
   <!--original fetch url was git://codeaurora.org/-->
+  <!--original fetch url was https://git.mozilla.org/external/caf-->
   <remote fetch="https://git.mozilla.org/external/caf" name="caf"/>
+  <!--original fetch url was https://git.mozilla.org/releases-->
   <!--original fetch url was https://git.mozilla.org/releases-->
   <remote fetch="https://git.mozilla.org/releases" name="mozillaorg"/>
   <!--original fetch url was git://github.com/apitrace/-->
+  <!--original fetch url was https://git.mozilla.org/external/apitrace-->
   <remote fetch="https://git.mozilla.org/external/apitrace" name="apitrace"/>
   <default remote="caf" revision="ics_chocolate_rb4.2" sync-j="4"/>
   <!-- Gonk specific things and forks -->
@@ -19,7 +26,7 @@
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
   <project name="fake-dalvik" path="dalvik" remote="b2g" revision="ca1f327d5acc198bb4be62fa51db2c039032c9ce"/>
-  <project name="gaia.git" path="gaia" remote="mozillaorg" revision="3fbef18cb8767d3c6168170f5aa058e41e0e632c"/>
+  <project name="gaia.git" path="gaia" remote="mozillaorg" revision="0dde42761b40cdb21079ff82f703fa60b7785110"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="15e8982284c4560f9c74c2b9fe8bb361ebfe0cb6"/>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="827214fcf38d6569aeb5c6d6f31cb296d1f09272"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="84f2f2fce22605e17d511ff1767e54770067b5b5"/>
