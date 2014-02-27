@@ -153,14 +153,15 @@ RtspControllerParent::OnMediaDataAvailable(uint8_t index,
   uint32_t int32Value;
   uint64_t int64Value;
 
+  nsresult rv = meta->GetTimeStamp(&int64Value);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+
   LOG(("RtspControllerParent:: OnMediaDataAvailable %d:%d time %lld",
        index, length, int64Value));
 
   // Serialize meta data.
   nsCString name;
   name.AssignLiteral("TIMESTAMP");
-  nsresult rv = meta->GetTimeStamp(&int64Value);
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
   InfallibleTArray<RtspMetadataParam> metaData;
   metaData.AppendElement(RtspMetadataParam(name, int64Value));
 
