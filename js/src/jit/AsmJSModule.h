@@ -417,7 +417,7 @@ class AsmJSModule
     FunctionCountsVector                  functionCounts_;
 
     // This field is accessed concurrently when triggering the operation
-    // callback and access must be sychronized via the runtime's operation
+    // callback and access must be synchronized via the runtime's operation
     // callback lock.
     mutable bool                          codeIsProtected_;
 
