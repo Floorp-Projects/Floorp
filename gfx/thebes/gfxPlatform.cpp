@@ -2025,7 +2025,6 @@ gfxPlatform::OptimalFormatForContent(gfxContentType aContent)
 static bool sPrefLayersOffMainThreadCompositionEnabled = false;
 static bool sPrefLayersOffMainThreadCompositionTestingEnabled = false;
 static bool sPrefLayersOffMainThreadCompositionForceEnabled = false;
-static bool sPrefLayersAccelerationForceEnabled = false;
 static bool sPrefLayersAccelerationDisabled = false;
 static bool sPrefLayersPreferOpenGL = false;
 static bool sPrefLayersPreferD3D9 = false;
@@ -2034,8 +2033,7 @@ static bool sPrefLayersDump = false;
 static bool sPrefLayersScrollGraph = false;
 static bool sPrefLayersEnableTiles = false;
 static bool sLayersSupportsD3D9 = false;
-static bool sBufferRotationEnabled = false;
-static bool sComponentAlphaEnabled = true;
+static bool sBufferRotationCheckPref = true;
 static bool sPrefBrowserTabsRemoteAutostart = false;
 
 static bool sLayersAccelerationPrefsInitialized = false;
@@ -2054,21 +2052,18 @@ InitLayersAccelerationPrefs()
     sPrefLayersOffMainThreadCompositionEnabled = Preferences::GetBool("layers.offmainthreadcomposition.enabled", false);
     sPrefLayersOffMainThreadCompositionTestingEnabled = Preferences::GetBool("layers.offmainthreadcomposition.testing.enabled", false);
     sPrefLayersOffMainThreadCompositionForceEnabled = Preferences::GetBool("layers.offmainthreadcomposition.force-enabled", false);
-    sPrefLayersAccelerationForceEnabled = Preferences::GetBool("layers.acceleration.force-enabled", false);
     sPrefLayersAccelerationDisabled = Preferences::GetBool("layers.acceleration.disabled", false);
     sPrefLayersPreferOpenGL = Preferences::GetBool("layers.prefer-opengl", false);
     sPrefLayersPreferD3D9 = Preferences::GetBool("layers.prefer-d3d9", false);
     sPrefLayersDump = Preferences::GetBool("layers.dump", false);
     sPrefLayersScrollGraph = Preferences::GetBool("layers.scroll-graph", false);
     sPrefLayersEnableTiles = Preferences::GetBool("layers.enable-tiles", false);
-    sBufferRotationEnabled = Preferences::GetBool("layers.bufferrotation.enabled", true);
-    sComponentAlphaEnabled = Preferences::GetBool("layers.componentalpha.enabled", true);
     sPrefBrowserTabsRemoteAutostart = Preferences::GetBool("browser.tabs.remote.autostart", false);
 
     Preferences::AddBoolVarCache(&sPrefLayersDrawFPS, "layers.acceleration.draw-fps", false);
 
 #ifdef XP_WIN
-    if (sPrefLayersAccelerationForceEnabled) {
+    if (gfxPrefs::LayersAccelerationForceEnabled()) {
       sLayersSupportsD3D9 = true;
     } else {
       nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
@@ -2103,30 +2098,16 @@ gfxPlatform::GetPrefLayersOffMainThreadCompositionForceEnabled()
   return sPrefLayersOffMainThreadCompositionForceEnabled;
 }
 
-bool
-gfxPlatform::GetPrefLayersAccelerationForceEnabled()
-{
-  InitLayersAccelerationPrefs();
-  return sPrefLayersAccelerationForceEnabled;
-}
-
 bool gfxPlatform::OffMainThreadCompositionRequired()
 {
   InitLayersAccelerationPrefs();
 #if defined(MOZ_WIDGET_GTK) && defined(NIGHTLY_BUILD)
   // Linux users who chose OpenGL are being grandfathered in to OMTC
   return sPrefBrowserTabsRemoteAutostart ||
-         sPrefLayersAccelerationForceEnabled;
+         gfxPrefs::LayersAccelerationForceEnabled();
 #else
   return sPrefBrowserTabsRemoteAutostart;
 #endif
-}
-
-bool
-gfxPlatform::GetPrefLayersAccelerationDisabled()
-{
-  InitLayersAccelerationPrefs();
-  return sPrefLayersAccelerationDisabled;
 }
 
 bool
@@ -2187,8 +2168,7 @@ gfxPlatform::BufferRotationEnabled()
 {
   MutexAutoLock autoLock(*gGfxPlatformPrefsLock);
 
-  InitLayersAccelerationPrefs();
-  return sBufferRotationEnabled;
+  return sBufferRotationCheckPref && gfxPrefs::BufferRotationEnabled();
 }
 
 void
@@ -2196,18 +2176,7 @@ gfxPlatform::DisableBufferRotation()
 {
   MutexAutoLock autoLock(*gGfxPlatformPrefsLock);
 
-  sBufferRotationEnabled = false;
-}
-
-bool
-gfxPlatform::ComponentAlphaEnabled()
-{
-#ifdef MOZ_GFX_OPTIMIZE_MOBILE
-  return false;
-#endif
-
-  InitLayersAccelerationPrefs();
-  return sComponentAlphaEnabled;
+  sBufferRotationCheckPref = false;
 }
 
 TemporaryRef<ScaledFont>

@@ -503,8 +503,6 @@ public:
      */
     static bool GetPrefLayersOffMainThreadCompositionEnabled();
     static bool GetPrefLayersOffMainThreadCompositionForceEnabled();
-    static bool GetPrefLayersAccelerationForceEnabled();
-    static bool GetPrefLayersAccelerationDisabled();
     static bool GetPrefLayersPreferOpenGL();
     static bool GetPrefLayersPreferD3D9();
     static bool CanUseDirect3D9();
@@ -516,12 +514,12 @@ public:
     static bool OffMainThreadCompositionRequired();
 
     /**
-     * Is it possible to use buffer rotation
+     * Is it possible to use buffer rotation.  Note that these
+     * check the preference, but also allow for the override to
+     * disable it using DisableBufferRotation.
      */
     static bool BufferRotationEnabled();
     static void DisableBufferRotation();
-
-    static bool ComponentAlphaEnabled();
 
     /**
      * Are we going to try color management?

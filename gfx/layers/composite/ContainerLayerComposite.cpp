@@ -10,7 +10,7 @@
 #include "gfx2DGlue.h"                  // for ToMatrix4x4
 #include "gfx3DMatrix.h"                // for gfx3DMatrix
 #include "gfxImageSurface.h"            // for gfxImageSurface
-#include "gfxPlatform.h"                // for gfxPlatform
+#include "gfxPrefs.h"                   // for gfxPrefs
 #include "gfxUtils.h"                   // for gfxUtils, etc
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/RefPtr.h"             // for RefPtr
@@ -271,11 +271,11 @@ ContainerRender(ContainerT* aContainer,
       // not safe.
       if (HasOpaqueAncestorLayer(aContainer) &&
           transform3D.Is2D(&transform) && !ThebesMatrix(transform).HasNonIntegerTranslation()) {
-        surfaceCopyNeeded = gfxPlatform::ComponentAlphaEnabled();
+        surfaceCopyNeeded = gfxPrefs::ComponentAlphaEnabled();
         sourcePoint.x += transform._31;
         sourcePoint.y += transform._32;
         aContainer->mSupportsComponentAlphaChildren
-          = gfxPlatform::ComponentAlphaEnabled();
+          = gfxPrefs::ComponentAlphaEnabled();
       }
     }
 
@@ -348,7 +348,7 @@ ContainerRender(ContainerT* aContainer,
       layerToRender->RenderLayer(clipRect);
     }
 
-    if (gfxPlatform::GetPrefLayersScrollGraph()) {
+    if (gfxPrefs::LayersScrollGraph()) {
       DrawVelGraph(clipRect, aManager, layerToRender->GetLayer());
     }
     // invariant: our GL context should be current here, I don't think we can
