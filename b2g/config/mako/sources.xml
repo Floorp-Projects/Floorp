@@ -1,20 +1,14 @@
 <?xml version="1.0" ?><manifest>
   <!--original fetch url was https://android.googlesource.com/-->
-  <!--original fetch url was https://git.mozilla.org/external/aosp-->
   <remote fetch="https://git.mozilla.org/external/aosp" name="aosp"/>
   <!--original fetch url was git://github.com/mozilla-b2g/-->
-  <!--original fetch url was https://git.mozilla.org/b2g-->
   <remote fetch="https://git.mozilla.org/b2g" name="b2g"/>
   <!--original fetch url was git://github.com/mozilla/-->
-  <!--original fetch url was https://git.mozilla.org/b2g-->
   <remote fetch="https://git.mozilla.org/b2g" name="mozilla"/>
   <!--original fetch url was git://github.com/apitrace/-->
-  <!--original fetch url was https://git.mozilla.org/external/apitrace-->
   <remote fetch="https://git.mozilla.org/external/apitrace" name="apitrace"/>
   <!--original fetch url was git://codeaurora.org/-->
-  <!--original fetch url was https://git.mozilla.org/external/caf-->
   <remote fetch="https://git.mozilla.org/external/caf" name="caf"/>
-  <!--original fetch url was https://git.mozilla.org/releases-->
   <!--original fetch url was https://git.mozilla.org/releases-->
   <remote fetch="https://git.mozilla.org/releases" name="mozillaorg"/>
   <!-- B2G specific things. -->
