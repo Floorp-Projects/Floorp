@@ -193,7 +193,7 @@ TextTrackManager::UpdateCueDisplay()
   }
 
   nsTArray<nsRefPtr<TextTrackCue> > activeCues;
-  mTextTracks->GetAllActiveCues(activeCues);
+  mTextTracks->UpdateAndGetShowingCues(activeCues);
 
   if (activeCues.Length() > 0) {
     nsCOMPtr<nsIWritableVariant> jsCues =
