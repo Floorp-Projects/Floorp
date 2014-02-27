@@ -22,7 +22,7 @@
 #include "nsHTMLParts.h"
 #include "nsRenderingContext.h"
 #include "nsIDOMMutationEvent.h"
-#include "nsINameSpaceManager.h"
+#include "nsNameSpaceManager.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsAutoPtr.h"
 #include "nsStyleSet.h"

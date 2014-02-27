@@ -20,7 +20,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsIJSEventListener.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsINameSpaceManager.h"
+#include "nsNameSpaceManager.h"
 #include "nsIContent.h"
 #include "mozilla/MemoryReporting.h"
 #include "nsCOMPtr.h"

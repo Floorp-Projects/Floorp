@@ -10,7 +10,7 @@
 #include "nsCOMPtr.h"
 #include "nsIContent.h"
 #include "nsContainerFrame.h"
-#include "nsINameSpaceManager.h"
+#include "nsNameSpaceManager.h"
 #include "nsGkAtoms.h"
 #include "nsFrameManager.h"
 #include "nsIDOMNode.h"

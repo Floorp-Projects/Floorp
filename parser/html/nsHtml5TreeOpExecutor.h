@@ -6,7 +6,7 @@
 #define nsHtml5TreeOpExecutor_h
 
 #include "nsIAtom.h"
-#include "nsINameSpaceManager.h"
+#include "nsNameSpaceManager.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsISupportsImpl.h"

@@ -14,7 +14,7 @@
 #include "nsGkAtoms.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNode.h"
-#include "nsINameSpaceManager.h"
+#include "nsNameSpaceManager.h"
 #include "nsLiteralString.h"
 #include "nsPlaintextEditor.h"
 #include "nsString.h"

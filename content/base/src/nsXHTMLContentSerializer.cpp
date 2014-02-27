@@ -15,7 +15,7 @@
 #include "nsIDOMElement.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
-#include "nsINameSpaceManager.h"
+#include "nsNameSpaceManager.h"
 #include "nsString.h"
 #include "nsUnicharUtils.h"
 #include "nsXPIDLString.h"

@@ -22,7 +22,7 @@
 #include "txLog.h"
 #include "nsIConsoleService.h"
 #include "nsIDOMDocumentFragment.h"
-#include "nsINameSpaceManager.h"
+#include "nsNameSpaceManager.h"
 #include "nsCSSStyleSheet.h"
 #include "txStringUtils.h"
 #include "txURIUtils.h"

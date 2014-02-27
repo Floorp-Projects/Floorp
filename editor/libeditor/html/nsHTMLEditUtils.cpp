@@ -19,7 +19,7 @@
 #include "nsIAtom.h"                    // for nsIAtom
 #include "nsIDOMHTMLAnchorElement.h"    // for nsIDOMHTMLAnchorElement
 #include "nsIDOMNode.h"                 // for nsIDOMNode
-#include "nsINameSpaceManager.h"        // for kNameSpaceID_None
+#include "nsNameSpaceManager.h"        // for kNameSpaceID_None
 #include "nsLiteralString.h"            // for NS_LITERAL_STRING
 #include "nsString.h"                   // for nsAutoString
 #include "nsTextEditUtils.h"            // for nsTextEditUtils

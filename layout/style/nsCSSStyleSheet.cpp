@@ -30,7 +30,7 @@
 #include "nsCSSParser.h"
 #include "mozilla/css/Loader.h"
 #include "nsICSSLoaderObserver.h"
-#include "nsINameSpaceManager.h"
+#include "nsNameSpaceManager.h"
 #include "nsXMLNameSpaceMap.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"

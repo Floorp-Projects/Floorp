@@ -8,7 +8,7 @@
 #include "nsGkAtoms.h"
 #include "nsIContent.h"
 #include "nsStyleContext.h"
-#include "nsINameSpaceManager.h" 
+#include "nsNameSpaceManager.h"
 #include "nsIBoxObject.h"
 #include "nsTreeBoxObject.h"
 #include "nsIDOMElement.h"

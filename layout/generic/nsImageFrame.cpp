@@ -32,7 +32,7 @@
 #include "nsNetUtil.h"
 #include "nsCSSRendering.h"
 #include "nsIDOMHTMLAnchorElement.h"
-#include "nsINameSpaceManager.h"
+#include "nsNameSpaceManager.h"
 #include <algorithm>
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
