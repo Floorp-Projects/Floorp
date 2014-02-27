@@ -38,8 +38,6 @@ include $(topsrcdir)/config/config.mk
 
 include $(topsrcdir)/config/rules.mk
 
-LDFLAGS += $(MOZ_ALLOW_HEAP_EXECUTE_FLAGS)
-
 ifeq ($(OS_ARCH),WINNT) #{
 
 ifdef MOZ_CONTENT_SANDBOX
