@@ -2350,6 +2350,28 @@ ClipListsExceptCaret(nsDisplayListCollection* aLists,
   ::ClipItemsExceptCaret(aLists->Content(), aBuilder, aClipFrame, aClip);
 }
 
+static bool
+DisplayportExceedsMaxTextureSize(nsPresContext* aPresContext, const nsRect& aDisplayPort)
+{
+#ifdef MOZ_WIDGET_GONK
+  // On B2G we actively run into max texture size limits because the displayport-sizing code
+  // in the AsyncPanZoomController code is slightly busted (bug 957668 will fix it properly).
+  // We sometimes end up requesting displayports for which the corresponding layer will be
+  // larger than the max GL texture size (which we assume to be 4096 here).
+  // If we run into this case, we should just not use the displayport at all and fall back to
+  // just making a ScrollInfoLayer so that we use the APZC's synchronous scrolling fallback
+  // mechanism.
+  // Note also that if we don't do this here, it is quite likely that the parent B2G process
+  // will kill this child process to prevent OOMs (see the patch that landed as part of bug
+  // 965945 for details).
+  gfxSize resolution = aPresContext->PresShell()->GetCumulativeResolution();
+  return (aPresContext->AppUnitsToDevPixels(aDisplayPort.width) * resolution.width > 4096) ||
+         (aPresContext->AppUnitsToDevPixels(aDisplayPort.height) * resolution.height > 4096);
+#else
+  return false;
+#endif
+}
+
 void
 ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                     const nsRect&           aDirtyRect,
@@ -2420,6 +2442,9 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   bool usingDisplayport =
     nsLayoutUtils::GetDisplayPort(mOuter->GetContent(), &displayPort) &&
     !aBuilder->IsForEventDelivery();
+  if (usingDisplayport && DisplayportExceedsMaxTextureSize(mOuter->PresContext(), displayPort)) {
+    usingDisplayport = false;
+  }
   if (usingDisplayport) {
     dirtyRect = displayPort;
   }
