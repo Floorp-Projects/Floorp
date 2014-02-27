@@ -1233,6 +1233,11 @@ public:
     mClip = aBuilder->AllocateDisplayItemClip(aClip);
   }
 
+  // If we return false here it means that if this item creates a layer then
+  // ProcessDisplayItems will not set the visible region on the layer. The item
+  // should set the visible region, usually in BuildContainerLayer.
+  virtual bool SetVisibleRegionOnLayer() { return true; }
+
 protected:
   friend class nsDisplayList;
 
@@ -2715,6 +2720,9 @@ public:
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                              LayerManager* aManager,
                                              const ContainerLayerParameters& aContainerParameters) MOZ_OVERRIDE;
+
+  virtual bool SetVisibleRegionOnLayer() MOZ_OVERRIDE { return !(mFlags & GENERATE_SCROLLABLE_LAYER); }
+
   NS_DISPLAY_DECL_NAME("SubDocument", TYPE_SUBDOCUMENT)
 };
 
@@ -2843,6 +2851,8 @@ public:
 
   virtual nsIFrame* GetScrollFrame() { return mScrollFrame; }
   virtual nsIFrame* GetScrolledFrame() { return mScrolledFrame; }
+
+  virtual bool SetVisibleRegionOnLayer() MOZ_OVERRIDE { return false; }
 
 #ifdef MOZ_DUMP_PAINTING
   virtual void WriteDebugInfo(nsACString& aTo) MOZ_OVERRIDE;
@@ -3201,6 +3211,8 @@ public:
                                                 nsIFrame* aFrame,
                                                 bool aLogAnimations = false);
   bool CanUseAsyncAnimations(nsDisplayListBuilder* aBuilder) MOZ_OVERRIDE;
+
+  virtual bool SetVisibleRegionOnLayer() MOZ_OVERRIDE { return false; }
 
 private:
   static gfx3DMatrix GetResultingTransformMatrixInternal(const FrameTransformProperties& aProperties,
