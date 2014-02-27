@@ -446,7 +446,10 @@ nsPersistentProperties::nsPersistentProperties()
 : mIn(nullptr)
 {
   mSubclass = static_cast<nsIPersistentProperties*>(this);
-  mTable.ops = nullptr;
+
+  PL_DHashTableInit(&mTable, &property_HashTableOps, nullptr,
+                    sizeof(PropertyTableEntry), 20);
+
   PL_INIT_ARENA_POOL(&mArena, "PersistentPropertyArena", 2048);
 }
 
@@ -455,13 +458,6 @@ nsPersistentProperties::~nsPersistentProperties()
   PL_FinishArenaPool(&mArena);
   if (mTable.ops)
     PL_DHashTableFinish(&mTable);
-}
-
-void
-nsPersistentProperties::Init()
-{
-  PL_DHashTableInit(&mTable, &property_HashTableOps, nullptr,
-                    sizeof(PropertyTableEntry), 20);
 }
 
 nsresult
@@ -474,7 +470,6 @@ nsPersistentProperties::Create(nsISupports *aOuter, REFNSIID aIID, void **aResul
     return NS_ERROR_OUT_OF_MEMORY;
 
   NS_ADDREF(props);
-  props->Init();
   nsresult rv = props->QueryInterface(aIID, aResult);
 
   NS_RELEASE(props);
