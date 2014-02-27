@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-// define(function(require, exports, module) {
-
+'use strict';
 // <INJECTED SOURCE:START>
 
 // THIS FILE IS GENERATED FROM SOURCE IN THE GCLI PROJECT
@@ -23,28 +22,25 @@
 
 var exports = {};
 
-const TEST_URI = "data:text/html;charset=utf-8,<p id='gcli-input'>gcli-testString.js</p>";
+var TEST_URI = "data:text/html;charset=utf-8,<p id='gcli-input'>gcli-testString.js</p>";
 
 function test() {
-  helpers.addTabWithToolbar(TEST_URI, function(options) {
-    return helpers.runTests(options, exports);
-  }).then(finish);
+  return Task.spawn(function() {
+    let options = yield helpers.openTab(TEST_URI);
+    yield helpers.openToolbar(options);
+    gcli.addItems(mockCommands.items);
+
+    yield helpers.runTests(options, exports);
+
+    gcli.removeItems(mockCommands.items);
+    yield helpers.closeToolbar(options);
+    yield helpers.closeTab(options);
+  }).then(finish, helpers.handleError);
 }
 
 // <INJECTED SOURCE:END>
 
-'use strict';
-
-// var helpers = require('gclitest/helpers');
-// var mockCommands = require('gclitest/mockCommands');
-
-exports.setup = function(options) {
-  mockCommands.setup();
-};
-
-exports.shutdown = function(options) {
-  mockCommands.shutdown();
-};
+// var helpers = require('./helpers');
 
 exports.testNewLine = function(options) {
   return helpers.audit(options, [
@@ -165,8 +161,7 @@ exports.testBlank = function(options) {
           p2: {
             value: undefined,
             arg: ' ""',
-            status: 'INCOMPLETE',
-            message: ''
+            status: 'INCOMPLETE'
           },
           p3: {
             value: 'c',
@@ -227,7 +222,7 @@ exports.testBlankWithParam = function(options) {
         args: {
           command: { name: 'tsrsrsr' },
           p1: { value: 'a', arg: '  a', status: 'VALID', message: '' },
-          p2: { value: undefined, arg: '', status: 'INCOMPLETE', message: '' },
+          p2: { value: undefined, arg: '', status: 'INCOMPLETE' },
           p3: { value: '', arg: ' --p3', status: 'VALID', message: '' },
         }
       }
@@ -245,7 +240,7 @@ exports.testBlankWithParam = function(options) {
         args: {
           command: { name: 'tsrsrsr' },
           p1: { value: 'a', arg: '  a', status: 'VALID', message: '' },
-          p2: { value: undefined, arg: '', status: 'INCOMPLETE', message: '' },
+          p2: { value: undefined, arg: '', status: 'INCOMPLETE' },
           p3: { value: '', arg: ' --p3 ', status: 'VALID', message: '' },
         }
       }
@@ -263,7 +258,7 @@ exports.testBlankWithParam = function(options) {
         args: {
           command: { name: 'tsrsrsr' },
           p1: { value: 'a', arg: '  a', status: 'VALID', message: '' },
-          p2: { value: undefined, arg: '', status: 'INCOMPLETE', message: '' },
+          p2: { value: undefined, arg: '', status: 'INCOMPLETE' },
           p3: { value: '', arg: ' --p3 "', status: 'VALID', message: '' },
         }
       }
@@ -281,13 +276,10 @@ exports.testBlankWithParam = function(options) {
         args: {
           command: { name: 'tsrsrsr' },
           p1: { value: 'a', arg: '  a', status: 'VALID', message: '' },
-          p2: { value: undefined, arg: '', status: 'INCOMPLETE', message: '' },
+          p2: { value: undefined, arg: '', status: 'INCOMPLETE' },
           p3: { value: '', arg: ' --p3 ""', status: 'VALID', message: '' },
         }
       }
     }
   ]);
 };
-
-
-// });

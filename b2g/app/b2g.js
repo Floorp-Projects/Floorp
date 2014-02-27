@@ -862,15 +862,12 @@ pref("dom.downloads.max_retention_days", 7);
 // Inactivity time in milliseconds after which we shut down the OS.File worker.
 pref("osfile.reset_worker_delay", 5000);
 
-// The URL of the Firefox Accounts auth server backend
-pref("identity.fxaccounts.auth.uri", "https://api-accounts.dev.lcip.org/v1");
-
 // APZC preferences.
 //
 // Gaia relies heavily on scroll events for now, so lets fire them
 // more often than the default value (100).
 pref("apz.asyncscroll.throttle", 40);
-pref("apz.pan_repaint_interval", 40);
+pref("apz.pan_repaint_interval", 16);
 
 // Maximum fling velocity in px/ms.  Slower devices may need to reduce this
 // to avoid checkerboarding.  Note, float value must be set as a string.

@@ -273,8 +273,6 @@ sp<ABuffer> MakeAACCodecSpecificData2(const char *params) {
     // be encoded.
     CHECK_LT(20 + config->size(), 128u);
 
-    const uint8_t *data = config->data();
-
     static const uint8_t kStaticESDS[] = {
         0x03, 22,
         0x00, 0x00,     // ES_ID

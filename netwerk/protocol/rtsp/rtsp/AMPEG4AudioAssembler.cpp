@@ -108,7 +108,6 @@ static status_t parseAudioObjectType(
 static status_t parseGASpecificConfig(
         ABitReader *bits,
         unsigned audioObjectType, unsigned channelConfiguration) {
-    unsigned frameLengthFlag = bits->getBits(1);
     unsigned dependsOnCoreCoder = bits->getBits(1);
     if (dependsOnCoreCoder) {
         /* unsigned coreCoderDelay = */bits->getBits(1);

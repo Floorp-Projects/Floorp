@@ -5,175 +5,169 @@
 
 const TEST_URI = "http://sub1.test2.example.com/browser/browser/devtools/" +
                  "commandline/test/browser_cmd_appcache_valid_index.html";
-let tests = {};
 
 function test() {
-  helpers.addTabWithToolbar(TEST_URI, function(options) {
-    let deferred = promise.defer();
+  return Task.spawn(spawnTest).then(finish, helpers.handleError);
+}
 
-    info("adding cache listener.");
+function spawnTest() {
+  let options = yield helpers.openTab(TEST_URI);
+  yield helpers.openToolbar(options);
 
-    // Wait for site to be cached.
-    gBrowser.contentWindow.applicationCache.addEventListener('cached', function BCAV_cached() {
-      gBrowser.contentWindow.applicationCache.removeEventListener('cached', BCAV_cached);
+  info("adding cache listener.");
 
-      info("Site now cached, running tests.");
+  // Wait for site to be cached.
+  yield helpers.listenOnce(gBrowser.contentWindow.applicationCache, 'cached');
 
-      deferred.resolve(helpers.audit(options, [
-        {
-          setup: 'appcache',
-          check: {
-            input:  'appcache',
-            markup: 'IIIIIIII',
-            status: 'ERROR',
-            args: {}
-          },
-        },
+  // Pages containing an appcache the notification bar gives options to allow
+  // or deny permission for the app to save data offline. Let's click Allow.
+  let notificationID = "offline-app-requested-sub1.test2.example.com";
+  let notification = PopupNotifications.getNotification(notificationID, gBrowser.selectedBrowser);
 
-        {
-          setup: function() {
-            Services.prefs.setBoolPref("browser.cache.disk.enable", false);
-            helpers.setInput(options, 'appcache list', 13);
-          },
-          check: {
-            input:  'appcache list',
-            markup: 'VVVVVVVVVVVVV',
-            status: 'VALID',
-            args: {},
-          },
-          exec: {
-            output: [ /cache is disabled/ ]
-          },
-          post: function(output) {
-            Services.prefs.setBoolPref("browser.cache.disk.enable", true);
-          }
-        },
-
-        {
-          setup: 'appcache list',
-          check: {
-            input:  'appcache list',
-            markup: 'VVVVVVVVVVVVV',
-            status: 'VALID',
-            args: {},
-          },
-          exec: {
-            output: [ /index/, /page1/, /page2/, /page3/ ]
-          },
-        },
-
-        {
-          setup: 'appcache list page',
-          check: {
-            input:  'appcache list page',
-            markup: 'VVVVVVVVVVVVVVVVVV',
-            status: 'VALID',
-            args: {
-              search: { value: 'page' },
-            }
-          },
-          exec: {
-            output: [ /page1/, /page2/, /page3/ ]
-          },
-          post: function(output, text) {
-            ok(!text.contains("index"), "index is not contained in output");
-          }
-        },
-
-        {
-          setup: 'appcache validate',
-          check: {
-            input:  'appcache validate',
-            markup: 'VVVVVVVVVVVVVVVVV',
-            status: 'VALID',
-            args: {}
-          },
-          exec: {
-            completed: false,
-            output: [ /successfully/ ]
-          },
-        },
-
-        {
-          setup: 'appcache validate ' + TEST_URI,
-          check: {
-            input:  'appcache validate ' + TEST_URI,
-                  // appcache validate http://sub1.test2.example.com/browser/browser/devtools/commandline/test/browser_cmd_appcache_valid_index.html
-            markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV',
-            status: 'VALID',
-            args: {
-              uri: {
-                value: TEST_URI
-              },
-            }
-          },
-          exec: {
-            completed: false,
-            output: [ /successfully/ ]
-          },
-        },
-
-        {
-          setup: 'appcache clear',
-          check: {
-            input:  'appcache clear',
-            markup: 'VVVVVVVVVVVVVV',
-            status: 'VALID',
-            args: {},
-          },
-          exec: {
-            output: [ /successfully/ ]
-          },
-        },
-
-        {
-          setup: 'appcache list',
-          check: {
-            input:  'appcache list',
-            markup: 'VVVVVVVVVVVVV',
-            status: 'VALID',
-            args: {},
-          },
-          exec: {
-            output: [ /no results/ ]
-          },
-          post: function(output, text) {
-            ok(!text.contains("index"), "index is not contained in output");
-            ok(!text.contains("page1"), "page1 is not contained in output");
-            ok(!text.contains("page2"), "page1 is not contained in output");
-            ok(!text.contains("page3"), "page1 is not contained in output");
-          }
-        },
-
-        {
-          setup: 'appcache viewentry --key ' + TEST_URI,
-          check: {
-            input:  'appcache viewentry --key ' + TEST_URI,
-                  // appcache viewentry --key http://sub1.test2.example.com/browser/browser/devtools/commandline/test/browser_cmd_appcache_valid_index.html
-            markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV',
-            status: 'VALID',
-            args: {}
-          },
-        },
-      ]));
-    });
-
-    acceptOfflineCachePrompt();
-
-    return deferred.promise;
-  }).then(finish);
-
-  function acceptOfflineCachePrompt() {
-    // Pages containing an appcache the notification bar gives options to allow
-    // or deny permission for the app to save data offline. Let's click Allow.
-    let notificationID = "offline-app-requested-sub1.test2.example.com";
-    let notification = PopupNotifications.getNotification(notificationID, gBrowser.selectedBrowser);
-
-    if (notification) {
-      info("Authorizing offline storage.");
-      notification.mainAction.callback();
-    } else {
-      info("No notification box is available.");
-    }
+  if (notification) {
+    info("Authorizing offline storage.");
+    notification.mainAction.callback();
+  } else {
+    info("No notification box is available.");
   }
+
+  info("Site now cached, running tests.");
+  yield helpers.audit(options, [
+    {
+      setup: 'appcache',
+      check: {
+        input:  'appcache',
+        markup: 'IIIIIIII',
+        status: 'ERROR',
+        args: {}
+      },
+    },
+
+    {
+      setup: function() {
+        Services.prefs.setBoolPref("browser.cache.disk.enable", false);
+        return helpers.setInput(options, 'appcache list', 13);
+      },
+      check: {
+        input:  'appcache list',
+        markup: 'VVVVVVVVVVVVV',
+        status: 'VALID',
+        args: {},
+      },
+      exec: {
+        output: [ /cache is disabled/ ]
+      },
+      post: function(output) {
+        Services.prefs.setBoolPref("browser.cache.disk.enable", true);
+      }
+    },
+
+    {
+      setup: 'appcache list',
+      check: {
+        input:  'appcache list',
+        markup: 'VVVVVVVVVVVVV',
+        status: 'VALID',
+        args: {},
+      },
+      exec: {
+        output: [ /index/, /page1/, /page2/, /page3/ ]
+      },
+    },
+
+    {
+      setup: 'appcache list page',
+      check: {
+        input:  'appcache list page',
+        markup: 'VVVVVVVVVVVVVVVVVV',
+        status: 'VALID',
+        args: {
+          search: { value: 'page' },
+        }
+      },
+      exec: {
+        output: [ /page1/, /page2/, /page3/ ]
+      },
+      post: function(output, text) {
+        ok(!text.contains("index"), "index is not contained in output");
+      }
+    },
+
+    {
+      setup: 'appcache validate',
+      check: {
+        input:  'appcache validate',
+        markup: 'VVVVVVVVVVVVVVVVV',
+        status: 'VALID',
+        args: {}
+      },
+      exec: {
+        output: [ /successfully/ ]
+      },
+    },
+
+    {
+      setup: 'appcache validate ' + TEST_URI,
+      check: {
+        input:  'appcache validate ' + TEST_URI,
+              // appcache validate http://sub1.test2.example.com/browser/browser/devtools/commandline/test/browser_cmd_appcache_valid_index.html
+        markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV',
+        status: 'VALID',
+        args: {
+          uri: {
+            value: TEST_URI
+          },
+        }
+      },
+      exec: {
+        output: [ /successfully/ ]
+      },
+    },
+
+    {
+      setup: 'appcache clear',
+      check: {
+        input:  'appcache clear',
+        markup: 'VVVVVVVVVVVVVV',
+        status: 'VALID',
+        args: {},
+      },
+      exec: {
+        output: [ /successfully/ ]
+      },
+    },
+
+    {
+      setup: 'appcache list',
+      check: {
+        input:  'appcache list',
+        markup: 'VVVVVVVVVVVVV',
+        status: 'VALID',
+        args: {},
+      },
+      exec: {
+        output: [ /no results/ ]
+      },
+      post: function(output, text) {
+        ok(!text.contains("index"), "index is not contained in output");
+        ok(!text.contains("page1"), "page1 is not contained in output");
+        ok(!text.contains("page2"), "page1 is not contained in output");
+        ok(!text.contains("page3"), "page1 is not contained in output");
+      }
+    },
+
+    {
+      setup: 'appcache viewentry --key ' + TEST_URI,
+      check: {
+        input:  'appcache viewentry --key ' + TEST_URI,
+              // appcache viewentry --key http://sub1.test2.example.com/browser/browser/devtools/commandline/test/browser_cmd_appcache_valid_index.html
+        markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV',
+        status: 'VALID',
+        args: {}
+      },
+    },
+  ]);
+
+  yield helpers.closeToolbar(options);
+  yield helpers.closeTab(options);
 }

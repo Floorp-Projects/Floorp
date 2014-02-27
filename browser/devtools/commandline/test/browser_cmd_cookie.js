@@ -166,5 +166,5 @@ function test() {
         }
       },
     ]);
-  }).then(finish);
+  }).then(finish, helpers.handleError);
 }

@@ -4,7 +4,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(6385282b-4413-4cd6-b60a-de43e0b5c307)]
+[scriptable, uuid(c25d3993-6481-4e12-acee-55e32f6e1454)]
 interface nsITelephonyListener : nsISupports
 {
   /**
@@ -26,6 +26,12 @@ interface nsITelephonyListener : nsISupports
    *        Indicates whether this call is an emergency call.
    * @param isConference
    *        Indicates whether this call is a conference call.
+   * @param isSwitchable
+   *        Indicates whether this call can be switched between states of
+   *        nsITelephonyProvider::CALL_STATE_CONNECTED and
+   *        nsITelephonyProvider::CALL_STATE_HELD.
+   * @param isMergeable
+   *        Indicates whether this call be be added into a conference.
    */
   void callStateChanged(in unsigned long clientId,
                         in unsigned long callIndex,
@@ -34,7 +40,9 @@ interface nsITelephonyListener : nsISupports
                         in boolean isActive,
                         in boolean isOutgoing,
                         in boolean isEmergency,
-                        in boolean isConference);
+                        in boolean isConference,
+                        in boolean isSwitchable,
+                        in boolean isMergeable);
 
   /**
    * Called when participants of a conference call have been updated, and the
@@ -72,6 +80,12 @@ interface nsITelephonyListener : nsISupports
    *        Indicates whether this call is outgoing or incoming.
    * @param isConference
    *        Indicates whether this call is a conference call.
+   * @param isSwitchable
+   *        Indicates whether this call can be switched between states of
+   *        nsITelephonyProvider::CALL_STATE_CONNECTED and
+   *        nsITelephonyProvider::CALL_STATE_HELD.
+   * @param isMergeable
+   *        Indicates whether this call be be added into a conference.
    */
   void enumerateCallState(in unsigned long clientId,
                           in unsigned long callIndex,
@@ -80,7 +94,9 @@ interface nsITelephonyListener : nsISupports
                           in boolean isActive,
                           in boolean isOutgoing,
                           in boolean isEmergency,
-                          in boolean isConference);
+                          in boolean isConference,
+                          in boolean isSwitchable,
+                          in boolean isMergeable);
 
   /**
    * Notify when RIL receives supplementary service notification.

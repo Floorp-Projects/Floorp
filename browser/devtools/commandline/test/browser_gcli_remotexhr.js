@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-// define(function(require, exports, module) {
-
+'use strict';
 // <INJECTED SOURCE:START>
 
 // THIS FILE IS GENERATED FROM SOURCE IN THE GCLI PROJECT
@@ -23,35 +22,36 @@
 
 var exports = {};
 
-const TEST_URI = "data:text/html;charset=utf-8,<p id='gcli-input'>gcli-testRemote.js</p>";
+var TEST_URI = "data:text/html;charset=utf-8,<p id='gcli-input'>gcli-testRemoteXhr.js</p>";
 
 function test() {
-  helpers.addTabWithToolbar(TEST_URI, function(options) {
-    return helpers.runTests(options, exports);
-  }).then(finish);
+  return Task.spawn(function() {
+    let options = yield helpers.openTab(TEST_URI);
+    yield helpers.openToolbar(options);
+    gcli.addItems(mockCommands.items);
+
+    yield helpers.runTests(options, exports);
+
+    gcli.removeItems(mockCommands.items);
+    yield helpers.closeToolbar(options);
+    yield helpers.closeTab(options);
+  }).then(finish, helpers.handleError);
 }
 
 // <INJECTED SOURCE:END>
 
-'use strict';
+// var assert = require('../testharness/assert');
+// var helpers = require('./helpers');
 
-// var assert = require('test/assert');
-// var helpers = require('gclitest/helpers');
-// var mockCommands = require('gclitest/mockCommands');
+// testRemoteWs and testRemoteXhr are virtually identical.
+// Changes made here should be made there too.
+// They are kept separate to save adding complexity to the test system and so
+// to help us select the test that are available in different environments
 
-exports.setup = function(options) {
-  mockCommands.setup();
-};
-
-exports.shutdown = function(options) {
-  mockCommands.shutdown();
-};
-
-exports.testRemote = function(options) {
-  var connected = false;
+exports.testRemoteXhr = function(options) {
   return helpers.audit(options, [
     {
-      skipRemainingIf: !options.isHttp,
+      skipRemainingIf: options.isRemote || options.isNode || options.isFirefox,
       setup:    'remote ',
       check: {
         input:  'remote ',
@@ -67,94 +67,73 @@ exports.testRemote = function(options) {
       }
     },
     {
-      setup:    'connect remote',
+      setup: 'connect remote',
       check: {
-        input:  'connect remote',
-        hints:                ' [options]',
-        markup: 'VVVVVVVVVVVVVV',
-        cursor: 14,
-        current: 'prefix',
-        status: 'VALID',
-        options: [ ],
-        message: '',
-        predictions: [ ],
-        unassigned: [ ],
         args: {
-          command: { name: 'connect' },
-          prefix: { value: 'remote', arg: ' remote', status: 'VALID', message: '' },
-          host: { value: undefined, arg: '', status: 'VALID', message: '' },
-          port: { value: undefined, arg: '', status: 'VALID', message: '' },
+          prefix: { value: 'remote' },
+          url: { value: undefined }
         }
       },
       exec: {
-        completed: false,
         error: false
-      },
-      post: function(output, data) {
-        connected = !output.error;
-        if (!connected) {
-          console.log('Failure from "connect remote". Run server with "node gcli server start --websocket --allowexec" to allow remote command testing');
-        }
       }
     },
     {
-      // We do a connect-disconnect dance for 2 reasons, partly re-establishing
-      // a connection is a good test, and secondly it lets us have minimal
-      // testing on the first connection so we don't need to turn websockets
-      // on all the time
-      setup:    'disconnect remote --force',
-      skipRemainingIf: !connected,
+      setup: 'disconnect remote',
       check: {
-        input:  'disconnect remote --force',
-        hints:                           '',
-        markup: 'VVVVVVVVVVVVVVVVVVVVVVVVV',
-        cursor: 25,
-        current: 'force',
-        status: 'VALID',
-        message: '',
-        unassigned: [ ],
         args: {
-          command: { name: 'disconnect' },
           prefix: {
             value: function(connection) {
               assert.is(connection.prefix, 'remote', 'disconnecting remote');
-            },
-            arg: ' remote',
-            status: 'VALID',
-            message: ''
+            }
           }
         }
       },
       exec: {
         output: /^Removed [0-9]* commands.$/,
-        completed: true,
         type: 'string',
         error: false
       }
     },
     {
-      setup:    'connect remote',
+      setup: 'connect remote --method xhr',
       check: {
-        input:  'connect remote',
-        hints:                ' [options]',
-        markup: 'VVVVVVVVVVVVVV',
-        cursor: 14,
-        current: 'prefix',
-        status: 'VALID',
-        options: [ ],
-        message: '',
-        predictions: [ ],
-        unassigned: [ ],
         args: {
-          command: { name: 'connect' },
-          prefix: { value: 'remote', arg: ' remote', status: 'VALID', message: '' },
-          host: { value: undefined, arg: '', status: 'VALID', message: '' },
-          port: { value: undefined, arg: '', status: 'VALID', message: '' },
+          prefix: { value: 'remote' },
+          url: { value: undefined }
+        }
+      },
+      exec: {
+        error: false
+      }
+    },
+    {
+      setup: 'disconnect remote',
+      check: {
+        args: {
+          prefix: {
+            value: function(connection) {
+              assert.is(connection.prefix, 'remote', 'disconnecting remote');
+            }
+          }
+        }
+      },
+      exec: {
+        output: /^Removed [0-9]* commands.$/,
+        type: 'string',
+        error: false
+      }
+    },
+    {
+      setup: 'connect remote --method xhr',
+      check: {
+        args: {
+          prefix: { value: 'remote' },
+          url: { value: undefined }
         }
       },
       exec: {
         output: /^Added [0-9]* commands.$/,
-        completed: false,
         type: 'string',
         error: false
       }
@@ -163,10 +142,9 @@ exports.testRemote = function(options) {
       setup:    'remote ',
       check: {
         input:  'remote ',
-        hints:         '',
+        // PhantomJS fails on this. Unsure why
+        // hints:         ' {',
         markup: 'IIIIIIV',
-        cursor: 7,
-        current: '__command',
         status: 'ERROR',
         optionsIncludes: [
           'remote', 'remote cd', 'remote context', 'remote echo',
@@ -174,7 +152,7 @@ exports.testRemote = function(options) {
           'remote intro', 'remote make'
         ],
         message: '',
-        predictions: [ 'remote' ],
+        predictionsIncludes: [ 'remote' ],
         unassigned: [ ],
       }
     },
@@ -203,7 +181,6 @@ exports.testRemote = function(options) {
       },
       exec: {
         output: 'hello world',
-        completed: false,
         type: 'string',
         error: false
       }
@@ -232,8 +209,7 @@ exports.testRemote = function(options) {
       },
       exec: {
         // output: '', We can't rely on the contents of the FS
-        completed: false,
-        type: 'string',
+        type: 'output',
         error: false
       }
     },
@@ -281,7 +257,6 @@ exports.testRemote = function(options) {
       },
       exec: {
         output: 'Done',
-        completed: false,
         type: 'string',
         error: false
       }
@@ -312,7 +287,6 @@ exports.testRemote = function(options) {
       },
       exec: {
         output: '',
-        completed: false,
         type: 'string',
         error: false
       }
@@ -336,10 +310,9 @@ exports.testRemote = function(options) {
       },
       exec: {
         output: [
-          /^This command line/,
+          /^GCLI is an experiment/,
           /F1\/Escape/
         ],
-        completed: false,
         type: 'intro',
         error: false
       }
@@ -348,19 +321,25 @@ exports.testRemote = function(options) {
       setup:    'context remote',
       check: {
         input:  'context remote',
-        hints:                '',
+        // hints:                ' {',
         markup: 'VVVVVVVVVVVVVV',
         cursor: 14,
         current: 'prefix',
         status: 'VALID',
-        optionsContains: [ 'remote', 'remote cd', 'remote echo', 'remote exec', 'remote exit', 'remote firefox', 'remote help', 'remote intro', 'remote make' ],
+        optionsContains: [
+          'remote', 'remote cd', 'remote echo', 'remote exec', 'remote exit',
+          'remote firefox', 'remote help', 'remote intro', 'remote make'
+        ],
         message: '',
-        predictionsContains: [ 'remote', 'remote cd', 'remote echo', 'remote exec', 'remote exit', 'remote firefox', 'remote help', 'remote intro', 'remote make', 'remote pref' ],
+        // predictionsContains: [
+        //   'remote', 'remote cd', 'remote echo', 'remote exec', 'remote exit',
+        //   'remote firefox', 'remote help', 'remote intro', 'remote make',
+        //   'remote pref'
+        // ],
         unassigned: [ ],
         args: {
           command: { name: 'context' },
           prefix: {
-            /*value:[object Object],*/
             arg: ' remote',
             status: 'VALID',
             message: ''
@@ -369,7 +348,6 @@ exports.testRemote = function(options) {
       },
       exec: {
         output: 'Using remote as a command prefix',
-        completed: true,
         type: 'string',
         error: false
       }
@@ -393,8 +371,7 @@ exports.testRemote = function(options) {
       },
       exec: {
         // output: '', We can't rely on the contents of the filesystem
-        completed: false,
-        type: 'string',
+        type: 'output',
         error: false
       }
     },
@@ -436,7 +413,10 @@ exports.testRemote = function(options) {
         cursor: 7,
         current: '__command',
         status: 'VALID',
-        optionsContains: [ 'remote', 'remote cd', 'remote echo', 'remote exec', 'remote exit', 'remote firefox', 'remote help', 'remote intro', 'remote make' ],
+        optionsContains: [
+          'remote', 'remote cd', 'remote echo', 'remote exec', 'remote exit',
+          'remote firefox', 'remote help', 'remote intro', 'remote make'
+        ],
         message: '',
         predictions: [ ],
         unassigned: [ ],
@@ -447,7 +427,6 @@ exports.testRemote = function(options) {
       },
       exec: {
         output: 'Command prefix is unset',
-        completed: true,
         type: 'string',
         error: false
       }
@@ -471,24 +450,21 @@ exports.testRemote = function(options) {
             value: undefined,
             arg: '',
             status: 'INCOMPLETE',
-            message: ''
+            message: 'Value required for \'prefix\'.'
           }
         }
       }
     },
     {
-      setup:    'disconnect remote --force',
+      setup:    'disconnect remote',
       check: {
-        input:  'disconnect remote --force',
-        hints:                           '',
-        markup: 'VVVVVVVVVVVVVVVVVVVVVVVVV',
-        cursor: 25,
-        current: 'force',
+        input:  'disconnect remote',
+        hints:                   '',
+        markup: 'VVVVVVVVVVVVVVVVV',
         status: 'VALID',
         message: '',
         unassigned: [ ],
         args: {
-          command: { name: 'disconnect' },
           prefix: {
             value: function(connection) {
               assert.is(connection.prefix, 'remote', 'disconnecting remote');
@@ -501,7 +477,6 @@ exports.testRemote = function(options) {
       },
       exec: {
         output: /^Removed [0-9]* commands.$/,
-        completed: true,
         type: 'string',
         error: false
       }
@@ -523,7 +498,3 @@ exports.testRemote = function(options) {
     }
   ]);
 };
-
-
-// });
-

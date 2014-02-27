@@ -1097,7 +1097,6 @@ pref("devtools.errorconsole.enabled", false);
 // Developer toolbar and GCLI preferences
 pref("devtools.toolbar.enabled", true);
 pref("devtools.toolbar.visible", false);
-pref("devtools.gcli.allowSet", false);
 pref("devtools.commands.dir", "");
 
 // Enable the app manager
@@ -1385,9 +1384,6 @@ pref("identity.fxaccounts.remote.signin.uri", "https://accounts.firefox.com/sign
 // Note that this will always need to be in the same TLD as the
 // "identity.fxaccounts.remote.uri" pref.
 pref("identity.fxaccounts.settings.uri", "https://accounts.firefox.com/settings");
-
-// The URL of the Firefox Accounts auth server backend
-pref("identity.fxaccounts.auth.uri", "https://api.accounts.firefox.com/v1");
 
 // On GTK, we now default to showing the menubar only when alt is pressed:
 #ifdef MOZ_WIDGET_GTK

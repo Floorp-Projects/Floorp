@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-// define(function(require, exports, module) {
-
+'use strict';
 // <INJECTED SOURCE:START>
 
 // THIS FILE IS GENERATED FROM SOURCE IN THE GCLI PROJECT
@@ -23,30 +22,35 @@
 
 var exports = {};
 
-const TEST_URI = "data:text/html;charset=utf-8,<p id='gcli-input'>gcli-testNode.js</p>";
+var TEST_URI = "data:text/html;charset=utf-8,<p id='gcli-input'>gcli-testNode.js</p>";
 
 function test() {
-  helpers.addTabWithToolbar(TEST_URI, function(options) {
-    return helpers.runTests(options, exports);
-  }).then(finish);
+  return Task.spawn(function() {
+    let options = yield helpers.openTab(TEST_URI);
+    yield helpers.openToolbar(options);
+    gcli.addItems(mockCommands.items);
+
+    yield helpers.runTests(options, exports);
+
+    gcli.removeItems(mockCommands.items);
+    yield helpers.closeToolbar(options);
+    yield helpers.closeTab(options);
+  }).then(finish, helpers.handleError);
 }
 
 // <INJECTED SOURCE:END>
 
-'use strict';
-
-// var assert = require('test/assert');
-// var helpers = require('gclitest/helpers');
-// var mockCommands = require('gclitest/mockCommands');
+// var assert = require('../testharness/assert');
+// var helpers = require('./helpers');
 var nodetype = require('gcli/types/node');
 
 exports.setup = function(options) {
-  mockCommands.setup();
-  nodetype.setDocument(options.window.document);
+  if (options.window) {
+    nodetype.setDocument(options.window.document);
+  }
 };
 
 exports.shutdown = function(options) {
-  mockCommands.shutdown();
   nodetype.unsetDocument();
 };
 
@@ -63,7 +67,7 @@ exports.testNode = function(options) {
         status: 'ERROR',
         args: {
           command: { name: 'tse' },
-          node: { status: 'INCOMPLETE', message: '' },
+          node: { status: 'INCOMPLETE' },
           nodes: { status: 'VALID' },
           nodes2: { status: 'VALID' }
         }
@@ -135,7 +139,6 @@ exports.testNode = function(options) {
       }
     },
     {
-      skipIf: options.isJsdom,
       setup:    'tse *',
       check: {
         input:  'tse *',
@@ -161,11 +164,11 @@ exports.testNode = function(options) {
 };
 
 exports.testNodeDom = function(options) {
-  var requisition = options.display.requisition;
+  var requisition = options.requisition;
 
   return helpers.audit(options, [
     {
-      skipIf: options.isJsdom,
+      skipRemainingIf: options.isNoDom,
       setup:    'tse :root',
       check: {
         input:  'tse :root',
@@ -183,7 +186,6 @@ exports.testNodeDom = function(options) {
       }
     },
     {
-      skipIf: options.isJsdom,
       setup:    'tse :root ',
       check: {
         input:  'tse :root ',
@@ -206,7 +208,6 @@ exports.testNodeDom = function(options) {
       }
     },
     {
-      skipIf: options.isJsdom,
       setup:    'tse #gcli-nomatch',
       check: {
         input:  'tse #gcli-nomatch',
@@ -232,11 +233,11 @@ exports.testNodeDom = function(options) {
 };
 
 exports.testNodes = function(options) {
-  var requisition = options.display.requisition;
+  var requisition = options.requisition;
 
   return helpers.audit(options, [
     {
-      skipIf: options.isJsdom,
+      skipRemainingIf: options.isNoDom,
       setup:    'tse :root --nodes *',
       check: {
         input:  'tse :root --nodes *',
@@ -258,7 +259,6 @@ exports.testNodes = function(options) {
       }
     },
     {
-      skipIf: options.isJsdom,
       setup:    'tse :root --nodes2 div',
       check: {
         input:  'tse :root --nodes2 div',
@@ -281,7 +281,6 @@ exports.testNodes = function(options) {
       }
     },
     {
-      skipIf: options.isJsdom,
       setup:    'tse --nodes ffff',
       check: {
         input:  'tse --nodes ffff',
@@ -295,8 +294,7 @@ exports.testNodes = function(options) {
           node: {
             value: undefined,
             arg: '',
-            status: 'INCOMPLETE',
-            message: ''
+            status: 'INCOMPLETE'
           },
           nodes: {
             value: undefined,
@@ -316,7 +314,6 @@ exports.testNodes = function(options) {
       }
     },
     {
-      skipIf: options.isJsdom,
       setup:    'tse --nodes2 ffff',
       check: {
         input:  'tse --nodes2 ffff',
@@ -330,8 +327,7 @@ exports.testNodes = function(options) {
           node: {
             value: undefined,
             arg: '',
-            status: 'INCOMPLETE',
-            message: ''
+            status: 'INCOMPLETE'
           },
           nodes: { arg: '', status: 'VALID', message: '' },
           nodes2: { arg: ' --nodes2 ffff', status: 'VALID', message: '' }
@@ -350,6 +346,3 @@ exports.testNodes = function(options) {
     },
   ]);
 };
-
-
-// });

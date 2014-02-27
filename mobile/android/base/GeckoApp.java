@@ -452,7 +452,7 @@ public abstract class GeckoApp
             if (GeckoThread.checkAndSetLaunchState(GeckoThread.LaunchState.GeckoRunning, GeckoThread.LaunchState.GeckoExiting)) {
                 GeckoAppShell.notifyGeckoOfEvent(GeckoEvent.createBroadcastEvent("Browser:Quit", null));
             } else {
-                System.exit(0);
+                GeckoAppShell.systemExit();
             }
             return true;
         }
@@ -1235,7 +1235,7 @@ public abstract class GeckoApp
         if (LocaleManager.systemLocaleDidChange()) {
             Log.i(LOGTAG, "System locale changed. Restarting.");
             doRestart();
-            System.exit(0);
+            GeckoAppShell.systemExit();
             return;
         }
 
@@ -1886,9 +1886,9 @@ public abstract class GeckoApp
     @Override
     protected void onNewIntent(Intent intent) {
         if (GeckoThread.checkLaunchState(GeckoThread.LaunchState.GeckoExiting)) {
-            // We're exiting and shouldn't try to do anything else just incase
-            // we're hung for some reason we'll force the process to exit
-            System.exit(0);
+            // We're exiting and shouldn't try to do anything else. In the case
+            // where we are hung while exiting, we should force the process to exit.
+            GeckoAppShell.systemExit();
             return;
         }
 

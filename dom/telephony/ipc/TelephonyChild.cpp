@@ -60,7 +60,9 @@ TelephonyChild::RecvNotifyCallStateChanged(const uint32_t& aClientId,
                               aData.isActive(),
                               aData.isOutGoing(),
                               aData.isEmergency(),
-                              aData.isConference());
+                              aData.isConference(),
+                              aData.isSwitchable(),
+                              aData.isMergeable());
   return true;
 }
 
@@ -152,7 +154,9 @@ TelephonyRequestChild::RecvNotifyEnumerateCallState(const uint32_t& aClientId,
                                 aData.isActive(),
                                 aData.isOutGoing(),
                                 aData.isEmergency(),
-                                aData.isConference());
+                                aData.isConference(),
+                                aData.isSwitchable(),
+                                aData.isMergeable());
   return true;
 }
 
