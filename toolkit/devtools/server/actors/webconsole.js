@@ -17,9 +17,6 @@ let devtools = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devto
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "ConsoleAPIStorage",
-                                  "resource://gre/modules/ConsoleAPIStorage.jsm");
-
 for (let name of ["WebConsoleUtils", "ConsoleServiceListener",
                   "ConsoleAPIListener", "ConsoleProgressListener",
                   "JSTermHelpers", "JSPropertyProvider", "NetworkMonitor",
@@ -778,7 +775,10 @@ WebConsoleActor.prototype =
     // TODO: Bug 717611 - Web Console clear button does not clear cached errors
     let windowId = !this.parentActor.isRootActor ?
                    WebConsoleUtils.getInnerWindowId(this.window) : null;
+    let ConsoleAPIStorage = Cc["@mozilla.org/consoleAPI-storage;1"]
+                              .getService(Ci.nsIConsoleAPIStorage);
     ConsoleAPIStorage.clearEvents(windowId);
+
     if (this.parentActor.isRootActor) {
       Services.console.logStringMessage(null); // for the Error Console
       Services.console.reset();
