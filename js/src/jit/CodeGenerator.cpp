@@ -40,7 +40,7 @@ using namespace js;
 using namespace js::jit;
 
 using mozilla::DebugOnly;
-using mozilla::DoubleExponentBias;
+using mozilla::FloatingPoint;
 using mozilla::Maybe;
 using mozilla::NegativeInfinity;
 using mozilla::PositiveInfinity;
@@ -8152,7 +8152,9 @@ CodeGenerator::emitAssertRangeD(const Range *r, FloatRegister input, FloatRegist
     // This code does not yet check r->canHaveFractionalPart(). This would require new
     // assembler interfaces to make rounding instructions available.
 
-    if (!r->hasInt32Bounds() && !r->canBeInfiniteOrNaN() && r->exponent() < DoubleExponentBias) {
+    if (!r->hasInt32Bounds() && !r->canBeInfiniteOrNaN() &&
+        r->exponent() < FloatingPoint<double>::ExponentBias)
+    {
         // Check the bounds implied by the maximum exponent.
         Label exponentLoOk;
         masm.loadConstantDouble(pow(2.0, r->exponent() + 1), temp);
@@ -8177,13 +8179,13 @@ CodeGenerator::emitAssertRangeD(const Range *r, FloatRegister input, FloatRegist
         // If we think the value also can't be an infinity, check that it isn't.
         if (!r->canBeInfiniteOrNaN()) {
             Label notposinf;
-            masm.loadConstantDouble(PositiveInfinity(), temp);
+            masm.loadConstantDouble(PositiveInfinity<double>(), temp);
             masm.branchDouble(Assembler::DoubleLessThan, input, temp, &notposinf);
             masm.assumeUnreachable("Input shouldn't be +Inf.");
             masm.bind(&notposinf);
 
             Label notneginf;
-            masm.loadConstantDouble(NegativeInfinity(), temp);
+            masm.loadConstantDouble(NegativeInfinity<double>(), temp);
             masm.branchDouble(Assembler::DoubleGreaterThan, input, temp, &notneginf);
             masm.assumeUnreachable("Input shouldn't be -Inf.");
             masm.bind(&notneginf);
