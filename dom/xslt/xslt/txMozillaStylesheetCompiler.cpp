@@ -12,7 +12,6 @@
 #include "nsIChannelEventSink.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsILoadGroup.h"
-#include "nsINameSpaceManager.h"
 #include "nsINodeInfo.h"
 #include "nsIParser.h"
 #include "nsCharsetSource.h"
