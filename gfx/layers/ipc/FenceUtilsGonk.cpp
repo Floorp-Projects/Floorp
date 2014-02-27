@@ -21,14 +21,33 @@ void
 ParamTraits<FenceHandle>::Write(Message* aMsg,
                                 const paramType& aParam)
 {
+#if ANDROID_VERSION >= 19
+  sp<Fence> flattenable = aParam.mFence;
+#else
   Flattenable *flattenable = aParam.mFence.get();
+#endif
   size_t nbytes = flattenable->getFlattenedSize();
   size_t nfds = flattenable->getFdCount();
 
   char data[nbytes];
   int fds[nfds];
-  flattenable->flatten(data, nbytes, fds, nfds);
 
+#if ANDROID_VERSION >= 19
+  // Make a copy of "data" and "fds" for flatten() to avoid casting problem
+  void *pdata = (void *)data;
+  int *pfds = fds;
+
+  flattenable->flatten(pdata, nbytes, pfds, nfds);
+
+  // In Kitkat, flatten() will change the value of nbytes and nfds, which dues
+  // to multiple parcelable object consumption. The actual size and fd count
+  // which returned by getFlattenedSize() and getFdCount() are not changed.
+  // So we change nbytes and nfds back by call corresponding calls.
+  nbytes = flattenable->getFlattenedSize();
+  nfds = flattenable->getFdCount();
+#else
+  flattenable->flatten(data, nbytes, fds, nfds);
+#endif
   aMsg->WriteSize(nbytes);
   aMsg->WriteSize(nfds);
 
@@ -73,9 +92,17 @@ ParamTraits<FenceHandle>::Read(const Message* aMsg,
   }
 
   sp<Fence> buffer(new Fence());
+#if ANDROID_VERSION >= 19
+  // Make a copy of "data" and "fds" for unflatten() to avoid casting problem
+  void const *pdata = (void const *)data;
+  int const *pfds = fds;
+
+  if (NO_ERROR == buffer->unflatten(pdata, nbytes, pfds, nfds)) {
+#else
   Flattenable *flattenable = buffer.get();
 
   if (NO_ERROR == flattenable->unflatten(data, nbytes, fds, nfds)) {
+#endif
     aResult->mFence = buffer;
     return true;
   }
