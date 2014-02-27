@@ -50,7 +50,7 @@
 #include "nsIDOMWheelEvent.h"
 #include "nsIDOMDragEvent.h"
 #include "nsIDOMUIEvent.h"
-#include "nsDOMDragEvent.h"
+#include "nsDOMUIEvent.h"
 #include "nsIMozBrowserFrame.h"
 
 #include "nsSubDocumentFrame.h"
@@ -3566,7 +3566,7 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
           // made to access the dataTransfer during the event, yet the event
           // was cancelled. Instead, use the initial data transfer available
           // from the drag session. The drop effect would not have been
-          // initialized (which is done in nsDOMDragEvent::GetDataTransfer),
+          // initialized (which is done in DragEvent::GetDataTransfer),
           // so set it from the drag action. We'll still want to filter it
           // based on the effectAllowed below.
           dataTransfer = initialDataTransfer;
