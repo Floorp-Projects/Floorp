@@ -27,11 +27,11 @@ SpecialPowers.pushPrefEnv({"set": [["media.webvtt.enabled", true]]},
     is(trackList.length, 0, "Length should be 0.");
 
     ok(typeof video.addTextTrack == "function", "HTMLMediaElement::AddTextTrack() function should be available.")
-    video.addTextTrack("subtitles", "label", "en-CA");
+    video.addTextTrack("subtitles", "third", "en-CA");
     is(trackList.length, 1, "Length should be 1.");
 
     var textTrack = video.textTracks[0];
-    is(textTrack.label, "label", "Label should be set to label.");
+    is(textTrack.label, "third", "Label should be set to third.");
     is(textTrack.language, "en-CA", "Language should be en-CA.");
     is(textTrack.kind, "subtitles", "Default kind should be subtitles.");
     is(textTrack.mode, "hidden", "Default mode should be hidden.");
@@ -47,7 +47,7 @@ SpecialPowers.pushPrefEnv({"set": [["media.webvtt.enabled", true]]},
 
     // All below are read-only properties and so should not allow setting.
     textTrack.label = "French subtitles";
-    is(textTrack.label, "label", "Label is read-only so should still be \"label\".");
+    is(textTrack.label, "third", "Label is read-only so should still be \"label\".");
 
     textTrack.language = "en";
     is(textTrack.language, "en-CA", "Language is read-only so should still be \"en-CA\".");
@@ -60,9 +60,50 @@ SpecialPowers.pushPrefEnv({"set": [["media.webvtt.enabled", true]]},
       is(textTrack.mode, value, message);
     }
 
-    SimpleTest.finish();
-  }
-);
+    // Test that text tracks are sorted correctly when being inserted on the
+    // MediaElements list of text tracks. For this test we add four tracks, the
+    // first one was at the start of the test, the next three are below.
+    var trackOne = document.createElement("track");
+    trackOne.label = "first";
+    trackOne.src = "basic.vtt";
+    video.appendChild(trackOne);
+
+    video.addTextTrack("subtitles", "fourth", "en-CA");
+
+    var trackTwo = document.createElement("track");
+    trackTwo.label = "second";
+    trackTwo.src = "basic.vtt";
+    video.appendChild(trackTwo);
+
+    video.src = "seek.webm";
+    video.preload = "auto";
+
+    document.getElementById("content").appendChild(video);
+
+    video.addEventListener("loadedmetadata", function run_tests() {
+      // Re-que run_tests() at the end of the event loop until the track
+      // element has loaded its data.
+      if (trackOne.readyState == 1 || trackTwo.readyState == 1) {
+        setTimeout(run_tests, 0);
+        return;
+      }
+      is(trackOne.readyState, 2, "First Track::ReadyState should be set to LOADED.");
+      is(trackTwo.readyState, 2, "Second Track::ReadyState should be set to LOADED.");
+
+      // For the tracks to be sorted the first two tracks, added through a
+      // TrackElement, must occupy the first two indexes in their TrackElement
+      // tree order. The second two tracks, added through the 'addTextTrack'
+      // method, will occupy the last two indexes in the order that they were
+      // added in.
+      var labels = [ "first", "second", "third", "fourth" ];
+      is(video.textTracks.length, labels.length, "TextTracks length should be " + labels.length);
+      for (var i = 0; i < video.textTracks.length; i++) {
+        isnot(video.textTracks[i], null, "Video should have a text track at " + i + " index.");
+        is(video.textTracks[i].label, labels[i], "Text track at " + i + " should be " + labels[i]);
+      }
+      SimpleTest.finish();
+    });
+});
 </script>
 </pre>
 </body>
