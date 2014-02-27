@@ -1139,7 +1139,7 @@ class Activation
 
     // Counter incremented by JS::HideScriptedCaller and decremented by
     // JS::UnhideScriptedCaller. If > 0 for the top activation,
-    // JS_DescribeScriptedCaller will return null instead of querying that
+    // DescribeScriptedCaller will return null instead of querying that
     // activation, which should prompt the caller to consult embedding-specific
     // data structures instead.
     size_t hideScriptedCallerCount_;
