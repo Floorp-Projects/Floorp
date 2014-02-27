@@ -13,6 +13,9 @@
 #include "nsGlobalWindow.h"
 #include "nsJSUtils.h"
 #include "nsPerformance.h"
+#include "WorkerPrivate.h"
+#include "WorkerRunnable.h"
+#include "xpcprivate.h"
 
 #include "nsIConsoleAPIStorage.h"
 #include "nsIDOMWindowUtils.h"
@@ -39,10 +42,95 @@
 // This constant tells how many messages to process in a single timer execution.
 #define MESSAGES_IN_INTERVAL 1500
 
+// This tag is used in the Structured Clone Algorithm to move js values from
+// worker thread to main thread
+#define CONSOLE_TAG JS_SCTAG_USER_MIN
+
 using namespace mozilla::dom::exceptions;
+using namespace mozilla::dom::workers;
 
 namespace mozilla {
 namespace dom {
+
+/**
+ * Console API in workers uses the Structured Clone Algorithm to move any value
+ * from the worker thread to the main-thread. Some object cannot be moved and,
+ * in these cases, we convert them to strings.
+ * It's not the best, but at least we are able to show something.
+ */
+
+// This method is called by the Structured Clone Algorithm when some data has
+// to be read.
+static JSObject*
+ConsoleStructuredCloneCallbacksRead(JSContext* aCx,
+                                    JSStructuredCloneReader* /* unused */,
+                                    uint32_t aTag, uint32_t aData,
+                                    void* aClosure)
+{
+  AssertIsOnMainThread();
+
+  if (aTag != CONSOLE_TAG) {
+    return nullptr;
+  }
+
+  nsTArray<nsString>* strings = static_cast<nsTArray<nsString>*>(aClosure);
+  MOZ_ASSERT(strings->Length() <= aData);
+
+  JS::Rooted<JS::Value> value(aCx);
+  if (!xpc::StringToJsval(aCx, strings->ElementAt(aData), &value)) {
+    return nullptr;
+  }
+
+  JS::Rooted<JSObject*> obj(aCx);
+  if (!JS_ValueToObject(aCx, value, &obj)) {
+    return nullptr;
+  }
+
+  return obj;
+}
+
+// This method is called by the Structured Clone Algorithm when some data has
+// to be written.
+static bool
+ConsoleStructuredCloneCallbacksWrite(JSContext* aCx,
+                                     JSStructuredCloneWriter* aWriter,
+                                     JS::Handle<JSObject*> aObj,
+                                     void* aClosure)
+{
+  JS::Rooted<JS::Value> value(aCx, JS::ObjectOrNullValue(aObj));
+  JS::Rooted<JSString*> jsString(aCx, JS::ToString(aCx, value));
+  if (!jsString) {
+    return false;
+  }
+
+  nsDependentJSString string;
+  if (!string.init(aCx, jsString)) {
+    return false;
+  }
+
+  nsTArray<nsString>* strings = static_cast<nsTArray<nsString>*>(aClosure);
+
+  if (!JS_WriteUint32Pair(aWriter, CONSOLE_TAG, strings->Length())) {
+    return false;
+  }
+
+  strings->AppendElement(string);
+
+  return true;
+}
+
+static void
+ConsoleStructuredCloneCallbacksError(JSContext* /* aCx */,
+                                     uint32_t /* aErrorId */)
+{
+  NS_WARNING("Failed to clone data for the Console API in workers.");
+}
+
+JSStructuredCloneCallbacks gConsoleCallbacks = {
+  ConsoleStructuredCloneCallbacksRead,
+  ConsoleStructuredCloneCallbacksWrite,
+  ConsoleStructuredCloneCallbacksError
+};
 
 class ConsoleCallData
 {
@@ -96,6 +184,292 @@ public:
 
 private:
   JSContext* mCx;
+};
+
+class ConsoleRunnable : public nsRunnable
+{
+public:
+  ConsoleRunnable()
+    : mWorkerPrivate(GetCurrentThreadWorkerPrivate())
+  {
+    MOZ_ASSERT(mWorkerPrivate);
+  }
+
+  virtual
+  ~ConsoleRunnable()
+  {
+  }
+
+  bool
+  Dispatch()
+  {
+    mWorkerPrivate->AssertIsOnWorkerThread();
+
+    JSContext* cx = mWorkerPrivate->GetJSContext();
+
+    if (!PreDispatch(cx)) {
+      return false;
+    }
+
+    AutoSyncLoopHolder syncLoop(mWorkerPrivate);
+    mSyncLoopTarget = syncLoop.EventTarget();
+
+    if (NS_FAILED(NS_DispatchToMainThread(this, NS_DISPATCH_NORMAL))) {
+      JS_ReportError(cx,
+                     "Failed to dispatch to main thread for the Console API!");
+      return false;
+    }
+
+    return syncLoop.Run();
+  }
+
+private:
+  NS_IMETHOD Run()
+  {
+    AssertIsOnMainThread();
+
+    RunConsole();
+
+    nsRefPtr<MainThreadStopSyncLoopRunnable> response =
+      new MainThreadStopSyncLoopRunnable(mWorkerPrivate,
+                                         mSyncLoopTarget.forget(),
+                                         true);
+    if (!response->Dispatch(nullptr)) {
+      NS_WARNING("Failed to dispatch response!");
+    }
+
+    return NS_OK;
+  }
+
+protected:
+  virtual bool
+  PreDispatch(JSContext* aCx) = 0;
+
+  virtual void
+  RunConsole() = 0;
+
+  WorkerPrivate* mWorkerPrivate;
+
+private:
+  nsCOMPtr<nsIEventTarget> mSyncLoopTarget;
+};
+
+// This runnable appends a CallData object into the Console queue running on
+// the main-thread.
+class ConsoleCallDataRunnable MOZ_FINAL : public ConsoleRunnable
+{
+public:
+  ConsoleCallDataRunnable(const ConsoleCallData& aCallData)
+    : mCallData(aCallData)
+  {
+  }
+
+private:
+  bool
+  PreDispatch(JSContext* aCx) MOZ_OVERRIDE
+  {
+    ClearException ce(aCx);
+    JSAutoCompartment ac(aCx, mCallData.mGlobal);
+
+    JS::Rooted<JSObject*> arguments(aCx,
+      JS_NewArrayObject(aCx, mCallData.mArguments.Length()));
+    if (!arguments) {
+      return false;
+    }
+
+    for (uint32_t i = 0; i < mCallData.mArguments.Length(); ++i) {
+      if (!JS_DefineElement(aCx, arguments, i, mCallData.mArguments[i],
+                            nullptr, nullptr, JSPROP_ENUMERATE)) {
+        return false;
+      }
+    }
+
+    JS::Rooted<JS::Value> value(aCx, JS::ObjectValue(*arguments));
+
+    if (!mArguments.write(aCx, value, &gConsoleCallbacks, &mStrings)) {
+      return false;
+    }
+
+    mCallData.mArguments.Clear();
+    mCallData.mGlobal = nullptr;
+    return true;
+  }
+
+  void
+  RunConsole() MOZ_OVERRIDE
+  {
+    // Walk up to our containing page
+    WorkerPrivate* wp = mWorkerPrivate;
+    while (wp->GetParent()) {
+      wp = wp->GetParent();
+    }
+
+    AutoPushJSContext cx(wp->ParentJSContext());
+    ClearException ce(cx);
+
+    nsPIDOMWindow* window = wp->GetWindow();
+    NS_ENSURE_TRUE_VOID(window);
+
+    nsRefPtr<nsGlobalWindow> win = static_cast<nsGlobalWindow*>(window);
+    NS_ENSURE_TRUE_VOID(win);
+
+    ErrorResult error;
+    nsRefPtr<Console> console = win->GetConsole(error);
+    if (error.Failed()) {
+      NS_WARNING("Failed to get console from the window.");
+      return;
+    }
+
+    JS::Rooted<JS::Value> argumentsValue(cx);
+    if (!mArguments.read(cx, &argumentsValue, &gConsoleCallbacks, &mStrings)) {
+      return;
+    }
+
+    MOZ_ASSERT(argumentsValue.isObject());
+    JS::Rooted<JSObject*> argumentsObj(cx, &argumentsValue.toObject());
+    MOZ_ASSERT(JS_IsArrayObject(cx, argumentsObj));
+
+    uint32_t length;
+    if (!JS_GetArrayLength(cx, argumentsObj, &length)) {
+      return;
+    }
+
+    for (uint32_t i = 0; i < length; ++i) {
+      JS::Rooted<JS::Value> value(cx);
+
+      if (!JS_GetElement(cx, argumentsObj, i, &value)) {
+        return;
+      }
+
+      mCallData.mArguments.AppendElement(value);
+    }
+
+    MOZ_ASSERT(mCallData.mArguments.Length() == length);
+
+    mCallData.mGlobal = JS::CurrentGlobalOrNull(cx);
+    console->AppendCallData(mCallData);
+  }
+
+private:
+  ConsoleCallData mCallData;
+
+  JSAutoStructuredCloneBuffer mArguments;
+  nsTArray<nsString> mStrings;
+};
+
+// This runnable calls ProfileMethod() on the console on the main-thread.
+class ConsoleProfileRunnable MOZ_FINAL : public ConsoleRunnable
+{
+public:
+  ConsoleProfileRunnable(const nsAString& aAction,
+                         const Sequence<JS::Value>& aArguments)
+    : mAction(aAction)
+    , mArguments(aArguments)
+  {
+  }
+
+private:
+  bool
+  PreDispatch(JSContext* aCx) MOZ_OVERRIDE
+  {
+    ClearException ce(aCx);
+
+    JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
+    if (!global) {
+      return false;
+    }
+
+    JSAutoCompartment ac(aCx, global);
+
+    JS::Rooted<JSObject*> arguments(aCx,
+      JS_NewArrayObject(aCx, mArguments.Length()));
+    if (!arguments) {
+      return false;
+    }
+
+    for (uint32_t i = 0; i < mArguments.Length(); ++i) {
+      if (!JS_DefineElement(aCx, arguments, i, mArguments[i], nullptr, nullptr,
+                            JSPROP_ENUMERATE)) {
+        return false;
+      }
+    }
+
+    JS::Rooted<JS::Value> value(aCx, JS::ObjectValue(*arguments));
+
+    if (!mBuffer.write(aCx, value, &gConsoleCallbacks, &mStrings)) {
+      return false;
+    }
+
+    return true;
+  }
+
+  void
+  RunConsole() MOZ_OVERRIDE
+  {
+    // Walk up to our containing page
+    WorkerPrivate* wp = mWorkerPrivate;
+    while (wp->GetParent()) {
+      wp = wp->GetParent();
+    }
+
+    AutoPushJSContext cx(wp->ParentJSContext());
+    ClearException ce(cx);
+
+    JS::Rooted<JSObject*> global(cx, JS::CurrentGlobalOrNull(cx));
+    NS_ENSURE_TRUE_VOID(global);
+    JSAutoCompartment ac(cx, global);
+
+    nsPIDOMWindow* window = wp->GetWindow();
+    NS_ENSURE_TRUE_VOID(window);
+
+    nsRefPtr<nsGlobalWindow> win = static_cast<nsGlobalWindow*>(window);
+    NS_ENSURE_TRUE_VOID(win);
+
+    ErrorResult error;
+    nsRefPtr<Console> console = win->GetConsole(error);
+    if (error.Failed()) {
+      NS_WARNING("Failed to get console from the window.");
+      return;
+    }
+
+    JS::Rooted<JS::Value> argumentsValue(cx);
+    if (!mBuffer.read(cx, &argumentsValue, &gConsoleCallbacks, &mStrings)) {
+      return;
+    }
+
+    MOZ_ASSERT(argumentsValue.isObject());
+    JS::Rooted<JSObject*> argumentsObj(cx, &argumentsValue.toObject());
+    MOZ_ASSERT(JS_IsArrayObject(cx, argumentsObj));
+
+    uint32_t length;
+    if (!JS_GetArrayLength(cx, argumentsObj, &length)) {
+      return;
+    }
+
+    Sequence<JS::Value> arguments;
+
+    for (uint32_t i = 0; i < length; ++i) {
+      JS::Rooted<JS::Value> value(cx);
+
+      if (!JS_GetElement(cx, argumentsObj, i, &value)) {
+        return;
+      }
+
+      arguments.AppendElement(value);
+    }
+
+    console->ProfileMethod(cx, mAction, arguments, error);
+    if (error.Failed()) {
+      NS_WARNING("Failed to call call profile() method to the ConsoleAPI.");
+    }
+  }
+
+private:
+  nsString mAction;
+  Sequence<JS::Value> mArguments;
+
+  JSAutoStructuredCloneBuffer mBuffer;
+  nsTArray<nsString> mStrings;
 };
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(Console)
@@ -285,6 +659,14 @@ Console::ProfileMethod(JSContext* aCx, const nsAString& aAction,
                        const Sequence<JS::Value>& aData,
                        ErrorResult& aRv)
 {
+  if (!NS_IsMainThread()) {
+    // Here we are in a worker thread.
+    nsRefPtr<ConsoleProfileRunnable> runnable =
+      new ConsoleProfileRunnable(aAction, aData);
+    runnable->Dispatch();
+    return;
+  }
+
   RootedDictionary<ConsoleProfileEvent> event(aCx);
   event.mAction = aAction;
 
@@ -471,8 +853,28 @@ Console::Method(JSContext* aCx, MethodName aMethodName,
     callData.mMonotonicTimer = performance->Now();
   }
 
+  if (!NS_IsMainThread()) {
+    // Here we are in a worker thread.
+    nsRefPtr<ConsoleCallDataRunnable> runnable =
+      new ConsoleCallDataRunnable(callData);
+    runnable->Dispatch();
+    return;
+  }
+
   // The operation is completed. RAII class has to be disabled.
   raii.Finished();
+
+  if (!mTimer) {
+    mTimer = do_CreateInstance("@mozilla.org/timer;1");
+    mTimer->InitWithCallback(this, CALL_DELAY,
+                             nsITimer::TYPE_REPEATING_SLACK);
+  }
+}
+
+void
+Console::AppendCallData(const ConsoleCallData& aCallData)
+{
+  mQueuedCalls.AppendElement(aCallData);
 
   if (!mTimer) {
     mTimer = do_CreateInstance("@mozilla.org/timer;1");

@@ -145,6 +145,7 @@ LOCAL_INCLUDES += [
     '../src/geolocation',
     '../src/storage',
     '../time',
+    '../workers',
     '../xbl',
     '/content/base/src',
     '/content/html/document/src',
