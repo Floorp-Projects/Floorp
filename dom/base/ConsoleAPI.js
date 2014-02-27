@@ -31,8 +31,11 @@ const MESSAGES_IN_INTERVAL = 1500;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/ConsoleAPIStorage.jsm");
 Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
+
+XPCOMUtils.defineLazyServiceGetter(this, "ConsoleAPIStorage",
+                                   "@mozilla.org/consoleAPI-storage;1",
+                                   "nsIConsoleAPIStorage");
 
 /**
  * The window.console API implementation. One instance is lazily created for
