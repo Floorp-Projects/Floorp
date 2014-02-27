@@ -99,11 +99,17 @@ HwcComposer2D::Init(hwc_display_t dpy, hwc_surface_t sur)
 
 #if ANDROID_VERSION >= 17
     int supported = 0;
-    if (mHwc->query(mHwc, HwcUtils::HWC_COLOR_FILL, &supported) == NO_ERROR) {
-        mColorFill = supported ? true : false;
-    }
-    if (mHwc->query(mHwc, HwcUtils::HWC_FORMAT_RB_SWAP, &supported) == NO_ERROR) {
-        mRBSwapSupport = supported ? true : false;
+
+    if (mHwc->query) {
+        if (mHwc->query(mHwc, HwcUtils::HWC_COLOR_FILL, &supported) == NO_ERROR) {
+            mColorFill = !!supported;
+        }
+        if (mHwc->query(mHwc, HwcUtils::HWC_FORMAT_RB_SWAP, &supported) == NO_ERROR) {
+            mRBSwapSupport = !!supported;
+        }
+    } else {
+        mColorFill = false;
+        mRBSwapSupport = false;
     }
 #else
     char propValue[PROPERTY_VALUE_MAX];

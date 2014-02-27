@@ -70,7 +70,7 @@
 #include "nsFocusManager.h"
 #include "nsAttrValueOrString.h"
 
-#include "mozilla/MutationEvent.h"
+#include "mozilla/InternalMutationEvent.h"
 #include "nsDOMStringMap.h"
 
 #include "nsIEditor.h"
