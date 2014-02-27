@@ -37,7 +37,7 @@
 #include "prenv.h"
 #include "mozilla/Attributes.h"
 #include "nsContentUtils.h"
-#include "gfxPlatform.h"
+#include "gfxPrefs.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/MouseEvents.h"
 #include "GLConsts.h"
@@ -859,8 +859,8 @@ nsBaseWidget::ComputeShouldAccelerate(bool aDefault)
 #endif
 
   // we should use AddBoolPrefVarCache
-  bool disableAcceleration = gfxPlatform::GetPrefLayersAccelerationDisabled();
-  mForceLayersAcceleration = gfxPlatform::GetPrefLayersAccelerationForceEnabled();
+  bool disableAcceleration = gfxPrefs::LayersAccelerationDisabled();
+  mForceLayersAcceleration = gfxPrefs::LayersAccelerationForceEnabled();
 
   const char *acceleratedEnv = PR_GetEnv("MOZ_ACCELERATED");
   accelerateByDefault = accelerateByDefault ||
