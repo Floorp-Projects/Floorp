@@ -156,19 +156,17 @@ class MercurialSetupWizard(object):
 
         self.prompt_external_extension(c, 'bzexport', BZEXPORT_INFO)
 
-        active = c.extensions
-
-        if 'mq' in active:
+        if 'mq' in c.extensions:
             self.prompt_external_extension(c, 'mqext', MQEXT_INFO,
                                            os.path.join(self.ext_dir, 'mqext'))
 
             if 'mqext' in c.extensions:
                 self.update_mercurial_repo(
-                hg,
-                'https://bitbucket.org/sfink/mqext',
-                os.path.join(self.ext_dir, 'mqext'),
-                'default',
-                'Ensuring mqext extension is up to date...')
+                    hg,
+                    'https://bitbucket.org/sfink/mqext',
+                    os.path.join(self.ext_dir, 'mqext'),
+                    'default',
+                    'Ensuring mqext extension is up to date...')
                 if self._prompt_yn('Would you like to configure mqext to '
                     'automatically commit changes as you modify patches'):
                     c.autocommit_mq(True)
@@ -305,4 +303,4 @@ class MercurialSetupWizard(object):
             if choice in ('n', 'no'):
                 return False
 
-            print('Must reply with one of {yes, no, y, no}.')
+            print('Must reply with one of {yes, no, y, n}.')
