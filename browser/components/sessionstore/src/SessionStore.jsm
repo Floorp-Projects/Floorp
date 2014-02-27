@@ -3140,12 +3140,8 @@ let SessionStoreInternal = {
    */
   _prepDataForDeferredRestore: function ssi_prepDataForDeferredRestore(state) {
     // Make sure that we don't modify the global state as provided by
-    // nsSessionStartup.state. Converting the object to a JSON string and
-    // parsing it again is the easiest way to do that, although not the most
-    // efficient one. Deferred sessions that don't have automatic session
-    // restore enabled tend to be a lot smaller though so that this shouldn't
-    // be a big perf hit.
-    state = JSON.parse(JSON.stringify(state));
+    // nsSessionStartup.state.
+    state = Cu.cloneInto(state, {});
 
     let defaultState = { windows: [], selectedWindow: 1 };
 
