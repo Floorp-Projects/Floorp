@@ -1016,7 +1016,7 @@ CodeGeneratorARM::visitPowHalfD(LPowHalfD *ins)
     Label done;
 
     // Masm.pow(-Infinity, 0.5) == Infinity.
-    masm.ma_vimm(NegativeInfinity(), ScratchFloatReg);
+    masm.ma_vimm(NegativeInfinity<double>(), ScratchFloatReg);
     masm.compareDouble(input, ScratchFloatReg);
     masm.ma_vneg(ScratchFloatReg, output, Assembler::Equal);
     masm.ma_b(&done, Assembler::Equal);

@@ -24,11 +24,7 @@ using namespace js;
 using namespace js::jit;
 
 using mozilla::DebugOnly;
-using mozilla::DoubleExponentBias;
-using mozilla::DoubleExponentShift;
-using mozilla::FloatExponentBias;
-using mozilla::FloatExponentShift;
-using mozilla::FloatExponentBits;
+using mozilla::FloatingPoint;
 using JS::GenericNaN;
 
 CodeGeneratorX86::CodeGeneratorX86(MIRGenerator *gen, LIRGraph *graph, MacroAssembler *masm)
@@ -841,8 +837,9 @@ CodeGeneratorX86::visitOutOfLineTruncate(OutOfLineTruncate *ool)
         masm.storeDouble(input, Operand(esp, 0));
 
         static const uint32_t EXPONENT_MASK = 0x7ff00000;
-        static const uint32_t EXPONENT_SHIFT = DoubleExponentShift - 32;
-        static const uint32_t TOO_BIG_EXPONENT = (DoubleExponentBias + 63) << EXPONENT_SHIFT;
+        static const uint32_t EXPONENT_SHIFT = FloatingPoint<double>::ExponentShift - 32;
+        static const uint32_t TOO_BIG_EXPONENT = (FloatingPoint<double>::ExponentBias + 63)
+                                                 << EXPONENT_SHIFT;
 
         // Check exponent to avoid fp exceptions.
         Label failPopDouble;
@@ -928,10 +925,11 @@ CodeGeneratorX86::visitOutOfLineTruncateFloat32(OutOfLineTruncateFloat32 *ool)
         masm.subl(Imm32(sizeof(uint64_t)), esp);
         masm.storeFloat32(input, Operand(esp, 0));
 
-        static const uint32_t EXPONENT_MASK = FloatExponentBits;
-        static const uint32_t EXPONENT_SHIFT = FloatExponentShift;
+        static const uint32_t EXPONENT_MASK = FloatingPoint<float>::ExponentBits;
+        static const uint32_t EXPONENT_SHIFT = FloatingPoint<float>::ExponentShift;
         // Integers are still 64 bits long, so we can still test for an exponent > 63.
-        static const uint32_t TOO_BIG_EXPONENT = (FloatExponentBias + 63) << EXPONENT_SHIFT;
+        static const uint32_t TOO_BIG_EXPONENT = (FloatingPoint<float>::ExponentBias + 63)
+                                                 << EXPONENT_SHIFT;
 
         // Check exponent to avoid fp exceptions.
         Label failPopFloat;
