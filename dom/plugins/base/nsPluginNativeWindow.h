@@ -9,10 +9,10 @@
 #include "nscore.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
+#include "nsISupportsImpl.h"
 #include "nsNPAPIPluginInstance.h"
 #include "npapi.h"
 #include "nsIWidget.h"
-#include "nsTraceRefcnt.h"
 
 /**
  * base class for native plugin window implementations

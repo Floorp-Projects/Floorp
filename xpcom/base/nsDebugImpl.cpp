@@ -30,7 +30,7 @@
 #include <stdlib.h>
 #endif
 
-#include "nsTraceRefcntImpl.h"
+#include "nsTraceRefcnt.h"
 
 #if defined(XP_UNIX)
 #include <signal.h>
@@ -373,7 +373,7 @@ NS_DebugBreak(uint32_t aSeverity, const char *aStr, const char *aExpr,
      RealBreak();
 #endif
 #ifdef DEBUG
-     nsTraceRefcntImpl::WalkTheStack(stderr);
+     nsTraceRefcnt::WalkTheStack(stderr);
 #endif
      Abort(buf.buffer);
      return;
@@ -397,11 +397,11 @@ NS_DebugBreak(uint32_t aSeverity, const char *aStr, const char *aExpr,
       return;
 
    case NS_ASSERT_STACK:
-     nsTraceRefcntImpl::WalkTheStack(stderr);
+     nsTraceRefcnt::WalkTheStack(stderr);
      return;
 
    case NS_ASSERT_STACK_AND_ABORT:
-     nsTraceRefcntImpl::WalkTheStack(stderr);
+     nsTraceRefcnt::WalkTheStack(stderr);
      // Fall through to abort
 
    case NS_ASSERT_ABORT:

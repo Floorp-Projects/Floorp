@@ -13,7 +13,7 @@
 #include "nscore.h"
 #include "nsDebug.h"
 #include "nsError.h"
-#include "nsTraceRefcnt.h"
+#include "nsISupportsImpl.h"
 
 #ifdef DEBUG
 #include "prinit.h"

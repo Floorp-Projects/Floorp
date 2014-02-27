@@ -64,6 +64,7 @@ UNIFIED_SOURCES += [
     'nsFrameState.cpp',
     'nsFrameUtil.cpp',
     'nsGfxScrollFrame.cpp',
+    'nsGridContainerFrame.cpp',
     'nsHTMLCanvasFrame.cpp',
     'nsHTMLReflowMetrics.cpp',
     'nsHTMLReflowState.cpp',

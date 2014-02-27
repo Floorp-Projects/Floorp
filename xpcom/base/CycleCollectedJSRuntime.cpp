@@ -877,8 +877,6 @@ CycleCollectedJSRuntime::ZoneParticipant()
 nsresult
 CycleCollectedJSRuntime::TraverseRoots(nsCycleCollectionNoteRootCallback &aCb)
 {
-  MOZ_ASSERT(!NeedCollect(), "Cannot cycle collect if GC has not run first!");
-
   TraverseNativeRoots(aCb);
 
   NoteWeakMapsTracer trc(mJSRuntime, TraceWeakMapping, aCb);
