@@ -5451,26 +5451,32 @@ class CGMethodCall(CGThing):
         allowedArgCounts = method.allowedArgCounts
 
         argCountCases = []
-        for argCount in allowedArgCounts:
+        for (argCountIdx, argCount) in enumerate(allowedArgCounts):
             possibleSignatures = method.signaturesForArgCount(argCount)
+
+            # Try to optimize away cases when the next argCount in the list
+            # will have the same code as us; if it does, we can fall through to
+            # that case.
+            if argCountIdx+1 < len(allowedArgCounts):
+                nextPossibleSignatures = \
+                    method.signaturesForArgCount(allowedArgCounts[argCountIdx+1])
+            else:
+                nextPossibleSignatures = None
+            if possibleSignatures == nextPossibleSignatures:
+                # Same set of signatures means we better have the same
+                # distinguishing index.  So we can in fact just fall through to
+                # the next case here.
+                assert (len(possibleSignatures) == 1 or
+                        (method.distinguishingIndexForArgCount(argCount) ==
+                         method.distinguishingIndexForArgCount(allowedArgCounts[argCountIdx+1])))
+                argCountCases.append(CGCase(str(argCount), None, True))
+                continue
+
             if len(possibleSignatures) == 1:
                 # easy case!
                 signature = possibleSignatures[0]
-
-                # (possibly) important optimization: if signature[1] has >
-                # argCount arguments and signature[1][argCount] is optional and
-                # there is only one signature for argCount+1, then the
-                # signature for argCount+1 is just ourselves and we can fall
-                # through.
-                if (len(signature[1]) > argCount and
-                    signature[1][argCount].optional and
-                    (argCount+1) in allowedArgCounts and
-                    len(method.signaturesForArgCount(argCount+1)) == 1):
-                    argCountCases.append(
-                        CGCase(str(argCount), None, True))
-                else:
-                    argCountCases.append(
-                        CGCase(str(argCount), getPerSignatureCall(signature)))
+                argCountCases.append(
+                    CGCase(str(argCount), getPerSignatureCall(signature)))
                 continue
 
             distinguishingIndex = method.distinguishingIndexForArgCount(argCount)
