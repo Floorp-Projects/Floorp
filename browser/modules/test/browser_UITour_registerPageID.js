@@ -8,23 +8,68 @@ let gContentAPI;
 let gContentWindow;
 
 Components.utils.import("resource:///modules/UITour.jsm");
+Components.utils.import("resource://gre/modules/UITelemetry.jsm");
 Components.utils.import("resource:///modules/BrowserUITelemetry.jsm");
 
 function test() {
+  UITelemetry._enabled = true;
+
   registerCleanupFunction(function() {
-    UITour.seenPageIDs.clear();
+    Services.prefs.clearUserPref("browser.uitour.seenPageIDs");
+    resetSeenPageIDsLazyGetter();
+    UITelemetry._enabled = undefined;
     BrowserUITelemetry.setBucket(null);
+    delete window.UITelemetry;
     delete window.BrowserUITelemetry;
   });
   UITourTest();
 }
 
+function resetSeenPageIDsLazyGetter() {
+  delete UITour.seenPageIDs;
+  // This should be kept in sync with how UITour.init() sets this.
+  Object.defineProperty(UITour, "seenPageIDs", {
+    get: UITour.restoreSeenPageIDs.bind(UITour),
+    configurable: true,
+  });
+}
+
+function checkExpectedSeenPageIDs(expected) {
+  is(UITour.seenPageIDs.size, expected.length, "Should be " + expected.length + " total seen page IDs");
+
+  for (let id of expected)
+    ok(UITour.seenPageIDs.has(id), "Should have seen '" + id + "' page ID");
+
+  let prefData = Services.prefs.getCharPref("browser.uitour.seenPageIDs");
+  prefData = new Map(JSON.parse(prefData));
+
+  is(prefData.size, expected.length, "Should be " + expected.length + " total seen page IDs persisted");
+
+  for (let id of expected)
+    ok(prefData.has(id), "Should have seen '" + id + "' page ID persisted");
+}
+
 let tests = [
-  function test_seenPageIDs_1(done) {
+  function test_seenPageIDs_restore(done) {
+    info("Setting up seenPageIDs to be restored from pref");
+    let data = JSON.stringify([
+      ["savedID1", { lastSeen: Date.now() }],
+      ["savedID2", { lastSeen: Date.now() }],
+      // 3 weeks ago, should auto expire.
+      ["savedID3", { lastSeen: Date.now() - 3 * 7 * 24 * 60 * 60 * 1000 }],
+    ]);
+    Services.prefs.setCharPref("browser.uitour.seenPageIDs",
+                               data);
+
+    resetSeenPageIDsLazyGetter();
+    checkExpectedSeenPageIDs(["savedID1", "savedID2"]);
+
+    done();
+  },
+  function test_seenPageIDs_set_1(done) {
     gContentAPI.registerPageID("testpage1");
 
-    is(UITour.seenPageIDs.size, 1, "Should be 1 seen page ID");
-    ok(UITour.seenPageIDs.has("testpage1"), "Should have seen 'testpage1' page ID");
+    checkExpectedSeenPageIDs(["savedID1", "savedID2", "testpage1"]);
 
     const PREFIX = BrowserUITelemetry.BUCKET_PREFIX;
     const SEP = BrowserUITelemetry.BUCKET_SEPARATOR;
@@ -42,12 +87,10 @@ let tests = [
     BrowserUITelemetry.setBucket(null);
     done();
   },
-  function test_seenPageIDs_2(done) {
+  function test_seenPageIDs_set_2(done) {
     gContentAPI.registerPageID("testpage2");
 
-    is(UITour.seenPageIDs.size, 2, "Should be 2 seen page IDs");
-    ok(UITour.seenPageIDs.has("testpage1"), "Should have seen 'testpage1' page ID");
-    ok(UITour.seenPageIDs.has("testpage2"), "Should have seen 'testpage2' page ID");
+    checkExpectedSeenPageIDs(["savedID1", "savedID2", "testpage1", "testpage2"]);
 
     const PREFIX = BrowserUITelemetry.BUCKET_PREFIX;
     const SEP = BrowserUITelemetry.BUCKET_SEPARATOR;
