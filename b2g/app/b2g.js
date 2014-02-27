@@ -870,7 +870,7 @@ pref("identity.fxaccounts.auth.uri", "https://api-accounts.dev.lcip.org/v1");
 // Gaia relies heavily on scroll events for now, so lets fire them
 // more often than the default value (100).
 pref("apz.asyncscroll.throttle", 40);
-pref("apz.pan_repaint_interval", 40);
+pref("apz.pan_repaint_interval", 16);
 
 // Maximum fling velocity in px/ms.  Slower devices may need to reduce this
 // to avoid checkerboarding.  Note, float value must be set as a string.
