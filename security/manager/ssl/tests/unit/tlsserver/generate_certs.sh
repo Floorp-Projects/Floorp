@@ -79,7 +79,6 @@ function make_INT {
   NICKNAME="${1}"
   SUBJECT="${2}"
   CA="${3}"
-  EXTRA_ARGS="${4}"
 
   echo -e "$INT_RESPONSES" | $RUN_MOZILLA $CERTUTIL -d $OUTPUT_DIR -S \
                                                     -n $NICKNAME \
@@ -88,8 +87,7 @@ function make_INT {
                                                     -t ",," \
                                                     -m $SERIALNO \
                                                     --extAIA \
-                                                    $COMMON_ARGS \
-                                                    $EXTRA_ARGS
+                                                    $COMMON_ARGS
   SERIALNO=$(($SERIALNO + 1))
 }
 
@@ -99,25 +97,25 @@ function make_EE {
   SUBJECT="${2}"
   CA="${3}"
   SUBJECT_ALT_NAME="${4}"
-  EXTRA_ARGS="${5}"
+  if [ -n "$SUBJECT_ALT_NAME" ]; then
+    SUBJECT_ALT_NAME="-8 $SUBJECT_ALT_NAME"
+  fi
 
   echo -e "$CERT_RESPONSES" | $RUN_MOZILLA $CERTUTIL -d $OUTPUT_DIR -S \
                                                      -n $NICKNAME \
                                                      -s "$SUBJECT" \
-                                                     -8 $SUBJECT_ALT_NAME \
+                                                     $SUBJECT_ALT_NAME \
                                                      -c $CA \
                                                      -t ",," \
                                                      -m $SERIALNO \
                                                      --extAIA \
-                                                     $COMMON_ARGS \
-                                                     $EXTRA_ARGS
+                                                     $COMMON_ARGS
   SERIALNO=$(($SERIALNO + 1))
 }
 
 make_CA testCA 'CN=Test CA' test-ca.der
 make_CA otherCA 'CN=Other test CA' other-test-ca.der
 make_EE localhostAndExampleCom 'CN=Test End-entity' testCA "localhost,*.example.com"
-$RUN_MOZILLA $CERTUTIL -d $OUTPUT_DIR -L -n localhostAndExampleCom -r > $OUTPUT_DIR/default-ee.der
 # A cert that is like localhostAndExampleCom, but with a different serial number for
 # testing the "OCSP response is from the right issuer, but it is for the wrong cert"
 # case.
@@ -125,18 +123,5 @@ make_EE ocspOtherEndEntity 'CN=Other Cert' testCA "localhost,*.example.com"
 
 make_INT testINT 'CN=Test Intermediate' testCA
 make_EE ocspEEWithIntermediate 'CN=Test End-entity with Intermediate' testINT "localhost,*.example.com"
-make_EE expired 'CN=Expired Test End-entity' testCA "expired.example.com" "-w -400"
-make_EE mismatch 'CN=Mismatch Test End-entity' testCA "doesntmatch.example.com"
-make_EE selfsigned 'CN=Self-signed Test End-entity' testCA "selfsigned.example.com" "-x"
-# If the certificate 'CN=Test Intermediate' isn't loaded into memory,
-# this certificate will have an unknown issuer.
-make_INT deletedINT 'CN=Test Intermediate to delete' testCA
-make_EE unknownissuer 'CN=Test End-entity from unknown issuer' deletedINT "unknownissuer.example.com"
-$RUN_MOZILLA $CERTUTIL -d $OUTPUT_DIR -D -n deletedINT
-make_INT expiredINT 'CN=Expired Test Intermediate' testCA "-w -400"
-make_EE expiredissuer 'CN=Test End-entity with expired issuer' expiredINT "expiredissuer.example.com"
-NSS_ALLOW_WEAK_SIGNATURE_ALG=1 make_EE md5signature 'CN=Test End-entity with MD5 signature' testCA "md5signature.example.com" "-Z MD5"
-make_EE inadequatekeyusage 'CN=Test End-entity with inadequate key usage' testCA "inadequatekeyusage.example.com" "--keyUsage crlSigning"
-make_EE untrustedissuer 'CN=Test End-entity with untrusted issuer' otherCA "untrustedissuer.example.com"
 
 cleanup
