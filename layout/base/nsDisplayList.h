@@ -354,18 +354,6 @@ public:
   void SetInTransform(bool aInTransform) { mInTransform = aInTransform; }
 
   /**
-   * Determines if this item is scrolled by content-document display-port
-   * scrolling. aAnimatedGeometryRoot will be set to the animated geometry root
-   * of the item. This may not necessarily correspond to the animated geometry
-   * root of the item's underlying frame.
-   * If specified, aOverrideAnimatedGeometryRoot will be treated as the active
-   * scrolled root.
-   */
-  bool IsFixedItem(nsDisplayItem* aItem,
-                   const nsIFrame** aAnimatedGeometryRoot = nullptr,
-                   const nsIFrame* aOverrideAnimatedGeometryScrolledRoot = nullptr);
-
-  /**
    * @return true if images have been set to decode synchronously.
    */
   bool ShouldSyncDecodeImages() { return mSyncDecodeImages; }
@@ -972,8 +960,7 @@ public:
   { return false; }
   /**
    * @return true if the contents of this item are rendered fixed relative
-   * to the nearest viewport *and* they cover the viewport's scrollport.
-   * Only return true if the contents actually vary when scrolling in the viewport.
+   * to the nearest viewport.
    */
   virtual bool ShouldFixToViewport(nsDisplayListBuilder* aBuilder)
   { return false; }
@@ -2654,7 +2641,7 @@ public:
 class nsDisplayStickyPosition : public nsDisplayOwnLayer {
 public:
   nsDisplayStickyPosition(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                          nsIFrame* aStickyPosFrame, nsDisplayList* aList);
+                          nsDisplayList* aList);
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplayStickyPosition();
 #endif
@@ -2670,9 +2657,6 @@ public:
     return mozilla::LAYER_ACTIVE;
   }
   virtual bool TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem) MOZ_OVERRIDE;
-
-protected:
-  nsIFrame* mStickyPosFrame;
 };
 
 /**
