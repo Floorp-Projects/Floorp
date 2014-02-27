@@ -485,13 +485,6 @@ public:
         // platform-specific override, by default do nothing
     }
 
-    // Break large OMTC tiled thebes layer painting into small paints.
-    static bool UseProgressiveTilePainting();
-
-    // When a critical display-port is set, render the visible area outside of
-    // it into a buffer at a lower precision. Requires tiled buffers.
-    static bool UseLowPrecisionBuffer();
-
     // Retrieve the resolution that a low precision buffer should render at.
     static float GetLowPrecisionResolution();
 
@@ -506,10 +499,7 @@ public:
     static bool GetPrefLayersPreferOpenGL();
     static bool GetPrefLayersPreferD3D9();
     static bool CanUseDirect3D9();
-    static bool GetPrefLayersDump();
-    static bool GetPrefLayersScrollGraph();
     static bool GetPrefLayersEnableTiles();
-    static bool GetPrefLayersDrawFPS();
 
     static bool OffMainThreadCompositionRequired();
 
@@ -602,7 +592,6 @@ public:
      */
     mozilla::layers::DiagnosticTypes GetLayerDiagnosticTypes();
 
-    static bool DrawFrameCounter();
     static nsIntRect FrameCounterBounds() {
       int bits = 16;
       int sizeOfBit = 3;
@@ -732,9 +721,6 @@ private:
     bool mWidgetUpdateFlashing;
     bool mLayersPreferMemoryOverShmem;
     bool mLayersUseDeprecated;
-    bool mDrawLayerBorders;
-    bool mDrawTileBorders;
-    bool mDrawBigImageBorders;
 };
 
 #endif /* GFX_PLATFORM_H */
