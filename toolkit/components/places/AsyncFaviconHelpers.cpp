@@ -210,42 +210,42 @@ FetchIconInfo(nsRefPtr<Database>& aDB,
   NS_ENSURE_STATE(stmt);
   mozStorageStatementScoper scoper(stmt);
 
-  nsresult rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("icon_url"),
-                                _icon.spec);
-  NS_ENSURE_SUCCESS(rv, rv);
+  DebugOnly<nsresult> rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("icon_url"),
+                                           _icon.spec);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   bool hasResult;
   rv = stmt->ExecuteStep(&hasResult);
-  NS_ENSURE_SUCCESS(rv, rv);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
   if (!hasResult) {
     // The icon does not exist yet, bail out.
     return NS_OK;
   }
 
   rv = stmt->GetInt64(0, &_icon.id);
-  NS_ENSURE_SUCCESS(rv, rv);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   // Expiration can be nullptr.
   bool isNull;
   rv = stmt->GetIsNull(1, &isNull);
-  NS_ENSURE_SUCCESS(rv, rv);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
   if (!isNull) {
     rv = stmt->GetInt64(1, reinterpret_cast<int64_t*>(&_icon.expiration));
-    NS_ENSURE_SUCCESS(rv, rv);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 
   // Data can be nullptr.
   rv = stmt->GetIsNull(2, &isNull);
-  NS_ENSURE_SUCCESS(rv, rv);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
   if (!isNull) {
     uint8_t* data;
     uint32_t dataLen = 0;
     rv = stmt->GetBlob(2, &dataLen, &data);
-    NS_ENSURE_SUCCESS(rv, rv);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
     _icon.data.Adopt(TO_CHARBUFFER(data), dataLen);
     // Read mime only if we have data.
     rv = stmt->GetUTF8String(3, _icon.mimeType);
-    NS_ENSURE_SUCCESS(rv, rv);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 
   return NS_OK;
@@ -813,7 +813,7 @@ AsyncGetFaviconURLForPage::Run()
 
   nsAutoCString iconSpec;
   nsresult rv = FetchIconURL(mDB, mPageSpec, iconSpec);
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Now notify our callback of the icon spec we retrieved, even if empty.
   IconData iconData;
@@ -878,7 +878,7 @@ AsyncGetFaviconDataForPage::Run()
 
   nsAutoCString iconSpec;
   nsresult rv = FetchIconURL(mDB, mPageSpec, iconSpec);
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   IconData iconData;
   iconData.spec.Assign(iconSpec);
@@ -890,7 +890,6 @@ AsyncGetFaviconDataForPage::Run()
     rv = FetchIconInfo(mDB, iconData);
     if (NS_FAILED(rv)) {
       iconData.spec.Truncate();
-      MOZ_ASSERT(false, "Fetching favicon information failed unexpectedly.");
     }
   }
 
