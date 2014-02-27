@@ -959,8 +959,8 @@ BasicLayerManager::PaintLayer(gfxContext* aTarget,
       return;
     }
 
-    nsRefPtr<gfxContext> groupTarget = new gfxContext(untransformedDT);
-    groupTarget->Translate(gfxPoint(-bounds.x, -bounds.y));
+    nsRefPtr<gfxContext> groupTarget = new gfxContext(untransformedDT,
+                                                      Point(bounds.x, bounds.y));
 
     PaintSelfOrChildren(paintLayerContext, groupTarget);
 
@@ -976,8 +976,7 @@ BasicLayerManager::PaintLayer(gfxContext* aTarget,
                      (aLayer->GetDebugColorIndex() & 4) ? 1.0 : 0.0,
                      1.0);
 
-      nsRefPtr<gfxContext> temp = new gfxContext(untransformedDT);
-      temp->Translate(gfxPoint(-bounds.x, -bounds.y));
+      nsRefPtr<gfxContext> temp = new gfxContext(untransformedDT, Point(bounds.x, bounds.y));
       temp->SetColor(color);
       temp->Paint();
     }
