@@ -51,11 +51,6 @@ public class Tabs implements GeckoEventListener {
     private AccountManager mAccountManager;
     private OnAccountsUpdateListener mAccountListener = null;
 
-    private static final int LOAD_PROGRESS_START = 20;
-    private static final int LOAD_PROGRESS_LOCATION_CHANGE = 60;
-    private static final int LOAD_PROGRESS_LOADED = 80;
-    private static final int LOAD_PROGRESS_STOP = 100;
-
     public static final int LOADURL_NONE         = 0;
     public static final int LOADURL_NEW_TAB      = 1 << 0;
     public static final int LOADURL_USER_ENTERED = 1 << 1;
@@ -440,7 +435,6 @@ public class Tabs implements GeckoEventListener {
             } else if (event.equals("Tab:Select")) {
                 selectTab(tab.getId());
             } else if (event.equals("Content:LocationChange")) {
-                tab.setLoadProgress(LOAD_PROGRESS_LOCATION_CHANGE);
                 tab.handleLocationChange(message);
             } else if (event.equals("Content:SecurityChange")) {
                 tab.updateIdentityData(message.getJSONObject("identity"));
@@ -454,20 +448,19 @@ public class Tabs implements GeckoEventListener {
                     if ((state & GeckoAppShell.WPL_STATE_START) != 0) {
                         boolean showProgress = message.getBoolean("showProgress");
                         tab.handleDocumentStart(showProgress, message.getString("uri"));
-                        tab.setLoadProgress(LOAD_PROGRESS_START);
                         notifyListeners(tab, Tabs.TabEvents.START);
                     } else if ((state & GeckoAppShell.WPL_STATE_STOP) != 0) {
                         tab.handleDocumentStop(message.getBoolean("success"));
-                        tab.setLoadProgress(LOAD_PROGRESS_STOP);
                         notifyListeners(tab, Tabs.TabEvents.STOP);
                     }
                 }
             } else if (event.equals("Content:LoadError")) {
-                tab.setLoadProgress(LOAD_PROGRESS_LOADED);
+                tab.handleContentLoaded();
                 notifyListeners(tab, Tabs.TabEvents.LOAD_ERROR);
             } else if (event.equals("Content:PageShow")) {
                 notifyListeners(tab, TabEvents.PAGE_SHOW);
             } else if (event.equals("DOMContentLoaded")) {
+                tab.handleContentLoaded();
                 String backgroundColor = message.getString("bgColor");
                 if (backgroundColor != null) {
                     tab.setBackgroundColor(backgroundColor);
@@ -476,7 +469,6 @@ public class Tabs implements GeckoEventListener {
                     tab.setBackgroundColor(Color.WHITE);
                 }
                 tab.setErrorType(message.optString("errorType"));
-                tab.setLoadProgress(LOAD_PROGRESS_LOADED);
                 notifyListeners(tab, Tabs.TabEvents.LOADED);
             } else if (event.equals("DOMTitleChanged")) {
                 tab.updateTitle(message.getString("title"));
