@@ -97,6 +97,7 @@ using mozilla::image::Flip;
 using mozilla::image::ImageOps;
 using mozilla::image::Orientation;
 
+#define GRID_ENABLED_PREF_NAME "layout.css.grid.enabled"
 #define STICKY_ENABLED_PREF_NAME "layout.css.sticky.enabled"
 #define TEXT_ALIGN_TRUE_ENABLED_PREF_NAME "layout.css.text-align-true-value.enabled"
 
@@ -126,6 +127,51 @@ static ContentMap& GetContentMap() {
     sContentMap = new ContentMap();
   }
   return *sContentMap;
+}
+
+// When the pref "layout.css.grid.enabled" changes, this function is invoked
+// to let us update kDisplayKTable, to selectively disable or restore the
+// entries for "grid" and "inline-grid" in that table.
+static void
+GridEnabledPrefChangeCallback(const char* aPrefName, void* aClosure)
+{
+  MOZ_ASSERT(strncmp(aPrefName, GRID_ENABLED_PREF_NAME,
+                     ArrayLength(GRID_ENABLED_PREF_NAME)) == 0,
+             "We only registered this callback for a single pref, so it "
+             "should only be called for that pref");
+
+  static int32_t sIndexOfGridInDisplayTable;
+  static int32_t sIndexOfInlineGridInDisplayTable;
+  static bool sAreGridKeywordIndicesInitialized; // initialized to false
+
+  bool isGridEnabled =
+    Preferences::GetBool(GRID_ENABLED_PREF_NAME, false);
+  if (!sAreGridKeywordIndicesInitialized) {
+    // First run: find the position of "grid" and "inline-grid" in
+    // kDisplayKTable.
+    sIndexOfGridInDisplayTable =
+      nsCSSProps::FindIndexOfKeyword(eCSSKeyword_grid,
+                                     nsCSSProps::kDisplayKTable);
+    MOZ_ASSERT(sIndexOfGridInDisplayTable >= 0,
+               "Couldn't find grid in kDisplayKTable");
+    sIndexOfInlineGridInDisplayTable =
+      nsCSSProps::FindIndexOfKeyword(eCSSKeyword_inline_grid,
+                                     nsCSSProps::kDisplayKTable);
+    MOZ_ASSERT(sIndexOfInlineGridInDisplayTable >= 0,
+               "Couldn't find inline-grid in kDisplayKTable");
+    sAreGridKeywordIndicesInitialized = true;
+  }
+
+  // OK -- now, stomp on or restore the "grid" entries in kDisplayKTable,
+  // depending on whether the grid pref is enabled vs. disabled.
+  if (sIndexOfGridInDisplayTable >= 0) {
+    nsCSSProps::kDisplayKTable[sIndexOfGridInDisplayTable] =
+      isGridEnabled ? eCSSKeyword_grid : eCSSKeyword_UNKNOWN;
+  }
+  if (sIndexOfInlineGridInDisplayTable >= 0) {
+    nsCSSProps::kDisplayKTable[sIndexOfInlineGridInDisplayTable] =
+      isGridEnabled ? eCSSKeyword_inline_grid : eCSSKeyword_UNKNOWN;
+  }
 }
 
 // When the pref "layout.css.sticky.enabled" changes, this function is invoked
@@ -5323,6 +5369,9 @@ nsLayoutUtils::Initialize()
   Preferences::AddBoolVarCache(&sCSSVariablesEnabled,
                                "layout.css.variables.enabled");
 
+  Preferences::RegisterCallback(GridEnabledPrefChangeCallback,
+                                GRID_ENABLED_PREF_NAME);
+  GridEnabledPrefChangeCallback(GRID_ENABLED_PREF_NAME, nullptr);
   Preferences::RegisterCallback(StickyEnabledPrefChangeCallback,
                                 STICKY_ENABLED_PREF_NAME);
   StickyEnabledPrefChangeCallback(STICKY_ENABLED_PREF_NAME, nullptr);
@@ -5343,6 +5392,8 @@ nsLayoutUtils::Shutdown()
     sContentMap = nullptr;
   }
 
+  Preferences::UnregisterCallback(GridEnabledPrefChangeCallback,
+                                  GRID_ENABLED_PREF_NAME);
   Preferences::UnregisterCallback(StickyEnabledPrefChangeCallback,
                                   STICKY_ENABLED_PREF_NAME);
 

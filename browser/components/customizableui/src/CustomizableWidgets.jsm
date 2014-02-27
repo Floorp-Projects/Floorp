@@ -678,8 +678,8 @@ const CustomizableWidgets = [{
         let elem = aDocument.createElementNS(kNSXUL, "toolbarbutton");
         elem.setAttribute("label", item.label);
         elem.setAttribute("type", "checkbox");
-        elem.section = aSection == "detectors" ? "detectors" : "charsets";
-        elem.value = item.id;
+        elem.section = aSection;
+        elem.value = item.value;
         elem.setAttribute("class", "subviewbutton");
         containerElem.appendChild(elem);
       }
@@ -687,10 +687,7 @@ const CustomizableWidgets = [{
     updateCurrentCharset: function(aDocument) {
       let content = aDocument.defaultView.content;
       let currentCharset = content && content.document && content.document.characterSet;
-      if (currentCharset) {
-        currentCharset = aDocument.defaultView.FoldCharset(currentCharset);
-      }
-      currentCharset = currentCharset ? ("charset." + currentCharset) : "";
+      currentCharset = CharsetMenu.foldCharset(currentCharset);
 
       let pinnedContainer = aDocument.getElementById("PanelUI-characterEncodingView-pinned");
       let charsetContainer = aDocument.getElementById("PanelUI-characterEncodingView-charsets");
@@ -700,13 +697,11 @@ const CustomizableWidgets = [{
     },
     updateCurrentDetector: function(aDocument) {
       let detectorContainer = aDocument.getElementById("PanelUI-characterEncodingView-autodetect");
-      let detectorEnum = CharsetManager.GetCharsetDetectorList();
       let currentDetector;
       try {
         currentDetector = Services.prefs.getComplexValue(
           "intl.charset.detector", Ci.nsIPrefLocalizedString).data;
       } catch (e) {}
-      currentDetector = "chardet." + (currentDetector || "off");
 
       this._updateElements(detectorContainer.childNodes, currentDetector);
     },
@@ -762,13 +757,8 @@ const CustomizableWidgets = [{
       // The behavior as implemented here is directly based off of the
       // `MultiplexHandler()` method in browser.js.
       if (section != "detectors") {
-        let charset = value.substring(value.indexOf('charset.') + 'charset.'.length);
-        window.BrowserSetForcedCharacterSet(charset);
+        window.BrowserSetForcedCharacterSet(value);
       } else {
-        value = value.replace(/^chardet\./, "");
-        if (value == "off") {
-          value = "";
-        }
         // Set the detector pref.
         try {
           let str = Cc["@mozilla.org/supports-string;1"]

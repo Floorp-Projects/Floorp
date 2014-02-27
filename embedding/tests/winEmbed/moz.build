@@ -17,3 +17,17 @@ XPI_NAME = 'winembed'
 DEFINES['XPCOM_GLUE'] = True
 
 RESFILE = 'winEmbed.res'
+
+if CONFIG['GNU_CC']:
+    # Get rid of console window
+    LDFLAGS += ['-mwindows']
+else:
+    # Control the default heap size.
+    # This is the heap returned by GetProcessHeap().
+    # As we use the CRT heap, the default size is too large and wastes VM.
+    #
+    # The default heap size is 1MB on Win32.
+    # The heap will grow if need be.
+    #
+    # Set it to 256k.  See bug 127069.
+    LDFLAGS += ['/HEAP:0x40000']

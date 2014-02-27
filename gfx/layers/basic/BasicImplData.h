@@ -8,7 +8,7 @@
 #include "Layers.h"                     // for Layer (ptr only), etc
 #include "gfxContext.h"                 // for gfxContext, etc
 #include "nsDebug.h"                    // for NS_ASSERTION
-#include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc
+#include "nsISupportsImpl.h"            // for MOZ_COUNT_CTOR, etc
 #include "mozilla/gfx/Types.h"
 
 class gfxASurface;

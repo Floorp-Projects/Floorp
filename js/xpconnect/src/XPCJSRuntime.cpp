@@ -3078,9 +3078,9 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
 #elif defined(XP_WIN)
     // 1MB is the default stack size on Windows, so the default 1MB stack quota
     // we'd get on win32 is slightly too large. Use 900k instead. And since
-    // windows stack frames are 3.4k each, let's use a buffer of 40k.
+    // windows stack frames are 3.4k each, let's use a buffer of 50k.
     const size_t kStackQuota = 900 * 1024;
-    const size_t kTrustedScriptBuffer = 40 * 1024;
+    const size_t kTrustedScriptBuffer = 50 * 1024;
     // The following two configurations are linux-only. Given the numbers above,
     // we use 50k and 100k trusted buffers on 32-bit and 64-bit respectively.
 #elif defined(DEBUG)

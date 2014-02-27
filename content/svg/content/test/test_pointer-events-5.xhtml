@@ -1,0 +1,66 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=500174
+-->
+<head>
+  <title>Test Pointer Events</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="run()">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+function run()
+{
+  var svgDoc = document.getElementById('svg');
+  var div = document.getElementById("div");
+  // Get the coords of the origin of the SVG canvas:
+  var originX = div.offsetLeft;
+  var originY = div.offsetTop;
+  var circle = document.getElementById('circle');
+  var path = document.getElementById('path');
+
+  var elementFromPoint = document.elementFromPoint(originX + 55, originY + 55);
+  is(elementFromPoint, circle, 'Over circle stroke with pointer-events="all"');
+
+  elementFromPoint = document.elementFromPoint(originX + 205, originY + 55);
+  is(elementFromPoint, circle, 'Over foreignObject, outside clip path');
+
+  elementFromPoint = document.elementFromPoint(originX + 225, originY + 75);
+  // XXX disabled. See See https://bugzilla.mozilla.org/show_bug.cgi?id=580983#c116
+  //is(elementFromPoint, path, 'Over foreignObject, inside clip path');
+
+  SimpleTest.finish();
+}
+
+]]>
+</script>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=500174">Mozilla Bug 500174</a>
+<p id="display"></p>
+<div id="content">
+
+  <div width="100%" height="1" id="div">
+  </div>
+  <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" id="svg">
+    <defs>
+      <clipPath id="clip">
+        <rect x="20" y="20" width="30" height="30"/>
+      </clipPath>
+    </defs>
+    <rect id="bad" width="100%" height="100%" fill="blue"/>
+    <circle id="circle" cx="50%" cy="50%" r="500" stroke-width="500" fill="none" pointer-events="all"/>
+    <foreignObject id="fo" x="200" y="50" width="50" height="50" clip-path="url(#clip)">
+      <svg>
+        <path id="path" d="M0,0 H50 V50 H0 Z" fill="green"/>
+      </svg>
+    </foreignObject>
+  </svg>
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

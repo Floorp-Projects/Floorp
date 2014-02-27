@@ -55,6 +55,13 @@ static MOZ_CONSTEXPR_VAR Register CallTempReg3 = ecx;
 static MOZ_CONSTEXPR_VAR Register CallTempReg4 = esi;
 static MOZ_CONSTEXPR_VAR Register CallTempReg5 = edx;
 
+// The convention used by the ForkJoinGetSlice stub. None of these can be eax
+// or edx, which the stub also needs for cmpxchg and div, respectively.
+static MOZ_CONSTEXPR_VAR Register ForkJoinGetSliceReg_cx = edi;
+static MOZ_CONSTEXPR_VAR Register ForkJoinGetSliceReg_temp0 = ebx;
+static MOZ_CONSTEXPR_VAR Register ForkJoinGetSliceReg_temp1 = ecx;
+static MOZ_CONSTEXPR_VAR Register ForkJoinGetSliceReg_output = esi;
+
 // We have no arg regs, so our NonArgRegs are just our CallTempReg*
 static MOZ_CONSTEXPR_VAR Register CallTempNonArgRegs[] = { edi, eax, ebx, ecx, esi, edx };
 static const uint32_t NumCallTempNonArgRegs =

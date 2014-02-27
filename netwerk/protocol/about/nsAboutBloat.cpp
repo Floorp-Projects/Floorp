@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsTraceRefcntImpl.h"
+#include "nsTraceRefcnt.h"
 
 // if NS_BUILD_REFCNT_LOGGING isn't defined, don't try to build
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -29,7 +29,7 @@ nsAboutBloat::NewChannel(nsIURI *aURI, nsIChannel **result)
     rv = aURI->GetPath(path);
     if (NS_FAILED(rv)) return rv;
 
-    nsTraceRefcntImpl::StatisticsType statType = nsTraceRefcntImpl::ALL_STATS;
+    nsTraceRefcnt::StatisticsType statType = nsTraceRefcnt::ALL_STATS;
     bool clear = false;
     bool leaks = false;
 
@@ -38,7 +38,7 @@ nsAboutBloat::NewChannel(nsIURI *aURI, nsIChannel **result)
         nsAutoCString param;
         (void)path.Right(param, path.Length() - (pos+1));
         if (param.EqualsLiteral("new"))
-            statType = nsTraceRefcntImpl::NEW_STATS;
+            statType = nsTraceRefcnt::NEW_STATS;
         else if (param.EqualsLiteral("clear"))
             clear = true;
         else if (param.EqualsLiteral("leaks"))
@@ -47,7 +47,7 @@ nsAboutBloat::NewChannel(nsIURI *aURI, nsIChannel **result)
 
     nsCOMPtr<nsIInputStream> inStr;
     if (clear) {
-        nsTraceRefcntImpl::ResetStatistics();
+        nsTraceRefcnt::ResetStatistics();
 
         rv = NS_NewCStringInputStream(getter_AddRefs(inStr),
             NS_LITERAL_CSTRING("Bloat statistics cleared."));
@@ -83,7 +83,7 @@ nsAboutBloat::NewChannel(nsIURI *aURI, nsIChannel **result)
         }
 
         nsAutoCString dumpFileName;
-        if (statType == nsTraceRefcntImpl::ALL_STATS)
+        if (statType == nsTraceRefcnt::ALL_STATS)
             dumpFileName.AssignLiteral("all-");
         else
             dumpFileName.AssignLiteral("new-");
@@ -99,7 +99,7 @@ nsAboutBloat::NewChannel(nsIURI *aURI, nsIChannel **result)
         rv = file->OpenANSIFileDesc("w", &out);
         if (NS_FAILED(rv)) return rv;
 
-        rv = nsTraceRefcntImpl::DumpStatistics(statType, out);
+        rv = nsTraceRefcnt::DumpStatistics(statType, out);
         ::fclose(out);
         if (NS_FAILED(rv)) return rv;
 

@@ -20,10 +20,10 @@
 #include "nsAString.h"
 #include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsDebug.h"                    // for NS_ASSERTION
+#include "nsISupportsImpl.h"            // for MOZ_COUNT_CTOR, etc
 #include "nsPoint.h"                    // for nsIntPoint
 #include "nsRect.h"                     // for nsIntRect
 #include "nsString.h"                   // for nsAutoCString
-#include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc
 
 using namespace mozilla::gfx;
 

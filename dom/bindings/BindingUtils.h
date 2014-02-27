@@ -27,7 +27,7 @@
 #include "nsCycleCollector.h"
 #include "nsIXPConnect.h"
 #include "MainThreadUtils.h"
-#include "nsTraceRefcnt.h"
+#include "nsISupportsImpl.h"
 #include "qsObjectHelper.h"
 #include "xpcpublic.h"
 #include "nsIVariant.h"

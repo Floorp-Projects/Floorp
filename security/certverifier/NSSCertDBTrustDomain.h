@@ -47,8 +47,14 @@ class NSSCertDBTrustDomain : public insanity::pkix::TrustDomain
 {
 
 public:
-  NSSCertDBTrustDomain(SECTrustType certDBTrustType,
-                       bool ocspDownloadEnabled, bool ocspStrict,
+  enum OCSPFetching {
+    NeverFetchOCSP = 0,
+    FetchOCSPForDVSoftFail = 1,
+    FetchOCSPForDVHardFail = 2,
+    FetchOCSPForEV = 3,
+    LocalOnlyOCSPForEV = 4,
+  };
+  NSSCertDBTrustDomain(SECTrustType certDBTrustType, OCSPFetching ocspFetching,
                        void* pinArg);
 
   virtual SECStatus FindPotentialIssuers(
@@ -57,6 +63,7 @@ public:
                 /*out*/ insanity::pkix::ScopedCERTCertList& results);
 
   virtual SECStatus GetCertTrust(insanity::pkix::EndEntityOrCA endEntityOrCA,
+                                 SECOidTag policy,
                                  const CERTCertificate* candidateCert,
                          /*out*/ TrustLevel* trustLevel);
 
@@ -71,8 +78,7 @@ public:
 
 private:
   const SECTrustType mCertDBTrustType;
-  const bool mOCSPDownloadEnabled;
-  const bool mOCSPStrict;
+  const OCSPFetching mOCSPFetching;
   void* mPinArg; // non-owning!
 };
 

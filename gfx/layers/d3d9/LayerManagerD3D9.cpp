@@ -15,7 +15,7 @@
 #include "nsIGfxInfo.h"
 #include "nsServiceManagerUtils.h"
 #include "gfxFailure.h"
-#include "mozilla/Preferences.h"
+#include "gfxPrefs.h"
 
 #include "gfxCrashReporterUtils.h"
 
@@ -41,7 +41,7 @@ LayerManagerD3D9::Initialize(bool force)
   ScopedGfxFeatureReporter reporter("D3D9 Layers", force);
 
   /* XXX: this preference and blacklist code should move out of the layer manager */
-  bool forceAccelerate = gfxPlatform::GetPrefLayersAccelerationForceEnabled();
+  bool forceAccelerate = gfxPrefs::LayersAccelerationForceEnabled();
 
   nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
   if (gfxInfo) {

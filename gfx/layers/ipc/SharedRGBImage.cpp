@@ -19,7 +19,6 @@
 #include "nsISupportsImpl.h"            // for Image::AddRef, etc
 #include "nsRect.h"                     // for nsIntRect
 #include "nsSize.h"                     // for nsIntSize
-#include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc
 
 // Just big enough for a 1080p RGBA32 frame
 #define MAX_FRAME_SIZE (16 * 1024 * 1024)
