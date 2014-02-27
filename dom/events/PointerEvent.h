@@ -7,7 +7,7 @@
 #ifndef PointerEvent_h__
 #define PointerEvent_h__
 
-#include "nsDOMMouseEvent.h"
+#include "mozilla/dom/MouseEvent.h"
 #include "mozilla/dom/PointerEventBinding.h"
 
 class nsPresContext;
@@ -15,7 +15,7 @@ class nsPresContext;
 namespace mozilla {
 namespace dom {
 
-class PointerEvent : public nsDOMMouseEvent
+class PointerEvent : public MouseEvent
 {
 public:
   PointerEvent(EventTarget* aOwner,

@@ -15,7 +15,8 @@ namespace dom {
 PointerEvent::PointerEvent(EventTarget* aOwner,
                            nsPresContext* aPresContext,
                            WidgetPointerEvent* aEvent)
-  : nsDOMMouseEvent(aOwner, aPresContext, aEvent ? aEvent : new WidgetPointerEvent(false, 0, nullptr))
+  : MouseEvent(aOwner, aPresContext,
+               aEvent ? aEvent : new WidgetPointerEvent(false, 0, nullptr))
 {
   NS_ASSERTION(mEvent->eventStructType == NS_POINTER_EVENT, "event type mismatch NS_POINTER_EVENT");
 

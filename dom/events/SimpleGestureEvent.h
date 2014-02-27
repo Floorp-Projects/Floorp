@@ -6,16 +6,16 @@
 #define mozilla_dom_SimpleGestureEvent_h_
 
 #include "nsIDOMSimpleGestureEvent.h"
-#include "nsDOMMouseEvent.h"
-#include "mozilla/EventForwards.h"
+#include "mozilla/dom/MouseEvent.h"
 #include "mozilla/dom/SimpleGestureEventBinding.h"
+#include "mozilla/EventForwards.h"
 
 class nsPresContext;
 
 namespace mozilla {
 namespace dom {
 
-class SimpleGestureEvent : public nsDOMMouseEvent,
+class SimpleGestureEvent : public MouseEvent,
                            public nsIDOMSimpleGestureEvent
 {
 public:
@@ -28,7 +28,7 @@ public:
   NS_DECL_NSIDOMSIMPLEGESTUREEVENT
 
   // Forward to base class
-  NS_FORWARD_TO_NSDOMMOUSEEVENT
+  NS_FORWARD_TO_MOUSEEVENT
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
