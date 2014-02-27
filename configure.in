@@ -251,10 +251,13 @@ if test -n "$gonkdir" ; then
     19)
         GONK_INCLUDES="-I$gonkdir/frameworks/native/include -I$gonkdir/frameworks/av/include -I$gonkdir/frameworks/av/include/media -I$gonkdir/frameworks/av/include/camera -I$gonkdir/frameworks/native/include/media/openmax -I$gonkdir/frameworks/av/media/libstagefright/include"
         MOZ_B2G_CAMERA=1
-        MOZ_OMX_DECODER=1
         MOZ_B2G_BT=1
         MOZ_B2G_BT_BLUEDROID=1
         MOZ_NFC=1
+        MOZ_RTSP=1
+        MOZ_OMX_DECODER=1
+        MOZ_OMX_ENCODER=1
+        AC_DEFINE(MOZ_OMX_ENCODER)
 
         ;;
     *)
