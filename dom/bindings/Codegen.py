@@ -11775,7 +11775,7 @@ struct PrototypeTraits;
 
         curr = CGWrapper(curr, post='\n')
 
-        headers.update(["nsDebug.h", "mozilla/dom/UnionTypes.h", "XPCWrapper.h"])
+        headers.update(["nsDebug.h", "mozilla/dom/UnionTypes.h"])
         curr = CGHeaders([], [], [], [], headers, [], 'UnionConversions', curr)
 
         # Add include guards.
