@@ -21,12 +21,12 @@ public final class Clipboard {
     private Clipboard() {
     }
 
-    public static void init(Context c) {
+    public static void init(final Context c) {
         if (mContext != null) {
             Log.w(LOGTAG, "Clipboard.init() called twice!");
             return;
         }
-        mContext = c;
+        mContext = c.getApplicationContext();
     }
 
     @WrapElementForJNI(stubName = "GetClipboardTextWrapper")
