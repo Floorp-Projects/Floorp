@@ -10,7 +10,7 @@
         "@mozilla.org/telephony/gonktelephonyprovider;1"
 %}
 
-[scriptable, uuid(2ff3dcbb-ae63-443e-9c5d-76811f2f9b42)]
+[scriptable, uuid(5fdd720f-fbe8-46f5-b671-3bf3360013dd)]
 interface nsIGonkTelephonyProvider : nsITelephonyProvider
 {
   void notifyCallDisconnected(in unsigned long clientId, in jsval call);
@@ -20,7 +20,8 @@ interface nsIGonkTelephonyProvider : nsITelephonyProvider
 
   void notifyCallRing();
 
-  void notifyCallStateChanged(in unsigned long clientId, in jsval call);
+  void notifyCallStateChanged(in unsigned long clientId, in jsval call,
+                              [optional] in boolean skipStateConversion);
 
   void notifyCdmaCallWaiting(in unsigned long clientId, in AString number);
 
@@ -28,7 +29,4 @@ interface nsIGonkTelephonyProvider : nsITelephonyProvider
                                   in AString notification);
 
   void notifyConferenceCallStateChanged(in short state);
-
-  void notifyConferenceError(in AString errorName,
-                             in AString errorMsg);
 };

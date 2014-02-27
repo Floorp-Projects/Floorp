@@ -143,7 +143,6 @@ ARTPAssembler::AssemblyStatus AAMRAssembler::addPacket(
     }
 
     unsigned payloadHeader = buffer->data()[0];
-    unsigned CMR = payloadHeader >> 4;
     CHECK_EQ(payloadHeader & 0x0f, 0u);  // RR
 
     Vector<uint8_t> tableOfContents;

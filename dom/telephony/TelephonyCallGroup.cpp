@@ -150,6 +150,10 @@ bool
 TelephonyCallGroup::CanConference(const TelephonyCall& aCall,
                                   TelephonyCall* aSecondCall)
 {
+  if (!aCall.Mergeable()) {
+    return false;
+  }
+
   if (!aSecondCall) {
     MOZ_ASSERT(!mCalls.IsEmpty());
 
@@ -162,6 +166,10 @@ TelephonyCallGroup::CanConference(const TelephonyCall& aCall,
   MOZ_ASSERT(mCallState == nsITelephonyProvider::CALL_STATE_UNKNOWN);
 
   if (aCall.ServiceId() != aSecondCall->ServiceId()) {
+    return false;
+  }
+
+  if (!aSecondCall->Mergeable()) {
     return false;
   }
 

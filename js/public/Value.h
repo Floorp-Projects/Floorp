@@ -859,7 +859,7 @@ static inline JS_VALUE_CONSTEXPR JS::Value UndefinedValue();
 static MOZ_ALWAYS_INLINE double
 GenericNaN()
 {
-  return mozilla::SpecificNaN(0, 0x8000000000000ULL);
+  return mozilla::SpecificNaN<double>(0, 0x8000000000000ULL);
 }
 
 static inline double
@@ -979,7 +979,7 @@ class Value
 
     bool setNumber(double d) {
         int32_t i;
-        if (mozilla::DoubleIsInt32(d, &i)) {
+        if (mozilla::NumberIsInt32(d, &i)) {
             setInt32(i);
             return true;
         }
@@ -1632,7 +1632,7 @@ class HeapBase<JS::Value> : public ValueOperations<JS::Heap<JS::Value> >
 
     bool setNumber(double d) {
         int32_t i;
-        if (mozilla::DoubleIsInt32(d, &i)) {
+        if (mozilla::NumberIsInt32(d, &i)) {
             setInt32(i);
             return true;
         }

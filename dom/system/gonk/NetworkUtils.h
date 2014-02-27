@@ -38,7 +38,7 @@ public:
     mHostnames = aOther.mHostnames;
     mId = aOther.mId;
     mIfname = aOther.mIfname;
-    mNetmask = aOther.mNetmask;
+    mPrefixLength = aOther.mPrefixLength;
     mOldIfname = aOther.mOldIfname;
     mMode = aOther.mMode;
     mReport = aOther.mReport;
@@ -115,7 +115,7 @@ public:
     COPY_SEQUENCE_FIELD(mHostnames, nsString)
     COPY_OPT_STRING_FIELD(mIfname, EmptyString())
     COPY_OPT_STRING_FIELD(mIp, EmptyString())
-    COPY_OPT_STRING_FIELD(mNetmask, EmptyString())
+    COPY_OPT_FIELD(mPrefixLength, 0)
     COPY_OPT_STRING_FIELD(mOldIfname, EmptyString())
     COPY_OPT_STRING_FIELD(mMode, EmptyString())
     COPY_OPT_FIELD(mReport, false)
@@ -166,7 +166,7 @@ public:
   nsTArray<nsString> mHostnames;
   nsString mIfname;
   nsString mIp;
-  nsString mNetmask;
+  uint32_t mPrefixLength;
   nsString mOldIfname;
   nsString mMode;
   bool mReport;

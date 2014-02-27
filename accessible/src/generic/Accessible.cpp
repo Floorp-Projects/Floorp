@@ -1680,7 +1680,7 @@ Accessible::MinValue() const
 double
 Accessible::Step() const
 {
-  return UnspecifiedNaN(); // no mimimum increment (step) in ARIA.
+  return UnspecifiedNaN<double>(); // no mimimum increment (step) in ARIA.
 }
 
 double
@@ -3084,15 +3084,15 @@ double
 Accessible::AttrNumericValue(nsIAtom* aAttr) const
 {
   if (!mRoleMapEntry || mRoleMapEntry->valueRule == eNoValue)
-    return UnspecifiedNaN();
+    return UnspecifiedNaN<double>();
 
   nsAutoString attrValue;
   if (!mContent->GetAttr(kNameSpaceID_None, aAttr, attrValue))
-    return UnspecifiedNaN();
+    return UnspecifiedNaN<double>();
 
   nsresult error = NS_OK;
   double value = attrValue.ToDouble(&error);
-  return NS_FAILED(error) ? UnspecifiedNaN() : value;
+  return NS_FAILED(error) ? UnspecifiedNaN<double>() : value;
 }
 
 uint32_t

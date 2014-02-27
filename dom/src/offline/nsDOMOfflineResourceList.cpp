@@ -6,7 +6,7 @@
 #include "nsDOMOfflineResourceList.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsError.h"
-#include "nsDOMLists.h"
+#include "mozilla/dom/DOMStringList.h"
 #include "nsIPrefetchService.h"
 #include "nsCPrefetchService.h"
 #include "nsNetUtil.h"
@@ -181,32 +181,35 @@ nsDOMOfflineResourceList::Disconnect()
 // nsDOMOfflineResourceList::nsIDOMOfflineResourceList
 //
 
-NS_IMETHODIMP
-nsDOMOfflineResourceList::GetMozItems(nsIDOMDOMStringList **aItems)
+already_AddRefed<DOMStringList>
+nsDOMOfflineResourceList::GetMozItems(ErrorResult& aRv)
 {
-  if (IS_CHILD_PROCESS()) 
-    return NS_ERROR_NOT_IMPLEMENTED;
+  if (IS_CHILD_PROCESS()) {
+    aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+    return nullptr;
+  }
 
-  *aItems = nullptr;
-
-  nsRefPtr<nsDOMStringList> items = new nsDOMStringList();
+  nsRefPtr<DOMStringList> items = new DOMStringList();
 
   // If we are not associated with an application cache, return an
   // empty list.
   nsCOMPtr<nsIApplicationCache> appCache = GetDocumentAppCache();
   if (!appCache) {
-    NS_ADDREF(*aItems = items);
-    return NS_OK;
+    return items.forget();
   }
 
-  nsresult rv = Init();
-  NS_ENSURE_SUCCESS(rv, rv);
+  aRv = Init();
+  if (aRv.Failed()) {
+    return nullptr;
+  }
 
   uint32_t length;
   char **keys;
-  rv = appCache->GatherEntries(nsIApplicationCache::ITEM_DYNAMIC,
-                               &length, &keys);
-  NS_ENSURE_SUCCESS(rv, rv);
+  aRv = appCache->GatherEntries(nsIApplicationCache::ITEM_DYNAMIC,
+                                &length, &keys);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
 
   for (uint32_t i = 0; i < length; i++) {
     items->Add(NS_ConvertUTF8toUTF16(keys[i]));
@@ -214,8 +217,15 @@ nsDOMOfflineResourceList::GetMozItems(nsIDOMDOMStringList **aItems)
 
   NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(length, keys);
 
-  NS_ADDREF(*aItems = items);
-  return NS_OK;
+  return items.forget();
+}
+
+NS_IMETHODIMP
+nsDOMOfflineResourceList::GetMozItems(nsISupports** aItems)
+{
+  ErrorResult rv;
+  *aItems = GetMozItems(rv).get();
+  return rv.ErrorCode();
 }
 
 NS_IMETHODIMP
