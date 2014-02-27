@@ -159,9 +159,9 @@ FoldBinaryNumeric(ExclusiveContext *cx, JSOp op, ParseNode *pn1, ParseNode *pn2,
             if (d == 0 || IsNaN(d))
                 d = GenericNaN();
             else if (IsNegative(d) != IsNegative(d2))
-                d = NegativeInfinity();
+                d = NegativeInfinity<double>();
             else
-                d = PositiveInfinity();
+                d = PositiveInfinity<double>();
         } else {
             d /= d2;
         }

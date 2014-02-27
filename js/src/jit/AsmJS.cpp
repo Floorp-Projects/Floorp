@@ -3173,7 +3173,7 @@ CheckGlobalDotImport(ModuleCompiler &m, PropertyName *varName, ParseNode *initNo
         if (field == m.cx()->names().NaN)
             return m.addGlobalConstant(varName, GenericNaN(), field);
         if (field == m.cx()->names().Infinity)
-            return m.addGlobalConstant(varName, PositiveInfinity(), field);
+            return m.addGlobalConstant(varName, PositiveInfinity<double>(), field);
         return m.failName(initNode, "'%s' is not a standard global constant", field);
     }
 

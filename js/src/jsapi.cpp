@@ -421,7 +421,7 @@ JS_ValueToSource(JSContext *cx, HandleValue value)
 JS_PUBLIC_API(bool)
 JS_DoubleIsInt32(double d, int32_t *ip)
 {
-    return mozilla::DoubleIsInt32(d, ip);
+    return mozilla::NumberIsInt32(d, ip);
 }
 
 JS_PUBLIC_API(int32_t)

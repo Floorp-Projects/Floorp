@@ -852,7 +852,7 @@ JS_NumberValue(double d)
 {
     int32_t i;
     d = JS::CanonicalizeNaN(d);
-    if (mozilla::DoubleIsInt32(d, &i))
+    if (mozilla::NumberIsInt32(d, &i))
         return INT_TO_JSVAL(i);
     return DOUBLE_TO_JSVAL(d);
 }

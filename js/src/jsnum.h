@@ -200,7 +200,7 @@ ValueFitsInInt32(const Value &v, int32_t *pi)
         *pi = v.toInt32();
         return true;
     }
-    return v.isDouble() && mozilla::DoubleIsInt32(v.toDouble(), pi);
+    return v.isDouble() && mozilla::NumberIsInt32(v.toDouble(), pi);
 }
 
 /*
@@ -221,7 +221,7 @@ IsDefinitelyIndex(const Value &v, uint32_t *indexp)
     }
 
     int32_t i;
-    if (v.isDouble() && mozilla::DoubleIsInt32(v.toDouble(), &i) && i >= 0) {
+    if (v.isDouble() && mozilla::NumberIsInt32(v.toDouble(), &i) && i >= 0) {
         *indexp = uint32_t(i);
         return true;
     }
