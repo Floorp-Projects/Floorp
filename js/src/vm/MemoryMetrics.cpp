@@ -56,15 +56,7 @@ InefficientNonFlatteningStringHashPolicy::hash(const Lookup &l)
         chars = ownedChars;
     }
 
-    // We include the result of isShort() in the hash.  This is because it is
-    // possible for a particular string (i.e. unique char sequence) to have one
-    // or more copies as short strings and one or more copies as non-short
-    // strings, and treating them separately for the purposes of notable string
-    // detection makes things simpler.  In practice, although such collisions
-    // do happen, they are sufficiently rare that they are unlikely to have a
-    // significant effect on which strings are considered notable.
-    return mozilla::AddToHash(mozilla::HashString(chars, l->length()),
-                              l->isShort());
+    return mozilla::HashString(chars, l->length());
 }
 
 /* static */ bool
@@ -72,10 +64,6 @@ InefficientNonFlatteningStringHashPolicy::match(const JSString *const &k, const 
 {
     // We can't use js::EqualStrings, because that flattens our strings.
     if (k->length() != l->length())
-        return false;
-
-    // Just like in hash(), we must consider isShort() for the two strings.
-    if (k->isShort() != l->isShort())
         return false;
 
     const jschar *c1;
@@ -255,6 +243,9 @@ enum Granularity {
     CoarseGrained   // Corresponds to AddSizeOfTab()
 };
 
+// The various kinds of hashing are expensive, and the results are unused when
+// doing coarse-grained measurements. Skipping them more than doubles the
+// profile speed for complex pages such as gmail.com.
 template <Granularity granularity>
 static void
 StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKind,
@@ -289,28 +280,18 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
       case JSTRACE_STRING: {
         JSString *str = static_cast<JSString *>(thing);
 
-        bool isShort = str->isShort();
         size_t strCharsSize = str->sizeOfExcludingThis(rtStats->mallocSizeOf_);
 
+        zStats->stringsGCHeap += thingSize;
+        zStats->stringsMallocHeap += strCharsSize;
 
-        if (isShort) {
-            zStats->stringsShortGCHeap += thingSize;
-            MOZ_ASSERT(strCharsSize == 0);
-        } else {
-            zStats->stringsNormalGCHeap += thingSize;
-            zStats->stringsNormalMallocHeap += strCharsSize;
-        }
-
-        // This string hashing is expensive.  Its results are unused when doing
-        // coarse-grained measurements, and skipping it more than doubles the
-        // profile speed for complex pages such as gmail.com.
         if (granularity == FineGrained) {
             ZoneStats::StringsHashMap::AddPtr p = zStats->strings->lookupForAdd(str);
             if (!p) {
-                JS::StringInfo info(isShort, thingSize, strCharsSize);
+                JS::StringInfo info(thingSize, strCharsSize);
                 zStats->strings->add(p, str, info);
             } else {
-                p->value().add(isShort, thingSize, strCharsSize);
+                p->value().add(thingSize, strCharsSize);
             }
         }
 
@@ -423,16 +404,10 @@ FindNotableStrings(ZoneStats &zStats)
 
         // We're moving this string from a non-notable to a notable bucket, so
         // subtract it out of the non-notable tallies.
-        if (info.isShort) {
-            MOZ_ASSERT(zStats.stringsShortGCHeap >= info.gcHeap);
-            zStats.stringsShortGCHeap -= info.gcHeap;
-            MOZ_ASSERT(info.mallocHeap == 0);
-        } else {
-            MOZ_ASSERT(zStats.stringsNormalGCHeap >= info.gcHeap);
-            MOZ_ASSERT(zStats.stringsNormalMallocHeap >= info.mallocHeap);
-            zStats.stringsNormalGCHeap -= info.gcHeap;
-            zStats.stringsNormalMallocHeap -= info.mallocHeap;
-        }
+        MOZ_ASSERT(zStats.stringsGCHeap >= info.gcHeap);
+        MOZ_ASSERT(zStats.stringsMallocHeap >= info.mallocHeap);
+        zStats.stringsGCHeap -= info.gcHeap;
+        zStats.stringsMallocHeap -= info.mallocHeap;
     }
 }
 

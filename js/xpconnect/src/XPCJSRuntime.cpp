@@ -1892,23 +1892,14 @@ ReportZoneStats(const JS::ZoneStats &zStats,
         }
     }
 
-    ZCREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("strings/short-gc-heap"),
-                      zStats.stringsShortGCHeap,
-                      "Memory on the garbage-collected JavaScript "
-                      "heap that holds headers for strings which are short "
-                      "enough to be stored completely within the header.  That "
-                      "is, a 'short' string uses no string-chars.");
+    ZCREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("strings/non-notable/gc-heap"),
+                      zStats.stringsGCHeap,
+                      "Memory on the garbage-collected JavaScript heap that "
+                      "holds string headers. The character data for such "
+                      "strings is counted under strings/non-notable/malloc-heap.");
 
-    ZCREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("strings/normal/gc-heap"),
-                      zStats.stringsNormalGCHeap,
-                      "Memory on the garbage-collected JavaScript "
-                      "heap that holds string headers for strings which are too "
-                      "long to fit entirely within the header.  The character "
-                      "data for such strings is counted under "
-                      "strings/normal/malloc-heap.");
-
-    ZCREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("strings/normal/malloc-heap"),
-                   zStats.stringsNormalMallocHeap,
+    ZCREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("strings/non-notable/malloc-heap"),
+                   zStats.stringsMallocHeap,
                    "Memory allocated to hold characters for strings which are too long "
                    "to fit entirely within their string headers.\n\n"
                    "Sometimes more memory is allocated than necessary, to "
