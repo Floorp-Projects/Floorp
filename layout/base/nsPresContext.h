@@ -535,32 +535,18 @@ public:
 
   /**
    * Get the minimum font size for the specified language. If aLanguage
-   * is nullptr, then the document's language is used.  This combines
-   * the language-specific global preference with the per-presentation
-   * base minimum font size.
+   * is nullptr, then the document's language is used.
    */
   int32_t MinFontSize(nsIAtom *aLanguage) const {
     const LangGroupFontPrefs *prefs = GetFontPrefsForLang(aLanguage);
-    return std::max(mBaseMinFontSize, prefs->mMinimumFontSize);
+    return std::max(mMinFontSize, prefs->mMinimumFontSize);
   }
-  
-  /**
-   * Get the per-presentation base minimum font size.  This size is
-   * independent of the language-specific global preference.
-   */
-  int32_t BaseMinFontSize() const {
-    return mBaseMinFontSize;
-  }
-  
-  /**
-   * Set the per-presentation base minimum font size.  This size is
-   * independent of the language-specific global preference.
-   */
-  void SetBaseMinFontSize(int32_t aMinFontSize) {
-    if (aMinFontSize == mBaseMinFontSize)
+
+  void SetMinFontSize(int32_t aMinFontSize) {
+    if (aMinFontSize == mMinFontSize)
       return;
 
-    mBaseMinFontSize = aMinFontSize;
+    mMinFontSize = aMinFontSize;
     if (HasCachedStyleData()) {
       // Media queries could have changed, since we changed the meaning
       // of 'em' units in them.
@@ -1193,8 +1179,7 @@ protected:
 
   PRCList               mDOMMediaQueryLists;
 
-  // Base minimum font size, independent of the language-specific global preference. Defaults to 0
-  int32_t               mBaseMinFontSize;
+  int32_t               mMinFontSize;   // Min font size, defaults to 0
   float                 mTextZoom;      // Text zoom, defaults to 1.0
   float                 mFullZoom;      // Page zoom, defaults to 1.0
 
