@@ -557,7 +557,6 @@ class ScriptSourceObject : public JSObject
   public:
     static const Class class_;
 
-    static void trace(JSTracer *trc, JSObject *obj);
     static void finalize(FreeOp *fop, JSObject *obj);
     static ScriptSourceObject *create(ExclusiveContext *cx, ScriptSource *source,
                                       const ReadOnlyCompileOptions &options);
@@ -572,18 +571,11 @@ class ScriptSourceObject : public JSObject
     void initElement(HandleObject element);
     const Value &elementAttributeName() const;
 
-    JSScript *introductionScript() const {
-        void *untyped = getReservedSlot(INTRODUCTION_SCRIPT_SLOT).toPrivate();
-        return static_cast<JSScript *>(untyped);
-    }
-    void initIntroductionScript(JSScript *script);
-
   private:
     static const uint32_t SOURCE_SLOT = 0;
     static const uint32_t ELEMENT_SLOT = 1;
     static const uint32_t ELEMENT_PROPERTY_SLOT = 2;
-    static const uint32_t INTRODUCTION_SCRIPT_SLOT = 3;
-    static const uint32_t RESERVED_SLOTS = 4;
+    static const uint32_t RESERVED_SLOTS = 3;
 };
 
 enum GeneratorKind { NotGenerator, LegacyGenerator, StarGenerator };
