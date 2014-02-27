@@ -12,7 +12,6 @@
 #include "nsCoreUtils.h"
 #include "Role.h"
 #include "States.h"
-#include "nsINameSpaceManager.h"
 #include "nsIURI.h"
 
 using namespace mozilla::a11y;
