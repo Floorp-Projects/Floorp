@@ -18,128 +18,39 @@ using namespace js;
 
 const size_t WORKER_THREAD_STACK_SIZE = 1*1024*1024;
 
-/////////////////////////////////////////////////////////////////////////////
-// ThreadPoolBaseWorker
-//
-// Base class for worker threads in the pool.
-
-class js::ThreadPoolBaseWorker
+static inline uint32_t
+ComposeSliceBounds(uint16_t from, uint16_t to)
 {
-  protected:
-    const uint32_t workerId_;
-    ThreadPool *pool_;
+    MOZ_ASSERT(from <= to);
+    return (uint32_t(from) << 16) | to;
+}
 
-  private:
-    // Slices this thread is responsible for.
-    //
-    // This a uint32 composed of two uint16s (the lower and upper bounds) so
-    // that we may do a single CAS. See {Compose,Decompose}SliceBounds
-    // functions below.
-    mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire> sliceBounds_;
-
-  protected:
-    static uint32_t ComposeSliceBounds(uint16_t from, uint16_t to) {
-        MOZ_ASSERT(from <= to);
-        return (uint32_t(from) << 16) | to;
-    }
-
-    static void DecomposeSliceBounds(uint32_t bounds, uint16_t *from, uint16_t *to) {
-        *from = bounds >> 16;
-        *to = bounds & uint16_t(~0);
-        MOZ_ASSERT(*from <= *to);
-    }
-
-    bool hasWork() const {
-        uint16_t from, to;
-        DecomposeSliceBounds(sliceBounds_, &from, &to);
-        return from != to;
-    }
-
-    bool popSliceFront(uint16_t *sliceId);
-    bool popSliceBack(uint16_t *sliceId);
-    bool stealFrom(ThreadPoolBaseWorker *victim, uint16_t *sliceId);
-
-  public:
-    ThreadPoolBaseWorker(uint32_t workerId, ThreadPool *pool)
-      : workerId_(workerId),
-        pool_(pool),
-        sliceBounds_(0)
-    { }
-
-    void submitSlices(uint16_t sliceFrom, uint16_t sliceTo) {
-        MOZ_ASSERT(!hasWork());
-        sliceBounds_ = ComposeSliceBounds(sliceFrom, sliceTo);
-    }
-
-    void abort();
-};
-
-/////////////////////////////////////////////////////////////////////////////
-// ThreadPoolWorker
-//
-// Each |ThreadPoolWorker| just hangs around waiting for slices to be added to
-// its worklist. Whenever something is added, it gets executed. Once the
-// worker's state is set to |TERMINATED|, the worker will exit as soon as its
-// queue is empty.
-
-class js::ThreadPoolWorker : public ThreadPoolBaseWorker
+static inline void
+DecomposeSliceBounds(uint32_t bounds, uint16_t *from, uint16_t *to)
 {
-    friend class ThreadPoolMainWorker;
+    *from = bounds >> 16;
+    *to = bounds & uint16_t(~0);
+    MOZ_ASSERT(*from <= *to);
+}
 
-    // Current point in the worker's lifecycle.
-    //
-    // Modified only while holding the ThreadPoolWorker's lock.
-    volatile enum WorkerState {
-        CREATED, ACTIVE, TERMINATED
-    } state_;
-
-    // The thread's main function
-    static void ThreadMain(void *arg);
-    void run();
-
-  public:
-    ThreadPoolWorker(uint32_t workerId, ThreadPool *pool)
-      : ThreadPoolBaseWorker(workerId, pool),
-        state_(CREATED)
-    { }
-
-    // Get a slice of work, from ourself or steal work from other workers
-    // (or from the main thread).
-    bool getSlice(uint16_t *sliceId);
-
-    // Invoked from main thread; signals worker to start.
-    bool start();
-
-    // Invoked from main thread; signals the worker loop to return.
-    void terminate(AutoLockMonitor &lock);
-};
-
-// ThreadPoolMainWorker
-//
-// This class abstracts the main thread as a worker thread with a private
-// queue to allow for work stealing.
-
-class js::ThreadPoolMainWorker : public ThreadPoolBaseWorker
-{
-    friend class ThreadPoolWorker;
-
-  public:
-    bool isActive;
-
-    ThreadPoolMainWorker(ThreadPool *pool)
-      : ThreadPoolBaseWorker(0, pool),
-        isActive(false)
-    { }
-
-    // Get a slice of work, from ourself or steal work from other workers.
-    bool getSlice(uint16_t *sliceId);
-
-    // Execute a job on the main thread.
-    void executeJob();
-};
+ThreadPoolWorker::ThreadPoolWorker(uint32_t workerId, uint32_t rngSeed, ThreadPool *pool)
+  : workerId_(workerId),
+    pool_(pool),
+    sliceBounds_(0),
+    state_(CREATED),
+    schedulerRNGState_(rngSeed)
+{ }
 
 bool
-ThreadPoolBaseWorker::popSliceFront(uint16_t *sliceId)
+ThreadPoolWorker::hasWork() const
+{
+    uint16_t from, to;
+    DecomposeSliceBounds(sliceBounds_, &from, &to);
+    return from != to;
+}
+
+bool
+ThreadPoolWorker::popSliceFront(uint16_t *sliceId)
 {
     uint32_t bounds;
     uint16_t from, to;
@@ -156,7 +67,7 @@ ThreadPoolBaseWorker::popSliceFront(uint16_t *sliceId)
 }
 
 bool
-ThreadPoolBaseWorker::popSliceBack(uint16_t *sliceId)
+ThreadPoolWorker::popSliceBack(uint16_t *sliceId)
 {
     uint32_t bounds;
     uint16_t from, to;
@@ -173,7 +84,7 @@ ThreadPoolBaseWorker::popSliceBack(uint16_t *sliceId)
 }
 
 void
-ThreadPoolBaseWorker::abort()
+ThreadPoolWorker::discardSlices()
 {
     uint32_t bounds;
     uint16_t from, to;
@@ -186,7 +97,7 @@ ThreadPoolBaseWorker::abort()
 }
 
 bool
-ThreadPoolBaseWorker::stealFrom(ThreadPoolBaseWorker *victim, uint16_t *sliceId)
+ThreadPoolWorker::stealFrom(ThreadPoolWorker *victim, uint16_t *sliceId)
 {
     // Instead of popping the slice from the front by incrementing sliceFrom_,
     // decrement sliceTo_. Usually this gives us better locality.
@@ -198,19 +109,34 @@ ThreadPoolBaseWorker::stealFrom(ThreadPoolBaseWorker *victim, uint16_t *sliceId)
     return true;
 }
 
+ThreadPoolWorker *
+ThreadPoolWorker::randomWorker()
+{
+    // Perform 32-bit xorshift.
+    uint32_t x = schedulerRNGState_;
+    x ^= x << XORSHIFT_A;
+    x ^= x >> XORSHIFT_B;
+    x ^= x << XORSHIFT_C;
+    schedulerRNGState_ = x;
+    return pool_->workers_[x % pool_->numWorkers()];
+}
+
 bool
 ThreadPoolWorker::start()
 {
 #ifndef JS_THREADSAFE
     return false;
 #else
+    if (isMainThread())
+        return true;
+
     MOZ_ASSERT(state_ == CREATED);
 
     // Set state to active now, *before* the thread starts:
     state_ = ACTIVE;
 
     if (!PR_CreateThread(PR_USER_THREAD,
-                         ThreadMain, this,
+                         HelperThreadMain, this,
                          PR_PRIORITY_NORMAL, PR_LOCAL_THREAD,
                          PR_UNJOINABLE_THREAD,
                          WORKER_THREAD_STACK_SIZE))
@@ -225,44 +151,17 @@ ThreadPoolWorker::start()
 }
 
 void
-ThreadPoolWorker::ThreadMain(void *arg)
+ThreadPoolWorker::HelperThreadMain(void *arg)
 {
     ThreadPoolWorker *worker = (ThreadPoolWorker*) arg;
-    worker->run();
-}
-
-bool
-ThreadPoolWorker::getSlice(uint16_t *sliceId)
-{
-    // First see whether we have any work ourself.
-    if (popSliceFront(sliceId))
-        return true;
-
-    // Try to steal work.
-    if (!pool_->workStealing())
-        return false;
-
-    ThreadPoolBaseWorker *victim;
-    do {
-        if (!pool_->hasWork())
-            return false;
-
-        // Add one to add the main thread into the mix.
-        uint32_t victimId = rand() % (pool_->numWorkers() + 1);
-
-        // By convention consider worker id 0 the main thread.
-        if (victimId == 0)
-            victim = pool_->mainWorker_;
-        else
-            victim = pool_->workers_[victimId - 1];
-    } while (!stealFrom(victim, sliceId));
-
-    return true;
+    worker->helperLoop();
 }
 
 void
-ThreadPoolWorker::run()
+ThreadPoolWorker::helperLoop()
 {
+    MOZ_ASSERT(!isMainThread());
+
     // This is hokey in the extreme.  To compute the stack limit,
     // subtract the size of the stack from the address of a local
     // variable and give a 100k buffer.  Is there a better way?
@@ -270,6 +169,7 @@ ThreadPoolWorker::run()
     uintptr_t stackLimitOffset = WORKER_THREAD_STACK_SIZE - 100*1024;
     uintptr_t stackLimit = (((uintptr_t)&stackLimitOffset) +
                              stackLimitOffset * JS_STACK_GROWTH_DIRECTION);
+
 
     for (;;) {
         // Wait for work to arrive or for us to terminate.
@@ -286,7 +186,7 @@ ThreadPoolWorker::run()
             pool_->activeWorkers_++;
         }
 
-        if (!pool_->job()->executeFromWorker(workerId_, stackLimit))
+        if (!pool_->job()->executeFromWorker(this, stackLimit))
             pool_->abortJob();
 
         // Join the pool.
@@ -298,22 +198,14 @@ ThreadPoolWorker::run()
 }
 
 void
-ThreadPoolWorker::terminate(AutoLockMonitor &lock)
+ThreadPoolWorker::submitSlices(uint16_t sliceFrom, uint16_t sliceTo)
 {
-    MOZ_ASSERT(lock.isFor(*pool_));
-    MOZ_ASSERT(state_ != TERMINATED);
-    state_ = TERMINATED;
-}
-
-void
-ThreadPoolMainWorker::executeJob()
-{
-    if (!pool_->job()->executeFromMainThread())
-        pool_->abortJob();
+    MOZ_ASSERT(!hasWork());
+    sliceBounds_ = ComposeSliceBounds(sliceFrom, sliceTo);
 }
 
 bool
-ThreadPoolMainWorker::getSlice(uint16_t *sliceId)
+ThreadPoolWorker::getSlice(ForkJoinContext *cx, uint16_t *sliceId)
 {
     // First see whether we have any work ourself.
     if (popSliceFront(sliceId))
@@ -323,16 +215,20 @@ ThreadPoolMainWorker::getSlice(uint16_t *sliceId)
     if (!pool_->workStealing())
         return false;
 
-    // Pick a random target with work left over.
-    ThreadPoolWorker *victim;
     do {
         if (!pool_->hasWork())
             return false;
-
-        victim = pool_->workers_[rand() % pool_->numWorkers()];
-    } while (!stealFrom(victim, sliceId));
+    } while (!stealFrom(randomWorker(), sliceId));
 
     return true;
+}
+
+void
+ThreadPoolWorker::terminate(AutoLockMonitor &lock)
+{
+    MOZ_ASSERT(lock.isFor(*pool_));
+    MOZ_ASSERT(state_ != TERMINATED);
+    state_ = TERMINATED;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -343,14 +239,14 @@ ThreadPoolMainWorker::getSlice(uint16_t *sliceId)
 
 ThreadPool::ThreadPool(JSRuntime *rt)
   : runtime_(rt),
-    mainWorker_(nullptr),
     activeWorkers_(0),
     joinBarrier_(nullptr),
     job_(nullptr),
 #ifdef DEBUG
     stolenSlices_(0),
 #endif
-    pendingSlices_(0)
+    pendingSlices_(0),
+    isMainThreadActive_(false)
 { }
 
 ThreadPool::~ThreadPool()
@@ -379,10 +275,9 @@ uint32_t
 ThreadPool::numWorkers() const
 {
 #ifdef JS_THREADSAFE
-    // Subtract one for the main thread, which always exists.
-    return WorkerThreadState().cpuCount - 1;
+    return WorkerThreadState().cpuCount;
 #else
-    return 0;
+    return 1;
 #endif
 }
 
@@ -397,11 +292,7 @@ ThreadPool::workStealing() const
     return true;
 }
 
-bool
-ThreadPool::isMainThreadActive() const
-{
-    return mainWorker_ && mainWorker_->isActive;
-}
+extern uint64_t random_next(uint64_t *, int);
 
 bool
 ThreadPool::lazyStartWorkers(JSContext *cx)
@@ -422,8 +313,10 @@ ThreadPool::lazyStartWorkers(JSContext *cx)
     // Note that numWorkers() is the number of *desired* workers,
     // but workers_.length() is the number of *successfully
     // initialized* workers.
+    uint64_t rngState = 0;
     for (uint32_t workerId = 0; workerId < numWorkers(); workerId++) {
-        ThreadPoolWorker *worker = cx->new_<ThreadPoolWorker>(workerId, this);
+        uint32_t rngSeed = uint32_t(random_next(&rngState, 32));
+        ThreadPoolWorker *worker = cx->new_<ThreadPoolWorker>(workerId, rngSeed, this);
         if (!worker || !workers_.append(worker)) {
             terminateWorkersAndReportOOM(cx);
             return false;
@@ -464,7 +357,7 @@ ThreadPool::terminateWorkers()
 
         // Wake up all the workers. Set the number of active workers to the
         // current number of workers so we can make sure they all join.
-        activeWorkers_ = workers_.length();
+        activeWorkers_ = workers_.length() - 1;
         lock.notifyAll();
 
         // Wait for all workers to join.
@@ -473,8 +366,6 @@ ThreadPool::terminateWorkers()
         while (workers_.length() > 0)
             js_delete(workers_.popCopy());
     }
-
-    js_delete(mainWorker_);
 }
 
 void
@@ -508,22 +399,13 @@ ThreadPool::executeJob(JSContext *cx, ParallelJob *job, uint16_t sliceFrom, uint
     MOZ_ASSERT(activeWorkers_ == 0);
     MOZ_ASSERT(!hasWork());
 
-    // Create the main thread worker and off-main-thread workers if necessary.
-    if (!mainWorker_) {
-        mainWorker_ = cx->new_<ThreadPoolMainWorker>(this);
-        if (!mainWorker_) {
-            terminateWorkersAndReportOOM(cx);
-            return TP_FATAL;
-        }
-    }
-
     if (!lazyStartWorkers(cx))
         return TP_FATAL;
 
     // Evenly distribute slices to the workers.
     uint16_t numSlices = sliceMax - sliceFrom;
-    uint16_t slicesPerWorker = numSlices / (numWorkers() + 1);
-    uint16_t leftover = numSlices % (numWorkers() + 1);
+    uint16_t slicesPerWorker = numSlices / numWorkers();
+    uint16_t leftover = numSlices % numWorkers();
     uint16_t sliceTo = sliceFrom;
     for (uint32_t workerId = 0; workerId < numWorkers(); workerId++) {
         if (leftover > 0) {
@@ -536,7 +418,6 @@ ThreadPool::executeJob(JSContext *cx, ParallelJob *job, uint16_t sliceFrom, uint
         sliceFrom = sliceTo;
     }
     MOZ_ASSERT(leftover == 0);
-    mainWorker_->submitSlices(sliceFrom, sliceFrom + slicesPerWorker);
 
     // Notify the worker threads that there's work now.
     {
@@ -550,9 +431,10 @@ ThreadPool::executeJob(JSContext *cx, ParallelJob *job, uint16_t sliceFrom, uint
     }
 
     // Do work on the main thread.
-    mainWorker_->isActive = true;
-    mainWorker_->executeJob();
-    mainWorker_->isActive = false;
+    isMainThreadActive_ = true;
+    if (!job->executeFromMainThread(mainThreadWorker()))
+        abortJob();
+    isMainThreadActive_ = false;
 
     // Wait for all threads to join. While there are no pending slices at this
     // point, the slices themselves may not be finished processing.
@@ -569,31 +451,16 @@ ThreadPool::executeJob(JSContext *cx, ParallelJob *job, uint16_t sliceFrom, uint
     return TP_SUCCESS;
 }
 
-bool
-ThreadPool::getSliceForWorker(uint32_t workerId, uint16_t *sliceId)
-{
-    MOZ_ASSERT(workers_[workerId]);
-    return workers_[workerId]->getSlice(sliceId);
-}
-
-bool
-ThreadPool::getSliceForMainThread(uint16_t *sliceId)
-{
-    MOZ_ASSERT(mainWorker_);
-    return mainWorker_->getSlice(sliceId);
-}
-
 void
 ThreadPool::abortJob()
 {
-    mainWorker_->abort();
     for (uint32_t workerId = 0; workerId < numWorkers(); workerId++)
-        workers_[workerId]->abort();
+        workers_[workerId]->discardSlices();
 
     // Spin until pendingSlices_ reaches 0.
     //
-    // The reason for this is that while calling abort() clears all workers'
-    // bounds, the pendingSlices_ cache might still be > 0 due to
+    // The reason for this is that while calling discardSlices() clears all
+    // workers' bounds, the pendingSlices_ cache might still be > 0 due to
     // still-executing calls to popSliceBack or popSliceFront in other
     // threads. When those finish, we will be sure that !hasWork(), which is
     // important to ensure that an aborted worker does not start again due to

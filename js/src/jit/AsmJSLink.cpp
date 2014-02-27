@@ -224,6 +224,38 @@ ValidateConstant(JSContext *cx, AsmJSModule::Global &global, HandleValue globalV
 }
 
 static bool
+LinkModuleToHeap(JSContext *cx, AsmJSModule &module, Handle<ArrayBufferObject*> heap)
+{
+    if (!IsValidAsmJSHeapLength(heap->byteLength())) {
+        ScopedJSFreePtr<char> msg(
+            JS_smprintf("ArrayBuffer byteLength 0x%x is not a valid heap length. The next "
+                        "valid length is 0x%x",
+                        heap->byteLength(),
+                        RoundUpToNextValidAsmJSHeapLength(heap->byteLength())));
+        return LinkFail(cx, msg.get());
+    }
+
+    // This check is sufficient without considering the size of the loaded datum because heap
+    // loads and stores start on an aligned boundary and the heap byteLength has larger alignment.
+    JS_ASSERT((module.minHeapLength() - 1) <= INT32_MAX);
+    if (heap->byteLength() < module.minHeapLength()) {
+        ScopedJSFreePtr<char> msg(
+            JS_smprintf("ArrayBuffer byteLength of 0x%x is less than 0x%x (which is the"
+                        "largest constant heap access offset rounded up to the next valid "
+                        "heap size).",
+                        heap->byteLength(),
+                        module.minHeapLength()));
+        return LinkFail(cx, msg.get());
+    }
+
+    if (!ArrayBufferObject::prepareForAsmJS(cx, heap))
+        return LinkFail(cx, "Unable to prepare ArrayBuffer for asm.js use");
+
+    module.initHeap(heap, cx);
+    return true;
+}
+
+static bool
 DynamicallyLinkModule(JSContext *cx, CallArgs args, AsmJSModule &module)
 {
     module.setIsDynamicallyLinked();
@@ -245,34 +277,9 @@ DynamicallyLinkModule(JSContext *cx, CallArgs args, AsmJSModule &module)
         if (!IsTypedArrayBuffer(bufferVal))
             return LinkFail(cx, "bad ArrayBuffer argument");
 
-        heap = &bufferVal.toObject().as<ArrayBufferObject>();
-
-        if (!IsValidAsmJSHeapLength(heap->byteLength())) {
-            ScopedJSFreePtr<char> msg(
-                JS_smprintf("ArrayBuffer byteLength 0x%x is not a valid heap length. The next "
-                            "valid length is 0x%x",
-                            heap->byteLength(),
-                            RoundUpToNextValidAsmJSHeapLength(heap->byteLength())));
-            return LinkFail(cx, msg.get());
-        }
-
-        // This check is sufficient without considering the size of the loaded datum because heap
-        // loads and stores start on an aligned boundary and the heap byteLength has larger alignment.
-        JS_ASSERT((module.minHeapLength() - 1) <= INT32_MAX);
-        if (heap->byteLength() < module.minHeapLength()) {
-            ScopedJSFreePtr<char> msg(
-                JS_smprintf("ArrayBuffer byteLength of 0x%x is less than 0x%x (which is the"
-                            "largest constant heap access offset rounded up to the next valid "
-                            "heap size).",
-                            heap->byteLength(),
-                            module.minHeapLength()));
-            return LinkFail(cx, msg.get());
-        }
-
-        if (!ArrayBufferObject::prepareForAsmJS(cx, heap))
-            return LinkFail(cx, "Unable to prepare ArrayBuffer for asm.js use");
-
-        module.initHeap(heap, cx);
+        heap = &AsTypedArrayBuffer(bufferVal);
+        if (!LinkModuleToHeap(cx, module, heap))
+            return false;
     }
 
     AutoObjectVector ffis(cx);
@@ -419,7 +426,6 @@ CallAsmJS(JSContext *cx, unsigned argc, Value *vp)
         // Eagerly push an IonContext+JitActivation so that the optimized
         // asm.js-to-Ion FFI call path (which we want to be very fast) can
         // avoid doing so.
-        jit::IonContext ictx(cx, nullptr);
         JitActivation jitActivation(cx, /* firstFrameIsConstructing = */ false, /* active */ false);
 
         // Call the per-exported-function trampoline created by GenerateEntry.

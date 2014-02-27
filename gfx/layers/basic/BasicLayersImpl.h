@@ -18,7 +18,6 @@
 #include "nsDebug.h"                    // for NS_ASSERTION
 #include "nsISupportsImpl.h"            // for gfxContext::Release, etc
 #include "nsRegion.h"                   // for nsIntRegion
-#include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc
 
 namespace mozilla {
 namespace layers {

@@ -35,7 +35,7 @@
 #include "nsIContentFilter.h"
 #include "nsIDOMComment.h"
 #include "nsIDOMDOMStringList.h"
-#include "nsIDOMDataTransfer.h"
+#include "mozilla/dom/DataTransfer.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentFragment.h"
 #include "nsIDOMElement.h"

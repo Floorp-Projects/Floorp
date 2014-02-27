@@ -19,7 +19,7 @@
 #include "nsContentCreatorFunctions.h"
 #include "nsIScriptElement.h"
 #include "nsIDTD.h"
-#include "nsTraceRefcnt.h"
+#include "nsISupportsImpl.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIFormControl.h"
 #include "nsIStyleSheetLinkingElement.h"

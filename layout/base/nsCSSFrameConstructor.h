@@ -285,14 +285,6 @@ private:
                       nsIContent* aContent,
                       nsFrameConstructorState* aState);
 
-  // Construct a frame for aContent and put it in aFrameItems.  This should
-  // only be used in cases when it's known that the frame won't need table
-  // pseudo-frame construction and the like.
-  void ConstructFrame(nsFrameConstructorState& aState,
-                      nsIContent*              aContent,
-                      nsIFrame*                aParentFrame,
-                      nsFrameItems&            aFrameItems);
-
   // Add the frame construction items for the given aContent and aParentFrame
   // to the list.  This might add more than one item in some rare cases.
   // If aSuppressWhiteSpaceOptimizations is true, optimizations that
@@ -1029,10 +1021,9 @@ private:
 
   /**
    * Function to create the anonymous flex items that we need.
-   * aParentFrame _must_ be a nsFlexContainerFrame -- the caller is responsible
-   * for checking this.
+   * If aParentFrame is not a nsFlexContainerFrame then this method is a NOP.
    * @param aItems the child frame construction items before pseudo creation
-   * @param aParentFrame the flex container frame
+   * @param aParentFrame the parent frame
    */
   void CreateNeededAnonFlexItems(nsFrameConstructorState& aState,
                                     FrameConstructionItemList& aItems,

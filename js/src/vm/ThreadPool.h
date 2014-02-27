@@ -11,6 +11,7 @@
 
 #include "jsalloc.h"
 #include "jslock.h"
+#include "jsmath.h"
 #include "jspubtd.h"
 
 #include "js/Vector.h"
@@ -21,22 +22,104 @@ struct JSCompartment;
 
 namespace js {
 
-class ThreadPoolBaseWorker;
-class ThreadPoolWorker;
-class ThreadPoolMainWorker;
+class ThreadPool;
 
+/////////////////////////////////////////////////////////////////////////////
+// ThreadPoolWorker
+//
+// Class for worker threads in the pool. All threads (i.e. helpers and main
+// thread) have a worker associted with them. By convention, the worker id of
+// the main thread is 0.
+
+class ThreadPoolWorker
+{
+    const uint32_t workerId_;
+    ThreadPool *pool_;
+
+    // Slices this thread is responsible for.
+    //
+    // This a uint32 composed of two uint16s (the lower and upper bounds) so
+    // that we may do a single CAS. See {Compose,Decompose}SliceBounds
+    // functions below.
+    mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire> sliceBounds_;
+
+    // Current point in the worker's lifecycle.
+    volatile enum WorkerState {
+        CREATED, ACTIVE, TERMINATED
+    } state_;
+
+    // Per-worker scheduler RNG state used for picking a random worker during
+    // work stealing.
+    uint32_t schedulerRNGState_;
+
+    // The thread's main function.
+    static void HelperThreadMain(void *arg);
+    void helperLoop();
+
+    bool hasWork() const;
+    bool popSliceFront(uint16_t *sliceId);
+    bool popSliceBack(uint16_t *sliceId);
+    bool stealFrom(ThreadPoolWorker *victim, uint16_t *sliceId);
+
+    // Get a worker at random from the pool using our own thread-local RNG
+    // state. This is a weak, but very fast, random function [1]. We choose
+    // [a,b,c] = 11,21,13.
+    //
+    // [1] http://www.jstatsoft.org/v08/i14/paper
+  public:
+    static const uint32_t XORSHIFT_A = 11;
+    static const uint32_t XORSHIFT_B = 21;
+    static const uint32_t XORSHIFT_C = 13;
+
+  private:
+    ThreadPoolWorker *randomWorker();
+
+  public:
+    ThreadPoolWorker(uint32_t workerId, uint32_t rngSeed, ThreadPool *pool);
+
+    uint32_t id() const { return workerId_; }
+    bool isMainThread() const { return id() == 0; }
+
+    // Submits a new set of slices. Assumes !hasWork().
+    void submitSlices(uint16_t sliceFrom, uint16_t sliceTo);
+
+    // Get the next slice; work stealing happens here if work stealing is
+    // on. Returns false if there are no more slices to hand out.
+    bool getSlice(ForkJoinContext *cx, uint16_t *sliceId);
+
+    // Discard remaining slices. Used for aborting jobs.
+    void discardSlices();
+
+    // Invoked from the main thread; signals worker to start.
+    bool start();
+
+    // Invoked from the main thread; signals the worker loop to return.
+    void terminate(AutoLockMonitor &lock);
+
+    static size_t offsetOfSliceBounds() {
+        return offsetof(ThreadPoolWorker, sliceBounds_);
+    }
+
+    static size_t offsetOfSchedulerRNGState() {
+        return offsetof(ThreadPoolWorker, schedulerRNGState_);
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////
 // A ParallelJob is the main runnable abstraction in the ThreadPool.
 //
 // The unit of work here is in terms of threads, *not* slices. The
 // user-provided function has the responsibility of getting slices of work via
 // the |ForkJoinGetSlice| intrinsic.
+
 class ParallelJob
 {
   public:
-    virtual bool executeFromWorker(uint32_t workerId, uintptr_t stackLimit) = 0;
-    virtual bool executeFromMainThread() = 0;
+    virtual bool executeFromWorker(ThreadPoolWorker *worker, uintptr_t stackLimit) = 0;
+    virtual bool executeFromMainThread(ThreadPoolWorker *mainWorker) = 0;
 };
 
+/////////////////////////////////////////////////////////////////////////////
 // ThreadPool used for parallel JavaScript execution. Unless you are building
 // a new kind of parallel service, it is very likely that you do not wish to
 // interact with the threadpool directly. In particular, if you wish to
@@ -79,17 +162,13 @@ class ParallelJob
 class ThreadPool : public Monitor
 {
   private:
-    friend class ThreadPoolBaseWorker;
     friend class ThreadPoolWorker;
-    friend class ThreadPoolMainWorker;
 
     // Initialized at startup only.
     JSRuntime *const runtime_;
 
-    // Worker threads and the main thread worker have different
-    // logic. Initialized lazily.
+    // Initialized lazily.
     js::Vector<ThreadPoolWorker *, 8, SystemAllocPolicy> workers_;
-    ThreadPoolMainWorker *mainWorker_;
 
     // The number of active workers. Should only access under lock.
     uint32_t activeWorkers_;
@@ -106,19 +185,35 @@ class ThreadPool : public Monitor
     // Number of pending slices in the current job.
     mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire> pendingSlices_;
 
+    // Whether the main thread is currently processing slices.
+    bool isMainThreadActive_;
+
     bool lazyStartWorkers(JSContext *cx);
     void terminateWorkers();
     void terminateWorkersAndReportOOM(JSContext *cx);
     void join(AutoLockMonitor &lock);
     void waitForWorkers(AutoLockMonitor &lock);
+    ThreadPoolWorker *mainThreadWorker() { return workers_[0]; }
 
   public:
+#ifdef DEBUG
+    static size_t offsetOfStolenSlices() {
+        return offsetof(ThreadPool, stolenSlices_);
+    }
+#endif
+    static size_t offsetOfPendingSlices() {
+        return offsetof(ThreadPool, pendingSlices_);
+    }
+    static size_t offsetOfWorkers() {
+        return offsetof(ThreadPool, workers_);
+    }
+
     ThreadPool(JSRuntime *rt);
     ~ThreadPool();
 
     bool init();
 
-    // Return number of worker threads in the pool, not counting the main thread.
+    // Return number of worker threads in the pool, counting the main thread.
     uint32_t numWorkers() const;
 
     // Returns whether we have any pending slices.
@@ -134,7 +229,7 @@ class ThreadPool : public Monitor
     bool workStealing() const;
 
     // Returns whether or not the main thread is working.
-    bool isMainThreadActive() const;
+    bool isMainThreadActive() const { return isMainThreadActive_; }
 
 #ifdef DEBUG
     // Return the number of stolen slices in the last parallel job.
@@ -150,11 +245,6 @@ class ThreadPool : public Monitor
     // Blocks until the main thread has completed execution.
     ParallelResult executeJob(JSContext *cx, ParallelJob *job, uint16_t sliceStart,
                               uint16_t numSlices);
-
-    // Get the next slice; work stealing happens here if work stealing is
-    // on. Returns false if there are no more slices to hand out.
-    bool getSliceForWorker(uint32_t workerId, uint16_t *sliceId);
-    bool getSliceForMainThread(uint16_t *sliceId);
 
     // Abort the current job.
     void abortJob();

@@ -7,7 +7,7 @@
 
 #include "nscore.h"
 #include "MainThreadUtils.h"
-#include "nsTraceRefcnt.h"
+#include "nsISupportsImpl.h"
 #include "nsDebug.h"
 
 // This isn't really a class, it's a namespace for static methods.

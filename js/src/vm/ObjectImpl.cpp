@@ -533,7 +533,9 @@ DenseElementsHeader::defineElement(JSContext *cx, Handle<ObjectImpl*> obj, uint3
 JSObject *
 js::ArrayBufferDelegate(JSContext *cx, Handle<ObjectImpl*> obj)
 {
-    MOZ_ASSERT(obj->hasClass(&ArrayBufferObject::class_));
+    MOZ_ASSERT(obj->hasClass(&ArrayBufferObject::class_) ||
+               obj->hasClass(&SharedArrayBufferObject::class_));
+
     if (obj->getPrivate())
         return static_cast<JSObject *>(obj->getPrivate());
     JSObject *delegate = NewObjectWithGivenProto(cx, &JSObject::class_,

@@ -14,8 +14,8 @@
 #include "mozilla/layers/ContentClient.h"  // for ContentClient
 #include "mozilla/mozalloc.h"           // for operator delete
 #include "nsDebug.h"                    // for NS_ASSERTION
+#include "nsISupportsImpl.h"            // for MOZ_COUNT_CTOR, etc
 #include "nsRegion.h"                   // for nsIntRegion
-#include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc
 #include "mozilla/layers/PLayerTransaction.h" // for ThebesLayerAttributes
 
 class gfxContext;

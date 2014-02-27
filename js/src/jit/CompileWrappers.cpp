@@ -34,15 +34,15 @@ CompileRuntime::addressOfIonTop()
 }
 
 const void *
-CompileRuntime::addressOfIonStackLimit()
+CompileRuntime::addressOfJitStackLimit()
 {
-    return &runtime()->mainThread.ionStackLimit;
+    return &runtime()->mainThread.jitStackLimit;
 }
 
 const void *
 CompileRuntime::addressOfJSContext()
 {
-    return &runtime()->mainThread.ionJSContext;
+    return &runtime()->mainThread.jitJSContext;
 }
 
 const void *
@@ -78,6 +78,12 @@ CompileRuntime::addressOfInterruptPar()
     return &runtime()->interruptPar;
 }
 #endif
+
+const void *
+CompileRuntime::addressOfThreadPool()
+{
+    return &runtime()->threadPool;
+}
 
 const JitRuntime *
 CompileRuntime::jitRuntime()

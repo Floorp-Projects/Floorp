@@ -10,8 +10,8 @@
 # nsTraceRefcnt's Linux stack walking code.  This is useful for two
 # things:
 #  (1) Getting line number information out of
-#      |nsTraceRefcntImpl::WalkTheStack|'s output in debug builds.
-#  (2) Getting function names out of |nsTraceRefcntImpl::WalkTheStack|'s
+#      |nsTraceRefcnt::WalkTheStack|'s output in debug builds.
+#  (2) Getting function names out of |nsTraceRefcnt::WalkTheStack|'s
 #      output on optimized builds (where it mostly prints UNKNOWN
 #      because only a handful of symbols are exported from component
 #      libraries).

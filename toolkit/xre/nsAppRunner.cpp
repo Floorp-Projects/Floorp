@@ -1110,6 +1110,13 @@ nsXULAppInfo::SetSubmitReports(bool aEnabled)
   return CrashReporter::SetSubmitReports(aEnabled);
 }
 
+NS_IMETHODIMP
+nsXULAppInfo::UpdateCrashEventsDir()
+{
+  CrashReporter::UpdateCrashEventsDir();
+  return NS_OK;
+}
+
 #endif
 
 static const nsXULAppInfo kAppInfo;
@@ -2991,6 +2998,7 @@ XREMain::XRE_mainInit(bool* aExitFlag)
   if ((mAppData->flags & NS_XRE_ENABLE_CRASH_REPORTER) &&
       NS_SUCCEEDED(
          CrashReporter::SetExceptionHandler(mAppData->xreDirectory))) {
+    CrashReporter::UpdateCrashEventsDir();
     if (mAppData->crashReporterURL)
       CrashReporter::SetServerURL(nsDependentCString(mAppData->crashReporterURL));
 
@@ -3644,6 +3652,8 @@ XREMain::XRE_mainStartup(bool* aExitFlag)
 #ifdef MOZ_CRASHREPORTER
   if (mAppData->flags & NS_XRE_ENABLE_CRASH_REPORTER)
       MakeOrSetMinidumpPath(mProfD);
+
+  CrashReporter::UpdateCrashEventsDir();
 #endif
 
   nsAutoCString version;

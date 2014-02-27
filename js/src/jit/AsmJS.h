@@ -10,6 +10,7 @@
 #include <stddef.h>
 
 #include "js/TypeDecls.h"
+#include "vm/ObjectImpl.h"
 
 namespace js {
 
@@ -91,7 +92,29 @@ IsValidAsmJSHeapLength(uint32_t length);
 // byteLength portion of which is accessible) so that out-of-bounds accesses
 // (made using a uint32 index) are guaranteed to raise a SIGSEGV.
 static const size_t AsmJSBufferProtectedSize = 4 * 1024ULL * 1024ULL * 1024ULL;
-#endif
+
+// To avoid dynamically checking bounds on each load/store, asm.js code relies
+// on the SIGSEGV handler in AsmJSSignalHandlers.cpp. However, this only works
+// if we can guarantee that *any* out-of-bounds access generates a fault. This
+// isn't generally true since an out-of-bounds access could land on other
+// Mozilla data. To overcome this on x64, we reserve an entire 4GB space,
+// making only the range [0, byteLength) accessible, and use a 32-bit unsigned
+// index into this space. (x86 and ARM require different tricks.)
+//
+// One complication is that we need to put an ObjectElements struct immediately
+// before the data array (as required by the general JSObject data structure).
+// Thus, we must stick a page before the elements to hold ObjectElements.
+//
+//   |<------------------------------ 4GB + 1 pages --------------------->|
+//           |<--- sizeof --->|<------------------- 4GB ----------------->|
+//
+//   | waste | ObjectElements | data array | inaccessible reserved memory |
+//                            ^            ^                              ^
+//                            |            \                             /
+//                      obj->elements       required to be page boundaries
+//
+static const size_t AsmJSMappedSize = AsmJSPageSize + AsmJSBufferProtectedSize;
+#endif // JS_CODEGEN_X64
 
 #ifdef JS_ION
 

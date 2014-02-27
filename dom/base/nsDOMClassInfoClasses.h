@@ -86,8 +86,6 @@ DOMCI_CLASS(MozMobileConnection)
 // @font-face in CSS
 DOMCI_CLASS(CSSFontFaceRule)
 
-DOMCI_CLASS(DataTransfer)
-
 DOMCI_CLASS(EventListenerInfo)
 
 DOMCI_CLASS(ContentFrameMessageManager)

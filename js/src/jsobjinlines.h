@@ -1034,7 +1034,8 @@ ObjectClassIs(HandleObject obj, ESClassValue classValue, JSContext *cx)
       case ESClass_String: return obj->is<StringObject>();
       case ESClass_Boolean: return obj->is<BooleanObject>();
       case ESClass_RegExp: return obj->is<RegExpObject>();
-      case ESClass_ArrayBuffer: return obj->is<ArrayBufferObject>();
+      case ESClass_ArrayBuffer:
+        return obj->is<ArrayBufferObject>() || obj->is<SharedArrayBufferObject>();
       case ESClass_Date: return obj->is<DateObject>();
     }
     MOZ_ASSUME_UNREACHABLE("bad classValue");

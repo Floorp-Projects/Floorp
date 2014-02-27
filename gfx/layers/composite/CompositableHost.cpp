@@ -14,7 +14,7 @@
 #include "mozilla/layers/TextureHost.h"  // for TextureHost, etc
 #include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsDebug.h"                    // for NS_WARNING
-#include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc
+#include "nsISupportsImpl.h"            // for MOZ_COUNT_CTOR, etc
 #include "gfxPlatform.h"                // for gfxPlatform
 
 namespace mozilla {

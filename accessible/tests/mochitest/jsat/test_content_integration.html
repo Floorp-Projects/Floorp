@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Tests AccessFu content integration</title>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js">
+  </script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/chrome-harness.js">
+  </script>
+
+  <script type="application/javascript" src="../common.js"></script>
+  <script type="application/javascript" src="../browser.js"></script>
+  <script type="application/javascript" src="../events.js"></script>
+  <script type="application/javascript" src="../role.js"></script>
+  <script type="application/javascript" src="../states.js"></script>
+  <script type="application/javascript" src="../layout.js"></script>
+  <script type="application/javascript" src="jsatcommon.js"></script>
+
+  <script type="application/javascript">
+    function doTest() {
+      var doc = currentTabDocument();
+      var iframe = doc.createElement("iframe");
+      iframe.mozbrowser = true;
+      iframe.addEventListener("mozbrowserloadend", function () {
+        var simpleMoveNext = { name: 'AccessFu:MoveCursor',
+                               json: { action: 'moveNext',
+                                       rule: 'Simple',
+                                       inputType: 'gesture',
+                                       origin: 'top' }
+                             };
+
+        var simpleMovePrevious = { name: 'AccessFu:MoveCursor',
+                                   json: { action: 'movePrevious',
+                                           rule: 'Simple',
+                                           inputType: 'gesture',
+                                           origin: 'top' }
+                                 };
+
+        var activateCurrent = { name: 'AccessFu:Activate',
+                                json: { origin: 'top' } };
+
+        var simpleMoveLast = { name: 'AccessFu:MoveCursor',
+                               json: { action: 'moveLast',
+                                       rule: 'Simple',
+                                       inputType: 'gesture',
+                                       origin: 'top' }
+                             };
+
+        var simpleMoveFirst = { name: 'AccessFu:MoveCursor',
+                                json: { action: 'moveFirst',
+                                        rule: 'Simple',
+                                        inputType: 'gesture',
+                                        origin: 'top' }
+                              };
+
+        var clearCursor = { name: 'AccessFu:ClearCursor',
+                            json: { origin: 'top' }
+                          };
+
+        function focusFunc(aSelector, aBlur) {
+         return function (mm) {
+          mm.sendAsyncMessage(
+            'AccessFuTest:Focus', { selector: aSelector, blur: aBlur });
+          };
+        }
+
+        var contentTest = new AccessFuContentTest(
+          [
+            // Simple traversal forward
+            [simpleMoveNext,
+            { speak: 'Phone status bar Traversal Rule test document' }],
+           [simpleMoveNext,
+            { speak: 'wow heading level 1 such app' }],
+           [simpleMoveNext,
+            { speak: 'many option not checked check button' }],
+            // check checkbox
+           [activateCurrent,
+            { speak: 'checked' }],
+            [null,
+             { speak: 'checked', speak_checkFunc: 'todo_isnot' }],
+            // uncheck checkbox
+           [simpleMoveNext,
+            { speak: 'Home button' }],
+
+            // Simple traversal backward
+           [simpleMovePrevious,
+            { speak: 'many option checked check button such app' }],
+           [activateCurrent,
+            { speak: 'unchecked' }],
+           [null,
+            { speak: 'unchecked', speak_checkFunc: 'todo_isnot' }],
+           [simpleMovePrevious,
+            { speak: 'wow heading level 1' }],
+           [simpleMovePrevious,
+            { speak: 'Phone status bar' }],
+
+            // Moving to the absolute last item from an embedded document fails.
+            // Bug 972035.
+            [simpleMoveNext,
+            { speak: 'wow heading level 1 such app' }],
+            // Move from an inner frame to the last element in the parent doc
+            [simpleMoveLast,
+             { speak: 'Home button', speak_checkFunc: 'todo_is' }],
+
+            [clearCursor, null], // Reset cursors
+
+            // Moving to the absolute first item from an embedded document fails.
+            // Bug 972035.
+            [simpleMoveNext,
+            { speak: 'Phone status bar Traversal Rule test document' }],
+            [simpleMoveNext,
+             { speak: 'wow heading level 1 such app' }],
+            [simpleMoveNext,
+             { speak: 'many option not checked check button' }],
+            [simpleMoveFirst,
+             { speak: 'Phone status bar', speak_checkFunc: 'todo_is' }],
+
+            // Reset cursors
+            [clearCursor, null],
+
+            // Move cursor with focus in outside document
+            [simpleMoveNext,
+            { speak: 'Phone status bar Traversal Rule test document' }],
+            [ focusFunc('button', false), { speak: 'Home button' }],
+
+            // Blur button and reset cursor
+            [focusFunc('button', true), null],
+            [clearCursor, null],
+
+            // Set focus on element outside of embedded frame while cursor is in frame
+            [simpleMoveNext,
+            { speak: 'Phone status bar Traversal Rule test document' }],
+            [simpleMoveNext,
+             { speak: 'wow heading level 1 such app' }],
+            [focusFunc('button', false), { speak: 'Home button' }]
+
+            // XXX: Set focus on iframe itself.
+            // XXX: Set focus on element in iframe when cursor is outside of it.
+            // XXX: Set focus on element in iframe when cursor is in iframe.
+        ]);
+
+        contentTest.start(function () {
+          closeBrowserWindow();
+          SimpleTest.finish();
+        });
+
+      });
+      iframe.src = 'data:text/html;charset=utf-8,' + doc.defaultView.frameContents;
+      doc.querySelector('#windows').appendChild(iframe);
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addLoadEvent(
+      function () {
+        openBrowserWindow(
+          function () {
+            SpecialPowers.pushPrefEnv({
+              "set": [
+                // TODO: remove this as part of bug 820712
+                ["network.disable.ipc.security", true],
+
+
+                ["dom.ipc.browser_frames.oop_by_default", true],
+                ["dom.mozBrowserFramesEnabled", true],
+                ["browser.pagethumbnails.capturing_disabled", true]
+              ]
+            }, doTest) },
+          getRootDirectory(window.location.href) + "doc_content_integration.html");
+        });
+  </script>
+</head>
+<body id="body">
+
+  <a target="_blank"
+     title="Add tests for OOP message handling and general integration"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=972047">Mozilla Bug 933808</a>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+</body>
+</html>

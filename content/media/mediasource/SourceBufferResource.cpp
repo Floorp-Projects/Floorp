@@ -10,7 +10,7 @@
 #include <algorithm>
 
 #include "nsISeekableStream.h"
-#include "nsTraceRefcnt.h"
+#include "nsISupportsImpl.h"
 #include "prenv.h"
 #include "prlog.h"
 

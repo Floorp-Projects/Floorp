@@ -6,7 +6,7 @@
 #include "CrossProcessMutex.h"
 #include "mozilla/unused.h"
 #include "nsDebug.h"
-#include "nsTraceRefcnt.h"
+#include "nsISupportsImpl.h"
 
 namespace {
 

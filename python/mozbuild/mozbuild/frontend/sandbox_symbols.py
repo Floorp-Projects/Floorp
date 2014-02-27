@@ -688,7 +688,7 @@ VARIABLES = {
         """Flags passed to the C compiler for all of the C source files
            declared in this directory.
 
-           Note that the ordering of flags matter here, these flags will be
+           Note that the ordering of flags matters here, these flags will be
            added to the compiler's command line in the same order as they
            appear in the moz.build file.
         """, 'binaries'),
@@ -697,7 +697,25 @@ VARIABLES = {
         """Flags passed to the C++ compiler for all of the C++ source files
            declared in this directory.
 
-           Note that the ordering of flags matter here, these flags will be
+           Note that the ordering of flags matters here; these flags will be
+           added to the compiler's command line in the same order as they
+           appear in the moz.build file.
+        """, 'binaries'),
+
+    'CMFLAGS': (list, list,
+        """Flags passed to the Objective-C compiler for all of the Objective-C
+           source files declared in this directory.
+
+           Note that the ordering of flags matters here; these flags will be
+           added to the compiler's command line in the same order as they
+           appear in the moz.build file.
+        """, 'binaries'),
+
+    'CMMFLAGS': (list, list,
+        """Flags passed to the Objective-C++ compiler for all of the
+           Objective-C++ source files declared in this directory.
+
+           Note that the ordering of flags matters here; these flags will be
            added to the compiler's command line in the same order as they
            appear in the moz.build file.
         """, 'binaries'),
@@ -706,7 +724,7 @@ VARIABLES = {
         """Flags passed to the linker when linking all of the libraries and
            executables declared in this directory.
 
-           Note that the ordering of flags matter here, these flags will be
+           Note that the ordering of flags matters here; these flags will be
            added to the linker's command line in the same order as they
            appear in the moz.build file.
         """, 'libs'),

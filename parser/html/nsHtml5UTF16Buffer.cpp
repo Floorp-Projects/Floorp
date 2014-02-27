@@ -32,7 +32,7 @@
 #include "nsString.h"
 #include "nsINameSpaceManager.h"
 #include "nsIContent.h"
-#include "nsTraceRefcnt.h"
+#include "nsISupportsImpl.h"
 #include "jArray.h"
 #include "nsHtml5ArrayCopy.h"
 #include "nsAHtml5TreeBuilderState.h"

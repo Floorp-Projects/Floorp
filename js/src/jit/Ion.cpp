@@ -157,6 +157,7 @@ JitRuntime::JitRuntime()
     parallelArgumentsRectifier_(nullptr),
     invalidator_(nullptr),
     debugTrapHandler_(nullptr),
+    forkJoinGetSliceStub_(nullptr),
     functionWrappers_(nullptr),
     osrTempData_(nullptr),
     flusher_(nullptr),
@@ -286,6 +287,18 @@ JitRuntime::debugTrapHandler(JSContext *cx)
         debugTrapHandler_ = generateDebugTrapHandler(cx);
     }
     return debugTrapHandler_;
+}
+
+bool
+JitRuntime::ensureForkJoinGetSliceStubExists(JSContext *cx)
+{
+    if (!forkJoinGetSliceStub_) {
+        IonSpew(IonSpew_Codegen, "# Emitting ForkJoinGetSlice stub");
+        AutoLockForExclusiveAccess lock(cx);
+        AutoCompartment ac(cx, cx->runtime()->atomsCompartment());
+        forkJoinGetSliceStub_ = generateForkJoinGetSliceStub(cx);
+    }
+    return !!forkJoinGetSliceStub_;
 }
 
 uint8_t *
@@ -1667,6 +1680,13 @@ IonCompile(JSContext *cx, JSScript *script,
     if (!cx->compartment()->jitCompartment()->ensureIonStubsExist(cx))
         return AbortReason_Alloc;
 
+    if (executionMode == ParallelExecution &&
+        LIRGenerator::allowInlineForkJoinGetSlice() &&
+        !cx->runtime()->jitRuntime()->ensureForkJoinGetSliceStubExists(cx))
+    {
+        return AbortReason_Alloc;
+    }
+
     MIRGraph *graph = alloc->new_<MIRGraph>(temp);
     if (!graph)
         return AbortReason_Alloc;
@@ -2227,7 +2247,6 @@ EnterIon(JSContext *cx, EnterJitData &data)
     data.result.setInt32(data.numActualArgs);
     {
         AssertCompartmentUnchanged pcc(cx);
-        IonContext ictx(cx, nullptr);
         JitActivation activation(cx, data.constructing);
         JSAutoResolveFlags rf(cx, RESOLVE_INFER);
         AutoFlushInhibitor afi(cx->runtime()->jitRuntime());

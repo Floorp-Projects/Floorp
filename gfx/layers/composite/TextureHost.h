@@ -20,8 +20,8 @@
 #include "mozilla/mozalloc.h"           // for operator delete
 #include "nsCOMPtr.h"                   // for already_AddRefed
 #include "nsDebug.h"                    // for NS_RUNTIMEABORT
+#include "nsISupportsImpl.h"            // for MOZ_COUNT_CTOR, etc
 #include "nsRegion.h"                   // for nsIntRegion
-#include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc
 #include "nscore.h"                     // for nsACString
 #include "mozilla/layers/AtomicRefCountedWithFinalize.h"
 

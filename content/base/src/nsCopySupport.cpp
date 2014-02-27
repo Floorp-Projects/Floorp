@@ -20,7 +20,7 @@
 #include "nsIPresShell.h"
 #include "nsFocusManager.h"
 #include "nsEventDispatcher.h"
-#include "nsDOMDataTransfer.h"
+#include "mozilla/dom/DataTransfer.h"
 
 #include "nsIDocShell.h"
 #include "nsIContentViewerEdit.h"
@@ -53,6 +53,7 @@
 #include "mozilla/Preferences.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 nsresult NS_NewDomSelection(nsISelection **aDomSelection);
 
@@ -643,9 +644,10 @@ nsCopySupport::FireClipboardEvent(int32_t aType, int32_t aClipboardType, nsIPres
 
   // next, fire the cut, copy or paste event
   bool doDefault = true;
-  nsRefPtr<nsDOMDataTransfer> clipboardData;
+  nsRefPtr<DataTransfer> clipboardData;
   if (chromeShell || Preferences::GetBool("dom.event.clipboardevents.enabled", true)) {
-    clipboardData = new nsDOMDataTransfer(aType, aType == NS_PASTE, aClipboardType);
+    clipboardData =
+      new DataTransfer(piWindow, aType, aType == NS_PASTE, aClipboardType);
 
     nsEventStatus status = nsEventStatus_eIgnore;
     InternalClipboardEvent evt(true, aType);

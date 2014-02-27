@@ -2741,7 +2741,7 @@ CodeGenerator::visitCheckOverRecursed(LCheckOverRecursed *lir)
 
     // Since Ion frames exist on the C stack, the stack limit may be
     // dynamically set by JS_SetThreadStackLimit() and JS_SetNativeStackQuota().
-    const void *limitAddr = GetIonContext()->runtime->addressOfIonStackLimit();
+    const void *limitAddr = GetIonContext()->runtime->addressOfJitStackLimit();
 
     CheckOverRecursedFailure *ool = new(alloc()) CheckOverRecursedFailure(lir);
     if (!addOutOfLineCode(ool))
@@ -2834,7 +2834,7 @@ bool
 CodeGenerator::visitCheckOverRecursedPar(LCheckOverRecursedPar *lir)
 {
     // See above: unlike visitCheckOverRecursed(), this code runs in
-    // parallel mode and hence uses the ionStackLimit from the current
+    // parallel mode and hence uses the jitStackLimit from the current
     // thread state.  Also, we must check the interrupt flags because
     // on interrupt or abort, only the stack limit for the main thread
     // is reset, not the worker threads.  See comment in vm/ForkJoin.h
@@ -2844,7 +2844,7 @@ CodeGenerator::visitCheckOverRecursedPar(LCheckOverRecursedPar *lir)
     Register tempReg = ToRegister(lir->getTempReg());
 
     masm.loadPtr(Address(cxReg, offsetof(ForkJoinContext, perThreadData)), tempReg);
-    masm.loadPtr(Address(tempReg, offsetof(PerThreadData, ionStackLimit)), tempReg);
+    masm.loadPtr(Address(tempReg, offsetof(PerThreadData, jitStackLimit)), tempReg);
 
     // Conditional forward (unlikely) branch to failure.
     CheckOverRecursedFailurePar *ool = new(alloc()) CheckOverRecursedFailurePar(lir);

@@ -1821,6 +1821,7 @@ GK_ATOM(flexContainerFrame, "FlexContainerFrame")
 GK_ATOM(formControlFrame, "FormControlFrame") // radio or checkbox
 GK_ATOM(frameSetFrame, "FrameSetFrame")
 GK_ATOM(gfxButtonControlFrame, "gfxButtonControlFrame")
+GK_ATOM(gridContainerFrame, "GridContainerFrame")
 GK_ATOM(HTMLButtonControlFrame, "HTMLButtonControlFrame")
 GK_ATOM(HTMLCanvasFrame, "HTMLCanvasFrame")
 GK_ATOM(subDocumentFrame, "subDocumentFrame")

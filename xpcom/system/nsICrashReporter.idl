@@ -14,7 +14,7 @@ interface nsIURL;
  *                    future releases.
  */
 
-[scriptable, uuid(4b525eab-d4b8-4f71-bf43-b698e306631b)]
+[scriptable, uuid(a2080795-e54c-4ecb-b001-bdc08a2021dd)]
 interface nsICrashReporter : nsISupports
 {
   /**
@@ -109,4 +109,12 @@ interface nsICrashReporter : nsISupports
    * User preference for submitting crash reports.
    */
   attribute boolean submitReports;
+
+  /**
+   * Cause the crash reporter to re-evaluate where crash events should go.
+   *
+   * This should be called during application startup and whenever profiles
+   * change.
+   */
+  void UpdateCrashEventsDir();
 };

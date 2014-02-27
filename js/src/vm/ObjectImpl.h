@@ -759,10 +759,11 @@ class ObjectElements
         CONVERT_DOUBLE_ELEMENTS     = 0x1,
         ASMJS_ARRAY_BUFFER          = 0x2,
         NEUTERED_BUFFER             = 0x4,
+        SHARED_ARRAY_BUFFER         = 0x8,
 
         // Present only if these elements correspond to an array with
         // non-writable length; never present for non-arrays.
-        NONWRITABLE_ARRAY_LENGTH    = 0x8
+        NONWRITABLE_ARRAY_LENGTH    = 0x10
     };
 
   private:
@@ -771,6 +772,7 @@ class ObjectElements
     friend class ArrayObject;
     friend class ArrayBufferObject;
     friend class ArrayBufferViewObject;
+    friend class SharedArrayBufferObject;
     friend class TypedArrayObject;
     friend class Nursery;
 
@@ -829,6 +831,12 @@ class ObjectElements
     }
     void setIsNeuteredBuffer() {
         flags |= NEUTERED_BUFFER;
+    }
+    bool isSharedArrayBuffer() const {
+        return flags & SHARED_ARRAY_BUFFER;
+    }
+    void setIsSharedArrayBuffer() {
+        flags |= SHARED_ARRAY_BUFFER;
     }
     bool hasNonwritableArrayLength() const {
         return flags & NONWRITABLE_ARRAY_LENGTH;
