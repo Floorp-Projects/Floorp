@@ -456,9 +456,16 @@ Shmem::OpenExisting(IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead,
   if (!segment)
     return 0;
 
+  Header* header = GetHeader(segment);
+
+  if (size != header->mSize) {
+    NS_ERROR("Wrong size for this Shmem!");
+    delete segment;
+    return nullptr;
+  }
+
   // The caller of this function may not know whether the segment is
   // unsafe or not
-  Header* header = GetHeader(segment);
   if (!header->mUnsafe && aProtect)
     Protect(segment);
 
@@ -571,8 +578,9 @@ Shmem::OpenExisting(IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead,
   if (!segment)
     return 0;
 
-  // this is the only validity check done OPT builds
+  // this is the only validity check done in non-DEBUG builds
   if (size != static_cast<size_t>(*PtrToSize(segment))) {
+    delete segment;
     return nullptr;
   }
 

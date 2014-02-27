@@ -907,6 +907,11 @@ AsmJSModule::protectCode(JSRuntime *rt) const
 {
     JS_ASSERT(rt->currentThreadOwnsOperationCallbackLock());
 
+    codeIsProtected_ = true;
+
+    if (!pod.functionBytes_)
+        return;
+
     // Technically, we should be able to only take away the execute permissions,
     // however this seems to break our emulators which don't always check
     // execute permissions while executing code.
@@ -918,13 +923,18 @@ AsmJSModule::protectCode(JSRuntime *rt) const
     if (mprotect(codeBase(), functionBytes(), PROT_NONE))
         MOZ_CRASH();
 #endif
-
-    codeIsProtected_ = true;
 }
 
 void
 AsmJSModule::unprotectCode(JSRuntime *rt) const
 {
+    JS_ASSERT(rt->currentThreadOwnsOperationCallbackLock());
+
+    codeIsProtected_ = false;
+
+    if (!pod.functionBytes_)
+        return;
+
 #if defined(XP_WIN)
     DWORD oldProtect;
     if (!VirtualProtect(codeBase(), functionBytes(), PAGE_EXECUTE_READWRITE, &oldProtect))
@@ -933,8 +943,6 @@ AsmJSModule::unprotectCode(JSRuntime *rt) const
     if (mprotect(codeBase(), functionBytes(), PROT_READ | PROT_WRITE | PROT_EXEC))
         MOZ_CRASH();
 #endif
-
-    codeIsProtected_ = false;
 }
 
 bool
