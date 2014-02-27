@@ -9,22 +9,10 @@
 
 #include "AccIterator.h"
 
+#include "mozilla/Move.h"
+
 namespace mozilla {
 namespace a11y {
-
-/**
- * This class is used to return Relation objects from functions.  A copy
- * constructor doesn't work here because we need to mutate the old relation to
- * have its nsAutoPtr forget what it points to.
- */
-struct RelationCopyHelper
-{
-  RelationCopyHelper(AccIterable* aFirstIter, AccIterable* aLastIter) :
-    mFirstIter(aFirstIter), mLastIter(aLastIter) { }
-
-  AccIterable* mFirstIter;
-  AccIterable* mLastIter;
-};
 
 /**
  * A collection of relation targets of a certain type.  Targets are computed
@@ -34,9 +22,6 @@ class Relation
 {
 public:
   Relation() : mFirstIter(nullptr), mLastIter(nullptr) { }
-
-  Relation(const RelationCopyHelper aRelation) :
-    mFirstIter(aRelation.mFirstIter), mLastIter(aRelation.mLastIter) { }
 
   Relation(AccIterable* aIter) :
     mFirstIter(aIter), mLastIter(aIter) { }
@@ -49,16 +34,18 @@ public:
     mFirstIter(nullptr), mLastIter(nullptr)
     { AppendTarget(aDocument, aContent); }
 
-  Relation& operator = (const RelationCopyHelper& aRH)
+  Relation(Relation&& aOther) :
+    mFirstIter(Move(aOther.mFirstIter)), mLastIter(aOther.mLastIter)
   {
-    mFirstIter = aRH.mFirstIter;
-    mLastIter = aRH.mLastIter;
-    return *this;
+    aOther.mLastIter = nullptr;
   }
 
-  operator RelationCopyHelper()
+  Relation& operator = (Relation&& aRH)
   {
-    return RelationCopyHelper(mFirstIter.forget(), mLastIter);
+    mFirstIter = Move(aRH.mFirstIter);
+    mLastIter = aRH.mLastIter;
+    aRH.mLastIter = nullptr;
+    return *this;
   }
 
   inline void AppendIter(AccIterable* aIter)
@@ -108,7 +95,8 @@ public:
   }
 
 private:
-  Relation& operator = (const Relation&);
+  Relation& operator = (const Relation&) MOZ_DELETE;
+  Relation(const Relation&) MOZ_DELETE;
 
   nsAutoPtr<AccIterable> mFirstIter;
   AccIterable* mLastIter;
