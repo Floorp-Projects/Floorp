@@ -101,7 +101,7 @@ class nsHashtable {
     bool            mEnumerating;
 
   public:
-    nsHashtable(uint32_t aSize = 16, bool threadSafe = false);
+    nsHashtable(uint32_t aSize = 16, bool aThreadSafe = false);
     virtual ~nsHashtable();
 
     int32_t Count(void) { return mHashtable.entryCount; }

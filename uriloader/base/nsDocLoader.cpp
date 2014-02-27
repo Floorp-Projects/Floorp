@@ -128,10 +128,8 @@ nsDocLoader::nsDocLoader()
     RequestInfoHashInitEntry
   };
 
-  if (!PL_DHashTableInit(&mRequestInfoHash, &hash_table_ops, nullptr,
-                         sizeof(nsRequestInfo), 16)) {
-    mRequestInfoHash.ops = nullptr;
-  }
+  PL_DHashTableInit(&mRequestInfoHash, &hash_table_ops, nullptr,
+                    sizeof(nsRequestInfo), 16);
 
   ClearInternalProgress();
 

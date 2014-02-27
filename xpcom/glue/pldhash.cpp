@@ -173,7 +173,7 @@ PL_NewDHashTable(const PLDHashTableOps *ops, void *data, uint32_t entrySize,
     PLDHashTable *table = (PLDHashTable *) malloc(sizeof *table);
     if (!table)
         return nullptr;
-    if (!PL_DHashTableInit(table, ops, data, entrySize, capacity)) {
+    if (!PL_DHashTableInit(table, ops, data, entrySize, capacity, fallible_t())) {
         free(table);
         return nullptr;
     }
@@ -188,8 +188,9 @@ PL_DHashTableDestroy(PLDHashTable *table)
 }
 
 bool
-PL_DHashTableInit(PLDHashTable *table, const PLDHashTableOps *ops, void *data,
-                  uint32_t entrySize, uint32_t capacity)
+PL_DHashTableInit(PLDHashTable *table, const PLDHashTableOps *ops,
+                  void *data, uint32_t entrySize, uint32_t capacity,
+                  const fallible_t& )
 {
 #ifdef DEBUG
     if (entrySize > 16 * sizeof(void *)) {
@@ -230,6 +231,22 @@ PL_DHashTableInit(PLDHashTable *table, const PLDHashTableOps *ops, void *data,
 #endif
 
     return true;
+}
+
+void
+PL_DHashTableInit(PLDHashTable *table, const PLDHashTableOps *ops, void *data,
+                  uint32_t entrySize, uint32_t capacity)
+{
+    if (!PL_DHashTableInit(table, ops, data, entrySize, capacity, fallible_t())) {
+        if (capacity > PL_DHASH_MAX_SIZE) {
+            MOZ_CRASH();
+        }
+        uint32_t nbytes;
+        if (!SizeOfEntryStore(capacity, entrySize, &nbytes)) {
+            MOZ_CRASH();
+        }
+        NS_ABORT_OOM(nbytes);
+    }
 }
 
 /*

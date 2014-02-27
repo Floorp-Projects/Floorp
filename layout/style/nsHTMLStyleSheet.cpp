@@ -477,12 +477,8 @@ already_AddRefed<nsMappedAttributes>
 nsHTMLStyleSheet::UniqueMappedAttributes(nsMappedAttributes* aMapped)
 {
   if (!mMappedAttrTable.ops) {
-    bool res = PL_DHashTableInit(&mMappedAttrTable, &MappedAttrTable_Ops,
-                                   nullptr, sizeof(MappedAttrTableEntry), 16);
-    if (!res) {
-      mMappedAttrTable.ops = nullptr;
-      return nullptr;
-    }
+    PL_DHashTableInit(&mMappedAttrTable, &MappedAttrTable_Ops,
+                      nullptr, sizeof(MappedAttrTableEntry), 16);
   }
   MappedAttrTableEntry *entry = static_cast<MappedAttrTableEntry*>
                                            (PL_DHashTableOperate(&mMappedAttrTable, aMapped, PL_DHASH_ADD));
@@ -515,13 +511,8 @@ nsIStyleRule*
 nsHTMLStyleSheet::LangRuleFor(const nsString& aLanguage)
 {
   if (!mLangRuleTable.ops) {
-    bool res = PL_DHashTableInit(&mLangRuleTable, &LangRuleTable_Ops,
-                                 nullptr, sizeof(LangRuleTableEntry), 16);
-    if (!res) {
-      NS_ASSERTION(false, "out of memory");
-      mLangRuleTable.ops = nullptr;
-      return nullptr;
-    }
+    PL_DHashTableInit(&mLangRuleTable, &LangRuleTable_Ops,
+                      nullptr, sizeof(LangRuleTableEntry), 16);
   }
   LangRuleTableEntry *entry = static_cast<LangRuleTableEntry*>
     (PL_DHashTableOperate(&mLangRuleTable, &aLanguage, PL_DHASH_ADD));
