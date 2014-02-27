@@ -4326,8 +4326,7 @@ JS::OwningCompileOptions::OwningCompileOptions(JSContext *cx)
     : ReadOnlyCompileOptions(),
       runtime(GetRuntime(cx)),
       elementRoot(cx),
-      elementAttributeNameRoot(cx),
-      introductionScriptRoot(cx)
+      elementAttributeNameRoot(cx)
 {
 }
 
@@ -4353,7 +4352,6 @@ JS::OwningCompileOptions::copy(JSContext *cx, const ReadOnlyCompileOptions &rhs)
     setOriginPrincipals(rhs.originPrincipals());
     setElement(rhs.element());
     setElementAttributeName(rhs.elementAttributeName());
-    setIntroductionScript(rhs.introductionScript());
 
     return (setFileAndLine(cx, rhs.filename(), rhs.lineno) &&
             setSourceMapURL(cx, rhs.sourceMapURL()) &&
@@ -4430,23 +4428,11 @@ JS::OwningCompileOptions::wrap(JSContext *cx, JSCompartment *compartment)
         if (!compartment->wrap(cx, elementAttributeNameRoot.address()))
             return false;
     }
-
-    // There is no equivalent of cross-compartment wrappers for scripts. If
-    // the introduction script would be in a different compartment from the
-    // compiled code, we would be creating a cross-compartment script
-    // reference, which would be bogus. In that case, just don't bother to
-    // retain the introduction script.
-    if (introductionScriptRoot) {
-        if (introductionScriptRoot->compartment() != compartment)
-            introductionScriptRoot = nullptr;
-    }
-
     return true;
 }
 
 JS::CompileOptions::CompileOptions(JSContext *cx, JSVersion version)
-    : ReadOnlyCompileOptions(), elementRoot(cx), elementAttributeNameRoot(cx),
-      introductionScriptRoot(cx)
+    : ReadOnlyCompileOptions(), elementRoot(cx), elementAttributeNameRoot(cx)
 {
     this->version = (version != JSVERSION_UNKNOWN) ? version : cx->findVersion();
 
@@ -4467,17 +4453,6 @@ JS::CompileOptions::wrap(JSContext *cx, JSCompartment *compartment)
         if (!compartment->wrap(cx, elementAttributeNameRoot.address()))
             return false;
     }
-
-    // There is no equivalent of cross-compartment wrappers for scripts. If
-    // the introduction script would be in a different compartment from the
-    // compiled code, we would be creating a cross-compartment script
-    // reference, which would be bogus. In that case, just don't bother to
-    // retain the introduction script.
-    if (introductionScriptRoot) {
-        if (introductionScriptRoot->compartment() != compartment)
-            introductionScriptRoot = nullptr;
-    }
-
     return true;
 }
 
