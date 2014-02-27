@@ -5,7 +5,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsDOMMutationEvent.h"
-#include "mozilla/MutationEvent.h"
+#include "mozilla/InternalMutationEvent.h"
 
 using namespace mozilla;
 

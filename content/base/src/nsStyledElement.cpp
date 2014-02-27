@@ -9,7 +9,7 @@
 #include "nsAttrValue.h"
 #include "nsAttrValueInlines.h"
 #include "mozilla/dom/ElementInlines.h"
-#include "mozilla/MutationEvent.h"
+#include "mozilla/InternalMutationEvent.h"
 #include "nsDOMCSSDeclaration.h"
 #include "nsDOMCSSAttrDeclaration.h"
 #include "nsServiceManagerUtils.h"

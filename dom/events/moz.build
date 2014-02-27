@@ -32,7 +32,7 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla += [
-    'MutationEvent.h',
+    'InternalMutationEvent.h',
 ]
 
 EXPORTS.mozilla.dom += [
