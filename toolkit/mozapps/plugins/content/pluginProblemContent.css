@@ -53,7 +53,6 @@ html|applet:not([height]), html|applet[height=""] {
   word-spacing: initial;
   letter-spacing: initial;
   line-height: initial;
-  z-index: 2147483647;
   position: relative;
 }
 
