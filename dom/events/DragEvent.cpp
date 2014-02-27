@@ -3,17 +3,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsDOMDragEvent.h"
+#include "mozilla/dom/DragEvent.h"
+#include "mozilla/MouseEvents.h"
 #include "nsContentUtils.h"
 #include "prtime.h"
-#include "mozilla/MouseEvents.h"
 
-using namespace mozilla;
-using namespace mozilla::dom;
+namespace mozilla {
+namespace dom {
 
-nsDOMDragEvent::nsDOMDragEvent(EventTarget* aOwner,
-                               nsPresContext* aPresContext,
-                               WidgetDragEvent* aEvent)
+DragEvent::DragEvent(EventTarget* aOwner,
+                     nsPresContext* aPresContext,
+                     WidgetDragEvent* aEvent)
   : nsDOMMouseEvent(aOwner, aPresContext, aEvent ? aEvent :
                     new WidgetDragEvent(false, 0, nullptr))
 {
@@ -28,22 +28,31 @@ nsDOMDragEvent::nsDOMDragEvent(EventTarget* aOwner,
   }
 }
 
-NS_IMPL_ADDREF_INHERITED(nsDOMDragEvent, nsDOMMouseEvent)
-NS_IMPL_RELEASE_INHERITED(nsDOMDragEvent, nsDOMMouseEvent)
+NS_IMPL_ADDREF_INHERITED(DragEvent, nsDOMMouseEvent)
+NS_IMPL_RELEASE_INHERITED(DragEvent, nsDOMMouseEvent)
 
-NS_INTERFACE_MAP_BEGIN(nsDOMDragEvent)
+NS_INTERFACE_MAP_BEGIN(DragEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMDragEvent)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMMouseEvent)
 
 void
-nsDOMDragEvent::InitDragEvent(const nsAString& aType, bool aCanBubble,
-                              bool aCancelable, nsIDOMWindow* aView,
-                              int32_t aDetail, int32_t aScreenX,
-                              int32_t aScreenY, int32_t aClientX,
-                              int32_t aClientY, bool aCtrlKey, bool aAltKey,
-                              bool aShiftKey, bool aMetaKey, uint16_t aButton,
-                              EventTarget* aRelatedTarget,
-                              DataTransfer* aDataTransfer, ErrorResult& aError)
+DragEvent::InitDragEvent(const nsAString& aType,
+                         bool aCanBubble,
+                         bool aCancelable,
+                         nsIDOMWindow* aView,
+                         int32_t aDetail,
+                         int32_t aScreenX,
+                         int32_t aScreenY,
+                         int32_t aClientX,
+                         int32_t aClientY,
+                         bool aCtrlKey,
+                         bool aAltKey,
+                         bool aShiftKey,
+                         bool aMetaKey,
+                         uint16_t aButton,
+                         EventTarget* aRelatedTarget,
+                         DataTransfer* aDataTransfer,
+                         ErrorResult& aError)
 {
   aError =
     nsDOMMouseEvent::InitMouseEvent(aType, aCanBubble, aCancelable,
@@ -61,15 +70,22 @@ nsDOMDragEvent::InitDragEvent(const nsAString& aType, bool aCanBubble,
 }
 
 NS_IMETHODIMP
-nsDOMDragEvent::InitDragEvent(const nsAString & aType,
-                              bool aCanBubble, bool aCancelable,
-                              nsIDOMWindow* aView, int32_t aDetail,
-                              int32_t aScreenX, int32_t aScreenY,
-                              int32_t aClientX, int32_t aClientY, 
-                              bool aCtrlKey, bool aAltKey, bool aShiftKey,
-                              bool aMetaKey, uint16_t aButton,
-                              nsIDOMEventTarget *aRelatedTarget,
-                              nsIDOMDataTransfer* aDataTransfer)
+DragEvent::InitDragEvent(const nsAString& aType,
+                         bool aCanBubble,
+                         bool aCancelable,
+                         nsIDOMWindow* aView,
+                         int32_t aDetail,
+                         int32_t aScreenX,
+                         int32_t aScreenY,
+                         int32_t aClientX,
+                         int32_t aClientY,
+                         bool aCtrlKey,
+                         bool aAltKey,
+                         bool aShiftKey,
+                         bool aMetaKey,
+                         uint16_t aButton,
+                         nsIDOMEventTarget* aRelatedTarget,
+                         nsIDOMDataTransfer* aDataTransfer)
 {
   nsCOMPtr<DataTransfer> dataTransfer = do_QueryInterface(aDataTransfer);
   NS_ENSURE_ARG(dataTransfer);
@@ -88,14 +104,14 @@ nsDOMDragEvent::InitDragEvent(const nsAString & aType,
 }
 
 NS_IMETHODIMP
-nsDOMDragEvent::GetDataTransfer(nsIDOMDataTransfer** aDataTransfer)
+DragEvent::GetDataTransfer(nsIDOMDataTransfer** aDataTransfer)
 {
   NS_IF_ADDREF(*aDataTransfer = GetDataTransfer());
   return NS_OK;
 }
 
 DataTransfer*
-nsDOMDragEvent::GetDataTransfer()
+DragEvent::GetDataTransfer()
 {
   // the dataTransfer field of the event caches the DataTransfer associated
   // with the drag. It is initialized when an attempt is made to retrieve it
@@ -116,11 +132,18 @@ nsDOMDragEvent::GetDataTransfer()
   return dragEvent->dataTransfer;
 }
 
-nsresult NS_NewDOMDragEvent(nsIDOMEvent** aInstancePtrResult,
-                            EventTarget* aOwner,
-                            nsPresContext* aPresContext,
-                            WidgetDragEvent* aEvent) 
+} // namespace dom
+} // namespace mozilla
+
+using namespace mozilla;
+using namespace mozilla::dom;
+
+nsresult
+NS_NewDOMDragEvent(nsIDOMEvent** aInstancePtrResult,
+                   EventTarget* aOwner,
+                   nsPresContext* aPresContext,
+                   WidgetDragEvent* aEvent) 
 {
-  nsDOMDragEvent* event = new nsDOMDragEvent(aOwner, aPresContext, aEvent);
+  DragEvent* event = new DragEvent(aOwner, aPresContext, aEvent);
   return CallQueryInterface(event, aInstancePtrResult);
 }

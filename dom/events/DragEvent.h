@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsDOMDragEvent_h__
-#define nsDOMDragEvent_h__
+#ifndef mozilla_dom_DragEvent_h_
+#define mozilla_dom_DragEvent_h_
 
 #include "nsIDOMDragEvent.h"
 #include "nsDOMMouseEvent.h"
@@ -13,31 +13,30 @@
 
 namespace mozilla {
 namespace dom {
-class DataTransfer;
-}
-}
 
-class nsDOMDragEvent : public nsDOMMouseEvent,
-                       public nsIDOMDragEvent
+class DataTransfer;
+
+class DragEvent : public nsDOMMouseEvent,
+                  public nsIDOMDragEvent
 {
 public:
-  nsDOMDragEvent(mozilla::dom::EventTarget* aOwner,
-                 nsPresContext* aPresContext,
-                 mozilla::WidgetDragEvent* aEvent);
+  DragEvent(EventTarget* aOwner,
+            nsPresContext* aPresContext,
+            WidgetDragEvent* aEvent);
 
   NS_DECL_ISUPPORTS_INHERITED
 
   NS_DECL_NSIDOMDRAGEVENT
-  
+
   NS_FORWARD_TO_NSDOMMOUSEEVENT
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
   {
-    return mozilla::dom::DragEventBinding::Wrap(aCx, aScope, this);
+    return DragEventBinding::Wrap(aCx, aScope, this);
   }
 
-  mozilla::dom::DataTransfer* GetDataTransfer();
+  DataTransfer* GetDataTransfer();
 
   void InitDragEvent(const nsAString& aType,
                      bool aCanBubble, bool aCancelable,
@@ -46,14 +45,12 @@ public:
                      int32_t aClientX, int32_t aClientY,
                      bool aCtrlKey, bool aAltKey, bool aShiftKey,
                      bool aMetaKey, uint16_t aButton,
-                     mozilla::dom::EventTarget* aRelatedTarget,
-                     mozilla::dom::DataTransfer* aDataTransfer,
-                     mozilla::ErrorResult& aError);
+                     EventTarget* aRelatedTarget,
+                     DataTransfer* aDataTransfer,
+                     ErrorResult& aError);
 };
 
-nsresult NS_NewDOMDragEvent(nsIDOMEvent** aInstancePtrResult,
-                            mozilla::dom::EventTarget* aOwner,
-                            nsPresContext* aPresContext,
-                            mozilla::WidgetDragEvent* aEvent);
+} // namespace dom
+} // namespace mozilla
 
-#endif // nsDOMDragEvent_h__
+#endif // mozilla_dom_DragEvent_h_
