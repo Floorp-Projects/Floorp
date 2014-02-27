@@ -567,20 +567,20 @@ txEXSLTFunctionCall::evaluate(txIEvalContext *aContext,
 
             if (nodes->isEmpty()) {
                 return aContext->recycler()->
-                    getNumberResult(UnspecifiedNaN(), aResult);
+                    getNumberResult(UnspecifiedNaN<double>(), aResult);
             }
 
             bool findMax = mType == MAX;
 
-            double res = findMax ? mozilla::NegativeInfinity() :
-                                   mozilla::PositiveInfinity();
+            double res = findMax ? mozilla::NegativeInfinity<double>() :
+                                   mozilla::PositiveInfinity<double>();
             int32_t i, len = nodes->size();
             for (i = 0; i < len; ++i) {
                 nsAutoString str;
                 txXPathNodeUtils::appendNodeValue(nodes->get(i), str);
                 double val = txDouble::toDouble(str);
                 if (mozilla::IsNaN(val)) {
-                    res = UnspecifiedNaN();
+                    res = UnspecifiedNaN<double>();
                     break;
                 }
 
@@ -610,8 +610,8 @@ txEXSLTFunctionCall::evaluate(txIEvalContext *aContext,
             NS_ENSURE_SUCCESS(rv, rv);
 
             bool findMax = mType == HIGHEST;
-            double res = findMax ? mozilla::NegativeInfinity() :
-                                   mozilla::PositiveInfinity();
+            double res = findMax ? mozilla::NegativeInfinity<double>() :
+                                   mozilla::PositiveInfinity<double>();
             int32_t i, len = nodes->size();
             for (i = 0; i < len; ++i) {
                 nsAutoString str;

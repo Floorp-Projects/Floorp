@@ -384,6 +384,12 @@ public class GeckoAppShell
 
     @WrapElementForJNI(allowMultithread = true, generateStatic = true, noThrow = true)
     public static void handleUncaughtException(Thread thread, Throwable e) {
+        if (GeckoThread.checkLaunchState(GeckoThread.LaunchState.GeckoExited)) {
+            // We've called System.exit. All exceptions after this point are Android
+            // berating us for being nasty to it.
+            return;
+        }
+
         if (thread == null) {
             thread = Thread.currentThread();
         }
@@ -699,7 +705,12 @@ public class GeckoAppShell
             }
         }
 
+        systemExit();
+    }
+
+    static void systemExit() {
         Log.d(LOGTAG, "Killing via System.exit()");
+        GeckoThread.setLaunchState(GeckoThread.LaunchState.GeckoExited);
         System.exit(0);
     }
 

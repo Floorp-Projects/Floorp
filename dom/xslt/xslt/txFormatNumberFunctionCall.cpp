@@ -85,18 +85,18 @@ txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext,
         return aContext->recycler()->getStringResult(format->mNaN, aResult);
     }
 
-    if (value == mozilla::PositiveInfinity()) {
+    if (value == mozilla::PositiveInfinity<double>()) {
         return aContext->recycler()->getStringResult(format->mInfinity,
                                                      aResult);
     }
 
-    if (value == mozilla::NegativeInfinity()) {
+    if (value == mozilla::NegativeInfinity<double>()) {
         nsAutoString res;
         res.Append(format->mMinusSign);
         res.Append(format->mInfinity);
         return aContext->recycler()->getStringResult(res, aResult);
     }
-    
+
     // Value is a normal finite number
     nsAutoString prefix;
     nsAutoString suffix;
@@ -362,7 +362,7 @@ txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext,
         }
         res.Insert((char16_t)(1 + format->mZeroDigit), resPos + 1);
     }
-    
+
     if (!hasFraction && !intDigits && !carry) {
         // If we havn't added any characters we add a '0'
         // This can only happen for formats like '##.##'

@@ -256,6 +256,9 @@
 #define NS_THEME_MOZ_MAC_UNIFIED_TOOLBAR                   224
 #define NS_THEME_MOZ_MAC_FULLSCREEN_BUTTON                 226
 
+// Mac help button
+#define NS_THEME_MOZ_MAC_HELP_BUTTON                       227
+
 // Vista glass
 #define NS_THEME_WIN_BORDERLESS_GLASS                      229
 #define NS_THEME_WIN_GLASS                                 230

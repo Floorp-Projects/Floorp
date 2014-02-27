@@ -135,6 +135,18 @@ ToData(Layer* aLayer)
   return static_cast<BasicImplData*>(aLayer->ImplData());
 }
 
+gfx::CompositionOp
+GetEffectiveOperator(Layer* aLayer)
+{
+  CompositionOp op = aLayer->GetEffectiveMixBlendMode();
+
+  if (op != CompositionOp::OP_OVER) {
+    return op;
+  }
+
+  return ToData(aLayer)->GetOperator();
+}
+
 ShadowableLayer*
 ToShadowable(Layer* aLayer)
 {

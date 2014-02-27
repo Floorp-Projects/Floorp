@@ -57,8 +57,8 @@ NumberDiv(double a, double b)
             return JS::GenericNaN();
 
         if (mozilla::IsNegative(a) != mozilla::IsNegative(b))
-            return mozilla::NegativeInfinity();
-        return mozilla::PositiveInfinity();
+            return mozilla::NegativeInfinity<double>();
+        return mozilla::PositiveInfinity<double>();
     }
 
     return a / b;
@@ -66,7 +66,7 @@ NumberDiv(double a, double b)
 
 inline double
 NumberMod(double a, double b) {
-    if (b == 0) 
+    if (b == 0)
         return JS::GenericNaN();
     return js_fmod(a, b);
 }

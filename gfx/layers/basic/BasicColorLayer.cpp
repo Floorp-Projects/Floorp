@@ -48,9 +48,8 @@ public:
     if (IsHidden()) {
       return;
     }
-    CompositionOp mixBlendMode = GetEffectiveMixBlendMode();
-    CompositionOp op =
-      mixBlendMode != CompositionOp::OP_OVER ? mixBlendMode : GetOperator();
+
+    CompositionOp op = GetEffectiveOperator(this);
 
     DrawOptions opts = DrawOptions();
     opts.mCompositionOp = op;
