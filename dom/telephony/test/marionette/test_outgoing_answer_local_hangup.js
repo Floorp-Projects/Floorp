@@ -10,28 +10,30 @@ let outNumber = "5555551111";
 function dial() {
   log("Make an outgoing call.");
 
-  outgoingCall = telephony.dial(outNumber);
-  ok(outgoingCall);
-  is(outgoingCall.number, outNumber);
-  is(outgoingCall.state, "dialing");
+  telephony.dial(outNumber).then(call => {
+    outgoingCall = call;
+    ok(outgoingCall);
+    is(outgoingCall.number, outNumber);
+    is(outgoingCall.state, "dialing");
 
-  is(outgoingCall, telephony.active);
-  is(telephony.calls.length, 1);
-  is(telephony.calls[0], outgoingCall);
+    is(outgoingCall, telephony.active);
+    is(telephony.calls.length, 1);
+    is(telephony.calls[0], outgoingCall);
 
-  outgoingCall.onalerting = function onalerting(event) {
-    log("Received 'alerting' call event.");
+    outgoingCall.onalerting = function onalerting(event) {
+      log("Received 'alerting' call event.");
 
-    is(outgoingCall, event.call);
-    is(outgoingCall.state, "alerting");
+      is(outgoingCall, event.call);
+      is(outgoingCall.state, "alerting");
 
-    emulator.run("gsm list", function(result) {
-      log("Call list is now: " + result);
-      is(result[0], "outbound to  " + outNumber + " : ringing");
-      is(result[1], "OK");
-      answer();
-    });
-  };
+      emulator.run("gsm list", function(result) {
+        log("Call list is now: " + result);
+        is(result[0], "outbound to  " + outNumber + " : ringing");
+        is(result[1], "OK");
+        answer();
+      });
+    };
+  });
 }
 
 function answer() {
