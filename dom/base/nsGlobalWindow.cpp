@@ -13366,12 +13366,44 @@ nsGlobalWindow::SetHasAudioAvailableEventListeners()
 }
 
 NS_IMETHODIMP
-nsGlobalWindow::GetConsole(nsISupports** aConsole)
+nsGlobalWindow::GetConsole(JSContext* aCx,
+                           JS::MutableHandle<JS::Value> aConsole)
 {
   ErrorResult rv;
   nsRefPtr<Console> console = GetConsole(rv);
-  console.forget(aConsole);
-  return rv.ErrorCode();
+  if (rv.Failed()) {
+    return rv.ErrorCode();
+  }
+
+  JS::Rooted<JSObject*> thisObj(aCx, mJSObject);
+  if (!mJSObject) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  if (!JS_WrapObject(aCx, &thisObj) ||
+      !WrapNewBindingObject(aCx, thisObj, console, aConsole)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGlobalWindow::SetConsole(JSContext* aCx, JS::Handle<JS::Value> aValue)
+{
+  JS::Rooted<JSObject*> thisObj(aCx, mJSObject);
+  if (!mJSObject) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  if (!JS_WrapObject(aCx, &thisObj) ||
+      !JS_DefineProperty(aCx, thisObj, "console", aValue,
+                         JS_PropertyStub, JS_StrictPropertyStub,
+                         JSPROP_ENUMERATE)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
 }
 
 Console*
