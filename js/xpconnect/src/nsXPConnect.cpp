@@ -185,7 +185,7 @@ nsXPConnect::IsISupportsDescendant(nsIInterfaceInfo* info)
 void
 xpc::SystemErrorReporter(JSContext *cx, const char *message, JSErrorReport *rep)
 {
-    // It would be nice to assert !JS_DescribeScriptedCaller here, to be sure
+    // It would be nice to assert !DescribeScriptedCaller here, to be sure
     // that there isn't any script running that could catch the exception. But
     // the JS engine invokes the error reporter directly if someone reports an
     // ErrorReport that it doesn't know how to turn into an exception. Arguably

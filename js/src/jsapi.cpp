@@ -6205,8 +6205,7 @@ HideScriptedCaller(JSContext *cx)
     MOZ_ASSERT(cx);
 
     // If there's no accessible activation on the stack, we'll return null from
-    // JS_DescribeScriptedCaller anyway, so there's no need to annotate
-    // anything.
+    // DescribeScriptedCaller anyway, so there's no need to annotate anything.
     Activation *act = cx->runtime()->mainThread.activation();
     if (!act)
         return;
