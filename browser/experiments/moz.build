@@ -14,3 +14,5 @@ EXTRA_JS_MODULES += [
 ]
 
 XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell/xpcshell.ini']
+
+SPHINX_TREES['experiments'] = 'docs'
