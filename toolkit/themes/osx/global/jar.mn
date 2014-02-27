@@ -114,7 +114,6 @@ toolkit.jar:
   skin/classic/global/icons/panebutton-active.png                    (icons/panebutton-active.png)
   skin/classic/global/icons/panebutton-inactive.png                  (icons/panebutton-inactive.png)
   skin/classic/global/icons/panel-dropmarker.png                     (icons/panel-dropmarker.png)
-  skin/classic/global/icons/question-mark.png                        (icons/question-mark.png)
   skin/classic/global/icons/resizer.png                              (icons/resizer.png)
   skin/classic/global/icons/resizer@2x.png                           (icons/resizer@2x.png)
   skin/classic/global/icons/resizer-rtl.png                          (icons/resizer-rtl.png)
