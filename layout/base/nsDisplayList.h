@@ -2721,6 +2721,10 @@ public:
                                              LayerManager* aManager,
                                              const ContainerLayerParameters& aContainerParameters) MOZ_OVERRIDE;
 
+  virtual bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
+                                 nsRegion* aVisibleRegion,
+                                 const nsRect& aAllowVisibleRegionExpansion) MOZ_OVERRIDE;
+
   virtual bool SetVisibleRegionOnLayer() MOZ_OVERRIDE { return !(mFlags & GENERATE_SCROLLABLE_LAYER); }
 
   NS_DISPLAY_DECL_NAME("SubDocument", TYPE_SUBDOCUMENT)

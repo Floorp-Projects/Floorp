@@ -3491,6 +3491,40 @@ nsDisplaySubDocument::BuildLayer(nsDisplayListBuilder* aBuilder,
   return layer.forget();
 }
 
+bool
+nsDisplaySubDocument::ComputeVisibility(nsDisplayListBuilder* aBuilder,
+                                        nsRegion* aVisibleRegion,
+                                        const nsRect& aAllowVisibleRegionExpansion)
+{
+  nsIFrame* rootScrollFrame = mFrame->PresContext()->PresShell()->GetRootScrollFrame();
+  nsIContent* content = rootScrollFrame ? rootScrollFrame->GetContent() : nullptr;
+  nsRect displayport;
+  bool usingDisplayPort = content &&
+    nsLayoutUtils::GetDisplayPort(content, &displayport);
+
+  if (!(mFlags & GENERATE_SCROLLABLE_LAYER) || !usingDisplayPort) {
+    return nsDisplayWrapList::ComputeVisibility(aBuilder, aVisibleRegion,
+                                                aAllowVisibleRegionExpansion);
+  }
+
+  nsRegion childVisibleRegion;
+  // The visible region for the children may be much bigger than the hole we
+  // are viewing the children from, so that the compositor process has enough
+  // content to asynchronously pan while content is being refreshed.
+  childVisibleRegion = displayport + mFrame->GetOffsetToCrossDoc(ReferenceFrame());
+
+  nsRect boundedRect =
+    childVisibleRegion.GetBounds().Intersect(mList.GetBounds(aBuilder));
+  nsRect allowExpansion = boundedRect.Intersect(aAllowVisibleRegionExpansion);
+  bool visible = mList.ComputeVisibilityForSublist(
+    aBuilder, &childVisibleRegion, boundedRect, allowExpansion);
+  // We don't allow this computation to influence aVisibleRegion, on the
+  // assumption that the layer can be asynchronously scrolled so we'll
+  // definitely need all the content under it.
+
+  return visible;
+}
+
 nsDisplayResolution::nsDisplayResolution(nsDisplayListBuilder* aBuilder,
                                          nsIFrame* aFrame, nsDisplayList* aList,
                                          uint32_t aFlags)
