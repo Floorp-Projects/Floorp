@@ -41,7 +41,7 @@ public class FilePicker implements GeckoEventListener {
 
     public static void init(Context context) {
         if (sFilePicker == null) {
-            sFilePicker = new FilePicker(context);
+            sFilePicker = new FilePicker(context.getApplicationContext());
         }
     }
 
