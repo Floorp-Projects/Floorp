@@ -515,15 +515,17 @@ NetworkService.prototype = {
     let params = {
       cmd: "updateUpStream",
       isAsync: true,
-      previous: previous,
-      current: current
+      preInternalIfname: previous.internalIfname,
+      preExternalIfname: previous.externalIfname,
+      curInternalIfname: current.internalIfname,
+      curExternalIfname: current.externalIfname
     };
 
     this.controlMessage(params, function(data) {
       let code = data.resultCode;
       let reason = data.resultReason;
       if(DEBUG) debug("updateUpStream result: Code " + code + " reason " + reason);
-      callback.updateUpStreamResult(!isError(code), data.current.externalIfname);
+      callback.updateUpStreamResult(!isError(code), data.curExternalIfname);
     });
   },
 
