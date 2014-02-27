@@ -248,28 +248,16 @@ AddressOf(AsmJSImmKind kind, ExclusiveContext *cx)
         return RedirectCall(FuncCast(NumberMod), Args_Double_DoubleDouble);
       case AsmJSImm_SinD:
         return RedirectCall(FuncCast<double (double)>(sin), Args_Double_Double);
-      case AsmJSImm_SinF:
-        return RedirectCall(FuncCast<float (float)>(sinf), Args_Float32_Float32);
       case AsmJSImm_CosD:
         return RedirectCall(FuncCast<double (double)>(cos), Args_Double_Double);
-      case AsmJSImm_CosF:
-        return RedirectCall(FuncCast<float (float)>(cosf), Args_Float32_Float32);
       case AsmJSImm_TanD:
         return RedirectCall(FuncCast<double (double)>(tan), Args_Double_Double);
-      case AsmJSImm_TanF:
-        return RedirectCall(FuncCast<float (float)>(tanf), Args_Float32_Float32);
       case AsmJSImm_ASinD:
         return RedirectCall(FuncCast<double (double)>(asin), Args_Double_Double);
-      case AsmJSImm_ASinF:
-        return RedirectCall(FuncCast<float (float)>(asinf), Args_Float32_Float32);
       case AsmJSImm_ACosD:
         return RedirectCall(FuncCast<double (double)>(acos), Args_Double_Double);
-      case AsmJSImm_ACosF:
-        return RedirectCall(FuncCast<float (float)>(acosf), Args_Float32_Float32);
       case AsmJSImm_ATanD:
         return RedirectCall(FuncCast<double (double)>(atan), Args_Double_Double);
-      case AsmJSImm_ATanF:
-        return RedirectCall(FuncCast<float (float)>(atanf), Args_Float32_Float32);
       case AsmJSImm_CeilD:
         return RedirectCall(FuncCast<double (double)>(ceil), Args_Double_Double);
       case AsmJSImm_CeilF:
@@ -280,12 +268,8 @@ AddressOf(AsmJSImmKind kind, ExclusiveContext *cx)
         return RedirectCall(FuncCast<float (float)>(floorf), Args_Float32_Float32);
       case AsmJSImm_ExpD:
         return RedirectCall(FuncCast<double (double)>(exp), Args_Double_Double);
-      case AsmJSImm_ExpF:
-        return RedirectCall(FuncCast<float (float)>(expf), Args_Float32_Float32);
       case AsmJSImm_LogD:
         return RedirectCall(FuncCast<double (double)>(log), Args_Double_Double);
-      case AsmJSImm_LogF:
-        return RedirectCall(FuncCast<float (float)>(logf), Args_Float32_Float32);
       case AsmJSImm_PowD:
         return RedirectCall(FuncCast(ecmaPow), Args_Double_DoubleDouble);
       case AsmJSImm_ATan2D:
