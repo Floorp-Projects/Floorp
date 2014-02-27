@@ -4152,7 +4152,7 @@ window > chatbox {
 }
 
 #main-window[tabsintitlebar][customize-entered] #TabsToolbar {
-  margin-top: 9px;
+  margin-top: 8px;
 }
 
 #main-window[customize-entered] #TabsToolbar {

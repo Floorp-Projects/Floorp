@@ -1,0 +1,11 @@
+
+<div>
+  <table class="gcli-menu-template" aria-live="polite">
+    <tr class="gcli-menu-option" foreach="item in ${items}"
+        onclick="${onItemClickInternal}" title="${item.manual}">
+      <td class="gcli-menu-name">${item.name}</td>
+      <td class="gcli-menu-desc">${item.description}</td>
+    </tr>
+  </table>
+  <div class="gcli-menu-more" if="${items.hasMore}">${l10n.fieldMenuMore}</div>
+</div>
