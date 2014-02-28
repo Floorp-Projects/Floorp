@@ -568,6 +568,7 @@ JSFunction::trace(JSTracer *trc)
             // - their compartment isn't currently executing scripts or being
             //   debugged
             // - they are not in the self-hosting compartment
+            // - their 'arguments' object can't escape
             // - they aren't generators
             // - they don't have JIT code attached
             // - they don't have child functions
