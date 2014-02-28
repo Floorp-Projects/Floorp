@@ -831,7 +831,7 @@ const CustomizableWidgets = [{
 
 #ifdef XP_WIN
 #ifdef MOZ_METRO
-if (Services.sysinfo.getProperty("hasWindowsTouchInterface")) {
+if (Services.metro && Services.metro.supported) {
   let widgetArgs = {tooltiptext: "switch-to-metro-button2.tooltiptext"};
   let brandShortName = BrandBundle.GetStringFromName("brandShortName");
   let metroTooltip = CustomizableUI.getLocalizedProperty(widgetArgs, "tooltiptext",

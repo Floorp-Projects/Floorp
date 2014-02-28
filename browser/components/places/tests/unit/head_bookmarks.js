@@ -63,10 +63,10 @@ let (XULAppInfo = {
 }
 
 // Smart bookmarks constants.
-let isWin8OrHigher = Services.sysinfo.getProperty("hasWindowsTouchInterface");
+let isMetroSupported = Services.metro && Services.metro.supported;
 const SMART_BOOKMARKS_VERSION = 6
 const SMART_BOOKMARKS_ON_TOOLBAR = 1;
-const SMART_BOOKMARKS_ON_MENU = isWin8OrHigher ? 4 : 3; // Takes in count the additional separator.
+const SMART_BOOKMARKS_ON_MENU = isMetroSupported ? 4 : 3; // Takes in count the additional separator.
 
 // Default bookmarks constants.
 const DEFAULT_BOOKMARKS_ON_TOOLBAR = 1;
