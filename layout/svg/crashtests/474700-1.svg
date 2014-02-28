@@ -1,1 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg"><filter id="f1" filterRes="10 20" height="-2"/><rect width="50" height="100" filter="url(#f1)"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg"><filter id="f1" height="-2"/><rect width="50" height="100" filter="url(#f1)"/></svg>
