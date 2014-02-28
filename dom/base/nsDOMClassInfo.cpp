@@ -136,7 +136,7 @@
 #include "nsIEventListenerService.h"
 #include "nsIMessageManager.h"
 
-#include "nsDOMTouchEvent.h"
+#include "mozilla/dom/TouchEvent.h"
 
 #include "nsWrapperCacheInlines.h"
 #include "mozilla/dom/HTMLCollectionBinding.h"
@@ -868,7 +868,7 @@ nsDOMClassInfo::RegisterExternalClasses()
   DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindowPerformance)                             \
   DOM_CLASSINFO_MAP_ENTRY(nsIInterfaceRequestor)                               \
   DOM_CLASSINFO_MAP_CONDITIONAL_ENTRY(nsITouchEventReceiver,                   \
-                                      nsDOMTouchEvent::PrefEnabled())
+                                      TouchEvent::PrefEnabled())
 #else // !MOZ_B2G
 #define DOM_CLASSINFO_WINDOW_MAP_ENTRIES                                       \
   DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindow)                                        \
@@ -878,7 +878,7 @@ nsDOMClassInfo::RegisterExternalClasses()
   DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindowPerformance)                             \
   DOM_CLASSINFO_MAP_ENTRY(nsIInterfaceRequestor)                               \
   DOM_CLASSINFO_MAP_CONDITIONAL_ENTRY(nsITouchEventReceiver,                   \
-                                      nsDOMTouchEvent::PrefEnabled())
+                                      TouchEvent::PrefEnabled())
 #endif // MOZ_B2G
 
 nsresult

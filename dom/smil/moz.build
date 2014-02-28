@@ -7,7 +7,6 @@
 TEST_TOOL_DIRS += ['test']
 
 EXPORTS += [
-    'nsDOMTimeEvent.h',
     'nsISMILAttr.h',
     'nsISMILType.h',
     'nsSMILAnimationController.h',
@@ -32,8 +31,11 @@ EXPORTS += [
     'nsSMILValue.h',
 ]
 
+EXPORTS.mozilla.dom += [
+    'TimeEvent.h',
+]
+
 UNIFIED_SOURCES += [
-    'nsDOMTimeEvent.cpp',
     'nsSMILAnimationController.cpp',
     'nsSMILAnimationFunction.cpp',
     'nsSMILCompositor.cpp',
@@ -57,6 +59,7 @@ UNIFIED_SOURCES += [
     'SMILEnumType.cpp',
     'SMILIntegerType.cpp',
     'SMILStringType.cpp',
+    'TimeEvent.cpp',
 ]
 
 FAIL_ON_WARNINGS = True
