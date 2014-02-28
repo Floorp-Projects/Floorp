@@ -183,6 +183,8 @@ IMEHandler::NotifyIME(nsWindow* aWindow,
           nsTextStore::CommitComposition(true);
         }
         return NS_OK;
+      case NOTIFY_IME_OF_POSITION_CHANGE:
+        return nsTextStore::OnLayoutChange();
       default:
         return NS_ERROR_NOT_IMPLEMENTED;
     }
