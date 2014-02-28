@@ -124,13 +124,6 @@ public:
    */
   void Listen();
 
-  /**
-   * Set up flags on whatever our current file descriptor is.
-   *
-   * @return true if successful, false otherwise
-   */
-  bool SetSocketFlags(int aFd);
-
   void GetSocketAddr(nsAString& aAddrStr)
   {
     if (!mConnector) {
@@ -156,6 +149,8 @@ public:
   void OnSocketCanSendWithoutBlocking() MOZ_OVERRIDE;
 
 private:
+  // Set up flags on whatever our current file descriptor is.
+  static bool SetSocketFlags(int aFd);
 
   void FireSocketError();
 
@@ -464,13 +459,12 @@ UnixSocketImpl::Listen()
       FireSocketError();
       return;
     }
-    SetFd(fd);
-
-    if (!SetSocketFlags(GetFd())) {
+    if (!SetSocketFlags(fd)) {
       NS_WARNING("Cannot set socket flags!");
       FireSocketError();
       return;
     }
+    SetFd(fd);
 
     // calls OnListening on success, or OnError otherwise
     nsresult rv = UnixSocketWatcher::Listen(
@@ -489,6 +483,11 @@ UnixSocketImpl::Connect()
     int fd = mConnector->Create();
     if (fd < 0) {
       NS_WARNING("Cannot create socket fd!");
+      FireSocketError();
+      return;
+    }
+    if (!SetSocketFlags(fd)) {
+      NS_WARNING("Cannot set socket flags!");
       FireSocketError();
       return;
     }
@@ -512,16 +511,27 @@ UnixSocketImpl::SetSocketFlags(int aFd)
 {
   // Set socket addr to be reused even if kernel is still waiting to close
   int n = 1;
-  setsockopt(aFd, SOL_SOCKET, SO_REUSEADDR, &n, sizeof(n));
-
-  // Set close-on-exec bit.
-  int flags = fcntl(aFd, F_GETFD);
-  if (-1 == flags) {
+  if (setsockopt(aFd, SOL_SOCKET, SO_REUSEADDR, &n, sizeof(n)) < 0) {
     return false;
   }
 
+  // Set close-on-exec bit.
+  int flags = TEMP_FAILURE_RETRY(fcntl(aFd, F_GETFD));
+  if (-1 == flags) {
+    return false;
+  }
   flags |= FD_CLOEXEC;
-  if (-1 == fcntl(aFd, F_SETFD, flags)) {
+  if (-1 == TEMP_FAILURE_RETRY(fcntl(aFd, F_SETFD, flags))) {
+    return false;
+  }
+
+  // Set non-blocking status flag.
+  flags = TEMP_FAILURE_RETRY(fcntl(aFd, F_GETFL));
+  if (-1 == flags) {
+    return false;
+  }
+  flags |= O_NONBLOCK;
+  if (-1 == TEMP_FAILURE_RETRY(fcntl(aFd, F_SETFL, flags))) {
     return false;
   }
 
@@ -541,10 +551,10 @@ UnixSocketImpl::OnAccepted(int aFd)
 
   RemoveWatchers(READ_WATCHER|WRITE_WATCHER);
   Close();
-  SetSocket(aFd, SOCKET_IS_CONNECTED);
-  if (!SetSocketFlags(GetFd())) {
+  if (!SetSocketFlags(aFd)) {
     return;
   }
+  SetSocket(aFd, SOCKET_IS_CONNECTED);
 
   nsRefPtr<OnSocketEventTask> t =
     new OnSocketEventTask(this, OnSocketEventTask::CONNECT_SUCCESS);
