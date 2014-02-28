@@ -932,7 +932,7 @@ JS::DisableIncrementalGC(JSRuntime *rt)
 
 JS::AutoDisableGenerationalGC::AutoDisableGenerationalGC(JSRuntime *rt)
   : runtime(rt)
-#ifdef JS_GC_ZEAL
+#if defined(JSGC_GENERATIONAL) && defined(JS_GC_ZEAL)
   , restartVerifier(rt->gcVerifyPostData)
 #endif
 {
