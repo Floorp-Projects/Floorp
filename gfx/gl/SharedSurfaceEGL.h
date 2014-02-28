@@ -40,23 +40,19 @@ protected:
     GLLibraryEGL* const mEGL;
     const GLFormats mFormats;
     GLuint mProdTex;
-    RefPtr<gfx::DataSourceSurface> mPixels;
-    GLuint mProdTexForPipe; // Moves to mProdTex when mPipeActive becomes true.
     EGLImage mImage;
     GLContext* mCurConsGL;
     GLuint mConsTex;
     nsRefPtr<TextureGarbageBin> mGarbageBin;
     EGLSync mSync;
-    bool mPipeFailed;   // Pipe creation failed, and has been abandoned.
-    bool mPipeComplete; // Pipe connects (mPipeActive ? mProdTex : mProdTexForPipe) to mConsTex.
-    bool mPipeActive;   // Pipe is complete and in use for production.
 
     SharedSurface_EGLImage(GLContext* gl,
                            GLLibraryEGL* egl,
                            const gfx::IntSize& size,
                            bool hasAlpha,
                            const GLFormats& formats,
-                           GLuint prodTex);
+                           GLuint prodTex,
+                           EGLImage image);
 
     EGLDisplay Display() const;
 
@@ -65,7 +61,7 @@ protected:
 public:
     virtual ~SharedSurface_EGLImage();
 
-    virtual void LockProdImpl();
+    virtual void LockProdImpl() {}
     virtual void UnlockProdImpl() {}
 
 
@@ -78,11 +74,8 @@ public:
     }
 
     // Implementation-specific functions below:
-    // Returns 0 if the pipe isn't ready. If 0, use GetPixels below.
-    GLuint AcquireConsumerTexture(GLContext* consGL);
-
-    // Will be void if AcquireConsumerTexture returns non-zero.
-    gfx::DataSourceSurface* GetPixels() const;
+    // Returns texture and target
+    void AcquireConsumerTexture(GLContext* consGL, GLuint* out_texture, GLuint* out_target);
 };
 
 
