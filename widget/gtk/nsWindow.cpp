@@ -2368,8 +2368,7 @@ nsWindow::OnConfigureEvent(GtkWidget *aWidget, GdkEventConfigure *aEvent)
 
     // XXX mozilla will invalidate the entire window after this move
     // complete.  wtf?
-    if (mWidgetListener)
-      mWidgetListener->WindowMoved(this, mBounds.x, mBounds.y);
+    NotifyWindowMoved(mBounds.x, mBounds.y);
 
     return FALSE;
 }
