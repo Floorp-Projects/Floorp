@@ -91,7 +91,7 @@
 #  else
 #    error "CPU type is unknown"
 #  endif
-#elif defined(__APPLE__)
+#elif defined(__APPLE__) || defined(__powerpc__) || defined(__ppc__)
 #  if __LITTLE_ENDIAN__
 #    define MOZ_LITTLE_ENDIAN 1
 #  elif __BIG_ENDIAN__
@@ -119,8 +119,7 @@
  * cases.
  */
 #elif defined(__sparc) || defined(__sparc__) || \
-      defined(_POWER) || defined(__powerpc__) || \
-      defined(__ppc__) || defined(__hppa) || \
+      defined(_POWER) || defined(__hppa) || \
       defined(_MIPSEB) || defined(__ARMEB__) || \
       defined(__s390__) || defined(__AARCH64EB__) || \
       (defined(__sh__) && defined(__LITTLE_ENDIAN__)) || \
