@@ -17,7 +17,7 @@
 #include "gfxColor.h"
 #include "gfxContext.h"
 #include "gfxUtils.h"
-#include "gfxPlatform.h"
+#include "gfxPrefs.h"
 #include "nsIWidget.h"
 
 #include "GLContext.h"
@@ -637,7 +637,7 @@ NS_IMPL_ISUPPORTS1(DebugDataSender, nsIRunnable);
 void
 LayerScope::CreateServerSocket()
 {
-    if (!Preferences::GetBool("gfx.layerscope.enabled", false)) {
+    if (!gfxPrefs::LayerScopeEnabled()) {
         return;
     }
 
@@ -814,7 +814,7 @@ LayerScopeWebSocketManager::LayerScopeWebSocketManager()
     NS_NewThread(getter_AddRefs(mDebugSenderThread));
 
     mServerSocket = do_CreateInstance(NS_SERVERSOCKET_CONTRACTID);
-    int port = Preferences::GetInt("gfx.layerscope.port", 23456);
+    int port = gfxPrefs::LayerScopePort();
     mServerSocket->Init(port, false, -1);
     mServerSocket->AsyncListen(new DebugListener);
 }
