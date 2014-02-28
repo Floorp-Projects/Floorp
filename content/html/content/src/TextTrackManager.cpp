@@ -82,6 +82,7 @@ StaticRefPtr<nsIWebVTTParserWrapper> TextTrackManager::sParserWrapper;
 
 TextTrackManager::TextTrackManager(HTMLMediaElement *aMediaElement)
   : mMediaElement(aMediaElement)
+  , performedTrackSelection(false)
 {
   MOZ_COUNT_CTOR(TextTrackManager);
   mNewCues = new TextTrackCueList(mMediaElement->OwnerDoc()->GetParentObject());
@@ -123,6 +124,11 @@ TextTrackManager::AddTextTrack(TextTrackKind aKind, const nsAString& aLabel,
     mTextTracks->AddTextTrack(aKind, aLabel, aLanguage, aMode, aReadyState,
                               aTextTrackSource, CompareTextTracks(mMediaElement));
   AddCues(ttrack);
+
+  if (aTextTrackSource == Track) {
+    HonorUserPreferencesForTrackSelection();
+  }
+
   return ttrack.forget();
 }
 
@@ -134,6 +140,9 @@ TextTrackManager::AddTextTrack(TextTrack* aTextTrack)
   }
   mTextTracks->AddTextTrack(aTextTrack, CompareTextTracks(mMediaElement));
   AddCues(aTextTrack);
+  if (aTextTrack->GetTextTrackSource() == Track) {
+    HonorUserPreferencesForTrackSelection();
+  }
 }
 
 void
@@ -221,6 +230,100 @@ TextTrackManager::PopulatePendingList()
         ttrack->ReadyState() == TextTrackReadyState::Loading) {
       mPendingTextTracks->AddTextTrack(ttrack,
                                        CompareTextTracks(mMediaElement));
+    }
+  }
+}
+
+void
+TextTrackManager::HonorUserPreferencesForTrackSelection()
+{
+  if (performedTrackSelection) {
+    return;
+  }
+
+  TextTrackKind ttKinds[] = { TextTrackKind::Captions,
+                              TextTrackKind::Subtitles };
+
+  // Steps 1 - 3: Perform automatic track selection for different TextTrack
+  // Kinds.
+  PerformTrackSelection(ttKinds, ArrayLength(ttKinds));
+  PerformTrackSelection(TextTrackKind::Descriptions);
+  PerformTrackSelection(TextTrackKind::Chapters);
+
+  // Step 4: Set all TextTracks with a kind of metadata that are disabled
+  // to hidden.
+  for (uint32_t i = 0; i < mTextTracks->Length(); i++) {
+    TextTrack* track = (*mTextTracks)[i];
+    if (track->Kind() == TextTrackKind::Metadata && TrackIsDefault(track) &&
+        track->Mode() == TextTrackMode::Disabled) {
+      track->SetMode(TextTrackMode::Hidden);
+    }
+  }
+
+  performedTrackSelection = true;
+}
+
+bool
+TextTrackManager::TrackIsDefault(TextTrack* aTextTrack)
+{
+  HTMLTrackElement* trackElement = aTextTrack->GetTrackElement();
+  if (!trackElement) {
+    return false;
+  }
+  return trackElement->Default();
+}
+
+void
+TextTrackManager::PerformTrackSelection(TextTrackKind aTextTrackKind)
+{
+  TextTrackKind ttKinds[] = { aTextTrackKind };
+  PerformTrackSelection(ttKinds, ArrayLength(ttKinds));
+}
+
+void
+TextTrackManager::PerformTrackSelection(TextTrackKind aTextTrackKinds[],
+                                        uint32_t size)
+{
+  nsTArray<TextTrack*> candidates;
+  GetTextTracksOfKinds(aTextTrackKinds, size, candidates);
+
+  // Step 3: If any TextTracks in candidates are showing then abort these steps.
+  for (uint32_t i = 0; i < candidates.Length(); i++) {
+    if (candidates[i]->Mode() == TextTrackMode::Showing) {
+      return;
+    }
+  }
+
+  // Step 4: Honor user preferences for track selection, otherwise, set the
+  // first TextTrack in candidates with a default attribute to showing.
+  // TODO: Bug 981691 - Honor user preferences for text track selection.
+  for (uint32_t i = 0; i < candidates.Length(); i++) {
+    if (TrackIsDefault(candidates[i]) &&
+        candidates[i]->Mode() == TextTrackMode::Disabled) {
+      candidates[i]->SetMode(TextTrackMode::Showing);
+      return;
+    }
+  }
+}
+
+void
+TextTrackManager::GetTextTracksOfKinds(TextTrackKind aTextTrackKinds[],
+                                       uint32_t size,
+                                       nsTArray<TextTrack*>& aTextTracks)
+{
+  for (uint32_t i = 0; i < size; i++) {
+    GetTextTracksOfKind(aTextTrackKinds[i], aTextTracks);
+  }
+}
+
+void
+TextTrackManager::GetTextTracksOfKind(TextTrackKind aTextTrackKind,
+                                      nsTArray<TextTrack*>& aTextTracks)
+{
+  for (uint32_t i = 0; i < mTextTracks->Length(); i++) {
+    TextTrack* textTrack = (*mTextTracks)[i];
+    if (textTrack->Kind() == aTextTrackKind) {
+      aTextTracks.AppendElement(textTrack);
     }
   }
 }
