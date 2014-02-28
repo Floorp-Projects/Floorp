@@ -37,7 +37,7 @@ class StartRecordingHelper;
 class nsDOMCameraControl MOZ_FINAL : public DOMMediaStream
 {
 public:
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(nsDOMCameraControl, DOMMediaStream)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsDOMCameraControl, DOMMediaStream)
   NS_DECL_ISUPPORTS_INHERITED
 
   nsDOMCameraControl(uint32_t aCameraId,
