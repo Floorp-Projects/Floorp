@@ -4144,6 +4144,69 @@ MacroAssemblerARMCompat::round(FloatRegister input, Register output, Label *bail
     bind(&fin);
 }
 
+void
+MacroAssemblerARMCompat::roundf(FloatRegister input, Register output, Label *bail, FloatRegister tmp)
+{
+    Label handleZero;
+    Label handleNeg;
+    Label fin;
+    // Do a compare based on the original value, then do most other things based on the
+    // shifted value.
+    ma_vcmpz_f32(input);
+    // Adding 0.5 is technically incorrect!
+    // We want to add 0.5 to negative numbers, and 0.49999999999999999 to positive numbers.
+    ma_vimm_f32(0.5f, ScratchFloatReg);
+    // Since we already know the sign bit, flip all numbers to be positive, stored in tmp.
+    ma_vabs_f32(input, tmp);
+    // Add 0.5, storing the result into tmp.
+    ma_vadd_f32(ScratchFloatReg, tmp, tmp);
+    as_vmrs(pc);
+    ma_b(&handleZero, Assembler::Equal);
+    ma_b(&handleNeg, Assembler::Signed);
+    // NaN is always a bail condition, just bail directly.
+    ma_b(bail, Assembler::Overflow);
+
+    // The argument is a positive number, truncation is the path to glory;
+    // Since it is known to be > 0.0, explicitly convert to a larger range,
+    // then a value that rounds to INT_MAX is explicitly different from an
+    // argument that clamps to INT_MAX
+    ma_vcvt_F32_U32(tmp, ScratchFloatReg);
+    ma_vxfer(VFPRegister(ScratchFloatReg).uintOverlay(), output);
+    ma_mov(output, output, SetCond);
+    ma_b(bail, Signed);
+    ma_b(&fin);
+
+    bind(&handleZero);
+    // Move the top word of the double into the output reg, if it is non-zero,
+    // then the original value was -0.0
+    as_vxfer(output, InvalidReg, input, FloatToCore, Always, 1);
+    ma_cmp(output, Imm32(0));
+    ma_b(bail, NonZero);
+    ma_b(&fin);
+
+    bind(&handleNeg);
+    // Negative case, negate, then start dancing.  This number may be positive, since we added 0.5
+    ma_vcvt_F32_U32(tmp, ScratchFloatReg);
+    ma_vxfer(VFPRegister(ScratchFloatReg).uintOverlay(), output);
+
+    // -output is now a correctly rounded value, unless the original value was exactly
+    // halfway between two integers, at which point, it has been rounded away from zero, when
+    // it should be rounded towards \infty.
+    ma_vcvt_U32_F32(ScratchFloatReg, ScratchFloatReg);
+    compareFloat(ScratchFloatReg, tmp);
+    ma_sub(output, Imm32(1), output, NoSetCond, Equal);
+    // Negate the output.  Since INT_MIN < -INT_MAX, even after adding 1,
+    // the result will still be a negative number
+    ma_rsb(output, Imm32(0), output, SetCond);
+
+    // If the result looks non-negative, then this value didn't actually fit into
+    // the int range, and special handling is required, or it was zero, which means
+    // the result is actually -0.0 which also requires special handling.
+    ma_b(bail, NotSigned);
+
+    bind(&fin);
+}
+
 CodeOffsetJump
 MacroAssemblerARMCompat::jumpWithPatch(RepatchLabel *label, Condition cond)
 {

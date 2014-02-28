@@ -112,6 +112,7 @@ class CodeGeneratorARM : public CodeGeneratorShared
     virtual bool visitFloor(LFloor *lir);
     virtual bool visitFloorF(LFloorF *lir);
     virtual bool visitRound(LRound *lir);
+    virtual bool visitRoundF(LRoundF *lir);
     virtual bool visitTruncateDToInt32(LTruncateDToInt32 *ins);
     virtual bool visitTruncateFToInt32(LTruncateFToInt32 *ins);
 
