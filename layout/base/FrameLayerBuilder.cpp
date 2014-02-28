@@ -1946,6 +1946,7 @@ ContainerState::ThebesLayerData::Accumulate(ContainerState* aState,
   } else {
     mImage = nullptr;
   }
+  bool clipMatches = mItemClip == aClip;
   mItemClip = aClip;
 
   if (!mIsSolidColorInVisibleRegion && mOpaqueRegion.Contains(aDrawRect) &&
@@ -1979,13 +1980,14 @@ ContainerState::ThebesLayerData::Accumulate(ContainerState* aState,
         isUniform = false;
       }
     }
-    if (isUniform && aClip.GetRoundedRectCount() == 0) {
+    if (isUniform) {
       if (mVisibleRegion.IsEmpty()) {
         // This color is all we have
         mSolidColor = uniformColor;
         mIsSolidColorInVisibleRegion = true;
       } else if (mIsSolidColorInVisibleRegion &&
-                 mVisibleRegion.IsEqual(nsIntRegion(aVisibleRect))) {
+                 mVisibleRegion.IsEqual(nsIntRegion(aVisibleRect)) &&
+                 clipMatches) {
         // we can just blend the colors together
         mSolidColor = NS_ComposeColors(mSolidColor, uniformColor);
       } else {
