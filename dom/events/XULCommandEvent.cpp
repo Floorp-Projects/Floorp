@@ -4,14 +4,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsDOMXULCommandEvent.h"
+#include "mozilla/dom/XULCommandEvent.h"
 #include "prtime.h"
 
-using namespace mozilla;
+namespace mozilla {
+namespace dom {
 
-nsDOMXULCommandEvent::nsDOMXULCommandEvent(mozilla::dom::EventTarget* aOwner,
-                                           nsPresContext* aPresContext,
-                                           WidgetInputEvent* aEvent)
+XULCommandEvent::XULCommandEvent(EventTarget* aOwner,
+                                 nsPresContext* aPresContext,
+                                 WidgetInputEvent* aEvent)
   : nsDOMUIEvent(aOwner, aPresContext,
                  aEvent ? aEvent : new WidgetInputEvent(false, 0, nullptr))
 {
@@ -24,24 +25,24 @@ nsDOMXULCommandEvent::nsDOMXULCommandEvent(mozilla::dom::EventTarget* aOwner,
   }
 }
 
-NS_IMPL_ADDREF_INHERITED(nsDOMXULCommandEvent, nsDOMUIEvent)
-NS_IMPL_RELEASE_INHERITED(nsDOMXULCommandEvent, nsDOMUIEvent)
+NS_IMPL_ADDREF_INHERITED(XULCommandEvent, nsDOMUIEvent)
+NS_IMPL_RELEASE_INHERITED(XULCommandEvent, nsDOMUIEvent)
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_1(nsDOMXULCommandEvent, nsDOMUIEvent,
+NS_IMPL_CYCLE_COLLECTION_INHERITED_1(XULCommandEvent, nsDOMUIEvent,
                                      mSourceEvent)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsDOMXULCommandEvent)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(XULCommandEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMXULCommandEvent)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMUIEvent)
 
 bool
-nsDOMXULCommandEvent::AltKey()
+XULCommandEvent::AltKey()
 {
   return mEvent->AsInputEvent()->IsAlt();
 }
 
 NS_IMETHODIMP
-nsDOMXULCommandEvent::GetAltKey(bool* aIsDown)
+XULCommandEvent::GetAltKey(bool* aIsDown)
 {
   NS_ENSURE_ARG_POINTER(aIsDown);
   *aIsDown = AltKey();
@@ -49,13 +50,13 @@ nsDOMXULCommandEvent::GetAltKey(bool* aIsDown)
 }
 
 bool
-nsDOMXULCommandEvent::CtrlKey()
+XULCommandEvent::CtrlKey()
 {
   return mEvent->AsInputEvent()->IsControl();
 }
 
 NS_IMETHODIMP
-nsDOMXULCommandEvent::GetCtrlKey(bool* aIsDown)
+XULCommandEvent::GetCtrlKey(bool* aIsDown)
 {
   NS_ENSURE_ARG_POINTER(aIsDown);
   *aIsDown = CtrlKey();
@@ -63,13 +64,13 @@ nsDOMXULCommandEvent::GetCtrlKey(bool* aIsDown)
 }
 
 bool
-nsDOMXULCommandEvent::ShiftKey()
+XULCommandEvent::ShiftKey()
 {
   return mEvent->AsInputEvent()->IsShift();
 }
 
 NS_IMETHODIMP
-nsDOMXULCommandEvent::GetShiftKey(bool* aIsDown)
+XULCommandEvent::GetShiftKey(bool* aIsDown)
 {
   NS_ENSURE_ARG_POINTER(aIsDown);
   *aIsDown = ShiftKey();
@@ -77,13 +78,13 @@ nsDOMXULCommandEvent::GetShiftKey(bool* aIsDown)
 }
 
 bool
-nsDOMXULCommandEvent::MetaKey()
+XULCommandEvent::MetaKey()
 {
   return mEvent->AsInputEvent()->IsMeta();
 }
 
 NS_IMETHODIMP
-nsDOMXULCommandEvent::GetMetaKey(bool* aIsDown)
+XULCommandEvent::GetMetaKey(bool* aIsDown)
 {
   NS_ENSURE_ARG_POINTER(aIsDown);
   *aIsDown = MetaKey();
@@ -91,7 +92,7 @@ nsDOMXULCommandEvent::GetMetaKey(bool* aIsDown)
 }
 
 NS_IMETHODIMP
-nsDOMXULCommandEvent::GetSourceEvent(nsIDOMEvent** aSourceEvent)
+XULCommandEvent::GetSourceEvent(nsIDOMEvent** aSourceEvent)
 {
   NS_ENSURE_ARG_POINTER(aSourceEvent);
   *aSourceEvent = GetSourceEvent().get();
@@ -99,13 +100,16 @@ nsDOMXULCommandEvent::GetSourceEvent(nsIDOMEvent** aSourceEvent)
 }
 
 NS_IMETHODIMP
-nsDOMXULCommandEvent::InitCommandEvent(const nsAString& aType,
-                                       bool aCanBubble, bool aCancelable,
-                                       nsIDOMWindow* aView,
-                                       int32_t aDetail,
-                                       bool aCtrlKey, bool aAltKey,
-                                       bool aShiftKey, bool aMetaKey,
-                                       nsIDOMEvent* aSourceEvent)
+XULCommandEvent::InitCommandEvent(const nsAString& aType,
+                                  bool aCanBubble,
+                                  bool aCancelable,
+                                  nsIDOMWindow* aView,
+                                  int32_t aDetail,
+                                  bool aCtrlKey,
+                                  bool aAltKey,
+                                  bool aShiftKey,
+                                  bool aMetaKey,
+                                  nsIDOMEvent* aSourceEvent)
 {
   nsresult rv = nsDOMUIEvent::InitUIEvent(aType, aCanBubble, aCancelable,
                                           aView, aDetail);
@@ -118,13 +122,18 @@ nsDOMXULCommandEvent::InitCommandEvent(const nsAString& aType,
   return NS_OK;
 }
 
+} // namespace dom
+} // namespace mozilla
 
-nsresult NS_NewDOMXULCommandEvent(nsIDOMEvent** aInstancePtrResult,
-                                  mozilla::dom::EventTarget* aOwner,
-                                  nsPresContext* aPresContext,
-                                  WidgetInputEvent* aEvent) 
+using namespace mozilla;
+using namespace mozilla::dom;
+
+nsresult
+NS_NewDOMXULCommandEvent(nsIDOMEvent** aInstancePtrResult,
+                         EventTarget* aOwner,
+                         nsPresContext* aPresContext,
+                         WidgetInputEvent* aEvent) 
 {
-  nsDOMXULCommandEvent* it =
-    new nsDOMXULCommandEvent(aOwner, aPresContext, aEvent);
+  XULCommandEvent* it = new XULCommandEvent(aOwner, aPresContext, aEvent);
   return CallQueryInterface(it, aInstancePtrResult);
 }
