@@ -738,10 +738,8 @@ public:
     void Init()
     {
         MOZ_ASSERT(IsEmpty(), "Failed to call GCGraph::Clear");
-        if (!PL_DHashTableInit(&mPtrToNodeMap, &PtrNodeOps, nullptr,
-                               sizeof(PtrToNodeEntry), 32768)) {
-            MOZ_CRASH();
-        }
+        PL_DHashTableInit(&mPtrToNodeMap, &PtrNodeOps, nullptr,
+                          sizeof(PtrToNodeEntry), 32768);
     }
 
     void Clear()
