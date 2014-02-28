@@ -125,9 +125,17 @@ RotatedBuffer::DrawBufferQuadrant(gfx::DrawTarget* aTarget,
   }
 
   if (aMask) {
+    Matrix oldTransform = aTarget->GetTransform();
+
     // Transform from user -> buffer space.
     Matrix transform;
     transform.Translate(quadrantTranslation.x, quadrantTranslation.y);
+
+    Matrix inverseMask = *aMaskTransform;
+    inverseMask.Invert();
+
+    transform *= oldTransform;
+    transform *= inverseMask;
 
 #ifdef MOZ_GFX_OPTIMIZE_MOBILE
     SurfacePattern source(snapshot, ExtendMode::CLAMP, transform, Filter::POINT);
@@ -135,7 +143,6 @@ RotatedBuffer::DrawBufferQuadrant(gfx::DrawTarget* aTarget,
     SurfacePattern source(snapshot, ExtendMode::CLAMP, transform);
 #endif
 
-    Matrix oldTransform = aTarget->GetTransform();
     aTarget->SetTransform(*aMaskTransform);
     aTarget->MaskSurface(source, aMask, Point(0, 0), DrawOptions(aOpacity, aOperator));
     aTarget->SetTransform(oldTransform);
