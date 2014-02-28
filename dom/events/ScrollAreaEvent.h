@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsDOMScrollAreaEvent_h__
-#define nsDOMScrollAreaEvent_h__
+#ifndef mozilla_dom_ScrollAreaEvent_h_
+#define mozilla_dom_ScrollAreaEvent_h_
 
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
@@ -14,15 +14,16 @@
 #include "mozilla/dom/DOMRect.h"
 #include "mozilla/dom/ScrollAreaEventBinding.h"
 
-class nsDOMScrollAreaEvent : public nsDOMUIEvent,
-                             public nsIDOMScrollAreaEvent
-{
-  typedef mozilla::dom::DOMRect DOMRect;
+namespace mozilla {
+namespace dom {
 
+class ScrollAreaEvent : public nsDOMUIEvent,
+                        public nsIDOMScrollAreaEvent
+{
 public:
-  nsDOMScrollAreaEvent(mozilla::dom::EventTarget* aOwner,
-                       nsPresContext *aPresContext,
-                       mozilla::InternalScrollAreaEvent* aEvent);
+  ScrollAreaEvent(EventTarget* aOwner,
+                  nsPresContext* aPresContext,
+                  InternalScrollAreaEvent* aEvent);
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -41,7 +42,7 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
   {
-    return mozilla::dom::ScrollAreaEventBinding::Wrap(aCx, aScope, this);
+    return ScrollAreaEventBinding::Wrap(aCx, aScope, this);
   }
 
   float X() const
@@ -71,7 +72,7 @@ public:
                            int32_t aDetail,
                            float aX, float aY,
                            float aWidth, float aHeight,
-                           mozilla::ErrorResult& aRv)
+                           ErrorResult& aRv)
   {
     aRv = InitScrollAreaEvent(aType, aCanBubble, aCancelable, aView,
                               aDetail, aX, aY, aWidth, aHeight);
@@ -81,4 +82,7 @@ protected:
   DOMRect mClientArea;
 };
 
-#endif // nsDOMScrollAreaEvent_h__
+} // namespace dom
+} // namespace mozilla
+
+#endif // mozilla_dom_ScrollAreaEvent_h_

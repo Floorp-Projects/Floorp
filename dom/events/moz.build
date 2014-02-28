@@ -54,6 +54,7 @@ EXPORTS.mozilla.dom += [
     'NotifyAudioAvailableEvent.h',
     'NotifyPaintEvent.h',
     'PointerEvent.h',
+    'ScrollAreaEvent.h',
     'SimpleGestureEvent.h',
     'Touch.h',
     'TouchEvent.h',
@@ -112,9 +113,6 @@ SOURCES += [
     'nsDOMEvent.cpp',
     # nsDOMEvent.cpp should be built separately because it includes
     # ipc/IPCMessageUtils.h, which on Windows includes windows.h.
-    'nsDOMScrollAreaEvent.cpp',
-    # nsDOMEvent.cpp should be built separately because it includes
-    # ipc/IPCMessageUtils.h, which on Windows includes windows.h.
     'nsDOMUIEvent.cpp',
     # nsDOMEvent.cpp should be built separately because it includes
     # mozilla/HalSensor.h, which includes ipc/IPCMessageUtils.h, which
@@ -122,6 +120,9 @@ SOURCES += [
     'nsEventListenerManager.cpp',
     # nsEventStateManager.cpp should be built separately because of Mac OS X headers.
     'nsEventStateManager.cpp',
+    # nsDOMEvent.cpp should be built separately because it includes
+    # ipc/IPCMessageUtils.h, which on Windows includes windows.h.
+    'ScrollAreaEvent.cpp',
 ]
 
 if CONFIG['MOZ_WEBSPEECH']:
