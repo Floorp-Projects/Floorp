@@ -154,6 +154,8 @@ private:
 
   DECL_GFX_PREF(Live, "nglayout.debug.widget_update_flashing", WidgetUpdateFlashing, bool, false);
 
+  DECL_GFX_PREF(Once, "webgl.force-layers-readback",           WebGLForceLayersReadback, bool, false);
+
 public:
   // Manage the singleton:
   static gfxPrefs& One()
