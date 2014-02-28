@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<head>
+	<style>
+		.parent {
+		  width: 200px;
+		  height: 200px;
+		  position: absolute;
+		  z-index: 1;
+			background-color: #00ff00;
+		}
+
+		.intermediate {
+			width: 100px;
+		  height: 100px;
+		  margin-left:50px;
+		  background-color: #ffffff;
+		}
+
+		.child {
+		  width: 100px;
+		  height: 100px;
+		  margin-left:50px;
+		  background-color: #00ffff;
+		}
+
+		.grandchild {
+			width: 50px;
+			height: 100px;
+			margin-left: 50px;
+			background-color: #0000ff;
+		}
+
+		body {
+			margin:0px;
+		}
+
+	</style>
+</head>
+<body>
+	<div class="parent">
+		<div class="intermediate">
+	    <div class="child">
+	    	<div class="grandchild"></div>
+	    </div>
+    </div>
+	</div>
+</body>
