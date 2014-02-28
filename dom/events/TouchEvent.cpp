@@ -67,8 +67,8 @@ TouchList::IdentifiedTouch(int32_t aIdentifier) const
 TouchEvent::TouchEvent(EventTarget* aOwner,
                        nsPresContext* aPresContext,
                        WidgetTouchEvent* aEvent)
-  : nsDOMUIEvent(aOwner, aPresContext,
-                 aEvent ? aEvent : new WidgetTouchEvent(false, 0, nullptr))
+  : UIEvent(aOwner, aPresContext,
+            aEvent ? aEvent : new WidgetTouchEvent(false, 0, nullptr))
 {
   if (aEvent) {
     mEventIsInternal = false;
@@ -83,16 +83,16 @@ TouchEvent::TouchEvent(EventTarget* aOwner,
   }
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_3(TouchEvent, nsDOMUIEvent,
+NS_IMPL_CYCLE_COLLECTION_INHERITED_3(TouchEvent, UIEvent,
                                      mTouches,
                                      mTargetTouches,
                                      mChangedTouches)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(TouchEvent)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMUIEvent)
+NS_INTERFACE_MAP_END_INHERITING(UIEvent)
 
-NS_IMPL_ADDREF_INHERITED(TouchEvent, nsDOMUIEvent)
-NS_IMPL_RELEASE_INHERITED(TouchEvent, nsDOMUIEvent)
+NS_IMPL_ADDREF_INHERITED(TouchEvent, UIEvent)
+NS_IMPL_RELEASE_INHERITED(TouchEvent, UIEvent)
 
 void
 TouchEvent::InitTouchEvent(const nsAString& aType,
@@ -109,11 +109,7 @@ TouchEvent::InitTouchEvent(const nsAString& aType,
                            TouchList* aChangedTouches,
                            ErrorResult& aRv)
 {
-  aRv = nsDOMUIEvent::InitUIEvent(aType,
-                                  aCanBubble,
-                                  aCancelable,
-                                  aView,
-                                  aDetail);
+  aRv = UIEvent::InitUIEvent(aType, aCanBubble, aCancelable, aView, aDetail);
   if (aRv.Failed()) {
     return;
   }

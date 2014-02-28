@@ -5,13 +5,13 @@
 #ifndef mozilla_dom_TouchEvent_h_
 #define mozilla_dom_TouchEvent_h_
 
-#include "nsDOMUIEvent.h"
-#include "nsTArray.h"
+#include "mozilla/dom/Touch.h"
+#include "mozilla/dom/TouchEventBinding.h"
+#include "mozilla/dom/UIEvent.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
 #include "nsJSEnvironment.h"
-#include "mozilla/dom/Touch.h"
-#include "mozilla/dom/TouchEventBinding.h"
+#include "nsTArray.h"
 #include "nsWrapperCache.h"
 
 class nsAString;
@@ -80,7 +80,7 @@ protected:
   nsTArray<nsRefPtr<Touch> > mPoints;
 };
 
-class TouchEvent : public nsDOMUIEvent
+class TouchEvent : public UIEvent
 {
 public:
   TouchEvent(EventTarget* aOwner,
@@ -88,7 +88,7 @@ public:
              WidgetTouchEvent* aEvent);
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(TouchEvent, nsDOMUIEvent)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(TouchEvent, UIEvent)
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE

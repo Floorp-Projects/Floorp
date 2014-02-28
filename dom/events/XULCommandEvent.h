@@ -9,14 +9,14 @@
 #ifndef mozilla_dom_XULCommandEvent_h_
 #define mozilla_dom_XULCommandEvent_h_
 
-#include "nsDOMUIEvent.h"
-#include "nsIDOMXULCommandEvent.h"
+#include "mozilla/dom/UIEvent.h"
 #include "mozilla/dom/XULCommandEventBinding.h"
+#include "nsIDOMXULCommandEvent.h"
 
 namespace mozilla {
 namespace dom {
 
-class XULCommandEvent : public nsDOMUIEvent,
+class XULCommandEvent : public UIEvent,
                         public nsIDOMXULCommandEvent
 {
 public:
@@ -25,11 +25,11 @@ public:
                   WidgetInputEvent* aEvent);
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(XULCommandEvent, nsDOMUIEvent)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(XULCommandEvent, UIEvent)
   NS_DECL_NSIDOMXULCOMMANDEVENT
 
   // Forward our inherited virtual methods to the base class
-  NS_FORWARD_TO_NSDOMUIEVENT
+  NS_FORWARD_TO_UIEVENT
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE

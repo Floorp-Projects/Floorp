@@ -15,18 +15,18 @@ namespace dom {
 ScrollAreaEvent::ScrollAreaEvent(EventTarget* aOwner,
                                  nsPresContext* aPresContext,
                                  InternalScrollAreaEvent* aEvent)
-  : nsDOMUIEvent(aOwner, aPresContext, aEvent)
+  : UIEvent(aOwner, aPresContext, aEvent)
   , mClientArea(nullptr)
 {
   mClientArea.SetLayoutRect(aEvent ? aEvent->mArea : nsRect());
 }
 
-NS_IMPL_ADDREF_INHERITED(ScrollAreaEvent, nsDOMUIEvent)
-NS_IMPL_RELEASE_INHERITED(ScrollAreaEvent, nsDOMUIEvent)
+NS_IMPL_ADDREF_INHERITED(ScrollAreaEvent, UIEvent)
+NS_IMPL_RELEASE_INHERITED(ScrollAreaEvent, UIEvent)
 
 NS_INTERFACE_MAP_BEGIN(ScrollAreaEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMScrollAreaEvent)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMUIEvent)
+NS_INTERFACE_MAP_END_INHERITING(UIEvent)
 
 
 #define FORWARD_GETTER(_name)                                                  \
@@ -53,7 +53,8 @@ ScrollAreaEvent::InitScrollAreaEvent(const nsAString& aEventType,
                                      float aWidth,
                                      float aHeight)
 {
-  nsresult rv = nsDOMUIEvent::InitUIEvent(aEventType, aCanBubble, aCancelable, aView, aDetail);
+  nsresult rv =
+    UIEvent::InitUIEvent(aEventType, aCanBubble, aCancelable, aView, aDetail);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mClientArea.SetRect(aX, aY, aWidth, aHeight);
