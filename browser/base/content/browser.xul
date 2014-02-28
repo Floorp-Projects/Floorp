@@ -691,6 +691,8 @@
                 <image id="mixed-content-blocked-notification-icon" class="notification-anchor-icon" role="button"/>
                 <image id="webRTC-shareDevices-notification-icon" class="notification-anchor-icon" role="button"/>
                 <image id="webRTC-sharingDevices-notification-icon" class="notification-anchor-icon" role="button"/>
+                <image id="webRTC-shareMicrophone-notification-icon" class="notification-anchor-icon" role="button"/>
+                <image id="webRTC-sharingMicrophone-notification-icon" class="notification-anchor-icon" role="button"/>
                 <image id="pointerLock-notification-icon" class="notification-anchor-icon" role="button"/>
                 <image id="servicesInstall-notification-icon" class="notification-anchor-icon" role="button"/>
               </box>
