@@ -6,15 +6,15 @@
 #ifndef mozilla_dom_KeyboardEvent_h_
 #define mozilla_dom_KeyboardEvent_h_
 
-#include "nsIDOMKeyEvent.h"
-#include "nsDOMUIEvent.h"
-#include "mozilla/EventForwards.h"
+#include "mozilla/dom/UIEvent.h"
 #include "mozilla/dom/KeyboardEventBinding.h"
+#include "mozilla/EventForwards.h"
+#include "nsIDOMKeyEvent.h"
 
 namespace mozilla {
 namespace dom {
 
-class KeyboardEvent : public nsDOMUIEvent,
+class KeyboardEvent : public UIEvent,
                       public nsIDOMKeyEvent
 {
 public:
@@ -28,7 +28,7 @@ public:
   NS_DECL_NSIDOMKEYEVENT
 
   // Forward to base class
-  NS_FORWARD_TO_NSDOMUIEVENT
+  NS_FORWARD_TO_UIEVENT
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE

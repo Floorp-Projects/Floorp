@@ -6,15 +6,15 @@
 #ifndef mozilla_dom_MouseEvent_h_
 #define mozilla_dom_MouseEvent_h_
 
-#include "nsIDOMMouseEvent.h"
-#include "nsDOMUIEvent.h"
+#include "mozilla/dom/UIEvent.h"
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/EventForwards.h"
+#include "nsIDOMMouseEvent.h"
 
 namespace mozilla {
 namespace dom {
 
-class MouseEvent : public nsDOMUIEvent,
+class MouseEvent : public UIEvent,
                    public nsIDOMMouseEvent
 {
 public:
@@ -28,7 +28,7 @@ public:
   NS_DECL_NSIDOMMOUSEEVENT
 
   // Forward to base class
-  NS_FORWARD_TO_NSDOMUIEVENT
+  NS_FORWARD_TO_UIEVENT
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
@@ -121,6 +121,6 @@ protected:
 
 #define NS_FORWARD_TO_MOUSEEVENT \
   NS_FORWARD_NSIDOMMOUSEEVENT(MouseEvent::) \
-  NS_FORWARD_TO_NSDOMUIEVENT
+  NS_FORWARD_TO_UIEVENT
 
 #endif // mozilla_dom_MouseEvent_h_
