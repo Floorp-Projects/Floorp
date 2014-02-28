@@ -52,6 +52,7 @@ enum BailoutKind
 static const uint32_t BAILOUT_KIND_BITS = 3;
 static const uint32_t BAILOUT_RESUME_BITS = 1;
 
+#ifdef DEBUG
 inline const char *
 BailoutKindString(BailoutKind kind)
 {
@@ -70,6 +71,7 @@ BailoutKindString(BailoutKind kind)
         MOZ_ASSUME_UNREACHABLE("Invalid BailoutKind");
     }
 }
+#endif
 
 static const uint32_t ELEMENT_TYPE_BITS = 4;
 static const uint32_t ELEMENT_TYPE_SHIFT = 0;
