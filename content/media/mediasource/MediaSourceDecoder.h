@@ -79,6 +79,10 @@ public:
     return mAudioReader;
   }
 
+  // Returns the duration in seconds as provided by the attached MediaSource.
+  // If no MediaSource is attached, returns the duration tracked by the decoder.
+  double GetMediaSourceDuration();
+
 private:
   dom::MediaSource* mMediaSource;
 

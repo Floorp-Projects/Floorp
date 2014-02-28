@@ -73,6 +73,9 @@ public:
   // Mark all SourceBuffers input buffers as ended.
   void Ended();
 
+  // Evicts data for the given time range from each SourceBuffer in the list.
+  void Evict(double aStart, double aEnd);
+
 private:
   friend class AsyncEventRunner<SourceBufferList>;
   void DispatchSimpleEvent(const char* aName);
