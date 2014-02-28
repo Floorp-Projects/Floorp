@@ -45,6 +45,10 @@ class GeckoInputConnection
     private static final boolean DEBUG = false;
     protected static final String LOGTAG = "GeckoInputConnection";
 
+    private static final String CUSTOM_HANDLER_TEST_METHOD = "testInputConnection";
+    private static final String CUSTOM_HANDLER_TEST_CLASS =
+        "org.mozilla.gecko.tests.components.GeckoViewComponent$TextInput";
+
     private static final int INLINE_IME_MIN_DISPLAY_SIZE = 480;
 
     private static Handler sBackgroundHandler;
@@ -541,6 +545,11 @@ class GeckoInputConnection
             if ("startInputInner".equals(frame.getMethodName()) &&
                 "android.view.inputmethod.InputMethodManager".equals(frame.getClassName())) {
                 // only return our own Handler to InputMethodManager
+                return true;
+            }
+            if (CUSTOM_HANDLER_TEST_METHOD.equals(frame.getMethodName()) &&
+                CUSTOM_HANDLER_TEST_CLASS.equals(frame.getClassName())) {
+                // InputConnection tests should also run on the custom handler
                 return true;
             }
         }

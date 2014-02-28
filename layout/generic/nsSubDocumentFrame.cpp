@@ -28,7 +28,7 @@
 #include "nsFrameSetFrame.h"
 #include "nsIDOMHTMLFrameElement.h"
 #include "nsIScrollable.h"
-#include "nsINameSpaceManager.h"
+#include "nsNameSpaceManager.h"
 #include "nsDisplayList.h"
 #include "nsIScrollableFrame.h"
 #include "nsIObjectLoadingContent.h"

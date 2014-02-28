@@ -12,8 +12,8 @@ function test() {
   let consoleObserver;
   let testURI =
     "http://example.com/browser/dom/tests/browser/test-console-api.html";
-  let CSS = {};
-  Cu.import("resource://gre/modules/ConsoleAPIStorage.jsm", CSS);
+  let ConsoleAPIStorage = Cc["@mozilla.org/consoleAPI-storage;1"]
+                            .getService(Ci.nsIConsoleAPIStorage);
 
   function getInnerWindowId(aWindow) {
     return aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -36,7 +36,7 @@ function test() {
       consoleObserver = {
         observe: function(aSubject, aTopic, aData) {
           if (aTopic == "console-api-log-event") {
-            afterEvents = CSS.ConsoleAPIStorage.getEvents(innerID);
+            afterEvents = ConsoleAPIStorage.getEvents(innerID);
             is(beforeEvents.length == afterEvents.length - 1, storageShouldOccur,
               "storage should" + (storageShouldOccur ? "" : " not") + " occur");
 
@@ -56,7 +56,7 @@ function test() {
     // We expect that console API messages are always stored.
     storageShouldOccur = true;
     innerID = getInnerWindowId(aWindow);
-    beforeEvents = CSS.ConsoleAPIStorage.getEvents(innerID);
+    beforeEvents = ConsoleAPIStorage.getEvents(innerID);
     aWindow.gBrowser.selectedBrowser.loadURI(testURI);
   }
 

@@ -81,11 +81,6 @@ EXPORTS.mozilla += [
     'VisualEventTracer.h',
 ]
 
-if CONFIG['OS_ARCH'] == 'WINNT':
-    EXPORTS.mozilla += [
-        'WindowsVersion.h',
-    ]
-
 # nsDebugImpl isn't unified because we disable PGO so that NS_ABORT_OOM isn't
 # optimized away oddly.
 SOURCES += [
