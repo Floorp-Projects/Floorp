@@ -515,10 +515,15 @@ StreamTextureSourceOGL::RetrieveTextureFromStream()
       SharedSurface_EGLImage* eglImageSurf =
           SharedSurface_EGLImage::Cast(sharedSurf);
 
-      eglImageSurf->AcquireConsumerTexture(gl(), &mTextureHandle, &mTextureTarget);
-      MOZ_ASSERT(mTextureHandle);
-      mFormat = sharedSurf->HasAlpha() ? SurfaceFormat::R8G8B8A8
-                                       : SurfaceFormat::R8G8B8X8;
+      mTextureHandle = eglImageSurf->AcquireConsumerTexture(gl());
+      mTextureTarget = eglImageSurf->TextureTarget();
+      if (!mTextureHandle) {
+        toUpload = eglImageSurf->GetPixels();
+        MOZ_ASSERT(toUpload);
+      } else {
+        mFormat = sharedSurf->HasAlpha() ? SurfaceFormat::R8G8B8A8
+                                         : SurfaceFormat::R8G8B8X8;
+      }
       break;
     }
 #ifdef XP_MACOSX
