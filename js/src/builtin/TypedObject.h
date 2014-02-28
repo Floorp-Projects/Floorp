@@ -880,6 +880,29 @@ IsTypedObjectClass(const Class *class_)
            class_ == &OpaqueTypedObject::class_;
 }
 
+inline bool
+IsSimpleTypeDescrClass(const Class* clasp)
+{
+    return clasp == &ScalarTypeDescr::class_ ||
+           clasp == &ReferenceTypeDescr::class_;
+}
+
+inline bool
+IsSizedTypeDescrClass(const Class* clasp)
+{
+    return IsSimpleTypeDescrClass(clasp) ||
+           clasp == &StructTypeDescr::class_ ||
+           clasp == &SizedArrayTypeDescr::class_ ||
+           clasp == &X4TypeDescr::class_;
+}
+
+inline bool
+IsTypeDescrClass(const Class* clasp)
+{
+    return IsSizedTypeDescrClass(clasp) ||
+           clasp == &UnsizedArrayTypeDescr::class_;
+}
+
 } // namespace js
 
 JSObject *
@@ -889,26 +912,21 @@ template <>
 inline bool
 JSObject::is<js::SimpleTypeDescr>() const
 {
-    return is<js::ScalarTypeDescr>() ||
-           is<js::ReferenceTypeDescr>();
+    return IsSimpleTypeDescrClass(getClass());
 }
 
 template <>
 inline bool
 JSObject::is<js::SizedTypeDescr>() const
 {
-    return is<js::SimpleTypeDescr>() ||
-           is<js::StructTypeDescr>() ||
-           is<js::SizedArrayTypeDescr>() ||
-           is<js::X4TypeDescr>();
+    return IsSizedTypeDescrClass(getClass());
 }
 
 template <>
 inline bool
 JSObject::is<js::TypeDescr>() const
 {
-    return is<js::SizedTypeDescr>() ||
-           is<js::UnsizedArrayTypeDescr>();
+    return IsTypeDescrClass(getClass());
 }
 
 template <>
@@ -919,4 +937,3 @@ JSObject::is<js::TypedObject>() const
 }
 
 #endif /* builtin_TypedObject_h */
-
