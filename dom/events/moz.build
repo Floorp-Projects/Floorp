@@ -52,6 +52,7 @@ EXPORTS.mozilla.dom += [
     'MouseScrollEvent.h',
     'MutationEvent.h',
     'NotifyAudioAvailableEvent.h',
+    'NotifyPaintEvent.h',
     'PointerEvent.h',
     'SimpleGestureEvent.h',
     'Touch.h',
@@ -105,10 +106,10 @@ UNIFIED_SOURCES += [
 SOURCES += [
     # nsDOMEvent.cpp should be built separately because it includes
     # ipc/IPCMessageUtils.h, which on Windows includes windows.h.
-    'nsDOMEvent.cpp',
+    'NotifyPaintEvent.cpp',
     # nsDOMEvent.cpp should be built separately because it includes
     # ipc/IPCMessageUtils.h, which on Windows includes windows.h.
-    'nsDOMNotifyPaintEvent.cpp',
+    'nsDOMEvent.cpp',
     # nsDOMEvent.cpp should be built separately because it includes
     # ipc/IPCMessageUtils.h, which on Windows includes windows.h.
     'nsDOMScrollAreaEvent.cpp',
