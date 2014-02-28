@@ -35,8 +35,9 @@ Finder.prototype = {
     this._listeners = this._listeners.filter(l => l != aListener);
   },
 
-  _notify: function (aSearchString, aResult, aFindBackwards, aDrawOutline) {
-    this._searchString = aSearchString;
+  _notify: function (aSearchString, aResult, aFindBackwards, aDrawOutline, aStoreResult = true) {
+    if (aStoreResult)
+      this._searchString = aSearchString;
     this._outlineLink(aDrawOutline);
 
     let foundLink = this._fastFind.foundLink;
@@ -56,7 +57,7 @@ Finder.prototype = {
     }
 
     for (let l of this._listeners) {
-      l.onFindResult(aResult, aFindBackwards, linkURL);
+      l.onFindResult(aResult, aFindBackwards, linkURL, aStoreResult);
     }
   },
 
@@ -101,7 +102,7 @@ Finder.prototype = {
     if (aHighlight) {
       let result = found ? Ci.nsITypeAheadFind.FIND_FOUND
                          : Ci.nsITypeAheadFind.FIND_NOTFOUND;
-      this._notify(aWord, result, false, false);
+      this._notify(aWord, result, false, false, false);
     }
   },
 
