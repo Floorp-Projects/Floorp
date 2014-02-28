@@ -13,6 +13,7 @@
 #include "jslibmath.h"
 #include "jsmath.h"
 #include "jsnum.h"
+#include "jsprf.h"
 
 #include "builtin/Eval.h"
 #include "builtin/TypedObject.h"
