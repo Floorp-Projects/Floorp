@@ -143,8 +143,3 @@ IOMarkerPayload::preparePayloadImp<JSCustomObjectBuilder>(JSCustomObjectBuilder&
 template JSObjectBuilder::Object
 IOMarkerPayload::preparePayloadImp<JSObjectBuilder>(JSObjectBuilder& b);
 
-void
-ProfilerJSEventMarker(const char *event)
-{
-    PROFILER_MARKER(event);
-}
