@@ -573,6 +573,8 @@ nsBrowserContentHandler.prototype = {
       } catch (ex) {}
       let override = needHomepageOverride(prefb);
       if (override != OVERRIDE_NONE) {
+        let locale = "en-US";
+
         switch (override) {
           case OVERRIDE_NEW_PROFILE:
             // New profile.
@@ -592,7 +594,6 @@ nsBrowserContentHandler.prototype = {
 
 #if MOZ_UPDATE_CHANNEL == aurora
             // Temporary Australis whatsnew page for Aurora (bug 966014)
-            let locale = "en-US";
             try {
               locale = Services.prefs.getCharPref("general.useragent.locale");
             } catch (e) {}
@@ -608,6 +609,27 @@ nsBrowserContentHandler.prototype = {
 
             overridePage = overridePage.replace("%OLD_VERSION%", old_mstone);
             break;
+
+#if MOZ_UPDATE_CHANNEL == aurora
+          case OVERRIDE_NEW_BUILD_ID:
+            try {
+              locale = Services.prefs.getCharPref("general.useragent.locale");
+            } catch (e) {}
+
+            let showedAustralisWhatsNew = false;
+            try {
+              showedAustralisWhatsNew = Services.prefs.
+                getBoolPref("browser.showedAustralisWhatsNew");
+            } catch (e) {}
+
+            // Show the Australis survey page for en-US if we haven't shown it.
+            if (!showedAustralisWhatsNew && locale == "en-US") {
+              Services.prefs.setBoolPref("browser.showedAustralisWhatsNew", true);
+              overridePage = "https://www.mozilla.org/en-US/firefox/aurora/up-to-date/"
+            }
+
+            break;
+#endif
         }
       }
     } catch (ex) {}
