@@ -140,6 +140,18 @@ private:
   gfxMatrix GetUserSpaceToFrameSpaceInCSSPxTransform() const;
 
   /**
+   * Finds the index in aPrimitiveDescrs of each input to aPrimitiveElement.
+   * For example, if aPrimitiveElement is:
+   *   <feGaussianBlur in="another-primitive" .../>
+   * Then, the resulting aSourceIndices will contain the index of the
+   * FilterPrimitiveDescription representing "another-primitive".
+   */
+  nsresult GetSourceIndices(nsSVGFE* aPrimitiveElement,
+                            const nsTArray<FilterPrimitiveDescription>& aPrimitiveDescrs,
+                            const nsDataHashtable<nsStringHashKey, int32_t>& aImageTable,
+                            nsTArray<int32_t>& aSourceIndices);
+
+  /**
    * The SVG reference filter originally from the style system.
    */
   const nsStyleFilter mFilter;
@@ -174,6 +186,13 @@ private:
    * The 'primitiveUnits' attribute value (objectBoundingBox or userSpaceOnUse).
    */
   uint16_t                mPrimitiveUnits;
+
+  /**
+   * The index of the FilterPrimitiveDescription that this SVG filter should use
+   * as its SourceGraphic, or the SourceGraphic keyword index if this is the
+   * first filter in a chain.
+   */
+  int32_t mSourceGraphicIndex;
 
   bool                    mInitialized;
 };
