@@ -4538,7 +4538,6 @@ var BrowserEventHandler = {
             let [x, y] = [data.x, data.y];
             if (ElementTouchHelper.isElementClickable(element)) {
               [x, y] = this._moveClickPoint(element, x, y);
-              element = ElementTouchHelper.anyElementFromPoint(x, y);
             }
 
             // Was the element already focused before it was clicked?
