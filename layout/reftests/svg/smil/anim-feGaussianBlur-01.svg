@@ -8,7 +8,7 @@
      onload="setTimeAndSnapshot(1.9999, true)">
   <title>Test animation of the "stdDeviation" &lt;number-optional-number&gt; attribute on "feGaussianBlur" elements</title>
   <script xlink:href="smil-util.js" type="text/javascript"/>
-  <filter id="filter" x="0" y="0" width="1" height="1" filterRes="1000">
+  <filter id="filter" x="0" y="0" width="1" height="1">
     <feGaussianBlur stdDeviation="50">
       <animate attributeName="stdDeviation"
                calcMode="linear"

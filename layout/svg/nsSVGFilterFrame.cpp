@@ -67,22 +67,6 @@ nsSVGFilterFrame::GetEnumValue(uint32_t aIndex, nsIContent *aDefault)
       mEnumAttributes[aIndex].GetAnimValue();
 }
 
-const nsSVGIntegerPair *
-nsSVGFilterFrame::GetIntegerPairValue(uint32_t aIndex, nsIContent *aDefault)
-{
-  const nsSVGIntegerPair *thisIntegerPair =
-    &static_cast<SVGFilterElement *>(mContent)->mIntegerPairAttributes[aIndex];
-
-  if (thisIntegerPair->IsExplicitlySet())
-    return thisIntegerPair;
-
-  AutoFilterReferencer filterRef(this);
-
-  nsSVGFilterFrame *next = GetReferencedFilterIfNotInUse();
-  return next ? next->GetIntegerPairValue(aIndex, aDefault) :
-    &static_cast<SVGFilterElement *>(aDefault)->mIntegerPairAttributes[aIndex];
-}
-
 const nsSVGLength2 *
 nsSVGFilterFrame::GetLengthValue(uint32_t aIndex, nsIContent *aDefault)
 {
@@ -187,7 +171,6 @@ nsSVGFilterFrame::AttributeChanged(int32_t  aNameSpaceID,
        aAttribute == nsGkAtoms::y ||
        aAttribute == nsGkAtoms::width ||
        aAttribute == nsGkAtoms::height ||
-       aAttribute == nsGkAtoms::filterRes ||
        aAttribute == nsGkAtoms::filterUnits ||
        aAttribute == nsGkAtoms::primitiveUnits)) {
     nsSVGEffects::InvalidateDirectRenderingObservers(this);

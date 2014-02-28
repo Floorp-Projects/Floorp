@@ -5,10 +5,10 @@
 <svg xmlns='http://www.w3.org/2000/svg' width='100px' height='100px'>
   <!--
     A basic test for the <feDiffuseLighting> filter primitive.
-    Setting filterRes on the <filter> and kernelUnitLength on the
-    <feDiffuseLighting> should allow us to assume pixel perfection.
+    Setting kernelUnitLength on the <feDiffuseLighting> should allow us to
+    assume pixel perfection.
     -->
-  <filter id='f' x='0' y='0' width='1' height='1' filterRes='100 100'>
+  <filter id='f' x='0' y='0' width='1' height='1'>
     <feDiffuseLighting kernelUnitLength='1'>
       <feDistantLight/>
     </feDiffuseLighting>
