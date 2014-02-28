@@ -757,11 +757,7 @@ nsDOMCameraControl::OnCreatedFileDescriptor(bool aSucceeded)
       return;
     }
   }
-  // An error occured. We need to manually close the file descriptor since
-  // the FileDescriptor destructor doesn't close file handles which originate
-  // from other processes.
-  int fd = mDSFileDescriptor->mFileDescriptor.PlatformHandle();
-  ScopedClose autoClose(fd);
+
   OnError(CameraControlListener::kInStartRecording, NS_LITERAL_STRING("FAILURE"));
 }
 

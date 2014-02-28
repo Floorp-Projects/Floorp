@@ -856,11 +856,7 @@ nsGonkCameraControl::StartRecordingImpl(DeviceStorageFileDescriptor* aFileDescri
   }
 
   nsresult rv;
-  // SetupRecording creates a dup of the file descriptor, and since it
-  // was created in the parent, the FileDescriptor destructor won't close
-  // it, so we go ahead and close it once we leave this function.
   int fd = aFileDescriptor->mFileDescriptor.PlatformHandle();
-  ScopedClose autoClose(fd);
   if (aOptions) {
     rv = SetupRecording(fd, aOptions->rotation, aOptions->maxFileSizeBytes,
                         aOptions->maxVideoLengthMs);
