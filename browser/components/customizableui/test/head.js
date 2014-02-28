@@ -202,6 +202,11 @@ function openAndLoadWindow(aOptions, aWaitForDelayedStartup=false) {
   return deferred.promise;
 }
 
+function promiseWindowClosed(win) {
+  win.close();
+  return waitForCondition(() => win.closed);
+}
+
 function promisePanelShown(win) {
   let panelEl = win.PanelUI.panel;
   return promisePanelElementShown(win, panelEl);
