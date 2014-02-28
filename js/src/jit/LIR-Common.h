@@ -5418,24 +5418,6 @@ class LPostWriteBarrierV : public LInstructionHelper<0, 1 + BOX_PIECES, 1>
     }
 };
 
-// Generational write barrier used when writing to multiple slots in an object.
-class LPostWriteBarrierAllSlots : public LInstructionHelper<0, 1, 0>
-{
-  public:
-    LIR_HEADER(PostWriteBarrierAllSlots)
-
-    LPostWriteBarrierAllSlots(const LAllocation &obj) {
-        setOperand(0, obj);
-    }
-
-    const MPostWriteBarrier *mir() const {
-        return mir_->toPostWriteBarrier();
-    }
-    const LAllocation *object() {
-        return getOperand(0);
-    }
-};
-
 // Guard against an object's identity.
 class LGuardObjectIdentity : public LInstructionHelper<0, 1, 0>
 {
