@@ -1013,19 +1013,16 @@ CloneObject(JSContext *cx, JSObject *selfHostedObject, CloneMemory &clonedObject
     RootedObject clone(cx);
     if (selfHostedObject->is<JSFunction>()) {
         JSFunction *selfHostedFunction = &selfHostedObject->as<JSFunction>();
-        bool needsName = selfHostedFunction->isInterpreted() &&
-                         selfHostedFunction->atom() != nullptr;
-        js::gc::AllocKind kind = needsName
+        bool hasName = selfHostedFunction->atom() != nullptr;
+        js::gc::AllocKind kind = hasName
                                  ? JSFunction::ExtendedFinalizeKind
                                  : selfHostedFunction->getAllocKind();
         clone = CloneFunctionObject(cx, HandleFunction::fromMarkedLocation(&selfHostedFunction),
                                     cx->global(), kind, TenuredObject);
-        // To be able to re-lazify cloned interpreted functions, their name in
-        // the self-hosting compartment has to be stored on the clone.
-        if (clone && needsName) {
-            JS_ASSERT(clone->as<JSFunction>().isSelfHostedBuiltin());
+        // To be able to re-lazify the cloned function, its name in the
+        // self-hosting compartment has to be stored on the clone.
+        if (clone && hasName)
             clone->as<JSFunction>().setExtendedSlot(0, StringValue(selfHostedFunction->atom()));
-        }
     } else if (selfHostedObject->is<RegExpObject>()) {
         RegExpObject &reobj = selfHostedObject->as<RegExpObject>();
         RootedAtom source(cx, reobj.getSource());
