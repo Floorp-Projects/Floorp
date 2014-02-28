@@ -50,5 +50,15 @@
 #include "hunspell_fopen_hooks.h"
 #endif
 
+/*
+ * Force-include sdkdecls.h for building the chromium sandbox code.
+ *
+ * CHROMIUM_SANDBOX_BUILD is defined in security/sandbox/moz.build.
+ * Note that this include path relies on the LOCAL_INCLUDES in that file.
+ */
+#if defined(CHROMIUM_SANDBOX_BUILD) && defined(XP_WIN)
+#include "base/shim/sdkdecls.h"
+#endif
+
 #endif /* _MOZILLA_CONFIG_H_ */
 
