@@ -371,6 +371,14 @@ MediaSource::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
   return MediaSourceBinding::Wrap(aCx, aScope, this);
 }
 
+void
+MediaSource::NotifyEvicted(double aStart, double aEnd)
+{
+  // Cycle through all SourceBuffers and tell them to evict data in
+  // the given range.
+  mSourceBuffers->Evict(aStart, aEnd);
+}
+
 NS_IMPL_CYCLE_COLLECTION_INHERITED_2(MediaSource, nsDOMEventTargetHelper,
                                      mSourceBuffers, mActiveSourceBuffers)
 
