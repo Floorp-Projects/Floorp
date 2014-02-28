@@ -370,6 +370,8 @@ public class GeckoAppShell
     public static void sendEventToGecko(GeckoEvent e) {
         if (GeckoThread.checkLaunchState(GeckoThread.LaunchState.GeckoRunning)) {
             notifyGeckoOfEvent(e);
+            // Gecko will copy the event data into a normal C++ object. We can recycle the evet now.
+            e.recycle();
         } else {
             gPendingEvents.addLast(e);
         }
