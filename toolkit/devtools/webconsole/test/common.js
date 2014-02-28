@@ -8,10 +8,12 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/ConsoleAPIStorage.jsm");
 
 let devtools = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools;
 let WebConsoleUtils = devtools.require("devtools/toolkit/webconsole/utils").Utils;
+
+let ConsoleAPIStorage = Cc["@mozilla.org/consoleAPI-storage;1"]
+                          .getService(Ci.nsIConsoleAPIStorage);
 
 let {ConsoleServiceListener, ConsoleAPIListener} =
   devtools.require("devtools/toolkit/webconsole/utils");

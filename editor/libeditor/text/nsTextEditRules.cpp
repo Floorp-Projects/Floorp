@@ -30,7 +30,7 @@
 #include "nsIDOMNodeIterator.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMText.h"
-#include "nsINameSpaceManager.h"
+#include "nsNameSpaceManager.h"
 #include "nsINode.h"
 #include "nsIPlaintextEditor.h"
 #include "nsISelection.h"

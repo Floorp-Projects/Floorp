@@ -8,7 +8,7 @@
 
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
-#include "nsINameSpaceManager.h"
+#include "nsNameSpaceManager.h"
 #include "js/TypeDecls.h"
 
 typedef uint8_t XBLBindingSerializeDetails;
@@ -57,7 +57,7 @@ typedef uint8_t XBLBindingSerializeDetails;
 // first. The special values below can appear in place of a namespace id.
 
 // Indicates that this is not one of the built-in namespaces defined in 
-// nsINameSpaceManager.h. The string form will be serialized immediately
+// nsNameSpaceManager.h. The string form will be serialized immediately
 // following.
 #define XBLBinding_Serialize_CustomNamespace 0xFE
 

@@ -61,6 +61,11 @@ EXPORTS.mozilla = [
     'WeakPtr.h',
 ]
 
+if CONFIG['OS_ARCH'] == 'WINNT':
+    EXPORTS.mozilla += [
+        'WindowsVersion.h',
+    ]
+
 UNIFIED_SOURCES = [
     'double-conversion/bignum-dtoa.cc',
     'double-conversion/bignum.cc',

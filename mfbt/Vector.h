@@ -59,12 +59,14 @@ struct VectorImpl
 {
     /* Destroys constructed objects in the range [begin, end). */
     static inline void destroy(T* begin, T* end) {
+      MOZ_ASSERT(begin <= end);
       for (T* p = begin; p < end; ++p)
         p->~T();
     }
 
     /* Constructs objects in the uninitialized range [begin, end). */
     static inline void initialize(T* begin, T* end) {
+      MOZ_ASSERT(begin <= end);
       for (T* p = begin; p < end; ++p)
         new(p) T();
     }
@@ -75,6 +77,7 @@ struct VectorImpl
      */
     template<typename U>
     static inline void copyConstruct(T* dst, const U* srcbeg, const U* srcend) {
+      MOZ_ASSERT(srcbeg <= srcend);
       for (const U* p = srcbeg; p < srcend; ++p, ++dst)
         new(dst) T(*p);
     }
@@ -85,6 +88,7 @@ struct VectorImpl
      */
     template<typename U>
     static inline void moveConstruct(T* dst, U* srcbeg, U* srcend) {
+      MOZ_ASSERT(srcbeg <= srcend);
       for (U* p = srcbeg; p < srcend; ++p, ++dst)
         new(dst) T(Move(*p));
     }
@@ -144,6 +148,7 @@ struct VectorImpl<T, N, AP, ThisVector, true>
        *
        * memset(begin, 0, sizeof(T) * (end-begin));
        */
+      MOZ_ASSERT(begin <= end);
       for (T* p = begin; p < end; ++p)
         new(p) T();
     }
@@ -157,6 +162,7 @@ struct VectorImpl<T, N, AP, ThisVector, true>
        *
        * memcpy(dst, srcbeg, sizeof(T) * (srcend - srcbeg));
        */
+      MOZ_ASSERT(srcbeg <= srcend);
       for (const U* p = srcbeg; p < srcend; ++p, ++dst)
         *dst = *p;
     }
@@ -391,13 +397,15 @@ class VectorBase : private AllocPolicy
         friend class VectorBase;
         T* cur_;
         T* end_;
-        Range(T* cur, T* end) : cur_(cur), end_(end) {}
+        Range(T* cur, T* end) : cur_(cur), end_(end) {
+          MOZ_ASSERT(cur <= end);
+        }
 
       public:
         Range() {}
         bool empty() const { return cur_ == end_; }
-        size_t remain() const { return end_ - cur_; }
-        T& front() const { return *cur_; }
+        size_t remain() const { return PointerRangeSize(cur_, end_); }
+        T& front() const { MOZ_ASSERT(!empty()); return *cur_; }
         void popFront() { MOZ_ASSERT(!empty()); ++cur_; }
         T popCopyFront() { MOZ_ASSERT(!empty()); return *cur_++; }
     };

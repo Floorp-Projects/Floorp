@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Test for empty stack in console</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<script type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+
+window.setTimeout(console.log.bind(console), 0, "xyz");
+
+window.addEventListener("fake", console.log.bind(console, "xyz"));
+
+window.addEventListener("fake", function() {
+  ok(true, "Still alive");
+  SimpleTest.finish();
+});
+
+window.dispatchEvent(new Event("fake"));
+</script>
+</pre>
+</body>
+</html>
+
