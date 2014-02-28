@@ -1133,6 +1133,7 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
 
     bool isRelazifiable() const {
         return (selfHosted() || lazyScript) &&
+               !(analyzedArgsUsage() && needsArgsObj()) &&
                !isGenerator() && !hasBaselineScript() && !hasAnyIonScript();
     }
     void setLazyScript(js::LazyScript *lazy) {
