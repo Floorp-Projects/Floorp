@@ -233,12 +233,26 @@ class UnixRealTimeClock : public RealTimeClock {
 // Keeps the global state for the Windows implementation of RtpRtcpClock.
 // Note that this is a POD. Only PODs are allowed to have static storage
 // duration according to the Google Style guide.
-static WindowsHelpTimer global_help_timer = {0, 0, {{ 0, 0}, 0}, 0};
+//
+// Note that on Windows, GetSystemTimeAsFileTime has poorer (up to 15 ms)
+// resolution than the media timers, hence the WindowsHelpTimer context
+// object and Synchronize API.
+//
+// We only sync up once, which means that on Windows, our realtime clock
+// wont respond to system time/date changes without a program restart.
+// TODO: We could attempt to detect 1+ minute jumps and resync for parity
+// with other platforms.
+
+static WindowsHelpTimer *SyncGlobalHelpTimer() {
+  static WindowsHelpTimer global_help_timer = {0, 0, {{ 0, 0}, 0}, 0};
+  Synchronize(&global_help_timer);
+  return &global_help_timer;
+}
 #endif
 
 Clock* Clock::GetRealTimeClock() {
 #if defined(_WIN32)
-  static WindowsRealTimeClock clock(&global_help_timer);
+  static WindowsRealTimeClock clock(SyncGlobalHelpTimer());
   return &clock;
 #elif ((defined WEBRTC_LINUX) || (defined WEBRTC_BSD) || (defined WEBRTC_MAC))
   static UnixRealTimeClock clock;
