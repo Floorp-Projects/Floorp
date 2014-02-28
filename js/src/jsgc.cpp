@@ -5523,12 +5523,12 @@ AutoMaybeTouchDeadZones::AutoMaybeTouchDeadZones(JSObject *obj)
 
 AutoMaybeTouchDeadZones::~AutoMaybeTouchDeadZones()
 {
+    runtime->gcManipulatingDeadZones = manipulatingDeadZones;
+
     if (inIncremental && runtime->gcObjectsMarkedInDeadZones != markCount) {
         JS::PrepareForFullGC(runtime);
         js::GC(runtime, GC_NORMAL, JS::gcreason::TRANSPLANT);
     }
-
-    runtime->gcManipulatingDeadZones = manipulatingDeadZones;
 }
 
 AutoSuppressGC::AutoSuppressGC(ExclusiveContext *cx)

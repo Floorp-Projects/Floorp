@@ -413,12 +413,8 @@ nsContentUtils::Init()
       EventListenerManagerHashInitEntry
     };
 
-    if (!PL_DHashTableInit(&sEventListenerManagersHash, &hash_table_ops,
-                           nullptr, sizeof(EventListenerManagerMapEntry), 16)) {
-      sEventListenerManagersHash.ops = nullptr;
-
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+    PL_DHashTableInit(&sEventListenerManagersHash, &hash_table_ops,
+                      nullptr, sizeof(EventListenerManagerMapEntry), 16);
 
     RegisterStrongMemoryReporter(new DOMEventListenerManagersHashReporter());
   }
