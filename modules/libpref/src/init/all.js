@@ -253,6 +253,19 @@ pref("media.peerconnection.agc_enabled", false);
 pref("media.peerconnection.agc", 1);
 pref("media.peerconnection.noise_enabled", false);
 pref("media.peerconnection.noise", 1);
+// Adjustments for OS mediastream+output+OS+input delay (lower bound)
+#if defined(XP_MACOSX)
+pref("media.peerconnection.capture_delay", 50);
+#elif defined(XP_WIN)
+pref("media.peerconnection.capture_delay", 50);
+#elif defined(ANDROID)
+pref("media.peerconnection.capture_delay", 100);
+#elif defined(XP_LINUX)
+pref("media.peerconnection.capture_delay", 70);
+#else
+// *BSD, others - merely a guess for now
+pref("media.peerconnection.capture_delay", 50);
+#endif
 #else
 #ifdef ANDROID
 pref("media.navigator.enabled", true);
