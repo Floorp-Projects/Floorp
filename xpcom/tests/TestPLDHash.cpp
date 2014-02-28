@@ -21,7 +21,8 @@ static bool test_pldhash_Init_capacity_ok()
   // platforms.
   PLDHashTable t;
   bool ok = PL_DHashTableInit(&t, PL_DHashGetStubOps(), nullptr,
-                              sizeof(PLDHashEntryStub), PL_DHASH_MAX_SIZE);
+                              sizeof(PLDHashEntryStub), PL_DHASH_MAX_SIZE,
+                              mozilla::fallible_t());
   if (ok)
     PL_DHashTableFinish(&t);
 
@@ -33,7 +34,8 @@ static bool test_pldhash_Init_capacity_too_large()
   // Try the smallest too-large capacity.
   PLDHashTable t;
   bool ok = PL_DHashTableInit(&t, PL_DHashGetStubOps(), nullptr,
-                              sizeof(PLDHashEntryStub), PL_DHASH_MAX_SIZE + 1);
+                              sizeof(PLDHashEntryStub), PL_DHASH_MAX_SIZE + 1,
+                              mozilla::fallible_t());
   // Don't call PL_DHashTableDestroy(), it's not safe after Init failure.
 
   return !ok;   // expected to fail
@@ -56,7 +58,8 @@ static bool test_pldhash_Init_overflow()
   // |nullptr| for |ops| is ok because it's unused due to the failure.
   PLDHashTable t;
   bool ok = PL_DHashTableInit(&t, /* ops = */nullptr, nullptr,
-                              sizeof(OneKBEntry), PL_DHASH_MAX_SIZE);
+                              sizeof(OneKBEntry), PL_DHASH_MAX_SIZE,
+                              mozilla::fallible_t());
 
   return !ok;   // expected to fail
 }
@@ -86,7 +89,8 @@ static bool test_pldhash_grow_to_max_capacity()
   };
 
   PLDHashTable t;
-  bool ok = PL_DHashTableInit(&t, &ops, nullptr, sizeof(PLDHashEntryStub), 256);
+  bool ok = PL_DHashTableInit(&t, &ops, nullptr, sizeof(PLDHashEntryStub), 256,
+                              mozilla::fallible_t());
   if (!ok)
     return false;
 
