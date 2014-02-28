@@ -1736,7 +1736,8 @@ MakeV1Cert(	CERTCertDBHandle *	handle,
 static SECStatus
 SignCert(CERTCertDBHandle *handle, CERTCertificate *cert, PRBool selfsign, 
          SECOidTag hashAlgTag,
-         SECKEYPrivateKey *privKey, char *issuerNickName, void *pwarg)
+         SECKEYPrivateKey *privKey, char *issuerNickName,
+         int certVersion, void *pwarg)
 {
     SECItem der;
     SECKEYPrivateKey *caPrivateKey = NULL;    
@@ -1776,9 +1777,23 @@ SignCert(CERTCertDBHandle *handle, CERTCertificate *cert, PRBool selfsign,
 	goto done;
     }
 
-    /* we only deal with cert v3 here */
-    *(cert->version.data) = 2;
-    cert->version.len = 1;
+    switch(certVersion) {
+      case (SEC_CERTIFICATE_VERSION_1):
+        // The initial version for x509 certificates is version one
+        // and this default value must be an implicit DER encoding.
+        cert->version.data = NULL;
+        cert->version.len = 0;
+        break;
+      case (SEC_CERTIFICATE_VERSION_2):
+      case (SEC_CERTIFICATE_VERSION_3):
+      case 3: // unspecified format (would be version 4 certificate).
+        *(cert->version.data) = certVersion;
+        cert->version.len = 1;
+        break;
+      default:
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
 
     der.len = 0;
     der.data = NULL;
@@ -1821,6 +1836,7 @@ CreateCert(
 	PRBool ascii,
 	PRBool  selfsign,
 	certutilExtnList extnList,
+        int certVersion,
 	SECItem * certDER)
 {
     void *	extHandle;
@@ -1880,7 +1896,8 @@ CreateCert(
 	}
 
 	rv = SignCert(handle, subjectCert, selfsign, hashAlgTag,
-		      *selfsignprivkey, issuerNickName, pwarg);
+		      *selfsignprivkey, issuerNickName,
+                      certVersion, pwarg);
 	if (rv != SECSuccess)
 	    break;
 
@@ -2194,6 +2211,7 @@ enum certutilOpts {
     opt_KeyOpFlagsOff,
     opt_KeyAttrFlags,
     opt_EmptyPassword,
+    opt_CertVersion,
     opt_Help
 };
 
@@ -2303,6 +2321,8 @@ secuCommandFlag options_init[] =
                                                    "keyAttrFlags"},
 	{ /* opt_EmptyPassword       */  0,   PR_FALSE, 0, PR_FALSE, 
                                                    "empty-password"},
+        { /* opt_CertVersion         */  0,   PR_FALSE, 0, PR_FALSE,
+                                                   "certVersion"},
 };
 #define NUM_OPTIONS ((sizeof options_init)  / (sizeof options_init[0]))
 
@@ -2341,6 +2361,7 @@ certutil_main(int argc, char **argv, PRBool initialize)
     SECOidTag   hashAlgTag      = SEC_OID_UNKNOWN;
     int	        keysize	        = DEFAULT_KEY_BITS;
     int         publicExponent  = 0x010001;
+    int         certVersion     = SEC_CERTIFICATE_VERSION_3;
     unsigned int serialNumber   = 0;
     int         warpmonths      = 0;
     int         validityMonths  = 3;
@@ -2568,6 +2589,19 @@ certutil_main(int argc, char **argv, PRBool initialize)
 	    return 255;
 	}
     }
+
+    /*  --certVersion */
+    if (certutil.options[opt_CertVersion].activated) {
+        certVersion = PORT_Atoi(certutil.options[opt_CertVersion].arg);
+        if (certVersion < 1 || certVersion > 4) {
+            PR_fprintf(PR_STDERR, "%s -certVersion: incorrect certificate version %d.",
+                                   progName, certVersion);
+            PR_fprintf(PR_STDERR, "Must be 1, 2, 3 or 4.\n");
+            return 255;
+        }
+        certVersion = certVersion - 1;
+    }
+
 
     /*  Check number of commands entered.  */
     commandsEntered = 0;
@@ -3225,6 +3259,7 @@ merge_fail:
 			    certutil.commands[cmd_CreateNewCert].activated,
 	                certutil.options[opt_SelfSign].activated,
 	                certutil_extns,
+                        certVersion,
 			&certDER);
 	if (rv) 
 	    goto shutdown;
