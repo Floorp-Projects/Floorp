@@ -2,8 +2,8 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#ifndef nsDOMTransitionEvent_h_
-#define nsDOMTransitionEvent_h_
+#ifndef mozilla_dom_TransitionEvent_h_
+#define mozilla_dom_TransitionEvent_h_
 
 #include "nsDOMEvent.h"
 #include "nsIDOMTransitionEvent.h"
@@ -12,28 +12,31 @@
 
 class nsAString;
 
-class nsDOMTransitionEvent : public nsDOMEvent,
-                             public nsIDOMTransitionEvent
+namespace mozilla {
+namespace dom {
+
+class TransitionEvent : public nsDOMEvent,
+                        public nsIDOMTransitionEvent
 {
 public:
-  nsDOMTransitionEvent(mozilla::dom::EventTarget* aOwner,
-                       nsPresContext *aPresContext,
-                       mozilla::InternalTransitionEvent* aEvent);
+  TransitionEvent(EventTarget* aOwner,
+                  nsPresContext* aPresContext,
+                  InternalTransitionEvent* aEvent);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_FORWARD_TO_NSDOMEVENT
   NS_DECL_NSIDOMTRANSITIONEVENT
 
-  static already_AddRefed<nsDOMTransitionEvent>
-  Constructor(const mozilla::dom::GlobalObject& aGlobal,
+  static already_AddRefed<TransitionEvent>
+  Constructor(const GlobalObject& aGlobal,
               const nsAString& aType,
-              const mozilla::dom::TransitionEventInit& aParam,
-              mozilla::ErrorResult& aRv);
+              const TransitionEventInit& aParam,
+              ErrorResult& aRv);
 
   virtual JSObject* WrapObject(JSContext* aCx,
-			       JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
+                               JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
   {
-    return mozilla::dom::TransitionEventBinding::Wrap(aCx, aScope, this);
+    return TransitionEventBinding::Wrap(aCx, aScope, this);
   }
 
   // xpidl implementation
@@ -43,4 +46,7 @@ public:
   float ElapsedTime();
 };
 
-#endif /* !defined(nsDOMTransitionEvent_h_) */
+} // namespace dom
+} // namespace mozilla
+
+#endif // mozilla_dom_TransitionEvent_h_

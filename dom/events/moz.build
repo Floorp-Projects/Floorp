@@ -56,6 +56,7 @@ EXPORTS.mozilla.dom += [
     'SimpleGestureEvent.h',
     'Touch.h',
     'TouchEvent.h',
+    'TransitionEvent.h',
     'WheelEvent.h',
 ]
 
@@ -84,7 +85,6 @@ UNIFIED_SOURCES += [
     'nsContentEventHandler.cpp',
     'nsDOMEventTargetHelper.cpp',
     'nsDOMTextEvent.cpp',
-    'nsDOMTransitionEvent.cpp',
     'nsDOMXULCommandEvent.cpp',
     'nsEventDispatcher.cpp',
     'nsEventListenerService.cpp',
@@ -97,6 +97,7 @@ UNIFIED_SOURCES += [
     'TextComposition.cpp',
     'Touch.cpp',
     'TouchEvent.cpp',
+    'TransitionEvent.cpp',
     'WheelEvent.cpp',
 ]
 
