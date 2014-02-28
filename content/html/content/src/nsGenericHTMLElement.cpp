@@ -97,9 +97,9 @@
 #include "nsThreadUtils.h"
 #include "nsTextFragment.h"
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/TouchEvent.h"
 #include "mozilla/ErrorResult.h"
 #include "nsHTMLDocument.h"
-#include "nsDOMTouchEvent.h"
 #include "nsGlobalWindow.h"
 #include "mozilla/dom/HTMLBodyElement.h"
 #include "imgIContainer.h"
@@ -1955,7 +1955,7 @@ nsGenericHTMLElement::SetUndoScopeInternal(bool aUndoScope)
 bool
 nsGenericHTMLElement::TouchEventsEnabled(JSContext* /* unused */, JSObject* /* unused */)
 {
-  return nsDOMTouchEvent::PrefEnabled();
+  return TouchEvent::PrefEnabled();
 }
 
 //----------------------------------------------------------------------

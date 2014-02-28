@@ -2,38 +2,38 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#ifndef nsDOMTouchEvent_h_
-#define nsDOMTouchEvent_h_
+#ifndef mozilla_dom_TouchEvent_h_
+#define mozilla_dom_TouchEvent_h_
 
-#include "nsDOMUIEvent.h"
-#include "nsTArray.h"
+#include "mozilla/dom/Touch.h"
+#include "mozilla/dom/TouchEventBinding.h"
+#include "mozilla/dom/UIEvent.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
 #include "nsJSEnvironment.h"
-#include "mozilla/dom/Touch.h"
-#include "mozilla/dom/TouchEventBinding.h"
+#include "nsTArray.h"
 #include "nsWrapperCache.h"
-
 
 class nsAString;
 
-class nsDOMTouchList MOZ_FINAL : public nsISupports
-                               , public nsWrapperCache
-{
-  typedef mozilla::dom::Touch Touch;
+namespace mozilla {
+namespace dom {
 
+class TouchList MOZ_FINAL : public nsISupports
+                          , public nsWrapperCache
+{
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsDOMTouchList)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(TouchList)
 
-  nsDOMTouchList(nsISupports* aParent)
+  TouchList(nsISupports* aParent)
     : mParent(aParent)
   {
     SetIsDOMBinding();
     nsJSContext::LikelyShortLivingObjectCreated();
   }
-  nsDOMTouchList(nsISupports* aParent,
-                 const nsTArray< nsRefPtr<Touch> >& aTouches)
+  TouchList(nsISupports* aParent,
+            const nsTArray<nsRefPtr<Touch> >& aTouches)
     : mParent(aParent)
     , mPoints(aTouches)
   {
@@ -46,15 +46,16 @@ public:
     mPoints.AppendElement(aPoint);
   }
 
-  virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
   nsISupports* GetParentObject() const
   {
     return mParent;
   }
 
-  static bool PrefEnabled(JSContext* aCx = nullptr, JSObject* aGlobal = nullptr);
+  static bool PrefEnabled(JSContext* aCx = nullptr,
+                          JSObject* aGlobal = nullptr);
 
   uint32_t Length() const
   {
@@ -76,28 +77,28 @@ public:
 
 protected:
   nsCOMPtr<nsISupports> mParent;
-  nsTArray< nsRefPtr<Touch> > mPoints;
+  nsTArray<nsRefPtr<Touch> > mPoints;
 };
 
-class nsDOMTouchEvent : public nsDOMUIEvent
+class TouchEvent : public UIEvent
 {
 public:
-  nsDOMTouchEvent(mozilla::dom::EventTarget* aOwner,
-                  nsPresContext* aPresContext,
-                  mozilla::WidgetTouchEvent* aEvent);
+  TouchEvent(EventTarget* aOwner,
+             nsPresContext* aPresContext,
+             WidgetTouchEvent* aEvent);
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsDOMTouchEvent, nsDOMUIEvent)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(TouchEvent, UIEvent)
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
   {
-    return mozilla::dom::TouchEventBinding::Wrap(aCx, aScope, this);
+    return TouchEventBinding::Wrap(aCx, aScope, this);
   }
 
-  nsDOMTouchList* Touches();
-  nsDOMTouchList* TargetTouches();
-  nsDOMTouchList* ChangedTouches();
+  TouchList* Touches();
+  TouchList* TargetTouches();
+  TouchList* ChangedTouches();
 
   bool AltKey();
   bool MetaKey();
@@ -113,16 +114,20 @@ public:
                       bool aAltKey,
                       bool aShiftKey,
                       bool aMetaKey,
-                      nsDOMTouchList* aTouches,
-                      nsDOMTouchList* aTargetTouches,
-                      nsDOMTouchList* aChangedTouches,
-                      mozilla::ErrorResult& aRv);
+                      TouchList* aTouches,
+                      TouchList* aTargetTouches,
+                      TouchList* aChangedTouches,
+                      ErrorResult& aRv);
 
-  static bool PrefEnabled(JSContext* aCx = nullptr, JSObject* aGlobal = nullptr);
+  static bool PrefEnabled(JSContext* aCx = nullptr,
+                          JSObject* aGlobal = nullptr);
 protected:
-  nsRefPtr<nsDOMTouchList> mTouches;
-  nsRefPtr<nsDOMTouchList> mTargetTouches;
-  nsRefPtr<nsDOMTouchList> mChangedTouches;
+  nsRefPtr<TouchList> mTouches;
+  nsRefPtr<TouchList> mTargetTouches;
+  nsRefPtr<TouchList> mChangedTouches;
 };
 
-#endif /* !defined(nsDOMTouchEvent_h_) */
+} // namespace dom
+} // namespace mozilla
+
+#endif // mozilla_dom_TouchEvent_h_

@@ -1447,7 +1447,7 @@ struct ConvertImpl<uint64_t, double> {
 // round-trip. In fact, on some platforms, including SPARC, there are pairs of
 // values, a uint64_t and a double, such that neither value is exactly
 // representable in the other type, but they cast to each other.
-#ifdef SPARC
+#if defined(SPARC) || defined(__powerpc__)
 // Simulate x86 overflow behavior
 template<>
 struct ConvertImpl<uint64_t, double> {

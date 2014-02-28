@@ -11,6 +11,7 @@
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
 #include "mozilla/dom/TabParent.h"
+#include "mozilla/dom/UIEvent.h"
 
 #include "nsCOMPtr.h"
 #include "nsEventStateManager.h"
@@ -50,7 +51,6 @@
 #include "nsIDOMWheelEvent.h"
 #include "nsIDOMDragEvent.h"
 #include "nsIDOMUIEvent.h"
-#include "nsDOMUIEvent.h"
 #include "nsIMozBrowserFrame.h"
 
 #include "nsSubDocumentFrame.h"
@@ -1030,9 +1030,9 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
        aEvent->eventStructType == NS_WHEEL_EVENT) &&
       !sIsPointerLocked) {
     sLastScreenPoint =
-      nsDOMUIEvent::CalculateScreenPoint(aPresContext, aEvent);
+      UIEvent::CalculateScreenPoint(aPresContext, aEvent);
     sLastClientPoint =
-      nsDOMUIEvent::CalculateClientPoint(aPresContext, aEvent, nullptr);
+      UIEvent::CalculateClientPoint(aPresContext, aEvent, nullptr);
   }
 
   // Do not take account NS_MOUSE_ENTER/EXIT so that loading a page
@@ -2337,9 +2337,9 @@ nsEventStateManager::DoDefaultDragStart(nsPresContext* aPresContext,
   // target of the mouse event. If one wasn't set in the
   // aDataTransfer during the event handler, just use the original
   // target instead.
-  nsCOMPtr<Element> dragTarget = aDataTransfer->GetDragTarget();
+  nsCOMPtr<nsIContent> dragTarget = aDataTransfer->GetDragTarget();
   if (!dragTarget) {
-    dragTarget = do_QueryInterface(aDragTarget);
+    dragTarget = aDragTarget;
     if (!dragTarget)
       return false;
   }
@@ -4332,7 +4332,7 @@ nsEventStateManager::NotifyMouseOver(WidgetMouseEvent* aMouseEvent,
 // Returns the center point of the window's inner content area.
 // This is in widget coordinates, i.e. relative to the widget's top
 // left corner, not in screen coordinates, the same units that
-// nsDOMUIEvent::refPoint is in.
+// UIEvent::refPoint is in.
 //
 // XXX Hack alert: XXX
 // However, we do the computation in integer CSS pixels, NOT device pix,
@@ -4386,7 +4386,7 @@ nsEventStateManager::GenerateMouseEnterExit(WidgetMouseEvent* aMouseEvent)
   case NS_MOUSE_MOVE:
     {
       // Mouse movement is reported on the MouseEvent.movement{X,Y} fields.
-      // Movement is calculated in nsDOMUIEvent::GetMovementPoint() as:
+      // Movement is calculated in UIEvent::GetMovementPoint() as:
       //   previous_mousemove_refPoint - current_mousemove_refPoint.
       if (sIsPointerLocked && aMouseEvent->widget) {
         // The pointer is locked. If the pointer is not located at the center of

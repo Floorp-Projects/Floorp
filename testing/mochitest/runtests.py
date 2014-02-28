@@ -152,7 +152,7 @@ class MochitestServer(object):
     # thus consuming too much resources when running together with the browser on
     # the test slaves. Try to limit the amount of resources by disabling certain
     # features.
-    env["ASAN_OPTIONS"] = "quarantine_size=1:redzone=32"
+    env["ASAN_OPTIONS"] = "quarantine_size=1:redzone=32:malloc_context_size=5"
 
     if mozinfo.isWin:
       env["PATH"] = env["PATH"] + ";" + str(self._xrePath)

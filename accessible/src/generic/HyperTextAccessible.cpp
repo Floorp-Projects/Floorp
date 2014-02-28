@@ -1791,7 +1791,6 @@ HyperTextAccessible::GetSpellTextAttribute(nsINode* aNode,
     return NS_OK;
 
   int32_t startHTOffset = 0, endHTOffset = 0;
-  nsresult rv = NS_OK;
   for (int32_t idx = 0; idx < rangeCount; idx++) {
     nsRange* range = domSel->GetRangeAt(idx);
     if (range->Collapsed())
