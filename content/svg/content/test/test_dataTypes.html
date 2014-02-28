@@ -122,56 +122,6 @@ function runTests()
   convolve.removeAttribute("targetX");
   ok(convolve.getAttribute("targetX") === null, "removed integer attribute");
 
-  // integer-optional-integer attribute
-
-  filter.setAttribute("filterRes", "100");
-  is(filter.filterResX.baseVal, 100, "integer-optional-integer first baseVal");
-  is(filter.filterResX.animVal, 100, "integer-optional-integer first animVal");
-  is(filter.filterResY.baseVal, 100, "integer-optional-integer second baseVal");
-  is(filter.filterResY.animVal, 100, "integer-optional-integer second animVal");
-
-  filter.filterResX.baseVal = 50;
-  is(filter.filterResX.animVal, 50, "integer-optional-integer first animVal");
-  is(filter.filterResY.animVal, 100, "integer-optional-integer second animVal");
-  is(filter.getAttribute("filterRes"), "50, 100", "integer-optional-integer attribute");
-
-  filter.filterResY.baseVal = 50;
-  is(filter.getAttribute("filterRes"), "50", "integer-optional-integer attribute");
-
-  filter.setFilterRes(80, 90);
-  is(filter.filterResX.baseVal, 80, "integer-optional-integer first baseVal");
-  is(filter.filterResX.animVal, 80, "integer-optional-integer first animVal");
-  is(filter.filterResY.baseVal, 90, "integer-optional-integer second baseVal");
-  is(filter.filterResY.animVal, 90, "integer-optional-integer second animVal");
-
-  // 32 bit integer range
-  filter.setFilterRes(-2147483648, 2147483647);
-  is(filter.filterResX.baseVal, -2147483648, "integer-optional-integer first baseVal");
-  is(filter.filterResX.animVal, -2147483648, "integer-optional-integer first animVal");
-  is(filter.filterResY.baseVal, 2147483647, "integer-optional-integer second baseVal");
-  is(filter.filterResY.animVal, 2147483647, "integer-optional-integer second animVal");
-
-  // too big, clamp
-  filter.setAttribute("filterRes", "-2147483649, 2147483648");
-  is(filter.filterResX.baseVal, -2147483648, "integer-optional-integer first baseVal");
-  is(filter.filterResX.animVal, -2147483648, "integer-optional-integer first animVal");
-  is(filter.filterResY.baseVal, 2147483647, "integer-optional-integer second baseVal");
-  is(filter.filterResY.animVal, 2147483647, "integer-optional-integer second animVal");
-
-  // invalid
-  filter.setAttribute("filterRes", "-00000000000invalid, 214748364720invalid");
-  is(filter.filterResX.baseVal, 0, "integer-optional-integer first baseVal");
-  is(filter.filterResX.animVal, 0, "integer-optional-integer first animVal");
-  is(filter.filterResY.baseVal, 0, "integer-optional-integer second baseVal");
-  is(filter.filterResY.animVal, 0, "integer-optional-integer second animVal");
-
-  filter.setAttribute("filterRes", "");
-  ok(filter.getAttribute("filterRes") === "",
-     "empty integer-optional-integer attribute");
-  filter.removeAttribute("filterRes");
-  ok(filter.getAttribute("filterRes") === null,
-     "removed integer-optional-integer attribute");
-
   // angle attribute
 
   marker.setAttribute("orient", "90deg");

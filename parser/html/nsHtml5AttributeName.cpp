@@ -1104,7 +1104,6 @@ nsHtml5AttributeName::initializeStatics()
   ATTR_ELEVATION = new nsHtml5AttributeName(ALL_NO_NS, SAME_LOCAL(nsHtml5Atoms::elevation), ALL_NO_PREFIX);
   ATTR_DIRECTION = new nsHtml5AttributeName(ALL_NO_NS, SAME_LOCAL(nsHtml5Atoms::direction), ALL_NO_PREFIX);
   ATTR_DRAGGABLE = new nsHtml5AttributeName(ALL_NO_NS, SAME_LOCAL(nsHtml5Atoms::draggable), ALL_NO_PREFIX);
-  ATTR_FILTERRES = new nsHtml5AttributeName(ALL_NO_NS, SVG_DIFFERENT(nsHtml5Atoms::filterres, nsHtml5Atoms::filterRes), ALL_NO_PREFIX);
   ATTR_FILL_RULE = new nsHtml5AttributeName(ALL_NO_NS, SAME_LOCAL(nsHtml5Atoms::fill_rule), ALL_NO_PREFIX);
   ATTR_FONTSTYLE = new nsHtml5AttributeName(ALL_NO_NS, SAME_LOCAL(nsHtml5Atoms::fontstyle), ALL_NO_PREFIX);
   ATTR_FONT_SIZE = new nsHtml5AttributeName(ALL_NO_NS, SAME_LOCAL(nsHtml5Atoms::font_size), ALL_NO_PREFIX);
