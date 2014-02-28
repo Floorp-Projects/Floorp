@@ -23,7 +23,7 @@
 #include <list>
 
 #include <hardware/hwcomposer.h>
-#if ANDROID_VERSION >= 18
+#if ANDROID_VERSION >= 17
 #include <ui/Fence.h>
 #endif
 
@@ -86,7 +86,7 @@ private:
     //Holds all the dynamically allocated RectVectors needed
     //to render the current frame
     std::list<RectVector>   mVisibleRegions;
-#if ANDROID_VERSION >= 18
+#if ANDROID_VERSION >= 17
     android::sp<android::Fence> mPrevRetireFence;
     android::sp<android::Fence> mPrevDisplayFence;
 #endif
