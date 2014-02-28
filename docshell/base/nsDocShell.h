@@ -900,6 +900,7 @@ private:
     nsCOMPtr<nsIPrincipal> mParentCharsetPrincipal;
     nsTObserverArray<nsWeakPtr> mPrivacyObservers;
     nsTObserverArray<nsWeakPtr> mReflowObservers;
+    nsTObserverArray<nsWeakPtr> mScrollObservers;
     nsCString         mOriginalUriString;
 
     // Separate function to do the actual name (i.e. not _top, _self etc.)
