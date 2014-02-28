@@ -1,0 +1,17 @@
+<!DOCTYPE HTML>
+<meta charset="UTF-8">
+<title>Does 'backface-visibility' create a stacking context?</title>
+<link rel="stylesheet" href="stacking-context-common.css">
+<style>
+.backface-visibility {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+</style>
+<div class="contain">
+  <div class="maybesc backface-visibility">
+    <div class="inner1"></div>
+    <div class="inner3"></div>
+  </div>
+  <div class="intruder"></div>
+</div>
