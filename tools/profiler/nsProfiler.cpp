@@ -96,6 +96,27 @@ nsProfiler::StopProfiler()
 }
 
 NS_IMETHODIMP
+nsProfiler::IsPaused(bool *aIsPaused)
+{
+  *aIsPaused = profiler_is_paused();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsProfiler::PauseSampling()
+{
+  profiler_pause();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsProfiler::ResumeSampling()
+{
+  profiler_resume();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsProfiler::AddMarker(const char *aMarker)
 {
   PROFILER_MARKER(aMarker);
