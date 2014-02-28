@@ -8,7 +8,7 @@
 #include "nsIDOMNodeList.h"
 #include "nsIDOMXULButtonElement.h"
 #include "nsGkAtoms.h"
-#include "nsINameSpaceManager.h"
+#include "nsNameSpaceManager.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsEventStateManager.h"

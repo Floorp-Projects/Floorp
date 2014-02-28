@@ -51,7 +51,8 @@ public:
      * Strips any transform from aTarget.
      * aTarget will be flushed in the gfxContext's destructor.
      */
-    gfxContext(mozilla::gfx::DrawTarget *aTarget);
+    gfxContext(mozilla::gfx::DrawTarget *aTarget,
+               const mozilla::gfx::Point& aDeviceOffset = mozilla::gfx::Point());
 
     ~gfxContext();
 

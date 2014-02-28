@@ -17,7 +17,7 @@
 #include "nsBoxFrame.h"
 #include "nsGkAtoms.h"
 #include "nsIContent.h"
-#include "nsINameSpaceManager.h"
+#include "nsNameSpaceManager.h"
 
 using namespace mozilla;
 

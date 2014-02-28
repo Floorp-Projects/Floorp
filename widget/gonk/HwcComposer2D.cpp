@@ -69,7 +69,7 @@ HwcComposer2D::HwcComposer2D()
     , mHwc(nullptr)
     , mColorFill(false)
     , mRBSwapSupport(false)
-#if ANDROID_VERSION >= 18
+#if ANDROID_VERSION >= 17
     , mPrevRetireFence(Fence::NO_FENCE)
     , mPrevDisplayFence(Fence::NO_FENCE)
 #endif

@@ -15,7 +15,7 @@
 #include "nsIContent.h"
 #include "nsPresContext.h"
 #include "nsGkAtoms.h"
-#include "nsINameSpaceManager.h"
+#include "nsNameSpaceManager.h"
 #include "nsCOMPtr.h"
 #include "nsBoxLayoutState.h"
 #include "nsIReflowCallback.h"

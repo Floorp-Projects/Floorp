@@ -33,10 +33,10 @@ function test() {
 
     // The expected stack trace object.
     let stacktrace = [
-      { filename: TEST_URI, lineNumber: 9, functionName: "window.foobar585956c", language: 2 },
-      { filename: TEST_URI, lineNumber: 14, functionName: "foobar585956b", language: 2 },
-      { filename: TEST_URI, lineNumber: 18, functionName: "foobar585956a", language: 2 },
-      { filename: TEST_URI, lineNumber: 21, functionName: null, language: 2 }
+      { filename: TEST_URI, functionName: "window.foobar585956c", language: 2, lineNumber: 9 },
+      { filename: TEST_URI, functionName: "foobar585956b", language: 2, lineNumber: 14 },
+      { filename: TEST_URI, functionName: "foobar585956a", language: 2, lineNumber: 18 },
+      { filename: TEST_URI, functionName: "", language: 2, lineNumber: 21 }
     ];
 
     ok(obj._stacktrace, "found stacktrace object");

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Robocop Input</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  </head>
+  <body onload="fillInput()">
+    <input id="input">
+    <script>
+      function fillInput() {
+        // fill the input with the URL hash if provided
+        var input = document.getElementById("input");
+        input.value = window.location.hash.slice(1); // remove leading #
+        input.focus();
+      }
+    </script>
+  </body>
+</html>

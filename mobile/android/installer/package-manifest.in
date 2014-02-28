@@ -280,7 +280,7 @@
 
 ; JavaScript components
 @BINPATH@/components/ConsoleAPI.manifest
-@BINPATH@/components/ConsoleAPI.js
+@BINPATH@/components/ConsoleAPIStorage.js
 @BINPATH@/components/ContactManager.js
 @BINPATH@/components/ContactManager.manifest
 @BINPATH@/components/PhoneNumberService.js

@@ -95,8 +95,8 @@ void CpuId(uint32 info_eax, uint32 info_ecx, uint32* cpu_info) {
 // X86 CPUs have xgetbv to detect OS saves high parts of ymm registers.
 int TestOsSaveYmm() {
   uint32 xcr0 = 0u;
-#if defined(_MSC_VER) && (_MSC_FULL_VER >= 160040219)
-  xcr0 = (uint32)(_xgetbv(0));  // VS2010 SP1 required.
+#if defined(_MSC_VER) && defined(_XCR_XFEATURE_ENABLED_MASK)
+  xcr0 = (uint32)(_xgetbv(_XCR_XFEATURE_ENABLED_MASK));
 #elif defined(_M_IX86)
   __asm {
     xor        ecx, ecx    // xcr 0

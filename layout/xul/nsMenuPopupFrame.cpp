@@ -11,7 +11,7 @@
 #include "nsPresContext.h"
 #include "nsStyleContext.h"
 #include "nsCSSRendering.h"
-#include "nsINameSpaceManager.h"
+#include "nsNameSpaceManager.h"
 #include "nsViewManager.h"
 #include "nsWidgetsCID.h"
 #include "nsMenuFrame.h"
@@ -400,8 +400,10 @@ nsMenuPopupFrame::LayoutPopup(nsBoxLayoutState& aState, nsIFrame* aParentMenu,
     // if the popup is not open, only do layout while showing or if the menu
     // is sized to the popup
     shouldPosition = (mPopupState == ePopupShowing);
-    if (!shouldPosition && !aSizedToPopup)
+    if (!shouldPosition && !aSizedToPopup) {
+      RemoveStateBits(NS_FRAME_FIRST_REFLOW);
       return;
+    }
   }
 
   // if the popup has just been opened, make sure the scrolled window is at 0,0

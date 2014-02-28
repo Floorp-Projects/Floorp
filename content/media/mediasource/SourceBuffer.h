@@ -105,6 +105,9 @@ public:
 
   void Ended();
 
+  // Evict data in the source buffer in the given time range.
+  void Evict(double aStart, double aEnd);
+
 private:
   friend class AsyncEventRunner<SourceBuffer>;
   void DispatchSimpleEvent(const char* aName);
@@ -117,6 +120,10 @@ private:
 
   // Shared implementation of AppendBuffer overloads.
   void AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aRv);
+
+  // Provide the minimum start time and maximum end time that is available
+  // in the data buffered by this SourceBuffer.
+  void GetBufferedStartEndTime(double* aStart, double* aEnd);
 
   nsRefPtr<MediaSource> mMediaSource;
 

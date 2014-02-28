@@ -7,7 +7,7 @@
 
 function test()
 {
-  let storage = Cu.import("resource://gre/modules/ConsoleAPIStorage.jsm", {}).ConsoleAPIStorage;
+  let storage = Cc["@mozilla.org/consoleAPI-storage;1"].getService(Ci.nsIConsoleAPIStorage);
   storage.clearEvents();
 
   let console = Cu.import("resource://gre/modules/devtools/Console.jsm", {}).console;
