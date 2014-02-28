@@ -2337,9 +2337,9 @@ nsEventStateManager::DoDefaultDragStart(nsPresContext* aPresContext,
   // target of the mouse event. If one wasn't set in the
   // aDataTransfer during the event handler, just use the original
   // target instead.
-  nsCOMPtr<Element> dragTarget = aDataTransfer->GetDragTarget();
+  nsCOMPtr<nsIContent> dragTarget = aDataTransfer->GetDragTarget();
   if (!dragTarget) {
-    dragTarget = do_QueryInterface(aDragTarget);
+    dragTarget = aDragTarget;
     if (!dragTarget)
       return false;
   }

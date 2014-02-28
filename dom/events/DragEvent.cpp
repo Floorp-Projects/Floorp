@@ -87,7 +87,6 @@ DragEvent::InitDragEvent(const nsAString& aType,
                          nsIDOMDataTransfer* aDataTransfer)
 {
   nsCOMPtr<DataTransfer> dataTransfer = do_QueryInterface(aDataTransfer);
-  NS_ENSURE_ARG(dataTransfer);
 
   nsresult rv =
     MouseEvent::InitMouseEvent(aType, aCanBubble, aCancelable, aView, aDetail,
