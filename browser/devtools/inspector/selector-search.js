@@ -4,6 +4,7 @@
 
 "use strict";
 
+const EventEmitter = require("devtools/shared/event-emitter");
 const promise = require("sdk/core/promise");
 
 loader.lazyGetter(this, "AutocompletePopup", () => require("devtools/shared/autocomplete-popup").AutocompletePopup);
@@ -18,12 +19,16 @@ const MAX_SUGGESTIONS = 15;
  * @param InspectorPanel aInspector
  *        The InspectorPanel whose `walker` attribute should be used for
  *        document traversal.
+ * @param nsIDOMDocument aContentDocument
+ *        The content document which inspector is attached to, or null if
+ *        a remote document.
  * @param nsiInputElement aInputNode
  *        The input element to which the panel will be attached and from where
  *        search input will be taken.
  */
-function SelectorSearch(aInspector, aInputNode) {
+function SelectorSearch(aInspector, aContentDocument, aInputNode) {
   this.inspector = aInspector;
+  this.doc = aContentDocument;
   this.searchBox = aInputNode;
   this.panelDoc = this.searchBox.ownerDocument;
 
@@ -50,7 +55,7 @@ function SelectorSearch(aInspector, aInputNode) {
     direction: "ltr",
     theme: "auto",
     onClick: this._onListBoxKeypress,
-    onKeypress: this._onListBoxKeypress
+    onKeypress: this._onListBoxKeypress,
   };
   this.searchPopup = new AutocompletePopup(this.panelDoc, options);
 
@@ -61,6 +66,8 @@ function SelectorSearch(aInspector, aInputNode) {
   // For testing, we need to be able to wait for the most recent node request
   // to finish.  Tests can watch this promise for that.
   this._lastQuery = promise.resolve(null);
+
+  EventEmitter.decorate(this);
 }
 
 exports.SelectorSearch = SelectorSearch;
@@ -158,21 +165,23 @@ SelectorSearch.prototype = {
   /**
    * Removes event listeners and cleans up references.
    */
-  destroy: function() {
+  destroy: function SelectorSearch_destroy() {
     // event listeners.
     this.searchBox.removeEventListener("command", this._onHTMLSearch, true);
     this.searchBox.removeEventListener("keypress", this._onSearchKeypress, true);
     this.searchPopup.destroy();
     this.searchPopup = null;
     this.searchBox = null;
+    this.doc = null;
     this.panelDoc = null;
     this._searchResults = null;
     this._searchSuggestions = null;
+    EventEmitter.decorate(this);
   },
 
   _selectResult: function(index) {
     return this._searchResults.item(index).then(node => {
-      this.inspector.selection.setNodeFront(node, "selectorsearch");
+      this.emit("node-selected", node);
     });
   },
 
@@ -180,7 +189,7 @@ SelectorSearch.prototype = {
    * The command callback for the input box. This function is automatically
    * invoked as the user is typing if the input box type is search.
    */
-  _onHTMLSearch: function() {
+  _onHTMLSearch: function SelectorSearch__onHTMLSearch() {
     let query = this.searchBox.value;
     if (query == this._lastSearched) {
       return;
@@ -247,7 +256,7 @@ SelectorSearch.prototype = {
         }
         return this._selectResult(0).then(() => {
           this.searchBox.classList.remove("devtools-no-search-result");
-        }).then(() => this.showSuggestions());
+        }).then( () => this.showSuggestions());
       }
       if (query.match(/[\s>+]$/)) {
         this._lastValidSearch = query + "*";
@@ -264,7 +273,7 @@ SelectorSearch.prototype = {
   /**
    * Handles keypresses inside the input box.
    */
-  _onSearchKeypress: function(aEvent) {
+  _onSearchKeypress: function SelectorSearch__onSearchKeypress(aEvent) {
     let query = this.searchBox.value;
     switch(aEvent.keyCode) {
       case aEvent.DOM_VK_ENTER:
@@ -340,7 +349,7 @@ SelectorSearch.prototype = {
   /**
    * Handles keypress and mouse click on the suggestions richlistbox.
    */
-  _onListBoxKeypress: function(aEvent) {
+  _onListBoxKeypress: function SelectorSearch__onListBoxKeypress(aEvent) {
     switch(aEvent.keyCode || aEvent.button) {
       case aEvent.DOM_VK_ENTER:
       case aEvent.DOM_VK_RETURN:
@@ -397,10 +406,11 @@ SelectorSearch.prototype = {
     }
   },
 
+  
   /**
    * Populates the suggestions list and show the suggestion popup.
    */
-  _showPopup: function(aList, aFirstPart) {
+  _showPopup: function SelectorSearch__showPopup(aList, aFirstPart) {
     let total = 0;
     let query = this.searchBox.value;
     let toLowerCase = false;
@@ -450,7 +460,7 @@ SelectorSearch.prototype = {
    * Suggests classes,ids and tags based on the user input as user types in the
    * searchbox.
    */
-  showSuggestions: function() {
+  showSuggestions: function SelectorSearch_showSuggestions() {
     let query = this.searchBox.value;
     let firstPart = "";
     if (this.state == this.States.TAG) {
@@ -490,5 +500,5 @@ SelectorSearch.prototype = {
       }
       this._showPopup(result.suggestions, firstPart);
     });
-  }
+  },
 };
