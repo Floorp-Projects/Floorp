@@ -17,7 +17,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=833386
 <pre id="test">
 <script class="testbody" type="text/javascript">
 SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv({"set": [["media.webvtt.enabled", true]]},
+SpecialPowers.pushPrefEnv({"set": [["media.webvtt.enabled", true],
+                                   ["media.webvtt.regions.enabled", true]]},
   function() {
     var video = document.createElement("video");
 
@@ -65,6 +66,7 @@ SpecialPowers.pushPrefEnv({"set": [["media.webvtt.enabled", true]]},
     var trackOne = document.createElement("track");
     trackOne.label = "first";
     trackOne.src = "basic.vtt";
+    trackOne.default = true;
     video.appendChild(trackOne);
 
     video.addTextTrack("subtitles", "fourth", "en-CA");
@@ -72,6 +74,7 @@ SpecialPowers.pushPrefEnv({"set": [["media.webvtt.enabled", true]]},
     var trackTwo = document.createElement("track");
     trackTwo.label = "second";
     trackTwo.src = "basic.vtt";
+    trackTwo.default = true;
     video.appendChild(trackTwo);
 
     video.src = "seek.webm";
@@ -98,19 +101,19 @@ SpecialPowers.pushPrefEnv({"set": [["media.webvtt.enabled", true]]},
       // tree order. The second two tracks, added through the 'addTextTrack'
       // method, will occupy the last two indexes in the order that they were
       // added in.
-      var trackInfo = [
-        { label: "first", mode: "disabled" },
+      var trackData = [
+        { label: "first", mode: "showing" },
         { label: "second", mode: "disabled" },
         { label: "third", mode: "hidden" },
-        { label: "fourth", mode:"hidden"}
+        { label: "fourth", mode: "hidden"}
       ];
-      is(video.textTracks.length, trackInfo.length, "TextTracks length should be " + trackInfo.length);
-      for (var i = 0; i < video.textTracks.length; i++) {
+      is(video.textTracks.length, trackData.length, "TextTracks length should be " + trackData.length);
+      for (var i = 0; i < trackData.length; i++) {
         var track = video.textTracks[i];
-        isnot(track, null, "Video should have a text track at " + i + " index.");
-        var info = trackInfo[i];
+        isnot(track, null, "Video should have a text track at index " + i);
+        var info = trackData[i];
         for (var key in info) {
-          is(track[key], info[key], "Track at " + i + " should have a '" + key + "'' property " +
+          is(track[key], info[key], "Track at index " + i + " should have a '" + key + "'' property " +
                                     "with a value of '" + info[key] + "'.");
         }
       }
