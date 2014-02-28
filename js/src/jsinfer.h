@@ -673,6 +673,21 @@ class TemporaryTypeSet : public TypeSet
     /* Get the class shared by all objects in this set, or nullptr. */
     const Class *getKnownClass();
 
+    /* Result returned from forAllClasses */
+    enum ForAllResult {
+        EMPTY=1,                // Set empty
+        ALL_TRUE,               // Set not empty and predicate returned true for all classes
+        ALL_FALSE,              // Set not empty and predicate returned false for all classes
+        MIXED,                  // Set not empty and predicate returned false for some classes
+                                // and true for others, or set contains an unknown or non-object
+                                // type
+    };
+
+    /* Apply func to the members of the set and return an appropriate result.
+     * The iteration may end early if the result becomes known early.
+     */
+    ForAllResult forAllClasses(bool (*func)(const Class *clasp));
+
     /* Get the prototype shared by all objects in this set, or nullptr. */
     JSObject *getCommonPrototype();
 
