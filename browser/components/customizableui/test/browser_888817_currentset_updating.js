@@ -46,7 +46,7 @@ add_task(function() {
   is(otherPersonalbar.getAttribute("currentset"), personalbarCurrentset,
      "Should have updated other window's currentSet after remove.");
 
-  otherWin.close();
+  yield promiseWindowClosed(otherWin);
   // Reset in asyncCleanup will put our button back for us.
 });
 

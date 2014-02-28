@@ -19,7 +19,7 @@ add_task(function() {
   let otherNavBar = newWindow.document.getElementById(CustomizableUI.AREA_NAVBAR);
   yield waitForCondition(() => otherNavBar.hasAttribute("overflowing"));
   ok(otherNavBar.hasAttribute("overflowing"), "Other window should have an overflowing toolbar.");
-  newWindow.close();
+  yield promiseWindowClosed(newWindow);
 
   window.resizeTo(originalWindowWidth, window.outerHeight);
   yield waitForCondition(() => !navbar.hasAttribute("overflowing"));
