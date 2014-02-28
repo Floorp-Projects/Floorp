@@ -8,13 +8,19 @@
 /**
  * Integration with the "Metro"/"Modern" UI environment in Windows 8.
  *
- * Note: browser/metro/base/content/browser-scripts.js contains a stub
+ * Note: browser/metro/base/content/browser.js contains a stub
  * implementation of this interface for non-Windows systems, for testing and
  * development purposes only.
  */
-[scriptable, uuid(dde6eee6-ad11-475b-b7d7-bee8e46e5756)]
+[scriptable, uuid(319faae0-82ca-4c2f-8a24-2b2445e5a72a)]
 interface nsIWinMetroUtils : nsISupports
 {
+  /**
+   * Determine if the current device has the hardware capabilities to run
+   * in metro mode.
+   */
+  readonly attribute boolean supported;
+
   /**
    * Determine if the current browser is running in the metro immersive
    * environment.
