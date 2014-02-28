@@ -52,13 +52,23 @@
 #elif defined(__powerpc64__)
 #define WEBRTC_ARCH_PPC64 1
 #define WEBRTC_ARCH_64_BITS 1
+#ifdef __LITTLE_ENDIAN__
+#define WEBRTC_ARCH_LITTLE_ENDIAN
+#define WEBRTC_LITTLE_ENDIAN
+#else
 #define WEBRTC_ARCH_BIG_ENDIAN
 #define WEBRTC_BIG_ENDIAN
+#endif
 #elif defined(__ppc__) || defined(__powerpc__)
 #define WEBRTC_ARCH_PPC 1
 #define WEBRTC_ARCH_32_BITS 1
+#ifdef __LITTLE_ENDIAN__
+#define WEBRTC_ARCH_LITTLE_ENDIAN
+#define WEBRTC_LITTLE_ENDIAN
+#else
 #define WEBRTC_ARCH_BIG_ENDIAN
 #define WEBRTC_BIG_ENDIAN
+#endif
 #elif defined(__sparc64__)
 #define WEBRTC_ARCH_SPARC 1
 #define WEBRTC_ARCH_64_BITS 1
