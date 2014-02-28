@@ -8,7 +8,7 @@
 #include "nsIAtom.h"
 #include "nsXBLDocumentInfo.h"
 #include "nsIInputStream.h"
-#include "nsINameSpaceManager.h"
+#include "nsNameSpaceManager.h"
 #include "nsHashtable.h"
 #include "nsIURI.h"
 #include "nsIURL.h"

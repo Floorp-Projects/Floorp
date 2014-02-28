@@ -51,7 +51,7 @@
       }
 
       function nativeCallback() {
-        new Promise(function(resolve, reject) { resolve(42); }).then(console.log);
+        new Promise(function(resolve, reject) { resolve(42); }).then(console.log.bind(console));
       }
     </script>
   </head>

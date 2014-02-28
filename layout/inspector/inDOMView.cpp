@@ -18,7 +18,7 @@
 #include "nsIDOMMozNamedAttrMap.h"
 #include "nsIDOMMutationEvent.h"
 #include "nsBindingManager.h"
-#include "nsINameSpaceManager.h"
+#include "nsNameSpaceManager.h"
 #include "nsIDocument.h"
 #include "nsIServiceManager.h"
 #include "nsITreeColumns.h"
@@ -652,8 +652,7 @@ inDOMView::AttributeChanged(nsIDocument* aDocument, dom::Element* aElement,
   nsCOMPtr<nsIDOMAttr> domAttr;
   nsDependentAtomString attrStr(aAttribute);
   if (aNameSpaceID) {
-    nsCOMPtr<nsINameSpaceManager> nsm =
-      do_GetService(NS_NAMESPACEMANAGER_CONTRACTID);
+    nsNameSpaceManager* nsm = nsNameSpaceManager::GetInstance();
     if (!nsm) {
       // we can't find out which attribute we want :(
       return;

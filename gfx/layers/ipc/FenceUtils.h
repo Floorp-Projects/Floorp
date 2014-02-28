@@ -13,7 +13,7 @@
 /**
  * FenceHandle is used for delivering Fence object via ipc.
  */
-#if MOZ_WIDGET_GONK && ANDROID_VERSION >= 18
+#if MOZ_WIDGET_GONK && ANDROID_VERSION >= 17
 # include "mozilla/layers/FenceUtilsGonk.h"
 #else
 namespace mozilla {
@@ -24,11 +24,11 @@ struct FenceHandle {
 };
 } // namespace layers
 } // namespace mozilla
-#endif // MOZ_WIDGET_GONK && ANDROID_VERSION >= 18
+#endif // MOZ_WIDGET_GONK && ANDROID_VERSION >= 17
 
 namespace IPC {
 
-#if MOZ_WIDGET_GONK && ANDROID_VERSION >= 18
+#if MOZ_WIDGET_GONK && ANDROID_VERSION >= 17
 #else
 template <>
 struct ParamTraits<mozilla::layers::FenceHandle> {
@@ -36,7 +36,7 @@ struct ParamTraits<mozilla::layers::FenceHandle> {
   static void Write(Message*, const paramType&) {}
   static bool Read(const Message*, void**, paramType*) { return false; }
 };
-#endif // MOZ_WIDGET_GONK && ANDROID_VERSION >= 18
+#endif // MOZ_WIDGET_GONK && ANDROID_VERSION >= 17
 
 } // namespace IPC
 

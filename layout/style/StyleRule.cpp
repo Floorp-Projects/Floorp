@@ -21,7 +21,7 @@
 #include "nsStyleUtil.h"
 #include "nsICSSStyleRuleDOMWrapper.h"
 #include "nsDOMCSSDeclaration.h"
-#include "nsINameSpaceManager.h"
+#include "nsNameSpaceManager.h"
 #include "nsXMLNameSpaceMap.h"
 #include "nsCSSPseudoElements.h"
 #include "nsCSSPseudoClasses.h"

@@ -218,7 +218,9 @@
         </vbox>
       </hbox>
     </panel>
+    <!-- type="default" forces frames to be created so that the panel's size can be determined --> 
     <panel id="UITourHighlightContainer"
+           type="default"
            hidden="true"
            noautofocus="true"
            noautohide="true"

@@ -12,7 +12,7 @@
 #include "nsIServiceManager.h"
 #include "nsGkAtoms.h"
 #include "nsIContent.h"
-#include "nsINameSpaceManager.h"
+#include "nsNameSpaceManager.h"
 #include "nsIDocument.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIDOMElement.h"
