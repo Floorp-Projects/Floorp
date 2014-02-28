@@ -198,6 +198,7 @@ function testOnPointerProperty()
   iframeBody.onpointerover = function (e) { gOnPointerPropHandled["pointerover"] = true; }
   iframeBody.onpointerenter = function (e) { gOnPointerPropHandled["pointerenter"] = true; }
   iframeBody.onpointerleave = function (e) { gOnPointerPropHandled["pointerleave"] = true; }
+  iframeBody.onpointercancel = function (e) { gOnPointerPropHandled["pointercancel"] = true; }
 
   iframeBody.dispatchEvent(getDefaultArgEvent("pointerdown"));
   is(gOnPointerPropHandled['pointerdown'], true, "pointerdown property is performed");
@@ -219,6 +220,9 @@ function testOnPointerProperty()
 
   iframeBody.dispatchEvent(getDefaultArgEvent("pointerleave"));
   is(gOnPointerPropHandled['pointerleave'], true, "pointerleave property is performed");
+
+  iframeBody.dispatchEvent(getDefaultArgEvent("pointercancel"));
+  is(gOnPointerPropHandled['pointercancel'], true, "pointercancel property is performed");
 
   nextTest();
 }

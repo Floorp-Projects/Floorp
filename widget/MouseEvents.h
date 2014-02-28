@@ -576,6 +576,12 @@ public:
       case NS_POINTER_ENTER:
       case NS_POINTER_LEAVE:
         mFlags.mBubbles = false;
+        mFlags.mCancelable = false;
+        break;
+      case NS_POINTER_CANCEL:
+      case NS_POINTER_GOT_CAPTURE:
+      case NS_POINTER_LOST_CAPTURE:
+        mFlags.mCancelable = false;
         break;
       default:
         break;
