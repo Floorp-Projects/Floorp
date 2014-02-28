@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "vm/ErrorObject-inl.h"
+#include "vm/ErrorObject.h"
 
 #include "jsexn.h"
 
@@ -125,7 +125,7 @@ js::ErrorObject::getOrCreateErrorReport(JSContext *cx)
 
     // Filename.
     JSAutoByteString filenameStr;
-    if (!filenameStr.encodeLatin1(cx, fileName(cx)))
+    if (!filenameStr.encodeLatin1(cx, fileName()))
         return nullptr;
     report.filename = filenameStr.ptr();
 
