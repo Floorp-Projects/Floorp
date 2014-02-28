@@ -214,12 +214,12 @@ if CONFIG['OS_TEST'] == 'powerpc':
             'xptcstubs_ppc_linux.cpp',
         ]
 
-if CONFIG['OS_TEST'] == 'powerpc64':
+if CONFIG['OS_TEST'] in ('powerpc64', 'powerpc64le'):
     if CONFIG['OS_ARCH'] in ('Linux', 'FreeBSD'):
           SOURCES += [
-              'xptcinvoke_asm_ppc64_linux.s',
+              'xptcinvoke_asm_ppc64_linux.S',
               'xptcinvoke_ppc64_linux.cpp',
-              'xptcstubs_asm_ppc64_linux.s',
+              'xptcstubs_asm_ppc64_linux.S',
               'xptcstubs_ppc64_linux.cpp',
           ]
 
