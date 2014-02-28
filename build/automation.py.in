@@ -533,7 +533,7 @@ class Automation(object):
         # will otherwise lead to OOM conditions on the current test slaves.
         if totalMemory <= 1024 * 1024 * 4:
           self.log.info("INFO | automation.py | ASan running in low-memory configuration")
-          env["ASAN_OPTIONS"] = "quarantine_size=50331648"
+          env["ASAN_OPTIONS"] = "quarantine_size=50331648:malloc_context_size=5"
         else:
           self.log.info("INFO | automation.py | ASan running in default memory configuration")
       except OSError,err:
