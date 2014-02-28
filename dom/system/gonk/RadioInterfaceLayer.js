@@ -4215,6 +4215,7 @@ RILNetworkInterface.prototype = {
   NETWORK_TYPE_MOBILE_MMS:  Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS,
   NETWORK_TYPE_MOBILE_SUPL: Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_SUPL,
   NETWORK_TYPE_MOBILE_IMS:  Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_IMS,
+  NETWORK_TYPE_MOBILE_DUN:  Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_DUN,
   // The network manager should only need to add the host route for "other"
   // types, which is the same handling method as the supl type. So let the
   // definition of other types to be the same as the one of supl type.
@@ -4250,6 +4251,10 @@ RILNetworkInterface.prototype = {
     if (this.connectedTypes.indexOf("ims") != -1) {
       return this.NETWORK_TYPE_MOBILE_IMS;
     }
+    if (this.connectedTypes.indexOf("dun") != -1) {
+      return this.NETWORK_TYPE_MOBILE_DUN;
+    }
+
     return this.NETWORK_TYPE_MOBILE_OTHERS;
   },
 
