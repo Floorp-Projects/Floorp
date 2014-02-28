@@ -85,6 +85,11 @@ public:
     return mDecoder;
   }
 
+  // Called by SourceBuffers to notify this MediaSource that data has
+  // been evicted from the buffered data. The start and end times
+  // that were evicted are provided.
+  void NotifyEvicted(double aStart, double aEnd);
+
 private:
   explicit MediaSource(nsPIDOMWindow* aWindow);
 

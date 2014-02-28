@@ -247,6 +247,7 @@ MarkIfGCThingWord(JSTracer *trc, uintptr_t w)
     return CGCT_VALID;
 }
 
+#ifndef JSGC_USE_EXACT_ROOTING
 static void
 MarkWordConservatively(JSTracer *trc, uintptr_t w)
 {
@@ -263,7 +264,6 @@ MarkWordConservatively(JSTracer *trc, uintptr_t w)
     MarkIfGCThingWord(trc, w);
 }
 
-#ifndef JSGC_USE_EXACT_ROOTING
 MOZ_ASAN_BLACKLIST
 static void
 MarkRangeConservatively(JSTracer *trc, const uintptr_t *begin, const uintptr_t *end)

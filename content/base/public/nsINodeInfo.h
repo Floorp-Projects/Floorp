@@ -26,8 +26,8 @@
 
 #include "nsCOMPtr.h"            // for member
 #include "nsIAtom.h"             // for member (in nsCOMPtr)
-#include "nsINameSpaceManager.h" // for kNameSpaceID_*
 #include "nsISupports.h"         // for base class
+#include "nsNameSpaceManager.h"  // for kNameSpaceID_*
 
 #ifdef MOZILLA_INTERNAL_API
 #include "nsDOMString.h"

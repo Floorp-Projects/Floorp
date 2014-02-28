@@ -141,7 +141,7 @@ ValueToStringBuffer(JSContext *cx, const Value &v, StringBuffer &sb)
 
 /* ES5 9.8 ToString for booleans, appending the result to the string buffer. */
 inline bool
-BooleanToStringBuffer(JSContext *cx, bool b, StringBuffer &sb)
+BooleanToStringBuffer(bool b, StringBuffer &sb)
 {
     return b ? sb.append("true") : sb.append("false");
 }

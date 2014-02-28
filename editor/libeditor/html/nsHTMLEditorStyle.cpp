@@ -33,7 +33,7 @@
 #include "nsIDOMRange.h"
 #include "nsIEditor.h"
 #include "nsIEditorIMESupport.h"
-#include "nsINameSpaceManager.h"
+#include "nsNameSpaceManager.h"
 #include "nsINode.h"
 #include "nsISelection.h"
 #include "nsISelectionPrivate.h"

@@ -12,7 +12,7 @@
 #include "nsRenderingContext.h"
 #include "nsStyleContext.h"
 #include "nsIContent.h"
-#include "nsINameSpaceManager.h"
+#include "nsNameSpaceManager.h"
 #include "nsBoxLayoutState.h"
 #include "nsMenuBarListener.h"
 #include "nsXPIDLString.h"

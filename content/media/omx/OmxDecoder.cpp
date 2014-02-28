@@ -15,7 +15,7 @@
 #include <stagefright/OMXClient.h>
 #include <stagefright/OMXCodec.h>
 #include <OMX.h>
-#if MOZ_WIDGET_GONK && ANDROID_VERSION >= 18
+#if MOZ_WIDGET_GONK && ANDROID_VERSION >= 17
 #include <ui/Fence.h>
 #endif
 
@@ -1060,7 +1060,7 @@ void OmxDecoder::ReleaseAllPendingVideoBuffersLocked()
   for (int i = 0; i < size; i++) {
     MediaBuffer *buffer;
     buffer = releasingVideoBuffers[i].mMediaBuffer;
-#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 18
+#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
     android::sp<Fence> fence;
     int fenceFd = -1;
     fence = releasingVideoBuffers[i].mReleaseFenceHandle.mFence;

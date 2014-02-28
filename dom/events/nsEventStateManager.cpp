@@ -31,7 +31,7 @@
 #include "nsIScrollableFrame.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIDOMXULControlElement.h"
-#include "nsINameSpaceManager.h"
+#include "nsNameSpaceManager.h"
 #include "nsIBaseWindow.h"
 #include "nsISelection.h"
 #include "nsITextControlElement.h"

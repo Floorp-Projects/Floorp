@@ -4,6 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/Sandbox.h"
+
 #include <unistd.h>
 #include <stdio.h>
 #include <sys/ptrace.h>
@@ -11,10 +13,19 @@
 #include <sys/syscall.h>
 #include <signal.h>
 #include <string.h>
+#include <linux/futex.h>
+#include <sys/time.h>
+#include <dirent.h>
+#include <stdlib.h>
+#include <pthread.h>
 
+#include "mozilla/Atomics.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/NullPtr.h"
 #include "mozilla/unused.h"
+#include "mozilla/dom/Exceptions.h"
+#include "nsString.h"
+#include "nsThreadUtils.h"
 
 #ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
@@ -25,10 +36,6 @@
 #include <android/log.h>
 #endif
 #include "seccomp_filter.h"
-
-#include "mozilla/dom/Exceptions.h"
-#include "nsString.h"
-#include "nsThreadUtils.h"
 
 #include "linux_seccomp.h"
 #ifdef MOZ_LOGGING
@@ -47,6 +54,8 @@ static PRLogModuleInfo* gSeccompSandboxLog;
 #define LOG_ERROR(args...)
 #endif
 
+// Note: this ifdef includes most of the file.
+#ifdef MOZ_CONTENT_SANDBOX
 struct sock_filter seccomp_filter[] = {
   VALIDATE_ARCHITECTURE,
   EXAMINE_SYSCALL,
@@ -221,20 +230,201 @@ InstallSyscallFilter(void)
   }
   return 0;
 }
+#endif
+
+#if defined(ANDROID) || defined(MOZ_CONTENT_SANDBOX)
+// Use signals for permissions that need to be set per-thread.
+static base::ChildPrivileges sSetPrivilegesTo;
+// The communication channel from the signal handler back to the main thread.
+static mozilla::Atomic<int> sSetSandboxDone;
+// about:memory has the first 3 RT signals.  (We should allocate
+// signals centrally instead of hard-coding them like this.)
+static const int sSetSandboxSignum = SIGRTMIN + 3;
+#endif
+
+static bool
+SetThreadSandbox(base::ChildPrivileges aPrivs, bool aIsMainThread)
+{
+  bool didAnything = false;
+  bool shouldSetPrivs = aIsMainThread;
+#if defined(ANDROID)
+  shouldSetPrivs = true;
+#endif
+
+  if (shouldSetPrivs && (aIsMainThread || geteuid() == 0)) {
+    SetCurrentProcessPrivileges(aPrivs);
+    if (aPrivs != base::PRIVILEGES_INHERIT) {
+      didAnything = true;
+    }
+  }
+#if defined(MOZ_CONTENT_SANDBOX)
+  if (PR_GetEnv("MOZ_DISABLE_CONTENT_SANDBOX") == nullptr &&
+      prctl(PR_GET_SECCOMP, 0, 0, 0, 0) == 0) {
+    if (InstallSyscallFilter() == 0) {
+      didAnything = true;
+    }
+    /*
+     * Bug 880797: when all B2G devices are required to support
+     * seccomp-bpf, this should exit/crash if InstallSyscallFilter
+     * returns nonzero (ifdef MOZ_WIDGET_GONK).
+     */
+  }
+#endif
+  return didAnything;
+}
+
+#if defined(ANDROID) || defined(MOZ_CONTENT_SANDBOX)
+static void
+SetThreadSandboxHandler(int signum)
+{
+  // The non-zero number sent back to the main thread indicates
+  // whether action was taken.
+  if (SetThreadSandbox(sSetPrivilegesTo, /* main: */ false)) {
+    sSetSandboxDone = 2;
+  } else {
+    sSetSandboxDone = 1;
+  }
+  // Wake up the main thread.  See the FUTEX_WAIT call, below, for an
+  // explanation.
+  syscall(__NR_futex, reinterpret_cast<int*>(&sSetSandboxDone),
+          FUTEX_WAKE, 1);
+}
+
+static void
+BroadcastSetThreadSandbox(base::ChildPrivileges aPrivs)
+{
+  pid_t pid, tid;
+  DIR *taskdp;
+  struct dirent *de;
+
+  static_assert(sizeof(mozilla::Atomic<int>) == sizeof(int),
+                "mozilla::Atomic<int> isn't represented by an int");
+  MOZ_ASSERT(NS_IsMainThread());
+  pid = getpid();
+  taskdp = opendir("/proc/self/task");
+  if (taskdp == nullptr) {
+    LOG_ERROR("opendir /proc/self/task: %s\n", strerror(errno));
+    MOZ_CRASH();
+  }
+  if (signal(sSetSandboxSignum, SetThreadSandboxHandler) != SIG_DFL) {
+    LOG_ERROR("signal %d in use!\n", sSetSandboxSignum);
+    MOZ_CRASH();
+  }
+
+  // In case this races with a not-yet-deprivileged thread cloning
+  // itself, repeat iterating over all threads until we find none
+  // that are still privileged.
+  sSetPrivilegesTo = aPrivs;
+  bool sandboxProgress;
+  do {
+    sandboxProgress = false;
+    // For each thread...
+    while ((de = readdir(taskdp))) {
+      char *endptr;
+      tid = strtol(de->d_name, &endptr, 10);
+      if (*endptr != '\0' || tid <= 0) {
+        // Not a task ID.
+        continue;
+      }
+      if (tid == pid) {
+        // Drop the main thread's privileges last, below, so
+        // we can continue to signal other threads.
+        continue;
+      }
+      // Reset the futex cell and signal.
+      sSetSandboxDone = 0;
+      if (syscall(__NR_tgkill, pid, tid, sSetSandboxSignum) != 0) {
+        if (errno == ESRCH) {
+          LOG_ERROR("Thread %d unexpectedly exited.", tid);
+          // Rescan threads, in case it forked before exiting.
+          sandboxProgress = true;
+          continue;
+        }
+        LOG_ERROR("tgkill(%d,%d): %s\n", pid, tid, strerror(errno));
+        MOZ_CRASH();
+      }
+      // It's unlikely, but if the thread somehow manages to exit
+      // after receiving the signal but before entering the signal
+      // handler, we need to avoid blocking forever.
+      //
+      // Using futex directly lets the signal handler send the wakeup
+      // from an async signal handler (pthread mutex/condvar calls
+      // aren't allowed), and to use a relative timeout that isn't
+      // affected by changes to the system clock (not possible with
+      // POSIX semaphores).
+      //
+      // If a thread doesn't respond within a reasonable amount of
+      // time, but still exists, we crash -- the alternative is either
+      // blocking forever or silently losing security, and it
+      // shouldn't actually happen.
+      static const int crashDelay = 10; // seconds
+      struct timespec timeLimit;
+      clock_gettime(CLOCK_MONOTONIC, &timeLimit);
+      timeLimit.tv_sec += crashDelay;
+      while (true) {
+        static const struct timespec futexTimeout = { 0, 10*1000*1000 }; // 10ms
+        // Atomically: if sSetSandboxDone == 0, then sleep.
+        if (syscall(__NR_futex, reinterpret_cast<int*>(&sSetSandboxDone),
+                  FUTEX_WAIT, 0, &futexTimeout) != 0) {
+          if (errno != EWOULDBLOCK && errno != ETIMEDOUT && errno != EINTR) {
+            LOG_ERROR("FUTEX_WAIT: %s\n", strerror(errno));
+            MOZ_CRASH();
+          }
+        }
+        // Did the handler finish?
+        if (sSetSandboxDone > 0) {
+          if (sSetSandboxDone == 2) {
+            sandboxProgress = true;
+          }
+          break;
+        }
+        // Has the thread ceased to exist?
+        if (syscall(__NR_tgkill, pid, tid, 0) != 0) {
+          if (errno == ESRCH) {
+            LOG_ERROR("Thread %d unexpectedly exited.", tid);
+          }
+          // Rescan threads, in case it forked before exiting.
+          // Also, if it somehow failed in a way that wasn't ESRCH,
+          // and still exists, that will be handled on the next pass.
+          sandboxProgress = true;
+          break;
+        }
+        struct timespec now;
+        clock_gettime(CLOCK_MONOTONIC, &now);
+        if (now.tv_sec > timeLimit.tv_nsec ||
+            (now.tv_sec == timeLimit.tv_nsec &&
+             now.tv_nsec > timeLimit.tv_nsec)) {
+          LOG_ERROR("Thread %d unresponsive for %d seconds.  Killing process.",
+                    tid, crashDelay);
+          MOZ_CRASH();
+        }
+      }
+    }
+    rewinddir(taskdp);
+  } while (sandboxProgress);
+  unused << signal(sSetSandboxSignum, SIG_DFL);
+  unused << closedir(taskdp);
+  // And now, deprivilege the main thread:
+  SetThreadSandbox(aPrivs, /* main: */ true);
+}
+#else
+static void
+BroadcastSetThreadSandbox(base::ChildPrivileges aPrivs)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  SetThreadSandbox(aPrivs, /* main: */ true);
+}
+#endif
 
 /**
- * Starts the seccomp sandbox for this process.
- * Generally called just after SetCurrentProcessPrivileges.
+ * Starts the seccomp sandbox for this process and sets user/group-based privileges.
  * Should be called only once, and before any potentially harmful content is loaded.
  *
  * Should normally make the process exit on failure.
 */
 void
-SetCurrentProcessSandbox(void)
+SetCurrentProcessSandbox(base::ChildPrivileges aPrivs)
 {
-  if (PR_GetEnv("MOZ_DISABLE_CONTENT_SANDBOX"))
-    return;
-
 #if !defined(ANDROID) && defined(PR_LOGGING)
   if (!gSeccompSandboxLog) {
     gSeccompSandboxLog = PR_NewLogModule("SeccompSandbox");
@@ -242,29 +432,14 @@ SetCurrentProcessSandbox(void)
   PR_ASSERT(gSeccompSandboxLog);
 #endif
 
-#ifdef MOZ_CONTENT_SANDBOX_REPORTER
+#if defined(MOZ_CONTENT_SANDBOX) && defined(MOZ_CONTENT_SANDBOX_REPORTER)
   if (InstallSyscallReporter()) {
     LOG_ERROR("install_syscall_reporter() failed\n");
-    /* This is disabled so that we do not exit if seccomp-bpf is not available
-     * This will be re-enabled when all B2G devices are required to support seccomp-bpf
-     * See bug 880797 for reversal
-     */
-
-    /* _exit(127); */
   }
-
 #endif
 
-  if (InstallSyscallFilter()) {
-    LOG_ERROR("install_syscall_filter() failed\n");
-    /* This is disabled so that we do not exit if seccomp-bpf is not available
-     * This will be re-enabled when all B2G devices are required to support seccomp-bpf
-     * See bug 880797 for reversal
-     */
-
-    /* _exit(127); */
-  }
-
+  BroadcastSetThreadSandbox(aPrivs);
 }
+
 } // namespace mozilla
 

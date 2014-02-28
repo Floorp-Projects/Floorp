@@ -10,7 +10,7 @@
 #include "nsXBLService.h"
 #include "nsXBLWindowKeyHandler.h"
 #include "nsIInputStream.h"
-#include "nsINameSpaceManager.h"
+#include "nsNameSpaceManager.h"
 #include "nsHashtable.h"
 #include "nsIURI.h"
 #include "nsIDOMElement.h"

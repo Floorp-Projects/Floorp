@@ -8,9 +8,9 @@
  */
 
 #include "nsXMLNameSpaceMap.h"
-#include "nsINameSpaceManager.h"
 #include "nsContentUtils.h"
 #include "nsGkAtoms.h"
+#include "nsNameSpaceManager.h"
 
 template <>
 class nsDefaultComparator <nsNameSpaceEntry, nsIAtom*> {

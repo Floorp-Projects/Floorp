@@ -551,7 +551,7 @@ struct TypeObject {
 };
 
 struct BaseShape {
-    const js::Class *clasp;
+    const js::Class *clasp_;
     JSObject *parent;
     JSObject *_1;
     JSCompartment *compartment;

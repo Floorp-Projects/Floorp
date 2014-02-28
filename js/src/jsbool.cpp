@@ -53,7 +53,7 @@ bool_toSource_impl(JSContext *cx, CallArgs args)
     bool b = thisv.isBoolean() ? thisv.toBoolean() : thisv.toObject().as<BooleanObject>().unbox();
 
     StringBuffer sb(cx);
-    if (!sb.append("(new Boolean(") || !BooleanToStringBuffer(cx, b, sb) || !sb.append("))"))
+    if (!sb.append("(new Boolean(") || !BooleanToStringBuffer(b, sb) || !sb.append("))"))
         return false;
 
     JSString *str = sb.finishString();
@@ -196,7 +196,7 @@ js::ToBooleanSlow(HandleValue v)
  * The only caller of the fast path, JSON's PreprocessValue, ensures that.
  */
 bool
-js::BooleanGetPrimitiveValueSlow(HandleObject wrappedBool, JSContext *cx)
+js::BooleanGetPrimitiveValueSlow(HandleObject wrappedBool)
 {
     JSObject *obj = wrappedBool->as<ProxyObject>().target();
     JS_ASSERT(obj);
