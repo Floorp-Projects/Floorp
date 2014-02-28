@@ -712,7 +712,12 @@ var NodeListActor = exports.NodeListActor = protocol.ActorClass({
    * Get a single node from the node list.
    */
   item: method(function(index) {
-    return this.walker.attachElement(this.nodeList[index]);
+    let node = this.walker._ref(this.nodeList[index]);
+    let newParents = [node for (node of this.walker.ensurePathToRoot(node))];
+    return {
+      node: node,
+      newParents: newParents
+    }
   }, {
     request: { item: Arg(0) },
     response: RetVal("disconnectedNode")
