@@ -654,14 +654,13 @@ MacroAssembler::newGCThing(const Register &result, gc::AllocKind allocKind, Labe
         jump(fail);
 
 #ifdef JSGC_GENERATIONAL
-    const Nursery &nursery = GetIonContext()->runtime->gcNursery();
-    if (nursery.isEnabled() &&
-        allocKind <= gc::FINALIZE_OBJECT_LAST &&
-        initialHeap != gc::TenuredHeap)
-    {
+    // Always use nursery allocation if it is possible to do so. The jit
+    // assumes a nursery pointer is returned to avoid barriers.
+    if (allocKind <= gc::FINALIZE_OBJECT_LAST && initialHeap != gc::TenuredHeap) {
         // Inline Nursery::allocate. No explicit check for nursery.isEnabled()
         // is needed, as the comparison with the nursery's end will always fail
         // in such cases.
+        const Nursery &nursery = GetIonContext()->runtime->gcNursery();
         loadPtr(AbsoluteAddress(nursery.addressOfPosition()), result);
         addPtr(Imm32(thingSize), result);
         branchPtr(Assembler::BelowOrEqual, AbsoluteAddress(nursery.addressOfCurrentEnd()), result, fail);
