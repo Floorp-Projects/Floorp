@@ -117,6 +117,15 @@ static inline void profiler_start(int aProfileEntries, double aInterval,
 // to retrieve the profile.
 static inline void profiler_stop() {}
 
+// These functions pause and resume the profiler. While paused the profile will not
+// take any samples and will not record any data into its buffers. The profiler
+// remains fully initialized in this state. Timeline markers will still be stored.
+// This feature will keep javascript profiling enabled, thus allowing toggling the
+// profiler without invalidating the JIT.
+static inline bool profiler_is_paused() { return false; }
+static inline void profiler_pause() {}
+static inline void profiler_resume() {}
+
 class ProfilerBacktrace;
 
 // Immediately capture the current thread's call stack and return it
