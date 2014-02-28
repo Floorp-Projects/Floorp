@@ -1325,15 +1325,11 @@ class ObjectImpl : public gc::BarrieredCell<ObjectImpl>
         return slots[slot - fixed];
     }
 
-    const HeapSlot *getSlotAddressUnchecked(uint32_t slot) const {
+    HeapSlot *getSlotAddressUnchecked(uint32_t slot) {
         uint32_t fixed = numFixedSlots();
         if (slot < fixed)
             return fixedSlots() + slot;
         return slots + (slot - fixed);
-    }
-
-    HeapSlot *getSlotAddressUnchecked(uint32_t slot) {
-        return const_cast<ObjectImpl*>(this)->getSlotAddressUnchecked(slot);
     }
 
     HeapSlot *getSlotAddress(uint32_t slot) {
@@ -1346,22 +1342,7 @@ class ObjectImpl : public gc::BarrieredCell<ObjectImpl>
         return getSlotAddressUnchecked(slot);
     }
 
-    const HeapSlot *getSlotAddress(uint32_t slot) const {
-        /*
-         * This can be used to get the address of the end of the slots for the
-         * object, which may be necessary when fetching zero-length arrays of
-         * slots (e.g. for callObjVarArray).
-         */
-        MOZ_ASSERT(slotInRange(slot, SENTINEL_ALLOWED));
-        return getSlotAddressUnchecked(slot);
-    }
-
     HeapSlot &getSlotRef(uint32_t slot) {
-        MOZ_ASSERT(slotInRange(slot));
-        return *getSlotAddress(slot);
-    }
-
-    const HeapSlot &getSlotRef(uint32_t slot) const {
         MOZ_ASSERT(slotInRange(slot));
         return *getSlotAddress(slot);
     }
