@@ -85,13 +85,24 @@ class ErrorObject : public JSObject
 
     JSErrorReport * getOrCreateErrorReport(JSContext *cx);
 
-    inline JSString * fileName(JSContext *cx) const;
-    inline uint32_t lineNumber() const;
-    inline uint32_t columnNumber() const;
-    inline JSString * stack(JSContext *cx) const;
+    JSString * fileName() const {
+        return getReservedSlot(FILENAME_SLOT).toString();
+    }
+
+    uint32_t lineNumber() const {
+        return getReservedSlot(LINENUMBER_SLOT).toInt32();
+    }
+
+    uint32_t columnNumber() const {
+        return getReservedSlot(COLUMNNUMBER_SLOT).toInt32();
+    }
+
+    JSString * stack() const {
+        return getReservedSlot(STACK_SLOT).toString();
+    }
 
     JSString * getMessage() const {
-        const HeapSlot &slot = getReservedSlotRef(MESSAGE_SLOT);
+        HeapSlot &slot = const_cast<ErrorObject*>(this)->getReservedSlotRef(MESSAGE_SLOT);
         return slot.isString() ? slot.toString() : nullptr;
     }
 };
