@@ -5,17 +5,16 @@
 <svg xmlns="http://www.w3.org/2000/svg"
      xmlns:xlink="http://www.w3.org/1999/xlink"
      class="reftest-wait"
-     onload="setTimeAndSnapshot(1.9999, true)">
-  <title>Test animation of the "stdDeviation" &lt;number-optional-number&gt; attribute on "feGaussianBlur" elements</title>
+     onload="setTimeAndSnapshot(101, true)">
+  <title>Test animation of the "filterRes" &lt;integer-optional-integer&gt; attribute on "filter" elements</title>
   <script xlink:href="smil-util.js" type="text/javascript"/>
-  <filter id="filter" x="0" y="0" width="1" height="1" filterRes="1000">
-    <feGaussianBlur stdDeviation="50">
-      <animate attributeName="stdDeviation"
-               calcMode="linear"
-               begin="0s" dur="2s"
-               from="100,100" to="0"
-               fill="freeze"/>
-    </feGaussianBlur>
+  <filter id="filter" x="0" y="0" width="1" height="1" filterRes="10 10">
+    <animate attributeName="filterRes"
+             calcMode="linear"
+             begin="100s" dur="2s"
+             from="0" to="2000 2000"
+             fill="freeze"/>
+    <feGaussianBlur stdDeviation="0.001"/>
   </filter>
   <rect width="100%" height="100%" fill="lime"/>
   <g transform="translate(50, 0)">

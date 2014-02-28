@@ -74,6 +74,9 @@ public:
 
   /**
    * Returns the size of the user specified "filter region", in filter space.
+   * The size will be {filterRes.x by filterRes.y}, whether the user specified
+   * the filter's filterRes attribute explicitly, or the implementation chose
+   * the filterRes values.
    */
   nsIntRect GetFilterSpaceBounds() const { return mFilterSpaceBounds; }
 

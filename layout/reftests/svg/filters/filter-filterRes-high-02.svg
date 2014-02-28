@@ -1,0 +1,20 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg" version="1.0">
+  <desc>
+    This test checks that the implicit offscreen surface scaling implied by
+    a high 'filterRes' interacts correctly with other transforms. Specifically
+    you should see no red if the lime filtered circle paints on all the pixels
+    that it should paint on.
+  </desc>
+  <filter id="filter" x="0" y="0" width="1" height="1" filterRes="1000 1000">
+    <feGaussianBlur stdDeviation="0.001"/>
+  </filter>
+  <rect width="100%" height="100%" fill="lime"/>
+  <circle fill="red" cx="200" cy="100" r="98"/>
+  <g transform="translate(50, 0)">
+    <circle fill="lime" cx="100" cy="100" r="100" transform="translate(50, 0)" filter="url(#filter)"/>
+  </g>
+</svg>
