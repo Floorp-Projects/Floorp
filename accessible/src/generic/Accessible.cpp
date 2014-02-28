@@ -933,7 +933,6 @@ Accessible::GetBoundsRect(nsRect& aTotalBounds, nsIFrame** aBoundingFrame)
       if (canvasFrame) {
         *aBoundingFrame = canvasFrame;
 
-        nsPresContext* presContext = mDoc->PresContext();
         aTotalBounds = *hitRegionRect;
 
         return;

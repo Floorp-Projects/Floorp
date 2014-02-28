@@ -634,7 +634,7 @@ nsresult nsProfileLock::Unlock(bool aFatalSignal)
                 free(mPidLockFileName);
             mPidLockFileName = nullptr;
         }
-        else if (mLockFileDesc != -1)
+        if (mLockFileDesc != -1)
         {
             close(mLockFileDesc);
             mLockFileDesc = -1;

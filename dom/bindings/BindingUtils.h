@@ -264,12 +264,6 @@ IsNotDateOrRegExp(JSContext* cx, JS::Handle<JSObject*> obj)
 }
 
 MOZ_ALWAYS_INLINE bool
-IsArrayLike(JSContext* cx, JS::Handle<JSObject*> obj)
-{
-  return IsNotDateOrRegExp(cx, obj);
-}
-
-MOZ_ALWAYS_INLINE bool
 IsObjectValueConvertibleToDictionary(JSContext* cx,
                                      JS::Handle<JS::Value> objVal)
 {

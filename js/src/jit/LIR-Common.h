@@ -4738,13 +4738,32 @@ class LFloorF : public LInstructionHelper<1, 1, 0>
     }
 };
 
-// Round a number. Implements Math.round().
+// Round a double precision number. Implements Math.round().
 class LRound : public LInstructionHelper<1, 1, 1>
 {
   public:
     LIR_HEADER(Round)
 
     LRound(const LAllocation &num, const LDefinition &temp) {
+        setOperand(0, num);
+        setTemp(0, temp);
+    }
+
+    const LDefinition *temp() {
+        return getTemp(0);
+    }
+    MRound *mir() const {
+        return mir_->toRound();
+    }
+};
+
+// Round a single precision number. Implements Math.round().
+class LRoundF : public LInstructionHelper<1, 1, 1>
+{
+  public:
+    LIR_HEADER(RoundF)
+
+    LRoundF(const LAllocation &num, const LDefinition &temp) {
         setOperand(0, num);
         setTemp(0, temp);
     }

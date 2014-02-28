@@ -1239,9 +1239,9 @@ MediaStreamGraphImpl::RunThread()
           } else {
             ps->ProduceOutput(prevComputedTime, mStateComputedTime,
                               ProcessedMediaStream::ALLOW_FINISH);
-            NS_ASSERTION(stream->mBuffer.GetEnd() >=
-                         GraphTimeToStreamTime(stream, mStateComputedTime),
-                       "Stream did not produce enough data");
+            NS_WARN_IF_FALSE(stream->mBuffer.GetEnd() >=
+                             GraphTimeToStreamTime(stream, mStateComputedTime),
+                             "Stream did not produce enough data");
           }
         }
       }

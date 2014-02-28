@@ -265,6 +265,9 @@ math_round(JSContext *cx, unsigned argc, Value *vp);
 extern double
 math_round_impl(double x);
 
+extern float
+math_roundf_impl(float x);
+
 extern double
 powi(double x, int y);
 

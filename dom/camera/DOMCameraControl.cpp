@@ -36,7 +36,6 @@ using namespace mozilla::dom;
 using namespace mozilla::idl;
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsDOMCameraControl)
-  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMediaStream)
 NS_INTERFACE_MAP_END_INHERITING(DOMMediaStream)
@@ -44,53 +43,25 @@ NS_INTERFACE_MAP_END_INHERITING(DOMMediaStream)
 NS_IMPL_ADDREF_INHERITED(nsDOMCameraControl, DOMMediaStream)
 NS_IMPL_RELEASE_INHERITED(nsDOMCameraControl, DOMMediaStream)
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsDOMCameraControl)
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsDOMCameraControl, DOMMediaStream)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mCapabilities)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindow)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mGetCameraOnSuccessCb)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mGetCameraOnErrorCb)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mAutoFocusOnSuccessCb)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mAutoFocusOnErrorCb)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mTakePictureOnSuccessCb)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mTakePictureOnErrorCb)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mStartRecordingOnSuccessCb)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mStartRecordingOnErrorCb)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mReleaseOnSuccessCb)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mReleaseOnErrorCb)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mSetConfigurationOnSuccessCb)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mSetConfigurationOnErrorCb)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mOnShutterCb)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mOnClosedCb)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mOnRecorderStateChangeCb)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mOnPreviewStateChangeCb)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsDOMCameraControl, DOMMediaStream)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCapabilities)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindow)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGetCameraOnSuccessCb)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGetCameraOnErrorCb)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAutoFocusOnSuccessCb)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAutoFocusOnErrorCb)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTakePictureOnSuccessCb)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTakePictureOnErrorCb)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStartRecordingOnSuccessCb)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStartRecordingOnErrorCb)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mReleaseOnSuccessCb)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mReleaseOnErrorCb)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSetConfigurationOnSuccessCb)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSetConfigurationOnErrorCb)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOnShutterCb)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOnClosedCb)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOnRecorderStateChangeCb)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOnPreviewStateChangeCb)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(nsDOMCameraControl)
+NS_IMPL_CYCLE_COLLECTION_INHERITED_18(nsDOMCameraControl, DOMMediaStream,
+                                      mCapabilities,
+                                      mWindow,
+                                      mGetCameraOnSuccessCb,
+                                      mGetCameraOnErrorCb,
+                                      mAutoFocusOnSuccessCb,
+                                      mAutoFocusOnErrorCb,
+                                      mTakePictureOnSuccessCb,
+                                      mTakePictureOnErrorCb,
+                                      mStartRecordingOnSuccessCb,
+                                      mStartRecordingOnErrorCb,
+                                      mReleaseOnSuccessCb,
+                                      mReleaseOnErrorCb,
+                                      mSetConfigurationOnSuccessCb,
+                                      mSetConfigurationOnErrorCb,
+                                      mOnShutterCb,
+                                      mOnClosedCb,
+                                      mOnRecorderStateChangeCb,
+                                      mOnPreviewStateChangeCb)
 
 class mozilla::StartRecordingHelper : public nsIDOMEventListener
 {
