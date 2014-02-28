@@ -8,6 +8,7 @@ dictionary DataStoreChangeEventInit : EventInit {
   DOMString revisionId = "";
   DataStoreKey id = 0;
   DOMString operation = "";
+  DOMString owner = "";
 };
 
 [Func="Navigator::HasDataStoreSupport",
@@ -16,4 +17,5 @@ interface DataStoreChangeEvent : Event {
   readonly attribute DOMString revisionId;
   readonly attribute DataStoreKey id;
   readonly attribute DOMString operation;
+  readonly attribute DOMString owner;
 };
