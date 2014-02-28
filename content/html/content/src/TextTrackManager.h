@@ -102,6 +102,21 @@ private:
   nsRefPtr<TextTrackCueList> mNewCues;
 
   static StaticRefPtr<nsIWebVTTParserWrapper> sParserWrapper;
+
+  bool performedTrackSelection;
+
+  // Runs the algorithm for performing automatic track selection.
+  void HonorUserPreferencesForTrackSelection();
+  // Performs track selection for a single TextTrackKind.
+  void PerformTrackSelection(TextTrackKind aTextTrackKind);
+  //Performs track selection for a set of TextTrackKinds, for example,
+  // 'subtitles' and 'captions' should be selected together.
+  void PerformTrackSelection(TextTrackKind aTextTrackKinds[], uint32_t size);
+  void GetTextTracksOfKinds(TextTrackKind aTextTrackKinds[], uint32_t size,
+                            nsTArray<TextTrack*>& aTextTracks);
+  void GetTextTracksOfKind(TextTrackKind aTextTrackKind,
+                           nsTArray<TextTrack*>& aTextTracks);
+  bool TrackIsDefault(TextTrack* aTextTrack);
 };
 
 } // namespace dom
