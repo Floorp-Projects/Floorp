@@ -67,6 +67,7 @@
 #include "nsITimedChannel.h"
 #include "nsIPrivacyTransitionObserver.h"
 #include "nsIReflowObserver.h"
+#include "nsIScrollObserver.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIChannel.h"
 #include "IHistory.h"
@@ -2855,6 +2856,39 @@ nsDocShell::GetCurrentDocChannel()
         }
     }
     return nullptr;
+}
+
+NS_IMETHODIMP
+nsDocShell::AddWeakScrollObserver(nsIScrollObserver* aObserver)
+{
+    nsWeakPtr weakObs = do_GetWeakReference(aObserver);
+    if (!weakObs) {
+        return NS_ERROR_FAILURE;
+    }
+    return mScrollObservers.AppendElement(weakObs) ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsDocShell::RemoveWeakScrollObserver(nsIScrollObserver* aObserver)
+{
+    nsWeakPtr obs = do_GetWeakReference(aObserver);
+    return mScrollObservers.RemoveElement(obs) ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsDocShell::NotifyScrollObservers()
+{
+    nsTObserverArray<nsWeakPtr>::ForwardIterator iter(mScrollObservers);
+    while (iter.HasMore()) {
+        nsWeakPtr ref = iter.GetNext();
+        nsCOMPtr<nsIScrollObserver> obs = do_QueryReferent(ref);
+        if (obs) {
+            obs->ScrollPositionChanged();
+        } else {
+            mScrollObservers.RemoveElement(ref);
+        }
+    }
+    return NS_OK;
 }
 
 //*****************************************************************************
