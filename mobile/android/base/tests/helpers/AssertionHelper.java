@@ -62,6 +62,18 @@ public final class AssertionHelper {
         sAsserter.is(actual, expected, message);
     }
 
+    public static void assertNotEquals(final String message, final double unexpected, final double actual, final double delta) {
+        sAsserter.ok(Math.abs(unexpected - actual) > delta, message, DIAG_STRING);
+    }
+
+    public static void assertNotEquals(final String message, final long unexpected, final long actual) {
+        sAsserter.isnot(actual, unexpected, message);
+    }
+
+    public static void assertNotEquals(final String message, final Object unexpected, final Object actual) {
+        sAsserter.isnot(actual, unexpected, message);
+    }
+
     public static void assertFalse(final String message, final boolean actual) {
         sAsserter.ok(!actual, message, DIAG_STRING);
     }

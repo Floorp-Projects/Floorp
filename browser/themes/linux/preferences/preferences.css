@@ -46,6 +46,14 @@ radio[pane=paneSync] {
 }
 %endif
 
+label.small {
+  font-size: smaller;
+}
+
+#tabPrefsBox {
+  margin: 5px;
+}
+
 /* Applications Pane */
 #BrowserPreferences[animated="true"] #handlersView {
   height: 25em;
@@ -146,6 +154,15 @@ radio[pane=paneSync] {
 #syncAddDeviceLabel {
   margin-top: 1em;
   margin-bottom: 1em;
+}
+
+#noFxaAccount {
+  margin: 5px;
+  line-height: 1.2em;
+}
+
+#noFxaAccount > label:first-child {
+  margin-bottom: 0.6em;
 }
 
 %endif

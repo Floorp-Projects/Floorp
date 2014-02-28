@@ -3515,8 +3515,8 @@
   "CHARSET_OVERRIDE_SITUATION": {
     "expires_in_version": "never",
     "kind": "enumerated",
-    "n_values": 7,
-    "description": "Labeling status of top-level page when overriding charset (unlabeled file URL without detection, unlabeled non-file URL without detection, unlabeled file URL with detection, unlabeled non-file URL with detection, labeled, already overridden, bug)"
+    "n_values": 8,
+    "description": "Labeling status of top-level page when overriding charset (0: unlabeled file URL without detection, 1: unlabeled non-TLD-guessed non-file URL without detection, 2: unlabeled file URL with detection, 3: unlabeled non-file URL with detection, 4: labeled, 5: already overridden, 6: bug, 7: unlabeled with TLD guessing)"
   },
   "CHARSET_OVERRIDE_USED": {
     "expires_in_version": "never",

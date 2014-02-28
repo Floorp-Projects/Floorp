@@ -43,7 +43,7 @@
 #include "nsLayoutCID.h"
 #include "nsWidgetsCID.h"
 #include "nsIFormControl.h"
-#include "nsINameSpaceManager.h"
+#include "nsNameSpaceManager.h"
 #include "nsIWindowWatcher.h"
 #include "nsIObserverService.h"
 #include "nsFocusManager.h"

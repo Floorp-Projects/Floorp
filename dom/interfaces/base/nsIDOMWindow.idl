@@ -24,7 +24,7 @@ interface nsIVariant;
  * @see <http://www.whatwg.org/html/#window>
  */
 
-[scriptable, uuid(97b6784b-ab12-4f79-8422-d7868a4cc7dc)]
+[scriptable, uuid(8c115ab3-cf96-492c-850c-3b18056b45e2)]
 interface nsIDOMWindow : nsISupports
 {
   // the current browsing context
@@ -504,6 +504,11 @@ interface nsIDOMWindow : nsISupports
 
   [implicit_jscontext] attribute jsval onmouseenter;
   [implicit_jscontext] attribute jsval onmouseleave;
+
+  /**
+   * Console API
+   */
+  [implicit_jscontext] attribute jsval console;
 };
 
 [scriptable, uuid(2146c906-57f7-486c-a1b4-8cdb57ef577f)]

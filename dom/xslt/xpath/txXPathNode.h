@@ -10,7 +10,7 @@
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIDOMNode.h"
-#include "nsINameSpaceManager.h"
+#include "nsNameSpaceManager.h"
 #include "nsContentUtils.h" // For NameSpaceManager().
 
 typedef nsIDOMNode txXPathNodeType;
