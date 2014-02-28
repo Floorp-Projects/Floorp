@@ -12,6 +12,7 @@ import traceback
 
 from application_cache import ApplicationCache
 from client import MarionetteClient
+from decorators import do_crash_check
 from emulator import Emulator
 from emulator_screen import EmulatorScreen
 from errors import *
@@ -420,6 +421,7 @@ class MultiActions(object):
         '''
         return self.marionette._send_message('multiAction', 'ok', value=self.multi_actions, max_length=self.max_length)
 
+
 class Marionette(object):
     """
     Represents a Marionette connection to a browser or device.
@@ -584,6 +586,7 @@ class Marionette(object):
             time.sleep(1)
         return False
 
+    @do_crash_check
     def _send_message(self, command, response_key="ok", **kwargs):
         if not self.session and command != "newSession":
             raise MarionetteException("Please start a session")
@@ -596,7 +599,7 @@ class Marionette(object):
 
         try:
             response = self.client.send(message)
-        except socket.timeout as e:
+        except socket.timeout:
             self.session = None
             self.window = None
             self.client.close()
@@ -714,14 +717,8 @@ class Marionette(object):
 
         """
 
-        try:
-            # We are ignoring desired_capabilities, at least for now.
-            self.session = self._send_message('newSession', 'value')
-        except:
-            exc, val, tb = sys.exc_info()
-            self.check_for_crash()
-            raise exc, val, tb
-
+        # We are ignoring desired_capabilities, at least for now.
+        self.session = self._send_message('newSession', 'value')
         self.b2g = 'b2g' in self.session
         return self.session
 

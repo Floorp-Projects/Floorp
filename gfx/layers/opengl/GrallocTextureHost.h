@@ -71,7 +71,7 @@ protected:
 };
 
 class GrallocTextureHostOGL : public TextureHost
-#if MOZ_WIDGET_GONK && ANDROID_VERSION >= 18
+#if MOZ_WIDGET_GONK && ANDROID_VERSION >= 17
                             , public TextureHostOGL
 #endif
 {
@@ -107,7 +107,7 @@ public:
     return mTextureSource;
   }
 
-#if MOZ_WIDGET_GONK && ANDROID_VERSION >= 18
+#if MOZ_WIDGET_GONK && ANDROID_VERSION >= 17
   virtual TextureHostOGL* AsHostOGL() MOZ_OVERRIDE
   {
     return this;
