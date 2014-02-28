@@ -12,7 +12,7 @@ var actual;
  * with 2^19 blocks, then test 2^20 - 1 blocks, finally test the limit.
  */
 var s = "{}";
-for (var i = 0; i < 19; i++)
+for (var i = 0; i < 21; i++)
     s += s;
 
 try {

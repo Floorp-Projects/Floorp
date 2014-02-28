@@ -169,11 +169,8 @@ nsFrameManager::RegisterPlaceholderFrame(nsPlaceholderFrame* aPlaceholderFrame)
   NS_PRECONDITION(nsGkAtoms::placeholderFrame == aPlaceholderFrame->GetType(),
                   "unexpected frame type");
   if (!mPlaceholderMap.ops) {
-    if (!PL_DHashTableInit(&mPlaceholderMap, &PlaceholderMapOps, nullptr,
-                           sizeof(PlaceholderMapEntry), 16)) {
-      mPlaceholderMap.ops = nullptr;
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+    PL_DHashTableInit(&mPlaceholderMap, &PlaceholderMapOps, nullptr,
+                      sizeof(PlaceholderMapEntry), 16);
   }
   PlaceholderMapEntry *entry = static_cast<PlaceholderMapEntry*>(PL_DHashTableOperate(&mPlaceholderMap,
                               aPlaceholderFrame->GetOutOfFlowFrame(),
