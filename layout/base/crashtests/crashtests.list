@@ -317,7 +317,7 @@ load 501878-1.html
 load 503936-1.html
 load 507119.html
 load 514104-1.xul
-load 522374-1.html
+skip-if(Android&&AndroidVersion==10) load 522374-1.html # bug 978265
 load 522374-2.html
 load 526378-1.xul
 load 534367-1.xhtml
