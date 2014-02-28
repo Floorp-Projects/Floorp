@@ -304,11 +304,12 @@
                      flex="1"
                      onchange="gSyncUtils.changeName(this)"/>
           </hbox>
+          <spacer flex="1"/>
           <hbox id="tosPP" pack="center">
-            <label class="text-link"
+            <label class="text-link small"
                    onclick="event.stopPropagation();gSyncUtils.openToS();"
                    value="&prefs.tosLink.label;"/>
-            <label class="text-link"
+            <label class="text-link small"
                    onclick="event.stopPropagation();gSyncUtils.openPrivacyPolicy();"
                    value="&fxaPrivacyNotice.link.label;"/>
           </hbox>

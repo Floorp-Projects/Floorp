@@ -45,6 +45,10 @@ radio[pane=paneSync] {
 }
 %endif
 
+label.small {
+  font-size: smaller;
+}
+
 #tabPrefsBox {
   margin: 6px;
 }
