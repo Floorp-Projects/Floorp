@@ -3930,7 +3930,7 @@ class MMathFunction
     static const char *FunctionName(Function function);
 
     bool isFloat32Commutative() const {
-        return function_ == Floor || function_ == Ceil;
+        return function_ == Floor || function_ == Ceil || function_ == Round;
     }
     void trySpecializeFloat32(TempAllocator &alloc);
     void computeRange(TempAllocator &alloc);
@@ -8283,12 +8283,13 @@ class MFloor
 // Inlined version of Math.round().
 class MRound
   : public MUnaryInstruction,
-    public DoublePolicy<0>
+    public FloatingPointPolicy<0>
 {
     MRound(MDefinition *num)
       : MUnaryInstruction(num)
     {
         setResultType(MIRType_Int32);
+        setPolicyType(MIRType_Double);
         setMovable();
     }
 
@@ -8308,6 +8309,16 @@ class MRound
     TypePolicy *typePolicy() {
         return this;
     }
+
+    bool isFloat32Commutative() const {
+        return true;
+    }
+    void trySpecializeFloat32(TempAllocator &alloc);
+#ifdef DEBUG
+    bool isConsistentFloat32Use(MUse *use) const {
+        return true;
+    }
+#endif
 };
 
 class MIteratorStart

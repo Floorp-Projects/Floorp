@@ -261,6 +261,7 @@
     _(Floor)                        \
     _(FloorF)                       \
     _(Round)                        \
+    _(RoundF)                       \
     _(In)                           \
     _(InArray)                      \
     _(InstanceOfO)                  \

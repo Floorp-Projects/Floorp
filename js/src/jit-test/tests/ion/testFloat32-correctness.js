@@ -230,6 +230,45 @@ function testFloorDouble() {
 test(setupFloor, testFloor);
 test(setupFloorDouble, testFloorDouble);
 
+function setupRound() {
+    f32[0] = -5.5;
+    f32[1] = -0.6;
+    f32[2] = 1.5;
+    f32[3] = 1;
+}
+function setupRoundDouble() {
+    f32[4] = NaN;
+    f32[5] = -0.49;          // rounded to -0
+    f32[6] = Infinity;
+    f32[7] = -Infinity;
+    f32[8] = Math.pow(2,31); // too big to fit into a int
+    f32[9] = -0;
+}
+function testRound() {
+    for (var i = 0; i < 4; ++i) {
+        var r32 = Math.round(f32[i]);
+        assertFloat32(r32, false); // r32 is an int32
+
+        var r64 = Math.round(-0 + f32[i]);
+        assertFloat32(r64, false);
+
+        assertEq(r32, r64);
+    }
+}
+function testRoundDouble() {
+    for (var i = 4; i < 10; ++i) {
+        var r32 = Math.fround(Math.round(f32[i]));
+        assertFloat32(r32, true);
+
+        var r64 = Math.round(-0 + f32[i]);
+        assertFloat32(r64, false);
+
+        assertEq(r32, r64);
+    }
+}
+test(setupRound, testRound);
+test(setupRoundDouble, testRoundDouble);
+
 function setupCeil() {
     f32[0] = -5.5;
     f32[1] = -1.5;
