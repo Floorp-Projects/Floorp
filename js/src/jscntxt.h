@@ -1036,6 +1036,7 @@ bool intrinsic_InParallelSection(JSContext *cx, unsigned argc, Value *vp);
 
 bool intrinsic_ObjectIsTransparentTypedObject(JSContext *cx, unsigned argc, Value *vp);
 bool intrinsic_ObjectIsOpaqueTypedObject(JSContext *cx, unsigned argc, Value *vp);
+bool intrinsic_ObjectIsTypeDescr(JSContext *cx, unsigned argc, Value *vp);
 
 class AutoLockForExclusiveAccess
 {

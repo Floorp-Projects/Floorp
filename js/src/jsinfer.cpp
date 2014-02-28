@@ -1698,6 +1698,37 @@ TemporaryTypeSet::getKnownClass()
     return clasp;
 }
 
+TemporaryTypeSet::ForAllResult
+TemporaryTypeSet::forAllClasses(bool (*func)(const Class* clasp))
+{
+    if (unknownObject())
+        return ForAllResult::MIXED;
+
+    unsigned count = getObjectCount();
+    if (count == 0)
+        return ForAllResult::EMPTY;
+
+    bool true_results = false;
+    bool false_results = false;
+    for (unsigned i = 0; i < count; i++) {
+        const Class *clasp = getObjectClass(i);
+        if (!clasp)
+            return ForAllResult::MIXED;
+        if (func(clasp)) {
+            true_results = true;
+            if (false_results) return ForAllResult::MIXED;
+        }
+        else {
+            false_results = true;
+            if (true_results) return ForAllResult::MIXED;
+        }
+    }
+
+    JS_ASSERT(true_results != false_results);
+
+    return true_results ? ForAllResult::ALL_TRUE : ForAllResult::ALL_FALSE;
+}
+
 int
 TemporaryTypeSet::getTypedArrayType()
 {
