@@ -912,7 +912,7 @@ JSCompartment::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                                       size_t *tiArrayTypeTables,
                                       size_t *tiObjectTypeTables,
                                       size_t *compartmentObject,
-                                      size_t *shapesCompartmentTables,
+                                      size_t *compartmentTables,
                                       size_t *crossCompartmentWrappersArg,
                                       size_t *regexpCompartment,
                                       size_t *debuggeesSet,
@@ -921,10 +921,10 @@ JSCompartment::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
     *compartmentObject += mallocSizeOf(this);
     types.addSizeOfExcludingThis(mallocSizeOf, tiAllocationSiteTables,
                                  tiArrayTypeTables, tiObjectTypeTables);
-    *shapesCompartmentTables += baseShapes.sizeOfExcludingThis(mallocSizeOf)
-                              + initialShapes.sizeOfExcludingThis(mallocSizeOf)
-                              + newTypeObjects.sizeOfExcludingThis(mallocSizeOf)
-                              + lazyTypeObjects.sizeOfExcludingThis(mallocSizeOf);
+    *compartmentTables += baseShapes.sizeOfExcludingThis(mallocSizeOf)
+                        + initialShapes.sizeOfExcludingThis(mallocSizeOf)
+                        + newTypeObjects.sizeOfExcludingThis(mallocSizeOf)
+                        + lazyTypeObjects.sizeOfExcludingThis(mallocSizeOf);
     *crossCompartmentWrappersArg += crossCompartmentWrappers.sizeOfExcludingThis(mallocSizeOf);
     *regexpCompartment += regExps.sizeOfExcludingThis(mallocSizeOf);
     *debuggeesSet += debuggees.sizeOfExcludingThis(mallocSizeOf);

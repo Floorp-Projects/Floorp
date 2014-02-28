@@ -215,7 +215,7 @@ public:
 
   /**
    * Read or write a namespace id from or to aStream. If the namespace matches
-   * one of the built-in ones defined in nsINameSpaceManager.h, it will be written as
+   * one of the built-in ones defined in nsNameSpaceManager.h, it will be written as
    * a single byte with that value. Otherwise, XBLBinding_Serialize_CustomNamespace is
    * written out, followed by a string written with writeWStringZ.
    */

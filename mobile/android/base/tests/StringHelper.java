@@ -76,6 +76,7 @@ public class StringHelper {
     public static final String ROBOCOP_SEARCH_URL = "/robocop/robocop_search.html";
     public static final String ROBOCOP_TEXT_PAGE_URL = "/robocop/robocop_text_page.html";
     public static final String ROBOCOP_ADOBE_FLASH_URL = "/robocop/robocop_adobe_flash.html";
+    public static final String ROBOCOP_INPUT_URL = "/robocop/robocop_input.html";
 
     // Robocop page titles
     public static final String ROBOCOP_BIG_LINK_TITLE = "Big Link";
@@ -90,6 +91,7 @@ public class StringHelper {
     public static final String ROBOCOP_PICTURE_LINK_TITLE = "Picture Link";
     public static final String ROBOCOP_SEARCH_TITLE = "Robocop Search Engine";
     public static final String ROBOCOP_TEXT_PAGE_TITLE = "Robocop Text Page";
+    public static final String ROBOCOP_INPUT_TITLE = "Robocop Input";
 
     // Settings menu strings
     // Section labels - ordered as found in the settings menu

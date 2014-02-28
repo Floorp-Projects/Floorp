@@ -107,7 +107,8 @@
 
     <org.mozilla.gecko.toolbar.ToolbarProgressView android:id="@+id/progress"
                                                    android:layout_width="fill_parent"
-                                                   android:layout_height="2dp"
+                                                   android:layout_height="14dp"
+                                                   android:layout_marginBottom="-7dp"
                                                    android:layout_alignBottom="@id/shadow"
                                                    android:src="@drawable/progress"
                                                    android:background="@null"

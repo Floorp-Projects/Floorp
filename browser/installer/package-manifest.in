@@ -346,7 +346,7 @@
 
 ; JavaScript components
 @BINPATH@/components/ConsoleAPI.manifest
-@BINPATH@/components/ConsoleAPI.js
+@BINPATH@/components/ConsoleAPIStorage.js
 @BINPATH@/components/BrowserElementParent.manifest
 @BINPATH@/components/BrowserElementParent.js
 @BINPATH@/components/FeedProcessor.manifest

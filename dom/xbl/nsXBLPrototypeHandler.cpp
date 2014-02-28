@@ -14,7 +14,7 @@
 #include "nsIAtom.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMMouseEvent.h"
-#include "nsINameSpaceManager.h"
+#include "nsNameSpaceManager.h"
 #include "nsIScriptContext.h"
 #include "nsIDocument.h"
 #include "nsIJSEventListener.h"

@@ -5,7 +5,7 @@
 # Setup for build cache
 
 bucket=
-if test -f "$topsrcdir/sccache/sccache.py"; then
+if test -z "$SCCACHE_DISABLE" -a -f "$topsrcdir/sccache/sccache.py"; then
     case `hostname` in
     try*spot*.use1.mozilla.com|try*ec2*.use1.mozilla.com)
         bucket=mozilla-releng-s3-cache-us-east-1-try

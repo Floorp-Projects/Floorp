@@ -13,7 +13,7 @@
 #include "nsIRDFService.h"
 #include "nsRDFCID.h"
 #include "nsIServiceManager.h"
-#include "nsINameSpaceManager.h"
+#include "nsNameSpaceManager.h"
 #include "nsGkAtoms.h"
 #include "nsIDOMDocument.h"
 #include "nsAttrName.h"

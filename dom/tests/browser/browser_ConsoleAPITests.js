@@ -166,10 +166,10 @@ function testConsoleGroup(aMessageObject) {
 function startTraceTest() {
   gLevel = "trace";
   gArgs = [
-    {filename: TEST_URI, lineNumber: 6, functionName: "window.foobar585956c", language: 2},
-    {filename: TEST_URI, lineNumber: 11, functionName: "foobar585956b", language: 2},
-    {filename: TEST_URI, lineNumber: 15, functionName: "foobar585956a", language: 2},
-    {filename: TEST_URI, lineNumber: 1, functionName: "onclick", language: 2}
+    {filename: TEST_URI, functionName: "window.foobar585956c", language: 2, lineNumber: 6},
+    {filename: TEST_URI, functionName: "foobar585956b", language: 2, lineNumber: 11},
+    {filename: TEST_URI, functionName: "foobar585956a", language: 2, lineNumber: 15},
+    {filename: TEST_URI, functionName: "onclick", language: 2, lineNumber: 1}
   ];
 
   let button = gWindow.document.getElementById("test-trace");
@@ -190,7 +190,7 @@ function startLocationTest() {
   };
   gLevel = "log";
   gArgs = [
-    {filename: TEST_URI, lineNumber: 19, functionName: "foobar646025", arguments: ["omg", "o", "d"]}
+    {filename: TEST_URI, functionName: "foobar646025", arguments: ["omg", "o", "d"], lineNumber: 19}
   ];
 
   let button = gWindow.document.getElementById("test-location");
@@ -213,10 +213,29 @@ function observeConsoleTest() {
   win.console.info("arg", "extra arg");
   yield undefined;
 
-  // We don't currently support width and precision qualifiers, but we don't
-  // choke on them either.
-  expect("warn", "Lesson 1: PI is approximately equal to 3.14159");
+  expect("warn", "Lesson 1: PI is approximately equal to 3");
+  win.console.warn("Lesson %d: %s is approximately equal to %1.0f",
+                   1,
+                   "PI",
+                   3.14159);
+  yield undefined;
+
+  expect("warn", "Lesson 1: PI is approximately equal to 3.14");
   win.console.warn("Lesson %d: %s is approximately equal to %1.2f",
+                   1,
+                   "PI",
+                   3.14159);
+  yield undefined;
+
+  expect("warn", "Lesson 1: PI is approximately equal to 3.141590");
+  win.console.warn("Lesson %d: %s is approximately equal to %f",
+                   1,
+                   "PI",
+                   3.14159);
+  yield undefined;
+
+  expect("warn", "Lesson 1: PI is approximately equal to 3.1415900");
+  win.console.warn("Lesson %d: %s is approximately equal to %0.7f",
                    1,
                    "PI",
                    3.14159);

@@ -60,7 +60,7 @@ SOURCES += [
 
 MSVC_ENABLE_PGO = True
 
-FINAL_LIBRARY = 'gkmedias'
+FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
     '../../cairo/src',
 ]

@@ -2500,6 +2500,16 @@ chatbox {
 
 %include ../shared/customizableui/customizeMode.inc.css
 
+/**
+ * This next rule is a hack to disable subpixel anti-aliasing on all
+ * labels during the customize mode transition. Subpixel anti-aliasing
+ * on Windows with Direct2D layers acceleration is particularly slow to
+ * paint, so this hack is how we sidestep that performance bottleneck.
+ */
+#main-window:-moz-any([customize-entering],[customize-exiting]) label {
+  transform: perspective(0.01px);
+}
+
 #main-window[customize-entered] {
   background-image: url("chrome://browser/skin/customizableui/customizeMode-gridTexture.png");
   background-attachment: fixed;
