@@ -65,6 +65,7 @@ const NETWORK_INTERFACE_DOWN = "down";
 
 const TETHERING_STATE_ONGOING = "ongoing";
 const TETHERING_STATE_IDLE    = "idle";
+const TETHERING_STATE_ACTIVE  = "active";
 
 // Settings DB path for USB tethering.
 const SETTINGS_USB_ENABLED             = "tethering.usb.enabled";
@@ -101,6 +102,9 @@ const IPV4_MAX_PREFIX_LENGTH           = 32;
 const IPV6_MAX_PREFIX_LENGTH           = 128;
 
 const PREF_DATA_DEFAULT_SERVICE_ID     = "ril.data.defaultServiceId";
+const MOBILE_DUN_CONNECT_TIMEOUT       = 30000;
+const MOBILE_DUN_RETRY_INTERVAL        = 5000;
+const MOBILE_DUN_MAX_RETRIES           = 5;
 
 
 const DEBUG = false;
@@ -311,6 +315,10 @@ NetworkManager.prototype = {
         Services.obs.removeObserver(this, TOPIC_INTERFACE_UNREGISTERED);
 #endif
         Services.obs.removeObserver(this, TOPIC_INTERFACE_STATE_CHANGED);
+#ifdef MOZ_B2G_RIL
+        this.dunConnectTimer.cancel();
+        this.dunRetryTimer.cancel();
+#endif
         break;
     }
   },
@@ -746,13 +754,70 @@ NetworkManager.prototype = {
   },
 
 #ifdef MOZ_B2G_RIL
+  dunConnectTimer: Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer),
+  /**
+   * Callback when dun connection fails to connect within timeout.
+   */
+  onDunConnectTimerTimeout: function() {
+    while (this._pendingTetheringRequests.length > 0) {
+      debug("onDunConnectTimerTimeout: callback without network info.");
+      let callback = this._pendingTetheringRequests.shift();
+      if (typeof callback === 'function') {
+        callback();
+      }
+    }
+  },
+
+  dunRetryTimes: 0,
+  dunRetryTimer: Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer),
+  setupDunConnection: function() {
+    this.dunRetryTimer.cancel();
+    let ril = this.mRil.getRadioInterface(this.gDataDefaultServiceId);
+
+    if (ril.rilContext && ril.rilContext.data &&
+        ril.rilContext.data.state === "registered") {
+      this.dunRetryTimes = 0;
+      ril.setupDataCallByType("dun");
+      this.dunConnectTimer.cancel();
+      this.dunConnectTimer.
+        initWithCallback(this.onDunConnectTimerTimeout.bind(this),
+                         MOBILE_DUN_CONNECT_TIMEOUT, Ci.nsITimer.TYPE_ONE_SHOT);
+      return;
+    }
+
+    if (this.dunRetryTimes++ >= this.MOBILE_DUN_MAX_RETRIES) {
+      debug("setupDunConnection: max retries reached.");
+      this.dunRetryTimes = 0;
+      // same as dun connect timeout.
+      this.onDunConnectTimerTimeout();
+      return;
+    }
+
+    debug("Data not ready, retry dun after " + MOBILE_DUN_RETRY_INTERVAL + " ms.");
+    this.dunRetryTimer.
+      initWithCallback(this.setupDunConnection.bind(this),
+                       MOBILE_DUN_RETRY_INTERVAL, Ci.nsITimer.TYPE_ONE_SHOT);
+  },
+
   _pendingTetheringRequests: [],
+  _dunActiveUsers: 0,
   handleDunConnection: function(enable, callback) {
     debug("handleDunConnection: " + enable);
     let dun = this.getNetworkInterface(
       Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_DUN);
 
     if (!enable) {
+      this._dunActiveUsers--;
+      if (this._dunActiveUsers > 0) {
+        debug("Dun still needed by others, do not disconnect.")
+        return;
+      }
+
+      this.dunRetryTimes = 0;
+      this.dunRetryTimer.cancel();
+      this.dunConnectTimer.cancel();
+      this._pendingTetheringRequests = [];
+
       if (dun && (dun.state == Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED)) {
         this.mRil.getRadioInterface(this.gDataDefaultServiceId)
           .deactivateDataCallByType("dun");
@@ -760,11 +825,13 @@ NetworkManager.prototype = {
       return;
     }
 
+    this._dunActiveUsers++;
     if (!dun || (dun.state != Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED)) {
       debug("DUN data call inactive, setup dun data call!")
       this._pendingTetheringRequests.push(callback);
-      this.mRil.getRadioInterface(this.gDataDefaultServiceId)
-        .setupDataCallByType("dun");
+      this.dunRetryTimes = 0;
+      this.setupDunConnection();
+
       return;
     }
     this._tetheringInterface[TETHERING_TYPE_USB].externalInterface = dun.name;
@@ -773,6 +840,20 @@ NetworkManager.prototype = {
 #endif
 
   handleUSBTetheringToggle: function(enable) {
+    debug("handleUSBTetheringToggle: " + enable);
+    if (enable &&
+        (this._usbTetheringAction === TETHERING_STATE_ONGOING ||
+         this._usbTetheringAction === TETHERING_STATE_ACTIVE)) {
+      debug("Usb tethering already connecting/connected.");
+      return;
+    }
+
+    if (!enable &&
+        this._usbTetheringAction === TETHERING_STATE_IDLE) {
+      debug("Usb tethering already disconnected.");
+      return;
+    }
+
     if (!enable) {
       this.tetheringSettings[SETTINGS_USB_ENABLED] = false;
       gNetworkService.enableUsbRndis(false, this.enableUsbRndisResult.bind(this));
@@ -780,10 +861,15 @@ NetworkManager.prototype = {
     }
 
     this.tetheringSettings[SETTINGS_USB_ENABLED] = true;
+    this._usbTetheringAction = TETHERING_STATE_ONGOING;
 
 #ifdef MOZ_B2G_RIL
     if (this.tetheringSettings[SETTINGS_DUN_REQUIRED]) {
       this.handleDunConnection(true, function(network) {
+        if (!network){
+          this.usbTetheringResultReport("Dun connection failed");
+          return;
+        }
         this._tetheringInterface[TETHERING_TYPE_USB].externalInterface = network.name;
         gNetworkService.enableUsbRndis(true, this.enableUsbRndisResult.bind(this));
       }.bind(this));
@@ -904,6 +990,10 @@ NetworkManager.prototype = {
 #ifdef MOZ_B2G_RIL
     if (this.tetheringSettings[SETTINGS_DUN_REQUIRED]) {
       this.handleDunConnection(true, function(config, callback, network) {
+        if (!network) {
+          this.notifyError(true, callback, "Dun connection failed");
+          return;
+        }
         this._tetheringInterface[TETHERING_TYPE_WIFI].externalInterface = network.name;
         this.enableWifiTethering(true, config, callback);
       }.bind(this, config, callback));
@@ -970,25 +1060,29 @@ NetworkManager.prototype = {
   usbTetheringResultReport: function(error) {
     let settingsLock = gSettingsService.createLock();
 
-    this._usbTetheringAction = TETHERING_STATE_IDLE;
     // Disable tethering settings when fail to enable it.
     if (error) {
       this.tetheringSettings[SETTINGS_USB_ENABLED] = false;
       settingsLock.set("tethering.usb.enabled", false, null);
       // Skip others request when we found an error.
+      this._requestCount = 0;
+      this._usbTetheringAction = TETHERING_STATE_IDLE;
 #ifdef MOZ_B2G_RIL
       if (this.tetheringSettings[SETTINGS_DUN_REQUIRED]) {
         this.handleDunConnection(false);
       }
 #endif
-      this._requestCount = 0;
     } else {
+      if (this.tetheringSettings[SETTINGS_USB_ENABLED]) {
+        this._usbTetheringAction = TETHERING_STATE_ACTIVE;
+      } else {
+        this._usbTetheringAction = TETHERING_STATE_IDLE;
 #ifdef MOZ_B2G_RIL
-      if (this.tetheringSettings[SETTINGS_DUN_REQUIRED] &&
-          !this.tetheringSettings[SETTINGS_USB_ENABLED]) {
-        this.handleDunConnection(false);
-      }
+        if (this.tetheringSettings[SETTINGS_DUN_REQUIRED]) {
+          this.handleDunConnection(false);
+        }
 #endif
+      }
       this.handleLastRequest();
     }
   },
@@ -1019,6 +1113,7 @@ NetworkManager.prototype = {
          this.mRil.getRadioInterface(this.gDataDefaultServiceId)
            .getDataCallStateByType("dun") ===
          Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED)) {
+      this.dunConnectTimer.cancel();
       debug("DUN data call connected, process callbacks.");
       while (this._pendingTetheringRequests.length > 0) {
         let callback = this._pendingTetheringRequests.shift();
