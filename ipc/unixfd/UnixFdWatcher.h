@@ -52,6 +52,8 @@ protected:
   void SetFd(int aFd);
 
 private:
+  static bool FdIsNonBlocking(int aFd);
+
   MessageLoop* mIOLoop;
   ScopedClose mFd;
   MessageLoopForIO::FileDescriptorWatcher mReadWatcher;
