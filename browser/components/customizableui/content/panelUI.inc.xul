@@ -153,6 +153,11 @@
       <vbox id="PanelUI-developerItems" class="panel-subview-body"/>
     </panelview>
 
+    <panelview id="PanelUI-sidebar" flex="1">
+      <label value="&appMenuSidebars.label;" class="panel-subview-header"/>
+      <vbox id="PanelUI-sidebarItems"/>
+    </panelview>
+
     <panelview id="PanelUI-characterEncodingView" flex="1">
       <label value="&charsetMenu.label;" class="panel-subview-header"/>
       <vbox class="panel-subview-body">
