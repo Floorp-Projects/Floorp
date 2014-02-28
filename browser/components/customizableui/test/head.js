@@ -60,12 +60,9 @@ function resetCustomization() {
 }
 
 function isInWin8() {
-  let sysInfo = Services.sysinfo;
-  let osName = sysInfo.getProperty("name");
-  let version = sysInfo.getProperty("version");
-
-  // Windows 8 is version >= 6.2
-  return osName == "Windows_NT" && version >= 6.2;
+  if (!Services.metro)
+    return false;
+  return Services.metro.supported;
 }
 
 function addSwitchToMetroButtonInWindows8(areaPanelPlacements) {
