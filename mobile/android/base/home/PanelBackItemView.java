@@ -11,8 +11,11 @@ import org.mozilla.gecko.home.PanelLayout.FilterDetail;
 import android.content.Context;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import com.squareup.picasso.Picasso;
 
 class PanelBackItemView extends LinearLayout {
     private final TextView title;
@@ -24,6 +27,11 @@ class PanelBackItemView extends LinearLayout {
         setOrientation(HORIZONTAL);
 
         title = (TextView) findViewById(R.id.title);
+
+        final ImageView image = (ImageView) findViewById(R.id.image);
+        Picasso.with(getContext())
+               .load(R.drawable.folder_up)
+               .into(image);
     }
 
     public void updateFromFilter(FilterDetail filter) {
