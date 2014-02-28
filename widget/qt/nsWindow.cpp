@@ -872,8 +872,8 @@ nsWindow::moveEvent(QMoveEvent* aEvent)
         return nsEventStatus_eIgnore;
     }
 
-    bool moved = mWidgetListener->WindowMoved(this, aEvent->pos().x(), aEvent->pos().y());
-    return moved ? nsEventStatus_eConsumeNoDefault : nsEventStatus_eIgnore;
+    NotifyWindowMoved(aEvent->pos().x(), aEvent->pos().y());
+    return nsEventStatus_eConsumeNoDefault;
 }
 
 nsEventStatus
