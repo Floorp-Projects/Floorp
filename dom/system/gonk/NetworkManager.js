@@ -223,7 +223,7 @@ NetworkManager.prototype = {
 #endif
             // Remove pre-created default route and let setAndConfigureActive()
             // to set default route only on preferred network
-            gNetworkService.removeDefaultRoute(network.name);
+            gNetworkService.removeDefaultRoute(network);
             this.setAndConfigureActive();
 #ifdef MOZ_B2G_RIL
             // Update data connection when Wifi connected/disconnected
@@ -258,7 +258,7 @@ NetworkManager.prototype = {
               gNetworkService.resetRoutingTable(network);
 #ifdef MOZ_B2G_RIL
             } else if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE) {
-              gNetworkService.removeDefaultRoute(network.name);
+              gNetworkService.removeDefaultRoute(network);
 #endif
             }
 
@@ -382,7 +382,7 @@ NetworkManager.prototype = {
 #endif
     // Remove pre-created default route and let setAndConfigureActive()
     // to set default route only on preferred network
-    gNetworkService.removeDefaultRoute(network.name);
+    gNetworkService.removeDefaultRoute(network);
     this.setAndConfigureActive();
     Services.obs.notifyObservers(network, TOPIC_INTERFACE_REGISTERED, null);
     debug("Network '" + network.name + "' registered.");
