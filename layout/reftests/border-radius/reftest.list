@@ -49,6 +49,8 @@ fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,5) == clipping-5-image.html
 fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,5) == clipping-5-overflow-hidden.html clipping-5-ref.html
 fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,5) fuzzy-if(Android,5,21) == clipping-5-refi.html clipping-5-ref.html
 fuzzy-if(true,1,7) fuzzy-if(cocoaWidget,1,99) fuzzy-if(Android&&browserIsRemote,7,89) fuzzy-if(Android&&!browserIsRemote,99,115) == clipping-5-refc.html clipping-5-ref.html # bug 732535
+fuzzy-if(winWidget,105,71) fuzzy-if(Android,8,464) == clipping-6.html clipping-6-ref.html # ThebesLayer and MaskLayer with transforms that aren't identical
+fuzzy-if(true,1,29) fuzzy-if(Android&&AndroidVersion<15,12,81) fuzzy-if(Android&&AndroidVersion>=15,255,586) == clipping-7.html clipping-7-ref.html # ColorLayer and MaskLayer with transforms that aren't identical. Reference image rendered without using layers (which causes fuzzy failures).
 fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,5) == clipping-and-zindex-1.html clipping-and-zindex-1-ref.html
 fuzzy-if(cocoaWidget,1,4) == intersecting-clipping-1-canvas.html intersecting-clipping-1-refc.html
 == intersecting-clipping-1-image.html intersecting-clipping-1-refi.html
