@@ -27,7 +27,7 @@
 # define IS_LITTLE_ENDIAN 1
 # undef  IS_BIG_ENDIAN
 
-#elif defined(__APPLE__)
+#elif defined(__APPLE__) || defined(__powerpc__) || defined(__ppc__)
 # if __LITTLE_ENDIAN__
 #  define IS_LITTLE_ENDIAN 1
 #  undef  IS_BIG_ENDIAN
@@ -89,8 +89,7 @@
 # endif
 
 #elif defined(__sparc) || defined(__sparc__) || \
-      defined(_POWER) || defined(__powerpc__) || \
-      defined(__ppc__) || defined(__hppa) || \
+      defined(_POWER) || defined(__hppa) || \
       defined(_MIPSEB) || defined(_BIG_ENDIAN)
 /* IA64 running HP-UX will have _BIG_ENDIAN defined.
  * IA64 running Linux will have endian.h and be handled above.
