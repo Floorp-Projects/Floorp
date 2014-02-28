@@ -63,7 +63,7 @@ inline StreamTime TicksToTimeRound(TrackRate aRate, TrackTicks aTicks)
 inline StreamTime TicksToTimeRoundDown(TrackRate aRate, TrackTicks aTicks)
 {
   NS_ASSERTION(0 < aRate && aRate <= TRACK_RATE_MAX, "Bad rate");
-  NS_ASSERTION(0 <= aTicks && aTicks <= TRACK_TICKS_MAX, "Bad samples");
+  NS_WARN_IF_FALSE(0 <= aTicks && aTicks <= TRACK_TICKS_MAX, "Bad samples");
   return (aTicks << MEDIA_TIME_FRAC_BITS)/aRate;
 }
 

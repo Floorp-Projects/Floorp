@@ -613,6 +613,9 @@ StyleEditorUI.prototype = {
 
     let label = summary.querySelector(".stylesheet-name > label");
     label.setAttribute("value", editor.friendlyName);
+    if (editor.styleSheet.href) {
+      label.setAttribute("tooltiptext", editor.styleSheet.href);
+    }
 
     let linkedCSSFile = "";
     if (editor.linkedCSSFile) {

@@ -23,11 +23,11 @@
 #include "nsEventStateManager.h"
 #include "nsISelectionPrivate.h"
 #include "nsISelectionController.h"
+#include "mozilla/dom/TouchEvent.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/TouchEvents.h"
 #include "nsView.h"
 #include "nsGkAtoms.h"
-#include "nsDOMTouchEvent.h"
 
 #include "nsComponentManagerUtils.h"
 
@@ -141,7 +141,7 @@ nsCoreUtils::DispatchTouchEvent(uint32_t aEventType, int32_t aX, int32_t aY,
                                 nsIContent* aContent, nsIFrame* aFrame,
                                 nsIPresShell* aPresShell, nsIWidget* aRootWidget)
 {
-  if (!nsDOMTouchEvent::PrefEnabled())
+  if (!dom::TouchEvent::PrefEnabled())
     return;
 
   WidgetTouchEvent event(true, aEventType, aRootWidget);
@@ -149,9 +149,8 @@ nsCoreUtils::DispatchTouchEvent(uint32_t aEventType, int32_t aX, int32_t aY,
   event.time = PR_IntervalNow();
 
   // XXX: Touch has an identifier of -1 to hint that it is synthesized.
-  nsRefPtr<mozilla::dom::Touch> t =
-    new mozilla::dom::Touch(-1, nsIntPoint(aX, aY),
-                            nsIntPoint(1, 1), 0.0f, 1.0f);
+  nsRefPtr<dom::Touch> t = new dom::Touch(-1, nsIntPoint(aX, aY),
+                                          nsIntPoint(1, 1), 0.0f, 1.0f);
   t->SetTarget(aContent);
   event.touches.AppendElement(t);
   nsEventStatus status = nsEventStatus_eIgnore;

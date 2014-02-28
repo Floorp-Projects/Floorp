@@ -2,7 +2,10 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-let Ci = Components.interfaces;
+const {Ci: interfaces, Cc: classes} = Components;
+
+let Clipboard = Cc["@mozilla.org/widget/clipboard;1"].getService(Ci.nsIClipboard);
+let HasFindClipboard = Clipboard.supportsFindClipboard();
 
 function test() {
   waitForExplicitFinish();
@@ -37,7 +40,10 @@ function onFocus(win) {
   let findBar = win.gFindBar;
   selectText(win.content);
   findBar.onFindCommand();
-  is(findBar._findField.value, "Select Me", "Findbar is initialized with selection");
+  // When the OS supports the Find Clipboard (OSX), the find field value is
+  // persisted across Fx sessions, thus not useful to test.
+  if (!HasFindClipboard)
+    is(findBar._findField.value, "Select Me", "Findbar is initialized with selection");
   findBar.close();
   win.close();
   finish();

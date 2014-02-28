@@ -482,7 +482,7 @@ js::intrinsic_IsPackedArray(JSContext *cx, unsigned argc, Value *vp)
     JS_ASSERT(args[0].isObject());
 
     JSObject *obj = &args[0].toObject();
-    bool isPacked = obj->is<ArrayObject>() &&
+    bool isPacked = obj->is<ArrayObject>() && !obj->hasLazyType() &&
                     !obj->type()->hasAllFlags(types::OBJECT_FLAG_NON_PACKED) &&
                     obj->getDenseInitializedLength() == obj->as<ArrayObject>().length();
 
@@ -635,6 +635,12 @@ js::intrinsic_ObjectIsOpaqueTypedObject(JSContext *cx, unsigned argc, Value *vp)
     return js::ObjectIsOpaqueTypedObject(cx, argc, vp);
 }
 
+bool
+js::intrinsic_ObjectIsTypeDescr(JSContext *cx, unsigned argc, Value *vp)
+{
+    return js::ObjectIsTypeDescr(cx, argc, vp);
+}
+
 /**
  * Returns the default locale as a well-formed, but not necessarily canonicalized,
  * BCP-47 language tag.
@@ -712,7 +718,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
               JSNativeThreadSafeWrapper<js::SetTypedObjectOffset>,
               &js::SetTypedObjectOffsetJitInfo, 2, 0),
     JS_FNINFO("ObjectIsTypeDescr",
-              JSNativeThreadSafeWrapper<js::ObjectIsTypeDescr>,
+              intrinsic_ObjectIsTypeDescr,
               &js::ObjectIsTypeDescrJitInfo, 5, 0),
     JS_FNINFO("ObjectIsTransparentTypedObject",
               intrinsic_ObjectIsTransparentTypedObject,

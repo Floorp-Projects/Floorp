@@ -5,7 +5,7 @@
 
 #include "nsIDOMEventTarget.idl"
 
-[scriptable, builtinclass, uuid(bcdf4ce4-9785-4e31-a851-1d51ea16da20)]
+[scriptable, builtinclass, uuid(e732649a-4f78-4ded-abe1-dbdc36fd59d3)]
 interface nsIDOMScreen : nsIDOMEventTarget
 {
   readonly attribute long             top;
@@ -26,36 +26,4 @@ interface nsIDOMScreen : nsIDOMEventTarget
    */
   [binaryname(SlowMozOrientation)]
   readonly attribute DOMString       mozOrientation;
-
-  /**
-   * Lock the screen to the specified orientations(s).  This method returns true
-   * if the lock was acquired successfully, and false otherwise.
-   *
-   * The parameter can be a DOMString or an Array of DOMStrings.  If you pass a
-   * string, we lock the screen to that one orientation.  If you pass an Array,
-   * we ensure that the screen is always in one of the given orientations.
-   *
-   * Valid orientations are "portrait", "portrait-primary",
-   * "portrait-secondary", "landscape", "landscape-primary", and
-   * "landscape-secondary".
-   * These tokens are case-sensitive.
-   *
-   * If you pass a string that's not one of the valid orientations, or if you
-   * pass an array of orientations and any of the orientations in the array is
-   * not valid, we reject the lock and return false.
-   *
-   * The "-primary" orientations correspond to holding the device right-side up,
-   * while the "-secondary" orientations correspond to holding the device
-   * upside-down.	Locking the orientation in "portrait" is the same as locking
-   * the orientation in ['portrait-primary', 'portrait-secondary'], and the
-   * "landscape" orientation similarly corresponds to the set
-   * ['landscape-primary', 'landscape-secondary'].
-   */
-  [implicit_jscontext] boolean mozLockOrientation(in jsval orientation);
-
-  /**
-   * Unlock the screen orientation.
-   */
-  [binaryname(SlowMozUnlockOrientation)]
-  void mozUnlockOrientation();
 };

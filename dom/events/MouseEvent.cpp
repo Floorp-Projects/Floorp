@@ -15,9 +15,9 @@ namespace dom {
 MouseEvent::MouseEvent(EventTarget* aOwner,
                        nsPresContext* aPresContext,
                        WidgetMouseEventBase* aEvent)
-  : nsDOMUIEvent(aOwner, aPresContext, aEvent ? aEvent :
-                 new WidgetMouseEvent(false, 0, nullptr,
-                                      WidgetMouseEvent::eReal))
+  : UIEvent(aOwner, aPresContext,
+            aEvent ? aEvent : new WidgetMouseEvent(false, 0, nullptr,
+                                                   WidgetMouseEvent::eReal))
 {
   // There's no way to make this class' ctor allocate an WidgetMouseScrollEvent.
   // It's not that important, though, since a scroll event is not a real
@@ -41,12 +41,12 @@ MouseEvent::MouseEvent(EventTarget* aOwner,
   }
 }
 
-NS_IMPL_ADDREF_INHERITED(MouseEvent, nsDOMUIEvent)
-NS_IMPL_RELEASE_INHERITED(MouseEvent, nsDOMUIEvent)
+NS_IMPL_ADDREF_INHERITED(MouseEvent, UIEvent)
+NS_IMPL_RELEASE_INHERITED(MouseEvent, UIEvent)
 
 NS_INTERFACE_MAP_BEGIN(MouseEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMouseEvent)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMUIEvent)
+NS_INTERFACE_MAP_END_INHERITING(UIEvent)
 
 NS_IMETHODIMP
 MouseEvent::InitMouseEvent(const nsAString& aType,
@@ -65,7 +65,8 @@ MouseEvent::InitMouseEvent(const nsAString& aType,
                            uint16_t aButton,
                            nsIDOMEventTarget* aRelatedTarget)
 {
-  nsresult rv = nsDOMUIEvent::InitUIEvent(aType, aCanBubble, aCancelable, aView, aDetail);
+  nsresult rv =
+    UIEvent::InitUIEvent(aType, aCanBubble, aCancelable, aView, aDetail);
   NS_ENSURE_SUCCESS(rv, rv);
 
   switch(mEvent->eventStructType) {
