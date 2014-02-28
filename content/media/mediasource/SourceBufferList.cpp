@@ -104,6 +104,14 @@ SourceBufferList::Remove(double aStart, double aEnd, ErrorResult& aRv)
 }
 
 void
+SourceBufferList::Evict(double aStart, double aEnd)
+{
+  for (uint32_t i = 0; i < mSourceBuffers.Length(); ++i) {
+    mSourceBuffers[i]->Evict(aStart, aEnd);
+  }
+}
+
+void
 SourceBufferList::Ended()
 {
   for (uint32_t i = 0; i < mSourceBuffers.Length(); ++i) {
