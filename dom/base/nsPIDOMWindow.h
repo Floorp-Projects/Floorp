@@ -344,7 +344,7 @@ public:
     return IsCurrentInnerWindow() ||
       (mOuterWindow &&
        mOuterWindow->GetCurrentInnerWindow() &&
-       mOuterWindow()->GetCurrentInnerWindow()->GetDoc() == mDoc);
+       mOuterWindow->GetCurrentInnerWindow()->GetDoc() == mDoc);
   }
 
   bool IsOuterWindow() const
