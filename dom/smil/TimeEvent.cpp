@@ -3,16 +3,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsDOMTimeEvent.h"
-#include "nsPresContext.h"
-#include "nsIInterfaceRequestorUtils.h"
+#include "mozilla/dom/TimeEvent.h"
 #include "mozilla/BasicEvents.h"
+#include "nsIInterfaceRequestorUtils.h"
+#include "nsPresContext.h"
 
-using namespace mozilla;
+namespace mozilla {
+namespace dom {
 
-nsDOMTimeEvent::nsDOMTimeEvent(mozilla::dom::EventTarget* aOwner,
-                               nsPresContext* aPresContext,
-                               WidgetEvent* aEvent)
+TimeEvent::TimeEvent(EventTarget* aOwner,
+                     nsPresContext* aPresContext,
+                     WidgetEvent* aEvent)
   : nsDOMEvent(aOwner, aPresContext,
                aEvent ? aEvent : new InternalUIEvent(false, 0)),
     mDetail(0)
@@ -43,18 +44,18 @@ nsDOMTimeEvent::nsDOMTimeEvent(mozilla::dom::EventTarget* aOwner,
   }
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_1(nsDOMTimeEvent, nsDOMEvent,
+NS_IMPL_CYCLE_COLLECTION_INHERITED_1(TimeEvent, nsDOMEvent,
                                      mView)
 
-NS_IMPL_ADDREF_INHERITED(nsDOMTimeEvent, nsDOMEvent)
-NS_IMPL_RELEASE_INHERITED(nsDOMTimeEvent, nsDOMEvent)
+NS_IMPL_ADDREF_INHERITED(TimeEvent, nsDOMEvent)
+NS_IMPL_RELEASE_INHERITED(TimeEvent, nsDOMEvent)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsDOMTimeEvent)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(TimeEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMTimeEvent)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
 
 NS_IMETHODIMP
-nsDOMTimeEvent::GetView(nsIDOMWindow** aView)
+TimeEvent::GetView(nsIDOMWindow** aView)
 {
   *aView = mView;
   NS_IF_ADDREF(*aView);
@@ -62,16 +63,16 @@ nsDOMTimeEvent::GetView(nsIDOMWindow** aView)
 }
 
 NS_IMETHODIMP
-nsDOMTimeEvent::GetDetail(int32_t* aDetail)
+TimeEvent::GetDetail(int32_t* aDetail)
 {
   *aDetail = mDetail;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMTimeEvent::InitTimeEvent(const nsAString& aTypeArg,
-                              nsIDOMWindow* aViewArg,
-                              int32_t aDetailArg)
+TimeEvent::InitTimeEvent(const nsAString& aTypeArg,
+                         nsIDOMWindow* aViewArg,
+                         int32_t aDetailArg)
 {
   nsresult rv = nsDOMEvent::InitEvent(aTypeArg, false /*doesn't bubble*/,
                                                 false /*can't cancel*/);
@@ -83,11 +84,18 @@ nsDOMTimeEvent::InitTimeEvent(const nsAString& aTypeArg,
   return NS_OK;
 }
 
-nsresult NS_NewDOMTimeEvent(nsIDOMEvent** aInstancePtrResult,
-                            mozilla::dom::EventTarget* aOwner,
-                            nsPresContext* aPresContext,
-                            WidgetEvent* aEvent)
+} // namespace dom
+} // namespace mozilla
+
+using namespace mozilla;
+using namespace mozilla::dom;
+
+nsresult
+NS_NewDOMTimeEvent(nsIDOMEvent** aInstancePtrResult,
+                   EventTarget* aOwner,
+                   nsPresContext* aPresContext,
+                   WidgetEvent* aEvent)
 {
-  nsDOMTimeEvent* it = new nsDOMTimeEvent(aOwner, aPresContext, aEvent);
+  TimeEvent* it = new TimeEvent(aOwner, aPresContext, aEvent);
   return CallQueryInterface(it, aInstancePtrResult);
 }

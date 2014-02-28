@@ -1441,6 +1441,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void floor(FloatRegister input, Register output, Label *handleNotAnInt);
     void floorf(FloatRegister input, Register output, Label *handleNotAnInt);
     void round(FloatRegister input, Register output, Label *handleNotAnInt, FloatRegister tmp);
+    void roundf(FloatRegister input, Register output, Label *handleNotAnInt, FloatRegister tmp);
 
     void clampCheck(Register r, Label *handleNotAnInt) {
         // check explicitly for r == INT_MIN || r == INT_MAX

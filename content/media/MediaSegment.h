@@ -268,8 +268,8 @@ protected:
                            TrackTicks aStart, TrackTicks aEnd)
   {
     NS_ASSERTION(aStart <= aEnd, "Endpoints inverted");
-    NS_ASSERTION(aStart >= 0 && aEnd <= aSource.mDuration,
-                 "Slice out of range");
+    NS_WARN_IF_FALSE(aStart >= 0 && aEnd <= aSource.mDuration,
+                     "Slice out of range");
     mDuration += aEnd - aStart;
     TrackTicks offset = 0;
     for (uint32_t i = 0; i < aSource.mChunks.Length() && offset < aEnd; ++i) {

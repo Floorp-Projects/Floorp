@@ -249,8 +249,8 @@ protected:
       StreamTime outputEnd = GraphTimeToStreamTime(interval.mEnd);
       TrackTicks startTicks = outputTrack->GetEnd();
       StreamTime outputStart = GraphTimeToStreamTime(interval.mStart);
-      NS_ASSERTION(startTicks == TimeToTicksRoundUp(rate, outputStart),
-                   "Samples missing");
+      NS_WARN_IF_FALSE(startTicks == TimeToTicksRoundUp(rate, outputStart),
+                       "Samples missing");
       TrackTicks endTicks = TimeToTicksRoundUp(rate, outputEnd);
       TrackTicks ticks = endTicks - startTicks;
       StreamTime inputStart = source->GraphTimeToStreamTime(interval.mStart);
