@@ -765,6 +765,11 @@ IFACEMETHODIMP CExecuteCommandVerb::Execute()
     return E_FAIL;
   }
 
+  if (!IsDX10Available()) {
+    Log(L"Can't launch in metro due to missing hardware acceleration features.");
+    mRequestType = DESKTOP_RESTART;
+  } 
+
   // Deal with metro restart for an update - launch desktop with a command
   // that tells it to run updater then launch the metro browser.
   if (mRequestType == METRO_UPDATE) {

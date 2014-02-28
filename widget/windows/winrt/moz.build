@@ -25,6 +25,10 @@ EXTRA_COMPONENTS += [
     'MetroUIUtils.manifest',
 ]
 
+EXPORTS.mozilla.widget += [
+    'MetroD3DCheckHelper.h',
+]
+
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'

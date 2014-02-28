@@ -104,7 +104,7 @@ interface nsIUpdateUpStreamCallback : nsISupports
 /**
  * Provide network services.
  */
-[scriptable, uuid(baec696c-c78d-42db-8b44-603f8fbfafb4)]
+[scriptable, uuid(f96461fa-e844-45d2-a6c3-8cd23ab0916b)]
 interface nsINetworkService : nsISupports
 {
   /**
@@ -246,10 +246,10 @@ interface nsINetworkService : nsISupports
   /**
    * Remove default route.
    *
-   * @param interfaceName
+   * @param networkInterface
    *        The network interface we want remove from the default route.
    */
-  void removeDefaultRoute(in DOMString interfaceName);
+  void removeDefaultRoute(in nsINetworkInterface networkInterface);
 
   /**
    * Add host route.
