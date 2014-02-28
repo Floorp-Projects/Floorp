@@ -58,6 +58,7 @@ EXPORTS.mozilla.dom += [
     'TouchEvent.h',
     'TransitionEvent.h',
     'WheelEvent.h',
+    'XULCommandEvent.h',
 ]
 
 if CONFIG['MOZ_WEBSPEECH']:
@@ -85,7 +86,6 @@ UNIFIED_SOURCES += [
     'nsContentEventHandler.cpp',
     'nsDOMEventTargetHelper.cpp',
     'nsDOMTextEvent.cpp',
-    'nsDOMXULCommandEvent.cpp',
     'nsEventDispatcher.cpp',
     'nsEventListenerService.cpp',
     'nsIMEStateManager.cpp',
@@ -99,6 +99,7 @@ UNIFIED_SOURCES += [
     'TouchEvent.cpp',
     'TransitionEvent.cpp',
     'WheelEvent.cpp',
+    'XULCommandEvent.cpp',
 ]
 
 SOURCES += [
