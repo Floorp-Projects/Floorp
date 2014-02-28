@@ -810,32 +810,14 @@ class XPCShellTests(object):
           Split the list of tests up into [totalChunks] pieces and filter the
           self.alltests based on thisChunk, so we only run a subset.
         """
-        totalTests = 0
-        for dir in self.alltests:
-            totalTests += len(self.alltests[dir])
-
+        totalTests = len(self.alltests)
         testsPerChunk = math.ceil(totalTests / float(self.totalChunks))
         start = int(round((self.thisChunk-1) * testsPerChunk))
-        end = start + testsPerChunk
-        currentCount = 0
-
-        templist = {}
-        for dir in self.alltests:
-            startPosition = 0
-            dirCount = len(self.alltests[dir])
-            endPosition = dirCount
-            if currentCount < start and currentCount + dirCount >= start:
-                startPosition = int(start - currentCount)
-            if currentCount + dirCount > end:
-                endPosition = int(end - currentCount)
-            if end - currentCount < 0 or (currentCount + dirCount < start):
-                endPosition = 0
-
-            if startPosition is not endPosition:
-                templist[dir] = self.alltests[dir][startPosition:endPosition]
-            currentCount += dirCount
-
-        self.alltests = templist
+        end = int(start + testsPerChunk)
+        if end > totalTests:
+            end = totalTests
+        self.log.info("Running tests %d-%d/%d", start+1, end, totalTests)
+        self.alltests = self.alltests[start:end]
 
     def setAbsPath(self):
         """
