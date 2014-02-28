@@ -1,0 +1,81 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=977029
+-->
+<head>
+  <title>Test for Bug 977029</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+</head>
+<body>
+<div id="content">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=977029">Bug 977029</a>
+  <p>
+    Goal of this test is to check that modifying defaultValue and value attribute
+    of input types is working as expected.
+  </p>
+  <form>
+    <input id='a' type="color" value="#00ff00">
+    <input id='b' type="text" value="foo">
+    <input id='c' type="email" value="foo">
+    <input id='d' type="date" value="2010-09-20">
+    <input id='e' type="search" value="foo">
+    <input id='f' type="tel" value="foo">
+    <input id='g' type="url" value="foo">
+    <input id='h' type="number" value="42">
+    <input id='i' type="range" value="42" min="0" max="100">
+    <input id='j' type="time" value="17:00:25.54">
+  </form>
+</div>
+<script type="application/javascript">
+
+// [ element id | original defaultValue | another value | another default value]
+// Preferably use only valid values: the goal of this test isn't to test the 
+// value sanitization algorithm (for input types which have one) as this is
+// already part of another test)
+var testData = [["a", "#00ff00", "#00aaaa", "#00ccaa"],
+                ["b", "foo", "bar", "tulip"],
+                ["c", "foo", "foo@bar.org", "tulip"],
+                ["d", "2010-09-20", "2012-09-21", ""],
+                ["e", "foo", "bar", "tulip"],
+                ["f", "foo", "bar", "tulip"],
+                ["g", "foo", "bar", "tulip"],
+                ["h", "42", "1337", "3"],
+                ["i", "42", "17", "3"],
+                ["j", "17:00:25.54", "07:00:25", "03:00:03"],
+               ];
+
+for (var data of testData) {
+  id = data[0];
+  input = document.getElementById(id);
+  originalDefaultValue = data[1];
+  is(originalDefaultValue, input.defaultValue,
+    "Default value isn't the expected one");
+  is(originalDefaultValue, input.value,
+    "input.value original value is different from defaultValue");
+  input.defaultValue = data[2]
+  is(input.defaultValue, input.value,
+    "Changing default value before value was changed should change value too");
+  input.value = data[3];
+  input.defaultValue = originalDefaultValue;
+  is(input.value, data[3],
+    "Changing default value after value was changed should not change value");
+  input.value = data[2];
+  is(originalDefaultValue, input.defaultValue,
+    "defaultValue shouldn't change when changing value");
+  input.defaultValue = data[3];
+  is(input.defaultValue, data[3],
+    "defaultValue should have changed");
+  // Change the value...
+  input.value = data[2];
+  is(input.value, data[2],
+    "value should have changed");
+  // ...then reset the form
+  input.form.reset();
+  is(input.defaultValue, input.value,
+    "reset form should bring back the default value");
+}
+</script>
+</body>
+</html>
+

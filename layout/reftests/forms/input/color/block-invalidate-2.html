@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html class='reftest-wait'>
+  <script>
+    function runTest() {
+      var p = document.getElementsByTagName('input')[0];
+      p.value = '#0000ff'
+      p.defaultValue = '#00ff00';
+      p.form.reset();
+      document.documentElement.className = '';
+    }
+    window.addEventListener("MozReftestInvalidate", runTest, false);
+  </script>
+  <body>
+    <p>Test for bug <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=977038">977038</a></p>
+    <form>
+      <input type="color" />
+    </form>
+  </body>
+</html>
