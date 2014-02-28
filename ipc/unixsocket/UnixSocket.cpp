@@ -5,34 +5,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "UnixSocket.h"
-
-#include <fcntl.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <errno.h>
-
-#include <sys/socket.h>
-
-#include "base/eintr_wrapper.h"
-#include "base/message_loop.h"
-
 #include "mozilla/ipc/UnixSocketWatcher.h"
-#include "mozilla/Monitor.h"
-#include "mozilla/FileUtils.h"
-#include "nsString.h"
 #include "nsTArray.h"
 #include "nsXULAppAPI.h"
+#include <fcntl.h>
 
 static const size_t MAX_READ_SIZE = 1 << 16;
-
-#undef CHROMIUM_LOG
-#if defined(MOZ_WIDGET_GONK)
-#include <android/log.h>
-#define CHROMIUM_LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "I/O", args);
-#else
-#define IODEBUG true
-#define CHROMIUM_LOG(args...) if (IODEBUG) printf(args);
-#endif
 
 namespace mozilla {
 namespace ipc {
