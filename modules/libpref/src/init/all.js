@@ -4313,9 +4313,9 @@ pref("social.enabled", false);
 // providers that can install from their own website without user warnings.
 // entries are
 pref("social.whitelist", "https://mozsocial.cliqz.com,https://now.msn.com,https://mixi.jp");
-// omma separated list of domain origins (e.g. https://domain.com) for directory
-// websites (e.g. AMO) that can install providers for other sites
-pref("social.directories", "https://addons.mozilla.org");
+// comma separated list of domain origins (e.g. https://domain.com) for
+// directory websites (e.g. AMO) that can install providers for other sites
+pref("social.directories", "https://activations.mozilla.org");
 // remote-install allows any website to activate a provider, with extended UI
 // notifying user of installation. we can later pref off remote install if
 // necessary. This does not affect whitelisted and directory installs.
