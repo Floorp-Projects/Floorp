@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_Touch_h
-#define mozilla_dom_Touch_h
+#ifndef mozilla_dom_Touch_h_
+#define mozilla_dom_Touch_h_
 
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
@@ -27,7 +27,7 @@ class Touch MOZ_FINAL : public nsISupports
 public:
   static bool PrefEnabled(JSContext* aCx, JSObject* aGlobal);
 
-  Touch(mozilla::dom::EventTarget* aTarget,
+  Touch(EventTarget* aTarget,
         int32_t aIdentifier,
         int32_t aPageX,
         int32_t aPageY,
@@ -52,7 +52,7 @@ public:
 
   void InitializePoints(nsPresContext* aPresContext, WidgetEvent* aEvent);
 
-  void SetTarget(mozilla::dom::EventTarget* aTarget);
+  void SetTarget(EventTarget* aTarget);
 
   bool Equals(Touch* aTouch);
 
@@ -92,4 +92,4 @@ protected:
 } // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_dom_Touch_h
+#endif // mozilla_dom_Touch_h_

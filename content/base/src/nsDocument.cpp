@@ -179,8 +179,8 @@
 #include "mozilla/dom/HTMLElementBinding.h"
 #include "mozilla/dom/SVGElementBinding.h"
 #include "nsXULAppAPI.h"
-#include "nsDOMTouchEvent.h"
 #include "mozilla/dom/Touch.h"
+#include "mozilla/dom/TouchEvent.h"
 #include "DictionaryHelpers.h"
 #include "GeneratedEvents.h"
 
@@ -10013,18 +10013,18 @@ nsIDocument::CreateTouch(nsIDOMWindow* aView,
   return touch.forget();
 }
 
-already_AddRefed<nsDOMTouchList>
+already_AddRefed<TouchList>
 nsIDocument::CreateTouchList()
 {
-  nsRefPtr<nsDOMTouchList> retval = new nsDOMTouchList(ToSupports(this));
+  nsRefPtr<TouchList> retval = new TouchList(ToSupports(this));
   return retval.forget();
 }
 
-already_AddRefed<nsDOMTouchList>
+already_AddRefed<TouchList>
 nsIDocument::CreateTouchList(Touch& aTouch,
                              const Sequence<OwningNonNull<Touch> >& aTouches)
 {
-  nsRefPtr<nsDOMTouchList> retval = new nsDOMTouchList(ToSupports(this));
+  nsRefPtr<TouchList> retval = new TouchList(ToSupports(this));
   retval->Append(&aTouch);
   for (uint32_t i = 0; i < aTouches.Length(); ++i) {
     retval->Append(aTouches[i].get());
@@ -10032,10 +10032,10 @@ nsIDocument::CreateTouchList(Touch& aTouch,
   return retval.forget();
 }
 
-already_AddRefed<nsDOMTouchList>
+already_AddRefed<TouchList>
 nsIDocument::CreateTouchList(const Sequence<OwningNonNull<Touch> >& aTouches)
 {
-  nsRefPtr<nsDOMTouchList> retval = new nsDOMTouchList(ToSupports(this));
+  nsRefPtr<TouchList> retval = new TouchList(ToSupports(this));
   for (uint32_t i = 0; i < aTouches.Length(); ++i) {
     retval->Append(aTouches[i].get());
   }
