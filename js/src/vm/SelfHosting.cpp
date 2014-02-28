@@ -474,7 +474,7 @@ js::intrinsic_IsPackedArray(JSContext *cx, unsigned argc, Value *vp)
     JS_ASSERT(args[0].isObject());
 
     JSObject *obj = &args[0].toObject();
-    bool isPacked = obj->is<ArrayObject>() &&
+    bool isPacked = obj->is<ArrayObject>() && !obj->hasLazyType() &&
                     !obj->type()->hasAllFlags(types::OBJECT_FLAG_NON_PACKED) &&
                     obj->getDenseInitializedLength() == obj->as<ArrayObject>().length();
 
