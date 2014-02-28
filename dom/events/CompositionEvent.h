@@ -7,15 +7,15 @@
 #ifndef mozilla_dom_CompositionEvent_h_
 #define mozilla_dom_CompositionEvent_h_
 
-#include "nsDOMUIEvent.h"
-#include "nsIDOMCompositionEvent.h"
 #include "mozilla/dom/CompositionEventBinding.h"
+#include "mozilla/dom/UIEvent.h"
 #include "mozilla/EventForwards.h"
+#include "nsIDOMCompositionEvent.h"
 
 namespace mozilla {
 namespace dom {
 
-class CompositionEvent : public nsDOMUIEvent,
+class CompositionEvent : public UIEvent,
                          public nsIDOMCompositionEvent
 {
 public:
@@ -24,7 +24,7 @@ public:
                    WidgetCompositionEvent* aEvent);
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_FORWARD_TO_NSDOMUIEVENT
+  NS_FORWARD_TO_UIEVENT
   NS_DECL_NSIDOMCOMPOSITIONEVENT
 
   virtual JSObject* WrapObject(JSContext* aCx,

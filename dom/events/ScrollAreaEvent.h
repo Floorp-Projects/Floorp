@@ -6,18 +6,17 @@
 #ifndef mozilla_dom_ScrollAreaEvent_h_
 #define mozilla_dom_ScrollAreaEvent_h_
 
+#include "mozilla/dom/DOMRect.h"
+#include "mozilla/dom/ScrollAreaEventBinding.h"
+#include "mozilla/dom/UIEvent.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
 #include "nsIDOMScrollAreaEvent.h"
-#include "nsDOMUIEvent.h"
-
-#include "mozilla/dom/DOMRect.h"
-#include "mozilla/dom/ScrollAreaEventBinding.h"
 
 namespace mozilla {
 namespace dom {
 
-class ScrollAreaEvent : public nsDOMUIEvent,
+class ScrollAreaEvent : public UIEvent,
                         public nsIDOMScrollAreaEvent
 {
 public:
@@ -29,7 +28,7 @@ public:
 
   NS_DECL_NSIDOMSCROLLAREAEVENT
 
-  NS_FORWARD_NSIDOMUIEVENT(nsDOMUIEvent::)
+  NS_FORWARD_NSIDOMUIEVENT(UIEvent::)
 
   NS_FORWARD_TO_NSDOMEVENT_NO_SERIALIZATION_NO_DUPLICATION
   NS_IMETHOD DuplicatePrivateData()

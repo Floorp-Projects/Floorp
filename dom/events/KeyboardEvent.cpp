@@ -13,8 +13,8 @@ namespace dom {
 KeyboardEvent::KeyboardEvent(EventTarget* aOwner,
                              nsPresContext* aPresContext,
                              WidgetKeyboardEvent* aEvent)
-  : nsDOMUIEvent(aOwner, aPresContext, aEvent ? aEvent :
-                 new WidgetKeyboardEvent(false, 0, nullptr))
+  : UIEvent(aOwner, aPresContext,
+            aEvent ? aEvent : new WidgetKeyboardEvent(false, 0, nullptr))
 {
   NS_ASSERTION(mEvent->eventStructType == NS_KEY_EVENT, "event type mismatch");
 
@@ -28,12 +28,12 @@ KeyboardEvent::KeyboardEvent(EventTarget* aOwner,
   }
 }
 
-NS_IMPL_ADDREF_INHERITED(KeyboardEvent, nsDOMUIEvent)
-NS_IMPL_RELEASE_INHERITED(KeyboardEvent, nsDOMUIEvent)
+NS_IMPL_ADDREF_INHERITED(KeyboardEvent, UIEvent)
+NS_IMPL_RELEASE_INHERITED(KeyboardEvent, UIEvent)
 
 NS_INTERFACE_MAP_BEGIN(KeyboardEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMKeyEvent)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMUIEvent)
+NS_INTERFACE_MAP_END_INHERITING(UIEvent)
 
 bool
 KeyboardEvent::AltKey()
@@ -212,7 +212,7 @@ KeyboardEvent::InitKeyEvent(const nsAString& aType,
                             uint32_t aKeyCode,
                             uint32_t aCharCode)
 {
-  nsresult rv = nsDOMUIEvent::InitUIEvent(aType, aCanBubble, aCancelable, aView, 0);
+  nsresult rv = UIEvent::InitUIEvent(aType, aCanBubble, aCancelable, aView, 0);
   NS_ENSURE_SUCCESS(rv, rv);
 
   WidgetKeyboardEvent* keyEvent = mEvent->AsKeyboardEvent();

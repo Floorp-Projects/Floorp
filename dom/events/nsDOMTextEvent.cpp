@@ -10,12 +10,13 @@
 #include "mozilla/TextEvents.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 nsDOMTextEvent::nsDOMTextEvent(mozilla::dom::EventTarget* aOwner,
                                nsPresContext* aPresContext,
                                WidgetTextEvent* aEvent)
-  : nsDOMUIEvent(aOwner, aPresContext,
-                 aEvent ? aEvent : new WidgetTextEvent(false, 0, nullptr))
+  : UIEvent(aOwner, aPresContext,
+            aEvent ? aEvent : new WidgetTextEvent(false, 0, nullptr))
 {
   NS_ASSERTION(mEvent->eventStructType == NS_TEXT_EVENT, "event type mismatch");
 
@@ -53,12 +54,12 @@ nsDOMTextEvent::nsDOMTextEvent(mozilla::dom::EventTarget* aOwner,
   }
 }
 
-NS_IMPL_ADDREF_INHERITED(nsDOMTextEvent, nsDOMUIEvent)
-NS_IMPL_RELEASE_INHERITED(nsDOMTextEvent, nsDOMUIEvent)
+NS_IMPL_ADDREF_INHERITED(nsDOMTextEvent, UIEvent)
+NS_IMPL_RELEASE_INHERITED(nsDOMTextEvent, UIEvent)
 
 NS_INTERFACE_MAP_BEGIN(nsDOMTextEvent)
   NS_INTERFACE_MAP_ENTRY(nsIPrivateTextEvent)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMUIEvent)
+NS_INTERFACE_MAP_END_INHERITING(UIEvent)
 
 NS_METHOD nsDOMTextEvent::GetText(nsString& aText)
 {

@@ -13,8 +13,8 @@ namespace dom {
 XULCommandEvent::XULCommandEvent(EventTarget* aOwner,
                                  nsPresContext* aPresContext,
                                  WidgetInputEvent* aEvent)
-  : nsDOMUIEvent(aOwner, aPresContext,
-                 aEvent ? aEvent : new WidgetInputEvent(false, 0, nullptr))
+  : UIEvent(aOwner, aPresContext,
+            aEvent ? aEvent : new WidgetInputEvent(false, 0, nullptr))
 {
   if (aEvent) {
     mEventIsInternal = false;
@@ -25,15 +25,15 @@ XULCommandEvent::XULCommandEvent(EventTarget* aOwner,
   }
 }
 
-NS_IMPL_ADDREF_INHERITED(XULCommandEvent, nsDOMUIEvent)
-NS_IMPL_RELEASE_INHERITED(XULCommandEvent, nsDOMUIEvent)
+NS_IMPL_ADDREF_INHERITED(XULCommandEvent, UIEvent)
+NS_IMPL_RELEASE_INHERITED(XULCommandEvent, UIEvent)
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_1(XULCommandEvent, nsDOMUIEvent,
+NS_IMPL_CYCLE_COLLECTION_INHERITED_1(XULCommandEvent, UIEvent,
                                      mSourceEvent)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(XULCommandEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMXULCommandEvent)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMUIEvent)
+NS_INTERFACE_MAP_END_INHERITING(UIEvent)
 
 bool
 XULCommandEvent::AltKey()
@@ -111,8 +111,8 @@ XULCommandEvent::InitCommandEvent(const nsAString& aType,
                                   bool aMetaKey,
                                   nsIDOMEvent* aSourceEvent)
 {
-  nsresult rv = nsDOMUIEvent::InitUIEvent(aType, aCanBubble, aCancelable,
-                                          aView, aDetail);
+  nsresult rv = UIEvent::InitUIEvent(aType, aCanBubble, aCancelable,
+                                     aView, aDetail);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mEvent->AsInputEvent()->InitBasicModifiers(aCtrlKey, aAltKey,
