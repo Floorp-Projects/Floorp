@@ -172,10 +172,16 @@ function prompt(aContentWindow, aCallID, aAudioRequested, aVideoRequested, aDevi
       if (aTopic == "swapping")
         return true;
 
+      let chromeDoc = this.browser.ownerDocument;
+
+      if (aTopic == "shown") {
+        let PopupNotifications = chromeDoc.defaultView.PopupNotifications;
+        let popupId = requestType == "Microphone" ? "Microphone" : "Devices";
+        PopupNotifications.panel.firstChild.setAttribute("popupid", "webRTC-share" + popupId);
+      }
+
       if (aTopic != "showing")
         return false;
-
-      let chromeDoc = this.browser.ownerDocument;
 
       function listDevices(menupopup, devices) {
         while (menupopup.lastChild)
@@ -245,9 +251,10 @@ function prompt(aContentWindow, aCallID, aAudioRequested, aVideoRequested, aDevi
     }
   };
 
+  let anchorId = requestType == "Microphone" ? "webRTC-shareMicrophone-notification-icon"
+                                             : "webRTC-shareDevices-notification-icon";
   chromeWin.PopupNotifications.show(browser, "webRTC-shareDevices", message,
-                                    "webRTC-shareDevices-notification-icon", mainAction,
-                                    secondaryActions, options);
+                                    anchorId, mainAction, secondaryActions, options);
 }
 
 function updateIndicators() {
@@ -313,11 +320,19 @@ function showBrowserSpecificIndicator(aBrowser) {
   let options = {
     hideNotNow: true,
     dismissed: true,
-    eventCallback: function(aTopic) aTopic == "swapping"
+    eventCallback: function(aTopic) {
+      if (aTopic == "shown") {
+        let PopupNotifications = this.browser.ownerDocument.defaultView.PopupNotifications;
+        let popupId = captureState == "Microphone" ? "Microphone" : "Devices";
+        PopupNotifications.panel.firstChild.setAttribute("popupid", "webRTC-sharing" + popupId);
+      }
+      return aTopic == "swapping";
+    }
   };
+  let anchorId = captureState == "Microphone" ? "webRTC-sharingMicrophone-notification-icon"
+                                              : "webRTC-sharingDevices-notification-icon";
   chromeWin.PopupNotifications.show(aBrowser, "webRTC-sharingDevices", message,
-                                    "webRTC-sharingDevices-notification-icon", mainAction,
-                                    secondaryActions, options);
+                                    anchorId, mainAction, secondaryActions, options);
 }
 
 function removeBrowserSpecificIndicator(aSubject, aTopic, aData) {
