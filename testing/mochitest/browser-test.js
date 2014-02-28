@@ -17,6 +17,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "Services",
 XPCOMUtils.defineLazyModuleGetter(this, "BrowserNewTabPreloader",
   "resource:///modules/BrowserNewTabPreloader.jsm", "BrowserNewTabPreloader");
 
+XPCOMUtils.defineLazyModuleGetter(this, "CustomizationTabPreloader",
+  "resource:///modules/CustomizationTabPreloader.jsm", "CustomizationTabPreloader");
+
 window.addEventListener("load", testOnLoad, false);
 
 function testOnLoad() {
@@ -426,6 +429,7 @@ Tester.prototype = {
           BackgroundPageThumbs._destroy();
 
           BrowserNewTabPreloader.uninit();
+          CustomizationTabPreloader.uninit();
           SocialFlyout.unload();
           SocialShare.uninit();
           TabView.uninit();
