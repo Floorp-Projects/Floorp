@@ -71,7 +71,7 @@ this.HawkClient.prototype = {
       code: restResponse.status,
       errno: restResponse.status
     };
-    let retryAfter = restResponse.headers["retry-after"];
+    let retryAfter = restResponse.headers && restResponse.headers["retry-after"];
     retryAfter = retryAfter ? parseInt(retryAfter) : retryAfter;
     if (retryAfter) {
       errorObj.retryAfter = retryAfter;
