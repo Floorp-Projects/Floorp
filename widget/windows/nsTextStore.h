@@ -9,7 +9,6 @@
 #include "nsAutoPtr.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
-#include "nsITimer.h"
 #include "nsIWidget.h"
 #include "nsWindowBase.h"
 #include "mozilla/Attributes.h"
@@ -148,6 +147,12 @@ public:
     return sTsfTextStore->OnSelectionChangeInternal();
   }
 
+  static nsresult OnLayoutChange()
+  {
+    NS_ENSURE_TRUE(sTsfTextStore, NS_ERROR_NOT_AVAILABLE);
+    return sTsfTextStore->OnLayoutChangeInternal();
+  }
+
   static nsIMEUpdatePreference GetIMEUpdatePreference();
 
   // Returns the address of the pointer so that the TSF automatic test can
@@ -276,7 +281,7 @@ protected:
   // and clear it.
   void     FlushPendingActions();
 
-  nsresult OnLayoutChange();
+  nsresult OnLayoutChangeInternal();
   HRESULT  ProcessScopeRequest(DWORD dwFlags,
                                ULONG cFilterAttrs,
                                const TS_ATTRID *paFilterAttrs);
@@ -350,17 +355,6 @@ protected:
                LONG aCompositionStartOffset,
                const nsAString& aCompositionString);
     void End();
-
-    void StartLayoutChangeTimer(nsTextStore* aTextStore);
-    void EnsureLayoutChangeTimerStopped();
-
-  private:
-    // Timer for calling ITextStoreACPSink::OnLayoutChange(). This is only used
-    // during composing.
-    nsCOMPtr<nsITimer> mLayoutChangeTimer;
-
-    static void TimerCallback(nsITimer* aTimer, void *aClosure);
-    static uint32_t GetLayoutChangeIntervalTime();
   };
   // While the document is locked, we cannot dispatch any events which cause
   // DOM events since the DOM events' handlers may modify the locked document.
