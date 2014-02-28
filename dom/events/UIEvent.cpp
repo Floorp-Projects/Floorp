@@ -5,28 +5,33 @@
 
 #include "base/basictypes.h"
 #include "ipc/IPCMessageUtils.h"
-#include "nsCOMPtr.h"
-#include "nsDOMUIEvent.h"
-#include "nsIInterfaceRequestorUtils.h"
-#include "nsIDOMWindow.h"
-#include "nsIDOMNode.h"
-#include "nsIContent.h"
-#include "nsContentUtils.h"
-#include "nsEventStateManager.h"
-#include "nsIFrame.h"
+#include "mozilla/dom/UIEvent.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/ContentEvents.h"
 #include "mozilla/TextEvents.h"
+#include "nsCOMPtr.h"
+#include "nsContentUtils.h"
+#include "nsEventStateManager.h"
+#include "nsIContent.h"
+#include "nsIInterfaceRequestorUtils.h"
+#include "nsIDOMWindow.h"
+#include "nsIDOMNode.h"
+#include "nsIFrame.h"
 #include "prtime.h"
 
-using namespace mozilla;
+namespace mozilla {
+namespace dom {
 
-nsDOMUIEvent::nsDOMUIEvent(mozilla::dom::EventTarget* aOwner,
-                           nsPresContext* aPresContext, WidgetGUIEvent* aEvent)
+UIEvent::UIEvent(EventTarget* aOwner,
+                 nsPresContext* aPresContext,
+                 WidgetGUIEvent* aEvent)
   : nsDOMEvent(aOwner, aPresContext,
                aEvent ? aEvent : new InternalUIEvent(false, 0))
-  , mClientPoint(0, 0), mLayerPoint(0, 0), mPagePoint(0, 0), mMovementPoint(0, 0)
+  , mClientPoint(0, 0)
+  , mLayerPoint(0, 0)
+  , mPagePoint(0, 0)
+  , mMovementPoint(0, 0)
   , mIsPointerLocked(nsEventStateManager::sIsPointerLocked)
   , mLastClientPoint(nsEventStateManager::sLastClientPoint)
 {
@@ -73,15 +78,15 @@ nsDOMUIEvent::nsDOMUIEvent(mozilla::dom::EventTarget* aOwner,
   }
 }
 
-//static
-already_AddRefed<nsDOMUIEvent>
-nsDOMUIEvent::Constructor(const mozilla::dom::GlobalObject& aGlobal,
-                          const nsAString& aType,
-                          const mozilla::dom::UIEventInit& aParam,
-                          mozilla::ErrorResult& aRv)
+// static
+already_AddRefed<UIEvent>
+UIEvent::Constructor(const GlobalObject& aGlobal,
+                     const nsAString& aType,
+                     const UIEventInit& aParam,
+                     ErrorResult& aRv)
 {
-  nsCOMPtr<mozilla::dom::EventTarget> t = do_QueryInterface(aGlobal.GetAsSupports());
-  nsRefPtr<nsDOMUIEvent> e = new nsDOMUIEvent(t, nullptr, nullptr);
+  nsCOMPtr<EventTarget> t = do_QueryInterface(aGlobal.GetAsSupports());
+  nsRefPtr<UIEvent> e = new UIEvent(t, nullptr, nullptr);
   bool trusted = e->Init(t);
   aRv = e->InitUIEvent(aType, aParam.mBubbles, aParam.mCancelable, aParam.mView,
                        aParam.mDetail);
@@ -89,13 +94,13 @@ nsDOMUIEvent::Constructor(const mozilla::dom::GlobalObject& aGlobal,
   return e.forget();
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_1(nsDOMUIEvent, nsDOMEvent,
+NS_IMPL_CYCLE_COLLECTION_INHERITED_1(UIEvent, nsDOMEvent,
                                      mView)
 
-NS_IMPL_ADDREF_INHERITED(nsDOMUIEvent, nsDOMEvent)
-NS_IMPL_RELEASE_INHERITED(nsDOMUIEvent, nsDOMEvent)
+NS_IMPL_ADDREF_INHERITED(UIEvent, nsDOMEvent)
+NS_IMPL_RELEASE_INHERITED(UIEvent, nsDOMEvent)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsDOMUIEvent)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(UIEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMUIEvent)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
 
@@ -108,7 +113,7 @@ DevPixelsToCSSPixels(const LayoutDeviceIntPoint& aPoint,
 }
 
 nsIntPoint
-nsDOMUIEvent::GetMovementPoint()
+UIEvent::GetMovementPoint()
 {
   if (mPrivateDataDuplicated) {
     return mMovementPoint;
@@ -132,7 +137,7 @@ nsDOMUIEvent::GetMovementPoint()
 }
 
 NS_IMETHODIMP
-nsDOMUIEvent::GetView(nsIDOMWindow** aView)
+UIEvent::GetView(nsIDOMWindow** aView)
 {
   *aView = mView;
   NS_IF_ADDREF(*aView);
@@ -140,18 +145,18 @@ nsDOMUIEvent::GetView(nsIDOMWindow** aView)
 }
 
 NS_IMETHODIMP
-nsDOMUIEvent::GetDetail(int32_t* aDetail)
+UIEvent::GetDetail(int32_t* aDetail)
 {
   *aDetail = mDetail;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMUIEvent::InitUIEvent(const nsAString& typeArg,
-                          bool canBubbleArg,
-                          bool cancelableArg,
-                          nsIDOMWindow* viewArg,
-                          int32_t detailArg)
+UIEvent::InitUIEvent(const nsAString& typeArg,
+                     bool canBubbleArg,
+                     bool cancelableArg,
+                     nsIDOMWindow* viewArg,
+                     int32_t detailArg)
 {
   if (viewArg) {
     nsCOMPtr<nsPIDOMWindow> view = do_QueryInterface(viewArg);
@@ -166,9 +171,8 @@ nsDOMUIEvent::InitUIEvent(const nsAString& typeArg,
   return NS_OK;
 }
 
-// ---- nsDOMNSUIEvent implementation -------------------
 NS_IMETHODIMP
-nsDOMUIEvent::GetPageX(int32_t* aPageX)
+UIEvent::GetPageX(int32_t* aPageX)
 {
   NS_ENSURE_ARG_POINTER(aPageX);
   *aPageX = PageX();
@@ -176,7 +180,7 @@ nsDOMUIEvent::GetPageX(int32_t* aPageX)
 }
 
 int32_t
-nsDOMUIEvent::PageX() const
+UIEvent::PageX() const
 {
   if (mPrivateDataDuplicated) {
     return mPagePoint.x;
@@ -189,7 +193,7 @@ nsDOMUIEvent::PageX() const
 }
 
 NS_IMETHODIMP
-nsDOMUIEvent::GetPageY(int32_t* aPageY)
+UIEvent::GetPageY(int32_t* aPageY)
 {
   NS_ENSURE_ARG_POINTER(aPageY);
   *aPageY = PageY();
@@ -197,7 +201,7 @@ nsDOMUIEvent::GetPageY(int32_t* aPageY)
 }
 
 int32_t
-nsDOMUIEvent::PageY() const
+UIEvent::PageY() const
 {
   if (mPrivateDataDuplicated) {
     return mPagePoint.y;
@@ -210,7 +214,7 @@ nsDOMUIEvent::PageY() const
 }
 
 NS_IMETHODIMP
-nsDOMUIEvent::GetWhich(uint32_t* aWhich)
+UIEvent::GetWhich(uint32_t* aWhich)
 {
   NS_ENSURE_ARG_POINTER(aWhich);
   *aWhich = Which();
@@ -218,7 +222,7 @@ nsDOMUIEvent::GetWhich(uint32_t* aWhich)
 }
 
 already_AddRefed<nsINode>
-nsDOMUIEvent::GetRangeParent()
+UIEvent::GetRangeParent()
 {
   nsIFrame* targetFrame = nullptr;
 
@@ -243,7 +247,7 @@ nsDOMUIEvent::GetRangeParent()
 }
 
 NS_IMETHODIMP
-nsDOMUIEvent::GetRangeParent(nsIDOMNode** aRangeParent)
+UIEvent::GetRangeParent(nsIDOMNode** aRangeParent)
 {
   NS_ENSURE_ARG_POINTER(aRangeParent);
   *aRangeParent = nullptr;
@@ -255,7 +259,7 @@ nsDOMUIEvent::GetRangeParent(nsIDOMNode** aRangeParent)
 }
 
 NS_IMETHODIMP
-nsDOMUIEvent::GetRangeOffset(int32_t* aRangeOffset)
+UIEvent::GetRangeOffset(int32_t* aRangeOffset)
 {
   NS_ENSURE_ARG_POINTER(aRangeOffset);
   *aRangeOffset = RangeOffset();
@@ -263,7 +267,7 @@ nsDOMUIEvent::GetRangeOffset(int32_t* aRangeOffset)
 }
 
 int32_t
-nsDOMUIEvent::RangeOffset() const
+UIEvent::RangeOffset() const
 {
   if (!mPresContext) {
     return 0;
@@ -280,7 +284,7 @@ nsDOMUIEvent::RangeOffset() const
 }
 
 NS_IMETHODIMP
-nsDOMUIEvent::GetCancelBubble(bool* aCancelBubble)
+UIEvent::GetCancelBubble(bool* aCancelBubble)
 {
   NS_ENSURE_ARG_POINTER(aCancelBubble);
   *aCancelBubble = CancelBubble();
@@ -288,14 +292,14 @@ nsDOMUIEvent::GetCancelBubble(bool* aCancelBubble)
 }
 
 NS_IMETHODIMP
-nsDOMUIEvent::SetCancelBubble(bool aCancelBubble)
+UIEvent::SetCancelBubble(bool aCancelBubble)
 {
   mEvent->mFlags.mPropagationStopped = aCancelBubble;
   return NS_OK;
 }
 
 nsIntPoint
-nsDOMUIEvent::GetLayerPoint() const
+UIEvent::GetLayerPoint() const
 {
   if (!mEvent ||
       (mEvent->eventStructType != NS_MOUSE_EVENT &&
@@ -320,7 +324,7 @@ nsDOMUIEvent::GetLayerPoint() const
 }
 
 NS_IMETHODIMP
-nsDOMUIEvent::GetLayerX(int32_t* aLayerX)
+UIEvent::GetLayerX(int32_t* aLayerX)
 {
   NS_ENSURE_ARG_POINTER(aLayerX);
   *aLayerX = GetLayerPoint().x;
@@ -328,7 +332,7 @@ nsDOMUIEvent::GetLayerX(int32_t* aLayerX)
 }
 
 NS_IMETHODIMP
-nsDOMUIEvent::GetLayerY(int32_t* aLayerY)
+UIEvent::GetLayerY(int32_t* aLayerY)
 {
   NS_ENSURE_ARG_POINTER(aLayerY);
   *aLayerY = GetLayerPoint().y;
@@ -336,14 +340,14 @@ nsDOMUIEvent::GetLayerY(int32_t* aLayerY)
 }
 
 NS_IMETHODIMP
-nsDOMUIEvent::GetIsChar(bool* aIsChar)
+UIEvent::GetIsChar(bool* aIsChar)
 {
   *aIsChar = IsChar();
   return NS_OK;
 }
 
 bool
-nsDOMUIEvent::IsChar() const
+UIEvent::IsChar() const
 {
   WidgetKeyboardEvent* keyEvent = mEvent->AsKeyboardEvent();
   if (keyEvent) {
@@ -354,7 +358,7 @@ nsDOMUIEvent::IsChar() const
 }
 
 NS_IMETHODIMP
-nsDOMUIEvent::DuplicatePrivateData()
+UIEvent::DuplicatePrivateData()
 {
   mClientPoint = nsDOMEvent::GetClientCoords(mPresContext,
                                              mEvent,
@@ -378,7 +382,7 @@ nsDOMUIEvent::DuplicatePrivateData()
 }
 
 NS_IMETHODIMP_(void)
-nsDOMUIEvent::Serialize(IPC::Message* aMsg, bool aSerializeInterfaceType)
+UIEvent::Serialize(IPC::Message* aMsg, bool aSerializeInterfaceType)
 {
   if (aSerializeInterfaceType) {
     IPC::WriteParam(aMsg, NS_LITERAL_STRING("uievent"));
@@ -392,7 +396,7 @@ nsDOMUIEvent::Serialize(IPC::Message* aMsg, bool aSerializeInterfaceType)
 }
 
 NS_IMETHODIMP_(bool)
-nsDOMUIEvent::Deserialize(const IPC::Message* aMsg, void** aIter)
+UIEvent::Deserialize(const IPC::Message* aMsg, void** aIter)
 {
   NS_ENSURE_TRUE(nsDOMEvent::Deserialize(aMsg, aIter), false);
   NS_ENSURE_TRUE(IPC::ReadParam(aMsg, aIter, &mDetail), false);
@@ -400,14 +404,14 @@ nsDOMUIEvent::Deserialize(const IPC::Message* aMsg, void** aIter)
 }
 
 // XXX Following struct and array are used only in
-//     nsDOMUIEvent::ComputeModifierState(), but if we define them in it,
+//     UIEvent::ComputeModifierState(), but if we define them in it,
 //     we fail to build on Mac at calling mozilla::ArrayLength().
-struct nsModifierPair
+struct ModifierPair
 {
-  mozilla::Modifier modifier;
+  Modifier modifier;
   const char* name;
 };
-static const nsModifierPair kPairs[] = {
+static const ModifierPair kPairs[] = {
   { MODIFIER_ALT,        NS_DOM_KEYNAME_ALT },
   { MODIFIER_ALTGRAPH,   NS_DOM_KEYNAME_ALTGRAPH },
   { MODIFIER_CAPSLOCK,   NS_DOM_KEYNAME_CAPSLOCK },
@@ -421,9 +425,9 @@ static const nsModifierPair kPairs[] = {
   { MODIFIER_OS,         NS_DOM_KEYNAME_OS }
 };
 
-/* static */
-mozilla::Modifiers
-nsDOMUIEvent::ComputeModifierState(const nsAString& aModifiersList)
+// static
+Modifiers
+UIEvent::ComputeModifierState(const nsAString& aModifiersList)
 {
   if (aModifiersList.IsEmpty()) {
     return 0;
@@ -439,7 +443,7 @@ nsDOMUIEvent::ComputeModifierState(const nsAString& aModifiersList)
   aModifiersList.BeginReading(listStart);
   aModifiersList.EndReading(listEnd);
 
-  for (uint32_t i = 0; i < mozilla::ArrayLength(kPairs); i++) {
+  for (uint32_t i = 0; i < ArrayLength(kPairs); i++) {
     nsAString::const_iterator start(listStart), end(listEnd);
     if (!FindInReadable(NS_ConvertASCIItoUTF16(kPairs[i].name), start, end)) {
       continue;
@@ -456,7 +460,7 @@ nsDOMUIEvent::ComputeModifierState(const nsAString& aModifiersList)
 }
 
 bool
-nsDOMUIEvent::GetModifierStateInternal(const nsAString& aKey)
+UIEvent::GetModifierStateInternal(const nsAString& aKey)
 {
   WidgetInputEvent* inputEvent = mEvent->AsInputEvent();
   MOZ_ASSERT(inputEvent, "mEvent must be WidgetInputEvent or derived class");
@@ -499,12 +503,18 @@ nsDOMUIEvent::GetModifierStateInternal(const nsAString& aKey)
   return false;
 }
 
+} // namespace dom
+} // namespace mozilla
 
-nsresult NS_NewDOMUIEvent(nsIDOMEvent** aInstancePtrResult,
-                          mozilla::dom::EventTarget* aOwner,
-                          nsPresContext* aPresContext,
-                          WidgetGUIEvent* aEvent) 
+using namespace mozilla;
+using namespace mozilla::dom;
+
+nsresult
+NS_NewDOMUIEvent(nsIDOMEvent** aInstancePtrResult,
+                 EventTarget* aOwner,
+                 nsPresContext* aPresContext,
+                 WidgetGUIEvent* aEvent) 
 {
-  nsDOMUIEvent* it = new nsDOMUIEvent(aOwner, aPresContext, aEvent);
+  UIEvent* it = new UIEvent(aOwner, aPresContext, aEvent);
   return CallQueryInterface(it, aInstancePtrResult);
 }

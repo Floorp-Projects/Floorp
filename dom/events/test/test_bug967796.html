@@ -166,7 +166,7 @@ function penter(evt) {
     is(evt.target.id, t, "Wrong event target!");
   }
   is(evt.bubbles, false, evt.type + " should not bubble!");
-  is(evt.cancelable, true, evt.type + " is cancelable!");
+  is(evt.cancelable, false, evt.type + " is cancelable!");
   is(evt.target, evt.currentTarget, "Wrong event target!");
   ok(!evt.relatedTarget || evt.target.ownerDocument == evt.relatedTarget.ownerDocument,
      "Leaking nodes to another document?");
@@ -183,7 +183,7 @@ function pleave(evt) {
     is(evt.target.id, t, "Wrong event target!");
   }
   is(evt.bubbles, false, evt.type + " should not bubble!");
-  is(evt.cancelable, true, evt.type + " is cancelable!");
+  is(evt.cancelable, false, evt.type + " is cancelable!");
   is(evt.target, evt.currentTarget, "Wrong event target!");
   ok(!evt.relatedTarget || evt.target.ownerDocument == evt.relatedTarget.ownerDocument,
      "Leaking nodes to another document?");

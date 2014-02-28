@@ -149,6 +149,7 @@ public:
     modifiers = aOther.modifiers;
     time = aOther.time;
     touches.AppendElements(aOther.touches);
+    mFlags.mCancelable = message != NS_TOUCH_CANCEL;
     MOZ_COUNT_CTOR(WidgetTouchEvent);
   }
 
@@ -156,6 +157,7 @@ public:
     WidgetInputEvent(aIsTrusted, aMessage, aWidget, NS_TOUCH_EVENT)
   {
     MOZ_COUNT_CTOR(WidgetTouchEvent);
+    mFlags.mCancelable = message != NS_TOUCH_CANCEL;
   }
 
   virtual ~WidgetTouchEvent()

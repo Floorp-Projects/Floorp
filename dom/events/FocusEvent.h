@@ -5,15 +5,15 @@
 #ifndef mozilla_dom_FocusEvent_h_
 #define mozilla_dom_FocusEvent_h_
 
-#include "nsDOMUIEvent.h"
-#include "nsIDOMFocusEvent.h"
-#include "mozilla/EventForwards.h"
 #include "mozilla/dom/FocusEventBinding.h"
+#include "mozilla/dom/UIEvent.h"
+#include "mozilla/EventForwards.h"
+#include "nsIDOMFocusEvent.h"
 
 namespace mozilla {
 namespace dom {
 
-class FocusEvent : public nsDOMUIEvent,
+class FocusEvent : public UIEvent,
                    public nsIDOMFocusEvent
 {
 public:
@@ -21,7 +21,7 @@ public:
   NS_DECL_NSIDOMFOCUSEVENT
 
   // Forward to base class
-  NS_FORWARD_TO_NSDOMUIEVENT
+  NS_FORWARD_TO_UIEVENT
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE

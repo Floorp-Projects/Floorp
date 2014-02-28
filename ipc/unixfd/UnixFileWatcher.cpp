@@ -18,6 +18,7 @@ nsresult
 UnixFileWatcher::Open(const char* aFilename, int aFlags, mode_t aMode)
 {
   MOZ_ASSERT(MessageLoopForIO::current() == GetIOLoop());
+  MOZ_ASSERT(aFlags & O_NONBLOCK);
 
   int fd = TEMP_FAILURE_RETRY(open(aFilename, aFlags, aMode));
   if (fd < 0) {

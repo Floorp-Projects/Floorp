@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<head>
+	<style>
+		.parent {
+		  width: 200px;
+		  height: 200px;
+		  position: absolute;
+		  z-index: 1;
+			background-color: #00ff00;
+		}
+
+		.intermediate {
+			width: 100px;
+		  height: 100px;
+		  margin-left:50px;
+		  background-color: #ff00ff;
+		  mix-blend-mode: difference;
+		}
+
+		.child {
+		  width: 100px;
+		  height: 100px;
+		  margin-left:50px;
+		  background-color: #00ffff;
+		  mix-blend-mode: multiply;
+		}
+
+		body {
+			margin:0px;
+		}
+	</style>
+	<!-- Blending should happen as follows:
+				First, the child element should blend with the intermediate element, with
+				the multiply operator. Is should not blend with the parent directly.
+				Then, group formed by the blended child and the intermediate element should
+				blend with the parent as a single layer.
+	 -->
+</head>
+<body>
+	<div class="parent">
+		<div class="intermediate">
+	    <div class="child"></div>
+    </div>
+	</div>
+</body>

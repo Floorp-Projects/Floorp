@@ -7,14 +7,14 @@
 
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/TouchBinding.h"
+#include "mozilla/dom/TouchEvent.h"
 #include "nsContentUtils.h"
-#include "nsDOMTouchEvent.h"
 #include "nsIContent.h"
 
 namespace mozilla {
 namespace dom {
 
-Touch::Touch(mozilla::dom::EventTarget* aTarget,
+Touch::Touch(EventTarget* aTarget,
              int32_t aIdentifier,
              int32_t aPageX,
              int32_t aPageY,
@@ -71,10 +71,11 @@ Touch::~Touch()
 {
 }
 
- /* static */ bool
+// static
+bool
 Touch::PrefEnabled(JSContext* aCx, JSObject* aGlobal)
 {
-  return nsDOMTouchEvent::PrefEnabled(aCx, aGlobal);
+  return TouchEvent::PrefEnabled(aCx, aGlobal);
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_1(Touch, mTarget)
@@ -117,7 +118,7 @@ Touch::InitializePoints(nsPresContext* aPresContext, WidgetEvent* aEvent)
 }
 
 void
-Touch::SetTarget(mozilla::dom::EventTarget* aTarget)
+Touch::SetTarget(EventTarget* aTarget)
 {
   mTarget = aTarget;
 }
@@ -132,7 +133,7 @@ Touch::Equals(Touch* aTouch)
          mRadius.y == aTouch->RadiusY();
 }
 
-/* virtual */ JSObject*
+JSObject*
 Touch::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
   return TouchBinding::Wrap(aCx, aScope, this);
