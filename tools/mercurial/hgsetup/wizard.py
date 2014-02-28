@@ -169,9 +169,11 @@ class MercurialSetupWizard(object):
                     os.path.join(self.ext_dir, 'mqext'),
                     'default',
                     'Ensuring mqext extension is up to date...')
+
+            if 'mqext' in c.extensions and not c.have_mqext_autocommit_mq():
                 if self._prompt_yn('Would you like to configure mqext to '
                     'automatically commit changes as you modify patches'):
-                    c.autocommit_mq(True)
+                    c.ensure_mqext_autocommit_mq()
                     print('Configured mqext to auto-commit.\n')
 
             self.prompt_external_extension(c, 'qimportbz', QIMPORTBZ_INFO)
