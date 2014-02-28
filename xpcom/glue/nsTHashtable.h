@@ -404,9 +404,7 @@ nsTHashtable<EntryType>::Init(uint32_t aInitSize)
     s_InitEntry
   };
 
-  if (!PL_DHashTableInit(&mTable, &sOps, nullptr, sizeof(EntryType), aInitSize)) {
-    NS_ABORT_OOM(sizeof(EntryType) * aInitSize);
-  }
+  PL_DHashTableInit(&mTable, &sOps, nullptr, sizeof(EntryType), aInitSize);
 }
 
 // static definitions

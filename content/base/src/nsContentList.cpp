@@ -192,7 +192,6 @@ already_AddRefed<nsContentList>
 NS_GetContentList(nsINode* aRootNode, 
                   int32_t  aMatchNameSpaceId,
                   const nsAString& aTagname)
-                  
 {
   NS_ASSERTION(aRootNode, "content list has to have a root");
 
@@ -218,20 +217,16 @@ NS_GetContentList(nsINode* aRootNode,
 
   // Initialize the hashtable if needed.
   if (!gContentListHashTable.ops) {
-    bool success = PL_DHashTableInit(&gContentListHashTable,
-                                       &hash_table_ops, nullptr,
-                                       sizeof(ContentListHashEntry),
-                                       16);
-
-    if (!success) {
-      gContentListHashTable.ops = nullptr;
-    }
+    PL_DHashTableInit(&gContentListHashTable,
+                      &hash_table_ops, nullptr,
+                      sizeof(ContentListHashEntry),
+                      16);
   }
-  
+
   ContentListHashEntry *entry = nullptr;
   // First we look in our hashtable.  Then we create a content list if needed
   if (gContentListHashTable.ops) {
-    
+
     // A PL_DHASH_ADD is equivalent to a PL_DHASH_LOOKUP for cases
     // when the entry is already in the hashtable.
     entry = static_cast<ContentListHashEntry *>
@@ -339,14 +334,10 @@ GetFuncStringContentList(nsINode* aRootNode,
 
   // Initialize the hashtable if needed.
   if (!gFuncStringContentListHashTable.ops) {
-    bool success = PL_DHashTableInit(&gFuncStringContentListHashTable,
-                                       &hash_table_ops, nullptr,
-                                       sizeof(FuncStringContentListHashEntry),
-                                       16);
-
-    if (!success) {
-      gFuncStringContentListHashTable.ops = nullptr;
-    }
+    PL_DHashTableInit(&gFuncStringContentListHashTable,
+                      &hash_table_ops, nullptr,
+                      sizeof(FuncStringContentListHashEntry),
+                      16);
   }
 
   FuncStringContentListHashEntry *entry = nullptr;
