@@ -18,7 +18,6 @@ EXPORTS += [
     'nsDOMEvent.h',
     'nsDOMEventTargetHelper.h',
     'nsDOMKeyNameList.h',
-    'nsDOMTouchEvent.h',
     'nsDOMUIEvent.h',
     'nsEventDispatcher.h',
     'nsEventListenerManager.h',
@@ -55,6 +54,7 @@ EXPORTS.mozilla.dom += [
     'PointerEvent.h',
     'SimpleGestureEvent.h',
     'Touch.h',
+    'TouchEvent.h',
     'WheelEvent.h',
 ]
 
@@ -83,7 +83,6 @@ UNIFIED_SOURCES += [
     'nsDOMEventTargetHelper.cpp',
     'nsDOMNotifyAudioAvailableEvent.cpp',
     'nsDOMTextEvent.cpp',
-    'nsDOMTouchEvent.cpp',
     'nsDOMTransitionEvent.cpp',
     'nsDOMXULCommandEvent.cpp',
     'nsEventDispatcher.cpp',
@@ -96,6 +95,7 @@ UNIFIED_SOURCES += [
     'SimpleGestureEvent.cpp',
     'TextComposition.cpp',
     'Touch.cpp',
+    'TouchEvent.cpp',
     'WheelEvent.cpp',
 ]
 
