@@ -223,7 +223,7 @@ add_task(function() {
   contextMenu.hidePopup();
   yield hiddenContextPromise;
   yield endCustomizing(this.otherWin);
-  this.otherWin.close();
+  yield promiseWindowClosed(this.otherWin);
   this.otherWin = null;
 });
 
