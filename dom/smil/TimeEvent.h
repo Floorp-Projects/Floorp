@@ -3,24 +3,27 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef NS_DOMTIMEEVENT_H_
-#define NS_DOMTIMEEVENT_H_
+#ifndef mozilla_dom_TimeEvent_h_
+#define mozilla_dom_TimeEvent_h_
 
 #include "nsIDOMTimeEvent.h"
 #include "nsDOMEvent.h"
 #include "mozilla/dom/TimeEventBinding.h"
 
-class nsDOMTimeEvent MOZ_FINAL : public nsDOMEvent,
-                                 public nsIDOMTimeEvent
+namespace mozilla {
+namespace dom {
+
+class TimeEvent MOZ_FINAL : public nsDOMEvent,
+                            public nsIDOMTimeEvent
 {
 public:
-  nsDOMTimeEvent(mozilla::dom::EventTarget* aOwner,
-                 nsPresContext* aPresContext,
-                 mozilla::WidgetEvent* aEvent);
+  TimeEvent(EventTarget* aOwner,
+            nsPresContext* aPresContext,
+            WidgetEvent* aEvent);
 
   // nsISupports interface:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsDOMTimeEvent, nsDOMEvent)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(TimeEvent, nsDOMEvent)
 
   // nsIDOMTimeEvent interface:
   NS_DECL_NSIDOMTIMEEVENT
@@ -31,7 +34,7 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
   {
-    return mozilla::dom::TimeEventBinding::Wrap(aCx, aScope, this);
+    return TimeEventBinding::Wrap(aCx, aScope, this);
   }
 
   int32_t Detail() const
@@ -45,7 +48,7 @@ public:
   }
 
   void InitTimeEvent(const nsAString& aType, nsIDOMWindow* aView,
-                     int32_t aDetail, mozilla::ErrorResult& aRv)
+                     int32_t aDetail, ErrorResult& aRv)
   {
     aRv = InitTimeEvent(aType, aView, aDetail);
   }
@@ -55,4 +58,7 @@ private:
   int32_t mDetail;
 };
 
-#endif // NS_DOMTIMEEVENT_H_
+} // namespace dom
+} // namespace mozilla
+
+#endif // mozilla_dom_TimeEvent_h_
