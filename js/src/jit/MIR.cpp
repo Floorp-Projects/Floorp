@@ -810,6 +810,22 @@ MFloor::trySpecializeFloat32(TempAllocator &alloc)
     setPolicyType(MIRType_Float32);
 }
 
+void
+MRound::trySpecializeFloat32(TempAllocator &alloc)
+{
+    // No need to look at the output, as it's an integer (unique way to have
+    // this instruction in IonBuilder::inlineMathRound)
+    JS_ASSERT(type() == MIRType_Int32);
+
+    if (!input()->canProduceFloat32()) {
+        if (input()->type() == MIRType_Float32)
+            ConvertDefinitionToDouble<0>(alloc, input(), this);
+        return;
+    }
+
+    setPolicyType(MIRType_Float32);
+}
+
 MTest *
 MTest::New(TempAllocator &alloc, MDefinition *ins, MBasicBlock *ifTrue, MBasicBlock *ifFalse)
 {

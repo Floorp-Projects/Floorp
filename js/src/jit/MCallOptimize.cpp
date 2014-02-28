@@ -162,6 +162,8 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSNative native)
         return inlineHasClass(callInfo, &TransparentTypedObject::class_);
     if (native == intrinsic_ObjectIsOpaqueTypedObject)
         return inlineHasClass(callInfo, &OpaqueTypedObject::class_);
+    if (native == intrinsic_ObjectIsTypeDescr)
+        return inlineObjectIsTypeDescr(callInfo);
 
     // Testing Functions
     if (native == testingFunc_inParallelSection)
@@ -673,7 +675,7 @@ IonBuilder::inlineMathRound(CallInfo &callInfo)
         return InliningStatus_Inlined;
     }
 
-    if (argType == MIRType_Double && returnType == MIRType_Int32) {
+    if (IsFloatingPointType(argType) && returnType == MIRType_Int32) {
         callInfo.setImplicitlyUsedUnchecked();
         MRound *ins = MRound::New(alloc(), callInfo.getArg(0));
         current->add(ins);
@@ -681,7 +683,7 @@ IonBuilder::inlineMathRound(CallInfo &callInfo)
         return InliningStatus_Inlined;
     }
 
-    if (argType == MIRType_Double && returnType == MIRType_Double) {
+    if (IsFloatingPointType(argType) && returnType == MIRType_Double) {
         callInfo.setImplicitlyUsedUnchecked();
         MMathFunction *ins = MMathFunction::New(alloc(), callInfo.getArg(0), MMathFunction::Round, nullptr);
         current->add(ins);
@@ -1503,6 +1505,43 @@ IonBuilder::inlineHasClass(CallInfo &callInfo, const Class *clasp)
         current->add(hasClass);
         current->push(hasClass);
     }
+
+    callInfo.setImplicitlyUsedUnchecked();
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineObjectIsTypeDescr(CallInfo &callInfo)
+{
+    if (callInfo.constructing() || callInfo.argc() != 1)
+        return InliningStatus_NotInlined;
+
+    if (callInfo.getArg(0)->type() != MIRType_Object)
+        return InliningStatus_NotInlined;
+    if (getInlineReturnType() != MIRType_Boolean)
+        return InliningStatus_NotInlined;
+
+    // The test is elaborate: in-line only if there is exact
+    // information.
+
+    types::TemporaryTypeSet *types = callInfo.getArg(0)->resultTypeSet();
+    if (!types)
+        return InliningStatus_NotInlined;
+
+    bool result = false;
+    switch (types->forAllClasses(IsTypeDescrClass)) {
+    case types::TemporaryTypeSet::ForAllResult::ALL_FALSE:
+    case types::TemporaryTypeSet::ForAllResult::EMPTY:
+        result = false;
+        break;
+    case types::TemporaryTypeSet::ForAllResult::ALL_TRUE:
+        result = true;
+        break;
+    case types::TemporaryTypeSet::ForAllResult::MIXED:
+        return InliningStatus_NotInlined;
+    }
+
+    pushConstant(BooleanValue(result));
 
     callInfo.setImplicitlyUsedUnchecked();
     return InliningStatus_Inlined;
