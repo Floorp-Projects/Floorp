@@ -491,7 +491,7 @@ CustomizeMode.prototype = {
     deck.addEventListener("transitionend", customizeTransitionEnd);
 
     if (gDisableAnimation) {
-      deck.setAttribute("fastcustomizeanimation", true);
+      this.document.getElementById("tab-view-deck").setAttribute("fastcustomizeanimation", true);
     }
     if (aEntering) {
       this.document.documentElement.setAttribute("customizing", true);
