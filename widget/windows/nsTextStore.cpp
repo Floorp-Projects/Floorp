@@ -29,8 +29,6 @@ using namespace mozilla;
 using namespace mozilla::widget;
 
 static const char* kPrefNameTSFEnabled = "intl.tsf.enable";
-static const char* kPrefNameLayoutChangeInternal =
-                     "intl.tsf.on_layout_change_interval";
 
 static const char* kLegacyPrefNameTSFEnabled = "intl.enable_tsf_support";
 
@@ -636,8 +634,6 @@ nsTextStore::~nsTextStore()
       }
     }
   }
-
-  mComposition.EnsureLayoutChangeTimerStopped();
 }
 
 bool
@@ -1047,7 +1043,6 @@ nsTextStore::FlushPendingActions()
         if (!mWidget || mWidget->Destroyed()) {
           break;
         }
-        mComposition.StartLayoutChangeTimer(this);
         break;
       }
       case PendingAction::COMPOSITION_UPDATE: {
@@ -1137,8 +1132,6 @@ nsTextStore::FlushPendingActions()
                 "flushing COMPOSITION_END={ mData=\"%s\" }",
                 this, NS_ConvertUTF16toUTF8(action.mData).get()));
 
-        mComposition.EnsureLayoutChangeTimerStopped();
-
         action.mData.ReplaceSubstring(NS_LITERAL_STRING("\r\n"),
                                       NS_LITERAL_STRING("\n"));
         if (action.mData != mComposition.mLastData) {
@@ -1206,8 +1199,6 @@ nsTextStore::FlushPendingActions()
     if (mWidget && !mWidget->Destroyed()) {
       continue;
     }
-
-    mComposition.EnsureLayoutChangeTimerStopped();
 
     PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
            ("TSF: 0x%p   nsTextStore::FlushPendingActions(), "
@@ -3178,6 +3169,7 @@ nsTextStore::GetIMEUpdatePreference()
       nsIMEUpdatePreference updatePreference(
         nsIMEUpdatePreference::NOTIFY_SELECTION_CHANGE |
         nsIMEUpdatePreference::NOTIFY_TEXT_CHANGE |
+        nsIMEUpdatePreference::NOTIFY_POSITION_CHANGE |
         nsIMEUpdatePreference::NOTIFY_DURING_DEACTIVE);
       // nsTextStore shouldn't notify TSF of selection change and text change
       // which are caused by composition.
@@ -3299,17 +3291,13 @@ nsTextStore::OnSelectionChangeInternal(void)
 }
 
 nsresult
-nsTextStore::OnLayoutChange()
+nsTextStore::OnLayoutChangeInternal()
 {
   NS_ENSURE_TRUE(mContext, NS_ERROR_FAILURE);
   NS_ENSURE_TRUE(mSink, NS_ERROR_FAILURE);
 
-  // XXXmnakano We always call OnLayoutChange for now, but this might use CPU
-  // power when the focused editor has very long text. Ideally, we should call
-  // this only when the composition string screen position is changed by window
-  // moving, resizing. And also reflowing and scrolling the contents.
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
-         ("TSF: 0x%p   nsTextStore::OnLayoutChange(), calling "
+         ("TSF: 0x%p   nsTextStore::OnLayoutChangeInternal(), calling "
           "mSink->OnLayoutChange()...", this));
   HRESULT hr = mSink->OnLayoutChange(TS_LC_CHANGE, TEXTSTORE_DEFAULT_VIEW);
   NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
@@ -3990,47 +3978,6 @@ nsTextStore::Composition::End()
 {
   mView = nullptr;
   mString.Truncate();
-}
-
-void
-nsTextStore::Composition::StartLayoutChangeTimer(nsTextStore* aTextStore)
-{
-  MOZ_ASSERT(!mLayoutChangeTimer);
-  mLayoutChangeTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
-  mLayoutChangeTimer->InitWithFuncCallback(TimerCallback, aTextStore,
-    GetLayoutChangeIntervalTime(), nsITimer::TYPE_REPEATING_SLACK);
-}
-
-void
-nsTextStore::Composition::EnsureLayoutChangeTimerStopped()
-{
-  if (!mLayoutChangeTimer) {
-    return;
-  }
-  mLayoutChangeTimer->Cancel();
-  mLayoutChangeTimer = nullptr;
-}
-
-// static
-void
-nsTextStore::Composition::TimerCallback(nsITimer* aTimer, void* aClosure)
-{
-  nsTextStore *ts = static_cast<nsTextStore*>(aClosure);
-  ts->OnLayoutChange();
-}
-
-// static
-uint32_t
-nsTextStore::Composition::GetLayoutChangeIntervalTime()
-{
-  static int32_t sTime = -1;
-  if (sTime > 0) {
-    return static_cast<uint32_t>(sTime);
-  }
-
-  sTime = std::max(10,
-    Preferences::GetInt(kPrefNameLayoutChangeInternal, 100));
-  return static_cast<uint32_t>(sTime);
 }
 
 /******************************************************************************
