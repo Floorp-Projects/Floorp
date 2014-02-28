@@ -223,6 +223,24 @@ static uint32_t makeMask(const uint32_t prefixLength)
 }
 
 /**
+ * Helper function to get the network part of an ip from prefix.
+ * param ip must be in network byte order.
+ */
+static char* getNetworkAddr(const uint32_t ip, const uint32_t prefix)
+{
+  uint32_t mask = 0, subnet = 0;
+
+  mask = ~mask << (32 - prefix);
+  mask = htonl(mask);
+  subnet = ip & mask;
+
+  struct in_addr addr;
+  addr.s_addr = subnet;
+
+  return inet_ntoa(addr);
+}
+
+/**
  * Helper function to split string by seperator, store split result as an nsTArray.
  */
 static void split(char* str, const char* sep, nsTArray<nsCString>& result)
@@ -741,7 +759,20 @@ void NetworkUtils::enableNat(CommandChain* aChain,
                              NetworkResultOptions& aResult)
 {
   char command[MAX_COMMAND_SIZE];
-  snprintf(command, MAX_COMMAND_SIZE - 1, "nat enable %s %s 0", GET_CHAR(mInternalIfname), GET_CHAR(mExternalIfname));
+
+  if (!GET_FIELD(mIp).IsEmpty() && !GET_FIELD(mPrefix).IsEmpty()) {
+    uint32_t prefix = atoi(GET_CHAR(mPrefix));
+    uint32_t ip = inet_addr(GET_CHAR(mIp));
+    char* networkAddr = getNetworkAddr(ip, prefix);
+
+    // address/prefix will only take effect when secondary routing table exists.
+    snprintf(command, MAX_COMMAND_SIZE - 1, "nat enable %s %s 1 %s/%s",
+      GET_CHAR(mInternalIfname), GET_CHAR(mExternalIfname), networkAddr,
+      GET_CHAR(mPrefix));
+  } else {
+    snprintf(command, MAX_COMMAND_SIZE - 1, "nat enable %s %s 0",
+      GET_CHAR(mInternalIfname), GET_CHAR(mExternalIfname));
+  }
 
   doCommand(command, aChain, aCallback);
 }
@@ -751,7 +782,19 @@ void NetworkUtils::disableNat(CommandChain* aChain,
                               NetworkResultOptions& aResult)
 {
   char command[MAX_COMMAND_SIZE];
-  snprintf(command, MAX_COMMAND_SIZE - 1, "nat disable %s %s 0", GET_CHAR(mInternalIfname), GET_CHAR(mExternalIfname));
+
+  if (!GET_FIELD(mIp).IsEmpty() && !GET_FIELD(mPrefix).IsEmpty()) {
+    uint32_t prefix = atoi(GET_CHAR(mPrefix));
+    uint32_t ip = inet_addr(GET_CHAR(mIp));
+    char* networkAddr = getNetworkAddr(ip, prefix);
+
+    snprintf(command, MAX_COMMAND_SIZE - 1, "nat disable %s %s 1 %s/%s",
+      GET_CHAR(mInternalIfname), GET_CHAR(mExternalIfname), networkAddr,
+      GET_CHAR(mPrefix));
+  } else {
+    snprintf(command, MAX_COMMAND_SIZE - 1, "nat disable %s %s 0",
+      GET_CHAR(mInternalIfname), GET_CHAR(mExternalIfname));
+  }
 
   doCommand(command, aChain, aCallback);
 }
