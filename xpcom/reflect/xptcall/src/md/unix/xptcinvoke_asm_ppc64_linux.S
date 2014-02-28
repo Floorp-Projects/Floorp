@@ -17,12 +17,38 @@
 .set f25,25; .set f26,26; .set f27,27; .set f28,28; .set f29,29
 .set f30,30; .set f31,31
 
+# The ABI defines a fixed stack frame area of 4 doublewords (ELFv2)
+# or 6 doublewords (ELFv1); the last of these doublewords is used
+# as TOC pointer save area.  The fixed area is followed by a parameter
+# save area of 8 doublewords (used for vararg routines), followed
+# by space for parameters passed on the stack.
+#
+# We set STACK_TOC to the offset of the TOC pointer save area, and
+# STACK_PARAMS to the offset of the first on-stack parameter.
+
+#if _CALL_ELF == 2
+#define STACK_TOC      24
+#define STACK_PARAMS   96
+#else
+#define STACK_TOC      40
+#define STACK_PARAMS   112
+#endif
 
 #
 # NS_InvokeByIndex(nsISupports* that, uint32_t methodIndex,
 #                    uint32_t paramCount, nsXPTCVariant* params)
 #
 
+#if _CALL_ELF == 2
+        .section ".text"
+        .type   NS_InvokeByIndex,@function
+        .globl  NS_InvokeByIndex
+        .align 2
+NS_InvokeByIndex:
+0:      addis 2,12,(.TOC.-0b)@ha
+        addi 2,2,(.TOC.-0b)@l
+        .localentry NS_InvokeByIndex,.-NS_InvokeByIndex
+#else
         .section ".toc","aw"
         .section ".text"
         .align 2
@@ -34,6 +60,7 @@ NS_InvokeByIndex:
         .previous
         .type   NS_InvokeByIndex,@function
 .NS_InvokeByIndex:
+#endif
         mflr    0
         std     0,16(r1)
 
@@ -50,13 +77,12 @@ NS_InvokeByIndex:
         # we don't actually need stack space for those. We must ensure
         # that the stack remains 16-byte aligned.
         #
-        #  | ..128-byte stack frame.. |     | 7 GP | 13 FP | 3 NV |
-        #  |               |(params)........| regs | regs  | regs |
-        # (r1)...........(+112)....(+128)
-        #                               (-23*8).(-16*8).(-3*8)..(r31)
+        #  | (fixed area + |                | 7 GP | 13 FP | 3 NV |
+        #  |  param. save) |(params)........| regs | regs  | regs |
+        # (r1)......(+STACK_PARAMS)...  (-23*8).(-16*8).(-3*8)..(r31)
 
         # +stack frame, -unused stack params, +regs storage, +1 for alignment
-        addi    r7,r5,((112/8)-7+7+13+3+1)
+        addi    r7,r5,((STACK_PARAMS/8)-7+7+13+3+1)
         rldicr  r7,r7,3,59              # multiply by 8 and mask with ~15
         neg     r7,r7
         stdux   r1,r1,r7
@@ -67,12 +93,13 @@ NS_InvokeByIndex:
         #                           uint64_t* d))
 
         # r5, r6 are passed through intact (paramCount, params)
-        # r7 (d) has to be r1+112 -- where parameters are passed on the stack.
+        # r7 (d) has to be r1+STACK_PARAMS
+        #        -- where parameters are passed on the stack.
         # r3, r4 are above that, easier to address from r31 than from r1
 
         subi    r3,r31,(23*8)           # r3 --> GPRS
         subi    r4,r31,(16*8)           # r4 --> FPRS
-        addi    r7,r1,112               # r7 --> params
+        addi    r7,r1,STACK_PARAMS      # r7 --> params
         bl      invoke_copy_to_stack
         nop
 
@@ -83,14 +110,18 @@ NS_InvokeByIndex:
 
         sldi    r30,r30,3               # Find function descriptor 
         add     r9,r9,r30
-        ld      r9,0(r9)
+        ld      r12,0(r9)
 
-        ld      r0,0(r9)                # Actual address from fd.
-        std     r2,40(r1)               # Save r2 (TOC pointer)
+        std     r2,STACK_TOC(r1)        # Save r2 (TOC pointer)
 
+#if _CALL_ELF == 2
+        mtctr   r12
+#else
+        ld      r0,0(r12)               # Actual address from fd.
         mtctr   0
-        ld      r11,16(r9)              # Environment pointer from fd.
-        ld      r2,8(r9)                # TOC pointer from fd.
+        ld      r11,16(r12)             # Environment pointer from fd.
+        ld      r2,8(r12)               # TOC pointer from fd.
+#endif
 
         # Load FP and GP registers as required
         ld      r4, -(23*8)(r31) 
@@ -117,7 +148,7 @@ NS_InvokeByIndex:
 
         bctrl                           # Do it
 
-        ld      r2,40(r1)               # Load our own TOC pointer
+        ld      r2,STACK_TOC(r1)        # Load our own TOC pointer
         ld      r1,0(r1)                # Revert stack frame
         ld      0,16(r1)                # Reload lr
         ld      29,-24(r1)              # Restore NVGPRS
@@ -126,7 +157,11 @@ NS_InvokeByIndex:
         mtlr    0
         blr
 
+#if _CALL_ELF == 2
+        .size   NS_InvokeByIndex,.-NS_InvokeByIndex
+#else
         .size   NS_InvokeByIndex,.-.NS_InvokeByIndex
+#endif
 
         # Magic indicating no need for an executable stack
         .section .note.GNU-stack, "", @progbits ; .previous
