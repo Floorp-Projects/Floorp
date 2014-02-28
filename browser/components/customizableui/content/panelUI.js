@@ -143,7 +143,7 @@ const PanelUI = {
       let iconAnchor =
         document.getAnonymousElementByAttribute(anchor, "class",
                                                 "toolbarbutton-icon");
-      this.panel.openPopup(iconAnchor || anchor, "bottomcenter topright");
+      this.panel.openPopup(iconAnchor || anchor);
 
       this.panel.addEventListener("popupshown", function onPopupShown() {
         this.removeEventListener("popupshown", onPopupShown);

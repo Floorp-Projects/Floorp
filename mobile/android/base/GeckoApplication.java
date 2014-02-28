@@ -13,13 +13,13 @@ import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.app.Application;
+import android.content.Context;
 import android.content.res.Configuration;
 import android.util.Log;
 
 public class GeckoApplication extends Application {
     private static final String LOG_TAG = "GeckoApplication";
 
-    private boolean mInited;
     private boolean mInBackground;
     private boolean mPausedGecko;
 
@@ -53,26 +53,6 @@ public class GeckoApplication extends Application {
         super.onConfigurationChanged(config);
     }
 
-    protected void initialize() {
-        if (mInited)
-            return;
-
-        // workaround for http://code.google.com/p/android/issues/detail?id=20915
-        try {
-            Class.forName("android.os.AsyncTask");
-        } catch (ClassNotFoundException e) {}
-
-        mLightweightTheme = new LightweightTheme(this);
-
-        GeckoConnectivityReceiver.getInstance().init(getApplicationContext());
-        GeckoBatteryManager.getInstance().init(getApplicationContext());
-        GeckoBatteryManager.getInstance().start();
-        GeckoNetworkManager.getInstance().init(getApplicationContext());
-        MemoryMonitor.getInstance().init(getApplicationContext());
-
-        mInited = true;
-    }
-
     public void onActivityPause(GeckoActivityStatus activity) {
         mInBackground = true;
 
@@ -103,8 +83,11 @@ public class GeckoApplication extends Application {
             GeckoAppShell.sendEventToGecko(GeckoEvent.createAppForegroundingEvent());
             mPausedGecko = false;
         }
-        GeckoConnectivityReceiver.getInstance().start();
-        GeckoNetworkManager.getInstance().start();
+
+        final Context applicationContext = getApplicationContext();
+        GeckoBatteryManager.getInstance().start(applicationContext);
+        GeckoConnectivityReceiver.getInstance().start(applicationContext);
+        GeckoNetworkManager.getInstance().start(applicationContext);
 
         mInBackground = false;
     }
@@ -125,5 +108,9 @@ public class GeckoApplication extends Application {
 
     public LightweightTheme getLightweightTheme() {
         return mLightweightTheme;
+    }
+
+    public void prepareLightweightTheme() {
+        mLightweightTheme = new LightweightTheme(this);
     }
 }
