@@ -9,6 +9,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
+Cu.import("resource://gre/modules/systemlibs.js");
 
 const NETWORKMANAGER_CONTRACTID = "@mozilla.org/network/manager;1";
 const NETWORKMANAGER_CID =
@@ -64,6 +65,7 @@ const NETWORK_INTERFACE_DOWN = "down";
 
 const TETHERING_STATE_ONGOING = "ongoing";
 const TETHERING_STATE_IDLE    = "idle";
+const TETHERING_STATE_ACTIVE  = "active";
 
 // Settings DB path for USB tethering.
 const SETTINGS_USB_ENABLED             = "tethering.usb.enabled";
@@ -78,6 +80,9 @@ const SETTINGS_USB_DNS2                = "tethering.usb.dns2";
 const SETTINGS_WIFI_DHCPSERVER_STARTIP = "tethering.wifi.dhcpserver.startip";
 const SETTINGS_WIFI_DHCPSERVER_ENDIP   = "tethering.wifi.dhcpserver.endip";
 
+// Settings DB patch for dun required setting.
+const SETTINGS_DUN_REQUIRED = "tethering.dun.required";
+
 // Default value for USB tethering.
 const DEFAULT_USB_IP                   = "192.168.0.1";
 const DEFAULT_USB_PREFIX               = "24";
@@ -89,6 +94,18 @@ const DEFAULT_DNS2                     = "8.8.4.4";
 
 const DEFAULT_WIFI_DHCPSERVER_STARTIP  = "192.168.1.10";
 const DEFAULT_WIFI_DHCPSERVER_ENDIP    = "192.168.1.30";
+
+const IPV4_ADDRESS_ANY                 = "0.0.0.0";
+const IPV6_ADDRESS_ANY                 = "::0";
+
+const IPV4_MAX_PREFIX_LENGTH           = 32;
+const IPV6_MAX_PREFIX_LENGTH           = 128;
+
+const PREF_DATA_DEFAULT_SERVICE_ID     = "ril.data.defaultServiceId";
+const MOBILE_DUN_CONNECT_TIMEOUT       = 30000;
+const MOBILE_DUN_RETRY_INTERVAL        = 5000;
+const MOBILE_DUN_MAX_RETRIES           = 5;
+
 
 const DEBUG = false;
 
@@ -198,10 +215,15 @@ NetworkManager.prototype = {
             }
             // Add extra host route. For example, mms proxy or mmsc.
             this.setExtraHostRoute(network);
+            // Dun type is a special case where we add the default route to a
+            // secondary table.
+            if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_DUN) {
+              this.setSecondaryDefaultRoute(network);
+            }
 #endif
             // Remove pre-created default route and let setAndConfigureActive()
             // to set default route only on preferred network
-            gNetworkService.removeDefaultRoute(network.name);
+            gNetworkService.removeDefaultRoute(network);
             this.setAndConfigureActive();
 #ifdef MOZ_B2G_RIL
             // Update data connection when Wifi connected/disconnected
@@ -226,13 +248,17 @@ NetworkManager.prototype = {
             }
             // Remove extra host route. For example, mms proxy or mmsc.
             this.removeExtraHostRoute(network);
+            // Remove secondary default route for dun.
+            if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_DUN) {
+              this.removeSecondaryDefaultRoute(network);
+            }
 #endif
             // Remove routing table in /proc/net/route
             if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_WIFI) {
               gNetworkService.resetRoutingTable(network);
 #ifdef MOZ_B2G_RIL
             } else if (network.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE) {
-              gNetworkService.removeDefaultRoute(network.name);
+              gNetworkService.removeDefaultRoute(network);
 #endif
             }
 
@@ -256,11 +282,20 @@ NetworkManager.prototype = {
         let regNetwork = subject.QueryInterface(Ci.nsINetworkInterface);
         // Add extra host route. For example, mms proxy or mmsc.
         this.setExtraHostRoute(regNetwork);
+        // Dun type is a special case where we add the default route to a
+        // secondary table.
+        if (regNetwork.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_DUN) {
+          this.setSecondaryDefaultRoute(regNetwork);
+        }
         break;
       case TOPIC_INTERFACE_UNREGISTERED:
         let unregNetwork = subject.QueryInterface(Ci.nsINetworkInterface);
         // Remove extra host route. For example, mms proxy or mmsc.
         this.removeExtraHostRoute(unregNetwork);
+        // Remove secondary default route for dun.
+        if (unregNetwork.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_DUN) {
+          this.removeSecondaryDefaultRoute(unregNetwork);
+        }
         break;
 #endif
       case TOPIC_MOZSETTINGS_CHANGED:
@@ -280,6 +315,10 @@ NetworkManager.prototype = {
         Services.obs.removeObserver(this, TOPIC_INTERFACE_UNREGISTERED);
 #endif
         Services.obs.removeObserver(this, TOPIC_INTERFACE_STATE_CHANGED);
+#ifdef MOZ_B2G_RIL
+        this.dunConnectTimer.cancel();
+        this.dunRetryTimer.cancel();
+#endif
         break;
     }
   },
@@ -291,6 +330,7 @@ NetworkManager.prototype = {
         let excludeMms = aMsg.json.excludeMms;
         let excludeSupl = aMsg.json.excludeSupl;
         let excludeIms = aMsg.json.excludeIms;
+        let excludeDun = aMsg.json.excludeDun;
 #endif
         let interfaces = [];
 
@@ -298,7 +338,8 @@ NetworkManager.prototype = {
 #ifdef MOZ_B2G_RIL
           if ((i.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS && excludeMms) ||
               (i.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_SUPL && excludeSupl) ||
-              (i.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_IMS && excludeIms)) {
+              (i.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_IMS && excludeIms) ||
+              (i.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_DUN && excludeDun)) {
             continue;
           }
 #endif
@@ -341,7 +382,7 @@ NetworkManager.prototype = {
 #endif
     // Remove pre-created default route and let setAndConfigureActive()
     // to set default route only on preferred network
-    gNetworkService.removeDefaultRoute(network.name);
+    gNetworkService.removeDefaultRoute(network);
     this.setAndConfigureActive();
     Services.obs.notifyObservers(network, TOPIC_INTERFACE_REGISTERED, null);
     debug("Network '" + network.name + "' registered.");
@@ -455,6 +496,39 @@ NetworkManager.prototype = {
 
       gNetworkService.removeHostRouteWithResolve(network, mmsHosts);
     }
+  },
+
+  setSecondaryDefaultRoute: function(network) {
+    // First, we need to add a host route to the gateway in the secondary
+    // routing table to make the gateway reachable. Host route takes the max
+    // prefix and gateway address 'any'.
+    let route = {
+      ip: network.gateway,
+      prefix: IPV4_MAX_PREFIX_LENGTH,
+      gateway: IPV4_ADDRESS_ANY
+    };
+    gNetworkService.addSecondaryRoute(network.name, route);
+    // Now we can add the default route through gateway. Default route takes the
+    // min prefix and destination ip 'any'.
+    route.ip = IPV4_ADDRESS_ANY;
+    route.prefix = 0;
+    route.gateway = network.gateway;
+    gNetworkService.addSecondaryRoute(network.name, route);
+  },
+
+  removeSecondaryDefaultRoute: function(network) {
+    // Remove both host route and default route.
+    let route = {
+      ip: network.gateway,
+      prefix: IPV4_MAX_PREFIX_LENGTH,
+      gateway: IPV4_ADDRESS_ANY
+    };
+    gNetworkService.removeSecondaryRoute(network.name, route);
+
+    route.ip = IPV4_ADDRESS_ANY;
+    route.prefix = "0";
+    route.gateway = network.gateway;
+    gNetworkService.removeSecondaryRoute(network.name, route);
   },
 #endif // MOZ_B2G_RIL
 
@@ -586,6 +660,11 @@ NetworkManager.prototype = {
 
     this.tetheringSettings[SETTINGS_WIFI_DHCPSERVER_STARTIP] = DEFAULT_WIFI_DHCPSERVER_STARTIP;
     this.tetheringSettings[SETTINGS_WIFI_DHCPSERVER_ENDIP]   = DEFAULT_WIFI_DHCPSERVER_ENDIP;
+
+#ifdef MOZ_B2G_RIL
+    this.tetheringSettings[SETTINGS_DUN_REQUIRED] =
+      libcutils.property_get("ro.tethering.dun_required") === "1";
+#endif
   },
 
   _requestCount: 0,
@@ -674,22 +753,138 @@ NetworkManager.prototype = {
     }
   },
 
+#ifdef MOZ_B2G_RIL
+  dunConnectTimer: Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer),
+  /**
+   * Callback when dun connection fails to connect within timeout.
+   */
+  onDunConnectTimerTimeout: function() {
+    while (this._pendingTetheringRequests.length > 0) {
+      debug("onDunConnectTimerTimeout: callback without network info.");
+      let callback = this._pendingTetheringRequests.shift();
+      if (typeof callback === 'function') {
+        callback();
+      }
+    }
+  },
+
+  dunRetryTimes: 0,
+  dunRetryTimer: Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer),
+  setupDunConnection: function() {
+    this.dunRetryTimer.cancel();
+    let ril = this.mRil.getRadioInterface(this.gDataDefaultServiceId);
+
+    if (ril.rilContext && ril.rilContext.data &&
+        ril.rilContext.data.state === "registered") {
+      this.dunRetryTimes = 0;
+      ril.setupDataCallByType("dun");
+      this.dunConnectTimer.cancel();
+      this.dunConnectTimer.
+        initWithCallback(this.onDunConnectTimerTimeout.bind(this),
+                         MOBILE_DUN_CONNECT_TIMEOUT, Ci.nsITimer.TYPE_ONE_SHOT);
+      return;
+    }
+
+    if (this.dunRetryTimes++ >= this.MOBILE_DUN_MAX_RETRIES) {
+      debug("setupDunConnection: max retries reached.");
+      this.dunRetryTimes = 0;
+      // same as dun connect timeout.
+      this.onDunConnectTimerTimeout();
+      return;
+    }
+
+    debug("Data not ready, retry dun after " + MOBILE_DUN_RETRY_INTERVAL + " ms.");
+    this.dunRetryTimer.
+      initWithCallback(this.setupDunConnection.bind(this),
+                       MOBILE_DUN_RETRY_INTERVAL, Ci.nsITimer.TYPE_ONE_SHOT);
+  },
+
+  _pendingTetheringRequests: [],
+  _dunActiveUsers: 0,
+  handleDunConnection: function(enable, callback) {
+    debug("handleDunConnection: " + enable);
+    let dun = this.getNetworkInterface(
+      Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_DUN);
+
+    if (!enable) {
+      this._dunActiveUsers--;
+      if (this._dunActiveUsers > 0) {
+        debug("Dun still needed by others, do not disconnect.")
+        return;
+      }
+
+      this.dunRetryTimes = 0;
+      this.dunRetryTimer.cancel();
+      this.dunConnectTimer.cancel();
+      this._pendingTetheringRequests = [];
+
+      if (dun && (dun.state == Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED)) {
+        this.mRil.getRadioInterface(this.gDataDefaultServiceId)
+          .deactivateDataCallByType("dun");
+      }
+      return;
+    }
+
+    this._dunActiveUsers++;
+    if (!dun || (dun.state != Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED)) {
+      debug("DUN data call inactive, setup dun data call!")
+      this._pendingTetheringRequests.push(callback);
+      this.dunRetryTimes = 0;
+      this.setupDunConnection();
+
+      return;
+    }
+    this._tetheringInterface[TETHERING_TYPE_USB].externalInterface = dun.name;
+    callback(dun);
+  },
+#endif
+
   handleUSBTetheringToggle: function(enable) {
+    debug("handleUSBTetheringToggle: " + enable);
+    if (enable &&
+        (this._usbTetheringAction === TETHERING_STATE_ONGOING ||
+         this._usbTetheringAction === TETHERING_STATE_ACTIVE)) {
+      debug("Usb tethering already connecting/connected.");
+      return;
+    }
+
+    if (!enable &&
+        this._usbTetheringAction === TETHERING_STATE_IDLE) {
+      debug("Usb tethering already disconnected.");
+      return;
+    }
+
     if (!enable) {
       this.tetheringSettings[SETTINGS_USB_ENABLED] = false;
       gNetworkService.enableUsbRndis(false, this.enableUsbRndisResult.bind(this));
       return;
     }
 
+    this.tetheringSettings[SETTINGS_USB_ENABLED] = true;
+    this._usbTetheringAction = TETHERING_STATE_ONGOING;
+
+#ifdef MOZ_B2G_RIL
+    if (this.tetheringSettings[SETTINGS_DUN_REQUIRED]) {
+      this.handleDunConnection(true, function(network) {
+        if (!network){
+          this.usbTetheringResultReport("Dun connection failed");
+          return;
+        }
+        this._tetheringInterface[TETHERING_TYPE_USB].externalInterface = network.name;
+        gNetworkService.enableUsbRndis(true, this.enableUsbRndisResult.bind(this));
+      }.bind(this));
+      return;
+    }
+#endif
+
     if (this.active) {
-      this._tetheringInterface[TETHERING_TYPE_USB].externalInterface = this.active.name
+      this._tetheringInterface[TETHERING_TYPE_USB].externalInterface = this.active.name;
     } else {
       let mobile = this.getNetworkInterface(Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE);
       if (mobile) {
         this._tetheringInterface[TETHERING_TYPE_USB].externalInterface = mobile.name;
       }
     }
-    this.tetheringSettings[SETTINGS_USB_ENABLED] = true;
     gNetworkService.enableUsbRndis(true, this.enableUsbRndisResult.bind(this));
   },
 
@@ -753,8 +948,28 @@ NetworkManager.prototype = {
     }
   },
 
+  enableWifiTethering: function(enable, config, callback) {
+    // Fill in config's required fields.
+    config.ifname         = this._tetheringInterface[TETHERING_TYPE_WIFI].internalInterface;
+    config.internalIfname = this._tetheringInterface[TETHERING_TYPE_WIFI].internalInterface;
+    config.externalIfname = this._tetheringInterface[TETHERING_TYPE_WIFI].externalInterface;
+
+    gNetworkService.setWifiTethering(enable, config, (function(error) {
+#ifdef MOZ_B2G_RIL
+      // Disconnect dun on error or when wifi tethering is disabled.
+      if (this.tetheringSettings[SETTINGS_DUN_REQUIRED] &&
+          (!enable || error)) {
+        this.handleDunConnection(false);
+      }
+#endif
+      let resetSettings = error;
+      this.notifyError(resetSettings, callback, error);
+    }).bind(this));
+  },
+
   // Enable/disable WiFi tethering by sending commands to netd.
   setWifiTethering: function(enable, network, config, callback) {
+    debug("setWifiTethering: " + enable);
     if (!network) {
       this.notifyError(true, callback, "invalid network information");
       return;
@@ -765,7 +980,26 @@ NetworkManager.prototype = {
       return;
     }
 
+    if (!enable) {
+      this.enableWifiTethering(false, config, callback);
+      return;
+    }
+
     this._tetheringInterface[TETHERING_TYPE_WIFI].internalInterface = network.name;
+
+#ifdef MOZ_B2G_RIL
+    if (this.tetheringSettings[SETTINGS_DUN_REQUIRED]) {
+      this.handleDunConnection(true, function(config, callback, network) {
+        if (!network) {
+          this.notifyError(true, callback, "Dun connection failed");
+          return;
+        }
+        this._tetheringInterface[TETHERING_TYPE_WIFI].externalInterface = network.name;
+        this.enableWifiTethering(true, config, callback);
+      }.bind(this, config, callback));
+      return;
+    }
+#endif
 
     let mobile = this.getNetworkInterface(Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE);
     // Update the real interface name
@@ -773,14 +1007,7 @@ NetworkManager.prototype = {
       this._tetheringInterface[TETHERING_TYPE_WIFI].externalInterface = mobile.name;
     }
 
-    config.ifname         = this._tetheringInterface[TETHERING_TYPE_WIFI].internalInterface;
-    config.internalIfname = this._tetheringInterface[TETHERING_TYPE_WIFI].internalInterface;
-    config.externalIfname = this._tetheringInterface[TETHERING_TYPE_WIFI].externalInterface;
-
-    gNetworkService.setWifiTethering(enable, config, (function(error) {
-      let resetSettings = error;
-      this.notifyError(resetSettings, callback, error);
-    }).bind(this));
+    this.enableWifiTethering(true, config, callback);
   },
 
   // Enable/disable USB tethering by sending commands to netd.
@@ -816,7 +1043,11 @@ NetworkManager.prototype = {
 
   enableUsbRndisResult: function(success, enable) {
     if (success) {
-      this._tetheringInterface[TETHERING_TYPE_USB].internalInterface = this.getUsbInterface();
+      // If enable is false, don't find usb interface cause it is already down,
+      // just use the internal interface in settings.
+      if (enable) {
+        this._tetheringInterface[TETHERING_TYPE_USB].internalInterface = this.getUsbInterface();
+      }
       this.setUSBTethering(enable,
                            this._tetheringInterface[TETHERING_TYPE_USB],
                            this.usbTetheringResultReport.bind(this));
@@ -829,14 +1060,29 @@ NetworkManager.prototype = {
   usbTetheringResultReport: function(error) {
     let settingsLock = gSettingsService.createLock();
 
-    this._usbTetheringAction = TETHERING_STATE_IDLE;
     // Disable tethering settings when fail to enable it.
     if (error) {
       this.tetheringSettings[SETTINGS_USB_ENABLED] = false;
       settingsLock.set("tethering.usb.enabled", false, null);
       // Skip others request when we found an error.
       this._requestCount = 0;
+      this._usbTetheringAction = TETHERING_STATE_IDLE;
+#ifdef MOZ_B2G_RIL
+      if (this.tetheringSettings[SETTINGS_DUN_REQUIRED]) {
+        this.handleDunConnection(false);
+      }
+#endif
     } else {
+      if (this.tetheringSettings[SETTINGS_USB_ENABLED]) {
+        this._usbTetheringAction = TETHERING_STATE_ACTIVE;
+      } else {
+        this._usbTetheringAction = TETHERING_STATE_IDLE;
+#ifdef MOZ_B2G_RIL
+        if (this.tetheringSettings[SETTINGS_DUN_REQUIRED]) {
+          this.handleDunConnection(false);
+        }
+#endif
+      }
       this.handleLastRequest();
     }
   },
@@ -857,10 +1103,42 @@ NetworkManager.prototype = {
       return;
     }
 
+#ifdef MOZ_B2G_RIL
+    // We can not use network.type only to check if it's dun, cause if it is
+    // shared with default, the returned type would always be default, see bug
+    // 939046. In most cases, if dun is required, it should not be shared with
+    // default.
+    if (this.tetheringSettings[SETTINGS_DUN_REQUIRED] &&
+        (network.type === Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_DUN ||
+         this.mRil.getRadioInterface(this.gDataDefaultServiceId)
+           .getDataCallStateByType("dun") ===
+         Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED)) {
+      this.dunConnectTimer.cancel();
+      debug("DUN data call connected, process callbacks.");
+      while (this._pendingTetheringRequests.length > 0) {
+        let callback = this._pendingTetheringRequests.shift();
+        if (typeof callback === 'function') {
+          callback(network);
+        }
+      }
+      return;
+    }
+#endif
+
     if (!this.tetheringSettings[SETTINGS_USB_ENABLED]) {
       debug("Usb tethering settings is not enabled");
       return;
     }
+
+#ifdef MOZ_B2G_RIL
+    if (this.tetheringSettings[SETTINGS_DUN_REQUIRED] &&
+        network.type === Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_DUN &&
+        this._tetheringInterface[TETHERING_TYPE_USB].externalInterface ===
+        network.name) {
+      debug("Dun required and dun interface is the same");
+      return;
+    }
+#endif
 
     if (this._tetheringInterface[TETHERING_TYPE_USB].externalInterface ===
         this.active.name) {
@@ -973,6 +1251,15 @@ let CaptivePortalDetectionHelper = (function() {
 XPCOMUtils.defineLazyServiceGetter(NetworkManager.prototype, "mRil",
                                    "@mozilla.org/ril;1",
                                    "nsIRadioInterfaceLayer");
+
+XPCOMUtils.defineLazyGetter(NetworkManager.prototype,
+                            "gDataDefaultServiceId", function() {
+  try {
+    return Services.prefs.getIntPref(PREF_DATA_DEFAULT_SERVICE_ID);
+  } catch(e) {}
+
+  return 0;
+});
 #endif
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([NetworkManager]);
