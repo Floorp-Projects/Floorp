@@ -9,6 +9,10 @@
 #include "FrameworkView.h"
 #include "MetroApp.h"
 #include "ToastNotificationHandler.h"
+#include "mozilla/Preferences.h"
+#include "mozilla/WindowsVersion.h"
+#include "nsIWindowsRegKey.h"
+#include "mozilla/widget/MetroD3DCheckHelper.h"
 
 #include <shldisp.h>
 #include <shellapi.h>
@@ -338,6 +342,59 @@ NS_IMETHODIMP
 nsWinMetroUtils::GetForeground(bool* aForeground)
 {
   *aForeground = (::GetActiveWindow() == ::GetForegroundWindow());
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWinMetroUtils::GetSupported(bool *aSupported)
+{
+  *aSupported = false;
+  if (!IsWin8OrLater()) {
+    return NS_OK;
+  }
+
+  // if last_used_feature_level_idx is set, we've previously created a
+  // d3d device that's compatible. See gfxEindowsPlatform for details.
+  if (Preferences::GetInt("gfx.direct3d.last_used_feature_level_idx", -1) != -1) {
+    *aSupported = true;
+    return NS_OK;
+  }
+
+  // if last_used_feature_level_idx isn't set, gfx hasn't attempted to create
+  // a device yet. This could be a case where d2d is pref'd off or blacklisted
+  // on desktop, or we tried to create a device and failed. This could also be
+  // a first run case where we haven't created an accelerated top level window
+  // yet.
+
+  NS_NAMED_LITERAL_STRING(metroRegValueName, "MetroD3DAvailable");
+  NS_NAMED_LITERAL_STRING(metroRegValuePath, "Software\\Mozilla\\Firefox");
+
+  // Check to see if the ceh launched us, it also does this check and caches
+  // a flag in the registry.
+  nsresult rv;
+  uint32_t value = 0;
+  nsCOMPtr<nsIWindowsRegKey> regKey =
+    do_CreateInstance("@mozilla.org/windows-registry-key;1", &rv);
+  if (NS_SUCCEEDED(rv)) {
+    rv = regKey->Open(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER,
+                      metroRegValuePath,
+                      nsIWindowsRegKey::ACCESS_WRITE);
+    if (NS_SUCCEEDED(rv)) {
+      rv = regKey->ReadIntValue(metroRegValueName, &value);
+      if (NS_SUCCEEDED(rv)) {
+        *aSupported = (bool)value;
+        return NS_OK;
+      }
+
+      // If all else fails, do the check here. This call is costly but
+      // we shouldn't hit this except in rare situations where the
+      // ceh never launched the browser that's running. 
+      value = D3DFeatureLevelCheck();
+      regKey->WriteIntValue(metroRegValueName, value);
+      *aSupported = (bool)value;
+      return NS_OK;
+    }
+  }
   return NS_OK;
 }
 
