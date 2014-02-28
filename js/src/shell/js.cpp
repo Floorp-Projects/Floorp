@@ -4275,6 +4275,22 @@ SetCachingEnabled(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
+static void
+PrintProfilerEvents_Callback(const char *msg)
+{
+    fprintf(stderr, "PROFILER EVENT: %s\n", msg);
+}
+
+static bool
+PrintProfilerEvents(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (cx->runtime()->spsProfiler.enabled())
+        js::RegisterRuntimeProfilingEventMarker(cx->runtime(), &PrintProfilerEvents_Callback);
+    args.rval().setUndefined();
+    return true;
+}
+
 static const JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("version", Version, 0, 0,
 "version([number])",
@@ -4614,6 +4630,11 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "  object encapsulates the code and its cached content. The cache entry is filled\n"
 "  and read by the \"evaluate\" function by using it in place of the source, and\n"
 "  by setting \"saveBytecode\" and \"loadBytecode\" options."),
+
+    JS_FN_HELP("printProfilerEvents", PrintProfilerEvents, 0, 0,
+"printProfilerEvents()",
+"  Register a callback with the profiler that prints javascript profiler events\n"
+"  to stderr.  Callback is only registered if profiling is enabled."),
 
     JS_FS_HELP_END
 };
