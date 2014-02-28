@@ -30,6 +30,11 @@
 
   function eventListener(obj) {
     ok(obj, "OnChangeListener is called with data");
+    ok("revisionId" in obj, "the event contains a revisionId");
+    ok("id" in obj, "the event contains a id");
+    ok("operation" in obj, "the event contains a operation");
+    ok("owner" in obj, "the event contains a owner");
+    is(obj.owner, 'http://test/tests/dom/datastore/tests/file_app.sjs?testToken=file_changes.html', 'Owner matches');
     finish();
   }
 

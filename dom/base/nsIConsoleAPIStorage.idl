@@ -1,0 +1,44 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(6701600a-17ca-417e-98f9-4ceb175dd15d)]
+interface nsIConsoleAPIStorage : nsISupports
+{
+  /**
+   * Get the events array by inner window ID or all events from all windows.
+   *
+   * @param string [aId]
+   *        Optional, the inner window ID for which you want to get the array of
+   *        cached events.
+   * @returns array
+   *          The array of cached events for the given window. If no |aId| is
+   *          given this function returns all of the cached events, from any
+   *          window.
+   */
+  jsval getEvents([optional] in DOMString aId);
+
+  /**
+   * Record an event associated with the given window ID.
+   *
+   * @param string aId
+   *        The ID of the inner window for which the event occurred or "jsm" for
+   *        messages logged from JavaScript modules..
+   * @param object aEvent
+   *        A JavaScript object you want to store.
+   */
+  void recordEvent(in DOMString aId, in jsval aEvent);
+
+  /**
+   * Clear storage data for the given window.
+   *
+   * @param string [aId]
+   *        Optional, the inner window ID for which you want to clear the
+   *        messages. If this is not specified all of the cached messages are
+   *        cleared, from all window objects.
+   */
+  void clearEvents([optional] in DOMString aId);
+};

@@ -199,11 +199,7 @@ const WorkerSandbox = Class({
     if (!getTabForContentWindow(window)) {
       let win = getUnsafeWindow(window);
 
-      // export our chrome console to content window, using the same approach
-      // of `ConsoleAPI`:
-      // http://mxr.mozilla.org/mozilla-central/source/dom/base/ConsoleAPI.js#150
-      //
-      // and described here:
+      // export our chrome console to content window, as described here:
       // https://developer.mozilla.org/en-US/docs/Components.utils.createObjectIn
       let con = Cu.createObjectIn(win);
 

@@ -15,7 +15,7 @@
 #include "nsIContent.h"
 #include "nsIFrame.h"
 #include "nsEventStates.h"
-#include "nsINameSpaceManager.h"
+#include "nsNameSpaceManager.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsLookAndFeel.h"
 #include "nsMenuFrame.h"

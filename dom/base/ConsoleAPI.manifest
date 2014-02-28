@@ -1,3 +1,2 @@
-component {b49c18f8-3379-4fc0-8c90-d7772c1a9ff3} ConsoleAPI.js
-contract @mozilla.org/console-api;1 {b49c18f8-3379-4fc0-8c90-d7772c1a9ff3}
-category JavaScript-global-property console @mozilla.org/console-api;1
+component {96cf7855-dfa9-4c6d-8276-f9705b4890f2} ConsoleAPIStorage.js
+contract @mozilla.org/consoleAPI-storage;1 {96cf7855-dfa9-4c6d-8276-f9705b4890f2}

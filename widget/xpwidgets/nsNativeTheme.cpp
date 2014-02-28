@@ -13,7 +13,7 @@
 #include "nsPresContext.h"
 #include "nsEventStateManager.h"
 #include "nsString.h"
-#include "nsINameSpaceManager.h"
+#include "nsNameSpaceManager.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMXULMenuListElement.h"
 #include "nsThemeConstants.h"
