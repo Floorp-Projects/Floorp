@@ -150,10 +150,9 @@ nsresult
 nsDiskCacheBindery::Init()
 {
     nsresult rv = NS_OK;
-    initialized = PL_DHashTableInit(&table, &ops, nullptr, sizeof(HashTableEntry), 0);
+    PL_DHashTableInit(&table, &ops, nullptr, sizeof(HashTableEntry), 0);
+    initialized = true;
 
-    if (!initialized) rv = NS_ERROR_OUT_OF_MEMORY;
-    
     return rv;
 }
 
