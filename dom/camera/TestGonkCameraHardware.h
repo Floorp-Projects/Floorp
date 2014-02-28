@@ -55,6 +55,7 @@ public:
 
 protected:
   const nsCString TestCase();
+  const nsCString GetExtraParameters();
   bool IsTestCaseInternal(const char* aTest, const char* aFile, int aLine);
   int TestCaseError(int aDefaultError);
 

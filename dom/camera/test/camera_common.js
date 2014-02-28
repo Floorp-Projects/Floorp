@@ -18,12 +18,40 @@ var CameraTest = (function() {
    * 'take-picture-process-failure' will simulate a failure of the
    * asynchronous picture-taking process, even if the initial API call
    * path seems to have succeeded.
+   *
+   * If 'camera.control.test.hardware.gonk.parameters' is set, it will cause
+   * the contents of that string to be appended to the string of parameters
+   * pulled from the Gonk camera library. This allows tests to inject fake
+   * settings/capabilities for features not supported by the emulator. These
+   * parameters are one or more semicolon-delimited key=value pairs, e.g. to
+   * pretend the emulator supports zoom:
+   *
+   *   zoom-ratios=100,150,200,300,400;max-zoom=4
+   *
+   * This means (of course) that neither the key not the value tokens can
+   * contain either equals signs or semicolons. The test shim doesn't enforce
+   * this so that we can test getting junk from the camera library as well.
    */
   const PREF_TEST_ENABLED = "camera.control.test.enabled";
   const PREF_TEST_HARDWARE = "camera.control.test.hardware";
+  const PREF_TEST_EXTRA_PARAMETERS = "camera.control.test.hardware.gonk.parameters";
   var oldTestEnabled;
   var oldTestHw;
   var testMode;
+
+  function testHardwareSetFakeParameters(parameters, callback) {
+    SpecialPowers.pushPrefEnv({'set': [[PREF_TEST_EXTRA_PARAMETERS, parameters]]}, function() {
+      var setParams = SpecialPowers.getCharPref(PREF_TEST_EXTRA_PARAMETERS);
+      ise(setParams, parameters, "Extra test parameters '" + setParams + "'");
+      if (callback) {
+        callback(setParams);
+      }
+    });
+  }
+
+  function testHardwareClearFakeParameters(callback) {
+    SpecialPowers.pushPrefEnv({'clear': [[PREF_TEST_EXTRA_PARAMETERS]]}, callback);
+  }
 
   function testHardwareSet(test, callback) {
     SpecialPowers.pushPrefEnv({'set': [[PREF_TEST_HARDWARE, test]]}, function() {
@@ -58,6 +86,8 @@ var CameraTest = (function() {
         } catch(e) { }
         testMode = {
           set: testHardwareSet,
+          setFakeParameters: testHardwareSetFakeParameters,
+          clearFakeParameters: testHardwareClearFakeParameters,
           done: testHardwareDone
         };
         if (callback) {
@@ -68,32 +98,40 @@ var CameraTest = (function() {
   }
 
   function testEnd(callback) {
-    function allDone(cb) {
-      function cb2() {
-        SimpleTest.finish();
-        if (cb) {
-          cb();
-        }
+    // A chain of clean-up functions....
+    function allCleanedUp() {
+      SimpleTest.finish();
+      if (callback) {
+        callback();
       }
+    }
+    function cleanUpTestEnabled() {
+      var next = allCleanedUp;
       if (oldTestEnabled) {
-        SpecialPowers.pushPrefEnv({'set': [[PREF_TEST_ENABLED, oldTestEnabled]]}, cb2);
+        SpecialPowers.pushPrefEnv({'set': [[PREF_TEST_ENABLED, oldTestEnabled]]}, next);
       } else {
-        SpecialPowers.pushPrefEnv({'clear': [[PREF_TEST_ENABLED]]}, cb2);
+        SpecialPowers.pushPrefEnv({'clear': [[PREF_TEST_ENABLED]]}, next);
+      }
+    }
+    function cleanUpTest() {
+      var next = cleanUpTestEnabled;
+      if (testMode) {
+        testMode.done(next);
+        testMode = null;
+      } else {
+        next();
+      }
+    }
+    function cleanUpExtraParameters() {
+      var next = cleanUpTest;
+      if (testMode) {
+        testMode.clearFakeParameters(next);
+      } else {
+        next();
       }
     }
 
-    if (testMode) {
-      testMode.done(function() {
-        allDone(callback);
-      });
-      testMode = null;
-    } else {
-      allDone(function() {
-        if (callback) {
-          callback();
-        }
-      });
-    }
+    cleanUpExtraParameters();
   }
 
   ise(SpecialPowers.sanityCheck(), "foo", "SpecialPowers passed sanity check");

@@ -1,0 +1,135 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for CameraParameters we need to fake</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="camera_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=976802">Mozilla Bug 976802</a>
+  <video id="viewfinder" width="200" height="200" autoplay></video>
+  <img src="#" alt="This image is going to load" id="testimage"/>
+
+<script class="testbody" type="text/javascript;version=1.7">
+
+var whichCamera = navigator.mozCameras.getListOfCameras()[0];
+var initialConfig = {
+  mode: 'picture',
+  recorderProfile: 'cif',
+  previewSize: {
+    width: 352,
+    height: 288
+  }
+};
+
+var cameraObj = null;
+
+// Shorthand functions
+function end() {
+  CameraTest.end();
+}
+function next() {
+  CameraTest.next();
+}
+function run() {
+  CameraTest.run();
+}
+
+function onError(e) {
+  ok(false, "Error" + JSON.stringify(e));
+}
+
+// The array of tests
+var tests = [
+  {
+    key: "fake-zoom",
+    prep: function setupFakeZoom(test) {
+      test.setFakeParameters("zoom-ratios=100,150,200,300,400;max-zoom=4", function() {
+        run();
+      });
+    },
+    test: function testFakeZoom(cam, cap) {
+      ok(cap.zoomRatios.length == 5, "zoom ratios length = " + cap.zoomRatios.length);
+
+      // test individual zoom ratios
+      cap.zoomRatios.forEach(function(zoom, index) {
+        cam.zoom = zoom;
+        ok(cam.zoom === zoom,
+          "zoom[" + index + "] = " + zoom + "x, cam.zoom = " + cam.zoom + "x");
+      });
+
+      // test below-lower-bound zoom ratio
+      var zoom = cap.zoomRatios[0] - 0.1;
+      cam.zoom = zoom;
+      ok(cam.zoom === cap.zoomRatios[0],
+        zoom + "x zoom clamps to minimum: " +
+        cap.zoomRatios[0] + "x, cam.zoom = " + cam.zoom + "x");
+
+      // test above-upper-bound zoom ratio
+      zoom = cap.zoomRatios.slice(-1)[0] + 1.0;
+      cam.zoom = zoom;
+      ok(cam.zoom === cap.zoomRatios.slice(-1)[0],
+        zoom + "x zoom clamps to maximum: " + cap.zoomRatios.slice(-1)[0] +
+        "x, cam.zoom = " + cam.zoom + "x");
+
+      // test snapping to supported zoom ratio
+      if (cap.zoomRatios.length > 1) {
+        zoom = (cap.zoomRatios[0] + cap.zoomRatios[1]) / 2;
+        cam.zoom = zoom;
+        ok(cam.zoom === cap.zoomRatios[0],
+          zoom + "x zoom rounded down to: " + cap.zoomRatios[0] +
+          "x, cam.zoom = " + cam.zoom + "x");
+      }
+
+      next();
+    }
+  },
+];
+
+var testGenerator = function() {
+  for (var i = 0; i < tests.length; ++i ) {
+    yield tests[i];
+  }
+}();
+
+window.addEventListener('beforeunload', function() {
+  document.getElementById('viewfinder').mozSrcObject = null;
+  cameraObj.release();
+  cameraObj = null;
+});
+
+CameraTest.begin("hardware", function(test) {
+  function onError(error) {
+    ok(false, "getCamera() failed with: " + error);
+    end();
+  }
+
+  CameraTest.next = function() {
+    try {
+      var t = testGenerator.next();
+      info("test: " + t.key);
+      function onSuccess(camera, config) {
+        cameraObj = camera;
+        t.test(camera, camera.capabilities);
+      }
+      CameraTest.run = function() {
+        navigator.mozCameras.getCamera(whichCamera, initialConfig, onSuccess, onError);
+      };
+      t.prep(test);
+    } catch(e) {
+      if (e instanceof StopIteration) {
+        end();
+      } else {
+        throw e;
+      }
+    }
+  };
+  next();
+});
+
+</script>
+</body>
+
+</html>
