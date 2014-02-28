@@ -17,6 +17,27 @@
 .set f25,25; .set f26,26; .set f27,27; .set f28,28; .set f29,29
 .set f30,30; .set f31,31
 
+#if _CALL_ELF == 2
+#define STACK_PARAMS   96
+#else
+#define STACK_PARAMS   112
+#endif
+
+#if _CALL_ELF == 2
+        .section ".text"
+        .type   SharedStub,@function
+        .globl  SharedStub
+        # Make the symbol hidden so that the branch from the stub does
+        # not go via a PLT.  This is not only better for performance,
+        # but may be necessary to avoid linker errors since there is
+        # no place to restore the TOC register in a sibling call.
+        .hidden SharedStub
+        .align 2
+SharedStub:
+0:      addis 2,12,(.TOC.-0b)@ha
+        addi 2,2,(.TOC.-0b)@l
+        .localentry SharedStub,.-SharedStub
+#else
         .section ".text"
         .align 2
         .globl SharedStub
@@ -34,6 +55,7 @@ SharedStub:
         .type   SharedStub,@function
 
 .SharedStub:
+#endif
         mflr    r0
 
         std     r4, -56(r1)                     # Save all GPRS
@@ -60,7 +82,7 @@ SharedStub:
 
         subi    r6,r1,56                        # r6 --> gprData
         subi    r7,r1,160                       # r7 --> fprData
-        addi    r5,r1,112                       # r5 --> extra stack args
+        addi    r5,r1,STACK_PARAMS              # r5 --> extra stack args
 
         std     r0, 16(r1)
 	
@@ -80,7 +102,11 @@ SharedStub:
         mtlr    r0
         blr
 
+#if _CALL_ELF == 2
+        .size   SharedStub,.-SharedStub
+#else
         .size   SharedStub,.-.SharedStub
+#endif
 
         # Magic indicating no need for an executable stack
         .section .note.GNU-stack, "", @progbits ; .previous

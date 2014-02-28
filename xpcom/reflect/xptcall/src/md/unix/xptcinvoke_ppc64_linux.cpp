@@ -74,7 +74,9 @@ invoke_copy_to_stack(uint64_t* gpregs,
                 fpregs[i]   = s->val.f; // if passed in registers, floats are promoted to doubles
             } else {
                 float *p = (float *)d;
+#ifndef __LITTLE_ENDIAN__
                 p++;
+#endif
                 *p = s->val.f;
             }
         }
