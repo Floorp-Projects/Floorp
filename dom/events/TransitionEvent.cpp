@@ -3,15 +3,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsDOMTransitionEvent.h"
-#include "prtime.h"
+#include "mozilla/dom/TransitionEvent.h"
 #include "mozilla/ContentEvents.h"
+#include "prtime.h"
 
-using namespace mozilla;
+namespace mozilla {
+namespace dom {
 
-nsDOMTransitionEvent::nsDOMTransitionEvent(mozilla::dom::EventTarget* aOwner,
-                                           nsPresContext *aPresContext,
-                                           InternalTransitionEvent* aEvent)
+TransitionEvent::TransitionEvent(EventTarget* aOwner,
+                                 nsPresContext* aPresContext,
+                                 InternalTransitionEvent* aEvent)
   : nsDOMEvent(aOwner, aPresContext,
                aEvent ? aEvent : new InternalTransitionEvent(false, 0))
 {
@@ -24,22 +25,22 @@ nsDOMTransitionEvent::nsDOMTransitionEvent(mozilla::dom::EventTarget* aOwner,
   }
 }
 
-NS_INTERFACE_MAP_BEGIN(nsDOMTransitionEvent)
+NS_INTERFACE_MAP_BEGIN(TransitionEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMTransitionEvent)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
 
-NS_IMPL_ADDREF_INHERITED(nsDOMTransitionEvent, nsDOMEvent)
-NS_IMPL_RELEASE_INHERITED(nsDOMTransitionEvent, nsDOMEvent)
+NS_IMPL_ADDREF_INHERITED(TransitionEvent, nsDOMEvent)
+NS_IMPL_RELEASE_INHERITED(TransitionEvent, nsDOMEvent)
 
-//static
-already_AddRefed<nsDOMTransitionEvent>
-nsDOMTransitionEvent::Constructor(const mozilla::dom::GlobalObject& aGlobal,
-                                  const nsAString& aType,
-                                  const mozilla::dom::TransitionEventInit& aParam,
-                                  mozilla::ErrorResult& aRv)
+// static
+already_AddRefed<TransitionEvent>
+TransitionEvent::Constructor(const GlobalObject& aGlobal,
+                             const nsAString& aType,
+                             const TransitionEventInit& aParam,
+                             ErrorResult& aRv)
 {
-  nsCOMPtr<mozilla::dom::EventTarget> t = do_QueryInterface(aGlobal.GetAsSupports());
-  nsRefPtr<nsDOMTransitionEvent> e = new nsDOMTransitionEvent(t, nullptr, nullptr);
+  nsCOMPtr<EventTarget> t = do_QueryInterface(aGlobal.GetAsSupports());
+  nsRefPtr<TransitionEvent> e = new TransitionEvent(t, nullptr, nullptr);
   bool trusted = e->Init(t);
 
   aRv = e->InitEvent(aType, aParam.mBubbles, aParam.mCancelable);
@@ -54,39 +55,44 @@ nsDOMTransitionEvent::Constructor(const mozilla::dom::GlobalObject& aGlobal,
 }
 
 NS_IMETHODIMP
-nsDOMTransitionEvent::GetPropertyName(nsAString & aPropertyName)
+TransitionEvent::GetPropertyName(nsAString& aPropertyName)
 {
   aPropertyName = mEvent->AsTransitionEvent()->propertyName;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMTransitionEvent::GetElapsedTime(float *aElapsedTime)
+TransitionEvent::GetElapsedTime(float* aElapsedTime)
 {
   *aElapsedTime = ElapsedTime();
   return NS_OK;
 }
 
 float
-nsDOMTransitionEvent::ElapsedTime()
+TransitionEvent::ElapsedTime()
 {
   return mEvent->AsTransitionEvent()->elapsedTime;
 }
 
 NS_IMETHODIMP
-nsDOMTransitionEvent::GetPseudoElement(nsAString& aPseudoElement)
+TransitionEvent::GetPseudoElement(nsAString& aPseudoElement)
 {
   aPseudoElement = mEvent->AsTransitionEvent()->pseudoElement;
   return NS_OK;
 }
 
+} // namespace dom
+} // namespace mozilla
+
+using namespace mozilla;
+using namespace mozilla::dom;
+
 nsresult
-NS_NewDOMTransitionEvent(nsIDOMEvent **aInstancePtrResult,
-                         mozilla::dom::EventTarget* aOwner,
-                         nsPresContext *aPresContext,
+NS_NewDOMTransitionEvent(nsIDOMEvent** aInstancePtrResult,
+                         EventTarget* aOwner,
+                         nsPresContext* aPresContext,
                          InternalTransitionEvent* aEvent)
 {
-  nsDOMTransitionEvent *it =
-    new nsDOMTransitionEvent(aOwner, aPresContext, aEvent);
+  TransitionEvent *it = new TransitionEvent(aOwner, aPresContext, aEvent);
   return CallQueryInterface(it, aInstancePtrResult);
 }

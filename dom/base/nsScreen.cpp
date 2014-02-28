@@ -222,64 +222,6 @@ nsScreen::GetLockOrientationPermission() const
   return doc->MozFullScreen() ? FULLSCREEN_LOCK_ALLOWED : LOCK_DENIED;
 }
 
-NS_IMETHODIMP
-nsScreen::MozLockOrientation(JS::Handle<JS::Value> aOrientation, JSContext* aCx,
-                             bool* aReturn)
-{
-  if (aOrientation.isObject()) {
-    JS::Rooted<JSObject*> seq(aCx, &aOrientation.toObject());
-    if (IsArrayLike(aCx, seq)) {
-      uint32_t length;
-      // JS_GetArrayLength actually works on all objects
-      if (!JS_GetArrayLength(aCx, seq, &length)) {
-        return NS_ERROR_FAILURE;
-      }
-
-      Sequence<nsString> orientations;
-      if (!orientations.SetCapacity(length)) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-
-      for (uint32_t i = 0; i < length; ++i) {
-        JS::Rooted<JS::Value> temp(aCx);
-        if (!JS_GetElement(aCx, seq, i, &temp)) {
-          return NS_ERROR_FAILURE;
-        }
-
-        JS::Rooted<JSString*> jsString(aCx, JS::ToString(aCx, temp));
-        if (!jsString) {
-          return NS_ERROR_FAILURE;
-        }
-
-        nsDependentJSString str;
-        if (!str.init(aCx, jsString)) {
-          return NS_ERROR_FAILURE;
-        }
-
-        *orientations.AppendElement() = str;
-      }
-
-      ErrorResult rv;
-      *aReturn = MozLockOrientation(orientations, rv);
-      return rv.ErrorCode();
-    }
-  }
-
-  JS::Rooted<JSString*> jsString(aCx, JS::ToString(aCx, aOrientation));
-  if (!jsString) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsDependentJSString orientation;
-  if (!orientation.init(aCx, jsString)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  ErrorResult rv;
-  *aReturn = MozLockOrientation(orientation, rv);
-  return rv.ErrorCode();
-}
-
 bool
 nsScreen::MozLockOrientation(const nsAString& aOrientation, ErrorResult& aRv)
 {
@@ -363,13 +305,6 @@ void
 nsScreen::MozUnlockOrientation()
 {
   hal::UnlockScreenOrientation();
-}
-
-NS_IMETHODIMP
-nsScreen::SlowMozUnlockOrientation()
-{
-  MozUnlockOrientation();
-  return NS_OK;
 }
 
 bool

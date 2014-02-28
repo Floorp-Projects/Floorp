@@ -479,7 +479,7 @@ def environment(xrePath, env=None, crashreporter=True, debugger=False, dmdPath=N
       message = "INFO | runtests.py | ASan running in %s configuration"
       if totalMemory <= 1024 * 1024 * 4:
         message = message % 'low-memory'
-        env["ASAN_OPTIONS"] = "quarantine_size=50331648"
+        env["ASAN_OPTIONS"] = "quarantine_size=50331648:malloc_context_size=5"
       else:
         message = message % 'default memory'
     except OSError,err:

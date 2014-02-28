@@ -3,14 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ifeq ($(OS_ARCH),WINNT)
-EXTRA_SDK_DECLS = $(topsrcdir)/security/sandbox/chromium/base/shim/sdkdecls.h
-
-ifdef _MSC_VER
-OS_CXXFLAGS += -FI $(EXTRA_SDK_DECLS)
-else
-OS_CXXFLAGS += -include $(EXTRA_SDK_DECLS)
-endif
-
 STL_FLAGS =
 MOZ_GLUE_LDFLAGS =
 endif
