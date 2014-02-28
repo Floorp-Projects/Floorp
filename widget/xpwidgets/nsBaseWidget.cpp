@@ -1472,6 +1472,18 @@ nsBaseWidget::NotifySizeMoveDone()
 }
 
 void
+nsBaseWidget::NotifyWindowMoved(int32_t aX, int32_t aY)
+{
+  if (mWidgetListener) {
+    mWidgetListener->WindowMoved(this, aX, aY);
+  }
+
+  if (GetIMEUpdatePreference().WantPositionChanged()) {
+    NotifyIME(IMENotification(IMEMessage::NOTIFY_IME_OF_POSITION_CHANGE));
+  }
+}
+
+void
 nsBaseWidget::NotifySysColorChanged()
 {
   if (!mWidgetListener || mWidgetListener->GetXULWindow())
