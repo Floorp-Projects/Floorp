@@ -59,14 +59,12 @@ AddTransformedRegion(nsIntRegion& aDest, const nsIntRegion& aSource, const gfx3D
   while ((r = iter.Next())) {
     aDest.Or(aDest, TransformRect(*r, aTransform));
   }
-  aDest.SimplifyOutward(4);
 }
 
 static void
 AddRegion(nsIntRegion& aDest, const nsIntRegion& aSource)
 {
   aDest.Or(aDest, aSource);
-  aDest.SimplifyOutward(4);
 }
 
 static nsIntRegion
