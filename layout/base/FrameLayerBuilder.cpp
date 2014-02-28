@@ -2452,8 +2452,6 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
         continue;
       }
 
-      bool setVisibleRegion = (itemType != nsDisplayItem::TYPE_TRANSFORM) &&
-        (itemType != nsDisplayItem::TYPE_SCROLL_LAYER);
       if (itemType == nsDisplayItem::TYPE_TRANSFORM) {
         mParameters.mAncestorClipRect = itemClip.HasClip() ? &clipRect : nullptr;
       } else {
@@ -2526,7 +2524,7 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
         }
       }
       itemVisibleRect.MoveBy(mParameters.mOffset);
-      if (setVisibleRegion) {
+      if (item->SetVisibleRegionOnLayer()) {
         SetVisibleRegionForLayer(ownLayer, ownLayer->GetVisibleRegion(), itemVisibleRect);
       }
 

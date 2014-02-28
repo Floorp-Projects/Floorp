@@ -203,7 +203,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
         'ipc/ShadowLayerUtilsGralloc.cpp',
     ]
 
-    if CONFIG['ANDROID_VERSION'] >= '18':
+    if CONFIG['ANDROID_VERSION'] >= '17':
         EXPORTS.mozilla.layers += [
             'ipc/FenceUtilsGonk.h',
         ]

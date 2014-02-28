@@ -126,6 +126,21 @@ var shell = {
     // purge the queue.
     this.CrashSubmit.pruneSavedDumps();
 
+    // check for environment affecting crash reporting
+    let env = Cc["@mozilla.org/process/environment;1"]
+                .getService(Ci.nsIEnvironment);
+    let shutdown = env.get("MOZ_CRASHREPORTER_SHUTDOWN");
+    if (shutdown) {
+      let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"]
+                         .getService(Ci.nsIAppStartup);
+      appStartup.quit(Ci.nsIAppStartup.eForceQuit);
+    }
+
+    let noReport = env.get("MOZ_CRASHREPORTER_NO_REPORT");
+    if (noReport) {
+      return;
+    }
+
     try {
       // Check if we should automatically submit this crash.
       if (Services.prefs.getBoolPref('app.reportCrashes')) {
