@@ -44,7 +44,7 @@
 #include "nsIDocument.h"
 #include "nsCSSStyleSheet.h"
 #include "nsAnimationManager.h"
-#include "nsINameSpaceManager.h"  // for Pref-related rule management (bugs 22963,20760,31816)
+#include "nsNameSpaceManager.h"  // for Pref-related rule management (bugs 22963,20760,31816)
 #include "nsFrame.h"
 #include "FrameLayerBuilder.h"
 #include "nsViewManager.h"

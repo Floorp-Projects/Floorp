@@ -342,6 +342,13 @@ Window implements TouchEventHandlers;
 
 Window implements OnErrorEventHandlerForWindow;
 
+// ConsoleAPI
+partial interface Window {
+  [Replaceable, GetterThrows]
+  readonly attribute Console console;
+};
+
+
 [ChromeOnly] interface ChromeWindow {
   [Func="nsGlobalWindow::IsChromeWindow"]
   const unsigned short STATE_MAXIMIZED = 1;

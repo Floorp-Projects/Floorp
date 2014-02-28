@@ -76,7 +76,7 @@
 #include "nsIHTMLDocument.h"            // for nsIHTMLDocument
 #include "nsIInlineSpellChecker.h"      // for nsIInlineSpellChecker, etc
 #include "nsIMEStateManager.h"          // for nsIMEStateManager
-#include "nsINameSpaceManager.h"        // for kNameSpaceID_None, etc
+#include "nsNameSpaceManager.h"        // for kNameSpaceID_None, etc
 #include "nsINode.h"                    // for nsINode, etc
 #include "nsIObserverService.h"         // for nsIObserverService
 #include "nsIPlaintextEditor.h"         // for nsIPlaintextEditor, etc

@@ -17,7 +17,7 @@
 #include "nsPresContext.h"
 #include "nsStyleContext.h"
 #include "nsIContent.h"
-#include "nsINameSpaceManager.h"
+#include "nsNameSpaceManager.h"
 #include "nsBoxLayoutState.h"
 #include "nsWidgetsCID.h"
 #include "nsViewManager.h"
