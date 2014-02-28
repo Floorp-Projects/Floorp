@@ -70,6 +70,9 @@ radio[pane=paneSync] {
 }
 %endif
 
+label.small {
+  font-size: smaller;
+}
 
 /* ----- APPLICATIONS PREFPANE ----- */
 #BrowserPreferences[animated="true"] #handlersView {
