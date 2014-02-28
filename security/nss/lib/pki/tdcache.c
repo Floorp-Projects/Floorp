@@ -468,10 +468,10 @@ nssTrustDomain_UpdateCachedTokenCerts (
     if (count > 0) {
 	cached = nss_ZNEWARRAY(NULL, NSSCertificate *, count + 1);
 	if (!cached) {
+	    nssList_Destroy(certList);
 	    return PR_FAILURE;
 	}
 	nssList_GetArray(certList, (void **)cached, count);
-	nssList_Destroy(certList);
 	for (cp = cached; *cp; cp++) {
 	    nssCryptokiObject *instance;
 	    NSSCertificate *c = *cp;
@@ -490,6 +490,7 @@ nssTrustDomain_UpdateCachedTokenCerts (
 	}
 	nssCertificateArray_Destroy(cached);
     }
+    nssList_Destroy(certList);
     return PR_SUCCESS;
 }
 
