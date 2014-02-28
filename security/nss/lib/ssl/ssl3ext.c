@@ -64,7 +64,7 @@ static PRInt32 ssl3_SendUseSRTPXtn(sslSocket *ss, PRBool append,
     PRUint32 maxBytes);
 static SECStatus ssl3_HandleUseSRTPXtn(sslSocket * ss, PRUint16 ex_type,
     SECItem *data);
-static SECStatus ssl3_ServerSendStatusRequestXtn(sslSocket * ss,
+static PRInt32 ssl3_ServerSendStatusRequestXtn(sslSocket * ss,
     PRBool append, PRUint32 maxBytes);
 static SECStatus ssl3_ServerHandleStatusRequestXtn(sslSocket *ss,
     PRUint16 ex_type, SECItem *data);
