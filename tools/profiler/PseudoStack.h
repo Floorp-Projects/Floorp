@@ -292,9 +292,6 @@ private:
   volatile bool       mSignalLock;
 };
 
-// Stub eventMarker function for js-engine event generation.
-void ProfilerJSEventMarker(const char *event);
-
 // the PseudoStack members are read by signal
 // handlers, so the mutation of them needs to be signal-safe.
 struct PseudoStack
@@ -401,7 +398,6 @@ public:
   void enableJSSampling() {
     if (mRuntime) {
       js::EnableRuntimeProfilingStack(mRuntime, true);
-      js::RegisterRuntimeProfilingEventMarker(mRuntime, &ProfilerJSEventMarker);
       mStartJSSampling = false;
     } else {
       mStartJSSampling = true;
