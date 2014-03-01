@@ -5,7 +5,7 @@
       function testDone() {
         clearTimeout(timerID);
         var l = document.body.firstChild.contentWindow.location.href;
-        opener.todo_is(l, "data:text/html,bar", "Should have loaded a new document");
+        opener.is(l, "data:text/html,bar", "Should have loaded a new document");
         opener.nextTest();
         window.close();
       }
