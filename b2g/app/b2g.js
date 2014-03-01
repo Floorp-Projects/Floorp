@@ -186,7 +186,8 @@ pref("privacy.item.siteSettings", true);
 pref("privacy.item.syncAccount", true);
 
 // base url for the wifi geolocation network provider
-pref("geo.wifi.uri", "https://maps.googleapis.com/maps/api/browserlocation/json");
+pref("geo.provider.use_mls", false);
+pref("geo.wifi.uri", "https://location.services.mozilla.com/v1/geolocate?key=%MOZILLA_API_KEY%");
 
 // enable geo
 pref("geo.enabled", true);
