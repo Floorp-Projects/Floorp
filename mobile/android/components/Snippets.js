@@ -118,8 +118,15 @@ function updateCountryCode(callback) {
  */
 function updateSnippets() {
   _httpGetRequest(gSnippetsURL, function(responseText) {
-    cacheSnippets(responseText);
-    updateBanner(responseText);
+    try {
+      let messages = JSON.parse(responseText);
+      updateBanner(messages);
+
+      // Only cache the response if it is valid JSON.
+      cacheSnippets(responseText);
+    } catch (e) {
+      Cu.reportError("Error parsing snippets responseText: " + e);
+    }
   });
 }
 
@@ -139,7 +146,10 @@ function cacheSnippets(response) {
  */
 function loadSnippetsFromCache() {
   let promise = OS.File.read(gSnippetsPath);
-  promise.then(array => updateBanner(gDecoder.decode(array)), e => {
+  promise.then(array => {
+    let messages = JSON.parse(gDecoder.decode(array));
+    updateBanner(messages);
+  }, e => {
     if (e instanceof OS.File.Error && e.becauseNoSuchFile) {
       Cu.reportError("Couldn't show snippets because cache does not exist yet.");
     } else {
@@ -155,8 +165,7 @@ var gMessageIds = [];
 /**
  * Updates set of snippets in the home banner message rotation.
  *
- * @param response responseText returned from snippets server.
- *   This should be a JSON array of message data JSON objects.
+ * @param messages JSON array of message data JSON objects.
  *   Each message object should have the following properties:
  *     - id (?): Unique identifier for this snippets message
  *     - text (string): Text to show as banner message
@@ -164,14 +173,12 @@ var gMessageIds = [];
  *     - icon (data URI): Icon to appear in banner
  *     - target_geo (string): Country code for where this message should be shown (e.g. "US")
  */
-function updateBanner(response) {
+function updateBanner(messages) {
   // Remove the current messages, if there are any.
   gMessageIds.forEach(function(id) {
     Home.banner.remove(id);
   })
   gMessageIds = [];
-
-  let messages = JSON.parse(response);
 
   try {
     let removedSnippetIds = JSON.parse(Services.prefs.getCharPref(SNIPPETS_REMOVED_IDS_PREF));
