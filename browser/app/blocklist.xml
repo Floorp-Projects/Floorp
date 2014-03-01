@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1392852504000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1393524054000">
   <emItems>
       <emItem  blockID="i454" id="sqlmoz@facebook.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
@@ -766,7 +766,7 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i394" id="{7D4F1959-3F72-49d5-8E59-F02F8AA6815D}">
+      <emItem  blockID="i562" id="iobitapps@mybrowserbar.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                     <prefs>
@@ -917,6 +917,12 @@
               </prefs>
     </emItem>
       <emItem  blockID="i308" id="9518042e-7ad6-4dac-b377-056e28d00c8f@f1cc0a13-4df1-4d66-938f-088db8838882.com">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i560" id="adsremoval@adsremoval.net">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                     <prefs>
@@ -1420,6 +1426,12 @@
     </emItem>
       <emItem  blockID="i437" id="{4933189D-C7F7-4C6E-834B-A29F087BFD23}">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i394" id="{7D4F1959-3F72-49d5-8E59-F02F8AA6815D}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -2032,6 +2044,12 @@
                               <versionRange  minVersion="17.0" maxVersion="*" />
                           </targetApplication>
                   </versionRange>
+                  </pluginItem>
+      <pluginItem  blockID="p556">
+                  <match name="filename" exp="npUnity3D32\.dll" />                      <versionRange  minVersion="0" maxVersion="4.3.4.99999999" severity="0" vulnerabilitystatus="1"></versionRange>
+                  </pluginItem>
+      <pluginItem  blockID="p558">
+            <match name="description" exp="^($|Unity Web Player version ([0-3]|(4\.([0-2]|3(\.[0-4])?[^0-9.]))))" />      <match name="filename" exp="Unity Web Player\.plugin" />                      <versionRange  severity="0" vulnerabilitystatus="1"></versionRange>
                   </pluginItem>
     </pluginItems>
 
