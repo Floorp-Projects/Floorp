@@ -1936,15 +1936,15 @@ TransactionItemCache.prototype = {
   postData: null,
   itemType: null,
   set uri(v)
-    this._uri = (v instanceof Ci.nsIURI ? NetUtil.newURI(v.spec) : null),
+    this._uri = (v instanceof Ci.nsIURI ? v.clone() : null),
   get uri()
     this._uri || null,
   set feedURI(v)
-    this._feedURI = (v instanceof Ci.nsIURI ? NetUtil.newURI(v.spec) : null),
+    this._feedURI = (v instanceof Ci.nsIURI ? v.clone() : null),
   get feedURI()
     this._feedURI || null,
   set siteURI(v)
-    this._siteURI = (v instanceof Ci.nsIURI ? NetUtil.newURI(v.spec) : null),
+    this._siteURI = (v instanceof Ci.nsIURI ? v.clone() : null),
   get siteURI()
     this._siteURI || null,
   set index(v)
