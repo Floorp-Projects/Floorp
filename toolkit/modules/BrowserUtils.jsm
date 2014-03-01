@@ -64,4 +64,27 @@ this.BrowserUtils = {
     return Services.io.newFileURI(aFile);
   },
 
+  /**
+   * For a given DOM element, returns its position in "screen"
+   * coordinates. In a content process, the coordinates returned will
+   * be relative to the left/top of the tab. In the chrome process,
+   * the coordinates are relative to the user's screen.
+   */
+  getElementBoundingScreenRect: function(aElement) {
+    let rect = aElement.getBoundingClientRect();
+    let window = aElement.ownerDocument.defaultView;
+
+    // We need to compensate for any iframes that might shift things
+    // over. We also need to compensate for zooming.
+    let fullZoom = window.getInterface(Ci.nsIDOMWindowUtils).fullZoom;
+    rect = {
+      left: (rect.left + window.mozInnerScreenX) * fullZoom,
+      top: (rect.top + window.mozInnerScreenY) * fullZoom,
+      width: rect.width * fullZoom,
+      height: rect.height * fullZoom
+    };
+
+    return rect;
+  },
+
 };
