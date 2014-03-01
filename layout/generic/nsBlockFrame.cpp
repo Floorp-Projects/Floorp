@@ -3756,7 +3756,7 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
     uint8_t breakType = NS_INLINE_GET_BREAK_TYPE(frameReflowStatus);
     NS_ASSERTION((NS_STYLE_CLEAR_NONE != breakType) || 
                  (NS_STYLE_CLEAR_NONE != aState.mFloatBreakType), "bad break type");
-    NS_ASSERTION(NS_STYLE_CLEAR_LAST_VALUE >= breakType, "invalid break type");
+    NS_ASSERTION(NS_STYLE_CLEAR_MAX >= breakType, "invalid break type");
 
     if (NS_INLINE_IS_BREAK_BEFORE(frameReflowStatus)) {
       // Break-before cases.
