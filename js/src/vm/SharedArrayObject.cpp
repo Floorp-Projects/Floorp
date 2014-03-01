@@ -85,22 +85,18 @@ SharedArrayRawBuffer::New(uint32_t length)
         UnmapMemory(p, AsmJSMappedSize);
         return nullptr;
     }
-
-    uint8_t *buffer = reinterpret_cast<uint8_t*>(p) + AsmJSPageSize;
-    uint8_t *base = buffer - sizeof(SharedArrayRawBuffer);
-    return new (base) SharedArrayRawBuffer(buffer, length);
 #else
-    uint32_t allocSize = sizeof(SharedArrayRawBuffer) + length;
+    uint32_t allocSize = length + AsmJSPageSize;
     if (allocSize <= length)
         return nullptr;
 
-    void *base = MapMemory(allocSize, true);
-    if (!base)
+    void *p = MapMemory(allocSize, true);
+    if (!p)
         return nullptr;
-
-    uint8_t *buffer = reinterpret_cast<uint8_t*>(base) + sizeof(SharedArrayRawBuffer);
-    return new (base) SharedArrayRawBuffer(buffer, length);
 #endif
+    uint8_t *buffer = reinterpret_cast<uint8_t*>(p) + AsmJSPageSize;
+    uint8_t *base = buffer - sizeof(SharedArrayRawBuffer);
+    return new (base) SharedArrayRawBuffer(buffer, length);
 }
 
 void
@@ -118,13 +114,12 @@ SharedArrayRawBuffer::dropReference()
 
     // If this was the final reference, release the buffer.
     if (refcount == 0) {
-#ifdef JS_CPU_X64
         uint8_t *p = this->dataPointer() - AsmJSPageSize;
         JS_ASSERT(uintptr_t(p) % AsmJSPageSize == 0);
+#ifdef JS_CPU_X64
         UnmapMemory(p, AsmJSMappedSize);
 #else
-        uint8_t *p = (uint8_t *)this;
-        UnmapMemory(p, this->length);
+        UnmapMemory(p, this->length + AsmJSPageSize);
 #endif
     }
 }
