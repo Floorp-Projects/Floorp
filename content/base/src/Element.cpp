@@ -1158,8 +1158,8 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     SetInDocument();
 
     if (GetCustomElementData()) {
-      // Enqueue an enteredView callback for the custom element.
-      aDocument->EnqueueLifecycleCallback(nsIDocument::eEnteredView, this);
+      // Enqueue an attached callback for the custom element.
+      aDocument->EnqueueLifecycleCallback(nsIDocument::eAttached, this);
     }
 
     // Unset this flag since we now really are in a document.
@@ -1321,8 +1321,8 @@ Element::UnbindFromTree(bool aDeep, bool aNullParent)
     document->ClearBoxObjectFor(this);
 
     if (GetCustomElementData()) {
-      // Enqueue a leftView callback for the custom element.
-      document->EnqueueLifecycleCallback(nsIDocument::eLeftView, this);
+      // Enqueue a detached callback for the custom element.
+      document->EnqueueLifecycleCallback(nsIDocument::eDetached, this);
     }
   }
 
