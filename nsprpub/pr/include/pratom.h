@@ -110,7 +110,7 @@ long __cdecl _InterlockedExchangeAdd(long volatile *Addend, long Value);
            (defined(__powerpc__) && !defined(__powerpc64__)) || \
            (defined(__arm__) && \
            defined(__GCC_HAVE_SYNC_COMPARE_AND_SWAP_4)) || \
-           defined(__alpha))))
+           defined(__aarch64__) || defined(__alpha))))
 
 /*
  * Because the GCC manual warns that some processors may support
