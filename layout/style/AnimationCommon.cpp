@@ -255,7 +255,7 @@ CommonAnimationManager::UpdateThrottledStyle(dom::Element* aElement,
       mPresContext->AnimationManager()->EnsureStyleRuleFor(ea);
       curRule.mRule = ea->mStyleRule;
 
-      // FIXME: maybe not needed anymore:
+      // FIXME (bug 828173): maybe not needed anymore:
       ForceLayerRerendering(primaryFrame, ea);
     } else if (curRule.mLevel == nsStyleSet::eTransitionSheet) {
       ElementTransitions *et =
@@ -269,7 +269,7 @@ CommonAnimationManager::UpdateThrottledStyle(dom::Element* aElement,
       et->EnsureStyleRuleFor(mPresContext->RefreshDriver()->MostRecentRefresh());
       curRule.mRule = et->mStyleRule;
 
-      // FIXME: maybe not needed anymore:
+      // FIXME (bug 828173): maybe not needed anymore:
       ForceLayerRerendering(primaryFrame, et);
     } else {
       curRule.mRule = ruleNode->GetRule();
