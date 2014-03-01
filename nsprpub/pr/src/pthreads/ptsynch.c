@@ -429,11 +429,12 @@ PR_IMPLEMENT(PRStatus) PR_NotifyAllCondVar(PRCondVar *cvar)
 
 /*
  * Notifies just get posted to the monitor. The actual notification is done
- * when the monitor is exited so that MP systems don't contend for a monitor
- * that they can't enter.
+ * when the monitor is fully exited so that MP systems don't contend for a
+ * monitor that they can't enter.
  */
 static void pt_PostNotifyToMonitor(PRMonitor *mon, PRBool broadcast)
 {
+    PR_ASSERT(NULL != mon);
     PR_ASSERT_CURRENT_THREAD_IN_MONITOR(mon);
 
     /* mon->notifyTimes is protected by the monitor, so we don't need to
@@ -504,6 +505,7 @@ PR_IMPLEMENT(PRMonitor*) PR_NewMonitor(void)
     mon->notifyTimes = 0;
     mon->entryCount = 0;
     mon->refCount = 1;
+    mon->name = NULL;
     return mon;
 
 error3:
@@ -653,7 +655,7 @@ PR_IMPLEMENT(PRStatus) PR_ExitMonitor(PRMonitor *mon)
 PR_IMPLEMENT(PRStatus) PR_Wait(PRMonitor *mon, PRIntervalTime timeout)
 {
     PRStatus rv;
-    PRInt16 saved_entries;
+    PRUint32 saved_entries;
     pthread_t saved_owner;
 
     PR_ASSERT(mon != NULL);
@@ -708,14 +710,12 @@ PR_IMPLEMENT(PRStatus) PR_Wait(PRMonitor *mon, PRIntervalTime timeout)
 
 PR_IMPLEMENT(PRStatus) PR_Notify(PRMonitor *mon)
 {
-    PR_ASSERT(NULL != mon);
     pt_PostNotifyToMonitor(mon, PR_FALSE);
     return PR_SUCCESS;
 }  /* PR_Notify */
 
 PR_IMPLEMENT(PRStatus) PR_NotifyAll(PRMonitor *mon)
 {
-    PR_ASSERT(NULL != mon);
     pt_PostNotifyToMonitor(mon, PR_TRUE);
     return PR_SUCCESS;
 }  /* PR_NotifyAll */
