@@ -373,7 +373,7 @@ public class HomePager extends ViewPager {
             }
 
             if (mHomeBanner != null) {
-                mHomeBanner.setEnabled(position == mDefaultPageIndex);
+                mHomeBanner.setActive(position == mDefaultPageIndex);
             }
         }
 

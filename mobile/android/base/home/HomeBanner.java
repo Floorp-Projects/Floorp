@@ -45,8 +45,8 @@ public class HomeBanner extends LinearLayout
     // Used to detect for upwards scroll to push banner all the way up
     private boolean mSnapBannerToTop;
 
-    // Tracks if the banner has been enabled by HomePager to avoid race conditions.
-    private boolean mEnabled = false;
+    // Tracks whether or not the banner should be shown.
+    private boolean mActive = false;
 
     // The user is currently swiping between HomePager pages
     private boolean mScrollingPages = false;
@@ -141,8 +141,8 @@ public class HomeBanner extends LinearLayout
                     mTextView.setText(text);
                     setVisibility(VISIBLE);
 
-                    // Animate the banner if it is currently enabled.
-                    if (mEnabled) {
+                    // Animate the banner if it is currently active.
+                    if (mActive) {
                         animateUp();
                     }
                 }
@@ -173,20 +173,20 @@ public class HomeBanner extends LinearLayout
         });
     }
 
-    public void setEnabled(boolean enabled) {
+    public void setActive(boolean active) {
         // No need to animate if not changing
-        if (mEnabled == enabled) {
+        if (mActive == active) {
             return;
         }
 
-        mEnabled = enabled;
+        mActive = active;
 
         // Don't animate if the banner isn't visible.
         if (getVisibility() != View.VISIBLE) {
             return;
         }
 
-        if (enabled) {
+        if (active) {
             animateUp();
         } else {
             animateDown();
@@ -217,7 +217,7 @@ public class HomeBanner extends LinearLayout
     }
 
     public void handleHomeTouch(MotionEvent event) {
-        if (!mEnabled || getVisibility() == GONE || mScrollingPages) {
+        if (!mActive || getVisibility() == GONE || mScrollingPages) {
             return;
         }
 
