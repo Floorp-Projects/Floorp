@@ -140,7 +140,11 @@ public class HomeBanner extends LinearLayout
                 public void run() {
                     mTextView.setText(text);
                     setVisibility(VISIBLE);
-                    animateUp();
+
+                    // Animate the banner if it is currently enabled.
+                    if (mEnabled) {
+                        animateUp();
+                    }
                 }
             });
         } catch (JSONException e) {
@@ -176,6 +180,12 @@ public class HomeBanner extends LinearLayout
         }
 
         mEnabled = enabled;
+
+        // Don't animate if the banner isn't visible.
+        if (getVisibility() != View.VISIBLE) {
+            return;
+        }
+
         if (enabled) {
             animateUp();
         } else {
@@ -184,14 +194,9 @@ public class HomeBanner extends LinearLayout
     }
 
     private void animateUp() {
-        // Check to make sure that message has been received and the banner has been enabled.
-        // Necessary to avoid race conditions between show() and handleMessage() calls.
-        if (!mEnabled || TextUtils.isEmpty(mTextView.getText()) || mUserSwipedDown) {
-            return;
-        }
-
-        // No need to animate if already translated.
-        if (ViewHelper.getTranslationY(this) == 0) {
+        // Don't try to animate if the banner is already translated, or if the user swiped
+        // the banner down previously to hide it.
+        if (ViewHelper.getTranslationY(this) == 0 || mUserSwipedDown) {
             return;
         }
 
@@ -201,7 +206,7 @@ public class HomeBanner extends LinearLayout
     }
 
     private void animateDown() {
-        // No need to animate if already translated or gone.
+        // Don't try to animate if the banner is already translated.
         if (ViewHelper.getTranslationY(this) == getHeight()) {
             return;
         }
