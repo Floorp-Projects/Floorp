@@ -331,11 +331,11 @@ CustomElementCallback::Call()
       static_cast<LifecycleCreatedCallback *>(mCallback.get())->Call(mThisObject, rv);
       mOwnerData->mElementIsBeingCreated = false;
       break;
-    case nsIDocument::eEnteredView:
-      static_cast<LifecycleEnteredViewCallback *>(mCallback.get())->Call(mThisObject, rv);
+    case nsIDocument::eAttached:
+      static_cast<LifecycleAttachedCallback *>(mCallback.get())->Call(mThisObject, rv);
       break;
-    case nsIDocument::eLeftView:
-      static_cast<LifecycleLeftViewCallback *>(mCallback.get())->Call(mThisObject, rv);
+    case nsIDocument::eDetached:
+      static_cast<LifecycleDetachedCallback *>(mCallback.get())->Call(mThisObject, rv);
       break;
     case nsIDocument::eAttributeChanged:
       static_cast<LifecycleAttributeChangedCallback *>(mCallback.get())->Call(mThisObject,
@@ -1750,16 +1750,16 @@ CustomDefinitionsTraverse(CustomElementHashKey* aKey,
     cb->NoteXPCOMChild(aDefinition->mCallbacks->mCreatedCallback.Value());
   }
 
-  if (callbacks->mEnteredViewCallback.WasPassed()) {
+  if (callbacks->mAttachedCallback.WasPassed()) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb,
-      "mCustomDefinitions->mCallbacks->mEnteredViewCallback");
-    cb->NoteXPCOMChild(aDefinition->mCallbacks->mEnteredViewCallback.Value());
+      "mCustomDefinitions->mCallbacks->mAttachedCallback");
+    cb->NoteXPCOMChild(aDefinition->mCallbacks->mAttachedCallback.Value());
   }
 
-  if (callbacks->mLeftViewCallback.WasPassed()) {
+  if (callbacks->mDetachedCallback.WasPassed()) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb,
-      "mCustomDefinitions->mCallbacks->mLeftViewCallback");
-    cb->NoteXPCOMChild(aDefinition->mCallbacks->mLeftViewCallback.Value());
+      "mCustomDefinitions->mCallbacks->mDetachedCallback");
+    cb->NoteXPCOMChild(aDefinition->mCallbacks->mDetachedCallback.Value());
   }
 
   return PL_DHASH_NEXT;
@@ -5571,15 +5571,15 @@ nsDocument::EnqueueLifecycleCallback(nsIDocument::ElementCallbackType aType,
       }
       break;
 
-    case nsIDocument::eEnteredView:
-      if (definition->mCallbacks->mEnteredViewCallback.WasPassed()) {
-        func = definition->mCallbacks->mEnteredViewCallback.Value();
+    case nsIDocument::eAttached:
+      if (definition->mCallbacks->mAttachedCallback.WasPassed()) {
+        func = definition->mCallbacks->mAttachedCallback.Value();
       }
       break;
 
-    case nsIDocument::eLeftView:
-      if (definition->mCallbacks->mLeftViewCallback.WasPassed()) {
-        func = definition->mCallbacks->mLeftViewCallback.Value();
+    case nsIDocument::eDetached:
+      if (definition->mCallbacks->mDetachedCallback.WasPassed()) {
+        func = definition->mCallbacks->mDetachedCallback.Value();
       }
       break;
 
@@ -5922,12 +5922,12 @@ nsDocument::RegisterElement(JSContext* aCx, const nsAString& aType,
       EnqueueLifecycleCallback(nsIDocument::eCreated, elem, nullptr, definition);
       if (elem->GetCurrentDoc()) {
         // Normally callbacks can not be enqueued until the created
-        // callback has been invoked, however, the entered view callback
+        // callback has been invoked, however, the attached callback
         // in element upgrade is an exception so pretend the created
         // callback has been invoked.
         elem->GetCustomElementData()->mCreatedCallbackInvoked = true;
 
-        EnqueueLifecycleCallback(nsIDocument::eEnteredView, elem, nullptr, definition);
+        EnqueueLifecycleCallback(nsIDocument::eAttached, elem, nullptr, definition);
       }
     }
   }
