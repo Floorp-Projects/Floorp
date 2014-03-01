@@ -3995,6 +3995,10 @@
                   PrivateBrowsingUtils.isWindowPrivate(sourceNode.ownerDocument.defaultView))
                 return dt.effectAllowed = "none";
 
+              if (window.gMultiProcessBrowser !=
+                  sourceNode.ownerDocument.defaultView.gMultiProcessBrowser)
+                return dt.effectAllowed = "none";
+
 #ifdef XP_MACOSX
               return dt.effectAllowed = event.altKey ? "copy" : "move";
 #else
