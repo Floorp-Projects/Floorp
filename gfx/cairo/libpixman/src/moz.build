@@ -65,7 +65,6 @@ LOCAL_INCLUDES += [
     '../../cairo/src',
 ]
 
-
 if CONFIG['MOZ_USE_PTHREADS']:
     DEFINES['HAVE_PTHREAD_SETSPECIFIC'] = True
 
@@ -143,3 +142,16 @@ if use_arm_neon_gcc:
     DEFINES['USE_ARM_NEON'] = True
     SOURCES += ['pixman-arm-neon.c']
     SOURCES['pixman-arm-neon.c'].flags += ['-mfpu=neon']
+
+# Suppress warnings in third-party code.
+if CONFIG['GNU_CC']:
+    CFLAGS += [
+        '-Wno-address',
+        '-Wno-sign-compare'
+    ]
+    if CONFIG['CLANG_CXX']:
+        CFLAGS += [
+            '-Wno-incompatible-pointer-types',
+            '-Wno-tautological-compare',
+            '-Wno-tautological-constant-out-of-range-compare',
+        ]
