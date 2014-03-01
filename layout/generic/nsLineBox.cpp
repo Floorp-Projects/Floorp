@@ -43,7 +43,7 @@ nsLineBox::nsLineBox(nsIFrame* aFrame, int32_t aCount, bool aIsBlock)
   }
 #endif
 
-  static_assert(NS_STYLE_CLEAR_LAST_VALUE <= 15,
+  static_assert(NS_STYLE_CLEAR_MAX <= 15,
                 "FlagBits needs more bits to store the full range of "
                 "break type ('clear') values");
 #if NS_STYLE_CLEAR_NONE > 0
