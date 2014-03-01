@@ -222,7 +222,7 @@ PR_IMPLEMENT(PRTraceHandle)
                 break;
             }
             qnp = (QName *)PR_NEXT_LINK( &qnp->link );
-        } while( qnp != (QName *)PR_LIST_HEAD( &qNameList ));
+        } while( qnp != (QName *)&qNameList );
     }
     /*
     ** If we did not find a matching QName,
@@ -251,7 +251,7 @@ PR_IMPLEMENT(PRTraceHandle)
             */
             PR_ASSERT( strcmp(rnp->name, rName));
             rnp = (RName *)PR_NEXT_LINK( &rnp->link );
-        } while( rnp != (RName *)PR_LIST_HEAD( &qnp->rNameList ));
+        } while( rnp != (RName *)&qnp->rNameList );
     }
 
     /* Get a new RName structure; initialize its members */
