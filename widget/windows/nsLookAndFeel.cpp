@@ -18,33 +18,27 @@
 using namespace mozilla;
 using namespace mozilla::widget;
 
-enum WinVersion {
-  WINXP_VERSION     = 0x501,
-  WIN2K3_VERSION    = 0x502,
-  VISTA_VERSION     = 0x600,
-  WIN7_VERSION      = 0x601,
-  WIN8_VERSION      = 0x602,
-  WIN8_1_VERSION    = 0x603
-};
-
-static WinVersion GetWindowsVersion()
+//static
+LookAndFeel::OperatingSystemVersion
+nsLookAndFeel::GetOperatingSystemVersion()
 {
-  static int32_t version = 0;
+  static OperatingSystemVersion version = eOperatingSystemVersion_Unknown;
 
-  if (version) {
-    return static_cast<WinVersion>(version);
+  if (version != eOperatingSystemVersion_Unknown) {
+    return version;
   }
 
-  OSVERSIONINFOEX osInfo;
-  osInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
-  // This cast is safe and supposed to be here, don't worry
-#pragma warning(push)
-#pragma warning(disable:4996)
-  ::GetVersionEx((OSVERSIONINFO*)&osInfo);
-#pragma warning(pop)
-  version =
-    (osInfo.dwMajorVersion & 0xff) << 8 | (osInfo.dwMinorVersion & 0xff);
-  return static_cast<WinVersion>(version);
+  if (IsWin8OrLater()) {
+    version = eOperatingSystemVersion_Windows8;
+  } else if (IsWin7OrLater()) {
+    version = eOperatingSystemVersion_Windows7;
+  } else if (IsVistaOrLater()) {
+    version = eOperatingSystemVersion_WindowsVista;
+  } else {
+    version = eOperatingSystemVersion_WindowsXP;
+  }
+
+  return version;
 }
 
 static nsresult GetColorFromTheme(nsUXThemeClass cls,
@@ -417,25 +411,7 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
 
     case eIntID_OperatingSystemVersionIdentifier:
     {
-        switch (GetWindowsVersion()) {
-            case WINXP_VERSION:
-            case WIN2K3_VERSION:
-                aResult = LookAndFeel::eOperatingSystemVersion_WindowsXP;
-                break;
-            case VISTA_VERSION:
-                aResult = LookAndFeel::eOperatingSystemVersion_WindowsVista;
-                break;
-            case WIN7_VERSION:
-                aResult = LookAndFeel::eOperatingSystemVersion_Windows7;
-                break;
-            case WIN8_VERSION:
-            case WIN8_1_VERSION:
-                aResult = LookAndFeel::eOperatingSystemVersion_Windows8;
-                break;
-            default:
-                aResult = LookAndFeel::eOperatingSystemVersion_Unknown;
-                break;
-        }
+        aResult = GetOperatingSystemVersion();
         break;
     }
 
