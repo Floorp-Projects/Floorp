@@ -24,13 +24,14 @@ public:
   }
 
   // Process with an array of delays, in frames, for each frame.
+  // Each delay must be > 0 and < MaxDelayFrames().
   void Process(const double *aPerFrameDelays,
                const float* const* aInputChannels,
                float* const* aOutputChannels,
                int aChannelCount, int aFramesToProcess);
 
   // Process with a constant delay, which will be smoothed with the previous
-  // delay.
+  // delay.  The delay must be > 0 and < MaxDelayFrames().
   void Process(double aDelayFrames, const float* const* aInputChannels,
                float* const* aOutputChannels, int aChannelCount,
                int aFramesToProcess);

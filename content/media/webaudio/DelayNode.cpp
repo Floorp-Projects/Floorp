@@ -129,13 +129,14 @@ public:
 
 
     bool inCycle = aStream->AsProcessedStream()->InCycle();
+    double minDelay = inCycle ? static_cast<double>(WEBAUDIO_BLOCK_SIZE) : 0.0;
+    double maxDelay = mBuffer.MaxDelayFrames();
     double sampleRate = aStream->SampleRate();
     if (mDelay.HasSimpleValue()) {
       // If this DelayNode is in a cycle, make sure the delay value is at least
       // one block.
-      float delayFrames = mDelay.GetValue() * sampleRate;
-      float delayFramesClamped = inCycle ? std::max(static_cast<float>(WEBAUDIO_BLOCK_SIZE), delayFrames) :
-                                           delayFrames;
+      double delayFrames = mDelay.GetValue() * sampleRate;
+      double delayFramesClamped = clamped(delayFrames, minDelay, maxDelay);
       mBuffer.Process(delayFramesClamped, inputChannels, outputChannels,
                       numChannels, WEBAUDIO_BLOCK_SIZE);
     } else {
@@ -145,9 +146,8 @@ public:
       double computedDelay[WEBAUDIO_BLOCK_SIZE];
       TrackTicks tick = aStream->GetCurrentPosition();
       for (size_t counter = 0; counter < WEBAUDIO_BLOCK_SIZE; ++counter) {
-        float delayAtTick = mDelay.GetValueAtTime(tick, counter) * sampleRate;
-        float delayAtTickClamped = inCycle ? std::max(static_cast<float>(WEBAUDIO_BLOCK_SIZE), delayAtTick) :
-                                             delayAtTick;
+        double delayAtTick = mDelay.GetValueAtTime(tick, counter) * sampleRate;
+        double delayAtTickClamped = clamped(delayAtTick, minDelay, maxDelay);
         computedDelay[counter] = delayAtTickClamped;
       }
       mBuffer.Process(computedDelay, inputChannels, outputChannels,
