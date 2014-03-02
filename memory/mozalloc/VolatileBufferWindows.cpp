@@ -2,13 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#if defined(XP_WIN) || defined(XP_OS2)
+#if defined(XP_WIN)
 #  define MOZALLOC_EXPORT __declspec(dllexport)
 #endif
 
 #include "VolatileBuffer.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/mozalloc.h"
+#include "mozilla/WindowsVersion.h"
 
 #include <windows.h>
 
@@ -45,24 +46,7 @@ VolatileBuffer::Init(size_t aSize, size_t aAlignment)
     goto heap_alloc;
   }
 
-  static bool sCheckedVersion = false;
-  static bool sUndoSupported = false;
-  if (!sCheckedVersion) {
-    OSVERSIONINFOEX verinfo = { 0 };
-    verinfo.dwOSVersionInfoSize = sizeof(verinfo);
-    verinfo.dwMajorVersion = 6;
-    verinfo.dwMinorVersion = 2;
-
-    DWORDLONG mask = 0;
-    VER_SET_CONDITION(mask, VER_MAJORVERSION, VER_GREATER_EQUAL);
-    VER_SET_CONDITION(mask, VER_MINORVERSION, VER_GREATER_EQUAL);
-
-    sUndoSupported = VerifyVersionInfo(&verinfo,
-                                       VER_MAJORVERSION | VER_MINORVERSION,
-                                       mask);
-    sCheckedVersion = true;
-  }
-
+  static bool sUndoSupported = IsWin8OrLater();
   if (!sUndoSupported) {
     goto heap_alloc;
   }
