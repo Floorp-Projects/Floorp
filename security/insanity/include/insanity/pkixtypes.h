@@ -73,8 +73,11 @@ public:
   // Find all certificates (intermediate and/or root) in the certificate
   // database that have a subject name matching |encodedIssuerName| at
   // the given time. Certificates where the given time is not within the
-  // certificate's validity period may be excluded. The results should be
-  // added to the |results| certificate list.
+  // certificate's validity period may be excluded. On input, |results|
+  // will be null on input. If no potential issuers are found, then this
+  // function should return SECSuccess with results being either null or
+  // an empty list. Otherwise, this function should construct a
+  // CERTCertList and return it in |results|, transfering ownership.
   virtual SECStatus FindPotentialIssuers(const SECItem* encodedIssuerName,
                                          PRTime time,
                                  /*out*/ ScopedCERTCertList& results) = 0;
