@@ -22,6 +22,7 @@
 #endif
 
 class nsLookAndFeel: public nsXPLookAndFeel {
+  static OperatingSystemVersion GetOperatingSystemVersion();
 public:
   nsLookAndFeel();
   virtual ~nsLookAndFeel();
