@@ -34,8 +34,9 @@ DelayBuffer::Process(const double *aPerFrameDelays,
     float* output = aOutputChannels[channel];
 
     for (int i = 0; i < aFramesToProcess; ++i) {
-      currentDelayFrames = clamped(aPerFrameDelays[i],
-                                   0.0, static_cast<double>(mMaxDelayFrames));
+      currentDelayFrames = aPerFrameDelays[i];
+      MOZ_ASSERT(currentDelayFrames >= 0.0);
+      MOZ_ASSERT(currentDelayFrames <= static_cast<double>(mMaxDelayFrames));
 
       // Write the input sample to the correct location in our buffer
       buffer[writeIndex] = input ? input[i] : 0.0f;
