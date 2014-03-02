@@ -26,7 +26,7 @@
 #define HRTFPanner_h
 
 #include "FFTConvolver.h"
-#include "DelayProcessor.h"
+#include "DelayBuffer.h"
 
 namespace mozilla {
 struct AudioChunk;
@@ -99,8 +99,8 @@ private:
     FFTConvolver m_convolverL2;
     FFTConvolver m_convolverR2;
 
-    mozilla::DelayProcessor m_delayLineL;
-    mozilla::DelayProcessor m_delayLineR;
+    mozilla::DelayBuffer m_delayLineL;
+    mozilla::DelayBuffer m_delayLineR;
 
     AudioFloatArray m_tempL1;
     AudioFloatArray m_tempR1;

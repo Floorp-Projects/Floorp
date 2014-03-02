@@ -10,7 +10,7 @@
 #include "AudioNodeStream.h"
 #include "AudioDestinationNode.h"
 #include "WebAudioUtils.h"
-#include "DelayProcessor.h"
+#include "DelayBuffer.h"
 #include "PlayingRefChangeHandler.h"
 
 namespace mozilla {
@@ -37,9 +37,9 @@ public:
     // Keep the default value in sync with the default value in DelayNode::DelayNode.
     , mDelay(0.f)
     // Use a smoothing range of 20ms
-    , mProcessor(aMaxDelayFrames,
-                 WebAudioUtils::ComputeSmoothingRate(0.02,
-                                                     mDestination->SampleRate()))
+    , mBuffer(aMaxDelayFrames,
+              WebAudioUtils::ComputeSmoothingRate(0.02,
+                                                  mDestination->SampleRate()))
     , mLeftOverData(INT32_MIN)
   {
   }
@@ -81,7 +81,7 @@ public:
     MOZ_ASSERT(aStream->SampleRate() == mDestination->SampleRate());
 
     const uint32_t numChannels = aInput.IsNull() ?
-                                 mProcessor.BufferChannelCount() :
+                                 mBuffer.ChannelCount() :
                                  aInput.mChannelData.Length();
 
     if (!aInput.IsNull()) {
@@ -91,14 +91,14 @@ public:
         aStream->Graph()->
           DispatchToMainThreadAfterStreamStateUpdate(refchanged.forget());
       }
-      mLeftOverData = mProcessor.MaxDelayFrames();
+      mLeftOverData = mBuffer.MaxDelayFrames();
     } else if (mLeftOverData > 0) {
       mLeftOverData -= WEBAUDIO_BLOCK_SIZE;
     } else {
       if (mLeftOverData != INT32_MIN) {
         mLeftOverData = INT32_MIN;
         // Delete our buffered data now we no longer need it
-        mProcessor.Reset();
+        mBuffer.Reset();
 
         nsRefPtr<PlayingRefChanged> refchanged =
           new PlayingRefChanged(aStream, PlayingRefChanged::RELEASE);
@@ -136,8 +136,8 @@ public:
       float delayFrames = mDelay.GetValue() * sampleRate;
       float delayFramesClamped = inCycle ? std::max(static_cast<float>(WEBAUDIO_BLOCK_SIZE), delayFrames) :
                                            delayFrames;
-      mProcessor.Process(delayFramesClamped, inputChannels, outputChannels,
-                         numChannels, WEBAUDIO_BLOCK_SIZE);
+      mBuffer.Process(delayFramesClamped, inputChannels, outputChannels,
+                      numChannels, WEBAUDIO_BLOCK_SIZE);
     } else {
       // Compute the delay values for the duration of the input AudioChunk
       // If this DelayNode is in a cycle, make sure the delay value is at least
@@ -150,15 +150,15 @@ public:
                                              delayAtTick;
         computedDelay[counter] = delayAtTickClamped;
       }
-      mProcessor.Process(computedDelay, inputChannels, outputChannels,
-                         numChannels, WEBAUDIO_BLOCK_SIZE);
+      mBuffer.Process(computedDelay, inputChannels, outputChannels,
+                      numChannels, WEBAUDIO_BLOCK_SIZE);
     }
   }
 
   AudioNodeStream* mSource;
   AudioNodeStream* mDestination;
   AudioParamTimeline mDelay;
-  DelayProcessor mProcessor;
+  DelayBuffer mBuffer;
   // How much data we have in our buffer which needs to be flushed out when our inputs
   // finish.
   int32_t mLeftOverData;
