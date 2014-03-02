@@ -410,22 +410,24 @@ void nsViewManager::ProcessPendingUpdatesForView(nsView* aView,
       }
       NS_ASSERTION(aView->HasWidget(), "FlushDelayedResize removed our widget!");
 
+      if (presShell) {
 #ifdef MOZ_DUMP_PAINTING
-      if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
-        printf_stderr("---- PAINT START ----PresShell(%p), nsView(%p), nsIWidget(%p)\n", presShell, aView, widget);
-      }
+        if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
+          printf_stderr("---- PAINT START ----PresShell(%p), nsView(%p), nsIWidget(%p)\n", presShell, aView, widget);
+        }
 #endif
-      nsAutoScriptBlocker scriptBlocker;
-      SetPainting(true);
-      presShell->Paint(aView, nsRegion(), nsIPresShell::PAINT_LAYERS);
+        nsAutoScriptBlocker scriptBlocker;
+        SetPainting(true);
+        presShell->Paint(aView, nsRegion(), nsIPresShell::PAINT_LAYERS);
 #ifdef MOZ_DUMP_PAINTING
-      if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
-        printf_stderr("---- PAINT END ----\n");
-      }
+        if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
+          printf_stderr("---- PAINT END ----\n");
+        }
 #endif
 
-      aView->SetForcedRepaint(false);
-      SetPainting(false);
+        aView->SetForcedRepaint(false);
+        SetPainting(false);
+      }
       viewManager->FlushDirtyRegionToWidget(aView);
     } else {
       viewManager->FlushDirtyRegionToWidget(aView);
