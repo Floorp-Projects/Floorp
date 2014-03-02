@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "DelayProcessor.h"
+#include "DelayBuffer.h"
 
 #include "mozilla/PodOperations.h"
 #include "AudioSegment.h"
@@ -12,10 +12,10 @@
 namespace mozilla {
 
 void
-DelayProcessor::Process(const double *aPerFrameDelays,
-                        const float* const* aInputChannels,
-                        float* const* aOutputChannels,
-                        int aChannelCount, int aFramesToProcess)
+DelayBuffer::Process(const double *aPerFrameDelays,
+                     const float* const* aInputChannels,
+                     float* const* aOutputChannels,
+                     int aChannelCount, int aFramesToProcess)
 {
   if (!EnsureBuffer(aChannelCount)) {
     for (int channel = 0; channel < aChannelCount; ++channel) {
@@ -77,9 +77,9 @@ DelayProcessor::Process(const double *aPerFrameDelays,
 }
 
 void
-DelayProcessor::Process(double aDelayFrames, const float* const* aInputChannels,
-                        float* const* aOutputChannels, int aChannelCount,
-                        int aFramesToProcess)
+DelayBuffer::Process(double aDelayFrames, const float* const* aInputChannels,
+                     float* const* aOutputChannels, int aChannelCount,
+                     int aFramesToProcess)
 {
   const bool firstTime = !mBuffer.Length();
   double currentDelay = firstTime ? aDelayFrames : mCurrentDelay;
@@ -98,7 +98,7 @@ DelayProcessor::Process(double aDelayFrames, const float* const* aInputChannels,
 }
 
 bool
-DelayProcessor::EnsureBuffer(uint32_t aNumberOfChannels)
+DelayBuffer::EnsureBuffer(uint32_t aNumberOfChannels)
 {
   if (aNumberOfChannels == 0) {
     return false;
