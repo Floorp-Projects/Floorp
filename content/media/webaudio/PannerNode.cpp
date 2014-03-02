@@ -302,7 +302,7 @@ PannerNodeEngine::HRTFPanningFunction(const AudioChunk& aInput,
     }
   }
 
-  mHRTFPanner->pan(azimuth, elevation, &input, aOutput, WEBAUDIO_BLOCK_SIZE);
+  mHRTFPanner->pan(azimuth, elevation, &input, aOutput);
 }
 
 void

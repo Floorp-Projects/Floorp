@@ -43,8 +43,8 @@ public:
     HRTFPanner(float sampleRate, mozilla::TemporaryRef<HRTFDatabaseLoader> databaseLoader);
     ~HRTFPanner();
 
-    // framesToProcess must be a power of 2 and greater than 128
-    void pan(double azimuth, double elevation, const AudioChunk* inputBus, AudioChunk* outputBus, mozilla::TrackTicks framesToProcess);
+    // chunk durations must be 128
+    void pan(double azimuth, double elevation, const AudioChunk* inputBus, AudioChunk* outputBus);
     void reset();
 
     size_t fftSize() const { return m_convolverL1.fftSize(); }
