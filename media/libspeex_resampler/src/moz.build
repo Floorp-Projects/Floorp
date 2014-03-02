@@ -39,3 +39,5 @@ else:
 if CONFIG['INTEL_ARCHITECTURE'] and CONFIG['OS_TARGET'] != 'Android':
     DEFINES['_USE_SSE'] = True
     DEFINES['_USE_SSE2'] = True
+    if CONFIG['GNU_CC']:
+        SOURCES['resample.c'].flags += ['-msse2']
