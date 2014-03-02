@@ -20,6 +20,7 @@ using namespace js::jit;
 LIRGraph::LIRGraph(MIRGraph *mir)
   : blocks_(mir->alloc()),
     constantPool_(mir->alloc()),
+    constantPoolMap_(mir->alloc()),
     safepoints_(mir->alloc()),
     nonCallSafepoints_(mir->alloc()),
     numVirtualRegisters_(0),
@@ -35,8 +36,15 @@ LIRGraph::LIRGraph(MIRGraph *mir)
 bool
 LIRGraph::addConstantToPool(const Value &v, uint32_t *index)
 {
+    JS_ASSERT(constantPoolMap_.initialized());
+
+    ConstantPoolMap::AddPtr p = constantPoolMap_.lookupForAdd(v);
+    if (p) {
+        *index = p->value();
+        return true;
+    }
     *index = constantPool_.length();
-    return constantPool_.append(v);
+    return constantPool_.append(v) && constantPoolMap_.add(p, v, *index);
 }
 
 bool
