@@ -8,6 +8,8 @@ const MAX_SUGGESTIONS = 15;
 // Pref which decides if CSS autocompletion is enabled in Style Editor or not.
 const AUTOCOMPLETION_PREF = "devtools.styleeditor.autocompletion-enabled";
 
+const {CSSProperties, CSSValues} = getCSSKeywords();
+
 // Test cases to test that autocompletion works correctly when enabled.
 // Format:
 // [
@@ -28,21 +30,21 @@ let TEST_CASES = [
   ['VK_RIGHT', -1],
   ['VK_RIGHT', -1],
   ['VK_RIGHT', -1],
-  [-1, MAX_SUGGESTIONS, 0],
+  [-1, getSuggestionNumberFor("font"), 0],
   ['VK_END', -1],
   ['VK_RETURN', -1],
-  ['b', MAX_SUGGESTIONS, 0],
-  ['a', 11, 0],
-  ['VK_DOWN', 11, 0, 1],
-  ['VK_TAB', 11, 1, 1],
+  ['b', getSuggestionNumberFor("b"), 0],
+  ['a', getSuggestionNumberFor("ba"), 0],
+  ['VK_DOWN', getSuggestionNumberFor("ba"), 0, 1],
+  ['VK_TAB', getSuggestionNumberFor("ba"), 1, 1],
   [':', -1],
-  ['b', 9, 0],
-  ['l', 4, 0],
-  ['VK_TAB', 4, 0, 1],
-  ['VK_DOWN', 4, 1, 1],
-  ['VK_UP', 4, 0, 1],
-  ['VK_TAB', 4, 1, 1],
-  ['VK_TAB', 4, 2, 1],
+  ['b', getSuggestionNumberFor("background", "b"), 0],
+  ['l', getSuggestionNumberFor("background", "bl"), 0],
+  ['VK_TAB', getSuggestionNumberFor("background", "bl"), 0, 1],
+  ['VK_DOWN', getSuggestionNumberFor("background", "bl"), 1, 1],
+  ['VK_UP', getSuggestionNumberFor("background", "bl"), 0, 1],
+  ['VK_TAB', getSuggestionNumberFor("background", "bl"), 1, 1],
+  ['VK_TAB', getSuggestionNumberFor("background", "bl"), 2, 1],
   ['VK_LEFT', -1],
   ['VK_RIGHT', -1],
   ['VK_DOWN', -1],
@@ -188,4 +190,43 @@ function cleanup() {
   gEditor = null;
   gPopup = null;
   finish();
+}
+
+/**
+ * Returns a list of all property names and a map of property name vs possible
+ * CSS values provided by the Gecko engine.
+ *
+ * @return {Object} An object with following properties:
+ *         - CSSProperties {Array} Array of string containing all the possible
+ *                         CSS property names.
+ *         - CSSValues {Object|Map} A map where key is the property name and
+ *                     value is an array of string containing all the possible
+ *                     CSS values the property can have.
+ */
+function getCSSKeywords() {
+  let domUtils = Cc["@mozilla.org/inspector/dom-utils;1"]
+                   .getService(Ci.inIDOMUtils);
+  let props = {};
+  let propNames = domUtils.getCSSPropertyNames(domUtils.INCLUDE_ALIASES);
+  propNames.forEach(prop => {
+    props[prop] = domUtils.getCSSValuesForProperty(prop).sort();
+  });
+  return {
+    CSSValues: props,
+    CSSProperties: propNames.sort()
+  };
+}
+
+/**
+ * Returns the number of expected suggestions for the given property and value.
+ * If the value is not null, returns the number of values starting with `value`.
+ * Returns the number of properties starting with `property` otherwise.
+ */
+function getSuggestionNumberFor(property, value) {
+  if (!value) {
+    return CSSProperties.filter(prop => prop.startsWith(property))
+                        .slice(0, MAX_SUGGESTIONS).length;
+  }
+  return CSSValues[property].filter(val => val.startsWith(value))
+                            .slice(0, MAX_SUGGESTIONS).length;
 }
