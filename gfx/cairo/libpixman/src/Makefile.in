@@ -6,61 +6,12 @@ ifeq ($(OS_TARGET),Android)
 MODULE_OPTIMIZE_FLAGS = -O2
 endif
 
-# Build MMX code either with VC or with gcc-on-x86
-ifdef _MSC_VER
-ifeq (86,$(findstring 86,$(OS_TEST)))
-USE_SSE2=1
-MMX_CFLAGS=
-SSE2_CFLAGS=
-endif
-endif
-
-ifdef GNU_CC
-ifeq (ppc,$(findstring ppc,$(OS_TEST)))
-VMX_CFLAGS=-maltivec
-endif
-ifeq (86,$(findstring 86,$(OS_TEST)))
-MMX_CFLAGS=-mmmx -Winline
-ifeq (64,$(findstring 64,$(OS_TEST)))
-USE_SSE2=1
-endif
-ifdef HAVE_GCC_ALIGN_ARG_POINTER
-USE_SSE2=1
-endif
-ifdef USE_SSE2
-SSE2_CFLAGS=-msse -msse2 -Winline
-endif
-MMX_CFLAGS+=--param inline-unit-growth=10000 --param large-function-growth=10000
-endif
-ifeq (arm,$(findstring arm,$(OS_TEST)))
-# Apple's arm assembler doesn't support the same syntax as
-# the standard GNU assembler, so use the C fallback paths for now.
-# This may be fixable if clang's ARM/iOS assembler improves into a
-# viable solution in the future.
-ifneq (Darwin,$(OS_ARCH))
-ifdef HAVE_ARM_NEON
-ARM_NEON_CFLAGS = -mfpu=neon
-endif
-endif
-endif
-
-endif
-
 include $(topsrcdir)/config/rules.mk
 
 # Disable spammy "missing initializer" GCC warning
 ifdef GNU_CC
 CFLAGS += -Wno-missing-field-initializers
 endif # GNU_CC
-
-# special rule for pixman-mmx to get the right cflags
-pixman-mmx.$(OBJ_SUFFIX): COMPILE_CFLAGS += $(MMX_CFLAGS)
-
-pixman-sse2.$(OBJ_SUFFIX): COMPILE_CFLAGS += $(SSE2_CFLAGS)
-
-pixman-arm-neon.$(OBJ_SUFFIX): COMPILE_CFLAGS += $(ARM_NEON_CFLAGS)
-
-pixman-vmx.$(OBJ_SUFFIX): COMPILE_CFLAGS += $(VMX_CFLAGS)
 
 # The ARM asm functions here don't appreciate being called by functions
 # compiled with -mapcs-frame.  See bug 832752.

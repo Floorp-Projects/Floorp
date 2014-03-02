@@ -29,17 +29,5 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
 CXXFLAGS += $(CAIRO_FT_CFLAGS) $(MOZ_PANGO_CFLAGS)
 endif
 
-# The file uses SSE2 intrinsics, so it needs special compile flags on some
-# compilers.
-ifneq (,$(INTEL_ARCHITECTURE))
-ifdef GNU_CC
-gfxAlphaRecoverySSE2.$(OBJ_SUFFIX): CXXFLAGS+=-msse2
-endif
-
-ifdef SOLARIS_SUNPRO_CXX
-gfxAlphaRecoverySSE2.$(OBJ_SUFFIX): OS_CXXFLAGS += -xarch=sse2 -xO4
-endif
-endif
-
 DeprecatedPremultiplyTables.h: $(srcdir)/genTables.py
 	$(PYTHON) $(srcdir)/genTables.py
