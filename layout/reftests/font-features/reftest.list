@@ -14,8 +14,7 @@ HTTP(..) != font-features-noliga.html font-features-ref.html
 HTTP(..) != font-features-hlig.html font-features-ref.html
 
 # compare Turkish rendering with reference using ZWNJ to break the ligature
-# (also works via Pango)
-fails-if(d2d) HTTP(..) == font-features-turkish.html font-features-turkish-ref.html
+HTTP(..) == font-features-turkish.html font-features-turkish-ref.html
 
 # compare Turkish rendering with explicitly disabled ligatures
 HTTP(..) == font-features-turkish.html font-features-noliga.html

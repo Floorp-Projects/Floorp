@@ -3400,6 +3400,8 @@ PR_EXTERN(PRStatus) _pr_push_ipv6toipv4_layer(PRFileDesc *fd);
 extern PRBool _pr_ipv6_is_present(void);
 PR_IMPLEMENT(PRBool) _pr_test_ipv6_socket()
 {
+    int osfd;
+
 #if defined(DARWIN)
     /*
      * Disable IPv6 if Darwin version is less than 7.0.0 (OS X 10.3).  IPv6 on
@@ -3412,24 +3414,18 @@ PR_IMPLEMENT(PRBool) _pr_test_ipv6_socket()
     }
 #endif
 
-#if defined(LINUX)
-    /* If /proc/net/if_inet6 exists, the Linux kernel supports IPv6. */
-    int rv = access("/proc/net/if_inet6", F_OK);
-    return (rv == 0);
-#else
     /*
      * HP-UX only: HP-UX IPv6 Porting Guide (dated February 2001)
      * suggests that we call open("/dev/ip6", O_RDWR) to determine
      * whether IPv6 APIs and the IPv6 stack are on the system.
      * Our portable test below seems to work fine, so I am using it.
      */
-    PRInt32 osfd = socket(AF_INET6, SOCK_STREAM, 0);
+    osfd = socket(AF_INET6, SOCK_STREAM, 0);
     if (osfd != -1) {
         close(osfd);
         return PR_TRUE;
     }
     return PR_FALSE;
-#endif
 }
 #endif	/* _PR_INET6_PROBE */
 #endif

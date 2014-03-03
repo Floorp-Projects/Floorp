@@ -41,10 +41,11 @@ interface nsIWebBrowserPrint;
 interface nsIVariant;
 interface nsIPrivacyTransitionObserver;
 interface nsIReflowObserver;
+interface nsIScrollObserver;
 
 typedef unsigned long nsLoadFlags;
 
-[scriptable, builtinclass, uuid(d0eaef67-4234-47de-b05a-9c7b324eb4f4)]
+[scriptable, builtinclass, uuid(e46d924d-c20f-4add-8cf5-1e1c817b2181)]
 interface nsIDocShell : nsIDocShellTreeItem
 {
   /**
@@ -666,6 +667,24 @@ interface nsIDocShell : nsIDocShellTreeItem
   [noscript] void notifyReflowObservers(in bool interruptible,
                                         in DOMHighResTimeStamp start,
                                         in DOMHighResTimeStamp end);
+
+  /**
+   * Add an observer to the list of parties to be notified when scroll position
+   * of some elements is changed.
+   */
+  [noscript] void addWeakScrollObserver(in nsIScrollObserver obs);
+
+  /**
+   * Add an observer to the list of parties to be notified when scroll position
+   * of some elements is changed.
+   */
+  [noscript] void removeWeakScrollObserver(in nsIScrollObserver obs);
+
+  /**
+   * Notify all attached observers that the scroll position of some element
+   * has changed.
+   */
+  [noscript] void notifyScrollObservers();
 
   /**
    * Returns true if this docshell corresponds to an <iframe mozbrowser>.

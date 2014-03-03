@@ -50,7 +50,6 @@ private:
   bool mNeedsYFlip;
   bool mIsD2DTexture;
   bool mHasAlpha;
-  bool mForceReadback;
 
   nsAutoArrayPtr<uint8_t> mCachedTempBlob;
   uint32_t mCachedTempBlob_Size;

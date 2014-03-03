@@ -1438,6 +1438,8 @@ function MapTypedParImplDepth1(inArray, inArrayType, outArrayType, func) {
   const mode = undefined;
 
   const outArray = new outArrayType(length);
+  if (length === 0)
+    return outArray;
 
   const outGrainTypeIsTransparent = ObjectIsTransparentTypedObject(outArray);
 

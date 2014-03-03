@@ -5263,11 +5263,6 @@ void PresShell::SetIgnoreViewportScrolling(bool aIgnore)
   SetRenderingState(state);
 }
 
-void PresShell::SetDisplayPort(const nsRect& aDisplayPort)
-{
-  NS_ABORT_IF_FALSE(false, "SetDisplayPort is deprecated");
-}
-
 nsresult PresShell::SetResolution(float aXResolution, float aYResolution)
 {
   if (!(aXResolution > 0.0 && aYResolution > 0.0)) {

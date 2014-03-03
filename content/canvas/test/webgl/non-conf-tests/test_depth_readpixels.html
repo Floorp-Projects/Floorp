@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>WebGL test: Check for error on ReadPixels from a depth-only FB.</title>
+<script src="/MochiKit/MochiKit.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<script src="webgl-util.js"></script>
+<script src="driver-info.js"></script>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script>
+"use strict";
+
+(function() {
+  var gl = WebGLUtil.getWebGL('c');
+  if (!gl) {
+    todo(gl, 'Get GL working here first.');
+    return;
+  }
+
+  var rb = gl.createRenderbuffer();
+  gl.bindRenderbuffer(gl.RENDERBUFFER, rb);
+  gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, 4, 4);
+
+  var fb = gl.createFramebuffer();
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+  gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT,
+                             gl.RENDERBUFFER, rb);
+
+  if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) != gl.FRAMEBUFFER_COMPLETE) {
+    todo(false, 'Depth-only FB incomplete. This is valid.');
+    return;
+  }
+
+  ok(!gl.getError(), 'Should have no errors after constructing FB.');
+
+  var pixels = new Uint8Array([1, 2, 3, 4]);
+  gl.readPixels(0, 0, // x,y
+                1, 1, // w,h
+                gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+
+  ok(gl.getError() == gl.INVALID_OPERATION,
+     '1x1 color read from a depth FB should generated INVALID_OP.');
+  console.log('Data after 1x1 color-from-depth readpixels:');
+  console.log(pixels);
+
+  gl.readPixels(0, 0, // x,y
+                0, 0, // w,h
+                gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+
+  ok(gl.getError() == gl.INVALID_OPERATION,
+     '0x0 color read from a depth FB should generated INVALID_OP.');
+})();
+
+ok(true, 'Test complete.');
+
+</script>
+</body>
+</html>

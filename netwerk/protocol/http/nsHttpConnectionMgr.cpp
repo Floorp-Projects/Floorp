@@ -2132,6 +2132,10 @@ nsHttpConnectionMgr::OnMsgShutdown(int32_t, void *param)
         mTimeoutTick = nullptr;
         mTimeoutTickArmed = false;
     }
+    if (mTimer) {
+      mTimer->Cancel();
+      mTimer = nullptr;
+    }
 
     // signal shutdown complete
     nsRefPtr<nsIRunnable> runnable =

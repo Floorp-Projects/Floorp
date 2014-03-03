@@ -970,13 +970,15 @@ nsNSSCertificateDB::SetCertTrust(nsIX509Cert *cert,
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  SECStatus srv;
   nsNSSCertTrust trust;
-  nsCOMPtr<nsIX509Cert2> pipCert = do_QueryInterface(cert);
-  if (!pipCert)
-    return NS_ERROR_FAILURE;
+  nsresult rv;
+  nsCOMPtr<nsIX509Cert2> pipCert = do_QueryInterface(cert, &rv);
+  if (!pipCert) {
+    return rv;
+  }
   insanity::pkix::ScopedCERTCertificate nsscert(pipCert->GetCert());
 
+  SECStatus srv;
   if (type == nsIX509Cert::CA_CERT) {
     // always start with untrusted and move up
     trust.SetValidCA();
@@ -1004,7 +1006,7 @@ nsNSSCertificateDB::SetCertTrust(nsIX509Cert *cert,
     // ignore user certs
     return NS_OK;
   }
-  return (srv) ? NS_ERROR_FAILURE : NS_OK;
+  return MapSECStatus(srv);
 }
 
 NS_IMETHODIMP 
@@ -1591,7 +1593,7 @@ NS_IMETHODIMP nsNSSCertificateDB::AddCertFromBase64(const char *aBase64, const c
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Creating temp cert\n"));
   CERTCertDBHandle *certdb = CERT_GetDefaultCertDB();
   insanity::pkix::ScopedCERTCertificate tmpCert(CERT_FindCertByDERCert(certdb, &der));
-  if (!tmpCert) 
+  if (!tmpCert)
     tmpCert = CERT_NewTempCertificate(certdb, &der,
                                       nullptr, false, true);
   nsMemory::Free(der.data);
@@ -1600,7 +1602,7 @@ NS_IMETHODIMP nsNSSCertificateDB::AddCertFromBase64(const char *aBase64, const c
 
   if (!tmpCert) {
     NS_ERROR("Couldn't create cert from DER blob");
-    return NS_ERROR_FAILURE;
+    return MapSECStatus(SECFailure);
   }
 
   if (tmpCert->isperm) {
@@ -1615,9 +1617,7 @@ NS_IMETHODIMP nsNSSCertificateDB::AddCertFromBase64(const char *aBase64, const c
   SECStatus srv = __CERT_AddTempCertToPerm(tmpCert.get(),
                                            const_cast<char*>(nickname.get()),
                                            trust.GetTrust());
-
-
-  return (srv == SECSuccess) ? NS_OK : NS_ERROR_FAILURE;
+  return MapSECStatus(srv);
 }
 
 NS_IMETHODIMP

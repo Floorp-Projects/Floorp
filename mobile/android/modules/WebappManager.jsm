@@ -189,7 +189,7 @@ this.WebappManager = {
   },
 
   autoInstall: function(aData) {
-    let oldApp = DOMApplicationRegistry.getAppByManifestURL(aData.manifestUrl);
+    let oldApp = DOMApplicationRegistry.getAppByManifestURL(aData.manifestURL);
     if (oldApp) {
       // If the app is already installed, update the existing installation.
       this._autoUpdate(aData, oldApp);
@@ -203,7 +203,7 @@ this.WebappManager = {
       }
     };
 
-    let origin = Services.io.newURI(aData.manifestUrl, null, null).prePath;
+    let origin = Services.io.newURI(aData.manifestURL, null, null).prePath;
 
     let message = aData.request || {
       app: {
@@ -222,7 +222,7 @@ this.WebappManager = {
     // The manifest url may be subtly different between the
     // time the APK was built and the APK being installed.
     // Thus, we should take the APK as the source of truth.
-    message.app.manifestURL = aData.manifestUrl;
+    message.app.manifestURL = aData.manifestURL;
     message.app.manifest = aData.manifest;
     message.app.apkPackageName = aData.apkPackageName;
     message.profilePath = aData.profilePath;

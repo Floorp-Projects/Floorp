@@ -52,3 +52,5 @@ random-if(Android) == jpg-srgb-icc.jpg jpg-srgb-icc.png
 # "Here is the beginning of a boundary," and --$(boundary)-- means "All done
 # sending you parts.")
 HTTP == webcam-simulacrum.mjpg blue.jpg
+pref(image.mozsamplesize.enabled,true) fuzzy(21,256) == jpg-size-32x32.jpg#-moz-samplesize=2 jpg-size-16x16.png
+pref(image.mozsamplesize.enabled,true) fuzzy(92,16) == jpg-size-32x32.jpg#-moz-samplesize=8 jpg-size-4x4.png

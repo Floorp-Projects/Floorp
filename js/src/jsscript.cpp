@@ -3619,7 +3619,7 @@ LazyScript::CreateRaw(ExclusiveContext *cx, HandleFunction fun,
     p.usesArgumentsAndApply = false;
 
     LazyScript *res = LazyScript::CreateRaw(cx, fun, packedFields, begin, end, lineno, column);
-    JS_ASSERT(res->version() == version);
+    JS_ASSERT_IF(res, res->version() == version);
     return res;
 }
 

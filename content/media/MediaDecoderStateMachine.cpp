@@ -2449,6 +2449,15 @@ void MediaDecoderStateMachine::StartBuffering()
 {
   AssertCurrentThreadInMonitor();
 
+  if (mState != DECODER_STATE_DECODING) {
+    // We only move into BUFFERING state if we're actually decoding.
+    // If we're currently doing something else, we don't need to buffer,
+    // and more importantly, we shouldn't overwrite mState to interrupt
+    // the current operation, as that could leave us in an inconsistent
+    // state!
+    return;
+  }
+
   if (IsPlaying()) {
     StopPlayback();
   }

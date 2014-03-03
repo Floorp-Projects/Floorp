@@ -166,6 +166,9 @@ public:
     NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLFramebuffer)
     NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLFramebuffer)
 
+    // mask mirrors glClear.
+    bool HasCompletePlanes(GLbitfield mask);
+
     bool CheckAndInitializeAttachments();
 
     bool CheckColorAttachmentNumber(GLenum attachment, const char* functionName) const;

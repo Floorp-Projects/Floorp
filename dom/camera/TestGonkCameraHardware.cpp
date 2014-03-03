@@ -56,6 +56,33 @@ TestGonkCameraHardware::TestCase()
   return test;
 }
 
+const nsCString
+TestGonkCameraHardware::GetExtraParameters()
+{
+  /**
+   * The contents of this pref are appended to the flattened string of
+   * parameters stuffed into GonkCameraParameters by the camera library.
+   * It consists of semicolon-delimited key=value pairs, e.g.
+   *
+   *   focus-mode=auto;flash-mode=auto;preview-size=1024x768
+   *
+   * The unflattening process breaks this string up on semicolon boundaries
+   * and sets an entry in a hashtable of strings with the token before
+   * the equals sign as the key, and the token after as the value. Because
+   * the string is parsed in order, key=value pairs occuring later in the
+   * string will replace value pairs appearing earlier, making it easy to
+   * inject fake, testable values into the parameters table.
+   *
+   * One constraint of this approach is that neither the key nor the value
+   * may contain equals signs or semicolons. We don't enforce that here
+   * so that we can also test correct handling of improperly-formatted values.
+   */
+  const nsCString parameters = Preferences::GetCString("camera.control.test.hardware.gonk.parameters");
+  DOM_CAMERA_LOGA("TestGonkCameraHardware : extra-parameters '%s'\n",
+    parameters.get());
+  return parameters;
+}
+
 bool
 TestGonkCameraHardware::IsTestCaseInternal(const char* aTest, const char* aFile, int aLine)
 {
@@ -174,7 +201,14 @@ TestGonkCameraHardware::PullParameters(GonkCameraParameters& aParams)
     return static_cast<nsresult>(TestCaseError(UNKNOWN_ERROR));
   }
 
-  return GonkCameraHardware::PullParameters(aParams);
+  String8 s = mCamera->getParameters();
+  nsCString extra = GetExtraParameters();
+  if (!extra.IsEmpty()) {
+    s += ";";
+    s += extra.get();
+  }
+
+  return aParams.Unflatten(s);
 }
 
 int
