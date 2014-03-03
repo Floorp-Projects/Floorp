@@ -1621,6 +1621,9 @@ public:
 
 void BaseMediaResource::DispatchBytesConsumed(int64_t aNumBytes, int64_t aOffset)
 {
+  if (aNumBytes <= 0) {
+    return;
+  }
   RefPtr<nsIRunnable> event(new DispatchBytesConsumedEvent(mDecoder, aNumBytes, aOffset));
   NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
 }
