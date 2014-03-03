@@ -41,6 +41,7 @@ var gLoadTimeout = 0;
 var gTimeoutHook = null;
 var gRemote = false;
 var gIgnoreWindowSize = false;
+var gShuffle = false;
 var gTotalChunks = 0;
 var gThisChunk = 0;
 var gContainingWindow = null;
@@ -432,6 +433,17 @@ function StartHTTPServer()
     gHttpServerPort = gServer.identity.primaryPort;
 }
 
+// Perform a Fisher-Yates shuffle of the array.
+function Shuffle(array)
+{
+    for (var i = array.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
+    }
+}
+
 function StartTests()
 {
     var uri;
@@ -448,6 +460,12 @@ function StartTests()
         gNoCanvasCache = prefs.getIntPref("reftest.nocache");
     } catch(e) {
         gNoCanvasCache = false;
+    }
+
+    try {
+      gShuffle = prefs.getBoolPref("reftest.shuffle");
+    } catch (e) {
+      gShuffle = false;
     }
 
     try {
@@ -484,6 +502,11 @@ function StartTests()
         DoneTests();
     }
 #endif
+
+    if (gShuffle) {
+        gNoCanvasCache = true;
+    }
+
     try {
         ReadTopManifest(uri);
         BuildUseCounts();
@@ -522,6 +545,11 @@ function StartTests()
             gDumpLog("REFTEST INFO | Running chunk " + gThisChunk + " out of " + gTotalChunks + " chunks.  ");
             gDumpLog("tests " + (start+1) + "-" + end + "/" + gURLs.length + "\n");
         }
+
+        if (gShuffle) {
+            Shuffle(gURLs);
+        }
+
         gTotalTests = gURLs.length;
 
         if (!gTotalTests)
