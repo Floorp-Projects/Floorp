@@ -387,6 +387,7 @@
     "layout/base/tests/test_bug603550.html":"Components.classes[@mozilla.org/widget/dragservice;1] is undefined",
     "layout/base/tests/test_bug629838.html":"depends on plugins support",
     "layout/base/tests/test_mozPaintCount.html":"depends on plugins support",
+    "layout/base/tests/test_bug687297.html":"Bug 948948",
     "layout/forms/test/test_bug348236.html":"select form control popup",
     "layout/forms/test/test_bug446663.html":"needs copy support",
     "layout/forms/test/test_bug564115.html":"times out on window.open and focus event",

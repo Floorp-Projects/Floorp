@@ -1,0 +1,24 @@
+<html>
+  <head>
+    <script>
+      var timerID = 0;
+      function testDone() {
+        clearTimeout(timerID);
+        var l = document.body.firstChild.contentWindow.location.href;
+        opener.is(l, "data:text/html,bar", "Should have loaded a new document");
+        opener.nextTest();
+        window.close();
+      }
+      function test() {
+        var ifr = document.getElementsByTagName("iframe")[0];
+        ifr.onload = testDone;
+        ifr.contentWindow.location.hash = "b";
+        ifr.contentWindow.location.href = "data:text/html,bar";
+        history.back();
+        timerID = setTimeout(testDone, 2000);
+      }
+    </script>
+  </head>
+  <body onload="setTimeout(test, 0)"><iframe src="data:text/html,foo#a"></iframe>
+  </body>
+</html>

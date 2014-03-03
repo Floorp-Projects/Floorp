@@ -113,6 +113,12 @@ browser.jar:
   skin/classic/browser/webRTC-shareDevice-64@2x.png
   skin/classic/browser/webRTC-sharingDevice-16.png
   skin/classic/browser/webRTC-sharingDevice-16@2x.png
+  skin/classic/browser/webRTC-shareMicrophone-16.png
+  skin/classic/browser/webRTC-shareMicrophone-16@2x.png
+  skin/classic/browser/webRTC-shareMicrophone-64.png
+  skin/classic/browser/webRTC-shareMicrophone-64@2x.png
+  skin/classic/browser/webRTC-sharingMicrophone-16.png
+  skin/classic/browser/webRTC-sharingMicrophone-16@2x.png
   skin/classic/browser/customizableui/background-noise-toolbar.png  (customizableui/background-noise-toolbar.png)
   skin/classic/browser/customizableui/customize-titleBar-toggle.png  (customizableui/customize-titleBar-toggle.png)
   skin/classic/browser/customizableui/customize-titleBar-toggle@2x.png  (customizableui/customize-titleBar-toggle@2x.png)

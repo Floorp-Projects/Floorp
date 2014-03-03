@@ -12,11 +12,14 @@ body {
   font-size: 40px;
   font-family: mplus;
 }
+span {
+  font-family: serif;
+}
 </style>
 </head>
 <body>
-<!-- the ZWNJ characters should prevent kerning at those positions;
+<!-- the ZWNJ characters with font change should prevent kerning at those positions;
      if the testcase looks the same, then kerning failed altogether -->
-AVA&zwnj;V&zwnj;A
+AVA<span>&zwnj;</span>V<span>&zwnj;</span>A
 </body>
 </html>

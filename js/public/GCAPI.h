@@ -316,7 +316,7 @@ WasIncrementalGC(JSRuntime *rt);
 class JS_FRIEND_API(AutoDisableGenerationalGC)
 {
     JSRuntime *runtime;
-#ifdef JS_GC_ZEAL
+#if defined(JSGC_GENERATIONAL) && defined(JS_GC_ZEAL)
     bool restartVerifier;
 #endif
 

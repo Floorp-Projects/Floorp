@@ -23,6 +23,8 @@ public:
                                      bool aScheduleComposite) = 0;
 
     virtual AsyncCompositionManager* GetCompositionManager(LayerTransactionParent* aLayerTree) { return nullptr; }
+
+    virtual void ForceComposite(LayerTransactionParent* aLayerTree) { }
 };
 
 } // layers

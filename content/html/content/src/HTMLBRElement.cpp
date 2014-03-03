@@ -37,8 +37,8 @@ NS_IMPL_STRING_ATTR(HTMLBRElement, Clear, clear)
 static const nsAttrValue::EnumTable kClearTable[] = {
   { "left", NS_STYLE_CLEAR_LEFT },
   { "right", NS_STYLE_CLEAR_RIGHT },
-  { "all", NS_STYLE_CLEAR_LEFT_AND_RIGHT },
-  { "both", NS_STYLE_CLEAR_LEFT_AND_RIGHT },
+  { "all", NS_STYLE_CLEAR_BOTH },
+  { "both", NS_STYLE_CLEAR_BOTH },
   { 0 }
 };
 

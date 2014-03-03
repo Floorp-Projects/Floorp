@@ -34,7 +34,6 @@ CopyableCanvasLayer::CopyableCanvasLayer(LayerManager* aLayerManager, void *aImp
   CanvasLayer(aLayerManager, aImplData)
 {
   MOZ_COUNT_CTOR(CopyableCanvasLayer);
-  mForceReadback = Preferences::GetBool("webgl.force-layers-readback", false);
 }
 
 CopyableCanvasLayer::~CopyableCanvasLayer()

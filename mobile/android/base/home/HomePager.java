@@ -248,9 +248,9 @@ public class HomePager extends ViewPager {
     }
 
     public void onToolbarFocusChange(boolean hasFocus) {
-        // We should only enable the banner if the toolbar is not focused and we are on the default page
-        final boolean enabled = !hasFocus && getCurrentItem() == mDefaultPageIndex;
-        mHomeBanner.setEnabled(enabled);
+        // We should only make the banner active if the toolbar is not focused and we are on the default page
+        final boolean active = !hasFocus && getCurrentItem() == mDefaultPageIndex;
+        mHomeBanner.setActive(active);
     }
 
     private void updateUiFromPanelConfigs(List<PanelConfig> panelConfigs) {
@@ -265,7 +265,7 @@ public class HomePager extends ViewPager {
         }
 
         if (mHomeBanner != null) {
-            mHomeBanner.setEnabled(false);
+            mHomeBanner.setActive(false);
         }
 
         final HomeAdapter adapter = (HomeAdapter) getAdapter();
@@ -345,7 +345,7 @@ public class HomePager extends ViewPager {
             }
 
             if (mHomeBanner != null) {
-                mHomeBanner.setEnabled(position == mDefaultPageIndex);
+                mHomeBanner.setActive(position == mDefaultPageIndex);
             }
         }
 
