@@ -753,7 +753,9 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
                      relative,
                      charset.get(),
                      aBuilder->GetViewSourceBaseURI());
-      NS_ENSURE_SUCCESS(rv, rv);
+      if (NS_FAILED(rv)) {
+        return NS_OK;
+      }
 
       // Reuse the fix for bug 467852
       // URLs that execute script (e.g. "javascript:" URLs) should just be
