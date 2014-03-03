@@ -84,6 +84,11 @@ ParseMP3Headers(MP3FrameParser *aParser, MediaResource *aResource)
                                     MAX_READ_SIZE, &bytesRead);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    if (!bytesRead) {
+      // End of stream.
+      return NS_ERROR_FAILURE;
+    }
+
     aParser->Parse(buffer, bytesRead, offset);
     offset += bytesRead;
   }
