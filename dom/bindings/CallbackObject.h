@@ -57,7 +57,7 @@ public:
 
   virtual ~CallbackObject()
   {
-    DropCallback();
+    DropJSObjects();
   }
 
   JS::Handle<JSObject*> Callback() const
@@ -121,28 +121,41 @@ private:
   inline void Init(JSObject* aCallback, nsIGlobalObject* aIncumbentGlobal)
   {
     MOZ_ASSERT(aCallback && !mCallback);
-    // Set mCallback before we hold, on the off chance that a GC could somehow
-    // happen in there... (which would be pretty odd, granted).
+    // Set script objects before we hold, on the off chance that a GC could
+    // somehow happen in there... (which would be pretty odd, granted).
     mCallback = aCallback;
+    if (aIncumbentGlobal) {
+      mIncumbentGlobal = aIncumbentGlobal;
+      mIncumbentJSGlobal = aIncumbentGlobal->GetGlobalJSObject();
+    }
     mozilla::HoldJSObjects(this);
-
-    mIncumbentGlobal = aIncumbentGlobal;
   }
 
   CallbackObject(const CallbackObject&) MOZ_DELETE;
   CallbackObject& operator =(const CallbackObject&) MOZ_DELETE;
 
 protected:
-  void DropCallback()
+  void DropJSObjects()
   {
+    MOZ_ASSERT_IF(mIncumbentJSGlobal, mCallback);
     if (mCallback) {
       mCallback = nullptr;
+      mIncumbentJSGlobal = nullptr;
       mozilla::DropJSObjects(this);
     }
   }
 
   JS::Heap<JSObject*> mCallback;
+  // Ideally, we'd just hold a reference to the nsIGlobalObject, since that's
+  // what we need to pass to AutoIncumbentScript. Unfortunately, that doesn't
+  // hold the actual JS global alive. So we maintain an additional pointer to
+  // the JS global itself so that we can trace it.
+  //
+  // At some point we should consider trying to make native globals hold their
+  // scripted global alive, at which point we can get rid of the duplication
+  // here.
   nsCOMPtr<nsIGlobalObject> mIncumbentGlobal;
+  JS::TenuredHeap<JSObject*> mIncumbentJSGlobal;
 
   class MOZ_STACK_CLASS CallSetup
   {
