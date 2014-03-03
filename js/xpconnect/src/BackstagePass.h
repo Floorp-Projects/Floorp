@@ -12,6 +12,8 @@
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIXPCScriptable.h"
 
+#include "js/HeapAPI.h"
+
 class BackstagePass : public nsIGlobalObject,
                       public nsIScriptObjectPrincipal,
                       public nsIXPCScriptable,
@@ -48,7 +50,7 @@ public:
 
 private:
   nsCOMPtr<nsIPrincipal> mPrincipal;
-  JSObject *mGlobal;
+  JS::TenuredHeap<JSObject*> mGlobal;
 };
 
 NS_EXPORT nsresult

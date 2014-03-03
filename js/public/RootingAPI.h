@@ -324,7 +324,7 @@ class TenuredHeap : public js::HeapBase<T>
                       "TenuredHeap<T> must be binary compatible with T.");
     }
     explicit TenuredHeap(T p) : bits(0) { setPtr(p); }
-    explicit TenuredHeap(const TenuredHeap<T> &p) : bits(0) { setPtr(p.ptr); }
+    explicit TenuredHeap(const TenuredHeap<T> &p) : bits(0) { setPtr(p.getPtr()); }
 
     bool operator==(const TenuredHeap<T> &other) { return bits == other.bits; }
     bool operator!=(const TenuredHeap<T> &other) { return bits != other.bits; }

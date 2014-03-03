@@ -7,7 +7,6 @@ const CURRENT_SCHEMA_VERSION = 23;
 
 const NS_APP_USER_PROFILE_50_DIR = "ProfD";
 const NS_APP_PROFILE_DIR_STARTUP = "ProfDS";
-const NS_APP_BOOKMARKS_50_FILE = "BMarks";
 
 // Shortcuts to transitions type.
 const TRANSITION_LINK = Ci.nsINavHistoryService.TRANSITION_LINK;
