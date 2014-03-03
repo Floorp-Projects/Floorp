@@ -206,6 +206,10 @@ public:
      */
     if (!mIsStartup && mEnabled == sBluetoothService->IsEnabledInternal()) {
       BT_WARNING("Bluetooth has already been enabled/disabled before.");
+      nsCOMPtr<nsIRunnable> ackTask = new BluetoothService::ToggleBtAck(mEnabled);
+      if (NS_FAILED(NS_DispatchToMainThread(ackTask))) {
+        BT_WARNING("Failed to dispatch to main thread!");
+      }
     } else {
       // Switch on/off bluetooth
       if (mEnabled) {
@@ -219,11 +223,6 @@ public:
           mEnabled = !mEnabled;
         }
       }
-    }
-
-    nsCOMPtr<nsIRunnable> ackTask = new BluetoothService::ToggleBtAck(mEnabled);
-    if (NS_FAILED(NS_DispatchToMainThread(ackTask))) {
-      BT_WARNING("Failed to dispatch to main thread!");
     }
 
     return NS_OK;
