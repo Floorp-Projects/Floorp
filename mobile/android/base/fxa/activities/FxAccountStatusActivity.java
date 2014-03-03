@@ -9,9 +9,13 @@ import org.mozilla.gecko.fxa.FirefoxAccounts;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 
 import android.accounts.Account;
+import android.annotation.TargetApi;
+import android.app.ActionBar;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
+import android.view.MenuItem;
 
 /**
  * Activity which displays account status.
@@ -31,6 +35,29 @@ public class FxAccountStatusActivity extends FragmentActivity {
       .beginTransaction()
       .replace(android.R.id.content, statusFragment)
       .commit();
+
+    maybeSetHomeButtonEnabled();
+  }
+
+  /**
+   * Sufficiently recent Android versions need additional code to receive taps
+   * on the status bar to go "up". See <a
+   * href="http://stackoverflow.com/a/8953148">this stackoverflow answer</a> for
+   * more information.
+   */
+  @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
+  protected void maybeSetHomeButtonEnabled() {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+      Logger.debug(LOG_TAG, "Not enabling home button; version too low.");
+      return;
+    }
+    final ActionBar actionBar = getActionBar();
+    if (actionBar != null) {
+      Logger.debug(LOG_TAG, "Enabling home button.");
+      actionBar.setHomeButtonEnabled(true);
+      return;
+    }
+    Logger.debug(LOG_TAG, "Not enabling home button.");
   }
 
   @Override
@@ -64,5 +91,16 @@ public class FxAccountStatusActivity extends FragmentActivity {
       return null;
     }
     return new AndroidFxAccount(this, account);
+  }
+
+  @Override
+  public boolean onOptionsItemSelected(MenuItem item) {
+    int itemId = item.getItemId();
+    switch (itemId) {
+    case android.R.id.home:
+      finish();
+      return true;
+    }
+    return super.onOptionsItemSelected(item);
   }
 }
