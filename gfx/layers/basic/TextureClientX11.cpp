@@ -20,7 +20,8 @@ using namespace mozilla::layers;
 
 TextureClientX11::TextureClientX11(SurfaceFormat aFormat, TextureFlags aFlags)
   : TextureClient(aFlags),
-    mFormat(aFormat)
+    mFormat(aFormat),
+    mLocked(false)
 {
   MOZ_COUNT_CTOR(TextureClientX11);
 }

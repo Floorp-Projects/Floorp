@@ -93,7 +93,7 @@ static void ListCounters(void)
         while ( rh != NULL )
         {
             PR_GET_COUNTER_NAME_FROM_HANDLE( rh, qname, rname, desc );
-            tCtr = PR_GET_COUNTER(tCtr, rh);
+            PR_GET_COUNTER(tCtr, rh);
             PR_LOG( lm, msgLevel,
                 ( "QName: %s  RName: %s  Desc: %s  Value: %ld\n", 
                 qn, rn, dn, tCtr ));

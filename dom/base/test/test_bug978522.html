@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=978522
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 978522 - basic support</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=978522">Mozilla Bug 978522</a>
+<script type="application/javascript">
+
+  console.log('%s', {
+    toString: function() {
+      console.log('%s', {
+        toString: function() {
+          ok(true, "Still alive \\o/");
+          SimpleTest.finish();
+          return "hello world";
+        }
+      });
+    }
+  });
+
+  SimpleTest.waitForExplicitFinish();
+
+</script>
+</body>
+</html>

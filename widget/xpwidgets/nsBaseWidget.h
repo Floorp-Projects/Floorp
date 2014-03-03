@@ -210,6 +210,7 @@ public:
 
   void NotifyWindowDestroyed();
   void NotifySizeMoveDone();
+  void NotifyWindowMoved(int32_t aX, int32_t aY);
 
   // Should be called by derived implementations to notify on system color and
   // theme changes.

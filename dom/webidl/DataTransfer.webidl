@@ -25,7 +25,7 @@ interface DataTransfer {
   [Throws]
   void clearData(optional DOMString format);
   [Throws]
-  readonly attribute FileList files;
+  readonly attribute FileList? files;
 };
 
 // Mozilla specific stuff

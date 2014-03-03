@@ -1177,6 +1177,25 @@
         </body>
       </method>
 
+      <!--
+        For out-of-process code, event.screen[XY] is relative to the
+        left/top of the content view. For in-process code,
+        event.screen[XY] is relative to the left/top of the screen. We
+        use this method to map screen coordinates received from a
+        (possibly out-of-process) <browser> element to coordinates
+        that are relative to the screen. This code handles the
+        in-process case, where we return the coordinates unchanged.
+      -->
+      <method name="mapScreenCoordinatesFromContent">
+        <parameter name="aScreenX"/>
+        <parameter name="aScreenY"/>
+        <body>
+        <![CDATA[
+          return { x: aScreenX, y: aScreenY };
+        ]]>
+        </body>
+      </method>
+
       <method name="swapDocShells">
         <parameter name="aOtherBrowser"/>
         <body>

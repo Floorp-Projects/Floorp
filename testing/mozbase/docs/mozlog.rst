@@ -5,6 +5,11 @@ Mozlog is a python package intended to simplify and standardize logs
 in the Mozilla universe. It wraps around python's logging module and
 adds some additional functionality.
 
+.. note::
+  For the purposes of logging results and other output from test runs,
+  :doc:`mozlog.structured<mozlog_structured>` should now be used
+  instead of this module.
+
 .. automodule:: mozlog
     :members: getLogger
 

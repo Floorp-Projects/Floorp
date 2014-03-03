@@ -92,6 +92,7 @@ public class IconGridInput extends PromptInput implements OnItemClickListener {
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         mSelected = position;
+        notifyListeners(Integer.toString(position));
     }
 
     @Override

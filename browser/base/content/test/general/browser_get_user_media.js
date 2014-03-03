@@ -213,7 +213,11 @@ let gTests = [
     });
 
     yield promisePopupNotification("webRTC-shareDevices", true);
+    is(PopupNotifications.getNotification("webRTC-shareDevices").anchorID,
+       "webRTC-shareDevices-notification-icon", "anchored to device icon");
     checkDeviceSelectors(true, true);
+    is(PopupNotifications.panel.firstChild.getAttribute("popupid"),
+       "webRTC-shareDevices", "panel using devices icon");
 
     yield promiseMessage("ok", () => {
       PopupNotifications.panel.firstChild.button.click();
@@ -237,7 +241,11 @@ let gTests = [
     });
 
     yield promisePopupNotification("webRTC-shareDevices", true);
+    is(PopupNotifications.getNotification("webRTC-shareDevices").anchorID,
+       "webRTC-shareMicrophone-notification-icon", "anchored to mic icon");
     checkDeviceSelectors(true);
+    is(PopupNotifications.panel.firstChild.getAttribute("popupid"),
+       "webRTC-shareMicrophone", "panel using microphone icon");
 
     yield promiseMessage("ok", () => {
       PopupNotifications.panel.firstChild.button.click();
@@ -260,7 +268,11 @@ let gTests = [
     });
 
     yield promisePopupNotification("webRTC-shareDevices", true);
+    is(PopupNotifications.getNotification("webRTC-shareDevices").anchorID,
+       "webRTC-shareDevices-notification-icon", "anchored to device icon");
     checkDeviceSelectors(false, true);
+    is(PopupNotifications.panel.firstChild.getAttribute("popupid"),
+       "webRTC-shareDevices", "panel using devices icon");
 
     yield promiseMessage("ok", () => {
       PopupNotifications.panel.firstChild.button.click();
@@ -668,8 +680,16 @@ let gTests = [
       expectNotification("recording-device-events");
       yield checkSharingUI();
 
-      // Stop sharing.
       PopupNotifications.getNotification("webRTC-sharingDevices").reshow();
+      let expectedIcon = "webRTC-sharingDevices";
+      if (aRequestAudio && !aRequestVideo)
+        expectedIcon = "webRTC-sharingMicrophone";
+      is(PopupNotifications.getNotification("webRTC-sharingDevices").anchorID,
+         expectedIcon + "-notification-icon", "anchored to correct icon");
+      is(PopupNotifications.panel.firstChild.getAttribute("popupid"), expectedIcon,
+         "panel using correct icon");
+
+      // Stop sharing.
       activateSecondaryAction(kActionDeny);
 
       yield promiseNotification("recording-device-events");
