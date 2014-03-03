@@ -59,17 +59,30 @@ void gfxPrefs::PrefAddVarCache(uint32_t* aVariable,
   Preferences::AddUintVarCache(aVariable, aPref, aDefault);
 }
 
+void gfxPrefs::PrefAddVarCache(float* aVariable,
+                               const char* aPref,
+                               float aDefault)
+{
+  Preferences::AddFloatVarCache(aVariable, aPref, aDefault);
+}
+
 bool gfxPrefs::PrefGet(const char* aPref, bool aDefault)
 {
-  return Preferences::GetBool(aPref,aDefault);
+  return Preferences::GetBool(aPref, aDefault);
 }
 
 int32_t gfxPrefs::PrefGet(const char* aPref, int32_t aDefault)
 {
-  return Preferences::GetInt(aPref,aDefault);
+  return Preferences::GetInt(aPref, aDefault);
 }
 
 uint32_t gfxPrefs::PrefGet(const char* aPref, uint32_t aDefault)
 {
-  return Preferences::GetUint(aPref,aDefault);
+  return Preferences::GetUint(aPref, aDefault);
 }
+
+float gfxPrefs::PrefGet(const char* aPref, float aDefault)
+{
+  return Preferences::GetFloat(aPref, aDefault);
+}
+

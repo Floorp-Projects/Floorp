@@ -2255,6 +2255,7 @@ public:
     {
         MOZ_ASSERT(mValues.IsEmpty());
         MOZ_ASSERT(mObjects.IsEmpty());
+        MOZ_ASSERT(mTenuredObjects.IsEmpty());
     }
 
     void Destroy()
@@ -2262,6 +2263,7 @@ public:
         mReferenceToThis = nullptr;
         mValues.Clear();
         mObjects.Clear();
+        mTenuredObjects.Clear();
         mozilla::DropJSObjects(this);
         NS_RELEASE_THIS();
     }
@@ -2272,6 +2274,7 @@ public:
     JSPurpleBuffer*& mReferenceToThis;
     SegmentedArray<JS::Heap<JS::Value>> mValues;
     SegmentedArray<JS::Heap<JSObject*>> mObjects;
+    SegmentedArray<JS::TenuredHeap<JSObject*>> mTenuredObjects;
 };
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(JSPurpleBuffer)
@@ -2299,6 +2302,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(JSPurpleBuffer)
     NS_TRACE_SEGMENTED_ARRAY(mValues)
     NS_TRACE_SEGMENTED_ARRAY(mObjects)
+    NS_TRACE_SEGMENTED_ARRAY(mTenuredObjects)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(JSPurpleBuffer, AddRef)
@@ -2381,6 +2385,14 @@ public:
     {
         if (*aObject && xpc_GCThingIsGrayCCThing(*aObject)) {
             mCollector->GetJSPurpleBuffer()->mObjects.AppendElement(*aObject);
+        }
+    }
+
+    virtual void Trace(JS::TenuredHeap<JSObject*>* aObject, const char* aName,
+                       void* aClosure) const
+    {
+        if (*aObject && xpc_GCThingIsGrayCCThing(*aObject)) {
+            mCollector->GetJSPurpleBuffer()->mTenuredObjects.AppendElement(*aObject);
         }
     }
 
