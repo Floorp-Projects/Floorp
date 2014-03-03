@@ -1776,6 +1776,30 @@ this.PlacesUtils = {
     });
 
     return deferred.promise;
+  },
+
+  /**
+   * Gets favicon data for a given page url.
+   *
+   * @param aPageUrl url of the page to look favicon for.
+   * @resolves to an object representing a favicon entry, having the following
+   *           properties: { uri, dataLen, data, mimeType }
+   * @rejects JavaScript exception if the given url has no associated favicon.
+   */
+  promiseFaviconData: function (aPageUrl) {
+    let deferred = Promise.defer();
+    PlacesUtils.favicons.getFaviconDataForPage(NetUtil.newURI(aPageUrl),
+      function (aURI, aDataLen, aData, aMimeType) {
+        if (aURI) {
+          deferred.resolve({ uri: aURI,
+                             dataLen: aDataLen,
+                             data: aData,
+                             mimeType: aMimeType });
+        } else {
+          deferred.reject();
+        }
+      });
+    return deferred.promise;
   }
 };
 
