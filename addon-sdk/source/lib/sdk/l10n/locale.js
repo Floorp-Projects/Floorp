@@ -11,7 +11,6 @@ const prefs = require("../preferences/service");
 const { Cu, Cc, Ci } = require("chrome");
 const { Services } = Cu.import("resource://gre/modules/Services.jsm");
 
-
 /**
  * Gets the currently selected locale for display.
  * Gets all usable locale that we can use sorted by priority of relevance
@@ -20,11 +19,13 @@ const { Services } = Cu.import("resource://gre/modules/Services.jsm");
 const PREF_MATCH_OS_LOCALE  = "intl.locale.matchOS";
 const PREF_SELECTED_LOCALE  = "general.useragent.locale";
 const PREF_ACCEPT_LANGUAGES = "intl.accept_languages";
-exports.getPreferedLocales = function getPreferedLocales() {
-  let locales = [];
 
+function getPreferedLocales(caseSensitve) {
+  let locales = [];
   function addLocale(locale) {
-    locale = locale.toLowerCase();
+    locale = locale.trim();
+    if (!caseSensitve)
+      locale = locale.toLowerCase();
     if (locales.indexOf(locale) === -1)
       locales.push(locale);
   }
@@ -48,7 +49,6 @@ exports.getPreferedLocales = function getPreferedLocales() {
   if (browserUiLocale)
     addLocale(browserUiLocale);
 
-
   // Third priority is the list of locales used for web content
   let contentLocales = prefs.get(PREF_ACCEPT_LANGUAGES, "");
   if (contentLocales) {
@@ -63,6 +63,7 @@ exports.getPreferedLocales = function getPreferedLocales() {
 
   return locales;
 }
+exports.getPreferedLocales = getPreferedLocales;
 
 /**
  * Selects the closest matching locale from a list of locales.
@@ -78,8 +79,7 @@ exports.getPreferedLocales = function getPreferedLocales() {
  * Stolen from http://mxr.mozilla.org/mozilla-central/source/toolkit/mozapps/extensions/internal/XPIProvider.jsm
  */
 exports.findClosestLocale = function findClosestLocale(aLocales, aMatchLocales) {
-
-  aMatchLocales = aMatchLocales || exports.getPreferedLocales();
+  aMatchLocales = aMatchLocales || getPreferedLocales();
 
   // Holds the best matching localized resource
   let bestmatch = null;

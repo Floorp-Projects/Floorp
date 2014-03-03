@@ -1,7 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 "use strict";
 
 module.metadata = {
@@ -46,7 +45,7 @@ function getBestLocale(rootURI) {
 
 /**
  * Read localization files and returns a promise of data to put in `@l10n/data`
- * pseudo module, in order to allow l10n/core to fetch it.
+ * pseudo module, in order to allow l10n/json/core to fetch it.
  */
 exports.load = function load(rootURI) {
   // First, search for a locale file:
