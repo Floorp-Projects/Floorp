@@ -402,8 +402,10 @@ add_task(function test_getAssertion() {
   _("ASSERTION: " + assertion + "\n");
   let pieces = assertion.split("~");
   do_check_eq(pieces[0], "cert1");
-  do_check_neq(fxa.internal.keyPair, undefined);
-  _(fxa.internal.keyPair.validUntil + "\n");
+  let keyPair = fxa.internal.currentAccountState.keyPair;
+  let cert = fxa.internal.currentAccountState.cert;
+  do_check_neq(keyPair, undefined);
+  _(keyPair.validUntil + "\n");
   let p2 = pieces[1].split(".");
   let header = JSON.parse(atob(p2[0]));
   _("HEADER: " + JSON.stringify(header) + "\n");
@@ -411,8 +413,8 @@ add_task(function test_getAssertion() {
   let payload = JSON.parse(atob(p2[1]));
   _("PAYLOAD: " + JSON.stringify(payload) + "\n");
   do_check_eq(payload.aud, "audience.example.com");
-  do_check_eq(fxa.internal.keyPair.validUntil, start + KEY_LIFETIME);
-  do_check_eq(fxa.internal.cert.validUntil, start + CERT_LIFETIME);
+  do_check_eq(keyPair.validUntil, start + KEY_LIFETIME);
+  do_check_eq(cert.validUntil, start + CERT_LIFETIME);
   _("delta: " + Date.parse(payload.exp - start) + "\n");
   let exp = Number(payload.exp);
 
@@ -449,8 +451,10 @@ add_task(function test_getAssertion() {
   // the initial start time, to which they are relative, not the current value
   // of "now".
 
-  do_check_eq(fxa.internal.keyPair.validUntil, start + KEY_LIFETIME);
-  do_check_eq(fxa.internal.cert.validUntil, start + CERT_LIFETIME);
+  keyPair = fxa.internal.currentAccountState.keyPair;
+  cert = fxa.internal.currentAccountState.cert;
+  do_check_eq(keyPair.validUntil, start + KEY_LIFETIME);
+  do_check_eq(cert.validUntil, start + CERT_LIFETIME);
   exp = Number(payload.exp);
   do_check_eq(exp, now + TWO_MINUTES_MS);
 
@@ -469,8 +473,10 @@ add_task(function test_getAssertion() {
   header = JSON.parse(atob(p2[0]));
   payload = JSON.parse(atob(p2[1]));
   do_check_eq(payload.aud, "fourth.example.com");
-  do_check_eq(fxa.internal.keyPair.validUntil, now + KEY_LIFETIME);
-  do_check_eq(fxa.internal.cert.validUntil, now + CERT_LIFETIME);
+  keyPair = fxa.internal.currentAccountState.keyPair;
+  cert = fxa.internal.currentAccountState.cert;
+  do_check_eq(keyPair.validUntil, now + KEY_LIFETIME);
+  do_check_eq(cert.validUntil, now + CERT_LIFETIME);
   exp = Number(payload.exp);
 
   do_check_eq(exp, now + TWO_MINUTES_MS);
@@ -494,14 +500,15 @@ add_test(function test_resend_email() {
   let fxa = new MockFxAccounts();
   let alice = getTestUser("alice");
 
-  do_check_eq(fxa.internal.generationCount, 0);
+  let initialState = fxa.internal.currentAccountState;
 
   // Alice is the user signing in; her email is unverified.
   fxa.setSignedInUser(alice).then(() => {
     log.debug("Alice signing in");
 
     // We're polling for the first email
-    do_check_eq(fxa.internal.generationCount, 1);
+    do_check_true(fxa.internal.currentAccountState !== initialState);
+    let aliceState = fxa.internal.currentAccountState;
 
     // The polling timer is ticking
     do_check_true(fxa.internal.currentTimer > 0);
@@ -517,7 +524,7 @@ add_test(function test_resend_email() {
         do_check_eq(result, "alice's session token");
 
         // Timer was not restarted
-        do_check_eq(fxa.internal.generationCount, 1);
+        do_check_true(fxa.internal.currentAccountState === aliceState);
 
         // Timer is still ticking
         do_check_true(fxa.internal.currentTimer > 0);
