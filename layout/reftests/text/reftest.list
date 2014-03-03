@@ -135,6 +135,7 @@ skip-if(B2G) == wordwrap-09.html wordwrap-09-ref.html
 random-if(cocoaWidget) HTTP(..) == zwnj-01.xhtml zwnj-01-ref.xhtml
 HTTP(..) == zwnj-02.xhtml zwnj-02-ref.xhtml # HTTP(..) for ../filters.svg
 != zwnj-01.html zwnj-01-notref.html
+== initial-zwj-1.html initial-zwj-1-ref.html
 == cgj-01.html cgj-01-ref.html
 == 444656.html 444656-ref.html
 == 449555-1.html 449555-1-ref.html
