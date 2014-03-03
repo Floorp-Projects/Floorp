@@ -741,7 +741,16 @@ BluetoothServiceBluedroid::StartInternal()
 
   nsresult ret = StartStopGonkBluetooth(true);
   if (NS_FAILED(ret)) {
+    nsCOMPtr<nsIRunnable> ackTask = new BluetoothService::ToggleBtAck(false);
+    if (NS_FAILED(NS_DispatchToMainThread(ackTask))) {
+      BT_WARNING("Failed to dispatch to main thread!");
+    }
     BT_LOGR("Error");
+  }
+
+  nsCOMPtr<nsIRunnable> ackTask = new BluetoothService::ToggleBtAck(true);
+  if (NS_FAILED(NS_DispatchToMainThread(ackTask))) {
+    BT_WARNING("Failed to dispatch to main thread!");
   }
 
   return ret;
@@ -754,7 +763,16 @@ BluetoothServiceBluedroid::StopInternal()
 
   nsresult ret = StartStopGonkBluetooth(false);
   if (NS_FAILED(ret)) {
+    nsCOMPtr<nsIRunnable> ackTask = new BluetoothService::ToggleBtAck(true);
+    if (NS_FAILED(NS_DispatchToMainThread(ackTask))) {
+      BT_WARNING("Failed to dispatch to main thread!");
+    }
     BT_LOGR("Error");
+  }
+
+  nsCOMPtr<nsIRunnable> ackTask = new BluetoothService::ToggleBtAck(false);
+  if (NS_FAILED(NS_DispatchToMainThread(ackTask))) {
+    BT_WARNING("Failed to dispatch to main thread!");
   }
 
   return ret;
