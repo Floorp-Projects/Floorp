@@ -2102,6 +2102,30 @@ add_test(function test_error_message_update_icc_contact() {
   run_next_test();
 });
 
+add_test(function test_process_icc_io_error() {
+  let worker = newUint8Worker();
+  let context = worker.ContextPool._contexts[0];
+  let ioHelper = context.ICCIOHelper;
+
+  function do_test(errorCode, expectedErrorMsg) {
+    let called = false;
+    function errorCb(errorMsg) {
+      called = true;
+      do_check_eq(errorMsg, expectedErrorMsg);
+    }
+
+    ioHelper.processICCIOError({rilRequestError: errorCode,
+                                onerror: errorCb});
+    do_check_true(called);
+  }
+
+  for (let i = 0; i < ERROR_REJECTED_BY_REMOTE + 1; i++) {
+    do_test(i, RIL_ERROR_TO_GECKO_ERROR[i]);
+  }
+
+  run_next_test();
+});
+
 add_test(function test_personalization_state() {
   let worker = newUint8Worker();
   let context = worker.ContextPool._contexts[0];

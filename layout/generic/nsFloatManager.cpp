@@ -455,7 +455,7 @@ nsFloatManager::ClearFloats(nscoord aY, uint8_t aBreakType,
 
   const FloatInfo &tail = mFloats[mFloats.Length() - 1];
   switch (aBreakType) {
-    case NS_STYLE_CLEAR_LEFT_AND_RIGHT:
+    case NS_STYLE_CLEAR_BOTH:
       bottom = std::max(bottom, tail.mLeftYMost);
       bottom = std::max(bottom, tail.mRightYMost);
       break;
@@ -479,10 +479,10 @@ bool
 nsFloatManager::ClearContinues(uint8_t aBreakType) const
 {
   return ((mPushedLeftFloatPastBreak || mSplitLeftFloatAcrossBreak) &&
-          (aBreakType == NS_STYLE_CLEAR_LEFT_AND_RIGHT ||
+          (aBreakType == NS_STYLE_CLEAR_BOTH ||
            aBreakType == NS_STYLE_CLEAR_LEFT)) ||
          ((mPushedRightFloatPastBreak || mSplitRightFloatAcrossBreak) &&
-          (aBreakType == NS_STYLE_CLEAR_LEFT_AND_RIGHT ||
+          (aBreakType == NS_STYLE_CLEAR_BOTH ||
            aBreakType == NS_STYLE_CLEAR_RIGHT));
 }
 

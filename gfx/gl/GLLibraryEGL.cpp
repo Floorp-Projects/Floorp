@@ -11,6 +11,7 @@
 #include "nsPrintfCString.h"
 #include "prenv.h"
 #include "GLContext.h"
+#include "gfxPrefs.h"
 
 namespace mozilla {
 namespace gl {
@@ -32,13 +33,9 @@ static const char *sEGLExtensionNames[] = {
 
 #if defined(ANDROID)
 
-static bool sUseApitraceInitialized = false;
-static bool sUseApitrace = false;
-
 static PRLibrary* LoadApitraceLibrary()
 {
-    MOZ_ASSERT(sUseApitraceInitialized);
-    if (!sUseApitrace) {
+    if (!gfxPrefs::UseApitrace()) {
         return nullptr;
     }
 
@@ -100,13 +97,6 @@ GLLibraryEGL::EnsureInitialized()
     if (mInitialized) {
         return true;
     }
-
-#if defined(ANDROID)
-    if (!sUseApitraceInitialized) {
-        sUseApitrace = Preferences::GetBool("gfx.apitrace.enabled", false);
-        sUseApitraceInitialized = true;
-    }
-#endif // ANDROID
 
     mozilla::ScopedGfxFeatureReporter reporter("EGL");
 

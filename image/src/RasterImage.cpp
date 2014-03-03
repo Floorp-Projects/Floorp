@@ -387,6 +387,7 @@ RasterImage::RasterImage(imgStatusTracker* aStatusTracker,
   mAnim(nullptr),
   mLockCount(0),
   mDecodeCount(0),
+  mRequestedSampleSize(0),
 #ifdef DEBUG
   mFramesNotified(0),
 #endif

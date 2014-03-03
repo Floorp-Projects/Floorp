@@ -749,6 +749,26 @@ void mozilla_sampler_stop()
     os->NotifyObservers(nullptr, "profiler-stopped", nullptr);
 }
 
+bool mozilla_sampler_is_paused() {
+  if (Sampler::GetActiveSampler()) {
+    return Sampler::GetActiveSampler()->IsPaused();
+  } else {
+    return false;
+  }
+}
+
+void mozilla_sampler_pause() {
+  if (Sampler::GetActiveSampler()) {
+    Sampler::GetActiveSampler()->SetPaused(true);
+  }
+}
+
+void mozilla_sampler_resume() {
+  if (Sampler::GetActiveSampler()) {
+    Sampler::GetActiveSampler()->SetPaused(false);
+  }
+}
+
 bool mozilla_sampler_is_active()
 {
   return sIsProfiling;

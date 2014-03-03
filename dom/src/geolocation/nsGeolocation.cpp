@@ -694,6 +694,10 @@ nsresult nsGeolocationService::Init()
   }
 #endif
 
+  if (Preferences::GetBool("geo.provider.use_mls", false)) {
+    mProvider = do_GetService("@mozilla.org/geolocation/mls-provider;1");
+  }
+
   // Override platform-specific providers with the default (network)
   // provider while testing. Our tests are currently not meant to exercise
   // the provider, and some tests rely on the network provider being used.

@@ -1704,33 +1704,26 @@ ContainerState::FindFixedPosFrameForLayerData(const nsIFrame* aAnimatedGeometryR
 
   nsPresContext* presContext = mContainerFrame->PresContext();
   nsIFrame* viewport = presContext->PresShell()->GetRootFrame();
-  const nsIFrame* result = nullptr;
-  nsRect displayPort;
 
   if (viewport == aAnimatedGeometryRoot && aDisplayItemFixedToViewport &&
-      nsLayoutUtils::ViewportHasDisplayPort(presContext, &displayPort)) {
+      nsLayoutUtils::ViewportHasDisplayPort(presContext)) {
     // Probably a background-attachment:fixed item
-    result = viewport;
-  } else {
-    // Viewports with no fixed-pos frames are not relevant.
-    if (!viewport->GetFirstChild(nsIFrame::kFixedList)) {
-      return nullptr;
+    return viewport;
+  }
+  // Viewports with no fixed-pos frames are not relevant.
+  if (!viewport->GetFirstChild(nsIFrame::kFixedList)) {
+    return nullptr;
+  }
+  for (const nsIFrame* f = aAnimatedGeometryRoot; f; f = f->GetParent()) {
+    if (nsLayoutUtils::IsFixedPosFrameInDisplayPort(f)) {
+      return f;
     }
-    for (const nsIFrame* f = aAnimatedGeometryRoot; f; f = f->GetParent()) {
-      if (nsLayoutUtils::IsFixedPosFrameInDisplayPort(f, &displayPort)) {
-        result = f;
-        break;
-      }
-      if (f == mContainerReferenceFrame) {
-        // The metadata will go on an ancestor layer if necessary.
-        return nullptr;
-      }
-    }
-    if (!result) {
+    if (f == mContainerReferenceFrame) {
+      // The metadata will go on an ancestor layer if necessary.
       return nullptr;
     }
   }
-  return result;
+  return nullptr;
 }
 
 void
@@ -1743,17 +1736,33 @@ ContainerState::AdjustLayerDataForFixedPositioning(const nsIFrame* aFixedPosFram
     return;
   }
 
-  nsRect displayPort;
+  nsRect fixedVisibleRect;
   nsPresContext* presContext = aFixedPosFrame->PresContext();
+  nsIPresShell* presShell = presContext->PresShell();
   DebugOnly<bool> hasDisplayPort =
-    nsLayoutUtils::ViewportHasDisplayPort(presContext, &displayPort);
+    nsLayoutUtils::ViewportHasDisplayPort(presContext, &fixedVisibleRect);
   NS_ASSERTION(hasDisplayPort, "No fixed-pos layer data if there's no displayport");
   // Display ports are relative to the viewport, convert it to be relative
   // to our reference frame.
-  nsIFrame* viewport = presContext->PresShell()->GetRootFrame();
-  displayPort += viewport->GetOffsetToCrossDoc(mContainerReferenceFrame);
+  nsIFrame* viewport = presShell->GetRootFrame();
+  if (aFixedPosFrame != viewport) {
+    // position: fixed items are reflowed into and only drawn inside the
+    // viewport, or the scroll position clamping scrollport size, if one is
+    // set. We differentiate background-attachment: fixed items from
+    // position: fixed items by the fact that background-attachment: fixed
+    // items use the viewport as their aFixedPosFrame.
+    NS_ASSERTION(aFixedPosFrame->StyleDisplay()->mPosition == NS_STYLE_POSITION_FIXED,
+      "should be position fixed items only");
+    fixedVisibleRect.MoveTo(0, 0);
+    if (presShell->IsScrollPositionClampingScrollPortSizeSet()) {
+      fixedVisibleRect.SizeTo(presShell->GetScrollPositionClampingScrollPortSize());
+    } else {
+      fixedVisibleRect.SizeTo(viewport->GetSize());
+    }
+  }
+  fixedVisibleRect += viewport->GetOffsetToCrossDoc(mContainerReferenceFrame);
   nsIntRegion newVisibleRegion;
-  newVisibleRegion.And(ScaleToOutsidePixels(displayPort, false),
+  newVisibleRegion.And(ScaleToOutsidePixels(fixedVisibleRect, false),
                        aDrawRegion);
   if (!aVisibleRegion->Contains(newVisibleRegion)) {
     if (aIsSolidColorInVisibleRegion) {
@@ -1844,7 +1853,8 @@ ContainerState::PopThebesLayerData()
   nsRefPtr<Layer> layer;
   nsRefPtr<ImageContainer> imageContainer = data->CanOptimizeImageLayer(mBuilder);
 
-  if ((data->mIsSolidColorInVisibleRegion || imageContainer) &&
+  bool isRetained = data->mLayer->Manager()->IsWidgetLayerManager();
+  if (isRetained && (data->mIsSolidColorInVisibleRegion || imageContainer) &&
       (data->mLayer->GetValidRegion().IsEmpty() || mLayerBuilder->CheckInLayerTreeCompressionMode())) {
     NS_ASSERTION(!(data->mIsSolidColorInVisibleRegion && imageContainer),
                  "Can't be a solid color as well as an image!");
@@ -2064,6 +2074,7 @@ ThebesLayerData::Accumulate(ContainerState* aState,
   } else {
     mImage = nullptr;
   }
+  bool clipMatches = mItemClip == aClip;
   mItemClip = aClip;
 
   if (!mIsSolidColorInVisibleRegion && mOpaqueRegion.Contains(aDrawRect) &&
@@ -2097,13 +2108,14 @@ ThebesLayerData::Accumulate(ContainerState* aState,
         isUniform = false;
       }
     }
-    if (isUniform && aClip.GetRoundedRectCount() == 0) {
+    if (isUniform) {
       if (mVisibleRegion.IsEmpty()) {
         // This color is all we have
         mSolidColor = uniformColor;
         mIsSolidColorInVisibleRegion = true;
       } else if (mIsSolidColorInVisibleRegion &&
-                 mVisibleRegion.IsEqual(nsIntRegion(aVisibleRect))) {
+                 mVisibleRegion.IsEqual(nsIntRegion(aVisibleRect)) &&
+                 clipMatches) {
         // we can just blend the colors together
         mSolidColor = NS_ComposeColors(mSolidColor, uniformColor);
       } else {

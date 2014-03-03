@@ -16,6 +16,7 @@
 #include "base/task.h"
 #include "Layers.h"
 #include "TestLayers.h"
+#include "gfxPrefs.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;
@@ -28,6 +29,26 @@ using ::testing::MockFunction;
 using ::testing::InSequence;
 
 class Task;
+
+class AsyncPanZoomControllerTester : public ::testing::Test {
+protected:
+  virtual void SetUp() {
+    gfxPrefs::One();
+  }
+  virtual void TearDown() {
+    gfxPrefs::Destroy();
+  }
+};
+
+class APZCTreeManagerTester : public ::testing::Test {
+protected:
+  virtual void SetUp() {
+    gfxPrefs::One();
+  }
+  virtual void TearDown() {
+    gfxPrefs::Destroy();
+  }
+};
 
 class MockContentController : public GeckoContentController {
 public:
@@ -544,7 +565,7 @@ TEST(AsyncPanZoomController, ComplexTransform) {
   EXPECT_EQ(ScreenPoint(135, 90), pointOut);
 }
 
-TEST(AsyncPanZoomController, Pan) {
+TEST_F(AsyncPanZoomControllerTester, Pan) {
   DoPanTest(true, false, mozilla::layers::AllowedTouchBehavior::NONE);
 }
 
@@ -553,24 +574,24 @@ TEST(AsyncPanZoomController, Pan) {
 // According to the pointer-events/touch-action spec AUTO and PAN_Y touch-action values allow vertical
 // scrolling while NONE and PAN_X forbid it. The first parameter of DoPanTest method specifies this
 // behavior.
-TEST(AsyncPanZoomController, PanWithTouchActionAuto) {
+TEST_F(AsyncPanZoomControllerTester, PanWithTouchActionAuto) {
   DoPanTest(true, true,
             mozilla::layers::AllowedTouchBehavior::HORIZONTAL_PAN | mozilla::layers::AllowedTouchBehavior::VERTICAL_PAN);
 }
 
-TEST(AsyncPanZoomController, PanWithTouchActionNone) {
+TEST_F(AsyncPanZoomControllerTester, PanWithTouchActionNone) {
   DoPanTest(false, true, 0);
 }
 
-TEST(AsyncPanZoomController, PanWithTouchActionPanX) {
+TEST_F(AsyncPanZoomControllerTester, PanWithTouchActionPanX) {
   DoPanTest(false, true, mozilla::layers::AllowedTouchBehavior::HORIZONTAL_PAN);
 }
 
-TEST(AsyncPanZoomController, PanWithTouchActionPanY) {
+TEST_F(AsyncPanZoomControllerTester, PanWithTouchActionPanY) {
   DoPanTest(true, true, mozilla::layers::AllowedTouchBehavior::VERTICAL_PAN);
 }
 
-TEST(AsyncPanZoomController, PanWithPreventDefault) {
+TEST_F(AsyncPanZoomControllerTester, PanWithPreventDefault) {
   TimeStamp testStartTime = TimeStamp::Now();
   AsyncPanZoomController::SetFrameTime(testStartTime);
 
@@ -608,7 +629,7 @@ TEST(AsyncPanZoomController, PanWithPreventDefault) {
   apzc->Destroy();
 }
 
-TEST(AsyncPanZoomController, Fling) {
+TEST_F(AsyncPanZoomControllerTester, Fling) {
   TimeStamp testStartTime = TimeStamp::Now();
   AsyncPanZoomController::SetFrameTime(testStartTime);
 
@@ -638,7 +659,7 @@ TEST(AsyncPanZoomController, Fling) {
   }
 }
 
-TEST(AsyncPanZoomController, OverScrollPanning) {
+TEST_F(AsyncPanZoomControllerTester, OverScrollPanning) {
   TimeStamp testStartTime = TimeStamp::Now();
   AsyncPanZoomController::SetFrameTime(testStartTime);
 
@@ -999,7 +1020,7 @@ TEST(APZCTreeManager, HitTesting1) {
 }
 
 // A more involved hit testing test that involves css and async transforms.
-TEST(APZCTreeManager, HitTesting2) {
+TEST_F(APZCTreeManagerTester, HitTesting2) {
   nsTArray<nsRefPtr<Layer> > layers;
   nsRefPtr<LayerManager> lm;
   nsRefPtr<Layer> root = CreateTestLayerTree2(lm, layers);

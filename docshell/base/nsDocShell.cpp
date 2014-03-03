@@ -67,6 +67,7 @@
 #include "nsITimedChannel.h"
 #include "nsIPrivacyTransitionObserver.h"
 #include "nsIReflowObserver.h"
+#include "nsIScrollObserver.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIChannel.h"
 #include "IHistory.h"
@@ -2855,6 +2856,39 @@ nsDocShell::GetCurrentDocChannel()
         }
     }
     return nullptr;
+}
+
+NS_IMETHODIMP
+nsDocShell::AddWeakScrollObserver(nsIScrollObserver* aObserver)
+{
+    nsWeakPtr weakObs = do_GetWeakReference(aObserver);
+    if (!weakObs) {
+        return NS_ERROR_FAILURE;
+    }
+    return mScrollObservers.AppendElement(weakObs) ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsDocShell::RemoveWeakScrollObserver(nsIScrollObserver* aObserver)
+{
+    nsWeakPtr obs = do_GetWeakReference(aObserver);
+    return mScrollObservers.RemoveElement(obs) ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsDocShell::NotifyScrollObservers()
+{
+    nsTObserverArray<nsWeakPtr>::ForwardIterator iter(mScrollObservers);
+    while (iter.HasMore()) {
+        nsWeakPtr ref = iter.GetNext();
+        nsCOMPtr<nsIScrollObserver> obs = do_QueryReferent(ref);
+        if (obs) {
+            obs->ScrollPositionChanged();
+        } else {
+            mScrollObservers.RemoveElement(ref);
+        }
+    }
+    return NS_OK;
 }
 
 //*****************************************************************************
@@ -9280,19 +9314,6 @@ nsDocShell::InternalLoad(nsIURI * aURI,
            sameExceptHashes && !newHash.IsEmpty());
 
         if (doShortCircuitedLoad) {
-            // Cancel an outstanding new-document load if this is a history
-            // load.
-            //
-            // We can't cancel the oustanding load unconditionally, because if a
-            // page does
-            //   - load a.html
-            //   - start loading b.html
-            //   - load a.html#h
-            // we break the web if we cancel the load of b.html.
-            if (aSHEntry && mDocumentRequest) {
-                mDocumentRequest->Cancel(NS_BINDING_ABORTED);
-            }
-
             // Save the position of the scrollers.
             nscoord cx = 0, cy = 0;
             GetCurScrollPos(ScrollOrientation_X, &cx);
@@ -9323,6 +9344,8 @@ nsDocShell::InternalLoad(nsIURI * aURI,
             }
 
             mURIResultedInDocument = true;
+
+            nsCOMPtr<nsISHEntry> oldLSHE = mLSHE;
 
             /* we need to assign mLSHE to aSHEntry right here, so that on History loads,
              * SetCurrentURI() called from OnNewURI() will send proper
@@ -9401,10 +9424,10 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                 SetCurScrollPosEx(bx, by);
             }
 
-            /* Clear out mLSHE so that further anchor visits get
-             * recorded in SH and SH won't misbehave. 
+            /* Restore the original LSHE if we were loading something
+             * while short-circuited load was initiated.
              */
-            SetHistoryEntry(&mLSHE, nullptr);
+            SetHistoryEntry(&mLSHE, oldLSHE);
             /* Set the title for the SH entry for this target url. so that
              * SH menus in go/back/forward buttons won't be empty for this.
              */

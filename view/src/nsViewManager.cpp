@@ -372,11 +372,13 @@ void nsViewManager::ProcessPendingUpdatesForView(nsView* aView,
   NS_ASSERTION(IsRootVM(), "Updates will be missed");
 
   // Protect against a null-view.
-  if (!aView) {
+  nsViewManager* viewManager = aView ? aView->GetViewManager() : nullptr;
+  if (!aView || !viewManager) {
     return;
   }
 
-  if (mPresShell && mPresShell->IsNeverPainting()) {
+  nsIPresShell* presShell = viewManager->mPresShell;
+  if (presShell && presShell->IsNeverPainting()) {
     return;
   }
 
@@ -397,46 +399,48 @@ void nsViewManager::ProcessPendingUpdatesForView(nsView* aView,
     if (widget && widget->NeedsPaint()) {
       // If an ancestor widget was hidden and then shown, we could
       // have a delayed resize to handle.
-      for (nsViewManager *vm = this; vm;
+      for (nsViewManager *vm = viewManager; vm;
            vm = vm->mRootView->GetParent()
                   ? vm->mRootView->GetParent()->GetViewManager()
                   : nullptr) {
         if (vm->mDelayedResize != nsSize(NSCOORD_NONE, NSCOORD_NONE) &&
             vm->mRootView->IsEffectivelyVisible() &&
-            mPresShell && mPresShell->IsVisible()) {
+            vm->mPresShell && vm->mPresShell->IsVisible()) {
           vm->FlushDelayedResize(true);
         }
       }
+      NS_ASSERTION(aView->HasWidget(), "FlushDelayedResize removed our widget!");
 
-      NS_ASSERTION(aView->HasWidget(), "Must have a widget!");
-
+      if (presShell) {
 #ifdef MOZ_DUMP_PAINTING
-      if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
-        printf_stderr("---- PAINT START ----PresShell(%p), nsView(%p), nsIWidget(%p)\n", mPresShell, aView, widget);
-      }
+        if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
+          printf_stderr("---- PAINT START ----PresShell(%p), nsView(%p), nsIWidget(%p)\n", presShell, aView, widget);
+        }
 #endif
-      nsAutoScriptBlocker scriptBlocker;
-      NS_ASSERTION(aView->HasWidget(), "Must have a widget!");
-      SetPainting(true);
-      mPresShell->Paint(aView, nsRegion(),
-                        nsIPresShell::PAINT_LAYERS);
+        nsAutoScriptBlocker scriptBlocker;
+        SetPainting(true);
+        presShell->Paint(aView, nsRegion(), nsIPresShell::PAINT_LAYERS);
 #ifdef MOZ_DUMP_PAINTING
-      if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
-        printf_stderr("---- PAINT END ----\n");
-      }
+        if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
+          printf_stderr("---- PAINT END ----\n");
+        }
 #endif
 
-      aView->SetForcedRepaint(false);
-      SetPainting(false);
-      FlushDirtyRegionToWidget(aView);
+        aView->SetForcedRepaint(false);
+        SetPainting(false);
+      }
+      viewManager->FlushDirtyRegionToWidget(aView);
     } else {
-      FlushDirtyRegionToWidget(aView);
+      viewManager->FlushDirtyRegionToWidget(aView);
     }
   }
 }
 
 void nsViewManager::FlushDirtyRegionToWidget(nsView* aView)
 {
+  NS_ASSERTION(aView->GetViewManager() == this,
+               "FlushDirtyRegionToWidget called on view we don't own");
+
   if (!aView->HasNonEmptyDirtyRegion())
     return;
 

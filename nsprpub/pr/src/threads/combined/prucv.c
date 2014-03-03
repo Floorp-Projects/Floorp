@@ -446,29 +446,35 @@ PR_IMPLEMENT(PRCondVar*) PR_NewCondVar(PRLock *lock)
 {
     PRCondVar *cvar;
 
-    PR_ASSERT(lock != NULL);
-
     cvar = PR_NEWZAP(PRCondVar);
     if (cvar) {
-#ifdef _PR_GLOBAL_THREADS_ONLY
-	if(_PR_MD_NEW_CV(&cvar->md)) {
-		PR_DELETE(cvar);
-		PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, 0);
-		return NULL;
-	}
-#endif
-        if (_PR_MD_NEW_LOCK(&(cvar->ilock)) == PR_FAILURE) {
-		PR_DELETE(cvar);
-		PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, 0);
-		return NULL;
-	}
-    cvar->lock = lock;
-	PR_INIT_CLIST(&cvar->condQ);
-
+        if (_PR_InitCondVar(cvar, lock) != PR_SUCCESS) {
+            PR_DELETE(cvar);
+            return NULL;
+        }
     } else {
         PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
     }
     return cvar;
+}
+
+PRStatus _PR_InitCondVar(PRCondVar *cvar, PRLock *lock)
+{
+    PR_ASSERT(lock != NULL);
+
+#ifdef _PR_GLOBAL_THREADS_ONLY
+    if(_PR_MD_NEW_CV(&cvar->md)) {
+        PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, 0);
+        return PR_FAILURE;
+    }
+#endif
+    if (_PR_MD_NEW_LOCK(&(cvar->ilock)) != PR_SUCCESS) {
+        PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, 0);
+        return PR_FAILURE;
+    }
+    cvar->lock = lock;
+    PR_INIT_CLIST(&cvar->condQ);
+    return PR_SUCCESS;
 }
 
 /*
@@ -479,14 +485,18 @@ PR_IMPLEMENT(PRCondVar*) PR_NewCondVar(PRLock *lock)
 */
 PR_IMPLEMENT(void) PR_DestroyCondVar(PRCondVar *cvar)
 {
+    _PR_FreeCondVar(cvar);
+    PR_DELETE(cvar);
+}
+
+void _PR_FreeCondVar(PRCondVar *cvar)
+{
     PR_ASSERT(cvar->condQ.next == &cvar->condQ);
 
 #ifdef _PR_GLOBAL_THREADS_ONLY
     _PR_MD_FREE_CV(&cvar->md);
 #endif
     _PR_MD_FREE_LOCK(&(cvar->ilock));
- 
-    PR_DELETE(cvar);
 }
 
 /*

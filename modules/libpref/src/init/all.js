@@ -263,6 +263,19 @@ pref("media.peerconnection.agc_enabled", false);
 pref("media.peerconnection.agc", 1);
 pref("media.peerconnection.noise_enabled", false);
 pref("media.peerconnection.noise", 1);
+// Adjustments for OS mediastream+output+OS+input delay (lower bound)
+#if defined(XP_MACOSX)
+pref("media.peerconnection.capture_delay", 50);
+#elif defined(XP_WIN)
+pref("media.peerconnection.capture_delay", 50);
+#elif defined(ANDROID)
+pref("media.peerconnection.capture_delay", 100);
+#elif defined(XP_LINUX)
+pref("media.peerconnection.capture_delay", 70);
+#else
+// *BSD, others - merely a guess for now
+pref("media.peerconnection.capture_delay", 50);
+#endif
 #else
 #ifdef ANDROID
 pref("media.navigator.enabled", true);
@@ -2572,10 +2585,6 @@ pref("intl.tsf.enable", false);
 // Support IMEs implemented with IMM in TSF mode.
 pref("intl.tsf.support_imm", true);
 
-// We need to notify the layout change to TSF, but we cannot check the actual
-// change now, therefore, we always notify it by this fequency.
-pref("intl.tsf.on_layout_change_interval", 100);
-
 // Enables/Disables hack for specific TIP.
 
 // Whether creates native caret for ATOK or not.
@@ -4323,3 +4332,6 @@ pref("dom.wakelock.enabled", false);
 
 // The URL of the Firefox Accounts auth server backend
 pref("identity.fxaccounts.auth.uri", "https://api.accounts.firefox.com/v1");
+
+// disable mozsample size for now
+pref("image.mozsamplesize.enabled", false);

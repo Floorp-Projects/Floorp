@@ -539,6 +539,8 @@ NSPR_API(void) _PR_PauseCPU(void);
     _PR_MD_UNLOCK(&(_lock)->ilock);
     
 extern void _PR_UnblockLockWaiter(PRLock *lock);
+extern PRStatus _PR_InitLock(PRLock *lock);
+extern void _PR_FreeLock(PRLock *lock);
 
 #define _PR_LOCK_PTR(_qp) \
     ((PRLock*) ((char*) (_qp) - offsetof(PRLock,links)))
@@ -550,8 +552,11 @@ extern void _PR_UnblockLockWaiter(PRLock *lock);
 #define _PR_CVAR_UNLOCK(_cvar) \
     _PR_MD_UNLOCK(&(_cvar)->ilock);
 
+extern PRStatus _PR_InitCondVar(PRCondVar *cvar, PRLock *lock);
+extern void _PR_FreeCondVar(PRCondVar *cvar);
 extern PRStatus _PR_WaitCondVar(
     PRThread *thread, PRCondVar *cvar, PRLock *lock, PRIntervalTime timeout);
+extern void _PR_NotifyCondVar(PRCondVar *cvar, PRThread *me);
 extern PRUint32 _PR_CondVarToString(PRCondVar *cvar, char *buf, PRUint32 buflen);
 
 NSPR_API(void) _PR_Notify(PRMonitor *mon, PRBool all, PRBool sticky);
@@ -1420,8 +1425,6 @@ struct PRLock {
 #endif
 };
 
-extern void _PR_InitLocks(void);
-
 struct PRCondVar {
     PRLock *lock;               /* associated lock that protects the condition */
 #if defined(_PR_PTHREADS)
@@ -1446,10 +1449,6 @@ struct PRCondVar {
 struct PRMonitor {
     const char* name;           /* monitor name for debugging */
 #if defined(_PR_PTHREADS)
-    PRIntn notifyTimes;         /* number of pending notifies for waitCV.
-                                 * The special value -1 means a broadcast
-                                 * (PR_NotifyAll). */
-
     pthread_mutex_t lock;       /* lock is only held when accessing fields
                                  * of the PRMonitor, instead of being held
                                  * while the monitor is entered. The only
@@ -1468,9 +1467,20 @@ struct PRMonitor {
                                  * signal entryCV, and releases the reference
                                  * after signaling entryCV. */
 #else  /* defined(_PR_PTHREADS) */
-    PRCondVar *cvar;            /* associated lock and condition variable queue */
+    PRLock lock;                /* lock is only held when accessing fields
+                                 * of the PRMonitor, instead of being held
+                                 * while the monitor is entered. The only
+                                 * exception is notifyTimes, which is
+                                 * protected by the monitor. */
+    PRThread *owner;            /* the owner of the monitor or invalid */
+    PRCondVar entryCV;          /* for threads waiting to enter the monitor */
+
+    PRCondVar waitCV;           /* for threads waiting on the monitor */
 #endif /* defined(_PR_PTHREADS) */
     PRUint32 entryCount;        /* # of times re-entered */
+    PRIntn notifyTimes;         /* number of pending notifies for waitCV.
+                                 * The special value -1 means a broadcast
+                                 * (PR_NotifyAll). */
 };
 
 /************************************************************************/
@@ -1489,8 +1499,6 @@ struct PRSemaphore {
 #endif /* defined(_PR_PTHREADS) */
 #endif /* defined(_PR_BTHREADS) */
 };
-
-NSPR_API(void) _PR_InitSem(void);
 
 /*************************************************************************/
 
@@ -1765,6 +1773,7 @@ struct PRDirUTF16 {
 }; 
 #endif /* MOZ_UNICODE */
 
+extern void _PR_InitLocks(void);
 extern void _PR_InitSegs(void);
 extern void _PR_InitStacks(void);
 extern void _PR_InitTPD(void);
@@ -1782,7 +1791,6 @@ extern void _PR_InitDtoa(void);
 extern void _PR_InitTime(void);
 extern void _PR_InitMW(void);
 extern void _PR_InitRWLocks(void);
-extern void _PR_NotifyCondVar(PRCondVar *cvar, PRThread *me);
 extern void _PR_CleanupThread(PRThread *thread);
 extern void _PR_CleanupCallOnce(void);
 extern void _PR_CleanupMW(void);

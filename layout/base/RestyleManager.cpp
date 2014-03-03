@@ -308,6 +308,12 @@ RestyleManager::RecomputePosition(nsIFrame* aFrame)
     return true;
   }
 
+  const nsStyleDisplay* display = aFrame->StyleDisplay();
+  // Changes to the offsets of a non-positioned element can safely be ignored.
+  if (display->mPosition == NS_STYLE_POSITION_STATIC) {
+    return true;
+  }
+
   // Don't process position changes on frames which have views or the ones which
   // have a view somewhere in their descendants, because the corresponding view
   // needs to be repositioned properly as well.
@@ -315,12 +321,6 @@ RestyleManager::RecomputePosition(nsIFrame* aFrame)
       (aFrame->GetStateBits() & NS_FRAME_HAS_CHILD_WITH_VIEW)) {
     StyleChangeReflow(aFrame, nsChangeHint_NeedReflow);
     return false;
-  }
-
-  const nsStyleDisplay* display = aFrame->StyleDisplay();
-  // Changes to the offsets of a non-positioned element can safely be ignored.
-  if (display->mPosition == NS_STYLE_POSITION_STATIC) {
-    return true;
   }
 
   aFrame->SchedulePaint();

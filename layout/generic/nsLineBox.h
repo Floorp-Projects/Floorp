@@ -399,7 +399,10 @@ public:
   }
   void SetBreakTypeBefore(uint8_t aBreakType) {
     NS_ASSERTION(IsBlock(), "Only blocks have break-before");
-    NS_ASSERTION(aBreakType <= NS_STYLE_CLEAR_LEFT_AND_RIGHT,
+    NS_ASSERTION(aBreakType == NS_STYLE_CLEAR_NONE ||
+                 aBreakType == NS_STYLE_CLEAR_LEFT ||
+                 aBreakType == NS_STYLE_CLEAR_RIGHT ||
+                 aBreakType == NS_STYLE_CLEAR_BOTH,
                  "Only float break types are allowed before a line");
     mFlags.mBreakType = aBreakType;
   }
@@ -418,7 +421,7 @@ public:
   bool HasFloatBreakAfter() const {
     return !IsBlock() && (NS_STYLE_CLEAR_LEFT == mFlags.mBreakType ||
                           NS_STYLE_CLEAR_RIGHT == mFlags.mBreakType ||
-                          NS_STYLE_CLEAR_LEFT_AND_RIGHT == mFlags.mBreakType);
+                          NS_STYLE_CLEAR_BOTH == mFlags.mBreakType);
   }
   uint8_t GetBreakTypeAfter() const {
     return !IsBlock() ? mFlags.mBreakType : NS_STYLE_CLEAR_NONE;

@@ -1275,7 +1275,11 @@ gfxFontUtils::DecodeFontName(const char *aNameData, int32_t aByteLen,
                              uint32_t aPlatformCode, uint32_t aScriptCode,
                              uint32_t aLangCode, nsAString& aName)
 {
-    NS_ASSERTION(aByteLen > 0, "bad length for font name data");
+    if (aByteLen <= 0) {
+        NS_WARNING("empty font name");
+        aName.SetLength(0);
+        return true;
+    }
 
     const char *csName = GetCharsetForFontName(aPlatformCode, aScriptCode, aLangCode);
 

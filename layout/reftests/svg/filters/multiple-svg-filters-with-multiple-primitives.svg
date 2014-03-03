@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <filter id="flood-with-red">
+    <!-- Turn the black rect into a yellow rect. -->
+    <feFlood x="20" y="20" width="100" height="100" flood-color="#ffff00"/>
+    <!-- Turn the yellow rect into a red rect. -->
+    <feComponentTransfer x="0" y="0" width="120" height="120">
+        <feFuncR type="identity"/>
+        <feFuncG type="table" tableValues="0 0"/>
+        <feFuncB type="table" tableValues="0 0"/>
+        <feFuncA type="identity"/>
+    </feComponentTransfer>
+  </filter>
+  <filter id="blur-and-hue-rotate">
+    <!-- Blur the red rect. -->
+    <feGaussianBlur stdDeviation="3" x="10" y="10" width="120" height="120"/>
+    <!-- Turn the red rect into a green rect. -->
+    <feColorMatrix type="hueRotate" values="90"/>
+  </filter>
+  <rect x="20" y="20" width="100" height="100" filter="url(#flood-with-red) url(#blur-and-hue-rotate)"/>
+</svg>

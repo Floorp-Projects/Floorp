@@ -18,6 +18,7 @@
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/LazyIdleThread.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/Scoped.h"
 #include "mozilla/Services.h"
 
 #include "nsAutoPtr.h"
@@ -73,6 +74,10 @@ using namespace mozilla::dom::devicestorage;
 using namespace mozilla::ipc;
 
 #include "nsDirectoryServiceDefs.h"
+
+namespace mozilla {
+  MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedPRFileDesc, PRFileDesc, PR_Close);
+}
 
 StaticAutoPtr<DeviceStorageUsedSpaceCache>
   DeviceStorageUsedSpaceCache::sDeviceStorageUsedSpaceCache;
@@ -933,14 +938,16 @@ DeviceStorageFile::AppendRelativePath(const nsAString& aPath) {
 nsresult
 DeviceStorageFile::CreateFileDescriptor(FileDescriptor& aFileDescriptor)
 {
-  PRFileDesc* fd;
+  ScopedPRFileDesc fd;
   nsresult rv = mFile->OpenNSPRFileDesc(PR_RDWR | PR_CREATE_FILE,
-                                        0660, &fd);
+                                        0660, &fd.rwget());
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // NOTE: The FileDescriptor::PlatformHandleType constructor returns a dup of
+  //       the file descriptor, so we don't need the original fd after this.
+  //       Our scoped file descriptor will automatically close fd.
   aFileDescriptor =
     FileDescriptor::PlatformHandleType(PR_FileDesc2NativeHandle(fd));
-
   return NS_OK;
 }
 

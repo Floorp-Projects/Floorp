@@ -89,7 +89,7 @@ enum LayerRenderStateFlags {
 struct LayerRenderState {
   LayerRenderState()
 #ifdef MOZ_WIDGET_GONK
-    : mSurface(nullptr), mFlags(0), mHasOwnOffset(false), mTexture(nullptr)
+    : mSurface(nullptr), mTexture(nullptr), mFlags(0), mHasOwnOffset(false)
 #endif
   {}
 
@@ -100,9 +100,9 @@ struct LayerRenderState {
                    TextureHost* aTexture)
     : mSurface(aSurface)
     , mSize(aSize)
+    , mTexture(aTexture)
     , mFlags(aFlags)
     , mHasOwnOffset(false)
-    , mTexture(aTexture)
   {}
 
   bool YFlipped() const

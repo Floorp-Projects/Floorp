@@ -630,6 +630,31 @@ WebGLFramebuffer::CheckFramebufferStatus() const
     return mContext->gl->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
 }
 
+bool
+WebGLFramebuffer::HasCompletePlanes(GLbitfield mask)
+{
+    if (CheckFramebufferStatus() != LOCAL_GL_FRAMEBUFFER_COMPLETE)
+        return false;
+
+    MOZ_ASSERT(mContext->mBoundFramebuffer == this);
+    bool hasPlanes = true;
+    if (mask & LOCAL_GL_COLOR_BUFFER_BIT) {
+        hasPlanes &= ColorAttachmentCount() &&
+                     ColorAttachment(0).IsDefined();
+    }
+
+    if (mask & LOCAL_GL_DEPTH_BUFFER_BIT) {
+        hasPlanes &= DepthAttachment().IsDefined() ||
+                     DepthStencilAttachment().IsDefined();
+    }
+
+    if (mask & LOCAL_GL_STENCIL_BUFFER_BIT) {
+        hasPlanes &= StencilAttachment().IsDefined() ||
+                     DepthStencilAttachment().IsDefined();
+    }
+
+    return hasPlanes;
+}
 
 bool
 WebGLFramebuffer::CheckAndInitializeAttachments()

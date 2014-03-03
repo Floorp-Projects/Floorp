@@ -1137,6 +1137,7 @@ nsHTMLFramesetFrame::Reflow(nsPresContext*           aPresContext,
   mDrag.UnSet();
 
   aDesiredSize.SetOverflowAreasToDesiredBounds();
+  FinishAndStoreOverflow(&aDesiredSize);
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return NS_OK;

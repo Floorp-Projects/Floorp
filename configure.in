@@ -60,7 +60,7 @@ dnl ========================================================
 GLIB_VERSION=1.2.0
 PERL_VERSION=5.006
 CAIRO_VERSION=1.10
-PANGO_VERSION=1.14.0
+PANGO_VERSION=1.22.0
 GTK2_VERSION=2.10.0
 GTK3_VERSION=3.0.0
 WINDRES_VERSION=2.14.90
@@ -251,10 +251,13 @@ if test -n "$gonkdir" ; then
     19)
         GONK_INCLUDES="-I$gonkdir/frameworks/native/include -I$gonkdir/frameworks/av/include -I$gonkdir/frameworks/av/include/media -I$gonkdir/frameworks/av/include/camera -I$gonkdir/frameworks/native/include/media/openmax -I$gonkdir/frameworks/av/media/libstagefright/include"
         MOZ_B2G_CAMERA=1
-        MOZ_OMX_DECODER=1
         MOZ_B2G_BT=1
         MOZ_B2G_BT_BLUEDROID=1
         MOZ_NFC=1
+        MOZ_RTSP=1
+        MOZ_OMX_DECODER=1
+        MOZ_OMX_ENCODER=1
+        AC_DEFINE(MOZ_OMX_ENCODER)
 
         ;;
     *)
@@ -4049,6 +4052,16 @@ if test -z "$MOZ_UPDATE_CHANNEL"; then
 fi
 AC_DEFINE_UNQUOTED(MOZ_UPDATE_CHANNEL, $MOZ_UPDATE_CHANNEL)
 AC_SUBST(MOZ_UPDATE_CHANNEL)
+
+# Allow to specify a Mozilla API key file that contains the secret key to be
+# used for various Mozilla API requests.
+MOZ_ARG_WITH_STRING(mozilla-api-keyfile,
+[  --with-mozilla-api-keyfile=file   Use the secret key contained in the given keyfile for Mozilla API requests],
+  MOZ_MOZILLA_API_KEY=`cat $withval`)
+if test -z "$MOZ_MOZILLA_API_KEY"; then
+    MOZ_MOZILLA_API_KEY=no-mozilla-api-key
+fi
+AC_SUBST(MOZ_MOZILLA_API_KEY)
 
 # Allow to specify a Google API key file that contains the secret key to be
 # used for various Google API requests.

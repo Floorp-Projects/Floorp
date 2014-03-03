@@ -160,14 +160,22 @@ PR_IMPLEMENT(PRLock*) PR_NewLock(void)
 
     lock = PR_NEWZAP(PRLock);
     if (lock) {
-        if (_PR_MD_NEW_LOCK(&lock->ilock) == PR_FAILURE) {
-		PR_DELETE(lock);
-		return(NULL);
-	}
-        PR_INIT_CLIST(&lock->links);
-        PR_INIT_CLIST(&lock->waitQ);
+        if (_PR_InitLock(lock) != PR_SUCCESS) {
+            PR_DELETE(lock);
+            return NULL;
+        }
     }
     return lock;
+}
+
+PRStatus _PR_InitLock(PRLock *lock)
+{
+    if (_PR_MD_NEW_LOCK(&lock->ilock) != PR_SUCCESS) {
+        return PR_FAILURE;
+    }
+    PR_INIT_CLIST(&lock->links);
+    PR_INIT_CLIST(&lock->waitQ);
+    return PR_SUCCESS;
 }
 
 /*
@@ -177,9 +185,14 @@ PR_IMPLEMENT(PRLock*) PR_NewLock(void)
 */
 PR_IMPLEMENT(void) PR_DestroyLock(PRLock *lock)
 {
-    PR_ASSERT(lock->owner == 0);
-	_PR_MD_FREE_LOCK(&lock->ilock);
+    _PR_FreeLock(lock);
     PR_DELETE(lock);
+}
+
+void _PR_FreeLock(PRLock *lock)
+{
+    PR_ASSERT(lock->owner == 0);
+    _PR_MD_FREE_LOCK(&lock->ilock);
 }
 
 extern PRThread *suspendAllThread;

@@ -323,8 +323,6 @@ nsLineLayout::UpdateBand(const nsRect& aNewAvailSpace,
   for (PerSpanData* psd = mCurrentSpan; psd; psd = psd->mParent) {
     psd->mRightEdge += deltaWidth;
     psd->mContainsFloat = true;
-    NS_ASSERTION(psd->mX - mTrimmableWidth <= psd->mRightEdge,
-                 "We placed a float where there was no room!");
 #ifdef NOISY_REFLOW
     printf("  span %p: oldRightEdge=%d newRightEdge=%d\n",
            psd, psd->mRightEdge - deltaRightEdge, psd->mRightEdge);

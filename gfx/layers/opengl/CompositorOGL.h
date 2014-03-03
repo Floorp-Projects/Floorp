@@ -307,7 +307,6 @@ private:
   // Textures used for direct texturing of buffers like gralloc.
   // The index of the texture in this array must correspond to the texture unit.
   nsTArray<GLuint> mTextures;
-  static bool sDrawFPS;
 
   /**
    * Height of the OpenGL context's primary framebuffer in pixels. Used by
