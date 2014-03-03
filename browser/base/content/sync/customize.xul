@@ -38,18 +38,18 @@
 #endif
                  />
 
-    <checkbox label="&engine.bookmarks.label;"
-              accesskey="&engine.bookmarks.accesskey;"
-              preference="engine.bookmarks"/>
-    <checkbox label="&engine.history.label;"
-              accesskey="&engine.history.accesskey;"
-              preference="engine.history"/>
     <checkbox label="&engine.tabs.label;"
               accesskey="&engine.tabs.accesskey;"
               preference="engine.tabs"/>
+    <checkbox label="&engine.bookmarks.label;"
+              accesskey="&engine.bookmarks.accesskey;"
+              preference="engine.bookmarks"/>
     <checkbox label="&engine.passwords.label;"
               accesskey="&engine.passwords.accesskey;"
               preference="engine.passwords"/>
+    <checkbox label="&engine.history.label;"
+              accesskey="&engine.history.accesskey;"
+              preference="engine.history"/>
     <checkbox label="&engine.addons.label;"
               accesskey="&engine.addons.accesskey;"
               preference="engine.addons"/>
