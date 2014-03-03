@@ -12,7 +12,7 @@ Components.utils.import("resource://gre/modules/Messaging.jsm");
 this.EXPORTED_SYMBOLS = ["Prompt"];
 
 function log(msg) {
-  //Services.console.logStringMessage(msg);
+  Services.console.logStringMessage(msg);
 }
 
 function Prompt(aOptions) {

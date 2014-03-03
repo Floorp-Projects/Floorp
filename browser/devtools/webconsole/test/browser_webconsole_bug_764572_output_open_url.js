@@ -11,6 +11,11 @@ const CONTEXT_MENU_ID = "#menu_openURL";
 let HUD = null, outputNode = null, contextMenu = null;
 
 function test() {
+  let original = Services.prefs.getBoolPref("devtools.webconsole.filter.networkinfo");
+  Services.prefs.setBoolPref("devtools.webconsole.filter.networkinfo", true);
+  registerCleanupFunction(() => {
+    Services.prefs.setBoolPref("devtools.webconsole.filter.networkinfo", original);
+  });
   addTab(TEST_URI);
   browser.addEventListener("load", function onLoad() {
     browser.removeEventListener("load", onLoad, true);
