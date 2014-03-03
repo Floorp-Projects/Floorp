@@ -159,8 +159,8 @@ void StopAllOffThreadCompilations(JSCompartment *comp);
 static inline bool
 IsIonEnabled(JSContext *cx)
 {
-    return cx->runtime()->options().ion() &&
-        cx->runtime()->options().baseline() &&
+    return cx->compartment()->options().ion(cx) &&
+        cx->compartment()->options().baseline(cx) &&
         cx->typeInferenceEnabled();
 }
 
