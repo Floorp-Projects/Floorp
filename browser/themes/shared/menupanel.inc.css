@@ -126,11 +126,6 @@ toolbarpaletteitem[place="palette"] > #email-link-button {
   -moz-image-region: rect(0, 800px, 32px, 768px);
 }
 
-#sidebar-button[cui-areatype="menu-panel"],
-toolbarpaletteitem[place="palette"] > #sidebar-button {
-  -moz-image-region: rect(0, 832px, 32px, 800px);
-}
-
 /* Wide panel control icons */
 
 #edit-controls@inAnyPanel@ > toolbarbutton,
