@@ -6,7 +6,7 @@
   "event/core": "sdk/event/core",
   "events": "sdk/deprecated/events",
   "functional": "sdk/core/functional",
-  "l10n/core": "sdk/l10n/core",
+  "l10n/core": "sdk/l10n/json/core",
   "l10n/html": "sdk/l10n/html",
   "l10n/loader": "sdk/l10n/loader",
   "l10n/locale": "sdk/l10n/locale",

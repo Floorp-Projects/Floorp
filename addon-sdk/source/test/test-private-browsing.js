@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 'use strict';
 
-const { Ci } = require('chrome');
+const { Ci, Cu } = require('chrome');
 const { safeMerge } = require('sdk/util/object');
 const windows = require('sdk/windows').browserWindows;
 const tabs = require('sdk/tabs');
@@ -20,6 +20,8 @@ const { pb } = require('./private-browsing/helper');
 const prefs = require('sdk/preferences/service');
 const { set: setPref } = require("sdk/preferences/service");
 const DEPRECATE_PREF = "devtools.errorconsole.deprecation_warnings";
+
+const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 
 const kAutoStartPref = "browser.privatebrowsing.autostart";
 
@@ -93,8 +95,8 @@ exports.testGetOwnerWindow = function(assert, done) {
     onOpen: function(tab) {
       // test that getOwnerWindow works as expected
       if (is('Fennec')) {
-        assert.notStrictEqual(chromeWindow, getOwnerWindow(tab)); 
-        assert.ok(getOwnerWindow(tab) instanceof Ci.nsIDOMWindow); 
+        assert.notStrictEqual(chromeWindow, getOwnerWindow(tab));
+        assert.ok(getOwnerWindow(tab) instanceof Ci.nsIDOMWindow);
       }
       else {
         assert.strictEqual(chromeWindow, getOwnerWindow(tab), 'associated window is the same for window and window\'s tab');
@@ -109,6 +111,14 @@ exports.testGetOwnerWindow = function(assert, done) {
     }
   });
 };
+
+exports.testNSIPrivateBrowsingChannel = function(assert) {
+  let channel = Services.io.newChannel("about:blank", null, null);
+  channel.QueryInterface(Ci.nsIPrivateBrowsingChannel);
+  assert.equal(isPrivate(channel), false, 'isPrivate detects non-private channels');
+  channel.setPrivate(true);
+  assert.ok(isPrivate(channel), 'isPrivate detects private channels');
+}
 
 exports.testNewGlobalPBService = function(assert) {
   assert.equal(isPrivate(), false, 'isPrivate() is false by default');

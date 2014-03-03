@@ -70,15 +70,15 @@ const ContentWorker = Object.freeze({
    *              onChromeEvent --> callback registered through pipe.on
    */
   createPipe: function createPipe(emitToChrome) {
-    function onEvent() {
-      // Convert to real array
-      let args = Array.slice(arguments);
+    function onEvent(type, ...args) {
       // JSON.stringify is buggy with cross-sandbox values,
       // it may return "{}" on functions. Use a replacer to match them correctly.
-      function replacer(k, v) {
-        return typeof v === "function" ? undefined : v;
-      }
-      let str = JSON.stringify(args, replacer);
+      let replacer = (k, v) =>
+        typeof(v) === "function"
+          ? (type === "console" ? Function.toString.call(v) : void(0))
+          : v;
+
+      let str = JSON.stringify([type, ...args], replacer);
       emitToChrome(str);
     }
 
@@ -163,7 +163,7 @@ const ContentWorker = Object.freeze({
               fileName: e.fileName,
               lineNumber: e.lineNumber,
               stack: e.stack,
-              name: e.name, 
+              name: e.name,
             };
           }
           pipe.emit('error', wrapper);

@@ -64,16 +64,16 @@ exports.testWindowTrackerIgnoresPrivateWindows = function(assert, done) {
     assert.equal(getWindowTitle(window), window.document.title,
                  'getWindowTitle works');
 
-    close(window).then(function() {
+    return close(window).then(function() {
       assert.pass('private window was closed');
 
-      makeEmptyBrowserWindow().then(function(window) {
+      return makeEmptyBrowserWindow().then(function(window) {
         myNonPrivateWindowId = getInnerId(window);
         assert.notEqual(myPrivateWindowId, myNonPrivateWindowId, 'non private window was opened');
-        close(window);
+        return close(window);
       });
     });
-  });
+  }).then(null, assert.fail);
 };
 
 // Test setting activeWIndow and onFocus for private windows
@@ -145,7 +145,7 @@ exports.testSettingActiveWindowDoesNotIgnorePrivateWindow = function(assert, don
         assert.deepEqual(winUtils.activeWindow, browserWindow,
                          "Correct active window when pb mode is supported [4]");
 
-        close(window).then(done);
+        close(window).then(done).then(null, assert.fail);
       }
     ];
 
@@ -197,8 +197,8 @@ exports.testActiveWindowDoesNotIgnorePrivateWindow = function(assert, done) {
       assert.equal(isPrivate(window), false, "window is not private");
     }
 
-    close(window).then(done);
-  });
+    return close(window);
+  }).then(done).then(null, assert.fail);
 }
 
 exports.testWindowIteratorIgnoresPrivateWindows = function(assert, done) {
@@ -210,8 +210,8 @@ exports.testWindowIteratorIgnoresPrivateWindows = function(assert, done) {
     assert.ok(toArray(winUtils.windowIterator()).indexOf(window) > -1,
               "window is in windowIterator()");
 
-    close(window).then(done);
-  });
+    return close(window);
+  }).then(done).then(null, assert.fail);
 };
 
 // test that it is not possible to find a private window in
@@ -243,6 +243,6 @@ exports.testWindowIteratorPrivateDefault = function(assert, done) {
     assert.equal(browserWindows.length, 2, '2 windows open');
     assert.equal(windows(null, { includePrivate: true }).length, 2);
 
-    close(window).then(done);
-  });
+    return close(window);
+  }).then(done).then(null, assert.fail);
 };

@@ -62,3 +62,29 @@ exports.testPageMod = function testPageMod(assert, done, testURL, pageModOptions
 
   return pageMods;
 }
+
+/**
+ * helper function that creates a PageMod and calls back the appropriate handler
+ * based on the value of document.readyState at the time contentScript is attached
+ */
+exports.handleReadyState = function(url, contentScriptWhen, callbacks) {
+  const { PageMod } = Loader(module).require('sdk/page-mod');
+
+  let pagemod = PageMod({
+    include: url,
+    attachTo: ['existing', 'top'],
+    contentScriptWhen: contentScriptWhen,
+    contentScript: "self.postMessage(document.readyState)",
+    onAttach: worker => {
+      let { tab } = worker;
+      worker.on('message', readyState => {
+        pagemod.destroy();
+        // generate event name from `readyState`, e.g. `"loading"` becomes `onLoading`.
+        let type = 'on' + readyState[0].toUpperCase() + readyState.substr(1);
+
+        if (type in callbacks)
+          callbacks[type](tab); 
+      })
+    }
+  });
+}
