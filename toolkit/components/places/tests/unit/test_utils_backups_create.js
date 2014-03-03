@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
  /**
-  * Check for correct functionality of PlacesUtils.archiveBookmarksFile
+  * Check for correct functionality of bookmarks backups
   */
 
 const PREFIX = "bookmarks-";
