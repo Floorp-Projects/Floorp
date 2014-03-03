@@ -12,6 +12,9 @@
   <color name="fxaccount_linkified_textColorLinkSubdued">#c0c9d0</color>
 
   <color name="fxaccount_error">#d63920</color>
+
+  <color name="fxaccount_error_preference_backgroundcolor">#fad4d2</color>
+
   <color name="fxaccount_button_textColor">#ffffff</color>
   <color name="fxaccount_button_background_active">#e66000</color>
   <color name="fxaccount_button_background_hit">#fd9500</color>
