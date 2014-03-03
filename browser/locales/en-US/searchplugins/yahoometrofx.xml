@@ -13,7 +13,7 @@
 <Url type="text/html" method="GET" template="http://search.yahoo.com/search">
   <Param name="p" value="{searchTerms}"/>
   <Param name="ei" value="UTF-8"/>
-  <MozParam name="fr" condition="pref" pref="yahoo-fr" />
+  <MozParam name="fr" condition="pref" pref="yahoo-fr-metro" />
 </Url>
 <SearchForm>http://search.yahoo.com/</SearchForm>
 </SearchPlugin>
