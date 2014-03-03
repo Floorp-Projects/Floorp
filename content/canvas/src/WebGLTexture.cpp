@@ -49,8 +49,8 @@ int64_t
 WebGLTexture::ImageInfo::MemoryUsage() const {
     if (mImageDataStatus == WebGLImageDataStatus::NoImageData)
         return 0;
-    int64_t texelSizeInBits = WebGLContext::GetBitsPerTexel(mInternalFormat, mType);
-    return int64_t(mWidth) * int64_t(mHeight) * texelSizeInBits / 8;
+    int64_t bitsPerTexel = WebGLContext::GetBitsPerTexel(mInternalFormat, mType);
+    return int64_t(mWidth) * int64_t(mHeight) * bitsPerTexel/8;
 }
 
 int64_t
