@@ -321,6 +321,9 @@ pref("media.audio_data.enabled", false);
 // 2 = STICKY (Allow lock to be broken, with hysteresis)
 pref("apz.axis_lock_mode", 0);
 
+// Whether to print the APZC tree for debugging
+pref("apz.printtree", false);
+
 #ifdef XP_MACOSX
 // Whether to run in native HiDPI mode on machines with "Retina"/HiDPI display;
 //   <= 0 : hidpi mode disabled, display will just use pixel-based upscaling
@@ -753,12 +756,15 @@ pref("javascript.options.strict",           false);
 #ifdef DEBUG
 pref("javascript.options.strict.debug",     true);
 #endif
-pref("javascript.options.baselinejit",      true);
-pref("javascript.options.ion",              true);
+pref("javascript.options.baselinejit.content", true);
+pref("javascript.options.baselinejit.chrome",  true);
+pref("javascript.options.ion.content",      true);
+pref("javascript.options.ion.chrome",       true);
 pref("javascript.options.asmjs",            true);
 pref("javascript.options.parallel_parsing", true);
 pref("javascript.options.ion.parallel_compilation", true);
-pref("javascript.options.typeinference",    true);
+pref("javascript.options.typeinference.content", true);
+pref("javascript.options.typeinference.chrome", true);
 // This preference limits the memory usage of javascript.
 // If you want to change these values for your device,
 // please find Bug 417052 comment 17 and Bug 456721

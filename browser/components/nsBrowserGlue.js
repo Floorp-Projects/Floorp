@@ -1046,13 +1046,13 @@ BrowserGlue.prototype = {
     // forced migration (due to a major schema change).
     // If the database is corrupt or has been newly created we should
     // import bookmarks.
-    var dbStatus = PlacesUtils.history.databaseStatus;
-    var importBookmarks = !aInitialMigrationPerformed &&
+    let dbStatus = PlacesUtils.history.databaseStatus;
+    let importBookmarks = !aInitialMigrationPerformed &&
                           (dbStatus == PlacesUtils.history.DATABASE_STATUS_CREATE ||
                            dbStatus == PlacesUtils.history.DATABASE_STATUS_CORRUPT);
 
     // Check if user or an extension has required to import bookmarks.html
-    var importBookmarksHTML = false;
+    let importBookmarksHTML = false;
     try {
       importBookmarksHTML =
         Services.prefs.getBoolPref("browser.places.importBookmarksHTML");
@@ -1063,7 +1063,7 @@ BrowserGlue.prototype = {
     Task.spawn(function() {
       // Check if Safe Mode or the user has required to restore bookmarks from
       // default profile's bookmarks.html
-      var restoreDefaultBookmarks = false;
+      let restoreDefaultBookmarks = false;
       try {
         restoreDefaultBookmarks =
           Services.prefs.getBoolPref("browser.bookmarks.restore_default_bookmarks");
@@ -1091,10 +1091,7 @@ BrowserGlue.prototype = {
         else {
           // We have created a new database but we don't have any backup available
           importBookmarks = true;
-          var dirService = Cc["@mozilla.org/file/directory_service;1"].
-                           getService(Ci.nsIProperties);
-          var bookmarksHTMLFile = dirService.get("BMarks", Ci.nsILocalFile);
-          if (bookmarksHTMLFile.exists()) {
+          if (yield OS.File.exists(BookmarkHTMLUtils.defaultPath)) {
             // If bookmarks.html is available in current profile import it...
             importBookmarksHTML = true;
           }
@@ -1120,36 +1117,30 @@ BrowserGlue.prototype = {
         // An import operation is about to run.
         // Don't try to recreate smart bookmarks if autoExportHTML is true or
         // smart bookmarks are disabled.
-        var autoExportHTML = false;
+        let autoExportHTML = false;
         try {
           autoExportHTML = Services.prefs.getBoolPref("browser.bookmarks.autoExportHTML");
         } catch(ex) {}
-        var smartBookmarksVersion = 0;
+        let smartBookmarksVersion = 0;
         try {
           smartBookmarksVersion = Services.prefs.getIntPref("browser.places.smartBookmarksVersion");
         } catch(ex) {}
         if (!autoExportHTML && smartBookmarksVersion != -1)
           Services.prefs.setIntPref("browser.places.smartBookmarksVersion", 0);
 
-        // Get bookmarks.html file location
-        var dirService = Cc["@mozilla.org/file/directory_service;1"].
-                         getService(Ci.nsIProperties);
-
-        var bookmarksURI = null;
+        let bookmarksUrl = null;
         if (restoreDefaultBookmarks) {
           // User wants to restore bookmarks.html file from default profile folder
-          bookmarksURI = NetUtil.newURI("resource:///defaults/profile/bookmarks.html");
+          bookmarksUrl = "resource:///defaults/profile/bookmarks.html";
         }
-        else {
-          var bookmarksFile = dirService.get("BMarks", Ci.nsILocalFile);
-          if (bookmarksFile.exists())
-            bookmarksURI = NetUtil.newURI(bookmarksFile);
+        else if (yield OS.File.exists(BookmarkHTMLUtils.defaultPath)) {
+          bookmarksUrl = OS.Path.toFileURI(BookmarkHTMLUtils.defaultPath);
         }
 
-        if (bookmarksURI) {
+        if (bookmarksUrl) {
           // Import from bookmarks.html file.
           try {
-            BookmarkHTMLUtils.importFromURL(bookmarksURI.spec, true).then(null,
+            BookmarkHTMLUtils.importFromURL(bookmarksUrl, true).then(null,
               function onFailure() {
                 Cu.reportError("Bookmarks.html file could be corrupt.");
               }
@@ -1240,7 +1231,7 @@ BrowserGlue.prototype = {
         // can safely add a profile-before-change blocker.
         AsyncShutdown.profileBeforeChange.addBlocker(
           "Places: bookmarks.html",
-          () => BookmarkHTMLUtils.exportToFile(Services.dirsvc.get("BMarks", Ci.nsIFile))
+          () => BookmarkHTMLUtils.exportToFile(BookmarkHTMLUtils.defaultPath)
                                  .then(null, Cu.reportError)
         );
       }

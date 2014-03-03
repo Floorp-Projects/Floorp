@@ -2836,6 +2836,15 @@
     "extended_statistics_ok": true,
     "description": "PLACES: Time to convert and write the backup"
   },
+  "PLACES_EXPORT_TOHTML_MS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "low": 50,
+    "high": 2000,
+    "n_buckets": 10,
+    "extended_statistics_ok": true,
+    "description": "PLACES: Time to convert and write bookmarks.html"
+  },
   "FENNEC_FAVICONS_COUNT": {
     "expires_in_version": "never",
     "kind": "exponential",

@@ -1136,8 +1136,25 @@ public:
    * an SVG viewBox attribute).
    */
   bool IsTransformed() const;
-  
-  bool HasOpacity() const;
+
+  /**
+   * Returns true if the frame is translucent for the purposes of creating a
+   * stacking context.
+   */
+  bool HasOpacity() const
+  {
+    return HasOpacityInternal(1.0f);
+  }
+  /**
+   * Returns true if the frame is translucent for display purposes.
+   */
+  bool HasVisualOpacity() const
+  {
+    // Treat an opacity value of 0.99 and above as opaque.  This is an
+    // optimization aimed at Web content which use opacity:0.99 as a hint for
+    // creating a stacking context only.
+    return HasOpacityInternal(0.99f);
+  }
 
    /**
    * Return true if this frame might be using a transform getter.
@@ -3049,6 +3066,8 @@ private:
 
   template<bool IsLessThanOrEqual(nsIFrame*, nsIFrame*)>
   static nsIFrame* MergeSort(nsIFrame *aSource);
+
+  bool HasOpacityInternal(float aThreshold) const;
 
 #ifdef DEBUG_FRAME_DUMP
 public:
