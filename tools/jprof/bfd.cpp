@@ -187,6 +187,8 @@ void leaky::ReadSymbols(const char *aFileName, u_long aBaseAddress)
   store = bfd_make_empty_symbol(symbolFile);
 
   // Scan symbols
+  size_t demangle_buffer_size = 128;
+  char *demangle_buffer = (char*) malloc(demangle_buffer_size);
   bfd_byte* from = (bfd_byte *) minisyms;
   bfd_byte* fromend = from + symcount * size;
   for (; from < fromend; from += size) {
@@ -201,16 +203,20 @@ void leaky::ReadSymbols(const char *aFileName, u_long aBaseAddress)
       if (nm && nm[0]) {
         char* dnm = nullptr;
         if (strncmp("__thunk", nm, 7)) {
-          dnm = abi::__cxa_demangle(nm, 0, 0, 0);
+          dnm =
+            abi::__cxa_demangle(nm, demangle_buffer, &demangle_buffer_size, 0);
+          if (dnm) {
+            demangle_buffer = dnm;
+          }
         }
         (*sp)->Init(dnm ? dnm : nm, syminfo.value + aBaseAddress);
-        if (dnm) {
-          free(dnm);
-        }
         NEXT_SYMBOL;
       }
 //    }
   }
+
+  free(demangle_buffer);
+  demangle_buffer = nullptr;
 
   bfd_close(symbolFile);
 
