@@ -5775,22 +5775,6 @@ SetRuntimeOptions(JSRuntime *rt, const OptionParser &op)
     rt->setParallelIonCompilationEnabled(parallelCompilation);
 #endif
 
-#if defined(JS_CODEGEN_X86) && defined(DEBUG)
-    if (op.getBoolOption("no-fpu"))
-        JSC::MacroAssembler::SetFloatingPointDisabled();
-#endif
-
-#if (defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)) && defined(DEBUG)
-    if (op.getBoolOption("no-sse3")) {
-        JSC::MacroAssembler::SetSSE3Disabled();
-        PropagateFlagToNestedShells("--no-sse3");
-    }
-    if (op.getBoolOption("no-sse4")) {
-        JSC::MacroAssembler::SetSSE4Disabled();
-        PropagateFlagToNestedShells("--no-sse4");
-    }
-#endif
-
 #endif // JS_ION
 
 #ifdef JS_ARM_SIMULATOR
@@ -6048,7 +6032,24 @@ main(int argc, char **argv, char **envp)
      * allocations as possible.
      */
     OOM_printAllocationCount = op.getBoolOption('O');
+
+#if defined(JS_CODEGEN_X86) && defined(JS_ION)
+    if (op.getBoolOption("no-fpu"))
+        JSC::MacroAssembler::SetFloatingPointDisabled();
 #endif
+
+#if (defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)) && defined(JS_ION)
+    if (op.getBoolOption("no-sse3")) {
+        JSC::MacroAssembler::SetSSE3Disabled();
+        PropagateFlagToNestedShells("--no-sse3");
+    }
+    if (op.getBoolOption("no-sse4")) {
+        JSC::MacroAssembler::SetSSE4Disabled();
+        PropagateFlagToNestedShells("--no-sse4");
+    }
+#endif
+
+#endif // DEBUG
 
     // Start the engine.
     if (!JS_Init())
