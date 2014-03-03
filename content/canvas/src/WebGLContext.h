@@ -895,6 +895,7 @@ protected:
     // -------------------------------------------------------------------------
     // WebGL extensions (implemented in WebGLContextExtensions.cpp)
     enum WebGLExtensionID {
+        EXT_color_buffer_half_float,
         EXT_frag_depth,
         EXT_sRGB,
         EXT_texture_filter_anisotropic,
@@ -905,6 +906,7 @@ protected:
         OES_texture_half_float,
         OES_texture_half_float_linear,
         OES_vertex_array_object,
+        WEBGL_color_buffer_float,
         WEBGL_compressed_texture_atc,
         WEBGL_compressed_texture_pvrtc,
         WEBGL_compressed_texture_s3tc,
@@ -932,7 +934,6 @@ protected:
     static const char* GetExtensionString(WebGLExtensionID ext);
 
     nsTArray<GLenum> mCompressedTextureFormats;
-
 
     // -------------------------------------------------------------------------
     // WebGL 2 specifics (implemented in WebGL2Context.cpp)
