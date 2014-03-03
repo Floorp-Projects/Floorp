@@ -112,18 +112,6 @@ static const FeatureInfo sFeatureInfoArr[] = {
         }
     },
     {
-        // Removes clamping for float color outputs from frag shaders.
-        "frag_color_float",
-        300, // OpenGL version
-        300, // OpenGL ES version
-        {
-            GLContext::ARB_color_buffer_float,
-            GLContext::EXT_color_buffer_float,
-            GLContext::EXT_color_buffer_half_float,
-            GLContext::Extensions_End
-        }
-    },
-    {
         "frag_depth",
         200, // OpenGL version
         300, // OpenGL ES version
@@ -265,26 +253,6 @@ static const FeatureInfo sFeatureInfoArr[] = {
          */
     },
     {
-        "renderbuffer_float",
-        300, // OpenGL version
-        300, // OpenGL ES version
-        {
-            GLContext::ARB_texture_float,
-            GLContext::EXT_color_buffer_float,
-            GLContext::Extensions_End
-        }
-    },
-    {
-        "renderbuffer_half_float",
-        300, // OpenGL version
-        300, // OpenGL ES version
-        {
-            GLContext::ARB_texture_float,
-            GLContext::EXT_color_buffer_half_float,
-            GLContext::Extensions_End
-        }
-    },
-    {
         "robustness",
         0,   // OpenGL version
         0,   // OpenGL ES version
@@ -314,7 +282,7 @@ static const FeatureInfo sFeatureInfoArr[] = {
     },
     {
         "texture_float",
-        300, // OpenGL version
+        310, // OpenGL version
         300, // OpenGL ES version
         {
             GLContext::ARB_texture_float,
@@ -334,7 +302,7 @@ static const FeatureInfo sFeatureInfoArr[] = {
     },
     {
         "texture_half_float",
-        300, // OpenGL version
+        310, // OpenGL version
         300, // OpenGL ES version
         {
             GLContext::ARB_half_float_pixel,
