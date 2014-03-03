@@ -1,0 +1,7 @@
+{
+  "id": "fxos_@SLASH_VERSION@_simulator@mozilla.org",
+  "name": "fxos_@SLASH_VERSION@_simulator",
+  "version": "@FULL_VERSION@",
+  "fullName": "Firefox OS @NUM_VERSION@ Simulator",
+  "description": "a Firefox OS @NUM_VERSION@ simulator"
+}
