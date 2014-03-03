@@ -148,6 +148,8 @@
               <hbox class="requests-menu-subitem requests-menu-status-and-method"
                     align="center">
                 <box class="requests-menu-status"/>
+                <label class="plain requests-menu-status-code"
+                       crop="end"/>
                 <label class="plain requests-menu-method"
                        crop="end"
                        flex="1"/>
