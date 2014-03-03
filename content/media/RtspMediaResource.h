@@ -204,7 +204,7 @@ public:
     void Revoke() { mResource = nullptr; }
 
   private:
-    RtspMediaResource* mResource;
+    nsRefPtr<RtspMediaResource> mResource;
   };
   friend class Listener;
 
