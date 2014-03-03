@@ -2448,7 +2448,7 @@ bool MediaDecoderStateMachine::JustExitedQuickBuffering()
 void MediaDecoderStateMachine::StartBuffering()
 {
   AssertCurrentThreadInMonitor();
-  
+
   if (mState != DECODER_STATE_DECODING) {
     // We only move into BUFFERING state if we're actually decoding.
     // If we're currently doing something else, we don't need to buffer,
