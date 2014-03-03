@@ -69,7 +69,7 @@ MPI_SRCS = mpprime.c mpmontg.c mplogic.c mpi.c mp_gf2m.c
 
 
 ECL_HDRS = ecl-exp.h ecl.h ec2.h ecp.h ecl-priv.h
-ifdef NSS_ENABLE_ECC
+ifndef NSS_DISABLE_ECC
 ECL_SRCS = ecl.c ecl_curve.c ecl_mult.c ecl_gf.c \
 	ecp_aff.c ecp_jac.c ecp_mont.c \
 	ec_naf.c ecp_jm.c ecp_256.c ecp_384.c ecp_521.c \
