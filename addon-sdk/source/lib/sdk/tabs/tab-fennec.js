@@ -35,8 +35,13 @@ const Tab = Class({
     let onReady = tabInternals.onReady = onTabReady.bind(this);
     tab.browser.addEventListener(EVENTS.ready.dom, onReady, false);
 
+    // TabPageShow
     let onPageShow = tabInternals.onPageShow = onTabPageShow.bind(this);
     tab.browser.addEventListener(EVENTS.pageshow.dom, onPageShow, false);
+
+    // TabLoad
+    let onLoad = tabInternals.onLoad = onTabLoad.bind(this);
+    tab.browser.addEventListener(EVENTS.load.dom, onLoad, true);
 
     // TabClose
     let onClose = tabInternals.onClose = onTabClose.bind(this);
@@ -189,9 +194,11 @@ function cleanupTab(tab) {
   if (tabInternals.tab.browser) {
     tabInternals.tab.browser.removeEventListener(EVENTS.ready.dom, tabInternals.onReady, false);
     tabInternals.tab.browser.removeEventListener(EVENTS.pageshow.dom, tabInternals.onPageShow, false);
+    tabInternals.tab.browser.removeEventListener(EVENTS.load.dom, tabInternals.onLoad, true);
   }
   tabInternals.onReady = null;
   tabInternals.onPageShow = null;
+  tabInternals.onLoad = null;
   tabInternals.window.BrowserApp.deck.removeEventListener(EVENTS.close.dom, tabInternals.onClose, false);
   tabInternals.onClose = null;
   rawTabNS(tabInternals.tab).tab = null;
@@ -205,6 +212,15 @@ function onTabReady(event) {
   // ignore frames
   if (win === win.top) {
     emit(this, 'ready', this);
+  }
+}
+
+function onTabLoad (event) {
+  let win = event.target.defaultView;
+
+  // ignore frames
+  if (win === win.top) {
+    emit(this, 'load', this);
   }
 }
 
