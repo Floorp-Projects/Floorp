@@ -340,6 +340,13 @@ var DebuggerServer = {
 
   /**
    * Install Firefox-specific actors.
+   *
+   * /!\ Be careful when adding a new actor, especially global actors.
+   * Any new global actor will be exposed and returned by the root actor.
+   *
+   * That's the reason why tab actors aren't loaded on demand via
+   * restrictPrivileges=true, to prevent exposing them on b2g parent process's
+   * root actor.
    */
   addBrowserActors: function(aWindowType = "navigator:browser", restrictPrivileges = false) {
     this.chromeWindowType = aWindowType;
@@ -361,11 +368,14 @@ var DebuggerServer = {
     // In case of apps being loaded in parent process, DebuggerServer is already
     // initialized and browser actors are already loaded,
     // but childtab.js hasn't been loaded yet.
-    if (!("BrowserTabActor" in this)) {
-      this.addActors("resource://gre/modules/devtools/server/actors/webbrowser.js");
+    if (!("WebConsoleActor" in this)) {
       this.addTabActors();
     }
-    if (!("ContentAppActor" in DebuggerServer)) {
+    // But webbrowser.js and childtab.js aren't loaded from shell.js.
+    if (!("BrowserTabActor" in this)) {
+      this.addActors("resource://gre/modules/devtools/server/actors/webbrowser.js");
+    }
+    if (!("ContentAppActor" in this)) {
       this.addActors("resource://gre/modules/devtools/server/actors/childtab.js");
     }
   },
