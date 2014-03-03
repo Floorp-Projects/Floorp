@@ -300,6 +300,8 @@ CustomizeMode.prototype = {
 
     this._handler.isExitingCustomizeMode = true;
 
+    this._removeExtraToolbarsIfEmpty();
+
     CustomizableUI.removeListener(this);
 
     this.document.removeEventListener("keypress", this);
@@ -853,6 +855,18 @@ CustomizeMode.prototype = {
         target.removeEventListener("dragend", this, true);
       }
     }.bind(this)).then(null, ERROR);
+  },
+
+  _removeExtraToolbarsIfEmpty: function() {
+    let toolbox = this.window.gNavToolbox;
+    for (let child of toolbox.children) {
+      if (child.hasAttribute("customindex")) {
+        let placements = CustomizableUI.getWidgetIdsInArea(child.id);
+        if (!placements.length) {
+          CustomizableUI.removeExtraToolbar(child.id);
+        }
+      }
+    }
   },
 
   persistCurrentSets: function(aSetBeforePersisting)  {
