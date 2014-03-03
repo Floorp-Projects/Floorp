@@ -272,7 +272,9 @@ function run_test() {
   // Now switch the application and its updated version.
   gStageUpdate = false;
   gSwitchApp = true;
-  runUpdate(0, STATE_SUCCEEDED);
+  do_timeout(TEST_CHECK_TIMEOUT, function() {
+    runUpdate(0, STATE_SUCCEEDED);
+  });
 }
 
 function checkUpdateApplied() {
