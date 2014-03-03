@@ -1267,7 +1267,7 @@ let CustomizableUIInternal = {
     // While keeping track of that, we go from the original target back up,
     // to the panel if we have to. We bail as soon as we find an input,
     // a toolbarbutton/item, or the panel:
-    while (true) {
+    while (true && target) {
       let tagName = target.localName;
       inInput = tagName == "input" || tagName == "textbox";
       inItem = tagName == "toolbaritem" || tagName == "toolbarbutton";
