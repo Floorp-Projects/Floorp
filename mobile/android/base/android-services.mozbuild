@@ -578,6 +578,7 @@ sync_java_files = [
     'fxa/login/StateFactory.java',
     'fxa/login/TokensAndKeysState.java',
     'fxa/sync/FxAccountGlobalSession.java',
+    'fxa/sync/FxAccountNotificationManager.java',
     'fxa/sync/FxAccountSchedulePolicy.java',
     'fxa/sync/FxAccountSyncAdapter.java',
     'fxa/sync/FxAccountSyncService.java',
