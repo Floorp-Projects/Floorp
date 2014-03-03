@@ -873,4 +873,27 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
 
         return null;
     }
+
+    /**
+     * Abstract class for running small test cases within a BaseTest.
+     */
+    abstract class TestCase implements Runnable {
+        /**
+         * Implement tests here. setUp and tearDown for the test case
+         * should be handled by the parent test. This is so we can avoid the
+         * overhead of starting Gecko and creating profiles.
+         */
+        protected abstract void test() throws Exception;
+
+        @Override
+        public void run() {
+            try {
+                test();
+            } catch (Exception e) {
+                mAsserter.ok(false,
+                             "Test " + this.getClass().getName() + " threw exception: " + e,
+                             "");
+            }
+        }
+    }
 }
