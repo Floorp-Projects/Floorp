@@ -245,3 +245,17 @@ fuzzy-if(OSX,1,100) == menclose-5-circle.html menclose-5-circle-ref.html
 == mo-movablelimits-dynamic.html mo-movablelimits-dynamic-ref.html
 == munderover-accent-dynamic.html munderover-accent-dynamic-ref.html
 == munderover-accentunder-dynamic.html munderover-accentunder-dynamic-ref.html
+== columnlines-1a.html columnlines-1-ref.html
+!= columnlines-1b.html columnlines-1-ref.html
+!= columnlines-1c.html columnlines-1-ref.html
+== columnlines-2a.html columnlines-2-ref.html
+== columnlines-2b.html columnlines-2-ref.html
+!= columnlines-3-1.html columnlines-3-1-ref.html
+== columnlines-3-2.html columnlines-3-2-ref.html
+== rowlines-1a.html rowlines-1-ref.html
+!= rowlines-1b.html rowlines-1-ref.html
+!= rowlines-1c.html rowlines-1-ref.html
+== rowlines-2a.html rowlines-2-ref.html
+== rowlines-2b.html rowlines-2-ref.html
+!= rowlines-3-1.html rowlines-3-1-ref.html
+== rowlines-3-2.html rowlines-3-2-ref.html
