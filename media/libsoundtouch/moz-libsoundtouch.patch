@@ -74,7 +74,7 @@ diff -u /src/cpu_detect_x86.cpp /src/cpu_detect_x86.cpp
      return res & ~_dwDisabledISA;
 --- /src/STTypes.h	2012-08-02 10:04:06.301691592 -0700
 +++ /src/STTypes.h
-@@ -42,21 +42,13 @@
+@@ -42,21 +42,17 @@
  typedef unsigned int    uint;
  typedef unsigned long   ulong;
  
@@ -95,14 +95,18 @@ diff -u /src/cpu_detect_x86.cpp /src/cpu_detect_x86.cpp
 +#include "soundtouch_config.h"
  
 +#ifdef WIN32
++#ifdef BUILDING_SOUNDTOUCH
 +#define EXPORT __declspec(dllexport)
++#else
++#define EXPORT __declspec(dllimport)
++#endif
 +#else
 +#define EXPORT
 +#endif
  
  namespace soundtouch
  {
-@@ -82,7 +74,7 @@
+@@ -82,7 +78,7 @@
          ///   also in GNU environment, then please #undef the INTEGER_SAMPLE
          ///   and FLOAT_SAMPLE defines first as in comments above.
          //#define SOUNDTOUCH_INTEGER_SAMPLES     1    //< 16bit integer samples
@@ -111,7 +115,7 @@ diff -u /src/cpu_detect_x86.cpp /src/cpu_detect_x86.cpp
       
      #endif
  
-@@ -144,10 +136,10 @@
+@@ -144,10 +140,10 @@
  
      #endif  // SOUNDTOUCH_INTEGER_SAMPLES
  
