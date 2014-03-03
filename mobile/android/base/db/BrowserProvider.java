@@ -43,12 +43,6 @@ import android.util.Log;
 public class BrowserProvider extends TransactionalProvider<BrowserDatabaseHelper> {
     private static final String LOGTAG = "GeckoBrowserProvider";
 
-    // Maximum age of deleted records to be cleaned up (20 days in ms)
-    static final long MAX_AGE_OF_DELETED_RECORDS = 86400000 * 20;
-
-    // Number of records marked as deleted to be removed
-    static final long DELETED_RECORDS_PURGE_LIMIT = 5;
-
     // How many records to reposition in a single query.
     // This should be less than the SQLite maximum number of query variables
     // (currently 999) divided by the number of variables used per positioning
@@ -272,88 +266,6 @@ public class BrowserProvider extends TransactionalProvider<BrowserDatabaseHelper
         }
     }
 
-    /*
-     * This utility is replicated from RepoUtils, which is managed by android-sync.
-     */
-    private static String computeSQLInClause(int items, String field) {
-        final StringBuilder builder = new StringBuilder(field);
-        builder.append(" IN (");
-        int i = 0;
-        for (; i < items - 1; ++i) {
-            builder.append("?, ");
-        }
-        if (i < items) {
-            builder.append("?");
-        }
-        builder.append(")");
-        return builder.toString();
-    }
-
-    /**
-     * Turn a single-column cursor of longs into a single SQL "IN" clause.
-     * We can do this without using selection arguments because Long isn't
-     * vulnerable to injection.
-     */
-    private static String computeSQLInClauseFromLongs(final Cursor cursor, String field) {
-        final StringBuilder builder = new StringBuilder(field);
-        builder.append(" IN (");
-        final int commaLimit = cursor.getCount() - 1;
-        int i = 0;
-        while (cursor.moveToNext()) {
-            builder.append(cursor.getLong(0));
-            if (i++ < commaLimit) {
-                builder.append(", ");
-            }
-        }
-        builder.append(")");
-        return builder.toString();
-    }
-
-    /**
-     * Clean up some deleted records from the specified table.
-     *
-     * If called in an existing transaction, it is the caller's responsibility
-     * to ensure that the transaction is already upgraded to a writer, because
-     * this method issues a read followed by a write, and thus is potentially
-     * vulnerable to an unhandled SQLITE_BUSY failure during the upgrade.
-     *
-     * If not called in an existing transaction, no new explicit transaction
-     * will be begun.
-     */
-    private void cleanupSomeDeletedRecords(Uri fromUri, Uri targetUri, String tableName) {
-        Log.d(LOGTAG, "Cleaning up deleted records from " + tableName);
-
-        // We clean up records marked as deleted that are older than a
-        // predefined max age. It's important not be too greedy here and
-        // remove only a few old deleted records at a time.
-
-        // Android SQLite doesn't have LIMIT on DELETE. Instead, query for the
-        // IDs of matching rows, then delete them in one go.
-        final long now = System.currentTimeMillis();
-        final String selection = SyncColumns.IS_DELETED + " = 1 AND " +
-                                 SyncColumns.DATE_MODIFIED + " <= " +
-                                 (now - MAX_AGE_OF_DELETED_RECORDS);
-
-        final String profile = fromUri.getQueryParameter(BrowserContract.PARAM_PROFILE);
-        final SQLiteDatabase db = getWritableDatabaseForProfile(profile, isTest(fromUri));
-        final String[] ids;
-        final String limit = Long.toString(DELETED_RECORDS_PURGE_LIMIT, 10);
-        final Cursor cursor = db.query(tableName, new String[] { CommonColumns._ID }, selection, null, null, null, null, limit);
-        try {
-            ids = new String[cursor.getCount()];
-            int i = 0;
-            while (cursor.moveToNext()) {
-                ids[i++] = Long.toString(cursor.getLong(0), 10);
-            }
-        } finally {
-            cursor.close();
-        }
-
-        final String inClause = computeSQLInClause(ids.length,
-                                                   CommonColumns._ID);
-        db.delete(tableName, inClause, ids);
-    }
-
     /**
      * Remove enough history items to bring the database count below <code>retain</code>,
      * removing no items with a modified time after <code>keepAfter</code>.
@@ -416,21 +328,6 @@ public class BrowserProvider extends TransactionalProvider<BrowserDatabaseHelper
                            ")";
         trace("Clear thumbs using query: " + sql);
         db.execSQL(sql);
-    }
-
-    private boolean isCallerSync(Uri uri) {
-        String isSync = uri.getQueryParameter(BrowserContract.PARAM_IS_SYNC);
-        return !TextUtils.isEmpty(isSync);
-    }
-
-    private boolean shouldShowDeleted(Uri uri) {
-        String showDeleted = uri.getQueryParameter(BrowserContract.PARAM_SHOW_DELETED);
-        return !TextUtils.isEmpty(showDeleted);
-    }
-
-    private boolean shouldUpdateOrInsert(Uri uri) {
-        String insertIfNeeded = uri.getQueryParameter(BrowserContract.PARAM_INSERT_IF_NEEDED);
-        return Boolean.parseBoolean(insertIfNeeded);
     }
 
     private boolean shouldIncrementVisits(Uri uri) {
