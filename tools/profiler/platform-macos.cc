@@ -195,7 +195,7 @@ class SamplerThread : public Thread {
   // Implement Thread::Run().
   virtual void Run() {
     while (SamplerRegistry::sampler->IsActive()) {
-      {
+      if (!SamplerRegistry::sampler->IsPaused()) {
         mozilla::MutexAutoLock lock(*Sampler::sRegisteredThreadsMutex);
         std::vector<ThreadInfo*> threads =
           SamplerRegistry::sampler->GetRegisteredThreads();
@@ -208,8 +208,7 @@ class SamplerThread : public Thread {
 
           ThreadProfile* thread_profile = info->Profile();
 
-          if (!SamplerRegistry::sampler->IsPaused())
-            SampleContext(SamplerRegistry::sampler, thread_profile);
+          SampleContext(SamplerRegistry::sampler, thread_profile);
         }
       }
       OS::SleepMicro(intervalMicro_);

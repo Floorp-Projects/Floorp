@@ -3930,6 +3930,11 @@ Tab.prototype = {
       } catch (e) {}
     }
 
+    // Update the page actions URI for helper apps.
+    if (BrowserApp.selectedTab == this) {
+      ExternalApps.updatePageActionUri(fixedURI);
+    }
+
     let message = {
       type: "Content:LocationChange",
       tabID: this.id,
@@ -4538,7 +4543,6 @@ var BrowserEventHandler = {
             let [x, y] = [data.x, data.y];
             if (ElementTouchHelper.isElementClickable(element)) {
               [x, y] = this._moveClickPoint(element, x, y);
-              element = ElementTouchHelper.anyElementFromPoint(x, y);
             }
 
             // Was the element already focused before it was clicked?
@@ -7852,7 +7856,7 @@ let Reader = {
 };
 
 var ExternalApps = {
-  _contextMenuId: -1,
+  _contextMenuId: null,
 
   // extend _getLink to pickup html5 media links.
   _getMediaLink: function(aElement) {
@@ -7884,7 +7888,10 @@ var ExternalApps = {
   },
 
   uninit: function helper_uninit() {
-    NativeWindow.contextmenus.remove(this._contextMenuId);
+    if (this._contextMenuId !== null) {
+      NativeWindow.contextmenus.remove(this._contextMenuId);
+    }
+    this._contextMenuId = null;
   },
 
   filter: {
@@ -7920,8 +7927,12 @@ var ExternalApps = {
     });
   },
 
-  _setUriForPageAction: function setUriForPageAction(uri, apps) {
+  updatePageActionUri: function updatePageActionUri(uri) {
     this._pageActionUri = uri;
+  },
+
+  _setUriForPageAction: function setUriForPageAction(uri, apps) {
+    this.updatePageActionUri(uri);
 
     // If the pageaction is already added, simply update the URI to be launched when 'onclick' is triggered.
     if (this._pageActionId != undefined)
@@ -7930,11 +7941,8 @@ var ExternalApps = {
     this._pageActionId = NativeWindow.pageactions.add({
       title: Strings.browser.GetStringFromName("openInApp.pageAction"),
       icon: "drawable://icon_openinapp",
-      clickCallback: (function() {
-        let callback = function(app) {
-          app.launch(uri);
-        }
 
+      clickCallback: () => {
         if (apps.length > 1) {
           // Use the HelperApps prompt here to filter out any Http handlers
           HelperApps.prompt(apps, {
@@ -7944,15 +7952,15 @@ var ExternalApps = {
               Strings.browser.GetStringFromName("openInApp.cancel")
             ]
           }, function(result) {
-            if (result.button != 0)
+            if (result.button != 0) {
               return;
-
-            callback(apps[result.icongrid0]);
+            }
+            apps[result.icongrid0].launch(this._pageActionUri);
           });
         } else {
-          callback(apps[0]);
+          apps[0].launch(this._pageActionUri);
         }
-      }).bind(this)
+      }
     });
   },
 

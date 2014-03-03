@@ -2,8 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import time
 import sys
+import time
 
 import errors
 import wait
@@ -23,10 +23,25 @@ class TickingClock(object):
     def now(self):
         return self.ticks
 
+class SequenceClock(object):
+    def __init__(self, times):
+        self.times = times
+        self.i = 0
+
+    @property
+    def now(self):
+        if len(self.times) > self.i:
+            self.i += 1
+        return self.times[self.i - 1]
+
+    def sleep(self, dur):
+        pass
+
 class MockMarionette(object):
     def __init__(self):
         self.waited = 0
         self.timeout = None
+
     def exception(self, e=None, wait=1):
         self.wait()
         if self.waited == wait:
@@ -60,6 +75,9 @@ class MockMarionette(object):
 def at_third_attempt(clock, end):
     return clock.now == 2
 
+def now(clock, end):
+    return True
+
 class SystemClockTest(MarionetteTestCase):
     def setUp(self):
         super(SystemClockTest, self).setUp()
@@ -77,6 +95,7 @@ class SystemClockTest(MarionetteTestCase):
 
     def test_time_now(self):
         self.assertIsNotNone(self.clock.now)
+
 class FormalWaitTest(MarionetteTestCase):
     def setUp(self):
         super(FormalWaitTest, self).setUp()
@@ -84,57 +103,68 @@ class FormalWaitTest(MarionetteTestCase):
         self.m.timeout = 123
 
     def test_construction_with_custom_timeout(self):
-        w = Wait(self.m, timeout=42)
-        self.assertEqual(w.timeout, 42)
+        wt = Wait(self.m, timeout=42)
+        self.assertEqual(wt.timeout, 42)
+
     def test_construction_with_custom_interval(self):
-        w = Wait(self.m, interval=42)
-        self.assertEqual(w.interval, 42)
+        wt = Wait(self.m, interval=42)
+        self.assertEqual(wt.interval, 42)
+
     def test_construction_with_custom_clock(self):
         c = TickingClock(1)
-        w = Wait(self.m, clock=c)
-        self.assertEqual(w.clock, c)
+        wt = Wait(self.m, clock=c)
+        self.assertEqual(wt.clock, c)
+
     def test_construction_with_custom_exception(self):
-        w = Wait(self.m, ignored_exceptions=Exception)
-        self.assertIn(Exception, w.exceptions)
-        self.assertEqual(len(w.exceptions), 1)
+        wt = Wait(self.m, ignored_exceptions=Exception)
+        self.assertIn(Exception, wt.exceptions)
+        self.assertEqual(len(wt.exceptions), 1)
+
     def test_construction_with_custom_exception_list(self):
         exc = [Exception, ValueError]
-        w = Wait(self.m, ignored_exceptions=exc)
+        wt = Wait(self.m, ignored_exceptions=exc)
         for e in exc:
-            self.assertIn(e, w.exceptions)
-        self.assertEqual(len(w.exceptions), len(exc))
+            self.assertIn(e, wt.exceptions)
+        self.assertEqual(len(wt.exceptions), len(exc))
+
     def test_construction_with_custom_exception_tuple(self):
         exc = (Exception, ValueError)
-        w = Wait(self.m, ignored_exceptions=exc)
+        wt = Wait(self.m, ignored_exceptions=exc)
         for e in exc:
-            self.assertIn(e, w.exceptions)
-        self.assertEqual(len(w.exceptions), len(exc))
+            self.assertIn(e, wt.exceptions)
+        self.assertEqual(len(wt.exceptions), len(exc))
+
     def test_duplicate_exceptions(self):
-        w = Wait(self.m, ignored_exceptions=[Exception, Exception])
-        self.assertIn(Exception, w.exceptions)
-        self.assertEqual(len(w.exceptions), 1)
+        wt = Wait(self.m, ignored_exceptions=[Exception, Exception])
+        self.assertIn(Exception, wt.exceptions)
+        self.assertEqual(len(wt.exceptions), 1)
+
     def test_default_timeout(self):
         self.assertEqual(wait.DEFAULT_TIMEOUT, 5)
 
     def test_default_interval(self):
         self.assertEqual(wait.DEFAULT_INTERVAL, 0.1)
+
     def test_end_property(self):
-        w = Wait(self.m)
-        self.assertIsNotNone(w.end)
+        wt = Wait(self.m)
+        self.assertIsNotNone(wt.end)
+
     def test_marionette_property(self):
-        w = Wait(self.m)
-        self.assertEqual(w.marionette, self.m)
+        wt = Wait(self.m)
+        self.assertEqual(wt.marionette, self.m)
+
     def test_clock_property(self):
-        w = Wait(self.m)
-        self.assertIsInstance(w.clock, wait.SystemClock)
+        wt = Wait(self.m)
+        self.assertIsInstance(wt.clock, wait.SystemClock)
+
     def test_timeout_inherited_from_marionette(self):
-        w = Wait(self.m)
-        self.assertEqual(w.timeout * 1000.0, self.m.timeout)
+        wt = Wait(self.m)
+        self.assertEqual(wt.timeout * 1000.0, self.m.timeout)
 
     def test_timeout_uses_default_if_marionette_timeout_is_none(self):
         self.m.timeout = None
-        w = Wait(self.m)
-        self.assertEqual(w.timeout, wait.DEFAULT_TIMEOUT)
+        wt = Wait(self.m)
+        self.assertEqual(wt.timeout, wait.DEFAULT_TIMEOUT)
 
 class PredicatesTest(MarionetteTestCase):
     def test_until(self):
@@ -148,39 +178,39 @@ class WaitUntilTest(MarionetteTestCase):
 
         self.m = MockMarionette()
         self.clock = TickingClock()
-        self.w = Wait(self.m, timeout=10, interval=1, clock=self.clock)
+        self.wt = Wait(self.m, timeout=10, interval=1, clock=self.clock)
 
     def test_true(self):
-        r = self.w.until(lambda x: x.true())
+        r = self.wt.until(lambda x: x.true())
         self.assertTrue(r)
         self.assertEqual(self.clock.ticks, 0)
 
     def test_true_within_timeout(self):
-        r = self.w.until(lambda x: x.true(wait=5))
+        r = self.wt.until(lambda x: x.true(wait=5))
         self.assertTrue(r)
         self.assertEqual(self.clock.ticks, 4)
 
     def test_timeout(self):
         with self.assertRaises(errors.TimeoutException):
-            r = self.w.until(lambda x: x.true(wait=15))
+            r = self.wt.until(lambda x: x.true(wait=15))
         self.assertEqual(self.clock.ticks, 10)
 
     def test_exception_raises_immediately(self):
         with self.assertRaises(TypeError):
-            self.w.until(lambda x: x.exception(e=TypeError))
+            self.wt.until(lambda x: x.exception(e=TypeError))
         self.assertEqual(self.clock.ticks, 0)
 
     def test_ignored_exception(self):
-        self.w.exceptions = (TypeError,)
+        self.wt.exceptions = (TypeError,)
         with self.assertRaises(errors.TimeoutException):
-            self.w.until(lambda x: x.exception(e=TypeError))
+            self.wt.until(lambda x: x.exception(e=TypeError))
 
     def test_ignored_exception_wrapped_in_timeoutexception(self):
-        self.w.exceptions = (TypeError,)
+        self.wt.exceptions = (TypeError,)
 
         exc = None
         try:
-            self.w.until(lambda x: x.exception(e=TypeError))
+            self.wt.until(lambda x: x.exception(e=TypeError))
         except Exception as e:
             exc = e
 
@@ -188,53 +218,59 @@ class WaitUntilTest(MarionetteTestCase):
         self.assertIsNotNone(exc)
         self.assertIsInstance(exc, errors.TimeoutException)
         self.assertIn(", caused by %r" % TypeError, s)
-        self.assertIn("self.w.until(lambda x: x.exception(e=TypeError))", s)
+        self.assertIn("self.wt.until(lambda x: x.exception(e=TypeError))", s)
 
     def test_ignored_exception_after_timeout_is_not_raised(self):
         with self.assertRaises(errors.TimeoutException):
-            r = self.w.until(lambda x: x.exception(wait=15))
+            r = self.wt.until(lambda x: x.exception(wait=15))
         self.assertEqual(self.clock.ticks, 10)
 
     def test_keyboard_interrupt(self):
         with self.assertRaises(KeyboardInterrupt):
-            self.w.until(lambda x: x.exception(e=KeyboardInterrupt))
+            self.wt.until(lambda x: x.exception(e=KeyboardInterrupt))
 
     def test_system_exit(self):
         with self.assertRaises(SystemExit):
-            self.w.until(lambda x: x.exception(SystemExit))
+            self.wt.until(lambda x: x.exception(SystemExit))
 
     def test_true_condition_returns_immediately(self):
-        r = self.w.until(lambda x: x.true())
+        r = self.wt.until(lambda x: x.true())
         self.assertIsInstance(r, bool)
         self.assertTrue(r)
         self.assertEqual(self.clock.ticks, 0)
 
     def test_value(self):
-        r = self.w.until(lambda x: "foo")
+        r = self.wt.until(lambda x: "foo")
         self.assertEqual(r, "foo")
         self.assertEqual(self.clock.ticks, 0)
 
     def test_custom_predicate(self):
-        r = self.w.until(lambda x: x.true(wait=2), is_true=at_third_attempt)
+        r = self.wt.until(lambda x: x.true(wait=2), is_true=at_third_attempt)
         self.assertTrue(r)
         self.assertEqual(self.clock.ticks, 1)
 
     def test_custom_predicate_times_out(self):
         with self.assertRaises(errors.TimeoutException):
-            self.w.until(lambda x: x.true(wait=4), is_true=at_third_attempt)
+            self.wt.until(lambda x: x.true(wait=4), is_true=at_third_attempt)
 
         self.assertEqual(self.clock.ticks, 2)
 
     def test_timeout_elapsed_duration(self):
         with self.assertRaisesRegexp(errors.TimeoutException,
-                                     "Timed out after 2 seconds"):
-            self.w.until(lambda x: x.true(wait=4), is_true=at_third_attempt)
+                                     "Timed out after 2.0 seconds"):
+            self.wt.until(lambda x: x.true(wait=4), is_true=at_third_attempt)
+
+    def test_timeout_elapsed_rounding(self):
+        wt = Wait(self.m, clock=SequenceClock([1, 0.01, 1]), timeout=0)
+        with self.assertRaisesRegexp(errors.TimeoutException,
+                                     "Timed out after 1.0 seconds"):
+            wt.until(lambda x: x.true(), is_true=now)
 
     def test_message(self):
-        self.w.exceptions = (TypeError,)
+        self.wt.exceptions = (TypeError,)
         exc = None
         try:
-            self.w.until(lambda x: x.exception(e=TypeError), message="hooba")
+            self.wt.until(lambda x: x.exception(e=TypeError), message="hooba")
         except errors.TimeoutException as e:
             exc = e
 
@@ -242,10 +278,10 @@ class WaitUntilTest(MarionetteTestCase):
         self.assertIn("seconds with message: hooba, caused by", result)
 
     def test_no_message(self):
-        self.w.exceptions = (TypeError,)
+        self.wt.exceptions = (TypeError,)
         exc = None
         try:
-            self.w.until(lambda x: x.exception(e=TypeError), message="")
+            self.wt.until(lambda x: x.exception(e=TypeError), message="")
         except errors.TimeoutException as e:
             exc = e
 
@@ -253,10 +289,10 @@ class WaitUntilTest(MarionetteTestCase):
         self.assertIn("seconds, caused by", result)
 
     def test_message_has_none_as_its_value(self):
-        self.w.exceptions = (TypeError,)
+        self.wt.exceptions = (TypeError,)
         exc = None
         try:
-            self.w.until(False, None, None)
+            self.wt.until(False, None, None)
         except errors.TimeoutException as e:
             exc = e
 

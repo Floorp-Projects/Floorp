@@ -86,6 +86,9 @@ browser.jar:
         skin/classic/browser/webRTC-shareDevice-16.png
         skin/classic/browser/webRTC-shareDevice-64.png
         skin/classic/browser/webRTC-sharingDevice-16.png
+        skin/classic/browser/webRTC-shareMicrophone-16.png
+        skin/classic/browser/webRTC-shareMicrophone-64.png
+        skin/classic/browser/webRTC-sharingMicrophone-16.png
         skin/classic/browser/customizableui/background-noise-toolbar.png  (customizableui/background-noise-toolbar.png)
         skin/classic/browser/customizableui/customizeFavicon.ico  (../shared/customizableui/customizeFavicon.ico)
         skin/classic/browser/customizableui/customize-titleBar-toggle.png  (customizableui/customize-titleBar-toggle.png)
@@ -404,6 +407,9 @@ browser.jar:
         skin/classic/aero/browser/webRTC-shareDevice-16.png
         skin/classic/aero/browser/webRTC-shareDevice-64.png
         skin/classic/aero/browser/webRTC-sharingDevice-16.png
+        skin/classic/aero/browser/webRTC-shareMicrophone-16.png
+        skin/classic/aero/browser/webRTC-shareMicrophone-64.png
+        skin/classic/aero/browser/webRTC-sharingMicrophone-16.png
         skin/classic/aero/browser/customizableui/background-noise-toolbar.png  (customizableui/background-noise-toolbar.png)
         skin/classic/aero/browser/customizableui/customize-titleBar-toggle.png  (customizableui/customize-titleBar-toggle.png)
         skin/classic/aero/browser/customizableui/customizeFavicon.ico  (../shared/customizableui/customizeFavicon.ico)

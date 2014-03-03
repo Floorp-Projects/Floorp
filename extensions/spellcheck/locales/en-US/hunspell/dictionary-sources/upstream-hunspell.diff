@@ -9544,81 +9544,84 @@
 < smoulders
 ---
 > smoulder/GSMD
-44062c49892
+43766a49597,49598
+> snarkily
+> snarky/TR
+44062c49894
 < sonofabitch
 ---
 > sonofabitch/!
-44346a50177
+44346a50179
 > spelled
-44348a50180
+44348a50182
 > spelt
-44371a50204
+44371a50206
 > spick/S!
-44383c50216
+44383c50218
 < spik/S
 ---
 > spik/S!
-46106a51940
+46106a51942
 > syllabi
-46160c51994
+46160c51996
 < synch/GMD
 ---
 > synch/GMDS
-46167d52000
+46167d52002
 < synchs
-46203,46204c52036,52037
+46203,46204c52038,52039
 < sysadmin/S
 < sysop/S
 ---
 > sysadmin/MS
 > sysop/MS
-46752a52586
+46752a52588
 > terabit/MS
-46753a52588,52589
+46753a52590,52591
 > terahertz/M
 > terapixel/MS
-46817a52654
+46817a52656
 > testcase/MS
-46831a52669
+46831a52671
 > testsuite/MS
-46925a52764
+46925a52766
 > theremin/MS
-47455c53294
+47455c53296
 < toolbar
 ---
 > toolbar/MS
-47755a53595
+47755a53597
 > transfect/DSMG
-47774a53615,53616
+47774a53617,53618
 > transgenderism
 > transgene/MS
-47951c53793
+47951c53795
 < triage/M
 ---
 > triage/MG
-48869a54712
+48869a54714
 > unlikeable
-49211c55054
+49211c55056
 < vagina/M
 ---
 > vagina/MS
-49368,49369c55211
+49368,49369c55213
 < velour's
 < velours's
 ---
 > velour/MS
-49478a55321
+49478a55323
 > vertices
-50148a55992
+50148a55994
 > weaponize/DSG
-50260,50261d56103
+50260,50261d56105
 < werwolf/M
 < werwolves
-50728c56570
+50728c56572
 < women
 ---
 > women/M
-50794c56636
+50794c56638
 < wop/S!
 ---
 > wop/MS!

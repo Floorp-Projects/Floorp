@@ -22,6 +22,7 @@ USE_PTHREADS=
 USE_USER_PTHREADS=
 USE_NSPR_THREADS=
 USE_N32=
+USE_X32=
 USE_64=
 USE_CPLUS=
 USE_IPV6=
@@ -393,6 +394,15 @@ AC_ARG_ENABLE(n32,
 	USE_N32=1
       else if test "$enableval" = "no"; then
 	USE_N32=
+      fi
+    fi ])
+
+AC_ARG_ENABLE(x32,
+    [  --enable-x32            Enable x32 ABI support (x86_64 only)],
+    [ if test "$enableval" = "yes"; then
+        USE_X32=1
+      else if test "$enableval" = "no"; then
+        USE_X32=
       fi
     fi ])
 
@@ -1867,6 +1877,10 @@ tools are selected during the Xcode/Developer Tools installation.])
     x86_64)
         if test -n "$USE_64"; then
             PR_MD_ASFILES=os_Linux_x86_64.s
+        elif test -n "$USE_X32"; then
+            PR_MD_ASFILES=os_Linux_x86_64.s
+            CC="$CC -mx32"
+            CXX="$CXX -mx32"
         else
             AC_DEFINE(i386)
             PR_MD_ASFILES=os_Linux_x86.s

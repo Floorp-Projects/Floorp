@@ -10,6 +10,8 @@ const Cr = Components.results;
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "BrowserUtils",
+                                  "resource://gre/modules/BrowserUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Deprecated",
                                   "resource://gre/modules/Deprecated.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FormHistory",
@@ -361,10 +363,10 @@ FormAutoCompleteChild.prototype = {
 
       this._pendingListener = aListener;
 
-      let rect = aField.getBoundingClientRect();
+      let rect = BrowserUtils.getElementBoundingScreenRect(aField);
 
-      let topLevelDocshell = aField.ownerDocument.defaultView
-                                   .QueryInterface(Ci.nsIInterfaceRequestor)
+      let window = aField.ownerDocument.defaultView;
+      let topLevelDocshell = window.QueryInterface(Ci.nsIInterfaceRequestor)
                                    .getInterface(Ci.nsIDocShell)
                                    .sameTypeRootTreeItem
                                    .QueryInterface(Ci.nsIDocShell);

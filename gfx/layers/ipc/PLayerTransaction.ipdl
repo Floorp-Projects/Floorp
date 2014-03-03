@@ -85,6 +85,9 @@ parent:
   // Drop any front buffers that might be retained on the compositor
   // side.
   async ClearCachedResources();
+  
+  // Schedule a composite if one isn't already scheduled.
+  async ForceComposite();
 
   async __delete__();
 };
