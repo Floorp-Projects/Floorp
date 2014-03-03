@@ -14,8 +14,7 @@ NS_IMPL_ISUPPORTS1(GfxTexturesReporter, nsIMemoryReporter)
 
 int64_t GfxTexturesReporter::sAmount = 0;
 
-static uint32_t
-GetBitsPerTexel(GLenum format, GLenum type)
+static uint32_t GetBitsPerTexel(GLenum format, GLenum type)
 {
     // If there is no defined format or type, we're not taking up any memory
     if (!format || !type) {
@@ -24,16 +23,16 @@ GetBitsPerTexel(GLenum format, GLenum type)
 
     if (format == LOCAL_GL_DEPTH_COMPONENT) {
         if (type == LOCAL_GL_UNSIGNED_SHORT)
-            return 2*8;
+            return 2;
         else if (type == LOCAL_GL_UNSIGNED_INT)
-            return 4*8;
+            return 4;
     } else if (format == LOCAL_GL_DEPTH_STENCIL) {
         if (type == LOCAL_GL_UNSIGNED_INT_24_8_EXT)
-            return 4*8;
+            return 4;
     }
 
     if (type == LOCAL_GL_UNSIGNED_BYTE || type == LOCAL_GL_FLOAT) {
-        uint32_t multiplier = type == LOCAL_GL_FLOAT ? 32 : 8;
+        int multiplier = type == LOCAL_GL_FLOAT ? 32 : 8;
         switch (format) {
             case LOCAL_GL_ALPHA:
             case LOCAL_GL_LUMINANCE:
@@ -65,7 +64,7 @@ GetBitsPerTexel(GLenum format, GLenum type)
                type == LOCAL_GL_UNSIGNED_SHORT_5_5_5_1 ||
                type == LOCAL_GL_UNSIGNED_SHORT_5_6_5)
     {
-        return 2*8;
+        return 16;
     }
 
     MOZ_ASSERT(false);
@@ -76,8 +75,8 @@ GetBitsPerTexel(GLenum format, GLenum type)
 GfxTexturesReporter::UpdateAmount(MemoryUse action, GLenum format,
                                   GLenum type, uint16_t tileSize)
 {
-    int64_t bitsPerTexel = GetBitsPerTexel(format, type);
-    int64_t bytes = int64_t(tileSize) * int64_t(tileSize) * bitsPerTexel/8;
+    uint32_t bytesPerTexel = GetBitsPerTexel(format, type) / 8;
+    int64_t bytes = (int64_t)(tileSize * tileSize * bytesPerTexel);
     if (action == MemoryFreed) {
         sAmount -= bytes;
     } else {
