@@ -5040,15 +5040,15 @@ gfxFontGroup::FindFontForChar(uint32_t aCh, uint32_t aPrevCh,
         // Don't switch fonts for control characters, regardless of
         // whether they are present in the current font, as they won't
         // actually be rendered (see bug 716229)
-        uint8_t category = GetGeneralCategory(aCh);
-        if (category == HB_UNICODE_GENERAL_CATEGORY_CONTROL) {
+        if (isJoinControl ||
+            GetGeneralCategory(aCh) == HB_UNICODE_GENERAL_CATEGORY_CONTROL) {
             nsRefPtr<gfxFont> ret = aPrevMatchedFont;
             return ret.forget();
         }
 
-        // if this character is a join-control or the previous is a join-causer,
+        // if previous character was a join-causer (ZWJ),
         // use the same font as the previous range if we can
-        if (isJoinControl || wasJoinCauser) {
+        if (wasJoinCauser) {
             if (aPrevMatchedFont->HasCharacter(aCh)) {
                 nsRefPtr<gfxFont> ret = aPrevMatchedFont;
                 return ret.forget();
@@ -5132,13 +5132,16 @@ void gfxFontGroup::ComputeRanges(nsTArray<gfxTextRange>& aRanges,
     NS_ASSERTION(aLength > 0, "don't call ComputeRanges for zero-length text");
 
     uint32_t prevCh = 0;
-    uint8_t matchType = 0;
     int32_t lastRangeIndex = -1;
 
     // initialize prevFont to the group's primary font, so that this will be
     // used for string-initial control chars, etc rather than risk hitting font
     // fallback for these (bug 716229)
     gfxFont *prevFont = GetFontAt(0);
+
+    // if we use the initial value of prevFont, we treat this as a match from
+    // the font group; fixes bug 978313
+    uint8_t matchType = gfxTextRange::kFontGroup;
 
     for (uint32_t i = 0; i < aLength; i++) {
 
