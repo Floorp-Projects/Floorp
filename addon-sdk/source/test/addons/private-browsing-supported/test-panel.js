@@ -52,7 +52,8 @@ exports.testShowPanelInPrivateWindow = function(assert, done) {
       return promise;
     }).
     then(close).
-    then(done, assert.fail.bind(assert));
+    then(done).
+    then(null, assert.fail);
 };
 
 

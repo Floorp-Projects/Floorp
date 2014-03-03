@@ -11,7 +11,7 @@ const memory = require("./memory");
 
 const { merge } = require("../util/object");
 const { union } = require("../util/array");
-const { isNil } = require("../lang/type");
+const { isNil, isRegExp } = require("../lang/type");
 
 // The possible return values of getTypeOf.
 const VALID_TYPES = [
@@ -23,6 +23,7 @@ const VALID_TYPES = [
   "object",
   "string",
   "undefined",
+  "regexp"
 ];
 
 const { isArray } = Array;
@@ -46,8 +47,8 @@ const { isArray } = Array;
  *                options.
  *           is:  An array containing any number of the typeof type names.  If
  *                the key's value is none of these types, it fails validation.
- *                Arrays and null are identified by the special type names
- *                "array" and "null"; "object" will not match either.  No type
+ *                Arrays, null and regexps are identified by the special type names
+ *                "array", "null", "regexp"; "object" will not match either.  No type
  *                coercion is done.
  *           ok:  A function that's passed the key's value.  If it returns
  *                false, the value fails validation.
@@ -127,8 +128,8 @@ exports.addIterator = function addIterator(obj, keysValsGenerator) {
   };
 };
 
-// Similar to typeof, except arrays and null are identified by "array" and
-// "null", not "object".
+// Similar to typeof, except arrays, null and regexps are identified by "array" and
+// "null" and "regexp", not "object".
 let getTypeOf = exports.getTypeOf = function getTypeOf(val) {
   let typ = typeof(val);
   if (typ === "object") {
@@ -136,6 +137,8 @@ let getTypeOf = exports.getTypeOf = function getTypeOf(val) {
       return "null";
     if (isArray(val))
       return "array";
+    if (isRegExp(val))
+      return "regexp";
   }
   return typ;
 }

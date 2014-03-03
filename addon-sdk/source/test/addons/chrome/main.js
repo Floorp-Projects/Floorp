@@ -20,7 +20,7 @@ exports.testChromeSkin = function(assert, done) {
     url: skinURL,
     overrideMimeType: 'text/plain',
     onComplete: function (response) {
-      assert.equal(response.text, 'test{}\n', 'chrome.manifest skin folder was registered!');
+      assert.equal(response.text.trim(), 'test{}', 'chrome.manifest skin folder was registered!');
       done();
     }
   }).get();

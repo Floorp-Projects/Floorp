@@ -347,11 +347,11 @@ exports.testRedirectIncludeArrays = function (assert, done) {
     if (url === firstURL) {
       page.port.emit('redirect', 'about:blank');
     } else if (url === 'about:blank') {
-      page.port.emit('redirect', 'about:home');
+      page.port.emit('redirect', 'about:mozilla');
       assert.ok('`include` property handles arrays');
       assert.equal(url, 'about:blank', 'Redirects work with accepted domains');
       done();
-    } else if (url === 'about:home') {
+    } else if (url === 'about:mozilla') {
       assert.fail('Should not redirect to restricted domain');
     }
   });
@@ -378,7 +378,7 @@ exports.testRedirectFromWorker = function (assert, done) {
     } else if (url === secondURL) {
       page.port.emit('redirect', thirdURL);
     } else if (url === thirdURL) {
-      page.port.emit('redirect', 'about:home');
+      page.port.emit('redirect', 'about:mozilla');
       assert.equal(url, thirdURL, 'Redirects work with accepted domains on include strings');
       done();
     } else {
@@ -405,7 +405,7 @@ exports.testRedirectWithContentURL = function (assert, done) {
     } else if (url === secondURL) {
       page.contentURL = thirdURL;
     } else if (url === thirdURL) {
-      page.contentURL = 'about:home';
+      page.contentURL = 'about:mozilla';
       assert.equal(url, thirdURL, 'Redirects work with accepted domains on include strings');
       done();
     } else {

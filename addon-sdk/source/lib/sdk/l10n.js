@@ -7,11 +7,13 @@ module.metadata = {
   "stability": "stable"
 };
 
-const core = require("./l10n/core");
+const json = require("./l10n/json/core");
+const { get: getKey } = require("./l10n/core");
+const properties = require("./l10n/properties/core");
 const { getRulesForLocale } = require("./l10n/plural-rules");
 
 // Retrieve the plural mapping function
-let pluralMappingFunction = getRulesForLocale(core.language()) ||
+let pluralMappingFunction = getRulesForLocale(json.language()) ||
                             getRulesForLocale("en");
 
 exports.get = function get(k) {
@@ -19,9 +21,10 @@ exports.get = function get(k) {
   // TODO: handle plural forms in gettext pattern
   if (typeof k !== "string")
     throw new Error("First argument of localization method should be a string");
+  let n = arguments[1];
 
   // Get translation from big hashmap or default to hard coded string:
-  let localized = core.get(k) || k;
+  let localized = getKey(k, n) || k;
 
   // # Simplest usecase:
   //   // String hard coded in source code:
