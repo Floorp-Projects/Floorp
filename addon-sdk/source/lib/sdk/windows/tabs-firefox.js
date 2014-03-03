@@ -17,8 +17,12 @@ const { getOwnerWindow, getActiveTab, getTabs,
 const { Options } = require("../tabs/common");
 const { observer: tabsObserver } = require("../tabs/observer");
 const { ignoreWindow } = require("../private-browsing/utils");
+const { when: unload } = require('../system/unload');
 
 const TAB_BROWSER = "tabbrowser";
+
+let unloaded = false;
+unload(_ => unloaded = true);
 
 /**
  * This is a trait that is used in composition of window wrapper. Trait tracks
@@ -121,6 +125,9 @@ const WindowTabTracker = Trait.compose({
     }
   },
   _emitEvent: function _emitEvent(type, tag) {
+    if (unloaded)
+      return;
+
     // Slices additional arguments and passes them into exposed
     // listener like other events (for pageshow)
     let args = Array.slice(arguments);

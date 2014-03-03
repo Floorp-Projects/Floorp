@@ -19,10 +19,10 @@ exports.testOpenTabWithPrivateActiveWindowNoIsPrivateOption = function(assert, d
         assert.ok(isPrivate(getOwnerWindow(tab)), 'new tab window is private');
         assert.strictEqual(getOwnerWindow(tab), window, 'the tab window and the private window are the same');
 
-        close(window).then(done, assert.fail);
+        close(window).then(done).then(null, assert.fail);
       }
     })
-  }, assert.fail).then(null, assert.fail);
+  }).then(null, assert.fail);
 }
 
 exports.testOpenTabWithNonPrivateActiveWindowNoIsPrivateOption = function(assert, done) {
@@ -38,10 +38,10 @@ exports.testOpenTabWithNonPrivateActiveWindowNoIsPrivateOption = function(assert
         assert.equal(isPrivate(getOwnerWindow(tab)), false, 'new tab window is not private');
         assert.strictEqual(getOwnerWindow(tab), window, 'the tab window and the new window are the same');
 
-        close(window).then(done, assert.fail);
+        close(window).then(done).then(null, assert.fail);
       }
     })
-  }, assert.fail).then(null, assert.fail);
+  }).then(null, assert.fail);
 }
 
 exports.testOpenTabWithPrivateActiveWindowWithIsPrivateOptionTrue = function(assert, done) {
@@ -58,10 +58,10 @@ exports.testOpenTabWithPrivateActiveWindowWithIsPrivateOptionTrue = function(ass
         assert.ok(isPrivate(getOwnerWindow(tab)), 'new tab window is private');
         assert.strictEqual(getOwnerWindow(tab), window, 'the tab window and the private window are the same');
 
-        close(window).then(done, assert.fail);
+        close(window).then(done).then(null, assert.fail);
       }
     })
-  }, assert.fail).then(null, assert.fail);
+  }).then(null, assert.fail);
 }
 
 exports.testOpenTabWithNonPrivateActiveWindowWithIsPrivateOptionFalse = function(assert, done) {
@@ -78,8 +78,8 @@ exports.testOpenTabWithNonPrivateActiveWindowWithIsPrivateOptionFalse = function
         assert.equal(isPrivate(getOwnerWindow(tab)), false, 'new tab window is not private');
         assert.strictEqual(getOwnerWindow(tab), window, 'the tab window and the new window are the same');
 
-        close(window).then(done, assert.fail);
+        close(window).then(done).then(null, assert.fail);
       }
     })
-  }, assert.fail).then(null, assert.fail);
+  }).then(null, assert.fail);
 }

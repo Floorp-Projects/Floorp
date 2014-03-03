@@ -182,6 +182,11 @@ function getTabId(tab) {
 }
 exports.getTabId = getTabId;
 
+function getTabForId(id) {
+  return getTabs().find(tab => getTabId(tab) === id) || null;
+}
+exports.getTabForId = getTabForId;
+
 function getTabTitle(tab) {
   return getBrowserForTab(tab).contentDocument.title || tab.label || "";
 }
@@ -264,7 +269,7 @@ function getTabForWindow(window) {
         return tab;
     }
   }
-  return null; 
+  return null;
 }
 
 function getTabURL(tab) {
