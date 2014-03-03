@@ -7,6 +7,7 @@ package org.mozilla.gecko.db;
 import org.mozilla.gecko.db.BrowserContract.CommonColumns;
 import org.mozilla.gecko.db.BrowserContract.SyncColumns;
 import org.mozilla.gecko.db.PerProfileDatabases.DatabaseHelperFactory;
+import org.mozilla.gecko.mozglue.RobocopTarget;
 
 import android.content.ContentProvider;
 import android.content.ContentUris;
@@ -115,6 +116,17 @@ public abstract class TransactionalProvider<T extends SQLiteOpenHelper> extends 
         return mDatabases.getDatabaseHelperForProfile(profile, isTest(uri)).getWritableDatabase();
     }
 
+    /**
+     * Public version of {@link #getWritableDatabase(Uri) getWritableDatabase}.
+     * This method should ONLY be used for testing purposes.
+     *
+     * @param uri content URI optionally indicating the profile of the user
+     * @return    instance of a writeable SQLiteDatabase
+     */
+    @RobocopTarget
+    public SQLiteDatabase getWritableDatabaseForTesting(Uri uri) {
+        return getWritableDatabase(uri);
+    }
 
     /**
      * Return true of the query is from Firefox Sync.
