@@ -95,13 +95,13 @@ WebGLRenderbuffer::MemoryUsage() const {
     int64_t primarySize = 0;
     switch (primaryFormat) {
         case LOCAL_GL_STENCIL_INDEX8:
-            primarySize = 1 * pixels;
+            primarySize = 1*pixels;
             break;
         case LOCAL_GL_RGBA4:
         case LOCAL_GL_RGB5_A1:
         case LOCAL_GL_RGB565:
         case LOCAL_GL_DEPTH_COMPONENT16:
-            primarySize = 2 * pixels;
+            primarySize = 2*pixels;
             break;
         case LOCAL_GL_RGB8:
         case LOCAL_GL_DEPTH_COMPONENT24:
@@ -112,6 +112,18 @@ WebGLRenderbuffer::MemoryUsage() const {
         case LOCAL_GL_DEPTH24_STENCIL8:
         case LOCAL_GL_DEPTH_COMPONENT32:
             primarySize = 4*pixels;
+            break;
+        case LOCAL_GL_RGB16F:
+            primarySize = 2*3*pixels;
+            break;
+        case LOCAL_GL_RGBA16F:
+            primarySize = 2*4*pixels;
+            break;
+        case LOCAL_GL_RGB32F:
+            primarySize = 4*3*pixels;
+            break;
+        case LOCAL_GL_RGBA32F:
+            primarySize = 4*4*pixels;
             break;
         default:
             MOZ_ASSERT(false, "Unknown `primaryFormat`.");

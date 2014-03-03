@@ -918,6 +918,24 @@ interface WebGLExtensionTextureHalfFloatLinear
 };
 
 [NoInterfaceObject]
+interface WebGLExtensionColorBufferFloat
+{
+    const GLenum RGBA32F_EXT = 0x8814;
+    const GLenum RGB32F_EXT = 0x8815;
+    const GLenum FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE_EXT = 0x8211;
+    const GLenum UNSIGNED_NORMALIZED_EXT = 0x8C17;
+};
+
+[NoInterfaceObject]
+interface WebGLExtensionColorBufferHalfFloat
+{
+    const GLenum RGBA16F_EXT = 0x881A;
+    const GLenum RGB16F_EXT = 0x881B;
+    const GLenum FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE_EXT = 0x8211;
+    const GLenum UNSIGNED_NORMALIZED_EXT = 0x8C17;
+};
+
+[NoInterfaceObject]
 interface WebGLExtensionVertexArray {
     const GLenum VERTEX_ARRAY_BINDING_OES = 0x85B5;
 
