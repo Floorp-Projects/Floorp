@@ -264,9 +264,9 @@
                            orient="vertical"
                            onselect="if (this.selectedCount) this.clearSelection();">
                 <richlistitem>
-                  <checkbox label="&engine.addons.label;"
-                            accesskey="&engine.addons.accesskey;"
-                            preference="engine.addons"/>
+                  <checkbox label="&engine.tabs.label;"
+                            accesskey="&engine.tabs.accesskey;"
+                            preference="engine.tabs"/>
                 </richlistitem>
                 <richlistitem>
                   <checkbox label="&engine.bookmarks.label;"
@@ -279,19 +279,19 @@
                             preference="engine.passwords"/>
                 </richlistitem>
                 <richlistitem>
-                  <checkbox label="&engine.prefs.label;"
-                            accesskey="&engine.prefs.accesskey;"
-                            preference="engine.prefs"/>
-                </richlistitem>
-                <richlistitem>
                   <checkbox label="&engine.history.label;"
                             accesskey="&engine.history.accesskey;"
                             preference="engine.history"/>
                 </richlistitem>
                 <richlistitem>
-                  <checkbox label="&engine.tabs.label;"
-                            accesskey="&engine.tabs.accesskey;"
-                            preference="engine.tabs"/>
+                  <checkbox label="&engine.addons.label;"
+                            accesskey="&engine.addons.accesskey;"
+                            preference="engine.addons"/>
+                </richlistitem>
+                <richlistitem>
+                  <checkbox label="&engine.prefs.label;"
+                            accesskey="&engine.prefs.accesskey;"
+                            preference="engine.prefs"/>
                 </richlistitem>
               </richlistbox>
             </vbox>
