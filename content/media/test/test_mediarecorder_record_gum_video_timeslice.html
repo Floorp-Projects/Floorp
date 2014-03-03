@@ -1,0 +1,89 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test MediaRecorder Record gUM video with Timeslice</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<div id="content" style="display: none">
+</div>
+<script class="testbody" type="text/javascript">
+
+function startTest() {
+  navigator.mozGetUserMedia({audio: true, video: true, fake: true}, function(stream) {
+    var dataAvailableCount = 0;
+    var onDataAvailableFirst = false;
+
+    mediaRecorder = new MediaRecorder(stream);
+    is(mediaRecorder.stream, stream,
+       'Media recorder stream = element stream at the start of recording');
+    mediaRecorder.onwarning = function() {
+      ok(false, 'onwarning unexpectedly fired');
+    };
+
+    mediaRecorder.onerror = function() {
+      ok(false, 'onerror unexpectedly fired');
+    };
+
+    mediaRecorder.onstop = function() {
+      ok(false, 'Unexpected onstop callback fired');
+    };
+
+    mediaRecorder.ondataavailable = function (evt) {
+      info('ondataavailable fired');
+      dataAvailableCount++;
+
+      ok(evt instanceof BlobEvent,
+         'Events fired from ondataavailable should be BlobEvent');
+      is(evt.type, 'dataavailable',
+         'Event type should dataavailable');
+      ok(evt.data.size >= 0,
+         'Blob data size received is greater than or equal to zero');
+
+      is(evt.data.type, 'video/webm',
+         'Blob data received should have type = ' + 'video/webm');
+      is(mediaRecorder.mimeType, 'video/webm',
+         'Mime type in ondataavailable = ' + mediaRecorder.mimeType);
+
+      // We'll stop recording upon the 1st blob being received
+      if (dataAvailableCount === 1) {
+        mediaRecorder.onstop = function (evt) {
+          info('onstop fired');
+
+          if (!onDataAvailableFirst) {
+            ok(false, 'onstop unexpectedly fired before ondataavailable');
+          }
+
+          ok(true, 'onstop fired successfully');
+          is(mediaRecorder.state, 'inactive',
+             'check recording status is inactive');
+          SimpleTest.finish();
+        };
+
+        mediaRecorder.stop();
+        is(mediaRecorder.state, 'inactive',
+           'Media recorder is inactive after being stopped');
+
+      } else if (dataAvailableCount === 2) {
+        // Ensure we've received at least two ondataavailable events before
+        // onstop
+        onDataAvailableFirst = true;
+      }
+    };
+
+    mediaRecorder.start(250);
+    is(mediaRecorder.state, 'recording', 'Media recorder should be recording');
+  }, function(err) {
+    ok(false, 'Unexpected error fired with: ' + err);
+    SimpleTest.finish();
+  });
+}
+
+SimpleTest.waitForExplicitFinish();
+startTest();
+</script>
+</pre>
+</body>
+</html>

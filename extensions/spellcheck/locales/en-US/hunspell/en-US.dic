@@ -1,4 +1,4 @@
-57460
+57465
 0/nm
 0th/pt
 1/n1
@@ -22722,6 +22722,7 @@ cinnabar/M
 cinnamon/M
 cipher's
 cipher/CGDS
+ciphertext/S
 cir
 circa
 circadian
@@ -25073,7 +25074,9 @@ cryptographer/MS
 cryptographic
 cryptographically
 cryptography/M
+cryptologist/MS
 cryptology
+cryptosystem/S
 crystal/SM
 crystalline
 crystallization/M
@@ -37149,7 +37152,7 @@ linguine/M
 linguini/M
 linguist/SM
 linguistic/S
-linguistically
+linguistical/Y
 linguistics/M
 liniment/SM
 lining/M
@@ -43770,6 +43773,7 @@ plainsmen
 plainsong/M
 plainspoken
 plaint/SMV
+plaintext
 plaintiff/SM
 plaintive/Y
 plait/MDGS
@@ -45245,6 +45249,7 @@ pseudonym/SM
 pseudonymous
 pseudopod
 pseudopodia
+pseudorandom/Y
 pseudoscience/MS
 pseudy
 pshaw/MS
