@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+
+    <filter id="f">
+        <feSpecularLighting style="display: none;"/>
+        <feComposite in="SourceGraphic"/>
+    </filter>
+
+    <path d="M0,0 h100 v100 h-100 z M20,20 v60 h60 v-60 z" filter="url(#f)"/>
+
+</svg>
