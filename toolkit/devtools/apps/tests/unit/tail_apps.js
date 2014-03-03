@@ -4,5 +4,3 @@ if (gClient) {
     run_next_test();
   });
 }
-
-Services.prefs.setBoolPref("devtools.debugger.enable-content-actors", originalPrefValue);

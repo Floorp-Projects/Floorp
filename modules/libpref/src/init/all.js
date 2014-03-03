@@ -552,8 +552,6 @@ pref("devtools.debugger.remote-port", 6000);
 pref("devtools.debugger.force-local", true);
 // Display a prompt when a new connection starts to accept/reject it
 pref("devtools.debugger.prompt-connection", true);
-// Temporary setting to enable webapps actors
-pref("devtools.debugger.enable-content-actors", true);
 // Block tools from seeing / interacting with certified apps
 pref("devtools.debugger.forbid-certified-apps", true);
 
