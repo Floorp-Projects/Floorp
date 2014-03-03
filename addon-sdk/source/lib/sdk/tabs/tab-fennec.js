@@ -10,10 +10,10 @@ const { EventTarget } = require('../event/target');
 const { activateTab, getTabTitle, setTabTitle, closeTab, getTabURL, getTabContentWindow,
         getTabForBrowser,
         setTabURL, getOwnerWindow, getTabContentType, getTabId } = require('./utils');
-const { emit } = require('../view/core');
+const { emit } = require('../event/core');
 const { getOwnerWindow: getPBOwnerWindow } = require('../private-browsing/window/utils');
 const { when: unload } = require('../system/unload');
-const { viewFor } = require('../event/core');
+const { viewFor } = require('../view/core');
 const { EVENTS } = require('./events');
 
 const ERR_FENNEC_MSG = 'This method is not yet supported by Fennec';
