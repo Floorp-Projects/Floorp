@@ -175,7 +175,6 @@ box.requests-menu-status {
   -moz-margin-end: 5px;
   border-radius: 10px;
   transition: box-shadow 0.5s ease-in-out;
-  margin-bottom: 2px; /* needed to align with text baseline */
 }
 
 label.requests-menu-status-code {
