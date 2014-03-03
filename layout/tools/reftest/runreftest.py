@@ -161,6 +161,8 @@ class RefTest(object):
       prefs['reftest.ignoreWindowSize'] = True
     if options.filter:
       prefs['reftest.filter'] = options.filter
+    if options.shuffle:
+      prefs['reftest.shuffle'] = True
     prefs['reftest.focusFilterMode'] = options.focusFilterMode
 
     if options.e10s:
@@ -440,6 +442,11 @@ class ReftestOptions(OptionParser):
                            "RegExp constructor) to test against URLs in the reftest manifest; "
                            "only test items that have a matching test URL will be run.")
     defaults["filter"] = None
+
+    self.add_option("--shuffle",
+                    action = "store_true", dest = "shuffle",
+                    help = "run reftests in random order")
+    defaults["shuffle"] = False
 
     self.add_option("--focus-filter-mode",
                     action = "store", type = "string", dest = "focusFilterMode",
