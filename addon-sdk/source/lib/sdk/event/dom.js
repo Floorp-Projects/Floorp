@@ -8,7 +8,7 @@ module.metadata = {
   "stability": "unstable"
 };
 
-let { emit, on, off } = require("./core");
+let { emit } = require("./core");
 
 // Simple utility function takes event target, event type and optional
 // `options.capture` and returns node style event stream that emits "data"

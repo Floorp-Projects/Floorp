@@ -29,10 +29,13 @@ const { EventTarget } = require('../../event/target');
 
 const view = require('./view');
 const { buttonContract, stateContract } = require('./contract');
-const { properties, render, state, register, unregister } = require('../state');
+const { properties, render, state, register, unregister,
+        getDerivedStateFor } = require('../state');
 const { events: stateEvents } = require('../state/events');
 const { events: viewEvents } = require('./view/events');
 const events = require('../../event/utils');
+
+const { getActiveTab } = require('../../tabs/utils');
 
 const { id: addonID } = require('../../self');
 const { identify } = require('../id');
@@ -97,7 +100,7 @@ let updateEvents = events.filter(actionButtonViewEvents, e => e.type === 'update
 
 on(clickEvents, 'data', ({target: id, window}) => {
   let button = buttons.get(id);
-  let state = button.state('tab');
+  let state = getDerivedStateFor(button, getActiveTab(window));
 
   emit(button, 'click', state);
 });

@@ -37,6 +37,8 @@ static const WCHAR* kDefaultMetroBrowserIDPathKey = L"FirefoxURL";
 static const WCHAR* kMetroRestartCmdLine = L"--metro-restart";
 static const WCHAR* kMetroUpdateCmdLine = L"--metro-update";
 static const WCHAR* kDesktopRestartCmdLine = L"--desktop-restart";
+static const WCHAR* kNsisLaunchCmdLine = L"--launchmetro";
+static const WCHAR* kExplorerLaunchCmdLine = L"-Embedding";
 
 static bool GetDefaultBrowserPath(CStringW& aPathBuffer);
 
@@ -99,6 +101,10 @@ public:
     mRequestMet(false),
     mDelayedLaunchType(NONE),
     mVerb(L"open")
+  {
+  }
+
+  ~CExecuteCommandVerb()
   {
   }
 
@@ -384,11 +390,18 @@ public:
 
     return !selfPath.CompareNoCase(browserPath);
   }
-private:
-  ~CExecuteCommandVerb()
+
+  /*
+   * Helper for nsis installer when it wants to launch the
+   * default metro browser.
+   */
+  void CommandLineMetroLaunch()
   {
+    mTargetIsDefaultBrowser = true;
+    LaunchMetroBrowser();
   }
 
+private:
   void LaunchDesktopBrowser();
   bool LaunchMetroBrowser();
   bool SetTargetPath(IShellItem* aItem);
@@ -673,27 +686,6 @@ CExecuteCommandVerb::HeartBeat()
   }
 }
 
-static bool
-PrepareActivationManager(CComPtr<IApplicationActivationManager> &activateMgr)
-{
-  HRESULT hr = activateMgr.CoCreateInstance(CLSID_ApplicationActivationManager,
-                                            nullptr, CLSCTX_LOCAL_SERVER);
-  if (FAILED(hr)) {
-    Log(L"CoCreateInstance failed, launching on desktop.");
-    return false;
-  }
-
-  // Hand off focus rights to the out-of-process activation server. Without
-  // this the metro interface won't launch.
-  hr = CoAllowSetForegroundWindow(activateMgr, nullptr);
-  if (FAILED(hr)) {
-    Log(L"CoAllowSetForegroundWindow result %X", hr);
-    return false;
-  }
-
-  return true;
-}
-
 bool
 CExecuteCommandVerb::TestForUpdateLock()
 {
@@ -715,13 +707,23 @@ CExecuteCommandVerb::TestForUpdateLock()
 bool
 CExecuteCommandVerb::LaunchMetroBrowser()
 {
-  // Launch in metro
+  HRESULT hr;
+
   CComPtr<IApplicationActivationManager> activateMgr;
-  if (!PrepareActivationManager(activateMgr)) {
+  hr = activateMgr.CoCreateInstance(CLSID_ApplicationActivationManager,
+                                    nullptr, CLSCTX_LOCAL_SERVER);
+  if (FAILED(hr)) {
+    Log(L"CoCreateInstance failed, launching on desktop.");
     return false;
   }
 
-  HRESULT hr;
+  // Hand off focus rights to the out-of-process activation server. This will
+  // fail if we don't have the rights to begin with. Log but don't bail.
+  hr = CoAllowSetForegroundWindow(activateMgr, nullptr);
+  if (FAILED(hr)) {
+    Log(L"CoAllowSetForegroundWindow result %X", hr);
+  }
+
   WCHAR appModelID[256];
   if (!GetDefaultBrowserAppModelID(appModelID)) {
     Log(L"GetDefaultBrowserAppModelID failed.");
@@ -886,7 +888,21 @@ int APIENTRY wWinMain(HINSTANCE, HINSTANCE, PWSTR pszCmdLine, int)
 #if defined(SHOW_CONSOLE)
   SetupConsole();
 #endif
-  if (!wcslen(pszCmdLine) || StrStrI(pszCmdLine, L"-Embedding"))
+
+  // nsis installer uses this as a helper to launch metro
+  if (pszCmdLine && StrStrI(pszCmdLine, kNsisLaunchCmdLine))
+  {
+    CoInitialize(nullptr);
+    CExecuteCommandVerb *pHandler = new CExecuteCommandVerb();
+    if (!pHandler)
+      return E_OUTOFMEMORY;
+    pHandler->CommandLineMetroLaunch();
+    delete pHandler;
+    CoUninitialize();
+    return 0;
+  }
+
+  if (!wcslen(pszCmdLine) || StrStrI(pszCmdLine, kExplorerLaunchCmdLine))
   {
       CoInitialize(nullptr);
 

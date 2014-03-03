@@ -231,6 +231,20 @@ toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-it
   border: 1px solid transparent;
 }
 
+.panelUI-grid .toolbarbutton-1[type="menu"] {
+  background-image: url("chrome://browser/skin/toolbarbutton-dropdown-arrow.png");
+  background-position: right 3px top 16px;
+  background-repeat: no-repeat;
+}
+
+.panelUI-grid .toolbarbutton-1[type="menu"]:-moz-locale-dir(rtl) {
+  background-position: left 3px top 16px;
+}
+
+.panelUI-grid .toolbarbutton-1 > .toolbarbutton-menu-dropmarker {
+  display: none;
+}
+
 .panelUI-grid .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
   -moz-box-align: center;
   width: 16px;

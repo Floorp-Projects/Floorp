@@ -251,7 +251,8 @@ exports["test PWPB Selection Listener"] = function(assert, done) {
 
           close(window).
             then(loader.unload).
-            then(done, assert.fail);
+            then(done).
+            then(null, assert.fail);
         });
       });
       return window;
@@ -280,7 +281,8 @@ exports["test PWPB Textarea OnSelect Listener"] = function(assert, done) {
 
           close(window).
             then(loader.unload).
-            then(done, assert.fail);
+            then(done).
+            then(null, assert.fail);
         });
       });
       return window;
@@ -319,7 +321,7 @@ exports["test PWPB Single DOM Selection"] = function(assert, done) {
 
       assert.equal(selectionCount, 1,
         "One iterable selection");
-    }).then(close).then(loader.unload).then(done, assert.fail);
+    }).then(close).then(loader.unload).then(done).then(null, assert.fail);
 }
 
 exports["test PWPB Textarea Selection"] = function(assert, done) {
@@ -353,8 +355,7 @@ exports["test PWPB Textarea Selection"] = function(assert, done) {
 
       assert.equal(selectionCount, 1,
         "One iterable selection");
-
-    }).then(close).then(loader.unload).then(done, assert.fail);
+    }).then(close).then(loader.unload).then(done).then(null, assert.fail);
 };
 
 exports["test PWPB Set HTML in Multiple DOM Selection"] = function(assert, done) {
@@ -392,7 +393,7 @@ exports["test PWPB Set HTML in Multiple DOM Selection"] = function(assert, done)
 
       assert.equal(selectionCount, 2,
         "Two iterable selections");
-    }).then(close).then(loader.unload).then(done, assert.fail);
+    }).then(close).then(loader.unload).then(done).then(null, assert.fail);
 };
 
 exports["test PWPB Set Text in Textarea Selection"] = function(assert, done) {
@@ -428,7 +429,7 @@ exports["test PWPB Set Text in Textarea Selection"] = function(assert, done) {
       assert.equal(selectionCount, 1,
         "One iterable selection");
 
-    }).then(close).then(loader.unload).then(done, assert.fail);
+    }).then(close).then(loader.unload).then(done).then(null, assert.fail);
 };
 
 // If the platform doesn't support the PBPW, we're replacing PBPW tests
