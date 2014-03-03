@@ -43,6 +43,7 @@
     "content/media/test/test_load_same_resource.html": "",
     "content/media/test/test_media_selection.html": "timed out",
     "content/media/test/test_metadata.html": "",
+    "content/media/test/test_mediarecorder_record_gum_video_timeslice.html": "mimetype check, bug 969289",
     "content/media/test/test_mozHasAudio.html": "",
     "content/media/test/test_play_events.html": "Last event should be canplaythrough for gizmo.mp4 - got playing, expected canplaythrough",
     "content/media/test/test_play_events_2.html": "Last event should be canplaythrough for gizmo.mp4 - got playing, expected canplaythrough",

@@ -16,75 +16,62 @@
 #include "nsMathUtils.h"                // for NS_lround
 #include "nsThreadUtils.h"              // for NS_DispatchToMainThread, etc
 #include "nscore.h"                     // for NS_IMETHOD
+#include "gfxPrefs.h"                   // for the preferences
 
 namespace mozilla {
 namespace layers {
 
 /**
+ * These are the preferences that control the behavior of APZ
+ */
+
+/**
+ * "apz.max_event_acceleration"
+ *
  * Maximum acceleration that can happen between two frames. Velocity is
  * throttled if it's above this. This may happen if a time delta is very low,
  * or we get a touch point very far away from the previous position for some
  * reason.
+ *
+ * The default value is 999.0f, set in gfxPrefs.h
  */
-static float gMaxEventAcceleration = 999.0f;
 
 /**
+ * "apz.fling_friction"
+ *
  * Amount of friction applied during flings.
+ *
+ * The default value is 0.002f, set in gfxPrefs.h
  */
-static float gFlingFriction = 0.002f;
 
 /**
+ * "apz.fling_stopped_threshold"
+ *
  * When flinging, if the velocity goes below this number, we just stop the
  * animation completely. This is to prevent asymptotically approaching 0
  * velocity and rerendering unnecessarily.
+ *
+ * The default value is 0.01f, set in gfxPrefs.h.
  */
-static float gFlingStoppedThreshold = 0.01f;
 
 /**
+ * "apz.max_velocity_queue_size"
+ *
  * Maximum size of velocity queue. The queue contains last N velocity records.
  * On touch end we calculate the average velocity in order to compensate
  * touch/mouse drivers misbehaviour.
+ *
+ * The default value is 5, set in gfxPrefs.h
  */
-static uint32_t gMaxVelocityQueueSize = 5;
 
 /**
+ * "apz.max_velocity_pixels_per_ms"
+ *
  * Maximum velocity in pixels per millisecond.  Velocity will be capped at this
  * value if a faster fling occurs.  Negative values indicate unlimited velocity.
+ *
+ * The default value is -1.0f, set in gfxPrefs.h
  */
-static float gMaxVelocity = -1.0f;
-
-static void ReadAxisPrefs()
-{
-  Preferences::AddFloatVarCache(&gMaxEventAcceleration, "apz.max_event_acceleration", gMaxEventAcceleration);
-  Preferences::AddFloatVarCache(&gFlingFriction, "apz.fling_friction", gFlingFriction);
-  Preferences::AddFloatVarCache(&gFlingStoppedThreshold, "apz.fling_stopped_threshold", gFlingStoppedThreshold);
-  Preferences::AddUintVarCache(&gMaxVelocityQueueSize, "apz.max_velocity_queue_size", gMaxVelocityQueueSize);
-  Preferences::AddFloatVarCache(&gMaxVelocity, "apz.max_velocity_pixels_per_ms", gMaxVelocity);
-}
-
-class ReadAxisPref MOZ_FINAL : public nsRunnable {
-public:
-  NS_IMETHOD Run()
-  {
-    ReadAxisPrefs();
-    return NS_OK;
-  }
-};
-
-static void InitAxisPrefs()
-{
-  static bool sInitialized = false;
-  if (sInitialized)
-    return;
-
-  sInitialized = true;
-  if (NS_IsMainThread()) {
-    ReadAxisPrefs();
-  } else {
-    // We have to dispatch an event to the main thread to read the pref.
-    NS_DispatchToMainThread(new ReadAxisPref());
-  }
-}
 
 Axis::Axis(AsyncPanZoomController* aAsyncPanZoomController)
   : mPos(0),
@@ -92,21 +79,20 @@ Axis::Axis(AsyncPanZoomController* aAsyncPanZoomController)
     mAxisLocked(false),
     mAsyncPanZoomController(aAsyncPanZoomController)
 {
-  InitAxisPrefs();
 }
 
 void Axis::UpdateWithTouchAtDevicePoint(int32_t aPos, const TimeDuration& aTimeDelta) {
   float newVelocity = mAxisLocked ? 0 : (mPos - aPos) / aTimeDelta.ToMilliseconds();
-  if (gMaxVelocity > 0.0f) {
-    newVelocity = std::min(newVelocity, gMaxVelocity);
+  if (gfxPrefs::APZMaxVelocity() > 0.0f) {
+    newVelocity = std::min(newVelocity, gfxPrefs::APZMaxVelocity());
   }
 
   mVelocity = newVelocity;
   mPos = aPos;
 
-  // Keep last gMaxVelocityQueueSize or less velocities in the queue.
+  // Limit queue size pased on pref
   mVelocityQueue.AppendElement(mVelocity);
-  if (mVelocityQueue.Length() > gMaxVelocityQueueSize) {
+  if (mVelocityQueue.Length() > gfxPrefs::APZMaxVelocityQueueSize()) {
     mVelocityQueue.RemoveElementAt(0);
   }
 }
@@ -180,14 +166,14 @@ bool Axis::Scrollable() {
 }
 
 bool Axis::FlingApplyFrictionOrCancel(const TimeDuration& aDelta) {
-  if (fabsf(mVelocity) <= gFlingStoppedThreshold) {
+  if (fabsf(mVelocity) <= gfxPrefs::APZFlingStoppedThreshold()) {
     // If the velocity is very low, just set it to 0 and stop the fling,
     // otherwise we'll just asymptotically approach 0 and the user won't
     // actually see any changes.
     mVelocity = 0.0f;
     return false;
   } else {
-    mVelocity *= pow(1.0f - gFlingFriction, float(aDelta.ToMilliseconds()));
+    mVelocity *= pow(1.0f - gfxPrefs::APZFlingFriction(), float(aDelta.ToMilliseconds()));
   }
   return true;
 }

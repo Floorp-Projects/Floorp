@@ -449,6 +449,7 @@ this.PlacesBackups = {
    *         The following properties exist only for a subset of bookmarks:
    *         * annos: array of annotations
    *         * uri: url
+   *         * iconuri: favicon's url
    *         * keyword: associated keyword
    *         * charset: last known charset
    *         * tags: csv string of tags
@@ -464,7 +465,8 @@ this.PlacesBackups = {
       try {
         rows = yield conn.execute(
           "SELECT b.id, h.url, IFNULL(b.title, '') AS title, b.parent, " +
-                 "b.position AS [index], b.type, b.dateAdded, b.lastModified, b.guid, " +
+                 "b.position AS [index], b.type, b.dateAdded, b.lastModified, " +
+                 "b.guid, f.url AS iconuri, " +
                  "( SELECT GROUP_CONCAT(t.title, ',') " +
                    "FROM moz_bookmarks b2 " +
                    "JOIN moz_bookmarks t ON t.id = +b2.parent AND t.parent = :tags_folder " +
@@ -478,6 +480,7 @@ this.PlacesBackups = {
           "FROM moz_bookmarks b " +
           "LEFT JOIN moz_bookmarks p ON p.id = b.parent " +
           "LEFT JOIN moz_places h ON h.id = b.fk " +
+          "LEFT JOIN moz_favicons f ON f.id = h.favicon_id " +
           "WHERE b.id <> :tags_folder AND b.parent <> :tags_folder AND p.parent <> :tags_folder " +
           "ORDER BY b.parent, b.position",
           { tags_folder: PlacesUtils.tagsFolderId,
@@ -601,6 +604,9 @@ function sqliteRowToBookmarkObject(aRow) {
       let tags = aRow.getResultByName("tags");
       if (tags)
         bookmark.tags = tags;
+      let iconuri = aRow.getResultByName("iconuri");
+      if (iconuri)
+        bookmark.iconuri = iconuri;
       break;
     case Ci.nsINavBookmarksService.TYPE_FOLDER:
       bookmark.type = PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER;
