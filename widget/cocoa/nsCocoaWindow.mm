@@ -1721,7 +1721,8 @@ nsCocoaWindow::ReportMoveEvent()
   UpdateBounds();
 
   // Dispatch the move event to Gecko
-  NotifyWindowMoved(mBounds.x, mBounds.y);
+  if (mWidgetListener)
+    mWidgetListener->WindowMoved(this, mBounds.x, mBounds.y);
 
   mInReportMoveEvent = false;
 
