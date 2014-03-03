@@ -93,7 +93,7 @@ abstract class ContentProviderTest extends BaseTest {
         }
     }
 
-    private class DelegatingTestContentProvider extends ContentProvider {
+    protected class DelegatingTestContentProvider extends ContentProvider {
         ContentProvider mTargetProvider;
 
         public DelegatingTestContentProvider(ContentProvider targetProvider) {
@@ -153,6 +153,10 @@ abstract class ContentProviderTest extends BaseTest {
         public int bulkInsert(Uri uri, ContentValues[] values) {
             return mTargetProvider.bulkInsert(appendTestParam(uri), values);
         }
+
+        public ContentProvider getTargetProvider() {
+            return mTargetProvider;
+        }
     }
 
     /*
@@ -204,7 +208,7 @@ abstract class ContentProviderTest extends BaseTest {
         mResolver.addProvider(mProviderAuthority, mProvider);
     }
 
-    public Uri appendUriParam(Uri uri, String param, String value) throws Exception {
+    public Uri appendUriParam(Uri uri, String param, String value) {
         return uri.buildUpon().appendQueryParameter(param, value).build();
     }
 
