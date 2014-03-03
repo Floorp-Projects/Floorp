@@ -4,7 +4,6 @@
 
 package org.mozilla.gecko.fxa.authenticator;
 
-import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.activities.FxAccountGetStartedActivity;
@@ -14,7 +13,6 @@ import android.accounts.Account;
 import android.accounts.AccountAuthenticatorResponse;
 import android.accounts.AccountManager;
 import android.accounts.NetworkErrorException;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -29,23 +27,6 @@ public class FxAccountAuthenticator extends AbstractAccountAuthenticator {
     super(context);
     this.context = context;
     this.accountManager = AccountManager.get(context);
-  }
-
-  protected static void enableSyncing(Context context, Account account) {
-    for (String authority : new String[] {
-        AppConstants.ANDROID_PACKAGE_NAME + ".db.browser",
-    }) {
-      ContentResolver.setSyncAutomatically(account, authority, true);
-      ContentResolver.setIsSyncable(account, authority, 1);
-    }
-  }
-
-  protected static void disableSyncing(Context context, Account account) {
-    for (String authority : new String[] {
-        AppConstants.ANDROID_PACKAGE_NAME + ".db.browser",
-    }) {
-      ContentResolver.setSyncAutomatically(account, authority, false);
-    }
   }
 
   @Override
