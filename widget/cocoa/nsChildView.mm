@@ -1752,7 +1752,8 @@ bool nsChildView::PaintWindow(nsIntRegion aRegion)
 
 void nsChildView::ReportMoveEvent()
 {
-   NotifyWindowMoved(mBounds.x, mBounds.y);
+  if (mWidgetListener)
+    mWidgetListener->WindowMoved(this, mBounds.x, mBounds.y);
 }
 
 void nsChildView::ReportSizeEvent()
