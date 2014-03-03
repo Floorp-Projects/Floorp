@@ -6,10 +6,10 @@ import ConfigParser
 import os
 import posixpath
 import re
-import shutil
 import signal
 from StringIO import StringIO
 import subprocess
+import sys
 import tempfile
 import time
 
@@ -153,8 +153,9 @@ class B2GRunner(RemoteRunner):
 
         self.dm.shellCheckOutput(['stop', 'b2g'])
 
-        self.kp_kwargs['processOutputLine'] = [self.on_output]
-        self.kp_kwargs['onTimeout'] = [self.on_timeout]
+        self.kp_kwargs.update({'stream': sys.stdout,
+                               'processOutputLine': self.on_output,
+                               'onTimeout': self.on_timeout,})
         self.process_handler = self.process_class(self.command, **self.kp_kwargs)
         self.process_handler.run(timeout=timeout, outputTimeout=outputTimeout)
 
@@ -202,7 +203,6 @@ class B2GRunner(RemoteRunner):
             pass
 
     def on_output(self, line):
-        print line
         match = re.findall(r"TEST-START \| ([^\s]*)", line)
         if match:
             self.last_test = match[-1]
