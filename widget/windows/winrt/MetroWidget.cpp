@@ -1484,7 +1484,9 @@ MetroWidget::Activated(bool aActiveated)
 NS_IMETHODIMP
 MetroWidget::Move(double aX, double aY)
 {
-  NotifyWindowMoved(aX, aY);
+  if (mWidgetListener) {
+    mWidgetListener->WindowMoved(this, aX, aY);
+  }
   return NS_OK;
 }
 
