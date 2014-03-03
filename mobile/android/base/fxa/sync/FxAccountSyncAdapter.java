@@ -11,7 +11,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import org.mozilla.gecko.R;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.fxa.FxAccountClient;
 import org.mozilla.gecko.background.fxa.FxAccountClient20;
@@ -22,7 +21,6 @@ import org.mozilla.gecko.browserid.RSACryptoImplementation;
 import org.mozilla.gecko.browserid.verifier.BrowserIDRemoteVerifierClient;
 import org.mozilla.gecko.browserid.verifier.BrowserIDVerifierDelegate;
 import org.mozilla.gecko.fxa.FxAccountConstants;
-import org.mozilla.gecko.fxa.activities.FxAccountStatusActivity;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 import org.mozilla.gecko.fxa.authenticator.FxAccountAuthenticator;
 import org.mozilla.gecko.fxa.login.FxAccountLoginStateMachine;
@@ -30,7 +28,6 @@ import org.mozilla.gecko.fxa.login.FxAccountLoginStateMachine.LoginStateMachineD
 import org.mozilla.gecko.fxa.login.FxAccountLoginTransition.Transition;
 import org.mozilla.gecko.fxa.login.Married;
 import org.mozilla.gecko.fxa.login.State;
-import org.mozilla.gecko.fxa.login.State.Action;
 import org.mozilla.gecko.fxa.login.State.StateLabel;
 import org.mozilla.gecko.sync.BackoffHandler;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
@@ -51,19 +48,14 @@ import org.mozilla.gecko.tokenserver.TokenServerException;
 import org.mozilla.gecko.tokenserver.TokenServerToken;
 
 import android.accounts.Account;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.content.AbstractThreadedSyncAdapter;
 import android.content.ContentProviderClient;
 import android.content.ContentResolver;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SyncResult;
 import android.os.Bundle;
 import android.os.SystemClock;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.NotificationCompat.Builder;
 
 public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
   private static final String LOG_TAG = FxAccountSyncAdapter.class.getSimpleName();
@@ -78,10 +70,12 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
   private volatile long lastSyncRealtimeMillis = 0L;
 
   protected final ExecutorService executor;
+  protected final FxAccountNotificationManager notificationManager;
 
   public FxAccountSyncAdapter(Context context, boolean autoInitialize) {
     super(context, autoInitialize);
     this.executor = Executors.newSingleThreadExecutor();
+    this.notificationManager = new FxAccountNotificationManager(NOTIFICATION_ID);
   }
 
   protected static class SyncDelegate {
@@ -89,8 +83,10 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
     protected final CountDownLatch latch;
     protected final SyncResult syncResult;
     protected final AndroidFxAccount fxAccount;
+    protected final FxAccountNotificationManager notificationManager;
 
-    public SyncDelegate(Context context, CountDownLatch latch, SyncResult syncResult, AndroidFxAccount fxAccount) {
+    public SyncDelegate(Context context, CountDownLatch latch, SyncResult syncResult, AndroidFxAccount fxAccount,
+        FxAccountNotificationManager notificationManager) {
       if (context == null) {
         throw new IllegalArgumentException("context must not be null");
       }
@@ -103,10 +99,14 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
       if (fxAccount == null) {
         throw new IllegalArgumentException("fxAccount must not be null");
       }
+      if (notificationManager == null) {
+        throw new IllegalArgumentException("notificationManager must not be null");
+      }
       this.context = context;
       this.latch = latch;
       this.syncResult = syncResult;
       this.fxAccount = fxAccount;
+      this.notificationManager = notificationManager;
     }
 
     /**
@@ -171,7 +171,6 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
      */
     public void handleCannotSync(State finalState) {
       Logger.warn(LOG_TAG, "Cannot sync from state: " + finalState.getStateLabel());
-      showNotification(context, finalState);
       setSyncResultSoftError();
       latch.countDown();
     }
@@ -395,34 +394,6 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
     tokenServerclient.getTokenFromBrowserIDAssertion(assertion, true, clientState, delegate);
   }
 
-  protected static void showNotification(Context context, State state) {
-    final NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-
-    final Action action = state.getNeededAction();
-    if (action == Action.None) {
-      Logger.info(LOG_TAG, "State " + state.getStateLabel() + " needs no action; cancelling any existing notification.");
-      notificationManager.cancel(NOTIFICATION_ID);
-      return;
-    }
-
-    final String title = context.getResources().getString(R.string.fxaccount_sync_sign_in_error_notification_title);
-    final String text = context.getResources().getString(R.string.fxaccount_sync_sign_in_error_notification_text, state.email);
-    Logger.info(LOG_TAG, "State " + state.getStateLabel() + " needs action; offering notification with title: " + title);
-    FxAccountConstants.pii(LOG_TAG, "And text: " + text);
-
-    final Intent notificationIntent = new Intent(context, FxAccountStatusActivity.class);
-    final PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, notificationIntent, 0);
-
-    final Builder builder = new NotificationCompat.Builder(context);
-    builder
-      .setContentTitle(title)
-      .setContentText(text)
-      .setSmallIcon(R.drawable.ic_status_logo)
-      .setAutoCancel(true)
-      .setContentIntent(pendingIntent);
-    notificationManager.notify(NOTIFICATION_ID, builder.build());
-  }
-
   /**
    * A trivial Sync implementation that does not cache client keys,
    * certificates, or tokens.
@@ -454,7 +425,7 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
     }
 
     final CountDownLatch latch = new CountDownLatch(1);
-    final SyncDelegate syncDelegate = new SyncDelegate(context, latch, syncResult, fxAccount);
+    final SyncDelegate syncDelegate = new SyncDelegate(context, latch, syncResult, fxAccount, notificationManager);
 
     try {
       final State state;
@@ -524,6 +495,7 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
           Logger.info(LOG_TAG, "handleFinal: in " + state.getStateLabel());
           fxAccount.setState(state);
           schedulePolicy.onHandleFinal(state.getNeededAction());
+          notificationManager.update(context, fxAccount);
           try {
             if (state.getStateLabel() != StateLabel.Married) {
               syncDelegate.handleCannotSync(state);
