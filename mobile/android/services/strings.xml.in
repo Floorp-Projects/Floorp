@@ -98,6 +98,9 @@
   <string name="sync_text_tab_sent">&sync.text.tab.sent.label;</string>
   <string name="sync_text_tab_not_sent">&sync.text.tab.not.sent.label;</string>
 
+<string name="browser_intent_package">@ANDROID_PACKAGE_NAME@</string>
+<string name="browser_intent_class">@ANDROID_PACKAGE_NAME@.App</string>
+
 <!-- Firefox account strings. -->
 
 <!-- Firefox account links. -->
