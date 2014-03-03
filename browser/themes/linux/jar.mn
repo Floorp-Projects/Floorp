@@ -68,6 +68,9 @@ browser.jar:
   skin/classic/browser/webRTC-shareDevice-16.png
   skin/classic/browser/webRTC-shareDevice-64.png
   skin/classic/browser/webRTC-sharingDevice-16.png
+  skin/classic/browser/webRTC-shareMicrophone-16.png
+  skin/classic/browser/webRTC-shareMicrophone-64.png
+  skin/classic/browser/webRTC-sharingMicrophone-16.png
   skin/classic/browser/customizableui/background-noise-toolbar.png  (customizableui/background-noise-toolbar.png)
   skin/classic/browser/customizableui/customizeMode-gridTexture.png  (customizableui/customizeMode-gridTexture.png)
   skin/classic/browser/customizableui/customizeMode-separatorHorizontal.png  (customizableui/customizeMode-separatorHorizontal.png)

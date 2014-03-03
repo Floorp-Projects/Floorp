@@ -38,8 +38,17 @@ public class PromptInput {
     protected final String mType;
     protected final String mId;
     protected final String mValue;
+    protected OnChangeListener mListener;
     protected View mView;
     public static final String LOGTAG = "GeckoPromptInput";
+
+    public interface OnChangeListener {
+        public void onChange(PromptInput input);
+    }
+
+    public void setListener(OnChangeListener listener) {
+        mListener = listener;
+    }
 
     public static class EditInput extends PromptInput {
         protected final String mHint;
@@ -375,5 +384,11 @@ public class PromptInput {
 
     public boolean canApplyInputStyle() {
         return true;
+    }
+
+    protected void notifyListeners(String val) {
+        if (mListener != null) {
+            mListener.onChange(this);
+        }
     }
 }

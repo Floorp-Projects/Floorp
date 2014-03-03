@@ -25,8 +25,8 @@ var gConnectionsDialog = {
         var proxyPortPref = document.getElementById("network.proxy." + proxyPrefs[i] + "_port");
         var backupServerURLPref = document.getElementById("network.proxy.backup." + proxyPrefs[i]);
         var backupPortPref = document.getElementById("network.proxy.backup." + proxyPrefs[i] + "_port");
-        backupServerURLPref.value = proxyServerURLPref.value;
-        backupPortPref.value = proxyPortPref.value;
+        backupServerURLPref.value = backupServerURLPref.value || proxyServerURLPref.value;
+        backupPortPref.value = backupPortPref.value || proxyPortPref.value;
         proxyServerURLPref.value = httpProxyURLPref.value;
         proxyPortPref.value = httpProxyPortPref.value;
       }
