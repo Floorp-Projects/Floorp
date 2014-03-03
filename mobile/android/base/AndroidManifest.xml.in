@@ -141,6 +141,12 @@
                 <action android:name="android.intent.action.SEARCH" />
             </intent-filter>
 
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="application/x-xpinstall" />
+            </intent-filter>
+
 #ifdef MOZ_ANDROID_BEAM
             <intent-filter>
                 <action android:name="android.nfc.action.NDEF_DISCOVERED"/>
