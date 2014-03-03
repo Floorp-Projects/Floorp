@@ -3,9 +3,12 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+var rootDir = getRootDirectory(gTestPath);
+const gHttpTestRoot = rootDir.replace("chrome://mochitests/content/", "http://mochi.test:8888/");
+
 // Test clearing plugin data using sanitize.js.
-const testURL1 = "http://mochi.test:8888/browser/browser/base/content/test/general/browser_clearplugindata.html";
-const testURL2 = "http://mochi.test:8888/browser/browser/base/content/test/general/browser_clearplugindata_noage.html";
+const testURL1 = gHttpTestRoot + "browser_clearplugindata.html";
+const testURL2 = gHttpTestRoot + "browser_clearplugindata_noage.html";
 
 let tempScope = {};
 Cc["@mozilla.org/moz/jssubscript-loader;1"].getService(Ci.mozIJSSubScriptLoader)
