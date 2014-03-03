@@ -2585,6 +2585,10 @@ pref("intl.tsf.enable", false);
 // Support IMEs implemented with IMM in TSF mode.
 pref("intl.tsf.support_imm", true);
 
+// We need to notify the layout change to TSF, but we cannot check the actual
+// change now, therefore, we always notify it by this fequency.
+pref("intl.tsf.on_layout_change_interval", 100);
+
 // Enables/Disables hack for specific TIP.
 
 // Whether creates native caret for ATOK or not.
