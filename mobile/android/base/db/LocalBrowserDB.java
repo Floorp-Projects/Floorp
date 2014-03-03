@@ -17,6 +17,7 @@ import org.mozilla.gecko.db.BrowserContract.ExpirePriority;
 import org.mozilla.gecko.db.BrowserContract.FaviconColumns;
 import org.mozilla.gecko.db.BrowserContract.Favicons;
 import org.mozilla.gecko.db.BrowserContract.History;
+import org.mozilla.gecko.db.BrowserContract.ReadingListItems;
 import org.mozilla.gecko.db.BrowserContract.SyncColumns;
 import org.mozilla.gecko.db.BrowserContract.Thumbnails;
 import org.mozilla.gecko.db.BrowserContract.URLColumns;
@@ -65,6 +66,7 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
     private final Uri mUpdateHistoryUriWithProfile;
     private final Uri mFaviconsUriWithProfile;
     private final Uri mThumbnailsUriWithProfile;
+    private final Uri mReadingListUriWithProfile;
 
     private static final String[] DEFAULT_BOOKMARK_COLUMNS =
             new String[] { Bookmarks._ID,
@@ -87,6 +89,7 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         mCombinedUriWithProfile = appendProfile(Combined.CONTENT_URI);
         mFaviconsUriWithProfile = appendProfile(Favicons.CONTENT_URI);
         mThumbnailsUriWithProfile = appendProfile(Thumbnails.CONTENT_URI);
+        mReadingListUriWithProfile = appendProfile(ReadingListItems.CONTENT_URI);
 
         mDeletedHistoryUriWithProfile = mHistoryUriWithProfile.buildUpon().
             appendQueryParameter(BrowserContract.PARAM_SHOW_DELETED, "1").build();
@@ -421,6 +424,16 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         return new LocalDBCursor(c);
     }
 
+    @Override
+    public Cursor getReadingList(ContentResolver cr) {
+        return cr.query(mReadingListUriWithProfile,
+                        ReadingListItems.DEFAULT_PROJECTION,
+                        null,
+                        null,
+                        null);
+    }
+
+
     // Returns true if any desktop bookmarks exist, which will be true if the user
     // has set up sync at one point, or done a profile migration from XUL fennec.
     private boolean desktopBookmarksExist(ContentResolver cr) {
@@ -454,18 +467,18 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
 
     @Override
     public int getReadingListCount(ContentResolver cr) {
-        // This method is about the Reading List, not normal bookmarks
         Cursor c = null;
         try {
-            c = cr.query(mBookmarksUriWithProfile,
-                         new String[] { Bookmarks._ID },
-                         Bookmarks.PARENT + " = ?",
-                         new String[] { String.valueOf(Bookmarks.FIXED_READING_LIST_ID) },
+            c = cr.query(mReadingListUriWithProfile,
+                         new String[] { ReadingListItems._ID },
+                         null,
+                         null,
                          null);
             return c.getCount();
         } finally {
-            if (c != null)
+            if (c != null) {
                 c.close();
+            }
         }
     }
 
@@ -498,14 +511,11 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
     public boolean isReadingListItem(ContentResolver cr, String uri) {
         Cursor c = null;
         try {
-            c = cr.query(mBookmarksUriWithProfile,
-                         new String[] { Bookmarks._ID },
-                         Bookmarks.URL + " = ? AND " +
-                         Bookmarks.PARENT + " == ?",
-                         new String[] { uri,
-                                        String.valueOf(Bookmarks.FIXED_READING_LIST_ID) },
-                         Bookmarks.URL);
-
+            c = cr.query(mReadingListUriWithProfile,
+                         new String[] { ReadingListItems._ID },
+                         ReadingListItems.URL + " = ? ",
+                         new String[] { uri },
+                         null);
             return c.getCount() > 0;
         } catch (NullPointerException e) {
             Log.e(LOGTAG, "NullPointerException in isReadingListItem");
@@ -690,20 +700,33 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
 
     @Override
     public void addReadingListItem(ContentResolver cr, String title, String uri) {
-        addBookmarkItem(cr, title, uri, Bookmarks.FIXED_READING_LIST_ID);
+        final ContentValues values = new ContentValues();
+        values.put(ReadingListItems.IS_DELETED, 0);
+        values.put(ReadingListItems.URL, uri);
+        values.put(ReadingListItems.TITLE, title);
+
+        // Restore deleted record if possible
+        final Uri insertUri = mReadingListUriWithProfile
+                              .buildUpon()
+                              .appendQueryParameter(BrowserContract.PARAM_INSERT_IF_NEEDED, "true")
+                              .build();
+
+        final int updated = cr.update(insertUri,
+                                      values,
+                                      ReadingListItems.URL + " = ? ",
+                                      new String[] { uri });
+
+        debug("Updated " + updated + " rows to new modified time.");
     }
 
     @Override
     public void removeReadingListItemWithURL(ContentResolver cr, String uri) {
-        Uri contentUri = mBookmarksUriWithProfile;
+        cr.delete(mReadingListUriWithProfile, ReadingListItems.URL + " = ? ", new String[] { uri });
+    }
 
-        // Do this now so that the items still exist!
-        bumpParents(cr, Bookmarks.URL, uri);
-
-        final String[] urlArgs = new String[] { uri, String.valueOf(Bookmarks.FIXED_READING_LIST_ID) };
-        final String urlEquals = Bookmarks.URL + " = ? AND " + Bookmarks.PARENT + " == ?";
-
-        cr.delete(contentUri, urlEquals, urlArgs);
+    @Override
+    public void removeReadingListItem(ContentResolver cr, int id) {
+        cr.delete(mReadingListUriWithProfile, ReadingListItems._ID + " = ? ", new String[] { String.valueOf(id) });
     }
 
     @Override
