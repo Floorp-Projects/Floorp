@@ -2,11 +2,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+include $(topsrcdir)/toolkit/mozapps/installer/package-name.mk
+
 installer: 
 	@$(MAKE) -C b2g/installer installer
 
 package:
 	@$(MAKE) -C b2g/installer
+ifdef FXOS_SIMULATOR
+	$(PYTHON) $(srcdir)/b2g/simulator/build_xpi.py $(MOZ_PKG_PLATFORM)
+endif
 
 install::
 	@echo 'B2G can't be installed directly.'
