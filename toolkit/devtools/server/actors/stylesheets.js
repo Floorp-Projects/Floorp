@@ -23,6 +23,7 @@ loader.lazyGetter(this, "CssLogic", () => require("devtools/styleinspector/css-l
 
 let TRANSITION_CLASS = "moz-styleeditor-transitioning";
 let TRANSITION_DURATION_MS = 500;
+let TRANSITION_BUFFER_MS = 1000;
 let TRANSITION_RULE = "\
 :root.moz-styleeditor-transitioning, :root.moz-styleeditor-transitioning * {\
 transition-duration: " + TRANSITION_DURATION_MS + "ms !important; \
@@ -751,10 +752,10 @@ let StyleSheetActor = protocol.ActorClass({
 
     this._transitionRefCount++;
 
-    // Set up clean up and commit after transition duration (+10% buffer)
+    // Set up clean up and commit after transition duration (+buffer)
     // @see _onTransitionEnd
     this.window.setTimeout(this._onTransitionEnd.bind(this),
-                           Math.floor(TRANSITION_DURATION_MS * 1.1));
+                           TRANSITION_DURATION_MS + TRANSITION_BUFFER_MS);
   },
 
   /**
