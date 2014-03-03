@@ -127,7 +127,7 @@ include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
 
-for var in ('MOZ_GFX', 'USE_CAIRO', 'GFX2D_INTERNAL', 'MOZ2D_HAS_MOZ_CAIRO'):
+for var in ('USE_CAIRO', 'MOZ2D_HAS_MOZ_CAIRO'):
     DEFINES[var] = True
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gtk2', 'gtk3', 'gonk', 'qt'):
