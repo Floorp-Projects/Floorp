@@ -409,7 +409,7 @@ public class FxAccountStatusFragment extends PreferenceFragment implements OnPre
         Logger.info(LOG_TAG, "Syncing.");
         final Bundle extras = new Bundle();
         extras.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true);
-        ContentResolver.requestSync(fxAccount.getAndroidAccount(), BrowserContract.AUTHORITY, extras);
+        fxAccount.requestSync(extras);
         // No sense refreshing, since the sync will complete in the future.
       } else if ("debug_forget_certificate".equals(key)) {
         State state = fxAccount.getState();
