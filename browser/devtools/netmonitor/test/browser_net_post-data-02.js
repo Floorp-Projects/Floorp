@@ -3,7 +3,7 @@
 
 /**
  * Tests if the POST requests display the correct information in the UI,
- * even for raw payloads without attached content-type headers.
+ * for raw payloads with attached content-type headers.
  */
 
 function test() {
