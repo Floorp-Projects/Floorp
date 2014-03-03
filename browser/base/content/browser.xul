@@ -502,7 +502,7 @@
 <deck flex="1" id="tab-view-deck">
 <vbox flex="1" id="browser-panel">
 
-  <toolbox id="navigator-toolbox">
+  <toolbox id="navigator-toolbox" mode="icons">
     <!-- Menu -->
     <toolbar type="menubar" id="toolbar-menubar" class="chromeclass-menubar" customizable="true"
              defaultset="menubar-items"
