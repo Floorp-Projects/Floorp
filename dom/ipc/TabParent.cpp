@@ -2043,7 +2043,7 @@ TabParent::GetUseAsyncPanZoom(bool* useAsyncPanZoom)
 NS_IMETHODIMP
 TabParent::SetIsDocShellActive(bool isActive)
 {
-  SendSetIsDocShellActive(isActive);
+  unused << SendSetIsDocShellActive(isActive);
   return NS_OK;
 }
 
