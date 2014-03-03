@@ -56,7 +56,8 @@ public:                                                                       \
 static Type Name() { MOZ_ASSERT(Exists()); return One().mPref##Name.mValue; } \
 private:                                                                      \
 static const char* Get##Name##PrefName() { return Pref; }                     \
-PrefTemplate<UpdatePolicy::Update, Type, Default, Get##Name##PrefName> mPref##Name
+static Type Get##Name##PrefDefault() { return Default; }                      \
+PrefTemplate<UpdatePolicy::Update, Type, Get##Name##PrefDefault, Get##Name##PrefName> mPref##Name
 
 class gfxPrefs;
 class gfxPrefs MOZ_FINAL
@@ -70,12 +71,12 @@ private:
   MOZ_END_NESTED_ENUM_CLASS(UpdatePolicy)
 
   // Since we cannot use const char*, use a function that returns it.
-    template <MOZ_ENUM_CLASS_ENUM_TYPE(UpdatePolicy) Update, class T, T Default, const char* Pref(void)>
+  template <MOZ_ENUM_CLASS_ENUM_TYPE(UpdatePolicy) Update, class T, T Default(void), const char* Pref(void)>
   class PrefTemplate
   {
   public:
     PrefTemplate()
-    : mValue(Default)
+    : mValue(Default())
     {
       Register(Update, Pref());
     }
@@ -101,6 +102,12 @@ private:
   // This is where DECL_GFX_PREF for each of the preferences should go.
   // We will keep these in an alphabetical order to make it easier to see if
   // a method accessing a pref already exists. Just add yours in the list.
+
+  DECL_GFX_PREF(Once, "apz.fling_friction",                    APZFlingFriction, float, 0.002f);
+  DECL_GFX_PREF(Once, "apz.fling_stopped_threshold",           APZFlingStoppedThreshold, float, 0.01f);
+  DECL_GFX_PREF(Once, "apz.max_event_acceleration",            APZMaxEventAcceleration, float, 999.0f);
+  DECL_GFX_PREF(Once, "apz.max_velocity_pixels_per_ms",        APZMaxVelocity, float, -1.0f);
+  DECL_GFX_PREF(Once, "apz.max_velocity_queue_size",           APZMaxVelocityQueueSize, uint32_t, 5);
 
 #if defined(ANDROID)
   DECL_GFX_PREF(Once, "gfx.apitrace.enabled",                  UseApitrace, bool, false);
@@ -181,9 +188,11 @@ private:
   static void PrefAddVarCache(bool*, const char*, bool);
   static void PrefAddVarCache(int32_t*, const char*, int32_t);
   static void PrefAddVarCache(uint32_t*, const char*, uint32_t);
+  static void PrefAddVarCache(float*, const char*, float);
   static bool PrefGet(const char*, bool);
   static int32_t PrefGet(const char*, int32_t);
   static uint32_t PrefGet(const char*, uint32_t);
+  static float PrefGet(const char*, float);
 
   gfxPrefs();
   ~gfxPrefs();
