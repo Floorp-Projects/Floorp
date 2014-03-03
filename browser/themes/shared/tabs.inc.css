@@ -20,6 +20,10 @@
     url(chrome://browser/skin/tabbrowser/tab-background-start.png);
 }
 
+#tabbrowser-tabs {
+  min-height: @tabHeight@;
+}
+
 .tabbrowser-tab,
 .tabs-newtab-button {
   -moz-appearance: none;
