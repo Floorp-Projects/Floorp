@@ -145,6 +145,19 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
+    // This is requested in Bug 836516. With settings this property, WLAN
+    // firmware could be aware of Bluetooth has been turned on/off, so that the
+    // mecahnism of handling coexistence of WIFI and Bluetooth could be started.
+    //
+    // In the future, we may have our own way instead of setting a system
+    // property to let firmware developers be able to sense that Bluetooth has
+    // been toggled.
+#if defined(MOZ_WIDGET_GONK)
+    if (property_set(PROP_BLUETOOTH_ENABLED, mEnabled ? "true" : "false") != 0) {
+      BT_WARNING("Failed to set bluetooth enabled property");
+    }
+#endif
+
     NS_ENSURE_TRUE(sBluetoothService, NS_OK);
 
     if (sInShutdown) {
@@ -214,19 +227,6 @@ public:
         }
       }
     }
-
-    // This is requested in Bug 836516. With settings this property, WLAN
-    // firmware could be aware of Bluetooth has been turned on/off, so that the
-    // mecahnism of handling coexistence of WIFI and Bluetooth could be started.
-    //
-    // In the future, we may have our own way instead of setting a system
-    // property to let firmware developers be able to sense that Bluetooth has
-    // been toggled.
-#if defined(MOZ_WIDGET_GONK)
-    if (property_set(PROP_BLUETOOTH_ENABLED, mEnabled ? "true" : "false") != 0) {
-      BT_WARNING("Failed to set bluetooth enabled property");
-    }
-#endif
 
     nsCOMPtr<nsIRunnable> ackTask = new BluetoothService::ToggleBtAck(mEnabled);
     if (NS_FAILED(NS_DispatchToMainThread(ackTask))) {
