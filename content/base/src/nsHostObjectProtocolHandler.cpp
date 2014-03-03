@@ -166,7 +166,7 @@ class BlobURLsReporter MOZ_FINAL : public nsIMemoryReporter
          "invalidated with URL.revokeObjectURL.");
       nsAutoCString path, url, owner, specialDesc;
       nsCOMPtr<nsIURI> principalURI;
-      uint64_t size;
+      uint64_t size = 0;
       uint32_t refCount = 1;
       DebugOnly<bool> blobWasCounted;
 
@@ -174,11 +174,15 @@ class BlobURLsReporter MOZ_FINAL : public nsIMemoryReporter
       MOZ_ASSERT(blobWasCounted);
       MOZ_ASSERT(refCount > 0);
 
-      if (NS_FAILED(blob->GetSize(&size))) {
-        size = 0;
+      bool isMemoryFile = blob->IsMemoryFile();
+
+      if (isMemoryFile) {
+        if (NS_FAILED(blob->GetSize(&size))) {
+          size = 0;
+        }
       }
 
-      path = "blob-urls/";
+      path = isMemoryFile ? "memory-blob-urls/" : "file-blob-urls/";
       if (NS_SUCCEEDED(aInfo->mPrincipal->GetURI(getter_AddRefs(principalURI))) &&
           principalURI != nullptr &&
           NS_SUCCEEDED(principalURI->GetSpec(owner)) &&
@@ -211,19 +215,35 @@ class BlobURLsReporter MOZ_FINAL : public nsIMemoryReporter
         specialDesc += addrStr;
         specialDesc += ") has ";
         specialDesc.AppendInt(refCount);
-        specialDesc += " URLs; its size is divided ";
-        specialDesc += refCount > 2 ? "among" : "between";
-        specialDesc += " them in this report.";
+        specialDesc += " URLs.";
+        if (isMemoryFile) {
+          specialDesc += " Its size is divided ";
+          specialDesc += refCount > 2 ? "among" : "between";
+          specialDesc += " them in this report.";
+        }
       }
-      envp->mCallback->Callback(EmptyCString(),
-                                path,
-                                KIND_OTHER,
-                                UNITS_BYTES,
-                                size / refCount,
-                                (specialDesc.IsEmpty()
-                                 ? static_cast<const nsACString&>(desc)
-                                 : static_cast<const nsACString&>(specialDesc)),
-                                envp->mData);
+
+      const nsACString& descString = specialDesc.IsEmpty()
+          ? static_cast<const nsACString&>(desc)
+          : static_cast<const nsACString&>(specialDesc);
+      if (isMemoryFile) {
+        envp->mCallback->Callback(EmptyCString(),
+            path,
+            KIND_OTHER,
+            UNITS_BYTES,
+            size / refCount,
+            descString,
+            envp->mData);
+      }
+      else {
+        envp->mCallback->Callback(EmptyCString(),
+            path,
+            KIND_OTHER,
+            UNITS_COUNT,
+            1,
+            descString,
+            envp->mData);
+      }
     }
     return PL_DHASH_NEXT;
   }
@@ -233,7 +253,8 @@ NS_IMPL_ISUPPORTS1(BlobURLsReporter, nsIMemoryReporter)
 
 }
 
-nsHostObjectProtocolHandler::nsHostObjectProtocolHandler()
+void
+nsHostObjectProtocolHandler::Init(void)
 {
   static bool initialized = false;
 
@@ -244,6 +265,10 @@ nsHostObjectProtocolHandler::nsHostObjectProtocolHandler()
   }
 }
 
+nsHostObjectProtocolHandler::nsHostObjectProtocolHandler()
+{
+  Init();
+}
 
 nsresult
 nsHostObjectProtocolHandler::AddDataEntry(const nsACString& aScheme,
@@ -251,6 +276,8 @@ nsHostObjectProtocolHandler::AddDataEntry(const nsACString& aScheme,
                                           nsIPrincipal* aPrincipal,
                                           nsACString& aUri)
 {
+  Init();
+
   nsresult rv = GenerateURIString(aScheme, aUri);
   NS_ENSURE_SUCCESS(rv, rv);
 
