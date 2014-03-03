@@ -1704,33 +1704,26 @@ ContainerState::FindFixedPosFrameForLayerData(const nsIFrame* aAnimatedGeometryR
 
   nsPresContext* presContext = mContainerFrame->PresContext();
   nsIFrame* viewport = presContext->PresShell()->GetRootFrame();
-  const nsIFrame* result = nullptr;
-  nsRect displayPort;
 
   if (viewport == aAnimatedGeometryRoot && aDisplayItemFixedToViewport &&
-      nsLayoutUtils::ViewportHasDisplayPort(presContext, &displayPort)) {
+      nsLayoutUtils::ViewportHasDisplayPort(presContext)) {
     // Probably a background-attachment:fixed item
-    result = viewport;
-  } else {
-    // Viewports with no fixed-pos frames are not relevant.
-    if (!viewport->GetFirstChild(nsIFrame::kFixedList)) {
-      return nullptr;
+    return viewport;
+  }
+  // Viewports with no fixed-pos frames are not relevant.
+  if (!viewport->GetFirstChild(nsIFrame::kFixedList)) {
+    return nullptr;
+  }
+  for (const nsIFrame* f = aAnimatedGeometryRoot; f; f = f->GetParent()) {
+    if (nsLayoutUtils::IsFixedPosFrameInDisplayPort(f)) {
+      return f;
     }
-    for (const nsIFrame* f = aAnimatedGeometryRoot; f; f = f->GetParent()) {
-      if (nsLayoutUtils::IsFixedPosFrameInDisplayPort(f, &displayPort)) {
-        result = f;
-        break;
-      }
-      if (f == mContainerReferenceFrame) {
-        // The metadata will go on an ancestor layer if necessary.
-        return nullptr;
-      }
-    }
-    if (!result) {
+    if (f == mContainerReferenceFrame) {
+      // The metadata will go on an ancestor layer if necessary.
       return nullptr;
     }
   }
-  return result;
+  return nullptr;
 }
 
 void
