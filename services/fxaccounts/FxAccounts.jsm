@@ -41,6 +41,164 @@ let publicProperties = [
   "whenVerified"
 ];
 
+// An AccountState object holds all state related to one specific account.
+// Only one AccountState is ever "current" in the FxAccountsInternal object -
+// whenever a user logs out or logs in, the current AccountState is discarded,
+// making it impossible for the wrong state or state data to be accidentally
+// used.
+// In addition, it has some promise-related helpers to ensure that if an
+// attempt is made to resolve a promise on a "stale" state (eg, if an
+// operation starts, but a different user logs in before the operation
+// completes), the promise will be rejected.
+// It is intended to be used thusly:
+// somePromiseBasedFunction: function() {
+//   let currentState = this.currentAccountState;
+//   return someOtherPromiseFunction().then(
+//     data => currentState.resolve(data)
+//   );
+// }
+// If the state has changed between the function being called and the promise
+// being resolved, the .resolve() call will actually be rejected.
+AccountState = function(fxaInternal) {
+  this.fxaInternal = fxaInternal;
+};
+
+AccountState.prototype = {
+  cert: null,
+  keyPair: null,
+  signedInUser: null,
+  whenVerifiedPromise: null,
+  whenKeysReadyPromise: null,
+
+  get isCurrent() this.fxaInternal && this.fxaInternal.currentAccountState === this,
+
+  abort: function() {
+    if (this.whenVerifiedPromise) {
+      this.whenVerifiedPromise.reject(
+        new Error("Verification aborted; Another user signing in"));
+      this.whenVerifiedPromise = null;
+    }
+
+    if (this.whenKeysReadyPromise) {
+      this.whenKeysReadyPromise.reject(
+        new Error("Verification aborted; Another user signing in"));
+      this.whenKeysReadyPromise = null;
+    }
+    this.cert = null;
+    this.keyPair = null;
+    this.signedInUser = null;
+    this.fxaInternal = null;
+  },
+
+  getUserAccountData: function() {
+    // Skip disk if user is cached.
+    if (this.signedInUser) {
+      return this.resolve(this.signedInUser.accountData);
+    }
+
+    return this.fxaInternal.signedInUserStorage.get().then(
+      user => {
+        log.debug("getUserAccountData -> " + JSON.stringify(user));
+        if (user && user.version == this.version) {
+          log.debug("setting signed in user");
+          this.signedInUser = user;
+        }
+        return this.resolve(user ? user.accountData : null);
+      },
+      err => {
+        if (err instanceof OS.File.Error && err.becauseNoSuchFile) {
+          // File hasn't been created yet.  That will be done
+          // on the first call to getSignedInUser
+          return this.resolve(null);
+        }
+        return this.reject(err);
+      }
+    );
+  },
+
+  setUserAccountData: function(accountData) {
+    return this.fxaInternal.signedInUserStorage.get().then(record => {
+      if (!this.isCurrent) {
+        return this.reject(new Error("Another user has signed in"));
+      }
+      record.accountData = accountData;
+      this.signedInUser = record;
+      return this.fxaInternal.signedInUserStorage.set(record)
+        .then(() => this.resolve(accountData));
+    });
+  },
+
+
+  getCertificate: function(data, keyPair, mustBeValidUntil) {
+    log.debug("getCertificate" + JSON.stringify(this.signedInUser));
+    // TODO: get the lifetime from the cert's .exp field
+    if (this.cert && this.cert.validUntil > mustBeValidUntil) {
+      log.debug(" getCertificate already had one");
+      return this.resolve(this.cert.cert);
+    }
+    // else get our cert signed
+    let willBeValidUntil = this.fxaInternal.now() + CERT_LIFETIME;
+    return this.fxaInternal.getCertificateSigned(data.sessionToken,
+                                                 keyPair.serializedPublicKey,
+                                                 CERT_LIFETIME).then(
+      cert => {
+        this.cert = {
+          cert: cert,
+          validUntil: willBeValidUntil
+        };
+        return cert;
+      }
+    ).then(result => this.resolve(result));
+  },
+
+  getKeyPair: function(mustBeValidUntil) {
+    if (this.keyPair && (this.keyPair.validUntil > mustBeValidUntil)) {
+      log.debug("getKeyPair: already have a keyPair");
+      return this.resolve(this.keyPair.keyPair);
+    }
+    // Otherwse, create a keypair and set validity limit.
+    let willBeValidUntil = this.fxaInternal.now() + KEY_LIFETIME;
+    let d = Promise.defer();
+    jwcrypto.generateKeyPair("DS160", (err, kp) => {
+      if (err) {
+        return this.reject(err);
+      }
+      this.keyPair = {
+        keyPair: kp,
+        validUntil: willBeValidUntil
+      };
+      log.debug("got keyPair");
+      delete this.cert;
+      d.resolve(this.keyPair.keyPair);
+    });
+    return d.promise.then(result => this.resolve(result));
+  },
+
+  resolve: function(result) {
+    if (!this.isCurrent) {
+      log.info("An accountState promise was resolved, but was actually rejected" +
+               " due to a different user being signed in. Originally resolved" +
+               " with: " + result);
+      return Promise.reject(new Error("A different user signed in"));
+    }
+    return Promise.resolve(result);
+  },
+
+  reject: function(error) {
+    // It could be argued that we should just let it reject with the original
+    // error - but this runs the risk of the error being (eg) a 401, which
+    // might cause the consumer to attempt some remediation and cause other
+    // problems.
+    if (!this.isCurrent) {
+      log.info("An accountState promise was rejected, but we are ignoring that" +
+               "reason and rejecting it due to a different user being signed in." +
+               "Originally rejected with: " + reason);
+      return Promise.reject(new Error("A different user signed in"));
+    }
+    return Promise.reject(error);
+  },
+
+}
 /**
  * The public API's constructor.
  */
@@ -70,9 +228,6 @@ this.FxAccounts = function (mockInternal) {
  * The internal API's constructor.
  */
 function FxAccountsInternal() {
-  this.cert = null;
-  this.keyPair = null;
-  this.signedInUser = null;
   this.version = DATA_FORMAT_VERSION;
 
   // Make a local copy of these constants so we can mock it in testing
@@ -89,11 +244,10 @@ function FxAccountsInternal() {
   // conceivable that while we are waiting to verify one identity, a caller
   // could start verification on a second, different identity, we need to be
   // able to abort all work on the first sign-in process.  The currentTimer and
-  // generationCount are used for this purpose.
-  this.whenVerifiedPromise = null;
-  this.whenKeysReadyPromise = null;
+  // currentAccountState are used for this purpose.
+  // (XXX - should the timer be directly on the currentAccountState?)
   this.currentTimer = null;
-  this.generationCount = 0;
+  this.currentAccountState = new AccountState(this);
 
   this.fxAccountsClient = new FxAccountsClient();
 
@@ -184,7 +338,8 @@ FxAccountsInternal.prototype = {
    *        or null if no user is signed in.
    */
   getSignedInUser: function getSignedInUser() {
-    return this.getUserAccountData().then(data => {
+    let currentState = this.currentAccountState;
+    return currentState.getUserAccountData().then(data => {
       if (!data) {
         return null;
       }
@@ -195,7 +350,7 @@ FxAccountsInternal.prototype = {
         this.startVerifiedCheck(data);
       }
       return data;
-    });
+    }).then(result => currentState.resolve(result));
   },
 
   /**
@@ -222,8 +377,9 @@ FxAccountsInternal.prototype = {
     this.abortExistingFlow();
 
     let record = {version: this.version, accountData: credentials};
+    let currentState = this.currentAccountState;
     // Cache a clone of the credentials object.
-    this.signedInUser = JSON.parse(JSON.stringify(record));
+    currentState.signedInUser = JSON.parse(JSON.stringify(record));
 
     // This promise waits for storage, but not for verification.
     // We're telling the caller that this is durable now.
@@ -232,7 +388,7 @@ FxAccountsInternal.prototype = {
       if (!this.isUserEmailVerified(credentials)) {
         this.startVerifiedCheck(credentials);
       }
-    });
+    }).then(result => currentState.resolve(result));
   },
 
   /**
@@ -241,8 +397,9 @@ FxAccountsInternal.prototype = {
    */
   getAssertion: function getAssertion(audience) {
     log.debug("enter getAssertion()");
+    let currentState = this.currentAccountState;
     let mustBeValidUntil = this.now() + ASSERTION_LIFETIME;
-    return this.getUserAccountData().then(data => {
+    return currentState.getUserAccountData().then(data => {
       if (!data) {
         // No signed-in user
         return null;
@@ -251,13 +408,13 @@ FxAccountsInternal.prototype = {
         // Signed-in user has not verified email
         return null;
       }
-      return this.getKeyPair(mustBeValidUntil).then(keyPair => {
-        return this.getCertificate(data, keyPair, mustBeValidUntil)
+      return currentState.getKeyPair(mustBeValidUntil).then(keyPair => {
+        return currentState.getCertificate(data, keyPair, mustBeValidUntil)
           .then(cert => {
             return this.getAssertionFromCert(data, keyPair, cert, audience);
           });
       });
-    });
+    }).then(result => currentState.resolve(result));
   },
 
   /**
@@ -265,12 +422,13 @@ FxAccountsInternal.prototype = {
    *
    */
   resendVerificationEmail: function resendVerificationEmail() {
+    let currentState = this.currentAccountState;
     return this.getSignedInUser().then(data => {
       // If the caller is asking for verification to be re-sent, and there is
       // no signed-in user to begin with, this is probably best regarded as an
       // error.
       if (data) {
-        this.pollEmailStatus(data.sessionToken, "start");
+        this.pollEmailStatus(currentState, data.sessionToken, "start");
         return this.fxAccountsClient.resendVerificationEmail(data.sessionToken);
       }
       throw new Error("Cannot resend verification email; no signed-in user");
@@ -286,25 +444,13 @@ FxAccountsInternal.prototype = {
       clearTimeout(this.currentTimer);
       this.currentTimer = 0;
     }
-    this.generationCount++;
-    log.debug("generationCount: " + this.generationCount);
-
-    if (this.whenVerifiedPromise) {
-      this.whenVerifiedPromise.reject(
-        new Error("Verification aborted; Another user signing in"));
-      this.whenVerifiedPromise = null;
-    }
-
-    if (this.whenKeysReadyPromise) {
-      this.whenKeysReadyPromise.reject(
-        new Error("KeyFetch aborted; Another user signing in"));
-      this.whenKeysReadyPromise = null;
-    }
+    this.currentAccountState.abort();
+    this.currentAccountState = new AccountState(this);
   },
 
   signOut: function signOut() {
     this.abortExistingFlow();
-    this.signedInUser = null; // clear in-memory cache
+    this.currentAccountState.signedInUser = null; // clear in-memory cache
     return this.signedInUserStorage.set(null).then(() => {
       this.notifyObservers(ONLOGOUT_NOTIFICATION);
     });
@@ -330,38 +476,37 @@ FxAccountsInternal.prototype = {
    *        or null if no user is signed in
    */
   getKeys: function() {
-    return this.getUserAccountData().then((data) => {
+    let currentState = this.currentAccountState;
+    return currentState.getUserAccountData().then((data) => {
       if (!data) {
         throw new Error("Can't get keys; User is not signed in");
       }
       if (data.kA && data.kB) {
         return data;
       }
-      if (!this.whenKeysReadyPromise) {
-        this.whenKeysReadyPromise = Promise.defer();
+      if (!currentState.whenKeysReadyPromise) {
+        currentState.whenKeysReadyPromise = Promise.defer();
         this.fetchAndUnwrapKeys(data.keyFetchToken).then(data => {
-          if (this.whenKeysReadyPromise) {
-            this.whenKeysReadyPromise.resolve(data);
-          }
+          currentState.whenKeysReadyPromise.resolve(data);
         });
       }
-      return this.whenKeysReadyPromise.promise;
-    });
+      return currentState.whenKeysReadyPromise.promise;
+    }).then(result => currentState.resolve(result));
    },
 
   fetchAndUnwrapKeys: function(keyFetchToken) {
     log.debug("fetchAndUnwrapKeys: token: " + keyFetchToken);
+    let currentState = this.currentAccountState;
     return Task.spawn(function* task() {
       // Sign out if we don't have a key fetch token.
       if (!keyFetchToken) {
         yield this.signOut();
         return null;
       }
-      let myGenerationCount = this.generationCount;
 
       let {kA, wrapKB} = yield this.fetchKeys(keyFetchToken);
 
-      let data = yield this.getUserAccountData();
+      let data = yield currentState.getUserAccountData();
 
       // Sanity check that the user hasn't changed out from under us
       if (data.keyFetchToken !== keyFetchToken) {
@@ -381,20 +526,13 @@ FxAccountsInternal.prototype = {
 
       log.debug("Keys Obtained: kA=" + data.kA + ", kB=" + data.kB);
 
-      // Before writing any data, ensure that a new flow hasn't been
-      // started behind our backs.
-      if (this.generationCount !== myGenerationCount) {
-        return null;
-      }
-
-      yield this.setUserAccountData(data);
-
+      yield currentState.setUserAccountData(data);
       // We are now ready for business. This should only be invoked once
       // per setSignedInUser(), regardless of whether we've rebooted since
       // setSignedInUser() was called.
       this.notifyObservers(ONVERIFIED_NOTIFICATION);
       return data;
-    }.bind(this));
+    }.bind(this)).then(result => currentState.resolve(result));
   },
 
   getAssertionFromCert: function(data, keyPair, cert, audience) {
@@ -405,6 +543,7 @@ FxAccountsInternal.prototype = {
       localtimeOffsetMsec: this.localtimeOffsetMsec,
       now: this.now()
     };
+    let currentState = this.currentAccountState;
     // "audience" should look like "http://123done.org".
     // The generated assertion will expire in two minutes.
     jwcrypto.generateAssertion(cert, keyPair, audience, options, (err, signed) => {
@@ -416,90 +555,20 @@ FxAccountsInternal.prototype = {
         d.resolve(signed);
       }
     });
-    return d.promise;
-  },
-
-  getCertificate: function(data, keyPair, mustBeValidUntil) {
-    log.debug("getCertificate" + JSON.stringify(this.signedInUserStorage));
-    // TODO: get the lifetime from the cert's .exp field
-    if (this.cert && this.cert.validUntil > mustBeValidUntil) {
-      log.debug(" getCertificate already had one");
-      return Promise.resolve(this.cert.cert);
-    }
-    // else get our cert signed
-    let willBeValidUntil = this.now() + CERT_LIFETIME;
-    return this.getCertificateSigned(data.sessionToken,
-                                     keyPair.serializedPublicKey,
-                                     CERT_LIFETIME)
-      .then((cert) => {
-        this.cert = {
-          cert: cert,
-          validUntil: willBeValidUntil
-        };
-        return cert;
-      }
-    );
+    return d.promise.then(result => currentState.resolve(result));
   },
 
   getCertificateSigned: function(sessionToken, serializedPublicKey, lifetime) {
     log.debug("getCertificateSigned: " + sessionToken + " " + serializedPublicKey);
-    return this.fxAccountsClient.signCertificate(sessionToken,
-                                                 JSON.parse(serializedPublicKey),
-                                                 lifetime);
-  },
-
-  getKeyPair: function(mustBeValidUntil) {
-    if (this.keyPair && (this.keyPair.validUntil > mustBeValidUntil)) {
-      log.debug("getKeyPair: already have a keyPair");
-      return Promise.resolve(this.keyPair.keyPair);
-    }
-    // Otherwse, create a keypair and set validity limit.
-    let willBeValidUntil = this.now() + KEY_LIFETIME;
-    let d = Promise.defer();
-    jwcrypto.generateKeyPair("DS160", (err, kp) => {
-      if (err) {
-        d.reject(err);
-      } else {
-        this.keyPair = {
-          keyPair: kp,
-          validUntil: willBeValidUntil
-        };
-        log.debug("got keyPair");
-        delete this.cert;
-        d.resolve(this.keyPair.keyPair);
-      }
-    });
-    return d.promise;
+    return this.fxAccountsClient.signCertificate(
+      sessionToken,
+      JSON.parse(serializedPublicKey),
+      lifetime
+    );
   },
 
   getUserAccountData: function() {
-    // Skip disk if user is cached.
-    if (this.signedInUser) {
-      return Promise.resolve(this.signedInUser.accountData);
-    }
-
-    let deferred = Promise.defer();
-    this.signedInUserStorage.get()
-      .then((user) => {
-        log.debug("getUserAccountData -> " + JSON.stringify(user));
-        if (user && user.version == this.version) {
-          log.debug("setting signed in user");
-          this.signedInUser = user;
-        }
-        deferred.resolve(user ? user.accountData : null);
-      },
-      (err) => {
-        if (err instanceof OS.File.Error && err.becauseNoSuchFile) {
-          // File hasn't been created yet.  That will be done
-          // on the first call to getSignedInUser
-          deferred.resolve(null);
-        } else {
-          deferred.reject(err);
-        }
-      }
-    );
-
-    return deferred.promise;
+    return this.currentAccountState.getUserAccountData();
   },
 
   isUserEmailVerified: function isUserEmailVerified(data) {
@@ -510,10 +579,11 @@ FxAccountsInternal.prototype = {
    * Setup for and if necessary do email verification polling.
    */
   loadAndPoll: function() {
-    return this.getUserAccountData()
+    let currentState = this.currentAccountState;
+    return currentState.getUserAccountData()
       .then(data => {
         if (data && !this.isUserEmailVerified(data)) {
-          this.pollEmailStatus(data.sessionToken, "start");
+          this.pollEmailStatus(currentState, data.sessionToken, "start");
         }
         return data;
       });
@@ -528,19 +598,22 @@ FxAccountsInternal.prototype = {
     // obtains and stores kA and kB, it will fire the onverified observer
     // notification.
     return this.whenVerified(data)
-      .then((data) => this.getKeys(data));
+      .then(() => this.getKeys());
   },
 
   whenVerified: function(data) {
+    let currentState = this.currentAccountState;
     if (data.verified) {
       log.debug("already verified");
-      return Promise.resolve(data);
+      return currentState.resolve(data);
     }
-    if (!this.whenVerifiedPromise) {
+    if (!currentState.whenVerifiedPromise) {
       log.debug("whenVerified promise starts polling for verified email");
-      this.pollEmailStatus(data.sessionToken, "start");
+      this.pollEmailStatus(currentState, data.sessionToken, "start");
     }
-    return this.whenVerifiedPromise.promise;
+    return currentState.whenVerifiedPromise.promise.then(
+      result => currentState.resolve(result)
+    );
   },
 
   notifyObservers: function(topic) {
@@ -548,43 +621,35 @@ FxAccountsInternal.prototype = {
     Services.obs.notifyObservers(null, topic, null);
   },
 
-  pollEmailStatus: function pollEmailStatus(sessionToken, why) {
-    let myGenerationCount = this.generationCount;
-    log.debug("entering pollEmailStatus: " + why + " " + myGenerationCount);
+  // XXX - pollEmailStatus should maybe be on the AccountState object?
+  pollEmailStatus: function pollEmailStatus(currentState, sessionToken, why) {
+    log.debug("entering pollEmailStatus: " + why);
     if (why == "start") {
       // If we were already polling, stop and start again.  This could happen
       // if the user requested the verification email to be resent while we
       // were already polling for receipt of an earlier email.
       this.pollTimeRemaining = this.POLL_SESSION;
-      if (!this.whenVerifiedPromise) {
-        this.whenVerifiedPromise = Promise.defer();
+      if (!currentState.whenVerifiedPromise) {
+        currentState.whenVerifiedPromise = Promise.defer();
       }
     }
 
     this.checkEmailStatus(sessionToken)
       .then((response) => {
         log.debug("checkEmailStatus -> " + JSON.stringify(response));
-        // Check to see if we're still current.
-        // If for some ghastly reason we are not, stop processing.
-        if (this.generationCount !== myGenerationCount) {
-          log.debug("generation count differs from " + this.generationCount + " - aborting");
-          log.debug("sessionToken on abort is " + sessionToken);
-          return;
-        }
-
         if (response && response.verified) {
           // Bug 947056 - Server should be able to tell FxAccounts.jsm to back
           // off or stop polling altogether
-          this.getUserAccountData()
+          currentState.getUserAccountData()
             .then((data) => {
               data.verified = true;
-              return this.setUserAccountData(data);
+              return currentState.setUserAccountData(data);
             })
             .then((data) => {
               // Now that the user is verified, we can proceed to fetch keys
-              if (this.whenVerifiedPromise) {
-                this.whenVerifiedPromise.resolve(data);
-                delete this.whenVerifiedPromise;
+              if (currentState.whenVerifiedPromise) {
+                currentState.whenVerifiedPromise.resolve(data);
+                delete currentState.whenVerifiedPromise;
               }
             });
         } else {
@@ -593,28 +658,19 @@ FxAccountsInternal.prototype = {
           log.debug("time remaining: " + this.pollTimeRemaining);
           if (this.pollTimeRemaining > 0) {
             this.currentTimer = setTimeout(() => {
-              this.pollEmailStatus(sessionToken, "timer")}, this.POLL_STEP);
+              this.pollEmailStatus(currentState, sessionToken, "timer")}, this.POLL_STEP);
             log.debug("started timer " + this.currentTimer);
           } else {
-            if (this.whenVerifiedPromise) {
-              this.whenVerifiedPromise.reject(
+            if (currentState.whenVerifiedPromise) {
+              currentState.whenVerifiedPromise.reject(
                 new Error("User email verification timed out.")
               );
-              delete this.whenVerifiedPromise;
+              delete currentState.whenVerifiedPromise;
             }
           }
         }
       });
     },
-
-  setUserAccountData: function(accountData) {
-    return this.signedInUserStorage.get().then(record => {
-      record.accountData = accountData;
-      this.signedInUser = record;
-      return this.signedInUserStorage.set(record)
-        .then(() => accountData);
-    });
-  },
 
   // Return the URI of the remote UI flows.
   getAccountsURI: function() {
@@ -641,6 +697,7 @@ FxAccountsInternal.prototype = {
     if (!/^https:/.test(url)) { // Comment to un-break emacs js-mode highlighting
       throw new Error("Firefox Accounts server must use HTTPS");
     }
+    let currentState = this.currentAccountState;
     // but we need to append the email address onto a query string.
     return this.getSignedInUser().then(accountData => {
       if (!accountData) {
@@ -649,7 +706,7 @@ FxAccountsInternal.prototype = {
       let newQueryPortion = url.indexOf("?") == -1 ? "?" : "&";
       newQueryPortion += "email=" + encodeURIComponent(accountData.email);
       return url + newQueryPortion;
-    });
+    }).then(result => currentState.resolve(result));
   }
 };
 
