@@ -35,10 +35,6 @@
 #include "TextComposition.h"
 #include "mozilla/Preferences.h"
 #include "nsAsyncDOMEvent.h"
-#include "nsIDocShell.h"
-#include "nsIReflowObserver.h"
-#include "nsIScrollObserver.h"
-#include "nsWeakReference.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -50,10 +46,7 @@ using namespace mozilla::widget;
 // sTextStateObserver is null if there is no focused editor
 
 class nsTextStateManager MOZ_FINAL : public nsISelectionListener,
-                                     public nsStubMutationObserver,
-                                     public nsIReflowObserver,
-                                     public nsIScrollObserver,
-                                     public nsSupportsWeakReference
+                                     public nsStubMutationObserver
 {
 public:
   nsTextStateManager()
@@ -68,10 +61,6 @@ public:
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
   NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTEWILLCHANGE
   NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
-  NS_DECL_NSIREFLOWOBSERVER
-
-  // nsIScrollObserver
-  virtual void ScrollPositionChanged() MOZ_OVERRIDE;
 
   void     Init(nsIWidget* aWidget,
                 nsPresContext* aPresContext,
@@ -93,7 +82,6 @@ private:
   void NotifyContentAdded(nsINode* aContainer, int32_t aStart, int32_t aEnd);
   void ObserveEditableNode();
 
-  nsCOMPtr<nsIDocShell>          mDocShell;
   nsIMEUpdatePreference mUpdatePreference;
   uint32_t mPreAttrChangeLength;
 };
@@ -764,8 +752,6 @@ nsTextStateManager::Init(nsIWidget* aWidget,
     return;
   }
 
-  mDocShell = aPresContext->GetDocShell();
-
   ObserveEditableNode();
 }
 
@@ -787,13 +773,6 @@ nsTextStateManager::ObserveEditableNode()
   if (mUpdatePreference.WantTextChange()) {
     // add text change observer
     mRootContent->AddMutationObserver(this);
-  }
-
-  if (mUpdatePreference.WantPositionChanged() && mDocShell) {
-    // Add scroll position listener and reflow observer to detect position and
-    // size changes
-    mDocShell->AddWeakScrollObserver(this);
-    mDocShell->AddWeakReflowObserver(this);
   }
 }
 
@@ -821,13 +800,8 @@ nsTextStateManager::Destroy(void)
   if (mUpdatePreference.WantTextChange() && mRootContent) {
     mRootContent->RemoveMutationObserver(this);
   }
-  if (mUpdatePreference.WantPositionChanged() && mDocShell) {
-    mDocShell->RemoveWeakScrollObserver(this);
-    mDocShell->RemoveWeakReflowObserver(this);
-  }
   mRootContent = nullptr;
   mEditableNode = nullptr;
-  mDocShell = nullptr;
   mUpdatePreference.mWantUpdates = nsIMEUpdatePreference::NOTIFY_NOTHING;
 }
 
@@ -859,12 +833,9 @@ nsTextStateManager::IsEditorHandlingEventForComposition() const
   return composition->IsEditorHandlingEvent();
 }
 
-NS_IMPL_ISUPPORTS5(nsTextStateManager,
+NS_IMPL_ISUPPORTS2(nsTextStateManager,
                    nsIMutationObserver,
-                   nsISelectionListener,
-                   nsIReflowObserver,
-                   nsIScrollObserver,
-                   nsISupportsWeakReference)
+                   nsISelectionListener)
 
 // Helper class, used for selection change notification
 class SelectionChangeEvent : public nsRunnable {
@@ -945,54 +916,6 @@ private:
   uint32_t mStart, mOldEnd, mNewEnd;
   bool mCausedByComposition;
 };
-
-class PositionChangeEvent MOZ_FINAL : public nsRunnable
-{
-public:
-  PositionChangeEvent(nsTextStateManager* aDispatcher)
-    : mDispatcher(aDispatcher) {
-    MOZ_ASSERT(mDispatcher);
-  }
-
-  NS_IMETHOD Run() {
-    if (mDispatcher->mWidget) {
-      mDispatcher->mWidget->NotifyIME(
-        IMENotification(NOTIFY_IME_OF_POSITION_CHANGE));
-    }
-    return NS_OK;
-  }
-
-private:
-  nsRefPtr<nsTextStateManager> mDispatcher;
-};
-
-void
-nsTextStateManager::ScrollPositionChanged()
-{
-  if (mWidget) {
-    nsContentUtils::AddScriptRunner(new PositionChangeEvent(this));
-  }
-}
-
-NS_IMETHODIMP
-nsTextStateManager::Reflow(DOMHighResTimeStamp aStart,
-                           DOMHighResTimeStamp aEnd)
-{
-  if (mWidget) {
-    nsContentUtils::AddScriptRunner(new PositionChangeEvent(this));
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsTextStateManager::ReflowInterruptible(DOMHighResTimeStamp aStart,
-                                        DOMHighResTimeStamp aEnd)
-{
-  if (mWidget) {
-    nsContentUtils::AddScriptRunner(new PositionChangeEvent(this));
-  }
-  return NS_OK;
-}
 
 void
 nsTextStateManager::CharacterDataChanged(nsIDocument* aDocument,
