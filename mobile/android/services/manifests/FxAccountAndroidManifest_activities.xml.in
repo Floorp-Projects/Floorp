@@ -1,7 +1,6 @@
         <activity
-            android:theme="@style/FxAccountTheme"
-            android:icon="@drawable/fxaccount_icon"
-            android:label="Status"
+            android:theme="@style/FxAccountTheme.FxAccountStatusActivity"
+            android:label="@string/fxaccount_status_activity_label"
             android:clearTaskOnLaunch="true"
             android:taskAffinity="@ANDROID_PACKAGE_NAME@.FXA"
             android:name="org.mozilla.gecko.fxa.activities.FxAccountStatusActivity"
@@ -16,8 +15,7 @@
 
         <activity
             android:theme="@style/FxAccountTheme"
-            android:icon="@drawable/fxaccount_icon"
-            android:label="Setup"
+            android:label="@string/sync_app_name"
             android:clearTaskOnLaunch="true"
             android:taskAffinity="@ANDROID_PACKAGE_NAME@.FXA"
             android:name="org.mozilla.gecko.fxa.activities.FxAccountGetStartedActivity"
@@ -32,42 +30,36 @@
 
         <activity
             android:theme="@style/FxAccountTheme"
-            android:icon="@drawable/fxaccount_icon"
             android:name="org.mozilla.gecko.fxa.activities.FxAccountCreateAccountActivity"
             android:windowSoftInputMode="adjustResize">
         </activity>
 
         <activity
             android:theme="@style/FxAccountTheme"
-            android:icon="@drawable/fxaccount_icon"
             android:name="org.mozilla.gecko.fxa.activities.FxAccountConfirmAccountActivity"
             android:windowSoftInputMode="adjustResize">
         </activity>
 
         <activity
             android:theme="@style/FxAccountTheme"
-            android:icon="@drawable/fxaccount_icon"
             android:name="org.mozilla.gecko.fxa.activities.FxAccountSignInActivity"
             android:windowSoftInputMode="adjustResize">
         </activity>
 
         <activity
             android:theme="@style/FxAccountTheme"
-            android:icon="@drawable/fxaccount_icon"
             android:name="org.mozilla.gecko.fxa.activities.FxAccountVerifiedAccountActivity"
             android:windowSoftInputMode="adjustResize">
         </activity>
 
         <activity
             android:theme="@style/FxAccountTheme"
-            android:icon="@drawable/fxaccount_icon"
             android:name="org.mozilla.gecko.fxa.activities.FxAccountUpdateCredentialsActivity"
             android:windowSoftInputMode="adjustResize">
         </activity>
 
         <activity
             android:theme="@style/FxAccountTheme"
-            android:icon="@drawable/fxaccount_icon"
             android:name="org.mozilla.gecko.fxa.activities.FxAccountCreateAccountNotAllowedActivity"
             android:windowSoftInputMode="adjustResize">
         </activity>

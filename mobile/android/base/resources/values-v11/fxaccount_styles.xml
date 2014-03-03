@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+   This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/.
+-->
+
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- FxAccountStatusActivity ActionBar -->
+    <style name="ActionBar.FxAccountStatusActivity">
+         <item name="android:displayOptions">showHome|homeAsUp|showTitle</item>
+    </style>
+
+    <style name="FxAccountTheme" parent="@style/Gecko" />
+
+    <style name="FxAccountTheme.FxAccountStatusActivity" parent="@FxAccountTheme">
+         <item name="android:windowActionBar">true</item>
+         <item name="android:windowNoTitle">false</item>
+         <item name="android:actionBarStyle">@style/ActionBar.FxAccountStatusActivity</item>
+    </style>
+
+</resources>
