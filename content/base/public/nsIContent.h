@@ -950,6 +950,15 @@ public:
                            bool aDumpAll = true) const = 0;
 #endif
 
+  /**
+   * Append to aOutDescription a short (preferably one line) string
+   * describing the content.
+   * Currently implemented for elements only.
+   */
+  virtual void Describe(nsAString& aOutDescription) const {
+    aOutDescription = NS_LITERAL_STRING("(not an element)");
+  }
+
   enum ETabFocusType {
   //eTabFocus_textControlsMask = (1<<0),  // unused - textboxes always tabbable
     eTabFocus_formElementsMask = (1<<1),  // non-text form elements

@@ -150,7 +150,8 @@ function create(options) {
           emit(viewEvents, 'data', {
             type: 'click',
             target: id,
-            window: event.view
+            window: event.view,
+            checked: node.checked
           });
         }
       });

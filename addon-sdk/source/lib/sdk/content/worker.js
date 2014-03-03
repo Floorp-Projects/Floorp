@@ -34,7 +34,6 @@ const ERR_DESTROYED =
 const ERR_FROZEN = "The page is currently hidden and can no longer be used " +
                    "until it is visible again.";
 
-
 /**
  * Message-passing facility for communication between code running
  * in the content and add-on process.
@@ -162,11 +161,14 @@ attach.define(Worker, function (worker, window) {
  * Remove all internal references to the attached document
  * Tells _port to unload itself and removes all the references from itself.
  */
-detach.define(Worker, function (worker) {
+detach.define(Worker, function (worker, reason) {
   let model = modelFor(worker);
+
   // maybe unloaded before content side is created
-  if (model.contentWorker)
-    model.contentWorker.destroy();
+  if (model.contentWorker) {
+    model.contentWorker.destroy(reason);
+  }
+
   model.contentWorker = null;
   if (model.window) {
     model.window.removeEventListener("pageshow", model.pageShow, true);
@@ -188,8 +190,8 @@ detach.define(Worker, function (worker) {
  * Tells content worker to unload itself and
  * removes all the references from itself.
  */
-destroy.define(Worker, function (worker) {
-  detach(worker);
+destroy.define(Worker, function (worker, reason) {
+  detach(worker, reason);
   modelFor(worker).inited = true;
   // Specifying no type or listener removes all listeners
   // from target
@@ -233,7 +235,6 @@ function processMessage (worker, ...args) {
     throw new Error(ERR_DESTROYED);
   if (model.frozen)
     throw new Error(ERR_FROZEN);
-
   model.contentWorker.emit.apply(null, args);
 }
 
@@ -279,4 +280,3 @@ function emitEventToContent (worker, ...eventArgs) {
   }
   processMessage.apply(null, [worker].concat(args));
 }
-

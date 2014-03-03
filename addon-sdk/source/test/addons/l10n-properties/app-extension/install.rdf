@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+  <Description about="urn:mozilla:install-manifest">
+    <em:id>xulapp@toolness.com</em:id>
+    <em:version>1.0</em:version>
+    <em:type>2</em:type>
+    <em:bootstrap>true</em:bootstrap>
+    <em:unpack>false</em:unpack>
+
+    <!-- Firefox -->
+    <em:targetApplication>
+      <Description>
+        <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
+        <em:minVersion>21.0</em:minVersion>
+        <em:maxVersion>25.0a1</em:maxVersion>
+      </Description>
+    </em:targetApplication>
+
+    <!-- Front End MetaData -->
+    <em:name>Test App</em:name>
+    <em:description>Harness for tests.</em:description>
+    <em:creator>Mozilla Corporation</em:creator>
+    <em:homepageURL></em:homepageURL>
+    <em:optionsType></em:optionsType>
+    <em:updateURL></em:updateURL>
+  </Description>
+</RDF>

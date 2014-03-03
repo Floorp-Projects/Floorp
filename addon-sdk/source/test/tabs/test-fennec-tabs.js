@@ -581,4 +581,26 @@ exports.testUniqueTabIds = function(assert, done) {
   next(0);
 }
 
+exports.testOnLoadEventWithDOM = function(assert, done) {
+  let count = 0;
+  let title = 'testOnLoadEventWithDOM';
+
+  tabs.open({
+    url: 'data:text/html;charset=utf-8,<title>' + title + '</title>',
+    inBackground: true,
+    onLoad: function(tab) {
+      assert.equal(tab.title, title, 'tab passed in as arg, load called');
+
+      if (++count > 1) {
+        assert.pass('onLoad event called on reload');
+        tab.close(done);
+      }
+      else {
+        assert.pass('first onLoad event occured');
+        tab.reload();
+      }
+    }
+  });
+};
+
 require('sdk/test').run(exports);
