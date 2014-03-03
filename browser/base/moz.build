@@ -15,6 +15,7 @@ MOCHITEST_CHROME_MANIFESTS += [
 BROWSER_CHROME_MANIFESTS += [
     'content/test/general/browser.ini',
     'content/test/newtab/browser.ini',
+    'content/test/plugins/browser.ini',
     'content/test/social/browser.ini',
 ]
 
