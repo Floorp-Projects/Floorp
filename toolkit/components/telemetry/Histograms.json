@@ -5055,10 +5055,56 @@
     "n_buckets": "1000",
     "description": "The time (in milliseconds) that it took a 'reconfigure thread' request to go round trip."
   },
+  "WEBRTC_ICE_FINAL_CONNECTION_STATE": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 7,
+    "description": "The ICE connection state when the PC was closed"
+  },
+  "WEBRTC_ICE_ON_TIME_TRICKLE_ARRIVAL_TIME": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "20",
+    "description": "The length of time (in milliseconds) that a trickle candidate took to arrive after the start of ICE, given that it arrived when ICE was not in a failure state (ie; a candidate that we could do something with, hence 'on time')"
+  },
+  "WEBRTC_ICE_LATE_TRICKLE_ARRIVAL_TIME": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "20",
+    "description": "The length of time (in milliseconds) that a trickle candidate took to arrive after the start of ICE, given that it arrived after ICE failed."
+  },
+  "WEBRTC_ICE_SUCCESS_TIME": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "20",
+    "description": "The length of time (in milliseconds) it took for ICE to complete, given that ICE succeeded."
+  },
+  "WEBRTC_ICE_FAILURE_TIME": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "20",
+    "description": "The length of time (in milliseconds) it took for ICE to complete, given that it failed."
+  },
   "WEBRTC_ICE_SUCCESS_RATE": {
     "expires_in_version": "never",
     "kind": "boolean",
     "description": "The number of failed ICE Connections (0) vs. number of successful ICE connections (1)."
+  },
+  "WEBRTC_CANDIDATE_TYPES_GIVEN_SUCCESS": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 128,
+    "description": "A bitpattern indicating what types of candidates were present. Bit 0: Remote server reflexive. Bit 1: Remote relayed. Bit 2: Local server reflexive. Bits 3-6: Local UDP, TCP, TLS, and HTTPS relay respectively."
+  },
+  "WEBRTC_CANDIDATE_TYPES_GIVEN_FAILURE": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 128,
+    "description": "Identical to WEBRTC_CANDIDATE_TYPES_GIVEN_SUCCEESS, except recorded only when ICE fails on the stream in question."
   },
   "WEBRTC_AVSYNC_WHEN_AUDIO_LAGS_VIDEO_MS": {
     "expires_in_version": "never",
