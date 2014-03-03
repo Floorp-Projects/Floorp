@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/fxaccount_error_preference_backgroundcolor"
+    android:gravity="center_vertical"
+    android:minHeight="?android:attr/listPreferredItemHeight"
+    android:paddingRight="?android:attr/scrollbarSize" >
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:minWidth="0dp"
+        android:orientation="horizontal" >
+
+        <ImageView
+            android:id="@+android:id/icon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:minWidth="48dip"
+            android:padding="10dip" />
+    </LinearLayout>
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="6dip"
+        android:layout_marginLeft="15dip"
+        android:layout_marginRight="6dip"
+        android:layout_marginTop="6dip"
+        android:layout_weight="1" >
+
+        <TextView
+            android:id="@+android:id/title"
+            style="@style/FxAccountTextItem"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:gravity="center_vertical" >
+        </TextView>
+    </RelativeLayout>
+
+    <!-- We ignore summary and widget_frame, but they still need to be present.  We set them to be gone. -->
+
+    <TextView
+        android:id="@+android:id/summary"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:maxLines="4"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:textColor="?android:attr/textColorSecondary"
+        android:visibility="gone" />
+
+    <!-- Preference should place its actual preference widget here. -->
+
+    <LinearLayout
+        android:id="@+android:id/widget_frame"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="gone" />
+
+</LinearLayout>
