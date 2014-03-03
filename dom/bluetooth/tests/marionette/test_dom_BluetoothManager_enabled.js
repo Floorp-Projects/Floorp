@@ -11,14 +11,18 @@ function waitEitherEnabledOrDisabled() {
   let deferred = Promise.defer();
 
   function onEnabledDisabled(aEvent) {
-    bluetoothManager.removeEventListener("enabled", onEnabledDisabled);
+    bluetoothManager.removeEventListener("adapteradded", onEnabledDisabled);
     bluetoothManager.removeEventListener("disabled", onEnabledDisabled);
 
     ok(true, "Got event " + aEvent.type);
-    deferred.resolve(aEvent.type === "enabled");
+    deferred.resolve(aEvent.type === "adapteradded");
   }
 
-  bluetoothManager.addEventListener("enabled", onEnabledDisabled);
+  // Listen 'adapteradded' rather than 'enabled' since the current API can't
+  // disable BT before the BT adapter is initialized.
+  // We should listen to 'enabled' when gecko can handle the case I mentioned
+  // above, please refer to the follow-up bug 973482.
+  bluetoothManager.addEventListener("adapteradded", onEnabledDisabled);
   bluetoothManager.addEventListener("disabled", onEnabledDisabled);
 
   return deferred.promise;
@@ -39,7 +43,7 @@ function test(aEnabled) {
       log("  Examine results " + JSON.stringify(aResults));
 
       is(bluetoothManager.enabled, aEnabled, "bluetoothManager.enabled");
-      is(aResults[1], aEnabled, "'enabled' event received");
+      is(aResults[1], aEnabled, "'adapteradded' event received");
 
       if (bluetoothManager.enabled === aEnabled && aResults[1] === aEnabled) {
         deferred.resolve();
