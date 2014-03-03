@@ -955,7 +955,7 @@ SocialToolbar = {
     const CACHE_PREF_NAME = "social.cached.ambientNotificationIcons";
     // provider.profile == undefined means no response yet from the provider
     // to tell us whether the user is logged in or not.
-    if (!SocialUI.enabled ||
+    if (!SocialUI.enabled || !Social.provider.sidebarURL ||
         (!Social.provider.haveLoggedInUser() && Social.provider.profile !== undefined)) {
       // Either no enabled provider, or there is a provider and it has
       // responded with a profile and the user isn't loggedin.  The icons
