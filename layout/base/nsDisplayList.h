@@ -1290,7 +1290,7 @@ public:
   {
     mTop = &mSentinel;
     mSentinel.mAbove = nullptr;
-#ifdef DEBUG
+#if defined(DEBUG) || defined(MOZ_DUMP_PAINTING)
     mDidComputeVisibility = false;
 #endif
   }
@@ -1540,7 +1540,7 @@ public:
                nsDisplayItem::HitTestState* aState,
                nsTArray<nsIFrame*> *aOutFrames) const;
 
-#ifdef DEBUG
+#if defined(DEBUG) || defined(MOZ_DUMP_PAINTING)
   bool DidComputeVisibility() const { return mDidComputeVisibility; }
 #endif
 
@@ -1566,7 +1566,7 @@ private:
   // This is set to true by ComputeVisibility if any display item in this
   // list needs to force the surface containing this list to be transparent.
   bool mForceTransparentSurface;
-#ifdef DEBUG
+#if defined(DEBUG) || defined(MOZ_DUMP_PAINTING)
   bool mDidComputeVisibility;
 #endif
 };

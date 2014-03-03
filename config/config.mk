@@ -841,7 +841,7 @@ OBJ_SUFFIX := $(_OBJ_SUFFIX)
 
 # PGO builds with GCC build objects with instrumentation in a first pass,
 # then objects optimized, without instrumentation, in a second pass. If
-# we overwrite the ojects from the first pass with those from the second,
+# we overwrite the objects from the first pass with those from the second,
 # we end up not getting instrumentation data for better optimization on
 # incremental builds. As a consequence, we use a different object suffix
 # for the first pass.

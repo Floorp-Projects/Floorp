@@ -57,6 +57,12 @@ emitted:
   ``tests``
     A list of test_ids (list).
 
+  ``run_info``
+    An optional dictionary describing the properties of the
+    build and test environment. This contains the information provided
+    by :doc:`mozinfo <mozinfo>`, plus a boolean ``debug`` field indicating
+    whether the build under test is a debug build.
+
 ``suite_end``
   Emitted when the testsuite is finished and no more results will be produced.
 

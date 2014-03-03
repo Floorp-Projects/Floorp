@@ -1484,9 +1484,7 @@ MetroWidget::Activated(bool aActiveated)
 NS_IMETHODIMP
 MetroWidget::Move(double aX, double aY)
 {
-  if (mWidgetListener) {
-    mWidgetListener->WindowMoved(this, aX, aY);
-  }
+  NotifyWindowMoved(aX, aY);
   return NS_OK;
 }
 
@@ -1606,6 +1604,8 @@ MetroWidget::NotifyIME(const IMENotification& aIMENotification)
       return nsTextStore::OnSelectionChange();
     case NOTIFY_IME_OF_TEXT_CHANGE:
       return nsTextStore::OnTextChange(aIMENotification);
+    case NOTIFY_IME_OF_POSITION_CHANGE:
+      return nsTextStore::OnLayoutChange();
     default:
       return NS_ERROR_NOT_IMPLEMENTED;
   }

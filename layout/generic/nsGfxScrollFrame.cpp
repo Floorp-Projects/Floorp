@@ -2085,6 +2085,8 @@ ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange, nsIAtom* aOri
   for (uint32_t i = 0; i < mListeners.Length(); i++) {
     mListeners[i]->ScrollPositionDidChange(pt.x, pt.y);
   }
+
+  presContext->GetDocShell()->NotifyScrollObservers();
 }
 
 static void

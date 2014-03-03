@@ -338,13 +338,6 @@ CompositorParent::RecvFlushRendering()
 }
 
 bool
-CompositorParent::RecvForceComposite()
-{
-  ScheduleComposition();
-  return true;
-}
-
-bool
 CompositorParent::RecvNotifyRegionInvalidated(const nsIntRegion& aRegion)
 {
   if (mLayerManager) {
@@ -759,6 +752,12 @@ CompositorParent::ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
 }
 
 void
+CompositorParent::ForceComposite(LayerTransactionParent* aLayerTree)
+{
+  ScheduleComposition();
+}
+
+void
 CompositorParent::InitializeLayerManager(const nsTArray<LayersBackend>& aBackendHints)
 {
   NS_ASSERTION(!mLayerManager, "Already initialised mLayerManager");
@@ -1017,7 +1016,6 @@ public:
                                 SurfaceDescriptor* aOutSnapshot)
   { return true; }
   virtual bool RecvFlushRendering() MOZ_OVERRIDE { return true; }
-  virtual bool RecvForceComposite() MOZ_OVERRIDE { return true; }
   virtual bool RecvNotifyRegionInvalidated(const nsIntRegion& aRegion) { return true; }
   virtual bool RecvStartFrameTimeRecording(const int32_t& aBufferSize, uint32_t* aOutStartIndex) MOZ_OVERRIDE { return true; }
   virtual bool RecvStopFrameTimeRecording(const uint32_t& aStartIndex, InfallibleTArray<float>* intervals) MOZ_OVERRIDE  { return true; }
@@ -1036,6 +1034,7 @@ public:
                                    const TargetConfig& aTargetConfig,
                                    bool aIsFirstPaint,
                                    bool aScheduleComposite) MOZ_OVERRIDE;
+  virtual void ForceComposite(LayerTransactionParent* aLayerTree) MOZ_OVERRIDE;
 
   virtual AsyncCompositionManager* GetCompositionManager(LayerTransactionParent* aParent) MOZ_OVERRIDE;
 
@@ -1186,6 +1185,14 @@ CrossProcessCompositorParent::ShadowLayersUpdated(
   UpdateIndirectTree(id, shadowRoot, aTargetConfig);
 
   sIndirectLayerTrees[id].mParent->NotifyShadowTreeTransaction(id, aIsFirstPaint, aScheduleComposite);
+}
+
+void
+CrossProcessCompositorParent::ForceComposite(LayerTransactionParent* aLayerTree)
+{
+  uint64_t id = aLayerTree->GetId();
+  MOZ_ASSERT(id != 0);
+  sIndirectLayerTrees[id].mParent->ForceComposite(aLayerTree);
 }
 
 AsyncCompositionManager*

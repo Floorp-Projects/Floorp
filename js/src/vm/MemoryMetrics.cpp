@@ -328,6 +328,8 @@ AddClassInfo(Granularity granularity, CompartmentStats *cStats, const char *clas
              JS::ClassInfo &info)
 {
     if (granularity == FineGrained) {
+        if (!className)
+            className = "<no class name>";
         CompartmentStats::ClassesHashMap::AddPtr p =
             cStats->allClasses->lookupForAdd(className);
         if (!p) {

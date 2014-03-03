@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script type="text/javascript">
+
+function boom()
+{
+  var s = document.getElementById("s");
+  document.body.removeChild(s);
+  document.body.appendChild(s);  
+}
+
+window.addEventListener("load", boom, false);
+
+</script>
+</head>
+
+<body>
+<span style="word-spacing: -379660px">a </span>
+<span id="s"><br style="clear: both;"/></span>
+</body>
+  
+</html>
