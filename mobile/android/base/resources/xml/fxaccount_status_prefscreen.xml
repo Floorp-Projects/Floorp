@@ -4,7 +4,7 @@
 
     <PreferenceCategory
         android:key="signed_in_as_category"
-        android:title="@string/fxaccount_status_header" >
+        android:title="@string/fxaccount_status_signed_in_as" >
         <Preference
             android:editable="false"
             android:key="email"
