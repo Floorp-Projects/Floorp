@@ -1,0 +1,41 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Network Monitor test page</title>
+  </head>
+
+  <body>
+    <p>POST raw with headers test</p>
+
+    <script type="text/javascript">
+      function post(aAddress, aMessage, aCallback) {
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", aAddress, true);
+
+        xhr.onreadystatechange = function() {
+          if (this.readyState == this.DONE) {
+            aCallback();
+          }
+        };
+        xhr.send(aMessage);
+      }
+
+      function performRequests() {
+        var rawData = [
+          "content-type: application/x-www-form-urlencoded",
+          "custom-header: hello world!",
+          "",
+          "foo=bar&baz=123"
+        ];
+        post("sjs_simple-test-server.sjs", rawData.join("\n"), function() {
+          // Done.
+        });
+      }
+    </script>
+  </body>
+
+</html>

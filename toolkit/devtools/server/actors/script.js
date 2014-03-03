@@ -4709,7 +4709,7 @@ ThreadSources.prototype = {
         })
         .then(null, error => {
           if (!DevToolsUtils.reportingDisabled) {
-            DevToolsUtils.reportException(error);
+            DevToolsUtils.reportException("ThreadSources.prototype.getOriginalLocation", error);
           }
           return { url: null, line: null, column: null };
         });

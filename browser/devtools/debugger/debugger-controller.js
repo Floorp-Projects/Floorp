@@ -1418,7 +1418,7 @@ Tracer.prototype = {
     ], this._trace, (aResponse) => {
       const { error } = aResponse;
       if (error) {
-        DevToolsUtils.reportException(error);
+        DevToolsUtils.reportException("Tracer.prototype.startTracing", error);
         this._trace = null;
       }
 
@@ -1436,7 +1436,7 @@ Tracer.prototype = {
     this.traceClient.stopTrace(this._trace, aResponse => {
       const { error } = aResponse;
       if (error) {
-        DevToolsUtils.reportException(error);
+        DevToolsUtils.reportException("Tracer.prototype.stopTracing", error);
       }
 
       this._trace = null;

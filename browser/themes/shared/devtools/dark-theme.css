@@ -7,13 +7,13 @@
  * https://bugzilla.mozilla.org/show_bug.cgi?id=715472#c17
  */
 .theme-body {
-  background: #131c26;
-  color: #8fa1b2;
+  background: #14171a;
+  color: #a9bacb;
 }
 
 .theme-sidebar {
-  background: #131c26;
-  color: #8fa1b2;
+  background: #181d20;
+  color: #a9bacb;
 }
 
 ::-moz-selection {
@@ -190,7 +190,7 @@
 .cm-s-mozilla .cm-variable-3,
 .cm-s-mozilla .cm-operator,
 .cm-s-mozilla .cm-special { /* theme-body color */
-  color: #8fa1b2;
+  color: #a9bacb;
 }
 
 .cm-s-mozilla .CodeMirror-lines .CodeMirror-cursor {
