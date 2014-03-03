@@ -9,7 +9,7 @@ import java.util.EnumSet;
 
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.ReaderModeUtils;
-import org.mozilla.gecko.db.BrowserContract.Bookmarks;
+import org.mozilla.gecko.db.BrowserContract.ReadingListItems;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
@@ -36,6 +36,7 @@ import android.widget.TextView;
  * Fragment that displays reading list contents in a ListView.
  */
 public class ReadingListPanel extends HomeFragment {
+
     // Cursor loader ID for reading list
     private static final int LOADER_ID_READING_LIST = 0;
 
@@ -113,10 +114,9 @@ public class ReadingListPanel extends HomeFragment {
             @Override
             public HomeContextMenuInfo makeInfoForCursor(View view, int position, long id, Cursor cursor) {
                 final HomeContextMenuInfo info = new HomeContextMenuInfo(view, position, id);
-                info.url = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.URL));
-                info.title = cursor.getString(cursor.getColumnIndexOrThrow(URLColumns.TITLE));
-                info.bookmarkId = cursor.getInt(cursor.getColumnIndexOrThrow(Bookmarks._ID));
-                info.inReadingList = true;
+                info.url = cursor.getString(cursor.getColumnIndexOrThrow(ReadingListItems.URL));
+                info.title = cursor.getString(cursor.getColumnIndexOrThrow(ReadingListItems.TITLE));
+                info.readingListItemId = cursor.getInt(cursor.getColumnIndexOrThrow(ReadingListItems._ID));
                 return info;
             }
         });
@@ -201,7 +201,7 @@ public class ReadingListPanel extends HomeFragment {
 
         @Override
         public Cursor loadCursor() {
-            return BrowserDB.getBookmarksInFolder(getContext().getContentResolver(), Bookmarks.FIXED_READING_LIST_ID);
+            return BrowserDB.getReadingList(getContext().getContentResolver());
         }
     }
 

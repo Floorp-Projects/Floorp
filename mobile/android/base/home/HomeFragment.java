@@ -91,8 +91,8 @@ abstract class HomeFragment extends Fragment {
             menu.findItem(R.id.home_edit_bookmark).setVisible(false);
         }
 
-        // Hide the "Remove" menuitem if this item doesn't have a bookmark or history ID.
-        if (!info.hasBookmarkId() && !info.hasHistoryId()) {
+        // Hide the "Remove" menuitem if this item not removable.
+        if (!info.canRemove()) {
             menu.findItem(R.id.home_remove).setVisible(false);
         }
 
@@ -176,7 +176,12 @@ abstract class HomeFragment extends Fragment {
             }
 
             if (info.hasBookmarkId()) {
-                new RemoveBookmarkTask(context, info.bookmarkId, info.url, info.isInReadingList()).execute();
+                new RemoveBookmarkTask(context, info.bookmarkId).execute();
+                return true;
+            }
+
+            if (info.isInReadingList()) {
+                (new RemoveReadingListItemTask(context, info.readingListItemId, info.url)).execute();
                 return true;
             }
         }
@@ -223,36 +228,49 @@ abstract class HomeFragment extends Fragment {
     private static class RemoveBookmarkTask extends UiAsyncTask<Void, Void, Void> {
         private final Context mContext;
         private final int mId;
-        private final String mUrl;
-        private final boolean mInReadingList;
 
-        public RemoveBookmarkTask(Context context, int id, String url, boolean inReadingList) {
+        public RemoveBookmarkTask(Context context, int id) {
             super(ThreadUtils.getBackgroundHandler());
 
             mContext = context;
             mId = id;
-            mUrl = url;
-            mInReadingList = inReadingList;
         }
 
         @Override
         public Void doInBackground(Void... params) {
             ContentResolver cr = mContext.getContentResolver();
             BrowserDB.removeBookmark(cr, mId);
-            if (mInReadingList) {
-                GeckoEvent e = GeckoEvent.createBroadcastEvent("Reader:Remove", mUrl);
-                GeckoAppShell.sendEventToGecko(e);
-            }
             return null;
         }
 
         @Override
         public void onPostExecute(Void result) {
-            // The remove from reading list toast is handled in Reader:Removed,
-            // so handle only the bookmark removed toast here.
-            if (!mInReadingList) {
-                Toast.makeText(mContext, R.string.bookmark_removed, Toast.LENGTH_SHORT).show();
-            }
+            Toast.makeText(mContext, R.string.bookmark_removed, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+
+    private static class RemoveReadingListItemTask extends UiAsyncTask<Void, Void, Void> {
+        private final int mId;
+        private final String mUrl;
+        private final Context mContext;
+
+        public RemoveReadingListItemTask(Context context, int id, String url) {
+            super(ThreadUtils.getBackgroundHandler());
+            mId = id;
+            mUrl = url;
+            mContext = context;
+        }
+
+        @Override
+        public Void doInBackground(Void... params) {
+            ContentResolver cr = mContext.getContentResolver();
+            BrowserDB.removeReadingListItem(cr, mId);
+
+            GeckoEvent e = GeckoEvent.createBroadcastEvent("Reader:Remove", mUrl);
+            GeckoAppShell.sendEventToGecko(e);
+
+            return null;
         }
     }
 
