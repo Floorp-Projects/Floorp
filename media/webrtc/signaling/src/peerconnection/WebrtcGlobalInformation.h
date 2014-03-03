@@ -7,6 +7,10 @@
 
 #include "nsString.h"
 
+namespace sipcc {
+class PeerConnectionImpl;
+}
+
 namespace mozilla {
 class ErrorResult;
 
@@ -26,6 +30,8 @@ public:
                          const nsAString& aPattern,
                          WebrtcGlobalLoggingCallback& aLoggingCallback,
                          ErrorResult& aRv);
+
+  static void StoreLongTermICEStatistics(sipcc::PeerConnectionImpl& aPc);
 
 private:
   WebrtcGlobalInformation() MOZ_DELETE;

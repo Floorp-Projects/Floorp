@@ -74,6 +74,7 @@
 #include "nsIScriptGlobalObject.h"
 #include "DOMMediaStream.h"
 #include "rlogringbuffer.h"
+#include "WebrtcGlobalInformation.h"
 #endif
 
 #ifndef USE_FAKE_MEDIA_STREAMS
@@ -1354,6 +1355,22 @@ PeerConnectionImpl::AddIceCandidate(const char* aCandidate, const char* aMid, un
   mTimeCard = nullptr;
   STAMP_TIMECARD(tc, "Add Ice Candidate");
 
+#ifdef MOZILLA_INTERNAL_API
+  // When remote candidates are added before our ICE ctx is up and running
+  // (the transition to New is async through STS, so this is not impossible),
+  // we won't record them as trickle candidates. Is this what we want?
+  if(!mIceStartTime.IsNull()) {
+    TimeDuration timeDelta = TimeStamp::Now() - mIceStartTime;
+    if (mIceConnectionState == PCImplIceConnectionState::Failed) {
+      Telemetry::Accumulate(Telemetry::WEBRTC_ICE_LATE_TRICKLE_ARRIVAL_TIME,
+                            timeDelta.ToMilliseconds());
+    } else {
+      Telemetry::Accumulate(Telemetry::WEBRTC_ICE_ON_TIME_TRICKLE_ARRIVAL_TIME,
+                            timeDelta.ToMilliseconds());
+    }
+  }
+#endif
+
   mInternal->mCall->addICECandidate(aCandidate, aMid, aLevel, tc);
   return NS_OK;
 }
@@ -1613,6 +1630,14 @@ PeerConnectionImpl::CloseInt()
 {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
 
+  // We do this at the end of the call because we want to make sure we've waited
+  // for all trickle ICE candidates to come in; this can happen well after we've
+  // transitioned to connected. As a bonus, this allows us to detect race
+  // conditions where a stats dispatch happens right as the PC closes.
+  if (!IsClosed()) {
+    RecordLongtermICEStatistics();
+  }
+
   if (mInternal->mCall) {
     CSFLogInfo(logTag, "%s: Closing PeerConnectionImpl %s; "
                "ending call", __FUNCTION__, mHandle.c_str());
@@ -1871,12 +1896,44 @@ PeerConnectionImpl::IceGatheringStateChange(
                 NS_DISPATCH_NORMAL);
 }
 
+static bool isDone(PCImplIceConnectionState state) {
+  return state != PCImplIceConnectionState::Checking &&
+         state != PCImplIceConnectionState::New;
+}
+
+static bool isSucceeded(PCImplIceConnectionState state) {
+  return state == PCImplIceConnectionState::Connected ||
+         state == PCImplIceConnectionState::Completed;
+}
+
+static bool isFailed(PCImplIceConnectionState state) {
+  return state == PCImplIceConnectionState::Failed ||
+         state == PCImplIceConnectionState::Disconnected;
+}
+
 nsresult
 PeerConnectionImpl::IceConnectionStateChange_m(PCImplIceConnectionState aState)
 {
   PC_AUTO_ENTER_API_CALL(false);
 
   CSFLogDebug(logTag, "%s", __FUNCTION__);
+
+#ifdef MOZILLA_INTERNAL_API
+  if (!isDone(mIceConnectionState) && isDone(aState)) {
+    // mIceStartTime can be null if going directly from New to Closed, in which
+    // case we don't count it as a success or a failure.
+    if (!mIceStartTime.IsNull()){
+      TimeDuration timeDelta = TimeStamp::Now() - mIceStartTime;
+      if (isSucceeded(aState)) {
+        Telemetry::Accumulate(Telemetry::WEBRTC_ICE_SUCCESS_TIME,
+                              timeDelta.ToMilliseconds());
+      } else if (isFailed(aState)) {
+        Telemetry::Accumulate(Telemetry::WEBRTC_ICE_FAILURE_TIME,
+                              timeDelta.ToMilliseconds());
+      }
+    }
+  }
+#endif
 
   mIceConnectionState = aState;
 
@@ -1887,6 +1944,10 @@ PeerConnectionImpl::IceConnectionStateChange_m(PCImplIceConnectionState aState)
       STAMP_TIMECARD(mTimeCard, "Ice state: new");
       break;
     case PCImplIceConnectionState::Checking:
+#ifdef MOZILLA_INTERNAL_API
+      // For telemetry
+      mIceStartTime = TimeStamp::Now();
+#endif
       STAMP_TIMECARD(mTimeCard, "Ice state: checking");
       break;
     case PCImplIceConnectionState::Connected:
@@ -2322,6 +2383,13 @@ void PeerConnectionImpl::DeliverStatsReportToPCObserver_m(
 }
 
 #endif
+
+void
+PeerConnectionImpl::RecordLongtermICEStatistics() {
+#ifdef MOZILLA_INTERNAL_API
+  WebrtcGlobalInformation::StoreLongTermICEStatistics(*this);
+#endif
+}
 
 void
 PeerConnectionImpl::IceStreamReady(NrIceMediaStream *aStream)
