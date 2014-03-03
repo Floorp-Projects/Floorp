@@ -154,17 +154,6 @@ let HomeBanner = (function () {
   });
 })();
 
-function Panel(id, options) {
-  this.id = id;
-  this.title = options.title;
-
-  if ("layout" in options)
-    this.layout = options.layout;
-
-  if ("views" in options)
-    this.views = options.views;
-}
-
 // We need this function to have access to the HomePanels
 // private members without leaking it outside Home.jsm.
 let handlePanelsGet;
@@ -201,23 +190,26 @@ let HomePanels = (function () {
     INTENT: "intent"
   });
 
-  let _generatePanel = function(id) {
-    let panel = new Panel(id, _registeredPanels[id]());
+  function Panel(id, options) {
+    this.id = id;
+    this.title = options.title;
+    this.layout = options.layout;
+    this.views = options.views;
 
-    if (!panel.id || !panel.title) {
+    if (!this.id || !this.title) {
       throw "Home.panels: Can't create a home panel without an id and title!";
     }
 
-    if (!panel.layout) {
+    if (!this.layout) {
       // Use FRAME layout by default
-      panel.layout = Layout.FRAME;
-    } else if (!_valueExists(Layout, panel.layout)) {
-      throw "Home.panels: Invalid layout for panel: panel.id = " + panel.id + ", panel.layout =" + panel.layout;
+      this.layout = Layout.FRAME;
+    } else if (!_valueExists(Layout, this.layout)) {
+      throw "Home.panels: Invalid layout for panel: panel.id = " + this.id + ", panel.layout =" + this.layout;
     }
 
-    for (let view of panel.views) {
+    for (let view of this.views) {
       if (!_valueExists(View, view.type)) {
-        throw "Home.panels: Invalid view type: panel.id = " + panel.id + ", view.type = " + view.type;
+        throw "Home.panels: Invalid view type: panel.id = " + this.id + ", view.type = " + view.type;
       }
 
       if (!view.itemType) {
@@ -229,22 +221,25 @@ let HomePanels = (function () {
           view.itemType = Item.IMAGE;
         }
       } else if (!_valueExists(Item, view.itemType)) {
-        throw "Home.panels: Invalid item type: panel.id = " + panel.id + ", view.itemType = " + view.itemType;
+        throw "Home.panels: Invalid item type: panel.id = " + this.id + ", view.itemType = " + view.itemType;
       }
 
       if (!view.itemHandler) {
         // Use BROWSER item handler by default
         view.itemHandler = ItemHandler.BROWSER;
       } else if (!_valueExists(ItemHandler, view.itemHandler)) {
-        throw "Home.panels: Invalid item handler: panel.id = " + panel.id + ", view.itemHandler = " + view.itemHandler;
+        throw "Home.panels: Invalid item handler: panel.id = " + this.id + ", view.itemHandler = " + view.itemHandler;
       }
 
       if (!view.dataset) {
-        throw "Home.panels: No dataset provided for view: panel.id = " + panel.id + ", view.type = " + view.type;
+        throw "Home.panels: No dataset provided for view: panel.id = " + this.id + ", view.type = " + view.type;
       }
     }
+  }
 
-    return panel;
+  let _generatePanel = function(id) {
+    let options = _registeredPanels[id]();
+    return new Panel(id, options);
   };
 
   handlePanelsGet = function(data) {
