@@ -1408,11 +1408,13 @@ SourceNeededRegionForPrimitive(const FilterPrimitiveDescription& aDescription,
   const AttributeMap& atts = aDescription.Attributes();
   switch (aDescription.Type()) {
 
-    case FilterPrimitiveDescription::eNone:
     case FilterPrimitiveDescription::eFlood:
     case FilterPrimitiveDescription::eTurbulence:
     case FilterPrimitiveDescription::eImage:
       MOZ_CRASH("this shouldn't be called for filters without inputs");
+      return nsIntRegion();
+
+    case FilterPrimitiveDescription::eNone:
       return nsIntRegion();
 
     case FilterPrimitiveDescription::eBlend:
