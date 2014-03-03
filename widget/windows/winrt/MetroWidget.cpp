@@ -1604,8 +1604,6 @@ MetroWidget::NotifyIME(const IMENotification& aIMENotification)
       return nsTextStore::OnSelectionChange();
     case NOTIFY_IME_OF_TEXT_CHANGE:
       return nsTextStore::OnTextChange(aIMENotification);
-    case NOTIFY_IME_OF_POSITION_CHANGE:
-      return nsTextStore::OnLayoutChange();
     default:
       return NS_ERROR_NOT_IMPLEMENTED;
   }
