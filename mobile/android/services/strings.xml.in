@@ -165,6 +165,7 @@
 <string name="fxaccount_update_credentials_button_label">&fxaccount_update_credentials_button_label;</string>
 <string name="fxaccount_update_credentials_unknown_error">&fxaccount_update_credentials_unknown_error;</string>
 
+<string name="fxaccount_status_activity_label">&syncBrand.shortName.label;</string>
 <string name="fxaccount_status_header">&fxaccount_status_header;</string>
 <string name="fxaccount_status_sync">&fxaccount_status_sync;</string>
 <string name="fxaccount_status_sync_enabled">&fxaccount_status_sync_enabled;</string>
