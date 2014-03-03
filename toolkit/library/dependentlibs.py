@@ -106,7 +106,7 @@ def dependentlibs(lib, libpaths, func):
                 # Black list the ICU data DLL because preloading it at startup
                 # leads to startup performance problems because of its excessive
                 # size (around 10MB).
-                if not dep.startswith("icudt"):
+                if not dep.startswith("icu"):
                     deps.append(dep)
                 break
 
