@@ -84,45 +84,34 @@ UNIFIED_SOURCES += [
     'MouseScrollEvent.cpp',
     'MutationEvent.cpp',
     'NotifyAudioAvailableEvent.cpp',
+    'NotifyPaintEvent.cpp',
     'nsAsyncDOMEvent.cpp',
     'nsContentEventHandler.cpp',
+    'nsDOMEvent.cpp',
     'nsDOMEventTargetHelper.cpp',
     'nsDOMTextEvent.cpp',
     'nsEventDispatcher.cpp',
+    'nsEventListenerManager.cpp',
     'nsEventListenerService.cpp',
     'nsIMEStateManager.cpp',
     'nsJSEventListener.cpp',
     'nsPaintRequest.cpp',
     'nsPrivateTextRange.cpp',
     'PointerEvent.cpp',
+    'ScrollAreaEvent.cpp',
     'SimpleGestureEvent.cpp',
     'TextComposition.cpp',
     'Touch.cpp',
     'TouchEvent.cpp',
     'TransitionEvent.cpp',
+    'UIEvent.cpp',
     'WheelEvent.cpp',
     'XULCommandEvent.cpp',
 ]
 
+# nsEventStateManager.cpp should be built separately because of Mac OS X headers.
 SOURCES += [
-    # nsDOMEvent.cpp should be built separately because it includes
-    # ipc/IPCMessageUtils.h, which on Windows includes windows.h.
-    'NotifyPaintEvent.cpp',
-    # nsDOMEvent.cpp should be built separately because it includes
-    # ipc/IPCMessageUtils.h, which on Windows includes windows.h.
-    'nsDOMEvent.cpp',
-    # nsDOMEvent.cpp should be built separately because it includes
-    # mozilla/HalSensor.h, which includes ipc/IPCMessageUtils.h, which
-    # on Windows includes windows.h.
-    'nsEventListenerManager.cpp',
-    # nsEventStateManager.cpp should be built separately because of Mac OS X headers.
     'nsEventStateManager.cpp',
-    # nsDOMEvent.cpp should be built separately because it includes
-    # ipc/IPCMessageUtils.h, which on Windows includes windows.h.
-    'ScrollAreaEvent.cpp',
-    # nsDOMEvent.cpp should be built separately because it includes
-    # ipc/IPCMessageUtils.h, which on Windows includes windows.h.
-    'UIEvent.cpp',
 ]
 
 if CONFIG['MOZ_WEBSPEECH']:

@@ -33,3 +33,23 @@ else:
         'include/ics',
         'include/ics/media/stagefright/openmax',
     ]
+
+if CONFIG['GNU_CXX']:
+    # Stagefright header files define many multichar constants.
+    CXXFLAGS += ['-Wno-multichar']
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+    CXXFLAGS += [
+         '-I%s/%s' % (CONFIG['ANDROID_SOURCE'], d) for d in [
+             'dalvik/libnativehelper/include/nativehelper',
+             'frameworks/base/include/',
+             'frameworks/base/include/binder/',
+             'frameworks/base/include/utils/',
+             'frameworks/base/include/media/',
+             'frameworks/base/include/media/stagefright/openmax',
+             'frameworks/base/media/libstagefright/include',
+             'frameworks/base/native/include',
+             'system/core/include',
+             'hardware/libhardware/include',
+         ]
+    ]

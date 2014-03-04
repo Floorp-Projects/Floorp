@@ -23,7 +23,7 @@ public:
 
   VideoPlaybackQuality(HTMLMediaElement* aElement, DOMHighResTimeStamp aCreationTime,
                        uint64_t aTotalFrames, uint64_t aDroppedFrames,
-                       uint64_t aCorruptedFrames, double aTotalFrameDelay);
+                       uint64_t aCorruptedFrames);
 
   HTMLMediaElement* GetParentObject() const;
 
@@ -49,18 +49,12 @@ public:
     return mCorruptedFrames;
   }
 
-  double TotalFrameDelay()
-  {
-    return mTotalFrameDelay;
-  }
-
 private:
   nsRefPtr<HTMLMediaElement> mElement;
   DOMHighResTimeStamp mCreationTime;
   uint64_t mTotalFrames;
   uint64_t mDroppedFrames;
   uint64_t mCorruptedFrames;
-  double mTotalFrameDelay;
 };
 
 } // namespace dom

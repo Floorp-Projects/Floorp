@@ -38,7 +38,7 @@ public:
 
     ~GLContextEGL();
 
-    virtual GLContextType GetContextType() MOZ_OVERRIDE { return GLContextType::EGL; }
+    virtual GLContextType GetContextType() const MOZ_OVERRIDE { return GLContextType::EGL; }
 
     static GLContextEGL* Cast(GLContext* gl) {
         MOZ_ASSERT(gl->GetContextType() == GLContextType::EGL);
@@ -47,7 +47,7 @@ public:
 
     bool Init();
 
-    bool IsDoubleBuffered() {
+    virtual bool IsDoubleBuffered() const MOZ_OVERRIDE {
         return mIsDoubleBuffered;
     }
 
@@ -55,35 +55,31 @@ public:
         mIsDoubleBuffered = aIsDB;
     }
 
-    bool SupportsRobustness()
-    {
+    virtual bool SupportsRobustness() const MOZ_OVERRIDE {
         return sEGLLibrary.HasRobustness();
     }
 
-    virtual bool IsANGLE()
-    {
+    virtual bool IsANGLE() const MOZ_OVERRIDE {
         return sEGLLibrary.IsANGLE();
     }
 
-    bool BindTexImage();
+    virtual bool BindTexImage() MOZ_OVERRIDE;
 
-    bool ReleaseTexImage();
+    virtual bool ReleaseTexImage() MOZ_OVERRIDE;
 
     void SetEGLSurfaceOverride(EGLSurface surf);
 
-    bool MakeCurrentImpl(bool aForce = false);
+    virtual bool MakeCurrentImpl(bool aForce) MOZ_OVERRIDE;
 
-    virtual bool IsCurrent();
+    virtual bool IsCurrent() MOZ_OVERRIDE;
 
-    virtual bool
-    RenewSurface();
+    virtual bool RenewSurface() MOZ_OVERRIDE;
 
-    virtual void
-    ReleaseSurface();
+    virtual void ReleaseSurface() MOZ_OVERRIDE;
 
-    bool SetupLookupFunction();
+    virtual bool SetupLookupFunction() MOZ_OVERRIDE;
 
-    bool SwapBuffers();
+    virtual bool SwapBuffers() MOZ_OVERRIDE;
 
     // hold a reference to the given surface
     // for the lifetime of this context.
@@ -95,7 +91,6 @@ public:
 
     bool BindTex2DOffscreen(GLContext *aOffscreen);
     void UnbindTex2DOffscreen(GLContext *aOffscreen);
-    bool ResizeOffscreen(const gfx::IntSize& aNewSize);
     void BindOffscreenFramebuffer();
 
     static already_AddRefed<GLContextEGL>
