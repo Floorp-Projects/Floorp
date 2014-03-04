@@ -136,7 +136,9 @@ template <class Op>
 inline void
 StackFrame::unaliasedForEachActual(Op op)
 {
-    JS_ASSERT(!script()->funHasAnyAliasedFormal());
+    // Don't assert !script()->funHasAnyAliasedFormal() since this function is
+    // called from ArgumentsObject::createUnexpected() which can access aliased
+    // slots.
 
     const Value *argsEnd = argv() + numActualArgs();
     for (const Value *p = argv(); p < argsEnd; ++p)
