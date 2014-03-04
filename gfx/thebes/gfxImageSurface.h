@@ -112,8 +112,9 @@ public:
 
     /**
      * Copy to a Moz2D DataSourceSurface.
+     * Marked as virtual so that browsercomps can access this method.
      */
-    mozilla::TemporaryRef<mozilla::gfx::DataSourceSurface> CopyToB8G8R8A8DataSourceSurface();
+    virtual mozilla::TemporaryRef<mozilla::gfx::DataSourceSurface> CopyToB8G8R8A8DataSourceSurface();
 
     /* return new Subimage with pointing to original image starting from aRect.pos
      * and size of aRect.size. New subimage keeping current image reference
