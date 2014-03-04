@@ -126,7 +126,6 @@ struct TextRangeStyle
  * mozilla::TextRange
  ******************************************************************************/
 
-// Sync with nsIPrivateTextRange.h when you change these constants.
 #define NS_TEXTRANGE_CARETPOSITION         0x01
 #define NS_TEXTRANGE_RAWINPUT              0x02
 #define NS_TEXTRANGE_SELECTEDRAWTEXT       0x03
