@@ -43,11 +43,11 @@ extern const SEC_ASN1Template lg_nsslowkey_RSAPrivateKeyTemplate2[];
 extern const SEC_ASN1Template lg_nsslowkey_DSAPrivateKeyTemplate[];
 extern const SEC_ASN1Template lg_nsslowkey_DHPrivateKeyTemplate[];
 extern const SEC_ASN1Template lg_nsslowkey_DHPrivateKeyExportTemplate[];
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
 #define NSSLOWKEY_EC_PRIVATE_KEY_VERSION   1  /* as per SECG 1 C.4 */
 extern const SEC_ASN1Template lg_nsslowkey_ECParamsTemplate[];
 extern const SEC_ASN1Template lg_nsslowkey_ECPrivateKeyTemplate[];
-#endif /* NSS_ENABLE_ECC */
+#endif /* NSS_DISABLE_ECC */
 
 extern const SEC_ASN1Template lg_nsslowkey_PrivateKeyInfoTemplate[];
 extern const SEC_ASN1Template nsslowkey_EncryptedPrivateKeyInfoTemplate[];

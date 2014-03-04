@@ -369,7 +369,9 @@ FrameworkView::SendActivationEvent()
   }
   NS_ASSERTION(mWindow, "SetWindow must be called before SendActivationEvent!");
   mWidget->Activated(mWinActiveState);
-  UpdateWidgetSizeAndPosition();
+  if (mWinActiveState) {
+    UpdateWidgetSizeAndPosition();
+  }
   EnsureAutomationProviderCreated();
 }
 

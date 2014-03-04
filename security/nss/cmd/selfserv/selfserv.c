@@ -160,11 +160,11 @@ PrintUsageHeader(const char *progName)
 "         [-f password_file] [-L [seconds]] [-M maxProcs] [-P dbprefix]\n"
 "         [-V [min-version]:[max-version]] [-a sni_name]\n"
 "         [ T <good|revoked|unknown|badsig|corrupted|none|ocsp>] [-A ca]\n"
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
 "         [-C SSLCacheEntries] [-e ec_nickname]\n"
 #else
 "         [-C SSLCacheEntries]\n"
-#endif /* NSS_ENABLE_ECC */
+#endif /* NSS_DISABLE_ECC */
         ,progName);
 }
 
@@ -2133,7 +2133,7 @@ main(int argc, char **argv)
 {
     char *               progName    = NULL;
     char *               nickName    = NULL;
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
     char *               ecNickName   = NULL;
 #endif
     const char *         fileName    = NULL;
@@ -2246,9 +2246,9 @@ main(int argc, char **argv)
 
 	case 'd': dir = optstate->value; break;
 
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
 	case 'e': ecNickName = PORT_Strdup(optstate->value); break;
-#endif /* NSS_ENABLE_ECC */
+#endif /* NSS_DISABLE_ECC */
 
 	case 'f':
             pwdata.source = PW_FROMFILE;
@@ -2362,7 +2362,7 @@ main(int argc, char **argv)
     }
 
     if ((nickName == NULL)
- #ifdef NSS_ENABLE_ECC
+ #ifndef NSS_DISABLE_ECC
 						&& (ecNickName == NULL)
  #endif
     ) {
@@ -2593,7 +2593,7 @@ main(int argc, char **argv)
 	setupCertStatus(certStatusArena, ocspStaplingMode, cert[kt_rsa], kt_rsa,
 			&pwdata);
     }
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
     if (ecNickName) {
 	cert[kt_ecdh] = PK11_FindCertFromNickname(ecNickName, &pwdata);
 	if (cert[kt_ecdh] == NULL) {
@@ -2620,7 +2620,7 @@ main(int argc, char **argv)
 	setupCertStatus(certStatusArena, ocspStaplingMode, cert[kt_ecdh], kt_ecdh,
 			&pwdata);
     }
-#endif /* NSS_ENABLE_ECC */
+#endif /* NSS_DISABLE_ECC */
 
     if (testbypass)
 	goto cleanup;
@@ -2691,7 +2691,7 @@ cleanup:
     if (certPrefix && certPrefix != emptyString) {                            
         PORT_Free(certPrefix);
     }
- #ifdef NSS_ENABLE_ECC
+ #ifndef NSS_DISABLE_ECC
     if (ecNickName) {
         PORT_Free(ecNickName);
     }
