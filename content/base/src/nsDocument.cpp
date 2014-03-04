@@ -9367,6 +9367,12 @@ nsDocument::GetTemplateContentsOwner()
     NS_ENSURE_TRUE(mTemplateContentsOwner, nullptr);
 
     mTemplateContentsOwner->SetScriptHandlingObject(scriptObject);
+
+    // Set |doc| as the template contents owner of itself so that
+    // |doc| is the template contents owner of template elements created
+    // by |doc|.
+    nsDocument* doc = static_cast<nsDocument*>(mTemplateContentsOwner.get());
+    doc->mTemplateContentsOwner = doc;
   }
 
   return mTemplateContentsOwner;

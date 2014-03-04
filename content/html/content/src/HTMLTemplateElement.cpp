@@ -39,16 +39,8 @@ HTMLTemplateElement::HTMLTemplateElement(already_AddRefed<nsINodeInfo> aNodeInfo
 nsresult
 HTMLTemplateElement::Init()
 {
-  nsIDocument* doc = OwnerDoc();
-  nsIDocument* contentsOwner = doc;
-
-  // Used to test if the document "has a browsing context".
-  nsCOMPtr<nsISupports> container = doc->GetContainer();
-  if (container) {
-    // GetTemplateContentsOwner lazily creates a document.
-    contentsOwner = doc->GetTemplateContentsOwner();
-    NS_ENSURE_TRUE(contentsOwner, NS_ERROR_UNEXPECTED);
-  }
+  nsIDocument* contentsOwner = OwnerDoc()->GetTemplateContentsOwner();
+  NS_ENSURE_TRUE(contentsOwner, NS_ERROR_UNEXPECTED);
 
   mContent = contentsOwner->CreateDocumentFragment();
   mContent->SetHost(this);

@@ -220,7 +220,7 @@ nsJSON::EncodeInternal(JSContext* cx, const JS::Value& aValue,
       toJSON.isObject() &&
       JS_ObjectIsCallable(cx, &toJSON.toObject())) {
     // If toJSON is implemented, it must not throw
-    if (!JS_CallFunctionValue(cx, obj, toJSON, JS::EmptyValueArray, &val)) {
+    if (!JS_CallFunctionValue(cx, obj, toJSON, JS::HandleValueArray::empty(), &val)) {
       if (JS_IsExceptionPending(cx))
         // passing NS_OK will throw the pending exception
         return NS_OK;
@@ -482,7 +482,7 @@ NS_NewJSON(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 
 nsJSONListener::nsJSONListener(JSContext *cx, JS::Value *rootVal,
                                bool needsConverter)
-  : mNeedsConverter(needsConverter), 
+  : mNeedsConverter(needsConverter),
     mCx(cx),
     mRootVal(rootVal)
 {
@@ -551,7 +551,7 @@ nsJSONListener::OnDataAvailable(nsIRequest *aRequest, nsISupports *aContext,
     if (mSniffBuffer.Length() < 4)
       return NS_OK;
   }
-  
+
   char buffer[JSON_STREAM_BUFSIZE];
   unsigned long bytesRemaining = aLength - mSniffBuffer.Length();
   while (bytesRemaining) {

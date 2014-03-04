@@ -50,6 +50,14 @@ ok(templateEl.content.ownerDocument != templateEl.ownerDocument, "Template shoul
 var otherTemplateEl = document.getElementById("first");
 is(templateEl.content.ownerDocument, otherTemplateEl.content.ownerDocument, "Template contents within the same document should be owned by the same template contents owner.");
 
+var htmlDoc = document.implementation.createHTMLDocument();
+var otherDocTemplateEl = htmlDoc.createElement("template");
+isnot(otherDocTemplateEl.content.ownerDocument, htmlDoc, "Template content owner should be a new document.");
+
+var templateOwnerDoc = otherDocTemplateEl.content.ownerDocument;
+var docCreatedTemplateEl = templateOwnerDoc.createElement("template");
+is(docCreatedTemplateEl.content.ownerDocument, templateOwnerDoc, "Template content owner of template elements created by a template document should be the template document.");
+
 // Tests for XMLSerializer
 templateEl = document.getElementById("justtemplate");
 var serializer = new XMLSerializer();
