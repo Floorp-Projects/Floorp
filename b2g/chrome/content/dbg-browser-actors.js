@@ -72,13 +72,13 @@ ContentTabList.prototype.getList = function() {
   return promise.resolve([actor]);
 };
 
-ContentTabList.prototype.onCloseWindow = makeInfallible(function(aWindow) {
+ContentTabList.prototype.onCloseWindow = DevToolsUtils.makeInfallible(function(aWindow) {
   /*
    * nsIWindowMediator deadlocks if you call its GetEnumerator method from
    * a nsIWindowMediatorListener's onCloseWindow hook (bug 873589), so
    * handle the close in a different tick.
    */
-  Services.tm.currentThread.dispatch(makeInfallible(() => {
+  Services.tm.currentThread.dispatch(DevToolsUtils.makeInfallible(() => {
     /*
      * Scan the entire map for actors representing tabs that were in this
      * top-level window, and exit them.
