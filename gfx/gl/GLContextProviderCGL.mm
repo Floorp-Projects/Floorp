@@ -163,7 +163,7 @@ GLContextCGL::SetupLookupFunction()
 }
 
 bool
-GLContextCGL::IsDoubleBuffered()
+GLContextCGL::IsDoubleBuffered() const
 {
   return gUseDoubleBufferedWindows;
 }
