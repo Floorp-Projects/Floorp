@@ -511,6 +511,16 @@ char* Pickle::BeginWrite(uint32_t length, uint32_t alignment) {
   DCHECK(intptr_t(buffer) % alignment == 0);
 
   header_->payload_size = new_size;
+
+#ifdef MOZ_VALGRIND
+  // pad the trailing end as well, so that valgrind
+  // doesn't complain when we write the buffer
+  padding = AlignInt(length) - length;
+  if (padding) {
+    memset(buffer + length, kBytePaddingMarker, padding);
+  }
+#endif
+
   return buffer;
 }
 

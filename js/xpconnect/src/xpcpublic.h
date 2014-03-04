@@ -173,7 +173,7 @@ xpc_UnmarkSkippableJSHolders();
 
 // No JS can be on the stack when this is called. Probably only useful from
 // xpcshell.
-NS_EXPORT_(void)
+void
 xpc_ActivateDebugMode();
 
 // readable string conversions, static methods and members only
@@ -259,8 +259,8 @@ private:
 namespace xpc {
 
 // If these functions return false, then an exception will be set on cx.
-NS_EXPORT_(bool) Base64Encode(JSContext *cx, JS::HandleValue val, JS::MutableHandleValue out);
-NS_EXPORT_(bool) Base64Decode(JSContext *cx, JS::HandleValue val, JS::MutableHandleValue out);
+bool Base64Encode(JSContext *cx, JS::HandleValue val, JS::MutableHandleValue out);
+bool Base64Decode(JSContext *cx, JS::HandleValue val, JS::MutableHandleValue out);
 
 /**
  * Convert an nsString to jsval, returning true on success.
@@ -427,15 +427,7 @@ WindowGlobalOrNull(JSObject *aObj);
 void
 SystemErrorReporter(JSContext *cx, const char *message, JSErrorReport *rep);
 
-// We have a separate version that's exported with external linkage for use by
-// xpcshell, since external linkage on windows changes the signature to make it
-// incompatible with the JSErrorReporter type, causing JS_SetErrorReporter calls
-// to fail to compile.
-NS_EXPORT_(void)
-SystemErrorReporterExternal(JSContext *cx, const char *message,
-                            JSErrorReport *rep);
-
-NS_EXPORT_(void)
+void
 SimulateActivityCallback(bool aActive);
 
 void
