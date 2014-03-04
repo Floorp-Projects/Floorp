@@ -345,7 +345,9 @@ ifdef LIBXUL_LIBRARY
 ifdef IS_COMPONENT
 $(error IS_COMPONENT is set, but is not compatible with LIBXUL_LIBRARY)
 endif
+ifneq (xul,$(LIBRARY_NAME))
 FORCE_STATIC_LIB=1
+endif
 endif
 
 # If we are building this component into an extension/xulapp, it cannot be
