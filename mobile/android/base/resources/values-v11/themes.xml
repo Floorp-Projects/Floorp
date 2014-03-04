@@ -22,6 +22,8 @@
         <item name="android:windowNoTitle">true</item>
     </style>
 
+    <style name="GeckoTitleDialogBase" parent="@android:style/Theme.Holo.Light.Dialog" />
+
     <style name="GeckoPreferencesBase" parent="GeckoBase">
         <item name="android:windowActionBar">true</item>
         <item name="android:windowNoTitle">false</item>

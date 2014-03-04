@@ -90,6 +90,8 @@
 
 <!ENTITY pref_category_home "Home">
 <!ENTITY pref_category_home_panels "Panels">
+<!ENTITY pref_home_add_panel "Add panel">
+<!ENTITY home_add_panel_title "Add new panel">
 
 <!-- Localization note: These are shown in the left sidebar on tablets -->
 <!ENTITY pref_header_customize "Customize">
