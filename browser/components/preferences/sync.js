@@ -147,11 +147,8 @@ let gSyncPane = {
         document.getElementById("fxaEmailAddress2").textContent = data.email;
         document.getElementById("fxaEmailAddress3").textContent = data.email;
         document.getElementById("fxaSyncComputerName").value = Weave.Service.clientsEngine.localName;
-        let enginesList = document.getElementById("fxaSyncEnginesList")
-        enginesList.disabled = enginesListDisabled;
-        // *sigh* - disabling the <richlistbox> draws each item as if it is disabled,
-        // but doesn't disable the checkboxes.
-        for (let checkbox of enginesList.querySelectorAll("checkbox")) {
+        let engines = document.getElementById("fxaSyncEngines")
+        for (let checkbox of engines.querySelectorAll("checkbox")) {
           checkbox.disabled = enginesListDisabled;
         }
       });
