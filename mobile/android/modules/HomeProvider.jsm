@@ -17,12 +17,11 @@ Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 /*
- * XXX: Add migration logic to getDatabaseConnection if you ever rev SCHEMA_VERSION.
- *
  * SCHEMA_VERSION history:
  *   1: Create HomeProvider (bug 942288)
+ *   2: Add filter column to items table (bug 942295/975841)
  */
-const SCHEMA_VERSION = 1;
+const SCHEMA_VERSION = 2;
 
 XPCOMUtils.defineLazyGetter(this, "DB_PATH", function() {
   return OS.Path.join(OS.Constants.Path.profileDir, "home.sqlite");
@@ -54,6 +53,9 @@ const SQL = {
       "filter TEXT," +
       "created INTEGER" +
     ")",
+
+  dropItemsTable:
+    "DROP TABLE items",
 
   insertItem:
     "INSERT INTO items (dataset_id, url, title, description, image_url, filter, created) " +
@@ -182,6 +184,33 @@ this.HomeProvider = Object.freeze({
 var gDatabaseEnsured = false;
 
 /**
+ * Creates the database schema.
+ */
+function createDatabase(db) {
+  return Task.spawn(function create_database_task() {
+    yield db.execute(SQL.createItemsTable);
+  });
+}
+
+/**
+ * Migrates the database schema to a new version.
+ */
+function upgradeDatabase(db, oldVersion, newVersion) {
+  return Task.spawn(function upgrade_database_task() {
+    for (let v = oldVersion + 1; v <= newVersion; v++) {
+      switch(v) {
+        case 2:
+          // Recreate the items table discarding any
+          // existing data.
+          yield db.execute(SQL.dropItemsTable);
+          yield db.execute(SQL.createItemsTable);
+          break;
+      }
+    }
+  });
+}
+
+/**
  * Opens a database connection and makes sure that the database schema version
  * is correct, performing migrations if necessary. Consumers should be sure
  * to close any database connections they open.
@@ -198,13 +227,17 @@ function getDatabaseConnection() {
 
     try {
       // Check to see if we need to perform any migrations.
-      // XXX: We will need to add migration logic if we ever rev SCHEMA_VERSION.
-      let dbVersion = yield db.getSchemaVersion();
-      if (parseInt(dbVersion) < SCHEMA_VERSION) {
-        // For schema v1, create the items table and set the schema version.
-        yield db.execute(SQL.createItemsTable);
-        yield db.setSchemaVersion(SCHEMA_VERSION);
+      let dbVersion = parseInt(yield db.getSchemaVersion());
+
+      // getSchemaVersion() returns a 0 int if the schema
+      // version is undefined.
+      if (dbVersion === 0) {
+        yield createDatabase(db);
+      } else if (dbVersion < SCHEMA_VERSION) {
+        yield upgradeDatabase(db, dbVersion, SCHEMA_VERSION);
       }
+
+      yield db.setSchemaVersion(SCHEMA_VERSION);
     } catch(e) {
       // Close the DB connection before passing the exception to the consumer.
       yield db.close();
