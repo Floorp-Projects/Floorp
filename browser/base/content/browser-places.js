@@ -1327,6 +1327,7 @@ let BookmarkingUI = {
     }
 
     if (this.notifier.style.transform == '') {
+      let isRTL = getComputedStyle(this.button).direction == "rtl";
       let buttonRect = this.button.getBoundingClientRect();
       let notifierRect = this.notifier.getBoundingClientRect();
       let topDiff = buttonRect.top - notifierRect.top;
@@ -1335,7 +1336,11 @@ let BookmarkingUI = {
       let widthDiff = buttonRect.width - notifierRect.width;
       let translateX = (leftDiff + .5 * widthDiff) + "px";
       let translateY = (topDiff + .5 * heightDiff) + "px";
-      this.notifier.style.transform = "translate(" +  translateX + ", " + translateY + ")";
+      let transform = "translate(" +  translateX + ", " + translateY + ")";
+      if (isRTL) {
+        transform += " scaleX(-1)";
+      }
+      this.notifier.style.transform = transform;
     }
 
     let isInBookmarksToolbar = this.button.classList.contains("bookmark-item");
