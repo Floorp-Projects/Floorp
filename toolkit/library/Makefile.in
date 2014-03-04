@@ -24,10 +24,6 @@ SHARED_LIBRARY_LIBS += \
   $(foreach component,$(COMPONENT_LIBS),$(DEPTH)/staticlib/$(LIB_PREFIX)$(component).$(LIB_SUFFIX)) \
   $(NULL)
 
-ifeq ($(OS_ARCH)_$(GNU_CC),WINNT_)
-RCINCLUDE = xulrunner.rc
-endif
-
 # dependent libraries
 ifdef MOZ_B2G_BT_BLUEZ #{
 ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
