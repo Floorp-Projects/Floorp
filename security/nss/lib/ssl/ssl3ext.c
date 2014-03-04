@@ -230,7 +230,7 @@ ssl3_GetSessionTicketKeys(const unsigned char **aes_key,
 /* This table is used by the server, to handle client hello extensions. */
 static const ssl3HelloExtensionHandler clientHelloHandlers[] = {
     { ssl_server_name_xtn,        &ssl3_HandleServerNameXtn },
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
     { ssl_elliptic_curves_xtn,    &ssl3_HandleSupportedCurvesXtn },
     { ssl_ec_point_formats_xtn,   &ssl3_HandleSupportedPointFormatsXtn },
 #endif
@@ -272,7 +272,7 @@ static const
 ssl3HelloExtensionSender clientHelloSendersTLS[SSL_MAX_EXTENSIONS] = {
     { ssl_server_name_xtn,        &ssl3_SendServerNameXtn        },
     { ssl_renegotiation_info_xtn, &ssl3_SendRenegotiationInfoXtn },
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
     { ssl_elliptic_curves_xtn,    &ssl3_SendSupportedCurvesXtn },
     { ssl_ec_point_formats_xtn,   &ssl3_SendSupportedPointFormatsXtn },
 #endif
@@ -2219,7 +2219,7 @@ ssl3_ClientSendSigAlgsXtn(sslSocket * ss, PRBool append, PRUint32 maxBytes)
 	tls_hash_sha256, tls_sig_rsa,
 	tls_hash_sha384, tls_sig_rsa,
 	tls_hash_sha1,   tls_sig_rsa,
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
 	tls_hash_sha256, tls_sig_ecdsa,
 	tls_hash_sha384, tls_sig_ecdsa,
 	tls_hash_sha1,   tls_sig_ecdsa,

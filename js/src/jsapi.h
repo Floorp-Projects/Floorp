@@ -604,12 +604,11 @@ class JS_PUBLIC_API(CustomAutoRooter) : private AutoGCRooter
 class HandleValueArray
 {
     const size_t length_;
-    const Value *elements_;
+    const Value * const elements_;
 
     HandleValueArray(size_t len, const Value *elements) : length_(len), elements_(elements) {}
 
   public:
-    HandleValueArray() : length_(0), elements_(nullptr) {}
     HandleValueArray(const RootedValue& value) : length_(1), elements_(value.address()) {}
 
     HandleValueArray(const AutoValueVector& values)
@@ -631,6 +630,10 @@ class HandleValueArray
         return HandleValueArray(len, values.begin() + startIndex);
     }
 
+    static HandleValueArray empty() {
+        return HandleValueArray(0, nullptr);
+    }
+
     size_t length() const { return length_; }
     const Value *begin() const { return elements_; }
 
@@ -639,8 +642,6 @@ class HandleValueArray
         return HandleValue::fromMarkedLocation(&elements_[i]);
     }
 };
-
-extern JS_PUBLIC_DATA(const HandleValueArray) EmptyValueArray;
 
 }  /* namespace JS */
 

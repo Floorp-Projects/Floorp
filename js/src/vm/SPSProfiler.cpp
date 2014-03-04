@@ -26,7 +26,8 @@ SPSProfiler::SPSProfiler(JSRuntime *rt)
     max_(0),
     slowAssertions(false),
     enabled_(false),
-    lock_(nullptr)
+    lock_(nullptr),
+    eventMarker_(nullptr)
 {
     JS_ASSERT(rt != nullptr);
 }
@@ -64,6 +65,12 @@ SPSProfiler::setProfilingStack(ProfileEntry *stack, uint32_t *size, uint32_t max
     stack_ = stack;
     size_  = size;
     max_   = max;
+}
+
+void
+SPSProfiler::setEventMarker(void (*fn)(const char *))
+{
+    eventMarker_ = fn;
 }
 
 void
@@ -128,6 +135,16 @@ SPSProfiler::onScriptFinalized(JSScript *script)
         const char *tofree = entry->value();
         strings.remove(entry);
         js_free(const_cast<char *>(tofree));
+    }
+}
+
+void
+SPSProfiler::markEvent(const char *event)
+{
+    JS_ASSERT(enabled());
+    if (eventMarker_) {
+        JS::AutoAssertNoGC nogc;
+        eventMarker_(event);
     }
 }
 
@@ -329,6 +346,13 @@ JS_FRIEND_API(void)
 js::EnableRuntimeProfilingStack(JSRuntime *rt, bool enabled)
 {
     rt->spsProfiler.enable(enabled);
+}
+
+JS_FRIEND_API(void)
+js::RegisterRuntimeProfilingEventMarker(JSRuntime *rt, void (*fn)(const char *))
+{
+    JS_ASSERT(rt->spsProfiler.enabled());
+    rt->spsProfiler.setEventMarker(fn);
 }
 
 JS_FRIEND_API(jsbytecode*)
