@@ -88,6 +88,7 @@
 
 .cui-widget-panelview .subviewbutton.panel-subview-footer {
   margin: 4px 0 0;
+  -moz-box-pack: center;
 }
 
 #PanelUI-mainView {
@@ -559,7 +560,8 @@ panelview .toolbarbutton-1,
 .subviewbutton.panel-subview-footer > .toolbarbutton-text,
 .subviewbutton.panel-subview-footer > .menu-text {
   -moz-padding-start: 0;
-  text-align: center;
+  -moz-padding-end: 12px;
+  -moz-box-flex: 0;
 }
 
 .subviewbutton:not(.panel-subview-footer) {
