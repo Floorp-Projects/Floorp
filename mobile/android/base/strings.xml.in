@@ -113,6 +113,8 @@
 
   <string name="pref_category_home">&pref_category_home;</string>
   <string name="pref_category_home_panels">&pref_category_home_panels;</string>
+  <string name="pref_home_add_panel">&pref_home_add_panel;</string>
+  <string name="home_add_panel_title">&home_add_panel_title;</string>
 
   <string name="pref_header_customize">&pref_header_customize;</string>
   <string name="pref_header_display">&pref_header_display;</string>
