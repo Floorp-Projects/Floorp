@@ -10,7 +10,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/TypedEnum.h"
 
-// First time gfxPrefs::One() needs to be called on the main thread,
+// First time gfxPrefs::GetSingleton() needs to be called on the main thread,
 // before any of the methods accessing the values are used, but after
 // the Preferences system has been initialized.
 
@@ -53,7 +53,7 @@
 
 #define DECL_GFX_PREF(Update, Pref, Name, Type, Default)                     \
 public:                                                                       \
-static Type Name() { MOZ_ASSERT(Exists()); return One().mPref##Name.mValue; } \
+static Type Name() { MOZ_ASSERT(SingletonExists()); return GetSingleton().mPref##Name.mValue; } \
 private:                                                                      \
 static const char* Get##Name##PrefName() { return Pref; }                     \
 static Type Get##Name##PrefDefault() { return Default; }                      \
@@ -128,7 +128,7 @@ private:
   DECL_GFX_PREF(Live, "gl.msaa-level",                         MSAALevel, uint32_t, 2);
 
   DECL_GFX_PREF(Once, "layers.acceleration.disabled",          LayersAccelerationDisabled, bool, false);
-  DECL_GFX_PREF(Live, "layers.acceleration.draw-fps",          LayersDrawFPS, bool, true);
+  DECL_GFX_PREF(Live, "layers.acceleration.draw-fps",          LayersDrawFPS, bool, false);
   DECL_GFX_PREF(Once, "layers.acceleration.force-enabled",     LayersAccelerationForceEnabled, bool, false);
 #ifdef XP_WIN
   // On windows, ignore the preference value, forcing async video to false.
@@ -172,15 +172,15 @@ private:
 
 public:
   // Manage the singleton:
-  static gfxPrefs& One()
+  static gfxPrefs& GetSingleton()
   {
     if (!sInstance) {
       sInstance = new gfxPrefs;
     }
     return *sInstance;
   }
-  static void Destroy();
-  static bool Exists();
+  static void DestroySingleton();
+  static bool SingletonExists();
 
 private:
   static gfxPrefs* sInstance;

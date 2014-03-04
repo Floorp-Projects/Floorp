@@ -797,7 +797,7 @@ WebappsActor.prototype = {
 
     let childTransport, prefix;
 
-    let onActorCreated = makeInfallible(function (msg) {
+    let onActorCreated = DevToolsUtils.makeInfallible(function (msg) {
       mm.removeMessageListener("debug:actor", onActorCreated);
 
       dump("***** Got debug:actor\n");
@@ -822,7 +822,7 @@ WebappsActor.prototype = {
     }).bind(this);
     mm.addMessageListener("debug:actor", onActorCreated);
 
-    let onMessageManagerDisconnect = makeInfallible(function (subject, topic, data) {
+    let onMessageManagerDisconnect = DevToolsUtils.makeInfallible(function (subject, topic, data) {
       if (subject == mm) {
         Services.obs.removeObserver(onMessageManagerDisconnect, topic);
         if (childTransport) {
