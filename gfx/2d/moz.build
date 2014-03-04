@@ -88,6 +88,16 @@ if CONFIG['INTEL_ARCHITECTURE']:
             'ImageScalingSSE2.cpp',
         ]
         DEFINES['USE_SSE2'] = True
+        # The file uses SSE2 intrinsics, so it needs special compile flags on some
+        # compilers.
+        if CONFIG['GNU_CC']:
+            SOURCES['BlurSSE2.cpp'].flags += ['-msse2']
+            SOURCES['FilterProcessingSSE2.cpp'].flags += ['-msse2']
+            SOURCES['ImageScalingSSE2.cpp'].flags += ['-msse2']
+        if CONFIG['SOLARIS_SUNPRO_CXX']:
+            SOURCES['BlurSSE2.cpp'].flags += ['-xarch=sse2', '-xO4']
+            SOURCES['FilterProcessingSSE2.cpp'].flags += ['-xarch=sse2', '-xO4']
+            SOURCES['ImageScalingSSE2.cpp'].flags += ['-xarch=sse2', '-xO4']
 
 UNIFIED_SOURCES += [
     'Blur.cpp',

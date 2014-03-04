@@ -29,7 +29,16 @@ class CompartmentChecker
   public:
     explicit CompartmentChecker(ExclusiveContext *cx)
       : compartment(cx->compartment())
-    {}
+    {
+#ifdef DEBUG
+        // In debug builds, make sure the embedder passed the cx it claimed it
+        // was going to use.
+        JSContext *activeContext = nullptr;
+        if (cx->isJSContext())
+            activeContext = cx->asJSContext()->runtime()->activeContext;
+        JS_ASSERT_IF(activeContext, cx == activeContext);
+#endif
+    }
 
     /*
      * Set a breakpoint here (break js::CompartmentChecker::fail) to debug
@@ -368,7 +377,9 @@ JSContext::setPendingException(js::Value v)
     JS_ASSERT(!IsPoisonedValue(v));
     this->throwing = true;
     this->unwrappedException_ = v;
-    js::assertSameCompartment(this, v);
+    // We don't use assertSameCompartment here to allow
+    // js::SetPendingExceptionCrossContext to work.
+    JS_ASSERT_IF(v.isObject(), v.toObject().compartment() == compartment());
 }
 
 inline void

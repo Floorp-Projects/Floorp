@@ -24,8 +24,6 @@ EXPORTS += [
     'nsEventStateManager.h',
     'nsEventStates.h',
     'nsIJSEventListener.h',
-    'nsIPrivateTextEvent.h',
-    'nsIPrivateTextRange.h',
     'nsVKList.h',
 ]
 
@@ -89,14 +87,12 @@ UNIFIED_SOURCES += [
     'nsContentEventHandler.cpp',
     'nsDOMEvent.cpp',
     'nsDOMEventTargetHelper.cpp',
-    'nsDOMTextEvent.cpp',
     'nsEventDispatcher.cpp',
     'nsEventListenerManager.cpp',
     'nsEventListenerService.cpp',
     'nsIMEStateManager.cpp',
     'nsJSEventListener.cpp',
     'nsPaintRequest.cpp',
-    'nsPrivateTextRange.cpp',
     'PointerEvent.cpp',
     'ScrollAreaEvent.cpp',
     'SimpleGestureEvent.cpp',

@@ -143,20 +143,21 @@ APZCCallbackHelper::UpdateRootFrame(nsIDOMWindowUtils* aUtils,
     bool scrollUpdated = false;
     CSSPoint actualScrollOffset = ScrollFrameTo(sf, aMetrics.mScrollOffset, scrollUpdated);
 
-    if (scrollUpdated) {
-        // Correct the display port due to the difference between mScrollOffset and the
-        // actual scroll offset, possibly align it to tile boundaries (if tiled layers are
-        // enabled), and clamp it to the scrollable rect.
-        MaybeAlignAndClampDisplayPort(aMetrics, actualScrollOffset);
-    } else {
-        // For whatever reason we couldn't update the scroll offset on the scroll frame,
-        // which means the data APZ used for its displayport calculation is stale. Fall
-        // back to a sane default behaviour. Note that we don't tile-align the recentered
-        // displayport because tile-alignment depends on the scroll position, and the
-        // scroll position here is out of our control. See bug 966507 comment 21 for a
-        // more detailed explanation.
-        RecenterDisplayPort(aMetrics);
+    if (!scrollUpdated) {
+      // For whatever reason we couldn't update the scroll offset on the scroll frame,
+      // which means the data APZ used for its displayport calculation is stale. Fall
+      // back to a sane default behaviour. Note that we don't tile-align the recentered
+      // displayport because tile-alignment depends on the scroll position, and the
+      // scroll position here is out of our control. See bug 966507 comment 21 for a
+      // more detailed explanation.
+      RecenterDisplayPort(aMetrics);
     }
+
+    // Correct the display port due to the difference between mScrollOffset and the
+    // actual scroll offset, possibly align it to tile boundaries (if tiled layers are
+    // enabled), and clamp it to the scrollable rect.
+    MaybeAlignAndClampDisplayPort(aMetrics, actualScrollOffset);
+
     aMetrics.mScrollOffset = actualScrollOffset;
 
     // The mZoom variable on the frame metrics stores the CSS-to-screen scale for this
@@ -214,11 +215,10 @@ APZCCallbackHelper::UpdateSubFrame(nsIContent* aContent,
 
     nsCOMPtr<nsIDOMElement> element = do_QueryInterface(aContent);
     if (element) {
-        if (scrollUpdated) {
-            MaybeAlignAndClampDisplayPort(aMetrics, actualScrollOffset);
-        } else {
+        if (!scrollUpdated) {
             RecenterDisplayPort(aMetrics);
         }
+        MaybeAlignAndClampDisplayPort(aMetrics, actualScrollOffset);
         utils->SetDisplayPortForElement(aMetrics.mDisplayPort.x,
                                         aMetrics.mDisplayPort.y,
                                         aMetrics.mDisplayPort.width,

@@ -4,24 +4,26 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MetroAppShell.h"
-#include "nsXULAppAPI.h"
+
+#include "mozilla/AutoRestore.h"
+#include "mozilla/TimeStamp.h"
 #include "mozilla/widget/AudioSession.h"
+
+#include "nsIObserverService.h"
+#include "nsIAppStartup.h"
+#include "nsToolkitCompsCID.h"
+#include "nsIPowerManagerService.h"
+
+#include "nsXULAppAPI.h"
+#include "nsServiceManagerUtils.h"
+#include "WinUtils.h"
+#include "nsWinMetroUtils.h"
 #include "MetroUtils.h"
 #include "MetroApp.h"
 #include "FrameworkView.h"
-#include "nsIObserverService.h"
-#include "nsServiceManagerUtils.h"
-#include "mozilla/AutoRestore.h"
-#include "mozilla/TimeStamp.h"
-#include "WinUtils.h"
-#include "nsIAppStartup.h"
-#include "nsToolkitCompsCID.h"
+#include "WakeLockListener.h"
+
 #include <shellapi.h>
-#include "nsIDOMWakeLockListener.h"
-#include "nsIPowerManagerService.h"
-#include "mozilla/StaticPtr.h"
-#include <windows.system.display.h>
-#include "nsWinMetroUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::widget;
@@ -50,33 +52,6 @@ namespace widget {
 extern UINT sAppShellGeckoMsgId;
 } }
 
-class WakeLockListener : public nsIDOMMozWakeLockListener {
-public:
-  NS_DECL_ISUPPORTS;
-
-private:
-  ComPtr<ABI::Windows::System::Display::IDisplayRequest> mDisplayRequest;
-
-  NS_IMETHOD Callback(const nsAString& aTopic, const nsAString& aState) {
-    if (!mDisplayRequest) {
-      if (FAILED(ActivateGenericInstance(RuntimeClass_Windows_System_Display_DisplayRequest, mDisplayRequest))) {
-        NS_WARNING("Failed to instantiate IDisplayRequest, wakelocks will be broken!");
-        return NS_OK;
-      }
-    }
-
-    if (aState.Equals(NS_LITERAL_STRING("locked-foreground"))) {
-      mDisplayRequest->RequestActive();
-    } else {
-      mDisplayRequest->RequestRelease();
-    }
-
-    return NS_OK;
-  }
-};
-
-NS_IMPL_ISUPPORTS1(WakeLockListener, nsIDOMMozWakeLockListener)
-StaticRefPtr<WakeLockListener> sWakeLockListener;
 static ComPtr<ICoreWindowStatic> sCoreStatic;
 static bool sIsDispatching = false;
 static bool sShouldPurgeThreadQueue = false;
@@ -130,7 +105,8 @@ MetroAppShell::Init()
   return nsBaseAppShell::Init();
 }
 
-HRESULT SHCreateShellItemArrayFromShellItemDynamic(IShellItem *psi, REFIID riid, void **ppv)
+HRESULT
+SHCreateShellItemArrayFromShellItemDynamic(IShellItem *psi, REFIID riid, void **ppv)
 {
   HMODULE shell32DLL = LoadLibraryW(L"shell32.dll");
   if (!shell32DLL) {
@@ -210,6 +186,35 @@ WinLaunchDeferredMetroFirefox()
   return executeCommand->Execute();
 }
 
+static WakeLockListener*
+InitWakeLock()
+{
+  nsCOMPtr<nsIPowerManagerService> powerManagerService =
+    do_GetService(POWERMANAGERSERVICE_CONTRACTID);
+  if (powerManagerService) {
+    WakeLockListener* pLock = new WakeLockListener();
+    powerManagerService->AddWakeLockListener(pLock);
+    return pLock;
+  }
+  else {
+    NS_WARNING("Failed to retrieve PowerManagerService, wakelocks will be broken!");
+  }
+  return nullptr;
+}
+
+static void
+ShutdownWakeLock(WakeLockListener* aLock)
+{
+  if (!aLock) {
+    return;
+  }
+  nsCOMPtr<nsIPowerManagerService> powerManagerService =
+    do_GetService(POWERMANAGERSERVICE_CONTRACTID);
+  if (powerManagerService) {
+    powerManagerService->RemoveWakeLockListener(aLock);
+  }
+}
+
 // Called by appstartup->run in xre, which is initiated by a call to
 // XRE_metroStartup in MetroApp. This call is on the metro main thread.
 NS_IMETHODIMP
@@ -231,26 +236,12 @@ MetroAppShell::Run(void)
       rv = NS_ERROR_NOT_IMPLEMENTED;
     break;
     case GeckoProcessType_Default: {
-      nsCOMPtr<nsIPowerManagerService> sPowerManagerService = do_GetService(POWERMANAGERSERVICE_CONTRACTID);
-      if (sPowerManagerService) {
-        sWakeLockListener = new WakeLockListener();
-        sPowerManagerService->AddWakeLockListener(sWakeLockListener);
-      }
-      else {
-        NS_WARNING("Failed to retrieve PowerManagerService, wakelocks will be broken!");
-      }
-
+      nsAutoPtr<WakeLockListener> wakeLock = InitWakeLock();
       mozilla::widget::StartAudioSession();
       sMetroApp->ActivateBaseView();
       rv = nsBaseAppShell::Run();
       mozilla::widget::StopAudioSession();
-
-      if (sPowerManagerService) {
-        sPowerManagerService->RemoveWakeLockListener(sWakeLockListener);
-
-        sPowerManagerService = nullptr;
-        sWakeLockListener = nullptr;
-      }
+      ShutdownWakeLock(wakeLock);
 
       nsCOMPtr<nsIAppStartup> appStartup (do_GetService(NS_APPSTARTUP_CONTRACTID));
       bool restartingInMetro = false, restartingInDesktop = false;

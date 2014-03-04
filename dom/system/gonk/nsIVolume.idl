@@ -5,7 +5,7 @@
 #include "nsISupports.idl"
 #include "nsIVolumeStat.idl"
 
-[scriptable, uuid(8c163fe4-5577-11e3-b3d0-10bf48d707fb)]
+[scriptable, uuid(13caa69c-8f1f-11e3-8e36-10bf48d707fb)]
 interface nsIVolume : nsISupports
 {
   // These MUST match the states from android's system/vold/Volume.h header
@@ -72,6 +72,14 @@ interface nsIVolume : nsISupports
   // Formats the volume in IO thread, if the volume is ready to be formatted.
   // Automounter will unmount it, format it and then mount it again.
   void format();
+
+  // Mounts the volume in IO thread, if the volume is already unmounted.
+  // Automounter will mount it. Otherwise Automounter will skip this.
+  void mount();
+
+  // Unmounts the volume in IO thread, if the volume is already mounted.
+  // Automounter will unmount it. Otherwise Automounter will skip this.
+  void unmount();
 
   // Whether this is a fake volume.
   readonly attribute boolean isFake;
