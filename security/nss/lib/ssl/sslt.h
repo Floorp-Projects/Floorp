@@ -181,7 +181,7 @@ typedef enum {
 typedef enum {
     ssl_server_name_xtn              = 0,
     ssl_cert_status_xtn              = 5,
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
     ssl_elliptic_curves_xtn          = 10,
     ssl_ec_point_formats_xtn         = 11,
 #endif
