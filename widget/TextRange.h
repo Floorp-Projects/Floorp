@@ -8,8 +8,10 @@
 
 #include <stdint.h>
 
+#include "nsAutoPtr.h"
 #include "nsColor.h"
 #include "nsStyleConsts.h"
+#include "nsTArray.h"
 
 namespace mozilla {
 
@@ -159,11 +161,36 @@ struct TextRange
 
 /******************************************************************************
  * mozilla::TextRangeArray
- *
- * XXX This should be replaced with nsTArray<TextRange>.
  ******************************************************************************/
+class TextRangeArray MOZ_FINAL : public nsAutoTArray<TextRange, 10>
+{
+  NS_INLINE_DECL_REFCOUNTING(TextRangeArray)
 
-typedef TextRange* TextRangeArray;
+public:
+  bool IsComposing() const
+  {
+    for (uint32_t i = 0; i < Length(); ++i) {
+      if (ElementAt(i).IsClause()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // Returns target clase offset.  If there are selected clauses, this returns
+  // the first selected clause offset.  Otherwise, 0.
+  uint32_t TargetClauseOffset() const
+  {
+    for (uint32_t i = 0; i < Length(); ++i) {
+      const TextRange& range = ElementAt(i);
+      if (range.mRangeType == NS_TEXTRANGE_SELECTEDRAWTEXT ||
+          range.mRangeType == NS_TEXTRANGE_SELECTEDCONVERTEDTEXT) {
+        return range.mStartOffset;
+      }
+    }
+    return 0;
+  }
+};
 
 } // namespace mozilla
 

@@ -221,11 +221,13 @@ public:
   // Note that the range array may not specify a caret position; in that
   // case there will be no range of type NS_TEXTRANGE_CARETPOSITION in the
   // array.
-  TextRangeArray rangeArray;
+  TextRange* rangeArray;
   // Indicates whether the event signifies printable text.
   // XXX This is not a standard, and most platforms don't set this properly.
   //     So, perhaps, we can get rid of this.
   bool isChar;
+
+  nsRefPtr<TextRangeArray> mRanges;
 
   void AssignTextEventData(const WidgetTextEvent& aEvent, bool aCopyTargets)
   {
@@ -237,14 +239,35 @@ public:
     // for internal use only (not available from JS).
   }
 
+  // XXX This copies all ranges from legacy member to new member.
+  //     This will be removed later.
+  void EnsureRanges()
+  {
+    if (mRanges || !rangeCount) {
+      return;
+    }
+    mRanges = new TextRangeArray();
+    for (uint32_t i = 0; i < rangeCount; i++) {
+      mRanges->AppendElement(rangeArray[i]);
+    }
+  }
+
   bool IsComposing() const
   {
-    for (uint32_t i = 0; i < rangeCount; i++) {
-      if (rangeArray[i].IsClause()) {
-        return true;
-      }
-    }
-    return false;
+    const_cast<WidgetTextEvent*>(this)->EnsureRanges();
+    return mRanges && mRanges->IsComposing();
+  }
+
+  uint32_t TargetClauseOffset() const
+  {
+    const_cast<WidgetTextEvent*>(this)->EnsureRanges();
+    return mRanges ? mRanges->TargetClauseOffset() : 0;
+  }
+
+  uint32_t RangeCount() const
+  {
+    const_cast<WidgetTextEvent*>(this)->EnsureRanges();
+    return mRanges ? mRanges->Length() : 0;
   }
 };
 

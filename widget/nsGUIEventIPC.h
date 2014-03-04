@@ -379,6 +379,37 @@ struct ParamTraits<mozilla::TextRange>
 };
 
 template<>
+struct ParamTraits<mozilla::TextRangeArray>
+{
+  typedef mozilla::TextRangeArray paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.Length());
+    for (uint32_t index = 0; index < aParam.Length(); index++) {
+      WriteParam(aMsg, aParam[index]);
+    }
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    uint32_t length;
+    if (!ReadParam(aMsg, aIter, &length)) {
+      return false;
+    }
+    for (uint32_t index = 0; index < length; index++) {
+      mozilla::TextRange textRange;
+      if (!ReadParam(aMsg, aIter, &textRange)) {
+        aResult->Clear();
+        return false;
+      }
+      aResult->AppendElement(textRange);
+    }
+    return true;
+  }
+};
+
+template<>
 struct ParamTraits<mozilla::WidgetTextEvent>
 {
   typedef mozilla::WidgetTextEvent paramType;
@@ -390,34 +421,55 @@ struct ParamTraits<mozilla::WidgetTextEvent>
     WriteParam(aMsg, aParam.theText);
     WriteParam(aMsg, aParam.isChar);
     WriteParam(aMsg, aParam.rangeCount);
+    bool hasRanges = !!aParam.mRanges;
+    WriteParam(aMsg, hasRanges);
     for (uint32_t index = 0; index < aParam.rangeCount; index++)
       WriteParam(aMsg, aParam.rangeArray[index]);
+    if (hasRanges) {
+      WriteParam(aMsg, *aParam.mRanges.get());
+    }
   }
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
+    bool hasRanges;
     if (!ReadParam(aMsg, aIter,
                    static_cast<mozilla::WidgetGUIEvent*>(aResult)) ||
         !ReadParam(aMsg, aIter, &aResult->mSeqno) ||
         !ReadParam(aMsg, aIter, &aResult->theText) ||
         !ReadParam(aMsg, aIter, &aResult->isChar) ||
-        !ReadParam(aMsg, aIter, &aResult->rangeCount))
+        !ReadParam(aMsg, aIter, &aResult->rangeCount) ||
+        !ReadParam(aMsg, aIter, &hasRanges)) {
       return false;
+    }
 
     if (!aResult->rangeCount) {
       aResult->rangeArray = nullptr;
-      return true;
-    }
-
-    aResult->rangeArray = new mozilla::TextRange[aResult->rangeCount];
-    if (!aResult->rangeArray)
-      return false;
-
-    for (uint32_t index = 0; index < aResult->rangeCount; index++)
-      if (!ReadParam(aMsg, aIter, &aResult->rangeArray[index])) {
-        Free(*aResult);
+    } else {
+      aResult->rangeArray = new mozilla::TextRange[aResult->rangeCount];
+      if (!aResult->rangeArray) {
         return false;
       }
+
+      for (uint32_t index = 0; index < aResult->rangeCount; index++) {
+        if (!ReadParam(aMsg, aIter, &aResult->rangeArray[index])) {
+          Free(*aResult);
+          return false;
+        }
+      }
+    }
+
+    if (!hasRanges) {
+      aResult->mRanges = nullptr;
+    } else {
+      aResult->mRanges = new mozilla::TextRangeArray();
+      if (!aResult->mRanges) {
+        return false;
+      }
+      if (!ReadParam(aMsg, aIter, aResult->mRanges.get())) {
+        return false;
+      }
+    }
     return true;
   }
 
