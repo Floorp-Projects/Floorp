@@ -69,6 +69,24 @@ void
 AutoMounterFormatVolume(const nsCString& aVolumeName);
 
 /**
+ * Mounts the volume with specified volume name.
+ *
+ * If the volume is already unmounted, automounter
+ * will mount it. Otherwise automounter will skip this.
+ */
+void
+AutoMounterMountVolume(const nsCString& aVolumeName);
+
+/**
+ * Unmounts the volume with specified volume name.
+ *
+ * If the volume is already mounted, automounter
+ * will unmount it. Otherwise automounter will skip this.
+ */
+void
+AutoMounterUnmountVolume(const nsCString& aVolumeName);
+
+/**
  * Shuts down the automounter.
  *
  * This leaves the volumes in whatever state they're in.

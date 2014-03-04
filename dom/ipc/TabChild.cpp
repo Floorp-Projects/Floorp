@@ -2039,7 +2039,6 @@ TabChild::RecvTextEvent(const WidgetTextEvent& event)
 {
   WidgetTextEvent localEvent(event);
   DispatchWidgetEvent(localEvent);
-  IPC::ParamTraits<WidgetTextEvent>::Free(event);
   return true;
 }
 

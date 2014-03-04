@@ -890,6 +890,13 @@ function ArrayScatterPar(targets, defaultValue, conflictFunc, length, mode) {
     return buffer;
   }
 
+  function collide(elem1, elem2) {
+    if (conflictFunc === undefined)
+      ThrowError(JSMSG_PAR_ARRAY_SCATTER_CONFLICT);
+
+    return conflictFunc(elem1, elem2);
+  }
+
   function checkTarget(i, t) {
     if (TO_INT32(t) !== t)
       ThrowError(JSMSG_PAR_ARRAY_SCATTER_BAD_TARGET, i);
