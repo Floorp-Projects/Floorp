@@ -113,7 +113,6 @@
 #include "SVGContentUtils.h"
 #include "nsSVGEffects.h"
 #include "SVGFragmentIdentifier.h"
-#include "nsArenaMemoryStats.h"
 
 #include "nsPerformance.h"
 #include "nsRefreshDriver.h"

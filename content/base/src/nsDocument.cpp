@@ -221,7 +221,6 @@
 #include "nsIMutableArray.h"
 #include "nsContentPermissionHelper.h"
 #include "mozilla/dom/DOMStringList.h"
-#include "nsWindowMemoryReporter.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
