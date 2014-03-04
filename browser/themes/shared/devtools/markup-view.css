@@ -14,3 +14,22 @@
 .styleinspector-propertyeditor {
   border: 1px solid #CCC;
 }
+
+
+/* Selected nodes in the tree should have light selected text.
+   theme-selected doesn't work in this case since the text is a
+   sibling of the class, not a child. */
+.theme-selected ~ .editor,
+.theme-selected ~ .editor .theme-fg-color1,
+.theme-selected ~ .editor .theme-fg-color2,
+.theme-selected ~ .editor .theme-fg-color3,
+.theme-selected ~ .editor .theme-fg-color4,
+.theme-selected ~ .editor .theme-fg-color5,
+.theme-selected ~ .editor .theme-fg-color6,
+.theme-selected ~ .editor .theme-fg-color7 {
+  color: #f5f7fa; /* Light foreground text */
+}
+
+.tag-line {
+  padding-left: 2px;
+}
