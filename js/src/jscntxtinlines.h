@@ -368,7 +368,9 @@ JSContext::setPendingException(js::Value v)
     JS_ASSERT(!IsPoisonedValue(v));
     this->throwing = true;
     this->unwrappedException_ = v;
-    js::assertSameCompartment(this, v);
+    // We don't use assertSameCompartment here to allow
+    // js::SetPendingExceptionCrossContext to work.
+    JS_ASSERT_IF(v.isObject(), v.toObject().compartment() == compartment());
 }
 
 inline void
