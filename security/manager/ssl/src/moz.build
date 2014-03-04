@@ -98,6 +98,8 @@ LOCAL_INCLUDES += [
     '../../../insanity/include',
 ]
 
+if CONFIG['NSS_DISABLE_DBM']:
+    DEFINES['NSS_DISABLE_DBM'] = '1'
 
 DEFINES['NSS_ENABLE_ECC'] = 'True'
 for var in ('DLL_PREFIX', 'DLL_SUFFIX'):

@@ -32,7 +32,6 @@ CVS_CHECKOUT_BRANCH="cvs_checkout_${BRANCH}"
 export HOST=`hostname`
 export DOMSUF=red.iplanet.com
 
-export NSS_ENABLE_ECC=1
 export NSS_ECC_MORE_THAN_SUITE_B=1
 export IOPR_HOSTADDR_LIST="dochinups.red.iplanet.com"
 export NSS_AIA_PATH="/share/builds/mccrel3/security/aia_certs"

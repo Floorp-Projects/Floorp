@@ -1190,7 +1190,12 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
     // Tell the memory reporter manager that this ContentParent is going away.
     nsRefPtr<nsMemoryReporterManager> mgr =
         nsMemoryReporterManager::GetOrCreate();
-    if (mgr) {
+#ifdef MOZ_NUWA_PROCESS
+    bool isMemoryChild = !IsNuwaProcess();
+#else
+    bool isMemoryChild = true;
+#endif
+    if (mgr && isMemoryChild) {
         mgr->DecrementNumChildProcesses();
     }
 
@@ -1405,11 +1410,13 @@ ContentParent::ContentParent(mozIApplication* aApp,
 
     IToplevelProtocol::SetTransport(mSubprocess->GetChannel());
 
-    // Tell the memory reporter manager that this ContentParent exists.
-    nsRefPtr<nsMemoryReporterManager> mgr =
-        nsMemoryReporterManager::GetOrCreate();
-    if (mgr) {
-        mgr->IncrementNumChildProcesses();
+    if (!aIsNuwaProcess) {
+        // Tell the memory reporter manager that this ContentParent exists.
+        nsRefPtr<nsMemoryReporterManager> mgr =
+            nsMemoryReporterManager::GetOrCreate();
+        if (mgr) {
+            mgr->IncrementNumChildProcesses();
+        }
     }
 
     std::vector<std::string> extraArgs;
@@ -1470,6 +1477,13 @@ ContentParent::ContentParent(ContentParent* aTemplate,
                                                aPid,
                                                *fd,
                                                aOSPrivileges);
+
+    // Tell the memory reporter manager that this ContentParent exists.
+    nsRefPtr<nsMemoryReporterManager> mgr =
+        nsMemoryReporterManager::GetOrCreate();
+    if (mgr) {
+        mgr->IncrementNumChildProcesses();
+    }
 
     mSubprocess->LaunchAndWaitForProcessHandle();
 

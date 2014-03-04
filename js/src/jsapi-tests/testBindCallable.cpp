@@ -21,7 +21,7 @@ BEGIN_TEST(test_BindCallable)
 
   JS::RootedValue retval(cx);
   JS::RootedValue fun(cx, JS::ObjectValue(*newCallable));
-  bool called = JS_CallFunctionValue(cx, JS::NullPtr(), fun, JS::EmptyValueArray, &retval);
+  bool called = JS_CallFunctionValue(cx, JS::NullPtr(), fun, JS::HandleValueArray::empty(), &retval);
   CHECK(called);
 
   CHECK(JSVAL_IS_INT(retval));
