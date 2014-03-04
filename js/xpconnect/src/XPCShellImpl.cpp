@@ -1282,7 +1282,7 @@ XPCShellErrorReporter(JSContext *cx, const char *message, JSErrorReport *rep)
         gExitCode = EXITCODE_RUNTIME_ERROR;
 
     // Delegate to the system error reporter for heavy lifting.
-    xpc::SystemErrorReporterExternal(cx, message, rep);
+    xpc::SystemErrorReporter(cx, message, rep);
 }
 
 static bool
