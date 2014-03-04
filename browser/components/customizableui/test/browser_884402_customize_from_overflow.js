@@ -30,7 +30,7 @@ add_task(function() {
   let shownContextPromise = contextMenuShown(contextMenu);
   let homeButton = document.getElementById("home-button");
   ok(homeButton, "home-button was found");
-  ok(homeButton.classList.contains("overflowedItem"), "Home button is overflowing");
+  is(homeButton.getAttribute("overflowedItem"), "true", "Home button is overflowing");
   EventUtils.synthesizeMouse(homeButton, 2, 2, {type: "contextmenu", button: 2});
   yield shownContextPromise;
 
@@ -74,5 +74,5 @@ add_task(function() {
   ok(homeButtonPlacement, "Home button should still have a placement");
   is(homeButtonPlacement && homeButtonPlacement.area, "nav-bar", "Home button should be back in the navbar now");
 
-  ok(homeButton.classList.contains("overflowedItem"), "Home button should still be overflowed");
+  is(homeButton.getAttribute("overflowedItem"), "true", "Home button should still be overflowed");
 });
