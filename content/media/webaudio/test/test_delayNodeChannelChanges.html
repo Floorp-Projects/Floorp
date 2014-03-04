@@ -1,0 +1,97 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>test DelayNode channel count changes</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="webaudio.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+const bufferSize = 4096;
+
+var ctx;
+var testDelay;
+var stereoDelay;
+var invertor;
+
+function compareOutputs(callback) {
+  var processor = ctx.createScriptProcessor(bufferSize, 2, 0);
+  testDelay.connect(processor);
+  invertor.connect(processor);
+  processor.onaudioprocess =
+    function(e) {
+      compareBuffers(e.inputBuffer,
+                     ctx.createBuffer(2, bufferSize, ctx.sampleRate));
+      e.target.onaudioprocess = null;
+      callback();
+    }
+}
+
+function startTest() {
+  // And a two-channel signal
+  var merger = ctx.createChannelMerger();
+  merger.connect(testDelay);
+  merger.connect(stereoDelay);
+  var oscL = ctx.createOscillator();
+  oscL.connect(merger, 0, 0);
+  oscL.start(0);
+  var oscR = ctx.createOscillator();
+  oscR.type = "sawtooth";
+  oscR.connect(merger, 0, 1);
+  oscR.start(0);
+
+  compareOutputs(
+    function () {
+      // Disconnect the two-channel signal and test again
+      merger.disconnect();
+      compareOutputs(SimpleTest.finish);
+    });
+}
+
+function prepareTest() {
+  ctx = new AudioContext();
+
+  // The output of a test delay node with mono and stereo input will be
+  // compared with that of separate mono and stereo delay nodes.
+  const delayTime = 0.3 * bufferSize / ctx.sampleRate;
+  testDelay = ctx.createDelay(delayTime);
+  testDelay.delayTime.value = delayTime;
+  monoDelay = ctx.createDelay(delayTime);
+  monoDelay.delayTime.value = delayTime;
+  stereoDelay = ctx.createDelay(delayTime);
+  stereoDelay.delayTime.value = delayTime;
+
+  // Create a one-channel signal and connect to the delay nodes
+  var monoOsc = ctx.createOscillator();
+  monoOsc.frequency.value = 110;
+  monoOsc.connect(testDelay);
+  monoOsc.connect(monoDelay);
+  monoOsc.start(0);
+
+  // Invert the expected so that mixing with the test will find the difference.
+  invertor = ctx.createGain();
+  invertor.gain.value = -1.0;
+  monoDelay.connect(invertor);
+  stereoDelay.connect(invertor);
+
+  // Start the test after the delay nodes have begun processing.
+  var processor = ctx.createScriptProcessor(bufferSize, 1, 0);
+  processor.connect(ctx.destination);
+
+  processor.onaudioprocess =
+    function(e) {
+      e.target.onaudioprocess = null;
+      processor.disconnect();
+      startTest();
+    };
+}
+prepareTest();
+</script>
+</pre>
+</body>
+</html>
