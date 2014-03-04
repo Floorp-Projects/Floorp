@@ -38,8 +38,10 @@ XPCJSContextStack::Pop()
     JSContext *cx = mStack[idx].cx;
 
     mStack.RemoveElementAt(idx);
-    if (idx == 0)
+    if (idx == 0) {
+        js::Debug_SetActiveJSContext(mRuntime->Runtime(), nullptr);
         return cx;
+    }
 
     --idx; // Advance to new top of the stack
 
@@ -50,12 +52,14 @@ XPCJSContextStack::Pop()
         JS_RestoreFrameChain(e.cx);
         e.savedFrameChain = false;
     }
+    js::Debug_SetActiveJSContext(mRuntime->Runtime(), e.cx);
     return cx;
 }
 
 bool
 XPCJSContextStack::Push(JSContext *cx)
 {
+    js::Debug_SetActiveJSContext(mRuntime->Runtime(), cx);
     if (mStack.Length() == 0) {
         mStack.AppendElement(cx);
         return true;
