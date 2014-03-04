@@ -427,9 +427,9 @@ AudioNodeStream::ProduceOutput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags)
     }
     bool finished = false;
     if (maxInputs <= 1 && mEngine->OutputCount() <= 1) {
-      mEngine->ProduceAudioBlock(this, inputChunks[0], &mLastChunks[0], &finished);
+      mEngine->ProcessBlock(this, inputChunks[0], &mLastChunks[0], &finished);
     } else {
-      mEngine->ProduceAudioBlocksOnPorts(this, inputChunks, mLastChunks, &finished);
+      mEngine->ProcessBlocksOnPorts(this, inputChunks, mLastChunks, &finished);
     }
     for (uint16_t i = 0; i < outputCount; ++i) {
       NS_ASSERTION(mLastChunks[i].GetDuration() == WEBAUDIO_BLOCK_SIZE,
