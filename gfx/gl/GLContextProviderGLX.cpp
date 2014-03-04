@@ -885,13 +885,13 @@ GLContextGLX::SetupLookupFunction()
 }
 
 bool
-GLContextGLX::IsDoubleBuffered()
+GLContextGLX::IsDoubleBuffered() const
 {
     return mDoubleBuffered;
 }
 
 bool
-GLContextGLX::SupportsRobustness()
+GLContextGLX::SupportsRobustness() const
 {
     return mGLX->HasRobustness();
 }
