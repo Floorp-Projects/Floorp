@@ -8,3 +8,18 @@ XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
 
 MOCHITEST_MANIFESTS += ['mochitest.ini']
 
+if CONFIG['MOZ_B2G_RIL']:
+    MOCHITEST_MANIFESTS += ['mochitest-ril.ini']
+
+if CONFIG['MOZ_B2G_FM']:
+    MOCHITEST_MANIFESTS += ['mochitest-fm.ini']
+
+if CONFIG['MOZ_B2G_BT']:
+    MOCHITEST_MANIFESTS += ['mochitest-bt.ini']
+
+if CONFIG['MOZ_WEBSMS_BACKEND']:
+    MOCHITEST_MANIFESTS += ['mochitest-websms.ini']
+
+if CONFIG['MOZ_TIME_MANAGER']:
+    MOCHITEST_MANIFESTS += ['mochitest-time.ini']
+
