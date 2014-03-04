@@ -477,9 +477,6 @@ WebGLContext::CopyTexSubImage2D_base(GLenum target,
 
         gl->fCopyTexSubImage2D(target, level, actual_xoffset, actual_yoffset, actual_x, actual_y, actual_width, actual_height);
     }
-
-    if (!sub)
-        ReattachTextureToAnyFramebufferToWorkAroundBugs(tex, level);
 }
 
 void
@@ -3375,8 +3372,6 @@ WebGLContext::CompressedTexImage2D(GLenum target, GLint level, GLenum internalfo
     MOZ_ASSERT(tex);
     tex->SetImageInfo(target, level, width, height, internalformat, LOCAL_GL_UNSIGNED_BYTE,
                       WebGLImageDataStatus::InitializedImageData);
-
-    ReattachTextureToAnyFramebufferToWorkAroundBugs(tex, level);
 }
 
 void
@@ -3784,8 +3779,6 @@ WebGLContext::TexImage2D_base(GLenum target, GLint level, GLenum internalformat,
     MOZ_ASSERT(imageInfoStatusIfSuccess != WebGLImageDataStatus::NoImageData);
 
     tex->SetImageInfo(target, level, width, height, internalformat, type, imageInfoStatusIfSuccess);
-
-    ReattachTextureToAnyFramebufferToWorkAroundBugs(tex, level);
 }
 
 void
@@ -4218,58 +4211,6 @@ InternalFormatForFormatAndType(GLenum format, GLenum type, bool isGLES2)
 
     NS_ASSERTION(false, "Coding mistake -- bad format/type passed?");
     return 0;
-}
-
-void
-WebGLContext::ReattachTextureToAnyFramebufferToWorkAroundBugs(WebGLTexture *tex,
-                                                              GLint level)
-{
-    MOZ_ASSERT(tex);
-
-    if (!gl->WorkAroundDriverBugs())
-        return;
-
-    if (!mIsMesa)
-        return;
-
-    MakeContextCurrent();
-    WebGLFramebuffer* curFB = mBoundFramebuffer;
-
-    for(WebGLFramebuffer *framebuffer = mFramebuffers.getFirst();
-        framebuffer;
-        framebuffer = framebuffer->getNext())
-    {
-        size_t colorAttachmentCount = framebuffer->mColorAttachments.Length();
-        for (size_t i = 0; i < colorAttachmentCount; i++)
-        {
-            if (framebuffer->ColorAttachment(i).Texture() == tex) {
-                BindFramebuffer(LOCAL_GL_FRAMEBUFFER, framebuffer);
-                framebuffer->FramebufferTexture2D(
-                  LOCAL_GL_FRAMEBUFFER, LOCAL_GL_COLOR_ATTACHMENT0 + i,
-                  tex->Target(), tex, level);
-            }
-        }
-        if (framebuffer->DepthAttachment().Texture() == tex) {
-            BindFramebuffer(LOCAL_GL_FRAMEBUFFER, framebuffer);
-            framebuffer->FramebufferTexture2D(
-              LOCAL_GL_FRAMEBUFFER, LOCAL_GL_DEPTH_ATTACHMENT,
-              tex->Target(), tex, level);
-        }
-        if (framebuffer->StencilAttachment().Texture() == tex) {
-            BindFramebuffer(LOCAL_GL_FRAMEBUFFER, framebuffer);
-            framebuffer->FramebufferTexture2D(
-              LOCAL_GL_FRAMEBUFFER, LOCAL_GL_STENCIL_ATTACHMENT,
-              tex->Target(), tex, level);
-        }
-        if (framebuffer->DepthStencilAttachment().Texture() == tex) {
-            BindFramebuffer(LOCAL_GL_FRAMEBUFFER, framebuffer);
-            framebuffer->FramebufferTexture2D(
-              LOCAL_GL_FRAMEBUFFER, LOCAL_GL_DEPTH_STENCIL_ATTACHMENT,
-              tex->Target(), tex, level);
-        }
-    }
-
-    BindFramebuffer(LOCAL_GL_FRAMEBUFFER, curFB);
 }
 
 void
