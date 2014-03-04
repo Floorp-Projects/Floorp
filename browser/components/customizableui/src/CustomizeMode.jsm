@@ -362,10 +362,34 @@ CustomizeMode.prototype = {
 
       yield this._doTransition(false);
 
+      let browser = document.getElementById("browser");
+      if (this.browser.selectedBrowser.currentURI.spec == kAboutURI) {
+        let custBrowser = this.browser.selectedBrowser;
+        if (custBrowser.canGoBack) {
+          // If there's history to this tab, just go back.
+          // Note that this throws an exception if the previous document has a
+          // problematic URL (e.g. about:idontexist)
+          try {
+            custBrowser.goBack();
+          } catch (ex) {
+            ERROR(ex);
+          }
+        } else {
+          // If we can't go back, we're removing the about:customization tab.
+          // We only do this if we're the top window for this window (so not
+          // a dialog window, for example).
+          if (window.getTopWin(true) == window) {
+            let customizationTab = this.browser.selectedTab;
+            if (this.browser.browsers.length == 1) {
+              window.BrowserOpenTab();
+            }
+            this.browser.removeTab(customizationTab);
+          }
+        }
+      }
+      browser.parentNode.selectedPanel = browser;
       let customizer = document.getElementById("customization-container");
       customizer.hidden = true;
-      let browser = document.getElementById("browser");
-      browser.parentNode.selectedPanel = browser;
 
       window.gNavToolbox.removeEventListener("toolbarvisibilitychange", this);
 
@@ -418,31 +442,6 @@ CustomizeMode.prototype = {
       let mainView = window.PanelUI.mainView;
       if (this._mainViewContext) {
         mainView.setAttribute("context", this._mainViewContext);
-      }
-
-      if (this.browser.selectedBrowser.currentURI.spec == kAboutURI) {
-        let custBrowser = this.browser.selectedBrowser;
-        if (custBrowser.canGoBack) {
-          // If there's history to this tab, just go back.
-          // Note that this throws an exception if the previous document has a
-          // problematic URL (e.g. about:idontexist)
-          try {
-            custBrowser.goBack();
-          } catch (ex) {
-            ERROR(ex);
-          }
-        } else {
-          // If we can't go back, we're removing the about:customization tab.
-          // We only do this if we're the top window for this window (so not
-          // a dialog window, for example).
-          if (window.getTopWin(true) == window) {
-            let customizationTab = this.browser.selectedTab;
-            if (this.browser.browsers.length == 1) {
-              window.BrowserOpenTab();
-            }
-            this.browser.removeTab(customizationTab);
-          }
-        }
       }
 
       if (this.document.documentElement._lightweightTheme)
