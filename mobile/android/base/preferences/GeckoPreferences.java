@@ -75,26 +75,26 @@ public class GeckoPreferences
     private int mPrefsRequestId = 0;
 
     // These match keys in resources/xml*/preferences*.xml
-    private static String PREFS_SEARCH_RESTORE_DEFAULTS = NON_PREF_PREFIX + "search.restore_defaults";
+    private static final String PREFS_SEARCH_RESTORE_DEFAULTS = NON_PREF_PREFIX + "search.restore_defaults";
 
-    private static String PREFS_ANNOUNCEMENTS_ENABLED = NON_PREF_PREFIX + "privacy.announcements.enabled";
-    private static String PREFS_DATA_REPORTING_PREFERENCES = NON_PREF_PREFIX + "datareporting.preferences";
-    private static String PREFS_TELEMETRY_ENABLED = "datareporting.telemetry.enabled";
-    private static String PREFS_CRASHREPORTER_ENABLED = "datareporting.crashreporter.submitEnabled";
-    private static String PREFS_MENU_CHAR_ENCODING = "browser.menu.showCharacterEncoding";
-    private static String PREFS_MP_ENABLED = "privacy.masterpassword.enabled";
-    private static String PREFS_UPDATER_AUTODOWNLOAD = "app.update.autodownload";
-    private static String PREFS_GEO_REPORTING = "app.geo.reportdata";
-    private static String PREFS_HEALTHREPORT_LINK = NON_PREF_PREFIX + "healthreport.link";
-    private static String PREFS_DEVTOOLS_REMOTE_ENABLED = "devtools.debugger.remote-enabled";
-    private static String PREFS_DISPLAY_REFLOW_ON_ZOOM = "browser.zoom.reflowOnZoom";
-    private static String PREFS_SYNC = NON_PREF_PREFIX + "sync";
+    private static final String PREFS_ANNOUNCEMENTS_ENABLED = NON_PREF_PREFIX + "privacy.announcements.enabled";
+    private static final String PREFS_DATA_REPORTING_PREFERENCES = NON_PREF_PREFIX + "datareporting.preferences";
+    private static final String PREFS_TELEMETRY_ENABLED = "datareporting.telemetry.enabled";
+    private static final String PREFS_CRASHREPORTER_ENABLED = "datareporting.crashreporter.submitEnabled";
+    private static final String PREFS_MENU_CHAR_ENCODING = "browser.menu.showCharacterEncoding";
+    private static final String PREFS_MP_ENABLED = "privacy.masterpassword.enabled";
+    private static final String PREFS_UPDATER_AUTODOWNLOAD = "app.update.autodownload";
+    private static final String PREFS_GEO_REPORTING = "app.geo.reportdata";
+    private static final String PREFS_HEALTHREPORT_LINK = NON_PREF_PREFIX + "healthreport.link";
+    private static final String PREFS_DEVTOOLS_REMOTE_ENABLED = "devtools.debugger.remote-enabled";
+    private static final String PREFS_DISPLAY_REFLOW_ON_ZOOM = "browser.zoom.reflowOnZoom";
+    private static final String PREFS_SYNC = NON_PREF_PREFIX + "sync";
 
-    public static String PREFS_RESTORE_SESSION = NON_PREF_PREFIX + "restoreSession3";
+    public static final String PREFS_RESTORE_SESSION = NON_PREF_PREFIX + "restoreSession3";
 
     // These values are chosen to be distinct from other Activity constants.
-    private static int REQUEST_CODE_PREF_SCREEN = 5;
-    private static int RESULT_CODE_EXIT_SETTINGS = 6;
+    private static final int REQUEST_CODE_PREF_SCREEN = 5;
+    private static final int RESULT_CODE_EXIT_SETTINGS = 6;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
