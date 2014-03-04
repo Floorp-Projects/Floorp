@@ -37,6 +37,9 @@
 #endif
 #endif
 
+#ifdef LOG_TAG
+#undef LOG_TAG
+#endif
 #define LOG_TAG "HWComposer"
 
 /*
