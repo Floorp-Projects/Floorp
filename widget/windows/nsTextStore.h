@@ -501,7 +501,7 @@ protected:
     // For compositionupdate and compositionend
     nsString mData;
     // For compositionupdate
-    nsTArray<mozilla::TextRange> mRanges;
+    nsRefPtr<mozilla::TextRangeArray> mRanges;
     // For selectionset
     bool mSelectionReversed;
   };
@@ -521,9 +521,7 @@ protected:
     }
     PendingAction* newAction = mPendingActions.AppendElement();
     newAction->mType = PendingAction::COMPOSITION_UPDATE;
-    // We think that 4 ranges (3 clauses and caret position) are enough for
-    // most cases.
-    newAction->mRanges.SetCapacity(4);
+    newAction->mRanges = new mozilla::TextRangeArray();
     return newAction;
   }
 
