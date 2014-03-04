@@ -249,11 +249,11 @@
               target = edge + center;
             }
             this._mainViewContainer.style.transform = "translateX(" + target + "px)";
-            aAnchor.classList.add("panel-multiview-anchor");
+            aAnchor.setAttribute("panel-multiview-anchor", true);
           } else {
             this._mainViewContainer.style.transform = "";
             if (this.anchorElement)
-              this.anchorElement.classList.remove("panel-multiview-anchor");
+              this.anchorElement.removeAttribute("panel-multiview-anchor");
           }
           this.anchorElement = aAnchor;
         ]]></body>

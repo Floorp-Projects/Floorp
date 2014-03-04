@@ -2980,7 +2980,7 @@ const BrowserSearch = {
       return;
     }
     if (placement && placement.area == CustomizableUI.AREA_NAVBAR && searchBar &&
-        searchBar.parentNode.classList.contains("overflowedItem")) {
+        searchBar.parentNode.getAttribute("overflowedItem") == "true") {
       let navBar = document.getElementById(CustomizableUI.AREA_NAVBAR);
       navBar.overflowable.show().then(() => {
         focusSearchBar();
