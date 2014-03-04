@@ -141,7 +141,7 @@ let developerHUD = {
       delete target.metrics;
       target.display();
 
-      this._target.delete(frame);
+      this._targets.delete(frame);
     }
   },
 
