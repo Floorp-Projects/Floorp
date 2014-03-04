@@ -1412,7 +1412,8 @@ XPCJSRuntime::OutOfMemoryCallback(JSContext *cx)
 
     // If this fails, it fails silently.
     dumper->DumpMemoryInfoToTempDir(NS_LITERAL_STRING("due-to-JS-OOM"),
-                                    /* minimizeMemoryUsage = */ false);
+                                    /* minimizeMemoryUsage = */ false,
+                                    /* dumpChildProcesses = */ false);
 }
 
 size_t
