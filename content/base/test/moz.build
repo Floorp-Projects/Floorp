@@ -25,6 +25,13 @@ MOCHITEST_MANIFESTS += [
     'chrome/mochitest.ini',
     'mochitest.ini',
 ]
+# OOP tests don't work on Windows (bug 763081) or native-fennec
+# (see Bug 774939). App permission checks are also disabled on
+# anything but B2G (Bug 900707).
+if CONFIG['MOZ_CHILD_PERMISSIONS']:
+    MOCHITEST_MANIFESTS += [
+        'mochitest-child-permissions.ini',
+    ]
 
 MOCHITEST_CHROME_MANIFESTS += [
     'chrome.ini',
