@@ -420,11 +420,8 @@ struct ParamTraits<mozilla::WidgetTextEvent>
     WriteParam(aMsg, aParam.mSeqno);
     WriteParam(aMsg, aParam.theText);
     WriteParam(aMsg, aParam.isChar);
-    WriteParam(aMsg, aParam.rangeCount);
     bool hasRanges = !!aParam.mRanges;
     WriteParam(aMsg, hasRanges);
-    for (uint32_t index = 0; index < aParam.rangeCount; index++)
-      WriteParam(aMsg, aParam.rangeArray[index]);
     if (hasRanges) {
       WriteParam(aMsg, *aParam.mRanges.get());
     }
@@ -438,25 +435,8 @@ struct ParamTraits<mozilla::WidgetTextEvent>
         !ReadParam(aMsg, aIter, &aResult->mSeqno) ||
         !ReadParam(aMsg, aIter, &aResult->theText) ||
         !ReadParam(aMsg, aIter, &aResult->isChar) ||
-        !ReadParam(aMsg, aIter, &aResult->rangeCount) ||
         !ReadParam(aMsg, aIter, &hasRanges)) {
       return false;
-    }
-
-    if (!aResult->rangeCount) {
-      aResult->rangeArray = nullptr;
-    } else {
-      aResult->rangeArray = new mozilla::TextRange[aResult->rangeCount];
-      if (!aResult->rangeArray) {
-        return false;
-      }
-
-      for (uint32_t index = 0; index < aResult->rangeCount; index++) {
-        if (!ReadParam(aMsg, aIter, &aResult->rangeArray[index])) {
-          Free(*aResult);
-          return false;
-        }
-      }
     }
 
     if (!hasRanges) {
@@ -471,12 +451,6 @@ struct ParamTraits<mozilla::WidgetTextEvent>
       }
     }
     return true;
-  }
-
-  static void Free(const paramType& aResult)
-  {
-    if (aResult.rangeArray)
-      delete [] aResult.rangeArray;
   }
 };
 
