@@ -217,7 +217,7 @@ MessageChannel::MessageChannel(MessageListener *aListener)
                                                  &MessageChannel::OnMaybeDequeueOne));
 
 #ifdef OS_WIN
-    mEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr);
+    mEvent = CreateEventW(nullptr, TRUE, FALSE, nullptr);
     NS_ASSERTION(mEvent, "CreateEvent failed! Nothing is going to work!");
 #endif
 }
