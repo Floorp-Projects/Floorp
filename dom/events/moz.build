@@ -87,7 +87,6 @@ UNIFIED_SOURCES += [
     'nsContentEventHandler.cpp',
     'nsDOMEvent.cpp',
     'nsDOMEventTargetHelper.cpp',
-    'nsDOMTextEvent.cpp',
     'nsEventDispatcher.cpp',
     'nsEventListenerManager.cpp',
     'nsEventListenerService.cpp',
