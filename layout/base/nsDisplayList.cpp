@@ -1271,17 +1271,12 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
 
   nsRect viewport(aBuilder->ToReferenceFrame(aForFrame), aForFrame->GetSize());
 
-  // If we are ignoring the root scroll frame we make the RecordFrameMetrics
-  // call for it. Otherwise nsGfxScrollFrame will create scroll layer(s) that
-  // will do that.
-  if (aBuilder->GetIgnoreScrollFrame() == rootScrollFrame) {
-    RecordFrameMetrics(aForFrame, rootScrollFrame,
-                       aBuilder->FindReferenceFrameFor(aForFrame),
-                       root, mVisibleRect, viewport,
-                       (usingDisplayport ? &displayport : nullptr),
-                       (usingCriticalDisplayport ? &criticalDisplayport : nullptr),
-                       id, isRoot, containerParameters);
-  }
+  RecordFrameMetrics(aForFrame, rootScrollFrame,
+                     aBuilder->FindReferenceFrameFor(aForFrame),
+                     root, mVisibleRect, viewport,
+                     (usingDisplayport ? &displayport : nullptr),
+                     (usingCriticalDisplayport ? &criticalDisplayport : nullptr),
+                     id, isRoot, containerParameters);
   if (usingDisplayport &&
       !(root->GetContentFlags() & Layer::CONTENT_OPAQUE)) {
     // See bug 693938, attachment 567017
