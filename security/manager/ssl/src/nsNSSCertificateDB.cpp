@@ -58,6 +58,31 @@ using mozilla::psm::SharedSSLState;
 extern PRLogModuleInfo* gPIPNSSLog;
 #endif
 
+static nsresult
+attemptToLogInWithDefaultPassword()
+{
+#ifdef NSS_DISABLE_DBM
+  // The SQL NSS DB requires the user to be authenticated to set certificate
+  // trust settings, even if the user's password is empty. To maintain
+  // compatibility with the DBM-based database, try to log in with the
+  // default empty password. This will allow, at least, tests that need to
+  // change certificate trust to pass on all platforms. TODO(bug 978120): Do
+  // proper testing and/or implement a better solution so that we are confident
+  // that this does the correct thing outside of xpcshell tests too.
+  ScopedPK11SlotInfo slot(PK11_GetInternalKeySlot());
+  if (!slot) {
+    return MapSECStatus(SECFailure);
+  }
+  if (PK11_NeedUserInit(slot)) {
+    // Ignore the return value. Presumably PK11_InitPin will fail if the user
+    // has a non-default password.
+    (void) PK11_InitPin(slot, nullptr, nullptr);
+  }
+#endif
+
+  return NS_OK;
+}
+
 NS_IMPL_ISUPPORTS2(nsNSSCertificateDB, nsIX509CertDB, nsIX509CertDB2)
 
 nsNSSCertificateDB::nsNSSCertificateDB()
@@ -978,6 +1003,11 @@ nsNSSCertificateDB::SetCertTrust(nsIX509Cert *cert,
   }
   insanity::pkix::ScopedCERTCertificate nsscert(pipCert->GetCert());
 
+  rv = attemptToLogInWithDefaultPassword();
+  if (NS_WARN_IF(rv != NS_OK)) {
+    return rv;
+  }
+
   SECStatus srv;
   if (type == nsIX509Cert::CA_CERT) {
     // always start with untrusted and move up
@@ -1614,6 +1644,11 @@ NS_IMETHODIMP nsNSSCertificateDB::AddCertFromBase64(const char *aBase64, const c
 
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Created nick \"%s\"\n", nickname.get()));
 
+  rv = attemptToLogInWithDefaultPassword();
+  if (NS_WARN_IF(rv != NS_OK)) {
+    return rv;
+  }
+
   SECStatus srv = __CERT_AddTempCertToPerm(tmpCert.get(),
                                            const_cast<char*>(nickname.get()),
                                            trust.GetTrust());
@@ -1643,6 +1678,12 @@ nsNSSCertificateDB::SetCertTrustFromString(nsIX509Cert3* cert,
     return MapSECStatus(SECFailure);
   }
   insanity::pkix::ScopedCERTCertificate nssCert(cert->GetCert());
+
+  nsresult rv = attemptToLogInWithDefaultPassword();
+  if (NS_WARN_IF(rv != NS_OK)) {
+    return rv;
+  }
+
   srv = CERT_ChangeCertTrust(CERT_GetDefaultCertDB(), nssCert.get(), &trust);
   return MapSECStatus(srv);
 }

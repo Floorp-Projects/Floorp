@@ -23,6 +23,7 @@
 #include "mozilla/dom/quota/Utilities.h"
 #include "mozilla/dom/TabContext.h"
 #include "mozilla/Services.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/storage.h"
 #include "nsContentUtils.h"
 #include "nsEventDispatcher.h"
@@ -208,7 +209,7 @@ IndexedDatabaseManager::GetOrCreate()
   if (!gDBManager) {
     sIsMainProcess = XRE_GetProcessType() == GeckoProcessType_Default;
 
-    if (sIsMainProcess) {
+    if (sIsMainProcess && Preferences::GetBool("disk_space_watcher.enabled", false)) {
       // See if we're starting up in low disk space conditions.
       nsCOMPtr<nsIDiskSpaceWatcher> watcher =
         do_GetService(DISKSPACEWATCHER_CONTRACTID);

@@ -1246,7 +1246,7 @@ static const CK_ATTRIBUTE_TYPE dhPubKeyAttrs[] = {
 };
 static const CK_ULONG dhPubKeyAttrsCount = 
 			sizeof(dhPubKeyAttrs)/sizeof(dhPubKeyAttrs[0]);
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
 static const CK_ATTRIBUTE_TYPE ecPubKeyAttrs[] = {
     CKA_EC_PARAMS, CKA_EC_POINT
 };
@@ -1279,7 +1279,7 @@ static const CK_ATTRIBUTE_TYPE dhPrivKeyAttrs[] = {
 };
 static const CK_ULONG dhPrivKeyAttrsCount = 
 			sizeof(dhPrivKeyAttrs)/sizeof(dhPrivKeyAttrs[0]);
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
 static const CK_ATTRIBUTE_TYPE ecPrivKeyAttrs[] = {
     CKA_EC_PARAMS, CKA_VALUE
 };
@@ -1390,7 +1390,7 @@ stfk_CopyTokenPrivateKey(SFTKObject *destObject,SFTKTokenObject *src_to)
 	crv = stfk_CopyTokenAttributes(destObject, src_to, dhPrivKeyAttrs,
 							dhPrivKeyAttrsCount);
 	break;
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
     case CKK_EC:
 	crv = stfk_CopyTokenAttributes(destObject, src_to, ecPrivKeyAttrs,
 							ecPrivKeyAttrsCount);
@@ -1452,7 +1452,7 @@ stfk_CopyTokenPublicKey(SFTKObject *destObject,SFTKTokenObject *src_to)
 	crv = stfk_CopyTokenAttributes(destObject, src_to, dhPubKeyAttrs,
 							dhPubKeyAttrsCount);
 	break;
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
     case CKK_EC:
 	crv = stfk_CopyTokenAttributes(destObject, src_to, ecPubKeyAttrs,
 							ecPubKeyAttrsCount);
