@@ -187,6 +187,8 @@ NS_IMETHODIMP nsVolume::GetIsFake(bool *aIsFake)
 
 NS_IMETHODIMP nsVolume::Format()
 {
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+
   XRE_GetIOMessageLoop()->PostTask(
       FROM_HERE,
       NewRunnableFunction(FormatVolumeIOThread, NameStr()));
@@ -197,12 +199,62 @@ NS_IMETHODIMP nsVolume::Format()
 /* static */
 void nsVolume::FormatVolumeIOThread(const nsCString& aVolume)
 {
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+
   MOZ_ASSERT(MessageLoop::current() == XRE_GetIOMessageLoop());
   if (VolumeManager::State() != VolumeManager::VOLUMES_READY) {
     return;
   }
 
   AutoMounterFormatVolume(aVolume);
+}
+
+NS_IMETHODIMP nsVolume::Mount()
+{
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+
+  XRE_GetIOMessageLoop()->PostTask(
+      FROM_HERE,
+      NewRunnableFunction(MountVolumeIOThread, NameStr()));
+
+  return NS_OK;
+}
+
+/* static */
+void nsVolume::MountVolumeIOThread(const nsCString& aVolume)
+{
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+
+  MOZ_ASSERT(MessageLoop::current() == XRE_GetIOMessageLoop());
+  if (VolumeManager::State() != VolumeManager::VOLUMES_READY) {
+    return;
+  }
+
+  AutoMounterMountVolume(aVolume);
+}
+
+NS_IMETHODIMP nsVolume::Unmount()
+{
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+
+  XRE_GetIOMessageLoop()->PostTask(
+      FROM_HERE,
+      NewRunnableFunction(UnmountVolumeIOThread, NameStr()));
+
+  return NS_OK;
+}
+
+/* static */
+void nsVolume::UnmountVolumeIOThread(const nsCString& aVolume)
+{
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+
+  MOZ_ASSERT(MessageLoop::current() == XRE_GetIOMessageLoop());
+  if (VolumeManager::State() != VolumeManager::VOLUMES_READY) {
+    return;
+  }
+
+  AutoMounterUnmountVolume(aVolume);
 }
 
 void
