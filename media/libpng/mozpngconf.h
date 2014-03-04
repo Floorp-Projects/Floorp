@@ -66,19 +66,25 @@
 #define PNG_READ_SCALE_16_TO_8_SUPPORTED
 #define PNG_READ_TRANSFORMS_SUPPORTED
 
-/* necessary for boot animation code */
+/* necessary for freetype color bitmap support (Android & B2G)
+   and boot animation code (Gonk) */
+#if defined(ANDROID) || defined(FT_CONFIG_OPTION_USE_PNG)
+#define PNG_READ_PACK_SUPPORTED
+#define PNG_READ_FILLER_SUPPORTED
+#define PNG_READ_STRIP_16_TO_8_SUPPORTED
+#define PNG_READ_USER_TRANSFORM_SUPPORTED
+#define PNG_SEQUENTIAL_READ_SUPPORTED
+#endif
+
+/* necessary for boot animation code (Gonk) */
 #ifdef MOZ_WIDGET_GONK
 #define PNG_UNKNOWN_CHUNKS_SUPPORTED
 #define PNG_SET_UNKNOWN_CHUNKS_SUPPORTED
 #define PNG_HANDLE_AS_UNKNOWN_SUPPORTED
 #define PNG_EASY_ACCESS_SUPPORTED
 #define PNG_READ_BGR_SUPPORTED
-#define PNG_READ_FILLER_SUPPORTED
 #define PNG_READ_GRAY_TO_RGB_SUPPORTED
-#define PNG_READ_STRIP_16_TO_8_SUPPORTED
 #define PNG_READ_STRIP_ALPHA_SUPPORTED
-#define PNG_READ_USER_TRANSFORM_SUPPORTED
-#define PNG_SEQUENTIAL_READ_SUPPORTED
 #endif
 
 #define PNG_WRITE_SUPPORTED
@@ -109,11 +115,8 @@
 #define PNG_SETJMP_SUPPORTED
 #define PNG_STDIO_SUPPORTED
 #define PNG_TEXT_SUPPORTED
-
-#ifdef PR_LOGGING
 #define PNG_ERROR_TEXT_SUPPORTED
 #define PNG_WARNINGS_SUPPORTED
-#endif
 
 /* Mangle names of exported libpng functions so different libpng versions
    can coexist. It is recommended that if you do this, you give your
@@ -644,9 +647,11 @@
 #define png_realloc_array                         MOZ_PNG_realloc_array
 #define png_zstream_error                         MOZ_PNG_zstream_error
 
+/* needed by FreeType's PNG support */
+#define png_error                       MOZ_PNG_error
+
 #if defined(PR_LOGGING) && defined(PNG_WARNINGS_SUPPORTED)
 #define png_warning                     MOZ_PNG_warning
-#define png_error                       MOZ_PNG_error
 #define png_chunk_error                 MOZ_PNG_chunk_err
 #define png_fixed_error                 MOZ_PNG_fixed_err
 #define png_formatted_warning           MOZ_PNG_formatted_warning
@@ -654,6 +659,10 @@
 #define png_warning_parameter           MOZ_PNG_warn_param
 #define png_warning_parameter_signed    MOZ_PNG_warn_param_signed
 #define png_warning_parameter_unsigned  MOZ_PNG_warn_param_unsigned
+#endif
+
+#if defined(PNG_READ_PACK_SUPPORTED) || defined(PNG_WRITE_PACK_SUPPORTED)
+#define png_set_packing  MOZ_PNG_set_packing
 #endif
 
 #endif /* MOZPNGCONF_H */
