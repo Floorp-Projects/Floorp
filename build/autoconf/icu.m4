@@ -119,11 +119,8 @@ AC_SUBST(ICU_LIB_NAMES)
 AC_SUBST(MOZ_ICU_LIBS)
 
 if test -n "$ENABLE_INTL_API" -a -z "$MOZ_NATIVE_ICU"; then
-    dnl We build ICU as a static library for non-shared js builds and as a shared library for shared js builds.
     if test -z "$MOZ_SHARED_ICU"; then
         AC_DEFINE(U_STATIC_IMPLEMENTATION)
-    else
-        AC_DEFINE(U_COMBINED_IMPLEMENTATION)
     fi
     dnl Source files that use ICU should have control over which parts of the ICU
     dnl namespace they want to use.
@@ -140,6 +137,12 @@ if test -z "$BUILDING_JS" -o -n "$JS_STANDALONE"; then
     if test -n "$ENABLE_INTL_API" -a -z "$MOZ_NATIVE_ICU"; then
         # Set ICU compile options
         ICU_CPPFLAGS=""
+        dnl We build ICU as a static library for non-shared js builds and as a shared library for shared js builds.
+        if test -z "$MOZ_SHARED_ICU"; then
+            ICU_CPPFLAGS="$ICU_CPPFLAGS -DU_STATIC_IMPLEMENTATION"
+        else
+            ICU_CPPFLAGS="$ICU_CPPFLAGS -DU_COMBINED_IMPLEMENTATION"
+        fi
         # don't use icu namespace automatically in client code
         ICU_CPPFLAGS="$ICU_CPPFLAGS -DU_USING_ICU_NAMESPACE=0"
         # don't include obsolete header files
