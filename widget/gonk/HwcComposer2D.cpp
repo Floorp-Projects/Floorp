@@ -67,9 +67,9 @@ namespace mozilla {
 static StaticRefPtr<HwcComposer2D> sInstance;
 
 HwcComposer2D::HwcComposer2D()
-    : mMaxLayerCount(0)
+    : mHwc(nullptr)
     , mList(nullptr)
-    , mHwc(nullptr)
+    , mMaxLayerCount(0)
     , mColorFill(false)
     , mRBSwapSupport(false)
 #if ANDROID_VERSION >= 17
