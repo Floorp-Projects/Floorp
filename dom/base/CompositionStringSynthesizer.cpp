@@ -138,8 +138,9 @@ CompositionStringSynthesizer::DispatchEvent(bool* aDefaultPrevented)
   WidgetTextEvent textEvent(true, NS_TEXT_TEXT, widget);
   textEvent.time = PR_IntervalNow();
   textEvent.theText = mString;
-  textEvent.rangeCount = mClauses->Length();
-  textEvent.rangeArray = mClauses->Elements();
+  if (!mClauses->IsEmpty()) {
+    textEvent.mRanges = mClauses;
+  }
 
   // XXX How should we set false for this on b2g?
   textEvent.mFlags.mIsSynthesizedForTests = true;
