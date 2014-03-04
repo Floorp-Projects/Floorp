@@ -32,7 +32,7 @@ function createDummyXULButton(id, label) {
 
 let gAddedToolbars = new Set();
 
-function createToolbarWithPlacements(id, placements) {
+function createToolbarWithPlacements(id, placements = []) {
   gAddedToolbars.add(id);
   let tb = document.createElementNS(kNSXUL, "toolbar");
   tb.id = id;
