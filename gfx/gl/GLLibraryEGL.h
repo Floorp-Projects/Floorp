@@ -120,7 +120,7 @@ public:
         Extensions_Max
     };
 
-    bool IsExtensionSupported(EGLExtensions aKnownExtension) {
+    bool IsExtensionSupported(EGLExtensions aKnownExtension) const {
         return mAvailableExtensions[aKnownExtension];
     }
 
@@ -411,7 +411,7 @@ public:
         return mEGLDisplay;
     }
 
-    bool IsANGLE() {
+    bool IsANGLE() const {
         return mIsANGLE;
     }
 
@@ -431,7 +431,7 @@ public:
         return IsExtensionSupported(ANGLE_surface_d3d_texture_2d_share_handle);
     }
 
-    bool HasRobustness() {
+    bool HasRobustness() const {
         return IsExtensionSupported(EXT_create_context_robustness);
     }
 
