@@ -1003,6 +1003,11 @@ let BookmarkingUI = {
     return this.notifier = document.getElementById("bookmarked-notification-anchor");
   },
 
+  get dropmarkerNotifier() {
+    delete this.dropmarkerNotifier;
+    return this.dropmarkerNotifier = document.getElementById("bookmarked-notification-dropmarker-anchor");
+  },
+
   get broadcaster() {
     delete this.broadcaster;
     let broadcaster = document.getElementById("bookmarkThisPageBroadcaster");
@@ -1332,42 +1337,49 @@ let BookmarkingUI = {
   },
 
   _showBookmarkedNotification: function BUI_showBookmarkedNotification() {
-    /*
-     * We're dynamically setting pointer-events to none here for the duration
-     * of the bookmark menu button's dropmarker animation in order to avoid
-     * having it end up in the overflow menu. This happens because it gaining
-     * focus triggers a style change which triggers an overflow event, even
-     * though this does not happen if no focus change occurs. The core issue
-     * is tracked in https://bugzilla.mozilla.org/show_bug.cgi?id=981637
-     */
-    let onDropmarkerAnimationEnd = () => {
-      this.button.removeEventListener("animationend", onDropmarkerAnimationEnd);
-      this.button.style.removeProperty("pointer-events");
-    };
-    let onDropmarkerAnimationStart = () => {
-      this.button.removeEventListener("animationstart", onDropmarkerAnimationStart);
-      this.button.style.pointerEvents = 'none';
-    };
+    function getCenteringTransformForRects(rectToPosition, referenceRect) {
+      let topDiff = referenceRect.top - rectToPosition.top;
+      let leftDiff = referenceRect.left - rectToPosition.left;
+      let heightDiff = referenceRect.height - rectToPosition.height;
+      let widthDiff = referenceRect.width - rectToPosition.width;
+      return [(leftDiff + .5 * widthDiff) + "px", (topDiff + .5 * heightDiff) + "px"];
+    }
 
     if (this._notificationTimeout) {
       clearTimeout(this._notificationTimeout);
     }
 
     if (this.notifier.style.transform == '') {
+      // Get all the relevant nodes and computed style objects
+      let dropmarker = document.getAnonymousElementByAttribute(this.button, "anonid", "dropmarker");
+      let dropmarkerIcon = document.getAnonymousElementByAttribute(dropmarker, "class", "dropmarker-icon");
+      let dropmarkerStyle = getComputedStyle(dropmarkerIcon);
+
+      // Check for RTL and get bounds
       let isRTL = getComputedStyle(this.button).direction == "rtl";
       let buttonRect = this.button.getBoundingClientRect();
       let notifierRect = this.notifier.getBoundingClientRect();
-      let topDiff = buttonRect.top - notifierRect.top;
-      let leftDiff = buttonRect.left - notifierRect.left;
-      let heightDiff = buttonRect.height - notifierRect.height;
-      let widthDiff = buttonRect.width - notifierRect.width;
-      let translateX = (leftDiff + .5 * widthDiff) + "px";
-      let translateY = (topDiff + .5 * heightDiff) + "px";
-      let transform = "translate(" +  translateX + ", " + translateY + ")";
+      let dropmarkerRect = dropmarkerIcon.getBoundingClientRect();
+      let dropmarkerNotifierRect = this.dropmarkerNotifier.getBoundingClientRect();
+
+      // Compute, but do not set, transform for star icon
+      let [translateX, translateY] = getCenteringTransformForRects(notifierRect, buttonRect);
+      let starIconTransform = "translate(" +  translateX + ", " + translateY + ")";
       if (isRTL) {
-        transform += " scaleX(-1)";
+        starIconTransform += " scaleX(-1)";
       }
-      this.notifier.style.transform = transform;
+
+      // Compute, but do not set, transform for dropmarker
+      [translateX, translateY] = getCenteringTransformForRects(dropmarkerNotifierRect, dropmarkerRect);
+      let dropmarkerTransform = "translate(" + translateX + ", " + translateY + ")";
+
+      // Do all layout invalidation in one go:
+      this.notifier.style.transform = starIconTransform;
+      this.dropmarkerNotifier.style.transform = dropmarkerTransform;
+
+      let dropmarkerAnimationNode = this.dropmarkerNotifier.firstChild;
+      dropmarkerAnimationNode.style.MozImageRegion = dropmarkerStyle.MozImageRegion;
+      dropmarkerAnimationNode.style.listStyleImage = dropmarkerStyle.listStyleImage;
     }
 
     let isInBookmarksToolbar = this.button.classList.contains("bookmark-item");
@@ -1378,16 +1390,17 @@ let BookmarkingUI = {
     if (!isInOverflowPanel) {
       this.notifier.setAttribute("notification", "finish");
       this.button.setAttribute("notification", "finish");
-      this.button.addEventListener('animationstart', onDropmarkerAnimationStart);
-      this.button.addEventListener("animationend", onDropmarkerAnimationEnd);
+      this.dropmarkerNotifier.setAttribute("notification", "finish");
     }
 
     this._notificationTimeout = setTimeout( () => {
-      this.notifier.removeAttribute("notification");
       this.notifier.removeAttribute("in-bookmarks-toolbar");
+      this.notifier.removeAttribute("notification");
+      this.dropmarkerNotifier.removeAttribute("notification");
       this.button.removeAttribute("notification");
+
+      this.dropmarkerNotifier.style.transform = '';
       this.notifier.style.transform = '';
-      this.button.style.removeProperty("pointer-events");
     }, 1000);
   },
 
