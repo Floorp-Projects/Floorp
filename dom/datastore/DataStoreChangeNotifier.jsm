@@ -25,6 +25,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
 this.DataStoreChangeNotifier = {
   children: [],
   messages: [ "DataStore:Changed", "DataStore:RegisterForMessages",
+              "DataStore:UnregisterForMessages",
               "child-process-shutdown" ],
 
   init: function() {
@@ -94,6 +95,7 @@ this.DataStoreChangeNotifier = {
         break;
 
       case "child-process-shutdown":
+      case "DataStore:UnregisterForMessages":
         debug("Unregister");
 
         for (let i = 0; i < this.children.length;) {

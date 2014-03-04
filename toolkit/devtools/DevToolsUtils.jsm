@@ -7,26 +7,12 @@
 /*
  * General utilities used throughout devtools.
  *
- * To support chrome debugging, the debugger server needs to have all its
- * code in one global, so it must use loadSubScript directly. Everyone else,
- * though, prefers a JSM.
+ * When using chrome debugging, the debugger server is unable to debug itself.
+ * To avoid this, it must be loaded with a custom devtools loader with the
+ * invisibleToDebugger flag set to true. Everyone else, though, prefers a JSM.
  */
 
 this.EXPORTED_SYMBOLS = [ "DevToolsUtils" ];
 
-Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
-  .getService(Components.interfaces.mozIJSSubScriptLoader)
-  .loadSubScript("resource://gre/modules/devtools/DevToolsUtils.js", this);
-
-this.DevToolsUtils = {
-  safeErrorString: safeErrorString,
-  reportException: reportException,
-  makeInfallible: makeInfallible,
-  zip: zip,
-  yieldingEach: yieldingEach,
-  reportingDisabled: false , // Used by tests.
-  defineLazyPrototypeGetter: defineLazyPrototypeGetter,
-  getProperty: getProperty,
-  hasSafeGetter: hasSafeGetter,
-  isSafeJSObject: isSafeJSObject,
-};
+const { devtools } = Components.utils.import("resource://gre/modules/devtools/Loader.jsm", {});
+this.DevToolsUtils = devtools.require("devtools/toolkit/DevToolsUtils.js");

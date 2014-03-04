@@ -49,5 +49,3 @@ libs:: dummy
 GARBAGE += dummy
 endif
 endif
-
-test.$(OBJ_SUFFIX): CFLAGS := -O0

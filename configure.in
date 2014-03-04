@@ -952,7 +952,7 @@ MOZ_JPEG_CFLAGS=
 MOZ_JPEG_LIBS='$(call EXPAND_LIBNAME_PATH,mozjpeg,$(DEPTH)/media/libjpeg)'
 MOZ_BZ2_CFLAGS=
 MOZ_BZ2_LIBS='$(call EXPAND_LIBNAME_PATH,bz2,$(DEPTH)/modules/libbz2/src)'
-MOZ_PNG_CFLAGS=
+MOZ_PNG_CFLAGS="-I$_objdir/dist/include" # needed for freetype compilation
 MOZ_PNG_LIBS='$(call EXPAND_LIBNAME_PATH,mozpng,$(DEPTH)/media/libpng)'
 
 MOZ_JS_STATIC_LIBS='$(call EXPAND_LIBNAME_PATH,js_static,$(LIBXUL_DIST)/lib)'
@@ -8675,19 +8675,7 @@ fi
 AC_SUBST(MOZ_EM_DEBUG)
 
 if test -n "$COMPILE_ENVIRONMENT"; then
-AC_MSG_CHECKING([for posix_fallocate])
-AC_TRY_LINK([#define _XOPEN_SOURCE 600
-  #include <fcntl.h>],
-                 [posix_fallocate(0, 0, 0);],
-                 [ac_cv___posix_fallocate=true],
-                 [ac_cv___posix_fallocate=false])
-
-if test "$ac_cv___posix_fallocate" = true ; then
-  AC_DEFINE(HAVE_POSIX_FALLOCATE)
-  AC_MSG_RESULT(yes)
-else
-  AC_MSG_RESULT(no)
-fi
+AC_CHECK_FUNCS(posix_fadvise posix_fallocate)
 
 dnl Check for missing components
 if test "$MOZ_X11"; then
@@ -8927,8 +8915,10 @@ if test "$MOZ_TREE_FREETYPE"; then
    export CPPFLAGS="$CPPFLAGS $MOZ_DEBUG_FLAGS"
    export CXXFLAGS="$CXXFLAGS $MOZ_DEBUG_FLAGS"
    export LDFLAGS="$LDFLAGS $MOZ_DEBUG_LDFLAGS"
+   export LIBPNG_CFLAGS="$MOZ_PNG_CFLAGS"
+   export LIBPNG_LDFLAGS="$MOZ_PNG_LIBS"
    export CONFIG_FILES="unix-cc.mk:unix-cc.in unix-def.mk:unix-def.in freetype-config freetype2.pc:freetype2.in"
-   ac_configure_args="$ac_configure_args --host=$target --disable-shared --with-pic=yes --without-png"
+   ac_configure_args="$ac_configure_args --host=$target --disable-shared --with-pic=yes"
 
    if ! test -e modules; then
      mkdir modules

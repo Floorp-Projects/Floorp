@@ -3,9 +3,6 @@
 
 Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
 Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
-Cu.import("resource://gre/modules/devtools/DevToolsUtils.jsm");
-
-var { safeErrorString } = DevToolsUtils;
 
 let port = 2929;
 
@@ -144,7 +141,7 @@ function makeInfallible(aHandler, aName) {
       if (aName) {
         msg += aName + " ";
       }
-      msg += "threw an exception: " + safeErrorString(ex);
+      msg += "threw an exception: " + DevToolsUtils.safeErrorString(ex);
       if (ex.stack) {
         msg += "\nCall stack:\n" + ex.stack;
       }

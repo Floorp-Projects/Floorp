@@ -69,7 +69,7 @@ struct AlternativeCharCode;
 struct TextRangeStyle;
 struct TextRange;
 
-typedef TextRange* TextRangeArray;
+class TextRangeArray;
 
 } // namespace mozilla
 

@@ -207,7 +207,7 @@ class DeviceManagerADB(DeviceManager):
         if 'read-only file system' in result.lower():
             raise DMError("Error creating directory: read only file system")
 
-    def pushDir(self, localDir, remoteDir, retryLimit=None):
+    def pushDir(self, localDir, remoteDir, retryLimit=None, timeout=None):
         # adb "push" accepts a directory as an argument, but if the directory
         # contains symbolic links, the links are pushed, rather than the linked
         # files; we either zip/unzip or re-copy the directory into a temporary
@@ -226,7 +226,7 @@ class DeviceManagerADB(DeviceManager):
                 data = self._runCmd(["shell", "unzip", "-o", remoteZip,
                                      "-d", remoteDir]).stdout.read()
                 self._checkCmd(["shell", "rm", remoteZip],
-                               retryLimit=retryLimit)
+                               retryLimit=retryLimit, timeout=timeout)
                 if re.search("unzip: exiting", data) or re.search("Operation not permitted", data):
                     raise Exception("unzip failed, or permissions error")
             except:

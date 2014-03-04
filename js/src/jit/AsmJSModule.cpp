@@ -347,7 +347,8 @@ AsmJSModule::AsmJSModule(ScriptSource *scriptSource, uint32_t charsBegin)
     dynamicallyLinked_(false),
     loadedFromCache_(false),
     charsBegin_(charsBegin),
-    scriptSource_(scriptSource)
+    scriptSource_(scriptSource),
+    codeIsProtected_(false)
 {
     mozilla::PodZero(&pod);
     scriptSource_->incref();

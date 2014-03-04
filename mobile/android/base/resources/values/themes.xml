@@ -20,6 +20,8 @@
         <item name="android:windowContentOverlay">@null</item>
     </style>
 
+    <style name="GeckoTitleDialogBase" parent="@android:style/Theme.Dialog" />
+
     <style name="GeckoPreferencesBase" parent="GeckoBase">
         <item name="android:windowNoTitle">false</item>
     </style>
@@ -65,6 +67,8 @@
     </style>
 
     <style name="Gecko.Dialog" parent="GeckoDialogBase"/>
+
+    <style name="Gecko.TitleDialog" parent="GeckoTitleDialogBase"/>
 
     <!--
         Activity based themes.

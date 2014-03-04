@@ -16,6 +16,7 @@
 #include "nsPresContext.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
+#include "mozilla/TextRange.h"
 
 class nsDispatchingCallback;
 class nsIEditor;
@@ -57,6 +58,12 @@ public:
   // Note that mString and mLastData are different between dispatcing
   // compositionupdate and text event handled by focused editor.
   const nsString& String() const { return mString; }
+  // Returns the clauses and/or caret range of the composition string.
+  // This is modified at a call of EditorWillHandleTextEvent().
+  // This may return null if there is no clauses and caret.
+  // XXX We should return |const TextRangeArray*| here, but it causes compile
+  //     error due to inaccessible Release() method.
+  TextRangeArray* GetRanges() const { return mRanges; }
   // Returns true if the composition is started with synthesized event which
   // came from nsDOMWindowUtils.
   bool IsSynthesizedForTests() const { return mIsSynthesizedForTests; }
@@ -142,6 +149,10 @@ private:
   // this instance.
   nsPresContext* mPresContext;
   nsCOMPtr<nsINode> mNode;
+
+  // This is the clause and caret range information which is managed by
+  // the focused editor.  This may be null if there is no clauses or caret.
+  nsRefPtr<TextRangeArray> mRanges;
 
   // mNativeContext stores a opaque pointer.  This works as the "ID" for this
   // composition.  Don't access the instance, it may not be available.

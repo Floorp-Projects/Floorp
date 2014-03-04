@@ -144,4 +144,6 @@ make_EE untrusted-expired 'CN=Untrusted-Expired Test End-entity' otherCA "untrus
 make_EE mismatch-untrusted-expired 'CN=Mismatch-Untrusted-Expired Test End-entity' otherCA "doesntmatch.example.com" "-w -400"
 NSS_ALLOW_WEAK_SIGNATURE_ALG=1 make_EE md5signature-expired 'CN=Test MD5Signature-Expired End-entity' testCA "md5signature-expired.example.com" "-Z MD5" "-w -400"
 
+make_EE inadequatekeyusage 'CN=Inadequate Key Usage Test End-entity' testCA "inadequatekeyusage.example.com" "--keyUsage crlSigning"
+
 cleanup

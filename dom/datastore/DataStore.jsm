@@ -79,6 +79,7 @@ this.DataStore.prototype = {
   _revisionId: null,
   _exposedObject: null,
   _cursor: null,
+  _shuttingdown: false,
 
   init: function(aWindow, aName, aOwner, aReadOnly) {
     debug("DataStore init");
@@ -96,6 +97,8 @@ this.DataStore.prototype = {
       let wId = aSubject.QueryInterface(Ci.nsISupportsPRUint64).data;
       if (wId == self._innerWindowID) {
         cpmm.removeMessageListener("DataStore:Changed:Return:OK", self);
+        cpmm.sendAsyncMessage("DataStore:UnregisterForMessages");
+        self._shuttingdown = true;
         self._db.close();
       }
     }, "inner-window-destroyed", false);
@@ -320,6 +323,11 @@ this.DataStore.prototype = {
 
     this.retrieveRevisionId(
       function() {
+        // If the window has been destroyed we don't emit the events.
+        if (self._shuttingdown) {
+          return;
+        }
+
         // If we have an active cursor we don't emit events.
         if (self._cursor) {
           return;

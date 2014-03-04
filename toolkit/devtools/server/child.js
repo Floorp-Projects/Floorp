@@ -7,7 +7,8 @@
 // Encapsulate in its own scope to allows loading this frame script
 // more than once.
 (function () {
-  const {DevToolsUtils} = Cu.import("resource://gre/modules/devtools/DevToolsUtils.jsm", {});
+  let { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+  const DevToolsUtils = devtools.require("devtools/toolkit/DevToolsUtils.js");
   const {DebuggerServer, ActorPool} = Cu.import("resource://gre/modules/devtools/dbg-server.jsm", {});
 
   if (!DebuggerServer.initialized) {

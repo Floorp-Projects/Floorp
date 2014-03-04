@@ -966,6 +966,16 @@ struct JSRuntime : public JS::shadow::Runtime,
 # endif
 #endif
 
+#ifdef DEBUG
+    /*
+     * To help embedders enforce their invariants, we allow them to specify in
+     * advance which JSContext should be passed to JSAPI calls. If this is set
+     * to a non-null value, the assertSameCompartment machinery does double-
+     * duty (in debug builds) to verify that it matches the cx being used.
+     */
+    JSContext          *activeContext;
+#endif
+
     /* Garbage collector state, used by jsgc.c. */
 
     /* Garbase collector state has been sucessfully initialized. */

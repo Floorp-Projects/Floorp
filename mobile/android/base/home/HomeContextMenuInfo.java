@@ -21,10 +21,10 @@ public class HomeContextMenuInfo extends AdapterContextMenuInfo {
     public String url;
     public String title;
     public boolean isFolder = false;
-    public boolean inReadingList = false;
     public int display = Combined.DISPLAY_NORMAL;
     public int historyId = -1;
     public int bookmarkId = -1;
+    public int readingListItemId = -1;
 
     public HomeContextMenuInfo(View targetView, int position, long id) {
         super(targetView, position, id);
@@ -39,7 +39,11 @@ public class HomeContextMenuInfo extends AdapterContextMenuInfo {
     }
 
     public boolean isInReadingList() {
-        return inReadingList;
+        return readingListItemId > -1;
+    }
+
+    public boolean canRemove() {
+        return hasBookmarkId() || hasHistoryId() || isInReadingList();
     }
 
     public String getDisplayTitle() {

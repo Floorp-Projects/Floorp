@@ -28,6 +28,10 @@
   background-repeat: no-repeat;
 }
 
+#PanelUI-button:-moz-locale-dir(rtl) {
+  background-position: 100% 0, calc(100% - 1px) 0, calc(100% - 2px) 0;
+}
+
 .panel-subviews {
   padding: 4px;
   background-color: hsla(0,0%,100%,.97);
@@ -84,6 +88,7 @@
 
 .cui-widget-panelview .subviewbutton.panel-subview-footer {
   margin: 4px 0 0;
+  -moz-box-pack: center;
 }
 
 #PanelUI-mainView {
@@ -119,7 +124,6 @@
 
 .panelUI-grid .toolbarbutton-menubutton-button > .toolbarbutton-multiline-text,
 .panelUI-grid .toolbarbutton-1 > .toolbarbutton-multiline-text {
-  text-align: center;
   -moz-hyphens: auto;
   min-height: 3.5em;
 }
@@ -129,11 +133,14 @@
   mask: url(chrome://browser/content/browser.xul#menuPanelButtonTextFadeOutMask);
 }
 
+.panelUI-grid .toolbarbutton-1 > .toolbarbutton-text,
 .panelUI-grid .toolbarbutton-1 > .toolbarbutton-multiline-text {
+  text-align: center;
   margin: 2px 0 0;
 }
 
 .panelUI-grid .toolbarbutton-menubutton-button > .toolbarbutton-multiline-text {
+  text-align: center;
   margin: -1px 0 0;
 }
 
@@ -549,7 +556,8 @@ panelview .toolbarbutton-1,
 .subviewbutton.panel-subview-footer > .toolbarbutton-text,
 .subviewbutton.panel-subview-footer > .menu-text {
   -moz-padding-start: 0;
-  text-align: center;
+  -moz-padding-end: 12px;
+  -moz-box-flex: 0;
 }
 
 .subviewbutton:not(.panel-subview-footer) {

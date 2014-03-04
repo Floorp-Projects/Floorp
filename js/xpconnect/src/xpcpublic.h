@@ -102,6 +102,15 @@ IsReflector(JSObject *obj);
 
 bool
 IsXrayWrapper(JSObject *obj);
+
+// If this function was created for a given XrayWrapper, returns the global of
+// the Xrayed object. Otherwise, returns the global of the function.
+//
+// To emphasize the obvious: the return value here is not necessarily same-
+// compartment with the argument.
+JSObject *
+XrayAwareCalleeGlobal(JSObject *fun);
+
 } /* namespace xpc */
 
 namespace JS {

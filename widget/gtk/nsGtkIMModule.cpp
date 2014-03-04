@@ -1193,23 +1193,13 @@ nsGtkIMModule::DispatchTextEvent(const nsAString &aCompositionString,
 
     uint32_t targetOffset = mCompositionStart;
 
-    nsAutoTArray<TextRange, 4> textRanges;
     if (!aIsCommit) {
         // NOTE: SetTextRangeList() assumes that mDispatchedCompositionString
         //       has been updated already.
-        SetTextRangeList(textRanges);
-        for (uint32_t i = 0; i < textRanges.Length(); i++) {
-            TextRange& range = textRanges[i];
-            if (range.mRangeType == NS_TEXTRANGE_SELECTEDRAWTEXT ||
-                range.mRangeType == NS_TEXTRANGE_SELECTEDCONVERTEDTEXT) {
-                targetOffset += range.mStartOffset;
-                break;
-            }
-        }
+        textEvent.mRanges = CreateTextRangeArray();
+        targetOffset += textEvent.mRanges->TargetClauseOffset();
     }
 
-    textEvent.rangeCount = textRanges.Length();
-    textEvent.rangeArray = textRanges.Elements();
     textEvent.theText = mDispatchedCompositionString.get();
 
     mCompositionState = aIsCommit ?
@@ -1232,13 +1222,13 @@ nsGtkIMModule::DispatchTextEvent(const nsAString &aCompositionString,
     return true;
 }
 
-void
-nsGtkIMModule::SetTextRangeList(nsTArray<TextRange> &aTextRangeList)
+already_AddRefed<TextRangeArray>
+nsGtkIMModule::CreateTextRangeArray()
 {
     PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
-        ("GtkIMModule(%p): SetTextRangeList", this));
+        ("GtkIMModule(%p): CreateTextRangeArray", this));
 
-    NS_PRECONDITION(aTextRangeList.IsEmpty(), "aTextRangeList must be empty");
+    nsRefPtr<TextRangeArray> textRangeArray = new TextRangeArray();
 
     gchar *preedit_string;
     gint cursor_pos;
@@ -1250,7 +1240,7 @@ nsGtkIMModule::SetTextRangeList(nsTArray<TextRange> &aTextRangeList)
             ("    preedit_string is null"));
         pango_attr_list_unref(feedback_list);
         g_free(preedit_string);
-        return;
+        return textRangeArray.forget();
     }
 
     PangoAttrIterator* iter;
@@ -1260,7 +1250,7 @@ nsGtkIMModule::SetTextRangeList(nsTArray<TextRange> &aTextRangeList)
             ("    FAILED, iterator couldn't be allocated"));
         pango_attr_list_unref(feedback_list);
         g_free(preedit_string);
-        return;
+        return textRangeArray.forget();
     }
 
     /*
@@ -1326,7 +1316,7 @@ nsGtkIMModule::SetTextRangeList(nsTArray<TextRange> &aTextRangeList)
             uniStr = nullptr;
         }
 
-        aTextRangeList.AppendElement(range);
+        textRangeArray->AppendElement(range);
 
         PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
             ("    mStartOffset=%u, mEndOffset=%u, mRangeType=%s",
@@ -1344,7 +1334,7 @@ nsGtkIMModule::SetTextRangeList(nsTArray<TextRange> &aTextRangeList)
     }
     range.mEndOffset = range.mStartOffset;
     range.mRangeType = NS_TEXTRANGE_CARETPOSITION;
-    aTextRangeList.AppendElement(range);
+    textRangeArray->AppendElement(range);
 
     PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
         ("    mStartOffset=%u, mEndOffset=%u, mRangeType=%s",
@@ -1354,6 +1344,8 @@ nsGtkIMModule::SetTextRangeList(nsTArray<TextRange> &aTextRangeList)
     pango_attr_iterator_destroy(iter);
     pango_attr_list_unref(feedback_list);
     g_free(preedit_string);
+
+    return textRangeArray.forget();
 }
 
 void

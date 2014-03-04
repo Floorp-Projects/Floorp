@@ -18,6 +18,7 @@ SOURCES += [
     'ToastNotificationHandler.cpp',
     'UIAAccessibilityBridge.cpp',
     'UIABridge.cpp',
+    'WakeLockListener.cpp',
 ]
 
 EXTRA_COMPONENTS += [

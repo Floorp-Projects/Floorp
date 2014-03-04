@@ -228,7 +228,9 @@ public class PanelsPreferenceCategory extends CustomListCategory {
      */
     @Override
     protected void setFallbackDefault() {
-        for (int i = 0; i < getPreferenceCount(); i++) {
+        // First preference (index 0) is Preference to add panels.
+        final int prefsCount = getPreferenceCount();
+        for (int i = 1; i < prefsCount; i++) {
             final PanelsPreference pref = (PanelsPreference) getPreference(i);
             if (!pref.isHidden()) {
                 super.setDefault(pref);

@@ -913,8 +913,8 @@ chatbox:-moz-full-screen-ancestor > .chat-titlebar {
 #navigator-toolbox,
 #content-deck {
   transition-property: margin-left, margin-right;
-  transition-duration: 150ms;
-  transition-timing-function: ease-out;
+  transition-duration: 200ms;
+  transition-timing-function: linear;
 }
 
 #tab-view-deck[fastcustomizeanimation] #navigator-toolbox,
