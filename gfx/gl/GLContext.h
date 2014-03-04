@@ -162,7 +162,7 @@ public:
      * Returns true if the context is using ANGLE. This should only be overridden
      * for an ANGLE implementation.
      */
-    virtual bool IsANGLE() {
+    virtual bool IsANGLE() const {
         return false;
     }
 
@@ -273,13 +273,11 @@ public:
     /**
      * If this context is double-buffered, returns TRUE.
      */
-    virtual bool IsDoubleBuffered() {
+    virtual bool IsDoubleBuffered() const {
         return false;
     }
 
-    virtual GLContextType GetContextType() {
-        return GLContextType::Unknown;
-    }
+    virtual GLContextType GetContextType() const = 0;
 
     virtual bool IsCurrent() = 0;
 
@@ -500,7 +498,7 @@ private:
 // Robustness handling
 public:
 
-    bool HasRobustness() {
+    bool HasRobustness() const {
         return mHasRobustness;
     }
 
@@ -508,7 +506,7 @@ public:
      * The derived class is expected to provide information on whether or not it
      * supports robustness.
      */
-    virtual bool SupportsRobustness() = 0;
+    virtual bool SupportsRobustness() const = 0;
 
 
 private:
@@ -2460,15 +2458,13 @@ public:
 // -----------------------------------------------------------------------------
 // Everything that isn't standard GL APIs
 protected:
-
     typedef class gfx::SharedSurface SharedSurface;
     typedef gfx::SharedSurfaceType SharedSurfaceType;
     typedef gfx::SurfaceFormat SurfaceFormat;
 
+    virtual bool MakeCurrentImpl(bool aForce) = 0;
+
 public:
-
-    virtual bool MakeCurrentImpl(bool aForce = false) = 0;
-
 #ifdef MOZ_ENABLE_GL_TRACKING
     static void StaticInit() {
         PR_NewThreadPrivateIndex(&sCurrentGLContextTLS, nullptr);
@@ -2548,7 +2544,7 @@ public:
      *
      * Only valid if IsOffscreen() returns true.
      */
-    virtual bool ResizeOffscreen(const gfx::IntSize& size) {
+    bool ResizeOffscreen(const gfx::IntSize& size) {
         return ResizeScreenBuffer(size);
     }
 
@@ -2635,7 +2631,7 @@ public:
     void ForceDirtyScreen();
     void CleanDirtyScreen();
 
-    virtual GLenum GetPreferredARGB32Format() { return LOCAL_GL_RGBA; }
+    virtual GLenum GetPreferredARGB32Format() const { return LOCAL_GL_RGBA; }
 
     virtual bool RenewSurface() { return false; }
 

@@ -249,7 +249,7 @@ private:
 #endif
 };
 
-NS_EXPORT_(bool)
+bool
 xpc_LocalizeRuntime(JSRuntime *rt)
 {
   JS_SetLocaleCallbacks(rt, new XPCLocaleCallbacks());
@@ -273,7 +273,7 @@ xpc_LocalizeRuntime(JSRuntime *rt)
   return !!JS_SetDefaultLocale(rt, locale.get());
 }
 
-NS_EXPORT_(void)
+void
 xpc_DelocalizeRuntime(JSRuntime *rt)
 {
   XPCLocaleCallbacks* lc = XPCLocaleCallbacks::This(rt);

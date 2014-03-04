@@ -547,12 +547,6 @@ TRY_AGAIN_POWER_OF_TWO:
     return surface;
 }
 
-bool
-GLContextEGL::ResizeOffscreen(const gfx::IntSize& aNewSize)
-{
-    return ResizeScreenBuffer(aNewSize);
-}
-
 static const EGLint kEGLConfigAttribsOffscreenPBuffer[] = {
     LOCAL_EGL_SURFACE_TYPE,    LOCAL_EGL_PBUFFER_BIT,
     LOCAL_EGL_RENDERABLE_TYPE, LOCAL_EGL_OPENGL_ES2_BIT,

@@ -2583,6 +2583,7 @@ static PRFuncPtr FindFunction(const char* aName)
 
 static void MOZ_gdk_display_close(GdkDisplay *display)
 {
+#if CLEANUP_MEMORY
   // XXX wallpaper for bug 417163: don't close the Display if we're using the
   // Qt theme because we crash (in Qt code) when using jemalloc.
   bool theme_is_qt = false;
@@ -2597,12 +2598,10 @@ static void MOZ_gdk_display_close(GdkDisplay *display)
     g_free(theme_name);
   }
 
-#if CLEANUP_MEMORY
   // Get a (new) Pango context that holds a reference to the fontmap that
   // GTK has been using.  gdk_pango_context_get() must be called while GTK
   // has a default display.
   PangoContext *pangoContext = gdk_pango_context_get();
-#endif
 
   bool buggyCairoShutdown = cairo_version() < CAIRO_VERSION_ENCODE(1, 4, 0);
 
@@ -2615,7 +2614,6 @@ static void MOZ_gdk_display_close(GdkDisplay *display)
       gdk_display_close(display);
   }
 
-#if CLEANUP_MEMORY
   // Clean up PangoCairo's default fontmap.
   // This pango_fc_font_map_shutdown call (and the associated code to
   // get the font map) really shouldn't be needed anymore, except that
@@ -2647,12 +2645,16 @@ static void MOZ_gdk_display_close(GdkDisplay *display)
   cairo_debug_reset_static_data();
   // FIXME: Do we need to call this in non-GTK2 cases as well?
   FcFini();
-#endif // CLEANUP_MEMORY
 
   if (buggyCairoShutdown) {
     if (!theme_is_qt)
       gdk_display_close(display);
   }
+#else // not CLEANUP_MEMORY
+  // Don't do anything to avoid running into driver bugs under XCloseDisplay().
+  // See bug 973192.
+  (void) display;
+#endif
 }
 #endif // MOZ_WIDGET_GTK2
 
