@@ -472,6 +472,9 @@
       <vbox id="bookmarked-notification-anchor">
         <vbox id="bookmarked-notification"/>
       </vbox>
+      <vbox id="bookmarked-notification-dropmarker-anchor">
+        <image id="bookmarked-notification-dropmarker-icon"/>
+      </vbox>
     </hbox>
 
     <tooltip id="dynamic-shortcut-tooltip"
