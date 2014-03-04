@@ -34,7 +34,7 @@ public:
 
     ~GLContextCGL();
 
-    virtual GLContextType GetContextType() MOZ_OVERRIDE { return GLContextType::CGL; }
+    virtual GLContextType GetContextType() const MOZ_OVERRIDE { return GLContextType::CGL; }
 
     static GLContextCGL* Cast(GLContext* gl) {
         MOZ_ASSERT(gl->GetContextType() == GLContextType::CGL);
@@ -46,21 +46,19 @@ public:
     NSOpenGLContext* GetNSOpenGLContext() const { return mContext; }
     CGLContextObj GetCGLContext() const;
 
-    bool MakeCurrentImpl(bool aForce = false);
+    virtual bool MakeCurrentImpl(bool aForce) MOZ_OVERRIDE;
 
-    virtual bool IsCurrent();
+    virtual bool IsCurrent() MOZ_OVERRIDE;
 
-    virtual GLenum GetPreferredARGB32Format() MOZ_OVERRIDE;
+    virtual GLenum GetPreferredARGB32Format() const MOZ_OVERRIDE;
 
-    bool SetupLookupFunction();
+    virtual bool SetupLookupFunction() MOZ_OVERRIDE;
 
-    bool IsDoubleBuffered();
+    virtual bool IsDoubleBuffered() const MOZ_OVERRIDE;
 
-    bool SupportsRobustness();
+    virtual bool SupportsRobustness() const MOZ_OVERRIDE;
 
-    bool SwapBuffers();
-
-    bool ResizeOffscreen(const gfx::IntSize& aNewSize);
+    virtual bool SwapBuffers() MOZ_OVERRIDE;
 };
 
 }

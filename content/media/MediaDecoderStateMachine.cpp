@@ -2336,9 +2336,6 @@ void MediaDecoderStateMachine::AdvanceFrame()
     }
     MediaDecoder::FrameStatistics& frameStats = mDecoder->GetFrameStatistics();
     frameStats.NotifyPresentedFrame();
-    double frameDelay = double(clock_time - currentFrame->mTime) / USECS_PER_S;
-    NS_ASSERTION(frameDelay >= 0.0, "Frame should never be displayed early.");
-    frameStats.NotifyFrameDelay(frameDelay);
     remainingTime = currentFrame->GetEndTime() - clock_time;
     currentFrame = nullptr;
   }
