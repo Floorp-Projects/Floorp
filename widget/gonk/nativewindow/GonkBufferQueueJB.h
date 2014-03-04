@@ -387,7 +387,7 @@ public:
     // NATIVE_WINDOW_TRANSFORM_ROT_90.  The default is 0 (no transform).
     status_t setTransformHint(uint32_t hint);
 
-    int getGeneration();
+    uint32_t getGeneration();
 
     SurfaceDescriptor *getSurfaceDescriptorFromBuffer(ANativeWindowBuffer* buffer);
 

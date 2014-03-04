@@ -75,6 +75,12 @@ const ContentPanning = {
   },
 
   handleEvent: function cp_handleEvent(evt) {
+    // Ignore events targeting a <iframe mozbrowser> since those will be
+    // handle by the BrowserElementPanning.js instance of it.
+    if (evt.target instanceof Ci.nsIMozBrowserFrame) {
+      return;
+    }
+
     if (evt.defaultPrevented || evt.multipleActionsPrevented) {
       // clean up panning state even if touchend/mouseup has been preventDefault.
       if(evt.type === 'touchend' || evt.type === 'mouseup') {
