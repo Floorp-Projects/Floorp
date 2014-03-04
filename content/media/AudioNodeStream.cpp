@@ -426,13 +426,6 @@ AudioNodeStream::ProduceOutput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags)
       ObtainInputBlock(inputChunks[i], i);
     }
     bool finished = false;
-#ifdef DEBUG
-    for (uint16_t i = 0; i < outputCount; ++i) {
-      // Alter mDuration so we can detect if ProduceAudioBlock fails to set
-      // chunks.
-      mLastChunks[i].mDuration--;
-    }
-#endif
     if (maxInputs <= 1 && mEngine->OutputCount() <= 1) {
       mEngine->ProduceAudioBlock(this, inputChunks[0], &mLastChunks[0], &finished);
     } else {

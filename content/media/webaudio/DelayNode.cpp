@@ -40,6 +40,7 @@ public:
     , mBuffer(aMaxDelayTicks,
               WebAudioUtils::ComputeSmoothingRate(0.02,
                                                   mDestination->SampleRate()))
+    , mLastOutputPosition(-1)
     , mLeftOverData(INT32_MIN)
   {
   }
@@ -75,7 +76,7 @@ public:
   virtual void ProduceAudioBlock(AudioNodeStream* aStream,
                                  const AudioChunk& aInput,
                                  AudioChunk* aOutput,
-                                 bool* aFinished)
+                                 bool* aFinished) MOZ_OVERRIDE
   {
     MOZ_ASSERT(mSource == aStream, "Invalid source stream");
     MOZ_ASSERT(aStream->SampleRate() == mDestination->SampleRate());
@@ -107,12 +108,24 @@ public:
 
     mBuffer.Write(aInput);
 
-    bool inCycle = aStream->AsProcessedStream()->InCycle();
+    UpdateOutputBlock(aOutput);
+    mBuffer.NextBlock();
+  }
+
+  void UpdateOutputBlock(AudioChunk* aOutput)
+  {
+    TrackTicks tick = mSource->GetCurrentPosition();
+    if (tick == mLastOutputPosition) {
+      return; // mLastChunks is already set on the stream
+    }
+
+    mLastOutputPosition = tick;
+    bool inCycle = mSource->AsProcessedStream()->InCycle();
     double minDelay = inCycle ? static_cast<double>(WEBAUDIO_BLOCK_SIZE) : 0.0;
     double maxDelay = mBuffer.MaxDelayTicks();
-    double sampleRate = aStream->SampleRate();
+    double sampleRate = mSource->SampleRate();
     ChannelInterpretation channelInterpretation =
-      aStream->GetChannelInterpretation();
+      mSource->GetChannelInterpretation();
     if (mDelay.HasSimpleValue()) {
       // If this DelayNode is in a cycle, make sure the delay value is at least
       // one block.
@@ -124,7 +137,6 @@ public:
       // If this DelayNode is in a cycle, make sure the delay value is at least
       // one block.
       double computedDelay[WEBAUDIO_BLOCK_SIZE];
-      TrackTicks tick = aStream->GetCurrentPosition();
       for (size_t counter = 0; counter < WEBAUDIO_BLOCK_SIZE; ++counter) {
         double delayAtTick = mDelay.GetValueAtTime(tick, counter) * sampleRate;
         double delayAtTickClamped = clamped(delayAtTick, minDelay, maxDelay);
@@ -132,13 +144,22 @@ public:
       }
       mBuffer.Read(computedDelay, aOutput, channelInterpretation);
     }
-    mBuffer.NextBlock();
+  }
+
+  virtual void ProduceBlockBeforeInput(AudioChunk* aOutput) MOZ_OVERRIDE
+  {
+    if (mLeftOverData <= 0) {
+      aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
+    } else {
+      UpdateOutputBlock(aOutput);
+    }
   }
 
   AudioNodeStream* mSource;
   AudioNodeStream* mDestination;
   AudioParamTimeline mDelay;
   DelayBuffer mBuffer;
+  TrackTicks mLastOutputPosition;
   // How much data we have in our buffer which needs to be flushed out when our inputs
   // finish.
   int32_t mLeftOverData;
