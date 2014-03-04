@@ -62,7 +62,7 @@ var PlacesOrganizer = {
       for (let container of hierarchy) {
         switch (typeof container) {
           case "number":
-            this._places.selectItems([container]);
+            this._places.selectItems([container], false);
             break;
           case "string":
             if (container.substr(0, 6) == "place:")
@@ -327,7 +327,7 @@ var PlacesOrganizer = {
 
   openFlatContainer: function PO_openFlatContainerFlatContainer(aContainer) {
     if (aContainer.itemId != -1)
-      this._places.selectItems([aContainer.itemId]);
+      this._places.selectItems([aContainer.itemId], false);
     else if (PlacesUtils.nodeIsQuery(aContainer))
       this._places.selectPlaceURI(aContainer.uri);
   },
