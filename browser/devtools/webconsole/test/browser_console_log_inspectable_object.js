@@ -32,10 +32,14 @@ function performTest(hud)
       objects: true,
     }],
   }).then(([result]) => {
+    let msg = [...result.matched][0];
+    ok(msg, "message element");
+    let body = msg.querySelector(".body");
+    ok(body, "message body");
     let clickable = result.clickableElements[0];
     ok(clickable, "the console.log() object anchor was found");
-    isnot(clickable.textContent.indexOf('{abba: "omgBug676722"}'), -1,
-          "clickable node content is correct");
+    ok(body.textContent.contains('{ abba: "omgBug676722" }'),
+       "clickable node content is correct");
 
     hud.jsterm.once("variablesview-fetched",
       (aEvent, aVar) => {

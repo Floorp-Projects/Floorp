@@ -2140,13 +2140,8 @@ WebConsoleFrame.prototype = {
     }
     else {
       this._outputTimerInitialized = false;
-      if (this._flushCallback) {
-        try {
-          this._flushCallback();
-        }
-        catch (ex) {
-          console.error(ex);
-        }
+      if (this._flushCallback && this._flushCallback() === false) {
+        this._flushCallback = null;
       }
     }
 
@@ -3204,10 +3199,10 @@ JSTerm.prototype = {
         if (oldFlushCallback) {
           oldFlushCallback();
           this.hud._flushCallback = oldFlushCallback;
+          return true;
         }
-        else {
-          this.hud._flushCallback = null;
-        }
+
+        return false;
       };
     }
 

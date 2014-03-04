@@ -189,7 +189,7 @@ a {
 }
 
 .message .learn-more-link {
-  color: #0000EE;
+  color: -moz-nativehyperlinktext;
   margin: 0 6px;
 }
 
@@ -369,6 +369,16 @@ a {
 .stacktrace .function {
   display: block;
   flex: 1 1 auto;
+}
+
+.cm-s-mozilla a[class] {
+  font-style: italic;
+  text-decoration: none;
+}
+
+.cm-s-mozilla a[class]:hover,
+.cm-s-mozilla a[class]:focus {
+  text-decoration: underline;
 }
 
 /* Replace these values with CSS variables as available */
