@@ -211,6 +211,10 @@ richlistitem:not([selected]) * {
   width: 22em;
 }
 
+#header-utils-btn {
+  -moz-user-focus: normal;
+}
+
 .discover-button[disabled="true"] {
   display: none;
 }
