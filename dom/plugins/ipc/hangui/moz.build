@@ -18,3 +18,5 @@ DEFINES['NS_NO_XPCOM'] = True
 
 if CONFIG['GNU_CC']:
     WIN32_EXE_LDFLAGS += ['-municode']
+
+RCINCLUDE = 'HangUIDlg.rc'

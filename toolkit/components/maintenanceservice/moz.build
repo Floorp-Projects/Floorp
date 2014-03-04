@@ -32,3 +32,5 @@ USE_STATIC_LIBS = True
 
 if CONFIG['_MSC_VER']:
     WIN32_EXE_LDFLAGS += ['-ENTRY:wmainCRTStartup']
+
+RCINCLUDE = 'maintenanceservice.rc'

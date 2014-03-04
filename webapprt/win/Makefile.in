@@ -30,8 +30,6 @@ DEFINES += -DAPP_VERSION=$(APP_VERSION)
 
 OS_LIBS += $(call EXPAND_LIBNAME,shell32)
 
-RCINCLUDE = webapprt.rc
-
 # Uninstaller
 ifdef LOCALE_MERGEDIR
 PPL_LOCALE_ARGS = \

@@ -43,3 +43,4 @@ if CONFIG['MOZ_ENABLE_GTK']:
         'crashreporter_unix_common.cpp'
     ]
 
+RCINCLUDE = 'crashreporter.rc'

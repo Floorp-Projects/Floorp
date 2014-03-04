@@ -39,6 +39,7 @@ if CONFIG['_MSC_VER']:
     WIN32_EXE_LDFLAGS += ['-ENTRY:wmainCRTStartup']
 
 if CONFIG['OS_ARCH'] == 'WINNT':
+    RCINCLUDE = 'splash.rc'
     DEFINES['MOZ_PHOENIX'] = True
 
 # Control the default heap size.

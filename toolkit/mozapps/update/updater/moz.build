@@ -20,6 +20,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         'progressui_win.cpp',
         'win_dirent.cpp',
     ]
+    RCINCLUDE = 'updater.rc'
     DEFINES['UNICODE'] = True
     DEFINES['_UNICODE'] = True
     USE_STATIC_LIBS = True

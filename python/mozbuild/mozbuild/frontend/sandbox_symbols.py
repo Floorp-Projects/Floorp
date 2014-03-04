@@ -349,6 +349,12 @@ VARIABLES = {
         This variable can only be used on Windows.
         """, None),
 
+    'RCINCLUDE': (unicode, unicode,
+        """The resource script file to be included in the default .res file.
+
+        This variable can only be used on Windows.
+        """, None),
+
     'DEFFILE': (unicode, unicode,
         """The program .def (module definition) file.
 
