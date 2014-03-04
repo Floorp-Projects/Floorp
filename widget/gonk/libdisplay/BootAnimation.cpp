@@ -267,7 +267,7 @@ RawReader(png_structp png_ptr, png_bytep data, png_size_t length)
 {
     RawReadState *state = (RawReadState *)png_get_io_ptr(png_ptr);
     if (length > (state->length - state->offset))
-        png_error(png_ptr, "PNG read overrun");
+        png_err(png_ptr);
 
     memcpy(data, state->start + state->offset, length);
     state->offset += length;
