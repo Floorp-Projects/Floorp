@@ -707,7 +707,7 @@ Sync11Service.prototype = {
 
           // Go ahead and do remote setup, so that we can determine
           // conclusively that our passphrase is correct.
-          if (this._remoteSetup(test)) {
+          if (this._remoteSetup()) {
             // Username/password verified.
             this.status.login = LOGIN_SUCCEEDED;
             return true;
