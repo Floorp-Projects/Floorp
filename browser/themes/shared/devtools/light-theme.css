@@ -21,40 +21,9 @@
   color: #f5f7fa;
 }
 
-.theme-twisty {
-  cursor: pointer;
-  width: 14px;
-  height: 14px;
-  background-repeat: no-repeat;
-  background-image: url("chrome://browser/skin/devtools/controls.png");
-  background-position: 0 -14px;
-}
-
-.theme-twisty:-moz-focusring {
-  outline-style: none;
-}
-
-.theme-twisty[open] {
-  background-position: -14px -14px;
-}
-
-.theme-checkbox {
-  display: inline-block;
-  border: 0;
-  width: 14px;
-  height: 14px;
-  padding: 0;
-  outline: none;
-  background-image: url("chrome://browser/skin/devtools/controls.png");
-  background-position: 0 0;
-}
-
-.theme-checkbox[checked] {
-  background-position: -14px 0;
-}
-
 .theme-selected {
-  background-color: #CCC;
+  background-color: #4c9ed9;
+  color: #f5f7fa; /* Light foreground text */
 }
 
 .theme-bg-darker {
@@ -251,6 +220,56 @@ div.CodeMirror span.eval-text {
 .cm-s-markup-view pre {
   line-height: 1.4em;
   min-height: 1.4em;
+}
+
+/* Twisty and checkbox controls */
+
+.theme-twisty, .theme-checkbox {
+  width: 14px;
+  height: 14px;
+  background-repeat: no-repeat;
+  background-image: url("chrome://browser/skin/devtools/controls.png");
+  background-size: 56px 28px;
+}
+
+.theme-twisty {
+  cursor: pointer;
+  background-position: 0 -14px;
+}
+
+.theme-twisty:-moz-focusring {
+  outline-style: none;
+}
+
+.theme-twisty[open] {
+  background-position: -14px -14px;
+}
+
+/* Use white twisty when next to a selected item in markup view */
+.theme-selected ~ .theme-twisty {
+  background-position: -28px -14px;
+}
+
+.theme-selected ~ .theme-twisty[open] {
+  background-position: -42px -14px;
+}
+
+.theme-checkbox {
+  display: inline-block;
+  border: 0;
+  padding: 0;
+  outline: none;
+  background-position: 0 0;
+}
+
+.theme-checkbox[checked] {
+  background-position: -14px 0;
+}
+
+@media (min-resolution: 2dppx) {
+  .theme-twisty, .theme-checkbox {
+    background-image: url("chrome://browser/skin/devtools/controls@2x.png");
+  }
 }
 
 /* XUL panel styling (see browser/devtools/shared/widgets/Tooltip.js) */
