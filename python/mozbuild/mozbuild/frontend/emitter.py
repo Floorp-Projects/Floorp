@@ -241,6 +241,7 @@ class TreeMetadataEmitter(LoggingMixin):
             'OS_LIBS',
             'RCFILE',
             'RESFILE',
+            'RCINCLUDE',
             'DEFFILE',
             'SDK_LIBRARY',
             'WIN32_EXE_LDFLAGS',

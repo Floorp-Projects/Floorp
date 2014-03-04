@@ -18,10 +18,6 @@ LIBS            += \
 		$(NULL)
 endif
 
-ifeq ($(OS_ARCH),WINNT)
-RCINCLUDE = xulrunner-stub.rc
-endif
-
 ifndef MOZ_WINCONSOLE
 ifdef MOZ_DEBUG
 MOZ_WINCONSOLE = 1
