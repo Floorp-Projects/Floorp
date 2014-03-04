@@ -1,0 +1,97 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=946815
+-->
+<head>
+  <bindings xmlns="http://www.mozilla.org/xbl">
+    <binding id="testBinding">
+      <implementation>
+        <constructor>
+          // Grab some basic infrastructure off the content window.
+          var win = XPCNativeWrapper.unwrap(window);
+          SpecialPowers = win.SpecialPowers;
+          Cu = SpecialPowers.Cu;
+          is = win.is;
+          ok = win.ok;
+          SimpleTest = win.SimpleTest;
+
+          var bound = document.getElementById('bound');
+
+          // This gets invoked by an event handler.
+          window.finish = function() {
+            // XBL scope, with 'wifi-manage' scope
+            testWifiPermissionFromXbl(true, true /* with wifi-manage permission */);
+            SimpleTest.finish();
+          }
+
+          eval('var testWifiPermissionFromXbl = ' + win.testWifiPermissionFromContent.toSource());
+
+          // XBL scope, with no 'wifi-manage' permission
+          testWifiPermissionFromXbl(true, false /* without wifi-manage permission */);
+
+          // Hand things off to content. Content will call us back.
+          win.go();
+        </constructor>
+      </implementation>
+      <handlers>
+        <handler event="testevent" action="ok(true, 'called event handler'); finish();" allowuntrusted="true"/>
+      </handlers>
+    </binding>
+  </bindings>
+  <script type="application/javascript">
+  <![CDATA[
+
+  ok = parent.ok;
+  is = parent.is;
+  SimpleTest = parent.SimpleTest;
+  SpecialPowers = parent.SpecialPowers;
+
+  function go() {
+    "use strict";
+
+    // Content scope, with no 'wifi-manage' permission
+    testWifiPermissionFromContent(false, false /* without wifi-manage permission */);
+
+    SpecialPowers.pushPermissions([{ "type": "wifi-manage", "allow": 1, "context": window.document }], function() {
+      testWifiPermissionFromContent(false, true /* with wifi-manage permission */);
+      // Hand control back to the XBL scope by dispatching an event on the bound element.
+      bound.dispatchEvent(new CustomEvent('testevent'));
+    });
+  }
+
+  function testWifiPermissionFromContent(aIsXblScope, aExpectedWifiPermission) {
+    // Even though the function name has suggested we are either in content or
+    // XBL scope, the argument |aIsXblScope| is still required to print
+    // descriptive enough message for the test.
+
+    // If this test fails, something must be wrong with the permission manipulation.
+    // Check test_bug946815.html to see if we removed wifi-manage permission in
+    // the beginning and if we forgot to add permission back during testing.
+    is(aExpectedWifiPermission, SpecialPowers.hasPermission("wifi-manage", window.document),
+       "'wifi-manage' permission is not as expected! Expected: " + aExpectedWifiPermission);
+
+    is(typeof window.MozWifiP2pManager, (aExpectedWifiPermission ? "function" : "undefined"),
+       (aIsXblScope ? "XBL" : "Content") + " should" + (aExpectedWifiPermission ? "" : " NOT") +
+       " see MozWifiP2pManager with" + (aExpectedWifiPermission ? "" : "out") +
+       " 'wifi-manage' permission." );
+  }
+
+  function setup() {
+    // When the bindings are applied, the constructor will be invoked and the
+    // test will continue.
+    document.getElementById('bound').style.MozBinding = 'url(#testBinding)';
+  }
+
+  ]]>
+</script>
+</head>
+<body onload="setup()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=946815">Mozilla Bug 946815</a>
+<p id="display"></p>
+<div id="content">
+  <div id="bound">Bound element</div>
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
