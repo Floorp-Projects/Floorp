@@ -524,10 +524,10 @@ HapticPresenter.prototype = {
 
   type: 'Haptic',
 
-  PIVOT_CHANGE_PATTHERN: [20],
+  PIVOT_CHANGE_PATTERN: [40],
 
   pivotChanged: function HapticPresenter_pivotChanged(aContext, aReason) {
-    return { type: this.type, details: { pattern: this.PIVOT_CHANGE_PATTHERN } };
+    return { type: this.type, details: { pattern: this.PIVOT_CHANGE_PATTERN } };
   }
 };
 
