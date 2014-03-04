@@ -739,7 +739,7 @@ PresShell::PresShell()
     addedSynthMouseMove = true;
   }
   static bool addedPointerEventEnabled = false;
-  if (addedPointerEventEnabled) {
+  if (!addedPointerEventEnabled) {
     Preferences::AddBoolVarCache(&sPointerEventEnabled,
                                  "dom.w3c_pointer_events.enabled", true);
     addedPointerEventEnabled = true;
