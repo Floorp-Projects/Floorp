@@ -33,7 +33,7 @@ include $(topsrcdir)/config/rules.mk
 
 _ABS_DIST = $(abspath $(DIST))
 
-package: $(properties_deps)
+package: $(properties_deps) FORCE
 	# Make directory for the zips
 	$(MKDIR) -p $(_ABS_DIST)/geckoview_library
 

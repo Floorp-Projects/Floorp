@@ -69,7 +69,10 @@ let HomeBanner = (function () {
       text: message.text,
       iconURI: message.iconURI
     });
+  };
 
+  let _handleShown = function(id) {
+    let message = _messages[id];
     if (message.onshown)
       message.onshown();
   };
@@ -93,13 +96,17 @@ let HomeBanner = (function () {
           _handleGet();
           break;
 
+        case "HomeBanner:Shown":
+          _handleShown(data);
+          break;
+
         case "HomeBanner:Click":
           _handleClick(data);
           break;
 
         case "HomeBanner:Dismiss":
           _handleDismiss(data);
-          break; 
+          break;
       }
     },
 
@@ -119,6 +126,7 @@ let HomeBanner = (function () {
       // observers to listen for requests from the Java UI.
       if (Object.keys(_messages).length == 1) {
         Services.obs.addObserver(this, "HomeBanner:Get", false);
+        Services.obs.addObserver(this, "HomeBanner:Shown", false);
         Services.obs.addObserver(this, "HomeBanner:Click", false);
         Services.obs.addObserver(this, "HomeBanner:Dismiss", false);
 
@@ -149,6 +157,7 @@ let HomeBanner = (function () {
       // If there are no more messages, remove the observers.
       if (Object.keys(_messages).length == 0) {
         Services.obs.removeObserver(this, "HomeBanner:Get");
+        Services.obs.removeObserver(this, "HomeBanner:Shown");
         Services.obs.removeObserver(this, "HomeBanner:Click");
         Services.obs.removeObserver(this, "HomeBanner:Dismiss");
       }
