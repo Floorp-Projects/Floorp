@@ -5,15 +5,15 @@
 "use strict";
 
 /* General utilities used throughout devtools. */
+const { Ci, Cu } = require("chrome");
 
-let Cu = Components.utils;
-let { Promise: promise } = Components.utils.import("resource://gre/modules/commonjs/sdk/core/promise.js", {});
-let { Services } = Components.utils.import("resource://gre/modules/Services.jsm", {});
+let { Promise: promise } = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js", {});
+let { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 
 /**
  * Turn the error |aError| into a string, without fail.
  */
-this.safeErrorString = function safeErrorString(aError) {
+exports.safeErrorString = function safeErrorString(aError) {
   try {
     let errorString = aError.toString();
     if (typeof errorString == "string") {
@@ -42,18 +42,18 @@ this.safeErrorString = function safeErrorString(aError) {
 /**
  * Report that |aWho| threw an exception, |aException|.
  */
-this.reportException = function reportException(aWho, aException) {
-  let msg = aWho + " threw an exception: " + safeErrorString(aException);
+exports.reportException = function reportException(aWho, aException) {
+  let msg = aWho + " threw an exception: " + exports.safeErrorString(aException);
 
   dump(msg + "\n");
 
-  if (Components.utils.reportError) {
+  if (Cu.reportError) {
     /*
      * Note that the xpcshell test harness registers an observer for
      * console messages, so when we're running tests, this will cause
      * the test to quit.
      */
-    Components.utils.reportError(msg);
+    Cu.reportError(msg);
   }
 }
 
@@ -71,7 +71,7 @@ this.reportException = function reportException(aWho, aException) {
  * (SpiderMonkey does generate good names for anonymous functions, but we
  * don't have a way to get at them from JavaScript at the moment.)
  */
-this.makeInfallible = function makeInfallible(aHandler, aName) {
+exports.makeInfallible = function makeInfallible(aHandler, aName) {
   if (!aName)
     aName = aHandler.name;
 
@@ -83,7 +83,7 @@ this.makeInfallible = function makeInfallible(aHandler, aName) {
       if (aName) {
         who += " " + aName;
       }
-      reportException(who, ex);
+      exports.reportException(who, ex);
     }
   }
 }
@@ -98,7 +98,7 @@ this.makeInfallible = function makeInfallible(aHandler, aName) {
  * @returns Array
  *          The combined array, in the form [a1, b1, a2, b2, ...]
  */
-this.zip = function zip(a, b) {
+exports.zip = function zip(a, b) {
   if (!b) {
     return a;
   }
@@ -116,8 +116,8 @@ this.zip = function zip(a, b) {
 
 const executeSoon = aFn => {
   Services.tm.mainThread.dispatch({
-    run: this.makeInfallible(aFn)
-  }, Components.interfaces.nsIThread.DISPATCH_NORMAL);
+    run: exports.makeInfallible(aFn)
+  }, Ci.nsIThread.DISPATCH_NORMAL);
 };
 
 /**
@@ -133,7 +133,7 @@ const executeSoon = aFn => {
  *          A promise that is resolved once the whole array has been iterated
  *          over.
  */
-this.yieldingEach = function yieldingEach(aArray, aFn) {
+exports.yieldingEach = function yieldingEach(aArray, aFn) {
   const deferred = promise.defer();
 
   let i = 0;
@@ -180,7 +180,7 @@ this.yieldingEach = function yieldingEach(aArray, aFn) {
  *        The callback that will be called to determine the value. Will be
  *        called with the |this| value of the current instance.
  */
-this.defineLazyPrototypeGetter =
+exports.defineLazyPrototypeGetter =
 function defineLazyPrototypeGetter(aObject, aKey, aCallback) {
   Object.defineProperty(aObject, aKey, {
     configurable: true,
@@ -208,7 +208,7 @@ function defineLazyPrototypeGetter(aObject, aKey, aCallback) {
  *        The key to look for.
  * @return Any
  */
-this.getProperty = function getProperty(aObj, aKey) {
+exports.getProperty = function getProperty(aObj, aKey) {
   let root = aObj;
   try {
     do {
@@ -218,13 +218,13 @@ this.getProperty = function getProperty(aObj, aKey) {
           return desc.value;
         }
         // Call the getter if it's safe.
-        return hasSafeGetter(desc) ? desc.get.call(root).return : undefined;
+        return exports.hasSafeGetter(desc) ? desc.get.call(root).return : undefined;
       }
       aObj = aObj.proto;
     } while (aObj);
   } catch (e) {
     // If anything goes wrong report the error and return undefined.
-    reportException("getProperty", e);
+    exports.reportException("getProperty", e);
   }
   return undefined;
 };
@@ -237,7 +237,7 @@ this.getProperty = function getProperty(aObj, aKey) {
  * @return Boolean
  *         Whether a safe getter was found.
  */
-this.hasSafeGetter = function hasSafeGetter(aDesc) {
+exports.hasSafeGetter = function hasSafeGetter(aDesc) {
   let fn = aDesc.get;
   return fn && fn.callable && fn.class == "Function" && fn.script === undefined;
 };
@@ -254,9 +254,9 @@ this.hasSafeGetter = function hasSafeGetter(aDesc) {
  * @return Boolean
  *         True if it is safe to read properties from aObj, or false otherwise.
  */
-this.isSafeJSObject = function isSafeJSObject(aObj) {
+exports.isSafeJSObject = function isSafeJSObject(aObj) {
   if (Cu.getGlobalForObject(aObj) ==
-      Cu.getGlobalForObject(isSafeJSObject)) {
+      Cu.getGlobalForObject(exports.isSafeJSObject)) {
     return true; // aObj is not a cross-compartment wrapper.
   }
 

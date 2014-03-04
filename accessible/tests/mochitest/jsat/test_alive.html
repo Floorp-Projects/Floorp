@@ -13,43 +13,57 @@
           src="./jsatcommon.js"></script>
   <script type="application/javascript">
 
-    function confirmAccessFuStart() {
-      ok(AccessFu._enabled, "AccessFu was started and enabled.");
-      AccessFuTest.nextTest();
+    function prefStart() {
+      // Start AccessFu via pref.
+      SpecialPowers.setIntPref("accessibility.accessfu.activate", 1);
+      AccessFuTest.once_log("EventManager.start", AccessFuTest.nextTest);
     }
 
     // Listen for 'EventManager.stop' and enable AccessFu again.
-    function onStop() {
+    function settingsStart() {
       ok(true, "EventManager was stopped.");
       isnot(AccessFu._enabled, true, "AccessFu was disabled.");
-      AccessFuTest.once_log("EventManager.start", AccessFuTest.nextTest);
-      AccessFu._enable();
+      AccessFuTest.once([{
+        "method": "speak",
+        "data": "Screen reader started",
+        "options": {
+          "enqueue": false
+        }
+      }], AccessFuTest.nextTest);
+      // XXX: Bug 978076 - test start with SettingsManager.
+      //navigator.mozSettings.createLock().set(
+      //  {'accessibility.screenreader': false});
+      AccessFu._enable()
     }
 
     // Make sure EventManager is started again.
-    function onFinalStart() {
-      ok(true, "EventManager was started again.");
+    function settingsStop() {
       ok(AccessFu._enabled, "AccessFu was enabled again.");
-      AccessFuTest.finish();
-    }
-
-    // Listen for initial 'EventManager.start' and disable AccessFu.
-    function onInitialStart() {
-      ok(true, "EventManager was started.");
-      AccessFuTest.once_log("EventManager.stop", AccessFuTest.nextTest);
+      AccessFuTest.once([{
+        "method": "speak",
+        "data": "Screen reader stopped",
+        "options": {
+          "enqueue": false
+        }
+      }], AccessFuTest.finish);
+      // XXX: Bug 978076 - test stop with SettingsManager.
+      //navigator.mozSettings.createLock().set(
+      //  {'accessibility.screenreader': false});
       AccessFu._disable();
     }
 
-    function init() {
-      AccessFuTest.once_log("EventManager.start", AccessFuTest.nextTest);
+    // Listen for initial 'EventManager.start' and disable AccessFu.
+    function prefStop() {
+      ok(AccessFu._enabled, "AccessFu was started via preference.");
+      AccessFuTest.once_log("EventManager.stop", AccessFuTest.nextTest);
+      SpecialPowers.setIntPref("accessibility.accessfu.activate", 0);
     }
 
     function doTest() {
-      AccessFuTest.addFunc(confirmAccessFuStart);
-      AccessFuTest.addFunc(init);
-      AccessFuTest.addFunc(onInitialStart);
-      AccessFuTest.addFunc(onStop);
-      AccessFuTest.addFunc(onFinalStart);
+      AccessFuTest.addFunc(prefStart);
+      AccessFuTest.addFunc(prefStop);
+      AccessFuTest.addFunc(settingsStart);
+      AccessFuTest.addFunc(settingsStop);
       AccessFuTest.waitForExplicitFinish();
       AccessFuTest.runTests();  // Will call SimpleTest.finish();
     }

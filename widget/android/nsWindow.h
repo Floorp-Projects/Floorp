@@ -197,7 +197,7 @@ protected:
     bool mIMEMaskSelectionUpdate, mIMEMaskTextUpdate;
     int32_t mIMEMaskEventsCount; // Mask events when > 0
     nsString mIMEComposingText;
-    nsAutoTArray<mozilla::TextRange, 4> mIMERanges;
+    nsRefPtr<mozilla::TextRangeArray> mIMERanges;
     bool mIMEUpdatingContext;
     nsAutoTArray<mozilla::AndroidGeckoEvent, 8> mIMEKeyEvents;
 
