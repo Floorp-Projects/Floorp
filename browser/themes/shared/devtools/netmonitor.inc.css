@@ -815,19 +815,3 @@ label.requests-menu-status-code {
        right border and box-shadow of "Size" column should be hidden. */
   }
 }
-
-@media (min-width: 701px) {
-  #network-table[type-overflows] .requests-menu-domain {
-    border-width: 0 !important;
-    box-shadow: none !important;
-    /* The "Type" header is not visible anymore, and thus the
-       right border and box-shadow of "Domain" column should be hidden. */
-  }
-
-  #network-table[domain-overflows] .requests-menu-icon-and-file {
-    border-width: 0 !important;
-    box-shadow: none !important;
-    /* The "Domain" header is not visible anymore, and thus the
-       right border and box-shadow of "File" column should be hidden. */
-  }
-}
