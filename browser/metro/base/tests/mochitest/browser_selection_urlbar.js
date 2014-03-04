@@ -232,7 +232,7 @@ gTests.push({
 
 gTests.push({
   desc: "Bug 957646 - Selection monocles sometimes don't display when tapping" +
-        " text ion the nav bar.",
+        " text in the nav bar.",
   run: function() {
     yield showNavBar();
 
@@ -247,6 +247,43 @@ gTests.push({
     yield waitForCondition(function () {
       return SelectionHelperUI.isSelectionUIVisible;
     });
+  }
+});
+
+gTests.push({
+  desc: "Bug 972574 - Monocles not matching selection after double tap" +
+        " in URL text field.",
+  run: function() {
+    yield showNavBar();
+
+    let MARGIN_OF_ERROR = 15;
+    let EST_URLTEXT_WIDTH = 125;
+
+    let edit = document.getElementById("urlbar-edit");
+    edit.value = "http://www.wikipedia.org/";
+
+    // Determine a tap point centered on URL.
+    let editRectangle = edit.getBoundingClientRect();
+    let midX = editRectangle.left + Math.ceil(EST_URLTEXT_WIDTH / 2);
+    let midY = editRectangle.top + Math.ceil(editRectangle.height / 2);
+
+    // Tap inside the input for fluffing to take effect.
+    sendTap(window, midX, midY);
+
+    // Double-tap inside the input to selectALL.
+    sendDoubleTap(window, midX, midY);
+
+    // Check for start/end monocles positioned within accepted margins.
+    checkMonoclePositionRange("start",
+      Math.ceil(editRectangle.left - MARGIN_OF_ERROR),
+      Math.ceil(editRectangle.left + MARGIN_OF_ERROR),
+      Math.ceil(editRectangle.top + editRectangle.height - MARGIN_OF_ERROR),
+      Math.ceil(editRectangle.top + editRectangle.height + MARGIN_OF_ERROR));
+    checkMonoclePositionRange("end",
+      Math.ceil(editRectangle.left + EST_URLTEXT_WIDTH - MARGIN_OF_ERROR),
+      Math.ceil(editRectangle.left + EST_URLTEXT_WIDTH + MARGIN_OF_ERROR),
+      Math.ceil(editRectangle.top + editRectangle.height - MARGIN_OF_ERROR),
+      Math.ceil(editRectangle.top + editRectangle.height + MARGIN_OF_ERROR));
   }
 });
 
