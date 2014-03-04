@@ -7175,14 +7175,17 @@ IonBuilder::getTypedArrayElements(MDefinition *obj)
     if (obj->isConstant() && obj->toConstant()->value().isObject()) {
         TypedArrayObject *tarr = &obj->toConstant()->value().toObject().as<TypedArrayObject>();
         void *data = tarr->viewData();
+        // Bug 979449 - Optimistically embed the elements and use TI to
+        //              invalidate if we move them.
+        if (!gc::IsInsideNursery(tarr->runtimeFromMainThread(), data)) {
+            // The 'data' pointer can change in rare circumstances
+            // (ArrayBufferObject::changeContents).
+            types::TypeObjectKey *tarrType = types::TypeObjectKey::get(tarr);
+            tarrType->watchStateChangeForTypedArrayBuffer(constraints());
 
-        // The 'data' pointer can change in rare circumstances
-        // (ArrayBufferObject::changeContents).
-        types::TypeObjectKey *tarrType = types::TypeObjectKey::get(tarr);
-        tarrType->watchStateChangeForTypedArrayBuffer(constraints());
-
-        obj->setImplicitlyUsedUnchecked();
-        return MConstantElements::New(alloc(), data);
+            obj->setImplicitlyUsedUnchecked();
+            return MConstantElements::New(alloc(), data);
+        }
     }
     return MTypedArrayElements::New(alloc(), obj);
 }
