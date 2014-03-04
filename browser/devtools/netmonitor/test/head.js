@@ -248,10 +248,13 @@ function verifyRequestItemTarget(aRequestItem, aMethod, aUrl, aData = {}) {
 
   if (status !== undefined) {
     let value = target.querySelector(".requests-menu-status").getAttribute("code");
+    let codeValue = target.querySelector(".requests-menu-status-code").getAttribute("value");
     let tooltip = target.querySelector(".requests-menu-status-and-method").getAttribute("tooltiptext");
     info("Displayed status: " + value);
+    info("Displayed code: " + codeValue);
     info("Tooltip status: " + tooltip);
     is(value, status, "The displayed status is incorrect.");
+    is(codeValue, status, "The displayed status code is incorrect.");
     is(tooltip, status + " " + statusText, "The tooltip status is incorrect.");
   }
   if (type !== undefined) {
