@@ -268,7 +268,6 @@ StyleEditorUI.prototype = {
       new StyleSheetEditor(styleSheet, this._window, file, isNew, this._walker);
 
     editor.on("property-change", this._summaryChange.bind(this, editor));
-    editor.on("style-applied", this._summaryChange.bind(this, editor));
     editor.on("linked-css-file", this._summaryChange.bind(this, editor));
     editor.on("linked-css-file-error", this._summaryChange.bind(this, editor));
     editor.on("error", this._onError);
