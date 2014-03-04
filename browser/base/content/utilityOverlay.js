@@ -184,6 +184,7 @@ function whereToOpenLink( e, ignoreButton, ignoreAlt )
  *   postData             (nsIInputStream)
  *   referrerURI          (nsIURI)
  *   relatedToCurrent     (boolean)
+ *   skipTabAnimation     (boolean)
  */
 function openUILinkIn(url, where, aAllowThirdPartyFixup, aPostData, aReferrerURI) {
   var params;
@@ -218,6 +219,7 @@ function openLinkIn(url, where, params) {
   var aDisallowInheritPrincipal = params.disallowInheritPrincipal;
   var aInitiatingDoc        = params.initiatingDoc;
   var aIsPrivate            = params.private;
+  var aSkipTabAnimation     = params.skipTabAnimation;
 
   if (where == "save") {
     if (!aInitiatingDoc) {
@@ -320,6 +322,7 @@ function openLinkIn(url, where, params) {
                        inBackground: loadInBackground,
                        allowThirdPartyFixup: aAllowThirdPartyFixup,
                        relatedToCurrent: aRelatedToCurrent,
+                       skipAnimation: aSkipTabAnimation,
                        disableMCB: aDisableMCB});
     break;
   }
