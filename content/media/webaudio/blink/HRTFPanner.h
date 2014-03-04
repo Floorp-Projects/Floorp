@@ -99,8 +99,7 @@ private:
     FFTConvolver m_convolverL2;
     FFTConvolver m_convolverR2;
 
-    mozilla::DelayBuffer m_delayLineL;
-    mozilla::DelayBuffer m_delayLineR;
+    mozilla::DelayBuffer m_delayLine;
 
     AudioFloatArray m_tempL1;
     AudioFloatArray m_tempR1;

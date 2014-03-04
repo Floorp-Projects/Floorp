@@ -27,11 +27,10 @@
 
 #include "FFTConvolver.h"
 #include "HRTFDatabase.h"
-#include "WebAudioUtils.h"
 
 using namespace std;
 using namespace mozilla;
-using mozilla::dom::WebAudioUtils;
+using dom::ChannelInterpretation;
 
 namespace WebCore {
 
@@ -55,10 +54,7 @@ HRTFPanner::HRTFPanner(float sampleRate, mozilla::TemporaryRef<HRTFDatabaseLoade
     , m_convolverR1(m_convolverL1.fftSize())
     , m_convolverL2(m_convolverL1.fftSize())
     , m_convolverR2(m_convolverL1.fftSize())
-    , m_delayLineL(ceilf(MaxDelayTimeSeconds * sampleRate),
-                   WebAudioUtils::ComputeSmoothingRate(0.02, sampleRate))
-    , m_delayLineR(ceilf(MaxDelayTimeSeconds * sampleRate),
-                   WebAudioUtils::ComputeSmoothingRate(0.02, sampleRate))
+    , m_delayLine(ceilf(MaxDelayTimeSeconds * sampleRate), 1.0)
 {
     MOZ_ASSERT(m_databaseLoader);
     MOZ_COUNT_CTOR(HRTFPanner);
@@ -86,8 +82,7 @@ void HRTFPanner::reset()
     m_convolverR1.reset();
     m_convolverL2.reset();
     m_convolverR2.reset();
-    m_delayLineL.Reset();
-    m_delayLineR.Reset();
+    m_delayLine.Reset();
 }
 
 int HRTFPanner::calculateDesiredAzimuthIndexAndBlend(double azimuth, double& azimuthBlend)
@@ -151,11 +146,7 @@ void HRTFPanner::pan(double desiredAzimuth, double elevation, const AudioChunk* 
     // Normally, we'll just be dealing with mono sources.
     // If we have a stereo input, implement stereo panning with left source processed by left HRTF, and right source by right HRTF.
 
-    // Get source and destination pointers.
-    const float* sourceL = numInputChannels > 0 ?
-        static_cast<const float*>(inputBus->mChannelData[0]) : nullptr;
-    const float* sourceR = numInputChannels > 1 ?
-        static_cast<const float*>(inputBus->mChannelData[1]) : sourceL;
+    // Get destination pointers.
     float* destinationL =
         static_cast<float*>(const_cast<void*>(outputBus->mChannelData[0]));
     float* destinationR =
@@ -220,12 +211,27 @@ void HRTFPanner::pan(double desiredAzimuth, double elevation, const AudioChunk* 
     MOZ_ASSERT(frameDelayL2 / sampleRate() < MaxDelayTimeSeconds && frameDelayR2 / sampleRate() < MaxDelayTimeSeconds);
 
     // Crossfade inter-aural delays based on transitions.
-    double frameDelayL = (1 - m_crossfadeX) * frameDelayL1 + m_crossfadeX * frameDelayL2;
-    double frameDelayR = (1 - m_crossfadeX) * frameDelayR1 + m_crossfadeX * frameDelayR2;
+    double frameDelaysL[WEBAUDIO_BLOCK_SIZE];
+    double frameDelaysR[WEBAUDIO_BLOCK_SIZE];
+    {
+      float x = m_crossfadeX;
+      float incr = m_crossfadeIncr;
+      for (unsigned i = 0; i < WEBAUDIO_BLOCK_SIZE; ++i) {
+        frameDelaysL[i] = (1 - x) * frameDelayL1 + x * frameDelayL2;
+        frameDelaysR[i] = (1 - x) * frameDelayR1 + x * frameDelayR2;
+        x += incr;
+      }
+    }
 
     // First run through delay lines for inter-aural time difference.
-    m_delayLineL.Process(frameDelayL, &sourceL, &destinationL, 1, WEBAUDIO_BLOCK_SIZE);
-    m_delayLineR.Process(frameDelayR, &sourceR, &destinationR, 1, WEBAUDIO_BLOCK_SIZE);
+    m_delayLine.Write(*inputBus);
+    // "Speakers" means a mono input is read into both outputs (with possibly
+    // different delays).
+    m_delayLine.ReadChannel(frameDelaysL, outputBus, 0,
+                            ChannelInterpretation::Speakers);
+    m_delayLine.ReadChannel(frameDelaysR, outputBus, 1,
+                            ChannelInterpretation::Speakers);
+    m_delayLine.NextBlock();
 
     bool needsCrossfading = m_crossfadeIncr;
 
@@ -283,7 +289,7 @@ int HRTFPanner::maxTailFrames() const
     // tailTime of the DelayKernel and the tailTime of the FFTConvolver.
     // The FFTConvolver has a tail time of fftSize(), including latency of
     // fftSize()/2.
-    return m_delayLineL.MaxDelayFrames() + fftSize();
+    return m_delayLine.MaxDelayTicks() + fftSize();
 }
 
 } // namespace WebCore
