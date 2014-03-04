@@ -17,29 +17,11 @@ STL_FLAGS =
 
 include $(topsrcdir)/config/rules.mk
 
-ifdef GNU_CXX
-# Stagefright header files define many multichar constants.
-CXXFLAGS += -Wno-multichar
-endif
-
 ifeq ($(MOZ_WIDGET_TOOLKIT),gonk)
 EXTRA_DSO_LDOPTS += \
                -lutils -lstagefright -lmedia -lstagefright_omx -lbinder -lui \
                -lhardware -lcutils \
 		$(NULL)
-
-CXXFLAGS += \
-                -I$(ANDROID_SOURCE)/dalvik/libnativehelper/include/nativehelper \
-                -I$(ANDROID_SOURCE)/frameworks/base/include/ \
-                -I$(ANDROID_SOURCE)/frameworks/base/include/binder/ \
-                -I$(ANDROID_SOURCE)/frameworks/base/include/utils/ \
-                -I$(ANDROID_SOURCE)/frameworks/base/include/media/ \
-                -I$(ANDROID_SOURCE)/frameworks/base/include/media/stagefright/openmax \
-                -I$(ANDROID_SOURCE)/frameworks/base/media/libstagefright/include \
-                -I$(ANDROID_SOURCE)/frameworks/base/native/include \
-                -I$(ANDROID_SOURCE)/system/core/include \
-                -I$(ANDROID_SOURCE)/hardware/libhardware/include \
-                $(NULL)
 else
 EXTRA_DSO_LDOPTS += \
 		-L$(DEPTH)/media/omx-plugin/lib/ics/libutils \
