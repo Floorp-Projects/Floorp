@@ -169,7 +169,7 @@
   <binding id="menu"
            extends="chrome://global/content/bindings/menu.xml#menu-base">
     <content>
-      <xul:label class="menu-text" flex="1" xbl:inherits="value=label,accesskey,crop" crop="right"/>
+      <xul:label class="menu-text" xbl:inherits="value=label,accesskey,crop" crop="right"/>
       <xul:hbox class="menu-accel-container" anonid="accel">
         <xul:label class="menu-accel" xbl:inherits="value=acceltext"/>
       </xul:hbox>
@@ -182,7 +182,7 @@
 
   <binding id="menuitem" extends="chrome://global/content/bindings/menu.xml#menuitem-base">
     <content>
-      <xul:label class="menu-text" flex="1" xbl:inherits="value=label,accesskey,crop" crop="right"/>
+      <xul:label class="menu-text" xbl:inherits="value=label,accesskey,crop" crop="right"/>
       <xul:hbox class="menu-accel-container" anonid="accel">
         <xul:label class="menu-accel" xbl:inherits="value=acceltext"/>
       </xul:hbox>
