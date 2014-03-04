@@ -499,6 +499,17 @@ SpeechPresenter.prototype = {
         }]
       }
     };
+  },
+
+  announce: function SpeechPresenter_announce(aAnnouncement) {
+    return {
+      type: this.type,
+      details: {
+        actions: [{
+          method: 'speak', data: aAnnouncement, options: { enqueue: false }
+        }]
+      }
+    };
   }
 };
 
