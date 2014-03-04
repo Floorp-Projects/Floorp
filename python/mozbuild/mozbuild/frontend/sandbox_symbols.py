@@ -84,7 +84,7 @@ VARIABLES = {
         populated by calling add_android_eclipse{_library}_project().
         """, 'export'),
 
-    'SOURCES': (StrictOrderingOnAppendListWithFlagsFactory({'no_pgo': bool}), list,
+    'SOURCES': (StrictOrderingOnAppendListWithFlagsFactory({'no_pgo': bool, 'flags': list}), list,
         """Source code files.
 
         This variable contains a list of source code files to compile.
