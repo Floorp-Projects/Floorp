@@ -330,10 +330,10 @@ ScriptFrameIter::ionForEachCanonicalActualArg(JSContext *cx, Op op)
     JS_ASSERT(isJit());
 #ifdef JS_ION
     if (data_.ionFrames_.isOptimizedJS()) {
-        ionInlineFrames_.forEachCanonicalActualArg(cx, op, 0, -1);
+        ionInlineFrames_.forEachCanonicalActualArg(cx, op, jit::ReadFrame_Actuals);
     } else {
         JS_ASSERT(data_.ionFrames_.isBaselineJS());
-        data_.ionFrames_.forEachCanonicalActualArg(op, 0, -1);
+        data_.ionFrames_.forEachCanonicalActualArg(op, jit::ReadFrame_Actuals);
     }
 #endif
 }
