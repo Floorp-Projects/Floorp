@@ -12,8 +12,7 @@
 #include "nsIPrivateTextEvent.h"
 #include "nsPrivateTextRange.h"
 
-class nsDOMTextEvent : public mozilla::dom::UIEvent,
-                       public nsIPrivateTextEvent
+class nsDOMTextEvent : public mozilla::dom::UIEvent
 {
   typedef mozilla::dom::UIEvent UIEvent;
 
@@ -26,14 +25,6 @@ public:
 
   // Forward to base class
   NS_FORWARD_TO_UIEVENT
-
-  // nsIPrivateTextEvent interface
-  NS_IMETHOD GetText(nsString& aText) MOZ_OVERRIDE;
-  NS_IMETHOD_(already_AddRefed<nsIPrivateTextRangeList>) GetInputRange() MOZ_OVERRIDE;
-  
-protected:
-  nsString mText;
-  nsRefPtr<nsPrivateTextRangeList> mTextRange;
 };
 
 #endif // nsDOMTextEvent_h__
