@@ -372,12 +372,12 @@ public class BrowserContract {
         }
 
         static final String TABLE_BOOKMARKS_JOIN_IMAGES = Bookmarks.TABLE_NAME + " LEFT OUTER JOIN " +
-                Obsolete.TABLE_IMAGES + " ON " + DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, Bookmarks.URL) + " = " +
-                DBUtils.qualifyColumn(Obsolete.TABLE_IMAGES, Obsolete.Images.URL);
+                Obsolete.TABLE_IMAGES + " ON " + Bookmarks.TABLE_NAME + "." + Bookmarks.URL + " = " +
+                Obsolete.TABLE_IMAGES + "." + Obsolete.Images.URL;
 
         static final String TABLE_HISTORY_JOIN_IMAGES = History.TABLE_NAME + " LEFT OUTER JOIN " +
-                Obsolete.TABLE_IMAGES + " ON " + DBUtils.qualifyColumn(Bookmarks.TABLE_NAME, History.URL) + " = " +
-                DBUtils.qualifyColumn(Obsolete.TABLE_IMAGES, Obsolete.Images.URL);
+                Obsolete.TABLE_IMAGES + " ON " + Bookmarks.TABLE_NAME + "." + History.URL + " = " +
+                Obsolete.TABLE_IMAGES + "." + Obsolete.Images.URL;
 
         static final String FAVICON_DB = "favicon_urls.db";
     }
