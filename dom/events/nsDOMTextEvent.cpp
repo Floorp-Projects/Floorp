@@ -39,13 +39,13 @@ nsDOMTextEvent::nsDOMTextEvent(mozilla::dom::EventTarget* aOwner,
   // IME transaction will hold a ref, the widget representation
   // isn't persistent
   //
-  mTextRange = new nsPrivateTextRangeList(te->rangeCount);
+  mTextRange = new nsPrivateTextRangeList(te->RangeCount());
   if (mTextRange) {
     uint16_t i;
 
     for(i = 0; i < te->rangeCount; i++) {
       nsRefPtr<nsPrivateTextRange> tempPrivateTextRange = new
-        nsPrivateTextRange(te->rangeArray[i]);
+        nsPrivateTextRange(te->mRanges->ElementAt(i));
 
       if (tempPrivateTextRange) {
         mTextRange->AppendTextRange(tempPrivateTextRange);
