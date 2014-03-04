@@ -263,6 +263,15 @@ public:
     MOZ_ASSERT(mInputCount <= 1 && mOutputCount <= 1);
     *aOutput = aInput;
   }
+  /**
+   * Produce the next block of audio samples, before input is provided.
+   * ProduceAudioBlock() will be called later, and it then should not change
+   * aOutput.  This is used only for DelayNodeEngine in a feedback loop.
+   */
+  virtual void ProduceBlockBeforeInput(AudioChunk* aOutput)
+  {
+    NS_NOTREACHED("ProduceBlockBeforeInput called on wrong engine\n");
+  }
 
   /**
    * Produce the next block of audio samples, given input samples in the aInput
