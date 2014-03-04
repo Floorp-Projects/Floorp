@@ -15,7 +15,6 @@
 #include "nsNodeInfoManager.h"      // for use in NodePrincipal()
 #include "nsPropertyTable.h"        // for typedefs
 #include "nsTObserverArray.h"       // for member
-#include "nsWindowMemoryReporter.h" // for NS_DECL_SIZEOF_EXCLUDING_THIS
 #include "mozilla/ErrorResult.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/EventTarget.h" // for base class
@@ -244,12 +243,20 @@ private:
   // ever passed to Mutated().
   enum { eMaxMutations = 300 };
 
-  
+
   // sMutationCount is a global mutation counter which is decreased by one at
   // every mutation. It is capped at 0 to avoid wrapping.
   // Its value is always between 0 and 300, inclusive.
   static uint32_t sMutationCount;
 };
+
+// This should be used for any nsINode sub-class that has fields of its own
+// that it needs to measure;  any sub-class that doesn't use it will inherit
+// SizeOfExcludingThis from its super-class.  SizeOfIncludingThis() need not be
+// defined, it is inherited from nsINode.
+// This macro isn't actually specific to nodes, and bug 956400 will move it into MFBT.
+#define NS_DECL_SIZEOF_EXCLUDING_THIS \
+  virtual size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
 // Categories of node properties
 // 0 is global.
