@@ -12,6 +12,7 @@ import org.mozilla.gecko.home.HomeConfig.ItemHandler;
 import org.mozilla.gecko.home.HomeConfig.ViewConfig;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import org.mozilla.gecko.home.PanelLayout.DatasetBacked;
+import org.mozilla.gecko.home.PanelLayout.FilterManager;
 import org.mozilla.gecko.home.PanelLayout.PanelView;
 
 import android.content.Context;
@@ -51,6 +52,12 @@ public class PanelListView extends HomeListView
     public void setOnUrlOpenListener(OnUrlOpenListener listener) {
         super.setOnUrlOpenListener(listener);
         mUrlHandler.setOnUrlOpenListener(listener);
+    }
+
+    @Override
+    public void setFilterManager(FilterManager filterManager) {
+        mAdapter.setFilterManager(filterManager);
+        mUrlHandler.setFilterManager(filterManager);
     }
 
     private class PanelListItemClickListener implements AdapterView.OnItemClickListener {

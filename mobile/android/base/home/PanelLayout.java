@@ -20,7 +20,6 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.widget.FrameLayout;
 
-import java.util.Deque;
 import java.util.EnumSet;
 import java.util.LinkedList;
 import java.util.Map;
@@ -74,6 +73,7 @@ abstract class PanelLayout extends FrameLayout {
      */
     public interface DatasetBacked {
         public void setDataset(Cursor cursor);
+        public void setFilterManager(FilterManager manager);
     }
 
     /**
@@ -141,6 +141,12 @@ abstract class PanelLayout extends FrameLayout {
 
     public interface PanelView {
         public void setOnUrlOpenListener(OnUrlOpenListener listener);
+    }
+
+    public interface FilterManager {
+        public String getPreviousFilter();
+        public boolean canGoBack();
+        public void goBack();
     }
 
     public PanelLayout(Context context, PanelConfig panelConfig, DatasetHandler datasetHandler, OnUrlOpenListener urlOpenListener) {
@@ -217,6 +223,11 @@ abstract class PanelLayout extends FrameLayout {
         ((PanelView) view).setOnUrlOpenListener(new PanelUrlOpenListener(state));
         view.setOnKeyListener(new PanelKeyListener(state));
 
+        if (view instanceof DatasetBacked) {
+            DatasetBacked datasetBacked = (DatasetBacked) view;
+            datasetBacked.setFilterManager(new PanelFilterManager(state));
+        }
+
         return view;
     }
 
@@ -268,7 +279,7 @@ abstract class PanelLayout extends FrameLayout {
      */
     protected static class ViewState {
         private final ViewConfig mViewConfig;
-        private Deque<String> mFilterStack;
+        private LinkedList<String> mFilterStack;
 
         public ViewState(ViewConfig viewConfig) {
             mViewConfig = viewConfig;
@@ -287,6 +298,17 @@ abstract class PanelLayout extends FrameLayout {
             } else {
                 return mFilterStack.peek();
             }
+        }
+
+        /**
+         * Get the previous filter that this view was displaying, or null if none.
+         */
+        public String getPreviousFilter() {
+            if (!canPopFilter()) {
+                return null;
+            }
+
+            return mFilterStack.get(1);
         }
 
         /**
@@ -381,6 +403,29 @@ abstract class PanelLayout extends FrameLayout {
             }
 
             return false;
+        }
+    }
+
+    private class PanelFilterManager implements FilterManager {
+        private final ViewState mViewState;
+
+        public PanelFilterManager(ViewState viewState) {
+            mViewState = viewState;
+        }
+
+        @Override
+        public String getPreviousFilter() {
+            return mViewState.getPreviousFilter();
+        }
+
+        @Override
+        public boolean canGoBack() {
+            return mViewState.canPopFilter();
+        }
+
+        @Override
+        public void goBack() {
+            popFilterOnView(mViewState);
         }
     }
 }
