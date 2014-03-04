@@ -821,6 +821,9 @@ ArrayBufferObject::obj_trace(JSTracer *trc, JSObject *obj)
         obj->setPrivateUnbarriered(delegate);
     }
 
+    if (!IS_GC_MARKING_TRACER(trc) && !trc->runtime->isHeapMinorCollecting())
+        return;
+
     // ArrayBufferObjects need to maintain a list of possibly-weak pointers to
     // their views. The straightforward way to update the weak pointers would
     // be in the views' finalizers, but giving views finalizers means they
@@ -834,69 +837,55 @@ ArrayBufferObject::obj_trace(JSTracer *trc, JSObject *obj)
     // then swept to prune out their dead views.
 
     ArrayBufferObject &buffer = AsArrayBuffer(obj);
-    ArrayBufferViewObject *viewsHead = GetViewList(&buffer);
+    ArrayBufferViewObject *viewsHead = UpdateObjectIfRelocated(trc->runtime,
+                                                               &GetViewListRef(&buffer));
     if (!viewsHead)
         return;
 
-    // During minor collections, mark weak pointers on the buffer strongly.
-    if (trc->runtime->isHeapMinorCollecting()) {
-        MarkObject(trc, &GetViewListRef(&buffer), "arraybuffer.viewlist");
-        ArrayBufferViewObject *prior = GetViewList(&buffer);
-        for (ArrayBufferViewObject *view = prior->nextView();
-             view;
-             prior = view, view = view->nextView())
-        {
-            MarkObjectUnbarriered(trc, &view, "arraybuffer.views");
-            prior->setNextView(view);
-        }
-        return;
-    }
-
+    viewsHead = UpdateObjectIfRelocated(trc->runtime, &GetViewListRef(&buffer));
     ArrayBufferViewObject *firstView = viewsHead;
     if (firstView->nextView() == nullptr) {
         // Single view: mark it, but only if we're actually doing a GC pass
         // right now. Otherwise, the tracing pass for barrier verification will
         // fail if we add another view and the pointer becomes weak.
-        if (IS_GC_MARKING_TRACER(trc))
-            MarkObject(trc, &GetViewListRef(&buffer), "arraybuffer.singleview");
+        MarkObject(trc, &GetViewListRef(&buffer), "arraybuffer.singleview");
     } else {
         // Multiple views: do not mark, but append buffer to list.
-        if (IS_GC_MARKING_TRACER(trc)) {
-            // obj_trace may be called multiple times before sweep(), so avoid
-            // adding this buffer to the list multiple times.
-            if (firstView->bufferLink() == UNSET_BUFFER_LINK) {
-                JS_ASSERT(obj->compartment() == firstView->compartment());
-                ArrayBufferObject **bufList = &obj->compartment()->gcLiveArrayBuffers;
-                firstView->setBufferLink(*bufList);
-                *bufList = &AsArrayBuffer(obj);
-            } else {
+        // obj_trace may be called multiple times before sweep(), so avoid
+        // adding this buffer to the list multiple times.
+        if (firstView->bufferLink() == UNSET_BUFFER_LINK) {
+            JS_ASSERT(obj->compartment() == firstView->compartment());
+            ArrayBufferObject **bufList = &obj->compartment()->gcLiveArrayBuffers;
+            firstView->setBufferLink(*bufList);
+            *bufList = &AsArrayBuffer(obj);
+        } else {
 #ifdef DEBUG
-                bool found = false;
-                for (ArrayBufferObject *p = obj->compartment()->gcLiveArrayBuffers;
-                     p;
-                     p = GetViewList(p)->bufferLink())
+            bool found = false;
+            for (ArrayBufferObject *p = obj->compartment()->gcLiveArrayBuffers;
+                 p;
+                 p = GetViewList(p)->bufferLink())
+            {
+                if (p == obj)
                 {
-                    if (p == obj)
-                    {
-                        JS_ASSERT(!found);
-                        found = true;
-                    }
+                    JS_ASSERT(!found);
+                    found = true;
                 }
-#endif
             }
+#endif
         }
     }
 }
 
-void
+/* static */ void
 ArrayBufferObject::sweep(JSCompartment *compartment)
 {
+    JSRuntime *rt = compartment->runtimeFromMainThread();
     ArrayBufferObject *buffer = compartment->gcLiveArrayBuffers;
     JS_ASSERT(buffer != UNSET_BUFFER_LINK);
     compartment->gcLiveArrayBuffers = nullptr;
 
     while (buffer) {
-        ArrayBufferViewObject *viewsHead = GetViewList(buffer);
+        ArrayBufferViewObject *viewsHead = UpdateObjectIfRelocated(rt, &GetViewListRef(buffer));
         JS_ASSERT(viewsHead);
 
         ArrayBufferObject *nextBuffer = viewsHead->bufferLink();
@@ -914,7 +903,7 @@ ArrayBufferObject::sweep(JSCompartment *compartment)
                 view->setNextView(prevLiveView);
                 prevLiveView = view;
             }
-            view = nextView;
+            view = UpdateObjectIfRelocated(rt, &nextView);
         }
         SetViewList(buffer, prevLiveView);
 
