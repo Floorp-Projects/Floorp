@@ -22,9 +22,11 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.background.announcements.AnnouncementsConstants;
 import org.mozilla.gecko.background.common.GlobalConstants;
 import org.mozilla.gecko.background.healthreport.HealthReportConstants;
+import org.mozilla.gecko.home.HomePanelPicker;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.Fragment;
@@ -76,7 +78,7 @@ public class GeckoPreferences
 
     // These match keys in resources/xml*/preferences*.xml
     private static final String PREFS_SEARCH_RESTORE_DEFAULTS = NON_PREF_PREFIX + "search.restore_defaults";
-
+    private static final String PREFS_HOME_ADD_PANEL = NON_PREF_PREFIX + "home.add_panel";
     private static final String PREFS_ANNOUNCEMENTS_ENABLED = NON_PREF_PREFIX + "privacy.announcements.enabled";
     private static final String PREFS_DATA_REPORTING_PREFERENCES = NON_PREF_PREFIX + "datareporting.preferences";
     private static final String PREFS_TELEMETRY_ENABLED = "datareporting.telemetry.enabled";
@@ -265,10 +267,30 @@ public class GeckoPreferences
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (REQUEST_CODE_PREF_SCREEN == requestCode && RESULT_CODE_EXIT_SETTINGS == resultCode) {
-            // Pass this result up to the parent activity.
-            setResult(RESULT_CODE_EXIT_SETTINGS);
-            finish();
+        switch (requestCode) {
+          case REQUEST_CODE_PREF_SCREEN:
+              if (resultCode == RESULT_CODE_EXIT_SETTINGS) {
+                  // Pass this result up to the parent activity.
+                  setResult(RESULT_CODE_EXIT_SETTINGS);
+                  finish();
+              }
+              break;
+
+          case HomePanelPicker.REQUEST_CODE_ADD_PANEL:
+              switch (resultCode) {
+                  case Activity.RESULT_OK:
+                      // XXX: Bug 976925 - UI after adding a panel.
+                      setResult(RESULT_CODE_EXIT_SETTINGS);
+                      finish();
+                      break;
+                  case Activity.RESULT_CANCELED:
+                      // Dialog was cancelled, do nothing.
+                      break;
+                  default:
+                      Log.w(LOGTAG, "Unhandled ADD_PANEL result code " + requestCode);
+                      break;
+              }
+              break;
         }
     }
 
@@ -393,6 +415,15 @@ public class GeckoPreferences
                         @Override
                         public boolean onPreferenceClick(Preference preference) {
                             GeckoPreferences.this.restoreDefaultSearchEngines();
+                            return true;
+                        }
+                    });
+                } else if (PREFS_HOME_ADD_PANEL.equals(key)) {
+                    pref.setOnPreferenceClickListener(new OnPreferenceClickListener() {
+                        @Override
+                        public boolean onPreferenceClick(Preference preference) {
+                            Intent dialogIntent = new Intent(GeckoPreferences.this, HomePanelPicker.class);
+                            startActivityForResult(dialogIntent, HomePanelPicker.REQUEST_CODE_ADD_PANEL);
                             return true;
                         }
                     });
