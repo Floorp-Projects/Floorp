@@ -9,6 +9,7 @@
  * Toolkit glue for the remote debugging protocol, loaded into the
  * debugging global.
  */
+let DevToolsUtils = require("devtools/toolkit/DevToolsUtils.js");
 
 // Until all Debugger server code is converted to SDK modules,
 // imports Components.* alias from chrome module.
@@ -21,6 +22,8 @@ this.Cc = Cc;
 this.CC = CC;
 this.Cu = Cu;
 this.Cr = Cr;
+this.DevToolsUtils = DevToolsUtils;
+
 // Overload `Components` to prevent SDK loader exception on Components
 // object usage
 Object.defineProperty(this, "Components", {
@@ -31,7 +34,6 @@ const DBG_STRINGS_URI = "chrome://global/locale/devtools/debugger.properties";
 
 const nsFile = CC("@mozilla.org/file/local;1", "nsIFile", "initWithPath");
 Cu.import("resource://gre/modules/reflect.jsm");
-Cu.import("resource://gre/modules/devtools/DevToolsUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 let wantLogging = Services.prefs.getBoolPref("devtools.debugger.log");
@@ -61,8 +63,6 @@ this.promised = promised;
 this.all = all;
 
 Cu.import("resource://gre/modules/devtools/SourceMap.jsm");
-
-loadSubScript.call(this, "resource://gre/modules/devtools/DevToolsUtils.js");
 
 function dumpn(str) {
   if (wantLogging) {
@@ -517,7 +517,7 @@ var DebuggerServer = {
   // nsIServerSocketListener implementation
 
   onSocketAccepted:
-  makeInfallible(function DS_onSocketAccepted(aSocket, aTransport) {
+  DevToolsUtils.makeInfallible(function DS_onSocketAccepted(aSocket, aTransport) {
     if (Services.prefs.getBoolPref("devtools.debugger.prompt-connection") && !this._allowConnection()) {
       return;
     }
@@ -921,7 +921,7 @@ DebuggerServerConnection.prototype = {
   },
 
   _unknownError: function DSC__unknownError(aPrefix, aError) {
-    let errorString = aPrefix + ": " + safeErrorString(aError);
+    let errorString = aPrefix + ": " + DevToolsUtils.safeErrorString(aError);
     Cu.reportError(errorString);
     dumpn(errorString);
     return {
