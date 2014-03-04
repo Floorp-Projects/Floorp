@@ -125,7 +125,7 @@ status_t GonkBufferQueue::setTransformHint(uint32_t hint) {
     return NO_ERROR;
 }
 
-int GonkBufferQueue::getGeneration() {
+uint32_t GonkBufferQueue::getGeneration() {
     return mGeneration;
 }
 

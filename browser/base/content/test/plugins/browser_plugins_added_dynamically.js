@@ -1,4 +1,5 @@
-const gTestRoot = "http://mochi.test:8888/browser/browser/base/content/test/general/";
+var rootDir = getRootDirectory(gTestPath);
+const gTestRoot = rootDir.replace("chrome://mochitests/content/", "http://mochi.test:8888/");
 
 let gTestBrowser = null;
 let gNextTest = null;

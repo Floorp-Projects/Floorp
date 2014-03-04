@@ -1,0 +1,58 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=975270
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug </title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="manifest.js"></script>
+  <script type="application/javascript">
+
+  /** Test for Bug 975270 **/
+  // Test that 'emptied' and 'abort' events are fired asynchronously when re-starting
+  // media load.
+  SimpleTest.waitForExplicitFinish();
+
+  var a = document.createElement("audio");
+  a._abort = 0;
+  a._emptied = 0;
+  a.preload = "metadata"; // On B2G we default to preload:none.
+  
+  is(a.networkState, HTMLMediaElement.NETWORK_EMPTY, "Shouldn't be loading");
+  
+  a.addEventListener("abort", function(e) { a._abort++; });
+  a.addEventListener("emptied", function(e) { a._emptied++; });
+  a.addEventListener("loadedmetadata",
+    function(e) {
+      is(a._abort, 0, "Should not have received 'abort' before 'loadedmetadata");
+      is(a._emptied, 0, "Should not have received 'emptied' before 'loadedmetadata");
+
+      a.addEventListener("loadstart",
+        function(e) {
+          is(a._abort, 1, "Should have received 'abort' before 'loadstart");
+          is(a._emptied, 1, "Should  have received 'emptied' before 'loadstart");
+          SimpleTest.finish();
+        });
+
+      a.src = "";
+      is(a._abort, 0, "Should not have received 'abort' during setting a.src=''");
+      is(a._emptied, 0, "Should not have received 'emptied' during setting a.src=''");
+    });
+  
+  a.src = getPlayableAudio(gSmallTests).name;
+    
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=">Mozilla Bug </a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

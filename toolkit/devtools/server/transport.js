@@ -94,7 +94,7 @@ DebuggerTransport.prototype = {
   },
 
   onOutputStreamReady:
-  makeInfallible(function DT_onOutputStreamReady(aStream) {
+  DevToolsUtils.makeInfallible(function DT_onOutputStreamReady(aStream) {
     let written = 0;
     try {
       written = aStream.write(this._outgoing, this._outgoing.length);
@@ -121,11 +121,11 @@ DebuggerTransport.prototype = {
 
   // nsIStreamListener
   onStartRequest:
-  makeInfallible(function DT_onStartRequest(aRequest, aContext) {},
+  DevToolsUtils.makeInfallible(function DT_onStartRequest(aRequest, aContext) {},
                  "DebuggerTransport.prototype.onStartRequest"),
 
   onStopRequest:
-  makeInfallible(function DT_onStopRequest(aRequest, aContext, aStatus) {
+  DevToolsUtils.makeInfallible(function DT_onStopRequest(aRequest, aContext, aStatus) {
     this.close();
     if (this.hooks) {
       this.hooks.onClosed(aStatus);
@@ -134,7 +134,7 @@ DebuggerTransport.prototype = {
   }, "DebuggerTransport.prototype.onStopRequest"),
 
   onDataAvailable:
-  makeInfallible(function DT_onDataAvailable(aRequest, aContext,
+  DevToolsUtils.makeInfallible(function DT_onDataAvailable(aRequest, aContext,
                                              aStream, aOffset, aCount) {
     this._incoming += NetUtil.readInputStreamToString(aStream,
                                                       aStream.available());
@@ -194,7 +194,7 @@ DebuggerTransport.prototype = {
       dumpn("Got: " + JSON.stringify(parsed, null, 2));
     }
     let self = this;
-    Services.tm.currentThread.dispatch(makeInfallible(function() {
+    Services.tm.currentThread.dispatch(DevToolsUtils.makeInfallible(function() {
       // Ensure the hooks are still around by the time this runs (they will go
       // away when the transport is closed).
       if (self.hooks) {
@@ -249,7 +249,7 @@ LocalDebuggerTransport.prototype = {
     this._deepFreeze(aPacket);
     let other = this.other;
     if (other) {
-      Services.tm.currentThread.dispatch(makeInfallible(function() {
+      Services.tm.currentThread.dispatch(DevToolsUtils.makeInfallible(function() {
         // Avoid the cost of JSON.stringify() when logging is disabled.
         if (wantLogging) {
           dumpn("Received packet " + serial + ": " + JSON.stringify(aPacket, null, 2));

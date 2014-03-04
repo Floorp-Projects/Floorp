@@ -113,6 +113,18 @@ function add_simple_tests(useInsanity) {
   add_cert_override_test("mismatch.example.com",
                          Ci.nsICertOverrideService.ERROR_MISMATCH,
                          getXPCOMStatusFromNSS(SSL_ERROR_BAD_CERT_DOMAIN));
+
+  // Inadequate key usage is no longer overridable.
+  add_connection_test("inadequatekeyusage.example.com",
+                      getXPCOMStatusFromNSS(SEC_ERROR_INADEQUATE_KEY_USAGE),
+                      null,
+                      function (securityInfo) {
+                        // bug 754369 - no SSLStatus probably means this is
+                        // a non-overridable error, which is what we're testing
+                        // (although it would be best to test this directly).
+                        securityInfo.QueryInterface(Ci.nsISSLStatusProvider);
+                        do_check_eq(securityInfo.SSLStatus, null);
+                      });
 }
 
 function add_combo_tests(useInsanity) {
@@ -171,7 +183,6 @@ function add_distrust_tests(useInsanity) {
                              useInsanity
                                 ? getXPCOMStatusFromNSS(SEC_ERROR_UNTRUSTED_ISSUER)
                                 : Cr.NS_OK);
-
 }
 
 function add_distrust_override_test(certFileName, hostName,

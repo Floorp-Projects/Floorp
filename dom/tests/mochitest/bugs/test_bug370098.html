@@ -24,10 +24,9 @@ function test_constructor(dom_proto, shouldthrow) {
     } catch (e) {
         threw = true;
     }
-    if (shouldthrow)
-      ok(threw, "Calling |" + dom_proto + "()| should throw");
-    else
-      todo(threw, "Calling |" + dom_proto + "()| should throw");
+    // XSLTProcessor is still on the old bindings.
+    if (dom_proto != 'XSLTProcessor')
+      ok(threw, "Calling |" + dom_proto + "()| should always throw");
 
     threw = false;
     try {

@@ -13,7 +13,7 @@
  * This service will eventually get replaced by extending xpidl to allow errors to be defined.
  * (http://bugzilla.mozilla.org/show_bug.cgi?id=13423).
  */
-[scriptable, uuid(e72f94b2-5f85-11d4-9877-00c04fa0cf4a)]
+[scriptable, uuid(afe1f190-a3c2-11e3-a5e2-0800200c9a66)]
 interface nsIErrorService : nsISupports 
 {
     /**
@@ -31,25 +31,6 @@ interface nsIErrorService : nsISupports
      * Retrieves a string bundle URL for an error module.
      */
     string getErrorStringBundle(in short errorModule);
-
-    /**
-     * Registers a key in a string bundle for an nsresult error code. Only the code portion
-     * of the nsresult is used (obtained with NS_ERROR_GET_CODE) in this registration. The
-     * string bundle key is used to look up internationalized messages in the string bundle.
-     */
-    void registerErrorStringBundleKey(in nsresult error, in string stringBundleKey);
-    
-    /**
-     * Unregisters a key in a string bundle for an nsresult error code. 
-     */
-    void unregisterErrorStringBundleKey(in nsresult error);
-    
-    /**
-     * Retrieves a key in a string bundle for an nsresult error code. If no key is registered
-     * for the specified nsresult's code (obtained with NS_ERROR_GET_CODE), then the stringified
-     * version of the nsresult code is returned.
-     */
-    string getErrorStringBundleKey(in nsresult error);
 };
 
 %{C++
