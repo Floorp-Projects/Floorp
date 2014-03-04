@@ -972,7 +972,7 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
   mCompositorChild->Open(parentChannel, childMessageLoop, ipc::ChildSide);
 
   TextureFactoryIdentifier textureFactoryIdentifier;
-  PLayerTransactionChild* shadowManager;
+  PLayerTransactionChild* shadowManager = nullptr;
   nsTArray<LayersBackend> backendHints;
   GetPreferredCompositorBackends(backendHints);
 
