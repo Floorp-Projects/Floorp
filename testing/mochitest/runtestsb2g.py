@@ -146,15 +146,10 @@ class B2GMochitest(MochitestUtilsMixin):
             log.info("runtests.py | Received keyboard interrupt.\n");
             status = -1
         except:
-            # XXX Bug 937684
-            time.sleep(5)
             traceback.print_exc()
             log.error("Automation Error: Received unexpected exception while running application\n")
             self.runner.check_for_crashes()
             status = 1
-
-        # XXX Bug 937684
-        time.sleep(5)
 
         self.stopWebServer(options)
         self.stopWebSocketServer(options)

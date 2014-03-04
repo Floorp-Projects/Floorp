@@ -380,6 +380,8 @@ public:
 
   NS_IMETHOD GetInternalStream(nsIInputStream**) MOZ_OVERRIDE;
 
+  NS_IMETHOD_(bool) IsMemoryFile(void) MOZ_OVERRIDE;
+
 protected:
   // Create slice
   nsDOMMemoryFile(const nsDOMMemoryFile* aOther, uint64_t aStart,

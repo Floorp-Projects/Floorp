@@ -32,6 +32,8 @@
 
 #include "jsobjinlines.h"
 
+#include "vm/ErrorObject-inl.h"
+
 using namespace js;
 using namespace js::gc;
 using namespace js::types;
@@ -895,10 +897,10 @@ js_CopyErrorObject(JSContext *cx, Handle<ErrorObject*> err, HandleObject scope)
     RootedString message(cx, err->getMessage());
     if (message && !cx->compartment()->wrap(cx, message.address()))
         return nullptr;
-    RootedString fileName(cx, err->fileName());
+    RootedString fileName(cx, err->fileName(cx));
     if (!cx->compartment()->wrap(cx, fileName.address()))
         return nullptr;
-    RootedString stack(cx, err->stack());
+    RootedString stack(cx, err->stack(cx));
     if (!cx->compartment()->wrap(cx, stack.address()))
         return nullptr;
     uint32_t lineNumber = err->lineNumber();

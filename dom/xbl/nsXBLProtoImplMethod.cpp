@@ -39,7 +39,7 @@ nsXBLProtoImplMethod::~nsXBLProtoImplMethod()
   }
 }
 
-void 
+void
 nsXBLProtoImplMethod::AppendBodyText(const nsAString& aText)
 {
   NS_PRECONDITION(!IsCompiled(),
@@ -56,7 +56,7 @@ nsXBLProtoImplMethod::AppendBodyText(const nsAString& aText)
   uncompiledMethod->AppendBodyText(aText);
 }
 
-void 
+void
 nsXBLProtoImplMethod::AddParameter(const nsAString& aText)
 {
   NS_PRECONDITION(!IsCompiled(),
@@ -125,7 +125,7 @@ nsXBLProtoImplMethod::InstallMember(JSContext* aCx,
   return NS_OK;
 }
 
-nsresult 
+nsresult
 nsXBLProtoImplMethod::CompileMember(const nsCString& aClassStr,
                                     JS::Handle<JSObject*> aClassObject)
 {
@@ -165,9 +165,9 @@ nsXBLProtoImplMethod::CompileMember(const nsCString& aClassStr,
       return NS_ERROR_OUT_OF_MEMORY;
 
     // Add our parameters to our args array.
-    int32_t argPos = 0; 
-    for (nsXBLParameter* curr = uncompiledMethod->mParameters; 
-         curr; 
+    int32_t argPos = 0;
+    for (nsXBLParameter* curr = uncompiledMethod->mParameters;
+         curr;
          curr = curr->mNext) {
       args[argPos] = curr->mName;
       argPos++;
@@ -335,7 +335,7 @@ nsXBLProtoImplAnonymousMethod::Execute(nsIContent* aBoundElement)
   if (scriptAllowed) {
     JS::Rooted<JS::Value> retval(cx);
     JS::Rooted<JS::Value> methodVal(cx, JS::ObjectValue(*method));
-    ok = ::JS::Call(cx, thisObject, methodVal, JS::EmptyValueArray, &retval);
+    ok = ::JS::Call(cx, thisObject, methodVal, JS::HandleValueArray::empty(), &retval);
   }
 
   if (!ok) {

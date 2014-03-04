@@ -171,7 +171,7 @@ static const SSLCipherSuiteInfo suiteInfo[] = {
 {0,CS(SSL_RSA_WITH_NULL_SHA),                 S_RSA, K_RSA, C_NULL,B_0,   M_SHA, 0, 1, 0, },
 {0,CS(SSL_RSA_WITH_NULL_MD5),                 S_RSA, K_RSA, C_NULL,B_0,   M_MD5, 0, 1, 0, },
 
-#ifdef NSS_ENABLE_ECC
+#ifndef NSS_DISABLE_ECC
 /* ECC cipher suites */
 {0,CS(TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256), S_RSA, K_ECDHE, C_AESGCM, B_128, M_AEAD_128, 1, 0, 0, },
 {0,CS(TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256), S_ECDSA, K_ECDHE, C_AESGCM, B_128, M_AEAD_128, 1, 0, 0, },
@@ -201,7 +201,7 @@ static const SSLCipherSuiteInfo suiteInfo[] = {
 {0,CS(TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA),    S_RSA, K_ECDHE, C_AES, B_128, M_SHA, 1, 0, 0, },
 {0,CS(TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256), S_RSA, K_ECDHE, C_AES, B_128, M_SHA256, 1, 0, 0, },
 {0,CS(TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA),    S_RSA, K_ECDHE, C_AES, B_256, M_SHA, 1, 0, 0, },
-#endif /* NSS_ENABLE_ECC */
+#endif /* NSS_DISABLE_ECC */
 
 /* SSL 2 table */
 {0,CK(SSL_CK_RC4_128_WITH_MD5),               S_RSA, K_RSA, C_RC4, B_128, M_MD5, 0, 0, 0, },

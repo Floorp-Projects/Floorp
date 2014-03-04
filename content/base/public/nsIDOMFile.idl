@@ -26,7 +26,7 @@ interface nsIURI;
 interface nsIPrincipal;
 interface nsIDOMBlob;
 
-[scriptable, builtinclass, uuid(52d22585-7737-460e-9731-c658df03304a)]
+[scriptable, builtinclass, uuid(b1723fac-4814-4429-82cb-dc54ba0d46d6)]
 interface nsIDOMBlob : nsISupports
 {
   readonly attribute unsigned long long size;
@@ -57,9 +57,12 @@ interface nsIDOMBlob : nsISupports
   // Called before the blob is stored in a database to decide if it can be
   // shared or needs to be copied. It can be called on any thread.
   [notxpcom] FileInfo getFileInfo(in FileManager aFileManager);
+
+  // Return true if this blob is a memory file.
+  [notxpcom] bool isMemoryFile();
 };
 
-[scriptable, builtinclass, uuid(0acb4135-9f79-4516-ba92-b5fba5203620)]
+[scriptable, builtinclass, uuid(4e7d1a8b-e2d5-4304-a753-4affb731660c)]
 interface nsIDOMFile : nsIDOMBlob
 {
   readonly attribute DOMString name;
