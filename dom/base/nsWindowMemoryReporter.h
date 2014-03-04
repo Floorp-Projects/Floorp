@@ -19,13 +19,6 @@
 #include "mozilla/TimeStamp.h"
 #include "nsArenaMemoryStats.h"
 
-// This should be used for any nsINode sub-class that has fields of its own
-// that it needs to measure;  any sub-class that doesn't use it will inherit
-// SizeOfExcludingThis from its super-class.  SizeOfIncludingThis() need not be
-// defined, it is inherited from nsINode.
-#define NS_DECL_SIZEOF_EXCLUDING_THIS \
-  virtual size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
-
 class nsWindowSizes {
 #define FOR_EACH_SIZE(macro) \
   macro(DOM,   mDOMElementNodesSize) \
