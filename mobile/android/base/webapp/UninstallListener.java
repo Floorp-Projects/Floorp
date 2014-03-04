@@ -5,8 +5,11 @@
 
 package org.mozilla.gecko.webapp;
 
+import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
+import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -23,6 +26,7 @@ import android.content.pm.PackageManager;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.ArrayList;
 
@@ -93,6 +97,24 @@ public class UninstallListener extends BroadcastReceiver {
                 GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Webapps:AutoUninstall", message.toString()));
             } catch (JSONException e) {
                 Log.e(LOGTAG, "JSON EXCEPTION " + e);
+            }
+        }
+    }
+
+    public static class DelayedStartupTask implements Runnable {
+        private GeckoApp mApp;
+
+        public DelayedStartupTask(GeckoApp app) {
+            mApp = app;
+        }
+
+        @Override
+        public void run() {
+            ThreadUtils.assertOnBackgroundThread();
+
+            // Perform webapp uninstalls as appropiate.
+            if (AppConstants.MOZ_ANDROID_SYNTHAPKS) {
+                UninstallListener.initUninstallPackageScan(mApp.getApplicationContext());
             }
         }
     }
