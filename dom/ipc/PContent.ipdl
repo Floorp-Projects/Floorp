@@ -273,7 +273,7 @@ child:
      */
     async SetProcessPrivileges(ChildPrivileges privs);
 
-    PMemoryReportRequest(uint32_t generation, bool minimizeMemoryUsage, nsString DMDDumpIdent);
+    PMemoryReportRequest(uint32_t generation);
 
     /**
      * Notify the AudioChannelService in the child processes.
@@ -283,10 +283,19 @@ child:
     async SpeakerManagerNotify();
 
     /**
+     * Do a memory info dump to a file in our temp directory.
+     *
+     * For documentation on the args, see
+     * MemoryInfoDumper::dumpMemoryInfoToTempDir.
+     */
+    async DumpMemoryInfoToTempDir(nsString identifier,
+                                  bool minimizeMemoryUsage,
+                                  bool dumpChildProcesses);
+    /**
      * Dump this process's GC and CC logs.
      *
-     * For documentation on the args, see dumpGCAndCCLogsToFile in
-     * nsIMemoryInfoDumper.idl
+     * For documentation on the args, see
+     * MemoryInfoDumper::dumpGCAndCCLogsToFile.
      */
     async DumpGCAndCCLogsToFile(nsString identifier,
                                 bool dumpAllTraces,

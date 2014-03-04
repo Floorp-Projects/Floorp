@@ -8,7 +8,6 @@
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
-#include "nsPrintfCString.h"
 #include "nsServiceManagerUtils.h"
 #include "nsMemoryReporterManager.h"
 #include "nsITimer.h"
@@ -953,23 +952,6 @@ nsMemoryReporterManager::GetReports(
   nsIFinishReportingCallback* aFinishReporting,
   nsISupports* aFinishReportingData)
 {
-  return GetReportsExtended(aHandleReport, aHandleReportData,
-                            aFinishReporting, aFinishReportingData,
-                            /* minimize = */ false,
-                            /* DMDident = */ nsString());
-}
-
-NS_IMETHODIMP
-nsMemoryReporterManager::GetReportsExtended(
-  nsIHandleReportCallback* aHandleReport,
-  nsISupports* aHandleReportData,
-  nsIFinishReportingCallback* aFinishReporting,
-  nsISupports* aFinishReportingData,
-  bool aMinimize,
-  const nsAString& aDMDDumpIdent)
-{
-  nsresult rv;
-
   // Memory reporters are not necessarily threadsafe, so this function must
   // be called from the main thread.
   if (!NS_IsMainThread()) {
@@ -997,19 +979,16 @@ nsMemoryReporterManager::GetReportsExtended(
       do_GetService("@mozilla.org/observer-service;1");
     NS_ENSURE_STATE(obs);
 
-    nsPrintfCString genStr("generation=%x minimize=%d DMDident=",
-                           generation, aMinimize ? 1 : 0);
-    nsAutoString msg = NS_ConvertUTF8toUTF16(genStr);
-    msg += aDMDDumpIdent;
-
+    // Casting the uint32_t generation to |const char16_t*| is a hack, but
+    // simpler than converting the number to an actual string.
     obs->NotifyObservers(nullptr, "child-memory-reporter-request",
-                         msg.get());
+                         (const char16_t*)(uintptr_t)generation);
 
     nsCOMPtr<nsITimer> timer = do_CreateInstance(NS_TIMER_CONTRACTID);
     NS_ENSURE_TRUE(timer, NS_ERROR_FAILURE);
-    rv = timer->InitWithFuncCallback(TimeoutCallback,
-                                     this, kTimeoutLengthMS,
-                                     nsITimer::TYPE_ONE_SHOT);
+    nsresult rv = timer->InitWithFuncCallback(TimeoutCallback,
+                                              this, kTimeoutLengthMS,
+                                              nsITimer::TYPE_ONE_SHOT);
     NS_ENSURE_SUCCESS(rv, rv);
 
     mGetReportsState = new GetReportsState(generation,
@@ -1018,40 +997,16 @@ nsMemoryReporterManager::GetReportsExtended(
                                            aHandleReport,
                                            aHandleReportData,
                                            aFinishReporting,
-                                           aFinishReportingData,
-                                           aDMDDumpIdent);
-  } else {
-    mGetReportsState = new GetReportsState(generation,
-                                           nullptr,
-                                           /* mNumChildProcesses = */ 0,
-                                           aHandleReport,
-                                           aHandleReportData,
-                                           aFinishReporting,
-                                           aFinishReportingData,
-                                           aDMDDumpIdent);
+                                           aFinishReportingData);
   }
-
-  if (aMinimize) {
-    rv = MinimizeMemoryUsage(NS_NewRunnableMethod(this, &nsMemoryReporterManager::StartGettingReports));
-  } else {
-    rv = StartGettingReports();
-  }
-  return rv;
-}
-
-nsresult
-nsMemoryReporterManager::StartGettingReports()
-{
-  GetReportsState *s = mGetReportsState;
 
   // Get reports for this process.
-  GetReportsForThisProcessExtended(s->mHandleReport, s->mHandleReportData,
-                                   s->mDMDDumpIdent);
+  GetReportsForThisProcess(aHandleReport, aHandleReportData);
 
   // If there are no child processes, we can finish up immediately.
-  return (s->mNumChildProcesses == 0)
-    ? s->mFinishReporting->Callback(s->mFinishReportingData)
-    : NS_OK;
+  return (mNumChildProcesses == 0)
+       ? aFinishReporting->Callback(aFinishReportingData)
+       : NS_OK;
 }
 
 typedef nsCOMArray<nsIMemoryReporter> MemoryReporterArray;
@@ -1077,30 +1032,11 @@ nsMemoryReporterManager::GetReportsForThisProcess(
   nsIHandleReportCallback* aHandleReport,
   nsISupports* aHandleReportData)
 {
-  return GetReportsForThisProcessExtended(aHandleReport,
-                                          aHandleReportData,
-                                          nsString());
-}
-
-NS_IMETHODIMP
-nsMemoryReporterManager::GetReportsForThisProcessExtended(
-  nsIHandleReportCallback* aHandleReport,
-  nsISupports* aHandleReportData,
-  const nsAString& aDMDDumpIdent)
-{
   // Memory reporters are not necessarily threadsafe, so this function must
   // be called from the main thread.
   if (!NS_IsMainThread()) {
     MOZ_CRASH();
   }
-
-#ifdef MOZ_DMD
-  if (!aDMDDumpIdent.IsEmpty()) {
-    // Clear DMD's reportedness state before running the memory
-    // reporters, to avoid spurious twice-reported warnings.
-    dmd::ClearReports();
-  }
-#endif
 
   MemoryReporterArray allReporters;
   {
@@ -1111,12 +1047,6 @@ nsMemoryReporterManager::GetReportsForThisProcessExtended(
   for (uint32_t i = 0; i < allReporters.Length(); i++) {
     allReporters[i]->CollectReports(aHandleReport, aHandleReportData);
   }
-
-#ifdef MOZ_DMD
-  if (!aDMDDumpIdent.IsEmpty()) {
-    return nsMemoryInfoDumper::DumpDMD(aDMDDumpIdent);
-  }
-#endif
 
   return NS_OK;
 }

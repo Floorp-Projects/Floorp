@@ -172,24 +172,14 @@ static bool sNuwaForking = false;
 namespace mozilla {
 namespace dom {
 
-class MemoryReportRequestChild : public PMemoryReportRequestChild,
-                                 public nsIRunnable
+class MemoryReportRequestChild : public PMemoryReportRequestChild
 {
 public:
-    NS_DECL_ISUPPORTS
-
-    MemoryReportRequestChild(uint32_t aGeneration, const nsAString& aDMDDumpIdent);
+    MemoryReportRequestChild();
     virtual ~MemoryReportRequestChild();
-    NS_IMETHOD Run();
-private:
-    uint32_t mGeneration;
-    nsString mDMDDumpIdent;
 };
 
-NS_IMPL_ISUPPORTS1(MemoryReportRequestChild, nsIRunnable)
-
-MemoryReportRequestChild::MemoryReportRequestChild(uint32_t aGeneration, const nsAString& aDMDDumpIdent)
-: mGeneration(aGeneration), mDMDDumpIdent(aDMDDumpIdent)
+MemoryReportRequestChild::MemoryReportRequestChild()
 {
     MOZ_COUNT_CTOR(MemoryReportRequestChild);
 }
@@ -528,13 +518,9 @@ ContentChild::InitXPCOM()
 }
 
 PMemoryReportRequestChild*
-ContentChild::AllocPMemoryReportRequestChild(const uint32_t& generation,
-                                             const bool &minimizeMemoryUsage,
-                                             const nsString& aDMDDumpIdent)
+ContentChild::AllocPMemoryReportRequestChild(const uint32_t& generation)
 {
-    MemoryReportRequestChild *actor = new MemoryReportRequestChild(generation, aDMDDumpIdent);
-    actor->AddRef();
-    return actor;
+    return new MemoryReportRequestChild();
 }
 
 // This is just a wrapper for InfallibleTArray<MemoryReport> that implements
@@ -581,44 +567,25 @@ NS_IMPL_ISUPPORTS1(
 bool
 ContentChild::RecvPMemoryReportRequestConstructor(
     PMemoryReportRequestChild* child,
-    const uint32_t& generation,
-    const bool& minimizeMemoryUsage,
-    const nsString& aDMDDumpIdent)
+    const uint32_t& generation)
 {
-    MemoryReportRequestChild *actor = static_cast<MemoryReportRequestChild*>(child);
-    nsresult rv;
-
-    if (minimizeMemoryUsage) {
-        nsCOMPtr<nsIMemoryReporterManager> mgr = do_GetService("@mozilla.org/memory-reporter-manager;1");
-        rv = mgr->MinimizeMemoryUsage(actor);
-        // mgr will eventually call actor->Run()
-    } else {
-        rv = actor->Run();
-    }
-
-    return !NS_WARN_IF(NS_FAILED(rv));
-}
-
-NS_IMETHODIMP MemoryReportRequestChild::Run()
-{
-    ContentChild *child = static_cast<ContentChild*>(Manager());
     nsCOMPtr<nsIMemoryReporterManager> mgr = do_GetService("@mozilla.org/memory-reporter-manager;1");
 
     InfallibleTArray<MemoryReport> reports;
 
     nsCString process;
-    child->GetProcessName(process);
-    child->AppendProcessId(process);
+    GetProcessName(process);
+    AppendProcessId(process);
 
     // Run the reporters.  The callback will turn each measurement into a
     // MemoryReport.
     nsRefPtr<MemoryReportsWrapper> wrappedReports =
         new MemoryReportsWrapper(&reports);
     nsRefPtr<MemoryReportCallback> cb = new MemoryReportCallback(process);
-    mgr->GetReportsForThisProcessExtended(cb, wrappedReports, mDMDDumpIdent);
+    mgr->GetReportsForThisProcess(cb, wrappedReports);
 
-    bool sent = Send__delete__(this, mGeneration, reports);
-    return sent ? NS_OK : NS_ERROR_FAILURE;
+    child->Send__delete__(child, generation, reports);
+    return true;
 }
 
 bool
@@ -635,7 +602,19 @@ ContentChild::RecvAudioChannelNotify()
 bool
 ContentChild::DeallocPMemoryReportRequestChild(PMemoryReportRequestChild* actor)
 {
-    static_cast<MemoryReportRequestChild*>(actor)->Release();
+    delete actor;
+    return true;
+}
+
+bool
+ContentChild::RecvDumpMemoryInfoToTempDir(const nsString& aIdentifier,
+                                          const bool& aMinimizeMemoryUsage,
+                                          const bool& aDumpChildProcesses)
+{
+    nsCOMPtr<nsIMemoryInfoDumper> dumper = do_GetService("@mozilla.org/memory-info-dumper;1");
+
+    dumper->DumpMemoryInfoToTempDir(aIdentifier, aMinimizeMemoryUsage,
+                                    aDumpChildProcesses);
     return true;
 }
 
