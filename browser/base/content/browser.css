@@ -255,7 +255,7 @@ toolbarpaletteitem[removable="false"] {
 #bookmarks-toolbar-placeholder,
 toolbarpaletteitem > #personal-bookmarks > #PlacesToolbar,
 #personal-bookmarks[cui-areatype="menu-panel"] > #PlacesToolbar,
-#personal-bookmarks[cui-areatype="toolbar"].overflowedItem > #PlacesToolbar {
+#personal-bookmarks[cui-areatype="toolbar"][overflowedItem=true] > #PlacesToolbar {
   display: none;
 }
 
@@ -266,11 +266,11 @@ toolbarpaletteitem > #personal-bookmarks > #PlacesToolbar,
 
 toolbarpaletteitem > #personal-bookmarks > #bookmarks-toolbar-placeholder,
 #personal-bookmarks[cui-areatype="menu-panel"] > #bookmarks-toolbar-placeholder,
-#personal-bookmarks[cui-areatype="toolbar"].overflowedItem > #bookmarks-toolbar-placeholder {
+#personal-bookmarks[cui-areatype="toolbar"][overflowedItem=true] > #bookmarks-toolbar-placeholder {
   display: -moz-box;
 }
 
-#zoom-controls[cui-areatype="toolbar"]:not(.overflowedItem) > #zoom-reset-button > .toolbarbutton-text {
++#zoom-controls[cui-areatype="toolbar"]:not([overflowedItem=true]) > #zoom-reset-button > .toolbarbutton-text {
   display: -moz-box;
 }
 

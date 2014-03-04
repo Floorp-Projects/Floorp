@@ -1347,7 +1347,7 @@ let BookmarkingUI = {
     if (isInBookmarksToolbar)
       this.notifier.setAttribute("in-bookmarks-toolbar", true);
 
-    let isInOverflowPanel = this.button.classList.contains("overflowedItem");
+    let isInOverflowPanel = this.button.getAttribute("overflowedItem") == "true";
     if (!isInOverflowPanel) {
       this.notifier.setAttribute("notification", "finish");
       this.button.setAttribute("notification", "finish");

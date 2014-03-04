@@ -690,28 +690,28 @@ menuitem.subviewbutton@menuStateActive@,
   height: 16px;
 }
 
-#PanelUI-footer > #PanelUI-footer-inner.panel-multiview-anchor,
-toolbarbutton.panel-multiview-anchor {
+#PanelUI-footer > #PanelUI-footer-inner[panel-multiview-anchor=true],
+toolbarbutton[panel-multiview-anchor=true] {
   background-color: Highlight;
   background-image: linear-gradient(rgba(255,255,255,0.3), rgba(255,255,255,0));
 }
 
-toolbarbutton.panel-multiview-anchor {
+toolbarbutton[panel-multiview-anchor=true] {
   background-image: url(chrome://browser/skin/customizableui/subView-arrow-back-inverted.png),
                     linear-gradient(rgba(255,255,255,0.3), rgba(255,255,255,0));
   background-position: right 5px center;
   background-repeat: no-repeat;
 }
 
-toolbarbutton.panel-multiview-anchor:-moz-locale-dir(rtl) {
+toolbarbutton[panel-multiview-anchor=true]:-moz-locale-dir(rtl) {
   background-image: url(chrome://browser/skin/customizableui/subView-arrow-back-inverted-rtl.png),
                     linear-gradient(rgba(255,255,255,0), rgba(255,255,255,0.3));
   background-position: left 5px center;
 }
 
-#PanelUI-footer > #PanelUI-footer-inner.panel-multiview-anchor,
-toolbarbutton.panel-multiview-anchor,
-toolbarbutton.panel-multiview-anchor > .toolbarbutton-menubutton-button {
+#PanelUI-footer > #PanelUI-footer-inner[panel-multiview-anchor=true],
+toolbarbutton[panel-multiview-anchor=true],
+toolbarbutton[panel-multiview-anchor=true] > .toolbarbutton-menubutton-button {
   color: HighlightText;
 }
 
@@ -848,7 +848,8 @@ toolbarpaletteitem[place="palette"] > #search-container {
   padding-right: 10px;
 }
 
-#widget-overflow-list > .overflowedItem {
+toolbaritem[overflowedItem=true],
+toolbarbutton[overflowedItem=true] {
   width: 100%;
   max-width: @menuPanelWidth@;
   min-height: 36px;
