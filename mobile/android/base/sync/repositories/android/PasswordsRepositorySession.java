@@ -327,6 +327,13 @@ public class PasswordsRepositorySession extends
         }
         // End deletion logic.
 
+        // Validate the incoming record.
+        if (!remoteRecord.isValid()) {
+            Logger.warn(LOG_TAG, "Incoming record is invalid. Reporting store failed.");
+            delegate.onRecordStoreFailed(new RuntimeException("Can't store invalid password record."), record.guid);
+            return;
+        }
+
         // Now we're processing a non-deleted incoming record.
         if (existingRecord == null) {
           trace("Looking up match for record " + remoteRecord.guid);
