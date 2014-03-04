@@ -7,7 +7,3 @@ include $(topsrcdir)/config/rules.mk
 
 CFLAGS          += $(GLIB_CFLAGS) $(MOZ_DBUS_GLIB_CFLAGS)
 CXXFLAGS        += $(GLIB_CFLAGS) $(MOZ_DBUS_GLIB_CFLAGS)
-
-ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))
-  LOCAL_INCLUDES += -I$(ANDROID_SOURCE)/hardware/libhardware_legacy/include
-endif

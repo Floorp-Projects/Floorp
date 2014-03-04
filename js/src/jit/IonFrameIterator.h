@@ -9,6 +9,7 @@
 
 #ifdef JS_ION
 
+#include "jsfun.h"
 #include "jsscript.h"
 #include "jstypes.h"
 
@@ -64,6 +65,17 @@ enum FrameType
     // looks like a JS frame, but does not push scripted arguments, as OSR
     // reads arguments from a js::StackFrame.
     IonFrame_Osr
+};
+
+enum ReadFrameArgsBehavior {
+    // Only read formals (i.e. [0 ... callee()->nargs]
+    ReadFrame_Formals,
+
+    // Only read overflown args (i.e. [callee()->nargs ... numActuals()]
+    ReadFrame_Overflown,
+
+    // Read all args (i.e. [0 ... numActuals()])
+    ReadFrame_Actuals
 };
 
 class IonCommonFrameLayout;
@@ -205,15 +217,24 @@ class IonFrameIterator
     MachineState machineState() const;
 
     template <class Op>
-    void forEachCanonicalActualArg(Op op, unsigned start, unsigned count) const {
+    void forEachCanonicalActualArg(Op op, ReadFrameArgsBehavior behavior) const {
         JS_ASSERT(isBaselineJS());
 
         unsigned nactual = numActualArgs();
-        if (count == unsigned(-1))
-            count = nactual - start;
-
-        unsigned end = start + count;
-        JS_ASSERT(start <= end && end <= nactual);
+        unsigned start, end;
+        switch (behavior) {
+          case ReadFrame_Formals:
+            start = 0;
+            end = callee()->nargs();
+            break;
+          case ReadFrame_Overflown:
+            start = callee()->nargs();
+            end = nactual;
+            break;
+          case ReadFrame_Actuals:
+            start = 0;
+            end = nactual;
+        }
 
         Value *argv = actualArgs();
         for (unsigned i = start; i < end; i++)
@@ -273,8 +294,8 @@ class SnapshotIterator : public SnapshotReader
     }
 
     template <class Op>
-    void readFrameArgs(Op &op, const Value *argv, Value *scopeChain, Value *thisv,
-                       unsigned start, unsigned formalEnd, unsigned iterEnd, JSScript *script)
+    void readFrameArgs(Op &op, Value *scopeChain, Value *thisv,
+                       unsigned start, unsigned end, JSScript *script)
     {
         if (scopeChain)
             *scopeChain = read();
@@ -294,21 +315,17 @@ class SnapshotIterator : public SnapshotReader
             skip();
 
         unsigned i = 0;
-        if (formalEnd < start)
+        if (end < start)
             i = start;
 
         for (; i < start; i++)
             skip();
-        for (; i < formalEnd && i < iterEnd; i++) {
+        for (; i < end; i++) {
             // We are not always able to read values from the snapshots, some values
             // such as non-gc things may still be live in registers and cause an
             // error while reading the machine state.
             Value v = maybeRead();
             op(v);
-        }
-        if (iterEnd >= formalEnd) {
-            for (; i < iterEnd; i++)
-                op(argv[i]);
         }
     }
 
@@ -340,6 +357,10 @@ class InlineFrameIteratorMaybeGC
     typename MaybeRooted<JSScript*, allowGC>::RootType script_;
     jsbytecode *pc_;
     uint32_t numActualArgs_;
+
+    struct Nop {
+        void operator()(const Value &v) { }
+    };
 
   private:
     void findNextFrame();
@@ -399,50 +420,65 @@ class InlineFrameIteratorMaybeGC
         return frame_->numActualArgs();
     }
 
-    template <class Op>
-    void forEachCanonicalActualArg(JSContext *cx, Op op, unsigned start, unsigned count) const {
+    template <class ArgOp, class LocalOp>
+    void readFrameArgsAndLocals(JSContext *cx, ArgOp &argOp, LocalOp &localOp,
+                                Value *scopeChain, Value *thisv,
+                                ReadFrameArgsBehavior behavior) const
+    {
         unsigned nactual = numActualArgs();
-        if (count == unsigned(-1))
-            count = nactual - start;
-
-        unsigned end = start + count;
         unsigned nformal = callee()->nargs();
 
-        JS_ASSERT(start <= end && end <= nactual);
+        // Get the non overflown arguments, which are taken from the inlined
+        // frame, because it will have the updated value when JSOP_SETARG is
+        // done.
+        SnapshotIterator s(si_);
+        if (behavior != ReadFrame_Overflown)
+            s.readFrameArgs(argOp, scopeChain, thisv, 0, nformal, script());
 
-        if (more()) {
-            // There is still a parent frame of this inlined frame.
-            // The not overflown arguments are taken from the inlined frame,
-            // because it will have the updated value when JSOP_SETARG is done.
-            // All arguments (also the overflown) are the last pushed values in the parent frame.
-            // To get the overflown arguments, we need to take them from there.
+        if (behavior != ReadFrame_Formals) {
+            if (more()) {
+                // There is still a parent frame of this inlined frame.  All
+                // arguments (also the overflown) are the last pushed values
+                // in the parent frame.  To get the overflown arguments, we
+                // need to take them from there.
 
-            // Get the non overflown arguments
-            unsigned formal_end = (end < nformal) ? end : nformal;
-            SnapshotIterator s(si_);
-            s.readFrameArgs(op, nullptr, nullptr, nullptr, start, nformal, formal_end, script());
+                // The overflown arguments are not available in current frame.
+                // They are the last pushed arguments in the parent frame of
+                // this inlined frame.
+                InlineFrameIteratorMaybeGC it(cx, this);
+                ++it;
+                unsigned argsObjAdj = it.script()->argumentsHasVarBinding() ? 1 : 0;
+                SnapshotIterator parent_s(it.snapshotIterator());
 
-            // The overflown arguments are not available in current frame.
-            // They are the last pushed arguments in the parent frame of this inlined frame.
-            InlineFrameIteratorMaybeGC it(cx, this);
-            ++it;
-            unsigned argsObjAdj = it.script()->argumentsHasVarBinding() ? 1 : 0;
-            SnapshotIterator parent_s(it.snapshotIterator());
+                // Skip over all slots until we get to the last slots
+                // (= arguments slots of callee) the +3 is for [this], [returnvalue],
+                // [scopechain], and maybe +1 for [argsObj]
+                JS_ASSERT(parent_s.allocations() >= nactual + 3 + argsObjAdj);
+                unsigned skip = parent_s.allocations() - nactual - 3 - argsObjAdj;
+                for (unsigned j = 0; j < skip; j++)
+                    parent_s.skip();
 
-            // Skip over all slots untill we get to the last slots (= arguments slots of callee)
-            // the +3 is for [this], [returnvalue], [scopechain], and maybe +1 for [argsObj]
-            JS_ASSERT(parent_s.allocations() >= nactual + 3 + argsObjAdj);
-            unsigned skip = parent_s.allocations() - nactual - 3 - argsObjAdj;
-            for (unsigned j = 0; j < skip; j++)
-                parent_s.skip();
-
-            // Get the overflown arguments
-            parent_s.readFrameArgs(op, nullptr, nullptr, nullptr, nformal, nactual, end, it.script());
-        } else {
-            SnapshotIterator s(si_);
-            Value *argv = frame_->actualArgs();
-            s.readFrameArgs(op, argv, nullptr, nullptr, start, nformal, end, script());
+                // Get the overflown arguments
+                parent_s.readFrameArgs(argOp, nullptr, nullptr, nformal, nactual, it.script());
+            } else {
+                // There is no parent frame to this inlined frame, we can read
+                // from the frame's Value vector directly.
+                Value *argv = frame_->actualArgs();
+                for (unsigned i = nformal; i < nactual; i++)
+                    argOp(argv[i]);
+            }
         }
+
+        // At this point we've read all the formals in s, and can read the
+        // locals.
+        for (unsigned i = 0; i < script()->nfixed(); i++)
+            localOp(s.read());
+    }
+
+    template <class Op>
+    void forEachCanonicalActualArg(JSContext *cx, Op op, ReadFrameArgsBehavior behavior) const {
+        Nop nop;
+        readFrameArgsAndLocals(cx, op, nop, nullptr, nullptr, behavior);
     }
 
     JSScript *script() const {

@@ -224,7 +224,7 @@ PluginHangUIParent::Init(const nsString& aPluginName)
   }
   commandLine.AppendLooseValue(ipcCookie);
 
-  ScopedHandle showEvent(::CreateEvent(nullptr, FALSE, FALSE, nullptr));
+  ScopedHandle showEvent(::CreateEventW(nullptr, FALSE, FALSE, nullptr));
   if (!showEvent.IsValid()) {
     return false;
   }
@@ -290,7 +290,7 @@ PluginHangUIParent::UnwatchHangUIChildProcess(bool aWait)
     // constructor) completionEvent
     ScopedHandle completionEvent;
     if (aWait) {
-      completionEvent.Set(::CreateEvent(nullptr, FALSE, FALSE, nullptr));
+      completionEvent.Set(::CreateEventW(nullptr, FALSE, FALSE, nullptr));
       if (!completionEvent.IsValid()) {
         return false;
       }

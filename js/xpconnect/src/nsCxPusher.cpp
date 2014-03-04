@@ -15,9 +15,6 @@
 using mozilla::dom::EventTarget;
 using mozilla::DebugOnly;
 
-NS_EXPORT
-nsCxPusher::~nsCxPusher() {}
-
 bool
 nsCxPusher::Push(EventTarget *aCurrentTarget)
 {
@@ -78,7 +75,7 @@ nsCxPusher::RePush(EventTarget *aCurrentTarget)
   return Push(aCurrentTarget);
 }
 
-NS_EXPORT_(void)
+void
 nsCxPusher::Push(JSContext *cx)
 {
   mPusher.construct(cx);
@@ -92,7 +89,7 @@ nsCxPusher::PushNull()
   mPusher.construct(static_cast<JSContext*>(nullptr), /* aAllowNull = */ true);
 }
 
-NS_EXPORT_(void)
+void
 nsCxPusher::Pop()
 {
   if (!mPusher.empty())
@@ -135,7 +132,6 @@ AutoCxPusher::AutoCxPusher(JSContext* cx, bool allowNull)
   }
 }
 
-NS_EXPORT
 AutoCxPusher::~AutoCxPusher()
 {
   // GC when we pop a script entry point. This is a useful heuristic that helps

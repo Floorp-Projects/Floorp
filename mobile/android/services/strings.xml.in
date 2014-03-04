@@ -98,6 +98,9 @@
   <string name="sync_text_tab_sent">&sync.text.tab.sent.label;</string>
   <string name="sync_text_tab_not_sent">&sync.text.tab.not.sent.label;</string>
 
+<string name="browser_intent_package">@ANDROID_PACKAGE_NAME@</string>
+<string name="browser_intent_class">@ANDROID_PACKAGE_NAME@.App</string>
+
 <!-- Firefox account strings. -->
 
 <!-- Firefox account links. -->
@@ -162,7 +165,9 @@
 <string name="fxaccount_update_credentials_button_label">&fxaccount_update_credentials_button_label;</string>
 <string name="fxaccount_update_credentials_unknown_error">&fxaccount_update_credentials_unknown_error;</string>
 
+<string name="fxaccount_status_activity_label">&syncBrand.shortName.label;</string>
 <string name="fxaccount_status_header">&fxaccount_status_header;</string>
+<string name="fxaccount_status_signed_in_as">&fxaccount_status_signed_in_as;</string>
 <string name="fxaccount_status_sync">&fxaccount_status_sync;</string>
 <string name="fxaccount_status_sync_enabled">&fxaccount_status_sync_enabled;</string>
 <string name="fxaccount_status_needs_verification">&fxaccount_status_needs_verification2;</string>
