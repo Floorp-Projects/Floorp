@@ -857,6 +857,8 @@ var gEditItemOverlay = {
     var txn = new PlacesCreateFolderTransaction(defaultLabel, ip.itemId, ip.index);
     PlacesUtils.transactionManager.doTransaction(txn);
     this._folderTree.focus();
+    this._folderTree.selectItems([ip.itemId]);
+    PlacesUtils.asContainer(this._folderTree.selectedNode).containerOpen = true;
     this._folderTree.selectItems([this._lastNewItem]);
     this._folderTree.startEditing(this._folderTree.view.selection.currentIndex,
                                   this._folderTree.columns.getFirstColumn());

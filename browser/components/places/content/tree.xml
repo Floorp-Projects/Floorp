@@ -45,7 +45,7 @@
       <property name="view">
         <getter><![CDATA[
           try {
-            return this.treeBoxObject.view.wrappedJSObject;
+            return this.treeBoxObject.view.wrappedJSObject || null;
           }
           catch(e) {
             return null;
@@ -312,9 +312,9 @@
           for (let i = 0; i < rc; ++i) {
             let min = { }, max = { };
             selection.getRangeAt(i, min, max);
-
-            for (let j = min.value; j <= max.value; ++j)
+            for (let j = min.value; j <= max.value; ++j) {
               nodes.push(resultview.nodeForTreeIndex(j));
+            }
           }
           return nodes;
         ]]></getter>
@@ -453,8 +453,6 @@
           //
           // If the sole selection is the bookmarks toolbar folder, we insert
           // into it even if it is not opened
-          var itemId =
-            PlacesUtils.getConcreteItemId(resultView.nodeForTreeIndex(max.value));
           if (selection.count == 1 && resultView.isContainer(max.value) &&
               !this.flatList)
             orientation = Ci.nsITreeView.DROP_ON;
@@ -546,13 +544,16 @@
       </method>
 
       <!-- This method will select the first node in the tree that matches
-           each given item id. It will open any parent nodes that it needs
+           each given item id. It will open any folder nodes that it needs
            to in order to show the selected items.
       -->
       <method name="selectItems">
         <parameter name="aIDs"/>
         <parameter name="aOpenContainers"/>
         <body><![CDATA[
+          // Never open containers in flat lists.
+          if (this.flatList)
+            aOpenContainers = false;
           // By default, we do search and select within containers which were
           // closed (note that containers in which nodes were not found are
           // closed).
@@ -601,8 +602,13 @@
                 nodesURIChecked.indexOf(node.uri) != -1)
               return foundOne;
 
+            // Don't try to open a query or a shurtcut, since it may return
+            // any duplicate data and be infinitely nested.  Though, if it has
+            // been explicitly opened by the caller, search into it.
+            let shouldOpen = aOpenContainers &&
+                             node.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER;
             PlacesUtils.asContainer(node);
-            if (!aOpenContainers && !node.containerOpen)
+            if (!node.containerOpen && !shouldOpen)
               return foundOne;
 
             nodesURIChecked.push(node.uri);
