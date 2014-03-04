@@ -87,6 +87,16 @@ nsTableCellFrame::Init(nsIContent*      aContent,
   }
 }
 
+void
+nsTableCellFrame::DestroyFrom(nsIFrame* aDestructRoot)
+{
+  if (GetStateBits() & NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN) {
+    nsTableFrame::UnregisterPositionedTablePart(this, aDestructRoot);
+  }
+
+  nsContainerFrame::DestroyFrom(aDestructRoot);
+}
+
 // nsIPercentHeightObserver methods
 
 void
