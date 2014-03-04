@@ -204,7 +204,8 @@ MessageChannel::MessageChannel(MessageListener *aListener)
     mDispatchingSyncMessage(false),
     mDispatchingUrgentMessageCount(0),
     mRemoteStackDepthGuess(false),
-    mSawInterruptOutMsg(false)
+    mSawInterruptOutMsg(false),
+    mAbortOnError(false)
 {
     MOZ_COUNT_CTOR(ipc::MessageChannel);
 
@@ -1517,6 +1518,9 @@ MessageChannel::OnChannelErrorFromLink()
         NotifyWorkerThread();
 
     if (ChannelClosing != mChannelState) {
+        if (mAbortOnError) {
+            NS_RUNTIMEABORT("Aborting on channel error.");
+        }
         mChannelState = ChannelError;
         mMonitor->Notify();
     }
