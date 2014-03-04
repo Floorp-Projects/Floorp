@@ -19,7 +19,7 @@
 #include "nsIScreenManager.h"
 #include "nsILocaleService.h"
 #include "nsServiceManagerUtils.h"
-
+#include "gfxPrefs.h"
 #include "cairo.h"
 
 #include "ft2build.h"
@@ -121,7 +121,7 @@ gfxAndroidPlatform::gfxAndroidPlatform()
                        ? gfxImageFormat::RGB16_565
                        : gfxImageFormat::RGB24;
 
-    if (Preferences::GetBool("gfx.android.rgb16.force", false)) {
+    if (gfxPrefs::AndroidRGB16Force()) {
         mOffscreenFormat = gfxImageFormat::RGB16_565;
     }
 
