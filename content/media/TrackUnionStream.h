@@ -39,7 +39,7 @@ public:
     }
     ProcessedMediaStream::RemoveInput(aPort);
   }
-  virtual void ProduceOutput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags) MOZ_OVERRIDE
+  virtual void ProcessInput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags) MOZ_OVERRIDE
   {
     if (IsFinishedOnGraphThread()) {
       return;
