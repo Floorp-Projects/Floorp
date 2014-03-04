@@ -196,6 +196,7 @@ CustomizeMode.prototype = {
 
       // Hide the palette before starting the transition for increased perf.
       this.visiblePalette.hidden = true;
+      this.visiblePalette.removeAttribute("showing");
 
       // Disable the button-text fade-out mask
       // during the transition for increased perf.
@@ -263,6 +264,12 @@ CustomizeMode.prototype = {
 
       // Show the palette now that the transition has finished.
       this.visiblePalette.hidden = false;
+      window.setTimeout(() => {
+        // Force layout reflow to ensure the animation runs,
+        // and make it async so it doesn't affect the timing.
+        this.visiblePalette.clientTop;
+        this.visiblePalette.setAttribute("showing", "true");
+      }, 0);
       this.paletteSpacer.hidden = true;
       this._updateEmptyPaletteNotice();
 
@@ -343,6 +350,7 @@ CustomizeMode.prototype = {
     // Hide the palette before starting the transition for increased perf.
     this.paletteSpacer.hidden = false;
     this.visiblePalette.hidden = true;
+    this.visiblePalette.removeAttribute("showing");
     this.paletteEmptyNotice.hidden = true;
 
     // Disable the button-text fade-out mask
