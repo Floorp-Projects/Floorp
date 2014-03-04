@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>nsIAccessible::childAtPoint() for canvas from browser tests</title>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../layout.js"></script>
+
+  <script type="application/javascript">
+    SpecialPowers.setBoolPref("canvas.hitregions.enabled", true);
+
+    function redrawCheckbox(context, element, x, y)
+    {
+      context.save();
+      context.font = '10px sans-serif';
+      context.textAlign = 'left';
+      context.textBaseline = 'middle';
+      var metrics = context.measureText(element.parentNode.textContent);
+      context.beginPath();
+      context.strokeStyle = 'black';
+      context.rect(x-5, y-5, 10, 10);
+      context.stroke();
+      if (element.checked) {
+        context.fillStyle = 'black';
+        context.fill();
+      }
+      context.fillText(element.parentNode.textContent, x+5, y);
+
+      context.beginPath();
+      context.rect(x-7, y-7, 12 + metrics.width+2, 14);
+
+      if (document.activeElement == element)
+        context.drawFocusIfNeeded(element);
+      context.addHitRegion({control: element});
+      context.restore();
+    }
+
+    function doTest()
+    {
+      getNode("hittest").scrollIntoView(true);
+
+      var context = document.getElementById("hitcanvas").getContext('2d');
+      redrawCheckbox(context, document.getElementById('hitcheck'), 20, 40);
+
+      var hitcanvas = getAccessible("hitcanvas");
+      var hitcheck = getAccessible("hitcheck");
+
+      var [hitX, hitY, hitWidth, hitHeight] = getBounds(hitcanvas);
+
+      var docAcc = getAccessible(document);
+      var tgtX = hitX+25;
+      var tgtY = hitY+45;
+      hitAcc = docAcc.getDeepestChildAtPoint(tgtX, tgtY);
+      // test if we hit the region associated with the shadow dom checkbox
+      is(hitAcc, hitcheck, "Hit match at " + tgtX + "," + tgtY +
+                          ". Found: " + prettyName(hitAcc));
+
+      tgtY = hitY+75;
+      hitAcc = docAcc.getDeepestChildAtPoint(tgtX, tgtY);
+      // test that we don't hit the region associated with the shadow dom checkbox
+      is(hitAcc, hitcanvas, "Hit match at " + tgtX + "," + tgtY +
+                          ". Found: " + prettyName(hitAcc));
+
+      SpecialPowers.setBoolPref("canvas.hitregions.enabled", false);
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=966591"
+     title="nsIAccessible::childAtPoint() for canvas hit regions from browser tests">Mozilla Bug 966591</a>
+
+  <canvas id="hitcanvas">
+    <input id="hitcheck" type="checkbox"><label for="showA"> Show A </label>
+  </canvas>
+</body>
+</html>
