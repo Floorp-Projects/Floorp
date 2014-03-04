@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:key="status_screen" >
+
+    <PreferenceCategory
+        android:key="signed_in_as_category"
+        android:title="@string/fxaccount_status_signed_in_as" >
+        <Preference
+            android:editable="false"
+            android:key="email"
+            android:persistent="false"
+            android:title="@string/fxaccount_email_hint" />
+    </PreferenceCategory>
+    <PreferenceCategory
+        android:key="sync_category"
+        android:title="@string/fxaccount_status_sync" >
+        <Preference
+            android:editable="false"
+            android:icon="@drawable/fxaccount_sync_error"
+            android:key="needs_credentials"
+            android:layout="@layout/fxaccount_status_error_preference"
+            android:persistent="false"
+            android:title="@string/fxaccount_status_needs_credentials" />
+        <Preference
+            android:editable="false"
+            android:icon="@drawable/fxaccount_sync_error"
+            android:key="needs_upgrade"
+            android:layout="@layout/fxaccount_status_error_preference"
+            android:persistent="false"
+            android:title="@string/fxaccount_status_needs_upgrade" />
+        <Preference
+            android:editable="false"
+            android:icon="@drawable/fxaccount_sync_error"
+            android:key="needs_verification"
+            android:layout="@layout/fxaccount_status_error_preference"
+            android:persistent="false"
+            android:title="@string/fxaccount_status_needs_verification" />
+
+        <CheckBoxPreference
+            android:key="bookmarks"
+            android:persistent="false"
+            android:title="@string/fxaccount_status_bookmarks" />
+        <CheckBoxPreference
+            android:key="history"
+            android:persistent="false"
+            android:title="@string/fxaccount_status_history" />
+        <CheckBoxPreference
+            android:key="tabs"
+            android:persistent="false"
+            android:title="@string/fxaccount_status_tabs" />
+        <CheckBoxPreference
+            android:key="passwords"
+            android:persistent="false"
+            android:title="@string/fxaccount_status_passwords" />
+    </PreferenceCategory>
+    <PreferenceCategory
+        android:key="legal_category"
+        android:title="@string/fxaccount_status_legal" >
+        <Preference android:title="@string/fxaccount_policy_linktos" >
+            <intent
+                android:action="android.intent.action.VIEW"
+                android:data="@string/fxaccount_link_tos"
+                android:targetClass="@string/browser_intent_class"
+                android:targetPackage="@string/browser_intent_package" />
+        </Preference>
+        <Preference android:title="@string/fxaccount_policy_linkprivacy" >
+            <intent
+                android:action="android.intent.action.VIEW"
+                android:data="@string/fxaccount_link_pn"
+                android:targetClass="@string/browser_intent_class"
+                android:targetPackage="@string/browser_intent_package" />
+        </Preference>
+    </PreferenceCategory>
+    <PreferenceCategory
+        android:key="debug_category" >
+        <Preference android:key="debug_refresh" />
+        <Preference android:key="debug_dump" />
+        <Preference android:key="debug_force_sync" />
+        <Preference android:key="debug_forget_certificate" />
+        <Preference android:key="debug_require_password" />
+        <Preference android:key="debug_require_upgrade" />
+    </PreferenceCategory>
+
+</PreferenceScreen>

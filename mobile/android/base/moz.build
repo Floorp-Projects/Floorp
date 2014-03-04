@@ -154,6 +154,7 @@ gbjar.sources += [
     'GeckoMessageReceiver.java',
     'GeckoNetworkManager.java',
     'GeckoProfile.java',
+    'GeckoProfileDirectories.java',
     'GeckoScreenOrientation.java',
     'GeckoSmsManager.java',
     'GeckoThread.java',
