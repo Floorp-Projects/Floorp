@@ -2,24 +2,31 @@
 <html>
 <head>
 <style type="text/css">
-#parent {
+#parent1 {
  width: 200px;
 }
 #block1 {
- height: 40px;
- margin-bottom: 10%;
+ height: 50px;
  background-color: green;
 }
+#parent2 {
+ width: 500px;
+}
 #block2 {
- height: 40px;
- margin-top: 25%;
+ height: 50px;
  background-color: green;
+}
+#spacer {
+ height: 50px;
 }
 </style>
 </head>
 <body>
-<div id="parent">
+<div id="parent1">
  <div id="block1"></div>
+</div>
+<div id="spacer"></div>
+<div id="parent2">
  <div id="block2"></div>
 </div>
 </body>

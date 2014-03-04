@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<style type="text/css">
+.separator {
+ height: 20px;
+ background-color: green;
+}
+#parent {
+ margin-top: 60px;
+ margin-bottom: -30px;
+}
+#child {
+ margin-top: -20px;
+}
+</style>
+<script type="text/javascript">
+function test() {
+ document.getElementById('child').style.marginBottom = '70px';
+ document.documentElement.removeAttribute('class');
+}
+document.addEventListener('MozReftestInvalidate', test, false);
+</script>
+</head>
+<body>
+<div class="separator"></div>
+<div id="parent">
+ <div id="child"></div>
+</div>
+<div class="separator"></div>
+</body>
+</html>

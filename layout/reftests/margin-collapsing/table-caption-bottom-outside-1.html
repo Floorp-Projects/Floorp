@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style type="text/css">
+#block1, #block2 {
+ height: 20px;
+ background-color: green;
+}
+#block1 {
+ margin-bottom: 10px;
+}
+#block2 {
+ margin-top: 10px;
+}
+#table {
+ display: table;
+}
+#caption {
+ display: table-caption;
+ caption-side: bottom-outside;
+ height: 20px;
+ margin: 20px 0;
+ background-color: blue;
+}
+#cell {
+ display: table-cell;
+ width: 100px;
+ height: 20px;
+ background-color: orange;
+}
+</style>
+</head>
+<body>
+<div id="block1"></div>
+<div id="table">
+ <div id="caption"></div>
+ <div id="cell"></div>
+</div>
+<div id="block2"></div>
+</body>
+</html>
