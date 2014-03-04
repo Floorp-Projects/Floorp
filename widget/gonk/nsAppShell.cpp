@@ -240,6 +240,9 @@ sendTouchEvent(UserInputData& data, bool* captured)
     case AMOTION_EVENT_ACTION_CANCEL:
         msg = NS_TOUCH_CANCEL;
         break;
+    default:
+        msg = NS_EVENT_NULL;
+        break;
     }
 
     WidgetTouchEvent event(true, msg, nullptr);
@@ -689,8 +692,14 @@ GeckoInputDispatcher::dispatchOnce()
         case AMOTION_EVENT_ACTION_UP:
             msg = NS_MOUSE_BUTTON_UP;
             break;
+        default:
+            msg = NS_EVENT_NULL;
+            break;
         }
-        sendMouseEvent(msg, data, status != nsEventStatus_eConsumeNoDefault);
+        if (msg != NS_EVENT_NULL) {
+            sendMouseEvent(msg, data, 
+                           status != nsEventStatus_eConsumeNoDefault);
+        }
         break;
     }
     case UserInputData::KEY_DATA: {
