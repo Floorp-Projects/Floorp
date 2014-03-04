@@ -40,12 +40,15 @@ function test() {
         is($("#empty-cache-chart").childNodes.length, 1,
           "There should be a real empty cache chart created now.");
 
-        is($all(".pie-chart-container:not([placeholder=true])").length, 2,
-          "Two real pie chart appear to be rendered correctly.");
-        is($all(".table-chart-container:not([placeholder=true])").length, 2,
-          "Two real table chart appear to be rendered correctly.");
+        Task.spawn(function*() {
+          yield until(() => $all(".pie-chart-container:not([placeholder=true])").length == 2);
+          ok(true, "Two real pie charts appear to be rendered correctly.");
 
-        teardown(aMonitor).then(finish);
+          yield until(() => $all(".table-chart-container:not([placeholder=true])").length == 2);
+          ok(true, "Two real table charts appear to be rendered correctly.")
+
+          teardown(aMonitor).then(finish);
+        });
       });
     });
 
@@ -53,5 +56,17 @@ function test() {
 
     is(NetMonitorView.currentFrontendMode, "network-statistics-view",
       "The current frontend mode is correct.");
+  });
+}
+
+function waitForTick() {
+  let deferred = promise.defer();
+  executeSoon(deferred.resolve);
+  return deferred.promise;
+}
+
+function until(predicate) {
+  return Task.spawn(function*() {
+    while (!predicate()) yield waitForTick();
   });
 }
