@@ -35,7 +35,6 @@
 #include "nsIScriptTimeoutHandler.h"
 #include "nsIController.h"
 #include "nsScriptNameSpaceManager.h"
-#include "nsWindowMemoryReporter.h"
 
 // Helper Classes
 #include "nsJSUtils.h"
