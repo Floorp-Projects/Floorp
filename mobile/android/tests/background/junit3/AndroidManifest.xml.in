@@ -1,7 +1,7 @@
 #filter substitution
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="@ANDROID_BACKGROUND_TEST_PACKAGE_NAME@"
+    package="org.mozilla.gecko.background.tests"
     sharedUserId="@MOZ_ANDROID_SHARED_ID@"
     android:versionCode="1"
     android:versionName="1.0" >
@@ -14,11 +14,11 @@
     <uses-permission android:name="@ANDROID_BACKGROUND_TARGET_PACKAGE_NAME@.permissions.PASSWORD_PROVIDER"/>
 
     <application
+        android:debuggable="true"
         android:icon="@drawable/icon"
         android:label="@ANDROID_BACKGROUND_APP_DISPLAYNAME@">
         <uses-library android:name="android.test.runner" />
     </application>
-
 
     <instrumentation
         android:label="@string/app_name"
