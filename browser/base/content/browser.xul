@@ -776,7 +776,7 @@
                        cui-areatype="toolbar"
                        oncommand="BookmarkingUI.onCommand(event);">
           <menupopup id="BMB_bookmarksPopup"
-                     class="cui-widget-panel cui-widget-panelview cui-widget-panelWithFooter"
+                     class="cui-widget-panel cui-widget-panelview cui-widget-panelWithFooter PanelUI-subView"
                      placespopup="true"
                      context="placesContext"
                      openInTabs="children"
