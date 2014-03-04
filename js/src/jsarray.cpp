@@ -1094,7 +1094,20 @@ ArrayJoin(JSContext *cx, CallArgs &args)
 
     JS::Anchor<JSString*> anchor(sepstr);
 
-    // Step 6 is implicit in the loops below
+    // Step 6 is implicit in the loops below.
+
+    // An optimized version of a special case of steps 7-11: when length==1 and
+    // the 0th element is a string, ToString() of that element is a no-op and
+    // so it can be immediately returned as the result.
+    if (length == 1 && !Locale && obj->is<ArrayObject>() &&
+        obj->getDenseInitializedLength() == 1)
+    {
+        const Value &elem0 = obj->getDenseElement(0);
+        if (elem0.isString()) {
+            args.rval().setString(elem0.toString());
+            return true;
+        }
+    }
 
     StringBuffer sb(cx);
 
@@ -1103,7 +1116,7 @@ ArrayJoin(JSContext *cx, CallArgs &args)
     if (length > 0 && !sb.reserve(seplen * (length - 1)))
         return false;
 
-    // Various optimized versions of steps 7-10
+    // Various optimized versions of steps 7-10.
     if (seplen == 0) {
         EmptySeparatorOp op;
         if (!ArrayJoinKernel<Locale>(cx, op, obj, length, sb))

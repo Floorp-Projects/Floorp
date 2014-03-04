@@ -79,11 +79,11 @@ Logging::Logging()
 
   std::wstring event_name = GetEventName(browser_pid, true);
   logging_event_on_.reset(new base::WaitableEvent(
-      CreateEvent(NULL, TRUE, FALSE, event_name.c_str())));
+      CreateEventW(NULL, TRUE, FALSE, event_name.c_str())));
 
   event_name = GetEventName(browser_pid, false);
   logging_event_off_.reset(new base::WaitableEvent(
-      CreateEvent(NULL, TRUE, FALSE, event_name.c_str())));
+      CreateEventW(NULL, TRUE, FALSE, event_name.c_str())));
 
   RegisterWaitForEvent(true);
 #endif

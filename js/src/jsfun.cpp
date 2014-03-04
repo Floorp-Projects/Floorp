@@ -966,7 +966,7 @@ PushBaselineFunApplyArguments(JSContext *cx, jit::IonFrameIterator &frame, Invok
     args.setThis(vp[2]);
 
     /* Steps 7-8. */
-    frame.forEachCanonicalActualArg(CopyTo(args.array()), 0, -1);
+    frame.forEachCanonicalActualArg(CopyTo(args.array()), jit::ReadFrame_Actuals);
     return true;
 }
 #endif
@@ -1024,7 +1024,8 @@ js_fun_apply(JSContext *cx, unsigned argc, Value *vp)
                     args.setThis(vp[2]);
 
                     /* Steps 7-8. */
-                    iter.forEachCanonicalActualArg(cx, CopyTo(args.array()), 0, -1);
+                    iter.forEachCanonicalActualArg(cx, CopyTo(args.array()),
+                                                   jit::ReadFrame_Actuals);
                 } else {
                     JS_ASSERT(frame.isBaselineStub());
 

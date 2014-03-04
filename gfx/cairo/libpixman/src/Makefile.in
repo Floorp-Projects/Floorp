@@ -11,14 +11,7 @@ ifdef _MSC_VER
 ifeq (86,$(findstring 86,$(OS_TEST)))
 USE_SSE2=1
 MMX_CFLAGS=
-ifneq (,$(filter 1400 1500, $(_MSC_VER)))
-# MSVC 2005 and 2008 generate code that breaks alignment
-# restrictions in debug mode so always optimize.
-# See bug 640250 for more info.
-SSE2_CFLAGS=-O2
-else
 SSE2_CFLAGS=
-endif
 endif
 endif
 
