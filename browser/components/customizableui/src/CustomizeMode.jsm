@@ -270,6 +270,11 @@ CustomizeMode.prototype = {
       panelContents.removeAttribute("customize-transitioning");
 
       CustomizableUI.dispatchToolboxEvent("customizationready", {}, window);
+      this._enableOutlinesTimeout = window.setTimeout(() => {
+        this.document.getElementById("nav-bar").setAttribute("showoutline", "true");
+        this.panelUIContents.setAttribute("showoutline", "true");
+        delete this._enableOutlinesTimeout;
+      }, 0);
 
       // It's possible that we didn't enter customize mode via the menu panel,
       // meaning we didn't kick off about:customizing preloading. If that's
@@ -309,6 +314,13 @@ CustomizeMode.prototype = {
     this.hideTip();
 
     this._handler.isExitingCustomizeMode = true;
+
+    if (this._enableOutlinesTimeout) {
+      this.window.clearTimeout(this._enableOutlinesTimeout);
+    } else {
+      this.document.getElementById("nav-bar").removeAttribute("showoutline");
+      this.panelUIContents.removeAttribute("showoutline");
+    }
 
     this._removeExtraToolbarsIfEmpty();
 
