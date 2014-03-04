@@ -26,6 +26,10 @@
   background-repeat: no-repeat;
 }
 
+#PanelUI-button:-moz-locale-dir(rtl) {
+  background-position: 100% 0, calc(100% - 1px) 0, calc(100% - 2px) 0;
+}
+
 .panel-subviews {
   padding: 4px;
   background-color: hsla(0,0%,100%,.97);
