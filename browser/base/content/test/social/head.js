@@ -325,7 +325,7 @@ function resetBlocklist(aCallback) {
   // XXX - this has "forked" from the head.js helpers in our parent directory :(
   // But let's reuse their blockNoPlugins.xml.  Later, we should arrange to
   // use their head.js helpers directly
-  let noBlockedURL = "http://example.com/browser/browser/base/content/test/general/blockNoPlugins.xml";
+  let noBlockedURL = "http://example.com/browser/browser/base/content/test/plugins/blockNoPlugins.xml";
   setAndUpdateBlocklist(noBlockedURL, function() {
     Services.prefs.setCharPref("extensions.blocklist.url", _originalTestBlocklistURL);
     if (aCallback)

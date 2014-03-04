@@ -14,20 +14,4 @@ include $(topsrcdir)/config/rules.mk
 # changes the symbol names of exported C++ functions that use LOGFONT.
 DEFINES := $(filter-out -DUNICODE -D_UNICODE,$(DEFINES))
 
-# The file uses SSE2 intrinsics, so it needs special compile flags on some
-# compilers.
-ifneq (,$(INTEL_ARCHITECTURE))
-ifdef GNU_CC
-ImageScalingSSE2.$(OBJ_SUFFIX): CXXFLAGS+=-msse2
-BlurSSE2.$(OBJ_SUFFIX): CXXFLAGS+=-msse2
-FilterProcessingSSE2.$(OBJ_SUFFIX): CXXFLAGS+=-msse2
-endif
-
-ifdef SOLARIS_SUNPRO_CXX
-ImageScalingSSE2.$(OBJ_SUFFIX): OS_CXXFLAGS += -xarch=sse2 -xO4
-BlurSSE2.$(OBJ_SUFFIX): OS_CXXFLAGS += -xarch=sse2 -xO4
-FilterProcessingSSE2.$(OBJ_SUFFIX): OS_CXXFLAGS += -xarch=sse2 -xO4
-endif
-endif
-
 CXXFLAGS += $(MOZ_CAIRO_CFLAGS)

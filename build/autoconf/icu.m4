@@ -122,8 +122,6 @@ if test -n "$ENABLE_INTL_API" -a -z "$MOZ_NATIVE_ICU"; then
     dnl We build ICU as a static library for non-shared js builds and as a shared library for shared js builds.
     if test -z "$MOZ_SHARED_ICU"; then
         AC_DEFINE(U_STATIC_IMPLEMENTATION)
-    else
-        AC_DEFINE(U_COMBINED_IMPLEMENTATION)
     fi
     dnl Source files that use ICU should have control over which parts of the ICU
     dnl namespace they want to use.

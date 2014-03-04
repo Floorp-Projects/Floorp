@@ -4,11 +4,16 @@
 
 package org.mozilla.gecko.db;
 
+import org.mozilla.gecko.db.BrowserContract.CommonColumns;
+import org.mozilla.gecko.db.BrowserContract.SyncColumns;
 import org.mozilla.gecko.db.PerProfileDatabases.DatabaseHelperFactory;
+import org.mozilla.gecko.mozglue.RobocopTarget;
 
 import android.content.ContentProvider;
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
@@ -109,6 +114,56 @@ public abstract class TransactionalProvider<T extends SQLiteOpenHelper> extends 
         }
 
         return mDatabases.getDatabaseHelperForProfile(profile, isTest(uri)).getWritableDatabase();
+    }
+
+    /**
+     * Public version of {@link #getWritableDatabase(Uri) getWritableDatabase}.
+     * This method should ONLY be used for testing purposes.
+     *
+     * @param uri content URI optionally indicating the profile of the user
+     * @return    instance of a writeable SQLiteDatabase
+     */
+    @RobocopTarget
+    public SQLiteDatabase getWritableDatabaseForTesting(Uri uri) {
+        return getWritableDatabase(uri);
+    }
+
+    /**
+     * Return true of the query is from Firefox Sync.
+     * @param uri query URI
+     */
+    public static boolean isCallerSync(Uri uri) {
+        String isSync = uri.getQueryParameter(BrowserContract.PARAM_IS_SYNC);
+        return !TextUtils.isEmpty(isSync);
+    }
+
+    /**
+     * Indicates whether a query should include deleted fields
+     * based on the URI.
+     * @param uri query URI
+     */
+    public static boolean shouldShowDeleted(Uri uri) {
+        String showDeleted = uri.getQueryParameter(BrowserContract.PARAM_SHOW_DELETED);
+        return !TextUtils.isEmpty(showDeleted);
+    }
+
+    /**
+     * Indicates whether an insertion should be made if a record doesn't
+     * exist, based on the URI.
+     * @param uri query URI
+     */
+    public static boolean shouldUpdateOrInsert(Uri uri) {
+        String insertIfNeeded = uri.getQueryParameter(BrowserContract.PARAM_INSERT_IF_NEEDED);
+        return Boolean.parseBoolean(insertIfNeeded);
+    }
+
+    /**
+     * Indicates whether query is a test based on the URI.
+     * @param uri query URI
+     */
+    public static boolean isTest(Uri uri) {
+        String isTest = uri.getQueryParameter(BrowserContract.PARAM_IS_TEST);
+        return !TextUtils.isEmpty(isTest);
     }
 
     protected SQLiteDatabase getWritableDatabaseForProfile(String profile, boolean isTest) {
@@ -246,6 +301,43 @@ public abstract class TransactionalProvider<T extends SQLiteOpenHelper> extends 
         isInBatchOperation.set(Boolean.FALSE);
     }
 
+    /*
+     * This utility is replicated from RepoUtils, which is managed by android-sync.
+     */
+    protected static String computeSQLInClause(int items, String field) {
+        final StringBuilder builder = new StringBuilder(field);
+        builder.append(" IN (");
+        int i = 0;
+        for (; i < items - 1; ++i) {
+            builder.append("?, ");
+        }
+        if (i < items) {
+            builder.append("?");
+        }
+        builder.append(")");
+        return builder.toString();
+    }
+
+    /**
+     * Turn a single-column cursor of longs into a single SQL "IN" clause.
+     * We can do this without using selection arguments because Long isn't
+     * vulnerable to injection.
+     */
+    protected static String computeSQLInClauseFromLongs(final Cursor cursor, String field) {
+        final StringBuilder builder = new StringBuilder(field);
+        builder.append(" IN (");
+        final int commaLimit = cursor.getCount() - 1;
+        int i = 0;
+        while (cursor.moveToNext()) {
+            builder.append(cursor.getLong(0));
+            if (i++ < commaLimit) {
+                builder.append(", ");
+            }
+        }
+        builder.append(")");
+        return builder.toString();
+    }
+
     @Override
     public int delete(Uri uri, String selection, String[] selectionArgs) {
         trace("Calling delete on URI: " + uri + ", " + selection + ", " + selectionArgs);
@@ -348,9 +440,59 @@ public abstract class TransactionalProvider<T extends SQLiteOpenHelper> extends 
         return successes;
     }
 
-    protected boolean isTest(Uri uri) {
-        String isTest = uri.getQueryParameter(BrowserContract.PARAM_IS_TEST);
-        return !TextUtils.isEmpty(isTest);
+    /**
+     * Clean up some deleted records from the specified table.
+     *
+     * If called in an existing transaction, it is the caller's responsibility
+     * to ensure that the transaction is already upgraded to a writer, because
+     * this method issues a read followed by a write, and thus is potentially
+     * vulnerable to an unhandled SQLITE_BUSY failure during the upgrade.
+     *
+     * If not called in an existing transaction, no new explicit transaction
+     * will be begun.
+     */
+    protected void cleanupSomeDeletedRecords(Uri fromUri, Uri targetUri, String tableName) {
+        Log.d(LOGTAG, "Cleaning up deleted records from " + tableName);
+
+        // We clean up records marked as deleted that are older than a
+        // predefined max age. It's important not be too greedy here and
+        // remove only a few old deleted records at a time.
+
+        // we cleanup records marked as deleted that are older than a
+        // predefined max age. It's important not be too greedy here and
+        // remove only a few old deleted records at a time.
+
+        // Maximum age of deleted records to be cleaned up (20 days in ms)
+        final long MAX_AGE_OF_DELETED_RECORDS = 86400000 * 20;
+
+        // Number of records marked as deleted to be removed
+        final long DELETED_RECORDS_PURGE_LIMIT = 5;
+
+        // Android SQLite doesn't have LIMIT on DELETE. Instead, query for the
+        // IDs of matching rows, then delete them in one go.
+        final long now = System.currentTimeMillis();
+        final String selection = SyncColumns.IS_DELETED + " = 1 AND " +
+                                 SyncColumns.DATE_MODIFIED + " <= " +
+                                 (now - MAX_AGE_OF_DELETED_RECORDS);
+
+        final String profile = fromUri.getQueryParameter(BrowserContract.PARAM_PROFILE);
+        final SQLiteDatabase db = getWritableDatabaseForProfile(profile, isTest(fromUri));
+        final String[] ids;
+        final String limit = Long.toString(DELETED_RECORDS_PURGE_LIMIT, 10);
+        final Cursor cursor = db.query(tableName, new String[] { CommonColumns._ID }, selection, null, null, null, null, limit);
+        try {
+            ids = new String[cursor.getCount()];
+            int i = 0;
+            while (cursor.moveToNext()) {
+                ids[i++] = Long.toString(cursor.getLong(0), 10);
+            }
+        } finally {
+            cursor.close();
+        }
+
+        final String inClause = computeSQLInClause(ids.length,
+                                                   CommonColumns._ID);
+        db.delete(tableName, inClause, ids);
     }
 
     // Calculate these once, at initialization. isLoggable is too expensive to

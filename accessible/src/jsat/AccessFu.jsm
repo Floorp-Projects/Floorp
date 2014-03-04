@@ -134,6 +134,11 @@ this.AccessFu = {
       this.readyCallback();
       delete this.readyCallback;
     }
+
+    if (Utils.MozBuildApp !== 'mobile/android') {
+      this.announce(
+        Utils.stringBundle.GetStringFromName('screenReaderStarted'));
+    }
   },
 
   /**
@@ -148,6 +153,11 @@ this.AccessFu = {
     Logger.info('Disabled');
 
     Utils.win.document.removeChild(this.stylesheet.get());
+
+    if (Utils.MozBuildApp !== 'mobile/android') {
+      this.announce(
+        Utils.stringBundle.GetStringFromName('screenReaderStopped'));
+    }
 
     for each (let mm in Utils.AllMessageManagers) {
       mm.sendAsyncMessage('AccessFu:Stop');
@@ -368,8 +378,7 @@ this.AccessFu = {
   },
 
   announce: function announce(aAnnouncement) {
-    this._output(Presentation.announce(aAnnouncement),
-                 Utils.CurrentBrowser);
+    this._output(Presentation.announce(aAnnouncement), Utils.CurrentBrowser);
   },
 
   // So we don't enable/disable twice
@@ -515,7 +524,8 @@ var Output = {
 
     init: function init() {
       let window = Utils.win;
-      this.webspeechEnabled = !!window.speechSynthesis;
+      this.webspeechEnabled = !!window.speechSynthesis &&
+        !!window.SpeechSynthesisUtterance;
 
       let settingsToGet = 2;
       let settingsCallback = (aName, aSetting) => {

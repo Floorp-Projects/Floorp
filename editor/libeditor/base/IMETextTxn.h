@@ -11,9 +11,9 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsID.h"
 #include "nsIDOMCharacterData.h"
-#include "nsIPrivateTextRange.h"
 #include "nsString.h"
 #include "nscore.h"
+#include "mozilla/TextRange.h"
 
 class nsITransaction;
 
@@ -38,13 +38,14 @@ public:
     * @param aElement the text content node
     * @param aOffset  the location in aElement to do the insertion
     * @param aReplaceLength the length of text to replace (0 == no replacement)
+    * @param aTextRangeArray clauses and/or caret information. This may be null.
     * @param aString  the new text to insert
     * @param aSelCon used to get and set the selection
     */
   NS_IMETHOD Init(nsIDOMCharacterData *aElement,
                   uint32_t aOffset,
                   uint32_t aReplaceLength,
-                  nsIPrivateTextRangeList* aTextRangeList,
+                  mozilla::TextRangeArray* aTextRangeArray,
                   const nsAString& aString,
                   nsIEditor* aEditor);
 
@@ -63,12 +64,9 @@ public:
   // override QueryInterface to handle IMETextTxn request
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
-  /** return the string data associated with this transaction */
-  NS_IMETHOD GetData(nsString& aResult, nsIPrivateTextRangeList** aTextRangeList);
-
 protected:
 
-  NS_IMETHOD CollapseTextSelection(void);
+  nsresult SetSelectionForRanges();
 
   /** the text element to operate upon */
   nsCOMPtr<nsIDOMCharacterData> mElement;
@@ -82,7 +80,7 @@ protected:
   nsString mStringToInsert;
 
   /** the range list **/
-  nsCOMPtr<nsIPrivateTextRangeList>	mRangeList;
+  nsRefPtr<mozilla::TextRangeArray> mRanges;
 
   /** the editor, which is used to get the selection controller */
   nsIEditor *mEditor;

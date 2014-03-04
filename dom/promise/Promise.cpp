@@ -9,6 +9,7 @@
 #include "jsfriendapi.h"
 #include "mozilla/dom/OwningNonNull.h"
 #include "mozilla/dom/PromiseBinding.h"
+#include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/Preferences.h"
 #include "PromiseCallback.h"
 #include "PromiseNativeHandler.h"
@@ -98,13 +99,11 @@ public:
     MOZ_ASSERT(mState != Promise::Pending);
     MOZ_COUNT_CTOR(PromiseResolverMixin);
 
-    JSContext* cx = nsContentUtils::GetDefaultJSContextForThread();
-
     /* It's safe to use unsafeGet() here: the unsafeness comes from the
      * possibility of updating the value of mJSObject without triggering the
      * barriers.  However if the value will always be marked, post barriers
      * unnecessary. */
-    JS_AddNamedValueRootRT(JS_GetRuntime(cx), mValue.unsafeGet(),
+    JS_AddNamedValueRootRT(CycleCollectedJSRuntime::Get()->Runtime(), mValue.unsafeGet(),
                            "PromiseResolverMixin.mValue");
   }
 
@@ -113,13 +112,11 @@ public:
     NS_ASSERT_OWNINGTHREAD(PromiseResolverMixin);
     MOZ_COUNT_DTOR(PromiseResolverMixin);
 
-    JSContext* cx = nsContentUtils::GetDefaultJSContextForThread();
-
     /* It's safe to use unsafeGet() here: the unsafeness comes from the
      * possibility of updating the value of mJSObject without triggering the
      * barriers.  However if the value will always be marked, post barriers
      * unnecessary. */
-    JS_RemoveValueRootRT(JS_GetRuntime(cx), mValue.unsafeGet());
+    JS_RemoveValueRootRT(CycleCollectedJSRuntime::Get()->Runtime(), mValue.unsafeGet());
   }
 
 protected:
@@ -631,7 +628,7 @@ public:
   {
     MOZ_ASSERT(mCountdown > 0);
 
-    JSContext* cx = nsContentUtils::GetDefaultJSContextForThread();
+    ThreadsafeAutoSafeJSContext cx;
     JSAutoCompartment ac(cx, mValues);
 
     {
@@ -855,8 +852,7 @@ Promise::RunTask()
   mResolveCallbacks.Clear();
   mRejectCallbacks.Clear();
 
-  JSContext* cx = nsContentUtils::GetDefaultJSContextForThread();
-  JSAutoRequest ar(cx);
+  ThreadsafeAutoJSContext cx; // Just for rooting.
   JS::Rooted<JS::Value> value(cx, mResult);
 
   for (uint32_t i = 0; i < callbacks.Length(); ++i) {
@@ -871,13 +867,10 @@ Promise::MaybeReportRejected()
     return;
   }
 
-  // Technically we should push this JSContext, but in reality the JS engine
-  // just uses it for string allocation here, so we can get away without it.
   if (!mResult.isObject()) {
     return;
   }
-  JSContext* cx = nsContentUtils::GetDefaultJSContextForThread();
-  JSAutoRequest ar(cx);
+  ThreadsafeAutoJSContext cx;
   JS::Rooted<JSObject*> obj(cx, &mResult.toObject());
   JSAutoCompartment ac(cx, obj);
   JSErrorReport* report = JS_ErrorFromException(cx, obj);

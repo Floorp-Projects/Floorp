@@ -131,6 +131,7 @@ MOZ_BEGIN_ENUM_CLASS(GLVendor)
     Imagination,
     Nouveau,
     Vivante,
+    VMware,
     Other
 MOZ_END_ENUM_CLASS(GLVendor)
 
@@ -143,6 +144,7 @@ MOZ_BEGIN_ENUM_CLASS(GLRenderer)
     SGX540,
     Tegra,
     AndroidEmulator,
+    GalliumLlvmpipe,
     Other
 MOZ_END_ENUM_CLASS(GLRenderer)
 

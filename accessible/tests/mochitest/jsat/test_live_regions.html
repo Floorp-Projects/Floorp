@@ -13,8 +13,14 @@
           src="./jsatcommon.js"></script>
   <script type="application/javascript">
 
-    function EventManagerStarted() {
+    function startAccessFu() {
+      SpecialPowers.setIntPref("accessibility.accessfu.activate", 1);
       AccessFuTest.once_log("EventManager.start", AccessFuTest.nextTest);
+    }
+
+    function stopAccessFu() {
+      SpecialPowers.setIntPref("accessibility.accessfu.activate", 0);
+      AccessFuTest.once_log("EventManager.stop", AccessFuTest.finish);
     }
 
     function hide(id) {
@@ -245,14 +251,14 @@
     }];
 
     function doTest() {
-      AccessFuTest.addFunc(EventManagerStarted);
+      AccessFuTest.addFunc(startAccessFu);
       tests.forEach(function addTest(test) {
         AccessFuTest.addFunc(function () {
           AccessFuTest.once(test.expected, AccessFuTest.nextTest);
           test.action();
         });
       });
-      AccessFuTest.addFunc(AccessFuTest.finish);
+      AccessFuTest.addFunc(stopAccessFu);
       AccessFuTest.waitForExplicitFinish();
       AccessFuTest.runTests();
     }

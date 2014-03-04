@@ -18,9 +18,6 @@ CXXFLAGS += -I'$(MOZ_DIRECTX_SDK_PATH)/include'
 
 ifdef GNU_CC
 
-TextureSSE2.$(OBJ_SUFFIX): CXXFLAGS+=-msse2
-ImageSSE2.$(OBJ_SUFFIX): CXXFLAGS+=-msse2
-
 OS_CXXFLAGS := $(filter-out -fno-exceptions,$(OS_CXXFLAGS)) -fexceptions
 OS_LIBS += -ld3d9 -ldxguid
 

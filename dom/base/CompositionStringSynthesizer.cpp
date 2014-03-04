@@ -23,6 +23,7 @@ CompositionStringSynthesizer::CompositionStringSynthesizer(
                                 nsPIDOMWindow* aWindow)
 {
   mWindow = do_GetWeakReference(aWindow);
+  mClauses = new TextRangeArray();
   ClearInternal();
 }
 
@@ -34,7 +35,7 @@ void
 CompositionStringSynthesizer::ClearInternal()
 {
   mString.Truncate();
-  mClauses.Clear();
+  mClauses->Clear();
   mCaret.mRangeType = 0;
 }
 
@@ -84,10 +85,10 @@ CompositionStringSynthesizer::AppendClause(uint32_t aLength,
     case ATTR_SELECTEDCONVERTEDTEXT: {
       TextRange textRange;
       textRange.mStartOffset =
-        mClauses.IsEmpty() ? 0 : mClauses[mClauses.Length() - 1].mEndOffset;
+        mClauses->IsEmpty() ? 0 : mClauses->LastElement().mEndOffset;
       textRange.mEndOffset = textRange.mStartOffset + aLength;
       textRange.mRangeType = aAttribute;
-      mClauses.AppendElement(textRange);
+      mClauses->AppendElement(textRange);
       return NS_OK;
     }
     default:
@@ -118,8 +119,8 @@ CompositionStringSynthesizer::DispatchEvent(bool* aDefaultPrevented)
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
-  if (!mClauses.IsEmpty() &&
-      mClauses[mClauses.Length()-1].mEndOffset != mString.Length()) {
+  if (!mClauses->IsEmpty() &&
+      mClauses->LastElement().mEndOffset != mString.Length()) {
     NS_WARNING("Sum of length of the all clauses must be same as the string "
                "length");
     ClearInternal();
@@ -131,14 +132,15 @@ CompositionStringSynthesizer::DispatchEvent(bool* aDefaultPrevented)
       ClearInternal();
       return NS_ERROR_ILLEGAL_VALUE;
     }
-    mClauses.AppendElement(mCaret);
+    mClauses->AppendElement(mCaret);
   }
 
   WidgetTextEvent textEvent(true, NS_TEXT_TEXT, widget);
   textEvent.time = PR_IntervalNow();
   textEvent.theText = mString;
-  textEvent.rangeCount = mClauses.Length();
-  textEvent.rangeArray = mClauses.Elements();
+  if (!mClauses->IsEmpty()) {
+    textEvent.mRanges = mClauses;
+  }
 
   // XXX How should we set false for this on b2g?
   textEvent.mFlags.mIsSynthesizedForTests = true;

@@ -797,7 +797,7 @@ WebappsActor.prototype = {
 
     let childTransport, prefix;
 
-    let onActorCreated = makeInfallible(function (msg) {
+    let onActorCreated = DevToolsUtils.makeInfallible(function (msg) {
       mm.removeMessageListener("debug:actor", onActorCreated);
 
       dump("***** Got debug:actor\n");
@@ -822,7 +822,7 @@ WebappsActor.prototype = {
     }).bind(this);
     mm.addMessageListener("debug:actor", onActorCreated);
 
-    let onMessageManagerDisconnect = makeInfallible(function (subject, topic, data) {
+    let onMessageManagerDisconnect = DevToolsUtils.makeInfallible(function (subject, topic, data) {
       if (subject == mm) {
         Services.obs.removeObserver(onMessageManagerDisconnect, topic);
         if (childTransport) {
@@ -988,24 +988,18 @@ WebappsActor.prototype = {
  * The request types this actor can handle.
  */
 WebappsActor.prototype.requestTypes = {
-  "install": WebappsActor.prototype.install
+  "install": WebappsActor.prototype.install,
+  "uploadPackage": WebappsActor.prototype.uploadPackage,
+  "getAll": WebappsActor.prototype.getAll,
+  "getApp": WebappsActor.prototype.getApp,
+  "launch": WebappsActor.prototype.launch,
+  "close": WebappsActor.prototype.close,
+  "uninstall": WebappsActor.prototype.uninstall,
+  "listRunningApps": WebappsActor.prototype.listRunningApps,
+  "getAppActor": WebappsActor.prototype.getAppActor,
+  "watchApps": WebappsActor.prototype.watchApps,
+  "unwatchApps": WebappsActor.prototype.unwatchApps,
+  "getIconAsDataURL": WebappsActor.prototype.getIconAsDataURL
 };
-
-// Until we implement unix domain socket, we only enable app install
-// only on production devices
-if (Services.prefs.getBoolPref("devtools.debugger.enable-content-actors")) {
-  let requestTypes = WebappsActor.prototype.requestTypes;
-  requestTypes.uploadPackage = WebappsActor.prototype.uploadPackage;
-  requestTypes.getAll = WebappsActor.prototype.getAll;
-  requestTypes.getApp = WebappsActor.prototype.getApp;
-  requestTypes.launch = WebappsActor.prototype.launch;
-  requestTypes.close  = WebappsActor.prototype.close;
-  requestTypes.uninstall = WebappsActor.prototype.uninstall;
-  requestTypes.listRunningApps = WebappsActor.prototype.listRunningApps;
-  requestTypes.getAppActor = WebappsActor.prototype.getAppActor;
-  requestTypes.watchApps = WebappsActor.prototype.watchApps;
-  requestTypes.unwatchApps = WebappsActor.prototype.unwatchApps;
-  requestTypes.getIconAsDataURL = WebappsActor.prototype.getIconAsDataURL;
-}
 
 DebuggerServer.addGlobalActor(WebappsActor, "webappsActor");

@@ -1,0 +1,22 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>WebGL test: WebGL2RenderingContext not exposed</title>
+<script src="/MochiKit/MochiKit.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<script>
+
+var exposed = false;
+try {
+  null instanceof WebGL2RenderingContext;
+  exposed = true;
+} catch (e) {}
+
+ok(!exposed, 'WebGL2RenderingContext should not be exposed.');
+
+</script>
+</body>
+</html>
