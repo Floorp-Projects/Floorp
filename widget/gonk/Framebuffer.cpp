@@ -110,7 +110,6 @@ Open()
     // that's double buffered with r5g6b5 format.  Hence the
     // hard-coded numbers here.
     gfxImageFormat format = gfxImageFormat::RGB16_565;
-    int bytesPerPixel = gfxASurface::BytePerPixelFromFormat(format);
     if (!sScreenSize) {
         sScreenSize = new gfxIntSize(sVi.xres, sVi.yres);
     }
