@@ -21,7 +21,6 @@ function test() {
   is(vpq.totalVideoFrames, 0, "totalVideoFrames should be 0");
   is(vpq.droppedVideoFrames, 0, "droppedVideoFrames should be 0");
   is(vpq.corruptedVideoFrames, 0, "corruptedVideoFrames should be 0");
-  is(vpq.totalFrameDelay, 0, "totalFrameDelay should be 0");
 
   var vpq2 = video.getVideoPlaybackQuality();
   ok(vpq !== vpq2, "getVideoPlaybackQuality should return a new object");
@@ -38,7 +37,6 @@ function test() {
     ok(vpq.totalVideoFrames > 0, "totalVideoFrames should be > 0");
     ok(vpq.droppedVideoFrames >= 0, "droppedVideoFrames should be >= 0");
     ok(vpq.corruptedVideoFrames >= 0, "corruptedVideoFrames should be >= 0");
-    ok(vpq.totalFrameDelay >= 0, "totalFrameDelay should be >= 0");
 
     SpecialPowers.pushPrefEnv({"set": [["media.video_stats.enabled", false]]}, function () {
       vpq = video.getVideoPlaybackQuality();
@@ -46,7 +44,6 @@ function test() {
       is(vpq.totalVideoFrames, 0, "totalVideoFrames should be 0");
       is(vpq.droppedVideoFrames, 0, "droppedVideoFrames should be 0");
       is(vpq.corruptedVideoFrames, 0, "corruptedVideoFrames should be 0");
-      is(vpq.totalFrameDelay, 0, "totalFrameDelay should be 0");
 
       SimpleTest.finish();
     });
