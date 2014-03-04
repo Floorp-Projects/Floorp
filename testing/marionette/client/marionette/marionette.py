@@ -732,6 +732,9 @@ class Marionette(object):
             self._test_name = test_name
 
     def delete_session(self):
+        """
+        Close the current session and disconnect from the server.
+        """
         response = self._send_message('deleteSession', 'ok')
         self.session = None
         self.window = None
