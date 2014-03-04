@@ -394,6 +394,12 @@ js::GetGlobalForObjectCrossCompartment(JSObject *obj)
 }
 
 JS_FRIEND_API(void)
+js::SetPendingExceptionCrossContext(JSContext *cx, JS::HandleValue v)
+{
+    cx->setPendingException(v);
+}
+
+JS_FRIEND_API(void)
 js::AssertSameCompartment(JSContext *cx, JSObject *obj)
 {
     assertSameCompartment(cx, obj);
