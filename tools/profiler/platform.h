@@ -75,7 +75,7 @@
 
 #endif
 
-#if defined(XP_MACOSX) || defined(XP_WIN)
+#if defined(XP_MACOSX) || defined(XP_WIN) || defined(XP_LINUX)
 #define ENABLE_SPS_LEAF_DATA
 #endif
 

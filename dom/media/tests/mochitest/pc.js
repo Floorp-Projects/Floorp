@@ -1449,7 +1449,7 @@ PeerConnectionWrapper.prototype = {
   /**
    * Returns if the ICE the connection state is "connected".
    *
-   * @returns {boolean} True is the connection state is "connected", otherwise false.
+   * @returns {boolean} True if the connection state is "connected", otherwise false.
    */
   isIceConnected : function PCW_isIceConnected() {
     info("iceConnectionState: " + this.iceConnectionState);
@@ -1459,7 +1459,7 @@ PeerConnectionWrapper.prototype = {
   /**
    * Returns if the ICE the connection state is "checking".
    *
-   * @returns {boolean} True is the connection state is "checking", otherwise false.
+   * @returns {boolean} True if the connection state is "checking", otherwise false.
    */
   isIceChecking : function PCW_isIceChecking() {
     return this.iceConnectionState === "checking";
@@ -1468,10 +1468,21 @@ PeerConnectionWrapper.prototype = {
   /**
    * Returns if the ICE the connection state is "new".
    *
-   * @returns {boolean} True is the connection state is "new", otherwise false.
+   * @returns {boolean} True if the connection state is "new", otherwise false.
    */
   isIceNew : function PCW_isIceNew() {
     return this.iceConnectionState === "new";
+  },
+
+  /**
+   * Checks if the ICE connection state still waits for a connection to get
+   * established.
+   *
+   * @returns {boolean} True if the connection state is "checking" or "new", 
+   *  otherwise false.
+   */
+  isIceConnectionPending : function PCW_isIceConnectionPending() {
+    return (this.isIceChecking() || this.isIceNew());
   },
 
   /**
@@ -1494,7 +1505,7 @@ PeerConnectionWrapper.prototype = {
       if (self.isIceConnected()) {
         delete self.ice_connection_callbacks["waitForIceConnected"];
         mySuccess();
-      } else if (! (self.isIceChecking() || self.isIceNew())) {
+      } else if (! self.isIceConnectionPending()) {
         delete self.ice_connection_callbacks["waitForIceConnected"];
         myFailure();
       }

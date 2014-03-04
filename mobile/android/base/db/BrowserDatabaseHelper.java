@@ -26,6 +26,7 @@ import org.mozilla.gecko.db.BrowserContract.FaviconColumns;
 import org.mozilla.gecko.db.BrowserContract.Favicons;
 import org.mozilla.gecko.db.BrowserContract.History;
 import org.mozilla.gecko.db.BrowserContract.Obsolete;
+import org.mozilla.gecko.db.BrowserContract.ReadingListItems;
 import org.mozilla.gecko.db.BrowserContract.Thumbnails;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.sync.Utils;
@@ -49,7 +50,7 @@ import android.util.Log;
 final class BrowserDatabaseHelper extends SQLiteOpenHelper {
 
     private static final String LOGTAG = "GeckoBrowserDBHelper";
-    public static final int DATABASE_VERSION = 17;
+    public static final int DATABASE_VERSION = 18;
     public static final String DATABASE_NAME = "browser.db";
 
     final protected Context mContext;
@@ -58,6 +59,7 @@ final class BrowserDatabaseHelper extends SQLiteOpenHelper {
     static final String TABLE_HISTORY = History.TABLE_NAME;
     static final String TABLE_FAVICONS = Favicons.TABLE_NAME;
     static final String TABLE_THUMBNAILS = Thumbnails.TABLE_NAME;
+    static final String TABLE_READING_LIST = ReadingListItems.TABLE_NAME;
 
     static final String VIEW_COMBINED = Combined.VIEW_NAME;
     static final String VIEW_BOOKMARKS_WITH_FAVICONS = Bookmarks.VIEW_WITH_FAVICONS;
@@ -766,6 +768,8 @@ final class BrowserDatabaseHelper extends SQLiteOpenHelper {
         // Create distribution bookmarks before our own default bookmarks
         int pos = createDistributionBookmarks(db);
         createDefaultBookmarks(db, pos);
+
+        createReadingListTable(db);
     }
 
     private String getLocalizedProperty(JSONObject bookmark, String property, Locale locale) throws JSONException {
@@ -854,6 +858,27 @@ final class BrowserDatabaseHelper extends SQLiteOpenHelper {
             }
         }
         return pos;
+    }
+
+    private void createReadingListTable(SQLiteDatabase db) {
+        debug("Creating " + TABLE_READING_LIST + " table");
+
+        db.execSQL("CREATE TABLE " + TABLE_READING_LIST + "(" +
+                    ReadingListItems._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    ReadingListItems.URL + " TEXT NOT NULL, " +
+                    ReadingListItems.TITLE + " TEXT, " +
+                    ReadingListItems.EXCERPT + " TEXT, " +
+                    ReadingListItems.READ + " TINYINT DEFAULT 0, " +
+                    ReadingListItems.IS_DELETED + " TINYINT DEFAULT 0, " +
+                    ReadingListItems.GUID + " TEXT UNIQUE NOT NULL, " +
+                    ReadingListItems.DATE_MODIFIED + " INTEGER NOT NULL, " +
+                    ReadingListItems.DATE_CREATED  + " INTEGER NOT NULL, " +
+                    ReadingListItems.LENGTH + " INTEGER DEFAULT 0 ); ");
+
+        db.execSQL("CREATE INDEX reading_list_url ON " + TABLE_READING_LIST + "("
+                + ReadingListItems.URL + ")");
+        db.execSQL("CREATE UNIQUE INDEX reading_list_guid ON " + TABLE_READING_LIST + "("
+                + ReadingListItems.GUID + ")");
     }
 
     // Inserts default bookmarks, starting at a specified position
@@ -1523,6 +1548,68 @@ final class BrowserDatabaseHelper extends SQLiteOpenHelper {
         }
     }
 
+    /*
+     * Moves reading list items from 'bookmarks' table to 'reading_list' table. Uses the
+     * same item GUID.
+     */
+    private void upgradeDatabaseFrom17to18(SQLiteDatabase db) {
+        debug("Moving reading list items from 'bookmarks' table to 'reading_list' table");
+
+        final String selection = Bookmarks.PARENT + " = ? AND " + Bookmarks.IS_DELETED + " = ? ";
+        final String[] selectionArgs = { String.valueOf(Bookmarks.FIXED_READING_LIST_ID), "0" };
+        final String[] projection = {   Bookmarks._ID,
+                                        Bookmarks.GUID,
+                                        Bookmarks.URL,
+                                        Bookmarks.DATE_MODIFIED,
+                                        Bookmarks.DATE_CREATED,
+                                        Bookmarks.TITLE };
+        Cursor cursor = null;
+        try {
+            // Start transaction
+            db.beginTransaction();
+
+            // Create 'reading_list' table
+            createReadingListTable(db);
+
+            // Get all the reading list items from bookmarks table
+            cursor = db.query(TABLE_BOOKMARKS, projection, selection, selectionArgs,
+                         null, null, null);
+
+            // Insert reading list items into reading_list table
+            while (cursor.moveToNext()) {
+                debug(DatabaseUtils.dumpCurrentRowToString(cursor));
+                ContentValues values = new ContentValues();
+                DatabaseUtils.cursorStringToContentValues(cursor, Bookmarks.URL, values, ReadingListItems.URL);
+                DatabaseUtils.cursorStringToContentValues(cursor, Bookmarks.GUID, values, ReadingListItems.GUID);
+                DatabaseUtils.cursorStringToContentValues(cursor, Bookmarks.TITLE, values, ReadingListItems.TITLE);
+                DatabaseUtils.cursorLongToContentValues(cursor, Bookmarks.DATE_CREATED, values, ReadingListItems.DATE_CREATED);
+                DatabaseUtils.cursorLongToContentValues(cursor, Bookmarks.DATE_MODIFIED, values, ReadingListItems.DATE_MODIFIED);
+
+                db.insertOrThrow(TABLE_READING_LIST, null, values);
+            }
+
+            // Delete reading list items from bookmarks table
+            db.delete(TABLE_BOOKMARKS,
+                      Bookmarks.PARENT + " = ? ",
+                      new String[] { String.valueOf(Bookmarks.FIXED_READING_LIST_ID) });
+
+            // Delete reading list special folder
+            db.delete(TABLE_BOOKMARKS,
+                      Bookmarks._ID + " = ? ",
+                      new String[] { String.valueOf(Bookmarks.FIXED_READING_LIST_ID) });
+            // Done
+            db.setTransactionSuccessful();
+
+        } catch (SQLException e) {
+            Log.e(LOGTAG, "Error migrating reading list items", e);
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+            db.endTransaction();
+        }
+    }
+
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         debug("Upgrading browser.db: " + db.getPath() + " from " +
@@ -1594,6 +1681,10 @@ final class BrowserDatabaseHelper extends SQLiteOpenHelper {
 
                 case 17:
                     upgradeDatabaseFrom16to17(db);
+                    break;
+
+                case 18:
+                    upgradeDatabaseFrom17to18(db);
                     break;
             }
         }

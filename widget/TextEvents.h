@@ -181,8 +181,6 @@ private:
 
   WidgetTextEvent()
     : mSeqno(kLatestSeqno)
-    , rangeCount(0)
-    , rangeArray(nullptr)
     , isChar(false)
   {
   }
@@ -196,8 +194,6 @@ public:
   WidgetTextEvent(bool aIsTrusted, uint32_t aMessage, nsIWidget* aWidget)
     : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, NS_TEXT_EVENT)
     , mSeqno(kLatestSeqno)
-    , rangeCount(0)
-    , rangeArray(nullptr)
     , isChar(false)
   {
   }
@@ -215,17 +211,12 @@ public:
 
   // The composition string or the commit string.
   nsString theText;
-  // Count of rangeArray.
-  uint32_t rangeCount;
-  // Pointer to the first item of the ranges (clauses).
-  // Note that the range array may not specify a caret position; in that
-  // case there will be no range of type NS_TEXTRANGE_CARETPOSITION in the
-  // array.
-  TextRangeArray rangeArray;
   // Indicates whether the event signifies printable text.
   // XXX This is not a standard, and most platforms don't set this properly.
   //     So, perhaps, we can get rid of this.
   bool isChar;
+
+  nsRefPtr<TextRangeArray> mRanges;
 
   void AssignTextEventData(const WidgetTextEvent& aEvent, bool aCopyTargets)
   {
@@ -239,12 +230,17 @@ public:
 
   bool IsComposing() const
   {
-    for (uint32_t i = 0; i < rangeCount; i++) {
-      if (rangeArray[i].IsClause()) {
-        return true;
-      }
-    }
-    return false;
+    return mRanges && mRanges->IsComposing();
+  }
+
+  uint32_t TargetClauseOffset() const
+  {
+    return mRanges ? mRanges->TargetClauseOffset() : 0;
+  }
+
+  uint32_t RangeCount() const
+  {
+    return mRanges ? mRanges->Length() : 0;
   }
 };
 

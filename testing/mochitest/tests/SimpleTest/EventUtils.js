@@ -946,8 +946,21 @@ function synthesizeText(aEvent, aWindow)
   compositionString.setString(aEvent.composition.string);
   if (aEvent.composition.clauses[0].length) {
     for (var i = 0; i < aEvent.composition.clauses.length; i++) {
-      compositionString.appendClause(aEvent.composition.clauses[i].length,
-                                     aEvent.composition.clauses[i].attr);
+      switch (aEvent.composition.clauses[i].attr) {
+        case compositionString.ATTR_RAWINPUT:
+        case compositionString.ATTR_SELECTEDRAWTEXT:
+        case compositionString.ATTR_CONVERTEDTEXT:
+        case compositionString.ATTR_SELECTEDCONVERTEDTEXT:
+          compositionString.appendClause(aEvent.composition.clauses[i].length,
+                                         aEvent.composition.clauses[i].attr);
+          break;
+        case 0:
+          // Ignore dummy clause for the argument.
+          break;
+        default:
+          throw new Error("invalid clause attribute specified");
+          break;
+      }
     }
   }
 

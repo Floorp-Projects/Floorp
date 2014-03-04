@@ -718,21 +718,9 @@ nsStringBundleService::FormatWithBundle(nsIStringBundle* bundle, nsresult aStatu
   nsresult rv;
   nsXPIDLCString key;
 
-  // then find a key into the string bundle for that particular error:
-  rv = mErrorService->GetErrorStringBundleKey(aStatus, getter_Copies(key));
-
-  // first try looking up the error message with the string key:
-  if (NS_SUCCEEDED(rv)) {
-    rv = bundle->FormatStringFromName(NS_ConvertASCIItoUTF16(key).get(),
-                                      (const char16_t**)argArray, 
-                                      argCount, result);
-  }
-
-  // if the string key fails, try looking up the error message with the int key:
-  if (NS_FAILED(rv)) {
-    uint16_t code = NS_ERROR_GET_CODE(aStatus);
-    rv = bundle->FormatStringFromID(code, (const char16_t**)argArray, argCount, result);
-  }
+  // try looking up the error message with the int key:
+  uint16_t code = NS_ERROR_GET_CODE(aStatus);
+  rv = bundle->FormatStringFromID(code, (const char16_t**)argArray, argCount, result);
 
   // If the int key fails, try looking up the default error message. E.g. print:
   //   An unknown error has occurred (0x804B0003).

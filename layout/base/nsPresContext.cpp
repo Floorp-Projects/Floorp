@@ -53,6 +53,7 @@
 #include "nsRefreshDriver.h"
 #include "Layers.h"
 #include "nsIDOMEvent.h"
+#include "gfxPrefs.h"
 
 #include "nsContentUtils.h"
 #include "nsCxPusher.h"
@@ -688,6 +689,11 @@ nsPresContext::GetFontPrefsForLang(nsIAtom *aLanguage) const
 void
 nsPresContext::GetDocumentColorPreferences()
 {
+  // Make sure the preferences are initialized.  In the normal run,
+  // they would already be, because gfxPlatform would have been created,
+  // but in some reference tests, that is not the case.
+  gfxPrefs::GetSingleton();
+
   int32_t useAccessibilityTheme = 0;
   bool usePrefColors = true;
   nsCOMPtr<nsIDocShellTreeItem> docShell(mContainer);

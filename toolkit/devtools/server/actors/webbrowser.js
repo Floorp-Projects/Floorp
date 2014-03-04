@@ -357,7 +357,7 @@ BrowserTabList.prototype._listenForEventsIf = function(aShouldListen, aGuard, aE
 /**
  * Implement nsIDOMEventListener.
  */
-BrowserTabList.prototype.handleEvent = makeInfallible(function(aEvent) {
+BrowserTabList.prototype.handleEvent = DevToolsUtils.makeInfallible(function(aEvent) {
   switch (aEvent.type) {
   case "TabOpen":
   case "TabSelect":
@@ -398,8 +398,8 @@ BrowserTabList.prototype._listenToMediatorIf = function(aShouldListen) {
  */
 BrowserTabList.prototype.onWindowTitleChange = () => { };
 
-BrowserTabList.prototype.onOpenWindow = makeInfallible(function(aWindow) {
-  let handleLoad = makeInfallible(() => {
+BrowserTabList.prototype.onOpenWindow = DevToolsUtils.makeInfallible(function(aWindow) {
+  let handleLoad = DevToolsUtils.makeInfallible(() => {
     /* We don't want any further load events from this window. */
     aWindow.removeEventListener("load", handleLoad, false);
 
@@ -433,7 +433,7 @@ BrowserTabList.prototype.onOpenWindow = makeInfallible(function(aWindow) {
   aWindow.addEventListener("load", handleLoad, false);
 }, "BrowserTabList.prototype.onOpenWindow");
 
-BrowserTabList.prototype.onCloseWindow = makeInfallible(function(aWindow) {
+BrowserTabList.prototype.onCloseWindow = DevToolsUtils.makeInfallible(function(aWindow) {
   aWindow = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                    .getInterface(Ci.nsIDOMWindow);
 
@@ -445,7 +445,7 @@ BrowserTabList.prototype.onCloseWindow = makeInfallible(function(aWindow) {
    * a nsIWindowMediatorListener's onCloseWindow hook (bug 873589), so
    * handle the close in a different tick.
    */
-  Services.tm.currentThread.dispatch(makeInfallible(() => {
+  Services.tm.currentThread.dispatch(DevToolsUtils.makeInfallible(() => {
     /*
      * Scan the entire map for actors representing tabs that were in this
      * top-level window, and exit them.
@@ -734,7 +734,7 @@ BrowserTabActor.prototype = {
   onReload: function(aRequest) {
     // Wait a tick so that the response packet can be dispatched before the
     // subsequent navigation event packet.
-    Services.tm.currentThread.dispatch(makeInfallible(() => {
+    Services.tm.currentThread.dispatch(DevToolsUtils.makeInfallible(() => {
       this.window.location.reload();
     }, "BrowserTabActor.prototype.onReload's delayed body"), 0);
     return {};
@@ -746,7 +746,7 @@ BrowserTabActor.prototype = {
   onNavigateTo: function(aRequest) {
     // Wait a tick so that the response packet can be dispatched before the
     // subsequent navigation event packet.
-    Services.tm.currentThread.dispatch(makeInfallible(() => {
+    Services.tm.currentThread.dispatch(DevToolsUtils.makeInfallible(() => {
       this.window.location = aRequest.url;
     }, "BrowserTabActor.prototype.onNavigateTo's delayed body"), 0);
     return {};
@@ -894,7 +894,7 @@ BrowserTabActor.prototype = {
    * DebuggerProgressListener.
    */
   onWindowCreated:
-  makeInfallible(function BTA_onWindowCreated(evt) {
+  DevToolsUtils.makeInfallible(function BTA_onWindowCreated(evt) {
     // pageshow events for non-persisted pages have already been handled by a
     // prior DOMWindowCreated event.
     if (!this._attached || (evt.type == "pageshow" && !evt.persisted)) {
@@ -926,13 +926,9 @@ BrowserTabActor.prototype = {
    *         True if the window.console object is native, or false otherwise.
    */
   hasNativeConsoleAPI: function BTA_hasNativeConsoleAPI(aWindow) {
-    let isNative = false;
-    try {
-      let console = aWindow.wrappedJSObject.console;
-      isNative = console instanceof aWindow.Console;
-    }
-    catch (ex) { }
-    return isNative;
+    // Do not expose WebConsoleActor function directly as it is always
+    // loaded after the BrowserTabActor
+    return WebConsoleActor.prototype.hasNativeConsoleAPI(aWindow);
   }
 };
 
@@ -1051,7 +1047,7 @@ function DebuggerProgressListener(aBrowserTabActor) {
 
 DebuggerProgressListener.prototype = {
   onStateChange:
-  makeInfallible(function DPL_onStateChange(aProgress, aRequest, aFlag, aStatus) {
+  DevToolsUtils.makeInfallible(function DPL_onStateChange(aProgress, aRequest, aFlag, aStatus) {
     let isStart = aFlag & Ci.nsIWebProgressListener.STATE_START;
     let isStop = aFlag & Ci.nsIWebProgressListener.STATE_STOP;
     let isDocument = aFlag & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT;

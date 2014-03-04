@@ -4,7 +4,7 @@
 
 Cu.import("resource://gre/modules/Services.jsm");
 
-const CRASH_URL = "http://example.com/browser/browser/base/content/test/general/pluginCrashCommentAndURL.html";
+const CRASH_URL = "http://example.com/browser/browser/base/content/test/plugins/plugin_crashCommentAndURL.html";
 
 const SERVER_URL = "http://example.com/browser/toolkit/crashreporter/test/browser/crashreport.sjs";
 

@@ -271,6 +271,11 @@
                   android:configChanges="orientation|screenSize"
                   android:excludeFromRecents="true"/>
 
+        <activity android:name="org.mozilla.gecko.home.HomePanelPicker"
+                  android:theme="@style/Gecko.TitleDialog"
+                  android:label="@string/home_add_panel_title"
+                  android:excludeFromRecents="true" />
+
         <provider android:name="org.mozilla.gecko.db.BrowserProvider"
                   android:authorities="@ANDROID_PACKAGE_NAME@.db.browser"
                   android:permission="@ANDROID_PACKAGE_NAME@.permissions.BROWSER_PROVIDER">
@@ -305,6 +310,10 @@
 
         <provider android:name="org.mozilla.gecko.db.HomeProvider"
                   android:authorities="@ANDROID_PACKAGE_NAME@.db.home"
+                  android:permission="@ANDROID_PACKAGE_NAME@.permissions.BROWSER_PROVIDER"/>
+
+        <provider android:name="org.mozilla.gecko.db.ReadingListProvider"
+                  android:authorities="@ANDROID_PACKAGE_NAME@.db.readinglist"
                   android:permission="@ANDROID_PACKAGE_NAME@.permissions.BROWSER_PROVIDER"/>
 
         <service

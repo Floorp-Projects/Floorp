@@ -141,7 +141,7 @@ ProfilerActor.prototype = {
     }
     return { unregistered: unregistered }
   },
-  observe: makeInfallible(function(aSubject, aTopic, aData) {
+  observe: DevToolsUtils.makeInfallible(function(aSubject, aTopic, aData) {
     /*
      * this.conn.send can only transmit acyclic values. However, it is
      * idiomatic for wrapped JS objects like aSubject (and possibly aData?)

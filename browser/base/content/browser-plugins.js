@@ -130,7 +130,7 @@ var gPluginHandler = {
       return false;
     }
 
-    let contentWindow = plugin.ownerDocument.defaultView.top;
+    let contentWindow = plugin.ownerDocument.defaultView;
     let cwu = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                            .getInterface(Ci.nsIDOMWindowUtils);
 

@@ -53,6 +53,9 @@ dump("### SelectionPrototype.js loaded\n");
 var SelectionPrototype = function() { }
 
 SelectionPrototype.prototype = {
+  _CARET_MODE: 1, // Single monocle mode (Collapsed caret).
+  _SELECTION_MODE: 2, // Double monocle mode (Selection w/Text).
+
   _debugEvents: false,
   _cache: {},
   _targetElement: null,
@@ -167,6 +170,28 @@ SelectionPrototype.prototype = {
   _onSelectionDebug: function _onSelectionDebug(aMsg) {
     this._debugOptions = aMsg;
     this._debugEvents = aMsg.dumpEvents;
+  },
+
+  /*
+   * Selection Changed notification listener. This allows us to respond to selection changes
+   * introduced programmatically by Gecko events, target-page support code, etc.
+   */
+  notifySelectionChanged: function notifySelectionChanged(aDocument, aSelection, aReason) {
+    // Ignore user generated selectionChange notifications during monocle/marker movement.
+    if ((typeof SelectionHelperUI != "undefined") && SelectionHelperUI.hasActiveDrag) {
+      return;
+    }
+
+    // Ignore selectionChange notifications, unless reason is mouseup, or unknown.
+    if (!(aReason & Ci.nsISelectionListener.MOUSEUP_REASON) &&
+        (aReason != Ci.nsISelectionListener.NO_REASON)) {
+      return;
+    }
+
+    // If in selection mode, and we have a selection, update it.
+    if (this._mode == this._SELECTION_MODE && !aSelection.isCollapsed) {
+      this._updateSelectionUI("update", true, true);
+    }
   },
 
   /*************************************************

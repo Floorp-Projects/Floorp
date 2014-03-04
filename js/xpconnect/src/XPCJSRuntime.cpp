@@ -2956,7 +2956,7 @@ static const JSWrapObjectCallbacks WrapObjectCallbacks = {
 
 XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
    : CycleCollectedJSRuntime(nullptr, 32L * 1024L * 1024L, JS_USE_HELPER_THREADS),
-   mJSContextStack(new XPCJSContextStack()),
+   mJSContextStack(new XPCJSContextStack(MOZ_THIS_IN_INITIALIZER_LIST())),
    mCallContext(nullptr),
    mAutoRoots(nullptr),
    mResolveName(JSID_VOID),

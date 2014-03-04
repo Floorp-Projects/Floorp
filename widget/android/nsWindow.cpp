@@ -176,6 +176,7 @@ nsWindow::nsWindow() :
     mIMEMaskSelectionUpdate(false),
     mIMEMaskTextUpdate(false),
     mIMEMaskEventsCount(1), // Mask IME events since there's no focus yet
+    mIMERanges(new TextRangeArray()),
     mIMEUpdatingContext(false),
     mIMESelectionChanged(false)
 {
@@ -1987,7 +1988,7 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
                     ConvertAndroidColor(uint32_t(ae->RangeBackColor()));
             range.mRangeStyle.mUnderlineColor =
                     ConvertAndroidColor(uint32_t(ae->RangeLineColor()));
-            mIMERanges.AppendElement(range);
+            mIMERanges->AppendElement(range);
         }
         break;
     case AndroidGeckoEvent::IME_UPDATE_COMPOSITION:
@@ -2010,8 +2011,8 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
             WidgetTextEvent event(true, NS_TEXT_TEXT, this);
             InitEvent(event, nullptr);
 
-            event.rangeArray = mIMERanges.Elements();
-            event.rangeCount = mIMERanges.Length();
+            event.mRanges = new TextRangeArray();
+            mIMERanges.swap(event.mRanges);
 
             {
                 WidgetSelectionEvent event(true, NS_SELECTION_SET, this);
@@ -2048,11 +2049,10 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
             const NS_ConvertUTF16toUTF8 theText8(event.theText);
             const char* text = theText8.get();
             ALOGIME("IME: IME_SET_TEXT: text=\"%s\", length=%u, range=%u",
-                    text, event.theText.Length(), mIMERanges.Length());
+                    text, event.theText.Length(), event.mRanges->Length());
 #endif // DEBUG_ANDROID_IME
 
             DispatchEvent(&event);
-            mIMERanges.Clear();
 
             // Notify SelectionHandler of final caret position
             // Required in cases of keyboards providing autoCorrections
@@ -2074,7 +2074,7 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
             AutoIMEMask selMask(mIMEMaskSelectionUpdate);
             AutoIMEMask textMask(mIMEMaskTextUpdate);
             RemoveIMEComposition();
-            mIMERanges.Clear();
+            mIMERanges->Clear();
         }
         break;
     }

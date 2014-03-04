@@ -1610,14 +1610,9 @@ nsIMM32Handler::DispatchTextEvent(nsWindow* aWindow,
 
   aWindow->InitEvent(event, &point);
 
-  nsAutoTArray<TextRange, 4> textRanges;
-
   if (aCheckAttr) {
-    SetTextRangeList(textRanges);
+    event.mRanges = CreateTextRangeArray();
   }
-
-  event.rangeCount = textRanges.Length();
-  event.rangeArray = textRanges.Elements();
 
   event.theText = mCompositionString.get();
 
@@ -1628,15 +1623,17 @@ nsIMM32Handler::DispatchTextEvent(nsWindow* aWindow,
   // it will call SetIMERelatedWindowsPos.
 }
 
-void
-nsIMM32Handler::SetTextRangeList(nsTArray<TextRange> &aTextRangeList)
+already_AddRefed<TextRangeArray>
+nsIMM32Handler::CreateTextRangeArray()
 {
   // Sogou (Simplified Chinese IME) returns contradictory values: The cursor
   // position is actual cursor position. However, other values (composition
   // string and attributes) are empty. So, if you want to remove following
   // assertion, be careful.
   NS_ASSERTION(ShouldDrawCompositionStringOurselves(),
-    "SetTextRangeList is called when we don't need to fire text event");
+    "CreateTextRangeArray is called when we don't need to fire text event");
+
+  nsRefPtr<TextRangeArray> textRangeArray = new TextRangeArray();
 
   TextRange range;
   if (mClauseArray.Length() == 0) {
@@ -1645,10 +1642,10 @@ nsIMM32Handler::SetTextRangeList(nsTArray<TextRange> &aTextRangeList)
     range.mStartOffset = 0;
     range.mEndOffset = mCompositionString.Length();
     range.mRangeType = NS_TEXTRANGE_RAWINPUT;
-    aTextRangeList.AppendElement(range);
+    textRangeArray->AppendElement(range);
 
     PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
-      ("IMM32: SetTextRangeList, mClauseLength=0\n"));
+      ("IMM32: CreateTextRangeArray, mClauseLength=0\n"));
   } else {
     // iterate over the attributes
     uint32_t lastOffset = 0;
@@ -1656,7 +1653,8 @@ nsIMM32Handler::SetTextRangeList(nsTArray<TextRange> &aTextRangeList)
       uint32_t current = mClauseArray[i + 1];
       if (current > mCompositionString.Length()) {
         PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
-          ("IMM32: SetTextRangeList, mClauseArray[%ld]=%lu. This is larger than mCompositionString.Length()=%lu\n",
+          ("IMM32: CreateTextRangeArray, mClauseArray[%ld]=%lu. "
+           "This is larger than mCompositionString.Length()=%lu\n",
            i + 1, current, mCompositionString.Length()));
         current = int32_t(mCompositionString.Length());
       }
@@ -1664,12 +1662,12 @@ nsIMM32Handler::SetTextRangeList(nsTArray<TextRange> &aTextRangeList)
       range.mRangeType = PlatformToNSAttr(mAttributeArray[lastOffset]);
       range.mStartOffset = lastOffset;
       range.mEndOffset = current;
-      aTextRangeList.AppendElement(range);
+      textRangeArray->AppendElement(range);
 
       lastOffset = current;
 
       PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
-        ("IMM32: SetTextRangeList, index=%ld, rangeType=%s, range=[%lu-%lu]\n",
+        ("IMM32: CreateTextRangeArray, index=%ld, rangeType=%s, range=[%lu-%lu]\n",
          i, GetRangeTypeName(range.mRangeType), range.mStartOffset,
          range.mEndOffset));
     }
@@ -1677,25 +1675,28 @@ nsIMM32Handler::SetTextRangeList(nsTArray<TextRange> &aTextRangeList)
 
   if (mCursorPosition == NO_IME_CARET) {
     PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
-      ("IMM32: GetTextRangeList, no caret\n"));
-    return;
+      ("IMM32: CreateTextRangeArray, no caret\n"));
+    return textRangeArray.forget();
   }
 
   int32_t cursor = mCursorPosition;
   if (uint32_t(cursor) > mCompositionString.Length()) {
     PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
-      ("IMM32: SetTextRangeList, mCursorPosition=%ld. This is larger than mCompositionString.Length()=%lu\n",
+      ("IMM32: CreateTextRangeArray, mCursorPosition=%ld. "
+       "This is larger than mCompositionString.Length()=%lu\n",
        mCursorPosition, mCompositionString.Length()));
     cursor = mCompositionString.Length();
   }
 
   range.mStartOffset = range.mEndOffset = cursor;
   range.mRangeType = NS_TEXTRANGE_CARETPOSITION;
-  aTextRangeList.AppendElement(range);
+  textRangeArray->AppendElement(range);
 
   PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
-    ("IMM32: SetTextRangeList, caret position=%ld\n",
+    ("IMM32: CreateTextRangeArray, caret position=%ld\n",
      range.mStartOffset));
+
+  return textRangeArray.forget();
 }
 
 void

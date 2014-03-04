@@ -89,3 +89,8 @@
 .cui-widget-panelview menuseparator {
   padding: 0 !important;
 }
+
+.PanelUI-subView menuitem[checked="true"]::before,
+.PanelUI-subView toolbarbutton[checked="true"]::before {
+  margin: 0 5px;
+}

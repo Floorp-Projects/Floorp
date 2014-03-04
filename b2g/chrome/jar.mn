@@ -9,7 +9,6 @@ chrome.jar:
 % content b2g %content/
 
   content/arrow.svg                     (content/arrow.svg)
-* content/dbg-browser-actors.js         (content/dbg-browser-actors.js)
 * content/settings.js                   (content/settings.js)
 * content/shell.html                    (content/shell.html)
 * content/shell.js                      (content/shell.js)

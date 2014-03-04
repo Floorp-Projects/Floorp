@@ -37,7 +37,7 @@ class nsAnonymousContentList;
 // *********************************************************************/
 // The XBLBinding class
 
-class nsXBLBinding
+class nsXBLBinding MOZ_FINAL
 {
 public:
   nsXBLBinding(nsXBLPrototypeBinding* aProtoBinding);

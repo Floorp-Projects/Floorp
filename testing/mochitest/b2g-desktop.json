@@ -12,6 +12,7 @@
     "b2g/chrome/content/test/mochitest": "require OOP support for mochitest-b2g-desktop, Bug 957554",
     "content/xul":"tests that use xul",
     "layout/xul" : "",
+    "dom/downloads":"bug 979446, frequent failures",
     "dom/plugins": "tests that use plugins",
     "dom/tests/mochitest/general/test_focusrings.xul":"",
     "layout/base/tests/test_bug465448.xul":"",

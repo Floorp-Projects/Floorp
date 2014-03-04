@@ -10,7 +10,6 @@
 
 Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
 Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
-Cu.import("resource://gre/modules/devtools/DevToolsUtils.jsm");
 
 let port = 2929;
 

@@ -1288,7 +1288,6 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     // is resized, this needs to be invalidated.
     if (aReset) {
       this._cachedWaterfallWidth = 0;
-      this._hideOverflowingColumns();
     }
 
     // Determine the scaling to be applied to all the waterfalls so that
@@ -1462,35 +1461,6 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
       let waterfallNode = $(".requests-menu-waterfall", target);
       waterfallNode.style.backgroundImage = this._cachedWaterfallBackground;
     }
-  },
-
-  /**
-   * Hides the overflowing columns in the requests table.
-   */
-  _hideOverflowingColumns: function() {
-    if (window.isRTL) {
-      return;
-    }
-    let table = $("#network-table");
-    let toolbar = $("#requests-menu-toolbar");
-    let columns = [
-      ["#requests-menu-waterfall-header-box", "waterfall-overflows"],
-      ["#requests-menu-size-header-box", "size-overflows"],
-      ["#requests-menu-type-header-box", "type-overflows"],
-      ["#requests-menu-domain-header-box", "domain-overflows"]
-    ];
-
-    // Flush headers.
-    columns.forEach(([, attribute]) => table.removeAttribute(attribute));
-    let availableWidth = toolbar.getBoundingClientRect().width;
-
-    // Hide the columns.
-    columns.forEach(([id, attribute]) => {
-      let bounds = $(id).getBoundingClientRect();
-      if (bounds.right > availableWidth - REQUESTS_HEADERS_SAFE_BOUNDS) {
-        table.setAttribute(attribute, "");
-      }
-    });
   },
 
   /**

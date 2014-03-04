@@ -5726,6 +5726,13 @@ nsHttpChannel::DoAuthRetry(nsAHttpConnection *conn)
     // get rid of the old response headers
     mResponseHead = nullptr;
 
+    // rewind the upload stream
+    if (mUploadStream) {
+        nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mUploadStream);
+        if (seekable)
+            seekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
+    }
+
     // set sticky connection flag and disable pipelining.
     mCaps |=  NS_HTTP_STICKY_CONNECTION;
     mCaps &= ~NS_HTTP_ALLOW_PIPELINING;
@@ -5737,13 +5744,6 @@ nsHttpChannel::DoAuthRetry(nsAHttpConnection *conn)
     // transfer ownership of connection to transaction
     if (conn)
         mTransaction->SetConnection(conn);
-
-    // rewind the upload stream
-    if (mUploadStream) {
-        nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mUploadStream);
-        if (seekable)
-            seekable->Seek(nsISeekableStream::NS_SEEK_SET, 0);
-    }
 
     rv = gHttpHandler->InitiateTransaction(mTransaction, mPriority);
     if (NS_FAILED(rv)) return rv;

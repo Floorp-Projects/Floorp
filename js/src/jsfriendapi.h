@@ -661,6 +661,11 @@ GetObjectParentMaybeScope(JSObject *obj);
 JS_FRIEND_API(JSObject *)
 GetGlobalForObjectCrossCompartment(JSObject *obj);
 
+// Sidestep the activeContext checking implicitly performed in
+// JS_SetPendingException.
+JS_FRIEND_API(void)
+SetPendingExceptionCrossContext(JSContext *cx, JS::HandleValue v);
+
 JS_FRIEND_API(void)
 AssertSameCompartment(JSContext *cx, JSObject *obj);
 
@@ -1950,6 +1955,21 @@ typedef JSContext*
 
 JS_FRIEND_API(void)
 SetDefaultJSContextCallback(JSRuntime *rt, DefaultJSContextCallback cb);
+
+/*
+ * To help embedders enforce their invariants, we allow them to specify in
+ * advance which JSContext should be passed to JSAPI calls. If this is set
+ * to a non-null value, the assertSameCompartment machinery does double-
+ * duty (in debug builds) to verify that it matches the cx being used.
+ */
+#ifdef DEBUG
+JS_FRIEND_API(void)
+Debug_SetActiveJSContext(JSRuntime *rt, JSContext *cx);
+#else
+inline void
+Debug_SetActiveJSContext(JSRuntime *rt, JSContext *cx) {};
+#endif
+
 
 enum CTypesActivityType {
     CTYPES_CALL_BEGIN,

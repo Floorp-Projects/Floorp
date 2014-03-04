@@ -53,6 +53,16 @@ GetXrayType(JSObject *obj)
     return NotXray;
 }
 
+JSObject *
+XrayAwareCalleeGlobal(JSObject *fun)
+{
+  MOZ_ASSERT(js::IsFunctionObject(fun));
+  JSObject *scope = js::GetObjectParent(fun);
+  if (IsXrayWrapper(scope))
+    scope = js::UncheckedUnwrap(scope);
+  return js::GetGlobalForObjectCrossCompartment(scope);
+}
+
 const uint32_t JSSLOT_RESOLVING = 0;
 ResolvingId::ResolvingId(JSContext *cx, HandleObject wrapper, HandleId id)
   : mId(id),
@@ -1540,7 +1550,7 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, HandleObject wra
         id == nsXPConnect::GetRuntimeInstance()->GetStringID(XPCJSRuntime::IDX_TO_STRING))
     {
 
-        JSFunction *toString = JS_NewFunction(cx, XrayToString, 0, 0, holder, "toString");
+        JSFunction *toString = JS_NewFunction(cx, XrayToString, 0, 0, wrapper, "toString");
         if (!toString)
             return false;
 

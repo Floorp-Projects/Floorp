@@ -93,27 +93,4 @@ nsErrorService::GetErrorStringBundle(int16_t errorModule, char **result)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsErrorService::RegisterErrorStringBundleKey(nsresult error, const char *stringBundleKey)
-{
-    return mErrorStringBundleKeyMap.Put(static_cast<uint32_t>(error),
-                                        stringBundleKey);
-}
-
-NS_IMETHODIMP
-nsErrorService::UnregisterErrorStringBundleKey(nsresult error)
-{
-    return mErrorStringBundleKeyMap.Remove(static_cast<uint32_t>(error));
-}
-
-NS_IMETHODIMP
-nsErrorService::GetErrorStringBundleKey(nsresult error, char **result)
-{
-    char* value = mErrorStringBundleKeyMap.Get(static_cast<uint32_t>(error));
-    if (value == nullptr)
-        return NS_ERROR_OUT_OF_MEMORY;
-    *result = value;
-    return NS_OK;
-}
-
 ////////////////////////////////////////////////////////////////////////////////

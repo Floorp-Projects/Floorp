@@ -2633,12 +2633,11 @@ IMEInputHandler::GetRangeCount(NSAttributedString *aAttrString)
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(0);
 }
 
-void
-IMEInputHandler::SetTextRangeList(nsTArray<TextRange>& aTextRangeList,
-                                  NSAttributedString *aAttrString,
-                                  NSRange& aSelectedRange)
+already_AddRefed<mozilla::TextRangeArray>
+IMEInputHandler::CreateTextRangeArray(NSAttributedString *aAttrString,
+                                      NSRange& aSelectedRange)
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
   // Convert the Cocoa range into the TextRange Array used in Gecko.
   // Iterate through the attributed string and map the underline attribute to
@@ -2646,6 +2645,8 @@ IMEInputHandler::SetTextRangeList(nsTArray<TextRange>& aTextRangeList,
   // we change the implementation of validAttributesForMarkedText.
   NSRange limitRange = NSMakeRange(0, [aAttrString length]);
   uint32_t rangeCount = GetRangeCount(aAttrString);
+  nsRefPtr<mozilla::TextRangeArray> textRangeArray =
+                                      new mozilla::TextRangeArray();
   for (uint32_t i = 0; i < rangeCount && limitRange.length > 0; i++) {
     NSRange effectiveRange;
     id attributeValue = [aAttrString attribute:NSUnderlineStyleAttributeName
@@ -2658,10 +2659,10 @@ IMEInputHandler::SetTextRangeList(nsTArray<TextRange>& aTextRangeList,
     range.mEndOffset = NSMaxRange(effectiveRange);
     range.mRangeType =
       ConvertToTextRangeType([attributeValue intValue], aSelectedRange);
-    aTextRangeList.AppendElement(range);
+    textRangeArray->AppendElement(range);
 
     PR_LOG(gLog, PR_LOG_ALWAYS,
-      ("%p IMEInputHandler::SetTextRangeList, "
+      ("%p IMEInputHandler::CreateTextRangeArray, "
        "range={ mStartOffset=%llu, mEndOffset=%llu, mRangeType=%s }",
        this, range.mStartOffset, range.mEndOffset,
        GetRangeTypeName(range.mRangeType)));
@@ -2676,15 +2677,17 @@ IMEInputHandler::SetTextRangeList(nsTArray<TextRange>& aTextRangeList,
   range.mStartOffset = aSelectedRange.location + aSelectedRange.length;
   range.mEndOffset = range.mStartOffset;
   range.mRangeType = NS_TEXTRANGE_CARETPOSITION;
-  aTextRangeList.AppendElement(range);
+  textRangeArray->AppendElement(range);
 
   PR_LOG(gLog, PR_LOG_ALWAYS,
-    ("%p IMEInputHandler::SetTextRangeList, "
+    ("%p IMEInputHandler::CreateTextRangeArray, "
      "range={ mStartOffset=%llu, mEndOffset=%llu, mRangeType=%s }",
      this, range.mStartOffset, range.mEndOffset,
      GetRangeTypeName(range.mRangeType)));
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  return textRangeArray.forget();
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
 bool
@@ -2710,12 +2713,9 @@ IMEInputHandler::DispatchTextEvent(const nsString& aText,
   WidgetTextEvent textEvent(true, NS_TEXT_TEXT, mWidget);
   textEvent.time = PR_IntervalNow();
   textEvent.theText = aText;
-  nsAutoTArray<TextRange, 4> textRanges;
   if (!aDoCommit) {
-    SetTextRangeList(textRanges, aAttrString, aSelectedRange);
+    textEvent.mRanges = CreateTextRangeArray(aAttrString, aSelectedRange);
   }
-  textEvent.rangeArray = textRanges.Elements();
-  textEvent.rangeCount = textRanges.Length();
 
   if (textEvent.theText != mLastDispatchedCompositionString) {
     WidgetCompositionEvent compositionUpdate(true, NS_COMPOSITION_UPDATE,
