@@ -35,7 +35,7 @@
             <item android:id="@+id/launcher_add"
                   android:title="@string/contextmenu_add_to_launcher" />
 
-            <item android:id="@+id/subscribe"
+            <item android:id="@+id/save_subscribe"
                   android:title="@string/contextmenu_subscribe" />
 
         </menu>
