@@ -17,7 +17,8 @@
          android:id="@+id/main_layout"
          android:layout_width="fill_parent"
          android:layout_height="fill_parent"
-         android:background="@android:color/transparent">
+         android:background="@android:color/transparent"
+         android:clipChildren="false">
 
         <RelativeLayout android:id="@+id/gecko_layout"
                         android:layout_width="fill_parent"
@@ -90,6 +91,7 @@
                 android:layout_width="fill_parent"
                 android:layout_height="@dimen/browser_toolbar_height"
                 android:clickable="true"
+                android:clipChildren="false"
                 android:focusable="true">
 
             <org.mozilla.gecko.toolbar.BrowserToolbar
@@ -99,6 +101,7 @@
                 android:layout_height="@dimen/browser_toolbar_height"
                 android:clickable="true"
                 android:focusable="true"
+                android:clipChildren="false"
                 android:background="@drawable/url_bar_bg"/>
 
             <org.mozilla.gecko.ActionModeCompatView android:id="@+id/actionbar"
