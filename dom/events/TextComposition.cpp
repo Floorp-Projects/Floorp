@@ -60,6 +60,9 @@ TextComposition::DispatchEvent(WidgetGUIEvent* aEvent,
 {
   if (aEvent->message == NS_COMPOSITION_UPDATE) {
     mLastData = aEvent->AsCompositionEvent()->data;
+  } else if (aEvent->message == NS_TEXT_TEXT) {
+    // XXX This will be removed by later patch.
+    aEvent->AsTextEvent()->EnsureRanges();
   }
 
   nsEventDispatcher::Dispatch(mNode, mPresContext,
@@ -152,6 +155,7 @@ void
 TextComposition::EditorWillHandleTextEvent(const WidgetTextEvent* aTextEvent)
 {
   mIsComposing = aTextEvent->IsComposing();
+  mRanges = aTextEvent->mRanges;
   mIsEditorHandlingEvent = true;
 
   MOZ_ASSERT(mLastData == aTextEvent->theText,
