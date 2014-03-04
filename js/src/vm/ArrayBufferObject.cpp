@@ -664,9 +664,10 @@ ArrayBufferObject::addView(ArrayBufferViewObject *view)
 }
 
 ArrayBufferObject *
-ArrayBufferObject::create(JSContext *cx, uint32_t nbytes, bool clear /* = true */)
+ArrayBufferObject::create(JSContext *cx, uint32_t nbytes, bool clear /* = true */,
+                          NewObjectKind newKind /* = GenericObject */)
 {
-    Rooted<ArrayBufferObject*> obj(cx, NewBuiltinClassInstance<ArrayBufferObject>(cx));
+    Rooted<ArrayBufferObject*> obj(cx, NewBuiltinClassInstance<ArrayBufferObject>(cx, newKind));
     if (!obj)
         return nullptr;
     JS_ASSERT_IF(obj->isTenured(), obj->tenuredGetAllocKind() == gc::FINALIZE_OBJECT16_BACKGROUND);
@@ -1350,7 +1351,11 @@ JS_PUBLIC_API(JSObject *)
 JS_NewArrayBufferWithContents(JSContext *cx, void *contents)
 {
     JS_ASSERT(contents);
-    JSObject *obj = ArrayBufferObject::create(cx, 0);
+
+    // Do not allocate ArrayBuffers with an API-provided pointer in the nursery.
+    // These are likely to be long lived and the nursery does not know how to
+    // free the contents.
+    JSObject *obj = ArrayBufferObject::create(cx, 0, true, TenuredObject);
     if (!obj)
         return nullptr;
     js::ObjectElements *elements = reinterpret_cast<js::ObjectElements *>(contents);
