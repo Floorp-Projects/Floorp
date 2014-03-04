@@ -335,7 +335,7 @@ InternalPrompt.prototype = {
       aTitle, aText, aUsername, aPassword, aCheckMsg, aCheckState) {
     let p = this._getPrompt(aTitle, aText, null);
     this.addTextbox(p, aUsername.value, true, PromptUtils.getLocaleString("username", "passwdmgr"));
-    this.addPassword(p, aPassword.value, true, PromptUtils.getLocaleString("password", "passwdmgr"));
+    this.addPassword(p, aPassword.value, false, PromptUtils.getLocaleString("password", "passwdmgr"));
     this.addCheckbox(p, aCheckMsg, aCheckState);
     let data = this.showPrompt(p);
 
