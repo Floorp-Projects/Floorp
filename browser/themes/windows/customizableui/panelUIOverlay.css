@@ -35,6 +35,11 @@
   padding: 0 6px;
 }
 
+#BMB_bookmarksPopup menuitem[checked="true"]::before,
+#BMB_bookmarksPopup toolbarbutton[checked="true"]::before {
+  margin: 0 9px;
+}
+
 %ifdef WINDOWS_AERO
 /* Win8 and beyond. */
 @media not all and (-moz-os-version: windows-vista) {
