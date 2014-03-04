@@ -399,7 +399,7 @@ AudioNodeStream::UpMixDownMixChunk(const AudioChunk* aChunk,
 // The MediaStreamGraph guarantees that this is actually one block, for
 // AudioNodeStreams.
 void
-AudioNodeStream::ProduceOutput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags)
+AudioNodeStream::ProcessInput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags)
 {
   EnsureTrack(AUDIO_TRACK, mSampleRate);
   // No more tracks will be coming
