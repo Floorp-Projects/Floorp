@@ -117,7 +117,6 @@
 
 .panelUI-grid .toolbarbutton-menubutton-button > .toolbarbutton-multiline-text,
 .panelUI-grid .toolbarbutton-1 > .toolbarbutton-multiline-text {
-  text-align: center;
   -moz-hyphens: auto;
   min-height: 3.5em;
 }
@@ -127,11 +126,14 @@
   mask: url(chrome://browser/content/browser.xul#menuPanelButtonTextFadeOutMask);
 }
 
+.panelUI-grid .toolbarbutton-1 > .toolbarbutton-text,
 .panelUI-grid .toolbarbutton-1 > .toolbarbutton-multiline-text {
+  text-align: center;
   margin: 2px 0 0;
 }
 
 .panelUI-grid .toolbarbutton-menubutton-button > .toolbarbutton-multiline-text {
+  text-align: center;
   margin: -1px 0 0;
 }
 
