@@ -40,7 +40,6 @@ private:
 
 protected:
     nsInt2StrHashtable mErrorStringBundleURLMap;
-    nsInt2StrHashtable mErrorStringBundleKeyMap;
 };
 
 #endif // nsErrorService_h__
