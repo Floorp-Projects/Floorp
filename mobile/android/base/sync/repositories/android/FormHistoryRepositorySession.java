@@ -5,6 +5,7 @@
 package org.mozilla.gecko.sync.repositories.android;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 
@@ -313,9 +314,9 @@ public class FormHistoryRepositorySession extends
       }
     };
 
-    ArrayList<Callable<Cursor>> callableCursors = new ArrayList<Callable<Cursor>>();
-    callableCursors.add(regularCallable);
-    callableCursors.add(deletedCallable);
+    @SuppressWarnings("unchecked")
+    List<Callable<Cursor>> callableCursors = Arrays.asList(regularCallable, deletedCallable);
+
     fetchHelper(delegate, sharedEnd, callableCursors);
   }
 
@@ -348,9 +349,9 @@ public class FormHistoryRepositorySession extends
       }
     };
 
-    ArrayList<Callable<Cursor>> callableCursors = new ArrayList<Callable<Cursor>>();
-    callableCursors.add(regularCallable);
-    callableCursors.add(deletedCallable);
+    @SuppressWarnings("unchecked")
+    List<Callable<Cursor>> callableCursors = Arrays.asList(regularCallable, deletedCallable);
+
     fetchHelper(delegate, sharedEnd, callableCursors);
   }
 

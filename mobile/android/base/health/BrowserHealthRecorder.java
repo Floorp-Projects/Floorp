@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -789,9 +790,9 @@ public class BrowserHealthRecorder implements HealthRecorder, GeckoEventListener
             new MeasurementFields() {
                 @Override
                 public Iterable<FieldSpec> getFields() {
-                    ArrayList<FieldSpec> out = new ArrayList<FieldSpec>(2);
-                    out.add(new FieldSpec("normal", Field.TYPE_JSON_DISCRETE));
-                    out.add(new FieldSpec("abnormal", Field.TYPE_JSON_DISCRETE));
+                    List<FieldSpec> out = Arrays.asList(
+                        new FieldSpec("normal", Field.TYPE_JSON_DISCRETE),
+                        new FieldSpec("abnormal", Field.TYPE_JSON_DISCRETE));
                     return out;
                 }
         });
