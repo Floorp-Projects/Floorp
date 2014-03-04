@@ -11,7 +11,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 import org.mozilla.gecko.background.common.GlobalConstants;
+import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.fxa.FxAccountUtils;
+import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.login.State;
 import org.mozilla.gecko.fxa.login.State.StateLabel;
@@ -21,6 +23,7 @@ import org.mozilla.gecko.sync.Utils;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -324,17 +327,34 @@ public class AndroidFxAccount {
   }
 
   public void enableSyncing() {
-    FxAccountAuthenticator.enableSyncing(context, account);
+    Logger.info(LOG_TAG, "Disabling sync for account named like " + Utils.obfuscateEmail(getEmail()));
+    for (String authority : new String[] { BrowserContract.AUTHORITY }) {
+      ContentResolver.setSyncAutomatically(account, authority, true);
+      ContentResolver.setIsSyncable(account, authority, 1);
+    }
   }
 
   public void disableSyncing() {
-    FxAccountAuthenticator.disableSyncing(context, account);
+    Logger.info(LOG_TAG, "Disabling sync for account named like " + Utils.obfuscateEmail(getEmail()));
+    for (String authority : new String[] { BrowserContract.AUTHORITY }) {
+      ContentResolver.setSyncAutomatically(account, authority, false);
+    }
+  }
+
+  public void requestSync(Bundle extras) {
+    Logger.info(LOG_TAG, "Requesting sync for account named like " + Utils.obfuscateEmail(getEmail()) +
+        (extras.isEmpty() ? "." : "; has extras."));
+    for (String authority : new String[] { BrowserContract.AUTHORITY }) {
+      ContentResolver.requestSync(account, authority, extras);
+    }
   }
 
   public synchronized void setState(State state) {
     if (state == null) {
       throw new IllegalArgumentException("state must not be null");
     }
+    Logger.info(LOG_TAG, "Moving account named like " + Utils.obfuscateEmail(getEmail()) +
+        " to state " + state.getStateLabel().toString());
     updateBundleValue(BUNDLE_KEY_STATE_LABEL, state.getStateLabel().name());
     updateBundleValue(BUNDLE_KEY_STATE, state.toJSONObject().toJSONString());
   }
