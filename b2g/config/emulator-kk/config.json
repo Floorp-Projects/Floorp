@@ -1,0 +1,32 @@
+{
+    "config_version": 2,
+    "tooltool_manifest": "releng-emulator-kk.tt",
+    "mock_target": "mozilla-centos6-x86_64",
+    "mock_packages": ["ccache", "make", "bison", "flex", "gcc", "g++", "mpfr", "zlib-devel", "ncurses-devel", "zip", "autoconf213", "glibc-static", "perl-Digest-SHA", "wget", "alsa-lib", "atk", "cairo", "dbus-glib", "fontconfig", "freetype", "glib2", "gtk2", "libXRender", "libXt", "pango", "mozilla-python27-mercurial", "openssh-clients", "nss-devel", "glibc-devel.i686", "libstdc++.i686", "zlib-devel.i686", "ncurses-devel.i686", "libX11-devel.i686", "mesa-libGL-devel.i686", "mesa-libGL-devel", "libX11-devel", "git", "libxml2"],
+    "mock_files": [["/home/cltbld/.ssh", "/home/mock_mozilla/.ssh"]],
+    "build_targets": ["droid", "package-emulator", "package-tests"],
+    "upload_files": [
+        "{workdir}/out/target/product/generic/*.tar.bz2",
+        "{workdir}/out/target/product/generic/tests/*.zip",
+        "{workdir}/out/emulator.tar.gz",
+        "{objdir}/dist/b2g-*.crashreporter-symbols.zip",
+        "{workdir}/sources.xml"
+    ],
+    "public_upload_files": [
+        "{workdir}/out/target/product/generic/*.tar.bz2",
+        "{workdir}/out/target/product/generic/tests/*.zip",
+        "{objdir}/dist/b2g-*.crashreporter-symbols.zip",
+        "{workdir}/sources.xml"
+    ],
+    "upload_platform": "emulator-kk",
+    "gecko_l10n_root": "https://hg.mozilla.org/l10n-central",
+    "gaia": {
+        "l10n": {
+            "vcs": "hgtool",
+            "root": "https://hg.mozilla.org/gaia-l10n"
+        }
+    },
+    "b2g_manifest": "emulator-kk.xml",
+    "b2g_manifest_branch": "master",
+    "b2g_manifest_intree": true
+}
