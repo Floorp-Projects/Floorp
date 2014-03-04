@@ -470,6 +470,21 @@ class GeneratedInclude(SandboxDerived):
         self.path = path
 
 
+class PerSourceFlag(SandboxDerived):
+    """Describes compiler flags specified for individual source files."""
+
+    __slots__ = (
+        'file_name',
+        'flags',
+    )
+
+    def __init__(self, sandbox, file_name, flags):
+        SandboxDerived.__init__(self, sandbox)
+
+        self.file_name = file_name
+        self.flags = flags
+
+
 class JARManifest(SandboxDerived):
     """Describes an individual JAR manifest file and how to process it.
 

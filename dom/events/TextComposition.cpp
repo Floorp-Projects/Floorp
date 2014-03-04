@@ -113,17 +113,8 @@ TextComposition::NotityUpdateComposition(WidgetGUIEvent* aEvent)
   } else if (aEvent->eventStructType != NS_TEXT_EVENT) {
     return;
   } else {
-    WidgetTextEvent* textEvent = aEvent->AsTextEvent();
-    mCompositionTargetOffset = mCompositionStartOffset;
-
-    for (uint32_t i = 0; i < textEvent->rangeCount; i++) {
-      TextRange& range = textEvent->rangeArray[i];
-      if (range.mRangeType == NS_TEXTRANGE_SELECTEDRAWTEXT ||
-          range.mRangeType == NS_TEXTRANGE_SELECTEDCONVERTEDTEXT) {
-        mCompositionTargetOffset += range.mStartOffset;
-        break;
-      }
-    }
+    mCompositionTargetOffset =
+      mCompositionStartOffset + aEvent->AsTextEvent()->TargetClauseOffset();
   }
 
   NotifyIME(NOTIFY_IME_OF_COMPOSITION_UPDATE);
@@ -161,6 +152,7 @@ void
 TextComposition::EditorWillHandleTextEvent(const WidgetTextEvent* aTextEvent)
 {
   mIsComposing = aTextEvent->IsComposing();
+  mRanges = aTextEvent->mRanges;
   mIsEditorHandlingEvent = true;
 
   MOZ_ASSERT(mLastData == aTextEvent->theText,
