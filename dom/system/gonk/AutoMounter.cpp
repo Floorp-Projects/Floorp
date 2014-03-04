@@ -259,6 +259,8 @@ public:
     if (vol->IsSharingEnabled() == aAllowSharing) {
       return;
     }
+    vol->SetUnmountRequested(false);
+    vol->SetMountRequested(false);
     vol->SetSharingEnabled(aAllowSharing);
     DBG("Calling UpdateState due to volume %s shareing set to %d",
         vol->NameStr(), (int)aAllowSharing);
@@ -274,9 +276,43 @@ public:
     if (vol->IsFormatRequested()) {
       return;
     }
+    vol->SetUnmountRequested(false);
+    vol->SetMountRequested(false);
     vol->SetFormatRequested(true);
     DBG("Calling UpdateState due to volume %s formatting set to %d",
         vol->NameStr(), (int)vol->IsFormatRequested());
+    UpdateState();
+  }
+
+  void MountVolume(const nsACString& aVolumeName)
+  {
+    RefPtr<Volume> vol = VolumeManager::FindVolumeByName(aVolumeName);
+    if (!vol) {
+      return;
+    }
+    vol->SetUnmountRequested(false);
+    if (vol->IsMountRequested() || vol->mState == nsIVolume::STATE_MOUNTED) {
+      return;
+    }
+    vol->SetMountRequested(true);
+    DBG("Calling UpdateState due to volume %s mounting set to %d",
+        vol->NameStr(), (int)vol->IsMountRequested());
+    UpdateState();
+  }
+
+  void UnmountVolume(const nsACString& aVolumeName)
+  {
+    RefPtr<Volume> vol = VolumeManager::FindVolumeByName(aVolumeName);
+    if (!vol) {
+      return;
+    }
+    if (vol->IsUnmountRequested()) {
+      return;
+    }
+    vol->SetMountRequested(false);
+    vol->SetUnmountRequested(true);
+    DBG("Calling UpdateState due to volume %s unmounting set to %d",
+        vol->NameStr(), (int)vol->IsUnmountRequested());
     UpdateState();
   }
 
@@ -432,9 +468,11 @@ AutoMounter::UpdateState()
       continue;
     }
 
-    if ((tryToShare && vol->IsSharingEnabled()) || vol->IsFormatRequested()) {
-      // We're going to try to unmount and share the volumes
+    if ((tryToShare && vol->IsSharingEnabled()) ||
+        vol->IsFormatRequested() ||
+        vol->IsUnmountRequested()) {
       switch (volState) {
+        // We're going to try to unmount the volume
         case nsIVolume::STATE_MOUNTED: {
           if (vol->IsMountLocked()) {
             // The volume is currently locked, so leave it in the mounted
@@ -536,10 +574,12 @@ AutoMounter::UpdateState()
           return; // UpdateState will be called again when the Unshare command completes
         }
         case nsIVolume::STATE_IDLE: {
-          // Volume is unmounted, try to mount.
+          if (!vol->IsUnmountRequested()) {
+            // Volume is unmounted and mount-requested, try to mount.
 
-          LOG("UpdateState: Mounting %s", vol->NameStr());
-          vol->StartMount(mResponseCallback);
+            LOG("UpdateState: Mounting %s", vol->NameStr());
+            vol->StartMount(mResponseCallback);
+          }
           return; // UpdateState will be called again when Mount command completes
         }
         default: {
@@ -584,6 +624,7 @@ ShutdownAutoMounterIOThread()
 static void
 SetAutoMounterModeIOThread(const int32_t& aMode)
 {
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
   MOZ_ASSERT(MessageLoop::current() == XRE_GetIOMessageLoop());
   MOZ_ASSERT(sAutoMounter);
 
@@ -593,6 +634,7 @@ SetAutoMounterModeIOThread(const int32_t& aMode)
 static void
 SetAutoMounterSharingModeIOThread(const nsCString& aVolumeName, const bool& aAllowSharing)
 {
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
   MOZ_ASSERT(MessageLoop::current() == XRE_GetIOMessageLoop());
   MOZ_ASSERT(sAutoMounter);
 
@@ -602,10 +644,31 @@ SetAutoMounterSharingModeIOThread(const nsCString& aVolumeName, const bool& aAll
 static void
 AutoMounterFormatVolumeIOThread(const nsCString& aVolumeName)
 {
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
   MOZ_ASSERT(MessageLoop::current() == XRE_GetIOMessageLoop());
   MOZ_ASSERT(sAutoMounter);
 
   sAutoMounter->FormatVolume(aVolumeName);
+}
+
+static void
+AutoMounterMountVolumeIOThread(const nsCString& aVolumeName)
+{
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+  MOZ_ASSERT(MessageLoop::current() == XRE_GetIOMessageLoop());
+  MOZ_ASSERT(sAutoMounter);
+
+  sAutoMounter->MountVolume(aVolumeName);
+}
+
+static void
+AutoMounterUnmountVolumeIOThread(const nsCString& aVolumeName)
+{
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+  MOZ_ASSERT(MessageLoop::current() == XRE_GetIOMessageLoop());
+  MOZ_ASSERT(sAutoMounter);
+
+  sAutoMounter->UnmountVolume(aVolumeName);
 }
 
 static void
@@ -773,6 +836,24 @@ AutoMounterFormatVolume(const nsCString& aVolumeName)
   XRE_GetIOMessageLoop()->PostTask(
       FROM_HERE,
       NewRunnableFunction(AutoMounterFormatVolumeIOThread,
+                          aVolumeName));
+}
+
+void
+AutoMounterMountVolume(const nsCString& aVolumeName)
+{
+  XRE_GetIOMessageLoop()->PostTask(
+      FROM_HERE,
+      NewRunnableFunction(AutoMounterMountVolumeIOThread,
+                          aVolumeName));
+}
+
+void
+AutoMounterUnmountVolume(const nsCString& aVolumeName)
+{
+  XRE_GetIOMessageLoop()->PostTask(
+      FROM_HERE,
+      NewRunnableFunction(AutoMounterUnmountVolumeIOThread,
                           aVolumeName));
 }
 

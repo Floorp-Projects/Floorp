@@ -174,6 +174,32 @@ DeviceStorageRequestParent::Dispatch()
       break;
     }
 
+    case DeviceStorageParams::TDeviceStorageMountParams:
+    {
+      DeviceStorageMountParams p = mParams;
+
+      nsRefPtr<DeviceStorageFile> dsf =
+        new DeviceStorageFile(p.type(), p.storageName());
+      nsRefPtr<PostMountResultEvent> r
+        = new PostMountResultEvent(this, dsf);
+      DebugOnly<nsresult> rv = NS_DispatchToMainThread(r);
+      MOZ_ASSERT(NS_SUCCEEDED(rv));
+      break;
+    }
+
+    case DeviceStorageParams::TDeviceStorageUnmountParams:
+    {
+      DeviceStorageUnmountParams p = mParams;
+
+      nsRefPtr<DeviceStorageFile> dsf =
+        new DeviceStorageFile(p.type(), p.storageName());
+      nsRefPtr<PostUnmountResultEvent> r
+        = new PostUnmountResultEvent(this, dsf);
+      DebugOnly<nsresult> rv = NS_DispatchToMainThread(r);
+      MOZ_ASSERT(NS_SUCCEEDED(rv));
+      break;
+    }
+
     case DeviceStorageParams::TDeviceStorageEnumerationParams:
     {
       DeviceStorageEnumerationParams p = mParams;
@@ -279,6 +305,22 @@ DeviceStorageRequestParent::EnsureRequiredPermissions(
       DeviceStorageFormatParams p = mParams;
       type = p.type();
       requestType = DEVICE_STORAGE_REQUEST_FORMAT;
+      break;
+    }
+
+    case DeviceStorageParams::TDeviceStorageMountParams:
+    {
+      DeviceStorageMountParams p = mParams;
+      type = p.type();
+      requestType = DEVICE_STORAGE_REQUEST_MOUNT;
+      break;
+    }
+
+    case DeviceStorageParams::TDeviceStorageUnmountParams:
+    {
+      DeviceStorageUnmountParams p = mParams;
+      type = p.type();
+      requestType = DEVICE_STORAGE_REQUEST_UNMOUNT;
       break;
     }
 
@@ -896,6 +938,62 @@ DeviceStorageRequestParent::PostFormatResultEvent::CancelableRun()
   }
 
   FormatStorageResponse response(state);
+  unused << mParent->Send__delete__(mParent, response);
+  return NS_OK;
+}
+
+DeviceStorageRequestParent::PostMountResultEvent::
+  PostMountResultEvent(DeviceStorageRequestParent* aParent,
+                           DeviceStorageFile* aFile)
+  : CancelableRunnable(aParent)
+  , mFile(aFile)
+{
+}
+
+DeviceStorageRequestParent::PostMountResultEvent::
+  ~PostMountResultEvent()
+{
+}
+
+nsresult
+DeviceStorageRequestParent::PostMountResultEvent::CancelableRun()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsString state = NS_LITERAL_STRING("unavailable");
+  if (mFile) {
+    mFile->DoMount(state);
+  }
+
+  MountStorageResponse response(state);
+  unused << mParent->Send__delete__(mParent, response);
+  return NS_OK;
+}
+
+DeviceStorageRequestParent::PostUnmountResultEvent::
+  PostUnmountResultEvent(DeviceStorageRequestParent* aParent,
+                           DeviceStorageFile* aFile)
+  : CancelableRunnable(aParent)
+  , mFile(aFile)
+{
+}
+
+DeviceStorageRequestParent::PostUnmountResultEvent::
+  ~PostUnmountResultEvent()
+{
+}
+
+nsresult
+DeviceStorageRequestParent::PostUnmountResultEvent::CancelableRun()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsString state = NS_LITERAL_STRING("unavailable");
+  if (mFile) {
+    mFile->DoUnmount(state);
+  }
+
+  UnmountStorageResponse response(state);
   unused << mParent->Send__delete__(mParent, response);
   return NS_OK;
 }

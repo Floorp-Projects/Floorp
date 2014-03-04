@@ -269,6 +269,26 @@ private:
       nsRefPtr<DeviceStorageFile> mFile;
  };
 
+ class PostMountResultEvent : public CancelableRunnable
+ {
+    public:
+      PostMountResultEvent(DeviceStorageRequestParent* aParent, DeviceStorageFile* aFile);
+      virtual ~PostMountResultEvent();
+      virtual nsresult CancelableRun();
+    private:
+      nsRefPtr<DeviceStorageFile> mFile;
+ };
+
+ class PostUnmountResultEvent : public CancelableRunnable
+ {
+    public:
+      PostUnmountResultEvent(DeviceStorageRequestParent* aParent, DeviceStorageFile* aFile);
+      virtual ~PostUnmountResultEvent();
+      virtual nsresult CancelableRun();
+    private:
+      nsRefPtr<DeviceStorageFile> mFile;
+ };
+
 protected:
   bool AddRunnable(CancelableRunnable* aRunnable) {
     MutexAutoLock lock(mMutex);
