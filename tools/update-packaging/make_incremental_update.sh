@@ -86,9 +86,9 @@ if [ $(echo "$newdir" | grep -c '\/$') = 1 ]; then
   newdir=$(echo "$newdir" | sed -e 's:\/$::')
 fi
 workdir="$newdir.work"
-updatemanifestv1="$workdir/update.manifest"
 updatemanifestv2="$workdir/updatev2.manifest"
-archivefiles="update.manifest updatev2.manifest"
+updatemanifestv3="$workdir/updatev3.manifest"
+archivefiles="updatev2.manifest updatev3.manifest"
 
 mkdir -p "$workdir"
 
@@ -121,9 +121,17 @@ list_files newfiles
 
 popd
 
+# Add the type of update to the beginning of the update manifests.
 notice ""
-notice "Adding file patch and add instructions to file 'update.manifest'"
-> $updatemanifestv1
+notice "Adding type instruction to update manifests"
+> $updatemanifestv2
+> $updatemanifestv3
+notice "       type partial"
+echo "type \"partial\"" >> $updatemanifestv2
+echo "type \"partial\"" >> $updatemanifestv3
+
+notice ""
+notice "Adding file patch and add instructions to update manifests"
 
 num_oldfiles=${#oldfiles[*]}
 remove_array=
@@ -146,12 +154,22 @@ for ((i=0; $i<$num_oldfiles; i=$i+1)); do
   # If this file exists in the new directory as well, then check if it differs.
   if [ -f "$newdir/$f" ]; then
 
+    if check_for_add_if_not_update "$f"; then
+      # The full workdir may not exist yet, so create it if necessary.
+      mkdir -p `dirname "$workdir/$f"`
+      $BZIP2 -cz9 "$newdir/$f" > "$workdir/$f"
+      copy_perm "$newdir/$f" "$workdir/$f"
+      make_add_if_not_instruction "$f" "$updatemanifestv3"
+      archivefiles="$archivefiles \"$f\""
+      continue 1
+    fi
+
     if check_for_forced_update "$requested_forced_updates" "$f"; then
       # The full workdir may not exist yet, so create it if necessary.
       mkdir -p `dirname "$workdir/$f"`
       $BZIP2 -cz9 "$newdir/$f" > "$workdir/$f"
       copy_perm "$newdir/$f" "$workdir/$f"
-      make_add_instruction "$f" 1 >> $updatemanifestv1
+      make_add_instruction "$f" "$updatemanifestv2" "$updatemanifestv3" 1
       archivefiles="$archivefiles \"$f\""
       continue 1
     fi
@@ -161,6 +179,7 @@ for ((i=0; $i<$num_oldfiles; i=$i+1)); do
       # compare the sizes.  Then choose the smaller of the two to package.
       dir=$(dirname "$workdir/$f")
       mkdir -p "$dir"
+      notice "diffing \"$f\""
       $MBSDIFF "$olddir/$f" "$newdir/$f" "$workdir/$f.patch"
       $BZIP2 -z9 "$workdir/$f.patch"
       $BZIP2 -cz9 "$newdir/$f" > "$workdir/$f"
@@ -170,12 +189,12 @@ for ((i=0; $i<$num_oldfiles; i=$i+1)); do
       fullsize=$(get_file_size "$workdir/$f")
 
       if [ $patchsize -lt $fullsize ]; then
-        make_patch_instruction "$f" >> $updatemanifestv1
+        make_patch_instruction "$f" "$updatemanifestv2" "$updatemanifestv3"
         mv -f "$patchfile" "$workdir/$f.patch"
         rm -f "$workdir/$f"
         archivefiles="$archivefiles \"$f.patch\""
       else
-        make_add_instruction "$f" >> $updatemanifestv1
+        make_add_instruction "$f" "$updatemanifestv2" "$updatemanifestv3"
         rm -f "$patchfile"
         archivefiles="$archivefiles \"$f\""
       fi
@@ -190,7 +209,7 @@ done
 
 # Newly added files
 notice ""
-notice "Adding file add instructions to file 'update.manifest'"
+notice "Adding file add instructions to update manifests"
 num_newfiles=${#newfiles[*]}
 
 for ((i=0; $i<$num_newfiles; i=$i+1)); do
@@ -215,34 +234,40 @@ for ((i=0; $i<$num_newfiles; i=$i+1)); do
   $BZIP2 -cz9 "$newdir/$f" > "$workdir/$f"
   copy_perm "$newdir/$f" "$workdir/$f"
 
-  make_add_instruction "$f" >> "$updatemanifestv1"
+  if check_for_add_if_not_update "$f"; then
+    # Raise an exception if a new channel-prefs.js or update-settings.ini file
+    # is found to prevent it from being to a new location like happened in
+    # bug 756325.
+    if [ `basename $f` = "channel-prefs.js" ]; then
+      notice "new channel-prefs.js file found: $f"
+      exit 1
+    fi
+    if [ `basename $f` = "update-settings.ini" ]; then
+      notice "new update-settings.ini file found: $f"
+      exit 1
+    fi
+    make_add_if_not_instruction "$f" "$updatemanifestv3"
+  else
+    make_add_instruction "$f" "$updatemanifestv2" "$updatemanifestv3"
+  fi
+
+
   archivefiles="$archivefiles \"$f\""
 done
 
 notice ""
-notice "Adding file remove instructions to file 'update.manifest'"
+notice "Adding file remove instructions to update manifests"
 for ((i=0; $i<$num_removes; i=$i+1)); do
   f="${remove_array[$i]}"
-  notice "     remove: $f"
-  echo "remove \"$f\"" >> $updatemanifestv1
+  notice "     remove \"$f\""
+  echo "remove \"$f\"" >> $updatemanifestv2
+  echo "remove \"$f\"" >> $updatemanifestv3
 done
 
-# Add the type of update to the beginning of and cat the contents of the version
-# 1 update manifest to the version 2 update manifest.
-notice ""
-notice "Adding type instruction to file 'updatev2.manifest'"
-> $updatemanifestv2
-notice "       type: partial"
-echo "type \"partial\"" >> $updatemanifestv2
-
-notice ""
-notice "Concatenating file 'update.manifest' to file 'updatev2.manifest'"
-cat $updatemanifestv1 >> $updatemanifestv2
-
-# Append remove instructions for any dead files.
+# Add remove instructions for any dead files.
 notice ""
 notice "Adding file and directory remove instructions from file 'removed-files'"
-append_remove_instructions "$newdir" "$updatemanifestv1" "$updatemanifestv2"
+append_remove_instructions "$newdir" "$updatemanifestv2" "$updatemanifestv3"
 
 notice ""
 notice "Adding directory remove instructions for directories that no longer exist"
@@ -252,13 +277,14 @@ for ((i=0; $i<$num_olddirs; i=$i+1)); do
   f="${olddirs[$i]}"
   # If this dir doesn't exist in the new directory remove it.
   if [ ! -d "$newdir/$f" ]; then
-    notice "      rmdir: $f/"
+    notice "      rmdir $f/"
     echo "rmdir \"$f/\"" >> $updatemanifestv2
+    echo "rmdir \"$f/\"" >> $updatemanifestv3
   fi
 done
 
-$BZIP2 -z9 "$updatemanifestv1" && mv -f "$updatemanifestv1.bz2" "$updatemanifestv1"
 $BZIP2 -z9 "$updatemanifestv2" && mv -f "$updatemanifestv2.bz2" "$updatemanifestv2"
+$BZIP2 -z9 "$updatemanifestv3" && mv -f "$updatemanifestv3.bz2" "$updatemanifestv3"
 
 eval "$MAR -C \"$workdir\" -c output.mar $archivefiles"
 mv -f "$workdir/output.mar" "$archive"
@@ -268,3 +294,4 @@ rm -fr "$workdir"
 
 notice ""
 notice "Finished"
+notice ""

@@ -61,6 +61,7 @@ GARBAGE_DIRS += classes db jars res sync services generated
 JAVA_CLASSPATH = $(ANDROID_SDK)/android.jar
 
 ALL_JARS = \
+  gecko-R.jar \
   gecko-browser.jar \
   gecko-mozglue.jar \
   gecko-util.jar \
