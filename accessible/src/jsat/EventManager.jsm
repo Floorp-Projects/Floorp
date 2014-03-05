@@ -240,18 +240,25 @@ this.EventManager.prototype = {
       }
       case Events.HIDE:
       {
+        let evt = aEvent.QueryInterface(Ci.nsIAccessibleHideEvent);
         let {liveRegion, isPolite} = this._handleLiveRegion(
-          aEvent.QueryInterface(Ci.nsIAccessibleHideEvent),
-          ['removals', 'all']);
-        // Only handle hide if it is a relevant live region.
-        if (!liveRegion) {
-          break;
+          evt, ['removals', 'all']);
+        if (liveRegion) {
+          // Hide for text is handled by the EVENT_TEXT_REMOVED handler.
+          if (aEvent.accessible.role === Roles.TEXT_LEAF) {
+            break;
+          }
+          this._queueLiveEvent(Events.HIDE, liveRegion, isPolite);
+        } else {
+          let vc = Utils.getVirtualCursor(this.contentScope.content.document);
+          if (vc.position &&
+            (Utils.getState(vc.position).contains(States.DEFUNCT) ||
+              Utils.isInSubtree(vc.position, aEvent.accessible))) {
+            this.contentScope.contentControl.autoMove(
+              evt.targetPrevSibling || evt.targetParent,
+              { moveToFocused: true, delay: 500 });
+          }
         }
-        // Hide for text is handled by the EVENT_TEXT_REMOVED handler.
-        if (aEvent.accessible.role === Roles.TEXT_LEAF) {
-          break;
-        }
-        this._queueLiveEvent(Events.HIDE, liveRegion, isPolite);
         break;
       }
       case Events.TEXT_INSERTED:
