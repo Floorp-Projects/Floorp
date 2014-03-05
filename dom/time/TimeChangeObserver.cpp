@@ -13,7 +13,6 @@
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
 #include "nsPIDOMWindow.h"
-#include "nsDOMEvent.h"
 #include "nsContentUtils.h"
 #include "nsIObserverService.h"
 #include "nsIDocument.h"

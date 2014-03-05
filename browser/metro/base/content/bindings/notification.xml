@@ -41,6 +41,46 @@
           this.removeEventListener("AlertClose", this.handleEvent, true);
         ]]>
       </destructor>
+      <method name="adoptNotification">
+        <parameter name="aItem"/>
+        <body>
+          <![CDATA[
+            // insert an existing notification element
+            // XXX: borrows code from appendNotification in toolkit/content/widgets/notification.xml
+            // if this sticks around, we'll want to refactor both to eliminate duplication
+
+            let priority = aItem.priority;
+            // check for where the notification should be inserted according to
+            // priority. If two are equal, the existing one appears on top.
+            let notifications = this.allNotifications;
+            let insertPos = null;
+            for (let n = notifications.length - 1; n >= 0; n--) {
+              if (notifications[n].priority < priority)
+                break;
+              insertPos = notifications[n];
+            }
+            if (!insertPos) {
+              aItem.style.position = "fixed";
+              aItem.style.top = "100%";
+              aItem.style.marginTop = "-15px";
+              aItem.style.opacity = "0";
+            }
+            let label = aItem.label;
+            this.insertBefore(aItem, insertPos);
+            aItem.label = label;
+
+            if (!insertPos)
+              this._showNotification(aItem, true, true);
+
+            // Fire event for accessibility APIs
+            var event = document.createEvent("Events");
+            event.initEvent("AlertActive", true, true);
+            aItem.dispatchEvent(event);
+
+            return aItem;
+          ]]>
+        </body>
+      </method>
       <method name="removeNotification">
         <parameter name="aItem"/>
         <parameter name="aSkipAnimation"/>
@@ -76,5 +116,43 @@
     </implementation>
   </binding>
 
-
+  <binding id="notification" role="xul:alert" extends="chrome://global/content/bindings/notification.xml#notification">
+    <implementation>
+      <property name="_messageContainer" onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'messageText');"/>
+      <property name="label">
+        <getter><![CDATA[
+          if (this._messageContainer.childElementCount) {
+            // return a document fragment when our label is a complex value containing elements
+            // by cloning childNodes into a document fragment, the returned value
+            // is *not* live and will survive unbinding of this notification
+            let frag = this.ownerDocument.createDocumentFragment();
+            let containerNode = this._messageContainer;
+            for(let cnode of containerNode.childNodes) {
+              frag.appendChild(cnode.cloneNode(true));
+            }
+            return frag;
+          } else {
+            return String.trim(this._messageContainer.textContent) ||
+                   this.getAttribute("label");
+          }
+        ]]></getter>
+        <setter><![CDATA[
+            // accept a string or node (e.g. document fragment, element or text node) as label value
+            if (val && "object" == typeof val && ('nodeType' in val)) {
+              let containerNode = this._messageContainer;
+              let cnode;
+              while((cnode = containerNode.firstChild)) {
+                cnode.remove();
+              }
+              if (val.ownerDocument !== this.ownerDocument) {
+                val = this.ownerDocument.importNode(val, true);
+              }
+              return containerNode.appendChild(val);
+            } else {
+              return (this._messageContainer.textContent = val);
+            }
+        ]]></setter>
+      </property>
+    </implementation>
+  </binding>
 </bindings>

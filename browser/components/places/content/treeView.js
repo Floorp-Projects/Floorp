@@ -452,7 +452,7 @@ PlacesTreeView.prototype = {
     for (let i = 0; i < aNodesInfo.length; i++) {
       let nodeInfo = aNodesInfo[i];
       let row = this._getNewRowForRemovedNode(aUpdatedContainer,
-                                              aNodesInfo[i].node);
+                                              nodeInfo.node);
       // Select the found node, if any.
       if (row != -1) {
         selection.rangedSelect(row, row, true);
@@ -465,9 +465,11 @@ PlacesTreeView.prototype = {
     // select the node at its old row, if any.
     if (aNodesInfo.length == 1 && selection.count == 0) {
       let row = Math.min(aNodesInfo[0].oldRow, this._rows.length - 1);
-      selection.rangedSelect(row, row, true);
-      if (aNodesInfo[0].wasVisible && scrollToRow == -1)
-        scrollToRow = aNodesInfo[0].oldRow;
+      if (row != -1) {
+        selection.rangedSelect(row, row, true);
+        if (aNodesInfo[0].wasVisible && scrollToRow == -1)
+          scrollToRow = aNodesInfo[0].oldRow;
+      }
     }
 
     if (scrollToRow != -1)
@@ -705,7 +707,8 @@ PlacesTreeView.prototype = {
 
     // Restore selection.
     let rowToSelect = Math.min(oldRow, this._rows.length - 1);
-    this.selection.rangedSelect(rowToSelect, rowToSelect, true);
+    if (rowToSelect != -1)
+      this.selection.rangedSelect(rowToSelect, rowToSelect, true);
   },
 
   nodeMoved:

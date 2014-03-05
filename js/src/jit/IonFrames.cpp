@@ -1829,7 +1829,7 @@ InlineFrameIteratorMaybeGC<allowGC>::dump() const
             else {
                 if (i - 2 == callee()->nargs() && numActualArgs() > callee()->nargs()) {
                     DumpOp d(callee()->nargs());
-                    forEachCanonicalActualArg(GetJSContextFromJitCode(), d, ReadFrame_Overflown);
+                    unaliasedForEachActual(GetJSContextFromJitCode(), d, ReadFrame_Overflown);
                 }
 
                 fprintf(stderr, "  slot %d: ", int(i - 2 - callee()->nargs()));

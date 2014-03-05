@@ -22,6 +22,7 @@ var ContextUI = {
     Elements.browsers.addEventListener('URLChanged', this, true);
     Elements.browsers.addEventListener("AlertActive", this, true);
     Elements.browsers.addEventListener("AlertClose", this, true);
+    Elements.tabList.addEventListener('TabSelect', this, true);
     Elements.panelUI.addEventListener('ToolPanelShown', this, false);
     Elements.panelUI.addEventListener('ToolPanelHidden', this, false);
 
@@ -175,6 +176,7 @@ var ContextUI = {
   // Display the nav bar
   displayNavbar: function () {
     Elements.navbar.show();
+    Elements.chromeState.setAttribute("navbar", "visible");
     ContentAreaObserver.updateContentArea();
   },
 
@@ -189,6 +191,7 @@ var ContextUI = {
     if (!BrowserUI.isStartTabVisible) {
       Elements.autocomplete.closePopup();
       Elements.navbar.dismiss();
+      Elements.chromeState.removeAttribute("navbar");
       ContentAreaObserver.updateContentArea();
     }
   },
@@ -365,6 +368,7 @@ var ContextUI = {
         break;
       case "AlertActive":
       case "AlertClose":
+      case "TabSelect":
         ContentAreaObserver.updateContentArea();
         break;
       case "MozFlyoutPanelShowing":

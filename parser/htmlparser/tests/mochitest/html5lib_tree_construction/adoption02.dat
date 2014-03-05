@@ -37,3 +37,27 @@
 |       <address>
 |         <a>
 |         <a>
+
+#data
+<b><i><a><s><tt><div></b>first</b></div></tt></s></a>second</i>
+#errors
+3: Start tag seen without seeing a doctype first. Expected "<!DOCTYPE html>".
+25: End tag "b" violates nesting rules.
+34: Stray end tag "b".
+63: Stray end tag "i".
+#document
+| <html>
+|   <head>
+|   <body>
+|     <b>
+|       <i>
+|         <a>
+|           <s>
+|             <tt>
+|     <a>
+|       <s>
+|         <tt>
+|           <div>
+|             <b>
+|             "first"
+|     "second"

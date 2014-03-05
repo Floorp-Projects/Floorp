@@ -37,10 +37,6 @@ public:
   // nsIContent interface methods
   virtual nsIAtom *GetIDAttributeName() const MOZ_OVERRIDE;
   virtual nsIAtom* DoGetID() const MOZ_OVERRIDE;
-  virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
-                              nsIContent* aBindingParent,
-                              bool aCompileEventHandlers) MOZ_OVERRIDE;
-  virtual void UnbindFromTree(bool aDeep, bool aNullParent) MOZ_OVERRIDE;
   virtual nsresult UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
                              bool aNotify) MOZ_OVERRIDE;
   virtual bool ParseAttribute(int32_t aNamespaceID,

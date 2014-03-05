@@ -42,3 +42,5 @@ LOCAL_INCLUDES += [
     '../../build',
 ]
 
+# Don't use STL wrappers here (i.e. wrapped <new>); they require mozalloc
+DISABLE_STL_WRAPPING = True

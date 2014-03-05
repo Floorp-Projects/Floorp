@@ -181,7 +181,7 @@ static uint32_t sCCollectedWaitingForGC;
 static uint32_t sLikelyShortLivingObjectsNeedingGC;
 static bool sPostGCEventsToConsole;
 static bool sPostGCEventsToObserver;
-static uint32_t sCCTimerFireCount = 0;
+static int32_t sCCTimerFireCount = 0;
 static uint32_t sMinForgetSkippableTime = UINT32_MAX;
 static uint32_t sMaxForgetSkippableTime = 0;
 static uint32_t sTotalForgetSkippableTime = 0;
@@ -2000,9 +2000,15 @@ struct CycleCollectorStats
 
   void FinishCycleCollectionSlice()
   {
+    if (mBeginSliceTime.IsNull()) {
+      // We already called this method from EndCycleCollectionCallback for this slice.
+      return;
+    }
+
     uint32_t sliceTime = TimeUntilNow(mBeginSliceTime);
     mMaxSliceTime = std::max(mMaxSliceTime, sliceTime);
     mTotalSliceTime += sliceTime;
+    mBeginSliceTime = TimeStamp();
     MOZ_ASSERT(mExtraForgetSkippableCalls == 0, "Forget to reset extra forget skippable calls?");
   }
 
@@ -2063,15 +2069,11 @@ CycleCollectorStats::PrepareForCycleCollectionSlice(int32_t aExtraForgetSkippabl
   mBeginSliceTime = TimeStamp::Now();
 
   // Before we begin the cycle collection, make sure there is no active GC.
-  TimeStamp endGCTime;
   if (sCCLockedOut) {
     mAnyLockedOut = true;
     FinishAnyIncrementalGC();
-    endGCTime = TimeStamp::Now();
-    uint32_t gcTime = TimeBetween(mBeginSliceTime, endGCTime);
+    uint32_t gcTime = TimeBetween(mBeginSliceTime, TimeStamp::Now());
     mMaxGCDuration = std::max(mMaxGCDuration, gcTime);
-  } else {
-    endGCTime = mBeginSliceTime;
   }
 
   mExtraForgetSkippableCalls = aExtraForgetSkippableCalls;
@@ -2122,7 +2124,7 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
 
 //static
 void
-nsJSContext::RunCycleCollectorSlice(int64_t aSliceTime)
+nsJSContext::RunCycleCollectorSlice()
 {
   if (!NS_IsMainThread()) {
     return;
@@ -2133,7 +2135,7 @@ nsJSContext::RunCycleCollectorSlice(int64_t aSliceTime)
   // Ideally, the slice time would be decreased by the amount of
   // time spent on PrepareForCycleCollection().
   gCCStats.PrepareForCycleCollectionSlice();
-  nsCycleCollector_collectSlice(aSliceTime);
+  nsCycleCollector_collectSlice(ICCSliceTime());
   gCCStats.FinishCycleCollectionSlice();
 }
 
@@ -2158,7 +2160,7 @@ ICCTimerFired(nsITimer* aTimer, void* aClosure)
     }
   }
 
-  nsJSContext::RunCycleCollectorSlice(ICCSliceTime());
+  nsJSContext::RunCycleCollectorSlice();
 }
 
 //static
@@ -2197,7 +2199,9 @@ nsJSContext::EndCycleCollectionCallback(CycleCollectorResults &aResults)
 
   nsJSContext::KillICCTimer();
 
-  // Update timing information for the current slice before we log it.
+  // Update timing information for the current slice before we log it, if
+  // we previously called PrepareForCycleCollectionSlice(). During shutdown
+  // CCs, this won't happen.
   gCCStats.FinishCycleCollectionSlice();
 
   sCCollectedWaitingForGC += aResults.mFreedRefCounted + aResults.mFreedGCed;
@@ -2416,8 +2420,9 @@ CCTimerFired(nsITimer *aTimer, void *aClosure)
 
   // During early timer fires, we only run forgetSkippable. During the first
   // late timer fire, we decide if we are going to have a second and final
-  // late timer fire, where we may begin to run the CC.
-  uint32_t numEarlyTimerFires = ccDelay / NS_CC_SKIPPABLE_DELAY - 2;
+  // late timer fire, where we may begin to run the CC. Should run at least one
+  // early timer fire to allow cleanup before the CC.
+  int32_t numEarlyTimerFires = std::max((int32_t)ccDelay / NS_CC_SKIPPABLE_DELAY - 2, 1);
   bool isLateTimerFire = sCCTimerFireCount > numEarlyTimerFires;
   uint32_t suspected = nsCycleCollector_suspectedCount();
   if (isLateTimerFire && ShouldTriggerCC(suspected)) {
@@ -2432,7 +2437,7 @@ CCTimerFired(nsITimer *aTimer, void *aClosure)
       // We are in the final timer fire and still meet the conditions for
       // triggering a CC. Let RunCycleCollectorSlice finish the current IGC, if
       // any because that will allow us to include the GC time in the CC pause.
-      nsJSContext::RunCycleCollectorSlice(ICCSliceTime());
+      nsJSContext::RunCycleCollectorSlice();
     }
   } else if ((sPreviousSuspectedCount + 100) <= suspected) {
       // Only do a forget skippable if there are more than a few new objects.
@@ -2496,6 +2501,13 @@ nsJSContext::PokeGC(JS::gcreason::Reason aReason, int aDelay)
     // Make sure CC is called...
     sNeedsFullCC = true;
     // and GC after it.
+    sNeedsGCAfterCC = true;
+    return;
+  }
+
+  if (sICCTimer) {
+    // Make sure GC is called after the current CC completes.
+    // No need to set sNeedsFullCC because we are currently running a CC.
     sNeedsGCAfterCC = true;
     return;
   }

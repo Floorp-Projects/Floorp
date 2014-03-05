@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MessagePort.h"
+#include "mozilla/dom/Event.h"
 #include "mozilla/dom/MessageChannel.h"
 #include "mozilla/dom/MessagePortBinding.h"
 #include "mozilla/dom/StructuredCloneTags.h"
@@ -11,7 +12,6 @@
 #include "nsContentUtils.h"
 #include "nsEventDispatcher.h"
 #include "nsPresContext.h"
-#include "nsDOMEvent.h"
 
 #include "nsIDocument.h"
 #include "nsIDOMFile.h"
@@ -55,24 +55,16 @@ class PostMessageRunnable : public nsRunnable
     NS_DECL_NSIRUNNABLE
 
     PostMessageRunnable()
-      : mMessage(nullptr)
-      , mMessageLen(0)
     {
     }
 
     ~PostMessageRunnable()
     {
-      // Ensure that the buffer is freed
-      if (mMessage) {
-        JSAutoStructuredCloneBuffer buffer;
-        buffer.adopt(mMessage, mMessageLen);
-      }
     }
 
-    void SetJSData(JSAutoStructuredCloneBuffer& aBuffer)
+    JSAutoStructuredCloneBuffer& Buffer()
     {
-      NS_ASSERTION(!mMessage && mMessageLen == 0, "Don't call twice!");
-      aBuffer.steal(&mMessage, &mMessageLen);
+      return mBuffer;
     }
 
     bool StoreISupports(nsISupports* aSupports)
@@ -89,8 +81,7 @@ class PostMessageRunnable : public nsRunnable
 
   private:
     nsRefPtr<MessagePort> mPort;
-    uint64_t* mMessage;
-    size_t mMessageLen;
+    JSAutoStructuredCloneBuffer mBuffer;
 
     nsTArray<nsCOMPtr<nsISupports> > mSupportsArray;
 };
@@ -225,12 +216,6 @@ PostMessageRunnable::Run()
 {
   MOZ_ASSERT(mPort);
 
-  // Ensure that the buffer is freed even if we fail to post the message
-  JSAutoStructuredCloneBuffer buffer;
-  buffer.adopt(mMessage, mMessageLen);
-  mMessage = nullptr;
-  mMessageLen = 0;
-
   // Get the JSContext for the target window
   nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(mPort->GetOwner());
   NS_ENSURE_STATE(sgo);
@@ -247,7 +232,7 @@ PostMessageRunnable::Run()
     scInfo.mEvent = this;
     scInfo.mPort = mPort;
 
-    if (!buffer.read(cx, &messageData, &kPostMessageCallbacks, &scInfo)) {
+    if (!mBuffer.read(cx, &messageData, &kPostMessageCallbacks, &scInfo)) {
       return NS_ERROR_DOM_DATA_CLONE_ERR;
     }
   }
@@ -259,7 +244,7 @@ PostMessageRunnable::Run()
   }
 
   ErrorResult error;
-  nsRefPtr<nsDOMEvent> event =
+  nsRefPtr<Event> event =
     doc->CreateEvent(NS_LITERAL_STRING("MessageEvent"), error);
   if (error.Failed()) {
     return NS_OK;
@@ -364,7 +349,6 @@ MessagePort::PostMessageMoz(JSContext* aCx, JS::Handle<JS::Value> aMessage,
 
   // We *must* clone the data here, or the JS::Value could be modified
   // by script
-  JSAutoStructuredCloneBuffer buffer;
   StructuredCloneInfo scInfo;
   scInfo.mEvent = event;
   scInfo.mPort = this;
@@ -388,13 +372,11 @@ MessagePort::PostMessageMoz(JSContext* aCx, JS::Handle<JS::Value> aMessage,
     transferable.setObject(*array);
   }
 
-  if (!buffer.write(aCx, aMessage, transferable, &kPostMessageCallbacks,
-                    &scInfo)) {
+  if (!event->Buffer().write(aCx, aMessage, transferable,
+                             &kPostMessageCallbacks, &scInfo)) {
     aRv.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);
     return;
   }
-
-  event->SetJSData(buffer);
 
   if (!mEntangledPort) {
     return;

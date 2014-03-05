@@ -835,7 +835,7 @@ RasterImage::CopyFrame(uint32_t aWhichFrame,
 
   nsresult rv;
 
-  if (!ApplyDecodeFlags(aFlags))
+  if (!ApplyDecodeFlags(aFlags, aWhichFrame))
     return NS_ERROR_NOT_AVAILABLE;
 
   // If requested, synchronously flush any data we have lying around to the decoder
@@ -896,7 +896,7 @@ RasterImage::GetFrame(uint32_t aWhichFrame,
   if (mInDecoder && (aFlags & imgIContainer::FLAG_SYNC_DECODE))
     return nullptr;
 
-  if (!ApplyDecodeFlags(aFlags))
+  if (!ApplyDecodeFlags(aFlags, aWhichFrame))
     return nullptr;
 
   // If the caller requested a synchronous decode, do it
@@ -1183,12 +1183,23 @@ RasterImage::InternalAddFrame(uint32_t framenum,
 }
 
 bool
-RasterImage::ApplyDecodeFlags(uint32_t aNewFlags)
+RasterImage::ApplyDecodeFlags(uint32_t aNewFlags, uint32_t aWhichFrame)
 {
   if (mFrameDecodeFlags == (aNewFlags & DECODE_FLAGS_MASK))
     return true; // Not asking very much of us here.
 
   if (mDecoded) {
+    // If the requested frame is opaque and the current and new decode flags
+    // only differ in the premultiply alpha bit then we can use the existing
+    // frame, we don't need to discard and re-decode.
+    uint32_t currentNonAlphaFlags =
+      (mFrameDecodeFlags & DECODE_FLAGS_MASK) & ~FLAG_DECODE_NO_PREMULTIPLY_ALPHA;
+    uint32_t newNonAlphaFlags =
+      (aNewFlags & DECODE_FLAGS_MASK) & ~FLAG_DECODE_NO_PREMULTIPLY_ALPHA;
+    if (currentNonAlphaFlags == newNonAlphaFlags && FrameIsOpaque(aWhichFrame)) {
+      return true;
+    }
+
     // if we can't discard, then we're screwed; we have no way
     // to re-decode.  Similarly if we aren't allowed to do a sync
     // decode.
@@ -2616,8 +2627,16 @@ RasterImage::Draw(gfxContext *aContext,
 
   NS_ENSURE_ARG_POINTER(aContext);
 
-  // We can only draw with the default decode flags
-  if (mFrameDecodeFlags != DECODE_FLAGS_DEFAULT) {
+  // We can only draw without discarding and redecoding in these cases:
+  //  * We have the default decode flags.
+  //  * We have exactly FLAG_DECODE_NO_PREMULTIPLY_ALPHA and the current frame
+  //    is opaque.
+  bool haveDefaultFlags = (mFrameDecodeFlags == DECODE_FLAGS_DEFAULT);
+  bool haveSafeAlphaFlags =
+    (mFrameDecodeFlags == FLAG_DECODE_NO_PREMULTIPLY_ALPHA) &&
+    FrameIsOpaque(FRAME_CURRENT);
+
+  if (!(haveDefaultFlags || haveSafeAlphaFlags)) {
     if (!CanForciblyDiscardAndRedecode())
       return NS_ERROR_NOT_AVAILABLE;
     ForceDiscard();

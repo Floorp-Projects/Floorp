@@ -1090,6 +1090,10 @@ Console::ProcessArguments(JSContext* aCx,
     }
 
     ++start;
+    if (start == end) {
+      output.Append('%');
+      break;
+    }
 
     if (*start == '%') {
       output.Append(*start);
@@ -1111,12 +1115,22 @@ Console::ProcessArguments(JSContext* aCx,
         integer = integer * 10 + *start - '0';
         tmp.Append(*start);
         ++start;
-      } while (*start >= '0' && *start <= '9');
+      } while (*start >= '0' && *start <= '9' && start != end);
+    }
+
+    if (start == end) {
+      output.Append(tmp);
+      break;
     }
 
     if (*start == '.') {
       tmp.Append(*start);
       ++start;
+
+      if (start == end) {
+        output.Append(tmp);
+        break;
+      }
 
       // '.' must be followed by a number.
       if (*start < '0' || *start > '9') {
@@ -1130,7 +1144,12 @@ Console::ProcessArguments(JSContext* aCx,
         mantissa = mantissa * 10 + *start - '0';
         tmp.Append(*start);
         ++start;
-      } while (*start >= '0' && *start <= '9');
+      } while (*start >= '0' && *start <= '9' && start != end);
+
+      if (start == end) {
+        output.Append(tmp);
+        break;
+      }
     }
 
     char ch = *start;

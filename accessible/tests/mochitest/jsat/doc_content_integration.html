@@ -12,18 +12,56 @@
       '</body>' +
       '</html>';
 
+    function showAlert() {
+      document.getElementById('alert').hidden = false;
+    }
+
+    function hideAlert() {
+      document.getElementById('alert').hidden = true;
+    }
+
   </script>
   <style>
-    #windows > iframe {
+    #windows {
+      position: relative;
       width: 320px;
       height: 480px;
     }
+
+    #windows > iframe {
+      z-index: 1;
+    }
+
+    #windows > div[role='dialog'] {
+      z-index: 2;
+      background-color: pink;
+    }
+
+    #windows > * {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+    }
+
+    iframe {
+      width: 100%;
+      height: 100%;
+    }
+
   </style>
 
 </head>
 <body>
   <div>Phone status bar</div>
-  <div id="windows"></div>
-  <button>Home</button>
+  <div id="windows">
+    <div id="appframe"></div>
+    <div role="dialog" id="alert" hidden>
+      <h1>This is an alert!</h1>
+      <p>Do you agree?</p>
+      <button onclick="hideAlert()">Yes</button>
+      <button onclick="hideAlert()">No</button>
+    </div>
+  </div>
+  <button id="home">Home</button>
 </body>
 </html>

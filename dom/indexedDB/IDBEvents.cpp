@@ -84,7 +84,7 @@ IDBVersionChangeEvent::CreateRunnableInternal(mozilla::dom::EventTarget* aTarget
                                               uint64_t aOldVersion,
                                               uint64_t aNewVersion)
 {
-  nsRefPtr<nsDOMEvent> event =
+  nsRefPtr<Event> event =
     CreateInternal(aTarget, aType, aOldVersion, aNewVersion);
   NS_ENSURE_TRUE(event, nullptr);
 
@@ -92,9 +92,9 @@ IDBVersionChangeEvent::CreateRunnableInternal(mozilla::dom::EventTarget* aTarget
   return runnable.forget();
 }
 
-NS_IMPL_ADDREF_INHERITED(IDBVersionChangeEvent, nsDOMEvent)
-NS_IMPL_RELEASE_INHERITED(IDBVersionChangeEvent, nsDOMEvent)
+NS_IMPL_ADDREF_INHERITED(IDBVersionChangeEvent, Event)
+NS_IMPL_RELEASE_INHERITED(IDBVersionChangeEvent, Event)
 
 NS_INTERFACE_MAP_BEGIN(IDBVersionChangeEvent)
   NS_INTERFACE_MAP_ENTRY(IDBVersionChangeEvent)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
+NS_INTERFACE_MAP_END_INHERITING(Event)

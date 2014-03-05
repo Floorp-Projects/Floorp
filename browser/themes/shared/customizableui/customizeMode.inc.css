@@ -56,11 +56,16 @@
 #main-window[customize-entered] .customization-target:not(#PanelUI-contents):hover::before,
 #main-window[customize-entered] .customization-target[customizing-dragovertarget]:not(#PanelUI-contents)::before,
 /* nav-bar and panel outlines are always shown */
-#main-window[customize-entered] #nav-bar-customization-target.customization-target::before {
+#nav-bar[showoutline=true] > #nav-bar-customization-target.customization-target::before {
   outline-color: rgb(102,102,102);
 }
 
-#main-window[customize-entered] .panel-customization-placeholder {
+#nav-bar[showoutline=true] > #nav-bar-customization-target.customization-target::before {
+  transition: outline-color 250ms linear;
+}
+
+#PanelUI-contents[showoutline=true] > .panel-customization-placeholder {
+  transition: outline-color 250ms linear;
   outline-color: #bbb;
 }
 
@@ -169,6 +174,15 @@ toolbarpaletteitem[mousedown] {
 toolbarpaletteitem[place="palette"],
 toolbarpaletteitem[place="panel"] {
   transition: transform .3s ease-in-out;
+}
+
+#customization-palette {
+  transition: opacity .3s ease-in-out;
+  opacity: 0;
+}
+
+#customization-palette[showing="true"] {
+  opacity: 1;
 }
 
 toolbarpaletteitem[notransition].panel-customization-placeholder,

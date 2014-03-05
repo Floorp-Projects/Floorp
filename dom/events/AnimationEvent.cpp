@@ -13,8 +13,8 @@ namespace dom {
 AnimationEvent::AnimationEvent(EventTarget* aOwner,
                                nsPresContext* aPresContext,
                                InternalAnimationEvent* aEvent)
-  : nsDOMEvent(aOwner, aPresContext,
-               aEvent ? aEvent : new InternalAnimationEvent(false, 0))
+  : Event(aOwner, aPresContext,
+          aEvent ? aEvent : new InternalAnimationEvent(false, 0))
 {
   if (aEvent) {
     mEventIsInternal = false;
@@ -27,10 +27,10 @@ AnimationEvent::AnimationEvent(EventTarget* aOwner,
 
 NS_INTERFACE_MAP_BEGIN(AnimationEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMAnimationEvent)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
+NS_INTERFACE_MAP_END_INHERITING(Event)
 
-NS_IMPL_ADDREF_INHERITED(AnimationEvent, nsDOMEvent)
-NS_IMPL_RELEASE_INHERITED(AnimationEvent, nsDOMEvent)
+NS_IMPL_ADDREF_INHERITED(AnimationEvent, Event)
+NS_IMPL_RELEASE_INHERITED(AnimationEvent, Event)
 
 //static
 already_AddRefed<AnimationEvent>

@@ -36,3 +36,6 @@ if CONFIG['_MSC_VER']:
 
 if CONFIG['OS_ARCH'] == 'WINNT':
     DEFINES['MOZ_XULRUNNER'] = True
+    RCINCLUDE = 'xulrunner-stub.rc'
+
+DISABLE_STL_WRAPPING = True

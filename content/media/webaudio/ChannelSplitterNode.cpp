@@ -23,10 +23,10 @@ public:
     MOZ_ASSERT(NS_IsMainThread());
   }
 
-  virtual void ProduceAudioBlocksOnPorts(AudioNodeStream* aStream,
-                                         const OutputChunks& aInput,
-                                         OutputChunks& aOutput,
-                                         bool* aFinished) MOZ_OVERRIDE
+  virtual void ProcessBlocksOnPorts(AudioNodeStream* aStream,
+                                    const OutputChunks& aInput,
+                                    OutputChunks& aOutput,
+                                    bool* aFinished) MOZ_OVERRIDE
   {
     MOZ_ASSERT(aInput.Length() == 1, "Should only have one input port");
 

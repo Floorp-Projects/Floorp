@@ -5,10 +5,10 @@
 
 #include "WakeLock.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/Event.h" // for nsIDOMEvent::InternalDOMEvent()
 #include "mozilla/dom/MozWakeLockBinding.h"
 #include "mozilla/Hal.h"
 #include "mozilla/HalWakeLock.h"
-#include "nsDOMEvent.h"
 #include "nsError.h"
 #include "nsIDocument.h"
 #include "nsIDOMWindow.h"

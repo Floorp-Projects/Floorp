@@ -7,17 +7,17 @@
 #ifndef mozilla_dom_NotifyAudioAvailableEvent_h_
 #define mozilla_dom_NotifyAudioAvailableEvent_h_
 
-#include "nsIDOMNotifyAudioAvailableEvent.h"
-#include "nsDOMEvent.h"
-#include "nsCycleCollectionParticipant.h"
+#include "mozilla/dom/Event.h"
 #include "mozilla/dom/NotifyAudioAvailableEventBinding.h"
+#include "nsCycleCollectionParticipant.h"
+#include "nsIDOMNotifyAudioAvailableEvent.h"
 
 class nsPresContext;
 
 namespace mozilla {
 namespace dom {
 
-class NotifyAudioAvailableEvent : public nsDOMEvent,
+class NotifyAudioAvailableEvent : public Event,
                                   public nsIDOMNotifyAudioAvailableEvent
 {
 public:
@@ -31,10 +31,10 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(
-    NotifyAudioAvailableEvent, nsDOMEvent)
+    NotifyAudioAvailableEvent, Event)
 
   NS_DECL_NSIDOMNOTIFYAUDIOAVAILABLEEVENT
-  NS_FORWARD_NSIDOMEVENT(nsDOMEvent::)
+  NS_FORWARD_NSIDOMEVENT(Event::)
 
   ~NotifyAudioAvailableEvent();
 

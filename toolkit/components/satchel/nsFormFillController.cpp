@@ -5,6 +5,8 @@
 
 #include "nsFormFillController.h"
 
+#include "mozilla/dom/Element.h"
+#include "mozilla/dom/Event.h" // for nsIDOMEvent::InternalDOMEvent()
 #include "nsIFormAutoComplete.h"
 #include "nsIInputListAutoComplete.h"
 #include "nsIAutoCompleteSimpleResult.h"
@@ -32,9 +34,7 @@
 #include "nsToolkitCompsCID.h"
 #include "nsEmbedCID.h"
 #include "nsIDOMNSEditableElement.h"
-#include "mozilla/dom/Element.h"
 #include "nsContentUtils.h"
-#include "nsDOMEvent.h"
 #include "nsILoadContext.h"
 
 using namespace mozilla::dom;

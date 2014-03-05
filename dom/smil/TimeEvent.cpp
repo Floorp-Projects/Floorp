@@ -14,9 +14,9 @@ namespace dom {
 TimeEvent::TimeEvent(EventTarget* aOwner,
                      nsPresContext* aPresContext,
                      WidgetEvent* aEvent)
-  : nsDOMEvent(aOwner, aPresContext,
-               aEvent ? aEvent : new InternalUIEvent(false, 0)),
-    mDetail(0)
+  : Event(aOwner, aPresContext,
+          aEvent ? aEvent : new InternalUIEvent(false, 0))
+  , mDetail(0)
 {
   SetIsDOMBinding();
   if (aEvent) {
@@ -44,15 +44,15 @@ TimeEvent::TimeEvent(EventTarget* aOwner,
   }
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_1(TimeEvent, nsDOMEvent,
+NS_IMPL_CYCLE_COLLECTION_INHERITED_1(TimeEvent, Event,
                                      mView)
 
-NS_IMPL_ADDREF_INHERITED(TimeEvent, nsDOMEvent)
-NS_IMPL_RELEASE_INHERITED(TimeEvent, nsDOMEvent)
+NS_IMPL_ADDREF_INHERITED(TimeEvent, Event)
+NS_IMPL_RELEASE_INHERITED(TimeEvent, Event)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(TimeEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMTimeEvent)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
+NS_INTERFACE_MAP_END_INHERITING(Event)
 
 NS_IMETHODIMP
 TimeEvent::GetView(nsIDOMWindow** aView)
@@ -74,8 +74,8 @@ TimeEvent::InitTimeEvent(const nsAString& aTypeArg,
                          nsIDOMWindow* aViewArg,
                          int32_t aDetailArg)
 {
-  nsresult rv = nsDOMEvent::InitEvent(aTypeArg, false /*doesn't bubble*/,
-                                                false /*can't cancel*/);
+  nsresult rv = Event::InitEvent(aTypeArg, false /*doesn't bubble*/,
+                                           false /*can't cancel*/);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mDetail = aDetailArg;

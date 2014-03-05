@@ -5,7 +5,7 @@
 
 #include "nsAutoWindowStateHelper.h"
 
-#include "nsDOMEvent.h"
+#include "mozilla/dom/Event.h"
 #include "nsIDocument.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMWindow.h"
@@ -59,7 +59,7 @@ nsAutoWindowStateHelper::DispatchEventToChrome(const char *aEventName)
   }
 
   ErrorResult rv;
-  nsRefPtr<nsDOMEvent> event = doc->CreateEvent(NS_LITERAL_STRING("Events"), rv);
+  nsRefPtr<Event> event = doc->CreateEvent(NS_LITERAL_STRING("Events"), rv);
   if (rv.Failed()) {
     return false;
   }

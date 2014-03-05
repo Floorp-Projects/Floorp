@@ -525,4 +525,6 @@ test-pref(layout.css.sticky.enabled,true) load 915475.xhtml
 load 943509-1.html
 asserts(4-8) load 944909-1.html
 test-pref(layout.css.sticky.enabled,true) load 949932.html
+load 973701-1.xhtml
+load 973701-2.xhtml
 load outline-on-frameset.xhtml

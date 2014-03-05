@@ -6,8 +6,8 @@
 #include "mozilla/dom/UndoManager.h"
 #include "mozilla/dom/DOMTransactionBinding.h"
 
+#include "mozilla/dom/Event.h"
 #include "nsDOMClassInfoID.h"
-#include "nsDOMEvent.h"
 #include "nsIClassInfo.h"
 #include "nsIDOMDocument.h"
 #include "nsIXPCScriptable.h"
@@ -1142,7 +1142,7 @@ UndoManager::DispatchTransactionEvent(JSContext* aCx, const nsAString& aType,
     return;
   }
 
-  nsRefPtr<nsDOMEvent> event = mHostNode->OwnerDoc()->CreateEvent(
+  nsRefPtr<Event> event = mHostNode->OwnerDoc()->CreateEvent(
     NS_LITERAL_STRING("domtransaction"), aRv);
   if (aRv.Failed()) {
     return;

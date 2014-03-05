@@ -7,23 +7,22 @@
 #ifndef mozilla_dom_telephony_callevent_h
 #define mozilla_dom_telephony_callevent_h
 
+#include "mozilla/dom/Event.h"
 #include "mozilla/dom/telephony/TelephonyCommon.h"
-
-#include "nsDOMEvent.h"
 
 namespace mozilla {
 namespace dom {
 
 struct CallEventInit;
 
-class CallEvent MOZ_FINAL : public nsDOMEvent
+class CallEvent MOZ_FINAL : public Event
 {
   nsRefPtr<TelephonyCall> mCall;
 
 public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(CallEvent, nsDOMEvent)
-  NS_FORWARD_TO_NSDOMEVENT
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(CallEvent, Event)
+  NS_FORWARD_TO_EVENT
 
   virtual JSObject*
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
@@ -44,7 +43,7 @@ private:
   CallEvent(EventTarget* aOwner,
             nsPresContext* aPresContext,
             WidgetEvent* aEvent)
-  : nsDOMEvent(aOwner, aPresContext, aEvent)
+    : Event(aOwner, aPresContext, aEvent)
   {
     SetIsDOMBinding();
   }
