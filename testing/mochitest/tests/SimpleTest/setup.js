@@ -1,4 +1,4 @@
-/* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- js-indent-level: 2; tab-width: 2; indent-tabs-mode: nil -*- */
 /* vim:set ts=2 sw=2 sts=2 et: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -118,14 +118,6 @@ if (params.logFile) {
   TestRunner.logger.addListener("mozLogger", fileLevel + "", spl.getLogCallback());
 }
 
-// if we get a quiet param, don't log to the console
-if (!params.quiet) {
-  function dumpListener(msg) {
-    dump(msg.num + " " + msg.level + " " + msg.info.join(' ') + "\n");
-  }
-  TestRunner.logger.addListener("dumpListener", consoleLevel + "", dumpListener);
-}
-
 // A temporary hack for android 4.0 where Fennec utilizes the pandaboard so much it reboots
 if (params.runSlower) {
   TestRunner.runSlower = true;
@@ -142,6 +134,11 @@ if (params.dumpAboutMemoryAfterTest) {
 if (params.dumpDMDAfterTest) {
   TestRunner.dumpDMDAfterTest = true;
 }
+
+// Log things to the console if appropriate.
+TestRunner.logger.addListener("dumpListener", consoleLevel + "", function(msg) {
+  dump(msg.num + " " + msg.level + " " + msg.info.join(' ') + "\n");
+});
 
 var gTestList = [];
 var RunSet = {}
