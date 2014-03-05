@@ -12,3 +12,5 @@ SOURCES += [
 LIBRARY_NAME = 'replace_malloc'
 
 FORCE_SHARED_LIB = True
+
+DISABLE_STL_WRAPPING = True

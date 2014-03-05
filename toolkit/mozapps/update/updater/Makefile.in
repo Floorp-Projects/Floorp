@@ -33,7 +33,6 @@ OS_LIBS += -framework Cocoa
 endif
 
 ifeq (gonk,$(MOZ_WIDGET_TOOLKIT)) #{
-STL_FLAGS =
 OS_LIBS += -lcutils -lsysutils
 # clear out all the --wrap flags and remove dependency on mozglue for Gonk
 WRAP_LDFLAGS :=

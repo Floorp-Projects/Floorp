@@ -24,3 +24,5 @@ if CONFIG['GNU_CC']:
     LDFLAGS += ['-Wl,-e,_DummyEntryPoint@12']
 else:
     LDFLAGS += ['-ENTRY:DummyEntryPoint']
+
+DISABLE_STL_WRAPPING = True

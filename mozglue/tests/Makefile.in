@@ -3,8 +3,6 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ifdef MOZ_LINKER
-STL_FLAGS =
-
 # Only link against the linker, not mozglue
 MOZ_GLUE_PROGRAM_LDFLAGS =
 MOZ_GLUE_LDFLAGS =

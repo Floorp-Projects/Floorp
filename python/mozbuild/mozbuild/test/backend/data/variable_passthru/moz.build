@@ -47,3 +47,5 @@ CFLAGS += ['-fno-exceptions', '-w']
 CXXFLAGS += ['-fcxx-exceptions', '-include foo.h']
 LDFLAGS += ['-framework Foo', '-x']
 WIN32_EXE_LDFLAGS += ['-subsystem:console']
+
+DISABLE_STL_WRAPPING = True

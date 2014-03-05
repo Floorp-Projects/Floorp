@@ -3,7 +3,6 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 MODULES = stlport
-STL_FLAGS =
 
 # Force to build a static library, instead of a fake library, without
 # installing it in dist/lib.

@@ -151,6 +151,7 @@ class TestEmitterBasic(unittest.TestCase):
             CMMSRCS=['fans.mm', 'tans.mm'],
             CSRCS=['fans.c', 'tans.c'],
             CPP_UNIT_TESTS=['foo.cpp'],
+            DISABLE_STL_WRAPPING=True,
             EXPORT_LIBRARY=True,
             EXTRA_COMPONENTS=['fans.js', 'tans.js'],
             EXTRA_PP_COMPONENTS=['fans.pp.js', 'tans.pp.js'],

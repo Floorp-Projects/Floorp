@@ -26,8 +26,6 @@ endif #} LIBXUL_SDK
 
 # Build a binary bootstrapping with XRE_main
 
-STL_FLAGS=
-
 LIBS += \
 	$(XPCOM_STANDALONE_GLUE_LDOPTS) \
 	$(NULL)

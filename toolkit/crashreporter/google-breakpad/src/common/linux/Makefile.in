@@ -10,4 +10,4 @@ endif
 include $(topsrcdir)/config/rules.mk
 
 # See https://bugzilla.mozilla.org/show_bug.cgi?id=741348#c11
-file_id.$(OBJ_SUFFIX): STL_FLAGS=
+file_id.$(OBJ_SUFFIX): DISABLE_STL_WRAPPING := 1
