@@ -3027,9 +3027,9 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         if (selfClosing) {
             errSelfClosing();
         }
-        if (attributes != HtmlAttributes.EMPTY_ATTRIBUTES) {
-            Portability.delete(attributes);
-        }
+        // CPPONLY: if (mBuilder == null && attributes != HtmlAttributes.EMPTY_ATTRIBUTES) {
+        // CPPONLY:    Portability.delete(attributes);
+        // CPPONLY: }
     }
 
     private void startTagTitleInHead(ElementName elementName, HtmlAttributes attributes) throws SAXException {
