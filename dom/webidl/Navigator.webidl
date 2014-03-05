@@ -235,10 +235,10 @@ partial interface Navigator {
   readonly attribute MozMobileMessageManager? mozMobileMessage;
 };
 
-// nsIDOMMozNavigatorNetwork
+// NetworkInformation
 partial interface Navigator {
-  [Pref="dom.network.enabled"]
-  readonly attribute MozConnection? mozConnection;
+  [Throws, Pref="dom.netinfo.enabled"]
+  readonly attribute NetworkInformation connection;
 };
 
 // nsIDOMNavigatorCamera
