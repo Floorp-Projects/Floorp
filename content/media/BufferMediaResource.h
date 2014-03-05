@@ -142,6 +142,24 @@ public:
     return mContentType;
   }
 
+  virtual size_t SizeOfExcludingThis(
+                        MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
+  {
+    // Not owned:
+    // - mBuffer
+    // - mPrincipal
+    size_t size = MediaResource::SizeOfExcludingThis(aMallocSizeOf);
+    size += mContentType.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+
+    return size;
+  }
+
+  virtual size_t SizeOfIncludingThis(
+                        MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
+  {
+    return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
+  }
+
 private:
   const uint8_t * mBuffer;
   uint32_t mLength;
