@@ -212,10 +212,8 @@ js::ComputeStackString(JSContext *cx)
     {
         RootedAtom atom(cx);
         SuppressErrorsGuard seg(cx);
-        // We should get rid of the CURRENT_CONTEXT and STOP_AT_SAVED here.
-        // See bug 960820.
-        for (NonBuiltinScriptFrameIter i(cx, ScriptFrameIter::CURRENT_CONTEXT,
-                                         ScriptFrameIter::STOP_AT_SAVED,
+        for (NonBuiltinScriptFrameIter i(cx, ScriptFrameIter::ALL_CONTEXTS,
+                                         ScriptFrameIter::GO_THROUGH_SAVED,
                                          cx->compartment()->principals);
             !i.done(); ++i)
         {
