@@ -344,7 +344,7 @@ nsIContent*
 nsHtml5TreeOperation::CreateElement(int32_t aNs,
                                     nsIAtom* aName,
                                     nsHtml5HtmlAttributes* aAttributes,
-                                    bool aFromNetwork,
+                                    mozilla::dom::FromParser aFromParser,
                                     nsHtml5DocumentBuilder* aBuilder)
 {
   bool isKeygen = (aName == nsHtml5Atoms::keygen && aNs == kNameSpaceID_XHTML);
@@ -358,11 +358,7 @@ nsHtml5TreeOperation::CreateElement(int32_t aNs,
   NS_ASSERTION(nodeInfo, "Got null nodeinfo.");
   NS_NewElement(getter_AddRefs(newContent),
                 nodeInfo.forget(),
-                (aFromNetwork ?
-                 dom::FROM_PARSER_NETWORK
-                 : (aBuilder->BelongsToStringParser() ?
-                    dom::FROM_PARSER_FRAGMENT :
-                    dom::FROM_PARSER_DOCUMENT_WRITE)));
+                aFromParser);
   NS_ASSERTION(newContent, "Element creation created null pointer.");
 
   aBuilder->HoldElement(newContent);
@@ -406,11 +402,7 @@ nsHtml5TreeOperation::CreateElement(int32_t aNs,
       nsCOMPtr<nsINodeInfo> ni = optionNodeInfo;
       NS_NewElement(getter_AddRefs(optionElt),
                     ni.forget(),
-                    (aFromNetwork ?
-                     dom::FROM_PARSER_NETWORK
-                     : (aBuilder->BelongsToStringParser() ?
-                        dom::FROM_PARSER_FRAGMENT :
-                        dom::FROM_PARSER_DOCUMENT_WRITE)));
+                    aFromParser);
       nsRefPtr<nsTextNode> optionText =
         new nsTextNode(aBuilder->GetNodeInfoManager());
       (void) optionText->SetText(theContent[i], false);
@@ -674,7 +666,9 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       *target = CreateElement(ns,
                               name,
                               attributes,
-                              mOpCode == eTreeOpCreateElementNetwork,
+                              mOpCode == eTreeOpCreateElementNetwork ?
+                                dom::FROM_PARSER_NETWORK :
+                                dom::FROM_PARSER_DOCUMENT_WRITE,
                               aBuilder);
       return NS_OK;
     }
