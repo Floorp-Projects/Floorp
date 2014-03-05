@@ -2124,7 +2124,7 @@ nsJSContext::CycleCollectNow(nsICycleCollectorListener *aListener,
 
 //static
 void
-nsJSContext::RunCycleCollectorSlice(int64_t aSliceTime)
+nsJSContext::RunCycleCollectorSlice()
 {
   if (!NS_IsMainThread()) {
     return;
@@ -2135,7 +2135,7 @@ nsJSContext::RunCycleCollectorSlice(int64_t aSliceTime)
   // Ideally, the slice time would be decreased by the amount of
   // time spent on PrepareForCycleCollection().
   gCCStats.PrepareForCycleCollectionSlice();
-  nsCycleCollector_collectSlice(aSliceTime);
+  nsCycleCollector_collectSlice(ICCSliceTime());
   gCCStats.FinishCycleCollectionSlice();
 }
 
@@ -2160,7 +2160,7 @@ ICCTimerFired(nsITimer* aTimer, void* aClosure)
     }
   }
 
-  nsJSContext::RunCycleCollectorSlice(ICCSliceTime());
+  nsJSContext::RunCycleCollectorSlice();
 }
 
 //static
@@ -2436,7 +2436,7 @@ CCTimerFired(nsITimer *aTimer, void *aClosure)
       // We are in the final timer fire and still meet the conditions for
       // triggering a CC. Let RunCycleCollectorSlice finish the current IGC, if
       // any because that will allow us to include the GC time in the CC pause.
-      nsJSContext::RunCycleCollectorSlice(ICCSliceTime());
+      nsJSContext::RunCycleCollectorSlice();
     }
   } else if ((sPreviousSuspectedCount + 100) <= suspected) {
       // Only do a forget skippable if there are more than a few new objects.
