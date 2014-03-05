@@ -3456,8 +3456,16 @@ var PDFView = {
   },
 
   getVisiblePages: function pdfViewGetVisiblePages() {
-    return this.getVisibleElements(this.container, this.pages,
-                                   !PresentationMode.active);
+    if (!PresentationMode.active) {
+      return this.getVisibleElements(this.container, this.pages, true);
+    } else {
+      // The algorithm in getVisibleElements doesn't work in all browsers and
+      // configurations when presentation mode is active.
+      var visible = [];
+      var currentPage = this.pages[this.page - 1];
+      visible.push({ id: currentPage.id, view: currentPage });
+      return { first: currentPage, last: currentPage, views: visible };
+    }
   },
 
   getVisibleThumbs: function pdfViewGetVisibleThumbs() {
@@ -3961,7 +3969,12 @@ var PageView = function pageView(container, id, scale,
   };
 
   this.scrollIntoView = function pageViewScrollIntoView(dest) {
-    if (PresentationMode.active) { // Avoid breaking presentation mode.
+    if (PresentationMode.active) {
+      if (PDFView.page !== this.id) {
+        // Avoid breaking PDFView.getVisiblePages in presentation mode.
+        PDFView.page = this.id;
+        return;
+      }
       dest = null;
       PDFView.setScale(PDFView.currentScaleValue, true, true);
     }
@@ -4136,9 +4149,6 @@ var PageView = function pageView(container, id, scale,
       textLayerDiv.dataset._scaleY = outputScale.sy;
     }
 
-    // Checking if document fonts are used only once
-    var checkIfDocumentFontsUsed = !PDFView.pdfDocument.embeddedFontsUsed;
-
     // Rendering area
 
     var self = this;
@@ -4166,12 +4176,6 @@ var PageView = function pageView(container, id, scale,
         self.zoomLayer = null;
       }
 
-      if (checkIfDocumentFontsUsed && PDFView.pdfDocument.embeddedFontsUsed &&
-          PDFJS.disableFontFace) {
-        console.error(mozL10n.get('web_fonts_disabled', null,
-          'Web fonts are disabled: unable to use embedded PDF fonts.'));
-        PDFView.fallback();
-      }
       if (self.textLayer && self.textLayer.textDivs &&
           self.textLayer.textDivs.length > 0 &&
           !PDFView.supportsDocumentColors) {
@@ -4537,10 +4541,7 @@ var TextLayerBuilder = function textLayerBuilder(options) {
   };
 
   this.renderLayer = function textLayerBuilderRenderLayer() {
-    var self = this;
     var textDivs = this.textDivs;
-    var bidiTexts = this.textContent;
-    var textLayerDiv = this.textLayerDiv;
     var canvas = document.createElement('canvas');
     var ctx = canvas.getContext('2d');
 
@@ -4570,7 +4571,7 @@ var TextLayerBuilder = function textLayerBuilder(options) {
       }
     }
 
-    textLayerDiv.appendChild(textLayerFrag);
+    this.textLayerDiv.appendChild(textLayerFrag);
     this.renderingDone = true;
     this.updateMatches();
   };
@@ -4910,7 +4911,7 @@ var DocumentOutlineView = function documentOutlineView(outline) {
 };
 
 
-document.addEventListener('DOMContentLoaded', function webViewerLoad(evt) {
+function webViewerLoad(evt) {
   PDFView.initialize();
 
   var file = window.location.href.split('#')[0];
@@ -4957,6 +4958,8 @@ document.addEventListener('DOMContentLoaded', function webViewerLoad(evt) {
 
   if (!PDFView.supportsDocumentFonts) {
     PDFJS.disableFontFace = true;
+    console.warn(mozL10n.get('web_fonts_disabled', null,
+      'Web fonts are disabled: unable to use embedded PDF fonts.'));
   }
 
   if ('textLayer' in hashParams) {
@@ -5088,9 +5091,13 @@ document.addEventListener('DOMContentLoaded', function webViewerLoad(evt) {
   PDFView.initPassiveLoading();
   return;
 
-  PDFView.open(file, 0);
+  if (file) {
+    PDFView.open(file, 0);
+  }
 
-}, true);
+}
+
+document.addEventListener('DOMContentLoaded', webViewerLoad, true);
 
 function updateViewarea() {
 
@@ -5124,9 +5131,11 @@ function updateViewarea() {
     currentId = visiblePages[0].id;
   }
 
-  updateViewarea.inProgress = true; // used in "set page"
-  PDFView.page = currentId;
-  updateViewarea.inProgress = false;
+  if (!PresentationMode.active) {
+    updateViewarea.inProgress = true; // used in "set page"
+    PDFView.page = currentId;
+    updateViewarea.inProgress = false;
+  }
 
   var currentScale = PDFView.currentScale;
   var currentScaleValue = PDFView.currentScaleValue;
@@ -5356,6 +5365,7 @@ window.addEventListener('keydown', function keydown(evt) {
     }
   }
 
+
   // CTRL+ALT or Option+Command
   if (cmd === 3 || cmd === 10) {
     switch (evt.keyCode) {
@@ -5379,23 +5389,15 @@ window.addEventListener('keydown', function keydown(evt) {
   // Some shortcuts should not get handled if a control/input element
   // is selected.
   var curElement = document.activeElement || document.querySelector(':focus');
-  if (curElement && (curElement.tagName.toUpperCase() === 'INPUT' ||
-                     curElement.tagName.toUpperCase() === 'TEXTAREA' ||
-                     curElement.tagName.toUpperCase() === 'SELECT')) {
+  var curElementTagName = curElement && curElement.tagName.toUpperCase();
+  if (curElementTagName === 'INPUT' ||
+      curElementTagName === 'TEXTAREA' ||
+      curElementTagName === 'SELECT') {
     // Make sure that the secondary toolbar is closed when Escape is pressed.
     if (evt.keyCode !== 27) { // 'Esc'
       return;
     }
   }
-  var controlsElement = document.getElementById('toolbar');
-  while (curElement) {
-    if (curElement === controlsElement && !PresentationMode.active)
-      return; // ignoring if the 'toolbar' element is focused
-    curElement = curElement.parentNode;
-  }
-  // Workaround for issue in Firefox, that prevents scroll keys from working
-  // when elements with 'tabindex' are focused.
-  PDFView.container.blur();
 
   if (cmd === 0) { // no control key pressed at all.
     switch (evt.keyCode) {
@@ -5470,6 +5472,23 @@ window.addEventListener('keydown', function keydown(evt) {
       case 82: // 'r'
         PDFView.rotatePages(90);
         break;
+    }
+    if (!handled && !PresentationMode.active) {
+      // 33=Page Up  34=Page Down  35=End    36=Home
+      // 37=Left     38=Up         39=Right  40=Down
+      if (evt.keyCode >= 33 && evt.keyCode <= 40 &&
+          !PDFView.container.contains(curElement)) {
+        // The page container is not focused, but a page navigation key has been
+        // pressed. Change the focus to the viewer container to make sure that
+        // navigation by keyboard works as expected.
+        PDFView.container.focus();
+      }
+      // 32=Spacebar
+      if (evt.keyCode === 32 && curElementTagName !== 'BUTTON') {
+  // Workaround for issue in Firefox, that prevents scroll keys from working
+  // when elements with 'tabindex' are focused. (#3499)
+        PDFView.container.blur();
+      }
     }
   }
 
