@@ -31,6 +31,7 @@
 #ifndef nsHtml5TreeBuilder_h
 #define nsHtml5TreeBuilder_h
 
+#include "nsContentUtils.h"
 #include "nsIAtom.h"
 #include "nsHtml5AtomTable.h"
 #include "nsITimer.h"
@@ -55,6 +56,7 @@
 #include "nsHtml5ViewSourceUtils.h"
 #include "mozilla/Likely.h"
 #include "nsIContentHandle.h"
+#include "nsHtml5OplessBuilder.h"
 
 class nsHtml5StreamParser;
 
