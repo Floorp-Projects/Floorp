@@ -81,19 +81,6 @@ class nsHtml5TreeOpExecutor : public nsHtml5DocumentBuilder,
     bool                          mCallContinueInterruptedParsingIfEnabled;
 
     /**
-     * Non-NS_OK if this parser should refuse to process any more input.
-     * For example, the parser needs to be marked as broken if it drops some
-     * input due to a memory allocation failure. In such a case, the whole
-     * parser needs to be marked as broken, because some input has been lost
-     * and parsing more input could lead to a DOM where pieces of HTML source
-     * that weren't supposed to become scripts become scripts.
-     *
-     * Since NS_OK is actually 0, zeroing operator new takes care of
-     * initializing this.
-     */
-    nsresult                      mBroken;
-
-    /**
      * Whether this executor has already complained about matters related
      * to character encoding declarations.
      */
@@ -101,7 +88,7 @@ class nsHtml5TreeOpExecutor : public nsHtml5DocumentBuilder,
 
   public:
   
-    nsHtml5TreeOpExecutor(bool aRunsToCompletion = false);
+    nsHtml5TreeOpExecutor();
     virtual ~nsHtml5TreeOpExecutor();
   
     // nsIContentSink
@@ -154,16 +141,8 @@ class nsHtml5TreeOpExecutor : public nsHtml5DocumentBuilder,
      */
     virtual nsISupports *GetTarget();
   
-    // nsContentSink methods
-    virtual void UpdateChildCounts();
-    virtual nsresult FlushTags();
     virtual void ContinueInterruptedParsingAsync();
  
-    /**
-     * Sets up style sheet load / parse
-     */
-    void UpdateStyleSheet(nsIContent* aElement);
-
     // XXX Does anyone need this?
     nsIDocShell* GetDocShell() {
       return mDocShell;
@@ -172,14 +151,8 @@ class nsHtml5TreeOpExecutor : public nsHtml5DocumentBuilder,
     bool IsScriptExecuting() {
       return IsScriptExecutingImpl();
     }
-    
-    void SetNodeInfoManager(nsNodeInfoManager* aManager) {
-      mNodeInfoManager = aManager;
-    }
-    
-    // Not from interface
 
-    void SetDocumentCharsetAndSource(nsACString& aCharset, int32_t aCharsetSource);
+    // Not from interface
 
     void SetStreamParser(nsHtml5StreamParser* aStreamParser) {
       mStreamParser = aStreamParser;
@@ -189,50 +162,10 @@ class nsHtml5TreeOpExecutor : public nsHtml5DocumentBuilder,
 
     bool IsScriptEnabled();
 
-    bool BelongsToStringParser() {
-      return mRunsToCompletion;
-    }
+    virtual nsresult MarkAsBroken(nsresult aReason);
 
-    /**
-     * Marks this parser as broken and tells the stream parser (if any) to
-     * terminate.
-     *
-     * @return aReason for convenience
-     */
-    nsresult MarkAsBroken(nsresult aReason);
-
-    /**
-     * Checks if this parser is broken. Returns a non-NS_OK (i.e. non-0)
-     * value if broken.
-     */
-    inline nsresult IsBroken() {
-      return mBroken;
-    }
-
-    inline void BeginDocUpdate() {
-      NS_PRECONDITION(mFlushState == eInFlush, "Tried to double-open update.");
-      NS_PRECONDITION(mParser, "Started update without parser.");
-      mFlushState = eInDocUpdate;
-      mDocument->BeginUpdate(UPDATE_CONTENT_MODEL);
-    }
-
-    inline void EndDocUpdate() {
-      NS_PRECONDITION(mFlushState != eNotifying, "mFlushState out of sync");
-      if (mFlushState == eInDocUpdate) {
-        FlushPendingAppendNotifications();
-        mFlushState = eInFlush;
-        mDocument->EndUpdate(UPDATE_CONTENT_MODEL);
-      }
-    }
-
-    
     void StartLayout();
     
-    void SetDocumentMode(nsHtml5DocumentMode m);
-
-    nsresult Init(nsIDocument* aDoc, nsIURI* aURI,
-                  nsISupports* aContainer, nsIChannel* aChannel);
-
     void FlushSpeculativeLoads();
                   
     void RunFlushLoop();
@@ -272,8 +205,6 @@ class nsHtml5TreeOpExecutor : public nsHtml5DocumentBuilder,
 #endif
     
     void RunScript(nsIContent* aScriptElement);
-    
-    void Reset();
     
     /**
      * Flush the operations from the tree operations from the argument

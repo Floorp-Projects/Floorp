@@ -8,6 +8,7 @@
 #include "nsHtml5DocumentMode.h"
 #include "nsHtml5HtmlAttributes.h"
 #include "nsXPCOMStrings.h"
+#include "mozilla/dom/FromParser.h"
 
 class nsIContent;
 class nsHtml5TreeOpExecutor;
@@ -146,7 +147,7 @@ class nsHtml5TreeOperation {
     static nsIContent* CreateElement(int32_t aNs,
                                      nsIAtom* aName,
                                      nsHtml5HtmlAttributes* aAttributes,
-                                     bool aFromNetwork,
+                                     mozilla::dom::FromParser aFromParser,
                                      nsHtml5DocumentBuilder* aBuilder);
 
     static void SetFormElement(nsIContent* aNode, nsIContent* aParent);
