@@ -43,8 +43,14 @@ nsClipboard::SetData(nsITransferable *aTransferable,
   nsAutoString buffer;
   supportsString->GetData(buffer);
 
-  Clipboard::SetClipboardText(buffer);
-
+  if (XRE_GetProcessType() == GeckoProcessType_Default) {
+    mozilla::widget::android::Clipboard::SetClipboardText(buffer);
+  }else{
+    bool isPrivateData = false;
+    aTransferable->GetIsPrivateData(&isPrivateData);
+    ContentChild::GetSingleton()->SendSetClipboardText(buffer, isPrivateData,
+                                                        aWhichClipboard);
+  }
   return NS_OK;
 }
 
@@ -85,8 +91,11 @@ nsClipboard::EmptyClipboard(int32_t aWhichClipboard)
 {
   if (aWhichClipboard != kGlobalClipboard)
     return NS_ERROR_NOT_IMPLEMENTED;
-  Clipboard::ClearText();
-
+  if (XRE_GetProcessType() == GeckoProcessType_Default) {
+    mozilla::widget::android::Clipboard::ClearText();
+  } else {
+    ContentChild::GetSingleton()->SendEmptyClipboard();
+  }
   return NS_OK;
 }
 
@@ -98,7 +107,11 @@ nsClipboard::HasDataMatchingFlavors(const char **aFlavorList,
   *aHasText = false;
   if (aWhichClipboard != kGlobalClipboard)
     return NS_ERROR_NOT_IMPLEMENTED;
-  *aHasText = Clipboard::HasText();
+  if (XRE_GetProcessType() == GeckoProcessType_Default) {
+    *aHasText = mozilla::widget::android::Clipboard::HasText();
+  } else {
+    ContentChild::GetSingleton()->SendClipboardHasText(aHasText);
+  }
   return NS_OK;
 }
 
