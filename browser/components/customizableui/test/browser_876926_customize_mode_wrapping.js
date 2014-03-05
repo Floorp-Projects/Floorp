@@ -52,6 +52,36 @@ function isLast(containerId, defaultPlacements, id) {
      "Widget " + id + " should be in " + containerId + " in other window.");
 }
 
+function getLastVisibleNodeInToolbar(containerId, win=window) {
+  let container = win.document.getElementById(containerId).customizationTarget;
+  let rv = container.lastChild;
+  while (rv && (rv.getAttribute('hidden') == 'true' || (rv.firstChild && rv.firstChild.getAttribute('hidden') == 'true'))) {
+    rv = rv.previousSibling;
+  }
+  return rv;
+}
+
+function isLastVisibleInToolbar(containerId, defaultPlacements, id) {
+  let newPlacements;
+  for (let i = defaultPlacements.length - 1; i >= 0; i--) {
+    let el = document.getElementById(defaultPlacements[i]);
+    if (el && el.getAttribute('hidden') != 'true') {
+      newPlacements = [...defaultPlacements];
+      newPlacements.splice(i + 1, 0, id);
+      break;
+    }
+  }
+  if (!newPlacements) {
+    assertAreaPlacements(containerId, defaultPlacements.concat([id]));
+  } else {
+    assertAreaPlacements(containerId, newPlacements);
+  }
+  is(getLastVisibleNodeInToolbar(containerId).firstChild.id, id,
+     "Widget " + id + " should be in " + containerId + " in customizing window.");
+  is(getLastVisibleNodeInToolbar(containerId, otherWin).id, id,
+     "Widget " + id + " should be in " + containerId + " in other window.");
+}
+
 function isFirst(containerId, defaultPlacements, id) {
   assertAreaPlacements(containerId, [id].concat(defaultPlacements));
   is(document.getElementById(containerId).customizationTarget.firstChild.firstChild.id, id,
@@ -66,6 +96,8 @@ function checkToolbar(id, method) {
   move[method](id, kToolbar);
   if (method == "dragToItem") {
     isFirst(kToolbar, toolbarPlacements, id);
+  } else if (method == "drag") {
+    isLastVisibleInToolbar(kToolbar, toolbarPlacements, id);
   } else {
     isLast(kToolbar, toolbarPlacements, id);
   }
