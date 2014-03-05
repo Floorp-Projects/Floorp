@@ -26,9 +26,9 @@
      */
     void documentMode(nsHtml5DocumentMode m);
 
-    nsIContent** getDocumentFragmentForTemplate(nsIContent** aTemplate);
+    nsIContentHandle* getDocumentFragmentForTemplate(nsIContentHandle* aTemplate);
 
-    nsIContent** getFormPointerForContext(nsIContent** aContext);
+    nsIContentHandle* getFormPointerForContext(nsIContentHandle* aContext);
 
     /**
      * Using nsIContent** instead of nsIContent* is the parser deals with DOM
@@ -49,11 +49,11 @@
      * run before tree ops that try to further operate on the node that the
      * nsIContent** is a handle to.
      *
-     * On-the-main-thread parts of the parser use the same mechanism in order
-     * to avoid having to have duplicate code paths for on-the-main-thread and
-     * off-the-main-thread tree builder instances.)
+     * On-the-main-thread parts of the parser use nsIContent* instead of
+     * nsIContent**. Since both cases share the same parser core, the parser
+     * core casts both to nsIContentHandle*.
      */
-    nsIContent** AllocateContentHandle();
+    nsIContentHandle* AllocateContentHandle();
     
     void accumulateCharactersForced(const char16_t* aBuf, int32_t aStart, int32_t aLength)
     {

@@ -33,7 +33,7 @@
 #include "nsString.h"
 #include "nsNameSpaceManager.h"
 #include "nsIContent.h"
-#include "nsISupportsImpl.h"
+#include "nsTraceRefcnt.h"
 #include "jArray.h"
 #include "nsHtml5ArrayCopy.h"
 #include "nsAHtml5TreeBuilderState.h"
@@ -41,6 +41,7 @@
 #include "nsHtml5ByteReadable.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsHtml5Macros.h"
+#include "nsIContentHandle.h"
 
 class nsHtml5StreamParser;
 
@@ -60,22 +61,22 @@ class nsHtml5StateSnapshot : public nsAHtml5TreeBuilderState
     autoJArray<nsHtml5StackNode*,int32_t> stack;
     autoJArray<nsHtml5StackNode*,int32_t> listOfActiveFormattingElements;
     autoJArray<int32_t,int32_t> templateModeStack;
-    nsIContent** formPointer;
-    nsIContent** headPointer;
-    nsIContent** deepTreeSurrogateParent;
+    nsIContentHandle* formPointer;
+    nsIContentHandle* headPointer;
+    nsIContentHandle* deepTreeSurrogateParent;
     int32_t mode;
     int32_t originalMode;
     bool framesetOk;
     bool needToDropLF;
     bool quirks;
   public:
-    nsHtml5StateSnapshot(jArray<nsHtml5StackNode*,int32_t> stack, jArray<nsHtml5StackNode*,int32_t> listOfActiveFormattingElements, jArray<int32_t,int32_t> templateModeStack, nsIContent** formPointer, nsIContent** headPointer, nsIContent** deepTreeSurrogateParent, int32_t mode, int32_t originalMode, bool framesetOk, bool needToDropLF, bool quirks);
+    nsHtml5StateSnapshot(jArray<nsHtml5StackNode*,int32_t> stack, jArray<nsHtml5StackNode*,int32_t> listOfActiveFormattingElements, jArray<int32_t,int32_t> templateModeStack, nsIContentHandle* formPointer, nsIContentHandle* headPointer, nsIContentHandle* deepTreeSurrogateParent, int32_t mode, int32_t originalMode, bool framesetOk, bool needToDropLF, bool quirks);
     jArray<nsHtml5StackNode*,int32_t> getStack();
     jArray<int32_t,int32_t> getTemplateModeStack();
     jArray<nsHtml5StackNode*,int32_t> getListOfActiveFormattingElements();
-    nsIContent** getFormPointer();
-    nsIContent** getHeadPointer();
-    nsIContent** getDeepTreeSurrogateParent();
+    nsIContentHandle* getFormPointer();
+    nsIContentHandle* getHeadPointer();
+    nsIContentHandle* getDeepTreeSurrogateParent();
     int32_t getMode();
     int32_t getOriginalMode();
     bool isFramesetOk();
