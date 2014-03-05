@@ -61,34 +61,45 @@ public:
       numPreSquares++;
     }
     mNumPowTablePreSquares = numPreSquares;
-    for (int i = 0; i < sCacheSize; i++) {
-      Float a = i / Float(sCacheSize - 1);
+    for (size_t i = 0; i < sCacheSize; i++) {
+      // sCacheSize is chosen in such a way that a takes values
+      // from 0.0 to 1.0 inclusive.
+      Float a = i / Float(1 << sCacheIndexPrecisionBits);
+      MOZ_ASSERT(0.0f <= a && a <= 1.0f, "We only want to cache for bases between 0 and 1.");
+
       for (int j = 0; j < mNumPowTablePreSquares; j++) {
         a = sqrt(a);
       }
-      mPowTable[i] = uint16_t(pow(a, mExponent) * (1 << sOutputIntPrecisionBits));
+      uint32_t cachedInt = pow(a, mExponent) * (1 << sOutputIntPrecisionBits);
+      MOZ_ASSERT(cachedInt < (1 << (sizeof(mPowTable[i]) * 8)), "mPowCache integer type too small");
+
+      mPowTable[i] = cachedInt;
     }
   }
 
   uint16_t Pow(uint16_t aBase)
   {
     // Results should be similar to what the following code would produce:
-    // double x = double(aBase) / (1 << sInputIntPrecisionBits);
+    // Float x = Float(aBase) / (1 << sInputIntPrecisionBits);
     // return uint16_t(pow(x, mExponent) * (1 << sOutputIntPrecisionBits));
+
+    MOZ_ASSERT(aBase <= (1 << sInputIntPrecisionBits), "aBase needs to be between 0 and 1!");
 
     uint32_t a = aBase;
     for (int j = 0; j < mNumPowTablePreSquares; j++) {
       a = a * a >> sInputIntPrecisionBits;
     }
-    static_assert(sCacheSize == (1 << sInputIntPrecisionBits >> 7), "please fix index calculation below");
-    int i = a >> 7;
+    uint32_t i = a >> (sInputIntPrecisionBits - sCacheIndexPrecisionBits);
+    MOZ_ASSERT(i < sCacheSize, "out-of-bounds mPowTable access");
     return mPowTable[i];
   }
 
-private:
-  static const int sCacheSize = 256;
   static const int sInputIntPrecisionBits = 15;
-  static const int sOutputIntPrecisionBits = 8;
+  static const int sOutputIntPrecisionBits = 15;
+  static const int sCacheIndexPrecisionBits = 7;
+
+private:
+  static const size_t sCacheSize = (1 << sCacheIndexPrecisionBits) + 1;
 
   Float mExponent;
   int mNumPowTablePreSquares;
@@ -3251,8 +3262,7 @@ void
 SpotLightSoftware::Prepare()
 {
   mVectorFromFocusPointToLight = Normalized(mPointsAt - mPosition);
-  const float radPerDeg = static_cast<float>(M_PI/180.0);
-  mLimitingConeCos = std::max<double>(cos(mLimitingConeAngle * radPerDeg), 0.0);
+  mLimitingConeCos = std::max<double>(cos(mLimitingConeAngle * M_PI/180.0), 0.0);
   mPowCache.CacheForExponent(mSpecularFocus);
 }
 
@@ -3271,11 +3281,12 @@ SpotLightSoftware::GetColor(uint32_t aLightColor, const Point3D &aVectorToLight)
   };
   color = aLightColor;
   Float dot = -aVectorToLight.DotProduct(mVectorFromFocusPointToLight);
-  int16_t doti = dot * (255 << 7);
-  uint16_t tmp = mPowCache.Pow(doti) * (dot >= mLimitingConeCos);
-  colorC[B8G8R8A8_COMPONENT_BYTEOFFSET_R] = uint8_t((colorC[B8G8R8A8_COMPONENT_BYTEOFFSET_R] * tmp) >> 8);
-  colorC[B8G8R8A8_COMPONENT_BYTEOFFSET_G] = uint8_t((colorC[B8G8R8A8_COMPONENT_BYTEOFFSET_G] * tmp) >> 8);
-  colorC[B8G8R8A8_COMPONENT_BYTEOFFSET_B] = uint8_t((colorC[B8G8R8A8_COMPONENT_BYTEOFFSET_B] * tmp) >> 8);
+  uint16_t doti = dot * (dot >= 0) * (1 << PowCache::sInputIntPrecisionBits);
+  uint32_t tmp = mPowCache.Pow(doti) * (dot >= mLimitingConeCos);
+  MOZ_ASSERT(tmp <= (1 << PowCache::sOutputIntPrecisionBits), "pow() result must not exceed 1.0");
+  colorC[B8G8R8A8_COMPONENT_BYTEOFFSET_R] = uint8_t((colorC[B8G8R8A8_COMPONENT_BYTEOFFSET_R] * tmp) >> PowCache::sOutputIntPrecisionBits);
+  colorC[B8G8R8A8_COMPONENT_BYTEOFFSET_G] = uint8_t((colorC[B8G8R8A8_COMPONENT_BYTEOFFSET_G] * tmp) >> PowCache::sOutputIntPrecisionBits);
+  colorC[B8G8R8A8_COMPONENT_BYTEOFFSET_B] = uint8_t((colorC[B8G8R8A8_COMPONENT_BYTEOFFSET_B] * tmp) >> PowCache::sOutputIntPrecisionBits);
   colorC[B8G8R8A8_COMPONENT_BYTEOFFSET_A] = 255;
   return color;
 }
@@ -3502,22 +3513,22 @@ SpecularLightingSoftware::LightPixel(const Point3D &aNormal,
   Point3D vectorToEye(0, 0, 1);
   Point3D halfwayVector = Normalized(aVectorToLight + vectorToEye);
   Float dotNH = aNormal.DotProduct(halfwayVector);
-  uint16_t dotNHi = uint16_t(dotNH * (dotNH >= 0) * (255 << 7));
-  uint32_t specularNHi = mSpecularConstantInt * mPowCache.Pow(dotNHi);
+  uint16_t dotNHi = uint16_t(dotNH * (dotNH >= 0) * (1 << PowCache::sInputIntPrecisionBits));
+  uint32_t specularNHi = uint32_t(mSpecularConstantInt) * mPowCache.Pow(dotNHi) >> 8;
 
   union {
     uint32_t bgra;
     uint8_t components[4];
   } color = { aColor };
   color.components[B8G8R8A8_COMPONENT_BYTEOFFSET_B] =
-    umin(FilterProcessing::FastDivideBy255<uint16_t>(
-      specularNHi * color.components[B8G8R8A8_COMPONENT_BYTEOFFSET_B] >> 8), 255U);
+    umin(
+      (specularNHi * color.components[B8G8R8A8_COMPONENT_BYTEOFFSET_B]) >> PowCache::sOutputIntPrecisionBits, 255U);
   color.components[B8G8R8A8_COMPONENT_BYTEOFFSET_G] =
-    umin(FilterProcessing::FastDivideBy255<uint16_t>(
-      specularNHi * color.components[B8G8R8A8_COMPONENT_BYTEOFFSET_G] >> 8), 255U);
+    umin(
+      (specularNHi * color.components[B8G8R8A8_COMPONENT_BYTEOFFSET_G]) >> PowCache::sOutputIntPrecisionBits, 255U);
   color.components[B8G8R8A8_COMPONENT_BYTEOFFSET_R] =
-    umin(FilterProcessing::FastDivideBy255<uint16_t>(
-      specularNHi * color.components[B8G8R8A8_COMPONENT_BYTEOFFSET_R] >> 8), 255U);
+    umin(
+      (specularNHi * color.components[B8G8R8A8_COMPONENT_BYTEOFFSET_R]) >> PowCache::sOutputIntPrecisionBits, 255U);
 
   color.components[B8G8R8A8_COMPONENT_BYTEOFFSET_A] =
     umax(color.components[B8G8R8A8_COMPONENT_BYTEOFFSET_B],
