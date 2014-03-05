@@ -23,19 +23,23 @@ class nsHtml5Speculation MOZ_FINAL : public nsAHtml5TreeOpSink
     
     ~nsHtml5Speculation();
 
-    nsHtml5OwningUTF16Buffer* GetBuffer() {
+    nsHtml5OwningUTF16Buffer* GetBuffer()
+    {
       return mBuffer;
     }
     
-    int32_t GetStart() {
+    int32_t GetStart()
+    {
       return mStart;
     }
 
-    int32_t GetStartLineNumber() {
+    int32_t GetStartLineNumber()
+    {
       return mStartLineNumber;
     }
     
-    nsAHtml5TreeBuilderState* GetSnapshot() {
+    nsAHtml5TreeBuilderState* GetSnapshot()
+    {
       return mSnapshot;
     }
 

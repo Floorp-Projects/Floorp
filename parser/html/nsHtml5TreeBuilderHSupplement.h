@@ -87,11 +87,13 @@
 
     bool HasScript();
     
-    void SetOpSink(nsAHtml5TreeOpSink* aOpSink) {
+    void SetOpSink(nsAHtml5TreeOpSink* aOpSink)
+    {
       mOpSink = aOpSink;
     }
 
-    void ClearOps() {
+    void ClearOps()
+    {
       mOpQueue.Clear();
     }
     
@@ -115,11 +117,13 @@
 
     void DropHandles();
 
-    void SetPreventScriptExecution(bool aPrevent) {
+    void SetPreventScriptExecution(bool aPrevent)
+    {
       mPreventScriptExecution = aPrevent;
     }
 
-    bool HasBuilder() {
+    bool HasBuilder()
+    {
       return mBuilder;
     }
 

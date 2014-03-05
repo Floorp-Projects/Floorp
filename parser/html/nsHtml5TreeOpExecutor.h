@@ -144,17 +144,20 @@ class nsHtml5TreeOpExecutor : public nsHtml5DocumentBuilder,
     virtual void ContinueInterruptedParsingAsync();
  
     // XXX Does anyone need this?
-    nsIDocShell* GetDocShell() {
+    nsIDocShell* GetDocShell()
+    {
       return mDocShell;
     }
 
-    bool IsScriptExecuting() {
+    bool IsScriptExecuting()
+    {
       return IsScriptExecutingImpl();
     }
 
     // Not from interface
 
-    void SetStreamParser(nsHtml5StreamParser* aStreamParser) {
+    void SetStreamParser(nsHtml5StreamParser* aStreamParser)
+    {
       mStreamParser = aStreamParser;
     }
     
@@ -186,20 +189,24 @@ class nsHtml5TreeOpExecutor : public nsHtml5DocumentBuilder,
 
     void ComplainAboutBogusProtocolCharset(nsIDocument* aDoc);
 
-    bool IsComplete() {
+    bool IsComplete()
+    {
       return !mParser;
     }
     
-    bool HasStarted() {
+    bool HasStarted()
+    {
       return mStarted;
     }
     
-    bool IsFlushing() {
+    bool IsFlushing()
+    {
       return mFlushState >= eInFlush;
     }
 
 #ifdef DEBUG
-    bool IsInFlushLoop() {
+    bool IsInFlushLoop()
+    {
       return mRunFlushLoopOnStack;
     }
 #endif
@@ -212,18 +219,21 @@ class nsHtml5TreeOpExecutor : public nsHtml5DocumentBuilder,
      */
     virtual void MoveOpsFrom(nsTArray<nsHtml5TreeOperation>& aOpQueue);
     
-    nsHtml5TreeOpStage* GetStage() {
+    nsHtml5TreeOpStage* GetStage()
+    {
       return &mStage;
     }
     
-    void StartReadingFromStage() {
+    void StartReadingFromStage()
+    {
       mReadingFromStage = true;
     }
 
     void StreamEnded();
     
 #ifdef DEBUG
-    void AssertStageEmpty() {
+    void AssertStageEmpty()
+    {
       mStage.AssertEmpty();
     }
 #endif
