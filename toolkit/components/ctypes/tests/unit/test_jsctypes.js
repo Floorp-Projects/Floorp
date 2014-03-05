@@ -2776,21 +2776,22 @@ function run_static_data_tests(library)
 // bug 522360 - try loading system library without full path
 function run_load_system_library()
 {
-#ifdef XP_WIN
-  let syslib = ctypes.open("user32.dll");
-#elifdef XP_MACOSX
-  let syslib = ctypes.open("libm.dylib");
-#elifdef XP_UNIX
   let syslib;
-  try {
-    syslib = ctypes.open("libm.so");
-  } catch (e) {
-    // limb.so wasn't available, try libm.so.6 instead
-    syslib = ctypes.open("libm.so.6");
+  let OS = get_os();
+  if (OS == "WINNT") {
+    syslib = ctypes.open("user32.dll");
+  } else if (OS == "Darwin") {
+    syslib = ctypes.open("libm.dylib");
+  } else if (OS == "Linux" || OS == "Android" || OS.match(/BSD$/)) {
+    try {
+      syslib = ctypes.open("libm.so");
+    } catch (e) {
+      // limb.so wasn't available, try libm.so.6 instead
+      syslib = ctypes.open("libm.so.6");
+    }
+  } else {
+    do_throw("please add a system library for this test");
   }
-#else
-  do_throw("please add a system library for this test")
-#endif
   syslib.close();
   return true;
 }
