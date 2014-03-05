@@ -1904,6 +1904,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mScriptGlobalObject)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mListenerManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDOMStyleSheets)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStyleSheetSetList)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mScriptLoader)
 
   tmp->mRadioGroups.EnumerateRead(RadioGroupsTraverser, &cb);
@@ -2040,6 +2041,13 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
     tmp->mListenerManager->Disconnect();
     tmp->UnsetFlags(NODE_HAS_LISTENERMANAGER);
     tmp->mListenerManager = nullptr;
+  }
+
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDOMStyleSheets)
+
+  if (tmp->mStyleSheetSetList) {
+    tmp->mStyleSheetSetList->Disconnect();
+    tmp->mStyleSheetSetList = nullptr;
   }
 
   if (tmp->mSubDocuments) {
