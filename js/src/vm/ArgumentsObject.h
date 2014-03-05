@@ -52,13 +52,12 @@ struct ArgumentsData
     size_t      *deletedBits;
 
     /*
-     * This array holds either the current argument value or the magic value
-     * JS_FORWARD_TO_CALL_OBJECT. The latter means that the function has both a
+     * This array holds either the current argument value or the magic
+     * forwarding value. The latter means that the function has both a
      * CallObject and an ArgumentsObject AND the particular formal variable is
      * aliased by the CallObject. In such cases, the CallObject holds the
-     * canonical value so any element access to the arguments object should
-     * load the value out of the CallObject (which is pointed to by
-     * MAYBE_CALL_SLOT).
+     * canonical value so any element access to the arguments object should load
+     * the value out of the CallObject (which is pointed to by MAYBE_CALL_SLOT).
      */
     HeapValue   args[1];
 
@@ -214,10 +213,10 @@ class ArgumentsObject : public JSObject
      * There are two ways to access the ArgumentsData::args corresponding to
      * these two use cases:
      *  - object access should use elements(i) which will take care of
-     *    forwarding when the value is JS_FORWARD_TO_CALL_OBJECT;
+     *    forwarding when the value is the magic forwarding value;
      *  - VM argument access should use arg(i) which will assert that the
-     *    value is not JS_FORWARD_TO_CALL_OBJECT (since, if such forwarding was
-     *    needed, the frontend should have emitted JSOP_GETALIASEDVAR.
+     *    value is not the magic forwarding value (since, if such forwarding was
+     *    needed, the frontend should have emitted JSOP_GETALIASEDVAR).
      */
     const Value &element(uint32_t i) const;
 
@@ -226,14 +225,14 @@ class ArgumentsObject : public JSObject
     const Value &arg(unsigned i) const {
         JS_ASSERT(i < data()->numArgs);
         const Value &v = data()->args[i];
-        JS_ASSERT(!v.isMagic(JS_FORWARD_TO_CALL_OBJECT));
+        JS_ASSERT(!v.isMagic());
         return v;
     }
 
     void setArg(unsigned i, const Value &v) {
         JS_ASSERT(i < data()->numArgs);
         HeapValue &lhs = data()->args[i];
-        JS_ASSERT(!lhs.isMagic(JS_FORWARD_TO_CALL_OBJECT));
+        JS_ASSERT(!lhs.isMagic());
         lhs = v;
     }
 
