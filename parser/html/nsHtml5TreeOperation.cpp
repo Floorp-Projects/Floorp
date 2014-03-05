@@ -621,6 +621,25 @@ nsHtml5TreeOperation::DoneCreatingElement(nsIContent* aNode)
   aNode->DoneCreatingElement();
 }
 
+void
+nsHtml5TreeOperation::SvgLoad(nsIContent* aNode)
+{
+  nsCOMPtr<nsIRunnable> event = new nsHtml5SVGLoadDispatcher(aNode);
+  if (NS_FAILED(NS_DispatchToMainThread(event))) {
+    NS_WARNING("failed to dispatch svg load dispatcher");
+  }
+}
+
+void
+nsHtml5TreeOperation::MarkMalformedIfScript(nsIContent* aNode)
+{
+  nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(aNode);
+  if (sele) {
+    // Make sure to serialize this script correctly, for nice round tripping.
+    sele->SetIsMalformed();
+  }
+}
+
 nsresult
 nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
                               nsIContent** aScriptElement)
@@ -788,11 +807,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
     }
     case eTreeOpMarkMalformedIfScript: {
       nsIContent* node = *(mOne.node);
-      nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(node);
-      if (sele) {
-        // Make sure to serialize this script correctly, for nice round tripping.
-        sele->SetIsMalformed();
-      }
+      MarkMalformedIfScript(node);
       return NS_OK;
     }
     case eTreeOpStreamEnded: {
@@ -824,10 +839,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
     }
     case eTreeOpSvgLoad: {
       nsIContent* node = *(mOne.node);
-      nsCOMPtr<nsIRunnable> event = new nsHtml5SVGLoadDispatcher(node);
-      if (NS_FAILED(NS_DispatchToMainThread(event))) {
-        NS_WARNING("failed to dispatch svg load dispatcher");
-      }
+      SvgLoad(node);
       return NS_OK;
     }
     case eTreeOpMaybeComplainAboutCharset: {

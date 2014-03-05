@@ -535,7 +535,8 @@ nsHtml5TreeBuilder::markMalformedIfScript(nsIContentHandle* aElement)
   NS_PRECONDITION(aElement, "Null element");
 
   if (mBuilder) {
-    // XXX innerHTML
+    nsHtml5TreeOperation::MarkMalformedIfScript(
+      static_cast<nsIContent*>(aElement));
     return;
   }
 
@@ -732,12 +733,11 @@ nsHtml5TreeBuilder::elementPopped(int32_t aNamespace, nsIAtom* aName, nsIContent
     return;
   }
   if (aNamespace == kNameSpaceID_SVG) {
-    if (mBuilder) {
-      // XXX innerHTML
-      // is this ever needed for the on-the-main-thread case
-      return;
-    }
     if (aName == nsHtml5Atoms::svg) {
+      if (mBuilder) {
+        nsHtml5TreeOperation::SvgLoad(static_cast<nsIContent*>(aElement));
+        return;
+      }
       nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
       NS_ASSERTION(treeOp, "Tree op allocation failed.");
       treeOp->Init(eTreeOpSvgLoad, aElement);
