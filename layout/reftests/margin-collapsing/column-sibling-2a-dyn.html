@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<style type="text/css">
+#multi-column1, #multi-column2, #multi-column3 {
+ -moz-column-count: 1;
+ column-count: 1;
+ height: 20px;
+ background-color: blue;
+}
+#multi-column1 {
+ margin-bottom: 10px;
+}
+#multi-column2 {
+ display: none;
+ margin: 20px 0;
+}
+#multi-column3 {
+ margin-top: 10px;
+}
+</style>
+<script type="text/javascript">
+function test() {
+ document.getElementById('multi-column2').style.display = 'block';
+ document.documentElement.removeAttribute('class');
+}
+document.addEventListener('MozReftestInvalidate', test, false);
+</script>
+</head>
+<body>
+<div id="multi-column1"></div>
+<div id="multi-column2"></div>
+<div id="multi-column3"></div>
+</body>
+</html>

@@ -13,3 +13,5 @@ LIBRARY_NAME = 'profdirserviceprovidersa_s'
 FORCE_STATIC_LIB = True
 
 DEFINES['XPCOM_GLUE'] = 1
+
+DISABLE_STL_WRAPPING = True

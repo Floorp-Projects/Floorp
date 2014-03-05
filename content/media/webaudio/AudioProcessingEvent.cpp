@@ -11,19 +11,19 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_3(AudioProcessingEvent, nsDOMEvent,
+NS_IMPL_CYCLE_COLLECTION_INHERITED_3(AudioProcessingEvent, Event,
                                      mInputBuffer, mOutputBuffer, mNode)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(AudioProcessingEvent)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
+NS_INTERFACE_MAP_END_INHERITING(Event)
 
-NS_IMPL_ADDREF_INHERITED(AudioProcessingEvent, nsDOMEvent)
-NS_IMPL_RELEASE_INHERITED(AudioProcessingEvent, nsDOMEvent)
+NS_IMPL_ADDREF_INHERITED(AudioProcessingEvent, Event)
+NS_IMPL_RELEASE_INHERITED(AudioProcessingEvent, Event)
 
 AudioProcessingEvent::AudioProcessingEvent(ScriptProcessorNode* aOwner,
                                            nsPresContext* aPresContext,
                                            WidgetEvent* aEvent)
-  : nsDOMEvent(aOwner, aPresContext, aEvent)
+  : Event(aOwner, aPresContext, aEvent)
   , mPlaybackTime(0.0)
   , mNode(aOwner)
 {

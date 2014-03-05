@@ -722,10 +722,10 @@ js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason, TypeObjectList 
 
     AutoStopVerifyingBarriers av(rt, false);
 
-    /* Move objects pointed to by roots from the nursery to the major heap. */
+    // Move objects pointed to by roots from the nursery to the major heap.
     MinorCollectionTracer trc(rt, this);
 
-    /* Mark the store buffer. This must happen first. */
+    // Mark the store buffer. This must happen first.
     StoreBuffer &sb = rt->gcStoreBuffer;
     TIME_START(markValues);
     sb.markValues(&trc);
@@ -771,25 +771,31 @@ js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason, TypeObjectList 
     rt->newObjectCache.clearNurseryObjects(rt);
     TIME_END(clearNewObjectCache);
 
-    /*
-     * Most of the work is done here. This loop iterates over objects that have
-     * been moved to the major heap. If these objects have any outgoing pointers
-     * to the nursery, then those nursery objects get moved as well, until no
-     * objects are left to move. That is, we iterate to a fixed point.
-     */
+    // Most of the work is done here. This loop iterates over objects that have
+    // been moved to the major heap. If these objects have any outgoing pointers
+    // to the nursery, then those nursery objects get moved as well, until no
+    // objects are left to move. That is, we iterate to a fixed point.
     TIME_START(collectToFP);
     TenureCountCache tenureCounts;
     collectToFixedPoint(&trc, tenureCounts);
     TIME_END(collectToFP);
 
+    // Update the array buffer object's view lists.
+    TIME_START(sweepArrayBufferViewList);
+    for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next()) {
+        if (c->gcLiveArrayBuffers)
+            ArrayBufferObject::sweep(c);
+    }
+    TIME_END(sweepArrayBufferViewList);
+
+    // Update any slot or element pointers whose destination has been tenured.
     TIME_START(updateJitActivations);
 #ifdef JS_ION
-    /* Update any slot or element pointers whose destination has been tenured. */
     js::jit::UpdateJitActivationsForMinorGC(rt, &trc);
 #endif
     TIME_END(updateJitActivations);
 
-    /* Resize the nursery. */
+    // Resize the nursery.
     TIME_START(resize);
     double promotionRate = trc.tenuredSize / double(allocationEnd() - start());
     if (promotionRate > 0.05)
@@ -798,11 +804,11 @@ js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason, TypeObjectList 
         shrinkAllocableSpace();
     TIME_END(resize);
 
-    TIME_START(pretenure);
     // If we are promoting the nursery, or exhausted the store buffer with
     // pointers to nursery things, which will force a collection well before
     // the nursery is full, look for object types that are getting promoted
     // excessively and try to pretenure them.
+    TIME_START(pretenure);
     if (pretenureTypes && (promotionRate > 0.8 || reason == JS::gcreason::FULL_STORE_BUFFER)) {
         for (size_t i = 0; i < ArrayLength(tenureCounts.entries); i++) {
             const TenureCount &entry = tenureCounts.entries[i];
@@ -812,7 +818,7 @@ js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason, TypeObjectList 
     }
     TIME_END(pretenure);
 
-    /* Sweep. */
+    // Sweep.
     TIME_START(freeHugeSlots);
     freeHugeSlots(rt);
     TIME_END(freeHugeSlots);
@@ -825,11 +831,9 @@ js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason, TypeObjectList 
     rt->gcStoreBuffer.clear();
     TIME_END(clearStoreBuffer);
 
-    /*
-     * We ignore gcMaxBytes when allocating for minor collection. However, if we
-     * overflowed, we disable the nursery. The next time we allocate, we'll fail
-     * because gcBytes >= gcMaxBytes.
-     */
+    // We ignore gcMaxBytes when allocating for minor collection. However, if we
+    // overflowed, we disable the nursery. The next time we allocate, we'll fail
+    // because gcBytes >= gcMaxBytes.
     if (rt->gcBytes >= rt->gcMaxBytes)
         disable();
 
@@ -842,13 +846,13 @@ js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason, TypeObjectList 
         static bool printedHeader = false;
         if (!printedHeader) {
             fprintf(stderr,
-                    "MinorGC: Reason               PRate  Size Time   mkVals mkClls mkSlts mkWCll mkRVal mkRCll mkGnrc ckTbls mkRntm mkDbgr clrNOC collct updtIn resize pretnr frSlts clrSB  sweep\n");
+                    "MinorGC: Reason               PRate  Size Time   mkVals mkClls mkSlts mkWCll mkRVal mkRCll mkGnrc ckTbls mkRntm mkDbgr clrNOC collct swpABO updtIn resize pretnr frSlts clrSB  sweep\n");
             printedHeader = true;
         }
 
 #define FMT " %6" PRIu64
         fprintf(stderr,
-                "MinorGC: %20s %5.1f%% %4d" FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT "\n",
+                "MinorGC: %20s %5.1f%% %4d" FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT FMT "\n",
                 js::gcstats::ExplainReason(reason),
                 promotionRate * 100,
                 numActiveChunks_,
@@ -865,6 +869,7 @@ js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason, TypeObjectList 
                 TIME_TOTAL(markDebugger),
                 TIME_TOTAL(clearNewObjectCache),
                 TIME_TOTAL(collectToFP),
+                TIME_TOTAL(sweepArrayBufferViewList),
                 TIME_TOTAL(updateJitActivations),
                 TIME_TOTAL(resize),
                 TIME_TOTAL(pretenure),

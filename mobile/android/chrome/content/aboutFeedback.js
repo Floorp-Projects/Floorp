@@ -32,9 +32,9 @@ function init() {
 
   document.getElementById("open-play-store").addEventListener("click", openPlayStore, false);
   document.forms[0].addEventListener("submit", sendFeedback, false);
-  document.getElementById("no-thanks").addEventListener("click", function(evt) {
-    window.close();
-  }, false);
+  for (let anchor of document.querySelectorAll(".no-thanks")) {
+    anchor.addEventListener("click", evt => window.close(), false);
+  }
 
   let sumoLink = Services.urlFormatter.formatURLPref("app.support.baseURL");
   document.getElementById("sumo-link").href = sumoLink;

@@ -69,18 +69,18 @@
 #include "nsIContentSecurityPolicy.h"
 #include "nsIChannelPolicy.h"
 #include "nsChannelPolicy.h"
-#include "mozilla/dom/Element.h"
 #include "GeckoProfiler.h"
 #include "nsObjectFrame.h"
 #include "nsDOMClassInfo.h"
 #include "nsWrapperCacheInlines.h"
 #include "nsDOMJSUtils.h"
-#include "nsDOMEvent.h"
 
 #include "nsWidgetsCID.h"
 #include "nsContentCID.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/Element.h"
+#include "mozilla/dom/Event.h"
 #include "mozilla/Telemetry.h"
 
 #ifdef XP_WIN
@@ -307,7 +307,7 @@ nsPluginCrashedEvent::Run()
   }
 
   ErrorResult rv;
-  nsRefPtr<nsDOMEvent> event =
+  nsRefPtr<Event> event =
     doc->CreateEvent(NS_LITERAL_STRING("datacontainerevents"), rv);
   nsCOMPtr<nsIDOMDataContainerEvent> containerEvent(do_QueryObject(event));
   if (!containerEvent) {

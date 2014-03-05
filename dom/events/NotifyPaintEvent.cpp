@@ -19,7 +19,7 @@ NotifyPaintEvent::NotifyPaintEvent(EventTarget* aOwner,
                                    WidgetEvent* aEvent,
                                    uint32_t aEventType,
                                    nsInvalidateRequestList* aInvalidateRequests)
-: nsDOMEvent(aOwner, aPresContext, aEvent)
+  : Event(aOwner, aPresContext, aEvent)
 {
   if (mEvent) {
     mEvent->message = aEventType;
@@ -31,10 +31,10 @@ NotifyPaintEvent::NotifyPaintEvent(EventTarget* aOwner,
 
 NS_INTERFACE_MAP_BEGIN(NotifyPaintEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNotifyPaintEvent)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
+NS_INTERFACE_MAP_END_INHERITING(Event)
 
-NS_IMPL_ADDREF_INHERITED(NotifyPaintEvent, nsDOMEvent)
-NS_IMPL_RELEASE_INHERITED(NotifyPaintEvent, nsDOMEvent)
+NS_IMPL_ADDREF_INHERITED(NotifyPaintEvent, Event)
+NS_IMPL_RELEASE_INHERITED(NotifyPaintEvent, Event)
 
 nsRegion
 NotifyPaintEvent::GetRegion()
@@ -105,7 +105,7 @@ NotifyPaintEvent::GetPaintRequests(nsISupports** aResult)
 already_AddRefed<nsPaintRequestList>
 NotifyPaintEvent::PaintRequests()
 {
-  nsDOMEvent* parent = this;
+  Event* parent = this;
   nsRefPtr<nsPaintRequestList> requests = new nsPaintRequestList(parent);
 
   if (nsContentUtils::IsCallerChrome()) {
@@ -127,7 +127,7 @@ NotifyPaintEvent::Serialize(IPC::Message* aMsg,
     IPC::WriteParam(aMsg, NS_LITERAL_STRING("notifypaintevent"));
   }
 
-  nsDOMEvent::Serialize(aMsg, false);
+  Event::Serialize(aMsg, false);
 
   uint32_t length = mInvalidateRequests.Length();
   IPC::WriteParam(aMsg, length);
@@ -140,7 +140,7 @@ NotifyPaintEvent::Serialize(IPC::Message* aMsg,
 NS_IMETHODIMP_(bool)
 NotifyPaintEvent::Deserialize(const IPC::Message* aMsg, void** aIter)
 {
-  NS_ENSURE_TRUE(nsDOMEvent::Deserialize(aMsg, aIter), false);
+  NS_ENSURE_TRUE(Event::Deserialize(aMsg, aIter), false);
 
   uint32_t length = 0;
   NS_ENSURE_TRUE(IPC::ReadParam(aMsg, aIter, &length), false);

@@ -48,3 +48,5 @@ LOCAL_INCLUDES += [
     '/toolkit/components/startup',
     '/xpcom/build',
 ]
+
+DISABLE_STL_WRAPPING = True

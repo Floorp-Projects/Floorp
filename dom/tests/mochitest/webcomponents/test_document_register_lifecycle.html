@@ -24,8 +24,8 @@ function testRegisterUnresolved() {
   var helloElem = document.getElementById("hello");
 
   var createdCallbackCalled = false;
-  var enteredViewCallbackCalled = false;
-  var leftViewCallbackCalled = false;
+  var attachedCallbackCalled = false;
+  var detachedCallbackCalled = false;
 
   var p = Object.create(HTMLElement.prototype);
   p.createdCallback = function() {
@@ -35,17 +35,17 @@ function testRegisterUnresolved() {
     createdCallbackCalled = true;
   };
 
-  p.enteredViewCallback = function() {
-    is(createdCallbackCalled, true, "Created callback should be called before enteredView");
-    is(enteredViewCallbackCalled, false, "enteredView callback should only be called once in this test.");
+  p.attachedCallback = function() {
+    is(createdCallbackCalled, true, "Created callback should be called before attached");
+    is(attachedCallbackCalled, false, "attached callback should only be called once in this test.");
     is(this, helloElem, "The 'this' value should be the custom element.");
-    enteredViewCallbackCalled = true;
+    attachedCallbackCalled = true;
   };
 
-  p.leftViewCallback = function() {
-    is(enteredViewCallbackCalled, true, "enteredView callback should be called before leftView");
-    is(leftViewCallbackCalled, false, "leftView callback should only be called once in this test.");
-    leftViewCallbackCalled = true;
+  p.detachedCallback = function() {
+    is(attachedCallbackCalled, true, "attached callback should be called before detached");
+    is(detachedCallbackCalled, false, "detached callback should only be called once in this test.");
+    detachedCallbackCalled = true;
     is(this, helloElem, "The 'this' value should be the custom element.");
     runNextTest();
   };
@@ -57,7 +57,7 @@ function testRegisterUnresolved() {
   document.registerElement("x-hello", { prototype: p });
   is(createdCallbackCalled, true, "created callback should be called when control returns to script from user agent code");
 
-  // Remove element from document to trigger leftView callback.
+  // Remove element from document to trigger detached callback.
   container.removeChild(helloElem);
 }
 
@@ -67,8 +67,8 @@ function testRegisterUnresolvedExtended() {
   var buttonElem = document.getElementById("extbutton");
 
   var createdCallbackCalled = false;
-  var enteredViewCallbackCalled = false;
-  var leftViewCallbackCalled = false;
+  var attachedCallbackCalled = false;
+  var detachedCallbackCalled = false;
 
   var p = Object.create(HTMLButtonElement.prototype);
   p.createdCallback = function() {
@@ -78,17 +78,17 @@ function testRegisterUnresolvedExtended() {
     createdCallbackCalled = true;
   };
 
-  p.enteredViewCallback = function() {
-    is(createdCallbackCalled, true, "Created callback should be called before enteredView");
-    is(enteredViewCallbackCalled, false, "enteredView callback should only be called once in this test.");
+  p.attachedCallback = function() {
+    is(createdCallbackCalled, true, "Created callback should be called before attached");
+    is(attachedCallbackCalled, false, "attached callback should only be called once in this test.");
     is(this, buttonElem, "The 'this' value should be the custom element.");
-    enteredViewCallbackCalled = true;
+    attachedCallbackCalled = true;
   };
 
-  p.leftViewCallback = function() {
-    is(enteredViewCallbackCalled, true, "enteredView callback should be called before leftView");
-    is(leftViewCallbackCalled, false, "leftView callback should only be called once in this test.");
-    leftViewCallbackCalled = true;
+  p.detachedCallback = function() {
+    is(attachedCallbackCalled, true, "attached callback should be called before detached");
+    is(detachedCallbackCalled, false, "detached callback should only be called once in this test.");
+    detachedCallbackCalled = true;
     is(this, buttonElem, "The 'this' value should be the custom element.");
     runNextTest();
   };
@@ -100,7 +100,7 @@ function testRegisterUnresolvedExtended() {
   document.registerElement("x-button", { prototype: p, extends: "button" });
   is(createdCallbackCalled, true, "created callback should be called when control returns to script from user agent code");
 
-  // Remove element from document to trigger leftView callback.
+  // Remove element from document to trigger detached callback.
   container.removeChild(buttonElem);
 }
 
@@ -174,8 +174,8 @@ function testInnerHTMLExtendedUpgrade() {
 // register -> create element -> insert into document -> remove from document
 function testRegisterResolved() {
   var createdCallbackCalled = false;
-  var enteredViewCallbackCalled = false;
-  var leftViewCallbackCalled = false;
+  var attachedCallbackCalled = false;
+  var detachedCallbackCalled = false;
 
   var createdCallbackThis;
 
@@ -186,18 +186,18 @@ function testRegisterResolved() {
     createdCallbackCalled = true;
   };
 
-  p.enteredViewCallback = function() {
-    is(createdCallbackCalled, true, "created callback should be called before enteredView callback.");
-    is(enteredViewCallbackCalled, false, "enteredView callback should only be called on in this test.");
+  p.attachedCallback = function() {
+    is(createdCallbackCalled, true, "created callback should be called before attached callback.");
+    is(attachedCallbackCalled, false, "attached callback should only be called on in this test.");
     is(this, createdElement, "The 'this' value should be the custom element.");
-    enteredViewCallbackCalled = true;
+    attachedCallbackCalled = true;
   };
 
-  p.leftViewCallback = function() {
-    is(enteredViewCallbackCalled, true, "enteredView callback should be called before leftView");
-    is(leftViewCallbackCalled, false, "leftView callback should only be called once in this test.");
+  p.detachedCallback = function() {
+    is(attachedCallbackCalled, true, "attached callback should be called before detached");
+    is(detachedCallbackCalled, false, "detached callback should only be called once in this test.");
     is(this, createdElement, "The 'this' value should be the custom element.");
-    leftViewCallbackCalled = true;
+    detachedCallbackCalled = true;
     runNextTest();
   };
 
@@ -212,10 +212,10 @@ function testRegisterResolved() {
   is(createdCallbackThis, createdElement, "The 'this' value in the created callback should be the custom element.");
   is(createdElement.__proto__, p, "Prototype of custom element should be the registered prototype.");
 
-  // Insert element into document to trigger enteredView callback.
+  // Insert element into document to trigger attached callback.
   container.appendChild(createdElement);
 
-  // Remove element from document to trigger leftView callback.
+  // Remove element from document to trigger detached callback.
   container.removeChild(createdElement);
 }
 
@@ -319,11 +319,11 @@ function testUpgradeCandidate() {
 function testNotInDocEnterLeave() {
   var p = Object.create(HTMLElement.prototype);
 
-  p.enteredView = function() {
-    ok(false, "enteredView should not be called when not entering the document.");
+  p.attached = function() {
+    ok(false, "attached should not be called when not entering the document.");
   };
 
-  p.leftView = function() {
+  p.detached = function() {
     ok(false, "leaveView should not be called when not leaving the document.");
   };
 
@@ -343,19 +343,19 @@ function testNotInDocEnterLeave() {
 }
 
 function testEnterLeaveView() {
-  var enteredViewCallbackCalled = false;
-  var leftViewCallbackCalled = false;
+  var attachedCallbackCalled = false;
+  var detachedCallbackCalled = false;
 
   var p = Object.create(HTMLElement.prototype);
-  p.enteredViewCallback = function() {
-    is(enteredViewCallbackCalled, false, "enteredView callback should only be called on in this test.");
-    enteredViewCallbackCalled = true;
+  p.attachedCallback = function() {
+    is(attachedCallbackCalled, false, "attached callback should only be called on in this test.");
+    attachedCallbackCalled = true;
   };
 
-  p.leftViewCallback = function() {
-    is(enteredViewCallbackCalled, true, "enteredView callback should be called before leftView");
-    is(leftViewCallbackCalled, false, "leftView callback should only be called once in this test.");
-    leftViewCallbackCalled = true;
+  p.detachedCallback = function() {
+    is(attachedCallbackCalled, true, "attached callback should be called before detached");
+    is(detachedCallbackCalled, false, "detached callback should only be called once in this test.");
+    detachedCallbackCalled = true;
     runNextTest();
   };
 
@@ -363,7 +363,7 @@ function testEnterLeaveView() {
   document.registerElement("x-element-in-div", { prototype: p });
   var customElement = document.createElement("x-element-in-div");
   div.appendChild(customElement);
-  is(enteredViewCallbackCalled, false, "Appending a custom element to a node that is not in the document should not call the enteredView callback.");
+  is(attachedCallbackCalled, false, "Appending a custom element to a node that is not in the document should not call the attached callback.");
 
   container.appendChild(div);
   container.removeChild(div);

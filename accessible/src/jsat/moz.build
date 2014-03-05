@@ -9,6 +9,7 @@ JS_MODULES_PATH = 'modules/accessibility'
 EXTRA_JS_MODULES += [
     'AccessFu.jsm',
     'Constants.jsm',
+    'ContentControl.jsm',
     'EventManager.jsm',
     'OutputGenerator.jsm',
     'Presentation.jsm',

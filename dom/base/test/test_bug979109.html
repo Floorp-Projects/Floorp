@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=979109
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 979109</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=979109">Mozilla Bug 979109</a>
+<script type="application/javascript">
+
+  console.warn("%", "a");
+  console.warn("%%", "a");
+  console.warn("%123", "a");
+  console.warn("%123.", "a");
+  console.warn("%123.123", "a");
+  console.warn("%123.123o", "a");
+  console.warn("%123.123s", "a");
+  console.warn("%123.123d", "a");
+  console.warn("%123.123f", "a");
+  console.warn("%123.123z", "a");
+  console.warn("%.", "a");
+  console.warn("%.123", "a");
+  ok(true, "Still alive \\o/");
+
+</script>
+</body>
+</html>

@@ -6,15 +6,15 @@
 #ifndef mozilla_dom_CommandEvent_h_
 #define mozilla_dom_CommandEvent_h_
 
-#include "nsIDOMCommandEvent.h"
-#include "nsDOMEvent.h"
-#include "mozilla/dom/CommandEventBinding.h"
 #include "mozilla/EventForwards.h"
+#include "mozilla/dom/CommandEventBinding.h"
+#include "mozilla/dom/Event.h"
+#include "nsIDOMCommandEvent.h"
 
 namespace mozilla {
 namespace dom {
 
-class CommandEvent : public nsDOMEvent,
+class CommandEvent : public Event,
                      public nsIDOMCommandEvent
 {
 public:
@@ -27,7 +27,7 @@ public:
   NS_DECL_NSIDOMCOMMANDEVENT
 
   // Forward to base class
-  NS_FORWARD_TO_NSDOMEVENT
+  NS_FORWARD_TO_EVENT
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE

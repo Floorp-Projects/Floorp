@@ -13,8 +13,8 @@ namespace dom {
 TransitionEvent::TransitionEvent(EventTarget* aOwner,
                                  nsPresContext* aPresContext,
                                  InternalTransitionEvent* aEvent)
-  : nsDOMEvent(aOwner, aPresContext,
-               aEvent ? aEvent : new InternalTransitionEvent(false, 0))
+  : Event(aOwner, aPresContext,
+          aEvent ? aEvent : new InternalTransitionEvent(false, 0))
 {
   if (aEvent) {
     mEventIsInternal = false;
@@ -27,10 +27,10 @@ TransitionEvent::TransitionEvent(EventTarget* aOwner,
 
 NS_INTERFACE_MAP_BEGIN(TransitionEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMTransitionEvent)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
+NS_INTERFACE_MAP_END_INHERITING(Event)
 
-NS_IMPL_ADDREF_INHERITED(TransitionEvent, nsDOMEvent)
-NS_IMPL_RELEASE_INHERITED(TransitionEvent, nsDOMEvent)
+NS_IMPL_ADDREF_INHERITED(TransitionEvent, Event)
+NS_IMPL_RELEASE_INHERITED(TransitionEvent, Event)
 
 // static
 already_AddRefed<TransitionEvent>

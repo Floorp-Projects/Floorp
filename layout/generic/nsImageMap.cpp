@@ -7,12 +7,12 @@
 
 #include "nsImageMap.h"
 
+#include "mozilla/dom/Element.h"
+#include "mozilla/dom/Event.h" // for nsIDOMEvent::InternalDOMEvent()
 #include "nsString.h"
-#include "nsDOMEvent.h"
 #include "nsReadableUtils.h"
 #include "nsRenderingContext.h"
 #include "nsPresContext.h"
-#include "mozilla/dom/Element.h"
 #include "nsNameSpaceManager.h"
 #include "nsGkAtoms.h"
 #include "nsImageFrame.h"

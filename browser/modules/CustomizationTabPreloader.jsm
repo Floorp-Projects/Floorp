@@ -21,12 +21,6 @@ const CUSTOMIZATION_URL = "about:customizing";
 // The interval between swapping in a preload docShell and kicking off the
 // next preload in the background.
 const PRELOADER_INTERVAL_MS = 600;
-// The initial delay before we start preloading our first customization page. The
-// timer is started after the first 'browser-delayed-startup' has been sent.
-const PRELOADER_INIT_DELAY_MS = 7000;
-
-const TOPIC_TIMER_CALLBACK = "timer-callback";
-const TOPIC_DELAYED_STARTUP = "browser-delayed-startup-finished";
 
 function createTimer(obj, delay) {
   let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
@@ -42,10 +36,6 @@ function clearTimer(timer) {
 }
 
 this.CustomizationTabPreloader = {
-  init: function() {
-    CustomizationTabPreloaderInternal.init();
-  },
-
   uninit: function () {
     CustomizationTabPreloaderInternal.uninit();
   },
@@ -53,28 +43,23 @@ this.CustomizationTabPreloader = {
   newTab: function (aTab) {
     return CustomizationTabPreloaderInternal.newTab(aTab);
   },
+
+  /**
+   * ensurePreloading starts the preloading of the about:customizing
+   * content page. This function is idempotent (until a call to uninit),
+   * so multiple calls to it are fine.
+   */
+  ensurePreloading: function() {
+    CustomizationTabPreloaderInternal.ensurePreloading();
+  },
 };
 
 Object.freeze(CustomizationTabPreloader);
 
 this.CustomizationTabPreloaderInternal = {
   _browser: null,
-  _timer: null,
-  _observing: false,
-
-  init: function () {
-    Services.obs.addObserver(this, TOPIC_DELAYED_STARTUP, false);
-    this._observing = true;
-  },
 
   uninit: function () {
-    this._timer = clearTimer(this._timer);
-
-    if (this._observing) {
-      Services.obs.removeObserver(this, TOPIC_DELAYED_STARTUP);
-      this._observing = false;
-    }
-
     HostFrame.destroy();
 
     if (this._browser) {
@@ -92,23 +77,10 @@ this.CustomizationTabPreloaderInternal = {
     return false;
   },
 
-  observe: function (aSubject, aTopic, aData) {
-    if (aTopic == TOPIC_DELAYED_STARTUP) {
-      Services.obs.removeObserver(this, TOPIC_DELAYED_STARTUP);
-      this._observing = false;
-      this._startTimer();
-    } else if (aTopic == TOPIC_TIMER_CALLBACK) {
-      this._timer = null;
-      this._startPreloader();
+  ensurePreloading: function () {
+    if (!this._browser) {
+      this._browser = new HiddenBrowser();
     }
-  },
-
-  _startTimer: function () {
-    this._timer = createTimer(this, PRELOADER_INIT_DELAY_MS);
-  },
-
-  _startPreloader: function () {
-    this._browser = new HiddenBrowser();
   }
 };
 

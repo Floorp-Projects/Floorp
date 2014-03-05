@@ -15,18 +15,18 @@ namespace dom {
 MutationEvent::MutationEvent(EventTarget* aOwner,
                              nsPresContext* aPresContext,
                              InternalMutationEvent* aEvent)
-  : nsDOMEvent(aOwner, aPresContext,
-               aEvent ? aEvent : new InternalMutationEvent(false, 0))
+  : Event(aOwner, aPresContext,
+          aEvent ? aEvent : new InternalMutationEvent(false, 0))
 {
   mEventIsInternal = (aEvent == nullptr);
 }
 
 NS_INTERFACE_MAP_BEGIN(MutationEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMutationEvent)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
+NS_INTERFACE_MAP_END_INHERITING(Event)
 
-NS_IMPL_ADDREF_INHERITED(MutationEvent, nsDOMEvent)
-NS_IMPL_RELEASE_INHERITED(MutationEvent, nsDOMEvent)
+NS_IMPL_ADDREF_INHERITED(MutationEvent, Event)
+NS_IMPL_RELEASE_INHERITED(MutationEvent, Event)
 
 already_AddRefed<nsINode>
 MutationEvent::GetRelatedNode()
@@ -95,7 +95,7 @@ MutationEvent::InitMutationEvent(const nsAString& aTypeArg,
                                  const nsAString& aAttrNameArg,
                                  uint16_t aAttrChangeArg)
 {
-  nsresult rv = nsDOMEvent::InitEvent(aTypeArg, aCanBubbleArg, aCancelableArg);
+  nsresult rv = Event::InitEvent(aTypeArg, aCanBubbleArg, aCancelableArg);
   NS_ENSURE_SUCCESS(rv, rv);
 
   InternalMutationEvent* mutation = mEvent->AsMutationEvent();
