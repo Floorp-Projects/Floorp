@@ -6,13 +6,11 @@
 #define nsHtml5TreeOpExecutor_h
 
 #include "nsIAtom.h"
-#include "nsNameSpaceManager.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
-#include "nsISupportsImpl.h"
+#include "nsTraceRefcnt.h"
 #include "nsHtml5TreeOperation.h"
 #include "nsHtml5SpeculativeLoad.h"
-#include "nsHtml5PendingNotification.h"
 #include "nsTArray.h"
 #include "nsContentSink.h"
 #include "nsNodeInfoManager.h"
@@ -25,22 +23,14 @@
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"
 #include "mozilla/LinkedList.h"
+#include "nsHtml5DocumentBuilder.h"
 
 class nsHtml5Parser;
 class nsHtml5TreeBuilder;
 class nsHtml5Tokenizer;
 class nsHtml5StreamParser;
 
-typedef nsIContent* nsIContentPtr;
-
-enum eHtml5FlushState {
-  eNotFlushing = 0,  // not flushing
-  eInFlush = 1,      // the Flush() method is on the call stack
-  eInDocUpdate = 2,  // inside an update batch on the document
-  eNotifying = 3     // flushing pending append notifications
-};
-
-class nsHtml5TreeOpExecutor : public nsContentSink,
+class nsHtml5TreeOpExecutor : public nsHtml5DocumentBuilder,
                               public nsIContentSink,
                               public nsAHtml5TreeOpSink,
                               public mozilla::LinkedListElement<nsHtml5TreeOpExecutor>
@@ -50,7 +40,6 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
   public:
     NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
     NS_DECL_ISUPPORTS_INHERITED
-    NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsHtml5TreeOpExecutor, nsContentSink)
 
   private:
     static bool        sExternalViewSource;
@@ -69,10 +58,7 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
     
     bool                                 mReadingFromStage;
     nsTArray<nsHtml5TreeOperation>       mOpQueue;
-    nsTArray<nsIContentPtr>              mElementsSeenInThisAppendBatch;
-    nsTArray<nsHtml5PendingNotification> mPendingNotifications;
     nsHtml5StreamParser*                 mStreamParser;
-    nsTArray<nsCOMPtr<nsIContent> >      mOwnedElements;
     
     /**
      * URLs already preloaded/preloading.
@@ -89,8 +75,6 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
     bool                          mStarted;
 
     nsHtml5TreeOpStage            mStage;
-
-    eHtml5FlushState              mFlushState;
 
     bool                          mRunFlushLoopOnStack;
 
@@ -180,13 +164,7 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
      */
     void UpdateStyleSheet(nsIContent* aElement);
 
-    // Getters and setters for fields from nsContentSink
-    nsIDocument* GetDocument() {
-      return mDocument;
-    }
-    nsNodeInfoManager* GetNodeInfoManager() {
-      return mNodeInfoManager;
-    }
+    // XXX Does anyone need this?
     nsIDocShell* GetDocShell() {
       return mDocShell;
     }
@@ -247,68 +225,7 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
       }
     }
 
-    void PostPendingAppendNotification(nsIContent* aParent, nsIContent* aChild) {
-      bool newParent = true;
-      const nsIContentPtr* first = mElementsSeenInThisAppendBatch.Elements();
-      const nsIContentPtr* last = first + mElementsSeenInThisAppendBatch.Length() - 1;
-      for (const nsIContentPtr* iter = last; iter >= first; --iter) {
-#ifdef DEBUG_NS_HTML5_TREE_OP_EXECUTOR_FLUSH
-        sAppendBatchSlotsExamined++;
-#endif
-        if (*iter == aParent) {
-          newParent = false;
-          break;
-        }
-      }
-      if (aChild->IsElement()) {
-        mElementsSeenInThisAppendBatch.AppendElement(aChild);
-      }
-      mElementsSeenInThisAppendBatch.AppendElement(aParent);
-      if (newParent) {
-        mPendingNotifications.AppendElement(aParent);
-      }
-#ifdef DEBUG_NS_HTML5_TREE_OP_EXECUTOR_FLUSH
-      sAppendBatchExaminations++;
-#endif
-    }
-
-    void FlushPendingAppendNotifications() {
-      NS_PRECONDITION(mFlushState == eInDocUpdate, "Notifications flushed outside update");
-      mFlushState = eNotifying;
-      const nsHtml5PendingNotification* start = mPendingNotifications.Elements();
-      const nsHtml5PendingNotification* end = start + mPendingNotifications.Length();
-      for (nsHtml5PendingNotification* iter = (nsHtml5PendingNotification*)start; iter < end; ++iter) {
-        iter->Fire();
-      }
-      mPendingNotifications.Clear();
-#ifdef DEBUG_NS_HTML5_TREE_OP_EXECUTOR_FLUSH
-      if (mElementsSeenInThisAppendBatch.Length() > sAppendBatchMaxSize) {
-        sAppendBatchMaxSize = mElementsSeenInThisAppendBatch.Length();
-      }
-#endif
-      mElementsSeenInThisAppendBatch.Clear();
-      NS_ASSERTION(mFlushState == eNotifying, "mFlushState out of sync");
-      mFlushState = eInDocUpdate;
-    }
     
-    inline bool HaveNotified(nsIContent* aNode) {
-      NS_PRECONDITION(aNode, "HaveNotified called with null argument.");
-      const nsHtml5PendingNotification* start = mPendingNotifications.Elements();
-      const nsHtml5PendingNotification* end = start + mPendingNotifications.Length();
-      for (;;) {
-        nsIContent* parent = aNode->GetParent();
-        if (!parent) {
-          return true;
-        }
-        for (nsHtml5PendingNotification* iter = (nsHtml5PendingNotification*)start; iter < end; ++iter) {
-          if (iter->Contains(parent)) {
-            return iter->HaveNotifiedIndex(parent->IndexOf(aNode));
-          }
-        }
-        aNode = parent;
-      }
-    }
-
     void StartLayout();
     
     void SetDocumentMode(nsHtml5DocumentMode m);
@@ -358,12 +275,6 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
     
     void Reset();
     
-    inline void HoldElement(nsIContent* aContent) {
-      mOwnedElements.AppendElement(aContent);
-    }
-
-    void DropHeldElements();
-
     /**
      * Flush the operations from the tree operations from the argument
      * queue unconditionally. (This is for the main thread case.)
