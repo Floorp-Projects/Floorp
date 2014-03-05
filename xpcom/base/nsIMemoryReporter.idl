@@ -178,7 +178,7 @@ interface nsIFinishReportingCallback : nsISupports
   void callback(in nsISupports data);
 };
 
-[scriptable, builtinclass, uuid(12e08b1b-6590-4f78-996b-d9062c17e856)]
+[scriptable, builtinclass, uuid(b6e5ec8a-71d9-48db-8ae9-68b4c5bbf2c3)]
 interface nsIMemoryReporterManager : nsISupports
 {
   /*
@@ -243,11 +243,36 @@ interface nsIMemoryReporterManager : nsISupports
                   in nsISupports finishReportingData);
 
   /*
+   * As above, but: If |minimizeMemoryUsage| is true, then each process will
+   * minimize its memory usage (see the |minimizeMemoryUsage| method) before
+   * gathering its report.  If DMD is enabled and |DMDDumpIdent| is non-empty
+   * then write a DMD report to a file in the usual temporary directory (see
+   * |dumpMemoryInfoToTempDir| in |nsIMemoryInfoDumper|.)
+   */
+  [noscript] void
+    getReportsExtended(in nsIMemoryReporterCallback handleReport,
+                       in nsISupports handleReportData,
+                       in nsIFinishReportingCallback finishReporting,
+                       in nsISupports finishReportingData,
+                       in boolean minimizeMemoryUsage,
+                       in AString DMDDumpIdent);
+
+  /*
    * Get memory reports in the current process only.  |handleReport| is called
    * for each report.
    */
   void getReportsForThisProcess(in nsIMemoryReporterCallback handleReport,
                                 in nsISupports handleReportData);
+
+  /*
+   * As above, but if DMD is enabled and |DMDDumpIdent| is non-empty
+   * then write a DMD report to a file in the usual temporary directory (see
+   * |dumpMemoryInfoToTempDir| in |nsIMemoryInfoDumper|.)
+   */
+  [noscript] void
+    getReportsForThisProcessExtended(in nsIMemoryReporterCallback handleReport,
+                                     in nsISupports handleReportData,
+                                     in AString DMDDumpIdent);
 
   /*
    * The memory reporter manager, for the most part, treats reporters

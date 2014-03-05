@@ -38,6 +38,9 @@ public:
    * instead.
    */
   static nsresult OpenTempFile(const nsACString &aFilename, nsIFile* *aFile);
+#ifdef MOZ_DMD
+  static nsresult DumpDMD(const nsAString &aIdentifier);
+#endif
 };
 
 #define NS_MEMORY_INFO_DUMPER_CID \
