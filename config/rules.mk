@@ -99,10 +99,6 @@ ifdef ENABLE_TESTS
 # locally against non-current test code.
 DIRS += $(TEST_DIRS)
 
-ifndef INCLUDED_TESTS_MOCHITEST_MK #{
-  include $(topsrcdir)/config/makefiles/mochitest.mk
-endif #}
-
 ifdef CPP_UNIT_TESTS
 ifdef COMPILE_ENVIRONMENT
 
@@ -1635,12 +1631,6 @@ FREEZE_VARIABLES = \
   TIERS \
   EXTRA_COMPONENTS \
   EXTRA_PP_COMPONENTS \
-  MOCHITEST_FILES \
-  MOCHITEST_CHROME_FILES \
-  MOCHITEST_BROWSER_FILES \
-  MOCHITEST_A11Y_FILES \
-  MOCHITEST_METRO_FILES \
-  MOCHITEST_ROBOCOP_FILES \
   $(NULL)
 
 $(foreach var,$(FREEZE_VARIABLES),$(eval $(var)_FROZEN := '$($(var))'))
