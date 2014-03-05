@@ -208,7 +208,33 @@ MediaSource::EndOfStream(const Optional<MediaSourceEndOfStreamError>& aError, Er
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
-  EndOfStreamInternal(aError, aRv);
+
+  SetReadyState(MediaSourceReadyState::Ended);
+  mSourceBuffers->Ended();
+  if (!aError.WasPassed()) {
+    // TODO:
+    // Run duration change algorithm.
+    // DurationChange(highestDurationOfSourceBuffers, aRv);
+    // if (aRv.Failed()) {
+    //   return;
+    // }
+    // Notify media element that all data is now available.
+    return;
+  }
+  switch (aError.Value()) {
+  case MediaSourceEndOfStreamError::Network:
+    // TODO: If media element has a readyState of:
+    //   HAVE_NOTHING -> run resource fetch algorithm
+    // > HAVE_NOTHING -> run "interrupted" steps of resource fetch
+    break;
+  case MediaSourceEndOfStreamError::Decode:
+    // TODO: If media element has a readyState of:
+    //   HAVE_NOTHING -> run "unsupported" steps of resource fetch
+    // > HAVE_NOTHING -> run "corrupted" steps of resource fetch
+    break;
+  default:
+    aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
+  }
 }
 
 /* static */ bool
@@ -322,37 +348,6 @@ MediaSource::DurationChange(double aNewDuration, ErrorResult& aRv)
   }
   // TODO: If partial audio frames/text cues exist, clamp duration based on mSourceBuffers.
   // TODO: Update media element's duration and run element's duration change algorithm.
-}
-
-void
-MediaSource::EndOfStreamInternal(const Optional<MediaSourceEndOfStreamError>& aError, ErrorResult& aRv)
-{
-  SetReadyState(MediaSourceReadyState::Ended);
-  mSourceBuffers->Ended();
-  if (!aError.WasPassed()) {
-    // TODO:
-    // Run duration change algorithm.
-    // DurationChange(highestDurationOfSourceBuffers, aRv);
-    // if (aRv.Failed()) {
-    //   return;
-    // }
-    // Notify media element that all data is now available.
-    return;
-  }
-  switch (aError.Value()) {
-  case MediaSourceEndOfStreamError::Network:
-    // TODO: If media element has a readyState of:
-    //   HAVE_NOTHING -> run resource fetch algorithm
-    // > HAVE_NOTHING -> run "interrupted" steps of resource fetch
-    break;
-  case MediaSourceEndOfStreamError::Decode:
-    // TODO: If media element has a readyState of:
-    //   HAVE_NOTHING -> run "unsupported" steps of resource fetch
-    // > HAVE_NOTHING -> run "corrupted" steps of resource fetch
-    break;
-  default:
-    aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
-  }
 }
 
 nsPIDOMWindow*
