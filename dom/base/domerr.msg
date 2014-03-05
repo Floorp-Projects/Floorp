@@ -69,6 +69,14 @@ DOM4_MSG_DEF(QuotaExceededError, "The current transaction exceeded its quota lim
 
 DOM_MSG_DEF(NS_ERROR_DOM_INDEXEDDB_RECOVERABLE_ERR, "The operation failed because the database was prevented from taking an action. The operation might be able to succeed if the application performs some recovery steps and retries the entire transaction. For example, there was not enough remaining storage space, or the storage quota was reached and the user declined to give more space to the database.")
 
+/* FileSystem DOM errors. */
+DOM4_MSG_DEF(InvalidAccessError, "Invalid file system path.", NS_ERROR_DOM_FILESYSTEM_INVALID_PATH_ERR)
+DOM4_MSG_DEF(InvalidModificationError, "Failed to modify the file.", NS_ERROR_DOM_FILESYSTEM_INVALID_MODIFICATION_ERR)
+DOM4_MSG_DEF(NoModificationAllowedError, "Modifications are not allowed for this file", NS_ERROR_DOM_FILESYSTEM_NO_MODIFICATION_ALLOWED_ERR)
+DOM4_MSG_DEF(AbortError, "File already exists.", NS_ERROR_DOM_FILESYSTEM_PATH_EXISTS_ERR)
+DOM4_MSG_DEF(TypeMismatchError, "The type of the file is incompatible with the expected type.", NS_ERROR_DOM_FILESYSTEM_TYPE_MISMATCH_ERR)
+DOM4_MSG_DEF(UnknownError, "The operation failed for reasons unrelated to the file system itself and not covered by any other error code.", NS_ERROR_DOM_FILESYSTEM_UNKNOWN_ERR)
+
 /* DOM error codes defined by us */
 
 /* XXX string should be specified by norris */

@@ -1,4 +1,8 @@
 #!/bin/bash
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 #
 # This tool generates full update packages for the update system.
 # Author: Darin Fisher
@@ -40,9 +44,9 @@ if [ $(echo "$targetdir" | grep -c '\/$') = 1 ]; then
   targetdir=$(echo "$targetdir" | sed -e 's:\/$::')
 fi
 workdir="$targetdir.work"
-updatemanifestv1="$workdir/update.manifest"
 updatemanifestv2="$workdir/updatev2.manifest"
-targetfiles="update.manifest updatev2.manifest"
+updatemanifestv3="$workdir/updatev3.manifest"
+targetfiles="updatev2.manifest updatev3.manifest"
 
 mkdir -p "$workdir"
 
@@ -64,16 +68,30 @@ list_files files
 
 popd
 
+# Add the type of update to the beginning of the update manifests.
+> $updatemanifestv2
+> $updatemanifestv3
 notice ""
-notice "Adding file add instructions to file 'update.manifest'"
-> $updatemanifestv1
+notice "Adding type instruction to update manifests"
+notice "       type complete"
+echo "type \"complete\"" >> $updatemanifestv2
+echo "type \"complete\"" >> $updatemanifestv3
 
+notice ""
+notice "Adding file add instructions to update manifests"
 num_files=${#files[*]}
 
 for ((i=0; $i<$num_files; i=$i+1)); do
   f="${files[$i]}"
 
-  make_add_instruction "$f" >> $updatemanifestv1
+  if check_for_add_if_not_update "$f"; then
+    make_add_if_not_instruction "$f" "$updatemanifestv3"
+    if check_for_add_to_manifestv2 "$f"; then
+      make_add_instruction "$f" "$updatemanifestv2" "" 1
+    fi
+  else
+    make_add_instruction "$f" "$updatemanifestv2" "$updatemanifestv3"
+  fi
 
   dir=$(dirname "$f")
   mkdir -p "$workdir/$dir"
@@ -83,25 +101,13 @@ for ((i=0; $i<$num_files; i=$i+1)); do
   targetfiles="$targetfiles \"$f\""
 done
 
-# Add the type of update to the beginning of and cat the contents of the version
-# 1 update manifest to the version 2 update manifest.
-> $updatemanifestv2
-notice ""
-notice "Adding type instruction to file 'updatev2.manifest'"
-notice "       type: complete"
-echo "type \"complete\"" >> $updatemanifestv2
-
-notice ""
-notice "Concatenating file 'update.manifest' to file 'updatev2.manifest'"
-cat $updatemanifestv1 >> $updatemanifestv2
-
 # Append remove instructions for any dead files.
 notice ""
 notice "Adding file and directory remove instructions from file 'removed-files'"
-append_remove_instructions "$targetdir" "$updatemanifestv1" "$updatemanifestv2"
+append_remove_instructions "$targetdir" "$updatemanifestv2" "$updatemanifestv3"
 
-$BZIP2 -z9 "$updatemanifestv1" && mv -f "$updatemanifestv1.bz2" "$updatemanifestv1"
 $BZIP2 -z9 "$updatemanifestv2" && mv -f "$updatemanifestv2.bz2" "$updatemanifestv2"
+$BZIP2 -z9 "$updatemanifestv3" && mv -f "$updatemanifestv3.bz2" "$updatemanifestv3"
 
 eval "$MAR -C \"$workdir\" -c output.mar $targetfiles"
 mv -f "$workdir/output.mar" "$archive"
@@ -111,3 +117,4 @@ rm -fr "$workdir"
 
 notice ""
 notice "Finished"
+notice ""

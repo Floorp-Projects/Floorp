@@ -68,7 +68,7 @@ namespace detail {
  * For more details, and examples of using these macros, see
  * https://developer.mozilla.org/en/Using_RAII_classes_in_Mozilla
  */
-class MOZ_EXPORT GuardObjectNotifier
+class GuardObjectNotifier
 {
   private:
     bool* statementDone;
@@ -85,7 +85,7 @@ class MOZ_EXPORT GuardObjectNotifier
     }
 };
 
-class MOZ_EXPORT GuardObjectNotificationReceiver
+class GuardObjectNotificationReceiver
 {
   private:
     bool statementDone;
