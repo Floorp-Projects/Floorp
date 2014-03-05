@@ -1,0 +1,204 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html> <!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=910412
+-->
+<head>
+  <title>Test Directory#get of the FileSystem API for device storage</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="devicestorage_common.js"></script>
+
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=910412">Mozilla Bug 910412</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+devicestorage_setup();
+SimpleTest.requestCompleteLog();
+
+// The root directory object.
+var gRoot = null;
+var gSub1 = null;
+var gSub2 = null;
+var gTestCount = 0;
+var gPath = "/";
+
+function testGetSuccess(dir, path) {
+  dir.get(path).then(getSuccess, cbError);
+}
+
+function testGetFailure(dir, path) {
+  dir.get(path).then(cbSuccess, getFailure);
+}
+
+function getSuccess(r) {
+  ok(r, "[" + gTestCount +"] Should get the file - " + gPath + ".");
+  switch (gTestCount) {
+    case 0:
+      gRoot = r;
+      // Get sub1/sub2/text.png from root.
+      gPath = "sub1/sub2/test.png";
+      testGetSuccess(gRoot, "sub1/sub2/test.png");
+      break;
+    case 1:
+      // Get sub1 from root.
+      gPath = "sub1";
+      testGetSuccess(gRoot, "sub1");
+      break;
+    case 2:
+      // Get sub1/sub2 from root.
+      gSub1 = r;
+      gPath = "sub1/sub2";
+      testGetSuccess(gRoot, "sub1/sub2");
+      break;
+    case 3:
+      // Get sub1/sub2 from sub2.
+      gSub2 = r;
+      gPath = "sub1/sub2";
+      testGetSuccess(gSub1, "sub2");
+      break;
+    case 4:
+      // Test path with leading and trailing white spaces.
+      gPath = "sub1/sub2";
+      testGetSuccess(gSub1, "\t sub2 ");
+      break;
+    case 5:
+      // Get sub1 from sub1/sub2 with "..".
+      gPath = "sub1/sub2/..";
+      testGetFailure(gSub2, "..");
+      break;
+    default:
+      ok(false, "Should not arrive at getSuccess!");
+      devicestorage_cleanup();
+      break;
+  }
+  gTestCount++;
+}
+
+function getFailure(e) {
+  ok(true, "[" + gTestCount +"] Should not get the file - " + gPath + ". Error: " + e.name);
+  switch (gTestCount) {
+    case 6:
+      // Test special path "..".
+      gPath = "sub1/sub2/../sub2";
+      testGetFailure(gSub2, "../sub2");
+      break;
+    case 7:
+      gPath = "sub1/sub2/../sub2";
+      testGetFailure(gRoot, "sub1/sub2/../sub2");
+      break;
+    case 8:
+      // Test special path ".".
+      gPath = "sub1/./sub2";
+      testGetFailure(gRoot, "sub1/./sub2");
+      break;
+    case 9:
+      gPath = "./sub1/sub2";
+      testGetFailure(gRoot, "./sub1/sub2");
+      break;
+    case 10:
+      gPath = "././sub1/sub2";
+      testGetFailure(gRoot, "././sub1/sub2");
+      break;
+    case 11:
+      gPath = "sub1/sub2/.";
+      testGetFailure(gRoot, "sub1/sub2/.");
+      break;
+    case 12:
+      gPath = "sub1/.";
+      testGetFailure(gSub1, "./");
+      break;
+    case 13:
+      // Test path starting with "/".
+      gPath = "sub1/";
+      testGetFailure(gSub1, "/");
+      break;
+    case 14:
+      // Test path ending with "/".
+      gPath = "sub1/";
+      testGetFailure(gSub1, "sub2/");
+      break;
+    case 15:
+      // Test empty path.
+      gPath = "sub2";
+      testGetFailure(gSub2, "");
+      break;
+    case 16:
+      // Test special path "//".
+      gPath = "sub1//sub2";
+      testGetFailure(gRoot, "sub1//sub2");
+      break;
+    case 17:
+      devicestorage_cleanup();
+      break;
+    default:
+      ok(false, "Should not arrive here!");
+      devicestorage_cleanup();
+      break;
+  }
+  gTestCount++;
+}
+
+function cbError(e) {
+  ok(false, "Should not arrive at cbError! Error: " + e.name);
+  devicestorage_cleanup();
+}
+
+function cbSuccess(e) {
+  ok(false, "Should not arrive at cbSuccess!");
+  devicestorage_cleanup();
+}
+
+ok(navigator.getDeviceStorage, "Should have getDeviceStorage.");
+
+var gStorage = navigator.getDeviceStorage("pictures");
+ok(gStorage, "Should have gotten a storage.");
+
+function createTestFile(path, callback) {
+  function addNamed() {
+    var req = gStorage.addNamed(createRandomBlob("image/png"), path);
+
+    req.onsuccess = function() {
+      ok(true, path + " was created.");
+      callback();
+    };
+
+    req.onerror = function(e) {
+      ok(false, "Failed to create " + path + ": " + e.target.error.name);
+      devicestorage_cleanup();
+    };
+  }
+
+  // Bug 980136. Check if the file exists before we create.
+  var req = gStorage.get(path);
+
+  req.onsuccess = function() {
+    ok(true, path + " exists. Do not need to create.");
+    callback();
+  };
+
+  req.onerror = function(e) {
+    ok(true, path + " does not exists: " + e.target.error.name);
+    addNamed();
+  };
+}
+
+createTestFile("sub1/sub2/test.png", function() {
+  var promise = gStorage.getRoot();
+  ok(promise, "Should have a non-null promise for getRoot.");
+  promise.then(getSuccess, cbError);
+});
+
+</script>
+</pre>
+</body>
+</html>
+
