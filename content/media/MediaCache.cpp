@@ -386,6 +386,28 @@ MediaCacheStream::MediaCacheStream(ChannelMediaResource* aClient)
 {
 }
 
+size_t MediaCacheStream::SizeOfExcludingThis(
+                                MallocSizeOf aMallocSizeOf) const
+{
+  // Looks like these are not owned:
+  // - mClient
+  // - mPrincipal
+  size_t size = mBlocks.SizeOfExcludingThis(aMallocSizeOf);
+  size += mReadaheadBlocks.SizeOfExcludingThis(aMallocSizeOf);
+  size += mMetadataBlocks.SizeOfExcludingThis(aMallocSizeOf);
+  size += mPlayedBlocks.SizeOfExcludingThis(aMallocSizeOf);
+  size += mPartialBlockBuffer.SizeOfExcludingThis(aMallocSizeOf);
+
+  return size;
+}
+
+size_t MediaCacheStream::BlockList::SizeOfExcludingThis(
+                                MallocSizeOf aMallocSizeOf) const
+{
+  return mEntries.SizeOfExcludingThis(/* sizeOfEntryExcludingThis = */ nullptr,
+                                      aMallocSizeOf);
+}
+
 void MediaCacheStream::BlockList::AddFirstBlock(int32_t aBlock)
 {
   NS_ASSERTION(!mEntries.GetEntry(aBlock), "Block already in list");
