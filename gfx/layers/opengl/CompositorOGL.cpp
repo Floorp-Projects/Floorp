@@ -626,8 +626,11 @@ CompositorOGL::clearFBRect(const gfx::Rect* aRect)
     return;
   }
 
+  // Map aRect to OGL coordinates, origin:bottom-left
+  GLint y = mHeight - (aRect->y + aRect->height);
+
   ScopedGLState scopedScissorTestState(mGLContext, LOCAL_GL_SCISSOR_TEST, true);
-  ScopedScissorRect autoScissorRect(mGLContext, aRect->x, aRect->y, aRect->width, aRect->height);
+  ScopedScissorRect autoScissorRect(mGLContext, aRect->x, y, aRect->width, aRect->height);
   mGLContext->fClearColor(0.0, 0.0, 0.0, 0.0);
   mGLContext->fClear(LOCAL_GL_COLOR_BUFFER_BIT | LOCAL_GL_DEPTH_BUFFER_BIT);
 }
