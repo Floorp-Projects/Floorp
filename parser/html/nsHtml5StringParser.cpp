@@ -14,8 +14,8 @@
 NS_IMPL_ISUPPORTS0(nsHtml5StringParser)
 
 nsHtml5StringParser::nsHtml5StringParser()
-  : mBuilder(new nsHtml5OplessBuilder())
-  , mTreeBuilder(new nsHtml5TreeBuilder(mBuilder))
+  : mExecutor(new nsHtml5TreeOpExecutor(true))
+  , mTreeBuilder(new nsHtml5TreeBuilder(mExecutor, nullptr))
   , mTokenizer(new nsHtml5Tokenizer(mTreeBuilder, false))
 {
   MOZ_COUNT_CTOR(nsHtml5StringParser);
@@ -42,9 +42,10 @@ nsHtml5StringParser::ParseFragment(const nsAString& aSourceBuffer,
   nsIURI* uri = doc->GetDocumentURI();
   NS_ENSURE_TRUE(uri, NS_ERROR_NOT_AVAILABLE);
 
+  nsIContent* target = aTargetNode;
   mTreeBuilder->setFragmentContext(aContextLocalName,
                                    aContextNamespace,
-                                   aTargetNode,
+                                   &target,
                                    aQuirks);
 
 #ifdef DEBUG
@@ -60,7 +61,8 @@ nsHtml5StringParser::ParseFragment(const nsAString& aSourceBuffer,
 
   mTreeBuilder->SetPreventScriptExecution(aPreventScriptExecution);
 
-  return Tokenize(aSourceBuffer, doc, true);
+  Tokenize(aSourceBuffer, doc, true);
+  return NS_OK;
 }
 
 nsresult
@@ -80,28 +82,28 @@ nsHtml5StringParser::ParseDocument(const nsAString& aSourceBuffer,
 
   mTreeBuilder->SetPreventScriptExecution(true);
 
-  return Tokenize(aSourceBuffer, aTargetDoc, aScriptingEnabledForNoscriptParsing);
+  Tokenize(aSourceBuffer, aTargetDoc, aScriptingEnabledForNoscriptParsing);
+  return NS_OK;
 }
 
-nsresult
+void
 nsHtml5StringParser::Tokenize(const nsAString& aSourceBuffer,
                               nsIDocument* aDocument,
                               bool aScriptingEnabledForNoscriptParsing) {
 
   nsIURI* uri = aDocument->GetDocumentURI();
 
-  mBuilder->Init(aDocument, uri, nullptr, nullptr);
+  mExecutor->Init(aDocument, uri, nullptr, nullptr);
 
-  mBuilder->SetParser(this);
-  mBuilder->SetNodeInfoManager(aDocument->NodeInfoManager());
+  mExecutor->SetParser(this);
+  mExecutor->SetNodeInfoManager(aDocument->NodeInfoManager());
 
-  // Mark the parser as *not* broken by passing NS_OK
-  nsresult rv = mBuilder->MarkAsBroken(NS_OK);
-
+  NS_PRECONDITION(!mExecutor->HasStarted(),
+                  "Tried to start parse without initializing the parser.");
   mTreeBuilder->setScriptingEnabled(aScriptingEnabledForNoscriptParsing);
   mTreeBuilder->setIsSrcdocDocument(aDocument->IsSrcdocDocument()); 
-  mBuilder->Start();
   mTokenizer->start();
+  mExecutor->Start(); // Don't call WillBuildModel in fragment case
   if (!aSourceBuffer.IsEmpty()) {
     bool lastWasCR = false;
     nsHtml5DependentUTF16Buffer buffer(aSourceBuffer);
@@ -110,15 +112,25 @@ nsHtml5StringParser::Tokenize(const nsAString& aSourceBuffer,
       lastWasCR = false;
       if (buffer.hasMore()) {
         lastWasCR = mTokenizer->tokenizeBuffer(&buffer);
-        if (NS_FAILED(rv = mBuilder->IsBroken())) {
-          break;
+        if (mTreeBuilder->HasScript()) {
+          // If we come here, we are in createContextualFragment() or in the
+          // upcoming document.parse(). It's unclear if it's really necessary
+          // to flush here, but let's do so for consistency with other flushes
+          // to avoid different code paths on the executor side.
+          mTreeBuilder->Flush(); // Move ops to the executor
+          mExecutor->FlushDocumentWrite(); // run the ops
         }
       }
     }
   }
   mTokenizer->eof();
+  mTreeBuilder->StreamEnded();
+  mTreeBuilder->Flush();
+  mExecutor->FlushDocumentWrite();
   mTokenizer->end();
-  mBuilder->Finish();
+  mExecutor->DropParserAndPerfHint();
+  mExecutor->DropHeldElements();
+  mTreeBuilder->DropHandles();
   mAtomTable.Clear();
-  return rv;
+  mExecutor->Reset();
 }

@@ -8,7 +8,7 @@
 #include "nsHtml5AtomTable.h"
 #include "nsParserBase.h"
 
-class nsHtml5OplessBuilder;
+class nsHtml5TreeOpExecutor;
 class nsHtml5TreeBuilder;
 class nsHtml5Tokenizer;
 class nsIContent;
@@ -58,14 +58,14 @@ class nsHtml5StringParser : public nsParserBase
 
   private:
 
-    nsresult Tokenize(const nsAString& aSourceBuffer,
-                      nsIDocument* aDocument,
-                      bool aScriptingEnabledForNoscriptParsing);
+    void Tokenize(const nsAString& aSourceBuffer,
+                  nsIDocument* aDocument,
+                  bool aScriptingEnabledForNoscriptParsing);
 
     /**
      * The tree operation executor
      */
-    nsRefPtr<nsHtml5OplessBuilder>      mBuilder;
+    nsRefPtr<nsHtml5TreeOpExecutor>     mExecutor;
 
     /**
      * The HTML5 tree builder
