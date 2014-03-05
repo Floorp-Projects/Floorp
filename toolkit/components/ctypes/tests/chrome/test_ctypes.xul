@@ -86,7 +86,7 @@
         SimpleTest.finish();
       }
 
-      worker.postMessage(dir.path);
+      worker.postMessage({dir: dir.path, os: Components.classes["@mozilla.org/xre/app-info;1"].getService(Components.interfaces.nsIXULRuntime).OS});
     }
 
   ]]>
