@@ -1144,7 +1144,7 @@ case "$OS_TEST" in
     CPU_ARCH=x86
     ;;
 
-powerpc64 | ppc64)
+powerpc64 | ppc64 | powerpc64le | ppc64le)
     CPU_ARCH=ppc64
     ;;
 
