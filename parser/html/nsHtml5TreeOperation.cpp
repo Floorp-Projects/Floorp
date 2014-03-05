@@ -120,7 +120,7 @@ nsresult
 nsHtml5TreeOperation::AppendTextToTextNode(const char16_t* aBuffer,
                                            uint32_t aLength,
                                            nsIContent* aTextNode,
-                                           nsHtml5TreeOpExecutor* aBuilder)
+                                           nsHtml5DocumentBuilder* aBuilder)
 {
   NS_PRECONDITION(aTextNode, "Got null text node.");
 
@@ -152,7 +152,7 @@ nsresult
 nsHtml5TreeOperation::AppendText(const char16_t* aBuffer,
                                  uint32_t aLength,
                                  nsIContent* aParent,
-                                 nsHtml5TreeOpExecutor* aBuilder)
+                                 nsHtml5DocumentBuilder* aBuilder)
 {
   nsresult rv = NS_OK;
   nsIContent* lastChild = aParent->GetLastChild();
@@ -176,7 +176,7 @@ nsHtml5TreeOperation::AppendText(const char16_t* aBuffer,
 nsresult
 nsHtml5TreeOperation::Append(nsIContent* aNode,
                              nsIContent* aParent,
-                             nsHtml5TreeOpExecutor* aBuilder)
+                             nsHtml5DocumentBuilder* aBuilder)
 {
   nsresult rv = NS_OK;
   nsIDocument* executorDoc = aBuilder->GetDocument();
@@ -207,7 +207,7 @@ nsHtml5TreeOperation::Append(nsIContent* aNode,
 
 nsresult
 nsHtml5TreeOperation::AppendToDocument(nsIContent* aNode,
-                                       nsHtml5TreeOpExecutor* aBuilder)
+                                       nsHtml5DocumentBuilder* aBuilder)
 {
   nsresult rv = NS_OK;
   aBuilder->FlushPendingAppendNotifications();
@@ -245,7 +245,7 @@ IsElementOrTemplateContent(nsINode* aNode) {
 }
 
 void
-nsHtml5TreeOperation::Detach(nsIContent* aNode, nsHtml5TreeOpExecutor* aBuilder)
+nsHtml5TreeOperation::Detach(nsIContent* aNode, nsHtml5DocumentBuilder* aBuilder)
 {
   aBuilder->FlushPendingAppendNotifications();
   nsCOMPtr<nsINode> parent = aNode->GetParentNode();
@@ -261,7 +261,7 @@ nsHtml5TreeOperation::Detach(nsIContent* aNode, nsHtml5TreeOpExecutor* aBuilder)
 nsresult
 nsHtml5TreeOperation::AppendChildrenToNewParent(nsIContent* aNode,
                                                 nsIContent* aParent,
-                                                nsHtml5TreeOpExecutor* aBuilder)
+                                                nsHtml5DocumentBuilder* aBuilder)
 {
   aBuilder->FlushPendingAppendNotifications();
 
@@ -288,7 +288,7 @@ nsresult
 nsHtml5TreeOperation::FosterParent(nsIContent* aNode,
                                    nsIContent* aParent,
                                    nsIContent* aTable,
-                                   nsHtml5TreeOpExecutor* aBuilder)
+                                   nsHtml5DocumentBuilder* aBuilder)
 {
   nsIContent* foster = aTable->GetParent();
 
@@ -311,7 +311,7 @@ nsHtml5TreeOperation::FosterParent(nsIContent* aNode,
 nsresult
 nsHtml5TreeOperation::AddAttributes(nsIContent* aNode,
                                     nsHtml5HtmlAttributes* aAttributes,
-                                    nsHtml5TreeOpExecutor* aBuilder)
+                                    nsHtml5DocumentBuilder* aBuilder)
 {
   dom::Element* node = aNode->AsElement();
   nsHtml5OtherDocUpdate update(node->OwnerDoc(),
@@ -345,7 +345,7 @@ nsHtml5TreeOperation::CreateElement(int32_t aNs,
                                     nsIAtom* aName,
                                     nsHtml5HtmlAttributes* aAttributes,
                                     bool aFromNetwork,
-                                    nsHtml5TreeOpExecutor* aBuilder)
+                                    nsHtml5DocumentBuilder* aBuilder)
 {
   bool isKeygen = (aName == nsHtml5Atoms::keygen && aNs == kNameSpaceID_XHTML);
   if (MOZ_UNLIKELY(isKeygen)) {
@@ -490,7 +490,7 @@ nsHtml5TreeOperation::SetFormElement(nsIContent* aNode, nsIContent* aParent)
 }
 
 nsresult
-nsHtml5TreeOperation::AppendIsindexPrompt(nsIContent* parent, nsHtml5TreeOpExecutor* aBuilder)
+nsHtml5TreeOperation::AppendIsindexPrompt(nsIContent* parent, nsHtml5DocumentBuilder* aBuilder)
 {
   nsXPIDLString prompt;
   nsresult rv =
@@ -512,7 +512,7 @@ nsHtml5TreeOperation::FosterParentText(nsIContent* aStackParent,
                                        char16_t* aBuffer,
                                        uint32_t aLength,
                                        nsIContent* aTable,
-                                       nsHtml5TreeOpExecutor* aBuilder)
+                                       nsHtml5DocumentBuilder* aBuilder)
 {
   nsresult rv = NS_OK;
   nsIContent* foster = aTable->GetParent();
@@ -552,7 +552,7 @@ nsresult
 nsHtml5TreeOperation::AppendComment(nsIContent* aParent,
                                     char16_t* aBuffer,
                                     int32_t aLength,
-                                    nsHtml5TreeOpExecutor* aBuilder)
+                                    nsHtml5DocumentBuilder* aBuilder)
 {
   nsRefPtr<dom::Comment> comment =
     new dom::Comment(aBuilder->GetNodeInfoManager());
@@ -566,7 +566,7 @@ nsHtml5TreeOperation::AppendComment(nsIContent* aParent,
 nsresult
 nsHtml5TreeOperation::AppendCommentToDocument(char16_t* aBuffer,
                                               int32_t aLength,
-                                              nsHtml5TreeOpExecutor* aBuilder)
+                                              nsHtml5DocumentBuilder* aBuilder)
 {
   nsRefPtr<dom::Comment> comment =
     new dom::Comment(aBuilder->GetNodeInfoManager());
@@ -581,7 +581,7 @@ nsresult
 nsHtml5TreeOperation::AppendDoctypeToDocument(nsIAtom* aName,
                                               const nsAString& aPublicId,
                                               const nsAString& aSystemId,
-                                              nsHtml5TreeOpExecutor* aBuilder)
+                                              nsHtml5DocumentBuilder* aBuilder)
 {
   // Adapted from nsXMLContentSink
   // Create a new doctype node
@@ -618,7 +618,7 @@ nsHtml5TreeOperation::PreventScriptExecution(nsIContent* aNode)
 
 void
 nsHtml5TreeOperation::DoneAddingChildren(nsIContent* aNode,
-                                         nsHtml5TreeOpExecutor* aBuilder)
+                                         nsHtml5DocumentBuilder* aBuilder)
 {
   aNode->DoneAddingChildren(aBuilder->HaveNotified(aNode));
 }
