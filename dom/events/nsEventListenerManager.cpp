@@ -13,7 +13,7 @@
 #undef CreateEvent
 
 #include "nsISupports.h"
-#include "nsDOMEvent.h"
+#include "mozilla/dom/Event.h"
 #include "nsEventListenerManager.h"
 #include "nsIDOMEventListener.h"
 #include "nsGkAtoms.h"
@@ -137,7 +137,7 @@ nsEventListenerManager::RemoveAllListeners()
 void
 nsEventListenerManager::Shutdown()
 {
-  nsDOMEvent::Shutdown();
+  Event::Shutdown();
 }
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsEventListenerManager, AddRef)
@@ -991,7 +991,7 @@ nsEventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
   nsAutoTObserverArray<nsListenerStruct, 2>::EndLimitedIterator iter(mListeners);
   Maybe<nsAutoPopupStatePusher> popupStatePusher;
   if (mIsMainThreadELM) {
-    popupStatePusher.construct(nsDOMEvent::GetEventPopupControlState(aEvent));
+    popupStatePusher.construct(Event::GetEventPopupControlState(aEvent));
   }
 
   bool hasListener = false;

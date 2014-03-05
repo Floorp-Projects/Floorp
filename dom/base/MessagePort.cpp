@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MessagePort.h"
+#include "mozilla/dom/Event.h"
 #include "mozilla/dom/MessageChannel.h"
 #include "mozilla/dom/MessagePortBinding.h"
 #include "mozilla/dom/StructuredCloneTags.h"
@@ -11,7 +12,6 @@
 #include "nsContentUtils.h"
 #include "nsEventDispatcher.h"
 #include "nsPresContext.h"
-#include "nsDOMEvent.h"
 
 #include "nsIDocument.h"
 #include "nsIDOMFile.h"
@@ -259,7 +259,7 @@ PostMessageRunnable::Run()
   }
 
   ErrorResult error;
-  nsRefPtr<nsDOMEvent> event =
+  nsRefPtr<Event> event =
     doc->CreateEvent(NS_LITERAL_STRING("MessageEvent"), error);
   if (error.Failed()) {
     return NS_OK;

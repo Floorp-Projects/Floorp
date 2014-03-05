@@ -65,7 +65,7 @@
 #include "nsIDOMDragEvent.h"
 #include "nsIConstraintValidation.h"
 #include "mozilla/Attributes.h"
-#include "nsDOMEvent.h"
+#include "mozilla/dom/Event.h" // for nsIDOMEvent::InternalDOMEvent()
 
 using namespace mozilla;
 using namespace mozilla::dom;

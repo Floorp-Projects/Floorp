@@ -499,20 +499,20 @@ public:
   // If mInSystemGroup is true, the event is being dispatched in system group.
   bool    mInSystemGroup: 1;
   // If mCancelable is true, the event can be consumed.  I.e., calling
-  // nsDOMEvent::PreventDefault() can prevent the default action.
+  // dom::Event::PreventDefault() can prevent the default action.
   bool    mCancelable : 1;
   // If mBubbles is true, the event can bubble.  Otherwise, cannot be handled
   // in bubbling phase.
   bool    mBubbles : 1;
-  // If mPropagationStopped is true, nsDOMEvent::StopPropagation() or
-  // nsDOMEvent::StopImmediatePropagation() has been called.
+  // If mPropagationStopped is true, dom::Event::StopPropagation() or
+  // dom::Event::StopImmediatePropagation() has been called.
   bool    mPropagationStopped : 1;
   // If mImmediatePropagationStopped is true,
-  // nsDOMEvent::StopImmediatePropagation() has been called.
+  // dom::Event::StopImmediatePropagation() has been called.
   // Note that mPropagationStopped must be true when this is true.
   bool    mImmediatePropagationStopped : 1;
   // If mDefaultPrevented is true, the event has been consumed.
-  // E.g., nsDOMEvent::PreventDefault() has been called or
+  // E.g., dom::Event::PreventDefault() has been called or
   // the default action has been performed.
   bool    mDefaultPrevented : 1;
   // If mDefaultPreventedByContent is true, the event has been

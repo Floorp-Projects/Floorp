@@ -193,6 +193,7 @@
 #include "nsIAppsService.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/DocumentFragment.h"
+#include "mozilla/dom/Event.h"
 #include "mozilla/dom/HTMLBodyElement.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/NodeFilterBinding.h"
@@ -203,7 +204,6 @@
 #include "nsDOMCaretPosition.h"
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsViewportInfo.h"
-#include "nsDOMEvent.h"
 #include "nsIContentPermissionPrompt.h"
 #include "mozilla/StaticPtr.h"
 #include "nsITextControlElement.h"
@@ -7649,7 +7649,7 @@ nsDocument::CreateEvent(const nsAString& aEventType, nsIDOMEvent** aReturn)
   return rv.ErrorCode();
 }
 
-already_AddRefed<nsDOMEvent>
+already_AddRefed<Event>
 nsIDocument::CreateEvent(const nsAString& aEventType, ErrorResult& rv) const
 {
   nsIPresShell *shell = GetShell();

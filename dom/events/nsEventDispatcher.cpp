@@ -610,7 +610,7 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
   aEvent->mFlags.mDispatchedAtLeastOnce = true;
 
   if (!externalDOMEvent && preVisitor.mDOMEvent) {
-    // An nsDOMEvent was created while dispatching the event.
+    // An dom::Event was created while dispatching the event.
     // Duplicate private data if someone holds a pointer to it.
     nsrefcnt rc = 0;
     NS_RELEASE2(preVisitor.mDOMEvent, rc);

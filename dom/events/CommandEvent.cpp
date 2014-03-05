@@ -13,8 +13,9 @@ namespace dom {
 CommandEvent::CommandEvent(EventTarget* aOwner,
                            nsPresContext* aPresContext,
                            WidgetCommandEvent* aEvent)
-  : nsDOMEvent(aOwner, aPresContext, aEvent ? aEvent :
-               new WidgetCommandEvent(false, nullptr, nullptr, nullptr))
+  : Event(aOwner, aPresContext,
+          aEvent ? aEvent :
+                   new WidgetCommandEvent(false, nullptr, nullptr, nullptr))
 {
   mEvent->time = PR_Now();
   if (aEvent) {
@@ -26,10 +27,10 @@ CommandEvent::CommandEvent(EventTarget* aOwner,
 
 NS_INTERFACE_MAP_BEGIN(CommandEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCommandEvent)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
+NS_INTERFACE_MAP_END_INHERITING(Event)
 
-NS_IMPL_ADDREF_INHERITED(CommandEvent, nsDOMEvent)
-NS_IMPL_RELEASE_INHERITED(CommandEvent, nsDOMEvent)
+NS_IMPL_ADDREF_INHERITED(CommandEvent, Event)
+NS_IMPL_RELEASE_INHERITED(CommandEvent, Event)
 
 NS_IMETHODIMP
 CommandEvent::GetCommand(nsAString& aCommand)
@@ -49,7 +50,7 @@ CommandEvent::InitCommandEvent(const nsAString& aTypeArg,
                                bool aCancelableArg,
                                const nsAString& aCommand)
 {
-  nsresult rv = nsDOMEvent::InitEvent(aTypeArg, aCanBubbleArg, aCancelableArg);
+  nsresult rv = Event::InitEvent(aTypeArg, aCanBubbleArg, aCancelableArg);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mEvent->AsCommandEvent()->command = do_GetAtom(aCommand);
