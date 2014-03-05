@@ -2000,9 +2000,15 @@ struct CycleCollectorStats
 
   void FinishCycleCollectionSlice()
   {
+    if (mBeginSliceTime.IsNull()) {
+      // We already called this method from EndCycleCollectionCallback for this slice.
+      return;
+    }
+
     uint32_t sliceTime = TimeUntilNow(mBeginSliceTime);
     mMaxSliceTime = std::max(mMaxSliceTime, sliceTime);
     mTotalSliceTime += sliceTime;
+    mBeginSliceTime = TimeStamp();
     MOZ_ASSERT(mExtraForgetSkippableCalls == 0, "Forget to reset extra forget skippable calls?");
   }
 
@@ -2197,7 +2203,9 @@ nsJSContext::EndCycleCollectionCallback(CycleCollectorResults &aResults)
 
   nsJSContext::KillICCTimer();
 
-  // Update timing information for the current slice before we log it.
+  // Update timing information for the current slice before we log it, if
+  // we previously called PrepareForCycleCollectionSlice(). During shutdown
+  // CCs, this won't happen.
   gCCStats.FinishCycleCollectionSlice();
 
   sCCollectedWaitingForGC += aResults.mFreedRefCounted + aResults.mFreedGCed;
