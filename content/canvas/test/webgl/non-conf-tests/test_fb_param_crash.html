@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<title>WebGL test: bug 958723</title>
+<script src="/MochiKit/MochiKit.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<script src="driver-info.js"></script>
+<script src="webgl-util.js"></script>
+<body>
+<canvas id="c"></canvas>
+<script>
+
+// Give ourselves a scope to return early from:
+(function() {
+  var gl = WebGLUtil.getWebGL('c');
+  if (!gl) {
+    todo(false, 'WebGL is unavailable.');
+    return;
+  }
+
+  // Catch actual WebGLUtil errors, not GL errors.
+  function errorFunc(str) {
+    ok(false, 'Error: ' + str);
+  }
+  WebGLUtil.setErrorFunc(errorFunc);
+
+  function checkGLError(func, info, reference) {
+    var error = gl.getError();
+    var prefix = info ? ('[' + info + '] ') : '';
+    var text = 'gl.getError should be 0x' + reference.toString(16) +
+               ', was 0x' + error.toString(16) + '.';
+    func(error == reference, prefix + text);
+  }
+
+  // Begin test:
+  if (!gl.getExtension('WEBGL_draw_buffers')) {
+    todo(false, 'Not having this extension is fine.');
+    return;
+  }
+  checkGLError(ok, 'before bad param query', 0);
+
+  var result = gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER,
+                                                    gl.COLOR_ATTACHMENT0,
+                                                    gl.FRAMEBUFFER_ATTACHMENT_OBJECT_NAME);
+
+  checkGLError(ok, 'after bad param query', gl.INVALID_OPERATION);
+})();
+
+</script>
+
