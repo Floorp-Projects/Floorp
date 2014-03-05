@@ -269,6 +269,9 @@ class TestRecursiveMakeBackend(BackendTester):
                 'CSRCS += bar.c',
                 'CSRCS += foo.c',
             ],
+            'DISABLE_STL_WRAPPING': [
+                'DISABLE_STL_WRAPPING := 1',
+            ],
             'EXTRA_COMPONENTS': [
                 'EXTRA_COMPONENTS += bar.js',
                 'EXTRA_COMPONENTS += foo.js',

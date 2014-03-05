@@ -14,6 +14,7 @@ if not CONFIG['LIBXUL_SDK']:
             '/xpcom/base',
             '/xpcom/build',
         ]
+        DISABLE_STL_WRAPPING = True
 
 for var in ('APP_NAME', 'APP_VERSION'):
     DEFINES[var] = CONFIG['MOZ_%s' % var]

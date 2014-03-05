@@ -20,3 +20,5 @@ LOCAL_INCLUDES += [
     '/xpcom/base',
     '/xpcom/build',
 ]
+
+DISABLE_STL_WRAPPING = True

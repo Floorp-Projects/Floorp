@@ -50,8 +50,6 @@ EXTRA_DSO_LDOPTS += \
 	$(call EXPAND_LIBNAME,version) \
 	$(NULL)
 
-STL_FLAGS=
-
 endif
 
 ifeq (Darwin_1,$(OS_TARGET)_$(MOZ_REPLACE_MALLOC))

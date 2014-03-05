@@ -178,6 +178,11 @@ VARIABLES = {
         delimiters.
         """, None),
 
+    'DISABLE_STL_WRAPPING': (bool, bool,
+        """Disable the wrappers for STL which allow it to work with C++ exceptions
+        disabled.
+        """, 'binaries'),
+
     'EXPORT_LIBRARY': (bool, bool,
         """Install the library to the static libraries folder.
         """, None),
