@@ -994,6 +994,7 @@ void GStreamerReader::VideoPreroll()
   /* The first video buffer has reached the video sink. Get width and height */
   LOG(PR_LOG_DEBUG, "Video preroll");
   GstPad* sinkpad = gst_element_get_static_pad(GST_ELEMENT(mVideoAppSink), "sink");
+  int PARNumerator, PARDenominator;
 #if GST_VERSION_MAJOR >= 1
   GstCaps* caps = gst_pad_get_current_caps(sinkpad);
   memset (&mVideoInfo, 0, sizeof (mVideoInfo));
@@ -1001,15 +1002,34 @@ void GStreamerReader::VideoPreroll()
   mFormat = mVideoInfo.finfo->format;
   mPicture.width = mVideoInfo.width;
   mPicture.height = mVideoInfo.height;
+  PARNumerator = GST_VIDEO_INFO_PAR_N(&mVideoInfo);
+  PARDenominator = GST_VIDEO_INFO_PAR_D(&mVideoInfo);
 #else
   GstCaps* caps = gst_pad_get_negotiated_caps(sinkpad);
   gst_video_format_parse_caps(caps, &mFormat, &mPicture.width, &mPicture.height);
+  if (!gst_video_parse_caps_pixel_aspect_ratio(caps, &PARNumerator, &PARDenominator)) {
+    PARNumerator = 1;
+    PARDenominator = 1;
+  }
 #endif
-  GstStructure* structure = gst_caps_get_structure(caps, 0);
-  gst_structure_get_fraction(structure, "framerate", &fpsNum, &fpsDen);
   NS_ASSERTION(mPicture.width && mPicture.height, "invalid video resolution");
-  mInfo.mVideo.mDisplay = ThebesIntSize(mPicture.Size());
-  mInfo.mVideo.mHasVideo = true;
+
+  // Calculate display size according to pixel aspect ratio.
+  nsIntRect pictureRect(0, 0, mPicture.width, mPicture.height);
+  nsIntSize frameSize = nsIntSize(mPicture.width, mPicture.height);
+  nsIntSize displaySize = nsIntSize(mPicture.width, mPicture.height);
+  ScaleDisplayByAspectRatio(displaySize, float(PARNumerator) / float(PARDenominator));
+
+  // If video frame size is overflow, stop playing.
+  if (IsValidVideoRegion(frameSize, pictureRect, displaySize)) {
+    GstStructure* structure = gst_caps_get_structure(caps, 0);
+    gst_structure_get_fraction(structure, "framerate", &fpsNum, &fpsDen);
+    mInfo.mVideo.mDisplay = ThebesIntSize(displaySize.ToIntSize());
+    mInfo.mVideo.mHasVideo = true;
+  } else {
+    LOG(PR_LOG_DEBUG, "invalid video region");
+    Eos();
+  }
   gst_caps_unref(caps);
   gst_object_unref(sinkpad);
 }
