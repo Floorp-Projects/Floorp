@@ -2806,7 +2806,7 @@ nsDownload::SetState(DownloadState aState)
         if (mimeInfo)
           mimeInfo->GetMIMEType(contentType);
 
-        mozilla::widget::android::GeckoAppShell::ScanMedia(path, NS_ConvertUTF8toUTF16(contentType));
+        GeckoAppShell::ScanMedia(path, NS_ConvertUTF8toUTF16(contentType));
 #endif
       }
 

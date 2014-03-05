@@ -19,12 +19,11 @@ nsShellService::SwitchTask()
 }
 
 NS_IMETHODIMP
-nsShellService::CreateShortcut(const nsAString& aTitle, const nsAString& aURI,
-                                const nsAString& aIconData, const nsAString& aIntent)
+nsShellService::CreateShortcut(const nsAString& aTitle, const nsAString& aURI, const nsAString& aIconData, const nsAString& aIntent)
 {
   if (!aTitle.Length() || !aURI.Length() || !aIconData.Length())
     return NS_ERROR_FAILURE;
 
-  mozilla::widget::android::GeckoAppShell::CreateShortcut(aTitle, aURI, aIconData, aIntent);
+  GeckoAppShell::CreateShortcut(aTitle, aURI, aIconData, aIntent);
   return NS_OK;
 }

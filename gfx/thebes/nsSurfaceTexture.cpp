@@ -194,7 +194,7 @@ nsSurfaceTexture::~nsSurfaceTexture()
   JNIEnv* env = GetJNIForThread();
 
   if (mSurfaceTexture) {
-    mozilla::widget::android::GeckoAppShell::UnregisterSurfaceTextureFrameListener(mSurfaceTexture);
+    GeckoAppShell::UnregisterSurfaceTextureFrameListener(mSurfaceTexture);
 
     env->DeleteGlobalRef(mSurfaceTexture);
     mSurfaceTexture = nullptr;
@@ -223,9 +223,9 @@ void
 nsSurfaceTexture::SetFrameAvailableCallback(nsIRunnable* aRunnable)
 {
   if (aRunnable)
-    mozilla::widget::android::GeckoAppShell::RegisterSurfaceTextureFrameListener(mSurfaceTexture, mID);
+    GeckoAppShell::RegisterSurfaceTextureFrameListener(mSurfaceTexture, mID);
   else
-    mozilla::widget::android::GeckoAppShell::UnregisterSurfaceTextureFrameListener(mSurfaceTexture);
+    GeckoAppShell::UnregisterSurfaceTextureFrameListener(mSurfaceTexture);
 
   mFrameAvailableCallback = aRunnable;
 }
