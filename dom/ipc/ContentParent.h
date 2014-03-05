@@ -346,6 +346,12 @@ private:
     AllocPDeviceStorageRequestParent(const DeviceStorageParams&) MOZ_OVERRIDE;
     virtual bool DeallocPDeviceStorageRequestParent(PDeviceStorageRequestParent*) MOZ_OVERRIDE;
 
+    virtual PFileSystemRequestParent*
+    AllocPFileSystemRequestParent(const FileSystemParams&) MOZ_OVERRIDE;
+
+    virtual bool
+    DeallocPFileSystemRequestParent(PFileSystemRequestParent*) MOZ_OVERRIDE;
+
     virtual PBlobParent* AllocPBlobParent(const BlobConstructorParams& aParams) MOZ_OVERRIDE;
     virtual bool DeallocPBlobParent(PBlobParent*) MOZ_OVERRIDE;
 
