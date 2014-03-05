@@ -99,10 +99,6 @@ public:
   void Key(nsACString& aKey) { aKey = mKey; }
   bool IsDoomed();
 
-  // Memory reporting
-  size_t SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
-
 private:
   friend class CacheFileIOManager;
   friend class CacheFileChunk;
@@ -115,7 +111,7 @@ private:
 
   void     Lock();
   void     Unlock();
-  void     AssertOwnsLock() const;
+  void     AssertOwnsLock();
   void     ReleaseOutsideLock(nsISupports *aObject);
 
   nsresult GetChunk(uint32_t aIndex, bool aWriter,
