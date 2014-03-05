@@ -116,6 +116,9 @@ nsSVGMarkerFrame::PaintMark(nsRenderingContext *aContext,
   AutoMarkerReferencer markerRef(this, aMarkedFrame);
 
   SVGMarkerElement *marker = static_cast<SVGMarkerElement*>(mContent);
+  if (!marker->HasValidDimensions()) {
+    return NS_OK;
+  }
 
   const nsSVGViewBoxRect viewBox = marker->GetViewBoxRect();
 
@@ -171,6 +174,9 @@ nsSVGMarkerFrame::GetMarkBBoxContribution(const Matrix &aToBBoxUserspace,
   AutoMarkerReferencer markerRef(this, aMarkedFrame);
 
   SVGMarkerElement *content = static_cast<SVGMarkerElement*>(mContent);
+  if (!content->HasValidDimensions()) {
+    return bbox;
+  }
 
   const nsSVGViewBoxRect viewBox = content->GetViewBoxRect();
 
