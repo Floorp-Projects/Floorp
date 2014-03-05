@@ -52,6 +52,9 @@ autoscroller {
 notificationbox {
   -moz-binding: url('chrome://browser/content/bindings/notification.xml#notificationbox');
 }
+notification {
+  -moz-binding: url('chrome://browser/content/bindings/notification.xml#notification');
+}
 
 circularprogressindicator {
   -moz-binding: url('chrome://browser/content/bindings/circularprogress.xml#circular-progress-indicator');
