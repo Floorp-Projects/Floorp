@@ -44,8 +44,10 @@ package: $(properties_deps) FORCE
 	# Make empty directories to fit an Android project structure
 	$(MKDIR) -p bin gen libs/$(ANDROID_CPU_ARCH) src
 
-	# Copy the JARs
+	# Copy the JARs, except for the jar containing org.mozilla.gecko.R.
+	# org.mozilla.gecko.R will be provided by the embedding application.
 	cp $(DEPTH)/mobile/android/base/*.jar libs/
+	$(RM) libs/gecko-R.jar
 
 	# Copy the SOs
 	cp $(_ABS_DIST)/bin/libmozglue.so $(_ABS_DIST)/bin/lib/libplugin-container.so libs/$(ANDROID_CPU_ARCH)/
