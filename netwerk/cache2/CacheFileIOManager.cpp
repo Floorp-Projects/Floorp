@@ -1208,11 +1208,9 @@ CacheFileIOManager::OnProfile()
 
   nsCOMPtr<nsIFile> directory;
 
-  CacheObserver::ParentDirOverride(getter_AddRefs(directory));
-
 #if defined(MOZ_WIDGET_ANDROID)
   char* cachePath = getenv("CACHE_DIRECTORY");
-  if (!directory && cachePath && *cachePath) {
+  if (cachePath && *cachePath) {
     rv = NS_NewNativeLocalFile(nsDependentCString(cachePath),
                                true, getter_AddRefs(directory));
   }
@@ -1231,13 +1229,11 @@ CacheFileIOManager::OnProfile()
   if (directory) {
     rv = directory->Append(NS_LITERAL_STRING("cache2"));
     NS_ENSURE_SUCCESS(rv, rv);
-  }
 
-  // All functions return a clone.
-  ioMan->mCacheDirectory.swap(directory);
+    rv = directory->Clone(getter_AddRefs(ioMan->mCacheDirectory));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-  if (ioMan->mCacheDirectory) {
-    CacheIndex::Init(ioMan->mCacheDirectory);
+    CacheIndex::Init(directory);
   }
 
   return NS_OK;
