@@ -202,6 +202,10 @@ extern int      ogg_page_packets(const ogg_page *og);
 
 extern void     ogg_packet_clear(ogg_packet *op);
 
+extern void     ogg_set_mem_functions(ogg_malloc_function_type *malloc_func,
+                                      ogg_calloc_function_type *calloc_func,
+                                      ogg_realloc_function_type *realloc_func,
+                                      ogg_free_function_type *free_func);
 
 #ifdef __cplusplus
 }
