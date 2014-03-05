@@ -390,7 +390,10 @@ def read_ini(fp, variables=None, default='DEFAULT',
     # interpret the variables
     def interpret_variables(global_dict, local_dict):
         variables = global_dict.copy()
+        if 'skip-if' in local_dict and 'skip-if' in variables:
+            local_dict['skip-if'] = "(%s) || (%s)" % (variables['skip-if'].split('#')[0], local_dict['skip-if'].split('#')[0])
         variables.update(local_dict)
+            
         return variables
 
     sections = [(i, interpret_variables(variables, j)) for i, j in sections]
