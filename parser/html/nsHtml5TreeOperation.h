@@ -12,6 +12,7 @@
 class nsIContent;
 class nsHtml5TreeOpExecutor;
 class nsHtml5StateSnapshot;
+class nsHtml5DocumentBuilder;
 
 enum eHtml5TreeOperation {
 #ifdef DEBUG
@@ -113,72 +114,72 @@ class nsHtml5TreeOperation {
     static nsresult AppendTextToTextNode(const char16_t* aBuffer,
                                          uint32_t aLength,
                                          nsIContent* aTextNode,
-                                         nsHtml5TreeOpExecutor* aBuilder);
+                                         nsHtml5DocumentBuilder* aBuilder);
 
     static nsresult AppendText(const char16_t* aBuffer,
                                uint32_t aLength,
                                nsIContent* aParent,
-                               nsHtml5TreeOpExecutor* aBuilder);
+                               nsHtml5DocumentBuilder* aBuilder);
 
     static nsresult Append(nsIContent* aNode,
                            nsIContent* aParent,
-                           nsHtml5TreeOpExecutor* aBuilder);
+                           nsHtml5DocumentBuilder* aBuilder);
 
     static nsresult AppendToDocument(nsIContent* aNode,
-                                     nsHtml5TreeOpExecutor* aBuilder);
+                                     nsHtml5DocumentBuilder* aBuilder);
 
-    static void Detach(nsIContent* aNode, nsHtml5TreeOpExecutor* aBuilder);
+    static void Detach(nsIContent* aNode, nsHtml5DocumentBuilder* aBuilder);
 
     static nsresult AppendChildrenToNewParent(nsIContent* aNode,
                                               nsIContent* aParent,
-                                              nsHtml5TreeOpExecutor* aBuilder);
+                                              nsHtml5DocumentBuilder* aBuilder);
 
     static nsresult FosterParent(nsIContent* aNode,
                                  nsIContent* aParent,
                                  nsIContent* aTable,
-                                 nsHtml5TreeOpExecutor* aBuilder);
+                                 nsHtml5DocumentBuilder* aBuilder);
 
     static nsresult AddAttributes(nsIContent* aNode,
                                   nsHtml5HtmlAttributes* aAttributes,
-                                  nsHtml5TreeOpExecutor* aBuilder);
+                                  nsHtml5DocumentBuilder* aBuilder);
 
     static nsIContent* CreateElement(int32_t aNs,
                                      nsIAtom* aName,
                                      nsHtml5HtmlAttributes* aAttributes,
                                      bool aFromNetwork,
-                                     nsHtml5TreeOpExecutor* aBuilder);
+                                     nsHtml5DocumentBuilder* aBuilder);
 
     static void SetFormElement(nsIContent* aNode, nsIContent* aParent);
 
     static nsresult AppendIsindexPrompt(nsIContent* parent,
-                                        nsHtml5TreeOpExecutor* aBuilder);
+                                        nsHtml5DocumentBuilder* aBuilder);
 
     static nsresult FosterParentText(nsIContent* aStackParent,
                                      char16_t* aBuffer,
                                      uint32_t aLength,
                                      nsIContent* aTable,
-                                     nsHtml5TreeOpExecutor* aBuilder);
+                                     nsHtml5DocumentBuilder* aBuilder);
 
     static nsresult AppendComment(nsIContent* aParent,
                                   char16_t* aBuffer,
                                   int32_t aLength,
-                                  nsHtml5TreeOpExecutor* aBuilder);
+                                  nsHtml5DocumentBuilder* aBuilder);
 
     static nsresult AppendCommentToDocument(char16_t* aBuffer,
                                            int32_t aLength,
-                                           nsHtml5TreeOpExecutor* aBuilder);
+                                           nsHtml5DocumentBuilder* aBuilder);
 
     static nsresult AppendDoctypeToDocument(nsIAtom* aName,
                                             const nsAString& aPublicId,
                                             const nsAString& aSystemId,
-                                            nsHtml5TreeOpExecutor* aBuilder);
+                                            nsHtml5DocumentBuilder* aBuilder);
 
     static nsIContent* GetDocumentFragmentForTemplate(nsIContent* aNode);
 
     static void PreventScriptExecution(nsIContent* aNode);
 
     static void DoneAddingChildren(nsIContent* aNode,
-                                   nsHtml5TreeOpExecutor* aBuilder);
+                                   nsHtml5DocumentBuilder* aBuilder);
 
     static void DoneCreatingElement(nsIContent* aNode);
 
@@ -441,7 +442,8 @@ class nsHtml5TreeOperation {
       mFour.integer = aLine;
     }
 
-    nsresult Perform(nsHtml5TreeOpExecutor* aBuilder, nsIContent** aScriptElement);
+    nsresult Perform(nsHtml5TreeOpExecutor* aBuilder,
+                     nsIContent** aScriptElement);
 
   private:
     // possible optimization:
