@@ -29,11 +29,13 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  inline void HoldElement(nsIContent* aContent) {
+  inline void HoldElement(nsIContent* aContent)
+  {
     mOwnedElements.AppendElement(aContent);
   }
 
-  inline bool HaveNotified(nsIContent* aNode) {
+  inline bool HaveNotified(nsIContent* aNode)
+  {
     NS_PRECONDITION(aNode, "HaveNotified called with null argument.");
     const nsHtml5PendingNotification* start = mPendingNotifications.Elements();
     const nsHtml5PendingNotification* end = start + mPendingNotifications.Length();
@@ -51,7 +53,8 @@ public:
     }
   }
 
-  void PostPendingAppendNotification(nsIContent* aParent, nsIContent* aChild) {
+  void PostPendingAppendNotification(nsIContent* aParent, nsIContent* aChild)
+  {
     bool newParent = true;
     const nsIContentPtr* first = mElementsSeenInThisAppendBatch.Elements();
     const nsIContentPtr* last = first + mElementsSeenInThisAppendBatch.Length() - 1;
@@ -76,7 +79,8 @@ public:
 #endif
   }
 
-  void FlushPendingAppendNotifications() {
+  void FlushPendingAppendNotifications()
+  {
     NS_PRECONDITION(mFlushState == eInDocUpdate, "Notifications flushed outside update");
     mFlushState = eNotifying;
     const nsHtml5PendingNotification* start = mPendingNotifications.Elements();
@@ -99,10 +103,13 @@ public:
                 nsISupports* aContainer, nsIChannel* aChannel);
 
   // Getters and setters for fields from nsContentSink
-  nsIDocument* GetDocument() {
+  nsIDocument* GetDocument()
+  {
     return mDocument;
   }
-  nsNodeInfoManager* GetNodeInfoManager() {
+
+  nsNodeInfoManager* GetNodeInfoManager()
+  {
     return mNodeInfoManager;
   }
 
@@ -118,18 +125,21 @@ public:
    * Checks if this parser is broken. Returns a non-NS_OK (i.e. non-0)
    * value if broken.
    */
-  inline nsresult IsBroken() {
+  inline nsresult IsBroken()
+  {
     return mBroken;
   }
 
-  inline void BeginDocUpdate() {
+  inline void BeginDocUpdate()
+  {
     NS_PRECONDITION(mFlushState == eInFlush, "Tried to double-open update.");
     NS_PRECONDITION(mParser, "Started update without parser.");
     mFlushState = eInDocUpdate;
     mDocument->BeginUpdate(UPDATE_CONTENT_MODEL);
   }
 
-  inline void EndDocUpdate() {
+  inline void EndDocUpdate()
+  {
     NS_PRECONDITION(mFlushState != eNotifying, "mFlushState out of sync");
     if (mFlushState == eInDocUpdate) {
       FlushPendingAppendNotifications();
@@ -147,7 +157,8 @@ public:
 
   void SetDocumentMode(nsHtml5DocumentMode m);
 
-  void SetNodeInfoManager(nsNodeInfoManager* aManager) {
+  void SetNodeInfoManager(nsNodeInfoManager* aManager)
+  {
     mNodeInfoManager = aManager;
   }
 
