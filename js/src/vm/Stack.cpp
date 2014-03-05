@@ -12,6 +12,7 @@
 
 #include "gc/Marking.h"
 #ifdef JS_ION
+#include "jit/AsmJSModule.h"
 #include "jit/BaselineFrame.h"
 #include "jit/JitCompartment.h"
 #endif
@@ -50,8 +51,9 @@ StackFrame::initExecuteFrame(JSContext *cx, JSScript *script, AbstractFramePtr e
                 flags_ |= GLOBAL;
             }
         } else {
-            ScriptFrameIter iter(cx);
+            FrameIter iter(cx);
             JS_ASSERT(iter.isFunctionFrame() || iter.isGlobalFrame());
+            JS_ASSERT(!iter.isAsmJS());
             if (iter.isFunctionFrame()) {
                 callee = iter.callee();
                 flags_ |= FUNCTION;
@@ -594,10 +596,11 @@ FrameIter::settleOnActivation()
             continue;
         }
 
-        // AsmJS activations will soon contain iterable frames, but not atm.
+        // Until asm.js has real stack-walking, we have each AsmJSActivation
+        // expose a single function (the entry function).
         if (activation->isAsmJS()) {
-            ++data_.activations_;
-            continue;
+            data_.state_ = ASMJS;
+            return;
         }
 #endif
 
@@ -775,7 +778,12 @@ FrameIter::operator++()
         MOZ_ASSUME_UNREACHABLE("Unexpected state");
 #endif
       case ASMJS:
-        MOZ_ASSUME_UNREACHABLE("Next patch...");
+        // As described in settleOnActivation, an AsmJSActivation currently only
+        // represents a single asm.js function, so, if the FrameIter is
+        // currently stopped on an ASMJS frame, then we can pop the entire
+        // AsmJSActivation.
+        popActivation();
+        break;
     }
     return *this;
 }
@@ -916,6 +924,116 @@ FrameIter::isGeneratorFrame() const
       case ASMJS:
         return false;
     }
+    MOZ_ASSUME_UNREACHABLE("Unexpected state");
+}
+
+JSAtom *
+FrameIter::functionDisplayAtom() const
+{
+    JS_ASSERT(isNonEvalFunctionFrame());
+
+    switch (data_.state_) {
+      case DONE:
+        break;
+      case INTERP:
+      case JIT:
+        return callee()->displayAtom();
+      case ASMJS: {
+#ifdef JS_ION
+        AsmJSActivation &act = *data_.activations_.activation()->asAsmJS();
+        return act.module().exportedFunction(act.exportIndex()).name();
+#else
+        break;
+#endif
+      }
+    }
+
+    MOZ_ASSUME_UNREACHABLE("Unexpected state");
+}
+
+ScriptSource *
+FrameIter::scriptSource() const
+{
+    switch (data_.state_) {
+      case DONE:
+        break;
+      case INTERP:
+      case JIT:
+        return script()->scriptSource();
+      case ASMJS:
+#ifdef JS_ION
+        return data_.activations_.activation()->asAsmJS()->module().scriptSource();
+#else
+        break;
+#endif
+    }
+
+    MOZ_ASSUME_UNREACHABLE("Unexpected state");
+}
+
+const char *
+FrameIter::scriptFilename() const
+{
+    switch (data_.state_) {
+      case DONE:
+        break;
+      case INTERP:
+      case JIT:
+        return script()->filename();
+      case ASMJS:
+#ifdef JS_ION
+        return data_.activations_.activation()->asAsmJS()->module().scriptSource()->filename();
+#else
+        break;
+#endif
+    }
+
+    MOZ_ASSUME_UNREACHABLE("Unexpected state");
+}
+
+unsigned
+FrameIter::computeLine(uint32_t *column) const
+{
+    switch (data_.state_) {
+      case DONE:
+        break;
+      case INTERP:
+      case JIT:
+        return PCToLineNumber(script(), pc(), column);
+      case ASMJS: {
+#ifdef JS_ION
+        AsmJSActivation &act = *data_.activations_.activation()->asAsmJS();
+        AsmJSModule::ExportedFunction &func = act.module().exportedFunction(act.exportIndex());
+        if (column)
+            *column = func.column();
+        return func.line();
+#else
+        break;
+#endif
+      }
+    }
+
+    MOZ_ASSUME_UNREACHABLE("Unexpected state");
+}
+
+JSPrincipals *
+FrameIter::originPrincipals() const
+{
+    switch (data_.state_) {
+      case DONE:
+        break;
+      case INTERP:
+      case JIT:
+        return script()->originPrincipals();
+      case ASMJS: {
+#ifdef JS_ION
+        return data_.activations_.activation()->asAsmJS()->module().scriptSource()->originPrincipals();
+#else
+        break;
+#endif
+      }
+    }
+
     MOZ_ASSUME_UNREACHABLE("Unexpected state");
 }
 
@@ -1322,6 +1440,15 @@ js::SelfHostedFramesVisible()
 #endif
 
 void
+NonBuiltinFrameIter::settle()
+{
+    if (!SelfHostedFramesVisible()) {
+        while (!done() && hasScript() && script()->selfHosted())
+            FrameIter::operator++();
+    }
+}
+
+void
 NonBuiltinScriptFrameIter::settle()
 {
     if (!SelfHostedFramesVisible()) {
@@ -1414,12 +1541,13 @@ jit::JitActivation::setActive(JSContext *cx, bool active)
     }
 }
 
-AsmJSActivation::AsmJSActivation(JSContext *cx, AsmJSModule &module)
+AsmJSActivation::AsmJSActivation(JSContext *cx, AsmJSModule &module, unsigned exportIndex)
   : Activation(cx, AsmJS),
     module_(module),
     errorRejoinSP_(nullptr),
     profiler_(nullptr),
-    resumePC_(nullptr)
+    resumePC_(nullptr),
+    exportIndex_(exportIndex)
 {
     if (cx->runtime()->spsProfiler.enabled()) {
         // Use a profiler string that matches jsMatch regex in

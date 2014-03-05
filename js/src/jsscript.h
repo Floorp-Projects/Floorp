@@ -1969,10 +1969,10 @@ enum LineOption {
 };
 
 extern void
-CurrentScriptFileLineOrigin(JSContext *cx, JSScript **script,
-                            const char **file, unsigned *linenop,
-                            uint32_t *pcOffset, JSPrincipals **origin,
-                            LineOption opt = NOT_CALLED_FROM_JSOP_EVAL);
+DescribeScriptedCallerForCompilation(JSContext *cx, JSScript **maybeScript,
+                                     const char **file, unsigned *linenop,
+                                     uint32_t *pcOffset, JSPrincipals **origin,
+                                     LineOption opt = NOT_CALLED_FROM_JSOP_EVAL);
 
 bool
 CloneFunctionScript(JSContext *cx, HandleFunction original, HandleFunction clone,

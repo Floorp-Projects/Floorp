@@ -6196,7 +6196,7 @@ DescribeScriptedCaller(JSContext *cx, AutoFilename *filename, unsigned *lineno)
     if (lineno)
         *lineno = 0;
 
-    NonBuiltinScriptFrameIter i(cx);
+    NonBuiltinFrameIter i(cx);
     if (i.done())
         return false;
 
@@ -6206,16 +6206,16 @@ DescribeScriptedCaller(JSContext *cx, AutoFilename *filename, unsigned *lineno)
         return false;
 
     if (filename)
-        filename->reset(i.script()->scriptSource());
+        filename->reset(i.scriptSource());
     if (lineno)
-        *lineno = js::PCToLineNumber(i.script(), i.pc());
+        *lineno = i.computeLine();
     return true;
 }
 
 JS_PUBLIC_API(JSObject *)
 GetScriptedCallerGlobal(JSContext *cx)
 {
-    NonBuiltinScriptFrameIter i(cx);
+    NonBuiltinFrameIter i(cx);
     if (i.done())
         return nullptr;
 
