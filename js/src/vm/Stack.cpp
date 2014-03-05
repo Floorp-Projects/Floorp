@@ -593,6 +593,12 @@ ScriptFrameIter::settleOnActivation()
             ++data_.activations_;
             continue;
         }
+
+        // AsmJS activations will soon contain iterable frames, but not atm.
+        if (activation->isAsmJS()) {
+            ++data_.activations_;
+            continue;
+        }
 #endif
 
         JS_ASSERT(activation->isInterpreter());
@@ -1377,6 +1383,41 @@ jit::JitActivation::setActive(JSContext *cx, bool active)
         cx->mainThread().ionTop = prevIonTop_;
         cx->mainThread().jitJSContext = prevJitJSContext_;
     }
+}
+
+AsmJSActivation::AsmJSActivation(JSContext *cx, AsmJSModule &module)
+  : Activation(cx, AsmJS),
+    module_(module),
+    errorRejoinSP_(nullptr),
+    profiler_(nullptr),
+    resumePC_(nullptr)
+{
+    if (cx->runtime()->spsProfiler.enabled()) {
+        // Use a profiler string that matches jsMatch regex in
+        // browser/devtools/profiler/cleopatra/js/parserWorker.js.
+        // (For now use a single static string to avoid further slowing down
+        // calls into asm.js.)
+        profiler_ = &cx->runtime()->spsProfiler;
+        profiler_->enterNative("asm.js code :0", this);
+    }
+
+    prevAsmJS_ = cx_->runtime()->mainThread.asmJSActivationStack_;
+
+    JSRuntime::AutoLockForOperationCallback lock(cx_->runtime());
+    cx_->runtime()->mainThread.asmJSActivationStack_ = this;
+
+    (void) errorRejoinSP_;  // squelch GCC warning
+}
+
+AsmJSActivation::~AsmJSActivation()
+{
+    if (profiler_)
+        profiler_->exitNative();
+
+    JS_ASSERT(cx_->runtime()->mainThread.asmJSActivationStack_ == this);
+
+    JSRuntime::AutoLockForOperationCallback lock(cx_->runtime());
+    cx_->runtime()->mainThread.asmJSActivationStack_ = prevAsmJS_;
 }
 
 InterpreterFrameIterator &
