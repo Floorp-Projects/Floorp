@@ -7530,8 +7530,6 @@ class PostMessageEvent : public nsRunnable
                      bool aTrustedCaller)
     : mSource(aSource),
       mCallerOrigin(aCallerOrigin),
-      mMessage(nullptr),
-      mMessageLen(0),
       mTargetWindow(aTargetWindow),
       mProvidedPrincipal(aProvidedPrincipal),
       mTrustedCaller(aTrustedCaller)
@@ -7541,14 +7539,12 @@ class PostMessageEvent : public nsRunnable
     
     ~PostMessageEvent()
     {
-      NS_ASSERTION(!mMessage, "Message should have been deserialized!");
       MOZ_COUNT_DTOR(PostMessageEvent);
     }
 
-    void SetJSData(JSAutoStructuredCloneBuffer& aBuffer)
+    JSAutoStructuredCloneBuffer& Buffer()
     {
-      NS_ASSERTION(!mMessage && mMessageLen == 0, "Don't call twice!");
-      aBuffer.steal(&mMessage, &mMessageLen);
+      return mBuffer;
     }
 
     bool StoreISupports(nsISupports* aSupports)
@@ -7558,10 +7554,9 @@ class PostMessageEvent : public nsRunnable
     }
 
   private:
+    JSAutoStructuredCloneBuffer mBuffer;
     nsRefPtr<nsGlobalWindow> mSource;
     nsString mCallerOrigin;
-    uint64_t* mMessage;
-    size_t mMessageLen;
     nsRefPtr<nsGlobalWindow> mTargetWindow;
     nsCOMPtr<nsIPrincipal> mProvidedPrincipal;
     bool mTrustedCaller;
@@ -7709,12 +7704,6 @@ PostMessageEvent::Run()
   // If we bailed before this point we're going to leak mMessage, but
   // that's probably better than crashing.
 
-  // Ensure that the buffer is freed even if we fail to post the message
-  JSAutoStructuredCloneBuffer buffer;
-  buffer.adopt(mMessage, mMessageLen);
-  mMessage = nullptr;
-  mMessageLen = 0;
-
   nsRefPtr<nsGlobalWindow> targetWindow;
   if (mTargetWindow->IsClosedOrClosing() ||
       !(targetWindow = mTargetWindow->GetCurrentInnerWindowInternal()) ||
@@ -7757,7 +7746,7 @@ PostMessageEvent::Run()
     scInfo.event = this;
     scInfo.window = targetWindow;
 
-    if (!buffer.read(cx, &messageData, &kPostMessageCallbacks, &scInfo)) {
+    if (!mBuffer.read(cx, &messageData, &kPostMessageCallbacks, &scInfo)) {
       return NS_ERROR_DOM_DATA_CLONE_ERR;
     }
   }
@@ -7938,7 +7927,6 @@ nsGlobalWindow::PostMessageMoz(JSContext* aCx, JS::Handle<JS::Value> aMessage,
 
   // We *must* clone the data here, or the JS::Value could be modified
   // by script
-  JSAutoStructuredCloneBuffer buffer;
   StructuredCloneInfo scInfo;
   scInfo.event = event;
   scInfo.window = this;
@@ -7947,13 +7935,11 @@ nsGlobalWindow::PostMessageMoz(JSContext* aCx, JS::Handle<JS::Value> aMessage,
   JS::Rooted<JS::Value> message(aCx, aMessage);
   JS::Rooted<JS::Value> transfer(aCx, aTransfer);
   if (NS_FAILED(callerPrin->Subsumes(principal, &scInfo.subsumes)) ||
-      !buffer.write(aCx, message, transfer, &kPostMessageCallbacks,
-                    &scInfo)) {
+      !event->Buffer().write(aCx, message, transfer, &kPostMessageCallbacks,
+                             &scInfo)) {
     aError.Throw(NS_ERROR_DOM_DATA_CLONE_ERR);
     return;
   }
-
-  event->SetJSData(buffer);
 
   aError = NS_DispatchToCurrentThread(event);
 }
