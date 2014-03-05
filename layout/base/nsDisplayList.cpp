@@ -317,15 +317,15 @@ AddAnimationsForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
   // all data passed directly to the compositor should be in css pixels
   float scale = nsDeviceContext::AppUnitsPerCSSPixel();
 
-  TimeStamp startTime = ea->mStartTime + ea->mDelay;
-  TimeDuration duration = ea->mIterationDuration;
-  float iterations = ea->mIterationCount != NS_IEEEPositiveInfinity()
-                     ? ea->mIterationCount : -1;
-  int direction = ea->mDirection;
+  Animation* animation = aLayer->AddAnimation();
 
-  Animation* animation = aLayer->AddAnimation(startTime, duration,
-                                              iterations, direction,
-                                              aProperty, aData);
+  animation->startTime() = ea->mStartTime + ea->mDelay;
+  animation->duration() = ea->mIterationDuration;
+  animation->numIterations() =
+    ea->mIterationCount != NS_IEEEPositiveInfinity() ? ea->mIterationCount : -1;
+  animation->direction() = ea->mDirection;
+  animation->property() = aProperty;
+  animation->data() = aData;
 
   for (uint32_t propIdx = 0; propIdx < ea->mProperties.Length(); propIdx++) {
     AnimationProperty* property = &ea->mProperties[propIdx];
