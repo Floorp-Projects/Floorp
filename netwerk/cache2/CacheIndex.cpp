@@ -49,8 +49,6 @@ public:
     , mDoNotSearchInIndex(false)
     , mDoNotSearchInUpdates(false)
   {
-    mIndex->AssertOwnsLock();
-
     mHash = aHash;
     CacheIndexEntry *entry = FindEntry();
     mIndex->mIndexStats.BeforeChange(entry);
@@ -63,8 +61,6 @@ public:
 
   ~CacheIndexEntryAutoManage()
   {
-    mIndex->AssertOwnsLock();
-
     CacheIndexEntry *entry = FindEntry();
     mIndex->mIndexStats.AfterChange(entry);
     if (!entry || !entry->IsInitialized() || entry->IsRemoved()) {
@@ -85,19 +81,11 @@ public:
         // record has a different address, we have to replace it
         replaceFrecency = replaceExpiration = true;
       } else {
-        if (entry->mRec->mFrecency == 0 &&
-            entry->mRec->mExpirationTime == nsICacheEntry::NO_EXPIRATION_TIME) {
-          // This is a special case when we want to make sure that the entry is
-          // placed at the end of the lists even when the values didn't change.
-          replaceFrecency = replaceExpiration = true;
+        if (entry->mRec->mFrecency != mOldFrecency) {
+          replaceFrecency = true;
         }
-        else {
-          if (entry->mRec->mFrecency != mOldFrecency) {
-            replaceFrecency = true;
-          }
-          if (entry->mRec->mExpirationTime != mOldExpirationTime) {
-            replaceExpiration = true;
-          }
+        if (entry->mRec->mExpirationTime != mOldExpirationTime) {
+          replaceExpiration = true;
         }
       }
 
@@ -1040,74 +1028,6 @@ CacheIndex::HasEntry(const nsACString &aKey, EntryStatus *_retval)
   }
 
   LOG(("CacheIndex::HasEntry() - result is %u", *_retval));
-  return NS_OK;
-}
-
-// static
-nsresult
-CacheIndex::GetEntryForEviction(SHA1Sum::Hash *aHash, uint32_t *aCnt)
-{
-  LOG(("CacheIndex::GetEntryForEviction()"));
-
-  nsRefPtr<CacheIndex> index = gInstance;
-
-  if (!index)
-    return NS_ERROR_NOT_INITIALIZED;
-
-  CacheIndexAutoLock lock(index);
-
-  if (!index->IsIndexUsable()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  MOZ_ASSERT(index->mFrecencyArray.Length() ==
-             index->mExpirationArray.Length());
-
-  if (index->mExpirationArray.Length() == 0)
-    return NS_ERROR_NOT_AVAILABLE;
-
-  uint32_t now = PR_Now() / PR_USEC_PER_SEC;
-  if (index->mExpirationArray[0]->mExpirationTime < now) {
-    memcpy(aHash, &index->mExpirationArray[0]->mHash, sizeof(SHA1Sum::Hash));
-    *aCnt = index->mExpirationArray.Length();
-    LOG(("CacheIndex::GetEntryForEviction() - returning entry from expiration "
-         "array [hash=%08x%08x%08x%08x%08x, cnt=%u, expTime=%u, now=%u, "
-         "frecency=%u]", LOGSHA1(aHash), *aCnt,
-         index->mExpirationArray[0]->mExpirationTime, now,
-         index->mExpirationArray[0]->mFrecency));
-  }
-  else {
-    memcpy(aHash, &index->mFrecencyArray[0]->mHash, sizeof(SHA1Sum::Hash));
-    *aCnt = index->mFrecencyArray.Length();
-    LOG(("CacheIndex::GetEntryForEviction() - returning entry from frecency "
-         "array [hash=%08x%08x%08x%08x%08x, cnt=%u, expTime=%u, now=%u, "
-         "frecency=%u]", LOGSHA1(aHash), *aCnt,
-         index->mExpirationArray[0]->mExpirationTime, now,
-         index->mExpirationArray[0]->mFrecency));
-  }
-
-  return NS_OK;
-}
-
-// static
-nsresult
-CacheIndex::GetCacheSize(uint32_t *_retval)
-{
-  LOG(("CacheIndex::GetCacheSize()"));
-
-  nsRefPtr<CacheIndex> index = gInstance;
-
-  if (!index)
-    return NS_ERROR_NOT_INITIALIZED;
-
-  CacheIndexAutoLock lock(index);
-
-  if (!index->IsIndexUsable()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  *_retval = index->mIndexStats.Size();
-  LOG(("CacheIndex::GetCacheSize() - returning %u", *_retval));
   return NS_OK;
 }
 
@@ -2882,13 +2802,6 @@ CacheIndex::ChangeState(EState aNewState)
     return;
   }
 
-  // Try to evict entries over limit everytime we're leaving state READING,
-  // BUILDING or UPDATING, but not during shutdown.
-  if (!mShuttingDown && aNewState != SHUTDOWN &&
-      (mState == READING || mState == BUILDING || mState == UPDATING))  {
-    CacheFileIOManager::EvictIfOverLimit();
-  }
-
   mState = aNewState;
 }
 
@@ -2935,13 +2848,6 @@ public:
     return a->mFrecency == b->mFrecency;
   }
   bool LessThan(CacheIndexRecord* a, CacheIndexRecord* b) const {
-    // Place entries with frecency 0 at the end of the array.
-    if (a->mFrecency == 0) {
-      return false;
-    }
-    if (b->mFrecency == 0) {
-      return true;
-    }
     return a->mFrecency < b->mFrecency;
   }
 };
