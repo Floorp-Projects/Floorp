@@ -119,6 +119,10 @@
       mPreventScriptExecution = aPrevent;
     }
 
+    bool HasBuilder() {
+      return mBuilder;
+    }
+
     void EnableViewSource(nsHtml5Highlighter* aHighlighter);
 
     void errStrayStartTag(nsIAtom* aName);

@@ -130,6 +130,7 @@ class nsHtml5Tokenizer
     nsString* publicIdentifier;
     nsString* systemIdentifier;
     nsHtml5HtmlAttributes* attributes;
+    bool newAttributesEachTime;
     bool shouldSuspend;
   protected:
     bool confident;
@@ -206,7 +207,6 @@ class nsHtml5Tokenizer
   protected:
     void flushChars(char16_t* buf, int32_t pos);
   private:
-    void resetAttributes();
     void strBufToElementNameString();
     int32_t emitCurrentTagToken(bool selfClosing, int32_t pos);
     void attributeNameComplete();

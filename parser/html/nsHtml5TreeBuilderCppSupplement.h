@@ -81,7 +81,8 @@ nsHtml5TreeBuilder::createElement(int32_t aNamespace, nsIAtom* aName, nsHtml5Htm
                                           aAttributes,
                                           mozilla::dom::FROM_PARSER_FRAGMENT,
                                           mBuilder);
-    if (aAttributes != nsHtml5HtmlAttributes::EMPTY_ATTRIBUTES) {
+    if (MOZ_UNLIKELY(aAttributes != tokenizer->GetAttributes() &&
+                     aAttributes != nsHtml5HtmlAttributes::EMPTY_ATTRIBUTES)) {
       delete aAttributes;
     }
     return elem;
@@ -511,6 +512,8 @@ nsHtml5TreeBuilder::addAttributesToElement(nsIContentHandle* aElement, nsHtml5Ht
   }
 
   if (mBuilder) {
+    MOZ_ASSERT(aAttributes == tokenizer->GetAttributes(),
+      "Using attribute other than the tokenizer's to add to body or html.");
     nsresult rv = nsHtml5TreeOperation::AddAttributes(
       static_cast<nsIContent*>(aElement),
       aAttributes,
