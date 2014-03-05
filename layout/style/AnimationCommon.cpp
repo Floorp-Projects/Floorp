@@ -366,10 +366,12 @@ CommonElementAnimationData::CanAnimatePropertyOnCompositor(const dom::Element *a
                                                            CanAnimateFlags aFlags)
 {
   bool shouldLog = nsLayoutUtils::IsAnimationLoggingEnabled();
-  if (shouldLog && !gfxPlatform::OffMainThreadCompositingEnabled()) {
-    nsCString message;
-    message.AppendLiteral("Performance warning: Compositor disabled");
-    LogAsyncAnimationFailure(message);
+  if (!gfxPlatform::OffMainThreadCompositingEnabled()) {
+    if (shouldLog) {
+      nsCString message;
+      message.AppendLiteral("Performance warning: Compositor disabled");
+      LogAsyncAnimationFailure(message);
+    }
     return false;
   }
 
