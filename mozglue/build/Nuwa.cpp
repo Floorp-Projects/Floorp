@@ -1561,10 +1561,10 @@ ForkIPCProcess() {
     CloseAllProtoSockets(sProtoFdInfos, sProtoFdInfosSize);
   } else {
     // in the child
-#ifdef NUWA_DEBUG_CHILD_PROCESS
-    fprintf(stderr, "\n\n DEBUG ME @%d\n\n", getpid());
-    sleep(15);
-#endif
+    if (getenv("MOZ_DEBUG_CHILD_PROCESS")) {
+      printf("\n\nNUWA CHILDCHILDCHILDCHILD\n  debug me @ %d\n\n", getpid());
+      sleep(30);
+    }
     ReplaceSignalFds();
     ReplaceIPC(sProtoFdInfos, sProtoFdInfosSize);
     RecreateEpollFds();
