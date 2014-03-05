@@ -2,7 +2,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-/* File locked partial MAR file staged patch apply failure test */
+/* File in use inside removed dir partial MAR file staged patch apply failure
+   test */
 
 function run_test() {
   gStageUpdate = true;
@@ -12,28 +13,29 @@ function run_test() {
   setTestFilesAndDirsForFailure();
   setupUpdaterTest(FILE_PARTIAL_MAR, true, false);
 
-  // Exclusively lock an existing file so it is in use during the update.
+  let fileInUseBin = getApplyDirFile(gTestDirs[2].relPathDir +
+                                     gTestDirs[2].files[0]);
+  // Remove the empty file created for the test so the helper application can
+  // replace it.
+  fileInUseBin.remove(false);
+
   let helperBin = getTestDirFile(FILE_HELPER_BIN);
-  let helperDestDir = getApplyDirFile("a/b/");
-  helperBin.copyTo(helperDestDir, FILE_HELPER_BIN);
-  helperBin = getApplyDirFile("a/b/" + FILE_HELPER_BIN);
-  // Strip off the first two directories so the path has to be from the helper's
-  // working directory.
-  let lockFileRelPath = gTestFiles[2].relPathDir.split("/");
-  lockFileRelPath = lockFileRelPath.slice(2);
-  lockFileRelPath = lockFileRelPath.join("/") + "/" + gTestFiles[2].fileName;
+  let fileInUseDir = getApplyDirFile(gTestDirs[2].relPathDir);
+  helperBin.copyTo(fileInUseDir, gTestDirs[2].files[0]);
+
+  // Launch an existing file so it is in use during the update.
   let args = [getApplyDirPath() + "a/b/", "input", "output", "-s",
-              HELPER_SLEEP_TIMEOUT, lockFileRelPath];
-  let lockFileProcess = AUS_Cc["@mozilla.org/process/util;1"].
-                     createInstance(AUS_Ci.nsIProcess);
-  lockFileProcess.init(helperBin);
-  lockFileProcess.run(false, args, args.length);
+              HELPER_SLEEP_TIMEOUT];
+  let fileInUseProcess = AUS_Cc["@mozilla.org/process/util;1"].
+                         createInstance(AUS_Ci.nsIProcess);
+  fileInUseProcess.init(fileInUseBin);
+  fileInUseProcess.run(false, args, args.length);
 
   do_timeout(TEST_HELPER_TIMEOUT, waitForHelperSleep);
 }
 
 function doUpdate() {
-  runUpdate(1, STATE_FAILED_WRITE_ERROR, null);
+  runUpdate(0, STATE_APPLIED, null);
 
   // Switch the application to the staged application that was updated.
   gStageUpdate = false;
