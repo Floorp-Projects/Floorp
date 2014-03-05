@@ -181,8 +181,7 @@ class nsHtml5StreamParser : public nsIStreamListener,
      */
     void ContinueAfterFailedCharsetSwitch();
 
-    void Terminate()
-    {
+    void Terminate() {
       mozilla::MutexAutoLock autoLock(mTerminatedMutex);
       mTerminated = true;
     }
@@ -221,14 +220,12 @@ class nsHtml5StreamParser : public nsIStreamListener,
      * avoid having a previous in-flight runnable cancel your Interrupt()
      * call on the other thread too soon.
      */
-    void Interrupt()
-    {
+    void Interrupt() {
       mozilla::MutexAutoLock autoLock(mTerminatedMutex);
       mInterrupted = true;
     }
 
-    void Uninterrupt()
-    {
+    void Uninterrupt() {
       NS_ASSERTION(IsParserThread(), "Wrong thread!");
       mTokenizerMutex.AssertCurrentThreadOwns();
       // Not acquiring mTerminatedMutex because mTokenizerMutex is already
@@ -255,14 +252,12 @@ class nsHtml5StreamParser : public nsIStreamListener,
                                           uint32_t aCount,
                                           uint32_t *aWriteCount);
 
-    bool IsTerminatedOrInterrupted()
-    {
+    bool IsTerminatedOrInterrupted() {
       mozilla::MutexAutoLock autoLock(mTerminatedMutex);
       return mTerminated || mInterrupted;
     }
 
-    bool IsTerminated()
-    {
+    bool IsTerminated() {
       mozilla::MutexAutoLock autoLock(mTerminatedMutex);
       return mTerminated;
     }
@@ -270,8 +265,7 @@ class nsHtml5StreamParser : public nsIStreamListener,
     /**
      * True when there is a Unicode decoder already
      */
-    inline bool HasDecoder()
-    {
+    inline bool HasDecoder() {
       return !!mUnicodeDecoder;
     }
 

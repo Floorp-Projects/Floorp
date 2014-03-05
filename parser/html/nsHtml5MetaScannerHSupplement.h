@@ -4,8 +4,7 @@
  
 private:
   nsCString mCharset;
-  inline int32_t read()
-  {
+  inline int32_t read() {
     return readable->read();
   }
 public:

@@ -32,7 +32,7 @@
 #include "nsString.h"
 #include "nsNameSpaceManager.h"
 #include "nsIContent.h"
-#include "nsTraceRefcnt.h"
+#include "nsISupportsImpl.h"
 #include "jArray.h"
 #include "nsHtml5ArrayCopy.h"
 #include "nsAHtml5TreeBuilderState.h"
@@ -40,7 +40,6 @@
 #include "nsHtml5ByteReadable.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsHtml5Macros.h"
-#include "nsIContentHandle.h"
 
 #include "nsHtml5Tokenizer.h"
 #include "nsHtml5TreeBuilder.h"
@@ -55,7 +54,7 @@
 #include "nsHtml5StateSnapshot.h"
 
 
-nsHtml5StateSnapshot::nsHtml5StateSnapshot(jArray<nsHtml5StackNode*,int32_t> stack, jArray<nsHtml5StackNode*,int32_t> listOfActiveFormattingElements, jArray<int32_t,int32_t> templateModeStack, nsIContentHandle* formPointer, nsIContentHandle* headPointer, nsIContentHandle* deepTreeSurrogateParent, int32_t mode, int32_t originalMode, bool framesetOk, bool needToDropLF, bool quirks)
+nsHtml5StateSnapshot::nsHtml5StateSnapshot(jArray<nsHtml5StackNode*,int32_t> stack, jArray<nsHtml5StackNode*,int32_t> listOfActiveFormattingElements, jArray<int32_t,int32_t> templateModeStack, nsIContent** formPointer, nsIContent** headPointer, nsIContent** deepTreeSurrogateParent, int32_t mode, int32_t originalMode, bool framesetOk, bool needToDropLF, bool quirks)
   : stack(stack),
     listOfActiveFormattingElements(listOfActiveFormattingElements),
     templateModeStack(templateModeStack),
@@ -89,19 +88,19 @@ nsHtml5StateSnapshot::getListOfActiveFormattingElements()
   return listOfActiveFormattingElements;
 }
 
-nsIContentHandle* 
+nsIContent** 
 nsHtml5StateSnapshot::getFormPointer()
 {
   return formPointer;
 }
 
-nsIContentHandle* 
+nsIContent** 
 nsHtml5StateSnapshot::getHeadPointer()
 {
   return headPointer;
 }
 
-nsIContentHandle* 
+nsIContent** 
 nsHtml5StateSnapshot::getDeepTreeSurrogateParent()
 {
   return deepTreeSurrogateParent;
