@@ -201,6 +201,20 @@ struct FileSystemCreateDirectoryParams
   nsString realPath;
 };
 
+union FileSystemFileDataValue
+{
+  uint8_t[];
+  PBlob;
+};
+
+struct FileSystemCreateFileParams
+{
+  nsString filesystem;
+  nsString realPath;
+  FileSystemFileDataValue data;
+  bool replace;
+};
+
 struct FileSystemGetFileOrDirectoryParams
 {
   nsString filesystem;
@@ -224,6 +238,7 @@ struct FileSystemRemoveParams
 union FileSystemParams
 {
   FileSystemCreateDirectoryParams;
+  FileSystemCreateFileParams;
   FileSystemGetFileOrDirectoryParams;
   FileSystemRemoveParams;
 };
