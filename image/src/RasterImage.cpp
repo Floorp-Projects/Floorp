@@ -2616,8 +2616,16 @@ RasterImage::Draw(gfxContext *aContext,
 
   NS_ENSURE_ARG_POINTER(aContext);
 
-  // We can only draw with the default decode flags
-  if (mFrameDecodeFlags != DECODE_FLAGS_DEFAULT) {
+  // We can only draw without discarding and redecoding in these cases:
+  //  * We have the default decode flags.
+  //  * We have exactly FLAG_DECODE_NO_PREMULTIPLY_ALPHA and the current frame
+  //    is opaque.
+  bool haveDefaultFlags = (mFrameDecodeFlags == DECODE_FLAGS_DEFAULT);
+  bool haveSafeAlphaFlags =
+    (mFrameDecodeFlags == FLAG_DECODE_NO_PREMULTIPLY_ALPHA) &&
+    FrameIsOpaque(FRAME_CURRENT);
+
+  if (!(haveDefaultFlags || haveSafeAlphaFlags)) {
     if (!CanForciblyDiscardAndRedecode())
       return NS_ERROR_NOT_AVAILABLE;
     ForceDiscard();
