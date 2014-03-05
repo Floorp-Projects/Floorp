@@ -35,6 +35,20 @@ class MacroAssemblerARM : public Assembler
     // baseline IC stubs rely on lr holding the return address.
     Register secondScratchReg_;
 
+    // higher level tag testing code
+    Operand ToPayload(Operand base) {
+        return Operand(Register::FromCode(base.base()), base.disp());
+    }
+    Address ToPayload(Address base) {
+        return ToPayload(Operand(base)).toAddress();
+    }
+    Operand ToType(Operand base) {
+        return Operand(Register::FromCode(base.base()), base.disp() + sizeof(void *));
+    }
+    Address ToType(Address base) {
+        return ToType(Operand(base)).toAddress();
+    }
+
   public:
     MacroAssemblerARM()
       : secondScratchReg_(lr)

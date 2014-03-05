@@ -164,6 +164,9 @@ ValueTypeFromMIRType(MIRType type)
       return JSVAL_TYPE_STRING;
     case MIRType_Magic:
       return JSVAL_TYPE_MAGIC;
+    case MIRType_Float32x4:
+    case MIRType_Int32x4:
+      return JSVAL_TYPE_OBJECT;
     default:
       JS_ASSERT(type == MIRType_Object);
       return JSVAL_TYPE_OBJECT;
@@ -194,6 +197,10 @@ StringFromMIRType(MIRType type)
       return "Float32";
     case MIRType_String:
       return "String";
+    case MIRType_Float32x4:
+      return "Float32x4";
+    case MIRType_Int32x4:
+      return "Int32x4";
     case MIRType_Object:
       return "Object";
     case MIRType_Magic:

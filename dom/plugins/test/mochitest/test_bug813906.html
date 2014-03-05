@@ -21,9 +21,6 @@ function f() {
 SimpleTest.waitForExplicitFinish();
 setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
 
-// When the document is torn down or <svg> is removed, we hit bug 621618
-SimpleTest.expectAssertions(1);
-
 var frameLoadCount = 0;
 function frameLoaded() {
   frameLoadCount++;
@@ -33,11 +30,7 @@ function frameLoaded() {
   } else if (frameLoadCount == 2) {
     isnot(SpecialPowers.wrap(window.frame1).location.href.indexOf('chrome://'),
           0, 'plugin shouldnt be able to cause navigation to chrome URLs');
-
-    // Make sure we trigger bug 621618 before the test finishes so the assertion
-    // is attributed to this test.
-    document.body.removeChild(document.querySelector("svg"));
-    SimpleTest.executeSoon(function() { SimpleTest.finish(); });
+    SimpleTest.finish();
   }
 }
 </script>

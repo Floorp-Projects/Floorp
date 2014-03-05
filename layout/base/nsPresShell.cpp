@@ -40,6 +40,7 @@
 #include "nsPresContext.h"
 #include "nsIContent.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/Event.h" // for Event::GetEventPopupControlState()
 #include "mozilla/dom/ShadowRoot.h"
 #include "nsIDocument.h"
 #include "nsCSSStyleSheet.h"
@@ -55,7 +56,6 @@
 #include "nsTArray.h"
 #include "nsCOMArray.h"
 #include "nsContainerFrame.h"
-#include "nsDOMEvent.h"
 #include "nsISelection.h"
 #include "mozilla/Selection.h"
 #include "nsGkAtoms.h"
@@ -113,6 +113,7 @@
 #include "SVGContentUtils.h"
 #include "nsSVGEffects.h"
 #include "SVGFragmentIdentifier.h"
+#include "nsArenaMemoryStats.h"
 
 #include "nsPerformance.h"
 #include "nsRefreshDriver.h"
@@ -738,7 +739,7 @@ PresShell::PresShell()
     addedSynthMouseMove = true;
   }
   static bool addedPointerEventEnabled = false;
-  if (addedPointerEventEnabled) {
+  if (!addedPointerEventEnabled) {
     Preferences::AddBoolVarCache(&sPointerEventEnabled,
                                  "dom.w3c_pointer_events.enabled", true);
     addedPointerEventEnabled = true;
@@ -7212,7 +7213,8 @@ PresShell::HandleEventInternal(WidgetEvent* aEvent, nsEventStatus* aStatus)
         nsEventStateManager::GetActiveEventStateManager() == manager);
     }
 
-    nsAutoPopupStatePusher popupStatePusher(nsDOMEvent::GetEventPopupControlState(aEvent));
+    nsAutoPopupStatePusher popupStatePusher(
+                             Event::GetEventPopupControlState(aEvent));
 
     // FIXME. If the event was reused, we need to clear the old target,
     // bug 329430

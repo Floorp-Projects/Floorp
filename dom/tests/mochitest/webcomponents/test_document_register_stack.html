@@ -24,7 +24,7 @@ function testChangeAttributeInCreatedCallback() {
 
   var p = Object.create(HTMLElement.prototype);
   p.createdCallback = function() {
-    is(createdCallbackCalled, false, "Created callback should be called before enteredView callback.");
+    is(createdCallbackCalled, false, "Created callback should be called before attached callback.");
     createdCallbackCalled = true;
     is(attributeChangedCallbackCalled, false, "Attribute changed callback should not have been called prior to setting the attribute.");
     this.setAttribute("foo", "bar");
@@ -46,11 +46,11 @@ function testChangeAttributeInCreatedCallback() {
 function testChangeAttributeInEnteredViewCallback() {
   var p = Object.create(HTMLElement.prototype);
   var attributeChangedCallbackCalled = false;
-  var enteredViewCallbackCalled = false;
+  var attachedCallbackCalled = false;
 
-  p.enteredViewCallback = function() {
-    is(enteredViewCallbackCalled, false, "enteredView callback should be called only once in this test.");
-    enteredViewCallbackCalled = true;
+  p.attachedCallback = function() {
+    is(attachedCallbackCalled, false, "attached callback should be called only once in this test.");
+    attachedCallbackCalled = true;
     is(attributeChangedCallbackCalled, false, "Attribute changed callback should not be called before changing attribute.");
     this.setAttribute("foo", "bar");
     is(attributeChangedCallbackCalled, true, "Transition from user-agent implementation to script should result in attribute changed callback being called.");
@@ -58,7 +58,7 @@ function testChangeAttributeInEnteredViewCallback() {
   };
 
   p.attributeChangedCallback = function() {
-    is(enteredViewCallbackCalled, true, "enteredView callback should have been called prior to attribute changed callback.");
+    is(attachedCallbackCalled, true, "attached callback should have been called prior to attribute changed callback.");
     is(attributeChangedCallbackCalled, false, "attributeChanged callback should only be called once in this tests.");
     attributeChangedCallbackCalled = true;
   };
@@ -72,24 +72,24 @@ function testChangeAttributeInEnteredViewCallback() {
 
 function testLeaveViewInEnteredViewCallback() {
   var p = Object.create(HTMLElement.prototype);
-  var enteredViewCallbackCalled = false;
-  var leftViewCallbackCalled = false;
+  var attachedCallbackCalled = false;
+  var detachedCallbackCalled = false;
   var container = document.getElementById("container");
 
-  p.enteredViewCallback = function() {
+  p.attachedCallback = function() {
     is(this.parentNode, container, "Parent node should the container in which the node was appended.");
-    is(enteredViewCallbackCalled, false, "enteredView callback should be called only once in this test.");
-    enteredViewCallbackCalled = true;
-    is(leftViewCallbackCalled, false, "leftView callback should not be called prior to removing element from document.");
+    is(attachedCallbackCalled, false, "attached callback should be called only once in this test.");
+    attachedCallbackCalled = true;
+    is(detachedCallbackCalled, false, "detached callback should not be called prior to removing element from document.");
     container.removeChild(this);
-    is(leftViewCallbackCalled, true, "Transition from user-agent implementation to script should run left view callback.");
+    is(detachedCallbackCalled, true, "Transition from user-agent implementation to script should run left view callback.");
     runNextTest();
   };
 
-  p.leftViewCallback = function() {
-    is(leftViewCallbackCalled, false, "The left view callback should only be called once in this test.");
-    is(enteredViewCallbackCalled, true, "The entered view callback should be called prior to left view callback.");
-    leftViewCallbackCalled = true;
+  p.detachedCallback = function() {
+    is(detachedCallbackCalled, false, "The detached callback should only be called once in this test.");
+    is(attachedCallbackCalled, true, "The attached callback should be called prior to detached callback.");
+    detachedCallbackCalled = true;
   };
 
   document.registerElement("x-three", { prototype: p });

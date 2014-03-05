@@ -20,7 +20,6 @@ LIBS += \
 
 ifeq ($(OS_ARCH),WINNT)
 LIBS += $(call EXPAND_LIBNAME_PATH,verifymar,$(DEPTH)/modules/libmar/verify)
-RCINCLUDE = updater.rc
 OS_LIBS += $(call EXPAND_LIBNAME,comctl32 ws2_32 shell32 shlwapi)
 endif
 
@@ -34,7 +33,6 @@ OS_LIBS += -framework Cocoa
 endif
 
 ifeq (gonk,$(MOZ_WIDGET_TOOLKIT)) #{
-STL_FLAGS =
 OS_LIBS += -lcutils -lsysutils
 # clear out all the --wrap flags and remove dependency on mozglue for Gonk
 WRAP_LDFLAGS :=

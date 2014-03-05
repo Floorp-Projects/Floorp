@@ -359,7 +359,9 @@ private:
     virtual bool DeallocPIndexedDBParent(PIndexedDBParent* aActor) MOZ_OVERRIDE;
 
     virtual PMemoryReportRequestParent*
-    AllocPMemoryReportRequestParent(const uint32_t& generation) MOZ_OVERRIDE;
+    AllocPMemoryReportRequestParent(const uint32_t& generation,
+                                    const bool &minimizeMemoryUsage,
+                                    const nsString &aDMDDumpIdent) MOZ_OVERRIDE;
     virtual bool DeallocPMemoryReportRequestParent(PMemoryReportRequestParent* actor) MOZ_OVERRIDE;
 
     virtual PTestShellParent* AllocPTestShellParent() MOZ_OVERRIDE;

@@ -117,7 +117,7 @@ public:
   void HandleChildReports(
     const uint32_t& generation,
     const InfallibleTArray<mozilla::dom::MemoryReport>& aChildReports);
-  void FinishReporting();
+  nsresult FinishReporting();
 
   // Functions that (a) implement distinguished amounts, and (b) are outside of
   // this module.
@@ -157,9 +157,12 @@ public:
 private:
   nsresult RegisterReporterHelper(nsIMemoryReporter* aReporter,
                                   bool aForce, bool aStrongRef);
+  nsresult StartGettingReports();
 
   static void TimeoutCallback(nsITimer* aTimer, void* aData);
-  static const uint32_t kTimeoutLengthMS = 5000;
+  // Note: this timeout needs to be long enough to allow for the
+  // possibility of DMD reports and/or running on a low-end phone.
+  static const uint32_t kTimeoutLengthMS = 50000;
 
   mozilla::Mutex mMutex;
   bool mIsRegistrationBlocked;
@@ -184,13 +187,15 @@ private:
     nsCOMPtr<nsISupports>                mHandleReportData;
     nsCOMPtr<nsIFinishReportingCallback> mFinishReporting;
     nsCOMPtr<nsISupports>                mFinishReportingData;
+    nsString                             mDMDDumpIdent;
 
     GetReportsState(uint32_t aGeneration, nsITimer* aTimer,
                     uint32_t aNumChildProcesses,
                     nsIHandleReportCallback* aHandleReport,
                     nsISupports* aHandleReportData,
                     nsIFinishReportingCallback* aFinishReporting,
-                    nsISupports* aFinishReportingData)
+                    nsISupports* aFinishReportingData,
+                    const nsAString &aDMDDumpIdent)
       : mGeneration(aGeneration)
       , mTimer(aTimer)
       , mNumChildProcesses(aNumChildProcesses)
@@ -199,6 +204,7 @@ private:
       , mHandleReportData(aHandleReportData)
       , mFinishReporting(aFinishReporting)
       , mFinishReportingData(aFinishReportingData)
+      , mDMDDumpIdent(aDMDDumpIdent)
     {
     }
   };

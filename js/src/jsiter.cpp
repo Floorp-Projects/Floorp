@@ -131,13 +131,22 @@ static bool
 EnumerateNativeProperties(JSContext *cx, HandleObject pobj, unsigned flags, IdSet &ht,
                           AutoIdVector *props)
 {
-    /* Collect any elements from this object. */
+    /* Collect any dense elements from this object. */
     size_t initlen = pobj->getDenseInitializedLength();
     const Value *vp = pobj->getDenseElements();
     for (size_t i = 0; i < initlen; ++i, ++vp) {
         if (!vp->isMagic(JS_ELEMENTS_HOLE)) {
             /* Dense arrays never get so large that i would not fit into an integer id. */
-            if (!Enumerate(cx, pobj, INT_TO_JSID(i), true, flags, ht, props))
+            if (!Enumerate(cx, pobj, INT_TO_JSID(i), /* enumerable = */ true, flags, ht, props))
+                return false;
+        }
+    }
+
+    /* Collect any typed array elements from this object. */
+    if (pobj->is<TypedArrayObject>()) {
+        size_t len = pobj->as<TypedArrayObject>().length();
+        for (size_t i = 0; i < len; i++) {
+            if (!Enumerate(cx, pobj, INT_TO_JSID(i), /* enumerable = */ true, flags, ht, props))
                 return false;
         }
     }
@@ -623,6 +632,7 @@ js::GetIterator(JSContext *cx, HandleObject obj, unsigned flags, MutableHandleVa
                 do {
                     if (!pobj->isNative() ||
                         !pobj->hasEmptyElements() ||
+                        pobj->is<TypedArrayObject>() ||
                         pobj->hasUncacheableProto() ||
                         pobj->getOps()->enumerate ||
                         pobj->getClass()->enumerate != JS_EnumerateStub ||
@@ -1053,7 +1063,7 @@ SuppressDeletedPropertyHelper(JSContext *cx, HandleObject obj, StringPredicate p
                         if (prop) {
                             unsigned attrs;
                             if (obj2->isNative())
-                                attrs = GetShapeAttributes(prop);
+                                attrs = GetShapeAttributes(obj2, prop);
                             else if (!JSObject::getGenericAttributes(cx, obj2, id, &attrs))
                                 return false;
 

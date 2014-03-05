@@ -2,8 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-STL_FLAGS =
-
 # in order to prevent rules.mk from trying to link to libraries that are
 # not available to MFBT, we have to reset these MOZ_GLUE*_LDFLAGS before including it
 # and LIBS_ after including it. For WRAP_LDFLAGS, it shouldn't matter.

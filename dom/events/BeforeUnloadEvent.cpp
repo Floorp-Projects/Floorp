@@ -8,12 +8,12 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_ADDREF_INHERITED(BeforeUnloadEvent, nsDOMEvent)
-NS_IMPL_RELEASE_INHERITED(BeforeUnloadEvent, nsDOMEvent)
+NS_IMPL_ADDREF_INHERITED(BeforeUnloadEvent, Event)
+NS_IMPL_RELEASE_INHERITED(BeforeUnloadEvent, Event)
 
 NS_INTERFACE_MAP_BEGIN(BeforeUnloadEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMBeforeUnloadEvent)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
+NS_INTERFACE_MAP_END_INHERITING(Event)
 
 NS_IMETHODIMP
 BeforeUnloadEvent::SetReturnValue(const nsAString& aReturnValue)

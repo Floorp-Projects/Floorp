@@ -22,6 +22,7 @@ if CONFIG['WRAP_STL_INCLUDES']:
     if CONFIG['GNU_CXX']:
         EXPORTS.mozilla += ['throw_gcc.h']
     elif CONFIG['_MSC_VER']:
+        DEFINES['_HAS_EXCEPTIONS'] = 0
         if build_msvc_wrappers:
             EXPORTS.mozilla += [
                 'msvc_raise_wrappers.h',
@@ -69,3 +70,5 @@ DEFINES['_GNU_SOURCE'] = True
 TEST_TOOL_DIRS += ['tests']
 
 GENERATED_INCLUDES += ['/xpcom']
+
+DISABLE_STL_WRAPPING = True

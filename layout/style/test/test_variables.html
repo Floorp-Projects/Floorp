@@ -13,6 +13,11 @@
 <style id="test3">
 </style>
 
+<style id="test4">
+</style>
+
+<div id="t4"></div>
+
 <script>
 var tests = [
   function() {
@@ -40,7 +45,29 @@ var tests = [
     var declaration = test3.sheet.cssRules[0].style;
     is(declaration[declaration.length - 1], "var-decoration");
   },
+
+  function() {
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=959973
+    var test4 = document.getElementById("test4");
+    test4.textContent = "#t4 { background-image: var(a); }";
+
+    var element = document.getElementById("t4");
+    var path = window.location.pathname;
+    var currentDir = path.substring(0, path.lastIndexOf('/'));
+    var imageURL = "http://mochi.test:8888" + currentDir + "/image.png";
+
+    is(window.getComputedStyle(element).getPropertyValue("background-image"), "url(\"" + imageURL +"\")");
+  },
 ];
+
+function prepareTest() {
+  // Load an external style sheet for test 4.
+  var e = document.createElement("link");
+  e.addEventListener("load", runTest);
+  e.setAttribute("rel", "stylesheet");
+  e.setAttribute("href", "support/external-variable-url.css");
+  document.head.appendChild(e);
+}
 
 function runTest() {
   tests.forEach(function(fn) { fn(); });
@@ -49,5 +76,5 @@ function runTest() {
 
 SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPrefEnv({ set: [["layout.css.variables.enabled", true ]] },
-                          runTest);
+                          prepareTest);
 </script>

@@ -1,3 +1,4 @@
+// |jit-test| error:TypeError
 // Array.of can be transplanted to builtin constructors.
 
 load(libdir + "asserts.js");

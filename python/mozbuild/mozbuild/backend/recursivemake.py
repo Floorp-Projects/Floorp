@@ -1091,7 +1091,7 @@ class RecursiveMakeBackend(CommonBackend):
 
     def _process_per_source_flag(self, per_source_flag, backend_file):
         for flag in per_source_flag.flags:
-            backend_file.write('%s_FLAGS += %s\n' % (per_source_flag.file_name, flag))
+            backend_file.write('%s_FLAGS += %s\n' % (mozpath.basename(per_source_flag.file_name), flag))
 
     def _process_java_jar_data(self, jar, backend_file):
         target = jar.name

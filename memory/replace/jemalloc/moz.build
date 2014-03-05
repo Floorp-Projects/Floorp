@@ -28,3 +28,5 @@ DEFINES['MOZ_REPLACE_JEMALLOC'] = True
 GENERATED_INCLUDES += ['../../jemalloc/src/include']
 if CONFIG['_MSC_VER']:
     LOCAL_INCLUDES += ['/memory/jemalloc/src/include/msvc_compat']
+
+DISABLE_STL_WRAPPING = True

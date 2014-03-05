@@ -99,6 +99,7 @@ struct AudioChunk {
     mDuration = aDuration;
     mVolume = 1.0f;
   }
+  int ChannelCount() const { return mChannelData.Length(); }
 
   TrackTicks mDuration; // in frames within the buffer
   nsRefPtr<ThreadSharedObject> mBuffer; // the buffer object whose lifetime is managed; null means data is all zeroes

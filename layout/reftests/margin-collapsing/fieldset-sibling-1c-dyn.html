@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<style type="text/css">
+#separator-top {
+ height: 20px;
+ margin-bottom: 20px;
+ background-color: green;
+}
+fieldset {
+ height: 20px;
+ margin: 0;
+ padding: 0;
+ border: none;
+ background-color: green;
+}
+#separator-bottom {
+ height: 20px;
+ margin-top: 20px;
+ background-color: green;
+}
+</style>
+<script type="text/javascript">
+function test() {
+ document.getElementsByTagName('fieldset')[0].style.margin = '20px 0';
+ document.documentElement.removeAttribute('class');
+}
+document.addEventListener('MozReftestInvalidate', test, false);
+</script>
+</head>
+<body>
+<div id="separator-top"></div>
+<fieldset></fieldset>
+<div id="separator-bottom"></div>
+</body>
+</html>

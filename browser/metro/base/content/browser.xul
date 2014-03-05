@@ -69,6 +69,8 @@
                  viewstate=""/>
     <broadcaster id="bcast_loadingState"
                  loading="false"/>
+    <broadcaster id="bcast_chromeState"
+                 navbar="visible"/>
   </broadcasterset>
 
   <observerset id="observerset">
@@ -399,6 +401,8 @@ Desktop browser's sync prefs.
       <stack id="content-viewport">
         <observes element="bcast_windowState"
                   attribute="startpage"/>
+        <observes element="bcast_chromeState"
+                  attribute="navbar"/>
         <deck id="browsers"
               flex="1"
               observes="bcast_preciseInput"/>
