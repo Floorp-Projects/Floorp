@@ -315,7 +315,7 @@ MmsConnection.prototype = {
   getIccId: function() {
     let iccInfo = this.radioInterface.rilContext.iccInfo;
 
-    if (!iccInfo || !(iccInfo instanceof Ci.nsIDOMMozGsmIccInfo)) {
+    if (!iccInfo) {
       return null;
     }
 
@@ -1697,8 +1697,7 @@ MmsService.prototype = {
         // At this point we could send a message to content to notify the user
         // that storing an incoming MMS failed, most likely due to a full disk.
         // The end user has to retrieve the MMS again.
-        if (DEBUG) debug("Could not store MMS " + domMessage.id +
-                         ", error code " + rv);
+        if (DEBUG) debug("Could not store MMS , error code " + rv);
         return;
       }
 
@@ -1780,8 +1779,7 @@ MmsService.prototype = {
     let transactionId = notification.headers["x-mms-transaction-id"];
     gMobileMessageDatabaseService.getMessageRecordByTransactionId(transactionId,
         (function(aRv, aMessageRecord) {
-      if (Ci.nsIMobileMessageCallback.SUCCESS_NO_ERROR === aRv
-          && aMessageRecord) {
+      if (Components.isSuccessCode(aRv) && aMessageRecord) {
         if (DEBUG) debug("We already got the NotificationIndication with transactionId = "
                          + transactionId + " before.");
         return;
@@ -2171,9 +2169,16 @@ MmsService.prototype = {
     gMobileMessageDatabaseService
       .saveSendingMessage(savableMessage,
                           function notifySendingResult(aRv, aDomMessage) {
+      if (!Components.isSuccessCode(aRv)) {
+        if (DEBUG) debug("Error! Fail to save sending message! rv = " + aRv);
+        aRequest.notifySendMessageFailed(
+          gMobileMessageDatabaseService.translateCrErrorToMessageCallbackError(aRv));
+        Services.obs.notifyObservers(aDomMessage, kSmsFailedObserverTopic, null);
+        return;
+      }
+
       if (DEBUG) debug("Saving sending message is done. Start to send.");
 
-      // TODO bug 832140 handle !Components.isSuccessCode(aRv)
       Services.obs.notifyObservers(aDomMessage, kSmsSendingObserverTopic, null);
 
       if (errorCode !== Ci.nsIMobileMessageCallback.SUCCESS_NO_ERROR) {
@@ -2221,9 +2226,10 @@ MmsService.prototype = {
     if (DEBUG) debug("Retrieving message with ID " + aMessageId);
     gMobileMessageDatabaseService.getMessageRecordById(aMessageId,
         (function notifyResult(aRv, aMessageRecord, aDomMessage) {
-      if (Ci.nsIMobileMessageCallback.SUCCESS_NO_ERROR != aRv) {
-        if (DEBUG) debug("Function getMessageRecordById() return error.");
-        aRequest.notifyGetMessageFailed(aRv);
+      if (!Components.isSuccessCode(aRv)) {
+        if (DEBUG) debug("Function getMessageRecordById() return error: " + aRv);
+        aRequest.notifyGetMessageFailed(
+          gMobileMessageDatabaseService.translateCrErrorToMessageCallbackError(aRv));
         return;
       }
       if ("mms" != aMessageRecord.type) {
@@ -2362,9 +2368,9 @@ MmsService.prototype = {
             // At this point we could send a message to content to
             // notify the user that storing an incoming MMS failed, most
             // likely due to a full disk.
-            if (DEBUG) debug("Could not store MMS " + domMessage.id +
-                  ", error code " + rv);
-            aRequest.notifyGetMessageFailed(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
+            if (DEBUG) debug("Could not store MMS, error code " + rv);
+            aRequest.notifyGetMessageFailed(
+              gMobileMessageDatabaseService.translateCrErrorToMessageCallbackError(rv));
             return;
           }
 
@@ -2396,9 +2402,9 @@ MmsService.prototype = {
                                        (function(rv) {
           let success = Components.isSuccessCode(rv);
           if (!success) {
-            if (DEBUG) debug("Could not change the delivery status: MMS " +
-                             domMessage.id + ", error code " + rv);
-            aRequest.notifyGetMessageFailed(Ci.nsIMobileMessageCallback.INTERNAL_ERROR);
+            if (DEBUG) debug("Could not change the delivery status, error code " + rv);
+            aRequest.notifyGetMessageFailed(
+              gMobileMessageDatabaseService.translateCrErrorToMessageCallbackError(rv));
             return;
           }
 

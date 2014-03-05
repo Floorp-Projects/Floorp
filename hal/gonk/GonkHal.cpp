@@ -1228,7 +1228,7 @@ EnsureKernelLowMemKillerParamsSet()
   nsAutoCString minfreeParams;
 
   int32_t lowerBoundOfNextOomScoreAdj = OOM_SCORE_ADJ_MIN - 1;
-  int32_t lowerBoundOfNextKillUnderMB = 0;
+  int32_t lowerBoundOfNextKillUnderKB = 0;
   int32_t countOfLowmemorykillerParametersSets = 0;
 
   for (int i = NUM_PROCESS_PRIORITY - 1; i >= 0; i--) {
@@ -1245,18 +1245,18 @@ EnsureKernelLowMemKillerParamsSet()
       MOZ_CRASH();
     }
 
-    int32_t killUnderMB;
+    int32_t killUnderKB;
     if (!NS_SUCCEEDED(Preferences::GetInt(
-          nsPrintfCString("hal.processPriorityManager.gonk.%s.KillUnderMB",
+          nsPrintfCString("hal.processPriorityManager.gonk.%s.KillUnderKB",
                           ProcessPriorityToString(priority)).get(),
-          &killUnderMB))) {
+          &killUnderKB))) {
       continue;
     }
 
     // The LMK in kernel silently malfunctions if we assign the parameters
     // in non-increasing order, so we add this assertion here. See bug 887192.
     MOZ_ASSERT(oomScoreAdj > lowerBoundOfNextOomScoreAdj);
-    MOZ_ASSERT(killUnderMB > lowerBoundOfNextKillUnderMB);
+    MOZ_ASSERT(killUnderKB > lowerBoundOfNextKillUnderKB);
 
     // The LMK in kernel only accept 6 sets of LMK parameters. See bug 914728.
     MOZ_ASSERT(countOfLowmemorykillerParametersSets < 6);
@@ -1265,10 +1265,10 @@ EnsureKernelLowMemKillerParamsSet()
     adjParams.AppendPrintf("%d,", OomAdjOfOomScoreAdj(oomScoreAdj));
 
     // minfree is in pages.
-    minfreeParams.AppendPrintf("%d,", killUnderMB * 1024 * 1024 / PAGE_SIZE);
+    minfreeParams.AppendPrintf("%d,", killUnderKB * 1024 / PAGE_SIZE);
 
     lowerBoundOfNextOomScoreAdj = oomScoreAdj;
-    lowerBoundOfNextKillUnderMB = killUnderMB;
+    lowerBoundOfNextKillUnderKB = killUnderKB;
     countOfLowmemorykillerParametersSets++;
   }
 
@@ -1281,14 +1281,14 @@ EnsureKernelLowMemKillerParamsSet()
   }
 
   // Set the low-memory-notification threshold.
-  int32_t lowMemNotifyThresholdMB;
+  int32_t lowMemNotifyThresholdKB;
   if (NS_SUCCEEDED(Preferences::GetInt(
-        "hal.processPriorityManager.gonk.notifyLowMemUnderMB",
-        &lowMemNotifyThresholdMB))) {
+        "hal.processPriorityManager.gonk.notifyLowMemUnderKB",
+        &lowMemNotifyThresholdKB))) {
 
     // notify_trigger is in pages.
     WriteToFile("/sys/module/lowmemorykiller/parameters/notify_trigger",
-      nsPrintfCString("%d", lowMemNotifyThresholdMB * 1024 * 1024 / PAGE_SIZE).get());
+      nsPrintfCString("%d", lowMemNotifyThresholdKB * 1024 / PAGE_SIZE).get());
   }
 
   // Ensure OOM events appear in logcat

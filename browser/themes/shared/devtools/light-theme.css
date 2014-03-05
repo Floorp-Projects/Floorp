@@ -21,13 +21,13 @@
   color: #f5f7fa;
 }
 
+.theme-bg-darker {
+  background: #EFEFEF;
+}
+
 .theme-selected {
   background-color: #4c9ed9;
   color: #f5f7fa; /* Light foreground text */
-}
-
-.theme-bg-darker {
-  background: #EFEFEF;
 }
 
 .theme-bg-contrast,
