@@ -42,6 +42,8 @@
 
 namespace mozilla {
 
+using namespace layers;
+
 RestyleManager::RestyleManager(nsPresContext* aPresContext)
   : mPresContext(aPresContext)
   , mRebuildAllStyleData(false)
