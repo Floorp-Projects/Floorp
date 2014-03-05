@@ -8,7 +8,6 @@
 #include "../cache/nsCacheUtils.h"
 #include "CacheHashUtils.h"
 #include "CacheStorageService.h"
-#include "CacheIndex.h"
 #include "nsThreadUtils.h"
 #include "CacheFile.h"
 #include "nsIFile.h"
@@ -86,7 +85,8 @@ NS_INTERFACE_MAP_BEGIN(CacheFileHandle)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END_THREADSAFE
 
-CacheFileHandle::CacheFileHandle(const SHA1Sum::Hash *aHash, bool aPriority)
+CacheFileHandle::CacheFileHandle(const SHA1Sum::Hash *aHash,
+                                 bool aPriority)
   : mHash(aHash)
   , mIsDoomed(false)
   , mPriority(aPriority)
@@ -96,23 +96,7 @@ CacheFileHandle::CacheFileHandle(const SHA1Sum::Hash *aHash, bool aPriority)
   , mFileSize(-1)
   , mFD(nullptr)
 {
-  LOG(("CacheFileHandle::CacheFileHandle() [this=%p, hash=%08x%08x%08x%08x%08x]"
-       , this, LOGSHA1(aHash)));
-}
-
-CacheFileHandle::CacheFileHandle(const nsACString &aKey, bool aPriority)
-  : mHash(nullptr)
-  , mIsDoomed(false)
-  , mPriority(aPriority)
-  , mClosed(false)
-  , mInvalid(false)
-  , mFileExists(false)
-  , mFileSize(-1)
-  , mFD(nullptr)
-  , mKey(aKey)
-{
-  LOG(("CacheFileHandle::CacheFileHandle() [this=%p, key=%s]", this,
-       PromiseFlatCString(aKey).get()));
+  LOG(("CacheFileHandle::CacheFileHandle() [this=%p]", this));
 }
 
 CacheFileHandle::~CacheFileHandle()
@@ -125,53 +109,6 @@ CacheFileHandle::~CacheFileHandle()
   if (ioMan) {
     ioMan->CloseHandleInternal(this);
   }
-}
-
-void
-CacheFileHandle::Log()
-{
-  nsAutoCString leafName;
-  if (mFile) {
-    mFile->GetNativeLeafName(leafName);
-  }
-
-  if (!mHash) {
-    // special file
-    LOG(("CacheFileHandle::Log() [this=%p, hash=nullptr, isDoomed=%d, "
-         "priority=%d, closed=%d, invalid=%d, "
-         "fileExists=%d, fileSize=%lld, leafName=%s, key=%s]",
-         this, mIsDoomed, mPriority, mClosed, mInvalid,
-         mFileExists, mFileSize, leafName.get(), mKey.get()));
-  }
-  else {
-    LOG(("CacheFileHandle::Log() [this=%p, hash=%08x%08x%08x%08x%08x, "
-         "isDoomed=%d, priority=%d, closed=%d, invalid=%d, "
-         "fileExists=%d, fileSize=%lld, leafName=%s, key=%s]",
-         this, LOGSHA1(mHash), mIsDoomed, mPriority, mClosed,
-         mInvalid, mFileExists, mFileSize, leafName.get(), mKey.get()));
-  }
-}
-
-uint32_t
-CacheFileHandle::FileSizeInK()
-{
-  MOZ_ASSERT(mFileSize != -1);
-  uint64_t size64 = mFileSize;
-
-  size64 += 0x3FF;
-  size64 >>= 10;
-
-  uint32_t size;
-  if (size64 >> 32) {
-    NS_WARNING("CacheFileHandle::FileSizeInK() - FileSize is too large, "
-               "truncating to PR_UINT32_MAX");
-    size = PR_UINT32_MAX;
-  }
-  else {
-    size = static_cast<uint32_t>(size64);
-  }
-
-  return size;
 }
 
 /******************************************************************************
@@ -256,11 +193,6 @@ CacheFileHandles::GetHandle(const SHA1Sum::Hash *aHash,
   MOZ_ASSERT(CacheFileIOManager::IsOnIOThreadOrCeased());
   MOZ_ASSERT(aHash);
 
-#ifdef DEBUG_HANDLES
-  LOG(("CacheFileHandles::GetHandle() [hash=%08x%08x%08x%08x%08x]",
-       LOGSHA1(aHash)));
-#endif
-
   // find hash entry for key
   HandleHashKey *entry = mTable.GetEntry(*aHash);
   if (!entry) {
@@ -268,10 +200,6 @@ CacheFileHandles::GetHandle(const SHA1Sum::Hash *aHash,
          "no handle entries found", LOGSHA1(aHash)));
     return NS_ERROR_NOT_AVAILABLE;
   }
-
-#ifdef DEBUG_HANDLES
-  Log(entry);
-#endif
 
   // Check if the entry is doomed
   nsRefPtr<CacheFileHandle> handle = entry->GetNewestHandle();
@@ -306,16 +234,8 @@ CacheFileHandles::NewHandle(const SHA1Sum::Hash *aHash,
   MOZ_ASSERT(CacheFileIOManager::IsOnIOThreadOrCeased());
   MOZ_ASSERT(aHash);
 
-#ifdef DEBUG_HANDLES
-  LOG(("CacheFileHandles::NewHandle() [hash=%08x%08x%08x%08x%08x]", LOGSHA1(aHash)));
-#endif
-
   // find hash entry for key
   HandleHashKey *entry = mTable.PutEntry(*aHash);
-
-#ifdef DEBUG_HANDLES
-  Log(entry);
-#endif
 
 #ifdef DEBUG
   entry->AssertHandlesState();
@@ -340,11 +260,6 @@ CacheFileHandles::RemoveHandle(CacheFileHandle *aHandle)
   if (!aHandle)
     return;
 
-#ifdef DEBUG_HANDLES
-  LOG(("CacheFileHandles::RemoveHandle() [handle=%p, hash=%08x%08x%08x%08x%08x]"
-       , aHandle, LOGSHA1(aHandle->Hash())));
-#endif
-
   // find hash entry for key
   HandleHashKey *entry = mTable.GetEntry(*aHandle->Hash());
   if (!entry) {
@@ -355,10 +270,6 @@ CacheFileHandles::RemoveHandle(CacheFileHandle *aHandle)
          "no entries found", LOGSHA1(aHandle->Hash())));
     return;
   }
-
-#ifdef DEBUG_HANDLES
-  Log(entry);
-#endif
 
   LOG(("CacheFileHandles::RemoveHandle() hash=%08x%08x%08x%08x%08x "
        "removing handle %p", LOGSHA1(entry->Hash()), aHandle));
@@ -400,24 +311,6 @@ CacheFileHandles::HandleCount()
 {
   return mTable.Count();
 }
-
-#ifdef DEBUG_HANDLES
-void
-CacheFileHandles::Log(CacheFileHandlesEntry *entry)
-{
-  LOG(("CacheFileHandles::Log() BEGIN [entry=%p]", entry));
-
-  nsTArray<nsRefPtr<CacheFileHandle> > array;
-  aEntry->GetHandles(array);
-
-  for (uint32_t i = 0; i < array.Length(); ++i) {
-    CacheFileHandle *handle = array[i];
-    handle->Log();
-  }
-
-  LOG(("CacheFileHandles::Log() END [entry=%p]", entry));
-}
-#endif
 
 // Events
 
@@ -480,9 +373,7 @@ public:
     if (mTarget) {
       mRV = NS_OK;
 
-      if (mFlags & CacheFileIOManager::SPECIAL_FILE) {
-      }
-      else if (mFlags & CacheFileIOManager::NOHASH) {
+      if (mFlags & CacheFileIOManager::NOHASH) {
         nsACString::const_char_iterator begin, end;
         begin = mKey.BeginReading();
         end = mKey.EndReading();
@@ -511,23 +402,16 @@ public:
         sum.finish(mHash);
       }
 
-      MOZ_EVENT_TRACER_EXEC(static_cast<nsIRunnable*>(this),
-                            "net::cache::open-background");
+      MOZ_EVENT_TRACER_EXEC(static_cast<nsIRunnable*>(this), "net::cache::open-background");
       if (NS_SUCCEEDED(mRV)) {
         if (!mIOMan)
           mRV = NS_ERROR_NOT_INITIALIZED;
         else {
-          if (mFlags & CacheFileIOManager::SPECIAL_FILE)
-            mRV = mIOMan->OpenSpecialFileInternal(mKey, mFlags,
-                                                  getter_AddRefs(mHandle));
-          else
-            mRV = mIOMan->OpenFileInternal(&mHash, mFlags,
-                                           getter_AddRefs(mHandle));
+          mRV = mIOMan->OpenFileInternal(&mHash, mFlags, getter_AddRefs(mHandle));
           mIOMan = nullptr;
           if (mHandle) {
             MOZ_EVENT_TRACER_NAME_OBJECT(mHandle.get(), mKey.get());
-            if (mHandle->Key().IsEmpty())
-              mHandle->Key() = mKey;
+            mHandle->Key() = mKey;
           }
         }
       }
@@ -637,10 +521,6 @@ public:
   ~WriteEvent()
   {
     MOZ_COUNT_DTOR(WriteEvent);
-
-    if (!mCallback && mBuf) {
-      free(const_cast<char *>(mBuf));
-    }
   }
 
   NS_IMETHOD Run()
@@ -663,10 +543,6 @@ public:
       MOZ_EVENT_TRACER_EXEC(static_cast<nsIRunnable*>(this), "net::cache::write-result");
       if (mCallback)
         mCallback->OnDataWritten(mHandle, mBuf, mRV);
-      else {
-        free(const_cast<char *>(mBuf));
-        mBuf = nullptr;
-      }
       MOZ_EVENT_TRACER_DONE(static_cast<nsIRunnable*>(this), "net::cache::write-result");
     }
     return NS_OK;
@@ -859,136 +735,6 @@ protected:
   nsresult                      mRV;
 };
 
-class RenameFileEvent : public nsRunnable {
-public:
-  RenameFileEvent(CacheFileHandle *aHandle, const nsACString &aNewName,
-                  CacheFileIOListener *aCallback)
-    : mHandle(aHandle)
-    , mNewName(aNewName)
-    , mCallback(aCallback)
-    , mRV(NS_ERROR_FAILURE)
-  {
-    MOZ_COUNT_CTOR(RenameFileEvent);
-    mTarget = static_cast<nsIEventTarget*>(NS_GetCurrentThread());
-  }
-
-  ~RenameFileEvent()
-  {
-    MOZ_COUNT_DTOR(RenameFileEvent);
-  }
-
-  NS_IMETHOD Run()
-  {
-    if (mTarget) {
-      if (mHandle->IsClosed())
-        mRV = NS_ERROR_NOT_INITIALIZED;
-      else
-        mRV = CacheFileIOManager::gInstance->RenameFileInternal(mHandle,
-                                                                mNewName);
-
-      nsCOMPtr<nsIEventTarget> target;
-      mTarget.swap(target);
-      target->Dispatch(this, nsIEventTarget::DISPATCH_NORMAL);
-    }
-    else {
-      if (mCallback)
-        mCallback->OnFileRenamed(mHandle, mRV);
-    }
-    return NS_OK;
-  }
-
-protected:
-  nsRefPtr<CacheFileHandle>     mHandle;
-  nsCString                     mNewName;
-  nsCOMPtr<CacheFileIOListener> mCallback;
-  nsCOMPtr<nsIEventTarget>      mTarget;
-  nsresult                      mRV;
-};
-
-class InitIndexEntryEvent : public nsRunnable {
-public:
-  InitIndexEntryEvent(CacheFileHandle *aHandle, uint32_t aAppId,
-                      bool aAnonymous, bool aInBrowser)
-    : mHandle(aHandle)
-    , mAppId(aAppId)
-    , mAnonymous(aAnonymous)
-    , mInBrowser(aInBrowser)
-  {
-    MOZ_COUNT_CTOR(InitIndexEntryEvent);
-  }
-
-  ~InitIndexEntryEvent()
-  {
-    MOZ_COUNT_DTOR(InitIndexEntryEvent);
-  }
-
-  NS_IMETHOD Run()
-  {
-    if (mHandle->IsClosed() || mHandle->IsDoomed())
-      return NS_OK;
-
-    CacheIndex::InitEntry(mHandle->Hash(), mAppId, mAnonymous, mInBrowser);
-
-    // We cannot set the filesize before we init the entry. If we're opening
-    // an existing entry file, frecency and expiration time will be set after
-    // parsing the entry file, but we must set the filesize here since nobody is
-    // going to set it if there is no write to the file.
-    uint32_t sizeInK = mHandle->FileSizeInK();
-    CacheIndex::UpdateEntry(mHandle->Hash(), nullptr, nullptr, &sizeInK);
-
-    return NS_OK;
-  }
-
-protected:
-  nsRefPtr<CacheFileHandle> mHandle;
-  uint32_t                  mAppId;
-  bool                      mAnonymous;
-  bool                      mInBrowser;
-};
-
-class UpdateIndexEntryEvent : public nsRunnable {
-public:
-  UpdateIndexEntryEvent(CacheFileHandle *aHandle, const uint32_t *aFrecency,
-                        const uint32_t *aExpirationTime)
-    : mHandle(aHandle)
-    , mHasFrecency(false)
-    , mHasExpirationTime(false)
-  {
-    MOZ_COUNT_CTOR(UpdateIndexEntryEvent);
-    if (aFrecency) {
-      mHasFrecency = true;
-      mFrecency = *aFrecency;
-    }
-    if (aExpirationTime) {
-      mHasExpirationTime = true;
-      mExpirationTime = *aExpirationTime;
-    }
-  }
-
-  ~UpdateIndexEntryEvent()
-  {
-    MOZ_COUNT_DTOR(UpdateIndexEntryEvent);
-  }
-
-  NS_IMETHOD Run()
-  {
-    if (mHandle->IsClosed() || mHandle->IsDoomed())
-      return NS_OK;
-
-    CacheIndex::UpdateEntry(mHandle->Hash(),
-                            mHasFrecency ? &mFrecency : nullptr,
-                            mHasExpirationTime ? &mExpirationTime : nullptr,
-                            nullptr);
-    return NS_OK;
-  }
-
-protected:
-  nsRefPtr<CacheFileHandle> mHandle;
-  bool                      mHasFrecency;
-  bool                      mHasExpirationTime;
-  uint32_t                  mFrecency;
-  uint32_t                  mExpirationTime;
-};
 
 class MetadataWriteScheduleEvent : public nsRunnable
 {
@@ -1100,8 +846,6 @@ CacheFileIOManager::Shutdown()
 
   Telemetry::AutoTimer<Telemetry::NETWORK_DISK_CACHE_SHUTDOWN_V2> shutdownTimer;
 
-  CacheIndex::PreShutdown();
-
   ShutdownMetadataWriteScheduling();
 
   {
@@ -1122,8 +866,6 @@ CacheFileIOManager::Shutdown()
   if (gInstance->mIOThread)
     gInstance->mIOThread->Shutdown();
 
-  CacheIndex::Shutdown();
-
   nsRefPtr<CacheFileIOManager> ioMan;
   ioMan.swap(gInstance);
 
@@ -1133,8 +875,6 @@ CacheFileIOManager::Shutdown()
 nsresult
 CacheFileIOManager::ShutdownInternal()
 {
-  LOG(("CacheFileIOManager::ShutdownInternal() [this=%p]", this));
-
   MOZ_ASSERT(mIOThread->IsCurrentThread());
 
   // No new handles can be created after this flag is set
@@ -1143,13 +883,10 @@ CacheFileIOManager::ShutdownInternal()
   // close all handles and delete all associated files
   nsTArray<nsRefPtr<CacheFileHandle> > handles;
   mHandles.GetAllHandles(&handles);
-  handles.AppendElements(mSpecialHandles);
 
   for (uint32_t i=0 ; i<handles.Length() ; i++) {
     CacheFileHandle *h = handles[i];
     h->mClosed = true;
-
-    h->Log();
 
     // Close file handle
     if (h->mFD) {
@@ -1158,20 +895,11 @@ CacheFileIOManager::ShutdownInternal()
 
     // Remove file if entry is doomed or invalid
     if (h->mFileExists && (h->mIsDoomed || h->mInvalid)) {
-      LOG(("CacheFileIOManager::ShutdownInternal() - Removing file from disk"));
       h->mFile->Remove(false);
     }
 
-    if (!h->IsSpecialFile() && !h->mIsDoomed &&
-        (h->mInvalid || !h->mFileExists)) {
-      CacheIndex::RemoveEntry(h->Hash());
-    }
-
-    // Remove the handle from mHandles/mSpecialHandles
-    if (h->IsSpecialFile())
-      mSpecialHandles.RemoveElement(h);
-    else
-      mHandles.RemoveHandle(h);
+    // Remove the handle from hashtable
+    mHandles.RemoveHandle(h);
   }
 
   // Assert the table is empty. When we are here, no new handles can be added
@@ -1218,13 +946,11 @@ CacheFileIOManager::OnProfile()
   }
 
   if (directory) {
-    rv = directory->Append(NS_LITERAL_STRING("cache2"));
-    NS_ENSURE_SUCCESS(rv, rv);
-
     rv = directory->Clone(getter_AddRefs(ioMan->mCacheDirectory));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    CacheIndex::Init(directory);
+    rv = ioMan->mCacheDirectory->Append(NS_LITERAL_STRING("cache2"));
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   return NS_OK;
@@ -1250,17 +976,6 @@ CacheFileIOManager::IOThread()
     thread = gInstance->mIOThread;
 
   return thread.forget();
-}
-
-// static
-bool
-CacheFileIOManager::IsOnIOThread()
-{
-  nsRefPtr<CacheFileIOManager> ioMan = gInstance;
-  if (ioMan && ioMan->mIOThread)
-    return ioMan->mIOThread->IsCurrentThread();
-
-  return false;
 }
 
 // static
@@ -1439,10 +1154,7 @@ CacheFileIOManager::OpenFileInternal(const SHA1Sum::Hash *aHash,
                                      uint32_t aFlags,
                                      CacheFileHandle **_retval)
 {
-  LOG(("CacheFileIOManager::OpenFileInternal() [hash=%08x%08x%08x%08x%08x, "
-       "flags=%d]", LOGSHA1(aHash), aFlags));
-
-  MOZ_ASSERT(CacheFileIOManager::IsOnIOThread());
+  MOZ_ASSERT(CacheFileIOManager::IsOnIOThreadOrCeased());
 
   nsresult rv;
 
@@ -1461,7 +1173,7 @@ CacheFileIOManager::OpenFileInternal(const SHA1Sum::Hash *aHash,
   nsRefPtr<CacheFileHandle> handle;
   mHandles.GetHandle(aHash, false, getter_AddRefs(handle));
 
-  if ((aFlags & (OPEN | CREATE | CREATE_NEW)) == CREATE_NEW) {
+  if (aFlags == CREATE_NEW) {
     if (handle) {
       rv = DoomFileInternal(handle);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -1476,19 +1188,13 @@ CacheFileIOManager::OpenFileInternal(const SHA1Sum::Hash *aHash,
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (exists) {
-      CacheIndex::RemoveEntry(aHash);
-
-      LOG(("CacheFileIOManager::OpenFileInternal() - Removing old file from "
-           "disk"));
       rv = file->Remove(false);
       if (NS_FAILED(rv)) {
         NS_WARNING("Cannot remove old entry from the disk");
-        LOG(("CacheFileIOManager::OpenFileInternal() - Removing old file failed"
-             ". [rv=0x%08x]", rv));
+        // TODO log
       }
     }
 
-    CacheIndex::AddEntry(aHash);
     handle->mFile.swap(file);
     handle->mFileSize = 0;
   }
@@ -1502,106 +1208,11 @@ CacheFileIOManager::OpenFileInternal(const SHA1Sum::Hash *aHash,
   rv = file->Exists(&exists);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!exists && (aFlags & (OPEN | CREATE | CREATE_NEW)) == OPEN)
+  if (!exists && aFlags == OPEN)
     return NS_ERROR_NOT_AVAILABLE;
 
   rv = mHandles.NewHandle(aHash, aFlags & PRIORITY, getter_AddRefs(handle));
   NS_ENSURE_SUCCESS(rv, rv);
-
-  if (exists) {
-    rv = file->GetFileSize(&handle->mFileSize);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    handle->mFileExists = true;
-
-    CacheIndex::EnsureEntryExists(aHash);
-  }
-  else {
-    handle->mFileSize = 0;
-
-    CacheIndex::AddEntry(aHash);
-  }
-
-  handle->mFile.swap(file);
-  handle.swap(*_retval);
-  return NS_OK;
-}
-
-nsresult
-CacheFileIOManager::OpenSpecialFileInternal(const nsACString &aKey,
-                                            uint32_t aFlags,
-                                            CacheFileHandle **_retval)
-{
-  LOG(("CacheFileIOManager::OpenSpecialFileInternal() [key=%s, flags=%d]",
-       PromiseFlatCString(aKey).get(), aFlags));
-
-  MOZ_ASSERT(CacheFileIOManager::IsOnIOThread());
-
-  nsresult rv;
-
-  if (mShuttingDown)
-    return NS_ERROR_NOT_INITIALIZED;
-
-  if (!mTreeCreated) {
-    rv = CreateCacheTree();
-    if (NS_FAILED(rv)) return rv;
-  }
-
-  nsCOMPtr<nsIFile> file;
-  rv = GetSpecialFile(aKey, getter_AddRefs(file));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsRefPtr<CacheFileHandle> handle;
-  for (uint32_t i = 0 ; i < mSpecialHandles.Length() ; i++) {
-    if (!mSpecialHandles[i]->IsDoomed() && mSpecialHandles[i]->Key() == aKey) {
-      handle = mSpecialHandles[i];
-      break;
-    }
-  }
-
-  if ((aFlags & (OPEN | CREATE | CREATE_NEW)) == CREATE_NEW) {
-    if (handle) {
-      rv = DoomFileInternal(handle);
-      NS_ENSURE_SUCCESS(rv, rv);
-      handle = nullptr;
-    }
-
-    handle = new CacheFileHandle(aKey, aFlags & PRIORITY);
-    mSpecialHandles.AppendElement(handle);
-
-    bool exists;
-    rv = file->Exists(&exists);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (exists) {
-      LOG(("CacheFileIOManager::OpenSpecialFileInternal() - Removing file from "
-           "disk"));
-      rv = file->Remove(false);
-      if (NS_FAILED(rv)) {
-        NS_WARNING("Cannot remove old entry from the disk");
-        LOG(("CacheFileIOManager::OpenSpecialFileInternal() - Removing file "
-             "failed. [rv=0x%08x]", rv));
-      }
-    }
-
-    handle->mFile.swap(file);
-    handle->mFileSize = 0;
-  }
-
-  if (handle) {
-    handle.swap(*_retval);
-    return NS_OK;
-  }
-
-  bool exists;
-  rv = file->Exists(&exists);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!exists && (aFlags & (OPEN | CREATE | CREATE_NEW)) == OPEN)
-    return NS_ERROR_NOT_AVAILABLE;
-
-  handle = new CacheFileHandle(aKey, aFlags & PRIORITY);
-  mSpecialHandles.AppendElement(handle);
 
   if (exists) {
     rv = file->GetFileSize(&handle->mFileSize);
@@ -1621,9 +1232,6 @@ CacheFileIOManager::OpenSpecialFileInternal(const nsACString &aKey,
 nsresult
 CacheFileIOManager::CloseHandleInternal(CacheFileHandle *aHandle)
 {
-  LOG(("CacheFileIOManager::CloseHandleInternal() [handle=%p]", aHandle));
-  aHandle->Log();
-
   MOZ_ASSERT(CacheFileIOManager::IsOnIOThreadOrCeased());
 
   // Close file handle
@@ -1631,22 +1239,13 @@ CacheFileIOManager::CloseHandleInternal(CacheFileHandle *aHandle)
     ReleaseNSPRHandleInternal(aHandle);
   }
 
-  // Delete the file if the entry was doomed or invalid
-  if (aHandle->mIsDoomed || aHandle->mInvalid) {
-    LOG(("CacheFileIOManager::CloseHandleInternal() - Removing file from "
-         "disk"));
+  // If the entry was doomed delete the file
+  if (aHandle->IsDoomed()) {
     aHandle->mFile->Remove(false);
   }
 
-  if (!aHandle->IsSpecialFile() && !aHandle->mIsDoomed &&
-      (aHandle->mInvalid || !aHandle->mFileExists)) {
-    CacheIndex::RemoveEntry(aHandle->Hash());
-  }
-
   // Remove the handle from hashtable
-  if (aHandle->IsSpecialFile())
-    mSpecialHandles.RemoveElement(aHandle);
-  else if (!mShuttingDown) // Don't touch after shutdown
+  if (!mShuttingDown) // Don't touch after shutdown
     mHandles.RemoveHandle(aHandle);
 
   return NS_OK;
@@ -1680,9 +1279,6 @@ nsresult
 CacheFileIOManager::ReadInternal(CacheFileHandle *aHandle, int64_t aOffset,
                                  char *aBuf, int32_t aCount)
 {
-  LOG(("CacheFileIOManager::ReadInternal() [handle=%p, offset=%lld, count=%d]",
-       aHandle, aOffset, aCount));
-
   nsresult rv;
 
   if (!aHandle->mFileExists) {
@@ -1743,9 +1339,6 @@ CacheFileIOManager::WriteInternal(CacheFileHandle *aHandle, int64_t aOffset,
                                   const char *aBuf, int32_t aCount,
                                   bool aValidate)
 {
-  LOG(("CacheFileIOManager::WriteInternal() [handle=%p, offset=%lld, count=%d, "
-       "validate=%d]", aHandle, aOffset, aCount, aValidate));
-
   nsresult rv;
 
   if (!aHandle->mFileExists) {
@@ -1775,14 +1368,8 @@ CacheFileIOManager::WriteInternal(CacheFileHandle *aHandle, int64_t aOffset,
 
   int32_t bytesWritten = PR_Write(aHandle->mFD, aBuf, aCount);
 
-  if (bytesWritten != -1 && aHandle->mFileSize < aOffset+bytesWritten) {
-    aHandle->mFileSize = aOffset+bytesWritten;
-
-    if (!aHandle->IsDoomed() && !aHandle->IsSpecialFile()) {
-      uint32_t size = aHandle->FileSizeInK();
-      CacheIndex::UpdateEntry(aHandle->Hash(), nullptr, nullptr, &size);
-    }
-  }
+  if (bytesWritten != -1 && aHandle->mFileSize < aOffset+bytesWritten)
+      aHandle->mFileSize = aOffset+bytesWritten;
 
   if (bytesWritten != aCount)
     return NS_ERROR_FAILURE;
@@ -1819,9 +1406,6 @@ CacheFileIOManager::DoomFile(CacheFileHandle *aHandle,
 nsresult
 CacheFileIOManager::DoomFileInternal(CacheFileHandle *aHandle)
 {
-  LOG(("CacheFileIOManager::DoomFileInternal() [handle=%p]", aHandle));
-  aHandle->Log();
-
   nsresult rv;
 
   if (aHandle->IsDoomed())
@@ -1857,9 +1441,6 @@ CacheFileIOManager::DoomFileInternal(CacheFileHandle *aHandle)
     }
   }
 
-  if (!aHandle->IsSpecialFile())
-    CacheIndex::RemoveEntry(aHandle->Hash());
-
   aHandle->mIsDoomed = true;
   return NS_OK;
 }
@@ -1887,9 +1468,6 @@ CacheFileIOManager::DoomFileByKey(const nsACString &aKey,
 nsresult
 CacheFileIOManager::DoomFileByKeyInternal(const SHA1Sum::Hash *aHash)
 {
-  LOG(("CacheFileIOManager::DoomFileByKeyInternal() [hash=%08x%08x%08x%08x%08x]"
-       , LOGSHA1(aHash)));
-
   MOZ_ASSERT(CacheFileIOManager::IsOnIOThreadOrCeased());
 
   nsresult rv;
@@ -1905,8 +1483,6 @@ CacheFileIOManager::DoomFileByKeyInternal(const SHA1Sum::Hash *aHash)
   mHandles.GetHandle(aHash, true, getter_AddRefs(handle));
 
   if (handle) {
-    handle->Log();
-
     if (handle->IsDoomed())
       return NS_OK;
 
@@ -1925,16 +1501,11 @@ CacheFileIOManager::DoomFileByKeyInternal(const SHA1Sum::Hash *aHash)
   if (!exists)
     return NS_ERROR_NOT_AVAILABLE;
 
-  LOG(("CacheFileIOManager::DoomFileByKeyInternal() - Removing file from "
-       "disk"));
   rv = file->Remove(false);
   if (NS_FAILED(rv)) {
     NS_WARNING("Cannot remove old entry from the disk");
-    LOG(("CacheFileIOManager::DoomFileByKeyInternal() - Removing file failed. "
-         "[rv=0x%08x]", rv));
+    // TODO log
   }
-
-  CacheIndex::RemoveEntry(aHash);
 
   return NS_OK;
 }
@@ -1960,8 +1531,6 @@ CacheFileIOManager::ReleaseNSPRHandle(CacheFileHandle *aHandle)
 nsresult
 CacheFileIOManager::ReleaseNSPRHandleInternal(CacheFileHandle *aHandle)
 {
-  LOG(("CacheFileIOManager::ReleaseNSPRHandleInternal() [handle=%p]", aHandle));
-
   MOZ_ASSERT(CacheFileIOManager::IsOnIOThreadOrCeased());
   MOZ_ASSERT(aHandle->mFD);
 
@@ -1995,6 +1564,52 @@ CacheFileIOManager::TruncateSeekSetEOF(CacheFileHandle *aHandle,
   rv = ioMan->mIOThread->Dispatch(ev, CacheIOThread::WRITE);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  return NS_OK;
+}
+
+nsresult
+CacheFileIOManager::EnumerateEntryFiles(EEnumerateMode aMode,
+                                        CacheEntriesEnumerator** aEnumerator)
+{
+  LOG(("CacheFileIOManager::EnumerateEntryFiles(%d)", aMode));
+
+  nsresult rv;
+  nsRefPtr<CacheFileIOManager> ioMan = gInstance;
+
+  if (!ioMan)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  if (!ioMan->mCacheDirectory)
+    return NS_ERROR_FILE_NOT_FOUND;
+
+  nsCOMPtr<nsIFile> file;
+  rv = ioMan->mCacheDirectory->Clone(getter_AddRefs(file));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  switch (aMode) {
+  case ENTRIES:
+    rv = file->AppendNative(NS_LITERAL_CSTRING("entries"));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    break;
+
+  case DOOMED:
+    rv = file->AppendNative(NS_LITERAL_CSTRING("doomed"));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    break;
+
+  default:
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  nsAutoPtr<CacheEntriesEnumerator> enumerator(
+    new CacheEntriesEnumerator(file));
+
+  rv = enumerator->Init();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aEnumerator = enumerator.forget();
   return NS_OK;
 }
 
@@ -2039,9 +1654,6 @@ CacheFileIOManager::TruncateSeekSetEOFInternal(CacheFileHandle *aHandle,
                                                int64_t aTruncatePos,
                                                int64_t aEOFPos)
 {
-  LOG(("CacheFileIOManager::TruncateSeekSetEOFInternal() [handle=%p, "
-       "truncatePos=%lld, EOFPos=%lld]", aHandle, aTruncatePos, aEOFPos));
-
   nsresult rv;
 
   if (!aHandle->mFileExists) {
@@ -2075,206 +1687,22 @@ CacheFileIOManager::TruncateSeekSetEOFInternal(CacheFileHandle *aHandle,
 }
 
 nsresult
-CacheFileIOManager::RenameFile(CacheFileHandle *aHandle,
-                               const nsACString &aNewName,
-                               CacheFileIOListener *aCallback)
-{
-  LOG(("CacheFileIOManager::RenameFile() [handle=%p, newName=%s, listener=%p]",
-       aHandle, PromiseFlatCString(aNewName).get(), aCallback));
-
-  nsresult rv;
-  nsRefPtr<CacheFileIOManager> ioMan = gInstance;
-
-  if (aHandle->IsClosed() || !ioMan)
-    return NS_ERROR_NOT_INITIALIZED;
-
-  if (!aHandle->IsSpecialFile())
-    return NS_ERROR_UNEXPECTED;
-
-  nsRefPtr<RenameFileEvent> ev = new RenameFileEvent(aHandle, aNewName,
-                                                     aCallback);
-  rv = ioMan->mIOThread->Dispatch(ev, CacheIOThread::WRITE);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-nsresult
-CacheFileIOManager::RenameFileInternal(CacheFileHandle *aHandle,
-                                       const nsACString &aNewName)
-{
-  LOG(("CacheFileIOManager::RenameFileInternal() [handle=%p, newName=%s]",
-       aHandle, PromiseFlatCString(aNewName).get()));
-
-  nsresult rv;
-
-  MOZ_ASSERT(aHandle->IsSpecialFile());
-
-  if (aHandle->IsDoomed())
-    return NS_ERROR_NOT_AVAILABLE;
-
-  // Doom old handle if it exists and is not doomed
-  for (uint32_t i = 0 ; i < mSpecialHandles.Length() ; i++) {
-    if (!mSpecialHandles[i]->IsDoomed() &&
-        mSpecialHandles[i]->Key() == aNewName) {
-      MOZ_ASSERT(aHandle != mSpecialHandles[i]);
-      rv = DoomFileInternal(mSpecialHandles[i]);
-      NS_ENSURE_SUCCESS(rv, rv);
-      break;
-    }
-  }
-
-  nsCOMPtr<nsIFile> file;
-  rv = GetSpecialFile(aNewName, getter_AddRefs(file));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  bool exists;
-  rv = file->Exists(&exists);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (exists) {
-    LOG(("CacheFileIOManager::RenameFileInternal() - Removing old file from "
-         "disk"));
-    rv = file->Remove(false);
-    if (NS_FAILED(rv)) {
-      NS_WARNING("Cannot remove file from the disk");
-      LOG(("CacheFileIOManager::RenameFileInternal() - Removing old file failed"
-           ". [rv=0x%08x]", rv));
-    }
-  }
-
-  if (!aHandle->FileExists()) {
-    aHandle->mKey = aNewName;
-    return NS_OK;
-  }
-
-  if (aHandle->mFD)
-    ReleaseNSPRHandleInternal(aHandle);
-
-  rv = aHandle->mFile->MoveToNative(nullptr, aNewName);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  aHandle->mKey = aNewName;
-  return NS_OK;
-}
-
-nsresult
-CacheFileIOManager::InitIndexEntry(CacheFileHandle *aHandle,
-                                   uint32_t         aAppId,
-                                   bool             aAnonymous,
-                                   bool             aInBrowser)
-{
-  LOG(("CacheFileIOManager::InitIndexEntry() [handle=%p, appId=%u, anonymous=%d"
-       ", inBrowser=%d]", aHandle, aAppId, aAnonymous, aInBrowser));
-
-  nsresult rv;
-  nsRefPtr<CacheFileIOManager> ioMan = gInstance;
-
-  if (aHandle->IsClosed() || !ioMan)
-    return NS_ERROR_NOT_INITIALIZED;
-
-  if (aHandle->IsSpecialFile())
-    return NS_ERROR_UNEXPECTED;
-
-  nsRefPtr<InitIndexEntryEvent> ev =
-    new InitIndexEntryEvent(aHandle, aAppId, aAnonymous, aInBrowser);
-  rv = ioMan->mIOThread->Dispatch(ev, CacheIOThread::WRITE);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-nsresult
-CacheFileIOManager::UpdateIndexEntry(CacheFileHandle *aHandle,
-                                     const uint32_t  *aFrecency,
-                                     const uint32_t  *aExpirationTime)
-{
-  LOG(("CacheFileIOManager::UpdateIndexEntry() [handle=%p, frecency=%s, "
-       "expirationTime=%s]", aHandle,
-       aFrecency ? nsPrintfCString("%u", *aFrecency).get() : "",
-       aExpirationTime ? nsPrintfCString("%u", *aExpirationTime).get() : ""));
-
-  nsresult rv;
-  nsRefPtr<CacheFileIOManager> ioMan = gInstance;
-
-  if (aHandle->IsClosed() || !ioMan)
-    return NS_ERROR_NOT_INITIALIZED;
-
-  if (aHandle->IsSpecialFile())
-    return NS_ERROR_UNEXPECTED;
-
-  nsRefPtr<UpdateIndexEntryEvent> ev =
-    new UpdateIndexEntryEvent(aHandle, aFrecency, aExpirationTime);
-  rv = ioMan->mIOThread->Dispatch(ev, CacheIOThread::WRITE);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-nsresult
-CacheFileIOManager::EnumerateEntryFiles(EEnumerateMode aMode,
-                                        CacheEntriesEnumerator** aEnumerator)
-{
-  LOG(("CacheFileIOManager::EnumerateEntryFiles(%d)", aMode));
-
-  nsresult rv;
-  nsRefPtr<CacheFileIOManager> ioMan = gInstance;
-
-  if (!ioMan)
-    return NS_ERROR_NOT_INITIALIZED;
-
-  if (!ioMan->mCacheDirectory)
-    return NS_ERROR_FILE_NOT_FOUND;
-
-  nsCOMPtr<nsIFile> file;
-  rv = ioMan->mCacheDirectory->Clone(getter_AddRefs(file));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  switch (aMode) {
-  case ENTRIES:
-    rv = file->AppendNative(NS_LITERAL_CSTRING(kEntriesDir));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    break;
-
-  case DOOMED:
-    rv = file->AppendNative(NS_LITERAL_CSTRING(kDoomedDir));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    break;
-
-  default:
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  nsAutoPtr<CacheEntriesEnumerator> enumerator(
-    new CacheEntriesEnumerator(file));
-
-  rv = enumerator->Init();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *aEnumerator = enumerator.forget();
-  return NS_OK;
-}
-
-nsresult
 CacheFileIOManager::CreateFile(CacheFileHandle *aHandle)
 {
   MOZ_ASSERT(!aHandle->mFD);
-  MOZ_ASSERT(aHandle->mFile);
 
   nsresult rv;
 
+  nsCOMPtr<nsIFile> file;
   if (aHandle->IsDoomed()) {
-    nsCOMPtr<nsIFile> file;
-
     rv = GetDoomedFile(getter_AddRefs(file));
     NS_ENSURE_SUCCESS(rv, rv);
-
-    aHandle->mFile.swap(file);
   } else {
+    rv = GetFile(aHandle->Hash(), getter_AddRefs(file));
+    NS_ENSURE_SUCCESS(rv, rv);
+
     bool exists;
-    if (NS_SUCCEEDED(aHandle->mFile->Exists(&exists)) && exists) {
+    if (NS_SUCCEEDED(file->Exists(&exists)) && exists) {
       NS_WARNING("Found a file that should not exist!");
     }
   }
@@ -2287,7 +1715,7 @@ CacheFileIOManager::CreateFile(CacheFileHandle *aHandle)
 }
 
 void
-CacheFileIOManager::HashToStr(const SHA1Sum::Hash *aHash, nsACString &_retval)
+CacheFileIOManager::GetHashStr(const SHA1Sum::Hash *aHash, nsACString &_retval)
 {
   _retval.Assign("");
   const char hexChars[] = {'0', '1', '2', '3', '4', '5', '6', '7',
@@ -2299,33 +1727,6 @@ CacheFileIOManager::HashToStr(const SHA1Sum::Hash *aHash, nsACString &_retval)
 }
 
 nsresult
-CacheFileIOManager::StrToHash(const nsACString &aHash, SHA1Sum::Hash *_retval)
-{
-  if (aHash.Length() != 2*sizeof(SHA1Sum::Hash))
-    return NS_ERROR_INVALID_ARG;
-
-  for (uint32_t i=0 ; i<aHash.Length() ; i++) {
-    uint8_t value;
-
-    if (aHash[i] >= '0' && aHash[i] <= '9')
-      value = aHash[i] - '0';
-    else if (aHash[i] >= 'A' && aHash[i] <= 'F')
-      value = aHash[i] - 'A' + 10;
-    else if (aHash[i] >= 'a' && aHash[i] <= 'f')
-      value = aHash[i] - 'a' + 10;
-    else
-      return NS_ERROR_INVALID_ARG;
-
-    if (i%2 == 0)
-      (reinterpret_cast<uint8_t *>(_retval))[i/2] = value << 4;
-    else
-      (reinterpret_cast<uint8_t *>(_retval))[i/2] += value;
-  }
-
-  return NS_OK;
-}
-
-nsresult
 CacheFileIOManager::GetFile(const SHA1Sum::Hash *aHash, nsIFile **_retval)
 {
   nsresult rv;
@@ -2333,28 +1734,13 @@ CacheFileIOManager::GetFile(const SHA1Sum::Hash *aHash, nsIFile **_retval)
   rv = mCacheDirectory->Clone(getter_AddRefs(file));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = file->AppendNative(NS_LITERAL_CSTRING(kEntriesDir));
+  rv = file->AppendNative(NS_LITERAL_CSTRING("entries"));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsAutoCString leafName;
-  HashToStr(aHash, leafName);
+  GetHashStr(aHash, leafName);
 
   rv = file->AppendNative(leafName);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  file.swap(*_retval);
-  return NS_OK;
-}
-
-nsresult
-CacheFileIOManager::GetSpecialFile(const nsACString &aKey, nsIFile **_retval)
-{
-  nsresult rv;
-  nsCOMPtr<nsIFile> file;
-  rv = mCacheDirectory->Clone(getter_AddRefs(file));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = file->AppendNative(aKey);
   NS_ENSURE_SUCCESS(rv, rv);
 
   file.swap(*_retval);
@@ -2369,7 +1755,7 @@ CacheFileIOManager::GetDoomedFile(nsIFile **_retval)
   rv = mCacheDirectory->Clone(getter_AddRefs(file));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = file->AppendNative(NS_LITERAL_CSTRING(kDoomedDir));
+  rv = file->AppendNative(NS_LITERAL_CSTRING("doomed"));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = file->AppendNative(NS_LITERAL_CSTRING("dummyleaf"));
@@ -2447,11 +1833,11 @@ CacheFileIOManager::CreateCacheTree()
   NS_ENSURE_SUCCESS(rv, rv);
 
   // ensure entries directory exists
-  rv = CheckAndCreateDir(mCacheDirectory, kEntriesDir);
+  rv = CheckAndCreateDir(mCacheDirectory, "entries");
   NS_ENSURE_SUCCESS(rv, rv);
 
   // ensure doomed directory exists
-  rv = CheckAndCreateDir(mCacheDirectory, kDoomedDir);
+  rv = CheckAndCreateDir(mCacheDirectory, "doomed");
   NS_ENSURE_SUCCESS(rv, rv);
 
   mTreeCreated = true;
@@ -2465,8 +1851,6 @@ CacheFileIOManager::OpenNSPRHandle(CacheFileHandle *aHandle, bool aCreate)
   MOZ_ASSERT(!aHandle->mFD);
   MOZ_ASSERT(mHandlesByLastUsed.IndexOf(aHandle) == mHandlesByLastUsed.NoIndex);
   MOZ_ASSERT(mHandlesByLastUsed.Length() <= kOpenHandlesLimit);
-  MOZ_ASSERT((aCreate && !aHandle->mFileExists) ||
-             (!aCreate && aHandle->mFileExists));
 
   nsresult rv;
 
@@ -2488,7 +1872,8 @@ CacheFileIOManager::OpenNSPRHandle(CacheFileHandle *aHandle, bool aCreate)
     if (NS_ERROR_FILE_NOT_FOUND == rv) {
       LOG(("  file doesn't exists"));
       aHandle->mFileExists = false;
-      return DoomFileInternal(aHandle);
+      aHandle->mIsDoomed = true;
+      return NS_OK;
     }
     NS_ENSURE_SUCCESS(rv, rv);
   }
