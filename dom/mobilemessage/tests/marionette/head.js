@@ -5,7 +5,8 @@ const {Cc: Cc, Ci: Ci, Cr: Cr, Cu: Cu} = SpecialPowers;
 
 let Promise = Cu.import("resource://gre/modules/Promise.jsm").Promise;
 
-/* Push required permissions and test if |navigator.mozMobileMessage| exists.
+/**
+ * Push required permissions and test if |navigator.mozMobileMessage| exists.
  * Resolve if it does, reject otherwise.
  *
  * Fulfill params:
@@ -44,7 +45,8 @@ function ensureMobileMessage() {
   return deferred.promise;
 }
 
-/* Send a SMS message to a single receiver.  Resolve if it succeeds, reject
+/**
+ * Send a SMS message to a single receiver.  Resolve if it succeeds, reject
  * otherwise.
  *
  * Fulfill params:
@@ -72,7 +74,8 @@ function sendSmsWithSuccess(aReceiver, aText) {
   return deferred.promise;
 }
 
-/* Send a MMS message with specified parameters.  Resolve if it fails, reject
+/**
+ * Send a MMS message with specified parameters.  Resolve if it fails, reject
  * otherwise.
  *
  * Fulfill params:
@@ -100,7 +103,8 @@ function sendMmsWithFailure(aMmsParameters) {
   return deferred.promise;
 }
 
-/* Retrieve messages from database.
+/**
+ * Retrieve messages from database.
  *
  * Fulfill params:
  *   messages -- an array of {Sms,Mms}Message instances.
@@ -136,7 +140,8 @@ function getMessages(aFilter, aReverse) {
   return deferred.promise;
 }
 
-/* Retrieve all messages from database.
+/**
+ * Retrieve all messages from database.
  *
  * Fulfill params:
  *   messages -- an array of {Sms,Mms}Message instances.
@@ -150,7 +155,8 @@ function getAllMessages() {
   return getMessages(null, false);
 }
 
-/* Retrieve all threads from database.
+/**
+ * Retrieve all threads from database.
  *
  * Fulfill params:
  *   threads -- an array of MozMobileMessageThread instances.
@@ -179,7 +185,8 @@ function getAllThreads() {
   return deferred.promise;
 }
 
-/* Retrieve a single specified thread from database.
+/**
+ * Retrieve a single specified thread from database.
  *
  * Fulfill params:
  *   thread -- a MozMobileMessageThread instance.
@@ -204,7 +211,8 @@ function getThreadById(aThreadId) {
     });
 }
 
-/* Delete messages specified from database.
+/**
+ * Delete messages specified from database.
  *
  * Fulfill params:
  *   result -- an array of boolean values indicating whether delesion was
@@ -234,7 +242,8 @@ function deleteMessagesById(aMessageIds) {
   return deferred.promise;
 }
 
-/* Delete messages specified from database.
+/**
+ * Delete messages specified from database.
  *
  * Fulfill params:
  *   result -- an array of boolean values indicating whether delesion was
@@ -252,7 +261,8 @@ function deleteMessages(aMessages) {
   return deleteMessagesById(ids);
 }
 
-/* Delete all messages from database.
+/**
+ * Delete all messages from database.
  *
  * Fulfill params:
  *   ids -- an array of numeric values identifying those deleted
@@ -269,7 +279,8 @@ function deleteAllMessages() {
 
 let pendingEmulatorCmdCount = 0;
 
-/* Send emulator command with safe guard.
+/**
+ * Send emulator command with safe guard.
  *
  * We should only call |finish()| after all emulator command transactions
  * end, so here comes with the pending counter.  Resolve when the emulator
@@ -301,7 +312,8 @@ function runEmulatorCmdSafe(aCommand) {
   return deferred.promise;
 }
 
-/* Send simple text SMS to emulator.
+/**
+ * Send simple text SMS to emulator.
  *
  * Fulfill params:
  *   result -- an array of emulator response lines.
@@ -316,7 +328,8 @@ function sendTextSmsToEmulator(aFrom, aText) {
   return runEmulatorCmdSafe(command);
 }
 
-/* Send raw SMS TPDU to emulator.
+/**
+ * Send raw SMS TPDU to emulator.
  *
  * Fulfill params:
  *   result -- an array of emulator response lines.
@@ -331,7 +344,8 @@ function sendRawSmsToEmulator(aPdu) {
   return runEmulatorCmdSafe(command);
 }
 
-/* Name space for MobileMessageDB.jsm.  Only initialized after first call to
+/**
+ * Name space for MobileMessageDB.jsm.  Only initialized after first call to
  * newMobileMessageDB.
  */
 let MMDB;
@@ -348,7 +362,8 @@ function newMobileMessageDB() {
   return mmdb;
 }
 
-/* Initialize a MobileMessageDB.  Resolve if initialized with success, reject
+/**
+ * Initialize a MobileMessageDB.  Resolve if initialized with success, reject
  * otherwise.
  *
  * Fulfill params: a MobileMessageDB instance.
@@ -378,7 +393,8 @@ function initMobileMessageDB(aMmdb, aDbName, aDbVersion) {
   return deferred.promise;
 }
 
-/* Close a MobileMessageDB.
+/**
+ * Close a MobileMessageDB.
  *
  * @return The passed MobileMessageDB instance.
  */
@@ -387,7 +403,8 @@ function closeMobileMessageDB(aMmdb) {
   return aMmdb;
 }
 
-/* Create a new array of id attribute of input messages.
+/**
+ * Create a new array of id attribute of input messages.
  *
  * @param aMessages an array of {Sms,Mms}Message instances.
  *
@@ -404,7 +421,8 @@ function messagesToIds(aMessages) {
 // A reference to a nsIUUIDGenerator service.
 let uuidGenerator;
 
-/* Generate a new UUID.
+/**
+ * Generate a new UUID.
  *
  * @return A UUID string.
  */
@@ -418,7 +436,8 @@ function newUUID() {
   return uuidGenerator.generateUUID().toString();
 }
 
-/* Flush permission settings and call |finish()|.
+/**
+ * Flush permission settings and call |finish()|.
  */
 function cleanUp() {
   waitFor(function() {
@@ -433,6 +452,14 @@ function cleanUp() {
   });
 }
 
+/**
+ * Basic test routine helper for mobile message tests.
+ *
+ * This helper does nothing but clean-ups.
+ *
+ * @param aTestCaseMain
+ *        A function that takes no parameter.
+ */
 function startTestBase(aTestCaseMain) {
   Promise.resolve()
          .then(aTestCaseMain)
@@ -442,6 +469,15 @@ function startTestBase(aTestCaseMain) {
          });
 }
 
+/**
+ * Common test routine helper for mobile message tests.
+ *
+ * This function ensures global |manager| variable is available during the
+ * process and performs clean-ups as well.
+ *
+ * @param aTestCaseMain
+ *        A function that takes no parameter.
+ */
 function startTestCommon(aTestCaseMain) {
   startTestBase(function() {
     return ensureMobileMessage()
