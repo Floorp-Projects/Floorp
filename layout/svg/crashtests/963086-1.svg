@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+   viewBox="0 0 64 64">
+  <defs>
+    <filter id="dropShadow">
+      <feGaussianBlur stdDeviation="2" />
+      <feOffset
+         result="offsetBlur"
+         dy="1073741824"/>
+      <feMerge>
+        <feMergeNode
+           in="offsetBlur" />
+        <feMergeNode
+           in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+  <rect height="64" width="64" style="filter:url(#dropShadow)" />
+</svg>
