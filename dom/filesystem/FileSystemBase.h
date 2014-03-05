@@ -57,6 +57,24 @@ public:
   {
     return mShutdown;
   }
+
+  virtual bool
+  IsSafeFile(nsIFile* aFile) const;
+
+  /*
+   * Get the permission name required to access this file system.
+   */
+  const nsCString&
+  GetPermission() const
+  {
+    return mPermission;
+  }
+
+  bool
+  IsTesting() const
+  {
+    return mIsTesting;
+  }
 protected:
   virtual ~FileSystemBase();
 
@@ -64,6 +82,11 @@ protected:
   nsString mString;
 
   bool mShutdown;
+
+  // The permission name required to access the file system.
+  nsCString mPermission;
+
+  bool mIsTesting;
 };
 
 } // namespace dom
