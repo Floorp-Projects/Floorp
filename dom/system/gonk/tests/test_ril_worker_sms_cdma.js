@@ -307,18 +307,11 @@ add_test(function test_processCdmaSmsWapPush() {
     do_check_eq(orig_address, postedMessage.sender);
     do_check_eq(0x23F0, postedMessage.header.originatorPort);
     do_check_eq(0x0B84, postedMessage.header.destinationPort);
-    do_check_eq(fullDataHexString, bytesToHexString(postedMessage.fullData));
+    do_check_eq(fullDataHexString, bytesToHexString(postedMessage.data));
   }
 
   // Verify Single WAP PDU
   test_CdmaSmsWapPdu(["000102030405060708090A0B0C0D0E0F"]);
-
-  // Verify Concatenated WAP PDUs
-  test_CdmaSmsWapPdu(["000102030405060708090A0B0C0D0E0F", "0F0E0D0C0B0A09080706050403020100"]);
-
-  // Verify Concatenated WAP PDUs received in reversed order.
-  // Note: the port information is only available in 1st segment in CDMA WAP Push.
-  test_CdmaSmsWapPdu(["000102030405060708090A0B0C0D0E0F", "0F0E0D0C0B0A09080706050403020100"], true);
 
   run_next_test();
 });
