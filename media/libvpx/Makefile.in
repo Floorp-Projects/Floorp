@@ -89,16 +89,6 @@ EXTRA_MDDEPEND_FILES = vp8_asm_enc_offsets.s.pp vp8_asm_enc_offsets.$(OBJ_SUFFIX
 
 include $(topsrcdir)/config/rules.mk
 
-# This must be after rules.mk in order to use $(OBJ_SUFFIX) outside a
-# recursively-expanded variable.
-
-# dont add for MSVC
-ifndef _MSC_VER
-%_sse2.$(OBJ_SUFFIX): CFLAGS += -msse2
-%_ssse3.$(OBJ_SUFFIX): CFLAGS += -mssse3
-%_avx2.$(OBJ_SUFFIX): CFLAGS += -mavx2
-endif
-
 quantize_sse4.$(OBJ_SUFFIX): vp8_asm_enc_offsets.asm
 quantize_ssse3.$(OBJ_SUFFIX): vp8_asm_enc_offsets.asm
 

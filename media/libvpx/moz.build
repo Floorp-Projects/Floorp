@@ -87,3 +87,13 @@ if CONFIG['OS_TARGET'] == 'Android':
         SOURCES += [
             '%s/sources/android/cpufeatures/cpu-features.c' % CONFIG['ANDROID_NDK'],
         ]
+
+if not CONFIG['_MSC_VER']:
+    for f in SOURCES:
+        if f.endswith('.c'):
+            if 'sse2' in f:
+                SOURCES[f].flags += ['-msse2']
+            if 'ssse3' in f:
+                SOURCES[f].flags += ['-mssse3']
+            if 'avx2' in f:
+                SOURCES[f].flags += ['-mavx2']
