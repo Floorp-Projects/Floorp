@@ -1151,13 +1151,23 @@ _get_bitmap_surface (FT_Bitmap		     *bitmap,
 	    } else {
 		int i;
 		unsigned char *source, *dest;
+		int copy_len = MIN (stride, bitmap->pitch);
+		int pad_len = stride - bitmap->pitch;
 
 		source = bitmap->buffer;
 		dest = data;
 		for (i = height; i; i--) {
-		    memcpy (dest, source, stride);
+		    memcpy (dest, source, copy_len);
 		    source += bitmap->pitch;
 		    dest += stride;
+		}
+		/* do we really care about zeroing any extra row padding in dest? */
+		if (pad_len > 0) {
+		    dest = data + copy_len;
+		    for (i = height; i; i--) {
+			memset (dest, '\0', pad_len);
+			dest += stride;
+		    }
 		}
 	    }
 	}
