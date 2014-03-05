@@ -121,3 +121,7 @@ function must_throw(f) {
   }
   do_check_true(has_thrown);
 }
+
+function get_os() {
+  return Components.classes["@mozilla.org/xre/app-info;1"].getService(Components.interfaces.nsIXULRuntime).OS;
+}

@@ -4,37 +4,10 @@
 
 EXTRA_DSO_LDOPTS += $(MOZALLOC_LIB)
 
-xpctestdir = $(testxpcobjdir)/$(relativesrcdir)/unit
-
-chrometestdir = \
-  $(DEPTH)/_tests/testing/mochitest/chrome/toolkit/components/$(relativesrcdir)
-
-# should be MOCHITEST_CHROME_FILES, see bug 770938
-MOCHITEST_CHROME_TESTS_FILES = \
-  xpcshellTestHarnessAdaptor.js \
-  ctypes_worker.js \
-  test_ctypes.xul \
-  $(NULL)
-
-MOCHITEST_CHROME_TESTS_DEST = $(chrometestdir)
-INSTALL_TARGETS += MOCHITEST_CHROME_TESTS
-
-TEST_JS_CTYPES = unit/test_jsctypes.js.in
-TEST_JS_CTYPES_PATH = $(xpctestdir)
-PP_TARGETS += TEST_JS_CTYPES
-
-TEST_JS_CTYPES_2_FILES = $(xpctestdir)/test_jsctypes.js
-TEST_JS_CTYPES_2_DEST = $(chrometestdir)
-INSTALL_TARGETS += TEST_JS_CTYPES_2
-
 LIB_1_FILES = $(SHARED_LIBRARY)
-LIB_1_DEST = $(xpctestdir)
+LIB_1_DEST = $(DEPTH)/_tests/xpcshell/$(relativesrcdir)/unit
 INSTALL_TARGETS += LIB_1
 
-LIB_2_FILES = $(SHARED_LIBRARY)
-LIB_2_DEST = $(DEPTH)/_tests/testing/mochitest/chrome/libraries
-INSTALL_TARGETS += LIB_2
-
 LIB_3_FILES = $(SHARED_LIBRARY)
-LIB_3_DEST = $(chrometestdir)
+LIB_3_DEST = $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)/chrome
 INSTALL_TARGETS += LIB_3

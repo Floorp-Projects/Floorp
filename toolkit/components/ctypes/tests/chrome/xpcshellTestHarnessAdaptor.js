@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 var _WORKINGDIR_ = null;
+var _OS_ = null;
 
 var Components = {
   classes: { },
@@ -78,4 +79,8 @@ function do_get_file(path, allowNonexistent) {
     }
   }
   return lf;
+}
+
+function get_os() {
+  return _OS_;
 }

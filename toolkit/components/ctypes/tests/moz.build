@@ -6,6 +6,7 @@
 NO_DIST_INSTALL = True
 
 XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
+MOCHITEST_CHROME_MANIFESTS += ['chrome/chrome.ini']
 
 UNIFIED_SOURCES += [
     'jsctypes-test-errno.cpp',
