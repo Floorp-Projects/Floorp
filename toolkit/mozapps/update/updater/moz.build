@@ -20,6 +20,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         'progressui_win.cpp',
         'win_dirent.cpp',
     ]
+    RCINCLUDE = 'updater.rc'
     DEFINES['UNICODE'] = True
     DEFINES['_UNICODE'] = True
     USE_STATIC_LIBS = True
@@ -43,6 +44,7 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
         'automounter_gonk.cpp',
         'progressui_gonk.cpp',
     ]
+    DISABLE_STL_WRAPPING = True
 
 if have_progressui == 0:
     SOURCES += [

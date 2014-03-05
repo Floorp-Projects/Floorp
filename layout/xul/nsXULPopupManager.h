@@ -17,6 +17,7 @@
 #include "nsPoint.h"
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
+#include "nsIObserver.h"
 #include "nsITimer.h"
 #include "nsIReflowCallback.h"
 #include "nsThreadUtils.h"

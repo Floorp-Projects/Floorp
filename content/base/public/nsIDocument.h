@@ -19,6 +19,7 @@
 #include "nsPIDOMWindow.h"               // for use in inline functions
 #include "nsPropertyTable.h"             // for member
 #include "nsTHashtable.h"                // for member
+#include "nsWeakReference.h"
 #include "mozilla/dom/DocumentBinding.h"
 #include "mozilla/WeakPtr.h"
 #include "Units.h"
@@ -79,7 +80,6 @@ class nsWindowSizes;
 class nsSmallVoidArray;
 class nsDOMCaretPosition;
 class nsViewportInfo;
-class nsDOMEvent;
 class nsIGlobalObject;
 class nsCSSSelectorList;
 
@@ -102,6 +102,7 @@ class DOMImplementation;
 class DOMStringList;
 class Element;
 struct ElementRegistrationOptions;
+class Event;
 class EventTarget;
 class FrameRequestCallback;
 class HTMLBodyElement;
@@ -2003,8 +2004,8 @@ public:
 
   enum ElementCallbackType {
     eCreated,
-    eEnteredView,
-    eLeftView,
+    eAttached,
+    eDetached,
     eAttributeChanged
   };
 
@@ -2065,8 +2066,8 @@ public:
   already_AddRefed<nsINode>
     ImportNode(nsINode& aNode, bool aDeep, mozilla::ErrorResult& rv) const;
   nsINode* AdoptNode(nsINode& aNode, mozilla::ErrorResult& rv);
-  already_AddRefed<nsDOMEvent> CreateEvent(const nsAString& aEventType,
-                                           mozilla::ErrorResult& rv) const;
+  already_AddRefed<mozilla::dom::Event>
+    CreateEvent(const nsAString& aEventType, mozilla::ErrorResult& rv) const;
   already_AddRefed<nsRange> CreateRange(mozilla::ErrorResult& rv);
   already_AddRefed<mozilla::dom::NodeIterator>
     CreateNodeIterator(nsINode& aRoot, uint32_t aWhatToShow,

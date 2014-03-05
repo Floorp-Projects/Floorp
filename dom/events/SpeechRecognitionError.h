@@ -6,13 +6,13 @@
 #ifndef SpeechRecognitionError_h__
 #define SpeechRecognitionError_h__
 
-#include "nsDOMEvent.h"
+#include "mozilla/dom/Event.h"
 #include "mozilla/dom/SpeechRecognitionErrorBinding.h"
 
 namespace mozilla {
 namespace dom {
 
-class SpeechRecognitionError : public nsDOMEvent
+class SpeechRecognitionError : public Event
 {
 public:
   SpeechRecognitionError(mozilla::dom::EventTarget* aOwner,

@@ -172,14 +172,24 @@ static bool sNuwaForking = false;
 namespace mozilla {
 namespace dom {
 
-class MemoryReportRequestChild : public PMemoryReportRequestChild
+class MemoryReportRequestChild : public PMemoryReportRequestChild,
+                                 public nsIRunnable
 {
 public:
-    MemoryReportRequestChild();
+    NS_DECL_ISUPPORTS
+
+    MemoryReportRequestChild(uint32_t aGeneration, const nsAString& aDMDDumpIdent);
     virtual ~MemoryReportRequestChild();
+    NS_IMETHOD Run();
+private:
+    uint32_t mGeneration;
+    nsString mDMDDumpIdent;
 };
 
-MemoryReportRequestChild::MemoryReportRequestChild()
+NS_IMPL_ISUPPORTS1(MemoryReportRequestChild, nsIRunnable)
+
+MemoryReportRequestChild::MemoryReportRequestChild(uint32_t aGeneration, const nsAString& aDMDDumpIdent)
+: mGeneration(aGeneration), mDMDDumpIdent(aDMDDumpIdent)
 {
     MOZ_COUNT_CTOR(MemoryReportRequestChild);
 }
@@ -258,6 +268,16 @@ ConsoleListener::Observe(nsIConsoleMessage* aMessage)
         NS_ENSURE_SUCCESS(rv, rv);
         rv = scriptError->GetSourceLine(sourceLine);
         NS_ENSURE_SUCCESS(rv, rv);
+
+        // Before we send the error to the parent process (which
+        // involves copying the memory), truncate any long lines.  CSS
+        // errors in particular share the memory for long lines with
+        // repeated errors, but the IPC communication we're about to do
+        // will break that sharing, so we better truncate now.
+        if (sourceLine.Length() > 1000) {
+            sourceLine.Truncate(1000);
+        }
+
         rv = scriptError->GetCategory(getter_Copies(category));
         NS_ENSURE_SUCCESS(rv, rv);
         rv = scriptError->GetLineNumber(&lineNum);
@@ -518,9 +538,13 @@ ContentChild::InitXPCOM()
 }
 
 PMemoryReportRequestChild*
-ContentChild::AllocPMemoryReportRequestChild(const uint32_t& generation)
+ContentChild::AllocPMemoryReportRequestChild(const uint32_t& generation,
+                                             const bool &minimizeMemoryUsage,
+                                             const nsString& aDMDDumpIdent)
 {
-    return new MemoryReportRequestChild();
+    MemoryReportRequestChild *actor = new MemoryReportRequestChild(generation, aDMDDumpIdent);
+    actor->AddRef();
+    return actor;
 }
 
 // This is just a wrapper for InfallibleTArray<MemoryReport> that implements
@@ -567,25 +591,44 @@ NS_IMPL_ISUPPORTS1(
 bool
 ContentChild::RecvPMemoryReportRequestConstructor(
     PMemoryReportRequestChild* child,
-    const uint32_t& generation)
+    const uint32_t& generation,
+    const bool& minimizeMemoryUsage,
+    const nsString& aDMDDumpIdent)
 {
+    MemoryReportRequestChild *actor = static_cast<MemoryReportRequestChild*>(child);
+    nsresult rv;
+
+    if (minimizeMemoryUsage) {
+        nsCOMPtr<nsIMemoryReporterManager> mgr = do_GetService("@mozilla.org/memory-reporter-manager;1");
+        rv = mgr->MinimizeMemoryUsage(actor);
+        // mgr will eventually call actor->Run()
+    } else {
+        rv = actor->Run();
+    }
+
+    return !NS_WARN_IF(NS_FAILED(rv));
+}
+
+NS_IMETHODIMP MemoryReportRequestChild::Run()
+{
+    ContentChild *child = static_cast<ContentChild*>(Manager());
     nsCOMPtr<nsIMemoryReporterManager> mgr = do_GetService("@mozilla.org/memory-reporter-manager;1");
 
     InfallibleTArray<MemoryReport> reports;
 
     nsCString process;
-    GetProcessName(process);
-    AppendProcessId(process);
+    child->GetProcessName(process);
+    child->AppendProcessId(process);
 
     // Run the reporters.  The callback will turn each measurement into a
     // MemoryReport.
     nsRefPtr<MemoryReportsWrapper> wrappedReports =
         new MemoryReportsWrapper(&reports);
     nsRefPtr<MemoryReportCallback> cb = new MemoryReportCallback(process);
-    mgr->GetReportsForThisProcess(cb, wrappedReports);
+    mgr->GetReportsForThisProcessExtended(cb, wrappedReports, mDMDDumpIdent);
 
-    child->Send__delete__(child, generation, reports);
-    return true;
+    bool sent = Send__delete__(this, mGeneration, reports);
+    return sent ? NS_OK : NS_ERROR_FAILURE;
 }
 
 bool
@@ -602,19 +645,7 @@ ContentChild::RecvAudioChannelNotify()
 bool
 ContentChild::DeallocPMemoryReportRequestChild(PMemoryReportRequestChild* actor)
 {
-    delete actor;
-    return true;
-}
-
-bool
-ContentChild::RecvDumpMemoryInfoToTempDir(const nsString& aIdentifier,
-                                          const bool& aMinimizeMemoryUsage,
-                                          const bool& aDumpChildProcesses)
-{
-    nsCOMPtr<nsIMemoryInfoDumper> dumper = do_GetService("@mozilla.org/memory-info-dumper;1");
-
-    dumper->DumpMemoryInfoToTempDir(aIdentifier, aMinimizeMemoryUsage,
-                                    aDumpChildProcesses);
+    static_cast<MemoryReportRequestChild*>(actor)->Release();
     return true;
 }
 

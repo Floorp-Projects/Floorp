@@ -8,7 +8,7 @@
 interface nsIDOMEventTarget;
 
 [ptr] native WidgetEventPtr(mozilla::WidgetEvent);
-[ptr] native nsDOMEventPtr(nsDOMEvent);
+[ptr] native DOMEventPtr(mozilla::dom::Event);
 [ptr] native IPCMessagePtr(IPC::Message);
 [ptr] native ConstIPCMessagePtr(const IPC::Message);
 [ptr] native EventTargetPtr(mozilla::dom::EventTarget);
@@ -18,7 +18,6 @@ interface nsIDOMEventTarget;
 #endif
 
 #include "mozilla/EventForwards.h"
-class nsDOMEvent;
 class nsPresContext;
 class nsInvalidateRequestList;
 namespace IPC {
@@ -26,6 +25,7 @@ class Message;
 }
 namespace mozilla {
 namespace dom {
+class Event;
 class EventTarget;
 } // namespace dom
 } // namespace mozilla
@@ -212,7 +212,7 @@ interface nsIDOMEvent : nsISupports
                             in boolean aSerializeInterfaceType);
   [notxpcom] boolean Deserialize(in ConstIPCMessagePtr aMsg, out voidPtr aIter);
   [noscript,notxpcom] void SetOwner(in EventTargetPtr aOwner);
-  [notxpcom] nsDOMEventPtr InternalDOMEvent();
+  [notxpcom] DOMEventPtr InternalDOMEvent();
 };
 
 dictionary EventInit

@@ -6,16 +6,16 @@
 #ifndef mozilla_dom_ClipboardEvent_h_
 #define mozilla_dom_ClipboardEvent_h_
 
-#include "nsIDOMClipboardEvent.h"
-#include "nsDOMEvent.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/dom/ClipboardEventBinding.h"
+#include "mozilla/dom/Event.h"
+#include "nsIDOMClipboardEvent.h"
 
 namespace mozilla {
 namespace dom {
 class DataTransfer;
 
-class ClipboardEvent : public nsDOMEvent,
+class ClipboardEvent : public Event,
                        public nsIDOMClipboardEvent
 {
 public:
@@ -28,7 +28,7 @@ public:
   NS_DECL_NSIDOMCLIPBOARDEVENT
 
   // Forward to base class
-  NS_FORWARD_TO_NSDOMEVENT
+  NS_FORWARD_TO_EVENT
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE

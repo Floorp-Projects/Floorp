@@ -6,8 +6,6 @@
 # to dynamically link into our executable, as we copy it to arbitrary locations.
 MOZ_GLUE_LDFLAGS =
 
-STL_FLAGS=
-
 LIBS = \
   $(XPCOM_STANDALONE_STATICRUNTIME_GLUE_LDOPTS) \
   $(NULL)
@@ -29,8 +27,6 @@ APP_VERSION := $(shell cat $(topsrcdir)/browser/config/version.txt)
 DEFINES += -DAPP_VERSION=$(APP_VERSION)
 
 OS_LIBS += $(call EXPAND_LIBNAME,shell32)
-
-RCINCLUDE = webapprt.rc
 
 # Uninstaller
 ifdef LOCALE_MERGEDIR

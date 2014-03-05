@@ -100,7 +100,7 @@ StoreBuffer::MonoTypeBuffer<T>::handleOverflow(StoreBuffer *owner)
           * compacting unless the buffer is totally full.
           */
         if (storage_->availableInCurrentChunk() < sizeof(T))
-            compact(owner);
+            maybeCompact(owner);
     }
 }
 

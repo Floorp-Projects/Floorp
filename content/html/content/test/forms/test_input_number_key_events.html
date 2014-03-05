@@ -71,6 +71,18 @@ function getStepBase(element) {
          Number(element.getAttribute("value") || "NaN") || 0;
 }
 
+function hasStepMismatch(element) {
+  var value = element.value;
+  if (value == "") {
+    value = 0;
+  }
+  var step = getStep(element);
+  if (step == "any") {
+    return false;
+  }
+  return ((value - getStepBase(element)) % step) != 0;
+}
+
 function floorModulo(x, y) {
   return (x - y * Math.floor(x / y));
 }
@@ -101,7 +113,7 @@ function expectedValueAfterStepUpOrDown(stepFactor, element) {
     return value;
   }
 
-  if (element.validity.stepMismatch &&
+  if (hasStepMismatch(element) &&
       value != minimum && value != maximum) {
     if (stepFactor > 0) {
       value -= floorModulo(value - getStepBase(element), step);
@@ -138,8 +150,8 @@ function test() {
   var elem = document.getElementById("input");
   elem.focus();
 
-  elem.min = -3;
-  elem.max = 3;
+  elem.min = -5;
+  elem.max = 5;
   elem.step = 2;
   var defaultValue = 0;
   var oldVal, expectedVal;
@@ -203,6 +215,22 @@ function test() {
     sendString("abc");
     synthesizeKey(key, {});
     is(elem.value, "", "Test " + key + " does nothing when the input is invalid");
+
+    // Test that no value does not block UI initiated stepping:
+    oldVal = elem.value = "";
+    elem.setAttribute("required", "required");
+    elem.select();
+    expectedVal = expectedValAfterKeyEvent(key, elem);
+    synthesizeKey(key, {});
+    is(elem.value, expectedVal, "Test " + key + " for number control with value set to the empty string and with the 'required' attribute set");
+
+    // Same again:
+    expectedVal = expectedValAfterKeyEvent(key, elem);
+    synthesizeKey(key, {});
+    is(elem.value, expectedVal, "Test repeat of " + key + " for number control");
+
+    // Reset 'required' attribute:
+    elem.removeAttribute("required");
   }
 }
 

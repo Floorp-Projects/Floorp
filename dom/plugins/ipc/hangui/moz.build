@@ -15,6 +15,11 @@ UNIFIED_SOURCES += [
 include('/ipc/chromium/chromium-config.mozbuild')
 
 DEFINES['NS_NO_XPCOM'] = True
+DEFINES['_HAS_EXCEPTIONS'] = 0
+
+DISABLE_STL_WRAPPING = True
 
 if CONFIG['GNU_CC']:
     WIN32_EXE_LDFLAGS += ['-municode']
+
+RCINCLUDE = 'HangUIDlg.rc'

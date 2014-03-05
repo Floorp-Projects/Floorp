@@ -30,10 +30,10 @@ public:
 
   NS_FORWARD_NSIDOMUIEVENT(UIEvent::)
 
-  NS_FORWARD_TO_NSDOMEVENT_NO_SERIALIZATION_NO_DUPLICATION
+  NS_FORWARD_TO_EVENT_NO_SERIALIZATION_NO_DUPLICATION
   NS_IMETHOD DuplicatePrivateData()
   {
-    return nsDOMEvent::DuplicatePrivateData();
+    return Event::DuplicatePrivateData();
   }
   NS_IMETHOD_(void) Serialize(IPC::Message* aMsg, bool aSerializeInterfaceType) MOZ_OVERRIDE;
   NS_IMETHOD_(bool) Deserialize(const IPC::Message* aMsg, void** aIter) MOZ_OVERRIDE;

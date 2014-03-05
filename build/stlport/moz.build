@@ -52,3 +52,4 @@ LOCAL_INCLUDES += [
     'stlport',
 ]
 
+DISABLE_STL_WRAPPING = True

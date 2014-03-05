@@ -18,3 +18,5 @@ LOCAL_INCLUDES += [
     '../include/froyo/media/stagefright/openmax',
 ]
 
+# Don't use STL wrappers; this isn't Gecko code
+DISABLE_STL_WRAPPING = True

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<style type="text/css">
+#container {
+ width: 110px;
+ margin-right: auto;
+}
+#float1, #float2 {
+ width: 100px;
+ height: 20px;
+ background-color: green;
+}
+#float1 {
+ float: left;
+ margin-bottom: 20px;
+}
+#float2 {
+ margin-top: 10px;
+}
+</style>
+<script type="text/javascript">
+function test() {
+ document.getElementById('float2').style.cssFloat = 'left';
+ document.documentElement.removeAttribute('class');
+}
+document.addEventListener('MozReftestInvalidate', test, false);
+</script>
+</head>
+<body>
+<div id="container">
+ <div id="float1"></div>
+ <div id="float2"></div>
+</div>
+</body>
+</html>

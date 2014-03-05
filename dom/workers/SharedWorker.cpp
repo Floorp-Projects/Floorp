@@ -10,9 +10,9 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/SharedWorkerBinding.h"
 #include "nsContentUtils.h"
-#include "nsDOMEvent.h"
 #include "nsEventDispatcher.h"
 #include "nsIClassInfoImpl.h"
+#include "nsIDOMEvent.h"
 
 #include "MessagePort.h"
 #include "RuntimeService.h"

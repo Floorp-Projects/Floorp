@@ -128,3 +128,5 @@ elif CONFIG['OS_ARCH'] == 'WINNT':
     LOCAL_INCLUDES += ['/security/sandbox/chromium']
     LOCAL_INCLUDES += ['/security']
     LOCAL_INCLUDES += ['/nsprpub']
+
+    DISABLE_STL_WRAPPING = True

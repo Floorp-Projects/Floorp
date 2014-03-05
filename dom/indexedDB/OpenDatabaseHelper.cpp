@@ -1672,7 +1672,7 @@ public:
       }
 
       // Otherwise fire a versionchange event.
-      nsRefPtr<nsDOMEvent> event = 
+      nsRefPtr<Event> event = 
         IDBVersionChangeEvent::Create(database, mOldVersion, mNewVersion);
       NS_ENSURE_TRUE(event, NS_ERROR_FAILURE);
 
@@ -1684,7 +1684,7 @@ public:
     // then fire the blocked event.
     for (uint32_t index = 0; index < count; index++) {
       if (!mWaitingDatabases[index]->IsClosed()) {
-        nsRefPtr<nsDOMEvent> event =
+        nsRefPtr<Event> event =
           IDBVersionChangeEvent::CreateBlocked(mRequest,
                                                mOldVersion, mNewVersion);
         NS_ENSURE_TRUE(event, NS_ERROR_FAILURE);

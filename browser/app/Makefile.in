@@ -26,8 +26,6 @@ endif #} LIBXUL_SDK
 
 # Build a binary bootstrapping with XRE_main
 
-STL_FLAGS=
-
 LIBS += \
 	$(XPCOM_STANDALONE_GLUE_LDOPTS) \
 	$(NULL)
@@ -55,7 +53,6 @@ NSDISTMODE = copy
 include $(topsrcdir)/config/config.mk
 
 ifeq ($(OS_ARCH),WINNT)
-RCINCLUDE = splash.rc
 # Rebuild firefox.exe if the manifest changes - it's included by splash.rc.
 # (this dependency should really be just for firefox.exe, not other targets)
 # Note the manifest file exists in the tree, so we use the explicit filename

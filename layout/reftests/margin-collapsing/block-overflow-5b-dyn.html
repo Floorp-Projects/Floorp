@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<style type="text/css">
+#separator-top {
+ height: 20px;
+ margin-bottom: 10px;
+ background-color: green;
+}
+#overflow {
+ overflow: scroll;
+ height: 40px;
+ margin: 20px 0;
+ background-color: green;
+}
+#separator-bottom {
+ height: 20px;
+ margin-top: 10px;
+ background-color: green;
+}
+</style>
+<script type="text/javascript">
+function test() {
+ document.getElementById('overflow').style.overflow = 'hidden';
+ document.documentElement.removeAttribute('class');
+}
+document.addEventListener('MozReftestInvalidate', test, false);
+</script>
+</head>
+<body>
+<div id="separator-top"></div>
+<div id="overflow"></div>
+<div id="separator-bottom"></div>
+</body>
+</html>

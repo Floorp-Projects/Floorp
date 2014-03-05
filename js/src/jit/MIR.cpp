@@ -13,6 +13,7 @@
 #include "jslibmath.h"
 #include "jsstr.h"
 
+#include "builtin/SIMD.h"
 #include "jit/BaselineInspector.h"
 #include "jit/IonBuilder.h"
 #include "jit/IonSpewer.h"
@@ -624,6 +625,116 @@ MMathFunction::printOpcode(FILE *fp) const
     fprintf(fp, " %s", FunctionName(function()));
 }
 
+const char *MSIMDNullaryFunction::Names[] = {
+#define MSIMD_NULLARY_FUNCTION_NAME_TYPE(Id, Name, ReturnType) "SIMD." Name,
+        MSIMD_NULLARY_FUNCTION_LIST(MSIMD_NULLARY_FUNCTION_NAME_TYPE)
+#undef MSIMD_NULLARY_FUNCTION_NAME_TYPE
+        ""
+};
+
+MIRType MSIMDNullaryFunction::ReturnTypes[] = {
+#define MSIMD_NULLARY_FUNCTION_RETURN_TYPE(Id, Name, ReturnType) ReturnType,
+        MSIMD_NULLARY_FUNCTION_LIST(MSIMD_NULLARY_FUNCTION_RETURN_TYPE)
+#undef MSIMD_NULLARY_FUNCTION_RETURN_TYPE
+        MIRType_None
+};
+
+const char *MSIMDUnaryFunction::Names[] = {
+#define MSIMD_UNARY_FUNCTION_NAME_TYPE(Id, Name, ReturnType, ArgumentType)    \
+        "SIMD." Name,
+        MSIMD_UNARY_FUNCTION_LIST(MSIMD_UNARY_FUNCTION_NAME_TYPE)
+#undef MSIMD_UNARY_FUNCTION_NAME_TYPE
+        ""
+};
+
+MIRType MSIMDUnaryFunction::ReturnTypes[] = {
+#define MSIMD_UNARY_FUNCTION_RETURN_TYPE(Id, Name, ReturnType, ArgumentType)    \
+        ReturnType,
+        MSIMD_UNARY_FUNCTION_LIST(MSIMD_UNARY_FUNCTION_RETURN_TYPE)
+#undef MSIMD_UNARY_FUNCTION_RETURN_TYPE
+        MIRType_None
+};
+
+MIRType MSIMDUnaryFunction::ArgumentTypes[] = {
+#define MSIMD_UNARY_FUNCTION_ARGUMENT_TYPE(Id, Name, ReturnType, ArgumentType)  \
+        ArgumentType,
+        MSIMD_UNARY_FUNCTION_LIST(MSIMD_UNARY_FUNCTION_ARGUMENT_TYPE)
+#undef MSIMD_UNARY_FUNCTION_ARGUMENT_TYPE
+        MIRType_None
+};
+
+const char *MSIMDBinaryFunction::Names[] = {
+#define MSIMD_BINARY_FUNCTION_NAME_TYPE(Id, Name, ReturnType, Argument1Type, Argument2Type)       \
+        "SIMD." Name,
+        MSIMD_BINARY_FUNCTION_LIST(MSIMD_BINARY_FUNCTION_NAME_TYPE)
+#undef MSIMD_BINARY_FUNCTION_NAME_TYPE
+        ""
+};
+
+MIRType MSIMDBinaryFunction::ReturnTypes[] = {
+#define MSIMD_BINARY_FUNCTION_RETURN_TYPE(Id, Name, ReturnType, Argument1Type, Argument2Type)       \
+        ReturnType,
+        MSIMD_BINARY_FUNCTION_LIST(MSIMD_BINARY_FUNCTION_RETURN_TYPE)
+#undef MSIMD_BINARY_FUNCTION_RETURN_TYPE
+        MIRType_None
+};
+
+MIRType MSIMDBinaryFunction::ArgumentTypes[][2] = {
+#define MSIMD_BINARY_FUNCTION_ARGUMENTS_TYPE(Id, Name, ReturnType, Argument1Type, Argument2Type)    \
+        {Argument1Type, Argument2Type},
+        MSIMD_BINARY_FUNCTION_LIST(MSIMD_BINARY_FUNCTION_ARGUMENTS_TYPE)
+#undef MSIMD_BINARY_FUNCTION_ARGUMENTS_TYPE
+        {MIRType_None, MIRType_None}
+};
+
+const char *MSIMDTernaryFunction::Names[] = {
+#define MSIMD_TERNARY_FUNCTION_NAME_TYPE(Id, Name, ReturnType, Argument1Type, Argument2Type, Argument3Type)       \
+        "SIMD." Name,
+        MSIMD_TERNARY_FUNCTION_LIST(MSIMD_TERNARY_FUNCTION_NAME_TYPE)
+#undef MSIMD_TERNARY_FUNCTION_NAME_TYPE
+        ""
+};
+
+MIRType MSIMDTernaryFunction::ReturnTypes[] = {
+#define MSIMD_TERNARY_FUNCTION_RETURN_TYPE(Id, Name, ReturnType, Argument1Type, Argument2Type, Argument3Type)       \
+        ReturnType,
+        MSIMD_TERNARY_FUNCTION_LIST(MSIMD_TERNARY_FUNCTION_RETURN_TYPE)
+#undef MSIMD_TERNARY_FUNCTION_RETURN_TYPE
+        MIRType_None
+};
+
+MIRType MSIMDTernaryFunction::ArgumentTypes[][3] = {
+#define MSIMD_TERNARY_FUNCTION_ARGUMENTS_TYPE(Id, Name, ReturnType, Argument1Type, Argument2Type, Argument3Type)    \
+        {Argument1Type, Argument2Type, Argument3Type},
+        MSIMD_TERNARY_FUNCTION_LIST(MSIMD_TERNARY_FUNCTION_ARGUMENTS_TYPE)
+#undef MSIMD_TERNARY_FUNCTION_ARGUMENTS_TYPE
+        {MIRType_None, MIRType_None, MIRType_None}
+};
+
+const char *MSIMDQuarternaryFunction::Names[] = {
+#define MSIMD_QUARTERNARY_FUNCTION_NAME_TYPE(Id, Name, ReturnType, Argument1Type, Argument2Type, Argument3Type, Argument4Type)       \
+        "SIMD." Name,
+        MSIMD_QUARTERNARY_FUNCTION_LIST(MSIMD_QUARTERNARY_FUNCTION_NAME_TYPE)
+#undef MSIMD_QUARTERNARY_FUNCTION_NAME_TYPE
+        ""
+};
+
+MIRType MSIMDQuarternaryFunction::ReturnTypes[] = {
+#define MSIMD_QUARTERNARY_FUNCTION_RETURN_TYPE(Id, Name, ReturnType, Argument1Type, Argument2Type, Argument3Type, Argument4Type)       \
+        ReturnType,
+        MSIMD_QUARTERNARY_FUNCTION_LIST(MSIMD_QUARTERNARY_FUNCTION_RETURN_TYPE)
+#undef MSIMD_QUARTERNARY_FUNCTION_RETURN_TYPE
+        MIRType_None
+};
+
+MIRType MSIMDQuarternaryFunction::ArgumentTypes[][4] = {
+#define MSIMD_QUARTERNARY_FUNCTION_ARGUMENTS_TYPE(Id, Name, ReturnType, Argument1Type, Argument2Type, Argument3Type, Argument4Type)    \
+        {Argument1Type, Argument2Type, Argument3Type, Argument4Type},
+        MSIMD_QUARTERNARY_FUNCTION_LIST(MSIMD_QUARTERNARY_FUNCTION_ARGUMENTS_TYPE)
+#undef MSIMD_QUARTERNARY_FUNCTION_ARGUMENTS_TYPE
+        {MIRType_None, MIRType_None, MIRType_None, MIRType_None}
+};
+
 MParameter *
 MParameter::New(TempAllocator &alloc, int32_t index, types::TemporaryTypeSet *types)
 {
@@ -896,7 +1007,7 @@ MTypeBarrier::printOpcode(FILE *fp) const
     fprintf(fp, " ");
     getOperand(0)->printName(fp);
 }
- 
+
 void
 MPhi::removeOperand(size_t index)
 {
@@ -2444,7 +2555,7 @@ MCompare::evaluateConstantOperands(bool *result)
         int32_t comp = 0; // Default to equal.
         if (left != right)
             comp = CompareAtoms(&lhs.toString()->asAtom(), &rhs.toString()->asAtom());
-        
+
         switch (jsop_) {
           case JSOP_LT:
             *result = (comp < 0);
@@ -2933,8 +3044,9 @@ jit::ElementAccessIsDenseNative(MDefinition *obj, MDefinition *id)
     if (!types)
         return false;
 
+    // Typed arrays are native classes but do not have dense elements.
     const Class *clasp = types->getKnownClass();
-    return clasp && clasp->isNative();
+    return clasp && clasp->isNative() && !IsTypedArrayClass(clasp);
 }
 
 bool

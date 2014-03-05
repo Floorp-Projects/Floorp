@@ -14,8 +14,8 @@ namespace dom {
 ClipboardEvent::ClipboardEvent(EventTarget* aOwner,
                                nsPresContext* aPresContext,
                                InternalClipboardEvent* aEvent)
-  : nsDOMEvent(aOwner, aPresContext, aEvent ? aEvent :
-               new InternalClipboardEvent(false, 0))
+  : Event(aOwner, aPresContext,
+          aEvent ? aEvent : new InternalClipboardEvent(false, 0))
 {
   if (aEvent) {
     mEventIsInternal = false;
@@ -27,10 +27,10 @@ ClipboardEvent::ClipboardEvent(EventTarget* aOwner,
 
 NS_INTERFACE_MAP_BEGIN(ClipboardEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMClipboardEvent)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
+NS_INTERFACE_MAP_END_INHERITING(Event)
 
-NS_IMPL_ADDREF_INHERITED(ClipboardEvent, nsDOMEvent)
-NS_IMPL_RELEASE_INHERITED(ClipboardEvent, nsDOMEvent)
+NS_IMPL_ADDREF_INHERITED(ClipboardEvent, Event)
+NS_IMPL_RELEASE_INHERITED(ClipboardEvent, Event)
 
 nsresult
 ClipboardEvent::InitClipboardEvent(const nsAString& aType,
@@ -53,7 +53,7 @@ ClipboardEvent::InitClipboardEvent(const nsAString& aType, bool aCanBubble,
                                    DataTransfer* aClipboardData,
                                    ErrorResult& aError)
 {
-  aError = nsDOMEvent::InitEvent(aType, aCanBubble, aCancelable);
+  aError = Event::InitEvent(aType, aCanBubble, aCancelable);
   if (aError.Failed()) {
     return;
   }

@@ -8,15 +8,12 @@ DIST_PROGRAM = maintenanceservice$(BIN_SUFFIX)
 # bug 725876
 MOZ_GLUE_LDFLAGS =
 MOZ_GLUE_PROGRAM_LDFLAGS =
-STL_FLAGS=
 
 ifeq ($(OS_ARCH),WINNT)
 LIBS += $(call EXPAND_LIBNAME_PATH,updatecommon-standalone,../../mozapps/update/common-standalone)
 else
 LIBS += $(call EXPAND_LIBNAME_PATH,updatecommon,../../mozapps/update/common)
 endif
-
-RCINCLUDE = maintenanceservice.rc
 
 OS_LIBS += $(call EXPAND_LIBNAME,comctl32 ws2_32 shell32)
 

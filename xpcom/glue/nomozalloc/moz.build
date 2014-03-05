@@ -39,3 +39,6 @@ LOCAL_INCLUDES += [
 # avoids "msvcrp" and assembly dependencies from creeping into the directives
 # for this library on Windows.
 USE_STATIC_LIBS = True
+
+# Don't use STL wrappers here (i.e. wrapped <new>); they require mozalloc
+DISABLE_STL_WRAPPING = True

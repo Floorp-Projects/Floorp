@@ -14,16 +14,16 @@ namespace dom {
  * DeviceMotionEvent
  *****************************************************************************/
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_3(DeviceMotionEvent, nsDOMEvent,
+NS_IMPL_CYCLE_COLLECTION_INHERITED_3(DeviceMotionEvent, Event,
                                      mAcceleration,
                                      mAccelerationIncludingGravity,
                                      mRotationRate)
 
-NS_IMPL_ADDREF_INHERITED(DeviceMotionEvent, nsDOMEvent)
-NS_IMPL_RELEASE_INHERITED(DeviceMotionEvent, nsDOMEvent)
+NS_IMPL_ADDREF_INHERITED(DeviceMotionEvent, Event)
+NS_IMPL_RELEASE_INHERITED(DeviceMotionEvent, Event)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(DeviceMotionEvent)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
+NS_INTERFACE_MAP_END_INHERITING(Event)
 
 void
 DeviceMotionEvent::InitDeviceMotionEvent(
@@ -36,7 +36,7 @@ DeviceMotionEvent::InitDeviceMotionEvent(
                      Nullable<double> aInterval,
                      ErrorResult& aRv)
 {
-  aRv = nsDOMEvent::InitEvent(aType, aCanBubble, aCancelable);
+  aRv = Event::InitEvent(aType, aCanBubble, aCancelable);
   if (aRv.Failed()) {
     return;
   }

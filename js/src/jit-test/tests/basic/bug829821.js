@@ -1,4 +1,4 @@
-
+// |jit-test| error:TypeError
 
 x = [];
 x.unshift(Uint8ClampedArray);

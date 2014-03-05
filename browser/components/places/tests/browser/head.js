@@ -30,6 +30,46 @@ function openLibrary(callback, aLeftPaneRoot) {
 }
 
 /**
+ * Returns a handle to a Library window.
+ * If one is opens returns itm otherwise it opens a new one.
+ *
+ * @param aLeftPaneRoot
+ *        Hierarchy to open and select in the left pane.
+ */
+function promiseLibrary(aLeftPaneRoot) {
+  let deferred = Promise.defer();
+  let library = Services.wm.getMostRecentWindow("Places:Organizer");
+  if (library) {
+    if (aLeftPaneRoot)
+      library.PlacesOrganizer.selectLeftPaneContainerByHierarchy(aLeftPaneRoot);
+    deferred.resolve(library);
+  }
+  else {
+    openLibrary(aLibrary => deferred.resolve(aLibrary), aLeftPaneRoot);
+  }
+  return deferred.promise;
+}
+
+/**
+ * Waits for a clipboard operation to complete, looking for the expected type.
+ *
+ * @see waitForClipboard
+ *
+ * @param aPopulateClipboardFn
+ *        Function to populate the clipboard.
+ * @param aFlavor
+ *        Data flavor to expect.
+ */
+function promiseClipboard(aPopulateClipboardFn, aFlavor) {
+  let deferred = Promise.defer();
+  waitForClipboard(function (aData) !!aData,
+                   aPopulateClipboardFn,
+                   function () { deferred.resolve(); },
+                   aFlavor);
+  return deferred.promise;
+}
+
+/**
  * Waits for completion of a clear history operation, before
  * proceeding with aCallback.
  *

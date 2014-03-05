@@ -1,0 +1,66 @@
+<?xml version="1.0"?>
+
+<!--
+    Any copyright is dedicated to the Public Domain.
+    http://creativecommons.org/licenses/publicdomain/
+   -->
+
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<?xml-stylesheet href="chrome://browser/content/places/places.css"?>
+<?xml-stylesheet href="chrome://browser/skin/places/places.css"?>
+<?xul-overlay href="chrome://browser/content/places/placesOverlay.xul"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="549192:  History view not updated after deleting entry"
+        onload="runTest();">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script type="application/javascript" src="head.js" />
+
+  <body xmlns="http://www.w3.org/1999/xhtml" />
+
+  <tree id="tree"
+        type="places"
+        flex="1">
+    <treecols>
+      <treecol label="Title" id="title" anonid="title" primary="true" ordinal="1" flex="1"/>
+    </treecols>
+    <treechildren flex="1"/>
+  </tree>
+
+  <script type="application/javascript"><![CDATA[
+    /**
+     * Ensure that selectItems doesn't recurse infinitely in nested trees.
+     */
+
+    function runTest() {
+      PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
+                                           NetUtil.newURI("place:folder=UNFILED_BOOKMARKS"),
+                                           PlacesUtils.bookmarks.DEFAULT_INDEX,
+                                           "shortcut");
+      PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
+                                           NetUtil.newURI("place:folder=UNFILED_BOOKMARKS&maxResults=10"),
+                                           PlacesUtils.bookmarks.DEFAULT_INDEX,
+                                           "query");
+      let folderId = PlacesUtils.bookmarks.createFolder(PlacesUtils.unfiledBookmarksFolderId,
+                                                        "folder",
+                                                        PlacesUtils.bookmarks.DEFAULT_INDEX);
+      let itemId = PlacesUtils.bookmarks.insertBookmark(folderId,
+                                                        NetUtil.newURI("http://www.mozilla.org/"),
+                                                        PlacesUtils.bookmarks.DEFAULT_INDEX,
+                                                        "bookmark");
+      // Setup the places tree contents.
+      var tree = document.getElementById("tree");
+      tree.place = "place:folder=UNFILED_BOOKMARKS";
+
+      // Select the last bookmark.
+      tree.selectItems([itemId]);
+      is (tree.selectedNode.itemId, itemId, "The right node was selected");
+    }
+
+  ]]></script>
+</window>

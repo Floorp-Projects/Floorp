@@ -313,7 +313,7 @@ private:
   // The this value to use for invocation of the callback.
   nsRefPtr<mozilla::dom::Element> mThisObject;
   nsRefPtr<mozilla::dom::CallbackFunction> mCallback;
-  // The type of callback (eCreated, eEnteredView, etc.)
+  // The type of callback (eCreated, eAttached, etc.)
   nsIDocument::ElementCallbackType mType;
   // Arguments to be passed to the callback,
   // used by the attribute changed callback.

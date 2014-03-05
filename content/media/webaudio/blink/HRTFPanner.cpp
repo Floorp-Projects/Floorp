@@ -27,11 +27,10 @@
 
 #include "FFTConvolver.h"
 #include "HRTFDatabase.h"
-#include "WebAudioUtils.h"
 
 using namespace std;
 using namespace mozilla;
-using mozilla::dom::WebAudioUtils;
+using dom::ChannelInterpretation;
 
 namespace WebCore {
 
@@ -40,7 +39,7 @@ namespace WebCore {
 const double MaxDelayTimeSeconds = 0.002;
 
 const int UninitializedAzimuth = -1;
-const unsigned RenderingQuantum = 128;
+const unsigned RenderingQuantum = WEBAUDIO_BLOCK_SIZE;
 
 HRTFPanner::HRTFPanner(float sampleRate, mozilla::TemporaryRef<HRTFDatabaseLoader> databaseLoader)
     : m_databaseLoader(databaseLoader)
@@ -55,10 +54,7 @@ HRTFPanner::HRTFPanner(float sampleRate, mozilla::TemporaryRef<HRTFDatabaseLoade
     , m_convolverR1(m_convolverL1.fftSize())
     , m_convolverL2(m_convolverL1.fftSize())
     , m_convolverR2(m_convolverL1.fftSize())
-    , m_delayLineL(ceilf(MaxDelayTimeSeconds * sampleRate),
-                   WebAudioUtils::ComputeSmoothingRate(0.02, sampleRate))
-    , m_delayLineR(ceilf(MaxDelayTimeSeconds * sampleRate),
-                   WebAudioUtils::ComputeSmoothingRate(0.02, sampleRate))
+    , m_delayLine(ceilf(MaxDelayTimeSeconds * sampleRate), 1.0)
 {
     MOZ_ASSERT(m_databaseLoader);
     MOZ_COUNT_CTOR(HRTFPanner);
@@ -86,8 +82,7 @@ void HRTFPanner::reset()
     m_convolverR1.reset();
     m_convolverL2.reset();
     m_convolverR2.reset();
-    m_delayLineL.Reset();
-    m_delayLineR.Reset();
+    m_delayLine.Reset();
 }
 
 int HRTFPanner::calculateDesiredAzimuthIndexAndBlend(double azimuth, double& azimuthBlend)
@@ -115,15 +110,15 @@ int HRTFPanner::calculateDesiredAzimuthIndexAndBlend(double azimuth, double& azi
     return desiredAzimuthIndex;
 }
 
-void HRTFPanner::pan(double desiredAzimuth, double elevation, const AudioChunk* inputBus, AudioChunk* outputBus, TrackTicks framesToProcess)
+void HRTFPanner::pan(double desiredAzimuth, double elevation, const AudioChunk* inputBus, AudioChunk* outputBus)
 {
     unsigned numInputChannels =
         inputBus->IsNull() ? 0 : inputBus->mChannelData.Length();
 
     MOZ_ASSERT(numInputChannels <= 2);
-    MOZ_ASSERT(framesToProcess <= inputBus->mDuration);
+    MOZ_ASSERT(inputBus->mDuration == WEBAUDIO_BLOCK_SIZE);
 
-    bool isOutputGood = outputBus && outputBus->mChannelData.Length() == 2 && framesToProcess <= outputBus->mDuration;
+    bool isOutputGood = outputBus && outputBus->mChannelData.Length() == 2 && outputBus->mDuration == WEBAUDIO_BLOCK_SIZE;
     MOZ_ASSERT(isOutputGood);
 
     if (!isOutputGood) {
@@ -151,11 +146,7 @@ void HRTFPanner::pan(double desiredAzimuth, double elevation, const AudioChunk* 
     // Normally, we'll just be dealing with mono sources.
     // If we have a stereo input, implement stereo panning with left source processed by left HRTF, and right source by right HRTF.
 
-    // Get source and destination pointers.
-    const float* sourceL = numInputChannels > 0 ?
-        static_cast<const float*>(inputBus->mChannelData[0]) : nullptr;
-    const float* sourceR = numInputChannels > 1 ?
-        static_cast<const float*>(inputBus->mChannelData[1]) : sourceL;
+    // Get destination pointers.
     float* destinationL =
         static_cast<float*>(const_cast<void*>(outputBus->mChannelData[0]));
     float* destinationR =
@@ -197,95 +188,94 @@ void HRTFPanner::pan(double desiredAzimuth, double elevation, const AudioChunk* 
         }
     }
 
-    // This algorithm currently requires that we process in power-of-two size chunks at least RenderingQuantum.
-    MOZ_ASSERT(framesToProcess && 0 == (framesToProcess & (framesToProcess - 1)));
-    MOZ_ASSERT(framesToProcess >= RenderingQuantum);
+    // Get the HRTFKernels and interpolated delays.
+    HRTFKernel* kernelL1;
+    HRTFKernel* kernelR1;
+    HRTFKernel* kernelL2;
+    HRTFKernel* kernelR2;
+    double frameDelayL1;
+    double frameDelayR1;
+    double frameDelayL2;
+    double frameDelayR2;
+    database->getKernelsFromAzimuthElevation(azimuthBlend, m_azimuthIndex1, m_elevation1, kernelL1, kernelR1, frameDelayL1, frameDelayR1);
+    database->getKernelsFromAzimuthElevation(azimuthBlend, m_azimuthIndex2, m_elevation2, kernelL2, kernelR2, frameDelayL2, frameDelayR2);
 
-    const unsigned framesPerSegment = RenderingQuantum;
-    const unsigned numberOfSegments = framesToProcess / framesPerSegment;
+    bool areKernelsGood = kernelL1 && kernelR1 && kernelL2 && kernelR2;
+    MOZ_ASSERT(areKernelsGood);
+    if (!areKernelsGood) {
+        outputBus->SetNull(outputBus->mDuration);
+        return;
+    }
 
-    for (unsigned segment = 0; segment < numberOfSegments; ++segment) {
-        // Get the HRTFKernels and interpolated delays.
-        HRTFKernel* kernelL1;
-        HRTFKernel* kernelR1;
-        HRTFKernel* kernelL2;
-        HRTFKernel* kernelR2;
-        double frameDelayL1;
-        double frameDelayR1;
-        double frameDelayL2;
-        double frameDelayR2;
-        database->getKernelsFromAzimuthElevation(azimuthBlend, m_azimuthIndex1, m_elevation1, kernelL1, kernelR1, frameDelayL1, frameDelayR1);
-        database->getKernelsFromAzimuthElevation(azimuthBlend, m_azimuthIndex2, m_elevation2, kernelL2, kernelR2, frameDelayL2, frameDelayR2);
+    MOZ_ASSERT(frameDelayL1 / sampleRate() < MaxDelayTimeSeconds && frameDelayR1 / sampleRate() < MaxDelayTimeSeconds);
+    MOZ_ASSERT(frameDelayL2 / sampleRate() < MaxDelayTimeSeconds && frameDelayR2 / sampleRate() < MaxDelayTimeSeconds);
 
-        bool areKernelsGood = kernelL1 && kernelR1 && kernelL2 && kernelR2;
-        MOZ_ASSERT(areKernelsGood);
-        if (!areKernelsGood) {
-            outputBus->SetNull(outputBus->mDuration);
-            return;
+    // Crossfade inter-aural delays based on transitions.
+    double frameDelaysL[WEBAUDIO_BLOCK_SIZE];
+    double frameDelaysR[WEBAUDIO_BLOCK_SIZE];
+    {
+      float x = m_crossfadeX;
+      float incr = m_crossfadeIncr;
+      for (unsigned i = 0; i < WEBAUDIO_BLOCK_SIZE; ++i) {
+        frameDelaysL[i] = (1 - x) * frameDelayL1 + x * frameDelayL2;
+        frameDelaysR[i] = (1 - x) * frameDelayR1 + x * frameDelayR2;
+        x += incr;
+      }
+    }
+
+    // First run through delay lines for inter-aural time difference.
+    m_delayLine.Write(*inputBus);
+    // "Speakers" means a mono input is read into both outputs (with possibly
+    // different delays).
+    m_delayLine.ReadChannel(frameDelaysL, outputBus, 0,
+                            ChannelInterpretation::Speakers);
+    m_delayLine.ReadChannel(frameDelaysR, outputBus, 1,
+                            ChannelInterpretation::Speakers);
+    m_delayLine.NextBlock();
+
+    bool needsCrossfading = m_crossfadeIncr;
+
+    // Have the convolvers render directly to the final destination if we're not cross-fading.
+    float* convolutionDestinationL1 = needsCrossfading ? m_tempL1.Elements() : destinationL;
+    float* convolutionDestinationR1 = needsCrossfading ? m_tempR1.Elements() : destinationR;
+    float* convolutionDestinationL2 = needsCrossfading ? m_tempL2.Elements() : destinationL;
+    float* convolutionDestinationR2 = needsCrossfading ? m_tempR2.Elements() : destinationR;
+
+    // Now do the convolutions.
+    // Note that we avoid doing convolutions on both sets of convolvers if we're not currently cross-fading.
+
+    if (m_crossfadeSelection == CrossfadeSelection1 || needsCrossfading) {
+        m_convolverL1.process(kernelL1->fftFrame(), destinationL, convolutionDestinationL1, WEBAUDIO_BLOCK_SIZE);
+        m_convolverR1.process(kernelR1->fftFrame(), destinationR, convolutionDestinationR1, WEBAUDIO_BLOCK_SIZE);
+    }
+
+    if (m_crossfadeSelection == CrossfadeSelection2 || needsCrossfading) {
+        m_convolverL2.process(kernelL2->fftFrame(), destinationL, convolutionDestinationL2, WEBAUDIO_BLOCK_SIZE);
+        m_convolverR2.process(kernelR2->fftFrame(), destinationR, convolutionDestinationR2, WEBAUDIO_BLOCK_SIZE);
+    }
+
+    if (needsCrossfading) {
+        // Apply linear cross-fade.
+        float x = m_crossfadeX;
+        float incr = m_crossfadeIncr;
+        for (unsigned i = 0; i < WEBAUDIO_BLOCK_SIZE; ++i) {
+            destinationL[i] = (1 - x) * convolutionDestinationL1[i] + x * convolutionDestinationL2[i];
+            destinationR[i] = (1 - x) * convolutionDestinationR1[i] + x * convolutionDestinationR2[i];
+            x += incr;
         }
+        // Update cross-fade value from local.
+        m_crossfadeX = x;
 
-        MOZ_ASSERT(frameDelayL1 / sampleRate() < MaxDelayTimeSeconds && frameDelayR1 / sampleRate() < MaxDelayTimeSeconds);
-        MOZ_ASSERT(frameDelayL2 / sampleRate() < MaxDelayTimeSeconds && frameDelayR2 / sampleRate() < MaxDelayTimeSeconds);
-
-        // Crossfade inter-aural delays based on transitions.
-        double frameDelayL = (1 - m_crossfadeX) * frameDelayL1 + m_crossfadeX * frameDelayL2;
-        double frameDelayR = (1 - m_crossfadeX) * frameDelayR1 + m_crossfadeX * frameDelayR2;
-
-        // Calculate the source and destination pointers for the current segment.
-        unsigned offset = segment * framesPerSegment;
-        const float* segmentSourceL = sourceL ? sourceL + offset : nullptr;
-        const float* segmentSourceR = sourceR ? sourceR + offset : nullptr;
-        float* segmentDestinationL = destinationL + offset;
-        float* segmentDestinationR = destinationR + offset;
-
-        // First run through delay lines for inter-aural time difference.
-        m_delayLineL.Process(frameDelayL, &segmentSourceL, &segmentDestinationL, 1, framesPerSegment);
-        m_delayLineR.Process(frameDelayR, &segmentSourceR, &segmentDestinationR, 1, framesPerSegment);
-
-        bool needsCrossfading = m_crossfadeIncr;
-        
-        // Have the convolvers render directly to the final destination if we're not cross-fading.
-        float* convolutionDestinationL1 = needsCrossfading ? m_tempL1.Elements() : segmentDestinationL;
-        float* convolutionDestinationR1 = needsCrossfading ? m_tempR1.Elements() : segmentDestinationR;
-        float* convolutionDestinationL2 = needsCrossfading ? m_tempL2.Elements() : segmentDestinationL;
-        float* convolutionDestinationR2 = needsCrossfading ? m_tempR2.Elements() : segmentDestinationR;
-
-        // Now do the convolutions.
-        // Note that we avoid doing convolutions on both sets of convolvers if we're not currently cross-fading.
-        
-        if (m_crossfadeSelection == CrossfadeSelection1 || needsCrossfading) {
-            m_convolverL1.process(kernelL1->fftFrame(), segmentDestinationL, convolutionDestinationL1, framesPerSegment);
-            m_convolverR1.process(kernelR1->fftFrame(), segmentDestinationR, convolutionDestinationR1, framesPerSegment);
-        }
-
-        if (m_crossfadeSelection == CrossfadeSelection2 || needsCrossfading) {
-            m_convolverL2.process(kernelL2->fftFrame(), segmentDestinationL, convolutionDestinationL2, framesPerSegment);
-            m_convolverR2.process(kernelR2->fftFrame(), segmentDestinationR, convolutionDestinationR2, framesPerSegment);
-        }
-        
-        if (needsCrossfading) {
-            // Apply linear cross-fade.
-            float x = m_crossfadeX;
-            float incr = m_crossfadeIncr;
-            for (unsigned i = 0; i < framesPerSegment; ++i) {
-                segmentDestinationL[i] = (1 - x) * convolutionDestinationL1[i] + x * convolutionDestinationL2[i];
-                segmentDestinationR[i] = (1 - x) * convolutionDestinationR1[i] + x * convolutionDestinationR2[i];
-                x += incr;
-            }
-            // Update cross-fade value from local.
-            m_crossfadeX = x;
-
-            if (m_crossfadeIncr > 0 && fabs(m_crossfadeX - 1) < m_crossfadeIncr) {
-                // We've fully made the crossfade transition from 1 -> 2.
-                m_crossfadeSelection = CrossfadeSelection2;
-                m_crossfadeX = 1;
-                m_crossfadeIncr = 0;
-            } else if (m_crossfadeIncr < 0 && fabs(m_crossfadeX) < -m_crossfadeIncr) {
-                // We've fully made the crossfade transition from 2 -> 1.
-                m_crossfadeSelection = CrossfadeSelection1;
-                m_crossfadeX = 0;
-                m_crossfadeIncr = 0;
-            }
+        if (m_crossfadeIncr > 0 && fabs(m_crossfadeX - 1) < m_crossfadeIncr) {
+            // We've fully made the crossfade transition from 1 -> 2.
+            m_crossfadeSelection = CrossfadeSelection2;
+            m_crossfadeX = 1;
+            m_crossfadeIncr = 0;
+        } else if (m_crossfadeIncr < 0 && fabs(m_crossfadeX) < -m_crossfadeIncr) {
+            // We've fully made the crossfade transition from 2 -> 1.
+            m_crossfadeSelection = CrossfadeSelection1;
+            m_crossfadeX = 0;
+            m_crossfadeIncr = 0;
         }
     }
 }
@@ -299,7 +289,7 @@ int HRTFPanner::maxTailFrames() const
     // tailTime of the DelayKernel and the tailTime of the FFTConvolver.
     // The FFTConvolver has a tail time of fftSize(), including latency of
     // fftSize()/2.
-    return m_delayLineL.MaxDelayFrames() + fftSize();
+    return m_delayLine.MaxDelayTicks() + fftSize();
 }
 
 } // namespace WebCore

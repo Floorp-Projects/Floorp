@@ -4,6 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/Hal.h"
+#include "mozilla/dom/Event.h" // for nsIDOMEvent::InternalDOMEvent()
+#include "mozilla/dom/ScreenBinding.h"
 #include "nsScreen.h"
 #include "nsIDocument.h"
 #include "nsIDocShell.h"
@@ -12,9 +14,7 @@
 #include "nsCOMPtr.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsLayoutUtils.h"
-#include "nsDOMEvent.h"
 #include "nsJSUtils.h"
-#include "mozilla/dom/ScreenBinding.h"
 #include "nsDeviceContext.h"
 
 using namespace mozilla;

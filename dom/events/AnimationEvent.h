@@ -5,17 +5,17 @@
 #ifndef mozilla_dom_AnimationEvent_h_
 #define mozilla_dom_AnimationEvent_h_
 
-#include "nsDOMEvent.h"
-#include "nsIDOMAnimationEvent.h"
 #include "mozilla/EventForwards.h"
+#include "mozilla/dom/Event.h"
 #include "mozilla/dom/AnimationEventBinding.h"
+#include "nsIDOMAnimationEvent.h"
 
 class nsAString;
 
 namespace mozilla {
 namespace dom {
 
-class AnimationEvent : public nsDOMEvent,
+class AnimationEvent : public Event,
                        public nsIDOMAnimationEvent
 {
 public:
@@ -24,7 +24,7 @@ public:
                  InternalAnimationEvent* aEvent);
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_FORWARD_TO_NSDOMEVENT
+  NS_FORWARD_TO_EVENT
   NS_DECL_NSIDOMANIMATIONEVENT
 
   static already_AddRefed<AnimationEvent>

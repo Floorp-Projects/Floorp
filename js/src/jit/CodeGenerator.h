@@ -366,13 +366,13 @@ class CodeGenerator : public CodeGeneratorSpecific
 
     bool generateBranchV(const ValueOperand &value, Label *ifTrue, Label *ifFalse, FloatRegister fr);
 
-    bool emitAllocateGCThingPar(LInstruction *lir, const Register &objReg, const Register &cxReg,
-                                const Register &tempReg1, const Register &tempReg2,
+    bool emitAllocateGCThingPar(LInstruction *lir, Register objReg, Register cxReg,
+                                Register tempReg1, Register tempReg2,
                                 JSObject *templateObj);
 
     bool emitCallToUncompiledScriptPar(LInstruction *lir, Register calleeReg);
 
-    void emitLambdaInit(const Register &resultReg, const Register &scopeChainReg,
+    void emitLambdaInit(Register resultReg, Register scopeChainReg,
                         const LambdaFunctionInfo &info);
 
     bool emitFilterArgumentsOrEval(LInstruction *lir, Register string, Register temp1,

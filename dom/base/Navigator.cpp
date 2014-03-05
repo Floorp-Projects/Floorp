@@ -35,7 +35,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticPtr.h"
 #include "Connection.h"
-#include "nsDOMEvent.h"
+#include "mozilla/dom/Event.h" // for nsIDOMEvent::InternalDOMEvent()
 #include "nsGlobalWindow.h"
 #ifdef MOZ_B2G_RIL
 #include "mozilla/dom/IccManager.h"
