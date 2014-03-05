@@ -134,7 +134,6 @@ private:
   bool Init();
   bool InitHfpInterface();
   void DeinitHfpInterface();
-  void Reset();
 
   void HandleShutdown();
   void HandleVolumeChanged(const nsAString& aData);

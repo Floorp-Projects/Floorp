@@ -261,6 +261,11 @@ private:
   RefPtr<Compositor> mCompositor;
   nsAutoPtr<LayerProperties> mClonedLayerTreeProperties;
 
+  /** 
+   * Context target, nullptr when drawing directly to our swap chain.
+   */
+  RefPtr<gfx::DrawTarget> mTarget;
+
   gfx::Matrix mWorldMatrix;
   nsIntRegion mInvalidRegion;
   nsAutoPtr<FPSState> mFPS;

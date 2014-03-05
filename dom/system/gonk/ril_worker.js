@@ -3962,8 +3962,9 @@ RilObject.prototype = {
       }
       currentDataCall.gw = updatedDataCall.gw;
       if (updatedDataCall.dns) {
-        currentDataCall.dns[0] = updatedDataCall.dns[0];
-        currentDataCall.dns[1] = updatedDataCall.dns[1];
+        currentDataCall.dns = updatedDataCall.dns.slice();
+      } else {
+        currentDataCall.dns = [];
       }
       currentDataCall.rilMessageType = "datacallstatechange";
       this.sendChromeMessage(currentDataCall);
