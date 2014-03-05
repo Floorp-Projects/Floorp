@@ -119,6 +119,7 @@
  "dom/datastore/tests/test_sync.html": "x86 only bug 936226",
  "image/test/mochitest/test_bug490949.html": "x86 only",
  "image/test/mochitest/test_bug497665.html": "x86 only",
+ "image/test/mochitest/test_bug601470.html": "x86 only",
  "image/test/mochitest/test_bug671906.html": "x86 only",
  "image/test/mochitest/test_bug89419-1.html": "x86 only",
  "image/test/mochitest/test_bug89419-2.html": "x86 only",

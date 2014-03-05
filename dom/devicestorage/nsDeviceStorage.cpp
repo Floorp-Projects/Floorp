@@ -22,7 +22,6 @@
 #include "mozilla/Services.h"
 
 #include "nsAutoPtr.h"
-#include "nsDOMEvent.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIFile.h"
 #include "nsIDirectoryEnumerator.h"

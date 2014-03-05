@@ -193,6 +193,7 @@
 #include "nsIAppsService.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/DocumentFragment.h"
+#include "mozilla/dom/Event.h"
 #include "mozilla/dom/HTMLBodyElement.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/NodeFilterBinding.h"
@@ -203,7 +204,6 @@
 #include "nsDOMCaretPosition.h"
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsViewportInfo.h"
-#include "nsDOMEvent.h"
 #include "nsIContentPermissionPrompt.h"
 #include "mozilla/StaticPtr.h"
 #include "nsITextControlElement.h"
@@ -221,6 +221,7 @@
 #include "nsIMutableArray.h"
 #include "nsContentPermissionHelper.h"
 #include "mozilla/dom/DOMStringList.h"
+#include "nsWindowMemoryReporter.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -330,11 +331,11 @@ CustomElementCallback::Call()
       static_cast<LifecycleCreatedCallback *>(mCallback.get())->Call(mThisObject, rv);
       mOwnerData->mElementIsBeingCreated = false;
       break;
-    case nsIDocument::eEnteredView:
-      static_cast<LifecycleEnteredViewCallback *>(mCallback.get())->Call(mThisObject, rv);
+    case nsIDocument::eAttached:
+      static_cast<LifecycleAttachedCallback *>(mCallback.get())->Call(mThisObject, rv);
       break;
-    case nsIDocument::eLeftView:
-      static_cast<LifecycleLeftViewCallback *>(mCallback.get())->Call(mThisObject, rv);
+    case nsIDocument::eDetached:
+      static_cast<LifecycleDetachedCallback *>(mCallback.get())->Call(mThisObject, rv);
       break;
     case nsIDocument::eAttributeChanged:
       static_cast<LifecycleAttributeChangedCallback *>(mCallback.get())->Call(mThisObject,
@@ -1749,16 +1750,16 @@ CustomDefinitionsTraverse(CustomElementHashKey* aKey,
     cb->NoteXPCOMChild(aDefinition->mCallbacks->mCreatedCallback.Value());
   }
 
-  if (callbacks->mEnteredViewCallback.WasPassed()) {
+  if (callbacks->mAttachedCallback.WasPassed()) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb,
-      "mCustomDefinitions->mCallbacks->mEnteredViewCallback");
-    cb->NoteXPCOMChild(aDefinition->mCallbacks->mEnteredViewCallback.Value());
+      "mCustomDefinitions->mCallbacks->mAttachedCallback");
+    cb->NoteXPCOMChild(aDefinition->mCallbacks->mAttachedCallback.Value());
   }
 
-  if (callbacks->mLeftViewCallback.WasPassed()) {
+  if (callbacks->mDetachedCallback.WasPassed()) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb,
-      "mCustomDefinitions->mCallbacks->mLeftViewCallback");
-    cb->NoteXPCOMChild(aDefinition->mCallbacks->mLeftViewCallback.Value());
+      "mCustomDefinitions->mCallbacks->mDetachedCallback");
+    cb->NoteXPCOMChild(aDefinition->mCallbacks->mDetachedCallback.Value());
   }
 
   return PL_DHASH_NEXT;
@@ -5570,15 +5571,15 @@ nsDocument::EnqueueLifecycleCallback(nsIDocument::ElementCallbackType aType,
       }
       break;
 
-    case nsIDocument::eEnteredView:
-      if (definition->mCallbacks->mEnteredViewCallback.WasPassed()) {
-        func = definition->mCallbacks->mEnteredViewCallback.Value();
+    case nsIDocument::eAttached:
+      if (definition->mCallbacks->mAttachedCallback.WasPassed()) {
+        func = definition->mCallbacks->mAttachedCallback.Value();
       }
       break;
 
-    case nsIDocument::eLeftView:
-      if (definition->mCallbacks->mLeftViewCallback.WasPassed()) {
-        func = definition->mCallbacks->mLeftViewCallback.Value();
+    case nsIDocument::eDetached:
+      if (definition->mCallbacks->mDetachedCallback.WasPassed()) {
+        func = definition->mCallbacks->mDetachedCallback.Value();
       }
       break;
 
@@ -5921,12 +5922,12 @@ nsDocument::RegisterElement(JSContext* aCx, const nsAString& aType,
       EnqueueLifecycleCallback(nsIDocument::eCreated, elem, nullptr, definition);
       if (elem->GetCurrentDoc()) {
         // Normally callbacks can not be enqueued until the created
-        // callback has been invoked, however, the entered view callback
+        // callback has been invoked, however, the attached callback
         // in element upgrade is an exception so pretend the created
         // callback has been invoked.
         elem->GetCustomElementData()->mCreatedCallbackInvoked = true;
 
-        EnqueueLifecycleCallback(nsIDocument::eEnteredView, elem, nullptr, definition);
+        EnqueueLifecycleCallback(nsIDocument::eAttached, elem, nullptr, definition);
       }
     }
   }
@@ -7648,7 +7649,7 @@ nsDocument::CreateEvent(const nsAString& aEventType, nsIDOMEvent** aReturn)
   return rv.ErrorCode();
 }
 
-already_AddRefed<nsDOMEvent>
+already_AddRefed<Event>
 nsIDocument::CreateEvent(const nsAString& aEventType, ErrorResult& rv) const
 {
   nsIPresShell *shell = GetShell();

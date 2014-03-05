@@ -324,9 +324,7 @@ MouseEvent::GetScreenX(int32_t* aScreenX)
 int32_t
 MouseEvent::ScreenX()
 {
-  return nsDOMEvent::GetScreenCoords(mPresContext,
-                                     mEvent,
-                                     mEvent->refPoint).x;
+  return Event::GetScreenCoords(mPresContext, mEvent, mEvent->refPoint).x;
 }
 
 NS_IMETHODIMP
@@ -340,9 +338,7 @@ MouseEvent::GetScreenY(int32_t* aScreenY)
 int32_t
 MouseEvent::ScreenY()
 {
-  return nsDOMEvent::GetScreenCoords(mPresContext,
-                                     mEvent,
-                                     mEvent->refPoint).y;
+  return Event::GetScreenCoords(mPresContext, mEvent, mEvent->refPoint).y;
 }
 
 
@@ -357,10 +353,8 @@ MouseEvent::GetClientX(int32_t* aClientX)
 int32_t
 MouseEvent::ClientX()
 {
-  return nsDOMEvent::GetClientCoords(mPresContext,
-                                     mEvent,
-                                     mEvent->refPoint,
-                                     mClientPoint).x;
+  return Event::GetClientCoords(mPresContext, mEvent, mEvent->refPoint,
+                                mClientPoint).x;
 }
 
 NS_IMETHODIMP
@@ -374,10 +368,8 @@ MouseEvent::GetClientY(int32_t* aClientY)
 int32_t
 MouseEvent::ClientY()
 {
-  return nsDOMEvent::GetClientCoords(mPresContext,
-                                     mEvent,
-                                     mEvent->refPoint,
-                                     mClientPoint).y;
+  return Event::GetClientCoords(mPresContext, mEvent, mEvent->refPoint,
+                                mClientPoint).y;
 }
 
 bool

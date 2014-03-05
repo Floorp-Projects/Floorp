@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #
 MOZ_GLUE_LDFLAGS =
-STL_FLAGS =
 
 SHARED_LIBRARY_LIBS += \
 	../../../$(LIB_PREFIX)sandbox_s.$(LIB_SUFFIX) \

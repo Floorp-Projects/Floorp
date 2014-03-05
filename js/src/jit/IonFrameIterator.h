@@ -217,7 +217,7 @@ class IonFrameIterator
     MachineState machineState() const;
 
     template <class Op>
-    void forEachCanonicalActualArg(Op op, ReadFrameArgsBehavior behavior) const {
+    void unaliasedForEachActual(Op op, ReadFrameArgsBehavior behavior) const {
         JS_ASSERT(isBaselineJS());
 
         unsigned nactual = numActualArgs();
@@ -476,7 +476,7 @@ class InlineFrameIteratorMaybeGC
     }
 
     template <class Op>
-    void forEachCanonicalActualArg(JSContext *cx, Op op, ReadFrameArgsBehavior behavior) const {
+    void unaliasedForEachActual(JSContext *cx, Op op, ReadFrameArgsBehavior behavior) const {
         Nop nop;
         readFrameArgsAndLocals(cx, op, nop, nullptr, nullptr, behavior);
     }

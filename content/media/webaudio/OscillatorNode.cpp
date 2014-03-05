@@ -410,10 +410,10 @@ public:
     aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
   }
 
-  virtual void ProduceAudioBlock(AudioNodeStream* aStream,
-                                 const AudioChunk& aInput,
-                                 AudioChunk* aOutput,
-                                 bool* aFinished) MOZ_OVERRIDE
+  virtual void ProcessBlock(AudioNodeStream* aStream,
+                            const AudioChunk& aInput,
+                            AudioChunk* aOutput,
+                            bool* aFinished) MOZ_OVERRIDE
   {
     MOZ_ASSERT(mSource == aStream, "Invalid source stream");
 

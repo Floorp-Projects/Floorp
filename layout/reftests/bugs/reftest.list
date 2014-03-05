@@ -1650,7 +1650,7 @@ skip-if(Android||B2G) random-if(winWidget) == 632781-verybig.html 632781-ref.htm
 == 632781-normalsize.html 632781-ref.html
 == 633344-1.html 633344-1-ref.html
 == 634232-1.html 634232-1-ref.html
-fails-if(Android) == 635302-1.html 635302-1-ref.html
+fails-if(Android&&AndroidVersion<17) == 635302-1.html 635302-1-ref.html
 skip-if(B2G) random-if(d2d) fails-if(Android) fuzzy-if(winWidget&&!d2d,1,11) == 635373-1.html 635373-1-ref.html
 skip-if(B2G) random-if(d2d) fails-if(Android) fuzzy-if(winWidget&&!d2d,1,15) == 635373-2.html 635373-2-ref.html
 skip-if(B2G) random-if(d2d) fails-if(Android) fuzzy-if(winWidget&&!d2d,1,15) == 635373-3.html 635373-3-ref.html

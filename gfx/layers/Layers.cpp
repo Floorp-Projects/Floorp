@@ -186,18 +186,13 @@ Layer::~Layer()
 {}
 
 Animation*
-Layer::AddAnimation(TimeStamp aStart, TimeDuration aDuration, float aIterations,
-                    int aDirection, nsCSSProperty aProperty, const AnimationData& aData)
+Layer::AddAnimation()
 {
   MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) AddAnimation", this));
 
+  MOZ_ASSERT(!mPendingAnimations, "should have called ClearAnimations first");
+
   Animation* anim = mAnimations.AppendElement();
-  anim->startTime() = aStart;
-  anim->duration() = aDuration;
-  anim->numIterations() = aIterations;
-  anim->direction() = aDirection;
-  anim->property() = aProperty;
-  anim->data() = aData;
 
   Mutated();
   return anim;
@@ -206,6 +201,8 @@ Layer::AddAnimation(TimeStamp aStart, TimeDuration aDuration, float aIterations,
 void
 Layer::ClearAnimations()
 {
+  mPendingAnimations = nullptr;
+
   if (mAnimations.IsEmpty() && mAnimationData.IsEmpty()) {
     return;
   }
@@ -214,6 +211,28 @@ Layer::ClearAnimations()
   mAnimations.Clear();
   mAnimationData.Clear();
   Mutated();
+}
+
+Animation*
+Layer::AddAnimationForNextTransaction()
+{
+  MOZ_ASSERT(mPendingAnimations,
+             "should have called ClearAnimationsForNextTransaction first");
+
+  Animation* anim = mPendingAnimations->AppendElement();
+
+  return anim;
+}
+
+void
+Layer::ClearAnimationsForNextTransaction()
+{
+  // Ensure we have a non-null mPendingAnimations to mark a future clear.
+  if (!mPendingAnimations) {
+    mPendingAnimations = new AnimationArray;
+  }
+
+  mPendingAnimations->Clear();
 }
 
 static nsCSSValueSharedList*
@@ -648,6 +667,13 @@ Layer::ApplyPendingUpdatesForThisTransaction()
     Mutated();
   }
   mPendingTransform = nullptr;
+
+  if (mPendingAnimations) {
+    MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) PendingUpdatesForThisTransaction", this));
+    mPendingAnimations->SwapElements(mAnimations);
+    mPendingAnimations = nullptr;
+    Mutated();
+  }
 }
 
 const float

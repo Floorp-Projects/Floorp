@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<style type="text/css">
+body {
+ margin: 0;
+}
+#block {
+ background-color: green;
+ margin: 10px 0;
+}
+#inline-block {
+ display: block;
+ margin: 10px 0;
+ background-color: lightgreen;
+}
+</style>
+<script type="text/javascript">
+function test() {
+ document.getElementById('inline-block').style.display = 'inline-block';
+ document.documentElement.removeAttribute('class');
+}
+document.addEventListener('MozReftestInvalidate', test, false);
+</script>
+</head>
+<body>
+<div id="block"><div id="inline-block">Hello Kitty</div></div>
+</body>
+</html>

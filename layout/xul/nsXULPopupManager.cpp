@@ -12,7 +12,6 @@
 #include "nsMenuBarListener.h"
 #include "nsContentUtils.h"
 #include "nsIDOMDocument.h"
-#include "nsDOMEvent.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMXULElement.h"
 #include "nsIXULDocument.h"
@@ -37,6 +36,7 @@
 #include "nsFrameManager.h"
 #include "nsIObserverService.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/Event.h" // for nsIDOMEvent::InternalDOMEvent()
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Services.h"

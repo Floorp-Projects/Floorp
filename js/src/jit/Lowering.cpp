@@ -174,21 +174,21 @@ LIRGenerator::visitNewSlots(MNewSlots *ins)
 bool
 LIRGenerator::visitNewArray(MNewArray *ins)
 {
-    LNewArray *lir = new(alloc()) LNewArray();
+    LNewArray *lir = new(alloc()) LNewArray(temp());
     return define(lir, ins) && assignSafepoint(lir, ins);
 }
 
 bool
 LIRGenerator::visitNewObject(MNewObject *ins)
 {
-    LNewObject *lir = new(alloc()) LNewObject();
+    LNewObject *lir = new(alloc()) LNewObject(temp());
     return define(lir, ins) && assignSafepoint(lir, ins);
 }
 
 bool
 LIRGenerator::visitNewDeclEnvObject(MNewDeclEnvObject *ins)
 {
-    LNewDeclEnvObject *lir = new(alloc()) LNewDeclEnvObject();
+    LNewDeclEnvObject *lir = new(alloc()) LNewDeclEnvObject(temp());
     return define(lir, ins) && assignSafepoint(lir, ins);
 }
 
@@ -201,7 +201,7 @@ LIRGenerator::visitNewCallObject(MNewCallObject *ins)
     else
         slots = LConstantIndex::Bogus();
 
-    LNewCallObject *lir = new(alloc()) LNewCallObject(slots);
+    LNewCallObject *lir = new(alloc()) LNewCallObject(slots, temp());
     if (!define(lir, ins))
         return false;
 
@@ -311,7 +311,7 @@ LIRGenerator::visitInitPropGetterSetter(MInitPropGetterSetter *ins)
 bool
 LIRGenerator::visitCreateThisWithTemplate(MCreateThisWithTemplate *ins)
 {
-    LCreateThisWithTemplate *lir = new(alloc()) LCreateThisWithTemplate();
+    LCreateThisWithTemplate *lir = new(alloc()) LCreateThisWithTemplate(temp());
     return define(lir, ins) && assignSafepoint(lir, ins);
 }
 
@@ -2026,7 +2026,7 @@ LIRGenerator::visitLambda(MLambda *ins)
         return defineReturn(lir, ins) && assignSafepoint(lir, ins);
     }
 
-    LLambda *lir = new(alloc()) LLambda(useRegister(ins->scopeChain()));
+    LLambda *lir = new(alloc()) LLambda(useRegister(ins->scopeChain()), temp());
     return define(lir, ins) && assignSafepoint(lir, ins);
 }
 

@@ -12,6 +12,7 @@
 #include "nsError.h"
 #include "nsSVGAnimatedTransformList.h"
 #include "nsSVGAttrTearoffTable.h"
+#include "mozilla/DebugOnly.h"
 
 namespace {
   const double kRadPerDegree = 2.0 * M_PI / 360.0;

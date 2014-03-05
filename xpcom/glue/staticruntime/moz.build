@@ -34,3 +34,6 @@ LOCAL_INCLUDES += [
 
 # Statically link to the CRT on Windows
 USE_STATIC_LIBS = True
+
+# Don't use STL wrappers here (i.e. wrapped <new>); they require mozalloc
+DISABLE_STL_WRAPPING = True

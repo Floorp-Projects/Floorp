@@ -91,6 +91,9 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     Operand ToPayload(Operand base) {
         return base;
     }
+    Address ToPayload(Address base) {
+        return base;
+    }
     Operand ToType(Operand base) {
         switch (base.kind()) {
           case Operand::MEM_REG_DISP:
@@ -103,6 +106,9 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
           default:
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
+    }
+    Address ToType(Address base) {
+        return ToType(Operand(base)).toAddress();
     }
     void moveValue(const Value &val, Register type, Register data) {
         jsval_layout jv = JSVAL_TO_IMPL(val);

@@ -1088,7 +1088,8 @@ protected:
    * Add/remove this element to the documents id cache
    */
   void AddToIdTable(nsIAtom* aId);
-  void RemoveFromIdTable();
+  void RemoveFromIdTable(); // checks HasID() and uses DoGetID()
+  void RemoveFromIdTable(nsIAtom* aId);
 
   /**
    * Functions to carry out event default actions for links of all types

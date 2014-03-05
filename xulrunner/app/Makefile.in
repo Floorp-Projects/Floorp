@@ -8,8 +8,6 @@ GARBAGE += $(addprefix $(DIST)/bin/defaults/pref/,xulrunner.js)
 
 DEFINES += -DAB_CD=$(AB_CD)
 
-STL_FLAGS=
-
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 TK_LIBS := -framework Cocoa $(TK_LIBS)
 endif
@@ -34,7 +32,6 @@ include $(topsrcdir)/config/config.mk
 
 ifeq ($(OS_ARCH),WINNT)
 OS_LIBS += $(call EXPAND_LIBNAME,comctl32 comdlg32 uuid shell32 ole32 oleaut32 version winspool)
-RCINCLUDE = splash.rc
 endif
 
 include $(topsrcdir)/config/rules.mk

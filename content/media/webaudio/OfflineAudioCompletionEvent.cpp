@@ -11,19 +11,19 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_1(OfflineAudioCompletionEvent, nsDOMEvent,
+NS_IMPL_CYCLE_COLLECTION_INHERITED_1(OfflineAudioCompletionEvent, Event,
                                      mRenderedBuffer)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(OfflineAudioCompletionEvent)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
+NS_INTERFACE_MAP_END_INHERITING(Event)
 
-NS_IMPL_ADDREF_INHERITED(OfflineAudioCompletionEvent, nsDOMEvent)
-NS_IMPL_RELEASE_INHERITED(OfflineAudioCompletionEvent, nsDOMEvent)
+NS_IMPL_ADDREF_INHERITED(OfflineAudioCompletionEvent, Event)
+NS_IMPL_RELEASE_INHERITED(OfflineAudioCompletionEvent, Event)
 
 OfflineAudioCompletionEvent::OfflineAudioCompletionEvent(AudioContext* aOwner,
                                                          nsPresContext* aPresContext,
                                                          WidgetEvent* aEvent)
-  : nsDOMEvent(aOwner, aPresContext, aEvent)
+  : Event(aOwner, aPresContext, aEvent)
 {
   SetIsDOMBinding();
 }

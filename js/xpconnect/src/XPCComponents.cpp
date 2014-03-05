@@ -26,6 +26,7 @@
 #include "nsZipArchive.h"
 #include "nsIDOMFile.h"
 #include "nsIDOMFileList.h"
+#include "nsWindowMemoryReporter.h"
 
 using namespace mozilla;
 using namespace JS;

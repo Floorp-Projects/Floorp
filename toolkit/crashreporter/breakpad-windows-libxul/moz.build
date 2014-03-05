@@ -28,3 +28,5 @@ SOURCES += objs_common
 SOURCES += objs_crash_generation
 SOURCES += objs_handler
 SOURCES += objs_sender
+
+DISABLE_STL_WRAPPING = True

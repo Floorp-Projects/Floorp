@@ -54,7 +54,8 @@
  * Makefile.in:
  *   MOZ_GLUE_LDFLAGS = # Don't link against mozglue
  *   WRAP_LDFLAGS = # Never wrap malloc function calls with -Wl,--wrap
- *   STL_FLAGS = # Avoid STL wrapping
+ * and the following to the implementation's moz.build:
+ *   DISABLE_STL_WRAPPING = True # Avoid STL wrapping
  *
  * If your replace-malloc implementation lives under memory/replace, these
  * are taken care of by memory/replace/defs.mk.

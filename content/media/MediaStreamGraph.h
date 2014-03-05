@@ -906,7 +906,7 @@ protected:
 /**
  * This stream processes zero or more input streams in parallel to produce
  * its output. The details of how the output is produced are handled by
- * subclasses overriding the ProduceOutput method.
+ * subclasses overriding the ProcessInput method.
  */
 class ProcessedMediaStream : public MediaStream {
 public:
@@ -962,7 +962,7 @@ public:
    * This will be called on streams that have finished. Most stream types should
    * just return immediately if IsFinishedOnGraphThread(), but some may wish to
    * update internal state (see AudioNodeStream).
-   * ProduceOutput is allowed to call FinishOnGraphThread only if ALLOW_FINISH
+   * ProcessInput is allowed to call FinishOnGraphThread only if ALLOW_FINISH
    * is in aFlags. (This flag will be set when aTo >= mStateComputedTime, i.e.
    * when we've producing the last block of data we need to produce.) Otherwise
    * we can get into a situation where we've determined the stream should not
@@ -972,7 +972,7 @@ public:
   enum {
     ALLOW_FINISH = 0x01
   };
-  virtual void ProduceOutput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags) = 0;
+  virtual void ProcessInput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags) = 0;
   void SetAutofinishImpl(bool aAutofinish) { mAutofinish = aAutofinish; }
 
   /**
@@ -1065,7 +1065,7 @@ public:
    * Dispatches a runnable that will run on the main thread after all
    * main-thread stream state has been next updated.
    * Should only be called during MediaStreamListener callbacks or during
-   * ProcessedMediaStream::ProduceOutput().
+   * ProcessedMediaStream::ProcessInput().
    */
   void DispatchToMainThreadAfterStreamStateUpdate(already_AddRefed<nsIRunnable> aRunnable)
   {

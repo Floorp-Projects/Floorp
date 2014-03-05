@@ -34,12 +34,15 @@
 #include "nsContentUtils.h"
 #include "nsIFrameInlines.h"
 #include "ActiveLayerTracker.h"
+#include "nsDisplayList.h"
 
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
 #endif
 
 namespace mozilla {
+
+using namespace layers;
 
 RestyleManager::RestyleManager(nsPresContext* aPresContext)
   : mPresContext(aPresContext)
@@ -237,7 +240,16 @@ DoApplyRenderingChangeToTree(nsIFrame* aFrame,
       // layer for this frame, and not scheduling an invalidating
       // paint.
       if (!needInvalidatingPaint) {
-        needInvalidatingPaint |= !aFrame->TryUpdateTransformOnly();
+        Layer* layer;
+        needInvalidatingPaint |= !aFrame->TryUpdateTransformOnly(&layer);
+
+        if (!needInvalidatingPaint) {
+          // Since we're not going to paint, we need to resend animation
+          // data to the layer.
+          MOZ_ASSERT(layer, "this can't happen if there's no layer");
+          nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(layer,
+            nullptr, nullptr, aFrame, eCSSProperty_transform);
+        }
       }
     }
     if (aChange & nsChangeHint_ChildrenOnlyTransform) {

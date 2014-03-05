@@ -134,13 +134,8 @@ struct CopyScriptFrameIterArgs
     { }
 
     void copyArgs(JSContext *cx, HeapValue *dstBase, unsigned totalArgs) const {
-        if (!iter_.isJit()) {
-            CopyStackFrameArguments(iter_.abstractFramePtr(), dstBase, totalArgs);
-            return;
-        }
-
         /* Copy actual arguments. */
-        iter_.ionForEachCanonicalActualArg(cx, CopyToHeap(dstBase));
+        iter_.unaliasedForEachActual(cx, CopyToHeap(dstBase));
 
         /* Define formals which are not part of the actuals. */
         unsigned numActuals = iter_.numActualArgs();
