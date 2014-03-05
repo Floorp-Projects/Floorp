@@ -195,7 +195,8 @@ public:
     CREATE       = 1U,
     CREATE_NEW   = 2U,
     PRIORITY     = 4U,
-    SPECIAL_FILE = 8U
+    NOHASH       = 8U,
+    SPECIAL_FILE = 16U
   };
 
   CacheFileIOManager();
@@ -238,8 +239,6 @@ public:
   static nsresult RenameFile(CacheFileHandle *aHandle,
                              const nsACString &aNewName,
                              CacheFileIOListener *aCallback);
-  static nsresult EvictIfOverLimit();
-
   static nsresult InitIndexEntry(CacheFileHandle *aHandle,
                                  uint32_t         aAppId,
                                  bool             aAnonymous,
@@ -300,8 +299,6 @@ private:
                                       int64_t aTruncatePos, int64_t aEOFPos);
   nsresult RenameFileInternal(CacheFileHandle *aHandle,
                               const nsACString &aNewName);
-  nsresult EvictIfOverLimitInternal();
-  nsresult OverLimitEvictionInternal();
 
   nsresult CreateFile(CacheFileHandle *aHandle);
   static void HashToStr(const SHA1Sum::Hash *aHash, nsACString &_retval);
@@ -328,7 +325,6 @@ private:
   nsTArray<nsRefPtr<CacheFileHandle> > mSpecialHandles;
   nsTArray<nsRefPtr<CacheFile> >       mScheduledMetadataWrites;
   nsCOMPtr<nsITimer>                   mMetadataWritesTimer;
-  bool                                 mOverLimitEvicting;
 };
 
 } // net

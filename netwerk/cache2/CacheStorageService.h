@@ -103,7 +103,6 @@ private:
 private:
   // Following methods are thread safe to call.
   friend class CacheStorage;
-  friend class CacheFileIOManager;
 
   /**
    * Get, or create when not existing and demanded, an entry for the storage
@@ -137,14 +136,6 @@ private:
   nsresult WalkStorageEntries(CacheStorage const* aStorage,
                               bool aVisitEntries,
                               nsICacheStorageVisitor* aVisitor);
-
-  /**
-   * CacheFileIOManager uses this method to notify CacheStorageService that
-   * an active entry was removed. This method is called even if the entry
-   * removal was originated by CacheStorageService.
-   */
-  nsresult CacheFileDoomed(nsILoadContextInfo* aLoadContextInfo,
-                           const nsACString & aURL);
 
 private:
   friend class CacheMemoryConsumer;

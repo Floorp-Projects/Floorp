@@ -56,6 +56,7 @@ public:
                 bool aCreateNew,
                 bool aMemoryOnly,
                 bool aPriority,
+                bool aKeyIsHash,
                 CacheFileListener *aCallback);
 
   NS_IMETHOD OnChunkRead(nsresult aResult, CacheFileChunk *aChunk);
@@ -97,7 +98,6 @@ public:
 
   bool DataSize(int64_t* aSize);
   void Key(nsACString& aKey) { aKey = mKey; }
-  bool IsDoomed();
 
 private:
   friend class CacheFileIOManager;
@@ -165,6 +165,7 @@ private:
   bool           mDataAccessed;
   bool           mDataIsDirty;
   bool           mWritingMetadata;
+  bool           mKeyIsHash;
   nsresult       mStatus;
   int64_t        mDataSize;
   nsCString      mKey;
