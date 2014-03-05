@@ -91,6 +91,23 @@ nsDeque::~nsDeque() {
   SetDeallocator(0);
 }
 
+size_t nsDeque::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
+  size_t size = 0;
+  if (mData != mBuffer) {
+    size += aMallocSizeOf(mData);
+  }
+
+  if (mDeallocator) {
+    size += aMallocSizeOf(mDeallocator);
+  }
+
+  return size;
+}
+
+size_t nsDeque::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
+  return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
+}
+
 /**
  * Set the functor to be called by Erase()
  * The deque owns the functor.

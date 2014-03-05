@@ -52,6 +52,16 @@ private:
       mData.AppendElements(aData, aSize);
     }
     nsTArray<uint8_t> mData;
+
+    size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
+      // size including this
+      size_t size = aMallocSizeOf(this);
+
+      // size excluding this
+      size += mData.SizeOfExcludingThis(aMallocSizeOf);
+
+      return size;
+    }
   };
 
   class ResourceQueueDeallocator : public nsDequeFunctor {
@@ -175,6 +185,20 @@ private:
       }
       return evicted;
     }
+
+    size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
+      // Calculate the size of the internal deque.
+      size_t size = nsDeque::SizeOfExcludingThis(aMallocSizeOf);
+
+      // Sum the ResourceItems.
+      for (int32_t i = 0; i < nsDeque::GetSize(); ++i) {
+        const ResourceItem* item =
+            static_cast<const ResourceItem*>(nsDeque::ObjectAt(i));
+        size += item->SizeOfIncludingThis(aMallocSizeOf);
+      }
+
+      return size;
+    }
   };
 
 public:
@@ -226,6 +250,26 @@ public:
 
   virtual const nsCString& GetContentType() const MOZ_OVERRIDE { return mType; }
 
+  virtual size_t SizeOfExcludingThis(
+                      MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
+  {
+    ReentrantMonitorAutoEnter mon(mMonitor);
+
+    // Not owned:
+    // - mPrincipal
+    size_t size = MediaResource::SizeOfExcludingThis(aMallocSizeOf);
+    size += mType.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+    size += mInputBuffer.SizeOfExcludingThis(aMallocSizeOf);
+
+    return size;
+  }
+
+  virtual size_t SizeOfIncludingThis(
+                      MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
+  {
+    return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
+  }
+
   // Used by SourceBuffer.
   void AppendData(const uint8_t* aData, uint32_t aLength);
   void Ended();
@@ -244,7 +288,7 @@ private:
   // Protects all of the member variables below.  Read() will await a
   // Notify() (from Seek, AppendData, Ended, or Close) when insufficient
   // data is available in mData.
-  ReentrantMonitor mMonitor;
+  mutable ReentrantMonitor mMonitor;
 
   // The buffer holding resource data is a queue of ResourceItem's.
   ResourceQueue mInputBuffer;
