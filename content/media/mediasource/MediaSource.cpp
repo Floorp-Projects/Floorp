@@ -30,9 +30,9 @@ class JSObject;
 
 #ifdef PR_LOGGING
 PRLogModuleInfo* gMediaSourceLog;
-#define LOG(type, msg) PR_LOG(gMediaSourceLog, type, msg)
+#define MSE_DEBUG(...) PR_LOG(gMediaSourceLog, PR_LOG_DEBUG, (__VA_ARGS__))
 #else
-#define LOG(type, msg)
+#define MSE_DEBUG(...)
 #endif
 
 // Arbitrary limit.
@@ -123,8 +123,8 @@ MediaSource::AddSourceBuffer(const nsAString& aType, ErrorResult& aRv)
   }
   nsRefPtr<SourceBuffer> sourceBuffer = new SourceBuffer(this, NS_ConvertUTF16toUTF8(mimeType));
   mSourceBuffers->Append(sourceBuffer);
-  LOG(PR_LOG_DEBUG, ("%p AddSourceBuffer(Type=%s) -> %p", this,
-                     NS_ConvertUTF16toUTF8(mimeType).get(), sourceBuffer.get()));
+  MSE_DEBUG("%p AddSourceBuffer(Type=%s) -> %p", this,
+            NS_ConvertUTF16toUTF8(mimeType).get(), sourceBuffer.get());
   return sourceBuffer.forget();
 }
 
@@ -179,7 +179,7 @@ MediaSource::IsTypeSupported(const GlobalObject& aGlobal,
 bool
 MediaSource::Attach(MediaSourceDecoder* aDecoder)
 {
-  LOG(PR_LOG_DEBUG, ("%p Attaching decoder %p owner %p", this, aDecoder, aDecoder->GetOwner()));
+  MSE_DEBUG("%p Attaching decoder %p owner %p", this, aDecoder, aDecoder->GetOwner());
   MOZ_ASSERT(aDecoder);
   if (mReadyState != MediaSourceReadyState::Closed) {
     return false;
@@ -193,7 +193,7 @@ MediaSource::Attach(MediaSourceDecoder* aDecoder)
 void
 MediaSource::Detach()
 {
-  LOG(PR_LOG_DEBUG, ("%p Detaching decoder %p owner %p", this, mDecoder.get(), mDecoder->GetOwner()));
+  MSE_DEBUG("%p Detaching decoder %p owner %p", this, mDecoder.get(), mDecoder->GetOwner());
   MOZ_ASSERT(mDecoder);
   mDecoder->DetachMediaSource();
   mDecoder = nullptr;
@@ -253,14 +253,14 @@ MediaSource::SetReadyState(MediaSourceReadyState aState)
 void
 MediaSource::DispatchSimpleEvent(const char* aName)
 {
-  LOG(PR_LOG_DEBUG, ("%p Dispatching event %s to MediaSource", this, aName));
+  MSE_DEBUG("%p Dispatching event %s to MediaSource", this, aName);
   DispatchTrustedEvent(NS_ConvertUTF8toUTF16(aName));
 }
 
 void
 MediaSource::QueueAsyncSimpleEvent(const char* aName)
 {
-  LOG(PR_LOG_DEBUG, ("%p Queuing event %s to MediaSource", this, aName));
+  MSE_DEBUG("%p Queuing event %s to MediaSource", this, aName);
   nsCOMPtr<nsIRunnable> event = new AsyncEventRunner<MediaSource>(this, aName);
   NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
 }
