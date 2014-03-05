@@ -1,0 +1,428 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=910412
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Permission test of FileSystem API for Device Storage</title>
+  <script type="application/javascript"
+           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css"
+         href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+</head>
+<body>
+<a target="_blank"
+    href="https://bugzilla.mozilla.org/show_bug.cgi?id=910412">Mozilla Bug 910412</a>
+<p id="display"></p>
+<div id="content">
+
+</div>
+<pre id="test">
+<script type="application/javascript;version=1.7">
+
+function randomFilename(l) {
+  let set = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXTZ";
+  let result = "";
+  for (let i=0; i<l; i++) {
+    let r = Math.floor(set.length * Math.random());
+    result += set.substring(r, r + 1);
+  }
+  return result;
+}
+
+let MockPermissionPrompt = SpecialPowers.MockPermissionPrompt;
+MockPermissionPrompt.init();
+
+SimpleTest.waitForExplicitFinish();
+
+function TestCreateDirectory(iframe, data) {
+  function cbError(e) {
+    is(e.name, "SecurityError", "[TestCreateDirectory] Should fire a SecurityError for type " + data.type);
+    is(data.shouldPass, false, "[TestCreateDirectory] Error callback was called for type " + data.type + '. Error: ' + e.name);
+    testComplete(iframe, data);
+  }
+
+  let storage = iframe.contentDocument.defaultView.navigator.getDeviceStorage(data.type);
+  isnot(storage, null, "[TestCreateDirectory] Should be able to get storage object for " + data.type);
+
+  if (!storage) {
+    testComplete(iframe, data);
+    return;
+  }
+
+  storage.getRoot().then(function(root) {
+    is(data.shouldPass, true, "[TestCreateDirectory] Success callback was called for type " + data.type);
+    let filename = randomFilename(100);
+    root.createDirectory(filename).then(function(d) {
+      let passed = d && (d.name === filename);
+      is(data.shouldPass, passed, "[TestCreateDirectory] Success callback was called for type " + data.type);
+      testComplete(iframe, data);
+    }, cbError);
+  }, cbError);
+}
+
+function TestGet(iframe, data) {
+  function cbError(e) {
+    is(e.name, "SecurityError", "[TestGet] Should fire a SecurityError for type " + data.type);
+    is(data.shouldPass, false, "[TestGet] Error callback was called for type " + data.type + '. Error: ' + e.name);
+    testComplete(iframe, data);
+  }
+
+  createTestFile(data.fileExtension);
+
+  let storage = iframe.contentDocument.defaultView.navigator.getDeviceStorage(data.type);
+  isnot(storage, null, "[TestGet] Should be able to get storage object for " + data.type);
+
+  if (!storage) {
+    testComplete(iframe, data);
+    return;
+  }
+
+  storage.getRoot().then(function(root) {
+    ok(true, "[TestGet] Success callback of getRoot was called for type " + data.type);
+    root.get("testfile" + data.fileExtension).then(function() {
+      is(data.shouldPass, true, "[TestGet] Success callback was called for type " + data.type);
+      testComplete(iframe, data);
+    }, cbError);
+  }, cbError);
+}
+
+let gTestUri = "https://example.com/tests/dom/devicestorage/test/test_fs_app_permissions.html"
+
+let gData = [
+
+  // Directory#get
+
+  // Web applications with no permissions
+  {
+    type: 'pictures',
+    shouldPass: false,
+    fileExtension: '.png',
+    test: TestGet
+  },
+  {
+    type: 'videos',
+    shouldPass: false,
+    fileExtension: '.ogv',
+    test: TestGet
+  },
+  {
+    type: 'videos',
+    shouldPass: false,
+    fileExtension: '.ogg',
+    test: TestGet
+  },
+  {
+    type: 'music',
+    shouldPass: false,
+    fileExtension: '.ogg',
+    test: TestGet
+  },
+  {
+    type: 'music',
+    shouldPass: false,
+    fileExtension: '.txt',
+    test: TestGet
+  },
+  {
+    type: 'sdcard',
+    shouldPass: false,
+    fileExtension: '.txt',
+    test: TestGet
+  },
+
+  // Web applications with permission granted
+  {
+    type: 'pictures',
+    shouldPass: true,
+    fileExtension: '.png',
+
+    permissions: ["device-storage:pictures"],
+
+    test: TestGet
+  },
+  {
+    type: 'videos',
+    shouldPass: true,
+    fileExtension: '.ogv',
+
+    permissions: ["device-storage:videos"],
+
+    test: TestGet
+  },
+  {
+    type: 'videos',
+    shouldPass: true,
+    fileExtension: '.ogg',
+
+    permissions: ["device-storage:videos"],
+
+    test: TestGet
+  },
+  {
+    type: 'music',
+    shouldPass: true,
+    fileExtension: '.ogg',
+
+    permissions: ["device-storage:music"],
+
+    test: TestGet
+  },
+  {
+    type: 'music',
+    shouldPass: false,
+    fileExtension: '.txt',
+
+    permissions: ["device-storage:music"],
+
+    test: TestGet
+  },
+  {
+    type: 'sdcard',
+    shouldPass: true,
+    fileExtension: '.txt',
+
+    permissions: ["device-storage:sdcard"],
+
+    test: TestGet
+  },
+
+  // Certified application with permision granted
+  {
+    type: 'pictures',
+    shouldPass: true,
+    fileExtension: '.png',
+
+    app: "https://example.com/manifest_cert.webapp",
+    permissions: ["device-storage:pictures"],
+
+    test: TestGet
+  },
+  {
+    type: 'videos',
+    shouldPass: true,
+    fileExtension: '.ogv',
+
+    app: "https://example.com/manifest_cert.webapp",
+    permissions: ["device-storage:videos"],
+
+    test: TestGet
+  },
+  {
+    type: 'videos',
+    shouldPass: true,
+    fileExtension: '.ogg',
+
+    app: "https://example.com/manifest_cert.webapp",
+    permissions: ["device-storage:videos"],
+
+    test: TestGet
+  },
+  {
+    type: 'music',
+    shouldPass: true,
+    fileExtension: '.ogg',
+
+    app: "https://example.com/manifest_cert.webapp",
+    permissions: ["device-storage:music"],
+
+    test: TestGet
+  },
+  {
+    type: 'music',
+    shouldPass: false,
+    fileExtension: '.txt',
+
+    app: "https://example.com/manifest_cert.webapp",
+    permissions: ["device-storage:music"],
+
+    test: TestGet
+  },
+  {
+    type: 'sdcard',
+    shouldPass: true,
+    fileExtension: '.txt',
+
+    app: "https://example.com/manifest_cert.webapp",
+    permissions: ["device-storage:sdcard"],
+
+    test: TestGet
+  },
+
+  // Directory#createDirectory
+
+  // Web applications with no permissions
+  {
+    type: 'pictures',
+    shouldPass: false,
+    test: TestCreateDirectory
+  },
+  {
+    type: 'videos',
+    shouldPass: false,
+    test: TestCreateDirectory
+  },
+  {
+    type: 'music',
+    shouldPass: false,
+    test: TestCreateDirectory
+  },
+  {
+    type: 'sdcard',
+    shouldPass: false,
+    test: TestCreateDirectory
+  },
+
+  // Web applications with permission granted
+  {
+    type: 'pictures',
+    shouldPass: true,
+
+    permissions: ["device-storage:pictures"],
+
+    test: TestCreateDirectory
+  },
+  {
+    type: 'videos',
+    shouldPass: true,
+
+    permissions: ["device-storage:videos"],
+
+    test: TestCreateDirectory
+  },
+  {
+    type: 'music',
+    shouldPass: true,
+
+    permissions: ["device-storage:music"],
+
+    test: TestCreateDirectory
+  },
+  {
+    type: 'sdcard',
+    shouldPass: true,
+
+    permissions: ["device-storage:sdcard"],
+
+    test: TestCreateDirectory
+  },
+
+  // Certified application with permision granted
+  {
+    type: 'pictures',
+    shouldPass: true,
+
+    app: "https://example.com/manifest_cert.webapp",
+    permissions: ["device-storage:pictures"],
+
+    test: TestCreateDirectory
+  },
+  {
+    type: 'videos',
+    shouldPass: true,
+
+    app: "https://example.com/manifest_cert.webapp",
+    permissions: ["device-storage:videos"],
+
+    test: TestCreateDirectory
+  },
+  {
+    type: 'music',
+    shouldPass: true,
+
+    app: "https://example.com/manifest_cert.webapp",
+    permissions: ["device-storage:music"],
+
+    test: TestCreateDirectory
+  },
+  {
+    type: 'sdcard',
+    shouldPass: true,
+
+    app: "https://example.com/manifest_cert.webapp",
+    permissions: ["device-storage:sdcard"],
+
+    test: TestCreateDirectory
+  }
+
+];
+
+function setupTest(iframe,data) {
+  if (data.permissions) {
+    for (let j in data.permissions) {
+      SpecialPowers.addPermission(data.permissions[j], true, iframe.contentDocument);
+    }
+  }
+}
+
+function testComplete(iframe, data) {
+  if (data.permissions) {
+    for (let j in data.permissions) {
+      SpecialPowers.removePermission(data.permissions[j], iframe.contentDocument);
+    }
+  }
+
+  document.getElementById('content').removeChild(iframe);
+
+  if (gData.length == 0) {
+    SimpleTest.finish();
+  } else {
+    gTestRunner.next();
+  }
+}
+
+function runTest() {
+  while (gData.length > 0) {
+    let iframe = document.createElement('iframe');
+    let data = gData.shift();
+
+    iframe.setAttribute('mozbrowser', '');
+    if (data.app) {
+      iframe.setAttribute('mozapp', data.app);
+    }
+
+    iframe.src = gTestUri;
+
+    iframe.addEventListener('load', function(e) {
+      setupTest(iframe, data)
+      data.test(iframe, data);
+    });
+
+    document.getElementById('content').appendChild(iframe);
+    yield undefined;
+  }
+}
+
+function createTestFile(extension) {
+  try {
+    const Cc = SpecialPowers.Cc;
+    const Ci = SpecialPowers.Ci;
+    let directoryService = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
+    let f = directoryService.get("TmpD", Ci.nsIFile);
+    f.appendRelativePath("device-storage-testing");
+    f.remove(true);
+    f.appendRelativePath("testfile" + extension);
+    f.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+  } catch(e) {}
+}
+
+let gTestRunner = runTest();
+SpecialPowers.addPermission("browser", true, gTestUri);
+
+// We are more permissive with CSP in our testing environment....
+const DEFAULT_CSP_PRIV = "default-src *; script-src 'self'; style-src 'self' 'unsafe-inline'; object-src 'none'";
+const DEFAULT_CSP_CERT = "default-src *; script-src 'self'; style-src 'self'; object-src 'none'";
+
+SpecialPowers.pushPrefEnv({'set': [["dom.mozBrowserFramesEnabled", true],
+                                   ["device.storage.enabled", true],
+                                   ["device.storage.testing", true],
+                                   ["device.storage.prompt.testing", false],
+                                   ["security.apps.privileged.CSP.default", DEFAULT_CSP_PRIV],
+                                   ["security.apps.certified.CSP.default", DEFAULT_CSP_CERT]]},
+  function() { gTestRunner.next(); });
+
+</script>
+</pre>
+</body>
+</html>
