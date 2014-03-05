@@ -5931,10 +5931,10 @@ js_DumpBacktrace(JSContext *cx)
     fprintf(stdout, "%s", sprinter.string());
 }
 void
-JSObject::addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::ClassInfo *info)
+JSObject::addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::ObjectsExtraSizes *sizes)
 {
     if (hasDynamicSlots())
-        info->objectsMallocHeapSlots += mallocSizeOf(slots);
+        sizes->mallocHeapSlots += mallocSizeOf(slots);
 
     if (hasDynamicElements()) {
         js::ObjectElements *elements = getElementsHeader();
@@ -5942,12 +5942,12 @@ JSObject::addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::ClassIn
 #if defined (JS_CPU_X64)
             // On x64, ArrayBufferObject::prepareForAsmJS switches the
             // ArrayBufferObject to use mmap'd storage.
-            info->objectsNonHeapElementsAsmJS += as<ArrayBufferObject>().byteLength();
+            sizes->nonHeapElementsAsmJS += as<ArrayBufferObject>().byteLength();
 #else
-            info->objectsMallocHeapElementsAsmJS += mallocSizeOf(elements);
+            sizes->mallocHeapElementsAsmJS += mallocSizeOf(elements);
 #endif
         } else {
-            info->objectsMallocHeapElementsNonAsmJS += mallocSizeOf(elements);
+            sizes->mallocHeapElementsNonAsmJS += mallocSizeOf(elements);
         }
     }
 
@@ -5970,20 +5970,20 @@ JSObject::addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::ClassIn
         // - ( 1.0%, 96.4%): Proxy
 
     } else if (is<ArgumentsObject>()) {
-        info->objectsMallocHeapMisc += as<ArgumentsObject>().sizeOfMisc(mallocSizeOf);
+        sizes->mallocHeapArgumentsData += as<ArgumentsObject>().sizeOfMisc(mallocSizeOf);
     } else if (is<RegExpStaticsObject>()) {
-        info->objectsMallocHeapMisc += as<RegExpStaticsObject>().sizeOfData(mallocSizeOf);
+        sizes->mallocHeapRegExpStatics += as<RegExpStaticsObject>().sizeOfData(mallocSizeOf);
     } else if (is<PropertyIteratorObject>()) {
-        info->objectsMallocHeapMisc += as<PropertyIteratorObject>().sizeOfMisc(mallocSizeOf);
+        sizes->mallocHeapPropertyIteratorData += as<PropertyIteratorObject>().sizeOfMisc(mallocSizeOf);
 #ifdef JS_ION
     } else if (is<AsmJSModuleObject>()) {
-        as<AsmJSModuleObject>().addSizeOfMisc(mallocSizeOf, &info->objectsNonHeapCodeAsmJS,
-                                              &info->objectsMallocHeapMisc);
+        as<AsmJSModuleObject>().addSizeOfMisc(mallocSizeOf, &sizes->nonHeapCodeAsmJS,
+                                              &sizes->mallocHeapAsmJSModuleData);
 #endif
 #ifdef JS_HAS_CTYPES
     } else {
         // This must be the last case.
-        info->objectsMallocHeapMisc +=
+        sizes->mallocHeapCtypesData +=
             js::SizeOfDataIfCDataObject(mallocSizeOf, const_cast<JSObject *>(this));
 #endif
     }
