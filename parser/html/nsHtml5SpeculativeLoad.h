@@ -27,7 +27,8 @@ class nsHtml5SpeculativeLoad {
     nsHtml5SpeculativeLoad();
     ~nsHtml5SpeculativeLoad();
     
-    inline void InitBase(const nsAString& aUrl) {
+    inline void InitBase(const nsAString& aUrl)
+    {
       NS_PRECONDITION(mOpCode == eSpeculativeLoadUninitialized,
                       "Trying to reinitialize a speculative load!");
       mOpCode = eSpeculativeLoadBase;
@@ -35,7 +36,8 @@ class nsHtml5SpeculativeLoad {
     }
 
     inline void InitImage(const nsAString& aUrl,
-                          const nsAString& aCrossOrigin) {
+                          const nsAString& aCrossOrigin)
+    {
       NS_PRECONDITION(mOpCode == eSpeculativeLoadUninitialized,
                       "Trying to reinitialize a speculative load!");
       mOpCode = eSpeculativeLoadImage;
@@ -47,7 +49,8 @@ class nsHtml5SpeculativeLoad {
                            const nsAString& aCharset,
                            const nsAString& aType,
                            const nsAString& aCrossOrigin,
-                           bool aParserInHead) {
+                           bool aParserInHead)
+    {
       NS_PRECONDITION(mOpCode == eSpeculativeLoadUninitialized,
                       "Trying to reinitialize a speculative load!");
       mOpCode = aParserInHead ?
@@ -59,7 +62,8 @@ class nsHtml5SpeculativeLoad {
     }
     
     inline void InitStyle(const nsAString& aUrl, const nsAString& aCharset,
-			  const nsAString& aCrossOrigin) {
+			  const nsAString& aCrossOrigin)
+    {
       NS_PRECONDITION(mOpCode == eSpeculativeLoadUninitialized,
                       "Trying to reinitialize a speculative load!");
       mOpCode = eSpeculativeLoadStyle;
@@ -79,7 +83,8 @@ class nsHtml5SpeculativeLoad {
      * manifests seen by the parser thread have to maintain the queue order
      * relative to true speculative loads. See bug 541079.
      */
-    inline void InitManifest(const nsAString& aUrl) {
+    inline void InitManifest(const nsAString& aUrl)
+    {
       NS_PRECONDITION(mOpCode == eSpeculativeLoadUninitialized,
                       "Trying to reinitialize a speculative load!");
       mOpCode = eSpeculativeLoadManifest;
@@ -97,7 +102,8 @@ class nsHtml5SpeculativeLoad {
      * the queue order relative to true speculative loads. See bug 675499.
      */
     inline void InitSetDocumentCharset(nsACString& aCharset,
-                                       int32_t aCharsetSource) {
+                                       int32_t aCharsetSource)
+    {
       NS_PRECONDITION(mOpCode == eSpeculativeLoadUninitialized,
                       "Trying to reinitialize a speculative load!");
       mOpCode = eSpeculativeLoadSetDocumentCharset;
