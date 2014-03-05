@@ -23,18 +23,11 @@ struct JSGenerator;
 
 namespace js {
 
-class StackFrame;
-class FrameRegs;
-
-class InvokeFrameGuard;
-class ExecuteFrameGuard;
-class GeneratorFrameGuard;
-
-class ScriptFrameIter;
-class AllFramesIter;
-
 class ArgumentsObject;
+class InterpreterRegs;
 class ScopeObject;
+class ScriptFrameIter;
+class StackFrame;
 class StaticBlockObject;
 
 struct ScopeCoordinate;
@@ -66,8 +59,8 @@ struct ScopeCoordinate;
 // The top of an activation's current frame's expression stack is pointed to by the
 // activation's "current regs", which contains the stack pointer 'sp'. In the
 // interpreter, sp is adjusted as individual values are pushed and popped from
-// the stack and the FrameRegs struct (pointed to by the InterpreterActivation)
-// is a local var of js::Interpret.
+// the stack and the InterpreterRegs struct (pointed to by the
+// InterpreterActivation) is a local var of js::Interpret.
 
 enum MaybeCheckAliasing { CHECK_ALIASING = true, DONT_CHECK_ALIASING = false };
 
@@ -367,24 +360,18 @@ class StackFrame
     void writeBarrierPost();
 
     /*
-     * These utilities provide raw access to the values associated with a
-     * StackFrame (see "VM stack layout" comment). The utilities are private
-     * since they are not able to assert that only unaliased vars/formals are
-     * accessed. Normal code should prefer the StackFrame::unaliased* members
-     * (or FrameRegs::stackDepth for the usual "depth is at least" assertions).
+     * The utilities are private since they are not able to assert that only
+     * unaliased vars/formals are accessed. Normal code should prefer the
+     * StackFrame::unaliased* members (or InterpreterRegs::stackDepth for the
+     * usual "depth is at least" assertions).
      */
-  public:
     Value *slots() const { return (Value *)(this + 1); }
     Value *base() const { return slots() + script()->nfixed(); }
-    Value *argv() const { return argv_; }
 
-  private:
-    friend class FrameRegs;
+    friend class InterpreterRegs;
     friend class InterpreterStack;
     friend class ScriptFrameIter;
-    friend class CallObject;
-    friend class ClonedBlockObject;
-    friend class ArgumentsObject;
+    friend class jit::BaselineFrame;
 
     /*
      * Frame initialization, called by InterpreterStack operations after acquiring
@@ -537,6 +524,9 @@ class StackFrame
 
     unsigned numFormalArgs() const { JS_ASSERT(hasArgs()); return fun()->nargs(); }
     unsigned numActualArgs() const { JS_ASSERT(hasArgs()); return u.nactual; }
+
+    /* Watch out, this exposes a pointer to the unaliased formal arg array. */
+    Value *argv() const { return argv_; }
 
     /*
      * Arguments object
@@ -935,6 +925,7 @@ class StackFrame
 
   public:
     void mark(JSTracer *trc);
+    void markValues(JSTracer *trc, unsigned start, unsigned end);
     void markValues(JSTracer *trc, Value *sp, jsbytecode *pc);
 
     // Entered Baseline/Ion from the interpreter.
@@ -971,7 +962,7 @@ InitialFrameFlagsAreConstructing(InitialFrameFlags initial)
 
 /*****************************************************************************/
 
-class FrameRegs
+class InterpreterRegs
 {
   public:
     Value *sp;
@@ -992,7 +983,7 @@ class FrameRegs
     }
 
     /* For generators. */
-    void rebaseFromTo(const FrameRegs &from, StackFrame &to) {
+    void rebaseFromTo(const InterpreterRegs &from, StackFrame &to) {
         fp_ = &to;
         sp = to.slots() + (from.sp - from.fp_->slots());
         pc = from.pc;
@@ -1067,10 +1058,10 @@ class InterpreterStack
 
     // The interpreter can push light-weight, "inline" frames without entering a
     // new InterpreterActivation or recursively calling Interpret.
-    bool pushInlineFrame(JSContext *cx, FrameRegs &regs, const CallArgs &args,
+    bool pushInlineFrame(JSContext *cx, InterpreterRegs &regs, const CallArgs &args,
                          HandleScript script, InitialFrameFlags initial);
 
-    void popInlineFrame(FrameRegs &regs);
+    void popInlineFrame(InterpreterRegs &regs);
 
     inline void purge(JSRuntime *rt);
 
@@ -1225,7 +1216,7 @@ class InterpreterActivation : public Activation
     friend class js::InterpreterFrameIterator;
 
     RunState &state_;
-    FrameRegs regs_;
+    InterpreterRegs regs_;
     StackFrame *entryFrame_;
     size_t opMask_; // For debugger interrupts, see js::Interpret.
 
@@ -1244,7 +1235,7 @@ class InterpreterActivation : public Activation
     StackFrame *current() const {
         return regs_.fp();
     }
-    FrameRegs &regs() {
+    InterpreterRegs &regs() {
         return regs_;
     }
     StackFrame *entryFrame() const {
@@ -1414,35 +1405,15 @@ class InterpreterFrameIterator
     }
 };
 
-/*
- * Iterate through the callstack (following fp->prev) of the given context.
- * Each element of said callstack can either be the execution of a script
- * (scripted function call, global code, eval code, debugger code) or the
- * invocation of a (C++) native. Example usage:
- *
- *   for (Stackiter i(cx); !i.done(); ++i) {
- *     if (i.isScript()) {
- *       ... i.fp() ... i.sp() ... i.pc()
- *     } else {
- *       JS_ASSERT(i.isNativeCall());
- *       ... i.args();
- *     }
- *   }
- *
- * The SavedOption parameter additionally lets the iterator continue through
- * breaks in the callstack (from JS_SaveFrameChain). The default is to stop.
- */
 class ScriptFrameIter
 {
   public:
     enum SavedOption { STOP_AT_SAVED, GO_THROUGH_SAVED };
     enum ContextOption { CURRENT_CONTEXT, ALL_CONTEXTS };
-    enum State { DONE, SCRIPTED, JIT };
+    enum State { DONE, INTERP, JIT };
 
-    /*
-     * Unlike ScriptFrameIter itself, ScriptFrameIter::Data can be allocated on
-     * the heap, so this structure should not contain any GC things.
-     */
+    // Unlike ScriptFrameIter itself, ScriptFrameIter::Data can be allocated on
+    // the heap, so this structure should not contain any GC things.
     struct Data
     {
         PerThreadData * perThread_;
@@ -1467,22 +1438,6 @@ class ScriptFrameIter
         Data(const Data &other);
     };
 
-    friend class ::JSBrokenFrameIterator;
-  private:
-    Data data_;
-#ifdef JS_ION
-    jit::InlineFrameIterator ionInlineFrames_;
-#endif
-
-    void popActivation();
-    void popInterpreterFrame();
-#ifdef JS_ION
-    void nextJitFrame();
-    void popJitFrame();
-#endif
-    void settleOnActivation();
-
-  public:
     ScriptFrameIter(JSContext *cx, SavedOption = STOP_AT_SAVED);
     ScriptFrameIter(JSContext *cx, ContextOption, SavedOption, JSPrincipals* = nullptr);
     ScriptFrameIter(const ScriptFrameIter &iter);
@@ -1490,46 +1445,20 @@ class ScriptFrameIter
     ScriptFrameIter(AbstractFramePtr frame);
 
     bool done() const { return data_.state_ == DONE; }
+
+    // -------------------------------------------------------
+    // The following functions can only be called when !done()
+    // -------------------------------------------------------
+
     ScriptFrameIter &operator++();
 
-    Data *copyData() const;
-    AbstractFramePtr copyDataAsAbstractFramePtr() const;
-
     JSCompartment *compartment() const;
+    Activation *activation() const { return data_.activations_.activation(); }
 
-    JSScript *script() const {
-        JS_ASSERT(!done());
-        if (data_.state_ == SCRIPTED)
-            return interpFrame()->script();
-#ifdef JS_ION
-        JS_ASSERT(data_.state_ == JIT);
-        if (data_.ionFrames_.isOptimizedJS())
-            return ionInlineFrames_.script();
-        return data_.ionFrames_.script();
-#else
-        return nullptr;
-#endif
-    }
-    bool isJit() const {
-        JS_ASSERT(!done());
-        return data_.state_ == JIT;
-    }
-
-    bool isIon() const {
-#ifdef JS_ION
-        return isJit() && data_.ionFrames_.isOptimizedJS();
-#else
-        return false;
-#endif
-    }
-
-    bool isBaseline() const {
-#ifdef JS_ION
-        return isJit() && data_.ionFrames_.isBaselineJS();
-#else
-        return false;
-#endif
-    }
+    bool isInterp() const { JS_ASSERT(!done()); return data_.state_ == INTERP;  }
+    bool isJit() const { JS_ASSERT(!done()); return data_.state_ == JIT; }
+    inline bool isIon() const;
+    inline bool isBaseline() const;
 
     bool isFunctionFrame() const;
     bool isGlobalFrame() const;
@@ -1537,30 +1466,16 @@ class ScriptFrameIter
     bool isNonEvalFunctionFrame() const;
     bool isGeneratorFrame() const;
     bool isConstructing() const;
-
     bool hasArgs() const { return isNonEvalFunctionFrame(); }
 
-    AbstractFramePtr abstractFramePtr() const;
-
-    /*
-     * When entering IonMonkey, the top interpreter frame (pushed by the caller)
-     * is kept on the stack as bookkeeping (with runningInIon() set). The
-     * contents of the frame are ignored by Ion code (and GC) and thus
-     * immediately become garbage and must not be touched directly.
-     */
-    StackFrame *interpFrame() const {
-        JS_ASSERT(data_.state_ == SCRIPTED);
-        return data_.interpFrames_.frame();
-    }
-
-    Activation *activation() const { return data_.activations_.activation(); }
+    inline JSScript *script() const;
 
     jsbytecode *pc() const { JS_ASSERT(!done()); return data_.pc_; }
     void        updatePcQuadratic();
     JSFunction *callee() const;
     Value       calleev() const;
     unsigned    numActualArgs() const;
-    unsigned    numFormalArgs() const { return script()->functionNonDelazifying()->nargs(); }
+    unsigned    numFormalArgs() const;
     Value       unaliasedActual(unsigned i, MaybeCheckAliasing = CHECK_ALIASING) const;
     template <class Op> inline void unaliasedForEachActual(JSContext *cx, Op op);
 
@@ -1584,6 +1499,33 @@ class ScriptFrameIter
     // These are only valid for the top frame.
     size_t      numFrameSlots() const;
     Value       frameSlotValue(size_t index) const;
+
+    // --------------------------------------------------------------------------
+    // The following functions can only be called when isInterp() or isBaseline()
+    // --------------------------------------------------------------------------
+
+    AbstractFramePtr abstractFramePtr() const;
+    AbstractFramePtr copyDataAsAbstractFramePtr() const;
+    Data *copyData() const;
+
+    // This can only be called when isInterp():
+    inline StackFrame *interpFrame() const;
+
+  private:
+    Data data_;
+#ifdef JS_ION
+    jit::InlineFrameIterator ionInlineFrames_;
+#endif
+
+    void popActivation();
+    void popInterpreterFrame();
+#ifdef JS_ION
+    void nextJitFrame();
+    void popJitFrame();
+#endif
+    void settleOnActivation();
+
+    friend class ::JSBrokenFrameIterator;
 };
 
 #ifdef DEBUG
@@ -1599,28 +1541,34 @@ SelfHostedFramesVisible()
 /* A filtering of the ScriptFrameIter to only stop at non-self-hosted scripts. */
 class NonBuiltinScriptFrameIter : public ScriptFrameIter
 {
-    void settle() {
-        if (!SelfHostedFramesVisible()) {
-            while (!done() && script()->selfHosted())
-                ScriptFrameIter::operator++();
-        }
-    }
+    void settle();
 
   public:
-    NonBuiltinScriptFrameIter(JSContext *cx, ScriptFrameIter::SavedOption opt = ScriptFrameIter::STOP_AT_SAVED)
-      : ScriptFrameIter(cx, opt) { settle(); }
+    NonBuiltinScriptFrameIter(JSContext *cx,
+                              ScriptFrameIter::SavedOption opt = ScriptFrameIter::STOP_AT_SAVED)
+      : ScriptFrameIter(cx, opt)
+    {
+        settle();
+    }
 
     NonBuiltinScriptFrameIter(JSContext *cx,
                               ScriptFrameIter::ContextOption contextOption,
                               ScriptFrameIter::SavedOption savedOption,
                               JSPrincipals *principals = nullptr)
-      : ScriptFrameIter(cx, contextOption, savedOption, principals) { settle(); }
+      : ScriptFrameIter(cx, contextOption, savedOption, principals)
+    {
+        settle();
+    }
 
     NonBuiltinScriptFrameIter(const ScriptFrameIter::Data &data)
       : ScriptFrameIter(data)
     {}
 
-    NonBuiltinScriptFrameIter &operator++() { ScriptFrameIter::operator++(); settle(); return *this; }
+    NonBuiltinScriptFrameIter &operator++() {
+        ScriptFrameIter::operator++();
+        settle();
+        return *this;
+    }
 };
 
 /*
@@ -1634,6 +1582,51 @@ class AllFramesIter : public ScriptFrameIter
       : ScriptFrameIter(cx, ScriptFrameIter::ALL_CONTEXTS, ScriptFrameIter::GO_THROUGH_SAVED)
     {}
 };
+
+/* Popular inline definitions. */
+
+inline JSScript *
+ScriptFrameIter::script() const
+{
+    JS_ASSERT(!done());
+    if (data_.state_ == INTERP)
+        return interpFrame()->script();
+#ifdef JS_ION
+    JS_ASSERT(data_.state_ == JIT);
+    if (data_.ionFrames_.isOptimizedJS())
+        return ionInlineFrames_.script();
+    return data_.ionFrames_.script();
+#else
+    return nullptr;
+#endif
+}
+
+inline bool
+ScriptFrameIter::isIon() const
+{
+#ifdef JS_ION
+    return isJit() && data_.ionFrames_.isOptimizedJS();
+#else
+    return false;
+#endif
+}
+
+inline bool
+ScriptFrameIter::isBaseline() const
+{
+#ifdef JS_ION
+    return isJit() && data_.ionFrames_.isBaselineJS();
+#else
+    return false;
+#endif
+}
+
+inline StackFrame *
+ScriptFrameIter::interpFrame() const
+{
+    JS_ASSERT(data_.state_ == INTERP);
+    return data_.interpFrames_.frame();
+}
 
 }  /* namespace js */
 #endif /* vm_Stack_h */
