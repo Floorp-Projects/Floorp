@@ -136,11 +136,11 @@ GLBlitTextureImageHelper::BlitTextureImage(TextureImage *aSrc, const nsIntRect& 
 
                 // now put the coords into the d[xy]0 .. d[xy]1 coordinate space
                 // from the 0..1 that it comes out of decompose
-                RectTriangles::vert_coord* v = (RectTriangles::vert_coord*)rects.vertexPointer();
+                InfallibleTArray<RectTriangles::coord>& coords = rects.vertCoords();
 
-                for (unsigned int i = 0; i < rects.elements(); ++i) {
-                    v[i].x = (v[i].x * (dx1 - dx0)) + dx0;
-                    v[i].y = (v[i].y * (dy1 - dy0)) + dy0;
+                for (unsigned int i = 0; i < coords.Length(); ++i) {
+                    coords[i].x = (coords[i].x * (dx1 - dx0)) + dx0;
+                    coords[i].y = (coords[i].y * (dy1 - dy0)) + dy0;
                 }
             }
 
@@ -149,8 +149,8 @@ GLBlitTextureImageHelper::BlitTextureImage(TextureImage *aSrc, const nsIntRect& 
 
             mGL->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
 
-            mGL->fVertexAttribPointer(0, 2, LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0, rects.vertexPointer());
-            mGL->fVertexAttribPointer(1, 2, LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0, rects.texCoordPointer());
+            mGL->fVertexAttribPointer(0, 2, LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0, rects.vertCoords().Elements());
+            mGL->fVertexAttribPointer(1, 2, LOCAL_GL_FLOAT, LOCAL_GL_FALSE, 0, rects.texCoords().Elements());
 
             mGL->fEnableVertexAttribArray(0);
             mGL->fEnableVertexAttribArray(1);
