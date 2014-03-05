@@ -10,6 +10,7 @@
 #include "mozilla/dom/FileSystemTaskBase.h"
 #include "nsAutoPtr.h"
 
+class nsCString;
 class nsString;
 
 namespace mozilla {
@@ -35,6 +36,9 @@ public:
 
   already_AddRefed<Promise>
   GetPromise();
+
+  virtual void
+  GetPermissionAccessType(nsCString& aAccess) const MOZ_OVERRIDE;
 
 protected:
   virtual FileSystemParams

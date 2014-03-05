@@ -34,6 +34,13 @@ public:
   static void
   NormalizedPathToLocalPath(const nsAString& aNorm, nsAString& aLocal);
 
+  /*
+   * Return true if aDescendantPath is a descendant of aPath. Both aPath and
+   * aDescendantPath are absolute DOM path.
+   */
+  static bool
+  IsDescendantPath(const nsAString& aPath, const nsAString& aDescendantPath);
+
   static bool
   IsParentProcess();
 

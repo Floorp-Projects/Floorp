@@ -43,6 +43,7 @@ FileSystemBase::FromString(const nsAString& aString)
 }
 
 FileSystemBase::FileSystemBase()
+  : mIsTesting(false)
 {
 }
 
@@ -54,6 +55,12 @@ nsPIDOMWindow*
 FileSystemBase::GetWindow() const
 {
   return nullptr;
+}
+
+bool
+FileSystemBase::IsSafeFile(nsIFile* aFile) const
+{
+  return true;
 }
 
 } // namespace dom
