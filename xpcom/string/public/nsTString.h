@@ -344,6 +344,9 @@ class nsTString_CharT : public nsTSubstring_CharT
 
       void ReplaceChar( char_type aOldChar, char_type aNewChar );
       void ReplaceChar( const char* aSet, char_type aNewChar );
+#ifdef CharT_is_PRUnichar
+      void ReplaceChar( const char16_t* aSet, char16_t aNewChar );
+#endif
       void ReplaceSubstring( const self_type& aTarget, const self_type& aNewValue);
       void ReplaceSubstring( const char_type* aTarget, const char_type* aNewValue);
 
