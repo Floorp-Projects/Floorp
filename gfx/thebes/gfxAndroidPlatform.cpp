@@ -22,6 +22,10 @@
 #include "gfxPrefs.h"
 #include "cairo.h"
 
+#ifdef MOZ_WIDGET_ANDROID
+#include "AndroidBridge.h"
+#endif
+
 #include "ft2build.h"
 #include FT_FREETYPE_H
 #include FT_MODULE_H
@@ -417,4 +421,17 @@ int
 gfxAndroidPlatform::GetScreenDepth() const
 {
     return mScreenDepth;
+}
+
+bool
+gfxAndroidPlatform::UseAcceleratedSkiaCanvas()
+{
+#ifdef MOZ_WIDGET_ANDROID
+    if (AndroidBridge::Bridge()->GetAPIVersion() < 11) {
+        // It's slower than software due to not having a compositing fast path
+        return false;
+    }
+#endif
+
+    return gfxPlatform::UseAcceleratedSkiaCanvas();
 }
