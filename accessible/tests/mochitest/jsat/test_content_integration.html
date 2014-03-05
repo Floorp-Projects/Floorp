@@ -138,11 +138,13 @@
              { speak: 'wow heading level 1 such app' }],
             [focusFunc('button#home', false), { speak: 'Home button' }]
 
+            // Blur button and reset cursor
+            [focusFunc('button#home', true), null],
+            [clearCursor, null],
+
             // XXX: Set focus on iframe itself.
             // XXX: Set focus on element in iframe when cursor is outside of it.
             // XXX: Set focus on element in iframe when cursor is in iframe.
-
-            [clearCursor, null],
 
             // Open dialog in outer doc, while cursor is also in outer doc
             [simpleMoveNext,
@@ -150,11 +152,13 @@
             [doc.defaultView.showAlert,
             { speak: 'This is an alert! heading level 1 dialog' }],
 
-            // XXX: Place cursor back where it was.
-            [doc.defaultView.hideAlert, null ],
+            [function () { doc.defaultView.hideAlert() },
+            { speak: 'wow heading level 1 such app' }],
+
+            [clearCursor, null],
 
             // Open dialog in outer doc, while cursor is in inner frame
-            [simpleMoveFirst,
+            [simpleMoveNext,
             { speak: 'Phone status bar Traversal Rule test document' }],
             [simpleMoveNext,
             { speak: 'wow heading level 1 such app' }],
@@ -162,7 +166,22 @@
             { speak: 'This is an alert! heading level 1 dialog' }],
 
             // XXX: Place cursor back where it was.
-            [doc.defaultView.hideAlert, null ]
+            [doc.defaultView.hideAlert,
+            { speak: 'many option not checked check button such app' }],
+
+            [clearCursor, null],
+
+            // Open dialog, then focus on something when closing
+            [simpleMoveNext,
+            { speak: 'Phone status bar Traversal Rule test document' }],
+            [doc.defaultView.showAlert,
+            { speak: 'This is an alert! heading level 1 dialog' }],
+
+            [function () {
+		doc.defaultView.hideAlert();
+		doc.querySelector('button#home').focus();
+	     },
+	    { speak: 'Home button Traversal Rule test document' }]
 	  ]);
 
         contentTest.start(function () {
