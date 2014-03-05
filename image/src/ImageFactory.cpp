@@ -23,6 +23,7 @@
 #include "nsIScriptSecurityManager.h"
 
 #include "ImageFactory.h"
+#include "gfxPrefs.h"
 
 namespace mozilla {
 namespace image {
@@ -38,6 +39,8 @@ ImageFactory::Initialize()
 {
   MOZ_ASSERT(NS_IsMainThread());
   if (!gInitializedPrefCaches) {
+    // Initialize the graphics preferences
+    gfxPrefs::GetSingleton();
     Preferences::AddBoolVarCache(&gDiscardable, "image.mem.discardable");
     Preferences::AddBoolVarCache(&gDecodeOnDraw, "image.mem.decodeondraw");
     Preferences::AddBoolVarCache(&gEnableMozSampleSize, "image.mozsamplesize.enabled");
