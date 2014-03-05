@@ -187,6 +187,10 @@ class nsHtml5TreeOperation {
 
     static void DoneCreatingElement(nsIContent* aNode);
 
+    static void SvgLoad(nsIContent* aNode);
+
+    static void MarkMalformedIfScript(nsIContent* aNode);
+
     nsHtml5TreeOperation();
 
     ~nsHtml5TreeOperation();
