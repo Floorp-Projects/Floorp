@@ -40,6 +40,47 @@ static const unsigned int MAX_SOURCE_BUFFERS = 16;
 
 namespace mozilla {
 
+static const char* const gMediaSourceTypes[6] = {
+  "video/webm",
+  "audio/webm",
+  "video/mp4",
+  "audio/mp4",
+  "audio/mpeg",
+  nullptr
+};
+
+static nsresult
+IsTypeSupported(const nsAString& aType)
+{
+  if (aType.IsEmpty()) {
+    return NS_ERROR_DOM_INVALID_ACCESS_ERR;
+  }
+  // TODO: Further restrict this to formats in the spec.
+  nsContentTypeParser parser(aType);
+  nsAutoString mimeType;
+  nsresult rv = parser.GetType(mimeType);
+  if (NS_FAILED(rv)) {
+    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  }
+  bool found = false;
+  for (uint32_t i = 0; gMediaSourceTypes[i]; ++i) {
+    if (mimeType.EqualsASCII(gMediaSourceTypes[i])) {
+      found = true;
+      break;
+    }
+  }
+  if (!found) {
+    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  }
+  // Check aType against HTMLMediaElement list of MIME types.  Since we've
+  // already restricted the container format, this acts as a specific check
+  // of any specified "codecs" parameter of aType.
+  if (dom::HTMLMediaElement::GetCanPlay(aType) == CANPLAY_NO) {
+    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  }
+  return NS_OK;
+}
+
 namespace dom {
 
 /* static */ already_AddRefed<MediaSource>
@@ -103,7 +144,9 @@ MediaSource::SetDuration(double aDuration, ErrorResult& aRv)
 already_AddRefed<SourceBuffer>
 MediaSource::AddSourceBuffer(const nsAString& aType, ErrorResult& aRv)
 {
-  if (!IsTypeSupportedInternal(aType, aRv)) {
+  nsresult rv = mozilla::IsTypeSupported(aType);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
     return nullptr;
   }
   if (mSourceBuffers->Length() >= MAX_SOURCE_BUFFERS) {
@@ -116,7 +159,7 @@ MediaSource::AddSourceBuffer(const nsAString& aType, ErrorResult& aRv)
   }
   nsContentTypeParser parser(aType);
   nsAutoString mimeType;
-  nsresult rv = parser.GetType(mimeType);
+  rv = parser.GetType(mimeType);
   if (NS_FAILED(rv)) {
     aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
     return nullptr;
@@ -169,11 +212,9 @@ MediaSource::EndOfStream(const Optional<MediaSourceEndOfStreamError>& aError, Er
 }
 
 /* static */ bool
-MediaSource::IsTypeSupported(const GlobalObject& aGlobal,
-                             const nsAString& aType)
+MediaSource::IsTypeSupported(const GlobalObject&, const nsAString& aType)
 {
-  ErrorResult unused;
-  return IsTypeSupportedInternal(aType, unused);
+  return NS_SUCCEEDED(mozilla::IsTypeSupported(aType));
 }
 
 bool
@@ -312,51 +353,6 @@ MediaSource::EndOfStreamInternal(const Optional<MediaSourceEndOfStreamError>& aE
   default:
     aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
   }
-}
-
-static const char* const gMediaSourceTypes[6] = {
-  "video/webm",
-  "audio/webm",
-  "video/mp4",
-  "audio/mp4",
-  "audio/mpeg",
-  nullptr
-};
-
-/* static */ bool
-MediaSource::IsTypeSupportedInternal(const nsAString& aType, ErrorResult& aRv)
-{
-  if (aType.IsEmpty()) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
-    return false;
-  }
-  // TODO: Further restrict this to formats in the spec.
-  nsContentTypeParser parser(aType);
-  nsAutoString mimeType;
-  nsresult rv = parser.GetType(mimeType);
-  if (NS_FAILED(rv)) {
-    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-    return false;
-  }
-  bool found = false;
-  for (uint32_t i = 0; gMediaSourceTypes[i]; ++i) {
-    if (mimeType.EqualsASCII(gMediaSourceTypes[i])) {
-      found = true;
-      break;
-    }
-  }
-  if (!found) {
-    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-    return false;
-  }
-  // Check aType against HTMLMediaElement list of MIME types.  Since we've
-  // already restricted the container format, this acts as a specific check
-  // of any specified "codecs" parameter of aType.
-  if (HTMLMediaElement::GetCanPlay(aType) == CANPLAY_NO) {
-    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-    return false;
-  }
-  return true;
 }
 
 nsPIDOMWindow*
