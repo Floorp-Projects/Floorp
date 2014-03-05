@@ -3557,10 +3557,19 @@ nsHtml5TreeBuilder::adoptionAgencyEndTag(nsIAtom* name)
     int32_t bookmark = formattingEltListPos;
     int32_t nodePos = furthestBlockPos;
     nsHtml5StackNode* lastNode = furthestBlock;
-    for (int32_t j = 0; j < 3; ++j) {
+    int32_t j = 0;
+    for (; ; ) {
+      ++j;
       nodePos--;
+      if (nodePos == formattingEltStackPos) {
+        break;
+      }
       nsHtml5StackNode* node = stack[nodePos];
       int32_t nodeListPos = findInListOfActiveFormattingElements(node);
+      if (j > 3 && nodeListPos != -1) {
+        removeFromListOfActiveFormattingElements(nodeListPos);
+        nodeListPos = -1;
+      }
       if (nodeListPos == -1) {
         MOZ_ASSERT(formattingEltStackPos < nodePos);
         MOZ_ASSERT(bookmark < nodePos);
@@ -3568,9 +3577,6 @@ nsHtml5TreeBuilder::adoptionAgencyEndTag(nsIAtom* name)
         removeFromStack(nodePos);
         furthestBlockPos--;
         continue;
-      }
-      if (nodePos == formattingEltStackPos) {
-        break;
       }
       if (nodePos == furthestBlockPos) {
         bookmark = nodeListPos + 1;
