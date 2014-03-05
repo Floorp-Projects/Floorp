@@ -15,11 +15,11 @@
   <remote fetch="https://git.mozilla.org/external/apitrace" name="apitrace"/>
   <default remote="caf" revision="refs/tags/android-4.0.4_r2.1" sync-j="4"/>
   <!-- Gonk specific things and forks -->
-  <project name="platform_build" path="build" remote="b2g" revision="59605a7c026ff06cc1613af3938579b1dddc6cfe">
+  <project name="platform_build" path="build" remote="b2g" revision="1ad48c4be51b279f7f63c1a13025b52fe087d231">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
   <project name="fake-dalvik" path="dalvik" remote="b2g" revision="ca1f327d5acc198bb4be62fa51db2c039032c9ce"/>
-  <project name="gaia.git" path="gaia" remote="mozillaorg" revision="4bb8b32d8f1a3a64bfac8f2da7878dc63e613ca5"/>
+  <project name="gaia.git" path="gaia" remote="mozillaorg" revision="9cb35e701df44766d9b3560b0defe0a401a0ecdd"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="15e8982284c4560f9c74c2b9fe8bb361ebfe0cb6"/>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="827214fcf38d6569aeb5c6d6f31cb296d1f09272"/>
   <project name="platform_hardware_ril" path="hardware/ril" remote="b2g" revision="d11f524d00cacf5ba0dfbf25e4aa2158b1c3a036"/>
@@ -104,5 +104,5 @@
   <project name="platform/prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.7-4.6" path="prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.7-4.6" revision="627f9b20fc518937b93747a7ff1ed4f5ed46e06f"/>
   <project name="platform/prebuilts/tools" path="prebuilts/tools" revision="c16df012d9649be75d6590f93aeacbdc24b29d53"/>
   <project name="platform_prebuilts_qemu-kernel" path="prebuilts/qemu-kernel" remote="b2g" revision="431afac2ebfdd9c1c8402b413ff5914ed448e961"/>
-  <project name="android-sdk" path="sdk" remote="b2g" revision="5701d3cb45c2e848cc57003cda2e1141288ecae4"/>
+  <project name="android-sdk" path="sdk" remote="b2g" revision="4f46930827957afbce500a4a920755a218bf3155"/>
 </manifest>
