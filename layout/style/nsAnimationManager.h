@@ -141,7 +141,7 @@ struct ElementAnimations MOZ_FINAL
   // This function returns -1 for the position if the animation should not be
   // run (because it is not currently active and has no fill behavior), but
   // only does so if aAnimation is non-null; with a null aAnimation it is an
-  // error to give aCurrentTime < aStartTime, and fill-forwards is assumed.
+  // error to give aElapsedDuration < 0, and fill-forwards is assumed.
   // After calling GetPositionInIteration with non-null aAnimation and aEa, be
   // sure to call CheckNeedsRefresh on the animation manager afterwards.
   static double GetPositionInIteration(TimeDuration aElapsedDuration,
