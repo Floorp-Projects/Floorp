@@ -736,7 +736,7 @@ Element::RemoveFromIdTable(nsIAtom* aId)
     }
   } else {
     nsIDocument* doc = GetCurrentDoc();
-    if (doc) {
+    if (doc && (!IsInAnonymousSubtree() || doc->IsXUL())) {
       // id can be null during mutation events evilness. Also, XUL elements
       // loose their proto attributes during cc-unlink, so this can happen
       // during cc-unlink too.
