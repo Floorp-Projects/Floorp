@@ -11,6 +11,15 @@
 
 class nsParserBase;
 
+/**
+ * This class implements a minimal subclass of nsHtml5DocumentBuilder that
+ * works when tree operation queues that are part of the off-the-main-thread
+ * parsing machinery are not used and, therefore, nsHtml5TreeOpExecutor is
+ * not used.
+ *
+ * This class is mostly responsible for wrapping tree building in an update
+ * batch and resetting various fields in nsContentSink upon finishing.
+ */
 class nsHtml5OplessBuilder : public nsHtml5DocumentBuilder
 {
 public:
