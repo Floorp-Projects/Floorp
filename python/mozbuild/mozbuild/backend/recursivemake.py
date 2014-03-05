@@ -1073,7 +1073,7 @@ class RecursiveMakeBackend(CommonBackend):
 
         m = self._test_manifests.setdefault(obj.flavor,
             (obj.install_prefix, set()))
-        m[1].add(obj.manifest_relpath)
+        m[1].add(obj.manifest_obj_relpath)
 
     def _process_local_include(self, local_include, backend_file):
         if local_include.startswith('/'):
