@@ -175,6 +175,7 @@ var ContextUI = {
   // Display the nav bar
   displayNavbar: function () {
     Elements.navbar.show();
+    Elements.chromeState.setAttribute("navbar", "visible");
     ContentAreaObserver.updateContentArea();
   },
 
@@ -189,6 +190,7 @@ var ContextUI = {
     if (!BrowserUI.isStartTabVisible) {
       Elements.autocomplete.closePopup();
       Elements.navbar.dismiss();
+      Elements.chromeState.removeAttribute("navbar");
       ContentAreaObserver.updateContentArea();
     }
   },
