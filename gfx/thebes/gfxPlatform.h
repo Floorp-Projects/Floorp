@@ -40,6 +40,7 @@ struct gfxRGBA;
 namespace mozilla {
 namespace gl {
 class GLContext;
+class SkiaGLGlue;
 }
 namespace gfx {
 class DrawTarget;
@@ -283,8 +284,7 @@ public:
     }
 
     virtual bool UseAcceleratedSkiaCanvas();
-
-    virtual void InitializeSkiaCaches();
+    virtual void InitializeSkiaCacheLimits();
 
     void GetAzureBackendInfo(mozilla::widget::InfoObject &aObj) {
       aObj.DefineProperty("AzureCanvasBackend", GetBackendName(mPreferredCanvasBackend));
@@ -598,6 +598,9 @@ public:
     bool PreferMemoryOverShmem() const;
     bool UseDeprecatedTextures() const { return mLayersUseDeprecated; }
 
+    mozilla::gl::SkiaGLGlue* GetSkiaGLGlue();
+    void PurgeSkiaCache();
+
 protected:
     gfxPlatform();
     virtual ~gfxPlatform();
@@ -711,6 +714,7 @@ private:
     mozilla::RefPtr<mozilla::gfx::DrawEventRecorder> mRecorder;
     bool mLayersPreferMemoryOverShmem;
     bool mLayersUseDeprecated;
+    mozilla::RefPtr<mozilla::gl::SkiaGLGlue> mSkiaGlue;
 };
 
 #endif /* GFX_PLATFORM_H */
