@@ -35,13 +35,10 @@
 
 using namespace mozilla;
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_1(nsHtml5TreeOpExecutor, nsContentSink,
-                                     mOwnedElements)
-
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHtml5TreeOpExecutor)
   NS_INTERFACE_TABLE_INHERITED1(nsHtml5TreeOpExecutor, 
                                 nsIContentSink)
-NS_INTERFACE_TABLE_TAIL_INHERITING(nsContentSink)
+NS_INTERFACE_TABLE_TAIL_INHERITING(nsHtml5DocumentBuilder)
 
 NS_IMPL_ADDREF_INHERITED(nsHtml5TreeOpExecutor, nsContentSink)
 
@@ -509,7 +506,7 @@ nsHtml5TreeOpExecutor::RunFlushLoop()
 
     uint32_t numberOfOpsToFlush = mOpQueue.Length();
 
-    mElementsSeenInThisAppendBatch.SetCapacity(numberOfOpsToFlush * 2);
+    SetAppendBatchCapacity(numberOfOpsToFlush * 2);
 
     const nsHtml5TreeOperation* first = mOpQueue.Elements();
     const nsHtml5TreeOperation* last = first + numberOfOpsToFlush - 1;
@@ -613,7 +610,7 @@ nsHtml5TreeOpExecutor::FlushDocumentWrite()
 
   uint32_t numberOfOpsToFlush = mOpQueue.Length();
 
-  mElementsSeenInThisAppendBatch.SetCapacity(numberOfOpsToFlush * 2);
+  SetAppendBatchCapacity(numberOfOpsToFlush * 2);
 
   const nsHtml5TreeOperation* start = mOpQueue.Elements();
   const nsHtml5TreeOperation* end = start + numberOfOpsToFlush;
@@ -896,18 +893,6 @@ nsHtml5TreeOpExecutor::Reset()
   mRunFlushLoopOnStack = false;
   MOZ_ASSERT(!mReadingFromStage);
   MOZ_ASSERT(NS_SUCCEEDED(mBroken));
-}
-
-void
-nsHtml5TreeOpExecutor::DropHeldElements()
-{
-  mScriptLoader = nullptr;
-  mDocument = nullptr;
-  mNodeInfoManager = nullptr;
-  mCSSLoader = nullptr;
-  mDocumentURI = nullptr;
-  mDocShell = nullptr;
-  mOwnedElements.Clear();
 }
 
 void
