@@ -105,6 +105,17 @@ nsJSUtils::ReportPendingException(JSContext *aContext)
   if (JS_IsExceptionPending(aContext)) {
     bool saved = JS_SaveFrameChain(aContext);
     {
+      // JS_SaveFrameChain set the compartment of aContext to null, so we need
+      // to enter a compartment.  The question is, which one? We don't want to
+      // enter the original compartment of aContext (or the compartment of the
+      // current exception on aContext, for that matter) because when we
+      // JS_ReportPendingException the JS engine can try to duck-type the
+      // exception and produce a JSErrorReport.  It will then pass that
+      // JSErrorReport to the error reporter on aContext, which might expose
+      // information from it to script via onerror handlers.  So it's very
+      // important that the duck typing happen in the same compartment as the
+      // onerror handler.  In practice, that's the compartment of the window (or
+      // otherwise default global) of aContext, so use that here.
       nsIScriptContext* scx = GetScriptContextFromJSContext(aContext);
       JS::Rooted<JSObject*> scope(aContext);
       scope = scx ? scx->GetWindowProxy()
