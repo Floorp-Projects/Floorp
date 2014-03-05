@@ -104,5 +104,5 @@
   <project name="platform/prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.7-4.6" path="prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.7-4.6" revision="627f9b20fc518937b93747a7ff1ed4f5ed46e06f"/>
   <project name="platform/prebuilts/tools" path="prebuilts/tools" revision="c16df012d9649be75d6590f93aeacbdc24b29d53"/>
   <project name="platform_prebuilts_qemu-kernel" path="prebuilts/qemu-kernel" remote="b2g" revision="431afac2ebfdd9c1c8402b413ff5914ed448e961"/>
-  <project name="android-sdk" path="sdk" remote="b2g" revision="5701d3cb45c2e848cc57003cda2e1141288ecae4"/>
+  <project name="android-sdk" path="sdk" remote="b2g" revision="4f97016504df559e0ed25f5f867e820e882cdbf8"/>
 </manifest>
