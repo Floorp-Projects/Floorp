@@ -236,12 +236,14 @@ MetroAppShell::Run(void)
       rv = NS_ERROR_NOT_IMPLEMENTED;
     break;
     case GeckoProcessType_Default: {
-      nsAutoPtr<WakeLockListener> wakeLock = InitWakeLock();
-      mozilla::widget::StartAudioSession();
-      sMetroApp->ActivateBaseView();
-      rv = nsBaseAppShell::Run();
-      mozilla::widget::StopAudioSession();
-      ShutdownWakeLock(wakeLock);
+      {
+        nsRefPtr<WakeLockListener> wakeLock = InitWakeLock();
+        mozilla::widget::StartAudioSession();
+        sMetroApp->ActivateBaseView();
+        rv = nsBaseAppShell::Run();
+        mozilla::widget::StopAudioSession();
+        ShutdownWakeLock(wakeLock);
+      }
 
       nsCOMPtr<nsIAppStartup> appStartup (do_GetService(NS_APPSTARTUP_CONTRACTID));
       bool restartingInMetro = false, restartingInDesktop = false;
