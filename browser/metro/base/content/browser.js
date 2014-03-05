@@ -1009,7 +1009,7 @@ nsBrowserAccess.prototype = {
   _getOpenAction: function _getOpenAction(aURI, aOpener, aWhere, aContext) {
     let where = aWhere;
     /*
-     * aWhere: 
+     * aWhere:
      * OPEN_DEFAULTWINDOW: default action
      * OPEN_CURRENTWINDOW: current window/tab
      * OPEN_NEWWINDOW: not allowed, converted to newtab below
@@ -1339,6 +1339,12 @@ Tab.prototype = {
         this.updateViewport();
         this._delayUpdateThumbnail();
         break;
+      case "AlertClose": {
+        if (this == Browser.selectedTab) {
+          this.updateViewport();
+        }
+        break;
+      }
     }
   },
 
@@ -1445,6 +1451,7 @@ Tab.prototype = {
     Elements.browsers.insertBefore(notification, aInsertBefore);
 
     notification.dir = "reverse";
+    notification.addEventListener("AlertClose", this);
 
      // let the content area manager know about this browser.
     ContentAreaObserver.onBrowserCreated(browser);
@@ -1461,6 +1468,7 @@ Tab.prototype = {
   _destroyBrowser: function _destroyBrowser() {
     if (this._browser) {
       let notification = this._notification;
+      notification.removeEventListener("AlertClose", this);
       let browser = this._browser;
       browser.active = false;
 
