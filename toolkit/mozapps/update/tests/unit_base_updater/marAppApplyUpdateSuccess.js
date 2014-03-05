@@ -7,11 +7,6 @@
  * apply it.
  */
 
-/**
- * The MAR file used for this test should not contain a version 2 update
- * manifest file (e.g. updatev2.manifest).
- */
-
 function run_test() {
   if (MOZ_APP_NAME == "xulrunner") {
     logTestInfo("Unable to run this test on xulrunner");
@@ -19,6 +14,19 @@ function run_test() {
   }
 
   setupTestCommon();
+  gTestFiles = gTestFilesCompleteSuccess;
+  gTestDirs = gTestDirsCompleteSuccess;
+  setupUpdaterTest(FILE_COMPLETE_MAR, false, false);
+
+  // For Mac OS X set the last modified time for the root directory to a date in
+  // the past to test that the last modified time is updated on a successful
+  // update (bug 600098).
+  if (IS_MACOSX) {
+    let now = Date.now();
+    let yesterday = now - (1000 * 60 * 60 * 24);
+    let applyToDir = getApplyDirFile();
+    applyToDir.lastModifiedTime = yesterday;
+  }
 
   let channel = Services.prefs.getCharPref(PREF_APP_UPDATE_CHANNEL);
   let patches = getLocalPatchString(null, null, null, null, null, "true",
@@ -29,34 +37,6 @@ function run_test() {
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
   writeVersionFile(getAppVersion());
   writeStatusFile(STATE_PENDING);
-
-  // This is the directory where the files that will be updated are located.
-  let updateTestDir = getUpdateTestDir();
-  // Add the directory where the files will be added and add files that will be
-  // removed.
-  if (!updateTestDir.exists()) {
-    updateTestDir.create(AUS_Ci.nsIFile.DIRECTORY_TYPE, PERMS_DIRECTORY);
-  }
-  logTestInfo("update test directory path: " + updateTestDir.path);
-
-  let file = updateTestDir.clone();
-  file.append("UpdateTestRemoveFile");
-  writeFile(file, "ToBeRemoved");
-
-  file = updateTestDir.clone();
-  file.append("UpdateTestAddFile");
-  writeFile(file, "ToBeReplaced");
-
-  file = updateTestDir.clone();
-  file.append("removed-files");
-  writeFile(file, "ToBeReplaced");
-
-  let updatesPatchDir = getUpdatesPatchDir();
-  let mar = getTestDirFile(FILE_SIMPLE_MAR);
-  mar.copyTo(updatesPatchDir, FILE_UPDATE_ARCHIVE);
-
-  let updateSettingsIni = getApplyDirFile(FILE_UPDATE_SETTINGS_INI, true);
-  writeFile(updateSettingsIni, UPDATE_SETTINGS_CONTENTS);
 
   setupAppFilesAsync();
 }
@@ -71,13 +51,13 @@ function setupAppFilesFinished() {
  */
 function checkUpdateFinished() {
   gTimeoutRuns++;
-  // Don't proceed until the update status state is succeeded.
+  // Don't proceed until the update's status state is the expected value.
   let state = readStatusState();
   if (state != STATE_SUCCEEDED) {
     if (gTimeoutRuns > MAX_TIMEOUT_RUNS) {
       do_throw("Exceeded MAX_TIMEOUT_RUNS while waiting for the update " +
-               "status state to equal " + STATE_SUCCEEDED + ", " +
-               "current status state: " + state);
+               "status state to equal: " + STATE_SUCCEEDED +
+               ", current status state: " + state);
     } else {
       do_timeout(TEST_CHECK_TIMEOUT, checkUpdateFinished);
     }
@@ -97,49 +77,46 @@ function checkUpdateFinished() {
     return;
   }
 
-  let updater = getUpdatesPatchDir();
-  updater.append(FILE_UPDATER_BIN);
-  if (updater.exists()) {
-    if (gTimeoutRuns > MAX_TIMEOUT_RUNS) {
-      do_throw("Exceeded while waiting for updater binary to no longer be in " +
-               "use");
-    } else {
-      try {
-        updater.remove(false);
-      } catch (e) {
-        do_timeout(TEST_CHECK_TIMEOUT, checkUpdateFinished);
-        return;
+  if (IS_WIN) {
+    // Don't proceed until the updater binary is no longer in use.
+    let updater = getUpdatesPatchDir();
+    updater.append(FILE_UPDATER_BIN);
+    if (updater.exists()) {
+      if (gTimeoutRuns > MAX_TIMEOUT_RUNS) {
+        do_throw("Exceeded while waiting for updater binary to no longer be " +
+                 "in use");
+      } else {
+        try {
+          updater.remove(false);
+        } catch (e) {
+          do_timeout(TEST_CHECK_TIMEOUT, checkUpdateFinished);
+          return;
+        }
       }
     }
   }
 
-  // Log the contents of the update.log so it is simpler to diagnose a test
-  // failure. For example, on Windows if the application binary is in use the
-  // updater will not apply the update.
-  let contents = readFile(log);
-  logTestInfo("contents of " + log.path + ":\n" +  
-              contents.replace(/\r\n/g, "\n"));
+  if (IS_MACOSX) {
+    logTestInfo("testing last modified time on the apply to directory has " +
+                "changed after a successful update (bug 600098)");
+    let now = Date.now();
+    let applyToDir = getApplyDirFile();
+    let timeDiff = Math.abs(applyToDir.lastModifiedTime - now);
+    do_check_true(timeDiff < MAC_MAX_TIME_DIFFERENCE);
+  }
+
+  checkFilesAfterUpdateSuccess();
+  // Sorting on Linux is different so skip this check for now.
+  if (!IS_UNIX) {
+    checkUpdateLogContents(LOG_COMPLETE_SUCCESS);
+  }
+
+  checkCallbackAppLog();
 
   standardInit();
 
   let update = gUpdateManager.getUpdateAt(0);
   do_check_eq(update.state, STATE_SUCCEEDED);
-
-  let updateTestDir = getUpdateTestDir();
-
-  let file = updateTestDir.clone();
-  file.append("UpdateTestRemoveFile");
-  do_check_false(file.exists());
-
-  file = updateTestDir.clone();
-  file.append("UpdateTestAddFile");
-  do_check_true(file.exists());
-  do_check_eq(readFileBytes(file), "UpdateTestAddFile\n");
-
-  file = updateTestDir.clone();
-  file.append("removed-files");
-  do_check_true(file.exists());
-  do_check_eq(readFileBytes(file), "update_test/UpdateTestRemoveFile\n");
 
   log = getUpdatesPatchDir();
   log.append(FILE_UPDATE_LOG);
