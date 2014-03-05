@@ -1,0 +1,105 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html> <!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=910412
+-->
+<head>
+  <title>Test createDirectory of the FileSystem API for device storage</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="devicestorage_common.js"></script>
+
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=910412">Mozilla Bug 910412</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+devicestorage_setup();
+
+// The root directory object.
+var gRoot;
+var gTestCount = 0;
+var gPath = '';
+var gName = '';
+
+function testCreateDirectory(rootDir, path) {
+  rootDir.createDirectory(path).then(createDirectorySuccess, cbError);
+}
+
+function createDirectorySuccess(d) {
+  ok(d.name === gName, "Failed to create directory: name mismatch.");
+
+  // Get the new created directory from the root.
+  gRoot.get(gPath).then(getSuccess, cbError);
+}
+
+function getSuccess(d) {
+  ok(d.name === gName, "Should get directory - " + (gPath || "[root]") + ".");
+  switch (gTestCount) {
+    case 0:
+      gRoot = d;
+      // Create a new directory under the root.
+      gName = gPath = randomFilename(12);
+      testCreateDirectory(gRoot, gName);
+      break;
+    case 1:
+      // Create a sub-directory under current directory.
+      gName = randomFilename(12);
+      gPath = gPath + '/' + gName;
+      testCreateDirectory(d, gName);
+      break;
+    case 2:
+      // Create directory with an existing path.
+      gRoot.createDirectory(gPath).then(function(what) {
+        ok(false, "Should not overwrite an existing directory.");
+        devicestorage_cleanup();
+      }, function(e) {
+        ok(true, "Creating directory should fail if it already exists.");
+
+        // Create a directory whose intermediate directory doesn't exit.
+        gName = randomFilename(12);
+        gPath = 'sub1/sub2/' + gName;
+        testCreateDirectory(gRoot, gPath);
+      });
+      break;
+    default:
+      // Create the parent directory.
+      d.createDirectory('..').then(function(what) {
+        ok(false, "Should not overwrite an existing directory.");
+        devicestorage_cleanup();
+      }, function(e) {
+        ok(true, "Accessing parent directory with '..' is not allowed.");
+        devicestorage_cleanup();
+      });
+      break;
+  }
+  gTestCount++;
+}
+
+function cbError(e) {
+  ok(false, e.name + " error should not arrive here!");
+  devicestorage_cleanup();
+}
+
+ok(navigator.getDeviceStorage, "Should have getDeviceStorage.");
+
+var storage = navigator.getDeviceStorage("pictures");
+ok(storage, "Should have gotten a storage.");
+
+var promise = storage.getRoot();
+ok(promise, "Should have a non-null promise for getRoot.");
+
+gName = storage.storageName;
+promise.then(getSuccess, cbError);
+</script>
+</pre>
+</body>
+</html>
+
