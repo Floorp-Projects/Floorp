@@ -1891,7 +1891,7 @@ nsHtml5TreeBuilder::startTag(nsHtml5ElementName* elementName, nsHtml5HtmlAttribu
   if (selfClosing) {
     errSelfClosing();
   }
-  if (attributes != nsHtml5HtmlAttributes::EMPTY_ATTRIBUTES) {
+  if (!mBuilder && attributes != nsHtml5HtmlAttributes::EMPTY_ATTRIBUTES) {
     delete attributes;
   }
 }
