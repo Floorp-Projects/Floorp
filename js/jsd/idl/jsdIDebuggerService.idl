@@ -44,8 +44,12 @@ interface jsdIActivationCallback;
 /**
  * Debugger service. It is not a good idea to have more than one active client
  * of the debugger service.
+ *
+ * Note that all the APIs in this file are deprecated. All consumers of
+ * these interfaces should switch to using the new Debugger API, documented
+ * here: https://wiki.mozilla.org/Debugger
  */
-[scriptable, uuid(029b8f0a-aa84-47eb-a60f-1a4752b7ad06)]
+[scriptable, uuid(39609752-2d73-4019-a324-a374dee16d3c)]
 interface jsdIDebuggerService : nsISupports
 {
     /** Internal use only. */
@@ -348,6 +352,16 @@ interface jsdIDebuggerService : nsISupports
      * @param fileName Filename to dump the heap into.
      */
     void dumpHeap(in AUTF8String fileName);
+
+    /**
+     * Suppress console warnings about using JSD, which is a deprecated API.
+     *
+     * This applies only to the next call to asyncOn; any subsequent calls
+     * will elicit the warning, unless you call 'acknowledgeDeprecation'
+     * before each of them, too. This arrangement ensures that one add-on's
+     * acknowledgement doesn't suppress warnings for other add-ons.
+     */
+    void acknowledgeDeprecation();
 };
 
 /* callback interfaces */
