@@ -84,7 +84,7 @@ nsXMLElement::NodeInfoChanged(nsINodeInfo* aOldNodeInfo)
     const nsAttrValue* attrVal =
       mAttrsAndChildren.GetAttr(aOldNodeInfo->GetIDAttributeAtom());
     if (attrVal) {
-      doc->RemoveFromIdTable(this, attrVal->GetAtomValue());
+      RemoveFromIdTable(attrVal->GetAtomValue());
     }
   }
   
@@ -104,7 +104,7 @@ nsXMLElement::NodeInfoChanged(nsINodeInfo* aOldNodeInfo)
       NS_ASSERTION(attrVal->Type() == nsAttrValue::eAtom,
                    "Should be atom by now");
       if (doc) {
-        doc->AddToIdTable(this, attrVal->GetAtomValue());
+        AddToIdTable(attrVal->GetAtomValue());
       }
     }
   }

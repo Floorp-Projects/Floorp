@@ -719,23 +719,29 @@ void
 Element::RemoveFromIdTable()
 {
   if (HasID()) {
-    if (HasFlag(NODE_IS_IN_SHADOW_TREE)) {
-      ShadowRoot* containingShadow = GetContainingShadow();
-      // Check for containingShadow because it may have
-      // been deleted during unlinking.
-      if (containingShadow) {
-        containingShadow->RemoveFromIdTable(this, DoGetID());
-      }
-    } else {
-      nsIDocument* doc = GetCurrentDoc();
-      if (doc) {
-        nsIAtom* id = DoGetID();
-        // id can be null during mutation events evilness. Also, XUL elements
-        // loose their proto attributes during cc-unlink, so this can happen
-        // during cc-unlink too.
-        if (id) {
-          doc->RemoveFromIdTable(this, DoGetID());
-        }
+    RemoveFromIdTable(DoGetID());
+  }
+}
+
+void
+Element::RemoveFromIdTable(nsIAtom* aId)
+{
+  NS_ASSERTION(HasID(), "Node doesn't have an ID?");
+  if (HasFlag(NODE_IS_IN_SHADOW_TREE)) {
+    ShadowRoot* containingShadow = GetContainingShadow();
+    // Check for containingShadow because it may have
+    // been deleted during unlinking.
+    if (containingShadow) {
+      containingShadow->RemoveFromIdTable(this, aId);
+    }
+  } else {
+    nsIDocument* doc = GetCurrentDoc();
+    if (doc) {
+      // id can be null during mutation events evilness. Also, XUL elements
+      // loose their proto attributes during cc-unlink, so this can happen
+      // during cc-unlink too.
+      if (aId) {
+        doc->RemoveFromIdTable(this, aId);
       }
     }
   }
