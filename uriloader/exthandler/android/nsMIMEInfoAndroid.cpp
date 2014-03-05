@@ -30,9 +30,7 @@ nsMIMEInfoAndroid::LoadUriInternal(nsIURI * aURI)
   nsCString uriScheme;
   aURI->GetScheme(uriScheme);
 
-  return mozilla::widget::android::GeckoAppShell::OpenUriExternal(NS_ConvertUTF8toUTF16(uriSpec),
-    (mType.Equals(uriScheme) || mType.Equals(uriSpec)) ?
-     EmptyString() : NS_ConvertUTF8toUTF16(mType)) ? NS_OK : NS_ERROR_FAILURE;
+  return GeckoAppShell::OpenUriExternal(NS_ConvertUTF8toUTF16(uriSpec), (mType.Equals(uriScheme) || mType.Equals(uriSpec)) ? EmptyString() : NS_ConvertUTF8toUTF16(mType)) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 
@@ -50,7 +48,7 @@ nsMIMEInfoAndroid::GetMimeInfoForMimeType(const nsACString& aMimeType,
   }
 
   nsIHandlerApp* systemDefault = nullptr;
-  bridge->GetHandlersForMimeType(NS_ConvertUTF8toUTF16(aMimeType),
+  bridge->GetHandlersForMimeType(NS_ConvertUTF8toUTF16(aMimeType), 
                                  info->mHandlerApps, &systemDefault);
   
   if (systemDefault)
@@ -109,7 +107,7 @@ nsMIMEInfoAndroid::GetMimeInfoForURL(const nsACString &aURL,
   }
 
   nsIHandlerApp* systemDefault = nullptr;
-  bridge->GetHandlersForURL(NS_ConvertUTF8toUTF16(aURL),
+  bridge->GetHandlersForURL(NS_ConvertUTF8toUTF16(aURL), 
                             mimeinfo->mHandlerApps, &systemDefault);
   
   if (systemDefault)

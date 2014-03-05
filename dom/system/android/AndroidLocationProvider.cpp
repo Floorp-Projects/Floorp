@@ -26,7 +26,7 @@ AndroidLocationProvider::~AndroidLocationProvider()
 NS_IMETHODIMP
 AndroidLocationProvider::Startup()
 {
-    mozilla::widget::android::GeckoAppShell::EnableLocation(true);
+    GeckoAppShell::EnableLocation(true);
     return NS_OK;
 }
 
@@ -42,13 +42,13 @@ AndroidLocationProvider::Watch(nsIGeolocationUpdate* aCallback)
 NS_IMETHODIMP
 AndroidLocationProvider::Shutdown()
 {
-    mozilla::widget::android::GeckoAppShell::EnableLocation(false);
+    GeckoAppShell::EnableLocation(false);
     return NS_OK;
 }
 
 NS_IMETHODIMP
 AndroidLocationProvider::SetHighAccuracy(bool enable)
 {
-    mozilla::widget::android::GeckoAppShell::EnableLocationHighAccuracy(enable);
+    GeckoAppShell::EnableLocationHighAccuracy(enable);
     return NS_OK;
 }
