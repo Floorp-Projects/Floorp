@@ -83,7 +83,7 @@ public:
   nsresult   ThrowMemoryCachedData();
 
   // metadata forwarders
-  nsresult GetElement(const char *aKey, const char **_retval);
+  nsresult GetElement(const char *aKey, char **_retval);
   nsresult SetElement(const char *aKey, const char *aValue);
   nsresult ElementsSize(uint32_t *_retval);
   nsresult SetExpirationTime(uint32_t aExpirationTime);
