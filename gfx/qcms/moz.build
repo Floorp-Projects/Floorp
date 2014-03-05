@@ -20,3 +20,48 @@ SOURCES += [
 MSVC_ENABLE_PGO = True
 
 FINAL_LIBRARY = 'gkmedias'
+
+if CONFIG['GNU_CC']:
+    CFLAGS += ['-Wno-missing-field-initializers']
+
+use_sse1 = False
+use_sse2 = False
+use_altivec = False
+if '86' in CONFIG['OS_TEST']:
+    use_sse2 = True
+    if CONFIG['_MSC_VER']:
+        if CONFIG['OS_ARCH'] != 'WINNT' or CONFIG['OS_TEST'] != 'x86_64':
+            use_sse1 = True
+    else:
+        use_sse1 = True
+elif 'ppc' in CONFIG['CPU_ARCH']:
+    if CONFIG['GNU_CC']:
+        use_altivec = True
+
+if use_sse1:
+    SOURCES += ['transform-sse1.c']
+    if CONFIG['GNU_CC']:
+        SOURCES['transform-sse1.c'].flags += ['-msse']
+    elif CONFIG['SOLARIS_SUNPRO_CC']:
+        if '64' in CONFIG['OS_TEST']:
+            # Sun Studio doesn't work correctly for x86 intristics
+            # with -m64 and without optimization.
+            SOURCES['transform-sse1.c'].flags += ['-xO4']
+        else:
+            SOURCES['transform-sse1.c'].flags += ['-xarch=sse']
+
+if use_sse2:
+    SOURCES += ['transform-sse2.c']
+    if CONFIG['GNU_CC']:
+        SOURCES['transform-sse2.c'].flags += ['-msse2']
+    elif CONFIG['SOLARIS_SUNPRO_CC']:
+        if '64' in CONFIG['OS_TEST']:
+            # Sun Studio doesn't work correctly for x86 intristics
+            # with -m64 and without optimization.
+            SOURCES['transform-sse2.c'].flags += ['-xO4']
+        else:
+            SOURCES['transform-sse2.c'].flags += ['-xarch=sse2']
+
+if use_altivec:
+    SOURCES += ['transform-altivec.c']
+    SOURCES['transform-altivec.c'].flags += ['-maltivec']
