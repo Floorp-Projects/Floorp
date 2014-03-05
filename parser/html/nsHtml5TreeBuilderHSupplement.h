@@ -5,6 +5,11 @@
 #define NS_HTML5_TREE_BUILDER_HANDLE_ARRAY_LENGTH 512
 
   private:
+    nsHtml5OplessBuilder*                  mBuilder;
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // If mBuilder is not null, the tree op machinery is not in use and
+    // the fields below aren't in use, either.
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     nsHtml5Highlighter*                    mViewSource;
     nsTArray<nsHtml5TreeOperation>         mOpQueue;
     nsTArray<nsHtml5SpeculativeLoad>       mSpeculativeLoadQueue;
@@ -13,7 +18,6 @@
     int32_t                                mHandlesUsed;
     nsTArray<nsAutoArrayPtr<nsIContent*> > mOldHandles;
     nsHtml5TreeOpStage*                    mSpeculativeLoadStage;
-    nsIContent**                           mDeepTreeSurrogateParent;
     bool                                   mCurrentHtmlScriptIsAsyncOrDefer;
     bool                                   mPreventScriptExecution;
 #ifdef DEBUG
@@ -60,7 +64,15 @@
       accumulateCharacters(aBuf, aStart, aLength);
     }
 
+    void MarkAsBrokenAndRequestSuspension(nsresult aRv)
+    {
+      mBuilder->MarkAsBroken(aRv);
+      requestSuspension();
+    }
+
   public:
+
+    nsHtml5TreeBuilder(nsHtml5OplessBuilder* aBuilder);
 
     nsHtml5TreeBuilder(nsAHtml5TreeOpSink* aOpSink,
                        nsHtml5TreeOpStage* aStage);

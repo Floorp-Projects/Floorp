@@ -13,6 +13,27 @@
 
 class nsPresContext;
 
+nsHtml5TreeBuilder::nsHtml5TreeBuilder(nsHtml5OplessBuilder* aBuilder)
+  : scriptingEnabled(false)
+  , fragment(false)
+  , contextNode(nullptr)
+  , formPointer(nullptr)
+  , headPointer(nullptr)
+  , mBuilder(aBuilder)
+  , mViewSource(nullptr)
+  , mOpSink(nullptr)
+  , mHandles(nullptr)
+  , mHandlesUsed(0)
+  , mSpeculativeLoadStage(nullptr)
+  , mCurrentHtmlScriptIsAsyncOrDefer(false)
+  , mPreventScriptExecution(false)
+#ifdef DEBUG
+  , mActive(false)
+#endif
+{
+  MOZ_COUNT_CTOR(nsHtml5TreeBuilder);
+}
+
 nsHtml5TreeBuilder::nsHtml5TreeBuilder(nsAHtml5TreeOpSink* aOpSink,
                                        nsHtml5TreeOpStage* aStage)
   : scriptingEnabled(false)
@@ -20,6 +41,7 @@ nsHtml5TreeBuilder::nsHtml5TreeBuilder(nsAHtml5TreeOpSink* aOpSink,
   , contextNode(nullptr)
   , formPointer(nullptr)
   , headPointer(nullptr)
+  , mBuilder(nullptr)
   , mViewSource(nullptr)
   , mOpSink(aOpSink)
   , mHandles(new nsIContent*[NS_HTML5_TREE_BUILDER_HANDLE_ARRAY_LENGTH])
@@ -50,6 +72,20 @@ nsHtml5TreeBuilder::createElement(int32_t aNamespace, nsIAtom* aName, nsHtml5Htm
                   aNamespace == kNameSpaceID_SVG || 
                   aNamespace == kNameSpaceID_MathML,
                   "Bogus namespace.");
+
+  if (mBuilder) {
+    nsCOMPtr<nsIAtom> name = nsHtml5TreeOperation::Reget(aName);
+    nsIContent* elem =
+      nsHtml5TreeOperation::CreateElement(aNamespace,
+                                          name,
+                                          aAttributes,
+                                          mozilla::dom::FROM_PARSER_FRAGMENT,
+                                          mBuilder);
+    if (aAttributes != nsHtml5HtmlAttributes::EMPTY_ATTRIBUTES) {
+      delete aAttributes;
+    }
+    return elem;
+  }
 
   nsIContentHandle* content = AllocateContentHandle();
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
@@ -214,9 +250,14 @@ nsHtml5TreeBuilder::createElement(int32_t aNamespace, nsIAtom* aName, nsHtml5Htm
 {
   nsIContentHandle* content = createElement(aNamespace, aName, aAttributes);
   if (aFormElement) {
-    nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
-    NS_ASSERTION(treeOp, "Tree op allocation failed.");
-    treeOp->Init(eTreeOpSetFormElement, content, aFormElement);
+    if (mBuilder) {
+      nsHtml5TreeOperation::SetFormElement(static_cast<nsIContent*>(content),
+        static_cast<nsIContent*>(aFormElement));
+    } else {
+      nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
+      NS_ASSERTION(treeOp, "Tree op allocation failed.");
+      treeOp->Init(eTreeOpSetFormElement, content, aFormElement);
+    }
   }
   return content;
 }
@@ -225,9 +266,17 @@ nsIContentHandle*
 nsHtml5TreeBuilder::createHtmlElementSetAsRoot(nsHtml5HtmlAttributes* aAttributes)
 {
   nsIContentHandle* content = createElement(kNameSpaceID_XHTML, nsHtml5Atoms::html, aAttributes);
-  nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
-  NS_ASSERTION(treeOp, "Tree op allocation failed.");
-  treeOp->Init(eTreeOpAppendToDocument, content);
+  if (mBuilder) {
+    nsresult rv = nsHtml5TreeOperation::AppendToDocument(static_cast<nsIContent*>(content),
+                                                         mBuilder);
+    if (NS_FAILED(rv)) {
+      MarkAsBrokenAndRequestSuspension(rv);
+    }
+  } else {
+    nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
+    NS_ASSERTION(treeOp, "Tree op allocation failed.");
+    treeOp->Init(eTreeOpAppendToDocument, content);
+  }
   return content;
 }
 
@@ -235,6 +284,12 @@ void
 nsHtml5TreeBuilder::detachFromParent(nsIContentHandle* aElement)
 {
   NS_PRECONDITION(aElement, "Null element");
+
+  if (mBuilder) {
+    nsHtml5TreeOperation::Detach(static_cast<nsIContent*>(aElement),
+                                 mBuilder);
+    return;
+  }
 
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
   NS_ASSERTION(treeOp, "Tree op allocation failed.");
@@ -249,6 +304,17 @@ nsHtml5TreeBuilder::appendElement(nsIContentHandle* aChild, nsIContentHandle* aP
   if (deepTreeSurrogateParent) {
     return;
   }
+
+  if (mBuilder) {
+    nsresult rv = nsHtml5TreeOperation::Append(static_cast<nsIContent*>(aChild),
+                                               static_cast<nsIContent*>(aParent),
+                                               mBuilder);
+    if (NS_FAILED(rv)) {
+      MarkAsBrokenAndRequestSuspension(rv);
+    }
+    return;
+  }
+
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
   NS_ASSERTION(treeOp, "Tree op allocation failed.");
   treeOp->Init(eTreeOpAppend, aChild, aParent);
@@ -259,6 +325,17 @@ nsHtml5TreeBuilder::appendChildrenToNewParent(nsIContentHandle* aOldParent, nsIC
 {
   NS_PRECONDITION(aOldParent, "Null old parent");
   NS_PRECONDITION(aNewParent, "Null new parent");
+
+  if (mBuilder) {
+    nsresult rv = nsHtml5TreeOperation::AppendChildrenToNewParent(
+      static_cast<nsIContent*>(aOldParent),
+      static_cast<nsIContent*>(aNewParent),
+      mBuilder);
+    if (NS_FAILED(rv)) {
+      MarkAsBrokenAndRequestSuspension(rv);
+    }
+    return;
+  }
 
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
   NS_ASSERTION(treeOp, "Tree op allocation failed.");
@@ -271,6 +348,20 @@ nsHtml5TreeBuilder::insertFosterParentedCharacters(char16_t* aBuffer, int32_t aS
   NS_PRECONDITION(aBuffer, "Null buffer");
   NS_PRECONDITION(aTable, "Null table");
   NS_PRECONDITION(aStackParent, "Null stack parent");
+  MOZ_ASSERT(!aStart, "aStart must always be zero.");
+
+  if (mBuilder) {
+    nsresult rv = nsHtml5TreeOperation::FosterParentText(
+      static_cast<nsIContent*>(aStackParent),
+      aBuffer, // XXX aStart always ignored???
+      aLength,
+      static_cast<nsIContent*>(aTable),
+      mBuilder);
+    if (NS_FAILED(rv)) {
+      MarkAsBrokenAndRequestSuspension(rv);
+    }
+    return;
+  }
 
   char16_t* bufferCopy = new char16_t[aLength];
   memcpy(bufferCopy, aBuffer, aLength * sizeof(char16_t));
@@ -287,6 +378,18 @@ nsHtml5TreeBuilder::insertFosterParentedChild(nsIContentHandle* aChild, nsIConte
   NS_PRECONDITION(aTable, "Null table");
   NS_PRECONDITION(aStackParent, "Null stack parent");
 
+  if (mBuilder) {
+    nsresult rv = nsHtml5TreeOperation::FosterParent(
+      static_cast<nsIContent*>(aChild),
+      static_cast<nsIContent*>(aStackParent),
+      static_cast<nsIContent*>(aTable),
+      mBuilder);
+    if (NS_FAILED(rv)) {
+      MarkAsBrokenAndRequestSuspension(rv);
+    }
+    return;
+  }
+
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
   NS_ASSERTION(treeOp, "Tree op allocation failed.");
   treeOp->Init(eTreeOpFosterParent, aChild, aStackParent, aTable);
@@ -297,6 +400,20 @@ nsHtml5TreeBuilder::appendCharacters(nsIContentHandle* aParent, char16_t* aBuffe
 {
   NS_PRECONDITION(aBuffer, "Null buffer");
   NS_PRECONDITION(aParent, "Null parent");
+  MOZ_ASSERT(!aStart, "aStart must always be zero.");
+
+  if (mBuilder) {
+    nsresult rv = nsHtml5TreeOperation::AppendText(
+      aBuffer, // XXX aStart always ignored???
+      aLength,
+      static_cast<nsIContent*>(deepTreeSurrogateParent ?
+                               deepTreeSurrogateParent : aParent),
+      mBuilder);
+    if (NS_FAILED(rv)) {
+      MarkAsBrokenAndRequestSuspension(rv);
+    }
+    return;
+  }
 
   char16_t* bufferCopy = new char16_t[aLength];
   memcpy(bufferCopy, aBuffer, aLength * sizeof(char16_t));
@@ -312,6 +429,16 @@ nsHtml5TreeBuilder::appendIsindexPrompt(nsIContentHandle* aParent)
 {
   NS_PRECONDITION(aParent, "Null parent");
 
+  if (mBuilder) {
+    nsresult rv = nsHtml5TreeOperation::AppendIsindexPrompt(
+      static_cast<nsIContent*>(aParent),
+      mBuilder);
+    if (NS_FAILED(rv)) {
+      MarkAsBrokenAndRequestSuspension(rv);
+    }
+    return;
+  }
+
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
   NS_ASSERTION(treeOp, "Tree op allocation failed.");
   treeOp->Init(eTreeOpAppendIsindexPrompt, aParent);
@@ -322,7 +449,21 @@ nsHtml5TreeBuilder::appendComment(nsIContentHandle* aParent, char16_t* aBuffer, 
 {
   NS_PRECONDITION(aBuffer, "Null buffer");
   NS_PRECONDITION(aParent, "Null parent");
+  MOZ_ASSERT(!aStart, "aStart must always be zero.");
+
   if (deepTreeSurrogateParent) {
+    return;
+  }
+
+  if (mBuilder) {
+    nsresult rv = nsHtml5TreeOperation::AppendComment(
+      static_cast<nsIContent*>(aParent),
+      aBuffer, // XXX aStart always ignored???
+      aLength,
+      mBuilder);
+    if (NS_FAILED(rv)) {
+      MarkAsBrokenAndRequestSuspension(rv);
+    }
     return;
   }
 
@@ -338,6 +479,18 @@ void
 nsHtml5TreeBuilder::appendCommentToDocument(char16_t* aBuffer, int32_t aStart, int32_t aLength)
 {
   NS_PRECONDITION(aBuffer, "Null buffer");
+  MOZ_ASSERT(!aStart, "aStart must always be zero.");
+
+  if (mBuilder) {
+    nsresult rv = nsHtml5TreeOperation::AppendCommentToDocument(
+      aBuffer, // XXX aStart always ignored???
+      aLength,
+      mBuilder);
+    if (NS_FAILED(rv)) {
+      MarkAsBrokenAndRequestSuspension(rv);
+    }
+    return;
+  }
 
   char16_t* bufferCopy = new char16_t[aLength];
   memcpy(bufferCopy, aBuffer, aLength * sizeof(char16_t));
@@ -356,6 +509,18 @@ nsHtml5TreeBuilder::addAttributesToElement(nsIContentHandle* aElement, nsHtml5Ht
   if (aAttributes == nsHtml5HtmlAttributes::EMPTY_ATTRIBUTES) {
     return;
   }
+
+  if (mBuilder) {
+    nsresult rv = nsHtml5TreeOperation::AddAttributes(
+      static_cast<nsIContent*>(aElement),
+      aAttributes,
+      mBuilder);
+    if (NS_FAILED(rv)) {
+      MarkAsBrokenAndRequestSuspension(rv);
+    }
+    return;
+  }
+
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
   NS_ASSERTION(treeOp, "Tree op allocation failed.");
   treeOp->Init(aElement, aAttributes);
@@ -365,6 +530,11 @@ void
 nsHtml5TreeBuilder::markMalformedIfScript(nsIContentHandle* aElement)
 {
   NS_PRECONDITION(aElement, "Null element");
+
+  if (mBuilder) {
+    // XXX innerHTML
+    return;
+  }
 
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
   NS_ASSERTION(treeOp, "Tree op allocation failed.");
@@ -394,6 +564,19 @@ void
 nsHtml5TreeBuilder::appendDoctypeToDocument(nsIAtom* aName, nsString* aPublicId, nsString* aSystemId)
 {
   NS_PRECONDITION(aName, "Null name");
+
+  if (mBuilder) {
+    nsCOMPtr<nsIAtom> name = nsHtml5TreeOperation::Reget(aName);
+    nsresult rv =
+      nsHtml5TreeOperation::AppendDoctypeToDocument(name,
+                                                    *aPublicId,
+                                                    *aSystemId,
+                                                    mBuilder);
+    if (NS_FAILED(rv)) {
+      MarkAsBrokenAndRequestSuspension(rv);
+    }
+    return;
+  }
 
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
   NS_ASSERTION(treeOp, "Tree op allocation failed.");
@@ -442,6 +625,10 @@ nsHtml5TreeBuilder::elementPushed(int32_t aNamespace, nsIAtom* aName, nsIContent
     return;
   }
   if (aName == nsHtml5Atoms::body || aName == nsHtml5Atoms::frameset) {
+    if (mBuilder) {
+      // InnerHTML and DOMParser shouldn't start layout anyway
+      return;
+    }
     nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
     NS_ASSERTION(treeOp, "Tree op allocation failed.");
     treeOp->Init(eTreeOpStartLayout);
@@ -453,15 +640,27 @@ nsHtml5TreeBuilder::elementPushed(int32_t aNamespace, nsIAtom* aName, nsIContent
       // If form inputs don't belong to a form, their state preservation
       // won't work right without an append notification flush at this
       // point. See bug 497861.
-      mOpQueue.AppendElement()->Init(eTreeOpFlushPendingAppendNotifications);
+      if (mBuilder) {
+        mBuilder->FlushPendingAppendNotifications();
+      } else {
+        mOpQueue.AppendElement()->Init(eTreeOpFlushPendingAppendNotifications);
+      }
     }
-    mOpQueue.AppendElement()->Init(eTreeOpDoneCreatingElement, aElement);
+    if (mBuilder) {
+      nsHtml5TreeOperation::DoneCreatingElement(static_cast<nsIContent*>(aElement));
+    } else {
+      mOpQueue.AppendElement()->Init(eTreeOpDoneCreatingElement, aElement);
+    }
     return;
   }
   if (aName == nsHtml5Atoms::audio ||
       aName == nsHtml5Atoms::video ||
       aName == nsHtml5Atoms::menuitem) {
-    mOpQueue.AppendElement()->Init(eTreeOpDoneCreatingElement, aElement);
+    if (mBuilder) {
+      nsHtml5TreeOperation::DoneCreatingElement(static_cast<nsIContent*>(aElement));
+    } else {
+      mOpQueue.AppendElement()->Init(eTreeOpDoneCreatingElement, aElement);
+    }
     return;
   }
 }
@@ -481,7 +680,14 @@ nsHtml5TreeBuilder::elementPopped(int32_t aNamespace, nsIAtom* aName, nsIContent
   // we now have only SVG and HTML
   if (aName == nsHtml5Atoms::script) {
     if (mPreventScriptExecution) {
+      if (mBuilder) {
+        nsHtml5TreeOperation::PreventScriptExecution(static_cast<nsIContent*>(aElement));
+        return;
+      }
       mOpQueue.AppendElement()->Init(eTreeOpPreventScriptExecution, aElement);
+      return;
+    }
+    if (mBuilder) {
       return;
     }
     if (mCurrentHtmlScriptIsAsyncOrDefer) {
@@ -500,18 +706,34 @@ nsHtml5TreeBuilder::elementPopped(int32_t aNamespace, nsIAtom* aName, nsIContent
     return;
   }
   if (aName == nsHtml5Atoms::title) {
+    if (mBuilder) {
+      nsHtml5TreeOperation::DoneAddingChildren(static_cast<nsIContent*>(aElement), mBuilder);
+      return;
+    }
     nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
     NS_ASSERTION(treeOp, "Tree op allocation failed.");
     treeOp->Init(eTreeOpDoneAddingChildren, aElement);
     return;
   }
   if (aName == nsHtml5Atoms::style || (aNamespace == kNameSpaceID_XHTML && aName == nsHtml5Atoms::link)) {
+    if (mBuilder) {
+      MOZ_ASSERT(!nsContentUtils::IsSafeToRunScript(),
+        "Scripts must be blocked.");
+      mBuilder->FlushPendingAppendNotifications();
+      mBuilder->UpdateStyleSheet(static_cast<nsIContent*>(aElement));
+      return;
+    }
     nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
     NS_ASSERTION(treeOp, "Tree op allocation failed.");
     treeOp->Init(eTreeOpUpdateStyleSheet, aElement);
     return;
   }
   if (aNamespace == kNameSpaceID_SVG) {
+    if (mBuilder) {
+      // XXX innerHTML
+      // is this ever needed for the on-the-main-thread case
+      return;
+    }
     if (aName == nsHtml5Atoms::svg) {
       nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
       NS_ASSERTION(treeOp, "Tree op allocation failed.");
@@ -525,6 +747,10 @@ nsHtml5TreeBuilder::elementPopped(int32_t aNamespace, nsIAtom* aName, nsIContent
   // XXX expose ElementName group here and do switch
   if (aName == nsHtml5Atoms::object ||
       aName == nsHtml5Atoms::applet) {
+    if (mBuilder) {
+      nsHtml5TreeOperation::DoneAddingChildren(static_cast<nsIContent*>(aElement), mBuilder);
+      return;
+    }
     nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
     NS_ASSERTION(treeOp, "Tree op allocation failed.");
     treeOp->Init(eTreeOpDoneAddingChildren, aElement);
@@ -536,16 +762,24 @@ nsHtml5TreeBuilder::elementPopped(int32_t aNamespace, nsIAtom* aName, nsIContent
       // If form inputs don't belong to a form, their state preservation
       // won't work right without an append notification flush at this 
       // point. See bug 497861 and bug 539895.
-      nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
-      NS_ASSERTION(treeOp, "Tree op allocation failed.");
-      treeOp->Init(eTreeOpFlushPendingAppendNotifications);
+      if (mBuilder) {
+        mBuilder->FlushPendingAppendNotifications();
+      } else {
+        nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
+        NS_ASSERTION(treeOp, "Tree op allocation failed.");
+        treeOp->Init(eTreeOpFlushPendingAppendNotifications);
+      }
+    }
+    if (mBuilder) {
+      nsHtml5TreeOperation::DoneAddingChildren(static_cast<nsIContent*>(aElement), mBuilder);
+      return;
     }
     nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
     NS_ASSERTION(treeOp, "Tree op allocation failed.");
     treeOp->Init(eTreeOpDoneAddingChildren, aElement);
     return;
   }
-  if (aName == nsHtml5Atoms::meta && !fragment) {
+  if (aName == nsHtml5Atoms::meta && !fragment && !mBuilder) {
     nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
     NS_ASSERTION(treeOp, "Tree op allocation failed.");
     treeOp->Init(eTreeOpProcessMeta, aElement);
@@ -571,6 +805,10 @@ nsHtml5TreeBuilder::accumulateCharacters(const char16_t* aBuf, int32_t aStart, i
 nsIContentHandle*
 nsHtml5TreeBuilder::AllocateContentHandle()
 {
+  if (MOZ_UNLIKELY(mBuilder)) {
+    MOZ_ASSUME_UNREACHABLE("Must never allocate a handle with builder.");
+    return nullptr;
+  }
   if (mHandlesUsed == NS_HTML5_TREE_BUILDER_HANDLE_ARRAY_LENGTH) {
     mOldHandles.AppendElement(mHandles.forget());
     mHandles = new nsIContent*[NS_HTML5_TREE_BUILDER_HANDLE_ARRAY_LENGTH];
@@ -595,6 +833,10 @@ nsHtml5TreeBuilder::HasScript()
 bool
 nsHtml5TreeBuilder::Flush(bool aDiscretionary)
 {
+  if (MOZ_UNLIKELY(mBuilder)) {
+    MOZ_ASSUME_UNREACHABLE("Must never flush with builder.");
+    return false;
+  }
   if (!aDiscretionary ||
       !(charBufferLen &&
         currentPtr >= 0 &&
@@ -621,6 +863,10 @@ nsHtml5TreeBuilder::Flush(bool aDiscretionary)
 void
 nsHtml5TreeBuilder::FlushLoads()
 {
+  if (MOZ_UNLIKELY(mBuilder)) {
+    MOZ_ASSUME_UNREACHABLE("Must never flush loads with builder.");
+    return;
+  }
   if (!mSpeculativeLoadQueue.IsEmpty()) {
     mSpeculativeLoadStage->MoveSpeculativeLoadsFrom(mSpeculativeLoadQueue);
   }
@@ -630,7 +876,9 @@ void
 nsHtml5TreeBuilder::SetDocumentCharset(nsACString& aCharset, 
                                        int32_t aCharsetSource)
 {
-  if (mSpeculativeLoadStage) {
+  if (mBuilder) {
+    mBuilder->SetDocumentCharsetAndSource(aCharset, aCharsetSource);
+  } else if (mSpeculativeLoadStage) {
     mSpeculativeLoadQueue.AppendElement()->InitSetDocumentCharset(
       aCharset, aCharsetSource);
   } else {
@@ -642,16 +890,11 @@ nsHtml5TreeBuilder::SetDocumentCharset(nsACString& aCharset,
 void
 nsHtml5TreeBuilder::StreamEnded()
 {
-  // The fragment mode calls DidBuildModel from nsHtml5Parser. 
-  // Letting DidBuildModel be called from the executor in the fragment case
-  // confuses the EndLoad logic of nsHTMLDocument, since nsHTMLDocument
-  // thinks it is dealing with document.written content as opposed to 
-  // innerHTML content.
-  if (!fragment) {
-    nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
-    NS_ASSERTION(treeOp, "Tree op allocation failed.");
-    treeOp->Init(eTreeOpStreamEnded);
-  }
+  MOZ_ASSERT(!mBuilder, "Must not call StreamEnded with builder.");
+  MOZ_ASSERT(!fragment, "Must not parse fragments off the main thread.");
+  nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
+  NS_ASSERTION(treeOp, "Tree op allocation failed.");
+  treeOp->Init(eTreeOpStreamEnded);
 }
 
 void
@@ -659,6 +902,10 @@ nsHtml5TreeBuilder::NeedsCharsetSwitchTo(const nsACString& aCharset,
                                          int32_t aCharsetSource,
                                          int32_t aLineNumber)
 {
+  if (MOZ_UNLIKELY(mBuilder)) {
+    MOZ_ASSUME_UNREACHABLE("Must never switch charset with builder.");
+    return;
+  }
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
   NS_ASSERTION(treeOp, "Tree op allocation failed.");
   treeOp->Init(eTreeOpNeedsCharsetSwitchTo,
@@ -672,12 +919,20 @@ nsHtml5TreeBuilder::MaybeComplainAboutCharset(const char* aMsgId,
                                               bool aError,
                                               int32_t aLineNumber)
 {
+  if (MOZ_UNLIKELY(mBuilder)) {
+    MOZ_ASSUME_UNREACHABLE("Must never complain about charset with builder.");
+    return;
+  }
   mOpQueue.AppendElement()->Init(aMsgId, aError, aLineNumber);
 }
 
 void
 nsHtml5TreeBuilder::AddSnapshotToScript(nsAHtml5TreeBuilderState* aSnapshot, int32_t aLine)
 {
+  if (MOZ_UNLIKELY(mBuilder)) {
+    MOZ_ASSUME_UNREACHABLE("Must never use snapshots with builder.");
+    return;
+  }
   NS_PRECONDITION(HasScript(), "No script to add a snapshot to!");
   NS_PRECONDITION(aSnapshot, "Got null snapshot.");
   mOpQueue.ElementAt(mOpQueue.Length() - 1).SetSnapshot(aSnapshot, aLine);
@@ -686,6 +941,7 @@ nsHtml5TreeBuilder::AddSnapshotToScript(nsAHtml5TreeBuilderState* aSnapshot, int
 void
 nsHtml5TreeBuilder::DropHandles()
 {
+  MOZ_ASSERT(!mBuilder, "Must not drop handles with builder.");
   mOldHandles.Clear();
   mHandlesUsed = 0;
 }
@@ -693,6 +949,10 @@ nsHtml5TreeBuilder::DropHandles()
 void
 nsHtml5TreeBuilder::MarkAsBroken()
 {
+  if (MOZ_UNLIKELY(mBuilder)) {
+    MOZ_ASSUME_UNREACHABLE("Must not call this with builder.");
+    return;
+  }
   mOpQueue.Clear(); // Previous ops don't matter anymore
   mOpQueue.AppendElement()->Init(eTreeOpMarkAsBroken);
 }
@@ -700,6 +960,7 @@ nsHtml5TreeBuilder::MarkAsBroken()
 void
 nsHtml5TreeBuilder::StartPlainTextViewSource(const nsAutoString& aTitle)
 {
+  MOZ_ASSERT(!mBuilder, "Must not view source with builder.");
   startTag(nsHtml5ElementName::ELT_TITLE,
            nsHtml5HtmlAttributes::EMPTY_ATTRIBUTES,
            false);
@@ -726,6 +987,7 @@ nsHtml5TreeBuilder::StartPlainTextViewSource(const nsAutoString& aTitle)
 void
 nsHtml5TreeBuilder::StartPlainText()
 {
+  MOZ_ASSERT(!mBuilder, "Must not view source with builder.");
   startTag(nsHtml5ElementName::ELT_LINK,
            nsHtml5PlainTextUtils::NewLinkAttributes(),
            false);
@@ -736,6 +998,7 @@ nsHtml5TreeBuilder::StartPlainText()
 void
 nsHtml5TreeBuilder::StartPlainTextBody()
 {
+  MOZ_ASSERT(!mBuilder, "Must not view source with builder.");
   startTag(nsHtml5ElementName::ELT_PRE,
            nsHtml5HtmlAttributes::EMPTY_ATTRIBUTES,
            false);
@@ -746,6 +1009,10 @@ nsHtml5TreeBuilder::StartPlainTextBody()
 void
 nsHtml5TreeBuilder::documentMode(nsHtml5DocumentMode m)
 {
+  if (mBuilder) {
+    mBuilder->SetDocumentMode(m);
+    return;
+  }
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
   NS_ASSERTION(treeOp, "Tree op allocation failed.");
   treeOp->Init(m);
@@ -754,6 +1021,9 @@ nsHtml5TreeBuilder::documentMode(nsHtml5DocumentMode m)
 nsIContentHandle*
 nsHtml5TreeBuilder::getDocumentFragmentForTemplate(nsIContentHandle* aTemplate)
 {
+  if (mBuilder) {
+    return nsHtml5TreeOperation::GetDocumentFragmentForTemplate(static_cast<nsIContent*>(aTemplate));
+  }
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
   NS_ASSERTION(treeOp, "Tree op allocation failed.");
   nsIContentHandle* fragHandle = AllocateContentHandle();
@@ -764,15 +1034,16 @@ nsHtml5TreeBuilder::getDocumentFragmentForTemplate(nsIContentHandle* aTemplate)
 nsIContentHandle*
 nsHtml5TreeBuilder::getFormPointerForContext(nsIContentHandle* aContext)
 {
+  MOZ_ASSERT(mBuilder, "Must have builder.");
   if (!aContext) {
     return nullptr;
   }
 
   MOZ_ASSERT(NS_IsMainThread());
 
-  // aContext must always be a handle to an element that already exists
-  // in the document. It must never be an empty handle.
-  nsIContent* contextNode = *(static_cast<nsIContent**>(aContext));
+  // aContext must always be an element that already exists
+  // in the document.
+  nsIContent* contextNode = static_cast<nsIContent*>(aContext);
   nsIContent* currentAncestor = contextNode;
 
   // We traverse the ancestors of the context node to find the nearest
@@ -790,9 +1061,7 @@ nsHtml5TreeBuilder::getFormPointerForContext(nsIContentHandle* aContext)
     return nullptr;
   }
 
-  nsIContentHandle* formPointer = AllocateContentHandle();
-  *(static_cast<nsIContent**>(formPointer)) = nearestForm;
-  return formPointer;
+  return nearestForm;
 }
 
 // Error reporting
@@ -800,6 +1069,7 @@ nsHtml5TreeBuilder::getFormPointerForContext(nsIContentHandle* aContext)
 void
 nsHtml5TreeBuilder::EnableViewSource(nsHtml5Highlighter* aHighlighter)
 {
+  MOZ_ASSERT(!mBuilder, "Must not view source with builder.");
   mViewSource = aHighlighter;
 }
 
