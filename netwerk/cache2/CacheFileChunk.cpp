@@ -597,7 +597,7 @@ CacheFileChunk::OnFileRenamed(CacheFileHandle *aHandle, nsresult aResult)
 }
 
 bool
-CacheFileChunk::IsReady() const
+CacheFileChunk::IsReady()
 {
   mFile->AssertOwnsLock();
 
@@ -605,7 +605,7 @@ CacheFileChunk::IsReady() const
 }
 
 bool
-CacheFileChunk::IsDirty() const
+CacheFileChunk::IsDirty()
 {
   mFile->AssertOwnsLock();
 
@@ -613,7 +613,7 @@ CacheFileChunk::IsDirty() const
 }
 
 char *
-CacheFileChunk::BufForWriting() const
+CacheFileChunk::BufForWriting()
 {
   mFile->AssertOwnsLock();
 
@@ -627,7 +627,7 @@ CacheFileChunk::BufForWriting() const
 }
 
 const char *
-CacheFileChunk::BufForReading() const
+CacheFileChunk::BufForReading()
 {
   mFile->AssertOwnsLock();
 
@@ -675,25 +675,6 @@ CacheFileChunk::EnsureBufSize(uint32_t aBufSize)
     memcpy(mBuf, mRWBuf, mRWBufSize);
 
   DoMemoryReport(MemorySize());
-}
-
-// Memory reporting
-
-size_t
-CacheFileChunk::SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
-{
-  size_t n = 0;
-  n += mallocSizeOf(mBuf);
-  n += mallocSizeOf(mRWBuf);
-  n += mValidityMap.SizeOfExcludingThis(mallocSizeOf);
-
-  return n;
-}
-
-size_t
-CacheFileChunk::SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
-{
-  return mallocSizeOf(this) + SizeOfExcludingThis(mallocSizeOf);
 }
 
 } // net

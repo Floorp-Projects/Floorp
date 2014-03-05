@@ -86,7 +86,7 @@ public:
   {
     MOZ_COUNT_CTOR(CacheIndexEntry);
     mRec = new CacheIndexRecord();
-    LOG(("CacheIndexEntry::CacheIndexEntry() - Created record [rec=%p]", mRec.get()));
+    LOG(("CacheIndexEntry::CacheIndexEntry() - Created record [rec=%p]", mRec));
     memcpy(&mRec->mHash, aKey, sizeof(SHA1Sum::Hash));
   }
   CacheIndexEntry(const CacheIndexEntry& aOther)
@@ -97,7 +97,8 @@ public:
   {
     MOZ_COUNT_DTOR(CacheIndexEntry);
     LOG(("CacheIndexEntry::~CacheIndexEntry() - Deleting record [rec=%p]",
-         mRec.get()));
+         mRec));
+    delete mRec;
   }
 
   // KeyEquals(): does this entry match this key?
@@ -246,17 +247,6 @@ public:
          GetExpirationTime(), GetFileSize()));
   }
 
-  // Memory reporting
-  size_t SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
-  {
-    return mallocSizeOf(mRec.get());
-  }
-
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
-  {
-    return mallocSizeOf(this) + SizeOfExcludingThis(mallocSizeOf);
-  }
-
 private:
   friend class CacheIndex;
   friend class CacheIndexEntryAutoManage;
@@ -283,7 +273,7 @@ private:
   // FileSize in kilobytes
   static const uint32_t kFileSizeMask    = 0x00FFFFFF;
 
-  nsAutoPtr<CacheIndexRecord> mRec;
+  CacheIndexRecord *mRec;
 };
 
 class CacheIndexStats
@@ -530,9 +520,6 @@ public:
   // Returns cache size in kB.
   static nsresult GetCacheSize(uint32_t *_retval);
 
-  // Memory reporting
-  static size_t SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf);
-  static size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
 
 private:
   friend class CacheIndexEntryAutoManage;
@@ -774,9 +761,6 @@ private:
   void InsertRecordToExpirationArray(CacheIndexRecord *aRecord);
   void RemoveRecordFromFrecencyArray(CacheIndexRecord *aRecord);
   void RemoveRecordFromExpirationArray(CacheIndexRecord *aRecord);
-
-  // Memory reporting (private part)
-  size_t SizeOfExcludingThisInternal(mozilla::MallocSizeOf mallocSizeOf) const;
 
   static CacheIndex *gInstance;
 

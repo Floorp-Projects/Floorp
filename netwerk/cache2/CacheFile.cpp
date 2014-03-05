@@ -923,7 +923,7 @@ CacheFile::Unlock()
 }
 
 void
-CacheFile::AssertOwnsLock() const
+CacheFile::AssertOwnsLock()
 {
   mLock.AssertCurrentThreadOwns();
 }
@@ -1557,58 +1557,6 @@ CacheFile::InitIndexEntry()
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
-}
-
-// Memory reporting
-
-namespace { // anon
-
-size_t
-CollectChunkSize(uint32_t const & aIdx,
-                 nsRefPtr<mozilla::net::CacheFileChunk> const & aChunk,
-                 mozilla::MallocSizeOf mallocSizeOf, void* aClosure)
-{
-  return aChunk->SizeOfIncludingThis(mallocSizeOf);
-}
-
-} // anon
-
-size_t
-CacheFile::SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
-{
-  CacheFileAutoLock lock(const_cast<CacheFile*>(this));
-
-  size_t n = 0;
-  n += mChunks.SizeOfExcludingThis(CollectChunkSize, mallocSizeOf);
-  n += mCachedChunks.SizeOfExcludingThis(CollectChunkSize, mallocSizeOf);
-  if (mMetadata) {
-    n += mMetadata->SizeOfIncludingThis(mallocSizeOf);
-  }
-
-  // Input streams are not elsewhere reported.
-  n += mInputs.SizeOfExcludingThis(mallocSizeOf);
-  for (uint32_t i = 0; i < mInputs.Length(); ++i) {
-    n += mInputs[i]->SizeOfIncludingThis(mallocSizeOf);
-  }
-
-  // Output streams are not elsewhere reported.
-  if (mOutput) {
-    n += mOutput->SizeOfIncludingThis(mallocSizeOf);
-  }
-
-  // The listeners are usually classes reported just above.
-  n += mChunkListeners.SizeOfExcludingThis(nullptr, mallocSizeOf);
-  n += mObjsToRelease.SizeOfExcludingThis(mallocSizeOf);
-
-  // mHandle reported directly from CacheFileIOManager.
-
-  return n;
-}
-
-size_t
-CacheFile::SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
-{
-  return mallocSizeOf(this) + SizeOfExcludingThis(mallocSizeOf);
 }
 
 } // net

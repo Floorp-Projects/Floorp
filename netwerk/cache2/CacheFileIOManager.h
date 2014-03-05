@@ -45,19 +45,15 @@ public:
   CacheFileHandle(const nsACString &aKey, bool aPriority);
   CacheFileHandle(const CacheFileHandle &aOther);
   void Log();
-  bool IsDoomed() const { return mIsDoomed; }
-  const SHA1Sum::Hash *Hash() const { return mHash; }
-  int64_t FileSize() const { return mFileSize; }
-  uint32_t FileSizeInK() const;
-  bool IsPriority() const { return mPriority; }
-  bool FileExists() const { return mFileExists; }
-  bool IsClosed() const { return mClosed; }
-  bool IsSpecialFile() const { return !mHash; }
+  bool IsDoomed() { return mIsDoomed; }
+  const SHA1Sum::Hash *Hash() { return mHash; }
+  int64_t FileSize() { return mFileSize; }
+  uint32_t FileSizeInK();
+  bool IsPriority() { return mPriority; }
+  bool FileExists() { return mFileExists; }
+  bool IsClosed() { return mClosed; }
+  bool IsSpecialFile() { return !mHash; }
   nsCString & Key() { return mKey; }
-
-  // Memory reporting
-  size_t SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
 private:
   friend class CacheFileIOManager;
@@ -96,10 +92,6 @@ public:
 #ifdef DEBUG_HANDLES
   void     Log(CacheFileHandlesEntry *entry);
 #endif
-
-  // Memory reporting
-  size_t SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
   class HandleHashKey : public PLDHashEntryHdr
   {
@@ -140,18 +132,14 @@ public:
     already_AddRefed<CacheFileHandle> GetNewestHandle();
     void GetHandles(nsTArray<nsRefPtr<CacheFileHandle> > &aResult);
 
-    SHA1Sum::Hash *Hash() const { return mHash; }
-    bool IsEmpty() const { return mHandles.Length() == 0; }
+    SHA1Sum::Hash *Hash() { return mHash; }
+    bool IsEmpty() { return mHandles.Length() == 0; }
 
     enum { ALLOW_MEMMOVE = true };
 
 #ifdef DEBUG
     void AssertHandlesState();
 #endif
-
-    // Memory reporting
-    size_t SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
-    size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
   private:
     nsAutoArrayPtr<SHA1Sum::Hash> mHash;
@@ -276,10 +264,6 @@ public:
 
   static void GetCacheDirectory(nsIFile** result);
 
-  // Memory reporting
-  static size_t SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf);
-  static size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
-
 private:
   friend class CacheFileHandle;
   friend class CacheFileChunk;
@@ -345,9 +329,6 @@ private:
   nsresult ScheduleMetadataWriteInternal(CacheFile * aFile);
   nsresult UnscheduleMetadataWriteInternal(CacheFile * aFile);
   nsresult ShutdownMetadataWriteSchedulingInternal();
-
-  // Memory reporting (private part)
-  size_t SizeOfExcludingThisInternal(mozilla::MallocSizeOf mallocSizeOf) const;
 
   static CacheFileIOManager           *gInstance;
   TimeStamp                            mStartTime;
