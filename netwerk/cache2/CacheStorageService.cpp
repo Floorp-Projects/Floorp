@@ -1324,7 +1324,6 @@ private:
   NS_IMETHOD OnDataRead(CacheFileHandle *aHandle, char *aBuf, nsresult aResult) { return NS_OK; }
   NS_IMETHOD OnFileDoomed(CacheFileHandle *aHandle, nsresult aResult);
   NS_IMETHOD OnEOFSet(CacheFileHandle *aHandle, nsresult aResult) { return NS_OK; }
-  NS_IMETHOD OnFileRenamed(CacheFileHandle *aHandle, nsresult aResult) { return NS_OK; }
 
   nsCOMPtr<nsICacheEntryDoomCallback> mCallback;
 };
