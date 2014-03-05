@@ -8,6 +8,9 @@
 #define nsHtml5DocumentBuilder_h
 
 #include "nsHtml5PendingNotification.h"
+#include "nsContentSink.h"
+#include "nsHtml5DocumentMode.h"
+#include "nsIDocument.h"
 
 typedef nsIContent* nsIContentPtr;
 
@@ -92,7 +95,8 @@ public:
     mFlushState = eInDocUpdate;
   }
 
-  void DropHeldElements();
+  nsresult Init(nsIDocument* aDoc, nsIURI* aURI,
+                nsISupports* aContainer, nsIChannel* aChannel);
 
   // Getters and setters for fields from nsContentSink
   nsIDocument* GetDocument() {
@@ -102,7 +106,54 @@ public:
     return mNodeInfoManager;
   }
 
-  virtual bool BelongsToStringParser() = 0;
+  /**
+   * Marks this parser as broken and tells the stream parser (if any) to
+   * terminate.
+   *
+   * @return aReason for convenience
+   */
+  virtual nsresult MarkAsBroken(nsresult aReason);
+
+  /**
+   * Checks if this parser is broken. Returns a non-NS_OK (i.e. non-0)
+   * value if broken.
+   */
+  inline nsresult IsBroken() {
+    return mBroken;
+  }
+
+  inline void BeginDocUpdate() {
+    NS_PRECONDITION(mFlushState == eInFlush, "Tried to double-open update.");
+    NS_PRECONDITION(mParser, "Started update without parser.");
+    mFlushState = eInDocUpdate;
+    mDocument->BeginUpdate(UPDATE_CONTENT_MODEL);
+  }
+
+  inline void EndDocUpdate() {
+    NS_PRECONDITION(mFlushState != eNotifying, "mFlushState out of sync");
+    if (mFlushState == eInDocUpdate) {
+      FlushPendingAppendNotifications();
+      mFlushState = eInFlush;
+      mDocument->EndUpdate(UPDATE_CONTENT_MODEL);
+    }
+  }
+
+  void SetDocumentCharsetAndSource(nsACString& aCharset, int32_t aCharsetSource);
+
+  /**
+   * Sets up style sheet load / parse
+   */
+  void UpdateStyleSheet(nsIContent* aElement);
+
+  void SetDocumentMode(nsHtml5DocumentMode m);
+
+  void SetNodeInfoManager(nsNodeInfoManager* aManager) {
+    mNodeInfoManager = aManager;
+  }
+
+  // nsContentSink methods
+  virtual void UpdateChildCounts();
+  virtual nsresult FlushTags();
 
 protected:
   inline void SetAppendBatchCapacity(uint32_t aCapacity)
@@ -110,11 +161,26 @@ protected:
     mElementsSeenInThisAppendBatch.SetCapacity(aCapacity);
   }
 
+  nsHtml5DocumentBuilder(bool aRunsToCompletion);
+  virtual ~nsHtml5DocumentBuilder();
+
 private:
   nsTArray<nsHtml5PendingNotification> mPendingNotifications;
-  nsTArray<nsCOMPtr<nsIContent> >      mOwnedElements;
   nsTArray<nsIContentPtr>              mElementsSeenInThisAppendBatch;
 protected:
+  nsTArray<nsCOMPtr<nsIContent> >      mOwnedElements;
+  /**
+   * Non-NS_OK if this parser should refuse to process any more input.
+   * For example, the parser needs to be marked as broken if it drops some
+   * input due to a memory allocation failure. In such a case, the whole
+   * parser needs to be marked as broken, because some input has been lost
+   * and parsing more input could lead to a DOM where pieces of HTML source
+   * that weren't supposed to become scripts become scripts.
+   *
+   * Since NS_OK is actually 0, zeroing operator new takes care of
+   * initializing this.
+   */
+  nsresult                             mBroken;
   eHtml5FlushState                     mFlushState;
 };
 

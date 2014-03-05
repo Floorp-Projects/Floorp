@@ -13,8 +13,6 @@
 #include "nsIMarkupDocumentViewer.h"
 #include "nsIContentViewer.h"
 #include "nsIDocShellTreeItem.h"
-#include "nsIStyleSheetLinkingElement.h"
-#include "nsStyleLinkElement.h"
 #include "nsIDocShell.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptSecurityManager.h"
@@ -62,10 +60,10 @@ class nsHtml5ExecutorReflusher : public nsRunnable
 static mozilla::LinkedList<nsHtml5TreeOpExecutor>* gBackgroundFlushList = nullptr;
 static nsITimer* gFlushTimer = nullptr;
 
-nsHtml5TreeOpExecutor::nsHtml5TreeOpExecutor(bool aRunsToCompletion)
-  : mPreloadedURLs(23)  // Mean # of preloadable resources per page on dmoz
+nsHtml5TreeOpExecutor::nsHtml5TreeOpExecutor()
+  : nsHtml5DocumentBuilder(false)
+  , mPreloadedURLs(23)  // Mean # of preloadable resources per page on dmoz
 {
-  mRunsToCompletion = aRunsToCompletion;
   // zeroing operator new for everything else
 }
 
@@ -210,34 +208,16 @@ nsHtml5TreeOpExecutor::FlushPendingNotifications(mozFlushType aType)
   }
 }
 
-void
-nsHtml5TreeOpExecutor::SetDocumentCharsetAndSource(nsACString& aCharset, int32_t aCharsetSource)
-{
-  if (mDocument) {
-    mDocument->SetDocumentCharacterSetSource(aCharsetSource);
-    mDocument->SetDocumentCharacterSet(aCharset);
-  }
-}
-
 nsISupports*
 nsHtml5TreeOpExecutor::GetTarget()
 {
   return mDocument;
 }
 
-// nsContentSink overrides
-
-void
-nsHtml5TreeOpExecutor::UpdateChildCounts()
-{
-  // No-op
-}
-
 nsresult
 nsHtml5TreeOpExecutor::MarkAsBroken(nsresult aReason)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_ASSERTION(!mRunsToCompletion, "Fragment parsers can't be broken!");
   mBroken = aReason;
   if (mStreamParser) {
     mStreamParser->Terminate();
@@ -253,12 +233,6 @@ nsHtml5TreeOpExecutor::MarkAsBroken(nsresult aReason)
     }
   }
   return aReason;
-}
-
-nsresult
-nsHtml5TreeOpExecutor::FlushTags()
-{
-  return NS_OK;
 }
 
 void
@@ -301,61 +275,6 @@ nsHtml5TreeOpExecutor::ContinueInterruptedParsingAsync()
                                         50, nsITimer::TYPE_REPEATING_SLACK);
     }
   }
-}
-
-void
-nsHtml5TreeOpExecutor::UpdateStyleSheet(nsIContent* aElement)
-{
-  // Break out of the doc update created by Flush() to zap a runnable 
-  // waiting to call UpdateStyleSheet without the right observer
-  EndDocUpdate();
-
-  if (MOZ_UNLIKELY(!mParser)) {
-    // EndDocUpdate ran stuff that called nsIParser::Terminate()
-    return;
-  }
-
-  nsCOMPtr<nsIStyleSheetLinkingElement> ssle(do_QueryInterface(aElement));
-  NS_ASSERTION(ssle, "Node didn't QI to style.");
-
-  ssle->SetEnableUpdates(true);
-
-  bool willNotify;
-  bool isAlternate;
-  nsresult rv = ssle->UpdateStyleSheet(mRunsToCompletion ? nullptr : this,
-                                       &willNotify,
-                                       &isAlternate);
-  if (NS_SUCCEEDED(rv) && willNotify && !isAlternate && !mRunsToCompletion) {
-    ++mPendingSheetCount;
-    mScriptLoader->AddExecuteBlocker();
-  }
-
-  if (aElement->IsHTML(nsGkAtoms::link)) {
-    // look for <link rel="next" href="url">
-    nsAutoString relVal;
-    aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::rel, relVal);
-    if (!relVal.IsEmpty()) {
-      uint32_t linkTypes = nsStyleLinkElement::ParseLinkTypes(relVal);
-      bool hasPrefetch = linkTypes & nsStyleLinkElement::ePREFETCH;
-      if (hasPrefetch || (linkTypes & nsStyleLinkElement::eNEXT)) {
-        nsAutoString hrefVal;
-        aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::href, hrefVal);
-        if (!hrefVal.IsEmpty()) {
-          PrefetchHref(hrefVal, aElement, hasPrefetch);
-        }
-      }
-      if (linkTypes & nsStyleLinkElement::eDNS_PREFETCH) {
-        nsAutoString hrefVal;
-        aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::href, hrefVal);
-        if (!hrefVal.IsEmpty()) {
-          PrefetchDNS(hrefVal);
-        }
-      }
-    }
-  }
-
-  // Re-open update
-  BeginDocUpdate();
 }
 
 void
@@ -666,26 +585,6 @@ nsHtml5TreeOpExecutor::IsScriptEnabled()
 }
 
 void
-nsHtml5TreeOpExecutor::SetDocumentMode(nsHtml5DocumentMode m)
-{
-  nsCompatibility mode = eCompatibility_NavQuirks;
-  switch (m) {
-    case STANDARDS_MODE:
-      mode = eCompatibility_FullStandards;
-      break;
-    case ALMOST_STANDARDS_MODE:
-      mode = eCompatibility_AlmostStandards;
-      break;
-    case QUIRKS_MODE:
-      mode = eCompatibility_NavQuirks;
-      break;
-  }
-  nsCOMPtr<nsIHTMLDocument> htmlDocument = do_QueryInterface(mDocument);
-  NS_ASSERTION(htmlDocument, "Document didn't QI into HTML document.");
-  htmlDocument->SetCompatibilityMode(mode);
-}
-
-void
 nsHtml5TreeOpExecutor::StartLayout() {
   if (mLayoutStarted || !mDocument) {
     return;
@@ -765,15 +664,6 @@ nsHtml5TreeOpExecutor::RunScript(nsIContent* aScriptElement)
     // necessary for the parse to continue after complex situations.
     nsHtml5TreeOpExecutor::ContinueInterruptedParsingAsync();
   }
-}
-
-nsresult
-nsHtml5TreeOpExecutor::Init(nsIDocument* aDoc,
-                            nsIURI* aURI,
-                            nsISupports* aContainer,
-                            nsIChannel* aChannel)
-{
-  return nsContentSink::Init(aDoc, aURI, aContainer, aChannel);
 }
 
 void
@@ -880,19 +770,6 @@ nsHtml5TreeOpExecutor::GetParser()
 {
   MOZ_ASSERT(!mRunsToCompletion);
   return static_cast<nsHtml5Parser*>(mParser.get());
-}
-
-void
-nsHtml5TreeOpExecutor::Reset()
-{
-  MOZ_ASSERT(mRunsToCompletion);
-  DropHeldElements();
-  mOpQueue.Clear();
-  mStarted = false;
-  mFlushState = eNotFlushing;
-  mRunFlushLoopOnStack = false;
-  MOZ_ASSERT(!mReadingFromStage);
-  MOZ_ASSERT(NS_SUCCEEDED(mBroken));
 }
 
 void
