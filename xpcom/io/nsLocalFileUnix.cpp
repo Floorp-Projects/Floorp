@@ -1893,8 +1893,7 @@ nsLocalFile::Launch()
         rv = mimeService->GetTypeFromFile(this, type);
 
     nsAutoCString fileUri = NS_LITERAL_CSTRING("file://") + mPath;
-    return mozilla::widget::android::GeckoAppShell::OpenUriExternal(NS_ConvertUTF8toUTF16(fileUri),
-      NS_ConvertUTF8toUTF16(type)) ? NS_OK : NS_ERROR_FAILURE;
+    return GeckoAppShell::OpenUriExternal(NS_ConvertUTF8toUTF16(fileUri), NS_ConvertUTF8toUTF16(type)) ? NS_OK : NS_ERROR_FAILURE;
 #elif defined(MOZ_WIDGET_COCOA)
     CFURLRef url;
     if (NS_SUCCEEDED(GetCFURL(&url))) {

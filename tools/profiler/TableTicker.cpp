@@ -230,8 +230,7 @@ typename Builder::Object BuildJavaThreadJSObject(Builder& b)
         b.DefineProperty(sample, "frames", frames);
         b.ArrayPush(samples, sample);
 
-        double sampleTime =
-          mozilla::widget::android::GeckoJavaSampler::GetSampleTimeJavaProfiling(0, sampleId);
+        double sampleTime = GeckoJavaSampler::GetSampleTimeJavaProfiling(0, sampleId);
         b.DefineProperty(sample, "time", sampleTime);
       }
       typename Builder::RootedObject frame(b.context(), b.CreateObject());
@@ -283,12 +282,12 @@ void TableTicker::BuildJSObject(Builder& b, typename Builder::ObjectHandle profi
 
 #if defined(SPS_OS_android) && !defined(MOZ_WIDGET_GONK)
   if (ProfileJava()) {
-    mozilla::widget::android::GeckoJavaSampler::PauseJavaProfiling();
+    GeckoJavaSampler::PauseJavaProfiling();
 
     typename Builder::RootedObject javaThread(b.context(), BuildJavaThreadJSObject(b));
     b.ArrayPush(threads, javaThread);
 
-    mozilla::widget::android::GeckoJavaSampler::UnpauseJavaProfiling();
+    GeckoJavaSampler::UnpauseJavaProfiling();
   }
 #endif
 

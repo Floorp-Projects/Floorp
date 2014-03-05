@@ -166,7 +166,7 @@ namespace sipcc {
 
 PeerConnectionCtx* PeerConnectionCtx::gInstance;
 nsIThread* PeerConnectionCtx::gMainThread;
-mozilla::StaticRefPtr<mozilla::PeerConnectionCtxShutdown> PeerConnectionCtx::gPeerConnectionCtxShutdown;
+StaticRefPtr<mozilla::PeerConnectionCtxShutdown> PeerConnectionCtx::gPeerConnectionCtxShutdown;
 
 // Since we have a pointer to main-thread, help make it safe for lower-level
 // SIPCC threads to use SyncRunnable without deadlocking, by exposing main's
@@ -174,7 +174,7 @@ mozilla::StaticRefPtr<mozilla::PeerConnectionCtxShutdown> PeerConnectionCtx::gPe
 
 static void thread_ended_dispatcher(thread_ended_funct func, thread_monitor_id_t id)
 {
-  nsresult rv = PeerConnectionCtx::gMainThread->Dispatch(mozilla::WrapRunnableNM(func, id),
+  nsresult rv = PeerConnectionCtx::gMainThread->Dispatch(WrapRunnableNM(func, id),
                                                          NS_DISPATCH_NORMAL);
   if (NS_FAILED(rv)) {
     CSFLogError( logTag, "%s(): Could not dispatch to main thread", __FUNCTION__);
@@ -222,7 +222,7 @@ nsresult PeerConnectionCtx::InitializeGlobal(nsIThread *mainThread,
     gInstance = ctx;
 
     if (!sipcc::PeerConnectionCtx::gPeerConnectionCtxShutdown) {
-      sipcc::PeerConnectionCtx::gPeerConnectionCtxShutdown = new mozilla::PeerConnectionCtxShutdown();
+      sipcc::PeerConnectionCtx::gPeerConnectionCtxShutdown = new PeerConnectionCtxShutdown();
       sipcc::PeerConnectionCtx::gPeerConnectionCtxShutdown->Init();
     }
   }
@@ -304,7 +304,7 @@ nsresult PeerConnectionCtx::Initialize() {
 
   mConnectionCounter = 0;
 #ifdef MOZILLA_INTERNAL_API
-  mozilla::Telemetry::GetHistogramById(mozilla::Telemetry::WEBRTC_CALL_COUNT)->Add(0);
+  Telemetry::GetHistogramById(Telemetry::WEBRTC_CALL_COUNT)->Add(0);
 #endif
 
   return NS_OK;
@@ -369,7 +369,7 @@ void PeerConnectionCtx::onCallEvent(ccapi_call_event_e aCallEvent,
   nsAutoPtr<std::string> pcDuped(new std::string(aCall->getPeerConnection()));
 
   // DISPATCH_NORMAL with duped string
-  nsresult rv = gMainThread->Dispatch(mozilla::WrapRunnableNM(&onCallEvent_m, pcDuped,
+  nsresult rv = gMainThread->Dispatch(WrapRunnableNM(&onCallEvent_m, pcDuped,
                                                      aCallEvent, aInfo),
                                       NS_DISPATCH_NORMAL);
   if (NS_FAILED(rv)) {

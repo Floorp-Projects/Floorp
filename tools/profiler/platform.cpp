@@ -684,7 +684,7 @@ void mozilla_sampler_start(int aProfileEntries, double aInterval,
     if (javaInterval < 10) {
       aInterval = 10;
     }
-    mozilla::widget::android::GeckoJavaSampler::StartJavaProfiling(javaInterval, 1000);
+    GeckoJavaSampler::StartJavaProfiling(javaInterval, 1000);
   }
 #endif
 
