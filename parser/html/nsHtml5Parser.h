@@ -237,7 +237,8 @@ class nsHtml5Parser : public nsIParser,
 
     void InitializeDocWriteParserState(nsAHtml5TreeBuilderState* aState, int32_t aLine);
 
-    void DropStreamParser() {
+    void DropStreamParser()
+    {
       if (mStreamParser) {
         mStreamParser->DropTimer();
         mStreamParser = nullptr;
@@ -248,7 +249,8 @@ class nsHtml5Parser : public nsIParser,
     
     void ContinueAfterFailedCharsetSwitch();
 
-    nsHtml5StreamParser* GetStreamParser() {
+    nsHtml5StreamParser* GetStreamParser()
+    {
       return mStreamParser;
     }
 
