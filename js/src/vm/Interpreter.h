@@ -328,14 +328,14 @@ UnwindScope(JSContext *cx, ScopeIter &si, jsbytecode *pc);
  * just preserving the basic engine stack invariants.
  */
 extern void
-UnwindForUncatchableException(JSContext *cx, const FrameRegs &regs);
+UnwindForUncatchableException(JSContext *cx, const InterpreterRegs &regs);
 
 extern bool
 OnUnknownMethod(JSContext *cx, HandleObject obj, Value idval, MutableHandleValue vp);
 
 class TryNoteIter
 {
-    const FrameRegs &regs;
+    const InterpreterRegs &regs;
     RootedScript script; /* TryNotIter is always stack allocated. */
     uint32_t pcOffset;
     JSTryNote *tn, *tnEnd;
@@ -343,7 +343,7 @@ class TryNoteIter
     void settle();
 
   public:
-    explicit TryNoteIter(JSContext *cx, const FrameRegs &regs);
+    explicit TryNoteIter(JSContext *cx, const InterpreterRegs &regs);
     bool done() const;
     void operator++();
     JSTryNote *operator*() const { return tn; }
