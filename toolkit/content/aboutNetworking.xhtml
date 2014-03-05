@@ -44,6 +44,9 @@
                 <span class="category-name">&aboutNetworking.websockets;</span>
             </div>
             <hr></hr>
+            <div class="category" value="dnslookuptool">
+                <span class="category-name">&aboutNetworking.dnsLookup;</span>
+            </div>
         </div>
         <div class="main-content">
             <div class="header">
@@ -116,6 +119,20 @@
                       </tr>
                   </thead>
                   <tbody id="websockets_content" />
+              </table>
+          </div>
+
+          <div id="dnslookuptool" class="tab" hidden="true">
+              &aboutNetworking.dnsDomain;: <input type="text" name="host" id="host"></input>
+              <button id="dnsLookupButton">&aboutNetworking.dnsLookupButton;</button>
+              <hr/>
+              <table>
+                  <thead>
+                      <tr>
+                          <th>&aboutNetworking.dnsLookupTableColumn;</th>
+                      </tr>
+                  </thead>
+                  <tbody id="dnslookuptool_content" />
               </table>
           </div>
         </div>

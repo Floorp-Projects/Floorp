@@ -165,6 +165,11 @@ function init() {
     if (e.target && e.target.parentNode == menu)
       show(e.target);
   });
+
+  let dnsLookupButton = document.getElementById("dnsLookupButton");
+  dnsLookupButton.addEventListener("click", function() {
+    doLookup();
+  });
 }
 
 function confirm () {
@@ -210,3 +215,30 @@ window.addEventListener("DOMContentLoaded", function load() {
   window.removeEventListener("DOMContentLoaded", load);
   init();
 });
+
+function doLookup() {
+  let host = document.getElementById("host").value;
+  if (host) {
+    gDashboard.requestDNSLookup(host, displayDNSLookup);
+  }
+}
+
+function displayDNSLookup(data) {
+  let cont = document.getElementById("dnslookuptool_content");
+  let parent = cont.parentNode;
+  let new_cont = document.createElement("tbody");
+  new_cont.setAttribute("id", "dnslookuptool_content");
+
+  if (data.answer) {
+    for (let address of data.address) {
+      let row = document.createElement("tr");
+      row.appendChild(col(address));
+      new_cont.appendChild(row);
+    }
+  }
+  else {
+    new_cont.appendChild(col(data.error));
+  }
+
+  parent.replaceChild(new_cont, cont);
+}
