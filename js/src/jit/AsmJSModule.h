@@ -221,11 +221,14 @@ class AsmJSModule
         struct Pod {
             ReturnType returnType_;
             uint32_t codeOffset_;
+            uint32_t line_;
+            uint32_t column_;
         } pod;
 
         friend class AsmJSModule;
 
         ExportedFunction(PropertyName *name,
+                         uint32_t line, uint32_t column,
                          PropertyName *maybeFieldName,
                          ArgCoercionVector &&argCoercions,
                          ReturnType returnType)
@@ -235,6 +238,8 @@ class AsmJSModule
             argCoercions_ = mozilla::Move(argCoercions);
             pod.returnType_ = returnType;
             pod.codeOffset_ = UINT32_MAX;
+            pod.line_ = line;
+            pod.column_ = column;
             JS_ASSERT_IF(maybeFieldName_, name_->isTenured());
         }
 
@@ -260,6 +265,12 @@ class AsmJSModule
 
         PropertyName *name() const {
             return name_;
+        }
+        uint32_t line() const {
+            return pod.line_;
+        }
+        uint32_t column() const {
+            return pod.column_;
         }
         PropertyName *maybeFieldName() const {
             return maybeFieldName_;
@@ -540,11 +551,12 @@ class AsmJSModule
         return functionCounts_.append(counts);
     }
 
-    bool addExportedFunction(PropertyName *name, PropertyName *maybeFieldName,
+    bool addExportedFunction(PropertyName *name, uint32_t line, uint32_t column,
+                             PropertyName *maybeFieldName,
                              ArgCoercionVector &&argCoercions,
                              ReturnType returnType)
     {
-        ExportedFunction func(name, maybeFieldName, mozilla::Move(argCoercions), returnType);
+        ExportedFunction func(name, line, column, maybeFieldName, mozilla::Move(argCoercions), returnType);
         return exports_.append(mozilla::Move(func));
     }
     unsigned numExportedFunctions() const {

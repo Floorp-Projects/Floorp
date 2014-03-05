@@ -483,8 +483,8 @@ js::Invoke(JSContext *cx, CallArgs args, MaybeConstruct construct)
 
     // Check to see if useNewType flag should be set for this frame.
     if (construct && cx->typeInferenceEnabled()) {
-        ScriptFrameIter iter(cx);
-        if (!iter.done()) {
+        FrameIter iter(cx);
+        if (!iter.done() && iter.hasScript()) {
             JSScript *script = iter.script();
             jsbytecode *pc = iter.pc();
             if (UseNewType(cx, script, pc))

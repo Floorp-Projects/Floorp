@@ -387,7 +387,7 @@ CallAsmJS(JSContext *cx, unsigned argc, Value *vp)
         // that the optimized asm.js-to-Ion FFI call path (which we want to be
         // very fast) can avoid doing so. The JitActivation is marked as
         // inactive so stack iteration will skip over it.
-        AsmJSActivation activation(cx, module);
+        AsmJSActivation activation(cx, module, exportIndex);
         JitActivation jitActivation(cx, /* firstFrameIsConstructing = */ false, /* active */ false);
 
         // Call the per-exported-function trampoline created by GenerateEntry.
