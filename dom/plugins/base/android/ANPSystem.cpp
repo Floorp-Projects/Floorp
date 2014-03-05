@@ -63,7 +63,7 @@ jclass anp_system_loadJavaClass(NPP instance, const char* classNameStr)
   lib->GetLibraryPath(libNameUtf8);
   NS_ConvertUTF8toUTF16 libName(libNameUtf8);
 
-  return GeckoAppShell::LoadPluginClass(className, libName);
+  return mozilla::widget::android::GeckoAppShell::LoadPluginClass(className, libName);
 }
 
 void anp_system_setPowerState(NPP instance, ANPPowerState powerState)
