@@ -44,6 +44,7 @@ EXPORTS += [
     'nsHtml5UTF16Buffer.h',
     'nsHtml5UTF16BufferHSupplement.h',
     'nsHtml5ViewSourceUtils.h',
+    'nsIContentHandle.h',
     'nsParserUtils.h',
 ]
 
