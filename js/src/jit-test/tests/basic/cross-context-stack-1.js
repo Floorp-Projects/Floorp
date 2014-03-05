@@ -1,17 +1,21 @@
-// Error().stack (ScriptFrameIter) should not include frames from other contexts.
-function g() {
-    evaluate("function h() {\nstack = Error().stack;\n };\n h();", {newContext: true});
+// Error().stack (ScriptFrameIter) is no longer context-bound.
+function beta() {
+    evaluate("function gamma() {\nstack = Error().stack;\n };\n gamma();", {newContext: true});
 }
-function f() {
-    g();
+function alpha() {
+    beta();
 }
-f();
-assertEq(stack,
-    "h@@evaluate:2:1\n" +
-    "@@evaluate:4:2\n");
+alpha();
+assertEq(/alpha/.test(stack), true);
+assertEq(/beta/.test(stack), true);
+assertEq(/gamma/.test(stack), true);
+assertEq(/delta/.test(stack), false);
 
-function k() {
+function delta() {
     evaluate("stack = Error().stack", {newContext: true});
 }
-k();
-assertEq(stack, "@@evaluate:1:1\n");
+delta();
+assertEq(/alpha/.test(stack), false);
+assertEq(/beta/.test(stack), false);
+assertEq(/gamma/.test(stack), false);
+assertEq(/delta/.test(stack), true);
