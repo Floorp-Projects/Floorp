@@ -1283,20 +1283,22 @@ CustomizeMode.prototype = {
     if (targetNode == targetArea.customizationTarget) {
       // We'll assume if the user is dragging directly over the target, that
       // they're attempting to append a child to that target.
-      dragOverItem = targetNode.lastChild || targetNode;
+      dragOverItem = (targetIsToolbar ? this._findVisiblePreviousSiblingNode(targetNode.lastChild) :
+                                        targetNode.lastChild) || targetNode;
       dragValue = "after";
     } else {
       let targetParent = targetNode.parentNode;
       let position = Array.indexOf(targetParent.children, targetNode);
       if (position == -1) {
-        dragOverItem = targetParent.lastChild;
+        dragOverItem = targetIsToolbar ? this._findVisiblePreviousSiblingNode(targetNode.lastChild) :
+                                         targetParent.lastChild;
         dragValue = "after";
       } else {
         dragOverItem = targetParent.children[position];
         if (!targetIsToolbar) {
           dragValue = "before";
-          dragOverItem = position == -1 ? targetParent.firstChild : targetParent.children[position];
         } else {
+          dragOverItem = this._findVisiblePreviousSiblingNode(targetParent.children[position]);
           // Check if the aDraggedItem is hovered past the first half of dragOverItem
           let window = dragOverItem.ownerDocument.defaultView;
           let direction = window.getComputedStyle(dragOverItem, null).direction;
@@ -1862,7 +1864,16 @@ CustomizeMode.prototype = {
     while (oldPlaceholders.length) {
       contents.removeChild(oldPlaceholders[0]);
     }
-  }
+  },
+
+  _findVisiblePreviousSiblingNode: function(aReferenceNode) {
+    while (aReferenceNode &&
+           aReferenceNode.localName == "toolbarpaletteitem" &&
+           aReferenceNode.firstChild.hidden) {
+      aReferenceNode = aReferenceNode.previousSibling;
+    }
+    return aReferenceNode;
+  },
 };
 
 function __dumpDragData(aEvent, caller) {
