@@ -12,10 +12,12 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/DeviceStorageBinding.h"
 #include "mozilla/dom/devicestorage/PDeviceStorageRequestChild.h"
+#include "mozilla/dom/Directory.h"
 #include "mozilla/dom/ipc/Blob.h"
 #include "mozilla/dom/PBrowserChild.h"
 #include "mozilla/dom/PContentPermissionRequestChild.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
+#include "mozilla/dom/Promise.h"
 #include "mozilla/LazyIdleThread.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Scoped.h"
@@ -3810,6 +3812,13 @@ nsDOMDeviceStorage::Default()
   nsString defaultStorageName;
   GetDefaultStorageName(mStorageType, defaultStorageName);
   return mStorageName.Equals(defaultStorageName);
+}
+
+already_AddRefed<Promise>
+nsDOMDeviceStorage::GetRoot()
+{
+  // TODO
+  return nullptr;
 }
 
 NS_IMETHODIMP
