@@ -54,6 +54,7 @@
 #include "nsHtml5ViewSourceUtils.h"
 #include "mozilla/Likely.h"
 #include "nsIContentHandle.h"
+#include "nsHtml5OplessBuilder.h"
 
 #include "nsHtml5Tokenizer.h"
 #include "nsHtml5MetaScanner.h"
@@ -3899,6 +3900,7 @@ nsHtml5TreeBuilder::appendToCurrentNodeAndPushFormElementMayFoster(nsHtml5HtmlAt
 void 
 nsHtml5TreeBuilder::appendToCurrentNodeAndPushFormattingElementMayFoster(nsHtml5ElementName* elementName, nsHtml5HtmlAttributes* attributes)
 {
+  nsHtml5HtmlAttributes* clone = attributes->cloneAttributes(nullptr);
   nsIContentHandle* elt = createElement(kNameSpaceID_XHTML, elementName->name, attributes);
   nsHtml5StackNode* current = stack[currentPtr];
   if (current->isFosterParenting()) {
@@ -3907,7 +3909,7 @@ nsHtml5TreeBuilder::appendToCurrentNodeAndPushFormattingElementMayFoster(nsHtml5
   } else {
     appendElement(elt, current->node);
   }
-  nsHtml5StackNode* node = new nsHtml5StackNode(elementName, elt, attributes->cloneAttributes(nullptr));
+  nsHtml5StackNode* node = new nsHtml5StackNode(elementName, elt, clone);
   push(node);
   append(node);
   node->retain();
@@ -3945,6 +3947,10 @@ void
 nsHtml5TreeBuilder::appendToCurrentNodeAndPushElementMayFosterMathML(nsHtml5ElementName* elementName, nsHtml5HtmlAttributes* attributes)
 {
   nsIAtom* popName = elementName->name;
+  bool markAsHtmlIntegrationPoint = false;
+  if (nsHtml5ElementName::ELT_ANNOTATION_XML == elementName && annotationXmlEncodingPermitsHtml(attributes)) {
+    markAsHtmlIntegrationPoint = true;
+  }
   nsIContentHandle* elt = createElement(kNameSpaceID_MathML, popName, attributes);
   nsHtml5StackNode* current = stack[currentPtr];
   if (current->isFosterParenting()) {
@@ -3952,10 +3958,6 @@ nsHtml5TreeBuilder::appendToCurrentNodeAndPushElementMayFosterMathML(nsHtml5Elem
     insertIntoFosterParent(elt);
   } else {
     appendElement(elt, current->node);
-  }
-  bool markAsHtmlIntegrationPoint = false;
-  if (nsHtml5ElementName::ELT_ANNOTATION_XML == elementName && annotationXmlEncodingPermitsHtml(attributes)) {
-    markAsHtmlIntegrationPoint = true;
   }
   nsHtml5StackNode* node = new nsHtml5StackNode(elementName, elt, popName, markAsHtmlIntegrationPoint);
   push(node);

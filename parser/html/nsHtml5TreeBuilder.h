@@ -55,6 +55,7 @@
 #include "nsHtml5ViewSourceUtils.h"
 #include "mozilla/Likely.h"
 #include "nsIContentHandle.h"
+#include "nsHtml5OplessBuilder.h"
 
 class nsHtml5StreamParser;
 
