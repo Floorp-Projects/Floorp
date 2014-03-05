@@ -88,6 +88,100 @@ class nsHtml5TreeOperationStringPair {
 class nsHtml5TreeOperation {
 
   public:
+    /**
+     * Atom is used inside the parser core are either static atoms that are
+     * the same as Gecko-wide static atoms or they are dynamic atoms scoped by
+     * both thread and parser to a particular nsHtml5AtomTable. In order to
+     * such scoped atoms coming into contact with the rest of Gecko, atoms
+     * that are about to exit the parser must go through this method which
+     * reobtains dynamic atoms from the Gecko-global atom table.
+     *
+     * @param aAtom a potentially parser-scoped atom
+     * @return an nsIAtom that's pointer comparable on the main thread with
+     *         other not-parser atoms.
+     */
+    static inline already_AddRefed<nsIAtom> Reget(nsIAtom* aAtom)
+    {
+      if (!aAtom || aAtom->IsStaticAtom()) {
+        return dont_AddRef(aAtom);
+      }
+      nsAutoString str;
+      aAtom->ToString(str);
+      return do_GetAtom(str);
+    }
+
+    static nsresult AppendTextToTextNode(const char16_t* aBuffer,
+                                         uint32_t aLength,
+                                         nsIContent* aTextNode,
+                                         nsHtml5TreeOpExecutor* aBuilder);
+
+    static nsresult AppendText(const char16_t* aBuffer,
+                               uint32_t aLength,
+                               nsIContent* aParent,
+                               nsHtml5TreeOpExecutor* aBuilder);
+
+    static nsresult Append(nsIContent* aNode,
+                           nsIContent* aParent,
+                           nsHtml5TreeOpExecutor* aBuilder);
+
+    static nsresult AppendToDocument(nsIContent* aNode,
+                                     nsHtml5TreeOpExecutor* aBuilder);
+
+    static void Detach(nsIContent* aNode, nsHtml5TreeOpExecutor* aBuilder);
+
+    static nsresult AppendChildrenToNewParent(nsIContent* aNode,
+                                              nsIContent* aParent,
+                                              nsHtml5TreeOpExecutor* aBuilder);
+
+    static nsresult FosterParent(nsIContent* aNode,
+                                 nsIContent* aParent,
+                                 nsIContent* aTable,
+                                 nsHtml5TreeOpExecutor* aBuilder);
+
+    static nsresult AddAttributes(nsIContent* aNode,
+                                  nsHtml5HtmlAttributes* aAttributes,
+                                  nsHtml5TreeOpExecutor* aBuilder);
+
+    static nsIContent* CreateElement(int32_t aNs,
+                                     nsIAtom* aName,
+                                     nsHtml5HtmlAttributes* aAttributes,
+                                     bool aFromNetwork,
+                                     nsHtml5TreeOpExecutor* aBuilder);
+
+    static void SetFormElement(nsIContent* aNode, nsIContent* aParent);
+
+    static nsresult AppendIsindexPrompt(nsIContent* parent,
+                                        nsHtml5TreeOpExecutor* aBuilder);
+
+    static nsresult FosterParentText(nsIContent* aStackParent,
+                                     char16_t* aBuffer,
+                                     uint32_t aLength,
+                                     nsIContent* aTable,
+                                     nsHtml5TreeOpExecutor* aBuilder);
+
+    static nsresult AppendComment(nsIContent* aParent,
+                                  char16_t* aBuffer,
+                                  int32_t aLength,
+                                  nsHtml5TreeOpExecutor* aBuilder);
+
+    static nsresult AppendCommentToDocument(char16_t* aBuffer,
+                                           int32_t aLength,
+                                           nsHtml5TreeOpExecutor* aBuilder);
+
+    static nsresult AppendDoctypeToDocument(nsIAtom* aName,
+                                            const nsAString& aPublicId,
+                                            const nsAString& aSystemId,
+                                            nsHtml5TreeOpExecutor* aBuilder);
+
+    static nsIContent* GetDocumentFragmentForTemplate(nsIContent* aNode);
+
+    static void PreventScriptExecution(nsIContent* aNode);
+
+    static void DoneAddingChildren(nsIContent* aNode,
+                                   nsHtml5TreeOpExecutor* aBuilder);
+
+    static void DoneCreatingElement(nsIContent* aNode);
+
     nsHtml5TreeOperation();
 
     ~nsHtml5TreeOperation();
@@ -349,34 +443,7 @@ class nsHtml5TreeOperation {
 
     nsresult Perform(nsHtml5TreeOpExecutor* aBuilder, nsIContent** aScriptElement);
 
-    inline already_AddRefed<nsIAtom> Reget(nsIAtom* aAtom) {
-      if (!aAtom || aAtom->IsStaticAtom()) {
-        return dont_AddRef(aAtom);
-      }
-      nsAutoString str;
-      aAtom->ToString(str);
-      return do_GetAtom(str);
-    }
-
   private:
-
-    nsresult AppendTextToTextNode(const char16_t* aBuffer,
-                                  uint32_t aLength,
-                                  nsIContent* aTextNode,
-                                  nsHtml5TreeOpExecutor* aBuilder);
-
-    nsresult AppendText(const char16_t* aBuffer,
-                        uint32_t aLength,
-                        nsIContent* aParent,
-                        nsHtml5TreeOpExecutor* aBuilder);
-
-    nsresult Append(nsIContent* aNode,
-                    nsIContent* aParent,
-                    nsHtml5TreeOpExecutor* aBuilder);
-
-    nsresult AppendToDocument(nsIContent* aNode,
-                              nsHtml5TreeOpExecutor* aBuilder);
-  
     // possible optimization:
     // Make the queue take items the size of pointer and make the op code
     // decide how many operands it dequeues after it.
