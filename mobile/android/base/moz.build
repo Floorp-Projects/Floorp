@@ -10,6 +10,13 @@ include('android-services.mozbuild')
 
 thirdparty_source_dir = TOPSRCDIR + '/mobile/android/thirdparty/'
 
+resjar = add_java_jar('gecko-R')
+resjar.sources = []
+resjar.generated_sources += [
+    'org/mozilla/gecko/R.java',
+]
+resjar.javac_flags += ['-Xlint:all']
+
 mgjar = add_java_jar('gecko-mozglue')
 mgjar.sources += [
     'mozglue/ByteBufferInputStream.java',
@@ -80,6 +87,7 @@ if CONFIG['MOZ_WEBRTC']:
         audio_root + 'WebRTCAudioDevice.java',
     ]
     wrjar.extra_jars = [
+        'gecko-R.jar',
         'gecko-browser.jar',
         'gecko-util.jar',
         'gecko-mozglue.jar',
@@ -398,7 +406,6 @@ gbjar.generated_sources += [ android_package_dir + f for f in [
 ] ]
 gbjar.generated_sources += [
     'org/mozilla/gecko/AppConstants.java',
-    'org/mozilla/gecko/R.java',
     'org/mozilla/gecko/SysInfo.java',
     'org/mozilla/gecko/widget/GeckoEditText.java',
     'org/mozilla/gecko/widget/GeckoImageButton.java',
@@ -415,6 +422,7 @@ if CONFIG['MOZ_CRASHREPORTER']:
 gbjar.sources += sync_java_files
 gbjar.generated_sources += sync_generated_java_files
 gbjar.extra_jars = [
+    'gecko-R.jar',
     'gecko-mozglue.jar',
     'gecko-util.jar',
     'squareup-picasso.jar',
