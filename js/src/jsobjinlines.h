@@ -353,6 +353,33 @@ JSObject::ensureDenseElementsPreservePackedFlag(js::ThreadSafeContext *cx, uint3
     return ensureDenseElementsNoPackedCheck(cx, index, extra);
 }
 
+inline js::Value
+JSObject::getDenseOrTypedArrayElement(uint32_t idx)
+{
+    if (is<js::TypedArrayObject>())
+        return as<js::TypedArrayObject>().getElement(idx);
+    return getDenseElement(idx);
+}
+
+inline bool
+JSObject::setDenseOrTypedArrayElementIfHasType(js::ThreadSafeContext *cx, uint32_t index,
+                                               const js::Value &val)
+{
+    if (is<js::TypedArrayObject>())
+        return as<js::TypedArrayObject>().setElement(cx, index, val);
+    return setDenseElementIfHasType(index, val);
+}
+
+inline bool
+JSObject::setDenseOrTypedArrayElementWithType(js::ExclusiveContext *cx, uint32_t index,
+                                              const js::Value &val)
+{
+    if (is<js::TypedArrayObject>())
+        return as<js::TypedArrayObject>().setElement(cx, index, val);
+    setDenseElementWithType(cx, index, val);
+    return true;
+}
+
 /* static */ inline bool
 JSObject::setSingletonType(js::ExclusiveContext *cx, js::HandleObject obj)
 {

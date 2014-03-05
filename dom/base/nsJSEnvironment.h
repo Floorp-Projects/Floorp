@@ -110,10 +110,8 @@ public:
   static void CycleCollectNow(nsICycleCollectorListener *aListener = nullptr,
                               int32_t aExtraForgetSkippableCalls = 0);
 
-  // If aSliceTime is negative, the CC will run to completion.  If aSliceTime
-  // is 0, only a minimum quantum of work will be done.  Otherwise, aSliceTime
-  // will be used as the time budget for the slice, in ms.
-  static void RunCycleCollectorSlice(int64_t aSliceTime);
+  // Run a cycle collector slice, using a heuristic to decide how long to run it.
+  static void RunCycleCollectorSlice();
 
   static void BeginCycleCollectionCallback();
   static void EndCycleCollectionCallback(mozilla::CycleCollectorResults &aResults);

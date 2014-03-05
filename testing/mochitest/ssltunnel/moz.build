@@ -9,3 +9,7 @@ PROGRAM = 'ssltunnel'
 SOURCES += [
     'ssltunnel.cpp',
 ]
+
+# This isn't XPCOM code, but it wants to use STL, so disable the STL
+# wrappers
+DISABLE_STL_WRAPPING = True

@@ -18,34 +18,34 @@ namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(MessageEvent)
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(MessageEvent, nsDOMEvent)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(MessageEvent, Event)
   tmp->mData = JSVAL_VOID;
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindowSource)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPortSource)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPorts)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(MessageEvent, nsDOMEvent)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(MessageEvent, Event)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindowSource)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPortSource)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPorts)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(MessageEvent, nsDOMEvent)
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(MessageEvent, Event)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JSVAL_MEMBER_CALLBACK(mData)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(MessageEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMessageEvent)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
+NS_INTERFACE_MAP_END_INHERITING(Event)
 
-NS_IMPL_ADDREF_INHERITED(MessageEvent, nsDOMEvent)
-NS_IMPL_RELEASE_INHERITED(MessageEvent, nsDOMEvent)
+NS_IMPL_ADDREF_INHERITED(MessageEvent, Event)
+NS_IMPL_RELEASE_INHERITED(MessageEvent, Event)
 
 MessageEvent::MessageEvent(EventTarget* aOwner,
                            nsPresContext* aPresContext,
                            WidgetEvent* aEvent)
-  : nsDOMEvent(aOwner, aPresContext, aEvent)
+  : Event(aOwner, aPresContext, aEvent)
   , mData(JSVAL_VOID)
 {
 }
@@ -156,8 +156,7 @@ MessageEvent::Constructor(const GlobalObject& aGlobal,
       ports.AppendElement(aParam.mPorts.Value().Value()[i].get());
     }
 
-    event->mPorts = new MessagePortList(static_cast<nsDOMEventBase*>(event),
-                                        ports);
+    event->mPorts = new MessagePortList(static_cast<EventBase*>(event), ports);
   }
 
   return event.forget();
@@ -172,7 +171,7 @@ MessageEvent::InitMessageEvent(const nsAString& aType,
                                const nsAString& aLastEventId,
                                nsIDOMWindow* aSource)
 {
-  nsresult rv = nsDOMEvent::InitEvent(aType, aCanBubble, aCancelable);
+  nsresult rv = Event::InitEvent(aType, aCanBubble, aCancelable);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mData = aData;

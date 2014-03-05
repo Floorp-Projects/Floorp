@@ -31,3 +31,5 @@ else:
     #
     # Set it to 256k.  See bug 127069.
     LDFLAGS += ['/HEAP:0x40000']
+
+DISABLE_STL_WRAPPING = True

@@ -38,8 +38,11 @@ i.addEventListener("load", function loadfunc() {
   i.removeEventListener("load", loadfunc);
   i.src = "about:blank";
   SimpleTest.executeSoon(function() {
-    ok(destroyran, "OnDestroy callback ran and did not crash");
-    SimpleTest.finish();
+    // Ensure this event doesn't race with CheckPluginStopEvent
+    SimpleTest.executeSoon(function() {
+      ok(destroyran, "OnDestroy callback ran and did not crash");
+      SimpleTest.finish();
+    });
   });
 });
 document.body.appendChild(i);

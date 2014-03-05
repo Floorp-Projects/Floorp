@@ -8,8 +8,6 @@ PREF_JS_EXPORTS = $(srcdir)/mobile.js
 
 ifndef LIBXUL_SDK
 ifneq (Android,$(OS_TARGET))
-STL_FLAGS=
-
 LIBS += \
   $(XPCOM_STANDALONE_GLUE_LDOPTS) \
   $(NULL)

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<style type="text/css">
+.separator {
+ height: 20px;
+ background-color: green;
+}
+#min-height {
+ margin-top: 30px;
+ margin-bottom: 40px;
+ background-color: blue;
+}
+#zero-height {
+ margin-top: 20px;
+ margin-bottom: 60px;
+}
+</style>
+<script type="text/javascript">
+function test() {
+ document.getElementById('min-height').style.minHeight = '20px';
+ document.documentElement.removeAttribute('class');
+}
+document.addEventListener('MozReftestInvalidate', test, false);
+</script>
+</head>
+<body>
+<div class="separator"></div>
+<div id="min-height">
+ <div id="zero-height"></div>
+</div>
+<div class="separator"></div>
+</body>
+</html>

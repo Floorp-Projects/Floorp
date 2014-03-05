@@ -141,7 +141,7 @@ public:
       return NS_OK;
     }
 
-    nsRefPtr<nsDOMEvent> event =
+    nsRefPtr<Event> event =
       IDBVersionChangeEvent::Create(mDatabase, mOldVersion, mNewVersion);
     MOZ_ASSERT(event);
 

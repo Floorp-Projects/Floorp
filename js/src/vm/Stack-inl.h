@@ -134,10 +134,11 @@ StackFrame::unaliasedActual(unsigned i, MaybeCheckAliasing checkAliasing)
 
 template <class Op>
 inline void
-StackFrame::forEachUnaliasedActual(Op op)
+StackFrame::unaliasedForEachActual(Op op)
 {
-    JS_ASSERT(!script()->funHasAnyAliasedFormal());
-    JS_ASSERT(!script()->needsArgsObj());
+    // Don't assert !script()->funHasAnyAliasedFormal() since this function is
+    // called from ArgumentsObject::createUnexpected() which can access aliased
+    // slots.
 
     const Value *argsEnd = argv() + numActualArgs();
     for (const Value *p = argv(); p < argsEnd; ++p)
@@ -325,17 +326,28 @@ InterpreterStack::popInlineFrame(FrameRegs &regs)
 
 template <class Op>
 inline void
-ScriptFrameIter::ionForEachCanonicalActualArg(JSContext *cx, Op op)
+ScriptFrameIter::unaliasedForEachActual(JSContext *cx, Op op)
 {
-    JS_ASSERT(isJit());
+    switch (data_.state_) {
+      case DONE:
+        break;
+      case SCRIPTED:
+        interpFrame()->unaliasedForEachActual(op);
+        return;
+      case JIT:
 #ifdef JS_ION
-    if (data_.ionFrames_.isOptimizedJS()) {
-        ionInlineFrames_.forEachCanonicalActualArg(cx, op, jit::ReadFrame_Actuals);
-    } else {
-        JS_ASSERT(data_.ionFrames_.isBaselineJS());
-        data_.ionFrames_.forEachCanonicalActualArg(op, jit::ReadFrame_Actuals);
-    }
+        if (data_.ionFrames_.isOptimizedJS()) {
+            ionInlineFrames_.unaliasedForEachActual(cx, op, jit::ReadFrame_Actuals);
+        } else {
+            JS_ASSERT(data_.ionFrames_.isBaselineJS());
+            data_.ionFrames_.unaliasedForEachActual(op, jit::ReadFrame_Actuals);
+        }
+        return;
+#else
+        break;
 #endif
+    }
+    MOZ_ASSUME_UNREACHABLE("Unexpected state");
 }
 
 inline void *

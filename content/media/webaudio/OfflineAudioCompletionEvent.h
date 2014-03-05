@@ -7,15 +7,15 @@
 #ifndef OfflineAudioCompletionEvent_h_
 #define OfflineAudioCompletionEvent_h_
 
-#include "nsDOMEvent.h"
 #include "AudioBuffer.h"
+#include "mozilla/dom/Event.h"
 
 namespace mozilla {
 namespace dom {
 
 class AudioContext;
 
-class OfflineAudioCompletionEvent : public nsDOMEvent
+class OfflineAudioCompletionEvent : public Event
 {
 public:
   OfflineAudioCompletionEvent(AudioContext* aOwner,
@@ -23,8 +23,8 @@ public:
                               WidgetEvent* aEvent);
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_FORWARD_TO_NSDOMEVENT
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(OfflineAudioCompletionEvent, nsDOMEvent)
+  NS_FORWARD_TO_EVENT
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(OfflineAudioCompletionEvent, Event)
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;

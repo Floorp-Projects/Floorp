@@ -514,12 +514,47 @@ fails == block-max-height-last-child-9a-dyn.html block-max-height-last-child-9-r
 == block-no-content-1a.html block-no-content-1-ref.html
 == block-no-content-1b.html block-no-content-1-ref.html
 == block-no-content-1c.html block-no-content-1-ref.html
+== block-no-content-1d.html block-no-content-1-ref.html
 == block-no-content-2a.html block-no-content-2-ref.html
 == block-no-content-2b.html block-no-content-2-ref.html
 == block-no-content-2c.html block-no-content-2-ref.html
 == block-no-content-2d.html block-no-content-2-ref.html
-== block-no-content-3.html block-no-content-3-ref.html
-== block-no-content-4.html block-no-content-4-ref.html
+== block-no-content-2e.html block-no-content-2-ref.html
+== block-no-content-3a.html block-no-content-3-ref.html
+== block-no-content-3b.html block-no-content-3-ref.html
+== block-no-content-3c.html block-no-content-3-ref.html
+== block-no-content-4a.html block-no-content-4-ref.html
+== block-no-content-4b.html block-no-content-4-ref.html
+== block-no-content-4c.html block-no-content-4-ref.html
+== block-no-content-5a.html block-no-content-5-ref.html
+== block-no-content-5b.html block-no-content-5-ref.html
+== block-no-content-6.html block-no-content-6-ref.html
+== block-no-content-7.html block-no-content-7-ref.html
+# "If the top margin of a box with non-zero computed 'min-height' and 'auto'
+#  computed 'height' collapses with the bottom margin of its last in-flow
+#  child, then the child's bottom margin does not collapse with the parent's
+#  bottom margin."
+== block-no-content-8.html block-no-content-8-ref.html
+== block-no-content-1a-dyn.html block-no-content-1-ref.html
+== block-no-content-1b-dyn.html block-no-content-1-ref.html
+== block-no-content-1c-dyn.html block-no-content-1-ref.html
+== block-no-content-1d-dyn.html block-no-content-1-ref.html
+== block-no-content-2a-dyn.html block-no-content-2-ref.html
+== block-no-content-2b-dyn.html block-no-content-2-ref.html
+== block-no-content-2c-dyn.html block-no-content-2-ref.html
+== block-no-content-2d-dyn.html block-no-content-2-ref.html
+== block-no-content-2e-dyn.html block-no-content-2-ref.html
+== block-no-content-3a-dyn.html block-no-content-3-ref.html
+== block-no-content-3b-dyn.html block-no-content-3-ref.html
+== block-no-content-3c-dyn.html block-no-content-3-ref.html
+== block-no-content-4a-dyn.html block-no-content-4-ref.html
+== block-no-content-4b-dyn.html block-no-content-4-ref.html
+== block-no-content-4c-dyn.html block-no-content-4-ref.html
+== block-no-content-5a-dyn.html block-no-content-5-ref.html
+== block-no-content-5b-dyn.html block-no-content-5-ref.html
+== block-no-content-6-dyn.html block-no-content-6-ref.html
+== block-no-content-7-dyn.html block-no-content-7-ref.html
+== block-no-content-8-dyn.html block-no-content-8-ref.html
 # These tests are similar to the no-content ones, except that some boxes
 # have height: 0; declared on them.
 == block-zero-height-1a.html block-zero-height-1a-ref.html
@@ -552,6 +587,14 @@ skip-if(B2G) == block-overflow-4.html block-overflow-4-ref2.html
 == block-overflow-5c.html block-overflow-5c-ref2.html
 == block-overflow-5d.html block-overflow-5-ref.html
 == block-overflow-5d.html block-overflow-5-ref2.html
+== block-overflow-1-dyn.html block-overflow-1-ref2.html
+== block-overflow-2-dyn.html block-overflow-2-ref2.html
+skip-if(B2G) == block-overflow-3-dyn.html block-overflow-3-ref2.html # bug 773482
+skip-if(B2G) == block-overflow-4-dyn.html block-overflow-4-ref2.html
+== block-overflow-5a-dyn.html block-overflow-5-ref2.html
+== block-overflow-5b-dyn.html block-overflow-5-ref2.html
+== block-overflow-5c-dyn.html block-overflow-5c-ref2.html
+== block-overflow-5d-dyn.html block-overflow-5-ref2.html
 # * 'fieldset' elements, per HTML5 (Candidate Recommendation 6 August 2013):
 # §10.3.13 (The fieldset and legend elements): "The fieldset element is
 # expected to establish a new block formatting context."
@@ -564,7 +607,14 @@ skip-if(B2G) == block-overflow-4.html block-overflow-4-ref2.html
 == fieldset-sibling-2a.html fieldset-sibling-2-ref2.html
 == fieldset-sibling-2b.html fieldset-sibling-2-ref2.html
 == fieldset-sibling-2c.html fieldset-sibling-2-ref2.html
+== fieldset-sibling-1a-dyn.html fieldset-sibling-1-ref.html
+== fieldset-sibling-1b-dyn.html fieldset-sibling-1-ref.html
+== fieldset-sibling-1c-dyn.html fieldset-sibling-1-ref.html
+== fieldset-sibling-2a-dyn.html fieldset-sibling-2-ref2.html
+== fieldset-sibling-2b-dyn.html fieldset-sibling-2-ref2.html
+== fieldset-sibling-2c-dyn.html fieldset-sibling-2-ref2.html
 == fieldset-child-1.html fieldset-child-1-ref.html
+== fieldset-child-1-dyn.html fieldset-child-1-ref.html
 # * Tables, per CSS 2.1 §17.4 (Tables in the visual formatting model):
 # "The table wrapper box establishes a block formatting context."
 # "The table wrapper box is a 'block' box if the table is block-level [...]"
@@ -602,13 +652,37 @@ skip-if(B2G) == table-sibling-3-dyn.html table-sibling-3-ref.html # bug 773482
 # table-captions, though, if they share the same caption-side.
 == table-caption-1a.html table-caption-1-ref.html
 == table-caption-1b.html table-caption-1-ref.html
+== table-caption-1c.html table-caption-1-ref.html
 == table-caption-2a.html table-caption-2-ref.html
 == table-caption-2b.html table-caption-2-ref.html
 == table-caption-2c.html table-caption-2-ref.html
+== table-caption-1a-dyn.html table-caption-1-ref.html
+== table-caption-1b-dyn.html table-caption-1-ref.html
+== table-caption-1c-dyn.html table-caption-1-ref.html
+== table-caption-2a-dyn.html table-caption-2-ref.html
+== table-caption-2b-dyn.html table-caption-2-ref.html
+== table-caption-2c-dyn.html table-caption-2-ref.html
+# Note: CSS 2.1 suggests that the 'caption-side' values 'top-outside' and
+# 'bottom-outside' will be used in a future CSS Module to restore the
+# CSS 2 definition of 'top' and 'bottom' (which is different from CSS 2.1's).
+# Since Bug #659828 was fixed, 'top-outside' and 'bottom-outside' act as an 
+# alias for the CSS 2.1 values 'top' and 'bottom' respectively.
 == table-caption-top-1.html table-caption-top-1-ref.html
 == table-caption-top-2.html table-caption-top-2-ref.html
+== table-caption-top-outside-1.html table-caption-top-1-ref.html
+== table-caption-top-outside-2.html table-caption-top-1-ref.html
 == table-caption-bottom-1.html table-caption-bottom-1-ref.html
 == table-caption-bottom-2.html table-caption-bottom-2-ref.html
+== table-caption-bottom-outside-1.html table-caption-bottom-1-ref.html
+== table-caption-bottom-outside-2.html table-caption-bottom-1-ref.html
+== table-caption-top-1-dyn.html table-caption-top-1-ref.html
+== table-caption-top-2-dyn.html table-caption-top-1-ref.html
+== table-caption-top-outside-1-dyn.html table-caption-top-1-ref.html
+== table-caption-top-outside-2-dyn.html table-caption-top-2-ref.html
+== table-caption-bottom-1-dyn.html table-caption-bottom-1-ref.html
+== table-caption-bottom-2-dyn.html table-caption-bottom-1-ref.html
+== table-caption-bottom-outside-1-dyn.html table-caption-bottom-1-ref.html
+== table-caption-bottom-outside-2-dyn.html table-caption-bottom-1-ref.html
 fails == caption-sibling-1a.html caption-sibling-1-ref.html # Bug 144517
 != caption-sibling-1a.html caption-sibling-1-noref.html
 fails == caption-sibling-1b.html caption-sibling-1-ref.html # Bug 144517
@@ -623,6 +697,25 @@ fails == caption-sibling-1c-dyn.html caption-sibling-1-ref.html # Bug 144517
 != caption-sibling-1c-dyn.html caption-sibling-1-noref2.html
 fails == caption-sibling-2-dyn.html caption-sibling-2-ref.html # Bug 144517
 != caption-sibling-2-dyn.html caption-sibling-2-noref.html
+== caption-child-1.html caption-child-1-ref.html
+== caption-child-1-dyn.html caption-child-1-ref.html
+# * Multi-column elements, per CSS Multi-column Layout Module
+# (Candidate Recommendation 12 April 2011):
+# "A multi-column element establishes a new block formatting context [...]"
+== column-sibling-1a.html column-sibling-1-ref.html
+== column-sibling-1b.html column-sibling-1-ref.html
+== column-sibling-1c.html column-sibling-1-ref.html
+== column-sibling-1a-dyn.html column-sibling-1-ref.html
+== column-sibling-1b-dyn.html column-sibling-1-ref.html
+== column-sibling-1c-dyn.html column-sibling-1-ref.html
+== column-sibling-2a.html column-sibling-2-ref.html
+== column-sibling-2b.html column-sibling-2-ref.html
+== column-sibling-2c.html column-sibling-2-ref.html
+== column-sibling-2a-dyn.html column-sibling-2-ref.html
+== column-sibling-2b-dyn.html column-sibling-2-ref.html
+== column-sibling-2c-dyn.html column-sibling-2-ref.html
+== column-child-1.html column-child-1-ref.html
+== column-child-1-dyn.html column-child-1-ref.html
 # * inline-block boxes
 # "Margins of inline-block boxes do not collapse
 #  (not even with their in-flow children)."
@@ -631,15 +724,25 @@ fails == caption-sibling-2-dyn.html caption-sibling-2-ref.html # Bug 144517
 == inline-block-sibling-1c.html inline-block-sibling-1-ref.html
 == inline-block-sibling-2.html inline-block-sibling-2-ref.html
 != inline-block-sibling-2.html inline-block-sibling-2-noref.html
+== inline-block-sibling-1a-dyn.html inline-block-sibling-1-ref.html
+== inline-block-sibling-1b-dyn.html inline-block-sibling-1-ref.html
+== inline-block-sibling-1c-dyn.html inline-block-sibling-1-ref.html
+== inline-block-sibling-2-dyn.html inline-block-sibling-2-ref.html
 == inline-block-child-1.html inline-block-child-1-ref.html
 == inline-block-child-2.html inline-block-child-2-ref.html
 != inline-block-child-2.html inline-block-child-2-noref.html
+== inline-block-child-3.html inline-block-child-3-ref.html
+== inline-block-child-1-dyn.html inline-block-child-1-ref.html
+== inline-block-child-2-dyn.html inline-block-child-2-ref.html
+== inline-block-child-3-dyn.html inline-block-child-3-ref.html
 # * absolutely positioned elements
 # "Margins of absolutely positioned boxes do not collapse
 #  (not even with their in-flow children)."
 == block-abs-pos-1.html block-abs-pos-1-ref.html
 == block-abs-pos-2.html block-abs-pos-2-ref.html
 == block-abs-pos-2.html block-abs-pos-2-ref2.html
+== block-abs-pos-1-dyn.html block-abs-pos-1-ref.html
+== block-abs-pos-2-dyn.html block-abs-pos-2-ref2.html
 # * Floats
 # "Margins between a floated box and any other box do not collapse
 #  (not even between a float and its in-flow children)."
@@ -653,6 +756,14 @@ fails == caption-sibling-2-dyn.html caption-sibling-2-ref.html # Bug 144517
 != block-float-2a.html block-float-2a-noref.html
 == block-float-2b.html block-float-2b-ref.html
 != block-float-2b.html block-float-2b-noref.html
+== block-float-3a.html block-float-3a-ref.html
+== block-float-3b.html block-float-3b-ref.html
+== block-float-1a-dyn.html block-float-1a-ref.html
+== block-float-1b-dyn.html block-float-1b-ref.html
+== block-float-2a-dyn.html block-float-2a-ref.html
+== block-float-2b-dyn.html block-float-2b-ref.html
+== block-float-3a-dyn.html block-float-3a-ref.html
+== block-float-3b-dyn.html block-float-3b-ref.html
 # Tests for various cases where clearance is applied and collapsing is
 # prevented or only allows for certain margins.
 fails == block-clear-1a.html block-clear-1a-ref.html # Bug 451791
@@ -740,8 +851,14 @@ fails == block-clear-7g-left.html block-clear-7efgh-left-ref2.html # Bug 493380
 == block-html-body-1.html block-html-body-1-ref.html
 == block-html-body-1.html block-html-body-1-ref2.html
 != block-html-body-1.html block-html-body-1-noref.html
-# Other tests.
+# Some basic tests for margins given in percent and em.
 == block-percent-1.html block-percent-1-ref.html
+== block-percent-1-dyn.html block-percent-1-ref.html
+== block-percent-2.html block-percent-2-ref.html
+== block-percent-2-dyn.html block-percent-2-ref.html
+== block-em-length-1.html block-em-length-1-ref.html
+== block-em-length-1-dyn.html block-em-length-1-ref.html
+# Other tests.
 == dynamic-add-text-1.html dynamic-add-text-1-ref.html # Bug 467321
 == scrollable-vertical-margin.html scrollable-vertical-margin-ref.html
 == scrollable-horizontal-margin.html scrollable-horizontal-margin-ref.html

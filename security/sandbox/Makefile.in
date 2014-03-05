@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ifeq ($(OS_ARCH),WINNT)
-STL_FLAGS =
 MOZ_GLUE_LDFLAGS =
 endif
 

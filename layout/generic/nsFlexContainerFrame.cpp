@@ -1053,8 +1053,10 @@ FlexItem::FlexItem(nsIFrame* aChildFrame,
     mAlignSelf(aChildFrame->StylePosition()->mAlignSelf)
 {
   MOZ_ASSERT(mFrame, "expecting a non-null child frame");
-  MOZ_ASSERT(!mFrame->IsAbsolutelyPositioned(),
-             "abspos child frames should not be treated as flex items");
+  MOZ_ASSERT(mFrame->GetType() != nsGkAtoms::placeholderFrame,
+             "placeholder frames should not be treated as flex items");
+  MOZ_ASSERT(!(mFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW),
+             "out-of-flow frames should not be treated as flex items");
 
   SetFlexBaseSizeAndMainSize(aFlexBaseSize);
 
@@ -1126,8 +1128,10 @@ FlexItem::FlexItem(nsIFrame* aChildFrame, nscoord aCrossSize)
   MOZ_ASSERT(NS_STYLE_VISIBILITY_COLLAPSE ==
              mFrame->StyleVisibility()->mVisible,
              "Should only make struts for children with 'visibility:collapse'");
-  MOZ_ASSERT(!mFrame->IsAbsolutelyPositioned(),
-             "abspos child frames should not be treated as flex items");
+  MOZ_ASSERT(mFrame->GetType() != nsGkAtoms::placeholderFrame,
+             "placeholder frames should not be treated as flex items");
+  MOZ_ASSERT(!(mFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW),
+             "out-of-flow frames should not be treated as flex items");
 }
 
 nscoord

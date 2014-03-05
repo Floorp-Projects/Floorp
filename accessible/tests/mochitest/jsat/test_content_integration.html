@@ -125,10 +125,10 @@
             // Move cursor with focus in outside document
             [simpleMoveNext,
             { speak: 'Phone status bar Traversal Rule test document' }],
-            [ focusFunc('button', false), { speak: 'Home button' }],
+            [ focusFunc('button#home', false), { speak: 'Home button' }],
 
             // Blur button and reset cursor
-            [focusFunc('button', true), null],
+            [focusFunc('button#home', true), null],
             [clearCursor, null],
 
             // Set focus on element outside of embedded frame while cursor is in frame
@@ -136,12 +136,53 @@
             { speak: 'Phone status bar Traversal Rule test document' }],
             [simpleMoveNext,
              { speak: 'wow heading level 1 such app' }],
-            [focusFunc('button', false), { speak: 'Home button' }]
+            [focusFunc('button#home', false), { speak: 'Home button' }]
+
+            // Blur button and reset cursor
+            [focusFunc('button#home', true), null],
+            [clearCursor, null],
 
             // XXX: Set focus on iframe itself.
             // XXX: Set focus on element in iframe when cursor is outside of it.
             // XXX: Set focus on element in iframe when cursor is in iframe.
-        ]);
+
+            // Open dialog in outer doc, while cursor is also in outer doc
+            [simpleMoveNext,
+            { speak: 'Phone status bar Traversal Rule test document' }],
+            [doc.defaultView.showAlert,
+            { speak: 'This is an alert! heading level 1 dialog' }],
+
+            [function () { doc.defaultView.hideAlert() },
+            { speak: 'wow heading level 1 such app' }],
+
+            [clearCursor, null],
+
+            // Open dialog in outer doc, while cursor is in inner frame
+            [simpleMoveNext,
+            { speak: 'Phone status bar Traversal Rule test document' }],
+            [simpleMoveNext,
+            { speak: 'wow heading level 1 such app' }],
+            [doc.defaultView.showAlert,
+            { speak: 'This is an alert! heading level 1 dialog' }],
+
+            // XXX: Place cursor back where it was.
+            [doc.defaultView.hideAlert,
+            { speak: 'many option not checked check button such app' }],
+
+            [clearCursor, null],
+
+            // Open dialog, then focus on something when closing
+            [simpleMoveNext,
+            { speak: 'Phone status bar Traversal Rule test document' }],
+            [doc.defaultView.showAlert,
+            { speak: 'This is an alert! heading level 1 dialog' }],
+
+            [function () {
+		doc.defaultView.hideAlert();
+		doc.querySelector('button#home').focus();
+	     },
+	    { speak: 'Home button Traversal Rule test document' }]
+	  ]);
 
         contentTest.start(function () {
           closeBrowserWindow();
@@ -150,7 +191,7 @@
 
       });
       iframe.src = 'data:text/html;charset=utf-8,' + doc.defaultView.frameContents;
-      doc.querySelector('#windows').appendChild(iframe);
+      doc.getElementById('appframe').appendChild(iframe);
     }
 
     SimpleTest.waitForExplicitFinish();

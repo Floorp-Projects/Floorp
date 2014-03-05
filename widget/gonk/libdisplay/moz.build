@@ -43,3 +43,5 @@ include('/ipc/chromium/chromium-config.mozbuild')
 FORCE_STATIC_LIB = True
 
 DEFINES['XPCOM_GLUE'] = True
+
+DISABLE_STL_WRAPPING = True

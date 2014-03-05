@@ -255,20 +255,29 @@ public:
    * *aFinished is set to false by the caller. If the callee sets it to true,
    * we'll finish the stream and not call this again.
    */
-  virtual void ProduceAudioBlock(AudioNodeStream* aStream,
-                                 const AudioChunk& aInput,
-                                 AudioChunk* aOutput,
-                                 bool* aFinished)
+  virtual void ProcessBlock(AudioNodeStream* aStream,
+                            const AudioChunk& aInput,
+                            AudioChunk* aOutput,
+                            bool* aFinished)
   {
     MOZ_ASSERT(mInputCount <= 1 && mOutputCount <= 1);
     *aOutput = aInput;
+  }
+  /**
+   * Produce the next block of audio samples, before input is provided.
+   * ProcessBlock() will be called later, and it then should not change
+   * aOutput.  This is used only for DelayNodeEngine in a feedback loop.
+   */
+  virtual void ProduceBlockBeforeInput(AudioChunk* aOutput)
+  {
+    NS_NOTREACHED("ProduceBlockBeforeInput called on wrong engine\n");
   }
 
   /**
    * Produce the next block of audio samples, given input samples in the aInput
    * array.  There is one input sample per active port in aInput, in order.
-   * This is the multi-input/output version of ProduceAudioBlock.  Only one kind
-   * of ProduceAudioBlock is called on each node, depending on whether the
+   * This is the multi-input/output version of ProcessBlock.  Only one kind
+   * of ProcessBlock is called on each node, depending on whether the
    * number of inputs and outputs are both 1 or not.
    *
    * aInput is always guaranteed to not contain more input AudioChunks than the
@@ -279,10 +288,10 @@ public:
    * corresponding AudioNode, in which case it will be interpreted as a channel
    * of silence.
    */
-  virtual void ProduceAudioBlocksOnPorts(AudioNodeStream* aStream,
-                                         const OutputChunks& aInput,
-                                         OutputChunks& aOutput,
-                                         bool* aFinished)
+  virtual void ProcessBlocksOnPorts(AudioNodeStream* aStream,
+                                    const OutputChunks& aInput,
+                                    OutputChunks& aOutput,
+                                    bool* aFinished)
   {
     MOZ_ASSERT(mInputCount > 1 || mOutputCount > 1);
     // Only produce one output port, and drop all other input ports.

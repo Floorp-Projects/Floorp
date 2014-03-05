@@ -5,7 +5,6 @@
 include $(topsrcdir)/config/config.mk
 
 DIST_PROGRAM = CommandExecuteHandler$(BIN_SUFFIX)
-RCINCLUDE = CommandExecuteHandler.rc
 
 # Don't link against mozglue.dll
 MOZ_GLUE_LDFLAGS =

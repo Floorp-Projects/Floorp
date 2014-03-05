@@ -26,8 +26,8 @@ namespace dom {
 UIEvent::UIEvent(EventTarget* aOwner,
                  nsPresContext* aPresContext,
                  WidgetGUIEvent* aEvent)
-  : nsDOMEvent(aOwner, aPresContext,
-               aEvent ? aEvent : new InternalUIEvent(false, 0))
+  : Event(aOwner, aPresContext,
+          aEvent ? aEvent : new InternalUIEvent(false, 0))
   , mClientPoint(0, 0)
   , mLayerPoint(0, 0)
   , mPagePoint(0, 0)
@@ -94,15 +94,15 @@ UIEvent::Constructor(const GlobalObject& aGlobal,
   return e.forget();
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_1(UIEvent, nsDOMEvent,
+NS_IMPL_CYCLE_COLLECTION_INHERITED_1(UIEvent, Event,
                                      mView)
 
-NS_IMPL_ADDREF_INHERITED(UIEvent, nsDOMEvent)
-NS_IMPL_RELEASE_INHERITED(UIEvent, nsDOMEvent)
+NS_IMPL_ADDREF_INHERITED(UIEvent, Event)
+NS_IMPL_RELEASE_INHERITED(UIEvent, Event)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(UIEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMUIEvent)
-NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
+NS_INTERFACE_MAP_END_INHERITING(Event)
 
 static nsIntPoint
 DevPixelsToCSSPixels(const LayoutDeviceIntPoint& aPoint,
@@ -162,7 +162,7 @@ UIEvent::InitUIEvent(const nsAString& typeArg,
     nsCOMPtr<nsPIDOMWindow> view = do_QueryInterface(viewArg);
     NS_ENSURE_TRUE(view, NS_ERROR_INVALID_ARG);
   }
-  nsresult rv = nsDOMEvent::InitEvent(typeArg, canBubbleArg, cancelableArg);
+  nsresult rv = Event::InitEvent(typeArg, canBubbleArg, cancelableArg);
   NS_ENSURE_SUCCESS(rv, rv);
   
   mDetail = detailArg;
@@ -186,10 +186,8 @@ UIEvent::PageX() const
     return mPagePoint.x;
   }
 
-  return nsDOMEvent::GetPageCoords(mPresContext,
-                                   mEvent,
-                                   mEvent->refPoint,
-                                   mClientPoint).x;
+  return Event::GetPageCoords(mPresContext, mEvent, mEvent->refPoint,
+                              mClientPoint).x;
 }
 
 NS_IMETHODIMP
@@ -207,10 +205,8 @@ UIEvent::PageY() const
     return mPagePoint.y;
   }
 
-  return nsDOMEvent::GetPageCoords(mPresContext,
-                                   mEvent,
-                                   mEvent->refPoint,
-                                   mClientPoint).y;
+  return Event::GetPageCoords(mPresContext, mEvent, mEvent->refPoint,
+                              mClientPoint).y;
 }
 
 NS_IMETHODIMP
@@ -360,21 +356,17 @@ UIEvent::IsChar() const
 NS_IMETHODIMP
 UIEvent::DuplicatePrivateData()
 {
-  mClientPoint = nsDOMEvent::GetClientCoords(mPresContext,
-                                             mEvent,
-                                             mEvent->refPoint,
-                                             mClientPoint);
+  mClientPoint =
+    Event::GetClientCoords(mPresContext, mEvent, mEvent->refPoint,
+                           mClientPoint);
   mMovementPoint = GetMovementPoint();
   mLayerPoint = GetLayerPoint();
-  mPagePoint = nsDOMEvent::GetPageCoords(mPresContext,
-                                         mEvent,
-                                         mEvent->refPoint,
-                                         mClientPoint);
+  mPagePoint =
+    Event::GetPageCoords(mPresContext, mEvent, mEvent->refPoint, mClientPoint);
   // GetScreenPoint converts mEvent->refPoint to right coordinates.
-  nsIntPoint screenPoint = nsDOMEvent::GetScreenCoords(mPresContext,
-                                                       mEvent,
-                                                       mEvent->refPoint);
-  nsresult rv = nsDOMEvent::DuplicatePrivateData();
+  nsIntPoint screenPoint =
+    Event::GetScreenCoords(mPresContext, mEvent, mEvent->refPoint);
+  nsresult rv = Event::DuplicatePrivateData();
   if (NS_SUCCEEDED(rv)) {
     mEvent->refPoint = LayoutDeviceIntPoint::FromUntyped(screenPoint);
   }
@@ -388,7 +380,7 @@ UIEvent::Serialize(IPC::Message* aMsg, bool aSerializeInterfaceType)
     IPC::WriteParam(aMsg, NS_LITERAL_STRING("uievent"));
   }
 
-  nsDOMEvent::Serialize(aMsg, false);
+  Event::Serialize(aMsg, false);
 
   int32_t detail = 0;
   GetDetail(&detail);
@@ -398,7 +390,7 @@ UIEvent::Serialize(IPC::Message* aMsg, bool aSerializeInterfaceType)
 NS_IMETHODIMP_(bool)
 UIEvent::Deserialize(const IPC::Message* aMsg, void** aIter)
 {
-  NS_ENSURE_TRUE(nsDOMEvent::Deserialize(aMsg, aIter), false);
+  NS_ENSURE_TRUE(Event::Deserialize(aMsg, aIter), false);
   NS_ENSURE_TRUE(IPC::ReadParam(aMsg, aIter, &mDetail), false);
   return true;
 }

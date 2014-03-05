@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<style type="text/css">
+div {
+ height: 20px; width: 100%;
+ background-color: blue;
+ vertical-align: bottom;
+}
+#block1 {
+ margin-bottom: 15px;
+}
+#inline-block1 {
+ margin: 25px 0 25px;
+}
+#inline-block2 {
+ margin: 15px 0 15px;
+}
+#block2 {
+ margin-top: 25px;
+}
+</style>
+<script type="text/javascript">
+function test() {
+ document.getElementById('inline-block1').style.display = 'inline-block';
+ document.getElementById('inline-block2').style.display = 'inline-block';
+ document.documentElement.removeAttribute('class');
+}
+document.addEventListener('MozReftestInvalidate', test, false);
+</script>
+</head>
+<body>
+<div id="block1"></div>
+<div id="inline-block1"></div>
+<div id="inline-block2"></div>
+<div id="block2"></div>
+</body>
+</html>

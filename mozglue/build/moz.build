@@ -32,6 +32,7 @@ if CONFIG['OS_TARGET'] == 'WINNT':
         'WindowsDllBlocklist.cpp',
     ]
     DEFFILE = 'mozglue.def'
+    DISABLE_STL_WRAPPING = True
 
 if CONFIG['MOZ_NUWA_PROCESS']:
     EXPORTS.ipc += [

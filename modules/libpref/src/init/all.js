@@ -3974,6 +3974,9 @@ pref("layers.offmainthreadcomposition.force-basic", false);
 // Whether to animate simple opacity and transforms on the compositor
 pref("layers.offmainthreadcomposition.async-animations", false);
 
+// Whether to log information about off main thread animations to stderr
+pref("layers.offmainthreadcomposition.log-animations", false);
+
 pref("layers.bufferrotation.enabled", true);
 
 pref("layers.componentalpha.enabled", true);

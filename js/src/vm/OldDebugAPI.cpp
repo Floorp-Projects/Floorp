@@ -318,7 +318,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj_, jsid id_,
             return false;
     }
 
-    if (!obj->isNative()) {
+    if (!obj->isNative() || obj->is<TypedArrayObject>()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_WATCH,
                              obj->getClass()->name);
         return false;
