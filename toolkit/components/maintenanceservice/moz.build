@@ -34,3 +34,5 @@ if CONFIG['_MSC_VER']:
     WIN32_EXE_LDFLAGS += ['-ENTRY:wmainCRTStartup']
 
 RCINCLUDE = 'maintenanceservice.rc'
+
+DISABLE_STL_WRAPPING = True

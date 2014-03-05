@@ -44,6 +44,7 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
         'automounter_gonk.cpp',
         'progressui_gonk.cpp',
     ]
+    DISABLE_STL_WRAPPING = True
 
 if have_progressui == 0:
     SOURCES += [

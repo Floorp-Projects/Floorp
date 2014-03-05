@@ -3,10 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# Don't use the STL wrappers in the crashreporter clients; they don't
-# link with -lmozalloc, and it really doesn't matter here anyway.
-STL_FLAGS =
-
 ifneq ($(OS_TARGET),Android)
 DIST_PROGRAM = crashreporter$(BIN_SUFFIX)
 
