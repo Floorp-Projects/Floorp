@@ -48,7 +48,7 @@ else
 fi
 
 # Create a virtualenv:
-curl https://raw.github.com/jonallengriffin/virtualenv/msys/virtualenv.py | ${PYTHON} - ${TARGET}
+curl https://raw.github.com/pypa/virtualenv/1.9.1/virtualenv.py | ${PYTHON} - ${TARGET}
 cd ${TARGET}
 . $BIN_NAME
 if [ -z "${VIRTUAL_ENV}" ]
