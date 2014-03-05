@@ -1497,6 +1497,37 @@ is(cs.marginRight, "75px", "animation-name list length is the length that matter
 is(cs.marginTop, "25px", "animation-name list length is the length that matters");
 done_div();
 
+var dyn_sheet_elt = document.createElement("style");
+document.head.appendChild(dyn_sheet_elt);
+var dyn_sheet = dyn_sheet_elt.sheet;
+dyn_sheet.insertRule("@keyframes dyn1 { from { margin-left: 0 } 50% { margin-left: 50px } to { margin-left: 100px } }", 0);
+dyn_sheet.insertRule("@keyframes dyn2 { from { margin-left: 100px } to { margin-left: 200px } }", 1);
+var dyn1 = dyn_sheet.cssRules[0];
+var dyn2 = dyn_sheet.cssRules[1];
+new_div("animation: dyn1 1s linear");
+is(cs.marginLeft, "0px", "dynamic rule change test, initial state");
+advance_clock(250);
+is(cs.marginLeft, "25px", "dynamic rule change test, 250ms");
+dyn2.name = "dyn1";
+is(cs.marginLeft, "125px", "dynamic rule change test, change in @keyframes name applies");
+dyn2.appendRule("50% { margin-left: 0px }");
+is(cs.marginLeft, "50px", "dynamic rule change test, @keyframes appendRule");
+var dyn2_kf1 = dyn2.cssRules[0]; // currently 0% { margin-left: 100px }
+dyn2_kf1.style.marginLeft = "-100px";
+// FIXME: Bug 978833 (keyframe rules used as nsIStyleRule but doesn't follow immutability contract)
+todo_is(cs.marginLeft, "-50px", "dynamic rule change test, keyframe style set");
+dyn2.name = "dyn2";
+is(cs.marginLeft, "25px", "dynamic rule change test, change in @keyframes name applies (second time)");
+var dyn1_kf2 = dyn1.cssRules[1]; // currently 50% { margin-left: 50px }
+dyn1_kf2.keyText = "25%";
+is(cs.marginLeft, "50px", "dynamic rule change test, change in keyframe keyText");
+dyn1.deleteRule("25%");
+is(cs.marginLeft, "25px", "dynamic rule change test, @keyframes deleteRule");
+done_div();
+dyn_sheet_elt.parentNode.removeChild(dyn_sheet_elt);
+dyn_sheet_elt = null;
+dyn_sheet = null;
+
 SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
 
 </script>
