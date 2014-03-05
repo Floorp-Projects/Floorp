@@ -826,6 +826,18 @@
 #undef MODULE
 
   /* ======================================================================= */
+  /* 36: NS_ERROR_MODULE_DOM_FILESYSTEM */
+  /* ======================================================================= */
+#define MODULE NS_ERROR_MODULE_DOM_FILESYSTEM
+  ERROR(NS_ERROR_DOM_FILESYSTEM_INVALID_PATH_ERR,          FAILURE(1)),
+  ERROR(NS_ERROR_DOM_FILESYSTEM_INVALID_MODIFICATION_ERR,  FAILURE(2)),
+  ERROR(NS_ERROR_DOM_FILESYSTEM_NO_MODIFICATION_ALLOWED_ERR, FAILURE(3)),
+  ERROR(NS_ERROR_DOM_FILESYSTEM_PATH_EXISTS_ERR,           FAILURE(4)),
+  ERROR(NS_ERROR_DOM_FILESYSTEM_TYPE_MISMATCH_ERR,         FAILURE(5)),
+  ERROR(NS_ERROR_DOM_FILESYSTEM_UNKNOWN_ERR,               FAILURE(6)),
+#undef MODULE
+
+  /* ======================================================================= */
   /* 51: NS_ERROR_MODULE_GENERAL */
   /* ======================================================================= */
 #define MODULE NS_ERROR_MODULE_GENERAL
