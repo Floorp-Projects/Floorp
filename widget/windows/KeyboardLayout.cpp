@@ -1070,6 +1070,13 @@ NativeKey::HandleKeyDownMessage(bool* aEventDispatched) const
 
   MSG followingCharMsg;
   if (GetFollowingCharMessage(followingCharMsg)) {
+    // Even if there was char message, it might be redirected by different
+    // window (perhaps, focus move?).  Then, we shouldn't continue to handle
+    // the message since no input should occur on the window.
+    if (followingCharMsg.message == WM_NULL ||
+        followingCharMsg.hwnd != mMsg.hwnd) {
+      return false;
+    }
     return DispatchKeyPressEventForFollowingCharMessage(followingCharMsg);
   }
 
@@ -1344,41 +1351,55 @@ NativeKey::GetFollowingCharMessage(MSG& aCharMsg) const
   // the message range.  So, if it returns WM_NULL, we should retry to get
   // the following char message it was found above.
   for (uint32_t i = 0; i < 5; i++) {
+    static const LPARAM kScanCodeMask = 0x00FF0000;
+
     MSG removedMsg;
-    if (!WinUtils::PeekMessage(&removedMsg, nextKeyMsg.hwnd,
+    if (!WinUtils::PeekMessage(&removedMsg, mMsg.hwnd,
                                nextKeyMsg.message, nextKeyMsg.message,
                                PM_REMOVE | PM_NOYIELD)) {
+      MSG nextKeyMsgInAllWindows;
+      // The char message is redirected to different thread's window by focus
+      // move or something or just cancelled by external application.
+      if (!WinUtils::PeekMessage(&nextKeyMsgInAllWindows, 0,
+                                 WM_KEYFIRST, WM_KEYLAST,
+                                 PM_NOREMOVE | PM_NOYIELD)) {
+        return true;
+      }
+      // The char message is redirected to different window created by our
+      // thread.
+      if (nextKeyMsgInAllWindows.message == nextKeyMsg.message &&
+          nextKeyMsgInAllWindows.wParam == nextKeyMsg.wParam &&
+          (nextKeyMsgInAllWindows.lParam & ~kScanCodeMask) ==
+            (nextKeyMsg.lParam & ~kScanCodeMask) &&
+          nextKeyMsgInAllWindows.hwnd != mMsg.hwnd) {
+        aCharMsg = nextKeyMsgInAllWindows;
+        return true;
+      }
+      // Otherwise, perhaps, we meet a PeekMessage()'s bug.  Let's crash and
+      // collect the detail.
 #ifdef MOZ_CRASHREPORTER
       nsPrintfCString info("\nHandling message: %s (0x%08X), wParam: 0x%08X, "
                            "lParam: 0x%08X, hwnd=0x%p, InSendMessageEx()=%s, \n"
                            "Found message: %s (0x%08X), wParam: 0x%08X, "
-                           "lParam: 0x%08X, \nWM_NULL has been removed: %d, ",
+                           "lParam: 0x%08X, hwnd=0x%p, "
+                           "\nWM_NULL has been removed: %d, "
+                           "\nNext key message in all windows: %s (0x%08X), "
+                           "wParam: 0x%08X, lParam: 0x%08X, hwnd=0x%p, "
+                           "time=%d, ",
                            GetMessageName(mMsg.message),
                            mMsg.message, mMsg.wParam, mMsg.lParam,
                            nextKeyMsg.hwnd,
                            GetResultOfInSendMessageEx().get(),
                            GetMessageName(nextKeyMsg.message),
                            nextKeyMsg.message, nextKeyMsg.wParam,
-                           nextKeyMsg.lParam, i);
+                           nextKeyMsg.lParam, nextKeyMsg.hwnd, i,
+                           GetMessageName(nextKeyMsgInAllWindows.message),
+                           nextKeyMsgInAllWindows.message,
+                           nextKeyMsgInAllWindows.wParam,
+                           nextKeyMsgInAllWindows.lParam,
+                           nextKeyMsgInAllWindows.hwnd,
+                           nextKeyMsgInAllWindows.time);
       CrashReporter::AppendAppNotesToCrashReport(info);
-      MSG nextKeyMsgInAllWindows;
-      if (WinUtils::PeekMessage(&nextKeyMsgInAllWindows, 0,
-                                WM_KEYFIRST, WM_KEYLAST,
-                                PM_NOREMOVE | PM_NOYIELD)) {
-        nsPrintfCString info("\nNext key message in all windows: %s (0x%08X), "
-                             "wParam: 0x%08X, lParam: 0x%08X, hwnd=0x%p, "
-                             "time=%d, ",
-                             GetMessageName(nextKeyMsgInAllWindows.message),
-                             nextKeyMsgInAllWindows.message,
-                             nextKeyMsgInAllWindows.wParam,
-                             nextKeyMsgInAllWindows.lParam,
-                             nextKeyMsgInAllWindows.hwnd,
-                             nextKeyMsgInAllWindows.time);
-        CrashReporter::AppendAppNotesToCrashReport(info);
-      } else {
-        CrashReporter::AppendAppNotesToCrashReport(
-          NS_LITERAL_CSTRING("\nThere is no key message in any window, "));
-      }
       MSG nextMsg;
       if (WinUtils::PeekMessage(&nextMsg, 0, 0, 0,
                                 PM_NOREMOVE | PM_NOYIELD)) {
@@ -1405,7 +1426,6 @@ NativeKey::GetFollowingCharMessage(MSG& aCharMsg) const
     // NOTE: Although, we don't know when this case occurs, the scan code value
     //       in lParam may be changed from 0 to something.  The changed value
     //       is different from the scan code of handling keydown message.
-    static const LPARAM kScanCodeMask = 0x00FF0000;
     if (removedMsg.message != nextKeyMsg.message ||
         removedMsg.wParam != nextKeyMsg.wParam ||
         (removedMsg.lParam & ~kScanCodeMask) !=
