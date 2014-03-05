@@ -11,11 +11,15 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/DeviceStorageBinding.h"
+#include "mozilla/dom/DeviceStorageFileSystem.h"
 #include "mozilla/dom/devicestorage/PDeviceStorageRequestChild.h"
+#include "mozilla/dom/Directory.h"
+#include "mozilla/dom/FileSystemUtils.h"
 #include "mozilla/dom/ipc/Blob.h"
 #include "mozilla/dom/PBrowserChild.h"
 #include "mozilla/dom/PContentPermissionRequestChild.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
+#include "mozilla/dom/Promise.h"
 #include "mozilla/LazyIdleThread.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Scoped.h"
@@ -892,14 +896,7 @@ DeviceStorageFile::IsSafePath(const nsAString& aPath)
 
 void
 DeviceStorageFile::NormalizeFilePath() {
-#if defined(XP_WIN)
-  char16_t* cur = mPath.BeginWriting();
-  char16_t* end = mPath.EndWriting();
-  for (; cur < end; ++cur) {
-    if (char16_t('\\') == *cur)
-      *cur = char16_t('/');
-  }
-#endif
+  FileSystemUtils::LocalPathToNormalizedPath(mPath, mPath);
 }
 
 void
@@ -917,23 +914,9 @@ DeviceStorageFile::AppendRelativePath(const nsAString& aPath) {
     NS_WARNING(NS_LossyConvertUTF16toASCII(aPath).get());
     return;
   }
-#if defined(XP_WIN)
-  // replace forward slashes with backslashes,
-  // since nsLocalFileWin chokes on them
-  nsString temp;
-  temp.Assign(aPath);
-
-  char16_t* cur = temp.BeginWriting();
-  char16_t* end = temp.EndWriting();
-
-  for (; cur < end; ++cur) {
-    if (char16_t('/') == *cur)
-      *cur = char16_t('\\');
-  }
-  mFile->AppendRelativePath(temp);
-#else
-  mFile->AppendRelativePath(aPath);
-#endif
+  nsString localPath;
+  FileSystemUtils::NormalizedPathToLocalPath(aPath, localPath);
+  mFile->AppendRelativePath(localPath);
 }
 
 nsresult
@@ -3074,6 +3057,11 @@ nsDOMDeviceStorage::Shutdown()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  if (mFileSystem) {
+    mFileSystem->SetDeviceStorage(nullptr);
+    mFileSystem = nullptr;
+  }
+
   if (!mStorageName.IsEmpty()) {
     UnregisterForSDCardChanges(this);
   }
@@ -3810,6 +3798,16 @@ nsDOMDeviceStorage::Default()
   nsString defaultStorageName;
   GetDefaultStorageName(mStorageType, defaultStorageName);
   return mStorageName.Equals(defaultStorageName);
+}
+
+already_AddRefed<Promise>
+nsDOMDeviceStorage::GetRoot()
+{
+  if (!mFileSystem) {
+    mFileSystem = new DeviceStorageFileSystem(mStorageType, mStorageName);
+    mFileSystem->SetDeviceStorage(this);
+  }
+  return mozilla::dom::Directory::GetRoot(mFileSystem);
 }
 
 NS_IMETHODIMP
