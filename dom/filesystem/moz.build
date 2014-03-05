@@ -18,6 +18,7 @@ SOURCES += [
     'DeviceStorageFileSystem.cpp',
     'Directory.cpp',
     'FileSystemBase.cpp',
+    'FileSystemPermissionRequest.cpp',
     'FileSystemRequestParent.cpp',
     'FileSystemTaskBase.cpp',
     'FileSystemUtils.cpp',

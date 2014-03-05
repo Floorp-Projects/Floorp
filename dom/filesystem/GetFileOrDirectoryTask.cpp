@@ -176,6 +176,10 @@ GetFileOrDirectoryTask::Work()
     return NS_ERROR_DOM_FILESYSTEM_TYPE_MISMATCH_ERR;
   }
 
+  if (!mFileSystem->IsSafeFile(file)) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
   mTargetFile = new nsDOMFileFile(file);
 
   return NS_OK;
@@ -207,6 +211,12 @@ GetFileOrDirectoryTask::HandlerCallback()
 
   mPromise->MaybeResolve(mTargetFile);
   mPromise = nullptr;
+}
+
+void
+GetFileOrDirectoryTask::GetPermissionAccessType(nsCString& aAccess) const
+{
+  aAccess.AssignLiteral("read");
 }
 
 } // namespace dom
