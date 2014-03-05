@@ -97,7 +97,6 @@ private:
   void QueueAsyncSimpleEvent(const char* aName);
 
   void DurationChange(double aNewDuration, ErrorResult& aRv);
-  void EndOfStreamInternal(const Optional<MediaSourceEndOfStreamError>& aError, ErrorResult& aRv);
 
   double mDuration;
 
