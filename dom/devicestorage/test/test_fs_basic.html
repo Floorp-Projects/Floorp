@@ -1,0 +1,70 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html> <!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=910412
+-->
+<head>
+  <title>Test for the FileSystem API for device storage</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="devicestorage_common.js"></script>
+
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=910412">Mozilla Bug 910412</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+devicestorage_setup();
+
+var gFileName = randomFilename(12);
+
+// The root directory object.
+var gRoot;
+
+function getRootSuccess(r) {
+  ok(r && r.name === storage.storageName, "Failed to get the root directory.");
+
+  gRoot = r;
+
+  // Create a new directory under the root.
+  gRoot.createDirectory(gFileName).then(createDirectorySuccess, cbError);
+}
+
+function createDirectorySuccess(d) {
+  ok(d.name === gFileName, "Failed to create directory: name mismatch.");
+
+  // Get the new created directory from the root.
+  gRoot.get(gFileName).then(getSuccess, cbError);
+}
+
+function getSuccess(d) {
+  ok(d.name === gFileName, "Should get directory - " + gFileName + ".");
+  devicestorage_cleanup();
+}
+
+function cbError(e) {
+  ok(false,  "Should not arrive here! Error: " + e.name);
+  devicestorage_cleanup();
+}
+
+ok(navigator.getDeviceStorage, "Should have getDeviceStorage");
+
+var storage = navigator.getDeviceStorage("pictures");
+ok(storage, "Should have gotten a storage");
+
+var promise = storage.getRoot();
+ok(promise, "Should have a non-null promise");
+
+promise.then(getRootSuccess, cbError);
+</script>
+</pre>
+</body>
+</html>
+
