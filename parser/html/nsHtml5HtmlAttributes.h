@@ -34,7 +34,7 @@
 #include "nsString.h"
 #include "nsNameSpaceManager.h"
 #include "nsIContent.h"
-#include "nsISupportsImpl.h"
+#include "nsTraceRefcnt.h"
 #include "jArray.h"
 #include "nsHtml5ArrayCopy.h"
 #include "nsAHtml5TreeBuilderState.h"
@@ -42,6 +42,7 @@
 #include "nsHtml5ByteReadable.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsHtml5Macros.h"
+#include "nsIContentHandle.h"
 
 class nsHtml5StreamParser;
 

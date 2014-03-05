@@ -41,7 +41,7 @@ nsHtml5TreeBuilder::~nsHtml5TreeBuilder()
   mOpQueue.Clear();
 }
 
-nsIContent**
+nsIContentHandle*
 nsHtml5TreeBuilder::createElement(int32_t aNamespace, nsIAtom* aName, nsHtml5HtmlAttributes* aAttributes)
 {
   NS_PRECONDITION(aAttributes, "Got null attributes.");
@@ -51,7 +51,7 @@ nsHtml5TreeBuilder::createElement(int32_t aNamespace, nsIAtom* aName, nsHtml5Htm
                   aNamespace == kNameSpaceID_MathML,
                   "Bogus namespace.");
 
-  nsIContent** content = AllocateContentHandle();
+  nsIContentHandle* content = AllocateContentHandle();
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
   NS_ASSERTION(treeOp, "Tree op allocation failed.");
   treeOp->Init(aNamespace,
@@ -209,10 +209,10 @@ nsHtml5TreeBuilder::createElement(int32_t aNamespace, nsIAtom* aName, nsHtml5Htm
   return content;
 }
 
-nsIContent**
-nsHtml5TreeBuilder::createElement(int32_t aNamespace, nsIAtom* aName, nsHtml5HtmlAttributes* aAttributes, nsIContent** aFormElement)
+nsIContentHandle*
+nsHtml5TreeBuilder::createElement(int32_t aNamespace, nsIAtom* aName, nsHtml5HtmlAttributes* aAttributes, nsIContentHandle* aFormElement)
 {
-  nsIContent** content = createElement(aNamespace, aName, aAttributes);
+  nsIContentHandle* content = createElement(aNamespace, aName, aAttributes);
   if (aFormElement) {
     nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
     NS_ASSERTION(treeOp, "Tree op allocation failed.");
@@ -221,10 +221,10 @@ nsHtml5TreeBuilder::createElement(int32_t aNamespace, nsIAtom* aName, nsHtml5Htm
   return content;
 }
 
-nsIContent**
+nsIContentHandle*
 nsHtml5TreeBuilder::createHtmlElementSetAsRoot(nsHtml5HtmlAttributes* aAttributes)
 {
-  nsIContent** content = createElement(kNameSpaceID_XHTML, nsHtml5Atoms::html, aAttributes);
+  nsIContentHandle* content = createElement(kNameSpaceID_XHTML, nsHtml5Atoms::html, aAttributes);
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
   NS_ASSERTION(treeOp, "Tree op allocation failed.");
   treeOp->Init(eTreeOpAppendToDocument, content);
@@ -232,7 +232,7 @@ nsHtml5TreeBuilder::createHtmlElementSetAsRoot(nsHtml5HtmlAttributes* aAttribute
 }
 
 void
-nsHtml5TreeBuilder::detachFromParent(nsIContent** aElement)
+nsHtml5TreeBuilder::detachFromParent(nsIContentHandle* aElement)
 {
   NS_PRECONDITION(aElement, "Null element");
 
@@ -242,7 +242,7 @@ nsHtml5TreeBuilder::detachFromParent(nsIContent** aElement)
 }
 
 void
-nsHtml5TreeBuilder::appendElement(nsIContent** aChild, nsIContent** aParent)
+nsHtml5TreeBuilder::appendElement(nsIContentHandle* aChild, nsIContentHandle* aParent)
 {
   NS_PRECONDITION(aChild, "Null child");
   NS_PRECONDITION(aParent, "Null parent");
@@ -255,7 +255,7 @@ nsHtml5TreeBuilder::appendElement(nsIContent** aChild, nsIContent** aParent)
 }
 
 void
-nsHtml5TreeBuilder::appendChildrenToNewParent(nsIContent** aOldParent, nsIContent** aNewParent)
+nsHtml5TreeBuilder::appendChildrenToNewParent(nsIContentHandle* aOldParent, nsIContentHandle* aNewParent)
 {
   NS_PRECONDITION(aOldParent, "Null old parent");
   NS_PRECONDITION(aNewParent, "Null new parent");
@@ -266,7 +266,7 @@ nsHtml5TreeBuilder::appendChildrenToNewParent(nsIContent** aOldParent, nsIConten
 }
 
 void
-nsHtml5TreeBuilder::insertFosterParentedCharacters(char16_t* aBuffer, int32_t aStart, int32_t aLength, nsIContent** aTable, nsIContent** aStackParent)
+nsHtml5TreeBuilder::insertFosterParentedCharacters(char16_t* aBuffer, int32_t aStart, int32_t aLength, nsIContentHandle* aTable, nsIContentHandle* aStackParent)
 {
   NS_PRECONDITION(aBuffer, "Null buffer");
   NS_PRECONDITION(aTable, "Null table");
@@ -281,7 +281,7 @@ nsHtml5TreeBuilder::insertFosterParentedCharacters(char16_t* aBuffer, int32_t aS
 }
 
 void
-nsHtml5TreeBuilder::insertFosterParentedChild(nsIContent** aChild, nsIContent** aTable, nsIContent** aStackParent)
+nsHtml5TreeBuilder::insertFosterParentedChild(nsIContentHandle* aChild, nsIContentHandle* aTable, nsIContentHandle* aStackParent)
 {
   NS_PRECONDITION(aChild, "Null child");
   NS_PRECONDITION(aTable, "Null table");
@@ -293,7 +293,7 @@ nsHtml5TreeBuilder::insertFosterParentedChild(nsIContent** aChild, nsIContent** 
 }
 
 void
-nsHtml5TreeBuilder::appendCharacters(nsIContent** aParent, char16_t* aBuffer, int32_t aStart, int32_t aLength)
+nsHtml5TreeBuilder::appendCharacters(nsIContentHandle* aParent, char16_t* aBuffer, int32_t aStart, int32_t aLength)
 {
   NS_PRECONDITION(aBuffer, "Null buffer");
   NS_PRECONDITION(aParent, "Null parent");
@@ -308,7 +308,7 @@ nsHtml5TreeBuilder::appendCharacters(nsIContent** aParent, char16_t* aBuffer, in
 }
 
 void
-nsHtml5TreeBuilder::appendIsindexPrompt(nsIContent** aParent)
+nsHtml5TreeBuilder::appendIsindexPrompt(nsIContentHandle* aParent)
 {
   NS_PRECONDITION(aParent, "Null parent");
 
@@ -318,7 +318,7 @@ nsHtml5TreeBuilder::appendIsindexPrompt(nsIContent** aParent)
 }
 
 void
-nsHtml5TreeBuilder::appendComment(nsIContent** aParent, char16_t* aBuffer, int32_t aStart, int32_t aLength)
+nsHtml5TreeBuilder::appendComment(nsIContentHandle* aParent, char16_t* aBuffer, int32_t aStart, int32_t aLength)
 {
   NS_PRECONDITION(aBuffer, "Null buffer");
   NS_PRECONDITION(aParent, "Null parent");
@@ -348,7 +348,7 @@ nsHtml5TreeBuilder::appendCommentToDocument(char16_t* aBuffer, int32_t aStart, i
 }
 
 void
-nsHtml5TreeBuilder::addAttributesToElement(nsIContent** aElement, nsHtml5HtmlAttributes* aAttributes)
+nsHtml5TreeBuilder::addAttributesToElement(nsIContentHandle* aElement, nsHtml5HtmlAttributes* aAttributes)
 {
   NS_PRECONDITION(aElement, "Null element");
   NS_PRECONDITION(aAttributes, "Null attributes");
@@ -362,7 +362,7 @@ nsHtml5TreeBuilder::addAttributesToElement(nsIContent** aElement, nsHtml5HtmlAtt
 }
 
 void
-nsHtml5TreeBuilder::markMalformedIfScript(nsIContent** aElement)
+nsHtml5TreeBuilder::markMalformedIfScript(nsIContentHandle* aElement)
 {
   NS_PRECONDITION(aElement, "Null element");
 
@@ -403,7 +403,7 @@ nsHtml5TreeBuilder::appendDoctypeToDocument(nsIAtom* aName, nsString* aPublicId,
 }
 
 void
-nsHtml5TreeBuilder::elementPushed(int32_t aNamespace, nsIAtom* aName, nsIContent** aElement)
+nsHtml5TreeBuilder::elementPushed(int32_t aNamespace, nsIAtom* aName, nsIContentHandle* aElement)
 {
   NS_ASSERTION(aNamespace == kNameSpaceID_XHTML || aNamespace == kNameSpaceID_SVG || aNamespace == kNameSpaceID_MathML, "Element isn't HTML, SVG or MathML!");
   NS_ASSERTION(aName, "Element doesn't have local name!");
@@ -467,7 +467,7 @@ nsHtml5TreeBuilder::elementPushed(int32_t aNamespace, nsIAtom* aName, nsIContent
 }
 
 void
-nsHtml5TreeBuilder::elementPopped(int32_t aNamespace, nsIAtom* aName, nsIContent** aElement)
+nsHtml5TreeBuilder::elementPopped(int32_t aNamespace, nsIAtom* aName, nsIContentHandle* aElement)
 {
   NS_ASSERTION(aNamespace == kNameSpaceID_XHTML || aNamespace == kNameSpaceID_SVG || aNamespace == kNameSpaceID_MathML, "Element isn't HTML, SVG or MathML!");
   NS_ASSERTION(aName, "Element doesn't have local name!");
@@ -568,7 +568,7 @@ nsHtml5TreeBuilder::accumulateCharacters(const char16_t* aBuf, int32_t aStart, i
   charBufferLen = newFillLen;
 }
 
-nsIContent**
+nsIContentHandle*
 nsHtml5TreeBuilder::AllocateContentHandle()
 {
   if (mHandlesUsed == NS_HTML5_TREE_BUILDER_HANDLE_ARRAY_LENGTH) {
@@ -751,18 +751,18 @@ nsHtml5TreeBuilder::documentMode(nsHtml5DocumentMode m)
   treeOp->Init(m);
 }
 
-nsIContent**
-nsHtml5TreeBuilder::getDocumentFragmentForTemplate(nsIContent** aTemplate)
+nsIContentHandle*
+nsHtml5TreeBuilder::getDocumentFragmentForTemplate(nsIContentHandle* aTemplate)
 {
   nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
   NS_ASSERTION(treeOp, "Tree op allocation failed.");
-  nsIContent** fragHandle = AllocateContentHandle();
+  nsIContentHandle* fragHandle = AllocateContentHandle();
   treeOp->Init(eTreeOpGetDocumentFragmentForTemplate, aTemplate, fragHandle);
   return fragHandle;
 }
 
-nsIContent**
-nsHtml5TreeBuilder::getFormPointerForContext(nsIContent** aContext)
+nsIContentHandle*
+nsHtml5TreeBuilder::getFormPointerForContext(nsIContentHandle* aContext)
 {
   if (!aContext) {
     return nullptr;
@@ -772,7 +772,7 @@ nsHtml5TreeBuilder::getFormPointerForContext(nsIContent** aContext)
 
   // aContext must always be a handle to an element that already exists
   // in the document. It must never be an empty handle.
-  nsIContent* contextNode = *aContext;
+  nsIContent* contextNode = *(static_cast<nsIContent**>(aContext));
   nsIContent* currentAncestor = contextNode;
 
   // We traverse the ancestors of the context node to find the nearest
@@ -790,8 +790,8 @@ nsHtml5TreeBuilder::getFormPointerForContext(nsIContent** aContext)
     return nullptr;
   }
 
-  nsIContent** formPointer = AllocateContentHandle();
-  *formPointer = nearestForm;
+  nsIContentHandle* formPointer = AllocateContentHandle();
+  *(static_cast<nsIContent**>(formPointer)) = nearestForm;
   return formPointer;
 }
 
