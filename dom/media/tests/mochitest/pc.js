@@ -1058,6 +1058,7 @@ DataChannelWrapper.prototype = {
 function PeerConnectionWrapper(label, configuration) {
   this.configuration = configuration;
   this.label = label;
+  this.whenCreated = Date.now();
 
   this.constraints = [ ];
   this.offerConstraints = {};
@@ -1591,11 +1592,67 @@ PeerConnectionWrapper.prototype = {
     for (var key in stats) {
       if (stats.hasOwnProperty(key)) {
         var res = stats[key];
+        // validate stats
+        ok(res.id == key, "Coherent stats id");
+        var nowish = Date.now() + 10000;        // TODO: severe drift observed
+        var minimum = this.whenCreated - 10000; // on Windows XP (Bug 979649)
+        ok(res.timestamp >= minimum,
+           "Valid " + (res.isRemote? "rtcp" : "rtp") + " timestamp " +
+               res.timestamp + " >= " + minimum + " (" +
+               (res.timestamp - minimum) + " ms)");
+        ok(res.timestamp <= nowish,
+           "Valid " + (res.isRemote? "rtcp" : "rtp") + " timestamp " +
+               res.timestamp + " <= " + nowish + " (" +
+               (res.timestamp - nowish) + " ms)");
         if (!res.isRemote) {
           counters[res.type] = toNum(counters[res.type]) + 1;
+
+          switch (res.type) {
+            case "inboundrtp":
+            case "outboundrtp": {
+              // ssrc is a 32 bit number returned as a string by spec
+              ok(res.ssrc.length > 0, "Ssrc has length");
+              ok(res.ssrc.length < 11, "Ssrc not lengthy");
+              ok(!/[^0-9]/.test(res.ssrc), "Ssrc numeric");
+              ok(parseInt(res.ssrc) < Math.pow(2,32), "Ssrc within limits");
+
+              if (res.type == "outboundrtp") {
+                ok(res.packetsSent !== undefined, "Rtp packetsSent");
+                // minimum fragment is 8 (from RFC 791)
+                ok(res.bytesSent >= res.packetsSent * 8, "Rtp bytesSent");
+              } else {
+                ok(res.packetsReceived !== undefined, "Rtp packetsReceived");
+                ok(res.bytesReceived >= res.packetsReceived * 8, "Rtp bytesReceived");
+              }
+              if (res.remoteId) {
+                var rem = stats[res.remoteId];
+                ok(rem.isRemote, "Remote is rtcp");
+                ok(rem.remoteId == res.id, "Remote backlink match");
+                if(res.type == "outboundrtp") {
+                  ok(rem.type == "inboundrtp", "Rtcp is inbound");
+                  ok(rem.packetsReceived !== undefined, "Rtcp packetsReceived");
+                  ok(rem.packetsReceived <= res.packetsSent, "No more than sent");
+                  ok(rem.packetsLost !== undefined, "Rtcp packetsLost");
+                  ok(rem.bytesReceived >= rem.packetsReceived * 8, "Rtcp bytesReceived");
+                  ok(rem.bytesReceived <= res.bytesSent, "No more than sent bytes");
+                  ok(rem.jitter !== undefined, "Rtcp jitter");
+                } else {
+                  ok(rem.type == "outboundrtp", "Rtcp is outbound");
+                  ok(rem.packetsSent !== undefined, "Rtcp packetsSent");
+                  // We may have received more than outdated Rtcp packetsSent
+                  ok(rem.bytesSent >= rem.packetsSent * 8, "Rtcp bytesSent");
+                }
+                ok(rem.ssrc == res.ssrc, "Remote ssrc match");
+              } else {
+                info("No rtcp info received yet");
+              }
+            }
+            break;
+          }
         }
       }
     }
+
     // Use MapClass way of enumerating stats
     var counters2 = {};
     stats.forEach(function(res) {
