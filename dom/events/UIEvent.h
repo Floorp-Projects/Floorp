@@ -7,19 +7,19 @@
 #define mozilla_dom_UIEvent_h_
 
 #include "mozilla/Attributes.h"
-#include "nsIDOMUIEvent.h"
-#include "nsDOMEvent.h"
-#include "nsLayoutUtils.h"
+#include "mozilla/dom/Event.h"
 #include "mozilla/dom/UIEventBinding.h"
-#include "nsPresContext.h"
 #include "nsDeviceContext.h"
+#include "nsIDOMUIEvent.h"
+#include "nsLayoutUtils.h"
+#include "nsPresContext.h"
 
 class nsINode;
 
 namespace mozilla {
 namespace dom {
 
-class UIEvent : public nsDOMEvent,
+class UIEvent : public Event,
                 public nsIDOMUIEvent
 {
 public:
@@ -28,13 +28,13 @@ public:
           WidgetGUIEvent* aEvent);
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(UIEvent, nsDOMEvent)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(UIEvent, Event)
 
   // nsIDOMUIEvent Interface
   NS_DECL_NSIDOMUIEVENT
 
-  // Forward to nsDOMEvent
-  NS_FORWARD_TO_NSDOMEVENT_NO_SERIALIZATION_NO_DUPLICATION
+  // Forward to Event
+  NS_FORWARD_TO_EVENT_NO_SERIALIZATION_NO_DUPLICATION
   NS_IMETHOD DuplicatePrivateData() MOZ_OVERRIDE;
   NS_IMETHOD_(void) Serialize(IPC::Message* aMsg, bool aSerializeInterfaceType) MOZ_OVERRIDE;
   NS_IMETHOD_(bool) Deserialize(const IPC::Message* aMsg, void** aIter) MOZ_OVERRIDE;
@@ -175,7 +175,7 @@ protected:
 
 #define NS_FORWARD_TO_UIEVENT                               \
   NS_FORWARD_NSIDOMUIEVENT(UIEvent::)                       \
-  NS_FORWARD_TO_NSDOMEVENT_NO_SERIALIZATION_NO_DUPLICATION  \
+  NS_FORWARD_TO_EVENT_NO_SERIALIZATION_NO_DUPLICATION       \
   NS_IMETHOD DuplicatePrivateData()                         \
   {                                                         \
     return UIEvent::DuplicatePrivateData();                 \

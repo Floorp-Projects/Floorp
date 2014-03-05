@@ -5573,7 +5573,7 @@ bool
 nsGlobalWindow::DispatchResizeEvent(const nsIntSize& aSize)
 {
   ErrorResult res;
-  nsRefPtr<nsDOMEvent> domEvent =
+  nsRefPtr<Event> domEvent =
     mDoc->CreateEvent(NS_LITERAL_STRING("CustomEvent"), res);
   if (res.Failed()) {
     return false;
@@ -13060,7 +13060,7 @@ NS_IMETHODIMP
 nsGlobalChromeWindow::BeginWindowMove(nsIDOMEvent *aMouseDownEvent, nsIDOMElement* aPanel)
 {
   NS_ENSURE_TRUE(aMouseDownEvent, NS_ERROR_FAILURE);
-  nsDOMEvent* mouseDownEvent = aMouseDownEvent->InternalDOMEvent();
+  Event* mouseDownEvent = aMouseDownEvent->InternalDOMEvent();
   NS_ENSURE_TRUE(mouseDownEvent, NS_ERROR_FAILURE);
 
   nsCOMPtr<Element> panel = do_QueryInterface(aPanel);
@@ -13072,7 +13072,7 @@ nsGlobalChromeWindow::BeginWindowMove(nsIDOMEvent *aMouseDownEvent, nsIDOMElemen
 }
 
 void
-nsGlobalWindow::BeginWindowMove(nsDOMEvent& aMouseDownEvent, Element* aPanel,
+nsGlobalWindow::BeginWindowMove(Event& aMouseDownEvent, Element* aPanel,
                                 ErrorResult& aError)
 {
   nsCOMPtr<nsIWidget> widget;

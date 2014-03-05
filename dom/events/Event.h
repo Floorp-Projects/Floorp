@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsDOMEvent_h__
-#define nsDOMEvent_h__
+#ifndef mozilla_dom_Event_h_
+#define mozilla_dom_Event_h_
 
 #include "mozilla/Attributes.h"
 #include "mozilla/BasicEvents.h"
@@ -26,29 +26,31 @@ class nsPresContext;
 
 namespace mozilla {
 namespace dom {
+
 class EventTarget;
 class ErrorEvent;
-}
-}
 
 // Dummy class so we can cast through it to get from nsISupports to
-// nsDOMEvent subclasses with only two non-ambiguous static casts.
-class nsDOMEventBase : public nsIDOMEvent
+// Event subclasses with only two non-ambiguous static casts.
+class EventBase : public nsIDOMEvent
 {
 };
 
-class nsDOMEvent : public nsDOMEventBase,
-                   public nsWrapperCache
+class Event : public EventBase,
+              public nsWrapperCache
 {
 public:
-  nsDOMEvent(mozilla::dom::EventTarget* aOwner, nsPresContext* aPresContext,
-             mozilla::WidgetEvent* aEvent);
-  nsDOMEvent(nsPIDOMWindow* aWindow);
-  virtual ~nsDOMEvent();
+  Event(EventTarget* aOwner,
+        nsPresContext* aPresContext,
+        WidgetEvent* aEvent);
+  Event(nsPIDOMWindow* aWindow);
+  virtual ~Event();
+
 private:
-  void ConstructorInit(mozilla::dom::EventTarget* aOwner,
+  void ConstructorInit(EventTarget* aOwner,
                        nsPresContext* aPresContext,
-                       mozilla::WidgetEvent* aEvent);
+                       WidgetEvent* aEvent);
+
 public:
   void GetParentObject(nsIScriptGlobalObject** aParentObject)
   {
@@ -59,7 +61,7 @@ public:
     }
   }
 
-  static nsDOMEvent* FromSupports(nsISupports* aSupports)
+  static Event* FromSupports(nsISupports* aSupports)
   {
     nsIDOMEvent* event =
       static_cast<nsIDOMEvent*>(aSupports);
@@ -74,11 +76,11 @@ public:
       MOZ_ASSERT(target_qi == event, "Uh, fix QI!");
     }
 #endif
-    return static_cast<nsDOMEvent*>(event);
+    return static_cast<Event*>(event);
   }
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsDOMEvent)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Event)
 
   nsISupports* GetParentObject()
   {
@@ -88,10 +90,10 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE
   {
-    return mozilla::dom::EventBinding::Wrap(aCx, aScope, this);
+    return EventBinding::Wrap(aCx, aScope, this);
   }
 
-  virtual mozilla::dom::ErrorEvent* AsErrorEvent()
+  virtual ErrorEvent* AsErrorEvent()
   {
     return nullptr;
   }
@@ -102,41 +104,37 @@ public:
   void InitPresContextData(nsPresContext* aPresContext);
 
   // Returns true if the event should be trusted.
-  bool Init(mozilla::dom::EventTarget* aGlobal);
+  bool Init(EventTarget* aGlobal);
 
-  static PopupControlState GetEventPopupControlState(
-                             mozilla::WidgetEvent* aEvent);
+  static PopupControlState GetEventPopupControlState(WidgetEvent* aEvent);
 
   static void PopupAllowedEventsChanged();
 
   static void Shutdown();
 
   static const char* GetEventName(uint32_t aEventType);
-  static mozilla::CSSIntPoint
-  GetClientCoords(nsPresContext* aPresContext,
-                  mozilla::WidgetEvent* aEvent,
-                  mozilla::LayoutDeviceIntPoint aPoint,
-                  mozilla::CSSIntPoint aDefaultPoint);
-  static mozilla::CSSIntPoint
-  GetPageCoords(nsPresContext* aPresContext,
-                mozilla::WidgetEvent* aEvent,
-                mozilla::LayoutDeviceIntPoint aPoint,
-                mozilla::CSSIntPoint aDefaultPoint);
-  static nsIntPoint
-  GetScreenCoords(nsPresContext* aPresContext,
-                  mozilla::WidgetEvent* aEvent,
-                  mozilla::LayoutDeviceIntPoint aPoint);
+  static CSSIntPoint GetClientCoords(nsPresContext* aPresContext,
+                                     WidgetEvent* aEvent,
+                                     LayoutDeviceIntPoint aPoint,
+                                     CSSIntPoint aDefaultPoint);
+  static CSSIntPoint GetPageCoords(nsPresContext* aPresContext,
+                                   WidgetEvent* aEvent,
+                                   LayoutDeviceIntPoint aPoint,
+                                   CSSIntPoint aDefaultPoint);
+  static nsIntPoint GetScreenCoords(nsPresContext* aPresContext,
+                                    WidgetEvent* aEvent,
+                                    LayoutDeviceIntPoint aPoint);
 
-  static already_AddRefed<nsDOMEvent> Constructor(const mozilla::dom::GlobalObject& aGlobal,
-                                                  const nsAString& aType,
-                                                  const mozilla::dom::EventInit& aParam,
-                                                  mozilla::ErrorResult& aRv);
+  static already_AddRefed<Event> Constructor(const GlobalObject& aGlobal,
+                                             const nsAString& aType,
+                                             const EventInit& aParam,
+                                             ErrorResult& aRv);
 
   // Implemented as xpidl method
   // void GetType(nsString& aRetval) {}
 
-  mozilla::dom::EventTarget* GetTarget() const;
-  mozilla::dom::EventTarget* GetCurrentTarget() const;
+  EventTarget* GetTarget() const;
+  EventTarget* GetCurrentTarget() const;
 
   uint16_t EventPhase() const;
 
@@ -196,13 +194,13 @@ public:
   }
 
   void InitEvent(const nsAString& aType, bool aBubbles, bool aCancelable,
-                 mozilla::ErrorResult& aRv)
+                 ErrorResult& aRv)
   {
     aRv = InitEvent(aType, aBubbles, aCancelable);
   }
 
-  mozilla::dom::EventTarget* GetOriginalTarget() const;
-  mozilla::dom::EventTarget* GetExplicitOriginalTarget() const;
+  EventTarget* GetOriginalTarget() const;
+  EventTarget* GetExplicitOriginalTarget() const;
 
   bool GetPreventDefault() const;
 
@@ -228,15 +226,18 @@ protected:
 
   mozilla::WidgetEvent*       mEvent;
   nsRefPtr<nsPresContext>     mPresContext;
-  nsCOMPtr<mozilla::dom::EventTarget> mExplicitOriginalTarget;
+  nsCOMPtr<EventTarget>       mExplicitOriginalTarget;
   nsCOMPtr<nsPIDOMWindow>     mOwner; // nsPIDOMWindow for now.
   bool                        mEventIsInternal;
   bool                        mPrivateDataDuplicated;
   bool                        mIsMainThreadEvent;
 };
 
-#define NS_FORWARD_TO_NSDOMEVENT \
-  NS_FORWARD_NSIDOMEVENT(nsDOMEvent::)
+} // namespace dom
+} // namespace mozilla
+
+#define NS_FORWARD_TO_EVENT \
+  NS_FORWARD_NSIDOMEVENT(Event::)
 
 #define NS_FORWARD_NSIDOMEVENT_NO_SERIALIZATION_NO_DUPLICATION(_to) \
   NS_IMETHOD GetType(nsAString& aType){ return _to GetType(aType); } \
@@ -257,24 +258,24 @@ protected:
   NS_IMETHOD GetIsTrusted(bool* aIsTrusted) { return _to GetIsTrusted(aIsTrusted); } \
   NS_IMETHOD SetTarget(nsIDOMEventTarget *aTarget) { return _to SetTarget(aTarget); } \
   NS_IMETHOD_(bool) IsDispatchStopped(void) { return _to IsDispatchStopped(); } \
-  NS_IMETHOD_(mozilla::WidgetEvent*) GetInternalNSEvent(void) { return _to GetInternalNSEvent(); } \
+  NS_IMETHOD_(WidgetEvent*) GetInternalNSEvent(void) { return _to GetInternalNSEvent(); } \
   NS_IMETHOD_(void) SetTrusted(bool aTrusted) { _to SetTrusted(aTrusted); } \
-  NS_IMETHOD_(void) SetOwner(mozilla::dom::EventTarget* aOwner) { _to SetOwner(aOwner); } \
-  NS_IMETHOD_(nsDOMEvent *) InternalDOMEvent(void) { return _to InternalDOMEvent(); }
+  NS_IMETHOD_(void) SetOwner(EventTarget* aOwner) { _to SetOwner(aOwner); } \
+  NS_IMETHOD_(Event*) InternalDOMEvent() { return _to InternalDOMEvent(); }
 
-#define NS_FORWARD_TO_NSDOMEVENT_NO_SERIALIZATION_NO_DUPLICATION \
-  NS_FORWARD_NSIDOMEVENT_NO_SERIALIZATION_NO_DUPLICATION(nsDOMEvent::)
+#define NS_FORWARD_TO_EVENT_NO_SERIALIZATION_NO_DUPLICATION \
+  NS_FORWARD_NSIDOMEVENT_NO_SERIALIZATION_NO_DUPLICATION(Event::)
 
 inline nsISupports*
-ToSupports(nsDOMEvent* e)
+ToSupports(mozilla::dom::Event* e)
 {
   return static_cast<nsIDOMEvent*>(e);
 }
 
 inline nsISupports*
-ToCanonicalSupports(nsDOMEvent* e)
+ToCanonicalSupports(mozilla::dom::Event* e)
 {
   return static_cast<nsIDOMEvent*>(e);
 }
 
-#endif // nsDOMEvent_h__
+#endif // mozilla_dom_Event_h_

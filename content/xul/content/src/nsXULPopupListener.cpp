@@ -32,6 +32,7 @@
 #include "nsHTMLReflowState.h"
 #include "nsIObjectLoadingContent.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/dom/Event.h" // for nsIDOMEvent::InternalDOMEvent()
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/FragmentOrElement.h"
 
@@ -43,7 +44,6 @@
 #include "nsViewManager.h"
 #include "nsError.h"
 #include "nsMenuFrame.h"
-#include "nsDOMEvent.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
