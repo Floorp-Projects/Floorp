@@ -396,11 +396,9 @@ int32_t GeckoChildProcessHost::mChildCounter = 0;
 bool
 GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts, base::ProcessArchitecture arch)
 {
-  // If separate NSPR log files are not requested, we're done.
+  // If NSPR log files are not requested, we're done.
   const char* origLogName = PR_GetEnv("NSPR_LOG_FILE");
-  const char* separateLogs = PR_GetEnv("GECKO_SEPARATE_NSPR_LOGS");
-  if (!origLogName || !separateLogs || !*separateLogs ||
-      *separateLogs == '0' || *separateLogs == 'N' || *separateLogs == 'n') {
+  if (!origLogName) {
     return PerformAsyncLaunchInternal(aExtraOpts, arch);
   }
 

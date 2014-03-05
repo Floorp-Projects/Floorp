@@ -59,6 +59,7 @@ const CRC_ERROR   = 4;
 const WRITE_ERROR = 7;
 
 const DIR_PATCH        = "0";
+const DIR_TOBEDELETED  = "tobedeleted";
 const DIR_UPDATES      = "updates";
 #ifdef XP_MACOSX
 const DIR_BIN_REL_PATH = "Contents/MacOS/";
