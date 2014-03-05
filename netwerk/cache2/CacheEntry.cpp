@@ -15,7 +15,6 @@
 #include "nsICacheStorage.h"
 #include "nsISerializable.h"
 #include "nsIStreamTransportService.h"
-#include "nsISizeOf.h"
 
 #include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
@@ -1544,41 +1543,6 @@ NS_IMETHODIMP CacheOutputCloseListener::Run()
 {
   mEntry->OnOutputClosed();
   return NS_OK;
-}
-
-// Memory reporting
-
-size_t CacheEntry::SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
-{
-  size_t n = 0;
-  nsCOMPtr<nsISizeOf> sizeOf;
-
-  n += mCallbacks.SizeOfExcludingThis(mallocSizeOf);
-  if (mFile) {
-    n += mFile->SizeOfIncludingThis(mallocSizeOf);
-  }
-
-  sizeOf = do_QueryInterface(mURI);
-  if (sizeOf) {
-    n += sizeOf->SizeOfIncludingThis(mallocSizeOf);
-  }
-
-  n += mEnhanceID.SizeOfExcludingThisIfUnshared(mallocSizeOf);
-  n += mStorageID.SizeOfExcludingThisIfUnshared(mallocSizeOf);
-
-  // mDoomCallback is an arbitrary class that is probably reported elsewhere.
-  // mOutputStream is reported in mFile.
-  // mWriter is one of many handles we create, but (intentionally) not keep
-  // any reference to, so those unfortunatelly cannot be reported.  Handles are
-  // small, though.
-  // mSecurityInfo doesn't impl nsISizeOf.
-
-  return n;
-}
-
-size_t CacheEntry::SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
-{
-  return mallocSizeOf(this) + SizeOfExcludingThis(mallocSizeOf);
 }
 
 } // net

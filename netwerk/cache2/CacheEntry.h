@@ -105,10 +105,6 @@ public:
   double mFrecency;
   uint32_t mSortingExpirationTime;
 
-  // Memory reporting
-  size_t SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
-
 private:
   virtual ~CacheEntry();
 
