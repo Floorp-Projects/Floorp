@@ -67,6 +67,16 @@ if (CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android') or \
    CONFIG['MOZ_WIDGET_GTK']:
     DEFINES['SK_FONTHOST_DOES_NOT_USE_FONTMGR'] = 1
 
+if CONFIG['INTEL_ARCHITECTURE'] and CONFIG['GNU_CC']:
+    SOURCES['trunk/src/opts/SkBitmapFilter_opts_SSE2.cpp'].flags += ['-msse2']
+    SOURCES['trunk/src/opts/SkBitmapProcState_opts_SSE2.cpp'].flags += ['-msse2']
+    SOURCES['trunk/src/opts/SkBitmapProcState_opts_SSSE3.cpp'].flags += ['-mssse3']
+    SOURCES['trunk/src/opts/SkBlitRect_opts_SSE2.cpp'].flags += ['-msse2']
+    SOURCES['trunk/src/opts/SkBlitRow_opts_SSE2.cpp'].flags += ['-msse2']
+    SOURCES['trunk/src/opts/SkBlurImage_opts_SSE2.cpp'].flags += ['-msse2']
+    SOURCES['trunk/src/opts/SkMorphology_opts_SSE2.cpp'].flags += ['-msse2']
+    SOURCES['trunk/src/opts/SkUtils_opts_SSE2.cpp'].flags += ['-msse2']
+
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     DEFINES['SKIA_DLL'] = 1
     DEFINES['GR_DLL'] = 1
