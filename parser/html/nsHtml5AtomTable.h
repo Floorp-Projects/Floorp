@@ -19,8 +19,7 @@ class nsHtml5AtomEntry : public nsStringHashKey
     nsHtml5AtomEntry(KeyTypePointer aStr);
     nsHtml5AtomEntry(const nsHtml5AtomEntry& aOther);
     ~nsHtml5AtomEntry();
-    inline nsHtml5Atom* GetAtom()
-    {
+    inline nsHtml5Atom* GetAtom() {
       return mAtom;
     }
   private:
@@ -85,14 +84,12 @@ class nsHtml5AtomTable
     /**
      * Empties the table.
      */
-    void Clear()
-    {
+    void Clear() {
       mTable.Clear();
     }
     
 #ifdef DEBUG
-    void SetPermittedLookupThread(nsIThread* aThread)
-    {
+    void SetPermittedLookupThread(nsIThread* aThread) {
       mPermittedLookupThread = aThread;
     }
 #endif  
