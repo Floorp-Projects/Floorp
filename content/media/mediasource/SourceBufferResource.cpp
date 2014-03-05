@@ -16,9 +16,9 @@
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gMediaSourceLog;
-#define LOG(type, msg) PR_LOG(gMediaSourceLog, type, msg)
+#define MSE_DEBUG(...) PR_LOG(gMediaSourceLog, PR_LOG_DEBUG, (__VA_ARGS__))
 #else
-#define LOG(type, msg)
+#define MSE_DEBUG(...)
 #endif
 
 namespace mozilla {
@@ -33,7 +33,7 @@ nsresult
 SourceBufferResource::Close()
 {
   ReentrantMonitorAutoEnter mon(mMonitor);
-  LOG(PR_LOG_DEBUG, ("%p SBR::Close", this));
+  MSE_DEBUG("%p SBR::Close", this);
   //MOZ_ASSERT(!mClosed);
   mClosed = true;
   mon.NotifyAll();
@@ -49,20 +49,20 @@ SourceBufferResource::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
   while (blockingRead &&
          !mEnded &&
          mOffset + aCount > static_cast<uint64_t>(GetLength())) {
-    LOG(PR_LOG_DEBUG, ("%p SBR::Read waiting for data", this));
+    MSE_DEBUG("%p SBR::Read waiting for data", this);
     mon.Wait();
   }
 
   uint32_t available = GetLength() - mOffset;
   uint32_t count = std::min(aCount, available);
   if (!PR_GetEnv("MOZ_QUIET")) {
-    LOG(PR_LOG_DEBUG, ("%p SBR::Read aCount=%u length=%u offset=%u "
-                       "available=%u count=%u, blocking=%d bufComplete=%d",
-                       this, aCount, GetLength(), mOffset, available, count,
-                       blockingRead, mEnded));
+    MSE_DEBUG("%p SBR::Read aCount=%u length=%u offset=%u "
+              "available=%u count=%u, blocking=%d bufComplete=%d",
+              this, aCount, GetLength(), mOffset, available, count,
+              blockingRead, mEnded);
   }
   if (available == 0) {
-    LOG(PR_LOG_DEBUG, ("%p SBR::Read EOF", this));
+    MSE_DEBUG("%p SBR::Read EOF", this);
     *aBytes = 0;
     return NS_OK;
   }
@@ -160,7 +160,7 @@ SourceBufferResource::Ended()
 SourceBufferResource::~SourceBufferResource()
 {
   MOZ_COUNT_DTOR(SourceBufferResource);
-  LOG(PR_LOG_DEBUG, ("%p SBR::~SBR", this));
+  MSE_DEBUG("%p SBR::~SBR", this);
 }
 
 SourceBufferResource::SourceBufferResource(nsIPrincipal* aPrincipal,
@@ -173,7 +173,7 @@ SourceBufferResource::SourceBufferResource(nsIPrincipal* aPrincipal,
   , mEnded(false)
 {
   MOZ_COUNT_CTOR(SourceBufferResource);
-  LOG(PR_LOG_DEBUG, ("%p SBR::SBR()", this));
+  MSE_DEBUG("%p SBR::SBR()", this);
 }
 
 } // namespace mozilla
