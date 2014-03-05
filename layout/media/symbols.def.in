@@ -67,6 +67,7 @@ vpx_codec_encode
 ogg_page_bos
 ogg_page_granulepos
 ogg_page_serialno
+ogg_set_mem_functions
 ogg_stream_check
 ogg_stream_clear
 ogg_stream_eos

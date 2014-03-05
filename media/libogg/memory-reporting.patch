@@ -1,0 +1,102 @@
+commit 16362f7dc755d9a2cfb8df06db74a16fcc97e495
+Author: Nathan Froyd <froydnj@mozilla.com>
+Date:   Wed Mar 5 10:58:29 2014 -0500
+
+    Bug 677653 - part 1 - indirect libogg memory allocations through variables
+
+diff --git a/media/libogg/include/ogg/ogg.h b/media/libogg/include/ogg/ogg.h
+index cea4ebe..cebe38e 100644
+--- include/ogg/ogg.h
++++ include/ogg/ogg.h
+@@ -202,6 +202,10 @@ extern int      ogg_page_packets(const ogg_page *og);
+ 
+ extern void     ogg_packet_clear(ogg_packet *op);
+ 
++extern void     ogg_set_mem_functions(ogg_malloc_function_type *malloc_func,
++                                      ogg_calloc_function_type *calloc_func,
++                                      ogg_realloc_function_type *realloc_func,
++                                      ogg_free_function_type *free_func);
+ 
+ #ifdef __cplusplus
+ }
+diff --git a/media/libogg/include/ogg/os_types.h b/media/libogg/include/ogg/os_types.h
+index 2c75a20..83ed732 100644
+--- include/ogg/os_types.h
++++ include/ogg/os_types.h
+@@ -17,12 +17,33 @@
+ #ifndef _OS_TYPES_H
+ #define _OS_TYPES_H
+ 
+-/* make it easy on the folks that want to compile the libs with a
+-   different malloc than stdlib */
+-#define _ogg_malloc  malloc
+-#define _ogg_calloc  calloc
+-#define _ogg_realloc realloc
+-#define _ogg_free    free
++#include <stddef.h>
++
++/* We indirect mallocs through settable-at-runtime functions to accommodate
++   memory reporting in the browser. */
++
++#ifdef __cplusplus
++extern "C" {
++#endif
++
++typedef void* (ogg_malloc_function_type)(size_t);
++typedef void* (ogg_calloc_function_type)(size_t, size_t);
++typedef void* (ogg_realloc_function_type)(void*, size_t);
++typedef void (ogg_free_function_type)(void*);
++
++extern ogg_malloc_function_type *ogg_malloc_func;
++extern ogg_calloc_function_type *ogg_calloc_func;
++extern ogg_realloc_function_type *ogg_realloc_func;
++extern ogg_free_function_type *ogg_free_func;
++
++#ifdef __cplusplus
++}
++#endif
++
++#define _ogg_malloc ogg_malloc_func
++#define _ogg_calloc ogg_calloc_func
++#define _ogg_realloc ogg_realloc_func
++#define _ogg_free ogg_free_func
+ 
+ #if defined(_WIN32) 
+ 
+diff --git a/media/libogg/src/ogg_alloc.c b/media/libogg/src/ogg_alloc.c
+new file mode 100644
+index 0000000..4238d7b
+--- /dev/null
++++ src/ogg_alloc.c
+@@ -0,0 +1,31 @@
++/********************************************************************
++ *                                                                  *
++ * THIS FILE IS PART OF THE OggVorbis SOFTWARE CODEC SOURCE CODE.   *
++ * USE, DISTRIBUTION AND REPRODUCTION OF THIS LIBRARY SOURCE IS     *
++ * GOVERNED BY A BSD-STYLE SOURCE LICENSE INCLUDED WITH THIS SOURCE *
++ * IN 'COPYING'. PLEASE READ THESE TERMS BEFORE DISTRIBUTING.       *
++ *                                                                  *
++ * THE OggVorbis SOURCE CODE IS (C) COPYRIGHT 1994-2002             *
++ * by the Xiph.Org Foundation http://www.xiph.org/                  *
++ *                                                                  *
++ *********************************************************************/
++
++#include <stdlib.h>
++#include "ogg/os_types.h"
++
++ogg_malloc_function_type *ogg_malloc_func = malloc;
++ogg_calloc_function_type *ogg_calloc_func = calloc;
++ogg_realloc_function_type *ogg_realloc_func = realloc;
++ogg_free_function_type *ogg_free_func = free;
++
++void
++ogg_set_mem_functions(ogg_malloc_function_type *malloc_func,
++                      ogg_calloc_function_type *calloc_func,
++                      ogg_realloc_function_type *realloc_func,
++                      ogg_free_function_type *free_func)
++{
++  ogg_malloc_func = malloc_func;
++  ogg_calloc_func = calloc_func;
++  ogg_realloc_func = realloc_func;
++  ogg_free_func = free_func;
++}
