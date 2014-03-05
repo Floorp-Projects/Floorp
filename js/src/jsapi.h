@@ -3491,6 +3491,7 @@ class JS_FRIEND_API(ReadOnlyCompileOptions)
         werrorOption(false),
         asmJSOption(false),
         forceAsync(false),
+        installedFile(false),
         sourcePolicy(SAVE_SOURCE),
         introductionType(nullptr),
         introductionLineno(0),
@@ -3530,6 +3531,7 @@ class JS_FRIEND_API(ReadOnlyCompileOptions)
     bool werrorOption;
     bool asmJSOption;
     bool forceAsync;
+    bool installedFile;  // 'true' iff pre-compiling js file in packaged app
     enum SourcePolicy {
         NO_SOURCE,
         LAZY_SOURCE,
@@ -4884,9 +4886,16 @@ typedef void
  * outparams. If the callback returns 'true', the JS engine guarantees a call
  * to CloseAsmJSCacheEntryForWriteOp passing the same base address, size and
  * handle.
+ *
+ * If 'installed' is true, then the cache entry is associated with a permanently
+ * installed JS file (e.g., in a packaged webapp). This information allows the
+ * embedding to store the cache entry in a installed location associated with
+ * the principal of 'global' where it will not be evicted until the associated
+ * installed JS file is removed.
  */
 typedef bool
-(* OpenAsmJSCacheEntryForWriteOp)(HandleObject global, const jschar *begin, const jschar *end,
+(* OpenAsmJSCacheEntryForWriteOp)(HandleObject global, bool installed,
+                                  const jschar *begin, const jschar *end,
                                   size_t size, uint8_t **memory, intptr_t *handle);
 typedef void
 (* CloseAsmJSCacheEntryForWriteOp)(HandleObject global, size_t size, uint8_t *memory,
