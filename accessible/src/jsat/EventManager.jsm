@@ -98,18 +98,11 @@ this.EventManager.prototype = {
       case 'wheel':
       {
         let attempts = 0;
-        let vc = Utils.getVirtualCursor(this.contentScope.content.document);
-        let intervalId = this.contentScope.content.setInterval(() => {
-          if (!Utils.isAliveAndVisible(vc.position, true)) {
-            this.contentScope.content.clearInterval(intervalId);
-            let delta = aEvent.deltaX || aEvent.deltaY;
-            this.contentScope.content.setTimeout(() => {
-              vc[delta > 0 ? 'moveNext' : 'movePrevious'](TraversalRules.SimpleOnScreen);
-            }, 100);
-          } else if (++attempts > 5) {
-            this.contentScope.content.clearInterval(intervalId);
-          }
-        }, 150);
+        let delta = aEvent.deltaX || aEvent.deltaY;
+        this.contentScope.contentControl.autoMove(
+         null,
+         { moveMethod: delta > 0 ? 'moveNext' : 'movePrevious',
+           onScreenOnly: true, noOpIfOnScreen: true, delay: 500 });
         break;
       }
       case 'scroll':
@@ -162,11 +155,6 @@ this.EventManager.prototype = {
         let reason = event.reason;
         let oldAccessible = event.oldAccessible;
 
-        if (oldAccessible && oldAccessible.role == Roles.INTERNAL_FRAME) {
-          let mm = Utils.getMessageManager(oldAccessible.DOMNode);
-          mm.sendAsyncMessage('AccessFu:ClearCursor', {});
-        }
-
         if (this.editState.editing) {
           aEvent.accessibleDocument.takeFocus();
         }
@@ -195,8 +183,7 @@ this.EventManager.prototype = {
       }
       case Events.SCROLLING_START:
       {
-        let vc = Utils.getVirtualCursor(this.contentScope.content.document);
-        vc.moveNext(TraversalRules.Simple, aEvent.accessible, true);
+        this.contentScope.contentControl.autoMove(aEvent.accessible);
         break;
       }
       case Events.TEXT_CARET_MOVED:
@@ -285,18 +272,14 @@ this.EventManager.prototype = {
         let acc = aEvent.accessible;
         let doc = aEvent.accessibleDocument;
         if (acc.role != Roles.DOCUMENT && doc.role != Roles.CHROME_WINDOW) {
-          this.contentScope.content.clearTimeout(this._autoMove);
-          let vc = Utils.getVirtualCursor(this.contentScope.content.document);
-          vc.moveNext(TraversalRules.Simple, acc, true);
-        }
-        break;
+         this.contentScope.contentControl.autoMove(acc);
+       }
+       break;
       }
       case Events.DOCUMENT_LOAD_COMPLETE:
       {
-        this._autoMove = this.contentScope.content.setTimeout(() => {
-          Utils.getVirtualCursor(this.contentScope.content.document)
-            .moveNext(TraversalRules.Simple, aEvent.accessible, true);
-        }, 500);
+        this.contentScope.contentControl.autoMove(
+          aEvent.accessible, { delay: 500 });
         break;
       }
     }
