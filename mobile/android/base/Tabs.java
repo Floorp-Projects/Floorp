@@ -567,7 +567,6 @@ public class Tabs implements GeckoEventListener {
         notifyListeners(tab, msg, "");
     }
 
-    // Throws if not initialized.
     public void notifyListeners(final Tab tab, final TabEvents msg, final Object data) {
         if (tab == null &&
             msg != TabEvents.RESTORED) {
