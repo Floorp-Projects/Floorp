@@ -9,12 +9,13 @@ let Promise =
 
 let bluetoothManager;
 
-/* Get mozSettings value specified by @aKey.
+/**
+ * Get mozSettings value specified by @aKey.
  *
  * Resolve if that mozSettings value is retrieved successfully, reject
  * otherwise.
  *
- * Forfill params:
+ * Fulfill params:
  *   The corresponding mozSettings value of the key.
  * Reject params: (none)
  *
@@ -39,11 +40,12 @@ function getSettings(aKey) {
   return deferred.promise;
 }
 
-/* Set mozSettings values.
+/**
+ * Set mozSettings values.
  *
  * Resolve if that mozSettings value is set successfully, reject otherwise.
  *
- * Forfill params: (none)
+ * Fulfill params: (none)
  * Reject params: (none)
  *
  * @param aSettings
@@ -67,12 +69,13 @@ function setSettings(aSettings) {
   return deferred.promise;
 }
 
-/* Get mozSettings value of 'bluetooth.enabled'.
+/**
+ * Get mozSettings value of 'bluetooth.enabled'.
  *
  * Resolve if that mozSettings value is retrieved successfully, reject
  * otherwise.
  *
- * Forfill params:
+ * Fulfill params:
  *   A boolean value.
  * Reject params: (none)
  *
@@ -82,11 +85,12 @@ function getBluetoothEnabled() {
   return getSettings("bluetooth.enabled");
 }
 
-/* Set mozSettings value of 'bluetooth.enabled'.
+/**
+ * Set mozSettings value of 'bluetooth.enabled'.
  *
  * Resolve if that mozSettings value is set successfully, reject otherwise.
  *
- * Forfill params: (none)
+ * Fulfill params: (none)
  * Reject params: (none)
  *
  * @param aEnabled
@@ -100,10 +104,11 @@ function setBluetoothEnabled(aEnabled) {
   return setSettings(obj);
 }
 
-/* Push required permissions and test if |navigator.mozBluetooth| exists.
+/**
+ * Push required permissions and test if |navigator.mozBluetooth| exists.
  * Resolve if it does, reject otherwise.
  *
- * Forfill params:
+ * Fulfill params:
  *   bluetoothManager -- an reference to navigator.mozBluetooth.
  * Reject params: (none)
  *
@@ -151,11 +156,12 @@ function ensureBluetoothManager(aPermissions) {
   return deferred.promise;
 }
 
-/* Wait for one named BluetoothManager event.
+/**
+ * Wait for one named BluetoothManager event.
  *
  * Resolve if that named event occurs.  Never reject.
  *
- * Forfill params: the DOMEvent passed.
+ * Fulfill params: the DOMEvent passed.
  *
  * @return A deferred promise.
  */
@@ -172,12 +178,13 @@ function waitForManagerEvent(aEventName) {
   return deferred.promise;
 }
 
-/* Convenient function for setBluetoothEnabled and waitForManagerEvent
+/**
+ * Convenient function for setBluetoothEnabled and waitForManagerEvent
  * combined.
  *
  * Resolve if that named event occurs.  Reject if we can't set settings.
  *
- * Forfill params: the DOMEvent passed.
+ * Fulfill params: the DOMEvent passed.
  * Reject params: (none)
  *
  * @return A deferred promise.
@@ -198,11 +205,12 @@ function setBluetoothEnabledAndWait(aEnabled) {
   return Promise.all(promises);
 }
 
-/* Get default adapter.
+/**
+ * Get default adapter.
  *
  * Resolve if that default adapter is got, reject otherwise.
  *
- * Forfill params: a BluetoothAdapter instance.
+ * Fulfill params: a BluetoothAdapter instance.
  * Reject params: a DOMError, or null if if there is no adapter ready yet.
  *
  * @return A deferred promise.
@@ -237,7 +245,8 @@ function getDefaultAdapter() {
   return deferred.promise;
 }
 
-/* Flush permission settings and call |finish()|.
+/**
+ * Flush permission settings and call |finish()|.
  */
 function cleanUp() {
   SpecialPowers.flushPermissions(function() {
