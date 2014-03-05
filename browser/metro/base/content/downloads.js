@@ -549,12 +549,27 @@ var MetroDownloadsView = {
     switch (aEvent.type) {
       case 'TabClose': {
         let browser = aEvent.originalTarget.linkedBrowser;
-        dump("DownloadNotificationsView handleEvent, got TabClose event for browser: "+browser+"\n");
-        let notn = this._getNotificationWithValue("download-progress");
-        if (notn && notn.defaultView == browser.contentWindow) {
-          let nextTab = Browser.getNextTab(aEvent.originalTarget);
-          let box = Browser.getNotificationBox(nextTab.linkedBrowser);
-          box.insertBefore(notn, box.firstChild);
+        let tab = Browser.getTabForBrowser(browser);
+        let notificationBox = Browser.getNotificationBox(browser);
+
+        // move any download-related notification before the tab and its notificationBox goes away
+        // The 3 possible values should be mutually exclusive
+        for(let name of ["download-progress",
+                        "save-download",
+                        "download-complete"]) {
+          let notn = notificationBox.getNotificationWithValue(name);
+          if (!notn) {
+            continue;
+          }
+
+          let nextTab = Browser.getNextTab(tab);
+          let nextBox = nextTab && Browser.getNotificationBox(nextTab.browser);
+          if (nextBox) {
+            // move notification to the next tab
+            nextBox.adoptNotification(notn);
+          } else {
+            // Alas, no browser to move the notifications to.
+          }
         }
         break;
       }
