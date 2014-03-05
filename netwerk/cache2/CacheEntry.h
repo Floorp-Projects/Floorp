@@ -70,7 +70,6 @@ public:
   bool UsingDisk() const;
   bool SetUsingDisk(bool aUsingDisk);
   bool IsReferenced() const;
-  bool IsFileDoomed();
 
   // Methods for entry management (eviction from memory),
   // called only on the management thread.

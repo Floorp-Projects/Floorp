@@ -62,13 +62,15 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
   CacheFileMetadata(CacheFileHandle *aHandle,
-                    const nsACString &aKey);
+                    const nsACString &aKey,
+                    bool aKeyIsHash);
   CacheFileMetadata(const nsACString &aKey);
   CacheFileMetadata();
 
   void SetHandle(CacheFileHandle *aHandle);
 
   nsresult GetKey(nsACString &_retval);
+  bool     KeyIsHash();
 
   nsresult ReadMetadata(CacheFileMetadataListener *aListener);
   nsresult WriteMetadata(uint32_t aOffset,
@@ -112,13 +114,14 @@ private:
   virtual ~CacheFileMetadata();
 
   void     InitEmptyMetadata();
-  nsresult ParseMetadata(uint32_t aMetaOffset, uint32_t aBufOffset, bool aHaveKey);
+  nsresult ParseMetadata(uint32_t aMetaOffset, uint32_t aBufOffset);
   nsresult CheckElements(const char *aBuf, uint32_t aSize);
   void     EnsureBuffer(uint32_t aSize);
   nsresult ParseKey(const nsACString &aKey);
 
   nsRefPtr<CacheFileHandle>           mHandle;
   nsCString                           mKey;
+  bool                                mKeyIsHash;
   CacheHash::Hash16_t                *mHashArray;
   uint32_t                            mHashArraySize;
   uint32_t                            mHashCount;
