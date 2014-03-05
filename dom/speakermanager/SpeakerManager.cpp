@@ -4,12 +4,12 @@
 
 #include "SpeakerManager.h"
 #include "nsIDOMClassInfo.h"
+#include "nsIDOMEvent.h"
 #include "nsIDOMEventListener.h"
 #include "SpeakerManagerService.h"
 #include "nsIPermissionManager.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIDocShell.h"
-#include "nsDOMEvent.h"
 #include "AudioChannelService.h"
 
 using namespace mozilla::dom;

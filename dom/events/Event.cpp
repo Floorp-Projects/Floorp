@@ -3,62 +3,58 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "base/basictypes.h"
-
 #include "AccessCheck.h"
+#include "base/basictypes.h"
 #include "ipc/IPCMessageUtils.h"
-#include "nsCOMPtr.h"
-#include "nsError.h"
-#include "nsDOMEvent.h"
-#include "nsEventStateManager.h"
-#include "nsIFrame.h"
-#include "nsIContent.h"
-#include "nsIPresShell.h"
-#include "nsIDocument.h"
+#include "mozilla/dom/Event.h"
 #include "mozilla/ContentEvents.h"
 #include "mozilla/InternalMutationEvent.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
 #include "nsContentUtils.h"
-#include "nsJSEnvironment.h"
-#include "mozilla/Preferences.h"
-#include "nsLayoutUtils.h"
-#include "nsIScrollableFrame.h"
-#include "nsDOMEventTargetHelper.h"
-#include "nsPIWindowRoot.h"
-#include "nsGlobalWindow.h"
+#include "nsCOMPtr.h"
 #include "nsDeviceContext.h"
-
-using namespace mozilla;
-using namespace mozilla::dom;
+#include "nsDOMEventTargetHelper.h"
+#include "nsError.h"
+#include "nsEventStateManager.h"
+#include "nsGlobalWindow.h"
+#include "nsIFrame.h"
+#include "nsIContent.h"
+#include "nsIDocument.h"
+#include "nsIPresShell.h"
+#include "nsIScrollableFrame.h"
+#include "nsJSEnvironment.h"
+#include "nsLayoutUtils.h"
+#include "nsPIWindowRoot.h"
 
 namespace mozilla {
 namespace dom {
+
 namespace workers {
 extern bool IsCurrentThreadRunningChromeWorker();
 } // namespace workers
-} // namespace dom
-} // namespace mozilla
 
 static char *sPopupAllowedEvents;
 
-
-nsDOMEvent::nsDOMEvent(mozilla::dom::EventTarget* aOwner,
-                       nsPresContext* aPresContext, WidgetEvent* aEvent)
+Event::Event(EventTarget* aOwner,
+             nsPresContext* aPresContext,
+             WidgetEvent* aEvent)
 {
   ConstructorInit(aOwner, aPresContext, aEvent);
 }
 
-nsDOMEvent::nsDOMEvent(nsPIDOMWindow* aParent)
+Event::Event(nsPIDOMWindow* aParent)
 {
   ConstructorInit(static_cast<nsGlobalWindow *>(aParent), nullptr, nullptr);
 }
 
 void
-nsDOMEvent::ConstructorInit(mozilla::dom::EventTarget* aOwner,
-                            nsPresContext* aPresContext, WidgetEvent* aEvent)
+Event::ConstructorInit(EventTarget* aOwner,
+                       nsPresContext* aPresContext,
+                       WidgetEvent* aEvent)
 {
   SetIsDOMBinding();
   SetOwner(aOwner);
@@ -80,13 +76,13 @@ nsDOMEvent::ConstructorInit(mozilla::dom::EventTarget* aOwner,
       (derived from WidgetEvent). To do this, it should take care to pass
       a non-nullptr aEvent to this ctor, e.g.:
       
-        nsDOMFooEvent::nsDOMFooEvent(..., WidgetEvent* aEvent)
-        : nsDOMEvent(..., aEvent ? aEvent : new nsFooEvent())
+        FooEvent::FooEvent(..., WidgetEvent* aEvent)
+          : Event(..., aEvent ? aEvent : new WidgetEvent())
       
       Then, to override the mEventIsInternal assignments done by the
       base ctor, it should do this in its own ctor:
 
-        nsDOMFooEvent::nsDOMFooEvent(..., WidgetEvent* aEvent)
+        FooEvent::FooEvent(..., WidgetEvent* aEvent)
         ...
         {
           ...
@@ -107,7 +103,7 @@ nsDOMEvent::ConstructorInit(mozilla::dom::EventTarget* aOwner,
 }
 
 void
-nsDOMEvent::InitPresContextData(nsPresContext* aPresContext)
+Event::InitPresContextData(nsPresContext* aPresContext)
 {
   mPresContext = aPresContext;
   // Get the explicit original target (if it's anonymous make it null)
@@ -120,31 +116,31 @@ nsDOMEvent::InitPresContextData(nsPresContext* aPresContext)
   }
 }
 
-nsDOMEvent::~nsDOMEvent() 
+Event::~Event() 
 {
-  NS_ASSERT_OWNINGTHREAD(nsDOMEvent);
+  NS_ASSERT_OWNINGTHREAD(Event);
 
   if (mEventIsInternal && mEvent) {
     delete mEvent;
   }
 }
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMEvent)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Event)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEvent)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMEvent)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDOMEvent)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(Event)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(Event)
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsDOMEvent)
+NS_IMPL_CYCLE_COLLECTION_CLASS(Event)
 
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsDOMEvent)
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(Event)
   NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMEvent)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Event)
   if (tmp->mEventIsInternal) {
     tmp->mEvent->target = nullptr;
     tmp->mEvent->currentTarget = nullptr;
@@ -182,7 +178,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMEvent)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMEvent)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Event)
   if (tmp->mEventIsInternal) {
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEvent->target)
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEvent->currentTarget)
@@ -227,7 +223,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMEvent)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 bool
-nsDOMEvent::IsChrome(JSContext* aCx) const
+Event::IsChrome(JSContext* aCx) const
 {
   return mIsMainThreadEvent ?
     xpc::AccessCheck::isChrome(js::GetContextCompartment(aCx)) :
@@ -235,7 +231,8 @@ nsDOMEvent::IsChrome(JSContext* aCx) const
 }
 
 // nsIDOMEventInterface
-NS_METHOD nsDOMEvent::GetType(nsAString& aType)
+NS_METHOD
+Event::GetType(nsAString& aType)
 {
   if (!mIsMainThreadEvent || !mEvent->typeString.IsEmpty()) {
     aType = mEvent->typeString;
@@ -263,26 +260,26 @@ GetDOMEventTarget(nsIDOMEventTarget* aTarget)
 }
 
 EventTarget*
-nsDOMEvent::GetTarget() const
+Event::GetTarget() const
 {
   return GetDOMEventTarget(mEvent->target);
 }
 
 NS_METHOD
-nsDOMEvent::GetTarget(nsIDOMEventTarget** aTarget)
+Event::GetTarget(nsIDOMEventTarget** aTarget)
 {
   NS_IF_ADDREF(*aTarget = GetTarget());
   return NS_OK;
 }
 
 EventTarget*
-nsDOMEvent::GetCurrentTarget() const
+Event::GetCurrentTarget() const
 {
   return GetDOMEventTarget(mEvent->currentTarget);
 }
 
 NS_IMETHODIMP
-nsDOMEvent::GetCurrentTarget(nsIDOMEventTarget** aCurrentTarget)
+Event::GetCurrentTarget(nsIDOMEventTarget** aCurrentTarget)
 {
   NS_IF_ADDREF(*aCurrentTarget = GetCurrentTarget());
   return NS_OK;
@@ -292,7 +289,7 @@ nsDOMEvent::GetCurrentTarget(nsIDOMEventTarget** aCurrentTarget)
 // Get the actual event target node (may have been retargeted for mouse events)
 //
 already_AddRefed<nsIContent>
-nsDOMEvent::GetTargetFromFrame()
+Event::GetTargetFromFrame()
 {
   if (!mPresContext) { return nullptr; }
 
@@ -307,7 +304,7 @@ nsDOMEvent::GetTargetFromFrame()
 }
 
 EventTarget*
-nsDOMEvent::GetExplicitOriginalTarget() const
+Event::GetExplicitOriginalTarget() const
 {
   if (mExplicitOriginalTarget) {
     return mExplicitOriginalTarget;
@@ -316,14 +313,14 @@ nsDOMEvent::GetExplicitOriginalTarget() const
 }
 
 NS_IMETHODIMP
-nsDOMEvent::GetExplicitOriginalTarget(nsIDOMEventTarget** aRealEventTarget)
+Event::GetExplicitOriginalTarget(nsIDOMEventTarget** aRealEventTarget)
 {
   NS_IF_ADDREF(*aRealEventTarget = GetExplicitOriginalTarget());
   return NS_OK;
 }
 
 EventTarget*
-nsDOMEvent::GetOriginalTarget() const
+Event::GetOriginalTarget() const
 {
   if (mEvent->originalTarget) {
     return GetDOMEventTarget(mEvent->originalTarget);
@@ -333,20 +330,20 @@ nsDOMEvent::GetOriginalTarget() const
 }
 
 NS_IMETHODIMP
-nsDOMEvent::GetOriginalTarget(nsIDOMEventTarget** aOriginalTarget)
+Event::GetOriginalTarget(nsIDOMEventTarget** aOriginalTarget)
 {
   NS_IF_ADDREF(*aOriginalTarget = GetOriginalTarget());
   return NS_OK;
 }
 
 NS_IMETHODIMP_(void)
-nsDOMEvent::SetTrusted(bool aTrusted)
+Event::SetTrusted(bool aTrusted)
 {
   mEvent->mFlags.mIsTrusted = aTrusted;
 }
 
 bool
-nsDOMEvent::Init(mozilla::dom::EventTarget* aGlobal)
+Event::Init(mozilla::dom::EventTarget* aGlobal)
 {
   if (!mIsMainThreadEvent) {
     return nsContentUtils::ThreadsafeIsCallerChrome();
@@ -366,15 +363,15 @@ nsDOMEvent::Init(mozilla::dom::EventTarget* aGlobal)
   return trusted;
 }
 
-//static
-already_AddRefed<nsDOMEvent>
-nsDOMEvent::Constructor(const mozilla::dom::GlobalObject& aGlobal,
-                        const nsAString& aType,
-                        const mozilla::dom::EventInit& aParam,
-                        mozilla::ErrorResult& aRv)
+// static
+already_AddRefed<Event>
+Event::Constructor(const GlobalObject& aGlobal,
+                   const nsAString& aType,
+                   const EventInit& aParam,
+                   ErrorResult& aRv)
 {
   nsCOMPtr<mozilla::dom::EventTarget> t = do_QueryInterface(aGlobal.GetAsSupports());
-  nsRefPtr<nsDOMEvent> e = new nsDOMEvent(t, nullptr, nullptr);
+  nsRefPtr<Event> e = new Event(t, nullptr, nullptr);
   bool trusted = e->Init(t);
   aRv = e->InitEvent(aType, aParam.mBubbles, aParam.mCancelable);
   e->SetTrusted(trusted);
@@ -382,7 +379,7 @@ nsDOMEvent::Constructor(const mozilla::dom::GlobalObject& aGlobal,
 }
 
 uint16_t
-nsDOMEvent::EventPhase() const
+Event::EventPhase() const
 {
   // Note, remember to check that this works also
   // if or when Bug 235441 is fixed.
@@ -401,42 +398,42 @@ nsDOMEvent::EventPhase() const
 }
 
 NS_IMETHODIMP
-nsDOMEvent::GetEventPhase(uint16_t* aEventPhase)
+Event::GetEventPhase(uint16_t* aEventPhase)
 {
   *aEventPhase = EventPhase();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMEvent::GetBubbles(bool* aBubbles)
+Event::GetBubbles(bool* aBubbles)
 {
   *aBubbles = Bubbles();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMEvent::GetCancelable(bool* aCancelable)
+Event::GetCancelable(bool* aCancelable)
 {
   *aCancelable = Cancelable();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMEvent::GetTimeStamp(uint64_t* aTimeStamp)
+Event::GetTimeStamp(uint64_t* aTimeStamp)
 {
   *aTimeStamp = TimeStamp();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMEvent::StopPropagation()
+Event::StopPropagation()
 {
   mEvent->mFlags.mPropagationStopped = true;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMEvent::StopImmediatePropagation()
+Event::StopImmediatePropagation()
 {
   mEvent->mFlags.mPropagationStopped = true;
   mEvent->mFlags.mImmediatePropagationStopped = true;
@@ -444,14 +441,14 @@ nsDOMEvent::StopImmediatePropagation()
 }
 
 NS_IMETHODIMP
-nsDOMEvent::GetIsTrusted(bool *aIsTrusted)
+Event::GetIsTrusted(bool* aIsTrusted)
 {
   *aIsTrusted = IsTrusted();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMEvent::PreventDefault()
+Event::PreventDefault()
 {
   // This method is called only from C++ code which must handle default action
   // of this event.  So, pass true always.
@@ -460,7 +457,7 @@ nsDOMEvent::PreventDefault()
 }
 
 void
-nsDOMEvent::PreventDefault(JSContext* aCx)
+Event::PreventDefault(JSContext* aCx)
 {
   MOZ_ASSERT(aCx, "JS context must be specified");
 
@@ -472,7 +469,7 @@ nsDOMEvent::PreventDefault(JSContext* aCx)
 }
 
 void
-nsDOMEvent::PreventDefaultInternal(bool aCalledByDefaultHandler)
+Event::PreventDefaultInternal(bool aCalledByDefaultHandler)
 {
   if (!mEvent->mFlags.mCancelable) {
     return;
@@ -511,7 +508,7 @@ nsDOMEvent::PreventDefaultInternal(bool aCalledByDefaultHandler)
 }
 
 void
-nsDOMEvent::SetEventType(const nsAString& aEventTypeArg)
+Event::SetEventType(const nsAString& aEventTypeArg)
 {
   if (mIsMainThreadEvent) {
     mEvent->userType =
@@ -525,7 +522,9 @@ nsDOMEvent::SetEventType(const nsAString& aEventTypeArg)
 }
 
 NS_IMETHODIMP
-nsDOMEvent::InitEvent(const nsAString& aEventTypeArg, bool aCanBubbleArg, bool aCancelableArg)
+Event::InitEvent(const nsAString& aEventTypeArg,
+                 bool aCanBubbleArg,
+                 bool aCancelableArg)
 {
   // Make sure this event isn't already being dispatched.
   NS_ENSURE_TRUE(!mEvent->mFlags.mIsBeingDispatched, NS_OK);
@@ -552,9 +551,9 @@ nsDOMEvent::InitEvent(const nsAString& aEventTypeArg, bool aCanBubbleArg, bool a
 }
 
 NS_IMETHODIMP
-nsDOMEvent::DuplicatePrivateData()
+Event::DuplicatePrivateData()
 {
-  NS_ASSERTION(mEvent, "No WidgetEvent for nsDOMEvent duplication!");
+  NS_ASSERTION(mEvent, "No WidgetEvent for Event duplication!");
   if (mEventIsInternal) {
     return NS_OK;
   }
@@ -568,7 +567,7 @@ nsDOMEvent::DuplicatePrivateData()
 }
 
 NS_IMETHODIMP
-nsDOMEvent::SetTarget(nsIDOMEventTarget* aTarget)
+Event::SetTarget(nsIDOMEventTarget* aTarget)
 {
 #ifdef DEBUG
   {
@@ -584,19 +583,19 @@ nsDOMEvent::SetTarget(nsIDOMEventTarget* aTarget)
 }
 
 NS_IMETHODIMP_(bool)
-nsDOMEvent::IsDispatchStopped()
+Event::IsDispatchStopped()
 {
   return mEvent->mFlags.mPropagationStopped;
 }
 
 NS_IMETHODIMP_(WidgetEvent*)
-nsDOMEvent::GetInternalNSEvent()
+Event::GetInternalNSEvent()
 {
   return mEvent;
 }
 
-NS_IMETHODIMP_(nsDOMEvent*)
-nsDOMEvent::InternalDOMEvent()
+NS_IMETHODIMP_(Event*)
+Event::InternalDOMEvent()
 {
   return this;
 }
@@ -607,7 +606,7 @@ static bool
 PopupAllowedForEvent(const char *eventName)
 {
   if (!sPopupAllowedEvents) {
-    nsDOMEvent::PopupAllowedEventsChanged();
+    Event::PopupAllowedEventsChanged();
 
     if (!sPopupAllowedEvents) {
       return false;
@@ -643,7 +642,7 @@ PopupAllowedForEvent(const char *eventName)
 
 // static
 PopupControlState
-nsDOMEvent::GetEventPopupControlState(WidgetEvent* aEvent)
+Event::GetEventPopupControlState(WidgetEvent* aEvent)
 {
   // generally if an event handler is running, new windows are disallowed.
   // check for exceptions:
@@ -657,12 +656,14 @@ nsDOMEvent::GetEventPopupControlState(WidgetEvent* aEvent)
     if (nsEventStateManager::IsHandlingUserInput()) {
       switch(aEvent->message) {
       case NS_FORM_SELECTED :
-        if (::PopupAllowedForEvent("select"))
+        if (PopupAllowedForEvent("select")) {
           abuse = openControlled;
+        }
         break;
       case NS_FORM_CHANGE :
-        if (::PopupAllowedForEvent("change"))
+        if (PopupAllowedForEvent("change")) {
           abuse = openControlled;
+        }
         break;
       }
     }
@@ -674,8 +675,9 @@ nsDOMEvent::GetEventPopupControlState(WidgetEvent* aEvent)
     if (nsEventStateManager::IsHandlingUserInput()) {
       switch(aEvent->message) {
       case NS_FORM_INPUT :
-        if (::PopupAllowedForEvent("input"))
+        if (PopupAllowedForEvent("input")) {
           abuse = openControlled;
+        }
         break;
       }
     }
@@ -687,8 +689,9 @@ nsDOMEvent::GetEventPopupControlState(WidgetEvent* aEvent)
     if (nsEventStateManager::IsHandlingUserInput()) {
       switch(aEvent->message) {
       case NS_FORM_CHANGE :
-        if (::PopupAllowedForEvent("change"))
+        if (PopupAllowedForEvent("change")) {
           abuse = openControlled;
+        }
         break;
       case NS_XUL_COMMAND:
         abuse = openControlled;
@@ -702,21 +705,24 @@ nsDOMEvent::GetEventPopupControlState(WidgetEvent* aEvent)
       switch(aEvent->message) {
       case NS_KEY_PRESS :
         // return key on focused button. see note at NS_MOUSE_CLICK.
-        if (key == nsIDOMKeyEvent::DOM_VK_RETURN)
+        if (key == nsIDOMKeyEvent::DOM_VK_RETURN) {
           abuse = openAllowed;
-        else if (::PopupAllowedForEvent("keypress"))
+        } else if (PopupAllowedForEvent("keypress")) {
           abuse = openControlled;
+        }
         break;
       case NS_KEY_UP :
         // space key on focused button. see note at NS_MOUSE_CLICK.
-        if (key == nsIDOMKeyEvent::DOM_VK_SPACE)
+        if (key == nsIDOMKeyEvent::DOM_VK_SPACE) {
           abuse = openAllowed;
-        else if (::PopupAllowedForEvent("keyup"))
+        } else if (PopupAllowedForEvent("keyup")) {
           abuse = openControlled;
+        }
         break;
       case NS_KEY_DOWN :
-        if (::PopupAllowedForEvent("keydown"))
+        if (PopupAllowedForEvent("keydown")) {
           abuse = openControlled;
+        }
         break;
       }
     }
@@ -742,24 +748,28 @@ nsDOMEvent::GetEventPopupControlState(WidgetEvent* aEvent)
         aEvent->AsMouseEvent()->button == WidgetMouseEvent::eLeftButton) {
       switch(aEvent->message) {
       case NS_MOUSE_BUTTON_UP :
-        if (::PopupAllowedForEvent("mouseup"))
+        if (PopupAllowedForEvent("mouseup")) {
           abuse = openControlled;
+        }
         break;
       case NS_MOUSE_BUTTON_DOWN :
-        if (::PopupAllowedForEvent("mousedown"))
+        if (PopupAllowedForEvent("mousedown")) {
           abuse = openControlled;
+        }
         break;
       case NS_MOUSE_CLICK :
         /* Click events get special treatment because of their
            historical status as a more legitimate event handler. If
            click popups are enabled in the prefs, clear the popup
            status completely. */
-        if (::PopupAllowedForEvent("click"))
+        if (PopupAllowedForEvent("click")) {
           abuse = openAllowed;
+        }
         break;
       case NS_MOUSE_DOUBLECLICK :
-        if (::PopupAllowedForEvent("dblclick"))
+        if (PopupAllowedForEvent("dblclick")) {
           abuse = openControlled;
+        }
         break;
       }
     }
@@ -771,12 +781,14 @@ nsDOMEvent::GetEventPopupControlState(WidgetEvent* aEvent)
     if (nsEventStateManager::IsHandlingUserInput()) {
       switch(aEvent->message) {
       case NS_FORM_SUBMIT :
-        if (::PopupAllowedForEvent("submit"))
+        if (PopupAllowedForEvent("submit")) {
           abuse = openControlled;
+        }
         break;
       case NS_FORM_RESET :
-        if (::PopupAllowedForEvent("reset"))
+        if (PopupAllowedForEvent("reset")) {
           abuse = openControlled;
+        }
         break;
       }
     }
@@ -790,7 +802,7 @@ nsDOMEvent::GetEventPopupControlState(WidgetEvent* aEvent)
 
 // static
 void
-nsDOMEvent::PopupAllowedEventsChanged()
+Event::PopupAllowedEventsChanged()
 {
   if (sPopupAllowedEvents) {
     nsMemory::Free(sPopupAllowedEvents);
@@ -805,7 +817,7 @@ nsDOMEvent::PopupAllowedEventsChanged()
 
 // static
 void
-nsDOMEvent::Shutdown()
+Event::Shutdown()
 {
   if (sPopupAllowedEvents) {
     nsMemory::Free(sPopupAllowedEvents);
@@ -813,9 +825,9 @@ nsDOMEvent::Shutdown()
 }
 
 nsIntPoint
-nsDOMEvent::GetScreenCoords(nsPresContext* aPresContext,
-                            WidgetEvent* aEvent,
-                            LayoutDeviceIntPoint aPoint)
+Event::GetScreenCoords(nsPresContext* aPresContext,
+                       WidgetEvent* aEvent,
+                       LayoutDeviceIntPoint aPoint)
 {
   if (nsEventStateManager::sIsPointerLocked) {
     return nsEventStateManager::sLastScreenPoint;
@@ -844,17 +856,15 @@ nsDOMEvent::GetScreenCoords(nsPresContext* aPresContext,
                     nsPresContext::AppUnitsToIntCSSPixels(offset.y * factor));
 }
 
-//static
+// static
 CSSIntPoint
-nsDOMEvent::GetPageCoords(nsPresContext* aPresContext,
-                          WidgetEvent* aEvent,
-                          LayoutDeviceIntPoint aPoint,
-                          CSSIntPoint aDefaultPoint)
+Event::GetPageCoords(nsPresContext* aPresContext,
+                     WidgetEvent* aEvent,
+                     LayoutDeviceIntPoint aPoint,
+                     CSSIntPoint aDefaultPoint)
 {
-  CSSIntPoint pagePoint = nsDOMEvent::GetClientCoords(aPresContext,
-                                                      aEvent,
-                                                      aPoint,
-                                                      aDefaultPoint);
+  CSSIntPoint pagePoint =
+    Event::GetClientCoords(aPresContext, aEvent, aPoint, aDefaultPoint);
 
   // If there is some scrolling, add scroll info to client point.
   if (aPresContext && aPresContext->GetPresShell()) {
@@ -870,10 +880,10 @@ nsDOMEvent::GetPageCoords(nsPresContext* aPresContext,
 
 // static
 CSSIntPoint
-nsDOMEvent::GetClientCoords(nsPresContext* aPresContext,
-                            WidgetEvent* aEvent,
-                            LayoutDeviceIntPoint aPoint,
-                            CSSIntPoint aDefaultPoint)
+Event::GetClientCoords(nsPresContext* aPresContext,
+                       WidgetEvent* aEvent,
+                       LayoutDeviceIntPoint aPoint,
+                       CSSIntPoint aDefaultPoint)
 {
   if (nsEventStateManager::sIsPointerLocked) {
     return nsEventStateManager::sLastClientPoint;
@@ -908,10 +918,11 @@ nsDOMEvent::GetClientCoords(nsPresContext* aPresContext,
   return CSSIntPoint::FromAppUnitsRounded(pt);
 }
 
-// To be called ONLY by nsDOMEvent::GetType (which has the additional
+// To be called ONLY by Event::GetType (which has the additional
 // logic for handling user-defined events).
 // static
-const char* nsDOMEvent::GetEventName(uint32_t aEventType)
+const char*
+Event::GetEventName(uint32_t aEventType)
 {
   switch(aEventType) {
 #define ID_TO_EVENT(name_, _id, _type, _struct) \
@@ -925,12 +936,12 @@ const char* nsDOMEvent::GetEventName(uint32_t aEventType)
   // create and that are not user defined events since this function and
   // SetEventType are incomplete.  (But fixing that requires fixing the
   // arrays in nsEventListenerManager too, since the events for which
-  // this is a problem generally *are* created by nsDOMEvent.)
+  // this is a problem generally *are* created by Event.)
   return nullptr;
 }
 
 bool
-nsDOMEvent::DefaultPrevented(JSContext* aCx) const
+Event::DefaultPrevented(JSContext* aCx) const
 {
   MOZ_ASSERT(aCx, "JS context must be specified");
 
@@ -948,7 +959,7 @@ nsDOMEvent::DefaultPrevented(JSContext* aCx) const
 }
 
 bool
-nsDOMEvent::GetPreventDefault() const
+Event::GetPreventDefault() const
 {
   if (mOwner) {
     if (nsIDocument* doc = mOwner->GetExtantDoc()) {
@@ -962,7 +973,7 @@ nsDOMEvent::GetPreventDefault() const
 }
 
 NS_IMETHODIMP
-nsDOMEvent::GetPreventDefault(bool* aReturn)
+Event::GetPreventDefault(bool* aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
   *aReturn = GetPreventDefault();
@@ -970,7 +981,7 @@ nsDOMEvent::GetPreventDefault(bool* aReturn)
 }
 
 NS_IMETHODIMP
-nsDOMEvent::GetDefaultPrevented(bool* aReturn)
+Event::GetDefaultPrevented(bool* aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
   // This method must be called by only event handlers implemented by C++.
@@ -981,7 +992,7 @@ nsDOMEvent::GetDefaultPrevented(bool* aReturn)
 }
 
 NS_IMETHODIMP_(void)
-nsDOMEvent::Serialize(IPC::Message* aMsg, bool aSerializeInterfaceType)
+Event::Serialize(IPC::Message* aMsg, bool aSerializeInterfaceType)
 {
   if (aSerializeInterfaceType) {
     IPC::WriteParam(aMsg, NS_LITERAL_STRING("event"));
@@ -999,7 +1010,7 @@ nsDOMEvent::Serialize(IPC::Message* aMsg, bool aSerializeInterfaceType)
 }
 
 NS_IMETHODIMP_(bool)
-nsDOMEvent::Deserialize(const IPC::Message* aMsg, void** aIter)
+Event::Deserialize(const IPC::Message* aMsg, void** aIter)
 {
   nsString type;
   NS_ENSURE_TRUE(IPC::ReadParam(aMsg, aIter, &type), false);
@@ -1021,7 +1032,7 @@ nsDOMEvent::Deserialize(const IPC::Message* aMsg, void** aIter)
 }
 
 NS_IMETHODIMP_(void)
-nsDOMEvent::SetOwner(mozilla::dom::EventTarget* aOwner)
+Event::SetOwner(mozilla::dom::EventTarget* aOwner)
 {
   mOwner = nullptr;
 
@@ -1057,12 +1068,18 @@ nsDOMEvent::SetOwner(mozilla::dom::EventTarget* aOwner)
 #endif
 }
 
-nsresult NS_NewDOMEvent(nsIDOMEvent** aInstancePtrResult,
-                        mozilla::dom::EventTarget* aOwner,
-                        nsPresContext* aPresContext,
-                        WidgetEvent* aEvent) 
+} // namespace dom
+} // namespace mozilla
+
+using namespace mozilla;
+using namespace mozilla::dom;
+
+nsresult
+NS_NewDOMEvent(nsIDOMEvent** aInstancePtrResult,
+               EventTarget* aOwner,
+               nsPresContext* aPresContext,
+               WidgetEvent* aEvent) 
 {
-  nsRefPtr<nsDOMEvent> it =
-    new nsDOMEvent(aOwner, aPresContext, aEvent);
+  Event* it = new Event(aOwner, aPresContext, aEvent);
   return CallQueryInterface(it, aInstancePtrResult);
 }

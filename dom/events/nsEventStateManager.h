@@ -219,13 +219,13 @@ public:
   // Holds the point in screen coords that a mouse event was dispatched to,
   // before we went into pointer lock mode. This is constantly updated while
   // the pointer is not locked, but we don't update it while the pointer is
-  // locked. This is used by nsDOMEvent::GetScreenCoords() to make mouse
+  // locked. This is used by dom::Event::GetScreenCoords() to make mouse
   // events' screen coord appear frozen at the last mouse position while
   // the pointer is locked.
   static nsIntPoint sLastScreenPoint;
 
   // Holds the point in client coords of the last mouse event. Used by
-  // nsDOMEvent::GetClientCoords() to make mouse events' client coords appear
+  // dom::Event::GetClientCoords() to make mouse events' client coords appear
   // frozen at the last mouse position while the pointer is locked.
   static mozilla::CSSIntPoint sLastClientPoint;
 

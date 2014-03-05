@@ -6,14 +6,14 @@
 #ifndef mozilla_dom_TimeEvent_h_
 #define mozilla_dom_TimeEvent_h_
 
-#include "nsIDOMTimeEvent.h"
-#include "nsDOMEvent.h"
+#include "mozilla/dom/Event.h"
 #include "mozilla/dom/TimeEventBinding.h"
+#include "nsIDOMTimeEvent.h"
 
 namespace mozilla {
 namespace dom {
 
-class TimeEvent MOZ_FINAL : public nsDOMEvent,
+class TimeEvent MOZ_FINAL : public Event,
                             public nsIDOMTimeEvent
 {
 public:
@@ -23,13 +23,13 @@ public:
 
   // nsISupports interface:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(TimeEvent, nsDOMEvent)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(TimeEvent, Event)
 
   // nsIDOMTimeEvent interface:
   NS_DECL_NSIDOMTIMEEVENT
 
   // Forward to base class
-  NS_FORWARD_TO_NSDOMEVENT
+  NS_FORWARD_TO_EVENT
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE

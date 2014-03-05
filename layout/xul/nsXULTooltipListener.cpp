@@ -5,7 +5,6 @@
 
 #include "nsXULTooltipListener.h"
 
-#include "nsDOMEvent.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIDOMXULElement.h"
@@ -30,6 +29,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/Event.h" // for nsIDOMEvent::InternalDOMEvent()
 
 using namespace mozilla;
 using namespace mozilla::dom;

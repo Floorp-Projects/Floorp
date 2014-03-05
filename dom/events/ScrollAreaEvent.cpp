@@ -70,7 +70,7 @@ ScrollAreaEvent::Serialize(IPC::Message* aMsg,
     IPC::WriteParam(aMsg, NS_LITERAL_STRING("scrollareaevent"));
   }
 
-  nsDOMEvent::Serialize(aMsg, false);
+  Event::Serialize(aMsg, false);
 
   IPC::WriteParam(aMsg, X());
   IPC::WriteParam(aMsg, Y());
@@ -81,7 +81,7 @@ ScrollAreaEvent::Serialize(IPC::Message* aMsg,
 NS_IMETHODIMP_(bool)
 ScrollAreaEvent::Deserialize(const IPC::Message* aMsg, void** aIter)
 {
-  NS_ENSURE_TRUE(nsDOMEvent::Deserialize(aMsg, aIter), false);
+  NS_ENSURE_TRUE(Event::Deserialize(aMsg, aIter), false);
 
   float x, y, width, height;
   NS_ENSURE_TRUE(IPC::ReadParam(aMsg, aIter, &x), false);
