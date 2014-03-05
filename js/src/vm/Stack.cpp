@@ -511,14 +511,14 @@ InterpreterStack::pushExecuteFrame(JSContext *cx, HandleScript script, const Val
 #endif
 
 void
-ScriptFrameIter::popActivation()
+FrameIter::popActivation()
 {
     ++data_.activations_;
     settleOnActivation();
 }
 
 void
-ScriptFrameIter::popInterpreterFrame()
+FrameIter::popInterpreterFrame()
 {
     JS_ASSERT(data_.state_ == INTERP);
 
@@ -531,7 +531,7 @@ ScriptFrameIter::popInterpreterFrame()
 }
 
 void
-ScriptFrameIter::settleOnActivation()
+FrameIter::settleOnActivation()
 {
     while (true) {
         if (data_.activations_.done()) {
@@ -623,8 +623,8 @@ ScriptFrameIter::settleOnActivation()
     }
 }
 
-ScriptFrameIter::Data::Data(JSContext *cx, PerThreadData *perThread, SavedOption savedOption,
-                            ContextOption contextOption, JSPrincipals *principals)
+FrameIter::Data::Data(JSContext *cx, PerThreadData *perThread, SavedOption savedOption,
+                      ContextOption contextOption, JSPrincipals *principals)
   : perThread_(perThread),
     cx_(cx),
     savedOption_(savedOption),
@@ -639,7 +639,7 @@ ScriptFrameIter::Data::Data(JSContext *cx, PerThreadData *perThread, SavedOption
 {
 }
 
-ScriptFrameIter::Data::Data(const ScriptFrameIter::Data &other)
+FrameIter::Data::Data(const FrameIter::Data &other)
   : perThread_(other.perThread_),
     cx_(other.cx_),
     savedOption_(other.savedOption_),
@@ -655,7 +655,7 @@ ScriptFrameIter::Data::Data(const ScriptFrameIter::Data &other)
 {
 }
 
-ScriptFrameIter::ScriptFrameIter(JSContext *cx, SavedOption savedOption)
+FrameIter::FrameIter(JSContext *cx, SavedOption savedOption)
   : data_(cx, &cx->runtime()->mainThread, savedOption, CURRENT_CONTEXT, nullptr)
 #ifdef JS_ION
     , ionInlineFrames_(cx, (js::jit::IonFrameIterator*) nullptr)
@@ -664,8 +664,8 @@ ScriptFrameIter::ScriptFrameIter(JSContext *cx, SavedOption savedOption)
     settleOnActivation();
 }
 
-ScriptFrameIter::ScriptFrameIter(JSContext *cx, ContextOption contextOption,
-                                 SavedOption savedOption, JSPrincipals *principals)
+FrameIter::FrameIter(JSContext *cx, ContextOption contextOption,
+                     SavedOption savedOption, JSPrincipals *principals)
   : data_(cx, &cx->runtime()->mainThread, savedOption, contextOption, principals)
 #ifdef JS_ION
     , ionInlineFrames_(cx, (js::jit::IonFrameIterator*) nullptr)
@@ -674,7 +674,7 @@ ScriptFrameIter::ScriptFrameIter(JSContext *cx, ContextOption contextOption,
     settleOnActivation();
 }
 
-ScriptFrameIter::ScriptFrameIter(const ScriptFrameIter &other)
+FrameIter::FrameIter(const FrameIter &other)
   : data_(other.data_)
 #ifdef JS_ION
     , ionInlineFrames_(other.data_.cx_,
@@ -683,7 +683,7 @@ ScriptFrameIter::ScriptFrameIter(const ScriptFrameIter &other)
 {
 }
 
-ScriptFrameIter::ScriptFrameIter(const Data &data)
+FrameIter::FrameIter(const Data &data)
   : data_(data)
 #ifdef JS_ION
     , ionInlineFrames_(data.cx_, data_.ionFrames_.isOptimizedJS() ? &data_.ionFrames_ : nullptr)
@@ -694,7 +694,7 @@ ScriptFrameIter::ScriptFrameIter(const Data &data)
 
 #ifdef JS_ION
 void
-ScriptFrameIter::nextJitFrame()
+FrameIter::nextJitFrame()
 {
     if (data_.ionFrames_.isOptimizedJS()) {
         ionInlineFrames_.resetOn(&data_.ionFrames_);
@@ -706,7 +706,7 @@ ScriptFrameIter::nextJitFrame()
 }
 
 void
-ScriptFrameIter::popJitFrame()
+FrameIter::popJitFrame()
 {
     JS_ASSERT(data_.state_ == JIT);
 
@@ -729,8 +729,8 @@ ScriptFrameIter::popJitFrame()
 }
 #endif
 
-ScriptFrameIter &
-ScriptFrameIter::operator++()
+FrameIter &
+FrameIter::operator++()
 {
     switch (data_.state_) {
       case DONE:
@@ -774,25 +774,28 @@ ScriptFrameIter::operator++()
 #else
         MOZ_ASSUME_UNREACHABLE("Unexpected state");
 #endif
+      case ASMJS:
+        MOZ_ASSUME_UNREACHABLE("Next patch...");
     }
     return *this;
 }
 
-ScriptFrameIter::Data *
-ScriptFrameIter::copyData() const
+FrameIter::Data *
+FrameIter::copyData() const
 {
 #ifdef JS_ION
     /*
      * This doesn't work for optimized Ion frames since ionInlineFrames_ is
      * not copied.
      */
+    JS_ASSERT(data_.state_ != ASMJS);
     JS_ASSERT(data_.ionFrames_.type() != jit::IonFrame_OptimizedJS);
 #endif
     return data_.cx_->new_<Data>(data_);
 }
 
 AbstractFramePtr
-ScriptFrameIter::copyDataAsAbstractFramePtr() const
+FrameIter::copyDataAsAbstractFramePtr() const
 {
     AbstractFramePtr frame;
     if (Data *data = copyData())
@@ -801,20 +804,21 @@ ScriptFrameIter::copyDataAsAbstractFramePtr() const
 }
 
 JSCompartment *
-ScriptFrameIter::compartment() const
+FrameIter::compartment() const
 {
     switch (data_.state_) {
       case DONE:
         break;
       case INTERP:
       case JIT:
+      case ASMJS:
         return data_.activations_.activation()->compartment();
     }
     MOZ_ASSUME_UNREACHABLE("Unexpected state");
 }
 
 bool
-ScriptFrameIter::isFunctionFrame() const
+FrameIter::isFunctionFrame() const
 {
     switch (data_.state_) {
       case DONE:
@@ -830,12 +834,14 @@ ScriptFrameIter::isFunctionFrame() const
 #else
         break;
 #endif
+      case ASMJS:
+        return true;
     }
     MOZ_ASSUME_UNREACHABLE("Unexpected state");
 }
 
 bool
-ScriptFrameIter::isGlobalFrame() const
+FrameIter::isGlobalFrame() const
 {
     switch (data_.state_) {
       case DONE:
@@ -851,12 +857,14 @@ ScriptFrameIter::isGlobalFrame() const
 #else
         break;
 #endif
+      case ASMJS:
+        return false;
     }
     MOZ_ASSUME_UNREACHABLE("Unexpected state");
 }
 
 bool
-ScriptFrameIter::isEvalFrame() const
+FrameIter::isEvalFrame() const
 {
     switch (data_.state_) {
       case DONE:
@@ -872,12 +880,14 @@ ScriptFrameIter::isEvalFrame() const
 #else
         break;
 #endif
+      case ASMJS:
+        return false;
     }
     MOZ_ASSUME_UNREACHABLE("Unexpected state");
 }
 
 bool
-ScriptFrameIter::isNonEvalFunctionFrame() const
+FrameIter::isNonEvalFunctionFrame() const
 {
     JS_ASSERT(!done());
     switch (data_.state_) {
@@ -887,12 +897,14 @@ ScriptFrameIter::isNonEvalFunctionFrame() const
         return interpFrame()->isNonEvalFunctionFrame();
       case JIT:
         return !isEvalFrame() && isFunctionFrame();
+      case ASMJS:
+        return true;
     }
     MOZ_ASSUME_UNREACHABLE("Unexpected state");
 }
 
 bool
-ScriptFrameIter::isGeneratorFrame() const
+FrameIter::isGeneratorFrame() const
 {
     switch (data_.state_) {
       case DONE:
@@ -901,15 +913,18 @@ ScriptFrameIter::isGeneratorFrame() const
         return interpFrame()->isGeneratorFrame();
       case JIT:
         return false;
+      case ASMJS:
+        return false;
     }
     MOZ_ASSUME_UNREACHABLE("Unexpected state");
 }
 
 bool
-ScriptFrameIter::isConstructing() const
+FrameIter::isConstructing() const
 {
     switch (data_.state_) {
       case DONE:
+      case ASMJS:
         break;
       case JIT:
 #ifdef JS_ION
@@ -927,10 +942,11 @@ ScriptFrameIter::isConstructing() const
 }
 
 AbstractFramePtr
-ScriptFrameIter::abstractFramePtr() const
+FrameIter::abstractFramePtr() const
 {
     switch (data_.state_) {
       case DONE:
+      case ASMJS:
         break;
       case JIT:
 #ifdef JS_ION
@@ -946,10 +962,11 @@ ScriptFrameIter::abstractFramePtr() const
 }
 
 void
-ScriptFrameIter::updatePcQuadratic()
+FrameIter::updatePcQuadratic()
 {
     switch (data_.state_) {
       case DONE:
+      case ASMJS:
         break;
       case INTERP: {
         StackFrame *frame = interpFrame();
@@ -994,10 +1011,11 @@ ScriptFrameIter::updatePcQuadratic()
 }
 
 JSFunction *
-ScriptFrameIter::callee() const
+FrameIter::callee() const
 {
     switch (data_.state_) {
       case DONE:
+      case ASMJS:
         break;
       case INTERP:
         JS_ASSERT(isFunctionFrame());
@@ -1016,10 +1034,11 @@ ScriptFrameIter::callee() const
 }
 
 Value
-ScriptFrameIter::calleev() const
+FrameIter::calleev() const
 {
     switch (data_.state_) {
       case DONE:
+      case ASMJS:
         break;
       case INTERP:
         JS_ASSERT(isFunctionFrame());
@@ -1035,10 +1054,11 @@ ScriptFrameIter::calleev() const
 }
 
 unsigned
-ScriptFrameIter::numActualArgs() const
+FrameIter::numActualArgs() const
 {
     switch (data_.state_) {
       case DONE:
+      case ASMJS:
         break;
       case INTERP:
         JS_ASSERT(isFunctionFrame());
@@ -1058,16 +1078,17 @@ ScriptFrameIter::numActualArgs() const
 }
 
 unsigned
-ScriptFrameIter::numFormalArgs() const
+FrameIter::numFormalArgs() const
 {
     return script()->functionNonDelazifying()->nargs();
 }
 
 Value
-ScriptFrameIter::unaliasedActual(unsigned i, MaybeCheckAliasing checkAliasing) const
+FrameIter::unaliasedActual(unsigned i, MaybeCheckAliasing checkAliasing) const
 {
     switch (data_.state_) {
       case DONE:
+      case ASMJS:
         break;
       case INTERP:
         return interpFrame()->unaliasedActual(i, checkAliasing);
@@ -1083,10 +1104,11 @@ ScriptFrameIter::unaliasedActual(unsigned i, MaybeCheckAliasing checkAliasing) c
 }
 
 JSObject *
-ScriptFrameIter::scopeChain() const
+FrameIter::scopeChain() const
 {
     switch (data_.state_) {
       case DONE:
+      case ASMJS:
         break;
       case JIT:
 #ifdef JS_ION
@@ -1103,7 +1125,7 @@ ScriptFrameIter::scopeChain() const
 }
 
 CallObject &
-ScriptFrameIter::callObj() const
+FrameIter::callObj() const
 {
     JS_ASSERT(callee()->isHeavyweight());
 
@@ -1114,10 +1136,11 @@ ScriptFrameIter::callObj() const
 }
 
 bool
-ScriptFrameIter::hasArgsObj() const
+FrameIter::hasArgsObj() const
 {
     switch (data_.state_) {
       case DONE:
+      case ASMJS:
         break;
       case INTERP:
         return interpFrame()->hasArgsObj();
@@ -1133,12 +1156,13 @@ ScriptFrameIter::hasArgsObj() const
 }
 
 ArgumentsObject &
-ScriptFrameIter::argsObj() const
+FrameIter::argsObj() const
 {
     JS_ASSERT(hasArgsObj());
 
     switch (data_.state_) {
       case DONE:
+      case ASMJS:
         break;
       case JIT:
 #ifdef JS_ION
@@ -1154,9 +1178,9 @@ ScriptFrameIter::argsObj() const
 }
 
 bool
-ScriptFrameIter::computeThis(JSContext *cx) const
+FrameIter::computeThis(JSContext *cx) const
 {
-    JS_ASSERT(!done());
+    JS_ASSERT(!done() && !isAsmJS());
     if (!isIon()) {
         assertSameCompartment(cx, scopeChain());
         return ComputeThis(cx, abstractFramePtr());
@@ -1165,10 +1189,11 @@ ScriptFrameIter::computeThis(JSContext *cx) const
 }
 
 Value
-ScriptFrameIter::thisv() const
+FrameIter::thisv() const
 {
     switch (data_.state_) {
       case DONE:
+      case ASMJS:
         break;
       case JIT:
 #ifdef JS_ION
@@ -1185,10 +1210,11 @@ ScriptFrameIter::thisv() const
 }
 
 Value
-ScriptFrameIter::returnValue() const
+FrameIter::returnValue() const
 {
     switch (data_.state_) {
       case DONE:
+      case ASMJS:
         break;
       case JIT:
 #ifdef JS_ION
@@ -1203,10 +1229,11 @@ ScriptFrameIter::returnValue() const
 }
 
 void
-ScriptFrameIter::setReturnValue(const Value &v)
+FrameIter::setReturnValue(const Value &v)
 {
     switch (data_.state_) {
       case DONE:
+      case ASMJS:
         break;
       case JIT:
 #ifdef JS_ION
@@ -1224,10 +1251,11 @@ ScriptFrameIter::setReturnValue(const Value &v)
 }
 
 size_t
-ScriptFrameIter::numFrameSlots() const
+FrameIter::numFrameSlots() const
 {
     switch (data_.state_) {
       case DONE:
+      case ASMJS:
         break;
       case JIT: {
 #ifdef JS_ION
@@ -1249,10 +1277,11 @@ ScriptFrameIter::numFrameSlots() const
 }
 
 Value
-ScriptFrameIter::frameSlotValue(size_t index) const
+FrameIter::frameSlotValue(size_t index) const
 {
     switch (data_.state_) {
       case DONE:
+      case ASMJS:
         break;
       case JIT:
 #ifdef JS_ION
