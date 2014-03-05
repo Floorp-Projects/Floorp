@@ -1517,6 +1517,20 @@ public:
   static nsIFrame* GetDisplayRootFrame(nsIFrame* aFrame);
 
   /**
+   * Get the reference frame that would be used when constructing a
+   * display item for this frame.  (Note, however, that
+   * nsDisplayTransform use the reference frame appropriate for their
+   * parent, rather than using their own frame as a reference frame.)
+   *
+   * This duplicates some of the logic of GetDisplayRootFrame above and
+   * of nsDisplayListBuilder::FindReferenceFrameFor.
+   *
+   * If you have an nsDisplayListBuilder, you should get the reference
+   * frame from it instead of calling this.
+   */
+  static nsIFrame* GetReferenceFrame(nsIFrame* aFrame);
+
+  /**
    * Get textrun construction flags determined by a given style; in particular
    * some combination of:
    * -- TEXT_DISABLE_OPTIONAL_LIGATURES if letter-spacing is in use
