@@ -252,6 +252,9 @@ pref("browser.uitour.themeOrigin", "https://addons.mozilla.org/%LOCALE%/firefox/
 pref("browser.uitour.pinnedTabUrl", "https://support.mozilla.org/%LOCALE%/kb/pinned-tabs-keep-favorite-websites-open");
 pref("browser.uitour.whitelist.add.260", "www.mozilla.org,support.mozilla.org");
 
+pref("browser.customizemode.tip0.shown", false);
+pref("browser.customizemode.tip0.learnMoreUrl", "https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/customize");
+
 pref("keyword.enabled", true);
 
 pref("general.useragent.locale", "@AB_CD@");
