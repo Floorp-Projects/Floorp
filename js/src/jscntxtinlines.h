@@ -473,6 +473,9 @@ JSContext::currentScript(jsbytecode **ppc,
             return nullptr;
         return script;
     }
+
+    if (act->isAsmJS())
+        return nullptr;
 #endif
 
     JS_ASSERT(act->isInterpreter());

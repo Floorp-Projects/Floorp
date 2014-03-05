@@ -900,8 +900,17 @@ CallContextDebugHandler(JSContext *cx, JSScript *script, jsbytecode *bc, Value *
 JS_FRIEND_API(bool)
 js_CallContextDebugHandler(JSContext *cx)
 {
-    NonBuiltinScriptFrameIter iter(cx);
-    JS_ASSERT(!iter.done());
+    NonBuiltinFrameIter iter(cx);
+
+    // If there is no script to debug, then abort execution even if the user
+    // clicks 'Debug' in the slow-script dialog.
+    if (!iter.hasScript())
+        return false;
+
+    // Even if script was running during the operation callback, it's possible
+    // it was a builtin which 'iter' will have skipped over.
+    if (iter.done())
+        return false;
 
     RootedValue rval(cx);
     RootedScript script(cx, iter.script());
