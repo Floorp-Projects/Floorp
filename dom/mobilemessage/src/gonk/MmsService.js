@@ -315,7 +315,7 @@ MmsConnection.prototype = {
   getIccId: function() {
     let iccInfo = this.radioInterface.rilContext.iccInfo;
 
-    if (!iccInfo || !(iccInfo instanceof Ci.nsIDOMMozGsmIccInfo)) {
+    if (!iccInfo) {
       return null;
     }
 
