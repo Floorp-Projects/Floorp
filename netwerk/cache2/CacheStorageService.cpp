@@ -638,11 +638,13 @@ nsresult CacheFilesDeletor::Execute()
   }
 
   nsresult rv;
+  TimeStamp start;
 
   switch (mMode) {
   case ALL:
   case DOOMED:
     // Simply delete all files, don't doom then though the backend
+    start = TimeStamp::NowLoRes();
 
     while (mEnumerator->HasMore()) {
       nsCOMPtr<nsIFile> file;
@@ -663,9 +665,15 @@ nsresult CacheFilesDeletor::Execute()
 
       ++mRunning;
 
-      if (CacheIOThread::YieldAndRerun()) {
-        LOG(("  deleted %u files, breaking loop for higher level events."));
-        return NS_OK;
+      if (!(mRunning % (1 << 5)) && mEnumerator->HasMore()) {
+        TimeStamp now(TimeStamp::NowLoRes());
+#define DELETOR_LOOP_LIMIT_MS 200
+        static TimeDuration const kLimitms = TimeDuration::FromMilliseconds(DELETOR_LOOP_LIMIT_MS);
+        if ((now - start) > kLimitms) {
+          LOG(("  deleted %u files, breaking %dms loop", mRunning, DELETOR_LOOP_LIMIT_MS));
+          rv = mIOThread->Dispatch(this, CacheIOThread::EVICT);
+          return rv;
+        }
       }
     }
 
@@ -1058,9 +1066,7 @@ CacheStorageService::PurgeOverMemoryLimit()
 
   LOG(("  purging took %1.2fms", (TimeStamp::Now() - start).ToMilliseconds()));
 
-  // When we exit because of yield, leave the flag so this event is not reposted
-  // from OnMemoryConsumptionChange unnecessarily until we are dequeued again.
-  mPurging = CacheIOThread::YieldAndRerun();
+  mPurging = false;
 }
 
 void
@@ -1074,9 +1080,6 @@ CacheStorageService::PurgeExpired()
   uint32_t const memoryLimit = CacheObserver::MemoryLimit();
 
   for (uint32_t i = 0; mMemorySize > memoryLimit && i < mExpirationArray.Length();) {
-    if (CacheIOThread::YieldAndRerun())
-      return;
-
     nsRefPtr<CacheEntry> entry = mExpirationArray[i];
 
     uint32_t expirationTime = entry->GetExpirationTime();
@@ -1106,9 +1109,6 @@ CacheStorageService::PurgeByFrecency(bool &aFrecencyNeedsSort, uint32_t aWhat)
   uint32_t const memoryLimit = CacheObserver::MemoryLimit();
 
   for (uint32_t i = 0; mMemorySize > memoryLimit && i < mFrecencyArray.Length();) {
-    if (CacheIOThread::YieldAndRerun())
-      return;
-
     nsRefPtr<CacheEntry> entry = mFrecencyArray[i];
 
     if (entry->Purge(aWhat)) {
@@ -1129,9 +1129,6 @@ CacheStorageService::PurgeAll(uint32_t aWhat)
   MOZ_ASSERT(IsOnManagementThread());
 
   for (uint32_t i = 0; i < mFrecencyArray.Length();) {
-    if (CacheIOThread::YieldAndRerun())
-      return;
-
     nsRefPtr<CacheEntry> entry = mFrecencyArray[i];
 
     if (entry->Purge(aWhat)) {
