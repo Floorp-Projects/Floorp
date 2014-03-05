@@ -183,12 +183,20 @@ ThreadStackHelper::FillStackBuffer() {
   // Go from front to back
   const volatile StackEntry* entry = mPseudoStack->mStack;
   const volatile StackEntry* end = entry + mPseudoStack->stackSize();
+  // Deduplicate identical, consecutive frames
+  const char* prevLabel = nullptr;
   for (; reservedSize-- && entry != end; entry++) {
     /* We only accept non-copy labels, because
        we are unable to actually copy labels here */
-    if (!entry->isCopyLabel()) {
-      mStackBuffer.infallibleAppend(entry->label());
+    if (entry->isCopyLabel()) {
+      continue;
     }
+    const char* const label = entry->label();
+    if (label == prevLabel) {
+      continue;
+    }
+    mStackBuffer.infallibleAppend(label);
+    prevLabel = label;
   }
   // If we exited early due to buffer size, expand the buffer for next time
   mMaxStackSize += (end - entry);
