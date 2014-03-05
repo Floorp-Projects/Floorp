@@ -32,6 +32,7 @@ let Elements = {};
   ["urlbarState",        "bcast_urlbarState"],
   ["loadingState",       "bcast_loadingState"],
   ["windowState",        "bcast_windowState"],
+  ["chromeState",        "bcast_chromeState"],
   ["mainKeyset",         "mainKeyset"],
   ["stack",              "stack"],
   ["tabList",            "tabs"],
