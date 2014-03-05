@@ -12,3 +12,7 @@ cp $1/src/bitwise.c ./src/ogg_bitwise.c
 cp $1/src/framing.c ./src/ogg_framing.c
 cp $1/AUTHORS ./AUTHORS
 patch -p0 < solaris-types.patch
+# memory-reporting.patch adds ogg_alloc.c, make sure it doesn't exist to avoid
+# unpleasantries.
+rm -f ./src/ogg_alloc.c
+patch -p0 < memory-reporting.patch
