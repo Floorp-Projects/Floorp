@@ -98,7 +98,7 @@ namespace jit {
 
 class AbstractFramePtr
 {
-    friend class ScriptFrameIter;
+    friend class FrameIter;
 
     uintptr_t ptr_;
 
@@ -370,9 +370,9 @@ class StackFrame
     Value *slots() const { return (Value *)(this + 1); }
     Value *base() const { return slots() + script()->nfixed(); }
 
+    friend class FrameIter;
     friend class InterpreterRegs;
     friend class InterpreterStack;
-    friend class ScriptFrameIter;
     friend class jit::BaselineFrame;
 
     /*
@@ -1451,12 +1451,34 @@ class AsmJSActivation : public Activation
     void setResumePC(void *pc) { resumePC_ = pc; }
 };
 
-class ScriptFrameIter
+// A FrameIter walks over the runtime's stack of JS script activations,
+// abstracting over whether the JS scripts were running in the interpreter or
+// different modes of compiled code.
+//
+// FrameIter is parameterized by what it includes in the stack iteration:
+//  - The SavedOption controls whether FrameIter stops when it finds an
+//    activation that was set aside via JS_SaveFrameChain (and not yet retored
+//    by JS_RestoreFrameChain). (Hopefully this will go away.)
+//  - The ContextOption determines whether the iteration will view frames from
+//    all JSContexts or just the given JSContext. (Hopefully this will go away.)
+//  - When provided, the optional JSPrincipal argument will cause FrameIter to
+//    only show frames in globals whose JSPrincipals are subsumed (via
+//    JSSecurityCallbacks::subsume) by the given JSPrincipal.
+//
+// Additionally, there are derived FrameIter types that automatically skip
+// certain frames:
+//  - ScriptFrameIter only shows frames that have an associated JSScript
+//    (currently everything other than asm.js stack frames). When !hasScript(),
+//    clients must stick to the portion of the
+//    interface marked below.
+//  - NonBuiltinScriptFrameIter additionally filters out builtin (self-hosted)
+//    scripts.
+class FrameIter
 {
   public:
     enum SavedOption { STOP_AT_SAVED, GO_THROUGH_SAVED };
     enum ContextOption { CURRENT_CONTEXT, ALL_CONTEXTS };
-    enum State { DONE, INTERP, JIT };
+    enum State { DONE, INTERP, JIT, ASMJS };
 
     // Unlike ScriptFrameIter itself, ScriptFrameIter::Data can be allocated on
     // the heap, so this structure should not contain any GC things.
@@ -1484,11 +1506,11 @@ class ScriptFrameIter
         Data(const Data &other);
     };
 
-    ScriptFrameIter(JSContext *cx, SavedOption = STOP_AT_SAVED);
-    ScriptFrameIter(JSContext *cx, ContextOption, SavedOption, JSPrincipals* = nullptr);
-    ScriptFrameIter(const ScriptFrameIter &iter);
-    ScriptFrameIter(const Data &data);
-    ScriptFrameIter(AbstractFramePtr frame);
+    FrameIter(JSContext *cx, SavedOption = STOP_AT_SAVED);
+    FrameIter(JSContext *cx, ContextOption, SavedOption, JSPrincipals* = nullptr);
+    FrameIter(const FrameIter &iter);
+    FrameIter(const Data &data);
+    FrameIter(AbstractFramePtr frame);
 
     bool done() const { return data_.state_ == DONE; }
 
@@ -1496,13 +1518,14 @@ class ScriptFrameIter
     // The following functions can only be called when !done()
     // -------------------------------------------------------
 
-    ScriptFrameIter &operator++();
+    FrameIter &operator++();
 
     JSCompartment *compartment() const;
     Activation *activation() const { return data_.activations_.activation(); }
 
     bool isInterp() const { JS_ASSERT(!done()); return data_.state_ == INTERP;  }
     bool isJit() const { JS_ASSERT(!done()); return data_.state_ == JIT; }
+    bool isAsmJS() const { JS_ASSERT(!done()); return data_.state_ == ASMJS; }
     inline bool isIon() const;
     inline bool isBaseline() const;
 
@@ -1511,11 +1534,17 @@ class ScriptFrameIter
     bool isEvalFrame() const;
     bool isNonEvalFunctionFrame() const;
     bool isGeneratorFrame() const;
-    bool isConstructing() const;
     bool hasArgs() const { return isNonEvalFunctionFrame(); }
+
+    bool hasScript() const { return !isAsmJS(); }
+
+    // -----------------------------------------------------------
+    // The following functions can only be called when hasScript()
+    // -----------------------------------------------------------
 
     inline JSScript *script() const;
 
+    bool        isConstructing() const;
     jsbytecode *pc() const { JS_ASSERT(!done()); return data_.pc_; }
     void        updatePcQuadratic();
     JSFunction *callee() const;
@@ -1572,6 +1601,36 @@ class ScriptFrameIter
     void settleOnActivation();
 
     friend class ::JSBrokenFrameIterator;
+};
+
+class ScriptFrameIter : public FrameIter
+{
+    void settle() {
+        while (!done() && !hasScript())
+            FrameIter::operator++();
+    }
+
+  public:
+    ScriptFrameIter(JSContext *cx, SavedOption savedOption = STOP_AT_SAVED)
+      : FrameIter(cx, savedOption)
+    {}
+
+    ScriptFrameIter(JSContext *cx,
+                    ContextOption cxOption,
+                    SavedOption savedOption,
+                    JSPrincipals *prin = nullptr)
+      : FrameIter(cx, cxOption, savedOption, prin)
+    {}
+
+    ScriptFrameIter(const ScriptFrameIter &iter) : FrameIter(iter) {}
+    ScriptFrameIter(const FrameIter::Data &data) : FrameIter(data) {}
+    ScriptFrameIter(AbstractFramePtr frame) : FrameIter(frame) {}
+
+    ScriptFrameIter &operator++() {
+        FrameIter::operator++();
+        settle();
+        return *this;
+    }
 };
 
 #ifdef DEBUG
@@ -1632,7 +1691,7 @@ class AllFramesIter : public ScriptFrameIter
 /* Popular inline definitions. */
 
 inline JSScript *
-ScriptFrameIter::script() const
+FrameIter::script() const
 {
     JS_ASSERT(!done());
     if (data_.state_ == INTERP)
@@ -1648,7 +1707,7 @@ ScriptFrameIter::script() const
 }
 
 inline bool
-ScriptFrameIter::isIon() const
+FrameIter::isIon() const
 {
 #ifdef JS_ION
     return isJit() && data_.ionFrames_.isOptimizedJS();
@@ -1658,7 +1717,7 @@ ScriptFrameIter::isIon() const
 }
 
 inline bool
-ScriptFrameIter::isBaseline() const
+FrameIter::isBaseline() const
 {
 #ifdef JS_ION
     return isJit() && data_.ionFrames_.isBaselineJS();
@@ -1668,7 +1727,7 @@ ScriptFrameIter::isBaseline() const
 }
 
 inline StackFrame *
-ScriptFrameIter::interpFrame() const
+FrameIter::interpFrame() const
 {
     JS_ASSERT(data_.state_ == INTERP);
     return data_.interpFrames_.frame();

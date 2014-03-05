@@ -326,10 +326,11 @@ InterpreterStack::popInlineFrame(InterpreterRegs &regs)
 
 template <class Op>
 inline void
-ScriptFrameIter::unaliasedForEachActual(JSContext *cx, Op op)
+FrameIter::unaliasedForEachActual(JSContext *cx, Op op)
 {
     switch (data_.state_) {
       case DONE:
+      case ASMJS:
         break;
       case INTERP:
         interpFrame()->unaliasedForEachActual(op);
