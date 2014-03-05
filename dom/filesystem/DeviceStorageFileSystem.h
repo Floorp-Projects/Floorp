@@ -35,6 +35,10 @@ public:
 
   virtual const nsAString&
   GetRootName() const MOZ_OVERRIDE;
+
+  virtual bool
+  IsSafeFile(nsIFile* aFile) const MOZ_OVERRIDE;
+
 private:
   virtual
   ~DeviceStorageFileSystem();
@@ -45,6 +49,7 @@ private:
   // The local path of the root. Only available in the parent process.
   // In the child process, we don't use it and its value should be empty.
   nsString mLocalRootPath;
+  nsString mNormalizedLocalRootPath;
   nsDOMDeviceStorage* mDeviceStorage;
 };
 

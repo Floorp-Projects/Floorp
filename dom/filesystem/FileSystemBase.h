@@ -56,11 +56,34 @@ public:
    */
   virtual const nsAString&
   GetRootName() const = 0;
+
+  virtual bool
+  IsSafeFile(nsIFile* aFile) const;
+
+  /*
+   * Get the permission name required to access this file system.
+   */
+  const nsCString&
+  GetPermission() const
+  {
+    return mPermission;
+  }
+
+  bool
+  IsTesting() const
+  {
+    return mIsTesting;
+  }
 protected:
   virtual ~FileSystemBase();
 
   // The string representation of the file system.
   nsString mString;
+
+  // The permission name required to access the file system.
+  nsCString mPermission;
+
+  bool mIsTesting;
 };
 
 } // namespace dom
