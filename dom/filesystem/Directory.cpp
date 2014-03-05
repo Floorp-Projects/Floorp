@@ -5,9 +5,15 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/Directory.h"
-#include "mozilla/dom/DirectoryBinding.h"
 
+#include "CreateDirectoryTask.h"
+#include "GetFileOrDirectoryTask.h"
+
+#include "nsCharSeparatedTokenizer.h"
 #include "nsStringGlue.h"
+#include "mozilla/dom/DirectoryBinding.h"
+#include "mozilla/dom/FileSystemBase.h"
+#include "mozilla/dom/FileSystemUtils.h"
 
 // Resolve the name collision of Microsoft's API name with macros defined in
 // Windows header files. Undefine the macro of CreateDirectory to avoid
@@ -27,8 +33,25 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Directory)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-Directory::Directory()
+// static
+already_AddRefed<Promise>
+Directory::GetRoot(FileSystemBase* aFileSystem)
 {
+  nsRefPtr<GetFileOrDirectoryTask> task = new GetFileOrDirectoryTask(
+    aFileSystem, EmptyString(), true);
+  task->Start();
+  return task->GetPromise();
+}
+
+Directory::Directory(FileSystemBase* aFileSystem,
+                     const nsAString& aPath)
+  : mPath(aPath)
+{
+  MOZ_ASSERT(aFileSystem, "aFileSystem should not be null.");
+  mFileSystem = do_GetWeakReference(aFileSystem);
+  // Remove the trailing "/".
+  mPath.Trim(FILESYSTEM_DOM_PATH_SEPARATOR, false, true);
+
   SetIsDOMBinding();
 }
 
@@ -39,8 +62,11 @@ Directory::~Directory()
 nsPIDOMWindow*
 Directory::GetParentObject() const
 {
-  // TODO
-  return nullptr;
+  nsRefPtr<FileSystemBase> fs = do_QueryReferent(mFileSystem);
+  if (!fs) {
+    return nullptr;
+  }
+  return fs->GetWindow();
 }
 
 JSObject*
@@ -53,21 +79,104 @@ void
 Directory::GetName(nsString& aRetval) const
 {
   aRetval.Truncate();
-  // TODO
+
+  nsRefPtr<FileSystemBase> fs = do_QueryReferent(mFileSystem);
+  if (mPath.IsEmpty() && fs) {
+    aRetval = fs->GetRootName();
+    return;
+  }
+
+  aRetval = Substring(mPath,
+                      mPath.RFindChar(FileSystemUtils::kSeparatorChar) + 1);
 }
 
 already_AddRefed<Promise>
 Directory::CreateDirectory(const nsAString& aPath)
 {
-  // TODO
-  return nullptr;
+  nsresult error = NS_OK;
+  nsString realPath;
+  if (!DOMPathToRealPath(aPath, realPath)) {
+    error = NS_ERROR_DOM_FILESYSTEM_INVALID_PATH_ERR;
+  }
+  nsRefPtr<FileSystemBase> fs = do_QueryReferent(mFileSystem);
+  nsRefPtr<CreateDirectoryTask> task = new CreateDirectoryTask(
+    fs, realPath);
+  task->SetError(error);
+  task->Start();
+  return task->GetPromise();
 }
 
 already_AddRefed<Promise>
 Directory::Get(const nsAString& aPath)
 {
-  // TODO
-  return nullptr;
+  nsresult error = NS_OK;
+  nsString realPath;
+  if (!DOMPathToRealPath(aPath, realPath)) {
+    error = NS_ERROR_DOM_FILESYSTEM_INVALID_PATH_ERR;
+  }
+  nsRefPtr<FileSystemBase> fs = do_QueryReferent(mFileSystem);
+  nsRefPtr<GetFileOrDirectoryTask> task = new GetFileOrDirectoryTask(
+      fs, realPath, false);
+  task->SetError(error);
+  task->Start();
+  return task->GetPromise();
+}
+
+bool
+Directory::DOMPathToRealPath(const nsAString& aPath, nsAString& aRealPath) const
+{
+  aRealPath.Truncate();
+
+  nsString relativePath;
+  relativePath = aPath;
+
+  // Trim white spaces.
+  static const char kWhitespace[] = "\b\t\r\n ";
+  relativePath.Trim(kWhitespace);
+
+  if (!IsValidRelativePath(relativePath)) {
+    return false;
+  }
+
+  aRealPath = mPath + NS_LITERAL_STRING(FILESYSTEM_DOM_PATH_SEPARATOR) +
+    relativePath;
+
+  return true;
+}
+
+// static
+bool
+Directory::IsValidRelativePath(const nsString& aPath)
+{
+  // We don't allow empty relative path to access the root.
+  if (aPath.IsEmpty()) {
+    return false;
+  }
+
+  // Leading and trailing "/" are not allowed.
+  if (aPath.First() == FileSystemUtils::kSeparatorChar ||
+      aPath.Last() == FileSystemUtils::kSeparatorChar) {
+    return false;
+  }
+
+  NS_NAMED_LITERAL_STRING(kCurrentDir, ".");
+  NS_NAMED_LITERAL_STRING(kParentDir, "..");
+
+  // Split path and check each path component.
+  nsCharSeparatedTokenizer tokenizer(aPath, FileSystemUtils::kSeparatorChar);
+  while (tokenizer.hasMoreTokens()) {
+    nsDependentSubstring pathComponent = tokenizer.nextToken();
+    // The path containing empty components, such as "foo//bar", is invalid.
+    // We don't allow paths, such as "../foo", "foo/./bar" and "foo/../bar",
+    // to walk up the directory.
+    if (pathComponent.IsEmpty() ||
+        pathComponent.Equals(kCurrentDir) ||
+        pathComponent.Equals(kParentDir)) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 } // namespace dom
