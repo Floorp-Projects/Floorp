@@ -131,5 +131,11 @@ CreateDirectoryTask::HandlerCallback()
   mPromise = nullptr;
 }
 
+void
+CreateDirectoryTask::GetPermissionAccessType(nsCString& aAccess) const
+{
+  aAccess.AssignLiteral("create");
+}
+
 } // namespace dom
 } // namespace mozilla

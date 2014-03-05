@@ -44,6 +44,12 @@ FileSystemTaskBase::~FileSystemTaskBase()
 {
 }
 
+FileSystemBase*
+FileSystemTaskBase::GetFileSystem() const
+{
+  return mFileSystem.get();
+}
+
 void
 FileSystemTaskBase::Start()
 {
@@ -171,7 +177,8 @@ FileSystemTaskBase::SetError(const nsresult& aErrorValue)
 {
   uint16_t module = NS_ERROR_GET_MODULE(aErrorValue);
   if (module == NS_ERROR_MODULE_DOM_FILESYSTEM ||
-      module == NS_ERROR_MODULE_DOM_FILE) {
+      module == NS_ERROR_MODULE_DOM_FILE ||
+      module == NS_ERROR_MODULE_DOM) {
     mErrorValue = aErrorValue;
     return;
   }

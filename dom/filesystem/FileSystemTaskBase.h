@@ -128,6 +128,14 @@ public:
   void
   SetError(const nsresult& aErrorCode);
 
+  FileSystemBase*
+  GetFileSystem() const;
+
+  /*
+   * Get the type of permission access required to perform this task.
+   */
+  virtual void
+  GetPermissionAccessType(nsCString& aAccess) const = 0;
 
   NS_DECL_NSIRUNNABLE
 protected:
