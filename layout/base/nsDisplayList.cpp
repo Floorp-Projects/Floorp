@@ -2634,13 +2634,18 @@ nsRect
 nsDisplayBorder::GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap)
 {
   *aSnap = true;
-  const nsStyleBorder *styleBorder = mFrame->StyleBorder();
+  return CalculateBounds(*mFrame->StyleBorder());
+}
+
+nsRect
+nsDisplayBorder::CalculateBounds(const nsStyleBorder& aStyleBorder)
+{
   nsRect borderBounds(ToReferenceFrame(), mFrame->GetSize());
-  if (styleBorder->IsBorderImageLoaded()) {
-    borderBounds.Inflate(mFrame->StyleBorder()->GetImageOutset());
+  if (aStyleBorder.IsBorderImageLoaded()) {
+    borderBounds.Inflate(aStyleBorder.GetImageOutset());
     return borderBounds;
   } else {
-    nsMargin border = styleBorder->GetComputedBorder();
+    nsMargin border = aStyleBorder.GetComputedBorder();
     nsRect result;
     if (border.top > 0) {
       result = nsRect(borderBounds.X(), borderBounds.Y(), borderBounds.Width(), border.top);
