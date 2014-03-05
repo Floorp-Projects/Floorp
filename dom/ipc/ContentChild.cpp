@@ -268,6 +268,16 @@ ConsoleListener::Observe(nsIConsoleMessage* aMessage)
         NS_ENSURE_SUCCESS(rv, rv);
         rv = scriptError->GetSourceLine(sourceLine);
         NS_ENSURE_SUCCESS(rv, rv);
+
+        // Before we send the error to the parent process (which
+        // involves copying the memory), truncate any long lines.  CSS
+        // errors in particular share the memory for long lines with
+        // repeated errors, but the IPC communication we're about to do
+        // will break that sharing, so we better truncate now.
+        if (sourceLine.Length() > 1000) {
+            sourceLine.Truncate(1000);
+        }
+
         rv = scriptError->GetCategory(getter_Copies(category));
         NS_ENSURE_SUCCESS(rv, rv);
         rv = scriptError->GetLineNumber(&lineNum);
