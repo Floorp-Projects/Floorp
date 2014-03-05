@@ -179,6 +179,7 @@ LayerManagerComposite::BeginTransactionWithDrawTarget(DrawTarget* aTarget)
 
   mIsCompositorReady = true;
   mCompositor->SetTargetContext(aTarget);
+  mTarget = aTarget;
 }
 
 bool
@@ -243,6 +244,7 @@ LayerManagerComposite::EndTransaction(DrawThebesLayerCallback aCallback,
   }
 
   mCompositor->SetTargetContext(nullptr);
+  mTarget = nullptr;
 
 #ifdef MOZ_LAYERS_HAVE_LOG
   Log();
@@ -444,7 +446,7 @@ LayerManagerComposite::Render()
   /** Our more efficient but less powerful alter ego, if one is available. */
   nsRefPtr<Composer2D> composer2D = mCompositor->GetWidget()->GetComposer2D();
 
-  if (composer2D && composer2D->TryRender(mRoot, mWorldMatrix)) {
+  if (!mTarget && composer2D && composer2D->TryRender(mRoot, mWorldMatrix)) {
     if (mFPS) {
       double fps = mFPS->mCompositionFps.AddFrameAndGetFps(TimeStamp::Now());
       if (gfxPrefs::LayersDrawFPS()) {

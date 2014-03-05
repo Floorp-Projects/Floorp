@@ -306,7 +306,7 @@ private:
   TimeStamp mTestTime;
   bool mIsTesting;
 #ifdef COMPOSITOR_PERFORMANCE_WARNING
-  TimeStamp mExpectedComposeTime;
+  TimeStamp mExpectedComposeStartTime;
 #endif
 
   bool mPaused;
