@@ -5,8 +5,6 @@
 
 #include "imgIContainer.h"
 #include "imgIRequest.h"
-#include "mozilla/gfx/2D.h"
-#include "mozilla/RefPtr.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIImageLoadingContent.h"
@@ -57,8 +55,6 @@
 #define NS_TASKBAR_CONTRACTID "@mozilla.org/windows-taskbar;1"
 
 using mozilla::IsWin8OrLater;
-using namespace mozilla;
-using namespace mozilla::gfx;
 
 NS_IMPL_ISUPPORTS2(nsWindowsShellService, nsIWindowsShellService, nsIShellService)
 
@@ -753,30 +749,21 @@ WriteBitmap(nsIFile* aFile, imgIContainer* aImage)
 {
   nsresult rv;
 
-  nsRefPtr<gfxASurface> thebesSurface =
+  nsRefPtr<gfxASurface> surface =
     aImage->GetFrame(imgIContainer::FRAME_FIRST,
                      imgIContainer::FLAG_SYNC_DECODE);
-  NS_ENSURE_TRUE(thebesSurface, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(surface, NS_ERROR_FAILURE);
 
-  nsRefPtr<gfxImageSurface> thebesImageSurface =
-    thebesSurface->GetAsReadableARGB32ImageSurface();
-  NS_ENSURE_TRUE(thebesImageSurface, NS_ERROR_FAILURE);
+  nsRefPtr<gfxImageSurface> image(surface->GetAsReadableARGB32ImageSurface());
+  NS_ENSURE_TRUE(image, NS_ERROR_FAILURE);
 
-  RefPtr<DataSourceSurface> dataSurface =
-    thebesImageSurface->CopyToB8G8R8A8DataSourceSurface();
-  NS_ENSURE_TRUE(dataSurface, NS_ERROR_FAILURE);
+  int32_t width = image->Width();
+  int32_t height = image->Height();
 
-  DataSourceSurface::MappedSurface map;
-  dataSurface->Map(DataSourceSurface::MapType::READ, &map);
-  if (!map.mData) {
-    return NS_ERROR_FAILURE;
-  }
-
-  int32_t width = dataSurface->GetSize().width;
-  int32_t height = dataSurface->GetSize().height;
-  int32_t bytesPerPixel = 4 * sizeof(uint8_t);
-  uint32_t bytesPerRow = bytesPerPixel * width;
-  uint32_t length = map.mStride * height;
+  uint8_t* bits = image->Data();
+  uint32_t length = image->GetDataSize();
+  uint32_t bpr = uint32_t(image->Stride());
+  int32_t bitCount = bpr/width;
 
   // initialize these bitmap structs which we will later
   // serialize directly to the head of the bitmap file
@@ -785,9 +772,9 @@ WriteBitmap(nsIFile* aFile, imgIContainer* aImage)
   bmi.biWidth = width;
   bmi.biHeight = height;
   bmi.biPlanes = 1;
-  bmi.biBitCount = (WORD)bytesPerPixel*8;
+  bmi.biBitCount = (WORD)bitCount*8;
   bmi.biCompression = BI_RGB;
-  bmi.biSizeImage = bytesPerRow * height;
+  bmi.biSizeImage = length;
   bmi.biXPelsPerMeter = 0;
   bmi.biYPelsPerMeter = 0;
   bmi.biClrUsed = 0;
@@ -817,9 +804,9 @@ WriteBitmap(nsIFile* aFile, imgIContainer* aImage)
         // show bitmaps with negative heights for top-to-bottom
         uint32_t i = length;
         do {
-          i -= map.mStride;
-          stream->Write(((const char*)map.mData) + i, bytesPerRow, &written);
-          if (written == bytesPerRow) {
+          i -= bpr;
+          stream->Write(((const char*)bits) + i, bpr, &written);
+          if (written == bpr) {
             rv = NS_OK;
           } else {
             rv = NS_ERROR_FAILURE;
