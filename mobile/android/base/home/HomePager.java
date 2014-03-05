@@ -40,7 +40,6 @@ public class HomePager extends ViewPager {
     private HomeBanner mHomeBanner;
     private int mDefaultPageIndex = -1;
 
-    private final ViewPager.OnPageChangeListener mPageChangeListener;
     private final OnAddPanelListener mAddPanelListener;
 
     private final HomeConfig mConfig;
@@ -124,8 +123,7 @@ public class HomePager extends ViewPager {
         setFocusableInTouchMode(true);
 
         mOriginalBackground = getBackground();
-        mPageChangeListener = new PageChangeListener();
-        setOnPageChangeListener(mPageChangeListener);
+        setOnPageChangeListener(new PageChangeListener());
     }
 
     @Override
@@ -218,9 +216,8 @@ public class HomePager extends ViewPager {
     public void setCurrentItem(int item, boolean smoothScroll) {
         super.setCurrentItem(item, smoothScroll);
 
-        // Android doesn't call this when there is only one item
-        if (getAdapter().getCount() == 1 && mPageChangeListener != null) {
-            mPageChangeListener.onPageSelected(0);
+        if (mDecor != null) {
+            mDecor.onPageSelected(item);
         }
     }
 
@@ -262,10 +259,6 @@ public class HomePager extends ViewPager {
 
         if (mDecor != null) {
             mDecor.removeAllPagerViews();
-        }
-
-        if (mHomeBanner != null) {
-            mHomeBanner.setActive(false);
         }
 
         final HomeAdapter adapter = (HomeAdapter) getAdapter();
