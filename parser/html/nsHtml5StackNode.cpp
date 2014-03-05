@@ -33,7 +33,7 @@
 #include "nsString.h"
 #include "nsNameSpaceManager.h"
 #include "nsIContent.h"
-#include "nsISupportsImpl.h"
+#include "nsTraceRefcnt.h"
 #include "jArray.h"
 #include "nsHtml5ArrayCopy.h"
 #include "nsAHtml5TreeBuilderState.h"
@@ -41,6 +41,7 @@
 #include "nsHtml5ByteReadable.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsHtml5Macros.h"
+#include "nsIContentHandle.h"
 
 #include "nsHtml5Tokenizer.h"
 #include "nsHtml5TreeBuilder.h"
@@ -85,7 +86,7 @@ nsHtml5StackNode::isHtmlIntegrationPoint()
 }
 
 
-nsHtml5StackNode::nsHtml5StackNode(int32_t flags, int32_t ns, nsIAtom* name, nsIContent** node, nsIAtom* popName, nsHtml5HtmlAttributes* attributes)
+nsHtml5StackNode::nsHtml5StackNode(int32_t flags, int32_t ns, nsIAtom* name, nsIContentHandle* node, nsIAtom* popName, nsHtml5HtmlAttributes* attributes)
   : flags(flags),
     name(name),
     popName(popName),
@@ -98,7 +99,7 @@ nsHtml5StackNode::nsHtml5StackNode(int32_t flags, int32_t ns, nsIAtom* name, nsI
 }
 
 
-nsHtml5StackNode::nsHtml5StackNode(nsHtml5ElementName* elementName, nsIContent** node)
+nsHtml5StackNode::nsHtml5StackNode(nsHtml5ElementName* elementName, nsIContentHandle* node)
   : flags(elementName->getFlags()),
     name(elementName->name),
     popName(elementName->name),
@@ -112,7 +113,7 @@ nsHtml5StackNode::nsHtml5StackNode(nsHtml5ElementName* elementName, nsIContent**
 }
 
 
-nsHtml5StackNode::nsHtml5StackNode(nsHtml5ElementName* elementName, nsIContent** node, nsHtml5HtmlAttributes* attributes)
+nsHtml5StackNode::nsHtml5StackNode(nsHtml5ElementName* elementName, nsIContentHandle* node, nsHtml5HtmlAttributes* attributes)
   : flags(elementName->getFlags()),
     name(elementName->name),
     popName(elementName->name),
@@ -126,7 +127,7 @@ nsHtml5StackNode::nsHtml5StackNode(nsHtml5ElementName* elementName, nsIContent**
 }
 
 
-nsHtml5StackNode::nsHtml5StackNode(nsHtml5ElementName* elementName, nsIContent** node, nsIAtom* popName)
+nsHtml5StackNode::nsHtml5StackNode(nsHtml5ElementName* elementName, nsIContentHandle* node, nsIAtom* popName)
   : flags(elementName->getFlags()),
     name(elementName->name),
     popName(popName),
@@ -139,7 +140,7 @@ nsHtml5StackNode::nsHtml5StackNode(nsHtml5ElementName* elementName, nsIContent**
 }
 
 
-nsHtml5StackNode::nsHtml5StackNode(nsHtml5ElementName* elementName, nsIAtom* popName, nsIContent** node)
+nsHtml5StackNode::nsHtml5StackNode(nsHtml5ElementName* elementName, nsIAtom* popName, nsIContentHandle* node)
   : flags(prepareSvgFlags(elementName->getFlags())),
     name(elementName->name),
     popName(popName),
@@ -152,7 +153,7 @@ nsHtml5StackNode::nsHtml5StackNode(nsHtml5ElementName* elementName, nsIAtom* pop
 }
 
 
-nsHtml5StackNode::nsHtml5StackNode(nsHtml5ElementName* elementName, nsIContent** node, nsIAtom* popName, bool markAsIntegrationPoint)
+nsHtml5StackNode::nsHtml5StackNode(nsHtml5ElementName* elementName, nsIContentHandle* node, nsIAtom* popName, bool markAsIntegrationPoint)
   : flags(prepareMathFlags(elementName->getFlags(), markAsIntegrationPoint)),
     name(elementName->name),
     popName(popName),
