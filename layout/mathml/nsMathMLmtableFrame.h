@@ -206,6 +206,8 @@ public:
     return nsTableCellFrame::IsFrameOfType(aFlags & ~(nsIFrame::eMathML));
   }
 
+  virtual nsMargin* GetBorderWidth(nsMargin& aBorder) const MOZ_OVERRIDE;
+
 protected:
   nsMathMLmtdFrame(nsStyleContext* aContext) : nsTableCellFrame(aContext) {}
   virtual ~nsMathMLmtdFrame();
