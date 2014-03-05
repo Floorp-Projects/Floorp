@@ -207,8 +207,15 @@ CallbackObject::CallSetup::ShouldRethrowException(JS::Handle<JS::Value> aExcepti
 
 CallbackObject::CallSetup::~CallSetup()
 {
-  // First things first: if we have a JSContext, report any pending
-  // errors on it, unless we were told to re-throw them.
+  // To get our nesting right we have to destroy our JSAutoCompartment first.
+  // In particular, we want to do this before we try reporting any exceptions,
+  // so we end up reporting them while in the compartment of our entry point,
+  // not whatever cross-compartment wrappper mCallback might be.
+  // Be careful: the JSAutoCompartment might not have been constructed at all!
+  mAc.destroyIfConstructed();
+
+  // Now, if we have a JSContext, report any pending errors on it, unless we
+  // were told to re-throw them.
   if (mCx) {
     bool dealtWithPendingException = false;
     if ((mCompartment && mExceptionHandling == eRethrowContentExceptions) ||
@@ -231,13 +238,33 @@ CallbackObject::CallSetup::~CallSetup()
       // Either we're supposed to report our exceptions, or we're supposed to
       // re-throw them but we failed to JS_GetPendingException.  Either way,
       // just report the pending exception, if any.
-      nsJSUtils::ReportPendingException(mCx);
+      //
+      // We don't use nsJSUtils::ReportPendingException here because all it
+      // does at this point is JS_SaveFrameChain and enter a compartment around
+      // a JS_ReportPendingException call.  But our mAutoEntryScript should
+      // already do a JS_SaveFrameChain and we are already in the compartment
+      // we want to be in, so all nsJSUtils::ReportPendingException would do is
+      // screw up our compartment, which is exactly what we do not want.
+      //
+      // XXXbz FIXME: bug 979525 means we don't always JS_SaveFrameChain here,
+      // so we need to go ahead and do that.
+      JS::Rooted<JSObject*> oldGlobal(mCx, JS::CurrentGlobalOrNull(mCx));
+      MOZ_ASSERT(oldGlobal, "How can we not have a global here??");
+      bool saved = JS_SaveFrameChain(mCx);
+      // Make sure the JSAutoCompartment goes out of scope before the
+      // JS_RestoreFrameChain call!
+      {
+        JSAutoCompartment ac(mCx, oldGlobal);
+        MOZ_ASSERT(!JS::DescribeScriptedCaller(mCx),
+                   "Our comment above about JS_SaveFrameChain having been "
+                   "called is a lie?");
+        JS_ReportPendingException(mCx);
+      }
+      if (saved) {
+        JS_RestoreFrameChain(mCx);
+      }
     }
   }
-
-  // To get our nesting right we have to destroy our JSAutoCompartment first.
-  // But be careful: it might not have been constructed at all!
-  mAc.destroyIfConstructed();
 
   mAutoIncumbentScript.destroyIfConstructed();
   mAutoEntryScript.destroyIfConstructed();

@@ -78,6 +78,10 @@ public:
   // is being thrown.  Code that would call ReportJSException* or
   // StealJSException as needed must first call WouldReportJSException even if
   // this ErrorResult has not failed.
+  //
+  // The exn argument to ThrowJSException can be in any compartment.  It does
+  // not have to be in the compartment of cx.  If someone later uses it, they
+  // will wrap it into whatever compartment they're working in, as needed.
   void ThrowJSException(JSContext* cx, JS::Handle<JS::Value> exn);
   void ReportJSException(JSContext* cx);
   // Used to implement throwing exceptions from the JS implementation of

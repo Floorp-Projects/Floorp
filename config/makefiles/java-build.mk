@@ -110,7 +110,7 @@ endef
 
 $(foreach jar,$(JAVA_JAR_TARGETS),\
   $(if $($(jar)_DEST),,$(error Missing $(jar)_DEST))\
-  $(if $($(jar)_JAVAFILES),,$(error Missing $(jar)_JAVAFILES))\
+  $(if $($(jar)_JAVAFILES) $($(jar)_PP_JAVAFILES),,$(error Must provide at least one of $(jar)_JAVAFILES and $(jar)_PP_JAVAFILES))\
   $(eval $(call java_jar_template,$($(jar)_DEST),$($(jar)_JAVAFILES) $($(jar)_PP_JAVAFILES),$($(jar)_EXTRA_JARS),$($(jar)_JAVAC_FLAGS)))\
 )
 endif #} JAVA_JAR_TARGETS

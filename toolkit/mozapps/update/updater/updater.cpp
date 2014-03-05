@@ -11,11 +11,7 @@
  *  CRLF     = "\r\n"
  *  LWS      = 1*( " " | "\t" )
  *
- *  Available methods for the different manifest files:
- *
- *  update.manifest
- *  ---------------
- *  method   = "add" | "add-if" | "patch" | "patch-if" | "remove"
+ *  Available methods for the manifest file:
  *
  *  updatev2.manifest
  *  -----------------
@@ -25,6 +21,13 @@
  *  'type' is the update type (e.g. complete or partial) and when present MUST
  *  be the first entry in the update manifest. The type is used to support
  *  downgrades by causing the actions defined in precomplete to be performed.
+ *
+ *  updatev3.manifest
+ *  -----------------
+ *  method   = "add" | "add-if" | "add-if-not" | "patch" | "patch-if" |
+ *             "remove" | "rmdir" | "rmrfdir" | type
+ *
+ *  'add-if-not' adds a file if it doesn't exist.
  *
  *  precomplete
  *  -----------
@@ -1577,6 +1580,67 @@ AddIfFile::Execute()
 
 void
 AddIfFile::Finish(int status)
+{
+  if (!mTestFile)
+    return;
+
+  AddFile::Finish(status);
+}
+
+class AddIfNotFile : public AddFile
+{
+public:
+  AddIfNotFile() : mTestFile(NULL) { }
+
+  virtual int Parse(NS_tchar *line);
+  virtual int Prepare();
+  virtual int Execute();
+  virtual void Finish(int status);
+
+protected:
+  const NS_tchar *mTestFile;
+};
+
+int
+AddIfNotFile::Parse(NS_tchar *line)
+{
+  // format "<testfile>" "<newfile>"
+
+  mTestFile = get_valid_path(&line);
+  if (!mTestFile)
+    return PARSE_ERROR;
+
+  // consume whitespace between args
+  NS_tchar *q = mstrtok(kQuote, &line);
+  if (!q)
+    return PARSE_ERROR;
+
+  return AddFile::Parse(line);
+}
+
+int
+AddIfNotFile::Prepare()
+{
+  // If the test file exists, then skip this action.
+  if (!NS_taccess(mTestFile, F_OK)) {
+    mTestFile = NULL;
+    return OK;
+  }
+
+  return AddFile::Prepare();
+}
+
+int
+AddIfNotFile::Execute()
+{
+  if (!mTestFile)
+    return OK;
+
+  return AddFile::Execute();
+}
+
+void
+AddIfNotFile::Finish(int status)
 {
   if (!mTestFile)
     return;
@@ -3574,7 +3638,8 @@ int AddPreCompleteActions(ActionList *list)
   if (rb == nullptr) {
     LOG(("AddPreCompleteActions: error getting contents of precomplete " \
          "manifest"));
-    // Applications aren't required to have a precomplete manifest yet.
+    // Applications aren't required to have a precomplete manifest. The mar
+    // generation scripts enforce the presence of a precomplete manifest.
     return OK;
   }
 
@@ -3627,9 +3692,9 @@ int DoUpdate()
   ensure_parent_dir(manifest);
 
   // extract the manifest
-  int rv = gArchiveReader.ExtractFile("updatev2.manifest", manifest);
+  int rv = gArchiveReader.ExtractFile("updatev3.manifest", manifest);
   if (rv) {
-    rv = gArchiveReader.ExtractFile("update.manifest", manifest);
+    rv = gArchiveReader.ExtractFile("updatev2.manifest", manifest);
     if (rv) {
       LOG(("DoUpdate: error extracting manifest file"));
       return rv;
@@ -3659,25 +3724,27 @@ int DoUpdate()
       return PARSE_ERROR;
     }
 
-    if (isFirstAction && NS_tstrcmp(token, NS_T("type")) == 0) {
-      const NS_tchar *type = mstrtok(kQuote, &line);
-      LOG(("UPDATE TYPE " LOG_S, type));
-      if (NS_tstrcmp(type, NS_T("complete")) == 0) {
-        rv = AddPreCompleteActions(&list);
-        if (rv)
-          return rv;
-      }
+    if (isFirstAction) {
       isFirstAction = false;
-      continue;
+      // The update manifest isn't required to have a type declaration. The mar
+      // generation scripts enforce the presence of the type declaration.
+      if (NS_tstrcmp(token, NS_T("type")) == 0) {
+        const NS_tchar *type = mstrtok(kQuote, &line);
+        LOG(("UPDATE TYPE " LOG_S, type));
+        if (NS_tstrcmp(type, NS_T("complete")) == 0) {
+          rv = AddPreCompleteActions(&list);
+          if (rv)
+            return rv;
+        }
+        continue;
+      }
     }
-
-    isFirstAction = false;
 
     Action *action = nullptr;
     if (NS_tstrcmp(token, NS_T("remove")) == 0) { // rm file
       action = new RemoveFile();
     }
-    else if (NS_tstrcmp(token, NS_T("rmdir")) == 0) { // rmdir if  empty
+    else if (NS_tstrcmp(token, NS_T("rmdir")) == 0) { // rmdir if empty
       action = new RemoveDir();
     }
     else if (NS_tstrcmp(token, NS_T("rmrfdir")) == 0) { // rmdir recursive
@@ -3703,11 +3770,11 @@ int DoUpdate()
     else if (NS_tstrcmp(token, NS_T("add-if")) == 0) { // Add if exists
       action = new AddIfFile();
     }
+    else if (NS_tstrcmp(token, NS_T("add-if-not")) == 0) { // Add if not exists
+      action = new AddIfNotFile();
+    }
     else if (NS_tstrcmp(token, NS_T("patch-if")) == 0) { // Patch if exists
       action = new PatchIfFile();
-    }
-    else if (NS_tstrcmp(token, NS_T("add-cc")) == 0) { // no longer supported
-      continue;
     }
     else {
       LOG(("DoUpdate: unknown token: " LOG_S, token));
