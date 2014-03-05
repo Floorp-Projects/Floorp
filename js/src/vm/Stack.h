@@ -24,9 +24,11 @@ struct JSGenerator;
 namespace js {
 
 class ArgumentsObject;
+class AsmJSModule;
 class InterpreterRegs;
 class ScopeObject;
 class ScriptFrameIter;
+class SPSProfiler;
 class StackFrame;
 class StaticBlockObject;
 
@@ -1106,6 +1108,7 @@ struct DefaultHasher<AbstractFramePtr> {
 
 class InterpreterActivation;
 class ForkJoinActivation;
+class AsmJSActivation;
 
 namespace jit {
     class JitActivation;
@@ -1131,7 +1134,7 @@ class Activation
     // data structures instead.
     size_t hideScriptedCallerCount_;
 
-    enum Kind { Interpreter, Jit, ForkJoin };
+    enum Kind { Interpreter, Jit, ForkJoin, AsmJS };
     Kind kind_;
 
     inline Activation(JSContext *cx, Kind kind_);
@@ -1157,6 +1160,9 @@ class Activation
     bool isForkJoin() const {
         return kind_ == ForkJoin;
     }
+    bool isAsmJS() const {
+        return kind_ == AsmJS;
+    }
 
     InterpreterActivation *asInterpreter() const {
         JS_ASSERT(isInterpreter());
@@ -1169,6 +1175,10 @@ class Activation
     ForkJoinActivation *asForkJoin() const {
         JS_ASSERT(isForkJoin());
         return (ForkJoinActivation *)this;
+    }
+    AsmJSActivation *asAsmJS() const {
+        JS_ASSERT(isAsmJS());
+        return (AsmJSActivation *)this;
     }
 
     void saveFrameChain() {
@@ -1403,6 +1413,42 @@ class InterpreterFrameIterator
     bool done() const {
         return fp_ == nullptr;
     }
+};
+
+// An AsmJSActivation is part of two activation linked lists:
+//  - the normal Activation list used by FrameIter
+//  - a list of only AsmJSActivations that is signal-safe since it is accessed
+//    from the profiler at arbitrary points
+//
+// An eventual goal is to remove AsmJSActivation and to run asm.js code in a
+// JitActivation interleaved with Ion/Baseline jit code. This would allow
+// efficient calls back and forth but requires that we can walk the stack for
+// all kinds of jit code.
+class AsmJSActivation : public Activation
+{
+    AsmJSModule &module_;
+    AsmJSActivation *prevAsmJS_;
+    void *errorRejoinSP_;
+    SPSProfiler *profiler_;
+    void *resumePC_;
+
+  public:
+    AsmJSActivation(JSContext *cx, AsmJSModule &module);
+    ~AsmJSActivation();
+
+    JSContext *cx() { return cx_; }
+    AsmJSModule &module() const { return module_; }
+    AsmJSActivation *prevAsmJS() const { return prevAsmJS_; }
+
+    // Read by JIT code:
+    static unsigned offsetOfContext() { return offsetof(AsmJSActivation, cx_); }
+    static unsigned offsetOfResumePC() { return offsetof(AsmJSActivation, resumePC_); }
+
+    // Initialized by JIT code:
+    static unsigned offsetOfErrorRejoinSP() { return offsetof(AsmJSActivation, errorRejoinSP_); }
+
+    // Set from SIGSEGV handler:
+    void setResumePC(void *pc) { resumePC_ = pc; }
 };
 
 class ScriptFrameIter
