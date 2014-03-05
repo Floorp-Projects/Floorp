@@ -133,28 +133,3 @@ nsXMLElement::ParseAttribute(int32_t aNamespaceID,
 
   return false;
 }
-
-nsresult
-nsXMLElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
-                         nsIContent* aBindingParent,
-                         bool aCompileEventHandlers)
-{
-  nsresult rv = Element::BindToTree(aDocument, aParent,
-                                    aBindingParent,
-                                    aCompileEventHandlers);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (aDocument && HasID() && !GetBindingParent()) {
-    aDocument->AddToIdTable(this, DoGetID());
-  }
-
-  return NS_OK;
-}
-
-void
-nsXMLElement::UnbindFromTree(bool aDeep, bool aNullParent)
-{
-  RemoveFromIdTable();
-
-  return Element::UnbindFromTree(aDeep, aNullParent);
-}
