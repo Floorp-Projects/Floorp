@@ -11,7 +11,9 @@
 #include <QImageWriter>
 #include <QBuffer>
 
+#include "gfxPlatform.h"
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/gfx/2D.h"
 
 #include "nsClipboard.h"
 #include "nsISupportsPrimitives.h"
@@ -26,6 +28,7 @@
 #include "gfxImageSurface.h"
 
 using namespace mozilla;
+using namespace mozilla::gfx;
 
 NS_IMPL_ISUPPORTS1(nsClipboard, nsIClipboard)
 
@@ -53,14 +56,14 @@ nsClipboard::~nsClipboard()
 }
 
 static inline QImage::Format
-_gfximage_to_qformat(gfxImageFormat aFormat)
+_moz2dformat_to_qformat(SurfaceFormat aFormat)
 {
     switch (aFormat) {
-    case gfxImageFormat::ARGB32:
+    case SurfaceFormat::B8G8R8A8:
         return QImage::Format_ARGB32_Premultiplied;
-    case gfxImageFormat::RGB24:
+    case SurfaceFormat::B8G8R8X8:
         return QImage::Format_ARGB32;
-    case gfxImageFormat::RGB16_565:
+    case SurfaceFormat::R5G6B5:
         return QImage::Format_RGB16;
     default:
         return QImage::Format_Invalid;
@@ -176,21 +179,33 @@ nsClipboard::SetNativeClipboardData( nsITransferable *aTransferable,
                 if (!image)  // Not getting an image for an image mime type!?
                    continue;
 
-                nsRefPtr<gfxASurface> surface =
+                nsRefPtr<gfxASurface> thebesSurface =
                   image->GetFrame(imgIContainer::FRAME_CURRENT,
                                   imgIContainer::FLAG_SYNC_DECODE);
+                if (!thebesSurface)
+                  continue;
+
+                RefPtr<SourceSurface> surface =
+                  gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(nullptr,
+                                                                         thebesSurface);
                 if (!surface)
                   continue;
 
-                nsRefPtr<gfxImageSurface> frame(surface->GetAsReadableARGB32ImageSurface());
-                if (!frame)
+                RefPtr<DataSourceSurface> dataSurface =
+                  surface->GetDataSurface();
+                if (!dataSurface)
                   continue;
 
-                QImage qImage(frame->Data(),
-                              frame->Width(),
-                              frame->Height(),
-                              frame->Stride(),
-                              _gfximage_to_qformat(frame->Format()));
+                DataSourceSurface::MappedSurface map;
+                dataSurface->Map(DataSourceSurface::MapType::READ, &map);
+                if (!map.mData)
+                  continue;
+
+                QImage qImage(map.mData,
+                              dataSurface->GetSize().width,
+                              dataSurface->GetSize().height,
+                              map.mStride,
+                              _moz2dformat_to_qformat(dataSurface->GetFormat()));
 
                 // Add image to the mimeData
                 mimeData->setImageData(qImage);
