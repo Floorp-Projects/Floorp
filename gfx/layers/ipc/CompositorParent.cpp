@@ -578,19 +578,19 @@ CompositorParent::ScheduleComposition()
   TimeDuration minFrameDelta = TimeDuration::FromMilliseconds(
     rate == 0 ? 0.0 : std::max(0.0, 1000.0 / rate));
 
-#ifdef COMPOSITOR_PERFORMANCE_WARNING
-  mExpectedComposeTime = TimeStamp::Now() + minFrameDelta;
-#endif
 
   mCurrentCompositeTask = NewRunnableMethod(this, &CompositorParent::Composite);
 
   if (!initialComposition && delta < minFrameDelta) {
     TimeDuration delay = minFrameDelta - delta;
 #ifdef COMPOSITOR_PERFORMANCE_WARNING
-    mExpectedComposeTime = TimeStamp::Now() + delay;
+    mExpectedComposeStartTime = TimeStamp::Now() + delay;
 #endif
     ScheduleTask(mCurrentCompositeTask, delay.ToMilliseconds());
   } else {
+#ifdef COMPOSITOR_PERFORMANCE_WARNING
+    mExpectedComposeStartTime = TimeStamp::Now();
+#endif
     ScheduleTask(mCurrentCompositeTask, 0);
   }
 }
@@ -608,6 +608,16 @@ CompositorParent::CompositeToTarget(DrawTarget* aTarget)
   PROFILER_LABEL("CompositorParent", "Composite");
   NS_ABORT_IF_FALSE(CompositorThreadID() == PlatformThread::CurrentId(),
                     "Composite can only be called on the compositor thread");
+
+#ifdef COMPOSITOR_PERFORMANCE_WARNING
+  TimeDuration scheduleDelta = TimeStamp::Now() - mExpectedComposeStartTime;
+  if (scheduleDelta > TimeDuration::FromMilliseconds(2) ||
+      scheduleDelta < TimeDuration::FromMilliseconds(-2)) {
+    printf_stderr("Compositor: Compose starting off schedule by %4.1f ms\n",
+                  scheduleDelta.ToMilliseconds());
+  }
+#endif
+
   mCurrentCompositeTask = nullptr;
 
   mLastCompose = TimeStamp::Now();
@@ -658,9 +668,15 @@ CompositorParent::CompositeToTarget(DrawTarget* aTarget)
   }
 
 #ifdef COMPOSITOR_PERFORMANCE_WARNING
-  if (mExpectedComposeTime + TimeDuration::FromMilliseconds(15) < TimeStamp::Now()) {
-    printf_stderr("Compositor: Composite took %i ms.\n",
-                  15 + (int)(TimeStamp::Now() - mExpectedComposeTime).ToMilliseconds());
+  TimeDuration executionTime = TimeStamp::Now() - mLastCompose;
+  TimeDuration frameBudget = TimeDuration::FromMilliseconds(15);
+  int32_t frameRate = CalculateCompositionFrameRate();
+  if (frameRate > 0) {
+    frameBudget = TimeDuration::FromSeconds(1.0 / frameRate);
+  }
+  if (executionTime > frameBudget) {
+    printf_stderr("Compositor: Composite execution took %4.1f ms\n",
+                  executionTime.ToMilliseconds());
   }
 #endif
 

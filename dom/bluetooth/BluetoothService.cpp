@@ -475,6 +475,8 @@ BluetoothService::StartStopBluetooth(bool aStart, bool aIsStartup)
     NS_ENSURE_TRUE(profile, NS_ERROR_FAILURE);
     if (profile->IsConnected()) {
       profile->Disconnect(nullptr);
+    } else {
+      profile->Reset();
     }
 
     profile = BluetoothOppManager::Get();
@@ -487,13 +489,18 @@ BluetoothService::StartStopBluetooth(bool aStart, bool aIsStartup)
     NS_ENSURE_TRUE(profile, NS_ERROR_FAILURE);
     if (profile->IsConnected()) {
       profile->Disconnect(nullptr);
+    } else {
+      profile->Reset();
     }
 
     profile = BluetoothHidManager::Get();
     NS_ENSURE_TRUE(profile, NS_ERROR_FAILURE);
     if (profile->IsConnected()) {
       profile->Disconnect(nullptr);
+    } else {
+      profile->Reset();
     }
+
   }
 
   if (!mBluetoothThread) {

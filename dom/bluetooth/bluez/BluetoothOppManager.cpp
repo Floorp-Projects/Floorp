@@ -1609,3 +1609,9 @@ BluetoothOppManager::OnDisconnect(const nsAString& aErrorStr)
 {
   MOZ_ASSERT(false);
 }
+
+void
+BluetoothOppManager::Reset()
+{
+  MOZ_ASSERT(false);
+}
