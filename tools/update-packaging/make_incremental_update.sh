@@ -235,17 +235,6 @@ for ((i=0; $i<$num_newfiles; i=$i+1)); do
   copy_perm "$newdir/$f" "$workdir/$f"
 
   if check_for_add_if_not_update "$f"; then
-    # Raise an exception if a new channel-prefs.js or update-settings.ini file
-    # is found to prevent it from being to a new location like happened in
-    # bug 756325.
-    if [ `basename $f` = "channel-prefs.js" ]; then
-      notice "new channel-prefs.js file found: $f"
-      exit 1
-    fi
-    if [ `basename $f` = "update-settings.ini" ]; then
-      notice "new update-settings.ini file found: $f"
-      exit 1
-    fi
     make_add_if_not_instruction "$f" "$updatemanifestv3"
   else
     make_add_instruction "$f" "$updatemanifestv2" "$updatemanifestv3"
