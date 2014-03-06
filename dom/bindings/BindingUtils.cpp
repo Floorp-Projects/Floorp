@@ -1827,7 +1827,8 @@ GlobalObject::GetAsSupports() const
   }
 
   if (!NS_IsMainThread()) {
-    return UnwrapDOMObjectToISupports(mGlobalJSObject);
+    mGlobalObject = UnwrapDOMObjectToISupports(mGlobalJSObject);
+    return mGlobalObject;
   }
 
   JS::Rooted<JS::Value> val(mCx, JS::ObjectValue(*mGlobalJSObject));
