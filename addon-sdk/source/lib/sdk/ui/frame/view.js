@@ -68,9 +68,11 @@ const registerFrame = ({id, url}) => {
       innerFrame.setAttribute("src", url);
       innerFrame.setAttribute("seamless", "seamless");
       innerFrame.setAttribute("sandbox", "allow-scripts");
+      innerFrame.setAttribute("scrolling", "no");
       innerFrame.setAttribute("data-is-sdk-inner-frame", true);
       innerFrame.setAttribute("style", [ "border:none",
-        "position:absolute", "width:100%", "top: 0", "left: 0"].join(";"));
+        "position:absolute", "width:100%", "top: 0",
+        "left: 0", "overflow: hidden"].join(";"));
 
       let outerFrame = document.createElementNS(XUL_NS, "iframe");
       outerFrame.setAttribute("src", OUTER_FRAME_URI + "#" +
@@ -81,6 +83,7 @@ const registerFrame = ({id, url}) => {
       outerFrame.setAttribute("transparent", true);
       outerFrame.setAttribute("flex", 2);
       outerFrame.setAttribute("style", "overflow: hidden;");
+      outerFrame.setAttribute("scrolling", "no");
       outerFrame.setAttribute("disablehistory", true);
       outerFrame.setAttribute("seamless", "seamless");
 
