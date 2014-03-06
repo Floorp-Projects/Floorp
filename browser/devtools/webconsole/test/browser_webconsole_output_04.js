@@ -29,7 +29,7 @@ let inputTests = [
   // 2
   {
     input: "testDocumentFragment()",
-    output: 'DocumentFragment [ <div#foo1>, <div#foo3> ]',
+    output: 'DocumentFragment [ <div#foo1.bar>, <div#foo3> ]',
     printOutput: "[object DocumentFragment]",
     inspectable: true,
     variablesViewLabel: "DocumentFragment[2]",
