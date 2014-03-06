@@ -807,8 +807,7 @@ mozJSComponentLoader::ObjectForLocation(nsIFile *aComponentFile,
             ContextOptionsRef(cx).setDontReportUncaught(true);
 
         CompileOptions options(cx);
-        options.setPrincipals(nsJSPrincipals::get(mSystemPrincipal))
-               .setNoScriptRval(mReuseLoaderGlobal ? false : true)
+        options.setNoScriptRval(mReuseLoaderGlobal ? false : true)
                .setVersion(JSVERSION_LATEST)
                .setFileAndLine(nativePath.get(), 1)
                .setSourcePolicy(mReuseLoaderGlobal ?

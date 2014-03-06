@@ -4327,9 +4327,9 @@ JS::ReadOnlyCompileOptions::copyPODOptions(const ReadOnlyCompileOptions &rhs)
 }
 
 JSPrincipals *
-JS::ReadOnlyCompileOptions::originPrincipals() const
+JS::ReadOnlyCompileOptions::originPrincipals(ExclusiveContext *cx) const
 {
-    return NormalizeOriginPrincipals(principals_, originPrincipals_);
+    return NormalizeOriginPrincipals(cx->compartment()->principals, originPrincipals_);
 }
 
 JS::OwningCompileOptions::OwningCompileOptions(JSContext *cx)
@@ -4343,8 +4343,6 @@ JS::OwningCompileOptions::OwningCompileOptions(JSContext *cx)
 
 JS::OwningCompileOptions::~OwningCompileOptions()
 {
-    if (principals_)
-        JS_DropPrincipals(runtime, principals_);
     if (originPrincipals_)
         JS_DropPrincipals(runtime, originPrincipals_);
 
@@ -4359,8 +4357,7 @@ JS::OwningCompileOptions::copy(JSContext *cx, const ReadOnlyCompileOptions &rhs)
 {
     copyPODOptions(rhs);
 
-    setPrincipals(rhs.principals());
-    setOriginPrincipals(rhs.originPrincipals());
+    setOriginPrincipals(rhs.originPrincipals(cx));
     setElement(rhs.element());
     setElementAttributeName(rhs.elementAttributeName());
     setIntroductionScript(rhs.introductionScript());
@@ -4499,7 +4496,6 @@ JS::Compile(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &optio
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
-    JS_ASSERT_IF(options.principals(), cx->compartment()->principals == options.principals());
     AutoLastFrameCheck lfc(cx);
 
     return frontend::CompileScript(cx, &cx->tempLifoAlloc(), obj, NullPtr(), options, chars, length);
@@ -4664,7 +4660,6 @@ JS::CompileFunction(JSContext *cx, HandleObject obj, const ReadOnlyCompileOption
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
-    JS_ASSERT_IF(options.principals(), cx->compartment()->principals == options.principals());
     AutoLastFrameCheck lfc(cx);
 
     RootedAtom funAtom(cx);
@@ -4824,7 +4819,6 @@ JS::Evaluate(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &opti
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
-    JS_ASSERT_IF(options.principals(), cx->compartment()->principals == options.principals());
 
     AutoLastFrameCheck lfc(cx);
 
@@ -4897,9 +4891,10 @@ JS_EvaluateUCScriptForPrincipals(JSContext *cx, HandleObject obj,
                                  const char *filename, unsigned lineno,
                                  MutableHandleValue rval)
 {
+    JS_ASSERT(principals == cx->compartment()->principals);
+
     CompileOptions options(cx);
-    options.setPrincipals(principals)
-           .setFileAndLine(filename, lineno);
+    options.setFileAndLine(filename, lineno);
 
     return Evaluate(cx, obj, options, chars, length, rval.address());
 }
@@ -4911,9 +4906,10 @@ JS_EvaluateUCScriptForPrincipalsVersion(JSContext *cx, HandleObject obj,
                                         const char *filename, unsigned lineno,
                                         MutableHandleValue rval, JSVersion version)
 {
+    JS_ASSERT(principals == cx->compartment()->principals);
+
     CompileOptions options(cx);
-    options.setPrincipals(principals)
-           .setFileAndLine(filename, lineno)
+    options.setFileAndLine(filename, lineno)
            .setVersion(version);
 
     return Evaluate(cx, obj, options, chars, length, rval.address());
@@ -4927,9 +4923,10 @@ JS_EvaluateUCScriptForPrincipalsVersionOrigin(JSContext *cx, HandleObject obj,
                                               const char *filename, unsigned lineno,
                                               MutableHandleValue rval, JSVersion version)
 {
+    JS_ASSERT(principals == cx->compartment()->principals);
+
     CompileOptions options(cx);
-    options.setPrincipals(principals)
-           .setOriginPrincipals(originPrincipals)
+    options.setOriginPrincipals(originPrincipals)
            .setFileAndLine(filename, lineno)
            .setVersion(version);
 
@@ -4952,10 +4949,11 @@ JS_EvaluateScriptForPrincipals(JSContext *cx, JSObject *objArg, JSPrincipals *pr
                                const char *bytes, unsigned nbytes,
                                const char *filename, unsigned lineno, jsval *rval)
 {
+    JS_ASSERT(principals == cx->compartment()->principals);
+
     RootedObject obj(cx, objArg);
     CompileOptions options(cx);
-    options.setPrincipals(principals)
-           .setFileAndLine(filename, lineno);
+    options.setFileAndLine(filename, lineno);
 
     return Evaluate(cx, obj, options, bytes, nbytes, rval);
 }
@@ -4966,10 +4964,11 @@ JS_EvaluateScriptForPrincipalsVersion(JSContext *cx, JSObject *objArg, JSPrincip
                                       const char *filename, unsigned lineno, jsval *rval,
                                       JSVersion version)
 {
+    JS_ASSERT(principals == cx->compartment()->principals);
+
     RootedObject obj(cx, objArg);
     CompileOptions options(cx);
-    options.setPrincipals(principals)
-           .setVersion(version)
+    options.setVersion(version)
            .setFileAndLine(filename, lineno);
 
     return Evaluate(cx, obj, options, bytes, nbytes, rval);

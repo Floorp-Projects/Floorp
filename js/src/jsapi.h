@@ -3459,8 +3459,9 @@ namespace JS {
  */
 class JS_FRIEND_API(ReadOnlyCompileOptions)
 {
+    friend class CompileOptions;
+
   protected:
-    JSPrincipals *principals_;
     JSPrincipals *originPrincipals_;
     const char *filename_;
     const char *introducerFilename_;
@@ -3471,8 +3472,7 @@ class JS_FRIEND_API(ReadOnlyCompileOptions)
     // classes' constructors take care of that, in ways appropriate to their
     // purpose.
     ReadOnlyCompileOptions()
-      : principals_(nullptr),
-        originPrincipals_(nullptr),
+      : originPrincipals_(nullptr),
         filename_(nullptr),
         introducerFilename_(nullptr),
         sourceMapURL_(nullptr),
@@ -3506,8 +3506,7 @@ class JS_FRIEND_API(ReadOnlyCompileOptions)
   public:
     // Read-only accessors for non-POD options. The proper way to set these
     // depends on the derived type.
-    JSPrincipals *principals() const { return principals_; }
-    JSPrincipals *originPrincipals() const;
+    JSPrincipals *originPrincipals(js::ExclusiveContext *cx) const;
     const char *filename() const { return filename_; }
     const char *introducerFilename() const { return introducerFilename_; }
     const jschar *sourceMapURL() const { return sourceMapURL_; }
@@ -3609,12 +3608,6 @@ class JS_FRIEND_API(OwningCompileOptions) : public ReadOnlyCompileOptions
         introductionScriptRoot = s;
         return *this;
     }
-    OwningCompileOptions &setPrincipals(JSPrincipals *p) {
-        if (p) JS_HoldPrincipals(p);
-        if (principals_) JS_DropPrincipals(runtime, principals_);
-        principals_ = p;
-        return *this;
-    }
     OwningCompileOptions &setOriginPrincipals(JSPrincipals *p) {
         if (p) JS_HoldPrincipals(p);
         if (originPrincipals_) JS_DropPrincipals(runtime, originPrincipals_);
@@ -3649,6 +3642,9 @@ class JS_FRIEND_API(OwningCompileOptions) : public ReadOnlyCompileOptions
     }
 
     virtual bool wrap(JSContext *cx, JSCompartment *compartment) MOZ_OVERRIDE;
+
+  private:
+    void operator=(const CompileOptions &rhs) MOZ_DELETE;
 };
 
 /*
@@ -3672,8 +3668,7 @@ class MOZ_STACK_CLASS JS_FRIEND_API(CompileOptions) : public ReadOnlyCompileOpti
     {
         copyPODOptions(rhs);
 
-        principals_ = rhs.principals();
-        originPrincipals_ = rhs.originPrincipals();
+        originPrincipals_ = rhs.originPrincipals_;
         filename_ = rhs.filename();
         sourceMapURL_ = rhs.sourceMapURL();
         elementRoot = rhs.element();
@@ -3698,10 +3693,6 @@ class MOZ_STACK_CLASS JS_FRIEND_API(CompileOptions) : public ReadOnlyCompileOpti
     }
     CompileOptions &setIntroductionScript(JSScript *s) {
         introductionScriptRoot = s;
-        return *this;
-    }
-    CompileOptions &setPrincipals(JSPrincipals *p) {
-        principals_ = p;
         return *this;
     }
     CompileOptions &setOriginPrincipals(JSPrincipals *p) {
@@ -3735,6 +3726,9 @@ class MOZ_STACK_CLASS JS_FRIEND_API(CompileOptions) : public ReadOnlyCompileOpti
     }
 
     virtual bool wrap(JSContext *cx, JSCompartment *compartment) MOZ_OVERRIDE;
+
+  private:
+    void operator=(const CompileOptions &rhs) MOZ_DELETE;
 };
 
 extern JS_PUBLIC_API(JSScript *)

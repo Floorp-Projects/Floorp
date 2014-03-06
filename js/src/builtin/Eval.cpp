@@ -287,8 +287,6 @@ EvalKernel(JSContext *cx, const CallArgs &args, EvalType evalType, AbstractFrame
     size_t length = flatStr->length();
     ConstTwoByteChars chars(flatStr->chars(), length);
 
-    JSPrincipals *principals = PrincipalsForCompiledCode(args, cx);
-
     RootedScript callerScript(cx, caller ? caller.script() : nullptr);
     EvalJSONResult ejr = TryEvalJSON(cx, callerScript, chars, length, args.rval());
     if (ejr != EvalJSON_NotJSON)
@@ -320,7 +318,6 @@ EvalKernel(JSContext *cx, const CallArgs &args, EvalType evalType, AbstractFrame
                .setCompileAndGo(true)
                .setForEval(true)
                .setNoScriptRval(false)
-               .setPrincipals(principals)
                .setOriginPrincipals(originPrincipals)
                .setIntroductionInfo(introducerFilename, "eval", lineno, maybeScript, pcOffset);
         JSScript *compiled = frontend::CompileScript(cx, &cx->tempLifoAlloc(),
@@ -369,9 +366,6 @@ js::DirectEvalStringFromIon(JSContext *cx,
 
     EvalScriptGuard esg(cx);
 
-    // Ion will not perform cross compartment direct eval calls.
-    JSPrincipals *principals = cx->compartment()->principals;
-
     esg.lookupInEvalCache(flatStr, callerScript, pc);
 
     if (!esg.foundScript()) {
@@ -392,7 +386,6 @@ js::DirectEvalStringFromIon(JSContext *cx,
                .setCompileAndGo(true)
                .setForEval(true)
                .setNoScriptRval(false)
-               .setPrincipals(principals)
                .setOriginPrincipals(originPrincipals)
                .setIntroductionInfo(introducerFilename, "eval", lineno, maybeScript, pcOffset);
         JSScript *compiled = frontend::CompileScript(cx, &cx->tempLifoAlloc(),
@@ -459,28 +452,4 @@ bool
 js::IsAnyBuiltinEval(JSFunction *fun)
 {
     return fun->maybeNative() == IndirectEval;
-}
-
-JSPrincipals *
-js::PrincipalsForCompiledCode(const CallReceiver &call, JSContext *cx)
-{
-    JSObject &callee = call.callee();
-    JS_ASSERT(IsAnyBuiltinEval(&callee.as<JSFunction>()) ||
-              callee.as<JSFunction>().isBuiltinFunctionConstructor());
-
-    // To compute the principals of the compiled eval/Function code, we simply
-    // use the callee's principals. To see why the caller's principals are
-    // ignored, consider first that, in the capability-model we assume, the
-    // high-privileged eval/Function should never have escaped to the
-    // low-privileged caller. (For the Mozilla embedding, this is brute-enforced
-    // by explicit filtering by wrappers.) Thus, the caller's privileges should
-    // subsume the callee's.
-    //
-    // In the converse situation, where the callee has lower privileges than the
-    // caller, we might initially guess that the caller would want to retain
-    // their higher privileges in the generated code. However, since the
-    // compiled code will be run with the callee's scope chain, this would make
-    // fp->script()->compartment() != fp->compartment().
-
-    return callee.compartment()->principals;
 }

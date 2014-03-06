@@ -14,7 +14,7 @@
 
 static JSScript *
 CompileScriptForPrincipalsVersionOrigin(JSContext *cx, JS::HandleObject obj,
-                                        JSPrincipals *principals, JSPrincipals *originPrincipals,
+                                        JSPrincipals *originPrincipals,
                                         const char *bytes, size_t nbytes,
                                         const char *filename, unsigned lineno,
                                         JSVersion version)
@@ -27,8 +27,7 @@ CompileScriptForPrincipalsVersionOrigin(JSContext *cx, JS::HandleObject obj,
         return nullptr;
     JS_ALWAYS_TRUE(JS_DecodeBytes(cx, bytes, nbytes, chars, &nchars));
     JS::CompileOptions options(cx);
-    options.setPrincipals(principals)
-           .setOriginPrincipals(originPrincipals)
+    options.setOriginPrincipals(originPrincipals)
            .setFileAndLine(filename, lineno)
            .setVersion(version);
     JSScript *script = JS::Compile(cx, obj, options, chars, nchars);
@@ -87,17 +86,17 @@ BEGIN_TEST(testXDR_principals)
         // Appease the new JSAPI assertions. The stuff being tested here is
         // going away anyway.
         JS_SetCompartmentPrincipals(compartment, &testPrincipal0);
-        script = createScriptViaXDR(&testPrincipal0, nullptr, i);
+        script = createScriptViaXDR(nullptr, i);
         CHECK(script);
         CHECK(JS_GetScriptPrincipals(script) == &testPrincipal0);
         CHECK(JS_GetScriptOriginPrincipals(script) == &testPrincipal0);
 
-        script = createScriptViaXDR(&testPrincipal0, &testPrincipal0, i);
+        script = createScriptViaXDR(&testPrincipal0, i);
         CHECK(script);
         CHECK(JS_GetScriptPrincipals(script) == &testPrincipal0);
         CHECK(JS_GetScriptOriginPrincipals(script) == &testPrincipal0);
 
-        script = createScriptViaXDR(&testPrincipal0, &testPrincipal1, i);
+        script = createScriptViaXDR(&testPrincipal1, i);
         CHECK(script);
         CHECK(JS_GetScriptPrincipals(script) == &testPrincipal0);
         CHECK(JS_GetScriptOriginPrincipals(script) == &testPrincipal1);
@@ -114,14 +113,14 @@ enum TestCase {
     TEST_END
 };
 
-JSScript *createScriptViaXDR(JSPrincipals *prin, JSPrincipals *orig, int testCase)
+JSScript *createScriptViaXDR(JSPrincipals *orig, int testCase)
 {
     const char src[] =
         "function f() { return 1; }\n"
         "f;\n";
 
     JS::RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
-    JS::RootedScript script(cx, CompileScriptForPrincipalsVersionOrigin(cx, global, prin, orig,
+    JS::RootedScript script(cx, CompileScriptForPrincipalsVersionOrigin(cx, global, orig,
                                                                         src, strlen(src), "test", 1,
                                                                         JSVERSION_DEFAULT));
     if (!script)

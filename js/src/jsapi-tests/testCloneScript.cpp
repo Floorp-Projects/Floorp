@@ -107,8 +107,7 @@ BEGIN_TEST(test_cloneScriptWithPrincipals)
     {
         JSAutoCompartment a(cx, A);
         JS::CompileOptions options(cx);
-        options.setFileAndLine(__FILE__, 1)
-               .setPrincipals(principalsA);
+        options.setFileAndLine(__FILE__, 1);
         JS::RootedFunction fun(cx, JS_CompileFunction(cx, A, "f",
                 mozilla::ArrayLength(argnames), argnames, source,
                 strlen(source), options));
