@@ -69,6 +69,7 @@ input {
   text-indent: 0;
   -moz-user-select: text;
   text-shadow: none;
+  overflow-clip-box: content-box;
 }
 
 input > .anonymous-div,
@@ -380,11 +381,6 @@ optgroup:disabled {
   background-color: transparent;
 }
 
-input[type="text"],
-input[type="password"] {
-  overflow-clip-box: content-box;
-}
-
 /* hidden inputs */
 input[type="hidden"] {
   -moz-appearance: none;
@@ -422,6 +418,7 @@ input[type="file"] {
   display: inline-block;
   white-space: nowrap;
   overflow: hidden;
+  overflow-clip-box: padding-box;
   color: inherit;
 
   /* Revert rules which apply on all inputs. */
@@ -577,6 +574,7 @@ input[type="submit"] {
   white-space: pre;
   text-align: center;
   text-shadow: none;
+  overflow-clip-box: padding-box;
 }
 
 input[type="color"]:-moz-system-metric(color-picker-available) {
