@@ -4,30 +4,14 @@
 
 package org.mozilla.gecko.sync.crypto;
 
-import java.io.UnsupportedEncodingException;
 import java.security.GeneralSecurityException;
+import java.util.Arrays;
 
 import javax.crypto.Mac;
-import javax.crypto.SecretKey;
-import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.PBEKeySpec;
+import javax.crypto.ShortBufferException;
 import javax.crypto.spec.SecretKeySpec;
 
 public class PBKDF2 {
-  public static byte[] pbkdf2SHA1(byte[] password, byte[] salt, int c, int dkLen)
-      throws GeneralSecurityException {
-    // Won't work on API level 8, but this is trivial.
-    SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
-    PBEKeySpec keySpec;
-    try {
-      keySpec = new PBEKeySpec(new String(password, "UTF-8").toCharArray(), salt, c, dkLen * 8);
-    } catch (UnsupportedEncodingException e) {
-      throw new GeneralSecurityException(e);
-    }
-    SecretKey key = factory.generateSecret(keySpec);
-    return key.getEncoded();
-  }
-
   public static byte[] pbkdf2SHA256(byte[] password, byte[] salt, int c, int dkLen)
       throws GeneralSecurityException {
     final String algorithm = "HmacSHA256";
@@ -36,12 +20,18 @@ public class PBKDF2 {
     prf.init(keyspec);
 
     int hLen = prf.getMacLength();
+
+    byte U_r[] = new byte[hLen];
+    byte U_i[] = new byte[salt.length + 4];
+    byte scratch[] = new byte[hLen];
+
     int l = Math.max(dkLen, hLen);
     int r = dkLen - (l - 1) * hLen;
     byte T[] = new byte[l * hLen];
     int ti_offset = 0;
     for (int i = 1; i <= l; i++) {
-      F(T, ti_offset, prf, salt, c, i);
+      Arrays.fill(U_r, (byte) 0);
+      F(T, ti_offset, prf, salt, c, i, U_r, U_i, scratch);
       ti_offset += hLen;
     }
 
@@ -55,17 +45,18 @@ public class PBKDF2 {
     return T;
   }
 
-  private static void F(byte[] dest, int offset, Mac prf, byte[] S, int c, int blockIndex) {
+  private static void F(byte[] dest, int offset, Mac prf, byte[] S, int c, int blockIndex, byte U_r[], byte U_i[], byte[] scratch)
+      throws ShortBufferException, IllegalStateException {
     final int hLen = prf.getMacLength();
-    byte U_r[] = new byte[hLen];
 
     // U0 = S || INT (i);
-    byte U_i[] = new byte[S.length + 4];
     System.arraycopy(S, 0, U_i, 0, S.length);
     INT(U_i, S.length, blockIndex);
 
     for (int i = 0; i < c; i++) {
-      U_i = prf.doFinal(U_i);
+      prf.update(U_i);
+      prf.doFinal(scratch, 0);
+      U_i = scratch;
       xor(U_r, U_i);
     }
 
