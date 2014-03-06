@@ -1,6 +1,7 @@
 {
 "runtests": {},
 "excludetests": {
+  "content/canvas/test/webgl": "bug 865443- seperate suite - the non_conf* tests pass except for one on armv6 tests",
   "dom/imptests/html/webgl": "WebGL",
   "content/base/test/test_copypaste.xul": "bug 904183",
   "toolkit/content/tests/widgets/test_contextmenu_nested.xul": "",
