@@ -127,17 +127,17 @@ toolbarpaletteitem[place="palette"] > #personal-bookmarks > #bookmarks-toolbar-p
 /* ----- BOOKMARK STAR ANIMATION ----- */
 
 @keyframes animation-bookmarkAdded {
-  from { transform: rotate(0deg) translateX(-20px) rotate(0deg) scale(1); opacity: 0; }
-  60%  { transform: rotate(180deg) translateX(-20px) rotate(-180deg) scale(2.2); opacity: 1; }
+  from { transform: rotate(0deg) translateX(-16px) rotate(0deg) scale(1); opacity: 0; }
+  60%  { transform: rotate(180deg) translateX(-16px) rotate(-180deg) scale(2.2); opacity: 1; }
   80%  { opacity: 1; }
-  to   { transform: rotate(180deg) translateX(-20px) rotate(-180deg) scale(1); opacity: 0; }
+  to   { transform: rotate(180deg) translateX(-16px) rotate(-180deg) scale(1); opacity: 0; }
 }
 
 @keyframes animation-bookmarkAddedToBookmarksBar {
-  from { transform: rotate(0deg) translateX(-12px) rotate(0deg) scale(1); opacity: 0; }
-  60%  { transform: rotate(180deg) translateX(-12px) rotate(-180deg) scale(2.2); opacity: 1; }
+  from { transform: rotate(0deg) translateX(-10px) rotate(0deg) scale(1); opacity: 0; }
+  60%  { transform: rotate(180deg) translateX(-10px) rotate(-180deg) scale(2.2); opacity: 1; }
   80%  { opacity: 1; }
-  to   { transform: rotate(180deg) translateX(-12px) rotate(-180deg) scale(1); opacity: 0; }
+  to   { transform: rotate(180deg) translateX(-10px) rotate(-180deg) scale(1); opacity: 0; }
 }
 
 @keyframes animation-bookmarkPulse {
