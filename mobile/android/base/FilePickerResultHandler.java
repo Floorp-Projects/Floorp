@@ -6,6 +6,7 @@ package org.mozilla.gecko;
 
 import org.mozilla.gecko.mozglue.GeckoLoader;
 import org.mozilla.gecko.util.ActivityResultHandler;
+import org.mozilla.gecko.util.ThreadUtils;
 
 import android.app.Activity;
 import android.content.ContentResolver;
@@ -22,8 +23,10 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.text.TextUtils;
 import android.text.format.Time;
 import android.util.Log;
+import android.os.Process;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -36,6 +39,7 @@ class FilePickerResultHandler implements ActivityResultHandler {
     private static final String UPLOADS_DIR = "uploads";
 
     protected final FilePicker.ResultHandler handler;
+    private final int tabId;
     private final File cacheDir;
 
     // this code is really hacky and doesn't belong anywhere so I'm putting it here for now
@@ -43,7 +47,8 @@ class FilePickerResultHandler implements ActivityResultHandler {
     private String mImageName = "";
 
     /* Use this constructor to asynchronously listen for results */
-    public FilePickerResultHandler(FilePicker.ResultHandler handler, Context context) {
+    public FilePickerResultHandler(final FilePicker.ResultHandler handler, final Context context, final int tabId) {
+        this.tabId = tabId;
         cacheDir = new File(context.getCacheDir(), UPLOADS_DIR);
         this.handler = handler;
     }
@@ -119,16 +124,16 @@ class FilePickerResultHandler implements ActivityResultHandler {
     }
 
     private class VideoLoaderCallbacks implements LoaderCallbacks<Cursor> {
-        final private Uri mUri;
+        final private Uri uri;
         public VideoLoaderCallbacks(Uri uri) {
-            mUri = uri;
+            this.uri = uri;
         }
 
         @Override
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
             final FragmentActivity fa = (FragmentActivity) GeckoAppShell.getGeckoInterface().getActivity();
             return new CursorLoader(fa,
-                                    mUri,
+                                    uri,
                                     new String[] { MediaStore.Video.Media.DATA },
                                     null,  // selection
                                     null,  // selectionArgs
@@ -147,17 +152,20 @@ class FilePickerResultHandler implements ActivityResultHandler {
         public void onLoaderReset(Loader<Cursor> loader) { }
     }
 
-    private class FileLoaderCallbacks implements LoaderCallbacks<Cursor> {
-        final private Uri mUri;
+    private class FileLoaderCallbacks implements LoaderCallbacks<Cursor>,
+                                                 Tabs.OnTabsChangedListener {
+        final private Uri uri;
+        private String tempFile;
+
         public FileLoaderCallbacks(Uri uri) {
-            mUri = uri;
+            this.uri = uri;
         }
 
         @Override
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
             final FragmentActivity fa = (FragmentActivity) GeckoAppShell.getGeckoInterface().getActivity();
             return new CursorLoader(fa,
-                                    mUri,
+                                    uri,
                                     new String[] { OpenableColumns.DISPLAY_NAME },
                                     null,  // selection
                                     null,  // selectionArgs
@@ -169,7 +177,7 @@ class FilePickerResultHandler implements ActivityResultHandler {
             if (cursor.moveToFirst()) {
                 String name = cursor.getString(0);
                 // tmp filenames must be at least 3 characters long. Add a prefix to make sure that happens
-                String fileName = "tmp_";
+                String fileName = "tmp_" + Process.myPid() + "-";
                 String fileExt = null;
                 int period;
 
@@ -178,7 +186,7 @@ class FilePickerResultHandler implements ActivityResultHandler {
 
                 // Generate an extension if we don't already have one
                 if (name == null || (period = name.lastIndexOf('.')) == -1) {
-                    String mimeType = cr.getType(mUri);
+                    String mimeType = cr.getType(uri);
                     fileExt = "." + GeckoAppShell.getExtensionFromMimeType(mimeType);
                 } else {
                     fileExt = name.substring(period);
@@ -191,7 +199,7 @@ class FilePickerResultHandler implements ActivityResultHandler {
 
                     File file = File.createTempFile(fileName, fileExt, cacheDir);
                     FileOutputStream fos = new FileOutputStream(file);
-                    InputStream is = cr.openInputStream(mUri);
+                    InputStream is = cr.openInputStream(uri);
                     byte[] buf = new byte[4096];
                     int len = is.read(buf);
                     while (len != -1) {
@@ -200,8 +208,12 @@ class FilePickerResultHandler implements ActivityResultHandler {
                     }
                     fos.close();
 
-                    String path = file.getAbsolutePath();
-                    sendResult((path == null) ? "" : path);
+                    tempFile = file.getAbsolutePath();
+                    sendResult((tempFile == null) ? "" : tempFile);
+
+                    if (tabId > -1 && !TextUtils.isEmpty(tempFile)) {
+                        Tabs.registerOnTabsChangedListener(this);
+                    }
                 } catch(IOException ex) {
                     Log.i(LOGTAG, "Error writing file", ex);
                 }
@@ -212,6 +224,36 @@ class FilePickerResultHandler implements ActivityResultHandler {
 
         @Override
         public void onLoaderReset(Loader<Cursor> loader) { }
+
+        /*Tabs.OnTabsChangedListener*/
+        // This cleans up our temp file. If it doesn't run, we just hope that Android
+        // will eventually does the cleanup for us.
+        @Override
+        public void onTabChanged(Tab tab, Tabs.TabEvents msg, Object data) {
+            if (tab.getId() != tabId) {
+                return;
+            }
+
+            if (msg == Tabs.TabEvents.LOCATION_CHANGE ||
+                msg == Tabs.TabEvents.CLOSED) {
+                ThreadUtils.postToBackgroundThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        File f = new File(tempFile);
+                        f.delete();
+                    }
+                });
+
+                // We're already on the UIThread, but we have to post this back to the uithread to avoid
+                // modifying the listener array while its being iterated through.
+                ThreadUtils.postToUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Tabs.unregisterOnTabsChangedListener(FileLoaderCallbacks.this);
+                    }
+                });
+            }
+        }
     }
 
 }
