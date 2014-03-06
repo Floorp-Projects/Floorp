@@ -68,7 +68,7 @@ function setAttributes(aNode, aAttrs) {
 
 function updateCombinedWidgetStyle(aNode, aArea, aModifyCloseMenu) {
   let inPanel = (aArea == CustomizableUI.AREA_PANEL);
-  let cls = inPanel ? "panel-combined-button" : "toolbarbutton-1";
+  let cls = inPanel ? "panel-combined-button" : "toolbarbutton-1 toolbarbutton-combined";
   let attrs = {class: cls};
   if (aModifyCloseMenu) {
     attrs.closemenu = inPanel ? "none" : null;
@@ -364,7 +364,7 @@ const CustomizableWidgets = [{
       let inPanel = areaType == CustomizableUI.TYPE_MENU_PANEL;
       let inToolbar = areaType == CustomizableUI.TYPE_TOOLBAR;
       let closeMenu = inPanel ? "none" : null;
-      let cls = inPanel ? "panel-combined-button" : "toolbarbutton-1";
+      let cls = inPanel ? "panel-combined-button" : "toolbarbutton-1 toolbarbutton-combined";
 
       if (!this.currentArea)
         cls = null;
@@ -542,7 +542,7 @@ const CustomizableWidgets = [{
     defaultArea: CustomizableUI.AREA_PANEL,
     onBuild: function(aDocument) {
       let inPanel = (this.currentArea == CustomizableUI.AREA_PANEL);
-      let cls = inPanel ? "panel-combined-button" : "toolbarbutton-1";
+      let cls = inPanel ? "panel-combined-button" : "toolbarbutton-1 toolbarbutton-combined";
 
       if (!this.currentArea)
         cls = null;
