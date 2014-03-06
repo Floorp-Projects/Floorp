@@ -151,12 +151,6 @@ nsJSUtils::CompileFunction(JSContext* aCx,
   mozilla::DebugOnly<nsIScriptContext*> ctx = GetScriptContextFromJSContext(aCx);
   MOZ_ASSERT_IF(ctx, ctx->IsContextInitialized());
 
-  // Since aTarget and aCx are same-compartment, there should be no distinction
-  // between the object principal and the cx principal.
-  // However, aTarget may be null in the wacky aShared case. So use the cx.
-  JSPrincipals* p = JS_GetCompartmentPrincipals(js::GetContextCompartment(aCx));
-  aOptions.setPrincipals(p);
-
   // Do the junk Gecko is supposed to do before calling into JSAPI.
   if (aTarget) {
     JS::ExposeObjectToActiveJS(aTarget);
@@ -204,9 +198,6 @@ nsJSUtils::EvaluateString(JSContext* aCx,
   JS::ExposeObjectToActiveJS(aScopeObject);
   nsAutoMicroTask mt;
   nsresult rv = NS_OK;
-
-  JSPrincipals* p = JS_GetCompartmentPrincipals(js::GetObjectCompartment(aScopeObject));
-  aCompileOptions.setPrincipals(p);
 
   bool ok = false;
   nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
