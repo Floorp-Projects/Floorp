@@ -47,11 +47,6 @@
   padding: 4px 0 0; /* To align it with the checkbox */
 }
 
-.options-citation-label + label {
-  padding: 3px 0 0 !important; /* To align it with the checkbox */
-  font-style: italic;
-}
-
 .hidden-labels-box:not(.visible) > label,
 .hidden-labels-box.visible ~ .hidden-labels-box > label:last-child {
   display: none;
