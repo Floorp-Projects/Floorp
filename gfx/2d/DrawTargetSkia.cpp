@@ -21,6 +21,7 @@
 #include "skia/SkBlurDrawLooper.h"
 #include "skia/SkBlurMaskFilter.h"
 #include "skia/SkColorFilter.h"
+#include "skia/SkDropShadowImageFilter.h"
 #include "skia/SkLayerRasterizer.h"
 #include "skia/SkLayerDrawLooper.h"
 #include "skia/SkDashPathEffect.h"
@@ -337,60 +338,26 @@ DrawTargetSkia::DrawSurfaceWithShadow(SourceSurface *aSurface,
                                       Float aSigma,
                                       CompositionOp aOperator)
 {
+  if (!(aSurface->GetType() == SurfaceType::SKIA || aSurface->GetType() == SurfaceType::DATA)) {
+    return;
+  }
+
   MarkChanged();
+
   mCanvas->save(SkCanvas::kMatrix_SaveFlag);
   mCanvas->resetMatrix();
 
-  uint32_t blurFlags = SkBlurMaskFilter::kHighQuality_BlurFlag |
-                       SkBlurMaskFilter::kIgnoreTransform_BlurFlag;
   TempBitmap bitmap = GetBitmapForSurface(aSurface);
-  SkShader* shader = SkShader::CreateBitmapShader(bitmap.mBitmap,
-    SkShader::kClamp_TileMode, SkShader::kClamp_TileMode);
-  SkMatrix matrix;
-  matrix.reset();
-  matrix.setTranslateX(SkFloatToScalar(aDest.x));
-  matrix.setTranslateY(SkFloatToScalar(aDest.y));
-  shader->setLocalMatrix(matrix);
-  SkLayerDrawLooper* dl = new SkLayerDrawLooper;
-  SkLayerDrawLooper::LayerInfo info;
-  info.fPaintBits |= SkLayerDrawLooper::kShader_Bit;
-  SkPaint *layerPaint = dl->addLayer(info);
-  layerPaint->setShader(shader);
 
-  info.fPaintBits = 0;
-  info.fPaintBits |= SkLayerDrawLooper::kMaskFilter_Bit;
-  info.fPaintBits |= SkLayerDrawLooper::kColorFilter_Bit;
-  info.fColorMode = SkXfermode::kDst_Mode;
-  info.fOffset.set(SkFloatToScalar(aOffset.x), SkFloatToScalar(aOffset.y));
-  info.fPostTranslate = true;
-
-  SkMaskFilter* mf = SkBlurMaskFilter::Create(aSigma, SkBlurMaskFilter::kNormal_BlurStyle, blurFlags);
-  SkColor color = ColorToSkColor(aColor, 1);
-  SkColorFilter* cf = SkColorFilter::CreateModeFilter(color, SkXfermode::kSrcIn_Mode);
-
-
-  layerPaint = dl->addLayer(info);
-  SkSafeUnref(layerPaint->setMaskFilter(mf));
-  SkSafeUnref(layerPaint->setColorFilter(cf));
-  layerPaint->setColor(color);
-  
-  // TODO: This is using the rasterizer to calculate an alpha mask
-  // on both the shadow and normal layers. We should fix this
-  // properly so it only happens for the shadow layer
-  SkLayerRasterizer *raster = new SkLayerRasterizer();
-  SkPaint maskPaint;
-  SkSafeUnref(maskPaint.setShader(shader));
-  raster->addLayer(maskPaint, 0, 0);
-  
   SkPaint paint;
-  paint.setAntiAlias(true);
-  SkSafeUnref(paint.setRasterizer(raster));
-  paint.setXfermodeMode(GfxOpToSkiaOp(aOperator));
-  SkSafeUnref(paint.setLooper(dl));
 
-  SkRect rect = RectToSkRect(Rect(Float(aDest.x), Float(aDest.y),
-                                  Float(bitmap.mBitmap.width()), Float(bitmap.mBitmap.height())));
-  mCanvas->drawRect(rect, paint);
+  SkImageFilter* filter = new SkDropShadowImageFilter(aOffset.x, aOffset.y,
+                                                      aSigma, ColorToSkColor(aColor, 1.0));
+
+  paint.setImageFilter(filter);
+  paint.setXfermodeMode(GfxOpToSkiaOp(aOperator));
+
+  mCanvas->drawBitmap(bitmap.mBitmap, aDest.x, aDest.y, &paint);
   mCanvas->restore();
 }
 
