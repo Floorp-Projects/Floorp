@@ -102,7 +102,7 @@ skip-if(B2G) fuzzy-if(cocoaWidget,4,184) == feDistantLight-filterRes-01.svg feDi
 
 fuzzy(1,119) == feDiffuseLighting-1.svg feDiffuseLighting-1-ref.svg
 
-skip-if(d2d) == feSpecularLighting-1.svg feSpecularLighting-1-ref.svg
+fuzzy(2,2659) skip-if(d2d) == feSpecularLighting-1.svg feSpecularLighting-1-ref.svg
 
 pref(layout.css.filters.enabled,true) == multiple-svg-filters.svg multiple-svg-filters-ref.svg
 pref(layout.css.filters.enabled,true) == multiple-svg-filters-long-chain.svg multiple-svg-filters-ref.svg
