@@ -16,7 +16,7 @@
  * consequently can cause the main thread to lock for extended intervals while
  * the asynchronous thread performs some long-running operation.
  */
-[scriptable, uuid(2400f64d-2cb3-49a9-b01e-f03cacb8aa6e)]
+[scriptable, uuid(52e49370-3b2e-4a27-a3fc-79e20ad4056b)]
 interface mozIStorageAsyncStatement : mozIStorageBaseStatement {
   /*
    * 'params' provides a magic JS helper that lets you assign parameters by
