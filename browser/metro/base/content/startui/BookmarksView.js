@@ -9,15 +9,17 @@
  * fills it with the user's bookmarks.
  *
  * @param           aSet    Control implementing nsIDOMXULSelectControlElement.
- * @param {Number}  aLimit  Maximum number of items to show in the view.
  * @param           aRoot   Bookmark root to show in the view.
  */
-function BookmarksView(aSet, aLimit, aRoot, aFilterUnpinned) {
+function BookmarksView(aSet, aRoot, aFilterUnpinned) {
   View.call(this, aSet);
 
   this._inBatch = false; // batch up grid updates to avoid redundant arrangeItems calls
 
-  this._limit = aLimit;
+  // View monitors this for maximum tile display counts
+  this.tilePrefName = "browser.display.startUI.bookmarks.maxresults";
+  this.showing = this.maxTiles > 0;
+
   this._filterUnpinned = aFilterUnpinned;
   this._bookmarkService = PlacesUtils.bookmarks;
   this._navHistoryService = gHistSvc;
@@ -33,12 +35,16 @@ function BookmarksView(aSet, aLimit, aRoot, aFilterUnpinned) {
 }
 
 BookmarksView.prototype = Util.extend(Object.create(View.prototype), {
-  _limit: null,
   _set: null,
   _changes: null,
   _root: null,
   _sort: 0, // Natural bookmark order.
   _toRemove: null,
+
+  // For View's showing property
+  get vbox() {
+    return document.getElementById("start-bookmarks");
+  },
 
   get sort() {
     return this._sort;
@@ -67,6 +73,11 @@ BookmarksView.prototype = Util.extend(Object.create(View.prototype), {
     View.prototype.destruct.call(this);
   },
 
+  refreshView: function () {
+    this.clearBookmarks();
+    this.getBookmarks();
+  },
+
   handleItemClick: function bv_handleItemClick(aItem) {
     let url = aItem.getAttribute("value");
     StartUI.goToURI(url);
@@ -91,7 +102,7 @@ BookmarksView.prototype = Util.extend(Object.create(View.prototype), {
     options.excludeQueries = true; // Don't include "smart folders"
     options.sortingMode = this._sort;
 
-    let limit = this._limit || Infinity;
+    let limit = this.maxTiles;
 
     let query = this._navHistoryService.getNewQuery();
     query.setFolders([Bookmarks.metroRoot], 1);
@@ -305,7 +316,7 @@ let BookmarksStartView = {
   get _grid() { return document.getElementById("start-bookmarks-grid"); },
 
   init: function init() {
-    this._view = new BookmarksView(this._grid, StartUI.maxResultsPerSection, Bookmarks.metroRoot, true);
+    this._view = new BookmarksView(this._grid, Bookmarks.metroRoot, true);
     this._view.getBookmarks();
     this._grid.removeAttribute("fade");
   },
