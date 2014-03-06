@@ -42,6 +42,7 @@ const SEENPAGEID_EXPIRY  = 2 * 7 * 24 * 60 * 60 * 1000; // 2 weeks.
 
 
 this.UITour = {
+  url: null,
   seenPageIDs: null,
   pageIDSourceTabs: new WeakMap(),
   pageIDSourceWindows: new WeakMap(),
@@ -125,6 +126,11 @@ this.UITour = {
     Object.defineProperty(this, "seenPageIDs", {
       get: this.restoreSeenPageIDs.bind(this),
       configurable: true,
+    });
+
+    delete this.url;
+    XPCOMUtils.defineLazyGetter(this, "url", function () {
+      return Services.urlFormatter.formatURLPref("browser.uitour.url");
     });
 
     UITelemetry.addSimpleMeasureFunction("UITour",
