@@ -6006,8 +6006,8 @@ TryAttachLengthStub(JSContext *cx, JSScript *script, ICGetProp_Fallback *stub, H
         stub->addNewStub(newStub);
         return true;
     }
-    if (obj->is<TypedArrayObject>()) {
-        JS_ASSERT(res.isInt32());
+
+    if (obj->is<TypedArrayObject>() && res.isInt32()) {
         IonSpew(IonSpew_BaselineIC, "  Generating GetProp(TypedArray.length) stub");
         ICGetProp_TypedArrayLength::Compiler compiler(cx);
         ICStub *newStub = compiler.getStub(compiler.getStubSpace(script));
