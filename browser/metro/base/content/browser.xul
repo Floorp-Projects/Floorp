@@ -58,6 +58,8 @@
     <broadcaster id="bcast_preciseInput" input="precise"/>
     <broadcaster id="bcast_windowState" viewstate=""/>
     <broadcaster id="bcast_loadingState" loading="false"/>
+    <broadcaster id="bcast_chromeState"
+                 navbar="visible"/>
   </broadcasterset>
 
   <observerset id="observerset">
@@ -204,6 +206,8 @@ Desktop browser's sync prefs.
       <!-- Content viewport -->
       <stack id="content-viewport">
         <observes element="bcast_windowState" attribute="startpage"/>
+        <observes element="bcast_chromeState"
+                  attribute="navbar"/>
         <deck id="browsers" flex="1" observes="bcast_preciseInput"/>
         <box id="vertical-scroller" class="scroller" orient="vertical" end="0" top="0"/>
         <box id="horizontal-scroller" class="scroller" orient="horizontal" left="0" bottom="0"/>
