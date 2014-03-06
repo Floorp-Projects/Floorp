@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Tests that annotations disappear when their target is hidden.
+ * Detaching a tab to a new window shouldn't break the menu panel.
  */
 
 "use strict";
