@@ -270,6 +270,7 @@ DataSourceSurfaceD2D::Unmap()
 {
   MOZ_ASSERT(mIsMapped);
 
+  mIsMapped = false;
   mTexture->Unmap(0);
 }
 
