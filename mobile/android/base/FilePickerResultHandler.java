@@ -9,6 +9,7 @@ import org.mozilla.gecko.util.ActivityResultHandler;
 
 import android.app.Activity;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
@@ -32,31 +33,25 @@ import java.util.Queue;
 
 class FilePickerResultHandler implements ActivityResultHandler {
     private static final String LOGTAG = "GeckoFilePickerResultHandler";
+    private static final String UPLOADS_DIR = "uploads";
 
-    protected final Queue<String> mFilePickerResult;
-    protected final FilePicker.ResultHandler mHandler;
+    protected final FilePicker.ResultHandler handler;
+    private final File cacheDir;
 
     // this code is really hacky and doesn't belong anywhere so I'm putting it here for now
     // until I can come up with a better solution.
     private String mImageName = "";
 
-    public FilePickerResultHandler(Queue<String> resultQueue) {
-        mFilePickerResult = resultQueue;
-        mHandler = null;
-    }
-
     /* Use this constructor to asynchronously listen for results */
-    public FilePickerResultHandler(FilePicker.ResultHandler handler) {
-        mFilePickerResult = null;
-        mHandler = handler;
+    public FilePickerResultHandler(FilePicker.ResultHandler handler, Context context) {
+        cacheDir = new File(context.getCacheDir(), UPLOADS_DIR);
+        this.handler = handler;
     }
 
     private void sendResult(String res) {
-        if (mFilePickerResult != null)
-            mFilePickerResult.offer(res);
-
-        if (mHandler != null)
-            mHandler.gotFile(res);
+        if (handler != null) {
+            handler.gotFile(res);
+        }
     }
 
     @Override
@@ -192,7 +187,9 @@ class FilePickerResultHandler implements ActivityResultHandler {
 
                 // Now write the data to the temp file
                 try {
-                    File file = File.createTempFile(fileName, fileExt, GeckoLoader.getGREDir(GeckoAppShell.getContext()));
+                    cacheDir.mkdir();
+
+                    File file = File.createTempFile(fileName, fileExt, cacheDir);
                     FileOutputStream fos = new FileOutputStream(file);
                     InputStream is = cr.openInputStream(mUri);
                     byte[] buf = new byte[4096];
