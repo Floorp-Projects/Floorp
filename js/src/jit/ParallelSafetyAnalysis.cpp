@@ -181,7 +181,6 @@ class ParallelSafetyVisitor : public MInstructionVisitor
     SAFE_OP(TruncateToInt32)
     SAFE_OP(MaybeToDoubleElement)
     CUSTOM_OP(ToString)
-    SAFE_OP(NewSlots)
     CUSTOM_OP(NewArray)
     CUSTOM_OP(NewObject)
     CUSTOM_OP(NewCallObject)
@@ -533,6 +532,10 @@ ParallelSafetyVisitor::visitCreateThisWithTemplate(MCreateThisWithTemplate *ins)
 bool
 ParallelSafetyVisitor::visitNewCallObject(MNewCallObject *ins)
 {
+    if (ins->templateObject()->hasDynamicSlots()) {
+        SpewMIR(ins, "call with dynamic slots");
+        return markUnsafe();
+    }
     replace(ins, MNewCallObjectPar::New(alloc(), ForkJoinContext(), ins));
     return true;
 }
@@ -540,6 +543,10 @@ ParallelSafetyVisitor::visitNewCallObject(MNewCallObject *ins)
 bool
 ParallelSafetyVisitor::visitNewRunOnceCallObject(MNewRunOnceCallObject *ins)
 {
+    if (ins->templateObject()->hasDynamicSlots()) {
+        SpewMIR(ins, "call with dynamic slots");
+        return markUnsafe();
+    }
     replace(ins, MNewCallObjectPar::New(alloc(), ForkJoinContext(), ins));
     return true;
 }
@@ -667,11 +674,6 @@ ParallelSafetyVisitor::insertWriteGuard(MInstruction *writeInstruction,
           case MDefinition::Op_Slots:
             object = valueBeingWritten->toSlots()->object();
             break;
-
-          case MDefinition::Op_NewSlots:
-            // Values produced by new slots will ALWAYS be
-            // thread-local.
-            return true;
 
           default:
             SpewMIR(writeInstruction, "cannot insert write guard for %s",
