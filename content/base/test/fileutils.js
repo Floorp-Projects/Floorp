@@ -203,11 +203,6 @@ function testSlice(file, size, type, contents, fileType) {
   ok(slice instanceof Blob, fileType + " fullsize slice is a Blob");
   ok(!(slice instanceof File), fileType + " fullsize slice is not a File");
 
-  // Test that mozSlice works still.
-  slice = file.mozSlice(0, size);
-  ok(slice instanceof Blob, fileType + " fullsize slice is a Blob");
-  ok(!(slice instanceof File), fileType + " fullsize slice is not a File");
-  
   slice = file.slice(0, 1234);
   ok(slice instanceof Blob, fileType + " sized slice is a Blob");
   ok(!(slice instanceof File), fileType + " sized slice is not a File");
