@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=936340
+-->
+<head>
+  <title>Test whether sendBeacon fails for non-HTTP URIs and syntactically incorrect calls</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=936340">Mozilla Bug 936340</a>
+<p id="display"></p>
+
+<div id="content">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({'set': [["beacon.enabled", true]]}, beginTest);
+
+function beginTest() {
+  var threw;
+  try {
+    is(false, navigator.sendBeacon("ftp://example.com", "0"));
+    threw = false;
+  } catch (ex) {
+    threw = true;
+  }
+  ok(threw, "sendBeacon not supported for non ftp calls.");
+
+  try {
+    is(false, navigator.sendBeacon());
+    threw = false;
+  } catch (e) {
+    threw = true;
+  }
+  ok(threw, "sendBeacon needs more parameters.");
+
+  SimpleTest.finish()
+}
+
+</script>
+</pre>
+</body>
+</html>
+
