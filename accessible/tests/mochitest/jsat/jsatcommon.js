@@ -1,10 +1,5 @@
 // A common module to run tests on the AccessFu module
 
-'use strict';
-
-/*global isDeeply, getMainChromeWindow, SimpleTest, SpecialPowers, Logger,
-  AccessFu, Utils, addMessageListener, currentTabDocument, currentBrowser*/
-
 /**
   * A global variable holding an array of test functions.
   */
@@ -122,12 +117,12 @@ var AccessFuTest = {
   runTests: function AccessFuTest_runTests() {
     if (gTestFuncs.length === 0) {
       ok(false, "No tests specified!");
-      SimpleTest.finish();
+      simpleTest.finish();
       return;
     }
 
     // Create an Iterator for gTestFuncs array.
-    gIterator = Iterator(gTestFuncs); // jshint ignore:line
+    gIterator = Iterator(gTestFuncs);
 
     // Start AccessFu and put it in stand-by.
     Components.utils.import("resource://gre/modules/accessibility/AccessFu.jsm");
@@ -149,7 +144,7 @@ var AccessFuTest = {
         AccessFuTest.nextTest();
       } else {
         // Run all test functions synchronously.
-        [testFunc() for (testFunc of gTestFuncs)]; // jshint ignore:line
+        [testFunc() for (testFunc of gTestFuncs)];
         AccessFuTest.finish();
       }
     });
@@ -204,7 +199,7 @@ AccessFuContentTest.prototype = {
     }
 
     aMessageManager.addMessageListener('AccessFu:Present', this);
-    aMessageManager.addMessageListener('AccessFu:Ready', function () {
+    aMessageManager.addMessageListener('AccessFu:Ready', function (aMessage) {
       aMessageManager.addMessageListener('AccessFu:ContentStarted', aCallback);
       aMessageManager.sendAsyncMessage('AccessFu:Start', { buildApp: 'browser' });
     });
@@ -231,7 +226,7 @@ AccessFuContentTest.prototype = {
      }
     } else if (this.finishedCallback) {
       for (var mm of this.mms) {
-        mm.sendAsyncMessage('AccessFu:Stop');
+       mm.sendAsyncMessage('AccessFu:Stop');
       }
       this.finishedCallback();
     }
