@@ -1314,6 +1314,10 @@ function whenDelayedStartupFinished(aWindow, aCallback)
  *        - variablesViewLabel: string|RegExp, optional, the expected variables
  *        view label when the object is inspected. If this is not provided, then
  *        |output| is used.
+ *
+ *        - inspectorIcon: boolean, when true, the test runner expects the
+ *        result widget to contain an inspectorIcon element (className
+ *        open-inspector).
  */
 function checkOutputForInputs(hud, inputTests)
 {
@@ -1338,12 +1342,12 @@ function checkOutputForInputs(hud, inputTests)
     yield checkJSEval(entry);
   }
 
-  function checkConsoleLog(entry)
+  function* checkConsoleLog(entry)
   {
     hud.jsterm.clearOutput();
     hud.jsterm.execute("console.log(" + entry.input + ")");
 
-    return waitForMessages({
+    let [result] = yield waitForMessages({
       webconsole: hud,
       messages: [{
         name: "console.log() output: " + entry.output,
@@ -1352,6 +1356,11 @@ function checkOutputForInputs(hud, inputTests)
         severity: SEVERITY_LOG,
       }],
     });
+
+    if (typeof entry.inspectorIcon == "boolean") {
+      let msg = [...result.matched][0];
+      yield checkLinkToInspector(entry, msg);
+    }
   }
 
   function checkPrintOutput(entry)
@@ -1385,9 +1394,12 @@ function checkOutputForInputs(hud, inputTests)
       }],
     });
 
+    let msg = [...result.matched][0];
     if (!entry.noClick) {
-      let msg = [...result.matched][0];
       yield checkObjectClick(entry, msg);
+    }
+    if (typeof entry.inspectorIcon == "boolean") {
+      yield checkLinkToInspector(entry, msg);
     }
   }
 
@@ -1411,6 +1423,29 @@ function checkOutputForInputs(hud, inputTests)
     }
 
     return promise.resolve(null);
+  }
+
+  function checkLinkToInspector(entry, msg)
+  {
+    let elementNodeWidget = [...msg._messageObject.widgets][0];
+    if (!elementNodeWidget) {
+      ok(!entry.inspectorIcon, "The message has no ElementNode widget");
+      return;
+    }
+
+    return elementNodeWidget.linkToInspector().then(() => {
+      // linkToInspector resolved, check for the .open-inspector element
+      if (entry.inspectorIcon) {
+        ok(msg.querySelectorAll(".open-inspector").length,
+          "The ElementNode widget is linked to the inspector");
+      } else {
+        ok(!msg.querySelectorAll(".open-inspector").length,
+          "The ElementNode widget isn't linked to the inspector");
+      }
+    }, () => {
+      // linkToInspector promise rejected, node not linked to inspector
+      ok(!entry.inspectorIcon, "The ElementNode widget isn't linked to the inspector");
+    });
   }
 
   function onVariablesViewOpen(entry, deferred, event, view, options)
