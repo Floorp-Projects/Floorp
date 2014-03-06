@@ -6757,12 +6757,25 @@ GsmPDUHelperObject.prototype = {
   },
 
   /**
-   * Convert a semi-octet (number) to a GSM BCD char.
+   * Convert a semi-octet (number) to a GSM BCD char, or return empty string
+   * if invalid semiOctet and supressException is set to true.
+   *
+   * @param semiOctet
+   *        Nibble to be converted to.
+   * @param [optional] supressException
+   *        Supress exception if invalid semiOctet and supressException is set
+   *        to true.
+   *
+   * @return GSM BCD char, or empty string.
    */
   bcdChars: "0123456789*#,;",
-  semiOctetToBcdChar: function(semiOctet) {
+  semiOctetToBcdChar: function(semiOctet, supressException) {
     if (semiOctet >= 14) {
-      throw new RangeError();
+      if (supressException) {
+        return "";
+      } else {
+        throw new RangeError();
+      }
     }
 
     return this.bcdChars.charAt(semiOctet);
@@ -6802,10 +6815,13 @@ GsmPDUHelperObject.prototype = {
    *
    * @param pairs
    *        Number of nibble *pairs* to read.
+   * @param [optional] supressException
+   *        Supress exception if invalid semiOctet and supressException is set
+   *        to true.
    *
    * @return The BCD string.
    */
-  readSwappedNibbleBcdString: function(pairs) {
+  readSwappedNibbleBcdString: function(pairs, supressException) {
     let str = "";
     for (let i = 0; i < pairs; i++) {
       let nibbleH = this.readHexNibble();
@@ -6814,9 +6830,9 @@ GsmPDUHelperObject.prototype = {
         break;
       }
 
-      str += this.semiOctetToBcdChar(nibbleL);
+      str += this.semiOctetToBcdChar(nibbleL, supressException);
       if (nibbleH != 0x0F) {
-        str += this.semiOctetToBcdChar(nibbleH);
+        str += this.semiOctetToBcdChar(nibbleH, supressException);
       }
     }
 
@@ -11946,7 +11962,13 @@ ICCRecordHelperObject.prototype = {
       let strLen = Buf.readInt32();
       let octetLen = strLen / 2;
       RIL.iccInfo.iccid =
-        this.context.GsmPDUHelper.readSwappedNibbleBcdString(octetLen);
+        this.context.GsmPDUHelper.readSwappedNibbleBcdString(octetLen, true);
+      // Consumes the remaining buffer if any.
+      let unReadBuffer = this.context.Buf.getReadAvailable() -
+                         this.context.Buf.PDU_HEX_OCTET_SIZE;
+      if (unReadBuffer > 0) {
+        this.context.Buf.seekIncoming(unReadBuffer);
+      }
       Buf.readStringDelimiter(strLen);
 
       if (DEBUG) this.context.debug("ICCID: " + RIL.iccInfo.iccid);

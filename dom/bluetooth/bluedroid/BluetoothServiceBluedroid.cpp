@@ -55,7 +55,6 @@ static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sGetDeviceRunnableArray;
 static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sSetPropertyRunnableArray;
 static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sUnbondingRunnableArray;
 static nsTArray<int> sRequestedDeviceCountArray;
-static StaticAutoPtr<Monitor> sToggleBtMonitor;
 
 /**
  *  Classes only used in this file
@@ -246,9 +245,11 @@ AdapterStateChangeCallback(bt_state_t aStatus)
 
   sIsBtEnabled = (aStatus == BT_STATE_ON);
 
-  {
-    MonitorAutoLock lock(*sToggleBtMonitor);
-    lock.Notify();
+  nsRefPtr<nsRunnable> runnable =
+    new BluetoothService::ToggleBtAck(sIsBtEnabled);
+  if (NS_FAILED(NS_DispatchToMainThread(runnable))) {
+    BT_WARNING("Failed to dispatch to main thread!");
+    return;
   }
 
   if (sIsBtEnabled &&
@@ -670,14 +671,16 @@ StartStopGonkBluetooth(bool aShouldEnable)
 
   if (sIsBtEnabled == aShouldEnable) {
     // Keep current enable status
+    nsRefPtr<nsRunnable> runnable =
+      new BluetoothService::ToggleBtAck(sIsBtEnabled);
+    if (NS_FAILED(NS_DispatchToMainThread(runnable))) {
+      BT_WARNING("Failed to dispatch to main thread!");
+    }
     return NS_OK;
   }
 
   int ret = aShouldEnable ? sBtInterface->enable() : sBtInterface->disable();
   NS_ENSURE_TRUE(ret == BT_STATUS_SUCCESS, NS_ERROR_FAILURE);
-
-  MonitorAutoLock lock(*sToggleBtMonitor);
-  lock.Wait();
 
   return NS_OK;
 }
@@ -716,8 +719,6 @@ ReplyStatusError(BluetoothReplyRunnable* aBluetoothReplyRunnable,
  */
 BluetoothServiceBluedroid::BluetoothServiceBluedroid()
 {
-  sToggleBtMonitor = new Monitor("BluetoothService.sToggleBtMonitor");
-
   if (!EnsureBluetoothHalLoad()) {
     BT_LOGR("Error! Failed to load bluedroid library.");
     return;
@@ -731,7 +732,6 @@ BluetoothServiceBluedroid::BluetoothServiceBluedroid()
 
 BluetoothServiceBluedroid::~BluetoothServiceBluedroid()
 {
-  sToggleBtMonitor = nullptr;
 }
 
 nsresult
@@ -741,16 +741,12 @@ BluetoothServiceBluedroid::StartInternal()
 
   nsresult ret = StartStopGonkBluetooth(true);
   if (NS_FAILED(ret)) {
-    nsCOMPtr<nsIRunnable> ackTask = new BluetoothService::ToggleBtAck(false);
-    if (NS_FAILED(NS_DispatchToMainThread(ackTask))) {
+    nsRefPtr<nsRunnable> runnable =
+      new BluetoothService::ToggleBtAck(false);
+    if (NS_FAILED(NS_DispatchToMainThread(runnable))) {
       BT_WARNING("Failed to dispatch to main thread!");
     }
     BT_LOGR("Error");
-  }
-
-  nsCOMPtr<nsIRunnable> ackTask = new BluetoothService::ToggleBtAck(true);
-  if (NS_FAILED(NS_DispatchToMainThread(ackTask))) {
-    BT_WARNING("Failed to dispatch to main thread!");
   }
 
   return ret;
@@ -763,16 +759,12 @@ BluetoothServiceBluedroid::StopInternal()
 
   nsresult ret = StartStopGonkBluetooth(false);
   if (NS_FAILED(ret)) {
-    nsCOMPtr<nsIRunnable> ackTask = new BluetoothService::ToggleBtAck(true);
-    if (NS_FAILED(NS_DispatchToMainThread(ackTask))) {
+    nsRefPtr<nsRunnable> runnable =
+      new BluetoothService::ToggleBtAck(true);
+    if (NS_FAILED(NS_DispatchToMainThread(runnable))) {
       BT_WARNING("Failed to dispatch to main thread!");
     }
     BT_LOGR("Error");
-  }
-
-  nsCOMPtr<nsIRunnable> ackTask = new BluetoothService::ToggleBtAck(false);
-  if (NS_FAILED(NS_DispatchToMainThread(ackTask))) {
-    BT_WARNING("Failed to dispatch to main thread!");
   }
 
   return ret;
@@ -1178,7 +1170,7 @@ NextBluetoothProfileController()
   sControllerArray.RemoveElementAt(0);
   // Re-check if the task array is empty, if it's not, the next task will begin.
   NS_ENSURE_FALSE_VOID(sControllerArray.IsEmpty());
-  sControllerArray[0]->Start();
+  sControllerArray[0]->StartSession();
 }
 
 static void
@@ -1201,7 +1193,7 @@ ConnectDisconnect(bool aConnect, const nsAString& aDeviceAddress,
    * first one is completed. See NextBluetoothProfileController() for details.
    */
   if (sControllerArray.Length() == 1) {
-    sControllerArray[0]->Start();
+    sControllerArray[0]->StartSession();
   }
 }
 

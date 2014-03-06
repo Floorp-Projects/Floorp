@@ -1439,7 +1439,7 @@ this.PushService = {
                         .createInstance(Ci.nsIUDPSocket);
     this._udpServer.init(-1, false);
     this._udpServer.asyncListen(this);
-    debug("listenForUDPWakeup listening on " + this._udpPort);
+    debug("listenForUDPWakeup listening on " + this._udpServer.port);
 
     return this._udpServer.port;
   },

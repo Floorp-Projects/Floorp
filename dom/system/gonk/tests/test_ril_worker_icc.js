@@ -28,6 +28,10 @@ function newUint8Worker() {
     index += offset;
   };
 
+  context.Buf.getReadAvailable = function() {
+    return buf.length - index;
+  };
+
   worker.debug = do_print;
 
   return worker;
@@ -2115,6 +2119,10 @@ add_test(function test_process_icc_io_error() {
     }
 
     ioHelper.processICCIOError({rilRequestError: errorCode,
+                                fileId: 0xffff,
+                                command: 0xff,
+                                sw1: 0xff,
+                                sw2: 0xff,
                                 onerror: errorCb});
     do_check_true(called);
   }
@@ -3089,6 +3097,54 @@ add_test(function test_icc_io_get_response_for_linear_fixed_structure() {
     do_check_eq(options.recordSize, 0x1A);
     do_check_eq(options.totalRecords, 0x01);
   }
+
+  run_next_test();
+});
+
+/**
+ * Verify reading EF_ICCID.
+ */
+add_test(function test_handling_iccid() {
+  let worker = newUint8Worker();
+  let context = worker.ContextPool._contexts[0];
+  let record = context.ICCRecordHelper;
+  let helper = context.GsmPDUHelper;
+  let ril = context.RIL;
+  let buf = context.Buf;
+  let io = context.ICCIOHelper;
+
+  ril.reportStkServiceIsRunning = function fakeReportStkServiceIsRunning() {
+  };
+
+  function do_test(rawICCID, expectedICCID) {
+    io.loadTransparentEF = function fakeLoadTransparentEF(options) {
+      // Write data size
+      buf.writeInt32(rawICCID.length);
+
+      // Write data
+      for (let i = 0; i < rawICCID.length; i += 2) {
+        helper.writeHexOctet(parseInt(rawICCID.substr(i, 2), 16));
+      }
+
+      // Write string delimiter
+      buf.writeStringDelimiter(rawICCID.length);
+
+      if (options.callback) {
+        options.callback(options);
+      }
+    };
+
+    record.readICCID();
+
+    do_check_eq(ril.iccInfo.iccid, expectedICCID);
+  }
+
+  // Invalid char at high nibbile + low nibbile contains 0xF.
+  do_test("9868002E90909F001519", "89860020909");
+  // Invalid char at low nibbile.
+  do_test("986800E2909090001519", "8986002090909005191");
+  // Valid ICCID.
+  do_test("98101430121181157002", "89014103211118510720");
 
   run_next_test();
 });
