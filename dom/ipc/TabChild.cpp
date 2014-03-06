@@ -634,11 +634,6 @@ TabChild::HandlePossibleViewportChange()
     metrics.mScrollId = viewId;
   }
 
-  metrics.mDisplayPort = AsyncPanZoomController::CalculatePendingDisplayPort(
-    // The page must have been refreshed in some way such as a new document or
-    // new CSS viewport, so we know that there's no velocity, acceleration, and
-    // we have no idea how long painting will take.
-    metrics, ScreenPoint(0.0f, 0.0f), 0.0);
   metrics.mCumulativeResolution = metrics.mZoom / metrics.mDevPixelsPerCSSPixel * ScreenToLayerScale(1);
   // This is the root layer, so the cumulative resolution is the same
   // as the resolution.
@@ -658,6 +653,14 @@ TabChild::HandlePossibleViewportChange()
     return;
   }
   metrics.mScrollableRect = CSSRect(CSSPoint(), pageSize);
+
+  // Calculate a display port _after_ having a scrollable rect because the
+  // display port is clamped to the scrollable rect.
+  metrics.mDisplayPort = AsyncPanZoomController::CalculatePendingDisplayPort(
+    // The page must have been refreshed in some way such as a new document or
+    // new CSS viewport, so we know that there's no velocity, acceleration, and
+    // we have no idea how long painting will take.
+    metrics, ScreenPoint(0.0f, 0.0f), 0.0);
 
   // Force a repaint with these metrics. This, among other things, sets the
   // displayport, so we start with async painting.
