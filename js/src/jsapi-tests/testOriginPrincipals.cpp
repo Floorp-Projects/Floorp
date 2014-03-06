@@ -63,12 +63,14 @@ eval(const char *asciiChars, JSPrincipals *principals, JSPrincipals *originPrinc
     CHECK(global);
     JSAutoCompartment ac(cx, global);
     CHECK(JS_InitStandardClasses(cx, global));
-    bool ok = JS_EvaluateUCScriptForPrincipalsVersionOrigin(cx, global,
-                                                            principals,
-                                                            originPrincipals,
-                                                            chars, len, "", 0,
-                                                            rval,
-                                                            JSVERSION_DEFAULT);
+
+
+    JS::CompileOptions options(cx);
+    options.setOriginPrincipals(originPrincipals)
+           .setFileAndLine("", 0);
+
+    bool ok = JS::Evaluate(cx, global, options, chars, len, rval.address());
+
     delete[] chars;
     return ok;
 }
