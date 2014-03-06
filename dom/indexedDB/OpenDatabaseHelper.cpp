@@ -907,17 +907,21 @@ public:
     rv = aArguments->GetSharedBlob(0, &uncompressedLength, &uncompressed);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    static const fallible_t fallible = fallible_t();
     size_t compressedLength = snappy::MaxCompressedLength(uncompressedLength);
-    char* compressed = (char*)moz_malloc(compressedLength);
+    nsAutoArrayPtr<char> compressed(new (fallible) char[compressedLength]);
     NS_ENSURE_TRUE(compressed, NS_ERROR_OUT_OF_MEMORY);
 
     snappy::RawCompress(reinterpret_cast<const char*>(uncompressed),
-                        uncompressedLength, compressed, &compressedLength);
+                        uncompressedLength, compressed.get(),
+                        &compressedLength);
 
-    std::pair<uint8_t *, int> data((uint8_t*)compressed,
-                                   int(compressedLength));
-    // The variant takes ownership of | compressed |.
-    nsCOMPtr<nsIVariant> result = new mozilla::storage::AdoptedBlobVariant(data);
+    std::pair<const void *, int> data(static_cast<void*>(compressed.get()),
+                                      int(compressedLength));
+
+    // XXX This copies the buffer again... There doesn't appear to be any way to
+    //     preallocate space and write directly to a BlobVariant at the moment.
+    nsCOMPtr<nsIVariant> result = new mozilla::storage::BlobVariant(data);
 
     result.forget(aResult);
     return NS_OK;
