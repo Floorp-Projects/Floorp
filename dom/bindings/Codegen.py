@@ -270,16 +270,18 @@ class CGDOMProxyJSClass(CGThing):
     def declare(self):
         return ""
     def define(self):
+        callHook = LEGACYCALLER_HOOK_NAME if self.descriptor.operations["LegacyCaller"] else 'nullptr'
         return """
 static const DOMJSClass Class = {
   PROXY_CLASS_DEF("%s",
                   0, /* extra slots */
                   JSCLASS_IS_DOMJSCLASS,
-                  nullptr, /* call */
+                  %s, /* call */
                   nullptr  /* construct */),
 %s
 };
 """ % (self.descriptor.interface.identifier.name,
+       callHook,
        CGIndenter(CGGeneric(DOMClass(self.descriptor))).define())
 
 def PrototypeIDAndDepth(descriptor):
