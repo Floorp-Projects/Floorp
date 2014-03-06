@@ -69,6 +69,7 @@
 #include "RestyleManager.h"
 #include "StickyScrollContainer.h"
 #include "nsFieldSetFrame.h"
+#include "nsTextFrame.h"
 
 #ifdef MOZ_XUL
 #include "nsIRootBox.h"
