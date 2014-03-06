@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "skia/GrContext.h"
 #include "skia/GrGLInterface.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/ThreadLocal.h"
@@ -16,9 +17,11 @@
 #endif
 
 #include "GLContext.h"
+#include "SkiaGLGlue.h"
 
 using mozilla::gl::GLContext;
 using mozilla::gl::GLFeature;
+using mozilla::gl::SkiaGLGlue;
 using mozilla::gfx::DrawTarget;
 
 static mozilla::ThreadLocal<GLContext*> sGLContext;
@@ -27,8 +30,8 @@ extern "C" {
 
 void EnsureGLContext(const GrGLInterface* i)
 {
-    const DrawTarget* drawTarget = reinterpret_cast<const DrawTarget*>(i->fCallbackData);
-    GLContext* gl = static_cast<GLContext*>(drawTarget->GetGLContext());
+    const SkiaGLGlue* contextSkia = reinterpret_cast<const SkiaGLGlue*>(i->fCallbackData);
+    GLContext* gl = contextSkia->GetGLContext();
     gl->MakeCurrent();
 
     if (!sGLContext.initialized()) {
@@ -775,7 +778,7 @@ GrGLvoid glVertexPointer_mozilla(GrGLint size, GrGLenum type, GrGLsizei stride, 
 
 } // extern "C"
 
-GrGLInterface* CreateGrGLInterfaceFromGLContext(GLContext* context)
+static GrGLInterface* CreateGrGLInterfaceFromGLContext(GLContext* context)
 {
     GrGLInterface* i = new GrGLInterface();
     i->fCallback = EnsureGLContext;
@@ -933,4 +936,15 @@ GrGLInterface* CreateGrGLInterfaceFromGLContext(GLContext* context)
     }
 
     return i;
+}
+
+SkiaGLGlue::SkiaGLGlue(GLContext* context)
+    : mGLContext(context)
+{
+    SkAutoTUnref<GrGLInterface> i(CreateGrGLInterfaceFromGLContext(mGLContext));
+    i->fCallbackData = reinterpret_cast<GrGLInterfaceCallbackData>(this);
+    mGrGLInterface = i;
+    SkAutoTUnref<GrContext> gr(GrContext::Create(kOpenGL_GrBackend, (GrBackendContext)mGrGLInterface.get()));
+
+    mGrContext = gr;
 }

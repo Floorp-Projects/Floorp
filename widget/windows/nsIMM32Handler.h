@@ -11,9 +11,9 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsTArray.h"
+#include "nsIWidget.h"
 #include "mozilla/EventForwards.h"
 
-class nsIWidget;
 class nsWindow;
 struct nsIntRect;
 
@@ -142,6 +142,8 @@ public:
   static void CommitComposition(nsWindow* aWindow, bool aForce = false);
   static void CancelComposition(nsWindow* aWindow, bool aForce = false);
   static void OnUpdateComposition(nsWindow* aWindow);
+
+  static nsIMEUpdatePreference GetIMEUpdatePreference();
 
 protected:
   static void EnsureHandlerInstance();

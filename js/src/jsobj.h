@@ -25,7 +25,7 @@
 #include "vm/Xdr.h"
 
 namespace JS {
-struct ClassInfo;
+struct ObjectsExtraSizes;
 }
 
 namespace js {
@@ -354,7 +354,7 @@ class JSObject : public js::ObjectImpl
         return lastProperty()->hasTable();
     }
 
-    void addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::ClassInfo *info);
+    void addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::ObjectsExtraSizes *sizes);
 
     bool hasIdempotentProtoChain() const;
 

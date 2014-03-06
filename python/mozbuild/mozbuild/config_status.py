@@ -95,7 +95,7 @@ def config_status(topobjdir='.', topsrcdir='.',
     parser.add_option('-d', '--diff', action='store_true',
                       help='print diffs of changed files.')
     parser.add_option('-b', '--backend',
-                      choices=['RecursiveMake', 'AndroidEclipse', 'VisualStudio'],
+                      choices=['RecursiveMake', 'AndroidEclipse', 'CppEclipse', 'VisualStudio'],
                       default='RecursiveMake',
                       help='what backend to build (default: RecursiveMake).')
     options, args = parser.parse_args()
@@ -119,6 +119,11 @@ def config_status(topobjdir='.', topsrcdir='.',
         if not MachCommandConditions.is_android(env):
             raise Exception('The Android Eclipse backend is not available with this configuration.')
         backend_cls = AndroidEclipseBackend
+    elif options.backend == 'CppEclipse':
+        from mozbuild.backend.cpp_eclipse import CppEclipseBackend
+        backend_cls = CppEclipseBackend
+        if os.name == 'nt':
+          raise Exception('Eclipse is not supported on Windows. Consider using Visual Studio instead.')
     elif options.backend == 'VisualStudio':
         from mozbuild.backend.visualstudio import VisualStudioBackend
         backend_cls = VisualStudioBackend
