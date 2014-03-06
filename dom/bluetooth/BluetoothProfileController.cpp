@@ -281,27 +281,7 @@ BluetoothProfileController::Next()
 }
 
 void
-BluetoothProfileController::OnConnect(const nsAString& aErrorStr)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mTimer);
-
-  BT_LOGR_PROFILE(mProfiles[mProfilesIndex], "<%s>",
-                  NS_ConvertUTF16toUTF8(aErrorStr).get());
-
-  mCurrentProfileFinished = true;
-
-  if (mTimer) {
-    mTimer->Cancel();
-  }
-
-  mSuccess |= aErrorStr.IsEmpty();
-
-  Next();
-}
-
-void
-BluetoothProfileController::OnDisconnect(const nsAString& aErrorStr)
+BluetoothProfileController::NotifyCompletion(const nsAString& aErrorStr)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mTimer);
