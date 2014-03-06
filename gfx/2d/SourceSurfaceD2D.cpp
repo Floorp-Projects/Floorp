@@ -260,6 +260,7 @@ DataSourceSurfaceD2D::Map(MapType aMapType, MappedSurface *aMappedSurface)
 
   aMappedSurface->mData = (uint8_t*)map.pData;
   aMappedSurface->mStride = map.RowPitch;
+  mIsMapped = true;
 
   return true;
 }
