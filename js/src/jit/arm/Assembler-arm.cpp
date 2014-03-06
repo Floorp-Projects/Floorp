@@ -2749,6 +2749,20 @@ void Assembler::updateBoundsCheck(uint32_t heapSize, Instruction *inst)
     // within AsmJSModule::patchHeapAccesses, which does that for us.  Don't call this!
 }
 
+static uintptr_t
+PageStart(uintptr_t p)
+{
+    static const size_t PageSize = 4096;
+    return p & ~(PageSize - 1);
+}
+
+static bool
+OnSamePage(uintptr_t start1, uintptr_t stop1, uintptr_t start2, uintptr_t stop2)
+{
+    // Return true if (parts of) the two ranges are on the same memory page.
+    return PageStart(stop1) == PageStart(start2) || PageStart(stop2) == PageStart(start1);
+}
+
 void
 AutoFlushCache::update(uintptr_t newStart, size_t len)
 {
@@ -2761,12 +2775,16 @@ AutoFlushCache::update(uintptr_t newStart, size_t len)
         return;
     }
 
-    if (newStop < start_ - 4096 || newStart > stop_ + 4096) {
-        // If this would add too many pages to the range, bail and just do the flush now.
+    if (!OnSamePage(start_, stop_, newStart, newStop)) {
+        // Flush now if the two ranges have no memory page in common, to avoid
+        // problems on Linux where the kernel only flushes the first VMA that
+        // covers the range. This also ensures we don't add too many pages to
+        // the range.
         IonSpewCont(IonSpew_CacheFlush, "*");
         JSC::ExecutableAllocator::cacheFlush((void*)newStart, len);
         return;
     }
+
     start_ = Min(start_, newStart);
     stop_ = Max(stop_, newStop);
     IonSpewCont(IonSpew_CacheFlush, ".");
