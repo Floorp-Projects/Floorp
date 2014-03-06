@@ -48,6 +48,7 @@
 #include "nsRenderingContext.h"
 #include "TextOverflow.h"
 #include "nsIFrameInlines.h"
+#include "nsTextFrame.h"
 
 #ifdef IBMBIDI
 #include "nsBidiPresUtils.h"
