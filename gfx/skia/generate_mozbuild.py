@@ -20,7 +20,7 @@ if not CONFIG['INTEL_ARCHITECTURE'] and CONFIG['CPU_ARCH'] == 'arm' and CONFIG['
 
 MSVC_ENABLE_PGO = True
 
-FINAL_LIBRARY = 'xul'
+FINAL_LIBRARY = 'gkmedias'
 LOCAL_INCLUDES += [
     'trunk/include/config',
     'trunk/include/core',
@@ -66,6 +66,13 @@ if (CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android') or \
    CONFIG['MOZ_WIDGET_QT'] or \
    CONFIG['MOZ_WIDGET_GTK']:
     DEFINES['SK_FONTHOST_DOES_NOT_USE_FONTMGR'] = 1
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+    DEFINES['SKIA_DLL'] = 1
+    DEFINES['GR_DLL'] = 1
+
+DEFINES['SKIA_IMPLEMENTATION'] = 1
+DEFINES['GR_IMPLEMENTATION'] = 1
 """
 
 import json
