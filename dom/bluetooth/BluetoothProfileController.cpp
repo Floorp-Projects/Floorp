@@ -211,27 +211,49 @@ CheckProfileStatusCallback::Notify(nsITimer* aTimer)
 }
 
 void
-BluetoothProfileController::Start()
+BluetoothProfileController::StartSession()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mDeviceAddress.IsEmpty());
   MOZ_ASSERT(mProfilesIndex == -1);
   MOZ_ASSERT(mTimer);
-  NS_ENSURE_TRUE_VOID(mProfiles.Length() > 0);
 
-  ++mProfilesIndex;
-  BT_LOGR_PROFILE(mProfiles[mProfilesIndex], "");
+  if (mProfiles.Length() < 1) {
+    BT_LOGR("No queued profile.");
+    EndSession();
+    return;
+  }
 
   if (mTimer) {
     mTimer->InitWithCallback(mCheckProfileStatusCallback, CONNECTION_TIMEOUT_MS,
                              nsITimer::TYPE_ONE_SHOT);
   }
 
-  if (mConnect) {
-    mProfiles[mProfilesIndex]->Connect(mDeviceAddress, this);
+  BT_LOGR("%s", mConnect ? "connecting" : "disconnecting");
+
+  Next();
+}
+
+void
+BluetoothProfileController::EndSession()
+{
+  MOZ_ASSERT(mRunnable && mCallback);
+
+  BT_LOGR("mSuccess %d", mSuccess);
+
+  // The action has completed, so the DOM request should be replied then invoke
+  // the callback.
+  if (mSuccess) {
+    DispatchBluetoothReply(mRunnable, BluetoothValue(true), EmptyString());
+  } else if (mConnect) {
+    DispatchBluetoothReply(mRunnable, BluetoothValue(true),
+                           NS_LITERAL_STRING(ERR_CONNECTION_FAILED));
   } else {
-    mProfiles[mProfilesIndex]->Disconnect(this);
+    DispatchBluetoothReply(mRunnable, BluetoothValue(true),
+                           NS_LITERAL_STRING(ERR_DISCONNECTION_FAILED));
   }
+
+  mCallback();
 }
 
 void
@@ -243,78 +265,38 @@ BluetoothProfileController::Next()
   MOZ_ASSERT(mTimer);
 
   mCurrentProfileFinished = false;
-  if (++mProfilesIndex < (int)mProfiles.Length()) {
-    BT_LOGR_PROFILE(mProfiles[mProfilesIndex], "");
 
-    if (mTimer) {
-      mTimer->InitWithCallback(mCheckProfileStatusCallback,
-                               CONNECTION_TIMEOUT_MS,
-                               nsITimer::TYPE_ONE_SHOT);
-    }
-
-    if (mConnect) {
-      mProfiles[mProfilesIndex]->Connect(mDeviceAddress, this);
-    } else {
-      mProfiles[mProfilesIndex]->Disconnect(this);
-    }
+  if (++mProfilesIndex >= (int)mProfiles.Length()) {
+    EndSession();
     return;
   }
 
-  MOZ_ASSERT(mRunnable && mCallback);
+  BT_LOGR_PROFILE(mProfiles[mProfilesIndex], "");
 
-  // The action has been completed, so the dom request is replied and then
-  // the callback is invoked
-  if (mSuccess) {
-    DispatchBluetoothReply(mRunnable, BluetoothValue(true), EmptyString());
+  if (mConnect) {
+    mProfiles[mProfilesIndex]->Connect(mDeviceAddress, this);
   } else {
-    DispatchBluetoothReply(mRunnable, BluetoothValue(),
-                           NS_LITERAL_STRING(ERR_CONNECTION_FAILED));
+    mProfiles[mProfilesIndex]->Disconnect(this);
   }
-  mCallback();
 }
 
 void
-BluetoothProfileController::OnConnect(const nsAString& aErrorStr)
+BluetoothProfileController::NotifyCompletion(const nsAString& aErrorStr)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mTimer);
+  MOZ_ASSERT(mProfiles.Length() > 0);
 
   BT_LOGR_PROFILE(mProfiles[mProfilesIndex], "<%s>",
-    NS_ConvertUTF16toUTF8(aErrorStr).get());
+                  NS_ConvertUTF16toUTF8(aErrorStr).get());
 
   mCurrentProfileFinished = true;
+
   if (mTimer) {
     mTimer->Cancel();
   }
 
-  if (!aErrorStr.IsEmpty()) {
-    BT_WARNING(NS_ConvertUTF16toUTF8(aErrorStr).get());
-  } else {
-    mSuccess = true;
-  }
-
-  Next();
-}
-
-void
-BluetoothProfileController::OnDisconnect(const nsAString& aErrorStr)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mTimer);
-
-  BT_LOGR_PROFILE(mProfiles[mProfilesIndex], "<%s>",
-    NS_ConvertUTF16toUTF8(aErrorStr).get());
-
-  mCurrentProfileFinished = true;
-  if (mTimer) {
-    mTimer->Cancel();
-  }
-
-  if (!aErrorStr.IsEmpty()) {
-    BT_WARNING(NS_ConvertUTF16toUTF8(aErrorStr).get());
-  } else {
-    mSuccess = true;
-  }
+  mSuccess |= aErrorStr.IsEmpty();
 
   Next();
 }
@@ -329,3 +311,4 @@ BluetoothProfileController::GiveupAndContinue()
   mProfiles[mProfilesIndex]->Reset();
   Next();
 }
+

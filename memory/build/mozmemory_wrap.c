@@ -90,28 +90,32 @@ strdup_impl(const char *src)
 
 #ifdef ANDROID
 #include <stdarg.h>
+#include <stdio.h>
 
 MOZ_MEMORY_API int
 vasprintf_impl(char **str, const char *fmt, va_list ap)
 {
+  char* ptr, *_ptr;
+  int ret;
+
   if (str == NULL || fmt == NULL) {
     return -1;
   }
 
-  char* ptr = (char*)malloc_impl(128);
+  ptr = (char*)malloc_impl(128);
   if (ptr == NULL) {
     *str = NULL;
     return -1;
   }
 
-  int ret = vsnprintf(ptr, 128, fmt, ap);
+  ret = vsnprintf(ptr, 128, fmt, ap);
   if (ret < 0) {
     free_impl(ptr);
     *str = NULL;
     return -1;
   }
 
-  char* _ptr = realloc_impl(ptr, ret + 1);
+  _ptr = realloc_impl(ptr, ret + 1);
   if (_ptr == NULL) {
     free_impl(ptr);
     *str = NULL;
@@ -125,11 +129,12 @@ vasprintf_impl(char **str, const char *fmt, va_list ap)
 
 MOZ_MEMORY_API int
 asprintf_impl(char **str, const char *fmt, ...)
- {
+{
+   int ret;
    va_list ap;
    va_start(ap, fmt);
 
-   int ret = vasprintf_impl(str, fmt, ap);
+   ret = vasprintf_impl(str, fmt, ap);
 
    va_end(ap);
 
