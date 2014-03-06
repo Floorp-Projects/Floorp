@@ -3535,7 +3535,7 @@ nsDisplaySubDocument::BuildLayer(nsDisplayListBuilder* aBuilder,
                       mFrame->GetOffsetToCrossDoc(ReferenceFrame());
 
     RecordFrameMetrics(mFrame, rootScrollFrame, ReferenceFrame(),
-                       container, mVisibleRect, viewport,
+                       container, mList.GetVisibleRect(), viewport,
                        (usingDisplayport ? &displayport : nullptr),
                        (usingCriticalDisplayport ? &criticalDisplayport : nullptr),
                        scrollId, isRootContentDocument, aContainerParameters);
