@@ -187,8 +187,7 @@ panelview:not([mainview]) .toolbarbutton-text,
   flex: auto;
 }
 
-#edit-controls@inAnyPanel@ > toolbarbutton > .toolbarbutton-icon,
-#zoom-controls@inAnyPanel@ > toolbarbutton > .toolbarbutton-icon {
+.toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton > .toolbarbutton-icon {
   min-width: 0;
   min-height: 0;
   margin: 0;
@@ -528,8 +527,7 @@ panelview .toolbarbutton-1,
 .subviewbutton,
 .widget-overflow-list .toolbarbutton-1,
 .panelUI-grid .toolbarbutton-1 > .toolbarbutton-menubutton-button,
-#edit-controls@inAnyPanel@ > toolbarbutton,
-#zoom-controls@inAnyPanel@ > toolbarbutton {
+.toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton {
   -moz-appearance: none;
   padding: 2px 6px;
   background-color: hsla(210,4%,10%,0);
@@ -543,8 +541,7 @@ panelview .toolbarbutton-1,
 panelview .toolbarbutton-1,
 .subviewbutton,
 .widget-overflow-list .toolbarbutton-1,
-#edit-controls@inAnyPanel@ > toolbarbutton,
-#zoom-controls@inAnyPanel@ > toolbarbutton {
+.toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton {
   border-width: 1px;
 }
 
@@ -586,14 +583,12 @@ toolbarbutton.subviewbutton@buttonStateHover@,
 menu.subviewbutton@menuStateHover@,
 menuitem.subviewbutton@menuStateHover@,
 .widget-overflow-list .toolbarbutton-1@buttonStateHover@,
-#edit-controls@inAnyPanel@ > toolbarbutton@buttonStateHover@,
-#zoom-controls@inAnyPanel@ > toolbarbutton@buttonStateHover@ {
+.toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton@buttonStateHover@ {
   background-color: hsla(210,4%,10%,.08);
   border-color: hsla(210,4%,10%,.11);
 }
 
-#edit-controls@inAnyPanel@@buttonStateHover@,
-#zoom-controls@inAnyPanel@@buttonStateHover@ {
+.toolbaritem-combined-buttons@inAnyPanel@@buttonStateHover@ {
   border-color: hsla(210,4%,10%,.11);
 }
 
@@ -602,8 +597,7 @@ toolbarbutton.subviewbutton@buttonStateActive@,
 menu.subviewbutton@menuStateActive@,
 menuitem.subviewbutton@menuStateActive@,
 .widget-overflow-list .toolbarbutton-1@buttonStateActive@,
-#edit-controls@inAnyPanel@ > toolbarbutton@buttonStateActive@,
-#zoom-controls@inAnyPanel@ > toolbarbutton@buttonStateActive@ {
+.toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton@buttonStateActive@ {
   background-color: hsla(210,4%,10%,.12);
   border-color: hsla(210,4%,10%,.14);
   box-shadow: 0 1px 0 hsla(210,4%,10%,.03) inset;
@@ -732,8 +726,7 @@ toolbarpaletteitem[place="palette"] > #search-container {
   width: 7em;
 }
 
-#edit-controls@inAnyPanel@,
-#zoom-controls@inAnyPanel@ {
+.toolbaritem-combined-buttons@inAnyPanel@ {
   background-color: hsla(210,4%,10%,0);
   border-radius: 2px;
   border: 1px solid;
@@ -745,8 +738,7 @@ toolbarpaletteitem[place="palette"] > #search-container {
   transition-duration: 150ms;
 }
 
-#edit-controls@inAnyPanel@ > toolbarbutton,
-#zoom-controls@inAnyPanel@ > toolbarbutton {
+.toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton {
   border: 0;
   padding: .5em;
   margin: 0;
@@ -768,8 +760,7 @@ toolbarpaletteitem[place="palette"] > #search-container {
   max-width: calc(@menuPanelButtonWidth@ - 2px);
 }
 
-#main-window:not([customizing]) #edit-controls@inAnyPanel@ > toolbarbutton[disabled] > .toolbarbutton-icon,
-#main-window:not([customizing]) #zoom-controls@inAnyPanel@ > toolbarbutton[disabled] > .toolbarbutton-icon {
+#main-window:not([customizing]) .toolbaritem-combined-buttons@inAnyPanel@ > toolbarbutton[disabled] > .toolbarbutton-icon {
   opacity: .25;
 }
 
@@ -871,8 +862,7 @@ toolbarbutton[overflowedItem=true] {
   -moz-padding-start: .5em;
 }
 
-#widget-overflow-list > #edit-controls,
-#widget-overflow-list > #zoom-controls {
+#widget-overflow-list > .toolbaritem-combined-buttons {
   min-height: 28px;
 }
 
