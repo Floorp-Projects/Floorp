@@ -270,7 +270,7 @@ toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-it
   border-radius: 0 0 2px 0;
 }
 
-.panel-combined-button[disabled] > .toolbarbutton-icon {
+#main-window:not([customizing]) .panel-combined-button[disabled] > .toolbarbutton-icon {
   opacity: .5;
 }
 
@@ -768,8 +768,8 @@ toolbarpaletteitem[place="palette"] > #search-container {
   max-width: calc(@menuPanelButtonWidth@ - 2px);
 }
 
-#edit-controls@inAnyPanel@ > toolbarbutton[disabled] > .toolbarbutton-icon,
-#zoom-controls@inAnyPanel@ > toolbarbutton[disabled] > .toolbarbutton-icon {
+#main-window:not([customizing]) #edit-controls@inAnyPanel@ > toolbarbutton[disabled] > .toolbarbutton-icon,
+#main-window:not([customizing]) #zoom-controls@inAnyPanel@ > toolbarbutton[disabled] > .toolbarbutton-icon {
   opacity: .25;
 }
 
@@ -810,7 +810,13 @@ toolbarpaletteitem[place="palette"] > #search-container {
 }
 
 .toolbaritem-combined-buttons@inAnyPanel@ > separator {
-  margin: .5em 0;
+  /**
+   * The calculation below is a layout hack. Without it, when hovering over
+   * a .toolbaritem-combined-buttons element in the menu panel, the disappearance
+   * of the separator margins causes things in the menu panel to shift by a few
+   * pixels on Linux. See bug 978767.
+   */
+  margin: calc(0.5em - 1px) 0;
   width: 1px;
   background: hsla(210,4%,10%,.15);
   transition-property: margin;
