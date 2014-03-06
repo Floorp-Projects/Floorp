@@ -4525,22 +4525,12 @@ RILNetworkInterface.prototype = {
       }
       authType = RIL.RIL_DATACALL_AUTH_TO_GECKO.indexOf(RIL.GECKO_DATACALL_AUTH_DEFAULT);
     }
-    let pdptype = !radioInterface.rilContext.data.roaming
-                ? this.apnSetting.protocol
-                : this.apnSetting.roaming_protocol;
-    if (RIL.RIL_DATACALL_PDP_TYPES.indexOf(pdptype) < 0) {
-      if (DEBUG) {
-        this.debug("Invalid pdptype '" + pdptype + "', using '" +
-                   RIL.GECKO_DATACALL_PDP_TYPE_DEFAULT + "'");
-      }
-      pdptype = RIL.GECKO_DATACALL_PDP_TYPE_DEFAULT;
-    }
     radioInterface.setupDataCall(radioTechnology,
                                  this.apnSetting.apn,
                                  this.apnSetting.user,
                                  this.apnSetting.password,
                                  authType,
-                                 pdptype);
+                                 "IP");
     this.connecting = true;
   },
 
