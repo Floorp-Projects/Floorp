@@ -151,7 +151,7 @@ function loadSnippetsFromCache() {
     updateBanner(messages);
   }, e => {
     if (e instanceof OS.File.Error && e.becauseNoSuchFile) {
-      Cu.reportError("Couldn't show snippets because cache does not exist yet.");
+      Services.console.logStringMessage("Couldn't show snippets because cache does not exist yet.");
     } else {
       Cu.reportError("Error loading snippets from cache: " + e);
     }
