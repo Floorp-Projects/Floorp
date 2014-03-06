@@ -412,13 +412,6 @@ function synthesizeWheel(aTarget, aOffsetX, aOffsetY, aEvent, aWindow)
                   aEvent.deltaY > 0 ? Math.floor(aEvent.deltaY) :
                                       Math.ceil(aEvent.deltaY);
 
-  if (aEvent.deltaMode === WheelEvent.DOM_DELTA_PIXEL)
-  {
-    aEvent.deltaX *= devicePixelRatio;
-    aEvent.deltaY *= devicePixelRatio;
-    aEvent.deltaZ *= devicePixelRatio;
-  }
-
   var rect = aTarget.getBoundingClientRect();
   utils.sendWheelEvent(rect.left + aOffsetX, rect.top + aOffsetY,
                        aEvent.deltaX, aEvent.deltaY, aEvent.deltaZ,
