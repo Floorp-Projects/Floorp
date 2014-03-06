@@ -524,6 +524,11 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   color: white;
   background-color: rgb(116,191,67);
   text-shadow: none;
+  margin-top: -1px;
+}
+
+#customization-panelHolder #PanelUI-customize + toolbarseparator {
+  display: none;
 }
 
 #customization-panelHolder #PanelUI-customize:hover,
