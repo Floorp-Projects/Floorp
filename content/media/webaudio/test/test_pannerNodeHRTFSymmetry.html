@@ -1,0 +1,104 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test left/right symmetry and block-offset invariance of HRTF panner</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="webaudio.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+const blockSize = 128;
+const bufferSize = 4096; // > HRTF panner latency
+
+var ctx = new AudioContext();
+
+function isChannelSilent(channel) {
+  for (var i = 0; i < channel.length; ++i) {
+    if (channel[i] != 0.0) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function startTest() {
+  var leftPanner = ctx.createPanner();
+  var rightPanner = ctx.createPanner();
+  leftPanner.setPosition(-1,0,0);
+  rightPanner.setPosition(1,0,0);
+
+  // Test that PannerNode processes the signal consistently irrespective of
+  // the offset in the processing block.  This is done by inserting a delay of
+  // less than a block size before one panner.
+  const delayTime = 0.7 * blockSize / ctx.sampleRate;
+  var leftDelay = ctx.createDelay(delayTime);
+  leftDelay.delayTime.value = delayTime;
+  leftDelay.connect(leftPanner);
+  // and compensating for the delay after the other.
+  var rightDelay = ctx.createDelay(delayTime);
+  rightDelay.delayTime.value = delayTime;
+  rightPanner.connect(rightDelay);
+
+  // Feed the panners with a signal having some harmonics to fill the spectrum.
+  var oscillator = ctx.createOscillator();
+  oscillator.frequency.value = 110;
+  oscillator.type = "sawtooth";
+  oscillator.connect(leftDelay);
+  oscillator.connect(rightPanner);
+  oscillator.start(0);
+
+  // Switch the channels on one panner output, and it should match the other.
+  var splitter = ctx.createChannelSplitter();
+  leftPanner.connect(splitter);
+  var merger = ctx.createChannelMerger();
+  splitter.connect(merger, 0, 1);
+  splitter.connect(merger, 1, 0);
+
+  // Invert one signal so that mixing with the other will find the difference.
+  var gain = ctx.createGain();
+  gain.gain.value = -1.0;
+  merger.connect(gain);
+
+  var processor = ctx.createScriptProcessor(bufferSize, 2, 0);
+  gain.connect(processor);
+  rightDelay.connect(processor);
+  processor.onaudioprocess =
+    function(e) {
+      compareBuffers(e.inputBuffer,
+                     ctx.createBuffer(2, bufferSize, ctx.sampleRate));
+      e.target.onaudioprocess = null;
+      SimpleTest.finish();
+    }
+}
+
+function prepareTest() {
+  // A PannerNode will produce no output until it has loaded its HRIR
+  // database.  Wait for this to load before starting the test.
+  var processor = ctx.createScriptProcessor(bufferSize, 2, 0);
+  var panner = ctx.createPanner();
+  panner.connect(processor);
+  var oscillator = ctx.createOscillator();
+  oscillator.connect(panner);
+  oscillator.start(0);
+
+  processor.onaudioprocess =
+    function(e) {
+      if (isChannelSilent(e.inputBuffer.getChannelData(0)))
+        return;
+
+      oscillator.stop(0);
+      panner.disconnect();
+      e.target.onaudioprocess = null;
+      startTest();
+    };
+}
+prepareTest();
+</script>
+</pre>
+</body>
+</html>
