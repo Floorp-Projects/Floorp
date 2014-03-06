@@ -55,6 +55,7 @@ this.UITour = {
   availableTargetsCache: new WeakMap(),
 
   _detachingTab: false,
+  _annotationPanelMutationObservers: new WeakMap(),
   _queuedEvents: [],
   _pendingDoc: null,
 
@@ -839,6 +840,8 @@ this.UITour = {
                       - (Math.max(0, highlightWidthWithMin - targetRect.width) / 2);
       let offsetY = paddingLeftPx
                       - (Math.max(0, highlightHeightWithMin - targetRect.height) / 2);
+
+      this._addAnnotationPanelMutationObserver(highlighter.parentElement);
       highlighter.parentElement.openPopup(aTargetEl, "overlap", offsetX, offsetY);
     }
 
@@ -857,6 +860,7 @@ this.UITour = {
       this.removePinnedTab(aWindow);
 
     let highlighter = aWindow.document.getElementById("UITourHighlight");
+    this._removeAnnotationPanelMutationObserver(highlighter.parentElement);
     highlighter.parentElement.hidePopup();
     highlighter.removeAttribute("active");
 
@@ -934,6 +938,7 @@ this.UITour = {
       tooltip.setAttribute("targetName", aAnchor.targetName);
       tooltip.hidden = false;
       let alignment = "bottomcenter topright";
+      this._addAnnotationPanelMutationObserver(tooltip);
       tooltip.openPopup(aAnchorEl, alignment);
     }
 
@@ -950,6 +955,7 @@ this.UITour = {
     let document = aWindow.document;
 
     let tooltip = document.getElementById("UITourTooltip");
+    this._removeAnnotationPanelMutationObserver(tooltip);
     tooltip.hidePopup();
     this._setAppMenuStateForAnnotation(aWindow, "info", false);
 
@@ -1128,6 +1134,47 @@ this.UITour = {
         targets: [],
       });
     });
+  },
+
+  _addAnnotationPanelMutationObserver: function(aPanelEl) {
+#ifdef XP_LINUX
+    let observer = this._annotationPanelMutationObservers.get(aPanelEl);
+    if (observer) {
+      return;
+    }
+    let win = aPanelEl.ownerDocument.defaultView;
+    observer = new win.MutationObserver(this._annotationMutationCallback);
+    this._annotationPanelMutationObservers.set(aPanelEl, observer);
+    let observerOptions = {
+      attributeFilter: ["height", "width"],
+      attributes: true,
+    };
+    observer.observe(aPanelEl, observerOptions);
+#endif
+  },
+
+  _removeAnnotationPanelMutationObserver: function(aPanelEl) {
+#ifdef XP_LINUX
+    let observer = this._annotationPanelMutationObservers.get(aPanelEl);
+    if (observer) {
+      observer.disconnect();
+      this._annotationPanelMutationObservers.delete(aPanelEl);
+    }
+#endif
+  },
+
+/**
+ * Workaround for Ubuntu panel craziness in bug 970788 where incorrect sizes get passed to
+ * nsXULPopupManager::PopupResized and lead to incorrect width and height attributes getting
+ * set on the panel.
+ */
+  _annotationMutationCallback: function(aMutations) {
+    for (let mutation of aMutations) {
+      // Remove both attributes at once and ignore remaining mutations to be proccessed.
+      mutation.target.removeAttribute("width");
+      mutation.target.removeAttribute("height");
+      return;
+    }
   },
 };
 

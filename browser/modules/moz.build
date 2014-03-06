@@ -18,7 +18,6 @@ EXTRA_JS_MODULES += [
     'SitePermissions.jsm',
     'Social.jsm',
     'TabCrashReporter.jsm',
-    'UITour.jsm',
     'webappsUI.jsm',
     'webrtcUI.jsm',
 ]
@@ -32,6 +31,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
 EXTRA_PP_JS_MODULES += [
     'AboutHome.jsm',
     'RecentWindow.jsm',
+    'UITour.jsm',
 ]
 
 if CONFIG['MOZILLA_OFFICIAL']:
