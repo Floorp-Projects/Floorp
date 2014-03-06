@@ -5,7 +5,7 @@
 %include ../../shared/customizableui/panelUIOverlay.inc.css
 
 @media (min-resolution: 2dppx) {
-  toolbarbutton.panel-multiview-anchor {
+  toolbarbutton[panel-multiview-anchor=true] {
     background-image: url(chrome://browser/skin/customizableui/subView-arrow-back-inverted@2x.png),
                       linear-gradient(rgba(255,255,255,0.3), rgba(255,255,255,0));
     background-size: 16px, auto;

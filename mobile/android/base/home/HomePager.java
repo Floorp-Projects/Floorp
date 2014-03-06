@@ -216,10 +216,8 @@ public class HomePager extends ViewPager {
     public void setCurrentItem(int item, boolean smoothScroll) {
         super.setCurrentItem(item, smoothScroll);
 
-        // Android doesn't call onPageSelected when there is only one page. Make sure we activate
-        // the banner in this case.
-        if (mHomeBanner != null && getAdapter().getCount() == 1) {
-            mHomeBanner.setActive(true);
+        if (mDecor != null) {
+            mDecor.onPageSelected(item);
         }
     }
 
@@ -261,10 +259,6 @@ public class HomePager extends ViewPager {
 
         if (mDecor != null) {
             mDecor.removeAllPagerViews();
-        }
-
-        if (mHomeBanner != null) {
-            mHomeBanner.setActive(false);
         }
 
         final HomeAdapter adapter = (HomeAdapter) getAdapter();
