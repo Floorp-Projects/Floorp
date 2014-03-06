@@ -22,6 +22,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=910412
 <script class="testbody" type="text/javascript">
 
 devicestorage_setup();
+SimpleTest.requestCompleteLog();
 
 // The root directory object.
 var gRoot = null;
@@ -158,23 +159,43 @@ function cbSuccess(e) {
 
 ok(navigator.getDeviceStorage, "Should have getDeviceStorage.");
 
-var storage = navigator.getDeviceStorage("pictures");
-ok(storage, "Should have gotten a storage.");
+var gStorage = navigator.getDeviceStorage("pictures");
+ok(gStorage, "Should have gotten a storage.");
 
-// Create test files.
-var req = storage.addNamed(createRandomBlob("image/png"), "sub1/sub2/test.png");
+function createTestFile(path, callback) {
+  function addNamed() {
+    var req = gStorage.addNamed(createRandomBlob("image/png"), path);
 
-req.onsuccess = function() {
-  var promise = storage.getRoot();
+    req.onsuccess = function() {
+      ok(true, path + " was created.");
+      callback();
+    };
+
+    req.onerror = function(e) {
+      ok(false, "Failed to create " + path + ": " + e.target.error.name);
+      devicestorage_cleanup();
+    };
+  }
+
+  // Bug 980136. Check if the file exists before we create.
+  var req = gStorage.get(path);
+
+  req.onsuccess = function() {
+    ok(true, path + " exists. Do not need to create.");
+    callback();
+  };
+
+  req.onerror = function(e) {
+    ok(true, path + " does not exists: " + e.target.error.name);
+    addNamed();
+  };
+}
+
+createTestFile("sub1/sub2/test.png", function() {
+  var promise = gStorage.getRoot();
   ok(promise, "Should have a non-null promise for getRoot.");
   promise.then(getSuccess, cbError);
-};
-
-
-req.onerror = function() {
-  ok(false, "Failed to created test files.");
-  devicestorage_cleanup();
-};
+});
 
 </script>
 </pre>
