@@ -4885,55 +4885,6 @@ JS::Evaluate(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &opti
 }
 
 JS_PUBLIC_API(bool)
-JS_EvaluateUCScriptForPrincipals(JSContext *cx, HandleObject obj,
-                                 JSPrincipals *principals,
-                                 const jschar *chars, unsigned length,
-                                 const char *filename, unsigned lineno,
-                                 MutableHandleValue rval)
-{
-    JS_ASSERT(principals == cx->compartment()->principals);
-
-    CompileOptions options(cx);
-    options.setFileAndLine(filename, lineno);
-
-    return Evaluate(cx, obj, options, chars, length, rval.address());
-}
-
-JS_PUBLIC_API(bool)
-JS_EvaluateUCScriptForPrincipalsVersion(JSContext *cx, HandleObject obj,
-                                        JSPrincipals *principals,
-                                        const jschar *chars, unsigned length,
-                                        const char *filename, unsigned lineno,
-                                        MutableHandleValue rval, JSVersion version)
-{
-    JS_ASSERT(principals == cx->compartment()->principals);
-
-    CompileOptions options(cx);
-    options.setFileAndLine(filename, lineno)
-           .setVersion(version);
-
-    return Evaluate(cx, obj, options, chars, length, rval.address());
-}
-
-extern JS_PUBLIC_API(bool)
-JS_EvaluateUCScriptForPrincipalsVersionOrigin(JSContext *cx, HandleObject obj,
-                                              JSPrincipals *principals,
-                                              JSPrincipals *originPrincipals,
-                                              const jschar *chars, unsigned length,
-                                              const char *filename, unsigned lineno,
-                                              MutableHandleValue rval, JSVersion version)
-{
-    JS_ASSERT(principals == cx->compartment()->principals);
-
-    CompileOptions options(cx);
-    options.setOriginPrincipals(originPrincipals)
-           .setFileAndLine(filename, lineno)
-           .setVersion(version);
-
-    return Evaluate(cx, obj, options, chars, length, rval.address());
-}
-
-JS_PUBLIC_API(bool)
 JS_EvaluateUCScript(JSContext *cx, HandleObject obj, const jschar *chars, unsigned length,
                     const char *filename, unsigned lineno, MutableHandleValue rval)
 {
@@ -4941,37 +4892,6 @@ JS_EvaluateUCScript(JSContext *cx, HandleObject obj, const jschar *chars, unsign
     options.setFileAndLine(filename, lineno);
 
     return Evaluate(cx, obj, options, chars, length, rval.address());
-}
-
-/* Ancient unsigned nbytes is part of API/ABI, so use size_t length local. */
-JS_PUBLIC_API(bool)
-JS_EvaluateScriptForPrincipals(JSContext *cx, JSObject *objArg, JSPrincipals *principals,
-                               const char *bytes, unsigned nbytes,
-                               const char *filename, unsigned lineno, jsval *rval)
-{
-    JS_ASSERT(principals == cx->compartment()->principals);
-
-    RootedObject obj(cx, objArg);
-    CompileOptions options(cx);
-    options.setFileAndLine(filename, lineno);
-
-    return Evaluate(cx, obj, options, bytes, nbytes, rval);
-}
-
-JS_PUBLIC_API(bool)
-JS_EvaluateScriptForPrincipalsVersion(JSContext *cx, JSObject *objArg, JSPrincipals *principals,
-                                      const char *bytes, unsigned nbytes,
-                                      const char *filename, unsigned lineno, jsval *rval,
-                                      JSVersion version)
-{
-    JS_ASSERT(principals == cx->compartment()->principals);
-
-    RootedObject obj(cx, objArg);
-    CompileOptions options(cx);
-    options.setVersion(version)
-           .setFileAndLine(filename, lineno);
-
-    return Evaluate(cx, obj, options, bytes, nbytes, rval);
 }
 
 JS_PUBLIC_API(bool)
