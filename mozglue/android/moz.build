@@ -10,8 +10,10 @@ EXPORTS += [
 
 SOURCES += [
     'APKOpen.cpp',
+    'NativeCrypto.cpp',
     'nsGeckoUtils.cpp',
     'NSSBridge.cpp',
+    'pbkdf2_sha256.c',
     'SQLiteBridge.cpp',
 ]
 
