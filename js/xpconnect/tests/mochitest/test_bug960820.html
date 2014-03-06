@@ -26,6 +26,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=960820
     ok(/clickCallback/.test(stack), "clickCallback should be in the stack");
     ok(!/clickHandler/.test(stack), "clickHandler should not be in the stack");
     ok(/dispatchClick/.test(stack), "dispatchClick should be in the stack");
+
+    // Check Components.stack, but first filter through the SpecialPowers junk.
+    var stack = SpecialPowers.wrap(SpecialPowers.Components).stack;
+    while (/specialpowers/.test(stack)) {
+      stack = stack.caller;
+    }
+    ok(/clickCallback/.test(stack), "clickCallback should be reachable via Components.stack");
+    ok(/clickHandler/.test(stack.caller), "clickHandler should be reachable via Components.stack");
+    ok(/dispatchClick/.test(stack.caller.caller), "dispatchClick hould be reachable via Components.stack");
   }
   function dispatchClick() {
     document.dispatchEvent(new MouseEvent('click'));
