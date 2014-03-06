@@ -315,8 +315,94 @@ gTests.push({
     sendTap(window, inputFieldRectangle.left + 10, inputFieldRectangle.top + 5);
 
     yield waitForCondition(() => SelectionHelperUI.isCaretUIVisible);
-
     chromeHandlerSpy.restore();
+    inputField.blur();
+  }
+});
+
+gTests.push({
+  desc: "Bug 858206 - Drag selection monocles should not push other monocles " +
+        "out of the way.",
+  run: function test() {
+    yield showNavBar();
+
+    let edit = document.getElementById("urlbar-edit");
+    edit.value = "about:mozilla";
+
+    let editRectangle = edit.getBoundingClientRect();
+
+    sendTap(window, editRectangle.left, editRectangle.top);
+
+    yield waitForCondition(() => SelectionHelperUI.isSelectionUIVisible);
+
+    let selection = edit.QueryInterface(
+        Components.interfaces.nsIDOMXULTextBoxElement).editor.selection;
+    let selectionRectangle = selection.getRangeAt(0).getClientRects()[0];
+
+    // Place caret to the input start
+    sendTap(window, selectionRectangle.left + 2, selectionRectangle.top + 2);
+    yield waitForCondition(() => !SelectionHelperUI.isSelectionUIVisible &&
+        SelectionHelperUI.isCaretUIVisible);
+
+    let startXPos = SelectionHelperUI.caretMark.xPos;
+    let startYPos = SelectionHelperUI.caretMark.yPos + 10;
+    let touchDrag = new TouchDragAndHold();
+    yield touchDrag.start(gWindow, startXPos, startYPos, startXPos + 200,
+        startYPos);
+    yield waitForCondition(() => getTrimmedSelection(edit).toString() ==
+        "about:mozilla", kCommonWaitMs, kCommonPollMs);
+
+    touchDrag.end();
+    yield waitForCondition(() => !SelectionHelperUI.hasActiveDrag,
+        kCommonWaitMs, kCommonPollMs);
+
+    // Place caret to the input end
+    sendTap(window, selectionRectangle.right - 2, selectionRectangle.top + 2);
+    yield waitForCondition(() => !SelectionHelperUI.isSelectionUIVisible &&
+        SelectionHelperUI.isCaretUIVisible);
+
+    startXPos = SelectionHelperUI.caretMark.xPos;
+    startYPos = SelectionHelperUI.caretMark.yPos + 10;
+    yield touchDrag.start(gWindow, startXPos, startYPos, startXPos - 200,
+        startYPos);
+    yield waitForCondition(() => getTrimmedSelection(edit).toString() ==
+        "about:mozilla", kCommonWaitMs, kCommonPollMs);
+
+    touchDrag.end();
+    yield waitForCondition(() => !SelectionHelperUI.hasActiveDrag,
+        kCommonWaitMs, kCommonPollMs);
+
+    // Place caret in the middle
+    let midX = Math.ceil(((selectionRectangle.right - selectionRectangle.left) *
+        .5) + selectionRectangle.left);
+    let midY = Math.ceil(((selectionRectangle.bottom - selectionRectangle.top) *
+        .5) + selectionRectangle.top);
+
+    sendTap(window, midX, midY);
+    yield waitForCondition(() => !SelectionHelperUI.isSelectionUIVisible &&
+        SelectionHelperUI.isCaretUIVisible);
+
+    startXPos = SelectionHelperUI.caretMark.xPos;
+    startYPos = SelectionHelperUI.caretMark.yPos + 10;
+    yield touchDrag.start(gWindow, startXPos, startYPos, startXPos - 200,
+        startYPos);
+    yield waitForCondition(() => getTrimmedSelection(edit).toString() ==
+        "about:", kCommonWaitMs, kCommonPollMs);
+
+    touchDrag.end();
+    yield waitForCondition(() => !SelectionHelperUI.hasActiveDrag,
+        kCommonWaitMs, kCommonPollMs);
+
+    // Now try to swap monocles
+    startXPos = SelectionHelperUI.startMark.xPos;
+    startYPos = SelectionHelperUI.startMark.yPos + 10;
+    yield touchDrag.start(gWindow, startXPos, startYPos, startXPos + 200,
+        startYPos);
+    yield waitForCondition(() => getTrimmedSelection(edit).toString() ==
+        "mozilla", kCommonWaitMs, kCommonPollMs);
+      touchDrag.end();
+    yield waitForCondition(() => !SelectionHelperUI.hasActiveDrag &&
+        SelectionHelperUI.isSelectionUIVisible, kCommonWaitMs, kCommonPollMs);
   }
 });
 
