@@ -212,6 +212,15 @@ public:
   Accessible* GetAccessible(nsINode* aNode) const;
 
   /**
+   * Return an accessible for the given node even if the node is not in
+   * document's node map cache (like HTML area element).
+   *
+   * XXX: it should be really merged with GetAccessible().
+   */
+  Accessible* GetAccessibleEvenIfNotInMap(nsINode* aNode) const;
+  Accessible* GetAccessibleEvenIfNotInMapOrContainer(nsINode* aNode) const;
+
+  /**
    * Return whether the given DOM node has an accessible or not.
    */
   bool HasAccessible(nsINode* aNode) const
