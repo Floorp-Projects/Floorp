@@ -62,10 +62,20 @@ static const mozilla::Module::ContractIDEntry kGnomeContracts[] = {
   { nullptr }
 };
 
+static nsresult
+InitGType ()
+{
+  g_type_init();
+  return NS_OK;
+}
+
 static const mozilla::Module kGnomeModule = {
   mozilla::Module::kVersion,
   kGnomeCIDs,
-  kGnomeContracts
+  kGnomeContracts,
+  nullptr,
+  nullptr,
+  InitGType
 };
 
 NSMODULE_DEFN(mozgnome) = &kGnomeModule;
