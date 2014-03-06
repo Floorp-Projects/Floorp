@@ -442,6 +442,14 @@ Promise.defer = function ()
  */
 Promise.resolve = function (aValue)
 {
+  if (aValue && typeof(aValue) == "function" && aValue.isAsyncFunction) {
+    throw new TypeError(
+      "Cannot resolve a promise with an async function. " +
+      "You should either invoke the async function first " +
+      "or use 'Task.spawn' instead of 'Task.async' to start " +
+      "the Task and return its promise.");
+  }
+
   return new Promise((aResolve) => aResolve(aValue));
 };
 

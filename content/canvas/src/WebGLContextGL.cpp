@@ -1343,6 +1343,11 @@ WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
         return JS::NullValue();
     }
 
+    if (!mBoundFramebuffer) {
+        ErrorInvalidOperation("getFramebufferAttachmentParameter: cannot query framebuffer 0");
+        return JS::NullValue();
+    }
+
     if (attachment != LOCAL_GL_DEPTH_ATTACHMENT &&
         attachment != LOCAL_GL_STENCIL_ATTACHMENT &&
         attachment != LOCAL_GL_DEPTH_STENCIL_ATTACHMENT)
@@ -1363,11 +1368,6 @@ WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
             ErrorInvalidEnumInfo("getFramebufferAttachmentParameter: attachment", attachment);
             return JS::NullValue();
         }
-    }
-
-    if (!mBoundFramebuffer) {
-        ErrorInvalidOperation("getFramebufferAttachmentParameter: cannot query framebuffer 0");
-        return JS::NullValue();
     }
 
     MakeContextCurrent();

@@ -56,6 +56,7 @@ function CustomizeMode(aWindow) {
   this.visiblePalette = this.document.getElementById(kPaletteId);
   this.paletteEmptyNotice = this.document.getElementById("customization-empty");
   this.paletteSpacer = this.document.getElementById("customization-spacer");
+  this.tipPanel = this.document.getElementById("customization-tipPanel");
 #ifdef CAN_DRAW_IN_TITLEBAR
   this._updateTitlebarButton();
   Services.prefs.addObserver(kDrawInTitlebarPref, this, false);
@@ -213,6 +214,8 @@ CustomizeMode.prototype = {
       customizeButton.setAttribute("label", customizeButton.getAttribute("exitLabel"));
       customizeButton.setAttribute("enterTooltiptext", customizeButton.getAttribute("tooltiptext"));
       customizeButton.setAttribute("tooltiptext", customizeButton.getAttribute("exitTooltiptext"));
+      document.getElementById("PanelUI-help").setAttribute("disabled", true);
+      document.getElementById("PanelUI-quit").setAttribute("disabled", true);
 
       this._transitioning = true;
 
@@ -243,9 +246,6 @@ CustomizeMode.prototype = {
 
       window.gNavToolbox.addEventListener("toolbarvisibilitychange", this);
 
-      document.getElementById("PanelUI-help").setAttribute("disabled", true);
-      document.getElementById("PanelUI-quit").setAttribute("disabled", true);
-
       this._updateResetButton();
       this._updateUndoResetButton();
 
@@ -271,6 +271,8 @@ CustomizeMode.prototype = {
       }, 0);
       this.paletteSpacer.hidden = true;
       this._updateEmptyPaletteNotice();
+
+      this.maybeShowTip(panelHolder);
 
       this._handler.isEnteringCustomizeMode = false;
       panelContents.removeAttribute("customize-transitioning");
@@ -316,6 +318,8 @@ CustomizeMode.prototype = {
           "We'll exit after resetting has finished.");
       return;
     }
+
+    this.hideTip();
 
     this._handler.isExitingCustomizeMode = true;
 
@@ -532,6 +536,45 @@ CustomizeMode.prototype = {
     let catchAll = () => customizeTransitionEnd("timedout");
     let catchAllTimeout = this.window.setTimeout(catchAll, kMaxTransitionDurationMs);
     return deferred.promise;
+  },
+
+  maybeShowTip: function(aAnchor) {
+    let shown = false;
+    const kShownPref = "browser.customizemode.tip0.shown";
+    try {
+      shown = Services.prefs.getBoolPref(kShownPref);
+    } catch (ex) {}
+    if (shown)
+      return;
+
+    let anchorNode = aAnchor || this.document.getElementById("customization-panelHolder");
+    let messageNode = this.tipPanel.querySelector(".customization-tipPanel-contentMessage");
+    if (!messageNode.childElementCount) {
+      // Put the tip contents in the popup.
+      let bundle = this.document.getElementById("bundle_browser");
+      const kLabelClass = "customization-tipPanel-link";
+      messageNode.innerHTML = bundle.getFormattedString("customizeTips.tip0", [
+        "<label class=\"customization-tipPanel-em\" value=\"" +
+          bundle.getString("customizeTips.tip0.hint") + "\"/>",
+        this.document.getElementById("bundle_brand").getString("brandShortName"),
+        "<label class=\"" + kLabelClass + " text-link\" value=\"" +
+        bundle.getString("customizeTips.tip0.learnMore") + "\"/>"
+      ]);
+
+      messageNode.querySelector("." + kLabelClass).addEventListener("click", () => {
+        let url = Services.urlFormatter.formatURLPref("browser.customizemode.tip0.learnMoreUrl");
+        let browser = this.browser;
+        browser.selectedTab = browser.addTab(url);
+        this.hideTip();
+      });
+    }
+
+    this.tipPanel.openPopup(anchorNode);
+    Services.prefs.setBoolPref(kShownPref, true);
+  },
+
+  hideTip: function() {
+    this.tipPanel.hidePopup();
   },
 
   _getCustomizableChildForNode: function(aNode) {

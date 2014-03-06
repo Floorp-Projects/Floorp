@@ -270,16 +270,25 @@ class CGDOMProxyJSClass(CGThing):
     def declare(self):
         return ""
     def define(self):
+        flags = ["JSCLASS_IS_DOMJSCLASS"]
+        # We don't use an IDL annotation for JSCLASS_EMULATES_UNDEFINED because
+        # we don't want people ever adding that to any interface other than
+        # HTMLAllCollection.  So just hardcode it here.
+        if self.descriptor.interface.identifier.name == "HTMLAllCollection":
+            flags.append("JSCLASS_EMULATES_UNDEFINED")
+        callHook = LEGACYCALLER_HOOK_NAME if self.descriptor.operations["LegacyCaller"] else 'nullptr'
         return """
 static const DOMJSClass Class = {
   PROXY_CLASS_DEF("%s",
                   0, /* extra slots */
-                  JSCLASS_IS_DOMJSCLASS,
-                  nullptr, /* call */
+                  %s,
+                  %s, /* call */
                   nullptr  /* construct */),
 %s
 };
 """ % (self.descriptor.interface.identifier.name,
+       " | ".join(flags),
+       callHook,
        CGIndenter(CGGeneric(DOMClass(self.descriptor))).define())
 
 def PrototypeIDAndDepth(descriptor):

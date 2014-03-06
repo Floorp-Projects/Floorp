@@ -63,6 +63,7 @@ class GLContext;
 
 namespace gfx {
 class DrawTarget;
+class SurfaceStream;
 }
 
 namespace css {
@@ -595,11 +596,18 @@ public:
 
   bool IsInTransaction() const { return mInTransaction; }
 
+  virtual void AddRegionToClear(const nsIntRegion& aRegion)
+  {
+    mRegionToClear.Or(mRegionToClear, aRegion);
+  }
+
 protected:
   nsRefPtr<Layer> mRoot;
   gfx::UserData mUserData;
   bool mDestroyed;
   bool mSnapEffectiveTransforms;
+
+  nsIntRegion mRegionToClear;
 
   // Print interesting information about this into aTo.  Internally
   // used to implement Dump*() and Log*().
@@ -1334,6 +1342,7 @@ public:
 
   virtual LayerRenderState GetRenderState() { return LayerRenderState(); }
 
+
   void Mutated()
   {
     mManager->Mutated(this);
@@ -1796,6 +1805,8 @@ public:
     Data()
       : mDrawTarget(nullptr)
       , mGLContext(nullptr)
+      , mStream(nullptr)
+      , mTexID(0)
       , mSize(0,0)
       , mIsGLAlphaPremult(false)
     { }
@@ -1803,6 +1814,12 @@ public:
     // One of these two must be specified for Canvas2D, but never both
     mozilla::gfx::DrawTarget *mDrawTarget; // a DrawTarget for the canvas contents
     mozilla::gl::GLContext* mGLContext; // or this, for GL.
+
+    // Canvas/SkiaGL uses this
+    mozilla::gfx::SurfaceStream* mStream;
+
+    // ID of the texture backing the canvas layer (defaults to 0)
+    uint32_t mTexID;
 
     // The size of the canvas content
     nsIntSize mSize;
