@@ -395,7 +395,7 @@ nsCSSProps::LookupProperty(const nsACString& aProperty,
   }
   MOZ_ASSERT(eCSSAliasCount != 0,
              "'res' must be an alias at this point so we better have some!");
-  // We intentionally don't support eEnabledInUASheets
+  // We intentionally don't support eEnabledInUASheets or eEnabledInChromeOrCertifiedApp
   // for aliases yet because it's unlikely there will be a need for it.
   if (IsEnabled(res) || aEnabled == eIgnoreEnabledState) {
     res = gAliases[res - eCSSProperty_COUNT];
