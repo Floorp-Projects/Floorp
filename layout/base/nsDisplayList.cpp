@@ -4082,7 +4082,7 @@ nsDisplayZoom::~nsDisplayZoom() {
 
 nsRect nsDisplayZoom::GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap)
 {
-  nsRect bounds = nsDisplayWrapList::GetBounds(aBuilder, aSnap);
+  nsRect bounds = nsDisplaySubDocument::GetBounds(aBuilder, aSnap);
   *aSnap = false;
   return bounds.ConvertAppUnitsRoundOut(mAPD, mParentAPD);
 }
@@ -4125,10 +4125,22 @@ bool nsDisplayZoom::ComputeVisibility(nsDisplayListBuilder *aBuilder,
     mVisibleRect.ConvertAppUnitsRoundOut(mParentAPD, mAPD);
   nsRect allowExpansion =
     aAllowVisibleRegionExpansion.ConvertAppUnitsRoundIn(mParentAPD, mAPD);
-  bool retval =
-    mList.ComputeVisibilityForSublist(aBuilder, &visibleRegion,
-                                      transformedVisibleRect,
-                                      allowExpansion);
+  bool retval;
+  // If we are to generate a scrollable layer we call
+  // nsDisplaySubDocument::ComputeVisibility to make the necessary adjustments
+  // for ComputeVisibility, it does all it's calculations in the child APD.
+  bool usingDisplayPort =
+    nsLayoutUtils::ViewportHasDisplayPort(mFrame->PresContext());
+  if (!(mFlags & GENERATE_SCROLLABLE_LAYER) || !usingDisplayPort) {
+    retval =
+      mList.ComputeVisibilityForSublist(aBuilder, &visibleRegion,
+                                        transformedVisibleRect,
+                                        allowExpansion);
+  } else {
+    retval =
+      nsDisplaySubDocument::ComputeVisibility(aBuilder, &visibleRegion,
+                                              allowExpansion);
+  }
 
   nsRegion removed;
   // removed = originalVisibleRegion - visibleRegion
