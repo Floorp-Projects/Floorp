@@ -159,7 +159,7 @@ toolbarbutton.chevron:-moz-locale-dir(rtl) > .toolbarbutton-icon {
 
 /* ----- BOOKMARK BUTTONS ----- */
 
-toolbarbutton.bookmark-item:not(.subviewbutton),
+toolbarbutton.bookmark-item:not(.subviewbutton):not(#bookmarks-menu-button),
 #personal-bookmarks[cui-areatype="toolbar"] > #bookmarks-toolbar-placeholder {
   font-weight: bold;
   color: #222;
@@ -194,8 +194,8 @@ toolbarbutton.bookmark-item:not(.subviewbutton),
   margin: 0 !important;
 }
 
-toolbarbutton.bookmark-item:hover,
-toolbarbutton.bookmark-item[open="true"] {
+toolbarbutton.bookmark-item:not(#bookmarks-menu-button):hover,
+toolbarbutton.bookmark-item:not(#bookmarks-menu-button)[open="true"] {
   background-color: rgba(0, 0, 0, .205);
 }
 
@@ -217,8 +217,8 @@ toolbarbutton.bookmark-item[open="true"]:not(.subviewbutton) {
   }
 }
 
-toolbarbutton.bookmark-item:active:hover,
-toolbarbutton.bookmark-item[open="true"] {
+toolbarbutton.bookmark-item:not(#bookmarks-menu-button):active:hover,
+toolbarbutton.bookmark-item:not(#bookmarks-menu-button)[open="true"] {
   box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.4), 0 1px rgba(255, 255, 255, 0.4);
   background-color: rgba(0, 0, 0, .5);
 }
@@ -364,17 +364,10 @@ toolbarpaletteitem[place="palette"] > #personal-bookmarks > #bookmarks-toolbar-p
 /* ----- BOOKMARK STAR ANIMATION ----- */
 
 @keyframes animation-bookmarkAdded {
-  from { transform: rotate(0deg) translateX(-20px) rotate(0deg) scale(1); opacity: 0; }
-  60%  { transform: rotate(180deg) translateX(-20px) rotate(-180deg) scale(2.2); opacity: 1; }
+  from { transform: rotate(0deg) translateX(-14px) rotate(0deg) scale(1); opacity: 0; }
+  60%  { transform: rotate(180deg) translateX(-14px) rotate(-180deg) scale(2.2); opacity: 1; }
   80%  { opacity: 1; }
-  to   { transform: rotate(180deg) translateX(-20px) rotate(-180deg) scale(1); opacity: 0; }
-}
-
-@keyframes animation-bookmarkAddedToBookmarksBar {
-  from { transform: rotate(0deg) translateX(-12px) rotate(0deg) scale(1); opacity: 0; }
-  60%  { transform: rotate(180deg) translateX(-12px) rotate(-180deg) scale(2.2); opacity: 1; }
-  80%  { opacity: 1; }
-  to   { transform: rotate(180deg) translateX(-12px) rotate(-180deg) scale(1); opacity: 0; }
+  to   { transform: rotate(180deg) translateX(-14px) rotate(-180deg) scale(1); opacity: 0; }
 }
 
 @keyframes animation-bookmarkPulse {
@@ -408,7 +401,7 @@ toolbarpaletteitem[place="palette"] > #personal-bookmarks > #bookmarks-toolbar-p
 }
 
 #bookmarked-notification-anchor[notification="finish"][in-bookmarks-toolbar=true] > #bookmarked-notification {
-  animation: animation-bookmarkAddedToBookmarksBar 800ms;
+  animation: animation-bookmarkAdded 800ms;
 }
 
 @media (min-resolution: 2dppx) {
@@ -464,8 +457,57 @@ toolbar .toolbarbutton-1:not([type="menu-button"]),
   border: 0;
 }
 
+toolbar .toolbarbutton-1:not(:-moz-any([type="menu-button"],#back-button,#forward-button)),
+toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button,
+toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker,
+#restore-button {
+  border: 1px solid transparent;
+  border-radius: @toolbarbuttonCornerRadius@;
+  transition-property: background, border-color;
+  transition-duration: 250ms;
+}
+
+toolbar .toolbarbutton-1:not(:-moz-any([type="menu-button"],#back-button,#forward-button)),
+#restore-button {
+  padding: 2px 6px;
+}
+
+toolbar .toolbarbutton-1:not(:-moz-any([type="menu-button"],[disabled],[open],#back-button,#forward-button)):hover,
+toolbar .toolbarbutton-1[type="menu-button"]:not(:-moz-any([disabled],[open])):hover > .toolbarbutton-menubutton-button,
+toolbar .toolbarbutton-1[type="menu-button"]:not(:-moz-any([disabled],[open])):hover > .toolbarbutton-menubutton-dropmarker,
+toolbar .toolbaritem-combined-buttons:hover > .toolbarbutton-combined,
+#restore-button:not([disabled]):hover {
+  border-color: hsla(0,0%,0%,.2);
+}
+
+toolbar .toolbarbutton-1:not(:-moz-any([type="menu-button"],[disabled],[open],#back-button,#forward-button)):hover,
+toolbar .toolbarbutton-1[type="menu-button"]:not(:-moz-any([disabled],[open]))[buttonover] > .toolbarbutton-menubutton-button,
+toolbar .toolbarbutton-1[type="menu-button"]:not(:-moz-any([disabled],[open],[buttonover])):hover > .toolbarbutton-menubutton-dropmarker,
+#restore-button:not([disabled]):hover {
+  background: hsla(0,0%,100%,.1) linear-gradient(hsla(0,0%,100%,.3), hsla(0,0%,100%,.1)) padding-box;
+  box-shadow: 0 1px 0 hsla(0,0%,100%,.5),
+              0 1px 0 hsla(0,0%,100%,.5) inset;
+}
+
+toolbar .toolbarbutton-1:not(:-moz-any([type="menu-button"],[disabled],#back-button,#forward-button)):-moz-any(:hover:active,[open]),
+toolbar .toolbarbutton-1[type="menu-button"]:not(:-moz-any([disabled],[open]))[buttonover]:active > .toolbarbutton-menubutton-button,
+toolbar .toolbarbutton-1[type="menu-button"]:not(:-moz-any([disabled],[open],[buttonover])):hover:active > .toolbarbutton-menubutton-dropmarker,
+toolbar .toolbarbutton-1[type="menu-button"][open] > .toolbarbutton-menubutton-dropmarker,
+#restore-button:not([disabled]):hover:active {
+  background: hsla(0,0%,0%,.02) linear-gradient(hsla(0,0%,0%,.12), hsla(0,0%,0%,0)) border-box;
+  border-color: hsla(0,0%,0%,.3);
+  box-shadow: 0 1px 0 hsla(0,0%,100%,.5),
+              0 1px 0 hsla(0,0%,0%,.05) inset,
+              0 1px 1px hsla(0,0%,0%,.2) inset;
+  transition-duration: 10ms;
+}
+
 .toolbarbutton-1[type="menu-button"] {
   padding: 0;
+}
+
+toolbar .toolbarbutton-1[type="menu-button"] {
+  margin: 0;
 }
 
 .toolbarbutton-1 > .toolbarbutton-menubutton-button,
@@ -478,12 +520,16 @@ toolbar .toolbarbutton-1:not([type="menu-button"]),
   margin: 0 4px;
 }
 
+toolbar .toolbarbutton-1:not([type="menu-button"]) {
+  margin: 0 2px;
+}
+
 /**
  * Draw seperators before toolbar button dropmarkers, as well as between
  * consecutive toolbarbutton-1's within a toolbaritem.
  */
-#nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker::before,
-#nav-bar .toolbaritem-combined-buttons > .toolbarbutton-1 + .toolbarbutton-1::before {
+toolbar .toolbaritem-combined-buttons > separator,
+toolbar .toolbarbutton-1:not(:-moz-any([open],:hover)) > .toolbarbutton-menubutton-dropmarker::before {
   content: "";
   display: -moz-box;
   position: relative;
@@ -491,27 +537,43 @@ toolbar .toolbarbutton-1:not([type="menu-button"]),
   width: 1px;
   height: 18px;
   -moz-margin-end: -1px;
-  background-image: linear-gradient(hsla(210,54%,20%,.2) 0, hsla(210,54%,20%,.2) 18px);
+  background-image: linear-gradient(hsla(0,0%,0%,.15) 0, hsla(0,0%,0%,.15) 18px);
   background-clip: padding-box;
   background-position: center;
   background-repeat: no-repeat;
   background-size: 1px 18px;
-  box-shadow: 0 0 0 1px hsla(0,0%,100%,.2);
+  box-shadow: 0 0 0 1px hsla(0,0%,100%,.15);
 }
 
-#nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
+toolbar .toolbaritem-combined-buttons:hover > separator {
+  display: none;
+}
+
+toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
   -moz-box-orient: horizontal;
 }
 
-#nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
-  -moz-margin-start: 10px;
+toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
+toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
+  margin: 2px 6px;
+}
+
+#nav-bar #PanelUI-button {
+  -moz-box-align: center;
 }
 
 #nav-bar #PanelUI-menu-button {
   margin-top: 0;
   margin-bottom: 0;
+  padding-top: 5px;
+  padding-bottom: 5px;
   -moz-margin-start: 9px;
   -moz-margin-end: 7px;
+}
+
+#nav-bar > .toolbarbutton-1 {
+  margin-top: 4px;
+  margin-bottom: 4px;
 }
 
 @media not all and (min-resolution: 2dppx) {
@@ -546,16 +608,8 @@ toolbar .toolbarbutton-1:not([type="menu-button"]),
     -moz-image-region: rect(18px, 630px, 36px, 612px);
   }
 
-  #bookmarks-menu-button[cui-areatype="toolbar"][open] > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
-    -moz-image-region: rect(36px, 630px, 54px, 612px);
-  }
-
   #history-panelmenu@toolbarButtonPressed@ {
     -moz-image-region: rect(18px, 180px, 36px, 162px);
-  }
-
-  #history-panelmenu[open] {
-    -moz-image-region: rect(36px, 180px, 54px, 162px);
   }
 
   #downloads-button@toolbarButtonPressed@ {
@@ -590,10 +644,6 @@ toolbar .toolbarbutton-1:not([type="menu-button"]),
     -moz-image-region: rect(18px, 324px, 36px, 306px);
   }
 
-  #characterencoding-button[open] {
-    -moz-image-region: rect(36px, 324px, 54px, 306px);
-  }
-
   #new-window-button@toolbarButtonPressed@ {
     -moz-image-region: rect(18px, 342px, 36px, 324px);
   }
@@ -622,20 +672,12 @@ toolbar .toolbarbutton-1:not([type="menu-button"]),
     -moz-image-region: rect(18px, 450px, 36px, 432px);
   }
 
-  #developer-button[open] {
-    -moz-image-region: rect(36px, 450px, 54px, 432px);
-  }
-
   #preferences-button@toolbarButtonPressed@ {
     -moz-image-region: rect(18px, 468px, 36px, 450px);
   }
 
   #PanelUI-menu-button@toolbarButtonPressed@ {
     -moz-image-region: rect(18px, 486px, 36px, 468px);
-  }
-
-  #PanelUI-menu-button[open] {
-    -moz-image-region: rect(36px, 486px, 54px, 468px);
   }
 
   #cut-button@toolbarButtonPressed@ {
@@ -664,10 +706,6 @@ toolbar .toolbarbutton-1:not([type="menu-button"]),
 
   #nav-bar-overflow-button@toolbarButtonPressed@ {
     -moz-image-region: rect(18px, 612px, 36px, 594px);
-  }
-
-  #nav-bar-overflow-button[open] {
-    -moz-image-region: rect(36px, 612px, 54px, 594px);
   }
 
   #tabview-button@toolbarButtonPressed@ {
@@ -753,20 +791,12 @@ toolbar .toolbarbutton-1:not([type="menu-button"]),
     -moz-image-region: rect(36px, 1260px, 72px, 1224px);
   }
 
-  #bookmarks-menu-button[cui-areatype="toolbar"][open] > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
-    -moz-image-region: rect(72px, 1260px, 108px, 1224px);
-  }
-
   #history-panelmenu[cui-areatype="toolbar"] {
     -moz-image-region: rect(0, 360px, 36px, 324px);
   }
 
   #history-panelmenu[cui-areatype="toolbar"]:hover:active:not([disabled="true"]) {
     -moz-image-region: rect(36px, 360px, 72px, 324px);
-  }
-
-  #history-panelmenu[cui-areatype="toolbar"][open] {
-    -moz-image-region: rect(72px, 360px, 108px, 324px);
   }
 
   #downloads-button[cui-areatype="toolbar"] {
@@ -833,10 +863,6 @@ toolbar .toolbarbutton-1:not([type="menu-button"]),
     -moz-image-region: rect(36px, 648px, 72px, 612px);
   }
 
-  #characterencoding-button[cui-areatype="toolbar"][open] {
-    -moz-image-region: rect(72px, 648px, 108px, 612px);
-  }
-
   #new-window-button[cui-areatype="toolbar"] {
     -moz-image-region: rect(0, 684px, 36px, 648px);
   }
@@ -901,10 +927,6 @@ toolbar .toolbarbutton-1:not([type="menu-button"]),
     -moz-image-region: rect(36px, 900px, 72px, 864px);
   }
 
-  #developer-button[cui-areatype="toolbar"][open] {
-    -moz-image-region: rect(72px, 900px, 108px, 864px);
-  }
-
   #preferences-button[cui-areatype="toolbar"] {
     -moz-image-region: rect(0, 936px, 36px, 900px);
   }
@@ -919,10 +941,6 @@ toolbar .toolbarbutton-1:not([type="menu-button"]),
 
   #PanelUI-menu-button:hover:active:not([disabled="true"]) {
     -moz-image-region: rect(36px, 972px, 72px, 936px);
-  }
-
-  #PanelUI-menu-button[open] {
-    -moz-image-region: rect(72px, 972px, 108px, 936px);
   }
 
   #edit-controls[cui-areatype="toolbar"] > #cut-button {
@@ -979,10 +997,6 @@ toolbar .toolbarbutton-1:not([type="menu-button"]),
 
   #nav-bar-overflow-button:hover:active:not([disabled="true"]) {
     -moz-image-region: rect(36px, 1224px, 72px, 1188px);
-  }
-
-  #nav-bar-overflow-button[open] {
-    -moz-image-region: rect(72px, 1224px, 108px, 1188px);
   }
 
   #nav-bar-overflow-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
@@ -1258,9 +1272,8 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
   -moz-margin-end: 1px;
 }
 
-.toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
-  padding: 2px 4px 0;
-  -moz-border-start: none !important;
+.toolbarbutton-1 > .toolbarbutton-menubutton-button {
+  -moz-border-end: none !important;
 }
 
 .toolbarbutton-1 > .toolbarbutton-menubutton-button:-moz-locale-dir(rtl),
@@ -1491,6 +1504,10 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
   -moz-margin-end: 0;
 }
 
+#edit-controls[cui-areatype="toolbar"] > #cut-button {
+  -moz-border-end: 0;
+}
+
 #paste-button {
   -moz-border-start: none;
   -moz-margin-start: 0;
@@ -1521,8 +1538,20 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
 }
 
 #zoom-in-button {
-  -moz-border-start: none;
   -moz-margin-start: 0;
+  -moz-border-start: 0;
+}
+
+#zoom-controls[cui-areatype="toolbar"] > #zoom-out-button {
+  -moz-border-end: 0;
+}
+
+#zoom-controls[cui-areatype="toolbar"] > #zoom-in-button {
+  -moz-border-start-width: 1px;
+}
+
+#zoom-controls[cui-areatype="toolbar"] > #zoom-reset-button {
+  border-radius: 0;
 }
 
 #zoom-out-button:-moz-locale-dir(ltr),
@@ -1543,7 +1572,7 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
 }
 
 #zoom-controls[cui-areatype="toolbar"]:not([overflowedItem=true]) > #zoom-reset-button > .toolbarbutton-text {
-  padding-top: 8px;
+  padding-top: 6px;
   margin: 2px;
 }
 

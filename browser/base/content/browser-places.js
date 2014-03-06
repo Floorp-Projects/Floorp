@@ -1145,14 +1145,10 @@ let BookmarkingUI = {
                           this.button.parentNode.parentNode == personalToolbar;
     }
 
-    if (onPersonalToolbar) {
+    if (onPersonalToolbar)
       this.button.classList.add("bookmark-item");
-      this.button.classList.remove("toolbarbutton-1");
-    }
-    else {
+    else
       this.button.classList.remove("bookmark-item");
-      this.button.classList.add("toolbarbutton-1");
-    }
   },
 
   _uninitView: function BUI__uninitView() {
