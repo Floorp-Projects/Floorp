@@ -353,10 +353,6 @@ class Descriptor(DescriptorProvider):
                     raise SyntaxError("%s supports named properties but does "
                                       "not have a named getter.\n%s" %
                                       (self.interface, self.interface.location))
-                if operations['LegacyCaller']:
-                    raise SyntaxError("%s has a legacy caller but is a proxy; "
-                                      "we don't support that yet.\n%s" %
-                                      (self.interface, self.interface.location))
                 iface = self.interface
                 while iface:
                     iface.setUserData('hasProxyDescendant', True)

@@ -876,6 +876,7 @@ dictionary DictForConstructor {
 interface TestIndexedGetterInterface {
   getter long item(unsigned long idx);
   readonly attribute unsigned long length;
+  legacycaller void();
 };
 
 interface TestNamedGetterInterface {

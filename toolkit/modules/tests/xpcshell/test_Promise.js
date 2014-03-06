@@ -4,6 +4,7 @@
 
 Components.utils.import("resource://gre/modules/Promise.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/Task.jsm");
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Test runner
@@ -525,6 +526,14 @@ tests.push(
       }
     );
     return promise;
+  }));
+
+// Test that Promise.resolve throws when its argument is an async function.
+tests.push(
+  make_promise_test(function test_promise_resolve_throws_with_async_function(test) {
+    Assert.throws(() => Promise.resolve(Task.async(function* () {})),
+                  /Cannot resolve a promise with an async function/);
+    return Promise.resolve();
   }));
 
 // Test that the code after "then" is always executed before the callbacks
