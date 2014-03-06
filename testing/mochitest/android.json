@@ -1,6 +1,7 @@
 {
 "runtests": {},
 "excludetests": {
+  "content/canvas/test/webgl": "bug 865443- seperate suite - the non_conf* tests pass except for one on armv6 tests",
   "robocop": "TIMED_OUT",
   "Harness_sanity/test_bug816847.html": "No test app installed",
   "dom/imptests/html/webgl": "WebGL",
