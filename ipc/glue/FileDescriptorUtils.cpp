@@ -21,6 +21,7 @@ using mozilla::ipc::CloseFileRunnable;
 CloseFileRunnable::CloseFileRunnable(const FileDescriptor& aFileDescriptor)
 : mFileDescriptor(aFileDescriptor)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aFileDescriptor.IsValid());
 }
 
@@ -40,6 +41,8 @@ NS_IMPL_ISUPPORTS1(CloseFileRunnable, nsIRunnable)
 void
 CloseFileRunnable::Dispatch()
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   nsCOMPtr<nsIEventTarget> eventTarget =
     do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
   NS_ENSURE_TRUE_VOID(eventTarget);
