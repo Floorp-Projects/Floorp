@@ -141,12 +141,6 @@
     "dom/tests/mochitest/ajax/offline/test_updatingManifest.html":"",
     "dom/tests/mochitest/ajax/offline/test_xhtmlManifest.xhtml":"",
 
-    "dom/tests/mochitest/beacon/test_beacon.html":"",
-    "dom/tests/mochitest/beacon/test_beaconContentPolicy.html":"",
-    "dom/tests/mochitest/beacon/test_beaconCookies.html":"",
-    "dom/tests/mochitest/beacon/test_beaconFrame.html":"",
-    "dom/tests/mochitest/beacon/test_beaconPreflight.html":"",
-
     "content/base/test/test_bug466080.html":"bug 901356, also fails on android",
 
     "content/base/test/test_bug666604.html":"dom.disable_open_during_load not implemented in b2g",

@@ -8,7 +8,6 @@
 #define mozilla_dom_Navigator_h
 
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/dom/Nullable.h"
 #include "mozilla/ErrorResult.h"
 #include "nsIDOMNavigator.h"
 #include "nsIMozNavigatorNetwork.h"
@@ -25,7 +24,6 @@ class nsIDOMMozMobileMessageManager;
 class nsIDOMNavigatorSystemMessages;
 class nsDOMCameraManager;
 class nsDOMDeviceStorage;
-class nsIDOMBlob;
 
 namespace mozilla {
 namespace dom {
@@ -34,7 +32,6 @@ class systemMessageCallback;
 class MediaStreamConstraints;
 class MediaStreamConstraintsInternal;
 class WakeLock;
-class ArrayBufferViewOrBlobOrStringOrFormData;
 }
 }
 
@@ -224,11 +221,6 @@ public:
 #ifdef MOZ_AUDIO_CHANNEL_MANAGER
   system::AudioChannelManager* GetMozAudioChannelManager(ErrorResult& aRv);
 #endif // MOZ_AUDIO_CHANNEL_MANAGER
-
-  bool SendBeacon(const nsAString& aUrl,
-                  const Nullable<ArrayBufferViewOrBlobOrStringOrFormData>& aData,
-                  ErrorResult& aRv);
-
 #ifdef MOZ_MEDIA_NAVIGATOR
   void MozGetUserMedia(JSContext* aCx,
                        const MediaStreamConstraints& aConstraints,
