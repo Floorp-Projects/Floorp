@@ -28,6 +28,8 @@ function View(aSet) {
   this._set = aSet;
   this._set.controller = this;
   this._window = aSet.ownerDocument.defaultView;
+  this._maxTiles = 8;
+  this._tilePrefName = "unknown";
 
   this.onResize = () => this._adjustDOMforViewState();
   this._window.addEventListener("resize", this.onResize);
@@ -37,8 +39,31 @@ function View(aSet) {
 }
 
 View.prototype = {
+  set maxTiles(aVal) {
+    this._maxTiles = aVal;
+  },
+
+  get maxTiles() {
+    return this._maxTiles;
+  },
+
+  set showing(aFlag) {
+    // 'vbox' must be defined on objects that inherit from us
+    this.vbox.setAttribute("hidden", aFlag ? "false" : "true");
+  },
+
+  set tilePrefName(aStr) {
+    // Should be called once on init by objects that inherit from us
+    this._tilePrefName = aStr;
+    this._maxTiles = Services.prefs.getIntPref(this._tilePrefName);
+    Services.prefs.addObserver(this._tilePrefName, this, false);
+  },
+
   destruct: function () {
     this._window.removeEventListener("resize", this.onResize);
+    if (this._tilePrefName != "unknown") {
+      Services.prefs.removeObserver(this._tilePrefName, this);
+    }
   },
 
   _adjustDOMforViewState: function _adjustDOMforViewState(aState) {
@@ -111,6 +136,22 @@ View.prototype = {
         aItem.color = background;
       }
     });
-  }
+  },
 
+  refreshView: function () {
+  },
+
+  observe: function (aSubject, aTopic, aState) {
+    switch (aTopic) {
+      case "nsPref:changed": {
+        if (aState == this._tilePrefName) {
+          let count = Services.prefs.getIntPref(this._tilePrefName);
+          this.maxTiles = count;
+          this.showing = this.maxTiles > 0;
+          this.refreshView();
+        }
+        break;
+      }
+    }
+  }
 };

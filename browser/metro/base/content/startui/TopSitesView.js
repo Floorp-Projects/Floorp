@@ -4,15 +4,13 @@
 
 "use strict"
 
-let prefs = Components.classes["@mozilla.org/preferences-service;1"].
-      getService(Components.interfaces.nsIPrefBranch);
-
 Cu.import("resource://gre/modules/PageThumbs.jsm");
 
-function TopSitesView(aGrid, aMaxSites) {
+function TopSitesView(aGrid) {
   View.call(this, aGrid);
-
-  this._topSitesMax = aMaxSites;
+  // View monitors this for maximum tile display counts
+  this.tilePrefName = "browser.display.startUI.topsites.maxresults";
+  this.showing = this.maxTiles > 0 && !this.isFirstRun();
 
   // clean up state when the appbar closes
   StartUI.chromeWin.addEventListener('MozAppbarDismissing', this, false);
@@ -30,11 +28,15 @@ function TopSitesView(aGrid, aMaxSites) {
 
 TopSitesView.prototype = Util.extend(Object.create(View.prototype), {
   _set:null,
-  _topSitesMax: null,
   // _lastSelectedSites used to temporarily store blocked/removed sites for undo/restore-ing
   _lastSelectedSites: null,
   // isUpdating used only for testing currently
   isUpdating: false,
+
+  // For View's showing property
+  get vbox() {
+    return document.getElementById("start-topsites");
+  },
 
   destruct: function destruct() {
     Services.obs.removeObserver(this, "Metro:RefreshTopsiteThumbnail");
@@ -190,11 +192,16 @@ TopSitesView.prototype = Util.extend(Object.create(View.prototype), {
     this.isUpdating = true;
 
     let sites = TopSites.getSites();
-    if (this._topSitesMax) {
-      sites = sites.slice(0, this._topSitesMax);
-    }
+
     let tileset = this._set;
     tileset.clearAll(true);
+
+    if (!this.maxTiles) {
+      this.isUpdating = false;
+      return;
+    } else {
+      sites = sites.slice(0, this.maxTiles);
+    }
 
     for (let site of sites) {
       let slot = tileset.nextSlot();
@@ -214,7 +221,7 @@ TopSitesView.prototype = Util.extend(Object.create(View.prototype), {
   },
 
   isFirstRun: function isFirstRun() {
-    return prefs.getBoolPref("browser.firstrun.show.localepicker");
+    return Services.prefs.getBoolPref("browser.firstrun.show.localepicker");
   },
 
   _adjustDOMforViewState: function _adjustDOMforViewState(aState) {
@@ -243,6 +250,10 @@ TopSitesView.prototype = Util.extend(Object.create(View.prototype), {
     }
   },
 
+  refreshView: function () {
+    this.populateGrid();
+  },
+
   // nsIObservers
   observe: function (aSubject, aTopic, aState) {
     switch (aTopic) {
@@ -250,6 +261,8 @@ TopSitesView.prototype = Util.extend(Object.create(View.prototype), {
         this.forceReloadOfThumbnail(aState);
         break;
     }
+    View.prototype.observe.call(this, aSubject, aTopic, aState);
+    this.showing = this.maxTiles > 0 && !this.isFirstRun();
   },
 
   // nsINavHistoryObserver
@@ -295,11 +308,7 @@ let TopSitesStartView = {
   get _grid() { return document.getElementById("start-topsites-grid"); },
 
   init: function init() {
-    this._view = new TopSitesView(this._grid, 8);
-    if (this._view.isFirstRun()) {
-      let topsitesVbox = document.getElementById("start-topsites");
-      topsitesVbox.setAttribute("hidden", "true");
-    }
+    this._view = new TopSitesView(this._grid);
     this._grid.removeAttribute("fade");
   },
 
