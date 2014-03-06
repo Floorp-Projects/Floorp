@@ -52,6 +52,10 @@
 #else
                   />
 #endif
+        <menuitem id="menu_openTour"
+                  oncommand="openTourPage();"
+                  label="&helpShowTour.label;"
+                  accesskey="&helpShowTour.accesskey;"/>
         <menuitem id="menu_keyboardShortcuts"
                   oncommand="openHelpLink('keyboard-shortcuts')"
                   onclick="checkForMiddleClick(this, event);"
