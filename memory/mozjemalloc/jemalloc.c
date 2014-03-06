@@ -2714,10 +2714,11 @@ RETURN:
 static void *
 pages_trim(void *addr, size_t alloc_size, size_t leadsize, size_t size)
 {
+        size_t trailsize;
         void *ret = (void *)((uintptr_t)addr + leadsize);
 
         assert(alloc_size >= leadsize + size);
-        size_t trailsize = alloc_size - leadsize - size;
+        trailsize = alloc_size - leadsize - size;
 
         if (leadsize != 0)
                 pages_unmap(addr, leadsize);

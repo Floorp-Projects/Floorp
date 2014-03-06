@@ -47,7 +47,7 @@ BluetoothHfpManager::Connect(const nsAString& aDeviceAddress,
 {
   MOZ_ASSERT(aController);
 
-  aController->OnConnect(NS_LITERAL_STRING(ERR_NO_AVAILABLE_RESOURCE));
+  aController->NotifyCompletion(NS_LITERAL_STRING(ERR_NO_AVAILABLE_RESOURCE));
 }
 
 void
@@ -55,7 +55,7 @@ BluetoothHfpManager::Disconnect(BluetoothProfileController* aController)
 {
   MOZ_ASSERT(aController);
 
-  aController->OnDisconnect(NS_LITERAL_STRING(ERR_NO_AVAILABLE_RESOURCE));
+  aController->NotifyCompletion(NS_LITERAL_STRING(ERR_NO_AVAILABLE_RESOURCE));
 }
 
 bool
