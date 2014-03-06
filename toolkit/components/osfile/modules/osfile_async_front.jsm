@@ -200,7 +200,13 @@ let Scheduler = {
    * the promise returned by |code|.
    */
   push: function(code) {
-    let promise = this.queue.then(code);
+    let promise = this.queue.then(function() {
+      if (this.shutdown) {
+        LOG("OS.File is not available anymore. Request has been rejected.");
+        throw new Error("OS.File has been shut down.");
+      }
+      return code();
+    }.bind(this));
     // By definition, |this.queue| can never reject.
     this.queue = promise.then(null, () => undefined);
     // Fork |promise| to ensure that uncaught errors are reported
@@ -408,14 +414,13 @@ function warnAboutUnclosedFiles(shutdown = true) {
     // Don't launch the scheduler on our behalf. If no message has been
     // sent to the worker, we can't have any leaking file/directory
     // descriptor.
+    Scheduler.shutdown = Scheduler.shutdown || shutdown;
     return null;
   }
   let promise = Scheduler.post("Meta_getUnclosedResources");
 
   // Configure the worker to reject any further message.
-  if (shutdown) {
-    Scheduler.shutdown = true;
-  }
+  Scheduler.shutdown = Scheduler.shutdown || shutdown;
 
   return promise.then(function onSuccess(opened) {
     let msg = "";
