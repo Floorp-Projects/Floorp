@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <title>The circle should shrink and move to upper-left a bit.
+         It should remain a circle, with no artifacts left behind.</title>
+  <defs>
+    <circle id="smiley" fill="orange" cx="50" cy="50" r="20"/>
+  </defs>
+  <use id="target" xlink:href="#smiley" transform="scale(1.8)"/>
+</svg>
