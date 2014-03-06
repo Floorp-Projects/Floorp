@@ -79,17 +79,17 @@ XPCJSContextStack::Push(JSContext *cx)
         if ((e.cx == cx) && ssm) {
             // DOM JSContexts don't store their default compartment object on
             // the cx, so in those cases we need to fetch it via the scx
-            // instead.
+            // instead. And in some cases (i.e. the SafeJSContext), we have no
+            // default compartment object at all.
             RootedObject defaultScope(cx, GetDefaultScopeFromJSContext(cx));
-
-            nsIPrincipal *currentPrincipal =
-              GetCompartmentPrincipal(js::GetContextCompartment(cx));
-            nsIPrincipal *defaultPrincipal = GetObjectPrincipal(defaultScope);
-            bool equal = false;
-            currentPrincipal->Equals(defaultPrincipal, &equal);
-            if (equal) {
-                mStack.AppendElement(cx);
-                return true;
+            if (defaultScope) {
+                nsIPrincipal *currentPrincipal =
+                  GetCompartmentPrincipal(js::GetContextCompartment(cx));
+                nsIPrincipal *defaultPrincipal = GetObjectPrincipal(defaultScope);
+                if (currentPrincipal->Equals(defaultPrincipal)) {
+                    mStack.AppendElement(cx);
+                    return true;
+                }
             }
         }
 
