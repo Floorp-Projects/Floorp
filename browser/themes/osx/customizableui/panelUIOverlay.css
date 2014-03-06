@@ -98,8 +98,8 @@
 
 menu.subviewbutton,
 menuitem.subviewbutton:not(.panel-subview-footer) {
-  padding-top: 5px;
-  padding-bottom: 5px;
+  padding-top: 2px;
+  padding-bottom: 2px;
 }
 
 /* Override OSX-specific toolkit styles for the bookmarks panel */
