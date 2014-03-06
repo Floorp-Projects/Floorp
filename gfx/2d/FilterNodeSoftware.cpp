@@ -61,34 +61,45 @@ public:
       numPreSquares++;
     }
     mNumPowTablePreSquares = numPreSquares;
-    for (int i = 0; i < sCacheSize; i++) {
-      Float a = i / Float(sCacheSize - 1);
+    for (size_t i = 0; i < sCacheSize; i++) {
+      // sCacheSize is chosen in such a way that a takes values
+      // from 0.0 to 1.0 inclusive.
+      Float a = i / Float(1 << sCacheIndexPrecisionBits);
+      MOZ_ASSERT(0.0f <= a && a <= 1.0f, "We only want to cache for bases between 0 and 1.");
+
       for (int j = 0; j < mNumPowTablePreSquares; j++) {
         a = sqrt(a);
       }
-      mPowTable[i] = uint16_t(pow(a, mExponent) * (1 << sOutputIntPrecisionBits));
+      uint32_t cachedInt = pow(a, mExponent) * (1 << sOutputIntPrecisionBits);
+      MOZ_ASSERT(cachedInt < (1 << (sizeof(mPowTable[i]) * 8)), "mPowCache integer type too small");
+
+      mPowTable[i] = cachedInt;
     }
   }
 
   uint16_t Pow(uint16_t aBase)
   {
     // Results should be similar to what the following code would produce:
-    // double x = double(aBase) / (1 << sInputIntPrecisionBits);
+    // Float x = Float(aBase) / (1 << sInputIntPrecisionBits);
     // return uint16_t(pow(x, mExponent) * (1 << sOutputIntPrecisionBits));
+
+    MOZ_ASSERT(aBase <= (1 << sInputIntPrecisionBits), "aBase needs to be between 0 and 1!");
 
     uint32_t a = aBase;
     for (int j = 0; j < mNumPowTablePreSquares; j++) {
       a = a * a >> sInputIntPrecisionBits;
     }
-    static_assert(sCacheSize == (1 << sInputIntPrecisionBits >> 7), "please fix index calculation below");
-    int i = a >> 7;
+    uint32_t i = a >> (sInputIntPrecisionBits - sCacheIndexPrecisionBits);
+    MOZ_ASSERT(i < sCacheSize, "out-of-bounds mPowTable access");
     return mPowTable[i];
   }
 
-private:
-  static const int sCacheSize = 256;
   static const int sInputIntPrecisionBits = 15;
-  static const int sOutputIntPrecisionBits = 8;
+  static const int sOutputIntPrecisionBits = 15;
+  static const int sCacheIndexPrecisionBits = 7;
+
+private:
+  static const size_t sCacheSize = (1 << sCacheIndexPrecisionBits) + 1;
 
   Float mExponent;
   int mNumPowTablePreSquares;
@@ -190,11 +201,43 @@ ClearDataSourceSurface(DataSourceSurface *aSurface)
   PodZero(data, numBytes);
 }
 
-static ptrdiff_t
-DataOffset(DataSourceSurface* aSurface, IntPoint aPoint)
+// This check is safe against integer overflow.
+static bool
+SurfaceContainsPoint(SourceSurface* aSurface, const IntPoint& aPoint)
 {
-  return aPoint.y * aSurface->Stride() +
-         aPoint.x * BytesPerPixel(aSurface->GetFormat());
+  IntSize size = aSurface->GetSize();
+  return aPoint.x >= 0 && aPoint.x < size.width &&
+         aPoint.y >= 0 && aPoint.y < size.height;
+}
+
+static uint8_t*
+DataAtOffset(DataSourceSurface* aSurface, IntPoint aPoint)
+{
+  if (!SurfaceContainsPoint(aSurface, aPoint)) {
+    MOZ_CRASH("sample position needs to be inside surface!");
+  }
+
+  MOZ_ASSERT(Factory::CheckSurfaceSize(aSurface->GetSize()),
+             "surface size overflows - this should have been prevented when the surface was created");
+
+  uint8_t* data = aSurface->GetData() + aPoint.y * aSurface->Stride() +
+    aPoint.x * BytesPerPixel(aSurface->GetFormat());
+
+  if (data < aSurface->GetData()) {
+    MOZ_CRASH("out-of-range data access");
+  }
+
+  return data;
+}
+
+static bool
+IntRectOverflows(const IntRect& aRect)
+{
+  CheckedInt<int32_t> xMost = aRect.x;
+  xMost += aRect.width;
+  CheckedInt<int32_t> yMost = aRect.y;
+  yMost += aRect.height;
+  return !xMost.isValid() || !yMost.isValid();
 }
 
 /**
@@ -205,16 +248,23 @@ static void
 CopyRect(DataSourceSurface* aSrc, DataSourceSurface* aDest,
          IntRect aSrcRect, IntPoint aDestPoint)
 {
+  if (IntRectOverflows(aSrcRect) ||
+      IntRectOverflows(IntRect(aDestPoint, aSrcRect.Size()))) {
+    MOZ_CRASH("we should never be getting invalid rects at this point");
+  }
+
   MOZ_ASSERT(aSrc->GetFormat() == aDest->GetFormat(), "different surface formats");
   MOZ_ASSERT(IntRect(IntPoint(), aSrc->GetSize()).Contains(aSrcRect), "source rect too big for source surface");
   MOZ_ASSERT(IntRect(IntPoint(), aDest->GetSize()).Contains(aSrcRect - aSrcRect.TopLeft() + aDestPoint), "dest surface too small");
-  uint8_t* sourceData = aSrc->GetData();
-  uint32_t sourceStride = aSrc->Stride();
-  uint8_t* destData = aDest->GetData();
-  uint32_t destStride = aDest->Stride();
 
-  sourceData += DataOffset(aSrc, aSrcRect.TopLeft());
-  destData += DataOffset(aDest, aDestPoint);
+  if (aSrcRect.IsEmpty()) {
+    return;
+  }
+
+  uint8_t* sourceData = DataAtOffset(aSrc, aSrcRect.TopLeft());
+  uint32_t sourceStride = aSrc->Stride();
+  uint8_t* destData = DataAtOffset(aDest, aDestPoint);
+  uint32_t destStride = aDest->Stride();
 
   if (BytesPerPixel(aSrc->GetFormat()) == 4) {
     for (int32_t y = 0; y < aSrcRect.height; y++) {
@@ -245,10 +295,15 @@ CloneAligned(DataSourceSurface* aSource)
 static void
 FillRectWithPixel(DataSourceSurface *aSurface, const IntRect &aFillRect, IntPoint aPixelPos)
 {
-  uint8_t* data = aSurface->GetData();
-  uint8_t* sourcePixelData = data + DataOffset(aSurface, aPixelPos);
+  MOZ_ASSERT(!IntRectOverflows(aFillRect));
+  MOZ_ASSERT(IntRect(IntPoint(), aSurface->GetSize()).Contains(aFillRect),
+             "aFillRect needs to be completely inside the surface");
+  MOZ_ASSERT(SurfaceContainsPoint(aSurface, aPixelPos),
+             "aPixelPos needs to be inside the surface");
+
   int32_t stride = aSurface->Stride();
-  data += DataOffset(aSurface, aFillRect.TopLeft());
+  uint8_t* sourcePixelData = DataAtOffset(aSurface, aPixelPos);
+  uint8_t* data = DataAtOffset(aSurface, aFillRect.TopLeft());
   int bpp = BytesPerPixel(aSurface->GetFormat());
 
   // Fill the first row by hand.
@@ -273,10 +328,16 @@ FillRectWithVerticallyRepeatingHorizontalStrip(DataSourceSurface *aSurface,
                                                const IntRect &aFillRect,
                                                const IntRect &aSampleRect)
 {
-  uint8_t* data = aSurface->GetData();
+  MOZ_ASSERT(!IntRectOverflows(aFillRect));
+  MOZ_ASSERT(!IntRectOverflows(aSampleRect));
+  MOZ_ASSERT(IntRect(IntPoint(), aSurface->GetSize()).Contains(aFillRect),
+             "aFillRect needs to be completely inside the surface");
+  MOZ_ASSERT(IntRect(IntPoint(), aSurface->GetSize()).Contains(aSampleRect),
+             "aSampleRect needs to be completely inside the surface");
+
   int32_t stride = aSurface->Stride();
-  uint8_t* sampleData = data + DataOffset(aSurface, aSampleRect.TopLeft());
-  data += DataOffset(aSurface, aFillRect.TopLeft());
+  uint8_t* sampleData = DataAtOffset(aSurface, aSampleRect.TopLeft());
+  uint8_t* data = DataAtOffset(aSurface, aFillRect.TopLeft());
   if (BytesPerPixel(aSurface->GetFormat()) == 4) {
     for (int32_t y = 0; y < aFillRect.height; y++) {
       PodCopy((uint32_t*)data, (uint32_t*)sampleData, aFillRect.width);
@@ -295,10 +356,16 @@ FillRectWithHorizontallyRepeatingVerticalStrip(DataSourceSurface *aSurface,
                                                const IntRect &aFillRect,
                                                const IntRect &aSampleRect)
 {
-  uint8_t* data = aSurface->GetData();
+  MOZ_ASSERT(!IntRectOverflows(aFillRect));
+  MOZ_ASSERT(!IntRectOverflows(aSampleRect));
+  MOZ_ASSERT(IntRect(IntPoint(), aSurface->GetSize()).Contains(aFillRect),
+             "aFillRect needs to be completely inside the surface");
+  MOZ_ASSERT(IntRect(IntPoint(), aSurface->GetSize()).Contains(aSampleRect),
+             "aSampleRect needs to be completely inside the surface");
+
   int32_t stride = aSurface->Stride();
-  uint8_t* sampleData = data + DataOffset(aSurface, aSampleRect.TopLeft());
-  data += DataOffset(aSurface, aFillRect.TopLeft());
+  uint8_t* sampleData = DataAtOffset(aSurface, aSampleRect.TopLeft());
+  uint8_t* data = DataAtOffset(aSurface, aFillRect.TopLeft());
   if (BytesPerPixel(aSurface->GetFormat()) == 4) {
     for (int32_t y = 0; y < aFillRect.height; y++) {
       int32_t sampleColor = *((uint32_t*)sampleData);
@@ -321,6 +388,10 @@ FillRectWithHorizontallyRepeatingVerticalStrip(DataSourceSurface *aSurface,
 static void
 DuplicateEdges(DataSourceSurface* aSurface, const IntRect &aFromRect)
 {
+  MOZ_ASSERT(!IntRectOverflows(aFromRect));
+  MOZ_ASSERT(IntRect(IntPoint(), aSurface->GetSize()).Contains(aFromRect),
+             "aFromRect needs to be completely inside the surface");
+
   IntSize size = aSurface->GetSize();
   IntRect fill;
   IntRect sampleRect;
@@ -424,6 +495,13 @@ GetDataSurfaceInRect(SourceSurface *aSurface,
                      ConvolveMatrixEdgeMode aEdgeMode)
 {
   MOZ_ASSERT(aSurface ? aSurfaceRect.Size() == aSurface->GetSize() : aSurfaceRect.IsEmpty());
+
+  if (IntRectOverflows(aSurfaceRect) || IntRectOverflows(aDestRect)) {
+    // We can't rely on the intersection calculations below to make sense when
+    // XMost() or YMost() overflow. Bail out.
+    return nullptr;
+  }
+
   IntRect sourceRect = aSurfaceRect;
 
   if (sourceRect.IsEqualEdges(aDestRect)) {
@@ -567,9 +645,23 @@ FilterNodeSoftware::Draw(DrawTarget* aDrawTarget,
 
   Rect renderRect = aSourceRect;
   renderRect.RoundOut();
-  IntRect renderIntRect(int32_t(renderRect.x), int32_t(renderRect.y),
-                        int32_t(renderRect.width), int32_t(renderRect.height));
-  IntRect outputRect = renderIntRect.Intersect(GetOutputRectInRect(renderIntRect));
+  IntRect renderIntRect;
+  if (!renderRect.ToIntRect(&renderIntRect)) {
+#ifdef DEBUG_DUMP_SURFACES
+    printf("render rect overflowed, not painting anything\n");
+    printf("</pre>\n");
+#endif
+    return;
+  }
+
+  IntRect outputRect = GetOutputRectInRect(renderIntRect);
+  if (IntRectOverflows(outputRect)) {
+#ifdef DEBUG_DUMP_SURFACES
+    printf("output rect overflowed, not painting anything\n");
+    printf("</pre>\n");
+#endif
+    return;
+  }
 
   RefPtr<DataSourceSurface> result;
   if (!outputRect.IsEmpty()) {
@@ -613,6 +705,11 @@ TemporaryRef<DataSourceSurface>
 FilterNodeSoftware::GetOutput(const IntRect &aRect)
 {
   MOZ_ASSERT(GetOutputRectInRect(aRect).Contains(aRect));
+
+  if (IntRectOverflows(aRect)) {
+    return nullptr;
+  }
+
   if (!mCachedRect.Contains(aRect)) {
     RequestRect(aRect);
     mCachedOutput = Render(mRequestedRect);
@@ -639,6 +736,10 @@ FilterNodeSoftware::RequestRect(const IntRect &aRect)
 void
 FilterNodeSoftware::RequestInputRect(uint32_t aInputEnumIndex, const IntRect &aRect)
 {
+  if (IntRectOverflows(aRect)) {
+    return;
+  }
+
   int32_t inputIndex = InputIndex(aInputEnumIndex);
   if (inputIndex < 0 || (uint32_t)inputIndex >= NumberOfSetInputs()) {
     MOZ_CRASH();
@@ -668,6 +769,10 @@ FilterNodeSoftware::GetInputDataSourceSurface(uint32_t aInputEnumIndex,
                                               ConvolveMatrixEdgeMode aEdgeMode,
                                               const IntRect *aTransparencyPaddedSourceRect)
 {
+  if (IntRectOverflows(aRect)) {
+    return nullptr;
+  }
+
 #ifdef DEBUG_DUMP_SURFACES
   printf("<section><h1>GetInputDataSourceSurface with aRect: %d, %d, %d, %d</h1>\n",
          aRect.x, aRect.y, aRect.width, aRect.height);
@@ -766,6 +871,10 @@ IntRect
 FilterNodeSoftware::GetInputRectInRect(uint32_t aInputEnumIndex,
                                        const IntRect &aInRect)
 {
+  if (IntRectOverflows(aInRect)) {
+    return IntRect();
+  }
+
   int32_t inputIndex = InputIndex(aInputEnumIndex);
   if (inputIndex < 0 || (uint32_t)inputIndex >= NumberOfSetInputs()) {
     MOZ_CRASH();
@@ -980,7 +1089,11 @@ FilterNodeTransformSoftware::SourceRectForOutputRect(const IntRect &aRect)
 
   Rect neededRect = inverted.TransformBounds(Rect(aRect));
   neededRect.RoundOut();
-  return GetInputRectInRect(IN_TRANSFORM_IN, RoundedToInt(neededRect));
+  IntRect neededIntRect;
+  if (!neededRect.ToIntRect(&neededIntRect)) {
+    return IntRect();
+  }
+  return GetInputRectInRect(IN_TRANSFORM_IN, neededIntRect);
 }
 
 TemporaryRef<DataSourceSurface>
@@ -1032,7 +1145,11 @@ FilterNodeTransformSoftware::GetOutputRectInRect(const IntRect& aRect)
 
   Rect outRect = mMatrix.TransformBounds(Rect(srcRect));
   outRect.RoundOut();
-  return RoundedToInt(outRect).Intersect(aRect);
+  IntRect outIntRect;
+  if (!outRect.ToIntRect(&outIntRect)) {
+    return IntRect();
+  }
+  return outIntRect.Intersect(aRect);
 }
 
 FilterNodeMorphologySoftware::FilterNodeMorphologySoftware()
@@ -1091,12 +1208,10 @@ ApplyMorphology(const IntRect& aSourceRect, DataSourceSurface* aInput,
     }
 
     int32_t sourceStride = aInput->Stride();
-    uint8_t* sourceData = aInput->GetData();
-    sourceData += DataOffset(aInput, destRect.TopLeft() - srcRect.TopLeft());
+    uint8_t* sourceData = DataAtOffset(aInput, destRect.TopLeft() - srcRect.TopLeft());
 
     int32_t tmpStride = tmp->Stride();
-    uint8_t* tmpData = tmp->GetData();
-    tmpData += DataOffset(tmp, destRect.TopLeft() - tmpRect.TopLeft());
+    uint8_t* tmpData = DataAtOffset(tmp, destRect.TopLeft() - tmpRect.TopLeft());
 
     FilterProcessing::ApplyMorphologyHorizontal(
       sourceData, sourceStride, tmpData, tmpStride, tmpRect, rx, aOperator);
@@ -1112,8 +1227,7 @@ ApplyMorphology(const IntRect& aSourceRect, DataSourceSurface* aInput,
     }
 
     int32_t tmpStride = tmp->Stride();
-    uint8_t* tmpData = tmp->GetData();
-    tmpData += DataOffset(tmp, destRect.TopLeft() - tmpRect.TopLeft());
+    uint8_t* tmpData = DataAtOffset(tmp, destRect.TopLeft() - tmpRect.TopLeft());
 
     int32_t destStride = dest->Stride();
     uint8_t* destData = dest->GetData();
@@ -2281,13 +2395,12 @@ FilterNodeConvolveMatrixSoftware::DoRender(const IntRect& aRect,
   }
   ClearDataSourceSurface(target);
 
-  uint8_t* sourceData = input->GetData();
+  IntPoint offset = aRect.TopLeft() - srcRect.TopLeft();
+
+  uint8_t* sourceData = DataAtOffset(input, offset);
   int32_t sourceStride = input->Stride();
   uint8_t* targetData = target->GetData();
   int32_t targetStride = target->Stride();
-
-  IntPoint offset = aRect.TopLeft() - srcRect.TopLeft();
-  sourceData += DataOffset(input, offset);
 
   // Why exactly are we reversing the kernel?
   std::vector<Float> kernel = ReversedVector(mKernelMatrix);
@@ -2428,15 +2541,14 @@ FilterNodeDisplacementMapSoftware::Render(const IntRect& aRect)
     return nullptr;
   }
 
-  uint8_t* sourceData = input->GetData();
+  IntPoint offset = aRect.TopLeft() - srcRect.TopLeft();
+
+  uint8_t* sourceData = DataAtOffset(input, offset);
   int32_t sourceStride = input->Stride();
   uint8_t* mapData = map->GetData();
   int32_t mapStride = map->Stride();
   uint8_t* targetData = target->GetData();
   int32_t targetStride = target->Stride();
-
-  IntPoint offset = aRect.TopLeft() - srcRect.TopLeft();
-  sourceData += DataOffset(input, offset);
 
   static const ptrdiff_t channelMap[4] = {
                              B8G8R8A8_COMPONENT_BYTEOFFSET_R,
@@ -2897,8 +3009,9 @@ FilterNodeCropSoftware::SetAttribute(uint32_t aIndex,
   MOZ_ASSERT(aIndex == ATT_CROP_RECT);
   Rect srcRect = aSourceRect;
   srcRect.Round();
-  mCropRect = IntRect(int32_t(srcRect.x), int32_t(srcRect.y),
-                      int32_t(srcRect.width), int32_t(srcRect.height));
+  if (!srcRect.ToIntRect(&mCropRect)) {
+    mCropRect = IntRect();
+  }
   Invalidate();
 }
 
@@ -3152,8 +3265,7 @@ void
 SpotLightSoftware::Prepare()
 {
   mVectorFromFocusPointToLight = Normalized(mPointsAt - mPosition);
-  const float radPerDeg = static_cast<float>(M_PI/180.0);
-  mLimitingConeCos = std::max<double>(cos(mLimitingConeAngle * radPerDeg), 0.0);
+  mLimitingConeCos = std::max<double>(cos(mLimitingConeAngle * M_PI/180.0), 0.0);
   mPowCache.CacheForExponent(mSpecularFocus);
 }
 
@@ -3172,11 +3284,12 @@ SpotLightSoftware::GetColor(uint32_t aLightColor, const Point3D &aVectorToLight)
   };
   color = aLightColor;
   Float dot = -aVectorToLight.DotProduct(mVectorFromFocusPointToLight);
-  int16_t doti = dot * (255 << 7);
-  uint16_t tmp = mPowCache.Pow(doti) * (dot >= mLimitingConeCos);
-  colorC[B8G8R8A8_COMPONENT_BYTEOFFSET_R] = uint8_t((colorC[B8G8R8A8_COMPONENT_BYTEOFFSET_R] * tmp) >> 8);
-  colorC[B8G8R8A8_COMPONENT_BYTEOFFSET_G] = uint8_t((colorC[B8G8R8A8_COMPONENT_BYTEOFFSET_G] * tmp) >> 8);
-  colorC[B8G8R8A8_COMPONENT_BYTEOFFSET_B] = uint8_t((colorC[B8G8R8A8_COMPONENT_BYTEOFFSET_B] * tmp) >> 8);
+  uint16_t doti = dot * (dot >= 0) * (1 << PowCache::sInputIntPrecisionBits);
+  uint32_t tmp = mPowCache.Pow(doti) * (dot >= mLimitingConeCos);
+  MOZ_ASSERT(tmp <= (1 << PowCache::sOutputIntPrecisionBits), "pow() result must not exceed 1.0");
+  colorC[B8G8R8A8_COMPONENT_BYTEOFFSET_R] = uint8_t((colorC[B8G8R8A8_COMPONENT_BYTEOFFSET_R] * tmp) >> PowCache::sOutputIntPrecisionBits);
+  colorC[B8G8R8A8_COMPONENT_BYTEOFFSET_G] = uint8_t((colorC[B8G8R8A8_COMPONENT_BYTEOFFSET_G] * tmp) >> PowCache::sOutputIntPrecisionBits);
+  colorC[B8G8R8A8_COMPONENT_BYTEOFFSET_B] = uint8_t((colorC[B8G8R8A8_COMPONENT_BYTEOFFSET_B] * tmp) >> PowCache::sOutputIntPrecisionBits);
   colorC[B8G8R8A8_COMPONENT_BYTEOFFSET_A] = 255;
   return color;
 }
@@ -3293,13 +3406,12 @@ FilterNodeLightingSoftware<LightType, LightingType>::DoRender(const IntRect& aRe
     return nullptr;
   }
 
-  uint8_t* sourceData = input->GetData();
+  IntPoint offset = aRect.TopLeft() - srcRect.TopLeft();
+
+  uint8_t* sourceData = DataAtOffset(input, offset);
   int32_t sourceStride = input->Stride();
   uint8_t* targetData = target->GetData();
   int32_t targetStride = target->Stride();
-
-  IntPoint offset = aRect.TopLeft() - srcRect.TopLeft();
-  sourceData += DataOffset(input, offset);
 
   uint32_t lightColor = ColorToBGRA(mColor);
   mLight.Prepare();
@@ -3404,22 +3516,22 @@ SpecularLightingSoftware::LightPixel(const Point3D &aNormal,
   Point3D vectorToEye(0, 0, 1);
   Point3D halfwayVector = Normalized(aVectorToLight + vectorToEye);
   Float dotNH = aNormal.DotProduct(halfwayVector);
-  uint16_t dotNHi = uint16_t(dotNH * (dotNH >= 0) * (255 << 7));
-  uint32_t specularNHi = mSpecularConstantInt * mPowCache.Pow(dotNHi);
+  uint16_t dotNHi = uint16_t(dotNH * (dotNH >= 0) * (1 << PowCache::sInputIntPrecisionBits));
+  uint32_t specularNHi = uint32_t(mSpecularConstantInt) * mPowCache.Pow(dotNHi) >> 8;
 
   union {
     uint32_t bgra;
     uint8_t components[4];
   } color = { aColor };
   color.components[B8G8R8A8_COMPONENT_BYTEOFFSET_B] =
-    umin(FilterProcessing::FastDivideBy255<uint16_t>(
-      specularNHi * color.components[B8G8R8A8_COMPONENT_BYTEOFFSET_B] >> 8), 255U);
+    umin(
+      (specularNHi * color.components[B8G8R8A8_COMPONENT_BYTEOFFSET_B]) >> PowCache::sOutputIntPrecisionBits, 255U);
   color.components[B8G8R8A8_COMPONENT_BYTEOFFSET_G] =
-    umin(FilterProcessing::FastDivideBy255<uint16_t>(
-      specularNHi * color.components[B8G8R8A8_COMPONENT_BYTEOFFSET_G] >> 8), 255U);
+    umin(
+      (specularNHi * color.components[B8G8R8A8_COMPONENT_BYTEOFFSET_G]) >> PowCache::sOutputIntPrecisionBits, 255U);
   color.components[B8G8R8A8_COMPONENT_BYTEOFFSET_R] =
-    umin(FilterProcessing::FastDivideBy255<uint16_t>(
-      specularNHi * color.components[B8G8R8A8_COMPONENT_BYTEOFFSET_R] >> 8), 255U);
+    umin(
+      (specularNHi * color.components[B8G8R8A8_COMPONENT_BYTEOFFSET_R]) >> PowCache::sOutputIntPrecisionBits, 255U);
 
   color.components[B8G8R8A8_COMPONENT_BYTEOFFSET_A] =
     umax(color.components[B8G8R8A8_COMPONENT_BYTEOFFSET_B],
