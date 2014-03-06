@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    </head>
+    <body>
+        <!-- The div's border should hide the select's button -->
+        <!-- z-index:1 works around an unrelated bug in B2G -->
+        <div style="position:absolute; z-index:1; box-sizing:border-box; width:402px; height:202px; border-right:50px solid black;"></div>
+        <div><select style="background:transparent; border-radius:0; box-sizing:content-box; padding:50px; width:300px; height:100px; border:1px solid black; direction:ltr"></select></div>
+
+        <div style="position:absolute; z-index:1; box-sizing:border-box; width:402px; height:202px; border-left:50px solid black;"></div>
+        <div><select style="background:transparent; border-radius:0; box-sizing:content-box; padding:50px; width:300px; height:100px; border:1px solid black; direction:rtl"></select></div>
+    </body>
+</html>
