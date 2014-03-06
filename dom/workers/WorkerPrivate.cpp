@@ -2142,13 +2142,7 @@ WorkerPrivateParent<Derived>::WrapObject(JSContext* aCx,
 
   AssertIsOnParentThread();
 
-  JSObject* wrapper =
-    WorkerBinding::Wrap(aCx, aScope, ParentAsWorkerPrivate());
-  if (wrapper) {
-    MOZ_ALWAYS_TRUE(TryPreserveWrapper(wrapper));
-  }
-
-  return wrapper;
+  return WorkerBinding::Wrap(aCx, aScope, ParentAsWorkerPrivate());
 }
 
 template <class Derived>
