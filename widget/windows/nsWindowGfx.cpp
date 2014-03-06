@@ -29,6 +29,10 @@ using mozilla::plugins::PluginInstanceParent;
 #include "gfxImageSurface.h"
 #include "gfxWindowsSurface.h"
 #include "gfxWindowsPlatform.h"
+#include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/DataSurfaceHelpers.h"
+#include "mozilla/gfx/Tools.h"
+#include "mozilla/RefPtr.h"
 #include "nsGfxCIID.h"
 #include "gfxContext.h"
 #include "nsRenderingContext.h"
@@ -56,6 +60,7 @@ extern "C" {
 }
 
 using namespace mozilla;
+using namespace mozilla::gfx;
 using namespace mozilla::layers;
 using namespace mozilla::widget;
 
@@ -619,60 +624,104 @@ nsresult nsWindowGfx::CreateIcon(imgIContainer *aContainer,
                                   gfxIntSize aScaledSize,
                                   HICON *aIcon) {
 
+  MOZ_ASSERT((aScaledSize.width > 0 && aScaledSize.height > 0) ||
+             (aScaledSize.width == 0 && aScaledSize.height == 0));
+
   // Get the image data
-  nsRefPtr<gfxASurface> surface =
+  nsRefPtr<gfxASurface> thebesSurface =
     aContainer->GetFrame(imgIContainer::FRAME_CURRENT,
                          imgIContainer::FLAG_SYNC_DECODE);
-  NS_ENSURE_TRUE(surface, NS_ERROR_NOT_AVAILABLE);
+  NS_ENSURE_TRUE(thebesSurface, NS_ERROR_NOT_AVAILABLE);
 
-  nsRefPtr<gfxImageSurface> frame(surface->GetAsReadableARGB32ImageSurface());
-  NS_ENSURE_TRUE(frame, NS_ERROR_NOT_AVAILABLE);
+  RefPtr<SourceSurface> surface =
+    gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(nullptr,
+                                                           thebesSurface);
+  NS_ENSURE_TRUE(surface, NS_ERROR_FAILURE);
 
-  int32_t width = frame->Width();
-  int32_t height = frame->Height();
-  if (!width || !height)
+  IntSize surfaceSize(surface->GetSize().width, surface->GetSize().height);
+  if (surfaceSize.IsEmpty()) {
     return NS_ERROR_FAILURE;
-
-  uint8_t *data;
-  nsRefPtr<gfxImageSurface> dest;
-
-  if ((aScaledSize.width == 0 && aScaledSize.height == 0) ||
-      (aScaledSize.width == width && aScaledSize.height == height)) {
-    // We're not scaling the image. The data is simply what's in the frame.
-    data = frame->Data();
-  }
-  else {
-    NS_ENSURE_ARG(aScaledSize.width > 0);
-    NS_ENSURE_ARG(aScaledSize.height > 0);
-    // Draw a scaled version of the image to a temporary surface
-    dest = new gfxImageSurface(aScaledSize, gfxImageFormat::ARGB32);
-    if (!dest)
-      return NS_ERROR_OUT_OF_MEMORY;
-
-    gfxContext ctx(dest);
-
-    // Set scaling
-    gfxFloat sw = (double) aScaledSize.width / width;
-    gfxFloat sh = (double) aScaledSize.height / height;
-    ctx.Scale(sw, sh);
-
-    // Paint a scaled image
-    ctx.SetOperator(gfxContext::OPERATOR_SOURCE);
-    ctx.SetSource(frame);
-    ctx.Paint();
-
-    data = dest->Data();
-    width = aScaledSize.width;
-    height = aScaledSize.height;
   }
 
-  HBITMAP bmp = DataToBitmap(data, width, -height, 32);
-  uint8_t* a1data = Data32BitTo1Bit(data, width, height);
+  IntSize iconSize(aScaledSize.width, aScaledSize.height);
+  if (iconSize == IntSize(0, 0)) { // use frame's intrinsic size
+    iconSize = surfaceSize;
+  }
+
+  RefPtr<DataSourceSurface> dataSurface;
+  bool mappedOK;
+  DataSourceSurface::MappedSurface map;
+
+  if (iconSize != surfaceSize) {
+    // Scale the surface
+    dataSurface = Factory::CreateDataSourceSurface(iconSize,
+                                                   SurfaceFormat::B8G8R8A8);
+    NS_ENSURE_TRUE(dataSurface, NS_ERROR_FAILURE);
+    mappedOK = dataSurface->Map(DataSourceSurface::MapType::READ_WRITE, &map);
+    NS_ENSURE_TRUE(mappedOK, NS_ERROR_FAILURE);
+
+    RefPtr<DrawTarget> dt =
+      Factory::CreateDrawTargetForData(BackendType::CAIRO,
+                                       map.mData,
+                                       dataSurface->GetSize(),
+                                       map.mStride,
+                                       SurfaceFormat::B8G8R8A8);
+    dt->DrawSurface(surface,
+                    Rect(0, 0, iconSize.width, iconSize.height),
+                    Rect(0, 0, surfaceSize.width, surfaceSize.height),
+                    DrawSurfaceOptions(),
+                    DrawOptions(1.0f, CompositionOp::OP_SOURCE));
+  } else if (surface->GetFormat() != SurfaceFormat::B8G8R8A8) {
+    // Convert format to SurfaceFormat::B8G8R8A8
+    dataSurface = Factory::CreateDataSourceSurface(iconSize,
+                                                   SurfaceFormat::B8G8R8A8);
+    NS_ENSURE_TRUE(dataSurface, NS_ERROR_FAILURE);
+
+    RefPtr<DrawTarget> dt =
+      Factory::CreateDrawTargetForData(BackendType::CAIRO,
+                                       map.mData,
+                                       dataSurface->GetSize(),
+                                       map.mStride,
+                                       SurfaceFormat::B8G8R8A8);
+    dt->CopySurface(surface, IntRect(IntPoint(0, 0), iconSize),
+                    IntPoint(0, 0));
+
+    mappedOK = dataSurface->Map(DataSourceSurface::MapType::READ, &map);
+  } else {
+    dataSurface = surface->GetDataSurface();
+    mappedOK = dataSurface->Map(DataSourceSurface::MapType::READ, &map);
+  }
+  NS_ENSURE_TRUE(dataSurface && mappedOK, NS_ERROR_FAILURE);
+  MOZ_ASSERT(dataSurface->GetFormat() == SurfaceFormat::B8G8R8A8);
+
+  uint8_t* data = nullptr;
+  nsAutoArrayPtr<uint8_t> autoDeleteArray;
+  if (map.mStride == BytesPerPixel(dataSurface->GetFormat()) * iconSize.width) {
+    // Mapped data is already packed
+    data = map.mData;
+  } else {
+    // We can't use map.mData since the pixels are not packed (as required by
+    // CreateDIBitmap, which is called under the DataToBitmap call below).
+    //
+    // We must unmap before calling SurfaceToPackedBGRA because it needs access
+    // to the pixel data.
+    dataSurface->Unmap();
+    map.mData = nullptr;
+
+    data = autoDeleteArray = SurfaceToPackedBGRA(dataSurface);
+    NS_ENSURE_TRUE(data, NS_ERROR_FAILURE);
+  }
+
+  HBITMAP bmp = DataToBitmap(data, iconSize.width, -iconSize.height, 32);
+  uint8_t* a1data = Data32BitTo1Bit(data, iconSize.width, iconSize.height);
+  if (map.mData) {
+    dataSurface->Unmap();
+  }
   if (!a1data) {
     return NS_ERROR_FAILURE;
   }
 
-  HBITMAP mbmp = DataToBitmap(a1data, width, -height, 1);
+  HBITMAP mbmp = DataToBitmap(a1data, iconSize.width, -iconSize.height, 1);
   PR_Free(a1data);
 
   ICONINFO info = {0};
