@@ -37,6 +37,16 @@ BackCert::Init()
   if (!exts) {
     return Success;
   }
+  // We only decode v3 extensions for v3 certificates for two reasons.
+  // 1. They make no sense in non-v3 certs
+  // 2. An invalid cert can embed a basic constraints extension and the
+  //    check basic constrains will asume that this is valid. Making it
+  //    posible to create chains with v1 and v2 intermediates with is
+  //    not desirable.
+  if (! (nssCert->version.len == 1 &&
+      nssCert->version.data[0] == mozilla::pkix::der::Version::v3)) {
+    return Fail(RecoverableError, SEC_ERROR_EXTENSION_VALUE_INVALID);
+  }
 
   const SECItem* dummyEncodedSubjectKeyIdentifier = nullptr;
   const SECItem* dummyEncodedAuthorityKeyIdentifier = nullptr;
