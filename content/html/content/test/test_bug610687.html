@@ -129,7 +129,7 @@ function checkRadios(r1, r2, r3, form)
   var p = r2.parentNode;
   p.removeChild(r2);
   checkPseudoClasses(r1, true, true, false);
-  checkPseudoClasses(r2, true, true, false);
+  checkPseudoClasses(r2, false, false, true);
 
   p.appendChild(r2);
   checkPseudoClasses(r1, false, false, true);
