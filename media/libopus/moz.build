@@ -19,6 +19,15 @@ DEFINES['OPUS_BUILD'] = True
 DEFINES['OPUS_VERSION'] = '"v1.1-mozilla"'
 DEFINES['USE_ALLOCA'] = True
 
+if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['GNU_AS']:
+    DEFINES['OPUS_ARM_ASM'] = True
+    DEFINES['OPUS_ARM_EXTERNAL_ASM'] = True
+    DEFINES['OPUS_ARM_INLINE_ASM'] = True
+    DEFINES['OPUS_ARM_INLINE_EDSP'] = True
+    DEFINES['OPUS_ARM_MAY_HAVE_EDSP'] = True
+    DEFINES['OPUS_ARM_MAY_HAVE_MEDIA'] = True
+    DEFINES['OPUS_ARM_MAY_HAVE_NEON'] = True
+
 if CONFIG['MOZ_DEBUG']:
     DEFINES['ENABLE_ASSERTIONS'] = True
 
@@ -67,6 +76,20 @@ else:
         'silk/fixed',
     ]
     SOURCES += silk_sources_fixed
+
+if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['GNU_AS']:
+    SOURCES += celt_sources_arm
+    GENERATED_SOURCES += [ '%s.%s' % (f, CONFIG['ASM_SUFFIX']) for f in [
+        'celt_pitch_xcorr_arm-gnu',
+    ]]
+    # -Os is significantly slower, enable -O3 unless optimization is disabled
+    if CONFIG['MOZ_OPTIMIZE']:
+      CFLAGS += [
+        '-O3',
+      ]
+      CXXFLAGS += [
+        '-O3',
+      ]
 
 # Suppress warnings in third-party code.
 if CONFIG['GNU_CC']:
