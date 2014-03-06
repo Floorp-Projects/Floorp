@@ -90,6 +90,7 @@ strdup_impl(const char *src)
 
 #ifdef ANDROID
 #include <stdarg.h>
+#include <stdio.h>
 
 MOZ_MEMORY_API int
 vasprintf_impl(char **str, const char *fmt, va_list ap)
