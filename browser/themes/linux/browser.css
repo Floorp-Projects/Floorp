@@ -652,6 +652,10 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
   box-shadow: 0 0 0 1px hsla(0,0%,100%,.2);
 }
 
+:-moz-any(#TabsToolbar, #nav-bar) .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
+  -moz-margin-start: -4px;
+}
+
 #forward-button[disabled] {
   transform: scale(0);
   opacity: 0;
