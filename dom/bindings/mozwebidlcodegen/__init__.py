@@ -389,9 +389,10 @@ class WebIDLCodegenManager(LoggingMixin):
             if any(dep for dep in v['inputs'] if dep in changed_inputs):
                 changed_inputs.add(v['filename'])
 
-        # Ensure all changed inputs actually exist (some changed inputs could
-        # have been from deleted files).
-        return set(f for f in changed_inputs if os.path.exists(f))
+        # Only use paths that are known to our current state.
+        # This filters out files that were deleted or changed type (e.g. from
+        # static to preprocessed).
+        return changed_inputs & self._input_paths
 
     def _binding_info(self, p):
         """Compute binding metadata for an input path.
