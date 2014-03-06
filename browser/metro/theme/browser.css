@@ -251,10 +251,6 @@ documenttab[selected] .documenttab-selection:-moz-locale-dir(rtl) {
 
 /* Start UI ----------------------------------------------------------------- */
 
-#content-viewport[startpage] .active-tab-notificationbox {
-  padding-bottom: @toolbar_height@;
-}
-
 #urlbar-autocomplete[viewstate="snapped"],
 #urlbar-autocomplete[viewstate="portrait"]{
   -moz-box-orient: vertical;
@@ -504,6 +500,11 @@ documenttab[selected] .documenttab-selection:-moz-locale-dir(rtl) {
 #navbar:not([hiding]):not([visible]) > #toolbar-overlay {
   visibility: hidden;
 }
+
+#content-viewport[navbar="visible"] .active-tab-notificationbox:not([count="0"]):not([notificationsVisible="false"]) {
+  padding-bottom: @toolbar_height@;
+}
+
 
 /* Progress meter ---------------------------------------------------------- */
 
