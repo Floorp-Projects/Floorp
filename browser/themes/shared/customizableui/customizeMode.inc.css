@@ -260,3 +260,5 @@ toolbarpaletteitem[place="toolbar"] {
   margin-left: 0;
   margin-right: 0;
 }
+
+%include customizeTip.inc.css

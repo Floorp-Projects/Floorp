@@ -185,8 +185,10 @@ function checkInputRequiredValidity(type)
 
   element.required = true;
   SpecialPowers.wrap(element).value = ''; // To make :-moz-ui-valid apply.
+  checkSufferingFromBeingMissing(element, true);
   document.forms[0].removeChild(element);
-  checkNotSufferingFromBeingMissing(element);
+  // Removing the child changes nothing about whether it's valid
+  checkSufferingFromBeingMissing(element, true);
 }
 
 function checkInputRequiredValidityForCheckbox()
@@ -221,7 +223,7 @@ function checkInputRequiredValidityForCheckbox()
   element.required = true;
   element.checked = false;
   document.forms[0].removeChild(element);
-  checkNotSufferingFromBeingMissing(element);
+  checkSufferingFromBeingMissing(element, true);
 }
 
 function checkInputRequiredValidityForRadio()
@@ -297,7 +299,7 @@ function checkInputRequiredValidityForRadio()
   element2.required = true;
   element2.checked = false;
   document.forms[0].removeChild(element2);
-  checkNotSufferingFromBeingMissing(element2);
+  checkSufferingFromBeingMissing(element2, true);
 }
 
 function checkInputRequiredValidityForFile()
@@ -350,7 +352,7 @@ function checkInputRequiredValidityForFile()
   SpecialPowers.wrap(element).value = '';
   file.remove(false);
   document.forms[0].removeChild(element);
-  checkNotSufferingFromBeingMissing(element);
+  checkSufferingFromBeingMissing(element, true);
 }
 
 checkTextareaRequiredValidity();

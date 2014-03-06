@@ -118,6 +118,36 @@ add_test(function test_spawn_function()
   });
 });
 
+add_test(function test_spawn_function_this()
+{
+  Task.spawn(function () {
+    return this;
+  }).then(function (result) {
+    // Since the task function wasn't defined in strict mode, its "this" object
+    // should be the same as the "this" object in this function, i.e. the global
+    // object.
+    do_check_eq(result, this);
+    run_next_test();
+  }, function (ex) {
+    do_throw("Unexpected error: " + ex);
+  });
+});
+
+add_test(function test_spawn_function_this_strict()
+{
+  "use strict";
+  Task.spawn(function () {
+    return this;
+  }).then(function (result) {
+    // Since the task function was defined in strict mode, its "this" object
+    // should be undefined.
+    do_check_eq(typeof(result), "undefined");
+    run_next_test();
+  }, function (ex) {
+    do_throw("Unexpected error: " + ex);
+  });
+});
+
 add_test(function test_spawn_function_returning_promise()
 {
   Task.spawn(function () {
@@ -237,6 +267,119 @@ add_test(function test_mixed_legacy_and_star()
     })();
   }).then(function (result) {
     do_check_eq(5, result);
+    run_next_test();
+  }, function (ex) {
+    do_throw("Unexpected error: " + ex);
+  });
+});
+
+add_test(function test_async_function_from_generator()
+{
+  Task.spawn(function* () {
+    let object = {
+      asyncFunction: Task.async(function* (param) {
+        do_check_eq(this, object);
+        return param;
+      })
+    };
+
+    // Ensure the async function returns a promise that resolves as expected.
+    do_check_eq((yield object.asyncFunction(1)), 1);
+
+    // Ensure a second call to the async function also returns such a promise.
+    do_check_eq((yield object.asyncFunction(3)), 3);
+  }).then(function () {
+    run_next_test();
+  }, function (ex) {
+    do_throw("Unexpected error: " + ex);
+  });
+});
+
+add_test(function test_async_function_from_function()
+{
+  Task.spawn(function* () {
+    return Task.spawn(function* () {
+      let object = {
+        asyncFunction: Task.async(function (param) {
+          do_check_eq(this, object);
+          return param;
+        })
+      };
+
+      // Ensure the async function returns a promise that resolves as expected.
+      do_check_eq((yield object.asyncFunction(5)), 5);
+
+      // Ensure a second call to the async function also returns such a promise.
+      do_check_eq((yield object.asyncFunction(7)), 7);
+    });
+  }).then(function () {
+    run_next_test();
+  }, function (ex) {
+    do_throw("Unexpected error: " + ex);
+  });
+});
+
+add_test(function test_async_function_that_throws_rejects_promise()
+{
+  Task.spawn(function* () {
+    let object = {
+      asyncFunction: Task.async(function* () {
+        throw "Rejected!";
+      })
+    };
+
+    yield object.asyncFunction();
+  }).then(function () {
+    do_throw("unexpected success calling async function that throws error");
+  }, function (ex) {
+    do_check_eq(ex, "Rejected!");
+    run_next_test();
+  });
+});
+
+add_test(function test_async_return_function()
+{
+  Task.spawn(function* () {
+    // Ensure an async function that returns a function resolves to the function
+    // itself instead of calling the function and resolving to its return value.
+    return Task.spawn(function* () {
+      let returnValue = function () {
+        return "These aren't the droids you're looking for.";
+      };
+
+      let asyncFunction = Task.async(function () {
+        return returnValue;
+      });
+
+      do_check_eq((yield asyncFunction()), returnValue);
+    });
+  }).then(function () {
+    run_next_test();
+  }, function (ex) {
+    do_throw("Unexpected error: " + ex);
+  });
+});
+
+add_test(function test_async_throw_argument_not_function()
+{
+  Task.spawn(function* () {
+    // Ensure Task.async throws if its aTask argument is not a function.
+    Assert.throws(() => Task.async("not a function"),
+                  /aTask argument must be a function/);
+  }).then(function () {
+    run_next_test();
+  }, function (ex) {
+    do_throw("Unexpected error: " + ex);
+  });
+});
+
+add_test(function test_async_throw_on_function_in_place_of_promise()
+{
+  Task.spawn(function* () {
+    // Ensure Task.spawn throws if passed an async function.
+    Assert.throws(() => Task.spawn(Task.async(function* () {})),
+                  /Cannot use an async function in place of a promise/);
+  }).then(function () {
     run_next_test();
   }, function (ex) {
     do_throw("Unexpected error: " + ex);
