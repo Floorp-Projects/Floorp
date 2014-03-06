@@ -2680,7 +2680,6 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 .tabbrowser-tab,
 .tabs-newtab-button {
   font: message-box;
-  font-weight: bold;
   border: none;
 }
 
