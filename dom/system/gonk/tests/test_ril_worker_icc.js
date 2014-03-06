@@ -2115,6 +2115,10 @@ add_test(function test_process_icc_io_error() {
     }
 
     ioHelper.processICCIOError({rilRequestError: errorCode,
+                                fileId: 0xffff,
+                                command: 0xff,
+                                sw1: 0xff,
+                                sw2: 0xff,
                                 onerror: errorCb});
     do_check_true(called);
   }
