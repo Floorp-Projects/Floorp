@@ -14,6 +14,7 @@
 #include "prlock.h"
 #include "mozilla/RefPtr.h"
 #include "nsWeakPtr.h"
+#include "nsAutoPtr.h"
 #include "nsIWeakReferenceUtils.h" // for the definition of nsWeakPtr
 #include "IPeerConnection.h"
 #include "sigslot.h"
@@ -33,6 +34,7 @@
 #include "VideoUtils.h"
 #include "VideoSegment.h"
 #include "nsNSSShutDown.h"
+#include "mozilla/dom/RTCStatsReportBinding.h"
 #endif
 
 namespace test {
@@ -153,6 +155,27 @@ private:
   std::vector<NrIceStunServer> mStunServers;
   std::vector<NrIceTurnServer> mTurnServers;
 };
+
+#ifdef MOZILLA_INTERNAL_API
+// Not an inner class so we can forward declare.
+class RTCStatsQuery {
+  public:
+    explicit RTCStatsQuery(bool internalStats);
+    ~RTCStatsQuery();
+
+    mozilla::dom::RTCStatsReportInternal report;
+    std::string error;
+
+  private:
+    friend class PeerConnectionImpl;
+    std::string pcName;
+    bool internalStats;
+    nsTArray<mozilla::RefPtr<mozilla::MediaPipeline>> pipelines;
+    mozilla::RefPtr<NrIceCtx> iceCtx;
+    nsTArray<mozilla::RefPtr<NrIceMediaStream>> streams;
+    DOMHighResTimeStamp now;
+};
+#endif // MOZILLA_INTERNAL_API
 
 // Enter an API call and check that the state is OK,
 // the PC isn't closed, etc.
@@ -313,16 +336,9 @@ public:
   }
 
   NS_IMETHODIMP_TO_ERRORRESULT(GetStats, ErrorResult &rv,
-                               mozilla::dom::MediaStreamTrack *aSelector,
-                               bool internalStats)
+                               mozilla::dom::MediaStreamTrack *aSelector)
   {
-    rv = GetStats(aSelector, internalStats);
-  }
-
-  NS_IMETHODIMP_TO_ERRORRESULT(GetLogging, ErrorResult &rv,
-                               const nsAString& pattern)
-  {
-    rv = GetLogging(pattern);
+    rv = GetStats(aSelector);
   }
 
   NS_IMETHODIMP AddIceCandidate(const char* aCandidate, const char* aMid,
@@ -490,9 +506,17 @@ public:
   // Sets the RTC Signaling State
   void SetSignalingState_m(mozilla::dom::PCImplSignalingState aSignalingState);
 
+  bool IsClosed() const;
+
 #ifdef MOZILLA_INTERNAL_API
   // initialize telemetry for when calls start
   void startCallTelem();
+
+  nsresult BuildStatsQuery_m(
+      mozilla::dom::MediaStreamTrack *aSelector,
+      RTCStatsQuery *query);
+
+  static nsresult ExecuteStatsQuery_s(RTCStatsQuery *query);
 #endif
 
 private:
@@ -544,51 +568,15 @@ private:
 
 
 #ifdef MOZILLA_INTERNAL_API
-  // TODO(bcampen@mozilla.com): Once the dust settles on this stuff, it
-  // probably makes sense to make these static in PeerConnectionImpl.cpp
-  // (ie; stop exporting them)
-
-  // Fills in an RTCStatsReportInternal. Must be run on STS.
-  static void GetStats_s(
+  static void GetStatsForPCObserver_s(
       const std::string& pcHandle,
-      const std::string& pcName,
-      nsCOMPtr<nsIThread> callbackThread,
-      bool internalStats,
-      const std::vector<mozilla::RefPtr<mozilla::MediaPipeline>> &pipelines,
-      const mozilla::RefPtr<NrIceCtx> &iceCtx,
-      const std::vector<mozilla::RefPtr<NrIceMediaStream>> &streams,
-      DOMHighResTimeStamp now);
-
-  static nsresult GetStatsImpl_s(
-      bool internalStats,
-      const std::vector<mozilla::RefPtr<mozilla::MediaPipeline>> &pipelines,
-      const mozilla::RefPtr<NrIceCtx> &iceCtx,
-      const std::vector<mozilla::RefPtr<NrIceMediaStream>> &streams,
-      DOMHighResTimeStamp now,
-      mozilla::dom::RTCStatsReportInternal *report);
-
-  static void FillStatsReport_s(
-      NrIceMediaStream& stream,
-      bool internalStats,
-      DOMHighResTimeStamp now,
-      mozilla::dom::RTCStatsReportInternal* stats);
+      nsAutoPtr<RTCStatsQuery> query);
 
   // Sends an RTCStatsReport to JS. Must run on main thread.
-  static void OnStatsReport_m(
+  static void DeliverStatsReportToPCObserver_m(
       const std::string& pcHandle,
       nsresult result,
-      const std::vector<mozilla::RefPtr<mozilla::MediaPipeline>> &pipelines,
-      nsAutoPtr<mozilla::dom::RTCStatsReportInternal> report);
-
-  // Fetches logs matching pattern from RLogRingBuffer. Must be run on STS.
-  static void GetLogging_s(const std::string& pcHandle,
-                           nsCOMPtr<nsIThread> callbackThread,
-                           const std::string& pattern);
-
-  // Sends logging to JS. Must run on main thread.
-  static void OnGetLogging_m(const std::string& pcHandle,
-                             const std::string& pattern,
-                             nsAutoPtr<std::deque<std::string>> logging);
+      nsAutoPtr<RTCStatsQuery> query);
 #endif
 
   // Timecard used to measure processing time. This should be the first class

@@ -915,6 +915,27 @@ nsString::FindCharInSet( const char16_t* aSet, int32_t aOffset ) const
     return result;
   }
 
+void
+nsString::ReplaceChar( const char16_t* aSet, char16_t aNewChar )
+  {
+    if (!EnsureMutable()) // XXX do this lazily?
+      NS_ABORT_OOM(mLength);
+
+    char16_t* data = mData;
+    uint32_t lenRemaining = mLength;
+
+    while (lenRemaining)
+      {
+        int32_t i = ::FindCharInSet(data, lenRemaining, aSet);
+        if (i == kNotFound)
+          break;
+
+        data[i++] = aNewChar;
+        data += i;
+        lenRemaining -= i;
+      }
+  }
+
 
   /**
    * nsTString::Compare,CompareWithConversion,etc.
