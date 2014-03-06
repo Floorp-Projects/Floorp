@@ -16,6 +16,8 @@ const { on, off } = require('sdk/event/core');
 const { events } = require('sdk/places/events');
 const { setTimeout } = require('sdk/timers');
 const { before, after } = require('sdk/test/utils');
+const bmsrv = Cc['@mozilla.org/browser/nav-bookmarks-service;1'].
+                getService(Ci.nsINavBookmarksService);
 const {
   search
 } = require('sdk/places/history');
@@ -52,6 +54,11 @@ exports['test bookmark-item-changed'] = function (assert, done) {
   function handler ({type, data}) {
     if (type !== 'bookmark-item-changed') return;
     if (data.id !== id) return;
+    // Abort if the 'bookmark-item-changed' event isn't for the `title` property,
+    // as sometimes the event can be for the `url` property.
+    // Intermittent failure, bug 969616
+    if (data.property !== 'title') return;
+
     assert.equal(type, 'bookmark-item-changed',
       'correct type in bookmark-item-changed event');
     assert.equal(data.type, 'bookmark',
@@ -78,6 +85,8 @@ exports['test bookmark-item-changed'] = function (assert, done) {
 exports['test bookmark-item-moved'] = function (assert, done) {
   let id;
   let complete = makeCompleted(done);
+  let previousIndex, previousParentId;
+
   function handler ({type, data}) {
     if (type !== 'bookmark-item-moved') return;
     if (data.id !== id) return;
@@ -86,12 +95,12 @@ exports['test bookmark-item-moved'] = function (assert, done) {
     assert.equal(data.type, 'bookmark',
       'correct data in bookmark-item-moved event');
     assert.ok(data.id === id, 'correct id in bookmark-item-moved event');
-    assert.equal(data.previousParentId, UNSORTED.id,
+    assert.equal(data.previousParentId, previousParentId,
       'correct previousParentId');
-    assert.equal(data.currentParentId, MENU.id,
+    assert.equal(data.currentParentId, bmsrv.getFolderIdForItem(id),
       'correct currentParentId');
-    assert.equal(data.previousIndex, 0, 'correct previousIndex');
-    assert.equal(data.currentIndex, 0, 'correct currentIndex');
+    assert.equal(data.previousIndex, previousIndex, 'correct previousIndex');
+    assert.equal(data.currentIndex, bmsrv.getItemIndex(id), 'correct currentIndex');
 
     events.off('data', handler);
     complete();
@@ -103,6 +112,8 @@ exports['test bookmark-item-moved'] = function (assert, done) {
     group: UNSORTED
   }).then(item => {
     id = item.id;
+    previousIndex = bmsrv.getItemIndex(id);
+    previousParentId = bmsrv.getFolderIdForItem(id);
     item.group = MENU;
     return saveP(item);
   }).then(complete);
