@@ -562,6 +562,13 @@ function openFeedbackPage()
   openUILinkIn("https://input.mozilla.org/feedback", "tab");
 }
 
+function openTourPage()
+{
+  let scope = {}
+  Components.utils.import("resource:///modules/UITour.jsm", scope);
+  openUILinkIn(scope.UITour.url, "tab");
+}
+
 function buildHelpMenu()
 {
   // Enable/disable the "Report Web Forgery" menu item.

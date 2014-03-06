@@ -250,6 +250,7 @@ pref("browser.uitour.enabled", true);
 pref("browser.uitour.requireSecure", true);
 pref("browser.uitour.themeOrigin", "https://addons.mozilla.org/%LOCALE%/firefox/themes/");
 pref("browser.uitour.pinnedTabUrl", "https://support.mozilla.org/%LOCALE%/kb/pinned-tabs-keep-favorite-websites-open");
+pref("browser.uitour.url", "https://www.mozilla.org/%LOCALE%/firefox/%VERSION%/tour/");
 pref("browser.uitour.whitelist.add.260", "www.mozilla.org,support.mozilla.org");
 
 pref("keyword.enabled", true);
