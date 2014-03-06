@@ -1,0 +1,58 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=936340
+-->
+<head>
+  <title>Test whether sendBeacon sets cookies</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=936340">Mozilla Bug 936340</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var beaconUrl = "http://mochi.test:8888/tests/dom/tests/mochitest/beacon/beacon-set-cookie.sjs";
+
+// not enabled by default yet.
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({'set': [["beacon.enabled", true]]}, beginTest);
+
+const Cc = SpecialPowers.Cc;
+const Ci = SpecialPowers.Ci;
+
+function examiner() {
+  SpecialPowers.addObserver(this, "cookie-changed", false);
+}
+examiner.prototype = {
+  finished: false,
+  observe: function examiner_observe(subject, topic, data) {
+    if (!this.finished) {
+      ok(true, "cookie set by beacon request");
+      SimpleTest.finish();
+    }
+  }
+}
+
+window.examiner = new examiner();
+
+function fail() {
+  examiner.finished = true;
+  ok(false, "cookie event never arrived");
+  SimpleTest.finish();
+}
+
+function beginTest() {
+  navigator.sendBeacon(beaconUrl, "ceci n'est pas une demande");
+  setTimeout(2000, fail);
+}
+
+</script>
+</pre>
+</body>
+</html>
