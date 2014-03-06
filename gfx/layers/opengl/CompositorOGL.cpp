@@ -80,6 +80,7 @@ static void
 DrawQuads(GLContext *aGLContext,
           VBOArena &aVBOs,
           ShaderProgramOGL *aProg,
+          GLenum aMode,
           RectTriangles &aRects)
 {
   NS_ASSERTION(aProg->HasInitialized(), "Shader program not correctly initialized");
@@ -89,8 +90,7 @@ DrawQuads(GLContext *aGLContext,
     aProg->AttribLocation(ShaderProgramOGL::TexCoordAttrib);
   bool texCoords = (texCoordAttribIndex != GLuint(-1));
 
-  GLsizei elements = aRects.elements();
-  GLsizei bytes = elements * 2 * sizeof(GLfloat);
+  GLsizei bytes = aRects.elements() * 2 * sizeof(GLfloat);
 
   GLsizei total = bytes;
   if (texCoords) {
@@ -107,7 +107,7 @@ DrawQuads(GLContext *aGLContext,
   aGLContext->fBufferSubData(LOCAL_GL_ARRAY_BUFFER,
                              0,
                              bytes,
-                             aRects.vertexPointer());
+                             aRects.vertCoords().Elements());
   aGLContext->fEnableVertexAttribArray(vertAttribIndex);
   aGLContext->fVertexAttribPointer(vertAttribIndex,
                                    2, LOCAL_GL_FLOAT,
@@ -118,7 +118,7 @@ DrawQuads(GLContext *aGLContext,
     aGLContext->fBufferSubData(LOCAL_GL_ARRAY_BUFFER,
                                bytes,
                                bytes,
-                               aRects.texCoordPointer());
+                               aRects.texCoords().Elements());
     aGLContext->fEnableVertexAttribArray(texCoordAttribIndex);
     aGLContext->fVertexAttribPointer(texCoordAttribIndex,
                                      2, LOCAL_GL_FLOAT,
@@ -126,7 +126,7 @@ DrawQuads(GLContext *aGLContext,
                                      0, BUFFER_OFFSET(bytes));
   }
 
-  aGLContext->fDrawArrays(LOCAL_GL_TRIANGLES, 0, elements);
+  aGLContext->fDrawArrays(aMode, 0, aRects.elements());
 
   aGLContext->fDisableVertexAttribArray(vertAttribIndex);
   if (texCoords) {
@@ -489,7 +489,7 @@ CompositorOGL::BindAndDrawQuadWithTextureRect(ShaderProgramOGL *aProg,
   }
 
   gfx3DMatrix textureTransform;
-  if (rects.IsSimpleQuad(textureTransform)) {
+  if (rects.isSimpleQuad(textureTransform)) {
     Matrix4x4 transform;
     ToMatrix4x4(aTextureTransform * textureTransform, transform);
     aProg->SetTextureTransform(transform);
@@ -498,7 +498,7 @@ CompositorOGL::BindAndDrawQuadWithTextureRect(ShaderProgramOGL *aProg,
     Matrix4x4 transform;
     ToMatrix4x4(aTextureTransform, transform);
     aProg->SetTextureTransform(transform);
-    DrawQuads(mGLContext, mVBOs, aProg, rects);
+    DrawQuads(mGLContext, mVBOs, aProg, LOCAL_GL_TRIANGLES, rects);
   }
 }
 
@@ -626,8 +626,11 @@ CompositorOGL::clearFBRect(const gfx::Rect* aRect)
     return;
   }
 
+  // Map aRect to OGL coordinates, origin:bottom-left
+  GLint y = mHeight - (aRect->y + aRect->height);
+
   ScopedGLState scopedScissorTestState(mGLContext, LOCAL_GL_SCISSOR_TEST, true);
-  ScopedScissorRect autoScissorRect(mGLContext, aRect->x, aRect->y, aRect->width, aRect->height);
+  ScopedScissorRect autoScissorRect(mGLContext, aRect->x, y, aRect->width, aRect->height);
   mGLContext->fClearColor(0.0, 0.0, 0.0, 0.0);
   mGLContext->fClear(LOCAL_GL_COLOR_BUFFER_BIT | LOCAL_GL_DEPTH_BUFFER_BIT);
 }

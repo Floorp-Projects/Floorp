@@ -138,6 +138,7 @@ skip-if(B2G) == 726420-1.html 726420-1-ref.html
 == 746987-4.html 746987-4-ref.html
 == 779003-1.html 779003-1-ref.html
 == 779003-1-dynamic.html 779003-1-ref.html
+== 847242-1.html 847242-1-ref.html
 == 869833-1.xul 869833-1-ref.xul
 == 922530-1.html 922530-1-ref.html
 == 922550-1.html 922550-1-ref.html

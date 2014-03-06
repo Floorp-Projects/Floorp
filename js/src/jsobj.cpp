@@ -3760,7 +3760,7 @@ DefinePropertyOrElement(typename ExecutionModeTraits<mode>::ExclusiveContextType
 
     // Don't define new indexed properties on typed arrays.
     if (obj->is<TypedArrayObject>()) {
-        double index;
+        uint64_t index;
         if (IsTypedArrayIndex(id, &index))
             return true;
     }
@@ -4002,9 +4002,9 @@ LookupOwnPropertyWithFlagsInline(ExclusiveContext *cx,
     // so that integer properties on the prototype are ignored even for out
     // of bounds accesses.
     if (obj->template is<TypedArrayObject>()) {
-        double index;
+        uint64_t index;
         if (IsTypedArrayIndex(id, &index)) {
-            if (index >= 0 && index < obj->template as<TypedArrayObject>().length()) {
+            if (index < obj->template as<TypedArrayObject>().length()) {
                 objp.set(obj);
                 MarkDenseOrTypedArrayElementFound<allowGC>(propp);
             }
@@ -4595,9 +4595,9 @@ LookupPropertyPureInline(JSObject *obj, jsid id, JSObject **objp, Shape **propp)
         }
 
         if (current->is<TypedArrayObject>()) {
-            double index;
+            uint64_t index;
             if (IsTypedArrayIndex(id, &index)) {
-                if (index >= 0 && index < obj->as<TypedArrayObject>().length()) {
+                if (index < obj->as<TypedArrayObject>().length()) {
                     *objp = current;
                     MarkDenseOrTypedArrayElementFound<NoGC>(propp);
                 } else {
