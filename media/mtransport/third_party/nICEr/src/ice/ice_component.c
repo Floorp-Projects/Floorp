@@ -96,6 +96,7 @@ static int nr_ice_pre_answer_request_destroy(nr_ice_pre_answer_request **parp)
     nr_stun_message_destroy(&par->req.response);
 
     RFREE(par->username);
+    RFREE(par);
 
     return(0);
   }
