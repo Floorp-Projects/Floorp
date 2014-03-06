@@ -11,6 +11,11 @@
     background-size: 16px, auto;
   }
 
+  toolbarbutton[panel-multiview-anchor=true]:-moz-locale-dir(rtl) {
+    background-image: url(chrome://browser/skin/customizableui/subView-arrow-back-inverted-rtl@2x.png),
+                      linear-gradient(rgba(255,255,255,0), rgba(255,255,255,0.3));
+  }
+
   #PanelUI-fxa-status {
     list-style-image: url(chrome://browser/skin/sync-horizontalbar@2x.png);
   }
