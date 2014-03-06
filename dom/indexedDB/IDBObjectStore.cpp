@@ -21,7 +21,6 @@
 #include "mozilla/dom/quota/FileStreams.h"
 #include "mozilla/Endian.h"
 #include "mozilla/storage.h"
-#include "nsAutoRef.h"
 #include "nsContentUtils.h"
 #include "nsDOMClassInfo.h"
 #include "nsDOMFile.h"
@@ -3095,8 +3094,6 @@ NoRequestObjectStoreHelper::OnError()
   mTransaction->Abort(GetResultCode());
 }
 
-namespace {
-
 // This is a duplicate of the js engine's byte munging in StructuredClone.cpp
 uint64_t
 ReinterpretDoubleAsUInt64(double d)
@@ -3108,15 +3105,6 @@ ReinterpretDoubleAsUInt64(double d)
   pun.d = d;
   return pun.u;
 }
-
-template <>
-class nsAutoRefTraits<char> : public nsPointerRefTraits<char>
-{
-public:
-  static void Release(char* ptr) { moz_free(ptr); }
-};
-
-} // anonymous namespace
 
 nsresult
 AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
@@ -3194,30 +3182,28 @@ AddHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
 
   mKey.BindToStatement(stmt, NS_LITERAL_CSTRING("key_value"));
 
-
   // Compress the bytes before adding into the database.
   const char* uncompressed =
     reinterpret_cast<const char*>(mCloneWriteInfo.mCloneBuffer.data());
   size_t uncompressedLength = mCloneWriteInfo.mCloneBuffer.nbytes();
 
+  static const fallible_t fallible = fallible_t();
   size_t compressedLength = snappy::MaxCompressedLength(uncompressedLength);
-  // moz_malloc is equivalent to NS_Alloc, which we use because mozStorage
-  // expects to be able to free the adopted pointer with NS_Free.
-  nsAutoRef<char> compressed((char*)moz_malloc(compressedLength));
+  // This will hold our compressed data until the end of the method. The
+  // BindBlobByName function will copy it.
+  nsAutoArrayPtr<char> compressed(new (fallible) char[compressedLength]);
   NS_ENSURE_TRUE(compressed, NS_ERROR_OUT_OF_MEMORY);
 
-  snappy::RawCompress(uncompressed, uncompressedLength, compressed,
+  snappy::RawCompress(uncompressed, uncompressedLength, compressed.get(),
                       &compressedLength);
 
-  uint8_t* dataBuffer = reinterpret_cast<uint8_t*>(compressed.get());
+  const uint8_t* dataBuffer =
+    reinterpret_cast<const uint8_t*>(compressed.get());
   size_t dataBufferLength = compressedLength;
 
-  // If this call succeeds, | compressed | is now owned by mozStorage, and we
-  // are no longer responsible for it.
-  rv = stmt->BindAdoptedBlobByName(NS_LITERAL_CSTRING("data"), dataBuffer,
-                                   dataBufferLength);
+  rv = stmt->BindBlobByName(NS_LITERAL_CSTRING("data"), dataBuffer,
+                            dataBufferLength);
   IDB_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-  compressed.disown();
 
   // Handle blobs
   uint32_t length = mCloneWriteInfo.mFiles.Length();
