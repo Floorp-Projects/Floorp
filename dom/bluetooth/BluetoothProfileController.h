@@ -89,7 +89,12 @@ public:
    * The controller starts connecting/disconnecting profiles one by one
    * according to the order in array mProfiles.
    */
-  void Start();
+  void StartSession();
+
+  /**
+   * The original DOM request would be fired in this function.
+   */
+  void EndSession();
 
   /**
    * It is invoked after a profile has tried to establish the connection.

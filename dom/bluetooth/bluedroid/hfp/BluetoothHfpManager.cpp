@@ -1231,12 +1231,21 @@ BluetoothHfpManager::Connect(const nsAString& aDeviceAddress,
     return;
   }
 
-  NS_ENSURE_TRUE_VOID(sBluetoothHfpInterface);
+  if (!sBluetoothHfpInterface) {
+    BT_LOGR("sBluetoothHfpInterface is null");
+    aController->OnConnect(NS_LITERAL_STRING(ERR_NO_AVAILABLE_RESOURCE));
+    return;
+  }
 
   bt_bdaddr_t deviceBdAddress;
   StringToBdAddressType(aDeviceAddress, &deviceBdAddress);
-  NS_ENSURE_TRUE_VOID(BT_STATUS_SUCCESS ==
-    sBluetoothHfpInterface->connect(&deviceBdAddress));
+
+  bt_status_t result = sBluetoothHfpInterface->connect(&deviceBdAddress);
+  if (BT_STATUS_SUCCESS != result) {
+    BT_LOGR("Failed to connect: %x", result);
+    aController->OnConnect(NS_LITERAL_STRING(ERR_CONNECTION_FAILED));
+    return;
+  }
 
   mDeviceAddress = aDeviceAddress;
   mController = aController;
@@ -1248,12 +1257,21 @@ BluetoothHfpManager::Disconnect(BluetoothProfileController* aController)
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mController);
 
-  NS_ENSURE_TRUE_VOID(sBluetoothHfpInterface);
+  if (!sBluetoothHfpInterface) {
+    BT_LOGR("sBluetoothHfpInterface is null");
+    aController->OnDisconnect(NS_LITERAL_STRING(ERR_NO_AVAILABLE_RESOURCE));
+    return;
+  }
 
   bt_bdaddr_t deviceBdAddress;
   StringToBdAddressType(mDeviceAddress, &deviceBdAddress);
-  NS_ENSURE_TRUE_VOID(BT_STATUS_SUCCESS ==
-    sBluetoothHfpInterface->disconnect(&deviceBdAddress));
+
+  bt_status_t result = sBluetoothHfpInterface->disconnect(&deviceBdAddress);
+  if (BT_STATUS_SUCCESS != result) {
+    BT_LOGR("Failed to disconnect: %x", result);
+    aController->OnDisconnect(NS_LITERAL_STRING(ERR_DISCONNECTION_FAILED));
+    return;
+  }
 
   mController = aController;
 }

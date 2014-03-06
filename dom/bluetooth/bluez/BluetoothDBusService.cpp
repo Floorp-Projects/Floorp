@@ -3244,7 +3244,7 @@ NextBluetoothProfileController()
 
   // Re-check if the task array is empty, if it's not, the next task will begin.
   NS_ENSURE_FALSE_VOID(sControllerArray.IsEmpty());
-  sControllerArray[0]->Start();
+  sControllerArray[0]->StartSession();
 }
 
 static void
@@ -3267,7 +3267,7 @@ ConnectDisconnect(bool aConnect, const nsAString& aDeviceAddress,
    * first one is completed. See NextBluetoothProfileController() for details.
    */
   if (sControllerArray.Length() == 1) {
-    sControllerArray[0]->Start();
+    sControllerArray[0]->StartSession();
   }
 }
 
