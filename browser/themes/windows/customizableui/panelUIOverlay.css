@@ -16,14 +16,14 @@
 
 /* bookmark panel submenus */
 
-#BMB_bookmarksPopup menupopup {
+#BMB_bookmarksPopup menupopup[placespopup=true] {
   -moz-appearance: none;
   background: transparent;
   border: none;
   padding: 6px;
 }
 
-#BMB_bookmarksPopup menupopup > hbox {
+#BMB_bookmarksPopup menupopup[placespopup=true] > hbox {
   /* emulating chrome://browser/content/places/menu.xml#places-popup-arrow but without the arrow */
   box-shadow: 0 0 4px rgba(0,0,0,0.2);
   background: #FFF;
@@ -32,14 +32,48 @@
   margin-top: -4px;
 }
 
+#BMB_bookmarksPopup menupopup {
+  padding-top: 2px;
+}
+
+/* Add some space at the top because there are no headers: */
+#BMB_bookmarksPopup menupopup[placespopup=true] > hbox > .popup-internal-box > .arrowscrollbox-scrollbox > .scrollbox-innerbox  {
+  padding-top: 4px;
+}
+
 #BMB_bookmarksPopup .menu-text {
   color: #000;
+}
+
+#BMB_bookmarksPopup .subviewbutton[disabled=true] > .menu-text {
+  color: #6d6d6d;
 }
 
 /* bookmark panel separator */
 #BMB_bookmarksPopup menuseparator {
   padding-top: 0;
   padding-bottom: 0;
+}
+
+.subviewbutton > .menu-right,
+.subviewbutton > .menu-iconic-left {
+  padding-top: 1px;
+  margin-top: 1px;
+  margin-bottom: 2px;
+}
+
+/* Disabled empty item looks too small otherwise, because it has no icon. */
+menuitem.subviewbutton[disabled]:not(.menuitem-iconic),
+/* Same for checkbox menu items, whose icons lose size due to -moz-appearance: none: */
+menuitem[type="checkbox"].subviewbutton {
+  /* This is 16px for an icon + 3px for its margins + 1px for its padding +
+   * 2px for its border, see above */
+  min-height: 22px;
+}
+
+.subviewbutton > .toolbarbutton-text {
+  padding-top: 3px;
+  padding-bottom: 3px;
 }
 
 .widget-overflow-list .toolbarbutton-1 > .toolbarbutton-menubutton-button {
