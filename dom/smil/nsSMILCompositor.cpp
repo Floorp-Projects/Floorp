@@ -125,7 +125,7 @@ nsSMILCompositor::CreateSMILAttr()
   if (mKey.mIsCSS) {
     nsCSSProperty propId =
       nsCSSProps::LookupProperty(nsDependentAtomString(mKey.mAttributeName),
-                                 nsCSSProps::eEnabled);
+                                 nsCSSProps::eEnabledForAllContent);
     if (nsSMILCSSProperty::IsPropertyAnimatable(propId)) {
       return new nsSMILCSSProperty(propId, mKey.mElement.get());
     }
