@@ -2500,12 +2500,8 @@ js::AsTypedArrayBuffer(HandleValue v)
 }
 
 bool
-js::StringIsTypedArrayIndex(JSLinearString *str, double *indexp)
+js::StringIsTypedArrayIndex(JSLinearString *str, uint64_t *indexp)
 {
-    // Largest double (2^53 - 1) which can be exactly represented in the
-    // mantissa of a double.
-    static const double MAX_INTEGER = 9007199254740991;
-
     const jschar *s = str->chars();
     const jschar *end = s + str->length();
 
@@ -2522,7 +2518,7 @@ js::StringIsTypedArrayIndex(JSLinearString *str, double *indexp)
     if (!JS7_ISDEC(*s))
         return false;
 
-    double index = 0;
+    uint64_t index = 0;
     uint32_t digit = JS7_UNDEC(*s++);
 
     /* Don't allow leading zeros. */
@@ -2537,17 +2533,17 @@ js::StringIsTypedArrayIndex(JSLinearString *str, double *indexp)
 
         digit = JS7_UNDEC(*s);
 
-        /* Watch for mantissa overflows. */
-        if ((MAX_INTEGER - digit) / 10 < index)
-            return false;
-
-        index = 10 * index + digit;
+        /* Watch for overflows. */
+        if ((UINT64_MAX - digit) / 10 < index)
+            index = UINT64_MAX;
+        else
+            index = 10 * index + digit;
     }
 
     if (negative)
-        index = -index;
-
-    *indexp = index;
+        *indexp = UINT64_MAX;
+    else
+        *indexp = index;
     return true;
 }
 

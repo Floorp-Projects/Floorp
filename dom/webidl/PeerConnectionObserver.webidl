@@ -28,10 +28,6 @@ interface PeerConnectionObserver
   void onGetStatsSuccess(optional RTCStatsReportInternal report);
   void onGetStatsError(unsigned long name, DOMString message);
 
-  /* Logging callbacks */
-  void onGetLoggingSuccess(sequence<DOMString> logs);
-  void onGetLoggingError(unsigned long name, DOMString message);
-
   /* Data channel callbacks */
   void notifyDataChannel(DataChannel channel);
   void notifyConnection();
