@@ -30,14 +30,14 @@ add_task(function() {
   ok(!navbar.querySelector("#" + kHomeBtn), "Home button should no longer be in the navbar");
   let homeBtnNode = overflowList.querySelector("#" + kHomeBtn);
   ok(homeBtnNode, "Home button should be overflowing");
-  ok(homeBtnNode && homeBtnNode.classList.contains("overflowedItem"), "Home button should have overflowedItem class");
+  ok(homeBtnNode && homeBtnNode.getAttribute("overflowedItem") == "true", "Home button should have overflowedItem attribute");
 
   let placementOfHomeButton = CustomizableUI.getWidgetIdsInArea(navbar.id).indexOf(kHomeBtn);
   CustomizableUI.addWidgetToArea(kTestBtn1, navbar.id, placementOfHomeButton);
   ok(!navbar.querySelector("#" + kTestBtn1), "New button should not be in the navbar");
   let newButtonNode = overflowList.querySelector("#" + kTestBtn1);
   ok(newButtonNode, "New button should be overflowing");
-  ok(newButtonNode && newButtonNode.classList.contains("overflowedItem"), "New button should have overflowedItem class");
+  ok(newButtonNode && newButtonNode.getAttribute("overflowedItem") == "true", "New button should have overflowedItem attribute");
   let nextEl = newButtonNode && newButtonNode.nextSibling;
   is(nextEl && nextEl.id, kHomeBtn, "Test button should be next to home button.");
 
@@ -45,11 +45,11 @@ add_task(function() {
   yield waitForCondition(() => !navbar.hasAttribute("overflowing"));
   ok(!navbar.hasAttribute("overflowing"), "Should not have an overflowing toolbar.");
   ok(navbar.querySelector("#" + kHomeBtn), "Home button should be in the navbar");
-  ok(homeBtnNode && !homeBtnNode.classList.contains("overflowedItem"), "Home button should no longer have overflowedItem class");
+  ok(homeBtnNode && (homeBtnNode.getAttribute("overflowedItem") != "true"), "Home button should no longer have overflowedItem attribute");
   ok(!overflowList.querySelector("#" + kHomeBtn), "Home button should no longer be overflowing");
   ok(navbar.querySelector("#" + kTestBtn1), "Test button should be in the navbar");
   ok(!overflowList.querySelector("#" + kTestBtn1), "Test button should no longer be overflowing");
-  ok(newButtonNode && !newButtonNode.classList.contains("overflowedItem"), "New button should no longer have overflowedItem class");
+  ok(newButtonNode && (newButtonNode.getAttribute("overflowedItem") != "true"), "New button should no longer have overflowedItem attribute");
   let el = document.getElementById(kTestBtn1);
   if (el) {
     CustomizableUI.removeWidgetFromArea(kTestBtn1);
@@ -101,13 +101,13 @@ add_task(function() {
   ok(!navbar.querySelector("#" + kHomeBtn), "Home button should no longer be in the navbar");
   let homeBtnNode = overflowList.querySelector("#" + kHomeBtn);
   ok(homeBtnNode, "Home button should be overflowing");
-  ok(homeBtnNode && homeBtnNode.classList.contains("overflowedItem"), "Home button should have overflowedItem class");
+  ok(homeBtnNode && homeBtnNode.getAttribute("overflowedItem") == "true", "Home button should have overflowedItem class");
 
   let testBtnSpec = {id: kTestBtn3, label: "Overflowable widget test", defaultArea: "nav-bar"};
   CustomizableUI.createWidget(testBtnSpec);
   let testNode = overflowList.querySelector("#" + kTestBtn3);
   ok(testNode, "Test button should be overflowing");
-  ok(testNode && testNode.classList.contains("overflowedItem"), "Test button should have overflowedItem class");
+  ok(testNode && testNode.getAttribute("overflowedItem") == "true", "Test button should have overflowedItem class");
 
   CustomizableUI.destroyWidget(kTestBtn3);
   testNode = document.getElementById(kTestBtn3);
@@ -116,7 +116,7 @@ add_task(function() {
   CustomizableUI.createWidget(testBtnSpec);
   testNode = overflowList.querySelector("#" + kTestBtn3);
   ok(testNode, "Test button should be overflowing");
-  ok(testNode && testNode.classList.contains("overflowedItem"), "Test button should have overflowedItem class");
+  ok(testNode && testNode.getAttribute("overflowedItem") == "true", "Test button should have overflowedItem class");
 
   CustomizableUI.removeWidgetFromArea(kTestBtn3);
   testNode = document.getElementById(kTestBtn3);
