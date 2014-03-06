@@ -1860,10 +1860,20 @@ public:
 
   void Run()
   {
+    MOZ_ASSERT(!sDBusConnection);
+
+    sDBusConnection = mConnection;
+
     mConnection->Watch();
 
-    /**
-     * Normally we'll receive the signal 'AdapterAdded' with the adapter object
+    nsRefPtr<nsRunnable> runnable =
+      new BluetoothService::ToggleBtAck(true);
+    if (NS_FAILED(NS_DispatchToMainThread(runnable))) {
+      BT_WARNING("Failed to dispatch to main thread!");
+      return;
+    }
+
+    /* Normally we'll receive the signal 'AdapterAdded' with the adapter object
      * path from the DBus daemon during start up. So, there's no need to query
      * the object path of default adapter here. However, if we restart from a
      * crash, the default adapter might already be available, so we ask the daemon
@@ -1891,16 +1901,6 @@ BluetoothDBusService::StartInternal()
 {
   // This could block. It should never be run on the main thread.
   MOZ_ASSERT(!NS_IsMainThread()); // BT thread
-
-  if (sDBusConnection) {
-    // This should actually not happen.
-    BT_WARNING("Bluetooth is already running");
-    nsCOMPtr<nsIRunnable> ackTask = new BluetoothService::ToggleBtAck(true);
-    if (NS_FAILED(NS_DispatchToMainThread(ackTask))) {
-      BT_WARNING("Failed to dispatch to main thread!");
-    }
-    return NS_OK;
-  }
 
 #ifdef MOZ_WIDGET_GONK
   if (!sBluedroid.Enable()) {
@@ -1955,15 +1955,8 @@ BluetoothDBusService::StartInternal()
     sPairingReqTable = new nsDataHashtable<nsStringHashKey, DBusMessage* >;
   }
 
-  sDBusConnection = connection;
-
   Task* task = new StartDBusConnectionTask(connection, sAdapterPath.IsEmpty());
   DispatchToDBusThread(task);
-
-  nsCOMPtr<nsIRunnable> ackTask = new BluetoothService::ToggleBtAck(true);
-  if (NS_FAILED(NS_DispatchToMainThread(ackTask))) {
-    BT_WARNING("Failed to dispatch to main thread!");
-  }
 
   return NS_OK;
 }
@@ -3244,7 +3237,7 @@ NextBluetoothProfileController()
 
   // Re-check if the task array is empty, if it's not, the next task will begin.
   NS_ENSURE_FALSE_VOID(sControllerArray.IsEmpty());
-  sControllerArray[0]->Start();
+  sControllerArray[0]->StartSession();
 }
 
 static void
@@ -3267,7 +3260,7 @@ ConnectDisconnect(bool aConnect, const nsAString& aDeviceAddress,
    * first one is completed. See NextBluetoothProfileController() for details.
    */
   if (sControllerArray.Length() == 1) {
-    sControllerArray[0]->Start();
+    sControllerArray[0]->StartSession();
   }
 }
 
