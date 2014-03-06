@@ -81,6 +81,8 @@ public:
 
     virtual int GetScreenDepth() const;
 
+    virtual bool UseAcceleratedSkiaCanvas() MOZ_OVERRIDE;
+
 private:
     int mScreenDepth;
     gfxImageFormat mOffscreenFormat;

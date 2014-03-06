@@ -40,6 +40,7 @@ if CONFIG['MOZ_ENABLE_GTK']:
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     LOCAL_INCLUDES += [
+        '../windows/ia2',
         '../windows/msaa',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':

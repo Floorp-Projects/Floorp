@@ -17,19 +17,6 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-ifneq (,$(INTEL_ARCHITECTURE))
-ifdef GNU_CC
-SkBitmapFilter_opts_SSE2.$(OBJ_SUFFIX): CXXFLAGS+=-msse2
-SkBitmapProcState_opts_SSE2.$(OBJ_SUFFIX): CXXFLAGS+=-msse2
-SkBitmapProcState_opts_SSSE3.$(OBJ_SUFFIX): CXXFLAGS+=-mssse3
-SkBlitRect_opts_SSE2.$(OBJ_SUFFIX): CXXFLAGS+=-msse2
-SkBlitRow_opts_SSE2.$(OBJ_SUFFIX): CXXFLAGS+=-msse2
-SkBlurImage_opts_SSE2.$(OBJ_SUFFIX): CXXFLAGS+=-msse2
-SkMorphology_opts_SSE2.$(OBJ_SUFFIX): CXXFLAGS+=-msse2
-SkUtils_opts_SSE2.$(OBJ_SUFFIX): CXXFLAGS+=-msse2
-endif
-endif
-
 ifeq ($(CPU_ARCH)_$(GNU_CC),arm_1)
 # The assembly uses the frame pointer register (r7 in Thumb/r11 in
 # ARM), the compiler doesn't like that.

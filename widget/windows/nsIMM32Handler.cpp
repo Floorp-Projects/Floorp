@@ -138,6 +138,13 @@ nsIMM32Handler::GetKeyboardCodePage()
   return sCodePage;
 }
 
+/* static */
+nsIMEUpdatePreference
+nsIMM32Handler::GetIMEUpdatePreference()
+{
+  return nsIMEUpdatePreference(nsIMEUpdatePreference::NOTIFY_POSITION_CHANGE);
+}
+
 // used for checking the lParam of WM_IME_COMPOSITION
 #define IS_COMPOSING_LPARAM(lParam) \
   ((lParam) & (GCS_COMPSTR | GCS_COMPATTR | GCS_COMPCLAUSE | GCS_CURSORPOS))
