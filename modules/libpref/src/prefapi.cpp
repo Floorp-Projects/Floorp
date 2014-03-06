@@ -8,6 +8,7 @@
 #include "prefapi.h"
 #include "prefapi_private_data.h"
 #include "prefread.h"
+#include "MainThreadUtils.h"
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
 
@@ -575,6 +576,8 @@ pref_DeleteItem(PLDHashTable *table, PLDHashEntryHdr *heh, uint32_t i, void *arg
 nsresult
 PREF_DeleteBranch(const char *branch_name)
 {
+    MOZ_ASSERT(NS_IsMainThread());
+
     int len = (int)strlen(branch_name);
 
     if (!gHashTable.ops)
@@ -642,6 +645,8 @@ pref_ClearUserPref(PLDHashTable *table, PLDHashEntryHdr *he, uint32_t,
 nsresult
 PREF_ClearAllUserPrefs()
 {
+    MOZ_ASSERT(NS_IsMainThread());
+
     if (!gHashTable.ops)
         return NS_ERROR_NOT_INITIALIZED;
 
@@ -716,6 +721,8 @@ static void pref_SetValue(PrefValue* oldValue, PrefValue newValue, PrefType type
 
 PrefHashEntry* pref_HashTableLookup(const void *key)
 {
+    MOZ_ASSERT(NS_IsMainThread());
+
     PrefHashEntry* result =
         static_cast<PrefHashEntry*>(PL_DHashTableOperate(&gHashTable, key, PL_DHASH_LOOKUP));
 
@@ -727,6 +734,8 @@ PrefHashEntry* pref_HashTableLookup(const void *key)
 
 nsresult pref_HashPref(const char *key, PrefValue value, PrefType type, uint32_t flags)
 {
+    MOZ_ASSERT(NS_IsMainThread());
+
     if (!gHashTable.ops)
         return NS_ERROR_OUT_OF_MEMORY;
 

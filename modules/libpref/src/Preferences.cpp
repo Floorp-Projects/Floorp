@@ -402,6 +402,8 @@ Preferences::GetInstanceForService()
 bool
 Preferences::InitStaticMembers()
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   if (!sShutdown && !sPreferences) {
     nsCOMPtr<nsIPrefService> prefService =
       do_GetService(NS_PREFSERVICE_CONTRACTID);

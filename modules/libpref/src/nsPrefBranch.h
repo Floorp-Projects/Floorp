@@ -182,7 +182,7 @@ class nsPrefBranch : public nsIPrefBranchInternal,
 {
   friend class mozilla::PreferenceServiceReporter;
 public:
-  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_ISUPPORTS
   NS_DECL_NSIPREFBRANCH
   NS_DECL_NSIPREFBRANCH2
   NS_DECL_NSIOBSERVER
@@ -235,7 +235,7 @@ public:
   nsPrefLocalizedString();
   virtual ~nsPrefLocalizedString();
 
-  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_ISUPPORTS
   NS_FORWARD_NSISUPPORTSSTRING(mUnicodeString->)
   NS_FORWARD_NSISUPPORTSPRIMITIVE(mUnicodeString->)
 
@@ -253,7 +253,7 @@ private:
 class nsRelativeFilePref : public nsIRelativeFilePref
 {
 public:
-  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_ISUPPORTS
   NS_DECL_NSIRELATIVEFILEPREF
   
                 nsRelativeFilePref();
