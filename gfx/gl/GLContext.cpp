@@ -628,6 +628,12 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
                 MarkUnsupported(GLFeature::standard_derivatives);
             }
 
+            if (Vendor() == GLVendor::Imagination &&
+                Renderer() == GLRenderer::SGX540) {
+                // Bug 980048
+                MarkExtensionUnsupported(OES_EGL_sync);
+            }
+
 #ifdef XP_MACOSX
             // The Mac Nvidia driver, for versions up to and including 10.8, don't seem
             // to properly support this.  See 814839

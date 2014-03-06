@@ -41,7 +41,8 @@ function test_property(property)
       var val = gDeclaration.getPropertyValue(sproperty);
       is(val, "", "value of '" + sproperty + "' before we do anything");
       is(val, gDeclaration[sinfo.domProp],
-         "consistency between decl.getPropertyValue('" + sproperty + "') and decl." + sinfo.domProp);
+         "(initial) consistency between decl.getPropertyValue('" + sproperty +
+         "') and decl." + sinfo.domProp);
     }
     check_initial(property);
     if ("subproperties" in info)
@@ -56,7 +57,7 @@ function test_property(property)
       is(val, keyword,
          keyword + " reported back for property '" + sproperty + "'");
       is(val, gDeclaration[sinfo.domProp],
-         "consistency between decl.getPropertyValue('" + sproperty +
+         "(set) consistency between decl.getPropertyValue('" + sproperty +
          "') and decl." + sinfo.domProp);
     }
     check_set(property);
@@ -81,7 +82,8 @@ function test_property(property)
       var val = gDeclaration.getPropertyValue(sproperty);
       is(val, "", "value of '" + sproperty + "' after removal of value");
       is(val, gDeclaration[sinfo.domProp],
-         "consistency between decl.getPropertyValue('" + sproperty + "') and decl." + sinfo.domProp);
+         "(final) consistency between decl.getPropertyValue('" + sproperty +
+         "') and decl." + sinfo.domProp);
     }
     check_final(property);
     if ("subproperties" in info)

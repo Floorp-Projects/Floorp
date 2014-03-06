@@ -967,6 +967,7 @@ public:
   uint32_t Item(uint32_t&);
   uint32_t Item(uint32_t, bool&) MOZ_DELETE;
   uint32_t Length();
+  void LegacyCall(JS::Handle<JS::Value>);
 };
 
 class TestNamedGetterInterface : public nsISupports,

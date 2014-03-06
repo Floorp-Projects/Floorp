@@ -104,7 +104,7 @@ tabbrowser {
 
 .tabbrowser-tab:not([pinned]) {
   -moz-box-flex: 100;
-  max-width: 180px;
+  max-width: 210px;
   min-width: 100px;
   width: 0;
   transition: min-width 200ms ease-out,
@@ -115,8 +115,6 @@ tabbrowser {
   max-width: 0.1px;
   min-width: 0.1px;
   visibility: hidden;
-  transition: min-width 200ms ease-out,
-              max-width 230ms ease-out;
 }
 
 .tab-background {
@@ -365,11 +363,6 @@ panel[noactions] > richlistbox > richlistitem[type~="action"] > .ac-url-box > .a
   display: none;
 }
 
-#wrapper-urlbar-container > #urlbar-container > #urlbar-wrapper > #urlbar {
-  -moz-user-input: disabled;
-  cursor: grab;
-}
-
 #PopupAutoComplete {
   -moz-binding: url("chrome://browser/content/urlbarBindings.xml#browser-autocomplete-result-popup");
 }
@@ -420,7 +413,7 @@ panel[noactions] > richlistbox > richlistitem[type~="action"] > .ac-url-box > .a
   -moz-margin-end: 0.25em !important;
 }
 
-#wrapper-search-container > #search-container > #searchbar > .searchbar-textbox > .autocomplete-textbox-container > .textbox-input-box > html|*.textbox-input {
+#main-window[customizing] :-moz-any(#urlbar, .searchbar-textbox) > .autocomplete-textbox-container > .textbox-input-box {
   visibility: hidden;
 }
 

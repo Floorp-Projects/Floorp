@@ -25,7 +25,7 @@ inline Accessible*
 sdnAccessible::GetAccessible() const
 {
   DocAccessible* document = GetDocument();
-  return document ? document->GetAccessible(mNode) : nullptr;
+  return document ? document->GetAccessibleEvenIfNotInMap(mNode) : nullptr;
 }
 
 } // namespace a11y
