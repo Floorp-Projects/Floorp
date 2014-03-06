@@ -9,10 +9,6 @@ Cu.import("resource://gre/modules/Services.jsm");
 var StartUI = {
   get startUI() { return document.getElementById("start-container"); },
 
-  get maxResultsPerSection() {
-    return Services.prefs.getIntPref("browser.display.startUI.maxresults");
-  },
-
   get chromeWin() {
     // XXX Not e10s friendly. We use this in a few places.
     return Services.wm.getMostRecentWindow('navigator:browser');
