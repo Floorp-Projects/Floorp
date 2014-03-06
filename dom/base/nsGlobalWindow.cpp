@@ -2338,6 +2338,10 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
   nsCxPusher cxPusher;
   cxPusher.Push(cx);
 
+  // Check if we're near the stack limit before we get anywhere near the
+  // transplanting code.
+  JS_CHECK_RECURSION(cx, return NS_ERROR_FAILURE);
+
   nsCOMPtr<WindowStateHolder> wsh = do_QueryInterface(aState);
   NS_ASSERTION(!aState || wsh, "What kind of weird state are you giving me here?");
 
