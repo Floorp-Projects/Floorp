@@ -959,7 +959,8 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
 bool
 Declaration::GetValueIsImportant(const nsAString& aProperty) const
 {
-  nsCSSProperty propID = nsCSSProps::LookupProperty(aProperty, nsCSSProps::eAny);
+  nsCSSProperty propID =
+    nsCSSProps::LookupProperty(aProperty, nsCSSProps::eIgnoreEnabledState);
   if (propID == eCSSProperty_UNKNOWN) {
     return false;
   }
