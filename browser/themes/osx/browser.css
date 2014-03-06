@@ -4265,6 +4265,10 @@ window > chatbox {
     list-style-image: url(chrome://browser/skin/customizableui/customize-illustration@2x.png);
   }
 
+  .customization-tipPanel-contentImage:-moz-locale-dir(rtl) {
+    list-style-image: url(chrome://browser/skin/customizableui/customize-illustration-rtl@2x.png);
+  }
+
   #customization-tipPanel > .panel-arrowcontainer > .panel-arrowbox > .panel-arrow[side="left"],
   #customization-tipPanel > .panel-arrowcontainer > .panel-arrowbox > .panel-arrow[side="right"] {
     list-style-image: url("chrome://browser/skin/customizableui/panelarrow-customizeTip@2x.png");
