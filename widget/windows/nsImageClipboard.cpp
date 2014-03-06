@@ -3,8 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
  
-#include "mozilla/gfx/2D.h"
-#include "mozilla/RefPtr.h"
+ 
 #include "nsITransferable.h"
 #include "nsImageClipboard.h"
 #include "nsGfxCIID.h"
@@ -15,9 +14,6 @@
 #include "nsComponentManagerUtils.h"
 
 #define BFH_LENGTH 14
-
-using namespace mozilla;
-using namespace mozilla::gfx;
 
 /* Things To Do 11/8/00
 
@@ -120,23 +116,13 @@ nsImageToClipboard::CreateFromImage ( imgIContainer* inImage, HANDLE* outBitmap 
     nsresult rv;
     *outBitmap = nullptr;
 
-    nsRefPtr<gfxASurface> thebesSurface =
+    nsRefPtr<gfxASurface> surface =
       inImage->GetFrame(imgIContainer::FRAME_CURRENT,
                         imgIContainer::FLAG_SYNC_DECODE);
-    NS_ENSURE_TRUE(thebesSurface, NS_ERROR_FAILURE);
+    NS_ENSURE_TRUE(surface, NS_ERROR_FAILURE);
 
-    nsRefPtr<gfxImageSurface> thebesImageSurface =
-      thebesSurface->GetAsReadableARGB32ImageSurface();
-    NS_ENSURE_TRUE(thebesImageSurface, NS_ERROR_FAILURE);
-
-    IntSize surfaceSize(thebesImageSurface->GetSize().width,
-                        thebesImageSurface->GetSize().height);
-    RefPtr<DataSourceSurface> dataSurface =
-      Factory::CreateWrappingDataSourceSurface(thebesImageSurface->Data(),
-                                               thebesImageSurface->Stride(),
-                                               surfaceSize,
-                                               SurfaceFormat::B8G8R8A8);
-    NS_ENSURE_TRUE(dataSurface, NS_ERROR_FAILURE);
+    nsRefPtr<gfxImageSurface> frame(surface->GetAsReadableARGB32ImageSurface());
+    NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
     nsCOMPtr<imgIEncoder> encoder = do_CreateInstance("@mozilla.org/image/encoder;2?type=image/bmp", &rv);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -148,12 +134,12 @@ nsImageToClipboard::CreateFromImage ( imgIContainer* inImage, HANDLE* outBitmap 
     } else {
       options.AppendLiteral("version=3;bpp=");
     }
-    switch (dataSurface->GetFormat()) {
-    case SurfaceFormat::B8G8R8A8:
+    switch (frame->Format()) {
+    case gfxImageFormat::ARGB32:
         format = imgIEncoder::INPUT_FORMAT_HOSTARGB;
         options.AppendInt(32);
         break;
-    case SurfaceFormat::B8G8R8X8:
+    case gfxImageFormat::RGB24:
         format = imgIEncoder::INPUT_FORMAT_RGB;
         options.AppendInt(24);
         break;
@@ -161,16 +147,9 @@ nsImageToClipboard::CreateFromImage ( imgIContainer* inImage, HANDLE* outBitmap 
         return NS_ERROR_INVALID_ARG;  
     }
 
-    DataSourceSurface::MappedSurface map;
-    bool mappedOK = dataSurface->Map(DataSourceSurface::MapType::READ, &map);
-    NS_ENSURE_TRUE(mappedOK, NS_ERROR_FAILURE);
-
-    rv = encoder->InitFromData(map.mData, 0,
-                               dataSurface->GetSize().width,
-                               dataSurface->GetSize().height,
-                               map.mStride,
+    rv = encoder->InitFromData(frame->Data(), 0, frame->Width(),
+                               frame->Height(), frame->Stride(),
                                format, options);
-    dataSurface->Unmap();
     NS_ENSURE_SUCCESS(rv, rv);
 
     uint32_t size;
