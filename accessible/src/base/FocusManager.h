@@ -123,12 +123,6 @@ private:
    */
   nsIDocument* FocusedDOMDocument() const;
 
-  /**
-   * Return accessible for a focusable node.
-   */
-  Accessible* GetFocusableAccessibleFor(nsINode* aNode,
-                                        DocAccessible* aDoc) const;
-
 private:
   nsRefPtr<Accessible> mActiveItem;
   nsRefPtr<Accessible> mActiveARIAMenubar;

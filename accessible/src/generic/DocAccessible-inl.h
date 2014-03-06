@@ -116,6 +116,13 @@ DocAccessible::MaybeNotifyOfValueChange(Accessible* aAccessible)
     FireDelayedEvent(nsIAccessibleEvent::EVENT_VALUE_CHANGE, aAccessible);
 }
 
+inline Accessible*
+DocAccessible::GetAccessibleEvenIfNotInMapOrContainer(nsINode* aNode) const
+{
+  Accessible* acc = GetAccessibleEvenIfNotInMap(aNode);
+  return acc ? acc : GetContainerAccessible(aNode);
+}
+
 } // namespace a11y
 } // namespace mozilla
 
