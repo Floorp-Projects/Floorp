@@ -2643,8 +2643,7 @@ nsXULPrototypeScript::Compile(const char16_t* aText,
     // Ok, compile it to create a prototype script object!
     NS_ENSURE_TRUE(JSVersion(mLangVersion) != JSVERSION_UNKNOWN, NS_OK);
     JS::CompileOptions options(cx);
-    options.setPrincipals(nsJSPrincipals::get(aDocument->NodePrincipal()))
-           .setFileAndLine(urlspec.get(), aLineNo)
+    options.setFileAndLine(urlspec.get(), aLineNo)
            .setVersion(JSVersion(mLangVersion));
     // If the script was inline, tell the JS parser to save source for
     // Function.prototype.toSource(). If it's out of line, we retrieve the
