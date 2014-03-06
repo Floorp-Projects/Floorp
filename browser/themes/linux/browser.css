@@ -1641,7 +1641,8 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 }
 
 /* Tabstrip close button */
-.tabs-closebutton {
+.tabs-closebutton,
+.customization-tipPanel-closeBox > .close-icon {
   list-style-image: url("moz-icon://stock/gtk-close?size=menu");
 }
 
@@ -2017,7 +2018,11 @@ chatbox {
 
 %include ../shared/customizableui/customizeMode.inc.css
 
-#main-window[customize-entered] #tab-view-deck {
+#main-window[customizing] > #tab-view-deck {
+  background: linear-gradient(to bottom, #bcbcbc, #b5b5b5);
+}
+
+#main-window[customize-entered] > #tab-view-deck {
   background-image: url("chrome://browser/skin/customizableui/customizeMode-gridTexture.png"),
                     url("chrome://browser/skin/customizableui/background-noise-toolbar.png"),
                     linear-gradient(to bottom, #bcbcbc, #b5b5b5);
