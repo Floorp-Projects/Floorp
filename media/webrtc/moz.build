@@ -69,6 +69,7 @@ if CONFIG['MOZ_WEBRTC_SIGNALING']:
         'signaling/src/peerconnection/PeerConnectionCtx.cpp',
         'signaling/src/peerconnection/PeerConnectionImpl.cpp',
         'signaling/src/peerconnection/PeerConnectionMedia.cpp',
+        'signaling/src/peerconnection/WebrtcGlobalInformation.cpp',
         'signaling/src/sipcc/core/ccapp/call_logger.c',
         'signaling/src/sipcc/core/ccapp/capability_set.c',
         'signaling/src/sipcc/core/ccapp/cc_call_feature.c',

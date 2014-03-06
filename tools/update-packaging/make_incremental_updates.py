@@ -366,15 +366,6 @@ def create_partial_patch(from_dir_path, to_dir_path, patch_filename, shas, patch
     add_filenames.sort(reverse=True)
     for filename in add_filenames:
         if os.path.basename(filename) in add_if_not_list:
-            # Raise an exception if a new channel-prefs.js or
-            # update-settings.ini file is found to prevent it from being
-            # to a new location like happened in bug 756325.
-            if os.path.basename(filename) == 'channel-prefs.js':
-                raise Exception, "new channel-prefs.js file found: "+filename
-
-            if os.path.basename(filename) == 'update-settings.ini':
-                raise Exception, "new update-settings.ini file found: "+filename
-
             create_add_if_not_patch_for_file(to_dir_hash[filename], patch_info)
         else:
             create_add_patch_for_file(to_dir_hash[filename], patch_info)
