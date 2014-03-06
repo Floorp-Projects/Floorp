@@ -302,32 +302,6 @@ class LGoto : public LControlInstructionHelper<1, 0, 0>
     }
 };
 
-class LNewSlots : public LCallInstructionHelper<1, 0, 3>
-{
-  public:
-    LIR_HEADER(NewSlots)
-
-    LNewSlots(const LDefinition &temp1, const LDefinition &temp2, const LDefinition &temp3) {
-        setTemp(0, temp1);
-        setTemp(1, temp2);
-        setTemp(2, temp3);
-    }
-
-    const LDefinition *temp1() {
-        return getTemp(0);
-    }
-    const LDefinition *temp2() {
-        return getTemp(1);
-    }
-    const LDefinition *temp3() {
-        return getTemp(2);
-    }
-
-    MNewSlots *mir() const {
-        return mir_->toNewSlots();
-    }
-};
-
 class LNewArray : public LInstructionHelper<1, 0, 1>
 {
   public:
@@ -464,22 +438,19 @@ class LNewDeclEnvObject : public LInstructionHelper<1, 0, 1>
     }
 };
 
-// Allocates a new CallObject. The inputs are:
-//      slots: either a reg representing a HeapSlot *, or a placeholder
-//             meaning that no slots pointer is needed.
+// Allocates a new CallObject.
 //
 // This instruction generates two possible instruction sets:
 //   (1) If the call object is extensible, this is a callVM to create the
 //       call object.
 //   (2) Otherwise, an inline allocation of the call object is attempted.
 //
-class LNewCallObject : public LInstructionHelper<1, 1, 1>
+class LNewCallObject : public LInstructionHelper<1, 0, 1>
 {
   public:
     LIR_HEADER(NewCallObject)
 
-    LNewCallObject(const LAllocation &slots, const LDefinition &temp) {
-        setOperand(0, slots);
+    LNewCallObject(const LDefinition &temp) {
         setTemp(0, temp);
     }
 
@@ -487,46 +458,42 @@ class LNewCallObject : public LInstructionHelper<1, 1, 1>
         return getTemp(0);
     }
 
-    const LAllocation *slots() {
-        return getOperand(0);
-    }
 
     MNewCallObject *mir() const {
         return mir_->toNewCallObject();
     }
 };
 
-// Allocates a new CallObject with singleton type through an out-of-line VM
-// call. The inputs are:
-//      slots: either a reg representing a HeapSlot *, or a placeholder
-//             meaning that no slots pointer is needed.
+// Allocates a new CallObject with singleton type.
 //
-class LNewSingletonCallObject : public LInstructionHelper<1, 1, 0>
+// This instruction generates two possible instruction sets:
+//   (1) If the call object is extensible, this is a callVM to create the
+//       call object.
+//   (2) Otherwise, an inline allocation of the call object is attempted.
+//
+class LNewSingletonCallObject : public LInstructionHelper<1, 0, 1>
 {
   public:
     LIR_HEADER(NewSingletonCallObject)
 
-    LNewSingletonCallObject(const LAllocation &slots) {
-        setOperand(0, slots);
+    LNewSingletonCallObject(const LDefinition &temp) {
+        setTemp(0, temp);
     }
 
-    const LAllocation *slots() {
-        return getOperand(0);
+    const LDefinition *temp() {
+        return getTemp(0);
     }
 
-    MNewCallObjectBase * mir() const {
+    MNewCallObjectBase *mir() const {
         MOZ_ASSERT(mir_->isNewCallObject() || mir_->isNewRunOnceCallObject());
         return static_cast<MNewCallObjectBase *>(mir_);
     }
 };
 
-class LNewCallObjectPar : public LInstructionHelper<1, 2, 2>
+class LNewCallObjectPar : public LInstructionHelper<1, 1, 2>
 {
-    LNewCallObjectPar(const LAllocation &cx, const LAllocation &slots,
-                      const LDefinition &temp1, const LDefinition &temp2)
-    {
+    LNewCallObjectPar(const LAllocation &cx, const LDefinition &temp1, const LDefinition &temp2) {
         setOperand(0, cx);
-        setOperand(1, slots);
         setTemp(0, temp1);
         setTemp(1, temp2);
     }
@@ -534,35 +501,14 @@ class LNewCallObjectPar : public LInstructionHelper<1, 2, 2>
 public:
     LIR_HEADER(NewCallObjectPar);
 
-    static LNewCallObjectPar *NewWithSlots(TempAllocator &alloc,
-                                           const LAllocation &cx, const LAllocation &slots,
-                                           const LDefinition &temp1, const LDefinition &temp2)
+    static LNewCallObjectPar *New(TempAllocator &alloc, const LAllocation &cx,
+                                  const LDefinition &temp1, const LDefinition &temp2)
     {
-        return new(alloc) LNewCallObjectPar(cx, slots, temp1, temp2);
-    }
-
-    static LNewCallObjectPar *NewSansSlots(TempAllocator &alloc,
-                                           const LAllocation &cx,
-                                           const LDefinition &temp1, const LDefinition &temp2)
-    {
-        LAllocation slots = LConstantIndex::Bogus();
-        return new(alloc) LNewCallObjectPar(cx, slots, temp1, temp2);
+        return new(alloc) LNewCallObjectPar(cx, temp1, temp2);
     }
 
     const LAllocation *forkJoinContext() {
         return getOperand(0);
-    }
-
-    const LAllocation *slots() {
-        return getOperand(1);
-    }
-
-    const bool hasDynamicSlots() {
-        // TO INVESTIGATE: Felix tried using isRegister() method here,
-        // but for useFixed(_, CallTempN), isRegister() is false (and
-        // isUse() is true).  So for now ignore that and try to match
-        // the LConstantIndex::Bogus() generated above instead.
-        return slots() && ! slots()->isConstant();
     }
 
     const MNewCallObjectPar *mir() const {

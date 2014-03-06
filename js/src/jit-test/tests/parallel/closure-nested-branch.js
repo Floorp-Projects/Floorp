@@ -3,15 +3,6 @@ load(libdir + "parallelarray-helpers.js");
 function testClosureCreationAndInvocation() {
   var a = range(0, 64);
   function makeaddv(v) {
-    var u = 1;
-    var t = 2;
-    var s = 3;
-    var r = 4;
-    var q = 5;
-    var p = 6;
-    var o = 7;
-    var n = 8;
-    var m = 9;
     var l = 10;
     var k = 11;
     var j = 12;
@@ -34,11 +25,6 @@ function testClosureCreationAndInvocation() {
               case 6: return g; case 7: return h;
               case 8: return i; case 9: return j;
               case 10: return k; case 11: return l;
-              case 12: return m; case 13: return n;
-              case 14: return o; case 15: return p;
-              case 16: return q; case 17: return r;
-              case 18: return s; case 19: return t;
-              case 20: return u;
               }
             });
   }
