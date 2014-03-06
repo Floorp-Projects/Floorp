@@ -140,11 +140,14 @@ IsTypedArrayBuffer(HandleValue v);
 ArrayBufferObject &
 AsTypedArrayBuffer(HandleValue v);
 
+// Return value is whether the string is some integer. If the string is an
+// integer which is not representable as a uint64_t, the return value is true
+// and the resulting index is UINT64_MAX.
 bool
-StringIsTypedArrayIndex(JSLinearString *str, double *indexp);
+StringIsTypedArrayIndex(JSLinearString *str, uint64_t *indexp);
 
 inline bool
-IsTypedArrayIndex(jsid id, double *indexp)
+IsTypedArrayIndex(jsid id, uint64_t *indexp)
 {
     if (JSID_IS_INT(id)) {
         int32_t i = JSID_TO_INT(id);
@@ -156,7 +159,13 @@ IsTypedArrayIndex(jsid id, double *indexp)
     if (MOZ_UNLIKELY(!JSID_IS_STRING(id)))
         return false;
 
-    return StringIsTypedArrayIndex(JSID_TO_ATOM(id), indexp);
+    JSAtom *atom = JSID_TO_ATOM(id);
+
+    jschar c = atom->chars()[0];
+    if (!JS7_ISDEC(c) && c != '-')
+        return false;
+
+    return StringIsTypedArrayIndex(atom, indexp);
 }
 
 static inline unsigned
