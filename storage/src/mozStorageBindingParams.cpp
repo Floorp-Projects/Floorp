@@ -354,6 +354,22 @@ BindingParams::BindBlobByName(const nsACString &aName,
   return BindByName(aName, value);
 }
 
+
+NS_IMETHODIMP
+BindingParams::BindAdoptedBlobByName(const nsACString &aName,
+                                     uint8_t *aValue,
+                                     uint32_t aValueSize)
+{
+  NS_ENSURE_ARG_MAX(aValueSize, INT_MAX);
+  std::pair<uint8_t *, int> data(
+    aValue,
+    int(aValueSize)
+  );
+  nsCOMPtr<nsIVariant> value(new AdoptedBlobVariant(data));
+
+  return BindByName(aName, value);
+}
+
 NS_IMETHODIMP
 BindingParams::BindByIndex(uint32_t aIndex,
                            nsIVariant *aValue)
@@ -452,6 +468,21 @@ BindingParams::BindBlobByIndex(uint32_t aIndex,
   );
   nsCOMPtr<nsIVariant> value(new BlobVariant(data));
   NS_ENSURE_TRUE(value, NS_ERROR_OUT_OF_MEMORY);
+
+  return BindByIndex(aIndex, value);
+}
+
+NS_IMETHODIMP
+BindingParams::BindAdoptedBlobByIndex(uint32_t aIndex,
+                                      uint8_t *aValue,
+                                      uint32_t aValueSize)
+{
+  NS_ENSURE_ARG_MAX(aValueSize, INT_MAX);
+  std::pair<uint8_t *, int> data(
+    static_cast<uint8_t *>(aValue),
+    int(aValueSize)
+  );
+  nsCOMPtr<nsIVariant> value(new AdoptedBlobVariant(data));
 
   return BindByIndex(aIndex, value);
 }
