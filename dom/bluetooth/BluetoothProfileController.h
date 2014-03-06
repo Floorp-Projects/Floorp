@@ -89,19 +89,18 @@ public:
    * The controller starts connecting/disconnecting profiles one by one
    * according to the order in array mProfiles.
    */
-  void Start();
+  void StartSession();
 
   /**
-   * It is invoked after a profile has tried to establish the connection.
-   * An error string is returned when it fails.
+   * The original DOM request would be fired in this function.
    */
-  void OnConnect(const nsAString& aErrorStr);
+  void EndSession();
 
   /**
-   * It is invoked after a profile has tried to drop the connection.
-   * An error string is returned when it fails.
+   * It would be invoked after connect/disconnect operation is completed.
+   * An error string would be returned when it fails.
    */
-  void OnDisconnect(const nsAString& aErrorStr);
+  void NotifyCompletion(const nsAString& aErrorStr);
 
   /**
    * It is invoked after a profile has reached timeout, reset mProfiles.
