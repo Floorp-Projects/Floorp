@@ -75,20 +75,20 @@ public class AboutHomeComponent extends BaseComponent {
         assertVisible();
 
         final int expectedPanelIndex = getPanelIndexForDevice(expectedPanel.ordinal());
-        assertEquals("The current HomePager panel is " + expectedPanel,
+        fAssertEquals("The current HomePager panel is " + expectedPanel,
                      expectedPanelIndex, getHomePagerView().getCurrentItem());
         return this;
     }
 
     public AboutHomeComponent assertNotVisible() {
-        assertTrue("The HomePager is not visible",
+        fAssertTrue("The HomePager is not visible",
                     getHomePagerContainer().getVisibility() != View.VISIBLE ||
                     getHomePagerView().getVisibility() != View.VISIBLE);
         return this;
     }
 
     public AboutHomeComponent assertVisible() {
-        assertTrue("The HomePager is visible",
+        fAssertTrue("The HomePager is visible",
                     getHomePagerContainer().getVisibility() == View.VISIBLE &&
                     getHomePagerView().getVisibility() == View.VISIBLE);
         return this;
@@ -96,7 +96,7 @@ public class AboutHomeComponent extends BaseComponent {
 
     public AboutHomeComponent assertBannerNotVisible() {
         View banner = getHomeBannerView();
-        assertTrue("The HomeBanner is not visible",
+        fAssertTrue("The HomeBanner is not visible",
                     getHomePagerContainer().getVisibility() != View.VISIBLE ||
                     banner.getVisibility() != View.VISIBLE ||
                     banner.getTranslationY() == banner.getHeight());
@@ -104,7 +104,7 @@ public class AboutHomeComponent extends BaseComponent {
     }
 
     public AboutHomeComponent assertBannerVisible() {
-        assertTrue("The HomeBanner is visible",
+        fAssertTrue("The HomeBanner is visible",
                     getHomePagerContainer().getVisibility() == View.VISIBLE &&
                     getHomeBannerView().getVisibility() == View.VISIBLE);
         return this;
@@ -114,7 +114,7 @@ public class AboutHomeComponent extends BaseComponent {
         assertBannerVisible();
 
         final TextView textView = (TextView) getHomeBannerView().findViewById(R.id.text);
-        assertEquals("The correct HomeBanner text is shown",
+        fAssertEquals("The correct HomeBanner text is shown",
                      text, textView.getText().toString());
         return this;
     }
@@ -148,7 +148,7 @@ public class AboutHomeComponent extends BaseComponent {
     }
 
     private void swipeToPanel(final int panelDirection) {
-        assertTrue("Swiping in a valid direction",
+        fAssertTrue("Swiping in a valid direction",
                 panelDirection == Solo.LEFT || panelDirection == Solo.RIGHT);
         assertVisible();
 

@@ -104,7 +104,7 @@ public class testNativeCrypto extends UITest {
 
     try {
       final byte[] key = NativeCrypto.pbkdf2SHA256(p.getBytes("US-ASCII"), s.getBytes("US-ASCII"), c, dkLen);
-      fail("Expected sha256 to throw with negative dkLen argument.");
+      fFail("Expected sha256 to throw with negative dkLen argument.");
     } catch (IllegalArgumentException e) { } // Expected.
   }
 
@@ -133,7 +133,7 @@ public class testNativeCrypto extends UITest {
       final String expected = expecteds[i];
 
       final byte[] actual = NativeCrypto.sha1(input);
-      assertNotNull("Hashed value is non-null", actual);
+      fAssertNotNull("Hashed value is non-null", actual);
       assertExpectedBytes(expected, actual);
     }
   }
@@ -156,7 +156,7 @@ public class testNativeCrypto extends UITest {
 
       final byte[] mdBytes = digest.digest(inputBytes);
       final byte[] ourBytes = NativeCrypto.sha1(inputBytes);
-      assertArrayEquals("MessageDigest hash is the same as NativeCrypto SHA-1 hash", mdBytes, ourBytes);
+      fAssertArrayEquals("MessageDigest hash is the same as NativeCrypto SHA-1 hash", mdBytes, ourBytes);
     }
   }
 
@@ -165,7 +165,7 @@ public class testNativeCrypto extends UITest {
     final long start = SystemClock.elapsedRealtime();
 
     final byte[] key = NativeCrypto.pbkdf2SHA256(p.getBytes("US-ASCII"), s.getBytes("US-ASCII"), c, dkLen);
-    assertNotNull("Hash result is non-null", key);
+    fAssertNotNull("Hash result is non-null", key);
 
     final long end = SystemClock.elapsedRealtime();
     dumpLog(LOGTAG, "SHA-256 " + c + " took " + (end - start) + "ms");
@@ -174,16 +174,16 @@ public class testNativeCrypto extends UITest {
       return;
     }
 
-    assertEquals("Hash result is the appropriate length", dkLen,
+    fAssertEquals("Hash result is the appropriate length", dkLen,
         Utils.hex2Byte(expectedStr).length);
     assertExpectedBytes(expectedStr, key);
   }
 
   private void assertExpectedBytes(final String expectedStr, byte[] key) {
-    assertEquals("Expected string matches hash result", expectedStr, Utils.byte2Hex(key));
+    fAssertEquals("Expected string matches hash result", expectedStr, Utils.byte2Hex(key));
     final byte[] expected = Utils.hex2Byte(expectedStr);
 
-    assertEquals("Expected byte array length matches key length", expected.length, key.length);
-    assertArrayEquals("Expected byte array matches key byte array", expected, key);
+    fAssertEquals("Expected byte array length matches key length", expected.length, key.length);
+    fAssertArrayEquals("Expected byte array matches key byte array", expected, key);
   }
 }
