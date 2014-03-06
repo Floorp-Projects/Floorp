@@ -63,11 +63,6 @@ namespace jit {
     _(PowHalf)                                                              \
     _(Random)                                                               \
     _(MathFunction)                                                         \
-    _(SIMDNullaryFunction)                                                  \
-    _(SIMDUnaryFunction)                                                    \
-    _(SIMDBinaryFunction)                                                   \
-    _(SIMDTernaryFunction)                                                  \
-    _(SIMDQuarternaryFunction)                                              \
     _(Add)                                                                  \
     _(Sub)                                                                  \
     _(Mul)                                                                  \
