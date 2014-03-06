@@ -985,6 +985,10 @@ toolbar .toolbarbutton-1:not([type="menu-button"]),
     -moz-image-region: rect(72px, 1224px, 108px, 1188px);
   }
 
+  #nav-bar-overflow-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
+    transform: scaleX(-1);
+  }
+
   #tabview-button {
     -moz-image-region: rect(0, 1296px, 36px, 1260px);
   }
