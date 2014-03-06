@@ -104,6 +104,11 @@ public class HomeListView extends ListView
 
     @Override
     public void setOnItemClickListener(final AdapterView.OnItemClickListener listener) {
+        if (listener == null) {
+            super.setOnItemClickListener(null);
+            return;
+        }
+
         super.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
