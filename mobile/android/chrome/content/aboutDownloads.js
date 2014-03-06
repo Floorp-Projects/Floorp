@@ -458,6 +458,10 @@ let Downloads = {
 
   openDownload: function dl_openDownload(aItem) {
     this._getDownloadForElement(aItem, function(aDownload) {
+      if (aDownload.state !== Ci.nsIDownloadManager.DOWNLOAD_FINISHED) {
+        // Do not open unfinished downloads.
+        return;
+      }
       try {
         let f = aDownload.targetFile;
         if (f) f.launch();
