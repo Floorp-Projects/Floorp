@@ -110,6 +110,7 @@ NS_CP_ContentTypeName(uint32_t contentType)
     CASE_RETURN( TYPE_WEBSOCKET         );
     CASE_RETURN( TYPE_CSP_REPORT        );
     CASE_RETURN( TYPE_XSLT              );
+    CASE_RETURN( TYPE_BEACON            );
    default:
     return "<Unknown Type>";
   }
