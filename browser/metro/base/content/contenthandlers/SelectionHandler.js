@@ -118,13 +118,24 @@ var SelectionHandler = {
       return;
     }
 
-    // Similar to _onSelectionStart - we need to create initial selection
-    // but without the initialization bits.
-    let framePoint = this._clientPointToFramePoint({ xPos: aX, yPos: aY });
-    if (!this._domWinUtils.selectAtPoint(framePoint.xPos, framePoint.yPos,
-                                         Ci.nsIDOMWindowUtils.SELECT_CHARACTER)) {
-      this._onFail("failed to set selection at point");
-      return;
+    // Only use selectAtPoint for editable content and avoid that for inputs,
+    // as we can expand caret to selection manually more precisely. We can use
+    // selectAtPoint for inputs too though, but only once bug 881938 is fully
+    // resolved.
+    if(Util.isEditableContent(this._targetElement)) {
+      // Similar to _onSelectionStart - we need to create initial selection
+      // but without the initialization bits.
+      let framePoint = this._clientPointToFramePoint({ xPos: aX, yPos: aY });
+      if (!this._domWinUtils.selectAtPoint(framePoint.xPos, framePoint.yPos,
+                                           Ci.nsIDOMWindowUtils.SELECT_CHARACTER)) {
+        this._onFail("failed to set selection at point");
+        return;
+      }
+    } else if (this._targetElement.selectionStart == 0 || aMarker == "end") {
+      // Expand caret forward or backward depending on direction
+      this._targetElement.selectionEnd++;
+    } else {
+      this._targetElement.selectionStart--;
     }
 
     // We bail if things get out of sync here implying we missed a message.
