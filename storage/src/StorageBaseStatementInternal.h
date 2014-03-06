@@ -319,6 +319,15 @@ NS_DEFINE_STATIC_IID_ACCESSOR(StorageBaseStatementInternal,
                 (uint32_t aWhere,                        \
                  const uint8_t *aValue,                  \
                  uint32_t aValueSize),                   \
+                (aWhere, aValue, aValueSize))            \
+  BIND_GEN_IMPL(_class, _optionalGuard,                  \
+                AdoptedBlob,                             \
+                (const nsACString &aWhere,               \
+                 uint8_t *aValue,                        \
+                 uint32_t aValueSize),                   \
+                (uint32_t aWhere,                        \
+                 uint8_t *aValue,                        \
+                 uint32_t aValueSize),                   \
                 (aWhere, aValue, aValueSize))
 
   
