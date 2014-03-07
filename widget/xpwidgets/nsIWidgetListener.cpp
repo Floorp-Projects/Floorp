@@ -102,6 +102,11 @@ nsIWidgetListener::DidPaintWindow()
 }
 
 void
+nsIWidgetListener::DidCompositeWindow()
+{
+}
+
+void
 nsIWidgetListener::RequestRepaint()
 {
 }

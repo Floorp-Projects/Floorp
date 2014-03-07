@@ -153,6 +153,8 @@ public:
 
   virtual void Composite() MOZ_OVERRIDE;
 
+  virtual void DidComposite();
+
 protected:
   enum TransactionPhase {
     PHASE_NONE, PHASE_CONSTRUCTION, PHASE_DRAWING, PHASE_FORWARD

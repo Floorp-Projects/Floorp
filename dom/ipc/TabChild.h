@@ -381,6 +381,9 @@ public:
     }
 
     static TabChild* GetFrom(nsIPresShell* aPresShell);
+    static TabChild* GetFrom(uint64_t aLayersId);
+
+    void DidComposite();
 
     static inline TabChild*
     GetFrom(nsIDOMWindow* aWindow)
@@ -499,6 +502,7 @@ private:
     nsRefPtr<ContentChild> mManager;
     nsRefPtr<TabChildGlobal> mTabChildGlobal;
     uint32_t mChromeFlags;
+    uint64_t mLayersId;
     nsIntRect mOuterRect;
     ScreenIntSize mInnerSize;
     // When we're tracking a possible tap gesture, this is the "down"
