@@ -12,10 +12,10 @@
 % we don't support nested calc(): https://bugzilla.mozilla.org/show_bug.cgi?id=968761
 %define menuPanelButtonWidth (@menuPanelWidth@ / 3 - 0.1px)
 %define exitSubviewGutterWidth 38px
-%define buttonStateHover :not(:-moz-any([disabled],[open],[checked="true"],:active)):hover
-%define menuStateHover :not(:-moz-any([disabled],[checked="true"],:active))[_moz-menuactive]
-%define buttonStateActive :not([disabled]):-moz-any([open],[checked="true"],:hover:active)
-%define menuStateActive :not([disabled]):-moz-any([checked="true"],[_moz-menuactive]:active)
+%define buttonStateHover :not(:-moz-any([disabled],[open],:active)):hover
+%define menuStateHover :not(:-moz-any([disabled],:active))[_moz-menuactive]
+%define buttonStateActive :not([disabled]):-moz-any([open],:hover:active)
+%define menuStateActive :not([disabled])[_moz-menuactive]:active
 
 %include ../browser.inc
 
@@ -53,10 +53,6 @@
 
 .panel-viewstack:not([viewtype="main"]) > .panel-mainview > #PanelUI-mainView {
   -moz-box-flex: 1;
-}
-
-.subviewbutton:not(:-moz-any([image],[targetURI],.cui-withicon)) > .toolbarbutton-text {
-  -moz-margin-start: 0;
 }
 
 .panel-subview-body {
@@ -683,10 +679,6 @@ menuitem.subviewbutton@menuStateActive@,
   list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
 }
 
-.restoreallitem.subviewbutton > .toolbarbutton-icon {
-  display: none;
-}
-
 #PanelUI-recentlyClosedWindows > toolbarbutton > .toolbarbutton-icon,
 #PanelUI-recentlyClosedTabs > toolbarbutton > .toolbarbutton-icon,
 #PanelUI-historyItems > toolbarbutton > .toolbarbutton-icon {
@@ -888,22 +880,16 @@ toolbaritem[overflowedItem=true],
   box-shadow: 0 0 0 1px hsla(0,0%,100%,.2);
 }
 
-.PanelUI-subView toolbarbutton[checked="true"] {
-  -moz-padding-start: 4px;
+.subviewbutton[checked="true"] {
+  background: url("chrome://global/skin/menu/menu-check.png") top 7px left 7px / 11px 11px no-repeat transparent;
 }
 
-.PanelUI-subView toolbarbutton[checked="true"] > .toolbarbutton-text {
-  -moz-padding-start: 0px;
+.PanelUI-subView > menu > .menu-iconic-left,
+.PanelUI-subView > menuitem > .menu-iconic-left {
+  -moz-appearance: none;
+  -moz-margin-end: 3px;
 }
 
-.PanelUI-subView menuitem[checked="true"]::before,
-.PanelUI-subView toolbarbutton[checked="true"]::before {
-  content: "✓";
-  display: -moz-box;
-  width: 12px;
-  margin: 0 2px;
-}
-
-#BMB_bookmarksPopup > menuitem[checked="true"] > .menu-iconic-left {
-  display: none;
+.PanelUI-subView > menuitem[checked="true"] > .menu-iconic-left {
+  visibility: hidden;
 }
