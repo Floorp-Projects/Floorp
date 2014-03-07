@@ -17,6 +17,8 @@
 #include "nsCxPusher.h"
 #include "nsDataHashtable.h"
 #include "jsapi.h"
+#include "js/HashTable.h"
+#include "js/RootingAPI.h"
 
 #include "xpcIJSGetFactory.h"
 
@@ -59,6 +61,8 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
 
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
 
+    void Trace(JSTracer *trc);
+
  protected:
     static mozJSComponentLoader* sSelf;
 
@@ -73,8 +77,8 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
 
     nsresult ObjectForLocation(nsIFile* aComponentFile,
                                nsIURI *aComponent,
-                               JSObject **aObject,
-                               JSScript **aTableScript,
+                               JS::MutableHandle<JSObject*> aObject,
+                               JS::MutableHandle<JSScript*> aTableScript,
                                char **location,
                                bool aCatchException,
                                JS::MutableHandleValue aException);
@@ -94,7 +98,7 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
     class ModuleEntry : public mozilla::Module
     {
     public:
-        ModuleEntry() : mozilla::Module() {
+        ModuleEntry(JSContext *cx) : mozilla::Module(), obj(cx), thisObjectKey(cx) {
             mVersion = mozilla::Module::kVersion;
             mCIDs = nullptr;
             mContractIDs = nullptr;
@@ -120,9 +124,6 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
                 JSAutoCompartment ac(cx, obj);
 
                 JS_SetAllNonReservedSlotsToUndefined(cx, obj);
-                JS_RemoveObjectRoot(cx, &obj);
-                if (thisObjectKey)
-                    JS_RemoveScriptRoot(cx, &thisObjectKey);
             }
 
             if (location)
@@ -139,9 +140,9 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
                                                        const mozilla::Module::CIDEntry& entry);
 
         nsCOMPtr<xpcIJSGetFactory> getfactoryobj;
-        JSObject            *obj;
-        JSScript            *thisObjectKey;
-        char                *location;
+        JS::PersistentRooted<JSObject*> obj;
+        JS::PersistentRooted<JSScript*> thisObjectKey;
+        char *location;
     };
 
     friend class ModuleEntry;
@@ -158,7 +159,11 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
 
     nsClassHashtable<nsCStringHashKey, ModuleEntry> mImports;
     nsDataHashtable<nsCStringHashKey, ModuleEntry*> mInProgressImports;
-    nsDataHashtable<nsPtrHashKey<JSScript>, JSObject*> mThisObjects;
+    typedef js::HashMap<JSScript*,
+                        JS::Heap<JSObject*>,
+                        js::PointerHasher<JSScript*, 3>,
+                        js::SystemAllocPolicy> ThisObjectsMap;
+    ThisObjectsMap mThisObjects;
 
     bool mInitialized;
     bool mReuseLoaderGlobal;
