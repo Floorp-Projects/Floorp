@@ -134,9 +134,9 @@ static nsresult EncodeImageData(DataSourceSurface* aDataSurface,
     return NS_IMAGELIB_ERROR_NO_ENCODER;
 
   DataSourceSurface::MappedSurface map;
-  aDataSurface->Map(DataSourceSurface::MapType::READ, &map);
-  if (!map.mData)
+  if (!aDataSurface->Map(DataSourceSurface::MapType::READ, &map)) {
     return NS_ERROR_FAILURE;
+  }
 
   IntSize size = aDataSurface->GetSize();
   uint32_t dataLength = map.mStride * size.height;
@@ -149,7 +149,7 @@ static nsresult EncodeImageData(DataSourceSurface* aDataSurface,
                                       map.mStride,
                                       imgIEncoder::INPUT_FORMAT_HOSTARGB,
                                       aOutputOptions);
-
+  aDataSurface->Unmap();
   NS_ENSURE_SUCCESS(rv, rv);
 
   return CallQueryInterface(encoder, aStream);
@@ -204,9 +204,9 @@ NS_IMETHODIMP imgTools::EncodeScaledImage(imgIContainer *aContainer,
     Factory::CreateDataSourceSurface(IntSize(aScaledWidth, aScaledHeight),
                                      SurfaceFormat::B8G8R8A8);
   DataSourceSurface::MappedSurface map;
-  dataSurface->Map(DataSourceSurface::MapType::WRITE, &map);
-  if (!map.mData)
+  if (!dataSurface->Map(DataSourceSurface::MapType::WRITE, &map)) {
     return NS_ERROR_FAILURE;
+  }
 
   RefPtr<DrawTarget> dt =
     Factory::CreateDrawTargetForData(BackendType::CAIRO,
@@ -219,6 +219,8 @@ NS_IMETHODIMP imgTools::EncodeScaledImage(imgIContainer *aContainer,
                   Rect(0, 0, frameWidth, frameHeight),
                   DrawSurfaceOptions(),
                   DrawOptions(1.0f, CompositionOp::OP_SOURCE));
+
+  dataSurface->Unmap();
 
   return EncodeImageData(dataSurface, aMimeType, aOutputOptions, aStream);
 }
@@ -267,9 +269,9 @@ NS_IMETHODIMP imgTools::EncodeCroppedImage(imgIContainer *aContainer,
     Factory::CreateDataSourceSurface(IntSize(aWidth, aHeight),
                                      SurfaceFormat::B8G8R8A8);
   DataSourceSurface::MappedSurface map;
-  dataSurface->Map(DataSourceSurface::MapType::WRITE, &map);
-  if (!map.mData)
+  if (!dataSurface->Map(DataSourceSurface::MapType::WRITE, &map)) {
     return NS_ERROR_FAILURE;
+  }
 
   RefPtr<DrawTarget> dt =
     Factory::CreateDrawTargetForData(BackendType::CAIRO,
@@ -280,6 +282,8 @@ NS_IMETHODIMP imgTools::EncodeCroppedImage(imgIContainer *aContainer,
   dt->CopySurface(frame,
                   IntRect(aOffsetX, aOffsetY, aWidth, aHeight),
                   IntPoint(0, 0));
+
+  dataSurface->Unmap();
 
   return EncodeImageData(dataSurface, aMimeType, aOutputOptions, aStream);
 }

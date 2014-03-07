@@ -122,6 +122,23 @@ const kSaveDelayMs = 1500;
  */
 const kPrefImportedFromSqlite = "browser.download.importedFromSqlite";
 
+/**
+ * List of observers to listen against
+ */
+const kObserverTopics = [
+  "quit-application-requested",
+  "offline-requested",
+  "last-pb-context-exiting",
+  "last-pb-context-exited",
+  "sleep_notification",
+  "suspend_process_notification",
+  "wake_notification",
+  "resume_process_notification",
+  "network:offline-about-to-go-offline",
+  "network:offline-status-changed",
+  "xpcom-will-shutdown",
+];
+
 ////////////////////////////////////////////////////////////////////////////////
 //// DownloadIntegration
 
@@ -825,17 +842,9 @@ this.DownloadIntegration = {
     DownloadObserver.registerView(aList, aIsPrivate);
     if (!DownloadObserver.observersAdded) {
       DownloadObserver.observersAdded = true;
-      Services.obs.addObserver(DownloadObserver, "quit-application-requested", true);
-      Services.obs.addObserver(DownloadObserver, "offline-requested", true);
-      Services.obs.addObserver(DownloadObserver, "last-pb-context-exiting", true);
-      Services.obs.addObserver(DownloadObserver, "last-pb-context-exited", true);
-
-      Services.obs.addObserver(DownloadObserver, "sleep_notification", true);
-      Services.obs.addObserver(DownloadObserver, "suspend_process_notification", true);
-      Services.obs.addObserver(DownloadObserver, "wake_notification", true);
-      Services.obs.addObserver(DownloadObserver, "resume_process_notification", true);
-      Services.obs.addObserver(DownloadObserver, "network:offline-about-to-go-offline", true);
-      Services.obs.addObserver(DownloadObserver, "network:offline-status-changed", true);
+      for (let topic of kObserverTopics) {
+        Services.obs.addObserver(DownloadObserver, topic, false);
+      }
     }
     return Promise.resolve();
   },
@@ -1038,14 +1047,24 @@ this.DownloadObserver = {
           this._resumeOfflineDownloads();
         }
         break;
+      // We need to unregister observers explicitly before we reach the
+      // "xpcom-shutdown" phase, otherwise observers may be notified when some
+      // required services are not available anymore. We can't unregister
+      // observers on "quit-application", because this module is also loaded
+      // during "make package" automation, and the quit notification is not sent
+      // in that execution environment (bug 973637).
+      case "xpcom-will-shutdown":
+        for (let topic of kObserverTopics) {
+          Services.obs.removeObserver(this, topic);
+        }
+        break;
     }
   },
 
   ////////////////////////////////////////////////////////////////////////////
   //// nsISupports
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
-                                         Ci.nsISupportsWeakReference])
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver])
 };
 
 ////////////////////////////////////////////////////////////////////////////////

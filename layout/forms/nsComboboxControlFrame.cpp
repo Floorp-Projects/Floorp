@@ -829,41 +829,25 @@ nsComboboxControlFrame::Reflow(nsPresContext*          aPresContext,
                                     aStatus);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Now set the correct width and height on our button.  The width we need to
-  // set always, the height only if we had an auto height.
+  // The button should occupy the same space as a scrollbar
   nsRect buttonRect = mButtonFrame->GetRect();
-  // If we have a non-intrinsic computed height, our kids should have sized
-  // themselves properly on their own.
-  if (aReflowState.ComputedHeight() == NS_INTRINSICSIZE) {
-    // The display frame is going to be the right height and width at this
-    // point. Use its height as the button height.
-    nsRect displayRect = mDisplayFrame->GetRect();
-    buttonRect.height = displayRect.height;
-    buttonRect.y = displayRect.y;
-  }
-#ifdef DEBUG
-  else {
-    nscoord buttonHeight = mButtonFrame->GetSize().height;
-    nscoord displayHeight = mDisplayFrame->GetSize().height;
-
-    // The button and display area should be equal heights, unless the computed
-    // height on the combobox is too small to fit their borders and padding.
-    NS_ASSERTION(buttonHeight == displayHeight ||
-                 (aReflowState.ComputedHeight() < buttonHeight &&
-                  buttonHeight ==
-                    mButtonFrame->GetUsedBorderAndPadding().TopBottom()) ||
-                 (aReflowState.ComputedHeight() < displayHeight &&
-                  displayHeight ==
-                    mDisplayFrame->GetUsedBorderAndPadding().TopBottom()),
-                 "Different heights?");
-  }
-#endif
 
   if (StyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL) {
-    // Make sure the right edge of the button frame stays where it is now
-    buttonRect.x -= buttonWidth - buttonRect.width;
+    buttonRect.x = aReflowState.ComputedPhysicalBorderPadding().left -
+                   aReflowState.ComputedPhysicalPadding().left;
+  }
+  else {
+    buttonRect.x = aReflowState.ComputedPhysicalBorderPadding().LeftRight() +
+                   mDisplayWidth -
+                   (aReflowState.ComputedPhysicalBorderPadding().right -
+                    aReflowState.ComputedPhysicalPadding().right);
   }
   buttonRect.width = buttonWidth;
+
+  buttonRect.y = this->GetUsedBorder().top;
+  buttonRect.height = mDisplayFrame->GetRect().height +
+                      this->GetUsedPadding().TopBottom();
+
   mButtonFrame->SetRect(buttonRect);
 
   if (!NS_INLINE_IS_BREAK_BEFORE(aStatus) &&
