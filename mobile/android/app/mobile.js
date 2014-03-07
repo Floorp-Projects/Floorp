@@ -833,8 +833,10 @@ pref("browser.webapps.updateCheckUrl", "http://dapk.net/app_updates");
 
 #endif
 
-// Whether or not to only sync home provider data when the user is on wifi.
-pref("home.sync.wifiOnly", false);
+// The mode of home provider syncing.
+// 0: Sync always
+// 1: Sync only when on wifi
+pref("home.sync.updateMode", 0);
 
 // How frequently to check if we should sync home provider data.
 pref("home.sync.checkIntervalSecs", 3600);
