@@ -5,8 +5,6 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/Endian.h"
-#include "mozilla/dom/TypedArray.h"
-#include "mozilla/HoldDropJSObjects.h"
 
 #include "nsSocketTransport2.h"
 #include "nsUDPSocket.h"
@@ -141,89 +139,48 @@ NS_IMETHODIMP nsUDPOutputStream::IsNonBlocking(bool *_retval)
 //-----------------------------------------------------------------------------
 // nsUDPMessage impl
 //-----------------------------------------------------------------------------
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsUDPMessage)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsUDPMessage)
+NS_IMPL_ISUPPORTS1(nsUDPMessage, nsIUDPMessage)
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsUDPMessage)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsUDPMessage)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_INTERFACE_MAP_ENTRY(nsIUDPMessage)
-NS_INTERFACE_MAP_END
-
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsUDPMessage)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mJsobj)
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsUDPMessage)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsUDPMessage)
-  tmp->mJsobj = nullptr;
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-nsUDPMessage::nsUDPMessage(NetAddr* aAddr,
-                           nsIOutputStream* aOutputStream,
-                           FallibleTArray<uint8_t>& aData)
+nsUDPMessage::nsUDPMessage(PRNetAddr* aAddr,
+             nsIOutputStream* aOutputStream,
+             const nsACString& aData)
   : mOutputStream(aOutputStream)
+  , mData(aData)
 {
   memcpy(&mAddr, aAddr, sizeof(NetAddr));
-  aData.SwapElements(mData);
 }
 
 nsUDPMessage::~nsUDPMessage()
 {
-  mozilla::DropJSObjects(this);
 }
 
 /* readonly attribute nsINetAddr from; */
-NS_IMETHODIMP
-nsUDPMessage::GetFromAddr(nsINetAddr * *aFromAddr)
+NS_IMETHODIMP nsUDPMessage::GetFromAddr(nsINetAddr * *aFromAddr)
 {
   NS_ENSURE_ARG_POINTER(aFromAddr);
 
-  nsCOMPtr<nsINetAddr> result = new nsNetAddr(&mAddr);
+  NetAddr clientAddr;
+  PRNetAddrToNetAddr(&mAddr, &clientAddr);
+
+  nsCOMPtr<nsINetAddr> result = new nsNetAddr(&clientAddr);
   result.forget(aFromAddr);
 
   return NS_OK;
 }
 
 /* readonly attribute ACString data; */
-NS_IMETHODIMP
-nsUDPMessage::GetData(nsACString & aData)
+NS_IMETHODIMP nsUDPMessage::GetData(nsACString & aData)
 {
-  aData.Assign(reinterpret_cast<const char*>(mData.Elements()), mData.Length());
+  aData = mData;
   return NS_OK;
 }
 
 /* readonly attribute nsIOutputStream outputStream; */
-NS_IMETHODIMP
-nsUDPMessage::GetOutputStream(nsIOutputStream * *aOutputStream)
+NS_IMETHODIMP nsUDPMessage::GetOutputStream(nsIOutputStream * *aOutputStream)
 {
   NS_ENSURE_ARG_POINTER(aOutputStream);
   NS_IF_ADDREF(*aOutputStream = mOutputStream);
   return NS_OK;
-}
-
-/* readonly attribute jsval rawData; */
-NS_IMETHODIMP
-nsUDPMessage::GetRawData(JSContext* cx,
-                         JS::MutableHandleValue aRawData)
-{
-  if(!mJsobj){
-    mJsobj = mozilla::dom::Uint8Array::Create(cx, nullptr, mData.Length(), mData.Elements());
-    mozilla::HoldJSObjects(this);
-  }
-  aRawData.setObject(*mJsobj);
-  return NS_OK;
-}
-
-/* [noscript, notxpcom, nostdcall] Uint8ArrayRef getDataAsTArray(); */
-FallibleTArray<uint8_t>&
-nsUDPMessage::GetDataAsTArray()
-{
-  return mData;
 }
 
 //-----------------------------------------------------------------------------
@@ -346,78 +303,6 @@ nsUDPSocket::TryAttach()
   return NS_OK;
 }
 
-namespace {
-//-----------------------------------------------------------------------------
-// UDPMessageProxy
-//-----------------------------------------------------------------------------
-class UDPMessageProxy MOZ_FINAL : public nsIUDPMessage
-{
-public:
-  UDPMessageProxy(NetAddr* aAddr,
-                  nsIOutputStream* aOutputStream,
-                  FallibleTArray<uint8_t>& aData)
-  : mOutputStream(aOutputStream)
-  {
-    memcpy(&mAddr, aAddr, sizeof(NetAddr));
-    aData.SwapElements(mData);
-  }
-
-  NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_NSIUDPMESSAGE
-
-private:
-  NetAddr mAddr;
-  nsCOMPtr<nsIOutputStream> mOutputStream;
-  FallibleTArray<uint8_t> mData;
-};
-
-NS_IMPL_ISUPPORTS1(UDPMessageProxy, nsIUDPMessage)
-
-/* readonly attribute nsINetAddr from; */
-NS_IMETHODIMP
-UDPMessageProxy::GetFromAddr(nsINetAddr * *aFromAddr)
-{
-  NS_ENSURE_ARG_POINTER(aFromAddr);
-
-  nsCOMPtr<nsINetAddr> result = new nsNetAddr(&mAddr);
-  result.forget(aFromAddr);
-
-  return NS_OK;
-}
-
-/* readonly attribute ACString data; */
-NS_IMETHODIMP
-UDPMessageProxy::GetData(nsACString & aData)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* [noscript, notxpcom, nostdcall] Uint8TArrayRef getDataAsTArray(); */
-FallibleTArray<uint8_t>&
-UDPMessageProxy::GetDataAsTArray()
-{
-  return mData;
-}
-
-/* readonly attribute jsval rawData; */
-NS_IMETHODIMP
-UDPMessageProxy::GetRawData(JSContext* cx,
-                            JS::MutableHandleValue aRawData)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* readonly attribute nsIOutputStream outputStream; */
-NS_IMETHODIMP
-UDPMessageProxy::GetOutputStream(nsIOutputStream * *aOutputStream)
-{
-  NS_ENSURE_ARG_POINTER(aOutputStream);
-  NS_IF_ADDREF(*aOutputStream = mOutputStream);
-  return NS_OK;
-}
-
-} //anonymous namespace
-
 //-----------------------------------------------------------------------------
 // nsUDPSocket::nsASocketHandler
 //-----------------------------------------------------------------------------
@@ -448,9 +333,9 @@ nsUDPSocket::OnSocketReady(PRFileDesc *fd, int16_t outFlags)
   }
   mByteReadCount += count;
 
-  FallibleTArray<uint8_t> data;
-  if(!data.AppendElements(buff, count)){
-    mCondition = NS_ERROR_UNEXPECTED;
+  nsCString data;
+  if (!data.Assign(buff, count, mozilla::fallible_t())) {
+    mCondition = NS_ERROR_OUT_OF_MEMORY;
     return;
   }
 
@@ -475,9 +360,7 @@ nsUDPSocket::OnSocketReady(PRFileDesc *fd, int16_t outFlags)
     return;
   }
 
-  NetAddr netAddr;
-  PRNetAddrToNetAddr(&prClientAddr, &netAddr);
-  nsCOMPtr<nsIUDPMessage> message = new UDPMessageProxy(&netAddr, pipeOut, data);
+  nsCOMPtr<nsIUDPMessage> message = new nsUDPMessage(&prClientAddr, pipeOut, data);
   mListener->OnPacketReceived(this, message);
 }
 
@@ -651,9 +534,7 @@ nsUDPSocket::GetAddress(NetAddr *aResult)
 }
 
 namespace {
-//-----------------------------------------------------------------------------
-// SocketListenerProxy
-//-----------------------------------------------------------------------------
+
 class SocketListenerProxy MOZ_FINAL : public nsIUDPSocketListener
 {
 public:
@@ -732,20 +613,7 @@ SocketListenerProxy::OnStopListening(nsIUDPSocket* aSocket,
 NS_IMETHODIMP
 SocketListenerProxy::OnPacketReceivedRunnable::Run()
 {
-  NetAddr netAddr;
-  nsCOMPtr<nsINetAddr> nsAddr;
-  mMessage->GetFromAddr(getter_AddRefs(nsAddr));
-  nsAddr->GetNetAddr(&netAddr);
-
-  nsCOMPtr<nsIOutputStream> outputStream;
-  mMessage->GetOutputStream(getter_AddRefs(outputStream));
-
-  FallibleTArray<uint8_t>& data = mMessage->GetDataAsTArray();
-
-  nsCOMPtr<nsIUDPMessage> message = new nsUDPMessage(&netAddr,
-                                                     outputStream,
-                                                     data);
-  mListener->OnPacketReceived(mSocket, message);
+  mListener->OnPacketReceived(mSocket, mMessage);
   return NS_OK;
 }
 
