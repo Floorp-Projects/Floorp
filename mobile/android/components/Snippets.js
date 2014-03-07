@@ -351,6 +351,8 @@ function loadSyncPromoBanner() {
         text: text + "<a href=\"#\">" + link + "</a>",
         icon: "drawable://sync_promo",
         onclick: function() {
+          // Remove the message, so that it won't show again for the rest of the app lifetime.
+          Home.banner.remove(id);
           Accounts.launchSetup();
         },
         ondismiss: function() {
