@@ -9,7 +9,6 @@
 
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Mutex.h"
-#include "mozilla/VolatileBuffer.h"
 #include "nsRect.h"
 #include "nsPoint.h"
 #include "nsSize.h"
@@ -24,21 +23,6 @@
 #include "nsAutoPtr.h"
 #include "imgIContainer.h"
 #include "gfxColor.h"
-
-/*
- * This creates a gfxImageSurface which will unlock the buffer on destruction
- */
-
-class LockedImageSurface
-{
-public:
-  static gfxImageSurface *
-  CreateSurface(mozilla::VolatileBuffer *vbuf,
-                const gfxIntSize& size,
-                gfxImageFormat format);
-  static mozilla::TemporaryRef<mozilla::VolatileBuffer>
-  AllocateBuffer(const gfxIntSize& size, gfxImageFormat format);
-};
 
 class imgFrame
 {
@@ -88,16 +72,14 @@ public:
   nsresult UnlockImageData();
   void ApplyDirtToSurfaces();
 
-  void SetDiscardable();
-
-  nsresult GetSurface(gfxASurface **aSurface)
+  nsresult GetSurface(gfxASurface **aSurface) const
   {
     *aSurface = ThebesSurface();
     NS_IF_ADDREF(*aSurface);
     return NS_OK;
   }
 
-  nsresult GetPattern(gfxPattern **aPattern)
+  nsresult GetPattern(gfxPattern **aPattern) const
   {
     if (mSinglePixel)
       *aPattern = new gfxPattern(mSinglePixelColor);
@@ -107,12 +89,7 @@ public:
     return NS_OK;
   }
 
-  bool IsSinglePixel()
-  {
-    return mSinglePixel;
-  }
-
-  gfxASurface* ThebesSurface()
+  gfxASurface* ThebesSurface() const
   {
     if (mOptSurface)
       return mOptSurface;
@@ -123,27 +100,7 @@ public:
     if (mQuartzSurface)
       return mQuartzSurface;
 #endif
-    if (mImageSurface)
-      return mImageSurface;
-    if (mVBuf) {
-      mozilla::VolatileBufferPtr<uint8_t> ref(mVBuf);
-      if (ref.WasBufferPurged())
-        return nullptr;
-
-      gfxImageSurface *sur =
-        LockedImageSurface::CreateSurface(mVBuf, mSize, mFormat);
-#if defined(XP_MACOSX)
-      return new gfxQuartzImageSurface(sur);
-#else
-      return sur;
-#endif
-    }
-    // We can return null here if we're single pixel optimized
-    // or a paletted image. However, one has to check for paletted
-    // image data first before attempting to get a surface, so
-    // this is only valid for single pixel optimized images
-    MOZ_ASSERT(mSinglePixel, "No image surface and not a single pixel!");
-    return nullptr;
+    return mImageSurface;
   }
 
   size_t SizeOfExcludingThisWithComputedFallbackIfHeap(
@@ -210,8 +167,6 @@ private: // data
   /** Indicates how many readers currently have locked this frame */
   int32_t mLockCount;
 
-  mozilla::RefPtr<mozilla::VolatileBuffer> mVBuf;
-
   gfxImageFormat mFormat;
   uint8_t      mPaletteDepth;
   int8_t       mBlendMethod;
@@ -219,7 +174,6 @@ private: // data
   bool mFormatChanged;
   bool mCompositingFailed;
   bool mNonPremult;
-  bool mDiscardable;
 
   /** Have we called DiscardTracker::InformAllocation()? */
   bool mInformedDiscardTracker;
