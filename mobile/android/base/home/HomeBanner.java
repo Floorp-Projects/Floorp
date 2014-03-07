@@ -131,42 +131,42 @@ public class HomeBanner extends LinearLayout
 
     @Override
     public void handleMessage(String event, JSONObject message) {
-        try {
-            // Store the current message id to pass back to JS in the view's OnClickListener.
-            setTag(message.getString("id"));
-
-            // Display styled text from an HTML string.
-            final Spanned text = Html.fromHtml(message.getString("text"));
-
-            // Update the banner message on the UI thread.
-            ThreadUtils.postToUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    mTextView.setText(text);
-                    setVisibility(VISIBLE);
-                    GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("HomeBanner:Shown", (String) getTag()));
-
-                    // Animate the banner if it is currently active.
-                    if (mActive) {
-                        animateUp();
-                    }
-                }
-            });
-        } catch (JSONException e) {
-            Log.e(LOGTAG, "Exception handling " + event + " message", e);
-            return;
-        }
-
+        final String id = message.optString("id");
+        final String text = message.optString("text");
         final String iconURI = message.optString("iconURI");
 
-        BitmapUtils.getDrawable(getContext(), iconURI, new BitmapUtils.BitmapLoader() {
+        // Update the banner message on the UI thread.
+        ThreadUtils.postToUiThread(new Runnable() {
             @Override
-            public void onBitmapFound(final Drawable d) {
-                // Hide the image view if we don't have an icon to show.
-                if (d == null) {
-                    mIconView.setVisibility(View.GONE);
-                } else {
-                    mIconView.setImageDrawable(d);
+            public void run() {
+                // Hide the banner if the message doesn't have valid id and text.
+                if (TextUtils.isEmpty(id) || TextUtils.isEmpty(text)) {
+                    setVisibility(View.GONE);
+                    return;
+                }
+
+                // Store the current message id to pass back to JS in the view's OnClickListener.
+                setTag(id);
+                mTextView.setText(Html.fromHtml(text));
+
+                BitmapUtils.getDrawable(getContext(), iconURI, new BitmapUtils.BitmapLoader() {
+                    @Override
+                    public void onBitmapFound(final Drawable d) {
+                        // Hide the image view if we don't have an icon to show.
+                        if (d == null) {
+                            mIconView.setVisibility(View.GONE);
+                        } else {
+                            mIconView.setImageDrawable(d);
+                        }
+                    }
+                });
+
+                setVisibility(View.VISIBLE);
+                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("HomeBanner:Shown", id));
+
+                // Animate the banner if it is currently active.
+                if (mActive) {
+                    animateUp();
                 }
             }
         });
