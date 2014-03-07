@@ -2047,6 +2047,7 @@ Parser<FullParseHandler>::finishFunctionDefinition(ParseNode *pn, FunctionBox *f
     }
 
     JS_ASSERT(pn->pn_funbox == funbox);
+    JS_ASSERT(pn->pn_body->isKind(PNK_ARGSBODY));
     pn->pn_body->append(body);
     pn->pn_body->pn_pos = body->pn_pos;
 
@@ -2624,7 +2625,7 @@ typename ParseHandler::Node
 Parser<ParseHandler>::condition()
 {
     MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_BEFORE_COND);
-    Node pn = parenExpr();
+    Node pn = exprInParens();
     if (!pn)
         return null();
     MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_AFTER_COND);
@@ -4535,7 +4536,7 @@ Parser<ParseHandler>::switchStatement()
 
     MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_BEFORE_SWITCH);
 
-    Node discriminant = parenExpr();
+    Node discriminant = exprInParens();
     if (!discriminant)
         return null();
 
@@ -4881,7 +4882,7 @@ Parser<FullParseHandler>::withStatement()
         return null();
 
     MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_BEFORE_WITH);
-    Node objectExpr = parenExpr();
+    Node objectExpr = exprInParens();
     if (!objectExpr)
         return null();
     MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_AFTER_WITH);
@@ -6269,6 +6270,18 @@ Parser<FullParseHandler>::legacyComprehensionTail(ParseNode *bodyStmt, unsigned 
 }
 
 template <>
+SyntaxParseHandler::Node
+Parser<SyntaxParseHandler>::legacyComprehensionTail(SyntaxParseHandler::Node bodyStmt,
+                                                    unsigned blockid,
+                                                    GeneratorKind comprehensionKind,
+                                                    ParseContext<SyntaxParseHandler> *outerpc,
+                                                    unsigned innerBlockScopeDepth)
+{
+    abortIfSyntaxParser();
+    return null();
+}
+
+template <>
 ParseNode*
 Parser<FullParseHandler>::legacyArrayComprehension(ParseNode *array)
 {
@@ -6307,6 +6320,99 @@ Parser<SyntaxParseHandler>::legacyArrayComprehension(Node array)
     return null();
 }
 
+template <typename ParseHandler>
+typename ParseHandler::Node
+Parser<ParseHandler>::generatorComprehensionLambda(GeneratorKind comprehensionKind,
+                                                   unsigned begin, Node innerStmt)
+{
+    JS_ASSERT(comprehensionKind == LegacyGenerator || comprehensionKind == StarGenerator);
+    JS_ASSERT(!!innerStmt == (comprehensionKind == LegacyGenerator));
+
+    Node genfn = handler.newFunctionDefinition();
+    if (!genfn)
+        return null();
+    handler.setOp(genfn, JSOP_LAMBDA);
+
+    ParseContext<ParseHandler> *outerpc = pc;
+
+    // If we are off the main thread, the generator meta-objects have
+    // already been created by js::StartOffThreadParseScript, so cx will not
+    // be necessary.
+    RootedObject proto(context);
+    if (comprehensionKind == StarGenerator) {
+        JSContext *cx = context->maybeJSContext();
+        proto = GlobalObject::getOrCreateStarGeneratorFunctionPrototype(cx, context->global());
+        if (!proto)
+            return null();
+    }
+
+    RootedFunction fun(context, newFunction(outerpc, /* atom = */ NullPtr(), Expression, proto));
+    if (!fun)
+        return null();
+
+    // Create box for fun->object early to root it.
+    Directives directives(/* strict = */ outerpc->sc->strict);
+    FunctionBox *genFunbox = newFunctionBox(genfn, fun, outerpc, directives, comprehensionKind);
+    if (!genFunbox)
+        return null();
+
+    ParseContext<ParseHandler> genpc(this, outerpc, genfn, genFunbox,
+                                     /* newDirectives = */ nullptr,
+                                     outerpc->staticLevel + 1, outerpc->blockidGen,
+                                     /* blockScopeDepth = */ 0);
+    if (!genpc.init(tokenStream))
+        return null();
+
+    /*
+     * We assume conservatively that any deoptimization flags in pc->sc
+     * come from the kid. So we propagate these flags into genfn. For code
+     * simplicity we also do not detect if the flags were only set in the
+     * kid and could be removed from pc->sc.
+     */
+    genFunbox->anyCxFlags = outerpc->sc->anyCxFlags;
+    if (outerpc->sc->isFunctionBox())
+        genFunbox->funCxFlags = outerpc->sc->asFunctionBox()->funCxFlags;
+
+    JS_ASSERT(genFunbox->generatorKind() == comprehensionKind);
+    genFunbox->inGenexpLambda = true;
+    handler.setBlockId(genfn, genpc.bodyid);
+
+    Node body;
+
+    if (comprehensionKind == StarGenerator) {
+        body = comprehension(StarGenerator);
+        if (!body)
+            return null();
+    } else {
+        JS_ASSERT(comprehensionKind == LegacyGenerator);
+        body = legacyComprehensionTail(innerStmt, outerpc->blockid(), LegacyGenerator,
+                                       outerpc, LegacyComprehensionHeadBlockScopeDepth(outerpc));
+        if (!body)
+            return null();
+    }
+
+    if (comprehensionKind == StarGenerator)
+        MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_IN_PAREN);
+
+    handler.setBeginPosition(body, begin);
+    handler.setEndPosition(body, pos().end);
+
+    handler.setBeginPosition(genfn, begin);
+    handler.setEndPosition(genfn, pos().end);
+
+    // Note that if we ever start syntax-parsing generators, we will also
+    // need to propagate the closed-over variable set to the inner
+    // lazyscript, as in finishFunctionDefinition.
+    handler.setFunctionBody(genfn, body);
+
+    PropagateTransitiveParseFlags(genFunbox, outerpc->sc);
+
+    if (!leaveFunction(genfn, outerpc))
+        return null();
+
+    return genfn;
+}
+
 #if JS_HAS_GENERATOR_EXPRS
 
 /*
@@ -6326,77 +6432,25 @@ Parser<SyntaxParseHandler>::legacyArrayComprehension(Node array)
  */
 template <>
 ParseNode *
-Parser<FullParseHandler>::legacyGeneratorExpr(ParseNode *kid)
+Parser<FullParseHandler>::legacyGeneratorExpr(ParseNode *expr)
 {
     JS_ASSERT(tokenStream.isCurrentTokenType(TOK_FOR));
 
     /* Create a |yield| node for |kid|. */
-    ParseNode *yieldExpr = handler.newUnary(PNK_YIELD, JSOP_NOP, kid->pn_pos.begin, kid);
+    ParseNode *yieldExpr = handler.newUnary(PNK_YIELD, JSOP_NOP, expr->pn_pos.begin, expr);
     if (!yieldExpr)
         return null();
     yieldExpr->setInParens(true);
 
     // A statement to wrap the yield expression.
-    ParseNode *yieldStmt = handler.newExprStatement(yieldExpr, kid->pn_pos.end);
+    ParseNode *yieldStmt = handler.newExprStatement(yieldExpr, expr->pn_pos.end);
     if (!yieldStmt)
         return null();
 
     /* Make a new node for the desugared generator function. */
-    ParseNode *genfn = CodeNode::create(PNK_FUNCTION, &handler);
+    ParseNode *genfn = generatorComprehensionLambda(LegacyGenerator, expr->pn_pos.begin, yieldStmt);
     if (!genfn)
         return null();
-    genfn->setOp(JSOP_LAMBDA);
-    JS_ASSERT(!genfn->pn_body);
-    genfn->pn_dflags = 0;
-
-    {
-        ParseContext<FullParseHandler> *outerpc = pc;
-
-        RootedFunction fun(context, newFunction(outerpc, /* atom = */ NullPtr(), Expression));
-        if (!fun)
-            return null();
-
-        /* Create box for fun->object early to protect against last-ditch GC. */
-        Directives directives(/* strict = */ outerpc->sc->strict);
-        FunctionBox *genFunbox = newFunctionBox(genfn, fun, outerpc, directives,
-                                                LegacyGenerator);
-        if (!genFunbox)
-            return null();
-
-        ParseContext<FullParseHandler> genpc(this, outerpc, genfn, genFunbox,
-                                             /* newDirectives = */ nullptr,
-                                             outerpc->staticLevel + 1, outerpc->blockidGen,
-                                             /* blockScopeDepth = */ 0);
-        if (!genpc.init(tokenStream))
-            return null();
-
-        /*
-         * We assume conservatively that any deoptimization flags in pc->sc
-         * come from the kid. So we propagate these flags into genfn. For code
-         * simplicity we also do not detect if the flags were only set in the
-         * kid and could be removed from pc->sc.
-         */
-        genFunbox->anyCxFlags = outerpc->sc->anyCxFlags;
-        if (outerpc->sc->isFunctionBox())
-            genFunbox->funCxFlags = outerpc->sc->asFunctionBox()->funCxFlags;
-
-        JS_ASSERT(genFunbox->isLegacyGenerator());
-        genFunbox->inGenexpLambda = true;
-        genfn->pn_blockid = genpc.bodyid;
-
-        ParseNode *body = legacyComprehensionTail(yieldStmt, outerpc->blockid(), LegacyGenerator,
-                                                  outerpc,
-                                                  LegacyComprehensionHeadBlockScopeDepth(outerpc));
-        if (!body)
-            return null();
-        JS_ASSERT(!genfn->pn_body);
-        genfn->pn_body = body;
-        genfn->pn_pos.begin = body->pn_pos.begin;
-        genfn->pn_pos.end = body->pn_pos.end;
-
-        if (!leaveFunction(genfn, outerpc))
-            return null();
-    }
 
     /*
      * Our result is a call expression that invokes the anonymous generator
@@ -6593,6 +6647,32 @@ Parser<ParseHandler>::arrayComprehension(uint32_t begin)
     handler.setEndPosition(comp, pos().end);
 
     return comp;
+}
+
+template <typename ParseHandler>
+typename ParseHandler::Node
+Parser<ParseHandler>::generatorComprehension(uint32_t begin)
+{
+    JS_ASSERT(tokenStream.isCurrentTokenType(TOK_FOR));
+
+    // We have no problem parsing generator comprehensions inside lazy
+    // functions, but the bytecode emitter currently can't handle them that way,
+    // because when it goes to emit the code for the inner generator function,
+    // it expects outer functions to have non-lazy scripts.
+    if (!abortIfSyntaxParser())
+        return null();
+
+    Node genfn = generatorComprehensionLambda(StarGenerator, begin, null());
+    if (!genfn)
+        return null();
+
+    Node result = handler.newList(PNK_GENEXP, genfn, JSOP_CALL);
+    if (!result)
+        return null();
+    handler.setBeginPosition(result, begin);
+    handler.setEndPosition(result, pos().end);
+
+    return result;
 }
 
 template <typename ParseHandler>
@@ -7222,17 +7302,7 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
         return letBlock(LetExpresion);
 
       case TOK_LP:
-      {
-        bool genexp;
-        Node pn = parenExpr(&genexp);
-        if (!pn)
-            return null();
-        pn = handler.setInParens(pn);
-
-        if (!genexp)
-            MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_IN_PAREN);
-        return pn;
-      }
+        return parenExprOrGeneratorComprehension();
 
       case TOK_STRING:
         return stringLiteral();
@@ -7300,14 +7370,86 @@ Parser<ParseHandler>::primaryExpr(TokenKind tt)
 
 template <typename ParseHandler>
 typename ParseHandler::Node
-Parser<ParseHandler>::parenExpr(bool *genexp)
+Parser<ParseHandler>::parenExprOrGeneratorComprehension()
 {
     JS_ASSERT(tokenStream.isCurrentTokenType(TOK_LP));
     uint32_t begin = pos().begin;
+    uint32_t startYieldOffset = pc->lastYieldOffset;
 
-    if (genexp)
-        *genexp = false;
+    if (tokenStream.matchToken(TOK_FOR, TokenStream::Operand))
+        return generatorComprehension(begin);
 
+    /*
+     * Always accept the 'in' operator in a parenthesized expression,
+     * where it's unambiguous, even if we might be parsing the init of a
+     * for statement.
+     */
+    bool oldParsingForInit = pc->parsingForInit;
+    pc->parsingForInit = false;
+    Node pn = expr();
+    pc->parsingForInit = oldParsingForInit;
+
+    if (!pn)
+        return null();
+
+#if JS_HAS_GENERATOR_EXPRS
+    if (tokenStream.matchToken(TOK_FOR)) {
+        if (pc->lastYieldOffset != startYieldOffset) {
+            reportWithOffset(ParseError, false, pc->lastYieldOffset,
+                             JSMSG_BAD_GENEXP_BODY, js_yield_str);
+            return null();
+        }
+        if (handler.isOperationWithoutParens(pn, PNK_COMMA)) {
+            report(ParseError, false, null(),
+                   JSMSG_BAD_GENERATOR_SYNTAX, js_generator_str);
+            return null();
+        }
+        pn = legacyGeneratorExpr(pn);
+        if (!pn)
+            return null();
+        handler.setBeginPosition(pn, begin);
+        if (tokenStream.getToken() != TOK_RP) {
+            report(ParseError, false, null(),
+                   JSMSG_BAD_GENERATOR_SYNTAX, js_generator_str);
+            return null();
+        }
+        handler.setEndPosition(pn, pos().end);
+        handler.setInParens(pn);
+        return pn;
+    }
+#endif /* JS_HAS_GENERATOR_EXPRS */
+
+    pn = handler.setInParens(pn);
+
+    MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_IN_PAREN);
+
+    return pn;
+}
+
+// Legacy generator comprehensions can sometimes appear without parentheses.
+// For example:
+//
+//   foo(x for (x in bar))
+//
+// In this case the parens are part of the call, and not part of the generator
+// comprehension.  This can happen in these contexts:
+//
+//   if (_)
+//   while (_) {}
+//   do {} while (_)
+//   switch (_) {}
+//   with (_) {}
+//   foo(_) // must be first and only argument
+//
+// This is not the case for ES6 generator comprehensions; they must always be in
+// parentheses.
+
+template <typename ParseHandler>
+typename ParseHandler::Node
+Parser<ParseHandler>::exprInParens()
+{
+    JS_ASSERT(tokenStream.isCurrentTokenType(TOK_LP));
+    uint32_t begin = pos().begin;
     uint32_t startYieldOffset = pc->lastYieldOffset;
 
     /*
@@ -7339,15 +7481,6 @@ Parser<ParseHandler>::parenExpr(bool *genexp)
         if (!pn)
             return null();
         handler.setBeginPosition(pn, begin);
-        if (genexp) {
-            if (tokenStream.getToken() != TOK_RP) {
-                report(ParseError, false, null(),
-                       JSMSG_BAD_GENERATOR_SYNTAX, js_generator_str);
-                return null();
-            }
-            handler.setEndPosition(pn, pos().end);
-            *genexp = true;
-        }
     }
 #endif /* JS_HAS_GENERATOR_EXPRS */
 
