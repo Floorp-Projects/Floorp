@@ -14,6 +14,16 @@ void
 ConvertBGRXToBGRA(uint8_t* aData, const IntSize &aSize, int32_t aStride);
 
 /**
+ * Copy the pixel data from aSrc and pack it into aDst. aSrcSize, aSrcStride
+ * and aBytesPerPixel give the size, stride and bytes per pixel for aSrc's
+ * surface. Callers are responsible for making sure that aDst is big enough to
+ * contain |aSrcSize.width * aSrcSize.height * aBytesPerPixel| bytes.
+ */
+void
+CopySurfaceDataToPackedArray(uint8_t* aSrc, uint8_t* aDst, IntSize aSrcSize,
+                             int32_t aSrcStride, int32_t aBytesPerPixel);
+
+/**
  * Convert aSurface to a packed buffer in BGRA format. The pixel data is
  * returned in a buffer allocated with new uint8_t[].
  */
