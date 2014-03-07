@@ -1494,7 +1494,7 @@ jobs
 
 // jp : http://en.wikipedia.org/wiki/.jp
 // http://jprs.co.jp/en/jpdomain.html
-// Submitted by registry <info@jprs.jp> 2012-05-28
+// Submitted by registry <info@jprs.jp> 2014-02-28
 jp
 // jp organizational type names
 ac.jp
@@ -1598,7 +1598,6 @@ konan.aichi.jp
 kota.aichi.jp
 mihama.aichi.jp
 miyoshi.aichi.jp
-nagakute.aichi.jp
 nishio.aichi.jp
 nisshin.aichi.jp
 obu.aichi.jp
@@ -2270,7 +2269,6 @@ rikuzentakata.iwate.jp
 shiwa.iwate.jp
 shizukuishi.iwate.jp
 sumita.iwate.jp
-takizawa.iwate.jp
 tanohata.iwate.jp
 tono.iwate.jp
 yahaba.iwate.jp
