@@ -538,13 +538,12 @@ WebGLContext::CopyTexImage2D(GLenum target,
     }
 
     if (sizeMayChange)
-        UpdateWebGLErrorAndClearGLError();
+        GetAndFlushUnderlyingGLErrors();
 
     CopyTexSubImage2D_base(target, level, internalformat, 0, 0, x, y, width, height, false);
 
     if (sizeMayChange) {
-        GLenum error = LOCAL_GL_NO_ERROR;
-        UpdateWebGLErrorAndClearGLError(&error);
+        GLenum error = GetAndFlushUnderlyingGLErrors();
         if (error) {
             GenerateWarning("copyTexImage2D generated error %s", ErrorName(error));
             return;
@@ -902,8 +901,7 @@ WebGLContext::DoFakeVertexAttrib0(GLuint vertexCount)
 
         gl->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, mFakeVertexAttrib0BufferObject);
 
-        GLenum error = LOCAL_GL_NO_ERROR;
-        UpdateWebGLErrorAndClearGLError();
+        GetAndFlushUnderlyingGLErrors();
 
         if (mFakeVertexAttrib0BufferStatus == WebGLVertexAttrib0Status::EmulatedInitializedArray) {
             nsAutoArrayPtr<GLfloat> array(new GLfloat[4 * vertexCount]);
@@ -917,7 +915,7 @@ WebGLContext::DoFakeVertexAttrib0(GLuint vertexCount)
         } else {
             gl->fBufferData(LOCAL_GL_ARRAY_BUFFER, dataSize, nullptr, LOCAL_GL_DYNAMIC_DRAW);
         }
-        UpdateWebGLErrorAndClearGLError(&error);
+        GLenum error = GetAndFlushUnderlyingGLErrors();
 
         gl->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, mBoundArrayBuffer ? mBoundArrayBuffer->GLName() : 0);
 
@@ -1499,19 +1497,53 @@ WebGLContext::CreateTexture()
     return globj.forget();
 }
 
+static GLenum
+GetAndClearError(GLenum* errorVar)
+{
+    MOZ_ASSERT(errorVar);
+    GLenum ret = *errorVar;
+    *errorVar = LOCAL_GL_NO_ERROR;
+    return ret;
+}
+
 GLenum
 WebGLContext::GetError()
 {
-    if (mContextStatus == ContextNotLost) {
-        MakeContextCurrent();
-        UpdateWebGLErrorAndClearGLError();
-    } else if (!mContextLostErrorSet) {
-        mWebGLError = LOCAL_GL_CONTEXT_LOST;
-        mContextLostErrorSet = true;
+    /* WebGL 1.0: Section 5.14.3: Setting and getting state:
+     *   If the context's webgl context lost flag is set, returns
+     *   CONTEXT_LOST_WEBGL the first time this method is called.
+     *   Afterward, returns NO_ERROR until the context has been
+     *   restored.
+     *
+     * WEBGL_lose_context:
+     *   [When this extension is enabled: ] loseContext and
+     *   restoreContext are allowed to generate INVALID_OPERATION errors
+     *   even when the context is lost.
+     */
+
+    if (IsContextLost()) {
+        if (mEmitContextLostErrorOnce) {
+            mEmitContextLostErrorOnce = false;
+            return LOCAL_GL_CONTEXT_LOST;
+        }
+        // Don't return yet, since WEBGL_lose_contexts contradicts the
+        // original spec, and allows error generation while lost.
     }
 
-    GLenum err = mWebGLError;
-    mWebGLError = LOCAL_GL_NO_ERROR;
+    GLenum err = GetAndClearError(&mWebGLError);
+    if (err != LOCAL_GL_NO_ERROR)
+        return err;
+
+    if (IsContextLost())
+        return LOCAL_GL_NO_ERROR;
+
+    // Either no WebGL-side error, or it's already been cleared.
+    // UnderlyingGL-side errors, now.
+
+    MakeContextCurrent();
+    GetAndFlushUnderlyingGLErrors();
+
+    err = GetAndClearError(&mUnderlyingGLError);
     return err;
 }
 
@@ -2496,10 +2528,9 @@ WebGLContext::RenderbufferStorage(GLenum target, GLenum internalformat, GLsizei 
                        height != mBoundRenderbuffer->Height() ||
                        internalformat != mBoundRenderbuffer->InternalFormat();
     if (sizeChanges) {
-        UpdateWebGLErrorAndClearGLError();
+        GetAndFlushUnderlyingGLErrors();
         mBoundRenderbuffer->RenderbufferStorage(internalformatForGL, width, height);
-        GLenum error = LOCAL_GL_NO_ERROR;
-        UpdateWebGLErrorAndClearGLError(&error);
+        GLenum error = GetAndFlushUnderlyingGLErrors();
         if (error) {
             GenerateWarning("renderbufferStorage generated error %s", ErrorName(error));
             return;
@@ -3632,12 +3663,11 @@ GLenum WebGLContext::CheckedTexImage2D(GLenum target,
     }
 
     if (sizeMayChange) {
-        UpdateWebGLErrorAndClearGLError();
+        GetAndFlushUnderlyingGLErrors();
 
         gl->fTexImage2D(target, level, internalFormat, width, height, border, format, realType, data);
 
-        GLenum error = LOCAL_GL_NO_ERROR;
-        UpdateWebGLErrorAndClearGLError(&error);
+        GLenum error = GetAndFlushUnderlyingGLErrors();
         return error;
     }
 

@@ -451,13 +451,12 @@ WebGLTexture::DoDeferredImageInitialization(GLenum imageTarget, GLint level)
     void *zeros = calloc(1, checked_byteLength.value());
 
     GLenum format = WebGLTexelConversions::GLFormatForTexelFormat(texelformat);
-    mContext->UpdateWebGLErrorAndClearGLError();
+    mContext->GetAndFlushUnderlyingGLErrors();
     mContext->gl->fTexImage2D(imageTarget, level, imageInfo.mInternalFormat,
                               imageInfo.mWidth, imageInfo.mHeight,
                               0, format, imageInfo.mType,
                               zeros);
-    GLenum error = LOCAL_GL_NO_ERROR;
-    mContext->UpdateWebGLErrorAndClearGLError(&error);
+    GLenum error = mContext->GetAndFlushUnderlyingGLErrors();
 
     free(zeros);
     SetImageDataStatus(imageTarget, level, WebGLImageDataStatus::InitializedImageData);
