@@ -7492,17 +7492,11 @@ nsFrame::DoGetParentStyleContextFrame() const
     return GetCorrectedParent(this);
   }
 
-  // For out-of-flow frames, we must resolve underneath the
-  // placeholder's parent.
-  const nsIFrame* oofFrame = this;
-  if ((oofFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW) &&
-      GetPrevInFlow()) {
-    // Out of flows that are continuations do not
-    // have placeholders. Use their first-in-flow's placeholder.
-    oofFrame = oofFrame->FirstInFlow();
-  }
-  nsIFrame* placeholder = oofFrame->PresContext()->FrameManager()->
-                            GetPlaceholderFrameFor(oofFrame);
+  // We're an out-of-flow frame.  For out-of-flow frames, we must
+  // resolve underneath the placeholder's parent.  The placeholder is
+  // reached from the first-in-flow.
+  nsIFrame* placeholder = PresContext()->FrameManager()->
+                            GetPlaceholderFrameFor(FirstInFlow());
   if (!placeholder) {
     NS_NOTREACHED("no placeholder frame for out-of-flow frame");
     return GetCorrectedParent(this);
