@@ -1901,7 +1901,7 @@ Compile(JSContext *cx, HandleScript script, BaselineFrame *osrFrame, jsbytecode 
 {
     JS_ASSERT(jit::IsIonEnabled(cx));
     JS_ASSERT(jit::IsBaselineEnabled(cx));
-    JS_ASSERT_IF(osrPc != nullptr, (JSOp)*osrPc == JSOP_LOOPENTRY);
+    JS_ASSERT_IF(osrPc != nullptr, LoopEntryCanIonOsr(osrPc));
     JS_ASSERT_IF(executionMode == ParallelExecution, !osrFrame && !osrPc);
     JS_ASSERT_IF(executionMode == ParallelExecution, !HasIonScript(script, executionMode));
 
@@ -2000,6 +2000,7 @@ jit::CanEnterAtBranch(JSContext *cx, JSScript *script, BaselineFrame *osrFrame,
 {
     JS_ASSERT(jit::IsIonEnabled(cx));
     JS_ASSERT((JSOp)*pc == JSOP_LOOPENTRY);
+    JS_ASSERT(LoopEntryCanIonOsr(pc));
 
     // Skip if the script has been disabled.
     if (!script->canIonCompile())
