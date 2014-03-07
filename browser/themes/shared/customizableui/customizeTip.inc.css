@@ -46,6 +46,10 @@
   display: -moz-box;
 }
 
+.customization-tipPanel-contentImage:-moz-locale-dir(rtl) {
+  list-style-image: url(chrome://browser/skin/customizableui/customize-illustration-rtl.png);
+}
+
 .customization-tipPanel-link {
   -moz-appearance: none;
   background: transparent;
