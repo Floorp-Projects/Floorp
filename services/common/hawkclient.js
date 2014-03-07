@@ -199,7 +199,7 @@ this.HawkClient.prototype = {
       localtimeOffsetMsec: this.localtimeOffsetMsec,
     };
 
-    let request = new HAWKAuthenticatedRESTRequest(uri, credentials, extra);
+    let request = this.newHAWKAuthenticatedRESTRequest(uri, credentials, extra);
     if (method == "post" || method == "put") {
       request[method](payloadObj, onComplete);
     } else {
@@ -207,5 +207,10 @@ this.HawkClient.prototype = {
     }
 
     return deferred.promise;
-  }
+  },
+
+  // override points for testing.
+  newHAWKAuthenticatedRESTRequest: function(uri, credentials, extra) {
+    return new HAWKAuthenticatedRESTRequest(uri, credentials, extra);
+  },
 }

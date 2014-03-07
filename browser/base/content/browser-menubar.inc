@@ -469,6 +469,11 @@
                         accesskey="&syncSyncNowItem.accesskey;"
                         observes="sync-syncnow-state"
                         oncommand="gSyncUI.doSync(event);"/>
+              <menuitem id="sync-reauthitem"
+                        label="&syncReAuthItem.label;"
+                        accesskey="&syncReAuthItem.accesskey;"
+                        observes="sync-reauth-state"
+                        oncommand="gSyncUI.openSignInAgainPage();"/>
 #endif
               <menuseparator id="devToolsSeparator"/>
               <menu id="webDeveloperMenu"
