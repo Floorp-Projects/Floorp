@@ -28,7 +28,9 @@
   }
 
   .devtools-responsive-container > .devtools-side-splitter {
-    border: 0;
+    border-width: 0;
+    border-top-width: 1px;
+    border-top-style: solid;
     margin: 0;
     min-height: 3px;
     height: 3px;

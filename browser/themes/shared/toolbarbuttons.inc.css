@@ -136,6 +136,10 @@
   -moz-image-region: rect(0, 612px, 18px, 594px);
 }
 
+#nav-bar-overflow-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
+  transform: scaleX(-1);
+}
+
 #tabview-button {
   -moz-image-region: rect(0, 648px, 18px, 630px);
 }
