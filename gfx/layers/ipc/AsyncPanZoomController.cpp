@@ -288,11 +288,11 @@ static bool gCrossSlideEnabled = false;
 static bool gAllowCheckerboarding = true;
 
 /**
- * Pref that enables enlarging of the displayport along one axis when its
- * opposite's scrollable rect is within the composition bounds. That is, we
- * don't need to pad the opposite axis.
+ * Pref that enables enlarging of the displayport along one axis when the
+ * generated displayport's size is beyond that of the scrollable rect on the
+ * opposite axis.
  */
-static bool gEnlargeDisplayPortWhenOnlyScrollable = false;
+static bool gEnlargeDisplayPortWhenClipped = false;
 
 /**
  * Is aAngle within the given threshold of the horizontal axis?
@@ -419,8 +419,8 @@ AsyncPanZoomController::InitializeGlobalState()
   Preferences::AddBoolVarCache(&gCrossSlideEnabled, "apz.cross_slide.enabled", gCrossSlideEnabled);
   Preferences::AddIntVarCache(&gAxisLockMode, "apz.axis_lock_mode", gAxisLockMode);
   Preferences::AddBoolVarCache(&gAllowCheckerboarding, "apz.allow-checkerboarding", gAllowCheckerboarding);
-  Preferences::AddBoolVarCache(&gEnlargeDisplayPortWhenOnlyScrollable, "apz.enlarge_displayport_when_only_scrollable",
-    gEnlargeDisplayPortWhenOnlyScrollable);
+  Preferences::AddBoolVarCache(&gEnlargeDisplayPortWhenClipped, "apz.enlarge_displayport_when_clipped",
+    gEnlargeDisplayPortWhenClipped);
 
   gComputedTimingFunction = new ComputedTimingFunction();
   gComputedTimingFunction->Init(
@@ -1301,31 +1301,57 @@ void AsyncPanZoomController::ScaleWithFocus(float aScale,
 }
 
 /**
- * Attempts to enlarge the displayport along a single axis based on the
- * velocity. aOffset and aLength are in/out parameters; they are initially set
- * to the currently visible area and will be transformed to the area we should
- * be drawing to minimize checkerboarding.
+ * Enlarges the displayport along both axes based on the velocity.
+ */
+static CSSSize
+CalculateDisplayPortSize(const CSSRect& aCompositionBounds,
+                         const CSSPoint& aVelocity)
+{
+  float xMultiplier = fabsf(aVelocity.x) < gMinSkateSpeed
+                        ? gXStationarySizeMultiplier
+                        : gXSkateSizeMultiplier;
+  float yMultiplier = fabsf(aVelocity.y) < gMinSkateSpeed
+                        ? gYStationarySizeMultiplier
+                        : gYSkateSizeMultiplier;
+  return CSSSize(aCompositionBounds.width * xMultiplier,
+                 aCompositionBounds.height * yMultiplier);
+}
+
+/**
+ * Attempts to redistribute any area in the displayport that would get clipped
+ * by the scrollable rect, or be inaccessible due to disabled scrolling, to the
+ * other axis, while maintaining total displayport area.
  */
 static void
-EnlargeDisplayPortAlongAxis(float* aOutOffset, float* aOutLength,
-                            double aEstimatedPaintDurationMillis, float aVelocity,
-                            float aStationarySizeMultiplier, float aSkateSizeMultiplier)
+RedistributeDisplayPortExcess(CSSSize& aDisplayPortSize,
+                              const CSSRect& aCompositionBounds,
+                              const CSSRect& aScrollableRect,
+                              bool aScrollingDisabledX,
+                              bool aScrollingDisabledY)
 {
-  // Scale up the length using the appropriate multiplier and center the
-  // displayport around the visible area.
-  float multiplier = (fabsf(aVelocity) < gMinSkateSpeed
-                        ? aStationarySizeMultiplier
-                        : aSkateSizeMultiplier);
-  float newLength = (*aOutLength) * multiplier;
-  *aOutOffset -= (newLength - (*aOutLength)) / 2;
-  *aOutLength = newLength;
+  float xSlack, ySlack;
+  if (aScrollingDisabledX) {
+    xSlack = aDisplayPortSize.width - aCompositionBounds.width;
+  } else {
+    xSlack = std::max(0.0f, aDisplayPortSize.width - aScrollableRect.width);
+  }
+  if (aScrollingDisabledY) {
+    ySlack = aDisplayPortSize.height - aCompositionBounds.height;
+  } else {
+    ySlack = std::max(0.0f, aDisplayPortSize.height - aScrollableRect.height);
+  }
 
-  // Project the displayport out based on the estimated time it will take to paint,
-  // if the gUsePaintDuration flag is set. If not, just use a constant 50ms paint
-  // time. Setting the gVelocityBias pref appropriately can cancel this out if so
-  // desired.
-  double paintFactor = (gUsePaintDuration ? aEstimatedPaintDurationMillis : 50.0);
-  *aOutOffset += (aVelocity * paintFactor * gVelocityBias);
+  if (ySlack > 0) {
+    // Reassign wasted y-axis displayport to the x-axis
+    aDisplayPortSize.height -= ySlack;
+    float xExtra = ySlack * aDisplayPortSize.width / aDisplayPortSize.height;
+    aDisplayPortSize.width += xExtra;
+  } else if (xSlack > 0) {
+    // Reassign wasted x-axis displayport to the y-axis
+    aDisplayPortSize.width -= xSlack;
+    float yExtra = xSlack * aDisplayPortSize.height / aDisplayPortSize.width;
+    aDisplayPortSize.height += yExtra;
+  }
 }
 
 /* static */
@@ -1334,37 +1360,10 @@ const CSSRect AsyncPanZoomController::CalculatePendingDisplayPort(
   const ScreenPoint& aVelocity,
   double aEstimatedPaintDuration)
 {
-  // convert to milliseconds
-  double estimatedPaintDurationMillis = aEstimatedPaintDuration * 1000;
-
   CSSRect compositionBounds = aFrameMetrics.CalculateCompositedRectInCssPixels();
-  CSSPoint scrollOffset = aFrameMetrics.mScrollOffset;
-  CSSRect displayPort(scrollOffset, compositionBounds.Size());
   CSSPoint velocity = aVelocity / aFrameMetrics.mZoom;
-
+  CSSPoint scrollOffset = aFrameMetrics.mScrollOffset;
   CSSRect scrollableRect = aFrameMetrics.GetExpandedScrollableRect();
-
-  float xSkateSizeMultiplier = gXSkateSizeMultiplier,
-        ySkateSizeMultiplier = gYSkateSizeMultiplier;
-
-  if (gEnlargeDisplayPortWhenOnlyScrollable) {
-    // Check if the displayport, without being enlarged, fits tightly inside the
-    // scrollable rect. If so, we're not going to be able to enlarge it, so we
-    // should consider enlarging the opposite axis.
-    if (scrollableRect.width - compositionBounds.width <= EPSILON ||
-        aFrameMetrics.GetDisableScrollingX()) {
-      xSkateSizeMultiplier = 1.f;
-      ySkateSizeMultiplier = gYStationarySizeMultiplier;
-    }
-    // Even if we end up overwriting the previous multipliers, it doesn't
-    // matter, since this frame's scrollable rect fits within its composition
-    // bounds on both axes and we won't be enlarging either displayport axis.
-    if (scrollableRect.height - compositionBounds.height <= EPSILON ||
-        aFrameMetrics.GetDisableScrollingY()) {
-      ySkateSizeMultiplier = 1.f;
-      xSkateSizeMultiplier = gXSkateSizeMultiplier;
-    }
-  }
 
   // If scrolling is disabled here then our actual velocity is going
   // to be zero, so treat the displayport accordingly.
@@ -1375,16 +1374,27 @@ const CSSRect AsyncPanZoomController::CalculatePendingDisplayPort(
     velocity.y = 0;
   }
 
-  // Enlarge the displayport along both axes depending on how fast we're moving
-  // on that axis and how long it takes to paint. Apply some heuristics to try
-  // to minimize checkerboarding.
-  EnlargeDisplayPortAlongAxis(&(displayPort.x), &(displayPort.width),
-    estimatedPaintDurationMillis, velocity.x,
-    gXStationarySizeMultiplier, xSkateSizeMultiplier);
-  EnlargeDisplayPortAlongAxis(&(displayPort.y), &(displayPort.height),
-    estimatedPaintDurationMillis, velocity.y,
-    gYStationarySizeMultiplier, ySkateSizeMultiplier);
+  // Calculate the displayport size based on how fast we're moving along each axis.
+  CSSSize displayPortSize = CalculateDisplayPortSize(compositionBounds, velocity);
 
+  if (gEnlargeDisplayPortWhenClipped) {
+    RedistributeDisplayPortExcess(displayPortSize, compositionBounds, scrollableRect,
+                                  aFrameMetrics.GetDisableScrollingX(),
+                                  aFrameMetrics.GetDisableScrollingY());
+  }
+
+  // Offset the displayport, depending on how fast we're moving and the
+  // estimated time it takes to paint, to try to minimise checkerboarding.
+  float estimatedPaintDurationMillis = (float)(aEstimatedPaintDuration * 1000.0);
+  float paintFactor = (gUsePaintDuration ? estimatedPaintDurationMillis : 50.0f);
+  CSSRect displayPort = CSSRect(scrollOffset + (velocity * paintFactor * gVelocityBias),
+                                displayPortSize);
+
+  // Re-center the displayport based on its expansion over the composition bounds.
+  displayPort.MoveBy((compositionBounds.width - displayPort.width)/2.0f,
+                     (compositionBounds.height - displayPort.height)/2.0f);
+
+  // Make sure the displayport remains within the scrollable rect.
   displayPort = displayPort.ForceInside(scrollableRect) - scrollOffset;
 
   APZC_LOG_FM(aFrameMetrics,
