@@ -23,6 +23,9 @@ Cu.import("resource://services-sync/stages/cluster.js");
 Cu.import("resource://gre/modules/FxAccounts.jsm");
 
 // Lazy imports to prevent unnecessary load on startup.
+XPCOMUtils.defineLazyModuleGetter(this, "Weave",
+                                  "resource://services-sync/main.js");
+
 XPCOMUtils.defineLazyModuleGetter(this, "BulkKeyBundle",
                                   "resource://services-sync/keys.js");
 
@@ -89,6 +92,11 @@ this.BrowserIDManager.prototype = {
   _token: null,
   _account: null,
 
+  // null if no error, otherwise a LOGIN_FAILED_* value that indicates why
+  // we failed to authenticate (but note it might not be an actual
+  // authentication problem, just a transient network error or similar)
+  _authFailureReason: null,
+
   // it takes some time to fetch a sync key bundle, so until this flag is set,
   // we don't consider the lack of a keybundle as a failure state.
   _shouldHaveSyncKeyBundle: false,
@@ -114,18 +122,51 @@ this.BrowserIDManager.prototype = {
     return this.initializeWithCurrentIdentity();
   },
 
+  /**
+   * Ensure the user is logged in.  Returns a promise that resolves when
+   * the user is logged in, or is rejected if the login attempt has failed.
+   */
+  ensureLoggedIn: function() {
+    if (!this._shouldHaveSyncKeyBundle) {
+      // We are already in the process of logging in.
+      return this.whenReadyToAuthenticate.promise;
+    }
+
+    // If we are already happy then there is nothing more to do.
+    if (Weave.Status.login == LOGIN_SUCCEEDED) {
+      return Promise.resolve();
+    }
+
+    // Similarly, if we have a previous failure that implies an explicit
+    // re-entering of credentials by the user is necessary we don't take any
+    // further action - an observer will fire when the user does that.
+    if (Weave.Status.login == LOGIN_FAILED_LOGIN_REJECTED) {
+      return Promise.reject();
+    }
+
+    // So - we've a previous auth problem and aren't currently attempting to
+    // log in - so fire that off.
+    this.initializeWithCurrentIdentity();
+    return this.whenReadyToAuthenticate.promise;
+  },
+
   initializeWithCurrentIdentity: function(isInitialSync=false) {
+    // While this function returns a promise that resolves once we've started
+    // the auth process, that process is complete when
+    // this.whenReadyToAuthenticate.promise resolves.
     this._log.trace("initializeWithCurrentIdentity");
-    Components.utils.import("resource://services-sync/main.js");
 
     // Reset the world before we do anything async.
     this.whenReadyToAuthenticate = Promise.defer();
     this._shouldHaveSyncKeyBundle = false;
+    this._authFailureReason = null;
 
     return this._fxaService.getSignedInUser().then(accountData => {
       if (!accountData) {
         this._log.info("initializeWithCurrentIdentity has no user logged in");
         this._account = null;
+        this._shouldHaveSyncKeyBundle = true;
+        this.whenReadyToAuthenticate.reject("no user is logged in");
         return;
       }
 
@@ -160,6 +201,7 @@ this.BrowserIDManager.prototype = {
         this._shouldHaveSyncKeyBundle = true; // and we should actually have one...
         this.whenReadyToAuthenticate.resolve();
         this._log.info("Background fetch for key bundle done");
+        Weave.Status.login = LOGIN_SUCCEEDED;
         if (isInitialSync) {
           this._log.info("Doing initial sync actions");
           Svc.Prefs.set("firstSync", "resetClient");
@@ -186,7 +228,6 @@ this.BrowserIDManager.prototype = {
       break;
 
     case fxAccountsCommon.ONLOGOUT_NOTIFICATION:
-      Components.utils.import("resource://services-sync/main.js");
       // Setting .username calls resetCredentials which drops the key bundle
       // and resets _shouldHaveSyncKeyBundle.
       this.username = "";
@@ -329,6 +370,11 @@ this.BrowserIDManager.prototype = {
    * Sync.
    */
   get currentAuthState() {
+    if (this._authFailureReason) {
+      this._log.info("currentAuthState returning " + this._authFailureReason +
+                     " due to previous failure");
+      return this._authFailureReason;
+    }
     // TODO: need to revisit this. Currently this isn't ready to go until
     // both the username and syncKeyBundle are both configured and having no
     // username seems to make things fail fast so that's good.
@@ -432,8 +478,11 @@ this.BrowserIDManager.prototype = {
       let deferred = Promise.defer();
       let cb = function (err, token) {
         if (err) {
-          log.info("TokenServerClient.getTokenFromBrowserIDAssertion() failed with: " + err.message);
-          return deferred.reject(new AuthenticationError(err));
+          log.info("TokenServerClient.getTokenFromBrowserIDAssertion() failed with: " + err);
+          if (err.response && err.response.status === 401) {
+            err = new AuthenticationError(err);
+          }
+          return deferred.reject(err);
         } else {
           log.debug("Successfully got a sync token");
           return deferred.resolve(token);
@@ -448,6 +497,7 @@ this.BrowserIDManager.prototype = {
       log.debug("Getting an assertion");
       let audience = Services.io.newURI(tokenServerURI, null, null).prePath;
       return fxa.getAssertion(audience).then(null, err => {
+        log.error("fxa.getAssertion() failed with: " + err.code + " - " + err.message);
         if (err.code === 401) {
           throw new AuthenticationError("Unable to get assertion for user");
         } else {
@@ -474,14 +524,19 @@ this.BrowserIDManager.prototype = {
         // and client-state error)
         if (err instanceof AuthenticationError) {
           this._log.error("Authentication error in _fetchTokenForUser: " + err);
-          // Drop the sync key bundle, but still expect to have one.
-          // This will arrange for us to be in the right 'currentAuthState'
-          // such that UI will show the right error.
-          this._shouldHaveSyncKeyBundle = true;
-          this._syncKeyBundle = null;
-          Weave.Status.login = this.currentAuthState;
-          Services.obs.notifyObservers(null, "weave:service:login:error", null);
+          // set it to the "fatal" LOGIN_FAILED_LOGIN_REJECTED reason.
+          this._authFailureReason = LOGIN_FAILED_LOGIN_REJECTED;
+        } else {
+          this._log.error("Non-authentication error in _fetchTokenForUser: " + err.message);
+          // for now assume it is just a transient network related problem.
+          this._authFailureReason = LOGIN_FAILED_NETWORK_ERROR;
         }
+        // Drop the sync key bundle, but still expect to have one.
+        // This will arrange for us to be in the right 'currentAuthState'
+        // such that UI will show the right error.
+        this._shouldHaveSyncKeyBundle = true;
+        this._syncKeyBundle = null;
+        Weave.Status.login = this._authFailureReason;
         throw err;
       });
   },

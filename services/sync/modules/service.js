@@ -948,6 +948,13 @@ Sync11Service.prototype = {
         throw "Aborting login, client not configured.";
       }
 
+      // Ask the identity manager to explicitly login now.
+      let cb = Async.makeSpinningCallback();
+      this.identity.ensureLoggedIn().then(cb, cb);
+
+      // Just let any errors bubble up - they've more context than we do!
+      cb.wait();
+
       // Calling login() with parameters when the client was
       // previously not configured means setup was completed.
       if (initialStatus == CLIENT_NOT_CONFIGURED
