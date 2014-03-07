@@ -274,6 +274,7 @@ pref("ui.dragThresholdY", 25);
 pref("layers.offmainthreadcomposition.enabled", true);
 #ifndef MOZ_WIDGET_GONK
 pref("dom.ipc.tabs.disabled", true);
+pref("layers.acceleration.disabled", true);
 pref("layers.offmainthreadcomposition.async-animations", false);
 pref("layers.async-video.enabled", false);
 #else
