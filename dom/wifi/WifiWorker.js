@@ -554,14 +554,14 @@ var WifiManager = (function() {
       didConnectSupplicant(function(){});
       return;
     }
-    if (connectTries++ < 3) {
-      // Try again in 5 seconds.
+    if (connectTries++ < 5) {
+      // Try again in 1 seconds.
       if (!retryTimer)
         retryTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 
       retryTimer.initWithCallback(function(timer) {
         wifiCommand.connectToSupplicant(connectCallback);
-      }, 5000, Ci.nsITimer.TYPE_ONE_SHOT);
+      }, 1000, Ci.nsITimer.TYPE_ONE_SHOT);
       return;
     }
 
