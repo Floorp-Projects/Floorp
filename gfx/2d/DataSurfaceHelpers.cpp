@@ -26,6 +26,28 @@ ConvertBGRXToBGRA(uint8_t* aData, const IntSize &aSize, int32_t aStride)
   }
 }
 
+void
+CopySurfaceDataToPackedArray(uint8_t* aSrc, uint8_t* aDst, IntSize aSrcSize,
+                             int32_t aSrcStride, int32_t aBytesPerPixel)
+{
+  MOZ_ASSERT(aBytesPerPixel > 0,
+             "Negative stride for aDst not currently supported");
+
+  int packedStride = aSrcSize.width * aBytesPerPixel;
+
+  if (aSrcStride == packedStride) {
+    // aSrc is already packed, so we can copy with a single memcpy.
+    memcpy(aDst, aSrc, packedStride * aSrcSize.height);
+  } else {
+    // memcpy one row at a time.
+    for (int row = 0; row < aSrcSize.height; ++row) {
+      memcpy(aDst, aSrc, packedStride);
+      aSrc += aSrcStride;
+      aDst += packedStride;
+    }
+  }
+}
+
 uint8_t*
 SurfaceToPackedBGRA(DataSourceSurface *aSurface)
 {
@@ -41,22 +63,16 @@ SurfaceToPackedBGRA(DataSourceSurface *aSurface)
     return nullptr;
   }
 
-  size_t stride = aSurface->Stride();
-
-  uint32_t* src = reinterpret_cast<uint32_t*>(aSurface->GetData());
-  uint32_t* dst = reinterpret_cast<uint32_t*>(imageBuffer);
-
-  if (stride == size.width * sizeof(uint32_t)) {
-    // DataSourceSurface is already packed. We can use memcpy.
-    memcpy(dst, src, size.width * size.height * sizeof(uint32_t));
-  } else {
-    for (int row = 0; row < size.height; ++row) {
-      for (int column = 0; column < size.width; ++column) {
-        *dst++ = src[column];
-      }
-      src += (stride/4);
-    }
+  DataSourceSurface::MappedSurface map;
+  if (!aSurface->Map(DataSourceSurface::MapType::READ, &map)) {
+    delete [] imageBuffer;
+    return nullptr;
   }
+
+  CopySurfaceDataToPackedArray(map.mData, imageBuffer, size,
+                               map.mStride, 4 * sizeof(uint8_t));
+
+  aSurface->Unmap();
 
   if (format == SurfaceFormat::B8G8R8X8) {
     // Convert BGRX to BGRA by setting a to 255.
