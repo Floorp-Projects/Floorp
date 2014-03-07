@@ -368,6 +368,7 @@ GrallocImage::GetAsSourceSurface()
                            mSize,
                            surface->GetData(),
                            surface->Stride());
+    surface->Unmap();
     return surface;
   }
 
