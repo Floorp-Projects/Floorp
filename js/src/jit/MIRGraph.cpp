@@ -211,9 +211,19 @@ MBasicBlock::NewWithResumePoint(MIRGraph &graph, CompileInfo &info,
 
 MBasicBlock *
 MBasicBlock::NewPendingLoopHeader(MIRGraph &graph, CompileInfo &info,
-                                  MBasicBlock *pred, jsbytecode *entryPc)
+                                  MBasicBlock *pred, jsbytecode *entryPc,
+                                  unsigned stackPhiCount)
 {
-    return MBasicBlock::New(graph, nullptr, info, pred, entryPc, PENDING_LOOP_HEADER);
+    JS_ASSERT(entryPc != nullptr);
+
+    MBasicBlock *block = new(graph.alloc()) MBasicBlock(graph, info, entryPc, PENDING_LOOP_HEADER);
+    if (!block->init())
+        return nullptr;
+
+    if (!block->inherit(graph.alloc(), nullptr, pred, 0, stackPhiCount))
+        return nullptr;
+
+    return block;
 }
 
 MBasicBlock *
@@ -336,7 +346,7 @@ MBasicBlock::copySlots(MBasicBlock *from)
 
 bool
 MBasicBlock::inherit(TempAllocator &alloc, BytecodeAnalysis *analysis, MBasicBlock *pred,
-                     uint32_t popped)
+                     uint32_t popped, unsigned stackPhiCount)
 {
     if (pred) {
         stackPosition_ = pred->stackPosition_;
@@ -367,7 +377,29 @@ MBasicBlock::inherit(TempAllocator &alloc, BytecodeAnalysis *analysis, MBasicBlo
             return false;
 
         if (kind_ == PENDING_LOOP_HEADER) {
-            for (size_t i = 0; i < stackDepth(); i++) {
+            size_t i = 0;
+            for (i = 0; i < info().firstStackSlot(); i++) {
+                MPhi *phi = MPhi::New(alloc, i);
+                if (!phi->addInputSlow(pred->getSlot(i)))
+                    return false;
+                addPhi(phi);
+                setSlot(i, phi);
+                entryResumePoint()->setOperand(i, phi);
+            }
+
+            JS_ASSERT(stackPhiCount <= stackDepth());
+            JS_ASSERT(info().firstStackSlot() <= stackDepth() - stackPhiCount);
+
+            // Avoid creating new phis for stack values that aren't part of the
+            // loop.  Note that for loop headers that can OSR, all values on the
+            // stack are part of the loop.
+            for (; i < stackDepth() - stackPhiCount; i++) {
+                MDefinition *val = pred->getSlot(i);
+                setSlot(i, val);
+                entryResumePoint()->setOperand(i, val);
+            }
+
+            for (; i < stackDepth(); i++) {
                 MPhi *phi = MPhi::New(alloc, i);
                 if (!phi->addInputSlow(pred->getSlot(i)))
                     return false;
