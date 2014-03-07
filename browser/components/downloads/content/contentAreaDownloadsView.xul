@@ -38,7 +38,8 @@
   <stack flex="1">
     <richlistbox id="downloadsRichListBox"/>
     <description id="downloadsListEmptyDescription"
-                 value="&downloadsListEmpty.label;"/>
+                 value="&downloadsListEmpty.label;"
+                 mousethrough="always"/>
   </stack>
   <commandset id="downloadCommands"/>
   <menupopup id="downloadsContextMenu"/>

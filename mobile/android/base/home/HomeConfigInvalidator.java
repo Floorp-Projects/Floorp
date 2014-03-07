@@ -190,35 +190,9 @@ public class HomeConfigInvalidator implements GeckoEventListener {
     }
 
     /**
-     * Replace an element if a matching PanelConfig is
-     * present in the given list.
-     */
-    private boolean replacePanelConfig(List<PanelConfig> panelConfigs, PanelConfig panelConfig) {
-        final int index = panelConfigs.indexOf(panelConfig);
-        if (index >= 0) {
-            panelConfigs.set(index, panelConfig);
-            Log.d(LOGTAG, "executePendingChanges: replaced position " + index + " with " + panelConfig.getId());
-
-            return true;
-        }
-
-        return false;
-    }
-
-    private PanelConfig findPanelConfigWithId(List<PanelConfig> panelConfigs, String panelId) {
-        for (PanelConfig panelConfig : panelConfigs) {
-            if (panelConfig.getId().equals(panelId)) {
-                return panelConfig;
-            }
-        }
-
-        return null;
-    }
-
-    /**
      * Runs in the background thread.
      */
-    private List<PanelConfig> executePendingChanges(List<PanelConfig> panelConfigs) {
+    private void executePendingChanges(HomeConfig.Editor editor) {
         boolean shouldRefresh = false;
 
         while (!mPendingChanges.isEmpty()) {
@@ -227,17 +201,15 @@ public class HomeConfigInvalidator implements GeckoEventListener {
             switch (pendingChange.type) {
                 case UNINSTALL: {
                     final String panelId = (String) pendingChange.target;
-                    final PanelConfig panelConfig = findPanelConfigWithId(panelConfigs, panelId);
-                    if (panelConfig != null && panelConfigs.remove(panelConfig)) {
-                        Log.d(LOGTAG, "executePendingChanges: removed panel " + panelConfig.getId());
+                    if (editor.uninstall(panelId)) {
+                        Log.d(LOGTAG, "executePendingChanges: uninstalled panel " + panelId);
                     }
                     break;
                 }
 
                 case INSTALL: {
                     final PanelConfig panelConfig = (PanelConfig) pendingChange.target;
-                    if (!replacePanelConfig(panelConfigs, panelConfig)) {
-                        panelConfigs.add(panelConfig);
+                    if (editor.install(panelConfig)) {
                         Log.d(LOGTAG, "executePendingChanges: added panel " + panelConfig.getId());
                     }
                     break;
@@ -245,8 +217,8 @@ public class HomeConfigInvalidator implements GeckoEventListener {
 
                 case UPDATE: {
                     final PanelConfig panelConfig = (PanelConfig) pendingChange.target;
-                    if (!replacePanelConfig(panelConfigs, panelConfig)) {
-                        Log.w(LOGTAG, "Tried to update non-existing panel " + panelConfig.getId());
+                    if (editor.update(panelConfig)) {
+                        Log.w(LOGTAG, "executePendingChanges: updated panel " + panelConfig.getId());
                     }
                     break;
                 }
@@ -258,23 +230,19 @@ public class HomeConfigInvalidator implements GeckoEventListener {
         }
 
         if (shouldRefresh) {
-            return executeRefresh(panelConfigs);
-        } else {
-            return panelConfigs;
+            executeRefresh(editor);
         }
     }
 
     /**
      * Runs in the background thread.
      */
-    private List<PanelConfig> refreshFromPanelInfos(List<PanelConfig> panelConfigs, List<PanelInfo> panelInfos) {
+    private void refreshFromPanelInfos(HomeConfig.Editor editor, List<PanelInfo> panelInfos) {
         Log.d(LOGTAG, "refreshFromPanelInfos");
 
-        final int count = panelConfigs.size();
-        for (int i = 0; i < count; i++) {
-            final PanelConfig panelConfig = panelConfigs.get(i);
-
+        for (PanelConfig panelConfig : editor) {
             PanelConfig refreshedPanelConfig = null;
+
             if (panelConfig.isDynamic()) {
                 for (PanelInfo panelInfo : panelInfos) {
                     if (panelInfo.getId().equals(panelConfig.getId())) {
@@ -290,31 +258,26 @@ public class HomeConfigInvalidator implements GeckoEventListener {
 
             if (refreshedPanelConfig == null) {
                 Log.d(LOGTAG, "refreshFromPanelInfos: no refreshed panel, falling back: " + panelConfig.getId());
-                refreshedPanelConfig = panelConfig;
+                continue;
             }
 
-            refreshedPanelConfig.setIsDefault(panelConfig.isDefault());
-            refreshedPanelConfig.setIsDisabled(panelConfig.isDisabled());
-
-            Log.d(LOGTAG, "refreshFromPanelInfos: set " + i + " with " + refreshedPanelConfig.getId());
-            panelConfigs.set(i, refreshedPanelConfig);
+            Log.d(LOGTAG, "refreshFromPanelInfos: refreshed panel " + refreshedPanelConfig.getId());
+            editor.update(refreshedPanelConfig);
         }
-
-        return panelConfigs;
     }
 
     /**
      * Runs in the background thread.
      */
-    private List<PanelConfig> executeRefresh(List<PanelConfig> panelConfigs) {
-        if (panelConfigs.isEmpty()) {
-            return panelConfigs;
+    private void executeRefresh(HomeConfig.Editor editor) {
+        if (editor.isEmpty()) {
+            return;
         }
 
         Log.d(LOGTAG, "executeRefresh");
 
         final Set<String> ids = new HashSet<String>();
-        for (PanelConfig panelConfig : panelConfigs) {
+        for (PanelConfig panelConfig : editor) {
             ids.add(panelConfig.getId());
         }
 
@@ -339,11 +302,10 @@ public class HomeConfigInvalidator implements GeckoEventListener {
                 panelRequestLock.wait(PANEL_INFO_TIMEOUT_MSEC);
 
                 Log.d(LOGTAG, "executeRefresh: done fetching panel infos");
-                return refreshFromPanelInfos(panelConfigs, latestPanelInfos);
+                refreshFromPanelInfos(editor, latestPanelInfos);
             }
         } catch (InterruptedException e) {
             Log.e(LOGTAG, "Failed to fetch panels from gecko", e);
-            return panelConfigs;
         }
     }
 
@@ -353,7 +315,9 @@ public class HomeConfigInvalidator implements GeckoEventListener {
     private class InvalidationRunnable implements Runnable {
         @Override
         public void run() {
-            mHomeConfig.save(executePendingChanges(mHomeConfig.load()));
+            final HomeConfig.Editor editor = mHomeConfig.load().edit();
+            executePendingChanges(editor);
+            editor.commit();
         }
     };
 }
