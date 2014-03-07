@@ -83,7 +83,7 @@ let HighlighterActor = protocol.ActorClass({
    * outline highlighter for instance does not scrollIntoView
    */
   showBoxModel: method(function(node, options={}) {
-    if (node && this._isNodeValidForHighlighting(node.rawNode)) {
+    if (this._isNodeValidForHighlighting(node.rawNode)) {
       this._boxModelHighlighter.show(node.rawNode, options);
     } else {
       this._boxModelHighlighter.hide();
