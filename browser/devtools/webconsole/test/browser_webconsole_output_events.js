@@ -36,7 +36,7 @@ function test() {
       webconsole: hud,
       messages: [{
         name: "console.log() output for mousemove",
-        text: /"eventLogger" mousemove {target: .+, buttons: 1, clientX: \d+, clientY: \d+, layerX: \d+, layerY: \d+}/,
+        text: /"eventLogger" mousemove { target: .+, buttons: 1, clientX: \d+, clientY: \d+, layerX: \d+, layerY: \d+ }/,
         category: CATEGORY_WEBDEV,
         severity: SEVERITY_LOG,
       }],
@@ -49,7 +49,7 @@ function test() {
       webconsole: hud,
       messages: [{
         name: "console.log() output for keypress",
-        text: /"eventLogger" keypress Shift {target: .+, key: .+, charCode: \d+, keyCode: \d+}/,
+        text: /"eventLogger" keypress Shift { target: .+, key: .+, charCode: \d+, keyCode: \d+ }/,
         category: CATEGORY_WEBDEV,
         severity: SEVERITY_LOG,
       }],

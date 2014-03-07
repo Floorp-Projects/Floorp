@@ -189,7 +189,7 @@ a {
 }
 
 .message .learn-more-link {
-  color: #0000EE;
+  color: -moz-nativehyperlinktext;
   margin: 0 6px;
 }
 
@@ -369,6 +369,33 @@ a {
 .stacktrace .function {
   display: block;
   flex: 1 1 auto;
+}
+
+.cm-s-mozilla a[class] {
+  font-style: italic;
+  text-decoration: none;
+}
+
+.cm-s-mozilla a[class]:hover,
+.cm-s-mozilla a[class]:focus {
+  text-decoration: underline;
+}
+
+/* Open DOMNode in inspector button */
+.open-inspector {
+  background: url("chrome://browser/skin/devtools/vview-open-inspector.png") no-repeat 0 0;
+  padding-left: 16px;
+  margin-left: 5px;
+  cursor: pointer;
+}
+
+.elementNode:hover .open-inspector,
+.open-inspector:hover {
+  background-position: -32px 0;
+}
+
+.open-inspector:active {
+  background-position: -16px 0;
 }
 
 /* Replace these values with CSS variables as available */

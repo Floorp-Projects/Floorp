@@ -322,10 +322,7 @@ div.CodeMirror span.eval-text {
 
 .devtools-side-splitter {
   -moz-border-end: 1px solid black;
-}
-
-.devtools-responsive-container > .devtools-side-splitter {
-  border-top: 1px solid black;
+  border-color: black; /* Needed for responsive container at low width. */
 }
 
 .devtools-textinput,

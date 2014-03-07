@@ -68,7 +68,7 @@ var HistoryTestHelper = {
 
     // Just enough items so that there will be one less then the limit
     // after removing 4 items.
-    this.createNodes(this._startView._limit + 3);
+    this.createNodes(this._startView.maxTiles + 3);
 
     this._originalNavHistoryService = this._startView._navHistoryService;
     this._startView._navHistoryService = this.MockNavHistoryService;

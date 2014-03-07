@@ -55,7 +55,7 @@ let inputTests = [
   // 5 - basic array
   {
     input: "window.array1",
-    output: '[1, 2, 3, "a", "b", "c", "4", "5"]',
+    output: 'Array [ 1, 2, 3, "a", "b", "c", "4", "5" ]',
     printOutput: "1,2,3,a,b,c,4,5",
     inspectable: true,
     variablesViewLabel: "Array[8]",
@@ -64,8 +64,8 @@ let inputTests = [
   // 6 - array with objects
   {
     input: "window.array2",
-    output: '["a", HTMLDocument \u2192 test-console-output-02.html, <body>, ' +
-            "DOMStringMap[0], DOMTokenList[0]]",
+    output: 'Array [ "a", HTMLDocument \u2192 test-console-output-02.html, <body>, ' +
+            "DOMStringMap[0], DOMTokenList[0] ]",
     printOutput: '"a,[object HTMLDocument],[object HTMLBodyElement],' +
                  '[object DOMStringMap],"',
     inspectable: true,
@@ -75,8 +75,8 @@ let inputTests = [
   // 7 - array with more than 10 elements
   {
     input: "window.array3",
-    output: '[1, Window \u2192 test-console-output-02.html, null, "a", "b", ' +
-            'undefined, false, "", -Infinity, testfn3DisplayName(), 3 more\u2026]',
+    output: 'Array [ 1, Window \u2192 test-console-output-02.html, null, "a", "b", ' +
+            'undefined, false, "", -Infinity, testfn3DisplayName(), 3 more\u2026 ]',
     printOutput: '"1,[object Window],,a,b,,false,,-Infinity,' +
                  'function testfn3() { return 42; },[object Object],foo,bar"',
     inspectable: true,
@@ -86,7 +86,7 @@ let inputTests = [
   // 8 - array with holes and a cyclic reference
   {
     input: "window.array4",
-    output: '[,,,,, "test", Array[7]]',
+    output: 'Array [ , , , , , "test", Array[7] ]',
     printOutput: '",,,,,test,"',
     inspectable: true,
     variablesViewLabel: "Array[7]",
@@ -95,7 +95,7 @@ let inputTests = [
   // 9
   {
     input: "window.typedarray1",
-    output: 'Int32Array [1, 287, 8651, 40983, 8754]',
+    output: 'Int32Array [ 1, 287, 8651, 40983, 8754 ]',
     printOutput: "[object Int32Array]",
     inspectable: true,
     variablesViewLabel: "Int32Array[5]",
@@ -104,7 +104,7 @@ let inputTests = [
   // 10 - Set with cyclic reference
   {
     input: "window.set1",
-    output: 'Set [1, 2, null, Array[13], "a", "b", undefined, <head>, Set[9]]',
+    output: 'Set [ 1, 2, null, Array[13], "a", "b", undefined, <head>, Set[9] ]',
     printOutput: "[object Set]",
     inspectable: true,
     variablesViewLabel: "Set[9]",
@@ -113,8 +113,8 @@ let inputTests = [
   // 11 - Object with cyclic reference and a getter
   {
     input: "window.testobj2",
-    output: '{a: "b", c: "d", e: 1, f: "2", foo: Object, bar: Object, ' +
-            "getterTest: Getter}",
+    output: 'Object { a: "b", c: "d", e: 1, f: "2", foo: Object, bar: Object, ' +
+            "getterTest: Getter }",
     printOutput: "[object Object]",
     inspectable: true,
     variablesViewLabel: "Object",
@@ -123,8 +123,8 @@ let inputTests = [
   // 12 - Object with more than 10 properties
   {
     input: "window.testobj3",
-    output: '{a: "b", c: "d", e: 1, f: "2", g: true, h: null, i: undefined, ' +
-            'j: "", k: StyleSheetList[0], l: NodeList[5], 2 more\u2026}',
+    output: 'Object { a: "b", c: "d", e: 1, f: "2", g: true, h: null, i: undefined, ' +
+            'j: "", k: StyleSheetList[0], l: NodeList[5], 2 more\u2026 }',
     printOutput: "[object Object]",
     inspectable: true,
     variablesViewLabel: "Object",
@@ -133,7 +133,7 @@ let inputTests = [
   // 13 - Object with a non-enumerable property that we do not show
   {
     input: "window.testobj4",
-    output: '{a: "b", c: "d", 1 more\u2026}',
+    output: 'Object { a: "b", c: "d", 1 more\u2026 }',
     printOutput: "[object Object]",
     inspectable: true,
     variablesViewLabel: "Object",
@@ -142,7 +142,7 @@ let inputTests = [
   // 14 - Map with cyclic references
   {
     input: "window.map1",
-    output: 'Map {a: "b", HTMLCollection[2]: Object, Map[3]: Set[9]}',
+    output: 'Map { a: "b", HTMLCollection[2]: Object, Map[3]: Set[9] }',
     printOutput: "[object Map]",
     inspectable: true,
     variablesViewLabel: "Map[3]",
