@@ -6,7 +6,6 @@
 #define CacheFileIOManager__h__
 
 #include "CacheIOThread.h"
-#include "CacheEntriesEnumerator.h"
 #include "nsIEventTarget.h"
 #include "nsITimer.h"
 #include "nsCOMPtr.h"
@@ -26,6 +25,7 @@ class nsIDirectoryEnumerator;
 namespace mozilla {
 namespace net {
 
+class CacheFile;
 #ifdef DEBUG_HANDLES
 class CacheFileHandlesEntry;
 #endif
@@ -90,6 +90,7 @@ public:
   nsresult NewHandle(const SHA1Sum::Hash *aHash, bool aPriority, CacheFileHandle **_retval);
   void     RemoveHandle(CacheFileHandle *aHandlle);
   void     GetAllHandles(nsTArray<nsRefPtr<CacheFileHandle> > *_retval);
+  void     GetActiveHandles(nsTArray<nsRefPtr<CacheFileHandle> > *_retval);
   void     ClearAll();
   uint32_t HandleCount();
 
@@ -255,6 +256,7 @@ public:
                              const nsACString &aNewName,
                              CacheFileIOListener *aCallback);
   static nsresult EvictIfOverLimit();
+  static nsresult EvictAll();
 
   static nsresult InitIndexEntry(CacheFileHandle *aHandle,
                                  uint32_t         aAppId,
@@ -270,9 +272,6 @@ public:
     ENTRIES,
     DOOMED
   };
-
-  static nsresult EnumerateEntryFiles(EEnumerateMode aMode,
-                                      CacheEntriesEnumerator** aEnumerator);
 
   static void GetCacheDirectory(nsIFile** result);
 
@@ -322,6 +321,7 @@ private:
                               const nsACString &aNewName);
   nsresult EvictIfOverLimitInternal();
   nsresult OverLimitEvictionInternal();
+  nsresult EvictAllInternal();
 
   nsresult TrashDirectory(nsIFile *aFile);
   static void OnTrashTimer(nsITimer *aTimer, void *aClosure);

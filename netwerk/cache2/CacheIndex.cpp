@@ -16,6 +16,7 @@
 #include "prinrval.h"
 #include "nsIFile.h"
 #include "nsITimer.h"
+#include "mozilla/AutoRestore.h"
 #include <algorithm>
 
 
@@ -221,6 +222,72 @@ private:
   bool mLocked;
 };
 
+class FileOpenHelper : public CacheFileIOListener
+{
+public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+
+  FileOpenHelper(CacheIndex* aIndex)
+    : mIndex(aIndex)
+    , mCanceled(false)
+  {}
+
+  virtual ~FileOpenHelper() {}
+
+  void Cancel() {
+    mIndex->AssertOwnsLock();
+    mCanceled = true;
+  }
+
+private:
+  NS_IMETHOD OnFileOpened(CacheFileHandle *aHandle, nsresult aResult);
+  NS_IMETHOD OnDataWritten(CacheFileHandle *aHandle, const char *aBuf,
+                           nsresult aResult) {
+    MOZ_CRASH("FileOpenHelper::OnDataWritten should not be called!");
+    return NS_ERROR_UNEXPECTED;
+  }
+  NS_IMETHOD OnDataRead(CacheFileHandle *aHandle, char *aBuf,
+                        nsresult aResult) {
+    MOZ_CRASH("FileOpenHelper::OnDataRead should not be called!");
+    return NS_ERROR_UNEXPECTED;
+  }
+  NS_IMETHOD OnFileDoomed(CacheFileHandle *aHandle, nsresult aResult) {
+    MOZ_CRASH("FileOpenHelper::OnFileDoomed should not be called!");
+    return NS_ERROR_UNEXPECTED;
+  }
+  NS_IMETHOD OnEOFSet(CacheFileHandle *aHandle, nsresult aResult) {
+    MOZ_CRASH("FileOpenHelper::OnEOFSet should not be called!");
+    return NS_ERROR_UNEXPECTED;
+  }
+  NS_IMETHOD OnFileRenamed(CacheFileHandle *aHandle, nsresult aResult) {
+    MOZ_CRASH("FileOpenHelper::OnFileRenamed should not be called!");
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  nsRefPtr<CacheIndex> mIndex;
+  bool                 mCanceled;
+};
+
+NS_IMETHODIMP FileOpenHelper::OnFileOpened(CacheFileHandle *aHandle,
+                                           nsresult aResult)
+{
+  CacheIndexAutoLock lock(mIndex);
+
+  if (mCanceled) {
+    if (aHandle) {
+      CacheFileIOManager::DoomFile(aHandle, nullptr);
+    }
+
+    return NS_OK;
+  }
+
+  mIndex->OnFileOpenedInternal(this, aHandle, aResult);
+
+  return NS_OK;
+}
+
+NS_IMPL_ISUPPORTS1(FileOpenHelper, CacheFileIOListener);
+
 
 CacheIndex * CacheIndex::gInstance = nullptr;
 
@@ -239,16 +306,16 @@ CacheIndex::CacheIndex()
   , mState(INITIAL)
   , mShuttingDown(false)
   , mIndexNeedsUpdate(false)
+  , mRemovingAll(false)
   , mIndexOnDiskIsValid(false)
   , mDontMarkIndexClean(false)
   , mIndexTimeStamp(0)
+  , mUpdateEventPending(false)
   , mSkipEntries(0)
   , mProcessEntries(0)
   , mRWBuf(nullptr)
   , mRWBufSize(0)
   , mRWBufPos(0)
-  , mReadOpenCount(0)
-  , mReadFailed(false)
   , mJournalReadSuccessfully(false)
 {
   LOG(("CacheIndex::CacheIndex [this=%p]", this));
@@ -300,6 +367,8 @@ CacheIndex::Init(nsIFile *aCacheDirectory)
 
   nsRefPtr<CacheIndex> idx = new CacheIndex();
 
+  CacheIndexAutoLock lock(idx);
+
   nsresult rv = idx->InitInternal(aCacheDirectory);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -315,20 +384,9 @@ CacheIndex::InitInternal(nsIFile *aCacheDirectory)
   rv = aCacheDirectory->Clone(getter_AddRefs(mCacheDirectory));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  ChangeState(READING);
-
   mStartTime = TimeStamp::NowLoRes();
 
-  // dispatch an event since IO manager's path is not initialized yet
-  nsCOMPtr<nsIRunnable> event;
-  event = NS_NewRunnableMethod(this, &CacheIndex::ReadIndexFromDisk);
-
-  rv = NS_DispatchToCurrentThread(event);
-  if (NS_FAILED(rv)) {
-    ChangeState(INITIAL);
-    LOG(("CacheIndex::InitInternal() - Cannot dispatch event"));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+  ReadIndexFromDisk();
 
   return NS_OK;
 }
@@ -390,8 +448,8 @@ CacheIndex::PreShutdownInternal()
 
   MOZ_ASSERT(mShuttingDown);
 
-  if (mTimer) {
-    mTimer = nullptr;
+  if (mUpdateTimer) {
+    mUpdateTimer = nullptr;
   }
 
   switch (mState) {
@@ -405,8 +463,6 @@ CacheIndex::PreShutdownInternal()
       FinishRead(false);
       break;
     case BUILDING:
-      FinishBuild(false);
-      break;
     case UPDATING:
       FinishUpdate(false);
       break;
@@ -466,8 +522,6 @@ CacheIndex::Shutdown()
       index->FinishRead(false);
       break;
     case BUILDING:
-      index->FinishBuild(false);
-      break;
     case UPDATING:
       index->FinishUpdate(false);
       break;
@@ -980,6 +1034,90 @@ CacheIndex::UpdateEntry(const SHA1Sum::Hash *aHash,
 
 // static
 nsresult
+CacheIndex::RemoveAll()
+{
+  LOG(("CacheIndex::RemoveAll()"));
+
+  nsRefPtr<CacheIndex> index = gInstance;
+
+  if (!index) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  MOZ_ASSERT(CacheFileIOManager::IsOnIOThread());
+
+  nsCOMPtr<nsIFile> file;
+
+  {
+    CacheIndexAutoLock lock(index);
+
+    MOZ_ASSERT(!index->mRemovingAll);
+
+    if (!index->IsIndexUsable()) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+
+    AutoRestore<bool> saveRemovingAll(index->mRemovingAll);
+    index->mRemovingAll = true;
+
+    // Doom index and journal handles but don't null them out since this will be
+    // done in FinishWrite/FinishRead methods.
+    if (index->mIndexHandle) {
+      CacheFileIOManager::DoomFile(index->mIndexHandle, nullptr);
+    } else {
+      // We don't have a handle to index file, so get the file here, but delete
+      // it outside the lock. Ignore the result since this is not fatal.
+      index->GetFile(NS_LITERAL_CSTRING(kIndexName), getter_AddRefs(file));
+    }
+
+    if (index->mJournalHandle) {
+      CacheFileIOManager::DoomFile(index->mJournalHandle, nullptr);
+    }
+
+    switch (index->mState) {
+      case WRITING:
+        index->FinishWrite(false);
+        break;
+      case READY:
+        // nothing to do
+        break;
+      case READING:
+        index->FinishRead(false);
+        break;
+      case BUILDING:
+      case UPDATING:
+        index->FinishUpdate(false);
+        break;
+      default:
+        MOZ_ASSERT(false, "Unexpected state!");
+    }
+
+    // We should end up in READY state
+    MOZ_ASSERT(index->mState == READY);
+
+    // There should not be any handle
+    MOZ_ASSERT(!index->mIndexHandle);
+    MOZ_ASSERT(!index->mJournalHandle);
+
+    index->mIndexOnDiskIsValid = false;
+    index->mIndexNeedsUpdate = false;
+
+    index->mIndexStats.Clear();
+    index->mFrecencyArray.Clear();
+    index->mExpirationArray.Clear();
+    index->mIndex.Clear();
+  }
+
+  if (file) {
+    // Ignore the result. The file might not exist and the failure is not fatal.
+    file->Remove(false);
+  }
+
+  return NS_OK;
+}
+
+// static
+nsresult
 CacheIndex::HasEntry(const nsACString &aKey, EntryStatus *_retval)
 {
   LOG(("CacheIndex::HasEntry() [key=%s]", PromiseFlatCString(aKey).get()));
@@ -1274,10 +1412,11 @@ CacheIndex::WriteIndexToDisk()
 
   mProcessEntries = mIndexStats.ActiveEntriesCount();
 
+  mIndexFileOpener = new FileOpenHelper(this);
   rv = CacheFileIOManager::OpenFile(NS_LITERAL_CSTRING(kTempIndexName),
                                     CacheFileIOManager::SPECIAL_FILE |
                                     CacheFileIOManager::CREATE,
-                                    this);
+                                    mIndexFileOpener);
   if (NS_FAILED(rv)) {
     LOG(("CacheIndex::WriteIndexToDisk() - Can't open file [rv=0x%08x]", rv));
     FinishWrite(false);
@@ -1396,8 +1535,19 @@ CacheIndex::FinishWrite(bool aSucceeded)
   ReleaseBuffer();
 
   if (aSucceeded) {
+    // Opening of the file must not be in progress if writing succeeded.
+    MOZ_ASSERT(!mIndexFileOpener);
+
     mIndex.EnumerateEntries(&CacheIndex::ApplyIndexChanges, this);
     mIndexOnDiskIsValid = true;
+  } else {
+    if (mIndexFileOpener) {
+      // If opening of the file is still in progress (e.g. WRITE process was
+      // canceled by RemoveAll()) then we need to cancel the opener to make sure
+      // that OnFileOpenedInternal() won't be called.
+      mIndexFileOpener->Cancel();
+      mIndexFileOpener = nullptr;
+    }
   }
 
   ProcessPendingOperations();
@@ -1702,50 +1852,42 @@ CacheIndex::ReadIndexFromDisk()
 
   nsresult rv;
 
-  CacheIndexAutoLock lock(this);
+  AssertOwnsLock();
+  MOZ_ASSERT(mState == INITIAL);
 
-  MOZ_ASSERT(mState == READING);
+  ChangeState(READING);
 
-  mReadFailed = false;
-  mReadOpenCount = 0;
-
+  mIndexFileOpener = new FileOpenHelper(this);
   rv = CacheFileIOManager::OpenFile(NS_LITERAL_CSTRING(kIndexName),
                                     CacheFileIOManager::SPECIAL_FILE |
                                     CacheFileIOManager::OPEN,
-                                    this);
+                                    mIndexFileOpener);
   if (NS_FAILED(rv)) {
     LOG(("CacheIndex::ReadIndexFromDisk() - CacheFileIOManager::OpenFile() "
          "failed [rv=0x%08x, file=%s]", rv, kIndexName));
-    mReadFailed = true;
-  } else {
-    mReadOpenCount++;
+    FinishRead(false);
+    return;
   }
 
+  mJournalFileOpener = new FileOpenHelper(this);
   rv = CacheFileIOManager::OpenFile(NS_LITERAL_CSTRING(kJournalName),
                                     CacheFileIOManager::SPECIAL_FILE |
                                     CacheFileIOManager::OPEN,
-                                    this);
+                                    mJournalFileOpener);
   if (NS_FAILED(rv)) {
     LOG(("CacheIndex::ReadIndexFromDisk() - CacheFileIOManager::OpenFile() "
          "failed [rv=0x%08x, file=%s]", rv, kJournalName));
-    mReadFailed = true;
-  } else {
-    mReadOpenCount++;
+    FinishRead(false);
   }
 
+  mTmpFileOpener = new FileOpenHelper(this);
   rv = CacheFileIOManager::OpenFile(NS_LITERAL_CSTRING(kTempIndexName),
                                     CacheFileIOManager::SPECIAL_FILE |
                                     CacheFileIOManager::OPEN,
-                                    this);
+                                    mTmpFileOpener);
   if (NS_FAILED(rv)) {
     LOG(("CacheIndex::ReadIndexFromDisk() - CacheFileIOManager::OpenFile() "
          "failed [rv=0x%08x, file=%s]", rv, kTempIndexName));
-    mReadFailed = true;
-  } else {
-    mReadOpenCount++;
-  }
-
-  if (mReadOpenCount == 0) {
     FinishRead(false);
   }
 }
@@ -2133,6 +2275,19 @@ CacheIndex::FinishRead(bool aSucceeded)
     }
   }
 
+  if (mIndexFileOpener) {
+    mIndexFileOpener->Cancel();
+    mIndexFileOpener = nullptr;
+  }
+  if (mJournalFileOpener) {
+    mJournalFileOpener->Cancel();
+    mJournalFileOpener = nullptr;
+  }
+  if (mTmpFileOpener) {
+    mTmpFileOpener->Cancel();
+    mTmpFileOpener = nullptr;
+  }
+
   mIndexHandle = nullptr;
   mJournalHandle = nullptr;
   mRWHash = nullptr;
@@ -2148,7 +2303,7 @@ CacheIndex::FinishRead(bool aSucceeded)
     ProcessPendingOperations();
     // Remove all entries that we haven't seen during this session
     mIndex.EnumerateEntries(&CacheIndex::RemoveNonFreshEntries, this);
-    StartBuildingIndex();
+    StartUpdatingIndex(true);
     return;
   }
 
@@ -2156,7 +2311,7 @@ CacheIndex::FinishRead(bool aSucceeded)
     mTmpJournal.Clear();
     EnsureNoFreshEntry();
     ProcessPendingOperations();
-    StartUpdatingIndex();
+    StartUpdatingIndex(false);
     return;
   }
 
@@ -2171,9 +2326,9 @@ CacheIndex::FinishRead(bool aSucceeded)
 
 // static
 void
-CacheIndex::DelayedBuildUpdate(nsITimer *aTimer, void *aClosure)
+CacheIndex::DelayedUpdate(nsITimer *aTimer, void *aClosure)
 {
-  LOG(("CacheIndex::DelayedBuildUpdate()"));
+  LOG(("CacheIndex::DelayedUpdate()"));
 
   nsresult rv;
   nsRefPtr<CacheIndex> index = gInstance;
@@ -2184,7 +2339,7 @@ CacheIndex::DelayedBuildUpdate(nsITimer *aTimer, void *aClosure)
 
   CacheIndexAutoLock lock(index);
 
-  index->mTimer = nullptr;
+  index->mUpdateTimer = nullptr;
 
   if (!index->IsIndexUsable()) {
     return;
@@ -2194,30 +2349,34 @@ CacheIndex::DelayedBuildUpdate(nsITimer *aTimer, void *aClosure)
     return;
   }
 
-  MOZ_ASSERT(index->mState == BUILDING || index->mState == UPDATING);
+  // mUpdateEventPending must be false here since StartUpdatingIndex() won't
+  // schedule timer if it is true.
+  MOZ_ASSERT(!index->mUpdateEventPending);
+  if (index->mState != BUILDING && index->mState != UPDATING) {
+    LOG(("CacheIndex::DelayedUpdate() - Update was canceled"));
+    return;
+  }
 
   // We need to redispatch to run with lower priority
   nsRefPtr<CacheIOThread> ioThread = CacheFileIOManager::IOThread();
   MOZ_ASSERT(ioThread);
 
-  rv = ioThread->Dispatch(index, CacheIOThread::BUILD_OR_UPDATE_INDEX);
+  index->mUpdateEventPending = true;
+  rv = ioThread->Dispatch(index, CacheIOThread::INDEX);
   if (NS_FAILED(rv)) {
-    NS_WARNING("CacheIndex::DelayedBuildUpdate() - Can't dispatch event");
-    LOG(("CacheIndex::DelayedBuildUpdate() - Can't dispatch event" ));
-    if (index->mState == BUILDING) {
-      index->FinishBuild(false);
-    } else {
-      index->FinishUpdate(false);
-    }
+    index->mUpdateEventPending = false;
+    NS_WARNING("CacheIndex::DelayedUpdate() - Can't dispatch event");
+    LOG(("CacheIndex::DelayedUpdate() - Can't dispatch event" ));
+    index->FinishUpdate(false);
   }
 }
 
 nsresult
-CacheIndex::ScheduleBuildUpdateTimer(uint32_t aDelay)
+CacheIndex::ScheduleUpdateTimer(uint32_t aDelay)
 {
-  LOG(("CacheIndex::ScheduleBuildUpdateTimer() [delay=%u]", aDelay));
+  LOG(("CacheIndex::ScheduleUpdateTimer() [delay=%u]", aDelay));
 
-  MOZ_ASSERT(!mTimer);
+  MOZ_ASSERT(!mUpdateTimer);
 
   nsresult rv;
 
@@ -2230,11 +2389,11 @@ CacheIndex::ScheduleBuildUpdateTimer(uint32_t aDelay)
   rv = timer->SetTarget(ioTarget);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = timer->InitWithFuncCallback(CacheIndex::DelayedBuildUpdate, nullptr,
+  rv = timer->InitWithFuncCallback(CacheIndex::DelayedUpdate, nullptr,
                                    aDelay, nsITimer::TYPE_ONE_SHOT);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mTimer.swap(timer);
+  mUpdateTimer.swap(timer);
   return NS_OK;
 }
 
@@ -2299,43 +2458,16 @@ CacheIndex::InitEntryFromDiskData(CacheIndexEntry *aEntry,
                                  (aFileSize + 0x3FF) >> 10)));
 }
 
-void
-CacheIndex::StartBuildingIndex()
+bool
+CacheIndex::IsUpdatePending()
 {
-  LOG(("CacheIndex::StartBuildingIndex()"));
+  AssertOwnsLock();
 
-  nsresult rv;
-
-  ChangeState(BUILDING);
-  mDontMarkIndexClean = false;
-
-  if (mShuttingDown) {
-    FinishBuild(false);
-    return;
+  if (mUpdateTimer || mUpdateEventPending) {
+    return true;
   }
 
-  uint32_t elapsed = (TimeStamp::NowLoRes() - mStartTime).ToMilliseconds();
-  if (elapsed < kBuildIndexStartDelay) {
-    rv = ScheduleBuildUpdateTimer(kBuildIndexStartDelay - elapsed);
-    if (NS_SUCCEEDED(rv)) {
-      return;
-    }
-
-    LOG(("CacheIndex::StartBuildingIndex() - ScheduleBuildUpdateTimer() failed."
-         " Starting build immediately."));
-  }
-
-  nsRefPtr<CacheIOThread> ioThread = CacheFileIOManager::IOThread();
-  MOZ_ASSERT(ioThread);
-
-  // We need to dispatch an event even if we are on IO thread since we need to
-  // build the inde with the correct priority.
-  rv = ioThread->Dispatch(this, CacheIOThread::BUILD_OR_UPDATE_INDEX);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("CacheIndex::StartBuildingIndex() - Can't dispatch event");
-    LOG(("CacheIndex::StartBuildingIndex() - Can't dispatch event" ));
-    FinishBuild(false);
-  }
+  return false;
 }
 
 void
@@ -2356,13 +2488,13 @@ CacheIndex::BuildIndex()
       rv = SetupDirectoryEnumerator();
     }
     if (mState == SHUTDOWN) {
-      // The index was shut down while we released the lock. FinishBuild() was
+      // The index was shut down while we released the lock. FinishUpdate() was
       // already called from Shutdown(), so just simply return here.
       return;
     }
 
     if (NS_FAILED(rv)) {
-      FinishBuild(false);
+      FinishUpdate(false);
       return;
     }
   }
@@ -2370,6 +2502,7 @@ CacheIndex::BuildIndex()
   while (true) {
     if (CacheIOThread::YieldAndRerun()) {
       LOG(("CacheIndex::BuildIndex() - Breaking loop for higher level events."));
+      mUpdateEventPending = true;
       return;
     }
 
@@ -2383,7 +2516,7 @@ CacheIndex::BuildIndex()
       return;
     }
     if (!file) {
-      FinishBuild(NS_SUCCEEDED(rv));
+      FinishUpdate(NS_SUCCEEDED(rv));
       return;
     }
 
@@ -2475,54 +2608,17 @@ CacheIndex::BuildIndex()
   NS_NOTREACHED("We should never get here");
 }
 
-void
-CacheIndex::FinishBuild(bool aSucceeded)
-{
-  LOG(("CacheIndex::FinishBuild() [succeeded=%d]", aSucceeded));
-
-  MOZ_ASSERT((!aSucceeded && mState == SHUTDOWN) || mState == BUILDING);
-
-  AssertOwnsLock();
-
-  if (mDirEnumerator) {
-    if (NS_IsMainThread()) {
-      LOG(("CacheIndex::FinishBuild() - posting of PreShutdownInternal failed? "
-           "Cannot safely release mDirEnumerator, leaking it!"));
-      NS_WARNING(("CacheIndex::FinishBuild() - Leaking mDirEnumerator!"));
-      // This can happen only in case dispatching event to IO thread failed in
-      // CacheIndex::PreShutdown().
-      mDirEnumerator.forget(); // Leak it since dir enumerator is not threadsafe
-    } else {
-      mDirEnumerator->Close();
-      mDirEnumerator = nullptr;
-    }
-  }
-
-  if (!aSucceeded) {
-    mDontMarkIndexClean = true;
-  }
-
-  if (mState == BUILDING) {
-    // Make sure we won't start update. Index should be up to date, if build
-    // was successful. If the build failed, there is no reason to believe that
-    // the update will succeed.
-    mIndexNeedsUpdate = false;
-
-    ChangeState(READY);
-    mLastDumpTime = TimeStamp::NowLoRes(); // Do not dump new index immediately
-  }
-}
-
 bool
 CacheIndex::StartUpdatingIndexIfNeeded(bool aSwitchingToReadyState)
 {
   // Start updating process when we are in or we are switching to READY state
-  // and index needs update, but not during shutdown.
+  // and index needs update, but not during shutdown or when removing all
+  // entries.
   if ((mState == READY || aSwitchingToReadyState) && mIndexNeedsUpdate &&
-      !mShuttingDown) {
+      !mShuttingDown && !mRemovingAll) {
     LOG(("CacheIndex::StartUpdatingIndexIfNeeded() - starting update process"));
     mIndexNeedsUpdate = false;
-    StartUpdatingIndex();
+    StartUpdatingIndex(false);
     return true;
   }
 
@@ -2530,31 +2626,38 @@ CacheIndex::StartUpdatingIndexIfNeeded(bool aSwitchingToReadyState)
 }
 
 void
-CacheIndex::StartUpdatingIndex()
+CacheIndex::StartUpdatingIndex(bool aRebuild)
 {
-  LOG(("CacheIndex::StartUpdatingIndex()"));
+  LOG(("CacheIndex::StartUpdatingIndex() [rebuild=%d]", aRebuild));
+
+  AssertOwnsLock();
 
   nsresult rv;
 
   mIndexStats.Log();
 
-  ChangeState(UPDATING);
+  ChangeState(aRebuild ? BUILDING : UPDATING);
   mDontMarkIndexClean = false;
 
-  if (mShuttingDown) {
+  if (mShuttingDown || mRemovingAll) {
     FinishUpdate(false);
+    return;
+  }
+
+  if (IsUpdatePending()) {
+    LOG(("CacheIndex::StartUpdatingIndex() - Update is already pending"));
     return;
   }
 
   uint32_t elapsed = (TimeStamp::NowLoRes() - mStartTime).ToMilliseconds();
   if (elapsed < kUpdateIndexStartDelay) {
-    rv = ScheduleBuildUpdateTimer(kUpdateIndexStartDelay - elapsed);
+    rv = ScheduleUpdateTimer(kUpdateIndexStartDelay - elapsed);
     if (NS_SUCCEEDED(rv)) {
       return;
     }
 
-    LOG(("CacheIndex::StartUpdatingIndex() - ScheduleBuildUpdateTimer() failed."
-         " Starting update immediately."));
+    LOG(("CacheIndex::StartUpdatingIndex() - ScheduleUpdateTimer() failed. "
+         "Starting update immediately."));
   }
 
   nsRefPtr<CacheIOThread> ioThread = CacheFileIOManager::IOThread();
@@ -2562,8 +2665,10 @@ CacheIndex::StartUpdatingIndex()
 
   // We need to dispatch an event even if we are on IO thread since we need to
   // update the index with the correct priority.
-  rv = ioThread->Dispatch(this, CacheIOThread::BUILD_OR_UPDATE_INDEX);
+  mUpdateEventPending = true;
+  rv = ioThread->Dispatch(this, CacheIOThread::INDEX);
   if (NS_FAILED(rv)) {
+    mUpdateEventPending = false;
     NS_WARNING("CacheIndex::StartUpdatingIndex() - Can't dispatch event");
     LOG(("CacheIndex::StartUpdatingIndex() - Can't dispatch event" ));
     FinishUpdate(false);
@@ -2588,7 +2693,7 @@ CacheIndex::UpdateIndex()
       rv = SetupDirectoryEnumerator();
     }
     if (mState == SHUTDOWN) {
-      // The index was shut down while we released the lock. FinishBuild() was
+      // The index was shut down while we released the lock. FinishUpdate() was
       // already called from Shutdown(), so just simply return here.
       return;
     }
@@ -2603,6 +2708,7 @@ CacheIndex::UpdateIndex()
     if (CacheIOThread::YieldAndRerun()) {
       LOG(("CacheIndex::UpdateIndex() - Breaking loop for higher level "
            "events."));
+      mUpdateEventPending = true;
       return;
     }
 
@@ -2747,7 +2853,8 @@ CacheIndex::FinishUpdate(bool aSucceeded)
 {
   LOG(("CacheIndex::FinishUpdate() [succeeded=%d]", aSucceeded));
 
-  MOZ_ASSERT((!aSucceeded && mState == SHUTDOWN) || mState == UPDATING);
+  MOZ_ASSERT(mState == UPDATING || mState == BUILDING ||
+             (!aSucceeded && mState == SHUTDOWN));
 
   AssertOwnsLock();
 
@@ -2769,21 +2876,23 @@ CacheIndex::FinishUpdate(bool aSucceeded)
     mDontMarkIndexClean = true;
   }
 
-  if (mState == UPDATING) {
-    if (aSucceeded) {
-      // If we've iterated over all entries successfully then all entries that
-      // really exist on the disk are now marked as fresh. All non-fresh entries
-      // don't exist anymore and must be removed from the index.
-      mIndex.EnumerateEntries(&CacheIndex::RemoveNonFreshEntries, this);
-    }
-
-    // Make sure we won't start update again. If the update failed, there is no
-    // reason to believe that it will succeed next time.
-    mIndexNeedsUpdate = false;
-
-    ChangeState(READY);
-    mLastDumpTime = TimeStamp::NowLoRes(); // Do not dump new index immediately
+  if (mState == SHUTDOWN) {
+    return;
   }
+
+  if (mState == UPDATING && aSucceeded) {
+    // If we've iterated over all entries successfully then all entries that
+    // really exist on the disk are now marked as fresh. All non-fresh entries
+    // don't exist anymore and must be removed from the index.
+    mIndex.EnumerateEntries(&CacheIndex::RemoveNonFreshEntries, this);
+  }
+
+  // Make sure we won't start update. If the build or update failed, there is no
+  // reason to believe that it will succeed next time.
+  mIndexNeedsUpdate = false;
+
+  ChangeState(READY);
+  mLastDumpTime = TimeStamp::NowLoRes(); // Do not dump new index immediately
 }
 
 // static
@@ -2845,8 +2954,9 @@ CacheIndex::ChangeState(EState aNewState)
   }
 
   // Try to evict entries over limit everytime we're leaving state READING,
-  // BUILDING or UPDATING, but not during shutdown.
-  if (!mShuttingDown && aNewState != SHUTDOWN &&
+  // BUILDING or UPDATING, but not during shutdown or when removing all
+  // entries.
+  if (!mShuttingDown && !mRemovingAll && aNewState != SHUTDOWN &&
       (mState == READING || mState == BUILDING || mState == UPDATING))  {
     CacheFileIOManager::EvictIfOverLimit();
   }
@@ -2976,6 +3086,8 @@ CacheIndex::Run()
     return NS_OK;
   }
 
+  mUpdateEventPending = false;
+
   switch (mState) {
     case BUILDING:
       BuildIndex();
@@ -2984,21 +3096,22 @@ CacheIndex::Run()
       UpdateIndex();
       break;
     default:
-      MOZ_ASSERT(false, "Unexpected state!");
+      LOG(("CacheIndex::Run() - Update/Build was canceled"));
   }
 
   return NS_OK;
 }
 
 nsresult
-CacheIndex::OnFileOpened(CacheFileHandle *aHandle, nsresult aResult)
+CacheIndex::OnFileOpenedInternal(FileOpenHelper *aOpener,
+                                 CacheFileHandle *aHandle, nsresult aResult)
 {
-  LOG(("CacheIndex::OnFileOpened() [handle=%p, result=0x%08x]", aHandle,
-       aResult));
+  LOG(("CacheIndex::OnFileOpenedInternal() [opener=%p, handle=%p, "
+       "result=0x%08x]", aOpener, aHandle, aResult));
 
   nsresult rv;
 
-  CacheIndexAutoLock lock(this);
+  AssertOwnsLock();
 
   if (!IsIndexUsable()) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -3010,9 +3123,12 @@ CacheIndex::OnFileOpened(CacheFileHandle *aHandle, nsresult aResult)
 
   switch (mState) {
     case WRITING:
+      MOZ_ASSERT(aOpener == mIndexFileOpener);
+      mIndexFileOpener = nullptr;
+
       if (NS_FAILED(aResult)) {
-        LOG(("CacheIndex::OnFileOpened() - Can't open index file for writing "
-             "[rv=0x%08x]", aResult));
+        LOG(("CacheIndex::OnFileOpenedInternal() - Can't open index file for "
+             "writing [rv=0x%08x]", aResult));
         FinishWrite(false);
       } else {
         mIndexHandle = aHandle;
@@ -3020,80 +3136,80 @@ CacheIndex::OnFileOpened(CacheFileHandle *aHandle, nsresult aResult)
       }
       break;
     case READING:
-      mReadOpenCount--;
+      if (aOpener == mIndexFileOpener) {
+        mIndexFileOpener = nullptr;
 
-      if (mReadFailed) {
         if (NS_SUCCEEDED(aResult)) {
-          CacheFileIOManager::DoomFile(aHandle, nullptr);
-        }
-
-        if (mReadOpenCount == 0) {
-          FinishRead(false);
-        }
-
-        return NS_OK;
-      }
-
-      switch (mReadOpenCount) {
-        case 2: // kIndexName
-          if (NS_FAILED(aResult)) {
-            mReadFailed = true;
-          } else {
-            MOZ_ASSERT(aHandle->Key() == kIndexName);
-            if (aHandle->FileSize() == 0) {
-              mReadFailed = true;
-              CacheFileIOManager::DoomFile(aHandle, nullptr);
-            } else {
-              mIndexHandle = aHandle;
-            }
-          }
-          break;
-        case 1: // kJournalName
-          if (NS_SUCCEEDED(aResult)) {
-            MOZ_ASSERT(aHandle->Key() == kJournalName);
-            if (aHandle->FileSize() == 0) {
-              CacheFileIOManager::DoomFile(aHandle, nullptr);
-            } else {
-              mJournalHandle = aHandle;
-            }
-          }
-          break;
-        case 0: // kTempIndexName
-          if (NS_SUCCEEDED(aResult)) {
-            MOZ_ASSERT(aHandle->Key() == kTempIndexName);
+          if (aHandle->FileSize() == 0) {
+            FinishRead(false);
             CacheFileIOManager::DoomFile(aHandle, nullptr);
-
-            if (mJournalHandle) { // this should never happen
-              LOG(("CacheIndex::OnFileOpened() - Unexpected state, all files "
-                   "[%s, %s, %s] should never exist. Removing whole index.",
-                   kIndexName, kJournalName, kTempIndexName));
-              FinishRead(false);
-              break;
-            }
-          }
-
-          if (mJournalHandle) {
-            // Rename journal to make sure we update index on next start in case
-            // firefox crashes
-            rv = CacheFileIOManager::RenameFile(
-              mJournalHandle, NS_LITERAL_CSTRING(kTempIndexName), this);
-            if (NS_FAILED(rv)) {
-              LOG(("CacheIndex::OnFileOpened() - CacheFileIOManager::RenameFile"
-                   "() failed synchronously [rv=0x%08x]", rv));
-              FinishRead(false);
-              break;
-            }
             break;
+          } else {
+            mIndexHandle = aHandle;
           }
-
-          StartReadingIndex();
+        } else {
+          FinishRead(false);
+          break;
+        }
+      } else if (aOpener == mJournalFileOpener) {
+        mJournalFileOpener = nullptr;
+        mJournalHandle = aHandle;
+      } else if (aOpener == mTmpFileOpener) {
+        mTmpFileOpener = nullptr;
+        mTmpHandle = aHandle;
+      } else {
+        MOZ_ASSERT(false, "Unexpected state!");
       }
+
+      if (mIndexFileOpener || mJournalFileOpener || mTmpFileOpener) {
+        // Some opener still didn't finish
+        break;
+      }
+
+      // We fail and cancel all other openers when we opening index file fails.
+      MOZ_ASSERT(mIndexHandle);
+
+      if (mTmpHandle) {
+        CacheFileIOManager::DoomFile(mTmpHandle, nullptr);
+        mTmpHandle = nullptr;
+
+        if (mJournalHandle) { // this shouldn't normally happen
+          LOG(("CacheIndex::OnFileOpenedInternal() - Unexpected state, all "
+               "files [%s, %s, %s] should never exist. Removing whole index.",
+               kIndexName, kJournalName, kTempIndexName));
+          FinishRead(false);
+          break;
+        }
+      }
+
+      if (mJournalHandle) {
+        // Rename journal to make sure we update index on next start in case
+        // firefox crashes
+        rv = CacheFileIOManager::RenameFile(
+          mJournalHandle, NS_LITERAL_CSTRING(kTempIndexName), this);
+        if (NS_FAILED(rv)) {
+          LOG(("CacheIndex::OnFileOpenedInternal() - CacheFileIOManager::"
+               "RenameFile() failed synchronously [rv=0x%08x]", rv));
+          FinishRead(false);
+          break;
+        }
+      } else {
+        StartReadingIndex();
+      }
+
       break;
     default:
       MOZ_ASSERT(false, "Unexpected state!");
   }
 
   return NS_OK;
+}
+
+nsresult
+CacheIndex::OnFileOpened(CacheFileHandle *aHandle, nsresult aResult)
+{
+  MOZ_CRASH("CacheIndex::OnFileOpened should not be called!");
+  return NS_ERROR_UNEXPECTED;
 }
 
 nsresult
@@ -3117,6 +3233,12 @@ CacheIndex::OnDataWritten(CacheFileHandle *aHandle, const char *aBuf,
 
   switch (mState) {
     case WRITING:
+      if (mIndexHandle != aHandle) {
+        LOG(("CacheIndex::OnDataWritten() - ignoring notification since it "
+             "belongs to previously canceled operation [state=%d]", mState));
+        break;
+      }
+
       if (NS_FAILED(aResult)) {
         FinishWrite(false);
       } else {
@@ -3135,7 +3257,9 @@ CacheIndex::OnDataWritten(CacheFileHandle *aHandle, const char *aBuf,
       }
       break;
     default:
-      MOZ_ASSERT(false, "Unexpected state!");
+      // Writing was canceled.
+      LOG(("CacheIndex::OnDataWritten() - ignoring notification since the "
+           "operation was previously canceled [state=%d]", mState));
   }
 
   return NS_OK;
@@ -3153,12 +3277,10 @@ CacheIndex::OnDataRead(CacheFileHandle *aHandle, char *aBuf, nsresult aResult)
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  if (mState == READY && mShuttingDown) {
-    return NS_OK;
-  }
-
   switch (mState) {
     case READING:
+      MOZ_ASSERT(mIndexHandle == aHandle || mJournalHandle == aHandle);
+
       if (NS_FAILED(aResult)) {
         FinishRead(false);
       } else {
@@ -3170,7 +3292,9 @@ CacheIndex::OnDataRead(CacheFileHandle *aHandle, char *aBuf, nsresult aResult)
       }
       break;
     default:
-      MOZ_ASSERT(false, "Unexpected state!");
+      // Reading was canceled.
+      LOG(("CacheIndex::OnDataRead() - ignoring notification since the "
+           "operation was previously canceled [state=%d]", mState));
   }
 
   return NS_OK;
@@ -3211,12 +3335,26 @@ CacheIndex::OnFileRenamed(CacheFileHandle *aHandle, nsresult aResult)
       // This is a result of renaming the new index written to tmpfile to index
       // file. This is the last step when writing the index and the whole
       // writing process is successful iff renaming was successful.
+
+      if (mIndexHandle != aHandle) {
+        LOG(("CacheIndex::OnFileRenamed() - ignoring notification since it "
+             "belongs to previously canceled operation [state=%d]", mState));
+        break;
+      }
+
       FinishWrite(NS_SUCCEEDED(aResult));
       break;
     case READING:
       // This is a result of renaming journal file to tmpfile. It is renamed
       // before we start reading index and journal file and it should normally
       // succeed. If it fails give up reading of index.
+
+      if (mJournalHandle != aHandle) {
+        LOG(("CacheIndex::OnFileRenamed() - ignoring notification since it "
+             "belongs to previously canceled operation [state=%d]", mState));
+        break;
+      }
+
       if (NS_FAILED(aResult)) {
         FinishRead(false);
       } else {
@@ -3224,7 +3362,9 @@ CacheIndex::OnFileRenamed(CacheFileHandle *aHandle, nsresult aResult)
       }
       break;
     default:
-      MOZ_ASSERT(false, "Unexpected state!");
+      // Reading/writing was canceled.
+      LOG(("CacheIndex::OnFileRenamed() - ignoring notification since the "
+           "operation was previously canceled [state=%d]", mState));
   }
 
   return NS_OK;
@@ -3261,7 +3401,7 @@ CacheIndex::SizeOfExcludingThisInternal(mozilla::MallocSizeOf mallocSizeOf) cons
     n += sizeOf->SizeOfIncludingThis(mallocSizeOf);
   }
 
-  sizeOf = do_QueryInterface(mTimer);
+  sizeOf = do_QueryInterface(mUpdateTimer);
   if (sizeOf) {
     n += sizeOf->SizeOfIncludingThis(mallocSizeOf);
   }
