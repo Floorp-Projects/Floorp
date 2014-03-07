@@ -38,6 +38,9 @@ const components = new WeakMap();
 const ERR_UNREGISTERED = 'The state cannot be set or get. ' +
   'The object may be not be registered, or may already have been unloaded.';
 
+const ERR_INVALID_TARGET = 'The state cannot be set or get for this target.' +
+  'Only window, tab and registered component are valid targets.';
+
 const isWindow = thing => thing instanceof Ci.nsIDOMWindow;
 const isTab = thing => thing.tagName && thing.tagName.toLowerCase() === 'tab';
 const isActiveTab = thing => isTab(thing) && thing === getActiveTab(getOwnerWindow(thing));
@@ -47,6 +50,26 @@ const browsers = _ =>
 const getMostRecentTab = _ => getActiveTab(getMostRecentBrowserWindow());
 
 function getStateFor(component, target) {
+  if (!isRegistered(component))
+    throw new Error(ERR_UNREGISTERED);
+
+  if (!components.has(component))
+    return null;
+
+  let states = components.get(component);
+
+  if (target) {
+    if (isTab(target) || isWindow(target) || target === component)
+      return states.get(target) || null;
+    else
+      throw new Error(ERR_INVALID_TARGET);
+  }
+
+  return null;
+}
+exports.getStateFor = getStateFor;
+
+function getDerivedStateFor(component, target) {
   if (!isRegistered(component))
     throw new Error(ERR_UNREGISTERED);
 
@@ -77,7 +100,7 @@ function getStateFor(component, target) {
 
   return freeze(merge({}, componentState, windowState, tabState));
 }
-exports.getStateFor = getStateFor;
+exports.getDerivedStateFor = getDerivedStateFor;
 
 function setStateFor(component, target, state) {
   if (!isRegistered(component))
@@ -91,7 +114,7 @@ function setStateFor(component, target, state) {
                       null;
 
   if (!targetWindows)
-    throw new Error('target not allowed.');
+    throw new Error(ERR_INVALID_TARGET);
 
   // initialize the state's map
   if (!components.has(component))
@@ -108,12 +131,13 @@ function setStateFor(component, target, state) {
 
   render(component, targetWindows);
 }
+exports.setStateFor = setStateFor;
 
 function render(component, targetWindows) {
   targetWindows = targetWindows ? [].concat(targetWindows) : browsers();
 
   for (let window of targetWindows.filter(isEnumerable)) {
-    let tabState = getStateFor(component, getActiveTab(window));
+    let tabState = getDerivedStateFor(component, getActiveTab(window));
 
     emit(stateEvents, 'data', {
       type: 'render',
@@ -130,7 +154,7 @@ function properties(contract) {
   let { rules } = contract;
   let descriptor = Object.keys(rules).reduce(function(descriptor, name) {
     descriptor[name] = {
-      get: function() { return getStateFor(this)[name] },
+      get: function() { return getDerivedStateFor(this)[name] },
       set: function(value) {
         let changed = {};
         changed[name] = value;
@@ -159,7 +183,7 @@ function state(contract) {
 
       // jquery style
       return arguments.length < 2
-        ? getStateFor(this, target)
+        ? getDerivedStateFor(this, target)
         : setStateFor(this, target, contract(state))
     }
   }
@@ -200,7 +224,7 @@ on(activate, 'data', ({target}) => {
       type: 'render',
       target: component,
       window: window,
-      state: getStateFor(component, tab)
+      state: getDerivedStateFor(component, tab)
     });
   }
 });
