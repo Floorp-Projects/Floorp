@@ -30,6 +30,7 @@ namespace mozilla {
 namespace net {
 
 class CacheFileMetadata;
+class FileOpenHelper;
 
 typedef struct {
   // Version of the index. The index must be ignored and deleted when the file
@@ -327,8 +328,20 @@ public:
 
   void Log() {
     LOG(("CacheIndexStats::Log() [count=%u, notInitialized=%u, removed=%u, "
-         "dirty=%u, fresh=%u, empty=%u, size=%lld]", mCount, mNotInitialized,
+         "dirty=%u, fresh=%u, empty=%u, size=%u]", mCount, mNotInitialized,
          mRemoved, mDirty, mFresh, mEmpty, mSize));
+  }
+
+  void Clear() {
+    MOZ_ASSERT(!mStateLogged, "CacheIndexStats::Clear() - state logged!");
+
+    mCount = 0;
+    mNotInitialized = 0;
+    mRemoved = 0;
+    mDirty = 0;
+    mFresh = 0;
+    mEmpty = 0;
+    mSize = 0;
   }
 
 #ifdef DEBUG
@@ -512,6 +525,9 @@ public:
                               const uint32_t      *aExpirationTime,
                               const uint32_t      *aSize);
 
+  // Remove all entries from the index. Called when clearing the whole cache.
+  static nsresult RemoveAll();
+
   enum EntryStatus {
     EXISTS         = 0,
     DOES_NOT_EXIST = 1,
@@ -538,10 +554,13 @@ private:
   friend class CacheIndexEntryAutoManage;
   friend class CacheIndexAutoLock;
   friend class CacheIndexAutoUnlock;
+  friend class FileOpenHelper;
 
   virtual ~CacheIndex();
 
   NS_IMETHOD OnFileOpened(CacheFileHandle *aHandle, nsresult aResult);
+  nsresult   OnFileOpenedInternal(FileOpenHelper *aOpener,
+                                  CacheFileHandle *aHandle, nsresult aResult);
   NS_IMETHOD OnDataWritten(CacheFileHandle *aHandle, const char *aBuf,
                            nsresult aResult);
   NS_IMETHOD OnDataRead(CacheFileHandle *aHandle, char *aBuf, nsresult aResult);
@@ -682,29 +701,28 @@ private:
 
   // Following methods perform updating and building of the index.
   // Timer callback that starts update or build process.
-  static void DelayedBuildUpdate(nsITimer *aTimer, void *aClosure);
+  static void DelayedUpdate(nsITimer *aTimer, void *aClosure);
   // Posts timer event that start update or build process.
-  nsresult ScheduleBuildUpdateTimer(uint32_t aDelay);
+  nsresult ScheduleUpdateTimer(uint32_t aDelay);
   nsresult SetupDirectoryEnumerator();
   void InitEntryFromDiskData(CacheIndexEntry *aEntry,
                              CacheFileMetadata *aMetaData,
                              int64_t aFileSize);
-  // Starts build process or fires a timer when it is too early after startup.
-  void StartBuildingIndex();
+  // Returns true when either a timer is scheduled or event is posted.
+  bool IsUpdatePending();
   // Iterates through all files in entries directory that we didn't create/open
   // during this session, parses them and adds the entries to the index.
   void BuildIndex();
-  // Finalizes build process.
-  void FinishBuild(bool aSucceeded);
 
   bool StartUpdatingIndexIfNeeded(bool aSwitchingToReadyState = false);
-  // Starts update process or fires a timer when it is too early after startup.
-  void StartUpdatingIndex();
+  // Starts update or build process or fires a timer when it is too early after
+  // startup.
+  void StartUpdatingIndex(bool aRebuild);
   // Iterates through all files in entries directory that we didn't create/open
   // during this session and theirs last modified time is newer than timestamp
   // in the index header. Parses the files and adds the entries to the index.
   void UpdateIndex();
-  // Finalizes update process.
+  // Finalizes update or build process.
   void FinishUpdate(bool aSucceeded);
 
   static PLDHashOperator RemoveNonFreshEntries(CacheIndexEntry *aEntry,
@@ -797,6 +815,12 @@ private:
   // set this flag should also call StartUpdatingIndexIfNeeded() to cover the
   // case when we are currently in READY state.
   bool           mIndexNeedsUpdate;
+  // Set at the beginning of RemoveAll() which clears the whole index. When
+  // removing all entries we must stop any pending reading, writing, updating or
+  // building operation. This flag is checked at various places and it prevents
+  // we won't start another operation (e.g. canceling reading of the index would
+  // normally start update or build process)
+  bool           mRemovingAll;
   // Whether the index file on disk exists and is valid.
   bool           mIndexOnDiskIsValid;
   // When something goes wrong during updating or building process, we don't
@@ -812,7 +836,9 @@ private:
   TimeStamp      mLastDumpTime;
 
   // Timer of delayed update/build.
-  nsCOMPtr<nsITimer> mTimer;
+  nsCOMPtr<nsITimer> mUpdateTimer;
+  // True when build or update event is posted
+  bool               mUpdateEventPending;
 
   // Helper members used when reading/writing index from/to disk.
   // Contains number of entries that should be skipped:
@@ -828,12 +854,6 @@ private:
   uint32_t                  mRWBufPos;
   nsRefPtr<CacheHash>       mRWHash;
 
-  // When reading index from disk, we open index, journal and tmpindex files at
-  // the same time. This value tell us how many times CacheIndex::OnFileOpened()
-  // will be called and identifies the handle.
-  uint32_t                  mReadOpenCount;
-  // Reading of index failed completely if true.
-  bool                      mReadFailed;
   // Reading of journal succeeded if true.
   bool                      mJournalReadSuccessfully;
 
@@ -841,6 +861,12 @@ private:
   nsRefPtr<CacheFileHandle> mIndexHandle;
   // Handle used for reading journal file.
   nsRefPtr<CacheFileHandle> mJournalHandle;
+  // Used to check the existence of the file during reading process.
+  nsRefPtr<CacheFileHandle> mTmpHandle;
+
+  nsRefPtr<FileOpenHelper>  mIndexFileOpener;
+  nsRefPtr<FileOpenHelper>  mJournalFileOpener;
+  nsRefPtr<FileOpenHelper>  mTmpFileOpener;
 
   // Directory enumerator used when building and updating index.
   nsCOMPtr<nsIDirectoryEnumerator> mDirEnumerator;
