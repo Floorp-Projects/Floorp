@@ -265,12 +265,6 @@ struct JSStringFinalizer {
     void (*finalize)(const JSStringFinalizer *fin, jschar *chars);
 };
 
-// Return whether the first principal subsumes the second. The exact meaning of
-// 'subsumes' is left up to the browser. Subsumption is checked inside the JS
-// engine when determining, e.g., which stack frames to display in a backtrace.
-typedef bool
-(* JSSubsumesOp)(JSPrincipals *first, JSPrincipals *second);
-
 // Check whether v is an instance of obj.  Return false on error or exception,
 // true on success with true in *bp if v is an instance of obj, false in
 // *bp otherwise.
