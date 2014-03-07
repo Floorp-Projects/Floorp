@@ -231,6 +231,11 @@ interface CameraControl : MediaStream
   [Throws]
   readonly attribute unrestricted double exposureCompensation;
 
+  /* one of the values chosen from capabilities.isoModes; default
+     value is "auto" if supported. */
+  [Throws]
+  attribute DOMString       isoMode;
+
   /* the function to call on the camera's shutter event, to trigger
      a shutter sound and/or a visual shutter indicator. */
   attribute CameraShutterCallback? onShutter;

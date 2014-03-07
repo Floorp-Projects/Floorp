@@ -201,13 +201,10 @@ menulist {
   -moz-box-align: center;
   font-weight: 600;
 }
-
 .menu-popup > richlistbox > richlistitem {
-  padding-right: 50px;
+  -moz-padding-end: 50px;
 }
-
 /* Additional styles applied to popups for form <select> elements. */
-
 #select-container {
   padding: 0;
   position: absolute;

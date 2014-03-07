@@ -34,7 +34,7 @@ function onError(e) {
 
 var capabilities = [ 'previewSizes', 'pictureSizes', 'fileFormats', 'maxFocusAreas', 'minExposureCompensation',
                      'maxExposureCompensation', 'stepExposureCompensation', 'maxMeteringAreas', 'videoSizes',
-                     'recorderProfiles', 'zoomRatios'];
+                     'recorderProfiles', 'zoomRatios', 'isoModes'];
 
 var Camera = {
   cameraObj: null,
@@ -151,30 +151,17 @@ var Camera = {
     ok(Camera._previewSizes.length > 0, "previewSizes length = " + Camera._previewSizes.length);
     ok(Camera._pictureSizes.length > 0, "picturesizes length = " + Camera._pictureSizes.length);
     ok(Camera._fileFormats.length > 0, "file formats length = " + Camera._fileFormats.length);
-    info("zoom ratios length = " + Camera._zoomRatios.length);
+    ok(camcap.isoModes.length == 0, "ISO modes length = " + camcap.isoModes.length);
 
-    if (Camera._zoomRatios.length > 0) {
-      Camera._zoomRatios.forEach(function(element, index) {
-        info("zoom[" + index + "] = " + element + "x");
-        Camera.setZoom(element);
-        ok(Camera.getZoom() === element, "zoom[" + index + "] = " + element + "x");
-      });
-
-      var zoom = Camera._zoomRatios[0] - 0.1;
-      Camera.setZoom(zoom);
-      ok(Camera.getZoom() === Camera._zoomRatios[0],
-        zoom + "x zoom clamps to minimum: " + Camera._zoomRatios[0]);
-      zoom = Camera._zoomRatios.slice(-1)[0] + 1.0;
-      Camera.setZoom(zoom);
-      ok(Camera.getZoom() === Camera._zoomRatios[0],
-        zoom + "x zoom clamps to maximum: " + Camera._zoomRatios.slice(-1)[0]);
-      if (Camera._zoomRatios.length > 1) {
-        zoom = (Camera._zoomRatios[0] + Camera._zoomRatios[1]) / 2;
-        Camera.setZoom(zoom);
-        ok(Camera.getZoom() === Camera._zoomRatios[0],
-          zoom + "x zoom rounded down to maximum: " + Camera._zoomRatios.slice[0]);
-      }
-    }
+    // The emulator doesn't support zoom, so these parameters will be very constrained
+    // For more ambitious tests, see test_camera_fake_parameters.html
+    ok(Camera._zoomRatios.length == 1, "zoom ratios length = " + Camera._zoomRatios.length);
+    ok(Camera.cameraObj.zoom == 1.0, "zoom = " + Camera.cameraObj.zoom);
+    // Test snapping to supported values
+    Camera.cameraObj.zoom = 0.9;
+    ok(Camera.cameraObj.zoom == 1.0, "zoom = " + Camera.cameraObj.zoom);
+    Camera.cameraObj.zoom = 1.1;
+    ok(Camera.cameraObj.zoom == 1.0, "zoom = " + Camera.cameraObj.zoom);
 
     Camera._tests = new Array();
     for (var i in Camera._pictureSizes) {

@@ -61,6 +61,7 @@ OptionsPanel.prototype = {
 
     return targetPromise.then(() => {
       this.setupToolsList();
+      this.setupToolbarButtonsList();
       this.populatePreferences();
 
       this._disableJSClicked = this._disableJSClicked.bind(this);
@@ -81,6 +82,43 @@ OptionsPanel.prototype = {
     });
   },
 
+  setupToolbarButtonsList: function() {
+    let enabledToolbarButtonsBox = this.panelDoc.getElementById("enabled-toolbox-buttons-box");
+    enabledToolbarButtonsBox.textContent = "";
+
+    let toggleableButtons = this.toolbox.toolboxButtons;
+    let setToolboxButtonsVisibility =
+      this.toolbox.setToolboxButtonsVisibility.bind(this.toolbox);
+
+    let onCheckboxClick = (checkbox) => {
+      let toolDefinition = toggleableButtons.filter(tool => tool.id === checkbox.id)[0];
+      Services.prefs.setBoolPref(toolDefinition.visibilityswitch, checkbox.checked);
+      setToolboxButtonsVisibility();
+    };
+
+    let createCommandCheckbox = tool => {
+      let checkbox = this.panelDoc.createElement("checkbox");
+      checkbox.setAttribute("id", tool.id);
+      checkbox.setAttribute("label", tool.label);
+      checkbox.setAttribute("checked", this.getBoolPref(tool.visibilityswitch));
+      checkbox.addEventListener("command", onCheckboxClick.bind(this, checkbox));
+      return checkbox;
+    };
+
+    for (let tool of toggleableButtons) {
+      enabledToolbarButtonsBox.appendChild(createCommandCheckbox(tool));
+    }
+  },
+
+  getBoolPref: function(key) {
+    try {
+      return Services.prefs.getBoolPref(key);
+    }
+    catch (ex) {
+      return true;
+    }
+  },
+
   setupToolsList: function() {
     let defaultToolsBox = this.panelDoc.getElementById("default-tools-box");
     let additionalToolsBox = this.panelDoc.getElementById("additional-tools-box");
@@ -89,15 +127,6 @@ OptionsPanel.prototype = {
 
     defaultToolsBox.textContent = "";
     additionalToolsBox.textContent = "";
-
-    let pref = function(key) {
-      try {
-        return Services.prefs.getBoolPref(key);
-      }
-      catch (ex) {
-        return true;
-      }
-    };
 
     let onCheckboxClick = function(id) {
       let toolDefinition = gDevTools._tools.get(id);
@@ -124,7 +153,7 @@ OptionsPanel.prototype = {
                               l10n("options.toolNotSupportedMarker", tool.label));
         checkbox.setAttribute("unsupported", "");
       }
-      checkbox.setAttribute("checked", pref(tool.visibilityswitch));
+      checkbox.setAttribute("checked", this.getBoolPref(tool.visibilityswitch));
       checkbox.addEventListener("command", onCheckboxClick.bind(checkbox, tool.id));
       return checkbox;
     };
