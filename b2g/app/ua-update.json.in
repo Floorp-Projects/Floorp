@@ -95,14 +95,8 @@
   "movistar.com.ve": "\\(Mobile#(Android; Mobile",
   // bug 828445, bumeran.com.ve
   "bumeran.com.ve": "\\(Mobile#(Android; Mobile",
-  // bug 843112, movil.bankinter.es
-  "movil.bankinter.es": "\\(Mobile#(Android; Mobile",
   // bug 843114, einforma.com
   "einforma.com": "\\(Mobile#(Android; Mobile",
-  // bug 843119, askthebuilder.com
-  "askthebuilder.com": "\\(Mobile#(Android; Mobile",
-  // bug 843121, tor.com
-  "tor.com": "\\(Mobile#(Android; Mobile",
   // bug 843126, es.playstation.com
   "es.playstation.com": "Mozilla/5.0 (Linux; Android 4.0.4; Galaxy Nexus Build/IMM76B) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.133 Mobile Safari/535.19",
   // bug 843129, 11870.com
@@ -111,10 +105,6 @@
   "iphonejuegosgratis.com": "\\(Mobile#(Android; Mobile",
   // bug 843132, comunio.es
   "comunio.es": "\\(Mobile#(Android; Mobile",
-  // bug 843139, consumersearch.com
-  "consumersearch.com": "\\(Mobile#(Android; Mobile",
-  // bug 843141, foodily.com
-  "foodily.com": "\\(Mobile#(Android; Mobile",
   // bug 843151, citibank.com
   "citibank.com": "\\(Mobile#(Android; Mobile",
   // bug 843153, games.com
@@ -125,8 +115,6 @@
   "virginatlantic.com": "\\(Mobile#(Android; Mobile",
   // bug 843172, zimbio.com
   "zimbio.com": "\\(Mobile#(Android; Mobile",
-  // bug 843178, txt2nite.com
-  "txt2nite.com": "\\(Mobile#(Android; Mobile",
   // bug 843181, slashgear.com
   "slashgear.com": "\\(Mobile#(Android; Mobile",
   // bug 843186, chevrolet.com
