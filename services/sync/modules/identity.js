@@ -89,6 +89,27 @@ IdentityManager.prototype = {
    * its state
    */
   initialize: function() {
+    // Nothing to do for this identity provider.
+    return Promise.resolve();
+  },
+
+  finalize: function() {
+    // Nothing to do for this identity provider.
+    return Promise.resolve();
+  },
+
+  /**
+   * Called whenever Service.logout() is called.
+   */
+  logout: function() {
+    // nothing to do for this identity provider.
+  },
+
+  /**
+   * Ensure the user is logged in.  Returns a promise that resolves when
+   * the user is logged in, or is rejected if the login attempt has failed.
+   */
+  ensureLoggedIn: function() {
     // nothing to do for this identity provider
     return Promise.resolve();
   },

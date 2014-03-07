@@ -35,9 +35,16 @@
   padding: 0 6px;
 }
 
-#BMB_bookmarksPopup menuitem[checked="true"]::before,
-#BMB_bookmarksPopup toolbarbutton[checked="true"]::before {
-  margin: 0 9px;
+.subviewbutton > .toolbarbutton-text {
+  -moz-padding-start: 16px;
+}
+
+.subviewbutton:-moz-any([image],[targetURI],.cui-withicon, .restoreallitem, .bookmark-item) > .toolbarbutton-text {
+  -moz-padding-start: 0;
+}
+
+.subviewbutton.bookmark-item > .toolbarbutton-icon {
+  -moz-margin-start: 3px;
 }
 
 %ifdef WINDOWS_AERO

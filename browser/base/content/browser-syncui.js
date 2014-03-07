@@ -96,10 +96,24 @@ let gSyncUI = {
            firstSync == "notReady";
   },
 
+  _loginFailed: function () {
+    // Referencing Weave.Service will implicitly initialize sync, and we don't
+    // want to force that - so first check if it is ready.
+    let service = Cc["@mozilla.org/weave/service;1"]
+                  .getService(Components.interfaces.nsISupports)
+                  .wrappedJSObject;
+    if (!service.ready) {
+      return false;
+    }
+    return Weave.Status.login == Weave.LOGIN_FAILED_LOGIN_REJECTED;
+  },
+
   updateUI: function SUI_updateUI() {
     let needsSetup = this._needsSetup();
-    document.getElementById("sync-setup-state").hidden = !needsSetup;
-    document.getElementById("sync-syncnow-state").hidden = needsSetup;
+    let loginFailed = this._loginFailed();
+    document.getElementById("sync-setup-state").hidden = loginFailed || !needsSetup;
+    document.getElementById("sync-syncnow-state").hidden = loginFailed || needsSetup;
+    document.getElementById("sync-reauth-state").hidden = !loginFailed;
 
     if (!gBrowser)
       return;
@@ -338,6 +352,9 @@ let gSyncUI = {
     openPreferences("paneSync");
   },
 
+  openSignInAgainPage: function () {
+    switchToTabHavingURI("about:accounts?action=reauth", true);
+  },
 
   // Helpers
   _updateLastSyncTime: function SUI__updateLastSyncTime() {
