@@ -7,26 +7,6 @@
 
 interface nsIDOMBlob;
 
-// If this is changed, change the WebIDL dictionary as well.
-dictionary MmsAttachment
-{
-  DOMString? id;
-  DOMString? location;
-  nsIDOMBlob content; // If the content blob is a text/plain type, the encoding
-                      // for text should always be "utf-8".
-};
-
-dictionary MmsDeliveryInfo
-{
-  DOMString? receiver;
-  DOMString? deliveryStatus;
-  DOMTimeStamp deliveryTimestamp; // 0 if not available (e.g.,
-                                  // |delivery| = "received" or not yet delivered).
-  DOMString? readStatus;
-  DOMTimeStamp readTimestamp; // 0 if not available (e.g.,
-                              // |delivery| = "received" or not yet read).
-};
-
 [scriptable, builtinclass, uuid(f41d7400-0026-11e3-829d-eb7459c03810)]
 interface nsIDOMMozMmsMessage : nsISupports
 {
