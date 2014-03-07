@@ -347,6 +347,13 @@ public:
   {
   }
 
+#ifdef DEBUG
+  virtual ~DataSourceSurface()
+  {
+    MOZ_ASSERT(!mIsMapped, "Someone forgot to call Unmap()");
+  }
+#endif
+
   struct MappedSurface {
     uint8_t *mData;
     int32_t mStride;
