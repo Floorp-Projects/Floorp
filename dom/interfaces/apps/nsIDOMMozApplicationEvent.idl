@@ -16,8 +16,3 @@ interface nsIDOMMozApplicationEvent : nsIDOMEvent
                                           in boolean aCancelable,
                                           in mozIDOMApplication aApplication);
 };
-
-dictionary MozApplicationEventInit : EventInit
-{
-  mozIDOMApplication application;
-};

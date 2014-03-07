@@ -17,9 +17,3 @@ interface nsIDOMMozSettingsEvent : nsIDOMEvent
                                        in DOMString aSettingName,
                                        in nsIVariant aSettingValue);
 };
-
-dictionary MozSettingsEventInit : EventInit
-{
-  DOMString  settingName;
-  nsIVariant settingValue;
-};

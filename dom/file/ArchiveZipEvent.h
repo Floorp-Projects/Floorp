@@ -13,8 +13,6 @@
 #include "FileCommon.h"
 #include "zipstruct.h"
 
-#include "DictionaryHelpers.h"
-
 BEGIN_FILE_NAMESPACE
 
 /**
