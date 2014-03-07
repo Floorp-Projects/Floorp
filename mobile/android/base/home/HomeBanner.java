@@ -98,7 +98,6 @@ public class HomeBanner extends LinearLayout
         });
 
         GeckoAppShell.getEventDispatcher().registerEventListener("HomeBanner:Data", this);
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("HomeBanner:Get", null));
     }
 
     @Override
@@ -121,6 +120,13 @@ public class HomeBanner extends LinearLayout
 
     public void setScrollingPages(boolean scrollingPages) {
         mScrollingPages = scrollingPages;
+    }
+
+    /**
+     * Sends a message to gecko to request a new banner message. UI is updated in handleMessage.
+     */
+    public void update() {
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("HomeBanner:Get", null));
     }
 
     @Override
