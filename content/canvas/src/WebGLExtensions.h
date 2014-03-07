@@ -6,9 +6,17 @@
 #ifndef WEBGLEXTENSIONS_H_
 #define WEBGLEXTENSIONS_H_
 
+#include "jsapi.h"
+#include "mozilla/Attributes.h"
+#include "nsWrapperCache.h"
+#include "WebGLObjectModel.h"
+#include "WebGLTypes.h"
+
 namespace mozilla {
 
 class WebGLContext;
+class WebGLShader;
+class WebGLVertexArray;
 
 class WebGLExtensionBase
     : public nsWrapperCache
