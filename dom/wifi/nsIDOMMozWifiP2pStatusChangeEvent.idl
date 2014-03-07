@@ -17,8 +17,3 @@ interface nsIDOMMozWifiP2pStatusChangeEvent : nsIDOMEvent
                                                   in boolean aCancelable,
                                                   in DOMString aPeerAddress);
 };
-
-dictionary MozWifiP2pStatusChangeEventInit : EventInit
-{
-  DOMString peerAddress;
-};

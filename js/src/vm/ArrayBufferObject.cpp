@@ -44,11 +44,6 @@
 
 #include "vm/Shape-inl.h"
 
-#if JS_USE_NEW_OBJECT_REPRESENTATION
-// See the comment above OldObjectRepresentationHack.
-#  error "TypedArray support for new object representation unimplemented."
-#endif
-
 using namespace js;
 using namespace js::gc;
 using namespace js::types;

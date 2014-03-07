@@ -12,6 +12,7 @@ interface nsISocketTransport;
 interface nsIOutputStream;
 
 %{ C++
+#include "nsTArrayForwardDeclare.h"
 namespace mozilla {
 namespace net {
 union NetAddr;
@@ -20,6 +21,7 @@ union NetAddr;
 %}
 native NetAddr(mozilla::net::NetAddr);
 [ptr] native NetAddrPtr(mozilla::net::NetAddr);
+[ref] native Uint8TArrayRef(FallibleTArray<uint8_t>);
 
 /**
  * nsIUDPSocket
@@ -208,4 +210,10 @@ interface nsIUDPMessage : nsISupports
      * Stream to send a response
      */
     readonly attribute nsIOutputStream outputStream;
+
+    /**
+     * Raw Data of the message
+     */
+    [implicit_jscontext] readonly attribute jsval rawData;
+    [noscript, notxpcom, nostdcall] Uint8TArrayRef getDataAsTArray();
 };
