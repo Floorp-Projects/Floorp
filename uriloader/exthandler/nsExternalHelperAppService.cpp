@@ -347,8 +347,8 @@ static nsresult GetDownloadDirectory(nsIFile **_directory)
   DeviceStorageFile dsf(NS_LITERAL_STRING("sdcard"),
                         storageName,
                         NS_LITERAL_STRING("downloads"));
-  NS_ENSURE_TRUE(dsf.mFile, NS_ERROR_FAILURE);
-  NS_ENSURE_TRUE(dsf.IsAvailable(), NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(dsf.mFile, NS_ERROR_FILE_ACCESS_DENIED);
+  NS_ENSURE_TRUE(dsf.IsAvailable(), NS_ERROR_FILE_ACCESS_DENIED);
 
   bool alreadyThere;
   nsresult rv = dsf.mFile->Exists(&alreadyThere);
@@ -1816,8 +1816,8 @@ void nsExternalAppHandler::SendStatusChange(ErrorType type, nsresult rv, nsIRequ
         break;
     }
     PR_LOG(nsExternalHelperAppService::mLog, PR_LOG_ERROR,
-        ("Error: %s, type=%i, listener=0x%p, rv=0x%08X\n",
-         NS_LossyConvertUTF16toASCII(msgId).get(), type, mDialogProgressListener.get(), rv));
+        ("Error: %s, type=%i, listener=0x%p, transfer=0x%p, rv=0x%08X\n",
+         NS_LossyConvertUTF16toASCII(msgId).get(), type, mDialogProgressListener.get(), mTransfer.get(), rv));
     PR_LOG(nsExternalHelperAppService::mLog, PR_LOG_ERROR,
         ("       path='%s'\n", NS_ConvertUTF16toUTF8(path).get()));
 
@@ -1843,16 +1843,55 @@ void nsExternalAppHandler::SendStatusChange(ErrorType type, nsresult rv, nsIRequ
               else
               if (XRE_GetProcessType() == GeckoProcessType_Default) {
                 // We don't have a listener.  Simply show the alert ourselves.
-                nsCOMPtr<nsIPrompt> prompter(do_GetInterface(mWindowContext));
+                nsresult qiRv;
+                nsCOMPtr<nsIPrompt> prompter(do_GetInterface(mWindowContext, &qiRv));
                 nsXPIDLString title;
                 bundle->FormatStringFromName(MOZ_UTF16("title"),
                                              strings,
                                              1,
                                              getter_Copies(title));
-                if (prompter)
+
+                PR_LOG(nsExternalHelperAppService::mLog, PR_LOG_DEBUG,
+                       ("mWindowContext=0x%p, prompter=0x%p, qi rv=0x%08X, title='%s', msg='%s'",
+                       mWindowContext.get(),
+                       prompter.get(),
+                       qiRv,
+                       NS_ConvertUTF16toUTF8(title).get(),
+                       NS_ConvertUTF16toUTF8(msgText).get()));
+
+                // If we didn't have a prompter we will try and get a window
+                // instead, get it's docshell and use it to alert the user.
+                if (!prompter)
                 {
-                  prompter->Alert(title, msgText);
+                  nsCOMPtr<nsPIDOMWindow> window(do_GetInterface(mWindowContext));
+                  if (!window || !window->GetDocShell())
+                  {
+                    return;
+                  }
+
+                  prompter = do_GetInterface(window->GetDocShell(), &qiRv);
+
+                  PR_LOG(nsExternalHelperAppService::mLog, PR_LOG_DEBUG,
+                         ("No prompter from mWindowContext, using DocShell, " \
+                          "window=0x%p, docShell=0x%p, " \
+                          "prompter=0x%p, qi rv=0x%08X",
+                          window.get(),
+                          window->GetDocShell(),
+                          prompter.get(),
+                          qiRv));
+
+                  // If we still don't have a prompter, there's nothing else we
+                  // can do so just return.
+                  if (!prompter)
+                  {
+                    PR_LOG(nsExternalHelperAppService::mLog, PR_LOG_ERROR,
+                           ("No prompter from DocShell, no way to alert user"));
+                    return;
+                  }
                 }
+
+                // We should always have a prompter at this point.
+                prompter->Alert(title, msgText);
               }
             }
         }

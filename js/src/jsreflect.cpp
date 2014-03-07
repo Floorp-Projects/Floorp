@@ -222,12 +222,12 @@ class NodeBuilder
             if (!newNodeLoc(pos, &loc))
                 return false;
             AutoValueArray<1> argv(cx);
-            argv[1].set(loc);
+            argv[0].set(loc);
             return Invoke(cx, userv, fun, argv.length(), argv.begin(), dst);
         }
 
         AutoValueArray<1> argv(cx);
-        argv[1].setNull(); /* no zero-length arrays allowed! */
+        argv[0].setNull(); /* no zero-length arrays allowed! */
         return Invoke(cx, userv, fun, 0, argv.begin(), dst);
     }
 
@@ -243,7 +243,7 @@ class NodeBuilder
         }
 
         AutoValueArray<1> argv(cx);
-        argv[1].set(v1);
+        argv[0].set(v1);
         return Invoke(cx, userv, fun, argv.length(), argv.begin(), dst);
     }
 

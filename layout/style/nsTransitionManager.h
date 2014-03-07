@@ -87,6 +87,20 @@ struct ElementTransitions MOZ_FINAL
   void EnsureStyleRuleFor(mozilla::TimeStamp aRefreshTime);
 
   virtual bool HasAnimationOfProperty(nsCSSProperty aProperty) const MOZ_OVERRIDE;
+
+  // If aFlags contains CanAnimate_AllowPartial, returns whether the
+  // state of this element's transitions at the current refresh driver
+  // time contains transition data that can be done on the compositor
+  // thread.  (This is useful for determining whether a layer should be
+  // active, or whether to send data to the layer.)
+  // If aFlags does not contain CanAnimate_AllowPartial, returns whether
+  // the state of this element's transitions at the current refresh driver
+  // time can be fully represented by data sent to the compositor.
+  // (This is useful for determining whether throttle the transition
+  // (suppress main-thread style updates).)
+  // Note that when CanPerformOnCompositorThread returns true, it also,
+  // as a side-effect, notifies the ActiveLayerTracker.  FIXME:  This
+  // should probably move to the relevant callers.
   virtual bool CanPerformOnCompositorThread(CanAnimateFlags aFlags) const MOZ_OVERRIDE;
 
   // Either zero or one for each CSS property:

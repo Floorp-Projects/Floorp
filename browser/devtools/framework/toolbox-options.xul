@@ -20,9 +20,12 @@
         <vbox id="default-tools-box" class="options-groupbox" tabindex="0"/>
         <label value="&options.selectAdditionalTools.label;"/>
         <vbox id="additional-tools-box" class="options-groupbox"/>
+        <label value="&options.selectEnabledToolboxButtons.label;"/>
+        <vbox id="enabled-toolbox-buttons-box" class="options-groupbox"/>
         <label id="tools-not-supported-label"
                class="options-citation-label theme-comment"
                value="&options.toolNotSupported.label;"/>
+
       </vbox>
       <vbox class="options-vertical-pane" flex="1">
         <label value="&options.selectDevToolsTheme.label;"/>

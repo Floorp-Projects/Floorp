@@ -699,9 +699,6 @@ ScriptExecutorRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
   JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
   NS_ASSERTION(global, "Must have a global by now!");
 
-  JSPrincipals* principal = GetWorkerPrincipal();
-  NS_ASSERTION(principal, "This should never be null!");
-
   for (uint32_t index = mFirstIndex; index <= mLastIndex; index++) {
     ScriptLoadInfo& loadInfo = loadInfos.ElementAt(index);
 
@@ -718,8 +715,7 @@ ScriptExecutorRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
     NS_ConvertUTF16toUTF8 filename(loadInfo.mURL);
 
     JS::CompileOptions options(aCx);
-    options.setPrincipals(principal)
-           .setFileAndLine(filename.get(), 1);
+    options.setFileAndLine(filename.get(), 1);
     if (!JS::Evaluate(aCx, global, options, loadInfo.mScriptText.get(),
                       loadInfo.mScriptText.Length(), nullptr)) {
       return true;

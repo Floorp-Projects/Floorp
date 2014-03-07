@@ -73,9 +73,12 @@ MaybeAlignAndClampDisplayPort(mozilla::layers::FrameMetrics& aFrameMetrics,
   // Expand the display port to the next tile boundaries, if tiled thebes layers
   // are enabled.
   if (gfxPrefs::LayersTilesEnabled()) {
+    // We don't use LayersPixelsPerCSSPixel() here as mCumulativeResolution on
+    // this FrameMetrics may be incorrect (and is about to be reset by mZoom).
     displayPort =
       ExpandDisplayPortToTileBoundaries(displayPort + aActualScrollOffset,
-                                        aFrameMetrics.LayersPixelsPerCSSPixel())
+                                        aFrameMetrics.mZoom *
+                                        ScreenToLayerScale(1.0))
       - aActualScrollOffset;
   }
 

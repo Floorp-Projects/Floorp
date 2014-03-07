@@ -21,6 +21,7 @@ child:
   OnOpenMetadataForRead(Metadata metadata);
 parent:
   SelectCacheFileToRead(uint32_t moduleIndex);
+  CacheMiss();
 
 child:
   // Once the cache file has been opened, the child is notified and sent an

@@ -1,0 +1,25 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIAccessible;
+
+/**
+ * A range representing a piece of text in the document.
+ */
+[scriptable, uuid(6fe17c33-6709-4d7a-9ba0-3d448c4b3ef4)]
+interface nsIAccessibleTextRange : nsISupports
+{
+  readonly attribute nsIAccessible startContainer;
+  readonly attribute long startOffset;
+  readonly attribute nsIAccessible endContainer;
+  readonly attribute long endOffset;
+
+  /**
+   * Return text within the range.
+   */
+  readonly attribute AString text;
+};

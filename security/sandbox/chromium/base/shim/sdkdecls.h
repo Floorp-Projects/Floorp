@@ -9,6 +9,9 @@
 
 #include <windows.h>
 
+// This file contains definitions required for things dynamically loaded
+// while building or targetting lower platform versions or lower SDKs.
+
 #if (_WIN32_WINNT < 0x0600)
 typedef struct _STARTUPINFOEXA {
     STARTUPINFOA StartupInfo;
@@ -97,6 +100,74 @@ typedef LPSTARTUPINFOEXA LPSTARTUPINFOEX;
 #define PROCESS_CREATION_MITIGATION_POLICY_EXTENSION_POINT_DISABLE_ALWAYS_ON              (0x00000001ui64 << 32)
 #define PROCESS_CREATION_MITIGATION_POLICY_EXTENSION_POINT_DISABLE_ALWAYS_OFF             (0x00000002ui64 << 32)
 #define PROCESS_CREATION_MITIGATION_POLICY_EXTENSION_POINT_DISABLE_RESERVED               (0x00000003ui64 << 32)
-#endif // (_WIN32_WINNT >= 0x0602)
 
+// Check if we're including >= win8 winnt.h
+#ifndef NTDDI_WIN8
+
+typedef struct _SECURITY_CAPABILITIES {
+    PSID AppContainerSid;
+    PSID_AND_ATTRIBUTES Capabilities;
+    DWORD CapabilityCount;
+    DWORD Reserved;
+} SECURITY_CAPABILITIES, *PSECURITY_CAPABILITIES, *LPSECURITY_CAPABILITIES;
+
+typedef enum _PROCESS_MITIGATION_POLICY {
+  ProcessDEPPolicy,
+  ProcessASLRPolicy,
+  ProcessReserved1MitigationPolicy,
+  ProcessStrictHandleCheckPolicy,
+  ProcessSystemCallDisablePolicy,
+  ProcessMitigationOptionsMask,
+  ProcessExtensionPointDisablePolicy,
+  MaxProcessMitigationPolicy
+} PROCESS_MITIGATION_POLICY, *PPROCESS_MITIGATION_POLICY;
+
+#define LOAD_LIBRARY_SEARCH_DEFAULT_DIRS 0x00001000
+
+typedef struct _PROCESS_MITIGATION_ASLR_POLICY {
+  union {
+    DWORD  Flags;
+    struct {
+      DWORD EnableBottomUpRandomization : 1;
+      DWORD EnableForceRelocateImages : 1;
+      DWORD EnableHighEntropy : 1;
+      DWORD DisallowStrippedImages : 1;
+      DWORD ReservedFlags : 28;
+    };
+  };
+} PROCESS_MITIGATION_ASLR_POLICY, *PPROCESS_MITIGATION_ASLR_POLICY;
+
+typedef struct _PROCESS_MITIGATION_STRICT_HANDLE_CHECK_POLICY {
+  union {
+    DWORD  Flags;
+    struct {
+      DWORD RaiseExceptionOnInvalidHandleReference : 1;
+      DWORD HandleExceptionsPermanentlyEnabled : 1;
+      DWORD ReservedFlags : 30;
+    };
+  };
+} PROCESS_MITIGATION_STRICT_HANDLE_CHECK_POLICY, *PPROCESS_MITIGATION_STRICT_HANDLE_CHECK_POLICY;
+
+typedef struct _PROCESS_MITIGATION_SYSTEM_CALL_DISABLE_POLICY {
+  union {
+    DWORD  Flags;
+    struct {
+      DWORD DisallowWin32kSystemCalls : 1;
+      DWORD ReservedFlags : 31;
+    };
+  };
+} PROCESS_MITIGATION_SYSTEM_CALL_DISABLE_POLICY, *PPROCESS_MITIGATION_SYSTEM_CALL_DISABLE_POLICY;
+
+typedef struct _PROCESS_MITIGATION_EXTENSION_POINT_DISABLE_POLICY {
+  union {
+    DWORD  Flags;
+    struct {
+      DWORD DisableExtensionPoints : 1;
+      DWORD ReservedFlags : 31;
+    };
+  };
+} PROCESS_MITIGATION_EXTENSION_POINT_DISABLE_POLICY, *PPROCESS_MITIGATION_EXTENSION_POINT_DISABLE_POLICY;
+
+#endif // NTDDI_WIN8
+#endif // (_WIN32_WINNT < 0x0602)
 #endif // _SECURITY_SANDBOX_BASE_SHIM_SDKDECLS_H_

@@ -30,26 +30,22 @@ function run_test() {
   Cu.import("resource://gre/modules/BookmarkHTMLUtils.jsm");
 
   // file pointer to legacy bookmarks file
-  //var bookmarksFileOld = do_get_file("bookmarks.large.html");
-  var bookmarksFileOld = do_get_file("bookmarks.preplaces.html");
+  var bookmarksFileOld = OS.Path.join(do_get_cwd().path, "bookmarks.preplaces.html");
   // file pointer to a new places-exported json file
-  var jsonFile = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
-  jsonFile.append("bookmarks.exported.json");
+  var jsonFile = OS.Path.join(OS.Constants.Path.profileDir, "bookmarks.exported.json");
+  Task.spawn(function () {
+    // create bookmarks.exported.json
+    if ((yield OS.File.exists(jsonFile)))
+      yield OS.File.remove(jsonFile);
 
-  // create bookmarks.exported.json
-  if (jsonFile.exists())
-    jsonFile.remove(false);
-  jsonFile.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, 0600);
-  if (!jsonFile.exists())
-    do_throw("couldn't create file: bookmarks.exported.json");
-
-  // Test importing a pre-Places canonical bookmarks file.
-  // 1. import bookmarks.preplaces.html
-  // Note: we do not empty the db before this import to catch bugs like 380999
-  try {
-    BookmarkHTMLUtils.importFromFile(bookmarksFileOld, true)
-                     .then(after_import, do_report_unexpected_exception);
-  } catch(ex) { do_throw("couldn't import legacy bookmarks file: " + ex); }
+    // Test importing a pre-Places canonical bookmarks file.
+    // 1. import bookmarks.preplaces.html
+    // Note: we do not empty the db before this import to catch bugs like 380999
+    try {
+      BookmarkHTMLUtils.importFromFile(bookmarksFileOld, true)
+                       .then(after_import, do_report_unexpected_exception);
+    } catch(ex) { do_throw("couldn't import legacy bookmarks file: " + ex); }
+  });
 
   function after_import() {
     populate();

@@ -34,6 +34,9 @@ p {
   overflow:auto; overflow-clip-box:content-box;
 }
 .rel { position:relative; }
+.button { width:0px; padding:0 50px; overflow:hidden; }
+.pb { overflow-clip-box:padding-box; }
+.cb { overflow-clip-box:content-box; }
     </style>
 <script>
 function runTest() {
@@ -60,6 +63,15 @@ document.getElementById("d1").scrollLeft = "100000";
 <input spellcheck=false type="text" placeholder="someveryveryveryveryverylongvalue">
 <input spellcheck=false type="text" value="someveryveryveryveryverylongvalue"><br>
 <input spellcheck=false type="password" value="someveryveryveryveryverylongpassword">
+<input spellcheck=false type="email" value="someveryveryveryveryverylongvalue">
+<input spellcheck=false type="blah" value="someveryveryveryveryverylongvalue"><br>
+<input spellcheck=false type="button" value="button" class="button" style="overflow-clip-box:initial">
+<input spellcheck=false type="button" value="button" class="button pb">
+<input spellcheck=false type="reset" class="button pb">
+<input spellcheck=false type="submit" class="button pb"><br>
+<input spellcheck=false type="button" value="button" class="button cb">
+<input spellcheck=false type="reset" class="button cb">
+<input spellcheck=false type="submit" class="button cb"><br>
 
 </body>
 </html>

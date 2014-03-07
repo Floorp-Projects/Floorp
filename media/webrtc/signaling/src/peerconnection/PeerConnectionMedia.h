@@ -190,6 +190,7 @@ public:
   // It allows visibility into the pipelines and flows.
   const std::map<mozilla::TrackID, mozilla::RefPtr<mozilla::MediaPipeline>>&
   GetPipelines() const { return mPipelines; }
+  mozilla::RefPtr<mozilla::MediaPipeline> GetPipelineByLevel_m(int level);
 
 protected:
   std::map<mozilla::TrackID, mozilla::RefPtr<mozilla::MediaPipeline>> mPipelines;
@@ -244,6 +245,8 @@ class RemoteSourceStreamInfo : public SourceStreamInfo {
   void StorePipeline(int aTrack, bool aIsVideo,
                      mozilla::RefPtr<mozilla::MediaPipeline> aPipeline);
 
+  bool SetUsingBundle_m(int aLevel, bool decision);
+
   void DetachTransport_s();
   void DetachMedia_m();
 
@@ -295,6 +298,11 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
     return mRemoteSourceStreams.Length();
   }
   RemoteSourceStreamInfo* GetRemoteStream(int index);
+
+  bool SetUsingBundle_m(int level, bool decision);
+  bool UpdateFilterFromRemoteDescription_m(
+      int level,
+      nsAutoPtr<mozilla::MediaPipelineFilter> filter);
 
   // Add a remote stream. Returns the index in index
   nsresult AddRemoteStream(nsRefPtr<RemoteSourceStreamInfo> aInfo, int *aIndex);

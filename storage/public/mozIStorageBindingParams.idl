@@ -8,7 +8,7 @@
 
 interface nsIVariant;
 
-[scriptable, uuid(a8d4827c-641c-45e3-a9ea-493570b4106b)]
+[scriptable, uuid(7d8763ad-79d9-4674-ada1-37fd702af68c)]
 interface mozIStorageBindingParams : nsISupports {
   /**
    * Binds aValue to the parameter with the name aName.
@@ -34,6 +34,13 @@ interface mozIStorageBindingParams : nsISupports {
    void bindBlobByName(in AUTF8String aName,
                        [array, const, size_is(aValueSize)] in octet aValue,
                        in unsigned long aValueSize);
+   // The function adopts the storage for the provided blob.  After calling
+   // this function, mozStorage will ensure that NS_Free is called on the
+   // underlying pointer.
+   [noscript]
+   void bindAdoptedBlobByName(in AUTF8String aName,
+                              [array, size_is(aValueSize)] in octet aValue,
+                              in unsigned long aValueSize);
 
    /**
     * Binds aValue to the parameter with the index aIndex.
@@ -59,4 +66,11 @@ interface mozIStorageBindingParams : nsISupports {
    void bindBlobByIndex(in unsigned long aIndex,
                         [array, const, size_is(aValueSize)] in octet aValue,
                         in unsigned long aValueSize);
+   // The function adopts the storage for the provided blob.  After calling
+   // this function, mozStorage will ensure that NS_Free is called on the
+   // underlying pointer.
+   [noscript]
+   void bindAdoptedBlobByIndex(in unsigned long aIndex,
+                               [array, size_is(aValueSize)] in octet aValue,
+                               in unsigned long aValueSize);
 };
