@@ -72,6 +72,17 @@ add_test(function test_initial_state() {
   }
 );
 
+add_task(function test_initialializeWithCurrentIdentity() {
+    _("Verify start after initializeWithCurrentIdentity");
+    browseridManager.initializeWithCurrentIdentity();
+    yield browseridManager.whenReadyToAuthenticate.promise;
+    do_check_true(!!browseridManager._token);
+    do_check_true(browseridManager.hasValidToken());
+    do_check_eq(browseridManager.account, identityConfig.fxaccount.user.email);
+  }
+);
+
+
 add_test(function test_getResourceAuthenticator() {
     _("BrowserIDManager supplies a Resource Authenticator callback which returns a Hawk header.");
     let authenticator = browseridManager.getResourceAuthenticator();
@@ -85,7 +96,6 @@ add_test(function test_getResourceAuthenticator() {
     do_check_true(output.headers.authorization.startsWith('Hawk'));
     _("Expected internal state after successful call.");
     do_check_eq(browseridManager._token.uid, identityConfig.fxaccount.token.uid);
-    do_check_eq(browseridManager.account, identityConfig.fxaccount.user.email);
     run_next_test();
   }
 );
@@ -291,24 +301,6 @@ add_test(function test_tokenExpiration() {
   }
 );
 
-add_test(function test_userChangeAndLogOut() {
-    _("BrowserIDManager notices when the FxAccounts.getSignedInUser().email changes.");
-    let bidUser = new BrowserIDManager();
-    configureFxAccountIdentity(bidUser, identityConfig);
-    let request = new SyncStorageRequest(
-      "https://example.net/somewhere/over/the/rainbow");
-    let authenticator = bidUser.getRESTRequestAuthenticator();
-    do_check_true(!!authenticator);
-    let output = authenticator(request, 'GET');
-    do_check_true(!!output);
-    do_check_eq(bidUser.account, identityConfig.fxaccount.user.email);
-    do_check_true(bidUser.hasValidToken());
-    identityConfig.fxaccount.user.email = "something@new";
-    do_check_false(bidUser.hasValidToken());
-    run_next_test();
-  }
-);
-
 add_test(function test_sha256() {
   // Test vectors from http://www.bichlmeier.info/sha256test.html
   let vectors = [
@@ -475,6 +467,7 @@ function* initializeIdentityWithHAWKFailure(response) {
   };
 
   browseridManager._fxaService = fxa;
+  browseridManager._signedInUser = null;
   yield browseridManager.initializeWithCurrentIdentity();
   try {
     yield browseridManager.whenReadyToAuthenticate.promise;

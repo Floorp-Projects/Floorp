@@ -32,7 +32,7 @@ add_task(function* test_startover() {
   do_check_true(Service.clusterURL.length > 0);
 
   // remember some stuff so we can reset it after.
-  let oldIdentidy = Service.identity;
+  let oldIdentity = Service.identity;
   let oldClusterManager = Service._clusterManager;
   let deferred = Promise.defer();
   Services.obs.addObserver(function observeStartOverFinished() {
@@ -41,7 +41,7 @@ add_task(function* test_startover() {
   }, "weave:service:start-over:finish", false);
 
   Service.startOver();
-  yield deferred; // wait for the observer to fire.
+  yield deferred.promise; // wait for the observer to fire.
 
   // should have reset the pref that indicates if FxA is enabled.
   do_check_true(Services.prefs.getBoolPref("services.sync.fxaccounts.enabled"));
@@ -52,10 +52,11 @@ add_task(function* test_startover() {
   // should have clobbered the cluster URL
   do_check_eq(Service.clusterURL, "");
 
-  // reset the world.
-  Service.identity = oldIdentity = Service.identity;
-  Service._clusterManager = Service._clusterManager;
-  Services.prefs.setBoolPref("services.sync.fxaccounts.enabled", false);
+  // we should have thrown away the old identity provider and cluster manager.
+  do_check_neq(oldIdentity, Service.identity);
+  do_check_neq(oldClusterManager, Service._clusterManager);
 
+  // reset the world.
+  Services.prefs.setBoolPref("services.sync.fxaccounts.enabled", false);
   Services.prefs.setBoolPref("services.sync-testing.startOverKeepIdentity", oldValue);
 });
