@@ -10,7 +10,6 @@
 #include "mozilla/Mutex.h"
 #include "nsIOutputStream.h"
 #include "nsAutoPtr.h"
-#include "nsCycleCollectionParticipant.h"
 
 //-----------------------------------------------------------------------------
 
@@ -62,21 +61,19 @@ private:
 class nsUDPMessage : public nsIUDPMessage
 {
 public:
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsUDPMessage)
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIUDPMESSAGE
 
-  nsUDPMessage(mozilla::net::NetAddr* aAddr,
+  nsUDPMessage(PRNetAddr* aAddr,
                nsIOutputStream* aOutputStream,
-               FallibleTArray<uint8_t>& aData);
+               const nsACString& aData);
 
 private:
   virtual ~nsUDPMessage();
 
-  mozilla::net::NetAddr mAddr;
+  PRNetAddr mAddr;
   nsCOMPtr<nsIOutputStream> mOutputStream;
-  FallibleTArray<uint8_t> mData;
-  JS::Heap<JSObject*> mJsobj;
+  nsCString mData;
 };
 
 
