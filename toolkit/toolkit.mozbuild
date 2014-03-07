@@ -121,6 +121,8 @@ if CONFIG['MOZ_UNIVERSALCHARDET']:
 
 if CONFIG['ACCESSIBILITY']:
     DIRS += ['/accessible']
+else:
+    DIRS += ['/accessible/ipc']
 
 # toolkit
 
