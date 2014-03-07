@@ -3568,8 +3568,13 @@ mq
 mr
 gov.mr
 
-// ms : http://en.wikipedia.org/wiki/.ms
+// ms : http://www.nic.ms/pdf/MS_Domain_Name_Rules.pdf
 ms
+com.ms
+edu.ms
+gov.ms
+net.ms
+org.ms
 
 // mt : https://www.nic.org.mt/go/policy
 // Submitted by registry <help@nic.org.mt> 2013-11-19
