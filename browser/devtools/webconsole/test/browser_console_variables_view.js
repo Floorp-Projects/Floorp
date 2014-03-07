@@ -28,8 +28,7 @@ function consoleOpened(hud)
 function onExecuteFooObj(msg)
 {
   ok(msg, "output message found");
-  isnot(msg.textContent.indexOf('{testProp: "testValue"}'), -1,
-        "message text check");
+  ok(msg.textContent.contains('{ testProp: "testValue" }'), "message text check");
 
   let anchor = msg.querySelector("a");
   ok(anchor, "object link found");
