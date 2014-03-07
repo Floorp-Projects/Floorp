@@ -17,7 +17,7 @@ function test() {
       }
     }
   });
-  content.location = "http://www.mozilla.org/firefox/its-an-attack.html";
+  content.location = "http://www.itisatrap.org/firefox/its-an-attack.html";
 }
 
 function testMalware() {
@@ -32,7 +32,7 @@ function testMalware() {
   
   // Now launch the phishing test
   window.addEventListener("DOMContentLoaded", testPhishing, true);
-  content.location = "http://www.mozilla.org/firefox/its-a-trap.html";
+  content.location = "http://www.itisatrap.org/firefox/its-a-trap.html";
 }
 
 function testPhishing() {

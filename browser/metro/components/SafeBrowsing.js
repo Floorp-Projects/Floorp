@@ -69,13 +69,13 @@ SafeBrowsing.prototype = {
     this.listManager = Cc["@mozilla.org/url-classifier/listmanager;1"].getService(Ci.nsIUrlListManager);
 
     // Add a test chunk to the database
-    let testData = "mozilla.org/firefox/its-an-attack.html";
+    let testData = "itisatrap.org/firefox/its-an-attack.html";
     let testUpdate =
       "n:1000\ni:test-malware-simple\nad:1\n" +
       "a:1:32:" + testData.length + "\n" +
       testData;
 
-    testData = "mozilla.org/firefox/its-a-trap.html";
+    testData = "itisatrap.org/firefox/its-a-trap.html";
     testUpdate +=
       "n:1000\ni:test-phish-simple\nad:1\n" +
       "a:1:32:" + testData.length + "\n" +
