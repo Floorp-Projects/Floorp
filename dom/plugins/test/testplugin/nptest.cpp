@@ -2056,16 +2056,21 @@ bool
 scriptableHasProperty(NPObject* npobj, NPIdentifier name)
 {
   if (NPN_IdentifierIsString(name)) {
-    if (NPN_GetStringIdentifier(NPN_UTF8FromIdentifier(name)) != name)
+    NPUTF8 *asUTF8 = NPN_UTF8FromIdentifier(name);
+    if (NPN_GetStringIdentifier(asUTF8) != name) {
       Crash();
+    }
+    NPN_MemFree(asUTF8);
   }
   else {
-    if (NPN_GetIntIdentifier(NPN_IntFromIdentifier(name)) != name)
+    if (NPN_GetIntIdentifier(NPN_IntFromIdentifier(name)) != name) {
       Crash();
+    }
   }
   for (int i = 0; i < int(ARRAY_LENGTH(sPluginPropertyIdentifiers)); i++) {
-    if (name == sPluginPropertyIdentifiers[i])
+    if (name == sPluginPropertyIdentifiers[i]) {
       return true;
+    }
   }
   return false;
 }
