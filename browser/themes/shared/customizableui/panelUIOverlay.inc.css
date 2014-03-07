@@ -119,14 +119,13 @@
   padding: 0;
 }
 
-.panelUI-grid .toolbarbutton-menubutton-button > .toolbarbutton-multiline-text,
+.panelUI-grid .toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-multiline-text,
 .panelUI-grid .toolbarbutton-1 > .toolbarbutton-multiline-text {
   -moz-hyphens: auto;
-  min-height: 3.5em;
 }
 
-.panelUI-grid:not([customize-transitioning]) .toolbarbutton-menubutton-button > .toolbarbutton-multiline-text,
-.panelUI-grid:not([customize-transitioning]) .toolbarbutton-1 > .toolbarbutton-multiline-text {
+.panelUI-grid:not([customize-transitioning]) .toolbarbutton-1[fadelabel] > .toolbarbutton-menubutton-button > .toolbarbutton-multiline-text,
+.panelUI-grid:not([customize-transitioning]) .toolbarbutton-1[fadelabel] > .toolbarbutton-multiline-text {
   mask: url(chrome://browser/content/browser.xul#menuPanelButtonTextFadeOutMask);
 }
 
@@ -136,7 +135,7 @@
   margin: 2px 0 0;
 }
 
-.panelUI-grid .toolbarbutton-menubutton-button > .toolbarbutton-multiline-text {
+.panelUI-grid .toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-multiline-text {
   text-align: center;
   margin: -1px 0 0;
 }
