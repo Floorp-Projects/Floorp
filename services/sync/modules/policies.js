@@ -30,8 +30,6 @@ SyncScheduler.prototype = {
                       LOGIN_FAILED_INVALID_PASSPHRASE,
                       LOGIN_FAILED_LOGIN_REJECTED],
 
-  _loginNotReadyCounter: 0,
-
   /**
    * The nsITimer object that schedules the next sync. See scheduleNextSync().
    */
@@ -115,10 +113,6 @@ SyncScheduler.prototype = {
         // we'll handle that later
         Status.resetBackoff();
 
-        // Reset the loginNotReady counter, just in-case the user signs in
-        // as another user and re-hits the not-ready state.
-        this._loginNotReadyCounter = 0;
-
         this.globalScore = 0;
         break;
       case "weave:service:sync:finish":
@@ -161,13 +155,6 @@ SyncScheduler.prototype = {
           this._log.debug("Couldn't log in: master password is locked.");
           this._log.trace("Scheduling a sync at MASTER_PASSWORD_LOCKED_RETRY_INTERVAL");
           this.scheduleAtInterval(MASTER_PASSWORD_LOCKED_RETRY_INTERVAL);
-        } else if (Status.login == LOGIN_FAILED_NOT_READY) {
-          this._loginNotReadyCounter++;
-          this._log.debug("Couldn't log in: identity not ready.");
-          this._log.trace("Scheduling a sync at IDENTITY_NOT_READY_RETRY_INTERVAL * " +
-                          this._loginNotReadyCounter);
-          this.scheduleAtInterval(IDENTITY_NOT_READY_RETRY_INTERVAL *
-                                  this._loginNotReadyCounter);
         } else if (this._fatalLoginStatus.indexOf(Status.login) == -1) {
           // Not a fatal login error, just an intermittent network or server
           // issue. Keep on syncin'.

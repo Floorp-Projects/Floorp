@@ -6,6 +6,7 @@
 package org.mozilla.gecko.home;
 
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.util.ThreadUtils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -17,7 +18,11 @@ import android.os.Parcelable;
 import android.text.TextUtils;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 public final class HomeConfig {
@@ -265,7 +270,7 @@ public final class HomeConfig {
             return mFlags.contains(Flags.DEFAULT_PANEL);
         }
 
-        public void setIsDefault(boolean isDefault) {
+        private void setIsDefault(boolean isDefault) {
             if (isDefault) {
                 mFlags.add(Flags.DEFAULT_PANEL);
             } else {
@@ -277,7 +282,7 @@ public final class HomeConfig {
             return mFlags.contains(Flags.DISABLED_PANEL);
         }
 
-        public void setIsDisabled(boolean isDisabled) {
+        private void setIsDisabled(boolean isDisabled) {
             if (isDisabled) {
                 mFlags.add(Flags.DISABLED_PANEL);
             } else {
@@ -692,6 +697,374 @@ public final class HomeConfig {
         };
     }
 
+    /**
+     * Immutable representation of the current state of {@code HomeConfig}.
+     * This is what HomeConfig returns from a load() call and takes as
+     * input to save a new state.
+     *
+     * Users of {@code State} should use an {@code Iterator} to iterate
+     * through the contained {@code PanelConfig} instances.
+     *
+     * {@code State} is immutable i.e. you can't add, remove, or update
+     * contained elements directly. You have to use an {@code Editor} to
+     * change the state, which can be created through the {@code edit()}
+     * method.
+     */
+    public static class State implements Iterable<PanelConfig> {
+        private final HomeConfig mHomeConfig;
+        private final List<PanelConfig> mPanelConfigs;
+
+        private State(HomeConfig homeConfig, List<PanelConfig> panelConfigs) {
+            mHomeConfig = homeConfig;
+            mPanelConfigs = Collections.unmodifiableList(panelConfigs);
+        }
+
+        @Override
+        public Iterator<PanelConfig> iterator() {
+            return mPanelConfigs.iterator();
+        }
+
+        /**
+         * Creates an {@code Editor} for this state.
+         */
+        public Editor edit() {
+            return new Editor(mHomeConfig, this);
+        }
+    }
+
+    /**
+     * {@code Editor} allows you to make changes to a {@code State}. You
+     * can create {@code Editor} by calling {@code edit()} on the target
+     * {@code State} instance.
+     *
+     * {@code Editor} works on a copy of the {@code State} that originated
+     * it. This means that adding, removing, or updating panels in an
+     * {@code Editor} will never change the {@code State} which you
+     * created the {@code Editor} from. Calling {@code commit()} or
+     * {@code apply()} will cause the new {@code State} instance to be
+     * created and saved using the {@code HomeConfig} instance that
+     * created the source {@code State}.
+     *
+     * {@code Editor} is *not* thread-safe. You can only make calls on it
+     * from the thread where it was originally created. It will throw an
+     * exception if you don't follow this invariant.
+     */
+    public static class Editor implements Iterable<PanelConfig> {
+        private final HomeConfig mHomeConfig;
+        private final HashMap<String, PanelConfig> mConfigMap;
+        private final Thread mOriginalThread;
+
+        private PanelConfig mDefaultPanel;
+        private int mEnabledCount;
+
+        private Editor(HomeConfig homeConfig, State configState) {
+            mHomeConfig = homeConfig;
+            mOriginalThread = Thread.currentThread();
+            mConfigMap = new LinkedHashMap<String, PanelConfig>();
+            mEnabledCount = 0;
+
+            initFromState(configState);
+        }
+
+        /**
+         * Initialize the initial state of the editor from the given
+         * {@sode State}. A LinkedHashMap is used to represent the list of
+         * panels as it provides fast access to specific panels from IDs
+         * while also being order-aware. We keep a reference to the
+         * default panel and the number of enabled panels to avoid iterating
+         * through the map every time we need those.
+         *
+         * @param configState The source State to load the editor from.
+         */
+        private void initFromState(State configState) {
+            for (PanelConfig panelConfig : configState) {
+                final PanelConfig panelCopy = new PanelConfig(panelConfig);
+
+                if (!panelCopy.isDisabled()) {
+                    mEnabledCount++;
+                }
+
+                if (panelCopy.isDefault()) {
+                    if (mDefaultPanel == null) {
+                        mDefaultPanel = panelCopy;
+                    } else {
+                        throw new IllegalStateException("Multiple default panels in HomeConfig state");
+                    }
+                }
+
+                mConfigMap.put(panelConfig.getId(), panelCopy);
+            }
+
+            // We should always have a defined default panel if there's
+            // at least one enabled panel around.
+            if (mEnabledCount > 0 && mDefaultPanel == null) {
+                throw new IllegalStateException("Default panel in HomeConfig state is undefined");
+            }
+        }
+
+        private PanelConfig getPanelOrThrow(String panelId) {
+            final PanelConfig panelConfig = mConfigMap.get(panelId);
+            if (panelConfig == null) {
+                throw new IllegalStateException("Tried to access non-existing panel: " + panelId);
+            }
+
+            return panelConfig;
+        }
+
+        private boolean isCurrentDefaultPanel(PanelConfig panelConfig) {
+            if (mDefaultPanel == null) {
+                return false;
+            }
+
+            return mDefaultPanel.equals(panelConfig);
+        }
+
+        private void findNewDefault() {
+            // Pick the first panel that is neither disabled nor currently
+            // set as default.
+            for (PanelConfig panelConfig : mConfigMap.values()) {
+                if (!panelConfig.isDefault() && !panelConfig.isDisabled()) {
+                    setDefault(panelConfig.getId());
+                    return;
+                }
+            }
+
+            mDefaultPanel = null;
+        }
+
+        private List<PanelConfig> makeDeepCopy() {
+            List<PanelConfig> copiedList = new ArrayList<PanelConfig>();
+            for (PanelConfig panelConfig : mConfigMap.values()) {
+                copiedList.add(new PanelConfig(panelConfig));
+            }
+
+            return copiedList;
+        }
+
+        private void setPanelIsDisabled(PanelConfig panelConfig, boolean disabled) {
+            if (panelConfig.isDisabled() == disabled) {
+                return;
+            }
+
+            panelConfig.setIsDisabled(disabled);
+            mEnabledCount += (disabled ? -1 : 1);
+        }
+
+        /**
+         * Gets the ID of the current default panel.
+         */
+        public String getDefaultPanelId() {
+            ThreadUtils.assertOnThread(mOriginalThread);
+
+            if (mDefaultPanel == null) {
+                return null;
+            }
+
+            return mDefaultPanel.getId();
+        }
+
+        /**
+         * Set a new default panel.
+         *
+         * @param panelId the ID of the new default panel.
+         */
+        public void setDefault(String panelId) {
+            ThreadUtils.assertOnThread(mOriginalThread);
+
+            final PanelConfig panelConfig = getPanelOrThrow(panelId);
+            if (isCurrentDefaultPanel(panelConfig)) {
+                return;
+            }
+
+            if (mDefaultPanel != null) {
+                mDefaultPanel.setIsDefault(false);
+            }
+
+            panelConfig.setIsDefault(true);
+            setPanelIsDisabled(panelConfig, false);
+
+            mDefaultPanel = panelConfig;
+        }
+
+        /**
+         * Toggles disabled state for a panel.
+         *
+         * @param panelId the ID of the target panel.
+         * @param disabled true to disable the panel.
+         */
+        public void setDisabled(String panelId, boolean disabled) {
+            ThreadUtils.assertOnThread(mOriginalThread);
+
+            final PanelConfig panelConfig = getPanelOrThrow(panelId);
+            if (panelConfig.isDisabled() == disabled) {
+                return;
+            }
+
+            setPanelIsDisabled(panelConfig, disabled);
+
+            if (disabled) {
+                if (isCurrentDefaultPanel(panelConfig)) {
+                    panelConfig.setIsDefault(false);
+                    findNewDefault();
+                }
+            } else if (mEnabledCount == 1) {
+                setDefault(panelId);
+            }
+        }
+
+        /**
+         * Adds a new {@code PanelConfig}. It will do nothing if the
+         * {@code Editor} already contains a panel with the same ID.
+         *
+         * @param panelConfig the {@code PanelConfig} instance to be added.
+         * @return true if the item has been added.
+         */
+        public boolean install(PanelConfig panelConfig) {
+            ThreadUtils.assertOnThread(mOriginalThread);
+
+            if (panelConfig == null) {
+                throw new IllegalStateException("Can't install a null panel");
+            }
+
+            if (!panelConfig.isDynamic()) {
+                throw new IllegalStateException("Can't install a built-in panel: " + panelConfig.getId());
+            }
+
+            if (panelConfig.isDisabled()) {
+                throw new IllegalStateException("Can't install a disabled panel: " + panelConfig.getId());
+            }
+
+            boolean installed = false;
+
+            final String id = panelConfig.getId();
+            if (!mConfigMap.containsKey(id)) {
+                mConfigMap.put(id, panelConfig);
+
+                mEnabledCount++;
+                if (mEnabledCount == 1 || panelConfig.isDefault()) {
+                    setDefault(panelConfig.getId());
+                }
+
+                installed = true;
+            }
+
+            return installed;
+        }
+
+        /**
+         * Removes an existing panel.
+         *
+         * @return true if the item has been removed.
+         */
+        public boolean uninstall(String panelId) {
+            ThreadUtils.assertOnThread(mOriginalThread);
+
+            final PanelConfig panelConfig = mConfigMap.get(panelId);
+            if (panelConfig == null) {
+                return false;
+            }
+
+            if (!panelConfig.isDynamic()) {
+                throw new IllegalStateException("Can't uninstall a built-in panel: " + panelConfig.getId());
+            }
+
+            mConfigMap.remove(panelId);
+
+            if (!panelConfig.isDisabled()) {
+                mEnabledCount--;
+            }
+
+            if (isCurrentDefaultPanel(panelConfig)) {
+                findNewDefault();
+            }
+
+            return true;
+        }
+
+        /**
+         * Replaces an existing panel with a new {@code PanelConfig} instance.
+         *
+         * @return true if the item has been updated.
+         */
+        public boolean update(PanelConfig panelConfig) {
+            ThreadUtils.assertOnThread(mOriginalThread);
+
+            if (panelConfig == null) {
+                throw new IllegalStateException("Can't update a null panel");
+            }
+
+            boolean updated = false;
+
+            final String id = panelConfig.getId();
+            if (mConfigMap.containsKey(id)) {
+                final PanelConfig oldPanelConfig = mConfigMap.put(id, panelConfig);
+
+                // The disabled and default states can't never be
+                // changed by an update operation.
+                panelConfig.setIsDefault(oldPanelConfig.isDefault());
+                panelConfig.setIsDisabled(oldPanelConfig.isDisabled());
+
+                updated = true;
+            }
+
+            return updated;
+        }
+
+        /**
+         * Saves the current {@code Editor} state asynchronously in the
+         * background thread.
+         *
+         * @return the resulting {@code State} instance.
+         */
+        public State apply() {
+            ThreadUtils.assertOnThread(mOriginalThread);
+
+            // We're about to save the current state in the background thread
+            // so we should use a deep copy of the PanelConfig instances to
+            // avoid saving corrupted state.
+            final State newConfigState = new State(mHomeConfig, makeDeepCopy());
+
+            ThreadUtils.getBackgroundHandler().post(new Runnable() {
+                @Override
+                public void run() {
+                    mHomeConfig.save(newConfigState);
+                }
+            });
+
+            return newConfigState;
+        }
+
+        /**
+         * Saves the current {@code Editor} state synchronously in the
+         * current thread.
+         *
+         * @return the resulting {@code State} instance.
+         */
+        public State commit() {
+            ThreadUtils.assertOnThread(mOriginalThread);
+
+            final State newConfigState =
+                    new State(mHomeConfig, new ArrayList<PanelConfig>(mConfigMap.values()));
+
+            // This is a synchronous blocking operation, hence no
+            // need to deep copy the current PanelConfig instances.
+            mHomeConfig.save(newConfigState);
+
+            return newConfigState;
+        }
+
+        public boolean isEmpty() {
+            return mConfigMap.isEmpty();
+        }
+
+        @Override
+        public Iterator<PanelConfig> iterator() {
+            ThreadUtils.assertOnThread(mOriginalThread);
+
+            return mConfigMap.values().iterator();
+        }
+    }
+
     public interface OnChangeListener {
         public void onChange();
     }
@@ -715,16 +1088,17 @@ public final class HomeConfig {
         mBackend = backend;
     }
 
-    public List<PanelConfig> load() {
-        return mBackend.load();
+    public State load() {
+        final List<PanelConfig> panelConfigs = mBackend.load();
+        return new State(this, panelConfigs);
     }
 
     public String getLocale() {
         return mBackend.getLocale();
     }
 
-    public void save(List<PanelConfig> panelConfigs) {
-        mBackend.save(panelConfigs);
+    public void save(State configState) {
+        mBackend.save(configState.mPanelConfigs);
     }
 
     public void setOnChangeListener(OnChangeListener listener) {

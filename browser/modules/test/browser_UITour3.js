@@ -122,4 +122,21 @@ let tests = [
     let buttons = gContentWindow.makeButtons();
     gContentAPI.showInfo("urlbar", "another title", "moar text", "./image.png", buttons);
   },
+
+  function test_info_close_button(done) {
+    let popup = document.getElementById("UITourTooltip");
+    let closeButton = document.getElementById("UITourTooltipClose");
+
+    popup.addEventListener("popupshown", function onPopupShown() {
+      popup.removeEventListener("popupshown", onPopupShown);
+      EventUtils.synthesizeMouseAtCenter(closeButton, {}, window);
+      executeSoon(function() {
+        is(gContentWindow.callbackResult, "closeButton", "Close button callback called");
+        done();
+      });
+    });
+
+    let infoOptions = gContentWindow.makeInfoOptions();
+    gContentAPI.showInfo("urlbar", "Close me", "X marks the spot", null, null, infoOptions);
+  }
 ];
