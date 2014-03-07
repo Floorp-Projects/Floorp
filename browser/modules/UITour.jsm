@@ -324,7 +324,12 @@ this.UITour = {
             }
           }
 
-          this.showInfo(contentDocument, target, data.title, data.text, iconURL, buttons);
+          let infoOptions = {};
+
+          if (typeof data.closeButtonCallbackID == "string")
+            infoOptions.closeButtonCallbackID = data.closeButtonCallbackID;
+
+          this.showInfo(contentDocument, target, data.title, data.text, iconURL, buttons, infoOptions);
         }).then(null, Cu.reportError);
         break;
       }
@@ -504,14 +509,6 @@ this.UITour = {
         if (aEvent.target.id == "urlbar") {
           let window = aEvent.target.ownerDocument.defaultView;
           this.handleUrlbarInput(window);
-        }
-        break;
-      }
-
-      case "command": {
-        if (aEvent.target.id == "UITourTooltipClose") {
-          let window = aEvent.target.ownerDocument.defaultView;
-          this.hideInfo(window);
         }
         break;
       }
@@ -866,7 +863,20 @@ this.UITour = {
     this._setAppMenuStateForAnnotation(aWindow, "highlight", false);
   },
 
-  showInfo: function(aContentDocument, aAnchor, aTitle = "", aDescription = "", aIconURL = "", aButtons = []) {
+  /**
+   * Show an info panel.
+   *
+   * @param {Document} aContentDocument
+   * @param {Node}     aAnchor
+   * @param {String}   [aTitle=""]
+   * @param {String}   [aDescription=""]
+   * @param {String}   [aIconURL=""]
+   * @param {Object[]} [aButtons=[]]
+   * @param {Object}   [aOptions={}]
+   * @param {String}   [aOptions.closeButtonCallbackID]
+   */
+  showInfo: function(aContentDocument, aAnchor, aTitle = "", aDescription = "", aIconURL = "",
+                     aButtons = [], aOptions = {}) {
     function showInfoPanel(aAnchorEl) {
       aAnchorEl.focus();
 
@@ -910,7 +920,16 @@ this.UITour = {
       tooltipButtons.hidden = !aButtons.length;
 
       let tooltipClose = document.getElementById("UITourTooltipClose");
-      tooltipClose.addEventListener("command", this);
+      let closeButtonCallback = (event) => {
+        this.hideInfo(document.defaultView);
+        if (aOptions && aOptions.closeButtonCallbackID)
+          this.sendPageCallback(aContentDocument, aOptions.closeButtonCallbackID);
+      };
+      tooltipClose.addEventListener("command", closeButtonCallback);
+      tooltip.addEventListener("popuphiding", function tooltipHiding(event) {
+        tooltip.removeEventListener("popuphiding", tooltipHiding);
+        tooltipClose.removeEventListener("command", closeButtonCallback);
+      });
 
       tooltip.setAttribute("targetName", aAnchor.targetName);
       tooltip.hidden = false;
