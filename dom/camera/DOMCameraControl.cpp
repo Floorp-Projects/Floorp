@@ -11,6 +11,7 @@
 #include "DeviceStorage.h"
 #include "DeviceStorageFileDescriptor.h"
 #include "mozilla/dom/TabChild.h"
+#include "mozilla/ipc/FileDescriptorUtils.h"
 #include "mozilla/MediaManager.h"
 #include "mozilla/Services.h"
 #include "mozilla/unused.h"
@@ -34,6 +35,7 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::idl;
+using namespace mozilla::ipc;
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsDOMCameraControl)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
@@ -397,6 +399,19 @@ nsDOMCameraControl::SetFocusMode(const nsAString& aFocusMode, ErrorResult& aRv)
   aRv = mCameraControl->Set(CAMERA_PARAM_FOCUSMODE, aFocusMode);
 }
 
+void
+nsDOMCameraControl::GetIsoMode(nsString& aIsoMode, ErrorResult& aRv)
+{
+  MOZ_ASSERT(mCameraControl);
+  aRv = mCameraControl->Get(CAMERA_PARAM_ISOMODE, aIsoMode);
+}
+void
+nsDOMCameraControl::SetIsoMode(const nsAString& aIsoMode, ErrorResult& aRv)
+{
+  MOZ_ASSERT(mCameraControl);
+  aRv = mCameraControl->Set(CAMERA_PARAM_ISOMODE, aIsoMode);
+}
+
 double
 nsDOMCameraControl::GetZoom(ErrorResult& aRv)
 {
@@ -728,8 +743,16 @@ nsDOMCameraControl::OnCreatedFileDescriptor(bool aSucceeded)
       return;
     }
   }
-
   OnError(CameraControlListener::kInStartRecording, NS_LITERAL_STRING("FAILURE"));
+
+  if (mDSFileDescriptor->mFileDescriptor.IsValid()) {
+    // An error occured. We need to manually close the file associated with the
+    // FileDescriptor, and we shouldn't do this on the main thread, so we
+    // use a little helper.
+    nsRefPtr<CloseFileRunnable> closer =
+      new CloseFileRunnable(mDSFileDescriptor->mFileDescriptor);
+    closer->Dispatch();
+  }
 }
 
 void

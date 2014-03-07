@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Mozilla Foundation
+ * Copyright (C) 2013-2014 Mozilla Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -95,6 +95,7 @@ protected:
   double mExposureCompensationMin;
   double mExposureCompensationStep;
   nsTArray<int> mZoomRatios;
+  nsTArray<nsString> mIsoModes;
 
   // This subclass of android::CameraParameters just gives
   // all of the AOSP getters and setters the same signature.
@@ -176,6 +177,8 @@ protected:
   nsresult GetTranslated(uint32_t aKey, nsTArray<double>& aValues);
 
   template<class T> nsresult GetListAsArray(uint32_t aKey, nsTArray<T>& aArray);
+  nsresult MapIsoToGonk(const nsAString& aIso, nsACString& aIsoOut);
+  nsresult MapIsoFromGonk(const char* aIso, nsAString& aIsoOut);
 
   nsresult Initialize();
 };
