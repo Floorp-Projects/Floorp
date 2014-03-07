@@ -51,7 +51,10 @@ function run() {
   CameraTest.run();
 }
 
-// The array of tests
+// The array of tests. Because camera capabilities don't change over the life
+// of a CameraControl object, they are only read once when the CameraControl is
+// created; so we have to call the 'prep' function first to set the fake
+// capability pref, before we call getCamera() and call 'test' to run the test.
 var tests = [
   {
     key: "fake-zoom",
@@ -97,6 +100,21 @@ var tests = [
     }
   },
   {
+    key: "fake-zoom-out-of-order",
+    prep: function setupFakeZoomOutOfOrder(test) {
+      // We expect the camera library to give us zoom ratios in order; if
+      // it doesn't we ignore the list and just return 1x support.
+      test.setFakeParameters("zoom-ratios=100,150,200,400,300;max-zoom=4", function () {
+        run();
+      });
+    },
+    test: function testFakeZoomOutOfOrder(cam, cap) {
+      ok(cap.zoomRatios.length == 1, "zoom ratios length = " + cap.zoomRatios.length);
+      ok(cap.zoomRatios[0] == 1.0, "only supported zoom = " + cap.zoomRatios[0] + "x");
+      next();
+    }
+  },
+  {
     key: "fake-iso",
     prep: function setupFakeIso(test) {
       // we should recognize 'auto', 'hjr', and numeric modes; anything else
@@ -108,7 +126,7 @@ var tests = [
       });
     },
     test: function testFakeIso(cam, cap) {
-      // value 'foo' should be missing
+      // values 'foo' and 'ISObar' should not be included in isoModes
       ok(cap.isoModes.length == 7, "ISO modes length = " + cap.isoModes.length);
       ok(cap.isoModes.indexOf("foo") == -1, "Unknown ISO mode 'foo' is ignored");
       ok(cap.isoModes.indexOf("ISObar") == -1, "Unknown ISO mode 'ISObar' is ignored");
@@ -152,7 +170,15 @@ CameraTest.begin("hardware", function(test) {
       info("test: " + t.key);
       function onSuccess(camera, config) {
         cameraObj = camera;
-        t.test(camera, camera.capabilities);
+        document.getElementById('viewfinder').mozSrcObject = camera;
+        camera.onPreviewStateChange = function (state) {
+          if (state === "started") {
+            t.test(camera, camera.capabilities);
+          } else {
+            ok(false, "preview started (state = '" + state + "')");
+          }
+          camera.onPreviewStateChange = null;
+        };
       }
       CameraTest.run = function() {
         navigator.mozCameras.getCamera(whichCamera, initialConfig, onSuccess, onError);
