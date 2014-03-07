@@ -46,8 +46,9 @@
 #include "nsIWritablePropertyBag2.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsSandboxFlags.h"
+#include "mozilla/dom/ScriptSettings.h"
 
-using mozilla::AutoPushJSContext;
+using mozilla::dom::AutoEntryScript;
 
 static NS_DEFINE_CID(kJSURICID, NS_JSURI_CID);
 
@@ -239,7 +240,11 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
     bool useSandbox =
         (aExecutionPolicy == nsIScriptChannel::EXECUTE_IN_SANDBOX);
 
-    AutoPushJSContext cx(scriptContext->GetNativeContext());
+    // New script entry point required, due to the "Create a script" step of
+    // http://www.whatwg.org/specs/web-apps/current-work/#javascript-protocol
+    AutoEntryScript entryScript(innerGlobal, true,
+                                scriptContext->GetNativeContext());
+    JSContext* cx = entryScript.cx();
     JS::Rooted<JSObject*> globalJSObject(cx, innerGlobal->GetGlobalJSObject());
     NS_ENSURE_TRUE(globalJSObject, NS_ERROR_UNEXPECTED);
 
@@ -306,10 +311,11 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
         JS::CompileOptions options(cx);
         options.setFileAndLine(mURL.get(), 1)
                .setVersion(JSVERSION_DEFAULT);
-        rv = scriptContext->EvaluateString(NS_ConvertUTF8toUTF16(script),
-                                           globalJSObject, options,
-                                           /* aCoerceToString = */ true,
-                                           v.address());
+        nsJSUtils::EvaluateOptions evalOptions;
+        evalOptions.setCoerceToString(true);
+        rv = nsJSUtils::EvaluateString(cx, NS_ConvertUTF8toUTF16(script),
+                                       globalJSObject, options, evalOptions,
+                                       v.address());
 
         // If there's an error on cx as a result of that call, report
         // it now -- either we're just running under the event loop,
