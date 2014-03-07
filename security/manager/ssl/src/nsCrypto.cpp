@@ -2207,11 +2207,8 @@ nsCryptoRunnable::Run()
   JSAutoCompartment ac(cx, m_args->m_scope);
 
   bool ok =
-    JS_EvaluateScriptForPrincipals(cx, m_args->m_scope,
-                                   nsJSPrincipals::get(m_args->m_principals),
-                                   m_args->m_jsCallback, 
-                                   strlen(m_args->m_jsCallback),
-                                   nullptr, 0, nullptr);
+    JS_EvaluateScript(cx, m_args->m_scope, m_args->m_jsCallback, 
+                      strlen(m_args->m_jsCallback), nullptr, 0, nullptr);
   return ok ? NS_OK : NS_ERROR_FAILURE;
 }
 

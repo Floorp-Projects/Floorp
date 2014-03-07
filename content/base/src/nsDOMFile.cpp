@@ -262,29 +262,6 @@ nsDOMFileBase::Slice(int64_t aStart, int64_t aEnd,
 }
 
 NS_IMETHODIMP
-nsDOMFileBase::MozSlice(int64_t aStart, int64_t aEnd,
-                        const nsAString& aContentType, 
-                        JSContext* aCx,
-                        uint8_t optional_argc,
-                        nsIDOMBlob **aBlob)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  nsIScriptGlobalObject* sgo = nsJSUtils::GetDynamicScriptGlobal(aCx);
-  if (sgo) {
-    nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(sgo);
-    if (window) {
-      nsCOMPtr<nsIDocument> document = window->GetExtantDoc();
-      if (document) {
-        document->WarnOnceAbout(nsIDocument::eMozSlice);
-      }
-    }
-  }
-
-  return Slice(aStart, aEnd, aContentType, optional_argc, aBlob);
-}
-
-NS_IMETHODIMP
 nsDOMFileBase::GetInternalStream(nsIInputStream **aStream)
 {
   // Must be overridden

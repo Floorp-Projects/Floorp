@@ -1824,7 +1824,7 @@ ScriptSource::initFromOptions(ExclusiveContext *cx, const ReadOnlyCompileOptions
     JS_ASSERT(!filename_);
     JS_ASSERT(!introducerFilename_);
 
-    originPrincipals_ = options.originPrincipals();
+    originPrincipals_ = options.originPrincipals(cx);
     if (originPrincipals_)
         JS_HoldPrincipals(originPrincipals_);
 
@@ -2731,28 +2731,29 @@ js_GetScriptLineExtent(JSScript *script)
 }
 
 void
-js::CurrentScriptFileLineOrigin(JSContext *cx, JSScript **script,
-                                const char **file, unsigned *linenop,
-                                uint32_t *pcOffset, JSPrincipals **origin, LineOption opt)
+js::DescribeScriptedCallerForCompilation(JSContext *cx, JSScript **maybeScript,
+                                         const char **file, unsigned *linenop,
+                                         uint32_t *pcOffset, JSPrincipals **origin,
+                                         LineOption opt)
 {
     if (opt == CALLED_FROM_JSOP_EVAL) {
         jsbytecode *pc = nullptr;
-        *script = cx->currentScript(&pc);
+        *maybeScript = cx->currentScript(&pc);
         JS_ASSERT(JSOp(*pc) == JSOP_EVAL || JSOp(*pc) == JSOP_SPREADEVAL);
         JS_ASSERT(*(pc + (JSOp(*pc) == JSOP_EVAL ? JSOP_EVAL_LENGTH
                                                  : JSOP_SPREADEVAL_LENGTH)) == JSOP_LINENO);
-        *file = (*script)->filename();
+        *file = (*maybeScript)->filename();
         *linenop = GET_UINT16(pc + (JSOp(*pc) == JSOP_EVAL ? JSOP_EVAL_LENGTH
                                                            : JSOP_SPREADEVAL_LENGTH));
-        *pcOffset = pc - (*script)->code();
-        *origin = (*script)->originPrincipals();
+        *pcOffset = pc - (*maybeScript)->code();
+        *origin = (*maybeScript)->originPrincipals();
         return;
     }
 
-    NonBuiltinScriptFrameIter iter(cx);
+    NonBuiltinFrameIter iter(cx);
 
     if (iter.done()) {
-        *script = nullptr;
+        *maybeScript = nullptr;
         *file = nullptr;
         *linenop = 0;
         *pcOffset = 0;
@@ -2760,11 +2761,19 @@ js::CurrentScriptFileLineOrigin(JSContext *cx, JSScript **script,
         return;
     }
 
-    *script = iter.script();
-    *file = (*script)->filename();
-    *linenop = PCToLineNumber(*script, iter.pc());
-    *pcOffset = iter.pc() - (*script)->code();
-    *origin = (*script)->originPrincipals();
+    *file = iter.scriptFilename();
+    *linenop = iter.computeLine();
+    *origin = iter.originPrincipals();
+
+    // These values are only used for introducer fields which are debugging
+    // information and can be safely left null for asm.js frames.
+    if (iter.hasScript()) {
+        *maybeScript = iter.script();
+        *pcOffset = iter.pc() - (*maybeScript)->code();
+    } else {
+        *maybeScript = nullptr;
+        *pcOffset = 0;
+    }
 }
 
 template <class T>
@@ -2898,8 +2907,7 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
     /* Now that all fallible allocation is complete, create the GC thing. */
 
     CompileOptions options(cx);
-    options.setPrincipals(cx->compartment()->principals)
-           .setOriginPrincipals(src->originPrincipals())
+    options.setOriginPrincipals(src->originPrincipals())
            .setCompileAndGo(src->compileAndGo())
            .setSelfHostingMode(src->selfHosted())
            .setNoScriptRval(src->noScriptRval())

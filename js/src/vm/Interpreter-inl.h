@@ -151,11 +151,6 @@ GetLengthProperty(const Value &lval, MutableHandleValue vp)
                 return true;
             }
         }
-
-        if (obj->is<TypedArrayObject>()) {
-            vp.setInt32(obj->as<TypedArrayObject>().length());
-            return true;
-        }
     }
 
     return false;

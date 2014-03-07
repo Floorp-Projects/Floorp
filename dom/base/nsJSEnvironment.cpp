@@ -1985,6 +1985,7 @@ struct CycleCollectorStats
   void Clear()
   {
     mBeginSliceTime = TimeStamp();
+    mEndSliceTime = TimeStamp();
     mBeginTime = TimeStamp();
     mMaxGCDuration = 0;
     mRanSyncForgetSkippable = false;
@@ -2005,7 +2006,8 @@ struct CycleCollectorStats
       return;
     }
 
-    uint32_t sliceTime = TimeUntilNow(mBeginSliceTime);
+    mEndSliceTime = TimeStamp::Now();
+    uint32_t sliceTime = TimeBetween(mBeginSliceTime, mEndSliceTime);
     mMaxSliceTime = std::max(mMaxSliceTime, sliceTime);
     mTotalSliceTime += sliceTime;
     mBeginSliceTime = TimeStamp();
@@ -2016,6 +2018,9 @@ struct CycleCollectorStats
 
   // Time the current slice began, including any GC finishing.
   TimeStamp mBeginSliceTime;
+
+  // Time the previous slice of the current CC ended.
+  TimeStamp mEndSliceTime;
 
   // Time the current cycle collection began.
   TimeStamp mBeginTime;
@@ -2046,22 +2051,6 @@ struct CycleCollectorStats
 };
 
 CycleCollectorStats gCCStats;
-
-static int64_t
-ICCSliceTime()
-{
-  // If CC is not incremental, use an unlimited budget.
-  if (!sIncrementalCC) {
-    return -1;
-  }
-
-  // If an ICC is in progress and is taking too long, finish it off.
-  if (TimeUntilNow(gCCStats.mBeginTime) >= kMaxICCDuration) {
-    return -1;
-  }
-
-  return kICCSliceBudget;
-}
 
 void
 CycleCollectorStats::PrepareForCycleCollectionSlice(int32_t aExtraForgetSkippableCalls)
@@ -2132,10 +2121,29 @@ nsJSContext::RunCycleCollectorSlice()
 
   PROFILER_LABEL("CC", "RunCycleCollectorSlice");
 
-  // Ideally, the slice time would be decreased by the amount of
-  // time spent on PrepareForCycleCollection().
   gCCStats.PrepareForCycleCollectionSlice();
-  nsCycleCollector_collectSlice(ICCSliceTime());
+
+  // Decide how long we want to budget for this slice. By default,
+  // use an unlimited budget.
+  int64_t sliceBudget = -1;
+
+  if (sIncrementalCC) {
+    if (gCCStats.mBeginTime.IsNull()) {
+      // If no CC is in progress, use the standard slice time.
+      sliceBudget = kICCSliceBudget;
+    } else {
+      TimeStamp now = TimeStamp::Now();
+
+      // Only run a limited slice if we're within the max running time.
+      if (TimeBetween(gCCStats.mBeginTime, now) < kMaxICCDuration) {
+        float sliceMultiplier = std::max(TimeBetween(gCCStats.mEndSliceTime, now) / (float)kICCIntersliceDelay, 1.0f);
+        sliceBudget = kICCSliceBudget * sliceMultiplier;
+      }
+    }
+  }
+
+  nsCycleCollector_collectSlice(sliceBudget);
+
   gCCStats.FinishCycleCollectionSlice();
 }
 
@@ -2987,6 +2995,7 @@ AsmJSCacheOpenEntryForRead(JS::Handle<JSObject*> aGlobal,
 
 static bool
 AsmJSCacheOpenEntryForWrite(JS::Handle<JSObject*> aGlobal,
+                            bool aInstalled,
                             const jschar* aBegin,
                             const jschar* aEnd,
                             size_t aSize,
@@ -2994,8 +3003,8 @@ AsmJSCacheOpenEntryForWrite(JS::Handle<JSObject*> aGlobal,
                             intptr_t* aHandle)
 {
   nsIPrincipal* principal = nsContentUtils::GetObjectPrincipal(aGlobal);
-  return asmjscache::OpenEntryForWrite(principal, aBegin, aEnd, aSize, aMemory,
-                                       aHandle);
+  return asmjscache::OpenEntryForWrite(principal, aInstalled, aBegin, aEnd,
+                                       aSize, aMemory, aHandle);
 }
 
 static void

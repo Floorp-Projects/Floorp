@@ -181,3 +181,176 @@ assertEq(asmLink(asmCompile('g', USE_ASM + "function f() { g:{ return 42 } retur
 
 var imp = { ffi:function() { throw "Wrong" } };
 assertEq(asmLink(asmCompile('glob','imp', USE_ASM + "var ffi=imp.ffi; function f() { var i=0; return (i+1)|0; return ffi(i|0)|0 } return f"), null, imp)(), 1);
+
+// Ternaries conditionals
+//
+// Basic ternaries
+var f = asmLink(asmCompile(USE_ASM + "function f(x) { x=x|0; var a=2;if(x?1:0)a=1;else a=0; return a|0 } return f"));
+assertEq(f(1), 1);
+assertEq(f(0), 0);
+
+var guard = (function() {
+    var called_ = false;
+    return {
+        called: function(){ return called_ },
+        call: function(){ called_ = true }
+    }
+})();
+
+var f = asmLink(asmCompile('glob', 'ffi', USE_ASM + "var func=ffi.func; function f(x) { x=x|0; var a=2;if(x?1:1)a=1; else {func();a=0}return a|0 } return f"), this, {func: guard.call});
+assertEq(f(1), 1);
+assertEq(f(0), 1);
+assertEq(guard.called(), false);
+
+var f = asmLink(asmCompile('glob', 'ffi', USE_ASM + "var func=ffi.func; function f(x) { x=x|0; var a=2;if(x?0:0){a=1; func()}else a=0;return a|0 } return f"), this, {func: guard.call});
+assertEq(f(1), 0);
+assertEq(f(0), 0);
+assertEq(guard.called(), false);
+
+var f = asmLink(asmCompile(USE_ASM + "function f(x,y) { x=x|0;y=y|0; var a=2;if(x?0:y)a=1;else a=0; return a|0 } return f"));
+assertEq(f(1,1), 0);
+assertEq(f(1,0), 0);
+assertEq(f(0,0), 0);
+assertEq(f(0,1), 1);
+
+var f = asmLink(asmCompile(USE_ASM + "function f(x,y) { x=x|0;y=y|0; var a=2;if(x?y:1)a=1;else a=0; return a|0 } return f"));
+assertEq(f(1,1), 1);
+assertEq(f(1,0), 0);
+assertEq(f(0,0), 1);
+assertEq(f(0,1), 1);
+
+var f = asmLink(asmCompile(USE_ASM + "function f(x,y,z) { x=x|0;y=y|0;z=z|0; var a=2;if(x?y:z)a=1;else a=0; return a|0 } return f"));
+for (var i = 0; i < 2; ++i)
+    for (var j = 0; j < 2; ++j)
+        for (var k = 0; k < 2; ++k)
+            assertEq(f(i,j,k), ((i && j) || (!i && k))|0);
+
+// Complex ternaries
+function CheckTwoArgsTwoOptions(f) {
+    function check(x,y) {
+        return (x > 2 && y < 5) | 0;
+    }
+    for (var a = -10; a < 10; a++)
+        for (var b = -10; b < 10; b++)
+                assertEq(f(a,b), check(a,b));
+}
+
+function CheckThreeArgsTwoOptions(f) {
+    function check(x,y,z) {
+        return (x > 2 && y < 5 && z > -1) | 0;
+    }
+    for (var a = -10; a < 10; a++)
+        for (var b = -10; b < 10; b++)
+            for (var c = -10; c < 10; c++)
+                assertEq(f(a,b,c), check(a,b,c));
+}
+
+// Ternaries with && semantics
+var f = asmLink(asmCompile(USE_ASM + "function f(x,y) { x=x|0;y=y|0; var z=0; if((x|0) > 2 ? (y|0) < 5 : 0) z=1; return z|0;} return f"));
+CheckTwoArgsTwoOptions(f);
+var f = asmLink(asmCompile(USE_ASM + "function f(x,y) { x=x|0;y=y|0; var z=2; if((x|0) > 2 ? (y|0) < 5 : 0) z=1; else z=0; return z|0;} return f"));
+CheckTwoArgsTwoOptions(f);
+
+var f = asmLink(asmCompile(USE_ASM + "function f(x,y,z) { x=x|0;y=y|0;z=z|0; var a=0; if((x|0) > 2 ? ((y|0) < 5 ? (z|0) > -1 : 0) : 0) a=1; return a|0;} return f"));
+CheckThreeArgsTwoOptions(f);
+var f = asmLink(asmCompile(USE_ASM + "function f(x,y,z) { x=x|0;y=y|0;z=z|0; var a=2; if((x|0) > 2 ? ((y|0) < 5 ? (z|0) > -1 : 0) : 0) a=1; else a=0; return a|0;} return f"));
+CheckThreeArgsTwoOptions(f);
+
+var f = asmLink(asmCompile(USE_ASM + "function f(x,y,z) { x=x|0;y=y|0;z=z|0; var a=0; if((x|0) > 2 ? (y|0) < 5 : 0) {if ((z|0) > -1) a=1}; return a|0;} return f"));
+CheckThreeArgsTwoOptions(f);
+var f = asmLink(asmCompile(USE_ASM + "function f(x,y,z) { x=x|0;y=y|0;z=z|0; var a=2; if((x|0) > 2 ? (y|0) < 5 : 0) {if ((z|0) > -1) a=1; else a=0;} else a=0; return a|0;} return f"));
+CheckThreeArgsTwoOptions(f);
+
+var f = asmLink(asmCompile(USE_ASM + "function f(x,y,z) { x=x|0;y=y|0;z=z|0; var a=0; if(((x|0) == 3 ? 1 : ((x|0) > 3)) ? ((y|0) < 5 ? (z|0) > -1 : 0) : 0) a=1; return a|0;} return f"));
+CheckThreeArgsTwoOptions(f);
+var f = asmLink(asmCompile(USE_ASM + "function f(x,y,z) { x=x|0;y=y|0;z=z|0; var a=2; if(((x|0) == 3 ? 1 : ((x|0) > 3)) ? ((y|0) < 5 ? (z|0) > -1 : 0) : 0) a=1; else a=0; return a|0;} return f"));
+CheckThreeArgsTwoOptions(f);
+
+var f = asmLink(asmCompile(USE_ASM + "function f(x,y,z) { x=x|0;y=y|0;z=z|0; var a=0; if((x|0) == 3 ? 1 : (x|0) > 3) {if ((y|0) < 5 ? (z|0) > -1 : 0) a=1;} return a|0;} return f"));
+CheckThreeArgsTwoOptions(f);
+var f = asmLink(asmCompile(USE_ASM + "function f(x,y,z) { x=x|0;y=y|0;z=z|0; var a=2; if((x|0) == 3 ? 1 : (x|0) > 3) {if ((y|0) < 5 ? (z|0) > -1 : 0) a=1; else a=0;} else a=0; return a|0;} return f"));
+CheckThreeArgsTwoOptions(f);
+
+// Ternaries with || semantics
+var f = asmLink(asmCompile(USE_ASM + "function f(x,y) { x=x|0;y=y|0; var z=1; if((x|0) <= 2 ? 1 : (y|0) >= 5) z=0; return z|0;} return f"));
+CheckTwoArgsTwoOptions(f);
+var f = asmLink(asmCompile(USE_ASM + "function f(x,y) { x=x|0;y=y|0; var z=2; if((x|0) <= 2 ? 1 : (y|0) >= 5) z=0; else z=1; return z|0;} return f"));
+CheckTwoArgsTwoOptions(f);
+
+var f = asmLink(asmCompile(USE_ASM + "function f(x,y,z) { x=x|0;y=y|0;z=z|0; var a=1; if((x|0) <= 2 ? 1 : ((y|0) >= 5 ? 1 : (z|0) <= -1)) a=0; return a|0;} return f"));
+CheckThreeArgsTwoOptions(f);
+var f = asmLink(asmCompile(USE_ASM + "function f(x,y,z) { x=x|0;y=y|0;z=z|0; var a=2; if((x|0) <= 2 ? 1 : ((y|0) >= 5 ? 1 : (z|0) <= -1)) a=0; else a=1; return a|0;} return f"));
+CheckThreeArgsTwoOptions(f);
+
+var f = asmLink(asmCompile(USE_ASM + "function f(x,y,z) { x=x|0;y=y|0;z=z|0; var a=1; if((x|0) <= 2 ? 1 : (y|0) >= 5) a=0; else if ((z|0) <= -1) a=0; return a|0;} return f"));
+CheckThreeArgsTwoOptions(f);
+var f = asmLink(asmCompile(USE_ASM + "function f(x,y,z) { x=x|0;y=y|0;z=z|0; var a=2; if((x|0) <= 2 ? 1 : (y|0) >= 5) a=0; else if ((z|0) <= -1) a=0; else a=1; return a|0;} return f"));
+CheckThreeArgsTwoOptions(f);
+
+var f = asmLink(asmCompile(USE_ASM + "function f(x,y,z) { x=x|0;y=y|0;z=z|0; var a=1; if(((x|0) != 3 ? ((x|0) <= 3) : 0) ? 1 : ((y|0) >= 5 ? 1 : (z|0) <= -1)) a=0; return a|0;} return f"));
+CheckThreeArgsTwoOptions(f);
+var f = asmLink(asmCompile(USE_ASM + "function f(x,y,z) { x=x|0;y=y|0;z=z|0; var a=2; if(((x|0) != 3 ? ((x|0) <= 3) : 0) ? 1 : ((y|0) >= 5 ? 1 : (z|0) <= -1)) a=0; else a=1; return a|0;} return f"));
+CheckThreeArgsTwoOptions(f);
+
+// Massive test
+var code = '"use asm";\
+    function g(x,y) {\
+        x=x|0;\
+        y=y|0;\
+        var z = 0;\
+        if ((y|0) == 1337) {\
+            z = 1;\
+        } else if ((x|0) == 1 ? 1 : ((x|0) < 0 ? (y|0) == 1 : 0)) {\
+            z = 2;\
+        } else if ((x|0) == 2) {\
+            z = 3;\
+        } else if ((x|0) == 3 ? 1 : (x|0) == 4) {\
+            z = 4;\
+        } else if ((x|0) == 5 ? (y|0) > 5 : 0) {\
+            z = 5;\
+        } else {\
+            z = 6;\
+        }\
+        return z|0;\
+    }\
+    return g;';
+
+var m = asmLink(asmCompile(code));
+
+assertEq(m(0, 1337), 1);
+assertEq(m(0, 1338), 6);
+assertEq(m(0, 0), 6);
+assertEq(m(0, 1), 6);
+assertEq(m(0, 1336), 6);
+assertEq(m(1, 1337), 1);
+assertEq(m(2, 1337), 1);
+assertEq(m(3, 1337), 1);
+assertEq(m(4, 1337), 1);
+assertEq(m(5, 1337), 1);
+
+assertEq(m(1, 10), 2);
+assertEq(m(1, 1336), 2);
+assertEq(m(-1, 10), 6);
+assertEq(m(-1, 2), 6);
+assertEq(m(-1, -1), 6);
+assertEq(m(-1, 1), 2);
+assertEq(m(-9, 1), 2);
+
+assertEq(m(2, 1), 3);
+assertEq(m(2, 0), 3);
+assertEq(m(2, 6), 3);
+
+assertEq(m(3, 1), 4);
+assertEq(m(3, 0), 4);
+assertEq(m(3, 6), 4);
+assertEq(m(3, 3), 4);
+assertEq(m(4, 1), 4);
+assertEq(m(4, 0), 4);
+assertEq(m(4, 6), 4);
+assertEq(m(4, 3), 4);
+
+assertEq(m(5, -1), 6);
+assertEq(m(5, 4), 6);
+assertEq(m(5, 5), 6);
+assertEq(m(5, 6), 5);
+assertEq(m(5, 10), 5);

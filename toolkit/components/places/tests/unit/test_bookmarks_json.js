@@ -75,15 +75,15 @@ let test_bookmarks = {
 let bookmarksExportedFile;
 
 add_task(function test_import_bookmarks() {
-  bookmarksFile = do_get_file("bookmarks.json");
+  let bookmarksFile = OS.Path.join(do_get_cwd().path, "bookmarks.json");
 
   yield BookmarkJSONUtils.importFromFile(bookmarksFile, true);
   yield testImportedBookmarks();
 });
 
 add_task(function test_export_bookmarks() {
-  bookmarksExportedFile = gProfD;
-  bookmarksExportedFile.append("bookmarks.exported.json");
+  bookmarksExportedFile = OS.Path.join(OS.Constants.Path.profileDir,
+                                       "bookmarks.exported.json");
   yield BookmarkJSONUtils.exportToFile(bookmarksExportedFile);
 });
 

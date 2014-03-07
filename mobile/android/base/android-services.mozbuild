@@ -534,6 +534,7 @@ sync_java_files = [
     'background/healthreport/upload/ObsoleteDocumentTracker.java',
     'background/healthreport/upload/SubmissionClient.java',
     'background/healthreport/upload/SubmissionPolicy.java',
+    'background/nativecode/NativeCrypto.java',
     'background/preferences/PreferenceFragment.java',
     'background/preferences/PreferenceManagerCompat.java',
     'browserid/ASNUtils.java',

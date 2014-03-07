@@ -42,10 +42,5 @@ DirectEvalValueFromIon(JSContext *cx,
 extern bool
 IsAnyBuiltinEval(JSFunction *fun);
 
-// Return the principals to assign to code compiled for a call to
-// eval or the Function constructor.
-extern JSPrincipals *
-PrincipalsForCompiledCode(const CallReceiver &call, JSContext *cx);
-
 }  // namespace js
 #endif /* builtin_Eval_h */

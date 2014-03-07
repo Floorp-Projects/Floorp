@@ -7,8 +7,8 @@
 DIRS += [
     'dom-level0',
     'ajax',
+    'beacon',
     'bugs',
-    'crypto',
     'general',
     'geolocation',
     'localstorage',
@@ -23,6 +23,7 @@ if CONFIG['MOZ_GAMEPAD']:
    DIRS += ['gamepad']
 
 MOCHITEST_MANIFESTS += [
+    'crypto/mochitest.ini',
     'dom-level1-core/mochitest.ini',
     'dom-level2-core/mochitest.ini',
     'dom-level2-html/mochitest.ini',
@@ -41,3 +42,12 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gtk2':
     MOCHITEST_MANIFESTS += [
         'pointerlock/mochitest.ini',
     ]
+
+if CONFIG['MOZ_DISABLE_CRYPTOLEGACY']:
+   MOCHITEST_MANIFESTS += [
+      'crypto/mochitest-no-legacy.ini',
+   ]
+else:
+   MOCHITEST_MANIFESTS += [
+      'crypto/mochitest-legacy.ini',
+   ]

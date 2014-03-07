@@ -243,14 +243,14 @@ struct JSGenerator
 {
     js::HeapPtrObject   obj;
     JSGeneratorState    state;
-    js::FrameRegs       regs;
+    js::InterpreterRegs regs;
     JSGenerator         *prevGenerator;
     js::StackFrame      *fp;
     js::HeapValue       stackSnapshot[1];
 };
 
 extern JSObject *
-js_NewGenerator(JSContext *cx, const js::FrameRegs &regs);
+js_NewGenerator(JSContext *cx, const js::InterpreterRegs &regs);
 
 extern JSObject *
 js_InitIteratorClasses(JSContext *cx, js::HandleObject obj);

@@ -3027,9 +3027,9 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         if (selfClosing) {
             errSelfClosing();
         }
-        if (attributes != HtmlAttributes.EMPTY_ATTRIBUTES) {
-            Portability.delete(attributes);
-        }
+        // CPPONLY: if (mBuilder == null && attributes != HtmlAttributes.EMPTY_ATTRIBUTES) {
+        // CPPONLY:    Portability.delete(attributes);
+        // CPPONLY: }
     }
 
     private void startTagTitleInHead(ElementName elementName, HtmlAttributes attributes) throws SAXException {
@@ -5137,6 +5137,9 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         checkAttributes(attributes, "http://www.w3.org/1999/xhtml");
         // ]NOCPP]
         // This method can't be called for custom elements
+        HtmlAttributes clone = attributes.cloneAttributes(null);
+        // Attributes must not be read after calling createElement, because
+        // createElement may delete attributes in C++.
         T elt = createElement("http://www.w3.org/1999/xhtml", elementName.name, attributes);
         StackNode<T> current = stack[currentPtr];
         if (current.isFosterParenting()) {
@@ -5145,7 +5148,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         } else {
             appendElement(elt, current.node);
         }
-        StackNode<T> node = new StackNode<T>(elementName, elt, attributes.cloneAttributes(null)
+        StackNode<T> node = new StackNode<T>(elementName, elt, clone
                 // [NOCPP[
                 , errorHandler == null ? null : new TaintableLocatorImpl(tokenizer)
         // ]NOCPP]
@@ -5211,6 +5214,13 @@ public abstract class TreeBuilder<T> implements TokenHandler,
             popName = checkPopName(popName);
         }
         // ]NOCPP]
+        boolean markAsHtmlIntegrationPoint = false;
+        if (ElementName.ANNOTATION_XML == elementName
+                && annotationXmlEncodingPermitsHtml(attributes)) {
+            markAsHtmlIntegrationPoint = true;
+        }
+        // Attributes must not be read after calling createElement(), since
+        // createElement may delete the object in C++.
         T elt = createElement("http://www.w3.org/1998/Math/MathML", popName,
                 attributes);
         StackNode<T> current = stack[currentPtr];
@@ -5219,11 +5229,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
             insertIntoFosterParent(elt);
         } else {
             appendElement(elt, current.node);
-        }
-        boolean markAsHtmlIntegrationPoint = false;
-        if (ElementName.ANNOTATION_XML == elementName
-                && annotationXmlEncodingPermitsHtml(attributes)) {
-            markAsHtmlIntegrationPoint = true;
         }
         StackNode<T> node = new StackNode<T>(elementName, elt, popName,
                 markAsHtmlIntegrationPoint
