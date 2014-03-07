@@ -106,6 +106,10 @@ public class HomeBanner extends LinearLayout
         setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                // Hide the banner. This does not remove the message from the rotation, so it may appear
+                // again if the JS onclick handler doesn't choose to remove it.
+                HomeBanner.this.setVisibility(View.GONE);
+
                 // Send the current message id back to JS.
                 GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("HomeBanner:Click", (String) getTag()));
             }
