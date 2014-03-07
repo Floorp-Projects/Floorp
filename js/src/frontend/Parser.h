@@ -547,6 +547,12 @@ class Parser : private AutoGCRooter, public StrictModeGetter
     Node legacyArrayComprehension(Node array);
     Node legacyGeneratorExpr(Node kid);
 
+    Node comprehensionTail(GeneratorKind comprehensionKind);
+    Node comprehensionIf(GeneratorKind comprehensionKind);
+    Node comprehensionFor(GeneratorKind comprehensionKind);
+    Node comprehension(GeneratorKind comprehensionKind);
+    Node arrayComprehension(uint32_t begin);
+
     bool argumentList(Node listNode, bool *isSpread);
     Node letBlock(LetContext letContext);
     Node destructuringExpr(BindData<ParseHandler> *data, TokenKind tt);
