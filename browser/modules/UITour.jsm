@@ -55,6 +55,7 @@ this.UITour = {
   availableTargetsCache: new WeakMap(),
 
   _detachingTab: false,
+  _annotationPanelMutationObservers: new WeakMap(),
   _queuedEvents: [],
   _pendingDoc: null,
 
@@ -324,7 +325,12 @@ this.UITour = {
             }
           }
 
-          this.showInfo(contentDocument, target, data.title, data.text, iconURL, buttons);
+          let infoOptions = {};
+
+          if (typeof data.closeButtonCallbackID == "string")
+            infoOptions.closeButtonCallbackID = data.closeButtonCallbackID;
+
+          this.showInfo(contentDocument, target, data.title, data.text, iconURL, buttons, infoOptions);
         }).then(null, Cu.reportError);
         break;
       }
@@ -504,14 +510,6 @@ this.UITour = {
         if (aEvent.target.id == "urlbar") {
           let window = aEvent.target.ownerDocument.defaultView;
           this.handleUrlbarInput(window);
-        }
-        break;
-      }
-
-      case "command": {
-        if (aEvent.target.id == "UITourTooltipClose") {
-          let window = aEvent.target.ownerDocument.defaultView;
-          this.hideInfo(window);
         }
         break;
       }
@@ -842,6 +840,8 @@ this.UITour = {
                       - (Math.max(0, highlightWidthWithMin - targetRect.width) / 2);
       let offsetY = paddingLeftPx
                       - (Math.max(0, highlightHeightWithMin - targetRect.height) / 2);
+
+      this._addAnnotationPanelMutationObserver(highlighter.parentElement);
       highlighter.parentElement.openPopup(aTargetEl, "overlap", offsetX, offsetY);
     }
 
@@ -860,13 +860,27 @@ this.UITour = {
       this.removePinnedTab(aWindow);
 
     let highlighter = aWindow.document.getElementById("UITourHighlight");
+    this._removeAnnotationPanelMutationObserver(highlighter.parentElement);
     highlighter.parentElement.hidePopup();
     highlighter.removeAttribute("active");
 
     this._setAppMenuStateForAnnotation(aWindow, "highlight", false);
   },
 
-  showInfo: function(aContentDocument, aAnchor, aTitle = "", aDescription = "", aIconURL = "", aButtons = []) {
+  /**
+   * Show an info panel.
+   *
+   * @param {Document} aContentDocument
+   * @param {Node}     aAnchor
+   * @param {String}   [aTitle=""]
+   * @param {String}   [aDescription=""]
+   * @param {String}   [aIconURL=""]
+   * @param {Object[]} [aButtons=[]]
+   * @param {Object}   [aOptions={}]
+   * @param {String}   [aOptions.closeButtonCallbackID]
+   */
+  showInfo: function(aContentDocument, aAnchor, aTitle = "", aDescription = "", aIconURL = "",
+                     aButtons = [], aOptions = {}) {
     function showInfoPanel(aAnchorEl) {
       aAnchorEl.focus();
 
@@ -910,11 +924,21 @@ this.UITour = {
       tooltipButtons.hidden = !aButtons.length;
 
       let tooltipClose = document.getElementById("UITourTooltipClose");
-      tooltipClose.addEventListener("command", this);
+      let closeButtonCallback = (event) => {
+        this.hideInfo(document.defaultView);
+        if (aOptions && aOptions.closeButtonCallbackID)
+          this.sendPageCallback(aContentDocument, aOptions.closeButtonCallbackID);
+      };
+      tooltipClose.addEventListener("command", closeButtonCallback);
+      tooltip.addEventListener("popuphiding", function tooltipHiding(event) {
+        tooltip.removeEventListener("popuphiding", tooltipHiding);
+        tooltipClose.removeEventListener("command", closeButtonCallback);
+      });
 
       tooltip.setAttribute("targetName", aAnchor.targetName);
       tooltip.hidden = false;
       let alignment = "bottomcenter topright";
+      this._addAnnotationPanelMutationObserver(tooltip);
       tooltip.openPopup(aAnchorEl, alignment);
     }
 
@@ -931,6 +955,7 @@ this.UITour = {
     let document = aWindow.document;
 
     let tooltip = document.getElementById("UITourTooltip");
+    this._removeAnnotationPanelMutationObserver(tooltip);
     tooltip.hidePopup();
     this._setAppMenuStateForAnnotation(aWindow, "info", false);
 
@@ -1109,6 +1134,47 @@ this.UITour = {
         targets: [],
       });
     });
+  },
+
+  _addAnnotationPanelMutationObserver: function(aPanelEl) {
+#ifdef XP_LINUX
+    let observer = this._annotationPanelMutationObservers.get(aPanelEl);
+    if (observer) {
+      return;
+    }
+    let win = aPanelEl.ownerDocument.defaultView;
+    observer = new win.MutationObserver(this._annotationMutationCallback);
+    this._annotationPanelMutationObservers.set(aPanelEl, observer);
+    let observerOptions = {
+      attributeFilter: ["height", "width"],
+      attributes: true,
+    };
+    observer.observe(aPanelEl, observerOptions);
+#endif
+  },
+
+  _removeAnnotationPanelMutationObserver: function(aPanelEl) {
+#ifdef XP_LINUX
+    let observer = this._annotationPanelMutationObservers.get(aPanelEl);
+    if (observer) {
+      observer.disconnect();
+      this._annotationPanelMutationObservers.delete(aPanelEl);
+    }
+#endif
+  },
+
+/**
+ * Workaround for Ubuntu panel craziness in bug 970788 where incorrect sizes get passed to
+ * nsXULPopupManager::PopupResized and lead to incorrect width and height attributes getting
+ * set on the panel.
+ */
+  _annotationMutationCallback: function(aMutations) {
+    for (let mutation of aMutations) {
+      // Remove both attributes at once and ignore remaining mutations to be proccessed.
+      mutation.target.removeAttribute("width");
+      mutation.target.removeAttribute("height");
+      return;
+    }
   },
 };
 

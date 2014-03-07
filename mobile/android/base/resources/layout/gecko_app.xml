@@ -94,6 +94,10 @@
                 android:clipChildren="false"
                 android:focusable="true">
 
+            <!-- clipChildren="false" allows the child ToolbarProgressView to be drawn
+                 outside of BrowserToolbar's boundaries. Likewise, we need this property
+                 on BrowserToolbar's parent ViewFlipper, then on its parent MainLayout
+                 to allow the progress to overlap the content LayerView. -->
             <org.mozilla.gecko.toolbar.BrowserToolbar
                 android:id="@+id/browser_toolbar"
                 style="@style/BrowserToolbar"
