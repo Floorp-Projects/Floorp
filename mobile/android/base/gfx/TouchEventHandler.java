@@ -220,12 +220,14 @@ final class TouchEventHandler implements Tabs.OnTabsChangedListener {
      * Dispatch the event to the gesture detectors and the pan/zoom controller.
      */
     private void dispatchEvent(MotionEvent event, boolean allowDefaultAction) {
-        if (mGestureDetector.onTouchEvent(event)) {
-            return;
-        }
-        mScaleGestureDetector.onTouchEvent(event);
-        if (mScaleGestureDetector.isInProgress()) {
-            return;
+        if (allowDefaultAction) {
+            if (mGestureDetector.onTouchEvent(event)) {
+                return;
+            }
+            mScaleGestureDetector.onTouchEvent(event);
+            if (mScaleGestureDetector.isInProgress()) {
+                return;
+            }
         }
         mPanZoomController.handleEvent(event, !allowDefaultAction);
     }
