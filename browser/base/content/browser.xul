@@ -629,6 +629,7 @@
              overflowable="true"
              overflowbutton="nav-bar-overflow-button"
              overflowtarget="widget-overflow-list"
+             overflowpanel="widget-overflow"
              context="toolbar-context-menu">
 
       <hbox id="nav-bar-customization-target" flex="1">
