@@ -3455,7 +3455,12 @@ function OverflowableToolbar(aToolbarNode) {
   this._list.toolbox = this._toolbar.toolbox;
   this._list.customizationTarget = this._list;
 
-  Services.obs.addObserver(this, "browser-delayed-startup-finished", false);
+  let window = this._toolbar.ownerDocument.defaultView;
+  if (window.gBrowserInit.delayedStartupFinished) {
+    this.init();
+  } else {
+    Services.obs.addObserver(this, "browser-delayed-startup-finished", false);
+  }
 }
 
 OverflowableToolbar.prototype = {
@@ -3481,7 +3486,8 @@ OverflowableToolbar.prototype = {
     this._chevron = doc.getElementById(chevronId);
     this._chevron.addEventListener("command", this);
 
-    this._panel = doc.getElementById("widget-overflow");
+    let panelId = this._toolbar.getAttribute("overflowpanel");
+    this._panel = doc.getElementById(panelId);
     this._panel.addEventListener("popuphiding", this);
     CustomizableUIInternal.addPanelCloseListeners(this._panel);
 
