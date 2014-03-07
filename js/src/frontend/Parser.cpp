@@ -6425,6 +6425,178 @@ static const char js_generator_str[] = "generator";
 
 template <typename ParseHandler>
 typename ParseHandler::Node
+Parser<ParseHandler>::comprehensionFor(GeneratorKind comprehensionKind)
+{
+    JS_ASSERT(tokenStream.isCurrentTokenType(TOK_FOR));
+
+    uint32_t begin = pos().begin;
+
+    MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_AFTER_FOR);
+
+    // FIXME: Destructuring binding (bug 980828).
+
+    MUST_MATCH_TOKEN(TOK_NAME, JSMSG_NO_VARIABLE_NAME);
+    RootedPropertyName name(context, tokenStream.currentName());
+    if (name == context->names().let) {
+        report(ParseError, false, null(), JSMSG_LET_COMP_BINDING);
+        return null();
+    }
+    if (!tokenStream.matchContextualKeyword(context->names().of)) {
+        report(ParseError, false, null(), JSMSG_OF_AFTER_FOR_NAME);
+        return null();
+    }
+
+    Node rhs = assignExpr();
+    if (!rhs)
+        return null();
+
+    MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_AFTER_FOR_OF_ITERABLE);
+
+    TokenPos headPos(begin, pos().end);
+
+    StmtInfoPC stmtInfo(context);
+    BindData<ParseHandler> data(context);
+    RootedStaticBlockObject blockObj(context, StaticBlockObject::create(context));
+    if (!blockObj)
+        return null();
+    data.initLet(DontHoistVars, *blockObj, JSMSG_TOO_MANY_LOCALS);
+    Node lhs = newName(name);
+    if (!lhs)
+        return null();
+    Node decls = handler.newList(PNK_LET, lhs, JSOP_NOP);
+    if (!decls)
+        return null();
+    data.pn = lhs;
+    if (!data.binder(&data, name, this))
+        return null();
+    Node letScope = pushLetScope(blockObj, &stmtInfo);
+    if (!letScope)
+        return null();
+    handler.setLexicalScopeBody(letScope, decls);
+
+    Node assignLhs = newName(name);
+    if (!assignLhs)
+        return null();
+    if (!noteNameUse(name, assignLhs))
+        return null();
+    handler.setOp(assignLhs, JSOP_SETNAME);
+
+    Node head = handler.newForHead(PNK_FOROF, letScope, assignLhs, rhs, headPos);
+    if (!head)
+        return null();
+
+    Node tail = comprehensionTail(comprehensionKind);
+    if (!tail)
+        return null();
+
+    PopStatementPC(tokenStream, pc);
+
+    return handler.newForStatement(begin, head, tail, JSOP_ITER);
+}
+
+template <typename ParseHandler>
+typename ParseHandler::Node
+Parser<ParseHandler>::comprehensionIf(GeneratorKind comprehensionKind)
+{
+    JS_ASSERT(tokenStream.isCurrentTokenType(TOK_IF));
+
+    uint32_t begin = pos().begin;
+
+    MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_BEFORE_COND);
+    Node cond = assignExpr();
+    if (!cond)
+        return null();
+    MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_AFTER_COND);
+
+    /* Check for (a = b) and warn about possible (a == b) mistype. */
+    if (handler.isOperationWithoutParens(cond, PNK_ASSIGN) &&
+        !report(ParseExtraWarning, false, null(), JSMSG_EQUAL_AS_ASSIGN))
+    {
+        return null();
+    }
+
+    Node then = comprehensionTail(comprehensionKind);
+    if (!then)
+        return null();
+
+    return handler.newIfStatement(begin, cond, then, null());
+}
+
+template <typename ParseHandler>
+typename ParseHandler::Node
+Parser<ParseHandler>::comprehensionTail(GeneratorKind comprehensionKind)
+{
+    JS_CHECK_RECURSION(context, return null());
+
+    if (tokenStream.matchToken(TOK_FOR, TokenStream::Operand))
+        return comprehensionFor(comprehensionKind);
+
+    if (tokenStream.matchToken(TOK_IF, TokenStream::Operand))
+        return comprehensionIf(comprehensionKind);
+
+    uint32_t begin = pos().begin;
+
+    Node bodyExpr = assignExpr();
+    if (!bodyExpr)
+        return null();
+
+    if (comprehensionKind == NotGenerator)
+        return handler.newUnary(PNK_ARRAYPUSH, JSOP_ARRAYPUSH, begin, bodyExpr);
+
+    JS_ASSERT(comprehensionKind == StarGenerator);
+    Node yieldExpr = handler.newUnary(PNK_YIELD, JSOP_NOP, begin, bodyExpr);
+    if (!yieldExpr)
+        return null();
+    handler.setInParens(yieldExpr);
+
+    return handler.newExprStatement(yieldExpr, pos().end);
+}
+
+// Parse an ES6 generator or array comprehension, starting at the first 'for'.
+// The caller is responsible for matching the ending TOK_RP or TOK_RB.
+template <typename ParseHandler>
+typename ParseHandler::Node
+Parser<ParseHandler>::comprehension(GeneratorKind comprehensionKind)
+{
+    JS_ASSERT(tokenStream.isCurrentTokenType(TOK_FOR));
+
+    uint32_t startYieldOffset = pc->lastYieldOffset;
+
+    Node body = comprehensionFor(comprehensionKind);
+    if (!body)
+        return null();
+
+    if (comprehensionKind != NotGenerator && pc->lastYieldOffset != startYieldOffset) {
+        reportWithOffset(ParseError, false, pc->lastYieldOffset,
+                         JSMSG_BAD_GENEXP_BODY, js_yield_str);
+        return null();
+    }
+
+    return body;
+}
+
+template <typename ParseHandler>
+typename ParseHandler::Node
+Parser<ParseHandler>::arrayComprehension(uint32_t begin)
+{
+    Node inner = comprehension(NotGenerator);
+    if (!inner)
+        return null();
+
+    MUST_MATCH_TOKEN(TOK_RB, JSMSG_BRACKET_AFTER_ARRAY_COMPREHENSION);
+
+    Node comp = handler.newList(PNK_ARRAYCOMP, inner);
+    if (!comp)
+        return null();
+
+    handler.setBeginPosition(comp, begin);
+    handler.setEndPosition(comp, pos().end);
+
+    return comp;
+}
+
+template <typename ParseHandler>
+typename ParseHandler::Node
 Parser<ParseHandler>::assignExprWithoutYield(unsigned msg)
 {
     uint32_t startYieldOffset = pc->lastYieldOffset;
@@ -6678,7 +6850,8 @@ Parser<ParseHandler>::arrayInitializer()
 {
     JS_ASSERT(tokenStream.isCurrentTokenType(TOK_LB));
 
-    Node literal = handler.newArrayLiteral(pos().begin, pc->blockidGen);
+    uint32_t begin = pos().begin;
+    Node literal = handler.newArrayLiteral(begin, pc->blockidGen);
     if (!literal)
         return null();
 
@@ -6688,6 +6861,9 @@ Parser<ParseHandler>::arrayInitializer()
          * determine their type.
          */
         handler.setListFlag(literal, PNX_NONCONST);
+    } else if (tokenStream.matchToken(TOK_FOR, TokenStream::Operand)) {
+        // ES6 array comprehension.
+        return arrayComprehension(begin);
     } else {
         bool spread = false, missingTrailingComma = false;
         uint32_t index = 0;
