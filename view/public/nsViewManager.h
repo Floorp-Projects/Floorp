@@ -12,7 +12,6 @@
 #include "nsCRT.h"
 #include "nsVoidArray.h"
 #include "nsDeviceContext.h"
-#include "nsTArray.h"
 #include "mozilla/EventForwards.h"
 
 class nsIWidget;
@@ -328,10 +327,6 @@ private:
 
   void ProcessPendingUpdatesForView(nsView *aView,
                                     bool aFlushDirtyRegion = true);
-  void ProcessPendingUpdatesRecurse(nsView* aView,
-                                    nsTArray<nsCOMPtr<nsIWidget> >& aWidgets);
-  void ProcessPendingUpdatesPaint(nsIWidget* aWidget);
-
   void FlushDirtyRegionToWidget(nsView* aView);
   /**
    * Call WillPaint() on all view observers under this vm root.
