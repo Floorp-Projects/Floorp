@@ -15,6 +15,11 @@ const { data } = require('sdk/self');
 const { open, focus, close } = require('sdk/window/helpers');
 const { setTimeout } = require('sdk/timers');
 const { getMostRecentBrowserWindow } = require('sdk/window/utils');
+const { partial } = require('sdk/lang/functional');
+
+const openBrowserWindow = partial(open, null, {features: {toolbar: true}});
+const openPrivateBrowserWindow = partial(open, null,
+  {features: {toolbar: true, private: true}});
 
 function getWidget(buttonId, window = getMostRecentBrowserWindow()) {
   const { CustomizableUI } = Cu.import('resource:///modules/CustomizableUI.jsm', {});
@@ -305,7 +310,7 @@ exports['test button global state updated on multiple windows'] = function(asser
 
   let nodes = [getWidget(button.id).node];
 
-  open(null, { features: { toolbar: true }}).then(window => {
+  openBrowserWindow().then(window => {
     nodes.push(getWidget(button.id, window).node);
 
     button.label = 'New label';
@@ -350,7 +355,7 @@ exports['test button window state'] = function(assert, done) {
   let mainWindow = browserWindows.activeWindow;
   let nodes = [getWidget(button.id).node];
 
-  open(null, { features: { toolbar: true }}).then(focus).then(window => {
+  openBrowserWindow().then(focus).then(window => {
     nodes.push(getWidget(button.id, window).node);
 
     let { activeWindow } = browserWindows;
@@ -586,7 +591,7 @@ exports['test button click'] = function(assert, done) {
   let mainWindow = browserWindows.activeWindow;
   let chromeWindow = getMostRecentBrowserWindow();
 
-  open(null, { features: { toolbar: true }}).then(focus).then(window => {
+  openBrowserWindow().then(focus).then(window => {
     button.state(mainWindow, { label: 'nothing' });
     button.state(mainWindow.tabs.activeTab, { label: 'foo'})
     button.state(browserWindows.activeWindow, { label: 'bar' });
@@ -737,7 +742,7 @@ exports['test button are not in private windows'] = function(assert, done) {
     icon: './icon.png'
   });
 
-  open(null, { features: { toolbar: true, private: true }}).then(window => {
+  openPrivateBrowserWindow().then(window => {
     assert.ok(isPrivate(window),
       'the new window is private');
 
@@ -887,7 +892,7 @@ exports['test button checked'] = function(assert, done) {
   let mainWindow = browserWindows.activeWindow;
   let chromeWindow = getMostRecentBrowserWindow();
 
-  open(null, { features: { toolbar: true }}).then(focus).then(window => {
+  openBrowserWindow().then(focus).then(window => {
     button.state(mainWindow, { label: 'nothing' });
     button.state(mainWindow.tabs.activeTab, { label: 'foo'})
     button.state(browserWindows.activeWindow, { label: 'bar' });
@@ -910,6 +915,109 @@ exports['test button checked'] = function(assert, done) {
         then(done, assert.fail);
     })
   }).then(null, assert.fail);
+}
+
+exports['test button is checked on window level'] = function(assert, done) {
+  let loader = Loader(module);
+  let { ToggleButton } = loader.require('sdk/ui');
+  let { browserWindows } = loader.require('sdk/windows');
+  let tabs = loader.require('sdk/tabs');
+
+  let button = ToggleButton({
+    id: 'my-button-20',
+    label: 'my button',
+    icon: './icon.png'
+  });
+
+  let mainWindow = browserWindows.activeWindow;
+  let mainTab = tabs.activeTab;
+
+  assert.equal(button.checked, false,
+    'global state, checked is `false`.');
+  assert.equal(button.state(mainTab).checked, false,
+    'tab state, checked is `false`.');
+  assert.equal(button.state(mainWindow).checked, false,
+    'window state, checked is `false`.');
+
+  button.click();
+
+  tabs.open({
+    url: 'about:blank',
+    onActivate: function onActivate(tab) {
+      tab.removeListener('activate', onActivate);
+
+      assert.notEqual(mainTab, tab,
+        'the current tab is not the same.');
+
+      assert.equal(button.checked, false,
+        'global state, checked is `false`.');
+      assert.equal(button.state(mainTab).checked, true,
+        'previous tab state, checked is `true`.');
+      assert.equal(button.state(tab).checked, true,
+        'current tab state, checked is `true`.');
+      assert.equal(button.state(mainWindow).checked, true,
+        'window state, checked is `true`.');
+
+      openBrowserWindow().then(focus).then(window => {
+        let { activeWindow } = browserWindows;
+        let { activeTab } = activeWindow.tabs;
+
+        assert.equal(button.checked, false,
+          'global state, checked is `false`.');
+        assert.equal(button.state(activeTab).checked, false,
+          'tab state, checked is `false`.');
+
+        assert.equal(button.state(activeWindow).checked, false,
+          'window state, checked is `false`.');
+
+        tab.close(()=> {
+          close(window).
+            then(loader.unload).
+            then(done, assert.fail);
+        })
+      }).
+      then(null, assert.fail);
+    }
+  });
+
+};
+
+exports['test button click do not messing up states'] = function(assert) {
+  let loader = Loader(module);
+  let { ToggleButton } = loader.require('sdk/ui');
+  let { browserWindows } = loader.require('sdk/windows');
+
+  let button = ToggleButton({
+    id: 'my-button-21',
+    label: 'my button',
+    icon: './icon.png'
+  });
+
+  let mainWindow = browserWindows.activeWindow;
+  let { activeTab } = mainWindow.tabs;
+
+  button.state(mainWindow, { icon: './new-icon.png' });
+  button.state(activeTab, { label: 'foo'})
+
+  assert.equal(button.state(mainWindow).label, 'my button',
+    'label property for window state, properly derived from global state');
+
+  assert.equal(button.state(activeTab).icon, './new-icon.png',
+    'icon property for tab state, properly derived from window state');
+
+  button.click();
+
+  button.label = 'bar';
+
+  assert.equal(button.state(mainWindow).label, 'bar',
+    'label property for window state, properly derived from global state');
+
+  button.state(mainWindow, null);
+
+  assert.equal(button.state(activeTab).icon, './icon.png',
+    'icon property for tab state, properly derived from window state');
+
+  loader.unload();
 }
 
 // If the module doesn't support the app we're being run in, require() will
