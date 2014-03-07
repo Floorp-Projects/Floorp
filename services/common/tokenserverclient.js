@@ -245,7 +245,7 @@ TokenServerClient.prototype = {
 
     this._log.debug("Beginning BID assertion exchange: " + url);
 
-    let req = new RESTRequest(url);
+    let req = this.newRESTRequest(url);
     req.setHeader("Accept", "application/json");
     req.setHeader("Authorization", "BrowserID " + assertion);
 
@@ -403,5 +403,10 @@ TokenServerClient.prototype = {
       uid:      result.uid,
       duration: result.duration,
     });
+  },
+
+  // override points for testing.
+  newRESTRequest: function(url) {
+    return new RESTRequest(url);
   }
 };
