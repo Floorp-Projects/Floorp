@@ -93,6 +93,10 @@
 <!ENTITY pref_home_add_panel "Add panel">
 <!ENTITY home_add_panel_title "Add new panel">
 <!ENTITY home_add_panel_empty "Sorry, we couldn\'t find any panels for you to add.">
+<!ENTITY pref_category_home_content_settings "Content settings">
+<!ENTITY pref_home_updates "Automatic updates">
+<!ENTITY pref_home_updates_enabled "Enabled">
+<!ENTITY pref_home_updates_wifi "Only over Wi-Fi">
 
 <!-- Localization note: These are shown in the left sidebar on tablets -->
 <!ENTITY pref_header_customize "Customize">
