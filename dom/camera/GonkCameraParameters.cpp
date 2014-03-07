@@ -200,10 +200,25 @@ GonkCameraParameters::Initialize()
     NS_WARNING("Failed to initialize exposure compensation step size");
     mExposureCompensationStep = 0;
   }
+
   rv = GetListAsArray(CAMERA_PARAM_SUPPORTED_ZOOMRATIOS, mZoomRatios);
   if (NS_FAILED(rv)) {
     // zoom is not supported
     mZoomRatios.Clear();
+  }
+  for (uint32_t i = 1; i < mZoomRatios.Length(); ++i) {
+    // Make sure the camera gave us a properly sorted zoom ratio list!
+    if (mZoomRatios[i] < mZoomRatios[i - 1]) {
+      NS_WARNING("Zoom ratios list is out of order, discarding");
+      DOM_CAMERA_LOGE("zoom[%d]=%fx < zoom[%d]=%fx is out of order\n",
+        i, mZoomRatios[i] / 100.0, i - 1, mZoomRatios[i - 1] / 100.0);
+      mZoomRatios.Clear();
+      break;
+    }
+  }
+  if (mZoomRatios.Length() == 0) {
+    // Always report that we support at least 1.0x zoom.
+    *mZoomRatios.AppendElement() = 100;
   }
 
   // The return code from GetListAsArray() doesn't matter. If it fails,
@@ -516,20 +531,15 @@ GonkCameraParameters::SetTranslated(uint32_t aKey, const double& aValue)
 
     case CAMERA_PARAM_ZOOM:
       {
-        if (mZoomRatios.Length() == 0) {
-          DOM_CAMERA_LOGE("Zoom not supported, can't set %fx\n", aValue);
-          return NS_ERROR_NOT_AVAILABLE;
-        }
-
         /**
          * Convert from a real zoom multipler (e.g. 2.5x) to
          * the index of the nearest supported value.
          */
         value = aValue * 100.0;
 
-        if (value < mZoomRatios[0]) {
+        if (value <= mZoomRatios[0]) {
           index = 0;
-        } else if (value > mZoomRatios.LastElement()) {
+        } else if (value >= mZoomRatios.LastElement()) {
           index = mZoomRatios.Length() - 1;
         } else {
           // mZoomRatios is sorted, so we can binary search it
@@ -574,12 +584,13 @@ GonkCameraParameters::GetTranslated(uint32_t aKey, double& aValue)
 
   switch (aKey) {
     case CAMERA_PARAM_ZOOM:
-      rv = GetImpl(CAMERA_PARAM_ZOOM, index);
-      if (NS_SUCCEEDED(rv)) {
+      rv = GetImpl(aKey, index);
+      if (NS_SUCCEEDED(rv) && index >= 0) {
         val = mZoomRatios[index] / 100.0;
       } else {
         // return 1x when zooming is not supported
         val = 1.0;
+        rv = NS_OK;
       }
       break;
 
