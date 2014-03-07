@@ -30,6 +30,8 @@ exports.WebConsoleClient = WebConsoleClient;
 WebConsoleClient.prototype = {
   _longStrings: null,
 
+  get actor() { return this._actor; },
+
   /**
    * Retrieve the cached messages from the server.
    *
