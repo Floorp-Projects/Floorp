@@ -65,12 +65,18 @@ HawkClient.prototype = {
    *        A string describing the error
    */
   _constructError: function(restResponse, errorString) {
-    return {
+    let errorObj = {
       error: errorString,
       message: restResponse.statusText,
       code: restResponse.status,
       errno: restResponse.status
     };
+    let retryAfter = restResponse.headers && restResponse.headers["retry-after"];
+    retryAfter = retryAfter ? parseInt(retryAfter) : retryAfter;
+    if (retryAfter) {
+      errorObj.retryAfter = retryAfter;
+    }
+    return errorObj;
   },
 
   /*
