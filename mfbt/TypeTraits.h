@@ -476,6 +476,13 @@ struct IsSame<T, T> : TrueType {};
 
 namespace detail {
 
+#if defined(__GNUC__) || defined(__clang__) || defined(_MSC_VER)
+
+template<class Base, class Derived>
+struct BaseOfTester : IntegralConstant<bool, __is_base_of(Base, Derived)> {};
+
+#else
+
 // The trickery used to implement IsBaseOf here makes it possible to use it for
 // the cases of private and multiple inheritance.  This code was inspired by the
 // sample code here:
@@ -523,6 +530,8 @@ struct BaseOfTester<Type, Type> : TrueType {};
 
 template<class Type>
 struct BaseOfTester<Type, const Type> : TrueType {};
+
+#endif
 
 } /* namespace detail */
 
