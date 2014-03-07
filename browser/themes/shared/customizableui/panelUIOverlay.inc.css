@@ -640,20 +640,34 @@ menuitem.subviewbutton@menuStateActive@,
   box-shadow: 0 1px 0 hsla(210,4%,10%,.05) inset;
 }
 
-#BMB_bookmarksPopup > .subviewbutton {
+#BMB_bookmarksPopup .subviewbutton {
   font: inherit;
   font-weight: normal;
 }
 
-#BMB_bookmarksPopup > .subviewbutton:not([disabled="true"]) {
+#BMB_bookmarksPopup .subviewbutton:not([disabled="true"]) {
   color: inherit;
 }
 
-#BMB_bookmarksPopup > .panel-arrowcontainer > .panel-arrowcontent > .popup-internal-box > .autorepeatbutton-up,
-#BMB_bookmarksPopup > .panel-arrowcontainer > .panel-arrowcontent > .popup-internal-box > .autorepeatbutton-down {
+#BMB_bookmarksPopup .panel-arrowcontainer > .panel-arrowcontent > .popup-internal-box > .autorepeatbutton-up,
+#BMB_bookmarksPopup .panel-arrowcontainer > .panel-arrowcontent > .popup-internal-box > .autorepeatbutton-down {
   -moz-appearance: none;
   margin-top: 0;
   margin-bottom: 0;
+}
+
+/* Remove padding on xul:arrowscrollbox to avoid extra padding on footer */
+#BMB_bookmarksPopup arrowscrollbox {
+  padding-bottom: 0px;
+}
+
+#BMB_bookmarksPopup menupopup {
+  padding-top: 2px;
+}
+
+#BMB_bookmarksPopup menupopup > .bookmarks-actions-menuseparator {
+  /* Hide bottom separator as the styled footer includes a top border serving the same purpose */
+  display: none;
 }
 
 .PanelUI-subView menuseparator,
@@ -899,12 +913,11 @@ toolbaritem[overflowedItem=true],
   background: url("chrome://global/skin/menu/shared-menu-check.png") top 7px left 7px / 11px 11px no-repeat transparent;
 }
 
-.PanelUI-subView > menu > .menu-iconic-left,
-.PanelUI-subView > menuitem > .menu-iconic-left {
+.PanelUI-subView .menu-iconic-left {
   -moz-appearance: none;
   -moz-margin-end: 3px;
 }
 
-.PanelUI-subView > menuitem[checked="true"] > .menu-iconic-left {
+.PanelUI-subView menuitem[checked="true"] > .menu-iconic-left {
   visibility: hidden;
 }
