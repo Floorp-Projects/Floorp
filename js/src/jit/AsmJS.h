@@ -15,8 +15,6 @@
 namespace js {
 
 class ExclusiveContext;
-class AsmJSModule;
-class SPSProfiler;
 namespace frontend {
     template <typename ParseHandler> struct Parser;
     template <typename ParseHandler> struct ParseContext;
@@ -35,44 +33,6 @@ typedef frontend::ParseContext<frontend::FullParseHandler> AsmJSParseContext;
 extern bool
 CompileAsmJS(ExclusiveContext *cx, AsmJSParser &parser, frontend::ParseNode *stmtList,
              bool *validated);
-
-// The JSRuntime maintains a stack of AsmJSModule activations. An "activation"
-// of module A is an initial call from outside A into a function inside A,
-// followed by a sequence of calls inside A, and terminated by a call that
-// leaves A. The AsmJSActivation stack serves three purposes:
-//  - record the correct cx to pass to VM calls from asm.js;
-//  - record enough information to pop all the frames of an activation if an
-//    exception is thrown;
-//  - record the information necessary for asm.js signal handlers to safely
-//    recover from (expected) out-of-bounds access, the operation callback,
-//    stack overflow, division by zero, etc.
-class AsmJSActivation
-{
-    JSContext *cx_;
-    AsmJSModule &module_;
-    AsmJSActivation *prev_;
-    void *errorRejoinSP_;
-    SPSProfiler *profiler_;
-    void *resumePC_;
-
-  public:
-    AsmJSActivation(JSContext *cx, AsmJSModule &module);
-    ~AsmJSActivation();
-
-    JSContext *cx() { return cx_; }
-    AsmJSModule &module() const { return module_; }
-    AsmJSActivation *prev() const { return prev_; }
-
-    // Read by JIT code:
-    static unsigned offsetOfContext() { return offsetof(AsmJSActivation, cx_); }
-    static unsigned offsetOfResumePC() { return offsetof(AsmJSActivation, resumePC_); }
-
-    // Initialized by JIT code:
-    static unsigned offsetOfErrorRejoinSP() { return offsetof(AsmJSActivation, errorRejoinSP_); }
-
-    // Set from SIGSEGV handler:
-    void setResumePC(void *pc) { resumePC_ = pc; }
-};
 
 // The assumed page size; dynamically checked in CompileAsmJS.
 const size_t AsmJSPageSize = 4096;

@@ -58,8 +58,7 @@ END_FIXTURE_TEST(ScriptObjectFixture, bug438633_CompileScript_empty)
 BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_CompileScriptForPrincipals)
 {
     JS::CompileOptions options(cx);
-    options.setFileAndLine(__FILE__, __LINE__)
-           .setPrincipals(nullptr);
+    options.setFileAndLine(__FILE__, __LINE__);
     return tryScript(global, JS_CompileScript(cx, global, code, code_size,
                                               options));
 }
@@ -86,8 +85,7 @@ END_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileUCScript_empty)
 BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileUCScriptForPrincipals)
 {
     JS::CompileOptions options(cx);
-    options.setFileAndLine(__FILE__, __LINE__)
-           .setPrincipals(nullptr);
+    options.setFileAndLine(__FILE__, __LINE__);
     return tryScript(global, JS_CompileUCScript(cx, global, uc_code, code_size,
                                                 options));
 }
@@ -153,8 +151,7 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileFileHandleForPrincip
     CHECK(fputs(code, script_stream) != EOF);
     CHECK(fseek(script_stream, 0, SEEK_SET) != EOF);
     JS::CompileOptions options(cx);
-    options.setFileAndLine("temporary file", 1)
-           .setPrincipals(nullptr);
+    options.setFileAndLine("temporary file", 1);
     return tryScript(global, JS::Compile(cx, global, options, script_stream));
 }
 END_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileFileHandleForPrincipals)

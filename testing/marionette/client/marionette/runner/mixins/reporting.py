@@ -56,6 +56,7 @@ class HTMLReportingTestRunnerMixin(object):
                 result=result.result,
                 test_name=result.name,
                 test_class=result.test_class,
+                duration=round(result.duration, 1),
                 debug=result.debug,
                 output='\n'.join(result.output))
 

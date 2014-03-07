@@ -208,6 +208,24 @@ SET_UINT32_INDEX(jsbytecode *pc, uint32_t index)
 #define LOCALNO_BITS            24
 #define LOCALNO_LIMIT           (1 << LOCALNO_BITS)
 
+static inline unsigned
+LoopEntryDepthHint(jsbytecode *pc)
+{
+    JS_ASSERT(*pc == JSOP_LOOPENTRY);
+    return GET_UINT8(pc) & 0x7f;
+}
+static inline bool
+LoopEntryCanIonOsr(jsbytecode *pc)
+{
+    JS_ASSERT(*pc == JSOP_LOOPENTRY);
+    return GET_UINT8(pc) & 0x80;
+}
+static inline uint8_t
+PackLoopEntryDepthHintAndFlags(unsigned loopDepth, bool canIonOsr)
+{
+    return (loopDepth < 0x80 ? uint8_t(loopDepth) : 0x7f) | (canIonOsr ? 0x80 : 0);
+}
+
 /*
  * Describes the 'hops' component of a JOF_SCOPECOORD opcode.
  *

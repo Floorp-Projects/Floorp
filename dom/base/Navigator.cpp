@@ -15,6 +15,11 @@
 #include "mozilla/dom/DesktopNotification.h"
 #include "nsGeolocation.h"
 #include "nsIHttpProtocolHandler.h"
+#include "nsIContentPolicy.h"
+#include "nsIContentSecurityPolicy.h"
+#include "nsContentPolicyUtils.h"
+#include "nsCrossSiteListenerProxy.h"
+#include "nsISupportsPriority.h"
 #include "nsICachingChannel.h"
 #include "nsIWebContentHandlerRegistrar.h"
 #include "nsICookiePermission.h"
@@ -45,14 +50,19 @@
 #endif
 #include "nsIIdleObserver.h"
 #include "nsIPermissionManager.h"
+#include "nsMimeTypes.h"
 #include "nsNetUtil.h"
 #include "nsIHttpChannel.h"
+#include "nsIHttpChannelInternal.h"
 #include "TimeManager.h"
 #include "DeviceStorage.h"
 #include "nsIDOMNavigatorSystemMessages.h"
+#include "nsStreamUtils.h"
 #include "nsIAppsService.h"
 #include "mozIApplication.h"
 #include "WidgetUtils.h"
+#include "mozIThirdPartyUtil.h"
+#include "nsChannelPolicy.h"
 
 #ifdef MOZ_MEDIA_NAVIGATOR
 #include "MediaManager.h"
@@ -78,6 +88,9 @@
 
 #include "mozilla/dom/NavigatorBinding.h"
 #include "mozilla/dom/Promise.h"
+
+#include "nsIUploadChannel2.h"
+#include "nsFormData.h"
 
 namespace mozilla {
 namespace dom {
@@ -988,6 +1001,279 @@ Navigator::GetGeolocation(ErrorResult& aRv)
   }
 
   return mGeolocation;
+}
+
+class BeaconStreamListener MOZ_FINAL : public nsIStreamListener
+{
+  public:
+    BeaconStreamListener() {}
+
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSISTREAMLISTENER
+    NS_DECL_NSIREQUESTOBSERVER
+};
+
+NS_IMPL_ISUPPORTS2(BeaconStreamListener,
+                   nsIStreamListener,
+                   nsIRequestObserver)
+
+
+NS_IMETHODIMP
+BeaconStreamListener::OnStartRequest(nsIRequest *aRequest,
+                                     nsISupports *aContext)
+{
+  aRequest->Cancel(NS_ERROR_NET_INTERRUPT);
+  return NS_BINDING_ABORTED;
+}
+
+NS_IMETHODIMP
+BeaconStreamListener::OnStopRequest(nsIRequest *aRequest,
+                                    nsISupports *aContext,
+                                    nsresult aStatus)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BeaconStreamListener::OnDataAvailable(nsIRequest *aRequest,
+                                      nsISupports *ctxt,
+                                      nsIInputStream *inStr,
+                                      uint64_t sourceOffset,
+                                      uint32_t count)
+{
+  MOZ_ASSERT(false);
+  return NS_OK;
+}
+
+bool
+Navigator::SendBeacon(const nsAString& aUrl,
+                      const Nullable<ArrayBufferViewOrBlobOrStringOrFormData>& aData,
+                      ErrorResult& aRv)
+{
+  if (!mWindow) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return false;
+  }
+
+  nsCOMPtr<nsIDocument> doc = mWindow->GetDoc();
+  if (!doc) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return false;
+  }
+
+  nsIURI* documentURI = doc->GetDocumentURI();
+  if (!documentURI) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return false;
+  }
+
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = nsContentUtils::NewURIWithDocumentCharset(
+                  getter_AddRefs(uri),
+                  aUrl,
+                  doc,
+                  doc->GetDocBaseURI());
+  if (NS_FAILED(rv)) {
+    aRv.Throw(NS_ERROR_DOM_URL_MISMATCH_ERR);
+    return false;
+  }
+
+  // Check whether this is a sane URI to load
+  // Explicitly disallow things like chrome:, javascript:, and data: URIs
+  nsCOMPtr<nsIPrincipal> principal = doc->NodePrincipal();
+  nsCOMPtr<nsIScriptSecurityManager> secMan = nsContentUtils::GetSecurityManager();
+  uint32_t flags = nsIScriptSecurityManager::DISALLOW_INHERIT_PRINCIPAL
+                   & nsIScriptSecurityManager::DISALLOW_SCRIPT;
+  rv = secMan->CheckLoadURIWithPrincipal(principal,
+                                         uri,
+                                         flags);
+  if (NS_FAILED(rv)) {
+    // Bad URI
+    aRv.Throw(rv);
+    return false;
+  }
+
+  // Check whether the CSP allows us to load
+  int16_t shouldLoad = nsIContentPolicy::ACCEPT;
+  rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_BEACON,
+                                 uri,
+                                 principal,
+                                 doc,
+                                 EmptyCString(), //mime guess
+                                 nullptr,         //extra
+                                 &shouldLoad,
+                                 nsContentUtils::GetContentPolicy(),
+                                 nsContentUtils::GetSecurityManager());
+  if (NS_FAILED(rv) || NS_CP_REJECTED(shouldLoad)) {
+    // Disallowed by content policy
+    aRv.Throw(NS_ERROR_CONTENT_BLOCKED);
+    return false;
+  }
+
+  nsCOMPtr<nsIChannel> channel;
+  nsCOMPtr<nsIChannelPolicy> channelPolicy;
+  nsCOMPtr<nsIContentSecurityPolicy> csp;
+  rv = principal->GetCsp(getter_AddRefs(csp));
+  if (NS_FAILED(rv)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return false;
+  }
+
+  if (csp) {
+    channelPolicy = do_CreateInstance(NSCHANNELPOLICY_CONTRACTID);
+    channelPolicy->SetContentSecurityPolicy(csp);
+    channelPolicy->SetLoadType(nsIContentPolicy::TYPE_BEACON);
+  }
+  rv = NS_NewChannel(getter_AddRefs(channel),
+                     uri,
+                     nullptr,
+                     nullptr,
+                     nullptr,
+                     nsIRequest::LOAD_NORMAL,
+                     channelPolicy);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+    return false;
+  }
+
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(channel);
+  if (!httpChannel) {
+    // Beacon spec only supports HTTP requests at this time
+    aRv.Throw(NS_ERROR_DOM_BAD_URI);
+    return false;
+  }
+  httpChannel->SetReferrer(documentURI);
+
+  // Anything that will need to refer to the window during the request
+  // will need to be done now.  For example, detection of whether any
+  // cookies set by this request are foreign.  Note that ThirdPartyUtil
+  // (nsIThirdPartyUtil.isThirdPartyChannel) does a secondary check between
+  // the channel URI and the cookie URI even when forceAllowThirdPartyCookie
+  // is set, so this is safe with regard to redirects.
+  nsCOMPtr<nsIHttpChannelInternal> httpChannelInternal(do_QueryInterface(channel));
+  nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil = do_GetService(THIRDPARTYUTIL_CONTRACTID);
+  if (!httpChannelInternal) {
+    aRv.Throw(NS_ERROR_DOM_BAD_URI);
+    return false;
+  }
+  bool isForeign = true;
+  thirdPartyUtil->IsThirdPartyWindow(mWindow, uri, &isForeign);
+  httpChannelInternal->SetForceAllowThirdPartyCookie(!isForeign);
+
+  nsCString mimeType;
+  if (!aData.IsNull()) {
+    nsCOMPtr<nsIInputStream> in;
+  
+    if (aData.Value().IsString()) {
+      nsCString stringData = NS_ConvertUTF16toUTF8(aData.Value().GetAsString());
+      nsCOMPtr<nsIStringInputStream> strStream = do_CreateInstance(NS_STRINGINPUTSTREAM_CONTRACTID, &rv);
+      if (NS_FAILED(rv)) {
+        aRv.Throw(NS_ERROR_FAILURE);
+        return false;
+      }
+      rv = strStream->SetData(stringData.BeginReading(), stringData.Length());
+      if (NS_FAILED(rv)) {
+        aRv.Throw(NS_ERROR_FAILURE);
+        return false;
+      }
+      mimeType.AssignLiteral("text/plain;charset=UTF-8");
+      in = strStream;
+  
+    } else if (aData.Value().IsArrayBufferView()) {
+  
+      nsCOMPtr<nsIStringInputStream> strStream = do_CreateInstance(NS_STRINGINPUTSTREAM_CONTRACTID, &rv);
+      if (NS_FAILED(rv)) {
+        aRv.Throw(NS_ERROR_FAILURE);
+        return false;
+      }
+  
+      rv = strStream->SetData(reinterpret_cast<char*>(aData.Value().GetAsArrayBufferView().Data()),
+                              aData.Value().GetAsArrayBufferView().Length());
+  
+      if (NS_FAILED(rv)) {
+        aRv.Throw(NS_ERROR_FAILURE);
+        return false;
+      }
+      mimeType.AssignLiteral("application/octet-stream");
+      in = strStream;
+  
+    } else if (aData.Value().IsBlob()) {
+      nsCOMPtr<nsIDOMBlob> blob = aData.Value().GetAsBlob();
+      rv = blob->GetInternalStream(getter_AddRefs(in));
+      if (NS_FAILED(rv)) {
+        aRv.Throw(NS_ERROR_FAILURE);
+        return false;
+      }
+      nsAutoString type;
+      rv = blob->GetType(type);
+      if (NS_FAILED(rv)) {
+        aRv.Throw(NS_ERROR_FAILURE);
+        return false;
+      }
+      mimeType = NS_ConvertUTF16toUTF8(type);
+  
+    } else if (aData.Value().IsFormData()) {
+      nsFormData& form = aData.Value().GetAsFormData();
+      uint64_t len;
+      nsAutoCString charset;
+      form.GetSendInfo(getter_AddRefs(in),
+                       &len,
+                       mimeType,
+                       charset);
+    } else {
+      MOZ_ASSERT(false, "switch statements not in sync");
+      aRv.Throw(NS_ERROR_FAILURE);
+      return false;
+    }
+  
+    nsCOMPtr<nsIUploadChannel2> uploadChannel = do_QueryInterface(channel);
+    if (!uploadChannel) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return false;
+    }
+    uploadChannel->ExplicitSetUploadStream(in, mimeType, -1,
+                                           NS_LITERAL_CSTRING("POST"),
+                                           false);
+  } else {
+    httpChannel->SetRequestMethod(NS_LITERAL_CSTRING("POST"));
+  }
+
+  nsCOMPtr<nsISupportsPriority> p = do_QueryInterface(channel);
+  if (p) {
+    p->SetPriority(nsISupportsPriority::PRIORITY_LOWEST);
+  }
+
+  nsRefPtr<nsCORSListenerProxy> cors = new nsCORSListenerProxy(new BeaconStreamListener(),
+                                                               principal,
+                                                               true);
+
+  // Start a preflight if cross-origin and content type is not whitelisted
+  rv = secMan->CheckSameOriginURI(documentURI, uri, false);
+  bool crossOrigin = NS_FAILED(rv);
+  nsAutoCString contentType, parsedCharset;
+  rv = NS_ParseContentType(mimeType, contentType, parsedCharset);
+  if (crossOrigin && 
+      contentType.Length() > 0 &&
+      !contentType.Equals(APPLICATION_WWW_FORM_URLENCODED) &&
+      !contentType.Equals(MULTIPART_FORM_DATA) &&
+      !contentType.Equals(TEXT_PLAIN)) {
+    nsCOMPtr<nsIChannel> preflightChannel;
+    nsTArray<nsCString> unsafeHeaders;
+    unsafeHeaders.AppendElement(NS_LITERAL_CSTRING("Content-Type"));
+    rv = NS_StartCORSPreflight(channel,
+                               cors,
+                               principal,
+                               true,
+                               unsafeHeaders,
+                               getter_AddRefs(preflightChannel));
+  } else {
+    rv = channel->AsyncOpen(cors, nullptr);
+  }
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+    return false;
+  }
+  return true;
 }
 
 #ifdef MOZ_MEDIA_NAVIGATOR

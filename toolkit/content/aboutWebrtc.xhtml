@@ -28,6 +28,22 @@ function displayLogs(logs) {
   });
 }
 
+function candidateTypeString(cand) {
+  if (cand.type == "localcandidate") {
+    if (cand.candidateType == "relayed") {
+      return cand.candidateType + '-' + cand.mozLocalTransport;
+    }
+  }
+  return cand.candidateType;
+}
+
+function candidateAddrString(cand) {
+  return cand.ipAddress + ':' +
+         cand.portNumber + '/' +
+         cand.transport + '(' +
+         candidateTypeString(cand) + ')';
+}
+
 function buildCandPairTableRow(candPair, localCand, remoteCand) {
   var row = document.createElement('tr');
   row.onclick = function() {
@@ -36,9 +52,7 @@ function buildCandPairTableRow(candPair, localCand, remoteCand) {
 
   if (localCand) {
     row.appendChild(document.createElement('td'))
-       .appendChild(document.createTextNode(localCand.ipAddress + ':' +
-                                            localCand.portNumber + '/' +
-                                            localCand.candidateType));
+       .appendChild(document.createTextNode(candidateAddrString(localCand)));
   } else {
     row.appendChild(document.createElement('td'))
        .appendChild(document.createTextNode(candPair.localCandidateId));
@@ -46,9 +60,7 @@ function buildCandPairTableRow(candPair, localCand, remoteCand) {
 
   if (remoteCand) {
     row.appendChild(document.createElement('td'))
-       .appendChild(document.createTextNode(remoteCand.ipAddress + ':' +
-                                            remoteCand.portNumber + '/' +
-                                            remoteCand.candidateType));
+       .appendChild(document.createTextNode(candidateAddrString(remoteCand)));
   } else {
     row.appendChild(document.createElement('td'))
        .appendChild(document.createTextNode(candPair.remoteCandidateId));
@@ -71,10 +83,11 @@ function buildCandTableRow(cand) {
 
   row.appendChild(document.createElement('td'))
      .appendChild(document.createTextNode(cand.ipAddress + ':' +
-                                          cand.portNumber));
+                                          cand.portNumber + '/' +
+                                          cand.transport));
 
   row.appendChild(document.createElement('td'))
-     .appendChild(document.createTextNode(cand.candidateType));
+     .appendChild(document.createTextNode(candidateTypeString(cand)));
   return row;
 }
 

@@ -21,6 +21,7 @@
   using namespace mozilla::dom::quota;
 
 #define DSSTORE_FILE_NAME ".DS_Store"
+#define PERMISSION_STORAGE_UNLIMITED "indexedDB-unlimited"
 
 BEGIN_QUOTA_NAMESPACE
 

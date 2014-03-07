@@ -1,0 +1,97 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=936340
+-->
+<head>
+  <title>Test that sendBeacon obeys content policy directives</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=936340">Mozilla Bug 936340</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var beaconUrl = "http://mochi.test:8888/tests/dom/tests/mochitest/beacon/beacon-handler.sjs";
+
+const Cc = SpecialPowers.Cc;
+const Ci = SpecialPowers.Ci;
+
+// not enabled by default yet.
+SimpleTest.waitForExplicitFinish();
+
+var policy = setupPolicy();
+
+SpecialPowers.pushPrefEnv({'set': [["beacon.enabled", true]]}, beginTest);
+
+function setupPolicy() {
+  var policyID = SpecialPowers.wrap(SpecialPowers.Components).ID("{b80e19d0-878f-d41b-2654-194714a4115c}");
+  var policyName = "@mozilla.org/testpolicy;1";
+  var policy = {
+    // nsISupports implementation
+    QueryInterface: function(iid) {
+      iid = SpecialPowers.wrap(iid);
+      if (iid.equals(Ci.nsISupports) ||
+        iid.equals(Ci.nsIFactory) ||
+        iid.equals(Ci.nsIContentPolicy))
+        return this;
+      throw SpecialPowers.Cr.NS_ERROR_NO_INTERFACE;
+    },
+    
+    // nsIFactory implementation
+    createInstance: function(outer, iid) {
+      return this.QueryInterface(iid);
+    },
+
+    // nsIContentPolicy implementation
+    shouldLoad: function(contentType, contentLocation, requestOrigin, context, mimeTypeGuess, extra) {
+      // Remember last content type seen for the test url
+
+      if (SpecialPowers.wrap(contentLocation).spec == beaconUrl) {
+        is(contentType,  Ci.nsIContentPolicy.TYPE_BEACON, "Beacon content type should match expected.  is: " + contentType + " should be: " + Ci.nsIContentPolicy.TYPE_BEACON);
+        teardownPolicy();
+        SimpleTest.finish();
+      }
+
+      return Ci.nsIContentPolicy.ACCEPT;
+    },
+
+    shouldProcess: function(contentType, contentLocation, requestOrigin, context, mimeTypeGuess, extra) {
+      return Ci.nsIContentPolicy.ACCEPT;
+    }
+  }
+  policy = SpecialPowers.wrapCallbackObject(policy);
+
+  // Register content policy
+  var componentManager = SpecialPowers.wrap(SpecialPowers.Components).manager.QueryInterface(Ci.nsIComponentRegistrar);
+  componentManager.registerFactory(policyID, "Test content policy", policyName, policy);
+
+  var categoryManager = Cc["@mozilla.org/categorymanager;1"].getService(Ci.nsICategoryManager);
+  categoryManager.addCategoryEntry("content-policy", policyName, policyName, false, true);
+
+  return { 'policy': policy, 'policyID': policyID, 'policyName': policyName };
+}
+
+function teardownPolicy() {
+  setTimeout(function() {
+    // policy will not be removed from the category correctly
+    var componentManager = SpecialPowers.wrap(SpecialPowers.Components).manager.QueryInterface(Ci.nsIComponentRegistrar);
+    componentManager.unregisterFactory(policy.policyID, policy.policy);
+    var categoryManager = Cc["@mozilla.org/categorymanager;1"].getService(Ci.nsICategoryManager);
+    categoryManager.deleteCategoryEntry("content-policy", policy.policyName, false);
+  }, 0);
+}
+
+function beginTest() {
+  navigator.sendBeacon(beaconUrl, "bacon would have been a better name than beacon");
+}
+
+</script>
+</pre>
+</body>
+</html>

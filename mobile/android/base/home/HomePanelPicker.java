@@ -123,6 +123,11 @@ public class HomePanelPicker extends FragmentActivity {
             }
         }
 
+        if (availablePanels.isEmpty()) {
+            setContentView(R.layout.home_panel_picker_empty);
+            return;
+        }
+
         final PickerAdapter adapter = (PickerAdapter) mListView.getAdapter();
         adapter.updateFromPanelInfos(availablePanels);
     }

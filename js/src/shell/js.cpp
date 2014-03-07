@@ -1181,8 +1181,8 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
             }
 
             if (loadBytecode) {
-                script = JS_DecodeScript(cx, loadBuffer, loadLength, options.principals(),
-                                         options.originPrincipals());
+                script = JS_DecodeScript(cx, loadBuffer, loadLength, cx->compartment()->principals,
+                                         options.originPrincipals(cx));
             } else {
                 script = JS::Compile(cx, global, options, codeChars, codeLength);
             }
@@ -5351,7 +5351,8 @@ ShellCloseAsmJSCacheEntryForRead(HandleObject global, size_t serializedSize, con
 }
 
 static bool
-ShellOpenAsmJSCacheEntryForWrite(HandleObject global, const jschar *begin, const jschar *end,
+ShellOpenAsmJSCacheEntryForWrite(HandleObject global, bool installed,
+                                 const jschar *begin, const jschar *end,
                                  size_t serializedSize, uint8_t **memoryOut, intptr_t *handleOut)
 {
     if (!jsCachingEnabled || !jsCacheAsmJSPath)

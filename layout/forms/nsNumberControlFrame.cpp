@@ -133,7 +133,7 @@ nsNumberControlFrame::Reflow(nsPresContext* aPresContext,
   } else {
     NS_ASSERTION(outerWrapperFrame == mFrames.FirstChild(), "huh?");
 
-    nsHTMLReflowMetrics wrappersDesiredSize(aReflowState.GetWritingMode());
+    nsHTMLReflowMetrics wrappersDesiredSize(aReflowState);
 
     nsHTMLReflowState wrapperReflowState(aPresContext, aReflowState,
                                          outerWrapperFrame,

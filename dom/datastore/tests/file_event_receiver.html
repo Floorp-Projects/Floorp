@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for DataStore - event receiver</title>
+</head>
+<body>
+<script type="application/javascript;version=1.7">
+
+  function ok(a, msg) {
+    alert((a ? 'OK' : 'KO') + ' ' + msg)
+  }
+
+  function is(a, b, msg) {
+    ok(a === b, msg);
+  }
+
+  function cbError() {
+    alert('KO error');
+  }
+
+  function finish() {
+    alert('DONE');
+  }
+
+  function eventListener(evt) {
+    ok(evt, "OnChangeListener is called with data");
+    finish();
+  }
+
+  navigator.getDataStores('foo').then(function(stores) {
+    is(stores.length, 1, "getDataStores('foo') returns 1 element");
+    is(stores[0].name, 'foo', 'The dataStore.name is foo');
+    is(stores[0].readOnly, false, 'The dataStore foo is not in readonly');
+
+    var store = stores[0];
+    store.onchange = eventListener;
+    alert("READY");
+  });
+
+</script>
+</body>
+</html>
+
+

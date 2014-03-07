@@ -396,6 +396,78 @@ PeerConnectionMedia::GetRemoteStream(int aIndex)
   return mRemoteSourceStreams[aIndex];
 }
 
+bool
+PeerConnectionMedia::SetUsingBundle_m(int level, bool decision)
+{
+  ASSERT_ON_THREAD(mMainThread);
+  for (size_t i = 0; i < mRemoteSourceStreams.Length(); ++i) {
+    if (mRemoteSourceStreams[i]->SetUsingBundle_m(level, decision)) {
+      // Found the MediaPipeline for |level|
+      return true;
+    }
+  }
+  CSFLogWarn(logTag, "Could not locate level %d to set bundle flag to %s",
+                     static_cast<int>(level),
+                     decision ? "true" : "false");
+  return false;
+}
+
+static void
+UpdateFilterFromRemoteDescription_s(
+  RefPtr<mozilla::MediaPipeline> receive,
+  RefPtr<mozilla::MediaPipeline> transmit,
+  nsAutoPtr<mozilla::MediaPipelineFilter> filter) {
+
+  // Update filter, and make a copy of the final version.
+  mozilla::MediaPipelineFilter *finalFilter(
+    receive->UpdateFilterFromRemoteDescription_s(filter));
+
+  if (finalFilter) {
+    filter = new mozilla::MediaPipelineFilter(*finalFilter);
+  }
+
+  // Set same filter on transmit pipeline too.
+  transmit->UpdateFilterFromRemoteDescription_s(filter);
+}
+
+bool
+PeerConnectionMedia::UpdateFilterFromRemoteDescription_m(
+    int level,
+    nsAutoPtr<mozilla::MediaPipelineFilter> filter)
+{
+  ASSERT_ON_THREAD(mMainThread);
+
+  RefPtr<mozilla::MediaPipeline> receive;
+  for (size_t i = 0; !receive && i < mRemoteSourceStreams.Length(); ++i) {
+    receive = mRemoteSourceStreams[i]->GetPipelineByLevel_m(level);
+  }
+
+  RefPtr<mozilla::MediaPipeline> transmit;
+  for (size_t i = 0; !transmit && i < mLocalSourceStreams.Length(); ++i) {
+    transmit = mLocalSourceStreams[i]->GetPipelineByLevel_m(level);
+  }
+
+  if (receive && transmit) {
+    // GetPipelineByLevel_m will return nullptr if shutdown is in progress;
+    // since shutdown is initiated in main, and involves a dispatch to STS
+    // before the pipelines are released, our dispatch to STS will complete
+    // before any release can happen due to a shutdown that hasn't started yet.
+    RUN_ON_THREAD(GetSTSThread(),
+                  WrapRunnableNM(
+                      &UpdateFilterFromRemoteDescription_s,
+                      receive,
+                      transmit,
+                      filter
+                  ),
+                  NS_DISPATCH_NORMAL);
+    return true;
+  } else {
+    CSFLogWarn(logTag, "Could not locate level %d to update filter",
+        static_cast<int>(level));
+  }
+  return false;
+}
+
 nsresult
 PeerConnectionMedia::AddRemoteStream(nsRefPtr<RemoteSourceStreamInfo> aInfo,
   int *aIndex)
@@ -503,5 +575,41 @@ RemoteSourceStreamInfo::StorePipeline(int aTrack,
   mTypes[aTrack] = aIsVideo;
 }
 
+RefPtr<MediaPipeline> SourceStreamInfo::GetPipelineByLevel_m(int level) {
+  ASSERT_ON_THREAD(mParent->GetMainThread());
+
+  // Refuse to hand out references if we're tearing down.
+  // (Since teardown involves a dispatch to and from STS before MediaPipelines
+  // are released, it is safe to start other dispatches to and from STS with a
+  // RefPtr<MediaPipeline>, since that reference won't be the last one
+  // standing)
+  if (mMediaStream) {
+    for (auto p = mPipelines.begin(); p != mPipelines.end(); ++p) {
+      if (p->second->level() == level) {
+        return p->second;
+      }
+    }
+  }
+
+  return nullptr;
+}
+
+bool RemoteSourceStreamInfo::SetUsingBundle_m(int aLevel, bool decision) {
+  ASSERT_ON_THREAD(mParent->GetMainThread());
+
+  RefPtr<MediaPipeline> pipeline(GetPipelineByLevel_m(aLevel));
+
+  if (pipeline) {
+    RUN_ON_THREAD(mParent->GetSTSThread(),
+                  WrapRunnable(
+                      pipeline,
+                      &MediaPipeline::SetUsingBundle_s,
+                      decision
+                  ),
+                  NS_DISPATCH_NORMAL);
+    return true;
+  }
+  return false;
+}
 
 }  // namespace sipcc

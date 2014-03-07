@@ -156,7 +156,7 @@ class IonBuilder : public MIRGenerator
                 // MIR instruction
                 MTableSwitch *ins;
 
-                // The number of current successor that get mapped into a block.
+                // The number of current successor that get mapped into a block. 
                 uint32_t currentBlock;
 
             } tableswitch;
@@ -279,7 +279,8 @@ class IonBuilder : public MIRGenerator
     MBasicBlock *newBlockPopN(MBasicBlock *predecessor, jsbytecode *pc, uint32_t popped);
     MBasicBlock *newBlockAfter(MBasicBlock *at, MBasicBlock *predecessor, jsbytecode *pc);
     MBasicBlock *newOsrPreheader(MBasicBlock *header, jsbytecode *loopEntry);
-    MBasicBlock *newPendingLoopHeader(MBasicBlock *predecessor, jsbytecode *pc, bool osr);
+    MBasicBlock *newPendingLoopHeader(MBasicBlock *predecessor, jsbytecode *pc, bool osr, bool canOsr,
+                                      unsigned stackPhiCount);
     MBasicBlock *newBlock(jsbytecode *pc) {
         return newBlock(nullptr, pc);
     }
@@ -648,10 +649,6 @@ class IonBuilder : public MIRGenerator
     InliningStatus inlineMathImul(CallInfo &callInfo);
     InliningStatus inlineMathFRound(CallInfo &callInfo);
     InliningStatus inlineMathFunction(CallInfo &callInfo, MMathFunction::Function function);
-
-    // SIMD natives.
-    InliningStatus checkSIMDArgs(CallInfo &callInfo, const MIRType *argumentTypes);
-    InliningStatus inlineSIMDFunction(CallInfo &callInfo, uint32_t id, uint32_t argumentCount);
 
     // String natives.
     InliningStatus inlineStringObject(CallInfo &callInfo);
