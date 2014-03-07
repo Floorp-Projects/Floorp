@@ -1,8 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg"
      xmlns:xlink="http://www.w3.org/1999/xlink"
-     class="reftest-wait"
-     onload="setTimeAndSnapshot(101, true)">
+     class="reftest-wait">
   <script xlink:href="../smil-util.js" type="text/javascript"/>
+  <script>
+    window.addEventListener("MozReftestInvalidate", run, false);
+
+    function run() {
+      setTimeAndSnapshot(101, true);
+    }
+  </script>
   <defs>
     <g id="smiley">
       <circle fill="yellow" stroke="black" stroke-width="1" cx="0" cy="0"

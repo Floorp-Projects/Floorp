@@ -215,12 +215,6 @@ interface nsIDOMEvent : nsISupports
   [notxpcom] DOMEventPtr InternalDOMEvent();
 };
 
-dictionary EventInit
-{
-  boolean bubbles;
-  boolean cancelable;
-};
-
 %{C++
 
 nsresult
