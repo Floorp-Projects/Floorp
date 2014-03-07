@@ -27,21 +27,34 @@ var initialConfig = {
 var cameraObj = null;
 
 // Shorthand functions
+function onError(e) {
+  ok(false, "Error" + JSON.stringify(e));
+}
+
 function end() {
   CameraTest.end();
 }
 function next() {
-  CameraTest.next();
+  if (cameraObj) {
+    cameraObj.release(
+      function success() {
+        CameraTest.next();
+      },
+      onError
+    );
+    cameraObj = null;
+  } else {
+    CameraTest.next();
+  }
 }
 function run() {
   CameraTest.run();
 }
 
-function onError(e) {
-  ok(false, "Error" + JSON.stringify(e));
-}
-
-// The array of tests
+// The array of tests. Because camera capabilities don't change over the life
+// of a CameraControl object, they are only read once when the CameraControl is
+// created; so we have to call the 'prep' function first to set the fake
+// capability pref, before we call getCamera() and call 'test' to run the test.
 var tests = [
   {
     key: "fake-zoom",
@@ -86,6 +99,49 @@ var tests = [
       next();
     }
   },
+  {
+    key: "fake-zoom-out-of-order",
+    prep: function setupFakeZoomOutOfOrder(test) {
+      // We expect the camera library to give us zoom ratios in order; if
+      // it doesn't we ignore the list and just return 1x support.
+      test.setFakeParameters("zoom-ratios=100,150,200,400,300;max-zoom=4", function () {
+        run();
+      });
+    },
+    test: function testFakeZoomOutOfOrder(cam, cap) {
+      ok(cap.zoomRatios.length == 1, "zoom ratios length = " + cap.zoomRatios.length);
+      ok(cap.zoomRatios[0] == 1.0, "only supported zoom = " + cap.zoomRatios[0] + "x");
+      next();
+    }
+  },
+  {
+    key: "fake-iso",
+    prep: function setupFakeIso(test) {
+      // we should recognize 'auto', 'hjr', and numeric modes; anything else
+      // from the driver is ignored, which this test also verifies.
+      test.setFakeParameters(
+        "iso=auto;iso-values=auto,ISO_HJR,ISO100,foo,ISObar,ISO200,ISO400,ISO800,ISO1600",
+        function () {
+        run();
+      });
+    },
+    test: function testFakeIso(cam, cap) {
+      // values 'foo' and 'ISObar' should not be included in isoModes
+      ok(cap.isoModes.length == 7, "ISO modes length = " + cap.isoModes.length);
+      ok(cap.isoModes.indexOf("foo") == -1, "Unknown ISO mode 'foo' is ignored");
+      ok(cap.isoModes.indexOf("ISObar") == -1, "Unknown ISO mode 'ISObar' is ignored");
+      ok(cap.isoModes.indexOf("bar") == -1, "Unknown ISO mode 'bar' is ignored");
+
+      // test individual ISO modes
+      cap.isoModes.forEach(function(iso, index) {
+        cam.iso = iso;
+        ok(cam.iso === iso,
+          "ISO[" + index + "] = " + iso + ", cam.iso = " + cam.iso);
+      });
+
+      next();
+    }
+  },
 ];
 
 var testGenerator = function() {
@@ -96,8 +152,10 @@ var testGenerator = function() {
 
 window.addEventListener('beforeunload', function() {
   document.getElementById('viewfinder').mozSrcObject = null;
-  cameraObj.release();
-  cameraObj = null;
+  if (cameraObj) {
+    cameraObj.release();
+    cameraObj = null;
+  }
 });
 
 CameraTest.begin("hardware", function(test) {
@@ -112,7 +170,15 @@ CameraTest.begin("hardware", function(test) {
       info("test: " + t.key);
       function onSuccess(camera, config) {
         cameraObj = camera;
-        t.test(camera, camera.capabilities);
+        document.getElementById('viewfinder').mozSrcObject = camera;
+        camera.onPreviewStateChange = function (state) {
+          if (state === "started") {
+            t.test(camera, camera.capabilities);
+          } else {
+            ok(false, "preview started (state = '" + state + "')");
+          }
+          camera.onPreviewStateChange = null;
+        };
       }
       CameraTest.run = function() {
         navigator.mozCameras.getCamera(whichCamera, initialConfig, onSuccess, onError);
