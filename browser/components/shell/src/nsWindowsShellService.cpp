@@ -766,17 +766,10 @@ WriteBitmap(nsIFile* aFile, imgIContainer* aImage)
     thebesImageSurface->CopyToB8G8R8A8DataSourceSurface();
   NS_ENSURE_TRUE(dataSurface, NS_ERROR_FAILURE);
 
-  DataSourceSurface::MappedSurface map;
-  dataSurface->Map(DataSourceSurface::MapType::READ, &map);
-  if (!map.mData) {
-    return NS_ERROR_FAILURE;
-  }
-
   int32_t width = dataSurface->GetSize().width;
   int32_t height = dataSurface->GetSize().height;
   int32_t bytesPerPixel = 4 * sizeof(uint8_t);
   uint32_t bytesPerRow = bytesPerPixel * width;
-  uint32_t length = map.mStride * height;
 
   // initialize these bitmap structs which we will later
   // serialize directly to the head of the bitmap file
@@ -805,6 +798,11 @@ WriteBitmap(nsIFile* aFile, imgIContainer* aImage)
   rv = NS_NewLocalFileOutputStream(getter_AddRefs(stream), aFile);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  DataSourceSurface::MappedSurface map;
+  if (!dataSurface->Map(DataSourceSurface::MapType::READ, &map)) {
+    return NS_ERROR_FAILURE;
+  }
+
   // write the bitmap headers and rgb pixel data to the file
   rv = NS_ERROR_FAILURE;
   if (stream) {
@@ -815,7 +813,7 @@ WriteBitmap(nsIFile* aFile, imgIContainer* aImage)
       if (written == sizeof(BITMAPINFOHEADER)) {
         // write out the image data backwards because the desktop won't
         // show bitmaps with negative heights for top-to-bottom
-        uint32_t i = length;
+        uint32_t i = map.mStride * height;
         do {
           i -= map.mStride;
           stream->Write(((const char*)map.mData) + i, bytesPerRow, &written);
@@ -831,6 +829,8 @@ WriteBitmap(nsIFile* aFile, imgIContainer* aImage)
 
     stream->Close();
   }
+
+  dataSurface->Unmap();
 
   return rv;
 }
