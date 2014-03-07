@@ -39,7 +39,6 @@
 #include "IDBKeyRange.h"
 #include "IDBTransaction.h"
 #include "DatabaseInfo.h"
-#include "DictionaryHelpers.h"
 #include "KeyPath.h"
 #include "ProfilerHelpers.h"
 #include "ReportInternalError.h"

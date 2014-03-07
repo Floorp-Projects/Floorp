@@ -26,10 +26,3 @@ interface nsIDOMCloseEvent : nsIDOMEvent
                       in unsigned short aReasonCode,
                       in DOMString aReason);
 };
-
-dictionary CloseEventInit : EventInit
-{
-  boolean wasClean;
-  unsigned short code;
-  DOMString reason;
-};

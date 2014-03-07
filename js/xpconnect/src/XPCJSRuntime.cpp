@@ -3200,9 +3200,6 @@ XPCJSRuntime::newXPCJSRuntime(nsXPConnect* aXPConnect)
     return nullptr;
 }
 
-// InternStaticDictionaryJSVals is automatically generated.
-bool InternStaticDictionaryJSVals(JSContext* aCx);
-
 bool
 XPCJSRuntime::OnJSContextNew(JSContext *cx)
 {
@@ -3224,8 +3221,7 @@ XPCJSRuntime::OnJSContextNew(JSContext *cx)
             mStrJSVals[i] = STRING_TO_JSVAL(str);
         }
 
-        if (!mozilla::dom::DefineStaticJSVals(cx) ||
-            !InternStaticDictionaryJSVals(cx)) {
+        if (!mozilla::dom::DefineStaticJSVals(cx)) {
             return false;
         }
     }
