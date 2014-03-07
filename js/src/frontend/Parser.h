@@ -523,7 +523,8 @@ class Parser : private AutoGCRooter, public StrictModeGetter
     Node unaryExpr();
     Node memberExpr(TokenKind tt, bool allowCallSyntax);
     Node primaryExpr(TokenKind tt);
-    Node parenExpr(bool *genexp = nullptr);
+    Node parenExprOrGeneratorComprehension();
+    Node exprInParens();
 
     /*
      * Additional JS parsers.
@@ -541,6 +542,9 @@ class Parser : private AutoGCRooter, public StrictModeGetter
 
     Node condition();
 
+    Node generatorComprehensionLambda(GeneratorKind comprehensionKind, unsigned begin,
+                                      Node innerStmt);
+
     Node legacyComprehensionTail(Node kid, unsigned blockid, GeneratorKind comprehensionKind,
                                  ParseContext<ParseHandler> *outerpc,
                                  unsigned innerBlockScopeDepth);
@@ -552,6 +556,7 @@ class Parser : private AutoGCRooter, public StrictModeGetter
     Node comprehensionFor(GeneratorKind comprehensionKind);
     Node comprehension(GeneratorKind comprehensionKind);
     Node arrayComprehension(uint32_t begin);
+    Node generatorComprehension(uint32_t begin);
 
     bool argumentList(Node listNode, bool *isSpread);
     Node letBlock(LetContext letContext);
