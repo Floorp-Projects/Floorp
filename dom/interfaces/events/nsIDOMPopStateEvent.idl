@@ -20,8 +20,3 @@ interface nsIDOMPopStateEvent : nsIDOMEvent
                          in boolean cancelableArg,
                          in nsIVariant stateArg);
 };
-
-dictionary PopStateEventInit : EventInit
-{
-  nsIVariant state;
-};

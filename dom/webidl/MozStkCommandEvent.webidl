@@ -15,3 +15,644 @@ dictionary MozStkCommandEventInit : EventInit
 {
   any command = null;
 };
+
+dictionary MozStkTextMessage
+{
+  /**
+   * Text String.
+   *
+   * @see TS 11.14, clause 12.15, Text String.
+   */
+  DOMString text;
+
+  /**
+   * The length of time for which the ME shall display the dialog.
+   */
+  MozStkDuration duration;
+
+  /**
+   * Indicate this text message is high priority or normal priority.
+   *
+   * @see TS 11.14, clause 12.6, Command Qualifier, Display Text, bit 1.
+   *
+   * High priority text shall be displayed on the screen immediately, except if
+   * there is a conflict of priority level of alerting such as incoming calls
+   * or a low battery warning. In that situation, the resolution is left to
+   * the terminal. If the command is rejected in spite of the high priority,
+   * the terminal shall inform the ICC with resultCode is
+   * TERMINAL_CRNTLY_UNABLE_TO_PROCESS in MozStkResponse.
+   *
+   * true: high priority
+   * false: normal priority
+   */
+  boolean isHighPriority;
+
+  /**
+   * Need to wait for user to clear message or not.
+   *
+   * @see TS 11.14, clause 12.6, Command Qualifier, Display Text, bit 8.
+   *
+   * If this attribute is true, but user doesn't give any input within a period
+   * of time(said 30 secs), the terminal shall inform the ICC with resultCode
+   * is NO_RESPONSE_FROM_USER in MozStkResponse.
+   *
+   * true: Wait for user to clear message.
+   * false: clear message after a delay.
+   */
+  boolean userClear;
+
+  /**
+   * Need to response immediately or not.
+   *
+   * @see TS 11.14, clause 12.43, Immediate response.
+   *
+   * When this attribute is true, the terminal shall immediately send
+   * MozStkResponse with resultCode is OK.
+   *
+   * true: The terminal shall send response immediately.
+   * false: otherwise.
+   */
+  boolean responseNeeded;
+};
+
+dictionary MozStkItem
+{
+  /**
+   * Identifier of item.
+   *
+   * The identifier is a single byte between '01' and 'FF'. Each item shall
+   * have a unique identifier within an Item list.
+   */
+  unsigned short identifier;
+
+  /**
+   * Text string of item.
+   */
+  DOMString text;
+};
+
+dictionary MozStkMenu
+{
+  /**
+   * Array of MozStkItem.
+   *
+   * @see TS 11.14, clause 12.9
+   */
+  sequence<MozStkItem> items;
+
+  /**
+   * Presentation type, one of TYPE_*.
+   */
+  unsigned short presentationType;
+
+  /**
+   * Title of the menu.
+   */
+  DOMString title;
+
+  /**
+   * Default item identifier of the menu.
+   */
+  unsigned short defaultItem;
+
+  /**
+   * Help information available or not.
+   *
+   * @see TS 11.14, clause 12.6, Command Qualifier, SET UP MENU, bit 8.
+   *
+   * true: help information available.
+   * false: no help information available.
+   */
+  boolean isHelpAvailable;
+
+  /**
+   * List of Next Action Indicators.
+   * Each element should be one of nsIDOMMozIccManager.STK_CMD_*
+   *                            or nsIDOMMozIccManager.STK_NEXT_ACTION_*
+   * If it's STK_NEXT_ACTION_NULL, the terminal should ignore this action
+   * in corresponding item.
+   *
+   * @see TS 11.14, clause 12.24, Items Next Action Indicator.
+   */
+  sequence<unsigned short> nextActionList;
+};
+
+dictionary MozStkInput
+{
+  /**
+   * Text for the ME to display in conjunction with asking the user to respond.
+   */
+  DOMString text;
+
+  /**
+   * The length of time for which the ME shall display the dialog. This field
+   * is used only for GET INKEY.
+   *
+   * @see TS 11.14, clause 11.8, duration, GET INKEY T.C 27.22.4.2.8.4.2
+   */
+  MozStkDuration duration;
+
+  /**
+   * Minimum length of response.
+   */
+  unsigned short minLength;
+
+  /**
+   * Maximum length of response.
+   */
+  unsigned short maxLength;
+
+  /**
+   * Text for the ME to display, corresponds to a default text string offered
+   * by the ICC.
+   */
+  DOMString defaultText;
+
+  /**
+   * Input format.
+   *
+   * @see TS 11.14, clause 12.6, Command Qualifier, GET INPUT, bit 1.
+   *
+   * true: Alphabet set.
+   * false: Digits only.
+   */
+  boolean isAlphabet;
+
+  /**
+   * Alphabet encoding.
+   *
+   * @see TS 11.14, clause 12.6, Command Qualifier, GET INPUT, bit 2.
+   *
+   * true: UCS2 alphabet.
+   * false: default SMS alphabet.
+   */
+  boolean isUCS2;
+
+  /**
+   * Visibility of input.
+   *
+   * @see TS 11.14, clause 12.6, Command Qualifier, GET INPUT, bit 3.
+   *
+   * true: User input shall not be revealed in any way.
+   * false: ME may echo user input on the display.
+   */
+  boolean hideInput;
+
+  /**
+   * Yes/No response is requested.
+   *
+   * @see TS 11.14, clause 12.6, Command Qualifier, GET INKEY, bit 3.
+   *
+   * true: Yes/No response is requested, and character sets
+   *       (Alphabet set and UCS2) are disabled.
+   * false: Character sets (Alphabet set and UCS2) are enabled.
+   */
+  boolean isYesNoRequested;
+
+  /**
+   * User input in packed or unpacked format.
+   *
+   * @see TS 11.14, clause 12.6, Command Qualifier, GET INPUT, bit 4.
+   *
+   * true: User input to be in SMS packed format.
+   * false: User input to be in unpacked format.
+   */
+  boolean isPacked;
+
+  /**
+   * Help information available or not.
+   *
+   * @see TS 11.14, clause 12.6, Command Qualifier, GET INPUT/GET INKEY, bit 8.
+   *
+   * true: help information available.
+   * false: no help information available.
+   */
+  boolean isHelpAvailable;
+};
+
+dictionary MozStkBrowserSetting
+{
+  /**
+   * Confirm message to launch browser.
+   */
+  MozStkTextMessage confirmMessage;
+
+  /**
+   * The URL to be opened by browser.
+   */
+  DOMString url;
+
+  /**
+   * One of STK_BROWSER_MODE_*.
+   *
+   * @see nsIDOMMozIccManager.STK_BROWSER_MODE_*
+   */
+  unsigned short mode;
+};
+
+dictionary MozStkSetUpCall
+{
+  /**
+   * The Dialling number.
+   */
+  DOMString address;
+
+  /**
+   * The text message used in user confirmation phase.
+   */
+  MozStkTextMessage confirmMessage;
+
+  /**
+   * The text message used in call set up phase.
+   */
+  MozStkTextMessage callMessage;
+
+  /**
+   * The Optional maximum duration for the redial mechanism.
+   * The time elapsed since the first call set-up attempt has exceeded the duration
+   * requested by the UICC, the redial mechanism is terminated.
+   */
+  MozStkDuration duration;
+};
+
+dictionary MozStkSetUpEventList
+{
+  /**
+   * The list of events that needs to provide details to ICC when they happen.
+   * When this valus is null, means an indication to remove the existing list
+   * of events in ME.
+   *
+   * @see nsIDOMMozIccManager.STK_EVENT_TYPE_*
+   */
+   sequence<unsigned short> eventList;
+};
+
+dictionary MozStkLocationInfo
+{
+  /**
+   * Mobile Country Code (MCC) of the current serving operator.
+   */
+  unsigned short mcc;
+
+  /**
+   * Mobile Network Code (MNC) of the current serving operator.
+   */
+  unsigned short mnc;
+
+  /**
+   * Mobile Location Area Code (LAC) for the current serving operator.
+   */
+  unsigned short gsmLocationAreaCode;
+
+  /**
+   * Mobile Cell ID for the current serving operator.
+   */
+  unsigned long gsmCellId;
+};
+
+dictionary MozStkDuration
+{
+  /**
+   * Time unit used, should be one of STK_TIME_UNIT_*.
+   */
+  unsigned short timeUnit;
+
+  /**
+   * The length of time required, expressed in timeUnit.
+   */
+  octet timeInterval;
+};
+
+dictionary MozStkPlayTone
+{
+  /**
+   * Text String.
+   */
+  DOMString text;
+
+  /**
+   * One of STK_TONE_TYPE_*.
+   */
+  unsigned short tone;
+
+  /**
+   * The length of time for which the ME shall generate the tone.
+   */
+  MozStkDuration duration;
+
+  /**
+   * Need to vibrate or not.
+   * true: vibrate alert, if available, with the tone.
+   * false: use of vibrate alert is up to the ME.
+   */
+  boolean isVibrate;
+};
+
+dictionary MozStkProvideLocalInfo
+{
+  /**
+   * Indicate which local information is required.
+   * It shall be one of following:
+   *  - nsIDOMMozIccManager.STK_LOCAL_INFO_LOCATION_INFO
+   *  - nsIDOMMozIccManager.STK_LOCAL_INFO_IMEI
+   *  - nsIDOMMozIccManager.STK_LOCAL_INFO_DATE_TIME_ZONE
+   *  - nsIDOMMozIccManager.STK_LOCAL_INFO_LANGUAGE
+   */
+  unsigned short localInfoType;
+};
+
+dictionary MozStkLocationEvent
+{
+  /**
+   * The type of this event.
+   * It shall be nsIDOMMozIccManager.STK_EVENT_TYPE_LOCATION_STATUS;
+   */
+  unsigned short eventType;
+
+  /**
+   * Indicate current service state of the MS with one of the values listed
+   * below:
+   *  - nsIDOMMozIccManager.STK_SERVICE_STATE_NORMAL
+   *  - nsIDOMMozIccManager.STK_SERVICE_STATE_LIMITED
+   *  - nsIDOMMozIccManager.STK_SERVICE_STATE_UNAVAILABLE
+   */
+  unsigned short locationStatus;
+
+  /**
+   * See MozStkLocationInfo.
+   * This value shall only be provided if the locationStatus indicates
+   * 'STK_SERVICE_STATE_NORMAL'.
+   */
+  MozStkLocationInfo locationInfo;
+};
+
+dictionary MozStkTimer
+{
+  /**
+   * Identifier of a timer.
+   */
+  octet timerId;
+
+  /**
+   * Length of time during which the timer has to run.
+   * The resolution of a timer is 1 second.
+   */
+  unsigned long timerValue;
+
+  /**
+   * The action requested from UICC.
+   * It shall be one of below:
+   * - nsIDOMMozIccManager.STK_TIMER_START
+   * - nsIDOMMozIccManager.STK_TIMER_DEACTIVATE
+   * - nsIDOMMozIccManager.STK_TIMER_GET_CURRENT_VALUE
+   */
+  unsigned short timerAction;
+};
+
+dictionary MozStkBipMessage
+{
+  /**
+   * Text String
+   */
+  DOMString text;
+};
+
+dictionary MozStkCommand
+{
+  /**
+   * The number of command issued by ICC. And it is assigned
+   * by ICC may take any hexadecimal value betweean '01' and 'FE'.
+   *
+   * @see TS 11.14, clause 6.5.1
+   */
+  unsigned short commandNumber;
+
+  /**
+   * One of STK_CMD_*
+   */
+  unsigned short typeOfCommand;
+
+  /**
+   * Qualifiers specific to the command.
+   */
+  unsigned short commandQualifier;
+
+  /**
+   * options varies accrording to the typeOfCommand in MozStkCommand.
+   *
+   * When typeOfCommand is
+   * - STK_CMD_DISPLAY_TEXT
+   * - STK_CMD_SET_UP_IDLE_MODE_TEXT
+   * - STK_CMD_SEND_{SS|USSD|SMS|DTMF},
+   * options is MozStkTextMessage.
+   *
+   * When typeOfCommand is
+   * - STK_CMD_SELECT_ITEM
+   * - STK_CMD_SET_UP_MENU
+   * options is MozStkMenu.
+   *
+   * When typeOfCommand is
+   * - STK_CMD_GET_INKEY
+   * - STK_CMD_GET_INPUT,
+   * options is MozStkInput.
+   *
+   * When typeOfCommand is
+   * - STK_CMD_LAUNCH_BROWSER
+   * options is MozStkBrowserSetting.
+   *
+   * When typeOfCommand is
+   * - STK_CMD_SET_UP_CALL
+   * options is MozStkSetUpCall.
+   *
+   * When typeOfCommand is
+   * - STK_CMD_SET_UP_EVENT_LIST
+   * options is MozStkSetUpEventList.
+   *
+   * When typeOfCommand is
+   * - STK_CMD_PLAY_TONE
+   * options is MozStkPlayTone.
+   *
+   * When typeOfCommand is
+   * - STK_CMD_POLL_INTERVAL
+   * options is MozStkDuration.
+   *
+   * When typeOfCommand is
+   * - STK_CMD_PROVIDE_LOCAL_INFO
+   * options is MozStkProvideLocalInfo.
+   *
+   * When typeOfCommand is
+   * - STK_CMD_TIMER_MANAGEMENT
+   * option is MozStkTimer
+   *
+   * When typeOfCommand is
+   * - STK_CMD_OPEN_CHANNEL
+   * - STK_CMD_CLOSE_CHANNEL
+   * - STK_CMD_SEND_DATA
+   * - STK_CMD_RECEIVE_DATA
+   * options is MozStkBipMessage
+   *
+   * When typeOfCommand is
+   * - STK_CMD_POLL_OFF
+   * options is null.
+   *
+   * When typeOfCommand is
+   * - STK_CMD_REFRESH
+   * options is null.
+   */
+  any options;
+};
+
+dictionary MozStkResponse
+{
+  /**
+   * One of RESULT_*
+   */
+  unsigned short resultCode;
+
+  /**
+   * The identifier of the item selected by user.
+   *
+   * @see MozStkItem.identifier
+   */
+  unsigned short itemIdentifier;
+
+  /**
+   * User input.
+   */
+  DOMString input;
+
+  /**
+   * YES/NO response.
+   *
+   * @see MozStkInput.isYesNoRequested
+   */
+  boolean isYesNo;
+
+  /**
+   * User has confirmed or rejected the call during STK_CMD_CALL_SET_UP.
+   *
+   * @see RIL_REQUEST_STK_HANDLE_CALL_SETUP_REQUESTED_FROM_SIM
+   *
+   * true: Confirmed by User.
+   * false: Rejected by User.
+   */
+  boolean hasConfirmed;
+
+  /**
+   * The response for STK_CMD_PROVIDE_LOCAL_INFO
+   */
+  MozStkLocalInfo localInfo;
+
+  /**
+   * The response for STK_CMD_TIMER_MANAGEMENT.
+   * The 'timerValue' is needed if the action of STK_CMD_TIMER_MANAGEMENT is
+   * 'STK_TIMER_DEACTIVATE' or 'STK_TIMER_GET_CURRENT_VALUE'. It shall state
+   * the current value of a timer. And the resolution is 1 second.
+   */
+  MozStkTimer timer;
+};
+
+dictionary MozStkCallEvent
+{
+  /**
+   * The type of this event.
+   * It shall be one of following:
+   *     - nsIDOMMozIccManager.STK_EVENT_TYPE_MT_CALL,
+   *     - nsIDOMMozIccManager.STK_EVENT_TYPE_CALL_CONNECTED,
+   *     - nsIDOMMozIccManager.STK_EVENT_TYPE_CALL_DISCONNECTED.
+   */
+  unsigned short eventType;
+
+  /**
+   * Remote party number.
+   */
+  DOMString number;
+
+  /**
+   * This field is available in 'STK_EVENT_TYPE_CALL_CONNECTED' and
+   * 'STK_EVENT_TYPE_CALL_DISCONNECTED' events.
+   * For the STK_EVENT_TYPE_CALL_CONNECTED event, setting this to true means the
+   * connection is answered by remote end, that is, this is an outgoing call.
+   * For the STK_EVENT_TYPE_CALL_DISCONNECTED event, setting this to true
+   * indicates the connection is hung up by remote.
+   */
+  boolean isIssuedByRemote;
+
+  /**
+   * This field is available in Call Disconnected event to indicate the cause
+   * of disconnection. The cause string is passed to gaia through the error
+   * listener of nsIDOMCallEvent. Null if there's no error.
+   */
+  DOMString error;
+};
+
+dictionary MozStkLocalInfo
+{
+  /**
+   * IMEI information
+   */
+  DOMString imei;
+
+  /**
+   * Location Information
+   */
+  MozStkLocationInfo locationInfo;
+
+  /**
+   * Date information
+   */
+  Date date;
+
+  /**
+   * Language Information
+   *
+   * @see ISO 639-1, Alpha-2 code
+   */
+  DOMString language;
+};
+
+dictionary MozStkLanguageSelectionEvent
+{
+  /**
+   * The type of this event.
+   * It shall be nsIDOMMozIccManager.STK_EVENT_TYPE_LANGUAGE_SELECTION.
+   */
+  unsigned short eventType;
+
+  /**
+   * Language Information
+   *
+   * @see ISO 639-1, Alpha-2 code
+   *      "de" for German, "en" for English, "zh" for Chinese, etc.
+   */
+  DOMString language;
+};
+
+dictionary MozStkBrowserTerminationEvent
+{
+  /**
+   * The type of this event.
+   * It shall be nsIDOMMozIccManager.STK_EVENT_TYPE_BROWSER_TERMINATION
+   */
+  unsigned short eventType;
+
+  /**
+   * This object shall contain the browser termination cause.
+   * See TZ 102 223 8.51. It shall be one of following:
+   * - nsIDOMMozIccManager.STK_BROWSER_TERMINATION_CAUSE_USER
+   * - nsIDOMMozIccManager.STK_BROWSER_TERMINATION_CAUSE_ERROR
+   */
+  unsigned short terminationCause;
+};
+
+dictionary MozStkGeneralEvent
+{
+  /**
+   * The type of this event, MozStkGeneralEvent can be used for all Stk Event
+   * requires no more parameter than event type, including
+   * nsIDOMMozIccManager.STK_EVENT_TYPE_USER_ACTIVITY.
+   * nsIDOMMozIccManager.STK_EVENT_TYPE_IDLE_SCREEN_AVAILABLE.
+   * HCI Connectivity Event(Not defined in interface yet).
+   */
+  unsigned short eventType;
+};

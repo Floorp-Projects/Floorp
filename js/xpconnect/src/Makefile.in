@@ -3,11 +3,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-EXTRA_MDDEPEND_FILES = dom_qsgen.pp dictionary_helper_gen.pp event_impl_gen.pp
+EXTRA_MDDEPEND_FILES = dom_qsgen.pp event_impl_gen.pp
 
 INSTALL_TARGETS += extra_export_files
 extra_export_files_FILES := \
-  DictionaryHelpers.h \
   GeneratedEventClasses.h \
   GeneratedEvents.h \
   $(NULL)
@@ -33,30 +32,10 @@ dom_quickstubs.cpp: $(srcdir)/dom_quickstubs.qsconf \
 	  $(ENABLE_TRACEABLE_FLAGS) \
 	  $(srcdir)/dom_quickstubs.qsconf
 
-DictionaryHelpers.h: DictionaryHelpers.cpp
-
-DictionaryHelpers.cpp: $(srcdir)/dictionary_helper_gen.conf \
-                       event_impl_gen.conf \
-                       $(srcdir)/dictionary_helper_gen.py \
-                       $(LIBXUL_DIST)/sdk/bin/header.py \
-                       $(LIBXUL_DIST)/sdk/bin/xpidl.py
-	$(PYTHON) $(topsrcdir)/config/pythonpath.py \
-	  $(PLY_INCLUDE) \
-	  -I$(LIBXUL_DIST)/sdk/bin \
-	  $(srcdir)/dictionary_helper_gen.py \
-	  -I $(DEPTH)/dist/idl \
-	  --header-output DictionaryHelpers.h \
-	  --stub-output DictionaryHelpers.cpp \
-	  --makedepend-output $(MDDEPDIR)/dictionary_helper_gen.pp \
-	  $(srcdir)/dictionary_helper_gen.conf \
-	  event_impl_gen.conf
-
 event_impl_gen.conf : $(srcdir)/event_impl_gen.conf.in
 	$(call py_action,preprocessor,$(DEFINES) $(ACDEFINES) $^ -o event_impl_gen.conf)
 
-GeneratedEvents.h: $(srcdir)/dictionary_helper_gen.conf \
-                   event_impl_gen.conf \
-                   $(srcdir)/dictionary_helper_gen.py \
+GeneratedEvents.h: event_impl_gen.conf \
                    $(srcdir)/event_impl_gen.py \
                    $(LIBXUL_DIST)/sdk/bin/header.py \
                    $(LIBXUL_DIST)/sdk/bin/xpidl.py
@@ -70,11 +49,8 @@ GeneratedEvents.h: $(srcdir)/dictionary_helper_gen.conf \
 
 GeneratedEventClasses.h: GeneratedEvents.cpp
 
-GeneratedEvents.cpp: DictionaryHelpers.h \
-                     GeneratedEvents.h \
-                     $(srcdir)/dictionary_helper_gen.conf \
+GeneratedEvents.cpp: GeneratedEvents.h \
                      event_impl_gen.conf \
-                     $(srcdir)/dictionary_helper_gen.py \
                      $(srcdir)/event_impl_gen.py \
                      $(LIBXUL_DIST)/sdk/bin/header.py \
                      $(LIBXUL_DIST)/sdk/bin/xpidl.py
@@ -102,7 +78,6 @@ GARBAGE += \
 		xpidl_debug \
 		$(MDDEPDIR)/dom_qsgen.pp \
 		$(MDDEPDIR)/dombindingsgen.pp \
-		$(MDDEPDIR)/dictionary_helper_gen.pp \
 		$(MDDEPDIR)/event_impl_gen.pp \
 		$(wildcard $(topsrcdir)/other-licenses/ply/ply/*.pyc) \
 		$(NULL)

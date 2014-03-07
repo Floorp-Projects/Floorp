@@ -62,7 +62,6 @@ MarkExactStackRoot(JSTracer *trc, Rooted<void*> *rooter, ThingRootKind kind)
       case THING_ROOT_JIT_CODE:    MarkJitCodeRoot(trc, (jit::JitCode **)addr, "exact-jitcode"); break;
       case THING_ROOT_VALUE:       MarkValueRoot(trc, (Value *)addr, "exact-value"); break;
       case THING_ROOT_ID:          MarkIdRoot(trc, (jsid *)addr, "exact-id"); break;
-      case THING_ROOT_PROPERTY_ID: MarkIdRoot(trc, &((js::PropertyId *)addr)->asId(), "exact-propertyid"); break;
       case THING_ROOT_BINDINGS:    ((Bindings *)addr)->trace(trc); break;
       case THING_ROOT_PROPERTY_DESCRIPTOR: ((JSPropertyDescriptor *)addr)->trace(trc); break;
       case THING_ROOT_CUSTOM: {

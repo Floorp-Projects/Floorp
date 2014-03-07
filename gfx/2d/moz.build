@@ -102,6 +102,7 @@ if CONFIG['INTEL_ARCHITECTURE']:
 UNIFIED_SOURCES += [
     'Blur.cpp',
     'DataSourceSurface.cpp',
+    'DataSurfaceHelpers.cpp',
     'DrawEventRecorder.cpp',
     'DrawTargetCairo.cpp',
     'DrawTargetDual.cpp',

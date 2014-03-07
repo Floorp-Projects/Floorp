@@ -43,13 +43,3 @@ interface nsIDOMMozWifiConnectionInfoEvent : nsIDOMEvent
                                                    in long linkSpeed,
                                                    in DOMString ipAddress);
 };
-
-dictionary MozWifiConnectionInfoEventInit : EventInit
-{
-  nsIVariant network;
-  short signalStrength;
-  short relSignalStrength;
-  long linkSpeed;
-  DOMString ipAddress;
-};
-

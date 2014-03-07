@@ -4007,6 +4007,9 @@ LookupOwnPropertyWithFlagsInline(ExclusiveContext *cx,
             if (index < obj->template as<TypedArrayObject>().length()) {
                 objp.set(obj);
                 MarkDenseOrTypedArrayElementFound<allowGC>(propp);
+            } else {
+                objp.set(nullptr);
+                propp.set(nullptr);
             }
             *donep = true;
             return true;

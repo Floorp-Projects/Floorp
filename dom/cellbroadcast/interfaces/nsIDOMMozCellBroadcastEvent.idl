@@ -17,9 +17,3 @@ interface nsIDOMMozCellBroadcastEvent : nsIDOMEvent
                                             in boolean aCancelable,
                                             in nsIDOMMozCellBroadcastMessage aMessage);
 };
-
-dictionary MozCellBroadcastEventInit : EventInit
-{
-  //[binaryname(MessageMoz)]
-  nsIDOMMozCellBroadcastMessage message;
-};

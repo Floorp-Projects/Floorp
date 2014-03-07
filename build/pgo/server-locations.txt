@@ -108,7 +108,7 @@ http://fxfeeds.mozilla.com:80
 
 # Prevent safebrowsing tests from hitting the network for its-a-trap.html and
 # its-an-attack.html.
-http://www.mozilla.org:80
+http://www.itisatrap.org:80
 
 #
 # These are subdomains of <ält.example.org>.
