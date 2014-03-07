@@ -1401,7 +1401,7 @@ Parser<FullParseHandler>::leaveFunction(ParseNode *fn, ParseContext<FullParseHan
              * when leaving the inner function.
              *
              * The dn == outer_dn case arises with generator expressions
-             * (see CompExprTransplanter::transplant, the PN_CODE/PN_NAME
+             * (see LegacyCompExprTransplanter::transplant, the PN_CODE/PN_NAME
              * case), and nowhere else, currently.
              */
             if (dn != outer_dn) {
@@ -5761,16 +5761,16 @@ Parser<ParseHandler>::unaryExpr()
 }
 
 /*
- * A dedicated helper for transplanting the comprehension expression E in
+ * A dedicated helper for transplanting the legacy comprehension expression E in
  *
- *   [E for (V in I)]   // array comprehension
- *   (E for (V in I))   // generator expression
+ *   [E for (V in I)]   // legacy array comprehension
+ *   (E for (V in I))   // legacy generator expression
  *
  * from its initial location in the AST, on the left of the 'for', to its final
  * position on the right. To avoid a separate pass we do this by adjusting the
  * blockids and name binding links that were established when E was parsed.
  *
- * A generator expression desugars like so:
+ * A legacy generator expression desugars like so:
  *
  *   (E for (V in I)) => (function () { for (var V in I) yield E; })()
  *
@@ -5781,7 +5781,7 @@ Parser<ParseHandler>::unaryExpr()
  * NB: This is not a general tree transplanter -- it knows in particular that
  * the one or more bindings induced by V have not yet been created.
  */
-class CompExprTransplanter
+class LegacyCompExprTransplanter
 {
     ParseNode       *root;
     Parser<FullParseHandler> *parser;
@@ -5791,9 +5791,9 @@ class CompExprTransplanter
     HashSet<Definition *> visitedImplicitArguments;
 
   public:
-    CompExprTransplanter(ParseNode *pn, Parser<FullParseHandler> *parser,
-                         ParseContext<FullParseHandler> *outerpc,
-                         GeneratorKind kind, unsigned adj)
+    LegacyCompExprTransplanter(ParseNode *pn, Parser<FullParseHandler> *parser,
+                               ParseContext<FullParseHandler> *outerpc,
+                               GeneratorKind kind, unsigned adj)
       : root(pn), parser(parser), outerpc(outerpc), comprehensionKind(kind), adjust(adj),
         visitedImplicitArguments(parser->context)
     {}
@@ -5806,9 +5806,9 @@ class CompExprTransplanter
 };
 
 /*
- * Any definitions nested within the comprehension expression of a generator
- * expression must move "down" one static level, which of course increases the
- * upvar-frame-skip count.
+ * Any definitions nested within the legacy comprehension expression of a
+ * generator expression must move "down" one static level, which of course
+ * increases the upvar-frame-skip count.
  */
 template <typename ParseHandler>
 static bool
@@ -5838,7 +5838,7 @@ AdjustBlockId(TokenStream &ts, ParseNode *pn, unsigned adjust, ParseContext<Pars
 }
 
 bool
-CompExprTransplanter::transplant(ParseNode *pn)
+LegacyCompExprTransplanter::transplant(ParseNode *pn)
 {
     ParseContext<FullParseHandler> *pc = parser->pc;
 
@@ -5900,11 +5900,11 @@ CompExprTransplanter::transplant(ParseNode *pn)
             /*
              * Adjust the definition's block id only if it is a placeholder not
              * to the left of the root node, and if pn is the last use visited
-             * in the comprehension expression (to avoid adjusting the blockid
-             * multiple times).
+             * in the legacy comprehension expression (to avoid adjusting the
+             * blockid multiple times).
              *
-             * Non-placeholder definitions within the comprehension expression
-             * will be visited further below.
+             * Non-placeholder definitions within the legacy comprehension
+             * expression will be visited further below.
              */
             if (dn->isPlaceholder() && dn->pn_pos >= root->pn_pos && dn->dn_uses == pn) {
                 if (isGenexp && !BumpStaticLevel(parser->tokenStream, dn, pc))
@@ -5925,10 +5925,10 @@ CompExprTransplanter::transplant(ParseNode *pn)
                     /*
                      * The variable originally appeared to be a use of a
                      * definition or placeholder outside the generator, but now
-                     * we know it is scoped within the comprehension tail's
-                     * clauses. Make it (along with any other uses within the
-                     * generator) a use of a new placeholder in the generator's
-                     * lexdeps.
+                     * we know it is scoped within the legacy comprehension
+                     * tail's clauses. Make it (along with any other uses within
+                     * the generator) a use of a new placeholder in the
+                     * generator's lexdeps.
                      */
                     Definition *dn2 = parser->handler.newPlaceholder(atom, parser->pc->blockid(),
                                                                      parser->pos());
@@ -5998,11 +5998,11 @@ CompExprTransplanter::transplant(ParseNode *pn)
     return true;
 }
 
-// Parsing JS1.7-style comprehensions is terrible: we parse the head expression
-// as if it's part of a comma expression, then when we see the "for" we
-// transplant the parsed expression into the inside of a constructed
+// Parsing legacy (JS1.7-style) comprehensions is terrible: we parse the head
+// expression as if it's part of a comma expression, then when we see the "for"
+// we transplant the parsed expression into the inside of a constructed
 // for-of/for-in/for-each tail.  Transplanting an already-parsed expression is
-// tricky, but the CompExprTransplanter handles most of that.
+// tricky, but the LegacyCompExprTransplanter handles most of that.
 //
 // The one remaining thing to patch up is the block scope depth.  We need to
 // compute the maximum block scope depth of a function, so we know how much
@@ -6018,7 +6018,7 @@ CompExprTransplanter::transplant(ParseNode *pn)
 //
 template <typename ParseHandler>
 static unsigned
-ComprehensionHeadBlockScopeDepth(ParseContext<ParseHandler> *pc)
+LegacyComprehensionHeadBlockScopeDepth(ParseContext<ParseHandler> *pc)
 {
     return pc->topStmt ? pc->topStmt->innerBlockScopeDepth : pc->blockScopeDepth;
 }
@@ -6034,10 +6034,10 @@ ComprehensionHeadBlockScopeDepth(ParseContext<ParseHandler> *pc)
  */
 template <>
 ParseNode *
-Parser<FullParseHandler>::comprehensionTail(ParseNode *bodyStmt, unsigned blockid,
-                                            GeneratorKind comprehensionKind,
-                                            ParseContext<FullParseHandler> *outerpc,
-                                            unsigned innerBlockScopeDepth)
+Parser<FullParseHandler>::legacyComprehensionTail(ParseNode *bodyStmt, unsigned blockid,
+                                                  GeneratorKind comprehensionKind,
+                                                  ParseContext<FullParseHandler> *outerpc,
+                                                  unsigned innerBlockScopeDepth)
 {
     /*
      * If we saw any inner functions while processing the generator expression
@@ -6102,7 +6102,7 @@ Parser<FullParseHandler>::comprehensionTail(ParseNode *bodyStmt, unsigned blocki
 
     pnp = &pn->pn_expr;
 
-    CompExprTransplanter transplanter(bodyStmt, this, outerpc, comprehensionKind, adjust);
+    LegacyCompExprTransplanter transplanter(bodyStmt, this, outerpc, comprehensionKind, adjust);
     if (!transplanter.init())
         return null();
 
@@ -6270,7 +6270,7 @@ Parser<FullParseHandler>::comprehensionTail(ParseNode *bodyStmt, unsigned blocki
 
 template <>
 ParseNode*
-Parser<FullParseHandler>::arrayComprehension(ParseNode *array)
+Parser<FullParseHandler>::legacyArrayComprehension(ParseNode *array)
 {
     array->setKind(PNK_ARRAYCOMP);
 
@@ -6287,8 +6287,8 @@ Parser<FullParseHandler>::arrayComprehension(ParseNode *array)
     if (!arrayPush)
         return null();
 
-    ParseNode *comp = comprehensionTail(arrayPush, array->pn_blockid, NotGenerator,
-                                        nullptr, ComprehensionHeadBlockScopeDepth(pc));
+    ParseNode *comp = legacyComprehensionTail(arrayPush, array->pn_blockid, NotGenerator,
+                                              nullptr, LegacyComprehensionHeadBlockScopeDepth(pc));
     if (!comp)
         return null();
 
@@ -6301,7 +6301,7 @@ Parser<FullParseHandler>::arrayComprehension(ParseNode *array)
 
 template <>
 SyntaxParseHandler::Node
-Parser<SyntaxParseHandler>::arrayComprehension(Node array)
+Parser<SyntaxParseHandler>::legacyArrayComprehension(Node array)
 {
     abortIfSyntaxParser();
     return null();
@@ -6313,7 +6313,7 @@ Parser<SyntaxParseHandler>::arrayComprehension(Node array)
  * Starting from a |for| keyword after an expression, parse the comprehension
  * tail completing this generator expression. Wrap the expression at kid in a
  * generator function that is immediately called to evaluate to the generator
- * iterator that is the value of this generator expression.
+ * iterator that is the value of this legacy generator expression.
  *
  * |kid| must be the expression before the |for| keyword; we return an
  * application of a generator function that includes the |for| loops and
@@ -6326,7 +6326,7 @@ Parser<SyntaxParseHandler>::arrayComprehension(Node array)
  */
 template <>
 ParseNode *
-Parser<FullParseHandler>::generatorExpr(ParseNode *kid)
+Parser<FullParseHandler>::legacyGeneratorExpr(ParseNode *kid)
 {
     JS_ASSERT(tokenStream.isCurrentTokenType(TOK_FOR));
 
@@ -6384,8 +6384,9 @@ Parser<FullParseHandler>::generatorExpr(ParseNode *kid)
         genFunbox->inGenexpLambda = true;
         genfn->pn_blockid = genpc.bodyid;
 
-        ParseNode *body = comprehensionTail(yieldStmt, outerpc->blockid(), LegacyGenerator, outerpc,
-                                            ComprehensionHeadBlockScopeDepth(outerpc));
+        ParseNode *body = legacyComprehensionTail(yieldStmt, outerpc->blockid(), LegacyGenerator,
+                                                  outerpc,
+                                                  LegacyComprehensionHeadBlockScopeDepth(outerpc));
         if (!body)
             return null();
         JS_ASSERT(!genfn->pn_body);
@@ -6412,7 +6413,7 @@ Parser<FullParseHandler>::generatorExpr(ParseNode *kid)
 
 template <>
 SyntaxParseHandler::Node
-Parser<SyntaxParseHandler>::generatorExpr(Node kid)
+Parser<SyntaxParseHandler>::legacyGeneratorExpr(Node kid)
 {
     JS_ALWAYS_FALSE(abortIfSyntaxParser());
     return SyntaxParseHandler::NodeFailure;
@@ -6478,7 +6479,7 @@ Parser<ParseHandler>::argumentList(Node listNode, bool *isSpread)
                                  JSMSG_BAD_GENEXP_BODY, js_yield_str);
                 return false;
             }
-            argNode = generatorExpr(argNode);
+            argNode = legacyGeneratorExpr(argNode);
             if (!argNode)
                 return false;
             if (!arg0 || tokenStream.peekToken() == TOK_COMMA) {
@@ -6736,7 +6737,7 @@ Parser<ParseHandler>::arrayInitializer()
          * At this point, (index == 0 && missingTrailingComma) implies one
          * element initialiser was parsed.
          *
-         * An array comprehension of the form:
+         * A legacy array comprehension of the form:
          *
          *   [i * j for (i in o) for (j in p) if (i != j)]
          *
@@ -6751,10 +6752,10 @@ Parser<ParseHandler>::arrayInitializer()
          *     array
          *   }
          *
-         * where array is a nameless block-local variable. The "roughly"
-         * means that an implementation may optimize away the array.push.
-         * An array comprehension opens exactly one block scope, no matter
-         * how many for heads it contains.
+         * where array is a nameless block-local variable. The "roughly" means
+         * that an implementation may optimize away the array.push.  A legacy
+         * array comprehension opens exactly one block scope, no matter how many
+         * for heads it contains.
          *
          * Each let () {...} or for (let ...) ... compiles to:
          *
@@ -6774,12 +6775,12 @@ Parser<ParseHandler>::arrayInitializer()
          * JSOP_SETLOCAL ops. These ops have an immediate operand, the local
          * slot's stack index from fp->spbase.
          *
-         * The array comprehension iteration step, array.push(i * j) in
-         * the example above, is done by <i * j>; JSOP_ARRAYPUSH <array>,
-         * where <array> is the index of array's stack slot.
+         * The legacy array comprehension iteration step, array.push(i * j) in
+         * the example above, is done by <i * j>; JSOP_ARRAYPUSH <array>, where
+         * <array> is the index of array's stack slot.
          */
         if (index == 0 && !spread && tokenStream.matchToken(TOK_FOR) && missingTrailingComma)
-            return arrayComprehension(literal);
+            return legacyArrayComprehension(literal);
 
         MUST_MATCH_TOKEN(TOK_RB, JSMSG_BRACKET_AFTER_LIST);
     }
@@ -7158,7 +7159,7 @@ Parser<ParseHandler>::parenExpr(bool *genexp)
                    JSMSG_BAD_GENERATOR_SYNTAX, js_generator_str);
             return null();
         }
-        pn = generatorExpr(pn);
+        pn = legacyGeneratorExpr(pn);
         if (!pn)
             return null();
         handler.setBeginPosition(pn, begin);
