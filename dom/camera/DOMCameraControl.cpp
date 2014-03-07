@@ -399,6 +399,19 @@ nsDOMCameraControl::SetFocusMode(const nsAString& aFocusMode, ErrorResult& aRv)
   aRv = mCameraControl->Set(CAMERA_PARAM_FOCUSMODE, aFocusMode);
 }
 
+void
+nsDOMCameraControl::GetIsoMode(nsString& aIsoMode, ErrorResult& aRv)
+{
+  MOZ_ASSERT(mCameraControl);
+  aRv = mCameraControl->Get(CAMERA_PARAM_ISOMODE, aIsoMode);
+}
+void
+nsDOMCameraControl::SetIsoMode(const nsAString& aIsoMode, ErrorResult& aRv)
+{
+  MOZ_ASSERT(mCameraControl);
+  aRv = mCameraControl->Set(CAMERA_PARAM_ISOMODE, aIsoMode);
+}
+
 double
 nsDOMCameraControl::GetZoom(ErrorResult& aRv)
 {

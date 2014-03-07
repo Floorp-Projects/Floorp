@@ -134,6 +134,9 @@ CameraCapabilities::Populate(ICameraControl* aCameraControl)
   rv = aCameraControl->Get(CAMERA_PARAM_SUPPORTED_FOCUSMODES, mFocusModes);
   LOG_IF_ERROR(rv, CAMERA_PARAM_SUPPORTED_FOCUSMODES);
 
+  rv = aCameraControl->Get(CAMERA_PARAM_SUPPORTED_ISOMODES, mIsoModes);
+  LOG_IF_ERROR(rv, CAMERA_PARAM_SUPPORTED_ISOMODES);
+
   rv = aCameraControl->Get(CAMERA_PARAM_SUPPORTED_ZOOMRATIOS, mZoomRatios);
   LOG_IF_ERROR(rv, CAMERA_PARAM_SUPPORTED_ZOOMRATIOS);
 
@@ -276,6 +279,12 @@ JS::Value
 CameraCapabilities::RecorderProfiles(JSContext* aCx) const
 {
   return mRecorderProfiles;
+}
+
+void
+CameraCapabilities::GetIsoModes(nsTArray<nsString>& retval) const
+{
+  retval = mIsoModes;
 }
 
 } // namespace dom
