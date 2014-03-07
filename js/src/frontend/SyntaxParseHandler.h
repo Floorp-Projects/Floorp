@@ -107,6 +107,9 @@ class SyntaxParseHandler
 
     // Expressions
 
+    Node newArrayComprehension(Node body, unsigned blockid, const TokenPos &pos) {
+        return NodeGeneric;
+    }
     Node newArrayLiteral(uint32_t begin, unsigned blockid) { return NodeGeneric; }
     bool addElision(Node literal, const TokenPos &pos) { return true; }
     bool addSpreadElement(Node literal, uint32_t begin, Node inner) { return true; }

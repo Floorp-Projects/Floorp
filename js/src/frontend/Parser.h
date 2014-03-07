@@ -543,11 +543,10 @@ class Parser : private AutoGCRooter, public StrictModeGetter
     Node unaryOpExpr(ParseNodeKind kind, JSOp op, uint32_t begin);
 
     Node condition();
-    Node comprehensionTail(Node kid, unsigned blockid, bool isGenexp,
+    Node comprehensionTail(Node kid, unsigned blockid, GeneratorKind comprehensionKind,
                            ParseContext<ParseHandler> *outerpc,
-                           ParseNodeKind kind, JSOp op,
                            unsigned innerBlockScopeDepth);
-    bool arrayInitializerComprehensionTail(Node pn);
+    Node arrayComprehension(Node array);
     Node generatorExpr(Node kid);
     bool argumentList(Node listNode, bool *isSpread);
     Node letBlock(LetContext letContext);

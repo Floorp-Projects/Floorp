@@ -5786,15 +5786,15 @@ class CompExprTransplanter
     ParseNode       *root;
     Parser<FullParseHandler> *parser;
     ParseContext<FullParseHandler> *outerpc;
-    bool            genexp;
+    GeneratorKind   comprehensionKind;
     unsigned        adjust;
     HashSet<Definition *> visitedImplicitArguments;
 
   public:
     CompExprTransplanter(ParseNode *pn, Parser<FullParseHandler> *parser,
                          ParseContext<FullParseHandler> *outerpc,
-                         bool ge, unsigned adj)
-      : root(pn), parser(parser), outerpc(outerpc), genexp(ge), adjust(adj),
+                         GeneratorKind kind, unsigned adj)
+      : root(pn), parser(parser), outerpc(outerpc), comprehensionKind(kind), adjust(adj),
         visitedImplicitArguments(parser->context)
     {}
 
@@ -5842,6 +5842,8 @@ CompExprTransplanter::transplant(ParseNode *pn)
 {
     ParseContext<FullParseHandler> *pc = parser->pc;
 
+    bool isGenexp = comprehensionKind != NotGenerator;
+
     if (!pn)
         return true;
 
@@ -5887,7 +5889,7 @@ CompExprTransplanter::transplant(ParseNode *pn)
             return false;
 
         if (pn->isDefn()) {
-            if (genexp && !BumpStaticLevel(parser->tokenStream, pn, pc))
+            if (isGenexp && !BumpStaticLevel(parser->tokenStream, pn, pc))
                 return false;
         } else if (pn->isUsed()) {
             JS_ASSERT(pn->pn_cookie.isFree());
@@ -5905,7 +5907,7 @@ CompExprTransplanter::transplant(ParseNode *pn)
              * will be visited further below.
              */
             if (dn->isPlaceholder() && dn->pn_pos >= root->pn_pos && dn->dn_uses == pn) {
-                if (genexp && !BumpStaticLevel(parser->tokenStream, dn, pc))
+                if (isGenexp && !BumpStaticLevel(parser->tokenStream, dn, pc))
                     return false;
                 if (!AdjustBlockId(parser->tokenStream, dn, adjust, pc))
                     return false;
@@ -5916,7 +5918,7 @@ CompExprTransplanter::transplant(ParseNode *pn)
             StmtInfoPC *stmt = LexicalLookup(pc, atom, nullptr, (StmtInfoPC *)nullptr);
             JS_ASSERT(!stmt || stmt != pc->topStmt);
 #endif
-            if (genexp && !dn->isOp(JSOP_CALLEE)) {
+            if (isGenexp && !dn->isOp(JSOP_CALLEE)) {
                 JS_ASSERT(!pc->decls().lookupFirst(atom));
 
                 if (dn->pn_pos < root->pn_pos) {
@@ -5971,7 +5973,7 @@ CompExprTransplanter::transplant(ParseNode *pn)
                      * there may be multiple uses, so we need to maintain a set
                      * to only bump the definition once.
                      */
-                    if (genexp && !visitedImplicitArguments.has(dn)) {
+                    if (isGenexp && !visitedImplicitArguments.has(dn)) {
                         if (!BumpStaticLevel(parser->tokenStream, dn, pc))
                             return false;
                         if (!AdjustBlockId(parser->tokenStream, dn, adjust, pc))
@@ -6032,9 +6034,9 @@ ComprehensionHeadBlockScopeDepth(ParseContext<ParseHandler> *pc)
  */
 template <>
 ParseNode *
-Parser<FullParseHandler>::comprehensionTail(ParseNode *kid, unsigned blockid, bool isGenexp,
+Parser<FullParseHandler>::comprehensionTail(ParseNode *bodyStmt, unsigned blockid,
+                                            GeneratorKind comprehensionKind,
                                             ParseContext<FullParseHandler> *outerpc,
-                                            ParseNodeKind kind, JSOp op,
                                             unsigned innerBlockScopeDepth)
 {
     /*
@@ -6057,7 +6059,10 @@ Parser<FullParseHandler>::comprehensionTail(ParseNode *kid, unsigned blockid, bo
 
     JS_ASSERT(tokenStream.isCurrentTokenType(TOK_FOR));
 
-    if (kind == PNK_SEMI) {
+    bool isGenexp = comprehensionKind != NotGenerator;
+
+    if (isGenexp) {
+        JS_ASSERT(comprehensionKind == LegacyGenerator);
         /*
          * Generator expression desugars to an immediately applied lambda that
          * yields the next value from a for-in loop (possibly nested, and with
@@ -6068,8 +6073,6 @@ Parser<FullParseHandler>::comprehensionTail(ParseNode *kid, unsigned blockid, bo
             return null();
         adjust = pn->pn_blockid - blockid;
     } else {
-        JS_ASSERT(kind == PNK_ARRAYPUSH);
-
         /*
          * Make a parse-node and literal object representing the block scope of
          * this array comprehension. Our caller in primaryExpr, the TOK_LB case
@@ -6095,13 +6098,15 @@ Parser<FullParseHandler>::comprehensionTail(ParseNode *kid, unsigned blockid, bo
         adjust = blockid - adjust;
     }
 
+    handler.setBeginPosition(pn, bodyStmt);
+
     pnp = &pn->pn_expr;
 
-    CompExprTransplanter transplanter(kid, this, outerpc, kind == PNK_SEMI, adjust);
+    CompExprTransplanter transplanter(bodyStmt, this, outerpc, comprehensionKind, adjust);
     if (!transplanter.init())
         return null();
 
-    if (!transplanter.transplant(kid))
+    if (!transplanter.transplant(bodyStmt))
         return null();
 
     JS_ASSERT(pc->staticScope && pc->staticScope == pn->pn_objbox->object);
@@ -6253,50 +6258,53 @@ Parser<FullParseHandler>::comprehensionTail(ParseNode *kid, unsigned blockid, bo
         pnp = &pn2->pn_kid2;
     }
 
-    pn2 = UnaryNode::create(kind, &handler);
-    if (!pn2)
-        return null();
-    pn2->setOp(op);
-    pn2->pn_kid = kid;
-    *pnp = pn2;
+    *pnp = bodyStmt;
 
     pc->topStmt->innerBlockScopeDepth += innerBlockScopeDepth;
     PopStatementPC(tokenStream, pc);
+
+    handler.setEndPosition(pn, pos().end);
+
     return pn;
 }
 
 template <>
-bool
-Parser<FullParseHandler>::arrayInitializerComprehensionTail(ParseNode *pn)
+ParseNode*
+Parser<FullParseHandler>::arrayComprehension(ParseNode *array)
 {
-    /* Relabel pn as an array comprehension node. */
-    pn->setKind(PNK_ARRAYCOMP);
+    array->setKind(PNK_ARRAYCOMP);
 
-    /*
-     * Remove the comprehension expression from pn's linked list
-     * and save it via pnexp.  We'll re-install it underneath the
-     * ARRAYPUSH node after we parse the rest of the comprehension.
-     */
-    ParseNode *pnexp = pn->last();
-    JS_ASSERT(pn->pn_count == 1);
-    pn->pn_count = 0;
-    pn->pn_tail = &pn->pn_head;
-    *pn->pn_tail = nullptr;
+    // Remove the single element from array's linked list, leaving us with an
+    // empty array literal and a comprehension expression.
+    JS_ASSERT(array->pn_count == 1);
+    ParseNode *bodyExpr = array->last();
+    array->pn_count = 0;
+    array->pn_tail = &array->pn_head;
+    *array->pn_tail = nullptr;
 
-    ParseNode *pntop = comprehensionTail(pnexp, pn->pn_blockid, false, nullptr,
-                                         PNK_ARRAYPUSH, JSOP_ARRAYPUSH,
-                                         ComprehensionHeadBlockScopeDepth(pc));
-    if (!pntop)
-        return false;
-    pn->append(pntop);
-    return true;
+    ParseNode *arrayPush = handler.newUnary(PNK_ARRAYPUSH, JSOP_ARRAYPUSH,
+                                            bodyExpr->pn_pos.begin, bodyExpr);
+    if (!arrayPush)
+        return null();
+
+    ParseNode *comp = comprehensionTail(arrayPush, array->pn_blockid, NotGenerator,
+                                        nullptr, ComprehensionHeadBlockScopeDepth(pc));
+    if (!comp)
+        return null();
+
+    MUST_MATCH_TOKEN(TOK_RB, JSMSG_BRACKET_AFTER_ARRAY_COMPREHENSION);
+
+    TokenPos p = handler.getPosition(array);
+    p.end = pos().end;
+    return handler.newArrayComprehension(comp, array->pn_blockid, p);
 }
 
 template <>
-bool
-Parser<SyntaxParseHandler>::arrayInitializerComprehensionTail(Node pn)
+SyntaxParseHandler::Node
+Parser<SyntaxParseHandler>::arrayComprehension(Node array)
 {
-    return abortIfSyntaxParser();
+    abortIfSyntaxParser();
+    return null();
 }
 
 #if JS_HAS_GENERATOR_EXPRS
@@ -6323,13 +6331,15 @@ Parser<FullParseHandler>::generatorExpr(ParseNode *kid)
     JS_ASSERT(tokenStream.isCurrentTokenType(TOK_FOR));
 
     /* Create a |yield| node for |kid|. */
-    ParseNode *pn = UnaryNode::create(PNK_YIELD, &handler);
-    if (!pn)
+    ParseNode *yieldExpr = handler.newUnary(PNK_YIELD, JSOP_NOP, kid->pn_pos.begin, kid);
+    if (!yieldExpr)
         return null();
-    pn->setOp(JSOP_NOP);
-    pn->setInParens(true);
-    pn->pn_pos = kid->pn_pos;
-    pn->pn_kid = kid;
+    yieldExpr->setInParens(true);
+
+    // A statement to wrap the yield expression.
+    ParseNode *yieldStmt = handler.newExprStatement(yieldExpr, kid->pn_pos.end);
+    if (!yieldStmt)
+        return null();
 
     /* Make a new node for the desugared generator function. */
     ParseNode *genfn = CodeNode::create(PNK_FUNCTION, &handler);
@@ -6374,15 +6384,14 @@ Parser<FullParseHandler>::generatorExpr(ParseNode *kid)
         genFunbox->inGenexpLambda = true;
         genfn->pn_blockid = genpc.bodyid;
 
-        ParseNode *body = comprehensionTail(pn, outerpc->blockid(), true, outerpc,
-                                            PNK_SEMI, JSOP_NOP,
+        ParseNode *body = comprehensionTail(yieldStmt, outerpc->blockid(), LegacyGenerator, outerpc,
                                             ComprehensionHeadBlockScopeDepth(outerpc));
         if (!body)
             return null();
         JS_ASSERT(!genfn->pn_body);
         genfn->pn_body = body;
-        genfn->pn_pos.begin = body->pn_pos.begin = kid->pn_pos.begin;
-        genfn->pn_pos.end = body->pn_pos.end = pos().end;
+        genfn->pn_pos.begin = body->pn_pos.begin;
+        genfn->pn_pos.end = body->pn_pos.end;
 
         if (!leaveFunction(genfn, outerpc))
             return null();
@@ -6769,10 +6778,8 @@ Parser<ParseHandler>::arrayInitializer()
          * the example above, is done by <i * j>; JSOP_ARRAYPUSH <array>,
          * where <array> is the index of array's stack slot.
          */
-        if (index == 0 && !spread && tokenStream.matchToken(TOK_FOR) && missingTrailingComma) {
-            if (!arrayInitializerComprehensionTail(literal))
-                return null();
-        }
+        if (index == 0 && !spread && tokenStream.matchToken(TOK_FOR) && missingTrailingComma)
+            return arrayComprehension(literal);
 
         MUST_MATCH_TOKEN(TOK_RB, JSMSG_BRACKET_AFTER_LIST);
     }
