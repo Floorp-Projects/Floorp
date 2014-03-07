@@ -149,8 +149,8 @@ this.SafeBrowsing = {
   addMozEntries: function() {
     // Add test entries to the DB.
     // XXX bug 779008 - this could be done by DB itself?
-    const phishURL   = "mozilla.org/firefox/its-a-trap.html";
-    const malwareURL = "mozilla.org/firefox/its-an-attack.html";
+    const phishURL   = "itisatrap.org/firefox/its-a-trap.html";
+    const malwareURL = "itisatrap.org/firefox/its-an-attack.html";
 
     let update = "n:1000\ni:test-malware-simple\nad:1\n" +
                  "a:1:32:" + malwareURL.length + "\n" +

@@ -8,7 +8,6 @@ XPIDL_SOURCES += [
     'nsIDOMIccInfo.idl',
     'nsIDOMIccManager.idl',
     'nsIIccProvider.idl',
-    'SimToolKit.idl',
 ]
 
 XPIDL_MODULE = 'dom_icc'

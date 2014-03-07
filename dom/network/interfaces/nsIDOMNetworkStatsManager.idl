@@ -7,22 +7,6 @@
 interface nsIDOMDOMRequest;
 
 /**
- * Provide the detailed options for specifying different kinds of data filtering
- * in getSamples function.
- */
-dictionary NetworkStatsGetOptions
-{
-  /**
-   * App manifest URL is used to filter network stats by app, while service type
-   * is used to filter stats by system service.
-   * Note that, these two options cannot be specified at the same time for now;
-   * others, an NS_ERROR_NOT_IMPLMENTED exception will be thrown.
-   */
-  DOMString appManifestURL;
-  DOMString serviceType;
-};
-
-/**
  * Represents a data interface for which the manager is recording statistics.
  */
 [scriptable, uuid(f540615b-d803-43ff-8200-2a9d145a5645)]
@@ -34,12 +18,6 @@ interface nsIDOMMozNetworkStatsInterface : nsISupports
    * Id value is '0' for wifi or the iccid for mobile (SIM).
    */
   readonly attribute DOMString id;
-};
-
-dictionary NetworkStatsAlarmOptions
-{
-  jsval startTime; // Date object
-  jsval data;
 };
 
 [scriptable, builtinclass, uuid(063ebeb2-5c6e-47ae-bdcd-5e6ebdc7a68c)]

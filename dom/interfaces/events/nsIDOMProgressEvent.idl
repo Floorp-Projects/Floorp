@@ -24,9 +24,3 @@ interface nsIDOMProgressEvent : nsIDOMEvent
                          in unsigned long long loadedArg,
                          in unsigned long long totalArg);
 };
-
-dictionary ProgressEventInit : EventInit {
-  boolean lengthComputable;
-  unsigned long long loaded;
-  unsigned long long total;
-};
