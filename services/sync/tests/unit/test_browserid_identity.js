@@ -35,23 +35,23 @@ MockFxAccountsClient.prototype = {
 };
 
 function MockFxAccounts() {
-  return new FxAccounts({
+  let fxa = new FxAccounts({
     _now_is: Date.now(),
 
     now: function () {
       return this._now_is;
     },
 
-    getCertificate: function(data, keyPair, mustBeValidUntil) {
-      this.cert = {
-        validUntil: Date.now() + CERT_LIFETIME,
-        cert: "certificate",
-      };
-      return Promise.resolve(this.cert.cert);
-    },
-
     fxAccountsClient: new MockFxAccountsClient()
   });
+  fxa.internal.currentAccountState.getCertificate = function(data, keyPair, mustBeValidUntil) {
+    this.cert = {
+      validUntil: fxa.internal.now() + CERT_LIFETIME,
+      cert: "certificate",
+    };
+    return Promise.resolve(this.cert.cert);
+  };
+  return fxa;
 }
 
 function run_test() {
@@ -147,7 +147,7 @@ add_test(function test_resourceAuthenticatorSkew() {
   configureFxAccountIdentity(browseridManager, identityConfig);
 
   // Ensure the new FxAccounts mock has a signed-in user.
-  fxa.internal.signedInUser = browseridManager._fxaService.internal.signedInUser;
+  fxa.internal.currentAccountState.signedInUser = browseridManager._fxaService.internal.currentAccountState.signedInUser;
 
   browseridManager._fxaService = fxa;
 
@@ -200,7 +200,7 @@ add_test(function test_RESTResourceAuthenticatorSkew() {
   configureFxAccountIdentity(browseridManager, identityConfig);
 
   // Ensure the new FxAccounts mock has a signed-in user.
-  fxa.internal.signedInUser = browseridManager._fxaService.internal.signedInUser;
+  fxa.internal.currentAccountState.signedInUser = browseridManager._fxaService.internal.currentAccountState.signedInUser;
 
   browseridManager._fxaService = fxa;
 
