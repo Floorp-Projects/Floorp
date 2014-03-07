@@ -5629,7 +5629,7 @@ IonBuilder::newBlock(MBasicBlock *predecessor, jsbytecode *pc, uint32_t loopDept
 MBasicBlock *
 IonBuilder::newOsrPreheader(MBasicBlock *predecessor, jsbytecode *loopEntry)
 {
-    JS_ASSERT((JSOp)*loopEntry == JSOP_LOOPENTRY);
+    JS_ASSERT(LoopEntryCanIonOsr(loopEntry));
     JS_ASSERT(loopEntry == info().osrPc());
 
     // Create two blocks: one for the OSR entry with no predecessors, one for
