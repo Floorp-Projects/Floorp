@@ -67,7 +67,7 @@ gTests.push({
 
     ok(!item, "Item not in grid");
     ok(!gStartView._pinHelper.isPinned(uriFromIndex(2)), "Item hidden");
-    is(gStartView._set.itemCount, gStartView._limit, "Grid repopulated");
+    is(gStartView._set.itemCount, gStartView.maxTiles, "Grid repopulated");
 
     // --------- hide multiple items
 
@@ -94,7 +94,7 @@ gTests.push({
 
     ok(!item1 && !item2 && !item3, "Items are not in grid");
     ok(!gStartView._pinHelper.isPinned(uriFromIndex(0)) && !gStartView._pinHelper.isPinned(uriFromIndex(5)) && !gStartView._pinHelper.isPinned(uriFromIndex(12)) , "Items hidden");
-    ok(gStartView._set.itemCount === gStartView._limit - 1, "Grid repopulated");
+    ok(gStartView._set.itemCount === gStartView.maxTiles - 1, "Grid repopulated");
   }
 });
 
@@ -126,7 +126,7 @@ gTests.push({
     ok(!item, "Item not in grid");
     ok(HistoryTestHelper._nodes[uriFromIndex(2)], "Item not actually deleted yet");
     ok(!restoreButton.hidden, "Restore button is visible.");
-    ok(gStartView._set.itemCount === gStartView._limit, "Grid repopulated");
+    ok(gStartView._set.itemCount === gStartView.maxTiles, "Grid repopulated");
 
     let promise = waitForEvent(Elements.contextappbar, "transitionend", null, Elements.contextappbar);
     EventUtils.synthesizeMouse(restoreButton, 10, 10, {}, window);
@@ -135,7 +135,7 @@ gTests.push({
     item = gStartView._set.getItemsByUrl(uriFromIndex(2))[0];
     ok(item, "Item back in grid");
     ok(gStartView._set.getIndexOfItem(item) === initialLocation, "Back in same position.");
-    ok(gStartView._set.itemCount === gStartView._limit, "Grid repopulated");
+    ok(gStartView._set.itemCount === gStartView.maxTiles, "Grid repopulated");
 
     // --------- delete item 2 for realz
 
@@ -174,7 +174,7 @@ gTests.push({
 
     ok(!item, "Item not in grid");
     ok(!HistoryTestHelper._nodes[uriFromIndex(2)], "Item RIP");
-    is(gStartView._set.itemCount, gStartView._limit, "Grid repopulated");
+    is(gStartView._set.itemCount, gStartView.maxTiles, "Grid repopulated");
 
     // --------- delete multiple items and restore
 
@@ -209,7 +209,7 @@ gTests.push({
     ok(HistoryTestHelper._nodes[uriFromIndex(0)] && HistoryTestHelper._nodes[uriFromIndex(5)] && HistoryTestHelper._nodes[uriFromIndex(12)],
       "Items not deleted yet");
     ok(!restoreButton.hidden, "Restore button is visible.");
-    ok(gStartView._set.itemCount === gStartView._limit - 1, "Grid repopulated");
+    ok(gStartView._set.itemCount === gStartView.maxTiles - 1, "Grid repopulated");
 
     let promise = waitForEvent(Elements.contextappbar, "transitionend", null, Elements.contextappbar);
     EventUtils.synthesizeMouse(restoreButton, 10, 10, {}, window);
@@ -223,7 +223,7 @@ gTests.push({
     ok(gStartView._set.getIndexOfItem(item1) === initialLocation1 &&
       gStartView._set.getIndexOfItem(item2) === initialLocation2 &&
       gStartView._set.getIndexOfItem(item3) === initialLocation3, "Items back in the same position.");
-    ok(gStartView._set.itemCount === gStartView._limit, "Grid repopulated");
+    ok(gStartView._set.itemCount === gStartView.maxTiles, "Grid repopulated");
 
     // --------- delete multiple items for good
 
@@ -254,7 +254,7 @@ gTests.push({
     ok(HistoryTestHelper._nodes[uriFromIndex(0)] && HistoryTestHelper._nodes[uriFromIndex(5)] && HistoryTestHelper._nodes[uriFromIndex(12)],
       "Items not deleted yet");
     ok(!restoreButton.hidden, "Restore button is visible.");
-    ok(gStartView._set.itemCount === gStartView._limit - 1, "Grid repopulated");
+    ok(gStartView._set.itemCount === gStartView.maxTiles - 1, "Grid repopulated");
 
     let promise = waitForEvent(Elements.contextappbar, "transitionend", null, Elements.contextappbar);
     Elements.contextappbar.dismiss();
@@ -267,6 +267,6 @@ gTests.push({
     ok(!item1 && !item2 && !item3, "Items are not in grid");
     ok(!HistoryTestHelper._nodes[uriFromIndex(0)] && !HistoryTestHelper._nodes[uriFromIndex(5)] && !HistoryTestHelper._nodes[uriFromIndex(12)],
       "Items are gone");
-    ok(gStartView._set.itemCount === gStartView._limit - 1, "Grid repopulated");
+    ok(gStartView._set.itemCount === gStartView.maxTiles - 1, "Grid repopulated");
   }
 });

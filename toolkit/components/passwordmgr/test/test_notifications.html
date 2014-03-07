@@ -193,27 +193,30 @@ function checkTest() {
       /* autocomplete=off tests... */
 
       case 9:
-        // Check for no notification popup when autocomplete=off present
+        // Check for notification popup when autocomplete=off present
         is(gotUser, "notifyu1", "Checking submitted username");
         is(gotPass, "notifyp1", "Checking submitted password");
         popup = getPopup(popupNotifications, "password-save");
-        ok(!popup, "checking for no notification popup");
+        ok(popup, "checking for notification popup");
+        popup.remove();
         break;
 
       case 10:
-        // Check for no notification popup when autocomplete=off present
+        // Check for notification popup when autocomplete=off present
         is(gotUser, "notifyu1", "Checking submitted username");
         is(gotPass, "notifyp1", "Checking submitted password");
         popup = getPopup(popupNotifications, "password-save");
-        ok(!popup, "checking for no notification popup");
+        ok(popup, "checking for notification popup");
+        popup.remove();
         break;
 
       case 11:
-        // Check for no notification popup when autocomplete=off present
+        // Check for notification popup when autocomplete=off present
         is(gotUser, "notifyu1", "Checking submitted username");
         is(gotPass, "notifyp1", "Checking submitted password");
         popup = getPopup(popupNotifications, "password-save");
-        ok(!popup, "checking for no notification popup");
+        ok(popup, "checking for notification popup");
+        popup.remove();
         break;
 
       /* no password field test... */
