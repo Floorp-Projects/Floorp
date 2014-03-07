@@ -391,6 +391,12 @@ class MochitestOptions(optparse.OptionParser):
                    "when not set, recoverable but misleading SIGSEGV instances "
                    "may occur in Ion/Odin JIT code."
         }],
+        [["--quiet"],
+         { "action": "store_true",
+           "default": False,
+           "dest": "quiet",
+           "help": "Do not print test log lines unless a failure occurs."
+         }],
     ]
 
     def __init__(self, **kwargs):
