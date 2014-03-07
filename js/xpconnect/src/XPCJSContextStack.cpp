@@ -176,6 +176,9 @@ XPCJSContextStack::InitSafeJSContext()
         MOZ_CRASH();
     JSAutoRequest req(mSafeJSContext);
     ContextOptionsRef(mSafeJSContext).setNoDefaultCompartmentObject(true);
+#ifdef DEBUG
++    JS::ContextOptionsRef(mSafeJSContext).setExtraWarnings(true);
+#endif
 
     JS_SetErrorReporter(mSafeJSContext, xpc::SystemErrorReporter);
 
