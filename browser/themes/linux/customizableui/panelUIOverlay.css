@@ -41,10 +41,16 @@ toolbarbutton.social-provider-menuitem > .toolbarbutton-icon {
   visibility: hidden;
 }
 
+menuitem.subviewbutton {
+  -moz-appearance: none !important;
+}
+
 menu.subviewbutton > .menu-right {
   -moz-appearance: none;
   list-style-image: url(chrome://browser/skin/places/bookmarks-menu-arrow.png);
   -moz-image-region: rect(0, 16px, 16px, 0);
+  width: 16px;
+  height: 16px;
 }
 
 menu[disabled="true"].subviewbutton > .menu-right {
