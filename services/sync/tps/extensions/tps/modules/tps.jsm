@@ -23,6 +23,7 @@ CU.import("resource://tps/logger.jsm");
 CU.import("resource://tps/passwords.jsm");
 CU.import("resource://tps/history.jsm");
 CU.import("resource://tps/forms.jsm");
+CU.import("resource://tps/fxaccounts.jsm");
 CU.import("resource://tps/prefs.jsm");
 CU.import("resource://tps/tabs.jsm");
 CU.import("resource://tps/windows.jsm");
@@ -57,8 +58,11 @@ const SYNC_WIPE_SERVER  = "wipe-server";
 const SYNC_RESET_CLIENT = "reset-client";
 const SYNC_START_OVER   = "start-over";
 
-const OBSERVER_TOPICS = ["weave:engine:start-tracking",
+const OBSERVER_TOPICS = ["fxaccounts:onlogin",
+                         "fxaccounts:onlogout",
+                         "weave:engine:start-tracking",
                          "weave:engine:stop-tracking",
+                         "weave:service:setup-complete",
                          "weave:service:sync:finish",
                          "weave:service:sync:error",
                          "sessionstore-windows-restored",
@@ -71,6 +75,7 @@ let TPS = {
   _currentAction: -1,
   _currentPhase: -1,
   _errors: 0,
+  _setupComplete: false,
   _syncErrors: 0,
   _usSinceEpoch: 0,
   _tabsAdded: 0,
@@ -96,6 +101,15 @@ let TPS = {
         case "private-browsing":
           Logger.logInfo("private browsing " + data);
           break;
+
+        case "fxaccounts:onlogin":
+          this._loggedIn = true;
+          break;
+
+        case "fxaccounts:onlogout":
+          this._loggedIn = false;
+          break;
+
         case "weave:service:sync:error":
           if (this._waitingForSync && this._syncErrors == 0) {
             // if this is the first sync error, retry...
@@ -109,6 +123,10 @@ let TPS = {
             this.DumpError("sync error; aborting test");
             return;
           }
+          break;
+
+        case "weave:service:setup-complete":
+          this._setupComplete = true;
           break;
 
         case "weave:service:sync:finish":
@@ -611,13 +629,13 @@ let TPS = {
 
       // Store account details as prefs so they're accessible to the mozmill
       // framework.
-      prefs.setCharPref('tps.account.username', this.config.account.username);
-      prefs.setCharPref('tps.account.password', this.config.account.password);
-      prefs.setCharPref('tps.account.passphrase', this.config.account.passphrase);
-      if (this.config.account['serverURL']) {
-        prefs.setCharPref('tps.account.serverURL', this.config.account.serverURL);
+      prefs.setCharPref('tps.account.username', this.config.fx_account.username);
+      prefs.setCharPref('tps.account.password', this.config.fx_account.password);
+      // old sync
+      // prefs.setCharPref('tps.account.passphrase', this.config.fx_account.passphrase);
+      if (this.config["serverURL"]) {
+        prefs.setCharPref('tps.account.serverURL', this.config.serverURL);
       }
-
       // start processing the test actions
       this._currentAction = 0;
     }
@@ -704,6 +722,33 @@ let TPS = {
     cb.wait();
   },
 
+
+  /**
+   * Waits for Sync to logged in before returning
+   */
+  waitForLoggedIn: function waitForLoggedIn() {
+    if (!this._loggedIn) {
+      this.waitForEvent("fxaccount:onlogin");
+    }
+
+    let cb = Async.makeSyncCallback();
+    Utils.nextTick(cb);
+    Async.waitForSyncCallback(cb);
+  },
+
+  /**
+   * Waits for Sync to logged in before returning
+   */
+  waitForSetupComplete: function waitForSetup() {
+    if (!this._setupComplete) {
+      this.waitForEvent("weave:service:setup-complete");
+    }
+
+    let cb = Async.makeSyncCallback();
+    Utils.nextTick(cb);
+    Async.waitForSyncCallback(cb);
+  },
+
   /**
    * Waits for Sync to start tracking before returning.
    */
@@ -746,44 +791,37 @@ let TPS = {
       return;
     }
 
-    let account = this.config.account;
+    // old sync: have to add handling for this.config.sync_account
+    let account = this.config.fx_account;
+
     if (!account) {
       this.DumperError("No account information found! Did you use a valid " +
                        "config file?");
       return;
     }
 
-    if (account["serverURL"]) {
-      Weave.Service.serverURL = account["serverURL"];
+    if (this.config["serverURL"]) {
+      Weave.Service.serverURL = this.config.serverURL;
     }
 
     Logger.logInfo("Setting client credentials.");
-    if (account["admin-secret"]) {
-      // if admin-secret is specified, we'll dynamically create
-      // a new sync account
-      Weave.Svc.Prefs.set("admin-secret", account["admin-secret"]);
-      let suffix = account["account-suffix"];
-      Weave.Service.identity.account = "tps" + suffix + "@mozilla.com";
-      Weave.Service.identity.basicPassword = "tps" + suffix + "tps" + suffix;
-      Weave.Service.identity.syncKey = Weave.Utils.generatePassphrase();
-      Weave.Service.createAccount(Weave.Service.identity.account,
-                            Weave.Service.identity.basicPassword,
-                            "dummy1", "dummy2");
-    } else if (account["username"] && account["password"] &&
-               account["passphrase"]) {
-      Weave.Service.identity.account = account["username"];
-      Weave.Service.identity.basicPassword = account["password"];
-      Weave.Service.identity.syncKey = account["passphrase"];
+    if (account["username"] && account["password"]) { // && account["passphrase"]) {
+      FxAccountsHelper.signIn(account["username"], account["password"]);
+      this.waitForSetupComplete();
+
+      // Old sync code - has to be reactivated later for fallback
+      //Weave.Service.identity.account = account["username"];
+      //Weave.Service.identity.basicPassword = account["password"];
+      //Weave.Service.identity.syncKey = account["passphrase"];
     } else {
-      this.DumpError("Must specify admin-secret, or " +
-                     "username/password/passphrase in the config file");
+      this.DumpError("Must specify username/password in the config file");
       return;
     }
 
-    Weave.Service.login();
-    Logger.AssertEqual(Weave.Status.service, Weave.STATUS_OK, "Weave status not OK");
-    Weave.Svc.Obs.notify("weave:service:setup-complete");
-    this._loggedIn = true;
+    //Weave.Service.login();
+    //this._loggedIn = true;
+    //Weave.Svc.Obs.notify("weave:service:setup-complete");
+    Logger.AssertEqual(Weave.Status.service, Weave.STATUS_OK, "Weave status OK");
 
     this.waitForTracking();
   },
