@@ -266,18 +266,25 @@
             // Shouldn't act on e.g. context menus being shown from within the panel.
             return;
           }
-          switch(aEvent.type) {
+          switch (aEvent.type) {
             case "click":
               if (aEvent.originalTarget == this._clickCapturer) {
                 this.showMainView();
               }
               break;
             case "overflow":
-              // Resize the right view on the next tick.
-              if (this.showingSubView) {
-                setTimeout(this._syncContainerWithSubView.bind(this), 0);
-              } else if (!this.transitioning) {
-                setTimeout(this._syncContainerWithMainView.bind(this), 0);
+              switch (aEvent.target.localName) {
+                case "vbox":
+                  // Resize the right view on the next tick.
+                  if (this.showingSubView) {
+                    setTimeout(this._syncContainerWithSubView.bind(this), 0);
+                  } else if (!this.transitioning) {
+                    setTimeout(this._syncContainerWithMainView.bind(this), 0);
+                  }
+                  break;
+                case "toolbarbutton":
+                  aEvent.target.setAttribute("fadelabel", "true");
+                  break;
               }
               break;
             case "popupshowing":
