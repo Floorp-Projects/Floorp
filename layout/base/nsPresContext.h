@@ -818,6 +818,8 @@ public:
     return mIsChromeIsCached ? mIsChrome : IsChromeSlow();
   }
 
+  bool IsChromeOriginImage() const { return mIsChromeOriginImage; }
+
   virtual void InvalidateIsChromeCacheExternal();
   void InvalidateIsChromeCacheInternal() { mIsChromeIsCached = false; }
 #ifdef MOZILLA_INTERNAL_API
@@ -833,7 +835,7 @@ public:
 
   // Is it OK to let the page specify colors and backgrounds?
   bool UseDocumentColors() const {
-    return GetCachedBoolPref(kPresContext_UseDocumentColors) || IsChrome();
+    return GetCachedBoolPref(kPresContext_UseDocumentColors) || IsChrome() || IsChromeOriginImage();
   }
 
   // Explicitly enable and disable paint flashing.
@@ -1319,6 +1321,7 @@ protected:
   // value the slow way.
   mutable unsigned      mIsChromeIsCached : 1;
   mutable unsigned      mIsChrome : 1;
+  unsigned              mIsChromeOriginImage : 1;
 
   // Should we paint flash in this context? Do not use this variable directly.
   // Use GetPaintFlashing() method instead.
