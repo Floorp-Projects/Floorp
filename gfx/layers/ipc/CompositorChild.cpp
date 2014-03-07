@@ -20,7 +20,6 @@
 #include "nsTArray.h"                   // for nsTArray, nsTArray_Impl
 #include "nsXULAppAPI.h"                // for XRE_GetIOMessageLoop, etc
 #include "FrameLayerBuilder.h"
-#include "mozilla/dom/TabChild.h"
 
 using mozilla::layers::LayerTransactionChild;
 
@@ -118,21 +117,6 @@ bool
 CompositorChild::RecvInvalidateAll()
 {
   FrameLayerBuilder::InvalidateAllLayers(mLayerManager);
-  return true;
-}
-
-bool
-CompositorChild::RecvDidComposite(const uint64_t& aId)
-{
-  if (mLayerManager) {
-    MOZ_ASSERT(aId == 0);
-    mLayerManager->DidComposite();
-  } else if (aId != 0) {
-    dom::TabChild *child = dom::TabChild::GetFrom(aId);
-    if (child) {
-      child->DidComposite();
-    }
-  }
   return true;
 }
 

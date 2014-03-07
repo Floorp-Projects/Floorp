@@ -297,8 +297,6 @@ private:
    */
   bool CanComposite();
 
-  void DidComposite();
-
   nsRefPtr<LayerManagerComposite> mLayerManager;
   nsRefPtr<Compositor> mCompositor;
   RefPtr<AsyncCompositionManager> mCompositionManager;
@@ -326,8 +324,6 @@ private:
   CancelableTask* mForceCompositionTask;
 
   nsRefPtr<APZCTreeManager> mApzcTreeManager;
-
-  bool mWantDidCompositeEvent;
 
   DISALLOW_EVIL_CONSTRUCTORS(CompositorParent);
 };
