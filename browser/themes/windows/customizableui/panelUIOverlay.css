@@ -14,7 +14,30 @@
   padding-right: 12px;
 }
 
-#BMB_bookmarksPopup > menuseparator {
+/* bookmark panel submenus */
+
+#BMB_bookmarksPopup menupopup {
+  -moz-appearance: none;
+  background: transparent;
+  border: none;
+  padding: 6px;
+}
+
+#BMB_bookmarksPopup menupopup > hbox {
+  /* emulating chrome://browser/content/places/menu.xml#places-popup-arrow but without the arrow */
+  box-shadow: 0 0 4px rgba(0,0,0,0.2);
+  background: #FFF;
+  border: 1px solid rgba(0,0,0,0.25);
+  border-radius: 3.5px;
+  margin-top: -4px;
+}
+
+#BMB_bookmarksPopup .menu-text {
+  color: #000;
+}
+
+/* bookmark panel separator */
+#BMB_bookmarksPopup menuseparator {
   padding-top: 0;
   padding-bottom: 0;
 }
