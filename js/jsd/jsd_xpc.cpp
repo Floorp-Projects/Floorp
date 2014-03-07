@@ -1656,11 +1656,7 @@ jsdContext::GetJSContext(JSContext **_rval)
 #define JSOPTION_DONT_REPORT_UNCAUGHT           JS_BIT(8)
 #define JSOPTION_NO_DEFAULT_COMPARTMENT_OBJECT  JS_BIT(11)
 #define JSOPTION_NO_SCRIPT_RVAL                 JS_BIT(12)
-#define JSOPTION_BASELINE                       JS_BIT(14)
-#define JSOPTION_TYPE_INFERENCE                 JS_BIT(16)
 #define JSOPTION_STRICT_MODE                    JS_BIT(17)
-#define JSOPTION_ION                            JS_BIT(18)
-#define JSOPTION_ASMJS                          JS_BIT(19)
 #define JSOPTION_MASK                           JS_BITMASK(20)
 
 NS_IMETHODIMP
@@ -1674,11 +1670,7 @@ jsdContext::GetOptions(uint32_t *_rval)
            | (JS::ContextOptionsRef(mJSCx).dontReportUncaught() ? JSOPTION_DONT_REPORT_UNCAUGHT : 0)
            | (JS::ContextOptionsRef(mJSCx).noDefaultCompartmentObject() ? JSOPTION_NO_DEFAULT_COMPARTMENT_OBJECT : 0)
            | (JS::ContextOptionsRef(mJSCx).noScriptRval() ? JSOPTION_NO_SCRIPT_RVAL : 0)
-           | (JS::ContextOptionsRef(mJSCx).strictMode() ? JSOPTION_STRICT_MODE : 0)
-           | (JS::ContextOptionsRef(mJSCx).baseline() ? JSOPTION_BASELINE : 0)
-           | (JS::ContextOptionsRef(mJSCx).typeInference() ? JSOPTION_TYPE_INFERENCE : 0)
-           | (JS::ContextOptionsRef(mJSCx).ion() ? JSOPTION_ION : 0)
-           | (JS::ContextOptionsRef(mJSCx).asmJS() ? JSOPTION_ASMJS : 0);
+           | (JS::ContextOptionsRef(mJSCx).strictMode() ? JSOPTION_STRICT_MODE : 0);
     return NS_OK;
 }
 
@@ -1699,11 +1691,7 @@ jsdContext::SetOptions(uint32_t options)
                                 .setDontReportUncaught(options & JSOPTION_DONT_REPORT_UNCAUGHT)
                                 .setNoDefaultCompartmentObject(options & JSOPTION_NO_DEFAULT_COMPARTMENT_OBJECT)
                                 .setNoScriptRval(options & JSOPTION_NO_SCRIPT_RVAL)
-                                .setStrictMode(options & JSOPTION_STRICT_MODE)
-                                .setBaseline(options & JSOPTION_BASELINE)
-                                .setTypeInference(options & JSOPTION_TYPE_INFERENCE)
-                                .setIon(options & JSOPTION_ION)
-                                .setAsmJS(options & JSOPTION_ASMJS);
+                                .setStrictMode(options & JSOPTION_STRICT_MODE);
     return NS_OK;
 }
 

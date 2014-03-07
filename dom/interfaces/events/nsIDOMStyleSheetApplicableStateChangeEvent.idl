@@ -18,10 +18,3 @@ interface nsIDOMStyleSheetApplicableStateChangeEvent : nsIDOMEvent
                                                            in nsIDOMCSSStyleSheet aStyleSheet,
                                                            in boolean aApplicable);
 };
-
-dictionary StyleSheetApplicableStateChangeEventInit : EventInit
-{
-  nsIDOMCSSStyleSheet stylesheet;
-  boolean applicable;
-};
-

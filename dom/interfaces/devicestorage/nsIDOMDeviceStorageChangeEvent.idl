@@ -18,9 +18,3 @@ interface nsIDOMDeviceStorageChangeEvent : nsIDOMEvent
   readonly attribute DOMString path;
   readonly attribute DOMString reason;
 };
-
-dictionary DeviceStorageChangeEventInit : EventInit
-{
-  DOMString path;
-  DOMString reason;
-};
