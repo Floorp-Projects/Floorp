@@ -89,8 +89,20 @@ IdentityManager.prototype = {
    * its state
    */
   initialize: function() {
-    // nothing to do for this identity provider
+    // Nothing to do for this identity provider.
     return Promise.resolve();
+  },
+
+  finalize: function() {
+    // Nothing to do for this identity provider.
+    return Promise.resolve();
+  },
+
+  /**
+   * Called whenever Service.logout() is called.
+   */
+  logout: function() {
+    // nothing to do for this identity provider.
   },
 
   /**

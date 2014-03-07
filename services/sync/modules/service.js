@@ -164,7 +164,7 @@ Sync11Service.prototype = {
 
   _updateCachedURLs: function _updateCachedURLs() {
     // Nothing to cache yet if we don't have the building blocks
-    if (this.clusterURL == "" || this.identity.username == "")
+    if (!this.clusterURL || !this.identity.username)
       return;
 
     this._log.debug("Caching URLs under storage user base: " + this.userBaseURL);
@@ -852,14 +852,6 @@ Sync11Service.prototype = {
     Svc.Obs.notify("weave:engine:stop-tracking");
     this.status.resetSync();
 
-    // We want let UI consumers of the following notification know as soon as
-    // possible, so let's fake for the CLIENT_NOT_CONFIGURED status for now
-    // by emptying the passphrase (we still need the password).
-    this.identity.resetSyncKey();
-    this.status.login = LOGIN_FAILED_NO_PASSPHRASE;
-    this.logout();
-    Svc.Obs.notify("weave:service:start-over");
-
     // Deletion doesn't make sense if we aren't set up yet!
     if (this.clusterURL != "") {
       // Clear client-specific data from the server, including disabled engines.
@@ -871,9 +863,19 @@ Sync11Service.prototype = {
                          + Utils.exceptionStr(ex));
         }
       }
+      this._log.debug("Finished deleting client data.");
     } else {
       this._log.debug("Skipping client data removal: no cluster URL.");
     }
+
+    // We want let UI consumers of the following notification know as soon as
+    // possible, so let's fake for the CLIENT_NOT_CONFIGURED status for now
+    // by emptying the passphrase (we still need the password).
+    this._log.info("Service.startOver dropping sync key and logging out.");
+    this.identity.resetSyncKey();
+    this.status.login = LOGIN_FAILED_NO_PASSPHRASE;
+    this.logout();
+    Svc.Obs.notify("weave:service:start-over");
 
     // Reset all engines and clear keys.
     this.resetClient();
@@ -900,21 +902,23 @@ Sync11Service.prototype = {
       return;
     }
 
-    this.identity.username = "";
-    Services.prefs.clearUserPref("services.sync.fxaccounts.enabled");
-    this.status.__authManager = null;
-    this.identity = Status._authManager;
-    this._clusterManager = this.identity.createClusterManager(this);
-
-    // Tell the new identity manager to initialize itself
-    this.identity.initialize().then(() => {
-      Svc.Obs.notify("weave:service:start-over:finish");
-    }).then(null, err => {
-      this._log.error("startOver failed to re-initialize the identity manager: " + err);
-      // Still send the observer notification so the current state is
-      // reflected in the UI.
-      Svc.Obs.notify("weave:service:start-over:finish");
-    });
+    this.identity.finalize().then(
+      () => {
+        this.identity.username = "";
+        Services.prefs.clearUserPref("services.sync.fxaccounts.enabled");
+        this.status.__authManager = null;
+        this.identity = Status._authManager;
+        this._clusterManager = this.identity.createClusterManager(this);
+        Svc.Obs.notify("weave:service:start-over:finish");
+      }
+    ).then(null,
+      err => {
+        this._log.error("startOver failed to re-initialize the identity manager: " + err);
+        // Still send the observer notification so the current state is
+        // reflected in the UI.
+        Svc.Obs.notify("weave:service:start-over:finish");
+      }
+    );
   },
 
   persistLogin: function persistLogin() {
@@ -985,6 +989,7 @@ Sync11Service.prototype = {
       return;
 
     this._log.info("Logging out");
+    this.identity.logout();
     this._loggedIn = false;
 
     Svc.Obs.notify("weave:service:logout:finish");
