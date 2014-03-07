@@ -56,8 +56,10 @@ let gFxAccounts = {
     if (!service.ready) {
       return false;
     }
-    return Weave.Service.identity.readyToAuthenticate &&
-           Weave.Status.login != Weave.LOGIN_SUCCEEDED;
+    // LOGIN_FAILED_LOGIN_REJECTED explicitly means "you must log back in".
+    // All other login failures are assumed to be transient and should go
+    // away by themselves, so aren't reflected here.
+    return Weave.Status.login == Weave.LOGIN_FAILED_LOGIN_REJECTED;
   },
 
   get isActiveWindow() {
