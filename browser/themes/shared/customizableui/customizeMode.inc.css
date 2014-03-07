@@ -74,7 +74,7 @@
   outline-offset: -5px;
 }
 
-#main-window[customize-entered] .customization-target:not(#PanelUI-contents) {
+#main-window[customizing] .customization-target:not(#PanelUI-contents) {
   min-width: 100px;
   padding-left: 10px;
   padding-right: 10px;

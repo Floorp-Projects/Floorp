@@ -543,6 +543,7 @@ Toolbox.prototype = {
                                              this.doc, this._requisition);
     let container = this.doc.getElementById("toolbox-buttons");
     buttons.forEach(container.appendChild.bind(container));
+    this.setToolboxButtonsVisibility();
   },
 
   /**
@@ -560,6 +561,57 @@ Toolbox.prototype = {
 
     this._togglePicker = this.highlighterUtils.togglePicker.bind(this.highlighterUtils);
     this._pickerButton.addEventListener("command", this._togglePicker, false);
+  },
+
+  /**
+   * Return all toolbox buttons (command buttons, plus any others that were
+   * added manually).
+   */
+  get toolboxButtons() {
+    // White-list buttons that can be toggled to prevent adding prefs for
+    // addons that have manually inserted toolbarbuttons into DOM.
+    return [
+      "command-button-pick",
+      "command-button-splitconsole",
+      "command-button-responsive",
+      "command-button-paintflashing",
+      "command-button-tilt",
+      "command-button-scratchpad"
+    ].map(id => {
+      let button = this.doc.getElementById(id);
+      // Some buttons may not exist inside of Browser Toolbox
+      if (!button) {
+        return false;
+      }
+      return {
+        id: id,
+        button: button,
+        label: button.getAttribute("tooltiptext"),
+        visibilityswitch: "devtools." + id + ".enabled"
+      }
+    }).filter(button=>button);
+  },
+
+  /**
+   * Ensure the visibility of each toolbox button matches the
+   * preference value.  Simply hide buttons that are preffed off.
+   */
+  setToolboxButtonsVisibility: function() {
+    this.toolboxButtons.forEach(buttonSpec => {
+      let {visibilityswitch, id, button}=buttonSpec;
+      let on = true;
+      try {
+        on = Services.prefs.getBoolPref(visibilityswitch);
+      } catch (ex) { }
+
+      if (button) {
+        if (on) {
+          button.removeAttribute("hidden");
+        } else {
+          button.setAttribute("hidden", "true");
+        }
+      }
+    });
   },
 
   /**

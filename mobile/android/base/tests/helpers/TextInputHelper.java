@@ -32,7 +32,7 @@ public final class TextInputHelper {
     public static void assertText(final String message,
                                   final InputConnection ic,
                                   final String text) {
-        assertEquals(message, text, getText(ic));
+        fAssertEquals(message, text, getText(ic));
     }
 
     public static void assertSelection(final String message,
@@ -40,8 +40,8 @@ public final class TextInputHelper {
                                        final int start,
                                        final int end) {
         ExtractedText extract = getExtractedText(ic);
-        assertEquals(message, start, extract.selectionStart);
-        assertEquals(message, end, extract.selectionEnd);
+        fAssertEquals(message, start, extract.selectionStart);
+        fAssertEquals(message, end, extract.selectionEnd);
     }
 
     public static void assertSelectionAt(final String message,
@@ -56,9 +56,9 @@ public final class TextInputHelper {
                                               final int start,
                                               final int end) {
         ExtractedText extract = getExtractedText(ic);
-        assertEquals(message, text, extract.text);
-        assertEquals(message, start, extract.selectionStart);
-        assertEquals(message, end, extract.selectionEnd);
+        fAssertEquals(message, text, extract.text);
+        fAssertEquals(message, start, extract.selectionStart);
+        fAssertEquals(message, end, extract.selectionEnd);
     }
 
     public static void assertTextAndSelectionAt(final String message,

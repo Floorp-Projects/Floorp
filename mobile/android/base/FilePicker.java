@@ -33,7 +33,7 @@ import java.util.List;
 public class FilePicker implements GeckoEventListener {
     private static final String LOGTAG = "GeckoFilePicker";
     private static FilePicker sFilePicker;
-    private final Context mContext;
+    private final Context context;
 
     public interface ResultHandler {
         public void gotFile(String filename);
@@ -46,7 +46,7 @@ public class FilePicker implements GeckoEventListener {
     }
 
     protected FilePicker(Context context) {
-        mContext = context;
+        this.context = context;
         GeckoAppShell.getEventDispatcher().registerEventListener("FilePicker:Show", this);
     }
 
@@ -54,7 +54,8 @@ public class FilePicker implements GeckoEventListener {
     public void handleMessage(String event, final JSONObject message) {
         if (event.equals("FilePicker:Show")) {
             String mimeType = "*/*";
-            String mode = message.optString("mode");
+            final String mode = message.optString("mode");
+            final int tabId = message.optInt("tabId", -1);
 
             if ("mimeType".equals(mode))
                 mimeType = message.optString("mimeType");
@@ -68,15 +69,17 @@ public class FilePicker implements GeckoEventListener {
                     } catch (JSONException ex) {
                         Log.i(LOGTAG, "Can't add filename to message " + filename);
                     }
+
+
                     GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent(
                         "FilePicker:Result", message.toString()));
                 }
-            });
+            }, tabId);
         }
     }
 
     private void addActivities(Intent intent, HashMap<String, Intent> intents, HashMap<String, Intent> filters) {
-        PackageManager pm = mContext.getPackageManager();
+        PackageManager pm = context.getPackageManager();
         List<ResolveInfo> lri = pm.queryIntentActivities(intent, 0);
         for (ResolveInfo ri : lri) {
             ComponentName cn = new ComponentName(ri.activityInfo.applicationInfo.packageName, ri.activityInfo.name);
@@ -155,13 +158,13 @@ public class FilePicker implements GeckoEventListener {
 
     private String getFilePickerTitle(String mimeType) {
         if (mimeType.equals("audio/*")) {
-            return mContext.getString(R.string.filepicker_audio_title);
+            return context.getString(R.string.filepicker_audio_title);
         } else if (mimeType.equals("image/*")) {
-            return mContext.getString(R.string.filepicker_image_title);
+            return context.getString(R.string.filepicker_image_title);
         } else if (mimeType.equals("video/*")) {
-            return mContext.getString(R.string.filepicker_video_title);
+            return context.getString(R.string.filepicker_video_title);
         } else {
-            return mContext.getString(R.string.filepicker_title);
+            return context.getString(R.string.filepicker_title);
         }
     }
 
@@ -201,8 +204,8 @@ public class FilePicker implements GeckoEventListener {
      * sends the file returned to the passed in handler. If a null handler is passed in, will still
      * pick and launch the file picker, but will throw away the result.
      */
-    protected void showFilePickerAsync(String mimeType, final ResultHandler handler) {
-        final FilePickerResultHandler fileHandler = new FilePickerResultHandler(handler);
+    protected void showFilePickerAsync(String mimeType, final ResultHandler handler, final int tabId) {
+        final FilePickerResultHandler fileHandler = new FilePickerResultHandler(handler, context, tabId);
         getFilePickerIntentAsync(mimeType, fileHandler, new IntentHandler() {
             @Override
             public void gotIntent(Intent intent) {
