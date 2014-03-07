@@ -10,11 +10,14 @@ let {console} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
 let promise = devtools.require("sdk/core/promise");
 let {getInplaceEditorForSpan: inplaceEditor} = devtools.require("devtools/shared/inplace-editor");
 
+//Services.prefs.setBoolPref("devtools.dump.emit", true);
+
 // Clear preferences that may be set during the course of tests.
 function clearUserPrefs() {
   Services.prefs.clearUserPref("devtools.inspector.htmlPanelOpen");
   Services.prefs.clearUserPref("devtools.inspector.sidebarOpen");
   Services.prefs.clearUserPref("devtools.inspector.activeSidebar");
+  Services.prefs.clearUserPref("devtools.dump.emit");
 }
 
 registerCleanupFunction(clearUserPrefs);

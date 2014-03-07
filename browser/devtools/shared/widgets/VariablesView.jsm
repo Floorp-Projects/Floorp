@@ -52,7 +52,7 @@ Object.defineProperty(this, "NetworkHelper", {
   enumerable: true
 });
 
-this.EXPORTED_SYMBOLS = ["VariablesView"];
+this.EXPORTED_SYMBOLS = ["VariablesView", "escapeHTML"];
 
 /**
  * Debugger localization strings.
@@ -3423,7 +3423,24 @@ VariablesView.stringifiers.byObjectClass = {
 
     return "Date " + new Date(preview.timestamp).toISOString();
   },
+
+  String: function({displayString}) {
+    if (displayString === undefined) {
+      return null;
+    }
+    return VariablesView.getString(displayString);
+  },
+
+  Number: function({preview}) {
+    if (preview === undefined) {
+      return null;
+    }
+    return VariablesView.getString(preview.value);
+  },
 }; // VariablesView.stringifiers.byObjectClass
+
+VariablesView.stringifiers.byObjectClass.Boolean =
+  VariablesView.stringifiers.byObjectClass.Number;
 
 VariablesView.stringifiers.byObjectKind = {
   ArrayLike: function(aGrip, {concise}) {

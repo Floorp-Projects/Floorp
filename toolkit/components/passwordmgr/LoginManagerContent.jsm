@@ -13,7 +13,8 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 
-var gEnabled = false, gDebug = false, gAutofillForms = true , gOverrideAutocompleteAttribute = false; // these mirror signon.* prefs
+// These mirror signon.* prefs.
+var gEnabled, gDebug, gAutofillForms, gStoreWhenAutocompleteOff;
 
 function log(...pieces) {
     function generateLogMessage(args) {
@@ -71,7 +72,7 @@ var observer = {
         gDebug = Services.prefs.getBoolPref("signon.debug");
         gEnabled = Services.prefs.getBoolPref("signon.rememberSignons");
         gAutofillForms = Services.prefs.getBoolPref("signon.autofillForms");
-        gOverrideAutocompleteAttribute = Services.prefs.getBoolPref("signon.overrideAutocomplete");
+        gStoreWhenAutocompleteOff = Services.prefs.getBoolPref("signon.storeWhenAutocompleteOff");
     },
 };
 
@@ -357,9 +358,6 @@ var LoginManagerContent = {
      * specified form input.
      */
     _isAutocompleteDisabled :  function (element) {
-        if (gOverrideAutocompleteAttribute)
-            return false; 
-
         if (element && element.hasAttribute("autocomplete") &&
             element.getAttribute("autocomplete").toLowerCase() == "off")
             return true;
@@ -423,12 +421,13 @@ var LoginManagerContent = {
 
         // Check for autocomplete=off attribute. We don't use it to prevent
         // autofilling (for existing logins), but won't save logins when it's
-        // present.
+        // present and the storeWhenAutocompleteOff pref is false.
         // XXX spin out a bug that we don't update timeLastUsed in this case?
-        if (this._isAutocompleteDisabled(form) ||
-            this._isAutocompleteDisabled(usernameField) ||
-            this._isAutocompleteDisabled(newPasswordField) ||
-            this._isAutocompleteDisabled(oldPasswordField)) {
+        if ((this._isAutocompleteDisabled(form) ||
+             this._isAutocompleteDisabled(usernameField) ||
+             this._isAutocompleteDisabled(newPasswordField) ||
+             this._isAutocompleteDisabled(oldPasswordField)) &&
+            !gStoreWhenAutocompleteOff) {
                 log("(form submission ignored -- autocomplete=off found)");
                 return;
         }
