@@ -12,6 +12,7 @@
 #include "gfx2DGlue.h"
 #include "gfxPlatform.h"
 #include "gfxUtils.h"
+#include "gfxAlphaRecovery.h"
 
 static bool gDisableOptimize = false;
 
@@ -34,6 +35,48 @@ static bool gDisableOptimize = false;
 using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::image;
+
+static cairo_user_data_key_t kVolatileBuffer;
+
+static void
+VolatileBufferRelease(void *vbuf)
+{
+  delete static_cast<VolatileBufferPtr<unsigned char>*>(vbuf);
+}
+
+gfxImageSurface *
+LockedImageSurface::CreateSurface(VolatileBuffer *vbuf,
+                                  const gfxIntSize& size,
+                                  gfxImageFormat format)
+{
+  VolatileBufferPtr<unsigned char> *vbufptr =
+    new VolatileBufferPtr<unsigned char>(vbuf);
+  MOZ_ASSERT(!vbufptr->WasBufferPurged(), "Expected image data!");
+
+  long stride = gfxImageSurface::ComputeStride(size, format);
+  gfxImageSurface *img = new gfxImageSurface(*vbufptr, size, stride, format);
+  if (!img || img->CairoStatus()) {
+    delete img;
+    delete vbufptr;
+    return nullptr;
+  }
+
+  img->SetData(&kVolatileBuffer, vbufptr, VolatileBufferRelease);
+  return img;
+}
+
+TemporaryRef<VolatileBuffer>
+LockedImageSurface::AllocateBuffer(const gfxIntSize& size,
+                                   gfxImageFormat format)
+{
+  long stride = gfxImageSurface::ComputeStride(size, format);
+  RefPtr<VolatileBuffer> buf = new VolatileBuffer();
+  if (buf->Init(stride * size.height,
+                1 << gfxAlphaRecovery::GoodAlignmentLog2()))
+    return buf;
+
+  return nullptr;
+}
 
 // Returns true if an image of aWidth x aHeight is allowed and legal.
 static bool AllowedImageSize(int32_t aWidth, int32_t aHeight)
@@ -108,6 +151,7 @@ imgFrame::imgFrame() :
   mFormatChanged(false),
   mCompositingFailed(false),
   mNonPremult(false),
+  mDiscardable(false),
   mInformedDiscardTracker(false),
   mDirty(false)
 {
@@ -174,12 +218,17 @@ nsresult imgFrame::Init(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight,
     }
 #endif
 
-    // For other platforms we create the image surface first and then
-    // possibly wrap it in a device surface.  This branch is also used
-    // on Windows if we're not using device surfaces or if we couldn't
-    // create one.
-    if (!mImageSurface)
-      mImageSurface = new gfxImageSurface(gfxIntSize(mSize.width, mSize.height), mFormat);
+    // For other platforms, space for the image surface is first allocated in
+    // a volatile buffer and then wrapped by a LockedImageSurface.
+    // This branch is also used on Windows if we're not using device surfaces
+    // or if we couldn't create one.
+    if (!mImageSurface) {
+      mVBuf = LockedImageSurface::AllocateBuffer(mSize, mFormat);
+      if (!mVBuf) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      mImageSurface = LockedImageSurface::CreateSurface(mVBuf, mSize, mFormat);
+    }
 
     if (!mImageSurface || mImageSurface->CairoStatus()) {
       mImageSurface = nullptr;
@@ -251,6 +300,7 @@ nsresult imgFrame::Optimize()
         mSinglePixel = true;
 
         // blow away the older surfaces (if they exist), to release their memory
+        mVBuf = nullptr;
         mImageSurface = nullptr;
         mOptSurface = nullptr;
 #ifdef USE_WIN_SURFACE
@@ -300,6 +350,7 @@ nsresult imgFrame::Optimize()
     mOptSurface = gfxPlatform::GetPlatform()->OptimizeImage(mImageSurface, mFormat);
 
   if (mOptSurface) {
+    mVBuf = nullptr;
     mImageSurface = nullptr;
 #ifdef USE_WIN_SURFACE
     mWinSurface = nullptr;
@@ -483,10 +534,13 @@ uint32_t imgFrame::GetImageBytesPerRow() const
   if (mImageSurface)
     return mImageSurface->Stride();
 
+  if (mVBuf)
+    return gfxImageSurface::ComputeStride(mSize, mFormat);
+
   if (mPaletteDepth)
     return mSize.width;
 
-  NS_ERROR("GetImageBytesPerRow called with mImageSurface == null and mPaletteDepth == 0");
+  NS_ERROR("GetImageBytesPerRow called with mImageSurface == null, mVBuf == null and mPaletteDepth == 0");
 
   return 0;
 }
@@ -569,28 +623,42 @@ nsresult imgFrame::LockImageData()
   if (mPalettedImageData)
     return NS_OK;
 
-  if ((mOptSurface || mSinglePixel) && !mImageSurface) {
-    // Recover the pixels
-    mImageSurface = new gfxImageSurface(gfxIntSize(mSize.width, mSize.height),
-                                        gfxImageFormat::ARGB32);
-    if (!mImageSurface || mImageSurface->CairoStatus())
-      return NS_ERROR_OUT_OF_MEMORY;
+  if (!mImageSurface) {
+    if (mVBuf) {
+      VolatileBufferPtr<uint8_t> ref(mVBuf);
+      if (ref.WasBufferPurged())
+        return NS_ERROR_FAILURE;
 
-    gfxContext context(mImageSurface);
-    context.SetOperator(gfxContext::OPERATOR_SOURCE);
-    if (mSinglePixel)
-      context.SetDeviceColor(mSinglePixelColor);
-    else
-      context.SetSource(mOptSurface);
-    context.Paint();
+      mImageSurface = LockedImageSurface::CreateSurface(mVBuf, mSize, mFormat);
+      if (!mImageSurface || mImageSurface->CairoStatus())
+        return NS_ERROR_OUT_OF_MEMORY;
+    } else if (mOptSurface || mSinglePixel) {
+      // Recover the pixels
+      mVBuf = LockedImageSurface::AllocateBuffer(mSize, mFormat);
+      if (!mVBuf) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
 
-    mOptSurface = nullptr;
+      mImageSurface = LockedImageSurface::CreateSurface(mVBuf, mSize, mFormat);
+      if (!mImageSurface || mImageSurface->CairoStatus())
+        return NS_ERROR_OUT_OF_MEMORY;
+
+      gfxContext context(mImageSurface);
+      context.SetOperator(gfxContext::OPERATOR_SOURCE);
+      if (mSinglePixel)
+        context.SetDeviceColor(mSinglePixelColor);
+      else
+        context.SetSource(mOptSurface);
+      context.Paint();
+
+      mOptSurface = nullptr;
 #ifdef USE_WIN_SURFACE
-    mWinSurface = nullptr;
+      mWinSurface = nullptr;
 #endif
 #ifdef XP_MACOSX
-    mQuartzSurface = nullptr;
+      mQuartzSurface = nullptr;
 #endif
+    }
   }
 
   // We might write to the bits in this image surface, so we need to make the
@@ -601,6 +669,12 @@ nsresult imgFrame::LockImageData()
 #ifdef USE_WIN_SURFACE
   if (mWinSurface)
     mWinSurface->Flush();
+#endif
+
+#ifdef XP_MACOSX
+  if (!mQuartzSurface && !ShouldUseImageSurfaces()) {
+    mQuartzSurface = new gfxQuartzImageSurface(mImageSurface);
+  }
 #endif
 
   return NS_OK;
@@ -658,6 +732,13 @@ nsresult imgFrame::UnlockImageData()
     mQuartzSurface->Flush();
 #endif
 
+  if (mVBuf && mDiscardable) {
+    mImageSurface = nullptr;
+#ifdef XP_MACOSX
+    mQuartzSurface = nullptr;
+#endif
+  }
+
   return NS_OK;
 }
 
@@ -695,6 +776,12 @@ void imgFrame::ApplyDirtToSurfaces()
 
     mDirty = false;
   }
+}
+
+void imgFrame::SetDiscardable()
+{
+  MOZ_ASSERT(mLockCount, "Expected to be locked when SetDiscardable is called");
+  mDiscardable = true;
 }
 
 int32_t imgFrame::GetRawTimeout() const
@@ -795,8 +882,8 @@ imgFrame::SizeOfExcludingThisWithComputedFallbackIfHeap(gfxMemoryLocation aLocat
 #endif
 #ifdef XP_MACOSX
   if (mQuartzSurface && aLocation == gfxMemoryLocation::IN_PROCESS_HEAP) {
-    n += mSize.width * mSize.height * 4;
-  } else
+    n += aMallocSizeOf(mQuartzSurface);
+  }
 #endif
   if (mImageSurface && aLocation == mImageSurface->GetMemoryLocation()) {
     size_t n2 = 0;
@@ -807,6 +894,11 @@ imgFrame::SizeOfExcludingThisWithComputedFallbackIfHeap(gfxMemoryLocation aLocat
       n2 = mImageSurface->KnownMemoryUsed();
     }
     n += n2;
+  }
+
+  if (mVBuf && aLocation == gfxMemoryLocation::IN_PROCESS_HEAP) {
+    n += aMallocSizeOf(mVBuf);
+    n += mVBuf->HeapSizeOfExcludingThis(aMallocSizeOf);
   }
 
   if (mOptSurface && aLocation == mOptSurface->GetMemoryLocation()) {

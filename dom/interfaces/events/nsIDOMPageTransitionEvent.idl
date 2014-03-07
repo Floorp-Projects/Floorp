@@ -27,8 +27,3 @@ interface nsIDOMPageTransitionEvent : nsIDOMEvent
                                in boolean canCancelArg,
                                in boolean persisted);
 };
-
-dictionary PageTransitionEventInit : EventInit
-{
-  boolean persisted;
-};

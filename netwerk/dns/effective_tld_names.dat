@@ -401,8 +401,8 @@ net.bo
 mil.bo
 tv.bo
 
-// br : http://registro.br/dominio/dpn.html
-// Submitted by registry <fneves@registro.br> 2011-03-01
+// br : http://registro.br/dominio/categoria.html
+// Submitted by registry <fneves@registro.br> 2014-03-04
 br
 adm.br
 adv.br
@@ -447,6 +447,7 @@ lel.br
 mat.br
 med.br
 mil.br
+mp.br
 mus.br
 net.br
 nom.br
@@ -1087,6 +1088,7 @@ id
 ac.id
 biz.id
 co.id
+desa.id
 go.id
 mil.id
 my.id
@@ -1492,7 +1494,7 @@ jobs
 
 // jp : http://en.wikipedia.org/wiki/.jp
 // http://jprs.co.jp/en/jpdomain.html
-// Submitted by registry <info@jprs.jp> 2012-05-28
+// Submitted by registry <info@jprs.jp> 2014-02-28
 jp
 // jp organizational type names
 ac.jp
@@ -1596,7 +1598,6 @@ konan.aichi.jp
 kota.aichi.jp
 mihama.aichi.jp
 miyoshi.aichi.jp
-nagakute.aichi.jp
 nishio.aichi.jp
 nisshin.aichi.jp
 obu.aichi.jp
@@ -2268,7 +2269,6 @@ rikuzentakata.iwate.jp
 shiwa.iwate.jp
 shizukuishi.iwate.jp
 sumita.iwate.jp
-takizawa.iwate.jp
 tanohata.iwate.jp
 tono.iwate.jp
 yahaba.iwate.jp
@@ -3566,8 +3566,13 @@ mq
 mr
 gov.mr
 
-// ms : http://en.wikipedia.org/wiki/.ms
+// ms : http://www.nic.ms/pdf/MS_Domain_Name_Rules.pdf
 ms
+com.ms
+edu.ms
+gov.ms
+net.ms
+org.ms
 
 // mt : https://www.nic.org.mt/go/policy
 // Submitted by registry <help@nic.org.mt> 2013-11-19
@@ -6766,304 +6771,304 @@ otsuka
 // xn--fiQ64b : 2013-10-14 CITIC Group Corporation
 中信
 
-// gift : 2013-10-18 Uniregistry Corp. 
+// gift : 2013-10-18 Uniregistry Corp.
 gift
 
-// recipes : 2013-10-18 Grand Island, LLC 
+// recipes : 2013-10-18 Grand Island, LLC
 recipes
 
-// coffee : 2013-10-18 Trixy Cover, LLC 
+// coffee : 2013-10-18 Trixy Cover, LLC
 coffee
 
-// luxury : 2013-10-18 Luxury Partners, LLC 
+// luxury : 2013-10-18 Luxury Partners, LLC
 luxury
 
-// domains : 2013-10-18 Sugar Cross, LLC 
+// domains : 2013-10-18 Sugar Cross, LLC
 domains
 
-// photos : 2013-10-18 Sea Corner, LLC 
+// photos : 2013-10-18 Sea Corner, LLC
 photos
 
-// limo : 2013-10-18 Hidden Frostbite, LLC 
+// limo : 2013-10-18 Hidden Frostbite, LLC
 limo
 
-// viajes : 2013-10-18 Black Madison, LLC 
+// viajes : 2013-10-18 Black Madison, LLC
 viajes
 
-// wang : 2013-10-24 Zodiac Leo Limited 
+// wang : 2013-10-24 Zodiac Leo Limited
 wang
 
-// democrat : 2013-10-24 United TLD Holdco Ltd. 
+// democrat : 2013-10-24 United TLD Holdco Ltd.
 democrat
 
-// mango : 2013-10-25 PUNTO FA S.L. 
+// mango : 2013-10-25 PUNTO FA S.L.
 mango
 
-// cab : 2013-10-25 Half Sunset, LLC 
+// cab : 2013-10-25 Half Sunset, LLC
 cab
 
-// support : 2013-10-25 Grand Orchard, LLC 
+// support : 2013-10-25 Grand Orchard, LLC
 support
 
-// dance : 2013-10-25 United TLD Holdco Ltd. 
+// dance : 2013-10-25 United TLD Holdco Ltd.
 dance
 
-// nagoya : 2013-10-25 GMO Registry, Inc. 
+// nagoya : 2013-10-25 GMO Registry, Inc.
 nagoya
 
-// computer : 2013-10-25 Pine Mill, LLC 
+// computer : 2013-10-25 Pine Mill, LLC
 computer
 
-// wien : 2013-10-28 punkt.wien GmbH 
+// wien : 2013-10-28 punkt.wien GmbH
 wien
 
-// berlin : 2013-10-31 dotBERLIN GmbH & Co. KG 
+// berlin : 2013-10-31 dotBERLIN GmbH & Co. KG
 berlin
 
-// codes : 2013-10-31 Puff Willow, LLC 
+// codes : 2013-10-31 Puff Willow, LLC
 codes
 
-// email : 2013-10-31 Spring Madison, LLC 
+// email : 2013-10-31 Spring Madison, LLC
 email
 
-// xn--mgbab2bd : 2013-10-31 CORE Association 
+// xn--mgbab2bd : 2013-10-31 CORE Association
 بازار
 
-// repair : 2013-11-07 Lone Sunset, LLC 
+// repair : 2013-11-07 Lone Sunset, LLC
 repair
 
-// holiday : 2013-11-07 Goose Woods, LLC 
+// holiday : 2013-11-07 Goose Woods, LLC
 holiday
 
-// center : 2013-11-07 Tin Mill, LLC 
+// center : 2013-11-07 Tin Mill, LLC
 center
 
-// systems : 2013-11-07 Dash Cypress, LLC 
+// systems : 2013-11-07 Dash Cypress, LLC
 systems
 
-// wiki : 2013-11-07 Top Level Design, LLC 
+// wiki : 2013-11-07 Top Level Design, LLC
 wiki
 
-// ceo : 2013-11-07 CEOTLD Pty Ltd 
+// ceo : 2013-11-07 CEOTLD Pty Ltd
 ceo
 
-// international : 2013-11-07 Wild Way, LLC 
+// international : 2013-11-07 Wild Way, LLC
 international
 
-// solar : 2013-11-07 Ruby Town, LLC 
+// solar : 2013-11-07 Ruby Town, LLC
 solar
 
-// company : 2013-11-07 Silver Avenue, LLC 
+// company : 2013-11-07 Silver Avenue, LLC
 company
 
-// education : 2013-11-07 Brice Way, LLC 
+// education : 2013-11-07 Brice Way, LLC
 education
 
-// training : 2013-11-07 Wild Willow, LLC 
+// training : 2013-11-07 Wild Willow, LLC
 training
 
-// academy : 2013-11-07 Half Oaks, LLC 
+// academy : 2013-11-07 Half Oaks, LLC
 academy
 
-// marketing : 2013-11-07 Fern Pass, LLC 
+// marketing : 2013-11-07 Fern Pass, LLC
 marketing
 
-// florist : 2013-11-08 Half Cypress, LLC 
+// florist : 2013-11-08 Half Cypress, LLC
 florist
 
-// solutions : 2013-11-07 Silver Cover, LLC 
+// solutions : 2013-11-07 Silver Cover, LLC
 solutions
 
-// build : 2013-11-07 Plan Bee LLC 
+// build : 2013-11-07 Plan Bee LLC
 build
 
-// institute : 2013-11-07 Outer Maple, LLC 
+// institute : 2013-11-07 Outer Maple, LLC
 institute
 
-// builders : 2013-11-07 Atomic Madison, LLC 
+// builders : 2013-11-07 Atomic Madison, LLC
 builders
 
-// red : 2013-11-07 Afilias Limited 
+// red : 2013-11-07 Afilias Limited
 red
 
-// blue : 2013-11-07 Afilias Limited 
+// blue : 2013-11-07 Afilias Limited
 blue
 
-// ninja : 2013-11-07 United TLD Holdco Ltd. 
+// ninja : 2013-11-07 United TLD Holdco Ltd.
 ninja
 
-// business : 2013-11-07 Spring Cross, LLC 
+// business : 2013-11-07 Spring Cross, LLC
 business
 
-// gal : 2013-11-07 Asociación puntoGAL 
+// gal : 2013-11-07 Asociación puntoGAL
 gal
 
-// social : 2013-11-07 United TLD Holdco Ltd. 
+// social : 2013-11-07 United TLD Holdco Ltd.
 social
 
-// house : 2013-11-07 Sugar Park, LLC 
+// house : 2013-11-07 Sugar Park, LLC
 house
 
-// camp : 2013-11-07 Delta Dynamite, LLC 
+// camp : 2013-11-07 Delta Dynamite, LLC
 camp
 
-// immobilien : 2013-11-07 United TLD Holdco Ltd. 
+// immobilien : 2013-11-07 United TLD Holdco Ltd.
 immobilien
 
-// moda : 2013-11-07 United TLD Holdco Ltd. 
+// moda : 2013-11-07 United TLD Holdco Ltd.
 moda
 
-// glass : 2013-11-07 Black Cover, LLC 
+// glass : 2013-11-07 Black Cover, LLC
 glass
 
-// management : 2013-11-07 John Goodbye, LLC 
+// management : 2013-11-07 John Goodbye, LLC
 management
 
-// kaufen : 2013-11-07 United TLD Holdco Ltd. 
+// kaufen : 2013-11-07 United TLD Holdco Ltd.
 kaufen
 
-// farm : 2013-11-07 Just Maple, LLC 
+// farm : 2013-11-07 Just Maple, LLC
 farm
 
-// xn--55qw42g : 2013-11-08 China Organizational Name Administration Center 
+// xn--55qw42g : 2013-11-08 China Organizational Name Administration Center
 公益
 
-// xn--zfr164b : 2013-11-08 China Organizational Name Administration Center 
+// xn--zfr164b : 2013-11-08 China Organizational Name Administration Center
 政务
 
-// club : 2013-11-08 .CLUB DOMAINS, LLC 
+// club : 2013-11-08 .CLUB DOMAINS, LLC
 club
 
-// voting : 2013-11-13 Valuetainment Corp. 
+// voting : 2013-11-13 Valuetainment Corp.
 voting
 
-// TOKYO : 2013-11-13 GMO Registry, Inc. 
+// TOKYO : 2013-11-13 GMO Registry, Inc.
 tokyo
 
-// moe : 2013-11-13 Interlink Co., Ltd. 
+// moe : 2013-11-13 Interlink Co., Ltd.
 moe
 
-// guitars : 2013-11-14 Uniregistry, Corp. 
+// guitars : 2013-11-14 Uniregistry, Corp.
 guitars
 
-// bargains : 2013-11-14 Half Hallow, LLC 
+// bargains : 2013-11-14 Half Hallow, LLC
 bargains
 
-// xn--nqv7fs00ema : 2013-11-14 Public Interest Registry 
+// xn--nqv7fs00ema : 2013-11-14 Public Interest Registry
 组织机构
 
-// desi : 2013-11-14 Desi Networks LLC 
+// desi : 2013-11-14 Desi Networks LLC
 desi
 
-// cool : 2013-11-14 Koko Lake, LLC 
+// cool : 2013-11-14 Koko Lake, LLC
 cool
 
-// boutique : 2013-11-14 Over Galley, LLC 
+// boutique : 2013-11-14 Over Galley, LLC
 boutique
 
-// pics : 2013-11-14 Uniregistry, Corp. 
+// pics : 2013-11-14 Uniregistry, Corp.
 pics
 
-// xn--c1avg : 2013-11-14 Public Interest Registry 
+// xn--c1avg : 2013-11-14 Public Interest Registry
 орг
 
-// xn--55qx5d : 2013-11-14 Computer Network Information Center of Chinese Academy of Sciences （China Internet Network Information Center） 
+// xn--55qx5d : 2013-11-14 Computer Network Information Center of Chinese Academy of Sciences （China Internet Network Information Center）
 公司
 
-// xn--io0a7i : 2013-11-14 Computer Network Information Center of Chinese Academy of Sciences （China Internet Network Information Center） 
+// xn--io0a7i : 2013-11-14 Computer Network Information Center of Chinese Academy of Sciences （China Internet Network Information Center）
 网络
 
-// cheap : 2013-11-14 Sand Cover, LLC 
+// cheap : 2013-11-14 Sand Cover, LLC
 cheap
 
-// xn--xhq521b : 2013-11-14 Guangzhou YU Wei Information Technology Co., Ltd. 
+// xn--xhq521b : 2013-11-14 Guangzhou YU Wei Information Technology Co., Ltd.
 广东
 
-// photo : 2013-11-14 Uniregistry, Corp. 
+// photo : 2013-11-14 Uniregistry, Corp.
 photo
 
-// network : 2013-11-14 Trixy Manor, LLC 
+// network : 2013-11-14 Trixy Manor, LLC
 network
 
-// zone : 2013-11-14 Outer Falls, LLC 
+// zone : 2013-11-14 Outer Falls, LLC
 zone
 
-// xn--nqv7f : 2013-11-14 Public Interest Registry 
+// xn--nqv7f : 2013-11-14 Public Interest Registry
 机构
 
-// link : 2013-11-14 Uniregistry, Corp. 
+// link : 2013-11-14 Uniregistry, Corp.
 link
 
-// QPON : 2013-11-14 dotCOOL, Inc. 
+// QPON : 2013-11-14 dotCOOL, Inc.
 qpon
 
-// xn--i1b6b1a6a2e : 2013-11-14 Public Interest Registry 
+// xn--i1b6b1a6a2e : 2013-11-14 Public Interest Registry
 संगठन
 
-// agency : 2013-11-14 Steel Falls, LLC 
+// agency : 2013-11-14 Steel Falls, LLC
 agency
 
-// tienda : 2013-11-14 Victor Manor, LLC 
+// tienda : 2013-11-14 Victor Manor, LLC
 tienda
 
-// works : 2013-11-14 Little Dynamite, LLC 
+// works : 2013-11-14 Little Dynamite, LLC
 works
 
-// london : 2013-11-14 Dot London Domains Limited 
+// london : 2013-11-14 Dot London Domains Limited
 london
 
-// watch : 2013-11-14 Sand Shadow, LLC 
+// watch : 2013-11-14 Sand Shadow, LLC
 watch
 
-// rocks : 2013-11-14 Ruby Moon, LLC 
+// rocks : 2013-11-14 Ruby Moon, LLC
 rocks
 
-// SHIKSHA : 2013-11-14 Afilias Limited 
+// SHIKSHA : 2013-11-14 Afilias Limited
 shiksha
 
-// xn--d1acj3b : 2013-11-21 The Foundation for Network Initiatives “The Smart Internet” 
+// xn--d1acj3b : 2013-11-21 The Foundation for Network Initiatives “The Smart Internet”
 дети
 
-// budapest : 2013-11-21 Top Level Domain Holdings Limited 
+// budapest : 2013-11-21 Top Level Domain Holdings Limited
 budapest
 
-// nrw : 2013-11-21 Minds + Machines GmbH 
+// nrw : 2013-11-21 Minds + Machines GmbH
 nrw
 
-// VOTE : 2013-11-21 Monolith Registry LLC 
+// VOTE : 2013-11-21 Monolith Registry LLC
 vote
 
-// fishing : 2013-11-21 Top Level Domain Holdings Limited 
+// fishing : 2013-11-21 Top Level Domain Holdings Limited
 fishing
 
-// expert : 2013-11-21 Magic Pass, LLC 
+// expert : 2013-11-21 Magic Pass, LLC
 expert
 
-// horse : 2013-11-21 Top Level Domain Holdings Limited 
+// horse : 2013-11-21 Top Level Domain Holdings Limited
 horse
 
-// christmas : 2013-11-21 Uniregistry, Corp. 
+// christmas : 2013-11-21 Uniregistry, Corp.
 christmas
 
-// cooking : 2013-11-21 Top Level Domain Holdings Limited 
+// cooking : 2013-11-21 Top Level Domain Holdings Limited
 cooking
 
-// xn--czru2d : 2013-11-21 Zodiac Capricorn Limited 
+// xn--czru2d : 2013-11-21 Zodiac Capricorn Limited
 商城
 
-// casa : 2013-11-21 Top Level Domain Holdings Limited 
+// casa : 2013-11-21 Top Level Domain Holdings Limited
 casa
 
-// rich : 2013-11-21 I-REGISTRY Ltd., Niederlassung Deutschland 
+// rich : 2013-11-21 I-REGISTRY Ltd., Niederlassung Deutschland
 rich
 
-// VOTO : 2013-11-21 Monolith Registry LLC 
+// VOTO : 2013-11-21 Monolith Registry LLC
 voto
 
-// tools : 2013-11-21 Pioneer North, LLC 
+// tools : 2013-11-21 Pioneer North, LLC
 tools
 
-// xn--45q11c : 2013-11-21 Zodiac Scorpio Limited 
+// xn--45q11c : 2013-11-21 Zodiac Scorpio Limited
 八卦
 
 // praxi : 2013-12-05 Praxi S.p.A.
@@ -7159,37 +7164,37 @@ exposed
 // condos : 2013-12-05 Pine House, LLC
 condos
 
-// eus : 2013-12-12 Puntueus Fundazioa 
+// eus : 2013-12-12 Puntueus Fundazioa
 eus
 
-// Caravan : 2013-12-12 Caravan International, Inc. 
+// Caravan : 2013-12-12 Caravan International, Inc.
 caravan
 
-// actor : 2013-12-12 United TLD Holdco Ltd. 
+// actor : 2013-12-12 United TLD Holdco Ltd.
 actor
 
-// saarland : 2013-12-12 dotSaarland GmbH 
+// saarland : 2013-12-12 dotSaarland GmbH
 saarland
 
-// yokohama : 2013-12-12 GMO Registry, Inc. 
+// yokohama : 2013-12-12 GMO Registry, Inc.
 yokohama
 
-// pub : 2013-12-12 United TLD Holdco Ltd. 
+// pub : 2013-12-12 United TLD Holdco Ltd.
 pub
 
-// xn--p1acf : 2013-12-12 Rusnames Limited 
+// xn--p1acf : 2013-12-12 Rusnames Limited
 рус
 
-// ren : 2013-12-12 Beijing Qianxiang Wangjing Technology Development Co., Ltd. 
+// ren : 2013-12-12 Beijing Qianxiang Wangjing Technology Development Co., Ltd.
 ren
 
-// fish : 2013-12-12 Fox Woods, LLC 
+// fish : 2013-12-12 Fox Woods, LLC
 fish
 
-// BAR : 2013-12-12 Punto 2012 Sociedad Anonima Promotora de Inversion de Capital Variable 
+// BAR : 2013-12-12 Punto 2012 Sociedad Anonima Promotora de Inversion de Capital Variable
 bar
 
-// DNP : 2013-12-13 Dai Nippon Printing Co., Ltd. 
+// DNP : 2013-12-13 Dai Nippon Printing Co., Ltd.
 dnp
 
 // bid : 2013-12-19 dot Bid Limited
@@ -7255,68 +7260,188 @@ feedback
 // work : 2013-12-19 Top Level Domain Holdings Limited
 work
 
-// luxe : 2014-01-09 Top Level Domain Holdings Limited 
+// luxe : 2014-01-09 Top Level Domain Holdings Limited
 luxe
 
-// ryukyu : 2014-01-09 BusinessRalliart inc. 
+// ryukyu : 2014-01-09 BusinessRalliart inc.
 ryukyu
 
-// autos : 2014-01-09 DERAutos, LLC 
+// autos : 2014-01-09 DERAutos, LLC
 autos
 
-// homes : 2014-01-09 DERHomes, LLC 
+// homes : 2014-01-09 DERHomes, LLC
 homes
 
-// jetzt : 2014-01-09 New TLD Company AB 
+// jetzt : 2014-01-09 New TLD Company AB
 jetzt
 
-// yachts : 2014-01-09 DERYachts, LLC 
+// yachts : 2014-01-09 DERYachts, LLC
 yachts
 
-// motorcycles : 2014-01-09 DERMotorcycles, LLC 
+// motorcycles : 2014-01-09 DERMotorcycles, LLC
 motorcycles
 
-// mini : 2014-01-09 Bayerische Motoren Werke Aktiengesellschaft 
+// mini : 2014-01-09 Bayerische Motoren Werke Aktiengesellschaft
 mini
 
-// ggee : 2014-01-09 GMO Internet, Inc. 
+// ggee : 2014-01-09 GMO Internet, Inc.
 ggee
 
-// beer : 2014-01-09 Top Level Domain Holdings Limited 
+// beer : 2014-01-09 Top Level Domain Holdings Limited
 beer
 
 // xn--1qqw23a : 2014-01-13 Guangzhou YU Wei Information Technology Co., Ltd.
 佛山
 
-// college : 2014-01-16 XYZ.COM LLC 
+// college : 2014-01-16 XYZ.COM LLC
 college
 
-// ovh : 2014-01-16 OVH SAS 
+// ovh : 2014-01-16 OVH SAS
 ovh
 
-// meet : 2014-01-16 Afilias Limited 
+// meet : 2014-01-16 Afilias Limited
 meet
 
-// xn--ses554g : 2014-01-16 HU YI GLOBAL INFORMATION RESOURCES (HOLDING) COMPANY. HONGKONG LIMITED 
+// xn--ses554g : 2014-01-16 HU YI GLOBAL INFORMATION RESOURCES (HOLDING) COMPANY. HONGKONG LIMITED
 网址
 
-// gop : 2014-01-16 Republican State Leadership Committee, Inc. 
+// gop : 2014-01-16 Republican State Leadership Committee, Inc.
 gop
 
-// blackfriday : 2014-01-16 Uniregistry, Corp. 
+// blackfriday : 2014-01-16 Uniregistry, Corp.
 blackfriday
 
-// lacaixa : 2014-01-16 CAIXA D'ESTALVIS I PENSIONS DE BARCELONA 
+// lacaixa : 2014-01-16 CAIXA D'ESTALVIS I PENSIONS DE BARCELONA
 lacaixa
 
-// xn--czr694b : 2014-01-16 HU YI GLOBAL INFORMATION RESOURCES(HOLDING) COMPANY.HONGKONG LIMITED 
+// xn--czr694b : 2014-01-16 HU YI GLOBAL INFORMATION RESOURCES(HOLDING) COMPANY.HONGKONG LIMITED
 商标
 
-// vegas : 2014-01-16 Dot Vegas, Inc. 
+// vegas : 2014-01-16 Dot Vegas, Inc.
 vegas
 
-// black : 2014-01-16 Afilias Limited 
+// black : 2014-01-16 Afilias Limited
 black
+
+// soy : 2014-01-23 Charleston Road Registry Inc.
+soy
+
+// trade : 2014-01-23 Elite Registry Limited
+trade
+
+// gent : 2014-01-23 COMBELL GROUP NV/SA
+gent
+
+// ing : 2014-01-23 Charleston Road Registry Inc.
+ing
+
+// dad : 2014-01-23 Charleston Road Registry Inc.
+dad
+
+// shriram : 2014-01-23 Shriram Capital Ltd.
+shriram
+
+// bayern : 2014-01-23 Bayern Connect GmbH
+bayern
+
+// scot : 2014-01-23 Dot Scot Registry Limited
+scot
+
+// webcam : 2014-01-23 dot Webcam Limited
+webcam
+
+// foo : 2014-01-23 Charleston Road Registry Inc.
+foo
+
+// eat : 2014-01-23 Charleston Road Registry Inc.
+eat
+
+// nyc : 2014-01-23 The City of New York
+nyc
+
+// prod : 2014-01-23 Charleston Road Registry Inc.
+prod
+
+// how : 2014-01-23 Charleston Road Registry Inc.
+how
+
+// day : 2014-01-30 Charleston Road Registry Inc.
+day
+
+// meme : 2014-01-30 Charleston Road Registry Inc.
+meme
+
+// mov : 2014-01-30 Charleston Road Registry Inc.
+mov
+
+// paris : 2014-01-30 City of Paris
+paris
+
+// boo : 2014-01-30 Charleston Road Registry Inc.
+boo
+
+// new : 2014-01-30 Charleston Road Registry Inc.
+new
+
+// ifm : 2014-01-30 ifm electronic gmbh
+ifm
+
+// life : 2014-02-06 Trixy Oaks, LLC
+life
+
+// archi : 2014-02-06 STARTING DOT LIMITED
+archi
+
+// spiegel : 2014-02-06 SPIEGEL-Verlag Rudolf Augstein GmbH & Co. KG
+spiegel
+
+// brussels : 2014-02-06 DNS.be vzw
+brussels
+
+// church : 2014-02-06 Holly Fileds, LLC
+church
+
+// here : 2014-02-06 Charleston Road Registry Inc.
+here
+
+// dabur : 2014-02-06 Dabur India Limited
+dabur
+
+// vlaanderen : 2014-02-06 DNS.be vzw
+vlaanderen
+
+// cologne : 2014-02-06 NetCologne Gesellschaft für Telekommunikation mbH
+cologne
+
+// xn--kput3i : 2014-02-13 Beijing RITT-Net Technology Development Co., Ltd
+手机
+
+// wme : 2014-02-13 William Morris Endeavor Entertainment, LLC
+wme
+
+// nhk : 2014-02-13 Japan Broadcasting Corporation (NHK)
+nhk
+
+// suzuki : 2014-02-20 SUZUKI MOTOR CORPORATION
+suzuki
+
+// whoswho : 2014-02-20 Who's Who Registry
+whoswho
+
+// scb : 2014-02-20 The Siam Commercial Bank Public Company Limited ("SCB""\)
+scb
+
+// hamburg : 2014-02-20 Hamburg Top-Level-Domain GmbH
+hamburg
+
+// services : 2014-02-27 Fox Castle, LLC
+services
+
+// bzh : 2014-02-27 Association www.bzh
+bzh
+
+// rio : 2014-02-27 Empresa Municipal de Informática SA - IPLANRIO
+rio
 
 
 // ===END ICANN DOMAINS===

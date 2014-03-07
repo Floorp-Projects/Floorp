@@ -76,12 +76,8 @@ public:
    * (which might prevent any displacement from happening). If overscroll
    * ocurred, its amount is written to |aOverscrollAmountOut|.
    * The adjusted displacement is returned.
-   *
-   * aScrollingDisabled is used to indicate that no scrolling should happen
-   * in this axis. This is used to implement overflow: hidden;
    */
-  float AdjustDisplacement(float aDisplacement, float& aOverscrollAmountOut,
-                           bool aScrollingDisabled);
+  float AdjustDisplacement(float aDisplacement, float& aOverscrollAmountOut);
 
   /**
    * Gets the distance between the starting position of the touch supplied in

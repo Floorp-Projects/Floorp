@@ -679,16 +679,18 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
 
   if (scrollableFrame) {
     nsRect contentBounds = scrollableFrame->GetScrollRange();
+    nsPoint scrollPosition = scrollableFrame->GetScrollPosition();
     if (scrollableFrame->GetScrollbarStyles().mVertical == NS_STYLE_OVERFLOW_HIDDEN) {
-      metrics.SetDisableScrollingY(true);
+      contentBounds.y = scrollPosition.y;
+      contentBounds.height = 0;
     }
     if (scrollableFrame->GetScrollbarStyles().mHorizontal == NS_STYLE_OVERFLOW_HIDDEN) {
-      metrics.SetDisableScrollingX(true);
+      contentBounds.x = scrollPosition.x;
+      contentBounds.width = 0;
     }
     contentBounds.width += scrollableFrame->GetScrollPortRect().width;
     contentBounds.height += scrollableFrame->GetScrollPortRect().height;
     metrics.mScrollableRect = CSSRect::FromAppUnits(contentBounds);
-    nsPoint scrollPosition = scrollableFrame->GetScrollPosition();
     metrics.mScrollOffset = CSSPoint::FromAppUnits(scrollPosition);
 
     // If the frame was scrolled since the last layers update, and by

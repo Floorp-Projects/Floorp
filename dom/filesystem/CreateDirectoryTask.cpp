@@ -48,7 +48,8 @@ CreateDirectoryTask::CreateDirectoryTask(
 
 CreateDirectoryTask::~CreateDirectoryTask()
 {
-  MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
+  MOZ_ASSERT(!mPromise || NS_IsMainThread(),
+             "mPromise should be released on main thread!");
 }
 
 already_AddRefed<Promise>
@@ -123,6 +124,7 @@ CreateDirectoryTask::HandlerCallback()
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
   nsRefPtr<FileSystemBase> filesystem = do_QueryReferent(mFileSystem);
   if (!filesystem) {
+    mPromise = nullptr;
     return;
   }
 
@@ -130,10 +132,12 @@ CreateDirectoryTask::HandlerCallback()
     nsRefPtr<DOMError> domError = new DOMError(filesystem->GetWindow(),
       mErrorValue);
     mPromise->MaybeReject(domError);
+    mPromise = nullptr;
     return;
   }
   nsRefPtr<Directory> dir = new Directory(filesystem, mTargetRealPath);
   mPromise->MaybeResolve(dir);
+  mPromise = nullptr;
 }
 
 void
