@@ -838,7 +838,14 @@ function JSPropertyProvider(aDbgObject, anEnvironment, aInputValue, aCursor)
       return null;
     }
 
-    obj = DevToolsUtils.getProperty(obj, prop);
+    if (/\[\d+\]$/.test(prop)) {
+      // The property to autocomplete is a member of array. For example
+      // list[i][j]..[n]. Traverse the array to get the actual element.
+      obj = getArrayMemberProperty(obj, prop);
+    }
+    else {
+      obj = DevToolsUtils.getProperty(obj, prop);
+    }
 
     if (!isObjectUsable(obj)) {
       return null;
@@ -851,6 +858,50 @@ function JSPropertyProvider(aDbgObject, anEnvironment, aInputValue, aCursor)
   }
 
   return getMatchedPropsInDbgObject(obj, matchProp);
+}
+
+/**
+ * Get the array member of aObj for the given aProp. For example, given
+ * aProp='list[0][1]' the element at [0][1] of aObj.list is returned.
+ *
+ * @param object aObj
+ *        The object to operate on.
+ * @param string aProp
+ *        The property to return.
+ * @return null or Object
+ *         Returns null if the property couldn't be located. Otherwise the array
+ *         member identified by aProp.
+ */
+function getArrayMemberProperty(aObj, aProp)
+{
+  // First get the array.
+  let obj = aObj;
+  let propWithoutIndices = aProp.substr(0, aProp.indexOf("["));
+  obj = DevToolsUtils.getProperty(obj, propWithoutIndices);
+  if (!isObjectUsable(obj)) {
+    return null;
+  }
+
+  // Then traverse the list of indices to get the actual element.
+  let result;
+  let arrayIndicesRegex = /\[[^\]]*\]/g;
+  while ((result = arrayIndicesRegex.exec(aProp)) !== null) {
+    let indexWithBrackets = result[0];
+    let indexAsText = indexWithBrackets.substr(1, indexWithBrackets.length - 2);
+    let index = parseInt(indexAsText);
+
+    if (isNaN(index)) {
+      return null;
+    }
+
+    obj = DevToolsUtils.getProperty(obj, index);
+
+    if (!isObjectUsable(obj)) {
+      return null;
+    }
+  }
+
+  return obj;
 }
 
 /**

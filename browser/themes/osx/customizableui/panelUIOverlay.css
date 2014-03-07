@@ -58,12 +58,42 @@
   #PanelUI-quit:not([disabled]):hover:active {
     -moz-image-region: rect(0, 96px, 32px, 64px);
   }
+
+  .subviewbutton[checked="true"] {
+    background-image: url("chrome://global/skin/menu/menu-check@2x.png");
+  }
+
 }
 
 .panelUI-grid .toolbarbutton-1 {
   margin-right: 0;
   margin-left: 0;
   margin-bottom: 0;
+}
+
+.subviewbutton > .toolbarbutton-text,
+.subviewbutton > .menu-iconic-text {
+  margin: 2px 0px;
+}
+
+.subviewbutton:-moz-any([image],[targetURI],.cui-withicon, .bookmark-item) > .toolbarbutton-text {
+  margin: 2px 6px;
+}
+
+.restoreallitem > .toolbarbutton-icon {
+  display: none;
+}
+
+.subviewbutton {
+  -moz-padding-start: 18px;
+}
+
+.subviewbutton[checked="true"] {
+  background-position: top 5px left 4px;
+}
+
+.subviewbutton:not(:-moz-any([image],[targetURI],.cui-withicon, .bookmark-item)) > .menu-iconic-left {
+  display: none;
 }
 
 #BMB_bookmarksPopup > menu,
@@ -93,9 +123,4 @@
 .PanelUI-subView menuseparator,
 .cui-widget-panelview menuseparator {
   padding: 0 !important;
-}
-
-.PanelUI-subView menuitem[checked="true"]::before,
-.PanelUI-subView toolbarbutton[checked="true"]::before {
-  margin: 0 5px;
 }
