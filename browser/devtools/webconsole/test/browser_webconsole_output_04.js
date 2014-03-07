@@ -20,7 +20,7 @@ let inputTests = [
   // 1
   {
     input: "testCommentNode()",
-    output: "<!--\n  - Any copyright ",
+    output: /<!--\s+- Any copyright /,
     printOutput: "[object Comment]",
     inspectable: true,
     noClick: true,
@@ -29,7 +29,7 @@ let inputTests = [
   // 2
   {
     input: "testDocumentFragment()",
-    output: 'DocumentFragment [<div id="foo1" class="bar">, <div id="foo3">]',
+    output: 'DocumentFragment [ <div#foo1.bar>, <div#foo3> ]',
     printOutput: "[object DocumentFragment]",
     inspectable: true,
     variablesViewLabel: "DocumentFragment[2]",
@@ -58,7 +58,7 @@ let inputTests = [
   // 5
   {
     input: "testCSSStyleDeclaration()",
-    output: 'CSS2Properties {color: "green", font-size: "2em"}',
+    output: 'CSS2Properties { color: "green", font-size: "2em" }',
     printOutput: "[object CSS2Properties]",
     inspectable: true,
     noClick: true,
@@ -67,7 +67,7 @@ let inputTests = [
   // 6
   {
     input: "testStyleSheetList()",
-    output: "StyleSheetList [CSSStyleSheet]",
+    output: "StyleSheetList [ CSSStyleSheet ]",
     printOutput: "[object StyleSheetList",
     inspectable: true,
     variablesViewLabel: "StyleSheetList[1]",
@@ -84,7 +84,7 @@ let inputTests = [
   // 8
   {
     input: "document.styleSheets[0].cssRules",
-    output: "CSSRuleList [CSSStyleRule, CSSMediaRule]",
+    output: "CSSRuleList [ CSSStyleRule, CSSMediaRule ]",
     printOutput: "[object CSSRuleList",
     inspectable: true,
     variablesViewLabel: "CSSRuleList[2]",

@@ -4,12 +4,15 @@
 
 'use strict';
 
-function HistoryView(aSet, aLimit, aFilterUnpinned) {
+function HistoryView(aSet, aFilterUnpinned) {
   View.call(this, aSet);
 
   this._inBatch = 0;
 
-  this._limit = aLimit;
+  // View monitors this for maximum tile display counts
+  this.tilePrefName = "browser.display.startUI.history.maxresults";
+  this.showing = this.maxTiles > 0;
+
   this._filterUnpinned = aFilterUnpinned;
   this._historyService = PlacesUtils.history;
   this._navHistoryService = gHistSvc;
@@ -25,6 +28,11 @@ HistoryView.prototype = Util.extend(Object.create(View.prototype), {
   _set: null,
   _toRemove: null,
 
+  // For View's showing property
+  get vbox() {
+    return document.getElementById("start-history");
+  },
+
   destruct: function destruct() {
     this._historyService.removeObserver(this);
     if (StartUI.chromeWin) {
@@ -32,6 +40,11 @@ HistoryView.prototype = Util.extend(Object.create(View.prototype), {
       StartUI.chromeWin.removeEventListener('HistoryNeedsRefresh', this, false);
     }
     View.prototype.destruct.call(this);
+  },
+
+  refreshView: function () {
+    this.onClearHistory();
+    this.populateGrid();
   },
 
   handleItemClick: function tabview_handleItemClick(aItem) {
@@ -48,7 +61,7 @@ HistoryView.prototype = Util.extend(Object.create(View.prototype), {
     options.resultType = options.RESULTS_AS_URI;
     options.sortingMode = options.SORT_BY_DATE_DESCENDING;
 
-    let limit = this._limit || Infinity;
+    let limit = this.maxTiles;
     let result = this._navHistoryService.executeQuery(query, options);
     let rootNode = result.root;
     rootNode.containerOpen = true;
@@ -297,7 +310,7 @@ let HistoryStartView = {
   get _grid() { return document.getElementById("start-history-grid"); },
 
   init: function init() {
-    this._view = new HistoryView(this._grid, StartUI.maxResultsPerSection, true);
+    this._view = new HistoryView(this._grid, true);
     this._view.populateGrid();
     this._grid.removeAttribute("fade");
   },
