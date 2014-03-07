@@ -617,6 +617,17 @@ int nr_turn_client_allocate(nr_turn_client_ctx *ctx,
   nr_turn_stun_ctx *stun = 0;
   int r,_status;
 
+  if(ctx->state == NR_TURN_CLIENT_STATE_FAILED ||
+     ctx->state == NR_TURN_CLIENT_STATE_CANCELLED){
+    /* TURN TCP contexts can fail before we ever try to form an allocation,
+     * since the TCP connection can fail. It is also conceivable that a TURN
+     * TCP context could be cancelled before we are done forming all
+     * allocations (although we do not do this at the time this code was
+     * written) */
+    assert(ctx->turn_server_addr.protocol == IPPROTO_TCP);
+    ABORT(R_NOT_FOUND);
+  }
+
   assert(ctx->state == NR_TURN_CLIENT_STATE_INITTED);
 
   ctx->finished_cb=finished_cb;
