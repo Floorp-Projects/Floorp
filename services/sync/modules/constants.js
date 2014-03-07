@@ -54,11 +54,6 @@ HMAC_EVENT_INTERVAL:                   600000,
 // How long to wait between sync attempts if the Master Password is locked.
 MASTER_PASSWORD_LOCKED_RETRY_INTERVAL: 15 * 60 * 1000,   // 15 minutes
 
-// How long to initially wait between sync attempts if the identity manager is
-// not ready.  As we expect this to become ready relatively quickly, we retry
-// in (IDENTITY_NOT_READY_RETRY_INTERVAL * num_failures) seconds.
-IDENTITY_NOT_READY_RETRY_INTERVAL: 5 * 1000,   // 5 seconds
-
 // Separate from the ID fetch batch size to allow tuning for mobile.
 MOBILE_BATCH_SIZE:                     50,
 
