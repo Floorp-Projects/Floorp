@@ -45,11 +45,57 @@ function createToolbarWithPlacements(id, placements = []) {
   return tb;
 }
 
+function createOverflowableToolbarWithPlacements(id, placements) {
+  gAddedToolbars.add(id);
+
+  let tb = document.createElementNS(kNSXUL, "toolbar");
+  tb.id = id;
+  tb.setAttribute("customizationtarget", id + "-target");
+
+  let customizationtarget = document.createElementNS(kNSXUL, "hbox");
+  customizationtarget.id = id + "-target";
+  customizationtarget.setAttribute("flex", "1");
+  tb.appendChild(customizationtarget);
+
+  let overflowPanel = document.createElementNS(kNSXUL, "panel");
+  overflowPanel.id = id + "-overflow";
+  document.getElementById("mainPopupSet").appendChild(overflowPanel);
+
+  let overflowList = document.createElementNS(kNSXUL, "vbox");
+  overflowList.id = id + "-overflow-list";
+  overflowPanel.appendChild(overflowList);
+
+  let chevron = document.createElementNS(kNSXUL, "toolbarbutton");
+  chevron.id = id + "-chevron";
+  tb.appendChild(chevron);
+
+  CustomizableUI.registerArea(id, {
+    type: CustomizableUI.TYPE_TOOLBAR,
+    defaultPlacements: placements,
+    overflowable: true,
+  });
+
+  tb.setAttribute("customizable", "true");
+  tb.setAttribute("overflowable", "true");
+  tb.setAttribute("overflowpanel", overflowPanel.id);
+  tb.setAttribute("overflowtarget", overflowList.id);
+  tb.setAttribute("overflowbutton", chevron.id);
+
+  gNavToolbox.appendChild(tb);
+  return tb;
+}
+
 function removeCustomToolbars() {
   CustomizableUI.reset();
   for (let toolbarId of gAddedToolbars) {
     CustomizableUI.unregisterArea(toolbarId, true);
-    document.getElementById(toolbarId).remove();
+    let tb = document.getElementById(toolbarId);
+    if (tb.hasAttribute("overflowpanel")) {
+      let panel = document.getElementById(tb.getAttribute("overflowpanel"));
+      if (panel)
+        panel.remove();
+    }
+    tb.remove();
   }
   gAddedToolbars.clear();
 }
