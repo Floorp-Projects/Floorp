@@ -993,11 +993,17 @@ BrowserAddonList.prototype.onUninstalled = function (aAddon) {
 function BrowserAddonActor(aConnection, aAddon) {
   this.conn = aConnection;
   this._addon = aAddon;
+  this._contextPool = null;
+  this._threadActor = null;
   AddonManager.addAddonListener(this);
 }
 
 BrowserAddonActor.prototype = {
   actorPrefix: "addon",
+
+  get exited() {
+    return !this._addon;
+  },
 
   get id() {
     return this._addon.id;
@@ -1005,6 +1011,10 @@ BrowserAddonActor.prototype = {
 
   get url() {
     return this._addon.sourceURI ? this._addon.sourceURI.spec : undefined;
+  },
+
+  get attached() {
+    return this._threadActor;
   },
 
   form: function BAA_form() {
@@ -1024,9 +1034,72 @@ BrowserAddonActor.prototype = {
   onUninstalled: function BAA_onUninstalled(aAddon) {
     if (aAddon != this._addon)
       return;
+
+    if (this.attached) {
+      this.onDetach();
+      this.conn.send({ from: this.actorID, type: "tabDetached" });
+    }
+
     this._addon = null;
     AddonManager.removeAddonListener(this);
   },
+
+  onAttach: function BAA_onAttach() {
+    if (this.exited) {
+      return { type: "exited" };
+    }
+
+    if (!this.attached) {
+      this._contextPool = new ActorPool(this.conn);
+      this.conn.addActorPool(this._contextPool);
+
+      this._threadActor = new AddonThreadActor(this.conn, this,
+                                               this._addon.id);
+      this._contextPool.addActor(this._threadActor);
+    }
+
+    return { type: "tabAttached", threadActor: this._threadActor.actorID };
+  },
+
+  onDetach: function BAA_onDetach() {
+    if (!this.attached) {
+      return { error: "wrongState" };
+    }
+
+    this.conn.removeActorPool(this._contextPool);
+    this._contextPool = null;
+
+    this._threadActor = null;
+
+    return { type: "detached" };
+  },
+
+  preNest: function() {
+    let e = Services.wm.getEnumerator(null);
+    while (e.hasMoreElements()) {
+      let win = e.getNext();
+      let windowUtils = win.QueryInterface(Ci.nsIInterfaceRequestor)
+                           .getInterface(Ci.nsIDOMWindowUtils);
+      windowUtils.suppressEventHandling(true);
+      windowUtils.suspendTimeouts();
+    }
+  },
+
+  postNest: function() {
+    let e = Services.wm.getEnumerator(null);
+    while (e.hasMoreElements()) {
+      let win = e.getNext();
+      let windowUtils = win.QueryInterface(Ci.nsIInterfaceRequestor)
+                           .getInterface(Ci.nsIDOMWindowUtils);
+      windowUtils.resumeTimeouts();
+      windowUtils.suppressEventHandling(false);
+    }
+  }
+};
+
+BrowserAddonActor.prototype.requestTypes = {
+  "attach": BrowserAddonActor.prototype.onAttach,
+  "detach": BrowserAddonActor.prototype.onDetach
 };
 
 /**
