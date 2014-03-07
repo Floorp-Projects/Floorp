@@ -5838,7 +5838,11 @@ PresShell::Paint(nsView*        aViewToPaint,
   NS_ASSERTION(layerManager, "Must be in paint event");
   bool shouldInvalidate = layerManager->NeedsWidgetInvalidation();
 
-  nsAutoNotifyDidPaint notifyDidPaint(this, aFlags);
+  uint32_t didPaintFlags = aFlags;
+  if (!shouldInvalidate) {
+    didPaintFlags |= PAINT_COMPOSITE;
+  }
+  nsAutoNotifyDidPaint notifyDidPaint(this, didPaintFlags);
   AutoUpdateHitRegion updateHitRegion(this, frame);
 
   // Whether or not we should set first paint when painting is
