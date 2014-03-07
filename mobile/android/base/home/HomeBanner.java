@@ -56,6 +56,13 @@ public class HomeBanner extends LinearLayout
     private final TextView mTextView;
     private final ImageView mIconView;
 
+    // Listener that gets called when the banner is dismissed from the close button.
+    private OnDismissListener mOnDismissListener;
+
+    public interface OnDismissListener {
+        public void onDismiss();
+    }
+
     public HomeBanner(Context context) {
         this(context, null);
     }
@@ -84,8 +91,13 @@ public class HomeBanner extends LinearLayout
             @Override
             public void onClick(View view) {
                 HomeBanner.this.setVisibility(View.GONE);
+
                 // Send the current message id back to JS.
                 GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("HomeBanner:Dismiss", (String) getTag()));
+
+                if (mOnDismissListener != null) {
+                    mOnDismissListener.onDismiss();
+                }
             }
         });
 
@@ -120,6 +132,10 @@ public class HomeBanner extends LinearLayout
 
     public void setScrollingPages(boolean scrollingPages) {
         mScrollingPages = scrollingPages;
+    }
+
+    public void setOnDismissListener(OnDismissListener listener) {
+        mOnDismissListener = listener;
     }
 
     /**
