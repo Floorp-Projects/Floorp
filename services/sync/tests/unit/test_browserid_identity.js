@@ -12,6 +12,9 @@ Cu.import("resource://services-common/hawkclient.js");
 Cu.import("resource://gre/modules/FxAccounts.jsm");
 Cu.import("resource://gre/modules/FxAccountsClient.jsm");
 Cu.import("resource://gre/modules/FxAccountsCommon.js");
+Cu.import("resource://services-common/tokenserverclient.js");
+Cu.import("resource://services-sync/status.js");
+Cu.import("resource://services-sync/constants.js");
 
 const SECOND_MS = 1000;
 const MINUTE_MS = SECOND_MS * 60;
@@ -57,6 +60,7 @@ function MockFxAccounts() {
 function run_test() {
   initTestLogging("Trace");
   Log.repository.getLogger("Sync.Identity").level = Log.Level.Trace;
+  Log.repository.getLogger("Sync.BrowserIDManager").level = Log.Level.Trace;
   run_next_test();
 };
 
@@ -67,6 +71,17 @@ add_test(function test_initial_state() {
     run_next_test();
   }
 );
+
+add_task(function test_initialializeWithCurrentIdentity() {
+    _("Verify start after initializeWithCurrentIdentity");
+    browseridManager.initializeWithCurrentIdentity();
+    yield browseridManager.whenReadyToAuthenticate.promise;
+    do_check_true(!!browseridManager._token);
+    do_check_true(browseridManager.hasValidToken());
+    do_check_eq(browseridManager.account, identityConfig.fxaccount.user.email);
+  }
+);
+
 
 add_test(function test_getResourceAuthenticator() {
     _("BrowserIDManager supplies a Resource Authenticator callback which returns a Hawk header.");
@@ -81,7 +96,6 @@ add_test(function test_getResourceAuthenticator() {
     do_check_true(output.headers.authorization.startsWith('Hawk'));
     _("Expected internal state after successful call.");
     do_check_eq(browseridManager._token.uid, identityConfig.fxaccount.token.uid);
-    do_check_eq(browseridManager.account, identityConfig.fxaccount.user.email);
     run_next_test();
   }
 );
@@ -222,6 +236,44 @@ add_test(function test_RESTResourceAuthenticatorSkew() {
   run_next_test();
 });
 
+add_task(function test_ensureLoggedIn() {
+  configureFxAccountIdentity(browseridManager);
+  yield browseridManager.initializeWithCurrentIdentity();
+  Assert.equal(Status.login, LOGIN_SUCCEEDED, "original initialize worked");
+  yield browseridManager.ensureLoggedIn();
+  Assert.equal(Status.login, LOGIN_SUCCEEDED, "original ensureLoggedIn worked");
+  Assert.ok(browseridManager._shouldHaveSyncKeyBundle,
+            "_shouldHaveSyncKeyBundle should always be true after ensureLogin completes.");
+
+  // arrange for no logged in user.
+  let fxa = browseridManager._fxaService
+  let signedInUser = fxa.internal.currentAccountState.signedInUser;
+  fxa.internal.currentAccountState.signedInUser = null;
+  browseridManager.initializeWithCurrentIdentity();
+  Assert.ok(!browseridManager._shouldHaveSyncKeyBundle,
+            "_shouldHaveSyncKeyBundle should be false so we know we are testing what we think we are.");
+  Status.login = LOGIN_FAILED_NO_USERNAME;
+  try {
+    yield browseridManager.ensureLoggedIn();
+    Assert.ok(false, "promise should have been rejected.")
+  } catch(_) {
+  }
+  Assert.ok(browseridManager._shouldHaveSyncKeyBundle,
+            "_shouldHaveSyncKeyBundle should always be true after ensureLogin completes.");
+  fxa.internal.currentAccountState.signedInUser = signedInUser;
+  Status.login = LOGIN_FAILED_LOGIN_REJECTED;
+  try {
+    yield browseridManager.ensureLoggedIn();
+    Assert.ok(false, "LOGIN_FAILED_LOGIN_REJECTED should have caused immediate rejection");
+  } catch (_) {
+  }
+  Assert.equal(Status.login, LOGIN_FAILED_LOGIN_REJECTED,
+               "status should remain LOGIN_FAILED_LOGIN_REJECTED");
+  Status.login = LOGIN_FAILED_NETWORK_ERROR;
+  yield browseridManager.ensureLoggedIn();
+  Assert.equal(Status.login, LOGIN_SUCCEEDED, "final ensureLoggedIn worked");
+});
+
 add_test(function test_tokenExpiration() {
     _("BrowserIDManager notices token expiration:");
     let bimExp = new BrowserIDManager();
@@ -245,24 +297,6 @@ add_test(function test_tokenExpiration() {
     do_check_true(bimExp._token.expiration < bimExp._now());
     _("... means BrowserIDManager knows to re-fetch it on the next call.");
     do_check_false(bimExp.hasValidToken());
-    run_next_test();
-  }
-);
-
-add_test(function test_userChangeAndLogOut() {
-    _("BrowserIDManager notices when the FxAccounts.getSignedInUser().email changes.");
-    let bidUser = new BrowserIDManager();
-    configureFxAccountIdentity(bidUser, identityConfig);
-    let request = new SyncStorageRequest(
-      "https://example.net/somewhere/over/the/rainbow");
-    let authenticator = bidUser.getRESTRequestAuthenticator();
-    do_check_true(!!authenticator);
-    let output = authenticator(request, 'GET');
-    do_check_true(!!output);
-    do_check_eq(bidUser.account, identityConfig.fxaccount.user.email);
-    do_check_true(bidUser.hasValidToken());
-    identityConfig.fxaccount.user.email = "something@new";
-    do_check_false(bidUser.hasValidToken());
     run_next_test();
   }
 );
@@ -305,8 +339,142 @@ add_test(function test_computeXClientStateHeader() {
   run_next_test();
 });
 
+add_task(function test_getTokenErrors() {
+  _("BrowserIDManager correctly handles various failures to get a token.");
+
+  _("Arrange for a 401 - Sync should reflect an auth error.");
+  yield initializeIdentityWithTokenServerFailure({
+    status: 401,
+    headers: {"content-type": "application/json"},
+    body: JSON.stringify({}),
+  });
+  Assert.equal(Status.login, LOGIN_FAILED_LOGIN_REJECTED, "login was rejected");
+
+  // XXX - other interesting responses to return?
+
+  // And for good measure, some totally "unexpected" errors - we generally
+  // assume these problems are going to magically go away at some point.
+  _("Arrange for an empty body with a 200 response - should reflect a network error.");
+  yield initializeIdentityWithTokenServerFailure({
+    status: 200,
+    headers: [],
+    body: "",
+  });
+  Assert.equal(Status.login, LOGIN_FAILED_NETWORK_ERROR, "login state is LOGIN_FAILED_NETWORK_ERROR");
+});
+
+add_task(function test_getHAWKErrors() {
+  _("BrowserIDManager correctly handles various HAWK failures.");
+
+  _("Arrange for a 401 - Sync should reflect an auth error.");
+  yield initializeIdentityWithHAWKFailure({
+    status: 401,
+    headers: {"content-type": "application/json"},
+    body: JSON.stringify({}),
+  });
+  Assert.equal(Status.login, LOGIN_FAILED_LOGIN_REJECTED, "login was rejected");
+
+  // XXX - other interesting responses to return?
+
+  // And for good measure, some totally "unexpected" errors - we generally
+  // assume these problems are going to magically go away at some point.
+  _("Arrange for an empty body with a 200 response - should reflect a network error.");
+  yield initializeIdentityWithHAWKFailure({
+    status: 200,
+    headers: [],
+    body: "",
+  });
+  Assert.equal(Status.login, LOGIN_FAILED_NETWORK_ERROR, "login state is LOGIN_FAILED_NETWORK_ERROR");
+});
+
 // End of tests
 // Utility functions follow
+
+// Create a new browserid_identity object and initialize it with a
+// mocked TokenServerClient which always gets the specified response.
+function* initializeIdentityWithTokenServerFailure(response) {
+  // First create a mock "request" object that well' hack into the token server.
+  // A log for it
+  let requestLog = Log.repository.getLogger("testing.mock-rest");
+  if (!requestLog.appenders.length) { // might as well see what it says :)
+    requestLog.addAppender(new Log.DumpAppender());
+    requestLog.level = Log.Level.Trace;
+  }
+
+  // A mock request object.
+  function MockRESTRequest(url) {};
+  MockRESTRequest.prototype = {
+    _log: requestLog,
+    setHeader: function() {},
+    get: function(callback) {
+      this.response = response;
+      callback.call(this);
+    }
+  }
+  // The mocked TokenServer client which will get the response.
+  function MockTSC() { }
+  MockTSC.prototype = new TokenServerClient();
+  MockTSC.prototype.constructor = MockTSC;
+  MockTSC.prototype.newRESTRequest = function(url) {
+    return new MockRESTRequest(url);
+  }
+  // tie it all together.
+  let mockTSC = new MockTSC()
+  configureFxAccountIdentity(browseridManager);
+  browseridManager._tokenServerClient = mockTSC;
+
+  yield browseridManager.initializeWithCurrentIdentity();
+  try {
+    yield browseridManager.whenReadyToAuthenticate.promise;
+    Assert.ok(false, "expecting this promise to resolve with an error");
+  } catch (ex) {}
+}
+
+
+// Create a new browserid_identity object and initialize it with a
+// hawk mock that simulates a failure.
+// A token server mock will be used that doesn't hit a server, so we move
+// directly to a hawk request.
+function* initializeIdentityWithHAWKFailure(response) {
+  // A mock request object.
+  function MockRESTRequest() {};
+  MockRESTRequest.prototype = {
+    setHeader: function() {},
+    post: function(data, callback) {
+      this.response = response;
+      callback.call(this);
+    }
+  }
+
+  // The hawk client.
+  function MockedHawkClient() {}
+  MockedHawkClient.prototype = new HawkClient();
+  MockedHawkClient.prototype.constructor = MockedHawkClient;
+  MockedHawkClient.prototype.newHAWKAuthenticatedRESTRequest = function(uri, credentials, extra) {
+    return new MockRESTRequest();
+  }
+
+  // tie it all together - configureFxAccountIdentity isn't useful here :(
+  let fxaClient = new MockFxAccountsClient();
+  fxaClient.hawk = new MockedHawkClient();
+  let config = makeIdentityConfig();
+  let internal = {
+    fxAccountsClient: fxaClient,
+  }
+  let fxa = new FxAccounts(internal);
+  fxa.internal.currentAccountState.signedInUser = {
+      accountData: config.fxaccount.user,
+  };
+
+  browseridManager._fxaService = fxa;
+  browseridManager._signedInUser = null;
+  yield browseridManager.initializeWithCurrentIdentity();
+  try {
+    yield browseridManager.whenReadyToAuthenticate.promise;
+    Assert.ok(false, "expecting this promise to resolve with an error");
+  } catch (ex) {}
+}
+
 
 function getTimestamp(hawkAuthHeader) {
   return parseInt(/ts="(\d+)"/.exec(hawkAuthHeader)[1], 10) * SECOND_MS;
