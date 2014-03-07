@@ -1205,6 +1205,9 @@ pref("devtools.styleeditor.autocompletion-enabled", true);
 // Enable the Shader Editor.
 pref("devtools.shadereditor.enabled", false);
 
+// Enable the Web Audio Editor
+pref("devtools.webaudioeditor.enabled", false);
+
 // Enable tools for Chrome development.
 pref("devtools.chrome.enabled", false);
 
