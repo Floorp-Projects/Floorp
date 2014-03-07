@@ -113,11 +113,16 @@ function escapeHtmlEntities(aText) {
                       .replace("'", "&#39;", "g");
 }
 
+function notifyObservers(aTopic, aInitialImport) {
+  Services.obs.notifyObservers(null, aTopic, aInitialImport ? "html-initial"
+                                                            : "html");
+}
+
 this.BookmarkHTMLUtils = Object.freeze({
   /**
    * Loads the current bookmarks hierarchy from a "bookmarks.html" file.
    *
-   * @param aUrlString
+   * @param aSpec
    *        String containing the "file:" URI for the existing "bookmarks.html"
    *        file to be loaded.
    * @param aInitialImport
@@ -127,26 +132,59 @@ this.BookmarkHTMLUtils = Object.freeze({
    * @resolves When the new bookmarks have been created.
    * @rejects JavaScript exception.
    */
-  importFromURL: function BHU_importFromURL(aUrlString, aInitialImport) {
-    let importer = new BookmarkImporter(aInitialImport);
-    return importer.importFromURL(aUrlString);
+  importFromURL: function BHU_importFromURL(aSpec, aInitialImport) {
+    return Task.spawn(function* () {
+      notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_BEGIN, aInitialImport);
+      try {
+        let importer = new BookmarkImporter(aInitialImport);
+        yield importer.importFromURL(aSpec);
+
+        notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_SUCCESS, aInitialImport);
+      } catch(ex) {
+        Cu.reportError("Failed to import bookmarks from " + aSpec + ": " + ex);
+        notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_FAILED, aInitialImport);
+        throw ex;
+      }
+    });
   },
 
   /**
    * Loads the current bookmarks hierarchy from a "bookmarks.html" file.
    *
-   * @param aLocalFile
-   *        nsIFile for the existing "bookmarks.html" file to be loaded.
+   * @param aFilePath
+   *        OS.File path string of the "bookmarks.html" file to be loaded.
    * @param aInitialImport
    *        Whether this is the initial import executed on a new profile.
    *
    * @return {Promise}
    * @resolves When the new bookmarks have been created.
    * @rejects JavaScript exception.
+   * @deprecated passing an nsIFile is deprecated
    */
-  importFromFile: function BHU_importFromFile(aLocalFile, aInitialImport) {
-    let importer = new BookmarkImporter(aInitialImport);
-    return importer.importFromURL(NetUtil.newURI(aLocalFile).spec);
+  importFromFile: function BHU_importFromFile(aFilePath, aInitialImport) {
+    if (aFilePath instanceof Ci.nsIFile) {
+      Deprecated.warning("Passing an nsIFile to BookmarksJSONUtils.importFromFile " +
+                         "is deprecated. Please use an OS.File path string instead.",
+                         "https://developer.mozilla.org/docs/JavaScript_OS.File");
+      aFilePath = aFilePath.path;
+    }
+
+    return Task.spawn(function* () {
+      notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_BEGIN, aInitialImport);
+      try {
+        if (!(yield OS.File.exists(aFilePath)))
+          throw new Error("Cannot import from nonexisting html file");
+
+        let importer = new BookmarkImporter(aInitialImport);
+        yield importer.importFromURL(OS.Path.toFileURI(aFilePath));
+
+        notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_SUCCESS, aInitialImport);
+      } catch(ex) {
+        Cu.reportError("Failed to import bookmarks from " + aFilePath + ": " + ex);
+        notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_FAILED, aInitialImport);
+        throw ex;
+      }
+    });
   },
 
   /**
@@ -881,39 +919,28 @@ BookmarkImporter.prototype = {
     PlacesUtils.bookmarks.runInBatchMode(this, aDoc);
   },
 
-  _notifyObservers: function notifyObservers(topic) {
-    Services.obs.notifyObservers(null,
-                                 topic,
-                                 this._isImportDefaults ? "html-initial"
-                                                        : "html");
-  },
-
-  importFromURL: function importFromURL(aUrlString, aCallback) {
+  importFromURL: function importFromURL(aSpec) {
     let deferred = Promise.defer();
-    let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Ci.nsIXMLHttpRequest);
-    xhr.onload = (function onload() {
+    let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
+                .createInstance(Ci.nsIXMLHttpRequest);
+    xhr.onload = () => {
       try {
         this._walkTreeForImport(xhr.responseXML);
-        this._notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_SUCCESS);
         deferred.resolve();
       } catch(e) {
-        this._notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_FAILED);
         deferred.reject(e);
         throw e;
       }
-    }).bind(this);
-    xhr.onabort = xhr.onerror = xhr.ontimeout = (function handleFail() {
-      this._notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_FAILED);
+    };
+    xhr.onabort = xhr.onerror = xhr.ontimeout = () => {
       deferred.reject(new Error("xmlhttprequest failed"));
-    }).bind(this);
-    this._notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_BEGIN);
+    };
     try {
-      xhr.open("GET", aUrlString);
+      xhr.open("GET", aSpec);
       xhr.responseType = "document";
       xhr.overrideMimeType("text/html");
       xhr.send();
     } catch (e) {
-      this._notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_FAILED);
       deferred.reject(e);
     }
     return deferred.promise;
