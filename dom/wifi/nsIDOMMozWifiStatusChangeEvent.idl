@@ -27,9 +27,3 @@ interface nsIDOMMozWifiStatusChangeEvent : nsIDOMEvent
                                                  in nsIVariant aNetwork,
                                                  in DOMString aStatus);
 };
-
-dictionary MozWifiStatusChangeEventInit : EventInit
-{
-  nsIVariant network;
-  DOMString  status;
-};

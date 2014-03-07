@@ -19,10 +19,3 @@ interface nsIDOMStyleRuleChangeEvent : nsIDOMEvent
                                            in nsIDOMCSSStyleSheet aStyleSheet,
                                            in nsIDOMCSSRule aRule);
 };
-
-dictionary StyleRuleChangeEventInit : EventInit
-{
-  nsIDOMCSSStyleSheet stylesheet;
-  nsIDOMCSSRule rule;
-};
-

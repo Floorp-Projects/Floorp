@@ -828,6 +828,7 @@ public:
 
   // Is this presentation in a chrome docshell?
   bool IsChrome() const { return mIsChrome; }
+  bool IsChromeOriginImage() const { return mIsChromeOriginImage; }
   void UpdateIsChrome();
 
   // Public API for native theme code to get style internals.
@@ -835,7 +836,7 @@ public:
 
   // Is it OK to let the page specify colors and backgrounds?
   bool UseDocumentColors() const {
-    return GetCachedBoolPref(kPresContext_UseDocumentColors) || IsChrome();
+    return GetCachedBoolPref(kPresContext_UseDocumentColors) || IsChrome() || IsChromeOriginImage();
   }
 
   // Explicitly enable and disable paint flashing.
@@ -1318,6 +1319,7 @@ protected:
   unsigned              mFireAfterPaintEvents : 1;
 
   unsigned              mIsChrome : 1;
+  unsigned              mIsChromeOriginImage : 1;
 
   // Should we paint flash in this context? Do not use this variable directly.
   // Use GetPaintFlashing() method instead.

@@ -25,7 +25,3 @@ interface nsIDOMRecordErrorEvent : nsIDOMEvent
                             in boolean aCancelable,
                             in DOMString aName);
 };
-
-dictionary RecordErrorEventInit : EventInit {
-  DOMString name;
-};
