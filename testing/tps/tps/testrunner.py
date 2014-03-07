@@ -171,9 +171,9 @@ class TPSTestRunner(object):
 
         # Create a random account suffix that is used when creating test
         # accounts on a staging server.
-        account_suffix = {"account-suffix": ''.join([str(random.randint(0,9))
-                                                     for i in range(1,6)])}
-        self.config['account'].update(account_suffix)
+        #account_suffix = {"account-suffix": ''.join([str(random.randint(0,9))
+        #                                             for i in range(1,6)])}
+        #self.config['sync_account'].update(account_suffix)
 
         # Read and parse the test file, merge it with the contents of the config
         # file, and write the combined output to a temporary file.
