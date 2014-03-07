@@ -273,6 +273,7 @@ DataSourceSurfaceD2DTarget::Map(MapType aMapType, MappedSurface *aMappedSurface)
 
   aMappedSurface->mData = (uint8_t*)map.pData;
   aMappedSurface->mStride = map.RowPitch;
+  mIsMapped = true;
 
   return true;
 }
@@ -282,6 +283,7 @@ DataSourceSurfaceD2DTarget::Unmap()
 {
   MOZ_ASSERT(mIsMapped);
 
+  mIsMapped = false;
   mTexture->Unmap(0);
 }
 

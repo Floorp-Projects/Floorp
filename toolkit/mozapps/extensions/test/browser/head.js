@@ -16,8 +16,9 @@ pathParts.splice(pathParts.length - 1, pathParts.length);
 var gTestInWindow = /-window$/.test(pathParts[pathParts.length - 1]);
 
 // Drop the UI type
-pathParts.splice(pathParts.length - 1, pathParts.length);
-pathParts.push("browser");
+if (gTestInWindow) {
+  pathParts.splice(pathParts.length - 1, pathParts.length);
+}
 
 const RELATIVE_DIR = pathParts.slice(4).join("/") + "/";
 

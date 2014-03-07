@@ -274,6 +274,34 @@ class TestWebIDLCodegenManager(unittest.TestCase):
                     os.path.exists = old_exists
                     del sys.modules['mozwebidlcodegen.fakemodule']
 
+    def test_copy_input(self):
+        """Ensure a copied .webidl file is handled properly."""
+
+        # This test simulates changing the type of a WebIDL from static to
+        # preprocessed. In that scenario, the original file still exists but
+        # it should no longer be consulted during codegen.
+
+        args = self._get_manager_args()
+        m1 = WebIDLCodegenManager(**args)
+        m1.generate_build_files()
+
+        old_path = None
+        for p in args['inputs'][0]:
+            if p.endswith('Parent.webidl'):
+                old_path = p
+                break
+        self.assertIsNotNone(old_path)
+
+        new_path = mozpath.join(args['cache_dir'], 'Parent.webidl')
+        shutil.copy2(old_path, new_path)
+
+        args['inputs'][0].remove(old_path)
+        args['inputs'][0].add(new_path)
+
+        m2 = WebIDLCodegenManager(**args)
+        result = m2.generate_build_files()
+        self.assertEqual(len(result.updated), 0)
+
 
 if __name__ == '__main__':
     main()
