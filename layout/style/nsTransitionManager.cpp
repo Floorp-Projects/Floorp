@@ -171,10 +171,10 @@ ElementTransitions::CanPerformOnCompositorThread(CanAnimateFlags aFlags) const
   bool existsProperty = false;
   for (uint32_t i = 0, i_end = mPropertyTransitions.Length(); i < i_end; ++i) {
     const ElementPropertyTransition& pt = mPropertyTransitions[i];
-    if (pt.IsRemovedSentinel()) {
+    if (!pt.IsRunningAt(now)) {
       continue;
     }
-    
+
     existsProperty = true;
 
     if (!css::CommonElementAnimationData::CanAnimatePropertyOnCompositor(mElement,
