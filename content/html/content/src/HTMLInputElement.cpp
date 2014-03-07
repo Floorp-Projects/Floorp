@@ -2788,6 +2788,7 @@ HTMLInputElement::SetValueInternal(const nsAString& aValue,
           UpdateAllValidityStates(mParserCreating);
         }
       } else {
+        nsMemory::Free(mInputData.mValue);
         mInputData.mValue = ToNewUnicode(value);
         if (aSetValueChanged) {
           SetValueChanged(true);
