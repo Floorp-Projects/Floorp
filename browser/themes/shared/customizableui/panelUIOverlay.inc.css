@@ -121,11 +121,13 @@
 .panelUI-grid .toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-multiline-text,
 .panelUI-grid .toolbarbutton-1 > .toolbarbutton-multiline-text {
   -moz-hyphens: auto;
+  line-height: 1.1;
 }
 
 .panelUI-grid:not([customize-transitioning]) .toolbarbutton-1[fadelabel] > .toolbarbutton-menubutton-button > .toolbarbutton-multiline-text,
 .panelUI-grid:not([customize-transitioning]) .toolbarbutton-1[fadelabel] > .toolbarbutton-multiline-text {
-  mask: url(chrome://browser/content/browser.xul#menuPanelButtonTextFadeOutMask);
+  position: absolute;
+  clip: rect(auto, auto, 2.2em, auto);
 }
 
 .panelUI-grid .toolbarbutton-1 > .toolbarbutton-text,
@@ -194,7 +196,7 @@ toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-it
   -moz-appearance: none;
   -moz-box-orient: vertical;
   width: calc(@menuPanelButtonWidth@);
-  height: calc(40px + 4em);
+  height: calc(51px + 2.2em);
 }
 
 /* Help SDK buttons fit in. */
@@ -213,7 +215,7 @@ toolbarbutton[sdk-button="true"][cui-areatype="menu-panel"] > .toolbarbutton-ico
   -moz-appearance: none;
   -moz-box-orient: vertical;
   width: calc(@menuPanelButtonWidth@ - 2px);
-  height: calc(38px + 4em);
+  height: calc(49px + 2.2em);
   margin-top: 3px; /* Hack needed to get type=menu-button to properly align vertically. */
   border: 0;
 }
@@ -250,8 +252,8 @@ toolbaritem[cui-areatype="menu-panel"][sdkstylewidget="true"]:not(.panel-wide-it
   -moz-box-align: center;
   width: 16px;
   -moz-margin-start: -16px;
-  height: 40px;
-  margin-bottom: 4em;
+  height: 51px;
+  margin-bottom: 2.2em;
   padding: 0;
 }
 
