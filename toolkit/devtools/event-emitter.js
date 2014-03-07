@@ -10,13 +10,15 @@ this.EventEmitter = function EventEmitter() {};
 
 if (typeof(require) === "function") {
    module.exports = EventEmitter;
-   var {Cu} = require("chrome");
+   var {Cu, components} = require("chrome");
 } else {
   var EXPORTED_SYMBOLS = ["EventEmitter"];
   var Cu = this["Components"].utils;
+  var components = Components;
 }
 
 const { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
+const { Services } = Cu.import("resource://gre/modules/Services.jsm");
 
 /**
  * Decorate an object with event emitter functionality.
@@ -107,8 +109,11 @@ EventEmitter.prototype = {
    * be sent to listner functions.
    */
   emit: function EventEmitter_emit(aEvent) {
-    if (!this._eventEmitterListeners || !this._eventEmitterListeners.has(aEvent))
+    this.logEvent(aEvent, arguments);
+
+    if (!this._eventEmitterListeners || !this._eventEmitterListeners.has(aEvent)) {
       return;
+    }
 
     let originalListeners = this._eventEmitterListeners.get(aEvent);
     for (let listener of this._eventEmitterListeners.get(aEvent)) {
@@ -133,5 +138,55 @@ EventEmitter.prototype = {
         }
       }
     }
-  }
+  },
+
+  logEvent: function(aEvent, args) {
+    let logging = Services.prefs.getBoolPref("devtools.dump.emit");
+
+    if (logging) {
+      let caller = components.stack.caller.caller;
+      let func = caller.name;
+      let path = caller.filename.split(/ -> /)[1] + ":" + caller.lineNumber;
+
+      let argOut = "(";
+      if (args.length === 1) {
+        argOut += aEvent;
+      }
+
+      let out = "EMITTING: ";
+
+      // We need this try / catch to prevent any dead object errors.
+      try {
+        for (let i = 1; i < args.length; i++) {
+          if (i === 1) {
+            argOut = "(" + aEvent + ", ";
+          } else {
+            argOut += ", ";
+          }
+
+          let arg = args[i];
+          argOut += arg;
+
+          if (arg && arg.nodeName) {
+            argOut += " (" + arg.nodeName;
+            if (arg.id) {
+              argOut += "#" + arg.id;
+            }
+            if (arg.className) {
+              argOut += "." + arg.className;
+            }
+            argOut += ")";
+          }
+        }
+      } catch(e) {
+        // Object is dead so the toolbox is most likely shutting down,
+        // do nothing.
+      }
+
+      argOut += ")";
+      out += "emit" + argOut + " from " + func + "() -> " + path + "\n";
+
+      dump(out);
+    }
+  },
 };

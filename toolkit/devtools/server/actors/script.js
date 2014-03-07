@@ -3308,6 +3308,41 @@ ObjectActor.prototype.requestTypes = {
  * information for the debugger object, or true otherwise.
  */
 DebuggerServer.ObjectActorPreviewers = {
+  String: [function({obj, threadActor}, aGrip) {
+    let result = genericObjectPreviewer("String", String, obj, threadActor);
+    if (result) {
+      let length = DevToolsUtils.getProperty(obj, "length");
+      if (typeof length != "number") {
+        return false;
+      }
+
+      aGrip.displayString = result.value;
+      return true;
+    }
+
+    return true;
+  }],
+
+  Boolean: [function({obj, threadActor}, aGrip) {
+    let result = genericObjectPreviewer("Boolean", Boolean, obj, threadActor);
+    if (result) {
+      aGrip.preview = result;
+      return true;
+    }
+
+    return false;
+  }],
+
+  Number: [function({obj, threadActor}, aGrip) {
+    let result = genericObjectPreviewer("Number", Number, obj, threadActor);
+    if (result) {
+      aGrip.preview = result;
+      return true;
+    }
+
+    return false;
+  }],
+
   Function: [function({obj, threadActor}, aGrip) {
     if (obj.name) {
       aGrip.name = obj.name;
@@ -3484,6 +3519,45 @@ DebuggerServer.ObjectActorPreviewers = {
     return true;
   }], // DOMStringMap
 }; // DebuggerServer.ObjectActorPreviewers
+
+/**
+ * Generic previewer for "simple" classes like String, Number and Boolean.
+ *
+ * @param string aClassName
+ *        Class name to expect.
+ * @param object aClass
+ *        The class to expect, eg. String. The valueOf() method of the class is
+ *        invoked on the given object.
+ * @param Debugger.Object aObj
+ *        The debugger object we need to preview.
+ * @param object aThreadActor
+ *        The thread actor to use to create a value grip.
+ * @return object|null
+ *         An object with one property, "value", which holds the value grip that
+ *         represents the given object. Null is returned if we cant preview the
+ *         object.
+ */
+function genericObjectPreviewer(aClassName, aClass, aObj, aThreadActor) {
+  if (!aObj.proto || aObj.proto.class != aClassName) {
+    return null;
+  }
+
+  let raw = aObj.unsafeDereference();
+  let v = null;
+  try {
+    v = aClass.prototype.valueOf.call(raw);
+  } catch (ex) {
+    // valueOf() can throw if the raw JS object is "misbehaved".
+    return null;
+  }
+
+  if (v !== null) {
+    v = aThreadActor.createValueGrip(makeDebuggeeValueIfNeeded(aObj, v));
+    return { value: v };
+  }
+
+  return null;
+}
 
 // Preview functions that do not rely on the object class.
 DebuggerServer.ObjectActorPreviewers.Object = [
