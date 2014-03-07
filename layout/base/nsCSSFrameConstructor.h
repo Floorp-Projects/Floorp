@@ -383,13 +383,13 @@ private:
                            nsFrameItems&            aFrameItems);
 
   /**
-   * FrameConstructionData callback for constructing table rows and row groups.
+   * FrameConstructionData callback used for constructing table rows.
    */
-  nsIFrame* ConstructTableRowOrRowGroup(nsFrameConstructorState& aState,
-                                        FrameConstructionItem&   aItem,
-                                        nsIFrame*                aParentFrame,
-                                        const nsStyleDisplay*    aStyleDisplay,
-                                        nsFrameItems&            aFrameItems);
+  nsIFrame* ConstructTableRow(nsFrameConstructorState& aState,
+                              FrameConstructionItem&   aItem,
+                              nsIFrame*                aParentFrame,
+                              const nsStyleDisplay*    aStyleDisplay,
+                              nsFrameItems&            aFrameItems);
 
   /**
    * FrameConstructionData callback used for constructing table columns.
