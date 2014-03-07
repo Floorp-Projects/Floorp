@@ -34,3 +34,12 @@ a11y::PlatformShutdown()
   nsWinUtils::ShutdownWindowEmulation();
 }
 
+void
+a11y::ProxyCreated(ProxyAccessible*)
+{
+}
+
+void
+a11y::ProxyDestroyed(ProxyAccessible*)
+{
+}
