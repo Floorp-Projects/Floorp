@@ -1779,14 +1779,14 @@ SignCert(CERTCertDBHandle *handle, CERTCertificate *cert, PRBool selfsign,
 
     switch(certVersion) {
       case (SEC_CERTIFICATE_VERSION_1):
-        // The initial version for x509 certificates is version one
-        // and this default value must be an implicit DER encoding.
+        /* The initial version for x509 certificates is version one
+         * and this default value must be an implicit DER encoding. */
         cert->version.data = NULL;
         cert->version.len = 0;
         break;
       case (SEC_CERTIFICATE_VERSION_2):
       case (SEC_CERTIFICATE_VERSION_3):
-      case 3: // unspecified format (would be version 4 certificate).
+      case 3: /* unspecified format (would be version 4 certificate). */
         *(cert->version.data) = certVersion;
         cert->version.len = 1;
         break;
