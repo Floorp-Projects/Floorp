@@ -53,6 +53,7 @@ public:
         bool IsDeleteRequested() const;
 
         bool HasAlpha() const;
+        bool IsReadableFloat() const;
 
         void SetTexImage(WebGLTexture* tex, GLenum target, GLint level);
         void SetRenderbuffer(WebGLRenderbuffer* rb) {
