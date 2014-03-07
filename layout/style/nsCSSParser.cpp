@@ -248,9 +248,14 @@ public:
                                            uint32_t aLineOffset);
 
   nsCSSProperty LookupEnabledProperty(const nsAString& aProperty) {
-    return nsCSSProps::LookupProperty(aProperty, mUnsafeRulesEnabled ?
-                                                   nsCSSProps::eEnabledInUASheets :
-                                                   nsCSSProps::eEnabled);
+    static_assert(nsCSSProps::eEnabledForAllContent == 0,
+                  "nsCSSProps::eEnabledForAllContent should be zero for "
+                  "this bitfield to work");
+    nsCSSProps::EnabledState enabledState = nsCSSProps::eEnabledForAllContent;
+    if (mUnsafeRulesEnabled) {
+      enabledState |= nsCSSProps::eEnabledInUASheets;
+    }
+    return nsCSSProps::LookupProperty(aProperty, enabledState);
   }
 
 protected:
