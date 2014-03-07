@@ -17,9 +17,3 @@ interface nsIDOMDOMTransactionEvent : nsIDOMEvent
                                in boolean canCancelArg,
                                in nsIVariant transactions);
 };
-
-dictionary DOMTransactionEventInit : EventInit
-{
-  nsIVariant transactions;
-};
-

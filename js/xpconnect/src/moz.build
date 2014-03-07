@@ -53,7 +53,6 @@ SOURCES += [
 ]
 
 GENERATED_SOURCES += [
-    'DictionaryHelpers.cpp',
     'dom_quickstubs.cpp',
     'GeneratedEvents.cpp',
 ]
@@ -69,7 +68,6 @@ include('/ipc/chromium/chromium-config.mozbuild')
 FINAL_LIBRARY = 'gklayout'
 
 GENERATED_FILES = [
-    'DictionaryHelpers.h',
     'dom_quickstubs.h',
     'GeneratedEventClasses.h',
     'GeneratedEvents.h',

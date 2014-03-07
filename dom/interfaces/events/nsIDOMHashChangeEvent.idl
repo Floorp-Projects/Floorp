@@ -17,9 +17,3 @@ interface nsIDOMHashChangeEvent : nsIDOMEvent
                            in DOMString oldURLArg,
                            in DOMString newURLArg);
 };
-
-dictionary HashChangeEventInit : EventInit
-{
-  DOMString oldURL;
-  DOMString newURL;
-};
