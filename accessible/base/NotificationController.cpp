@@ -6,9 +6,11 @@
 #include "NotificationController.h"
 
 #include "DocAccessible-inl.h"
+#include "DocAccessibleChild.h"
 #include "TextLeafAccessible.h"
 #include "TextUpdater.h"
 
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/Telemetry.h"
 
@@ -217,8 +219,19 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
     if (ownerContent) {
       Accessible* outerDocAcc = mDocument->GetAccessible(ownerContent);
       if (outerDocAcc && outerDocAcc->AppendChild(childDoc)) {
-        if (mDocument->AppendChildDocument(childDoc))
+        if (mDocument->AppendChildDocument(childDoc)) {
+          if (IPCAccessibilityActive()) {
+            DocAccessibleChild* ipcDoc = new DocAccessibleChild(childDoc);
+            childDoc->SetIPCDoc(ipcDoc);
+            auto contentChild = dom::ContentChild::GetSingleton();
+            DocAccessibleChild* parentIPCDoc = mDocument->IPCDoc();
+            uint64_t id = reinterpret_cast<uintptr_t>(outerDocAcc->UniqueID());
+            contentChild->SendPDocAccessibleConstructor(ipcDoc, parentIPCDoc,
+                                                        id);
+          }
+
           continue;
+        }
 
         outerDocAcc->RemoveChild(childDoc);
       }
