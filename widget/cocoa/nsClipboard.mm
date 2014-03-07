@@ -8,7 +8,6 @@
 #endif
 #include "prlog.h"
 
-#include "gfxPlatform.h"
 #include "nsCOMPtr.h"
 #include "nsClipboard.h"
 #include "nsString.h"
@@ -24,10 +23,6 @@
 #include "nsObjCExceptions.h"
 #include "imgIContainer.h"
 #include "nsCocoaUtils.h"
-
-using mozilla::gfx::DataSourceSurface;
-using mozilla::gfx::SourceSurface;
-using mozilla::RefPtr;
 
 // Screenshots use the (undocumented) png pasteboard type.
 #define IMAGE_PASTEBOARD_TYPES NSTIFFPboardType, @"Apple PNG pasteboard type", nil
@@ -466,20 +461,18 @@ nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTransferable)
         continue;
       }
 
-      nsRefPtr<gfxASurface> thebesSurface =
+      nsRefPtr<gfxASurface> surface =
         image->GetFrame(imgIContainer::FRAME_CURRENT,
                         imgIContainer::FLAG_SYNC_DECODE);
-      if (!thebesSurface) {
-        continue;
-      }
-      RefPtr<SourceSurface> surface =
-        gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(
-          gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget(), thebesSurface);
       if (!surface) {
         continue;
       }
+      nsRefPtr<gfxImageSurface> frame(surface->GetAsReadableARGB32ImageSurface());
+      if (!frame) {
+        continue;
+      }
       CGImageRef imageRef = NULL;
-      nsresult rv = nsCocoaUtils::CreateCGImageFromSurface(surface, &imageRef);
+      nsresult rv = nsCocoaUtils::CreateCGImageFromSurface(frame, &imageRef);
       if (NS_FAILED(rv) || !imageRef) {
         continue;
       }
