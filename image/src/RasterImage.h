@@ -659,9 +659,6 @@ private: // data
   // Cached value for GetImageContainer.
   nsRefPtr<mozilla::layers::ImageContainer> mImageContainer;
 
-  // If not cached in mImageContainer, this might have our image container
-  WeakPtr<mozilla::layers::ImageContainer> mImageContainerCache;
-
 #ifdef DEBUG
   uint32_t                       mFramesNotified;
 #endif
