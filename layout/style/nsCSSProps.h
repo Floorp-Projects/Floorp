@@ -201,6 +201,14 @@ static_assert((CSS_PROPERTY_PARSE_PROPERTY_MASK &
 // In other words, this bit has no effect on the use of aliases.
 #define CSS_PROPERTY_ALWAYS_ENABLED_IN_UA_SHEETS  (1<<22)
 
+// This property is always enabled in chrome and in certified apps. This is
+// meant to be used together with a pref that enables the property for
+// non-privileged content. Note that if such a property has an alias, then any
+// use of that alias in privileged content will still be ignored unless the
+// pref is enabled. In other words, this bit has no effect on the use of
+// aliases.
+#define CSS_PROPERTY_ALWAYS_ENABLED_IN_CHROME_OR_CERTIFIED_APP (1<<23)
+
 /**
  * Types of animatable values.
  */
@@ -264,6 +272,8 @@ public:
     eEnabledForAllContent = 0,
     // Enable a property in UA sheets.
     eEnabledInUASheets    = 0x01,
+    // Enable a property in privileged content, i.e. chrome or Certified Apps
+    eEnabledInChromeOrCertifiedApp = 0x02,
     // Special value to unconditionally enable a property. This implies all the
     // bits above, but is strictly more than just their OR-ed union.
     // This just skips any test so a property will be enabled even if it would
@@ -464,6 +474,11 @@ public:
     }
     if ((aEnabled & eEnabledInUASheets) &&
         PropHasFlags(aProperty, CSS_PROPERTY_ALWAYS_ENABLED_IN_UA_SHEETS))
+    {
+      return true;
+    }
+    if ((aEnabled & eEnabledInChromeOrCertifiedApp) &&
+        PropHasFlags(aProperty, CSS_PROPERTY_ALWAYS_ENABLED_IN_CHROME_OR_CERTIFIED_APP))
     {
       return true;
     }
