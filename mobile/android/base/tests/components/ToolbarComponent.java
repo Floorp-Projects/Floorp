@@ -28,23 +28,23 @@ public class ToolbarComponent extends BaseComponent {
     }
 
     public ToolbarComponent assertIsEditing() {
-        assertTrue("The toolbar is in the editing state", isEditing());
+        fAssertTrue("The toolbar is in the editing state", isEditing());
         return this;
     }
 
     public ToolbarComponent assertIsNotEditing() {
-        assertFalse("The toolbar is not in the editing state", isEditing());
+        fAssertFalse("The toolbar is not in the editing state", isEditing());
         return this;
     }
 
     public ToolbarComponent assertTitle(final String expected) {
-        assertEquals("The Toolbar title is " + expected, expected, getTitle());
+        fAssertEquals("The Toolbar title is " + expected, expected, getTitle());
         return this;
     }
 
     public ToolbarComponent assertUrl(final String expected) {
         assertIsEditing();
-        assertEquals("The Toolbar url is " + expected, expected, getUrlEditText().getText());
+        fAssertEquals("The Toolbar url is " + expected, expected, getUrlEditText().getText());
         return this;
     }
 
@@ -158,12 +158,12 @@ public class ToolbarComponent extends BaseComponent {
     }
 
     public ToolbarComponent enterUrl(final String url) {
-        assertNotNull("url is not null", url);
+        fAssertNotNull("url is not null", url);
 
         assertIsEditing();
 
         final EditText urlEditText = getUrlEditText();
-        assertTrue("The UrlEditText is the input method target",
+        fAssertTrue("The UrlEditText is the input method target",
                 urlEditText.isInputMethodTarget());
 
         mSolo.clearEditText(urlEditText);
@@ -183,9 +183,9 @@ public class ToolbarComponent extends BaseComponent {
     }
 
     private ToolbarComponent pressButton(final View view, final String buttonName) {
-        assertNotNull("The " + buttonName + " button View is not null", view);
-        assertTrue("The " + buttonName + " button is enabled", view.isEnabled());
-        assertEquals("The " + buttonName + " button is visible",
+        fAssertNotNull("The " + buttonName + " button View is not null", view);
+        fAssertTrue("The " + buttonName + " button is enabled", view.isEnabled());
+        fAssertEquals("The " + buttonName + " button is visible",
                 View.VISIBLE, view.getVisibility());
         assertIsNotEditing();
 
