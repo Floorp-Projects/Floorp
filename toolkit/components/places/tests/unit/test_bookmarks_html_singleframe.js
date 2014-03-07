@@ -16,7 +16,7 @@ function run_test()
 
 add_task(function test_bookmarks_html_singleframe()
 {
-  let bookmarksFile = do_get_file("bookmarks_html_singleframe.html");
+  let bookmarksFile = OS.Path.join(do_get_cwd().path, "bookmarks_html_singleframe.html");
   yield BookmarkHTMLUtils.importFromFile(bookmarksFile, true);
 
   let root = PlacesUtils.getFolderContents(PlacesUtils.bookmarksMenuFolderId).root;
