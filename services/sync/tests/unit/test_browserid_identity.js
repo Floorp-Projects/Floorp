@@ -57,6 +57,7 @@ function MockFxAccounts() {
 function run_test() {
   initTestLogging("Trace");
   Log.repository.getLogger("Sync.Identity").level = Log.Level.Trace;
+  Log.repository.getLogger("Sync.BrowserIDManager").level = Log.Level.Trace;
   run_next_test();
 };
 
@@ -220,6 +221,44 @@ add_test(function test_RESTResourceAuthenticatorSkew() {
       (getTimestampDelta(authHeader, now) - 12 * HOUR_MS) < 2 * MINUTE_MS);
 
   run_next_test();
+});
+
+add_task(function test_ensureLoggedIn() {
+  configureFxAccountIdentity(browseridManager);
+  yield browseridManager.initializeWithCurrentIdentity();
+  Assert.equal(Status.login, LOGIN_SUCCEEDED, "original initialize worked");
+  yield browseridManager.ensureLoggedIn();
+  Assert.equal(Status.login, LOGIN_SUCCEEDED, "original ensureLoggedIn worked");
+  Assert.ok(browseridManager._shouldHaveSyncKeyBundle,
+            "_shouldHaveSyncKeyBundle should always be true after ensureLogin completes.");
+
+  // arrange for no logged in user.
+  let fxa = browseridManager._fxaService
+  let signedInUser = fxa.internal.currentAccountState.signedInUser;
+  fxa.internal.currentAccountState.signedInUser = null;
+  browseridManager.initializeWithCurrentIdentity();
+  Assert.ok(!browseridManager._shouldHaveSyncKeyBundle,
+            "_shouldHaveSyncKeyBundle should be false so we know we are testing what we think we are.");
+  Status.login = LOGIN_FAILED_NO_USERNAME;
+  try {
+    yield browseridManager.ensureLoggedIn();
+    Assert.ok(false, "promise should have been rejected.")
+  } catch(_) {
+  }
+  Assert.ok(browseridManager._shouldHaveSyncKeyBundle,
+            "_shouldHaveSyncKeyBundle should always be true after ensureLogin completes.");
+  fxa.internal.currentAccountState.signedInUser = signedInUser;
+  Status.login = LOGIN_FAILED_LOGIN_REJECTED;
+  try {
+    yield browseridManager.ensureLoggedIn();
+    Assert.ok(false, "LOGIN_FAILED_LOGIN_REJECTED should have caused immediate rejection");
+  } catch (_) {
+  }
+  Assert.equal(Status.login, LOGIN_FAILED_LOGIN_REJECTED,
+               "status should remain LOGIN_FAILED_LOGIN_REJECTED");
+  Status.login = LOGIN_FAILED_NETWORK_ERROR;
+  yield browseridManager.ensureLoggedIn();
+  Assert.equal(Status.login, LOGIN_SUCCEEDED, "final ensureLoggedIn worked");
 });
 
 add_test(function test_tokenExpiration() {

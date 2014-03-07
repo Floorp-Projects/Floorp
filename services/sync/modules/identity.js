@@ -94,6 +94,15 @@ IdentityManager.prototype = {
   },
 
   /**
+   * Ensure the user is logged in.  Returns a promise that resolves when
+   * the user is logged in, or is rejected if the login attempt has failed.
+   */
+  ensureLoggedIn: function() {
+    // nothing to do for this identity provider
+    return Promise.resolve();
+  },
+
+  /**
    * Indicates if the identity manager is still initializing
    */
   get readyToAuthenticate() {
