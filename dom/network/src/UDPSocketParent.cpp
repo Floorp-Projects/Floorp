@@ -45,7 +45,7 @@ ConvertNetAddrToString(mozilla::net::NetAddr &netAddr, nsACString *address, uint
     break;
   default:
     //impossible
-    MOZ_ASSERT("Unexpected address family");
+    MOZ_ASSERT(false, "Unexpected address family");
     return NS_ERROR_INVALID_ARG;
   }
 
