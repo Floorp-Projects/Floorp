@@ -17,10 +17,11 @@
 namespace mozilla {
 namespace dom {
 
-class MobileConnectionInfo MOZ_FINAL : public nsISupports
+class MobileConnectionInfo MOZ_FINAL : public nsIMobileConnectionInfo
                                      , public nsWrapperCache
 {
 public:
+  NS_DECL_NSIMOBILECONNECTIONINFO
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(MobileConnectionInfo)
 
