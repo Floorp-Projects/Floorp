@@ -6,27 +6,29 @@
 
 #include "mozilla/IMEStateManager.h"
 
-#include "IMEContentObserver.h"
+#include "mozilla/Attributes.h"
+#include "mozilla/Preferences.h"
+#include "mozilla/Services.h"
+#include "mozilla/TextEvents.h"
+#include "mozilla/dom/HTMLFormElement.h"
+
 #include "HTMLInputElement.h"
+#include "IMEContentObserver.h"
+#include "TextComposition.h"
+
 #include "nsCOMPtr.h"
-#include "nsIPresShell.h"
-#include "nsISupports.h"
+#include "nsContentUtils.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
-#include "nsPresContext.h"
 #include "nsIDOMMouseEvent.h"
-#include "nsContentUtils.h"
-#include "nsINode.h"
-#include "nsISelection.h"
-#include "nsIObserverService.h"
-#include "mozilla/Services.h"
-#include "nsIFormControl.h"
 #include "nsIForm.h"
-#include "mozilla/dom/HTMLFormElement.h"
-#include "mozilla/Attributes.h"
-#include "mozilla/TextEvents.h"
-#include "TextComposition.h"
-#include "mozilla/Preferences.h"
+#include "nsIFormControl.h"
+#include "nsINode.h"
+#include "nsIObserverService.h"
+#include "nsIPresShell.h"
+#include "nsISelection.h"
+#include "nsISupports.h"
+#include "nsPresContext.h"
 
 namespace mozilla {
 
@@ -69,8 +71,9 @@ IMEStateManager::OnDestroyPresContext(nsPresContext* aPresContext)
     }
   }
 
-  if (aPresContext != sPresContext)
+  if (aPresContext != sPresContext) {
     return NS_OK;
+  }
 
   DestroyTextStateManager();
 
@@ -378,13 +381,15 @@ public:
   {
   }
 
-  NS_IMETHOD Run() {
+  NS_IMETHOD Run()
+  {
     nsCOMPtr<nsIObserverService> observerService =
       services::GetObserverService();
     if (observerService) {
       nsAutoString state;
       state.AppendInt(mState);
-      observerService->NotifyObservers(nullptr, "ime-enabled-state-changed", state.get());
+      observerService->NotifyObservers(nullptr, "ime-enabled-state-changed",
+                                       state.get());
     }
     return NS_OK;
   }
@@ -446,20 +451,22 @@ IMEStateManager::SetIMEState(const IMEState& aState,
       nsCOMPtr<nsIForm> form;
       if (control) {
         // is this a form and does it have a default submit element?
-        if ((form = do_QueryInterface(formElement)) && form->GetDefaultSubmitElement()) {
+        if ((form = do_QueryInterface(formElement)) &&
+            form->GetDefaultSubmitElement()) {
           willSubmit = true;
         // is this an html form and does it only have a single text input element?
-        } else if (formElement && formElement->Tag() == nsGkAtoms::form && formElement->IsHTML() &&
-                   !static_cast<dom::HTMLFormElement*>(formElement)->ImplicitSubmissionIsDisabled()) {
+        } else if (formElement && formElement->Tag() == nsGkAtoms::form &&
+                   formElement->IsHTML() &&
+                   !static_cast<dom::HTMLFormElement*>(formElement)->
+                     ImplicitSubmissionIsDisabled()) {
           willSubmit = true;
         }
       }
-      context.mActionHint.Assign(willSubmit ? control->GetType() == NS_FORM_INPUT_SEARCH
-                                                ? NS_LITERAL_STRING("search")
-                                                : NS_LITERAL_STRING("go")
-                                            : formElement
-                                                ? NS_LITERAL_STRING("next")
-                                                : EmptyString());
+      context.mActionHint.Assign(
+        willSubmit ? (control->GetType() == NS_FORM_INPUT_SEARCH ?
+                       NS_LITERAL_STRING("search") : NS_LITERAL_STRING("go")) :
+                     (formElement ?
+                       NS_LITERAL_STRING("next") : EmptyString()));
     }
   }
 
@@ -471,10 +478,12 @@ IMEStateManager::SetIMEState(const IMEState& aState,
   }
 
   aWidget->SetInputContext(context, aAction);
-  if (oldContext.mIMEState.mEnabled != context.mIMEState.mEnabled) {
-    nsContentUtils::AddScriptRunner(
-      new IMEEnabledStateChangedEvent(context.mIMEState.mEnabled));
+  if (oldContext.mIMEState.mEnabled == context.mIMEState.mEnabled) {
+    return;
   }
+
+  nsContentUtils::AddScriptRunner(
+    new IMEEnabledStateChangedEvent(context.mIMEState.mEnabled));
 }
 
 void
@@ -640,7 +649,8 @@ IMEStateManager::IsEditable(nsINode* node)
     return true;
   }
   // |node| might be readwrite (for example, a text control)
-  if (node->IsElement() && node->AsElement()->State().HasState(NS_EVENT_STATE_MOZ_READWRITE)) {
+  if (node->IsElement() &&
+      node->AsElement()->State().HasState(NS_EVENT_STATE_MOZ_READWRITE)) {
     return true;
   }
   return false;
@@ -661,8 +671,9 @@ IMEStateManager::GetRootEditableNode(nsPresContext* aPresContext,
   }
   if (aPresContext) {
     nsIDocument* document = aPresContext->Document();
-    if (document && document->IsEditable())
+    if (document && document->IsEditable()) {
       return document;
+    }
   }
   return nullptr;
 }
