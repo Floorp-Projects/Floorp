@@ -48,27 +48,28 @@ public:
   // nsIScrollObserver
   virtual void ScrollPositionChanged() MOZ_OVERRIDE;
 
-  void     Init(nsIWidget* aWidget,
-                nsPresContext* aPresContext,
-                nsIContent* aContent);
-  void     Destroy(void);
-  bool     IsManaging(nsPresContext* aPresContext, nsIContent* aContent);
-  bool     IsEditorHandlingEventForComposition() const;
-  bool     KeepAliveDuringDeactive() const
+  void Init(nsIWidget* aWidget, nsPresContext* aPresContext,
+            nsIContent* aContent);
+  void Destroy();
+  bool IsManaging(nsPresContext* aPresContext, nsIContent* aContent);
+  bool IsEditorHandlingEventForComposition() const;
+  bool KeepAliveDuringDeactive() const
   {
     return mUpdatePreference.WantDuringDeactive();
   }
-
-  nsCOMPtr<nsIWidget>            mWidget;
-  nsCOMPtr<nsISelection>         mSel;
-  nsCOMPtr<nsIContent>           mRootContent;
-  nsCOMPtr<nsINode>              mEditableNode;
+  nsIWidget* GetWidget() const { return mWidget; }
+  nsresult GetSelectionAndRoot(nsISelection** aSelection,
+                               nsIContent** aRoot) const;
 
 private:
   void NotifyContentAdded(nsINode* aContainer, int32_t aStart, int32_t aEnd);
   void ObserveEditableNode();
 
-  nsCOMPtr<nsIDocShell>          mDocShell;
+  nsCOMPtr<nsIWidget> mWidget;
+  nsCOMPtr<nsISelection> mSelection;
+  nsCOMPtr<nsIContent> mRootContent;
+  nsCOMPtr<nsINode> mEditableNode;
+  nsCOMPtr<nsIDocShell> mDocShell;
   nsIMEUpdatePreference mUpdatePreference;
   uint32_t mPreAttrChangeLength;
 };

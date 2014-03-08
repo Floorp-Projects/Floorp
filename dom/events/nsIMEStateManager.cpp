@@ -731,17 +731,11 @@ nsresult
 nsIMEStateManager::GetFocusSelectionAndRoot(nsISelection** aSelection,
                                             nsIContent** aRootContent)
 {
-  if (!sActiveIMEContentObserver || !sActiveIMEContentObserver->mEditableNode ||
-      !sActiveIMEContentObserver->mSel) {
+  if (!sActiveIMEContentObserver) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-
-  NS_ASSERTION(sActiveIMEContentObserver->mSel &&
-                 sActiveIMEContentObserver->mRootContent,
-               "uninitialized content observer");
-  NS_ADDREF(*aSelection = sActiveIMEContentObserver->mSel);
-  NS_ADDREF(*aRootContent = sActiveIMEContentObserver->mRootContent);
-  return NS_OK;
+  return sActiveIMEContentObserver->GetSelectionAndRoot(aSelection,
+                                                        aRootContent);
 }
 
 // static
