@@ -63,6 +63,7 @@ bool nsStyleCoord::operator==(const nsStyleCoord& aOther) const
     case eStyleUnit_Grad:
     case eStyleUnit_Radian:
     case eStyleUnit_Turn:
+    case eStyleUnit_FlexFraction:
       return mValue.mFloat == aOther.mValue.mFloat;
     case eStyleUnit_Coord:
     case eStyleUnit_Integer:
@@ -91,6 +92,7 @@ uint32_t nsStyleCoord::HashValue(uint32_t aHash = 0) const
     case eStyleUnit_Grad:
     case eStyleUnit_Radian:
     case eStyleUnit_Turn:
+    case eStyleUnit_FlexFraction:
       return mozilla::AddToHash(aHash, mValue.mFloat);
     case eStyleUnit_Coord:
     case eStyleUnit_Integer:
@@ -158,6 +160,12 @@ void nsStyleCoord::SetAngleValue(float aValue, nsStyleUnit aUnit)
     NS_NOTREACHED("not an angle value");
     Reset();
   }
+}
+
+void nsStyleCoord::SetFlexFractionValue(float aValue)
+{
+  mUnit = eStyleUnit_FlexFraction;
+  mValue.mFloat = aValue;
 }
 
 void nsStyleCoord::SetCalcValue(Calc* aValue)

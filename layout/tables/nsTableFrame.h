@@ -111,6 +111,9 @@ class nsTableFrame : public nsContainerFrame
 public:
   NS_DECL_FRAMEARENA_HELPERS
 
+  static void DestroyPositionedTablePartArray(void* aPropertyValue);
+  NS_DECLARE_FRAME_PROPERTY(PositionedTablePartArray, DestroyPositionedTablePartArray)
+
   /** nsTableOuterFrame has intimate knowledge of the inner table frame */
   friend class nsTableOuterFrame;
 
@@ -146,6 +149,15 @@ public:
 
   static bool PageBreakAfter(nsIFrame* aSourceFrame,
                                nsIFrame* aNextFrame);
+  
+  // Register a positioned table part with its nsTableFrame. These objects will
+  // be visited by FixupPositionedTableParts after reflow is complete. (See that
+  // function for more explanation.) Should be called during frame construction.
+  static void RegisterPositionedTablePart(nsIFrame* aFrame);
+
+  // Unregister a positioned table part with its nsTableFrame.
+  static void UnregisterPositionedTablePart(nsIFrame* aFrame,
+                                            nsIFrame* aDestructRoot);
 
   nsPoint GetFirstSectionOrigin(const nsHTMLReflowState& aReflowState) const;
   /*
@@ -179,6 +191,12 @@ public:
   /** helper method to find the table parent of any table frame object */
   static nsTableFrame* GetTableFrame(nsIFrame* aSourceFrame);
                                  
+  /* Like GetTableFrame, but will return nullptr if we don't pass through
+   * aMustPassThrough on the way to the table.
+   */
+  static nsTableFrame* GetTableFramePassingThrough(nsIFrame* aMustPassThrough,
+                                                   nsIFrame* aSourceFrame);
+
   typedef void (* DisplayGenericTablePartTraversal)
       (nsDisplayListBuilder* aBuilder, nsFrame* aFrame,
        const nsRect& aDirtyRect, const nsDisplayListSet& aLists);
@@ -548,6 +566,18 @@ protected:
     */
   void AdjustForCollapsingRowsCols(nsHTMLReflowMetrics& aDesiredSize,
                                    nsMargin             aBorderPadding);
+
+  /** FixupPositionedTableParts is called at the end of table reflow to reflow
+   *  the absolutely positioned descendants of positioned table parts. This is
+   *  necessary because the dimensions of table parts may change after they've
+   *  been reflowed (e.g. in AdjustForCollapsingRowsCols).
+   */
+
+  void FixupPositionedTableParts(nsPresContext* aPresContext,
+                                 const nsHTMLReflowState& aReflowState);
+
+  // Clears the list of positioned table parts.
+  void ClearAllPositionedTableParts();
 
   nsITableLayoutStrategy* LayoutStrategy() const {
     return static_cast<nsTableFrame*>(FirstInFlow())->

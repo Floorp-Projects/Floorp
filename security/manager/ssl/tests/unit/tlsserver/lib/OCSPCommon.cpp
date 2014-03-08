@@ -6,8 +6,9 @@
 
 #include <stdio.h>
 
-#include "TLSServer.h"
 #include "ScopedNSSTypes.h"
+#include "TLSServer.h"
+#include "pkixtestutil.h"
 #include "secerr.h"
 
 using namespace mozilla;
@@ -26,181 +27,101 @@ GetOCSPResponseForType(OCSPResponseType aORT, CERTCertificate *aCert,
     return nullptr;
   }
 
+  if (aORT == ORTEmpty) {
+    SECItemArray* arr = SECITEM_AllocArray(aArena, nullptr, 1);
+    arr->items[0].data = nullptr;
+    arr->items[0].len = 0;
+    return arr;
+  }
+
   PRTime now = PR_Now();
-  ScopedCERTOCSPCertID id(CERT_CreateOCSPCertID(aCert, now));
-  if (!id) {
-    PrintPRError("CERT_CreateOCSPCertID failed");
-    return nullptr;
-  }
-  PRTime nextUpdate = now + 10 * PR_USEC_PER_SEC;
   PRTime oneDay = 60*60*24 * (PRTime)PR_USEC_PER_SEC;
-  PRTime expiredTime = now - oneDay;
   PRTime oldNow = now - (8 * oneDay);
-  PRTime oldNextUpdate = oldNow + 10 * PR_USEC_PER_SEC;
 
-  CERTOCSPSingleResponse *sr = nullptr;
-  switch (aORT) {
-    case ORTGood:
-    case ORTGoodOtherCA:
-    case ORTBadSignature:
-      sr = CERT_CreateOCSPSingleResponseGood(aArena, id, now, &nextUpdate);
-      if (!sr) {
-        PrintPRError("CERT_CreateOCSPSingleResponseGood failed");
-        return nullptr;
-      }
-      id.forget(); // owned by sr now
-      break;
-    case ORTRevoked:
-      sr = CERT_CreateOCSPSingleResponseRevoked(aArena, id, now, &nextUpdate,
-                                                expiredTime, nullptr);
-      if (!sr) {
-        PrintPRError("CERT_CreateOCSPSingleResponseRevoked failed");
-        return nullptr;
-      }
-      id.forget(); // owned by sr now
-      break;
-    case ORTUnknown:
-      sr = CERT_CreateOCSPSingleResponseUnknown(aArena, id, now, &nextUpdate);
-      if (!sr) {
-        PrintPRError("CERT_CreateOCSPSingleResponseUnknown failed");
-        return nullptr;
-      }
-      id.forget(); // owned by sr now
-      break;
-    case ORTExpired:
-    case ORTExpiredFreshCA:
-      sr = CERT_CreateOCSPSingleResponseGood(aArena, id, oldNow, &oldNextUpdate);
-      if (!sr) {
-        PrintPRError("CERT_CreateOCSPSingleResponseGood failed");
-        return nullptr;
-      }
-      id.forget(); // owned by sr now
-      break;
-    case ORTGoodOtherCert:
-    {
-      ScopedCERTCertificate otherCert(
-        PK11_FindCertFromNickname(aAdditionalCertName, nullptr));
-      if (!otherCert) {
-        PrintPRError("PK11_FindCertFromNickname failed");
-        return nullptr;
-      }
+  insanity::test::OCSPResponseContext context;
+  context.arena = aArena;
+  context.cert = CERT_DupCertificate(aCert);
+  context.issuerCert = nullptr;
+  context.signerCert = nullptr;
+  context.responseStatus = 0;
 
-      ScopedCERTOCSPCertID otherID(CERT_CreateOCSPCertID(otherCert, now));
-      if (!otherID) {
-        PrintPRError("CERT_CreateOCSPCertID failed");
-        return nullptr;
-      }
-      sr = CERT_CreateOCSPSingleResponseGood(aArena, otherID, now, &nextUpdate);
-      if (!sr) {
-        PrintPRError("CERT_CreateOCSPSingleResponseGood failed");
-        return nullptr;
-      }
-      otherID.forget(); // owned by sr now
-      break;
-    }
-    case ORTEmpty:
-    case ORTMalformed:
-    case ORTSrverr:
-    case ORTTryLater:
-    case ORTNeedsSig:
-    case ORTUnauthorized:
-      break;
-    default:
-      if (gDebugLevel >= DEBUG_ERRORS) {
-        fprintf(stderr, "bad ocsp response type: %d\n", aORT);
-      }
-      return nullptr;
-  }
+  context.producedAt = now;
+  context.thisUpdate = now;
+  context.nextUpdate = now + 10 * PR_USEC_PER_SEC;
+  context.includeNextUpdate = true;
+  context.certIDHashAlg = SEC_OID_SHA1;
+  context.certStatus = 0;
+  context.revocationTime = 0;
+  context.badSignature = false;
+  context.responderIDType = insanity::test::OCSPResponseContext::ByKeyHash;
 
-  ScopedCERTCertificate ca;
-  if (aORT == ORTGoodOtherCA) {
-    ca = PK11_FindCertFromNickname(aAdditionalCertName, nullptr);
-    if (!ca) {
+  if (aORT == ORTGoodOtherCert) {
+    context.cert = PK11_FindCertFromNickname(aAdditionalCertName, nullptr);
+    if (!context.cert) {
       PrintPRError("PK11_FindCertFromNickname failed");
       return nullptr;
     }
-  } else if (aORT == ORTBadSignature) {
-    // passing in a null responderCert to CERT_CreateEncodedOCSPSuccessResponse
-    // causes it to generate an invalid signature (by design, for testing).
-    ca = nullptr;
-  } else {
-    // XXX CERT_FindCertIssuer uses the old, deprecated path-building logic
-    ca = CERT_FindCertIssuer(aCert, now, certUsageSSLCA);
-    if (!ca) {
-      PrintPRError("CERT_FindCertIssuer failed");
+  }
+  // XXX CERT_FindCertIssuer uses the old, deprecated path-building logic
+  context.issuerCert = CERT_FindCertIssuer(aCert, now, certUsageSSLCA);
+  if (!context.issuerCert) {
+    PrintPRError("CERT_FindCertIssuer failed");
+    return nullptr;
+  }
+  if (aORT == ORTGoodOtherCA) {
+    context.signerCert = PK11_FindCertFromNickname(aAdditionalCertName,
+                                                   nullptr);
+    if (!context.signerCert) {
+      PrintPRError("PK11_FindCertFromNickname failed");
       return nullptr;
     }
   }
-
-  PRTime signTime = now;
-  if (aORT == ORTExpired) {
-    signTime = oldNow;
-  }
-
-  CERTOCSPSingleResponse **responses;
-  SECItem *response = nullptr;
   switch (aORT) {
     case ORTMalformed:
-      response = CERT_CreateEncodedOCSPErrorResponse(
-        aArena, SEC_ERROR_OCSP_MALFORMED_REQUEST);
-      if (!response) {
-        PrintPRError("CERT_CreateEncodedOCSPErrorResponse failed");
-        return nullptr;
-      }
+      context.responseStatus = 1;
       break;
     case ORTSrverr:
-      response = CERT_CreateEncodedOCSPErrorResponse(
-        aArena, SEC_ERROR_OCSP_SERVER_ERROR);
-      if (!response) {
-        PrintPRError("CERT_CreateEncodedOCSPErrorResponse failed");
-        return nullptr;
-      }
+      context.responseStatus = 2;
       break;
     case ORTTryLater:
-      response = CERT_CreateEncodedOCSPErrorResponse(
-        aArena, SEC_ERROR_OCSP_TRY_SERVER_LATER);
-      if (!response) {
-        PrintPRError("CERT_CreateEncodedOCSPErrorResponse failed");
-        return nullptr;
-      }
+      context.responseStatus = 3;
       break;
     case ORTNeedsSig:
-      response = CERT_CreateEncodedOCSPErrorResponse(
-        aArena, SEC_ERROR_OCSP_REQUEST_NEEDS_SIG);
-      if (!response) {
-        PrintPRError("CERT_CreateEncodedOCSPErrorResponse failed");
-        return nullptr;
-      }
+      context.responseStatus = 5;
       break;
     case ORTUnauthorized:
-      response = CERT_CreateEncodedOCSPErrorResponse(
-        aArena, SEC_ERROR_OCSP_UNAUTHORIZED_REQUEST);
-      if (!response) {
-        PrintPRError("CERT_CreateEncodedOCSPErrorResponse failed");
-        return nullptr;
-      }
-      break;
-    case ORTEmpty:
+      context.responseStatus = 6;
       break;
     default:
-      // responses is contained in aArena and will be freed when aArena is
-      responses = PORT_ArenaNewArray(aArena, CERTOCSPSingleResponse *, 2);
-      if (!responses) {
-        PrintPRError("PORT_ArenaNewArray failed");
-        return nullptr;
-      }
-      responses[0] = sr;
-      responses[1] = nullptr;
-      response = CERT_CreateEncodedOCSPSuccessResponse(
-        aArena, ca, ocspResponderID_byName, signTime, responses, nullptr);
-      if (!response) {
-        PrintPRError("CERT_CreateEncodedOCSPSuccessResponse failed");
-        return nullptr;
-      }
+      // context.responseStatus is 0 in all other cases, and it has
+      // already been initialized, above.
       break;
   }
+  if (aORT == ORTExpired || aORT == ORTExpiredFreshCA) {
+    context.thisUpdate = oldNow;
+    context.nextUpdate = oldNow + 10 * PR_USEC_PER_SEC;
+  }
+  if (aORT == ORTRevoked) {
+    context.certStatus = 1;
+  }
+  if (aORT == ORTUnknown) {
+    context.certStatus = 2;
+  }
+  if (aORT == ORTBadSignature) {
+    context.badSignature = true;
+  }
 
-  SECItemArray *arr = SECITEM_AllocArray(aArena, nullptr, 1);
+  if (!context.signerCert) {
+    context.signerCert = CERT_DupCertificate(context.issuerCert.get());
+  }
+
+  SECItem* response = insanity::test::CreateEncodedOCSPResponse(context);
+  if (!response) {
+    PrintPRError("CreateEncodedOCSPResponse failed");
+    return nullptr;
+  }
+
+  SECItemArray* arr = SECITEM_AllocArray(aArena, nullptr, 1);
   arr->items[0].data = response ? response->data : nullptr;
   arr->items[0].len = response ? response->len : 0;
 

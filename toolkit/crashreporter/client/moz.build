@@ -30,6 +30,7 @@ elif CONFIG['OS_ARCH'] == 'Darwin':
     LOCAL_INCLUDES += [
         '../google-breakpad/src/common/mac',
     ]
+    LDFLAGS += ['-framework Cocoa']
 elif CONFIG['OS_ARCH'] == 'SunOS':
     SOURCES += [
         'crashreporter_linux.cpp',

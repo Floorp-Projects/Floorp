@@ -39,7 +39,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=780199
 
   function test() {
     b = document.getElementById("b");
-    var m = MutationObserver(callback);
+    var m = new MutationObserver(callback);
     m.observe(b, { attributes: true, attributeOldValue: true });
     b.contentDocument.documentElement.textContent = "testvalue";
     b.setAttribute("src", b.getAttribute("src"));

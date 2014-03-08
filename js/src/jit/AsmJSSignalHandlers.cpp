@@ -347,7 +347,7 @@ HandleSimulatorInterrupt(JSRuntime *rt, AsmJSActivation *activation, void *fault
         module.containsPC(faultingAddress))
     {
         activation->setResumePC(nullptr);
-        int32_t nextpc = int32_t(module.operationCallbackExit());
+        int32_t nextpc = int32_t(module.interruptExit());
         rt->mainThread.simulator()->set_resume_pc(nextpc);
         return true;
     }
@@ -451,15 +451,15 @@ HandleException(PEXCEPTION_POINTERS exception)
         return false;
 
     // If we faulted trying to execute code in 'module', this must be an
-    // operation callback (see TriggerOperationCallbackForAsmJSCode). Redirect
-    // execution to a trampoline which will call js_HandleExecutionInterrupt.
+    // interrupt callback (see RequestInterruptForAsmJSCode). Redirect
+    // execution to a trampoline which will call js::HandleExecutionInterrupt.
     // The trampoline will jump to activation->resumePC if execution isn't
     // interrupted.
     if (module.containsPC(faultingAddress)) {
         activation->setResumePC(pc);
-        *ppc = module.operationCallbackExit();
+        *ppc = module.interruptExit();
 
-        JSRuntime::AutoLockForOperationCallback lock(rt);
+        JSRuntime::AutoLockForInterrupt lock(rt);
         module.unprotectCode(rt);
         return true;
     }
@@ -645,7 +645,7 @@ HandleMachException(JSRuntime *rt, const ExceptionRequest &request)
 
     const AsmJSModule &module = activation->module();
     if (HandleSimulatorInterrupt(rt, activation, faultingAddress)) {
-        JSRuntime::AutoLockForOperationCallback lock(rt);
+        JSRuntime::AutoLockForInterrupt lock(rt);
         module.unprotectCode(rt);
         return true;
     }
@@ -654,15 +654,15 @@ HandleMachException(JSRuntime *rt, const ExceptionRequest &request)
         return false;
 
     // If we faulted trying to execute code in 'module', this must be an
-    // operation callback (see TriggerOperationCallbackForAsmJSCode). Redirect
-    // execution to a trampoline which will call js_HandleExecutionInterrupt.
+    // interrupt callback (see RequestInterruptForAsmJSCode). Redirect
+    // execution to a trampoline which will call js::HandleExecutionInterrupt.
     // The trampoline will jump to activation->resumePC if execution isn't
     // interrupted.
     if (module.containsPC(faultingAddress)) {
         activation->setResumePC(pc);
-        *ppc = module.operationCallbackExit();
+        *ppc = module.interruptExit();
 
-        JSRuntime::AutoLockForOperationCallback lock(rt);
+        JSRuntime::AutoLockForInterrupt lock(rt);
         module.unprotectCode(rt);
 
         // Update the thread state with the new pc.
@@ -895,7 +895,7 @@ HandleSignal(int signum, siginfo_t *info, void *ctx)
 
     const AsmJSModule &module = activation->module();
     if (HandleSimulatorInterrupt(rt, activation, faultingAddress)) {
-        JSRuntime::AutoLockForOperationCallback lock(rt);
+        JSRuntime::AutoLockForInterrupt lock(rt);
         module.unprotectCode(rt);
         return true;
     }
@@ -904,15 +904,15 @@ HandleSignal(int signum, siginfo_t *info, void *ctx)
         return false;
 
     // If we faulted trying to execute code in 'module', this must be an
-    // operation callback (see TriggerOperationCallbackForAsmJSCode). Redirect
-    // execution to a trampoline which will call js_HandleExecutionInterrupt.
+    // interrupt callback (see RequestInterruptForAsmJSCode). Redirect
+    // execution to a trampoline which will call js::HandleExecutionInterrupt.
     // The trampoline will jump to activation->resumePC if execution isn't
     // interrupted.
     if (module.containsPC(faultingAddress)) {
         activation->setResumePC(pc);
-        *ppc = module.operationCallbackExit();
+        *ppc = module.interruptExit();
 
-        JSRuntime::AutoLockForOperationCallback lock(rt);
+        JSRuntime::AutoLockForInterrupt lock(rt);
         module.unprotectCode(rt);
         return true;
     }
@@ -1015,19 +1015,19 @@ js::EnsureAsmJSSignalHandlersInstalled(JSRuntime *rt)
 }
 
 // To interrupt execution of a JSRuntime, any thread may call
-// JS_TriggerOperationCallback (JSRuntime::triggerOperationCallback from inside
-// the engine). Normally, this sets some state that is polled at regular
-// intervals (function prologues, loop headers), even from jit-code. For tight
-// loops, this poses non-trivial overhead. For asm.js, we can do better: when
-// another thread triggers the operation callback, we simply mprotect all of
-// the innermost asm.js module activation's code. This will trigger a SIGSEGV,
-// taking us into AsmJSFaultHandler. From there, we can manually redirect
-// execution to call js_HandleExecutionInterrupt. The memory is un-protected
-// from the signal handler after control flow is redirected.
+// JS_RequestInterruptCallback (JSRuntime::requestInterruptCallback from inside
+// the engine). In the simplest case, this sets some state that is polled at
+// regular intervals (function prologues, loop headers). For tight loops, this
+// poses non-trivial overhead. For asm.js, we can do better: when another
+// thread requests an interrupt, we simply mprotect all of the innermost asm.js
+// module activation's code. This will trigger a SIGSEGV, taking us into
+// AsmJSFaultHandler. From there, we can manually redirect execution to call
+// js::HandleExecutionInterrupt. The memory is un-protected from the signal
+// handler after control flow is redirected.
 void
-js::TriggerOperationCallbackForAsmJSCode(JSRuntime *rt)
+js::RequestInterruptForAsmJSCode(JSRuntime *rt)
 {
-    JS_ASSERT(rt->currentThreadOwnsOperationCallbackLock());
+    JS_ASSERT(rt->currentThreadOwnsInterruptLock());
 
     AsmJSActivation *activation = rt->mainThread.asmJSActivationStackFromAnyThread();
     if (!activation)
