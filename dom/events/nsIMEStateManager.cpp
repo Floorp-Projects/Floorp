@@ -6,6 +6,7 @@
 
 #include "nsIMEStateManager.h"
 
+#include "IMEContentObserver.h"
 #include "HTMLInputElement.h"
 #include "nsCOMPtr.h"
 #include "nsIPresShell.h"
@@ -16,15 +17,7 @@
 #include "nsIDOMMouseEvent.h"
 #include "nsContentUtils.h"
 #include "nsINode.h"
-#include "nsIFrame.h"
-#include "nsRange.h"
-#include "nsIDOMRange.h"
 #include "nsISelection.h"
-#include "nsISelectionPrivate.h"
-#include "nsISelectionListener.h"
-#include "nsISelectionController.h"
-#include "nsIMutationObserver.h"
-#include "nsContentEventHandler.h"
 #include "nsIObserverService.h"
 #include "mozilla/Services.h"
 #include "nsIFormControl.h"
@@ -34,80 +27,19 @@
 #include "mozilla/TextEvents.h"
 #include "TextComposition.h"
 #include "mozilla/Preferences.h"
-#include "nsAsyncDOMEvent.h"
-#include "nsIDocShell.h"
-#include "nsIReflowObserver.h"
-#include "nsIScrollObserver.h"
-#include "nsWeakReference.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::widget;
-
-// nsTextStateManager notifies widget of any text and selection changes
-//  in the currently focused editor
-// sTextStateObserver points to the currently active nsTextStateManager
-// sTextStateObserver is null if there is no focused editor
-
-class nsTextStateManager MOZ_FINAL : public nsISelectionListener,
-                                     public nsStubMutationObserver,
-                                     public nsIReflowObserver,
-                                     public nsIScrollObserver,
-                                     public nsSupportsWeakReference
-{
-public:
-  nsTextStateManager()
-  {
-  }
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSISELECTIONLISTENER
-  NS_DECL_NSIMUTATIONOBSERVER_CHARACTERDATACHANGED
-  NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
-  NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
-  NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
-  NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTEWILLCHANGE
-  NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
-  NS_DECL_NSIREFLOWOBSERVER
-
-  // nsIScrollObserver
-  virtual void ScrollPositionChanged() MOZ_OVERRIDE;
-
-  void     Init(nsIWidget* aWidget,
-                nsPresContext* aPresContext,
-                nsIContent* aContent);
-  void     Destroy(void);
-  bool     IsManaging(nsPresContext* aPresContext, nsIContent* aContent);
-  bool     IsEditorHandlingEventForComposition() const;
-  bool     KeepAliveDuringDeactive() const
-  {
-    return mUpdatePreference.WantDuringDeactive();
-  }
-
-  nsCOMPtr<nsIWidget>            mWidget;
-  nsCOMPtr<nsISelection>         mSel;
-  nsCOMPtr<nsIContent>           mRootContent;
-  nsCOMPtr<nsINode>              mEditableNode;
-
-private:
-  void NotifyContentAdded(nsINode* aContainer, int32_t aStart, int32_t aEnd);
-  void ObserveEditableNode();
-
-  nsCOMPtr<nsIDocShell>          mDocShell;
-  nsIMEUpdatePreference mUpdatePreference;
-  uint32_t mPreAttrChangeLength;
-};
-
-/******************************************************************/
-/* nsIMEStateManager                                              */
-/******************************************************************/
 
 nsIContent*    nsIMEStateManager::sContent      = nullptr;
 nsPresContext* nsIMEStateManager::sPresContext  = nullptr;
 bool           nsIMEStateManager::sInstalledMenuKeyboardListener = false;
 bool           nsIMEStateManager::sIsTestingIME = false;
 
-nsTextStateManager* nsIMEStateManager::sTextStateObserver = nullptr;
+// sActiveIMEContentObserver points to the currently active IMEContentObserver.
+// sActiveIMEContentObserver is null if there is no focused editor.
+IMEContentObserver* nsIMEStateManager::sActiveIMEContentObserver = nullptr;
 TextCompositionArray* nsIMEStateManager::sTextCompositions = nullptr;
 
 void
@@ -240,9 +172,9 @@ nsIMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
     }
   }
 
-  if (sTextStateObserver &&
-      (aPresContext || !sTextStateObserver->KeepAliveDuringDeactive()) &&
-      !sTextStateObserver->IsManaging(aPresContext, aContent)) {
+  if (sActiveIMEContentObserver &&
+      (aPresContext || !sActiveIMEContentObserver->KeepAliveDuringDeactive()) &&
+      !sActiveIMEContentObserver->IsManaging(aPresContext, aContent)) {
     DestroyTextStateManager();
   }
 
@@ -290,7 +222,7 @@ nsIMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
     NS_IF_ADDREF(sContent = aContent);
   }
 
-  // Don't call CreateTextStateManager() here, it should be called from
+  // Don't call CreateIMEContentObserver() here, it should be called from
   // focus event handler of editor.
 
   return NS_OK;
@@ -354,16 +286,16 @@ nsIMEStateManager::OnFocusInEditor(nsPresContext* aPresContext,
     return;
   }
 
-  // If the nsTextStateManager instance isn't managing the editor actually,
+  // If the IMEContentObserver instance isn't managing the editor actually,
   // we need to recreate the instance.
-  if (sTextStateObserver) {
-    if (sTextStateObserver->IsManaging(aPresContext, aContent)) {
+  if (sActiveIMEContentObserver) {
+    if (sActiveIMEContentObserver->IsManaging(aPresContext, aContent)) {
       return;
     }
     DestroyTextStateManager();
   }
 
-  CreateTextStateManager();
+  CreateIMEContentObserver();
 }
 
 void
@@ -380,12 +312,12 @@ nsIMEStateManager::UpdateIMEState(const IMEState &aNewIMEState,
     return;
   }
 
-  // If the nsTextStateManager instance isn't managing the editor's current
+  // If the IMEContentObserver instance isn't managing the editor's current
   // editable root content, the editor frame might be reframed.  We should
   // recreate the instance at that time.
   bool createTextStateManager =
-    (!sTextStateObserver ||
-     !sTextStateObserver->IsManaging(sPresContext, aContent));
+    (!sActiveIMEContentObserver ||
+     !sActiveIMEContentObserver->IsManaging(sPresContext, aContent));
 
   bool updateIMEState =
     (widget->GetInputContext().mIMEState.mEnabled != aNewIMEState.mEnabled);
@@ -406,7 +338,7 @@ nsIMEStateManager::UpdateIMEState(const IMEState &aNewIMEState,
   }
 
   if (createTextStateManager) {
-    CreateTextStateManager();
+    CreateIMEContentObserver();
   }
 }
 
@@ -699,466 +631,6 @@ nsIMEStateManager::NotifyIME(IMEMessage aMessage,
   return NotifyIME(aMessage, widget);
 }
 
-void
-nsTextStateManager::Init(nsIWidget* aWidget,
-                         nsPresContext* aPresContext,
-                         nsIContent* aContent)
-{
-  mWidget = aWidget;
-  mEditableNode =
-    nsIMEStateManager::GetRootEditableNode(aPresContext, aContent);
-  if (!mEditableNode) {
-    return;
-  }
-
-  nsIPresShell* presShell = aPresContext->PresShell();
-
-  // get selection and root content
-  nsCOMPtr<nsISelectionController> selCon;
-  if (mEditableNode->IsNodeOfType(nsINode::eCONTENT)) {
-    nsIFrame* frame =
-      static_cast<nsIContent*>(mEditableNode.get())->GetPrimaryFrame();
-    NS_ENSURE_TRUE_VOID(frame);
-
-    frame->GetSelectionController(aPresContext,
-                                  getter_AddRefs(selCon));
-  } else {
-    // mEditableNode is a document
-    selCon = do_QueryInterface(presShell);
-  }
-  NS_ENSURE_TRUE_VOID(selCon);
-
-  selCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
-                       getter_AddRefs(mSel));
-  NS_ENSURE_TRUE_VOID(mSel);
-
-  nsCOMPtr<nsIDOMRange> selDomRange;
-  if (NS_SUCCEEDED(mSel->GetRangeAt(0, getter_AddRefs(selDomRange)))) {
-    nsRange* selRange = static_cast<nsRange*>(selDomRange.get());
-    NS_ENSURE_TRUE_VOID(selRange && selRange->GetStartParent());
-
-    mRootContent = selRange->GetStartParent()->
-                     GetSelectionRootContent(presShell);
-  } else {
-    mRootContent = mEditableNode->GetSelectionRootContent(presShell);
-  }
-  if (!mRootContent && mEditableNode->IsNodeOfType(nsINode::eDOCUMENT)) {
-    // The document node is editable, but there are no contents, this document
-    // is not editable.
-    return;
-  }
-  NS_ENSURE_TRUE_VOID(mRootContent);
-
-  if (nsIMEStateManager::sIsTestingIME) {
-    nsIDocument* doc = aPresContext->Document();
-    (new nsAsyncDOMEvent(doc, NS_LITERAL_STRING("MozIMEFocusIn"),
-                         false, false))->RunDOMEventWhenSafe();
-  }
-
-  aWidget->NotifyIME(IMENotification(NOTIFY_IME_OF_FOCUS));
-
-  // NOTIFY_IME_OF_FOCUS might cause recreating nsTextStateManager
-  // instance via nsIMEStateManager::UpdateIMEState().  So, this
-  // instance might already have been destroyed, check it.
-  if (!mRootContent) {
-    return;
-  }
-
-  mDocShell = aPresContext->GetDocShell();
-
-  ObserveEditableNode();
-}
-
-void
-nsTextStateManager::ObserveEditableNode()
-{
-  MOZ_ASSERT(mSel);
-  MOZ_ASSERT(mRootContent);
-
-  mUpdatePreference = mWidget->GetIMEUpdatePreference();
-  if (mUpdatePreference.WantSelectionChange()) {
-    // add selection change listener
-    nsCOMPtr<nsISelectionPrivate> selPrivate(do_QueryInterface(mSel));
-    NS_ENSURE_TRUE_VOID(selPrivate);
-    nsresult rv = selPrivate->AddSelectionListener(this);
-    NS_ENSURE_SUCCESS_VOID(rv);
-  }
-
-  if (mUpdatePreference.WantTextChange()) {
-    // add text change observer
-    mRootContent->AddMutationObserver(this);
-  }
-
-  if (mUpdatePreference.WantPositionChanged() && mDocShell) {
-    // Add scroll position listener and reflow observer to detect position and
-    // size changes
-    mDocShell->AddWeakScrollObserver(this);
-    mDocShell->AddWeakReflowObserver(this);
-  }
-}
-
-void
-nsTextStateManager::Destroy(void)
-{
-  // If CreateTextStateManager failed, mRootContent will be null,
-  // and we should not call NotifyIME(IMENotification(NOTIFY_IME_OF_BLUR))
-  if (mRootContent) {
-    if (nsIMEStateManager::sIsTestingIME && mEditableNode) {
-      nsIDocument* doc = mEditableNode->OwnerDoc();
-      (new nsAsyncDOMEvent(doc, NS_LITERAL_STRING("MozIMEFocusOut"),
-                           false, false))->RunDOMEventWhenSafe();
-    }
-    mWidget->NotifyIME(IMENotification(NOTIFY_IME_OF_BLUR));
-  }
-  // Even if there are some pending notification, it'll never notify the widget.
-  mWidget = nullptr;
-  if (mUpdatePreference.WantSelectionChange() && mSel) {
-    nsCOMPtr<nsISelectionPrivate> selPrivate(do_QueryInterface(mSel));
-    if (selPrivate)
-      selPrivate->RemoveSelectionListener(this);
-  }
-  mSel = nullptr;
-  if (mUpdatePreference.WantTextChange() && mRootContent) {
-    mRootContent->RemoveMutationObserver(this);
-  }
-  if (mUpdatePreference.WantPositionChanged() && mDocShell) {
-    mDocShell->RemoveWeakScrollObserver(this);
-    mDocShell->RemoveWeakReflowObserver(this);
-  }
-  mRootContent = nullptr;
-  mEditableNode = nullptr;
-  mDocShell = nullptr;
-  mUpdatePreference.mWantUpdates = nsIMEUpdatePreference::NOTIFY_NOTHING;
-}
-
-bool
-nsTextStateManager::IsManaging(nsPresContext* aPresContext,
-                               nsIContent* aContent)
-{
-  if (!mSel || !mRootContent || !mEditableNode) {
-    return false; // failed to initialize.
-  }
-  if (!mRootContent->IsInDoc()) {
-    return false; // the focused editor has already been reframed.
-  }
-  return mEditableNode == nsIMEStateManager::GetRootEditableNode(aPresContext,
-                                                                 aContent);
-}
-
-bool
-nsTextStateManager::IsEditorHandlingEventForComposition() const
-{
-  if (!mWidget) {
-    return false;
-  }
-  nsRefPtr<TextComposition> composition =
-    nsIMEStateManager::GetTextCompositionFor(mWidget);
-  if (!composition) {
-    return false;
-  }
-  return composition->IsEditorHandlingEvent();
-}
-
-NS_IMPL_ISUPPORTS5(nsTextStateManager,
-                   nsIMutationObserver,
-                   nsISelectionListener,
-                   nsIReflowObserver,
-                   nsIScrollObserver,
-                   nsISupportsWeakReference)
-
-// Helper class, used for selection change notification
-class SelectionChangeEvent : public nsRunnable {
-public:
-  SelectionChangeEvent(nsTextStateManager *aDispatcher,
-                       bool aCausedByComposition)
-    : mDispatcher(aDispatcher)
-    , mCausedByComposition(aCausedByComposition)
-  {
-    MOZ_ASSERT(mDispatcher);
-  }
-
-  NS_IMETHOD Run() {
-    if (mDispatcher->mWidget) {
-      IMENotification notification(NOTIFY_IME_OF_SELECTION_CHANGE);
-      notification.mSelectionChangeData.mCausedByComposition =
-         mCausedByComposition;
-      mDispatcher->mWidget->NotifyIME(notification);
-    }
-    return NS_OK;
-  }
-
-private:
-  nsRefPtr<nsTextStateManager> mDispatcher;
-  bool mCausedByComposition;
-};
-
-nsresult
-nsTextStateManager::NotifySelectionChanged(nsIDOMDocument* aDoc,
-                                           nsISelection* aSel,
-                                           int16_t aReason)
-{
-  bool causedByComposition = IsEditorHandlingEventForComposition();
-  if (causedByComposition &&
-      !mUpdatePreference.WantChangesCausedByComposition()) {
-    return NS_OK;
-  }
-
-  int32_t count = 0;
-  nsresult rv = aSel->GetRangeCount(&count);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (count > 0 && mWidget) {
-    nsContentUtils::AddScriptRunner(
-      new SelectionChangeEvent(this, causedByComposition));
-  }
-  return NS_OK;
-}
-
-// Helper class, used for text change notification
-class TextChangeEvent : public nsRunnable {
-public:
-  TextChangeEvent(nsTextStateManager* aDispatcher,
-                  uint32_t aStart, uint32_t aOldEnd, uint32_t aNewEnd,
-                  bool aCausedByComposition)
-    : mDispatcher(aDispatcher)
-    , mStart(aStart)
-    , mOldEnd(aOldEnd)
-    , mNewEnd(aNewEnd)
-    , mCausedByComposition(aCausedByComposition)
-  {
-    MOZ_ASSERT(mDispatcher);
-  }
-
-  NS_IMETHOD Run() {
-    if (mDispatcher->mWidget) {
-      IMENotification notification(NOTIFY_IME_OF_TEXT_CHANGE);
-      notification.mTextChangeData.mStartOffset = mStart;
-      notification.mTextChangeData.mOldEndOffset = mOldEnd;
-      notification.mTextChangeData.mNewEndOffset = mNewEnd;
-      notification.mTextChangeData.mCausedByComposition = mCausedByComposition;
-      mDispatcher->mWidget->NotifyIME(notification);
-    }
-    return NS_OK;
-  }
-
-private:
-  nsRefPtr<nsTextStateManager> mDispatcher;
-  uint32_t mStart, mOldEnd, mNewEnd;
-  bool mCausedByComposition;
-};
-
-class PositionChangeEvent MOZ_FINAL : public nsRunnable
-{
-public:
-  PositionChangeEvent(nsTextStateManager* aDispatcher)
-    : mDispatcher(aDispatcher) {
-    MOZ_ASSERT(mDispatcher);
-  }
-
-  NS_IMETHOD Run() {
-    if (mDispatcher->mWidget) {
-      mDispatcher->mWidget->NotifyIME(
-        IMENotification(NOTIFY_IME_OF_POSITION_CHANGE));
-    }
-    return NS_OK;
-  }
-
-private:
-  nsRefPtr<nsTextStateManager> mDispatcher;
-};
-
-void
-nsTextStateManager::ScrollPositionChanged()
-{
-  if (mWidget) {
-    nsContentUtils::AddScriptRunner(new PositionChangeEvent(this));
-  }
-}
-
-NS_IMETHODIMP
-nsTextStateManager::Reflow(DOMHighResTimeStamp aStart,
-                           DOMHighResTimeStamp aEnd)
-{
-  if (mWidget) {
-    nsContentUtils::AddScriptRunner(new PositionChangeEvent(this));
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsTextStateManager::ReflowInterruptible(DOMHighResTimeStamp aStart,
-                                        DOMHighResTimeStamp aEnd)
-{
-  if (mWidget) {
-    nsContentUtils::AddScriptRunner(new PositionChangeEvent(this));
-  }
-  return NS_OK;
-}
-
-void
-nsTextStateManager::CharacterDataChanged(nsIDocument* aDocument,
-                                         nsIContent* aContent,
-                                         CharacterDataChangeInfo* aInfo)
-{
-  NS_ASSERTION(aContent->IsNodeOfType(nsINode::eTEXT),
-               "character data changed for non-text node");
-
-  bool causedByComposition = IsEditorHandlingEventForComposition();
-  if (causedByComposition &&
-      !mUpdatePreference.WantChangesCausedByComposition()) {
-    return;
-  }
-
-  uint32_t offset = 0;
-  // get offsets of change and fire notification
-  if (NS_FAILED(nsContentEventHandler::GetFlatTextOffsetOfRange(
-                    mRootContent, aContent, aInfo->mChangeStart, &offset)))
-    return;
-
-  uint32_t oldEnd = offset + aInfo->mChangeEnd - aInfo->mChangeStart;
-  uint32_t newEnd = offset + aInfo->mReplaceLength;
-
-  nsContentUtils::AddScriptRunner(
-    new TextChangeEvent(this, offset, oldEnd, newEnd, causedByComposition));
-}
-
-void
-nsTextStateManager::NotifyContentAdded(nsINode* aContainer,
-                                       int32_t aStartIndex,
-                                       int32_t aEndIndex)
-{
-  bool causedByComposition = IsEditorHandlingEventForComposition();
-  if (causedByComposition &&
-      !mUpdatePreference.WantChangesCausedByComposition()) {
-    return;
-  }
-
-  uint32_t offset = 0, newOffset = 0;
-  if (NS_FAILED(nsContentEventHandler::GetFlatTextOffsetOfRange(
-                    mRootContent, aContainer, aStartIndex, &offset)))
-    return;
-
-  // get offset at the end of the last added node
-  if (NS_FAILED(nsContentEventHandler::GetFlatTextOffsetOfRange(
-                    aContainer->GetChildAt(aStartIndex),
-                    aContainer, aEndIndex, &newOffset)))
-    return;
-
-  // fire notification
-  if (newOffset) {
-    nsContentUtils::AddScriptRunner(
-      new TextChangeEvent(this, offset, offset, offset + newOffset,
-                          causedByComposition));
-  }
-}
-
-void
-nsTextStateManager::ContentAppended(nsIDocument* aDocument,
-                                    nsIContent* aContainer,
-                                    nsIContent* aFirstNewContent,
-                                    int32_t aNewIndexInContainer)
-{
-  NotifyContentAdded(aContainer, aNewIndexInContainer,
-                     aContainer->GetChildCount());
-}
-
-void
-nsTextStateManager::ContentInserted(nsIDocument* aDocument,
-                                     nsIContent* aContainer,
-                                     nsIContent* aChild,
-                                     int32_t aIndexInContainer)
-{
-  NotifyContentAdded(NODE_FROM(aContainer, aDocument),
-                     aIndexInContainer, aIndexInContainer + 1);
-}
-
-void
-nsTextStateManager::ContentRemoved(nsIDocument* aDocument,
-                                   nsIContent* aContainer,
-                                   nsIContent* aChild,
-                                   int32_t aIndexInContainer,
-                                   nsIContent* aPreviousSibling)
-{
-  bool causedByComposition = IsEditorHandlingEventForComposition();
-  if (causedByComposition &&
-      !mUpdatePreference.WantChangesCausedByComposition()) {
-    return;
-  }
-
-  uint32_t offset = 0, childOffset = 1;
-  if (NS_FAILED(nsContentEventHandler::GetFlatTextOffsetOfRange(
-                    mRootContent, NODE_FROM(aContainer, aDocument),
-                    aIndexInContainer, &offset)))
-    return;
-
-  // get offset at the end of the deleted node
-  if (aChild->IsNodeOfType(nsINode::eTEXT))
-    childOffset = aChild->TextLength();
-  else if (0 < aChild->GetChildCount())
-    childOffset = aChild->GetChildCount();
-
-  if (NS_FAILED(nsContentEventHandler::GetFlatTextOffsetOfRange(
-                    aChild, aChild, childOffset, &childOffset)))
-    return;
-
-  // fire notification
-  if (childOffset) {
-    nsContentUtils::AddScriptRunner(
-      new TextChangeEvent(this, offset, offset + childOffset, offset,
-                          causedByComposition));
-  }
-}
-
-static nsIContent*
-GetContentBR(mozilla::dom::Element *aElement) {
-  if (!aElement->IsNodeOfType(nsINode::eCONTENT)) {
-    return nullptr;
-  }
-  nsIContent *content = static_cast<nsIContent*>(aElement);
-  return content->IsHTML(nsGkAtoms::br) ? content : nullptr;
-}
-
-void
-nsTextStateManager::AttributeWillChange(nsIDocument* aDocument,
-                                        mozilla::dom::Element* aElement,
-                                        int32_t      aNameSpaceID,
-                                        nsIAtom*     aAttribute,
-                                        int32_t      aModType)
-{
-  nsIContent *content = GetContentBR(aElement);
-  mPreAttrChangeLength = content ?
-    nsContentEventHandler::GetNativeTextLength(content) : 0;
-}
-
-void
-nsTextStateManager::AttributeChanged(nsIDocument* aDocument,
-                                     mozilla::dom::Element* aElement,
-                                     int32_t aNameSpaceID,
-                                     nsIAtom* aAttribute,
-                                     int32_t aModType)
-{
-  bool causedByComposition = IsEditorHandlingEventForComposition();
-  if (causedByComposition &&
-      !mUpdatePreference.WantChangesCausedByComposition()) {
-    return;
-  }
-
-  nsIContent *content = GetContentBR(aElement);
-  if (!content) {
-    return;
-  }
-  uint32_t postAttrChangeLength =
-    nsContentEventHandler::GetNativeTextLength(content);
-  if (postAttrChangeLength != mPreAttrChangeLength) {
-    uint32_t start;
-    if (NS_SUCCEEDED(nsContentEventHandler::GetFlatTextOffsetOfRange(
-        mRootContent, content, 0, &start))) {
-      nsContentUtils::AddScriptRunner(new TextChangeEvent(this, start,
-        start + mPreAttrChangeLength, start + postAttrChangeLength,
-        causedByComposition));
-    }
-  }
-}
-
 bool
 nsIMEStateManager::IsEditable(nsINode* node)
 {
@@ -1211,21 +683,21 @@ nsIMEStateManager::IsEditableIMEState(nsIWidget* aWidget)
 void
 nsIMEStateManager::DestroyTextStateManager()
 {
-  if (!sTextStateObserver) {
+  if (!sActiveIMEContentObserver) {
     return;
   }
 
-  nsRefPtr<nsTextStateManager> tsm;
-  tsm.swap(sTextStateObserver);
+  nsRefPtr<IMEContentObserver> tsm;
+  tsm.swap(sActiveIMEContentObserver);
   tsm->Destroy();
 }
 
 void
-nsIMEStateManager::CreateTextStateManager()
+nsIMEStateManager::CreateIMEContentObserver()
 {
-  if (sTextStateObserver) {
+  if (sActiveIMEContentObserver) {
     NS_WARNING("text state observer has been there already");
-    MOZ_ASSERT(sTextStateObserver->IsManaging(sPresContext, sContent));
+    MOZ_ASSERT(sActiveIMEContentObserver->IsManaging(sPresContext, sContent));
     return;
   }
 
@@ -1234,7 +706,7 @@ nsIMEStateManager::CreateTextStateManager()
     return; // Sometimes, there are no widgets.
   }
 
-  // If it's not text ediable, we don't need to create nsTextStateManager.
+  // If it's not text ediable, we don't need to create IMEContentObserver.
   if (!IsEditableIMEState(widget)) {
     return;
   }
@@ -1245,28 +717,30 @@ nsIMEStateManager::CreateTextStateManager()
     sInitializeIsTestingIME = false;
   }
 
-  sTextStateObserver = new nsTextStateManager();
-  NS_ADDREF(sTextStateObserver);
+  sActiveIMEContentObserver = new IMEContentObserver();
+  NS_ADDREF(sActiveIMEContentObserver);
 
-  // nsTextStateManager::Init() might create another nsTextStateManager
-  // instance.  So, sTextStateObserver would be replaced with new one.
+  // IMEContentObserver::Init() might create another IMEContentObserver
+  // instance.  So, sActiveIMEContentObserver would be replaced with new one.
   // We should hold the current instance here.
-  nsRefPtr<nsTextStateManager> kungFuDeathGrip(sTextStateObserver);
-  sTextStateObserver->Init(widget, sPresContext, sContent);
+  nsRefPtr<IMEContentObserver> kungFuDeathGrip(sActiveIMEContentObserver);
+  sActiveIMEContentObserver->Init(widget, sPresContext, sContent);
 }
 
 nsresult
-nsIMEStateManager::GetFocusSelectionAndRoot(nsISelection** aSel,
-                                            nsIContent** aRoot)
+nsIMEStateManager::GetFocusSelectionAndRoot(nsISelection** aSelection,
+                                            nsIContent** aRootContent)
 {
-  if (!sTextStateObserver || !sTextStateObserver->mEditableNode ||
-      !sTextStateObserver->mSel)
+  if (!sActiveIMEContentObserver || !sActiveIMEContentObserver->mEditableNode ||
+      !sActiveIMEContentObserver->mSel) {
     return NS_ERROR_NOT_AVAILABLE;
+  }
 
-  NS_ASSERTION(sTextStateObserver->mSel && sTextStateObserver->mRootContent,
-               "uninitialized text state observer");
-  NS_ADDREF(*aSel = sTextStateObserver->mSel);
-  NS_ADDREF(*aRoot = sTextStateObserver->mRootContent);
+  NS_ASSERTION(sActiveIMEContentObserver->mSel &&
+                 sActiveIMEContentObserver->mRootContent,
+               "uninitialized content observer");
+  NS_ADDREF(*aSelection = sActiveIMEContentObserver->mSel);
+  NS_ADDREF(*aRootContent = sActiveIMEContentObserver->mRootContent);
   return NS_OK;
 }
 
