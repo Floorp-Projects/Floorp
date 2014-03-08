@@ -1892,8 +1892,7 @@ ThreadActor.prototype = {
    * @return The EnvironmentActor for aEnvironment or undefined for host
    *         functions or functions scoped to a non-debuggee global.
    */
-  createEnvironmentActor:
-  function (aEnvironment, aPool) {
+  createEnvironmentActor: function (aEnvironment, aPool) {
     if (!aEnvironment) {
       return undefined;
     }
@@ -1954,8 +1953,7 @@ ThreadActor.prototype = {
    * Return a protocol completion value representing the given
    * Debugger-provided completion value.
    */
-  createProtocolCompletionValue:
-  function (aCompletion) {
+  createProtocolCompletionValue: function (aCompletion) {
     let protoValue = {};
     if ("return" in aCompletion) {
       protoValue.return = this.createValueGrip(aCompletion.return);
@@ -2194,6 +2192,14 @@ ThreadActor.prototype = {
    */
   onNewScript: function (aScript, aGlobal) {
     this._addScript(aScript);
+
+    // |onNewScript| is only fired for top level scripts (AKA staticLevel == 0),
+    // so we have to make sure to call |_addScript| on every child script as
+    // well to restore breakpoints in those scripts.
+    for (let s of aScript.getChildScripts()) {
+      this._addScript(s);
+    }
+
     this.sources.sourcesForScript(aScript);
   },
 
