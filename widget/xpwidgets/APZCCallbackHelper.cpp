@@ -209,7 +209,7 @@ APZCCallbackHelper::UpdateRootFrame(nsIDOMWindowUtils* aUtils,
                                      aMetrics.mDisplayPort.y,
                                      aMetrics.mDisplayPort.width,
                                      aMetrics.mDisplayPort.height,
-                                     element);
+                                     element, 0);
 }
 
 void
@@ -244,7 +244,7 @@ APZCCallbackHelper::UpdateSubFrame(nsIContent* aContent,
                                         aMetrics.mDisplayPort.y,
                                         aMetrics.mDisplayPort.width,
                                         aMetrics.mDisplayPort.height,
-                                        element);
+                                        element, 0);
     }
 
     aMetrics.mScrollOffset = actualScrollOffset;

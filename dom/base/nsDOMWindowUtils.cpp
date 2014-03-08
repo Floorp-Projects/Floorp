@@ -305,6 +305,14 @@ nsDOMWindowUtils::GetViewportInfo(uint32_t aDisplayWidth,
   return NS_OK;
 }
 
+static void DestroyDisplayPortPropertyData(void* aObject, nsIAtom* aPropertyName,
+                                           void* aPropertyValue, void* aData)
+{
+  DisplayPortPropertyData* data =
+    static_cast<DisplayPortPropertyData*>(aPropertyValue);
+  delete data;
+}
+
 static void DestroyNsRect(void* aObject, nsIAtom* aPropertyName,
                           void* aPropertyValue, void* aData)
 {
@@ -358,7 +366,8 @@ MaybeReflowForInflationScreenWidthChange(nsPresContext *aPresContext)
 NS_IMETHODIMP
 nsDOMWindowUtils::SetDisplayPortForElement(float aXPx, float aYPx,
                                            float aWidthPx, float aHeightPx,
-                                           nsIDOMElement* aElement)
+                                           nsIDOMElement* aElement,
+                                           uint32_t aPriority)
 {
   if (!nsContentUtils::IsCallerChrome()) {
     return NS_ERROR_DOM_SECURITY_ERR;
@@ -388,8 +397,15 @@ nsDOMWindowUtils::SetDisplayPortForElement(float aXPx, float aYPx,
     return NS_ERROR_INVALID_ARG;
   }
 
-  content->SetProperty(nsGkAtoms::DisplayPort, new nsRect(displayport),
-                       DestroyNsRect);
+  DisplayPortPropertyData* currentData =
+    static_cast<DisplayPortPropertyData*>(content->GetProperty(nsGkAtoms::DisplayPort));
+  if (currentData && currentData->mPriority > aPriority) {
+    return NS_OK;
+  }
+
+  content->SetProperty(nsGkAtoms::DisplayPort,
+                       new DisplayPortPropertyData(displayport, aPriority),
+                       DestroyDisplayPortPropertyData);
 
   nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame();
   if (rootScrollFrame) {
