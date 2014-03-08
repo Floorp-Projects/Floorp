@@ -49,6 +49,7 @@ class ClientLayerManager;
 // A class to help implement copy-on-write semantics for shared tiles.
 class gfxSharedReadLock : public AtomicRefCounted<gfxSharedReadLock> {
 public:
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(gfxSharedReadLock)
   virtual ~gfxSharedReadLock() {}
 
   virtual int32_t ReadLock() = 0;
