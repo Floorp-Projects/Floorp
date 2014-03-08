@@ -14,10 +14,11 @@
 namespace mozilla {
 namespace dom {
 
-class MobileCellInfo MOZ_FINAL : public nsISupports
+class MobileCellInfo MOZ_FINAL : public nsIMobileCellInfo
                                , public nsWrapperCache
 {
 public:
+  NS_DECL_NSIMOBILECELLINFO
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(MobileCellInfo)
 
