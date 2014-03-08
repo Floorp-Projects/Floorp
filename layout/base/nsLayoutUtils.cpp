@@ -661,7 +661,7 @@ nsLayoutUtils::GetDisplayPort(nsIContent* aContent, nsRect *aResult)
   }
 
   if (aResult) {
-    *aResult = *static_cast<nsRect*>(property);
+    *aResult = (static_cast<DisplayPortPropertyData*>(property))->mRect;
   }
   return true;
 }

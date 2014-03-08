@@ -18,7 +18,7 @@ function recvSetDisplayPort(x, y, w, h) {
 
     dump("setting displayPort to <"+ x +", "+ y +", "+ w +", "+ h +">\n");
 
-    windowUtils().setDisplayPortForElement(x, y, w, h, content.document.documentElement);
+    windowUtils().setDisplayPortForElement(x, y, w, h, content.document.documentElement, 0);
 }
 
 function recvSetResolution(xres, yres) {

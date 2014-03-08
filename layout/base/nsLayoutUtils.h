@@ -70,6 +70,18 @@ class HTMLVideoElement;
 namespace layers {
 class Layer;
 }
+}
+
+namespace mozilla {
+
+struct DisplayPortPropertyData {
+  DisplayPortPropertyData(const nsRect& aRect, uint32_t aPriority)
+    : mRect(aRect)
+    , mPriority(aPriority)
+  {}
+  nsRect mRect;
+  uint32_t mPriority;
+};
 
 template <class AnimationsOrTransitions>
 extern AnimationsOrTransitions* HasAnimationOrTransition(nsIContent* aContent,
