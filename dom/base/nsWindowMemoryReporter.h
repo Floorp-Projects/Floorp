@@ -237,6 +237,10 @@ private:
   mozilla::TimeStamp mLastCheckForGhostWindows;
 
   nsCOMPtr<nsITimer> mCheckTimer;
+
+  bool mCycleCollectorIsRunning;
+
+  bool mCheckTimerWaitingForCCEnd;
 };
 
 #endif // nsWindowMemoryReporter_h__
