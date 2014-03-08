@@ -38,8 +38,9 @@ function test() {
 
     // Loading the inspector panel at first, to make it possible to listen for
     // new node selections
-    yield toolbox.loadTool("inspector");
-    let inspector = toolbox.getPanel("inspector");
+    yield toolbox.selectTool("inspector");
+    let inspector = toolbox.getCurrentPanel();
+    yield toolbox.selectTool("webconsole");
 
     info("Iterating over the test data");
     for (let data of TEST_DATA) {
@@ -52,16 +53,18 @@ function test() {
       info("Clicking on the inspector icon and waiting for the inspector to be selected");
       let onInspectorSelected = toolbox.once("inspector-selected");
       let onInspectorUpdated = inspector.once("inspector-updated");
+      let onNewNode = toolbox.selection.once("new-node");
 
       EventUtils.synthesizeMouseAtCenter(inspectorIcon, {},
         inspectorIcon.ownerDocument.defaultView);
       yield onInspectorSelected;
       yield onInspectorUpdated;
+      yield onNewNode;
       ok(true, "Inspector selected and new node got selected");
 
       let rawNode = content.wrappedJSObject[data.input.replace(/\(\)/g, "")]();
-      is(rawNode, inspector.selection.node.wrappedJSObject,
-        "The current inspector selection is correct");
+      is(inspector.selection.node.wrappedJSObject, rawNode,
+         "The current inspector selection is correct");
 
       info("Switching back to the console");
       yield toolbox.selectTool("webconsole");
