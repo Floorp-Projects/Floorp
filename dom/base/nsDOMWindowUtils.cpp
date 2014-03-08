@@ -152,6 +152,16 @@ nsDOMWindowUtils::GetPresContext()
   return presContext;
 }
 
+nsIDocument*
+nsDOMWindowUtils::GetDocument()
+{
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
+  if (!window) {
+    return nullptr;
+  }
+  return window->GetExtantDoc();
+}
+
 NS_IMETHODIMP
 nsDOMWindowUtils::GetImageAnimationMode(uint16_t *aMode)
 {
@@ -193,12 +203,9 @@ nsDOMWindowUtils::GetDocCharsetIsForced(bool *aIsForced)
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
-  if (window) {
-    nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
-    *aIsForced = doc &&
-      doc->GetDocumentCharacterSetSource() >= kCharsetFromParentForced;
-  }
+  nsIDocument* doc = GetDocument();
+  *aIsForced = doc &&
+    doc->GetDocumentCharacterSetSource() >= kCharsetFromParentForced;
   return NS_OK;
 }
 
@@ -210,14 +217,11 @@ nsDOMWindowUtils::GetDocumentMetadata(const nsAString& aName,
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
-  if (window) {
-    nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
-    if (doc) {
-      nsCOMPtr<nsIAtom> name = do_GetAtom(aName);
-      doc->GetHeaderData(name, aValue);
-      return NS_OK;
-    }
+  nsIDocument* doc = GetDocument();
+  if (doc) {
+    nsCOMPtr<nsIAtom> name = do_GetAtom(aName);
+    doc->GetHeaderData(name, aValue);
+    return NS_OK;
   }
 
   aValue.Truncate();
@@ -287,10 +291,7 @@ nsDOMWindowUtils::GetViewportInfo(uint32_t aDisplayWidth,
                                   uint32_t *aWidth, uint32_t *aHeight,
                                   bool *aAutoSize)
 {
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
-  NS_ENSURE_STATE(window);
-
-  nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
+  nsIDocument* doc = GetDocument();
   NS_ENSURE_STATE(doc);
 
   nsViewportInfo info = nsContentUtils::GetViewportInfo(doc, ScreenIntSize(aDisplayWidth, aDisplayHeight));
@@ -1500,10 +1501,7 @@ nsDOMWindowUtils::ElementFromPoint(float aX, float aY,
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
-  NS_ENSURE_STATE(window);
-
-  nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
+  nsCOMPtr<nsIDocument> doc = GetDocument();
   NS_ENSURE_STATE(doc);
 
   Element* el =
@@ -1525,10 +1523,7 @@ nsDOMWindowUtils::NodesFromRect(float aX, float aY,
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
-  NS_ENSURE_STATE(window);
-
-  nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
+  nsCOMPtr<nsIDocument> doc = GetDocument();
   NS_ENSURE_STATE(doc);
 
   return doc->NodesFromRectHelper(aX, aY, aTopSize, aRightSize, aBottomSize, aLeftSize, 
@@ -1676,10 +1671,7 @@ nsDOMWindowUtils::SuppressEventHandling(bool aSuppress)
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
-  NS_ENSURE_STATE(window);
-
-  nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
+  nsCOMPtr<nsIDocument> doc = GetDocument();
   NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
 
   if (aSuppress) {
@@ -1692,15 +1684,13 @@ nsDOMWindowUtils::SuppressEventHandling(bool aSuppress)
 }
 
 static nsresult
-getScrollXYAppUnits(nsWeakPtr mWindow, bool aFlushLayout, nsPoint& aScrollPos) {
+getScrollXYAppUnits(nsWeakPtr aWindow, bool aFlushLayout, nsPoint& aScrollPos) {
   if (!nsContentUtils::IsCallerChrome()) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
-  NS_ENSURE_STATE(window);
-
-  nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(aWindow);
+  nsCOMPtr<nsIDocument> doc = window ? window->GetExtantDoc() : nullptr;
   NS_ENSURE_STATE(doc);
 
   if (aFlushLayout) {
@@ -1752,10 +1742,7 @@ nsDOMWindowUtils::GetScrollbarSize(bool aFlushLayout, int32_t* aWidth,
   *aWidth = 0;
   *aHeight = 0;
 
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
-  NS_ENSURE_STATE(window);
-
-  nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
+  nsCOMPtr<nsIDocument> doc = GetDocument();
   NS_ENSURE_STATE(doc);
 
   if (aFlushLayout) {
@@ -1811,10 +1798,7 @@ nsDOMWindowUtils::GetRootBounds(nsIDOMClientRect** aResult)
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
-  NS_ENSURE_STATE(window);
-
-  nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
+  nsIDocument* doc = GetDocument();
   NS_ENSURE_STATE(doc);
 
   nsRect bounds(0, 0, 0, 0);
@@ -1830,6 +1814,7 @@ nsDOMWindowUtils::GetRootBounds(nsIDOMClientRect** aResult)
     }
   }
 
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
   nsRefPtr<DOMRect> rect = new DOMRect(window);
   rect->SetRect(nsPresContext::AppUnitsToFloatCSSPixels(bounds.x),
                 nsPresContext::AppUnitsToFloatCSSPixels(bounds.y),
@@ -2706,11 +2691,7 @@ nsDOMWindowUtils::RenderDocument(const nsRect& aRect,
       return NS_ERROR_DOM_SECURITY_ERR;
     }
 
-    nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
-    NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
-
-    // Get Document
-    nsCOMPtr<nsIDocument> doc = window->GetDoc();
+    nsCOMPtr<nsIDocument> doc = GetDocument();
     NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
 
     // Get Primary Shell
@@ -2730,14 +2711,10 @@ nsDOMWindowUtils::GetCursorType(int16_t *aCursor)
 
   NS_ENSURE_ARG_POINTER(aCursor);
 
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
-  NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
-
-  bool isSameDoc = false;
-  nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
-
+  nsIDocument* doc = GetDocument();
   NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
 
+  bool isSameDoc = false;
   do {
     if (nsEventStateManager::sMouseOverDocument == doc) {
       isSameDoc = true;
@@ -3259,10 +3236,8 @@ nsDOMWindowUtils::GetPlugins(JSContext* cx, JS::MutableHandle<JS::Value> aPlugin
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
-  NS_ENSURE_STATE(window);
-
-  nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
+  nsCOMPtr<nsIDocument> doc = GetDocument();
+  NS_ENSURE_STATE(doc);
 
   nsTArray<nsIObjectLoadingContent*> plugins;
   doc->GetPlugins(plugins);
@@ -3332,10 +3307,7 @@ nsDOMWindowUtils::RemoteFrameFullscreenChanged(nsIDOMElement* aFrameElement,
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
-  NS_ENSURE_STATE(window);
-
-  nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
+  nsCOMPtr<nsIDocument> doc = GetDocument();
   NS_ENSURE_STATE(doc);
 
   doc->RemoteFrameFullscreenChanged(aFrameElement, aNewOrigin);
@@ -3349,10 +3321,7 @@ nsDOMWindowUtils::RemoteFrameFullscreenReverted()
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
-  NS_ENSURE_STATE(window);
-
-  nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
+  nsCOMPtr<nsIDocument> doc = GetDocument();
   NS_ENSURE_STATE(doc);
 
   doc->RemoteFrameFullscreenReverted();
@@ -3476,10 +3445,7 @@ nsDOMWindowUtils::LoadSheet(nsIURI *aSheetURI, uint32_t aSheetType)
                 aSheetType == USER_SHEET ||
                 aSheetType == AUTHOR_SHEET);
 
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
-  NS_ENSURE_TRUE(window, NS_ERROR_INVALID_ARG);
-
-  nsCOMPtr<nsIDocument> doc = window->GetDoc();
+  nsCOMPtr<nsIDocument> doc = GetDocument();
   NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
 
   nsIDocument::additionalSheetType type = convertSheetType(aSheetType);
@@ -3499,10 +3465,7 @@ nsDOMWindowUtils::RemoveSheet(nsIURI *aSheetURI, uint32_t aSheetType)
                 aSheetType == USER_SHEET ||
                 aSheetType == AUTHOR_SHEET);
 
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
-  NS_ENSURE_TRUE(window, NS_ERROR_INVALID_ARG);
-
-  nsCOMPtr<nsIDocument> doc = window->GetDoc();
+  nsCOMPtr<nsIDocument> doc = GetDocument();
   NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
 
   nsIDocument::additionalSheetType type = convertSheetType(aSheetType);
