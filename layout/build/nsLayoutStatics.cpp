@@ -122,7 +122,7 @@ using namespace mozilla::system;
 #include "nsCookieService.h"
 #include "nsApplicationCacheService.h"
 #include "mozilla/dom/time/DateCacheCleaner.h"
-#include "nsIMEStateManager.h"
+#include "mozilla/IMEStateManager.h"
 #include "nsDocument.h"
 #include "mozilla/dom/HTMLVideoElement.h"
 
@@ -307,7 +307,7 @@ nsLayoutStatics::Shutdown()
   txMozillaXSLTProcessor::Shutdown();
   Attr::Shutdown();
   nsEventListenerManager::Shutdown();
-  nsIMEStateManager::Shutdown();
+  IMEStateManager::Shutdown();
   nsComputedDOMStyle::Shutdown();
   nsCSSParser::Shutdown();
   nsCSSRuleProcessor::Shutdown();

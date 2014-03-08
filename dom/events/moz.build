@@ -27,6 +27,7 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla += [
+    'IMEStateManager.h',
     'InternalMutationEvent.h',
 ]
 
@@ -78,6 +79,7 @@ UNIFIED_SOURCES += [
     'EventTarget.cpp',
     'FocusEvent.cpp',
     'IMEContentObserver.cpp',
+    'IMEStateManager.cpp',
     'KeyboardEvent.cpp',
     'MessageEvent.cpp',
     'MouseEvent.cpp',
@@ -91,7 +93,6 @@ UNIFIED_SOURCES += [
     'nsEventDispatcher.cpp',
     'nsEventListenerManager.cpp',
     'nsEventListenerService.cpp',
-    'nsIMEStateManager.cpp',
     'nsJSEventListener.cpp',
     'nsPaintRequest.cpp',
     'PointerEvent.cpp',

@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/Attributes.h"
+#include "mozilla/IMEStateManager.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/MouseEvents.h"
@@ -17,7 +18,6 @@
 #include "nsCOMPtr.h"
 #include "nsEventStateManager.h"
 #include "nsFocusManager.h"
-#include "nsIMEStateManager.h"
 #include "nsContentEventHandler.h"
 #include "nsIContent.h"
 #include "nsINodeInfo.h"
@@ -3765,7 +3765,7 @@ nsEventStateManager::IsTargetCrossProcess(WidgetGUIEvent* aEvent)
 void
 nsEventStateManager::NotifyDestroyPresContext(nsPresContext* aPresContext)
 {
-  nsIMEStateManager::OnDestroyPresContext(aPresContext);
+  IMEStateManager::OnDestroyPresContext(aPresContext);
   if (mHoverContent) {
     // Bug 70855: Presentation is going away, possibly for a reframe.
     // Reset the hover state so that if we're recreating the presentation,
@@ -5176,7 +5176,7 @@ nsEventStateManager::ContentRemoved(nsIDocument* aDocument, nsIContent* aContent
     element->LeaveLink(element->GetPresContext());
   }
 
-  nsIMEStateManager::OnRemoveContent(mPresContext, aContent);
+  IMEStateManager::OnRemoveContent(mPresContext, aContent);
 
   // inform the focus manager that the content is being removed. If this
   // content is focused, the focus will be removed without firing events.
