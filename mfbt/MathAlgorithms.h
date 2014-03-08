@@ -189,11 +189,9 @@ namespace detail {
   inline uint_fast8_t
   CountPopulation32(uint32_t u)
   {
-     uint32_t sum2  = (u     & 0x55555555) + ((u     & 0xaaaaaaaa) >> 1);
-     uint32_t sum4  = (sum2  & 0x33333333) + ((sum2  & 0xcccccccc) >> 2);
-     uint32_t sum8  = (sum4  & 0x0f0f0f0f) + ((sum4  & 0xf0f0f0f0) >> 4);
-     uint32_t sum16 = (sum8  & 0x00ff00ff) + ((sum8  & 0xff00ff00) >> 8);
-     return sum16;
+    uint32_t x = u - ((u >> 1) & 0x55555555);
+    x = (x & 0x33333333) + ((x >> 2) & 0x33333333);
+    return (((x + (x >> 4)) & 0xf0f0f0f) * 0x1010101) >> 24;
   }
 
   inline uint_fast8_t

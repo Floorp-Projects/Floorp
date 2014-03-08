@@ -22,6 +22,7 @@ enum nsStyleUnit {
   eStyleUnit_Grad         = 13,     // (float) angle in grads
   eStyleUnit_Radian       = 14,     // (float) angle in radians
   eStyleUnit_Turn         = 15,     // (float) angle in turns
+  eStyleUnit_FlexFraction = 16,     // (float) <flex> in fr units
   eStyleUnit_Coord        = 20,     // (nscoord) value is twips
   eStyleUnit_Integer      = 30,     // (int) value is simple integer
   eStyleUnit_Enumerated   = 32,     // (int) value has enumerated meaning
@@ -129,6 +130,7 @@ public:
   float       GetFactorValue() const;
   float       GetAngleValue() const;
   double      GetAngleValueInRadians() const;
+  float       GetFlexFractionValue() const;
   Calc*       GetCalcValue() const;
   void        GetUnionValue(nsStyleUnion& aValue) const;
   uint32_t    HashValue(uint32_t aHash) const;
@@ -139,6 +141,7 @@ public:
   void  SetPercentValue(float aValue);
   void  SetFactorValue(float aValue);
   void  SetAngleValue(float aValue, nsStyleUnit aUnit);
+  void  SetFlexFractionValue(float aValue);
   void  SetNormalValue();
   void  SetAutoValue();
   void  SetNoneValue();
@@ -295,6 +298,15 @@ inline float nsStyleCoord::GetAngleValue() const
   NS_ASSERTION(mUnit >= eStyleUnit_Degree &&
                mUnit <= eStyleUnit_Turn, "not an angle value");
   if (mUnit >= eStyleUnit_Degree && mUnit <= eStyleUnit_Turn) {
+    return mValue.mFloat;
+  }
+  return 0.0f;
+}
+
+inline float nsStyleCoord::GetFlexFractionValue() const
+{
+  NS_ASSERTION(mUnit == eStyleUnit_FlexFraction, "not a fr value");
+  if (mUnit == eStyleUnit_FlexFraction) {
     return mValue.mFloat;
   }
   return 0.0f;

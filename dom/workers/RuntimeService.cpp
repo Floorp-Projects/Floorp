@@ -600,7 +600,7 @@ ErrorReporter(JSContext* aCx, const char* aMessage, JSErrorReport* aReport)
 }
 
 bool
-OperationCallback(JSContext* aCx)
+InterruptCallback(JSContext* aCx)
 {
   WorkerPrivate* worker = GetWorkerPrivateFromContext(aCx);
   MOZ_ASSERT(worker);
@@ -608,7 +608,7 @@ OperationCallback(JSContext* aCx)
   // Now is a good time to turn on profiling if it's pending.
   profiler_js_operation_callback();
 
-  return worker->OperationCallback(aCx);
+  return worker->InterruptCallback(aCx);
 }
 
 class LogViolationDetailsRunnable MOZ_FINAL : public nsRunnable
@@ -820,7 +820,7 @@ CreateJSContextForWorker(WorkerPrivate* aWorkerPrivate, JSRuntime* aRuntime)
 
   JS_SetErrorReporter(workerCx, ErrorReporter);
 
-  JS_SetOperationCallback(aRuntime, OperationCallback);
+  JS_SetInterruptCallback(aRuntime, InterruptCallback);
 
   js::SetCTypesActivityCallback(aRuntime, CTypesActivityCallback);
 

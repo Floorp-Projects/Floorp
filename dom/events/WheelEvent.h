@@ -43,10 +43,16 @@ public:
     return WheelEventBinding::Wrap(aCx, aScope, this);
   }
 
+  // NOTE: DeltaX(), DeltaY() and DeltaZ() return CSS pixels when deltaMode is
+  //       DOM_DELTA_PIXEL. (The internal event's delta values are device pixels
+  //       if it's dispatched by widget)
   double DeltaX();
   double DeltaY();
   double DeltaZ();
   uint32_t DeltaMode();
+
+private:
+  int32_t mAppUnitsPerDevPixel;
 };
 
 } // namespace dom

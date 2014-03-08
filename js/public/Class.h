@@ -31,119 +31,12 @@ namespace js {
 
 class Class;
 class FreeOp;
-class PropertyId;
 class PropertyName;
 class Shape;
-class SpecialId;
 
 // This is equal to JSFunction::class_.  Use it in places where you don't want
 // to #include jsfun.h.
 extern JS_FRIEND_DATA(const js::Class* const) FunctionClassPtr;
-
-static MOZ_ALWAYS_INLINE jsid
-SPECIALID_TO_JSID(const SpecialId &sid);
-
-/*
- * We partition the ways to refer to a property into three: by an index
- * (uint32_t); by a string whose characters do not represent an index
- * (PropertyName, see vm/String.h); and by various special values.
- *
- * Special values are encoded using SpecialId, which is layout-compatible but
- * non-interconvertible with jsid.  A SpecialId is used for JSID_VOID, which
- * does not occur in JS scripts but may be used to indicate the absence of a
- * valid identifier.  In the future, a SpecialId may also be an object used by
- * Harmony-proposed private names.
- */
-class SpecialId
-{
-    uintptr_t bits_;
-
-    /* Needs access to raw bits. */
-    friend MOZ_ALWAYS_INLINE jsid SPECIALID_TO_JSID(const SpecialId &sid);
-    friend class PropertyId;
-
-    static const uintptr_t TYPE_VOID = JSID_TYPE_VOID;
-    static const uintptr_t TYPE_OBJECT = JSID_TYPE_OBJECT;
-    static const uintptr_t TYPE_MASK = JSID_TYPE_MASK;
-
-    SpecialId(uintptr_t bits) : bits_(bits) { }
-
-  public:
-    SpecialId() : bits_(TYPE_VOID) { }
-
-    /* Object-valued */
-
-    SpecialId(JSObject &obj)
-      : bits_(uintptr_t(&obj) | TYPE_OBJECT)
-    {
-        MOZ_ASSERT(&obj != nullptr);
-        MOZ_ASSERT((uintptr_t(&obj) & TYPE_MASK) == 0);
-    }
-
-    bool isObject() const {
-        return (bits_ & TYPE_MASK) == TYPE_OBJECT && bits_ != TYPE_OBJECT;
-    }
-
-    JSObject *toObject() const {
-        MOZ_ASSERT(isObject());
-        return reinterpret_cast<JSObject *>(bits_ & ~TYPE_MASK);
-    }
-
-    /* Empty */
-
-    static SpecialId empty() {
-        SpecialId sid(TYPE_OBJECT);
-        MOZ_ASSERT(sid.isEmpty());
-        return sid;
-    }
-
-    bool isEmpty() const {
-        return bits_ == TYPE_OBJECT;
-    }
-
-    /* Void */
-
-    static SpecialId voidId() {
-        SpecialId sid(TYPE_VOID);
-        MOZ_ASSERT(sid.isVoid());
-        return sid;
-    }
-
-    bool isVoid() const {
-        return bits_ == TYPE_VOID;
-    }
-};
-
-static MOZ_ALWAYS_INLINE jsid
-SPECIALID_TO_JSID(const SpecialId &sid)
-{
-    jsid id;
-    JSID_BITS(id) = sid.bits_;
-    MOZ_ASSERT_IF(sid.isObject(), JSID_IS_OBJECT(id) && JSID_TO_OBJECT(id) == sid.toObject());
-    MOZ_ASSERT_IF(sid.isVoid(), JSID_IS_VOID(id));
-    MOZ_ASSERT_IF(sid.isEmpty(), JSID_IS_EMPTY(id));
-    return id;
-}
-
-static MOZ_ALWAYS_INLINE bool
-JSID_IS_SPECIAL(jsid id)
-{
-    return JSID_IS_OBJECT(id) || JSID_IS_EMPTY(id) || JSID_IS_VOID(id);
-}
-
-static MOZ_ALWAYS_INLINE SpecialId
-JSID_TO_SPECIALID(jsid id)
-{
-    MOZ_ASSERT(JSID_IS_SPECIAL(id));
-    if (JSID_IS_OBJECT(id))
-        return SpecialId(*JSID_TO_OBJECT(id));
-    if (JSID_IS_EMPTY(id))
-        return SpecialId::empty();
-    MOZ_ASSERT(JSID_IS_VOID(id));
-    return SpecialId::voidId();
-}
-
-typedef JS::Handle<SpecialId> HandleSpecialId;
 
 } // namespace js
 
@@ -314,9 +207,6 @@ typedef bool
 (* LookupElementOp)(JSContext *cx, JS::HandleObject obj, uint32_t index,
                     JS::MutableHandleObject objp, JS::MutableHandle<Shape*> propp);
 typedef bool
-(* LookupSpecialOp)(JSContext *cx, JS::HandleObject obj, HandleSpecialId sid,
-                    JS::MutableHandleObject objp, JS::MutableHandle<Shape*> propp);
-typedef bool
 (* DefineGenericOp)(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::HandleValue value,
                     JSPropertyOp getter, JSStrictPropertyOp setter, unsigned attrs);
 typedef bool
@@ -327,10 +217,6 @@ typedef bool
 (* DefineElementOp)(JSContext *cx, JS::HandleObject obj, uint32_t index, JS::HandleValue value,
                     JSPropertyOp getter, JSStrictPropertyOp setter, unsigned attrs);
 typedef bool
-(* DefineSpecialOp)(JSContext *cx, JS::HandleObject obj, HandleSpecialId sid,
-                    JS::HandleValue value, JSPropertyOp getter, JSStrictPropertyOp setter,
-                    unsigned attrs);
-typedef bool
 (* GenericIdOp)(JSContext *cx, JS::HandleObject obj, JS::HandleObject receiver, JS::HandleId id,
                 JS::MutableHandleValue vp);
 typedef bool
@@ -340,9 +226,6 @@ typedef bool
 (* ElementIdOp)(JSContext *cx, JS::HandleObject obj, JS::HandleObject receiver, uint32_t index,
                 JS::MutableHandleValue vp);
 typedef bool
-(* SpecialIdOp)(JSContext *cx, JS::HandleObject obj, JS::HandleObject receiver,
-                HandleSpecialId sid, JS::MutableHandleValue vp);
-typedef bool
 (* StrictGenericIdOp)(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
                       JS::MutableHandleValue vp, bool strict);
 typedef bool
@@ -350,9 +233,6 @@ typedef bool
                        JS::MutableHandleValue vp, bool strict);
 typedef bool
 (* StrictElementIdOp)(JSContext *cx, JS::HandleObject obj, uint32_t index,
-                      JS::MutableHandleValue vp, bool strict);
-typedef bool
-(* StrictSpecialIdOp)(JSContext *cx, JS::HandleObject obj, HandleSpecialId sid,
                       JS::MutableHandleValue vp, bool strict);
 typedef bool
 (* GenericAttributesOp)(JSContext *cx, JS::HandleObject obj, JS::HandleId id, unsigned *attrsp);
@@ -364,8 +244,6 @@ typedef bool
                      bool *succeeded);
 typedef bool
 (* DeleteElementOp)(JSContext *cx, JS::HandleObject obj, uint32_t index, bool *succeeded);
-typedef bool
-(* DeleteSpecialOp)(JSContext *cx, JS::HandleObject obj, HandleSpecialId sid, bool *succeeded);
 
 typedef bool
 (* WatchOp)(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::HandleObject callable);
@@ -453,24 +331,19 @@ struct ObjectOps
     LookupGenericOp     lookupGeneric;
     LookupPropOp        lookupProperty;
     LookupElementOp     lookupElement;
-    LookupSpecialOp     lookupSpecial;
     DefineGenericOp     defineGeneric;
     DefinePropOp        defineProperty;
     DefineElementOp     defineElement;
-    DefineSpecialOp     defineSpecial;
     GenericIdOp         getGeneric;
     PropertyIdOp        getProperty;
     ElementIdOp         getElement;
-    SpecialIdOp         getSpecial;
     StrictGenericIdOp   setGeneric;
     StrictPropertyIdOp  setProperty;
     StrictElementIdOp   setElement;
-    StrictSpecialIdOp   setSpecial;
     GenericAttributesOp getGenericAttributes;
     GenericAttributesOp setGenericAttributes;
     DeletePropertyOp    deleteProperty;
     DeleteElementOp     deleteElement;
-    DeleteSpecialOp     deleteSpecial;
     WatchOp             watch;
     UnwatchOp           unwatch;
     SliceOp             slice; // Optimized slice, can be null.
@@ -482,7 +355,7 @@ struct ObjectOps
 #define JS_NULL_OBJECT_OPS                                                    \
     {nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr, \
      nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr, \
-     nullptr,nullptr,nullptr,nullptr,nullptr,nullptr,nullptr}
+     nullptr,nullptr}
 
 } // namespace js
 
@@ -493,7 +366,7 @@ typedef void (*JSClassInternal)();
 struct JSClass {
     JS_CLASS_MEMBERS(JSFinalizeOp);
 
-    void                *reserved[36];
+    void                *reserved[31];
 };
 
 #define JSCLASS_HAS_PRIVATE             (1<<0)  // objects have private slot
@@ -658,21 +531,6 @@ ObjectClassIs(JSObject &obj, ESClassValue classValue, JSContext *cx);
 /* Just a helper that checks v.isObject before calling ObjectClassIs. */
 inline bool
 IsObjectWithClass(const JS::Value &v, ESClassValue classValue, JSContext *cx);
-
-inline bool
-IsPoisonedSpecialId(js::SpecialId iden)
-{
-    if (iden.isObject())
-        return JS::IsPoisonedPtr(iden.toObject());
-    return false;
-}
-
-template <> struct GCMethods<SpecialId>
-{
-    static SpecialId initial() { return SpecialId(); }
-    static ThingRootKind kind() { return THING_ROOT_ID; }
-    static bool poisoned(SpecialId id) { return IsPoisonedSpecialId(id); }
-};
 
 }  /* namespace js */
 

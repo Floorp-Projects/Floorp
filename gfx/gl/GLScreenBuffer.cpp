@@ -623,11 +623,11 @@ ReadBuffer::Create(GLContext* gl,
 
     switch (surf->AttachType()) {
     case AttachmentType::GLTexture:
-        colorTex = surf->Texture();
-        target = surf->TextureTarget();
+        colorTex = surf->ProdTexture();
+        target = surf->ProdTextureTarget();
         break;
     case AttachmentType::GLRenderbuffer:
-        colorRB = surf->Renderbuffer();
+        colorRB = surf->ProdRenderbuffer();
         break;
     default:
         MOZ_CRASH("Unknown attachment type?");
@@ -676,11 +676,11 @@ ReadBuffer::Attach(SharedSurface_GL* surf)
 
         switch (surf->AttachType()) {
         case AttachmentType::GLTexture:
-            colorTex = surf->Texture();
-            target = surf->TextureTarget();
+            colorTex = surf->ProdTexture();
+            target = surf->ProdTextureTarget();
             break;
         case AttachmentType::GLRenderbuffer:
-            colorRB = surf->Renderbuffer();
+            colorRB = surf->ProdRenderbuffer();
             break;
         default:
             MOZ_CRASH("Unknown attachment type?");

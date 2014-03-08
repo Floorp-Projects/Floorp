@@ -45,3 +45,18 @@ LOCAL_INCLUDES += [
     'mediaresourcemanager',
 ]
 
+CXXFLAGS += [
+    '-I%s/%s' % (CONFIG['ANDROID_SOURCE'], d) for d in [
+        'dalvik/libnativehelper/include/nativehelper',
+        'frameworks/av/include/media',
+        'frameworks/base/include',
+        'frameworks/base/include/binder',
+        'frameworks/base/include/utils',
+        'frameworks/base/include/media',
+        'frameworks/base/include/media/stagefright/openmax',
+        'frameworks/base/media/libstagefright/include',
+        'frameworks/native/opengl/include',
+        'frameworks/native/include',
+    ]
+]
+

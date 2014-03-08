@@ -202,7 +202,7 @@ public:
     void ContentDocumentChanged();
     bool IsContentDocumentDisplayed();
 
-    bool ProgressiveUpdateCallback(bool aHasPendingNewThebesContent, const LayerRect& aDisplayPort, float aDisplayResolution, bool aDrawingCritical, ScreenRect& aCompositionBounds, CSSToScreenScale& aZoom);
+    bool ProgressiveUpdateCallback(bool aHasPendingNewThebesContent, const LayerRect& aDisplayPort, float aDisplayResolution, bool aDrawingCritical, ParentLayerRect& aCompositionBounds, CSSToParentLayerScale& aZoom);
 
     void SetLayerClient(JNIEnv* env, jobject jobj);
     GeckoLayerClient* GetLayerClient() { return mLayerClient; }

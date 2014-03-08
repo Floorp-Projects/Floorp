@@ -225,6 +225,7 @@ WebGLContext::IsTextureFormatCompressed(GLenum format)
         case LOCAL_GL_COMPRESSED_RGB_PVRTC_2BPPV1:
         case LOCAL_GL_COMPRESSED_RGBA_PVRTC_4BPPV1:
         case LOCAL_GL_COMPRESSED_RGBA_PVRTC_2BPPV1:
+        case LOCAL_GL_ETC1_RGB8_OES:
             return true;
         default:
             return false;

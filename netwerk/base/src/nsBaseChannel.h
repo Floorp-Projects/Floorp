@@ -157,9 +157,9 @@ public:
   }
 
   // This is a short-cut to calling nsIRequest::IsPending()
-  bool IsPending() const {
+  virtual bool Pending() const {
     return mPump || mWaitingOnAsyncRedirect;
-  }
+ }
 
   // Helper function for querying the channel's notification callbacks.
   template <class T> void GetCallback(nsCOMPtr<T> &result) {

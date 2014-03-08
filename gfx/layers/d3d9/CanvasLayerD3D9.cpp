@@ -81,7 +81,7 @@ CanvasLayerD3D9::UpdateSurface()
   RefPtr<SourceSurface> surface;
 
   if (mGLContext) {
-    SharedSurface* surf = mGLContext->RequestFrame();
+    SharedSurface_GL* surf = mGLContext->RequestFrame();
     if (!surf)
         return;
 
@@ -131,7 +131,7 @@ CanvasLayerD3D9::RenderLayer()
     return;
 
   /*
-   * We flip the Y axis here, note we can only do this because we are in 
+   * We flip the Y axis here, note we can only do this because we are in
    * CULL_NONE mode!
    */
 

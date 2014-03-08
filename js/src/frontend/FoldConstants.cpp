@@ -28,46 +28,68 @@ using mozilla::NegativeInfinity;
 using mozilla::PositiveInfinity;
 using JS::GenericNaN;
 
-static ParseNode *
-ContainsVarOrConst(ParseNode *pn)
+static bool
+ContainsVarOrConst(ExclusiveContext *cx, ParseNode *pn, ParseNode **resultp)
 {
-    if (!pn)
-        return nullptr;
-    if (pn->isKind(PNK_VAR) || pn->isKind(PNK_CONST))
-        return pn;
+    JS_CHECK_RECURSION(cx, return false);
+
+    if (!pn) {
+        *resultp = nullptr;
+        return true;
+    }
+    if (pn->isKind(PNK_VAR) || pn->isKind(PNK_CONST)) {
+        *resultp = pn;
+        return true;
+    }
     switch (pn->getArity()) {
       case PN_LIST:
         for (ParseNode *pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next) {
-            if (ParseNode *pnt = ContainsVarOrConst(pn2))
-                return pnt;
+            if (!ContainsVarOrConst(cx, pn2, resultp))
+                return false;
+            if (*resultp)
+                return true;
         }
         break;
+
       case PN_TERNARY:
-        if (ParseNode *pnt = ContainsVarOrConst(pn->pn_kid1))
-            return pnt;
-        if (ParseNode *pnt = ContainsVarOrConst(pn->pn_kid2))
-            return pnt;
-        return ContainsVarOrConst(pn->pn_kid3);
+        if (!ContainsVarOrConst(cx, pn->pn_kid1, resultp))
+            return false;
+        if (*resultp)
+            return true;
+        if (!ContainsVarOrConst(cx, pn->pn_kid2, resultp))
+            return false;
+        if (*resultp)
+            return true;
+        return ContainsVarOrConst(cx, pn->pn_kid3, resultp);
+
       case PN_BINARY:
       case PN_BINARY_OBJ:
-        /*
-         * Limit recursion if pn is a binary expression, which can't contain a
-         * var statement.
-         */
-        if (!pn->isOp(JSOP_NOP))
-            return nullptr;
-        if (ParseNode *pnt = ContainsVarOrConst(pn->pn_left))
-            return pnt;
-        return ContainsVarOrConst(pn->pn_right);
+        // Limit recursion if pn is a binary expression, which can't contain a
+        // var statement.
+        if (!pn->isOp(JSOP_NOP)) {
+            *resultp = nullptr;
+            return true;
+        }
+        if (!ContainsVarOrConst(cx, pn->pn_left, resultp))
+            return false;
+        if (*resultp)
+            return true;
+        return ContainsVarOrConst(cx, pn->pn_right, resultp);
+
       case PN_UNARY:
-        if (!pn->isOp(JSOP_NOP))
-            return nullptr;
-        return ContainsVarOrConst(pn->pn_kid);
+        if (!pn->isOp(JSOP_NOP)) {
+            *resultp = nullptr;
+            return true;
+        }
+        return ContainsVarOrConst(cx, pn->pn_kid, resultp);
+
       case PN_NAME:
-        return ContainsVarOrConst(pn->maybeExpr());
+        return ContainsVarOrConst(cx, pn->maybeExpr(), resultp);
+
       default:;
     }
-    return nullptr;
+    *resultp = nullptr;
+    return true;
 }
 
 /*
@@ -409,8 +431,17 @@ Fold(ExclusiveContext *cx, ParseNode **pnp,
 
     switch (pn->getKind()) {
       case PNK_IF:
-        if (ContainsVarOrConst(pn2) || ContainsVarOrConst(pn3))
-            break;
+        {
+            ParseNode *decl;
+            if (!ContainsVarOrConst(cx, pn2, &decl))
+                return false;
+            if (decl)
+                break;
+            if (!ContainsVarOrConst(cx, pn3, &decl))
+                return false;
+            if (decl)
+                break;
+        }
         /* FALL THROUGH */
 
       case PNK_CONDITIONAL:

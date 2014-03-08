@@ -411,7 +411,7 @@ BoxModelHighlighter.prototype = {
   _trackMutations: function() {
     if (this.currentNode) {
       let win = this.currentNode.ownerDocument.defaultView;
-      this.currentNodeObserver = win.MutationObserver(this._update);
+      this.currentNodeObserver = new win.MutationObserver(this._update);
       this.currentNodeObserver.observe(this.currentNode, {attributes: true});
     }
   },
