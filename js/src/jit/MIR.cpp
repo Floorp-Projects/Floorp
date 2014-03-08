@@ -2765,10 +2765,8 @@ InlinePropertyTable::buildTypeSetForFunction(JSFunction *func) const
     if (!types)
         return nullptr;
     for (size_t i = 0; i < numEntries(); i++) {
-        if (entries_[i]->func == func) {
-            if (!types->addType(types::Type::ObjectType(entries_[i]->typeObj), alloc))
-                return nullptr;
-        }
+        if (entries_[i]->func == func)
+            types->addType(types::Type::ObjectType(entries_[i]->typeObj), alloc);
     }
     return types;
 }
@@ -3172,7 +3170,7 @@ jit::PropertyReadIsIdempotent(types::CompilerConstraintList *constraints,
     return true;
 }
 
-bool
+void
 jit::AddObjectsForPropertyRead(MDefinition *obj, PropertyName *name,
                                types::TemporaryTypeSet *observed)
 {
@@ -3182,16 +3180,20 @@ jit::AddObjectsForPropertyRead(MDefinition *obj, PropertyName *name,
     LifoAlloc *alloc = GetIonContext()->temp->lifoAlloc();
 
     types::TemporaryTypeSet *types = obj->resultTypeSet();
-    if (!types || types->unknownObject())
-        return observed->addType(types::Type::AnyObjectType(), alloc);
+    if (!types || types->unknownObject()) {
+        observed->addType(types::Type::AnyObjectType(), alloc);
+        return;
+    }
 
     for (size_t i = 0; i < types->getObjectCount(); i++) {
         types::TypeObjectKey *object = types->getObject(i);
         if (!object)
             continue;
 
-        if (object->unknownProperties())
-            return observed->addType(types::Type::AnyObjectType(), alloc);
+        if (object->unknownProperties()) {
+            observed->addType(types::Type::AnyObjectType(), alloc);
+            return;
+        }
 
         jsid id = name ? NameToId(name) : JSID_VOID;
         types::HeapTypeSetKey property = object->property(id);
@@ -3199,17 +3201,17 @@ jit::AddObjectsForPropertyRead(MDefinition *obj, PropertyName *name,
         if (!types)
             continue;
 
-        if (types->unknownObject())
-            return observed->addType(types::Type::AnyObjectType(), alloc);
+        if (types->unknownObject()) {
+            observed->addType(types::Type::AnyObjectType(), alloc);
+            return;
+        }
 
         for (size_t i = 0; i < types->getObjectCount(); i++) {
             types::TypeObjectKey *object = types->getObject(i);
-            if (object && !observed->addType(types::Type::ObjectType(object), alloc))
-                return false;
+            if (object)
+                observed->addType(types::Type::ObjectType(object), alloc);
         }
     }
-
-    return true;
 }
 
 static bool
