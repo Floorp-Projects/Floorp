@@ -44,6 +44,9 @@ abstract class UITest extends ActivityInstrumentationTestCase2<Activity>
     private static final String LAUNCHER_ACTIVITY = TestConstants.ANDROID_PACKAGE_NAME + ".App";
     private static final String TARGET_PACKAGE_ID = "org.mozilla.gecko";
 
+    private static final String JUNIT_FAILURE_MSG = "A JUnit method was called. Make sure " +
+        "you are using AssertionHelper to make assertions. Try `fAssert*(...);`";
+
     private final static Class<Activity> sLauncherActivityClass;
 
     private Activity mActivity;
@@ -226,4 +229,63 @@ abstract class UITest extends ActivityInstrumentationTestCase2<Activity>
 
         return intent;
     }
+
+    /**
+     * Throws an Exception. Called from overridden JUnit methods to ensure JUnit assertions
+     * are not accidentally used over AssertionHelper assertions (the latter of which contains
+     * additional logging facilities for use in our test harnesses).
+     */
+    private static void junit() {
+        throw new UnsupportedOperationException(JUNIT_FAILURE_MSG);
+    }
+
+    // Note: inexplicably, javac does not think we're overriding these methods,
+    // so we can't use the @Override annotation.
+    public static void assertEquals(short e, short a) { junit(); }
+    public static void assertEquals(String m, int e, int a) { junit(); }
+    public static void assertEquals(String m, short e, short a) { junit(); }
+    public static void assertEquals(char e, char a) { junit(); }
+    public static void assertEquals(String m, String e, String a) { junit(); }
+    public static void assertEquals(int e, int a) { junit(); }
+    public static void assertEquals(String m, double e, double a, double delta) { junit(); }
+    public static void assertEquals(String m, long e, long a) { junit(); }
+    public static void assertEquals(byte e, byte a) { junit(); }
+    public static void assertEquals(Object e, Object a) { junit(); }
+    public static void assertEquals(boolean e, boolean a) { junit(); }
+    public static void assertEquals(String m, float e, float a, float delta) { junit(); }
+    public static void assertEquals(String m, boolean e, boolean a) { junit(); }
+    public static void assertEquals(String e, String a) { junit(); }
+    public static void assertEquals(float e, float a, float delta) { junit(); }
+    public static void assertEquals(String m, byte e, byte a) { junit(); }
+    public static void assertEquals(double e, double a, double delta) { junit(); }
+    public static void assertEquals(String m, char e, char a) { junit(); }
+    public static void assertEquals(String m, Object e, Object a) { junit(); }
+    public static void assertEquals(long e, long a) { junit(); }
+
+    public static void assertFalse(String m, boolean c) { junit(); }
+    public static void assertFalse(boolean c) { junit(); }
+
+    public static void assertNotNull(String m, Object o) { junit(); }
+    public static void assertNotNull(Object o) { junit(); }
+
+    public static void assertNotSame(Object e, Object a) { junit(); }
+    public static void assertNotSame(String m, Object e, Object a) { junit(); }
+
+    public static void assertNull(Object o) { junit(); }
+    public static void assertNull(String m, Object o) { junit(); }
+
+    public static void assertSame(Object e, Object a) { junit(); }
+    public static void assertSame(String m, Object e, Object a) { junit(); }
+
+    public static void assertTrue(String m, boolean c) { junit(); }
+    public static void assertTrue(boolean c) { junit(); }
+
+    public static void fail(String m) { junit(); }
+    public static void fail() { junit(); }
+
+    public static void failNotEquals(String m, Object e, Object a) { junit(); }
+    public static void failNotSame(String m, Object e, Object a) { junit(); }
+    public static void failSame(String m) { junit(); }
+
+    public static String format(String m, Object e, Object a) { junit(); return null; }
 }

@@ -5,13 +5,15 @@
 
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
+const APK_MIME_TYPE = "application/vnd.android.package-archive";
 const PREF_BD_USEDOWNLOADDIR = "browser.download.useDownloadDir";
 const URI_GENERIC_ICON_DOWNLOAD = "drawable://alert_download";
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Prompt.jsm");
+Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/HelperApps.jsm");
+Cu.import("resource://gre/modules/Prompt.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 // -----------------------------------------------------------------------
 // HelperApp Launcher Dialog
@@ -23,7 +25,110 @@ HelperAppLauncherDialog.prototype = {
   classID: Components.ID("{e9d277a0-268a-4ec2-bb8c-10fdf3e44611}"),
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIHelperAppLauncherDialog]),
 
+  getNativeWindow: function () {
+    try {
+      let win = Services.wm.getMostRecentWindow("navigator:browser");
+      if (win && win.NativeWindow) {
+        return win.NativeWindow;
+      }
+    } catch (e) {
+    }
+    return null;
+  },
+
+  /**
+   * Returns false if `url` represents a local or special URL that we don't
+   * wish to ever download.
+   *
+   * Returns true otherwise.
+   */
+  _canDownload: function (url, alreadyResolved=false) {
+    Services.console.logStringMessage("_canDownload: " + url);
+    // The common case.
+    if (url.schemeIs("http") ||
+        url.schemeIs("https") ||
+        url.schemeIs("ftp")) {
+      Services.console.logStringMessage("_canDownload: true\n");
+      return true;
+    }
+
+    // The less-common opposite case.
+    if (url.schemeIs("chrome") ||
+        url.schemeIs("jar") ||
+        url.schemeIs("resource") ||
+        url.schemeIs("wyciwyg")) {
+      Services.console.logStringMessage("_canDownload: false\n");
+      return false;
+    }
+
+    // For all other URIs, try to resolve them to an inner URI, and check that.
+    if (!alreadyResolved) {
+      let ioSvc = Cc["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
+      let innerURI = ioSvc.newChannelFromURI(url).URI;
+      if (!url.equals(innerURI)) {
+        Services.console.logStringMessage("_canDownload: recursing.\n");
+        return this._canDownload(innerURI, true);
+      }
+    }
+
+    if (url.schemeIs("file")) {
+      // If it's in our app directory or profile directory, we never ever
+      // want to do anything with it, including saving to disk or passing the
+      // file to another application.
+      let file = url.QueryInterface(Ci.nsIFileURL).file;
+
+      // TODO: pref blacklist?
+
+      let appRoot = FileUtils.getFile("XREExeF", []);
+      if (appRoot.contains(file, true)) {
+        Services.console.logStringMessage("_canDownload: appRoot.\n");
+        return false;
+      }
+
+      let profileRoot = FileUtils.getFile("ProfD", []);
+      if (profileRoot.contains(file, true)) {
+        Services.console.logStringMessage("_canDownload: prof dir.\n");
+        return false;
+      }
+
+      Services.console.logStringMessage("_canDownload: safe.\n");
+      return true;
+    }
+
+    // Anything else is fine to download.
+    return true;
+  },
+
+  /**
+   * Returns true if `launcher` represents a download for which we wish
+   * to prompt.
+   */
+  _shouldPrompt: function (launcher) {
+    let mimeType = this._getMimeTypeFromLauncher(launcher);
+
+    // Straight equality: nsIMIMEInfo normalizes.
+    return APK_MIME_TYPE == mimeType;
+  },
+
   show: function hald_show(aLauncher, aContext, aReason) {
+    if (!this._canDownload(aLauncher.source)) {
+      aLauncher.cancel(Cr.NS_BINDING_ABORTED);
+
+      let win = this.getNativeWindow();
+      if (!win) {
+        // Oops.
+        Services.console.logStringMessage("Refusing download, but can't show a toast.");
+        return;
+      }
+
+      Services.console.logStringMessage("Refusing download of non-downloadable file.");
+      let bundle = Services.strings.createBundle("chrome://browser/locale/handling.properties");
+      let failedText = bundle.GetStringFromName("protocol.failed");
+      win.toast.show(failedText, "long");
+
+      return;
+    }
+
     let bundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
 
     let defaultHandler = new Object();
@@ -31,13 +136,13 @@ HelperAppLauncherDialog.prototype = {
       mimeType: aLauncher.MIMEInfo.MIMEType,
     });
 
-    // Add a fake intent for save to disk at the top of the list
+    // Add a fake intent for save to disk at the top of the list.
     apps.unshift({
       name: bundle.GetStringFromName("helperapps.saveToDisk"),
       packageName: "org.mozilla.gecko.Download",
       iconUri: "drawable://icon",
       launch: function() {
-        // Reset the preferredAction here
+        // Reset the preferredAction here.
         aLauncher.MIMEInfo.preferredAction = Ci.nsIMIMEInfo.saveToDisk;
         aLauncher.saveToDisk(null, false);
         return true;
@@ -65,32 +170,38 @@ HelperAppLauncherDialog.prototype = {
       }
     }
 
-    if (apps.length > 1) {
-      HelperApps.prompt(apps, {
-        title: bundle.GetStringFromName("helperapps.pick"),
-        buttons: [
-          bundle.GetStringFromName("helperapps.alwaysUse"),
-          bundle.GetStringFromName("helperapps.useJustOnce")
-        ]
-      }, (data) => {
-        if (data.button < 0)
-          return;
-
-        callback(apps[data.icongrid0]);
-
-        if (data.button == 0)
-          this._setPreferredApp(aLauncher, apps[data.icongrid0]);
-      });
-    } else {
+    // If there's only one choice, and we don't want to prompt, go right ahead
+    // and choose that app automatically.
+    if (!this._shouldPrompt(aLauncher) && (apps.length === 1)) {
       callback(apps[0]);
+      return;
     }
+
+    // Otherwise, let's go through the prompt.
+    HelperApps.prompt(apps, {
+      title: bundle.GetStringFromName("helperapps.pick"),
+      buttons: [
+        bundle.GetStringFromName("helperapps.alwaysUse"),
+        bundle.GetStringFromName("helperapps.useJustOnce")
+      ]
+    }, (data) => {
+      if (data.button < 0) {
+        return;
+      }
+
+      callback(apps[data.icongrid0]);
+
+      if (data.button === 0) {
+        this._setPreferredApp(aLauncher, apps[data.icongrid0]);
+      }
+    });
   },
 
   _getPrefName: function getPrefName(mimetype) {
     return "browser.download.preferred." + mimetype.replace("\\", ".");
   },
 
-  _getMimeTypeFromLauncher: function getMimeTypeFromLauncher(launcher) {
+  _getMimeTypeFromLauncher: function (launcher) {
     let mime = launcher.MIMEInfo.MIMEType;
     if (!mime)
       mime = ContentAreaUtils.getMIMETypeForURI(launcher.source) || "";
@@ -105,7 +216,7 @@ HelperAppLauncherDialog.prototype = {
     try {
       return Services.prefs.getCharPref(this._getPrefName(mime));
     } catch(ex) {
-      Services.console.logStringMessage("Error getting pref for " + mime + " " + ex);
+      Services.console.logStringMessage("Error getting pref for " + mime + ".");
     }
     return null;
   },
