@@ -190,10 +190,64 @@ static void
 DestroyContext(JSContext *cx, bool withGC);
 
 static JSObject *
-NewGlobalObject(JSContext *cx, JS::CompartmentOptions &options);
+NewGlobalObject(JSContext *cx, JS::CompartmentOptions &options,
+                JSPrincipals *principals);
 
 static const JSErrorFormatString *
 my_GetErrorMessage(void *userRef, const char *locale, const unsigned errorNumber);
+
+
+/*
+ * A toy principals type for the shell.
+ *
+ * In the shell, a principal is simply a 32-bit mask: P subsumes Q if the
+ * set bits in P are a superset of those in Q. Thus, the principal 0 is
+ * subsumed by everything, and the principal ~0 subsumes everything.
+ *
+ * As a special case, a null pointer as a principal is treated like 0xffff.
+ *
+ * The 'newGlobal' function takes an option indicating which principal the
+ * new global should have; 'evaluate' does for the new code.
+ */
+class ShellPrincipals: public JSPrincipals {
+    uint32_t bits;
+
+    static uint32_t getBits(JSPrincipals *p) {
+        if (!p)
+            return 0xffff;
+        return static_cast<ShellPrincipals *>(p)->bits;
+    }
+
+  public:
+    ShellPrincipals(uint32_t bits, int32_t refcount = 0) : bits(bits) {
+        this->refcount = refcount;
+    }
+
+    static void destroy(JSPrincipals *principals) {
+        MOZ_ASSERT(principals != &fullyTrusted);
+        MOZ_ASSERT(principals->refcount == 0);
+        js_free(static_cast<ShellPrincipals *>(principals));
+    }
+
+    static bool subsumes(JSPrincipals *first, JSPrincipals *second) {
+        uint32_t firstBits  = getBits(first);
+        uint32_t secondBits = getBits(second);
+        return (firstBits | secondBits) == firstBits;
+    }
+
+    static JSSecurityCallbacks securityCallbacks;
+
+    // Fully-trusted principals singleton.
+    static ShellPrincipals fullyTrusted;
+};
+
+JSSecurityCallbacks ShellPrincipals::securityCallbacks = {
+    nullptr, // contentSecurityPolicyAllows
+    subsumes
+};
+
+// The fully-trusted principal subsumes all other principals.
+ShellPrincipals ShellPrincipals::fullyTrusted(-1, 1);
 
 #ifdef EDITLINE
 extern "C" {
@@ -2829,7 +2883,7 @@ WorkerMain(void *arg)
 
         JS::CompartmentOptions compartmentOptions;
         compartmentOptions.setVersion(JSVERSION_LATEST);
-        RootedObject global(cx, NewGlobalObject(cx, compartmentOptions));
+        RootedObject global(cx, NewGlobalObject(cx, compartmentOptions, nullptr));
         if (!global)
             break;
 
@@ -4104,6 +4158,7 @@ WrapWithProto(JSContext *cx, unsigned argc, jsval *vp)
 static bool
 NewGlobal(JSContext *cx, unsigned argc, jsval *vp)
 {
+    JSPrincipals *principals = nullptr;
     JS::CompartmentOptions options;
     options.setVersion(JSVERSION_LATEST);
 
@@ -4121,9 +4176,23 @@ NewGlobal(JSContext *cx, unsigned argc, jsval *vp)
             return false;
         if (v.isBoolean())
             options.setInvisibleToDebugger(v.toBoolean());
+
+        if (!JS_GetProperty(cx, opts, "principal", &v))
+            return false;
+        if (!v.isUndefined()) {
+            uint32_t bits;
+            if (!ToUint32(cx, v, &bits))
+                return false;
+            principals = cx->new_<ShellPrincipals>(bits);
+            if (!principals)
+                return false;
+            JS_HoldPrincipals(principals);
+        }
     }
 
-    RootedObject global(cx, NewGlobalObject(cx, options));
+    RootedObject global(cx, NewGlobalObject(cx, options, principals));
+    if (principals)
+        JS_DropPrincipals(cx->runtime(), principals);
     if (!global)
         return false;
 
@@ -4601,7 +4670,15 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "  Return a new global object in a new compartment. If options\n"
 "  is given, it may have any of the following properties:\n"
 "      sameZoneAs: the compartment will be in the same zone as the given object (defaults to a new zone)\n"
-"      invisibleToDebugger: the global will be invisible to the debugger (default false)"),
+"      invisibleToDebugger: the global will be invisible to the debugger (default false)\n"
+"      principal: if present, its value converted to a number must be an\n"
+"         integer that fits in 32 bits; use that as the new compartment's\n"
+"         principal. Shell principals are toys, meant only for testing; one\n"
+"         shell principal subsumes another if its set bits are a superset of\n"
+"         the other's. Thus, a principal of 0 subsumes nothing, while a\n"
+"         principals of ~0 subsumes all other principals. The absence of a\n"
+"         principal is treated as if its bits were 0xffff, for subsumption\n"
+"         purposes. If this property is omitted, supply no principal."),
 
     JS_FN_HELP("enableStackWalkingAssertion", EnableStackWalkingAssertion, 1, 0,
 "enableStackWalkingAssertion(enabled)",
@@ -5520,9 +5597,10 @@ DestroyContext(JSContext *cx, bool withGC)
 }
 
 static JSObject *
-NewGlobalObject(JSContext *cx, JS::CompartmentOptions &options)
+NewGlobalObject(JSContext *cx, JS::CompartmentOptions &options,
+                JSPrincipals *principals)
 {
-    RootedObject glob(cx, JS_NewGlobalObject(cx, &global_class, nullptr,
+    RootedObject glob(cx, JS_NewGlobalObject(cx, &global_class, principals,
                                              JS::DontFireOnNewGlobalHook, options));
     if (!glob)
         return nullptr;
@@ -5849,7 +5927,7 @@ Shell(JSContext *cx, OptionParser *op, char **envp)
     RootedObject glob(cx);
     JS::CompartmentOptions options;
     options.setVersion(JSVERSION_LATEST);
-    glob = NewGlobalObject(cx, options);
+    glob = NewGlobalObject(cx, options, nullptr);
     if (!glob)
         return 1;
 
@@ -6103,11 +6181,10 @@ main(int argc, char **argv, char **envp)
     if (availMem > 0)
         JS_SetGCParametersBasedOnAvailableMemory(rt, availMem);
 
-    /* Set the initial counter to 1 so the principal will never be destroyed. */
-    JSPrincipals shellTrustedPrincipals;
-    shellTrustedPrincipals.refcount = 1;
+    JS_SetTrustedPrincipals(rt, &ShellPrincipals::fullyTrusted);
+    JS_SetSecurityCallbacks(rt, &ShellPrincipals::securityCallbacks);
+    JS_InitDestroyPrincipalsCallback(rt, ShellPrincipals::destroy);
 
-    JS_SetTrustedPrincipals(rt, &shellTrustedPrincipals);
     JS_SetOperationCallback(rt, ShellOperationCallback);
     JS::SetAsmJSCacheOps(rt, &asmJSCacheOps);
 
