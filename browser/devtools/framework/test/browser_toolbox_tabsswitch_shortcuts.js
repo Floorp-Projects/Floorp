@@ -11,12 +11,15 @@ function test() {
 
   addTab("about:blank", function() {
     let target = TargetFactory.forTab(gBrowser.selectedTab);
-    toolIDs = gDevTools.getToolDefinitionArray()
-                .filter(def => def.isTargetSupported(target))
-                .map(def => def.id);
     idIndex = 0;
-    gDevTools.showToolbox(target, toolIDs[0], Toolbox.HostType.BOTTOM)
-             .then(testShortcuts);
+
+    target.makeRemote().then(() => {
+      toolIDs = gDevTools.getToolDefinitionArray()
+                  .filter(def => def.isTargetSupported(target))
+                  .map(def => def.id);
+      gDevTools.showToolbox(target, toolIDs[0], Toolbox.HostType.BOTTOM)
+               .then(testShortcuts);
+    });
   });
 }
 
