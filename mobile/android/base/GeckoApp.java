@@ -16,6 +16,7 @@ import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -678,10 +679,7 @@ public abstract class GeckoApp
                 Intent intent = GeckoAppShell.getOpenURIIntent(sAppContext, message.optString("url"),
                     message.optString("mime"), message.optString("action"), message.optString("title"));
                 String[] handlers = GeckoAppShell.getHandlersForIntent(intent);
-                ArrayList<String> appList = new ArrayList<String>(handlers.length);
-                for (int i = 0; i < handlers.length; i++) {
-                    appList.add(handlers[i]);
-                }
+                List<String> appList = Arrays.asList(handlers);
                 JSONObject handlersJSON = new JSONObject();
                 handlersJSON.put("apps", new JSONArray(appList));
                 EventDispatcher.sendResponse(message, handlersJSON);

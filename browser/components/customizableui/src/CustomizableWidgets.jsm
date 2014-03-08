@@ -320,6 +320,74 @@ const CustomizableWidgets = [{
       parent.appendChild(items);
     }
   }, {
+    id: "sidebar-button",
+    type: "view",
+    viewId: "PanelUI-sidebar",
+    onViewShowing: function(aEvent) {
+      // Largely duplicated from the developer-button above with a couple minor
+      // alterations.
+      // Populate the subview with whatever menuitems are in the
+      // sidebar menu. We skip menu elements, because the menu panel has no way
+      // of dealing with those right now.
+      let doc = aEvent.target.ownerDocument;
+      let win = doc.defaultView;
+
+      let items = doc.getElementById("PanelUI-sidebarItems");
+      let menu = doc.getElementById("viewSidebarMenu");
+
+      // First clear any existing menuitems then populate. Social sidebar
+      // options may not have been added yet, so we do that here. Add it to the
+      // standard menu first, then copy all sidebar options to the panel.
+      win.SocialSidebar.clearProviderMenus();
+      let providerMenuSeps = menu.getElementsByClassName("social-provider-menu");
+      if (providerMenuSeps.length > 0)
+        win.SocialSidebar.populateProviderMenu(providerMenuSeps[0]);
+
+      let attrs = ["oncommand", "onclick", "label", "key", "disabled",
+                   "command", "observes", "hidden", "class", "origin",
+                   "image", "checked"];
+
+      let fragment = doc.createDocumentFragment();
+      let itemsToDisplay = [...menu.children];
+      for (let node of itemsToDisplay) {
+        if (node.hidden)
+          continue;
+
+        let item;
+        if (node.localName == "menuseparator") {
+          item = doc.createElementNS(kNSXUL, "menuseparator");
+        } else if (node.localName == "menuitem") {
+          item = doc.createElementNS(kNSXUL, "toolbarbutton");
+        } else {
+          continue;
+        }
+        for (let attr of attrs) {
+          let attrVal = node.getAttribute(attr);
+          if (attrVal)
+            item.setAttribute(attr, attrVal);
+        }
+        if (node.localName == "menuitem")
+          item.classList.add("subviewbutton");
+        fragment.appendChild(item);
+      }
+
+      items.appendChild(fragment);
+    },
+    onViewHiding: function(aEvent) {
+      let doc = aEvent.target.ownerDocument;
+      let items = doc.getElementById("PanelUI-sidebarItems");
+      let parent = items.parentNode;
+      // We'll take the container out of the document before cleaning it out
+      // to avoid reflowing each time we remove something.
+      parent.removeChild(items);
+
+      while (items.firstChild) {
+        items.firstChild.remove();
+      }
+
+      parent.appendChild(items);
+    }
+  }, {
     id: "add-ons-button",
     shortcutId: "key_openAddons",
     tooltiptext: "add-ons-button.tooltiptext2",
