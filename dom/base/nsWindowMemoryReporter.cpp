@@ -31,7 +31,9 @@ StaticRefPtr<nsWindowMemoryReporter> sWindowReporter;
 const int32_t kTimeBetweenChecks = 45; /* seconds */
 
 nsWindowMemoryReporter::nsWindowMemoryReporter()
-  : mLastCheckForGhostWindows(TimeStamp::NowLoRes())
+  : mLastCheckForGhostWindows(TimeStamp::NowLoRes()),
+    mCycleCollectorIsRunning(false),
+    mCheckTimerWaitingForCCEnd(false)
 {
 }
 
@@ -115,6 +117,10 @@ nsWindowMemoryReporter::Init()
     os->AddObserver(sWindowReporter, DOM_WINDOW_DESTROYED_TOPIC,
                     /* weakRef = */ true);
     os->AddObserver(sWindowReporter, "after-minimize-memory-usage",
+                    /* weakRef = */ true);
+    os->AddObserver(sWindowReporter, "cycle-collector-begin",
+                    /* weakRef = */ true);
+    os->AddObserver(sWindowReporter, "cycle-collector-end",
                     /* weakRef = */ true);
   }
 
@@ -619,6 +625,18 @@ nsWindowMemoryReporter::Observe(nsISupports *aSubject, const char *aTopic,
     ObserveDOMWindowDetached(aSubject);
   } else if (!strcmp(aTopic, "after-minimize-memory-usage")) {
     ObserveAfterMinimizeMemoryUsage();
+  } else if (!strcmp(aTopic, "cycle-collector-begin")) {
+    if (mCheckTimer) {
+      mCheckTimerWaitingForCCEnd = true;
+      KillCheckTimer();
+    }
+    mCycleCollectorIsRunning = true;
+  } else if (!strcmp(aTopic, "cycle-collector-end")) {
+    mCycleCollectorIsRunning = false;
+    if (mCheckTimerWaitingForCCEnd) {
+      mCheckTimerWaitingForCCEnd = false;
+      AsyncCheckForGhostWindows();
+    }
   } else {
     MOZ_ASSERT(false);
   }
@@ -645,6 +663,7 @@ void
 nsWindowMemoryReporter::CheckTimerFired(nsITimer* aTimer, void* aClosure)
 {
   if (sWindowReporter) {
+    MOZ_ASSERT(!sWindowReporter->mCycleCollectorIsRunning);
     sWindowReporter->CheckForGhostWindows();
   }
 }
@@ -653,6 +672,11 @@ void
 nsWindowMemoryReporter::AsyncCheckForGhostWindows()
 {
   if (mCheckTimer) {
+    return;
+  }
+
+  if (mCycleCollectorIsRunning) {
+    mCheckTimerWaitingForCCEnd = true;
     return;
   }
 
