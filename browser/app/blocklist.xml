@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1393524054000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1394054454000">
   <emItems>
       <emItem  blockID="i454" id="sqlmoz@facebook.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
@@ -85,6 +85,12 @@
     </emItem>
       <emItem  blockID="i105" id="{95ff02bc-ffc6-45f0-a5c8-619b8226a9de}">
                         <versionRange  minVersion="0" maxVersion="*">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i20" id="{AB2CE124-6272-4b12-94A9-7303C7397BD1}">
+                        <versionRange  minVersion="0.1" maxVersion="5.2.0.7164" severity="1">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -176,8 +182,8 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i20" id="{AB2CE124-6272-4b12-94A9-7303C7397BD1}">
-                        <versionRange  minVersion="0.1" maxVersion="5.2.0.7164" severity="1">
+      <emItem  blockID="i566" id="{77BEC163-D389-42c1-91A4-C758846296A5}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -1374,7 +1380,7 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i224" id="{336D0C35-8A85-403a-B9D2-65C292C39087}">
+      <emItem  blockID="i564" id="/^(firefox@vebergreat\.net|EFGLQA@78ETGYN-0W7FN789T87\.COM|{52b0f3db-f988-4788-b9dc-861d016f4487})$/">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                     <prefs>
@@ -1531,6 +1537,12 @@
     </emItem>
       <emItem  blockID="i282" id="{33e0daa6-3af3-d8b5-6752-10e949c61516}">
                         <versionRange  minVersion="0" maxVersion="1.1.999" severity="1">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i224" id="{336D0C35-8A85-403a-B9D2-65C292C39087}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                     <prefs>
               </prefs>
