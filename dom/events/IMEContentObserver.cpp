@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "IMEContentObserver.h"
+#include "mozilla/IMEStateManager.h"
 #include "mozilla/dom/Element.h"
 #include "nsAutoPtr.h"
 #include "nsAsyncDOMEvent.h"
@@ -17,7 +18,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMRange.h"
 #include "nsIFrame.h"
-#include "nsIMEStateManager.h"
 #include "nsINode.h"
 #include "nsIPresShell.h"
 #include "nsISelectionController.h"
@@ -50,8 +50,7 @@ IMEContentObserver::Init(nsIWidget* aWidget,
                          nsIContent* aContent)
 {
   mWidget = aWidget;
-  mEditableNode =
-    nsIMEStateManager::GetRootEditableNode(aPresContext, aContent);
+  mEditableNode = IMEStateManager::GetRootEditableNode(aPresContext, aContent);
   if (!mEditableNode) {
     return;
   }
@@ -94,7 +93,7 @@ IMEContentObserver::Init(nsIWidget* aWidget,
   }
   NS_ENSURE_TRUE_VOID(mRootContent);
 
-  if (nsIMEStateManager::IsTestingIME()) {
+  if (IMEStateManager::IsTestingIME()) {
     nsIDocument* doc = aPresContext->Document();
     (new nsAsyncDOMEvent(doc, NS_LITERAL_STRING("MozIMEFocusIn"),
                          false, false))->RunDOMEventWhenSafe();
@@ -103,7 +102,7 @@ IMEContentObserver::Init(nsIWidget* aWidget,
   aWidget->NotifyIME(IMENotification(NOTIFY_IME_OF_FOCUS));
 
   // NOTIFY_IME_OF_FOCUS might cause recreating IMEContentObserver
-  // instance via nsIMEStateManager::UpdateIMEState().  So, this
+  // instance via IMEStateManager::UpdateIMEState().  So, this
   // instance might already have been destroyed, check it.
   if (!mRootContent) {
     return;
@@ -148,7 +147,7 @@ IMEContentObserver::Destroy()
   // If CreateTextStateManager failed, mRootContent will be null,
   // and we should not call NotifyIME(IMENotification(NOTIFY_IME_OF_BLUR))
   if (mRootContent) {
-    if (nsIMEStateManager::IsTestingIME() && mEditableNode) {
+    if (IMEStateManager::IsTestingIME() && mEditableNode) {
       nsIDocument* doc = mEditableNode->OwnerDoc();
       (new nsAsyncDOMEvent(doc, NS_LITERAL_STRING("MozIMEFocusOut"),
                            false, false))->RunDOMEventWhenSafe();
@@ -187,8 +186,8 @@ IMEContentObserver::IsManaging(nsPresContext* aPresContext,
   if (!mRootContent->IsInDoc()) {
     return false; // the focused editor has already been reframed.
   }
-  return mEditableNode == nsIMEStateManager::GetRootEditableNode(aPresContext,
-                                                                 aContent);
+  return mEditableNode == IMEStateManager::GetRootEditableNode(aPresContext,
+                                                               aContent);
 }
 
 bool
@@ -198,7 +197,7 @@ IMEContentObserver::IsEditorHandlingEventForComposition() const
     return false;
   }
   nsRefPtr<TextComposition> composition =
-    nsIMEStateManager::GetTextCompositionFor(mWidget);
+    IMEStateManager::GetTextCompositionFor(mWidget);
   if (!composition) {
     return false;
   }

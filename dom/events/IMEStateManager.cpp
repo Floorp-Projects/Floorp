@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsIMEStateManager.h"
+#include "mozilla/IMEStateManager.h"
 
 #include "IMEContentObserver.h"
 #include "HTMLInputElement.h"
@@ -28,22 +28,23 @@
 #include "TextComposition.h"
 #include "mozilla/Preferences.h"
 
-using namespace mozilla;
-using namespace mozilla::dom;
-using namespace mozilla::widget;
+namespace mozilla {
 
-nsIContent*    nsIMEStateManager::sContent      = nullptr;
-nsPresContext* nsIMEStateManager::sPresContext  = nullptr;
-bool           nsIMEStateManager::sInstalledMenuKeyboardListener = false;
-bool           nsIMEStateManager::sIsTestingIME = false;
+using namespace dom;
+using namespace widget;
+
+nsIContent* IMEStateManager::sContent = nullptr;
+nsPresContext* IMEStateManager::sPresContext = nullptr;
+bool IMEStateManager::sInstalledMenuKeyboardListener = false;
+bool IMEStateManager::sIsTestingIME = false;
 
 // sActiveIMEContentObserver points to the currently active IMEContentObserver.
 // sActiveIMEContentObserver is null if there is no focused editor.
-IMEContentObserver* nsIMEStateManager::sActiveIMEContentObserver = nullptr;
-TextCompositionArray* nsIMEStateManager::sTextCompositions = nullptr;
+IMEContentObserver* IMEStateManager::sActiveIMEContentObserver = nullptr;
+TextCompositionArray* IMEStateManager::sTextCompositions = nullptr;
 
 void
-nsIMEStateManager::Shutdown()
+IMEStateManager::Shutdown()
 {
   MOZ_ASSERT(!sTextCompositions || !sTextCompositions->Length());
   delete sTextCompositions;
@@ -51,7 +52,7 @@ nsIMEStateManager::Shutdown()
 }
 
 nsresult
-nsIMEStateManager::OnDestroyPresContext(nsPresContext* aPresContext)
+IMEStateManager::OnDestroyPresContext(nsPresContext* aPresContext)
 {
   NS_ENSURE_ARG_POINTER(aPresContext);
 
@@ -86,8 +87,8 @@ nsIMEStateManager::OnDestroyPresContext(nsPresContext* aPresContext)
 }
 
 nsresult
-nsIMEStateManager::OnRemoveContent(nsPresContext* aPresContext,
-                                   nsIContent* aContent)
+IMEStateManager::OnRemoveContent(nsPresContext* aPresContext,
+                                 nsIContent* aContent)
 {
   NS_ENSURE_ARG_POINTER(aPresContext);
 
@@ -146,18 +147,18 @@ nsIMEStateManager::OnRemoveContent(nsPresContext* aPresContext,
 }
 
 nsresult
-nsIMEStateManager::OnChangeFocus(nsPresContext* aPresContext,
-                                 nsIContent* aContent,
-                                 InputContextAction::Cause aCause)
+IMEStateManager::OnChangeFocus(nsPresContext* aPresContext,
+                               nsIContent* aContent,
+                               InputContextAction::Cause aCause)
 {
   InputContextAction action(aCause);
   return OnChangeFocusInternal(aPresContext, aContent, action);
 }
 
 nsresult
-nsIMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
-                                         nsIContent* aContent,
-                                         InputContextAction aAction)
+IMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
+                                       nsIContent* aContent,
+                                       InputContextAction aAction)
 {
   bool focusActuallyChanging =
     (sContent != aContent || sPresContext != aPresContext);
@@ -229,7 +230,7 @@ nsIMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
 }
 
 void
-nsIMEStateManager::OnInstalledMenuKeyboardListener(bool aInstalling)
+IMEStateManager::OnInstalledMenuKeyboardListener(bool aInstalling)
 {
   sInstalledMenuKeyboardListener = aInstalling;
 
@@ -240,9 +241,9 @@ nsIMEStateManager::OnInstalledMenuKeyboardListener(bool aInstalling)
 }
 
 void
-nsIMEStateManager::OnClickInEditor(nsPresContext* aPresContext,
-                                   nsIContent* aContent,
-                                   nsIDOMMouseEvent* aMouseEvent)
+IMEStateManager::OnClickInEditor(nsPresContext* aPresContext,
+                                 nsIContent* aContent,
+                                 nsIDOMMouseEvent* aMouseEvent)
 {
   if (sPresContext != aPresContext || sContent != aContent) {
     return;
@@ -279,8 +280,8 @@ nsIMEStateManager::OnClickInEditor(nsPresContext* aPresContext,
 }
 
 void
-nsIMEStateManager::OnFocusInEditor(nsPresContext* aPresContext,
-                                   nsIContent* aContent)
+IMEStateManager::OnFocusInEditor(nsPresContext* aPresContext,
+                                 nsIContent* aContent)
 {
   if (sPresContext != aPresContext || sContent != aContent) {
     return;
@@ -299,8 +300,8 @@ nsIMEStateManager::OnFocusInEditor(nsPresContext* aPresContext,
 }
 
 void
-nsIMEStateManager::UpdateIMEState(const IMEState &aNewIMEState,
-                                  nsIContent* aContent)
+IMEStateManager::UpdateIMEState(const IMEState& aNewIMEState,
+                                nsIContent* aContent)
 {
   if (!sPresContext) {
     NS_WARNING("ISM doesn't know which editor has focus");
@@ -343,8 +344,8 @@ nsIMEStateManager::UpdateIMEState(const IMEState &aNewIMEState,
 }
 
 IMEState
-nsIMEStateManager::GetNewIMEState(nsPresContext* aPresContext,
-                                  nsIContent*    aContent)
+IMEStateManager::GetNewIMEState(nsPresContext* aPresContext,
+                                nsIContent*    aContent)
 {
   // On Printing or Print Preview, we don't need IME.
   if (aPresContext->Type() == nsPresContext::eContext_PrintPreview ||
@@ -378,7 +379,8 @@ public:
   }
 
   NS_IMETHOD Run() {
-    nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();
+    nsCOMPtr<nsIObserverService> observerService =
+      services::GetObserverService();
     if (observerService) {
       nsAutoString state;
       state.AppendInt(mState);
@@ -392,10 +394,10 @@ private:
 };
 
 void
-nsIMEStateManager::SetIMEState(const IMEState &aState,
-                               nsIContent* aContent,
-                               nsIWidget* aWidget,
-                               InputContextAction aAction)
+IMEStateManager::SetIMEState(const IMEState& aState,
+                             nsIContent* aContent,
+                             nsIWidget* aWidget,
+                             InputContextAction aAction)
 {
   NS_ENSURE_TRUE_VOID(aWidget);
 
@@ -476,7 +478,7 @@ nsIMEStateManager::SetIMEState(const IMEState &aState,
 }
 
 void
-nsIMEStateManager::EnsureTextCompositionArray()
+IMEStateManager::EnsureTextCompositionArray()
 {
   if (sTextCompositions) {
     return;
@@ -485,11 +487,11 @@ nsIMEStateManager::EnsureTextCompositionArray()
 }
 
 void
-nsIMEStateManager::DispatchCompositionEvent(nsINode* aEventTargetNode,
-                                            nsPresContext* aPresContext,
-                                            WidgetEvent* aEvent,
-                                            nsEventStatus* aStatus,
-                                            nsDispatchingCallback* aCallBack)
+IMEStateManager::DispatchCompositionEvent(nsINode* aEventTargetNode,
+                                          nsPresContext* aPresContext,
+                                          WidgetEvent* aEvent,
+                                          nsEventStatus* aStatus,
+                                          nsDispatchingCallback* aCallBack)
 {
   MOZ_ASSERT(aEvent->eventStructType == NS_COMPOSITION_EVENT ||
              aEvent->eventStructType == NS_TEXT_EVENT);
@@ -532,8 +534,8 @@ nsIMEStateManager::DispatchCompositionEvent(nsINode* aEventTargetNode,
 
 // static
 nsresult
-nsIMEStateManager::NotifyIME(IMEMessage aMessage,
-                             nsIWidget* aWidget)
+IMEStateManager::NotifyIME(IMEMessage aMessage,
+                           nsIWidget* aWidget)
 {
   NS_ENSURE_TRUE(aWidget, NS_ERROR_INVALID_ARG);
 
@@ -619,8 +621,8 @@ nsIMEStateManager::NotifyIME(IMEMessage aMessage,
 
 // static
 nsresult
-nsIMEStateManager::NotifyIME(IMEMessage aMessage,
-                             nsPresContext* aPresContext)
+IMEStateManager::NotifyIME(IMEMessage aMessage,
+                           nsPresContext* aPresContext)
 {
   NS_ENSURE_TRUE(aPresContext, NS_ERROR_INVALID_ARG);
 
@@ -632,7 +634,7 @@ nsIMEStateManager::NotifyIME(IMEMessage aMessage,
 }
 
 bool
-nsIMEStateManager::IsEditable(nsINode* node)
+IMEStateManager::IsEditable(nsINode* node)
 {
   if (node->IsEditable()) {
     return true;
@@ -645,8 +647,8 @@ nsIMEStateManager::IsEditable(nsINode* node)
 }
 
 nsINode*
-nsIMEStateManager::GetRootEditableNode(nsPresContext* aPresContext,
-                                       nsIContent* aContent)
+IMEStateManager::GetRootEditableNode(nsPresContext* aPresContext,
+                                     nsIContent* aContent)
 {
   if (aContent) {
     nsINode* root = nullptr;
@@ -666,14 +668,14 @@ nsIMEStateManager::GetRootEditableNode(nsPresContext* aPresContext,
 }
 
 bool
-nsIMEStateManager::IsEditableIMEState(nsIWidget* aWidget)
+IMEStateManager::IsEditableIMEState(nsIWidget* aWidget)
 {
   switch (aWidget->GetInputContext().mIMEState.mEnabled) {
-    case widget::IMEState::ENABLED:
-    case widget::IMEState::PASSWORD:
+    case IMEState::ENABLED:
+    case IMEState::PASSWORD:
       return true;
-    case widget::IMEState::PLUGIN:
-    case widget::IMEState::DISABLED:
+    case IMEState::PLUGIN:
+    case IMEState::DISABLED:
       return false;
     default:
       MOZ_CRASH("Unknown IME enable state");
@@ -681,7 +683,7 @@ nsIMEStateManager::IsEditableIMEState(nsIWidget* aWidget)
 }
 
 void
-nsIMEStateManager::DestroyTextStateManager()
+IMEStateManager::DestroyTextStateManager()
 {
   if (!sActiveIMEContentObserver) {
     return;
@@ -693,7 +695,7 @@ nsIMEStateManager::DestroyTextStateManager()
 }
 
 void
-nsIMEStateManager::CreateIMEContentObserver()
+IMEStateManager::CreateIMEContentObserver()
 {
   if (sActiveIMEContentObserver) {
     NS_WARNING("text state observer has been there already");
@@ -728,8 +730,8 @@ nsIMEStateManager::CreateIMEContentObserver()
 }
 
 nsresult
-nsIMEStateManager::GetFocusSelectionAndRoot(nsISelection** aSelection,
-                                            nsIContent** aRootContent)
+IMEStateManager::GetFocusSelectionAndRoot(nsISelection** aSelection,
+                                          nsIContent** aRootContent)
 {
   if (!sActiveIMEContentObserver) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -740,7 +742,7 @@ nsIMEStateManager::GetFocusSelectionAndRoot(nsISelection** aSelection,
 
 // static
 already_AddRefed<TextComposition>
-nsIMEStateManager::GetTextCompositionFor(nsIWidget* aWidget)
+IMEStateManager::GetTextCompositionFor(nsIWidget* aWidget)
 {
   if (!sTextCompositions) {
     return nullptr;
@@ -752,9 +754,11 @@ nsIMEStateManager::GetTextCompositionFor(nsIWidget* aWidget)
 
 // static
 already_AddRefed<TextComposition>
-nsIMEStateManager::GetTextCompositionFor(WidgetGUIEvent* aEvent)
+IMEStateManager::GetTextCompositionFor(WidgetGUIEvent* aEvent)
 {
   MOZ_ASSERT(aEvent->AsCompositionEvent() || aEvent->AsTextEvent(),
              "aEvent has to be WidgetCompositionEvent or WidgetTextEvent");
   return GetTextCompositionFor(aEvent->widget);
 }
+
+} // namespace mozilla
