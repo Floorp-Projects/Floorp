@@ -273,18 +273,13 @@
               }
               break;
             case "overflow":
-              switch (aEvent.target.localName) {
-                case "vbox":
-                  // Resize the right view on the next tick.
-                  if (this.showingSubView) {
-                    setTimeout(this._syncContainerWithSubView.bind(this), 0);
-                  } else if (!this.transitioning) {
-                    setTimeout(this._syncContainerWithMainView.bind(this), 0);
-                  }
-                  break;
-                case "toolbarbutton":
-                  aEvent.target.setAttribute("fadelabel", "true");
-                  break;
+              if (aEvent.target.localName == "vbox") {
+                // Resize the right view on the next tick.
+                if (this.showingSubView) {
+                  setTimeout(this._syncContainerWithSubView.bind(this), 0);
+                } else if (!this.transitioning) {
+                  setTimeout(this._syncContainerWithMainView.bind(this), 0);
+                }
               }
               break;
             case "popupshowing":
