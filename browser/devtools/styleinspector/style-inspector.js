@@ -90,6 +90,10 @@ exports.RuleViewTool = RuleViewTool;
 
 RuleViewTool.prototype = {
   onSelect: function RVT_onSelect(aEvent) {
+    if (!this.view) {
+      // Skip the event if RuleViewTool has been destroyed.
+      return;
+    }
     this.view.setPageStyle(this.inspector.pageStyle);
 
     if (!this.inspector.selection.isConnected() ||
@@ -158,6 +162,10 @@ exports.ComputedViewTool = ComputedViewTool;
 ComputedViewTool.prototype = {
   onSelect: function CVT_onSelect(aEvent)
   {
+    if (!this.view) {
+      // Skip the event if ComputedViewTool has been destroyed.
+      return;
+    }
     this.view.setPageStyle(this.inspector.pageStyle);
 
     if (!this.inspector.selection.isConnected() ||
