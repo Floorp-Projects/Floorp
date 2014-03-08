@@ -242,10 +242,6 @@ class Type
         return data > JSVAL_TYPE_UNKNOWN;
     }
 
-    bool isObjectUnchecked() const {
-        return data > JSVAL_TYPE_UNKNOWN;
-    }
-
     inline TypeObjectKey *objectKey() const;
 
     /* Accessors for JSObject types */
@@ -339,7 +335,7 @@ public:
      * If the data this constraint refers to is still live, copy it into the
      * zone's new allocator. Type constraints only hold weak references.
      */
-    virtual bool sweep(TypeZone &zone, TypeConstraint **res) = 0;
+    virtual TypeConstraint *sweep(TypeZone &zone) = 0;
 };
 
 /* Flags and other state stored in TypeSet::flags */
@@ -532,7 +528,7 @@ class TypeSet
     static TemporaryTypeSet *unionSets(TypeSet *a, TypeSet *b, LifoAlloc *alloc);
 
     /* Add a type to this set using the specified allocator. */
-    inline void addType(Type type, LifoAlloc *alloc);
+    inline bool addType(Type type, LifoAlloc *alloc);
 
     /* Get a list of all types in this set. */
     typedef Vector<Type, 1, SystemAllocPolicy> TypeList;
@@ -547,6 +543,7 @@ class TypeSet
     inline TypeObjectKey *getObject(unsigned i) const;
     inline JSObject *getSingleObject(unsigned i) const;
     inline TypeObject *getTypeObject(unsigned i) const;
+    inline bool getTypeOrSingleObject(JSContext *cx, unsigned i, TypeObject **obj) const;
 
     /* The Class of an object in this set. */
     inline const Class *getObjectClass(unsigned i) const;
@@ -571,7 +568,7 @@ class TypeSet
     bool isSubset(TypeSet *other);
 
     /* Forward all types in this set to the specified constraint. */
-    bool addTypesToConstraint(JSContext *cx, TypeConstraint *constraint);
+    void addTypesToConstraint(JSContext *cx, TypeConstraint *constraint);
 
     // Clone a type set into an arbitrary allocator.
     TemporaryTypeSet *clone(LifoAlloc *alloc) const;
@@ -602,7 +599,7 @@ class ConstraintTypeSet : public TypeSet
     inline void addType(ExclusiveContext *cx, Type type);
 
     /* Add a new constraint to this set. */
-    bool addConstraint(JSContext *cx, TypeConstraint *constraint, bool callExisting = true);
+    void add(JSContext *cx, TypeConstraint *constraint, bool callExisting = true);
 
     inline void sweep(JS::Zone *zone);
 };
@@ -742,7 +739,7 @@ class TemporaryTypeSet : public TypeSet
 bool
 AddClearDefiniteGetterSetterForPrototypeChain(JSContext *cx, TypeObject *type, HandleId id);
 
-bool
+void
 AddClearDefiniteFunctionUsesInScript(JSContext *cx, TypeObject *type,
                                      JSScript *script, JSScript *calleeScript);
 
@@ -1111,6 +1108,8 @@ struct TypeObject : gc::BarrieredCell<TypeObject>
     void addPrototype(JSContext *cx, TypeObject *proto);
     void addPropertyType(ExclusiveContext *cx, jsid id, Type type);
     void addPropertyType(ExclusiveContext *cx, jsid id, const Value &value);
+    void addPropertyType(ExclusiveContext *cx, const char *name, Type type);
+    void addPropertyType(ExclusiveContext *cx, const char *name, const Value &value);
     void markPropertyNonData(ExclusiveContext *cx, jsid id);
     void markPropertyNonWritable(ExclusiveContext *cx, jsid id);
     void markStateChange(ExclusiveContext *cx);
@@ -1528,6 +1527,9 @@ struct TypeCompartment
     /* Get or make an object for an allocation site, and add to the allocation site table. */
     TypeObject *addAllocationSiteTypeObject(JSContext *cx, AllocationSiteKey key);
 
+    /* Mark all types as needing destruction once inference has 'finished'. */
+    void setPendingNukeTypes(ExclusiveContext *cx);
+
     /* Mark any type set containing obj as having a generic object type. */
     void markSetsUnknown(JSContext *cx, TypeObject *obj);
 
@@ -1560,6 +1562,12 @@ struct TypeZone
     /* Pending recompilations to perform before execution of JIT code can resume. */
     Vector<RecompileInfo> *pendingRecompiles;
 
+    /*
+     * Bit set if all current types must be marked as unknown, and all scripts
+     * recompiled. Caused by OOM failure within inference operations.
+     */
+    bool                         pendingNukeTypes;
+
     /* Whether type inference is enabled in this compartment. */
     bool                         inferenceEnabled;
 
@@ -1571,11 +1579,16 @@ struct TypeZone
 
     void sweep(FreeOp *fop, bool releaseTypes);
 
+    /* Mark all types as needing destruction once inference has 'finished'. */
+    void setPendingNukeTypes();
+
     /* Mark a script as needing recompilation once inference has finished. */
     void addPendingRecompile(JSContext *cx, const RecompileInfo &info);
     void addPendingRecompile(JSContext *cx, JSScript *script);
 
     void processPendingRecompiles(FreeOp *fop);
+
+    void nukeTypes(FreeOp *fop);
 };
 
 enum SpewChannel {

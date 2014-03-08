@@ -2065,8 +2065,7 @@ AnalyzePoppedThis(JSContext *cx, types::TypeObject *type,
              block = rp->block(), rp = block->callerResumePoint())
         {
             JSScript *script = rp->block()->info().script();
-            if (!types::AddClearDefiniteFunctionUsesInScript(cx, type, script, block->info().script()))
-                return true;
+            types::AddClearDefiniteFunctionUsesInScript(cx, type, script, block->info().script());
             if (!callerResumePoints.append(rp))
                 return false;
         }

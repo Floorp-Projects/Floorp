@@ -24,11 +24,10 @@
 #include "js/Tracer.h"
 
 namespace js {
-
-void
-CrashAtUnhandlableOOM(const char *reason);
-
 namespace gc {
+
+extern void
+CrashAtUnhandlableOOM(const char *);
 
 /*
  * BufferableRef represents an abstract reference for use in the generational
