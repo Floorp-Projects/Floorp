@@ -15,10 +15,10 @@ class nsIDOMMouseEvent;
 class nsINode;
 class nsPIDOMWindow;
 class nsPresContext;
-class nsTextStateManager;
 class nsISelection;
 
 namespace mozilla {
+class IMEContentObserver;
 class TextCompositionArray;
 class TextComposition;
 } // namespace mozilla
@@ -118,6 +118,10 @@ public:
   static nsresult NotifyIME(IMEMessage aMessage, nsIWidget* aWidget);
   static nsresult NotifyIME(IMEMessage aMessage, nsPresContext* aPresContext);
 
+  static nsINode* GetRootEditableNode(nsPresContext* aPresContext,
+                                      nsIContent* aContent);
+  static bool IsTestingIME() { return sIsTestingIME; }
+
 protected:
   static nsresult OnChangeFocusInternal(nsPresContext* aPresContext,
                                         nsIContent* aContent,
@@ -130,12 +134,10 @@ protected:
                                  nsIContent* aContent);
 
   static void EnsureTextCompositionArray();
-  static void CreateTextStateManager();
+  static void CreateIMEContentObserver();
   static void DestroyTextStateManager();
 
   static bool IsEditable(nsINode* node);
-  static nsINode* GetRootEditableNode(nsPresContext* aPresContext,
-                                      nsIContent* aContent);
 
   static bool IsEditableIMEState(nsIWidget* aWidget);
 
@@ -144,7 +146,7 @@ protected:
   static bool           sInstalledMenuKeyboardListener;
   static bool           sIsTestingIME;
 
-  static nsTextStateManager* sTextStateObserver;
+  static mozilla::IMEContentObserver* sActiveIMEContentObserver;
 
   // All active compositions in the process are stored by this array.
   // When you get an item of this array and use it, please be careful.
