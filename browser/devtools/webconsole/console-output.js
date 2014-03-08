@@ -524,6 +524,7 @@ Messages.BaseMessage.prototype = {
     for (let widget of this.widgets) {
       widget.destroy();
     }
+    this.widgets.clear();
   }
 }; // Messages.BaseMessage.prototype
 
