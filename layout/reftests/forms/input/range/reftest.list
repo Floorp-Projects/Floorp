@@ -17,8 +17,8 @@
 == value-prop.html 75pct-common-ref.html
 == valueAsNumber-prop-unthemed.html 75pct-unthemed-common-ref.html
 == valueAsNumber-prop.html 75pct-common-ref.html
-fails-if(B2G) == stepDown-unthemed.html 75pct-unthemed-common-ref.html
-fails-if(B2G) == stepDown.html 75pct-common-ref.html
+== stepDown-unthemed.html 75pct-unthemed-common-ref.html
+== stepDown.html 75pct-common-ref.html
 == stepUp-unthemed.html 75pct-unthemed-common-ref.html
 == stepUp.html 75pct-common-ref.html
 fuzzy-if(B2G,1,1) == max-prop.html 100pct-common-ref.html
