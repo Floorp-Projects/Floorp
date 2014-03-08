@@ -12,6 +12,8 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla.net += [
+    'ChannelDiverterChild.h',
+    'ChannelDiverterParent.h',
     'Dashboard.h',
     'DashboardTypes.h',
 ]
@@ -19,6 +21,8 @@ EXPORTS.mozilla.net += [
 UNIFIED_SOURCES += [
     'ArrayBufferInputStream.cpp',
     'BackgroundFileSaver.cpp',
+    'ChannelDiverterChild.cpp',
+    'ChannelDiverterParent.cpp',
     'Dashboard.cpp',
     'EventTokenBucket.cpp',
     'LoadContextInfo.cpp',
@@ -113,6 +117,7 @@ include('/ipc/chromium/chromium-config.mozbuild')
 FINAL_LIBRARY = 'necko'
 LOCAL_INCLUDES += [
     '/dom/base',
+    '/netwerk/protocol/http'
 ]
 
 if 'rtsp' in CONFIG['NECKO_PROTOCOLS']:

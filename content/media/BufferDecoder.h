@@ -74,6 +74,8 @@ public:
 
   virtual MediaDecoderOwner* GetOwner() MOZ_FINAL MOZ_OVERRIDE;
 
+  virtual void NotifyWaitingForResourcesStatusChanged() MOZ_FINAL MOZ_OVERRIDE;
+
 protected:
   // This monitor object is not really used to synchronize access to anything.
   // It's just there in order for us to be able to override

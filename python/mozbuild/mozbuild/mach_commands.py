@@ -898,11 +898,15 @@ class Makefiles(MachCommandBase):
             return True
 
         for path in self._makefile_ins():
-            statements = [s for s in pymake.parser.parsefile(path)
-                if is_statement_relevant(s)]
+            relpath = os.path.relpath(path, self.topsrcdir)
+            try:
+                statements = [s for s in pymake.parser.parsefile(path)
+                    if is_statement_relevant(s)]
 
-            if not statements:
-                print(os.path.relpath(path, self.topsrcdir))
+                if not statements:
+                    print(relpath)
+            except pymake.parser.SyntaxError:
+                print('Warning: Could not parse %s' % relpath, file=sys.stderr)
 
     def _makefile_ins(self):
         for root, dirs, files in os.walk(self.topsrcdir):

@@ -15,6 +15,7 @@
 #include "nsICacheStorage.h"
 #include "nsISerializable.h"
 #include "nsIStreamTransportService.h"
+#include "nsISizeOf.h"
 
 #include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
@@ -319,7 +320,6 @@ bool CacheEntry::Load(bool aTruncate, bool aPriority)
                        aTruncate,
                        !mUseDisk,
                        aPriority,
-                       false /* key is not a hash */,
                        directLoad ? nullptr : this);
     }
 
@@ -835,6 +835,17 @@ bool CacheEntry::IsReferenced() const
   // Increasing this counter from 0 to non-null and this check both happen only
   // under the service lock.
   return mHandlersCount > 0;
+}
+
+bool CacheEntry::IsFileDoomed()
+{
+  mozilla::MutexAutoLock lock(mLock);
+
+  if (NS_SUCCEEDED(mFileStatus)) {
+    return mFile->IsDoomed();
+  }
+
+  return false;
 }
 
 uint32_t CacheEntry::GetMetadataMemoryConsumption()
@@ -1533,6 +1544,41 @@ NS_IMETHODIMP CacheOutputCloseListener::Run()
 {
   mEntry->OnOutputClosed();
   return NS_OK;
+}
+
+// Memory reporting
+
+size_t CacheEntry::SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
+{
+  size_t n = 0;
+  nsCOMPtr<nsISizeOf> sizeOf;
+
+  n += mCallbacks.SizeOfExcludingThis(mallocSizeOf);
+  if (mFile) {
+    n += mFile->SizeOfIncludingThis(mallocSizeOf);
+  }
+
+  sizeOf = do_QueryInterface(mURI);
+  if (sizeOf) {
+    n += sizeOf->SizeOfIncludingThis(mallocSizeOf);
+  }
+
+  n += mEnhanceID.SizeOfExcludingThisIfUnshared(mallocSizeOf);
+  n += mStorageID.SizeOfExcludingThisIfUnshared(mallocSizeOf);
+
+  // mDoomCallback is an arbitrary class that is probably reported elsewhere.
+  // mOutputStream is reported in mFile.
+  // mWriter is one of many handles we create, but (intentionally) not keep
+  // any reference to, so those unfortunatelly cannot be reported.  Handles are
+  // small, though.
+  // mSecurityInfo doesn't impl nsISizeOf.
+
+  return n;
+}
+
+size_t CacheEntry::SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
+{
+  return mallocSizeOf(this) + SizeOfExcludingThis(mallocSizeOf);
 }
 
 } // net

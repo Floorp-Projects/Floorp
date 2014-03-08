@@ -86,9 +86,9 @@ class Linker
         // ARM does not yet use implicit interrupt checks, see bug 864220.
         return newCode<CanGC>(cx, JSC::ION_CODE);
 #else
-        // The caller must lock the runtime against operation callback triggers,
-        // as the triggering thread may use the executable allocator below.
-        JS_ASSERT(cx->runtime()->currentThreadOwnsOperationCallbackLock());
+        // The caller must lock the runtime against interrupt requests, as the
+        // thread requesting an interrupt may use the executable allocator below.
+        JS_ASSERT(cx->runtime()->currentThreadOwnsInterruptLock());
 
         JSC::ExecutableAllocator *alloc = cx->runtime()->jitRuntime()->getIonAlloc(cx);
         if (!alloc)

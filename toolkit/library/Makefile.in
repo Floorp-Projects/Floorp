@@ -53,7 +53,7 @@ COMPONENT_LIBS += $(MOZ_APP_COMPONENT_LIBS)
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-OS_LIBS += -framework OpenGL -lcups
+OS_LIBS += -lcups
 endif
 
 EXTRA_DSO_LDOPTS += \
@@ -171,10 +171,6 @@ EXTRA_DSO_LDOPTS += $(NSPR_LIBS) $(MOZALLOC_LIB)
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 CXXFLAGS += $(TK_CFLAGS)
 OS_LIBS += \
-  -framework SystemConfiguration \
-  -framework QTKit \
-  -framework IOKit \
-  -F$(MACOS_PRIVATE_FRAMEWORKS_DIR) -framework CoreUI \
   $(TK_LIBS) \
   $(NULL)
 endif

@@ -6,6 +6,8 @@
 #define CacheObserver__h__
 
 #include "nsIObserver.h"
+#include "nsIFile.h"
+#include "nsCOMPtr.h"
 #include "nsWeakReference.h"
 #include <algorithm>
 
@@ -44,6 +46,7 @@ class CacheObserver : public nsIObserver
     { return sHalfLifeHours * 60 * 60; }
   static int32_t const HalfLifeExperiment()
     { return sHalfLifeExperiment; }
+  static void ParentDirOverride(nsIFile ** aDir);
 
   static bool const EntryIsTooBig(int64_t aSize, bool aUsingDisk);
 
@@ -63,6 +66,9 @@ private:
   static uint32_t sCompressionLevel;
   static uint32_t sHalfLifeHours;
   static int32_t sHalfLifeExperiment;
+
+  // Non static properties, accessible via sSelf
+  nsCOMPtr<nsIFile> mCacheParentDirectoryOverride;
 };
 
 } // net

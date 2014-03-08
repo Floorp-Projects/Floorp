@@ -151,9 +151,6 @@ extern bool
 DeleteElement(JSContext *cx, HandleObject obj, uint32_t index, bool *succeeded);
 
 extern bool
-DeleteSpecial(JSContext *cx, HandleObject obj, HandleSpecialId sid, bool *succeeded);
-
-extern bool
 DeleteGeneric(JSContext *cx, HandleObject obj, HandleId id, bool *succeeded);
 
 extern bool
@@ -975,13 +972,6 @@ class JSObject : public js::ObjectImpl
         return (op ? op : js::baseops::LookupElement)(cx, obj, index, objp, propp);
     }
 
-    static bool lookupSpecial(JSContext *cx, js::HandleObject obj, js::SpecialId sid,
-                              js::MutableHandleObject objp, js::MutableHandleShape propp)
-    {
-        JS::RootedId id(cx, SPECIALID_TO_JSID(sid));
-        return lookupGeneric(cx, obj, id, objp, propp);
-    }
-
     static bool defineGeneric(js::ExclusiveContext *cx, js::HandleObject obj,
                               js::HandleId id, js::HandleValue value,
                               JSPropertyOp getter = JS_PropertyStub,
@@ -996,12 +986,6 @@ class JSObject : public js::ObjectImpl
 
     static bool defineElement(js::ExclusiveContext *cx, js::HandleObject obj,
                               uint32_t index, js::HandleValue value,
-                              JSPropertyOp getter = JS_PropertyStub,
-                              JSStrictPropertyOp setter = JS_StrictPropertyStub,
-                              unsigned attrs = JSPROP_ENUMERATE);
-
-    static bool defineSpecial(js::ExclusiveContext *cx, js::HandleObject obj,
-                              js::SpecialId sid, js::HandleValue value,
                               JSPropertyOp getter = JS_PropertyStub,
                               JSStrictPropertyOp setter = JS_StrictPropertyStub,
                               unsigned attrs = JSPROP_ENUMERATE);
@@ -1048,14 +1032,6 @@ class JSObject : public js::ObjectImpl
     static inline bool getElementNoGC(JSContext *cx, JSObject *obj, JSObject *receiver,
                                       uint32_t index, js::Value *vp);
 
-    static bool getSpecial(JSContext *cx, js::HandleObject obj,
-                           js::HandleObject receiver, js::SpecialId sid,
-                           js::MutableHandleValue vp)
-    {
-        JS::RootedId id(cx, SPECIALID_TO_JSID(sid));
-        return getGeneric(cx, obj, receiver, id, vp);
-    }
-
     static bool setGeneric(JSContext *cx, js::HandleObject obj, js::HandleObject receiver,
                            js::HandleId id, js::MutableHandleValue vp, bool strict)
     {
@@ -1081,14 +1057,6 @@ class JSObject : public js::ObjectImpl
         return js::baseops::SetElementHelper(cx, obj, receiver, index, 0, vp, strict);
     }
 
-    static bool setSpecial(JSContext *cx, js::HandleObject obj, js::HandleObject receiver,
-                           js::SpecialId sid, js::MutableHandleValue vp, bool strict)
-    {
-        JS::RootedId id(cx, SPECIALID_TO_JSID(sid));
-        return setGeneric(cx, obj, receiver, id, vp, strict);
-    }
-
-
     static bool nonNativeSetProperty(JSContext *cx, js::HandleObject obj,
                                      js::HandleId id, js::MutableHandleValue vp, bool strict);
     static bool nonNativeSetElement(JSContext *cx, js::HandleObject obj,
@@ -1109,8 +1077,6 @@ class JSObject : public js::ObjectImpl
                                       bool *succeeded);
     static inline bool deleteElement(JSContext *cx, js::HandleObject obj,
                                      uint32_t index, bool *succeeded);
-    static inline bool deleteSpecial(JSContext *cx, js::HandleObject obj,
-                                     js::HandleSpecialId sid, bool *succeeded);
     static bool deleteByValue(JSContext *cx, js::HandleObject obj,
                               const js::Value &property, bool *succeeded);
 
@@ -1311,6 +1277,35 @@ HasOwnProperty(JSContext *cx, LookupGenericOp lookup,
 
 typedef JSObject *(*ClassInitializerOp)(JSContext *cx, JS::HandleObject obj);
 
+/* Fast access to builtin constructors and prototypes. */
+bool
+GetBuiltinConstructor(ExclusiveContext *cx, JSProtoKey key, MutableHandleObject objp);
+
+bool
+GetBuiltinPrototype(ExclusiveContext *cx, JSProtoKey key, MutableHandleObject objp);
+
+const Class *
+ProtoKeyToClass(JSProtoKey key);
+
+JSObject *
+GetBuiltinPrototypePure(GlobalObject *global, JSProtoKey protoKey);
+
+extern bool
+SetClassAndProto(JSContext *cx, HandleObject obj,
+                 const Class *clasp, Handle<TaggedProto> proto, bool *succeeded);
+
+/*
+ * Property-lookup-based access to interface and prototype objects for classes.
+ * If the class is built-in (hhas a non-null JSProtoKey), these forward to
+ * GetClass{Object,Prototype}.
+ */
+
+bool
+FindClassObject(ExclusiveContext *cx, MutableHandleObject protop, const Class *clasp);
+
+extern bool
+FindClassPrototype(ExclusiveContext *cx, MutableHandleObject protop, const Class *clasp);
+
 } /* namespace js */
 
 /*
@@ -1331,31 +1326,6 @@ extern const char js_lookupSetter_str[];
 
 extern bool
 js_PopulateObject(JSContext *cx, js::HandleObject newborn, js::HandleObject props);
-
-/*
- * Fast access to immutable standard objects (constructors and prototypes).
- */
-extern bool
-js_GetClassObject(js::ExclusiveContext *cx, JSProtoKey key,
-                  js::MutableHandleObject objp);
-
-extern bool
-js_GetClassPrototype(js::ExclusiveContext *cx, JSProtoKey key,
-                     js::MutableHandleObject objp);
-
-/*
- * Property-lookup-based access to interface and prototype objects for classes.
- * If the class is built-in (and has a non-null JSProtoKey), these forward to
- * js_GetClass{Object,Prototype}.
- */
-
-bool
-js_FindClassObject(js::ExclusiveContext *cx, js::MutableHandleObject protop,
-                   const js::Class *clasp);
-
-extern bool
-js_FindClassPrototype(js::ExclusiveContext *cx, js::MutableHandleObject protop,
-                      const js::Class *clasp);
 
 
 namespace js {
@@ -1617,16 +1587,6 @@ js_InferFlags(JSContext *cx, unsigned defaultFlags);
 
 
 namespace js {
-
-const Class *
-ProtoKeyToClass(JSProtoKey key);
-
-JSObject *
-GetClassPrototypePure(GlobalObject *global, JSProtoKey protoKey);
-
-extern bool
-SetClassAndProto(JSContext *cx, HandleObject obj,
-                 const Class *clasp, Handle<TaggedProto> proto, bool *succeeded);
 
 extern JSObject *
 NonNullObject(JSContext *cx, const Value &v);

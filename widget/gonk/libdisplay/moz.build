@@ -45,3 +45,13 @@ FORCE_STATIC_LIB = True
 DEFINES['XPCOM_GLUE'] = True
 
 DISABLE_STL_WRAPPING = True
+
+CXXFLAGS += [
+    '-I%s/%s' % (CONFIG['ANDROID_SOURCE'], d) for d in [
+        'frameworks/native/include/gui',
+        'frameworks/native/opengl/include',
+        'hardware/libhardware/include',
+        'hardware/libhardware_legacy/include',
+        'system/core/libsuspend/include',
+    ]
+]

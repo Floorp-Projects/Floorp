@@ -6196,11 +6196,11 @@ CodeGenerator::link(JSContext *cx, types::CompilerConstraintList *constraints)
         return false;
     }
 
-    // Lock the runtime against operation callbacks during the link.
-    // We don't want an operation callback to protect the code for the script
+    // Lock the runtime against interrupt callbacks during the link.
+    // We don't want an interrupt request to protect the code for the script
     // before it has been filled in, as we could segv before the runtime's
     // patchable backedges have been fully updated.
-    JSRuntime::AutoLockForOperationCallback lock(cx->runtime());
+    JSRuntime::AutoLockForInterrupt lock(cx->runtime());
 
     // Make sure we don't segv while filling in the code, to avoid deadlocking
     // inside the signal handler.

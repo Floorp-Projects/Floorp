@@ -71,8 +71,10 @@ function add_tests_in_mode(useInsanity, certDB, otherTestCA) {
                         Ci.nsIX509CertDB.TRUSTED_SSL);
     run_next_test();
   });
+  // TODO(bug 979055): When using ByName instead of ByKey, the error here is
+  // SEC_ERROR_OCSP_UNAUTHORIZED_RESPONSE. We should be testing both cases.
   add_ocsp_test("ocsp-stapling-good-other-ca.example.com",
-                getXPCOMStatusFromNSS(SEC_ERROR_OCSP_UNAUTHORIZED_RESPONSE),
+                getXPCOMStatusFromNSS(SEC_ERROR_OCSP_INVALID_SIGNING_CERT),
                 true);
 
   // TODO: Test the case where the signing cert can't be found at all, which

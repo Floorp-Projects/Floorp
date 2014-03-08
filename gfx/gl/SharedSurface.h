@@ -100,22 +100,6 @@ public:
     bool HasAlpha() const {
         return mHasAlpha;
     }
-
-
-    // For use when AttachType is correct.
-    virtual GLuint Texture() const {
-        MOZ_ASSERT(AttachType() == AttachmentType::GLTexture);
-        MOZ_CRASH("Did you forget to override this function?");
-    }
-
-    virtual GLenum TextureTarget() const {
-        return Texture() ? LOCAL_GL_TEXTURE_2D : 0;
-    }
-
-    virtual GLuint Renderbuffer() const {
-        MOZ_ASSERT(AttachType() == AttachmentType::GLRenderbuffer);
-        MOZ_CRASH("Did you forget to override this function?");
-    }
 };
 
 } /* namespace gfx */

@@ -101,8 +101,8 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
       const OpDestroyThebesBuffer& op = aEdit.get_OpDestroyThebesBuffer();
       CompositableParent* compositableParent = static_cast<CompositableParent*>(op.compositableParent());
       CompositableHost* compositableHost = compositableParent->GetCompositableHost();
-      if (compositableHost->GetType() != COMPOSITABLE_CONTENT_SINGLE &&
-          compositableHost->GetType() != COMPOSITABLE_CONTENT_DOUBLE)
+      if (compositableHost->GetType() != BUFFER_CONTENT &&
+          compositableHost->GetType() != BUFFER_CONTENT_DIRECT)
       {
         return false;
       }
