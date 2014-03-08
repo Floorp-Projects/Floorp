@@ -1,0 +1,194 @@
+[
+  {
+    "events": [
+      {"type": "touchstart", "target": [{"base": "button", "x": 0, "y": 0}]},
+      {"type": "touchend", "delay": 50}
+    ],
+    "expectedGestures": "tap"
+  },
+  {
+    "events": [
+      {"type": "touchstart", "target": [{"base": "button", "x": 0, "y": 0}]},
+      {"type": "touchmove",
+        "target": [{"base": "button", "x": 0.03, "y": 0.02}], "delay": 25},
+      {"type": "touchend", "delay": 25}
+    ],
+    "expectedGestures": "tap"
+  },
+  {
+    "events": [
+      {"type": "touchstart", "target": [{"base": "button", "x": 0, "y": 0}]},
+      {"type": "touchend", "delay": 525}
+    ],
+    "expectedGestures": ["dwell", "dwellend"]
+  },
+  {
+    "events": [
+      {"type": "touchstart", "target": [{"base": "button", "x": 0, "y": 0}]},
+      {"type": "touchmove",
+        "target": [{"base": "button", "x": 0.03, "y": 0.02}], "delay": 25},
+      {"type": "touchend", "delay": 25},
+      {"type": "touchstart", "target": [{"base": "button", "x": 0, "y": 0}],
+        "delay": 25},
+      {"type": "touchmove",
+        "target": [{"base": "button", "x": -0.03, "y": 0.01}], "delay": 25},
+      {"type": "touchend", "delay": 25}
+    ],
+    "expectedGestures": ["tap", "doubletap"]
+  },
+  {
+    "events": [
+      {"type": "touchstart", "target": [{"base": "button", "x": 0, "y": 0}]},
+      {"type": "touchend", "delay": 25},
+      {"type": "touchstart", "target": [{"base": "button", "x": 0, "y": 0}],
+        "delay": 25},
+      {"type": "touchend", "delay": 25},
+      {"type": "touchstart", "target": [{"base": "button", "x": 0, "y": 0}],
+        "delay": 25},
+      {"type": "touchend", "delay": 25}
+    ],
+    "expectedGestures": ["tap", "doubletap", "tripletap"]
+  },
+  {
+    "events": [
+      {"type": "touchstart", "target": [{"base": "button", "x": 0, "y": 0}]},
+      {"type": "touchend", "delay": 25},
+      {"type": "touchstart", "target": [{"base": "button", "x": 0, "y": 0}],
+        "delay": 25},
+      {"type": "touchend", "delay": 25},
+      {"type": "touchstart", "target": [{"base": "button", "x": 0, "y": 0}],
+        "delay": 25},
+      {"type": "touchend", "delay": 525}
+    ],
+    "expectedGestures": ["tap", "doubletap", "doubletaphold", "dwellend"]
+  },
+  {
+    "events": [
+      {"type": "touchstart", "target": [{"base": "button", "x": 0, "y": 0}]},
+      {"type": "touchend", "delay": 25},
+      {"type": "touchstart", "target": [{"base": "button", "x": 0, "y": 0}],
+        "delay": 25},
+      {"type": "touchend", "delay": 525}
+    ],
+    "expectedGestures": ["tap", "taphold", "dwellend"]
+  },
+  {
+    "events": [
+      {"type": "touchstart", "target": [{"base": "button", "x": 0, "y": 0}]},
+      {"type": "touchmove", "target": [{"base": "button", "x": 0.5, "y": 0}],
+        "delay": 25},
+      {"type": "touchend", "delay": 25}
+    ],
+    "expectedGestures": "swiperight"
+  },
+  {
+    "events": [
+      {"type": "touchstart", "target": [{"base": "button", "x": 0.5, "y": 0}]},
+      {"type": "touchmove", "target": [{"base": "button", "x": 0, "y": 0}],
+        "delay": 25},
+      {"type": "touchend", "delay": 25}
+    ],
+    "expectedGestures": "swipeleft"
+  },
+  {
+    "events": [
+      {"type": "touchstart", "target": [{"base": "button", "x": 0, "y": 0}]},
+      {"type": "touchmove", "target": [{"base": "button", "x": 0, "y": 0.5}],
+        "delay": 25},
+      {"type": "touchend", "delay": 25}
+    ],
+    "expectedGestures": "swipedown"
+  },
+  {
+    "events": [
+      {"type": "touchstart", "target": [{"base": "button", "x": 0, "y": 0.5}]},
+      {"type": "touchmove", "target": [{"base": "button", "x": 0, "y": 0}],
+        "delay": 25},
+      {"type": "touchend", "delay": 25}
+    ],
+    "expectedGestures": "swipeup"
+  },
+  {
+    "events": [
+      {"type": "touchstart", "target": [{"base": "button", "x": 0, "y": 0}]},
+      {"type": "touchmove", "target": [{"base": "button", "x": 0.5, "y": 0.1}],
+        "delay": 25},
+      {"type": "touchend", "delay": 25}
+    ],
+    "expectedGestures": "swiperight"
+  },
+  {
+    "events": [
+      {"type": "touchstart",
+        "target": [{"base": "button", "x": 0.5, "y": 0.1}]},
+      {"type": "touchmove", "target": [{"base": "button", "x": 0, "y": -0.05}],
+        "delay": 25},
+      {"type": "touchend", "delay": 25}
+    ],
+    "expectedGestures": "swipeleft"
+  },
+  {
+    "events": [
+      {"type": "touchstart", "target": [{"base": "button", "x": 0, "y": 0}]},
+      {"type": "touchmove",
+        "target": [{"base": "button", "x": -0.1, "y": 0.5}], "delay": 25},
+      {"type": "touchend", "delay": 25}
+    ],
+    "expectedGestures": "swipedown"
+  },
+  {
+    "events": [
+      {"type": "touchstart",
+        "target": [{"base": "button", "x": 0.1, "y": 0.5}]},
+      {"type": "touchmove", "target": [{"base": "button", "x": 0, "y": 0}],
+        "delay": 25},
+      {"type": "touchend", "delay": 25}
+    ],
+    "expectedGestures": "swipeup"
+  },
+  {
+    "events": [
+      {"type": "touchstart", "target": [{"base": "button", "x": 0, "y": 0},
+        {"base": "button", "x": 0, "y": 0.5}]},
+      {"type": "touchmove", "target": [{"base": "button", "x": 0.5, "y": 0},
+        {"base": "button", "x": 0.5, "y": 0.5}], "delay": 25},
+      {"type": "touchend", "delay": 25}
+    ],
+    "expectedGestures": "swiperight"
+  },
+  {
+    "events": [
+      {"type": "touchstart", "target": [{"base": "button", "x": 0, "y": 0},
+        {"base": "button", "x": 0, "y": 0.5},
+        {"base": "button", "x": 0, "y": 1}]},
+      {"type": "touchmove", "target": [{"base": "button", "x": 0.5, "y": 0},
+        {"base": "button", "x": 0.5, "y": 0.5},
+        {"base": "button", "x": 0.5, "y": 1}],
+        "delay": 25},
+      {"type": "touchend", "delay": 25}
+    ],
+    "expectedGestures": "swiperight"
+  },
+  {
+    "events": [
+      {"type": "touchstart",
+        "target": [{"base": "button", "x": 0.6, "y": 0.5}]},
+      {"type": "touchmove", "target": [{"base": "button", "x": 0, "y": 0}],
+        "delay": 525},
+      {"type": "touchend", "delay": 25}
+    ],
+    "expectedGestures": ["dwell", "explore", "exploreend"]
+  },
+  {
+    "events": [
+      {"type": "touchstart",
+        "target": [{"base": "button", "x": 0, "y": 0.5}]},
+      {"type": "touchmove", "target": [{"base": "button", "x": 0, "y": 0}],
+        "delay": 525},
+      {"type": "touchmove", "target": [{"base": "button", "x": 0.5, "y": 0}],
+        "delay": 125},
+      {"type": "touchend", "delay": 25}
+    ],
+    "expectedGestures": ["dwell", "explore", "explore", "exploreend"]
+  }
+]

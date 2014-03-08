@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "ContentEventHandler.h"
 #include "TextComposition.h"
-#include "nsContentEventHandler.h"
 #include "nsContentUtils.h"
 #include "nsEventDispatcher.h"
 #include "nsIContent.h"
@@ -227,7 +227,7 @@ TextComposition::CompositionEventDispatcher::Run()
       WidgetCompositionEvent compStart(true, NS_COMPOSITION_START, mWidget);
       WidgetQueryContentEvent selectedText(true, NS_QUERY_SELECTED_TEXT,
                                            mWidget);
-      nsContentEventHandler handler(mPresContext);
+      ContentEventHandler handler(mPresContext);
       handler.OnQuerySelectedText(&selectedText);
       NS_ASSERTION(selectedText.mSucceeded, "Failed to get selected text");
       compStart.data = selectedText.mReply.mString;

@@ -1137,22 +1137,6 @@ MetroWidget::ApzReceiveInputEvent(WidgetInputEvent* aEvent,
   return mController->ReceiveInputEvent(aEvent, aOutTargetGuid);
 }
 
-nsEventStatus
-MetroWidget::ApzReceiveInputEvent(WidgetInputEvent* aInEvent,
-                                  ScrollableLayerGuid* aOutTargetGuid,
-                                  WidgetInputEvent* aOutEvent)
-{
-  MOZ_ASSERT(aInEvent);
-  MOZ_ASSERT(aOutEvent);
-
-  if (!mController) {
-    return nsEventStatus_eIgnore;
-  }
-  return mController->ReceiveInputEvent(aInEvent,
-                                        aOutTargetGuid,
-                                        aOutEvent);
-}
-
 LayerManager*
 MetroWidget::GetLayerManager(PLayerTransactionChild* aShadowManager,
                              LayersBackend aBackendHint,

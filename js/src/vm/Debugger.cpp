@@ -450,8 +450,11 @@ Debugger::fromChildJSObject(JSObject *obj)
 }
 
 bool
-Debugger::getScriptFrame(JSContext *cx, AbstractFramePtr frame, MutableHandleValue vp)
+Debugger::getScriptFrameWithIter(JSContext *cx, AbstractFramePtr frame,
+                                 const ScriptFrameIter *maybeIter, MutableHandleValue vp)
 {
+    MOZ_ASSERT_IF(maybeIter, maybeIter->abstractFramePtr() == frame);
+
     FrameMap::AddPtr p = frames.lookupForAdd(frame);
     if (!p) {
         /* Create and populate the Debugger.Frame object. */
@@ -461,7 +464,17 @@ Debugger::getScriptFrame(JSContext *cx, AbstractFramePtr frame, MutableHandleVal
         if (!frameobj)
             return false;
 
-        frameobj->setPrivate(frame.raw());
+        // Eagerly copy ScriptFrameIter data if we've already walked the
+        // stack.
+        if (maybeIter) {
+            AbstractFramePtr data = maybeIter->copyDataAsAbstractFramePtr();
+            if (!data)
+                return false;
+            frameobj->setPrivate(data.raw());
+        } else {
+            frameobj->setPrivate(frame.raw());
+        }
+
         frameobj->setReservedSlot(JSSLOT_DEBUGFRAME_OWNER, ObjectValue(*object));
 
         if (!frames.add(p, frame, frameobj)) {
@@ -4137,6 +4150,7 @@ DebuggerFrame_getEnvironment(JSContext *cx, unsigned argc, Value *vp)
     Rooted<Env*> env(cx);
     {
         AutoCompartment ac(cx, iter.abstractFramePtr().scopeChain());
+        iter.updatePcQuadratic();
         env = GetDebugScopeForFrame(cx, iter.abstractFramePtr(), iter.pc());
         if (!env)
             return false;
@@ -4634,6 +4648,7 @@ DebuggerFrame_eval(JSContext *cx, unsigned argc, Value *vp)
     THIS_FRAME_ITER(cx, argc, vp, "eval", args, thisobj, _, iter);
     REQUIRE_ARGC("Debugger.Frame.prototype.eval", 1);
     Debugger *dbg = Debugger::fromChildJSObject(thisobj);
+    iter.updatePcQuadratic();
     return DebuggerGenericEval(cx, "Debugger.Frame.prototype.eval",
                                args[0], EvalWithDefaultBindings, JS::UndefinedHandleValue,
                                args.get(1), args.rval(), dbg, js::NullPtr(), &iter);
@@ -4645,6 +4660,7 @@ DebuggerFrame_evalWithBindings(JSContext *cx, unsigned argc, Value *vp)
     THIS_FRAME_ITER(cx, argc, vp, "evalWithBindings", args, thisobj, _, iter);
     REQUIRE_ARGC("Debugger.Frame.prototype.evalWithBindings", 2);
     Debugger *dbg = Debugger::fromChildJSObject(thisobj);
+    iter.updatePcQuadratic();
     return DebuggerGenericEval(cx, "Debugger.Frame.prototype.evalWithBindings",
                                args[0], EvalHasExtraBindings, args[1], args.get(2),
                                args.rval(), dbg, js::NullPtr(), &iter);

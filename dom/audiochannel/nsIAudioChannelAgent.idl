@@ -4,7 +4,9 @@
 
 #include "nsISupports.idl"
 
-[function, scriptable, uuid(c7227506-5f8e-11e2-8bb3-10bf48d64bd4)]
+interface nsIDOMWindow;
+
+[scriptable, uuid(194b55d9-39c0-45c6-b8ef-b8049f978ea5)]
 interface nsIAudioChannelAgentCallback : nsISupports
 {
   /**
@@ -17,22 +19,28 @@ interface nsIAudioChannelAgentCallback : nsISupports
    *        it is faded state then the volume of media should be reduced.
    */
   void canPlayChanged(in long canPlay);
+
+  /**
+   * Notified when the window volume/mute is changed
+   */
+  void windowVolumeChanged();
 };
 
 /**
  * This interface provides an agent for gecko components to participate
  * in the audio channel service. Gecko components are responsible for
- *   1. Indicating what channel type they are using (via the init() member function).
+ *   1. Indicating what channel type they are using (via the init() member
+ *      function).
  *   2. Before playing, checking the playable status of the channel.
  *   3. Notifying the agent when they start/stop using this channel.
  *   4. Notifying the agent of changes to the visibility of the component using
- *       this channel.
+ *      this channel.
  *
  * The agent will invoke a callback to notify Gecko components of
  *   1. Changes to the playable status of this channel.
  */
 
-[scriptable, uuid(86ef883d-9cec-4c04-994f-5de198286e7c)]
+[scriptable, uuid(2b0222a5-8f7b-49d2-9ab8-cd01b744b23e)]
 interface nsIAudioChannelAgent : nsISupports
 {
   const long AUDIO_AGENT_CHANNEL_NORMAL             = 0;
@@ -58,16 +66,20 @@ interface nsIAudioChannelAgent : nsISupports
    * Initialize the agent with a channel type.
    * Note: This function should only be called once.
    *
+   * @param window
+   *    The window
    * @param channelType
    *    Audio Channel Type listed as above
    * @param callback
-   *    1. Once the playable status changes, agent uses this callback function to notify
-   *       Gecko component.
-   *    2. The callback is allowed to be null. Ex: telephony doesn't need to listen change
-   *       of the playable status.
-   *    3. The AudioChannelAgent keeps a strong reference to the callback object.
+   *    1. Once the playable status changes, agent uses this callback function
+   *       to notify Gecko component.
+   *    2. The callback is allowed to be null. Ex: telephony doesn't need to
+   *       listen change of the playable status.
+   *    3. The AudioChannelAgent keeps a strong reference to the callback
+   *       object.
    */
-  void init(in long channelType, in nsIAudioChannelAgentCallback callback);
+  void init(in nsIDOMWindow window, in long channelType,
+            in nsIAudioChannelAgentCallback callback);
 
   /**
    * This method is just like init(), except the audio channel agent keeps a
@@ -76,15 +88,18 @@ interface nsIAudioChannelAgent : nsISupports
    * In order for this to work, |callback| must implement
    * nsISupportsWeakReference.
    */
-  void initWithWeakCallback(in long channelType, in nsIAudioChannelAgentCallback callback);
+  void initWithWeakCallback(in nsIDOMWindow window, in long channelType,
+                            in nsIAudioChannelAgentCallback callback);
 
   /**
-   * This method is just like init(), and specify the channel is associated with video.
+   * This method is just like init(), and specify the channel is associated
+   * with video.
    *
    * @param weak
    *    true if weak reference should be hold.
    */
-  void initWithVideo(in long channelType, in nsIAudioChannelAgentCallback callback, in boolean weak);
+  void initWithVideo(in nsIDOMWindow window, in long channelType,
+                     in nsIAudioChannelAgentCallback callback, in boolean weak);
 
   /**
    * Notify the agent that we want to start playing.
@@ -118,5 +133,10 @@ interface nsIAudioChannelAgent : nsISupports
    *    True if the window associated with the agent is visible.
    */
   void setVisibilityState(in boolean visible);
+
+  /**
+   * Retrieve the volume from the window.
+   */
+  readonly attribute float windowVolume;
 };
 

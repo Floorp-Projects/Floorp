@@ -1228,7 +1228,7 @@ MetroInput::HandleFirstTouchStartEvent(WidgetTouchEvent* aEvent)
 
   WidgetTouchEvent transformedEvent(*aEvent);
   DUMP_TOUCH_IDS("APZC(1)", aEvent);
-  mWidget->ApzReceiveInputEvent(aEvent, &mTargetAPZCGuid, &transformedEvent);
+  mWidget->ApzReceiveInputEvent(&transformedEvent, &mTargetAPZCGuid);
 
   if (gTouchActionPropertyEnabled) {
     nsTArray<TouchBehaviorFlags> touchBehaviors;
@@ -1281,7 +1281,7 @@ MetroInput::HandleFirstTouchMoveEvent(WidgetTouchEvent* aEvent)
 
   WidgetTouchEvent transformedEvent(*aEvent);
   DUMP_TOUCH_IDS("APZC(2)", aEvent);
-  apzcStatus = mWidget->ApzReceiveInputEvent(aEvent, &mTargetAPZCGuid, &transformedEvent);
+  apzcStatus = mWidget->ApzReceiveInputEvent(&transformedEvent, &mTargetAPZCGuid);
 
   // We need to dispatch here only touch event, not pointer one.
   // That's because according to the spec pointer events doesn't imply pointermove event

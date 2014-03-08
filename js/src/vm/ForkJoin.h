@@ -124,12 +124,12 @@
 //   parallelization and just invoke |func()| N times in a row (once
 //   for each worker) but with |warmup| set to false.
 //
-// Operation callback:
+// Interrupts:
 //
-// During parallel execution, |cx.check()| must be periodically
-// invoked to check for the operation callback. This is automatically
-// done by the Ion-generated code. If the operation callback is
-// necessary, |cx.check()| abort the parallel execution.
+// During parallel execution, |cx.check()| must be periodically invoked to
+// check for interrupts. This is automatically done by the Ion-generated
+// code. If an interrupt has been requested |cx.check()| aborts parallel
+// execution.
 //
 // Transitive compilation:
 //
@@ -468,8 +468,7 @@ bool InExclusiveParallelSection();
 
 bool ParallelTestsShouldPass(JSContext *cx);
 
-void TriggerOperationCallbackForForkJoin(JSRuntime *rt,
-                                         JSRuntime::OperationCallbackTrigger trigger);
+void RequestInterruptForForkJoin(JSRuntime *rt, JSRuntime::InterruptMode mode);
 
 bool intrinsic_SetForkJoinTargetRegion(JSContext *cx, unsigned argc, Value *vp);
 extern const JSJitInfo intrinsic_SetForkJoinTargetRegionInfo;

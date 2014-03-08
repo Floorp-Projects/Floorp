@@ -96,6 +96,7 @@ public:
   {
     SetHTMLAttr(nsGkAtoms::rel, aRel, aRv);
   }
+  nsDOMTokenList* RelList();
   // XPCOM GetMedia is fine.
   void SetMedia(const nsAString& aMedia, ErrorResult& aRv)
   {
@@ -140,6 +141,7 @@ protected:
   // nsGenericHTMLElement
   virtual void GetItemValueText(nsAString& text) MOZ_OVERRIDE;
   virtual void SetItemValueText(const nsAString& text) MOZ_OVERRIDE;
+  nsRefPtr<nsDOMTokenList > mRelList;
 };
 
 } // namespace dom

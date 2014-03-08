@@ -51,10 +51,10 @@ public:
   {
     nsresult rv = NS_OK;
     if (video) {
-      rv = mAgent->InitWithVideo(mType, this, true);
+      rv = mAgent->InitWithVideo(nullptr, mType, this, true);
     }
     else {
-      rv = mAgent->InitWithWeakCallback(mType, this);
+      rv = mAgent->InitWithWeakCallback(nullptr, mType, this);
     }
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -101,6 +101,11 @@ public:
   {
     mCanPlay = static_cast<AudioChannelState>(canPlay);
     mWaitCallback = false;
+    return NS_OK;
+  }
+
+  NS_IMETHODIMP WindowVolumeChanged()
+  {
     return NS_OK;
   }
 

@@ -60,3 +60,14 @@
    fun:PR_GetAddrInfoByName
    ...
 }
+{
+   Bug 979242
+   Memcheck:Leak
+   fun:calloc
+   fun:xcb_connect_to_fd
+   fun:xcb_connect_to_display_with_auth_info
+   fun:_XConnectXCB
+   fun:XOpenDisplay
+   fun:gdk_display_open
+   ...
+}

@@ -243,10 +243,10 @@ struct BasicTiledLayerPaintData {
   ScreenPoint mLastScrollOffset;
 
   /*
-   * The transform matrix to go from Screen units to transformed LayoutDevice
-   * units.
+   * The transform matrix to go from ParentLayer units to transformed
+   * LayoutDevice units.
    */
-  gfx3DMatrix mTransformScreenToLayout;
+  gfx3DMatrix mTransformParentLayerToLayout;
 
   /*
    * The critical displayport of the content from the nearest ancestor layer
@@ -307,8 +307,8 @@ public:
   bool UpdateFromCompositorFrameMetrics(ContainerLayer* aLayer,
                                         bool aHasPendingNewThebesContent,
                                         bool aLowPrecision,
-                                        ScreenRect& aCompositionBounds,
-                                        CSSToScreenScale& aZoom);
+                                        ParentLayerRect& aCompositionBounds,
+                                        CSSToParentLayerScale& aZoom);
 
   /**
    * When a shared FrameMetrics can not be found for a given layer,
@@ -316,8 +316,8 @@ public:
    * by traversing up the layer tree.
    */
   void FindFallbackContentFrameMetrics(ContainerLayer* aLayer,
-                                       ScreenRect& aCompositionBounds,
-                                       CSSToScreenScale& aZoom);
+                                       ParentLayerRect& aCompositionBounds,
+                                       CSSToParentLayerScale& aZoom);
   /**
    * Determines if the compositor's upcoming composition bounds has fallen
    * outside of the contents display port. If it has then the compositor

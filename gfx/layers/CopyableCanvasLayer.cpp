@@ -97,7 +97,7 @@ CopyableCanvasLayer::UpdateTarget(DrawTarget* aDestTarget,
     RefPtr<DataSourceSurface> readSurf;
     RefPtr<SourceSurface> resultSurf;
 
-    SharedSurface* sharedSurf = mGLContext->RequestFrame();
+    SharedSurface_GL* sharedSurf = mGLContext->RequestFrame();
     if (!sharedSurf) {
       NS_WARNING("Null frame received.");
       return;
@@ -192,7 +192,7 @@ CopyableCanvasLayer::DeprecatedUpdateSurface(gfxASurface* aDestSurface,
     RefPtr<DataSourceSurface> readDSurf;
     nsRefPtr<gfxASurface> resultSurf;
 
-    SharedSurface* sharedSurf = mGLContext->RequestFrame();
+    SharedSurface_GL* sharedSurf = mGLContext->RequestFrame();
     if (!sharedSurf) {
       NS_WARNING("Null frame received.");
       return;
@@ -350,7 +350,7 @@ CopyableCanvasLayer::DeprecatedPaintWithOpacity(gfxContext* aContext,
   // Restore surface operator
   if (GetContentFlags() & CONTENT_OPAQUE) {
     aContext->SetOperator(savedOp);
-  }  
+  }
 
   if (mNeedsYFlip) {
     aContext->SetMatrix(m);

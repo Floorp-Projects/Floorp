@@ -190,10 +190,22 @@ public:
 
   virtual NS_HIDDEN_(bool) IsRunningTimeout() = 0;
 
+  // Audio API
+  bool GetAudioMuted() const;
+  void SetAudioMuted(bool aMuted);
+
+  float GetAudioVolume() const;
+  nsresult SetAudioVolume(float aVolume);
+
+  float GetAudioGlobalVolume();
+
 protected:
   // Lazily instantiate an about:blank document if necessary, and if
   // we have what it takes to do so.
   void MaybeCreateDoc();
+
+  float GetAudioGlobalVolumeInternal(float aVolume);
+  void RefreshMediaElements();
 
 public:
   // Internal getter/setter for the frame element, this version of the
@@ -767,6 +779,9 @@ protected:
   // is false.  Too bad we have so many different concepts of
   // "active".  Only used on outer windows.
   bool                   mIsBackground;
+
+  bool                   mAudioMuted;
+  float                  mAudioVolume;
 
   // And these are the references between inner and outer windows.
   nsPIDOMWindow         *mInnerWindow;

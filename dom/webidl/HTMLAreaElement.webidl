@@ -26,11 +26,11 @@ interface HTMLAreaElement : HTMLElement {
            attribute DOMString download;
            [SetterThrows]
            attribute DOMString ping;
+           [SetterThrows]
+           attribute DOMString rel;
+  readonly attribute DOMTokenList relList;
 
   // not implemented.
-  //        [SetterThrows]
-  //       attribute DOMString rel;
-  //readonly attribute DOMTokenList relList;
   //
   //       [SetterThrows]
   //       attribute DOMString hreflang;

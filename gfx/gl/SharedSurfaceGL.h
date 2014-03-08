@@ -54,8 +54,8 @@ protected:
     {}
 
 public:
-    static void Copy(SharedSurface_GL* src, SharedSurface_GL* dest,
-                     SurfaceFactory_GL* factory);
+    static void ProdCopy(SharedSurface_GL* src, SharedSurface_GL* dest,
+                         SurfaceFactory_GL* factory);
 
     static SharedSurface_GL* Cast(SharedSurface* surf) {
         MOZ_ASSERT(surf->APIType() == APITypeT::OpenGL);
@@ -63,13 +63,28 @@ public:
         return (SharedSurface_GL*)surf;
     }
 
+    // For use when AttachType is correct.
+    virtual GLuint ProdTexture() {
+        MOZ_ASSERT(AttachType() == AttachmentType::GLTexture);
+        MOZ_CRASH("Did you forget to override this function?");
+    }
+
+    virtual GLenum ProdTextureTarget() const {
+        return LOCAL_GL_TEXTURE_2D;
+    }
+
+    virtual GLuint ProdRenderbuffer() {
+        MOZ_ASSERT(AttachType() == AttachmentType::GLRenderbuffer);
+        MOZ_CRASH("Did you forget to override this function?");
+    }
+
     virtual bool ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height,
                             GLenum format, GLenum type, GLvoid *pixels) {
         return false;
     }
 
-    virtual void LockProd();
-    virtual void UnlockProd();
+    virtual void LockProd() MOZ_OVERRIDE;
+    virtual void UnlockProd() MOZ_OVERRIDE;
 
     GLContext* GL() const {
         return mGL;
@@ -149,19 +164,18 @@ protected:
 public:
     virtual ~SharedSurface_Basic();
 
-    virtual void LockProdImpl() {}
-    virtual void UnlockProdImpl() {}
+    virtual void LockProdImpl() MOZ_OVERRIDE {}
+    virtual void UnlockProdImpl() MOZ_OVERRIDE {}
 
 
-    virtual void Fence();
+    virtual void Fence() MOZ_OVERRIDE;
 
-    virtual bool WaitSync() {
+    virtual bool WaitSync() MOZ_OVERRIDE {
         // Since we already store the data in Fence, we're always done already.
         return true;
     }
 
-
-    virtual GLuint Texture() const {
+    virtual GLuint ProdTexture() MOZ_OVERRIDE {
         return mTex;
     }
 
@@ -179,7 +193,7 @@ public:
         : SurfaceFactory_GL(gl, SharedSurfaceType::Basic, caps)
     {}
 
-    virtual SharedSurface* CreateShared(const gfx::IntSize& size) {
+    virtual SharedSurface* CreateShared(const gfx::IntSize& size) MOZ_OVERRIDE {
         bool hasAlpha = mReadCaps.alpha;
         return SharedSurface_Basic::Create(mGL, mFormats, size, hasAlpha);
     }
@@ -233,20 +247,25 @@ protected:
 public:
     virtual ~SharedSurface_GLTexture();
 
-    virtual void LockProdImpl() {}
-    virtual void UnlockProdImpl() {}
+    virtual void LockProdImpl() MOZ_OVERRIDE {}
+    virtual void UnlockProdImpl() MOZ_OVERRIDE {}
 
 
-    virtual void Fence();
-    virtual bool WaitSync();
+    virtual void Fence() MOZ_OVERRIDE;
+    virtual bool WaitSync() MOZ_OVERRIDE;
 
 
-    virtual GLuint Texture() const {
+    virtual GLuint ProdTexture() MOZ_OVERRIDE {
         return mTex;
     }
 
     // Custom:
-    void SetConsumerGL(GLContext* consGL);
+
+    GLuint ConsTexture(GLContext* consGL);
+
+    GLenum ConsTextureTarget() const {
+        return ProdTextureTarget();
+    }
 };
 
 class SurfaceFactory_GLTexture
@@ -268,7 +287,7 @@ public:
         MOZ_ASSERT(consGL != prodGL);
     }
 
-    virtual SharedSurface* CreateShared(const gfx::IntSize& size) {
+    virtual SharedSurface* CreateShared(const gfx::IntSize& size) MOZ_OVERRIDE {
         bool hasAlpha = mReadCaps.alpha;
         return SharedSurface_GLTexture::Create(mGL, mConsGL, mFormats, size, hasAlpha);
     }
