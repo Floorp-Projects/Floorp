@@ -3123,14 +3123,14 @@ Tab.prototype = {
                                     pageRect.left - geckoScrollX), pageXMost - dpW);
         let dpY = Math.min(Math.max(displayPort.y - displayPort.height * 1.5,
                                     pageRect.top - geckoScrollY), pageYMost - dpH);
-        cwu.setDisplayPortForElement(dpX, dpY, dpW, dpH, element);
+        cwu.setDisplayPortForElement(dpX, dpY, dpW, dpH, element, 0);
         cwu.setCriticalDisplayPortForElement(displayPort.x, displayPort.y,
                                              displayPort.width, displayPort.height,
                                              element);
       } else {
         cwu.setDisplayPortForElement(displayPort.x, displayPort.y,
                                      displayPort.width, displayPort.height,
-                                     element);
+                                     element, 0);
       }
     }
 

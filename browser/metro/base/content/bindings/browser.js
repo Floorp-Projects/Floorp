@@ -685,7 +685,7 @@ let ContentActive =  {
         let cwu = content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
         if (json.keepviewport)
           break;
-        cwu.setDisplayPortForElement(0, 0, 0, 0, content.document.documentElement);
+        cwu.setDisplayPortForElement(0, 0, 0, 0, content.document.documentElement, 0);
         break;
 
       case "Content:Activate":
