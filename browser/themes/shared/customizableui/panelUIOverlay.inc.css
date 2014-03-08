@@ -790,6 +790,7 @@ toolbarpaletteitem[place="palette"] > #search-container {
 .toolbaritem-combined-buttons@inAnyPanel@ > separator {
   margin: .5em 0;
   width: 1px;
+  height: auto;
   background: hsla(210,4%,10%,.15);
   transition-property: margin;
   transition-duration: 10ms;
