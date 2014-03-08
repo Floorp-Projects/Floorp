@@ -367,13 +367,13 @@ private:
     bool UseAsyncPanZoom();
     // If we have a render frame currently, notify it that we're about
     // to dispatch |aEvent| to our child.  If there's a relevant
-    // transform in place, |aOutEvent| is the transformed |aEvent| to
-    // dispatch to content. |aOutTargetGuid| will contain the identifier
+    // transform in place, |aEvent| will be transformed in-place so that
+    // it is ready to be dispatched to content.
+    // |aOutTargetGuid| will contain the identifier
     // of the APZC instance that handled the event. aOutTargetGuid may be
-    // null but aOutEvent must not be.
-    void MaybeForwardEventToRenderFrame(const WidgetInputEvent& aEvent,
-                                        ScrollableLayerGuid* aOutTargetGuid,
-                                        WidgetInputEvent* aOutEvent);
+    // null.
+    void MaybeForwardEventToRenderFrame(WidgetInputEvent& aEvent,
+                                        ScrollableLayerGuid* aOutTargetGuid);
     // The offset for the child process which is sampled at touch start. This
     // means that the touch events are relative to where the frame was at the
     // start of the touch. We need to look for a better solution to this

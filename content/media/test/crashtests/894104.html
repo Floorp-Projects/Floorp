@@ -10,7 +10,7 @@ function boom()
   var frameWin = frame.contentWindow;
   frameWin.VTTCue;
   document.body.removeChild(frame);
-  frameWin.VTTCue(0, 1, "Bug 894104").getCueAsHTML();
+  new frameWin.VTTCue(0, 1, "Bug 894104").getCueAsHTML();
 }
 
 </script>

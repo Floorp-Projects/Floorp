@@ -83,7 +83,7 @@ let HighlighterActor = protocol.ActorClass({
    * outline highlighter for instance does not scrollIntoView
    */
   showBoxModel: method(function(node, options={}) {
-    if (this._isNodeValidForHighlighting(node.rawNode)) {
+    if (node && this._isNodeValidForHighlighting(node.rawNode)) {
       this._boxModelHighlighter.show(node.rawNode, options);
     } else {
       this._boxModelHighlighter.hide();
@@ -411,7 +411,7 @@ BoxModelHighlighter.prototype = {
   _trackMutations: function() {
     if (this.currentNode) {
       let win = this.currentNode.ownerDocument.defaultView;
-      this.currentNodeObserver = win.MutationObserver(this._update);
+      this.currentNodeObserver = new win.MutationObserver(this._update);
       this.currentNodeObserver.observe(this.currentNode, {attributes: true});
     }
   },

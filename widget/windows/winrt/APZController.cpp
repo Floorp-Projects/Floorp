@@ -193,22 +193,6 @@ APZController::ReceiveInputEvent(WidgetInputEvent* aEvent,
   return sAPZC->ReceiveInputEvent(*aEvent->AsInputEvent(), aOutTargetGuid);
 }
 
-nsEventStatus
-APZController::ReceiveInputEvent(WidgetInputEvent* aInEvent,
-                                 ScrollableLayerGuid* aOutTargetGuid,
-                                 WidgetInputEvent* aOutEvent)
-{
-  MOZ_ASSERT(aInEvent);
-  MOZ_ASSERT(aOutEvent);
-
-  if (!sAPZC) {
-    return nsEventStatus_eIgnore;
-  }
-  return sAPZC->ReceiveInputEvent(*aInEvent->AsInputEvent(),
-                                  aOutTargetGuid,
-                                  aOutEvent);
-}
-
 // APZC sends us this request when we need to update the display port on
 // the scrollable frame the apzc is managing.
 void

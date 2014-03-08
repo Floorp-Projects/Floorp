@@ -353,4 +353,26 @@ protected:
   bool mSeenVariableReference;
 };
 
+// Token for the grid-template-areas micro-syntax
+// http://dev.w3.org/csswg/css-grid/#propdef-grid-template-areas
+struct MOZ_STACK_CLASS nsCSSGridTemplateAreaToken {
+  nsAutoString mName;  // Empty for a null cell, non-empty for a named cell
+  bool isTrash;  // True for a trash token, mName is ignored in this case.
+};
+
+// Scanner for the grid-template-areas micro-syntax
+class nsCSSGridTemplateAreaScanner {
+public:
+  nsCSSGridTemplateAreaScanner(const nsAString& aBuffer);
+
+  // Get the next token.  Return false on EOF.
+  // aTokenResult is filled in with the data for the token.
+  bool Next(nsCSSGridTemplateAreaToken& aTokenResult);
+
+private:
+  const char16_t *mBuffer;
+  uint32_t mOffset;
+  uint32_t mCount;
+};
+
 #endif /* nsCSSScanner_h___ */

@@ -37,12 +37,6 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-ifndef __LP64__
-ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-EXTRA_DSO_LDOPTS += -framework Carbon
-endif
-endif
-
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 CXXFLAGS        += $(MOZ_GTK2_CFLAGS)
 CFLAGS          += $(MOZ_GTK2_CFLAGS)

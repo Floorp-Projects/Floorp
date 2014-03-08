@@ -9,7 +9,9 @@ import java.io.UnsupportedEncodingException;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.TreeMap;
 
+import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
 import org.mozilla.apache.commons.codec.binary.Base64;
 import org.mozilla.apache.commons.codec.binary.StringUtils;
@@ -28,6 +30,7 @@ import org.mozilla.gecko.sync.Utils;
 public class JSONWebTokenUtils {
   public static final long DEFAULT_CERTIFICATE_DURATION_IN_MILLISECONDS = 60 * 60 * 1000;
   public static final long DEFAULT_ASSERTION_DURATION_IN_MILLISECONDS = 60 * 60 * 1000;
+  public static final long DEFAULT_FUTURE_EXPIRES_AT_IN_MILLISECONDS = 9999999999999L;
   public static final String DEFAULT_CERTIFICATE_ISSUER = "127.0.0.1";
   public static final String DEFAULT_ASSERTION_ISSUER = "127.0.0.1";
 
@@ -70,8 +73,12 @@ public class JSONWebTokenUtils {
     return payload;
   }
 
-  protected static String getPayloadString(String payloadString, String issuer,
-      long issuedAt, String audience, long expiresAt) throws NonObjectJSONException,
+  /**
+   * Public for testing.
+   */
+  @SuppressWarnings("unchecked")
+  public static String getPayloadString(String payloadString, String audience, String issuer,
+      Long issuedAt, long expiresAt) throws NonObjectJSONException,
       IOException, ParseException {
     ExtendedJSONObject payload;
     if (payloadString != null) {
@@ -79,13 +86,16 @@ public class JSONWebTokenUtils {
     } else {
       payload = new ExtendedJSONObject();
     }
-    payload.put("iss", issuer);
-    payload.put("iat", issuedAt);
     if (audience != null) {
       payload.put("aud", audience);
     }
+    payload.put("iss", issuer);
+    if (issuedAt != null) {
+      payload.put("iat", issuedAt);
+    }
     payload.put("exp", expiresAt);
-    return payload.toJSONString();
+    // TreeMap so that keys are sorted. A small attempt to keep output stable over time.
+    return JSONObject.toJSONString(new TreeMap<Object, Object>(payload.object));
   }
 
   protected static String getCertificatePayloadString(VerifyingPublicKey publicKeyToSign, String email) throws NonObjectJSONException, IOException, ParseException  {
@@ -100,31 +110,40 @@ public class JSONWebTokenUtils {
   public static String createCertificate(VerifyingPublicKey publicKeyToSign, String email,
       String issuer, long issuedAt, long expiresAt, SigningPrivateKey privateKey) throws NonObjectJSONException, IOException, ParseException, GeneralSecurityException  {
     String certificatePayloadString = getCertificatePayloadString(publicKeyToSign, email);
-    String payloadString = getPayloadString(certificatePayloadString, issuer, issuedAt, null, expiresAt);
+    String payloadString = getPayloadString(certificatePayloadString, null, issuer, issuedAt, expiresAt);
     return JSONWebTokenUtils.encode(payloadString, privateKey);
   }
 
-  public static String createCertificate(VerifyingPublicKey publicKeyToSign, String email, SigningPrivateKey privateKey) throws NonObjectJSONException, IOException, ParseException, GeneralSecurityException  {
-    String issuer = DEFAULT_CERTIFICATE_ISSUER;
-    long issuedAt = System.currentTimeMillis();
-    long durationInMilliseconds = DEFAULT_CERTIFICATE_DURATION_IN_MILLISECONDS;
-    return createCertificate(publicKeyToSign, email, issuer, issuedAt, issuedAt + durationInMilliseconds, privateKey);
-  }
-
+  /**
+   * Create a Browser ID assertion.
+   *
+   * @param privateKeyToSignWith
+   *          private key to sign assertion with.
+   * @param certificate
+   *          to include in assertion; no attempt is made to ensure the
+   *          certificate is valid, or corresponds to the private key, or any
+   *          other condition.
+   * @param audience
+   *          to produce assertion for.
+   * @param issuer
+   *          to produce assertion for.
+   * @param issuedAt
+   *          timestamp for assertion, in milliseconds since the epoch; if null,
+   *          no timestamp is included.
+   * @param expiresAt
+   *          expiration timestamp for assertion, in milliseconds since the epoch.
+   * @return assertion.
+   * @throws NonObjectJSONException
+   * @throws IOException
+   * @throws ParseException
+   * @throws GeneralSecurityException
+   */
   public static String createAssertion(SigningPrivateKey privateKeyToSignWith, String certificate, String audience,
-      String issuer, long issuedAt, long durationInMilliseconds) throws NonObjectJSONException, IOException, ParseException, GeneralSecurityException  {
-    long expiresAt = issuedAt + durationInMilliseconds;
+      String issuer, Long issuedAt, long expiresAt) throws NonObjectJSONException, IOException, ParseException, GeneralSecurityException  {
     String emptyAssertionPayloadString = "{}";
-    String payloadString = getPayloadString(emptyAssertionPayloadString, issuer, issuedAt, audience, expiresAt);
+    String payloadString = getPayloadString(emptyAssertionPayloadString, audience, issuer, issuedAt, expiresAt);
     String signature = JSONWebTokenUtils.encode(payloadString, privateKeyToSignWith);
     return certificate + "~" + signature;
-  }
-
-  public static String createAssertion(SigningPrivateKey privateKeyToSignWith, String certificate, String audience) throws NonObjectJSONException, IOException, ParseException, GeneralSecurityException  {
-    String issuer = DEFAULT_ASSERTION_ISSUER;
-    long issuedAt = System.currentTimeMillis();
-    long durationInMilliseconds = DEFAULT_ASSERTION_DURATION_IN_MILLISECONDS;
-    return createAssertion(privateKeyToSignWith, certificate, audience, issuer, issuedAt, durationInMilliseconds);
   }
 
   /**

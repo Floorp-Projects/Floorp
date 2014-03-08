@@ -16,6 +16,7 @@
 #include "InputData.h"                  // for MultiTouchInput, etc
 #include "LayerTransactionParent.h"     // for LayerTransactionParent
 #include "Units.h"                      // for CSSRect, CSSPoint, etc
+#include "UnitTransforms.h"             // for TransformTo
 #include "base/message_loop.h"          // for MessageLoop
 #include "base/task.h"                  // for NewRunnableMethod, etc
 #include "base/tracked.h"               // for FROM_HERE
@@ -44,6 +45,7 @@
 #include "mozilla/layers/TaskThrottler.h"  // for TaskThrottler
 #include "mozilla/mozalloc.h"           // for operator new, etc
 #include "mozilla/unused.h"             // for unused
+#include "mozilla/FloatingPoint.h"      // for FuzzyEqualsMultiplicative
 #include "nsAlgorithm.h"                // for clamped
 #include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsCOMPtr.h"                   // for already_AddRefed
@@ -797,7 +799,7 @@ nsEventStatus AsyncPanZoomController::OnScaleBegin(const PinchGestureInput& aEve
   }
 
   SetState(PINCHING);
-  mLastZoomFocus = aEvent.mFocusPoint - mFrameMetrics.mCompositionBounds.TopLeft();
+  mLastZoomFocus = ToParentLayerCoords(aEvent.mFocusPoint) - mFrameMetrics.mCompositionBounds.TopLeft();
 
   return nsEventStatus_eConsumeNoDefault;
 }
@@ -819,8 +821,8 @@ nsEventStatus AsyncPanZoomController::OnScale(const PinchGestureInput& aEvent) {
   {
     ReentrantMonitorAutoEnter lock(mMonitor);
 
-    CSSToScreenScale userZoom = mFrameMetrics.mZoom;
-    ScreenPoint focusPoint = aEvent.mFocusPoint - mFrameMetrics.mCompositionBounds.TopLeft();
+    CSSToParentLayerScale userZoom = mFrameMetrics.GetZoomToParent();
+    ParentLayerPoint focusPoint = ToParentLayerCoords(aEvent.mFocusPoint) - mFrameMetrics.mCompositionBounds.TopLeft();
     CSSPoint cssFocusPoint = focusPoint / userZoom;
 
     CSSPoint focusChange = (mLastZoomFocus - focusPoint) / userZoom;
@@ -839,8 +841,8 @@ nsEventStatus AsyncPanZoomController::OnScale(const PinchGestureInput& aEvent) {
     // either axis such that we don't overscroll the boundaries when zooming.
     CSSPoint neededDisplacement;
 
-    CSSToScreenScale realMinZoom = mZoomConstraints.mMinZoom;
-    CSSToScreenScale realMaxZoom = mZoomConstraints.mMaxZoom;
+    CSSToParentLayerScale realMinZoom = mZoomConstraints.mMinZoom * mFrameMetrics.mTransformScale;
+    CSSToParentLayerScale realMaxZoom = mZoomConstraints.mMaxZoom * mFrameMetrics.mTransformScale;
     realMinZoom.scale = std::max(realMinZoom.scale,
                                  mFrameMetrics.mCompositionBounds.width / mFrameMetrics.mScrollableRect.width);
     realMinZoom.scale = std::max(realMinZoom.scale,
@@ -1345,7 +1347,7 @@ const CSSRect AsyncPanZoomController::CalculatePendingDisplayPort(
   const ScreenPoint& aVelocity,
   double aEstimatedPaintDuration)
 {
-  CSSRect compositionBounds = aFrameMetrics.CalculateCompositedRectInCssPixels();
+  CSSRect compositionBounds(aFrameMetrics.CalculateCompositedRectInCssPixels());
   CSSPoint velocity = aVelocity / aFrameMetrics.mZoom;
   CSSPoint scrollOffset = aFrameMetrics.mScrollOffset;
   CSSRect scrollableRect = aFrameMetrics.GetExpandedScrollableRect();
@@ -1528,7 +1530,7 @@ bool AsyncPanZoomController::SampleContentTransformForFrame(const TimeStamp& aSa
 
     LogRendertraceRect(GetGuid(), "viewport", "red",
       CSSRect(mFrameMetrics.mScrollOffset,
-              ScreenSize(mFrameMetrics.mCompositionBounds.Size()) / mFrameMetrics.mZoom));
+              ParentLayerSize(mFrameMetrics.mCompositionBounds.Size()) / mFrameMetrics.GetZoomToParent()));
 
     mCurrentAsyncScrollOffset = mFrameMetrics.mScrollOffset;
   }
@@ -1578,7 +1580,7 @@ ViewTransform AsyncPanZoomController::GetCurrentAsyncTransform() {
   // within rendered content.
   if (!gAllowCheckerboarding &&
       !mLastContentPaintMetrics.mDisplayPort.IsEmpty()) {
-    CSSRect compositedRect = mLastContentPaintMetrics.CalculateCompositedRectInCssPixels();
+    CSSRect compositedRect(mLastContentPaintMetrics.CalculateCompositedRectInCssPixels());
     CSSPoint maxScrollOffset = lastPaintScrollOffset +
       CSSPoint(mLastContentPaintMetrics.mDisplayPort.XMost() - compositedRect.width,
                mLastContentPaintMetrics.mDisplayPort.YMost() - compositedRect.height);
@@ -1620,6 +1622,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
   ReentrantMonitorAutoEnter lock(mMonitor);
 
   mLastContentPaintMetrics = aLayerMetrics;
+  UpdateTransformScale();
 
   bool isDefault = mFrameMetrics.IsDefault();
   mFrameMetrics.mMayHaveTouchListeners = aLayerMetrics.mMayHaveTouchListeners;
@@ -1729,27 +1732,27 @@ void AsyncPanZoomController::ZoomToRect(CSSRect aRect) {
   {
     ReentrantMonitorAutoEnter lock(mMonitor);
 
-    ScreenIntRect compositionBounds = mFrameMetrics.mCompositionBounds;
+    ParentLayerIntRect compositionBounds = mFrameMetrics.mCompositionBounds;
     CSSRect cssPageRect = mFrameMetrics.mScrollableRect;
     CSSPoint scrollOffset = mFrameMetrics.mScrollOffset;
-    CSSToScreenScale currentZoom = mFrameMetrics.mZoom;
-    CSSToScreenScale targetZoom;
+    CSSToParentLayerScale currentZoom = mFrameMetrics.GetZoomToParent();
+    CSSToParentLayerScale targetZoom;
 
     // The minimum zoom to prevent over-zoom-out.
     // If the zoom factor is lower than this (i.e. we are zoomed more into the page),
     // then the CSS content rect, in layers pixels, will be smaller than the
     // composition bounds. If this happens, we can't fill the target composited
     // area with this frame.
-    CSSToScreenScale localMinZoom(std::max(mZoomConstraints.mMinZoom.scale,
-                                  std::max(compositionBounds.width / cssPageRect.width,
-                                           compositionBounds.height / cssPageRect.height)));
-    CSSToScreenScale localMaxZoom = mZoomConstraints.mMaxZoom;
+    CSSToParentLayerScale localMinZoom(std::max((mZoomConstraints.mMinZoom * mFrameMetrics.mTransformScale).scale,
+                                       std::max(compositionBounds.width / cssPageRect.width,
+                                                compositionBounds.height / cssPageRect.height)));
+    CSSToParentLayerScale localMaxZoom = mZoomConstraints.mMaxZoom * mFrameMetrics.mTransformScale;
 
     if (!aRect.IsEmpty()) {
       // Intersect the zoom-to-rect to the CSS rect to make sure it fits.
       aRect = aRect.Intersect(cssPageRect);
-      targetZoom = CSSToScreenScale(std::min(compositionBounds.width / aRect.width,
-                                             compositionBounds.height / aRect.height));
+      targetZoom = CSSToParentLayerScale(std::min(compositionBounds.width / aRect.width,
+                                                  compositionBounds.height / aRect.height));
     }
     // 1. If the rect is empty, request received from browserElementScrolling.js
     // 2. currentZoom is equal to mZoomConstraints.mMaxZoom and user still double-tapping it
@@ -1758,27 +1761,27 @@ void AsyncPanZoomController::ZoomToRect(CSSRect aRect) {
     if (aRect.IsEmpty() ||
         (currentZoom == localMaxZoom && targetZoom >= localMaxZoom) ||
         (currentZoom == localMinZoom && targetZoom <= localMinZoom)) {
-      CSSRect compositedRect = mFrameMetrics.CalculateCompositedRectInCssPixels();
+      CSSRect compositedRect = CSSRect(mFrameMetrics.CalculateCompositedRectInCssPixels());
       float y = scrollOffset.y;
       float newHeight =
         cssPageRect.width * (compositedRect.height / compositedRect.width);
       float dh = compositedRect.height - newHeight;
 
       aRect = CSSRect(0.0f,
-                           y + dh/2,
-                           cssPageRect.width,
-                           newHeight);
+                      y + dh/2,
+                      cssPageRect.width,
+                      newHeight);
       aRect = aRect.Intersect(cssPageRect);
-      targetZoom = CSSToScreenScale(std::min(compositionBounds.width / aRect.width,
-                                             compositionBounds.height / aRect.height));
+      targetZoom = CSSToParentLayerScale(std::min(compositionBounds.width / aRect.width,
+                                                  compositionBounds.height / aRect.height));
     }
 
     targetZoom.scale = clamped(targetZoom.scale, localMinZoom.scale, localMaxZoom.scale);
     FrameMetrics endZoomToMetrics = mFrameMetrics;
-    endZoomToMetrics.mZoom = targetZoom;
+    endZoomToMetrics.mZoom = targetZoom / mFrameMetrics.mTransformScale;
 
     // Adjust the zoomToRect to a sensible position to prevent overscrolling.
-    CSSRect rectAfterZoom = endZoomToMetrics.CalculateCompositedRectInCssPixels();
+    CSSRect rectAfterZoom = CSSRect(endZoomToMetrics.CalculateCompositedRectInCssPixels());
 
     // If either of these conditions are met, the page will be
     // overscrolled after zoomed
@@ -1988,7 +1991,7 @@ void AsyncPanZoomController::SendAsyncScrollEvent() {
 
     isRoot = mFrameMetrics.mIsRoot;
     scrollableSize = mFrameMetrics.mScrollableRect.Size();
-    contentRect = mFrameMetrics.CalculateCompositedRectInCssPixels();
+    contentRect = CSSRect(mFrameMetrics.CalculateCompositedRectInCssPixels());
     contentRect.MoveTo(mCurrentAsyncScrollOffset);
   }
 
@@ -2069,6 +2072,20 @@ void AsyncPanZoomController::ShareCompositorFrameMetrics() {
       }
     }
   }
+}
+
+ParentLayerPoint AsyncPanZoomController::ToParentLayerCoords(const ScreenPoint& aPoint)
+{
+  return TransformTo<ParentLayerPixel>(GetNontransientAsyncTransform() * GetCSSTransform(), aPoint);
+}
+
+void AsyncPanZoomController::UpdateTransformScale()
+{
+  gfx3DMatrix nontransientTransforms = GetNontransientAsyncTransform() * GetCSSTransform();
+  if (!FuzzyEqualsMultiplicative(nontransientTransforms.GetXScale(), nontransientTransforms.GetYScale())) {
+    NS_WARNING("The x- and y-scales of the nontransient transforms should be equal");
+  }
+  mFrameMetrics.mTransformScale.scale = nontransientTransforms.GetXScale();
 }
 
 }

@@ -32,12 +32,31 @@ parent:
   Suspend();
   Resume();
 
+  // Divert OnDataAvailable to the parent.
+  DivertOnDataAvailable(nsCString data,
+                        uint64_t  offset,
+                        uint32_t  count);
+
+  // Divert OnStopRequest to the parent.
+  DivertOnStopRequest(nsresult statusCode);
+
+  // Child has no more events/messages to divert to the parent.
+  DivertComplete();
+
 child:
   OnStartRequest(int64_t aContentLength, nsCString aContentType,
                  PRTime aLastModified, nsCString aEntityID, URIParams aURI);
   OnDataAvailable(nsCString data, uint64_t offset, uint32_t count);
   OnStopRequest(nsresult statusCode);
   FailedAsyncOpen(nsresult statusCode);
+
+  // Parent has been suspended for diversion; no more events to be enqueued.
+  FlushedForDiversion();
+
+  // Child should resume processing the ChannelEventQueue, i.e. diverting any
+  // OnDataAvailable and OnStopRequest messages in the queue back to the parent.
+  DivertMessages();
+
   DeleteSelf();
 };
 

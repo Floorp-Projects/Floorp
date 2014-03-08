@@ -559,7 +559,7 @@ ErrorObject::createProto(JSContext *cx, JS::Handle<GlobalObject*> global, JSExnT
     if (!LinkConstructorAndPrototype(cx, ctor, err))
         return nullptr;
 
-    if (!DefineConstructorAndPrototype(cx, global, key, ctor, err))
+    if (!GlobalObject::initBuiltinConstructor(cx, global, key, ctor, err))
         return nullptr;
 
     return err;

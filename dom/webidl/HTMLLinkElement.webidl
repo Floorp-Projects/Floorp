@@ -21,8 +21,7 @@ interface HTMLLinkElement : HTMLElement {
            attribute DOMString crossOrigin;
   [SetterThrows, Pure]
            attribute DOMString rel;
-// Not supported yet:
-//  readonly attribute DOMTokenList relList;
+  readonly attribute DOMTokenList relList;
   [SetterThrows, Pure]
            attribute DOMString media;
   [SetterThrows, Pure]
