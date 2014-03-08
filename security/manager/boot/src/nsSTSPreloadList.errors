@@ -22,7 +22,6 @@ chrome.google.com: did not receive HSTS header (error ignored - included regardl
 cloud.google.com: did not receive HSTS header (error ignored - included regardless)
 code.google.com: did not receive HSTS header (error ignored - included regardless)
 codereview.chromium.org: did not receive HSTS header (error ignored - included regardless)
-conformal.com: could not connect to host
 crate.io: did not receive HSTS header
 crowdcurity.com: did not receive HSTS header
 crypto.is: did not receive HSTS header
@@ -34,6 +33,7 @@ dropcam.com: did not receive HSTS header
 email.lookout.com: could not connect to host
 emailprivacytester.com: did not receive HSTS header
 encrypted.google.com: did not receive HSTS header (error ignored - included regardless)
+errors.zenpayroll.com: could not connect to host
 espra.com: could not connect to host
 fatzebra.com.au: did not receive HSTS header
 fj.simple.com: did not receive HSTS header
