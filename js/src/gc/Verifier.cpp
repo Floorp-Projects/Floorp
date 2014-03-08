@@ -882,12 +882,3 @@ js::gc::FinishVerifier(JSRuntime *rt)
 }
 
 #endif /* JS_GC_ZEAL */
-
-void
-js::gc::CrashAtUnhandlableOOM(const char *reason)
-{
-    char msgbuf[1024];
-    JS_snprintf(msgbuf, sizeof(msgbuf), "[unhandlable oom] %s", reason);
-    MOZ_ReportAssertionFailure(msgbuf, __FILE__, __LINE__);
-    MOZ_CRASH();
-}
