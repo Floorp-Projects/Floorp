@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Bug 970891</title>
+  <style type="text/css">
+    @font-face {
+      font-family: "test";
+      src: url(../fonts/markA.ttf);
+    }
+    div {
+      font-family: test, monospace;
+      font-size: 16px;
+      line-height: 32px;
+    }
+    span {
+      font-family: monospace;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- markA does not have a glyph for the <space> character,
+       so the spaces should fall back to 'monospace'. -->
+  <div><b>A</b> <b>A</b> <i>A</i> <i>A</i><span>&nbsp;</span></div>
+</body>
+
+</html>

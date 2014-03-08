@@ -60,6 +60,9 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gtk2', 'gtk3', 'qt', 'gonk', 'co
 if CONFIG['INTEL_ARCHITECTURE'] and CONFIG['HAVE_TOOLCHAIN_SUPPORT_MSSSE3']:
     DEFINES['SK_BUILD_SSSE3'] = 1
 
+if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gonk'):
+    DEFINES['SK_FONTHOST_CAIRO_STANDALONE'] = 0
+
 if (CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android') or \
    (CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa') or \
    (CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk') or \
@@ -181,6 +184,7 @@ def generate_separated_sources(platform_sources):
     },
     'android': {
       # 'trunk/src/ports/SkDebug_android.cpp',
+      'trunk/src/ports/SkFontHost_android_old.cpp',
       'trunk/src/ports/SkFontHost_cairo.cpp',
       # 'trunk/src/ports/SkFontHost_FreeType.cpp',
       # 'trunk/src/ports/SkFontHost_FreeType_common.cpp',
