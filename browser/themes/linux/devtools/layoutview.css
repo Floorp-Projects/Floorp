@@ -11,36 +11,40 @@
 }
 
 .theme-body {
-  color: hsl(210,100%,85%) !important;
+  color: hsl(210,53%,45%) !important;
   box-sizing: border-box;
 }
 
 #main {
+  background-color: white;
   border-color: hsla(210,100%,85%,0.7);
   border-style: dotted;
 }
 
-#main > .border {
-  color: hsl(210,53%,45%);
-}
-
-.border > span {
-  background-color: hsl(210,100%,85%);
-  border-radius: 2px;
-  padding: 0 4px;
-}
-
 #content {
-  border-color: hsla(210,100%,85%,0.7);
-  border-style: dotted 
+  background-color: #80d4ff;
+  border-color: hsl(210,100%,85%);
+  border-style: dotted;
+}
+
+#padding,
+#margins {
+  border-color: hsla(210,100%,85%,0.2);
+  outline: dotted 1px hsl(210,100%,85%);
 }
 
 #padding {
-  border-color: hsla(210,100%,85%,0.2);
-  border-style: solid;
+  background-color: #66cc52;
 }
 
 #borders {
-  border-style: solid;
+  background-color: #ffe431;
+  border-style: dotted;
   border-color: hsl(210,100%,85%);
+  box-shadow: 0 0 8px #000;
+}
+
+#margins {
+  background-color: #d89b28;
+  opacity: 0.6;
 }
