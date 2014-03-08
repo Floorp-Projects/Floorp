@@ -253,9 +253,7 @@ CPROJECT_TEMPLATE_FOOTER = """                                </configuration>
                 </scannerConfigBuildInfo>
         </storageModule>
         <storageModule moduleId="refreshScope" versionNumber="2">
-                <configuration configurationName="Default">
-                        <resource resourceType="PROJECT" workspacePath="/Gecko"/>
-                </configuration>
+                <configuration configurationName="Default"/>
         </storageModule>
         <storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
 </cproject>
@@ -298,6 +296,10 @@ LANGUAGE_SETTINGS_TEMPLATE = """<?xml version="1.0" encoding="UTF-8" standalone=
                                         </resource>
                                 </language>
                         </provider>
+                        <provider class="org.eclipse.cdt.internal.build.crossgcc.CrossGCCBuiltinSpecsDetector" console="false" env-hash="-859273372804152468" id="org.eclipse.cdt.build.crossgcc.CrossGCCBuiltinSpecsDetector" keep-relative-paths="false" name="CDT Cross GCC Built-in Compiler Settings" parameter="${COMMAND} ${FLAGS} -E -P -v -dD &quot;${INPUTS}&quot; -std=c++11" prefer-non-shared="true" store-entries-with-project="true">
+                             <language-scope id="org.eclipse.cdt.core.gcc"/>
+                             <language-scope id="org.eclipse.cdt.core.g++"/>
+                        </provider>
                         <provider-reference id="org.eclipse.cdt.managedbuilder.core.MBSLanguageSettingsProvider" ref="shared-provider"/>
                 </extension>
         </configuration>
@@ -325,7 +327,7 @@ LAUNCH_CONFIG_TEMPLATE = """<?xml version="1.0" encoding="UTF-8" standalone="no"
 <stringAttribute key="org.eclipse.cdt.launch.DEBUGGER_STOP_AT_MAIN_SYMBOL" value="main"/>
 <stringAttribute key="org.eclipse.cdt.launch.PROGRAM_ARGUMENTS" value="@LAUNCH_ARGS@"/>
 <stringAttribute key="org.eclipse.cdt.launch.PROGRAM_NAME" value="@LAUNCH_PROGRAM@"/>
-<stringAttribute key="org.eclipse.cdt.launch.PROJECT_ATTR" value="Gecko"/>
+<stringAttribute key="org.eclipse.cdt.launch.PROJECT_ATTR" value="gecko"/>
 <booleanAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_AUTO_ATTR" value="true"/>
 <stringAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_ID_ATTR" value=""/>
 <booleanAttribute key="org.eclipse.cdt.launch.use_terminal" value="true"/>
