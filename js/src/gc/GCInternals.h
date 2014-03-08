@@ -152,6 +152,9 @@ struct AutoStopVerifyingBarriers
 };
 #endif /* JS_GC_ZEAL */
 
+void
+CrashAtUnhandlableOOM(const char *reason);
+
 } /* namespace gc */
 } /* namespace js */
 
