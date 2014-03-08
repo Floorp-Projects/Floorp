@@ -74,11 +74,11 @@ IMEContentObserver::Init(nsIWidget* aWidget,
   NS_ENSURE_TRUE_VOID(selCon);
 
   selCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
-                       getter_AddRefs(mSel));
-  NS_ENSURE_TRUE_VOID(mSel);
+                       getter_AddRefs(mSelection));
+  NS_ENSURE_TRUE_VOID(mSelection);
 
   nsCOMPtr<nsIDOMRange> selDomRange;
-  if (NS_SUCCEEDED(mSel->GetRangeAt(0, getter_AddRefs(selDomRange)))) {
+  if (NS_SUCCEEDED(mSelection->GetRangeAt(0, getter_AddRefs(selDomRange)))) {
     nsRange* selRange = static_cast<nsRange*>(selDomRange.get());
     NS_ENSURE_TRUE_VOID(selRange && selRange->GetStartParent());
 
@@ -117,13 +117,13 @@ IMEContentObserver::Init(nsIWidget* aWidget,
 void
 IMEContentObserver::ObserveEditableNode()
 {
-  MOZ_ASSERT(mSel);
+  MOZ_ASSERT(mSelection);
   MOZ_ASSERT(mRootContent);
 
   mUpdatePreference = mWidget->GetIMEUpdatePreference();
   if (mUpdatePreference.WantSelectionChange()) {
     // add selection change listener
-    nsCOMPtr<nsISelectionPrivate> selPrivate(do_QueryInterface(mSel));
+    nsCOMPtr<nsISelectionPrivate> selPrivate(do_QueryInterface(mSelection));
     NS_ENSURE_TRUE_VOID(selPrivate);
     nsresult rv = selPrivate->AddSelectionListener(this);
     NS_ENSURE_SUCCESS_VOID(rv);
@@ -143,7 +143,7 @@ IMEContentObserver::ObserveEditableNode()
 }
 
 void
-IMEContentObserver::Destroy(void)
+IMEContentObserver::Destroy()
 {
   // If CreateTextStateManager failed, mRootContent will be null,
   // and we should not call NotifyIME(IMENotification(NOTIFY_IME_OF_BLUR))
@@ -157,12 +157,13 @@ IMEContentObserver::Destroy(void)
   }
   // Even if there are some pending notification, it'll never notify the widget.
   mWidget = nullptr;
-  if (mUpdatePreference.WantSelectionChange() && mSel) {
-    nsCOMPtr<nsISelectionPrivate> selPrivate(do_QueryInterface(mSel));
-    if (selPrivate)
+  if (mUpdatePreference.WantSelectionChange() && mSelection) {
+    nsCOMPtr<nsISelectionPrivate> selPrivate(do_QueryInterface(mSelection));
+    if (selPrivate) {
       selPrivate->RemoveSelectionListener(this);
+    }
   }
-  mSel = nullptr;
+  mSelection = nullptr;
   if (mUpdatePreference.WantTextChange() && mRootContent) {
     mRootContent->RemoveMutationObserver(this);
   }
@@ -180,7 +181,7 @@ bool
 IMEContentObserver::IsManaging(nsPresContext* aPresContext,
                                nsIContent* aContent)
 {
-  if (!mSel || !mRootContent || !mEditableNode) {
+  if (!mSelection || !mRootContent || !mEditableNode) {
     return false; // failed to initialize.
   }
   if (!mRootContent->IsInDoc()) {
@@ -204,6 +205,20 @@ IMEContentObserver::IsEditorHandlingEventForComposition() const
   return composition->IsEditorHandlingEvent();
 }
 
+nsresult
+IMEContentObserver::GetSelectionAndRoot(nsISelection** aSelection,
+                                        nsIContent** aRootContent) const
+{
+  if (!mEditableNode || !mSelection) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  NS_ASSERTION(mSelection && mRootContent, "uninitialized content observer");
+  NS_ADDREF(*aSelection = mSelection);
+  NS_ADDREF(*aRootContent = mRootContent);
+  return NS_OK;
+}
+
 // Helper class, used for selection change notification
 class SelectionChangeEvent : public nsRunnable
 {
@@ -218,11 +233,11 @@ public:
 
   NS_IMETHOD Run()
   {
-    if (mDispatcher->mWidget) {
+    if (mDispatcher->GetWidget()) {
       IMENotification notification(NOTIFY_IME_OF_SELECTION_CHANGE);
       notification.mSelectionChangeData.mCausedByComposition =
          mCausedByComposition;
-      mDispatcher->mWidget->NotifyIME(notification);
+      mDispatcher->GetWidget()->NotifyIME(notification);
     }
     return NS_OK;
   }
@@ -233,8 +248,8 @@ private:
 };
 
 nsresult
-IMEContentObserver::NotifySelectionChanged(nsIDOMDocument* aDoc,
-                                           nsISelection* aSel,
+IMEContentObserver::NotifySelectionChanged(nsIDOMDocument* aDOMDocument,
+                                           nsISelection* aSelection,
                                            int16_t aReason)
 {
   bool causedByComposition = IsEditorHandlingEventForComposition();
@@ -244,7 +259,7 @@ IMEContentObserver::NotifySelectionChanged(nsIDOMDocument* aDoc,
   }
 
   int32_t count = 0;
-  nsresult rv = aSel->GetRangeCount(&count);
+  nsresult rv = aSelection->GetRangeCount(&count);
   NS_ENSURE_SUCCESS(rv, rv);
   if (count > 0 && mWidget) {
     nsContentUtils::AddScriptRunner(
@@ -265,8 +280,8 @@ public:
 
   NS_IMETHOD Run()
   {
-    if (mDispatcher->mWidget) {
-      mDispatcher->mWidget->NotifyIME(
+    if (mDispatcher->GetWidget()) {
+      mDispatcher->GetWidget()->NotifyIME(
         IMENotification(NOTIFY_IME_OF_POSITION_CHANGE));
     }
     return NS_OK;
@@ -322,13 +337,13 @@ public:
 
   NS_IMETHOD Run()
   {
-    if (mDispatcher->mWidget) {
+    if (mDispatcher->GetWidget()) {
       IMENotification notification(NOTIFY_IME_OF_TEXT_CHANGE);
       notification.mTextChangeData.mStartOffset = mStart;
       notification.mTextChangeData.mOldEndOffset = mOldEnd;
       notification.mTextChangeData.mNewEndOffset = mNewEnd;
       notification.mTextChangeData.mCausedByComposition = mCausedByComposition;
-      mDispatcher->mWidget->NotifyIME(notification);
+      mDispatcher->GetWidget()->NotifyIME(notification);
     }
     return NS_OK;
   }
@@ -355,9 +370,11 @@ IMEContentObserver::CharacterDataChanged(nsIDocument* aDocument,
 
   uint32_t offset = 0;
   // get offsets of change and fire notification
-  if (NS_FAILED(nsContentEventHandler::GetFlatTextOffsetOfRange(
-                    mRootContent, aContent, aInfo->mChangeStart, &offset)))
-    return;
+  nsresult rv =
+    nsContentEventHandler::GetFlatTextOffsetOfRange(mRootContent, aContent,
+                                                    aInfo->mChangeStart,
+                                                    &offset);
+  NS_ENSURE_SUCCESS_VOID(rv);
 
   uint32_t oldEnd = offset + aInfo->mChangeEnd - aInfo->mChangeStart;
   uint32_t newEnd = offset + aInfo->mReplaceLength;
@@ -377,23 +394,27 @@ IMEContentObserver::NotifyContentAdded(nsINode* aContainer,
     return;
   }
 
-  uint32_t offset = 0, newOffset = 0;
-  if (NS_FAILED(nsContentEventHandler::GetFlatTextOffsetOfRange(
-                    mRootContent, aContainer, aStartIndex, &offset)))
-    return;
+  uint32_t offset = 0;
+  nsresult rv =
+    nsContentEventHandler::GetFlatTextOffsetOfRange(mRootContent, aContainer,
+                                                    aStartIndex, &offset);
+  NS_ENSURE_SUCCESS_VOID(rv);
 
   // get offset at the end of the last added node
-  if (NS_FAILED(nsContentEventHandler::GetFlatTextOffsetOfRange(
-                    aContainer->GetChildAt(aStartIndex),
-                    aContainer, aEndIndex, &newOffset)))
-    return;
+  nsIContent* childAtStart = aContainer->GetChildAt(aStartIndex);
+  uint32_t addingLength = 0;
+  rv =
+    nsContentEventHandler::GetFlatTextOffsetOfRange(childAtStart, aContainer,
+                                                    aEndIndex, &addingLength);
+  NS_ENSURE_SUCCESS_VOID(rv);
 
-  // fire notification
-  if (newOffset) {
-    nsContentUtils::AddScriptRunner(
-      new TextChangeEvent(this, offset, offset, offset + newOffset,
-                          causedByComposition));
+  if (!addingLength) {
+    return;
   }
+
+  nsContentUtils::AddScriptRunner(
+    new TextChangeEvent(this, offset, offset, offset + addingLength,
+                        causedByComposition));
 }
 
 void
@@ -429,28 +450,33 @@ IMEContentObserver::ContentRemoved(nsIDocument* aDocument,
     return;
   }
 
-  uint32_t offset = 0, childOffset = 1;
-  if (NS_FAILED(nsContentEventHandler::GetFlatTextOffsetOfRange(
-                    mRootContent, NODE_FROM(aContainer, aDocument),
-                    aIndexInContainer, &offset)))
-    return;
+  uint32_t offset = 0;
+  nsresult rv =
+    nsContentEventHandler::GetFlatTextOffsetOfRange(mRootContent,
+                                                    NODE_FROM(aContainer,
+                                                              aDocument),
+                                                    aIndexInContainer, &offset);
+  NS_ENSURE_SUCCESS_VOID(rv);
 
   // get offset at the end of the deleted node
-  if (aChild->IsNodeOfType(nsINode::eTEXT))
-    childOffset = aChild->TextLength();
-  else if (0 < aChild->GetChildCount())
-    childOffset = aChild->GetChildCount();
+  int32_t nodeLength =
+    aChild->IsNodeOfType(nsINode::eTEXT) ?
+      static_cast<int32_t>(aChild->TextLength()) :
+      std::max(static_cast<int32_t>(aChild->GetChildCount()), 1);
+  MOZ_ASSERT(nodeLength >= 0, "The node length is out of range");
+  uint32_t textLength = 0;
+  rv =
+    nsContentEventHandler::GetFlatTextOffsetOfRange(aChild, aChild,
+                                                    nodeLength, &textLength);
+  NS_ENSURE_SUCCESS_VOID(rv);
 
-  if (NS_FAILED(nsContentEventHandler::GetFlatTextOffsetOfRange(
-                    aChild, aChild, childOffset, &childOffset)))
+  if (!textLength) {
     return;
-
-  // fire notification
-  if (childOffset) {
-    nsContentUtils::AddScriptRunner(
-      new TextChangeEvent(this, offset, offset + childOffset, offset,
-                          causedByComposition));
   }
+
+  nsContentUtils::AddScriptRunner(
+    new TextChangeEvent(this, offset, offset + textLength, offset,
+                        causedByComposition));
 }
 
 static nsIContent*
@@ -459,7 +485,7 @@ GetContentBR(dom::Element* aElement)
   if (!aElement->IsNodeOfType(nsINode::eCONTENT)) {
     return nullptr;
   }
-  nsIContent *content = static_cast<nsIContent*>(aElement);
+  nsIContent* content = static_cast<nsIContent*>(aElement);
   return content->IsHTML(nsGkAtoms::br) ? content : nullptr;
 }
 
@@ -492,17 +518,21 @@ IMEContentObserver::AttributeChanged(nsIDocument* aDocument,
   if (!content) {
     return;
   }
+
   uint32_t postAttrChangeLength =
     nsContentEventHandler::GetNativeTextLength(content);
-  if (postAttrChangeLength != mPreAttrChangeLength) {
-    uint32_t start;
-    if (NS_SUCCEEDED(nsContentEventHandler::GetFlatTextOffsetOfRange(
-        mRootContent, content, 0, &start))) {
-      nsContentUtils::AddScriptRunner(new TextChangeEvent(this, start,
-        start + mPreAttrChangeLength, start + postAttrChangeLength,
-        causedByComposition));
-    }
+  if (postAttrChangeLength == mPreAttrChangeLength) {
+    return;
   }
+  uint32_t start;
+  nsresult rv =
+    nsContentEventHandler::GetFlatTextOffsetOfRange(mRootContent, content,
+                                                    0, &start);
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  nsContentUtils::AddScriptRunner(
+    new TextChangeEvent(this, start, start + mPreAttrChangeLength,
+                        start + postAttrChangeLength, causedByComposition));
 }
 
 } // namespace mozilla
