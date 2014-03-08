@@ -182,7 +182,7 @@ CacheFileChunk::InitNew(CacheFileChunkListener *aCallback)
 
 nsresult
 CacheFileChunk::Read(CacheFileHandle *aHandle, uint32_t aLen,
-                     CacheHashUtils::Hash16_t aHash,
+                     CacheHash::Hash16_t aHash,
                      CacheFileChunkListener *aCallback)
 {
   mFile->AssertOwnsLock();
@@ -342,7 +342,7 @@ CacheFileChunk::Index()
   return mIndex;
 }
 
-CacheHashUtils::Hash16_t
+CacheHash::Hash16_t
 CacheFileChunk::Hash()
 {
   mFile->AssertOwnsLock();
@@ -351,7 +351,7 @@ CacheFileChunk::Hash()
   MOZ_ASSERT(!mListener);
   MOZ_ASSERT(IsReady());
 
-  return CacheHashUtils::Hash16(BufForReading(), mDataSize);
+  return CacheHash::Hash16(BufForReading(), mDataSize);
 }
 
 uint32_t
@@ -517,8 +517,7 @@ CacheFileChunk::OnDataRead(CacheFileHandle *aHandle, char *aBuf,
     MOZ_ASSERT(mListener);
 
     if (NS_SUCCEEDED(aResult)) {
-      CacheHashUtils::Hash16_t hash = CacheHashUtils::Hash16(mRWBuf,
-                                                             mRWBufSize);
+      CacheHash::Hash16_t hash = CacheHash::Hash16(mRWBuf, mRWBufSize);
       if (hash != mReadHash) {
         LOG(("CacheFileChunk::OnDataRead() - Hash mismatch! Hash of the data is"
              " %hx, hash in metadata is %hx. [this=%p, idx=%d]",
@@ -590,8 +589,15 @@ CacheFileChunk::OnEOFSet(CacheFileHandle *aHandle, nsresult aResult)
   return NS_ERROR_UNEXPECTED;
 }
 
+nsresult
+CacheFileChunk::OnFileRenamed(CacheFileHandle *aHandle, nsresult aResult)
+{
+  MOZ_CRASH("CacheFileChunk::OnFileRenamed should not be called!");
+  return NS_ERROR_UNEXPECTED;
+}
+
 bool
-CacheFileChunk::IsReady()
+CacheFileChunk::IsReady() const
 {
   mFile->AssertOwnsLock();
 
@@ -599,7 +605,7 @@ CacheFileChunk::IsReady()
 }
 
 bool
-CacheFileChunk::IsDirty()
+CacheFileChunk::IsDirty() const
 {
   mFile->AssertOwnsLock();
 
@@ -607,7 +613,7 @@ CacheFileChunk::IsDirty()
 }
 
 char *
-CacheFileChunk::BufForWriting()
+CacheFileChunk::BufForWriting() const
 {
   mFile->AssertOwnsLock();
 
@@ -621,7 +627,7 @@ CacheFileChunk::BufForWriting()
 }
 
 const char *
-CacheFileChunk::BufForReading()
+CacheFileChunk::BufForReading() const
 {
   mFile->AssertOwnsLock();
 
@@ -669,6 +675,25 @@ CacheFileChunk::EnsureBufSize(uint32_t aBufSize)
     memcpy(mBuf, mRWBuf, mRWBufSize);
 
   DoMemoryReport(MemorySize());
+}
+
+// Memory reporting
+
+size_t
+CacheFileChunk::SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
+{
+  size_t n = 0;
+  n += mallocSizeOf(mBuf);
+  n += mallocSizeOf(mRWBuf);
+  n += mValidityMap.SizeOfExcludingThis(mallocSizeOf);
+
+  return n;
+}
+
+size_t
+CacheFileChunk::SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
+{
+  return mallocSizeOf(this) + SizeOfExcludingThis(mallocSizeOf);
 }
 
 } // net

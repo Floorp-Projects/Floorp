@@ -6,7 +6,7 @@
 
 function boom()
 {
-  var bufferSource = AudioContext().createScriptProcessor().context.createBufferSource();
+  var bufferSource = new AudioContext().createScriptProcessor().context.createBufferSource();
   bufferSource.start(0, 0, 0);
   bufferSource.stop(562949953421313);
 }

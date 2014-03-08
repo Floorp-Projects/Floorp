@@ -275,7 +275,6 @@ class TextureHost
   void Finalize();
 
   friend class AtomicRefCountedWithFinalize<TextureHost>;
-
 public:
   TextureHost(TextureFlags aFlags);
 

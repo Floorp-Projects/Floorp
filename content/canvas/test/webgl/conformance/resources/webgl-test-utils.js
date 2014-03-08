@@ -218,6 +218,40 @@ var setupUnitQuad = function(gl, opt_positionLocation, opt_texcoordLocation) {
 };
 
 /**
+ * Draws a previously setupUnitQuad.
+ * @param {!WebGLContext} gl The WebGLContext to use.
+ */
+var drawUnitQuad = function(gl) {
+  gl.drawArrays(gl.TRIANGLES, 0, 6);
+};
+
+/**
+ * Clears then Draws a previously setupUnitQuad.
+ * @param {!WebGLContext} gl The WebGLContext to use.
+ * @param {!Array.<number>} opt_color The color to fill clear with before
+ * drawing. A 4 element array where each element is in the range 0 to
+ * 255. Default [255, 255, 255, 255]
+ */
+var clearAndDrawUnitQuad = function(gl, opt_color) {
+  opt_color = opt_color || [255, 255, 255, 255];
+
+  // Save and restore.
+  var prevClearColor = gl.getParameter(gl.COLOR_CLEAR_VALUE);
+
+  gl.clearColor(opt_color[0] / 255,
+                opt_color[1] / 255,
+                opt_color[2] / 255,
+                opt_color[3] / 255);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+  drawUnitQuad(gl);
+
+  gl.clearColor(prevClearColor[0],
+                prevClearColor[1],
+                prevClearColor[2],
+                prevClearColor[3]);
+};
+
+/**
  * Creates buffers for a textured unit quad with specified lower left
  * and upper right texture coordinates, and attaches them to vertex
  * attribs.
@@ -647,7 +681,7 @@ var glErrorShouldBe = function(gl, glError, opt_msg) {
  * Links a WebGL program, throws if there are errors.
  * @param {!WebGLContext} gl The WebGLContext to use.
  * @param {!WebGLProgram} program The WebGLProgram to link.
- * @param {function(string): void) opt_errorCallback callback for errors. 
+ * @param {function(string): void) opt_errorCallback callback for errors.
  */
 var linkProgram = function(gl, program, opt_errorCallback) {
   errFn = opt_errorCallback || testFailed;
@@ -963,8 +997,8 @@ var readFileList = function(url) {
  * Loads a shader.
  * @param {!WebGLContext} gl The WebGLContext to use.
  * @param {string} shaderSource The shader source.
- * @param {number} shaderType The type of shader. 
- * @param {function(string): void) opt_errorCallback callback for errors. 
+ * @param {number} shaderType The type of shader.
+ * @param {function(string): void) opt_errorCallback callback for errors.
  * @return {!WebGLShader} The created shader.
  */
 var loadShader = function(gl, shaderSource, shaderType, opt_errorCallback) {
@@ -1005,7 +1039,7 @@ var loadShader = function(gl, shaderSource, shaderType, opt_errorCallback) {
  * @param {!WebGLContext} gl The WebGLContext to use.
  * @param {file} file The URL of the shader source.
  * @param {number} type The type of shader.
- * @param {function(string): void) opt_errorCallback callback for errors. 
+ * @param {function(string): void) opt_errorCallback callback for errors.
  * @return {!WebGLShader} The created shader.
  */
 var loadShaderFromFile = function(gl, file, type, opt_errorCallback) {
@@ -1030,7 +1064,7 @@ var getScript = function(scriptId) {
  * @param {string} scriptId The id of the script tag.
  * @param {number} opt_shaderType The type of shader. If not passed in it will
  *     be derived from the type of the script tag.
- * @param {function(string): void) opt_errorCallback callback for errors. 
+ * @param {function(string): void) opt_errorCallback callback for errors.
  * @return {!WebGLShader} The created shader.
  */
 var loadShaderFromScript = function(
@@ -1072,7 +1106,7 @@ var loadStandardProgram = function(gl) {
  * @param {!WebGLContext} gl The WebGLContext to use.
  * @param {string} vertexShaderPath The URL of the vertex shader.
  * @param {string} fragmentShaderPath The URL of the fragment shader.
- * @param {function(string): void) opt_errorCallback callback for errors. 
+ * @param {function(string): void) opt_errorCallback callback for errors.
  * @return {!WebGLProgram} The created program.
  */
 var loadProgramFromFile = function(
@@ -1098,7 +1132,7 @@ var loadProgramFromFile = function(
  *        vertex shader.
  * @param {string} fragmentScriptId The id of the script tag that contains the
  *        fragment shader.
- * @param {function(string): void) opt_errorCallback callback for errors. 
+ * @param {function(string): void) opt_errorCallback callback for errors.
  * @return {!WebGLProgram} The created program.
  */
 var loadProgramFromScript = function loadProgramFromScript(
@@ -1122,7 +1156,7 @@ var loadProgramFromScript = function loadProgramFromScript(
  * @param {!WebGLContext} gl The WebGLContext to use.
  * @param {string} vertexShader The vertex shader.
  * @param {string} fragmentShader The fragment shader.
- * @param {function(string): void) opt_errorCallback callback for errors. 
+ * @param {function(string): void) opt_errorCallback callback for errors.
  * @return {!WebGLProgram} The created program.
  */
 var loadProgram = function(
@@ -1313,6 +1347,7 @@ var addShaderSource = function(element, label, source) {
 
 return {
   addShaderSource: addShaderSource,
+  clearAndDrawUnitQuad : clearAndDrawUnitQuad,
   create3DContext: create3DContext,
   create3DContextWithWrapperThatThrowsOnGLError:
     create3DContextWithWrapperThatThrowsOnGLError,
@@ -1320,6 +1355,7 @@ return {
   checkCanvasRect: checkCanvasRect,
   createColoredTexture: createColoredTexture,
   drawQuad: drawQuad,
+  drawUnitQuad: drawUnitQuad,
   endsWith: endsWith,
   getExtensionWithKnownPrefixes: getExtensionWithKnownPrefixes,
   getFileListAsync: getFileListAsync,

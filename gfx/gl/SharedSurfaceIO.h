@@ -21,38 +21,42 @@ public:
 
     ~SharedSurface_IOSurface();
 
-    virtual void LockProdImpl() { }
-    virtual void UnlockProdImpl() { }
+    virtual void LockProdImpl() MOZ_OVERRIDE { }
+    virtual void UnlockProdImpl() MOZ_OVERRIDE { }
 
-    virtual void Fence();
-    virtual bool WaitSync() { return true; }
+    virtual void Fence() MOZ_OVERRIDE;
+    virtual bool WaitSync() MOZ_OVERRIDE { return true; }
 
     virtual bool ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height,
                             GLenum format, GLenum type, GLvoid *pixels) MOZ_OVERRIDE;
 
-    virtual GLuint Texture() const
-    {
-        return mTexture;
+    virtual GLuint ProdTexture() MOZ_OVERRIDE {
+        return mProdTex;
     }
 
-    virtual GLenum TextureTarget() const {
+    virtual GLenum ProdTextureTarget() const MOZ_OVERRIDE {
         return LOCAL_GL_TEXTURE_RECTANGLE_ARB;
     }
 
-    static SharedSurface_IOSurface* Cast(SharedSurface *surf)
-    {
+    static SharedSurface_IOSurface* Cast(SharedSurface *surf) {
         MOZ_ASSERT(surf->Type() == SharedSurfaceType::IOSurface);
         return static_cast<SharedSurface_IOSurface*>(surf);
     }
 
-    MacIOSurface* GetIOSurface() { return mSurface; }
+    GLuint ConsTexture(GLContext* consGL);
+
+    GLenum ConsTextureTarget() const {
+        return LOCAL_GL_TEXTURE_RECTANGLE_ARB;
+    }
 
 private:
     SharedSurface_IOSurface(MacIOSurface* surface, GLContext* gl, const gfx::IntSize& size, bool hasAlpha);
 
     RefPtr<MacIOSurface> mSurface;
     nsRefPtr<gfxImageSurface> mImageSurface;
-    GLuint mTexture;
+    GLuint mProdTex;
+    const GLContext* mCurConsGL;
+    GLuint mConsTex;
 };
 
 class SurfaceFactory_IOSurface : public SurfaceFactory_GL

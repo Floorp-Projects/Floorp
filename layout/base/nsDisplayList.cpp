@@ -625,15 +625,6 @@ static void UnmarkFrameForDisplay(nsIFrame* aFrame) {
   }
 }
 
-static void AdjustForScrollBars(ScreenIntRect& aToAdjust, nsIScrollableFrame* aScrollableFrame) {
-  if (aScrollableFrame && !LookAndFeel::GetInt(LookAndFeel::eIntID_UseOverlayScrollbars)) {
-    nsMargin sizes = aScrollableFrame->GetActualScrollbarSizes();
-    // Scrollbars are not subject to scaling, so CSS pixels = screen pixels for them.
-    ScreenIntMargin boundMargins = RoundedToInt(CSSMargin::FromAppUnits(sizes) * CSSToScreenScale(1.0f));
-    aToAdjust.Deflate(boundMargins);
-  }
-}
-
 static bool gPrintApzcTree = false;
 
 static bool GetApzcTreePrintPref() {
@@ -759,33 +750,41 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
   nsRect compositionBounds(frameForCompositionBoundsCalculation->GetOffsetToCrossDoc(aReferenceFrame),
                            frameForCompositionBoundsCalculation->GetSize());
   metrics.mCompositionBounds = RoundedToInt(LayoutDeviceRect::FromAppUnits(compositionBounds, auPerDevPixel)
-                             * metrics.mCumulativeResolution
-                             * layerToScreenScale);
+                             * metrics.GetParentResolution());
 
-  // For the root scroll frame of the root content document, clamp the
-  // composition bounds to the widget bounds. This is necessary because, if
-  // the page is zoomed in, the frame's size might be larger than the widget
-  // bounds, but we don't want the composition bounds to be.
-  bool useWidgetBounds = false;
+  // For the root scroll frame of the root content document, the above calculation
+  // will yield the size of the viewport frame as the composition bounds, which
+  // doesn't actually correspond to what is visible when
+  // nsIDOMWindowUtils::setCSSViewport has been called to modify the visible area of
+  // the prescontext that the viewport frame is reflowed into. In that case if our
+  // document has a widget then the widget's bounds will correspond to what is
+  // visible. If we don't have a widget the root view's bounds correspond to what
+  // would be visible because they don't get modified by setCSSViewport.
   bool isRootContentDocRootScrollFrame = presContext->IsRootContentDocument()
                                       && aScrollFrame == presShell->GetRootScrollFrame();
   if (isRootContentDocRootScrollFrame) {
-    if (nsIWidget* widget = aForFrame->GetNearestWidget()) {
-      nsIntRect bounds;
-      widget->GetBounds(bounds);
-      ScreenIntRect screenBounds = ScreenIntRect::FromUnknownRect(mozilla::gfx::IntRect(
-          bounds.x, bounds.y, bounds.width, bounds.height));
-      AdjustForScrollBars(screenBounds, scrollableFrame);
-      metrics.mCompositionBounds = metrics.mCompositionBounds.ForceInside(screenBounds);
-      useWidgetBounds = true;
+    if (nsIFrame* rootFrame = presShell->GetRootFrame()) {
+      if (nsView* view = rootFrame->GetView()) {
+        nsIWidget* widget = view->GetWidget();
+        if (widget) {
+          nsIntRect bounds;
+          widget->GetBounds(bounds);
+          metrics.mCompositionBounds = ParentLayerIntRect::FromUnknownRect(mozilla::gfx::IntRect(
+              bounds.x, bounds.y, bounds.width, bounds.height));
+        } else {
+          metrics.mCompositionBounds = RoundedToInt(LayoutDeviceRect::FromAppUnits(view->GetBounds(), auPerDevPixel)
+                                     * metrics.GetParentResolution());
+        }
+      }
     }
   }
 
   // Adjust composition bounds for the size of scroll bars.
-  // If the widget bounds were used to clamp the composition bounds,
-  // this adjustment was already made to the widget bounds.
-  if (!useWidgetBounds) {
-    AdjustForScrollBars(metrics.mCompositionBounds, scrollableFrame);
+  if (scrollableFrame && !LookAndFeel::GetInt(LookAndFeel::eIntID_UseOverlayScrollbars)) {
+    nsMargin sizes = scrollableFrame->GetActualScrollbarSizes();
+    // Scrollbars are not subject to scaling, so CSS pixels = layer pixels for them.
+    ParentLayerIntMargin boundMargins = RoundedToInt(CSSMargin::FromAppUnits(sizes) * CSSToParentLayerScale(1.0f));
+    metrics.mCompositionBounds.Deflate(boundMargins);
   }
 
   if (GetApzcTreePrintPref()) {
@@ -2432,6 +2431,7 @@ nsDisplayThemedBackground::Paint(nsDisplayListBuilder* aBuilder,
   PaintInternal(aBuilder, aCtx, mVisibleRect, nullptr);
 }
 
+
 void
 nsDisplayThemedBackground::PaintInternal(nsDisplayListBuilder* aBuilder,
                                          nsRenderingContext* aCtx, const nsRect& aBounds,
@@ -2445,7 +2445,11 @@ nsDisplayThemedBackground::PaintInternal(nsDisplayListBuilder* aBuilder,
   theme->GetWidgetOverflow(presContext->DeviceContext(), mFrame, mAppearance,
                            &drawing);
   drawing.IntersectRect(drawing, aBounds);
-  theme->DrawWidgetBackground(aCtx, mFrame, mAppearance, borderArea, drawing);
+  nsIntRegion clear;
+  theme->DrawWidgetBackground(aCtx, mFrame, mAppearance, borderArea, drawing, &clear);
+  MOZ_ASSERT(clear.IsEmpty() || ReferenceFrame() == aBuilder->RootReferenceFrame(),
+             "Can't add to clear region if we're transformed!");
+  aBuilder->AddRegionToClear(clear);
 }
 
 bool nsDisplayThemedBackground::IsWindowActive()

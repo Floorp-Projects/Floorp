@@ -246,6 +246,12 @@ HTMLAudioElement::CanPlayChanged(int32_t canPlay)
 }
 
 NS_IMETHODIMP
+HTMLAudioElement::WindowVolumeChanged()
+{
+  return HTMLMediaElement::WindowVolumeChanged();
+}
+
+NS_IMETHODIMP
 HTMLAudioElement::Notify(nsITimer* aTimer)
 {
 #ifdef MOZ_B2G
@@ -274,7 +280,8 @@ HTMLAudioElement::UpdateAudioChannelPlayingState()
         return;
       }
       // Use a weak ref so the audio channel agent can't leak |this|.
-      mAudioChannelAgent->InitWithWeakCallback(mAudioChannelType, this);
+      mAudioChannelAgent->InitWithWeakCallback(OwnerDoc()->GetWindow(),
+                                               mAudioChannelType, this);
 
       mAudioChannelAgent->SetVisibilityState(!OwnerDoc()->Hidden());
     }

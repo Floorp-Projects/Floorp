@@ -1147,10 +1147,18 @@ function doTestZoom(aSettings, aCallback)
 
 function doTestZoomedScroll(aCallback)
 {
+  var zoom = 1.0;
+  function setFullZoom(aWindow, aZoom)
+  {
+    zoom = aZoom;
+    SpecialPowers.setFullZoom(aWindow, aZoom);
+  }
+
   function prepareTestZoomedPixelScroll()
   {
     // Reset zoom and store the scroll amount into the data.
     synthesizeKey("0", { accelKey: true });
+    zoom = 1.0;
     onZoomReset(testZoomedPixelScroll);
   }
 
@@ -1160,7 +1168,7 @@ function doTestZoomedScroll(aCallback)
     gScrollableElement.scrollLeft = 1000;
     // Ensure not to be in reflow.
     hitEventLoop(function () {
-      function handler(aEvent)
+      function mousePixelScrollHandler(aEvent)
       {
         if (aEvent.axis == MouseScrollEvent.HORIZONTAL_AXIS) {
           is(aEvent.detail, 16,
@@ -1172,7 +1180,15 @@ function doTestZoomedScroll(aCallback)
           ok(false, "doTestZoomedScroll: The axis of MozMousePixelScroll for pixel wheel event is invalid, got " + aEvent.axis);
         }
       }
-      window.addEventListener("MozMousePixelScroll", handler, true);
+      function wheelHandler(aEvent)
+      {
+        is(aEvent.deltaX, 16.0 / zoom,
+           "doTestZoomedScroll: The deltaX of wheel for pixel is wrong");
+        is(aEvent.deltaY, 16.0 / zoom,
+           "doTestZoomedScroll: The deltaY of wheel for pixel is wrong");
+      }
+      window.addEventListener("MozMousePixelScroll", mousePixelScrollHandler, true);
+      window.addEventListener("wheel", wheelHandler, true);
       synthesizeWheel(gScrollableElement, 10, 10,
         { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
           deltaX: 16.0, deltaY: 16.0, lineOrPageDeltaX: 0, lineOrPageDeltaY: 0 });
@@ -1186,7 +1202,7 @@ function doTestZoomedScroll(aCallback)
            "doTestZoomedScroll: scrolledY must be larger than 1000 for pixel wheel event, got " + scrolledY);
 
         // Zoom
-        SpecialPowers.setFullZoom(window, 2.0);
+        setFullZoom(window, 2.0);
         // Ensure not to be in reflow.
         hitEventLoop(function () {
           gScrollableElement.scrollTop = 1000;
@@ -1202,7 +1218,8 @@ function doTestZoomedScroll(aCallback)
             ok(Math.abs(gScrollableElement.scrollTop - (1000 + (scrolledY - 1000) / 2)) <= 1,
                "doTestZoomedScroll: zoomed vertical scroll amount by pixel wheel event is different from normal, scrollTop=" +
                  gScrollableElement.scrollTop + ", scrolledY=" + scrolledY);
-            window.removeEventListener("MozMousePixelScroll", handler, true);
+            window.removeEventListener("MozMousePixelScroll", mousePixelScrollHandler, true);
+            window.removeEventListener("wheel", wheelHandler, true);
 
             synthesizeKey("0", { accelKey: true });
             onZoomReset(prepareTestZoomedLineScroll);
@@ -1216,6 +1233,7 @@ function doTestZoomedScroll(aCallback)
   {
     // Reset zoom and store the scroll amount into the data.
     synthesizeKey("0", { accelKey: true });
+    zoom = 1.0;
     onZoomReset(testZoomedLineScroll);
   }
   function testZoomedLineScroll()
@@ -1261,7 +1279,7 @@ function doTestZoomedScroll(aCallback)
            "doTestZoomedScroll: scrolledY must be larger than 1000 for line wheel event, got " + scrolledY);
 
         // Zoom
-        SpecialPowers.setFullZoom(window, 2.0);
+        setFullZoom(window, 2.0);
         // Ensure not to be in reflow.
         hitEventLoop(function () {
           gScrollableElement.scrollTop = 1000;

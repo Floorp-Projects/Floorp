@@ -222,6 +222,7 @@ class TreeMetadataEmitter(LoggingMixin):
             'EXTRA_ASSEMBLER_FLAGS',
             'EXTRA_COMPILE_FLAGS',
             'EXTRA_COMPONENTS',
+            'EXTRA_DSO_LDOPTS',
             'EXTRA_JS_MODULES',
             'EXTRA_PP_COMPONENTS',
             'EXTRA_PP_JS_MODULES',

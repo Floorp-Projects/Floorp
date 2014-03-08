@@ -20,6 +20,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/ipc/URIUtils.h"
+#include "mozilla/net/ChannelDiverterChild.h"
 #include "mozilla/net/DNS.h"
 #include "SerializedLoadContext.h"
 
@@ -41,6 +42,9 @@ HttpChannelChild::HttpChannelChild()
   , mSendResumeAt(false)
   , mIPCOpen(false)
   , mKeptAlive(false)
+  , mDivertingToParent(false)
+  , mFlushedForDiversion(false)
+  , mSuspendSent(false)
 {
   LOG(("Creating HttpChannelChild @%x\n", this));
 
@@ -102,6 +106,7 @@ NS_INTERFACE_MAP_BEGIN(HttpChannelChild)
   NS_INTERFACE_MAP_ENTRY(nsIChildChannel)
   NS_INTERFACE_MAP_ENTRY(nsIHttpChannelChild)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIAssociatedContentSecurity, GetAssociatedContentSecurity())
+  NS_INTERFACE_MAP_ENTRY(nsIDivertableChannel)
 NS_INTERFACE_MAP_END_INHERITING(HttpBaseChannel)
 
 //-----------------------------------------------------------------------------
@@ -226,6 +231,13 @@ HttpChannelChild::RecvOnStartRequest(const nsHttpResponseHead& responseHead,
                                      const NetAddr& selfAddr,
                                      const NetAddr& peerAddr)
 {
+  // mFlushedForDiversion and mDivertingToParent should NEVER be set at this
+  // stage, as they are set in the listener's OnStartRequest.
+  MOZ_RELEASE_ASSERT(!mFlushedForDiversion,
+    "mFlushedForDiversion should be unset before OnStartRequest!");
+  MOZ_RELEASE_ASSERT(!mDivertingToParent,
+    "mDivertingToParent should be unset before OnStartRequest!");
+
   if (mEventQ->ShouldEnqueue()) {
     mEventQ->Enqueue(new StartRequestEvent(this, responseHead, useResponseHead,
                                           requestHeaders, isFromCache,
@@ -254,6 +266,13 @@ HttpChannelChild::OnStartRequest(const nsHttpResponseHead& responseHead,
                                  const NetAddr& peerAddr)
 {
   LOG(("HttpChannelChild::RecvOnStartRequest [this=%p]\n", this));
+
+  // mFlushedForDiversion and mDivertingToParent should NEVER be set at this
+  // stage, as they are set in the listener's OnStartRequest.
+  MOZ_RELEASE_ASSERT(!mFlushedForDiversion,
+    "mFlushedForDiversion should be unset before OnStartRequest!");
+  MOZ_RELEASE_ASSERT(!mDivertingToParent,
+    "mDivertingToParent should be unset before OnStartRequest!");
 
   if (useResponseHead && !mCanceled)
     mResponseHead = new nsHttpResponseHead(responseHead);
@@ -284,6 +303,14 @@ HttpChannelChild::OnStartRequest(const nsHttpResponseHead& responseHead,
   if (NS_FAILED(rv)) {
     Cancel(rv);
     return;
+  }
+
+  if (mDivertingToParent) {
+    mListener = nullptr;
+    mListenerContext = nullptr;
+    if (mLoadGroup) {
+      mLoadGroup->RemoveRequest(this, nullptr, mStatus);
+    }
   }
 
   if (mResponseHead)
@@ -335,11 +362,17 @@ HttpChannelChild::RecvOnTransportAndData(const nsresult& status,
                                          const uint64_t& offset,
                                          const uint32_t& count)
 {
+  MOZ_RELEASE_ASSERT(!mFlushedForDiversion,
+                     "Should not be receiving any more callbacks from parent!");
+
   if (mEventQ->ShouldEnqueue()) {
     mEventQ->Enqueue(new TransportAndDataEvent(this, status, progress,
                                               progressMax, data, offset,
                                               count));
   } else {
+    MOZ_RELEASE_ASSERT(!mDivertingToParent,
+                       "ShouldEnqueue when diverting to parent!");
+
     OnTransportAndData(status, progress, progressMax, data, offset, count);
   }
   return true;
@@ -354,6 +387,15 @@ HttpChannelChild::OnTransportAndData(const nsresult& status,
                                      const uint32_t& count)
 {
   LOG(("HttpChannelChild::OnTransportAndData [this=%p]\n", this));
+
+  // For diversion to parent, just SendDivertOnDataAvailable.
+  if (mDivertingToParent) {
+    MOZ_RELEASE_ASSERT(!mFlushedForDiversion,
+      "Should not be processing any more callbacks from parent!");
+
+    SendDivertOnDataAvailable(data, offset, count);
+    return;
+  }
 
   if (mCanceled)
     return;
@@ -431,9 +473,14 @@ class StopRequestEvent : public ChannelEvent
 bool
 HttpChannelChild::RecvOnStopRequest(const nsresult& statusCode)
 {
+  MOZ_RELEASE_ASSERT(!mFlushedForDiversion,
+    "Should not be receiving any more callbacks from parent!");
+
   if (mEventQ->ShouldEnqueue()) {
     mEventQ->Enqueue(new StopRequestEvent(this, statusCode));
   } else {
+    MOZ_ASSERT(!mDivertingToParent, "ShouldEnqueue when diverting to parent!");
+
     OnStopRequest(statusCode);
   }
   return true;
@@ -444,6 +491,14 @@ HttpChannelChild::OnStopRequest(const nsresult& statusCode)
 {
   LOG(("HttpChannelChild::OnStopRequest [this=%p status=%x]\n",
            this, statusCode));
+
+  if (mDivertingToParent) {
+    MOZ_RELEASE_ASSERT(!mFlushedForDiversion,
+      "Should not be processing any more callbacks from parent!");
+
+    SendDivertOnStopRequest(statusCode);
+    return;
+  }
 
   mIsPending = false;
 
@@ -777,6 +832,60 @@ HttpChannelChild::RecvRedirect3Complete()
   return true;
 }
 
+class HttpFlushedForDiversionEvent : public ChannelEvent
+{
+ public:
+  HttpFlushedForDiversionEvent(HttpChannelChild* aChild)
+  : mChild(aChild)
+  {
+    MOZ_RELEASE_ASSERT(aChild);
+  }
+
+  void Run()
+  {
+    mChild->FlushedForDiversion();
+  }
+ private:
+  HttpChannelChild* mChild;
+};
+
+bool
+HttpChannelChild::RecvFlushedForDiversion()
+{
+  MOZ_RELEASE_ASSERT(mDivertingToParent);
+  MOZ_RELEASE_ASSERT(mEventQ->ShouldEnqueue());
+
+  mEventQ->Enqueue(new HttpFlushedForDiversionEvent(this));
+
+  return true;
+}
+
+void
+HttpChannelChild::FlushedForDiversion()
+{
+  MOZ_RELEASE_ASSERT(mDivertingToParent);
+
+  // Once this is set, it should not be unset before HttpChannelChild is taken
+  // down. After it is set, no OnStart/OnData/OnStop callbacks should be
+  // received from the parent channel, nor dequeued from the ChannelEventQueue.
+  mFlushedForDiversion = true;
+
+  SendDivertComplete();
+}
+
+bool
+HttpChannelChild::RecvDivertMessages()
+{
+  MOZ_RELEASE_ASSERT(mDivertingToParent);
+  MOZ_RELEASE_ASSERT(mSuspendCount > 0);
+
+  // DivertTo() has been called on parent, so we can now start sending queued
+  // IPDL messages back to parent listener.
+  MOZ_RELEASE_ASSERT(NS_SUCCEEDED(Resume()));
+
+  return true;
+}
+
 void
 HttpChannelChild::Redirect3Complete()
 {
@@ -943,8 +1052,13 @@ NS_IMETHODIMP
 HttpChannelChild::Suspend()
 {
   NS_ENSURE_TRUE(RemoteChannelExists(), NS_ERROR_NOT_AVAILABLE);
-  if (!mSuspendCount++) {
+
+  // SendSuspend only once, when suspend goes from 0 to 1.
+  // Don't SendSuspend at all if we're diverting callbacks to the parent;
+  // suspend will be called at the correct time in the parent itself.
+  if (!mSuspendCount++ && !mDivertingToParent) {
     SendSuspend();
+    mSuspendSent = true;
   }
   mEventQ->Suspend();
 
@@ -959,7 +1073,11 @@ HttpChannelChild::Resume()
 
   nsresult rv = NS_OK;
 
-  if (!--mSuspendCount) {
+  // SendResume only once, when suspend count drops to 0.
+  // Don't SendResume at all if we're diverting callbacks to the parent (unless
+  // suspend was sent earlier); otherwise, resume will be called at the correct
+  // time in the parent itself.
+  if (!--mSuspendCount && (!mDivertingToParent || mSuspendSent)) {
     SendResume();
     if (mCallOnResume) {
       AsyncCall(mCallOnResume);
@@ -1441,6 +1559,37 @@ NS_IMETHODIMP HttpChannelChild::GetClientSetRequestHeaders(RequestHeaderTuples *
   return NS_OK;
 }
 
-//------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+// HttpChannelChild::nsIDivertableChannel
+//-----------------------------------------------------------------------------
+NS_IMETHODIMP
+HttpChannelChild::DivertToParent(ChannelDiverterChild **aChild)
+{
+  MOZ_RELEASE_ASSERT(aChild);
+  MOZ_RELEASE_ASSERT(gNeckoChild);
+  MOZ_RELEASE_ASSERT(!mDivertingToParent);
+
+  // We must fail DivertToParent() if there's no parent end of the channel (and
+  // won't be!) due to early failure.
+  if (NS_FAILED(mStatus) && !RemoteChannelExists()) {
+    return mStatus;
+  }
+
+  nsresult rv = Suspend();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // Once this is set, it should not be unset before the child is taken down.
+  mDivertingToParent = true;
+
+  PChannelDiverterChild* diverter =
+    gNeckoChild->SendPChannelDiverterConstructor(this);
+  MOZ_RELEASE_ASSERT(diverter);
+
+  *aChild = static_cast<ChannelDiverterChild*>(diverter);
+
+  return NS_OK;
+}
 
 }} // mozilla::net

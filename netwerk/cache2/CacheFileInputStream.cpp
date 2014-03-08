@@ -630,5 +630,17 @@ CacheFileInputStream::MaybeNotifyListener()
   }
 }
 
+// Memory reporting
+
+size_t
+CacheFileInputStream::SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
+{
+  // Everything the stream keeps a reference to is already reported somewhere else.
+  // mFile reports itself.
+  // mChunk reported as part of CacheFile.
+  // mCallback is usually CacheFile or a class that is reported elsewhere.
+  return mallocSizeOf(this);
+}
+
 } // net
 } // mozilla

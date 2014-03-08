@@ -3732,3 +3732,53 @@ nsDOMWindowUtils::GetOMTAOrComputedStyle(nsIDOMElement* aElement,
   return style->GetPropertyValue(aProperty, aResult);
 }
 
+NS_IMETHODIMP
+nsDOMWindowUtils::GetAudioMuted(bool* aMuted)
+{
+  if (!nsContentUtils::IsCallerChrome()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
+  NS_ENSURE_STATE(window);
+
+  *aMuted = window->GetAudioMuted();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::SetAudioMuted(bool aMuted)
+{
+  if (!nsContentUtils::IsCallerChrome()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
+  NS_ENSURE_STATE(window);
+
+  window->SetAudioMuted(aMuted);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::GetAudioVolume(float* aVolume)
+{
+  if (!nsContentUtils::IsCallerChrome()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
+  NS_ENSURE_STATE(window);
+
+  *aVolume = window->GetAudioVolume();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::SetAudioVolume(float aVolume)
+{
+  if (!nsContentUtils::IsCallerChrome()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
+  NS_ENSURE_STATE(window);
+
+  return window->SetAudioVolume(aVolume);
+}
