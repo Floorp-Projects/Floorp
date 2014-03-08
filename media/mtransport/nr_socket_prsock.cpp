@@ -516,7 +516,8 @@ int NrSocket::sendto(const void *msg, size_t len,
         sustained.getTokens(UINT32_MAX) < len) {
       r_log(LOG_GENERIC, LOG_ERR,
                  "Global rate limit for STUN requests exceeded.");
-      MOZ_ASSERT("Global rate limit for STUN requests exceeded. Go bug "
+      MOZ_ASSERT(false,
+                 "Global rate limit for STUN requests exceeded. Go bug "
                  "bcampen@mozilla.com if you weren't intentionally spamming "
                  "ICE candidates, or don't know what that means.");
       ABORT(R_WOULDBLOCK);
