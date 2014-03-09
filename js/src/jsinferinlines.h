@@ -247,9 +247,7 @@ struct AutoEnterAnalysis
          */
         if (!compartment->activeAnalysis) {
             TypeZone &types = compartment->zone()->types;
-            if (types.pendingNukeTypes)
-                types.nukeTypes(freeOp);
-            else if (types.pendingRecompiles)
+            if (types.pendingRecompiles)
                 types.processPendingRecompiles(freeOp);
         }
     }
@@ -385,12 +383,11 @@ EnsureTrackPropertyTypes(JSContext *cx, JSObject *obj, jsid id)
     if (obj->hasSingletonType()) {
         AutoEnterAnalysis enter(cx);
         if (obj->hasLazyType() && !obj->getType(cx)) {
-            cx->compartment()->types.setPendingNukeTypes(cx);
-            cx->clearPendingException();
+            CrashAtUnhandlableOOM("Could not allocate TypeObject in EnsureTrackPropertyTypes");
             return;
         }
         if (!obj->type()->unknownProperties() && !obj->type()->getProperty(cx, id)) {
-            cx->compartment()->types.setPendingNukeTypes(cx);
+            obj->type()->markUnknown(cx);
             return;
         }
     }
@@ -450,17 +447,17 @@ AddTypePropertyId(ExclusiveContext *cx, JSObject *obj, jsid id, const Value &val
 }
 
 inline void
-AddTypeProperty(ExclusiveContext *cx, TypeObject *obj, const char *name, Type type)
+AddTypePropertyId(ExclusiveContext *cx, TypeObject *obj, jsid id, Type type)
 {
     if (cx->typeInferenceEnabled() && !obj->unknownProperties())
-        obj->addPropertyType(cx, name, type);
+        obj->addPropertyType(cx, id, type);
 }
 
 inline void
-AddTypeProperty(ExclusiveContext *cx, TypeObject *obj, const char *name, const Value &value)
+AddTypePropertyId(ExclusiveContext *cx, TypeObject *obj, jsid id, const Value &value)
 {
     if (cx->typeInferenceEnabled() && !obj->unknownProperties())
-        obj->addPropertyType(cx, name, value);
+        obj->addPropertyType(cx, id, value);
 }
 
 /* Set one or more dynamic flags on a type object. */
@@ -1055,34 +1052,34 @@ TypeSet::clearObjects()
     objectSet = nullptr;
 }
 
-bool
+void
 TypeSet::addType(Type type, LifoAlloc *alloc)
 {
     if (unknown())
-        return true;
+        return;
 
     if (type.isUnknown()) {
         flags |= TYPE_FLAG_BASE_MASK;
         clearObjects();
         JS_ASSERT(unknown());
-        return true;
+        return;
     }
 
     if (type.isPrimitive()) {
         TypeFlags flag = PrimitiveTypeFlag(type.primitive());
         if (flags & flag)
-            return true;
+            return;
 
         /* If we add float to a type set it is also considered to contain int. */
         if (flag == TYPE_FLAG_DOUBLE)
             flag |= TYPE_FLAG_INT32;
 
         flags |= flag;
-        return true;
+        return;
     }
 
     if (flags & TYPE_FLAG_ANYOBJECT)
-        return true;
+        return;
     if (type.isAnyObject())
         goto unknownObject;
 
@@ -1092,9 +1089,9 @@ TypeSet::addType(Type type, LifoAlloc *alloc)
         TypeObjectKey **pentry = HashSetInsert<TypeObjectKey *,TypeObjectKey,TypeObjectKey>
                                      (*alloc, objectSet, objectCount, object);
         if (!pentry)
-            return false;
+            goto unknownObject;
         if (*pentry)
-            return true;
+            return;
         *pentry = object;
 
         setBaseObjectCount(objectCount);
@@ -1116,8 +1113,6 @@ TypeSet::addType(Type type, LifoAlloc *alloc)
         flags |= TYPE_FLAG_ANYOBJECT;
         clearObjects();
     }
-
-    return true;
 }
 
 inline void
@@ -1128,10 +1123,10 @@ ConstraintTypeSet::addType(ExclusiveContext *cxArg, Type type)
     if (hasType(type))
         return;
 
-    if (!TypeSet::addType(type, &cxArg->typeLifoAlloc())) {
-        cxArg->compartment()->types.setPendingNukeTypes(cxArg);
-        return;
-    }
+    TypeSet::addType(type, &cxArg->typeLifoAlloc());
+
+    if (type.isObjectUnchecked() && unknownObject())
+        type = Type::AnyObjectType();
 
     InferSpew(ISpewOps, "addType: %sT%p%s %s",
               InferSpewColor(this), this, InferSpewColorReset(),
@@ -1219,30 +1214,6 @@ TypeSet::getTypeObject(unsigned i) const
     return (key && key->isTypeObject()) ? key->asTypeObject() : nullptr;
 }
 
-inline bool
-TypeSet::getTypeOrSingleObject(JSContext *cx, unsigned i, TypeObject **result) const
-{
-    JS_ASSERT(result);
-    JS_ASSERT(cx->compartment()->activeAnalysis);
-
-    *result = nullptr;
-
-    TypeObject *type = getTypeObject(i);
-    if (!type) {
-        JSObject *singleton = getSingleObject(i);
-        if (!singleton)
-            return true;
-
-        type = singleton->uninlinedGetType(cx);
-        if (!type) {
-            cx->compartment()->types.setPendingNukeTypes(cx);
-            return false;
-        }
-    }
-    *result = type;
-    return true;
-}
-
 inline const Class *
 TypeSet::getObjectClass(unsigned i) const
 {
@@ -1302,7 +1273,7 @@ TypeObject::getProperty(ExclusiveContext *cx, jsid id)
     Property **pprop = HashSetInsert<jsid,Property,Property>
         (cx->typeLifoAlloc(), propertySet, propertyCount, id);
     if (!pprop) {
-        cx->compartment()->types.setPendingNukeTypes(cx);
+        markUnknown(cx);
         return nullptr;
     }
 
@@ -1310,8 +1281,7 @@ TypeObject::getProperty(ExclusiveContext *cx, jsid id)
 
     setBasePropertyCount(propertyCount);
     if (!addProperty(cx, id, pprop)) {
-        setBasePropertyCount(0);
-        propertySet = nullptr;
+        markUnknown(cx);
         return nullptr;
     }
 
