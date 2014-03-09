@@ -5,17 +5,17 @@
 
 /* Test version downgrade MAR security check */
 
-// We don't actually care if the MAR has any data, we only care about the
-// application return code and update.status result.
-const TEST_FILES = [];
-
 function run_test() {
   if (!IS_MAR_CHECKS_ENABLED) {
     return;
   }
 
   setupTestCommon();
-  setupUpdaterTest(FILE_OLD_VERSION_MAR);
+  // We don't actually care if the MAR has any data, we only care about the
+  // application return code and update.status result.
+  gTestFiles = gTestFilesCommon;
+  gTestDirs = [];
+  setupUpdaterTest(FILE_OLD_VERSION_MAR, false, false);
 
   // Apply the MAR
   // Note that if execv is used, the updater process will turn into the
@@ -25,5 +25,6 @@ function run_test() {
 }
 
 function checkUpdateApplied() {
+  checkFilesAfterUpdateSuccess();
   doTestFinish();
 }

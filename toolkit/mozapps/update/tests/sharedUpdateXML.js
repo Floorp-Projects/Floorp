@@ -11,33 +11,18 @@
  * features greater than JavaScript 1.7.
  */
 
-const FILE_SIMPLE_NO_PIB_MAR = "simple_no_pib.mar";
-const SIZE_SIMPLE_NO_PIB_MAR = "351";
-const MD5_HASH_SIMPLE_NO_PIB_MAR    = "d0a7f84dacc55a252ab916668a7cb216";
-const SHA1_HASH_SIMPLE_NO_PIB_MAR   = "f5053f9552d087c6c6ed83f9b19405eccf1436" +
-                                      "fc";
-const SHA256_HASH_SIMPLE_NO_PIB_MAR = "663c7cbd11fe45b0a71438387db924d205997a" +
-                                      "b85ccf5b40aebbdaef179796ab";
-const SHA384_HASH_SIMPLE_NO_PIB_MAR = "a57250554755a9f42b91932993599bb6b05e06" +
-                                      "3dcbd71846e350232945dbad2b0c83208a0781" +
-                                      "0cf798b3d1139399c453";
-const SHA512_HASH_SIMPLE_NO_PIB_MAR = "55d3e2a86acaeb0abb7a444c13bba748846fcb" +
-                                      "ac7ff058f8ee9c9260ba01e6aef86fa4a6c46a" +
-                                      "3016b675ef94e77e63fbe912f64d155bed9b1c" +
-                                      "341dd56e575a26";
-
 const FILE_SIMPLE_MAR = "simple.mar";
-const SIZE_SIMPLE_MAR = "735";
-const MD5_HASH_SIMPLE_MAR    = "025228705a76117b5499a22d9eed9271";
-const SHA1_HASH_SIMPLE_MAR   = "87a9b1f57b3ff9bb20b677c5c0924b46b6f6781e";
-const SHA256_HASH_SIMPLE_MAR = "443ef6a8ddcd2af88f9b72b1732d335454a483127766a" +
-                               "30ca3a5647d2ae159da";
-const SHA384_HASH_SIMPLE_MAR = "c8a493e50569c190a1c67793be80f0f9d13b08d839d79" +
-                               "dd8d7be2859cfd2f75b242f272a8fbbcbe4419d399259" +
-                               "35d732";
-const SHA512_HASH_SIMPLE_MAR = "9f9afbb5a6fa70e71fa28c73c5b1968cf8831ae02ebd4" +
-                               "28839ed2acf0b257c08c76c1f286c94c029dd3a4ad708" +
-                               "f9703f61e6bf5f30982e9deee7d6838c1dbe14";
+const SIZE_SIMPLE_MAR = "1031";
+const MD5_HASH_SIMPLE_MAR    = "1f8c038577bb6845d94ccec4999113ee";
+const SHA1_HASH_SIMPLE_MAR   = "5d49a672c87f10f31d7e326349564a11272a028b";
+const SHA256_HASH_SIMPLE_MAR = "1aabbed5b1dd6e16e139afc5b43d479e254e0c26" +
+                               "3c8fb9249c0a1bb93071c5fb";
+const SHA384_HASH_SIMPLE_MAR = "26615014ea034af32ef5651492d5f493f5a7a1a48522e" +
+                               "d24c366442a5ec21d5ef02e23fb58d79729b8ca2f9541" +
+                               "99dd53";
+const SHA512_HASH_SIMPLE_MAR = "922e5ae22081795f6e8d65a3c508715c9a314054179a8" +
+                               "bbfe5f50dc23919ad89888291bc0a07586ab17dd0304a" +
+                               "b5347473601127571c66f61f5080348e05c36b";
 
 const STATE_NONE            = "null";
 const STATE_DOWNLOADING     = "downloading";

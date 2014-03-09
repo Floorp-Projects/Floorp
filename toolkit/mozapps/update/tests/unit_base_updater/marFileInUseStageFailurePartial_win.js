@@ -2,19 +2,19 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-/* File in use complete MAR file staged patch apply failure fallback test */
+/* File in use partial MAR file staged patch apply failure test */
 
 function run_test() {
   gStageUpdate = true;
   setupTestCommon();
-  gTestFiles = gTestFilesCompleteSuccess;
-  gTestDirs = gTestDirsCompleteSuccess;
+  gTestFiles = gTestFilesPartialSuccess;
+  gTestDirs = gTestDirsPartialSuccess;
   setTestFilesAndDirsForFailure();
-  setupUpdaterTest(FILE_COMPLETE_MAR, false, false);
+  setupUpdaterTest(FILE_PARTIAL_MAR, true, false);
 
   // Launch an existing file so it is in use during the update.
-  let fileInUseBin = getApplyDirFile(gTestFiles[13].relPathDir +
-                                     gTestFiles[13].fileName);
+  let fileInUseBin = getApplyDirFile(gTestFiles[11].relPathDir +
+                                     gTestFiles[11].fileName);
   let args = [getApplyDirPath() + "a/b/", "input", "output", "-s",
               HELPER_SLEEP_TIMEOUT];
   let fileInUseProcess = AUS_Cc["@mozilla.org/process/util;1"].
@@ -31,7 +31,8 @@ function doUpdate() {
   // Switch the application to the staged application that was updated.
   gStageUpdate = false;
   gSwitchApp = true;
-  runUpdate(1, STATE_PENDING);
+  gDisableReplaceFallback = true;
+  runUpdate(1, STATE_FAILED_WRITE_ERROR);
 }
 
 function checkUpdateApplied() {
