@@ -37,9 +37,6 @@ public:
   GrallocTextureClientOGL(GrallocBufferActor* aActor,
                           gfx::IntSize aSize,
                           TextureFlags aFlags = TEXTURE_FLAGS_DEFAULT);
-  GrallocTextureClientOGL(CompositableClient* aCompositable,
-                          gfx::SurfaceFormat aFormat,
-                          TextureFlags aFlags = TEXTURE_FLAGS_DEFAULT);
   GrallocTextureClientOGL(ISurfaceAllocator* aAllocator,
                           gfx::SurfaceFormat aFormat,
                           TextureFlags aFlags = TEXTURE_FLAGS_DEFAULT);
@@ -51,6 +48,8 @@ public:
   virtual void Unlock() MOZ_OVERRIDE;
 
   virtual bool ImplementsLocking() const MOZ_OVERRIDE { return true; }
+
+  virtual bool HasInternalBuffer() const MOZ_OVERRIDE { return false; }
 
   virtual bool IsAllocated() const MOZ_OVERRIDE;
 
@@ -107,8 +106,6 @@ public:
   void SetGraphicBufferLocked(GraphicBufferLocked* aBufferLocked);
 
 protected:
-  ISurfaceAllocator* GetAllocator();
-
   /**
    * Unfortunately, until bug 879681 is fixed we need to use a GrallocBufferActor.
    */
@@ -117,8 +114,6 @@ protected:
   RefPtr<GraphicBufferLocked> mBufferLocked;
 
   android::sp<android::GraphicBuffer> mGraphicBuffer;
-
-  RefPtr<ISurfaceAllocator> mAllocator;
 
   /**
    * Points to a mapped gralloc buffer between calls to lock and unlock.

@@ -10,6 +10,7 @@
 #include "Layers.h"
 #include "gfxContext.h"                 // for gfxContext
 #include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
+#include "mozilla/LinkedList.h"         // For LinkedList
 #include "mozilla/WidgetUtils.h"        // for ScreenRotation
 #include "mozilla/gfx/Rect.h"           // for Rect
 #include "mozilla/layers/CompositorTypes.h"
@@ -32,6 +33,16 @@ class ClientThebesLayer;
 class CompositorChild;
 class ImageLayer;
 class PLayerChild;
+class TextureClientPool;
+
+class TextureClientPoolMember
+  : public LinkedListElement<TextureClientPoolMember> {
+public:
+  TextureClientPoolMember(gfx::SurfaceFormat aFormat, TextureClientPool* aTexturePool);
+
+  gfx::SurfaceFormat mFormat;
+  RefPtr<TextureClientPool> mTexturePool;
+};
 
 class ClientLayerManager : public LayerManager
 {
@@ -95,6 +106,8 @@ public:
   virtual bool HasShadowManagerInternal() const { return HasShadowManager(); }
 
   virtual void SetIsFirstPaint() MOZ_OVERRIDE;
+
+  TextureClientPool *GetTexturePool(gfx::SurfaceFormat aFormat);
 
   // Drop cached resources and ask our shadow manager to do the same,
   // if we have one.
@@ -214,6 +227,7 @@ private:
   bool mNeedsComposite;
 
   RefPtr<ShadowLayerForwarder> mForwarder;
+  LinkedList<TextureClientPoolMember> mTexturePools;
 };
 
 class ClientLayer : public ShadowableLayer

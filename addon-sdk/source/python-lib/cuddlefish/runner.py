@@ -193,11 +193,16 @@ class RemoteFennecRunner(mozrunner.Runner):
             print "Killing running Firefox instance ..."
             subprocess.call([self._adb_path, "shell",
                              "am force-stop " + self._intent_name])
-            time.sleep(2)
-            if self.getProcessPID(self._intent_name) != None:
-                raise Exception("Unable to automatically kill running Firefox" +
-                                " instance. Please close it manually before " +
-                                "executing cfx.")
+            time.sleep(7)
+            # It appears recently that the PID still exists even after
+            # Fennec closes, so removing this error still allows the tests
+            # to pass as the new Fennec instance is able to start.
+            # Leaving error in but commented out for now.
+            #
+            #if self.getProcessPID(self._intent_name) != None:
+            #    raise Exception("Unable to automatically kill running Firefox" +
+            #                    " instance. Please close it manually before " +
+            #                    "executing cfx.")
 
         print "Pushing the addon to your device"
 

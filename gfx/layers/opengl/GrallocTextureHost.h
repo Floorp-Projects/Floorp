@@ -62,10 +62,13 @@ public:
 
   GLuint GetGLTexture();
 
+  void Lock();
+
 protected:
   CompositorOGL* mCompositor;
   android::sp<android::GraphicBuffer> mGraphicBuffer;
   EGLImage mEGLImage;
+  GLuint mTexture;
   gfx::SurfaceFormat mFormat;
   bool mNeedsReset;
 };

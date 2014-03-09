@@ -4560,14 +4560,36 @@ public abstract class TreeBuilder<T> implements TokenHandler,
         listPtr--;
     }
 
+    /**
+     * Adoption agency algorithm.
+     *
+     * @param name subject as described in the specified algorithm.
+     * @return Returns true if the algorithm has completed and there is nothing remaining to
+     * be done. Returns false if the algorithm needs to "act as described in the 'any other
+     * end tag' entry" as described in the specified algorithm.
+     * @throws SAXException
+     */
     private boolean adoptionAgencyEndTag(@Local String name) throws SAXException {
+        // This check intends to ensure that for properly nested tags, closing tags will match
+        // against the stack instead of the listOfActiveFormattingElements.
+        if (stack[currentPtr].ns == "http://www.w3.org/1999/xhtml" &&
+                stack[currentPtr].name == name &&
+                findInListOfActiveFormattingElements(stack[currentPtr]) == -1) {
+            // If the current element matches the name but isn't on the list of active
+            // formatting elements, then it is possible that the list was mangled by the Noah's Arc
+            // clause. In this case, we want to match the end tag against the stack instead of
+            // proceeding with the AAA algorithm that may match against the list of
+            // active formatting elements (and possibly mangle the tree in unexpected ways).
+            pop();
+            return true;
+        }
+
         // If you crash around here, perhaps some stack node variable claimed to
         // be a weak ref isn't.
         for (int i = 0; i < 8; ++i) {
             int formattingEltListPos = listPtr;
             while (formattingEltListPos > -1) {
-                StackNode<T> listNode = listOfActiveFormattingElements[formattingEltListPos]; // weak
-                                                                                              // ref
+                StackNode<T> listNode = listOfActiveFormattingElements[formattingEltListPos]; // weak ref
                 if (listNode == null) {
                     formattingEltListPos = -1;
                     break;
@@ -4579,18 +4601,8 @@ public abstract class TreeBuilder<T> implements TokenHandler,
             if (formattingEltListPos == -1) {
                 return false;
             }
-            StackNode<T> formattingElt = listOfActiveFormattingElements[formattingEltListPos]; // this
-            // *looks*
-            // like
-            // a
-            // weak
-            // ref
-            // to
-            // the
-            // list
-            // of
-            // formatting
-            // elements
+            // this *looks* like a weak ref to the list of formatting elements
+            StackNode<T> formattingElt = listOfActiveFormattingElements[formattingEltListPos];
             int formattingEltStackPos = currentPtr;
             boolean inScope = true;
             while (formattingEltStackPos > -1) {
@@ -4631,8 +4643,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                 removeFromListOfActiveFormattingElements(formattingEltListPos);
                 return true;
             }
-            StackNode<T> commonAncestor = stack[formattingEltStackPos - 1]; // weak
-            // ref
+            StackNode<T> commonAncestor = stack[formattingEltStackPos - 1]; // weak ref
             StackNode<T> furthestBlock = stack[furthestBlockPos]; // weak ref
             // detachFromParent(furthestBlock.node); XXX AAA CHANGE
             int bookmark = formattingEltListPos;
@@ -4658,8 +4669,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                     assert formattingEltStackPos < nodePos;
                     assert bookmark < nodePos;
                     assert furthestBlockPos > nodePos;
-                    removeFromStack(nodePos); // node is now a bad pointer in
-                    // C++
+                    removeFromStack(nodePos); // node is now a bad pointer in C++
                     furthestBlockPos--;
                     continue;
                 }
@@ -4676,12 +4686,8 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                         node.name, clone, node.popName, node.attributes
                         // [NOCPP[
                         , node.getLocator()
-                // ]NOCPP]
-                ); // creation
-                // ownership
-                // goes
-                // to
-                // stack
+                        // ]NOCPP]
+                ); // creation ownership goes to stack
                 node.dropAttributes(); // adopt ownership to newNode
                 stack[nodePos] = newNode;
                 newNode.retain(); // retain for list
@@ -4711,12 +4717,8 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                     formattingElt.attributes
                     // [NOCPP[
                     , errorHandler == null ? null : new TaintableLocatorImpl(tokenizer)
-            // ]NOCPP]
-            ); // Ownership
-            // transfers
-            // to
-            // stack
-            // below
+                    // ]NOCPP]
+            ); // Ownership transfers to stack below
             formattingElt.dropAttributes(); // transfer ownership to
                                             // formattingClone
             appendChildrenToNewParent(furthestBlock.node, clone);

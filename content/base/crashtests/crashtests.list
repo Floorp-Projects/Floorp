@@ -146,5 +146,6 @@ load 849601.html
 skip-if(Android) load 851353-1.html
 load 863950.html
 load 864448.html
+load 930250.html
 load 942979.html
 load 978646.html

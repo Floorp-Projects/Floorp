@@ -45,6 +45,8 @@ public:
 
   virtual bool ImplementsLocking() const MOZ_OVERRIDE { return true; }
 
+  virtual bool HasInternalBuffer() const MOZ_OVERRIDE { return false; }
+
   virtual bool ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor) MOZ_OVERRIDE;
 
   virtual gfx::IntSize GetSize() const MOZ_OVERRIDE { return mSize; }

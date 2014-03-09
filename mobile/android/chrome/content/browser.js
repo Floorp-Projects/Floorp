@@ -1187,6 +1187,7 @@ var BrowserApp = {
         case "browser.chrome.titlebarMode":
         case "network.cookie.cookieBehavior":
         case "font.size.inflation.minTwips":
+        case "home.sync.updateMode":
           pref.type = "string";
           pref.value = pref.value.toString();
           break;
@@ -1258,6 +1259,7 @@ var BrowserApp = {
       case "browser.chrome.titlebarMode":
       case "network.cookie.cookieBehavior":
       case "font.size.inflation.minTwips":
+      case "home.sync.updateMode":
         json.type = "int";
         json.value = parseInt(json.value);
         break;
