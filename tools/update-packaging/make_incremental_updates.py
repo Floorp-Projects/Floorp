@@ -20,7 +20,6 @@ class PatchInfo:
     """ Represents the meta-data associated with a patch
         work_dir = working dir where files are stored for this patch
         archive_files = list of files to include in this patch
-        manifestv1 = set of manifest version 1 patch instructions
         manifestv2 = set of manifest version 2 patch instructions
         file_exclusion_list = 
         files to exclude from this patch. names without slashes will be
@@ -30,7 +29,6 @@ class PatchInfo:
     def __init__(self, work_dir, file_exclusion_list, path_exclusion_list):
         self.work_dir=work_dir
         self.archive_files=[]
-        self.manifestv1=[]
         self.manifestv2=[]
         self.file_exclusion_list=file_exclusion_list
         self.path_exclusion_list=path_exclusion_list
@@ -46,10 +44,8 @@ class PatchInfo:
         if m:
             # Directory immediately following extensions is used for the test
             testdir = m.group(1)
-            self.manifestv1.append('add-if "'+testdir+'" "'+filename+'"')
             self.manifestv2.append('add-if "'+testdir+'" "'+filename+'"')
         else:
-            self.manifestv1.append('add "'+filename+'"')
             self.manifestv2.append('add "'+filename+'"')
            
     def append_patch_instruction(self, filename, patchname):
@@ -66,10 +62,8 @@ class PatchInfo:
         m = re.match("((?:|.*/)distribution/extensions)/", filename)
         if m:
             testdir = m.group(1)
-            self.manifestv1.append('patch-if "'+testdir+'" "'+patchname+'" "'+filename+'"')
             self.manifestv2.append('patch-if "'+testdir+'" "'+patchname+'" "'+filename+'"')
         else:
-            self.manifestv1.append('patch "'+patchname+'" "'+filename+'"')
             self.manifestv2.append('patch "'+patchname+'" "'+filename+'"')
                 
     def append_remove_instruction(self, filename):
@@ -83,20 +77,9 @@ class PatchInfo:
             filename = filename[:-1]
             self.manifestv2.append('rmrfdir "'+filename+'"')
         else:
-            self.manifestv1.append('remove "'+filename+'"')
             self.manifestv2.append('remove "'+filename+'"')
 
     def create_manifest_files(self):
-        """ Createst the v1 manifest file in the root of the work_dir """
-        manifest_file_path = os.path.join(self.work_dir,"update.manifest")
-        manifest_file = open(manifest_file_path, "wb")
-        manifest_file.writelines(string.join(self.manifestv1, '\n'))
-        manifest_file.writelines("\n")
-        manifest_file.close()    
-
-        bzip_file(manifest_file_path)
-        self.archive_files.append('"update.manifest"')
-
         """ Createst the v2 manifest file in the root of the work_dir """
         manifest_file_path = os.path.join(self.work_dir,"updatev2.manifest")
         manifest_file = open(manifest_file_path, "wb")
