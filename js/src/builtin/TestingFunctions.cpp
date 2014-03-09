@@ -271,7 +271,7 @@ static const struct ParamPair {
 
 // Keep this in sync with above params.
 #define GC_PARAMETER_ARGS_LIST "maxBytes, maxMallocBytes, gcBytes, gcNumber, sliceTimeBudget, or markStackLimit"
- 
+
 static bool
 GCParameter(JSContext *cx, unsigned argc, Value *vp)
 {
@@ -317,6 +317,11 @@ GCParameter(JSContext *cx, unsigned argc, Value *vp)
     if (!value) {
         JS_ReportError(cx, "the second argument must be convertable to uint32_t "
                            "with non-zero value");
+        return false;
+    }
+
+    if (param == JSGC_MARK_STACK_LIMIT && IsIncrementalGCInProgress(cx->runtime())) {
+        JS_ReportError(cx, "attempt to set markStackLimit while a GC is in progress");
         return false;
     }
 
