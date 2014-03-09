@@ -86,9 +86,8 @@ if [ $(echo "$newdir" | grep -c '\/$') = 1 ]; then
   newdir=$(echo "$newdir" | sed -e 's:\/$::')
 fi
 workdir="$newdir.work"
-updatemanifestv1="$workdir/update.manifest"
 updatemanifestv2="$workdir/updatev2.manifest"
-archivefiles="update.manifest updatev2.manifest"
+archivefiles="updatev2.manifest"
 
 mkdir -p "$workdir"
 
@@ -121,9 +120,15 @@ list_files newfiles
 
 popd
 
+# Add the type of update to the beginning of version 2 update manifest.
 notice ""
-notice "Adding file patch and add instructions to file 'update.manifest'"
-> $updatemanifestv1
+notice "Adding type instruction to file 'updatev2.manifest'"
+> $updatemanifestv2
+notice "       type: partial"
+echo "type \"partial\"" >> $updatemanifestv2
+
+notice ""
+notice "Adding file patch and add instructions to file 'updatev2.manifest'"
 
 num_oldfiles=${#oldfiles[*]}
 remove_array=
@@ -151,7 +156,7 @@ for ((i=0; $i<$num_oldfiles; i=$i+1)); do
       mkdir -p `dirname "$workdir/$f"`
       $BZIP2 -cz9 "$newdir/$f" > "$workdir/$f"
       copy_perm "$newdir/$f" "$workdir/$f"
-      make_add_instruction "$f" 1 >> $updatemanifestv1
+      make_add_instruction "$f" 1 >> $updatemanifestv2
       archivefiles="$archivefiles \"$f\""
       continue 1
     fi
@@ -170,12 +175,12 @@ for ((i=0; $i<$num_oldfiles; i=$i+1)); do
       fullsize=$(get_file_size "$workdir/$f")
 
       if [ $patchsize -lt $fullsize ]; then
-        make_patch_instruction "$f" >> $updatemanifestv1
+        make_patch_instruction "$f" >> $updatemanifestv2
         mv -f "$patchfile" "$workdir/$f.patch"
         rm -f "$workdir/$f"
         archivefiles="$archivefiles \"$f.patch\""
       else
-        make_add_instruction "$f" >> $updatemanifestv1
+        make_add_instruction "$f" >> $updatemanifestv2
         rm -f "$patchfile"
         archivefiles="$archivefiles \"$f\""
       fi
@@ -190,7 +195,7 @@ done
 
 # Newly added files
 notice ""
-notice "Adding file add instructions to file 'update.manifest'"
+notice "Adding file add instructions to file 'updatev2.manifest'"
 num_newfiles=${#newfiles[*]}
 
 for ((i=0; $i<$num_newfiles; i=$i+1)); do
@@ -215,34 +220,22 @@ for ((i=0; $i<$num_newfiles; i=$i+1)); do
   $BZIP2 -cz9 "$newdir/$f" > "$workdir/$f"
   copy_perm "$newdir/$f" "$workdir/$f"
 
-  make_add_instruction "$f" >> "$updatemanifestv1"
+  make_add_instruction "$f" >> "$updatemanifestv2"
   archivefiles="$archivefiles \"$f\""
 done
 
 notice ""
-notice "Adding file remove instructions to file 'update.manifest'"
+notice "Adding file remove instructions to file 'updatev2.manifest'"
 for ((i=0; $i<$num_removes; i=$i+1)); do
   f="${remove_array[$i]}"
   notice "     remove: $f"
-  echo "remove \"$f\"" >> $updatemanifestv1
+  echo "remove \"$f\"" >> $updatemanifestv2
 done
 
-# Add the type of update to the beginning of and cat the contents of the version
-# 1 update manifest to the version 2 update manifest.
-notice ""
-notice "Adding type instruction to file 'updatev2.manifest'"
-> $updatemanifestv2
-notice "       type: partial"
-echo "type \"partial\"" >> $updatemanifestv2
-
-notice ""
-notice "Concatenating file 'update.manifest' to file 'updatev2.manifest'"
-cat $updatemanifestv1 >> $updatemanifestv2
-
-# Append remove instructions for any dead files.
+# Add remove instructions for any dead files.
 notice ""
 notice "Adding file and directory remove instructions from file 'removed-files'"
-append_remove_instructions "$newdir" "$updatemanifestv1" "$updatemanifestv2"
+append_remove_instructions "$newdir" "$updatemanifestv2"
 
 notice ""
 notice "Adding directory remove instructions for directories that no longer exist"
@@ -257,7 +250,6 @@ for ((i=0; $i<$num_olddirs; i=$i+1)); do
   fi
 done
 
-$BZIP2 -z9 "$updatemanifestv1" && mv -f "$updatemanifestv1.bz2" "$updatemanifestv1"
 $BZIP2 -z9 "$updatemanifestv2" && mv -f "$updatemanifestv2.bz2" "$updatemanifestv2"
 
 eval "$MAR -C \"$workdir\" -c output.mar $archivefiles"
