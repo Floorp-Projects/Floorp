@@ -82,8 +82,7 @@ ImageClient::CreateImageClient(CompositableType aCompositableHostType,
 ImageClientSingle::ImageClientSingle(CompositableForwarder* aFwd,
                                      TextureFlags aFlags,
                                      CompositableType aType)
-  : ImageClient(aFwd, aType)
-  , mTextureFlags(aFlags)
+  : ImageClient(aFwd, aFlags, aType)
 {
 }
 
@@ -310,12 +309,6 @@ ImageClientSingle::AddTextureClient(TextureClient* aTexture)
   return CompositableClient::AddTextureClient(aTexture);
 }
 
-TemporaryRef<BufferTextureClient>
-ImageClientSingle::CreateBufferTextureClient(gfx::SurfaceFormat aFormat, TextureFlags aFlags)
-{
-  return CompositableClient::CreateBufferTextureClient(aFormat, mTextureFlags | aFlags);
-}
-
 void
 ImageClientSingle::OnDetach()
 {
@@ -329,8 +322,9 @@ ImageClientBuffered::OnDetach()
   mBackBuffer = nullptr;
 }
 
-ImageClient::ImageClient(CompositableForwarder* aFwd, CompositableType aType)
-: CompositableClient(aFwd)
+ImageClient::ImageClient(CompositableForwarder* aFwd, TextureFlags aFlags,
+                         CompositableType aType)
+: CompositableClient(aFwd, aFlags)
 , mType(aType)
 , mLastPaintedImageSerial(0)
 {}
@@ -349,7 +343,7 @@ ImageClient::UpdatePictureRect(nsIntRect aRect)
 DeprecatedImageClientSingle::DeprecatedImageClientSingle(CompositableForwarder* aFwd,
                                                          TextureFlags aFlags,
                                                          CompositableType aType)
-  : ImageClient(aFwd, aType)
+  : ImageClient(aFwd, aFlags, aType)
   , mTextureInfo(aType)
 {
   mTextureInfo.mTextureFlags = aFlags;
@@ -482,7 +476,7 @@ DeprecatedImageClientSingle::Updated()
 
 ImageClientBridge::ImageClientBridge(CompositableForwarder* aFwd,
                                      TextureFlags aFlags)
-: ImageClient(aFwd, BUFFER_BRIDGE)
+: ImageClient(aFwd, aFlags, BUFFER_BRIDGE)
 , mAsyncContainerID(0)
 , mLayer(nullptr)
 {

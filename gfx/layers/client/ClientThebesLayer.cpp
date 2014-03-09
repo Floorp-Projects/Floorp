@@ -172,7 +172,10 @@ ClientLayerManager::CreateThebesLayerWithHint(ThebesLayerCreationHint aHint)
 #ifdef MOZ_B2G
       aHint == SCROLLABLE &&
 #endif
-      gfxPrefs::LayersTilesEnabled() && AsShadowForwarder()->GetCompositorBackendType() == LayersBackend::LAYERS_OPENGL) {
+      gfxPrefs::LayersTilesEnabled() &&
+      (AsShadowForwarder()->GetCompositorBackendType() == LayersBackend::LAYERS_OPENGL ||
+       AsShadowForwarder()->GetCompositorBackendType() == LayersBackend::LAYERS_D3D9 ||
+       AsShadowForwarder()->GetCompositorBackendType() == LayersBackend::LAYERS_D3D11)) {
     nsRefPtr<ClientTiledThebesLayer> layer =
       new ClientTiledThebesLayer(this);
     CREATE_SHADOW(Thebes);
