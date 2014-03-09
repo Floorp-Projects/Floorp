@@ -76,7 +76,6 @@ WebrtcVideoConduit::~WebrtcVideoConduit()
       if (mOtherDirection)
         mOtherDirection->mPtrExtCapture = nullptr;
     }
-    mPtrViECapture->Release();
   }
 
   //Deal with External Renderer
@@ -88,7 +87,6 @@ WebrtcVideoConduit::~WebrtcVideoConduit()
       }
       mPtrViERender->RemoveRenderer(mChannel);
     }
-    mPtrViERender->Release();
   }
 
   //Deal with the transport
@@ -97,12 +95,6 @@ WebrtcVideoConduit::~WebrtcVideoConduit()
     if (!mShutDown) {
       mPtrViENetwork->DeregisterSendTransport(mChannel);
     }
-    mPtrViENetwork->Release();
-  }
-
-  if(mPtrViECodec)
-  {
-    mPtrViECodec->Release();
   }
 
   if(mPtrViEBase)
@@ -113,12 +105,6 @@ WebrtcVideoConduit::~WebrtcVideoConduit()
       SyncTo(nullptr);
       mPtrViEBase->DeleteChannel(mChannel);
     }
-    mPtrViEBase->Release();
-  }
-
-  if (mPtrRTP)
-  {
-    mPtrRTP->Release();
   }
 
   if (mOtherDirection)
