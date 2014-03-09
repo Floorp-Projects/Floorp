@@ -1193,7 +1193,7 @@ var WalkerActor = protocol.ActorClass({
     // make it easier.
     let filteredWalker = (node) => {
       return documentWalker(node, this.rootWin, options.whatToShow);
-    }
+    };
 
     // Need to know the first and last child.
     let rawNode = node.rawNode;
@@ -1384,7 +1384,15 @@ var WalkerActor = protocol.ActorClass({
    * @param string selector
    */
   querySelectorAll: method(function(baseNode, selector) {
-    return new NodeListActor(this, baseNode.rawNode.querySelectorAll(selector));
+    let nodeList = null;
+
+    try {
+      nodeList = baseNode.rawNode.querySelectorAll(selector);
+    } catch(e) {
+      // Bad selector. Do nothing as the selector can come from a searchbox.
+    }
+
+    return new NodeListActor(this, nodeList);
   }, {
     request: {
       node: Arg(0, "domnode"),
