@@ -20,14 +20,17 @@ def get_build_entries(root_path):
             parent_dir_rel_path = root[len(root_path)+1:]
             rel_path_file = os.path.join(parent_dir_rel_path, file_name)
             rel_path_file = rel_path_file.replace("\\", "/")
-            if not (rel_path_file.endswith("channel-prefs.js")):
+            if not (rel_path_file.endswith("channel-prefs.js") or
+                    rel_path_file.endswith("update-settings.ini") or
+                    rel_path_file.find("distribution/") != -1):
                 rel_file_path_set.add(rel_path_file)
 
         for dir_name in dirs:
             parent_dir_rel_path = root[len(root_path)+1:]
             rel_path_dir = os.path.join(parent_dir_rel_path, dir_name)
             rel_path_dir = rel_path_dir.replace("\\", "/")+"/"
-            rel_dir_path_set.add(rel_path_dir)
+            if rel_path_dir.find("distribution/") == -1:
+                rel_dir_path_set.add(rel_path_dir)
 
     rel_file_path_list = list(rel_file_path_set)
     rel_file_path_list.sort(reverse=True)

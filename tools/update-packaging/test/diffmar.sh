@@ -3,7 +3,8 @@
 
 marA="$1"
 marB="$2"
-workdir="/tmp/diffmar"
+testDir="$3"
+workdir="/tmp/diffmar/$testDir"
 fromdir="$workdir/0"
 todir="$workdir/1"
 
@@ -31,6 +32,8 @@ mar -x "$1"
 rm "$1"
 mv updatev2.manifest updatev2.manifest.bz2
 bzip2 -d updatev2.manifest.bz2
+mv updatev3.manifest updatev3.manifest.bz2
+bzip2 -d updatev3.manifest.bz2
 ls $lsargs > files.txt
 
 cd "$todir"
@@ -38,9 +41,11 @@ mar -x "$2"
 rm "$2"
 mv updatev2.manifest updatev2.manifest.bz2
 bzip2 -d updatev2.manifest.bz2
+mv updatev3.manifest updatev3.manifest.bz2
+bzip2 -d updatev3.manifest.bz2
 ls $lsargs > files.txt
 
 echo "diffing $fromdir and $todir"
 echo "on linux shell sort and python sort return different results"
-echo "which cause differences in the manifest files"
+echo "which can cause differences in the manifest files"
 diff -ru "$fromdir" "$todir"
