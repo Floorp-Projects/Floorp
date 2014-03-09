@@ -381,23 +381,6 @@ a {
   text-decoration: underline;
 }
 
-/* Open DOMNode in inspector button */
-.open-inspector {
-  background: url("chrome://browser/skin/devtools/vview-open-inspector.png") no-repeat 0 0;
-  padding-left: 16px;
-  margin-left: 5px;
-  cursor: pointer;
-}
-
-.elementNode:hover .open-inspector,
-.open-inspector:hover {
-  background-position: -32px 0;
-}
-
-.open-inspector:active {
-  background-position: -16px 0;
-}
-
 /* Replace these values with CSS variables as available */
 .theme-dark .jsterm-input-container {
   background-color: #252c33; /* tabToolbarBackgroundColor */
