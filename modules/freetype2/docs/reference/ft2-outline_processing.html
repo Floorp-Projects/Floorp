@@ -3,7 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FreeType-2.5.2 API Reference</title>
+<title>FreeType-2.5.3 API Reference</title>
 <style type="text/css">
   body { font-family: Verdana, Geneva, Arial, Helvetica, serif;
          color: #000000;
@@ -35,7 +35,7 @@
 <table align=center><tr><td><font size=-1>[<a href="ft2-index.html">Index</a>]</font></td>
 <td width="100%"></td>
 <td><font size=-1>[<a href="ft2-toc.html">TOC</a>]</font></td></tr></table>
-<center><h1>FreeType-2.5.2 API Reference</h1></center>
+<center><h1>FreeType-2.5.3 API Reference</h1></center>
 
 <center><h1>
 Outline Processing
@@ -462,6 +462,7 @@ Defined in FT_OUTLINE_H (ftoutln.h).
   if ( face-&gt;slot-&gt;format == FT_GLYPH_FORMAT_OUTLINE )             
     FT_Outline_Embolden( &amp;face-&gt;slot-&gt;outline, strength );         
 </pre>
+<p>To get meaningful results, font scaling values must be set with functions like <a href="ft2-base_interface.html#FT_Set_Char_Size">FT_Set_Char_Size</a> before calling FT_Render_Glyph.</p>
 </td></tr></table>
 </td></tr></table>
 <hr width="75%">

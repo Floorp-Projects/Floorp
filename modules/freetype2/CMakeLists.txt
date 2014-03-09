@@ -1,6 +1,6 @@
 # CMakeLists.txt
 #
-# Copyright 2013 by
+# Copyright 2013, 2014 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # Written by John Cary <cary@txcorp.com>
@@ -41,7 +41,7 @@ project(freetype)
 
 set(VERSION_MAJOR "2")
 set(VERSION_MINOR "5")
-set(VERSION_PATCH "2")
+set(VERSION_PATCH "3")
 set(PROJECT_VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
 
 # Compiler definitions for building the library
